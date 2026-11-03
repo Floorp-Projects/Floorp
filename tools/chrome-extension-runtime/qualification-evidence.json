@@ -1,0 +1,2600 @@
+{
+  "schemaVersion": 1,
+  "auditedAtUTC": "2026-10-19T05:04:17.077121+00:00",
+  "selection": {
+    "lockPath": "tools/chrome-extension-runtime/corpus-lock.json",
+    "lockSha256": "d028abcdd43493d968b48e20895eeac07f30d1f6ebba632879a6b1ecbc13d39d",
+    "selectionSha256": "761894e3e5f336c76b3011dab8bef916558e7da9085133e8081d5072ad6d0978",
+    "selectedDenominator": 50,
+    "frozenPackages": 46,
+    "unavailablePackages": 4,
+    "unavailableIncludedInDenominator": true
+  },
+  "nativeQualified": false,
+  "nativeQualifiedCount": 0,
+  "primaryOperationPassRate": null,
+  "targetRuntime": {
+    "version": "158.0.1",
+    "commit": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "status": "full-native-candidate-building"
+  },
+  "scopeRules": [
+    "All50 selected rows remain in the denominator, including4 unavailable packages.",
+    "Historical157 primary passes are evidence about that old prebuilt only and never qualify the rebuilt158 candidate.",
+    "Actual authored-page product UI side effects are required; read-only inventory, heap, API-only fixtures, parent-protocol fixtures and wrapper passed flags do not complete a primary operation.",
+    "Account/service/product restrictions are not counted as success; explicit primary-not-run rows remain visible.",
+    "A native row can qualify only after its frozen primary passes on the exact authenticated rebuilt158 candidate, with same-run native background, complete signed script inventory and reviewed source/bundle provenance.",
+    "No compatibility percentage,90-percent target achievement or operating-system release qualification is claimed.",
+    "Reports are local artifacts; credential files, profiles, vault data and private keys are not exported by this registry."
+  ],
+  "operationStatusCounts": {
+    "chrome": {
+      "blocked-account": 11,
+      "blocked-external-service": 2,
+      "primary-passed": 26,
+      "blocked-package": 4,
+      "partial": 1,
+      "blocked-product-restriction": 1,
+      "not-attempted-account-gate": 3,
+      "not-attempted-account-unavailable": 1,
+      "selected-operation-not-applicable": 1
+    },
+    "floorp": {
+      "blocked-test-harness": 7,
+      "blocked-account": 3,
+      "primary-passed": 9,
+      "blocked-package": 4,
+      "not-run": 20,
+      "failed-runtime-api": 6,
+      "failed-unresolved": 1
+    }
+  },
+  "extensions": [
+    {
+      "index": 1,
+      "id": "difoiogjjojoaoomphldepapgpbgkhkb",
+      "name": "Sider",
+      "area": "sidePanel",
+      "packageStatus": "frozen",
+      "version": "5.35.1",
+      "packageSha256": "6cb08a28b0d2a44dec5d11d2f2272c8eb8c735b5ac3eb83f00260b31bf20bd5a",
+      "primaryOperation": "Open current-tab panel, read authored content, and retain a draft across tab switches",
+      "nativeQualified": false,
+      "owner": "offscreen_runtime",
+      "nextStep": "Use the unchanged package and actual native action/panel on the rebuilt158 candidate; verify authored-page transfer and independent retained draft. Resolve the recorded account/service gate before repeating gated actions.",
+      "notes": null,
+      "chrome": {
+        "reportPath": "_dist/chrome-runtime-tests/corpus-sidepanel-chrome-Z1ZWMa/report.json",
+        "reportSha256": "4f358ea3d5bd12e5a6eca66d90f4e71e58af707bb74be4d0b8db5a908cbc16d3",
+        "reportStage": "actual-sidepanel-primary-operation",
+        "evidenceKind": "actual-package-primary-operation",
+        "operationStatus": "blocked-account",
+        "reportedOperationStatus": "blocked-account",
+        "runtime": {
+          "version": "155.0.8059.84",
+          "platform": "linux-x86_64",
+          "binarySha256": "cb19b59995072b86cc7f887b3b1c7ab1f63518a7f2ed9f0d33249e1a040e2c76"
+        },
+        "buildScope": "frozen-official-Chrome155-reference",
+        "nativeQualified": false,
+        "notes": "The actual current-page read control opens required sign-in; no authored-page read was demonstrated.",
+        "packageHashMatchesLock": true
+      },
+      "floorp": {
+        "reportPath": "_dist/chrome-runtime-tests/corpus-sidepanel-floorp-1792372510205/report.json",
+        "reportSha256": "4f80c5be0ad9ab94cdef9a962eafb35e5bb02333d194debeac8904ea28f07254",
+        "reportStage": "actual-sidepanel-primary-operation",
+        "evidenceKind": "actual-package-primary-operation",
+        "operationStatus": "blocked-test-harness",
+        "reportedOperationStatus": "harness-fixture-unavailable",
+        "runtime": {
+          "version": "157.0",
+          "buildId": "20260926171135"
+        },
+        "buildScope": "historical-prebuilt157-not-native158",
+        "nativeQualified": false,
+        "notes": "Old157 attempt could not load the controlled authored fixture. Private actor/native click and loopback/proxy setup have since changed; no primary pass.",
+        "packageHashMatchesLock": true,
+        "recordedScriptIntegrity": {
+          "unchangedScriptCount": 38,
+          "unchangedScriptsSha256": "d295889f0d1c987b238fb94aba01ff5d90602e6ad32a377d3494d60d70a758ff"
+        }
+      },
+      "blockerCategory": "account-required"
+    },
+    {
+      "index": 2,
+      "id": "ofpnmcalabcbjgholdjcjblkibolbppb",
+      "name": "Monica",
+      "area": "sidePanel",
+      "packageStatus": "frozen",
+      "version": "9.0.23",
+      "packageSha256": "82276bdf748d3d183b4e85c608b376d33804b8fa2ead2e61692885acf4a4407c",
+      "primaryOperation": "Open current-tab panel, read authored content, and retain a draft across tab switches",
+      "nativeQualified": false,
+      "owner": "offscreen_runtime",
+      "nextStep": "Use the unchanged package and actual native action/panel on the rebuilt158 candidate; verify authored-page transfer and independent retained draft. Resolve the recorded account/service gate before repeating gated actions.",
+      "notes": null,
+      "chrome": {
+        "reportPath": "_dist/chrome-runtime-tests/corpus-sidepanel-chrome-OK20Dw/report.json",
+        "reportSha256": "81190afccdd9779d2c7a89b001a2f6f953879be47502ae4048317fdca507dfdf",
+        "reportStage": "actual-sidepanel-primary-operation",
+        "evidenceKind": "actual-package-primary-operation",
+        "operationStatus": "blocked-account",
+        "reportedOperationStatus": "blocked-account",
+        "runtime": {
+          "version": "155.0.8059.84",
+          "platform": "linux-x86_64",
+          "binarySha256": "cb19b59995072b86cc7f887b3b1c7ab1f63518a7f2ed9f0d33249e1a040e2c76"
+        },
+        "buildScope": "frozen-official-Chrome155-reference",
+        "nativeQualified": false,
+        "notes": "Actual advertised UI requires sign-in before authored-page reading.",
+        "packageHashMatchesLock": true
+      },
+      "floorp": {
+        "reportPath": "_dist/chrome-runtime-tests/corpus-sidepanel-floorp-1792372510205/report.json",
+        "reportSha256": "4f80c5be0ad9ab94cdef9a962eafb35e5bb02333d194debeac8904ea28f07254",
+        "reportStage": "actual-sidepanel-primary-operation",
+        "evidenceKind": "actual-package-primary-operation",
+        "operationStatus": "blocked-test-harness",
+        "reportedOperationStatus": "harness-fixture-unavailable",
+        "runtime": {
+          "version": "157.0",
+          "buildId": "20260926171135"
+        },
+        "buildScope": "historical-prebuilt157-not-native158",
+        "nativeQualified": false,
+        "notes": "Old157 attempt could not load the controlled authored fixture. Private actor/native click and loopback/proxy setup have since changed; no primary pass.",
+        "packageHashMatchesLock": true,
+        "recordedScriptIntegrity": {
+          "unchangedScriptCount": 6,
+          "unchangedScriptsSha256": "82de802d36ed26fdcd46d4532dc7977cde907930d093b86a83163923fb0a4786"
+        }
+      },
+      "blockerCategory": "account-required"
+    },
+    {
+      "index": 3,
+      "id": "camppjleccjaphfdbohjdohecfnoikec",
+      "name": "Merlin",
+      "area": "sidePanel",
+      "packageStatus": "frozen",
+      "version": "8.3.0",
+      "packageSha256": "e7e6ba786e9ba9c68ce73642f5a6e8d65c686f6c638692e2b0871b9b814e3b8d",
+      "primaryOperation": "Open current-tab panel, read authored content, and retain a draft across tab switches",
+      "nativeQualified": false,
+      "owner": "offscreen_runtime",
+      "nextStep": "Use the unchanged package and actual native action/panel on the rebuilt158 candidate; verify authored-page transfer and independent retained draft. Resolve the recorded account/service gate before repeating gated actions.",
+      "notes": null,
+      "chrome": {
+        "reportPath": "_dist/chrome-runtime-tests/corpus-sidepanel-chrome-OK20Dw/report.json",
+        "reportSha256": "81190afccdd9779d2c7a89b001a2f6f953879be47502ae4048317fdca507dfdf",
+        "reportStage": "actual-sidepanel-primary-operation",
+        "evidenceKind": "actual-package-primary-operation",
+        "operationStatus": "blocked-account",
+        "reportedOperationStatus": "blocked-account",
+        "runtime": {
+          "version": "155.0.8059.84",
+          "platform": "linux-x86_64",
+          "binarySha256": "cb19b59995072b86cc7f887b3b1c7ab1f63518a7f2ed9f0d33249e1a040e2c76"
+        },
+        "buildScope": "frozen-official-Chrome155-reference",
+        "nativeQualified": false,
+        "notes": "Actual advertised UI requires sign-in before authored-page reading.",
+        "packageHashMatchesLock": true
+      },
+      "floorp": {
+        "reportPath": "_dist/chrome-runtime-tests/corpus-sidepanel-floorp-1792372510205/report.json",
+        "reportSha256": "4f80c5be0ad9ab94cdef9a962eafb35e5bb02333d194debeac8904ea28f07254",
+        "reportStage": "actual-sidepanel-primary-operation",
+        "evidenceKind": "actual-package-primary-operation",
+        "operationStatus": "blocked-test-harness",
+        "reportedOperationStatus": "harness-fixture-unavailable",
+        "runtime": {
+          "version": "157.0",
+          "buildId": "20260926171135"
+        },
+        "buildScope": "historical-prebuilt157-not-native158",
+        "nativeQualified": false,
+        "notes": "Old157 attempt could not load the controlled authored fixture. Private actor/native click and loopback/proxy setup have since changed; no primary pass.",
+        "packageHashMatchesLock": true,
+        "recordedScriptIntegrity": {
+          "unchangedScriptCount": 404,
+          "unchangedScriptsSha256": "b71e6f1d31572802c5c900fc1dc51bad4e65011aeab3f11940dc7661a8a70c03"
+        }
+      },
+      "blockerCategory": "account-required"
+    },
+    {
+      "index": 4,
+      "id": "mhnlakgilnojmhinhkckjpncpbhabphi",
+      "name": "MaxAI",
+      "area": "sidePanel",
+      "packageStatus": "frozen",
+      "version": "8.37.3",
+      "packageSha256": "b9f46355cf4dc87c579f09ab62350336a5374ed60ceca13a5e95bd6bfb7ca77e",
+      "primaryOperation": "Open current-tab panel, read authored content, and retain a draft across tab switches",
+      "nativeQualified": false,
+      "owner": "offscreen_runtime",
+      "nextStep": "Use the unchanged package and actual native action/panel on the rebuilt158 candidate; verify authored-page transfer and independent retained draft. Resolve the recorded account/service gate before repeating gated actions.",
+      "notes": null,
+      "chrome": {
+        "reportPath": "_dist/chrome-runtime-tests/corpus-sidepanel-chrome-b0WEA2/report.json",
+        "reportSha256": "2dbc0cd682766b6c2a32e65deb5a9bf87fc50e9062965d2c6b062d2d9c802bfa",
+        "reportStage": "actual-sidepanel-primary-operation",
+        "evidenceKind": "actual-package-primary-operation",
+        "operationStatus": "blocked-account",
+        "reportedOperationStatus": "blocked-account",
+        "runtime": {
+          "version": "155.0.8059.84",
+          "platform": "linux-x86_64",
+          "binarySha256": "cb19b59995072b86cc7f887b3b1c7ab1f63518a7f2ed9f0d33249e1a040e2c76"
+        },
+        "buildScope": "frozen-official-Chrome155-reference",
+        "nativeQualified": false,
+        "notes": "Corrected native click on the visible Summarize this page control opens required Sign in to use AI for FREE. Authored text absent; separate5gwp4w report preserves guest draft retention only.",
+        "packageHashMatchesLock": true
+      },
+      "floorp": {
+        "reportPath": "_dist/chrome-runtime-tests/corpus-sidepanel-floorp-1792372510205/report.json",
+        "reportSha256": "4f80c5be0ad9ab94cdef9a962eafb35e5bb02333d194debeac8904ea28f07254",
+        "reportStage": "actual-sidepanel-primary-operation",
+        "evidenceKind": "actual-package-primary-operation",
+        "operationStatus": "blocked-test-harness",
+        "reportedOperationStatus": "harness-fixture-unavailable",
+        "runtime": {
+          "version": "157.0",
+          "buildId": "20260926171135"
+        },
+        "buildScope": "historical-prebuilt157-not-native158",
+        "nativeQualified": false,
+        "notes": "Old157 attempt could not load the controlled authored fixture. Private actor/native click and loopback/proxy setup have since changed; no primary pass.",
+        "packageHashMatchesLock": true,
+        "recordedScriptIntegrity": {
+          "unchangedScriptCount": 198,
+          "unchangedScriptsSha256": "77c257abc1e480d5d1563cabf01db01c946404f99519530f40b31ec04e1b9e98"
+        }
+      },
+      "blockerCategory": "account-required"
+    },
+    {
+      "index": 5,
+      "id": "cebmnlammjhancocbbnfcglifgdpfejc",
+      "name": "AI Blaze",
+      "area": "sidePanel",
+      "packageStatus": "frozen",
+      "version": "1.9.34",
+      "packageSha256": "59018943c7207f1adfa6d9f7b16486471fbe9a8973a017bd09edcf58bce75e6a",
+      "primaryOperation": "Open current-tab panel, read authored content, and retain a draft across tab switches",
+      "nativeQualified": false,
+      "owner": "offscreen_runtime",
+      "nextStep": "Use the unchanged package and actual native action/panel on the rebuilt158 candidate; verify authored-page transfer and independent retained draft. Resolve the recorded account/service gate before repeating gated actions.",
+      "notes": null,
+      "chrome": {
+        "reportPath": "_dist/chrome-runtime-tests/corpus-sidepanel-chrome-8EgAVG/report.json",
+        "reportSha256": "ac4d9f6c65eee5458e7c64b4857fd502c0e4057b1b7f8bb94d976c9cdd43888d",
+        "reportStage": "actual-sidepanel-primary-operation",
+        "evidenceKind": "actual-package-primary-operation",
+        "operationStatus": "blocked-external-service",
+        "reportedOperationStatus": "blocked-external-service",
+        "runtime": {
+          "version": "155.0.8059.84",
+          "platform": "linux-x86_64",
+          "binarySha256": "cb19b59995072b86cc7f887b3b1c7ab1f63518a7f2ed9f0d33249e1a040e2c76"
+        },
+        "buildScope": "frozen-official-Chrome155-reference",
+        "nativeQualified": false,
+        "notes": "Actual account-entry site displays upstream Cloudflare tunnel failure; no authored-page read.",
+        "packageHashMatchesLock": true
+      },
+      "floorp": {
+        "reportPath": "_dist/chrome-runtime-tests/corpus-sidepanel-floorp-1792372510205/report.json",
+        "reportSha256": "4f80c5be0ad9ab94cdef9a962eafb35e5bb02333d194debeac8904ea28f07254",
+        "reportStage": "actual-sidepanel-primary-operation",
+        "evidenceKind": "actual-package-primary-operation",
+        "operationStatus": "blocked-test-harness",
+        "reportedOperationStatus": "harness-fixture-unavailable",
+        "runtime": {
+          "version": "157.0",
+          "buildId": "20260926171135"
+        },
+        "buildScope": "historical-prebuilt157-not-native158",
+        "nativeQualified": false,
+        "notes": "Old157 attempt could not load the controlled authored fixture. Private actor/native click and loopback/proxy setup have since changed; no primary pass.",
+        "packageHashMatchesLock": true,
+        "recordedScriptIntegrity": {
+          "unchangedScriptCount": 13,
+          "unchangedScriptsSha256": "cfca0222ae37e1c54bc98c25541616ddcb958fb7a5d3497b8ab9b380107a1ffd"
+        }
+      },
+      "blockerCategory": "external-service"
+    },
+    {
+      "index": 6,
+      "id": "gldebcpkoojijledacjeboaehblhfbjg",
+      "name": "Ask Steve",
+      "area": "sidePanel",
+      "packageStatus": "frozen",
+      "version": "4.2.5",
+      "packageSha256": "6b13365038494988f8f5d888638d118ee39ab1fd51473d0087a3a23eb47b800d",
+      "primaryOperation": "Open current-tab panel, read authored content, and retain a draft across tab switches",
+      "nativeQualified": false,
+      "owner": "offscreen_runtime",
+      "nextStep": "Keep the authored-page reading primary unqualified while the actual product read action requires sign-in; retained draft alone cannot complete the frozen primary.",
+      "notes": "Actual read request reaches an explicit account gate; no authored paragraph read was verified. Independent draft retention succeeded, without qualifying the complete primary.",
+      "chrome": {
+        "reportPath": "_dist/chrome-runtime-tests/corpus-sidepanel-chrome-lTrC45/report.json",
+        "reportSha256": "25118089a0e1f76d3458a69995d9b3edfb73a698c2403784819e184f053a1926",
+        "reportStage": "actual-sidepanel-primary-operation",
+        "evidenceKind": "actual-package-primary-operation",
+        "operationStatus": "blocked-account",
+        "reportedOperationStatus": "blocked-account",
+        "primaryOperationAttempted": true,
+        "observedPrerequisiteStatus": "mandatory-sign-in-for-authored-page-read",
+        "observedRequiredAccountGate": {
+          "text": "Login here to use Ask Steve.",
+          "controls": [
+            "Login here",
+            "OK"
+          ]
+        },
+        "runtime": {
+          "version": "155.0.8059.84",
+          "platform": "linux-x86_64",
+          "binarySha256": "cb19b59995072b86cc7f887b3b1c7ab1f63518a7f2ed9f0d33249e1a040e2c76"
+        },
+        "buildScope": "frozen-official-Chrome155-reference",
+        "nativeQualified": false,
+        "notes": "Actual native toolbar panel opens on the authored page and independently retains the authored draft across tab switches. Submitting the real Read the current page and quote its first paragraph request through native Enter displays Login here to use Ask Steve. No authored-text reading was demonstrated; no login attempted. All43 frozen signed scripts unchanged.",
+        "packageHashMatchesLock": true,
+        "recordedScriptIntegrity": {
+          "unchangedScriptCount": 43,
+          "unchangedScriptsSha256": "aecbe3203dae9691b190e1d20ccc4acdb05141f9e255a6892716b6de30705e9d"
+        }
+      },
+      "floorp": {
+        "reportPath": "_dist/chrome-runtime-tests/corpus-sidepanel-floorp-1792372510205/report.json",
+        "reportSha256": "4f80c5be0ad9ab94cdef9a962eafb35e5bb02333d194debeac8904ea28f07254",
+        "reportStage": "actual-sidepanel-primary-operation",
+        "evidenceKind": "actual-package-primary-operation",
+        "operationStatus": "blocked-test-harness",
+        "reportedOperationStatus": "harness-fixture-unavailable",
+        "runtime": {
+          "version": "157.0",
+          "buildId": "20260926171135"
+        },
+        "buildScope": "historical-prebuilt157-not-native158",
+        "nativeQualified": false,
+        "notes": "Old157 attempt could not load the controlled authored fixture. Private actor/native click and loopback/proxy setup have since changed; no primary pass.",
+        "packageHashMatchesLock": true,
+        "recordedScriptIntegrity": {
+          "unchangedScriptCount": 43,
+          "unchangedScriptsSha256": "aecbe3203dae9691b190e1d20ccc4acdb05141f9e255a6892716b6de30705e9d"
+        }
+      },
+      "blockerCategory": "account-required",
+      "history": [
+        {
+          "browser": "chrome",
+          "observation": {
+            "reportPath": "_dist/chrome-runtime-tests/corpus-sidepanel-chrome-OK20Dw/report.json",
+            "reportSha256": "81190afccdd9779d2c7a89b001a2f6f953879be47502ae4048317fdca507dfdf",
+            "reportStage": "actual-sidepanel-primary-operation",
+            "evidenceKind": "actual-package-primary-operation",
+            "operationStatus": "partial",
+            "reportedOperationStatus": "failed",
+            "runtime": {
+              "version": "155.0.8059.84",
+              "platform": "linux-x86_64",
+              "binarySha256": "cb19b59995072b86cc7f887b3b1c7ab1f63518a7f2ed9f0d33249e1a040e2c76"
+            },
+            "buildScope": "frozen-official-Chrome155-reference",
+            "nativeQualified": false,
+            "notes": "Draft retention observed; authored-page transfer not demonstrated. Do not infer an account requirement from this partial result.",
+            "packageHashMatchesLock": true
+          },
+          "supersededReason": "A genuine current-page read request now establishes the mandatory account gate directly; previous panel/draft-only observation remains partial history."
+        }
+      ]
+    },
+    {
+      "index": 7,
+      "id": "befflofjcniongenjmbkgkoljhgliihe",
+      "name": "TinaMind",
+      "area": "sidePanel",
+      "packageStatus": "frozen",
+      "version": "2.26.0",
+      "packageSha256": "61e9fcb1f0b9088557bcf58682de85064af682daf18c72af55d223c77f9979ff",
+      "primaryOperation": "Open current-tab panel, read authored content, and retain a draft across tab switches",
+      "nativeQualified": false,
+      "owner": "offscreen_runtime",
+      "nextStep": "Use the unchanged package and actual native action/panel on the rebuilt158 candidate; verify authored-page transfer and independent retained draft. Resolve the recorded account/service gate before repeating gated actions.",
+      "notes": null,
+      "chrome": {
+        "reportPath": "_dist/chrome-runtime-tests/corpus-sidepanel-chrome-OK20Dw/report.json",
+        "reportSha256": "81190afccdd9779d2c7a89b001a2f6f953879be47502ae4048317fdca507dfdf",
+        "reportStage": "actual-sidepanel-primary-operation",
+        "evidenceKind": "actual-package-primary-operation",
+        "operationStatus": "blocked-account",
+        "reportedOperationStatus": "blocked-account",
+        "runtime": {
+          "version": "155.0.8059.84",
+          "platform": "linux-x86_64",
+          "binarySha256": "cb19b59995072b86cc7f887b3b1c7ab1f63518a7f2ed9f0d33249e1a040e2c76"
+        },
+        "buildScope": "frozen-official-Chrome155-reference",
+        "nativeQualified": false,
+        "notes": "Actual advertised UI requires sign-in before authored-page reading.",
+        "packageHashMatchesLock": true
+      },
+      "floorp": {
+        "reportPath": "_dist/chrome-runtime-tests/corpus-sidepanel-floorp-1792372510205/report.json",
+        "reportSha256": "4f80c5be0ad9ab94cdef9a962eafb35e5bb02333d194debeac8904ea28f07254",
+        "reportStage": "actual-sidepanel-primary-operation",
+        "evidenceKind": "actual-package-primary-operation",
+        "operationStatus": "blocked-test-harness",
+        "reportedOperationStatus": "harness-fixture-unavailable",
+        "runtime": {
+          "version": "157.0",
+          "buildId": "20260926171135"
+        },
+        "buildScope": "historical-prebuilt157-not-native158",
+        "nativeQualified": false,
+        "notes": "Old157 attempt could not load the controlled authored fixture. Private actor/native click and loopback/proxy setup have since changed; no primary pass.",
+        "packageHashMatchesLock": true,
+        "recordedScriptIntegrity": {
+          "unchangedScriptCount": 4,
+          "unchangedScriptsSha256": "7f471eee790371527164f3b3ed1c7e944404912dd6a51e49250c215f43b5a614"
+        }
+      },
+      "blockerCategory": "account-required"
+    },
+    {
+      "index": 8,
+      "id": "liecbddmkiiihnedobmlmillhodjkdmb",
+      "name": "Loom",
+      "area": "capture",
+      "packageStatus": "frozen",
+      "version": "5.5.212",
+      "packageSha256": "622b223bc52a6a92a43ef6638b8c895435c8f43e28bef526c238f9dfb99734ea",
+      "primaryOperation": "Capture authored-page image or audio/video as advertised, stop, and save playable media",
+      "nativeQualified": false,
+      "owner": "offscreen_runtime",
+      "nextStep": "Repeat the same authored media capture/stop/save recipe on rebuilt158. Account-gated recorders require an authorized test account; screenshot passes on157 are historical only.",
+      "notes": null,
+      "chrome": {
+        "reportPath": "_dist/chrome-runtime-tests/corpus-capture-reference-apAYPb/report.json",
+        "reportSha256": "2a8337a15a41e5d8fc5bb93f2bc85ca753e25bb1889bdd06d4ae0981a376b173",
+        "reportStage": "actual-package-primary-operation",
+        "evidenceKind": "actual-package-primary-operation",
+        "operationStatus": "blocked-account",
+        "reportedOperationStatus": "blocked-account",
+        "runtime": {
+          "version": "155.0.8059.84",
+          "platform": "linux-x86_64",
+          "binarySha256": "cb19b59995072b86cc7f887b3b1c7ab1f63518a7f2ed9f0d33249e1a040e2c76"
+        },
+        "buildScope": "frozen-official-Chrome155-reference",
+        "nativeQualified": false,
+        "notes": null,
+        "packageHashMatchesLock": true
+      },
+      "floorp": {
+        "reportPath": "_dist/chrome-runtime-tests/corpus-capture-floorp-{e046154f-fc63-4567-a092-ae14365ff16d}/report.json",
+        "reportSha256": "7f872a910e003dae526f615a374399a7182d0fbdb9bb403a508903de99f5b174",
+        "reportStage": null,
+        "evidenceKind": "actual-package-primary-operation",
+        "operationStatus": "blocked-account",
+        "reportedOperationStatus": "blocked-account",
+        "runtime": {
+          "version": "157.0",
+          "buildId": "20260926171135"
+        },
+        "buildScope": "historical-prebuilt157-not-native158",
+        "nativeQualified": false,
+        "notes": null,
+        "packageHashMatchesLock": true
+      },
+      "blockerCategory": "account-required"
+    },
+    {
+      "index": 9,
+      "id": "mmeijimgabbpbgpdklnllpncmdofkcpn",
+      "name": "Screencastify",
+      "area": "capture",
+      "packageStatus": "frozen",
+      "version": "4.24.7.5533",
+      "packageSha256": "eaae909406ac4fc48ebdad288a100f166d689762dd86622bb952cecd5cdb5edb",
+      "primaryOperation": "Capture authored-page image or audio/video as advertised, stop, and save playable media",
+      "nativeQualified": false,
+      "owner": "offscreen_runtime",
+      "nextStep": "Repeat the same authored media capture/stop/save recipe on rebuilt158. Account-gated recorders require an authorized test account; screenshot passes on157 are historical only.",
+      "notes": null,
+      "chrome": {
+        "reportPath": "_dist/chrome-runtime-tests/corpus-capture-reference-apAYPb/report.json",
+        "reportSha256": "2a8337a15a41e5d8fc5bb93f2bc85ca753e25bb1889bdd06d4ae0981a376b173",
+        "reportStage": "actual-package-primary-operation",
+        "evidenceKind": "actual-package-primary-operation",
+        "operationStatus": "blocked-account",
+        "reportedOperationStatus": "blocked-account",
+        "runtime": {
+          "version": "155.0.8059.84",
+          "platform": "linux-x86_64",
+          "binarySha256": "cb19b59995072b86cc7f887b3b1c7ab1f63518a7f2ed9f0d33249e1a040e2c76"
+        },
+        "buildScope": "frozen-official-Chrome155-reference",
+        "nativeQualified": false,
+        "notes": null,
+        "packageHashMatchesLock": true
+      },
+      "floorp": {
+        "reportPath": "_dist/chrome-runtime-tests/corpus-capture-floorp-{d8b01f6d-f008-48a9-8bf1-5501ec5344ec}/report.json",
+        "reportSha256": "20e8a044e3c7dbe5c6a3edc135294a1a85bf82a819a705c53cad5a5a4f83e774",
+        "reportStage": null,
+        "evidenceKind": "actual-package-primary-operation",
+        "operationStatus": "blocked-account",
+        "reportedOperationStatus": "blocked-account",
+        "runtime": {
+          "version": "157.0",
+          "buildId": "20260926171135"
+        },
+        "buildScope": "historical-prebuilt157-not-native158",
+        "nativeQualified": false,
+        "notes": null,
+        "packageHashMatchesLock": true
+      },
+      "blockerCategory": "account-required"
+    },
+    {
+      "index": 10,
+      "id": "nlipoenfbbikpbjkfpfillcgkoblgpmj",
+      "name": "Awesome Screenshot",
+      "area": "capture",
+      "packageStatus": "frozen",
+      "version": "4.4.44",
+      "packageSha256": "3b20e60b1142ef7dbf1d517a9ff9ee5527bd96dc6083c2fdc423e9f51b973d3a",
+      "primaryOperation": "Capture authored-page image or audio/video as advertised, stop, and save playable media",
+      "nativeQualified": false,
+      "owner": "offscreen_runtime",
+      "nextStep": "Repeat the same authored media capture/stop/save recipe on rebuilt158. Account-gated recorders require an authorized test account; screenshot passes on157 are historical only.",
+      "notes": null,
+      "chrome": {
+        "reportPath": "_dist/chrome-runtime-tests/corpus-capture-reference-LJkXAY/report.json",
+        "reportSha256": "6441b59ffdc36a4ee548fbe1bb793b084085435acbbd1b11268e8b46efe2dd43",
+        "reportStage": "actual-package-primary-operation",
+        "evidenceKind": "actual-package-primary-operation",
+        "operationStatus": "primary-passed",
+        "reportedOperationStatus": "pass",
+        "runtime": {
+          "version": "155.0.8059.84",
+          "platform": "linux-x86_64",
+          "binarySha256": "cb19b59995072b86cc7f887b3b1c7ab1f63518a7f2ed9f0d33249e1a040e2c76"
+        },
+        "buildScope": "frozen-official-Chrome155-reference",
+        "nativeQualified": false,
+        "notes": "Actual visible capture, editor and saved PNG; saved SHA matches preview.",
+        "packageHashMatchesLock": true
+      },
+      "floorp": {
+        "reportPath": "_dist/chrome-runtime-tests/corpus-capture-floorp-{b0ebe558-8b25-41f1-b3a1-1a07bc57a1a6}/report.json",
+        "reportSha256": "aa8dbd756ce206f0f9ee06518ff45a712e5a57839c4474db969bfe68e77d1a9c",
+        "reportStage": null,
+        "evidenceKind": "actual-package-primary-operation",
+        "operationStatus": "primary-passed",
+        "reportedOperationStatus": "pass",
+        "runtime": {
+          "version": "157.0",
+          "buildId": "20260926171135"
+        },
+        "buildScope": "historical-prebuilt157-not-native158",
+        "nativeQualified": false,
+        "notes": "Actual native screenshot/editor/save; old157 classic background fallback.",
+        "packageHashMatchesLock": true
+      },
+      "blockerCategory": "rebuilt-native158-primary-pending"
+    },
+    {
+      "index": 11,
+      "id": "bpconcjcammlapcogcnnelfmaeghhagj",
+      "name": "Nimbus Screenshot",
+      "area": "capture",
+      "packageStatus": "unavailable",
+      "version": null,
+      "packageSha256": null,
+      "primaryOperation": "Capture authored-page image or audio/video as advertised, stop, and save playable media",
+      "nativeQualified": false,
+      "owner": "root",
+      "nextStep": "Retrieve the same selected genuine signed package through normal verified transport; retain this row in the denominator until it is available.",
+      "notes": null,
+      "blockerCategory": "package-unavailable",
+      "blocker": "Error: Store response 503",
+      "chrome": {
+        "operationStatus": "blocked-package",
+        "reportPath": null,
+        "buildScope": "not-run",
+        "nativeQualified": false
+      },
+      "floorp": {
+        "operationStatus": "blocked-package",
+        "reportPath": null,
+        "buildScope": "not-run",
+        "nativeQualified": false
+      }
+    },
+    {
+      "index": 12,
+      "id": "fdpohaocaechififmbbbbbknoalclacl",
+      "name": "GoFullPage",
+      "area": "capture",
+      "packageStatus": "frozen",
+      "version": "8.9",
+      "packageSha256": "ed803408e3217c0bfc25d4c90cb425313524e7d45b64c11ee9353d9ccd929199",
+      "primaryOperation": "Capture authored-page image or audio/video as advertised, stop, and save playable media",
+      "nativeQualified": false,
+      "owner": "offscreen_runtime",
+      "nextStep": "Repeat the same authored media capture/stop/save recipe on rebuilt158. Account-gated recorders require an authorized test account; screenshot passes on157 are historical only.",
+      "notes": null,
+      "chrome": {
+        "reportPath": "_dist/chrome-runtime-tests/corpus-capture-reference-kfoBOT/report.json",
+        "reportSha256": "db55608760aaf2bb230615f16544e3bf455acdcebe8122b8e3ececd7a22390de",
+        "reportStage": "actual-package-primary-operation",
+        "evidenceKind": "actual-package-primary-operation",
+        "operationStatus": "primary-passed",
+        "reportedOperationStatus": "pass",
+        "runtime": {
+          "version": "155.0.8059.84",
+          "platform": "linux-x86_64",
+          "binarySha256": "cb19b59995072b86cc7f887b3b1c7ab1f63518a7f2ed9f0d33249e1a040e2c76"
+        },
+        "buildScope": "frozen-official-Chrome155-reference",
+        "nativeQualified": false,
+        "notes": "Actual stitched1050x2590 PNG downloaded through product UI.",
+        "packageHashMatchesLock": true
+      },
+      "floorp": {
+        "reportPath": "_dist/chrome-runtime-tests/corpus-capture-floorp-{0b3157bd-bb59-4a7e-b347-c995b517eed1}/report.json",
+        "reportSha256": "7db1de39d20c84f99075fa0f6b9f6bddf233cf780d648c12d2cf5b24740f7e80",
+        "reportStage": null,
+        "evidenceKind": "actual-package-primary-operation",
+        "operationStatus": "primary-passed",
+        "reportedOperationStatus": "pass",
+        "runtime": {
+          "version": "157.0",
+          "buildId": "20260926171135"
+        },
+        "buildScope": "historical-prebuilt157-not-native158",
+        "nativeQualified": false,
+        "notes": "Actual native screenshot/save and download permission prompt; old157 classic background fallback.",
+        "packageHashMatchesLock": true
+      },
+      "blockerCategory": "rebuilt-native158-primary-pending"
+    },
+    {
+      "index": 13,
+      "id": "pfnededegaaopdmhkdmcofjmoldfiped",
+      "name": "ZeroOmega",
+      "area": "proxy",
+      "packageStatus": "frozen",
+      "version": "3.5.2",
+      "packageSha256": "32b46bc39b1006f414c19cc7aa27b5fb1c5e9ed7b764e1dbb68101c19feea937",
+      "primaryOperation": "Apply a proxy profile, observe controlled request routing/bypass, and restore the previous setting",
+      "nativeQualified": false,
+      "owner": "mv3_manifest",
+      "nextStep": "Run actual product UI and controlled network side effects on rebuilt158, preserving the reference proxy/bypass/restore or filter/header recipe. Resolve product/account prerequisites explicitly.",
+      "notes": null,
+      "chrome": {
+        "reportPath": "_dist/chrome-runtime-tests/corpus-network-reference-y0w8iB/report.json",
+        "reportSha256": "df82bbe5641438679166f38d2cdbcb2a2369e0d5caf56da7ae0ea2f981198a29",
+        "reportStage": "actual-package-primary-operation",
+        "evidenceKind": "actual-package-primary-operation",
+        "operationStatus": "primary-passed",
+        "reportedOperationStatus": "passed",
+        "runtime": {
+          "version": "155.0.8059.84",
+          "platform": "linux-x86_64",
+          "binarySha256": "cb19b59995072b86cc7f887b3b1c7ab1f63518a7f2ed9f0d33249e1a040e2c76"
+        },
+        "buildScope": "frozen-official-Chrome155-reference",
+        "nativeQualified": false,
+        "notes": null,
+        "packageHashMatchesLock": true
+      },
+      "floorp": {
+        "operationStatus": "not-run",
+        "reportPath": null,
+        "buildScope": "rebuilt-native158-pending",
+        "nativeQualified": false,
+        "runtime": {
+          "targetVersion": "158.0.1",
+          "targetRuntimeCommit": "7dd619742b25567e479eeda97ae071d10542ad0b"
+        },
+        "notes": "No completed actual-package primary report on rebuilt158 exists at this audit."
+      },
+      "blockerCategory": "rebuilt-native158-primary-pending"
+    },
+    {
+      "index": 14,
+      "id": "gcknhkkoolaabfmlnjonogaaifnjlfnp",
+      "name": "FoxyProxy",
+      "area": "proxy",
+      "packageStatus": "frozen",
+      "version": "9.7",
+      "packageSha256": "4c69dd6c1307726115ed6c9786461de76c77cde47133e7d97837da2b4c9cfa20",
+      "primaryOperation": "Apply a proxy profile, observe controlled request routing/bypass, and restore the previous setting",
+      "nativeQualified": false,
+      "owner": "mv3_manifest",
+      "nextStep": "Run actual product UI and controlled network side effects on rebuilt158, preserving the reference proxy/bypass/restore or filter/header recipe. Resolve product/account prerequisites explicitly.",
+      "notes": null,
+      "chrome": {
+        "reportPath": "_dist/chrome-runtime-tests/corpus-network-reference-1vGmIs/report.json",
+        "reportSha256": "c2de32a3fc9a207ea10818f0d10b7f3dc858bab48124efb42e9941c3e6285f00",
+        "reportStage": "actual-package-primary-operation",
+        "evidenceKind": "actual-package-primary-operation",
+        "operationStatus": "primary-passed",
+        "reportedOperationStatus": "passed",
+        "runtime": {
+          "version": "155.0.8059.84",
+          "platform": "linux-x86_64",
+          "binarySha256": "cb19b59995072b86cc7f887b3b1c7ab1f63518a7f2ed9f0d33249e1a040e2c76"
+        },
+        "buildScope": "frozen-official-Chrome155-reference",
+        "nativeQualified": false,
+        "notes": null,
+        "packageHashMatchesLock": true
+      },
+      "floorp": {
+        "operationStatus": "not-run",
+        "reportPath": null,
+        "buildScope": "rebuilt-native158-pending",
+        "nativeQualified": false,
+        "runtime": {
+          "targetVersion": "158.0.1",
+          "targetRuntimeCommit": "7dd619742b25567e479eeda97ae071d10542ad0b"
+        },
+        "notes": "No completed actual-package primary report on rebuilt158 exists at this audit."
+      },
+      "blockerCategory": "rebuilt-native158-primary-pending"
+    },
+    {
+      "index": 15,
+      "id": "omghfjlpggmjjaagoclmmobgdodcjboh",
+      "name": "Browsec",
+      "area": "proxy",
+      "packageStatus": "frozen",
+      "version": "4.0.0",
+      "packageSha256": "369df6abba5c02b2071003fe9aa5e64dc4ccddc2404dc212751f7f4f2a10480c",
+      "primaryOperation": "Apply a proxy profile, observe controlled request routing/bypass, and restore the previous setting",
+      "nativeQualified": false,
+      "owner": "mv3_manifest",
+      "nextStep": "Run actual product UI and controlled network side effects on rebuilt158, preserving the reference proxy/bypass/restore or filter/header recipe. Resolve product/account prerequisites explicitly.",
+      "notes": null,
+      "chrome": {
+        "reportPath": "_dist/chrome-runtime-tests/corpus-network-reference-etZces/report.json",
+        "reportSha256": "fd4f49282acef1765424e9512fa8a08e9c2049b820d67e9761f743e8645d430a",
+        "reportStage": "actual-package-primary-operation",
+        "evidenceKind": "actual-package-primary-operation",
+        "operationStatus": "partial",
+        "reportedOperationStatus": "blocked-product-setup",
+        "runtime": {
+          "version": "155.0.8059.84",
+          "platform": "linux-x86_64",
+          "binarySha256": "cb19b59995072b86cc7f887b3b1c7ab1f63518a7f2ed9f0d33249e1a040e2c76"
+        },
+        "buildScope": "frozen-official-Chrome155-reference",
+        "nativeQualified": false,
+        "notes": "Terms/privacy product setup screen observed; VPN routing not demonstrated and no agreement inferred.",
+        "packageHashMatchesLock": true
+      },
+      "floorp": {
+        "operationStatus": "not-run",
+        "reportPath": null,
+        "buildScope": "rebuilt-native158-pending",
+        "nativeQualified": false,
+        "runtime": {
+          "targetVersion": "158.0.1",
+          "targetRuntimeCommit": "7dd619742b25567e479eeda97ae071d10542ad0b"
+        },
+        "notes": "No completed actual-package primary report on rebuilt158 exists at this audit."
+      },
+      "blockerCategory": "incomplete-primary-evidence"
+    },
+    {
+      "index": 16,
+      "id": "hnmpcagpplmpfojmgmnngilcnanddlhb",
+      "name": "Windscribe",
+      "area": "proxy",
+      "packageStatus": "frozen",
+      "version": "4.3.1",
+      "packageSha256": "03bb87147da87069eee9875294865b415546f31cad4d9ad0e02786aa8bceb19b",
+      "primaryOperation": "Apply a proxy profile, observe controlled request routing/bypass, and restore the previous setting",
+      "nativeQualified": false,
+      "owner": "mv3_manifest",
+      "nextStep": "Run actual product UI and controlled network side effects on rebuilt158, preserving the reference proxy/bypass/restore or filter/header recipe. Resolve product/account prerequisites explicitly.",
+      "notes": null,
+      "chrome": {
+        "reportPath": "_dist/chrome-runtime-tests/corpus-network-reference-QPgMR1/report.json",
+        "reportSha256": "72d4dbae1d75a28f88b3928f057adbb070da44685161422a14b1bbab5ae10c80",
+        "reportStage": "actual-package-primary-operation",
+        "evidenceKind": "actual-package-primary-operation",
+        "operationStatus": "blocked-account",
+        "reportedOperationStatus": "blocked-account-required",
+        "runtime": {
+          "version": "155.0.8059.84",
+          "platform": "linux-x86_64",
+          "binarySha256": "cb19b59995072b86cc7f887b3b1c7ab1f63518a7f2ed9f0d33249e1a040e2c76"
+        },
+        "buildScope": "frozen-official-Chrome155-reference",
+        "nativeQualified": false,
+        "notes": null,
+        "packageHashMatchesLock": true
+      },
+      "floorp": {
+        "operationStatus": "not-run",
+        "reportPath": null,
+        "buildScope": "rebuilt-native158-pending",
+        "nativeQualified": false,
+        "runtime": {
+          "targetVersion": "158.0.1",
+          "targetRuntimeCommit": "7dd619742b25567e479eeda97ae071d10542ad0b"
+        },
+        "notes": "No completed actual-package primary report on rebuilt158 exists at this audit."
+      },
+      "blockerCategory": "account-required"
+    },
+    {
+      "index": 17,
+      "id": "mooikfkahbdckldjjndioackbalphokd",
+      "name": "Selenium IDE",
+      "area": "debugger",
+      "packageStatus": "unavailable",
+      "version": null,
+      "packageSha256": null,
+      "primaryOperation": "Record or run navigation/input/extraction on an authored page and verify the resulting side effects",
+      "nativeQualified": false,
+      "owner": "root",
+      "nextStep": "Retrieve the same selected genuine signed package through normal verified transport; retain this row in the denominator until it is available.",
+      "notes": null,
+      "blockerCategory": "package-unavailable",
+      "blocker": "Error: Store response 503",
+      "chrome": {
+        "operationStatus": "blocked-package",
+        "reportPath": null,
+        "buildScope": "not-run",
+        "nativeQualified": false
+      },
+      "floorp": {
+        "operationStatus": "blocked-package",
+        "reportPath": null,
+        "buildScope": "not-run",
+        "nativeQualified": false
+      }
+    },
+    {
+      "index": 18,
+      "id": "gcbalfbdmfieckjlnblleoemohcganoc",
+      "name": "UI.Vision",
+      "area": "debugger",
+      "packageStatus": "frozen",
+      "version": "10.0.301",
+      "packageSha256": "ef6699aaef8c24aeaa26440649a50d628264a9f21371362961aa69693abbe407",
+      "primaryOperation": "Record or run navigation/input/extraction on an authored page and verify the resulting side effects",
+      "nativeQualified": false,
+      "owner": "runtime_documents",
+      "nextStep": "Run the prepared unchanged-package primary runner on rebuilt158 with real background_worker; verify actual recorded input/click/extraction side effects and script inventory.",
+      "notes": null,
+      "chrome": {
+        "reportPath": "_dist/chrome-runtime-tests/corpus-automation-reference-Y1EpOJ/report.json",
+        "reportSha256": "2daeda0bbe7db90a3ca8bb7d87314cded370ada99f4b0fdc06025ded58e5f634",
+        "reportStage": "frozen-automation-primary-operation",
+        "evidenceKind": "actual-package-primary-operation",
+        "operationStatus": "primary-passed",
+        "reportedOperationStatus": "pass",
+        "runtime": {
+          "version": "155.0.8059.84",
+          "platform": "linux-x86_64",
+          "binarySha256": "cb19b59995072b86cc7f887b3b1c7ab1f63518a7f2ed9f0d33249e1a040e2c76"
+        },
+        "buildScope": "frozen-official-Chrome155-reference",
+        "nativeQualified": false,
+        "notes": "Actual packaged macro/workflow engine executes native product UI and authored DOM input/click side effects; every signed script verified.",
+        "packageHashMatchesLock": true,
+        "recordedScriptIntegrity": {
+          "unchangedScriptCount": 38,
+          "unchangedScriptsSha256": "463890c0b6ef10e872df62461ce57be766993649bd21d6ca604dfc3177b5c41f"
+        }
+      },
+      "floorp": {
+        "operationStatus": "not-run",
+        "reportPath": null,
+        "buildScope": "rebuilt-native158-pending",
+        "nativeQualified": false,
+        "runtime": {
+          "targetVersion": "158.0.1",
+          "targetRuntimeCommit": "7dd619742b25567e479eeda97ae071d10542ad0b"
+        },
+        "notes": "No completed actual-package primary report on rebuilt158 exists at this audit."
+      },
+      "blockerCategory": "rebuilt-native158-primary-pending"
+    },
+    {
+      "index": 19,
+      "id": "infppggnoaenmfagbfknfkancpbljcca",
+      "name": "Automa",
+      "area": "debugger",
+      "packageStatus": "frozen",
+      "version": "1.30.02",
+      "packageSha256": "54095ca7764675f1df6f62329412a75be33bb30968fc2184497d9d29188b2797",
+      "primaryOperation": "Record or run navigation/input/extraction on an authored page and verify the resulting side effects",
+      "nativeQualified": false,
+      "owner": "runtime_documents",
+      "nextStep": "Run the prepared unchanged-package primary runner on rebuilt158 with real background_worker; verify actual recorded input/click/extraction side effects and script inventory.",
+      "notes": null,
+      "chrome": {
+        "reportPath": "_dist/chrome-runtime-tests/corpus-automation-reference-Y1EpOJ/report.json",
+        "reportSha256": "2daeda0bbe7db90a3ca8bb7d87314cded370ada99f4b0fdc06025ded58e5f634",
+        "reportStage": "frozen-automation-primary-operation",
+        "evidenceKind": "actual-package-primary-operation",
+        "operationStatus": "primary-passed",
+        "reportedOperationStatus": "pass",
+        "runtime": {
+          "version": "155.0.8059.84",
+          "platform": "linux-x86_64",
+          "binarySha256": "cb19b59995072b86cc7f887b3b1c7ab1f63518a7f2ed9f0d33249e1a040e2c76"
+        },
+        "buildScope": "frozen-official-Chrome155-reference",
+        "nativeQualified": false,
+        "notes": "Actual packaged macro/workflow engine executes native product UI and authored DOM input/click side effects; every signed script verified.",
+        "packageHashMatchesLock": true,
+        "recordedScriptIntegrity": {
+          "unchangedScriptCount": 55,
+          "unchangedScriptsSha256": "6ee7fefc68a489972a7e235822f2c40f70d7968d55fdc0c1480cbef9e5ed480b"
+        }
+      },
+      "floorp": {
+        "operationStatus": "not-run",
+        "reportPath": null,
+        "buildScope": "rebuilt-native158-pending",
+        "nativeQualified": false,
+        "runtime": {
+          "targetVersion": "158.0.1",
+          "targetRuntimeCommit": "7dd619742b25567e479eeda97ae071d10542ad0b"
+        },
+        "notes": "No completed actual-package primary report on rebuilt158 exists at this audit."
+      },
+      "blockerCategory": "rebuilt-native158-primary-pending"
+    },
+    {
+      "index": 20,
+      "id": "hfjnppljknigdnnpocjjgdcfmnodoafe",
+      "name": "Browserflow",
+      "area": "debugger",
+      "packageStatus": "frozen",
+      "version": "1.0.6",
+      "packageSha256": "20116ba3b03b5a8edab7b22e1a051e9602fed70fc2a77f3bff155032ef24147d",
+      "primaryOperation": "Record or run navigation/input/extraction on an authored page and verify the resulting side effects",
+      "nativeQualified": false,
+      "owner": "runtime_documents",
+      "nextStep": "Run the prepared unchanged-package primary runner on rebuilt158 with real background_worker; verify actual recorded input/click/extraction side effects and script inventory.",
+      "notes": null,
+      "chrome": {
+        "reportPath": "_dist/chrome-runtime-tests/corpus-automation-reference-Y1EpOJ/report.json",
+        "reportSha256": "2daeda0bbe7db90a3ca8bb7d87314cded370ada99f4b0fdc06025ded58e5f634",
+        "reportStage": "frozen-automation-primary-operation",
+        "evidenceKind": "actual-package-primary-operation",
+        "operationStatus": "blocked-account",
+        "reportedOperationStatus": "blocked-account",
+        "runtime": {
+          "version": "155.0.8059.84",
+          "platform": "linux-x86_64",
+          "binarySha256": "cb19b59995072b86cc7f887b3b1c7ab1f63518a7f2ed9f0d33249e1a040e2c76"
+        },
+        "buildScope": "frozen-official-Chrome155-reference",
+        "nativeQualified": false,
+        "notes": "Actual native toolbar popup offers sign-in; no local recorder controls or executed workflow.",
+        "packageHashMatchesLock": true,
+        "recordedScriptIntegrity": {
+          "unchangedScriptCount": 4,
+          "unchangedScriptsSha256": "c1aa9954d8b1c244e7e0fad2551bc07a6942fb73230c34960c1bb8bf5e17044e"
+        }
+      },
+      "floorp": {
+        "operationStatus": "not-run",
+        "reportPath": null,
+        "buildScope": "rebuilt-native158-pending",
+        "nativeQualified": false,
+        "runtime": {
+          "targetVersion": "158.0.1",
+          "targetRuntimeCommit": "7dd619742b25567e479eeda97ae071d10542ad0b"
+        },
+        "notes": "No completed actual-package primary report on rebuilt158 exists at this audit."
+      },
+      "blockerCategory": "account-required"
+    },
+    {
+      "index": 21,
+      "id": "jnhgnonknehpejjnehehllkliplmbmhn",
+      "name": "Web Scraper",
+      "area": "debugger",
+      "packageStatus": "frozen",
+      "version": "1.111.13",
+      "packageSha256": "646757324f52d3ad8b7fbd3e66e89ce3936f0b6eba5f645da2bf27c6f0d94294",
+      "primaryOperation": "Record or run navigation/input/extraction on an authored page and verify the resulting side effects",
+      "nativeQualified": false,
+      "owner": "runtime_documents",
+      "nextStep": "Run the prepared unchanged-package primary runner on rebuilt158 with real background_worker; verify actual recorded input/click/extraction side effects and script inventory.",
+      "notes": null,
+      "chrome": {
+        "reportPath": "_dist/chrome-runtime-tests/corpus-webscraper-reference-0ZWUxE/report.json",
+        "reportSha256": "b5fe24a431bca0e33dab3be2ff6f6366d2f16676b249efae5a3bb7c593813905",
+        "reportStage": "frozen-webscraper-primary-operation",
+        "evidenceKind": "actual-package-primary-operation",
+        "operationStatus": "primary-passed",
+        "reportedOperationStatus": "pass",
+        "runtime": {
+          "version": "155.0.8059.84",
+          "platform": "linux-x86_64",
+          "binarySha256": "cb19b59995072b86cc7f887b3b1c7ab1f63518a7f2ed9f0d33249e1a040e2c76"
+        },
+        "buildScope": "frozen-official-Chrome155-reference",
+        "nativeQualified": false,
+        "notes": "Actual DevTools panel imports sitemap and scrapes exact Apple3.25/Pear4.50 rows from authored source URL.",
+        "packageHashMatchesLock": true,
+        "recordedScriptIntegrity": {
+          "unchangedScriptCount": 11,
+          "unchangedScriptsSha256": "6cc0248ab15a3f15b8ba0f393c8ae75e94af00f5d6cffa0f1ff597936cc83ffd"
+        }
+      },
+      "floorp": {
+        "operationStatus": "not-run",
+        "reportPath": null,
+        "buildScope": "rebuilt-native158-pending",
+        "nativeQualified": false,
+        "runtime": {
+          "targetVersion": "158.0.1",
+          "targetRuntimeCommit": "7dd619742b25567e479eeda97ae071d10542ad0b"
+        },
+        "notes": "No completed actual-package primary report on rebuilt158 exists at this audit."
+      },
+      "blockerCategory": "rebuilt-native158-primary-pending"
+    },
+    {
+      "index": 22,
+      "id": "djeegiggegleadkkbgopoonhjimgehda",
+      "name": "Puppeteer Recorder",
+      "area": "debugger",
+      "packageStatus": "unavailable",
+      "version": null,
+      "packageSha256": null,
+      "primaryOperation": "Record or run navigation/input/extraction on an authored page and verify the resulting side effects",
+      "nativeQualified": false,
+      "owner": "root",
+      "nextStep": "Retrieve the same selected genuine signed package through normal verified transport; retain this row in the denominator until it is available.",
+      "notes": null,
+      "blockerCategory": "package-unavailable",
+      "blocker": "Error: Store response 503",
+      "chrome": {
+        "operationStatus": "blocked-package",
+        "reportPath": null,
+        "buildScope": "not-run",
+        "nativeQualified": false
+      },
+      "floorp": {
+        "operationStatus": "blocked-package",
+        "reportPath": null,
+        "buildScope": "not-run",
+        "nativeQualified": false
+      }
+    },
+    {
+      "index": 23,
+      "id": "fmkadmapgofadopljbjfkapdkoienihi",
+      "name": "React Developer Tools",
+      "area": "devtools",
+      "packageStatus": "frozen",
+      "version": "8.0.0",
+      "packageSha256": "d92e1122a16362cc5510927068a5b1a8d50b43e1f3be25c3117f7c005807b302",
+      "primaryOperation": "Inspect authored application component or state data and observe a controlled update",
+      "nativeQualified": false,
+      "owner": "runtime_assessment",
+      "nextStep": "Inspect the official framework application with the real native extension DevTools panel; observe a controlled component/state update on rebuilt158 and verify uninstall.",
+      "notes": null,
+      "chrome": {
+        "reportPath": "_dist/chrome-runtime-tests/corpus-devtools-reference-33OsFL/report.json",
+        "reportSha256": "a0c4b70d65314cfc33b88708352199defeb289b74bcf05605150c527edf32791",
+        "reportStage": "actual-package-devtools-primary-operation",
+        "evidenceKind": "actual-package-primary-operation",
+        "operationStatus": "primary-passed",
+        "reportedOperationStatus": "passed",
+        "runtime": {
+          "version": "155.0.8059.84",
+          "platform": "linux-x86_64",
+          "binarySha256": "cb19b59995072b86cc7f887b3b1c7ab1f63518a7f2ed9f0d33249e1a040e2c76"
+        },
+        "buildScope": "frozen-official-Chrome155-reference",
+        "nativeQualified": false,
+        "notes": "Actual React19.2.6 component tree props count0→1 after native authored app button; uninstall removes panel.",
+        "packageHashMatchesLock": true,
+        "recordedScriptIntegrity": {
+          "unchangedScriptCount": 13,
+          "unchangedScriptsSha256": "1fbe01c5d1349488ee066bb0f056344c38e9c1f8c07bf2295c7269fa3502cabc"
+        }
+      },
+      "floorp": {
+        "reportPath": "_dist/chrome-runtime-tests/corpus-devtools-floorp-dzeheofs/report.json",
+        "reportSha256": "0ad8acb01160000ab0c3dd72624fa7af989ba144b47ae5faa758d3211b825a22",
+        "reportStage": "actual-package-devtools-primary-operation",
+        "evidenceKind": "actual-package-primary-operation",
+        "operationStatus": "primary-passed",
+        "reportedOperationStatus": "passed",
+        "runtime": {
+          "version": "157.0",
+          "buildId": "20260926171135",
+          "nativeWorkerPolicy": false
+        },
+        "buildScope": "historical-prebuilt157-not-native158",
+        "nativeQualified": false,
+        "notes": "Real Gecko toolbox Components panel observes native app props0→1 and uninstall cleanup; old157 fallback only.",
+        "packageHashMatchesLock": true,
+        "recordedScriptIntegrity": {
+          "unchangedScriptCount": 13,
+          "unchangedScriptsSha256": "1fbe01c5d1349488ee066bb0f056344c38e9c1f8c07bf2295c7269fa3502cabc"
+        }
+      },
+      "blockerCategory": "rebuilt-native158-primary-pending"
+    },
+    {
+      "index": 24,
+      "id": "nhdogjmejiglipccpnnnanhbledajbpd",
+      "name": "Vue.js devtools",
+      "area": "devtools",
+      "packageStatus": "frozen",
+      "version": "7.7.7",
+      "packageSha256": "bf565c23fd9e2c074ed47144d0504336f787e5f105388f73c62846dee92f0124",
+      "primaryOperation": "Inspect authored application component or state data and observe a controlled update",
+      "nativeQualified": false,
+      "owner": "runtime_assessment",
+      "nextStep": "Run the genuine official-Vue application and unchanged frozen DevTools package on the authenticated rebuilt158 candidate; verify native panel count0→1 and uninstall negative control.",
+      "notes": "Chrome reference full primary passes with official Vue3.5.44; no Floorp native158 primary has run.",
+      "chrome": {
+        "reportPath": "_dist/chrome-runtime-tests/corpus-devtools-reference-AOpsfa/report.json",
+        "reportSha256": "1c7027be9eadf7bfd5174488621862016a9a56de815271d9db7900a512a225ba",
+        "reportStage": "actual-package-devtools-primary-operation",
+        "evidenceKind": "actual-package-primary-operation",
+        "operationStatus": "primary-passed",
+        "reportedOperationStatus": "passed",
+        "primaryOperationAttempted": true,
+        "runtime": {
+          "version": "155.0.8059.84",
+          "platform": "linux-x86_64",
+          "binarySha256": "cb19b59995072b86cc7f887b3b1c7ab1f63518a7f2ed9f0d33249e1a040e2c76"
+        },
+        "buildScope": "frozen-official-Chrome155-reference",
+        "nativeQualified": false,
+        "packageHashMatchesLock": true,
+        "recordedScriptIntegrity": {
+          "unchangedScriptCount": 52,
+          "unchangedScriptsSha256": "c117175ef29e10f883b8baca98aacca5c9aaa83aff6727de1fc8cba84bcdb4c8"
+        },
+        "notes": "Genuine headed Chrome155 native Vue panel inspects the real official Vue3.5.44 component tree and authored count0, observes real native app input update the same prop to1, and disappears after uninstall. All52 signed extension scripts unchanged; official framework archive/vendor integrity verified."
+      },
+      "floorp": {
+        "operationStatus": "not-run",
+        "reportPath": null,
+        "buildScope": "rebuilt-native158-pending",
+        "nativeQualified": false,
+        "runtime": {
+          "targetVersion": "158.0.1",
+          "targetRuntimeCommit": "7dd619742b25567e479eeda97ae071d10542ad0b"
+        },
+        "notes": "No completed actual-package primary report on rebuilt158 exists at this audit."
+      },
+      "blockerCategory": "rebuilt-native158-primary-pending",
+      "history": [
+        {
+          "browser": "chrome",
+          "observation": {
+            "reportPath": "_dist/chrome-runtime-tests/corpus-reference-RxxeDj/report.json",
+            "reportSha256": "e2c3ee55c14901736303c4142fabf3b33bb41b7b284be8e84979536289dd9c9e",
+            "reportStage": "actual-package-ui-inspection",
+            "evidenceKind": "ui-inventory",
+            "operationStatus": "not-run",
+            "reportedOperationStatus": "not-run",
+            "runtime": {
+              "version": "155.0.8059.84",
+              "platform": "linux-x86_64",
+              "binarySha256": "cb19b59995072b86cc7f887b3b1c7ab1f63518a7f2ed9f0d33249e1a040e2c76"
+            },
+            "buildScope": "frozen-official-Chrome155-reference",
+            "nativeQualified": false,
+            "notes": "Read-only entry inventory; no primary operation or actual authored side effects demonstrated."
+          },
+          "supersededReason": "Official Vue archive retrieval recovered through normal verified vendor transport; a genuine full primary supersedes the earlier UI inventory."
+        }
+      ]
+    },
+    {
+      "index": 25,
+      "id": "lmhkpmbekcpmknklioeibfkpmmfibljd",
+      "name": "Redux DevTools",
+      "area": "devtools",
+      "packageStatus": "frozen",
+      "version": "3.2.10",
+      "packageSha256": "2233508907594b05bc643372531253b9306e86cf5ca548e5b4e7707f347860a3",
+      "primaryOperation": "Inspect authored application component or state data and observe a controlled update",
+      "nativeQualified": false,
+      "owner": "runtime_assessment",
+      "nextStep": "Inspect the official framework application with the real native extension DevTools panel; observe a controlled component/state update on rebuilt158 and verify uninstall.",
+      "notes": null,
+      "chrome": {
+        "reportPath": "_dist/chrome-runtime-tests/corpus-devtools-reference-33OsFL/report.json",
+        "reportSha256": "a0c4b70d65314cfc33b88708352199defeb289b74bcf05605150c527edf32791",
+        "reportStage": "actual-package-devtools-primary-operation",
+        "evidenceKind": "actual-package-primary-operation",
+        "operationStatus": "primary-passed",
+        "reportedOperationStatus": "passed",
+        "runtime": {
+          "version": "155.0.8059.84",
+          "platform": "linux-x86_64",
+          "binarySha256": "cb19b59995072b86cc7f887b3b1c7ab1f63518a7f2ed9f0d33249e1a040e2c76"
+        },
+        "buildScope": "frozen-official-Chrome155-reference",
+        "nativeQualified": false,
+        "notes": "Actual native Redux extension panel observes state0→1 and AUTHORED_INCREMENT action after native app button; all7 signed scripts unchanged.",
+        "packageHashMatchesLock": true,
+        "recordedScriptIntegrity": {
+          "unchangedScriptCount": 7,
+          "unchangedScriptsSha256": "db60e10a0f7bde927be9328f1f2444e06d3e072e07470bf45639f2f8cee7c8fa"
+        }
+      },
+      "floorp": {
+        "reportPath": "_dist/chrome-runtime-tests/corpus-devtools-floorp-dzeheofs/report.json",
+        "reportSha256": "0ad8acb01160000ab0c3dd72624fa7af989ba144b47ae5faa758d3211b825a22",
+        "reportStage": "actual-package-devtools-primary-operation",
+        "evidenceKind": "actual-package-primary-operation",
+        "operationStatus": "primary-passed",
+        "reportedOperationStatus": "passed",
+        "runtime": {
+          "version": "157.0",
+          "buildId": "20260926171135",
+          "nativeWorkerPolicy": false
+        },
+        "buildScope": "historical-prebuilt157-not-native158",
+        "nativeQualified": false,
+        "notes": "Actual native Gecko Redux panel observes state0→1 and action history; same official app fixture bytes as Chrome,7 unchanged scripts, old157 fallback only.",
+        "packageHashMatchesLock": true,
+        "recordedScriptIntegrity": {
+          "unchangedScriptCount": 7,
+          "unchangedScriptsSha256": "db60e10a0f7bde927be9328f1f2444e06d3e072e07470bf45639f2f8cee7c8fa"
+        }
+      },
+      "blockerCategory": "rebuilt-native158-primary-pending"
+    },
+    {
+      "index": 26,
+      "id": "mdnleldcmiljblolnjhpnblkcekpdkpa",
+      "name": "Requestly",
+      "area": "network",
+      "packageStatus": "frozen",
+      "version": "26.9.29",
+      "packageSha256": "0bcd9589dba665d639db8f8eaa8a4656d8f873be74e5bcc91cc7bc953b702a23",
+      "primaryOperation": "Apply advertised filter/header/metadata behavior to a controlled page/request and verify the effect",
+      "nativeQualified": false,
+      "owner": "mv3_manifest",
+      "nextStep": "Run actual product UI and controlled network side effects on rebuilt158, preserving the reference proxy/bypass/restore or filter/header recipe. Resolve product/account prerequisites explicitly.",
+      "notes": null,
+      "chrome": {
+        "reportPath": "_dist/chrome-runtime-tests/corpus-network-reference-jj2pgK/report.json",
+        "reportSha256": "4e57c9b1040f10e12bc44a179a5d087a7694c0e9fe023f86cad9b9c620741f03",
+        "reportStage": "actual-package-primary-operation",
+        "evidenceKind": "actual-package-primary-operation",
+        "operationStatus": "blocked-product-restriction",
+        "reportedOperationStatus": "blocked-product-automation-restriction",
+        "runtime": {
+          "version": "155.0.8059.84",
+          "platform": "linux-x86_64",
+          "binarySha256": "cb19b59995072b86cc7f887b3b1c7ab1f63518a7f2ed9f0d33249e1a040e2c76"
+        },
+        "buildScope": "frozen-official-Chrome155-reference",
+        "nativeQualified": false,
+        "notes": "Actual remote editor explicitly forbids automated interaction; no primary rule-effect pass.",
+        "packageHashMatchesLock": true
+      },
+      "floorp": {
+        "operationStatus": "not-run",
+        "reportPath": null,
+        "buildScope": "rebuilt-native158-pending",
+        "nativeQualified": false,
+        "runtime": {
+          "targetVersion": "158.0.1",
+          "targetRuntimeCommit": "7dd619742b25567e479eeda97ae071d10542ad0b"
+        },
+        "notes": "No completed actual-package primary report on rebuilt158 exists at this audit."
+      },
+      "blockerCategory": "product-restriction"
+    },
+    {
+      "index": 27,
+      "id": "idgpnmonknjnojddfkpgkljpfnnfcklj",
+      "name": "ModHeader",
+      "area": "network",
+      "packageStatus": "unavailable",
+      "version": null,
+      "packageSha256": null,
+      "primaryOperation": "Apply advertised filter/header/metadata behavior to a controlled page/request and verify the effect",
+      "nativeQualified": false,
+      "owner": "root",
+      "nextStep": "Retrieve the same selected genuine signed package through normal verified transport; retain this row in the denominator until it is available.",
+      "notes": null,
+      "blockerCategory": "package-unavailable",
+      "blocker": "Error: Store response 503",
+      "chrome": {
+        "operationStatus": "blocked-package",
+        "reportPath": null,
+        "buildScope": "not-run",
+        "nativeQualified": false
+      },
+      "floorp": {
+        "operationStatus": "blocked-package",
+        "reportPath": null,
+        "buildScope": "not-run",
+        "nativeQualified": false
+      }
+    },
+    {
+      "index": 28,
+      "id": "djflhoibgkdhkhhcedjiklpkjnoahfmg",
+      "name": "User Agent Switcher",
+      "area": "network",
+      "packageStatus": "frozen",
+      "version": "2.0.2",
+      "packageSha256": "f7576f9019b16b1981b5c50f22b735b5cc8dfc3024c9eca96816b266bc716344",
+      "primaryOperation": "Apply advertised filter/header/metadata behavior to a controlled page/request and verify the effect",
+      "nativeQualified": false,
+      "owner": "mv3_manifest",
+      "nextStep": "Run actual product UI and controlled network side effects on rebuilt158, preserving the reference proxy/bypass/restore or filter/header recipe. Resolve product/account prerequisites explicitly.",
+      "notes": null,
+      "chrome": {
+        "reportPath": "_dist/chrome-runtime-tests/corpus-network-reference-1vGmIs/report.json",
+        "reportSha256": "c2de32a3fc9a207ea10818f0d10b7f3dc858bab48124efb42e9941c3e6285f00",
+        "reportStage": "actual-package-primary-operation",
+        "evidenceKind": "actual-package-primary-operation",
+        "operationStatus": "primary-passed",
+        "reportedOperationStatus": "passed",
+        "runtime": {
+          "version": "155.0.8059.84",
+          "platform": "linux-x86_64",
+          "binarySha256": "cb19b59995072b86cc7f887b3b1c7ab1f63518a7f2ed9f0d33249e1a040e2c76"
+        },
+        "buildScope": "frozen-official-Chrome155-reference",
+        "nativeQualified": false,
+        "notes": null,
+        "packageHashMatchesLock": true
+      },
+      "floorp": {
+        "reportPath": "_dist/chrome-runtime-tests/corpus-network-floorp-ma5__xwn/report.json",
+        "reportSha256": "898870bdd38c13fefb16ca209954cb53ce424d509e9f4bcab9cfb0329ddac8a1",
+        "reportStage": "actual-package-primary-operation",
+        "evidenceKind": "actual-package-primary-operation",
+        "operationStatus": "failed-runtime-api",
+        "reportedOperationStatus": "failed",
+        "runtime": {
+          "version": "157.0",
+          "buildId": "20260926171135",
+          "nativeWorkerPolicy": false,
+          "workerWebIDLCompiled": false
+        },
+        "buildScope": "historical-prebuilt157-not-native158",
+        "nativeQualified": false,
+        "notes": "Native trusted toolbar event and popup load observed; product remains empty on old157 DOM background fallback. Primary side effect absent.",
+        "packageHashMatchesLock": true,
+        "recordedScriptIntegrity": {
+          "unchangedScriptCount": 5,
+          "unchangedScriptsSha256": "e125f024d1288598e599d53c9bd0d62483e492d249a10a9da6388f30dbfc1822"
+        }
+      },
+      "blockerCategory": "historical-runtime-api-failure"
+    },
+    {
+      "index": 29,
+      "id": "hlkenndednhfkekhgcdicdfddnkalmdm",
+      "name": "Cookie Editor",
+      "area": "storage",
+      "packageStatus": "frozen",
+      "version": "1.13.0",
+      "packageSha256": "754a072a5b6327d27a0d4d6e299a8e28b2a5fafbd595ccb6bfcd4090ae8eb038",
+      "primaryOperation": "Create, edit, and delete a cookie on an authored page",
+      "nativeQualified": false,
+      "owner": "root",
+      "nextStep": "Repeat unchanged-package actual native product UI and exact side effects on rebuilt158; old157 successes do not qualify158.",
+      "notes": null,
+      "chrome": {
+        "reportPath": "_dist/chrome-runtime-tests/corpus-browser-tools-reference-MM5ALn/report.json",
+        "reportSha256": "c1cd0e006801dd6b5c89fd07be1c69dcd5f1e422c1110e7e2a740523c8658848",
+        "reportStage": "actual-package-primary-operation",
+        "evidenceKind": "actual-package-primary-operation",
+        "operationStatus": "primary-passed",
+        "reportedOperationStatus": "passed",
+        "runtime": {
+          "version": "155.0.8059.84",
+          "platform": "linux-x86_64",
+          "binarySha256": "cb19b59995072b86cc7f887b3b1c7ab1f63518a7f2ed9f0d33249e1a040e2c76"
+        },
+        "buildScope": "frozen-official-Chrome155-reference",
+        "nativeQualified": false,
+        "notes": null,
+        "packageHashMatchesLock": true,
+        "recordedScriptIntegrity": {
+          "unchangedScriptCount": 31,
+          "unchangedScriptsSha256": "577ae437be25f306d8963c33eeec06fbbcc332e3852cabf9eaaa7ac01e698efa"
+        }
+      },
+      "floorp": {
+        "reportPath": "_dist/chrome-runtime-tests/corpus-browser-tools-floorp-1792377433518/report.json",
+        "reportSha256": "df044b0b07e3fd00f41730b648c70946928fccce0b9ca4182362316a77636c67",
+        "reportStage": "actual-package-primary-operation",
+        "evidenceKind": "actual-package-primary-operation",
+        "operationStatus": "failed-runtime-api",
+        "reportedOperationStatus": "failed",
+        "runtime": {
+          "version": "157.0",
+          "buildId": "20260926171135",
+          "workerPolicy": false
+        },
+        "buildScope": "historical-prebuilt157-not-native158",
+        "nativeQualified": false,
+        "notes": "Actual trusted widget opens static popup; product initialization fails PromisedResponseOutOfScope on old157 fallback.",
+        "packageHashMatchesLock": true,
+        "recordedScriptIntegrity": {
+          "unchangedScriptCount": 31,
+          "unchangedScriptsSha256": "577ae437be25f306d8963c33eeec06fbbcc332e3852cabf9eaaa7ac01e698efa"
+        }
+      },
+      "blockerCategory": "historical-runtime-api-failure"
+    },
+    {
+      "index": 30,
+      "id": "nngceckbapebfimnlniiiahkandclblb",
+      "name": "Bitwarden",
+      "area": "nativeIdentity",
+      "packageStatus": "frozen",
+      "version": "2026.10.0",
+      "packageSha256": "f2feb7fc46d2550bef9b69af1cc358aea26b90a947645f9de16ec14d9296ef69",
+      "primaryOperation": "Unlock a test vault or companion session and fill authored login fields",
+      "nativeQualified": false,
+      "owner": "sidepanel_bridge",
+      "nextStep": "Repeat the same genuine pinned Vaultwarden/local TLS vault recipe with the unchanged package on rebuilt158 native Worker. Use only ephemeral authored local credentials; do not export private credential files.",
+      "notes": null,
+      "chrome": {
+        "reportPath": "_dist/chrome-runtime-tests/vaultwarden-p0xza76e/chrome-recipe-proof/report.json",
+        "reportSha256": "c05dc97e6c896d74ff6fe4c25d5de3c876e4abf4eff77018eb51e0df1dd1c7c5",
+        "reportStage": "actual-Bitwarden-primary-operation",
+        "evidenceKind": "actual-package-primary-operation",
+        "operationStatus": "primary-passed",
+        "reportedOperationStatus": true,
+        "runtime": {
+          "version": "155.0.8059.84",
+          "platform": "linux-x86_64",
+          "binarySha256": "cb19b59995072b86cc7f887b3b1c7ab1f63518a7f2ed9f0d33249e1a040e2c76"
+        },
+        "buildScope": "frozen-official-Chrome155-reference",
+        "nativeQualified": false,
+        "notes": "Genuine pinned Vaultwarden1.37.4 official UI account/vault; actual item Save and native Autofill fill initially-empty authored HTTPS login fields exactly; all27 vendor scripts unchanged.",
+        "packageHashMatchesLock": true
+      },
+      "floorp": {
+        "reportPath": "_dist/chrome-runtime-tests/vaultwarden-1h03rpj8/floorp-primary/report.json",
+        "reportSha256": "d97cf53bfaab95472d929fe7612c794d4e377b94c33055da8d552628dfb7b5c5",
+        "reportStage": null,
+        "evidenceKind": "actual-package-primary-operation",
+        "operationStatus": "failed-runtime-api",
+        "reportedOperationStatus": false,
+        "runtime": {
+          "version": "157.0",
+          "buildId": "20260926171135"
+        },
+        "buildScope": "historical-prebuilt157-not-native158",
+        "nativeQualified": false,
+        "notes": "Old157 background importScripts unavailable and popup closes; captured final context-disappearance error is downstream. Authored HTTPS fixture itself loads and is initially empty; fill not demonstrated.",
+        "packageHashMatchesLock": true,
+        "recordedScriptIntegrity": {
+          "unchangedScriptCount": 27,
+          "unchangedScriptsSha256": "bc80437401ff1219b73f5b8a85bc8ffc4affa2bc02a2685c5dee7a1bab0236a3"
+        }
+      },
+      "blockerCategory": "historical-runtime-api-failure"
+    },
+    {
+      "index": 31,
+      "id": "aeblfdkhhhdcdjpifhhbdiojplfjncoa",
+      "name": "1Password",
+      "area": "nativeIdentity",
+      "packageStatus": "frozen",
+      "version": "8.12.41.1",
+      "packageSha256": "ba9e031604781012f6032ffc8e16fba400090ed0c085d02b8e939556f95f8fa8",
+      "primaryOperation": "Unlock a test vault or companion session and fill authored login fields",
+      "nativeQualified": false,
+      "owner": "root",
+      "nextStep": "Establish an authorized test vault/account or explicitly documented local/offline product route, then perform the frozen primary operation through genuine product UI on both browsers. UI inventory alone is insufficient.",
+      "notes": "Observed account-add/sign-in gate after genuine native Welcome Continue; selected vault-unlock/fill primary remains not attempted.",
+      "chrome": {
+        "reportPath": "_dist/chrome-runtime-tests/corpus-identity-prerequisites-reference-UCJhRq/report.json",
+        "reportSha256": "ed7785fbf77351e8ffd5bd5b30a650006d0e2d631af4e88dfb7c77cc1f65d4c0",
+        "reportStage": "actual-package-prerequisite-only",
+        "evidenceKind": "actual-package-prerequisite-only",
+        "operationStatus": "not-attempted-account-gate",
+        "reportedOperationStatus": "not-attempted",
+        "runtime": {
+          "version": "155.0.8059.84",
+          "platform": "linux-x86_64",
+          "binarySha256": "cb19b59995072b86cc7f887b3b1c7ab1f63518a7f2ed9f0d33249e1a040e2c76"
+        },
+        "buildScope": "frozen-official-Chrome155-reference",
+        "nativeQualified": false,
+        "notes": "Actual native toolbar action and native Welcome Continue reach Add account: If you have a1Password account, sign in to get started; Create your1Password account / Sign in.391 signed scripts unchanged. No authentication or vault fill attempted.",
+        "packageHashMatchesLock": true,
+        "recordedScriptIntegrity": {
+          "unchangedScriptCount": 391,
+          "unchangedScriptsSha256": "2ed32b91fa9084a1900e4d1198211265b271d51d48eda0366641c4f5957bdf34"
+        },
+        "primaryOperationAttempted": false,
+        "observedPrerequisiteStatus": "observed-account-gate"
+      },
+      "floorp": {
+        "operationStatus": "not-run",
+        "reportPath": null,
+        "buildScope": "rebuilt-native158-pending",
+        "nativeQualified": false,
+        "runtime": {
+          "targetVersion": "158.0.1",
+          "targetRuntimeCommit": "7dd619742b25567e479eeda97ae071d10542ad0b"
+        },
+        "notes": "No completed actual-package primary report on rebuilt158 exists at this audit."
+      },
+      "blockerCategory": "account-required"
+    },
+    {
+      "index": 32,
+      "id": "hdokiejnpimakedhajhdlcegeplioahd",
+      "name": "LastPass",
+      "area": "nativeIdentity",
+      "packageStatus": "frozen",
+      "version": "4.156.0",
+      "packageSha256": "99d3d531aa67b8ef2269feb373776471713059bcb3aa61aeea0b03996ceec7b3",
+      "primaryOperation": "Unlock a test vault or companion session and fill authored login fields",
+      "nativeQualified": false,
+      "owner": "root",
+      "nextStep": "Establish an authorized test vault/account or explicitly documented local/offline product route, then perform the frozen primary operation through genuine product UI on both browsers. UI inventory alone is insufficient.",
+      "notes": "Observed explicit login/master-password form in genuine native popup; selected vault-unlock/fill primary remains not attempted.",
+      "chrome": {
+        "reportPath": "_dist/chrome-runtime-tests/corpus-identity-prerequisites-reference-UCJhRq/report.json",
+        "reportSha256": "ed7785fbf77351e8ffd5bd5b30a650006d0e2d631af4e88dfb7c77cc1f65d4c0",
+        "reportStage": "actual-package-prerequisite-only",
+        "evidenceKind": "actual-package-prerequisite-only",
+        "operationStatus": "not-attempted-account-gate",
+        "reportedOperationStatus": "not-attempted",
+        "runtime": {
+          "version": "155.0.8059.84",
+          "platform": "linux-x86_64",
+          "binarySha256": "cb19b59995072b86cc7f887b3b1c7ab1f63518a7f2ed9f0d33249e1a040e2c76"
+        },
+        "buildScope": "frozen-official-Chrome155-reference",
+        "nativeQualified": false,
+        "notes": "Actual native toolbar popup displays LOG IN / OR CREATE AN ACCOUNT, Email address and Master password.74 signed scripts unchanged. No credentials entered and no vault fill attempted.",
+        "packageHashMatchesLock": true,
+        "recordedScriptIntegrity": {
+          "unchangedScriptCount": 74,
+          "unchangedScriptsSha256": "274ed572978d7377a4b40f6297a46c549304bd613a20f3bd333819db4765bf96"
+        },
+        "primaryOperationAttempted": false,
+        "observedPrerequisiteStatus": "observed-account-gate"
+      },
+      "floorp": {
+        "operationStatus": "not-run",
+        "reportPath": null,
+        "buildScope": "rebuilt-native158-pending",
+        "nativeQualified": false,
+        "runtime": {
+          "targetVersion": "158.0.1",
+          "targetRuntimeCommit": "7dd619742b25567e479eeda97ae071d10542ad0b"
+        },
+        "notes": "No completed actual-package primary report on rebuilt158 exists at this audit."
+      },
+      "blockerCategory": "account-required"
+    },
+    {
+      "index": 33,
+      "id": "ghmbeldphafepmbegfdlkpapadhbakde",
+      "name": "Proton Pass",
+      "area": "nativeIdentity",
+      "packageStatus": "frozen",
+      "version": "1.42.0",
+      "packageSha256": "6edf8bb48ca05d184f003a3fa78a2a51059dbb1bd5f85d567bfa3d887a9d3f12",
+      "primaryOperation": "Unlock a test vault or companion session and fill authored login fields",
+      "nativeQualified": false,
+      "owner": "root",
+      "nextStep": "Wait for normal verified vendor onboarding transport to recover, then advance genuine non-auth setup to inspect the actual account/offline prerequisite; perform fill only with an authorized test vault.",
+      "notes": "External onboarding availability is intermittent: UCJhRq reached Step1;6Sv72f returns upstream failure. No account requirement is inferred from the URL or product name.",
+      "chrome": {
+        "reportPath": "_dist/chrome-runtime-tests/corpus-identity-prerequisites-reference-6Sv72f/report.json",
+        "reportSha256": "0f662664a293bf58a40a5a041a19f303b1e00c1d23c0c5f5a4803ac67cd0b989",
+        "reportStage": "actual-package-prerequisite-only",
+        "evidenceKind": "actual-package-prerequisite-only",
+        "operationStatus": "blocked-external-service",
+        "reportedOperationStatus": "not-attempted",
+        "runtime": {
+          "version": "155.0.8059.84",
+          "platform": "linux-x86_64",
+          "binarySha256": "cb19b59995072b86cc7f887b3b1c7ab1f63518a7f2ed9f0d33249e1a040e2c76"
+        },
+        "buildScope": "frozen-official-Chrome155-reference",
+        "nativeQualified": false,
+        "notes": "Actual native action opens genuine account.proton.me/pass/extension-onboarding; native DOM shows Envoy upstream transport failure and faviconHTTP503.152 signed scripts unchanged. EarlierUCJhRq briefly rendered Step1 Pin the extension / Continue; no mandatory-account gate or primary fill was demonstrated. Normal environment proxy/private public roots preserved, no TLS bypass.",
+        "packageHashMatchesLock": true,
+        "recordedScriptIntegrity": {
+          "unchangedScriptCount": 152,
+          "unchangedScriptsSha256": "747e37ea1d2d18869ec0ad91d2814d5f8db7d639835f040fb65026cd01cd7df4"
+        },
+        "primaryOperationAttempted": false,
+        "observedPrerequisiteStatus": "blocked-external-service"
+      },
+      "floorp": {
+        "operationStatus": "not-run",
+        "reportPath": null,
+        "buildScope": "rebuilt-native158-pending",
+        "nativeQualified": false,
+        "runtime": {
+          "targetVersion": "158.0.1",
+          "targetRuntimeCommit": "7dd619742b25567e479eeda97ae071d10542ad0b"
+        },
+        "notes": "No completed actual-package primary report on rebuilt158 exists at this audit."
+      },
+      "blockerCategory": "external-service"
+    },
+    {
+      "index": 34,
+      "id": "oeopbcgkkoapgobdbedcemjljbihmemj",
+      "name": "Checker Plus for Gmail",
+      "area": "identity",
+      "packageStatus": "frozen",
+      "version": "36.6",
+      "packageSha256": "2b483dc168f25882cffbffb471244395c4f4a50bad013c32274550580e8fad0b",
+      "primaryOperation": "Complete browser OAuth and read test-account notification state",
+      "nativeQualified": false,
+      "owner": "root",
+      "nextStep": "Establish an authorized test vault/account or explicitly documented local/offline product route, then perform the frozen primary operation through genuine product UI on both browsers. UI inventory alone is insufficient.",
+      "notes": "Observed account unavailable in genuine native popup; OAuth and test-account notification state not attempted. Do not infer a stronger mandatory-account contract from the product name.",
+      "chrome": {
+        "reportPath": "_dist/chrome-runtime-tests/corpus-identity-prerequisites-reference-UCJhRq/report.json",
+        "reportSha256": "ed7785fbf77351e8ffd5bd5b30a650006d0e2d631af4e88dfb7c77cc1f65d4c0",
+        "reportStage": "actual-package-prerequisite-only",
+        "evidenceKind": "actual-package-prerequisite-only",
+        "operationStatus": "not-attempted-account-unavailable",
+        "reportedOperationStatus": "not-attempted",
+        "runtime": {
+          "version": "155.0.8059.84",
+          "platform": "linux-x86_64",
+          "binarySha256": "cb19b59995072b86cc7f887b3b1c7ab1f63518a7f2ed9f0d33249e1a040e2c76"
+        },
+        "buildScope": "frozen-official-Chrome155-reference",
+        "nativeQualified": false,
+        "notes": "Actual native popup explicitly reports Problem detecting account with Sign out / in, Help, Options and Refresh.30 signed scripts unchanged. This establishes unavailable account state, not a completed browser OAuth or notification-state read; mandatory sign-in wording was not observed.",
+        "packageHashMatchesLock": true,
+        "recordedScriptIntegrity": {
+          "unchangedScriptCount": 30,
+          "unchangedScriptsSha256": "145c299f45456100a6880fc3ba157169309a34ccaef16ba8cef9dda8010356a7"
+        },
+        "primaryOperationAttempted": false,
+        "observedPrerequisiteStatus": "observed-account-unavailable"
+      },
+      "floorp": {
+        "operationStatus": "not-run",
+        "reportPath": null,
+        "buildScope": "rebuilt-native158-pending",
+        "nativeQualified": false,
+        "runtime": {
+          "targetVersion": "158.0.1",
+          "targetRuntimeCommit": "7dd619742b25567e479eeda97ae071d10542ad0b"
+        },
+        "notes": "No completed actual-package primary report on rebuilt158 exists at this audit."
+      },
+      "blockerCategory": "account-unavailable"
+    },
+    {
+      "index": 35,
+      "id": "oldceeleldhonbafppcapldpdifcinji",
+      "name": "LanguageTool",
+      "area": "contentScript",
+      "packageStatus": "frozen",
+      "version": "11.4.0",
+      "packageSha256": "fc030bc22930cd85400309f18a8e3824ba9e64f8025739b24379d3077633f5d6",
+      "primaryOperation": "Apply the advertised text/style/player transformation to an authored page and verify it after navigation",
+      "nativeQualified": false,
+      "owner": "mv3_manifest",
+      "nextStep": "Re-run the unchanged package with the authenticated rebuilt158 candidate, genuine background_worker and actual native controls; repeat correction/navigation/uninstall negatives. Chrome reference pass does not qualify Floorp.",
+      "notes": "Chrome reference full primary passes through the actual public LanguageTool service; no native158 operation is qualified.",
+      "chrome": {
+        "reportPath": "_dist/chrome-runtime-tests/corpus-languagetool-reference-m6nshupw/report.json",
+        "reportSha256": "8e158e3847ba45c17edd003b7878b52e714acb124b224fc533d7ca72fcd01ca2",
+        "reportStage": "actual-package-primary-operation",
+        "evidenceKind": "actual-package-primary-operation",
+        "operationStatus": "primary-passed",
+        "reportedOperationStatus": "passed",
+        "runtime": {
+          "version": "155.0.8059.84",
+          "platform": "linux-x86_64",
+          "binarySha256": "cb19b59995072b86cc7f887b3b1c7ab1f63518a7f2ed9f0d33249e1a040e2c76"
+        },
+        "buildScope": "frozen-official-Chrome155-reference",
+        "nativeQualified": false,
+        "notes": "Genuine headed Chrome155 with all 28 original signed scripts unchanged. Original suggestion corrects authored text on first/new document; actual uninstall leaves unchanged original sentence with no product UI. Complete native NetLog POST/check events show genuine public LanguageTool HTTP200. Raw log is preserved with missing final JSON delimiters; separate extraction contains only complete original events. No account or backend replacement.",
+        "packageHashMatchesLock": true,
+        "primaryOperationAttempted": true,
+        "recordedScriptIntegrity": {
+          "unchangedScriptCount": 28,
+          "unchangedScriptsSha256": "5026b0b714d42d569d2b40c9bc5dcefc526d5d2eb1684936a7608eead3d9d008"
+        },
+        "supportingEvidence": {
+          "path": "_dist/chrome-runtime-tests/corpus-languagetool-reference-m6nshupw/public-service-evidence.json",
+          "sha256": "a4e04ab836d7ebc10ea267691232751f5e32514d25d8ed793e7cf10ccd6691b5",
+          "rawNativeLogPath": "_dist/chrome-runtime-tests/corpus-languagetool-reference-m6nshupw/native-net-log.json",
+          "rawNativeLogSha256": "5cc1efe2c550cf485c5da57242fc77336205e38adc26367480762c06404735ed",
+          "sourceIntegrity": {
+            "unchangedScriptCount": 28,
+            "unchangedScriptsSha256": "5026b0b714d42d569d2b40c9bc5dcefc526d5d2eb1684936a7608eead3d9d008",
+            "excludedStoreMetadata": "_metadata only (reserved by Chrome loadUnpacked)"
+          }
+        }
+      },
+      "floorp": {
+        "operationStatus": "not-run",
+        "reportPath": null,
+        "buildScope": "rebuilt-native158-pending",
+        "nativeQualified": false,
+        "runtime": {
+          "targetVersion": "158.0.1",
+          "targetRuntimeCommit": "7dd619742b25567e479eeda97ae071d10542ad0b"
+        },
+        "notes": "No completed actual-package primary report on rebuilt158 exists at this audit."
+      },
+      "blockerCategory": "rebuilt-native158-primary-pending",
+      "history": [
+        {
+          "browser": "chrome",
+          "observation": {
+            "reportPath": "_dist/chrome-runtime-tests/corpus-languagetool-reference-0svplsmb/report.json",
+            "reportSha256": "89386964f9a609fb83953434e07bdeb2123c77283d4b56f4a6df282fcab0f499",
+            "reportStage": "actual-package-primary-operation",
+            "evidenceKind": "actual-package-primary-operation",
+            "operationStatus": "blocked-external-service",
+            "reportedOperationStatus": "failed",
+            "runtime": {
+              "version": "155.0.8059.84",
+              "platform": "linux-x86_64",
+              "binarySha256": "cb19b59995072b86cc7f887b3b1c7ab1f63518a7f2ed9f0d33249e1a040e2c76"
+            },
+            "buildScope": "frozen-official-Chrome155-reference",
+            "nativeQualified": false,
+            "notes": "Actual native NetLog and product record public service HTTP503. Earlier correction/navigation observed but negative control failed; no complete primary pass.",
+            "packageHashMatchesLock": true
+          },
+          "supersededReason": "Real public LanguageTool service now returns HTTP200 and the complete correction/navigation/uninstall operation passes; previous genuine HTTP503 remains historical."
+        }
+      ]
+    },
+    {
+      "index": 36,
+      "id": "dhdgffkkebhmkfjojejmpbldmpobfkfo",
+      "name": "Tampermonkey",
+      "area": "userScripts",
+      "packageStatus": "frozen",
+      "version": "5.5.1",
+      "packageSha256": "b5167937817e636adeba462ed9bf9b32ff01c2888f78a9afc6aa4f8e655fe872",
+      "primaryOperation": "Install an authored userscript, execute it on matching page/frame, and verify after navigation",
+      "nativeQualified": false,
+      "owner": "runtime_assessment",
+      "nextStep": "Run the unchanged package, actual native product controls and advertised authored-page effect; verify navigation and uninstall negative control on rebuilt158.",
+      "notes": null,
+      "chrome": {
+        "reportPath": "_dist/chrome-runtime-tests/corpus-content-reference-y6R34V/report.json",
+        "reportSha256": "32054dfb0e43b473b819ef2a4f57521a875abf5ecff5ecdfd16840616cebb90d",
+        "reportStage": "actual-package-primary-operation",
+        "evidenceKind": "actual-package-primary-operation",
+        "operationStatus": "primary-passed",
+        "reportedOperationStatus": "passed",
+        "runtime": {
+          "version": "155.0.8059.84",
+          "platform": "linux-x86_64",
+          "binarySha256": "cb19b59995072b86cc7f887b3b1c7ab1f63518a7f2ed9f0d33249e1a040e2c76"
+        },
+        "buildScope": "frozen-official-Chrome155-reference",
+        "nativeQualified": false,
+        "notes": null,
+        "packageHashMatchesLock": true
+      },
+      "floorp": {
+        "operationStatus": "not-run",
+        "reportPath": null,
+        "buildScope": "rebuilt-native158-pending",
+        "nativeQualified": false,
+        "runtime": {
+          "targetVersion": "158.0.1",
+          "targetRuntimeCommit": "7dd619742b25567e479eeda97ae071d10542ad0b"
+        },
+        "notes": "No completed actual-package primary report on rebuilt158 exists at this audit."
+      },
+      "blockerCategory": "rebuilt-native158-primary-pending"
+    },
+    {
+      "index": 37,
+      "id": "jinjaccalgkegednnccohejagnlnfdag",
+      "name": "Violentmonkey",
+      "area": "userScripts",
+      "packageStatus": "frozen",
+      "version": "2.49.0",
+      "packageSha256": "bca40180a633a53392407d113f01405897fc3cd6b425592d19ffd398c3b9423e",
+      "primaryOperation": "Install an authored userscript, execute it on matching page/frame, and verify after navigation",
+      "nativeQualified": false,
+      "owner": "runtime_assessment",
+      "nextStep": "Run the unchanged package, actual native product controls and advertised authored-page effect; verify navigation and uninstall negative control on rebuilt158.",
+      "notes": null,
+      "chrome": {
+        "reportPath": "_dist/chrome-runtime-tests/corpus-content-reference-RW9Eml/report.json",
+        "reportSha256": "4a91a7f7e62c32e36f46813e6c600ff361dd1f6e45a186a16930c084b7ce01a8",
+        "reportStage": "actual-package-primary-operation",
+        "evidenceKind": "actual-package-primary-operation",
+        "operationStatus": "primary-passed",
+        "reportedOperationStatus": "passed",
+        "runtime": {
+          "version": "155.0.8059.84",
+          "platform": "linux-x86_64",
+          "binarySha256": "cb19b59995072b86cc7f887b3b1c7ab1f63518a7f2ed9f0d33249e1a040e2c76"
+        },
+        "buildScope": "frozen-official-Chrome155-reference",
+        "nativeQualified": false,
+        "notes": null,
+        "packageHashMatchesLock": true
+      },
+      "floorp": {
+        "operationStatus": "not-run",
+        "reportPath": null,
+        "buildScope": "rebuilt-native158-pending",
+        "nativeQualified": false,
+        "runtime": {
+          "targetVersion": "158.0.1",
+          "targetRuntimeCommit": "7dd619742b25567e479eeda97ae071d10542ad0b"
+        },
+        "notes": "No completed actual-package primary report on rebuilt158 exists at this audit."
+      },
+      "blockerCategory": "rebuilt-native158-primary-pending"
+    },
+    {
+      "index": 38,
+      "id": "clngdbkpkpeebahjckkjfobafhncgmne",
+      "name": "Stylus",
+      "area": "contentScript",
+      "packageStatus": "frozen",
+      "version": "2.4.14",
+      "packageSha256": "f36b68096a79bff0ab7f7e5eb79d0848ec3643ae99849ac2c79f6b84355344f9",
+      "primaryOperation": "Apply the advertised text/style/player transformation to an authored page and verify it after navigation",
+      "nativeQualified": false,
+      "owner": "runtime_assessment",
+      "nextStep": "Run the unchanged package, actual native product controls and advertised authored-page effect; verify navigation and uninstall negative control on rebuilt158.",
+      "notes": null,
+      "chrome": {
+        "reportPath": "_dist/chrome-runtime-tests/corpus-content-reference-7M9nw7/report.json",
+        "reportSha256": "192680ae840afdc1d1a324255e344b1f9afa4ac0499d923fc5178bf1321aef28",
+        "reportStage": "actual-package-primary-operation",
+        "evidenceKind": "actual-package-primary-operation",
+        "operationStatus": "primary-passed",
+        "reportedOperationStatus": "passed",
+        "runtime": {
+          "version": "155.0.8059.84",
+          "platform": "linux-x86_64",
+          "binarySha256": "cb19b59995072b86cc7f887b3b1c7ab1f63518a7f2ed9f0d33249e1a040e2c76"
+        },
+        "buildScope": "frozen-official-Chrome155-reference",
+        "nativeQualified": false,
+        "notes": null,
+        "packageHashMatchesLock": true
+      },
+      "floorp": {
+        "reportPath": "_dist/chrome-runtime-tests/corpus-content-floorp-mzw9384_/report.json",
+        "reportSha256": "8c612192dd6cc22d7b6418955191be21572199b1f024e399b2d2dcccc7445e47",
+        "reportStage": "actual-package-primary-operation",
+        "evidenceKind": "actual-package-primary-operation",
+        "operationStatus": "failed-runtime-api",
+        "reportedOperationStatus": "failed",
+        "runtime": {
+          "version": "157.0",
+          "buildId": "20260926171135",
+          "nativeWorkerPolicy": false
+        },
+        "buildScope": "historical-prebuilt157-not-native158",
+        "nativeQualified": false,
+        "notes": "Old157 navigator.serviceWorker absent and DNR responseHeaders unsupported; actual editor times out. Requires compiled Worker/network candidate.",
+        "packageHashMatchesLock": true,
+        "recordedScriptIntegrity": {
+          "unchangedScriptCount": 30,
+          "unchangedScriptsSha256": "ab3156dd293475e98d4a810f02a70632198edb9fe257d64237574f0f23825419"
+        }
+      },
+      "blockerCategory": "historical-runtime-api-failure"
+    },
+    {
+      "index": 39,
+      "id": "eimadpbcbfnmbkopoojfekhnkhdbieeh",
+      "name": "Dark Reader",
+      "area": "contentScript",
+      "packageStatus": "frozen",
+      "version": "4.9.133",
+      "packageSha256": "ee38f20d1d50789f4b482c9a1a5dadab599b8682fd2a7dfb7de21fae8561b918",
+      "primaryOperation": "Apply the advertised text/style/player transformation to an authored page and verify it after navigation",
+      "nativeQualified": false,
+      "owner": "runtime_assessment",
+      "nextStep": "Run the unchanged package, actual native product controls and advertised authored-page effect; verify navigation and uninstall negative control on rebuilt158.",
+      "notes": null,
+      "chrome": {
+        "reportPath": "_dist/chrome-runtime-tests/corpus-content-reference-Au3onS/report.json",
+        "reportSha256": "e053e3f90fd29fe67101200bafc64e18a04fb06ef605bc3fe365eb7f6d44da66",
+        "reportStage": "actual-package-primary-operation",
+        "evidenceKind": "actual-package-primary-operation",
+        "operationStatus": "primary-passed",
+        "reportedOperationStatus": "passed",
+        "runtime": {
+          "version": "155.0.8059.84",
+          "platform": "linux-x86_64",
+          "binarySha256": "cb19b59995072b86cc7f887b3b1c7ab1f63518a7f2ed9f0d33249e1a040e2c76"
+        },
+        "buildScope": "frozen-official-Chrome155-reference",
+        "nativeQualified": false,
+        "notes": null,
+        "packageHashMatchesLock": true
+      },
+      "floorp": {
+        "reportPath": "_dist/chrome-runtime-tests/corpus-content-floorp-0l31tgq6/report.json",
+        "reportSha256": "5663aee04535d0778bf556eea20040eb22028f445cf9951ffa017ee82f4466ae",
+        "reportStage": "actual-package-primary-operation",
+        "evidenceKind": "actual-package-primary-operation",
+        "operationStatus": "primary-passed",
+        "reportedOperationStatus": "passed",
+        "runtime": {
+          "version": "157.0",
+          "buildId": "20260926171135",
+          "nativeWorkerPolicy": false
+        },
+        "buildScope": "historical-prebuilt157-not-native158",
+        "nativeQualified": false,
+        "notes": "Actual authored-page transformation, navigation and uninstall negative control; old157 classic fallback and9 unchanged scripts.",
+        "packageHashMatchesLock": true,
+        "recordedScriptIntegrity": {
+          "unchangedScriptCount": 9,
+          "unchangedScriptsSha256": "8bce818de99fd4565cac68c0f826d9dcbcdaa645874e6d9cb24fd27dd6d35659"
+        }
+      },
+      "blockerCategory": "rebuilt-native158-primary-pending"
+    },
+    {
+      "index": 40,
+      "id": "ddkjiahejlhfcafbddmgiahcphecmpfh",
+      "name": "uBlock Origin Lite",
+      "area": "dnr",
+      "packageStatus": "frozen",
+      "version": "2026.1012.1545",
+      "packageSha256": "de67c08f8f7a337bc82c2cc86423eea0243e02be3fd3bd9e289c20c82eadb24a",
+      "primaryOperation": "Block a controlled fixture request and allow it after rule change",
+      "nativeQualified": false,
+      "owner": "mv3_manifest",
+      "nextStep": "Run actual product UI and controlled network side effects on rebuilt158, preserving the reference proxy/bypass/restore or filter/header recipe. Resolve product/account prerequisites explicitly.",
+      "notes": null,
+      "chrome": {
+        "reportPath": "_dist/chrome-runtime-tests/corpus-network-reference-1vGmIs/report.json",
+        "reportSha256": "c2de32a3fc9a207ea10818f0d10b7f3dc858bab48124efb42e9941c3e6285f00",
+        "reportStage": "actual-package-primary-operation",
+        "evidenceKind": "actual-package-primary-operation",
+        "operationStatus": "primary-passed",
+        "reportedOperationStatus": "passed",
+        "runtime": {
+          "version": "155.0.8059.84",
+          "platform": "linux-x86_64",
+          "binarySha256": "cb19b59995072b86cc7f887b3b1c7ab1f63518a7f2ed9f0d33249e1a040e2c76"
+        },
+        "buildScope": "frozen-official-Chrome155-reference",
+        "nativeQualified": false,
+        "notes": null,
+        "packageHashMatchesLock": true
+      },
+      "floorp": {
+        "operationStatus": "not-run",
+        "reportPath": null,
+        "buildScope": "rebuilt-native158-pending",
+        "nativeQualified": false,
+        "runtime": {
+          "targetVersion": "158.0.1",
+          "targetRuntimeCommit": "7dd619742b25567e479eeda97ae071d10542ad0b"
+        },
+        "notes": "No completed actual-package primary report on rebuilt158 exists at this audit."
+      },
+      "blockerCategory": "rebuilt-native158-primary-pending"
+    },
+    {
+      "index": 41,
+      "id": "mnjggcdmjocbbbhaepdhchncahnbgone",
+      "name": "SponsorBlock",
+      "area": "network",
+      "packageStatus": "frozen",
+      "version": "6.1.6",
+      "packageSha256": "5587fe2b6a9946101ca0dde7c6efe76a755c5ee5b6d6e63dfc48c7f736cdb4ff",
+      "primaryOperation": "Apply advertised filter/header/metadata behavior to a controlled page/request and verify the effect",
+      "nativeQualified": false,
+      "owner": "mv3_manifest",
+      "nextStep": "Run the unchanged package, actual native product controls and advertised authored-page effect; verify navigation and uninstall negative control on rebuilt158.",
+      "notes": null,
+      "chrome": {
+        "reportPath": "_dist/chrome-runtime-tests/corpus-media-reference-_yqt63a4/report.json",
+        "reportSha256": "106991d578635b27c6906665fad840bbc8a35537580c99ad338cd72a53cd16e3",
+        "reportStage": "actual-package-primary-operation",
+        "evidenceKind": "actual-package-primary-operation",
+        "operationStatus": "primary-passed",
+        "reportedOperationStatus": "passed",
+        "runtime": {
+          "version": "155.0.8059.84",
+          "platform": "linux-x86_64",
+          "binarySha256": "cb19b59995072b86cc7f887b3b1c7ab1f63518a7f2ed9f0d33249e1a040e2c76"
+        },
+        "buildScope": "frozen-official-Chrome155-reference",
+        "nativeQualified": false,
+        "notes": null,
+        "packageHashMatchesLock": true
+      },
+      "floorp": {
+        "operationStatus": "not-run",
+        "reportPath": null,
+        "buildScope": "rebuilt-native158-pending",
+        "nativeQualified": false,
+        "runtime": {
+          "targetVersion": "158.0.1",
+          "targetRuntimeCommit": "7dd619742b25567e479eeda97ae071d10542ad0b"
+        },
+        "notes": "No completed actual-package primary report on rebuilt158 exists at this audit."
+      },
+      "blockerCategory": "rebuilt-native158-primary-pending"
+    },
+    {
+      "index": 42,
+      "id": "gebbhagfogifgggkldgodflihgfeippi",
+      "name": "Return YouTube Dislike",
+      "area": "network",
+      "packageStatus": "frozen",
+      "version": "4.0.5",
+      "packageSha256": "a2b942c162f419e00b41808cc6b1ddef5c29396355ba92e4d15aed41cc58b549",
+      "primaryOperation": "Apply advertised filter/header/metadata behavior to a controlled page/request and verify the effect",
+      "nativeQualified": false,
+      "owner": "runtime_assessment",
+      "nextStep": "Run the unchanged package, actual native product controls and advertised authored-page effect; verify navigation and uninstall negative control on rebuilt158.",
+      "notes": null,
+      "chrome": {
+        "reportPath": "_dist/chrome-runtime-tests/corpus-media-reference-d3lku2jo/report.json",
+        "reportSha256": "775295fe0f6d0f81872b9a584322d1175b143791d31a2f7ea23b0bbb3756bbf9",
+        "reportStage": "actual-package-primary-operation",
+        "evidenceKind": "actual-package-primary-operation",
+        "operationStatus": "primary-passed",
+        "reportedOperationStatus": "passed",
+        "runtime": {
+          "version": "155.0.8059.84",
+          "platform": "linux-x86_64",
+          "binarySha256": "cb19b59995072b86cc7f887b3b1c7ab1f63518a7f2ed9f0d33249e1a040e2c76"
+        },
+        "buildScope": "frozen-official-Chrome155-reference",
+        "nativeQualified": false,
+        "notes": null,
+        "packageHashMatchesLock": true
+      },
+      "floorp": {
+        "reportPath": "_dist/chrome-runtime-tests/corpus-media-floorp-dgn7_7u5/report.json",
+        "reportSha256": "e2dbff3748784251837821b6d99a98bdca301a6e2f5d44a2ee25187dd80b951d",
+        "reportStage": "actual-package-primary-operation",
+        "evidenceKind": "actual-package-primary-operation",
+        "operationStatus": "primary-passed",
+        "reportedOperationStatus": "passed",
+        "runtime": {
+          "version": "157.0",
+          "buildId": "20260926171135",
+          "nativeWorkerPolicy": false
+        },
+        "buildScope": "historical-prebuilt157-not-native158",
+        "nativeQualified": false,
+        "notes": "Actual controlled YouTube-origin authored votes123, navigation/uninstall, verified private TLS and6 unchanged scripts; not live upstream service compatibility.",
+        "packageHashMatchesLock": true,
+        "recordedScriptIntegrity": {
+          "unchangedScriptCount": 6,
+          "unchangedScriptsSha256": "5439d1ea1d258fb12ed40f0dce2e5809dd7e40c153cfc768d7be0a851d2d71ce"
+        }
+      },
+      "blockerCategory": "rebuilt-native158-primary-pending"
+    },
+    {
+      "index": 43,
+      "id": "ponfpcnoihfmfllpaingbgckeeldkhle",
+      "name": "Enhancer for YouTube",
+      "area": "contentScript",
+      "packageStatus": "frozen",
+      "version": "3.0.19",
+      "packageSha256": "d2fc37882abf1799ae3f09fb372e20f0b0642ab992b29682b41a36013c542de4",
+      "primaryOperation": "Apply the advertised text/style/player transformation to an authored page and verify it after navigation",
+      "nativeQualified": false,
+      "owner": "runtime_assessment",
+      "nextStep": "Run the unchanged package, actual native product controls and advertised authored-page effect; verify navigation and uninstall negative control on rebuilt158.",
+      "notes": null,
+      "chrome": {
+        "reportPath": "_dist/chrome-runtime-tests/corpus-media-reference-ma6hii1n/report.json",
+        "reportSha256": "d6cb3d429d3502d0a10854d343d6a11df5b3b97fa199c6c24569beace8094371",
+        "reportStage": "actual-package-primary-operation",
+        "evidenceKind": "actual-package-primary-operation",
+        "operationStatus": "primary-passed",
+        "reportedOperationStatus": "passed",
+        "runtime": {
+          "version": "155.0.8059.84",
+          "platform": "linux-x86_64",
+          "binarySha256": "cb19b59995072b86cc7f887b3b1c7ab1f63518a7f2ed9f0d33249e1a040e2c76"
+        },
+        "buildScope": "frozen-official-Chrome155-reference",
+        "nativeQualified": false,
+        "notes": null,
+        "packageHashMatchesLock": true
+      },
+      "floorp": {
+        "reportPath": "_dist/chrome-runtime-tests/corpus-media-floorp-p9eug9gu/report.json",
+        "reportSha256": "593b78f0ec8a100c52969d7c4ba1ca09caf749a36bb587f482eab7a34cc8a826",
+        "reportStage": "actual-package-primary-operation",
+        "evidenceKind": "actual-package-primary-operation",
+        "operationStatus": "failed-runtime-api",
+        "reportedOperationStatus": "failed",
+        "runtime": {
+          "version": "157.0",
+          "buildId": "20260926171135",
+          "nativeWorkerPolicy": false
+        },
+        "buildScope": "historical-prebuilt157-not-native158",
+        "nativeQualified": false,
+        "notes": "Old157 importScripts unavailable and native playback/effect recipe times out; fresh compiled candidate required.",
+        "packageHashMatchesLock": true,
+        "recordedScriptIntegrity": {
+          "unchangedScriptCount": 13,
+          "unchangedScriptsSha256": "1804f8c78730e57ffb4b76d588507315408f1c442ec17658159c0dea843208be"
+        }
+      },
+      "blockerCategory": "historical-runtime-api-failure"
+    },
+    {
+      "index": 44,
+      "id": "lmjnegcaeklhafolokijcfjliaokphfk",
+      "name": "Video DownloadHelper",
+      "area": "nativeMessaging",
+      "packageStatus": "frozen",
+      "version": "10.6.1.2",
+      "packageSha256": "fa8143ef62b0da0f6e4a8583e06f418e0525d58db2e0db4a1fb22b3759439690",
+      "primaryOperation": "Discover authored media and save it through the native companion protocol",
+      "nativeQualified": false,
+      "owner": "crx_verification",
+      "nextStep": "Run actual vendor10 media discovery/save on rebuilt158; record that current immutable v10 has no native companion. A separate genuine companion parent-protocol fixture cannot satisfy the frozen package primary.",
+      "notes": "Frozen primary requests a native companion, but vendor10.6.1.2 advertises its own download engine and no companion. Chrome actual advertised media save passed; the literal selected companion operation is not applicable, not silently counted as completed.",
+      "chrome": {
+        "reportPath": "_dist/chrome-runtime-tests/corpus-downloadhelper-reference-PfXs38/report.json",
+        "reportSha256": "e48a273a308841a6f95fe744ed3ac9d8cb43d3b149938f316d1b300fd5ea62ab",
+        "reportStage": "actual-package-primary-operation",
+        "evidenceKind": "actual-package-primary-operation",
+        "operationStatus": "selected-operation-not-applicable",
+        "reportedOperationStatus": "passed",
+        "runtime": {
+          "version": "155.0.8059.84",
+          "platform": "linux-x86_64",
+          "binarySha256": "cb19b59995072b86cc7f887b3b1c7ab1f63518a7f2ed9f0d33249e1a040e2c76"
+        },
+        "buildScope": "frozen-official-Chrome155-reference",
+        "nativeQualified": false,
+        "notes": "Current immutable v10 actual advertised operation saves authored H264/AAC MP4 and decodes matching first3 frames; all33 scripts verified. Native companion not applicable to this version; frozen primary wording mismatch remains explicit.",
+        "packageHashMatchesLock": true,
+        "recordedScriptIntegrity": {
+          "unchangedScriptCount": 33,
+          "unchangedScriptsSha256": "d91387bc4a5e6890d7d4355441882c102f4d61b30f74ee0f7f5090f5b9e3670b"
+        },
+        "advertisedOperationStatus": "primary-passed"
+      },
+      "floorp": {
+        "reportPath": "_dist/chrome-runtime-tests/corpus-downloadhelper-floorp-4o4vm8kv/report.json",
+        "reportSha256": "94605ce5b2972c5a90dba5f847665f65fbe9e2f5d87381f745709cb21c1bec93",
+        "reportStage": "actual-package-primary-operation",
+        "evidenceKind": "actual-package-primary-operation",
+        "operationStatus": "failed-runtime-api",
+        "reportedOperationStatus": "failed",
+        "runtime": {
+          "version": "157.0",
+          "buildId": "20260926171135"
+        },
+        "buildScope": "historical-prebuilt157-not-native158",
+        "nativeQualified": false,
+        "notes": "Historical native install rejected ignored side_panel.default_icon/default_title; maintained schema acceptance now fixed, fresh compiled Worker primary still pending.",
+        "packageHashMatchesLock": true
+      },
+      "blockerCategory": "historical-runtime-api-failure",
+      "primaryOperationApplicability": "not-applicable-to-frozen-v10-native-companion-absent"
+    },
+    {
+      "index": 45,
+      "id": "chphlpgkkbolifaimnlloiipkdnihall",
+      "name": "OneTab",
+      "area": "tabs",
+      "packageStatus": "frozen",
+      "version": "2.24",
+      "packageSha256": "7bdb60b8b795ca35c1020645143aeb8db08b75a0156b958ecf00c35dfb4e5551",
+      "primaryOperation": "Save authored tabs/session to a group and restore them",
+      "nativeQualified": false,
+      "owner": "root",
+      "nextStep": "Repeat unchanged-package actual native product UI and exact side effects on rebuilt158; old157 successes do not qualify158.",
+      "notes": null,
+      "chrome": {
+        "reportPath": "_dist/chrome-runtime-tests/corpus-browser-tools-reference-bGv62n/report.json",
+        "reportSha256": "0f7cbb14afc921f5eb39da209343b3c8d50c37083de9bab1b93cf952734c4aba",
+        "reportStage": "actual-package-primary-operation",
+        "evidenceKind": "actual-package-primary-operation",
+        "operationStatus": "primary-passed",
+        "reportedOperationStatus": "passed",
+        "runtime": {
+          "version": "155.0.8059.84",
+          "platform": "linux-x86_64",
+          "binarySha256": "cb19b59995072b86cc7f887b3b1c7ab1f63518a7f2ed9f0d33249e1a040e2c76"
+        },
+        "buildScope": "frozen-official-Chrome155-reference",
+        "nativeQualified": false,
+        "notes": null,
+        "packageHashMatchesLock": true,
+        "recordedScriptIntegrity": {
+          "unchangedScriptCount": 10,
+          "unchangedScriptsSha256": "35f86f90042db9592a95259113cd40ad1390653bcca898e96e8ed7dc2183d5fc"
+        }
+      },
+      "floorp": {
+        "reportPath": "_dist/chrome-runtime-tests/corpus-browser-tools-floorp-1792375495675/report.json",
+        "reportSha256": "995e64e5bd2db689cbd67f5942ddaaa66867e6c897c6a8d78f7bb95733549032",
+        "reportStage": "actual-package-primary-operation",
+        "evidenceKind": "actual-package-primary-operation",
+        "operationStatus": "primary-passed",
+        "reportedOperationStatus": "passed",
+        "runtime": {
+          "version": "157.0",
+          "buildId": "20260926171135",
+          "workerPolicy": false
+        },
+        "buildScope": "historical-prebuilt157-not-native158",
+        "nativeQualified": false,
+        "notes": null,
+        "packageHashMatchesLock": true,
+        "recordedScriptIntegrity": {
+          "unchangedScriptCount": 10,
+          "unchangedScriptsSha256": "35f86f90042db9592a95259113cd40ad1390653bcca898e96e8ed7dc2183d5fc"
+        }
+      },
+      "blockerCategory": "rebuilt-native158-primary-pending"
+    },
+    {
+      "index": 46,
+      "id": "edacconmaakjimmfgnblocblbcdcpbko",
+      "name": "Session Buddy",
+      "area": "tabs",
+      "packageStatus": "frozen",
+      "version": "4.1.2",
+      "packageSha256": "5d94b0257dd24bc5df058d6edc91513d5482c26d6c300e9434e72a965ed272aa",
+      "primaryOperation": "Save authored tabs/session to a group and restore them",
+      "nativeQualified": false,
+      "owner": "root",
+      "nextStep": "Repeat unchanged-package actual native product UI and exact side effects on rebuilt158; old157 successes do not qualify158.",
+      "notes": null,
+      "chrome": {
+        "reportPath": "_dist/chrome-runtime-tests/corpus-browser-tools-reference-4RbExH/report.json",
+        "reportSha256": "c8bfab3f237828cfa8ecd15eb63e1773fb911b5e24ff268e9cddcab6be75801f",
+        "reportStage": "actual-package-primary-operation",
+        "evidenceKind": "actual-package-primary-operation",
+        "operationStatus": "primary-passed",
+        "reportedOperationStatus": "passed",
+        "runtime": {
+          "version": "155.0.8059.84",
+          "platform": "linux-x86_64",
+          "binarySha256": "cb19b59995072b86cc7f887b3b1c7ab1f63518a7f2ed9f0d33249e1a040e2c76"
+        },
+        "buildScope": "frozen-official-Chrome155-reference",
+        "nativeQualified": false,
+        "notes": null,
+        "packageHashMatchesLock": true,
+        "recordedScriptIntegrity": {
+          "unchangedScriptCount": 5,
+          "unchangedScriptsSha256": "96d584025d049efdcbb822625e7ff0c511d554d628963f2b930f6f51c57c60c5"
+        }
+      },
+      "floorp": {
+        "reportPath": "_dist/chrome-runtime-tests/corpus-browser-tools-floorp-1792379748887/report.json",
+        "reportSha256": "b014afc8dc8101f1962095a629eab1937209001edae524c626fac1d50e87d344",
+        "reportStage": "actual-package-primary-operation",
+        "evidenceKind": "actual-package-primary-operation",
+        "operationStatus": "primary-passed",
+        "reportedOperationStatus": "passed",
+        "runtime": {
+          "version": "157.0",
+          "buildId": "20260926171135",
+          "workerPolicy": false,
+          "workerWebIDLCompiled": false
+        },
+        "buildScope": "historical-prebuilt157-not-native158",
+        "nativeQualified": false,
+        "notes": "Actual Save named collection, close source tabs, distinct-document reload, then Open restores both exact authored URLs in real new window.",
+        "packageHashMatchesLock": true,
+        "recordedScriptIntegrity": {
+          "unchangedScriptCount": 5,
+          "unchangedScriptsSha256": "96d584025d049efdcbb822625e7ff0c511d554d628963f2b930f6f51c57c60c5"
+        }
+      },
+      "blockerCategory": "rebuilt-native158-primary-pending"
+    },
+    {
+      "index": 47,
+      "id": "hddnkoipeenegfoeaoibdmnaalmgkpip",
+      "name": "Toby",
+      "area": "tabs",
+      "packageStatus": "frozen",
+      "version": "2.0.0.14",
+      "packageSha256": "ee2ebdcbf7a49cf291e4ca2ee86ffb72797bdf0e8f3b509a1a0d616bb19234fb",
+      "primaryOperation": "Save authored tabs/session to a group and restore them",
+      "nativeQualified": false,
+      "owner": "root",
+      "nextStep": "Repeat unchanged-package actual native product UI and exact side effects on rebuilt158; old157 successes do not qualify158.",
+      "notes": null,
+      "chrome": {
+        "reportPath": "_dist/chrome-runtime-tests/corpus-browser-tools-reference-r4Pq58/report.json",
+        "reportSha256": "eb4c3d1851772610e4719c800aac5b1d607551e2a1afd956bece2c8bb0b502b5",
+        "reportStage": "actual-package-primary-operation",
+        "evidenceKind": "actual-package-primary-operation",
+        "operationStatus": "blocked-account",
+        "reportedOperationStatus": "blocked-account",
+        "runtime": {
+          "version": "155.0.8059.84",
+          "platform": "linux-x86_64",
+          "binarySha256": "cb19b59995072b86cc7f887b3b1c7ab1f63518a7f2ed9f0d33249e1a040e2c76"
+        },
+        "buildScope": "frozen-official-Chrome155-reference",
+        "nativeQualified": false,
+        "notes": "Actual advertised native panel requires a Toby account before saving tabs.",
+        "packageHashMatchesLock": true,
+        "recordedScriptIntegrity": {
+          "unchangedScriptCount": 12,
+          "unchangedScriptsSha256": "117b2323bf59bb05284731cf4359d00e460c78e634fc996f538544c64ed9dda3"
+        }
+      },
+      "floorp": {
+        "reportPath": "_dist/chrome-runtime-tests/corpus-browser-tools-floorp-1792379855070/report.json",
+        "reportSha256": "0a707cffa97b18c47db8c4f6eb8269bfa8af60b99ed22920b716ba569af61a3d",
+        "reportStage": "actual-package-primary-operation",
+        "evidenceKind": "actual-package-primary-operation",
+        "operationStatus": "blocked-account",
+        "reportedOperationStatus": "blocked-account",
+        "runtime": {
+          "version": "157.0",
+          "buildId": "20260926171135",
+          "workerPolicy": false,
+          "workerWebIDLCompiled": false
+        },
+        "buildScope": "historical-prebuilt157-not-native158",
+        "nativeQualified": false,
+        "notes": "Actual trusted native CUI widget opens the genuine sidebar account gate; all12 signed vendor scripts unchanged. Wrapper completes, but primary save/restore is blocked by account setup and not counted as pass.",
+        "packageHashMatchesLock": true,
+        "recordedScriptIntegrity": {
+          "unchangedScriptCount": 12,
+          "unchangedScriptsSha256": "117b2323bf59bb05284731cf4359d00e460c78e634fc996f538544c64ed9dda3"
+        }
+      },
+      "blockerCategory": "account-required"
+    },
+    {
+      "index": 48,
+      "id": "jjmflmamggggndanpgfnpelongoepncg",
+      "name": "Extensity",
+      "area": "management",
+      "packageStatus": "frozen",
+      "version": "1.14.0",
+      "packageSha256": "4e797c526eb2f29ddee27bf90e85808fb461c886b546a6a13f2db659ede07cc8",
+      "primaryOperation": "Disable and re-enable another authored extension and verify lifecycle",
+      "nativeQualified": false,
+      "owner": "root",
+      "nextStep": "Repeat unchanged-package actual native product UI and exact side effects on rebuilt158; old157 successes do not qualify158.",
+      "notes": null,
+      "chrome": {
+        "reportPath": "_dist/chrome-runtime-tests/corpus-management-reference-QAotiB/report.json",
+        "reportSha256": "00c181843071be9d58961dee011eccfd93979f4955be304ac38a70fa003d4aa3",
+        "reportStage": "actual-package-primary-operation",
+        "evidenceKind": "actual-package-primary-operation",
+        "operationStatus": "primary-passed",
+        "reportedOperationStatus": "passed",
+        "runtime": {
+          "version": "155.0.8059.84",
+          "platform": "linux-x86_64",
+          "binarySha256": "cb19b59995072b86cc7f887b3b1c7ab1f63518a7f2ed9f0d33249e1a040e2c76"
+        },
+        "buildScope": "frozen-official-Chrome155-reference",
+        "nativeQualified": false,
+        "notes": null,
+        "packageHashMatchesLock": true
+      },
+      "floorp": {
+        "reportPath": "_dist/chrome-runtime-tests/corpus-management-floorp-1792373820177/report.json",
+        "reportSha256": "a209d33bb399578bc3779928a0b871f245cc770fb55c66be5142f15669d6f758",
+        "reportStage": "actual-package-primary-operation",
+        "evidenceKind": "actual-package-primary-operation",
+        "operationStatus": "primary-passed",
+        "reportedOperationStatus": "passed",
+        "runtime": {
+          "version": "157.0",
+          "buildId": "20260926171135",
+          "workerPolicy": false
+        },
+        "buildScope": "historical-prebuilt157-not-native158",
+        "nativeQualified": false,
+        "notes": null,
+        "packageHashMatchesLock": true,
+        "recordedScriptIntegrity": {
+          "unchangedScriptCount": 9,
+          "unchangedScriptsSha256": "a06e1e47d1c89fb48455e2292c2c4da5e9b22522d684a267d8f40660eea60e6e"
+        }
+      },
+      "blockerCategory": "rebuilt-native158-primary-pending"
+    },
+    {
+      "index": 49,
+      "id": "laookkfknpbbblfpciffpaejjkokdgca",
+      "name": "Momentum",
+      "area": "auxiliaryUI",
+      "packageStatus": "frozen",
+      "version": "2.27.8",
+      "packageSha256": "c7d574585d6c26065ef5efffcdcbdc89ec92c28857138b4522da0eb4bc425328",
+      "primaryOperation": "Open the advertised extension view, persist a setting, and verify it after reload",
+      "nativeQualified": false,
+      "owner": "sidepanel_bridge",
+      "nextStep": "Use rebuilt158 native Worker plus opt-in normal environment proxy/private CA parity. Repeat native name entry/guest dashboard and wait distinct innerWindowId after reload before checking persisted name. Keep external outage and pointer-overlay issues separate.",
+      "notes": null,
+      "chrome": {
+        "reportPath": "_dist/chrome-runtime-tests/corpus-browser-tools-reference-cXcA4D/report.json",
+        "reportSha256": "855098b6235fbbc100f6d8caedc0af4b4b082267c646169d5fb06bcd03d1fb26",
+        "reportStage": "actual-package-primary-operation",
+        "evidenceKind": "actual-package-primary-operation",
+        "operationStatus": "primary-passed",
+        "reportedOperationStatus": "passed",
+        "runtime": {
+          "version": "155.0.8059.84",
+          "platform": "linux-x86_64",
+          "binarySha256": "cb19b59995072b86cc7f887b3b1c7ab1f63518a7f2ed9f0d33249e1a040e2c76"
+        },
+        "buildScope": "frozen-official-Chrome155-reference",
+        "nativeQualified": false,
+        "notes": "Actual name input, Continue, Stay logged out guest dashboard and persisted name after a distinct native loader reload.",
+        "packageHashMatchesLock": true,
+        "recordedScriptIntegrity": {
+          "unchangedScriptCount": 424,
+          "unchangedScriptsSha256": "ffb2f22244c94daa20e18f6705b7ae222d037de6b8fe412007aefcccef359302"
+        }
+      },
+      "floorp": {
+        "reportPath": "_dist/chrome-runtime-tests/corpus-browser-tools-floorp-1792377652653/report.json",
+        "reportSha256": "266758806517ec6407b11d3c30d2c85cb5f22eb29db307f4d38c909f5bd58254",
+        "reportStage": "actual-package-primary-operation",
+        "evidenceKind": "actual-package-primary-operation",
+        "operationStatus": "failed-unresolved",
+        "reportedOperationStatus": "failed",
+        "runtime": {
+          "version": "157.0",
+          "buildId": "20260926171135",
+          "workerPolicy": false,
+          "workerWebIDLCompiled": false
+        },
+        "buildScope": "historical-prebuilt157-not-native158",
+        "nativeQualified": false,
+        "notes": "Old157 genuine name entry+native Enter bypasses pointer-occluding product overlay; actual unobstructed Stay logged out click yields Oops. Missing self.registration Worker API and unmatched normal external proxy/CA environment are separate unresolved causes; no guest dashboard/persistence pass.",
+        "packageHashMatchesLock": true,
+        "recordedScriptIntegrity": {
+          "unchangedScriptCount": 424,
+          "unchangedScriptsSha256": "ffb2f22244c94daa20e18f6705b7ae222d037de6b8fe412007aefcccef359302"
+        }
+      },
+      "blockerCategory": "mixed-runtime-and-environment-unresolved"
+    },
+    {
+      "index": 50,
+      "id": "kbfnbcaeplbcioakkpcpgfkobkghlhen",
+      "name": "Grammarly",
+      "area": "contentScript",
+      "packageStatus": "frozen",
+      "version": "14.1338.0",
+      "packageSha256": "bd5236bf128a4c24976b04fe42bd1a9930396cad31264061d359a8d47cd06e46",
+      "primaryOperation": "Apply the advertised text/style/player transformation to an authored page and verify it after navigation",
+      "nativeQualified": false,
+      "owner": "runtime_assessment",
+      "nextStep": "Keep the selected correction/navigation primary unqualified while the genuine inline sign-in prerequisite is unmet; repeat genuine product controls on the authenticated candidate only when an authorized signed-in prerequisite is available.",
+      "notes": "Mandatory account requirement observed at the actual inline suggestion action, beyond optional toolbar signup features. Healthy core101 transport and suggestion previews alone do not complete the selected operation.",
+      "chrome": {
+        "reportPath": "_dist/chrome-runtime-tests/corpus-grammarly-reference-XSBAYW/report.json",
+        "reportSha256": "7a58ef8fff66a9f17af96b27c3782c5014ecab9fcb83b4dbd19991bcef65030a",
+        "reportStage": "actual-package-writing-primary-prerequisites",
+        "evidenceKind": "actual-package-prerequisite-only",
+        "operationStatus": "not-attempted-account-gate",
+        "reportedOperationStatus": "not-attempted-account-gate",
+        "primaryOperationAttempted": false,
+        "runtime": {
+          "version": "155.0.8059.84",
+          "platform": "linux-x86_64",
+          "binarySha256": "cb19b59995072b86cc7f887b3b1c7ab1f63518a7f2ed9f0d33249e1a040e2c76"
+        },
+        "buildScope": "frozen-official-Chrome155-reference",
+        "nativeQualified": false,
+        "packageHashMatchesLock": true,
+        "observedPrerequisiteStatus": "mandatory-sign-in-for-inline-suggestions",
+        "observedRequiredAccountGate": {
+          "text": "4\nAuthored writing correction\nThis document contains only synthetic fixture text.\nAuthored English paragraph\nNavigate to the second authored document\nYou’re signed out of Grammarly\nYou won’t get any writing suggestions until you sign back in.\nContinue with Google\nContinue another way",
+          "controls": [
+            "4",
+            "Continue with Google",
+            "Continue another way"
+          ]
+        },
+        "recordedScriptIntegrity": {
+          "unchangedScriptCount": 671,
+          "unchangedScriptsSha256": "d15d44db8e1fe9d745ad8ad1e196d5bd6b65b72031a23f8e0f879306d5b628c9"
+        },
+        "notes": "Actual native core WebSocket handshakes101 twice and four suggestion previews appear. Native hover opens the inline correction card stating signed out/no writing suggestions until sign-in, with Continue with Google/Continue another way. No correction applied, navigation primary or account login attempted; all671 signed scripts unchanged. Earlier HTTP503 is historical."
+      },
+      "floorp": {
+        "operationStatus": "not-run",
+        "reportPath": null,
+        "buildScope": "rebuilt-native158-pending",
+        "nativeQualified": false,
+        "runtime": {
+          "targetVersion": "158.0.1",
+          "targetRuntimeCommit": "7dd619742b25567e479eeda97ae071d10542ad0b"
+        },
+        "notes": "No completed actual-package primary report on rebuilt158 exists at this audit."
+      },
+      "blockerCategory": "account-required",
+      "history": [
+        {
+          "browser": "chrome",
+          "observation": {
+            "reportPath": "_dist/chrome-runtime-tests/corpus-grammarly-reference-RQ0azJ/report.json",
+            "reportSha256": "8c18057daf9d8804bfca850ab21b3f656a1cc7e6ac8dd658cf30102a61b4a41c",
+            "reportStage": "actual-package-writing-primary-prerequisites",
+            "evidenceKind": "actual-package-primary-operation",
+            "operationStatus": "blocked-external-service",
+            "reportedOperationStatus": "primary-not-completed",
+            "runtime": {
+              "version": "155.0.8059.84",
+              "platform": "linux-x86_64",
+              "binarySha256": "cb19b59995072b86cc7f887b3b1c7ab1f63518a7f2ed9f0d33249e1a040e2c76"
+            },
+            "buildScope": "frozen-official-Chrome155-reference",
+            "nativeQualified": false,
+            "notes": "Actual native writing edits, injected Open Grammarly control and toolbar popup. Genuine capi.grammarly.com/freews WebSocket and HTTPS configuration return503; all671 signed scripts unchanged. Popup states anonymous Grammarly active; signup applies to extra dictionary/saved-doc/statistics features, not a proven core account gate.",
+            "packageHashMatchesLock": true,
+            "recordedScriptIntegrity": {
+              "unchangedScriptCount": 671,
+              "unchangedScriptsSha256": "d15d44db8e1fe9d745ad8ad1e196d5bd6b65b72031a23f8e0f879306d5b628c9"
+            }
+          },
+          "supersededReason": "The actual core service recovered, and the real inline correction card now establishes the mandatory sign-in prerequisite for the selected correction operation."
+        }
+      ]
+    }
+  ],
+  "nativeEvidencePolicy": {
+    "scope": "exact-native-candidate",
+    "sameRunBinding": "Host wrapper runId equals per-extension nativeEvidence.runId; reviewed suite source and executed bundle SHA256 must match actual files.",
+    "packageBinding": "candidate-identity.py authenticates the package, complete installed application inventory, exact source/patch identity and observed process version/build/OS/ABI/compiled bindings.",
+    "primaryBinding": "Only explicit reviewed suite/stage/frozen-ID adapters may qualify; generic wrapper passed, install success, account/service gates or unavailable/inapplicable primaries cannot.",
+    "candidatePositiveValidation": "Pending the first actual authenticated production158 primary; no fabricated candidate positive has been used.",
+    "releaseQualification": "Per-candidate row counts do not assert a cross-platform release qualification or compatibility rate."
+  }
+}

@@ -2,12 +2,12 @@
 // @colocated-env browser
 
 import {
-  validateSourceCode,
-  validateSourceCodeFull,
-  validateMultipleFiles,
+  getValidationSummary,
   isJavaScriptFile,
   mightContainUnsupportedPatterns,
-  getValidationSummary,
+  validateMultipleFiles,
+  validateSourceCode,
+  validateSourceCodeFull,
 } from "../CodeValidator.sys.mts";
 
 import {
@@ -51,15 +51,15 @@ function testIsJSFileCss(): void {
 
 function testQuickCheckTabCapture(): void {
   assert(
-    mightContainUnsupportedPatterns("chrome.tabCapture.getMediaStreamId()"),
-    "chrome.tabCapture should be detected",
+    !mightContainUnsupportedPatterns("chrome.tabCapture.getMediaStreamId()"),
+    "native tabCapture should not be flagged as unsupported",
   );
 }
 
 function testQuickCheckOffscreen(): void {
   assert(
-    mightContainUnsupportedPatterns("chrome.offscreen.createDocument()"),
-    "chrome.offscreen should be detected",
+    !mightContainUnsupportedPatterns("chrome.offscreen.createDocument()"),
+    "native offscreen should not be flagged as unsupported",
   );
 }
 
@@ -83,13 +83,33 @@ function testValidateCleanCode(): void {
   );
 }
 
-function testValidateUnsupportedTabCapture(): void {
+function testValidateNativeDesktopCapture(): void {
   const result = validateSourceCode(
     "bg.js",
-    'chrome.tabCapture.getMediaStreamId("test");',
+    'chrome.desktopCapture.chooseDesktopMedia(["screen"]);',
   );
-  assert(result !== null, "tabCapture should be detected");
-  assert(result.includes("tabCapture"), "error should mention tabCapture");
+  assertEquals(result, null, "native desktopCapture should be accepted");
+}
+
+function testValidateNativeTabCapture(): void {
+  const source = "chrome.tabCapture.getMediaStreamId({ targetTabId: 1 });";
+  const result = validateSourceCodeFull("capture.js", source);
+  assert(result.valid, "native video tabCapture code is accepted");
+  assertEquals(
+    result.errors.length,
+    0,
+    "tabCapture no longer produces an unsupported API error",
+  );
+  assertEquals(
+    validateSourceCode("capture.js", source),
+    null,
+    "legacy validation also accepts tabCapture",
+  );
+  assertEquals(
+    result.warnings.length,
+    0,
+    "native audio/video and consumerTabId have no stale limitation warning",
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -108,11 +128,15 @@ function testValidateFullWithWarning(): void {
     "bg.js",
     "chrome.sidePanel.setOptions({});",
   );
-  assert(result.warnings.length > 0, "sidePanel should produce warning");
+  assertEquals(
+    result.warnings.length,
+    0,
+    "retained native SidePanel has no stale limitation warning",
+  );
 }
 
 function testValidateFullErrorHasLineInfo(): void {
-  const code = "const x = 1;\nconst y = 2;\nchrome.tabCapture.start();";
+  const code = "const x = 1;\nconst y = 2;\nchrome.gcm.register(['sender']);";
   const result = validateSourceCodeFull("bg.js", code);
   assert(result.errors.length > 0, "should have error");
   assertEquals(result.errors[0].line, 3, "error should be on line 3");
@@ -124,7 +148,7 @@ function testValidateFullErrorHasLineInfo(): void {
 
 function testValidateMultipleFilesSkipsNonJS(): void {
   const files = new Map([
-    ["manifest.json", "chrome.tabCapture.start();"],
+    ["manifest.json", "chrome.gcm.register(['sender']);"],
     ["bg.js", "console.log('ok');"],
   ]);
   const result = validateMultipleFiles(files);
@@ -133,7 +157,7 @@ function testValidateMultipleFilesSkipsNonJS(): void {
 
 function testValidateMultipleFilesAggregatesErrors(): void {
   const files = new Map([
-    ["a.js", "chrome.tabCapture.start();"],
+    ["a.js", "chrome.gcm.register(['sender']);"],
     ["b.js", "console.log('ok');"],
   ]);
   const result = validateMultipleFiles(files);
@@ -188,7 +212,14 @@ export async function runAllTests(): Promise<void> {
     { name: "quickCheck offscreen", fn: testQuickCheckOffscreen },
     { name: "quickCheck clean", fn: testQuickCheckClean },
     { name: "validate clean code", fn: testValidateCleanCode },
-    { name: "validate tabCapture", fn: testValidateUnsupportedTabCapture },
+    {
+      name: "accept native desktopCapture",
+      fn: testValidateNativeDesktopCapture,
+    },
+    {
+      name: "accept native audio and video tabCapture",
+      fn: testValidateNativeTabCapture,
+    },
     { name: "validateFull clean", fn: testValidateFullClean },
     { name: "validateFull warning", fn: testValidateFullWithWarning },
     { name: "validateFull line info", fn: testValidateFullErrorHasLineInfo },

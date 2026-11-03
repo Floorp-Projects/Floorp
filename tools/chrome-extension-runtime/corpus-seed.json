@@ -1,0 +1,320 @@
+{
+  "schemaVersion": 1,
+  "referenceChromeVersion": "155.0.8059.84",
+  "selectionPolicy": "Names/IDs chosen before package qualification. Unavailable packages and external-service/native-host dependencies stay recorded; installation alone is not a passing primary operation.",
+  "extensions": [
+    {
+      "id": "difoiogjjojoaoomphldepapgpbgkhkb",
+      "name": "Sider",
+      "area": "sidePanel",
+      "primaryOperation": "Open current-tab panel, read authored content, and retain a draft across tab switches"
+    },
+    {
+      "id": "ofpnmcalabcbjgholdjcjblkibolbppb",
+      "name": "Monica",
+      "area": "sidePanel",
+      "primaryOperation": "Open current-tab panel, read authored content, and retain a draft across tab switches"
+    },
+    {
+      "id": "camppjleccjaphfdbohjdohecfnoikec",
+      "name": "Merlin",
+      "area": "sidePanel",
+      "primaryOperation": "Open current-tab panel, read authored content, and retain a draft across tab switches"
+    },
+    {
+      "id": "mhnlakgilnojmhinhkckjpncpbhabphi",
+      "name": "MaxAI",
+      "area": "sidePanel",
+      "primaryOperation": "Open current-tab panel, read authored content, and retain a draft across tab switches"
+    },
+    {
+      "id": "cebmnlammjhancocbbnfcglifgdpfejc",
+      "name": "AI Blaze",
+      "area": "sidePanel",
+      "primaryOperation": "Open current-tab panel, read authored content, and retain a draft across tab switches"
+    },
+    {
+      "id": "gldebcpkoojijledacjeboaehblhfbjg",
+      "name": "Ask Steve",
+      "area": "sidePanel",
+      "primaryOperation": "Open current-tab panel, read authored content, and retain a draft across tab switches"
+    },
+    {
+      "id": "befflofjcniongenjmbkgkoljhgliihe",
+      "name": "TinaMind",
+      "area": "sidePanel",
+      "primaryOperation": "Open current-tab panel, read authored content, and retain a draft across tab switches"
+    },
+    {
+      "id": "liecbddmkiiihnedobmlmillhodjkdmb",
+      "name": "Loom",
+      "area": "capture",
+      "primaryOperation": "Capture authored-page image or audio/video as advertised, stop, and save playable media"
+    },
+    {
+      "id": "mmeijimgabbpbgpdklnllpncmdofkcpn",
+      "name": "Screencastify",
+      "area": "capture",
+      "primaryOperation": "Capture authored-page image or audio/video as advertised, stop, and save playable media"
+    },
+    {
+      "id": "nlipoenfbbikpbjkfpfillcgkoblgpmj",
+      "name": "Awesome Screenshot",
+      "area": "capture",
+      "primaryOperation": "Capture authored-page image or audio/video as advertised, stop, and save playable media",
+      "acceptedManifestNames": [
+        "Awesome Screenshot",
+        "Awesome Screen Recorder & Screenshot"
+      ]
+    },
+    {
+      "id": "bpconcjcammlapcogcnnelfmaeghhagj",
+      "name": "Nimbus Screenshot",
+      "area": "capture",
+      "primaryOperation": "Capture authored-page image or audio/video as advertised, stop, and save playable media"
+    },
+    {
+      "id": "fdpohaocaechififmbbbbbknoalclacl",
+      "name": "GoFullPage",
+      "area": "capture",
+      "primaryOperation": "Capture authored-page image or audio/video as advertised, stop, and save playable media"
+    },
+    {
+      "id": "pfnededegaaopdmhkdmcofjmoldfiped",
+      "name": "ZeroOmega",
+      "area": "proxy",
+      "primaryOperation": "Apply a proxy profile, observe controlled request routing/bypass, and restore the previous setting",
+      "correctedCandidateId": "pfnededegaaopdmhkdmcofjpbgjhibok"
+    },
+    {
+      "id": "gcknhkkoolaabfmlnjonogaaifnjlfnp",
+      "name": "FoxyProxy",
+      "area": "proxy",
+      "primaryOperation": "Apply a proxy profile, observe controlled request routing/bypass, and restore the previous setting"
+    },
+    {
+      "id": "omghfjlpggmjjaagoclmmobgdodcjboh",
+      "name": "Browsec",
+      "area": "proxy",
+      "primaryOperation": "Apply a proxy profile, observe controlled request routing/bypass, and restore the previous setting"
+    },
+    {
+      "id": "hnmpcagpplmpfojmgmnngilcnanddlhb",
+      "name": "Windscribe",
+      "area": "proxy",
+      "primaryOperation": "Apply a proxy profile, observe controlled request routing/bypass, and restore the previous setting"
+    },
+    {
+      "id": "mooikfkahbdckldjjndioackbalphokd",
+      "name": "Selenium IDE",
+      "area": "debugger",
+      "primaryOperation": "Record or run navigation/input/extraction on an authored page and verify the resulting side effects"
+    },
+    {
+      "id": "gcbalfbdmfieckjlnblleoemohcganoc",
+      "name": "UI.Vision",
+      "area": "debugger",
+      "primaryOperation": "Record or run navigation/input/extraction on an authored page and verify the resulting side effects"
+    },
+    {
+      "id": "infppggnoaenmfagbfknfkancpbljcca",
+      "name": "Automa",
+      "area": "debugger",
+      "primaryOperation": "Record or run navigation/input/extraction on an authored page and verify the resulting side effects"
+    },
+    {
+      "id": "hfjnppljknigdnnpocjjgdcfmnodoafe",
+      "name": "Browserflow",
+      "area": "debugger",
+      "primaryOperation": "Record or run navigation/input/extraction on an authored page and verify the resulting side effects",
+      "correctedCandidateId": "bghdlfcceckopochgmefkanpffhnjeld"
+    },
+    {
+      "id": "jnhgnonknehpejjnehehllkliplmbmhn",
+      "name": "Web Scraper",
+      "area": "debugger",
+      "primaryOperation": "Record or run navigation/input/extraction on an authored page and verify the resulting side effects"
+    },
+    {
+      "id": "djeegiggegleadkkbgopoonhjimgehda",
+      "name": "Puppeteer Recorder",
+      "area": "debugger",
+      "primaryOperation": "Record or run navigation/input/extraction on an authored page and verify the resulting side effects",
+      "correctedCandidateId": "dkaagdgjmgdmbnecmcefdhjekcoceebi",
+      "selectionSource": "https://github.com/checkly/headless-recorder/blob/main/README.md",
+      "acceptedManifestNames": [
+        "Puppeteer Recorder",
+        "Headless Recorder"
+      ]
+    },
+    {
+      "id": "fmkadmapgofadopljbjfkapdkoienihi",
+      "name": "React Developer Tools",
+      "area": "devtools",
+      "primaryOperation": "Inspect authored application component or state data and observe a controlled update"
+    },
+    {
+      "id": "nhdogjmejiglipccpnnnanhbledajbpd",
+      "name": "Vue.js devtools",
+      "area": "devtools",
+      "primaryOperation": "Inspect authored application component or state data and observe a controlled update"
+    },
+    {
+      "id": "lmhkpmbekcpmknklioeibfkpmmfibljd",
+      "name": "Redux DevTools",
+      "area": "devtools",
+      "primaryOperation": "Inspect authored application component or state data and observe a controlled update"
+    },
+    {
+      "id": "mdnleldcmiljblolnjhpnblkcekpdkpa",
+      "name": "Requestly",
+      "area": "network",
+      "primaryOperation": "Apply advertised filter/header/metadata behavior to a controlled page/request and verify the effect"
+    },
+    {
+      "id": "idgpnmonknjnojddfkpgkljpfnnfcklj",
+      "name": "ModHeader",
+      "area": "network",
+      "primaryOperation": "Apply advertised filter/header/metadata behavior to a controlled page/request and verify the effect"
+    },
+    {
+      "id": "djflhoibgkdhkhhcedjiklpkjnoahfmg",
+      "name": "User Agent Switcher",
+      "area": "network",
+      "primaryOperation": "Apply advertised filter/header/metadata behavior to a controlled page/request and verify the effect"
+    },
+    {
+      "id": "hlkenndednhfkekhgcdicdfddnkalmdm",
+      "name": "Cookie Editor",
+      "area": "storage",
+      "primaryOperation": "Create, edit, and delete a cookie on an authored page"
+    },
+    {
+      "id": "nngceckbapebfimnlniiiahkandclblb",
+      "name": "Bitwarden",
+      "area": "nativeIdentity",
+      "primaryOperation": "Unlock a test vault or companion session and fill authored login fields"
+    },
+    {
+      "id": "aeblfdkhhhdcdjpifhhbdiojplfjncoa",
+      "name": "1Password",
+      "area": "nativeIdentity",
+      "primaryOperation": "Unlock a test vault or companion session and fill authored login fields"
+    },
+    {
+      "id": "hdokiejnpimakedhajhdlcegeplioahd",
+      "name": "LastPass",
+      "area": "nativeIdentity",
+      "primaryOperation": "Unlock a test vault or companion session and fill authored login fields"
+    },
+    {
+      "id": "ghmbeldphafepmbegfdlkpapadhbakde",
+      "name": "Proton Pass",
+      "area": "nativeIdentity",
+      "primaryOperation": "Unlock a test vault or companion session and fill authored login fields",
+      "correctedCandidateId": "gafhhkghbfjjkeiendhloienhogjacad"
+    },
+    {
+      "id": "oeopbcgkkoapgobdbedcemjljbihmemj",
+      "name": "Checker Plus for Gmail",
+      "area": "identity",
+      "primaryOperation": "Complete browser OAuth and read test-account notification state"
+    },
+    {
+      "id": "oldceeleldhonbafppcapldpdifcinji",
+      "name": "LanguageTool",
+      "area": "contentScript",
+      "primaryOperation": "Apply the advertised text/style/player transformation to an authored page and verify it after navigation"
+    },
+    {
+      "id": "dhdgffkkebhmkfjojejmpbldmpobfkfo",
+      "name": "Tampermonkey",
+      "area": "userScripts",
+      "primaryOperation": "Install an authored userscript, execute it on matching page/frame, and verify after navigation"
+    },
+    {
+      "id": "jinjaccalgkegednnccohejagnlnfdag",
+      "name": "Violentmonkey",
+      "area": "userScripts",
+      "primaryOperation": "Install an authored userscript, execute it on matching page/frame, and verify after navigation"
+    },
+    {
+      "id": "clngdbkpkpeebahjckkjfobafhncgmne",
+      "name": "Stylus",
+      "area": "contentScript",
+      "primaryOperation": "Apply the advertised text/style/player transformation to an authored page and verify it after navigation"
+    },
+    {
+      "id": "eimadpbcbfnmbkopoojfekhnkhdbieeh",
+      "name": "Dark Reader",
+      "area": "contentScript",
+      "primaryOperation": "Apply the advertised text/style/player transformation to an authored page and verify it after navigation"
+    },
+    {
+      "id": "ddkjiahejlhfcafbddmgiahcphecmpfh",
+      "name": "uBlock Origin Lite",
+      "area": "dnr",
+      "primaryOperation": "Block a controlled fixture request and allow it after rule change"
+    },
+    {
+      "id": "mnjggcdmjocbbbhaepdhchncahnbgone",
+      "name": "SponsorBlock",
+      "area": "network",
+      "primaryOperation": "Apply advertised filter/header/metadata behavior to a controlled page/request and verify the effect"
+    },
+    {
+      "id": "gebbhagfogifgggkldgodflihgfeippi",
+      "name": "Return YouTube Dislike",
+      "area": "network",
+      "primaryOperation": "Apply advertised filter/header/metadata behavior to a controlled page/request and verify the effect"
+    },
+    {
+      "id": "ponfpcnoihfmfllpaingbgckeeldkhle",
+      "name": "Enhancer for YouTube",
+      "area": "contentScript",
+      "primaryOperation": "Apply the advertised text/style/player transformation to an authored page and verify it after navigation"
+    },
+    {
+      "id": "lmjnegcaeklhafolokijcfjliaokphfk",
+      "name": "Video DownloadHelper",
+      "area": "nativeMessaging",
+      "primaryOperation": "Discover authored media and save it through the native companion protocol"
+    },
+    {
+      "id": "chphlpgkkbolifaimnlloiipkdnihall",
+      "name": "OneTab",
+      "area": "tabs",
+      "primaryOperation": "Save authored tabs/session to a group and restore them"
+    },
+    {
+      "id": "edacconmaakjimmfgnblocblbcdcpbko",
+      "name": "Session Buddy",
+      "area": "tabs",
+      "primaryOperation": "Save authored tabs/session to a group and restore them"
+    },
+    {
+      "id": "hddnkoipeenegfoeaoibdmnaalmgkpip",
+      "name": "Toby",
+      "area": "tabs",
+      "primaryOperation": "Save authored tabs/session to a group and restore them"
+    },
+    {
+      "id": "jjmflmamggggndanpgfnpelongoepncg",
+      "name": "Extensity",
+      "area": "management",
+      "primaryOperation": "Disable and re-enable another authored extension and verify lifecycle"
+    },
+    {
+      "id": "laookkfknpbbblfpciffpaejjkokdgca",
+      "name": "Momentum",
+      "area": "auxiliaryUI",
+      "primaryOperation": "Open the advertised extension view, persist a setting, and verify it after reload"
+    },
+    {
+      "id": "kbfnbcaeplbcioakkpcpgfkobkghlhen",
+      "name": "Grammarly",
+      "area": "contentScript",
+      "primaryOperation": "Apply the advertised text/style/player transformation to an authored page and verify it after navigation"
+    }
+  ]
+}

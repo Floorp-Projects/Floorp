@@ -1,0 +1,49 @@
+<!doctype html>
+<title>scope-http-pending</title>
+<script>
+(async () => {
+  const result = {
+    root: {},
+    nestedRoot: {},
+    nestedDefault: {},
+    unregistered: [],
+  };
+  const registrations = [];
+  try {
+    try {
+      const registration = await navigator.serviceWorker.register(
+        "/worker-background-scope.js",
+        { scope: "/" },
+      );
+      registrations.push(registration);
+      result.root.scope = registration.scope;
+    } catch (error) {
+      result.root.error = error.name;
+    }
+    try {
+      const registration = await navigator.serviceWorker.register(
+        "/worker-background-scope/worker.js",
+        { scope: "/" },
+      );
+      registrations.push(registration);
+      result.nestedRoot.scope = registration.scope;
+    } catch (error) {
+      result.nestedRoot.error = error.name;
+    }
+    try {
+      const registration = await navigator.serviceWorker.register(
+        "/worker-background-scope/worker.js",
+      );
+      registrations.push(registration);
+      result.nestedDefault.scope = registration.scope;
+    } catch (error) {
+      result.nestedDefault.error = error.name;
+    }
+  } finally {
+    for (const registration of registrations) {
+      result.unregistered.push(await registration.unregister());
+    }
+    document.title = "scope-http:" + JSON.stringify(result);
+  }
+})();
+</script>

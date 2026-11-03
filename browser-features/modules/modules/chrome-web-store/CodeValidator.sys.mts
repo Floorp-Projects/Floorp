@@ -8,8 +8,8 @@
  */
 
 import type {
-  ValidationResult,
   ValidationError,
+  ValidationResult,
   ValidationWarning,
 } from "./types.ts";
 import {
@@ -25,12 +25,7 @@ import {
 const JS_EXTENSIONS = [".js", ".mjs", ".jsx", ".ts", ".mts", ".tsx"] as const;
 
 /** Quick check patterns for early detection */
-const QUICK_CHECK_PATTERNS = [
-  "chrome.offscreen",
-  "chrome.tabCapture",
-  "chrome.tabGroups",
-  "chrome.sidePanel",
-] as const;
+const QUICK_CHECK_PATTERNS = ["chrome.gcm"] as const;
 
 // =============================================================================
 // Warning Patterns
@@ -39,20 +34,7 @@ const QUICK_CHECK_PATTERNS = [
 /**
  * Warning-level patterns - may work but with limitations
  */
-const WARNING_PATTERNS: readonly UnsupportedCodePattern[] = [
-  {
-    pattern: /chrome\.tabGroups\./,
-    message: "chrome.tabGroups API has limited support",
-  },
-  {
-    pattern: /chrome\.sidePanel\./,
-    message: "chrome.sidePanel API is not fully supported",
-  },
-  {
-    pattern: /chrome\.declarativeNetRequest\.MAX_NUMBER_OF_DYNAMIC_RULES/,
-    message: "Dynamic rules limit differs from Chrome",
-  },
-];
+const WARNING_PATTERNS: readonly UnsupportedCodePattern[] = [];
 
 // =============================================================================
 // Public API

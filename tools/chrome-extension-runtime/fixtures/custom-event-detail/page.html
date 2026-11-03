@@ -1,0 +1,13 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Waiting for authored detail contract</title>
+<script>
+window.__floorpOwnedContractPageMarker = 42;
+document.documentElement.setAttribute(
+  "data-owned-contract-token",
+  crypto.randomUUID(),
+);
+</script>
+<iframe src="frame.html" title="Owned same-origin contract frame"></iframe>
+<script src="observe-detail.js"></script>
+<script src="publish.js"></script>

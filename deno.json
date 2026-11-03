@@ -25,6 +25,8 @@
     "@std/streams": "jsr:@std/streams@^1.0.14",
     "@std/toml": "npm:@jsr/std__toml@^1.0.11",
     "fflate": "npm:fflate@^0.8.3",
+    "devtools-protocol": "npm:devtools-protocol@0.0.1608973",
+    "redux": "npm:redux@5.0.1",
     "vite": "npm:vite@^7.3.0"
   },
   "compilerOptions": {

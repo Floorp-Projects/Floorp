@@ -1,0 +1,177 @@
+diff --git a/dom/workers/ScriptLoader.h b/dom/workers/ScriptLoader.h
+--- a/dom/workers/ScriptLoader.h
++++ b/dom/workers/ScriptLoader.h
+@@ -233,6 +233,11 @@
+ 
+   bool IsDebuggerScript() const { return mWorkerScriptType == DebuggerScript; }
+ 
++  // Worker-thread import boundary, before constructing a request/cache/module
++  // identity. Authenticate against the serialized source principal and the
++  // thread-safe live extension policy; channels still enforce native security.
++  nsresult ResolveOwnChromeImportURI(nsIURI* aURI, nsIURI** aResult);
++
+   void SetController(const Maybe<ServiceWorkerDescriptor>& aDescriptor) {
+     mController = aDescriptor;
+   }
+diff --git a/dom/workers/ScriptLoader.cpp b/dom/workers/ScriptLoader.cpp
+--- a/dom/workers/ScriptLoader.cpp
++++ b/dom/workers/ScriptLoader.cpp
+@@ -19,6 +19,7 @@
+ #include "mozilla/ArrayAlgorithm.h"
+ #include "mozilla/Assertions.h"
+ #include "mozilla/Encoding.h"
++#include "mozilla/ExtensionPolicyService.h"
+ #include "mozilla/LoadContext.h"
+ #include "mozilla/Maybe.h"
+ #include "mozilla/ScopeExit.h"
+@@ -39,6 +40,7 @@
+ #include "mozilla/dom/workerinternals/NetworkLoadHandler.h"
+ #include "mozilla/dom/workerinternals/ScriptResponseHeaderProcessor.h"
+ #include "mozilla/dom/workerinternals/WorkerModuleLoader.h"
++#include "mozilla/extensions/WebExtensionPolicy.h"
+ #include "mozilla/ipc/BackgroundUtils.h"
+ #include "nsComponentManagerUtils.h"
+ #include "nsContentPolicyUtils.h"
+@@ -629,6 +631,68 @@
+   return nsIContentPolicy::TYPE_INTERNAL_WORKER_IMPORT_SCRIPTS;
+ }
+ 
++nsresult WorkerScriptLoader::ResolveOwnChromeImportURI(nsIURI* aURI,
++                                                       nsIURI** aResult) {
++  WorkerPrivate* worker = mWorkerRef->Private();
++  worker->AssertIsOnWorkerThread();
++  MOZ_ASSERT(aURI);
++  MOZ_ASSERT(aResult);
++
++  nsCOMPtr<nsIURI> uri = aURI;
++  if (IsDebuggerScript() || !worker->IsServiceWorker() ||
++      !worker->ExtensionChromeCompatibilityEnabled() ||
++      !uri->SchemeIs("chrome-extension")) {
++    uri.forget(aResult);
++    return NS_OK;
++  }
++
++  // This is the actual worker principal's immutable IPC snapshot, not an
++  // addon-supplied URL or a main-thread-only nsIPrincipal/AddonPolicy access.
++  const PrincipalInfo& principal = worker->GetPrincipalInfo();
++  if (principal.type() != PrincipalInfo::TContentPrincipalInfo) {
++    return NS_ERROR_DOM_BAD_URI;
++  }
++  nsCOMPtr<nsIURI> principalURI;
++  MOZ_TRY(NS_NewURI(getter_AddRefs(principalURI),
++                   principal.get_ContentPrincipalInfo().spec()));
++  RefPtr<extensions::WebExtensionPolicyCore> policy =
++      ExtensionPolicyService::GetCoreByURL(extensions::URLInfo(principalURI));
++  if (!policy || !policy->ChromeCompatibilityEnabled() ||
++      !policy->BackgroundServiceWorkerAllowed()) {
++    return NS_ERROR_DOM_BAD_URI;
++  }
++
++  nsAutoCString host;
++  nsAutoCString credentials;
++  int32_t port;
++  MOZ_TRY(uri->GetAsciiHost(host));
++  MOZ_TRY(uri->GetUserPass(credentials));
++  MOZ_TRY(uri->GetPort(&port));
++  if (!credentials.IsEmpty() || port != -1 || host.Length() != 32) {
++    return NS_ERROR_DOM_BAD_URI;
++  }
++  for (uint32_t index = 0; index < host.Length(); ++index) {
++    const char letter = host.CharAt(index);
++    if (letter < 'a' || letter > 'p') {
++      return NS_ERROR_DOM_BAD_URI;
++    }
++  }
++  nsAutoCString expectedId(host);
++  expectedId.AppendLiteral("@chromium-extension");
++  nsAutoCString actualId;
++  policy->Id()->ToUTF8String(actualId);
++  if (actualId != expectedId) {
++    return NS_ERROR_DOM_BAD_URI;
++  }
++
++  nsAutoCString path;
++  MOZ_TRY(uri->GetPathQueryRef(path));
++  // Keep path/query/ref, including paths beginning with //, inside the actual
++  // source extension. Native channels continue to enforce CSP/private/WAR.
++  return NS_NewURI(aResult, "moz-extension://"_ns +
++                                policy->MozExtensionHostname() + path);
++}
++
+ already_AddRefed<ScriptLoadRequest> WorkerScriptLoader::CreateScriptLoadRequest(
+     const nsString& aScriptURL, const mozilla::Encoding* aDocumentEncoding,
+     bool aIsMainScript, nsresult* aRv) {
+@@ -689,6 +753,19 @@
+     return nullptr;
+   }
+ 
++  // The request URI and cache key must be canonical before either is stored.
++  // Main scripts keep their original registration/manifest restrictions.
++  bool canonicalizedChromeImport = false;
++  if (!aIsMainScript) {
++    nsCOMPtr<nsIURI> originalURI = uri;
++    rv = ResolveOwnChromeImportURI(originalURI, getter_AddRefs(uri));
++    if (NS_FAILED(rv)) {
++      *aRv = rv;
++      return nullptr;
++    }
++    canonicalizedChromeImport = uri != originalURI;
++  }
++
+   // https://html.spec.whatwg.org/multipage/webappapis.html#fetch-a-classic-worker-script
+   // Step 2.5. Let script be the result [...] and the default classic script
+   // fetch options.
+@@ -741,6 +818,9 @@
+ 
+   // Set the mURL, it will be used for error handling and debugging.
+   request->mURL = NS_ConvertUTF16toUTF8(aScriptURL);
++  if (canonicalizedChromeImport) {
++    request->mURL = uri->GetSpecOrDefault();
++  }
+ 
+   request->NoCacheEntryFound(referrerPolicy, fetchOptions, uri);
+ 
+diff --git a/dom/workers/loader/WorkerModuleLoader.cpp b/dom/workers/loader/WorkerModuleLoader.cpp
+--- a/dom/workers/loader/WorkerModuleLoader.cpp
++++ b/dom/workers/loader/WorkerModuleLoader.cpp
+@@ -94,12 +94,25 @@
+     kind = ModuleLoadRequest::Kind::StaticImport;
+   }
+ 
++  // Use the canonical own resource URI before creating the LoadedScript and
++  // before ModuleLoaderBase inserts the request into its module map. Thus a
++  // relative and public-URL import of one file share one module identity.
++  nsCOMPtr<nsIURI> uri = aURI;
++  nsresult rv = GetCurrentScriptLoader()->ResolveOwnChromeImportURI(
++      aURI, getter_AddRefs(uri));
++  if (NS_FAILED(rv)) {
++    // A static CreateRequest must return a request. Reject it at CanStartLoad,
++    // before any module-map, cache or channel side effects.
++    loadContext->mLoadResult = rv;
++    uri = aURI;
++  }
++
+   JS::ModuleType moduleType = JS::GetModuleRequestType(aCx, aModuleRequest);
+   RefPtr<ModuleLoadRequest> request = new ModuleLoadRequest(
+       moduleType, SRIMetadata(), aBaseURL, loadContext, kind, this, root);
+ 
+-  request->mURL = aURI->GetSpecOrDefault();
+-  request->NoCacheEntryFound(aReferrerPolicy, aOptions, aURI);
++  request->mURL = uri->GetSpecOrDefault();
++  request->NoCacheEntryFound(aReferrerPolicy, aOptions, uri);
+   return request.forget();
+ }
+ 
+@@ -133,6 +146,12 @@
+ 
+ bool WorkerModuleLoader::CanStartLoad(ModuleLoadRequest* aRequest,
+                                       nsresult* aRvOut) {
++  WorkerLoadContext* context = aRequest->mLoadContext->AsWorkerContext();
++  if (NS_FAILED(context->mLoadResult) &&
++      context->mLoadResult != NS_ERROR_NOT_INITIALIZED) {
++    *aRvOut = context->mLoadResult;
++    return false;
++  }
+   return true;
+ }
+ 

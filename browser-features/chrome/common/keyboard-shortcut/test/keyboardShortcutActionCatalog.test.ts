@@ -14,6 +14,7 @@ import {
   type TestCase,
 } from "../../../test/utils/test_harness.ts";
 import {
+  CHROME_SIDE_PANEL_ACTION_ID,
   getKeyboardOnlyActions,
   getKeyboardShortcutAction,
   INLINE_TAB_URL_ACTION_ID,
@@ -33,6 +34,11 @@ function testFrozenKeyboardOnlyCatalog(): void {
     "inline URL action ID must remain stable",
   );
   assert(Object.isFrozen(KEYBOARD_ONLY_ACTIONS), "catalog should be frozen");
+  assert(
+    typeof getKeyboardShortcutAction(CHROME_SIDE_PANEL_ACTION_ID) ===
+      "function",
+    "side-panel action resolves through the keyboard registry",
+  );
 
   const matches = getKeyboardOnlyActions().filter((action) =>
     action.name === INLINE_TAB_URL_ACTION_ID

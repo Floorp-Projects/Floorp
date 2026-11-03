@@ -1,0 +1,216 @@
+diff --git a/browser/chrome/browser/content/browser/child/ext-devtools-panels.js b/browser/chrome/browser/content/browser/child/ext-devtools-panels.js
+--- a/browser/chrome/browser/content/browser/child/ext-devtools-panels.js
++++ b/browser/chrome/browser/content/browser/child/ext-devtools-panels.js
+@@ -211,6 +211,22 @@
+           };
+         },
+       }).api(),
++
++      ...(ExtensionUtils.getChromeExtensionId(context.extension)
++        ? {
++            setHeight(height) {
++              if (typeof height !== "string") {
++                throw new context.cloneScope.TypeError(
++                  "The sidebar height must be a string"
++                );
++              }
++              context.childManager.callParentFunctionNoReturn(
++                "devtools.panels.elements.Sidebar.setHeight",
++                [id, height]
++              );
++            },
++          }
++        : {}),
+ 
+       setPage(extensionPageURL) {
+         let resolvedSidebarURL = resolveExtensionURL(extensionPageURL);
+diff --git a/browser/chrome/browser/content/browser/parent/ext-devtools-panels.js b/browser/chrome/browser/content/browser/parent/ext-devtools-panels.js
+--- a/browser/chrome/browser/content/browser/parent/ext-devtools-panels.js
++++ b/browser/chrome/browser/content/browser/parent/ext-devtools-panels.js
+@@ -509,6 +509,10 @@
+     sidebar.on("extension-page-mount", this.onExtensionPageMount);
+     sidebar.on("extension-page-unmount", this.onExtensionPageUnmount);
+ 
++    if (this.panelOptions.height !== undefined) {
++      sidebar.setHeight(this.panelOptions.height);
++    }
++
+     const { _lazySidebarInit } = this;
+     this._lazySidebarInit = null;
+ 
+@@ -529,6 +533,11 @@
+       this.visible = false;
+       this.conduit.sendInspectorSidebarHidden(this.id);
+     }
++  }
++
++  setHeight(height) {
++    this.panelOptions.height = height;
++    this.extensionSidebar?.setHeight(height);
+   }
+ 
+   setPage(extensionPageURL) {
+@@ -675,6 +684,16 @@
+             // piece that is running in the child process to asks the parent process
+             // to execute the sidebar methods.
+             Sidebar: {
++              setHeight(sidebarId, height) {
++                if (!ExtensionUtils.getChromeExtensionId(context.extension) ||
++                    typeof height !== "string") {
++                  throw new ExtensionUtils.ExtensionError(
++                    "The sidebar height must be a Chrome extension string"
++                  );
++                }
++                const sidebar = sidebarsById.get(sidebarId);
++                sidebar.setHeight(height);
++              },
+               setPage(sidebarId, extensionPageURL) {
+                 const sidebar = sidebarsById.get(sidebarId);
+                 return sidebar.setPage(extensionPageURL);
+diff --git a/browser/chrome/browser/content/browser/schemas/devtools_panels.json b/browser/chrome/browser/content/browser/schemas/devtools_panels.json
+--- a/browser/chrome/browser/content/browser/schemas/devtools_panels.json
++++ b/browser/chrome/browser/content/browser/schemas/devtools_panels.json
+@@ -163,7 +163,6 @@
+         "functions": [
+           {
+             "name": "setHeight",
+-            "unsupported": true,
+             "type": "function",
+             "description": "Sets the height of the sidebar.",
+             "parameters": [
+diff --git a/browser/chrome/devtools/modules/devtools/client/inspector/extensions/actions/index.js b/browser/chrome/devtools/modules/devtools/client/inspector/extensions/actions/index.js
+--- a/browser/chrome/devtools/modules/devtools/client/inspector/extensions/actions/index.js
++++ b/browser/chrome/devtools/modules/devtools/client/inspector/extensions/actions/index.js
+@@ -17,6 +17,9 @@
+     // Switch the extension sidebar into an extension page container.
+     "EXTENSION_SIDEBAR_PAGE_UPDATE",
+ 
++    // Set an extension sidebar height without changing its content.
++    "EXTENSION_SIDEBAR_HEIGHT_UPDATE",
++
+     // Remove an extension sidebar from the inspector store.
+     "EXTENSION_SIDEBAR_REMOVE",
+   ],
+diff --git a/browser/chrome/devtools/modules/devtools/client/inspector/extensions/actions/sidebar.js b/browser/chrome/devtools/modules/devtools/client/inspector/extensions/actions/sidebar.js
+--- a/browser/chrome/devtools/modules/devtools/client/inspector/extensions/actions/sidebar.js
++++ b/browser/chrome/devtools/modules/devtools/client/inspector/extensions/actions/sidebar.js
+@@ -8,6 +8,7 @@
+   EXTENSION_SIDEBAR_OBJECT_TREEVIEW_UPDATE,
+   EXTENSION_SIDEBAR_EXPRESSION_RESULT_VIEW_UPDATE,
+   EXTENSION_SIDEBAR_PAGE_UPDATE,
++  EXTENSION_SIDEBAR_HEIGHT_UPDATE,
+   EXTENSION_SIDEBAR_REMOVE,
+ } = require("resource://devtools/client/inspector/extensions/actions/index.js");
+ 
+@@ -47,6 +48,17 @@
+   },
+ 
+   /**
++   * Set the sidebar height without replacing its current content.
++   */
++  updateSidebarHeight(sidebarId, height) {
++    return {
++      type: EXTENSION_SIDEBAR_HEIGHT_UPDATE,
++      sidebarId,
++      height,
++    };
++  },
++
++  /**
+    * Remove the extension sidebar from the inspector store.
+    */
+   removeExtensionSidebar(sidebarId) {
+diff --git a/browser/chrome/devtools/modules/devtools/client/inspector/extensions/reducers/sidebar.js b/browser/chrome/devtools/modules/devtools/client/inspector/extensions/reducers/sidebar.js
+--- a/browser/chrome/devtools/modules/devtools/client/inspector/extensions/reducers/sidebar.js
++++ b/browser/chrome/devtools/modules/devtools/client/inspector/extensions/reducers/sidebar.js
+@@ -8,6 +8,7 @@
+   EXTENSION_SIDEBAR_OBJECT_TREEVIEW_UPDATE,
+   EXTENSION_SIDEBAR_EXPRESSION_RESULT_VIEW_UPDATE,
+   EXTENSION_SIDEBAR_PAGE_UPDATE,
++  EXTENSION_SIDEBAR_HEIGHT_UPDATE,
+   EXTENSION_SIDEBAR_REMOVE,
+ } = require("resource://devtools/client/inspector/extensions/actions/index.js");
+ 
+@@ -19,6 +20,9 @@
+     // the passed object.
+     return Object.assign({}, sidebar, {
+       [sidebarId]: {
++        ...(sidebar[sidebarId]?.height !== undefined
++          ? { height: sidebar[sidebarId].height }
++          : {}),
+         viewMode: "object-treeview",
+         object,
+       },
+@@ -33,6 +37,9 @@
+     // the passed object.
+     return Object.assign({}, sidebar, {
+       [sidebarId]: {
++        ...(sidebar[sidebarId]?.height !== undefined
++          ? { height: sidebar[sidebarId].height }
++          : {}),
+         viewMode: "object-value-grip-view",
+         expressionResult,
+         rootTitle,
+@@ -45,9 +52,18 @@
+     // the passed object.
+     return Object.assign({}, sidebar, {
+       [sidebarId]: {
++        ...(sidebar[sidebarId]?.height !== undefined
++          ? { height: sidebar[sidebarId].height }
++          : {}),
+         viewMode: "extension-page",
+         iframeURL,
+       },
++    });
++  },
++
++  [EXTENSION_SIDEBAR_HEIGHT_UPDATE](sidebar, { sidebarId, height }) {
++    return Object.assign({}, sidebar, {
++      [sidebarId]: { ...sidebar[sidebarId], height },
+     });
+   },
+ 
+diff --git a/browser/chrome/devtools/modules/devtools/client/inspector/extensions/extension-sidebar.js b/browser/chrome/devtools/modules/devtools/client/inspector/extensions/extension-sidebar.js
+--- a/browser/chrome/devtools/modules/devtools/client/inspector/extensions/extension-sidebar.js
++++ b/browser/chrome/devtools/modules/devtools/client/inspector/extensions/extension-sidebar.js
+@@ -20,6 +20,7 @@
+ 
+ const {
+   updateExtensionPage,
++  updateSidebarHeight,
+   updateObjectTreeView,
+   updateExpressionResultView,
+   removeExtensionSidebar,
+@@ -183,6 +184,13 @@
+     );
+   }
+ 
++  setHeight(height) {
++    if (this.destroyed) {
++      throw new Error("Unable to resize a destroyed ExtensionSidebar");
++    }
++    this.store.dispatch(updateSidebarHeight(this.id, height));
++  }
++
+   setExtensionPage(iframeURL) {
+     if (this.removed) {
+       throw new Error(
+diff --git a/browser/chrome/devtools/modules/devtools/client/inspector/extensions/components/ExtensionSidebar.js b/browser/chrome/devtools/modules/devtools/client/inspector/extensions/components/ExtensionSidebar.js
+--- a/browser/chrome/devtools/modules/devtools/client/inspector/extensions/components/ExtensionSidebar.js
++++ b/browser/chrome/devtools/modules/devtools/client/inspector/extensions/components/ExtensionSidebar.js
+@@ -59,6 +59,7 @@
+ 
+     const {
+       iframeURL,
++      height,
+       object,
+       expressionResult,
+       rootTitle,
+@@ -97,6 +98,7 @@
+       {
+         id,
+         className,
++        ...(height !== undefined ? { style: { height } } : {}),
+       },
+       sidebarContentEl
+     );

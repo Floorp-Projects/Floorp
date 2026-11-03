@@ -1,0 +1,1403 @@
+diff --git a/browser/base/content/webext-panels.js b/browser/base/content/webext-panels.js
+index 2b0b40a..500181e 100644
+--- a/browser/base/content/webext-panels.js
++++ b/browser/base/content/webext-panels.js
+@@ -11,14 +11,31 @@ ChromeUtils.defineESModuleGetters(this, {
+ });
+ 
+ const { ExtensionUtils } = ChromeUtils.importESModule(
+-  "resource://gre/modules/ExtensionUtils.sys.mjs"
++  "resource://gre/modules/ExtensionUtils.sys.mjs",
+ );
+ 
+ var { promiseEvent } = ExtensionUtils;
+ 
++const retainedSidePanels = new Map();
++
++function releaseSidePanel(scope) {
++  const entry = retainedSidePanels.get(scope);
++  entry?.browser.remove();
++  retainedSidePanels.delete(scope);
++}
++
+ function getBrowser(panel) {
+-  let browser = document.getElementById("webext-panels-browser");
++  let browser = panel.scope != null
++    ? retainedSidePanels.get(panel.scope)?.browser
++    : document.getElementById("webext-panels-browser");
+   if (browser) {
++    const current = document.getElementById("webext-panels-browser");
++    if (current !== browser) {
++      current?.removeAttribute("id");
++      if (current) current.hidden = true;
++      browser.id = "webext-panels-browser";
++      browser.hidden = false;
++    }
+     return Promise.resolve(browser);
+   }
+ 
+@@ -26,11 +43,10 @@ function getBrowser(panel) {
+     if (!customElements.get("sidebar-panel-header")) {
+       ChromeUtils.importESModule(
+         "chrome://browser/content/sidebar/sidebar-panel-header.mjs",
+-        { global: "current" }
++        { global: "current" },
+       );
+     }
+-    const heading =
+-      panel.extension.manifest.sidebar_action.default_title ??
++    const heading = panel.extension.manifest.sidebar_action?.default_title ??
+       panel.extension.name;
+     document.getElementById("sidebar-panel-header").heading = heading;
+   }
+@@ -43,6 +59,11 @@ function getBrowser(panel) {
+     document.documentElement.appendChild(stack);
+   }
+ 
++  const current = document.getElementById("webext-panels-browser");
++  if (current) {
++    current.hidden = true;
++    current.removeAttribute("id");
++  }
+   browser = document.createXULElement("browser");
+   browser.setAttribute("id", "webext-panels-browser");
+   browser.setAttribute("type", "content");
+@@ -62,7 +83,7 @@ function getBrowser(panel) {
+   // extension pages from the same addon.
+   browser.setAttribute(
+     "initialBrowsingContextGroupId",
+-    panel.extension.policy.browsingContextGroupId
++    panel.extension.policy.browsingContextGroupId,
+   );
+ 
+   let readyPromise;
+@@ -70,7 +91,7 @@ function getBrowser(panel) {
+     browser.setAttribute("remote", "true");
+     browser.setAttribute(
+       "remoteType",
+-      ChromeUtils.predictRemoteTypeForURI(panel.uri, { window })
++      ChromeUtils.predictRemoteTypeForURI(panel.uri, { window }),
+     );
+     browser.setAttribute("maychangeremoteness", "true");
+ 
+@@ -80,6 +101,9 @@ function getBrowser(panel) {
+   }
+ 
+   stack.appendChild(browser);
++  if (panel.scope != null) {
++    retainedSidePanels.set(panel.scope, { browser, url: panel.uri });
++  }
+ 
+   browser.addEventListener(
+     "DoZoomEnlarge",
+@@ -92,7 +116,7 @@ function getBrowser(panel) {
+       }
+       browser.fullZoom = zoom;
+     },
+-    true
++    true,
+   );
+   browser.addEventListener(
+     "DoZoomReduce",
+@@ -105,9 +129,9 @@ function getBrowser(panel) {
+       }
+       browser.fullZoom = zoom;
+     },
+-    true
++    true,
+   );
+-  browser.addEventListener("DOMWindowClose", event => {
++  browser.addEventListener("DOMWindowClose", (event) => {
+     if (panel.viewType == "sidebar") {
+       windowRoot.window.SidebarController.hide();
+     }
+@@ -123,13 +147,13 @@ function getBrowser(panel) {
+     ExtensionParent.apiManager.emit(
+       "extension-browser-inserted",
+       browser,
+-      panel.browserInsertedData
++      panel.browserInsertedData,
+     );
+ 
+     browser.messageManager.loadFrameScript(
+       "chrome://extensions/content/ext-browser-content.js",
+       false,
+-      true
++      true,
+     );
+ 
+     let options = {};
+@@ -169,14 +193,23 @@ function updatePosition() {
+   );
+ }
+ 
+-function loadPanel(extensionId, extensionUrl, browserStyle) {
+-  let browserEl = document.getElementById("webext-panels-browser");
+-  if (browserEl) {
+-    if (browserEl.currentURI.spec === extensionUrl) {
+-      return;
++function loadPanel(
++  extensionId,
++  extensionUrl,
++  browserStyle,
++  forceReload = false,
++  scope = null,
++) {
++  if (scope != null) {
++    const retained = retainedSidePanels.get(scope);
++    if (retained && retained.url !== extensionUrl) releaseSidePanel(scope);
++  } else {
++    const browserEl = document.getElementById("webext-panels-browser");
++    if (browserEl) {
++      if (!forceReload && browserEl.currentURI.spec === extensionUrl) return;
++      browserEl.parentNode.remove();
++      retainedSidePanels.clear();
+     }
+-    // Forces runtime disconnect.  Remove the stack (parent).
+-    browserEl.parentNode.remove();
+   }
+ 
+   let policy = WebExtensionPolicy.getByID(extensionId);
+@@ -186,13 +219,17 @@ function loadPanel(extensionId, extensionUrl, browserStyle) {
+     extension: policy.extension,
+     browserStyle,
+     viewType: "sidebar",
++    scope,
+   };
+ 
+-  getBrowser(sidebar).then(browser => {
++  const retained = scope != null && retainedSidePanels.has(scope);
++  return getBrowser(sidebar).then((browser) => {
++    if (retained) return browser;
+     let uri = Services.io.newURI(policy.getURL());
+-    let triggeringPrincipal =
+-      Services.scriptSecurityManager.createContentPrincipal(uri, {});
++    let triggeringPrincipal = Services.scriptSecurityManager
++      .createContentPrincipal(uri, {});
+     browser.fixupAndLoadURIString(extensionUrl, { triggeringPrincipal });
++    return browser;
+   });
+ }
+ 
+@@ -200,12 +237,12 @@ XPCOMUtils.defineLazyPreferenceGetter(
+   this,
+   "gAllowTransparentBrowser",
+   "browser.tabs.allow_transparent_browser",
+-  false
++  false,
+ );
+ 
+ XPCOMUtils.defineLazyPreferenceGetter(
+   this,
+   "gSidebarRevampEnabled",
+   "sidebar.revamp",
+-  false
++  false,
+ );
+diff --git a/browser/components/extensions/ext-browser.json b/browser/components/extensions/ext-browser.json
+index aff3841..54ec4c9 100644
+--- a/browser/components/extensions/ext-browser.json
++++ b/browser/components/extensions/ext-browser.json
+@@ -145,6 +145,14 @@
+     "scopes": ["addon_parent"],
+     "paths": [["sessions"]]
+   },
++  "sidePanel": {
++    "url": "chrome://browser/content/parent/ext-sidePanel.js",
++    "schema": "chrome://browser/content/schemas/side_panel.json",
++    "scopes": ["addon_parent"],
++    "events": ["startup", "uninstall"],
++    "permissions": ["sidePanel"],
++    "paths": [["sidePanel"]]
++  },
+   "sidebarAction": {
+     "url": "chrome://browser/content/parent/ext-sidebarAction.js",
+     "schema": "chrome://browser/content/schemas/sidebar_action.json",
+diff --git a/browser/components/extensions/jar.mn b/browser/components/extensions/jar.mn
+index f4f14be..1af53cb 100644
+--- a/browser/components/extensions/jar.mn
++++ b/browser/components/extensions/jar.mn
+@@ -23,6 +23,7 @@ browser.jar:
+     content/browser/parent/ext-pkcs11.js (parent/ext-pkcs11.js)
+     content/browser/parent/ext-search.js (parent/ext-search.js)
+     content/browser/parent/ext-sessions.js (parent/ext-sessions.js)
++    content/browser/parent/ext-sidePanel.js (parent/ext-sidePanel.js)
+     content/browser/parent/ext-sidebarAction.js (parent/ext-sidebarAction.js)
+     content/browser/parent/ext-tabGroups.js (parent/ext-tabGroups.js)
+     content/browser/parent/ext-tabs.js (parent/ext-tabs.js)
+diff --git a/browser/components/extensions/parent/ext-browserAction.js b/browser/components/extensions/parent/ext-browserAction.js
+index 45ce82b..72d82b4 100644
+--- a/browser/components/extensions/parent/ext-browserAction.js
++++ b/browser/components/extensions/parent/ext-browserAction.js
+@@ -85,6 +85,19 @@ class BrowserAction extends BrowserActionBase {
+     return null;
+   }
+ 
++  triggerClickOrPopup(tab, clickInfo) {
++    const sidePanel = global.sidePanelFor?.(this.extension);
++    if (sidePanel?.openPanelOnActionClick && this.isShownForTab(tab)) {
++      this.setActiveTabForPreload(null);
++      this.extension.tabManager.addActiveTabPermission(tab);
++      this.recordTabCaptureInvocation(tab);
++      this.extension.tabManager.activateScripts(tab);
++      sidePanel.openForAction(tab);
++      return null;
++    }
++    return super.triggerClickOrPopup(tab, clickInfo);
++  }
++
+   dispatchClick(tab, clickInfo) {
+     this.buttonDelegate.emit("click", tab, clickInfo);
+   }
+diff --git a/browser/components/extensions/parent/ext-sidePanel.js b/browser/components/extensions/parent/ext-sidePanel.js
+new file mode 100644
+index 0000000..a8a46b2
+--- /dev/null
++++ b/browser/components/extensions/parent/ext-sidePanel.js
+@@ -0,0 +1,436 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
++ * You can obtain one at http://mozilla.org/MPL/2.0/. */
++
++"use strict";
++
++const floorpSidePanels = new WeakMap();
++
++this.sidePanel = class extends ExtensionAPIPersistent {
++  PERSISTENT_EVENTS = {
++    onOpened({ fire }) {
++      return this.registerPanelEvent("opened", fire);
++    },
++    onClosed({ fire }) {
++      return this.registerPanelEvent("closed", fire);
++    },
++  };
++
++  registerPanelEvent(name, fire) {
++    const listener = async (event, info) => {
++      try {
++        if (fire.wakeup) await fire.wakeup();
++        await fire.async(info);
++      } catch (error) {
++        Cu.reportError(error);
++      }
++    };
++    this.on(name, listener);
++    return {
++      unregister: () => this.off(name, listener),
++      convert: (newFire) => {
++        fire = newFire;
++      },
++    };
++  }
++
++  isChromeExtension() {
++    const { extension } = this;
++    const metadata = extension.manifest.browser_specific_settings?.gecko
++      ?.floorp_chrome_extension;
++    return metadata?.schema_version === 1 &&
++      /^[a-p]{32}$/.test(metadata.original_id) &&
++      extension.id === `${metadata.original_id}@chromium-extension`;
++  }
++
++  onStartup() {
++    if (this.isChromeExtension()) this.getAction();
++  }
++
++  getAction() {
++    if (!this.isChromeExtension()) {
++      throw new ExtensionUtils.ExtensionError(
++        "sidePanel requires a converted Chrome extension.",
++      );
++    }
++    if (!this.action) {
++      const { extension } = this;
++      this.states = new Map();
++      this.behaviorPref =
++        `extensions.floorp.sidePanel.openOnAction.${extension.id}`;
++      this.openPanelOnActionClick = Services.prefs.getBoolPref(
++        this.behaviorPref,
++        false,
++      );
++      this.action = extension.apiManager.getAPI("sidebarAction", extension);
++      this.action.isChromeSidePanel = true;
++      this.action.chromeSidePanel = this;
++      const path = extension.manifest.side_panel?.default_path;
++      this.action.initialize({
++        default_panel: path ? this.resolvePath(path) : "",
++        default_icon: extension.manifest.icons,
++        open_at_install: false,
++        browser_style: false,
++      });
++      this.action.defaults.sidePanelPath = path;
++      floorpSidePanels.set(extension, this);
++      this.windowClosed = (window) => {
++        const state = this.states.get(window);
++        if (state?.visible) this.emit("closed", state.visible);
++        state?.cleanup?.();
++        this.states.delete(window);
++      };
++      windowTracker.addCloseListener(this.windowClosed);
++    }
++    return this.action;
++  }
++
++  resolvePath(path) {
++    const { extension } = this;
++    const resource = ExtensionUtils.canonicalizeChromeExtensionResourceURL(extension, path);
++    const url = extension.baseURI.resolve(resource);
++    const uri = Services.io.newURI(url);
++    if (
++      !path || uri.scheme !== extension.baseURI.scheme ||
++      uri.host !== extension.baseURI.host
++    ) {
++      throw new ExtensionUtils.ExtensionError(
++        "Side panel path must be a page within the extension.",
++      );
++    }
++    return url;
++  }
++
++  getState(window) {
++    if (!this.states.has(window)) {
++      const state = {
++        global: false,
++        contextual: false,
++        closed: new WeakSet(),
++        tabs: new Set(),
++        scope: null,
++        visible: null,
++        updating: false,
++      };
++      this.states.set(window, state);
++      const close = (event) => {
++        const tab = event.target;
++        const key = `tab:${tabTracker.getId(tab)}`;
++        this.releaseScope(window, key);
++        state.tabs.delete(tab);
++      };
++      window.gBrowser.tabContainer.addEventListener("TabClose", close);
++      state.cleanup = () =>
++        window.gBrowser.tabContainer.removeEventListener("TabClose", close);
++    }
++    return this.states.get(window);
++  }
++
++  getWindow(options, context) {
++    if (options.tabId == null && options.windowId == null) {
++      throw new ExtensionUtils.ExtensionError(
++        "At least one of tabId and windowId must be specified.",
++      );
++    }
++    const tab = options.tabId != null
++      ? this.getAction().getTargetFromDetails({ tabId: options.tabId })
++      : null;
++    const window = tab?.documentGlobal ??
++      windowTracker.getWindow(options.windowId, context);
++    if (
++      tab && options.windowId != null &&
++      windowTracker.getWindow(options.windowId, context) !== window
++    ) {
++      throw new ExtensionUtils.ExtensionError(
++        "The tab does not belong to the specified window.",
++      );
++    }
++    if (!context.canAccessWindow(window) || !window.SidebarController) {
++      throw new ExtensionUtils.ExtensionError("Invalid side panel window.");
++    }
++    return { window, tab };
++  }
++
++  scopeFor(tab) {
++    return tab && this.action.getContextData(tab).sidePanelConfigured
++      ? { key: `tab:${tabTracker.getId(tab)}`, target: tab }
++      : { key: "global", target: null };
++  }
++
++  getScope(window) {
++    return this.getState(window).scope?.key ?? "global";
++  }
++
++  releaseScope(window, key) {
++    const host = window.SidebarController._floorpSidePanelBrowsers?.get(
++      this.action.id,
++    );
++    host?.contentWindow?.releaseSidePanel?.(key);
++  }
++
++  infoFor(window, scope) {
++    const data = this.action.getContextData(scope.target);
++    return {
++      windowId: windowTracker.getId(window),
++      path: Services.io.newURI(data.panel).filePath,
++      ...(scope.target ? { tabId: tabTracker.getId(scope.target) } : {}),
++    };
++  }
++
++  setVisible(window, scope) {
++    const state = this.getState(window);
++    const next = scope ? this.infoFor(window, scope) : null;
++    if (JSON.stringify(next) === JSON.stringify(state.visible)) return;
++    if (state.visible) this.emit("closed", state.visible);
++    state.visible = next;
++    if (next) {
++      this.emit("opened", next);
++      window.gFloorpLastChromeSidePanelId = this.extension.id;
++    }
++    window.dispatchEvent(
++      new window.CustomEvent("FloorpChromeSidePanelChanged", {
++        detail: { extensionId: this.extension.id, opened: !!next },
++      }),
++    );
++  }
++
++  onPanelShown(window) {
++    const state = this.getState(window);
++    if (!state.scope) {
++      state.contextual = true;
++      state.scope = this.scopeFor(window.gBrowser.selectedTab);
++    }
++    this.setVisible(window, state.scope);
++  }
++
++  onVisibilityChanged(window) {
++    const state = this.getState(window);
++    if (state.updating || !state.scope || this.action.isOpen(window)) return;
++    if (state.scope?.target) state.closed.add(state.scope.target);
++    else state.global = false;
++    state.contextual = false;
++    this.setVisible(window, null);
++  }
++
++  async updateWindow(window) {
++    if (!this.extension.canAccessWindow(window)) return;
++    const state = this.getState(window);
++    const tab = window.gBrowser.selectedTab;
++    const data = this.action.getContextData(tab);
++    let scope = null;
++    if (state.contextual && !state.closed.has(tab)) scope = this.scopeFor(tab);
++    else if (state.tabs.has(tab) && !state.closed.has(tab)) {
++      scope = this.scopeFor(tab);
++    } else if (state.global && !state.closed.has(tab)) {
++      scope = { key: "global", target: null };
++    }
++    const selected = scope ? this.action.getContextData(scope.target) : data;
++    if (scope && (!selected.enabled || !selected.panel)) scope = null;
++    state.updating = true;
++    try {
++      state.scope = scope;
++      this.action.chromePanelTargets.set(window, scope?.target ?? null);
++      // Keep the native entry discoverable even when this tab has no panel.
++      this.action.updateButton(window, selected);
++      if (!scope) {
++        if (this.action.isOpen(window)) {
++          window.SidebarController.hide({ dismissPanel: false });
++        }
++        this.setVisible(window, null);
++      } else if (!this.action.isOpen(window)) {
++        if (!(await window.SidebarController.show(this.action.id))) {
++          throw new ExtensionUtils.ExtensionError(
++            "The side panel could not be opened.",
++          );
++        }
++        this.setVisible(window, scope);
++      } else {
++        this.setVisible(window, scope);
++      }
++    } finally {
++      state.updating = false;
++    }
++  }
++
++  async openInWindow(window, target = null) {
++    this.getAction();
++    const scope = this.scopeFor(target);
++    const data = this.action.getContextData(scope.target);
++    if (!data.enabled || !data.panel) {
++      throw new ExtensionUtils.ExtensionError(
++        "No enabled side panel is available.",
++      );
++    }
++    const state = this.getState(window);
++    if (target) {
++      if (target.selected) state.contextual = true;
++      state.closed.delete(target);
++      state.tabs.add(target);
++    } else {
++      state.global = true;
++      state.contextual = false;
++      state.closed.delete(window.gBrowser.selectedTab);
++    }
++    await this.updateWindow(window);
++  }
++
++  async closeInWindow(window, target = null) {
++    const data = this.action.getContextData(target);
++    if (!data.enabled || !data.panel || (target && !data.sidePanelConfigured)) {
++      throw new ExtensionUtils.ExtensionError(
++        target
++          ? "No active tab-specific side panel is available."
++          : "No active global side panel is available.",
++      );
++    }
++    const state = this.getState(window);
++    if (target) {
++      const scope = this.scopeFor(target);
++      if (scope.key === "global" && state.global) {
++        throw new ExtensionUtils.ExtensionError(
++          "No tab-specific side panel is open in this tab.",
++        );
++      }
++      state.tabs.delete(target);
++      state.closed.add(target);
++    } else {
++      state.global = false;
++      if (state.scope?.key === "global") state.contextual = false;
++    }
++    await this.updateWindow(window);
++  }
++
++  openForAction(tab) {
++    const window = tab.documentGlobal;
++    const state = this.getState(window);
++    if (this.action.isOpen(window)) {
++      if (state.scope?.target) {
++        this.closeInWindow(window, state.scope.target).catch(Cu.reportError);
++      } else {
++        // A tab opening may use the global fallback scope.
++        state.tabs.delete(tab);
++        this.closeInWindow(window).catch(Cu.reportError);
++      }
++    } else this.openInWindow(window, tab).catch(Cu.reportError);
++  }
++
++  static onUninstall(id) {
++    Services.prefs.clearUserPref(
++      `extensions.floorp.sidePanel.openOnAction.${id}`,
++    );
++  }
++
++  onShutdown() {
++    floorpSidePanels.delete(this.extension);
++    if (!this.states) return;
++    windowTracker.removeCloseListener(this.windowClosed);
++    for (const [window, state] of this.states) {
++      state.cleanup?.();
++      if (!window.closed) {
++        window.dispatchEvent(
++          new window.CustomEvent("FloorpChromeSidePanelChanged", {
++            detail: { extensionId: this.extension.id, opened: false },
++          }),
++        );
++      }
++    }
++    this.states.clear();
++  }
++
++  getAPI(context) {
++    const event = (name) =>
++      new EventManager({
++        context,
++        module: "sidePanel",
++        event: name,
++        extensionApi: this,
++      }).api();
++    return {
++      sidePanel: {
++        setOptions: async (options) => {
++          const action = this.getAction();
++          const target = action.getTargetFromDetails({ tabId: options.tabId });
++          const panel = options.path != null
++            ? this.resolvePath(options.path)
++            : null;
++          const data = action.getContextData(target);
++          if (
++            target && !data.sidePanelConfigured &&
++            (panel !== null || options.enabled != null)
++          ) {
++            data.enabled = true;
++            data.panel = "";
++            data.sidePanelPath = undefined;
++            data.sidePanelConfigured = true;
++          }
++          if (panel !== null) {
++            if (data.panel !== panel) {
++              const key = target ? `tab:${tabTracker.getId(target)}` : "global";
++              for (const window of this.states.keys()) {
++                this.releaseScope(window, key);
++              }
++            }
++            data.panel = panel;
++            data.sidePanelPath = options.path;
++          }
++          if (options.enabled != null) data.enabled = options.enabled;
++          for (const window of windowTracker.browserWindows()) {
++            if (!target || target.documentGlobal === window) {
++              await this.updateWindow(window);
++            }
++          }
++        },
++        getOptions: async (options) => {
++          const action = this.getAction();
++          const data = action.getContextData(
++            action.getTargetFromDetails({ tabId: options.tabId }),
++          );
++          return {
++            ...(options.tabId != null && data.sidePanelConfigured
++              ? { tabId: options.tabId }
++              : {}),
++            ...(data.sidePanelPath != null ? { path: data.sidePanelPath } : {}),
++            enabled: data.enabled,
++          };
++        },
++        open: async (options) => {
++          this.getAction();
++          const { window, tab } = this.getWindow(options, context);
++          await this.openInWindow(window, tab);
++        },
++        close: async (options) => {
++          this.getAction();
++          const { window, tab } = this.getWindow(options, context);
++          await this.closeInWindow(window, tab);
++        },
++        getLayout: async () => {
++          this.getAction();
++          const start = Services.prefs.getBoolPref(
++            "sidebar.position_start",
++            true,
++          );
++          const rtl = Services.locale.isAppLocaleRTL;
++          return { side: start !== rtl ? "left" : "right" };
++        },
++        setPanelBehavior: async (options) => {
++          this.getAction();
++          if (options.openPanelOnActionClick != null) {
++            this.openPanelOnActionClick = options.openPanelOnActionClick;
++            Services.prefs.setBoolPref(
++              this.behaviorPref,
++              this.openPanelOnActionClick,
++            );
++          }
++        },
++        getPanelBehavior: async () => {
++          this.getAction();
++          return { openPanelOnActionClick: this.openPanelOnActionClick };
++        },
++        onOpened: event("onOpened"),
++        onClosed: event("onClosed"),
++      },
++    };
++  }
++};
++
++global.sidePanelFor = (extension) => floorpSidePanels.get(extension);
+diff --git a/browser/components/extensions/parent/ext-sidebarAction.js b/browser/components/extensions/parent/ext-sidebarAction.js
+index ec06766..a7775e5 100644
+--- a/browser/components/extensions/parent/ext-sidebarAction.js
++++ b/browser/components/extensions/parent/ext-sidebarAction.js
+@@ -5,7 +5,7 @@
+ "use strict";
+ 
+ var { ExtensionParent } = ChromeUtils.importESModule(
+-  "resource://gre/modules/ExtensionParent.sys.mjs"
++  "resource://gre/modules/ExtensionParent.sys.mjs",
+ );
+ var { ExtensionError } = ExtensionUtils;
+ 
+@@ -29,12 +29,28 @@ this.sidebarAction = class extends ExtensionAPI {
+   }
+ 
+   onManifestEntry() {
++    if (
++      ExtensionUtils.getChromeExtensionId(this.extension) &&
++      this.extension.hasPermission("sidePanel")
++    ) return;
++    this.initialize(this.extension.manifest.sidebar_action);
++  }
++
++  initialize(options) {
++    if (sidebarActionMap.has(this.extension)) {
++      return;
++    }
+     let { extension } = this;
++    this.openAtInstall = options.open_at_install;
++    this.panels = new WeakMap();
++    this.panelScopes = new WeakMap();
++    this.chromeScopeChanged = new WeakMap();
++    this.chromePanelTargets = new WeakMap();
++    this.chromeSuspendedWindows = new WeakSet();
++    this.chromePanelObservers = new WeakMap();
+ 
+     extension.once("ready", this.onReady.bind(this));
+ 
+-    let options = extension.manifest.sidebar_action;
+-
+     // Add the extension to the sidebar menu.  The sidebar widget will copy
+     // from that when it is viewed, so we shouldn't need to update that.
+     let widgetId = makeWidgetId(extension.id);
+@@ -51,7 +67,7 @@ this.sidebarAction = class extends ExtensionAPI {
+     };
+     this.globals = Object.create(this.defaults);
+ 
+-    this.tabContext = new TabContext(target => {
++    this.tabContext = new TabContext((target) => {
+       if (ChromeUtils.getClassName(target) == "Window") {
+         return this.globals;
+       }
+@@ -59,7 +75,7 @@ this.sidebarAction = class extends ExtensionAPI {
+     });
+ 
+     // We need to ensure our elements are available before session restore.
+-    this.windowOpenListener = window => {
++    this.windowOpenListener = (window) => {
+       this.createMenuItem(window, this.globals);
+     };
+     windowTracker.addOpenListener(this.windowOpenListener);
+@@ -86,6 +102,9 @@ this.sidebarAction = class extends ExtensionAPI {
+       return;
+     }
+     this.tabContext.shutdown();
++    for (const window of windowTracker.browserWindows()) {
++      this.chromePanelObservers.get(window)?.disconnect();
++    }
+     // Don't remove everything on app shutdown so session restore can handle
+     // restoring open sidebars.
+     if (isAppShutdown) {
+@@ -133,7 +152,7 @@ this.sidebarAction = class extends ExtensionAPI {
+       let { SidebarController } = window;
+       if (
+         (install || SidebarController.lastOpenedId == this.id) &&
+-        this.extension.manifest.sidebar_action.open_at_install
++        this.openAtInstall
+       ) {
+         SidebarController.show(this.id);
+       }
+@@ -144,19 +163,35 @@ this.sidebarAction = class extends ExtensionAPI {
+     if (!this.extension.canAccessWindow(window)) {
+       return;
+     }
+-    this.panel = details.panel;
++    this.panels.set(window, details.panel);
++    if (this.isChromeSidePanel && !this.chromePanelObservers.has(window)) {
++      const observer = new window.MutationObserver(() => {
++        this.chromeSidePanel.onVisibilityChanged(window);
++      });
++      observer.observe(window.document.getElementById("sidebar-box"), {
++        attributes: true,
++        attributeFilter: ["checked"],
++      });
++      this.chromePanelObservers.set(window, observer);
++    }
+     let { SidebarController, devicePixelRatio } = window;
+     SidebarController.registerExtension(this.id, {
+       iconUrl: this.getMenuIcon(details, devicePixelRatio),
+       menuId: this.menuId,
+       title: details.title,
+       extensionId: this.extension.id,
+-      onload: () =>
++      floorpChromeSidePanel: this.isChromeSidePanel,
++      onload: () => {
+         SidebarController.browser.contentWindow.loadPanel(
+           this.extension.id,
+-          this.panel,
+-          this.browserStyle
+-        ),
++          this.panels.get(window),
++          this.browserStyle,
++          false,
++          this.isChromeSidePanel ? this.chromeSidePanel.getScope(window) : null,
++        );
++        this.chromeSidePanel?.onPanelShown(window);
++        this.chromeScopeChanged.delete(window);
++      },
+     });
+   }
+ 
+@@ -172,7 +207,7 @@ this.sidebarAction = class extends ExtensionAPI {
+    */
+   getMenuIcon({ icon }, scale) {
+     return IconDetails.escapeUrl(
+-      IconDetails.getPreferredIcon(icon, this.extension, 16 * scale).icon
++      IconDetails.getPreferredIcon(icon, this.extension, 16 * scale).icon,
+     );
+   }
+ 
+@@ -193,17 +228,24 @@ this.sidebarAction = class extends ExtensionAPI {
+       // point if the extension updates the sidebar during its startup.
+       this.createMenuItem(window, tabData);
+     }
+-    let urlChanged = tabData.panel !== this.panel;
+-    if (urlChanged) {
+-      this.panel = tabData.panel;
++    const scope = this.isChromeSidePanel
++      ? this.chromeSidePanel.getScope(window)
++      : null;
++    const scopeChanged = scope !== this.panelScopes.get(window);
++    this.panelScopes.set(window, scope);
++    if (scopeChanged && this.isChromeSidePanel) {
++      this.chromeScopeChanged.set(window, true);
+     }
++    let urlChanged = tabData.panel !== this.panels.get(window) ||
++      (this.isChromeSidePanel && scopeChanged);
++    this.panels.set(window, tabData.panel);
+     SidebarController.setExtensionAttributes(
+       this.id,
+       {
+         iconUrl: this.getMenuIcon(tabData, devicePixelRatio),
+         label: title,
+       },
+-      urlChanged
++      urlChanged,
+     );
+   }
+ 
+@@ -214,11 +256,33 @@ this.sidebarAction = class extends ExtensionAPI {
+    *        Browser chrome window.
+    */
+   updateWindow(window) {
++    if (this.chromeSidePanel) {
++      this.chromeSidePanel.updateWindow(window).catch(Cu.reportError);
++      return;
++    }
+     if (!this.extension.canAccessWindow(window)) {
+       return;
+     }
+     let nativeTab = window.gBrowser.selectedTab;
+-    this.updateButton(window, this.tabContext.get(nativeTab));
++    let tabData = this.tabContext.get(nativeTab);
++    if (this.isChromeSidePanel && this.chromePanelTargets.has(window)) {
++      const target = this.chromePanelTargets.get(window);
++      if (!target) {
++        tabData = this.globals;
++      }
++    }
++    if (this.isChromeSidePanel && (!tabData.enabled || !tabData.panel)) {
++      this.chromeSuspendedWindows.add(window);
++      window.SidebarController.removeExtension(this.id);
++      return;
++    }
++    const restore = this.chromeSuspendedWindows.delete(window);
++    this.updateButton(window, tabData);
++    if (
++      restore && this.chromePanelTargets.has(window) && !this.isOpen(window)
++    ) {
++      window.SidebarController.show(this.id).catch(Cu.reportError);
++    }
+   }
+ 
+   /**
+@@ -263,7 +327,7 @@ this.sidebarAction = class extends ExtensionAPI {
+   getTargetFromDetails({ tabId, windowId }) {
+     if (tabId != null && windowId != null) {
+       throw new ExtensionError(
+-        "Only one of tabId and windowId can be specified."
++        "Only one of tabId and windowId can be specified.",
+       );
+     }
+     let target = null;
+diff --git a/browser/components/extensions/schemas/jar.mn b/browser/components/extensions/schemas/jar.mn
+index 0b9ba96..15cd3d4 100644
+--- a/browser/components/extensions/schemas/jar.mn
++++ b/browser/components/extensions/schemas/jar.mn
+@@ -18,6 +18,7 @@ browser.jar:
+     content/browser/schemas/pkcs11.json
+     content/browser/schemas/search.json
+     content/browser/schemas/sessions.json
++    content/browser/schemas/side_panel.json
+     content/browser/schemas/sidebar_action.json
+     content/browser/schemas/tabGroups.json
+     content/browser/schemas/tabs.json
+diff --git a/browser/components/extensions/schemas/side_panel.json b/browser/components/extensions/schemas/side_panel.json
+new file mode 100644
+index 0000000..84e7b13
+--- /dev/null
++++ b/browser/components/extensions/schemas/side_panel.json
+@@ -0,0 +1,233 @@
++[
++  {
++    "namespace": "manifest",
++    "types": [
++      {
++        "$extend": "PermissionNoPrompt",
++        "choices": [
++          {
++            "type": "string",
++            "enum": [
++              "sidePanel"
++            ]
++          }
++        ]
++      },
++      {
++        "$extend": "WebExtensionManifest",
++        "properties": {
++          "side_panel": {
++            "type": "object",
++            "optional": true,
++            "properties": {
++              "default_path": {
++                "type": "string",
++                "preprocess": "localize"
++              }
++            },
++            "additionalProperties": {
++              "$ref": "UnrecognizedProperty"
++            }
++          }
++        }
++      }
++    ]
++  },
++  {
++    "namespace": "sidePanel",
++    "permissions": [
++      "sidePanel"
++    ],
++    "functions": [
++      {
++        "name": "setOptions",
++        "type": "function",
++        "async": true,
++        "parameters": [
++          {
++            "name": "options",
++            "type": "object",
++            "properties": {
++              "tabId": {
++                "type": "integer",
++                "minimum": 0,
++                "optional": true
++              },
++              "path": {
++                "type": "string",
++                "optional": true
++              },
++              "enabled": {
++                "type": "boolean",
++                "optional": true
++              }
++            }
++          }
++        ]
++      },
++      {
++        "name": "getOptions",
++        "type": "function",
++        "async": true,
++        "parameters": [
++          {
++            "name": "options",
++            "type": "object",
++            "properties": {
++              "tabId": {
++                "type": "integer",
++                "minimum": 0,
++                "optional": true
++              }
++            }
++          }
++        ]
++      },
++      {
++        "name": "open",
++        "type": "function",
++        "async": true,
++        "parameters": [
++          {
++            "name": "options",
++            "type": "object",
++            "properties": {
++              "tabId": {
++                "type": "integer",
++                "minimum": 0,
++                "optional": true
++              },
++              "windowId": {
++                "type": "integer",
++                "minimum": -2,
++                "optional": true
++              }
++            }
++          }
++        ],
++        "requireUserInput": true
++      },
++      {
++        "name": "close",
++        "type": "function",
++        "async": true,
++        "parameters": [
++          {
++            "name": "options",
++            "type": "object",
++            "properties": {
++              "tabId": {
++                "type": "integer",
++                "minimum": 0,
++                "optional": true
++              },
++              "windowId": {
++                "type": "integer",
++                "minimum": -2,
++                "optional": true
++              }
++            }
++          }
++        ]
++      },
++      {
++        "name": "setPanelBehavior",
++        "type": "function",
++        "async": true,
++        "parameters": [
++          {
++            "name": "options",
++            "type": "object",
++            "properties": {
++              "openPanelOnActionClick": {
++                "type": "boolean",
++                "optional": true
++              }
++            }
++          }
++        ]
++      },
++      {
++        "name": "getPanelBehavior",
++        "type": "function",
++        "async": true,
++        "parameters": []
++      },
++      {
++        "name": "getLayout",
++        "type": "function",
++        "async": true,
++        "parameters": []
++      }
++    ],
++    "types": [
++      {
++        "id": "PanelOpenedInfo",
++        "type": "object",
++        "properties": {
++          "windowId": {
++            "type": "integer"
++          },
++          "tabId": {
++            "type": "integer",
++            "optional": true
++          },
++          "path": {
++            "type": "string"
++          }
++        }
++      },
++      {
++        "id": "PanelClosedInfo",
++        "type": "object",
++        "properties": {
++          "windowId": {
++            "type": "integer"
++          },
++          "tabId": {
++            "type": "integer",
++            "optional": true
++          },
++          "path": {
++            "type": "string"
++          }
++        }
++      },
++      {
++        "id": "PanelLayout",
++        "type": "object",
++        "properties": {
++          "side": {
++            "type": "string",
++            "enum": [
++              "left",
++              "right"
++            ]
++          }
++        }
++      }
++    ],
++    "events": [
++      {
++        "name": "onOpened",
++        "type": "function",
++        "parameters": [
++          {
++            "name": "info",
++            "$ref": "PanelOpenedInfo"
++          }
++        ]
++      },
++      {
++        "name": "onClosed",
++        "type": "function",
++        "parameters": [
++          {
++            "name": "info",
++            "$ref": "PanelClosedInfo"
++          }
++        ]
++      }
++    ]
++  }
++]
+diff --git a/browser/components/extensions/test/browser/browser.toml b/browser/components/extensions/test/browser/browser.toml
+index 726c1f0..b2e527d 100644
+--- a/browser/components/extensions/test/browser/browser.toml
++++ b/browser/components/extensions/test/browser/browser.toml
+@@ -135,3 +135,5 @@ support-files = ["file_slowed_document.sjs"]
+ ["browser_ext_webrtc.js"]
+ 
+ ["browser_toolbar_prefers_color_scheme.js"]
++
++["browser_ext_floorp_sidePanel.js"]
+diff --git a/browser/components/extensions/test/browser/browser_ext_floorp_sidePanel.js b/browser/components/extensions/test/browser/browser_ext_floorp_sidePanel.js
+new file mode 100644
+index 0000000..e2b870a
+--- /dev/null
++++ b/browser/components/extensions/test/browser/browser_ext_floorp_sidePanel.js
+@@ -0,0 +1,159 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
++ * You can obtain one at http://mozilla.org/MPL/2.0/. */
++
++"use strict";
++
++add_task(async function chrome_side_panel_lifecycle() {
++  const originalId = "a".repeat(32);
++  const extension = ExtensionTestUtils.loadExtension({
++    useAddonManager: "temporary",
++    manifest: {
++      manifest_version: 3,
++      permissions: ["sidePanel", "tabs"],
++      action: {},
++      side_panel: { default_path: "global.html" },
++      browser_specific_settings: {
++        gecko: {
++          id: `${originalId}@chromium-extension`,
++          floorp_chrome_extension: {
++            schema_version: 1,
++            original_id: originalId,
++          },
++        },
++      },
++    },
++    files: {
++      "global.html": '<script src="panel.js"></script>',
++      "tab.html": '<script src="panel.js"></script>',
++      "panel.js": () => {
++        browser.test.sendMessage("panel-loaded", location.pathname);
++      },
++    },
++    background() {
++      let activeTab;
++      let inactiveTab;
++      browser.test.onMessage.addListener(async (command) => {
++        try {
++          if (command === "configure") {
++            [activeTab] = await browser.tabs.query({
++              active: true,
++              currentWindow: true,
++            });
++            inactiveTab = await browser.tabs.create({ active: false });
++            await browser.sidePanel.setOptions({
++              tabId: activeTab.id,
++              path: "tab.html",
++            });
++            browser.test.assertEq(
++              "global.html",
++              (await browser.sidePanel.getOptions({})).path,
++            );
++            browser.test.assertEq(
++              "tab.html",
++              (await browser.sidePanel.getOptions({ tabId: activeTab.id }))
++                .path,
++            );
++            await browser.test.assertRejects(
++              browser.sidePanel.setOptions({ path: "https://example.com/" }),
++              /relative|extension|format/i,
++              "Remote panel URLs are rejected",
++            );
++            await browser.test.assertRejects(
++              browser.sidePanel.open({ windowId: activeTab.windowId }),
++              /user input|user gesture/i,
++              "Opening requires user interaction",
++            );
++            await browser.test.assertRejects(
++              browser.test.withHandlingUserInput(() =>
++                browser.sidePanel.open({ tabId: inactiveTab.id })
++              ),
++              /inactive tabs/,
++              "Unsupported inactive-tab opening rejects",
++            );
++          } else if (command === "open-global") {
++            await browser.test.withHandlingUserInput(() =>
++              browser.sidePanel.open({ windowId: activeTab.windowId })
++            );
++          } else if (command === "open-tab") {
++            await browser.test.withHandlingUserInput(() =>
++              browser.sidePanel.open({ tabId: activeTab.id })
++            );
++          } else if (command === "disable-tab") {
++            await browser.sidePanel.setOptions({
++              tabId: activeTab.id,
++              enabled: false,
++            });
++          } else if (command === "enable-action") {
++            await browser.sidePanel.setOptions({
++              tabId: activeTab.id,
++              enabled: true,
++            });
++            await browser.sidePanel.setPanelBehavior({
++              openPanelOnActionClick: true,
++            });
++            browser.test.assertTrue(
++              (await browser.sidePanel.getPanelBehavior())
++                .openPanelOnActionClick,
++            );
++          } else if (command === "close") {
++            await browser.sidePanel.close({ tabId: activeTab.id });
++          } else if (command === "cleanup") {
++            await browser.tabs.remove(inactiveTab.id);
++          }
++          browser.test.sendMessage("done");
++        } catch (error) {
++          browser.test.fail(`${command}: ${error}`);
++          browser.test.sendMessage("done");
++        }
++      });
++      browser.test.sendMessage("ready");
++    },
++  });
++  await extension.startup();
++  await extension.awaitMessage("ready");
++  const command = async (name) => {
++    extension.sendMessage(name);
++    await extension.awaitMessage("done");
++  };
++  await command("configure");
++  ok(!SidebarController.isOpen, "Panel stays closed at install");
++  await command("open-global");
++  is(
++    await extension.awaitMessage("panel-loaded"),
++    "/global.html",
++    "Window opening uses the global panel",
++  );
++  await command("open-tab");
++  is(
++    await extension.awaitMessage("panel-loaded"),
++    "/tab.html",
++    "Tab opening uses the tab panel",
++  );
++  await command("disable-tab");
++  ok(
++    !SidebarController.isOpen,
++    "Disabling a tab panel closes its real sidebar",
++  );
++  await command("enable-action");
++  await extension.awaitMessage("panel-loaded");
++  await clickBrowserAction(extension);
++  await TestUtils.waitForCondition(() => !SidebarController.isOpen);
++  await clickBrowserAction(extension);
++  is(
++    await extension.awaitMessage("panel-loaded"),
++    "/tab.html",
++    "Action opens the configured tab panel",
++  );
++  await command("close");
++  await command("close");
++  ok(!SidebarController.isOpen, "Closing hides the sidebar");
++  await command("cleanup");
++  await extension.unload();
++  ok(
++    !SidebarController.sidebars.has(
++      `${makeWidgetId(extension.id)}-sidebar-action`,
++    ),
++    "Unload unregisters the panel",
++  );
++});
+diff --git a/browser/components/sidebar/browser-sidebar.js b/browser/components/sidebar/browser-sidebar.js
+index 6a91102..b1b8d90 100644
+--- a/browser/components/sidebar/browser-sidebar.js
++++ b/browser/components/sidebar/browser-sidebar.js
+@@ -2001,6 +2001,7 @@ var SidebarController = {
+       // The following properties are specific to extensions
+       extensionId: props.extensionId,
+       onload: props.onload,
++      floorpChromeSidePanel: props.floorpChromeSidePanel,
+       name,
+     };
+     this.sidebars.set(commandID, sidebar);
+@@ -2178,6 +2179,12 @@ var SidebarController = {
+       // So, let the sidebarAction extension API code remove the lastOpenedId as needed
+       this.hide({ dismissPanel: false });
+     }
++    const retained = this._floorpSidePanelBrowsers?.get(commandID);
++    if (retained) {
++      if (this.browser === retained) this._selectFloorpSidePanelBrowser(null);
++      retained.remove();
++      this._floorpSidePanelBrowsers.delete(commandID);
++    }
+     document.getElementById(sidebar.menuId)?.remove();
+     document.getElementById(sidebar.switcherMenuId)?.remove();
+ 
+@@ -2272,7 +2279,33 @@ var SidebarController = {
+    * @param {string} commandID ID of the sidebar.
+    * @returns {Promise<void>}
+    */
++  _selectFloorpSidePanelBrowser(commandID) {
++    const compatible = this.sidebars.get(commandID)?.floorpChromeSidePanel;
++    this._floorpDefaultBrowser ??= this.browser;
++    this._floorpSidePanelBrowsers ??= new Map();
++    let browser = this._floorpDefaultBrowser;
++    if (compatible) {
++      browser = this._floorpSidePanelBrowsers.get(commandID);
++      if (!browser) {
++        browser = this._floorpDefaultBrowser.cloneNode(false);
++        browser.removeAttribute("id");
++        browser.removeAttribute("src");
++        browser.hidden = true;
++        this._floorpDefaultBrowser.parentNode.appendChild(browser);
++        this._floorpSidePanelBrowsers.set(commandID, browser);
++      }
++    }
++    if (this.browser !== browser) {
++      this.browser.hidden = true;
++      this.browser.removeAttribute("id");
++      browser.id = "sidebar";
++      browser.hidden = false;
++      this._browser = browser;
++    }
++  },
++
+   _show(commandID) {
++    this._selectFloorpSidePanelBrowser(commandID);
+     return new Promise(resolve => {
+       const willShowEvent = new CustomEvent("SidebarWillShow");
+       this.browser.contentWindow?.dispatchEvent(willShowEvent);
+@@ -2380,6 +2413,7 @@ var SidebarController = {
+       return;
+     }
+ 
++    const retainSidePanel = this.sidebars.get(this.currentID)?.floorpChromeSidePanel;
+     const willHideEvent = new CustomEvent("SidebarWillHide", {
+       cancelable: true,
+     });
+@@ -2422,8 +2456,10 @@ var SidebarController = {
+     // create a new content viewer because the old one doesn't get destroyed
+     // until about:blank has loaded (which does not happen as long as the
+     // element is hidden).
+-    this.browser.setAttribute("src", "about:blank");
+-    this.browser.docShell?.createAboutBlankDocumentViewer(null, null);
++    if (!retainSidePanel) {
++      this.browser.setAttribute("src", "about:blank");
++      this.browser.docShell?.createAboutBlankDocumentViewer(null, null);
++    }
+ 
+     this._box.removeAttribute("checked");
+     this._box.removeAttribute("context");

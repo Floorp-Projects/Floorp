@@ -1,0 +1,201 @@
+diff --git a/toolkit/components/extensions/chrome-network/ChromeDNRRegex.cpp b/toolkit/components/extensions/chrome-network/ChromeDNRRegex.cpp
+new file mode 100644
+index 0000000..26bb31c
+--- /dev/null
++++ b/toolkit/components/extensions/chrome-network/ChromeDNRRegex.cpp
+@@ -0,0 +1,62 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this
++ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
++#include "ChromeDNRRegex.h"
++#include "nsString.h"
++#include "nsTArray.h"
++namespace mozilla::extensions {
++NS_IMPL_ISUPPORTS(ChromeDNRRegex, mozIChromeDNRRegex)
++NS_IMETHODIMP ChromeDNRRegex::Init(const nsACString& aPattern,
++                                   bool aCaseSensitive, nsACString& aResult) {
++  // Reuse Gecko's already-linked Rust regex engine. Both compilation and DFA
++  // caches have explicit bounds; matching never uses the JS backtracking
++  // engine.
++  if (aPattern.Length() > 1024 * 1024) {
++    aResult.AssignLiteral("memoryLimitExceeded");
++    return NS_OK;
++  }
++  // Rust and RE2 use different program representations. This 4 KiB bound is
++  // intentionally local to this engine, not a claim of RE2 memory equivalence.
++  RustRegexOptions options;
++  options.Unicode(true)
++      .CaseInsensitive(!aCaseSensitive)
++      .SizeLimit(4 * 1024)
++      .DFASizeLimit(16 * 1024);
++  mRegex =
++      RustRegex(std::string_view(aPattern.Data(), aPattern.Length()), options);
++  if (mRegex) {
++    aResult.Truncate();
++    return NS_OK;
++  }
++  // Distinguish syntax from the bounded program size without running a match.
++  options.SizeLimit(16 * 1024 * 1024);
++  RustRegex probe(std::string_view(aPattern.Data(), aPattern.Length()),
++                  options);
++  aResult.Assign(probe ? "memoryLimitExceeded" : "syntaxError");
++  return NS_OK;
++}
++NS_IMETHODIMP ChromeDNRRegex::Test(const nsACString& aInput, bool* aResult) {
++  NS_ENSURE_TRUE(mRegex, NS_ERROR_NOT_INITIALIZED);
++  *aResult = mRegex.IsMatch(std::string_view(aInput.Data(), aInput.Length()));
++  return NS_OK;
++}
++NS_IMETHODIMP ChromeDNRRegex::Exec(const nsACString& aInput,
++                                   nsTArray<nsCString>& aResult) {
++  NS_ENSURE_TRUE(mRegex, NS_ERROR_NOT_INITIALIZED);
++  aResult.Clear();
++  auto captures =
++      mRegex.FindCaptures(std::string_view(aInput.Data(), aInput.Length()));
++  if (!captures) {
++    return NS_OK;
++  }
++  for (size_t index = 0; index < captures.Length(); ++index) {
++    auto match = captures[index];
++    nsCString value;
++    if (match) {
++      value.Assign(Substring(aInput, match->start, match->end - match->start));
++    }
++    aResult.AppendElement(std::move(value));
++  }
++  return NS_OK;
++}
++}  // namespace mozilla::extensions
+diff --git a/toolkit/components/extensions/chrome-network/ChromeDNRRegex.h b/toolkit/components/extensions/chrome-network/ChromeDNRRegex.h
+new file mode 100644
+index 0000000..11bb354
+--- /dev/null
++++ b/toolkit/components/extensions/chrome-network/ChromeDNRRegex.h
+@@ -0,0 +1,20 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this
++ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
++#ifndef mozilla_extensions_ChromeDNRRegex_h
++#define mozilla_extensions_ChromeDNRRegex_h
++#include "mozIChromeDNRRegex.h"
++#include "mozilla/RustRegex.h"
++namespace mozilla::extensions {
++class ChromeDNRRegex final : public mozIChromeDNRRegex {
++ public:
++  NS_DECL_ISUPPORTS
++  NS_DECL_MOZICHROMEDNRREGEX
++  ChromeDNRRegex() = default;
++
++ private:
++  ~ChromeDNRRegex() = default;
++  RustRegex mRegex;
++};
++}  // namespace mozilla::extensions
++#endif
+diff --git a/toolkit/components/extensions/chrome-network/components.conf b/toolkit/components/extensions/chrome-network/components.conf
+new file mode 100644
+index 0000000..139a01d
+--- /dev/null
++++ b/toolkit/components/extensions/chrome-network/components.conf
+@@ -0,0 +1,9 @@
++# This Source Code Form is subject to the terms of the Mozilla Public
++# License, v. 2.0. If a copy of the MPL was not distributed with this
++# file, You can obtain one at http://mozilla.org/MPL/2.0/.
++Classes = [{
++    'cid': '{235f6f17-de83-4ab6-a699-d3669c0343bd}',
++    'contract_ids': ['@floorp.app/extensions/chrome-dnr-regex;1'],
++    'type': 'mozilla::extensions::ChromeDNRRegex',
++    'headers': ['mozilla/extensions/ChromeDNRRegex.h'],
++}]
+diff --git a/toolkit/components/extensions/chrome-network/moz.build b/toolkit/components/extensions/chrome-network/moz.build
+new file mode 100644
+index 0000000..0b5b8a5
+--- /dev/null
++++ b/toolkit/components/extensions/chrome-network/moz.build
+@@ -0,0 +1,11 @@
++# This Source Code Form is subject to the terms of the Mozilla Public
++# License, v. 2.0. If a copy of the MPL was not distributed with this
++# file, You can obtain one at http://mozilla.org/MPL/2.0/.
++XPIDL_SOURCES += ["mozIChromeDNRRegex.idl"]
++XPIDL_MODULE = "chrome_dnr_regex"
++EXPORTS.mozilla.extensions += ["ChromeDNRRegex.h"]
++UNIFIED_SOURCES += ["ChromeDNRRegex.cpp"]
++XPCOM_MANIFESTS += ["components.conf"]
++FINAL_LIBRARY = "xul"
++
++XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell.toml"]
+diff --git a/toolkit/components/extensions/chrome-network/mozIChromeDNRRegex.idl b/toolkit/components/extensions/chrome-network/mozIChromeDNRRegex.idl
+new file mode 100644
+index 0000000..9f3b86f
+--- /dev/null
++++ b/toolkit/components/extensions/chrome-network/mozIChromeDNRRegex.idl
+@@ -0,0 +1,15 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this
++ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
++#include "nsISupports.idl"
++
++/** Bounded, linear-time regex matching for converted Chrome DNR rules. */
++[scriptable, builtinclass, uuid(235f6f17-de83-4ab6-a699-d3669c0343bd)]
++interface mozIChromeDNRRegex : nsISupports
++{
++  /** Empty string on success; syntaxError or memoryLimitExceeded on failure. */
++  ACString init(in AUTF8String pattern, in boolean caseSensitive);
++  boolean test(in AUTF8String input);
++  /** Empty array for no match; full match followed by capturing groups. */
++  Array<ACString> exec(in AUTF8String input);
++};
+diff --git a/toolkit/components/extensions/chrome-network/test/test_chrome_dnr_regex.js b/toolkit/components/extensions/chrome-network/test/test_chrome_dnr_regex.js
+new file mode 100644
+index 0000000..994928e
+--- /dev/null
++++ b/toolkit/components/extensions/chrome-network/test/test_chrome_dnr_regex.js
+@@ -0,0 +1,26 @@
++/* Any copyright is dedicated to the Public Domain.
++ * http://creativecommons.org/publicdomain/zero/1.0/ */
++"use strict";
++function engine(pattern, caseSensitive = true) {
++  const regex = Cc["@floorp.app/extensions/chrome-dnr-regex;1"].createInstance(Ci.mozIChromeDNRRegex);
++  Assert.equal(regex.init(pattern, caseSensitive), "", `Compiles ${pattern}`);
++  return regex;
++}
++add_task(function test_native_linear_regex_and_captures() {
++  const regex = engine("^https?://([^/]+)/capture-([0-9]+)$");
++  Assert.ok(regex.test("https://example.test/capture-42"));
++  Assert.deepEqual(regex.exec("https://example.test/capture-42"), ["https://example.test/capture-42", "example.test", "42"]);
++  Assert.deepEqual(regex.exec("https://example.test/other"), []);
++  Assert.ok(engine("HELLO", false).test("http://example.test/hello"));
++  Assert.ok(!engine("HELLO", true).test("http://example.test/hello"));
++  const linear = engine("(a+)+$");
++  const start = Cu.now();
++  Assert.ok(!linear.test("a".repeat(100000) + "!"));
++  Assert.ok(Cu.now() - start < 2000, "Nested quantifiers use bounded linear native matching");
++});
++add_task(function test_native_compile_failure_reasons() {
++  const regex = Cc["@floorp.app/extensions/chrome-dnr-regex;1"].createInstance(Ci.mozIChromeDNRRegex);
++  Assert.equal(regex.init("a(?=b)", true), "syntaxError");
++  Assert.equal(regex.init("(a)\\1", true), "syntaxError");
++  Assert.equal(regex.init("a".repeat(2000), true), "memoryLimitExceeded");
++});
+diff --git a/toolkit/components/extensions/chrome-network/test/xpcshell.toml b/toolkit/components/extensions/chrome-network/test/xpcshell.toml
+new file mode 100644
+index 0000000..541d9cb
+--- /dev/null
++++ b/toolkit/components/extensions/chrome-network/test/xpcshell.toml
+@@ -0,0 +1,4 @@
++[DEFAULT]
++head = ""
++
++["test_chrome_dnr_regex.js"]
+diff --git a/toolkit/components/extensions/moz.build b/toolkit/components/extensions/moz.build
+index 7e1eca8..3dfaf56 100644
+--- a/toolkit/components/extensions/moz.build
++++ b/toolkit/components/extensions/moz.build
+@@ -68,6 +68,7 @@ TESTING_JS_MODULES += [
+ 
+ DIRS += [
+     "schemas",
++    "chrome-network",
+     "storage",
+     "webidl-api",
+     "webrequest",

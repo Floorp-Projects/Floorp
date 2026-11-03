@@ -9,6 +9,7 @@ import { ChromeSiteBrowser } from "../browsers/chrome-site-browser.tsx";
 import { ExtensionSiteBrowser } from "../browsers/extension-site-browser.tsx";
 import { WebSiteBrowser } from "../browsers/web-site-browser.tsx";
 import {
+  activeChromeSidePanelId,
   isFloating,
   isPanelSidebarHoverPreview,
   panelSidebarConfig,
@@ -22,6 +23,10 @@ import {
 import type { Panel } from "../utils/type.ts";
 import { createEffect } from "solid-js";
 import { getExtensionSidebarAction } from "../extension-panels.ts";
+import {
+  getChromeSidePanelManager,
+  toggleChromeSidePanel,
+} from "../chrome-side-panels.ts";
 import { WebsitePanel } from "../website-panel-window-parent.ts";
 
 export class CPanelSidebar {
@@ -59,7 +64,12 @@ export class CPanelSidebar {
           panel.removeAttribute("data-checked");
         });
 
-        const currentPanel = this.getPanelData(selectedPanelId() ?? "");
+        const currentPanel = this.getPanelData(selectedPanelId() ?? "") ??
+          panelSidebarData().find(
+            (panel) =>
+              panel.type === "extension" &&
+              panel.extensionId === activeChromeSidePanelId(),
+          );
         if (currentPanel) {
           document
             // Select by data-panel-id to avoid touching workspace entries.
@@ -180,6 +190,14 @@ export class CPanelSidebar {
     const wasPreview = isPanelSidebarHoverPreview();
     setIsPanelSidebarHoverPreview(false);
     setIsPanelSidebarHoverOpen(false);
+    const nativePanel = this.getPanelData(panelId);
+    if (
+      nativePanel?.type === "extension" && nativePanel.extensionId &&
+      toggleChromeSidePanel(nativePanel.extensionId)
+    ) {
+      setSelectedPanelId(null);
+      return;
+    }
     // Clicking a preview pins it, including a preview that has retracted.
     if (wasPreview && panelId === selectedPanelId()) {
       this.openPanel(panelId);
@@ -207,6 +225,20 @@ export class CPanelSidebar {
     const panel = this.getPanelData(panelId);
     if (!panel) {
       throw new Error(`Panel not found: ${panelId}`);
+    }
+
+    if (
+      panel.type === "extension" && panel.extensionId &&
+      getChromeSidePanelManager(panel.extensionId)
+    ) {
+      const preview = isPanelSidebarHoverPreview();
+      setIsPanelSidebarHoverPreview(false);
+      setIsPanelSidebarHoverOpen(false);
+      if (!preview && activeChromeSidePanelId() !== panel.extensionId) {
+        toggleChromeSidePanel(panel.extensionId);
+      }
+      setSelectedPanelId(null);
+      return;
     }
 
     setSelectedPanelId(panelId);

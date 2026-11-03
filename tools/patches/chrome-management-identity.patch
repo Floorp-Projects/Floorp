@@ -1,0 +1,243 @@
+diff --git a/modules/Schemas.sys.mjs b/modules/Schemas.sys.mjs
+index 057034f..4f81929 100644
+--- a/modules/Schemas.sys.mjs
++++ b/modules/Schemas.sys.mjs
+@@ -1203,6 +1203,15 @@ const FORMATS = {
+     return string;
+   },
+ 
++  chromeManagementId(value, context) {
++    if (!ExtensionUtils.getChromeExtensionId(context.params.context?.extension)) {
++      throw new Error(
++        "Chrome management IDs require a converted Chrome extension"
++      );
++    }
++    return value;
++  },
++
+   canonicalDomain(string) {
+     if (URL.parse(`http://${string}`)?.hostname !== string) {
+       // Require the input to be a canonical domain.
+diff --git a/chrome/toolkit/content/extensions/parent/ext-management.js b/chrome/toolkit/content/extensions/parent/ext-management.js
+index 7239a3a..60f6553 100644
+--- a/chrome/toolkit/content/extensions/parent/ext-management.js
++++ b/chrome/toolkit/content/extensions/parent/ext-management.js
+@@ -46,9 +46,64 @@ const installType = addon => {
+   return "normal";
+ };
+ 
+-const getExtensionInfoForAddon = (extension, addon) => {
++const getChromeIdForAddon = (addon, extension) => {
++  extension ??= WebExtensionPolicy.getByID(addon.id)?.extension;
++  if (addon.isActive && extension) {
++    return extension.id === addon.id && extension.version === addon.version
++      ? ExtensionUtils.getChromeExtensionId(extension)
++      : null;
++  }
++  const id = addon.userPermissions?.floorpChromeOriginalId;
++  return addon.type === "extension" &&
++    typeof id === "string" &&
++    /^[a-p]{32}$/.test(id) &&
++    addon.id === `${id}@chromium-extension`
++    ? id
++    : null;
++};
++
++const checkCurrentManagementAddon = async addon => {
++  if (addon && (await AddonManager.getAddonByID(addon.id)) !== addon) {
++    throw new ExtensionError("The add-on changed during the management request");
++  }
++  return addon;
++};
++
++const checkCurrentChromeCaller = (extension, isChromeExtension) => {
++  if (
++    isChromeExtension &&
++    WebExtensionPolicy.getByID(extension.id)?.extension !== extension
++  ) {
++    throw new ExtensionError(
++      "The calling extension changed during the management request"
++    );
++  }
++};
++
++const getAddonForManagementId = async (id, isChromeExtension) => {
++  if (isChromeExtension && /^[a-p]{32}$/.test(id)) {
++    const addon = await checkCurrentManagementAddon(
++      await AddonManager.getAddonByID(`${id}@chromium-extension`)
++    );
++    if (addon && getChromeIdForAddon(addon) === id) {
++      return addon;
++    }
++  }
++  const addon = await AddonManager.getAddonByID(id);
++  return isChromeExtension ? checkCurrentManagementAddon(addon) : addon;
++};
++
++const getExtensionInfoForAddon = (extension, addon, isChromeExtension = false) => {
++  if (
++    isChromeExtension &&
++    (!addon.isActive || extension?.id !== addon.id || extension.version !== addon.version)
++  ) {
++    extension = null;
++  }
+   let extInfo = {
+-    id: addon.id,
++    id: isChromeExtension
++      ? getChromeIdForAddon(addon, extension) || addon.id
++      : addon.id,
+     name: addon.name,
+     description: addon.description || "",
+     version: addon.version,
+@@ -67,7 +122,11 @@ const getExtensionInfoForAddon = (extension, addon) => {
+     );
+ 
+     extInfo.permissions = Array.from(extension.permissions).filter(perm => {
+-      return !hostPerms.includes(perm);
++      return (
++        !hostPerms.includes(perm) &&
++        perm !== "internal:floorpChromeUserScriptsAllowed" &&
++        (!isChromeExtension || !perm.startsWith("internal:"))
++      );
+     });
+     extInfo.hostPermissions = hostPerms;
+ 
+@@ -107,6 +166,11 @@ function checkAllowedAddon(addon) {
+ class ManagementAddonListener extends ExtensionCommon.EventEmitter {
+   eventNames = ["onEnabled", "onDisabled", "onInstalled", "onUninstalled"];
+ 
++  constructor(extension) {
++    super();
++    this.isChromeExtension = !!ExtensionUtils.getChromeExtensionId(extension);
++  }
++
+   hasAnyListeners() {
+     for (let event of this.eventNames) {
+       if (this.has(event)) {
+@@ -138,7 +202,7 @@ class ManagementAddonListener extends ExtensionCommon.EventEmitter {
+ 
+   getExtensionInfo(addon) {
+     let ext = WebExtensionPolicy.getByID(addon.id)?.extension;
+-    return getExtensionInfoForAddon(ext, addon);
++    return getExtensionInfoForAddon(ext, addon, this.isChromeExtension);
+   }
+ 
+   onEnabled(addon) {
+@@ -166,12 +230,13 @@ class ManagementAddonListener extends ExtensionCommon.EventEmitter {
+     if (!checkAllowedAddon(addon)) {
+       return;
+     }
+-    this.emit("onUninstalled", this.getExtensionInfo(addon));
++    const info = this.getExtensionInfo(addon);
++    this.emit("onUninstalled", this.isChromeExtension ? info.id : info);
+   }
+ }
+ 
+ this.management = class extends ExtensionAPIPersistent {
+-  addonListener = new ManagementAddonListener();
++  addonListener = new ManagementAddonListener(this.extension);
+ 
+   onShutdown() {
+     AddonManager.removeAddonListener(this.addonListener);
+@@ -209,7 +274,8 @@ this.management = class extends ExtensionAPIPersistent {
+     return {
+       management: {
+         async get(id) {
+-          let addon = await AddonManager.getAddonByID(id);
++          let addon = await getAddonForManagementId(id, isChromeExtension);
++          checkCurrentChromeCaller(extension, isChromeExtension);
+           if (!addon) {
+             throw new ExtensionError(`No such addon ${id}`);
+           }
+@@ -218,15 +284,16 @@ this.management = class extends ExtensionAPIPersistent {
+           }
+           // If the extension is enabled get it and use it for more data.
+           let ext = WebExtensionPolicy.getByID(addon.id)?.extension;
+-          return getExtensionInfoForAddon(ext, addon);
++          return getExtensionInfoForAddon(ext, addon, isChromeExtension);
+         },
+ 
+         async getAll() {
+           let addons = await AddonManager.getAddonsByTypes(allowedTypes);
++          checkCurrentChromeCaller(extension, isChromeExtension);
+           return addons.filter(checkAllowedAddon).map(addon => {
+             // If the extension is enabled get it and use it for more data.
+             let ext = WebExtensionPolicy.getByID(addon.id)?.extension;
+-            return getExtensionInfoForAddon(ext, addon);
++            return getExtensionInfoForAddon(ext, addon, isChromeExtension);
+           });
+         },
+ 
+@@ -261,8 +328,9 @@ this.management = class extends ExtensionAPIPersistent {
+         },
+ 
+         async getSelf() {
+-          let addon = await AddonManager.getAddonByID(extension.id);
+-          return getExtensionInfoForAddon(extension, addon);
++          let addon = await getAddonForManagementId(extension.id, isChromeExtension);
++          checkCurrentChromeCaller(extension, isChromeExtension);
++          return getExtensionInfoForAddon(extension, addon, isChromeExtension);
+         },
+ 
+         async uninstallSelf(options) {
+@@ -292,7 +360,8 @@ this.management = class extends ExtensionAPIPersistent {
+               throw new ExtensionError("User cancelled uninstall of extension");
+             }
+           }
+-          let addon = await AddonManager.getAddonByID(extension.id);
++          let addon = await getAddonForManagementId(extension.id, isChromeExtension);
++          checkCurrentChromeCaller(extension, isChromeExtension);
+           let canUninstall = Boolean(
+             addon.permissions & AddonManager.PERM_CAN_UNINSTALL
+           );
+@@ -303,7 +372,8 @@ this.management = class extends ExtensionAPIPersistent {
+         },
+ 
+         async setEnabled(id, enabled) {
+-          let addon = await AddonManager.getAddonByID(id);
++          let addon = await getAddonForManagementId(id, isChromeExtension);
++          checkCurrentChromeCaller(extension, isChromeExtension);
+           if (!addon) {
+             throw new ExtensionError(`No such addon ${id}`);
+           }
+@@ -331,7 +401,7 @@ this.management = class extends ExtensionAPIPersistent {
+           if (
+             !enabled &&
+             Services.policies &&
+-            !Services.policies.isAllowed(`disable-extension:${id}`)
++            !Services.policies.isAllowed(`disable-extension:${addon.id}`)
+           ) {
+             throw new ExtensionError(
+               `Cannot disable add-on ${id}: disallowed by enterprise policy`
+diff --git a/chrome/toolkit/content/extensions/schemas/management.json b/chrome/toolkit/content/extensions/schemas/management.json
+index 1e481f2..040828c 100644
+--- a/chrome/toolkit/content/extensions/schemas/management.json
++++ b/chrome/toolkit/content/extensions/schemas/management.json
+@@ -176,7 +176,14 @@
+         "parameters": [
+           {
+             "name": "id",
+-            "$ref": "manifest.ExtensionID",
++            "choices": [
++              { "$ref": "manifest.ExtensionID" },
++              {
++                "type": "string",
++                "pattern": "^[a-p]{32}$",
++                "format": "chromeManagementId"
++              }
++            ],
+             "description": "The ID from an item of $(ref:management.ExtensionInfo)."
+           },
+           {
+@@ -355,7 +362,10 @@
+         "parameters": [
+           {
+             "name": "info",
+-            "$ref": "ExtensionInfo"
++            "choices": [
++              { "$ref": "ExtensionInfo" },
++              { "type": "string", "format": "chromeManagementId" }
++            ]
+           }
+         ]
+       }

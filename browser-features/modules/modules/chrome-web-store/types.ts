@@ -35,7 +35,7 @@ export type CWSErrorCodeType = (typeof CWSErrorCode)[keyof typeof CWSErrorCode];
  */
 export class CWSError extends Error {
   readonly code: CWSErrorCodeType;
-  readonly cause?: unknown;
+  override readonly cause?: unknown;
 
   constructor(code: CWSErrorCodeType, message: string, cause?: unknown) {
     super(message);
@@ -136,6 +136,7 @@ export interface ChromeManifest {
 
 export interface ChromeManifestBackground {
   service_worker?: string;
+  page?: string;
   scripts?: string[];
   persistent?: boolean;
   type?: "module" | "classic";
@@ -170,9 +171,9 @@ export interface DNRRuleResource {
 export type ContentSecurityPolicy =
   | string
   | {
-      extension_pages?: string;
-      sandbox?: string;
-    };
+    extension_pages?: string;
+    sandbox?: string;
+  };
 
 /**
  * MV2 format: string[]
@@ -194,6 +195,13 @@ export interface GeckoSpecificSettings {
   id?: string;
   strict_min_version?: string;
   strict_max_version?: string;
+  floorp_chrome_extension?: ChromeExtensionCompatibility;
+}
+
+/** Runtime contract for identifying converted Chrome extensions. */
+export interface ChromeExtensionCompatibility {
+  schema_version: 1;
+  original_id: string;
 }
 
 // =============================================================================
@@ -227,6 +235,12 @@ export interface HeaderOperation {
   value?: string;
 }
 
+export interface DNRHeaderInfo {
+  header: string;
+  values?: string[];
+  excludedValues?: string[];
+}
+
 export interface DNRRuleCondition {
   urlFilter?: string;
   regexFilter?: string;
@@ -243,6 +257,8 @@ export interface DNRRuleCondition {
   excludedResourceTypes?: ResourceType[];
   tabIds?: number[];
   excludedTabIds?: number[];
+  responseHeaders?: DNRHeaderInfo[];
+  excludedResponseHeaders?: DNRHeaderInfo[];
 }
 
 export type RequestMethod =
@@ -287,6 +303,28 @@ export interface ConversionResult {
   readonly transformedManifest?: ChromeManifest;
   readonly error?: CWSError;
   readonly warnings?: string[];
+  readonly report?: ChromeConversionReport;
+}
+
+/** Diagnostics embedded in a converted extension for migration and support. */
+export interface ChromeConversionReport {
+  schemaVersion: 1;
+  chromeId: string;
+  addonId: string;
+  originalVersion: string;
+  originalManifestPath: string;
+  background?: {
+    nativeWorkerCompiled: boolean;
+    selected: "service_worker" | "document" | "none";
+    serviceWorkerFallback: boolean;
+  };
+  signature?: {
+    format: 2 | 3;
+    algorithm: "rsa-sha1" | "rsa-sha256" | "ecdsa-sha256";
+    publicKeySha256: string;
+  };
+  warnings: string[];
+  removedPermissions: string[];
 }
 
 /**
@@ -373,6 +411,8 @@ export interface TransformOptions {
   readonly extensionId: string;
   /** Minimum Gecko version */
   readonly minGeckoVersion?: string;
+  /** Actual compiled worker capability, supplied by the production converter. */
+  readonly nativeWorker?: boolean;
   /** Whether to keep unsupported permissions (for logging) */
   readonly keepUnsupportedPermissions?: boolean;
 }
@@ -404,6 +444,7 @@ export interface AddonInstallListener {
  */
 export interface AddonInstall {
   install(): Promise<void>;
+  cancel(): void;
   addListener(listener: AddonInstallListener): void;
   removeListener(listener: AddonInstallListener): void;
   error?: number;

@@ -1,36 +1,33 @@
-# Chrome API Polyfills for Firefox
+# Chrome Extension Compatibility Entry Points
 
-This directory contains polyfill implementations for Chrome extension APIs that are not natively supported in Firefox. These polyfills are automatically injected during Chrome extension conversion to provide compatibility.
+This directory retains legacy module interfaces for offscreen documents and
+document IDs. Converted extensions use the native Floorp Runtime implementations
+described below; conversion no longer injects these scripts into backgrounds.
 
 ## Purpose
 
-Polyfills in this directory:
-- Emulate Chrome-specific APIs using Firefox capabilities
-- Are automatically injected during CRX to XPI conversion
-- Provide transparent compatibility for extension developers
-- Maintain API compatibility with Chrome's implementation
+Native implementations can share Gecko document identities and extension
+lifecycle management across backgrounds, extension pages, and message senders.
 
 ## Available Polyfills
 
-### Offscreen API Polyfill
+### Native Offscreen Documents
 
-**File:** `OffscreenPolyfill.sys.mts`  
-**Status:** Draft - Not yet integrated  
-**Chrome API:** `chrome.offscreen`  
-**Investigation:** [docs/investigations/offscreen-api-support.md](../../../../docs/investigations/offscreen-api-support.md)
+Converted MV3 extensions with the `offscreen` permission use a dedicated Runtime
+host through `chrome.offscreen.createDocument`, `closeDocument`, and
+`hasDocument`. The host belongs to the extension and survives event background
+termination. `runtime.getContexts` exposes the real document as
+`OFFSCREEN_DOCUMENT`, with the same native document ID used by messaging.
 
-**Description:**  
-Provides compatibility for Chrome's Offscreen API by creating hidden iframes in Firefox MV3 background scripts. The Offscreen API allows extensions to run DOM-based operations in hidden background contexts.
-
-**How it works:**
-- Creates hidden iframes to emulate offscreen documents
-- Leverages Firefox MV3 background scripts' DOM access
-- Provides same API surface as Chrome's Offscreen API
-- Enforces same constraints (single document, lifecycle rules)
+The Runtime validates extension ownership of the URL, reserves the single host
+before asynchronous loading, and cleans up cancelled or failed loads, closed
+documents, and extension shutdown. Offscreen documents and their extension
+iframes receive the runtime API. An `AUDIO_PLAYBACK` reason starts a 30 second
+silence timeout driven by Gecko's media controller.
 
 **Usage:**
 ```javascript
-// This code works in both Chrome and Firefox with the polyfill
+// Available in converted MV3 extensions using the patched Floorp Runtime.
 await chrome.offscreen.createDocument({
   url: 'offscreen.html',
   reasons: ['DOM_PARSER'],
@@ -43,213 +40,83 @@ await chrome.offscreen.createDocument({
 await chrome.offscreen.closeDocument();
 ```
 
-**Limitations:**
-- Only works in contexts with DOM access (background scripts)
-- Won't work in pure service worker contexts
-- Slight lifecycle differences vs. Chrome
-- Performance may differ from native implementation
+The former iframe polyfill is retired. Its module remains as a bridge to an
+already available native API, and its installer and generated script leave API
+bindings unchanged. Existing converted packages should be reconverted to remove
+their bundled legacy script. A separate native tab-capture API provides
+document-bound, single-use stream IDs and real video-only recording, including
+Offscreen consumers. Audio, desktop capture, and `consumerTabId` are unsupported
+and reject explicitly. The capture API requires an actual extension action
+invocation; hover/preload and generic `activeTab` grants do not authorize it.
 
 ---
 
-### DocumentId Polyfill
+### Native Document IDs
 
-**Directory:** `documentId/`  
-**Status:** Draft - Not yet integrated  
-**Chrome API:** `documentId` property in `chrome.scripting` and `chrome.tabs`
+The pinned Floorp Runtime provides document IDs through Gecko's
+`ExtensionDocumentId` module. `webNavigation`, `scripting`, message senders,
+`tabs.sendMessage`, `tabs.connect`, and `runtime.getContexts` share UUIDs tied to
+real inner windows. Scripts target a document within the requested tab; an ID
+from a previous navigation cannot select the replacement document in that frame.
 
-**Description:**  
-Provides compatibility for Chrome's `documentId` property (introduced in Chrome 106+) by generating synthetic documentIds based on `tabId` and `frameId`. Wraps `chrome.scripting.executeScript()` and `chrome.tabs.sendMessage()` to translate documentIds to Firefox-compatible parameters.
+Converted extensions use these native APIs directly. No documentId script or
+extra permission is needed. IDs must be treated as opaque values; they cannot be
+reconstructed from a tab or frame ID. The former synthetic ID implementation has
+been retired, and its exported installer and generated script are inert
+compatibility entry points. Already installed converted packages need to be
+reconverted to replace their bundled legacy script.
 
-**How it works:**
-- Generates unique documentIds in format: `floorp-doc-{tabId}-{frameId}-{instanceId}`
-- Intercepts API calls with `documentIds` and converts to `tabId`/`frameId` pairs
-- Caches parsed documentIds for efficient lookups
-
-**Usage:**
 ```javascript
-// This code works in both Chrome and Firefox with the polyfill
-await chrome.scripting.executeScript({
-  target: { documentIds: ['floorp-doc-123-0-abc123'] },
-  func: () => console.log('Executed!')
+const [{ documentId }] = await chrome.scripting.executeScript({
+  target: { tabId },
+  func: () => document.title,
 });
-
-// With tabs.sendMessage
-await chrome.tabs.sendMessage(tabId, message, {
-  documentId: 'floorp-doc-123-0-abc123'
-});
+await chrome.tabs.sendMessage(tabId, message, { documentId });
 ```
-
-**Limitations:**
-- DocumentIds are synthetic and may not persist across browser restarts
-- Not fully compatible with all Chrome documentId use cases
-- Event handler documentId injection not yet implemented
 
 ## Integration with Extension Conversion
 
-### Current State
+`ManifestTransformer.sys.mts` preserves classic and module background script types
+and adds extension-specific compatibility metadata. `CRXConverter.sys.mts`
+retains the original manifest and a conversion report. The Runtime checks that
+the original Chrome ID agrees with the installed extension ID before exposing
+compatibility APIs. Source patches are maintained under
+`.github/patches/floorp-runtime/common/`, with matching extracted artifact patches
+under `tools/patches/` for browser integration tests.
 
-Polyfills are currently **not integrated** into the conversion pipeline. They are reference implementations showing how compatibility could be achieved.
+## Verification
 
-### Planned Integration
+Run the host lifecycle and patch parity tests from the repository root:
 
-1. **Manifest Transformation** (`ManifestTransformer.sys.mts`):
-   - Detect when polyfilled APIs are requested
-   - Inject polyfill scripts into background context
-   - Mark manifest with polyfill metadata
-
-2. **Build Integration** (`CRXConverter.sys.mts`):
-   - Bundle polyfill scripts with converted extension
-   - Place polyfills in `__floorp_polyfills__/` directory
-   - Ensure polyfills load before extension code
-
-3. **Permission Handling** (`Constants.sys.mts`):
-   - Move polyfilled permissions to `POLYFILLED_PERMISSIONS`
-   - Remove from `UNSUPPORTED_PERMISSIONS`
-   - Allow permission during conversion
-
-## Creating New Polyfills
-
-When creating a new polyfill:
-
-1. **Research** - Create investigation document in `docs/investigations/`
-2. **Implementation** - Create polyfill module following this template:
-   ```typescript
-   /* -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
-    * This Source Code Form is subject to the terms of the Mozilla Public
-    * License, v. 2.0. If a copy of the MPL was not distributed with this
-    * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-   
-   /**
-    * <API Name> Polyfill for Firefox
-    *
-    * Description...
-    * See: docs/investigations/<api-name>-support.md
-    */
-   
-   // Types
-   export interface APIInterface {
-     // ...
-   }
-   
-   // Implementation
-   class APIPolyfillImpl implements APIInterface {
-     // ...
-   }
-   
-   // Installation
-   export function installAPIPolyfill(): boolean {
-     // ...
-   }
-   ```
-
-3. **Documentation** - Document:
-   - What Chrome API it polyfills
-   - How it works internally
-   - Known limitations
-   - Usage examples
-   - Testing approach
-
-4. **Testing** - Create tests:
-   - Unit tests for polyfill logic
-   - Integration tests with sample extensions
-   - Real-world extension testing
-
-5. **Integration** - Update:
-   - `Constants.sys.mts` - Permission lists
-   - `ManifestTransformer.sys.mts` - Injection logic
-   - `CRXConverter.sys.mts` - Build integration
-
-## Guidelines
-
-### API Compatibility
-
-- **Match Chrome's API surface** - Same method names, parameters, return types
-- **Match Chrome's behavior** - Same constraints, errors, edge cases
-- **Document differences** - Clearly note any unavoidable differences
-
-### Performance
-
-- **Minimize overhead** - Polyfills should be lightweight
-- **Lazy initialization** - Don't create resources until needed
-- **Cleanup** - Properly dispose of resources
-
-### Error Handling
-
-- **Match Chrome's errors** - Same error messages and conditions
-- **Fail gracefully** - Provide helpful error messages
-- **Don't break extensions** - Errors shouldn't crash the extension
-
-### Code Quality
-
-- **TypeScript** - Use proper type definitions
-- **Documentation** - Comprehensive JSDoc comments
-- **Testing** - Unit and integration tests
-- **Linting** - Follow project code style
-
-## Testing Polyfills
-
-### Unit Tests
-
-Test polyfill logic in isolation:
-```typescript
-// Test basic functionality
-await polyfill.createDocument({ /* ... */ });
-assert(await polyfill.hasDocument());
-await polyfill.closeDocument();
-assert(!(await polyfill.hasDocument()));
+```sh
+deno test --allow-read tools/src/offscreen_runtime_patch.test.ts
 ```
 
-### Integration Tests
+After applying the artifact patches to a built browser, run the actual native
+extension tests in a disposable profile:
 
-Test with real extensions:
-1. Find Chrome extensions using the API
-2. Convert using Floorp's CRX converter
-3. Install and test functionality
-4. Verify API compatibility
+```sh
+python3 tools/chrome-extension-runtime/run-browser-tests.py \
+  --browser _dist/bin/floorp \
+  --test browser-features/modules/modules/chrome-web-store/test/polyfills/offscreen/OffscreenNative.test.mts \
+  --test browser-features/modules/modules/chrome-web-store/test/polyfills/offscreen/OffscreenPolyfill.test.mts
+```
 
-### Real-world Testing
+The native test installs a temporary extension, verifies offscreen and iframe
+API restrictions, checks context filters and document IDs, stops the background,
+and confirms messaging and Ports still work through the surviving offscreen
+host. It also verifies immediate close, recreation, and extension shutdown.
+The source patch includes an xpcshell lifecycle regression for source-built
+Runtimes. Capture streams and platform audio routing require separate tests.
 
-Test with popular extensions:
-- Extensions with many users
-- Extensions using the API heavily
-- Extensions with different use cases
+## Adding Compatibility APIs
 
-## Maintenance
-
-### Monitoring Chrome Changes
-
-- Watch Chrome release notes for API changes
-- Update polyfills when Chrome changes behavior
-- Test compatibility with new Chrome versions
-
-### Monitoring Firefox Changes
-
-- Track Firefox's MV3 implementation
-- Adapt polyfills to Firefox changes
-- Watch for new native APIs that could replace polyfills
-
-### Performance Monitoring
-
-- Benchmark polyfill performance
-- Compare with native implementation
-- Optimize hot paths
-
-## Future Work
-
-### Potential Future Polyfills
-
-Based on extension usage patterns, consider polyfills for:
-- `chrome.sidePanel` - Chrome's side panel API
-- `chrome.tabCapture` - Tab audio/video capture
-- Other highly-requested Chrome APIs
-
-### Native API Migration
-
-If Firefox adds native support for an API:
-1. Update polyfill to detect native API
-2. Use native API when available
-3. Keep polyfill for older Firefox versions
-4. Eventually deprecate polyfill
+Choose the native Runtime layer when behavior depends on extension lifetime,
+permissions, document identity, or process boundaries. Keep source and extracted
+artifact patches equivalent and validate against `floorp-runtime.lock.json` in
+an isolated fixture. Restrict compatibility changes to the intended extension
+mode and use actual extension tests to verify bindings and event delivery.
+Document supported behavior and remaining gaps alongside the conversion report.
 
 ## Resources
 

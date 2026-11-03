@@ -1,0 +1,413 @@
+{
+  "schemaVersion": 1,
+  "referenceChromeVersion": "155.0.8059.84",
+  "referenceBinarySha256": "cb19b59995072b86cc7f887b3b1c7ab1f63518a7f2ed9f0d33249e1a040e2c76",
+  "runtimeSourceCommit": "1553b7b550dfe555684628d175e0c1701a785d0b",
+  "corpusFrozenAtUTC": "2026-10-18T23:59:25.555Z",
+  "scope": "Historical signed-package source inventory captured against runtimeSourceCommit, including supplemental package IDs outside the immutable selected50. Authored protocol observations and literal references do not qualify a current native candidate or change the selected50 denominator.",
+  "extensions": [
+    {
+      "id": "infppggnoaenmfagbfknfkancpbljcca",
+      "name": "Automa",
+      "version": "1.30.02",
+      "packageSha256": "54095ca7764675f1df6f62329412a75be33bb30968fc2184497d9d29188b2797",
+      "status": "frozen",
+      "literalCommandAndEventReferences": [
+        {
+          "method": "Input.dispatchKeyEvent",
+          "sources": [
+            {
+              "path": "background.bundle.js",
+              "sha256": "c71cd4c99a6eaca85f194a6d792404c4b6d7ccc00d3966a9a5e5ff67f6b29442"
+            },
+            {
+              "path": "contentScript.bundle.js",
+              "sha256": "febd745232f0e5fdedfd3ff21682f41df74875413970ebd6f96c560acf324826"
+            },
+            {
+              "path": "elementSelector.bundle.js",
+              "sha256": "8a9f438396a24ba90246f145efa1a3ab21e869ce5babc4f41c88c4213ba45fef"
+            }
+          ]
+        },
+        {
+          "method": "Input.dispatchMouseEvent",
+          "sources": [
+            {
+              "path": "contentScript.bundle.js",
+              "sha256": "febd745232f0e5fdedfd3ff21682f41df74875413970ebd6f96c560acf324826"
+            },
+            {
+              "path": "elementSelector.bundle.js",
+              "sha256": "8a9f438396a24ba90246f145efa1a3ab21e869ce5babc4f41c88c4213ba45fef"
+            }
+          ]
+        },
+        {
+          "method": "Network.setUserAgentOverride",
+          "sources": [
+            {
+              "path": "offscreen.bundle.js",
+              "sha256": "5a4676f434da365e313675ae6df5d35d36c0e289745510b5d7f89f6616eb99a4"
+            },
+            {
+              "path": "3475.bundle.js",
+              "sha256": "4395416fdf80345081a64997dfb01088bc5583d8a393cbcf2983fef9bee76553"
+            }
+          ]
+        },
+        {
+          "method": "Page.enable",
+          "sources": [
+            {
+              "path": "offscreen.bundle.js",
+              "sha256": "5a4676f434da365e313675ae6df5d35d36c0e289745510b5d7f89f6616eb99a4"
+            },
+            {
+              "path": "background.bundle.js",
+              "sha256": "c71cd4c99a6eaca85f194a6d792404c4b6d7ccc00d3966a9a5e5ff67f6b29442"
+            }
+          ]
+        },
+        {
+          "method": "Page.handleJavaScriptDialog",
+          "sources": [
+            {
+              "path": "offscreen.bundle.js",
+              "sha256": "5a4676f434da365e313675ae6df5d35d36c0e289745510b5d7f89f6616eb99a4"
+            },
+            {
+              "path": "3475.bundle.js",
+              "sha256": "4395416fdf80345081a64997dfb01088bc5583d8a393cbcf2983fef9bee76553"
+            }
+          ]
+        },
+        {
+          "method": "Page.javascriptDialogOpening",
+          "sources": [
+            {
+              "path": "offscreen.bundle.js",
+              "sha256": "5a4676f434da365e313675ae6df5d35d36c0e289745510b5d7f89f6616eb99a4"
+            },
+            {
+              "path": "3475.bundle.js",
+              "sha256": "4395416fdf80345081a64997dfb01088bc5583d8a393cbcf2983fef9bee76553"
+            }
+          ]
+        },
+        {
+          "method": "Runtime.evaluate",
+          "sources": [
+            {
+              "path": "background.bundle.js",
+              "sha256": "c71cd4c99a6eaca85f194a6d792404c4b6d7ccc00d3966a9a5e5ff67f6b29442"
+            }
+          ]
+        }
+      ],
+      "inventoryLimit": "Literal CDP strings in frozen JavaScript archives; dynamic method construction and successful primary operations require separate execution."
+    },
+    {
+      "id": "hfjnppljknigdnnpocjjgdcfmnodoafe",
+      "name": "Browserflow",
+      "version": "1.0.6",
+      "packageSha256": "20116ba3b03b5a8edab7b22e1a051e9602fed70fc2a77f3bff155032ef24147d",
+      "status": "frozen",
+      "literalCommandAndEventReferences": [
+        {
+          "method": "DOM.setFileInputFiles",
+          "sources": [
+            {
+              "path": "popup.bundle.js",
+              "sha256": "bd2166f23b37ce801e9951f7d774a5b045c585cf51e95df9adaef425179a781b"
+            }
+          ]
+        },
+        {
+          "method": "Input.dispatchKeyEvent",
+          "sources": [
+            {
+              "path": "popup.bundle.js",
+              "sha256": "bd2166f23b37ce801e9951f7d774a5b045c585cf51e95df9adaef425179a781b"
+            }
+          ]
+        },
+        {
+          "method": "Input.dispatchMouseEvent",
+          "sources": [
+            {
+              "path": "popup.bundle.js",
+              "sha256": "bd2166f23b37ce801e9951f7d774a5b045c585cf51e95df9adaef425179a781b"
+            }
+          ]
+        },
+        {
+          "method": "Input.insertText",
+          "sources": [
+            {
+              "path": "popup.bundle.js",
+              "sha256": "bd2166f23b37ce801e9951f7d774a5b045c585cf51e95df9adaef425179a781b"
+            }
+          ]
+        },
+        {
+          "method": "Page.captureScreenshot",
+          "sources": [
+            {
+              "path": "popup.bundle.js",
+              "sha256": "bd2166f23b37ce801e9951f7d774a5b045c585cf51e95df9adaef425179a781b"
+            }
+          ]
+        },
+        {
+          "method": "Page.enable",
+          "sources": [
+            {
+              "path": "popup.bundle.js",
+              "sha256": "bd2166f23b37ce801e9951f7d774a5b045c585cf51e95df9adaef425179a781b"
+            }
+          ]
+        },
+        {
+          "method": "Page.getLayoutMetrics",
+          "sources": [
+            {
+              "path": "popup.bundle.js",
+              "sha256": "bd2166f23b37ce801e9951f7d774a5b045c585cf51e95df9adaef425179a781b"
+            }
+          ]
+        },
+        {
+          "method": "Page.handleJavaScriptDialog",
+          "sources": [
+            {
+              "path": "popup.bundle.js",
+              "sha256": "bd2166f23b37ce801e9951f7d774a5b045c585cf51e95df9adaef425179a781b"
+            }
+          ]
+        },
+        {
+          "method": "Page.javascriptDialogClosed",
+          "sources": [
+            {
+              "path": "popup.bundle.js",
+              "sha256": "bd2166f23b37ce801e9951f7d774a5b045c585cf51e95df9adaef425179a781b"
+            }
+          ]
+        },
+        {
+          "method": "Page.javascriptDialogOpening",
+          "sources": [
+            {
+              "path": "popup.bundle.js",
+              "sha256": "bd2166f23b37ce801e9951f7d774a5b045c585cf51e95df9adaef425179a781b"
+            }
+          ]
+        },
+        {
+          "method": "Page.setBypassCSP",
+          "sources": [
+            {
+              "path": "popup.bundle.js",
+              "sha256": "bd2166f23b37ce801e9951f7d774a5b045c585cf51e95df9adaef425179a781b"
+            }
+          ]
+        },
+        {
+          "method": "Runtime.evaluate",
+          "sources": [
+            {
+              "path": "popup.bundle.js",
+              "sha256": "bd2166f23b37ce801e9951f7d774a5b045c585cf51e95df9adaef425179a781b"
+            }
+          ]
+        }
+      ],
+      "inventoryLimit": "Literal CDP strings in frozen JavaScript archives; dynamic method construction and successful primary operations require separate execution."
+    },
+    {
+      "id": "gcbalfbdmfieckjlnblleoemohcganoc",
+      "name": "UI.Vision",
+      "version": "10.0.301",
+      "packageSha256": "ef6699aaef8c24aeaa26440649a50d628264a9f21371362961aa69693abbe407",
+      "status": "frozen",
+      "literalCommandAndEventReferences": [
+        {
+          "method": "DOM.getDocument",
+          "sources": [
+            {
+              "path": "bg.js",
+              "sha256": "f7f786637c63fefe1f53b049bb2609cb6e97b440d5cbe18a32b8311ec32b510d"
+            },
+            {
+              "path": "360.js",
+              "sha256": "239e245ac11d9894b0dd02274c1d267e770f0a038a45a14c1f0e8f175e635211"
+            }
+          ]
+        },
+        {
+          "method": "DOM.querySelector",
+          "sources": [
+            {
+              "path": "bg.js",
+              "sha256": "f7f786637c63fefe1f53b049bb2609cb6e97b440d5cbe18a32b8311ec32b510d"
+            },
+            {
+              "path": "360.js",
+              "sha256": "239e245ac11d9894b0dd02274c1d267e770f0a038a45a14c1f0e8f175e635211"
+            }
+          ]
+        },
+        {
+          "method": "DOM.setFileInputFiles",
+          "sources": [
+            {
+              "path": "bg.js",
+              "sha256": "f7f786637c63fefe1f53b049bb2609cb6e97b440d5cbe18a32b8311ec32b510d"
+            },
+            {
+              "path": "360.js",
+              "sha256": "239e245ac11d9894b0dd02274c1d267e770f0a038a45a14c1f0e8f175e635211"
+            }
+          ]
+        },
+        {
+          "method": "Emulation.setFocusEmulationEnabled",
+          "sources": [
+            {
+              "path": "360.js",
+              "sha256": "239e245ac11d9894b0dd02274c1d267e770f0a038a45a14c1f0e8f175e635211"
+            }
+          ]
+        },
+        {
+          "method": "Input.dispatchKeyEvent",
+          "sources": [
+            {
+              "path": "360.js",
+              "sha256": "239e245ac11d9894b0dd02274c1d267e770f0a038a45a14c1f0e8f175e635211"
+            }
+          ]
+        },
+        {
+          "method": "Input.dispatchMouseEvent",
+          "sources": [
+            {
+              "path": "360.js",
+              "sha256": "239e245ac11d9894b0dd02274c1d267e770f0a038a45a14c1f0e8f175e635211"
+            }
+          ]
+        },
+        {
+          "method": "Runtime.evaluate",
+          "sources": [
+            {
+              "path": "360.js",
+              "sha256": "239e245ac11d9894b0dd02274c1d267e770f0a038a45a14c1f0e8f175e635211"
+            }
+          ]
+        }
+      ],
+      "inventoryLimit": "Literal CDP strings in frozen JavaScript archives; dynamic method construction and successful primary operations require separate execution."
+    },
+    {
+      "id": "mooikfkahbdckldjjndioackbalphokd",
+      "name": "Selenium IDE",
+      "status": "unavailable",
+      "literalCommandAndEventReferences": [],
+      "inventoryLimit": "Literal CDP strings in frozen JavaScript archives; dynamic method construction and successful primary operations require separate execution."
+    },
+    {
+      "id": "dkaagdgjmgdmbnecmcefdhjekcoceebi",
+      "name": "Puppeteer Recorder",
+      "version": "3.2.0.7",
+      "packageSha256": "7dcd525de140525b6f446c09aa68b8d0ac1b3b7e0d16a5b6da54ef14dfb8adb8",
+      "status": "frozen",
+      "literalCommandAndEventReferences": [],
+      "inventoryLimit": "Literal CDP strings in frozen JavaScript archives; dynamic method construction and successful primary operations require separate execution.",
+      "selectionScope": "Supplemental corrected package ID; outside the immutable selected50. Its availability does not replace the selected Puppeteer Recorder row."
+    },
+    {
+      "id": "mdnleldcmiljblolnjhpnblkcekpdkpa",
+      "name": "Requestly",
+      "version": "26.9.29",
+      "packageSha256": "0bcd9589dba665d639db8f8eaa8a4656d8f873be74e5bcc91cc7bc953b702a23",
+      "status": "frozen",
+      "literalCommandAndEventReferences": [],
+      "inventoryLimit": "Literal CDP strings in frozen JavaScript archives; dynamic method construction and successful primary operations require separate execution."
+    }
+  ],
+  "observedCommandParameters": {
+    "Runtime.evaluate": [
+      "expression",
+      "returnByValue",
+      "awaitPromise",
+      "userGesture"
+    ],
+    "DOM.getDocument": [],
+    "DOM.querySelector": [
+      "nodeId",
+      "selector"
+    ],
+    "DOM.setFileInputFiles": [
+      "nodeId",
+      "objectId",
+      "files"
+    ],
+    "Input.dispatchKeyEvent": [
+      "type",
+      "key",
+      "code",
+      "text",
+      "unmodifiedText",
+      "windowsVirtualKeyCode",
+      "nativeVirtualKeyCode",
+      "modifiers",
+      "autoRepeat",
+      "location",
+      "isKeypad"
+    ],
+    "Input.dispatchMouseEvent": [
+      "type",
+      "x",
+      "y",
+      "button",
+      "buttons",
+      "clickCount",
+      "modifiers",
+      "deltaX",
+      "deltaY",
+      "pointerType"
+    ],
+    "Input.insertText": [
+      "text"
+    ],
+    "Network.setUserAgentOverride": [
+      "userAgent"
+    ],
+    "Page.enable": [],
+    "Page.handleJavaScriptDialog": [
+      "accept",
+      "promptText"
+    ],
+    "Page.captureScreenshot": [
+      "clip",
+      "captureBeyondViewport"
+    ],
+    "Page.getLayoutMetrics": [],
+    "Page.setBypassCSP": [
+      "enabled"
+    ],
+    "Emulation.setFocusEmulationEnabled": [
+      "enabled"
+    ]
+  },
+  "observedEvents": [
+    "Page.javascriptDialogOpening",
+    "Page.javascriptDialogClosed"
+  ],
+  "requiresCompiledNativePatch": [
+    "Emulation.setFocusEmulationEnabled",
+    "Page.setBypassCSP"
+  ]
+}

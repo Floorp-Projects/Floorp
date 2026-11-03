@@ -1,0 +1,30 @@
+<!doctype html>
+<meta charset="utf-8" />
+<title>Frozen automation extension operation</title>
+<h1>Automation target</h1>
+<label>Customer <input id="customer" autocomplete="off" /></label>
+<button id="submit-operation">Submit operation</button>
+<output id="operation-result">Waiting</output>
+<table id="products">
+  <tbody>
+    <tr>
+      <td class="name">Apple</td>
+      <td class="price">3.25</td>
+    </tr>
+    <tr>
+      <td class="name">Pear</td>
+      <td class="price">4.50</td>
+    </tr>
+  </tbody>
+</table>
+<script>
+  document.querySelector("#submit-operation").addEventListener("click", () => {
+    const value = document.querySelector("#customer").value;
+    document.querySelector("#operation-result").textContent =
+      `Submitted: ${value}`;
+    document.documentElement.dataset.operation = value;
+    document.documentElement.dataset.clickCount = String(
+      Number(document.documentElement.dataset.clickCount || 0) + 1,
+    );
+  });
+</script>

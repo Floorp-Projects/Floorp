@@ -1,0 +1,56 @@
+diff --git a/modules/Extension.sys.mjs b/modules/Extension.sys.mjs
+index 0e59ba0..e179056 100644
+--- a/modules/Extension.sys.mjs
++++ b/modules/Extension.sys.mjs
+@@ -1710,6 +1710,9 @@ export class ExtensionData {
+       },
+       preprocessors: {},
+       manifestVersion: this.manifestVersion,
++      // Chrome permits userScripts as a required permission. Keep Firefox
++      // extensions on their existing optional-only permission path.
++      isChromeCompat: !!ExtensionUtils.getChromeExtensionId(this),
+       // We introduced this context param in Bug 1831417.
+       ignoreUnrecognizedProperties: false,
+       temporarilyInstalled: this.temporarilyInstalled,
+diff --git a/modules/Schemas.sys.mjs b/modules/Schemas.sys.mjs
+index 04055a8..17f22a7 100644
+--- a/modules/Schemas.sys.mjs
++++ b/modules/Schemas.sys.mjs
+@@ -1172,6 +1172,15 @@ class InjectionContext extends Context {
+  * format. The original input is always a string.
+  */
+ const FORMATS = {
++  chromeRequiredUserScriptsPermission(value, context) {
++    if (value !== "userScripts" || context.isChromeCompat !== true) {
++      throw new Error(
++        "Required userScripts permission is only supported for converted Chrome extensions"
++      );
++    }
++    return value;
++  },
++
+   hostname(string) {
+     // TODO bug 1797376: Despite the name, this format is NOT a "hostname",
+     // but hostname + port and may fail with IPv6. Use canonicalDomain instead.
+diff --git a/chrome/toolkit/content/extensions/schemas/user_scripts.json b/chrome/toolkit/content/extensions/schemas/user_scripts.json
+index f9589ae..09eabeb 100644
+--- a/chrome/toolkit/content/extensions/schemas/user_scripts.json
++++ b/chrome/toolkit/content/extensions/schemas/user_scripts.json
+@@ -2,6 +2,17 @@
+   {
+     "namespace": "manifest",
+     "types": [
++      {
++        "$extend": "Permission",
++        "choices": [
++          {
++            "type": "string",
++            "min_manifest_version": 3,
++            "pattern": "^userScripts$",
++            "format": "chromeRequiredUserScriptsPermission"
++          }
++        ]
++      },
+       {
+         "$extend": "OptionalOnlyPermission",
+         "choices": [

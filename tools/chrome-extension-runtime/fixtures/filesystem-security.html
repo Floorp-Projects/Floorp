@@ -1,0 +1,27 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>filesystem foreign origin probe</title>
+<script>
+(async () => {
+  const url = new URL(location.href).searchParams.get("url");
+  const image = () =>
+    new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => resolve(false);
+      img.onerror = () => resolve(true);
+      img.src = url;
+    });
+  let fetchDenied = false;
+  try {
+    await (await fetch(url)).arrayBuffer();
+  } catch {
+    fetchDenied = true;
+  }
+  document.title = "FSSEC:" +
+    JSON.stringify({
+      fetchDenied,
+      imageDenied: await image(),
+      globalsAbsent: typeof webkitRequestFileSystem === "undefined",
+    });
+})().catch((error) => document.title = "FAIL:" + error);
+</script>

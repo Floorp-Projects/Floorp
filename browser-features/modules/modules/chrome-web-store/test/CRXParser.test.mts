@@ -222,6 +222,33 @@ export async function runAllTests(): Promise<void> {
     },
     { name: "CRX2 zip offset calculation", fn: testCRX2ZipOffsetCalculation },
     { name: "CRX3 zip offset calculation", fn: testCRX3ZipOffsetCalculation },
+    {
+      name: "reject CRX2 header lengths outside buffer",
+      fn() {
+        const data = buildCRX2(0, 0, false);
+        new DataView(data).setUint32(8, 0xffffffff, true);
+        assertEquals(parseCRXHeader(data), null, "truncated CRX2 key rejected");
+      },
+    },
+    {
+      name: "reject CRX3 header length outside buffer",
+      fn() {
+        const data = buildCRX3(4, false);
+        new DataView(data).setUint32(8, 0xffffffff, true);
+        assertEquals(
+          parseCRXHeader(data),
+          null,
+          "truncated CRX3 protobuf rejected",
+        );
+      },
+    },
+    {
+      name: "reject truncated fixed CRX2 header without throwing",
+      fn() {
+        const data = buildCRX2(0, 0, false).slice(0, 12);
+        assertEquals(parseCRXHeader(data), null, "short CRX2 header rejected");
+      },
+    },
   ];
 
   await runTests("CRXParser.test.mts", tests);

@@ -1,0 +1,72 @@
+diff --git a/toolkit/components/extensions/ExtensionContent.sys.mjs b/toolkit/components/extensions/ExtensionContent.sys.mjs
+--- a/toolkit/components/extensions/ExtensionContent.sys.mjs
++++ b/toolkit/components/extensions/ExtensionContent.sys.mjs
+@@ -1102,6 +1102,10 @@
+         sandboxContentSecurityPolicy,
+         sameZoneAs: contentWindow,
+         wantXrays: true,
++        // Chrome isolated worlds retain Xrays without Gecko-only waiver access.
++        ...(ExtensionUtils.getChromeExtensionId(extension)
++          ? { allowWaivers: false }
++          : {}),
+         isWebExtensionContentScript: true,
+         wantExportHelpers: true,
+         wantGlobalProperties,
+@@ -1139,8 +1143,44 @@
+         // contentWindow, but window.JSON cannot (and it could potentially be
+         // spoofed by the web page). jQuery.parseJSON relies on window.JSON.
+         Cu.evalInSandbox("window.JSON = JSON;", this.sandbox);
+       }
++
++      if (ExtensionUtils.getChromeExtensionId(extension)) {
++        // Chrome resolves an absent timer receiver to the content Window.
++        // Gecko's content-script global is a sandbox, so preserve the real
++        // Window receiver for detached calls without accepting other objects.
++        Cu.evalInSandbox(
++          `(() => {
++            const contentWindow = window;
++            const sandboxGlobal = globalThis;
++            const apply = Reflect.apply;
++            for (const name of [
++              "setTimeout", "clearTimeout", "setInterval", "clearInterval",
++            ]) {
++              const original = contentWindow[name];
++              const timer = ({
++                [name]() {
++                  "use strict";
++                  const receiver = this === undefined || this === null ||
++                    this === sandboxGlobal ? contentWindow : this;
++                  return apply(original, receiver, arguments);
++                },
++              })[name];
++              Object.defineProperties(timer, {
++                name: { value: name, configurable: true },
++                length: { value: original.length, configurable: true },
++              });
++              const descriptor = {
++                value: timer, writable: true, enumerable: true, configurable: true,
++              };
++              Object.defineProperty(sandboxGlobal, name, descriptor);
++              Object.defineProperty(contentWindow, name, descriptor);
++            }
++          })();`,
++          this.sandbox
++        );
++      }
+     }
+ 
+     Object.defineProperty(this, "principal", {
+       value: Cu.getObjectPrincipal(this.sandbox),
+diff --git a/toolkit/components/extensions/Extension.sys.mjs b/toolkit/components/extensions/Extension.sys.mjs
+--- a/toolkit/components/extensions/Extension.sys.mjs
++++ b/toolkit/components/extensions/Extension.sys.mjs
+@@ -3888,6 +3888,9 @@
+       ignoreQuarantine: this.ignoreQuarantine,
+       hasRecommendedState: this.hasRecommendedState,
+       temporarilyInstalled: this.temporarilyInstalled,
++      // Native content-script world checks need the same authenticated Chrome
++      // identity as the extension process, independent of the global Worker pref.
++      backgroundServiceWorkerCompatibility: this.backgroundServiceWorkerCompatibility,
+     };
+   }
+ 

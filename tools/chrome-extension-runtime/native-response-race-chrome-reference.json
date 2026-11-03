@@ -1,0 +1,391 @@
+{
+  "output": "/dev/shm/chrome-response-race190-G1ZSeA",
+  "stage": "authored-genuine-Chrome155-response-race-reference",
+  "completed": true,
+  "probeSha256": "dfd50501aa1125b2b3e157ce9e972027d082c73ace75e32589fa3e5f08719083",
+  "binarySha256": "cb19b59995072b86cc7f887b3b1c7ab1f63518a7f2ed9f0d33249e1a040e2c76",
+  "rows": [
+    {
+      "kind": "sync-callback-return-promise",
+      "sender": {
+        "id": "owned-response-race-0",
+        "kind": "sync-callback-return-promise",
+        "realm": "document",
+        "runtimeId": "dcgnkhonmkcdcifbfjcfckhmocfdncml",
+        "syncThrow": null,
+        "settled": {
+          "status": "fulfilled",
+          "value": "sync-callback"
+        }
+      },
+      "receiver": {
+        "id": "owned-response-race-0",
+        "kind": "sync-callback-return-promise",
+        "realm": "worker",
+        "runtimeId": "dcgnkhonmkcdcifbfjcfckhmocfdncml",
+        "senderId": "dcgnkhonmkcdcifbfjcfckhmocfdncml",
+        "calls": [
+          {
+            "value": "sync-callback",
+            "returnedType": "undefined"
+          }
+        ],
+        "hooks": 0,
+        "events": []
+      }
+    },
+    {
+      "kind": "pending-promise-earlier-callback",
+      "sender": {
+        "id": "owned-response-race-1",
+        "kind": "pending-promise-earlier-callback",
+        "realm": "document",
+        "runtimeId": "dcgnkhonmkcdcifbfjcfckhmocfdncml",
+        "syncThrow": null,
+        "settled": {
+          "status": "fulfilled",
+          "value": "early-callback"
+        }
+      },
+      "receiver": {
+        "id": "owned-response-race-1",
+        "kind": "pending-promise-earlier-callback",
+        "realm": "worker",
+        "runtimeId": "dcgnkhonmkcdcifbfjcfckhmocfdncml",
+        "senderId": "dcgnkhonmkcdcifbfjcfckhmocfdncml",
+        "calls": [
+          {
+            "value": "early-callback",
+            "returnedType": "undefined"
+          }
+        ],
+        "hooks": 0,
+        "events": [
+          "callback",
+          "promise"
+        ]
+      }
+    },
+    {
+      "kind": "fulfilled-promise-later-callback",
+      "sender": {
+        "id": "owned-response-race-2",
+        "kind": "fulfilled-promise-later-callback",
+        "realm": "document",
+        "runtimeId": "dcgnkhonmkcdcifbfjcfckhmocfdncml",
+        "syncThrow": null,
+        "settled": {
+          "status": "fulfilled",
+          "value": "early-promise"
+        }
+      },
+      "receiver": {
+        "id": "owned-response-race-2",
+        "kind": "fulfilled-promise-later-callback",
+        "realm": "worker",
+        "runtimeId": "dcgnkhonmkcdcifbfjcfckhmocfdncml",
+        "senderId": "dcgnkhonmkcdcifbfjcfckhmocfdncml",
+        "calls": [
+          {
+            "value": "late-callback",
+            "returnedType": "undefined"
+          }
+        ],
+        "hooks": 0,
+        "events": [
+          "promise",
+          "callback"
+        ]
+      }
+    },
+    {
+      "kind": "fulfillment-tojson-callback-valid",
+      "sender": {
+        "id": "owned-response-race-3",
+        "kind": "fulfillment-tojson-callback-valid",
+        "realm": "document",
+        "runtimeId": "dcgnkhonmkcdcifbfjcfckhmocfdncml",
+        "syncThrow": null,
+        "settled": {
+          "status": "fulfilled",
+          "value": "outer-promise"
+        }
+      },
+      "receiver": {
+        "id": "owned-response-race-3",
+        "kind": "fulfillment-tojson-callback-valid",
+        "realm": "worker",
+        "runtimeId": "dcgnkhonmkcdcifbfjcfckhmocfdncml",
+        "senderId": "dcgnkhonmkcdcifbfjcfckhmocfdncml",
+        "calls": [
+          {
+            "value": "reentrant-callback",
+            "returnedType": "undefined"
+          }
+        ],
+        "hooks": 1,
+        "events": []
+      }
+    },
+    {
+      "kind": "fulfillment-tojson-callback-throw",
+      "sender": {
+        "id": "owned-response-race-4",
+        "kind": "fulfillment-tojson-callback-throw",
+        "realm": "document",
+        "runtimeId": "dcgnkhonmkcdcifbfjcfckhmocfdncml",
+        "syncThrow": null,
+        "settled": {
+          "status": "rejected",
+          "error": {
+            "name": "Error",
+            "message": "Could not serialize message."
+          }
+        }
+      },
+      "receiver": {
+        "id": "owned-response-race-4",
+        "kind": "fulfillment-tojson-callback-throw",
+        "realm": "worker",
+        "runtimeId": "dcgnkhonmkcdcifbfjcfckhmocfdncml",
+        "senderId": "dcgnkhonmkcdcifbfjcfckhmocfdncml",
+        "calls": [
+          {
+            "value": "reentrant-callback",
+            "returnedType": "undefined"
+          }
+        ],
+        "hooks": 1,
+        "events": []
+      }
+    },
+    {
+      "kind": "never-promise-earlier-callback",
+      "sender": {
+        "id": "owned-response-race-5",
+        "kind": "never-promise-earlier-callback",
+        "realm": "document",
+        "runtimeId": "dcgnkhonmkcdcifbfjcfckhmocfdncml",
+        "syncThrow": null,
+        "settled": {
+          "status": "fulfilled",
+          "value": "only-callback"
+        }
+      },
+      "receiver": {
+        "id": "owned-response-race-5",
+        "kind": "never-promise-earlier-callback",
+        "realm": "worker",
+        "runtimeId": "dcgnkhonmkcdcifbfjcfckhmocfdncml",
+        "senderId": "dcgnkhonmkcdcifbfjcfckhmocfdncml",
+        "calls": [
+          {
+            "value": "only-callback",
+            "returnedType": "undefined"
+          }
+        ],
+        "hooks": 0,
+        "events": [
+          "callback"
+        ]
+      }
+    },
+    {
+      "kind": "sync-callback-return-promise",
+      "sender": {
+        "id": "owned-response-race-6",
+        "kind": "sync-callback-return-promise",
+        "realm": "worker",
+        "runtimeId": "dcgnkhonmkcdcifbfjcfckhmocfdncml",
+        "syncThrow": null,
+        "settled": {
+          "status": "fulfilled",
+          "value": "sync-callback"
+        }
+      },
+      "receiver": {
+        "id": "owned-response-race-6",
+        "kind": "sync-callback-return-promise",
+        "realm": "document",
+        "runtimeId": "dcgnkhonmkcdcifbfjcfckhmocfdncml",
+        "senderId": "dcgnkhonmkcdcifbfjcfckhmocfdncml",
+        "calls": [
+          {
+            "value": "sync-callback",
+            "returnedType": "undefined"
+          }
+        ],
+        "hooks": 0,
+        "events": []
+      }
+    },
+    {
+      "kind": "pending-promise-earlier-callback",
+      "sender": {
+        "id": "owned-response-race-7",
+        "kind": "pending-promise-earlier-callback",
+        "realm": "worker",
+        "runtimeId": "dcgnkhonmkcdcifbfjcfckhmocfdncml",
+        "syncThrow": null,
+        "settled": {
+          "status": "fulfilled",
+          "value": "early-callback"
+        }
+      },
+      "receiver": {
+        "id": "owned-response-race-7",
+        "kind": "pending-promise-earlier-callback",
+        "realm": "document",
+        "runtimeId": "dcgnkhonmkcdcifbfjcfckhmocfdncml",
+        "senderId": "dcgnkhonmkcdcifbfjcfckhmocfdncml",
+        "calls": [
+          {
+            "value": "early-callback",
+            "returnedType": "undefined"
+          }
+        ],
+        "hooks": 0,
+        "events": [
+          "callback",
+          "promise"
+        ]
+      }
+    },
+    {
+      "kind": "fulfilled-promise-later-callback",
+      "sender": {
+        "id": "owned-response-race-8",
+        "kind": "fulfilled-promise-later-callback",
+        "realm": "worker",
+        "runtimeId": "dcgnkhonmkcdcifbfjcfckhmocfdncml",
+        "syncThrow": null,
+        "settled": {
+          "status": "fulfilled",
+          "value": "early-promise"
+        }
+      },
+      "receiver": {
+        "id": "owned-response-race-8",
+        "kind": "fulfilled-promise-later-callback",
+        "realm": "document",
+        "runtimeId": "dcgnkhonmkcdcifbfjcfckhmocfdncml",
+        "senderId": "dcgnkhonmkcdcifbfjcfckhmocfdncml",
+        "calls": [
+          {
+            "value": "late-callback",
+            "returnedType": "undefined"
+          }
+        ],
+        "hooks": 0,
+        "events": [
+          "promise",
+          "callback"
+        ]
+      }
+    },
+    {
+      "kind": "fulfillment-tojson-callback-valid",
+      "sender": {
+        "id": "owned-response-race-9",
+        "kind": "fulfillment-tojson-callback-valid",
+        "realm": "worker",
+        "runtimeId": "dcgnkhonmkcdcifbfjcfckhmocfdncml",
+        "syncThrow": null,
+        "settled": {
+          "status": "fulfilled",
+          "value": "outer-promise"
+        }
+      },
+      "receiver": {
+        "id": "owned-response-race-9",
+        "kind": "fulfillment-tojson-callback-valid",
+        "realm": "document",
+        "runtimeId": "dcgnkhonmkcdcifbfjcfckhmocfdncml",
+        "senderId": "dcgnkhonmkcdcifbfjcfckhmocfdncml",
+        "calls": [
+          {
+            "value": "reentrant-callback",
+            "returnedType": "undefined"
+          }
+        ],
+        "hooks": 1,
+        "events": []
+      }
+    },
+    {
+      "kind": "fulfillment-tojson-callback-throw",
+      "sender": {
+        "id": "owned-response-race-10",
+        "kind": "fulfillment-tojson-callback-throw",
+        "realm": "worker",
+        "runtimeId": "dcgnkhonmkcdcifbfjcfckhmocfdncml",
+        "syncThrow": null,
+        "settled": {
+          "status": "rejected",
+          "error": {
+            "name": "Error",
+            "message": "Could not serialize message."
+          }
+        }
+      },
+      "receiver": {
+        "id": "owned-response-race-10",
+        "kind": "fulfillment-tojson-callback-throw",
+        "realm": "document",
+        "runtimeId": "dcgnkhonmkcdcifbfjcfckhmocfdncml",
+        "senderId": "dcgnkhonmkcdcifbfjcfckhmocfdncml",
+        "calls": [
+          {
+            "value": "reentrant-callback",
+            "returnedType": "undefined"
+          }
+        ],
+        "hooks": 1,
+        "events": []
+      }
+    },
+    {
+      "kind": "never-promise-earlier-callback",
+      "sender": {
+        "id": "owned-response-race-11",
+        "kind": "never-promise-earlier-callback",
+        "realm": "worker",
+        "runtimeId": "dcgnkhonmkcdcifbfjcfckhmocfdncml",
+        "syncThrow": null,
+        "settled": {
+          "status": "fulfilled",
+          "value": "only-callback"
+        }
+      },
+      "receiver": {
+        "id": "owned-response-race-11",
+        "kind": "never-promise-earlier-callback",
+        "realm": "document",
+        "runtimeId": "dcgnkhonmkcdcifbfjcfckhmocfdncml",
+        "senderId": "dcgnkhonmkcdcifbfjcfckhmocfdncml",
+        "calls": [
+          {
+            "value": "only-callback",
+            "returnedType": "undefined"
+          }
+        ],
+        "hooks": 0,
+        "events": [
+          "callback"
+        ]
+      }
+    }
+  ],
+  "version": {
+    "protocolVersion": "1.3",
+    "product": "Chrome/155.0.8059.84",
+    "revision": "@5869fe313571d75152b77813cf0a4ee26a4e6df0",
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36",
+    "jsVersion": "15.5.35.25"
+  },
+  "extensionId": "dcgnkhonmkcdcifbfjcfckhmocfdncml",
+  "targets": {
+    "document": "1052326A77030E3C86A5B4DB4086283E",
+    "worker": "6836A4467BD9AFCA80BA15E005BAE279"
+  }
+}

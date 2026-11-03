@@ -71,3 +71,20 @@ export type Sidebar = {
 };
 
 export type MapSidebars = [string, Sidebar][];
+
+export interface ChromeSidePanelManager {
+  openForAction(tab: unknown): void;
+}
+
+export interface ChromeSidePanelWindow {
+  gFloorpLastChromeSidePanelId?: string;
+  gBrowser: { selectedTab: unknown };
+  SidebarController: {
+    isOpen: boolean;
+    currentID: string;
+    sidebars: Map<
+      string,
+      { floorpChromeSidePanel?: boolean; extensionId?: string }
+    >;
+  };
+}

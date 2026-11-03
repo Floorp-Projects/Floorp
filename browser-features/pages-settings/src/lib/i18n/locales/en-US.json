@@ -829,7 +829,8 @@
         "shortcut": "Shortcut",
         "actions": "Actions",
         "actionLabels": {
-            "floorp-edit-tab-url": "Edit Tab URL"
+            "floorp-edit-tab-url": "Edit Tab URL",
+            "floorp-toggle-last-extension-side-panel": "Toggle Last Chrome Extension Side Panel"
         },
         "notSet": "Not set",
         "add": "Add",

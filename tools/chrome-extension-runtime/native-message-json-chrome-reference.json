@@ -1,0 +1,5884 @@
+{
+  "passed": true,
+  "runId": "f12e064f3116bb068435850247c5a753",
+  "rawReport": "/dev/shm/chrome-message-json187-hOhiV8/report.json",
+  "sourceProbeSha256": "10f386ade6d97fccaa1377687aef0f7be53a6bf04cf3928e023dc436a62f96e4",
+  "actualBinary": {
+    "path": "/workspace/Floorp/_dist/chrome-reference/extracted/opt/google/chrome/chrome",
+    "sha256": "cb19b59995072b86cc7f887b3b1c7ab1f63518a7f2ed9f0d33249e1a040e2c76"
+  },
+  "actualVersion": {
+    "protocolVersion": "1.3",
+    "product": "Chrome/155.0.8059.84",
+    "revision": "@5869fe313571d75152b77813cf0a4ee26a4e6df0",
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36",
+    "jsVersion": "15.5.35.25"
+  },
+  "senderCount": 192,
+  "responseCount": 60,
+  "senderDOCWorkerEquivalent": true,
+  "responseDOCWorkerEquivalent": true,
+  "senderRows": [
+    {
+      "caseId": "undefined",
+      "api": "runtime.Port.postMessage",
+      "mode": "port",
+      "realm": "document",
+      "outcome": "received",
+      "observed": [
+        null
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "null",
+      "api": "runtime.Port.postMessage",
+      "mode": "port",
+      "realm": "document",
+      "outcome": "received",
+      "observed": [
+        null
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "true",
+      "api": "runtime.Port.postMessage",
+      "mode": "port",
+      "realm": "document",
+      "outcome": "received",
+      "observed": [
+        true
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "false",
+      "api": "runtime.Port.postMessage",
+      "mode": "port",
+      "realm": "document",
+      "outcome": "received",
+      "observed": [
+        false
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "string",
+      "api": "runtime.Port.postMessage",
+      "mode": "port",
+      "realm": "document",
+      "outcome": "received",
+      "observed": [
+        "owned-message"
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "unicode",
+      "api": "runtime.Port.postMessage",
+      "mode": "port",
+      "realm": "document",
+      "outcome": "received",
+      "observed": [
+        "Floorp 日本語 🚀"
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "number",
+      "api": "runtime.Port.postMessage",
+      "mode": "port",
+      "realm": "document",
+      "outcome": "received",
+      "observed": [
+        42.25
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "negative-zero",
+      "api": "runtime.Port.postMessage",
+      "mode": "port",
+      "realm": "document",
+      "outcome": "received",
+      "observed": [
+        0
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "nan",
+      "api": "runtime.Port.postMessage",
+      "mode": "port",
+      "realm": "document",
+      "outcome": "received",
+      "observed": [
+        null
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "infinity",
+      "api": "runtime.Port.postMessage",
+      "mode": "port",
+      "realm": "document",
+      "outcome": "received",
+      "observed": [
+        null
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "negative-infinity",
+      "api": "runtime.Port.postMessage",
+      "mode": "port",
+      "realm": "document",
+      "outcome": "received",
+      "observed": [
+        null
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "nested-primitives",
+      "api": "runtime.Port.postMessage",
+      "mode": "port",
+      "realm": "document",
+      "outcome": "received",
+      "observed": [
+        {
+          "nil": null,
+          "str": "owned",
+          "bool": false,
+          "number": 17,
+          "list": [
+            1,
+            "two",
+            true
+          ]
+        }
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "cycle",
+      "api": "runtime.Port.postMessage",
+      "mode": "port",
+      "realm": "document",
+      "outcome": "sync-throw",
+      "observed": [],
+      "error": {
+        "type": "object",
+        "name": "Error",
+        "message": "Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "bigint",
+      "api": "runtime.Port.postMessage",
+      "mode": "port",
+      "realm": "document",
+      "outcome": "sync-throw",
+      "observed": [],
+      "error": {
+        "type": "object",
+        "name": "Error",
+        "message": "Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "nested-bigint",
+      "api": "runtime.Port.postMessage",
+      "mode": "port",
+      "realm": "document",
+      "outcome": "sync-throw",
+      "observed": [],
+      "error": {
+        "type": "object",
+        "name": "Error",
+        "message": "Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "array-bigint",
+      "api": "runtime.Port.postMessage",
+      "mode": "port",
+      "realm": "document",
+      "outcome": "sync-throw",
+      "observed": [],
+      "error": {
+        "type": "object",
+        "name": "Error",
+        "message": "Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "date",
+      "api": "runtime.Port.postMessage",
+      "mode": "port",
+      "realm": "document",
+      "outcome": "received",
+      "observed": [
+        "2026-10-19T12:34:56.000Z"
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "invalid-date",
+      "api": "runtime.Port.postMessage",
+      "mode": "port",
+      "realm": "document",
+      "outcome": "received",
+      "observed": [
+        null
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "map",
+      "api": "runtime.Port.postMessage",
+      "mode": "port",
+      "realm": "document",
+      "outcome": "received",
+      "observed": [
+        {}
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "set",
+      "api": "runtime.Port.postMessage",
+      "mode": "port",
+      "realm": "document",
+      "outcome": "received",
+      "observed": [
+        {}
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "typed-array",
+      "api": "runtime.Port.postMessage",
+      "mode": "port",
+      "realm": "document",
+      "outcome": "received",
+      "observed": [
+        {
+          "0": 3,
+          "1": 7,
+          "2": 255
+        }
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "error",
+      "api": "runtime.Port.postMessage",
+      "mode": "port",
+      "realm": "document",
+      "outcome": "received",
+      "observed": [
+        {}
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "function",
+      "api": "runtime.Port.postMessage",
+      "mode": "port",
+      "realm": "document",
+      "outcome": "sync-throw",
+      "observed": [],
+      "error": {
+        "type": "object",
+        "name": "Error",
+        "message": "Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "symbol",
+      "api": "runtime.Port.postMessage",
+      "mode": "port",
+      "realm": "document",
+      "outcome": "sync-throw",
+      "observed": [],
+      "error": {
+        "type": "object",
+        "name": "Error",
+        "message": "Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "nested-unsupported",
+      "api": "runtime.Port.postMessage",
+      "mode": "port",
+      "realm": "document",
+      "outcome": "received",
+      "observed": [
+        {
+          "before": "kept",
+          "after": null
+        }
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "array-unsupported",
+      "api": "runtime.Port.postMessage",
+      "mode": "port",
+      "realm": "document",
+      "outcome": "received",
+      "observed": [
+        [
+          "kept",
+          null,
+          null,
+          null,
+          null
+        ]
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "tojson-object",
+      "api": "runtime.Port.postMessage",
+      "mode": "port",
+      "realm": "document",
+      "outcome": "received",
+      "observed": [
+        {
+          "transformed": true,
+          "unicode": "変換 🚀"
+        }
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 1,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [
+          true
+        ],
+        "keys": [
+          ""
+        ]
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "tojson-undefined",
+      "api": "runtime.Port.postMessage",
+      "mode": "port",
+      "realm": "document",
+      "outcome": "sync-throw",
+      "observed": [],
+      "error": {
+        "type": "object",
+        "name": "Error",
+        "message": "Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 1,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [
+          true
+        ],
+        "keys": [
+          ""
+        ]
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "tojson-throw",
+      "api": "runtime.Port.postMessage",
+      "mode": "port",
+      "realm": "document",
+      "outcome": "sync-throw",
+      "observed": [],
+      "error": {
+        "type": "object",
+        "name": "Error",
+        "message": "Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 1,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [
+          true
+        ],
+        "keys": [
+          ""
+        ]
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "tojson-bigint",
+      "api": "runtime.Port.postMessage",
+      "mode": "port",
+      "realm": "document",
+      "outcome": "sync-throw",
+      "observed": [],
+      "error": {
+        "type": "object",
+        "name": "Error",
+        "message": "Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 1,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [
+          true
+        ],
+        "keys": [
+          ""
+        ]
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "getter",
+      "api": "runtime.Port.postMessage",
+      "mode": "port",
+      "realm": "document",
+      "outcome": "received",
+      "observed": [
+        {
+          "label": "original",
+          "selected": {
+            "materialized": true,
+            "count": 1
+          }
+        }
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 1,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [
+          true
+        ],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "getter-throw",
+      "api": "runtime.Port.postMessage",
+      "mode": "port",
+      "realm": "document",
+      "outcome": "sync-throw",
+      "observed": [],
+      "error": {
+        "type": "object",
+        "name": "Error",
+        "message": "Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 1,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [
+          true
+        ],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "undefined",
+      "api": "runtime.sendMessage",
+      "mode": "single",
+      "realm": "document",
+      "outcome": "resolved",
+      "observed": [
+        null
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "undefined",
+      "api": "runtime.sendMessage",
+      "mode": "explicit-id",
+      "realm": "document",
+      "outcome": "resolved",
+      "observed": [
+        null
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "null",
+      "api": "runtime.sendMessage",
+      "mode": "single",
+      "realm": "document",
+      "outcome": "resolved",
+      "observed": [
+        null
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "null",
+      "api": "runtime.sendMessage",
+      "mode": "explicit-id",
+      "realm": "document",
+      "outcome": "resolved",
+      "observed": [
+        null
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "true",
+      "api": "runtime.sendMessage",
+      "mode": "single",
+      "realm": "document",
+      "outcome": "resolved",
+      "observed": [
+        true
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "true",
+      "api": "runtime.sendMessage",
+      "mode": "explicit-id",
+      "realm": "document",
+      "outcome": "resolved",
+      "observed": [
+        true
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "false",
+      "api": "runtime.sendMessage",
+      "mode": "single",
+      "realm": "document",
+      "outcome": "resolved",
+      "observed": [
+        false
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "false",
+      "api": "runtime.sendMessage",
+      "mode": "explicit-id",
+      "realm": "document",
+      "outcome": "resolved",
+      "observed": [
+        false
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "string",
+      "api": "runtime.sendMessage",
+      "mode": "single",
+      "realm": "document",
+      "outcome": "resolved",
+      "observed": [
+        "owned-message"
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "string",
+      "api": "runtime.sendMessage",
+      "mode": "explicit-id",
+      "realm": "document",
+      "outcome": "resolved",
+      "observed": [
+        "owned-message"
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "unicode",
+      "api": "runtime.sendMessage",
+      "mode": "single",
+      "realm": "document",
+      "outcome": "resolved",
+      "observed": [
+        "Floorp 日本語 🚀"
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "unicode",
+      "api": "runtime.sendMessage",
+      "mode": "explicit-id",
+      "realm": "document",
+      "outcome": "resolved",
+      "observed": [
+        "Floorp 日本語 🚀"
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "number",
+      "api": "runtime.sendMessage",
+      "mode": "single",
+      "realm": "document",
+      "outcome": "resolved",
+      "observed": [
+        42.25
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "number",
+      "api": "runtime.sendMessage",
+      "mode": "explicit-id",
+      "realm": "document",
+      "outcome": "resolved",
+      "observed": [
+        42.25
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "negative-zero",
+      "api": "runtime.sendMessage",
+      "mode": "single",
+      "realm": "document",
+      "outcome": "resolved",
+      "observed": [
+        0
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "negative-zero",
+      "api": "runtime.sendMessage",
+      "mode": "explicit-id",
+      "realm": "document",
+      "outcome": "resolved",
+      "observed": [
+        0
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "nan",
+      "api": "runtime.sendMessage",
+      "mode": "single",
+      "realm": "document",
+      "outcome": "resolved",
+      "observed": [
+        null
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "nan",
+      "api": "runtime.sendMessage",
+      "mode": "explicit-id",
+      "realm": "document",
+      "outcome": "resolved",
+      "observed": [
+        null
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "infinity",
+      "api": "runtime.sendMessage",
+      "mode": "single",
+      "realm": "document",
+      "outcome": "resolved",
+      "observed": [
+        null
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "infinity",
+      "api": "runtime.sendMessage",
+      "mode": "explicit-id",
+      "realm": "document",
+      "outcome": "resolved",
+      "observed": [
+        null
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "negative-infinity",
+      "api": "runtime.sendMessage",
+      "mode": "single",
+      "realm": "document",
+      "outcome": "resolved",
+      "observed": [
+        null
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "negative-infinity",
+      "api": "runtime.sendMessage",
+      "mode": "explicit-id",
+      "realm": "document",
+      "outcome": "resolved",
+      "observed": [
+        null
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "nested-primitives",
+      "api": "runtime.sendMessage",
+      "mode": "single",
+      "realm": "document",
+      "outcome": "resolved",
+      "observed": [
+        {
+          "nil": null,
+          "str": "owned",
+          "bool": false,
+          "number": 17,
+          "list": [
+            1,
+            "two",
+            true
+          ]
+        }
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "nested-primitives",
+      "api": "runtime.sendMessage",
+      "mode": "explicit-id",
+      "realm": "document",
+      "outcome": "resolved",
+      "observed": [
+        {
+          "nil": null,
+          "str": "owned",
+          "bool": false,
+          "number": 17,
+          "list": [
+            1,
+            "two",
+            true
+          ]
+        }
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "cycle",
+      "api": "runtime.sendMessage",
+      "mode": "single",
+      "realm": "document",
+      "outcome": "sync-throw",
+      "observed": [],
+      "error": {
+        "type": "object",
+        "name": "TypeError",
+        "message": "Error in invocation of runtime.sendMessage(optional string extensionId, any message, optional object options, optional function callback): Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "cycle",
+      "api": "runtime.sendMessage",
+      "mode": "explicit-id",
+      "realm": "document",
+      "outcome": "sync-throw",
+      "observed": [],
+      "error": {
+        "type": "object",
+        "name": "TypeError",
+        "message": "Error in invocation of runtime.sendMessage(optional string extensionId, any message, optional object options, optional function callback): Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "bigint",
+      "api": "runtime.sendMessage",
+      "mode": "single",
+      "realm": "document",
+      "outcome": "sync-throw",
+      "observed": [],
+      "error": {
+        "type": "object",
+        "name": "TypeError",
+        "message": "Error in invocation of runtime.sendMessage(optional string extensionId, any message, optional object options, optional function callback): Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "bigint",
+      "api": "runtime.sendMessage",
+      "mode": "explicit-id",
+      "realm": "document",
+      "outcome": "sync-throw",
+      "observed": [],
+      "error": {
+        "type": "object",
+        "name": "TypeError",
+        "message": "Error in invocation of runtime.sendMessage(optional string extensionId, any message, optional object options, optional function callback): Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "nested-bigint",
+      "api": "runtime.sendMessage",
+      "mode": "single",
+      "realm": "document",
+      "outcome": "sync-throw",
+      "observed": [],
+      "error": {
+        "type": "object",
+        "name": "TypeError",
+        "message": "Error in invocation of runtime.sendMessage(optional string extensionId, any message, optional object options, optional function callback): Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "nested-bigint",
+      "api": "runtime.sendMessage",
+      "mode": "explicit-id",
+      "realm": "document",
+      "outcome": "sync-throw",
+      "observed": [],
+      "error": {
+        "type": "object",
+        "name": "TypeError",
+        "message": "Error in invocation of runtime.sendMessage(optional string extensionId, any message, optional object options, optional function callback): Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "array-bigint",
+      "api": "runtime.sendMessage",
+      "mode": "single",
+      "realm": "document",
+      "outcome": "sync-throw",
+      "observed": [],
+      "error": {
+        "type": "object",
+        "name": "TypeError",
+        "message": "Error in invocation of runtime.sendMessage(optional string extensionId, any message, optional object options, optional function callback): Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "array-bigint",
+      "api": "runtime.sendMessage",
+      "mode": "explicit-id",
+      "realm": "document",
+      "outcome": "sync-throw",
+      "observed": [],
+      "error": {
+        "type": "object",
+        "name": "TypeError",
+        "message": "Error in invocation of runtime.sendMessage(optional string extensionId, any message, optional object options, optional function callback): Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "date",
+      "api": "runtime.sendMessage",
+      "mode": "single",
+      "realm": "document",
+      "outcome": "resolved",
+      "observed": [
+        "2026-10-19T12:34:56.000Z"
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "date",
+      "api": "runtime.sendMessage",
+      "mode": "explicit-id",
+      "realm": "document",
+      "outcome": "resolved",
+      "observed": [
+        "2026-10-19T12:34:56.000Z"
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "invalid-date",
+      "api": "runtime.sendMessage",
+      "mode": "single",
+      "realm": "document",
+      "outcome": "resolved",
+      "observed": [
+        null
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "invalid-date",
+      "api": "runtime.sendMessage",
+      "mode": "explicit-id",
+      "realm": "document",
+      "outcome": "resolved",
+      "observed": [
+        null
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "map",
+      "api": "runtime.sendMessage",
+      "mode": "single",
+      "realm": "document",
+      "outcome": "resolved",
+      "observed": [
+        {}
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "map",
+      "api": "runtime.sendMessage",
+      "mode": "explicit-id",
+      "realm": "document",
+      "outcome": "resolved",
+      "observed": [
+        {}
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "set",
+      "api": "runtime.sendMessage",
+      "mode": "single",
+      "realm": "document",
+      "outcome": "resolved",
+      "observed": [
+        {}
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "set",
+      "api": "runtime.sendMessage",
+      "mode": "explicit-id",
+      "realm": "document",
+      "outcome": "resolved",
+      "observed": [
+        {}
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "typed-array",
+      "api": "runtime.sendMessage",
+      "mode": "single",
+      "realm": "document",
+      "outcome": "resolved",
+      "observed": [
+        {
+          "0": 3,
+          "1": 7,
+          "2": 255
+        }
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "typed-array",
+      "api": "runtime.sendMessage",
+      "mode": "explicit-id",
+      "realm": "document",
+      "outcome": "resolved",
+      "observed": [
+        {
+          "0": 3,
+          "1": 7,
+          "2": 255
+        }
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "error",
+      "api": "runtime.sendMessage",
+      "mode": "single",
+      "realm": "document",
+      "outcome": "resolved",
+      "observed": [
+        {}
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "error",
+      "api": "runtime.sendMessage",
+      "mode": "explicit-id",
+      "realm": "document",
+      "outcome": "resolved",
+      "observed": [
+        {}
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "function",
+      "api": "runtime.sendMessage",
+      "mode": "single",
+      "realm": "document",
+      "outcome": "sync-throw",
+      "observed": [],
+      "error": {
+        "type": "object",
+        "name": "TypeError",
+        "message": "Error in invocation of runtime.sendMessage(optional string extensionId, any message, optional object options, optional function callback): Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "function",
+      "api": "runtime.sendMessage",
+      "mode": "explicit-id",
+      "realm": "document",
+      "outcome": "returned",
+      "observed": [
+        "iedmfohhnpmcfeobggjlblfididmianp"
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 1,
+        "functionArgumentTypes": [
+          [
+            "object"
+          ]
+        ],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "undefined",
+      "returnedThenable": false
+    },
+    {
+      "caseId": "symbol",
+      "api": "runtime.sendMessage",
+      "mode": "single",
+      "realm": "document",
+      "outcome": "sync-throw",
+      "observed": [],
+      "error": {
+        "type": "object",
+        "name": "TypeError",
+        "message": "Error in invocation of runtime.sendMessage(optional string extensionId, any message, optional object options, optional function callback): Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "symbol",
+      "api": "runtime.sendMessage",
+      "mode": "explicit-id",
+      "realm": "document",
+      "outcome": "sync-throw",
+      "observed": [],
+      "error": {
+        "type": "object",
+        "name": "TypeError",
+        "message": "Error in invocation of runtime.sendMessage(optional string extensionId, any message, optional object options, optional function callback): Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "nested-unsupported",
+      "api": "runtime.sendMessage",
+      "mode": "single",
+      "realm": "document",
+      "outcome": "resolved",
+      "observed": [
+        {
+          "before": "kept",
+          "after": null
+        }
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "nested-unsupported",
+      "api": "runtime.sendMessage",
+      "mode": "explicit-id",
+      "realm": "document",
+      "outcome": "resolved",
+      "observed": [
+        {
+          "before": "kept",
+          "after": null
+        }
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "array-unsupported",
+      "api": "runtime.sendMessage",
+      "mode": "single",
+      "realm": "document",
+      "outcome": "resolved",
+      "observed": [
+        [
+          "kept",
+          null,
+          null,
+          null,
+          null
+        ]
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "array-unsupported",
+      "api": "runtime.sendMessage",
+      "mode": "explicit-id",
+      "realm": "document",
+      "outcome": "resolved",
+      "observed": [
+        [
+          "kept",
+          null,
+          null,
+          null,
+          null
+        ]
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "tojson-object",
+      "api": "runtime.sendMessage",
+      "mode": "single",
+      "realm": "document",
+      "outcome": "resolved",
+      "observed": [
+        {
+          "transformed": true,
+          "unicode": "変換 🚀"
+        }
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 1,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [
+          true
+        ],
+        "keys": [
+          ""
+        ]
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "tojson-object",
+      "api": "runtime.sendMessage",
+      "mode": "explicit-id",
+      "realm": "document",
+      "outcome": "resolved",
+      "observed": [
+        {
+          "transformed": true,
+          "unicode": "変換 🚀"
+        }
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 1,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [
+          true
+        ],
+        "keys": [
+          ""
+        ]
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "tojson-undefined",
+      "api": "runtime.sendMessage",
+      "mode": "single",
+      "realm": "document",
+      "outcome": "sync-throw",
+      "observed": [],
+      "error": {
+        "type": "object",
+        "name": "TypeError",
+        "message": "Error in invocation of runtime.sendMessage(optional string extensionId, any message, optional object options, optional function callback): Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 1,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [
+          true
+        ],
+        "keys": [
+          ""
+        ]
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "tojson-undefined",
+      "api": "runtime.sendMessage",
+      "mode": "explicit-id",
+      "realm": "document",
+      "outcome": "sync-throw",
+      "observed": [],
+      "error": {
+        "type": "object",
+        "name": "TypeError",
+        "message": "Error in invocation of runtime.sendMessage(optional string extensionId, any message, optional object options, optional function callback): Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 1,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [
+          true
+        ],
+        "keys": [
+          ""
+        ]
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "tojson-throw",
+      "api": "runtime.sendMessage",
+      "mode": "single",
+      "realm": "document",
+      "outcome": "sync-throw",
+      "observed": [],
+      "error": {
+        "type": "object",
+        "name": "TypeError",
+        "message": "Error in invocation of runtime.sendMessage(optional string extensionId, any message, optional object options, optional function callback): Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 1,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [
+          true
+        ],
+        "keys": [
+          ""
+        ]
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "tojson-throw",
+      "api": "runtime.sendMessage",
+      "mode": "explicit-id",
+      "realm": "document",
+      "outcome": "sync-throw",
+      "observed": [],
+      "error": {
+        "type": "object",
+        "name": "TypeError",
+        "message": "Error in invocation of runtime.sendMessage(optional string extensionId, any message, optional object options, optional function callback): Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 1,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [
+          true
+        ],
+        "keys": [
+          ""
+        ]
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "tojson-bigint",
+      "api": "runtime.sendMessage",
+      "mode": "single",
+      "realm": "document",
+      "outcome": "sync-throw",
+      "observed": [],
+      "error": {
+        "type": "object",
+        "name": "TypeError",
+        "message": "Error in invocation of runtime.sendMessage(optional string extensionId, any message, optional object options, optional function callback): Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 1,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [
+          true
+        ],
+        "keys": [
+          ""
+        ]
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "tojson-bigint",
+      "api": "runtime.sendMessage",
+      "mode": "explicit-id",
+      "realm": "document",
+      "outcome": "sync-throw",
+      "observed": [],
+      "error": {
+        "type": "object",
+        "name": "TypeError",
+        "message": "Error in invocation of runtime.sendMessage(optional string extensionId, any message, optional object options, optional function callback): Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 1,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [
+          true
+        ],
+        "keys": [
+          ""
+        ]
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "getter",
+      "api": "runtime.sendMessage",
+      "mode": "single",
+      "realm": "document",
+      "outcome": "resolved",
+      "observed": [
+        {
+          "label": "original",
+          "selected": {
+            "materialized": true,
+            "count": 1
+          }
+        }
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 1,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [
+          true
+        ],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "getter",
+      "api": "runtime.sendMessage",
+      "mode": "explicit-id",
+      "realm": "document",
+      "outcome": "resolved",
+      "observed": [
+        {
+          "label": "original",
+          "selected": {
+            "materialized": true,
+            "count": 1
+          }
+        }
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 1,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [
+          true
+        ],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "getter-throw",
+      "api": "runtime.sendMessage",
+      "mode": "single",
+      "realm": "document",
+      "outcome": "sync-throw",
+      "observed": [],
+      "error": {
+        "type": "object",
+        "name": "TypeError",
+        "message": "Error in invocation of runtime.sendMessage(optional string extensionId, any message, optional object options, optional function callback): Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 1,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [
+          true
+        ],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "getter-throw",
+      "api": "runtime.sendMessage",
+      "mode": "explicit-id",
+      "realm": "document",
+      "outcome": "sync-throw",
+      "observed": [],
+      "error": {
+        "type": "object",
+        "name": "TypeError",
+        "message": "Error in invocation of runtime.sendMessage(optional string extensionId, any message, optional object options, optional function callback): Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 1,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [
+          true
+        ],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "undefined",
+      "api": "runtime.Port.postMessage",
+      "mode": "port",
+      "realm": "worker",
+      "outcome": "received",
+      "observed": [
+        null
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "null",
+      "api": "runtime.Port.postMessage",
+      "mode": "port",
+      "realm": "worker",
+      "outcome": "received",
+      "observed": [
+        null
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "true",
+      "api": "runtime.Port.postMessage",
+      "mode": "port",
+      "realm": "worker",
+      "outcome": "received",
+      "observed": [
+        true
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "false",
+      "api": "runtime.Port.postMessage",
+      "mode": "port",
+      "realm": "worker",
+      "outcome": "received",
+      "observed": [
+        false
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "string",
+      "api": "runtime.Port.postMessage",
+      "mode": "port",
+      "realm": "worker",
+      "outcome": "received",
+      "observed": [
+        "owned-message"
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "unicode",
+      "api": "runtime.Port.postMessage",
+      "mode": "port",
+      "realm": "worker",
+      "outcome": "received",
+      "observed": [
+        "Floorp 日本語 🚀"
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "number",
+      "api": "runtime.Port.postMessage",
+      "mode": "port",
+      "realm": "worker",
+      "outcome": "received",
+      "observed": [
+        42.25
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "negative-zero",
+      "api": "runtime.Port.postMessage",
+      "mode": "port",
+      "realm": "worker",
+      "outcome": "received",
+      "observed": [
+        0
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "nan",
+      "api": "runtime.Port.postMessage",
+      "mode": "port",
+      "realm": "worker",
+      "outcome": "received",
+      "observed": [
+        null
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "infinity",
+      "api": "runtime.Port.postMessage",
+      "mode": "port",
+      "realm": "worker",
+      "outcome": "received",
+      "observed": [
+        null
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "negative-infinity",
+      "api": "runtime.Port.postMessage",
+      "mode": "port",
+      "realm": "worker",
+      "outcome": "received",
+      "observed": [
+        null
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "nested-primitives",
+      "api": "runtime.Port.postMessage",
+      "mode": "port",
+      "realm": "worker",
+      "outcome": "received",
+      "observed": [
+        {
+          "nil": null,
+          "str": "owned",
+          "bool": false,
+          "number": 17,
+          "list": [
+            1,
+            "two",
+            true
+          ]
+        }
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "cycle",
+      "api": "runtime.Port.postMessage",
+      "mode": "port",
+      "realm": "worker",
+      "outcome": "sync-throw",
+      "observed": [],
+      "error": {
+        "type": "object",
+        "name": "Error",
+        "message": "Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "bigint",
+      "api": "runtime.Port.postMessage",
+      "mode": "port",
+      "realm": "worker",
+      "outcome": "sync-throw",
+      "observed": [],
+      "error": {
+        "type": "object",
+        "name": "Error",
+        "message": "Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "nested-bigint",
+      "api": "runtime.Port.postMessage",
+      "mode": "port",
+      "realm": "worker",
+      "outcome": "sync-throw",
+      "observed": [],
+      "error": {
+        "type": "object",
+        "name": "Error",
+        "message": "Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "array-bigint",
+      "api": "runtime.Port.postMessage",
+      "mode": "port",
+      "realm": "worker",
+      "outcome": "sync-throw",
+      "observed": [],
+      "error": {
+        "type": "object",
+        "name": "Error",
+        "message": "Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "date",
+      "api": "runtime.Port.postMessage",
+      "mode": "port",
+      "realm": "worker",
+      "outcome": "received",
+      "observed": [
+        "2026-10-19T12:34:56.000Z"
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "invalid-date",
+      "api": "runtime.Port.postMessage",
+      "mode": "port",
+      "realm": "worker",
+      "outcome": "received",
+      "observed": [
+        null
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "map",
+      "api": "runtime.Port.postMessage",
+      "mode": "port",
+      "realm": "worker",
+      "outcome": "received",
+      "observed": [
+        {}
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "set",
+      "api": "runtime.Port.postMessage",
+      "mode": "port",
+      "realm": "worker",
+      "outcome": "received",
+      "observed": [
+        {}
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "typed-array",
+      "api": "runtime.Port.postMessage",
+      "mode": "port",
+      "realm": "worker",
+      "outcome": "received",
+      "observed": [
+        {
+          "0": 3,
+          "1": 7,
+          "2": 255
+        }
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "error",
+      "api": "runtime.Port.postMessage",
+      "mode": "port",
+      "realm": "worker",
+      "outcome": "received",
+      "observed": [
+        {}
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "function",
+      "api": "runtime.Port.postMessage",
+      "mode": "port",
+      "realm": "worker",
+      "outcome": "sync-throw",
+      "observed": [],
+      "error": {
+        "type": "object",
+        "name": "Error",
+        "message": "Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "symbol",
+      "api": "runtime.Port.postMessage",
+      "mode": "port",
+      "realm": "worker",
+      "outcome": "sync-throw",
+      "observed": [],
+      "error": {
+        "type": "object",
+        "name": "Error",
+        "message": "Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "nested-unsupported",
+      "api": "runtime.Port.postMessage",
+      "mode": "port",
+      "realm": "worker",
+      "outcome": "received",
+      "observed": [
+        {
+          "before": "kept",
+          "after": null
+        }
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "array-unsupported",
+      "api": "runtime.Port.postMessage",
+      "mode": "port",
+      "realm": "worker",
+      "outcome": "received",
+      "observed": [
+        [
+          "kept",
+          null,
+          null,
+          null,
+          null
+        ]
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "tojson-object",
+      "api": "runtime.Port.postMessage",
+      "mode": "port",
+      "realm": "worker",
+      "outcome": "received",
+      "observed": [
+        {
+          "transformed": true,
+          "unicode": "変換 🚀"
+        }
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 1,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [
+          true
+        ],
+        "keys": [
+          ""
+        ]
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "tojson-undefined",
+      "api": "runtime.Port.postMessage",
+      "mode": "port",
+      "realm": "worker",
+      "outcome": "sync-throw",
+      "observed": [],
+      "error": {
+        "type": "object",
+        "name": "Error",
+        "message": "Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 1,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [
+          true
+        ],
+        "keys": [
+          ""
+        ]
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "tojson-throw",
+      "api": "runtime.Port.postMessage",
+      "mode": "port",
+      "realm": "worker",
+      "outcome": "sync-throw",
+      "observed": [],
+      "error": {
+        "type": "object",
+        "name": "Error",
+        "message": "Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 1,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [
+          true
+        ],
+        "keys": [
+          ""
+        ]
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "tojson-bigint",
+      "api": "runtime.Port.postMessage",
+      "mode": "port",
+      "realm": "worker",
+      "outcome": "sync-throw",
+      "observed": [],
+      "error": {
+        "type": "object",
+        "name": "Error",
+        "message": "Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 1,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [
+          true
+        ],
+        "keys": [
+          ""
+        ]
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "getter",
+      "api": "runtime.Port.postMessage",
+      "mode": "port",
+      "realm": "worker",
+      "outcome": "received",
+      "observed": [
+        {
+          "label": "original",
+          "selected": {
+            "materialized": true,
+            "count": 1
+          }
+        }
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 1,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [
+          true
+        ],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "getter-throw",
+      "api": "runtime.Port.postMessage",
+      "mode": "port",
+      "realm": "worker",
+      "outcome": "sync-throw",
+      "observed": [],
+      "error": {
+        "type": "object",
+        "name": "Error",
+        "message": "Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 1,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [
+          true
+        ],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "undefined",
+      "api": "runtime.sendMessage",
+      "mode": "single",
+      "realm": "worker",
+      "outcome": "resolved",
+      "observed": [
+        null
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "undefined",
+      "api": "runtime.sendMessage",
+      "mode": "explicit-id",
+      "realm": "worker",
+      "outcome": "resolved",
+      "observed": [
+        null
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "null",
+      "api": "runtime.sendMessage",
+      "mode": "single",
+      "realm": "worker",
+      "outcome": "resolved",
+      "observed": [
+        null
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "null",
+      "api": "runtime.sendMessage",
+      "mode": "explicit-id",
+      "realm": "worker",
+      "outcome": "resolved",
+      "observed": [
+        null
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "true",
+      "api": "runtime.sendMessage",
+      "mode": "single",
+      "realm": "worker",
+      "outcome": "resolved",
+      "observed": [
+        true
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "true",
+      "api": "runtime.sendMessage",
+      "mode": "explicit-id",
+      "realm": "worker",
+      "outcome": "resolved",
+      "observed": [
+        true
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "false",
+      "api": "runtime.sendMessage",
+      "mode": "single",
+      "realm": "worker",
+      "outcome": "resolved",
+      "observed": [
+        false
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "false",
+      "api": "runtime.sendMessage",
+      "mode": "explicit-id",
+      "realm": "worker",
+      "outcome": "resolved",
+      "observed": [
+        false
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "string",
+      "api": "runtime.sendMessage",
+      "mode": "single",
+      "realm": "worker",
+      "outcome": "resolved",
+      "observed": [
+        "owned-message"
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "string",
+      "api": "runtime.sendMessage",
+      "mode": "explicit-id",
+      "realm": "worker",
+      "outcome": "resolved",
+      "observed": [
+        "owned-message"
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "unicode",
+      "api": "runtime.sendMessage",
+      "mode": "single",
+      "realm": "worker",
+      "outcome": "resolved",
+      "observed": [
+        "Floorp 日本語 🚀"
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "unicode",
+      "api": "runtime.sendMessage",
+      "mode": "explicit-id",
+      "realm": "worker",
+      "outcome": "resolved",
+      "observed": [
+        "Floorp 日本語 🚀"
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "number",
+      "api": "runtime.sendMessage",
+      "mode": "single",
+      "realm": "worker",
+      "outcome": "resolved",
+      "observed": [
+        42.25
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "number",
+      "api": "runtime.sendMessage",
+      "mode": "explicit-id",
+      "realm": "worker",
+      "outcome": "resolved",
+      "observed": [
+        42.25
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "negative-zero",
+      "api": "runtime.sendMessage",
+      "mode": "single",
+      "realm": "worker",
+      "outcome": "resolved",
+      "observed": [
+        0
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "negative-zero",
+      "api": "runtime.sendMessage",
+      "mode": "explicit-id",
+      "realm": "worker",
+      "outcome": "resolved",
+      "observed": [
+        0
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "nan",
+      "api": "runtime.sendMessage",
+      "mode": "single",
+      "realm": "worker",
+      "outcome": "resolved",
+      "observed": [
+        null
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "nan",
+      "api": "runtime.sendMessage",
+      "mode": "explicit-id",
+      "realm": "worker",
+      "outcome": "resolved",
+      "observed": [
+        null
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "infinity",
+      "api": "runtime.sendMessage",
+      "mode": "single",
+      "realm": "worker",
+      "outcome": "resolved",
+      "observed": [
+        null
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "infinity",
+      "api": "runtime.sendMessage",
+      "mode": "explicit-id",
+      "realm": "worker",
+      "outcome": "resolved",
+      "observed": [
+        null
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "negative-infinity",
+      "api": "runtime.sendMessage",
+      "mode": "single",
+      "realm": "worker",
+      "outcome": "resolved",
+      "observed": [
+        null
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "negative-infinity",
+      "api": "runtime.sendMessage",
+      "mode": "explicit-id",
+      "realm": "worker",
+      "outcome": "resolved",
+      "observed": [
+        null
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "nested-primitives",
+      "api": "runtime.sendMessage",
+      "mode": "single",
+      "realm": "worker",
+      "outcome": "resolved",
+      "observed": [
+        {
+          "nil": null,
+          "str": "owned",
+          "bool": false,
+          "number": 17,
+          "list": [
+            1,
+            "two",
+            true
+          ]
+        }
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "nested-primitives",
+      "api": "runtime.sendMessage",
+      "mode": "explicit-id",
+      "realm": "worker",
+      "outcome": "resolved",
+      "observed": [
+        {
+          "nil": null,
+          "str": "owned",
+          "bool": false,
+          "number": 17,
+          "list": [
+            1,
+            "two",
+            true
+          ]
+        }
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "cycle",
+      "api": "runtime.sendMessage",
+      "mode": "single",
+      "realm": "worker",
+      "outcome": "sync-throw",
+      "observed": [],
+      "error": {
+        "type": "object",
+        "name": "TypeError",
+        "message": "Error in invocation of runtime.sendMessage(optional string extensionId, any message, optional object options, optional function callback): Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "cycle",
+      "api": "runtime.sendMessage",
+      "mode": "explicit-id",
+      "realm": "worker",
+      "outcome": "sync-throw",
+      "observed": [],
+      "error": {
+        "type": "object",
+        "name": "TypeError",
+        "message": "Error in invocation of runtime.sendMessage(optional string extensionId, any message, optional object options, optional function callback): Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "bigint",
+      "api": "runtime.sendMessage",
+      "mode": "single",
+      "realm": "worker",
+      "outcome": "sync-throw",
+      "observed": [],
+      "error": {
+        "type": "object",
+        "name": "TypeError",
+        "message": "Error in invocation of runtime.sendMessage(optional string extensionId, any message, optional object options, optional function callback): Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "bigint",
+      "api": "runtime.sendMessage",
+      "mode": "explicit-id",
+      "realm": "worker",
+      "outcome": "sync-throw",
+      "observed": [],
+      "error": {
+        "type": "object",
+        "name": "TypeError",
+        "message": "Error in invocation of runtime.sendMessage(optional string extensionId, any message, optional object options, optional function callback): Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "nested-bigint",
+      "api": "runtime.sendMessage",
+      "mode": "single",
+      "realm": "worker",
+      "outcome": "sync-throw",
+      "observed": [],
+      "error": {
+        "type": "object",
+        "name": "TypeError",
+        "message": "Error in invocation of runtime.sendMessage(optional string extensionId, any message, optional object options, optional function callback): Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "nested-bigint",
+      "api": "runtime.sendMessage",
+      "mode": "explicit-id",
+      "realm": "worker",
+      "outcome": "sync-throw",
+      "observed": [],
+      "error": {
+        "type": "object",
+        "name": "TypeError",
+        "message": "Error in invocation of runtime.sendMessage(optional string extensionId, any message, optional object options, optional function callback): Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "array-bigint",
+      "api": "runtime.sendMessage",
+      "mode": "single",
+      "realm": "worker",
+      "outcome": "sync-throw",
+      "observed": [],
+      "error": {
+        "type": "object",
+        "name": "TypeError",
+        "message": "Error in invocation of runtime.sendMessage(optional string extensionId, any message, optional object options, optional function callback): Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "array-bigint",
+      "api": "runtime.sendMessage",
+      "mode": "explicit-id",
+      "realm": "worker",
+      "outcome": "sync-throw",
+      "observed": [],
+      "error": {
+        "type": "object",
+        "name": "TypeError",
+        "message": "Error in invocation of runtime.sendMessage(optional string extensionId, any message, optional object options, optional function callback): Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "date",
+      "api": "runtime.sendMessage",
+      "mode": "single",
+      "realm": "worker",
+      "outcome": "resolved",
+      "observed": [
+        "2026-10-19T12:34:56.000Z"
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "date",
+      "api": "runtime.sendMessage",
+      "mode": "explicit-id",
+      "realm": "worker",
+      "outcome": "resolved",
+      "observed": [
+        "2026-10-19T12:34:56.000Z"
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "invalid-date",
+      "api": "runtime.sendMessage",
+      "mode": "single",
+      "realm": "worker",
+      "outcome": "resolved",
+      "observed": [
+        null
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "invalid-date",
+      "api": "runtime.sendMessage",
+      "mode": "explicit-id",
+      "realm": "worker",
+      "outcome": "resolved",
+      "observed": [
+        null
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "map",
+      "api": "runtime.sendMessage",
+      "mode": "single",
+      "realm": "worker",
+      "outcome": "resolved",
+      "observed": [
+        {}
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "map",
+      "api": "runtime.sendMessage",
+      "mode": "explicit-id",
+      "realm": "worker",
+      "outcome": "resolved",
+      "observed": [
+        {}
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "set",
+      "api": "runtime.sendMessage",
+      "mode": "single",
+      "realm": "worker",
+      "outcome": "resolved",
+      "observed": [
+        {}
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "set",
+      "api": "runtime.sendMessage",
+      "mode": "explicit-id",
+      "realm": "worker",
+      "outcome": "resolved",
+      "observed": [
+        {}
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "typed-array",
+      "api": "runtime.sendMessage",
+      "mode": "single",
+      "realm": "worker",
+      "outcome": "resolved",
+      "observed": [
+        {
+          "0": 3,
+          "1": 7,
+          "2": 255
+        }
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "typed-array",
+      "api": "runtime.sendMessage",
+      "mode": "explicit-id",
+      "realm": "worker",
+      "outcome": "resolved",
+      "observed": [
+        {
+          "0": 3,
+          "1": 7,
+          "2": 255
+        }
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "error",
+      "api": "runtime.sendMessage",
+      "mode": "single",
+      "realm": "worker",
+      "outcome": "resolved",
+      "observed": [
+        {}
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "error",
+      "api": "runtime.sendMessage",
+      "mode": "explicit-id",
+      "realm": "worker",
+      "outcome": "resolved",
+      "observed": [
+        {}
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "function",
+      "api": "runtime.sendMessage",
+      "mode": "single",
+      "realm": "worker",
+      "outcome": "sync-throw",
+      "observed": [],
+      "error": {
+        "type": "object",
+        "name": "TypeError",
+        "message": "Error in invocation of runtime.sendMessage(optional string extensionId, any message, optional object options, optional function callback): Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "function",
+      "api": "runtime.sendMessage",
+      "mode": "explicit-id",
+      "realm": "worker",
+      "outcome": "returned",
+      "observed": [
+        "iedmfohhnpmcfeobggjlblfididmianp"
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 1,
+        "functionArgumentTypes": [
+          [
+            "object"
+          ]
+        ],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "undefined",
+      "returnedThenable": false
+    },
+    {
+      "caseId": "symbol",
+      "api": "runtime.sendMessage",
+      "mode": "single",
+      "realm": "worker",
+      "outcome": "sync-throw",
+      "observed": [],
+      "error": {
+        "type": "object",
+        "name": "TypeError",
+        "message": "Error in invocation of runtime.sendMessage(optional string extensionId, any message, optional object options, optional function callback): Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "symbol",
+      "api": "runtime.sendMessage",
+      "mode": "explicit-id",
+      "realm": "worker",
+      "outcome": "sync-throw",
+      "observed": [],
+      "error": {
+        "type": "object",
+        "name": "TypeError",
+        "message": "Error in invocation of runtime.sendMessage(optional string extensionId, any message, optional object options, optional function callback): Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "nested-unsupported",
+      "api": "runtime.sendMessage",
+      "mode": "single",
+      "realm": "worker",
+      "outcome": "resolved",
+      "observed": [
+        {
+          "before": "kept",
+          "after": null
+        }
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "nested-unsupported",
+      "api": "runtime.sendMessage",
+      "mode": "explicit-id",
+      "realm": "worker",
+      "outcome": "resolved",
+      "observed": [
+        {
+          "before": "kept",
+          "after": null
+        }
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "array-unsupported",
+      "api": "runtime.sendMessage",
+      "mode": "single",
+      "realm": "worker",
+      "outcome": "resolved",
+      "observed": [
+        [
+          "kept",
+          null,
+          null,
+          null,
+          null
+        ]
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "array-unsupported",
+      "api": "runtime.sendMessage",
+      "mode": "explicit-id",
+      "realm": "worker",
+      "outcome": "resolved",
+      "observed": [
+        [
+          "kept",
+          null,
+          null,
+          null,
+          null
+        ]
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "tojson-object",
+      "api": "runtime.sendMessage",
+      "mode": "single",
+      "realm": "worker",
+      "outcome": "resolved",
+      "observed": [
+        {
+          "transformed": true,
+          "unicode": "変換 🚀"
+        }
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 1,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [
+          true
+        ],
+        "keys": [
+          ""
+        ]
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "tojson-object",
+      "api": "runtime.sendMessage",
+      "mode": "explicit-id",
+      "realm": "worker",
+      "outcome": "resolved",
+      "observed": [
+        {
+          "transformed": true,
+          "unicode": "変換 🚀"
+        }
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 1,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [
+          true
+        ],
+        "keys": [
+          ""
+        ]
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "tojson-undefined",
+      "api": "runtime.sendMessage",
+      "mode": "single",
+      "realm": "worker",
+      "outcome": "sync-throw",
+      "observed": [],
+      "error": {
+        "type": "object",
+        "name": "TypeError",
+        "message": "Error in invocation of runtime.sendMessage(optional string extensionId, any message, optional object options, optional function callback): Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 1,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [
+          true
+        ],
+        "keys": [
+          ""
+        ]
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "tojson-undefined",
+      "api": "runtime.sendMessage",
+      "mode": "explicit-id",
+      "realm": "worker",
+      "outcome": "sync-throw",
+      "observed": [],
+      "error": {
+        "type": "object",
+        "name": "TypeError",
+        "message": "Error in invocation of runtime.sendMessage(optional string extensionId, any message, optional object options, optional function callback): Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 1,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [
+          true
+        ],
+        "keys": [
+          ""
+        ]
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "tojson-throw",
+      "api": "runtime.sendMessage",
+      "mode": "single",
+      "realm": "worker",
+      "outcome": "sync-throw",
+      "observed": [],
+      "error": {
+        "type": "object",
+        "name": "TypeError",
+        "message": "Error in invocation of runtime.sendMessage(optional string extensionId, any message, optional object options, optional function callback): Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 1,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [
+          true
+        ],
+        "keys": [
+          ""
+        ]
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "tojson-throw",
+      "api": "runtime.sendMessage",
+      "mode": "explicit-id",
+      "realm": "worker",
+      "outcome": "sync-throw",
+      "observed": [],
+      "error": {
+        "type": "object",
+        "name": "TypeError",
+        "message": "Error in invocation of runtime.sendMessage(optional string extensionId, any message, optional object options, optional function callback): Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 1,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [
+          true
+        ],
+        "keys": [
+          ""
+        ]
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "tojson-bigint",
+      "api": "runtime.sendMessage",
+      "mode": "single",
+      "realm": "worker",
+      "outcome": "sync-throw",
+      "observed": [],
+      "error": {
+        "type": "object",
+        "name": "TypeError",
+        "message": "Error in invocation of runtime.sendMessage(optional string extensionId, any message, optional object options, optional function callback): Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 1,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [
+          true
+        ],
+        "keys": [
+          ""
+        ]
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "tojson-bigint",
+      "api": "runtime.sendMessage",
+      "mode": "explicit-id",
+      "realm": "worker",
+      "outcome": "sync-throw",
+      "observed": [],
+      "error": {
+        "type": "object",
+        "name": "TypeError",
+        "message": "Error in invocation of runtime.sendMessage(optional string extensionId, any message, optional object options, optional function callback): Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 1,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [
+          true
+        ],
+        "keys": [
+          ""
+        ]
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "getter",
+      "api": "runtime.sendMessage",
+      "mode": "single",
+      "realm": "worker",
+      "outcome": "resolved",
+      "observed": [
+        {
+          "label": "original",
+          "selected": {
+            "materialized": true,
+            "count": 1
+          }
+        }
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 1,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [
+          true
+        ],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "getter",
+      "api": "runtime.sendMessage",
+      "mode": "explicit-id",
+      "realm": "worker",
+      "outcome": "resolved",
+      "observed": [
+        {
+          "label": "original",
+          "selected": {
+            "materialized": true,
+            "count": 1
+          }
+        }
+      ],
+      "error": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 1,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [
+          true
+        ],
+        "keys": []
+      },
+      "returnedType": "object",
+      "returnedThenable": true
+    },
+    {
+      "caseId": "getter-throw",
+      "api": "runtime.sendMessage",
+      "mode": "single",
+      "realm": "worker",
+      "outcome": "sync-throw",
+      "observed": [],
+      "error": {
+        "type": "object",
+        "name": "TypeError",
+        "message": "Error in invocation of runtime.sendMessage(optional string extensionId, any message, optional object options, optional function callback): Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 1,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [
+          true
+        ],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    },
+    {
+      "caseId": "getter-throw",
+      "api": "runtime.sendMessage",
+      "mode": "explicit-id",
+      "realm": "worker",
+      "outcome": "sync-throw",
+      "observed": [],
+      "error": {
+        "type": "object",
+        "name": "TypeError",
+        "message": "Error in invocation of runtime.sendMessage(optional string extensionId, any message, optional object options, optional function callback): Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 1,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [
+          true
+        ],
+        "keys": []
+      },
+      "returnedType": null,
+      "returnedThenable": null
+    }
+  ],
+  "responseRows": [
+    {
+      "caseId": "undefined",
+      "mode": "sendResponse",
+      "senderRealm": "document",
+      "receiverRealm": "worker",
+      "outcome": "resolved",
+      "values": [
+        null
+      ],
+      "senderError": null,
+      "receiverThrow": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      }
+    },
+    {
+      "caseId": "undefined",
+      "mode": "promise",
+      "senderRealm": "document",
+      "receiverRealm": "worker",
+      "outcome": "resolved",
+      "values": [
+        null
+      ],
+      "senderError": null,
+      "receiverThrow": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      }
+    },
+    {
+      "caseId": "undefined",
+      "mode": "port",
+      "senderRealm": "document",
+      "receiverRealm": "worker",
+      "outcome": "received",
+      "values": [
+        null
+      ],
+      "senderError": null,
+      "receiverThrow": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      }
+    },
+    {
+      "caseId": "date",
+      "mode": "sendResponse",
+      "senderRealm": "document",
+      "receiverRealm": "worker",
+      "outcome": "resolved",
+      "values": [
+        "2026-10-19T12:34:56.000Z"
+      ],
+      "senderError": null,
+      "receiverThrow": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      }
+    },
+    {
+      "caseId": "date",
+      "mode": "promise",
+      "senderRealm": "document",
+      "receiverRealm": "worker",
+      "outcome": "resolved",
+      "values": [
+        "2026-10-19T12:34:56.000Z"
+      ],
+      "senderError": null,
+      "receiverThrow": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      }
+    },
+    {
+      "caseId": "date",
+      "mode": "port",
+      "senderRealm": "document",
+      "receiverRealm": "worker",
+      "outcome": "received",
+      "values": [
+        "2026-10-19T12:34:56.000Z"
+      ],
+      "senderError": null,
+      "receiverThrow": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      }
+    },
+    {
+      "caseId": "invalid-date",
+      "mode": "sendResponse",
+      "senderRealm": "document",
+      "receiverRealm": "worker",
+      "outcome": "resolved",
+      "values": [
+        null
+      ],
+      "senderError": null,
+      "receiverThrow": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      }
+    },
+    {
+      "caseId": "invalid-date",
+      "mode": "promise",
+      "senderRealm": "document",
+      "receiverRealm": "worker",
+      "outcome": "resolved",
+      "values": [
+        null
+      ],
+      "senderError": null,
+      "receiverThrow": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      }
+    },
+    {
+      "caseId": "invalid-date",
+      "mode": "port",
+      "senderRealm": "document",
+      "receiverRealm": "worker",
+      "outcome": "received",
+      "values": [
+        null
+      ],
+      "senderError": null,
+      "receiverThrow": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      }
+    },
+    {
+      "caseId": "map",
+      "mode": "sendResponse",
+      "senderRealm": "document",
+      "receiverRealm": "worker",
+      "outcome": "resolved",
+      "values": [
+        {}
+      ],
+      "senderError": null,
+      "receiverThrow": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      }
+    },
+    {
+      "caseId": "map",
+      "mode": "promise",
+      "senderRealm": "document",
+      "receiverRealm": "worker",
+      "outcome": "resolved",
+      "values": [
+        {}
+      ],
+      "senderError": null,
+      "receiverThrow": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      }
+    },
+    {
+      "caseId": "map",
+      "mode": "port",
+      "senderRealm": "document",
+      "receiverRealm": "worker",
+      "outcome": "received",
+      "values": [
+        {}
+      ],
+      "senderError": null,
+      "receiverThrow": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      }
+    },
+    {
+      "caseId": "tojson-object",
+      "mode": "sendResponse",
+      "senderRealm": "document",
+      "receiverRealm": "worker",
+      "outcome": "resolved",
+      "values": [
+        {
+          "transformed": true,
+          "unicode": "変換 🚀"
+        }
+      ],
+      "senderError": null,
+      "receiverThrow": null,
+      "state": {
+        "toJSONCalls": 1,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [
+          true
+        ],
+        "keys": [
+          ""
+        ]
+      }
+    },
+    {
+      "caseId": "tojson-object",
+      "mode": "promise",
+      "senderRealm": "document",
+      "receiverRealm": "worker",
+      "outcome": "resolved",
+      "values": [
+        {
+          "transformed": true,
+          "unicode": "変換 🚀"
+        }
+      ],
+      "senderError": null,
+      "receiverThrow": null,
+      "state": {
+        "toJSONCalls": 1,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [
+          true
+        ],
+        "keys": [
+          ""
+        ]
+      }
+    },
+    {
+      "caseId": "tojson-object",
+      "mode": "port",
+      "senderRealm": "document",
+      "receiverRealm": "worker",
+      "outcome": "received",
+      "values": [
+        {
+          "transformed": true,
+          "unicode": "変換 🚀"
+        }
+      ],
+      "senderError": null,
+      "receiverThrow": null,
+      "state": {
+        "toJSONCalls": 1,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [
+          true
+        ],
+        "keys": [
+          ""
+        ]
+      }
+    },
+    {
+      "caseId": "tojson-undefined",
+      "mode": "sendResponse",
+      "senderRealm": "document",
+      "receiverRealm": "worker",
+      "outcome": "promise-rejection",
+      "values": [],
+      "senderError": {
+        "type": "object",
+        "name": "Error",
+        "message": "Could not serialize message."
+      },
+      "receiverThrow": {
+        "type": "object",
+        "name": "TypeError",
+        "message": "Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 1,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [
+          true
+        ],
+        "keys": [
+          ""
+        ]
+      }
+    },
+    {
+      "caseId": "tojson-undefined",
+      "mode": "promise",
+      "senderRealm": "document",
+      "receiverRealm": "worker",
+      "outcome": "promise-rejection",
+      "values": [],
+      "senderError": {
+        "type": "object",
+        "name": "Error",
+        "message": "Could not serialize message."
+      },
+      "receiverThrow": null,
+      "state": {
+        "toJSONCalls": 1,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [
+          true
+        ],
+        "keys": [
+          ""
+        ]
+      }
+    },
+    {
+      "caseId": "tojson-undefined",
+      "mode": "port",
+      "senderRealm": "document",
+      "receiverRealm": "worker",
+      "outcome": "timeout",
+      "values": [],
+      "senderError": null,
+      "receiverThrow": {
+        "type": "object",
+        "name": "Error",
+        "message": "Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 1,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [
+          true
+        ],
+        "keys": [
+          ""
+        ]
+      }
+    },
+    {
+      "caseId": "tojson-throw",
+      "mode": "sendResponse",
+      "senderRealm": "document",
+      "receiverRealm": "worker",
+      "outcome": "promise-rejection",
+      "values": [],
+      "senderError": {
+        "type": "object",
+        "name": "Error",
+        "message": "Could not serialize message."
+      },
+      "receiverThrow": {
+        "type": "object",
+        "name": "TypeError",
+        "message": "Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 1,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [
+          true
+        ],
+        "keys": [
+          ""
+        ]
+      }
+    },
+    {
+      "caseId": "tojson-throw",
+      "mode": "promise",
+      "senderRealm": "document",
+      "receiverRealm": "worker",
+      "outcome": "promise-rejection",
+      "values": [],
+      "senderError": {
+        "type": "object",
+        "name": "Error",
+        "message": "Could not serialize message."
+      },
+      "receiverThrow": null,
+      "state": {
+        "toJSONCalls": 1,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [
+          true
+        ],
+        "keys": [
+          ""
+        ]
+      }
+    },
+    {
+      "caseId": "tojson-throw",
+      "mode": "port",
+      "senderRealm": "document",
+      "receiverRealm": "worker",
+      "outcome": "timeout",
+      "values": [],
+      "senderError": null,
+      "receiverThrow": {
+        "type": "object",
+        "name": "Error",
+        "message": "Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 1,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [
+          true
+        ],
+        "keys": [
+          ""
+        ]
+      }
+    },
+    {
+      "caseId": "function",
+      "mode": "sendResponse",
+      "senderRealm": "document",
+      "receiverRealm": "worker",
+      "outcome": "promise-rejection",
+      "values": [],
+      "senderError": {
+        "type": "object",
+        "name": "Error",
+        "message": "Could not serialize message."
+      },
+      "receiverThrow": {
+        "type": "object",
+        "name": "TypeError",
+        "message": "Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      }
+    },
+    {
+      "caseId": "function",
+      "mode": "promise",
+      "senderRealm": "document",
+      "receiverRealm": "worker",
+      "outcome": "promise-rejection",
+      "values": [],
+      "senderError": {
+        "type": "object",
+        "name": "Error",
+        "message": "Could not serialize message."
+      },
+      "receiverThrow": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      }
+    },
+    {
+      "caseId": "function",
+      "mode": "port",
+      "senderRealm": "document",
+      "receiverRealm": "worker",
+      "outcome": "timeout",
+      "values": [],
+      "senderError": null,
+      "receiverThrow": {
+        "type": "object",
+        "name": "Error",
+        "message": "Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      }
+    },
+    {
+      "caseId": "bigint",
+      "mode": "sendResponse",
+      "senderRealm": "document",
+      "receiverRealm": "worker",
+      "outcome": "promise-rejection",
+      "values": [],
+      "senderError": {
+        "type": "object",
+        "name": "Error",
+        "message": "Could not serialize message."
+      },
+      "receiverThrow": {
+        "type": "object",
+        "name": "TypeError",
+        "message": "Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      }
+    },
+    {
+      "caseId": "bigint",
+      "mode": "promise",
+      "senderRealm": "document",
+      "receiverRealm": "worker",
+      "outcome": "promise-rejection",
+      "values": [],
+      "senderError": {
+        "type": "object",
+        "name": "Error",
+        "message": "Could not serialize message."
+      },
+      "receiverThrow": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      }
+    },
+    {
+      "caseId": "bigint",
+      "mode": "port",
+      "senderRealm": "document",
+      "receiverRealm": "worker",
+      "outcome": "timeout",
+      "values": [],
+      "senderError": null,
+      "receiverThrow": {
+        "type": "object",
+        "name": "Error",
+        "message": "Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      }
+    },
+    {
+      "caseId": "cycle",
+      "mode": "sendResponse",
+      "senderRealm": "document",
+      "receiverRealm": "worker",
+      "outcome": "promise-rejection",
+      "values": [],
+      "senderError": {
+        "type": "object",
+        "name": "Error",
+        "message": "Could not serialize message."
+      },
+      "receiverThrow": {
+        "type": "object",
+        "name": "TypeError",
+        "message": "Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      }
+    },
+    {
+      "caseId": "cycle",
+      "mode": "promise",
+      "senderRealm": "document",
+      "receiverRealm": "worker",
+      "outcome": "promise-rejection",
+      "values": [],
+      "senderError": {
+        "type": "object",
+        "name": "Error",
+        "message": "Could not serialize message."
+      },
+      "receiverThrow": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      }
+    },
+    {
+      "caseId": "cycle",
+      "mode": "port",
+      "senderRealm": "document",
+      "receiverRealm": "worker",
+      "outcome": "timeout",
+      "values": [],
+      "senderError": null,
+      "receiverThrow": {
+        "type": "object",
+        "name": "Error",
+        "message": "Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      }
+    },
+    {
+      "caseId": "undefined",
+      "mode": "sendResponse",
+      "senderRealm": "worker",
+      "receiverRealm": "document",
+      "outcome": "resolved",
+      "values": [
+        null
+      ],
+      "senderError": null,
+      "receiverThrow": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      }
+    },
+    {
+      "caseId": "undefined",
+      "mode": "promise",
+      "senderRealm": "worker",
+      "receiverRealm": "document",
+      "outcome": "resolved",
+      "values": [
+        null
+      ],
+      "senderError": null,
+      "receiverThrow": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      }
+    },
+    {
+      "caseId": "undefined",
+      "mode": "port",
+      "senderRealm": "worker",
+      "receiverRealm": "document",
+      "outcome": "received",
+      "values": [
+        null
+      ],
+      "senderError": null,
+      "receiverThrow": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      }
+    },
+    {
+      "caseId": "date",
+      "mode": "sendResponse",
+      "senderRealm": "worker",
+      "receiverRealm": "document",
+      "outcome": "resolved",
+      "values": [
+        "2026-10-19T12:34:56.000Z"
+      ],
+      "senderError": null,
+      "receiverThrow": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      }
+    },
+    {
+      "caseId": "date",
+      "mode": "promise",
+      "senderRealm": "worker",
+      "receiverRealm": "document",
+      "outcome": "resolved",
+      "values": [
+        "2026-10-19T12:34:56.000Z"
+      ],
+      "senderError": null,
+      "receiverThrow": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      }
+    },
+    {
+      "caseId": "date",
+      "mode": "port",
+      "senderRealm": "worker",
+      "receiverRealm": "document",
+      "outcome": "received",
+      "values": [
+        "2026-10-19T12:34:56.000Z"
+      ],
+      "senderError": null,
+      "receiverThrow": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      }
+    },
+    {
+      "caseId": "invalid-date",
+      "mode": "sendResponse",
+      "senderRealm": "worker",
+      "receiverRealm": "document",
+      "outcome": "resolved",
+      "values": [
+        null
+      ],
+      "senderError": null,
+      "receiverThrow": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      }
+    },
+    {
+      "caseId": "invalid-date",
+      "mode": "promise",
+      "senderRealm": "worker",
+      "receiverRealm": "document",
+      "outcome": "resolved",
+      "values": [
+        null
+      ],
+      "senderError": null,
+      "receiverThrow": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      }
+    },
+    {
+      "caseId": "invalid-date",
+      "mode": "port",
+      "senderRealm": "worker",
+      "receiverRealm": "document",
+      "outcome": "received",
+      "values": [
+        null
+      ],
+      "senderError": null,
+      "receiverThrow": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      }
+    },
+    {
+      "caseId": "map",
+      "mode": "sendResponse",
+      "senderRealm": "worker",
+      "receiverRealm": "document",
+      "outcome": "resolved",
+      "values": [
+        {}
+      ],
+      "senderError": null,
+      "receiverThrow": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      }
+    },
+    {
+      "caseId": "map",
+      "mode": "promise",
+      "senderRealm": "worker",
+      "receiverRealm": "document",
+      "outcome": "resolved",
+      "values": [
+        {}
+      ],
+      "senderError": null,
+      "receiverThrow": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      }
+    },
+    {
+      "caseId": "map",
+      "mode": "port",
+      "senderRealm": "worker",
+      "receiverRealm": "document",
+      "outcome": "received",
+      "values": [
+        {}
+      ],
+      "senderError": null,
+      "receiverThrow": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      }
+    },
+    {
+      "caseId": "tojson-object",
+      "mode": "sendResponse",
+      "senderRealm": "worker",
+      "receiverRealm": "document",
+      "outcome": "resolved",
+      "values": [
+        {
+          "transformed": true,
+          "unicode": "変換 🚀"
+        }
+      ],
+      "senderError": null,
+      "receiverThrow": null,
+      "state": {
+        "toJSONCalls": 1,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [
+          true
+        ],
+        "keys": [
+          ""
+        ]
+      }
+    },
+    {
+      "caseId": "tojson-object",
+      "mode": "promise",
+      "senderRealm": "worker",
+      "receiverRealm": "document",
+      "outcome": "resolved",
+      "values": [
+        {
+          "transformed": true,
+          "unicode": "変換 🚀"
+        }
+      ],
+      "senderError": null,
+      "receiverThrow": null,
+      "state": {
+        "toJSONCalls": 1,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [
+          true
+        ],
+        "keys": [
+          ""
+        ]
+      }
+    },
+    {
+      "caseId": "tojson-object",
+      "mode": "port",
+      "senderRealm": "worker",
+      "receiverRealm": "document",
+      "outcome": "received",
+      "values": [
+        {
+          "transformed": true,
+          "unicode": "変換 🚀"
+        }
+      ],
+      "senderError": null,
+      "receiverThrow": null,
+      "state": {
+        "toJSONCalls": 1,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [
+          true
+        ],
+        "keys": [
+          ""
+        ]
+      }
+    },
+    {
+      "caseId": "tojson-undefined",
+      "mode": "sendResponse",
+      "senderRealm": "worker",
+      "receiverRealm": "document",
+      "outcome": "promise-rejection",
+      "values": [],
+      "senderError": {
+        "type": "object",
+        "name": "Error",
+        "message": "Could not serialize message."
+      },
+      "receiverThrow": {
+        "type": "object",
+        "name": "TypeError",
+        "message": "Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 1,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [
+          true
+        ],
+        "keys": [
+          ""
+        ]
+      }
+    },
+    {
+      "caseId": "tojson-undefined",
+      "mode": "promise",
+      "senderRealm": "worker",
+      "receiverRealm": "document",
+      "outcome": "promise-rejection",
+      "values": [],
+      "senderError": {
+        "type": "object",
+        "name": "Error",
+        "message": "Could not serialize message."
+      },
+      "receiverThrow": null,
+      "state": {
+        "toJSONCalls": 1,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [
+          true
+        ],
+        "keys": [
+          ""
+        ]
+      }
+    },
+    {
+      "caseId": "tojson-undefined",
+      "mode": "port",
+      "senderRealm": "worker",
+      "receiverRealm": "document",
+      "outcome": "timeout",
+      "values": [],
+      "senderError": null,
+      "receiverThrow": {
+        "type": "object",
+        "name": "Error",
+        "message": "Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 1,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [
+          true
+        ],
+        "keys": [
+          ""
+        ]
+      }
+    },
+    {
+      "caseId": "tojson-throw",
+      "mode": "sendResponse",
+      "senderRealm": "worker",
+      "receiverRealm": "document",
+      "outcome": "promise-rejection",
+      "values": [],
+      "senderError": {
+        "type": "object",
+        "name": "Error",
+        "message": "Could not serialize message."
+      },
+      "receiverThrow": {
+        "type": "object",
+        "name": "TypeError",
+        "message": "Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 1,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [
+          true
+        ],
+        "keys": [
+          ""
+        ]
+      }
+    },
+    {
+      "caseId": "tojson-throw",
+      "mode": "promise",
+      "senderRealm": "worker",
+      "receiverRealm": "document",
+      "outcome": "promise-rejection",
+      "values": [],
+      "senderError": {
+        "type": "object",
+        "name": "Error",
+        "message": "Could not serialize message."
+      },
+      "receiverThrow": null,
+      "state": {
+        "toJSONCalls": 1,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [
+          true
+        ],
+        "keys": [
+          ""
+        ]
+      }
+    },
+    {
+      "caseId": "tojson-throw",
+      "mode": "port",
+      "senderRealm": "worker",
+      "receiverRealm": "document",
+      "outcome": "timeout",
+      "values": [],
+      "senderError": null,
+      "receiverThrow": {
+        "type": "object",
+        "name": "Error",
+        "message": "Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 1,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [
+          true
+        ],
+        "keys": [
+          ""
+        ]
+      }
+    },
+    {
+      "caseId": "function",
+      "mode": "sendResponse",
+      "senderRealm": "worker",
+      "receiverRealm": "document",
+      "outcome": "promise-rejection",
+      "values": [],
+      "senderError": {
+        "type": "object",
+        "name": "Error",
+        "message": "Could not serialize message."
+      },
+      "receiverThrow": {
+        "type": "object",
+        "name": "TypeError",
+        "message": "Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      }
+    },
+    {
+      "caseId": "function",
+      "mode": "promise",
+      "senderRealm": "worker",
+      "receiverRealm": "document",
+      "outcome": "promise-rejection",
+      "values": [],
+      "senderError": {
+        "type": "object",
+        "name": "Error",
+        "message": "Could not serialize message."
+      },
+      "receiverThrow": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      }
+    },
+    {
+      "caseId": "function",
+      "mode": "port",
+      "senderRealm": "worker",
+      "receiverRealm": "document",
+      "outcome": "timeout",
+      "values": [],
+      "senderError": null,
+      "receiverThrow": {
+        "type": "object",
+        "name": "Error",
+        "message": "Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      }
+    },
+    {
+      "caseId": "bigint",
+      "mode": "sendResponse",
+      "senderRealm": "worker",
+      "receiverRealm": "document",
+      "outcome": "promise-rejection",
+      "values": [],
+      "senderError": {
+        "type": "object",
+        "name": "Error",
+        "message": "Could not serialize message."
+      },
+      "receiverThrow": {
+        "type": "object",
+        "name": "TypeError",
+        "message": "Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      }
+    },
+    {
+      "caseId": "bigint",
+      "mode": "promise",
+      "senderRealm": "worker",
+      "receiverRealm": "document",
+      "outcome": "promise-rejection",
+      "values": [],
+      "senderError": {
+        "type": "object",
+        "name": "Error",
+        "message": "Could not serialize message."
+      },
+      "receiverThrow": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      }
+    },
+    {
+      "caseId": "bigint",
+      "mode": "port",
+      "senderRealm": "worker",
+      "receiverRealm": "document",
+      "outcome": "timeout",
+      "values": [],
+      "senderError": null,
+      "receiverThrow": {
+        "type": "object",
+        "name": "Error",
+        "message": "Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      }
+    },
+    {
+      "caseId": "cycle",
+      "mode": "sendResponse",
+      "senderRealm": "worker",
+      "receiverRealm": "document",
+      "outcome": "promise-rejection",
+      "values": [],
+      "senderError": {
+        "type": "object",
+        "name": "Error",
+        "message": "Could not serialize message."
+      },
+      "receiverThrow": {
+        "type": "object",
+        "name": "TypeError",
+        "message": "Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      }
+    },
+    {
+      "caseId": "cycle",
+      "mode": "promise",
+      "senderRealm": "worker",
+      "receiverRealm": "document",
+      "outcome": "promise-rejection",
+      "values": [],
+      "senderError": {
+        "type": "object",
+        "name": "Error",
+        "message": "Could not serialize message."
+      },
+      "receiverThrow": null,
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      }
+    },
+    {
+      "caseId": "cycle",
+      "mode": "port",
+      "senderRealm": "worker",
+      "receiverRealm": "document",
+      "outcome": "timeout",
+      "values": [],
+      "senderError": null,
+      "receiverThrow": {
+        "type": "object",
+        "name": "Error",
+        "message": "Could not serialize message."
+      },
+      "state": {
+        "toJSONCalls": 0,
+        "getterCalls": 0,
+        "functionCalls": 0,
+        "functionArgumentTypes": [],
+        "receiverThis": [],
+        "keys": []
+      }
+    }
+  ],
+  "failures": []
+}

@@ -1,0 +1,589 @@
+diff --git a/modules/ChromeExtensionDesktopSource.sys.mjs b/modules/ChromeExtensionDesktopSource.sys.mjs
+new file mode 100644
+--- /dev/null
++++ b/modules/ChromeExtensionDesktopSource.sys.mjs
+@@ -0,0 +1,584 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
++ * You can obtain one at http://mozilla.org/MPL/2.0/. */
++Cu.importGlobalProperties(["AbortController"]);
++import { setTimeout, clearTimeout } from "resource://gre/modules/Timer.sys.mjs";
++
++async function iceComplete(peer) {
++  if (peer.iceGatheringState === "complete") return;
++  await new Promise((resolve, reject) => {
++    const timer = setTimeout(() => {
++      peer.removeEventListener("icegatheringstatechange", changed);
++      reject(new Error("Desktop source ICE gathering timed out."));
++    }, 10000);
++    function changed() {
++      if (peer.iceGatheringState === "complete") {
++        clearTimeout(timer);
++        peer.removeEventListener("icegatheringstatechange", changed);
++        resolve();
++      }
++    }
++    peer.addEventListener("icegatheringstatechange", changed);
++    changed();
++  });
++}
++async function connected(peer) {
++  if (peer.connectionState === "connected") return;
++  await new Promise((resolve, reject) => {
++    const timer = setTimeout(() => {
++      peer.removeEventListener("connectionstatechange", changed);
++      reject(new Error("Desktop source transport timed out."));
++    }, 10000);
++    function changed() {
++      if (["connected", "failed", "closed"].includes(peer.connectionState)) {
++        clearTimeout(timer);
++        peer.removeEventListener("connectionstatechange", changed);
++        if (peer.connectionState === "connected") resolve();
++        else reject(new Error("Desktop source transport failed."));
++      }
++    }
++    peer.addEventListener("connectionstatechange", changed);
++    changed();
++  });
++}
++function registerActors() {
++  for (const [name, options] of [
++    ["ChromeExtensionDesktopSource", { remoteTypes: ["extension", "parent"] }],
++    [
++      "ChromeExtensionCaptureAudio",
++      { allFrames: true, safeForUntrustedWebProcess: true },
++    ],
++  ]) {
++    try {
++      ChromeUtils.registerWindowActor(name, {
++        parent: { esModuleURI: `resource://gre/modules/${name}.sys.mjs` },
++        child: { esModuleURI: `resource://gre/modules/${name}.sys.mjs` },
++        ...options,
++      });
++    } catch (error) {
++      if (!String(error).includes("already")) throw error;
++    }
++  }
++}
++
++// The public desktop API owns this host, including while a stream ID awaits
++// consumption. It contains the extension's JSON manifest, never its scripts.
++export class DesktopSourcePage {
++  constructor(extension) {
++    const marker =
++      extension.manifest.browser_specific_settings?.gecko
++        ?.floorp_chrome_extension;
++    if (
++      marker?.schema_version !== 1 ||
++      !/^[a-p]{32}$/.test(marker.original_id) ||
++      extension.id !== `${marker.original_id}@chromium-extension` ||
++      !extension.hasPermission("desktopCapture")
++    )
++      throw new Error(
++        "Desktop source requires an authorized Chrome extension."
++      );
++    const { ExtensionParent } = ChromeUtils.importESModule(
++      "resource://gre/modules/ExtensionParent.sys.mjs"
++    );
++    this.extension = extension;
++    this.page = new ExtensionParent.HiddenExtensionPage(
++      extension,
++      "chrome_capture_source"
++    );
++    this.audioSources = new Map();
++    this.audioSessionId = String(Services.uuid.generateUUID());
++    this.abort = new AbortController();
++    this.onClose = null;
++  }
++  get browser() {
++    return this.page.browser;
++  }
++  get windowGlobal() {
++    return this.browser?.browsingContext?.currentWindowGlobal;
++  }
++  get unloaded() {
++    return this.page.unloaded;
++  }
++  async open() {
++    if (this.opening) return this.opening;
++    this.opening = (async () => {
++      registerActors();
++      await this.page.createBrowserElement();
++      if (this.unloaded)
++        throw new Error("Desktop source was closed before load.");
++      const { ExtensionParent } = ChromeUtils.importESModule(
++        "resource://gre/modules/ExtensionParent.sys.mjs"
++      );
++      ExtensionParent.apiManager.emit(
++        "extension-browser-inserted",
++        this.browser
++      );
++      const uri = this.extension.baseURI.resolve("manifest.json");
++      await new Promise((resolve, reject) => {
++        let settled = false;
++        const finish = error => {
++          if (settled) return;
++          settled = true;
++          clearTimeout(timer);
++          this.abort.signal.removeEventListener("abort", cancel);
++          if (this.browser?.webProgress)
++            this.browser.removeProgressListener(progress);
++          if (error) reject(error);
++          else resolve();
++        };
++        const loaded = () =>
++          this.windowGlobal?.isCurrentGlobal &&
++          this.windowGlobal.documentURI?.spec === uri &&
++          this.windowGlobal.documentPrincipal.originNoSuffix ===
++            this.extension.baseURI.prePath;
++        const progress = {
++          QueryInterface: ChromeUtils.generateQI([
++            "nsIWebProgressListener",
++            "nsISupportsWeakReference",
++          ]),
++          onStateChange(webProgress, _request, flags) {
++            if (
++              webProgress.isTopLevel &&
++              flags & Ci.nsIWebProgressListener.STATE_STOP &&
++              flags & Ci.nsIWebProgressListener.STATE_IS_DOCUMENT &&
++              loaded()
++            )
++              finish();
++          },
++        };
++        const cancel = () =>
++          finish(new Error("Desktop source load cancelled."));
++        const timer = setTimeout(
++          () => finish(new Error("Desktop source document failed to load.")),
++          15000
++        );
++        this.abort.signal.addEventListener("abort", cancel, { once: true });
++        this.browser.addProgressListener(
++          progress,
++          Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT
++        );
++        this.browser.fixupAndLoadURIString(uri, {
++          triggeringPrincipal: this.extension.principal,
++        });
++      });
++      if (this.unloaded)
++        throw new Error("Desktop source was closed during load.");
++      this.innerWindowId = this.windowGlobal.innerWindowId;
++      this.actor = this.windowGlobal.getActor("ChromeExtensionDesktopSource");
++      this.actor.page = this;
++      return this;
++    })().catch(error => {
++      this.close();
++      throw error;
++    });
++    return this.opening;
++  }
++  query(name, data = {}) {
++    if (
++      this.unloaded ||
++      !this.windowGlobal?.isCurrentGlobal ||
++      this.windowGlobal.innerWindowId !== this.innerWindowId
++    )
++      throw new Error("Desktop source document is no longer current.");
++    return this.actor.sendQuery(name, {
++      ...data,
++      innerWindowId: this.innerWindowId,
++      extensionOrigin: this.extension.baseURI.prePath,
++    });
++  }
++  async select({ kind, pickerToken, browserId, audioTab }) {
++    await this.open();
++    try {
++      if (kind === "tab") {
++        if (
++          audioTab &&
++          audioTab.linkedBrowser.browsingContext?.browserId !== browserId
++        )
++          throw new Error(
++            "Tab audio and video must belong to the same selected source."
++          );
++        this.watchTab(browserId);
++      }
++      const tracks = await this.query("Select", {
++        kind,
++        pickerToken,
++        browserId,
++      });
++      if (kind === "tab" && audioTab) {
++        await this.startTabAudio(audioTab);
++        return { video: tracks.video, audio: true };
++      }
++      return tracks;
++    } catch (error) {
++      this.close();
++      throw error;
++    }
++  }
++  watchTab(browserId) {
++    const context = BrowsingContext.getCurrentTopByBrowserId(browserId);
++    const browser = context?.embedderElement;
++    const global = context?.currentWindowGlobal;
++    if (
++      !browser ||
++      !global?.isCurrentGlobal ||
++      global.documentPrincipal.isSystemPrincipal ||
++      global.documentPrincipal.isExpandedPrincipal ||
++      global.documentPrincipal.addonPolicy
++    )
++      throw new Error("Selected tab source is unavailable or privileged.");
++    const innerWindowId = global.innerWindowId;
++    const observer = subject => {
++      if (subject.browserId === browserId) this.close();
++    };
++    Services.obs.addObserver(observer, "browsing-context-discarded");
++    const progress = {
++      QueryInterface: ChromeUtils.generateQI([
++        "nsIWebProgressListener",
++        "nsISupportsWeakReference",
++      ]),
++      onStateChange: (webProgress, _request, flags) => {
++        if (
++          webProgress.isTopLevel &&
++          flags & Ci.nsIWebProgressListener.STATE_START &&
++          flags & Ci.nsIWebProgressListener.STATE_IS_DOCUMENT
++        )
++          this.close();
++      },
++      onLocationChange: webProgress => {
++        if (
++          webProgress.isTopLevel &&
++          browser.browsingContext?.currentWindowGlobal?.innerWindowId !==
++            innerWindowId
++        )
++          this.close();
++      },
++    };
++    browser.addProgressListener(
++      progress,
++      Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT |
++        Ci.nsIWebProgress.NOTIFY_LOCATION
++    );
++    this.unwatchTab = () => {
++      Services.obs.removeObserver(observer, "browsing-context-discarded");
++      if (browser.webProgress) browser.removeProgressListener(progress);
++    };
++  }
++  async audioSource(global) {
++    if (
++      this.unloaded ||
++      !global?.isCurrentGlobal ||
++      global.documentPrincipal.isSystemPrincipal ||
++      global.documentPrincipal.isExpandedPrincipal ||
++      global.documentPrincipal.addonPolicy
++    )
++      return;
++    const sourceId = String(global.innerWindowId);
++    if (this.audioSources.has(sourceId)) return;
++    const source = {
++      actor: global.getActor("ChromeExtensionCaptureAudio"),
++      innerWindowId: global.innerWindowId,
++    };
++    this.audioSources.set(sourceId, source);
++    try {
++      const offer = await source.actor.sendQuery("Start", {
++        sessionId: this.audioSessionId,
++        innerWindowId: source.innerWindowId,
++      });
++      if (this.unloaded || !global.isCurrentGlobal)
++        throw new Error("Audio source changed during allocation.");
++      const answer = await this.query("AddAudioSource", { sourceId, offer });
++      await source.actor.sendQuery("Answer", {
++        sessionId: this.audioSessionId,
++        innerWindowId: source.innerWindowId,
++        answer,
++      });
++      await this.query("AudioConnected", { sourceId });
++    } catch (error) {
++      this.audioSources.delete(sourceId);
++      try {
++        source.actor.sendAsyncMessage("Stop", {
++          sessionId: this.audioSessionId,
++        });
++      } catch {}
++      if (this.unloaded || !global.isCurrentGlobal) return;
++      throw error;
++    }
++  }
++  async startTabAudio(tab) {
++    const browser = tab?.linkedBrowser;
++    const target = browser?.browsingContext?.currentWindowGlobal;
++    if (!target?.isCurrentGlobal)
++      throw new Error("Audio source tab is no longer current.");
++    const browserId = browser.browsingContext.browserId;
++    const innerWindowId = target.innerWindowId;
++    const observe = (subject, topic) => {
++      if (topic === "window-global-destroyed") {
++        const sourceId = String(subject.innerWindowId);
++        if (this.audioSources.delete(sourceId))
++          try {
++            this.query("RemoveAudioSource", { sourceId }).catch(() => {});
++          } catch {}
++        return;
++      }
++      if (subject.browsingContext.top.browserId !== browserId) return;
++      if (
++        subject.browsingContext.top === subject.browsingContext &&
++        subject.innerWindowId !== innerWindowId
++      ) {
++        this.close();
++        return;
++      }
++      this.audioSource(subject).catch(() => this.close());
++    };
++    Services.obs.addObserver(observe, "window-global-created");
++    Services.obs.addObserver(observe, "window-global-destroyed");
++    const progress = {
++      QueryInterface: ChromeUtils.generateQI([
++        "nsIWebProgressListener",
++        "nsISupportsWeakReference",
++      ]),
++      onStateChange: (webProgress, _request, flags) => {
++        if (
++          webProgress.isTopLevel &&
++          flags & Ci.nsIWebProgressListener.STATE_START &&
++          flags & Ci.nsIWebProgressListener.STATE_IS_DOCUMENT
++        )
++          this.close();
++      },
++    };
++    browser.addProgressListener(
++      progress,
++      Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT
++    );
++    this.unwatchAudio = () => {
++      Services.obs.removeObserver(observe, "window-global-created");
++      Services.obs.removeObserver(observe, "window-global-destroyed");
++      if (browser.webProgress) browser.removeProgressListener(progress);
++    };
++    const contexts = [browser.browsingContext];
++    while (contexts.length) {
++      const current = contexts.shift();
++      contexts.push(...current.children);
++      await this.audioSource(current.currentWindowGlobal);
++    }
++    if (
++      this.unloaded ||
++      browser.browsingContext?.currentWindowGlobal?.innerWindowId !==
++        innerWindowId
++    )
++      throw new Error("Audio source navigated during allocation.");
++  }
++  offer(sessionId) {
++    return this.query("Offer", { sessionId });
++  }
++  answer(sessionId, answer) {
++    return this.query("Answer", { sessionId, answer });
++  }
++  close() {
++    if (this.unloaded) return;
++    this.abort.abort();
++    this.unwatchAudio?.();
++    this.unwatchAudio = null;
++    this.unwatchTab?.();
++    this.unwatchTab = null;
++    for (const source of this.audioSources.values()) {
++      try {
++        source.actor.sendAsyncMessage("Stop", {
++          sessionId: this.audioSessionId,
++        });
++      } catch {}
++    }
++    this.audioSources.clear();
++    if (this.actor) {
++      this.actor.page = null;
++      try {
++        this.actor.sendAsyncMessage("Close", {});
++      } catch {}
++    }
++    this.page.shutdown();
++    try {
++      this.onClose?.();
++    } catch (error) {
++      Cu.reportError(error);
++    }
++  }
++}
++
++export class ChromeExtensionDesktopSourceParent extends JSWindowActorParent {
++  didDestroy() {
++    this.page?.close();
++  }
++  receiveMessage({ name }) {
++    if (name === "SourceEnded") this.page?.close();
++  }
++}
++export class ChromeExtensionDesktopSourceChild extends JSWindowActorChild {
++  stream = null;
++  selecting = false;
++  peer = null;
++  audioPeers = new Map();
++  close() {
++    if (this.closed) return;
++    this.closed = true;
++    try {
++      this.peer?.close();
++    } catch {}
++    for (const item of this.audioPeers.values()) {
++      try {
++        item.source?.disconnect();
++        item.peer.close();
++      } catch {}
++    }
++    this.audioPeers.clear();
++    try {
++      this.audioContext?.close().catch(() => {});
++    } catch {}
++    try {
++      this.stream?.getTracks().forEach(track => track.stop());
++    } catch {}
++    this.stream = null;
++  }
++  didDestroy() {
++    this.close();
++  }
++  async receiveMessage({ name, data }) {
++    if (name === "Close") {
++      this.close();
++      return undefined;
++    }
++    if (
++      this.closed ||
++      !this.manager.isCurrentGlobal ||
++      this.manager.innerWindowId !== data.innerWindowId ||
++      this.contentWindow.document.nodePrincipal.originNoSuffix !==
++        data.extensionOrigin
++    )
++      throw new Error(
++        "Desktop source document is not current or does not belong to the extension."
++      );
++    const window = this.contentWindow;
++    if (name === "Select") {
++      if (this.selecting || this.stream)
++        throw new Error("Desktop source is already selected.");
++      this.selecting = true;
++      try {
++        if (!["screen", "window", "tab"].includes(data.kind))
++          throw new Error("Unknown desktop source type.");
++        const video =
++          data.kind === "tab"
++            ? {
++                mediaSource: "browser",
++                deviceId: { exact: String(data.browserId) },
++              }
++            : { mediaSource: data.kind };
++        const constraints = { video, audio: false };
++        if (data.kind !== "tab") {
++          if (
++            window.navigator.mediaDevices.mozFloorpCapturePickerVersion !== 1
++          ) {
++            throw new Error(
++              "Desktop selection requires a Runtime with the native picker bridge."
++            );
++          }
++          if (typeof data.pickerToken !== "string" || !data.pickerToken)
++            throw new Error(
++              "Desktop source requires a registered native picker."
++            );
++          constraints.mozFloorpCapturePickerToken = data.pickerToken;
++        } else if (!Number.isSafeInteger(data.browserId) || data.browserId <= 0)
++          throw new Error("Invalid consented tab capture source.");
++        // Resolve the native method from the Xray prototype: an extension's own
++        // compatibility hook must not replace this privileged chooser request.
++        const native = window.MediaDevices.prototype.getUserMedia;
++        const stream = await native.call(
++          window.navigator.mediaDevices,
++          constraints
++        );
++        if (this.closed || !this.manager.isCurrentGlobal) {
++          stream.getTracks().forEach(track => track.stop());
++          throw new Error("Desktop selection was cancelled.");
++        }
++        this.stream = stream;
++        for (const track of stream.getTracks())
++          track.addEventListener(
++            "ended",
++            () => {
++              if (!this.closed)
++                try {
++                  this.sendAsyncMessage("SourceEnded", {});
++                } catch {}
++            },
++            { once: true }
++          );
++        return {
++          audio: !!stream.getAudioTracks().length,
++          video: !!stream.getVideoTracks().length,
++        };
++      } finally {
++        this.selecting = false;
++      }
++    }
++    if (!this.stream) throw new Error("No selected desktop source.");
++    if (name === "AddAudioSource") {
++      if (!this.audioContext) {
++        this.audioContext = new window.AudioContext();
++        this.destination = this.audioContext.createMediaStreamDestination();
++        for (const track of this.destination.stream.getAudioTracks())
++          this.stream.addTrack(track);
++        await this.audioContext.resume();
++      }
++      const old = this.audioPeers.get(data.sourceId);
++      old?.source?.disconnect();
++      old?.peer.close();
++      const peer = new window.RTCPeerConnection({ iceServers: [] });
++      const item = { peer };
++      this.audioPeers.set(data.sourceId, item);
++      peer.addEventListener("track", event => {
++        if (this.closed) {
++          event.track.stop();
++          return;
++        }
++        const source = this.audioContext.createMediaStreamSource(
++          new window.MediaStream([event.track])
++        );
++        source.connect(this.destination);
++        item.source = source;
++      });
++      await peer.setRemoteDescription(data.offer);
++      await peer.setLocalDescription(await peer.createAnswer());
++      await iceComplete(peer);
++      return peer.localDescription.toJSON();
++    }
++    if (name === "AudioConnected") {
++      const item = this.audioPeers.get(data.sourceId);
++      if (!item) throw new Error("Audio source was removed.");
++      await connected(item.peer);
++      return undefined;
++    }
++    if (name === "RemoveAudioSource") {
++      const item = this.audioPeers.get(data.sourceId);
++      item?.source?.disconnect();
++      item?.peer.close();
++      this.audioPeers.delete(data.sourceId);
++      return undefined;
++    }
++    if (name === "Offer") {
++      if (this.peer)
++        throw new Error("Desktop source transport has already been allocated.");
++      this.sessionId = data.sessionId;
++      this.peer = new window.RTCPeerConnection({ iceServers: [] });
++      for (const track of this.stream.getTracks())
++        this.peer.addTrack(track, this.stream);
++      await this.peer.setLocalDescription(await this.peer.createOffer());
++      await iceComplete(this.peer);
++      return this.peer.localDescription.toJSON();
++    }
++    if (name === "Answer") {
++      if (!this.peer || data.sessionId !== this.sessionId)
++        throw new Error("Invalid desktop transport session.");
++      await this.peer.setRemoteDescription(data.answer);
++      return undefined;
++    }
++    throw new Error("Invalid desktop source operation.");
++  }
++}

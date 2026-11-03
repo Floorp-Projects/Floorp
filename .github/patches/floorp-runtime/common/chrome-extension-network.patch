@@ -1,0 +1,981 @@
+diff --git a/toolkit/components/extensions/ExtensionDNR.sys.mjs b/toolkit/components/extensions/ExtensionDNR.sys.mjs
+index 043ee22..9a55f12 100644
+--- a/toolkit/components/extensions/ExtensionDNR.sys.mjs
++++ b/toolkit/components/extensions/ExtensionDNR.sys.mjs
+@@ -6,8 +6,81 @@
+ // are checked whenever a network request occurs. Individual extensions may
+ // occasionally modify their rules (e.g. via the updateSessionRules API).
+ const gRuleManagers = [];
++const gChromeMatchedRules = new WeakMap();
++const gChromeMatchedRuleCalls = new WeakMap();
++function takeChromeMatchedRuleCall(extension, userInput) {
++  if (userInput) return;
++  const now = Date.now();
++  const calls = (gChromeMatchedRuleCalls.get(extension) ?? []).filter(
++    time => time > now - 10 * 60 * 1000
++  );
++  if (calls.length >= 20)
++    throw new ExtensionError(
++      "MAX_GETMATCHEDRULES_CALLS_PER_INTERVAL quota exceeded"
++    );
++  calls.push(now);
++  gChromeMatchedRuleCalls.set(extension, calls);
++}
++const gChromeRuleListeners = new WeakMap();
++function addChromeRuleListener(extension, listener) {
++  if (!gChromeRuleListeners.has(extension))
++    gChromeRuleListeners.set(extension, new Set());
++  const listeners = gChromeRuleListeners.get(extension);
++  listeners.add(listener);
++  return () => listeners.delete(listener);
++}
++function getChromeMatchedRules(extension, filter = {}) {
++  filter ??= {};
++  const cutoff = Date.now() - 5 * 60 * 1000;
++  const rules = (gChromeMatchedRules.get(extension) ?? []).filter(
++    info => info.timeStamp >= cutoff
++  );
++  gChromeMatchedRules.set(extension, rules);
++  return rules.filter(
++    info =>
++      (filter.tabId == null || info.tabId === filter.tabId) &&
++      (filter.minTimeStamp == null ||
++        info.timeStamp >= filter.minTimeStamp)
++  );
++}
++function recordChromeMatchedRules(channel, matches) {
++  if (!matches?.length) return;
++  const timeStamp = Date.now();
++  const tabId = lazy.WebRequest.getTabIdForChannelWrapper(channel);
++  for (const match of matches) {
++    const { extension } = match.ruleManager;
++    if (!ExtensionUtils.getChromeExtensionId(extension)) continue;
++    const rule = { ruleId: match.rule.id, rulesetId: match.ruleset.id };
++    const history = getChromeMatchedRules(extension);
++    history.push({ rule, tabId, timeStamp });
++    if (history.length > 10000) history.splice(0, history.length - 10000);
++    gChromeMatchedRules.set(extension, history);
++    // Chrome's debug event is reserved for unpacked extensions.
++    if (!extension.addonData?.temporarilyInstalled) continue;
++    const info = {
++      rule,
++      request: {
++        requestId: String(channel.id),
++        url: channel.finalURL,
++        method: channel.method,
++        type: channel.type,
++        tabId,
++        frameId: channel.frameId,
++        parentFrameId: channel.parentFrameId,
++        initiator: channel.originURL || undefined,
++      },
++    };
++    for (const listener of gChromeRuleListeners.get(extension) ?? []) {
++      try {
++        listener(info);
++      } catch (error) {
++        Cu.reportError(error);
++      }
++    }
++  }
++}
+ 
+-import { setTimeout, clearTimeout } from "resource://gre/modules/Timer.sys.mjs";
++import { clearTimeout, setTimeout } from "resource://gre/modules/Timer.sys.mjs";
+ 
+ let gInvalidateResourceCacheTimer = null;
+ 
+@@ -632,7 +705,100 @@ class RequestDataForUrlFilter {
+   }
+ }
+ 
+-function compileRegexFilter(regexFilter, isUrlFilterCaseSensitive) {
++// RE2 and Rust regex share a linear-time engine model but differ in a few
++// syntax details. Keep URL matching in ASCII mode, quote RE2 literal spans,
++// and treat RE2 character-class set operators as ordinary characters.
++function normalizeChromeRegex(pattern) {
++  let result = "";
++  let inClass = false;
++  for (let index = 0; index < pattern.length; ++index) {
++    const char = pattern[index];
++    if (char === "\\") {
++      const next = pattern[++index];
++      if (next === "Q") {
++        let end = pattern.indexOf("\\E", index + 1);
++        if (end < 0) end = pattern.length;
++        result += pattern
++          .slice(index + 1, end)
++          .replace(/[\\^$.*+?()[\]{}|]/g, "\\$&");
++        index = end === pattern.length ? end : end + 1;
++      } else if (next && "dDwWsS".includes(next)) {
++        const classes = {
++          d: "0-9",
++          D: "^0-9",
++          w: "0-9A-Za-z_",
++          W: "^0-9A-Za-z_",
++          s: "\\t\\n\\f\\r ",
++          S: "^\\t\\n\\f\\r ",
++        };
++        // Positive shorthand classes can be embedded in a larger class.
++        // Negated shorthand classes need their own class expression.
++        if (inClass && next === next.toUpperCase()) result += "\\" + next;
++        else result += inClass ? classes[next] : `[${classes[next]}]`;
++      } else if (next === "C") {
++        result += "(?s-u:.)";
++      } else if (next && /[0-7]/.test(next)) {
++        const octal = pattern.slice(index).match(/^[0-7]{1,3}/)[0];
++        // RE2 only accepts a non-zero octal escape with three digits.
++        if (next !== "0" && octal.length < 3) {
++          throw new ExtensionError("Unsupported Chrome DNR backreference");
++        }
++        const value = Number.parseInt(octal, 8);
++        if (value > 255) {
++          throw new ExtensionError("Invalid Chrome DNR octal escape");
++        }
++        result += `\\x${value.toString(16).padStart(2, "0")}`;
++        index += octal.length - 1;
++      } else {
++        if (next === "u" || next === "U") {
++          throw new ExtensionError("Invalid Chrome DNR escape");
++        }
++        result += "\\" + (next ?? "");
++      }
++    } else if (char === "[") {
++      if (inClass && pattern[index + 1] !== ":") result += "\\[";
++      else result += char;
++      inClass = true;
++    } else if (char === "]") {
++      result += char;
++      inClass = false;
++    } else if (inClass && (char === "&" || char === "~")) {
++      result += "\\" + char;
++    } else {
++      if (char === "{" && /^\{\d+(?:,\d*)?\}/.test(pattern.slice(index))) {
++        const counts = pattern.slice(index).match(/^\{(\d+)(?:,(\d*))?\}/);
++        if (+counts[1] > 1000 || +(counts[2] || 0) > 1000) {
++          throw new ExtensionError("Chrome DNR repetition exceeds 1000");
++        }
++      }
++      // Rust-only flags and class subtraction must not change RE2 meaning.
++      if (char === "(" && /^\(\?[a-z-]*[xuR]/.test(pattern.slice(index))) {
++        throw new ExtensionError("Invalid Chrome DNR flag");
++      }
++      result += char;
++    }
++  }
++  return result;
++}
++
++function compileRegexFilter(regexFilter, isUrlFilterCaseSensitive, extension) {
++  if (ExtensionUtils.getChromeExtensionId(extension)) {
++    const regex = Cc[
++      "@floorp.app/extensions/chrome-dnr-regex;1"
++    ].createInstance(Ci.mozIChromeDNRRegex);
++    const reason = regex.init(
++      normalizeChromeRegex(regexFilter),
++      !!isUrlFilterCaseSensitive
++    );
++    if (reason) {
++      const error = new ExtensionError(
++        `Unsupported Chrome DNR regular expression: ${reason}`
++      );
++      error.reason = reason;
++      throw error;
++    }
++    return regex;
++  }
+   // TODO bug 1821033: Restrict supported regex to avoid perf issues. For
+   // discussion on the desired syntax, see
+   // https://github.com/w3c/webextensions/issues/344
+@@ -817,7 +983,11 @@ class ModifyResponseHeaders extends ModifyHeadersBase {
+ }
+ 
+ class RuleValidator {
+-  constructor(alreadyValidatedRules, { isSessionRuleset = false } = {}) {
++  constructor(
++    alreadyValidatedRules,
++    { isSessionRuleset = false, extension = null } = {}
++  ) {
++    this.extension = extension;
+     this.rulesMap = new Map(alreadyValidatedRules.map(r => [r.id, r]));
+     this.failures = [];
+     this.isSessionRuleset = isSessionRuleset;
+@@ -831,13 +1001,14 @@ class RuleValidator {
+    * @param {object} rule
+    * @returns {Rule}
+    */
+-  static deserializeRule(rule) {
++  static deserializeRule(rule, extension) {
+     const newRule = new Rule(rule);
+     if (newRule.condition.regexFilter) {
+       newRule.condition.setCompiledRegexFilter(
+         compileRegexFilter(
+           newRule.condition.regexFilter,
+-          newRule.condition.isUrlFilterCaseSensitive
++          newRule.condition.isUrlFilterCaseSensitive,
++          extension
+         )
+       );
+     }
+@@ -1018,7 +1189,8 @@ class RuleValidator {
+       try {
+         this.#lastCompiledRegexFilter = compileRegexFilter(
+           regexFilter,
+-          rule.condition.isUrlFilterCaseSensitive
++          rule.condition.isUrlFilterCaseSensitive,
++          this.extension
+         );
+       } catch (e) {
+         this.#collectInvalidRule(
+@@ -1231,10 +1403,17 @@ class RuleValidator {
+ }
+ 
+ export class RuleQuotaCounter {
+-  constructor(ruleLimitName) {
++  constructor(ruleLimitName, extension = null) {
+     this.ruleLimitName = ruleLimitName;
+-    this.ruleLimitRemaining = lazy.ExtensionDNRLimits[this.ruleLimitName];
+-    this.regexRemaining = lazy.ExtensionDNRLimits.MAX_NUMBER_OF_REGEX_RULES;
++    const limits = lazy.ExtensionDNRLimits.forExtension(extension);
++    this.ruleLimitRemaining = limits[this.ruleLimitName];
++    this.regexRemaining = limits.MAX_NUMBER_OF_REGEX_RULES;
++    this.unsafeRemaining =
++      ruleLimitName === "MAX_NUMBER_OF_DYNAMIC_RULES"
++        ? limits.MAX_NUMBER_OF_UNSAFE_DYNAMIC_RULES
++        : ruleLimitName === "MAX_NUMBER_OF_SESSION_RULES"
++          ? limits.MAX_NUMBER_OF_UNSAFE_SESSION_RULES
++          : undefined;
+   }
+ 
+   tryAddRules(rulesetId, rules) {
+@@ -1242,7 +1421,14 @@ export class RuleQuotaCounter {
+       this.#throwQuotaError(rulesetId, "rules", this.ruleLimitName);
+     }
+     let regexCount = 0;
++    let unsafeCount = 0;
+     for (let rule of rules) {
++      if (
++        !["block", "allow", "allowAllRequests", "upgradeScheme"].includes(
++          rule.action.type
++        )
++      )
++        ++unsafeCount;
+       if (rule.condition.regexFilter && ++regexCount > this.regexRemaining) {
+         this.#throwQuotaError(
+           rulesetId,
+@@ -1252,6 +1438,17 @@ export class RuleQuotaCounter {
+       }
+     }
+ 
++    if (
++      this.unsafeRemaining !== undefined &&
++      unsafeCount > this.unsafeRemaining
++    ) {
++      this.#throwQuotaError(
++        rulesetId,
++        "unsafe rules",
++        this.ruleLimitName.replace("NUMBER_OF_", "NUMBER_OF_UNSAFE_")
++      );
++    }
++    if (this.unsafeRemaining !== undefined) this.unsafeRemaining -= unsafeCount;
+     // Update counters only when there are no quota errors.
+     this.ruleLimitRemaining -= rules.length;
+     this.regexRemaining -= regexCount;
+@@ -2053,6 +2250,7 @@ const NetworkIntegration = {
+     // Cache for later. In case of redirects, _dnrMatchedRules may exist for
+     // the pre-redirect HTTP channel, and is overwritten here again.
+     channel._dnrMatchedRules = matchedRules;
++    recordChromeMatchedRules(channel, matchedRules);
+   },
+ 
+   /**
+@@ -2526,7 +2724,8 @@ function validateManifestEntry(extension) {
+   const getWarningMessage = msg =>
+     `Warning processing declarative_net_request: ${msg}`;
+ 
+-  const { MAX_NUMBER_OF_STATIC_RULESETS } = lazy.ExtensionDNRLimits;
++  const { MAX_NUMBER_OF_STATIC_RULESETS } =
++    lazy.ExtensionDNRLimits.forExtension(extension);
+   if (ruleResourcesArray.length > MAX_NUMBER_OF_STATIC_RULESETS) {
+     extension.manifestWarning(
+       getWarningMessage(
+@@ -2580,7 +2779,8 @@ function validateManifestEntry(extension) {
+     );
+   }
+ 
+-  const { MAX_NUMBER_OF_ENABLED_STATIC_RULESETS } = lazy.ExtensionDNRLimits;
++  const { MAX_NUMBER_OF_ENABLED_STATIC_RULESETS } =
++    lazy.ExtensionDNRLimits.forExtension(extension);
+ 
+   const enabledRulesets = ruleResourcesArray.filter(rs => rs.enabled);
+   if (enabledRulesets.length > MAX_NUMBER_OF_ENABLED_STATIC_RULESETS) {
+@@ -2626,6 +2826,10 @@ async function getDisabledRuleIds(extension, rulesetId) {
+ export const ExtensionDNR = {
+   RuleValidator,
+   RuleQuotaCounter,
++  compileRegexFilter,
++  addChromeRuleListener,
++  getChromeMatchedRules,
++  takeChromeMatchedRuleCall,
+   clearRuleManager,
+   ensureInitialized,
+   getMatchedRulesForRequest,
+diff --git a/toolkit/components/extensions/ExtensionDNRLimits.sys.mjs b/toolkit/components/extensions/ExtensionDNRLimits.sys.mjs
+index 9a57411..86cfcd4 100644
+--- a/toolkit/components/extensions/ExtensionDNRLimits.sys.mjs
++++ b/toolkit/components/extensions/ExtensionDNRLimits.sys.mjs
+@@ -2,6 +2,8 @@
+  * License, v. 2.0. If a copy of the MPL was not distributed with this
+  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ 
++import { ExtensionUtils } from "resource://gre/modules/ExtensionUtils.sys.mjs";
++
+ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+ 
+ // TODO(Bug 1803370): allow extension to exceed the GUARANTEED_MINIMUM_STATIC_RULES limit.
+@@ -48,6 +50,24 @@ const lazy = XPCOMUtils.declareLazy({
+ });
+ 
+ export const ExtensionDNRLimits = {
++  // Chrome 155 separates safe dynamic rules from redirect/modifyHeaders rules.
++  // Firefox extensions retain the original preference-controlled limits.
++  forExtension(extension) {
++    if (!ExtensionUtils.getChromeExtensionId(extension)) {
++      return this;
++    }
++    return {
++      GUARANTEED_MINIMUM_STATIC_RULES: 30000,
++      MAX_NUMBER_OF_STATIC_RULESETS: 100,
++      MAX_NUMBER_OF_ENABLED_STATIC_RULESETS: 50,
++      MAX_NUMBER_OF_DISABLED_STATIC_RULES: 5000,
++      MAX_NUMBER_OF_DYNAMIC_RULES: 30000,
++      MAX_NUMBER_OF_UNSAFE_DYNAMIC_RULES: 5000,
++      MAX_NUMBER_OF_SESSION_RULES: 5000,
++      MAX_NUMBER_OF_UNSAFE_SESSION_RULES: 5000,
++      MAX_NUMBER_OF_REGEX_RULES: 1000,
++    };
++  },
+   /**
+    * The minimum number of static rules guaranteed to an extension across its
+    * enabled static rulesets. Any rules above this limit will count towards the
+diff --git a/toolkit/components/extensions/ExtensionDNRStore.sys.mjs b/toolkit/components/extensions/ExtensionDNRStore.sys.mjs
+index a70366a..6f564b4 100644
+--- a/toolkit/components/extensions/ExtensionDNRStore.sys.mjs
++++ b/toolkit/components/extensions/ExtensionDNRStore.sys.mjs
+@@ -496,7 +496,8 @@ class RulesetsStore {
+    *          Resolves to the number of static rules available.
+    */
+   async getAvailableStaticRuleCount(extension) {
+-    const { GUARANTEED_MINIMUM_STATIC_RULES } = lazy.ExtensionDNRLimits;
++    const { GUARANTEED_MINIMUM_STATIC_RULES } =
++      lazy.ExtensionDNRLimits.forExtension(extension);
+ 
+     const existingRulesetIds = this.#getExistingStaticRulesetIds(extension);
+     if (!existingRulesetIds.length) {
+@@ -890,7 +891,8 @@ class RulesetsStore {
+ 
+     if (!isUpdateEnabledRulesets) {
+       ruleQuotaCounter = new lazy.ExtensionDNR.RuleQuotaCounter(
+-        "GUARANTEED_MINIMUM_STATIC_RULES"
++        "GUARANTEED_MINIMUM_STATIC_RULES",
++        extension
+       );
+     }
+ 
+@@ -899,7 +901,7 @@ class RulesetsStore {
+       // Warnings on MAX_NUMBER_OF_STATIC_RULESETS are already
+       // reported (see ExtensionDNR.validateManifestEntry, called
+       // from the DNR API onManifestEntry callback).
+-    } = lazy.ExtensionDNRLimits;
++    } = lazy.ExtensionDNRLimits.forExtension(extension);
+ 
+     for (let [idx, { id, enabled, path }] of ruleResources.entries()) {
+       // If passed enabledRulesetIds is used to determine if the enabled
+@@ -1024,7 +1026,9 @@ class RulesetsStore {
+     const validatedRulesTimerId =
+       Glean.extensionsApisDnr.validateRulesTime.start();
+     try {
+-      const ruleValidator = new lazy.ExtensionDNR.RuleValidator([]);
++      const ruleValidator = new lazy.ExtensionDNR.RuleValidator([], {
++        extension,
++      });
+       // Normalize rules read from JSON.
+       const validationContext = {
+         url: extension.baseURI.spec,
+@@ -1389,11 +1393,11 @@ class RulesetsStore {
+     Glean.extensionsApisDnr.startupCacheEntries.hit.add(1);
+     for (const ruleset of extCacheData.staticRulesets.values()) {
+       ruleset.rules = ruleset.rules.map(rule =>
+-        lazy.ExtensionDNR.RuleValidator.deserializeRule(rule)
++        lazy.ExtensionDNR.RuleValidator.deserializeRule(rule, extension)
+       );
+     }
+     extCacheData.dynamicRuleset = extCacheData.dynamicRuleset.map(rule =>
+-      lazy.ExtensionDNR.RuleValidator.deserializeRule(rule)
++      lazy.ExtensionDNR.RuleValidator.deserializeRule(rule, extension)
+     );
+     return new StoreData(extension, extCacheData);
+   }
+@@ -1506,7 +1510,8 @@ class RulesetsStore {
+       );
+ 
+       let ruleQuotaCounter = new lazy.ExtensionDNR.RuleQuotaCounter(
+-        "MAX_NUMBER_OF_DYNAMIC_RULES"
++        "MAX_NUMBER_OF_DYNAMIC_RULES",
++        extension
+       );
+       try {
+         ruleQuotaCounter.tryAddRules("_dynamic", validatedDynamicRules);
+@@ -1714,7 +1719,8 @@ class RulesetsStore {
+   async #updateDynamicRules(extension, { removeRuleIds, addRules }) {
+     const ruleManager = lazy.ExtensionDNR.getRuleManager(extension);
+     const ruleValidator = new lazy.ExtensionDNR.RuleValidator(
+-      ruleManager.getDynamicRules()
++      ruleManager.getDynamicRules(),
++      { extension }
+     );
+     if (removeRuleIds) {
+       ruleValidator.removeRuleIds(removeRuleIds);
+@@ -1729,7 +1735,8 @@ class RulesetsStore {
+ 
+     const validatedRules = ruleValidator.getValidatedRules();
+     let ruleQuotaCounter = new lazy.ExtensionDNR.RuleQuotaCounter(
+-      "MAX_NUMBER_OF_DYNAMIC_RULES"
++      "MAX_NUMBER_OF_DYNAMIC_RULES",
++      extension
+     );
+     ruleQuotaCounter.tryAddRules("_dynamic", validatedRules);
+ 
+@@ -1859,7 +1866,8 @@ class RulesetsStore {
+       }
+     }
+ 
+-    const { MAX_NUMBER_OF_ENABLED_STATIC_RULESETS } = lazy.ExtensionDNRLimits;
++    const { MAX_NUMBER_OF_ENABLED_STATIC_RULESETS } =
++      lazy.ExtensionDNRLimits.forExtension(extension);
+ 
+     const maxNewRulesetsCount =
+       MAX_NUMBER_OF_ENABLED_STATIC_RULESETS - updatedEnabledRulesets.size;
+@@ -1876,7 +1884,8 @@ class RulesetsStore {
+     // when previously-disabled rulesets are enabled, we need to count what we
+     // already have.
+     let ruleQuotaCounter = new lazy.ExtensionDNR.RuleQuotaCounter(
+-      "GUARANTEED_MINIMUM_STATIC_RULES"
++      "GUARANTEED_MINIMUM_STATIC_RULES",
++      extension
+     );
+     for (let [rulesetId, ruleset] of updatedEnabledRulesets) {
+       ruleQuotaCounter.tryAddRules(rulesetId, ruleset.rules);
+diff --git a/toolkit/components/extensions/child/ext-declarativeNetRequest.js b/toolkit/components/extensions/child/ext-declarativeNetRequest.js
+index a8cec72..258ea2a 100644
+--- a/toolkit/components/extensions/child/ext-declarativeNetRequest.js
++++ b/toolkit/components/extensions/child/ext-declarativeNetRequest.js
+@@ -9,29 +9,36 @@ ChromeUtils.defineESModuleGetters(this, {
+ });
+ 
+ this.declarativeNetRequest = class extends ExtensionAPI {
+-  getAPI() {
++  getAPI(context) {
++    const limits = ExtensionDNRLimits.forExtension(context.extension);
+     return {
+       declarativeNetRequest: {
+         get GUARANTEED_MINIMUM_STATIC_RULES() {
+-          return ExtensionDNRLimits.GUARANTEED_MINIMUM_STATIC_RULES;
++          return limits.GUARANTEED_MINIMUM_STATIC_RULES;
+         },
+         get MAX_NUMBER_OF_STATIC_RULESETS() {
+-          return ExtensionDNRLimits.MAX_NUMBER_OF_STATIC_RULESETS;
++          return limits.MAX_NUMBER_OF_STATIC_RULESETS;
+         },
+         get MAX_NUMBER_OF_ENABLED_STATIC_RULESETS() {
+-          return ExtensionDNRLimits.MAX_NUMBER_OF_ENABLED_STATIC_RULESETS;
++          return limits.MAX_NUMBER_OF_ENABLED_STATIC_RULESETS;
+         },
+         get MAX_NUMBER_OF_DISABLED_STATIC_RULES() {
+-          return ExtensionDNRLimits.MAX_NUMBER_OF_DISABLED_STATIC_RULES;
++          return limits.MAX_NUMBER_OF_DISABLED_STATIC_RULES;
+         },
+         get MAX_NUMBER_OF_DYNAMIC_RULES() {
+-          return ExtensionDNRLimits.MAX_NUMBER_OF_DYNAMIC_RULES;
++          return limits.MAX_NUMBER_OF_DYNAMIC_RULES;
+         },
+         get MAX_NUMBER_OF_SESSION_RULES() {
+-          return ExtensionDNRLimits.MAX_NUMBER_OF_SESSION_RULES;
++          return limits.MAX_NUMBER_OF_SESSION_RULES;
++        },
++        get MAX_NUMBER_OF_UNSAFE_DYNAMIC_RULES() {
++          return limits.MAX_NUMBER_OF_UNSAFE_DYNAMIC_RULES;
++        },
++        get MAX_NUMBER_OF_UNSAFE_SESSION_RULES() {
++          return limits.MAX_NUMBER_OF_UNSAFE_SESSION_RULES;
+         },
+         get MAX_NUMBER_OF_REGEX_RULES() {
+-          return ExtensionDNRLimits.MAX_NUMBER_OF_REGEX_RULES;
++          return limits.MAX_NUMBER_OF_REGEX_RULES;
+         },
+         // NOTE:this property is deprecated and it has been replaced by
+         // MAX_NUMBER_OF_DYNAMIC_RULES/MAX_NUMBER_OF_SESSION_RULES, but kept
+@@ -42,8 +49,8 @@ this.declarativeNetRequest = class extends ExtensionAPI {
+         // MAX_NUMBER_OF_SESSION_RULES have been customized through prefs.
+         get MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES() {
+           return Math.min(
+-            ExtensionDNRLimits.MAX_NUMBER_OF_DYNAMIC_RULES,
+-            ExtensionDNRLimits.MAX_NUMBER_OF_SESSION_RULES
++            limits.MAX_NUMBER_OF_DYNAMIC_RULES,
++            limits.MAX_NUMBER_OF_SESSION_RULES
+           );
+         },
+       },
+diff --git a/toolkit/components/extensions/parent/ext-declarativeNetRequest.js b/toolkit/components/extensions/parent/ext-declarativeNetRequest.js
+index 0339586..3bc5916 100644
+--- a/toolkit/components/extensions/parent/ext-declarativeNetRequest.js
++++ b/toolkit/components/extensions/parent/ext-declarativeNetRequest.js
+@@ -26,7 +26,7 @@ function ensureDNRFeedbackEnabled(apiName) {
+   }
+ }
+ 
+-this.declarativeNetRequest = class extends ExtensionAPI {
++this.declarativeNetRequest = class extends ExtensionAPIPersistent {
+   onManifestEntry(entryName) {
+     if (entryName === "declarative_net_request") {
+       ExtensionDNR.validateManifestEntry(this.extension);
+@@ -37,11 +37,64 @@ this.declarativeNetRequest = class extends ExtensionAPI {
+     ExtensionDNR.clearRuleManager(this.extension);
+   }
+ 
+-  getAPI() {
+-    const { extension } = this;
++  PERSISTENT_EVENTS = {
++    onRuleMatchedDebug({ fire }) {
++      const { extension } = this;
++      const unregister = ExtensionDNR.addChromeRuleListener(
++        extension,
++        async info => {
++          if (fire.wakeup) await fire.wakeup();
++          fire.async(info);
++        }
++      );
++      return {
++        unregister,
++        convert(newFire) {
++          fire = newFire;
++        },
++      };
++    },
++  };
+ 
++  getAPI(context) {
++    const { extension } = this;
++    const ensureChrome = () => {
++      if (!ExtensionUtils.getChromeExtensionId(extension))
++        throw new ExtensionError(
++          "This DNR operation requires a converted Chrome extension"
++        );
++    };
+     return {
+       declarativeNetRequest: {
++        onRuleMatchedDebug: new EventManager({
++          context,
++          module: "declarativeNetRequest",
++          event: "onRuleMatchedDebug",
++          extensionApi: this,
++        }).api(),
++        getMatchedRules(filter) {
++          ensureChrome();
++          if (!extension.hasPermission("declarativeNetRequestFeedback")) {
++            if (
++              filter?.tabId == null ||
++              !extension.tabManager.get(filter.tabId)?.hasActiveTabPermission
++            ) {
++              throw new ExtensionError(
++                "getMatchedRules requires declarativeNetRequestFeedback or activeTab access to the requested tab"
++              );
++            }
++          }
++          ExtensionDNR.takeChromeMatchedRuleCall(
++            extension,
++            context.callContextData?.isHandlingUserInput
++          );
++          return {
++            rulesMatchedInfo: ExtensionDNR.getChromeMatchedRules(
++              extension,
++              filter
++            ),
++          };
++        },
+         updateDynamicRules({ removeRuleIds, addRules }) {
+           return ExtensionDNR.updateDynamicRules(extension, {
+             removeRuleIds,
+@@ -53,7 +106,7 @@ this.declarativeNetRequest = class extends ExtensionAPI {
+           const ruleManager = ExtensionDNR.getRuleManager(extension);
+           let ruleValidator = new ExtensionDNR.RuleValidator(
+             ruleManager.getSessionRules(),
+-            { isSessionRuleset: true }
++            { isSessionRuleset: true, extension }
+           );
+           if (removeRuleIds) {
+             ruleValidator.removeRuleIds(removeRuleIds);
+@@ -67,7 +120,8 @@ this.declarativeNetRequest = class extends ExtensionAPI {
+           }
+           let validatedRules = ruleValidator.getValidatedRules();
+           let ruleQuotaCounter = new ExtensionDNR.RuleQuotaCounter(
+-            "MAX_NUMBER_OF_SESSION_RULES"
++            "MAX_NUMBER_OF_SESSION_RULES",
++            extension
+           );
+           ruleQuotaCounter.tryAddRules("_session", validatedRules);
+           ruleManager.setSessionRules(validatedRules);
+@@ -122,6 +176,21 @@ this.declarativeNetRequest = class extends ExtensionAPI {
+         },
+ 
+         isRegexSupported(regexOptions) {
++          if (ExtensionUtils.getChromeExtensionId(extension)) {
++            try {
++              ExtensionDNR.compileRegexFilter(
++                regexOptions.regex,
++                regexOptions.isCaseSensitive,
++                extension
++              );
++              return { isSupported: true };
++            } catch (error) {
++              return {
++                isSupported: false,
++                reason: error.reason ?? "syntaxError",
++              };
++            }
++          }
+           const {
+             regex: regexFilter,
+             isCaseSensitive: isUrlFilterCaseSensitive,
+@@ -148,7 +217,17 @@ this.declarativeNetRequest = class extends ExtensionAPI {
+         },
+ 
+         async testMatchOutcome(request, options) {
+-          ensureDNRFeedbackEnabled("declarativeNetRequest.testMatchOutcome");
++          if (ExtensionUtils.getChromeExtensionId(extension)) {
++            if (!extension.addonData?.temporarilyInstalled)
++              throw new ExtensionError(
++                "testMatchOutcome is only available to unpacked extensions"
++              );
++            if (options?.includeOtherExtensions)
++              throw new ExtensionError(
++                "includeOtherExtensions is not a Chrome DNR option"
++              );
++          } else
++            ensureDNRFeedbackEnabled("declarativeNetRequest.testMatchOutcome");
+           let { url, initiator, ...req } = request;
+           req.requestURI = Services.io.newURI(url);
+           if (initiator) {
+diff --git a/toolkit/components/extensions/schemas/declarative_net_request.json b/toolkit/components/extensions/schemas/declarative_net_request.json
+index 2697958..1a3320e 100644
+--- a/toolkit/components/extensions/schemas/declarative_net_request.json
++++ b/toolkit/components/extensions/schemas/declarative_net_request.json
+@@ -7,7 +7,9 @@
+         "choices": [
+           {
+             "type": "string",
+-            "enum": ["declarativeNetRequest"]
++            "enum": [
++              "declarativeNetRequest"
++            ]
+           }
+         ]
+       },
+@@ -16,7 +18,9 @@
+         "choices": [
+           {
+             "type": "string",
+-            "enum": ["declarativeNetRequestFeedback"]
++            "enum": [
++              "declarativeNetRequestFeedback"
++            ]
+           }
+         ]
+       },
+@@ -25,7 +29,9 @@
+         "choices": [
+           {
+             "type": "string",
+-            "enum": ["declarativeNetRequestWithHostAccess"]
++            "enum": [
++              "declarativeNetRequestWithHostAccess"
++            ]
+           }
+         ]
+       },
+@@ -35,14 +41,18 @@
+           "declarative_net_request": {
+             "type": "object",
+             "optional": true,
+-            "additionalProperties": { "$ref": "UnrecognizedProperty" },
++            "additionalProperties": {
++              "$ref": "UnrecognizedProperty"
++            },
+             "properties": {
+               "rule_resources": {
+                 "type": "array",
+                 "minItems": 1,
+                 "items": {
+                   "type": "object",
+-                  "additionalProperties": { "$ref": "UnrecognizedProperty" },
++                  "additionalProperties": {
++                    "$ref": "UnrecognizedProperty"
++                  },
+                   "properties": {
+                     "id": {
+                       "type": "string",
+@@ -106,7 +116,10 @@
+         "id": "UnsupportedRegexReason",
+         "type": "string",
+         "description": "Describes the reason why a given regular expression isn't supported.",
+-        "enum": ["syntaxError", "memoryLimitExceeded"]
++        "enum": [
++          "syntaxError",
++          "memoryLimitExceeded"
++        ]
+       },
+       {
+         "id": "MatchedRule",
+@@ -136,7 +149,11 @@
+             "type": "string",
+             "optional": true,
+             "description": "The new scheme for the request.",
+-            "enum": ["http", "https", "moz-extension"]
++            "enum": [
++              "http",
++              "https",
++              "moz-extension"
++            ]
+           },
+           "username": {
+             "type": "string",
+@@ -323,7 +340,10 @@
+                 "type": "string",
+                 "optional": true,
+                 "description": "Specifies whether the network request is first-party or third-party to the domain from which it originated. If omitted, all requests are matched.",
+-                "enum": ["firstParty", "thirdParty"]
++                "enum": [
++                  "firstParty",
++                  "thirdParty"
++                ]
+               },
+               "tabIds": {
+                 "type": "array",
+@@ -402,7 +422,11 @@
+                     "operation": {
+                       "type": "string",
+                       "description": "The operation to be performed on a header.",
+-                      "enum": ["append", "set", "remove"]
++                      "enum": [
++                        "append",
++                        "set",
++                        "remove"
++                      ]
+                     },
+                     "value": {
+                       "type": "string",
+@@ -427,7 +451,11 @@
+                     "operation": {
+                       "type": "string",
+                       "description": "The operation to be performed on a header.",
+-                      "enum": ["append", "set", "remove"]
++                      "enum": [
++                        "append",
++                        "set",
++                        "remove"
++                      ]
+                     },
+                     "value": {
+                       "type": "string",
+@@ -449,7 +477,39 @@
+             "type": "array",
+             "optional": true,
+             "description": "If specified, only rules with matching IDs are included.",
+-            "items": { "type": "integer" }
++            "items": {
++              "type": "integer"
++            }
++          }
++        }
++      },
++      {
++        "id": "MatchedRuleInfo",
++        "type": "object",
++        "properties": {
++          "rule": {
++            "$ref": "MatchedRule"
++          },
++          "tabId": {
++            "type": "integer"
++          },
++          "timeStamp": {
++            "type": "number"
++          }
++        }
++      },
++      {
++        "id": "MatchedRuleInfoDebug",
++        "type": "object",
++        "properties": {
++          "rule": {
++            "$ref": "MatchedRule"
++          },
++          "request": {
++            "type": "object",
++            "additionalProperties": {
++              "type": "any"
++            }
+           }
+         }
+       }
+@@ -540,7 +600,9 @@
+               {
+                 "type": "array",
+                 "name": "rulesetIds",
+-                "items": { "type": "string" }
++                "items": {
++                  "type": "string"
++                }
+               }
+             ]
+           }
+@@ -558,13 +620,17 @@
+             "properties": {
+               "disableRulesetIds": {
+                 "type": "array",
+-                "items": { "type": "string" },
++                "items": {
++                  "type": "string"
++                },
+                 "optional": true,
+                 "default": []
+               },
+               "enableRulesetIds": {
+                 "type": "array",
+-                "items": { "type": "string" },
++                "items": {
++                  "type": "string"
++                },
+                 "optional": true,
+                 "default": []
+               }
+@@ -592,13 +658,17 @@
+               },
+               "disableRuleIds": {
+                 "type": "array",
+-                "items": { "type": "integer" },
++                "items": {
++                  "type": "integer"
++                },
+                 "optional": true,
+                 "default": []
+               },
+               "enableRuleIds": {
+                 "type": "array",
+-                "items": { "type": "integer" },
++                "items": {
++                  "type": "integer"
++                },
+                 "optional": true,
+                 "default": []
+               }
+@@ -768,7 +838,9 @@
+         "name": "testMatchOutcome",
+         "type": "function",
+         "description": "Checks if any of the extension's declarativeNetRequest rules would match a hypothetical request.",
+-        "permissions": ["declarativeNetRequestFeedback"],
++        "permissions": [
++          "declarativeNetRequestFeedback"
++        ],
+         "async": "callback",
+         "parameters": [
+           {
+@@ -836,6 +908,50 @@
+             ]
+           }
+         ]
++      },
++      {
++        "name": "getMatchedRules",
++        "type": "function",
++        "permissions": [
++          "declarativeNetRequestFeedback",
++          "activeTab"
++        ],
++        "async": "callback",
++        "parameters": [
++          {
++            "name": "filter",
++            "type": "object",
++            "optional": true,
++            "properties": {
++              "tabId": {
++                "type": "integer",
++                "optional": true
++              },
++              "minTimeStamp": {
++                "type": "number",
++                "optional": true
++              }
++            }
++          },
++          {
++            "name": "callback",
++            "type": "function",
++            "parameters": [
++              {
++                "name": "details",
++                "type": "object",
++                "properties": {
++                  "rulesMatchedInfo": {
++                    "type": "array",
++                    "items": {
++                      "$ref": "MatchedRuleInfo"
++                    }
++                  }
++                }
++              }
++            ]
++          }
++        ]
+       }
+     ],
+     "properties": {
+@@ -880,7 +996,36 @@
+         "type": "string",
+         "value": "_session",
+         "description": "Ruleset ID for the session-scoped rules added by the extension."
++      },
++      "MAX_NUMBER_OF_UNSAFE_DYNAMIC_RULES": {
++        "type": "number"
++      },
++      "MAX_NUMBER_OF_UNSAFE_SESSION_RULES": {
++        "type": "number"
++      },
++      "GETMATCHEDRULES_QUOTA_INTERVAL": {
++        "type": "number",
++        "value": 10
++      },
++      "MAX_GETMATCHEDRULES_CALLS_PER_INTERVAL": {
++        "type": "number",
++        "value": 20
++      }
++    },
++    "events": [
++      {
++        "name": "onRuleMatchedDebug",
++        "type": "function",
++        "permissions": [
++          "declarativeNetRequestFeedback"
++        ],
++        "parameters": [
++          {
++            "name": "info",
++            "$ref": "MatchedRuleInfoDebug"
++          }
++        ]
+       }
+-    }
++    ]
+   }
+ ]

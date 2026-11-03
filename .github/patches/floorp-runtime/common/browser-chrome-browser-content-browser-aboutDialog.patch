@@ -1,0 +1,11 @@
+diff --git a/browser/base/content/aboutDialog.css b/browser/base/content/aboutDialog.css
+--- ./browser/base/content/aboutDialog.css
++++ ./browser/base/content/aboutDialog.css
+@@ -36,6 +36,7 @@
+   background-image: url("chrome://branding/content/about-wordmark.svg");
+   background-repeat: no-repeat;
+   background-size: 288px auto;
++  padding-top: 75px;
+   -moz-context-properties: fill;
+   fill: currentColor;
+   /* move wordmark down a bit so it doesnt bump up too closely to top of dialog */

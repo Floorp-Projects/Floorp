@@ -1,0 +1,211 @@
+diff --git a/toolkit/components/extensions/ext-toolkit.json b/toolkit/components/extensions/ext-toolkit.json
+--- a/toolkit/components/extensions/ext-toolkit.json
++++ b/toolkit/components/extensions/ext-toolkit.json
+@@ -106,6 +106,12 @@
+     "scopes": ["addon_parent"],
+     "paths": [["permissions"]]
+   },
++  "power": {
++    "url": "chrome://extensions/content/parent/ext-power.js",
++    "schema": "chrome://extensions/content/schemas/power.json",
++    "scopes": ["addon_parent"],
++    "paths": [["power"]]
++  },
+   "privacy": {
+     "url": "chrome://extensions/content/parent/ext-privacy.js",
+     "schema": "chrome://extensions/content/schemas/privacy.json",
+diff --git a/toolkit/components/extensions/jar.mn b/toolkit/components/extensions/jar.mn
+--- a/toolkit/components/extensions/jar.mn
++++ b/toolkit/components/extensions/jar.mn
+@@ -39,2 +39,3 @@
+     content/extensions/parent/ext-permissions.js (parent/ext-permissions.js)
++    content/extensions/parent/ext-power.js (parent/ext-power.js)
+     content/extensions/parent/ext-privacy.js (parent/ext-privacy.js)
+diff --git a/toolkit/components/extensions/schemas/jar.mn b/toolkit/components/extensions/schemas/jar.mn
+--- a/toolkit/components/extensions/schemas/jar.mn
++++ b/toolkit/components/extensions/schemas/jar.mn
+@@ -44,2 +44,3 @@
+     content/extensions/schemas/proxy.json
++    content/extensions/schemas/power.json
+     content/extensions/schemas/privacy.json
+diff --git a/toolkit/components/extensions/Schemas.sys.mjs b/toolkit/components/extensions/Schemas.sys.mjs
+--- a/toolkit/components/extensions/Schemas.sys.mjs
++++ b/toolkit/components/extensions/Schemas.sys.mjs
+@@ -606,6 +606,17 @@
+   makeError(message, { warning = false } = {}) {
+     let error = forceString(this.error(message, null, warning).error);
+     if (this.cloneScope) {
++      const extensionContext = this.params.context;
++      // API argument errors use the caller's TypeError in converted extension
++      // documents. Manifest normalization and native Worker error transport keep
++      // their existing exception contracts.
++      if (
++        !warning &&
++        extensionContext?.contentWindow &&
++        ExtensionUtils.getChromeExtensionId(extensionContext.extension)
++      ) {
++        return new this.cloneScope.TypeError(error);
++      }
+       return new this.cloneScope.Error(error);
+     }
+     return error;
+diff --git a/toolkit/components/extensions/parent/ext-power.js b/toolkit/components/extensions/parent/ext-power.js
+new file mode 100644
+--- /dev/null
++++ b/toolkit/components/extensions/parent/ext-power.js
+@@ -0,0 +1,98 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this
++ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
++"use strict";
++
++function compatiblePower(extension) {
++  const marker =
++    extension.manifest.browser_specific_settings?.gecko
++      ?.floorp_chrome_extension;
++  return (
++    marker?.schema_version === 1 &&
++    /^[a-p]{32}$/.test(marker.original_id) &&
++    extension.id === `${marker.original_id}@chromium-extension`
++  );
++}
++
++this.power = class extends ExtensionAPI {
++  constructor(extension) {
++    super(extension);
++    this.wakeLocks = [];
++    this.level = null;
++    this.closed = false;
++    this.permissionsRemoved = (event, permissions) => {
++      if (
++        permissions?.permissions?.includes("power") ||
++        !extension.hasPermission("power")
++      )
++        this.release();
++    };
++    extension.on("remove-permissions", this.permissionsRemoved);
++  }
++  release() {
++    const previous = this.wakeLocks;
++    this.wakeLocks = [];
++    this.level = null;
++    for (const lock of previous) {
++      try {
++        lock.unlock();
++      } catch (error) {
++        Cu.reportError(error);
++      }
++    }
++  }
++  onShutdown() {
++    this.closed = true;
++    this.extension.off("remove-permissions", this.permissionsRemoved);
++    this.release();
++  }
++  getAPI(context) {
++    const { extension } = this;
++    const authorized = () => {
++      if (
++        this.closed ||
++        !compatiblePower(extension) ||
++        !extension.hasPermission("power")
++      )
++        throw new ExtensionUtils.ExtensionError(
++          "Chrome power requires its current extension permission."
++        );
++    };
++    return {
++      power: {
++        requestKeepAwake: level => {
++          authorized();
++          if (level !== "system" && level !== "display")
++            throw new ExtensionUtils.ExtensionError("Unknown power level.");
++          if (this.level === level) return;
++          const service = Cc[
++            "@mozilla.org/power/powermanagerservice;1"
++          ].getService(Ci.nsIPowerManagerService);
++          if (typeof service.newWakeLockForChromeExtension !== "function")
++            throw new ExtensionUtils.ExtensionError(
++              "Chrome power requires the compiled Floorp wake-lock backend."
++            );
++          const acquired = [];
++          try {
++            acquired.push(service.newWakeLockForChromeExtension("cpu"));
++            if (level === "display")
++              acquired.push(service.newWakeLockForChromeExtension("screen"));
++            authorized();
++          } catch (error) {
++            for (const lock of acquired) lock.unlock();
++            throw error;
++          }
++          // Acquire the replacement before releasing the former level, avoiding
++          // a transient suspend window while another view changes this extension.
++          this.release();
++          this.wakeLocks = acquired;
++          this.level = level;
++        },
++        releaseKeepAwake: () => {
++          authorized();
++          this.release();
++        },
++      },
++    };
++  }
++};
+diff --git a/toolkit/components/extensions/schemas/power.json b/toolkit/components/extensions/schemas/power.json
+new file mode 100644
+--- /dev/null
++++ b/toolkit/components/extensions/schemas/power.json
+@@ -0,0 +1,52 @@
++[
++  {
++    "namespace": "manifest",
++    "types": [
++      {
++        "$extend": "OptionalPermissionNoPrompt",
++        "choices": [
++          {
++            "type": "string",
++            "enum": [
++              "power"
++            ]
++          }
++        ]
++      }
++    ]
++  },
++  {
++    "namespace": "power",
++    "description": "Native extension-owned system and display wake locks.",
++    "permissions": [
++      "power"
++    ],
++    "types": [
++      {
++        "id": "Level",
++        "type": "string",
++        "enum": [
++          "system",
++          "display"
++        ]
++      }
++    ],
++    "functions": [
++      {
++        "name": "requestKeepAwake",
++        "type": "function",
++        "parameters": [
++          {
++            "name": "level",
++            "$ref": "Level"
++          }
++        ]
++      },
++      {
++        "name": "releaseKeepAwake",
++        "type": "function",
++        "parameters": []
++      }
++    ]
++  }
++]

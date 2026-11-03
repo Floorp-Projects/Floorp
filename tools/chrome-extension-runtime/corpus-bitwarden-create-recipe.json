@@ -1,0 +1,103 @@
+[
+  {
+    "op": "click",
+    "selector": "#default-password-manager-prompt_button_skip-for-now",
+    "waitMs": 1000,
+    "optional": true
+  },
+  {
+    "op": "click",
+    "text": "Log in",
+    "waitMs": 1000
+  },
+  {
+    "op": "wait",
+    "selector": "#email"
+  },
+  {
+    "op": "click",
+    "text": "bitwarden.com"
+  },
+  {
+    "op": "click",
+    "text": "self-hosted"
+  },
+  {
+    "op": "fill",
+    "selector": "#self_hosted_env_settings_form_input_base_url",
+    "valueFrom": "vaultURL"
+  },
+  {
+    "op": "click",
+    "text": "Save",
+    "waitMs": 1500
+  },
+  {
+    "op": "wait",
+    "text": "self-hosted"
+  },
+  {
+    "op": "fill",
+    "selector": "#email",
+    "valueFrom": "email"
+  },
+  {
+    "op": "click",
+    "text": "Continue",
+    "waitMs": 2000
+  },
+  {
+    "op": "wait",
+    "selector": "#masterPassword"
+  },
+  {
+    "op": "fill",
+    "selector": "#masterPassword",
+    "valueFrom": "masterPassword"
+  },
+  {
+    "op": "click",
+    "text": "Log in",
+    "waitMs": 4000
+  },
+  {
+    "op": "wait",
+    "text": "New login"
+  },
+  {
+    "op": "click",
+    "text": "New login",
+    "waitMs": 1000
+  },
+  {
+    "op": "wait",
+    "selector": "#bit-form-field-5"
+  },
+  {
+    "op": "fill",
+    "selector": "#bit-form-field-5",
+    "valueFrom": "username"
+  },
+  {
+    "op": "fill",
+    "selector": "#bit-form-field-6",
+    "valueFrom": "password"
+  },
+  {
+    "op": "click",
+    "text": "Save",
+    "waitMs": 2000
+  },
+  {
+    "op": "wait",
+    "text": "Autofill"
+  },
+  {
+    "op": "click",
+    "text": "Autofill",
+    "waitMs": 2000
+  },
+  {
+    "op": "verify-fill"
+  }
+]

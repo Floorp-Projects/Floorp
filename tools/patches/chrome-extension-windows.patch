@@ -1,0 +1,272 @@
+diff --git a/browser/chrome/browser/content/browser/parent/ext-windows.js b/browser/chrome/browser/content/browser/parent/ext-windows.js
+index 20286db..836de7e 100644
+--- a/browser/chrome/browser/content/browser/parent/ext-windows.js
++++ b/browser/chrome/browser/content/browser/parent/ext-windows.js
+@@ -77,6 +77,148 @@ function sanitizePositionParams(params, window = null, positionOffset = 0) {
+   params.top = Math.round(clampedTop / cssToDesktopScale);
+ }
+ 
++// Native moves and resizes can complete after moveTo/resizeTo return. Keep
++// marked Chrome requests ordered per window, without changing Firefox callers.
++const chromeWindowGeometryUpdates = new WeakMap();
++
++function updateChromeWindowGeometry(context, window, options, update) {
++  const { setTimeout, clearTimeout } = ChromeUtils.importESModule(
++    "resource://gre/modules/Timer.sys.mjs"
++  );
++  const keys = ["left", "top", "width", "height"];
++  const read = () => [
++    window.screenX,
++    window.screenY,
++    window.outerWidth,
++    window.outerHeight,
++  ];
++  const available = () => {
++    if (window.closed) {
++      throw new ExtensionError("Window closed during update");
++    }
++    if (context.unloaded || !context.active || !context.canAccessWindow(window)) {
++      throw new ExtensionError("Window update context is no longer available");
++    }
++  };
++  let cancelled;
++  let abortActive;
++  let rejectCancellation;
++  const cancellation = new Promise((_resolve, reject) => {
++    rejectCancellation = reject;
++  });
++  const cancel = message => {
++    if (cancelled) return;
++    cancelled = new ExtensionError(message);
++    abortActive?.(cancelled);
++    rejectCancellation(cancelled);
++  };
++  const contextClosed = {
++    close() {
++      cancel("Window update context closed");
++    },
++  };
++  const windowClosed = closedWindow => {
++    if (closedWindow === window) cancel("Window closed during update");
++  };
++  context.callOnClose(contextClosed);
++  windowTracker.addCloseListener(windowClosed);
++  const previous = chromeWindowGeometryUpdates.get(window) ?? Promise.resolve();
++  const operation = previous.catch(() => {}).then(() => {
++    if (cancelled) throw cancelled;
++    available();
++    // Fill omitted coordinates only when this queued turn starts, so an
++    // earlier acknowledged move cannot be reset by stale derived values.
++    sanitizePositionParams(options, window);
++    const initial = read();
++    const target = keys.map(key => options[key]);
++    const requested = target.map(
++      (value, index) => Number.isFinite(value) && value !== initial[index]
++    );
++    if (!requested.some(Boolean)) {
++      update();
++      available();
++      return { completion: "unchanged", nativeEvents: { move: false, resize: false } };
++    }
++    return new Promise((resolve, reject) => {
++      const root = window.windowRoot;
++      let timer;
++      let finished = false;
++      let started = false;
++      const nativeEvents = { move: false, resize: false };
++      const finish = (error, completion) => {
++        if (finished) return;
++        finished = true;
++        clearTimeout(timer);
++        window.removeEventListener("resize", onResize);
++        root?.removeEventListener("MozUpdateWindowPos", onMove);
++        abortActive = null;
++        if (error) reject(error);
++        else resolve({ completion, nativeEvents: { ...nativeEvents } });
++      };
++      const inspect = group => {
++        if (finished || !started) return;
++        try {
++          available();
++          const current = read();
++          if (group === "move" && current.slice(0, 2).some((value, index) => value !== initial[index])) {
++            nativeEvents.move = true;
++          }
++          if (group === "resize" && current.slice(2).some((value, index) => value !== initial[index + 2])) {
++            nativeEvents.resize = true;
++          }
++          if (current.every((value, index) => !requested[index] || value === target[index])) {
++            finish(null, group === "synchronous" ? "synchronous" : "acknowledged");
++          }
++          // An unmatched event may be an intermediate or previous restore
++          // geometry, not the final clamped bounds. Continue to the actual
++          // target or the bound; never return that first intermediate value.
++        } catch (error) {
++          finish(error);
++        }
++      };
++      const onMove = event => {
++        if (event.isTrusted) inspect("move");
++      };
++      const onResize = event => {
++        if (event.isTrusted && event.target === window) inspect("resize");
++      };
++      abortActive = error => finish(error);
++      window.addEventListener("resize", onResize);
++      root?.addEventListener("MozUpdateWindowPos", onMove);
++      // GTK and Wayland may ignore a managed-window request without sending
++      // any event. Bound that wait like Window.setState; this is a fallback,
++      // not an acknowledgement, and the caller still reads actual geometry.
++      timer = setTimeout(() => {
++        try {
++          available();
++          finish(null, "timeout");
++        } catch (error) {
++          finish(error);
++        }
++      }, 2000);
++      try {
++        started = true;
++        update();
++        inspect("synchronous");
++      } catch (error) {
++        finish(error);
++      }
++    });
++  });
++  const queued = operation.finally(() => {
++    if (chromeWindowGeometryUpdates.get(window) === queued) {
++      chromeWindowGeometryUpdates.delete(window);
++    }
++  });
++  chromeWindowGeometryUpdates.set(window, queued);
++  // A queued context can close before an earlier request finishes. Reject its
++  // caller immediately, but keep the ordered chain until its cancelled turn.
++  return Promise.race([queued, cancellation]).finally(() => {
++    context.forgetOnClose(contextClosed);
++    windowTracker.removeCloseListener(windowClosed);
++  });
++}
++
+ this.windows = class extends ExtensionAPIPersistent {
+   windowEventRegistrar(event, listener) {
+     let { extension } = this;
+@@ -100,6 +242,61 @@ this.windows = class extends ExtensionAPIPersistent {
+   }
+ 
+   PERSISTENT_EVENTS = {
++    onBoundsChanged({ fire }) {
++      const { extension } = this;
++      const { setInterval, clearInterval } = ChromeUtils.importESModule(
++        "resource://gre/modules/Timer.sys.mjs"
++      );
++      const states = new Map();
++      const bounds = window => [
++        window.screenX,
++        window.screenY,
++        window.outerWidth,
++        window.outerHeight,
++        window.windowState,
++        window.fullScreen,
++      ].join(":");
++      const track = window => {
++        if (!extension.canAccessWindow(window)) {
++          return;
++        }
++        states.set(window, { observed: bounds(window), delivered: bounds(window), changedAt: 0 });
++      };
++      const remove = window => states.delete(window);
++      for (const window of windowTracker.browserWindows()) {
++        track(window);
++      }
++      windowTracker.addOpenListener(track);
++      windowTracker.addCloseListener(remove);
++      const timer = setInterval(() => {
++        const now = Date.now();
++        for (const [window, state] of states) {
++          if (window.closed || !extension.canAccessWindow(window)) {
++            states.delete(window);
++            continue;
++          }
++          const current = bounds(window);
++          if (current !== state.observed) {
++            state.observed = current;
++            state.changedAt = now;
++          } else if (current !== state.delivered && now - state.changedAt >= 200) {
++            state.delivered = current;
++            fire.async(extension.windowManager.convert(window));
++          }
++        }
++      }, 100);
++      return {
++        unregister() {
++          clearInterval(timer);
++          states.clear();
++          windowTracker.removeOpenListener(track);
++          windowTracker.removeCloseListener(remove);
++        },
++        convert(newFire) {
++          fire = newFire;
++        },
++      };
++    },
+     onCreated: this.windowEventRegistrar("domwindowopened", (fire, window) => {
+       fire.async(this.extension.windowManager.convert(window));
+     }),
+@@ -155,6 +352,13 @@ this.windows = class extends ExtensionAPIPersistent {
+ 
+     return {
+       windows: {
++        onBoundsChanged: new EventManager({
++          context,
++          module: "windows",
++          event: "onBoundsChanged",
++          extensionApi: this,
++        }).api(),
++
+         onCreated: new EventManager({
+           context,
+           module: "windows",
+@@ -541,8 +745,17 @@ this.windows = class extends ExtensionAPIPersistent {
+             win.window.getAttention();
+           }
+ 
+-          sanitizePositionParams(updateInfo, win.window);
+-          win.updateGeometry(updateInfo);
++          if (
++            ExtensionUtils.getChromeExtensionId(extension) &&
++            ["left", "top", "width", "height"].some(key => updateInfo[key] !== null)
++          ) {
++            await updateChromeWindowGeometry(context, win.window, updateInfo, () =>
++              win.updateGeometry(updateInfo)
++            );
++          } else {
++            sanitizePositionParams(updateInfo, win.window);
++            win.updateGeometry(updateInfo);
++          }
+ 
+           if (updateInfo.titlePreface !== null) {
+             win.setTitlePreface(updateInfo.titlePreface);
+diff --git a/browser/chrome/browser/content/browser/schemas/windows.json b/browser/chrome/browser/content/browser/schemas/windows.json
+index 7cc1b20..3a82338 100644
+--- a/browser/chrome/browser/content/browser/schemas/windows.json
++++ b/browser/chrome/browser/content/browser/schemas/windows.json
+@@ -438,6 +438,18 @@
+       }
+     ],
+     "events": [
++      {
++        "name": "onBoundsChanged",
++        "type": "function",
++        "description": "Fired when a window's bounds change after the new bounds have settled.",
++        "parameters": [
++          {
++            "$ref": "Window",
++            "name": "window",
++            "description": "Details of the window with its new bounds."
++          }
++        ]
++      },
+       {
+         "name": "onCreated",
+         "type": "function",

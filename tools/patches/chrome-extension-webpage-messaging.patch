@@ -1,0 +1,231 @@
+diff --git a/modules/ExtensionParent.sys.mjs b/modules/ExtensionParent.sys.mjs
+index a20f67f..385953e 100644
+--- a/modules/ExtensionParent.sys.mjs
++++ b/modules/ExtensionParent.sys.mjs
+@@ -233,4 +233,5 @@ const ProxyMessenger = {
+   portReceivers: new Map(),
++  webPagePortTargets: new Map(),
+ 
+   init() {
+     this.conduit = new lazy.BroadcastConduit(ProxyMessenger, {
+@@ -339,11 +340,25 @@ const ProxyMessenger = {
+   },
+ 
+   // TODO: Rework/simplify this and getSender/getTopBC after bug 1580766.
++  validateWebPageSender(sender, extension) {
++    const actor = sender.actor;
++    const windowGlobal = actor?.manager;
++    const principal = windowGlobal?.documentPrincipal;
++    const uri = windowGlobal?.documentURI;
++    return !sender.extensionId && JSWindowActorParent.isInstance(actor) &&
++      actor.browsingContext.currentWindowGlobal === windowGlobal &&
++      principal?.isContentPrincipal &&
++      (uri?.schemeIs("http") || uri?.schemeIs("https")) &&
++      (!principal.originAttributes.privateBrowsingId || extension.privateBrowsingAllowed) &&
++      ExtensionUtils.getChromeWebPageMatches(extension)?.matches(uri);
++  },
++
+   async normalizeArgs(arg, sender) {
++    const webPage = sender.envType === "webpage_child";
+     arg.extensionId = arg.extensionId || sender.extensionId;
+     const sourceExtension = GlobalManager.extensionMap.get(sender.extensionId);
+     if (
+-      ExtensionUtils.getChromeExtensionId(sourceExtension) &&
++      (webPage || ExtensionUtils.getChromeExtensionId(sourceExtension)) &&
+       /^[a-p]{32}$/.test(arg.extensionId)
+     ) {
+       const target = GlobalManager.extensionMap.get(
+@@ -359,10 +374,14 @@ const ProxyMessenger = {
+     if (!extension) {
+       return Promise.reject({ message: ERROR_NO_RECEIVERS });
+     }
++    if (webPage && (!this.validateWebPageSender(sender, extension) || arg.tabId ||
++        arg.documentId || arg.native || arg.userScriptWorldId)) {
++      return Promise.reject({ message: ERROR_NO_RECEIVERS });
++    }
+     // Compute from authenticated conduit identities before translating public
+     // sender IDs. Always overwrite a value supplied by an IPC caller.
+     arg.isExternal = sender.extensionId !== arg.extensionId;
+-    if (arg.isExternal && ExtensionUtils.getChromeExtensionId(extension)) {
++    if (!webPage && arg.isExternal && ExtensionUtils.getChromeExtensionId(extension)) {
+       const connectable = extension.manifest.externally_connectable;
+       if (connectable) {
+         const sourceId = ExtensionUtils.getChromeExtensionId(sourceExtension);
+@@ -383,6 +402,10 @@ const ProxyMessenger = {
+     // TODO bug 1852317: This should not be unconditional.
+     await extension.wakeupBackground?.();
+ 
++    if (webPage && !this.validateWebPageSender(sender, extension)) {
++      return Promise.reject({ message: ERROR_NO_RECEIVERS });
++    }
++
+     arg.sender = this.getSender(extension, sender);
+     arg.topBC = arg.tabId && this.getTopBrowsingContextId(arg.tabId);
+ 
+@@ -436,6 +459,8 @@ const ProxyMessenger = {
+ 
+     try {
+       let kind = await this.normalizeArgs(arg, sender);
++      if (sender.envType === "webpage_child")
++        this.webPagePortTargets.set(arg.portId, arg.extensionId);
+       arg.query = true;
+       let { targets, promises } = this.conduit.castPortConnect(kind, arg);
+       // Holds actors from which we accept recvConduitOpened for this portId,
+@@ -468,12 +493,19 @@ const ProxyMessenger = {
+     }
+     // Wait for onConnect dispatch to complete to avoid missing onMessage.
+     await this.portPromises.get(sender.portId);
++    if (sender.envType === "webpage_child") {
++      const target = GlobalManager.extensionMap.get(this.webPagePortTargets.get(sender.portId));
++      if (!target || !this.validateWebPageSender(sender, target)) {
++        throw new ExtensionError(ERROR_NO_RECEIVERS);
++      }
++    }
+     this.sendPortMessage(sender.portId, holder, !sender.source);
+   },
+ 
+   async recvConduitClosed(sender) {
+     if (sender.source) {
+       this.portSources.delete(sender.portId);
++      this.webPagePortTargets.delete(sender.portId);
+     }
+ 
+     let app = this.ports.get(sender.portId);
+@@ -491,6 +523,7 @@ const ProxyMessenger = {
+   },
+ 
+   sendPortDisconnect(portId, error, source = true) {
++    this.webPagePortTargets.delete(portId);
+     let port = this.ports.get(portId);
+     this.untrackNativeAppPort(port);
+     this.ports.delete(portId);
+diff --git a/modules/ExtensionProcessScript.sys.mjs b/modules/ExtensionProcessScript.sys.mjs
+index bc64f8f..3ae598f 100644
+--- a/modules/ExtensionProcessScript.sys.mjs
++++ b/modules/ExtensionProcessScript.sys.mjs
+@@ -14,6 +14,7 @@ import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+ 
+ const lazy = XPCOMUtils.declareLazy({
+   ExtensionChild: "resource://gre/modules/ExtensionChild.sys.mjs",
++  Messenger: "resource://gre/modules/ExtensionChild.sys.mjs",
+   ExtensionCommon: "resource://gre/modules/ExtensionCommon.sys.mjs",
+   ExtensionContent: "resource://gre/modules/ExtensionContent.sys.mjs",
+   ExtensionPageChild: "resource://gre/modules/ExtensionPageChild.sys.mjs",
+@@ -36,6 +37,70 @@ import { ExtensionUtils } from "resource://gre/modules/ExtensionUtils.sys.mjs";
+ 
+ const { DefaultWeakMap } = ExtensionUtils;
+ 
++// Web pages receive only the explicitly allowed external messaging surface.
++// This context has no extension identity, schema API manager, host permission,
++// or NativeMessage entry point. The parent authenticates its WindowGlobal and
++// checks the target's allowlist on every message and Port connection.
++const webPageContexts = new WeakMap();
++function injectChromeWebPageRuntime(document) {
++  const window = document.defaultView;
++  if (!window?.windowGlobalChild || !document.nodePrincipal.isContentPrincipal ||
++      !/^https?:$/.test(document.location.protocol) || webPageContexts.has(document)) return;
++  const uri = document.documentURIObject;
++  const permitted = WebExtensionPolicy.getActiveExtensions().some(policy => {
++    if (!/^[a-p]{32}@chromium-extension$/.test(policy.id)) return false;
++    const extension = extensions.get(policy);
++    return ExtensionUtils.getChromeWebPageMatches(extension)?.matches(uri) &&
++      (!document.nodePrincipal.originAttributes.privateBrowsingId || policy.privateBrowsingAllowed);
++  });
++  if (!permitted) return;
++  const { BaseContext } = lazy.ExtensionCommon;
++  const Messenger = lazy.Messenger;
++  class WebPageContext extends BaseContext {
++    constructor() {
++      super("webpage_child", { id: undefined, manifestVersion: 3, canAccessWindow: () => true });
++      this.setContentWindow(window);
++      this.childManager = { id: ExtensionUtils.getUniqueId() };
++    }
++    get cloneScope() { return this.contentWindow; }
++    get principal() { return document.nodePrincipal; }
++    // ExtensionActivityLog is keyed by addon identity; this caller has none.
++    logActivity() {}
++  }
++  const context = new WebPageContext();
++  const messenger = new Messenger(context);
++  // Do not expose incoming message listeners or a caller-supplied source ID.
++  const runtime = Cu.cloneInto({
++    sendMessage(target, message, options, callback) {
++      if (typeof options === "function") { callback = options; options = undefined; }
++      if (!/^[a-p]{32}$/.test(target) || options && typeof options !== "object" ||
++          callback !== undefined && typeof callback !== "function")
++        throw new context.Error("Invalid external sendMessage arguments");
++      return messenger.sendRuntimeMessage({ extensionId: target, message, callback });
++    },
++    connect(target, info = {}) {
++      if (!/^[a-p]{32}$/.test(target) || !info || typeof info !== "object" ||
++          info.name !== undefined && typeof info.name !== "string")
++        throw new context.Error("Invalid external connect arguments");
++      return messenger.connect({ extensionId: target, name: info.name || "" });
++    },
++  }, window, { cloneFunctions: true });
++  Object.defineProperty(Cu.waiveXrays(runtime), "lastError", { enumerable: true,
++    get: Cu.exportFunction(() => context.lastError && Cu.cloneInto(context.lastError, window), window) });
++  const chrome = Cu.waiveXrays(window).chrome || Cu.createObjectIn(window);
++  Object.defineProperty(chrome, "runtime", { value: runtime, configurable: true, enumerable: true });
++  if (!Cu.waiveXrays(window).chrome)
++    Object.defineProperty(Cu.waiveXrays(window), "chrome", { value: chrome, configurable: true, enumerable: true });
++  webPageContexts.set(document, context);
++  window.addEventListener("pagehide", () => {
++    context.unload();
++    webPageContexts.delete(document);
++  }, { once: true });
++  window.addEventListener("pageshow", event => {
++    if (event.persisted) injectChromeWebPageRuntime(document);
++  });
++}
++
+ const { sharedData } = Services.cpmm;
+ 
+ function getData(extension, key = "") {
+@@ -55,6 +120,9 @@ ExtensionManager = {
+   registeredContentScripts: new DefaultWeakMap(() => new Map()),
+ 
+   init() {
++    Services.obs.addObserver({ observe(document) {
++      try { injectChromeWebPageRuntime(document); } catch (error) { Cu.reportError(error); }
++    } }, "document-element-inserted");
+     Services.cpmm.addMessageListener("Extension:Startup", this);
+     Services.cpmm.addMessageListener("Extension:Shutdown", this);
+     Services.cpmm.addMessageListener("Extension:FlushJarCache", this);
+diff --git a/modules/ExtensionUtils.sys.mjs b/modules/ExtensionUtils.sys.mjs
+index 5ee7d93..441e24e 100644
+--- a/modules/ExtensionUtils.sys.mjs
++++ b/modules/ExtensionUtils.sys.mjs
+@@ -361,12 +361,32 @@ function getChromeExtensionId(extension) {
+     : null;
+ }
+ 
++// Chrome forbids an externally_connectable wildcard for every website or a
++// public suffix. Keep the declaration separate from host permissions: granting
++// an extension access to a site does not grant that site access to the runtime.
++function getChromeWebPageMatches(extension) {
++  if (!getChromeExtensionId(extension)) return null;
++  const patterns = extension.manifest.externally_connectable?.matches;
++  if (!Array.isArray(patterns) || !patterns.length || patterns.length > 128) return null;
++  for (const pattern of patterns) {
++    const parsed = /^(?:\*|https?):\/\/([^/]+)\/.*$/.exec(pattern);
++    if (!parsed) return null;
++    const host = parsed[1].replace(/^\*\./, "");
++    if (!host || host === "*" || host.includes("@")) return null;
++    if (host !== "localhost" && !/^[\d.]+$/.test(host) && !host.startsWith("[")) {
++      try { Services.eTLD.getBaseDomainFromHost(host); } catch { return null; }
++    }
++  }
++  try { return new MatchPatternSet(patterns); } catch { return null; }
++}
++
+ export var ExtensionUtils = {
+   flushJarCache,
+   getInnerWindowID,
+   getMessageManager,
+   getUniqueId,
+   getChromeExtensionId,
++  getChromeWebPageMatches,
+   makeDataURI,
+   isExtensionUrl,
+   parseMatchPatterns,

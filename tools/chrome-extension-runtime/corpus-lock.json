@@ -1,0 +1,2008 @@
+{
+  "schemaVersion": 1,
+  "frozenAtUTC": "2026-10-19T00:54:21.244Z",
+  "referenceChromeVersion": "155.0.8059.84",
+  "selectionSha256": "761894e3e5f336c76b3011dab8bef916558e7da9085133e8081d5072ad6d0978",
+  "qualified": false,
+  "primaryOperationPassRate": null,
+  "extensions": [
+    {
+      "id": "difoiogjjojoaoomphldepapgpbgkhkb",
+      "name": "Sider",
+      "area": "sidePanel",
+      "primaryOperation": "Open current-tab panel, read authored content, and retain a draft across tab switches",
+      "status": "frozen",
+      "manifestName": "Sider: Chat with all AI: GPT-5, Claude, DeepSeek, Gemini, Grok",
+      "version": "5.35.1",
+      "packageSha256": "6cb08a28b0d2a44dec5d11d2f2272c8eb8c735b5ac3eb83f00260b31bf20bd5a",
+      "packageBytes": 30323628,
+      "manifestVersion": 3,
+      "permissions": [
+        "storage",
+        "cookies",
+        "contextMenus",
+        "scripting",
+        "userScripts",
+        "activeTab",
+        "unlimitedStorage",
+        "tabs",
+        "sidePanel",
+        "offscreen",
+        "alarms",
+        "declarativeNetRequest"
+      ],
+      "optionalPermissions": [
+        "tabCapture",
+        "tabGroups"
+      ],
+      "background": {
+        "service_worker": "background.js"
+      },
+      "signature": {
+        "format": 3,
+        "algorithm": "rsa-sha256",
+        "publicKeySha256": "385e8e699e9e0eecf7b34f0f6f16a7a12c6a65b1cc82b045453eeffdb85cbfb6"
+      },
+      "cdpStringInventory": [],
+      "apiCallStringInventory": [],
+      "primaryOperationResult": "not-run"
+    },
+    {
+      "id": "ofpnmcalabcbjgholdjcjblkibolbppb",
+      "name": "Monica",
+      "area": "sidePanel",
+      "primaryOperation": "Open current-tab panel, read authored content, and retain a draft across tab switches",
+      "status": "frozen",
+      "manifestName": "Monica: All-In-One AI Assist & Smartest  AI Agent",
+      "version": "9.0.23",
+      "packageSha256": "82276bdf748d3d183b4e85c608b376d33804b8fa2ead2e61692885acf4a4407c",
+      "packageBytes": 32736752,
+      "manifestVersion": 3,
+      "permissions": [
+        "storage",
+        "scripting",
+        "sidePanel",
+        "contextMenus"
+      ],
+      "optionalPermissions": [
+        "tabs",
+        "tabGroups",
+        "activeTab"
+      ],
+      "background": {
+        "service_worker": "background.js"
+      },
+      "signature": {
+        "format": 3,
+        "algorithm": "rsa-sha256",
+        "publicKeySha256": "e5fdc20b0121967eb39291ba81eb1ff11cf47068d0f336a60db6a7f0dfb9ca41"
+      },
+      "cdpStringInventory": [],
+      "apiCallStringInventory": [],
+      "primaryOperationResult": "not-run"
+    },
+    {
+      "id": "camppjleccjaphfdbohjdohecfnoikec",
+      "name": "Merlin",
+      "area": "sidePanel",
+      "primaryOperation": "Open current-tab panel, read authored content, and retain a draft across tab switches",
+      "status": "frozen",
+      "manifestName": "Merlin AI",
+      "version": "8.3.0",
+      "packageSha256": "e7e6ba786e9ba9c68ce73642f5a6e8d65c686f6c638692e2b0871b9b814e3b8d",
+      "packageBytes": 4367595,
+      "manifestVersion": 3,
+      "permissions": [
+        "sidePanel",
+        "storage",
+        "contextMenus",
+        "tabs",
+        "alarms",
+        "webNavigation",
+        "webRequest",
+        "scripting"
+      ],
+      "optionalPermissions": [
+        "identity"
+      ],
+      "background": {
+        "service_worker": "background.js"
+      },
+      "signature": {
+        "format": 3,
+        "algorithm": "rsa-sha256",
+        "publicKeySha256": "20cff9b42290f7531e793e7425de8a42035a59ff2a2940569754ba6f055b1ad1"
+      },
+      "cdpStringInventory": [],
+      "apiCallStringInventory": [],
+      "primaryOperationResult": "not-run"
+    },
+    {
+      "id": "mhnlakgilnojmhinhkckjpncpbhabphi",
+      "name": "MaxAI",
+      "area": "sidePanel",
+      "primaryOperation": "Open current-tab panel, read authored content, and retain a draft across tab switches",
+      "status": "frozen",
+      "manifestName": "MaxAI: Ask AI anything as you browse (GPT, Gemini, Claude, Grok, etc.)",
+      "version": "8.37.3",
+      "packageSha256": "b9f46355cf4dc87c579f09ab62350336a5374ed60ceca13a5e95bd6bfb7ca77e",
+      "packageBytes": 32420160,
+      "manifestVersion": 3,
+      "permissions": [
+        "tabs",
+        "scripting",
+        "storage",
+        "contextMenus",
+        "clipboardRead",
+        "clipboardWrite",
+        "declarativeNetRequestWithHostAccess"
+      ],
+      "optionalPermissions": [],
+      "background": {
+        "service_worker": "background.js",
+        "type": "module"
+      },
+      "signature": {
+        "format": 3,
+        "algorithm": "rsa-sha256",
+        "publicKeySha256": "c7db0a68bde9c78d7a2a9fd2f1701f781803007aa9ee3b2c673ab9eb0f9e5f77"
+      },
+      "cdpStringInventory": [],
+      "apiCallStringInventory": [],
+      "primaryOperationResult": "not-run"
+    },
+    {
+      "id": "cebmnlammjhancocbbnfcglifgdpfejc",
+      "name": "AI Blaze",
+      "area": "sidePanel",
+      "primaryOperation": "Open current-tab panel, read authored content, and retain a draft across tab switches",
+      "status": "frozen",
+      "manifestName": "AI Blaze: Instantly Use AI in Any Webpage",
+      "version": "1.9.34",
+      "packageSha256": "59018943c7207f1adfa6d9f7b16486471fbe9a8973a017bd09edcf58bce75e6a",
+      "packageBytes": 359074,
+      "manifestVersion": 3,
+      "permissions": [
+        "tabs",
+        "storage",
+        "unlimitedStorage",
+        "clipboardRead",
+        "clipboardWrite",
+        "contextMenus",
+        "offscreen",
+        "scripting"
+      ],
+      "optionalPermissions": [],
+      "background": {
+        "service_worker": "js/background.js",
+        "type": "module"
+      },
+      "signature": {
+        "format": 3,
+        "algorithm": "rsa-sha256",
+        "publicKeySha256": "241cdb0cc970d2e211d526b8563f549262522e0bdae135435f5a5d85e55ebffe"
+      },
+      "cdpStringInventory": [],
+      "apiCallStringInventory": [],
+      "primaryOperationResult": "not-run"
+    },
+    {
+      "id": "gldebcpkoojijledacjeboaehblhfbjg",
+      "name": "Ask Steve",
+      "area": "sidePanel",
+      "primaryOperation": "Open current-tab panel, read authored content, and retain a draft across tab switches",
+      "status": "frozen",
+      "manifestName": "Ask Steve: Time-Saving AI Agents For Your Browser",
+      "version": "4.2.5",
+      "packageSha256": "6b13365038494988f8f5d888638d118ee39ab1fd51473d0087a3a23eb47b800d",
+      "packageBytes": 1204117,
+      "manifestVersion": 3,
+      "permissions": [
+        "storage",
+        "sidePanel",
+        "tabs",
+        "scripting",
+        "unlimitedStorage",
+        "contextMenus",
+        "offscreen",
+        "cookies",
+        "declarativeNetRequest"
+      ],
+      "optionalPermissions": [],
+      "background": {
+        "service_worker": "scripts/service-worker.js",
+        "type": "module"
+      },
+      "signature": {
+        "format": 3,
+        "algorithm": "rsa-sha256",
+        "publicKeySha256": "6b3412faee989b4302941e0471b7519617d1fdcef5f302c1c9dc972f58beb44d"
+      },
+      "cdpStringInventory": [],
+      "apiCallStringInventory": [],
+      "primaryOperationResult": "not-run"
+    },
+    {
+      "id": "befflofjcniongenjmbkgkoljhgliihe",
+      "name": "TinaMind",
+      "area": "sidePanel",
+      "primaryOperation": "Open current-tab panel, read authored content, and retain a draft across tab switches",
+      "status": "frozen",
+      "manifestName": "TinaMind - The most powerful AI Assistant!",
+      "version": "2.26.0",
+      "packageSha256": "61e9fcb1f0b9088557bcf58682de85064af682daf18c72af55d223c77f9979ff",
+      "packageBytes": 2853070,
+      "manifestVersion": 3,
+      "permissions": [
+        "tabs",
+        "storage",
+        "cookies",
+        "declarativeNetRequest",
+        "contextMenus"
+      ],
+      "optionalPermissions": [],
+      "background": {
+        "service_worker": "static/js/background.js"
+      },
+      "signature": {
+        "format": 3,
+        "algorithm": "rsa-sha256",
+        "publicKeySha256": "1455be592d8ed64d9c1a6aeb976b88741b79bc008daf92b77c82972a7269706f"
+      },
+      "cdpStringInventory": [],
+      "apiCallStringInventory": [],
+      "primaryOperationResult": "not-run"
+    },
+    {
+      "id": "liecbddmkiiihnedobmlmillhodjkdmb",
+      "name": "Loom",
+      "area": "capture",
+      "primaryOperation": "Capture authored-page image or audio/video as advertised, stop, and save playable media",
+      "status": "frozen",
+      "manifestName": "Loom – Screen Recorder & Screen Capture",
+      "version": "5.5.212",
+      "packageSha256": "622b223bc52a6a92a43ef6638b8c895435c8f43e28bef526c238f9dfb99734ea",
+      "packageBytes": 18955867,
+      "manifestVersion": 3,
+      "permissions": [
+        "system.memory",
+        "activeTab",
+        "alarms",
+        "contextMenus",
+        "cookies",
+        "desktopCapture",
+        "scripting",
+        "storage",
+        "system.cpu",
+        "system.display",
+        "tabCapture",
+        "webNavigation",
+        "webRequest"
+      ],
+      "optionalPermissions": [],
+      "background": {
+        "service_worker": "js/sw.js"
+      },
+      "signature": {
+        "format": 3,
+        "algorithm": "rsa-sha256",
+        "publicKeySha256": "b842133ca8887d43e1cbc8bb7e39a3c171cceb1fc9f994e6cd0c221631c1c424"
+      },
+      "cdpStringInventory": [],
+      "apiCallStringInventory": [],
+      "primaryOperationResult": "not-run"
+    },
+    {
+      "id": "mmeijimgabbpbgpdklnllpncmdofkcpn",
+      "name": "Screencastify",
+      "area": "capture",
+      "primaryOperation": "Capture authored-page image or audio/video as advertised, stop, and save playable media",
+      "status": "frozen",
+      "manifestName": "Screencastify - Screen Video Recorder",
+      "version": "4.24.7.5533",
+      "packageSha256": "eaae909406ac4fc48ebdad288a100f166d689762dd86622bb952cecd5cdb5edb",
+      "packageBytes": 64183293,
+      "manifestVersion": 3,
+      "permissions": [
+        "alarms",
+        "storage",
+        "tabs",
+        "activeTab",
+        "offscreen",
+        "scripting",
+        "unlimitedStorage",
+        "tabCapture",
+        "desktopCapture",
+        "webNavigation",
+        "notifications",
+        "system.display"
+      ],
+      "optionalPermissions": [],
+      "background": {
+        "service_worker": "background.js",
+        "type": "module"
+      },
+      "signature": {
+        "format": 3,
+        "algorithm": "rsa-sha256",
+        "publicKeySha256": "cc4898c6011f16f3abdbbfd2c3e5a2fdce1ada6164174fd5097f4df75dbe5b07"
+      },
+      "cdpStringInventory": [],
+      "apiCallStringInventory": [],
+      "primaryOperationResult": "not-run"
+    },
+    {
+      "id": "nlipoenfbbikpbjkfpfillcgkoblgpmj",
+      "name": "Awesome Screenshot",
+      "area": "capture",
+      "primaryOperation": "Capture authored-page image or audio/video as advertised, stop, and save playable media",
+      "acceptedManifestNames": [
+        "Awesome Screenshot",
+        "Awesome Screen Recorder & Screenshot"
+      ],
+      "status": "frozen",
+      "manifestName": "Awesome Screen Recorder & Screenshot",
+      "version": "4.4.44",
+      "packageSha256": "3b20e60b1142ef7dbf1d517a9ff9ee5527bd96dc6083c2fdc423e9f51b973d3a",
+      "packageBytes": 9593114,
+      "manifestVersion": 3,
+      "permissions": [
+        "tabs",
+        "power",
+        "storage",
+        "unlimitedStorage",
+        "desktopCapture",
+        "tabCapture",
+        "cookies",
+        "activeTab",
+        "contextMenus",
+        "scripting",
+        "offscreen",
+        "alarms"
+      ],
+      "optionalPermissions": [
+        "downloads"
+      ],
+      "background": {
+        "service_worker": "javascripts/bundles/serviceWorker.bundle.js"
+      },
+      "signature": {
+        "format": 3,
+        "algorithm": "rsa-sha256",
+        "publicKeySha256": "db8fe4d5118af19a5f58bb26ae1b6fc9569bcaff888ff8664a09fe3dc0558450"
+      },
+      "cdpStringInventory": [],
+      "apiCallStringInventory": [],
+      "primaryOperationResult": "not-run"
+    },
+    {
+      "id": "bpconcjcammlapcogcnnelfmaeghhagj",
+      "name": "Nimbus Screenshot",
+      "area": "capture",
+      "primaryOperation": "Capture authored-page image or audio/video as advertised, stop, and save playable media",
+      "status": "unavailable",
+      "error": "Error: Store response 503",
+      "primaryOperationResult": "blocked-package"
+    },
+    {
+      "id": "fdpohaocaechififmbbbbbknoalclacl",
+      "name": "GoFullPage",
+      "area": "capture",
+      "primaryOperation": "Capture authored-page image or audio/video as advertised, stop, and save playable media",
+      "status": "frozen",
+      "manifestName": "GoFullPage - Full Page Screen Capture",
+      "version": "8.9",
+      "packageSha256": "ed803408e3217c0bfc25d4c90cb425313524e7d45b64c11ee9353d9ccd929199",
+      "packageBytes": 890215,
+      "manifestVersion": 3,
+      "permissions": [
+        "activeTab",
+        "scripting",
+        "storage",
+        "unlimitedStorage"
+      ],
+      "optionalPermissions": [
+        "downloads",
+        "tabs",
+        "webNavigation"
+      ],
+      "background": {
+        "service_worker": "js/background/index.js"
+      },
+      "signature": {
+        "format": 3,
+        "algorithm": "rsa-sha256",
+        "publicKeySha256": "53fe70e204278585c11111ade0b2b02b5b106d7d6f06a239d16a57bdd289a663"
+      },
+      "cdpStringInventory": [],
+      "apiCallStringInventory": [],
+      "primaryOperationResult": "not-run"
+    },
+    {
+      "id": "pfnededegaaopdmhkdmcofjmoldfiped",
+      "name": "ZeroOmega",
+      "area": "proxy",
+      "primaryOperation": "Apply a proxy profile, observe controlled request routing/bypass, and restore the previous setting",
+      "correctedCandidateId": "pfnededegaaopdmhkdmcofjpbgjhibok",
+      "status": "frozen",
+      "manifestName": "Proxy SwitchyOmega 3 (ZeroOmega)",
+      "version": "3.5.2",
+      "packageSha256": "32b46bc39b1006f414c19cc7aa27b5fb1c5e9ed7b764e1dbb68101c19feea937",
+      "packageBytes": 1673996,
+      "manifestVersion": 3,
+      "permissions": [
+        "proxy",
+        "tabs",
+        "alarms",
+        "storage",
+        "unlimitedStorage",
+        "webRequest",
+        "webRequestAuthProvider",
+        "contextMenus"
+      ],
+      "optionalPermissions": [],
+      "background": {
+        "service_worker": "x-background.js",
+        "type": "module"
+      },
+      "signature": {
+        "format": 3,
+        "algorithm": "rsa-sha256",
+        "publicKeySha256": "f5d43434600ef3c7a3c2e59ceb358f43717a8bdcfaab4f96e2b023cca177716f"
+      },
+      "cdpStringInventory": [],
+      "apiCallStringInventory": [],
+      "primaryOperationResult": "not-run"
+    },
+    {
+      "id": "gcknhkkoolaabfmlnjonogaaifnjlfnp",
+      "name": "FoxyProxy",
+      "area": "proxy",
+      "primaryOperation": "Apply a proxy profile, observe controlled request routing/bypass, and restore the previous setting",
+      "status": "frozen",
+      "manifestName": "FoxyProxy",
+      "version": "9.7",
+      "packageSha256": "4c69dd6c1307726115ed6c9786461de76c77cde47133e7d97837da2b4c9cfa20",
+      "packageBytes": 244807,
+      "manifestVersion": 3,
+      "permissions": [
+        "contextMenus",
+        "downloads",
+        "notifications",
+        "proxy",
+        "storage",
+        "tabs",
+        "webRequest",
+        "webRequestAuthProvider"
+      ],
+      "optionalPermissions": [
+        "browsingData",
+        "privacy"
+      ],
+      "background": {
+        "scripts": [
+          "content/background.js"
+        ],
+        "service_worker": "content/background.js",
+        "type": "module"
+      },
+      "signature": {
+        "format": 3,
+        "algorithm": "rsa-sha256",
+        "publicKeySha256": "62ad7aaeeb0015cbd9ede60085d9b5dfa1078d9575daf00381aa2442e3047f39"
+      },
+      "cdpStringInventory": [],
+      "apiCallStringInventory": [],
+      "primaryOperationResult": "not-run"
+    },
+    {
+      "id": "omghfjlpggmjjaagoclmmobgdodcjboh",
+      "name": "Browsec",
+      "area": "proxy",
+      "primaryOperation": "Apply a proxy profile, observe controlled request routing/bypass, and restore the previous setting",
+      "status": "frozen",
+      "manifestName": "Browsec VPN - Free VPN for Chrome",
+      "version": "4.0.0",
+      "packageSha256": "369df6abba5c02b2071003fe9aa5e64dc4ccddc2404dc212751f7f4f2a10480c",
+      "packageBytes": 4866375,
+      "manifestVersion": 3,
+      "permissions": [
+        "proxy",
+        "storage",
+        "webRequest",
+        "alarms",
+        "background",
+        "browsingData",
+        "declarativeNetRequest",
+        "scripting",
+        "webRequestAuthProvider"
+      ],
+      "optionalPermissions": [
+        "management",
+        "privacy",
+        "tabs"
+      ],
+      "background": {
+        "service_worker": "background.js"
+      },
+      "signature": {
+        "format": 3,
+        "algorithm": "rsa-sha256",
+        "publicKeySha256": "ec6759bf66c99006e2bcce163e3291e7ae6cc71ef892c7197af1072cb29668bd"
+      },
+      "cdpStringInventory": [],
+      "apiCallStringInventory": [],
+      "primaryOperationResult": "not-run"
+    },
+    {
+      "id": "hnmpcagpplmpfojmgmnngilcnanddlhb",
+      "name": "Windscribe",
+      "area": "proxy",
+      "primaryOperation": "Apply a proxy profile, observe controlled request routing/bypass, and restore the previous setting",
+      "status": "frozen",
+      "manifestName": "Free VPN For Chrome - VPN Extension - Windscribe",
+      "version": "4.3.1",
+      "packageSha256": "03bb87147da87069eee9875294865b415546f31cad4d9ad0e02786aa8bceb19b",
+      "packageBytes": 17073681,
+      "manifestVersion": 3,
+      "permissions": [
+        "activeTab",
+        "contextMenus",
+        "declarativeNetRequestWithHostAccess",
+        "privacy",
+        "proxy",
+        "notifications",
+        "scripting",
+        "storage",
+        "tabs",
+        "webRequest",
+        "webRequestAuthProvider",
+        "management",
+        "alarms",
+        "offscreen",
+        "unlimitedStorage"
+      ],
+      "optionalPermissions": [
+        "contentSettings"
+      ],
+      "background": {
+        "service_worker": "backgroundScripts.js",
+        "type": "module"
+      },
+      "signature": {
+        "format": 3,
+        "algorithm": "rsa-sha256",
+        "publicKeySha256": "7dcf206ffbcf5e9c6cdd68b2d0d33b71d7086048dd50ca411aec3a4ef250ae6c"
+      },
+      "cdpStringInventory": [],
+      "apiCallStringInventory": [],
+      "primaryOperationResult": "not-run"
+    },
+    {
+      "id": "mooikfkahbdckldjjndioackbalphokd",
+      "name": "Selenium IDE",
+      "area": "debugger",
+      "primaryOperation": "Record or run navigation/input/extraction on an authored page and verify the resulting side effects",
+      "status": "unavailable",
+      "error": "Error: Store response 503",
+      "primaryOperationResult": "blocked-package"
+    },
+    {
+      "id": "gcbalfbdmfieckjlnblleoemohcganoc",
+      "name": "UI.Vision",
+      "area": "debugger",
+      "primaryOperation": "Record or run navigation/input/extraction on an authored page and verify the resulting side effects",
+      "status": "frozen",
+      "manifestName": "Ui.Vision",
+      "version": "10.0.301",
+      "packageSha256": "ef6699aaef8c24aeaa26440649a50d628264a9f21371362961aa69693abbe407",
+      "packageBytes": 2963723,
+      "manifestVersion": 3,
+      "permissions": [
+        "bookmarks",
+        "clipboardRead",
+        "clipboardWrite",
+        "cookies",
+        "debugger",
+        "downloads",
+        "downloads.ui",
+        "notifications",
+        "storage",
+        "tabs",
+        "activeTab",
+        "proxy",
+        "nativeMessaging",
+        "contextMenus",
+        "webRequest",
+        "webRequestAuthProvider",
+        "sidePanel",
+        "scripting"
+      ],
+      "optionalPermissions": [],
+      "background": {
+        "service_worker": "background.js"
+      },
+      "signature": {
+        "format": 3,
+        "algorithm": "rsa-sha256",
+        "publicKeySha256": "6210b513c5842a9bd1bb4e4ce7260de2b8c4798a7bc86f4d2af74c851517c072"
+      },
+      "cdpStringInventory": [
+        "DOM.getDocument",
+        "DOM.querySelector",
+        "DOM.setFileInputFiles",
+        "Input.dispatchKeyEvent",
+        "Input.dispatchMouseEvent",
+        "Runtime.evaluate"
+      ],
+      "apiCallStringInventory": [
+        "downloads.download",
+        "downloads.erase",
+        "downloads.onDeterminingFilename",
+        "downloads.search",
+        "downloads.setUiOptions",
+        "extension.isAllowedFileSchemeAccess",
+        "keyboard.down",
+        "keyboard.up",
+        "management.getSelf",
+        "mouse.click",
+        "mouse.move",
+        "mouse.wheel",
+        "proxy.onRequest",
+        "proxy.register",
+        "proxy.settings",
+        "proxy.unregister",
+        "runtime.connect",
+        "runtime.connectNative",
+        "runtime.getBrowserInfo",
+        "runtime.getManifest",
+        "runtime.id",
+        "runtime.lastError",
+        "runtime.onInstalled",
+        "runtime.onMessage",
+        "runtime.reload",
+        "runtime.sendMessage",
+        "scripting.executeScript",
+        "sidePanel.open",
+        "sidePanel.setOptions",
+        "sidebarAction.open",
+        "storage.local",
+        "storage.onChanged",
+        "storage.session",
+        "tabGroups.query",
+        "tabGroups.update",
+        "tabs.MAX",
+        "tabs.create",
+        "tabs.getCurrent",
+        "tabs.group",
+        "tabs.onRemoved",
+        "tabs.onUpdated",
+        "tabs.query",
+        "tabs.ungroup"
+      ],
+      "primaryOperationResult": "not-run"
+    },
+    {
+      "id": "infppggnoaenmfagbfknfkancpbljcca",
+      "name": "Automa",
+      "area": "debugger",
+      "primaryOperation": "Record or run navigation/input/extraction on an authored page and verify the resulting side effects",
+      "status": "frozen",
+      "manifestName": "Automa",
+      "version": "1.30.02",
+      "packageSha256": "54095ca7764675f1df6f62329412a75be33bb30968fc2184497d9d29188b2797",
+      "packageBytes": 2693283,
+      "manifestVersion": 3,
+      "permissions": [
+        "tabs",
+        "proxy",
+        "alarms",
+        "storage",
+        "debugger",
+        "activeTab",
+        "offscreen",
+        "webNavigation",
+        "unlimitedStorage",
+        "scripting"
+      ],
+      "optionalPermissions": [
+        "cookies",
+        "downloads",
+        "contextMenus",
+        "clipboardRead",
+        "notifications"
+      ],
+      "background": {
+        "service_worker": "background.bundle.js",
+        "type": "module"
+      },
+      "signature": {
+        "format": 3,
+        "algorithm": "rsa-sha256",
+        "publicKeySha256": "8d5ff66de04dc50615ad5a0d2f1b922018b46623be145953d0425cf459288d66"
+      },
+      "cdpStringInventory": [
+        "Input.dispatchKeyEvent",
+        "Input.dispatchMouseEvent",
+        "Network.setUserAgentOverride",
+        "Page.enable",
+        "Page.handleJavaScriptDialog",
+        "Page.javascriptDialogOpening",
+        "Runtime.evaluate"
+      ],
+      "apiCallStringInventory": [
+        "debugger.attach",
+        "debugger.detach",
+        "debugger.onEvent",
+        "debugger.sendCommand",
+        "dom.openOrClosedShadowRoot",
+        "google.com",
+        "offscreen.Reason",
+        "offscreen.createDocument",
+        "runtime.getContexts",
+        "runtime.id",
+        "runtime.onMessage",
+        "tabs.group"
+      ],
+      "primaryOperationResult": "not-run"
+    },
+    {
+      "id": "hfjnppljknigdnnpocjjgdcfmnodoafe",
+      "name": "Browserflow",
+      "area": "debugger",
+      "primaryOperation": "Record or run navigation/input/extraction on an authored page and verify the resulting side effects",
+      "correctedCandidateId": "bghdlfcceckopochgmefkanpffhnjeld",
+      "status": "frozen",
+      "manifestName": "Browserflow - Web Scraping & Web Automation",
+      "version": "1.0.6",
+      "packageSha256": "20116ba3b03b5a8edab7b22e1a051e9602fed70fc2a77f3bff155032ef24147d",
+      "packageBytes": 1163246,
+      "manifestVersion": 3,
+      "permissions": [
+        "storage",
+        "debugger",
+        "tabs",
+        "cookies",
+        "webNavigation",
+        "scripting",
+        "notifications",
+        "clipboardRead",
+        "downloads"
+      ],
+      "optionalPermissions": [],
+      "background": {
+        "service_worker": "background.bundle.js"
+      },
+      "signature": {
+        "format": 3,
+        "algorithm": "rsa-sha256",
+        "publicKeySha256": "759dffb9ad863ddfe2996325cde3e054c903bd41dd9b5f8e5b699e22c912d438"
+      },
+      "cdpStringInventory": [
+        "DOM.setFileInputFiles",
+        "Input.dispatchKeyEvent",
+        "Input.dispatchMouseEvent",
+        "Input.insertText",
+        "Page.captureScreenshot",
+        "Page.enable",
+        "Page.getLayoutMetrics",
+        "Page.handleJavaScriptDialog",
+        "Page.javascriptDialogClosed",
+        "Page.javascriptDialogOpening",
+        "Page.setBypassCSP",
+        "Runtime.evaluate"
+      ],
+      "apiCallStringInventory": [
+        "browser.metrics",
+        "debugger.attach",
+        "debugger.detach",
+        "debugger.onDetach",
+        "debugger.onEvent",
+        "debugger.sendCommand",
+        "google.com",
+        "runtime.id",
+        "runtime.lastError",
+        "windows.getLastFocused"
+      ],
+      "primaryOperationResult": "not-run"
+    },
+    {
+      "id": "jnhgnonknehpejjnehehllkliplmbmhn",
+      "name": "Web Scraper",
+      "area": "debugger",
+      "primaryOperation": "Record or run navigation/input/extraction on an authored page and verify the resulting side effects",
+      "status": "frozen",
+      "manifestName": "$webScraper$ - Free Web Scraping",
+      "version": "1.111.13",
+      "packageSha256": "646757324f52d3ad8b7fbd3e66e89ce3936f0b6eba5f645da2bf27c6f0d94294",
+      "packageBytes": 4846848,
+      "manifestVersion": 3,
+      "permissions": [
+        "tabs",
+        "notifications",
+        "storage",
+        "unlimitedStorage",
+        "declarativeNetRequest",
+        "scripting",
+        "sidePanel",
+        "webRequest"
+      ],
+      "optionalPermissions": [],
+      "background": {
+        "service_worker": "background_script.js"
+      },
+      "signature": {
+        "format": 3,
+        "algorithm": "rsa-sha256",
+        "publicKeySha256": "9d76dedad47f499d4747bbab8fbc1c7d6f96334347365555d289feca2525057a"
+      },
+      "cdpStringInventory": [],
+      "apiCallStringInventory": [
+        "browserAction.onClicked",
+        "declarativeNetRequest.updateDynamicRules",
+        "declarativeNetRequest.updateSessionRules",
+        "devtools.inspectedWindow",
+        "devtools.panels",
+        "dom.openOrClosedShadowRoot",
+        "notifications.create",
+        "permissions.getAll",
+        "runtime.getManifest",
+        "runtime.getURL",
+        "runtime.id",
+        "runtime.lastError",
+        "runtime.onConnect",
+        "runtime.onInstalled",
+        "runtime.onMessage",
+        "runtime.onMessageExternal",
+        "runtime.sendMessage",
+        "runtime.setUninstallURL",
+        "scripting.executeScript",
+        "scripting.getRegisteredContentScripts",
+        "scripting.insertCSS",
+        "scripting.registerContentScripts",
+        "sidePanel.open",
+        "sidePanel.setOptions",
+        "sidePanel.setPanelBehavior",
+        "tabs.connect",
+        "tabs.create",
+        "tabs.duplicate",
+        "tabs.get",
+        "tabs.onActivated",
+        "tabs.onCreated",
+        "tabs.onRemoved",
+        "tabs.onUpdated",
+        "tabs.query",
+        "tabs.remove",
+        "tabs.sendMessage",
+        "tabs.update",
+        "webNavigation.onBeforeNavigate",
+        "webNavigation.onCommitted",
+        "webNavigation.onCompleted",
+        "webNavigation.onErrorOccurred",
+        "webRequest.onBeforeRedirect",
+        "webRequest.onBeforeRequest",
+        "webRequest.onBeforeSendHeaders",
+        "webRequest.onCompleted",
+        "webRequest.onErrorOccurred",
+        "webRequest.onHeadersReceived",
+        "webRequest.onResponseStarted",
+        "windows.create",
+        "windows.getAll"
+      ],
+      "primaryOperationResult": "not-run"
+    },
+    {
+      "id": "djeegiggegleadkkbgopoonhjimgehda",
+      "name": "Puppeteer Recorder",
+      "area": "debugger",
+      "primaryOperation": "Record or run navigation/input/extraction on an authored page and verify the resulting side effects",
+      "correctedCandidateId": "dkaagdgjmgdmbnecmcefdhjekcoceebi",
+      "selectionSource": "https://github.com/checkly/headless-recorder/blob/main/README.md",
+      "acceptedManifestNames": [
+        "Puppeteer Recorder",
+        "Headless Recorder"
+      ],
+      "status": "unavailable",
+      "error": "Error: Store response 503",
+      "primaryOperationResult": "blocked-package"
+    },
+    {
+      "id": "fmkadmapgofadopljbjfkapdkoienihi",
+      "name": "React Developer Tools",
+      "area": "devtools",
+      "primaryOperation": "Inspect authored application component or state data and observe a controlled update",
+      "status": "frozen",
+      "manifestName": "React Developer Tools",
+      "version": "8.0.0",
+      "packageSha256": "d92e1122a16362cc5510927068a5b1a8d50b43e1f3be25c3117f7c005807b302",
+      "packageBytes": 670658,
+      "manifestVersion": 3,
+      "permissions": [
+        "scripting",
+        "storage",
+        "tabs"
+      ],
+      "optionalPermissions": [
+        "clipboardWrite"
+      ],
+      "background": {
+        "service_worker": "build/background.js"
+      },
+      "signature": {
+        "format": 3,
+        "algorithm": "rsa-sha256",
+        "publicKeySha256": "5ca03c0f6e503efb9195a0f3ae84d87820bb6f74fef32216d880e203f0ac8ced"
+      },
+      "cdpStringInventory": [],
+      "apiCallStringInventory": [],
+      "primaryOperationResult": "not-run"
+    },
+    {
+      "id": "nhdogjmejiglipccpnnnanhbledajbpd",
+      "name": "Vue.js devtools",
+      "area": "devtools",
+      "primaryOperation": "Inspect authored application component or state data and observe a controlled update",
+      "status": "frozen",
+      "manifestName": "Vue.js devtools",
+      "version": "7.7.7",
+      "packageSha256": "bf565c23fd9e2c074ed47144d0504336f787e5f105388f73c62846dee92f0124",
+      "packageBytes": 5349161,
+      "manifestVersion": 3,
+      "permissions": [
+        "scripting"
+      ],
+      "optionalPermissions": [],
+      "background": {
+        "service_worker": "dist/background.js"
+      },
+      "signature": {
+        "format": 3,
+        "algorithm": "rsa-sha256",
+        "publicKeySha256": "d73e69c4986b8f22fddd0d71b43091f3bccf3cc5ca7c2b42f63642437ae0fe66"
+      },
+      "cdpStringInventory": [],
+      "apiCallStringInventory": [],
+      "primaryOperationResult": "not-run"
+    },
+    {
+      "id": "lmhkpmbekcpmknklioeibfkpmmfibljd",
+      "name": "Redux DevTools",
+      "area": "devtools",
+      "primaryOperation": "Inspect authored application component or state data and observe a controlled update",
+      "status": "frozen",
+      "manifestName": "Redux DevTools",
+      "version": "3.2.10",
+      "packageSha256": "2233508907594b05bc643372531253b9306e86cf5ca548e5b4e7707f347860a3",
+      "packageBytes": 1261966,
+      "manifestVersion": 3,
+      "permissions": [
+        "notifications",
+        "contextMenus",
+        "storage"
+      ],
+      "optionalPermissions": [],
+      "background": {
+        "service_worker": "background.bundle.js"
+      },
+      "signature": {
+        "format": 3,
+        "algorithm": "rsa-sha256",
+        "publicKeySha256": "bc7afc14a2fcadab8e4815afcc581b935c8a20bddb55f7ec9b86f8113c1da39e"
+      },
+      "cdpStringInventory": [],
+      "apiCallStringInventory": [],
+      "primaryOperationResult": "not-run"
+    },
+    {
+      "id": "mdnleldcmiljblolnjhpnblkcekpdkpa",
+      "name": "Requestly",
+      "area": "network",
+      "primaryOperation": "Apply advertised filter/header/metadata behavior to a controlled page/request and verify the effect",
+      "status": "frozen",
+      "manifestName": "Requestly: Intercept & Modify HTTP Requests",
+      "version": "26.9.29",
+      "packageSha256": "0bcd9589dba665d639db8f8eaa8a4656d8f873be74e5bcc91cc7bc953b702a23",
+      "packageBytes": 1342621,
+      "manifestVersion": 3,
+      "permissions": [
+        "browsingData",
+        "contextMenus",
+        "declarativeNetRequest",
+        "proxy",
+        "scripting",
+        "sidePanel",
+        "storage",
+        "tabs",
+        "unlimitedStorage",
+        "webNavigation",
+        "webRequest"
+      ],
+      "optionalPermissions": [],
+      "background": {
+        "service_worker": "serviceWorker.js"
+      },
+      "signature": {
+        "format": 3,
+        "algorithm": "rsa-sha256",
+        "publicKeySha256": "c3db4b32c8b91bebd97fd1ba24af3af08fab8ae8ba8ef17f22e8e216fa91ea9d"
+      },
+      "cdpStringInventory": [],
+      "apiCallStringInventory": [
+        "action.setIcon",
+        "commands.onCommand",
+        "contextMenus.create",
+        "contextMenus.onClicked",
+        "contextMenus.removeAll",
+        "contextMenus.update",
+        "declarativeNetRequest.getDynamicRules",
+        "declarativeNetRequest.getSessionRules",
+        "declarativeNetRequest.updateDynamicRules",
+        "declarativeNetRequest.updateSessionRules",
+        "devtools.inspectedWindow",
+        "devtools.network",
+        "devtools.panels",
+        "proxy.settings",
+        "runtime.OnInstalledReason",
+        "runtime.connect",
+        "runtime.getManifest",
+        "runtime.getPlatformInfo",
+        "runtime.getURL",
+        "runtime.id",
+        "runtime.lastError",
+        "runtime.onConnect",
+        "runtime.onConnectExternal",
+        "runtime.onInstalled",
+        "runtime.onMessage",
+        "runtime.onMessageExternal",
+        "runtime.reload",
+        "runtime.sendMessage",
+        "runtime.setUninstallURL",
+        "scripting.executeScript",
+        "scripting.getRegisteredContentScripts",
+        "scripting.registerContentScripts",
+        "scripting.unregisterContentScripts",
+        "storage.local",
+        "storage.onChanged",
+        "tabs.TAB",
+        "tabs.create",
+        "tabs.get",
+        "tabs.highlight",
+        "tabs.onCreated",
+        "tabs.onRemoved",
+        "tabs.onReplaced",
+        "tabs.onUpdated",
+        "tabs.query",
+        "tabs.remove",
+        "tabs.sendMessage",
+        "tabs.update",
+        "test.some",
+        "webNavigation.onCommitted",
+        "webNavigation.onDOMContentLoaded",
+        "webRequest.onBeforeRequest",
+        "webRequest.onBeforeSendHeaders",
+        "webRequest.onCompleted",
+        "webRequest.onErrorOccurred",
+        "webRequest.onHeadersReceived",
+        "windows.create",
+        "windows.get",
+        "windows.onCreated",
+        "windows.remove",
+        "windows.update"
+      ],
+      "primaryOperationResult": "not-run"
+    },
+    {
+      "id": "idgpnmonknjnojddfkpgkljpfnnfcklj",
+      "name": "ModHeader",
+      "area": "network",
+      "primaryOperation": "Apply advertised filter/header/metadata behavior to a controlled page/request and verify the effect",
+      "status": "unavailable",
+      "error": "Error: Store response 503",
+      "primaryOperationResult": "blocked-package"
+    },
+    {
+      "id": "djflhoibgkdhkhhcedjiklpkjnoahfmg",
+      "name": "User Agent Switcher",
+      "area": "network",
+      "primaryOperation": "Apply advertised filter/header/metadata behavior to a controlled page/request and verify the effect",
+      "status": "frozen",
+      "manifestName": "User-Agent Switcher for Chrome",
+      "version": "2.0.2",
+      "packageSha256": "f7576f9019b16b1981b5c50f22b735b5cc8dfc3024c9eca96816b266bc716344",
+      "packageBytes": 143404,
+      "manifestVersion": 3,
+      "permissions": [
+        "storage",
+        "unlimitedStorage",
+        "tabs",
+        "declarativeNetRequest",
+        "offscreen"
+      ],
+      "optionalPermissions": [],
+      "background": {
+        "service_worker": "service_worker_js-bundle.js"
+      },
+      "signature": {
+        "format": 3,
+        "algorithm": "rsa-sha256",
+        "publicKeySha256": "395b7e816a37a7724398abfa9de075c603f7490c9ba8cdaeb425798c6c80c1b8"
+      },
+      "cdpStringInventory": [],
+      "apiCallStringInventory": [
+        "action.setBadgeText",
+        "declarativeNetRequest.MAX",
+        "declarativeNetRequest.getSessionRules",
+        "declarativeNetRequest.isRegexSupported",
+        "declarativeNetRequest.updateSessionRules",
+        "offscreen.closeDocument",
+        "offscreen.createDocument",
+        "runtime.getManifest",
+        "runtime.onInstalled",
+        "runtime.onMessage",
+        "runtime.sendMessage",
+        "storage.local",
+        "storage.managed",
+        "storage.onChanged",
+        "storage.session",
+        "storage.sync",
+        "tabs.get",
+        "tabs.onActivated",
+        "tabs.onUpdated",
+        "tabs.query",
+        "tabs.reload",
+        "tabs.update"
+      ],
+      "primaryOperationResult": "not-run"
+    },
+    {
+      "id": "hlkenndednhfkekhgcdicdfddnkalmdm",
+      "name": "Cookie Editor",
+      "area": "storage",
+      "primaryOperation": "Create, edit, and delete a cookie on an authored page",
+      "status": "frozen",
+      "manifestName": "Cookie-Editor",
+      "version": "1.13.0",
+      "packageSha256": "754a072a5b6327d27a0d4d6e299a8e28b2a5fafbd595ccb6bfcd4090ae8eb038",
+      "packageBytes": 296653,
+      "manifestVersion": 3,
+      "permissions": [
+        "cookies",
+        "tabs",
+        "storage",
+        "sidePanel"
+      ],
+      "optionalPermissions": [],
+      "background": {
+        "service_worker": "cookie-editor.js",
+        "type": "module"
+      },
+      "signature": {
+        "format": 3,
+        "algorithm": "rsa-sha256",
+        "publicKeySha256": "7ba4dd343d75a4a7623823533da0bc3cbb7db3528568987e60d68c0321766c5a"
+      },
+      "cdpStringInventory": [],
+      "apiCallStringInventory": [],
+      "primaryOperationResult": "not-run"
+    },
+    {
+      "id": "nngceckbapebfimnlniiiahkandclblb",
+      "name": "Bitwarden",
+      "area": "nativeIdentity",
+      "primaryOperation": "Unlock a test vault or companion session and fill authored login fields",
+      "status": "frozen",
+      "manifestName": "Bitwarden Password Manager",
+      "version": "2026.10.0",
+      "packageSha256": "f2feb7fc46d2550bef9b69af1cc358aea26b90a947645f9de16ec14d9296ef69",
+      "packageBytes": 24875732,
+      "manifestVersion": 3,
+      "permissions": [
+        "activeTab",
+        "alarms",
+        "clipboardRead",
+        "clipboardWrite",
+        "contextMenus",
+        "idle",
+        "offscreen",
+        "scripting",
+        "sidePanel",
+        "storage",
+        "tabs",
+        "unlimitedStorage",
+        "webNavigation",
+        "webRequest",
+        "webRequestAuthProvider",
+        "notifications"
+      ],
+      "optionalPermissions": [
+        "nativeMessaging",
+        "privacy"
+      ],
+      "background": {
+        "service_worker": "background.js"
+      },
+      "signature": {
+        "format": 3,
+        "algorithm": "rsa-sha256",
+        "publicKeySha256": "dd6242a10f4158cdbd88807a0d32b1b17dff823ad0d500825a999c8a1458bdf0"
+      },
+      "cdpStringInventory": [],
+      "apiCallStringInventory": [],
+      "primaryOperationResult": "not-run"
+    },
+    {
+      "id": "aeblfdkhhhdcdjpifhhbdiojplfjncoa",
+      "name": "1Password",
+      "area": "nativeIdentity",
+      "primaryOperation": "Unlock a test vault or companion session and fill authored login fields",
+      "status": "frozen",
+      "manifestName": "1Password – Password Manager",
+      "version": "8.12.41.1",
+      "packageSha256": "ba9e031604781012f6032ffc8e16fba400090ed0c085d02b8e939556f95f8fa8",
+      "packageBytes": 17977477,
+      "manifestVersion": 3,
+      "permissions": [
+        "alarms",
+        "contextMenus",
+        "downloads",
+        "idle",
+        "management",
+        "nativeMessaging",
+        "notifications",
+        "privacy",
+        "scripting",
+        "storage",
+        "tabs",
+        "webNavigation",
+        "webRequest",
+        "webRequestAuthProvider",
+        "declarativeNetRequestWithHostAccess"
+      ],
+      "optionalPermissions": [],
+      "background": {
+        "service_worker": "background/background.js",
+        "type": "module"
+      },
+      "signature": {
+        "format": 3,
+        "algorithm": "rsa-sha256",
+        "publicKeySha256": "041b53a7773239f8577138e9fb59d2e02599f358bd24094b9e875402b0cc7927"
+      },
+      "cdpStringInventory": [],
+      "apiCallStringInventory": [],
+      "primaryOperationResult": "not-run"
+    },
+    {
+      "id": "hdokiejnpimakedhajhdlcegeplioahd",
+      "name": "LastPass",
+      "area": "nativeIdentity",
+      "primaryOperation": "Unlock a test vault or companion session and fill authored login fields",
+      "status": "frozen",
+      "manifestName": "LastPass: Free Password Manager",
+      "version": "4.156.0",
+      "packageSha256": "99d3d531aa67b8ef2269feb373776471713059bcb3aa61aeea0b03996ceec7b3",
+      "packageBytes": 18165378,
+      "manifestVersion": 3,
+      "permissions": [
+        "scripting",
+        "tabs",
+        "notifications",
+        "contextMenus",
+        "storage",
+        "unlimitedStorage",
+        "webNavigation",
+        "webRequest",
+        "webRequestAuthProvider",
+        "offscreen",
+        "alarms",
+        "cookies",
+        "declarativeNetRequest"
+      ],
+      "optionalPermissions": [
+        "privacy",
+        "clipboardWrite"
+      ],
+      "background": {
+        "service_worker": "background-redux-new.js"
+      },
+      "signature": {
+        "format": 3,
+        "algorithm": "rsa-sha256",
+        "publicKeySha256": "73ea849df8c0a4370973b2464fb8e073a00a571427df5b0b897e7ef789352b25"
+      },
+      "cdpStringInventory": [],
+      "apiCallStringInventory": [],
+      "primaryOperationResult": "not-run"
+    },
+    {
+      "id": "ghmbeldphafepmbegfdlkpapadhbakde",
+      "name": "Proton Pass",
+      "area": "nativeIdentity",
+      "primaryOperation": "Unlock a test vault or companion session and fill authored login fields",
+      "correctedCandidateId": "gafhhkghbfjjkeiendhloienhogjacad",
+      "status": "frozen",
+      "manifestName": "Proton Pass: Free Password Manager",
+      "version": "1.42.0",
+      "packageSha256": "6edf8bb48ca05d184f003a3fa78a2a51059dbb1bd5f85d567bfa3d887a9d3f12",
+      "packageBytes": 8405429,
+      "manifestVersion": 3,
+      "permissions": [
+        "activeTab",
+        "alarms",
+        "offscreen",
+        "scripting",
+        "storage",
+        "unlimitedStorage",
+        "webNavigation",
+        "webRequest"
+      ],
+      "optionalPermissions": [
+        "privacy",
+        "webRequestAuthProvider",
+        "clipboardRead",
+        "clipboardWrite",
+        "nativeMessaging"
+      ],
+      "background": {
+        "service_worker": "background.js"
+      },
+      "signature": {
+        "format": 3,
+        "algorithm": "rsa-sha256",
+        "publicKeySha256": "67c14b3f7054fc14653baf0f03710a34ee487f136d09cff31a16d8c100cf0b6d"
+      },
+      "cdpStringInventory": [],
+      "apiCallStringInventory": [],
+      "primaryOperationResult": "not-run"
+    },
+    {
+      "id": "oeopbcgkkoapgobdbedcemjljbihmemj",
+      "name": "Checker Plus for Gmail",
+      "area": "identity",
+      "primaryOperation": "Complete browser OAuth and read test-account notification state",
+      "status": "frozen",
+      "manifestName": "Checker Plus for Gmail™",
+      "version": "36.6",
+      "packageSha256": "2b483dc168f25882cffbffb471244395c4f4a50bad013c32274550580e8fad0b",
+      "packageBytes": 1660326,
+      "manifestVersion": 3,
+      "permissions": [
+        "gcm",
+        "alarms",
+        "activeTab",
+        "tts",
+        "idle",
+        "notifications",
+        "storage",
+        "contextMenus",
+        "identity",
+        "system.display",
+        "cookies",
+        "declarativeNetRequestWithHostAccess",
+        "offscreen",
+        "scripting",
+        "sidePanel"
+      ],
+      "optionalPermissions": [
+        "background",
+        "webRequest"
+      ],
+      "background": {
+        "service_worker": "js/background.js"
+      },
+      "signature": {
+        "format": 3,
+        "algorithm": "rsa-sha256",
+        "publicKeySha256": "e4ef126aae0f6e1314324c9b9187c4c9423670da9cb6c79f0bf0ff0068e699dc"
+      },
+      "cdpStringInventory": [],
+      "apiCallStringInventory": [],
+      "primaryOperationResult": "not-run"
+    },
+    {
+      "id": "oldceeleldhonbafppcapldpdifcinji",
+      "name": "LanguageTool",
+      "area": "contentScript",
+      "primaryOperation": "Apply the advertised text/style/player transformation to an authored page and verify it after navigation",
+      "status": "frozen",
+      "manifestName": "AI Grammar Checker & Paraphraser – LanguageTool",
+      "version": "11.4.0",
+      "packageSha256": "fc030bc22930cd85400309f18a8e3824ba9e64f8025739b24379d3077633f5d6",
+      "packageBytes": 15730312,
+      "manifestVersion": 3,
+      "permissions": [
+        "activeTab",
+        "storage",
+        "contextMenus",
+        "scripting",
+        "alarms"
+      ],
+      "optionalPermissions": [],
+      "background": {
+        "service_worker": "background.js",
+        "type": "module"
+      },
+      "signature": {
+        "format": 3,
+        "algorithm": "rsa-sha256",
+        "publicKeySha256": "eb3244b4b37ed105ff20fb3f38528d986528c660a1b33ab571ef8f026a9e56dc"
+      },
+      "cdpStringInventory": [],
+      "apiCallStringInventory": [],
+      "primaryOperationResult": "not-run"
+    },
+    {
+      "id": "dhdgffkkebhmkfjojejmpbldmpobfkfo",
+      "name": "Tampermonkey",
+      "area": "userScripts",
+      "primaryOperation": "Install an authored userscript, execute it on matching page/frame, and verify after navigation",
+      "status": "frozen",
+      "manifestName": "Tampermonkey",
+      "version": "5.5.1",
+      "packageSha256": "b5167937817e636adeba462ed9bf9b32ff01c2888f78a9afc6aa4f8e655fe872",
+      "packageBytes": 1718930,
+      "manifestVersion": 3,
+      "permissions": [
+        "notifications",
+        "unlimitedStorage",
+        "tabs",
+        "idle",
+        "webNavigation",
+        "webRequest",
+        "webRequestBlocking",
+        "storage",
+        "contextMenus",
+        "chrome://favicon/",
+        "clipboardWrite",
+        "cookies",
+        "alarms",
+        "declarativeNetRequestWithHostAccess",
+        "scripting",
+        "userScripts",
+        "offscreen"
+      ],
+      "optionalPermissions": [
+        "downloads"
+      ],
+      "background": {
+        "service_worker": "background.js"
+      },
+      "signature": {
+        "format": 3,
+        "algorithm": "rsa-sha256",
+        "publicKeySha256": "373655aa417ca59e949cf1b3cfe15a5e0b3b21f464932156359f705531029c93"
+      },
+      "cdpStringInventory": [],
+      "apiCallStringInventory": [],
+      "primaryOperationResult": "not-run"
+    },
+    {
+      "id": "jinjaccalgkegednnccohejagnlnfdag",
+      "name": "Violentmonkey",
+      "area": "userScripts",
+      "primaryOperation": "Install an authored userscript, execute it on matching page/frame, and verify after navigation",
+      "status": "frozen",
+      "manifestName": "Violentmonkey",
+      "version": "2.49.0",
+      "packageSha256": "bca40180a633a53392407d113f01405897fc3cd6b425592d19ffd398c3b9423e",
+      "packageBytes": 680439,
+      "manifestVersion": 3,
+      "permissions": [
+        "tabs",
+        "webRequest",
+        "notifications",
+        "storage",
+        "unlimitedStorage",
+        "clipboardWrite",
+        "contextMenus",
+        "cookies",
+        "alarms",
+        "declarativeNetRequestWithHostAccess",
+        "identity",
+        "offscreen",
+        "userScripts",
+        "webNavigation"
+      ],
+      "optionalPermissions": [
+        "downloads"
+      ],
+      "background": {
+        "service_worker": "sw.js"
+      },
+      "signature": {
+        "format": 3,
+        "algorithm": "rsa-sha256",
+        "publicKeySha256": "98d90220b6a4643dd22e74906dbd5306f3202157354c36bd15649525962f822f"
+      },
+      "cdpStringInventory": [],
+      "apiCallStringInventory": [],
+      "primaryOperationResult": "not-run"
+    },
+    {
+      "id": "clngdbkpkpeebahjckkjfobafhncgmne",
+      "name": "Stylus",
+      "area": "contentScript",
+      "primaryOperation": "Apply the advertised text/style/player transformation to an authored page and verify it after navigation",
+      "status": "frozen",
+      "manifestName": "Stylus",
+      "version": "2.4.14",
+      "packageSha256": "f36b68096a79bff0ab7f7e5eb79d0848ec3643ae99849ac2c79f6b84355344f9",
+      "packageBytes": 1235979,
+      "manifestVersion": 3,
+      "permissions": [
+        "alarms",
+        "contextMenus",
+        "storage",
+        "tabs",
+        "unlimitedStorage",
+        "webNavigation",
+        "webRequest",
+        "webRequestBlocking",
+        "declarativeNetRequestWithHostAccess",
+        "identity",
+        "idle",
+        "offscreen",
+        "scripting",
+        "sidePanel"
+      ],
+      "optionalPermissions": [],
+      "background": {
+        "service_worker": "sw.js"
+      },
+      "signature": {
+        "format": 3,
+        "algorithm": "rsa-sha256",
+        "publicKeySha256": "2bd631afaf4410792aa95e1057d26cd4fbee26e23ee01ac59343224a7e839b7f"
+      },
+      "cdpStringInventory": [],
+      "apiCallStringInventory": [],
+      "primaryOperationResult": "not-run"
+    },
+    {
+      "id": "eimadpbcbfnmbkopoojfekhnkhdbieeh",
+      "name": "Dark Reader",
+      "area": "contentScript",
+      "primaryOperation": "Apply the advertised text/style/player transformation to an authored page and verify it after navigation",
+      "status": "frozen",
+      "manifestName": "Dark Reader",
+      "version": "4.9.133",
+      "packageSha256": "ee38f20d1d50789f4b482c9a1a5dadab599b8682fd2a7dfb7de21fae8561b918",
+      "packageBytes": 851022,
+      "manifestVersion": 3,
+      "permissions": [
+        "alarms",
+        "fontSettings",
+        "scripting",
+        "storage"
+      ],
+      "optionalPermissions": [
+        "contextMenus"
+      ],
+      "background": {
+        "service_worker": "background/index.js"
+      },
+      "signature": {
+        "format": 3,
+        "algorithm": "rsa-sha256",
+        "publicKeySha256": "48c03f1215dc1aefee954a7da73184471db3f77fc2b34c9cb65e40cbc60e87d2"
+      },
+      "cdpStringInventory": [],
+      "apiCallStringInventory": [],
+      "primaryOperationResult": "not-run"
+    },
+    {
+      "id": "ddkjiahejlhfcafbddmgiahcphecmpfh",
+      "name": "uBlock Origin Lite",
+      "area": "dnr",
+      "primaryOperation": "Block a controlled fixture request and allow it after rule change",
+      "status": "frozen",
+      "manifestName": "uBlock Origin Lite",
+      "version": "2026.1012.1545",
+      "packageSha256": "de67c08f8f7a337bc82c2cc86423eea0243e02be3fd3bd9e289c20c82eadb24a",
+      "packageBytes": 9125970,
+      "manifestVersion": 3,
+      "permissions": [
+        "activeTab",
+        "alarms",
+        "declarativeNetRequest",
+        "offscreen",
+        "scripting",
+        "storage",
+        "unlimitedStorage",
+        "userScripts"
+      ],
+      "optionalPermissions": [],
+      "background": {
+        "service_worker": "/js/background.js",
+        "type": "module"
+      },
+      "signature": {
+        "format": 3,
+        "algorithm": "rsa-sha256",
+        "publicKeySha256": "33a980749b75205133c68072f742cf57e67cce4c95d4f72c4b18ed5baa5adafe"
+      },
+      "cdpStringInventory": [],
+      "apiCallStringInventory": [],
+      "primaryOperationResult": "not-run"
+    },
+    {
+      "id": "mnjggcdmjocbbbhaepdhchncahnbgone",
+      "name": "SponsorBlock",
+      "area": "network",
+      "primaryOperation": "Apply advertised filter/header/metadata behavior to a controlled page/request and verify the effect",
+      "status": "frozen",
+      "manifestName": "SponsorBlock for YouTube - Skip Sponsorships",
+      "version": "6.1.6",
+      "packageSha256": "5587fe2b6a9946101ca0dde7c6efe76a755c5ee5b6d6e63dfc48c7f736cdb4ff",
+      "packageBytes": 1848477,
+      "manifestVersion": 3,
+      "permissions": [
+        "storage",
+        "scripting",
+        "unlimitedStorage"
+      ],
+      "optionalPermissions": [],
+      "background": {
+        "service_worker": "./js/background.js"
+      },
+      "signature": {
+        "format": 3,
+        "algorithm": "rsa-sha256",
+        "publicKeySha256": "cd96623c9e2111704f3727d207d16ed4f643c9ca7b4fb2878424fd5393512c62"
+      },
+      "cdpStringInventory": [],
+      "apiCallStringInventory": [
+        "contentScripts.register",
+        "extension.inIncognitoContext",
+        "extension.isAllowedIncognitoAccess",
+        "permissions.contains",
+        "permissions.remove",
+        "permissions.request",
+        "runtime.connect",
+        "runtime.getManifest",
+        "runtime.getURL",
+        "runtime.id",
+        "runtime.lastError",
+        "runtime.onConnect",
+        "runtime.onInstalled",
+        "runtime.onMessage",
+        "runtime.onMessageExternal",
+        "runtime.sendMessage",
+        "scripting.executeScript",
+        "scripting.insertCSS",
+        "storage.local",
+        "storage.onChanged",
+        "storage.sync",
+        "tabs.create",
+        "tabs.executeScript",
+        "tabs.insertCSS",
+        "tabs.onUpdated",
+        "tabs.query",
+        "tabs.sendMessage",
+        "webNavigation.onCommitted",
+        "windows.getAll"
+      ],
+      "primaryOperationResult": "not-run"
+    },
+    {
+      "id": "gebbhagfogifgggkldgodflihgfeippi",
+      "name": "Return YouTube Dislike",
+      "area": "network",
+      "primaryOperation": "Apply advertised filter/header/metadata behavior to a controlled page/request and verify the effect",
+      "status": "frozen",
+      "manifestName": "Return YouTube Dislike",
+      "version": "4.0.5",
+      "packageSha256": "a2b942c162f419e00b41808cc6b1ddef5c29396355ba92e4d15aed41cc58b549",
+      "packageBytes": 1316288,
+      "manifestVersion": 3,
+      "permissions": [
+        "storage"
+      ],
+      "optionalPermissions": [
+        "identity"
+      ],
+      "background": {
+        "service_worker": "ryd.background.js"
+      },
+      "signature": {
+        "format": 3,
+        "algorithm": "rsa-sha256",
+        "publicKeySha256": "64117065e685666ab36e35b876548ff85a5eb56a90ea463f4dc7d94866100b5d"
+      },
+      "cdpStringInventory": [],
+      "apiCallStringInventory": [
+        "identity.getAuthToken",
+        "identity.getRedirectURL",
+        "identity.launchWebAuthFlow",
+        "runtime.getManifest",
+        "runtime.lastError",
+        "runtime.onMessage",
+        "runtime.sendMessage",
+        "storage.onChanged",
+        "storage.sync",
+        "tabs.create",
+        "tabs.query",
+        "tabs.sendMessage",
+        "version.split"
+      ],
+      "primaryOperationResult": "not-run"
+    },
+    {
+      "id": "ponfpcnoihfmfllpaingbgckeeldkhle",
+      "name": "Enhancer for YouTube",
+      "area": "contentScript",
+      "primaryOperation": "Apply the advertised text/style/player transformation to an authored page and verify it after navigation",
+      "status": "frozen",
+      "manifestName": "Enhancer for YouTube™",
+      "version": "3.0.19",
+      "packageSha256": "d2fc37882abf1799ae3f09fb372e20f0b0642ab992b29682b41a36013c542de4",
+      "packageBytes": 498490,
+      "manifestVersion": 3,
+      "permissions": [
+        "storage"
+      ],
+      "optionalPermissions": [],
+      "background": {
+        "service_worker": "js/service-worker.js"
+      },
+      "signature": {
+        "format": 3,
+        "algorithm": "rsa-sha256",
+        "publicKeySha256": "fed5f2de875c5bbf08d6162a44b3a7b427ffb10bf57477e330de309ed2b9a0fa"
+      },
+      "cdpStringInventory": [],
+      "apiCallStringInventory": [],
+      "primaryOperationResult": "not-run"
+    },
+    {
+      "id": "lmjnegcaeklhafolokijcfjliaokphfk",
+      "name": "Video DownloadHelper",
+      "area": "nativeMessaging",
+      "primaryOperation": "Discover authored media and save it through the native companion protocol",
+      "status": "frozen",
+      "manifestName": "Video Download Helper",
+      "version": "10.6.1.2",
+      "packageSha256": "fa8143ef62b0da0f6e4a8583e06f418e0525d58db2e0db4a1fb22b3759439690",
+      "packageBytes": 4068785,
+      "manifestVersion": 3,
+      "permissions": [
+        "tabs",
+        "offscreen",
+        "downloads",
+        "sidePanel",
+        "webRequest",
+        "webNavigation",
+        "scripting",
+        "declarativeNetRequest",
+        "storage",
+        "notifications",
+        "contextMenus",
+        "unlimitedStorage"
+      ],
+      "optionalPermissions": [
+        "browsingData",
+        "downloads.open"
+      ],
+      "background": {
+        "type": "module",
+        "service_worker": "service/main.js"
+      },
+      "signature": {
+        "format": 3,
+        "algorithm": "rsa-sha256",
+        "publicKeySha256": "bc9d46204ab705ebea89259b80eaf75a1934c6a46c1f5cc45999c95291417cec"
+      },
+      "cdpStringInventory": [],
+      "apiCallStringInventory": [],
+      "primaryOperationResult": "not-run"
+    },
+    {
+      "id": "chphlpgkkbolifaimnlloiipkdnihall",
+      "name": "OneTab",
+      "area": "tabs",
+      "primaryOperation": "Save authored tabs/session to a group and restore them",
+      "status": "frozen",
+      "manifestName": "OneTab",
+      "version": "2.24",
+      "packageSha256": "7bdb60b8b795ca35c1020645143aeb8db08b75a0156b958ecf00c35dfb4e5551",
+      "packageBytes": 3005772,
+      "manifestVersion": 3,
+      "permissions": [
+        "favicon",
+        "unlimitedStorage",
+        "storage",
+        "tabs",
+        "activeTab",
+        "scripting",
+        "contextMenus"
+      ],
+      "optionalPermissions": [
+        "readingList",
+        "tabGroups",
+        "bookmarks"
+      ],
+      "background": {
+        "service_worker": "ext-onetab-concatenated-sources-background.js"
+      },
+      "signature": {
+        "format": 3,
+        "algorithm": "rsa-sha256",
+        "publicKeySha256": "27f7bf6aa1eb8508cdbbe88fa3d870bb000bf9641f473c34b778986e9af36aac"
+      },
+      "cdpStringInventory": [],
+      "apiCallStringInventory": [],
+      "primaryOperationResult": "not-run"
+    },
+    {
+      "id": "edacconmaakjimmfgnblocblbcdcpbko",
+      "name": "Session Buddy",
+      "area": "tabs",
+      "primaryOperation": "Save authored tabs/session to a group and restore them",
+      "status": "frozen",
+      "manifestName": "Session Buddy - Tab & Bookmark Manager",
+      "version": "4.1.2",
+      "packageSha256": "5d94b0257dd24bc5df058d6edc91513d5482c26d6c300e9434e72a965ed272aa",
+      "packageBytes": 865063,
+      "manifestVersion": 3,
+      "permissions": [
+        "tabs",
+        "unlimitedStorage",
+        "storage",
+        "alarms"
+      ],
+      "optionalPermissions": [],
+      "background": {
+        "service_worker": "background.bundle.js",
+        "type": "module"
+      },
+      "signature": {
+        "format": 3,
+        "algorithm": "rsa-sha256",
+        "publicKeySha256": "43022edc00a98cc56d1be21b1232f1aeca712fe1b5bcafb96cf56fb5f7a3fe75"
+      },
+      "cdpStringInventory": [],
+      "apiCallStringInventory": [],
+      "primaryOperationResult": "not-run"
+    },
+    {
+      "id": "hddnkoipeenegfoeaoibdmnaalmgkpip",
+      "name": "Toby",
+      "area": "tabs",
+      "primaryOperation": "Save authored tabs/session to a group and restore them",
+      "status": "frozen",
+      "manifestName": "Toby: Tab Manager & Session Saver",
+      "version": "2.0.0.14",
+      "packageSha256": "ee2ebdcbf7a49cf291e4ca2ee86ffb72797bdf0e8f3b509a1a0d616bb19234fb",
+      "packageBytes": 1495834,
+      "manifestVersion": 3,
+      "permissions": [
+        "storage",
+        "unlimitedStorage",
+        "tabs",
+        "contextMenus",
+        "declarativeNetRequestWithHostAccess",
+        "cookies",
+        "sidePanel"
+      ],
+      "optionalPermissions": [
+        "tabGroups",
+        "history"
+      ],
+      "background": {
+        "service_worker": "background.js"
+      },
+      "signature": {
+        "format": 3,
+        "algorithm": "rsa-sha256",
+        "publicKeySha256": "733dae8f44d465e40e813cd00bc6af8f67082f4b2e897b9a57e113782e97638e"
+      },
+      "cdpStringInventory": [],
+      "apiCallStringInventory": [],
+      "primaryOperationResult": "not-run"
+    },
+    {
+      "id": "jjmflmamggggndanpgfnpelongoepncg",
+      "name": "Extensity",
+      "area": "management",
+      "primaryOperation": "Disable and re-enable another authored extension and verify lifecycle",
+      "status": "frozen",
+      "manifestName": "Extensity",
+      "version": "1.14.0",
+      "packageSha256": "4e797c526eb2f29ddee27bf90e85808fb461c886b546a6a13f2db659ede07cc8",
+      "packageBytes": 175182,
+      "manifestVersion": 3,
+      "permissions": [
+        "management",
+        "storage"
+      ],
+      "optionalPermissions": [],
+      "background": {
+        "service_worker": "js/migration.js"
+      },
+      "signature": {
+        "format": 3,
+        "algorithm": "rsa-sha256",
+        "publicKeySha256": "99c5bc0c6666d30df65df4bed6e4fd26922b58d598e200fb451febe58039487a"
+      },
+      "cdpStringInventory": [],
+      "apiCallStringInventory": [],
+      "primaryOperationResult": "not-run"
+    },
+    {
+      "id": "laookkfknpbbblfpciffpaejjkokdgca",
+      "name": "Momentum",
+      "area": "auxiliaryUI",
+      "primaryOperation": "Open the advertised extension view, persist a setting, and verify it after reload",
+      "status": "frozen",
+      "manifestName": "Momentum",
+      "version": "2.27.8",
+      "packageSha256": "c7d574585d6c26065ef5efffcdcbdc89ec92c28857138b4522da0eb4bc425328",
+      "packageBytes": 18906692,
+      "manifestVersion": 3,
+      "permissions": [
+        "offscreen",
+        "unlimitedStorage",
+        "idle"
+      ],
+      "optionalPermissions": [
+        "bookmarks",
+        "tabs",
+        "sessions",
+        "topSites",
+        "favicon",
+        "scripting",
+        "alarms",
+        "notifications",
+        "tabGroups",
+        "search"
+      ],
+      "background": {
+        "service_worker": "serviceWorker.js"
+      },
+      "signature": {
+        "format": 3,
+        "algorithm": "rsa-sha256",
+        "publicKeySha256": "b0eeaa5adf111b5f2855f0499aea3620482a1441ad611457062dadd90796d653"
+      },
+      "cdpStringInventory": [],
+      "apiCallStringInventory": [],
+      "primaryOperationResult": "not-run"
+    },
+    {
+      "id": "kbfnbcaeplbcioakkpcpgfkobkghlhen",
+      "name": "Grammarly",
+      "area": "contentScript",
+      "primaryOperation": "Apply the advertised text/style/player transformation to an authored page and verify it after navigation",
+      "status": "frozen",
+      "manifestName": "Grammarly: AI Writing Assistant and Grammar Checker App",
+      "version": "14.1338.0",
+      "packageSha256": "bd5236bf128a4c24976b04fe42bd1a9930396cad31264061d359a8d47cd06e46",
+      "packageBytes": 18433190,
+      "manifestVersion": 3,
+      "permissions": [
+        "scripting",
+        "sidePanel",
+        "tabs",
+        "notifications",
+        "cookies",
+        "identity",
+        "storage"
+      ],
+      "optionalPermissions": [
+        "nativeMessaging",
+        "clipboardRead"
+      ],
+      "background": {
+        "service_worker": "sw.js"
+      },
+      "signature": {
+        "format": 3,
+        "algorithm": "rsa-sha256",
+        "publicKeySha256": "a15d1204fb128e0aaf2f65ae1a67b74db2fbb41b89bcc0a74ad124716e399c40"
+      },
+      "cdpStringInventory": [],
+      "apiCallStringInventory": [],
+      "primaryOperationResult": "not-run"
+    }
+  ]
+}

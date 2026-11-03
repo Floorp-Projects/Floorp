@@ -1,0 +1,52 @@
+[
+  {
+    "id": "difoiogjjojoaoomphldepapgpbgkhkb",
+    "name": "Sider",
+    "dismissSelectors": [
+      "button.ann-close",
+      "button[aria-label='Close']",
+      ".ant-modal-close"
+    ],
+    "readSelector": "div[role='button']:has(svg path[d^='m7.699'])",
+    "draftSelector": "textarea[placeholder]",
+    "submitForRead": true
+  },
+  {
+    "id": "ofpnmcalabcbjgholdjcjblkibolbppb",
+    "name": "Monica",
+    "draftSelector": "[contenteditable=true]",
+    "submitForRead": true
+  },
+  {
+    "id": "camppjleccjaphfdbohjdohecfnoikec",
+    "name": "Merlin"
+  },
+  {
+    "id": "mhnlakgilnojmhinhkckjpncpbhabphi",
+    "name": "MaxAI",
+    "refreshText": "Refresh this page",
+    "guestDismissText": [
+      "Got it",
+      "Next",
+      "Start now"
+    ],
+    "guestReadText": "Summarize this page",
+    "draftSelector": "textarea[data-testid=\"chat-input-textarea\"]",
+    "reopenWhenEditorMissing": "textarea[data-testid=\"chat-input-textarea\"]"
+  },
+  {
+    "id": "cebmnlammjhancocbbnfcglifgdpfejc",
+    "name": "AI Blaze",
+    "onboardingOrigin": "https://ai.blaze.today"
+  },
+  {
+    "id": "gldebcpkoojijledacjeboaehblhfbjg",
+    "name": "Ask Steve",
+    "draftSelector": "#chatInputText",
+    "submitForRead": true
+  },
+  {
+    "id": "befflofjcniongenjmbkgkoljhgliihe",
+    "name": "TinaMind"
+  }
+]

@@ -2,12 +2,13 @@
 // @colocated-env browser
 
 import {
-  isChromeWebStoreUrl,
+  EXTENSION_ID_SUFFIX,
   extractExtensionId,
   generateFirefoxId,
-  isPermissionSupported,
+  isChromeExtensionId,
+  isChromeWebStoreUrl,
   isOptionalPermissionAllowed,
-  EXTENSION_ID_SUFFIX,
+  isPermissionSupported,
 } from "../Constants.sys.mts";
 
 import {
@@ -52,13 +53,13 @@ function testIsCWSUrlEmpty(): void {
 // ---------------------------------------------------------------------------
 
 function testExtractIdNewUrl(): void {
-  const id = "abcdefghijklmnopqrstuvwxyzabcdef"; // 32 lowercase letters
+  const id = "abcdefghijklmnopabcdefghijklmnop";
   const url = `https://chromewebstore.google.com/detail/some-extension/${id}`;
   assertEquals(extractExtensionId(url), id, "should extract ID from new URL");
 }
 
 function testExtractIdOldUrl(): void {
-  const id = "abcdefghijklmnopqrstuvwxyzabcdef";
+  const id = "abcdefghijklmnopabcdefghijklmnop";
   const url = `https://chrome.google.com/webstore/detail/some-extension/${id}`;
   assertEquals(extractExtensionId(url), id, "should extract ID from old URL");
 }
@@ -80,14 +81,46 @@ function testExtractIdTooShort(): void {
 }
 
 function testExtractIdWithUppercase(): void {
-  // 32 chars but with uppercase — should not match [a-z]{32}
-  const mixedId = "ABCDEFGHijklmnopqrstuvwxyzabcdef";
+  const mixedId = "ABCDEFGHijklmnopabcdefghijklmnop";
   assertEquals(
     extractExtensionId(
       `https://chromewebstore.google.com/detail/ext/${mixedId}`,
     ),
     null,
     "mixed-case ID should return null",
+  );
+}
+
+function testChromeIdentityContract(): void {
+  const id = "abcdefghijklmnopabcdefghijklmnop";
+  assert(isChromeExtensionId(id), "valid Chrome alphabet");
+  for (
+    const invalid of [
+      "q".repeat(32),
+      "a".repeat(31),
+      "a".repeat(33),
+      id.toUpperCase(),
+    ]
+  ) {
+    assertEquals(
+      isChromeExtensionId(invalid),
+      false,
+      "invalid identity rejected",
+    );
+    assertEquals(
+      extractExtensionId(
+        `https://chromewebstore.google.com/detail/ext/${invalid}`,
+      ),
+      null,
+      "invalid store path cannot select another identity",
+    );
+  }
+  assertEquals(
+    extractExtensionId(
+      `https://chromewebstore.google.com/detail/ext/${id}?hl=ja`,
+    ),
+    id,
+    "query strings permitted",
   );
 }
 
@@ -115,9 +148,9 @@ function testSupportedPermission(): void {
 
 function testUnsupportedPermission(): void {
   assertEquals(
-    isPermissionSupported("tabCapture"),
+    isPermissionSupported("processes"),
     false,
-    '"tabCapture" should not be supported',
+    '"processes" should not be supported',
   );
 }
 
@@ -150,9 +183,9 @@ function testOptionalPermissionContextMenus(): void {
 
 function testOptionalPermissionUnsupported(): void {
   assertEquals(
-    isOptionalPermissionAllowed("tabCapture"),
+    isOptionalPermissionAllowed("processes"),
     false,
-    '"tabCapture" should not be allowed as optional',
+    '"processes" should not be allowed as optional',
   );
 }
 
@@ -162,6 +195,19 @@ function testOptionalPermissionUnsupported(): void {
 
 export async function runAllTests(): Promise<void> {
   const tests: TestCase[] = [
+    {
+      name: "native video tabCapture permission is retained",
+      fn() {
+        assert(
+          isPermissionSupported("tabCapture"),
+          "implemented video capture permission is supported",
+        );
+        assert(
+          isOptionalPermissionAllowed("tabCapture"),
+          "implemented capture can be requested optionally",
+        );
+      },
+    },
     { name: "isCWSUrl new domain", fn: testIsCWSUrlNewDomain },
     { name: "isCWSUrl old domain", fn: testIsCWSUrlOldDomain },
     { name: "isCWSUrl unrelated", fn: testIsCWSUrlUnrelated },
@@ -171,6 +217,7 @@ export async function runAllTests(): Promise<void> {
     { name: "extractExtensionId invalid URL", fn: testExtractIdInvalidUrl },
     { name: "extractExtensionId too short", fn: testExtractIdTooShort },
     { name: "extractExtensionId uppercase", fn: testExtractIdWithUppercase },
+    { name: "Chrome identity contract", fn: testChromeIdentityContract },
     { name: "generateFirefoxId", fn: testGenerateFirefoxId },
     { name: "supported permission", fn: testSupportedPermission },
     { name: "unsupported permission", fn: testUnsupportedPermission },

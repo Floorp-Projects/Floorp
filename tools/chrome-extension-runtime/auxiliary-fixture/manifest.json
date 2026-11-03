@@ -1,0 +1,29 @@
+{
+  "manifest_version": 3,
+  "name": "Floorp authored auxiliary API contract",
+  "version": "1.0",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAoQVRbW6/1tGk96oC1+25+yHPIz+mP5EUOntjVPXKnS166Fm0FyZ0RHyhn8rVulEkVCce/VvOeU4U1KMkjOWo2bjSX4vKBunIwcuMdrYdwSjJTN7T4arD7qzNSD/c/Ms1l0OC6Z41ITCUciobusIcc4O9R58dbRXH1mSvwu0Wosu4We9UZFXutVDwFgS1jju9lglboBH8l7spN2UlpTGmXFvxHhQMA7+PtyDdIBmkA52B/OTbZoTBlbUvT9elvwmj8CyFmFtVAZTxVqEDtv054sqDt5/nj23GqiHhAQsZ8QnaZUoAl/km/7y21vcM6W03022MVLQxsCZ+hMtjSNvcswIDAQAB",
+  "permissions": [
+    "storage",
+    "notifications",
+    "declarativeContent",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "http://127.0.0.1/*"
+  ],
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "http://127.0.0.1/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ]
+}

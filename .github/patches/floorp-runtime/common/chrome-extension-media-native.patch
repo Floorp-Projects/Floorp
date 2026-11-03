@@ -1,0 +1,1794 @@
+diff --git a/dom/media/MediaManager.cpp b/dom/media/MediaManager.cpp
+--- a/dom/media/MediaManager.cpp
++++ b/dom/media/MediaManager.cpp
+@@ -988,42 +988,37 @@
+  */
+ NS_IMPL_ISUPPORTS(LocalMediaDevice, nsIMediaDevice)
+ 
+-MediaDevice::MediaDevice(MediaEngine* aEngine, MediaSourceEnum aMediaSource,
+-                         const nsString& aRawName, const nsString& aRawID,
+-                         const nsString& aRawGroupID, IsScary aIsScary,
+-                         const OsPromptable canRequestOsLevelPrompt)
+-    : mEngine(aEngine),
+-      mAudioDeviceInfo(nullptr),
+-      mMediaSource(aMediaSource),
++MediaDevice::MediaDevice(MediaEngine *aEngine, MediaSourceEnum aMediaSource,
++                         const nsString &aRawName, const nsString &aRawID,
++                         const nsString &aRawGroupID, IsScary aIsScary,
++                         const OsPromptable canRequestOsLevelPrompt,
++                         bool aRestrictOsPromptToMediaSource)
++    : mEngine(aEngine), mAudioDeviceInfo(nullptr), mMediaSource(aMediaSource),
+       mKind(MediaEngineSource::IsVideo(aMediaSource)
+                 ? MediaDeviceKind::Videoinput
+                 : MediaDeviceKind::Audioinput),
+       mScary(aIsScary == IsScary::Yes),
+       mCanRequestOsLevelPrompt(canRequestOsLevelPrompt == OsPromptable::Yes),
++      mRestrictOsPromptToMediaSource(aRestrictOsPromptToMediaSource),
+       mIsFake(mEngine->IsFake()),
+-      mType(NS_ConvertASCIItoUTF16(dom::GetEnumString(mKind))),
+-      mRawID(aRawID),
+-      mRawGroupID(aRawGroupID),
+-      mRawName(aRawName) {
++      mType(NS_ConvertASCIItoUTF16(dom::GetEnumString(mKind))), mRawID(aRawID),
++      mRawGroupID(aRawGroupID), mRawName(aRawName) {
+   MOZ_ASSERT(mEngine);
+ }
+ 
+-MediaDevice::MediaDevice(MediaEngine* aEngine,
+-                         const RefPtr<AudioDeviceInfo>& aAudioDeviceInfo,
+-                         const nsString& aRawID)
+-    : mEngine(aEngine),
+-      mAudioDeviceInfo(aAudioDeviceInfo),
++MediaDevice::MediaDevice(MediaEngine *aEngine,
++                         const RefPtr<AudioDeviceInfo> &aAudioDeviceInfo,
++                         const nsString &aRawID)
++    : mEngine(aEngine), mAudioDeviceInfo(aAudioDeviceInfo),
+       mMediaSource(mAudioDeviceInfo->Type() == AudioDeviceInfo::TYPE_INPUT
+                        ? MediaSourceEnum::Microphone
+                        : MediaSourceEnum::Other),
+       mKind(mMediaSource == MediaSourceEnum::Microphone
+                 ? MediaDeviceKind::Audioinput
+                 : MediaDeviceKind::Audiooutput),
+-      mScary(false),
+-      mCanRequestOsLevelPrompt(false),
+-      mIsFake(false),
+-      mType(NS_ConvertASCIItoUTF16(dom::GetEnumString(mKind))),
+-      mRawID(aRawID),
++      mScary(false), mCanRequestOsLevelPrompt(false),
++      mRestrictOsPromptToMediaSource(false), mIsFake(false),
++      mType(NS_ConvertASCIItoUTF16(dom::GetEnumString(mKind))), mRawID(aRawID),
+       mRawGroupID(mAudioDeviceInfo->GroupID()),
+       mRawName(mAudioDeviceInfo->Name()) {}
+ 
+@@ -1034,7 +1029,8 @@
+   return new MediaDevice(aOther->mEngine, aOther->mMediaSource,
+                          aOther->mRawName, aOther->mRawID, aRawGroupID,
+                          IsScary(aOther->mScary),
+-                         OsPromptable(aOther->mCanRequestOsLevelPrompt));
++                         OsPromptable(aOther->mCanRequestOsLevelPrompt),
++                         aOther->mRestrictOsPromptToMediaSource);
+ }
+ 
+ MediaDevice::~MediaDevice() = default;
+@@ -1317,16 +1313,21 @@
+ 
+ // Source getter returning full list
+ 
+-static void GetMediaDevices(MediaEngine* aEngine, MediaSourceEnum aSrcType,
+-                            MediaManager::MediaDeviceSet& aResult,
+-                            const char* aMediaDeviceName = nullptr) {
++static void GetMediaDevices(MediaEngine *aEngine, MediaSourceEnum aSrcType,
++                            MediaManager::MediaDeviceSet &aResult,
++                            const char *aMediaDeviceName = nullptr,
++                            bool aRestrictOsPromptToMediaSource = false) {
+   MOZ_ASSERT(MediaManager::IsInMediaThread());
+ 
+   LOG("{}: aEngine={}, aSrcType={}, aMediaDeviceName={}", __func__,
+       fmt::ptr(aEngine), static_cast<uint8_t>(aSrcType),
+       aMediaDeviceName ? aMediaDeviceName : "null");
+   nsTArray<RefPtr<MediaDevice>> devices;
+-  aEngine->EnumerateDevices(aSrcType, MediaSinkEnum::Other, &devices);
++  if (aRestrictOsPromptToMediaSource) {
++    aEngine->EnumerateDevicesForChromeDesktop(aSrcType, &devices);
++  } else {
++    aEngine->EnumerateDevices(aSrcType, MediaSinkEnum::Other, &devices);
++  }
+ 
+   /*
+    * We're allowing multiple tabs to access the same camera for parity
+@@ -1794,10 +1795,8 @@
+       // really using the audio source and the SourceMediaTrack, which acts
+       // as placeholders. We re-route a number of tracks internally in the
+       // MTG and mix them down instead.
+-      NS_WARNING(
+-          "MediaCaptureWindowState doesn't handle "
+-          "MediaSourceEnum::AudioCapture. This must be fixed with UX "
+-          "before shipping.");
++      // AudioCapture is reported as browser sharing below, so the existing
++      // browser-sharing indicator and stop-sharing UI cover audio-only streams.
+       auto audioCaptureSource = MakeRefPtr<AudioCaptureTrackSource>(
+           principal, window, u"Window audio capture"_ns,
+           mtg->CreateAudioCaptureTrack(), peerIdentity);
+@@ -2407,7 +2406,8 @@
+     LOG("EnumerateRawDevices: Getting video sources with {} backend",
+         videoBackend == fakeBackend ? "fake" : "real");
+     GetMediaDevices(videoBackend, video->mInputType, videos,
+-                    video->mForcedDeviceName.get());
++                    video->mForcedDeviceName.get(),
++                    video->mRestrictOsPromptToMediaSource);
+     devices->AppendElements(std::move(videos));
+   }
+   if (aParams.mFlags.contains(EnumerationFlag::EnumerateAudioOutputs)) {
+@@ -3001,8 +3001,17 @@
+   }
+ 
+   // Disallow access to null principal pages and http pages (unless pref)
+-  if (principal->GetIsNullPrincipal() ||
+-      !(isSecure || StaticPrefs::media_getusermedia_insecure_enabled())) {
++  // Floorp's broker invokes this source in the authorized target document's
++  // process. Keep the native source inaccessible to ordinary content even when
++  // the target itself has an opaque or insecure principal.
++  const bool isSystemAudioCapture =
++      isChrome && c.mAudio.IsMediaTrackConstraints() &&
++      c.mAudio.GetAsMediaTrackConstraints().mMediaSource.WasPassed() &&
++      c.mAudio.GetAsMediaTrackConstraints().mMediaSource.Value().EqualsLiteral(
++          "audioCapture");
++  if (!isSystemAudioCapture &&
++      (principal->GetIsNullPrincipal() ||
++       !(isSecure || StaticPrefs::media_getusermedia_insecure_enabled()))) {
+     return StreamPromise::CreateAndReject(
+         MakeRefPtr<MediaMgrError>(MediaMgrError::Name::NotAllowedError),
+         __func__);
+@@ -3149,7 +3158,8 @@
+       case MediaSourceEnum::AudioCapture:
+         // Only enable AudioCapture if the pref is enabled. If it's not, we can
+         // deny right away.
+-        if (!Preferences::GetBool("media.getusermedia.audio.capture.enabled")) {
++        if (!isChrome &&
++            !Preferences::GetBool("media.getusermedia.audio.capture.enabled")) {
+           return StreamPromise::CreateAndReject(
+               MakeRefPtr<MediaMgrError>(MediaMgrError::Name::NotAllowedError),
+               __func__);
+@@ -3187,7 +3197,8 @@
+             !PermissionsPolicyUtils::IsFeatureAllowed(doc, u"microphone"_ns)) {
+           disabled = true;
+         }
+-      } else if (!PermissionsPolicyUtils::IsFeatureAllowed(
++      } else if (!isSystemAudioCapture &&
++                 !PermissionsPolicyUtils::IsFeatureAllowed(
+                      doc, u"display-capture"_ns)) {
+         disabled = true;
+       }
+@@ -3233,6 +3244,7 @@
+       (!hasAudio || audioType == MediaSourceEnum::Microphone);
+   bool askPermission =
+       (!privileged ||
++       (isChrome && !c.mMozFloorpCapturePickerToken.IsEmpty()) ||
+        Preferences::GetBool("media.navigator.permission.force")) &&
+       (!hasOnlyForcedFakes ||
+        Preferences::GetBool("media.navigator.permission.fake"));
+@@ -3261,9 +3273,17 @@
+           }
+         })));
+   }
++  auto enumeration = CreateEnumerationParams(videoType, audioType, flags);
++  if (enumeration.mVideo && isChrome &&
++      !c.mMozFloorpCapturePickerToken.IsEmpty() &&
++      (videoType == MediaSourceEnum::Screen ||
++       videoType == MediaSourceEnum::Window)) {
++    // Narrow only privileged Chrome desktop requests. The unchanged parent
++    // actor must still claim the one-shot nonce before granting capture.
++    enumeration.mVideo->mRestrictOsPromptToMediaSource = true;
++  }
+   RefPtr<MediaManager> self = this;
+-  return EnumerateDevicesImpl(
+-             aWindow, CreateEnumerationParams(videoType, audioType, flags))
++  return EnumerateDevicesImpl(aWindow, std::move(enumeration))
+       ->Then(
+           GetCurrentSerialEventTarget(), __func__,
+           [self, windowID, c, windowListener,
+@@ -3284,7 +3304,7 @@
+             // Apply any constraints. This modifies the passed-in list.
+             return self->SelectSettings(c, aCallerType, std::move(aDevices));
+           },
+-          [](RefPtr<MediaMgrError>&& aError) {
++          [](RefPtr<MediaMgrError> &&aError) {
+             LOG("GetUserMedia: post enumeration EnumerateDevicesImpl "
+                 "failure callback called!");
+             return LocalDeviceSetPromise::CreateAndReject(std::move(aError),
+@@ -3419,7 +3439,7 @@
+ #endif
+             return p;
+           },
+-          [placeholderListener](RefPtr<MediaMgrError>&& aError) {
++          [placeholderListener](RefPtr<MediaMgrError> &&aError) {
+             LOG("GetUserMedia: post enumeration SelectSettings failure "
+                 "callback called!");
+             placeholderListener->Stop();
+@@ -4281,7 +4301,9 @@
+       microphone = listener->CapturingSource(MediaSourceEnum::Microphone);
+       screen = listener->CapturingSource(MediaSourceEnum::Screen);
+       window = listener->CapturingSource(MediaSourceEnum::Window);
+-      browser = listener->CapturingSource(MediaSourceEnum::Browser);
++      browser = CombineCaptureState(
++          listener->CapturingSource(MediaSourceEnum::Browser),
++          listener->CapturingSource(MediaSourceEnum::AudioCapture));
+       devices = listener->GetDevices();
+     }
+   }
+diff --git a/dom/audiochannel/AudioChannelService.h b/dom/audiochannel/AudioChannelService.h
+--- a/dom/audiochannel/AudioChannelService.h
++++ b/dom/audiochannel/AudioChannelService.h
+@@ -130,7 +130,8 @@
+    * Return the state to indicate this audioChannel for his window should keep
+    * playing/muted/suspended.
+    */
+-  AudioPlaybackConfig GetMediaConfig(nsPIDOMWindowOuter* aWindow) const;
++  AudioPlaybackConfig GetMediaConfig(nsPIDOMWindowOuter* aWindow,
++                                    uint64_t aInnerWindowID = 0) const;
+ 
+   /**
+    * Called this method when the audible state of the audio playback changed,
+@@ -177,7 +178,6 @@
+    public:
+     explicit AudioChannelWindow(uint64_t aWindowID)
+         : mWindowID(aWindowID),
+-          mIsAudioCaptured(false),
+           mShouldSendActiveMediaBlockStopEvent(false) {}
+ 
+     void AudioAudibleChanged(AudioChannelAgent* aAgent, AudibleState aAudible,
+@@ -189,7 +189,10 @@
+     void NotifyMediaBlockStop(nsPIDOMWindowOuter* aWindow);
+ 
+     uint64_t mWindowID;
+-    bool mIsAudioCaptured;
++    // Capture belongs to a document, even though agents are grouped by their
++    // in-process top window. Independent frame streams must not revoke each
++    // other or route a neighbour's audio into the wrong sink.
++    nsTArray<uint64_t> mAudioCapturedInnerWindows;
+     AudioPlaybackConfig mConfig;
+ 
+     // Raw pointer because the AudioChannelAgent must unregister itself.
+diff --git a/dom/audiochannel/AudioChannelService.cpp b/dom/audiochannel/AudioChannelService.cpp
+--- a/dom/audiochannel/AudioChannelService.cpp
++++ b/dom/audiochannel/AudioChannelService.cpp
+@@ -197,7 +197,7 @@
+ }
+ 
+ AudioPlaybackConfig AudioChannelService::GetMediaConfig(
+-    nsPIDOMWindowOuter* aWindow) const {
++    nsPIDOMWindowOuter* aWindow, uint64_t aInnerWindowID) const {
+   AudioPlaybackConfig config(1.0, false, nsISuspendedTypes::NONE_SUSPENDED);
+ 
+   if (!aWindow) {
+@@ -217,7 +217,8 @@
+     if (winData) {
+       config.mVolume *= winData->mConfig.mVolume;
+       config.mMuted = config.mMuted || winData->mConfig.mMuted;
+-      config.mCapturedAudio = winData->mIsAudioCaptured;
++      config.mCapturedAudio =
++          winData->mAudioCapturedInnerWindows.Contains(aInnerWindowID);
+     }
+ 
+     config.mMuted = config.mMuted || window->GetAudioMuted();
+@@ -302,7 +303,7 @@
+     return;
+   }
+ 
+-  AudioChannelWindow* winData = GetWindowData(topWindow->WindowID());
++  AudioChannelWindow* winData = GetOrCreateWindowData(topWindow);
+   if (!winData) {
+     return;
+   }
+@@ -342,7 +343,7 @@
+     return;
+   }
+ 
+-  AudioChannelWindow* winData = GetWindowData(topWindow->WindowID());
++  AudioChannelWindow* winData = GetOrCreateWindowData(topWindow);
+ 
+   // This can happen, but only during shutdown, because the the outer window
+   // changes ScriptableTop, so that its ID is different.
+@@ -353,8 +354,14 @@
+     return;
+   }
+ 
+-  if (aCapture != winData->mIsAudioCaptured) {
+-    winData->mIsAudioCaptured = aCapture;
++  const bool capturing =
++      winData->mAudioCapturedInnerWindows.Contains(aInnerWindowID);
++  if (aCapture != capturing) {
++    if (aCapture) {
++      winData->mAudioCapturedInnerWindows.AppendElement(aInnerWindowID);
++    } else {
++      winData->mAudioCapturedInnerWindows.RemoveElement(aInnerWindowID);
++    }
+     for (AudioChannelAgent* agent : winData->mAgents.ForwardRange()) {
+       agent->WindowAudioCaptureChanged(aInnerWindowID, aCapture);
+     }
+@@ -409,7 +416,7 @@
+     return;
+   }
+ 
+-  AudioChannelWindow* winData = GetWindowData(topWindow->WindowID());
++  AudioChannelWindow* winData = GetOrCreateWindowData(topWindow);
+   if (!winData) {
+     return;
+   }
+diff --git a/dom/audiochannel/AudioChannelAgent.cpp b/dom/audiochannel/AudioChannelAgent.cpp
+--- a/dom/audiochannel/AudioChannelAgent.cpp
++++ b/dom/audiochannel/AudioChannelAgent.cpp
+@@ -130,7 +130,7 @@
+   MOZ_ASSERT(service);
+   MOZ_ASSERT(mIsRegToService);
+ 
+-  AudioPlaybackConfig config = service->GetMediaConfig(mWindow);
++  AudioPlaybackConfig config = service->GetMediaConfig(mWindow, mInnerWindowID);
+   MOZ_LOG(AudioChannelService::GetAudioChannelLog(), LogLevel::Debug,
+           ("AudioChannelAgent, PullInitialUpdate, this=%p, "
+            "mute=%s, volume=%f, suspend=%s, audioCapturing=%s\n",
+@@ -245,7 +245,7 @@
+   RefPtr<AudioChannelService> service = AudioChannelService::GetOrCreate();
+   AudioPlaybackConfig config(1.0, false, nsISuspendedTypes::NONE_SUSPENDED);
+   if (service) {
+-    config = service->GetMediaConfig(mWindow);
++    config = service->GetMediaConfig(mWindow, mInnerWindowID);
+   }
+   return config;
+ }
+diff --git a/dom/webidl/MediaStream.webidl b/dom/webidl/MediaStream.webidl
+--- a/dom/webidl/MediaStream.webidl
++++ b/dom/webidl/MediaStream.webidl
+@@ -20,6 +20,9 @@
+                         // colors if video is enabled, and sound of 1Khz sine
+                         // wave if audio is enabled.
+     DOMString? peerIdentity = null;
++    // A privileged Floorp picker registration forces the ordinary native
++    // source-selection prompt. Content cannot read or set this member.
++    [ChromeOnly] DOMString mozFloorpCapturePickerToken = "";
+ };
+ 
+ dictionary DisplayMediaStreamConstraints {
+diff --git a/dom/webidl/MediaDevices.webidl b/dom/webidl/MediaDevices.webidl
+--- a/dom/webidl/MediaDevices.webidl
++++ b/dom/webidl/MediaDevices.webidl
+@@ -14,6 +14,10 @@
+ interface MediaDevices : EventTarget {
+   attribute EventHandler ondevicechange;
+   MediaTrackSupportedConstraints getSupportedConstraints();
++
++  // A script-only patch must never silently fall back to unprompted system
++  // capture on a runtime whose dictionary predates the picker token.
++  [ChromeOnly] readonly attribute unsigned short mozFloorpCapturePickerVersion;
+ 
+   [NewObject, UseCounter]
+   Promise<sequence<MediaDeviceInfo>> enumerateDevices();
+diff --git a/dom/media/MediaDevices.h b/dom/media/MediaDevices.h
+--- a/dom/media/MediaDevices.h
++++ b/dom/media/MediaDevices.h
+@@ -56,6 +56,8 @@
+                        JS::Handle<JSObject*> aGivenProto) override;
+ 
+   void GetSupportedConstraints(MediaTrackSupportedConstraints& aResult);
++
++  uint16_t MozFloorpCapturePickerVersion() const { return 1; }
+ 
+   already_AddRefed<Promise> GetUserMedia(
+       const MediaStreamConstraints& aConstraints, CallerType aCallerType,
+diff --git a/dom/media/MediaManager.h b/dom/media/MediaManager.h
+--- a/dom/media/MediaManager.h
++++ b/dom/media/MediaManager.h
+@@ -85,10 +85,11 @@
+    */
+   enum class OsPromptable { No, Yes };
+ 
+-  MediaDevice(MediaEngine* aEngine, dom::MediaSourceEnum aMediaSource,
+-              const nsString& aRawName, const nsString& aRawID,
+-              const nsString& aRawGroupID, IsScary aIsScary,
+-              const OsPromptable canRequestOsLevelPrompt);
++  MediaDevice(MediaEngine *aEngine, dom::MediaSourceEnum aMediaSource,
++              const nsString &aRawName, const nsString &aRawID,
++              const nsString &aRawGroupID, IsScary aIsScary,
++              const OsPromptable canRequestOsLevelPrompt,
++              bool aRestrictOsPromptToMediaSource = false);
+ 
+   MediaDevice(MediaEngine* aEngine,
+               const RefPtr<AudioDeviceInfo>& aAudioDeviceInfo,
+@@ -109,6 +110,7 @@
+   const dom::MediaDeviceKind mKind;
+   const bool mScary;
+   const bool mCanRequestOsLevelPrompt;
++  const bool mRestrictOsPromptToMediaSource;
+   const bool mIsFake;
+   const nsString mType;
+   const nsString mRawID;
+@@ -361,6 +363,7 @@
+     // The by-pref forced microphone device name, used for groupId correlation
+     // of camera devices.
+     nsAutoCString mForcedMicrophoneName;
++    bool mRestrictOsPromptToMediaSource = false;
+   };
+ 
+   struct EnumerationParams {
+diff --git a/dom/media/gtest/TestCamerasParent.cpp b/dom/media/gtest/TestCamerasParent.cpp
+--- a/dom/media/gtest/TestCamerasParent.cpp
++++ b/dom/media/gtest/TestCamerasParent.cpp
+@@ -9,12 +9,13 @@
+ #include "api/video/i420_buffer.h"
+ #include "fake_video_capture/device_info_empty.h"
+ #include "fake_video_capture/device_info_fake.h"
+-#include "gmock/gmock.h"
+-#include "gtest/gtest.h"
++#include "modules/desktop_capture/mac/sck_picker_queue.h"
+ #include "mozilla/SyncRunnable.h"
+ #include "mozilla/gtest/WaitFor.h"
+ #include "mozilla/ipc/BackgroundParent.h"
+ #include "video_engine/video_capture_factory.h"
++#include "gmock/gmock.h"
++#include "gtest/gtest.h"
+ 
+ using testing::_;
+ using testing::AtLeast;
+@@ -144,9 +145,11 @@
+ 
+   // Members made public for the test.
+   using CamerasParent::CloseEngines;
++  using CamerasParent::GetOrCreateAggregator;
+   using CamerasParent::mAggregators;
+   using CamerasParent::mEngines;
+   using CamerasParent::mVideoCaptureThread;
++  using CamerasParent::ReleaseStream;
+ };
+ 
+ struct TestCamerasParent : public Test {
+@@ -170,6 +173,68 @@
+ };
+ 
+ TEST_F(TestCamerasParent, BasicLifecycle) {}
++
++TEST(SckPickerRequestQueue, PendingOwnerAndTombstoneCannotBeReassigned) {
++  webrtc::sck_internal::PickerRequestQueue queue;
++  queue.Register(1);
++  queue.Register(2);
++  ASSERT_TRUE(queue.Enqueue(1));
++  ASSERT_TRUE(queue.Enqueue(2));
++  ASSERT_FALSE(queue.Enqueue(2));
++  auto first = queue.StartNext();
++  ASSERT_TRUE(first);
++  EXPECT_EQ(first->owner, 1);
++  EXPECT_FALSE(queue.BeginTerminal());
++  ASSERT_TRUE(queue.MarkPresented(first->generation));
++  EXPECT_FALSE(queue.DiscardUnpresented(first->generation));
++  queue.Remove(1);
++  ASSERT_TRUE(queue.Active());
++  EXPECT_FALSE(queue.Active()->live);
++  EXPECT_FALSE(queue.StartNext());
++  auto terminal = queue.BeginTerminal();
++  ASSERT_TRUE(terminal);
++  EXPECT_FALSE(terminal->live);
++  EXPECT_FALSE(queue.BeginTerminal());
++  EXPECT_FALSE(queue.CompleteTerminal(terminal->generation + 1));
++  ASSERT_TRUE(queue.CompleteTerminal(terminal->generation));
++  auto second = queue.StartNext();
++  ASSERT_TRUE(second);
++  EXPECT_EQ(second->owner, 2);
++  EXPECT_NE(second->generation, first->generation);
++  EXPECT_FALSE(queue.CompleteTerminal(first->generation));
++  // This owner disappeared before presentation, so no native callback exists.
++  queue.Remove(2);
++  ASSERT_TRUE(queue.DiscardUnpresented(second->generation));
++  EXPECT_TRUE(queue.Idle());
++}
++
++TEST_F(TestCamerasParent, NativePickerEndpointIsNotASelectedSource) {
++  MOZ_ALWAYS_SUCCEEDS(SyncRunnable::DispatchToThread(
++      mParent->mVideoCaptureThread->GetEventTarget(),
++      NS_NewRunnableFunction(__func__, [&] {
++        const auto uniqueId = "same-raw-source-id"_ns;
++        for (const auto engine :
++             {CameraEngine, ScreenPickerEngine, WinPickerEngine}) {
++          // The existing mock camera isolates real aggregation policy from
++          // platform hardware and UI. No OS selection is simulated here.
++          mParent->mEngines->ElementAt(engine) = VideoEngine::Create(
++              CaptureDeviceType::Camera,
++              MakeRefPtr<NiceMock<MockVideoCaptureFactory<DeviceInfoFake>>>());
++          auto first = mParent->GetOrCreateAggregator(engine, 1, uniqueId, {});
++          auto second = mParent->GetOrCreateAggregator(engine, 2, uniqueId, {});
++          ASSERT_NE(first.mAggregator, nullptr);
++          ASSERT_NE(second.mAggregator, nullptr);
++          EXPECT_NE(first.mStreamId, second.mStreamId);
++          if (engine == CameraEngine) {
++            EXPECT_EQ(first.mAggregator, second.mAggregator);
++          } else {
++            EXPECT_NE(first.mAggregator, second.mAggregator);
++          }
++          EXPECT_EQ(mParent->ReleaseStream(engine, first.mStreamId), 0);
++          EXPECT_EQ(mParent->ReleaseStream(engine, second.mStreamId), 0);
++        }
++      })));
++}
+ 
+ TEST_F(TestCamerasParent, DestroyDuringAsyncAllocate) {
+   static constexpr auto kUniqueId = "unique-id-1"_ns;
+@@ -239,8 +304,12 @@
+         return CaptureDeviceType::Camera;
+       case ScreenEngine:
+         return CaptureDeviceType::Screen;
++      case ScreenPickerEngine:
++        return CaptureDeviceType::ScreenPicker;
+       case WinEngine:
+         return CaptureDeviceType::Window;
++      case WinPickerEngine:
++        return CaptureDeviceType::WindowPicker;
+       case BrowserEngine:
+         return CaptureDeviceType::Browser;
+     }
+diff --git a/dom/media/systemservices/CamerasChild.cpp b/dom/media/systemservices/CamerasChild.cpp
+--- a/dom/media/systemservices/CamerasChild.cpp
++++ b/dom/media/systemservices/CamerasChild.cpp
+@@ -462,7 +462,8 @@
+   LOG("{}", __PRETTY_FUNCTION__);
+ 
+   if (aCapEngine != ScreenEngine && aCapEngine != WinEngine &&
+-      aCapEngine != BrowserEngine) {
++      aCapEngine != BrowserEngine && aCapEngine != ScreenPickerEngine &&
++      aCapEngine != WinPickerEngine) {
+     MOZ_ASSERT_UNREACHABLE("Only supported for desktop capture");
+     return kError;
+   }
+diff --git a/dom/media/systemservices/CamerasParent.cpp b/dom/media/systemservices/CamerasParent.cpp
+--- a/dom/media/systemservices/CamerasParent.cpp
++++ b/dom/media/systemservices/CamerasParent.cpp
+@@ -948,6 +948,14 @@
+     case WinEngine:
+       captureDeviceType = CaptureDeviceType::Window;
+       break;
++#ifdef XP_MACOSX
++    case ScreenPickerEngine:
++      captureDeviceType = CaptureDeviceType::ScreenPicker;
++      break;
++    case WinPickerEngine:
++      captureDeviceType = CaptureDeviceType::WindowPicker;
++      break;
++#endif
+     case CameraEngine:
+       captureDeviceType = CaptureDeviceType::Camera;
+       break;
+@@ -1562,7 +1570,10 @@
+     guard->try_emplace(aCaptureId, kMaxShmemBuffers);
+   };
+   for (auto& aggregator : *mAggregators) {
+-    if (aggregator->mCapEngine != aEngine) {
++    if (aggregator->mCapEngine != aEngine || aEngine == ScreenPickerEngine ||
++        aEngine == WinPickerEngine) {
++      // A native picker endpoint is not an already selected physical source.
++      // Every constrained request must obtain its own actual OS selection.
+       continue;
+     }
+     if (aggregator->mUniqueId.Equals(aUniqueId)) {
+@@ -1616,6 +1627,12 @@
+ CamerasParent::EnsureCapabilitiesPopulated(CaptureEngine aEngine,
+                                            const nsCString& aUniqueId) {
+   mVideoCaptureThread->AssertOnCurrentThread();
++  // Native picker endpoints expose no discrete capabilities, just like the
++  // underlying DesktopCaptureDeviceInfo. Never borrow a camera cache entry
++  // solely because its raw ID happens to match a virtual picker endpoint.
++  if (aEngine == ScreenPickerEngine || aEngine == WinPickerEngine) {
++    return nullptr;
++  }
+   if (auto iter = mAllCandidateCapabilities.find(aUniqueId);
+       iter != mAllCandidateCapabilities.end()) {
+     return &iter->second;
+diff --git a/dom/media/systemservices/CamerasTypes.cpp b/dom/media/systemservices/CamerasTypes.cpp
+--- a/dom/media/systemservices/CamerasTypes.cpp
++++ b/dom/media/systemservices/CamerasTypes.cpp
+@@ -18,10 +18,12 @@
+     const CaptureEngine& aEngine) {
+   switch (aEngine) {
+     case ScreenEngine:
++    case ScreenPickerEngine:
+       return TrackingId::Source::Screen;
+     case BrowserEngine:
+       return TrackingId::Source::Tab;
+     case WinEngine:
++    case WinPickerEngine:
+       return TrackingId::Source::Window;
+     case CameraEngine:
+       return TrackingId::Source::Camera;
+diff --git a/dom/media/systemservices/CamerasTypes.h b/dom/media/systemservices/CamerasTypes.h
+--- a/dom/media/systemservices/CamerasTypes.h
++++ b/dom/media/systemservices/CamerasTypes.h
+@@ -20,6 +20,10 @@
+   BrowserEngine,
+   WinEngine,
+   CameraEngine,
++  // Separate engine identities keep constrained native pickers out of the
++  // ordinary Firefox device-info, capability and capturer reuse caches.
++  ScreenPickerEngine,
++  WinPickerEngine,
+   MaxEngine
+ };
+ 
+diff --git a/dom/media/systemservices/VideoEngine.h b/dom/media/systemservices/VideoEngine.h
+--- a/dom/media/systemservices/VideoEngine.h
++++ b/dom/media/systemservices/VideoEngine.h
+@@ -18,7 +18,8 @@
+ namespace mozilla::camera {
+ 
+ MOZ_DEFINE_ENUM_CLASS_WITH_TOSTRING(CaptureDeviceType,
+-                                    (Camera, Screen, Window, Browser));
++                                    (Camera, Screen, Window, Browser,
++                                     ScreenPicker, WindowPicker));
+ 
+ // Historically the video engine was part of libwebrtc.
+ // It was removed, and reimplemented in Talk.
+diff --git a/dom/media/systemservices/video_engine/desktop_capture_impl.cc b/dom/media/systemservices/video_engine/desktop_capture_impl.cc
+--- a/dom/media/systemservices/video_engine/desktop_capture_impl.cc
++++ b/dom/media/systemservices/video_engine/desktop_capture_impl.cc
+@@ -57,8 +57,10 @@
+                                                           aType);
+ }
+ 
+-static DesktopCaptureOptions CreateDesktopCaptureOptions() {
++static DesktopCaptureOptions
++CreateDesktopCaptureOptions(CaptureDeviceType aType) {
+   DesktopCaptureOptions options;
++  (void)aType; // The source restriction is used only by the macOS picker.
+ // Help avoid an X11 deadlock, see bug 1456101.
+ #ifdef MOZ_X11
+   MOZ_ALWAYS_SUCCEEDS(mozilla::SyncRunnable::DispatchToThread(
+@@ -93,6 +95,13 @@
+ 
+ #if defined(WEBRTC_MAC)
+   options.set_prefer_cursor_embedded(true);
++  if (aType == CaptureDeviceType::ScreenPicker) {
++    options.set_sck_picker_source(
++        DesktopCaptureOptions::SckPickerSource::SingleDisplay);
++  } else if (aType == CaptureDeviceType::WindowPicker) {
++    options.set_sck_picker_source(
++        DesktopCaptureOptions::SckPickerSource::SingleWindow);
++  }
+   options.set_allow_sck_capturer(
+       mozilla::StaticPrefs::
+           media_getdisplaymedia_screencapturekit_enabled_AtStartup());
+@@ -115,8 +124,9 @@
+ 
+ std::shared_ptr<VideoCaptureModule::DeviceInfo>
+ DesktopCaptureImpl::CreateDeviceInfo(const CaptureDeviceType aType) {
+-  if (aType == CaptureDeviceType::Screen) {
+-    auto options = CreateDesktopCaptureOptions();
++  if (aType == CaptureDeviceType::Screen ||
++      aType == CaptureDeviceType::ScreenPicker) {
++    auto options = CreateDesktopCaptureOptions(aType);
+ #ifdef XP_MACOSX
+     if (!options.allow_sck_system_picker() &&
+         !mozilla::StaticPrefs::
+@@ -126,9 +136,10 @@
+ #endif
+     return CreateDesktopDeviceInfo(CreateScreenCaptureInfo(options));
+   }
+-  if (aType == CaptureDeviceType::Window) {
++  if (aType == CaptureDeviceType::Window ||
++      aType == CaptureDeviceType::WindowPicker) {
+     return CreateDesktopDeviceInfo(
+-        CreateWindowCaptureInfo(CreateDesktopCaptureOptions()));
++        CreateWindowCaptureInfo(CreateDesktopCaptureOptions(aType)));
+   }
+   if (aType == CaptureDeviceType::Browser) {
+     return CreateTabDeviceInfo(CreateTabCaptureInfo());
+@@ -155,7 +166,14 @@
+ static std::unique_ptr<DesktopCapturer> CreateDesktopCapturerAndThread(
+     CaptureDeviceType aDeviceType, DesktopCapturer::SourceId aSourceId,
+     nsIThread** aOutThread) {
+-  DesktopCaptureOptions options = CreateDesktopCaptureOptions();
++  DesktopCaptureOptions options = CreateDesktopCaptureOptions(aDeviceType);
++  // The source restriction is immutable in options. Reuse the existing native
++  // screen/window capture logic without changing the reported media source.
++  if (aDeviceType == CaptureDeviceType::ScreenPicker) {
++    aDeviceType = CaptureDeviceType::Screen;
++  } else if (aDeviceType == CaptureDeviceType::WindowPicker) {
++    aDeviceType = CaptureDeviceType::Window;
++  }
+   auto ensureThread = [&]() {
+     if (*aOutThread) {
+       return *aOutThread;
+@@ -257,8 +275,10 @@
+     : mTrackingId(mozilla::TrackingId(CaptureEngineToTrackingSourceStr([&] {
+                                         switch (aType) {
+                                           case CaptureDeviceType::Screen:
++                                          case CaptureDeviceType::ScreenPicker:
+                                             return CaptureEngine::ScreenEngine;
+                                           case CaptureDeviceType::Window:
++                                          case CaptureDeviceType::WindowPicker:
+                                             return CaptureEngine::WinEngine;
+                                           case CaptureDeviceType::Browser:
+                                             return CaptureEngine::BrowserEngine;
+diff --git a/dom/media/systemservices/video_engine/desktop_device_info.cc b/dom/media/systemservices/video_engine/desktop_device_info.cc
+--- a/dom/media/systemservices/video_engine/desktop_device_info.cc
++++ b/dom/media/systemservices/video_engine/desktop_device_info.cc
+@@ -137,10 +137,19 @@
+       }
+     } else if constexpr (Type == CaptureDeviceType::Window) {
+       if (cap) {
+-        // We only use the screen side of a generic capturer for enumeration.
++#if defined(WEBRTC_MAC) && !defined(WEBRTC_IOS)
++        // A source-restricted native picker is a real window-choice endpoint.
++        // Ordinary Firefox generic pickers remain on the screen side only.
++        if (mOptions.sck_picker_source() !=
++            DesktopCaptureOptions::SckPickerSource::SingleWindow) {
++          return;
++        }
++#else
+         return;
++#endif
++      } else {
++        cap = DesktopCapturer::CreateWindowCapturer(mOptions);
+       }
+-      cap = DesktopCapturer::CreateWindowCapturer(mOptions);
+     }
+ 
+     if (!cap) {
+diff --git a/dom/media/webrtc/MediaEngine.h b/dom/media/webrtc/MediaEngine.h
+--- a/dom/media/webrtc/MediaEngine.h
++++ b/dom/media/webrtc/MediaEngine.h
+@@ -44,6 +44,14 @@
+   virtual void EnumerateDevices(dom::MediaSourceEnum, MediaSinkEnum,
+                                 nsTArray<RefPtr<MediaDevice>>*) = 0;
+ 
++  // Only the privileged Chrome desktop picker requests a source-restricted OS
++  // prompt. Other backends retain their existing enumeration behavior.
++  virtual void
++  EnumerateDevicesForChromeDesktop(dom::MediaSourceEnum aMediaSource,
++                                   nsTArray<RefPtr<MediaDevice>> *aDevices) {
++    EnumerateDevices(aMediaSource, MediaSinkEnum::Other, aDevices);
++  }
++
+   virtual void InvalidateDesktopCaptureDeviceCache(dom::MediaSourceEnum) = 0;
+ 
+   virtual void Shutdown() = 0;
+diff --git a/dom/media/webrtc/MediaEngineRemoteVideoSource.cpp b/dom/media/webrtc/MediaEngineRemoteVideoSource.cpp
+--- a/dom/media/webrtc/MediaEngineRemoteVideoSource.cpp
++++ b/dom/media/webrtc/MediaEngineRemoteVideoSource.cpp
+@@ -35,16 +35,18 @@
+ 
+ /* static */
+ camera::CaptureEngine MediaEngineRemoteVideoSource::CaptureEngine(
+-    MediaSourceEnum aMediaSource) {
++    MediaSourceEnum aMediaSource, bool aRestrictOsPromptToMediaSource) {
+   switch (aMediaSource) {
+     case MediaSourceEnum::Browser:
+       return camera::BrowserEngine;
+     case MediaSourceEnum::Camera:
+       return camera::CameraEngine;
+     case MediaSourceEnum::Screen:
+-      return camera::ScreenEngine;
++      return aRestrictOsPromptToMediaSource ? camera::ScreenPickerEngine
++                                            : camera::ScreenEngine;
+     case MediaSourceEnum::Window:
+-      return camera::WinEngine;
++      return aRestrictOsPromptToMediaSource ? camera::WinPickerEngine
++                                            : camera::WinEngine;
+     default:
+       MOZ_CRASH();
+   }
+@@ -167,8 +169,9 @@
+ }
+ 
+ MediaEngineRemoteVideoSource::MediaEngineRemoteVideoSource(
+-    const MediaDevice* aMediaDevice)
+-    : mCapEngine(CaptureEngine(aMediaDevice->mMediaSource)),
++    const MediaDevice *aMediaDevice)
++    : mCapEngine(CaptureEngine(aMediaDevice->mMediaSource,
++                               aMediaDevice->mRestrictOsPromptToMediaSource)),
+       mTrackingId(CaptureEngineToTrackingSourceStr(mCapEngine), 0),
+       mMutex("MediaEngineRemoteVideoSource::mMutex"),
+       mRescalingBufferPool(/* zero_initialize */ false,
+@@ -178,8 +181,7 @@
+       mTrackCapabilities(
+           MakeAndAddRef<media::Refcountable<MediaTrackCapabilities>>()),
+       mFirstFramePromise(mFirstFramePromiseHolder.Ensure(__func__)),
+-      mCalculation(kFitness),
+-      mPrefs(MakeUnique<MediaEnginePrefs>()),
++      mCalculation(kFitness), mPrefs(MakeUnique<MediaEnginePrefs>()),
+       mMediaDevice(aMediaDevice),
+       mDeviceUUID(NS_ConvertUTF16toUTF8(aMediaDevice->mRawID)) {
+   LOG("{}", __PRETTY_FUNCTION__);
+@@ -981,7 +983,9 @@
+ 
+   switch (mCapEngine) {
+     case camera::ScreenEngine:
++    case camera::ScreenPickerEngine:
+     case camera::WinEngine:
++    case camera::WinPickerEngine:
+     case camera::BrowserEngine: {
+       // DesktopCaptureImpl polls for frames and so must know the framerate to
+       // capture at. This is signaled through CamerasParent as the capability's
+diff --git a/dom/media/webrtc/MediaEngineRemoteVideoSource.h b/dom/media/webrtc/MediaEngineRemoteVideoSource.h
+--- a/dom/media/webrtc/MediaEngineRemoteVideoSource.h
++++ b/dom/media/webrtc/MediaEngineRemoteVideoSource.h
+@@ -125,7 +125,9 @@
+ 
+   const TrackingId& GetTrackingId() const override;
+ 
+-  static camera::CaptureEngine CaptureEngine(dom::MediaSourceEnum aMediaSource);
++  static camera::CaptureEngine
++  CaptureEngine(dom::MediaSourceEnum aMediaSource,
++                bool aRestrictOsPromptToMediaSource = false);
+ 
+   MediaEventSource<void>* CaptureEndedEvent() override {
+     return &mCaptureEndedEvent;
+diff --git a/dom/media/webrtc/MediaEngineWebRTC.cpp b/dom/media/webrtc/MediaEngineWebRTC.cpp
+--- a/dom/media/webrtc/MediaEngineWebRTC.cpp
++++ b/dom/media/webrtc/MediaEngineWebRTC.cpp
+@@ -57,7 +57,8 @@
+ }
+ 
+ void MediaEngineWebRTC::EnumerateVideoDevices(
+-    MediaSourceEnum aMediaSource, nsTArray<RefPtr<MediaDevice>>* aDevices) {
++    MediaSourceEnum aMediaSource, nsTArray<RefPtr<MediaDevice>> *aDevices,
++    bool aRestrictOsPromptToMediaSource) {
+   AssertIsOnOwningThread();
+   // flag sources with cross-origin exploit potential
+   bool scaryKind = (aMediaSource == MediaSourceEnum::Screen ||
+@@ -107,8 +108,14 @@
+     }
+   }
+ #endif
+-  camera::CaptureEngine capEngine =
+-      MediaEngineRemoteVideoSource::CaptureEngine(aMediaSource);
++  bool restrictOsPrompt = false;
++#if defined(WEBRTC_MAC)
++  restrictOsPrompt = aRestrictOsPromptToMediaSource && canRequestOsLevelPrompt;
++#else
++  (void)aRestrictOsPromptToMediaSource;
++#endif
++  camera::CaptureEngine capEngine = MediaEngineRemoteVideoSource::CaptureEngine(
++      aMediaSource, restrictOsPrompt);
+   num = GetChildAndCall(&CamerasChild::NumberOfCaptureDevices, capEngine);
+ 
+   for (int i = 0; i < num; i++) {
+@@ -151,11 +158,12 @@
+     // device name and higher layers will correlate this with the name of
+     // audio devices.
+ 
+-    aDevices->EmplaceBack(new MediaDevice(
+-        this, aMediaSource, name, uuid, uuid,
+-        MediaDevice::IsScary(scaryKind || scarySource),
+-        canRequestOsLevelPrompt ? MediaDevice::OsPromptable::Yes
+-                                : MediaDevice::OsPromptable::No));
++    aDevices->EmplaceBack(
++        new MediaDevice(this, aMediaSource, name, uuid, uuid,
++                        MediaDevice::IsScary(scaryKind || scarySource),
++                        canRequestOsLevelPrompt ? MediaDevice::OsPromptable::Yes
++                                                : MediaDevice::OsPromptable::No,
++                        restrictOsPrompt));
+   }
+ }
+ 
+@@ -284,6 +292,18 @@
+   }
+ }
+ 
++void MediaEngineWebRTC::EnumerateDevicesForChromeDesktop(
++    MediaSourceEnum aMediaSource, nsTArray<RefPtr<MediaDevice>> *aDevices) {
++#if defined(WEBRTC_MAC)
++  if (aMediaSource == MediaSourceEnum::Screen ||
++      aMediaSource == MediaSourceEnum::Window) {
++    EnumerateVideoDevices(aMediaSource, aDevices, true);
++    return;
++  }
++#endif
++  EnumerateDevices(aMediaSource, MediaSinkEnum::Other, aDevices);
++}
++
+ void MediaEngineWebRTC::InvalidateDesktopCaptureDeviceCache(
+     MediaSourceEnum aMediaSource) {
+   AssertIsOnOwningThread();
+diff --git a/dom/media/webrtc/MediaEngineWebRTC.h b/dom/media/webrtc/MediaEngineWebRTC.h
+--- a/dom/media/webrtc/MediaEngineWebRTC.h
++++ b/dom/media/webrtc/MediaEngineWebRTC.h
+@@ -25,6 +25,9 @@
+ 
+   void EnumerateDevices(dom::MediaSourceEnum, MediaSinkEnum,
+                         nsTArray<RefPtr<MediaDevice>>*) override;
++  void
++  EnumerateDevicesForChromeDesktop(dom::MediaSourceEnum,
++                                   nsTArray<RefPtr<MediaDevice>> *) override;
+   void InvalidateDesktopCaptureDeviceCache(dom::MediaSourceEnum) override;
+   RefPtr<MediaEngineSource> CreateSource(const MediaDevice* aDevice) override;
+   RefPtr<MediaEngineSource> CreateSourceFrom(const MediaEngineSource* aSource,
+@@ -38,7 +41,8 @@
+  private:
+   ~MediaEngineWebRTC() = default;
+   void EnumerateVideoDevices(dom::MediaSourceEnum,
+-                             nsTArray<RefPtr<MediaDevice>>*);
++                             nsTArray<RefPtr<MediaDevice>> *,
++                             bool aRestrictOsPromptToMediaSource = false);
+   void EnumerateMicrophoneDevices(nsTArray<RefPtr<MediaDevice>>*);
+   void EnumerateSpeakerDevices(nsTArray<RefPtr<MediaDevice>>*);
+ 
+diff --git a/third_party/libwebrtc/modules/desktop_capture/desktop_capture_options.h b/third_party/libwebrtc/modules/desktop_capture/desktop_capture_options.h
+--- a/third_party/libwebrtc/modules/desktop_capture/desktop_capture_options.h
++++ b/third_party/libwebrtc/modules/desktop_capture/desktop_capture_options.h
+@@ -95,6 +95,12 @@
+   // If ScreenCaptureKit is used for desktop capture and this flag is
+   // set, the ScreenCaptureKit backend will use SCContentSharingPicker for
+   // picking source.
++  enum class SckPickerSource { Default, SingleDisplay, SingleWindow };
++  SckPickerSource sck_picker_source() const { return sck_picker_source_; }
++  void set_sck_picker_source(SckPickerSource source) {
++    sck_picker_source_ = source;
++  }
++
+   bool allow_sck_system_picker() const { return allow_sck_system_picker_; }
+   void set_allow_sck_system_picker(bool allow) {
+     allow_sck_system_picker_ = allow;
+@@ -295,6 +301,7 @@
+   bool allow_iosurface_ = false;
+   bool allow_sck_capturer_ = false;
+   bool allow_sck_system_picker_ = false;
++  SckPickerSource sck_picker_source_ = SckPickerSource::Default;
+ #endif
+ 
+   scoped_refptr<FullScreenWindowDetector> full_screen_window_detector_;
+diff --git a/third_party/libwebrtc/modules/desktop_capture/mac/sck_picker_handle.h b/third_party/libwebrtc/modules/desktop_capture/mac/sck_picker_handle.h
+--- a/third_party/libwebrtc/modules/desktop_capture/mac/sck_picker_handle.h
++++ b/third_party/libwebrtc/modules/desktop_capture/mac/sck_picker_handle.h
+@@ -11,34 +11,55 @@
+ #ifndef MODULES_DESKTOP_CAPTURE_MAC_SCK_PICKER_HANDLE_H_
+ #define MODULES_DESKTOP_CAPTURE_MAC_SCK_PICKER_HANDLE_H_
+ 
+-#include <os/availability.h>
++#include "modules/desktop_capture/desktop_capturer.h"
++#import <ScreenCaptureKit/ScreenCaptureKit.h>
+ #include <cstddef>
+ #include <memory>
+-#include "modules/desktop_capture/desktop_capturer.h"
++#include <os/availability.h>
+ 
+ @class SCContentSharingPicker;
+ @class SCStream;
++
++API_AVAILABLE(macos(14.0))
++@protocol SckPickerClient <SCContentSharingPickerObserver>
++// Runs on the native main executor immediately before presentation. Returning
++// NO means the client no longer exists; no OS presentation has occurred yet.
++- (BOOL)preparePickerForStream:(SCStream *)stream;
++@end
+ 
+ namespace webrtc {
+ 
+ // Helper class to manage multiple users of SCContentSharingPicker.
+ //
+ // The `active` and `maximumStreamCount` properties are automatically managed on
+-// `SCContentSharingPicker.sharedPicker`, which is what is returned from
+-// GetPicker().
++// the process-wide `SCContentSharingPicker.sharedPicker` by its broker.
+ //
+ // When using this class, for stream limits to work, only create one stream per
+ // handle.
+ //
+-// Designed for single thread use.
++// Handle construction/destruction and presentation requests belong to the
++// capture API thread. Stream association uses the stable SourceId and the
++// thread-safe free function below, including from native callbacks.
+ class API_AVAILABLE(macos(14.0)) SckPickerHandleInterface {
+  public:
+   virtual ~SckPickerHandleInterface() = default;
+-  // Effectively identical to `SCContentSharingPicker.sharedPicker`.
+-  virtual SCContentSharingPicker* GetPicker() const = 0;
++  // All presentations, including ordinary Firefox requests, use one native
++  // broker so untagged initial callbacks have exactly one initiating owner.
++  virtual void RequestPresentation(id<SckPickerClient> observer,
++                                   SCContentSharingPickerMode modes,
++                                   SCStream *stream,
++                                   SCShareableContentStyle style) = 0;
+   // A SourceId unique to this handle.
+   virtual DesktopCapturer::SourceId Source() const = 0;
+ };
++
++// Associate the actual new stream synchronously on the broker main executor
++// before admitting another initial presentation. Off-main calls are queued.
++// The caller stores only this stable ID under its own mutex; native callback
++// threads must not read the API-thread-owned handle unique_ptr.
++void API_AVAILABLE(macos(14.0))
++    AssociateSckPickerStream(DesktopCapturer::SourceId source,
++                             SCStream *stream);
+ 
+ // Returns a newly created picker handle if the stream count limit has not been
+ // reached, null otherwise.
+diff --git a/third_party/libwebrtc/modules/desktop_capture/mac/sck_picker_handle.mm b/third_party/libwebrtc/modules/desktop_capture/mac/sck_picker_handle.mm
+--- a/third_party/libwebrtc/modules/desktop_capture/mac/sck_picker_handle.mm
++++ b/third_party/libwebrtc/modules/desktop_capture/mac/sck_picker_handle.mm
+@@ -1,11 +1,11 @@
+ /*
+- *  Copyright (c) 2024 The WebRTC project authors. All Rights Reserved.
++ * Copyright (c) 2024 The WebRTC project authors. All Rights Reserved.
+  *
+- *  Use of this source code is governed by a BSD-style license
+- *  that can be found in the LICENSE file in the root of the source
+- *  tree. An additional intellectual property rights grant can be found
+- *  in the file PATENTS.  All contributing project authors may
+- *  be found in the AUTHORS file in the root of the source tree.
++ * Use of this source code is governed by a BSD-style license
++ * that can be found in the LICENSE file in the root of the source
++ * tree. An additional intellectual property rights grant can be found
++ * in the file PATENTS. All contributing project authors may
++ * be found in the AUTHORS file in the root of the source tree.
+  */
+ 
+ #include "sck_picker_handle.h"
+@@ -14,74 +14,271 @@
+ 
+ #include "absl/base/attributes.h"
+ #include "api/sequence_checker.h"
+-
++#include "sck_picker_queue.h"
++
++#include <map>
+ #include <memory>
+ #include <optional>
+ 
+ namespace webrtc {
+-
+ class SckPickerProxy;
++}
++
++API_AVAILABLE(macos(14.0))
++@interface SckPickerObserver : NSObject <SCContentSharingPickerObserver>
++- (instancetype)initWithProxy:(webrtc::SckPickerProxy *)proxy;
++@end
++
++namespace webrtc {
+ 
+ class API_AVAILABLE(macos(14.0)) SckPickerProxy {
+  public:
+-  static SckPickerProxy* Get() {
+-    static SckPickerProxy* g_picker = new SckPickerProxy();
+-    return g_picker;
+-  }
+-
+-  bool AtCapacityLocked() const RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_) {
+-    return handle_count_ == kMaximumStreamCount;
+-  }
+-
+-  SCContentSharingPicker* GetPicker() const {
+-    return SCContentSharingPicker.sharedPicker;
+-  }
+-
+-  ABSL_MUST_USE_RESULT std::optional<DesktopCapturer::SourceId>
+-      AcquireSourceId() {
+-    MutexLock lock(&mutex_);
+-    if (AtCapacityLocked()) {
+-      return std::nullopt;
+-    }
+-    if (handle_count_ == 0) {
+-      auto* picker = GetPicker();
+-      picker.maximumStreamCount =
+-          [NSNumber numberWithUnsignedInt:kMaximumStreamCount];
+-      picker.active = YES;
+-    }
+-    handle_count_ += 1;
+-    unique_source_id_ += 1;
+-    return unique_source_id_;
+-  }
+-
+-  void RelinquishSourceId(DesktopCapturer::SourceId source) {
+-    MutexLock lock(&mutex_);
+-    handle_count_ -= 1;
+-    if (handle_count_ > 0) {
+-      return;
+-    }
+-    GetPicker().active = NO;
+-  }
++   using SourceId = DesktopCapturer::SourceId;
++   using Ticket = sck_internal::PickerRequestQueue::Ticket;
++
++   static SckPickerProxy *Get() {
++     static SckPickerProxy *proxy = new SckPickerProxy();
++     return proxy;
++   }
++
++   ABSL_MUST_USE_RESULT std::optional<SourceId> AcquireSourceId() {
++     MutexLock lock(&mutex_);
++     if (handle_count_ == kMaximumStreamCount) {
++       return std::nullopt;
++     }
++     ++handle_count_;
++     const SourceId source = ++unique_source_id_;
++     dispatch_async(dispatch_get_main_queue(), ^{
++       records_.try_emplace(source);
++       requests_.Register(source);
++       UpdateActivation();
++     });
++     return source;
++   }
++
++   void RelinquishSourceId(SourceId source) {
++     {
++       MutexLock lock(&mutex_);
++       --handle_count_;
++     }
++     dispatch_async(dispatch_get_main_queue(), ^{
++       requests_.Remove(source);
++       records_.erase(source);
++       // An active owner stays a tombstone until the real OS terminal event.
++       // Its nil-stream result must never become a subsequent owner's result.
++       UpdateActivation();
++     });
++   }
++
++   void RequestPresentation(SourceId source, id<SckPickerClient> observer,
++                            SCContentSharingPickerMode modes, SCStream *stream,
++                            SCShareableContentStyle style) {
++     dispatch_async(dispatch_get_main_queue(), ^{
++       auto it = records_.find(source);
++       if (it == records_.end() || !requests_.Enqueue(source)) {
++         return;
++       }
++       it->second.observer = observer;
++       it->second.modes = modes;
++       it->second.requested_stream = stream;
++       it->second.style = style;
++       Drain();
++     });
++   }
++
++   void AssociateStream(SourceId source, SCStream *stream) {
++     if ([NSThread isMainThread]) {
++       AssociateOnMain(source, stream);
++     } else {
++       dispatch_async(dispatch_get_main_queue(), ^{
++         AssociateOnMain(source, stream);
++       });
++     }
++   }
++
++   // The sole native observer dispatches every event asynchronously to the same
++   // main executor. It never broadcasts an untagged initial event to waiters.
++   void Selected(SCContentFilter *filter, SCStream *stream) {
++     const auto terminal = TerminalFor(stream);
++     id<SCContentSharingPickerObserver> observer =
++         terminal ? (terminal->live ? presentation_->observer : nil)
++                  : ObserverFor(stream);
++     if (observer) {
++       [observer contentSharingPicker:Picker()
++                  didUpdateWithFilter:filter
++                            forStream:stream];
++     }
++     Complete(terminal);
++   }
++
++   void Cancelled(SCStream *stream) {
++     const auto terminal = TerminalFor(stream);
++     id<SCContentSharingPickerObserver> observer =
++         terminal ? (terminal->live ? presentation_->observer : nil)
++                  : ObserverFor(stream);
++     if (observer) {
++       [observer contentSharingPicker:Picker() didCancelForStream:stream];
++     }
++     Complete(terminal);
++   }
++
++   void Failed(NSError *error) {
++     const auto terminal = requests_.BeginTerminal();
++     if (!terminal) {
++       return;
++     }
++     if (terminal->live) {
++       [presentation_->observer
++           contentSharingPickerStartDidFailWithError:error];
++     }
++     Complete(terminal);
++   }
+ 
+  private:
+-  // SckPickerProxy is a process-wide singleton. ScreenCapturerSck and
+-  // SckPickerHandle are largely single-threaded but may be used on different
+-  // threads. For instance some clients use a capturer on one thread for
+-  // enumeration and on another for frame capture. Since all those capturers
+-  // share the same SckPickerProxy instance, it must be thread-safe.
++   struct Record {
++     id<SckPickerClient> __strong observer = nil;
++     SCStream *__strong stream = nil;
++     SCStream *__strong requested_stream = nil;
++     SCContentSharingPickerMode modes =
++         SCContentSharingPickerModeSingleDisplay |
++         SCContentSharingPickerModeMultipleWindows;
++     SCShareableContentStyle style = SCShareableContentStyleNone;
++   };
++   struct Presentation {
++     Ticket ticket;
++     id<SckPickerClient> __strong observer;
++     SCStream *__strong stream;
++   };
++
++   SckPickerProxy() {
++     observer_ = [[SckPickerObserver alloc] initWithProxy:this];
++   }
++
++   SCContentSharingPicker *Picker() const {
++     return SCContentSharingPicker.sharedPicker;
++   }
++
++   SCContentSharingPickerConfiguration *
++   Configuration(SCContentSharingPickerMode modes) const {
++     SCContentSharingPickerConfiguration *configuration = [Picker().defaultConfiguration copy];
++     configuration.allowedPickerModes = modes;
++     return configuration;
++   }
++
++   void UpdateActivation() {
++     RTC_DCHECK([NSThread isMainThread]);
++     const bool needed = !records_.empty() || !requests_.Idle();
++     if (needed && !registered_) {
++       [Picker() addObserver:observer_];
++       registered_ = true;
++       Picker().maximumStreamCount = @(kMaximumStreamCount);
++       Picker().active = YES;
++     } else if (!needed && registered_) {
++       Picker().active = NO;
++       [Picker() removeObserver:observer_];
++       registered_ = false;
++     }
++   }
++
++   void Drain() {
++     RTC_DCHECK([NSThread isMainThread]);
++     const auto ticket = requests_.StartNext();
++     if (!ticket) {
++       UpdateActivation();
++       return;
++     }
++     const auto it = records_.find(ticket->owner);
++     RTC_CHECK(it != records_.end());
++     const Record &record = it->second;
++     presentation_ =
++         Presentation{*ticket, record.observer, record.requested_stream};
++     if (![record.observer preparePickerForStream:record.requested_stream]) {
++       // The client died while queued. No OS request has been presented, so
++       // there can be no stale native terminal callback for this ticket.
++       RTC_CHECK(requests_.DiscardUnpresented(ticket->generation));
++       presentation_.reset();
++       dispatch_async(dispatch_get_main_queue(), ^{
++         Drain();
++       });
++       return;
++     }
++     RTC_CHECK(requests_.MarkPresented(ticket->generation));
++     auto *configuration = Configuration(record.modes);
++     Picker().defaultConfiguration = configuration;
++     if (record.requested_stream) {
++       [Picker() setConfiguration:configuration
++                        forStream:record.requested_stream];
++     }
++     [Picker() presentPickerForStream:record.requested_stream
++                    usingContentStyle:record.style];
++   }
++
++   void AssociateOnMain(SourceId source, SCStream *stream) {
++     RTC_DCHECK([NSThread isMainThread]);
++     const auto it = records_.find(source);
++     if (it == records_.end()) {
++       return;
++     }
++     it->second.stream = stream;
++     if (stream) {
++       // The API explicitly supports configuration for a particular real
++       // stream. Never pass nil here: that would configure all active streams.
++       [Picker() setConfiguration:Configuration(it->second.modes)
++                        forStream:stream];
++     }
++   }
++
++   id<SCContentSharingPickerObserver> ObserverFor(SCStream *stream) const {
++     if (stream) {
++       for (const auto &[source, record] : records_) {
++         if (record.stream == stream) {
++           return record.observer;
++         }
++       }
++     }
++     return nil;
++   }
++
++   std::optional<Ticket> TerminalFor(SCStream *stream) {
++     if (!presentation_ || presentation_->stream != stream) {
++       return std::nullopt;
++     }
++     return requests_.BeginTerminal();
++   }
++
++   void Complete(const std::optional<Ticket> &terminal) {
++     if (!terminal) {
++       return;
++     }
++     RTC_CHECK(requests_.CompleteTerminal(terminal->generation));
++     presentation_.reset();
++     // Stream association above happens synchronously in the owner callback,
++     // before any next initial owner can be presented. Do not drain
++     // reentrantly.
++     dispatch_async(dispatch_get_main_queue(), ^{
++       Drain();
++     });
++   }
++
+   Mutex mutex_;
+-  // 100 is an arbitrary number that seems high enough to never get reached,
+-  // while still providing a reasonably low upper bound.
+   static constexpr size_t kMaximumStreamCount = 100;
+   size_t handle_count_ RTC_GUARDED_BY(mutex_) = 0;
+-  DesktopCapturer::SourceId unique_source_id_ RTC_GUARDED_BY(mutex_) = 0;
++  SourceId unique_source_id_ RTC_GUARDED_BY(mutex_) = 0;
++
++  // Everything below is confined to the native main executor. No capturer or
++  // helper callback is invoked while the bookkeeping mutex above is held.
++  std::map<SourceId, Record> records_;
++  sck_internal::PickerRequestQueue requests_;
++  std::optional<Presentation> presentation_;
++  SckPickerObserver *__strong observer_;
++  bool registered_ = false;
+ };
+ 
+ class API_AVAILABLE(macos(14.0)) SckPickerHandle
+     : public SckPickerHandleInterface {
+  public:
+   static std::unique_ptr<SckPickerHandle> Create(SckPickerProxy* proxy) {
+-    std::optional<DesktopCapturer::SourceId> id = proxy->AcquireSourceId();
++    const auto id = proxy->AcquireSourceId();
+     if (!id) {
+       return nullptr;
+     }
+@@ -93,8 +290,10 @@
+     proxy_->RelinquishSourceId(source_);
+   }
+ 
+-  SCContentSharingPicker* GetPicker() const override {
+-    return proxy_->GetPicker();
++  void RequestPresentation(id<SckPickerClient> observer,
++                           SCContentSharingPickerMode modes, SCStream *stream,
++                           SCShareableContentStyle style) override {
++    proxy_->RequestPresentation(source_, observer, modes, stream, style);
+   }
+ 
+   DesktopCapturer::SourceId Source() const override { return source_; }
+@@ -110,8 +309,51 @@
+   const DesktopCapturer::SourceId source_;
+ };
+ 
++void AssociateSckPickerStream(DesktopCapturer::SourceId source,
++                              SCStream *stream) {
++  SckPickerProxy::Get()->AssociateStream(source, stream);
++}
++
+ std::unique_ptr<SckPickerHandleInterface> CreateSckPickerHandle() {
+   return SckPickerHandle::Create(SckPickerProxy::Get());
+ }
+ 
+-}  // namespace webrtc
++} // namespace webrtc
++
++@implementation SckPickerObserver {
++  webrtc::SckPickerProxy *_proxy;
++}
++
++- (instancetype)initWithProxy:(webrtc::SckPickerProxy *)proxy {
++  self = [super init];
++  if (self) {
++    _proxy = proxy;
++  }
++  return self;
++}
++
++- (void)contentSharingPicker:(SCContentSharingPicker *)picker
++         didUpdateWithFilter:(SCContentFilter *)filter
++                   forStream:(SCStream *)stream {
++  auto *proxy = _proxy;
++  dispatch_async(dispatch_get_main_queue(), ^{
++    proxy->Selected(filter, stream);
++  });
++}
++
++- (void)contentSharingPicker:(SCContentSharingPicker *)picker
++          didCancelForStream:(SCStream *)stream {
++  auto *proxy = _proxy;
++  dispatch_async(dispatch_get_main_queue(), ^{
++    proxy->Cancelled(stream);
++  });
++}
++
++- (void)contentSharingPickerStartDidFailWithError:(NSError *)error {
++  auto *proxy = _proxy;
++  dispatch_async(dispatch_get_main_queue(), ^{
++    proxy->Failed(error);
++  });
++}
++
++@end
+diff --git a/third_party/libwebrtc/modules/desktop_capture/mac/sck_picker_queue.h b/third_party/libwebrtc/modules/desktop_capture/mac/sck_picker_queue.h
+new file mode 100644
+--- /dev/null
++++ b/third_party/libwebrtc/modules/desktop_capture/mac/sck_picker_queue.h
+@@ -0,0 +1,114 @@
++/*
++ * Copyright (c) 2026 The WebRTC project authors. All Rights Reserved.
++ *
++ * Use of this source code is governed by a BSD-style license that can be
++ * found in the LICENSE file in the root of the source tree.
++ */
++
++#ifndef MODULES_DESKTOP_CAPTURE_MAC_SCK_PICKER_QUEUE_H_
++#define MODULES_DESKTOP_CAPTURE_MAC_SCK_PICKER_QUEUE_H_
++
++#include <algorithm>
++#include <cstdint>
++#include <deque>
++#include <optional>
++#include <set>
++
++namespace webrtc::sck_internal {
++
++// Main-executor-only ownership of the one process-wide native picker. A dead
++// active owner remains a tombstone until the actual OS terminal callback. A
++// timeout or handle destruction must never make its result belong to a waiter.
++class PickerRequestQueue {
++public:
++  using Owner = intptr_t;
++  struct Ticket {
++    Owner owner;
++    uint64_t generation;
++    bool live;
++  };
++
++  void Register(Owner owner) { live_.insert(owner); }
++
++  void Remove(Owner owner) {
++    live_.erase(owner);
++    pending_.erase(std::remove(pending_.begin(), pending_.end(), owner),
++                   pending_.end());
++  }
++
++  bool Enqueue(Owner owner) {
++    if (!live_.count(owner) || (active_ && active_->owner == owner) ||
++        std::find(pending_.begin(), pending_.end(), owner) != pending_.end()) {
++      return false;
++    }
++    pending_.push_back(owner);
++    return true;
++  }
++
++  std::optional<Ticket> StartNext() {
++    if (active_ || pending_.empty()) {
++      return std::nullopt;
++    }
++    const Owner owner = pending_.front();
++    pending_.pop_front();
++    active_ = Ticket{owner, ++generation_, true};
++    forwarding_ = false;
++    presented_ = false;
++    return Active();
++  }
++
++  bool MarkPresented(uint64_t generation) {
++    if (!active_ || active_->generation != generation || presented_) {
++      return false;
++    }
++    presented_ = true;
++    return true;
++  }
++
++  bool DiscardUnpresented(uint64_t generation) {
++    if (!active_ || active_->generation != generation || presented_) {
++      return false;
++    }
++    active_.reset();
++    return true;
++  }
++
++  std::optional<Ticket> Active() const {
++    if (!active_) {
++      return std::nullopt;
++    }
++    return Ticket{active_->owner, active_->generation,
++                  live_.count(active_->owner) != 0};
++  }
++
++  std::optional<Ticket> BeginTerminal() {
++    if (!active_ || !presented_ || forwarding_) {
++      return std::nullopt;
++    }
++    forwarding_ = true;
++    return Active();
++  }
++
++  bool CompleteTerminal(uint64_t generation) {
++    if (!active_ || !forwarding_ || active_->generation != generation) {
++      return false;
++    }
++    active_.reset();
++    forwarding_ = false;
++    return true;
++  }
++
++  bool Idle() const { return !active_ && pending_.empty(); }
++
++private:
++  std::set<Owner> live_;
++  std::deque<Owner> pending_;
++  std::optional<Ticket> active_;
++  uint64_t generation_ = 0;
++  bool forwarding_ = false;
++  bool presented_ = false;
++};
++
++} // namespace webrtc::sck_internal
++
++#endif // MODULES_DESKTOP_CAPTURE_MAC_SCK_PICKER_QUEUE_H_
+diff --git a/third_party/libwebrtc/modules/desktop_capture/mac/screen_capturer_sck.mm b/third_party/libwebrtc/modules/desktop_capture/mac/screen_capturer_sck.mm
+--- a/third_party/libwebrtc/modules/desktop_capture/mac/screen_capturer_sck.mm
++++ b/third_party/libwebrtc/modules/desktop_capture/mac/screen_capturer_sck.mm
+@@ -34,9 +34,8 @@
+ // Also, the `SCContentFilter` fields `contentRect` and `pointPixelScale` were
+ // introduced in macOS 14.
+ API_AVAILABLE(macos(14.0))
+-@interface SckHelper : NSObject <SCStreamDelegate,
+-                                 SCStreamOutput,
+-                                 SCContentSharingPickerObserver>
++@interface SckHelper
++    : NSObject <SCStreamDelegate, SCStreamOutput, SckPickerClient>
+ 
+ - (instancetype)initWithCapturer:(webrtc::ScreenCapturerSck*)capturer;
+ 
+@@ -75,6 +74,7 @@
+   // Prep for implementing DelegatedSourceListController interface, for now used
+   // by Start(). Triggers SCContentSharingPicker. Runs on the caller's thread.
+   void EnsureVisible();
++  bool PreparePickerForStream(SCStream *stream);
+   // Helper functions to forward SCContentSharingPickerObserver notifications to
+   // source_list_observer_.
+   void NotifySourceSelection(SCContentFilter* filter, SCStream* stream);
+@@ -121,8 +121,12 @@
+   std::unique_ptr<SckPickerHandleInterface> picker_handle_
+       RTC_GUARDED_BY(api_checker_);
+ 
+-  // Flag to track if we have added ourselves as observer to picker_handle_.
+-  bool picker_handle_registered_ RTC_GUARDED_BY(api_checker_) = false;
++  // The native shared-picker broker binds the pending owner separately from
++  // established stream updates, including the initial nil-stream selection.
++  DesktopCapturer::SourceId picker_source_ RTC_GUARDED_BY(lock_) = 0;
++  bool picker_request_queued_ RTC_GUARDED_BY(lock_) = false;
++  bool picker_request_pending_ RTC_GUARDED_BY(lock_) = false;
++  SCStream *__strong pending_picker_stream_ RTC_GUARDED_BY(lock_) = nil;
+ 
+   // Options passed to the constructor. May be accessed on any thread, but the
+   // options are unchanged during the capturer's lifetime.
+@@ -229,6 +233,7 @@
+   RTC_LOG(LS_INFO) << "ScreenCapturerSck " << this << " destroyed.";
+   [stream_ stopCaptureWithCompletionHandler:nil];
+   [helper_ releaseCapturer];
++  picker_handle_.reset();
+ }
+ 
+ void ScreenCapturerSck::Start(DesktopCapturer::Callback* callback) {
+@@ -317,6 +322,10 @@
+   RTC_DCHECK_RUN_ON(&api_checker_);
+   if (!picker_handle_ && capture_options_.allow_sck_system_picker()) {
+     picker_handle_ = CreateSckPickerHandle();
++    if (picker_handle_) {
++      MutexLock lock(&lock_);
++      picker_source_ = picker_handle_->Source();
++    }
+     RTC_LOG(LS_INFO) << "ScreenCapturerSck " << this
+                      << " Created picker handle. allow_sck_system_picker="
+                      << capture_options_.allow_sck_system_picker()
+@@ -332,12 +341,7 @@
+   RTC_DCHECK_RUN_ON(&api_checker_);
+   RTC_LOG(LS_INFO) << "ScreenCapturerSck " << this << " " << __func__ << ".";
+   EnsurePickerHandle();
+-  if (picker_handle_) {
+-    if (!picker_handle_registered_) {
+-      picker_handle_registered_ = true;
+-      [picker_handle_->GetPicker() addObserver:helper_];
+-    }
+-  } else {
++  if (!picker_handle_) {
+     // We reached the maximum number of streams.
+     RTC_LOG(LS_ERROR)
+         << "ScreenCapturerSck " << this
+@@ -345,22 +349,15 @@
+     permanent_error_ = true;
+     return;
+   }
+-  SCContentSharingPicker* picker = picker_handle_->GetPicker();
+-  SCStream* stream;
++  SCStream *stream;
+   {
+     MutexLock lock(&lock_);
++    if (picker_request_queued_ || picker_request_pending_) {
++      return;
++    }
+     stream = stream_;
+-    stream_ = nil;
+-    filter_ = nil;
+-    MutexLock lock2(&latest_frame_lock_);
+-    frame_needs_reconfigure_ = false;
+-    frame_reconfigure_img_size_ = std::nullopt;
+-  }
+-  [stream removeStreamOutput:helper_ type:SCStreamOutputTypeScreen error:nil];
+-  [stream stopCaptureWithCompletionHandler:nil];
+-  SCContentSharingPickerConfiguration* config = picker.defaultConfiguration;
+-  config.allowedPickerModes = picker_modes_;
+-  picker.defaultConfiguration = config;
++    picker_request_queued_ = true;
++  }
+   SCShareableContentStyle style = SCShareableContentStyleNone;
+   // Pick a sensible style to start out with, based on our current mode.
+   if (@available(macOS 15, *)) {
+@@ -385,29 +382,61 @@
+   // This dies silently if maximumStreamCount streams are already running. We
+   // need our own stream count bookkeeping because of this, and to be able to
+   // unset `active`.
+-  [picker presentPickerForStream:stream usingContentStyle:style];
++  picker_handle_->RequestPresentation(helper_, picker_modes_, stream, style);
++}
++
++bool ScreenCapturerSck::PreparePickerForStream(SCStream *stream) {
++  // Invoked only by the broker immediately before the owned OS presentation.
++  // Do not stop or unbind an old stream while another owner is still pending.
++  DesktopCapturer::SourceId source;
++  {
++    MutexLock lock(&lock_);
++    if (!picker_request_queued_ || stream_ != stream) {
++      picker_request_queued_ = false;
++      permanent_error_ = true;
++      return false;
++    }
++    picker_request_queued_ = false;
++    picker_request_pending_ = true;
++    pending_picker_stream_ = stream;
++    source = picker_source_;
++    stream_ = nil;
++    filter_ = nil;
++    MutexLock lock2(&latest_frame_lock_);
++    frame_needs_reconfigure_ = false;
++    frame_reconfigure_img_size_ = std::nullopt;
++  }
++  [stream removeStreamOutput:helper_ type:SCStreamOutputTypeScreen error:nil];
++  [stream stopCaptureWithCompletionHandler:nil];
++  AssociateSckPickerStream(source, nil);
++  return true;
+ }
+ 
+ void ScreenCapturerSck::NotifySourceSelection(SCContentFilter* filter,
+                                               SCStream* stream) {
+   MutexLock lock(&lock_);
+-  if (stream_ != stream) {
+-    // The picker selected a source for another capturer.
++  if (!(picker_request_pending_ && pending_picker_stream_ == stream) &&
++      !(stream && stream_ == stream)) {
++    // The broker selected a source for another or released owner.
+     RTC_LOG(LS_INFO) << "ScreenCapturerSck " << this << " " << __func__
+                      << ". stream_ != stream.";
+     return;
+   }
+   RTC_LOG(LS_INFO) << "ScreenCapturerSck " << this << " " << __func__
+                    << ". Starting.";
++  picker_request_pending_ = false;
++  pending_picker_stream_ = nil;
+   StartWithFilter(filter);
+ }
+ 
+ void ScreenCapturerSck::NotifySourceCancelled(SCStream* stream) {
+   MutexLock lock(&lock_);
+-  if (stream_ != stream) {
+-    // The picker was cancelled for another capturer.
+-    return;
+-  }
++  if (!(picker_request_pending_ && pending_picker_stream_ == stream) &&
++      !(stream && stream_ == stream)) {
++    return;
++  }
++  picker_request_pending_ = false;
++  pending_picker_stream_ = nil;
+   RTC_LOG(LS_INFO) << "ScreenCapturerSck " << this << " " << __func__ << ".";
+   if (!stream_) {
+     // The initial picker was cancelled. There is no stream to fall back to.
+@@ -418,11 +447,11 @@
+ void ScreenCapturerSck::NotifySourceError() {
+   {
+     MutexLock lock(&lock_);
+-    if (stream_) {
+-      // The picker failed to start. But fear not, it was not our picker,
+-      // we already have a stream!
++    if (!picker_request_pending_) {
+       return;
+     }
++    picker_request_pending_ = false;
++    pending_picker_stream_ = nil;
+   }
+   RTC_LOG(LS_INFO) << "ScreenCapturerSck " << this << " " << __func__ << ".";
+   permanent_error_ = true;
+@@ -527,6 +556,25 @@
+ 
+ void ScreenCapturerSck::StartWithFilter(SCContentFilter* __strong filter) {
+   lock_.AssertHeld();
++  const auto source = capture_options_.sck_picker_source();
++  bool matches = true;
++  if (source == DesktopCaptureOptions::SckPickerSource::SingleDisplay) {
++    matches = filter && filter.style == SCShareableContentStyleDisplay;
++    if (@available(macOS 15.2, *)) {
++      matches = matches && filter.includedDisplays.count == 1;
++    }
++  } else if (source == DesktopCaptureOptions::SckPickerSource::SingleWindow) {
++    matches = filter && filter.style == SCShareableContentStyleWindow;
++    if (@available(macOS 15.2, *)) {
++      matches = matches && filter.includedWindows.count == 1;
++    }
++  }
++  if (!matches) {
++    RTC_LOG(LS_ERROR) << "ScreenCapturerSck " << this
++                      << " Native filter does not match requested source kind.";
++    permanent_error_ = true;
++    return;
++  }
+   SCStreamConfiguration* config = [[SCStreamConfiguration alloc] init];
+   config.pixelFormat = kCVPixelFormatType_32BGRA;
+   config.colorSpaceName = kCGColorSpaceSRGB;
+@@ -563,6 +611,11 @@
+     stream_ = [[SCStream alloc] initWithFilter:filter
+                                  configuration:config
+                                       delegate:helper_];
++    if (picker_source_) {
++      // The stable SourceId is guarded by lock_. Native callbacks never read
++      // the unique_ptr owned by the separate capture API thread.
++      AssociateSckPickerStream(picker_source_, stream_);
++    }
+ 
+     // TODO: crbug.com/327458809 - Choose an appropriate sampleHandlerQueue for
+     // best performance.
+@@ -575,6 +628,9 @@
+     if (!add_stream_output_result) {
+       stream_ = nil;
+       filter_ = nil;
++      if (picker_source_) {
++        AssociateSckPickerStream(picker_source_, nil);
++      }
+       RTC_LOG(LS_ERROR) << "ScreenCapturerSck " << this
+                         << " addStreamOutput failed.";
+       permanent_error_ = true;
+@@ -776,10 +832,20 @@
+     const DesktopCaptureOptions& options) {
+   if (@available(macOS 14.0, *)) {
+     if (options.allow_sck_system_picker()) {
+-      return std::make_unique<ScreenCapturerSck>(
+-          options,
++      SCContentSharingPickerMode modes =
+           SCContentSharingPickerModeSingleDisplay |
+-              SCContentSharingPickerModeMultipleWindows);
++          SCContentSharingPickerModeMultipleWindows;
++      switch (options.sck_picker_source()) {
++      case DesktopCaptureOptions::SckPickerSource::SingleDisplay:
++        modes = SCContentSharingPickerModeSingleDisplay;
++        break;
++      case DesktopCaptureOptions::SckPickerSource::SingleWindow:
++        modes = SCContentSharingPickerModeSingleWindow;
++        break;
++      case DesktopCaptureOptions::SckPickerSource::Default:
++        break;
++      }
++      return std::make_unique<ScreenCapturerSck>(options, modes);
+     }
+   }
+   return nullptr;
+@@ -827,6 +893,11 @@
+   if (_capturer) {
+     _capturer->NotifyCaptureStopped(stream);
+   }
++}
++
++- (BOOL)preparePickerForStream:(SCStream *)stream {
++  webrtc::MutexLock lock(&_capturer_lock);
++  return _capturer && _capturer->PreparePickerForStream(stream);
+ }
+ 
+ - (void)contentSharingPicker:(SCContentSharingPicker*)picker
