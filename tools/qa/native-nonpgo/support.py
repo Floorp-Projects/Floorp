@@ -102,6 +102,7 @@ def clean_environment(task, tools=None):
             ('rust/bin', 'clang/bin', 'cbindgen', 'nasm', 'node/bin', 'dump_syms', 'fix-stacks')]
             + [result['PATH']])
         result.update({'MOZBUILD_STATE_PATH': str(task / 'mozbuild'),
+                       'MOZ_FETCHES_DIR': str(tools),
                        'CARGO_HOME': str(task / 'cargo'), 'RUSTUP_HOME': str(task / 'rustup'),
                        'CC': str(tools / 'clang/bin/clang'), 'CXX': str(tools / 'clang/bin/clang++'),
                        'HOST_CC': str(tools / 'clang/bin/clang'),
@@ -325,7 +326,7 @@ class Runner:
                     env['PYTHONDONTWRITEBYTECODE']='1'
                     if not all(key in env for key in (*BINDING_KEYS,'TASK_ROOT','FLOORP_CENSUS_ABI')):
                         raise Failure('inventory-abi-missing')
-                    result=subprocess.run([sys.executable,str(Path(__file__).with_name('darwin_inventory.py')),
+                    result=subprocess.run([sys.executable,'-S',str(Path(__file__).with_name('darwin_inventory.py')),
                                            '--pgid',str(pgid)],capture_output=True,check=True,timeout=3,
                                           text=True,env=env)
                     reply=decode_reply(result.stdout,pgid)

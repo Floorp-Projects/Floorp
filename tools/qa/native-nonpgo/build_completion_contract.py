@@ -8,6 +8,8 @@ import os
 from pathlib import Path
 import stat
 import sys
+import tempfile
+import time
 import types
 
 from build_completion import collect, start_snapshot
@@ -27,8 +29,8 @@ LARGE_RESOURCE_ROWS = 136
 CODES = ('contract-source-kind', 'contract-source-size', 'contract-source-hash',
          'contract-source-changed', 'contract-task', 'contract-snapshot',
          'contract-monitor-init', 'contract-worker-started', 'contract-observation',
-         'contract-cleanup', 'contract-receipt-write')
-PHASES = ('source', 'task', 'snapshot', 'serializer', 'observation', 'cleanup', 'receipt')
+         'contract-cleanup', 'contract-receipt-write', 'contract-fixture-clock')
+PHASES = ('source', 'task', 'snapshot', 'fixture-clock', 'serializer', 'observation', 'cleanup', 'receipt')
 
 
 def safe_error(error, phase):
@@ -43,6 +45,25 @@ def safe_error(error, phase):
 def _identity(value):
     return (value.st_dev, value.st_ino, value.st_uid, value.st_mode, value.st_size,
             value.st_mtime_ns, value.st_ctime_ns, value.st_nlink)
+
+
+def fixture_clock_barrier(task, snapshot):
+    """Create synthetic input only after the filesystem reaches its snapshot clock."""
+    require(type(snapshot) is dict and snapshot.get('status') == 'captured' and
+            type(snapshot.get('wallTimeNs')) is int and snapshot['wallTimeNs'] > 0,
+            'contract-fixture-clock')
+    descriptor, name = tempfile.mkstemp(prefix='.serializer-clock-', dir=task)
+    try:
+        for _ in range(200):
+            os.utime(descriptor, None)
+            current = os.fstat(descriptor)
+            if min(current.st_mtime_ns, current.st_ctime_ns) >= snapshot['wallTimeNs']:
+                return
+            time.sleep(0.001)
+        raise Failure('contract-fixture-clock')
+    finally:
+        os.close(descriptor)
+        os.unlink(name)
 
 
 def load_serializer(path):
@@ -239,6 +260,8 @@ def run_contract(source, task, *, large_whole=False):
             phase = 'snapshot'
             snapshot = start_snapshot(case_task)
             require(snapshot.get('status') == 'captured', 'contract-snapshot')
+            phase = 'fixture-clock'
+            fixture_clock_barrier(case_task, snapshot)
             path = directory / PROFILE_NAME
             phase = 'serializer'
             cleanup, error = (serialize(module, path, profile_format, mode, large=True) if large else

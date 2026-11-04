@@ -56,9 +56,9 @@ def need(condition, code):
 
 
 def identity(value, full=True):
-    fields = ('st_dev', 'st_ino', 'st_uid', 'st_mode', 'st_nlink')
+    fields = ('st_dev', 'st_ino', 'st_uid', 'st_mode')
     if full:
-        fields += ('st_size', 'st_mtime_ns', 'st_ctime_ns')
+        fields += ('st_nlink', 'st_size', 'st_mtime_ns', 'st_ctime_ns')
     return tuple(getattr(value, key) for key in fields)
 
 
@@ -68,6 +68,7 @@ class _FixedRead:
         need(path.is_absolute() and '..' not in path.parts and path.resolve() == path, 'root-binding')
         self.task, self.stack, self.deadline = path, stack, deadline
         self.total, self.entries, self.directories = 0, [], []
+        # Ancestor siblings may gain logs; keep their inode, owner and mode pinned.
         descriptor = self._dir('/', None, False)
         for part in path.parts[1:]:
             descriptor = self._dir(part, descriptor, False)

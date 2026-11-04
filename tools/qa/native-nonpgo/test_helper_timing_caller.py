@@ -286,6 +286,79 @@ class FinalizationTests(unittest.TestCase):
             with self.subTest(key=key),self.assertRaises(Failure):caller.validate_preflight(value)
 
 
+@unittest.skipUnless(hasattr(os,'mkfifo'),'Requires POSIX named pipes')
+class ReceiptIOTests(unittest.TestCase):
+    def run_child(self,script,*arguments):
+        result=subprocess.run([sys.executable,'-B','-c',script,*arguments],
+            cwd=caller.HERE,capture_output=True,text=True,timeout=3,
+            env={**os.environ,'PYTHONDONTWRITEBYTECODE':'1'})
+        self.assertEqual(result.returncode,0,result.stderr)
+
+    def test_regular_source_hash_and_private_receipt_rules_are_preserved(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            path=Path(temporary)/'receipt';raw=b'{"status":"passed"}\n'
+            path.write_bytes(raw);path.chmod(0o644)
+            self.assertEqual(caller.digest(path),hashlib.sha256(raw).hexdigest())
+            with self.assertRaises(Failure):caller.owned_json(path)
+            path.chmod(0o600)
+            self.assertEqual(caller.owned_json(path),{'status':'passed'})
+            link=Path(temporary)/'link';os.link(path,link)
+            with self.assertRaises(Failure):caller.owned_json(path)
+            link.unlink();link.symlink_to(path)
+            for reader in (caller.owned_json,caller.digest):
+                with self.subTest(reader=reader.__name__),self.assertRaises(OSError):reader(link)
+
+    def test_oversized_source_and_clock_marker_are_rejected(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            path=Path(temporary)/'input'
+            with path.open('wb') as stream:stream.truncate(4*1024**2+1)
+            with self.assertRaises(Failure):caller.digest(path)
+            path.write_bytes(b'1'*129);path.chmod(0o600)
+            with self.assertRaises(Failure):caller.file_bytes(path,128,private=True)
+
+    def test_private_json_fifo_is_rejected_without_waiting_for_a_writer(self):
+        self.check_fifo('owned_json')
+
+    def test_digest_fifo_is_rejected_without_waiting_for_a_writer(self):
+        self.check_fifo('digest')
+
+    def check_fifo(self,operation):
+        with tempfile.TemporaryDirectory() as temporary:
+            path=Path(temporary)/'receipt';os.mkfifo(path,0o600)
+            self.run_child('''import sys
+from pathlib import Path
+import helper_timing_caller as caller
+from qa_core import Failure
+try:
+    getattr(caller,sys.argv[1])(Path(sys.argv[2]))
+except Failure:
+    pass
+else:
+    raise AssertionError('Named pipe was accepted as a regular file')
+''',operation,str(path))
+
+    def test_postemit_fifo_replacements_revoke_success_without_waiting_for_a_writer(self):
+        for name in ('started','started-monotonic','helper-timing-final.json'):
+            with self.subTest(name=name):
+                self.run_child('''import os,sys
+import helper_timing_caller as caller
+from test_helper_timing_caller import FinalizationTests
+fixture=FinalizationTests()
+fixture.setUp()
+try:
+    def emit(raw,flush):
+        fixture.emit(raw,flush)
+        if len(fixture.rows)==1 and fixture.rows[0]['status']=='passed':
+            path=fixture.task/sys.argv[1]
+            path.unlink()
+            os.mkfifo(path,0o600)
+    assert caller.finalize(fixture.task,emit=emit)==1
+    assert [row['status'] for row in fixture.rows]==['passed','failed']
+finally:
+    fixture.doCleanups()
+''',name)
+
+
 class ActualPreflightTests(unittest.TestCase):
     @unittest.skipUnless(sys.platform=='linux','Linux negative control only; actual Darwin qualification is separate')
     def test_real_selected_linux_preflight_skips_are_nonzero_and_all_owned_children_are_reaped(self):

@@ -23,7 +23,6 @@ if __name__=='__main__':
     # Distinguish reaching the script from loading the project and ctypes APIs.
     _emit_progress('project-imports')
 
-import argparse
 import ctypes
 import errno
 import hashlib
@@ -236,15 +235,18 @@ def decode_reply(text,pgid):
 
 
 def main():
-    parser=argparse.ArgumentParser();parser.add_argument('--pgid',type=int,required=True)
-    args=parser.parse_args();queries=[];progress={}
+    if (len(sys.argv)!=3 or sys.argv[1]!='--pgid' or
+            re.fullmatch('[0-9]{1,10}',sys.argv[2]) is None):raise SystemExit(2)
+    pgid=int(sys.argv[2])
+    if not 0<pgid<2**31:raise SystemExit(2)
+    queries=[];progress={}
     try:
         require(sys.platform=='darwin','inventory-platform')
-        value=collect(args.pgid,queries,progress=progress,notify=_emit_progress)
+        value=collect(pgid,queries,progress=progress,notify=_emit_progress)
     except Exception as error:
         code=str(error) if isinstance(error,Failure) else 'inventory-helper-exception'
         if code.startswith('census-'):code='inventory-abi-unavailable'
-        value={'status':'unavailable','pids':None,'group':args.pgid,'queries':queries,
+        value={'status':'unavailable','pids':None,'group':pgid,'queries':queries,
                'phase':progress.get('phase','startup'),
                'failureCode':code,'errorType':'os-error' if isinstance(error,OSError) else
                     'failure' if isinstance(error,Failure) else 'exception'}

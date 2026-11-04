@@ -22,7 +22,7 @@ HERE = Path(__file__).resolve().parent
 
 def verify_sdk_acquisition(task, runner, env, result, source_path=None):
     acquired=json.loads((task/'sdk-download/receipt.json').read_text())
-    from sdk_source import load_sdk_source, validate_acquisition_receipt
+    from sdk_source import load_sdk_source, validate_acquisition_receipt, source_provenance
     sdk_source=load_sdk_source(HERE/'plan.json',source_path)
     pin=sdk_source['pin']
     if source_path is not None:
@@ -45,8 +45,7 @@ def verify_sdk_acquisition(task, runner, env, result, source_path=None):
         'treeSHA256':materialized['canonicalSHA256'],'members':materialized['members'],
         'logicalBytes':materialized['logicalBytes'],'version':pin['version']}
     if source_path is not None:
-        result['sdkVerification']['acquisitionSource']={key:sdk_source[key] for key in
-            ('qualification','sourceSHA256','baselinePlanSHA256','uncompressedTar','producerJob')}
+        result['sdkVerification']['acquisitionSource']=source_provenance(sdk_source)
 
 
 

@@ -11,6 +11,7 @@ import unittest
 from unittest import mock
 
 import build_completion as bc
+from build_completion_contract import fixture_clock_barrier
 
 
 META = {'product': 'mach', 'version': 27, 'preprocessedProfileVersion': 47}
@@ -57,6 +58,7 @@ class CompletionTests(unittest.TestCase):
         self.directory.mkdir(parents=True)
         self.snapshot = bc.start_snapshot(self.task)
         self.assertEqual(self.snapshot['status'], 'captured')
+        fixture_clock_barrier(self.task, self.snapshot)
 
     def write(self, raw, name=NAME):
         path = self.directory / name
@@ -194,6 +196,7 @@ class CompletionTests(unittest.TestCase):
     def test_snapshot_can_precede_creation_of_expected_directories(self):
         with tempfile.TemporaryDirectory(prefix='floorp-build-completion-new-') as temp:
             task = Path(temp).resolve();snapshot = bc.start_snapshot(task)
+            fixture_clock_barrier(task, snapshot)
             directory = task.joinpath(*bc.PARTS);directory.mkdir(parents=True)
             (directory / NAME).write_bytes(jsonl([marker()]))
             self.assertEqual(bc.collect(task, snapshot)['status'], 'observed')
@@ -452,6 +455,54 @@ class CompletionTests(unittest.TestCase):
         self.assertEqual(value['finishedTierMarkers']['compile'], 1)
         self.assertNotIn('PRIVATE_SENTINEL', json.dumps(value))
 
+    def test_batch_validation_cache_keeps_fresh_values_bounds_and_deadline(self):
+        with tempfile.TemporaryFile() as stream:
+            raw = b'{"long":1},{"long":1},'
+            stream.write(raw);stream.flush()
+            reader = bc._JSONStream(stream.fileno(), 0, len(raw), time.monotonic() + 5)
+            first = reader.array_batch(0)
+            first[0]['long'] = 999
+            reader.pos = 0
+            self.assertEqual(reader.array_batch(0), [{'long': 1}, {'long': 1}])
+            for field, limit in (('MAX_KEY_BYTES', 3), ('MAX_OBJECT_KEYS', 0),
+                                 ('MAX_ROWS', 1), ('MAX_DEPTH', 0)):
+                reader.pos = 0
+                with self.subTest(field=field), mock.patch.object(bc, field, limit), \
+                        self.assertRaises(bc._Unknown):
+                    reader.array_batch(0)
+            reader.pos = 0
+            with mock.patch.object(bc.time, 'monotonic', return_value=reader.deadline + 1), \
+                    self.assertRaises(bc._Unknown) as failure:
+                reader.array_batch(0)
+            self.assertEqual(failure.exception.reason, 'build-completion-processing-limit')
+
+    def test_batch_validation_cache_retains_at_most_two_bounded_prefixes(self):
+        with tempfile.TemporaryFile() as stream, mock.patch.object(bc, 'READ_BYTES', 4):
+            raw = b'1,1,2,2,3,3,'
+            stream.write(raw);stream.flush()
+            reader = bc._JSONStream(stream.fileno(), 0, len(raw), time.monotonic() + 5)
+            for number in (1, 2, 3):
+                self.assertEqual(reader.array_batch(0), [number, number])
+                self.assertLessEqual(len(reader.batch_validation_cache), 2)
+            self.assertEqual(len(reader.batch_validation_cache), 2)
+            self.assertTrue(all(len(key[-1]) <= 4 for key in reader.batch_validation_cache))
+            reader.finish()
+
+    def test_repeated_batches_still_reject_changed_duplicate_nonfinite_deep_and_long_keys(self):
+        prefix = json.dumps(whole([phase(), marker()]), separators=(',', ':')).encode()[:-1]
+        repeated = b',"ignored":[' + b'{"ok":1},' * 400
+        tails = (b'{"k":1,"\\u006b":2}', b'1e999',
+                 b'[' * (bc.MAX_DEPTH + 1) + b'0' + b']' * (bc.MAX_DEPTH + 1),
+                 json.dumps({'k' * (bc.MAX_KEY_BYTES + 1): 1}).encode())
+        for tail in tails:
+            self.write(prefix + repeated + tail + b']}')
+            with mock.patch.object(bc, 'READ_BYTES', 256):
+                fast = bc.collect(self.task, self.snapshot)
+                with mock.patch.object(bc._JSONStream, 'small_value', return_value=bc._UNDECODED), \
+                        mock.patch.object(bc._JSONStream, 'array_batch', return_value=bc._UNDECODED):
+                    self.assertEqual(fast, bc.collect(self.task, self.snapshot))
+            self.unknown(fast)
+
     def test_whole_batches_with_quoted_container_delimiters_match_generic_validation(self):
         resource = marker('CPU', 'unused')
         resource['data'] = {'type': 'CPU', 'quoted': '}, ], \", literal', 'nested': {'a': [1, 2]}}
@@ -620,6 +671,26 @@ class CompletionTests(unittest.TestCase):
         self.assertTrue(changed)
         self.unknown(result)
         self.assertEqual(result['reason'], 'build-completion-file-changed')
+
+    def test_same_size_rewrite_is_rejected_when_metadata_identity_is_unchanged(self):
+        parse,identity=bc._parse,bc._identity
+        for raw in (jsonl([marker()]),json.dumps(whole([marker()])).encode()):
+            with self.subTest(format='jsonl' if raw.startswith(b'{"type"') else 'whole'):
+                path=self.write(raw);before=path.stat()
+                fixed=identity(before,True)
+                def change(*args):
+                    result=parse(*args)
+                    replaced=raw.replace(b'MacWebAppService.o',b'X'*len(b'MacWebAppService.o'))
+                    self.assertNotEqual(replaced,raw)
+                    with path.open('r+b') as stream:stream.write(replaced)
+                    os.utime(path,ns=(before.st_atime_ns,before.st_mtime_ns))
+                    return result
+                with mock.patch.object(bc,'_parse',side_effect=change), \
+                     mock.patch.object(bc,'_identity',side_effect=lambda value,full=False:
+                         fixed if full else identity(value)):
+                    result=bc.collect(self.task,self.snapshot)
+                self.unknown(result)
+                self.assertEqual(result['reason'],'build-completion-file-changed')
 
     def test_snapshot_validation_and_input_are_not_mutated(self):
         self.write(jsonl([marker()]));original = copy.deepcopy(self.snapshot)

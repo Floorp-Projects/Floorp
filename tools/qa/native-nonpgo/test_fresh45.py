@@ -19,6 +19,8 @@ import consumer_time
 import fresh45 as fresh
 import mozilla_target_build as target
 import mozilla_upstream as upstream
+import nss_dynamic_closure as nss
+import nss_runtime
 import pipeline
 import test_mozilla_target_build as target_models
 import test_mozilla_upstream as upstream_models
@@ -132,7 +134,7 @@ class Fresh45Flow(unittest.TestCase):
 
     def prepare(self, source, task, runner, env, deadline, result):
         result.update(copy.deepcopy(self.upstream));result.update(status='failed',assets=None,case=None)
-        for stage in upstream.EXTRA_STAGES[:2]:runner.run(stage,[],source,env,360,phase_deadline_minutes=deadline)
+        for stage in upstream.PREPARE_STAGES:runner.run(stage,[],source,env,360,phase_deadline_minutes=deadline)
 
     def scope(self, source, task, runner, env, deadline, result):
         self.assertEqual(deadline,345)
@@ -182,12 +184,16 @@ class Fresh45Flow(unittest.TestCase):
         self.assertEqual(result['qualification'],fresh.QUALIFICATION)
         self.assertTrue(result['freshObjdir']);self.assertTrue(result['sameJob']);self.assertFalse(result['checkpointUsed'])
         stages=[row[0] for row in self.launches]
-        self.assertEqual(stages[-15:],['configure','effective-config',fresh.EXPORT_STAGE,
-            *upstream.EXTRA_STAGES[:2],*target.STAGES,*upstream.EXTRA_STAGES[2:]])
+        expected=['configure','effective-config',fresh.EXPORT_STAGE,
+            *upstream.PREPARE_STAGES,*target.STAGES,*upstream.EXTRA_STAGES[len(upstream.PREPARE_STAGES):]]
+        self.assertEqual(stages[-len(expected):],expected)
         self.assertTrue(all(row[2]==345 for row in self.launches))
         self.assertFalse(any(stage in fresh.FORBIDDEN_STAGES for stage in stages))
         self.assertEqual(result['mozillaUpstream']['case']['harness']['counts']['executed'],42)
         self.assertEqual(result['mozillaUpstream']['case']['harness']['counts']['skipped'],3)
+        ledger=result['mozillaUpstreamExecution']
+        self.assertEqual(ledger['counts']['executed'],42);self.assertEqual(ledger['counts']['skipped'],3)
+        self.assertEqual(ledger['status'],'recorded');self.assertFalse(ledger['productQualification'])
         self.assertFalse(result['fullHostQualification']);self.assertEqual(result['nativeAuthentication'],'NOT_TESTED')
         self.assertEqual((self.task/'started-monotonic').read_bytes(),self.origin)
         self.assertIn(upstream.CHILD_LIBS_STAGE,result['targetStageLogs'])
@@ -202,6 +208,162 @@ class Fresh45Flow(unittest.TestCase):
                      ('--mozilla-first',),('--mozilla-targeted',),('--mozilla-upstream-xpcom',)]:
             with self.subTest(args=args),self.assertRaisesRegex(Failure,'fresh-firefox45-mode'):self.invoke(args)
         self.assertIsNone(self.runner);self.assertEqual(self.launches,[])
+
+    def test_opt_in_nss_builds_and_probes_precede_unchanged_42_case_scope(self):
+        def stack(task, runner, env, deadline, value):
+            value.update(status='passed', realToolExecuted=True)
+            runner.run(nss_runtime.STACK_STAGE, [], task, env, 360, phase_deadline_minutes=deadline)
+        def build(source, task, runner, env, deadline, value):
+            value.update(status='built')
+            for name, _ in nss_runtime.TARGETS:
+                runner.run(name, [], source, env, 360, phase_deadline_minutes=deadline)
+        def load(source, task, runner, env, deadline, macho, assets, value):
+            self.assertEqual(assets, self.assets)
+            self.assertNotIn('mozilla-upstream-xpcom', [row[0] for row in self.launches])
+            value.update(status='passed', realNSSLoadObserved=True)
+        with mock.patch.object(nss_runtime, 'run_stack_probe', stack), \
+                mock.patch.object(nss_runtime, 'run_build', build), \
+                mock.patch.object(nss_runtime, 'run_load_probe', load), \
+                mock.patch.object(nss_runtime, 'proof_complete', return_value=True):
+            code, result = self.invoke(('--nss-runtime-closure',))
+        self.assertEqual(code, 0)
+        self.assertEqual(result['nssRuntime']['loadProbe']['status'], 'passed')
+        self.assertFalse(result['nssRuntime']['native42ResultQualification'])
+        stages = [row[0] for row in self.launches]
+        self.assertLess(stages.index(nss_runtime.STACK_STAGE), stages.index('configure'))
+        self.assertLess(stages.index(nss_runtime.TARGETS[-1][0]), stages.index(target.STAGES[0]))
+        self.assertEqual(result['mozillaUpstreamExecution']['counts']['executed'], 42)
+        self.assertEqual(result['mozillaUpstreamExecution']['counts']['skipped'], 3)
+        self.assertEqual(result['nssDynamicClosure']['afterNSSBuild']['status'], 'unconfirmed')
+        self.assertTrue(all(name in result['targetStageLogs'] for name, _ in nss_runtime.TARGETS))
+
+    def test_opt_in_stack_failure_keeps_first_failure_and_no_build_or_42_launch(self):
+        def fail(task, runner, env, deadline, value):
+            value.update(status='failed', realToolExecuted=False)
+            runner.fail(nss_runtime.STACK_STAGE, 'controlled-functional-failure')
+            raise Failure('controlled-functional-failure')
+        with mock.patch.object(nss_runtime, 'run_stack_probe', fail):
+            code, result = self.invoke(('--nss-runtime-closure',))
+        self.assertEqual(code, 1)
+        self.assertEqual(result['firstFailure']['stage'], nss_runtime.STACK_STAGE)
+        self.assertFalse(result['nssRuntime']['stackProbe']['realToolExecuted'])
+        self.assertNotIn('configure', [row[0] for row in self.launches])
+        self.assertEqual(result['mozillaUpstreamExecution']['status'], 'unverified')
+        self.assertFalse(result['mozillaUpstreamExecution']['inventoryVerified'])
+
+    def test_opt_in_incomplete_nss_receipt_cannot_pass_saved_final_proof(self):
+        def value(*args):
+            args[-1].update(status='passed')
+        with mock.patch.object(nss_runtime, 'run_stack_probe', value), \
+                mock.patch.object(nss_runtime, 'run_build', value), \
+                mock.patch.object(nss_runtime, 'run_load_probe', value):
+            code, result = self.invoke(('--nss-runtime-closure',))
+        self.assertEqual(code, 1)
+        self.assertEqual(result['firstFailure']['code'], 'fresh-nss-runtime-proof-incomplete')
+
+    def test_nss_snapshots_follow_completed_builds_and_survive_in_saved_summary(self):
+        observations = []
+        def observe(task, *, deadline):
+            observations.append([row[0] for row in self.launches])
+            self.assertEqual(task, self.task.resolve())
+            self.assertLessEqual(deadline - self.clock, 30)
+            return nss.unconfirmed('missing')
+        with mock.patch.object(nss, 'observe_configured', side_effect=observe):
+            code, result = self.invoke()
+        self.assertEqual(code, 0)
+        self.assertEqual(len(observations), 4)
+        self.assertNotIn(target.STAGES[0], observations[0])
+        self.assertEqual(observations[1][-1], target.STAGES[-1])
+        self.assertEqual(observations[2][-1], upstream.RESOURCE_STAGE)
+        self.assertEqual(set(result['nssDynamicClosure']),
+                         {'beforeTargetBuild', 'afterTargetBuild', 'afterChildResources', 'final'})
+        self.assertTrue(all(value['native42ResultQualification'] is False
+                            for value in result['nssDynamicClosure'].values()))
+        self.assertEqual(result['nssDynamicClosure'],
+                         json.loads(self.stdout.splitlines()[-1])['nssDynamicClosure'])
+
+    def test_nss_diagnostic_exception_cannot_replace_first_failure_or_45_ledger(self):
+        self.fail_stage = upstream.CHILD_LIBS_STAGE
+        with mock.patch.object(nss, 'observe_configured', side_effect=RuntimeError('PRIVATE_SENTINEL')):
+            code, result = self.invoke()
+        self.assertEqual(code, 1)
+        self.assertEqual(result['firstFailure'],
+                         {'stage': upstream.CHILD_LIBS_STAGE, 'code': 'controlled-functional-failure'})
+        self.assertEqual(result['nssDynamicClosure']['final']['reason'], 'collector-exception')
+        self.assertEqual(result['mozillaUpstreamExecution']['counts']['notExecuted'], 42)
+        self.assertEqual(result['mozillaUpstreamExecution']['counts']['manifestDisabled'], 3)
+        self.assertNotIn('PRIVATE_SENTINEL', self.stdout)
+
+    def test_real_configured_observer_preserves_partial_files_in_failed_pipeline_summary(self):
+        import test_nss_dynamic_closure as model
+        def after(stage):
+            if stage == 'effective-config':
+                (self.task / 'effective-config.private.log').write_text(json.dumps(
+                    {'substs': {'MOZ_MACBUNDLE_NAME': 'Test.app'}, 'private': 'PRIVATE_SENTINEL'}))
+            if stage == target.STAGES[-1]:
+                for prefix in ('obj/dist/bin', 'obj/dist/Test.app/Contents/MacOS'):
+                    directory = self.task / prefix
+                    directory.mkdir(parents=True)
+                    for name in nss.LIBRARIES:
+                        (directory / name).write_bytes(model.dylib())
+                (self.task / 'obj/dist/bin/libsoftokn3.dylib').unlink()
+        self.after = after
+        self.fail_stage = upstream.CHILD_LIBS_STAGE
+        code, result = self.invoke()
+        self.assertEqual(code, 1)
+        value = result['nssDynamicClosure']['final']
+        self.assertTrue(value['bindingsStable'])
+        self.assertEqual(value['files']['dist:libsoftokn3.dylib']['reason'], 'missing')
+        self.assertEqual(value['files']['bundle:libsoftokn3.dylib']['status'], 'observed')
+        self.assertFalse(value['allLibrariesObserved'])
+        self.assertFalse(value['graphPinsMatch'])
+        self.assertFalse(value['realLoadPerformed'])
+        self.assertEqual(result['firstFailure']['stage'], upstream.CHILD_LIBS_STAGE)
+        self.assertEqual(result['nssDynamicClosure'],
+                         json.loads(self.stdout.splitlines()[-1])['nssDynamicClosure'])
+        self.assertNotIn('PRIVATE_SENTINEL', self.stdout)
+        self.assertNotIn(str(self.task), json.dumps(value))
+
+    def test_nss_final_snapshot_runs_after_asset_failure_without_later_test_launch(self):
+        def failed(diagnostic):
+            raise Failure('mozilla-upstream-current-native-asset')
+        self.after_asset = failed
+        with mock.patch.object(nss, 'observe_configured', return_value=nss.unconfirmed('missing')) as observe:
+            code, result = self.invoke()
+        self.assertEqual(code, 1)
+        self.assertEqual(observe.call_count, 4)
+        self.assertIn('final', result['nssDynamicClosure'])
+        self.assertIsNone(result['mozillaUpstream']['case'])
+        self.assertEqual(result['firstFailure']['code'], 'mozilla-upstream-current-native-asset')
+
+    def test_nss_diagnostic_failure_alone_cannot_fail_a_complete_route(self):
+        with mock.patch.object(nss, 'observe_configured', side_effect=OSError('PRIVATE_SENTINEL')):
+            code, result = self.invoke()
+        self.assertEqual(code, 0)
+        self.assertIsNone(result['firstFailure'])
+        self.assertEqual(result['nssDynamicClosure']['final']['reason'], 'collector-exception')
+        self.assertNotIn('PRIVATE_SENTINEL', self.stdout)
+
+    def test_nss_collection_never_extends_original_work_deadline(self):
+        self.after_scope = lambda: setattr(self, 'clock', 1000 + 345 * 60)
+        with mock.patch.object(nss, 'observe_configured', return_value=nss.unconfirmed('missing')) as observe:
+            code, result = self.invoke()
+        self.assertEqual(code, 1)
+        self.assertEqual(observe.call_count, 3)
+        self.assertEqual(result['nssDynamicClosure']['final']['reason'], 'work-deadline')
+        self.assertEqual((self.task / 'started-monotonic').read_bytes(), self.origin)
+
+    def test_nss_collection_does_not_overlap_an_unconfirmed_process_group(self):
+        def after(stage):
+            if stage == target.STAGES[0]:
+                self.runner.records[-1]['groupCleanup'] = 'unconfirmed'
+        self.after = after
+        with mock.patch.object(nss, 'observe_configured', return_value=nss.unconfirmed('missing')) as observe:
+            code, result = self.invoke()
+        self.assertEqual(code, 1)
+        self.assertEqual(observe.call_count, 1)
+        self.assertEqual(result['nssDynamicClosure']['final']['reason'], 'process-cleanup-unconfirmed')
+        self.assertEqual(result['firstFailure']['code'], 'mozilla-target-stage-proof')
 
     def test_existing_object_directory_or_broken_symlink_is_rejected(self):
         (self.task/'obj').symlink_to(self.task/'missing')
@@ -228,6 +390,12 @@ class Fresh45Flow(unittest.TestCase):
         self.assertEqual(result['firstFailure']['stage'],upstream.CHILD_LIBS_STAGE)
         self.assertNotIn(upstream.RESOURCE_STAGE,[row[0] for row in self.launches])
         self.assertIsNone(result['mozillaUpstream']['case'])
+        ledger=result['mozillaUpstreamExecution']
+        self.assertEqual(ledger['status'],'not-executed')
+        self.assertEqual(ledger['counts']['notExecuted'],42)
+        self.assertEqual(ledger['counts']['manifestDisabled'],3)
+        self.assertEqual(ledger['counts']['skipped'],0);self.assertEqual(ledger['counts']['passed'],0)
+        self.assertTrue(all(row['actual'] is None for row in ledger['tests']))
 
     def test_asset_failure_retains_first_false_predicate_and_no_executed45_counts(self):
         def failed(diagnostic):
@@ -313,9 +481,12 @@ class Fresh45Flow(unittest.TestCase):
 
     def test_first_failed_summary_cannot_be_promoted_by_writer_callback(self):
         self.fail_stage=target.STAGES[0]
-        self.writer_after=lambda value:value.update(status=fresh.STATUS,firstFailure=None)
+        self.writer_after=lambda value:value.update(status=fresh.STATUS,firstFailure=None,
+            mozillaUpstreamExecution={'status':'passed','productQualification':True})
         code,result=self.invoke();self.assertEqual(code,1)
         self.assertEqual(result['status'],'failed');self.assertEqual(result['firstFailure']['code'],'controlled-functional-failure')
+        self.assertEqual(result['mozillaUpstreamExecution']['status'],'not-executed')
+        self.assertFalse(result['mozillaUpstreamExecution']['productQualification'])
 
 
 class Fresh45PureGuards(unittest.TestCase):

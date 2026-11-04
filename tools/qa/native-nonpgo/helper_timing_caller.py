@@ -176,18 +176,23 @@ def public_failure(value):
             'code':value.get('code') if type(value) is dict and value.get('code') in codes else 'timing-final-proof-failed'}
 
 
-def owned_json(path,cap=4*1024**2):
-    descriptor=os.open(path,os.O_RDONLY|os.O_NOFOLLOW)
+def file_bytes(path,cap=4*1024**2,*,private=False):
+    descriptor=os.open(path,os.O_RDONLY|os.O_NOFOLLOW|os.O_NONBLOCK)
     try:
         before=os.fstat(descriptor)
-        require(stat.S_ISREG(before.st_mode) and before.st_uid==os.geteuid() and before.st_nlink==1 and
-                stat.S_IMODE(before.st_mode)==0o600 and 0<before.st_size<=cap,'timing-receipt-file')
+        require(stat.S_ISREG(before.st_mode) and 0<before.st_size<=cap and
+                (not private or (before.st_uid==os.geteuid() and before.st_nlink==1 and
+                stat.S_IMODE(before.st_mode)==0o600)),'timing-receipt-file')
         with os.fdopen(descriptor,'rb',closefd=False) as stream:raw=stream.read(cap+1)
         after=os.fstat(descriptor)
         identity=lambda info:(info.st_dev,info.st_ino,info.st_size,info.st_mtime_ns,info.st_ctime_ns)
         require(identity(before)==identity(after) and len(raw)==before.st_size,'timing-receipt-changed')
-        return _decode(raw)
+        return raw
     finally:os.close(descriptor)
+
+
+def owned_json(path,cap=4*1024**2):
+    return _decode(file_bytes(path,cap,private=True))
 
 
 def store(path,value):
@@ -198,7 +203,7 @@ def store(path,value):
 
 
 def digest(path):
-    with Path(path).open('rb') as stream:return hashlib.file_digest(stream,'sha256').hexdigest()
+    return hashlib.sha256(file_bytes(path)).hexdigest()
 
 
 def verify_sources(environment=None):
@@ -231,8 +236,8 @@ def clock(task,origin_hash,*,within_work=True,monotonic=None):
             origin['workDeadlineMinutes']==15 and origin['clockResetAllowed'] is False,'timing-origin-binding')
     started=datetime.datetime.fromisoformat(origin['startedAt'].replace('Z','+00:00')).timestamp()
     bound=origin['monotonicOrigin']
-    require(number(bound) and bound>0 and float((task/'started-monotonic').read_text())==bound and
-            float((task/'started').read_text())==started,'timing-clock-binding')
+    require(number(bound) and bound>0 and float(file_bytes(task/'started-monotonic',128,private=True))==bound and
+            float(file_bytes(task/'started',128,private=True))==started,'timing-clock-binding')
     elapsed=mono()-bound
     require(number(elapsed) and elapsed<(900 if within_work else 1200),'timing-clock-deadline')
     return elapsed
@@ -240,8 +245,9 @@ def clock(task,origin_hash,*,within_work=True,monotonic=None):
 
 def selection():
     path=HERE/'helper_timing_selection.json'
-    require(digest(path)==SELECTION_SHA256,'timing-selection-binding')
-    value=_decode(path.read_bytes())
+    raw=file_bytes(path)
+    require(hashlib.sha256(raw).hexdigest()==SELECTION_SHA256,'timing-selection-binding')
+    value=_decode(raw)
     require(type(value) is list and len(value)==103 and len(set(value))==103 and
             all(type(item) is str for item in value),'timing-selection')
     return value
@@ -459,7 +465,7 @@ def execute(task):
         clock(task,result['originSHA256'])
         from support import Runner,clean_environment
         from helper_import_preflight import select_abi,run_experiment
-        runner=Runner(task,float((task/'started').read_text()),json.loads((HERE/'plan.json').read_text())['limits'])
+        runner=Runner(task,float(file_bytes(task/'started',128,private=True)),_decode(file_bytes(HERE/'plan.json'))['limits'])
         runner.phase_deadline_minutes=15
         env=clean_environment(task);(task/'tmp').mkdir(mode=0o700)
         env['PYTHONDONTWRITEBYTECODE']='1';result['phase']='abi'

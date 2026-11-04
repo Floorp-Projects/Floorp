@@ -68,7 +68,7 @@ def origin(target):
 
 
 @contextmanager
-def owned_file(path, maximum):
+def owned_file(path, maximum, *, deadline=None):
     path = Path(path)
     before = path.lstat()
     require(stat.S_ISREG(before.st_mode) and before.st_uid == os.geteuid() and
@@ -77,7 +77,29 @@ def owned_file(path, maximum):
     with os.fdopen(fd, 'rb') as stream:
         opened = os.fstat(stream.fileno())
         require(all(getattr(before, key) == getattr(opened, key) for key in IDENTITY), 'sdk-qualification-file-changed')
+        deadline = time.monotonic() + MAX_SECONDS if deadline is None else deadline
+        def fingerprint():
+            budget(deadline)
+            os.lseek(stream.fileno(), 0, os.SEEK_SET)
+            content, count = hashlib.sha256(), 0
+            while True:
+                budget(deadline)
+                block = os.read(stream.fileno(), min(CHUNK, before.st_size + 1 - count))
+                budget(deadline)
+                if not block:
+                    break
+                count += len(block)
+                require(count <= before.st_size, 'sdk-qualification-file-changed')
+                content.update(block)
+            require(count == before.st_size, 'sdk-qualification-file-changed')
+            return content.digest()
+        initial = fingerprint()
+        stream.seek(0)
         yield stream
+        after, current = os.fstat(stream.fileno()), path.lstat()
+        require(all(getattr(before, key) == getattr(after, key) == getattr(current, key) for key in IDENTITY),
+                'sdk-qualification-file-changed')
+        require(fingerprint() == initial, 'sdk-qualification-file-changed')
         after, current = os.fstat(stream.fileno()), path.lstat()
         require(all(getattr(before, key) == getattr(after, key) == getattr(current, key) for key in IDENTITY),
                 'sdk-qualification-file-changed')
@@ -185,11 +207,11 @@ def qualify(zip_path, tar_path=None, *, target='retained'):
         baseline()
         pin, producer, producer_name = origin(target)
         with ExitStack() as stack:
-            wire = stack.enter_context(owned_file(zip_path, pin['zipBytes']))
+            wire = stack.enter_context(owned_file(zip_path, pin['zipBytes'], deadline=deadline))
             size, sha = checksum(wire, pin['zipBytes'], deadline)
             require(size == pin['zipBytes'] and sha == pin['zipSHA256'], 'sdk-qualification-zip')
             wire.seek(0)
-            payload = stack.enter_context(owned_file(tar_path, pin['tarBytes'])) if tar_path is not None else stack.enter_context(tempfile.TemporaryFile('w+b'))
+            payload = stack.enter_context(owned_file(tar_path, pin['tarBytes'], deadline=deadline)) if tar_path is not None else stack.enter_context(tempfile.TemporaryFile('w+b'))
             with zipfile.ZipFile(wire) as archive:
                 require(archive.namelist() == [pin['entry']], 'sdk-qualification-zip-layout')
                 info = archive.getinfo(pin['entry'])

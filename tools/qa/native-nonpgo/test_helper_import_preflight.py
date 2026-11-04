@@ -117,7 +117,7 @@ class SamplingTests(unittest.TestCase):
     def test_actual_fresh_wrapper_emits_parseable_stderr_graph_for_both_variants(self):
         for variant in hp.VARIANTS:
             with self.subTest(variant=variant):
-                value = subprocess.run([sys.executable, '-c', hp.WRAPPER, variant,
+                value = subprocess.run([sys.executable, '-S', '-c', hp.WRAPPER, variant,
                     str(hp.HERE/'darwin_inventory.py'), str(os.getpgrp())],
                     capture_output=True, text=True, check=True, timeout=3,
                     env=hp.helper_environment(environment()), cwd=hp.HERE)
@@ -147,8 +147,9 @@ class SamplingTests(unittest.TestCase):
                 value = hp.sample(variant, 'idle', 1, environment(), group)
             self.assertEqual(value['status'], 'measured'); self.assertTrue(value['cleanup']['reaped'])
             self.assertEqual(run.call_args.kwargs['timeout'], 3)
+            self.assertEqual(run.call_args.args[0][1:3], ['-S', '-c'])
             self.assertTrue(run.call_args.kwargs['check'])
-            self.assertEqual(run.call_args.args[0][2], hp.WRAPPER)
+            self.assertEqual(run.call_args.args[0][3], hp.WRAPPER)
             self.assertNotIn('987654321', json.dumps(value)); self.assertNotIn('PRIVATE', json.dumps(value))
         self.assertIn("if variant=='support-preimport':\n import support", hp.WRAPPER)
 

@@ -1,0 +1,4 @@
+[DEFAULT]
+head = ""
+
+["test_nss_sha256.js"]

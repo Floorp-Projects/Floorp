@@ -3,6 +3,7 @@ import argparse
 import ctypes
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
 import platform
@@ -18,9 +19,10 @@ from support import (Failure, Runner, clean_environment, digest, download,
                      extract_tar, require, scan_tar, write_json)
 from owned_native import OwnedNative
 from checkpoint_public import public_restore
-from sdk_source import load_sdk_source, validate_acquisition_receipt
+from sdk_source import load_sdk_source, validate_acquisition_receipt, source_provenance
 from consumer_time import select_consumer_time, select_fresh45_time
 from build_completion import start_snapshot, collect as collect_build_completion
+import nss_dynamic_closure
 
 
 HERE = Path(__file__).resolve().parent
@@ -346,6 +348,19 @@ def mozilla_proof_complete(value):
             type(value.get('cases')) is list and len(value['cases']) == 3)
 
 
+def nss_closure_evidence(task, runner, deadline):
+    try:
+        remaining = deadline * 60 - runner.elapsed()
+        if not math.isfinite(remaining) or remaining <= 0:
+            return nss_dynamic_closure.unconfirmed('work-deadline')
+        if any(row.get('groupCleanup') != 'verified-gone' for row in runner.records):
+            return nss_dynamic_closure.unconfirmed('process-cleanup-unconfirmed')
+        return nss_dynamic_closure.observe_configured(
+            task, deadline=time.monotonic() + min(30, remaining))
+    except Exception:
+        return nss_dynamic_closure.unconfirmed('collector-exception')
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--source', type=Path, required=True)
@@ -362,7 +377,9 @@ def main():
     parser.add_argument('--sdk-source', type=Path)
     parser.add_argument('--consumer-shared-deadline', action='store_true')
     parser.add_argument('--fresh-firefox45', action='store_true')
+    parser.add_argument('--nss-runtime-closure', action='store_true')
     args = parser.parse_args()
+    require(not args.nss_runtime_closure or args.fresh_firefox45, 'nss-runtime-fresh-only')
     require(not args.fresh_firefox45 or (args.checkpoint_role is None and not any((
         args.restore_only, args.replay_origin, args.mozilla_only, args.mozilla_first,
         args.mozilla_targeted, args.mozilla_upstream_xpcom, args.consumer_shared_deadline))),
@@ -399,6 +416,11 @@ def main():
     runner = Runner(task, started, plan['limits'])
     report = {'status': 'failed', 'newArtifacts': 0, 'retry': False, 'productQualification': False,
               'priorExecution': plan.get('recovery'), 'timePolicy': plan.get('timePolicy')}
+    if args.nss_runtime_closure:
+        import nss_runtime
+        report['nssRuntimeRequired'] = True
+        report['nssRuntime'] = {'contract': nss_runtime.CONTRACT,
+                               'productQualification': False, 'native42ResultQualification': False}
     if consumer_time['evidence'] is not None:
         report['executionTimeBudget'] = consumer_time['evidence']
     if args.mozilla_first:
@@ -450,6 +472,11 @@ def main():
         env = clean_environment(task, tools)
         env['PATH'] += ':/usr/local/bin'
         env['MOZ_BUILD_DATE'] = time.strftime('%Y%m%d%H%M%S', time.gmtime(started))
+        if args.nss_runtime_closure:
+            stage = 'nss-stack-fixer-probe'
+            report['nssRuntime']['stackProbe'] = {}
+            nss_runtime.run_stack_probe(task, runner, env, fresh_deadline,
+                                        report['nssRuntime']['stackProbe'])
         if checkpoint_role == 'consumer':
             date = os.environ.get('CHECKPOINT_BUILD_DATE', '')
             require(re.fullmatch('[0-9]{14}', date), 'checkpoint-build-date')
@@ -572,17 +599,37 @@ def main():
                 report['mozillaUpstream'] = {}
                 upstream.prepare(args.source, task, runner, env,
                     target_deadlines['consumerBuildDeadlineMinutes'], report['mozillaUpstream'])
+                report['nssDynamicClosure'] = {'beforeTargetBuild': nss_closure_evidence(
+                    task, runner, target_deadlines['consumerBuildDeadlineMinutes'])}
+            if args.nss_runtime_closure:
+                stage = 'nss-runtime-build'
+                report['nssRuntime']['build'] = {}
+                nss_runtime.run_build(args.source, task, runner, env,
+                    target_deadlines['consumerBuildDeadlineMinutes'], report['nssRuntime']['build'])
+                report['nssDynamicClosure']['afterNSSBuild'] = nss_closure_evidence(
+                    task, runner, target_deadlines['consumerBuildDeadlineMinutes'])
+                stage = 'mozilla-target-build'
             run_build(args.source, task, runner, env,
                       target_deadlines['consumerBuildDeadlineMinutes'], report['mozillaTargets'])
             if upstream_xpcom:
+                report['nssDynamicClosure']['afterTargetBuild'] = nss_closure_evidence(
+                    task, runner, target_deadlines['consumerBuildDeadlineMinutes'])
                 upstream.child_and_resources(args.source, task, runner, env,
                     target_deadlines['consumerBuildDeadlineMinutes'])
+                report['nssDynamicClosure']['afterChildResources'] = nss_closure_evidence(
+                    task, runner, target_deadlines['consumerBuildDeadlineMinutes'])
                 diagnostic = {}
                 report['mozillaUpstream']['nativeAssetPrecondition'] = diagnostic
                 report['mozillaUpstream']['assets'] = upstream.verify_scope_assets(
                     task, runner, macho, diagnostic=diagnostic)
             stage = 'mozilla-target-assets'
             report['mozillaTargets']['assets'] = verify_assets(task, runner, macho, source=args.source)
+            if args.nss_runtime_closure:
+                stage = 'nss-runtime-load'
+                report['nssRuntime']['loadProbe'] = {}
+                nss_runtime.run_load_probe(args.source, task, runner, env,
+                    target_deadlines['consumerNativeDeadlineMinutes'], macho,
+                    report['mozillaTargets']['assets'], report['nssRuntime']['loadProbe'])
             object_path = task / 'obj/widget/cocoa/MacWebAppService.o'
             report['hostObject'] = macho(object_path, 1)
             require(object_path.stat().st_mtime >= started, 'object-not-fresh')
@@ -719,6 +766,9 @@ def main():
             except OSError:
                 report['buildDiagnosticUnavailable'] = True
     finally:
+        if upstream_xpcom:
+            report.setdefault('nssDynamicClosure', {})['final'] = nss_closure_evidence(
+                task, runner, target_deadlines['finalDeadlineMinutes'])
         for key, path in (('monitorPreflight', 'monitor-preflight.json'),
                            ('sdk', 'sdk-materialized.json'), ('toolchains', 'toolchain-receipts.json'),
                            ('effectiveConfig', 'effective-config.json'), ('source', 'source.json'),
@@ -739,9 +789,7 @@ def main():
                             value.update({'artifact': acquired['artifact'], 'sourceRun': acquired['run'],
                                           'attempt': acquired['attempt'], 'zipSHA256': acquired['zipSHA256'],
                                           'tarSHA256': acquired['tarSHA256'],
-                                          'acquisitionSource': {key: sdk_source[key] for key in
-                                              ('qualification', 'sourceSHA256', 'baselinePlanSHA256',
-                                               'uncompressedTar', 'producerJob')},
+                                          'acquisitionSource': source_provenance(sdk_source),
                                           'baselineTarSHA256': plan['sdk']['tarSHA256']})
                     report[key] = value
             except (Failure, ValueError, OSError) as error:
@@ -767,6 +815,8 @@ def main():
                 target_log_stages += EXTRA_STAGES
             if args.fresh_firefox45:
                 target_log_stages += (fresh45.EXPORT_STAGE,)
+            if args.nss_runtime_closure:
+                target_log_stages += tuple(name for name, _ in nss_runtime.TARGETS) + (nss_runtime.STACK_STAGE,)
             report['checkpointStageLogs'] = {
                 row['stage']: full_log_receipt(task / (row['stage'] + '.private.log'))
                 for row in runner.records if row['stage'] in
@@ -848,6 +898,9 @@ def main():
         if args.fresh_firefox45:
             return fresh45.finish(task, runner, report, fresh_origin, fresh_deadline,
                                   fresh_time['evidence'])
+        if args.mozilla_upstream_xpcom:
+            from mozilla_upstream import execution_ledger
+            report['mozillaUpstreamExecution'] = execution_ledger(report.get('mozillaUpstream'))
         try:
             write_json(task / 'summary.json', report)
             if args.mozilla_targeted and report['status'] == 'mozilla-target-ready' and not (

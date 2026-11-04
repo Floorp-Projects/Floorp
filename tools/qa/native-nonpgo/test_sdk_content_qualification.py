@@ -204,6 +204,32 @@ class SDKContentQualification(unittest.TestCase):
         with mock.patch.object(q,'canonical_tar',side_effect=changed):
             self.rejected('sdk-qualification-file-changed',lambda:q.qualify(self.old_zip,self.tar))
 
+    def test_same_metadata_cannot_hide_post_scan_content_changes_on_either_open_descriptor(self):
+        original_scan=q.canonical_tar
+        original_stat=q.os.fstat;original_lstat=Path.lstat
+        saved={path:original_lstat(path) for path in (self.old_zip,self.tar)}
+        original_bytes={path:path.read_bytes() for path in saved}
+        def frozen_stat(fd):
+            value=original_stat(fd)
+            return next((entry for entry in saved.values() if
+                         (entry.st_dev,entry.st_ino)==(value.st_dev,value.st_ino)),value)
+        def frozen_lstat(path,*args,**kwargs):
+            return saved[path] if path in saved else original_lstat(path,*args,**kwargs)
+        for subject in saved:
+            for change in ('same-size','truncate','grow'):
+                for path,raw in original_bytes.items():path.write_bytes(raw)
+                def changed(*args):
+                    result=original_scan(*args)
+                    raw=original_bytes[subject]
+                    subject.write_bytes(b'x'*len(raw) if change=='same-size' else
+                                        raw[:-1] if change=='truncate' else raw+b'x')
+                    return result
+                with self.subTest(subject=subject.name,change=change), \
+                        mock.patch.object(q.os,'fstat',side_effect=frozen_stat), \
+                        mock.patch.object(Path,'lstat',frozen_lstat), \
+                        mock.patch.object(q,'canonical_tar',side_effect=changed):
+                    self.rejected('sdk-qualification-file-changed',lambda:q.qualify(self.old_zip,self.tar))
+
     def test_deadline_and_member_caps_are_fail_closed(self):
         with mock.patch.object(q.time,'monotonic',side_effect=[0,121]):
             self.rejected('sdk-qualification-deadline',lambda:q.qualify(self.old_zip))

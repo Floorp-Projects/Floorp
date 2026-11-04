@@ -136,11 +136,11 @@ class RestoreOnlyFlow(unittest.TestCase):
             result.update(status='built')
         def prepare(source, task, runner, env, deadline, result):
             self.assertEqual(deadline,345)
-            for stage in upstream.EXTRA_STAGES[:2]: self.run_stage(stage,[],source,env)
+            for stage in upstream.PREPARE_STAGES: self.run_stage(stage,[],source,env)
             result.update(status='inventory-observed')
         def child(source, task, runner, env, deadline):
             self.assertEqual(deadline,345)
-            for stage in upstream.EXTRA_STAGES[2:]: self.run_stage(stage,[],source,env)
+            for stage in upstream.EXTRA_STAGES[len(upstream.PREPARE_STAGES):]: self.run_stage(stage,[],source,env)
         def scope(source, task, runner, env, deadline, result):
             self.assertEqual(deadline,345)
             result.update(status='passed')

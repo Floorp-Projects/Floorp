@@ -6,6 +6,7 @@ cache hits, an active phase, remaining work, or a duration to completion.
 """
 from contextlib import ExitStack
 from functools import lru_cache
+import hashlib
 import json
 import math
 import os
@@ -310,6 +311,7 @@ class _JSONStream:
         self.base, self.buffer, self.index = start, b'', {}
         self.text = None
         self.failed_batch_base = None
+        self.batch_validation_cache = {}
         self.validated = validated
         self.decoder = _VALIDATED_DECODER if validated else _DECODER
 
@@ -408,6 +410,7 @@ class _JSONStream:
         # Validate a complete comma-terminated prefix in C. A failed candidate
         # falls back once per chunk, including delimiters inside strings or
         # nested containers. Never batch a child whose span must be indexed.
+        _budget(self.deadline)
         self.whitespace()
         if not self.buffered() or self.text is None or self.failed_batch_base == self.base:
             return _UNDECODED
@@ -420,15 +423,24 @@ class _JSONStream:
             cut += 1
         if cut <= start:
             return _UNDECODED
+        payload = self.buffer[start:cut]
+        context = (depth, MAX_DEPTH, MAX_OBJECT_KEYS, MAX_KEY_BYTES, MAX_ROWS,
+                   MAX_LINE_BYTES, READ_BYTES, payload)
+        known = not self.validated and context in self.batch_validation_cache
+        decoder = _VALIDATED_DECODER if known else self.decoder
         try:
-            values = self.decoder.decode((b'[' + self.buffer[start:cut] + b']').decode('utf-8'))
+            values = decoder.decode((b'[' + payload + b']').decode('utf-8'))
         except (_Unknown, ValueError, UnicodeError, RecursionError):
             self.failed_batch_base = self.base
             return _UNDECODED
         if not values:
             return _UNDECODED
-        if not self.validated:
+        if not self.validated and not known:
             _bounded_decoded(values, depth)
+            # Cache only exact bytes and bounds, never caller-mutable decoded values.
+            if len(self.batch_validation_cache) == 2:
+                del self.batch_validation_cache[next(iter(self.batch_validation_cache))]
+            self.batch_validation_cache[context] = True
         self.pos = self.base + cut + 1
         return values
 
@@ -612,8 +624,21 @@ def _parse(stream, size, deadline):
     return completed.result(kind, size)
 
 
+def _content_digest(descriptor, size, deadline):
+    value, offset = hashlib.sha256(), 0
+    while offset < size:
+        _budget(deadline)
+        raw = os.pread(descriptor, min(1024**2, size - offset), offset)
+        _need(bool(raw), 'file-changed')
+        value.update(raw)
+        offset += len(raw)
+    _need(not os.pread(descriptor, 1, size), 'file-changed')
+    _budget(deadline)
+    return value.digest()
+
+
 def collect(task, snapshot):
-    """Read once after exact leader reap and verified group cleanup; return safe evidence."""
+    """Read after exact leader reap and verified group cleanup; return safe evidence."""
     try:
         _need(type(snapshot) is dict and type(snapshot.get('schema')) is int and snapshot['schema'] == 1 and
               snapshot.get('status') == 'captured' and type(snapshot.get('wallTimeNs')) is int and
@@ -644,7 +669,9 @@ def collect(task, snapshot):
             stream = stack.enter_context(os.fdopen(opened, 'rb', closefd=False))
             _need(_identity(before, True) == _identity(os.fstat(stream.fileno()), True) == profiles[name],
                   'file-changed')
+            content = _content_digest(opened, before.st_size, deadline)
             result = _parse(stream, before.st_size, deadline)
+            _need(_content_digest(opened, before.st_size, deadline) == content, 'file-changed')
             _need(_identity(before, True) == _identity(os.fstat(stream.fileno()), True) ==
                   _identity(os.stat(name, dir_fd=descriptor, follow_symlinks=False), True), 'file-changed')
             _, final_identities = _directories(stack, task)

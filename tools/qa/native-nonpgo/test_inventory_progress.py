@@ -234,7 +234,7 @@ def delay():
  with open(ready,'w') as stream:stream.write('ready')
  time.sleep(30)
 def importer(name,*args,**kwargs):
- if mode=='imports' and name=='argparse':
+ if mode=='imports' and name=='ctypes':
   assert name not in sys.modules
   delay()
  result=original_import(name,*args,**kwargs)
