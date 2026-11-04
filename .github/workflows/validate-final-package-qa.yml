@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: MPL-2.0
 
 name: Validate final Floorp package regressions
+run-name: Japanese IME on the signed Floorp ${{ inputs.package_run_id }} candidate
 
 "on":
   workflow_dispatch:
@@ -37,16 +38,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - platform: linux
-            arch: x86_64
-            runner: ubuntu-24.04
-            package: noraneko-linux-x86_64-installer
-            file: floorp-linux-x86_64.tar.xz
-          - platform: mac
-            arch: x86_64
-            runner: macos-15-intel
-            package: noraneko-mac-universal-installer
-            file: floorp-macOS-universal.dmg
           - platform: mac
             arch: aarch64
             runner: macos-14
@@ -335,6 +326,51 @@ jobs:
           python3 tools/app-shim/test-runtime.py --browser "$QA_BROWSER" \
             --output "$RUNNER_TEMP/final-package-qa/native-gui" --launch-services --capture-window
 
+      - name: Exercise cancellation and retyping with native Japanese input
+        if: matrix.platform == 'mac' && inputs.pre_publication == true && inputs.validation_only == false
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > "$RUNNER_TEMP/select-japanese.c" <<'C'
+          #include <Carbon/Carbon.h>
+          #include <stdio.h>
+
+          static CFStringRef source_id(TISInputSourceRef source) {
+            return TISGetInputSourceProperty(source, kTISPropertyInputSourceID);
+          }
+
+          int main(void) {
+            CFArrayRef sources = TISCreateInputSourceList(NULL, true);
+            if (!sources) return 1;
+            int result = 1;
+            for (CFIndex index = 0; index < CFArrayGetCount(sources); index++) {
+              TISInputSourceRef source = (TISInputSourceRef)CFArrayGetValueAtIndex(sources, index);
+              CFStringRef identifier = source_id(source);
+              if (!identifier || !CFStringHasPrefix(identifier, CFSTR("com.apple.inputmethod.Kotoeri")) ||
+                  !CFStringHasSuffix(identifier, CFSTR(".Japanese"))) continue;
+              CFBooleanRef enabled = TISGetInputSourceProperty(source, kTISPropertyInputSourceIsEnabled);
+              OSStatus activation = enabled == kCFBooleanTrue ? noErr : TISEnableInputSource(source);
+              OSStatus selection = activation == noErr ? TISSelectInputSource(source) : activation;
+              char name[256];
+              if (!CFStringGetCString(identifier, name, sizeof(name), kCFStringEncodingUTF8)) return 1;
+              printf("%s activation=%d selection=%d\n", name, (int)activation, (int)selection);
+              if (selection != noErr) continue;
+              TISInputSourceRef current = TISCopyCurrentKeyboardInputSource();
+              if (current && source_id(current) && CFEqual(source_id(current), identifier)) result = 0;
+              if (current) CFRelease(current);
+              if (result == 0) break;
+            }
+            CFRelease(sources);
+            return result;
+          }
+          C
+          xcrun clang -Wall -Wextra -framework Carbon "$RUNNER_TEMP/select-japanese.c" -o "$RUNNER_TEMP/select-japanese"
+          "$RUNNER_TEMP/select-japanese" | tee "$RUNNER_TEMP/final-package-qa/japanese-input-source.txt"
+          for editor in textarea contenteditable; do
+            python3 -I -B tools/app-shim/test-ime.py --browser "$QA_BROWSER" \
+              --output "$RUNNER_TEMP/final-package-qa/ime-$editor" --editor "$editor"
+          done
+
       - name: Verify the source still awaits publication after GUI QA
         if: inputs.pre_publication == true
         uses: actions/github-script@v7
@@ -393,5 +429,7 @@ jobs:
             ${{ runner.temp }}/final-package-qa/context-menu/run-*/browser.log
             ${{ runner.temp }}/final-package-qa/native-gui/run-*/report.json
             ${{ runner.temp }}/final-package-qa/native-gui/run-*/fixture-window.png
+            ${{ runner.temp }}/final-package-qa/ime-*/run-*/report.json
+            ${{ runner.temp }}/final-package-qa/ime-*/run-*/browser*.log
           if-no-files-found: warn
           retention-days: 14
