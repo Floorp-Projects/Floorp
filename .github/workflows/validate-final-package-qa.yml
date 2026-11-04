@@ -436,7 +436,7 @@ jobs:
             ${{ runner.temp }}/final-package-qa/context-menu/run-*/browser.log
             ${{ runner.temp }}/final-package-qa/native-gui/run-*/report.json
             ${{ runner.temp }}/final-package-qa/native-gui/run-*/fixture-window.png
-            ${{ runner.temp }}/final-package-qa/ime-*/run-*/report.json
+            ${{ runner.temp }}/final-package-qa/ime-*/run-*/result.json
             ${{ runner.temp }}/final-package-qa/ime-*/run-*/browser*.log
           if-no-files-found: warn
           retention-days: 14
