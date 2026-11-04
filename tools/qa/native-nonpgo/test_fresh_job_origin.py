@@ -129,7 +129,7 @@ class FreshJobOriginTests(unittest.TestCase):
              mock.patch('sys.stdout', new_callable=io.StringIO):
             self.assertEqual(origin.main(), 0)
         initialize.assert_called_once_with(self.task, continuation=False, install_repair=True,
-                                           monitor_repair=False, diagnostics=False, nss=False, nss_binding=False)
+                                           monitor_repair=False, diagnostics=False, nss=False, nss_binding=False, verifier_order=False)
 
     def test_monitor_repair_requires_initial_bound_branch_and_keeps_original_budget(self):
         self.env['GITHUB_REF']='refs/heads/'+origin.MONITOR_REPAIR_BRANCH
@@ -185,7 +185,7 @@ class FreshJobOriginTests(unittest.TestCase):
              mock.patch('sys.stdout',new_callable=io.StringIO):
             self.assertEqual(origin.main(),0)
         initialize.assert_called_once_with(self.task,continuation=False,install_repair=False,
-                                           monitor_repair=True,diagnostics=False,nss=False,nss_binding=False)
+                                           monitor_repair=True,diagnostics=False,nss=False,nss_binding=False,verifier_order=False)
 
     def test_diagnostics_route_preserves_original_clock_and_rejects_old_routes(self):
         for branch in (origin.BRANCH, origin.CONTINUATION_BRANCH, origin.INSTALL_REPAIR_BRANCH,
@@ -230,7 +230,7 @@ class FreshJobOriginTests(unittest.TestCase):
              mock.patch('sys.stdout', new_callable=io.StringIO):
             self.assertEqual(origin.main(), 0)
         initialize.assert_called_once_with(self.task, continuation=False, install_repair=False,
-                                           monitor_repair=False, diagnostics=True, nss=False, nss_binding=False)
+                                           monitor_repair=False, diagnostics=True, nss=False, nss_binding=False, verifier_order=False)
 
     def test_nss_profile_keeps_authenticated_job_clock_and_original_bounds(self):
         self.env['GITHUB_REF'] = 'refs/heads/' + origin.NSS_BRANCH
@@ -291,7 +291,58 @@ class FreshJobOriginTests(unittest.TestCase):
              mock.patch('sys.stdout', new_callable=io.StringIO):
             self.assertEqual(origin.main(), 0)
         initialize.assert_called_once_with(self.task, continuation=False, install_repair=False,
-                                           monitor_repair=False, diagnostics=False, nss=False, nss_binding=True)
+                                           monitor_repair=False, diagnostics=False, nss=False, nss_binding=True, verifier_order=False)
+
+    def test_verifier_order_profile_keeps_authenticated_clock_and_rejects_existing_task(self):
+        self.env['GITHUB_REF'] = 'refs/heads/' + origin.VERIFIER_ORDER_BRANCH
+        self.run['head_branch'] = origin.VERIFIER_ORDER_BRANCH
+        record = origin.initialize(self.task, environment=self.env, opener=self.client,
+            wall_clock=lambda: self.wall, monotonic_clock=lambda: self.mono, verifier_order=True)
+        self.assertEqual(record['profile'], origin.VERIFIER_ORDER_PROFILE)
+        self.assertEqual(float((self.task/'started-monotonic').read_text()), 940)
+        self.assertEqual((record['platformMinutes'], record['workDeadlineMinutes']), (360, 345))
+        self.assertIs(record['clockResetAllowed'], False)
+        before = {path.name: path.read_bytes() for path in self.task.iterdir()}
+        self.requests.clear()
+        with self.assertRaisesRegex(Failure, 'task-exists-or-unavailable'):
+            origin.initialize(self.task, environment=self.env, opener=self.client,
+                wall_clock=lambda: self.wall, monotonic_clock=lambda: self.mono, verifier_order=True)
+        self.assertEqual({path.name: path.read_bytes() for path in self.task.iterdir()}, before)
+
+    def test_verifier_order_rejects_old_routes_reruns_dispatch_and_ambiguous_selectors(self):
+        env = {**self.env, 'GITHUB_REF': 'refs/heads/' + origin.VERIFIER_ORDER_BRANCH}
+        for branch in (origin.BRANCH, origin.CONTINUATION_BRANCH, origin.INSTALL_REPAIR_BRANCH,
+                       origin.MONITOR_REPAIR_BRANCH, origin.DIAGNOSTICS_BRANCH, origin.NSS_BRANCH, origin.NSS_BINDING_BRANCH, 'main'):
+            with self.subTest(branch=branch), self.assertRaisesRegex(Failure, 'fresh-origin-run-scope'):
+                origin.initialize(self.task, environment={**env, 'GITHUB_REF': 'refs/heads/' + branch},
+                                  verifier_order=True)
+        for key, value in (('GITHUB_RUN_ATTEMPT', '2'), ('GITHUB_EVENT_NAME', 'workflow_dispatch'),
+                           ('FRESH_PUSH_CREATED', 'false'), ('FRESH_PUSH_BEFORE', 'a'*40)):
+            with self.subTest(key=key), self.assertRaisesRegex(Failure, 'fresh-origin-run-scope'):
+                origin.initialize(self.task, environment={**env, key: value}, verifier_order=True)
+        for key in ('continuation', 'install_repair', 'monitor_repair', 'diagnostics', 'nss', 'nss_binding'):
+            with self.subTest(key=key), self.assertRaisesRegex(Failure, 'fresh-origin-run-scope'):
+                origin.initialize(self.task, environment=env, verifier_order=True, **{key: True})
+        for value in (None, 1, 'true'):
+            with self.assertRaisesRegex(Failure, 'fresh-origin-run-scope'):
+                origin.initialize(self.task, environment=env, verifier_order=value)
+        self.assertFalse(self.task.exists())
+        self.assertEqual(self.requests, [])
+
+    def test_verifier_order_requires_its_authenticated_run_branch(self):
+        self.env['GITHUB_REF'] = 'refs/heads/' + origin.VERIFIER_ORDER_BRANCH
+        with self.assertRaisesRegex(Failure, 'fresh-origin-run-provenance'):
+            origin.initialize(self.task, environment=self.env, opener=self.client,
+                wall_clock=lambda: self.wall, monotonic_clock=lambda: self.mono, verifier_order=True)
+        self.assertFalse(self.task.exists())
+
+    def test_cli_verifier_order_selects_only_its_explicit_profile(self):
+        with mock.patch.object(origin, 'initialize') as initialize, \
+             mock.patch('sys.argv', ['fresh_job_origin.py', '--task', str(self.task), '--verifier-order-20261104']), \
+             mock.patch('sys.stdout', new_callable=io.StringIO):
+            self.assertEqual(origin.main(), 0)
+        initialize.assert_called_once_with(self.task, continuation=False, install_repair=False,
+                                           monitor_repair=False, diagnostics=False, nss=False, nss_binding=False, verifier_order=True)
 
     def test_nss_rejects_every_old_branch_ambiguous_selector_and_noninitial_execution(self):
         env = {**self.env, 'GITHUB_REF': 'refs/heads/' + origin.NSS_BRANCH}
@@ -325,7 +376,7 @@ class FreshJobOriginTests(unittest.TestCase):
              mock.patch('sys.stdout', new_callable=io.StringIO):
             self.assertEqual(origin.main(), 0)
         initialize.assert_called_once_with(self.task, continuation=False, install_repair=False,
-                                           monitor_repair=False, diagnostics=False, nss=True, nss_binding=False)
+                                           monitor_repair=False, diagnostics=False, nss=True, nss_binding=False, verifier_order=False)
 
     def test_continuation_selector_cannot_admit_legacy_other_branch_rerun_or_dispatch(self):
         for selector in (None,1,'true'):

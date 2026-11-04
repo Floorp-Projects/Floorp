@@ -275,6 +275,74 @@ class DiagnosticArchiveTests(unittest.TestCase):
         self.assertTrue(all(rows[name]['reason'] == 'missing' and name not in members
                             for name, _ in archive.PREFLIGHT_FILES))
 
+    def test_verifier_order_recovers_exact_preflight_failure_and_all_sixteen_fixed_paths(self):
+        self.environment['GITHUB_REF'] = 'refs/heads/' + archive.VERIFIER_ORDER_BRANCH
+        self.origin.update(ref=self.environment['GITHUB_REF'], profile=archive.VERIFIER_ORDER_PROFILE)
+        self.write('job-origin.json', json.dumps(self.origin).encode())
+        expected = {name: ('PRIVATE-VERIFIER-ORDER:' + name).encode()
+                    for name, _ in archive.FILES[1:] + archive.NSS_PROBE_FILES + archive.PREFLIGHT_FILES}
+        for name, raw in expected.items():
+            self.write(name, raw)
+        for name in ('sdk-download/macos_sdk.tar.gz', 'private.key', 'unexpected.private.log'):
+            self.write(name, b'EXCLUDED-SENTINEL')
+        receipt = self.export(verifier_order_origin=True, nss_probes=True)
+        members = self.members()
+        self.assertEqual(len(receipt['files']), 16)
+        self.assertEqual(set(members), {'manifest.json', 'job-origin.json', *expected})
+        self.assertTrue(all(members[name] == raw for name, raw in expected.items()))
+        manifest = json.loads(members['manifest.json'])
+        self.assertTrue(manifest['preflightFilesCaptured'])
+        self.assertTrue(manifest['nssProbeFilesCaptured'])
+        self.assertNotIn(b'EXCLUDED-SENTINEL', b''.join(members.values()))
+        self.assertNotIn('PRIVATE-', json.dumps(receipt))
+        self.assertFalse(receipt['productQualification'])
+        for row in receipt['files']:
+            self.assertEqual(row['sha256'], hashlib.sha256(members[row['name']]).hexdigest())
+
+    def test_verifier_order_rejects_cross_profile_and_unselected_new_route(self):
+        with self.assertRaisesRegex(Failure, 'diagnostic-run-binding'):
+            self.export(verifier_order_origin=True)
+        self.environment['GITHUB_REF'] = 'refs/heads/' + archive.VERIFIER_ORDER_BRANCH
+        for selection in ({}, {'nss_origin': True}, {'nss_binding_origin': True}):
+            with self.subTest(selection=selection), self.assertRaisesRegex(Failure, 'diagnostic-run-binding'):
+                self.export(**selection)
+        for profile in (archive.DIAGNOSTICS_PROFILE, archive.NSS_PROFILE, archive.NSS_BINDING_PROFILE):
+            self.origin.update(ref=self.environment['GITHUB_REF'], profile=profile)
+            self.write('job-origin.json', json.dumps(self.origin).encode())
+            with self.subTest(profile=profile), self.assertRaisesRegex(Failure, 'diagnostic-origin-binding'):
+                self.export(verifier_order_origin=True)
+        self.assertFalse(self.output.exists())
+
+    def test_verifier_order_selectors_are_boolean_exclusive_and_cannot_bypass_snapshot(self):
+        for value in (None, 1, 'true'):
+            with self.assertRaisesRegex(Failure, 'diagnostic-run-binding'):
+                archive.bindings(self.environment, verifier_order_origin=value)
+        for other in ('nss_origin', 'nss_binding_origin'):
+            with self.subTest(other=other), self.assertRaisesRegex(Failure, 'diagnostic-run-binding'):
+                archive.bindings(self.environment, verifier_order_origin=True, **{other: True})
+        with self.assertRaisesRegex(Failure, 'diagnostic-origin-binding'):
+            archive.snapshot(self.task, archive.bindings(self.environment), verifier_order_origin=True)
+
+    def test_verifier_order_rejects_rerun_dispatch_and_foreign_identity_before_export(self):
+        env = {**self.environment, 'GITHUB_REF': 'refs/heads/' + archive.VERIFIER_ORDER_BRANCH}
+        for key, value in (('GITHUB_RUN_ATTEMPT', '2'), ('GITHUB_EVENT_NAME', 'workflow_dispatch'),
+                           ('GITHUB_REPOSITORY', 'foreign/repository'), ('GITHUB_SHA', 'bad')):
+            with self.subTest(key=key), self.assertRaisesRegex(Failure, 'diagnostic-run-binding'):
+                self.export(environment={**env, key: value}, verifier_order_origin=True)
+        self.assertFalse(self.output.exists())
+
+    def test_verifier_order_missing_preflight_is_explicit_without_changing_legacy_scopes(self):
+        self.environment['GITHUB_REF'] = 'refs/heads/' + archive.VERIFIER_ORDER_BRANCH
+        self.origin.update(ref=self.environment['GITHUB_REF'], profile=archive.VERIFIER_ORDER_PROFILE)
+        self.write('job-origin.json', json.dumps(self.origin).encode())
+        self.export(verifier_order_origin=True, nss_probes=True)
+        members = self.members()
+        manifest = json.loads(members['manifest.json'])
+        self.assertFalse(manifest['preflightFilesCaptured'])
+        rows = {row['name']: row for row in manifest['files']}
+        self.assertTrue(all(rows[name]['reason'] == 'missing' and name not in members
+                            for name, _ in archive.PREFLIGHT_FILES))
+
     def test_missing_log_is_explicit_and_does_not_claim_capture_or_pass(self):
         (self.task/archive.SCOPED[0]).unlink()
         receipt = self.export()

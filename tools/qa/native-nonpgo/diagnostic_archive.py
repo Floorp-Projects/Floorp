@@ -16,7 +16,8 @@ import time
 
 from firefox_target_observer import _FixedRead, decode, identity
 from fresh_job_origin import (DIAGNOSTICS_BRANCH, DIAGNOSTICS_PROFILE, NSS_BRANCH, NSS_PROFILE,
-                              NSS_BINDING_BRANCH, NSS_BINDING_PROFILE, REPOSITORY)
+                              NSS_BINDING_BRANCH, NSS_BINDING_PROFILE,
+                              VERIFIER_ORDER_BRANCH, VERIFIER_ORDER_PROFILE, REPOSITORY)
 from qa_core import Failure, require
 
 CONTRACT = 'fresh45-encrypted-diagnostics-v1'
@@ -44,17 +45,19 @@ ALLOWED_REASONS = ('missing', 'size-limit', 'total-limit', 'file-kind', 'file-bi
                   'directory-binding', 'root-binding', 'permission', 'io-unavailable')
 
 
-def _origin_profile(nss_origin, nss_binding_origin, code):
-    require(type(nss_origin) is bool and type(nss_binding_origin) is bool and
-            not (nss_origin and nss_binding_origin), code)
+def _origin_profile(nss_origin, nss_binding_origin, verifier_order_origin, code):
+    selectors = (nss_origin, nss_binding_origin, verifier_order_origin)
+    require(all(type(value) is bool for value in selectors) and sum(selectors) <= 1, code)
+    if verifier_order_origin:
+        return VERIFIER_ORDER_BRANCH, VERIFIER_ORDER_PROFILE
     if nss_binding_origin:
         return NSS_BINDING_BRANCH, NSS_BINDING_PROFILE
     return (NSS_BRANCH, NSS_PROFILE) if nss_origin else (DIAGNOSTICS_BRANCH, DIAGNOSTICS_PROFILE)
 
 
-def bindings(environment, *, nss_origin=False, nss_binding_origin=False):
+def bindings(environment, *, nss_origin=False, nss_binding_origin=False, verifier_order_origin=False):
     env = environment
-    branch, _ = _origin_profile(nss_origin, nss_binding_origin, 'diagnostic-run-binding')
+    branch, _ = _origin_profile(nss_origin, nss_binding_origin, verifier_order_origin, 'diagnostic-run-binding')
     require(env.get('GITHUB_REPOSITORY') == REPOSITORY and
             env.get('GITHUB_REF') == 'refs/heads/'+branch and
             env.get('GITHUB_EVENT_NAME') == 'push' and env.get('GITHUB_RUN_ATTEMPT') == '1',
@@ -70,8 +73,9 @@ def bindings(environment, *, nss_origin=False, nss_binding_origin=False):
             'runtimeSource': env['RUNTIME_SHA']}
 
 
-def snapshot(task, expected, *, nss_probes=False, nss_origin=False, nss_binding_origin=False):
-    branch, profile = _origin_profile(nss_origin, nss_binding_origin, 'diagnostic-origin-binding')
+def snapshot(task, expected, *, nss_probes=False, nss_origin=False, nss_binding_origin=False,
+             verifier_order_origin=False):
+    branch, profile = _origin_profile(nss_origin, nss_binding_origin, verifier_order_origin, 'diagnostic-origin-binding')
     require(expected.get('ref') == 'refs/heads/' + branch,
             'diagnostic-origin-binding')
     with ExitStack() as stack:
@@ -90,7 +94,7 @@ def snapshot(task, expected, *, nss_probes=False, nss_origin=False, nss_binding_
                 type(origin.get('workDeadlineMinutes')) is int and origin['workDeadlineMinutes'] == 345 and
                 origin.get('clockResetAllowed') is False, 'diagnostic-origin-binding')
         captured, records = {}, []
-        files = FILES + (NSS_PROBE_FILES if nss_probes else ()) + (PREFLIGHT_FILES if nss_binding_origin else ())
+        files = FILES + (NSS_PROBE_FILES if nss_probes else ()) + (PREFLIGHT_FILES if nss_binding_origin or verifier_order_origin else ())
         for name, cap in files:
             raw, record = reader.read(name, cap)
             if raw is not None:
@@ -105,7 +109,7 @@ def snapshot(task, expected, *, nss_probes=False, nss_origin=False, nss_binding_
                 'qualification': None, 'productQualification': False}
     if nss_probes:
         manifest['nssProbeFilesCaptured'] = all(name in captured for name, _ in NSS_PROBE_FILES)
-    if nss_binding_origin:
+    if nss_binding_origin or verifier_order_origin:
         manifest['preflightFilesCaptured'] = all(name in captured for name, _ in PREFLIGHT_FILES)
     payload = io.BytesIO()
     with tarfile.open(fileobj=payload, mode='w', format=tarfile.USTAR_FORMAT) as archive:
@@ -130,9 +134,9 @@ def openssl_run(openssl, arguments, *, payload=None):
 
 
 def export(task, certificate, certificate_sha256, output, *, openssl, environment=None,
-           nss_probes=False, nss_origin=False, nss_binding_origin=False):
+           nss_probes=False, nss_origin=False, nss_binding_origin=False, verifier_order_origin=False):
     expected = bindings(os.environ if environment is None else environment, nss_origin=nss_origin,
-                        nss_binding_origin=nss_binding_origin)
+                        nss_binding_origin=nss_binding_origin, verifier_order_origin=verifier_order_origin)
     require(type(certificate_sha256) is str and
             re.fullmatch('[0-9a-f]{64}', certificate_sha256) is not None, 'diagnostic-recipient')
     version = openssl_run(openssl, ['version'])
@@ -147,7 +151,7 @@ def export(task, certificate, certificate_sha256, output, *, openssl, environmen
     require(output.is_absolute() and output.parent.resolve() == output.parent and
             not output.exists() and not output.is_symlink(), 'diagnostic-destination')
     payload, manifest = snapshot(task, expected, nss_probes=nss_probes, nss_origin=nss_origin,
-                                 nss_binding_origin=nss_binding_origin)
+                                 nss_binding_origin=nss_binding_origin, verifier_order_origin=verifier_order_origin)
     with tempfile.TemporaryDirectory(prefix='.diagnostic-recipient-', dir=output.parent) as temporary:
         pinned_cert = Path(temporary)/'recipient.pem'
         pinned_cert.write_bytes(cert)
@@ -186,12 +190,14 @@ def main():
     selection = parser.add_mutually_exclusive_group()
     selection.add_argument('--nss-origin-20261102', action='store_true')
     selection.add_argument('--nss-binding-origin-20261103', action='store_true')
+    selection.add_argument('--verifier-order-origin-20261104', action='store_true')
     args = parser.parse_args()
     try:
         result = export(args.task, args.certificate, args.certificate_sha256, args.output,
                         openssl=args.openssl, nss_probes=args.nss_probes,
                         nss_origin=args.nss_origin_20261102,
-                        nss_binding_origin=args.nss_binding_origin_20261103)
+                        nss_binding_origin=args.nss_binding_origin_20261103,
+                        verifier_order_origin=args.verifier_order_origin_20261104)
     except BaseException as error:
         code = str(error) if isinstance(error, Failure) and str(error) in (
             'diagnostic-run-binding', 'diagnostic-private-root', 'diagnostic-origin-binding',

@@ -230,3 +230,9 @@ Mac run 41630387790/attempt1/head e3689d0a/job125898143523 は build/test succes
 検証器は inventory を7 target build後と要求するが、実pipelineは helpers install後・target build前に実行する。消費済みworkflowを保持した参照差分で、inventoryを前に含む正確な順序へ修正する候補を作成。認証済みsummaryと157 source pinsを隔離再評価し、元 target proof false・候補 true、ほかの target graph/assets/smoke・upstream・全stage・summary最終判定条件 true を確認。順序・欠落・同一性・cleanup等の14負例とsummary最終判定の6負例は拒否、公開診断7合成失敗制御も成功した。これは元workflowを成功に書き換えず、実workflow全体や現在のSDK有効期限を再検証したものではない。
 
 初回拡張検査は定数読取方法によるセットアップerrorで中止し、修正後に正常完了。対象helperは不変のため839件は再実行・加算しない。次は候補を消費済みworkflowではなく新workflowへ接続し、origin・SDK・fixture・期限・pins・負例を凍結してから、必要な別native初回を判断する。
+
+## 2026-11-04 JST 18時台：新workflowへ順序候補と初回入力を接続
+
+検証器の厳密なinventory順序修正を、新branch `b/qa-fresh45-verifier-order-20261104` 専用の別workflowへ組み込んだ。旧839実IDを保持した848 catalog/157pins、関連76 uniqueテスト、公開射影7制御、独立NSS正例1/負例26、起動正例1/負例10と全構文・許可差分比較が成功。成功済み75テストを再利用し、CLI mock修正1件だけ再実行した。全848と不変772件をローカルで再実行・加算しない。SDK13011079529の現行API/保存正規全ZIP同一性と期限11/13を再確認。
+
+新nativeはまだ開始しない。同fixture通常CIとRuntime shadowの終端、両Draft/担当・SDK/unused ref/push0を照合してから、固有意図を記録し別初回1回へ進む。元Mac41630387790は42PASS/3SKIPを確認したfailureのまま保持し、製品qualificationはfalse。task/session全子孫cleanup・最終製品/全OSは未認定。実行済みworkflowと過去ledger/practicalは不変。次はM1の新workflow結果を閉じ、M2/M3の製品側対応を優先する。詳細は `qa-verifier-order-freeze-2026-11-04.ja.md`。
