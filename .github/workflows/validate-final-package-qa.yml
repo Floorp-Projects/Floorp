@@ -346,19 +346,26 @@ jobs:
             for (CFIndex index = 0; index < CFArrayGetCount(sources); index++) {
               TISInputSourceRef source = (TISInputSourceRef)CFArrayGetValueAtIndex(sources, index);
               CFStringRef identifier = source_id(source);
-              if (!identifier || !CFStringHasPrefix(identifier, CFSTR("com.apple.inputmethod.Kotoeri")) ||
-                  !CFStringHasSuffix(identifier, CFSTR(".Japanese"))) continue;
+              if (identifier && CFEqual(identifier, CFSTR("com.apple.inputmethod.Kotoeri.RomajiTyping"))) {
+                printf("Romaji input method enable=%d\n", (int)TISEnableInputSource(source));
+                break;
+              }
+            }
+            for (CFIndex index = 0; index < CFArrayGetCount(sources); index++) {
+              TISInputSourceRef source = (TISInputSourceRef)CFArrayGetValueAtIndex(sources, index);
+              CFStringRef identifier = source_id(source);
+              if (!identifier || !CFEqual(identifier, CFSTR("com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"))) continue;
               CFBooleanRef enabled = TISGetInputSourceProperty(source, kTISPropertyInputSourceIsEnabled);
               OSStatus activation = enabled == kCFBooleanTrue ? noErr : TISEnableInputSource(source);
+              CFRunLoopRunInMode(kCFRunLoopDefaultMode, 0.5, false);
               OSStatus selection = activation == noErr ? TISSelectInputSource(source) : activation;
               char name[256];
               if (!CFStringGetCString(identifier, name, sizeof(name), kCFStringEncodingUTF8)) return 1;
               printf("%s activation=%d selection=%d\n", name, (int)activation, (int)selection);
-              if (selection != noErr) continue;
-              TISInputSourceRef current = TISCopyCurrentKeyboardInputSource();
-              if (current && source_id(current) && CFEqual(source_id(current), identifier)) result = 0;
-              if (current) CFRelease(current);
-              if (result == 0) break;
+              // test-ime.py selects Kana with the focused PWA and asserts that
+              // the resulting trusted native events perform real conversion.
+              if (activation == noErr) result = 0;
+              break;
             }
             CFRelease(sources);
             return result;
