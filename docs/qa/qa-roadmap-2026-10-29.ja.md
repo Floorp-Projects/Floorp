@@ -222,3 +222,11 @@ Native41350068009/attempt1/head4b365e79/job124978125641はSDK取得前のcheckpo
 限定Mac41470665560/attempt1/head8068a6435/job125363063696のAPI/完全ZIP/CMS9ファイル/157pins/105 exact IDsを終端照合。関連105件と14記録制御は全成功・skip0、以前の3errorも成功した。制御内の親nlink4→5とsize/mtime/ctime変化、inode/owner/modeおよび保護tool全属性の不変を実Macで観測。元NSS41350068009の未回収個別失敗は不明のまま保持する。5stageのleader reap/owned group消滅を確認、全task/session子孫cleanupは未認定。SDK/NSS/42未実行、旧45ledger/firstfailure/practicalは保持。
 
 同head通常CI全5jobsとshadow312件は全API/artifact/ZIP/log監査success。SDK13011079529は最新API/保存全ZIP同一・期限11/13、同bytesの49701-member監査を再利用する。新しい初回専用NSS-binding origin/branchを追加し、新回収経路だけ固定preflight5パスを追加して全16パス暗号化。work345/job360・3秒query/3samples・30秒profile・FD/source identity・owned cleanupと元の上流期待を維持する。新sourceの全839 IDs発見/旧830保持、関連67件は隔離全成功・skip0、5変更以外152hash不変。全839/変更なし772件は再実行・加算しない。新workflow/公開verifier/固有入力と同head CIを凍結後、別native初回1回へ進む。詳細は `qa-nss-binding-resume-2026-11-03.ja.md`。
+
+## 2026-11-04 JST：Mac終端と検証器の順序候補
+
+Mac run 41630387790/attempt1/head e3689d0a/job125898143523 は build/test success 後の独立検証器で failure。認証済みログと45行台帳の照合では有効42 PASS・manifest無効3 SKIP。839事前検査・14記録制御、限定NSS/stack probeも成立したが、製品認定ではなく、task/session全子孫cleanupは未認定。
+
+検証器は inventory を7 target build後と要求するが、実pipelineは helpers install後・target build前に実行する。消費済みworkflowを保持した参照差分で、inventoryを前に含む正確な順序へ修正する候補を作成。認証済みsummaryと157 source pinsを隔離再評価し、元 target proof false・候補 true、ほかの target graph/assets/smoke・upstream・全stage・summary最終判定条件 true を確認。順序・欠落・同一性・cleanup等の14負例とsummary最終判定の6負例は拒否、公開診断7合成失敗制御も成功した。これは元workflowを成功に書き換えず、実workflow全体や現在のSDK有効期限を再検証したものではない。
+
+初回拡張検査は定数読取方法によるセットアップerrorで中止し、修正後に正常完了。対象helperは不変のため839件は再実行・加算しない。次は候補を消費済みworkflowではなく新workflowへ接続し、origin・SDK・fixture・期限・pins・負例を凍結してから、必要な別native初回を判断する。
