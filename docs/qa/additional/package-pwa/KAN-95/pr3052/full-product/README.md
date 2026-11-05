@@ -43,3 +43,10 @@ regressions. No broad KAN26 repair is claimed from these24 configurations.
 No original Windows10, physical input/GPU, highDPI or native OS-edge qualification
 is implied. Existing Linux39 prior states and Windows work belong to separately
 recorded evidence and are not repeated by this script.
+
+The committed Marionette transport class is also available at
+`docs/qa/linux-22/package-pwa/pwa_ui_probe.py` in the same QA branch. Map the
+probe's original absolute helper/sysroot paths to the local checkout and actual
+installed Xvfb/libraries when reproducing elsewhere; use Python/Pillow and
+normal DBus. Such launcher-path adaptation must be recorded and does not imply
+a Windows or physical-input qualification.

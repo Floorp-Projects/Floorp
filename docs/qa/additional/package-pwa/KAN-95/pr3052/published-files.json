@@ -28,8 +28,12 @@
     "bytes": 6957
   },
   {
+    "path": "jira-update.json",
+    "bytes": 4363
+  },
+  {
     "path": "matrix.json",
-    "bytes": 4152
+    "bytes": 4540
   },
   {
     "path": "monitor_run.py",
@@ -56,6 +60,10 @@
     "bytes": 2868
   },
   {
+    "path": "pr-body.md",
+    "bytes": 5608
+  },
+  {
     "path": "preflight.json",
     "bytes": 1202
   },
@@ -64,12 +72,16 @@
     "bytes": 969
   },
   {
+    "path": "publication.json",
+    "bytes": 288
+  },
+  {
     "path": "publish_evidence.py",
     "bytes": 2504
   },
   {
     "path": "report.md",
-    "bytes": 7112
+    "bytes": 7699
   },
   {
     "path": "runtime-manifest-api.json",
@@ -133,7 +145,7 @@
   },
   {
     "path": "full-product/README.md",
-    "bytes": 2898
+    "bytes": 3316
   },
   {
     "path": "full-product/baseline-report.md",
@@ -181,7 +193,7 @@
   },
   {
     "path": "full-product/matrix.json",
-    "bytes": 2110
+    "bytes": 2113
   },
   {
     "path": "full-product/pre-candidate-checker-v1.json",

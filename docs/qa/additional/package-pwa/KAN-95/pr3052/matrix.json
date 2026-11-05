@@ -28,7 +28,7 @@
     ],
     "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/3052",
     "newPr": null,
-    "jiraCommentId": null,
+    "jiraCommentId": "10484",
     "package": {
       "run": 42123754997,
       "artifact": 13459714736,
@@ -77,6 +77,20 @@
       "prior-linux39/reuse-summary.md",
       "prior-linux39/retrieval-provenance.json",
       "full-product/vertical-scope.json"
-    ]
+    ],
+    "jiraLabels": [
+      "area-tabs",
+      "draft-pr",
+      "floorp-github-import-2026-11",
+      "linux-full-package-tested",
+      "linux-layout-tested",
+      "needs-repro",
+      "needs-windows10-native",
+      "p3",
+      "token-compat-tested",
+      "triage-reviewed",
+      "windows-headless-tested"
+    ],
+    "qaEvidenceCommit": "03794d1ff62cb2455bb4d6052c5e70a75f0f3cd5"
   }
 ]

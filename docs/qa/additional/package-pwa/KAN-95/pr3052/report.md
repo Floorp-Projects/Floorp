@@ -115,3 +115,14 @@ preexisting missing indicators remain. This is compatibility evidence for3052,
 not a claim that its source includes/fixes3041/3048. Both full products remain
 byte/tree-identical before/after, with native sandbox6, normalquit0, owned0.
 No extra product-code change, baseline39 replay or duplicate Linux dispatch.
+
+## Shared evidence and issue update
+
+Measured proof fullSHA: `03794d1ff62cb2455bb4d6052c5e70a75f0f3cd5`,
+branch codex/qa-linux-package-pwa, path
+`docs/qa/additional/package-pwa/KAN-95/pr3052/report.md`.
+Jira KAN-95 comment10484 and the Linux section of existing Draft3052 reference
+that immutable proof. needs-token-compat-validation was replaced with
+token-compat-tested/linux-full-package-tested based on this scoped actual
+result; needs-repro and needs-windows10-native remain. Status stays in progress,
+PR stays Draft. Original seven matrices and KAN24/KAN26 rows remain unchanged.

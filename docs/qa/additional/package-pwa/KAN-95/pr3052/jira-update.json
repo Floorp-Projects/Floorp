@@ -1,0 +1,48 @@
+{
+  "key": "KAN-95",
+  "commentId": "10484",
+  "body": "## PR3052 完全Linux製品の追加検証（限定環境で修正確認）\n\ncanonical Draft3052 head214ba6657a63314594de3867785441558b7a63b5、base29a3eb23145da90706d8a94441373278521cc737。既存Jira10406/10463/10467・原issue・2nativeテストを照合し、元Linux39状態はfullcommit2c0aeaa8f70ed4876af0fa1d5a421497a5c1b9f0から68files/41PNGをGitblob一致で回収、再実行しない。旧『欠陥未特定』は後のWindows3世代token変更調査前の限定判断として保持。\n\n同headにLinux packageがなかったため、既存Runtime lock8965ffc346d426ccdf919bd18585e4d4a0c21654と真正manifest/target artifactを固定したunsigned package-onlyを1回だけ起動。[run42123754997](https://github.com/Floorp-Projects/Floorp/actions/runs/42123754997)はattempt1成功、installer artifact13459714736。実ZIP SHA256 d4e89cc7ba88751df704771c89c93017a03a01aaa8877db0f538a62c8aa81502、tar f1404a3d8d23058d6eba83b0875cbc4154bf756e9244c8a32856b9409d961ee4。source checkout/Runtime実取得digest/uploadログを照合。候補omni.jaの生成JSにalias1件、基準0件。既存complete production application/package＋prebuilt nativeでありfreshGecko/署名配布資格ではない。\n\n未改変のsource29a3完全基準製品と候補をDebian13/Xvfb117/X11/通常DBus/defaulttheme/DPR1/sandbox6/専用profileで実行。4design(Proton/Lepton/Photon/Fluerial)×横/実expandedvertical×3density、各24状態・72タブ背景、合計48新状態。真正青container選択、橙/通常非選択、実Hubクリック・tabbrowser選択・pointeroff。CSS/AGENT/DOM sheet注入なし。厳格919成功/0失敗。Lepton横normal/compactの6背景だけCSS上余白と実topgap4→2px、既存bottomCSS0!important維持。touch/縦/他designの余白・幾何維持。両製品全file/tree不変、normalquit/exit0、残process0。\n\n候補を見る前にbaseline/vendor根拠で誤った初期基準を訂正（bottomCSS0を2へ変えない、rectendgap-4はCSSmargin0とは別）。初期/修正理由とpre-candidate checker SHAを保存し、候補後にassertを弱めていない。Hub checked明示記録は候補のみ追加、基準は実click/保存値/実nativeCSSを記録している差も記載。\n\nKAN26色線は余白とは別判定。両subjectは3041/3048未含有。48本の比較で新規消失0/逆色0、既存欠落21本を維持（Proton12/12・Lepton6/12・Photon0/12・Fluerial9/12可視）。既知線欠陥を3052回帰/3052による修正と混同しない。\n\n[共有QA report・matrix・再現script・ログ/画像](https://github.com/Floorp-Projects/Floorp/blob/03794d1ff62cb2455bb4d6052c5e70a75f0f3cd5/docs/qa/additional/package-pwa/KAN-95/pr3052/report.md)、証拠fullSHA03794d1ff62cb2455bb4d6052c5e70a75f0f3cd5。標準CI42123057521/Windows42123152394は統括担当で再起動/編集/実行していない。製品コード追加変更なし。原Windows10/12.17.0/nativeOS titlebar、物理input/GPU/highDPI、customtheme重要指定の完全製品試験、hover/multi/collapsedvertical等は残る。旧39は3density/Photon/実verticalの代用ではなく追加表へ保存。元7件/KAN24/KAN26/原Linux22分母を維持、課題進行中/Draft維持、merge/release/Doneなし。",
+  "status": "進行中",
+  "statusTransition": false,
+  "labels": [
+    "area-tabs",
+    "draft-pr",
+    "floorp-github-import-2026-11",
+    "linux-full-package-tested",
+    "linux-layout-tested",
+    "needs-repro",
+    "needs-windows10-native",
+    "p3",
+    "token-compat-tested",
+    "triage-reviewed",
+    "windows-headless-tested"
+  ],
+  "labelChange": {
+    "before": [
+      "area-tabs",
+      "floorp-github-import-2026-11",
+      "linux-layout-tested",
+      "needs-repro",
+      "needs-token-compat-validation",
+      "needs-windows10-native",
+      "p3",
+      "triage-reviewed",
+      "windows-headless-tested"
+    ],
+    "after": [
+      "area-tabs",
+      "floorp-github-import-2026-11",
+      "linux-layout-tested",
+      "needs-repro",
+      "needs-windows10-native",
+      "p3",
+      "triage-reviewed",
+      "windows-headless-tested",
+      "linux-full-package-tested",
+      "token-compat-tested",
+      "draft-pr"
+    ],
+    "status": "進行中"
+  },
+  "qaEvidenceCommit": "03794d1ff62cb2455bb4d6052c5e70a75f0f3cd5"
+}
