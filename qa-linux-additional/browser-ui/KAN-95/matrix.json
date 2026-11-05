@@ -30,7 +30,7 @@
       "role": "current-main full product with unrelated PR2934 sidebar fix, not KAN95 fix candidate",
       "result": "same Lepton4px inset/topedge click succeeds"
     },
-    "jiraCommentId": null,
+    "jiraCommentId": "10406",
     "jiraExistingCommentRead": "10145",
     "evidence": [
       "measurement-summary.json",
@@ -43,7 +43,8 @@
       "screenshots/",
       "cascade-29963.json",
       "jira-comment.md",
-      "primary-source-summary.json"
+      "primary-source-summary.json",
+      "jira-posted-10406.md"
     ],
     "evidenceBase": "KAN-95"
   }

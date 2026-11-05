@@ -1,0 +1,18 @@
+{
+  "sourceBase": "29a3eb23145da90706d8a94441373278521cc737",
+  "sourceSha": "d6bd2fc457774f55ab1f36a2b01c941f908f1ab0",
+  "sourceBranch": "https://github.com/Floorp-Projects/Floorp/tree/qa/kan97-scroll-target",
+  "draftPr": "https://github.com/Floorp-Projects/Floorp/pull/3047",
+  "changedFiles": 3,
+  "insertions": 113,
+  "deletions": 1,
+  "relatedExistingPr": 2678,
+  "existingCombinedSource": "0cf1474cba7bc7c45693671dc1690323d85c911b",
+  "combinedPr3031": "dbafd082f1f315a49575446e7094177450b1882b",
+  "combinedPr3034": "b21a81120d2354d90ea433410173cac208aabbf8",
+  "candidateKind": "one compiled-module diagnostic copy, not full production build or strict package",
+  "originalIssueCauseEstablished": false,
+  "actorRegistrationChanged": false,
+  "protectionsDisabled": false,
+  "jiraWriteOwner": "parent"
+}

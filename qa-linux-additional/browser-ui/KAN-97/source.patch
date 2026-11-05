@@ -1,0 +1,142 @@
+diff --git a/browser-features/chrome/common/mouse-gesture/test/scrollTarget.test.ts b/browser-features/chrome/common/mouse-gesture/test/scrollTarget.test.ts
+new file mode 100644
+index 00000000..653d9d36
+--- /dev/null
++++ b/browser-features/chrome/common/mouse-gesture/test/scrollTarget.test.ts
+@@ -0,0 +1,96 @@
++// SPDX-License-Identifier: MPL-2.0
++// @colocated-env browser
++
++import { getScrollTargetContext } from "../utils/scroll-target.ts";
++import {
++  assertEquals,
++  runTests,
++  type TestCase,
++} from "../../../test/utils/test_harness.ts";
++
++interface TestContext {
++  readonly top: TestContext;
++}
++
++function rootContext(): TestContext {
++  return {
++    get top() {
++      return this;
++    },
++  };
++}
++
++const selected = rootContext();
++const foreign = rootContext();
++const frame = { top: selected };
++const nestedFrame = { top: frame.top };
++
++const tests: TestCase[] = [
++  {
++    name: "no focused content falls back to the selected tab",
++    fn: () =>
++      assertEquals(
++        getScrollTargetContext(selected, null),
++        selected,
++        "null focus",
++      ),
++  },
++  {
++    name: "unavailable focus falls back to the selected tab",
++    fn: () =>
++      assertEquals(
++        getScrollTargetContext(selected, undefined),
++        selected,
++        "undefined focus",
++      ),
++  },
++  {
++    name: "focused selected document remains the target",
++    fn: () =>
++      assertEquals(
++        getScrollTargetContext(selected, selected),
++        selected,
++        "root focus",
++      ),
++  },
++  {
++    name: "focused iframe receives scroll commands",
++    fn: () =>
++      assertEquals(
++        getScrollTargetContext(selected, frame),
++        frame,
++        "focused frame",
++      ),
++  },
++  {
++    name: "focused nested descendant receives scroll commands",
++    fn: () =>
++      assertEquals(
++        getScrollTargetContext(selected, nestedFrame),
++        nestedFrame,
++        "nested frame",
++      ),
++  },
++  {
++    name: "another tab or window cannot redirect the command",
++    fn: () =>
++      assertEquals(
++        getScrollTargetContext(selected, foreign),
++        selected,
++        "foreign root",
++      ),
++  },
++  {
++    name: "a descendant of another tab is not a target",
++    fn: () =>
++      assertEquals(
++        getScrollTargetContext(selected, { top: foreign }),
++        selected,
++        "foreign frame",
++      ),
++  },
++];
++
++export async function runAllTests(): Promise<void> {
++  await runTests("scrollTarget.test.ts", tests);
++}
+diff --git a/browser-features/chrome/common/mouse-gesture/utils/actions.ts b/browser-features/chrome/common/mouse-gesture/utils/actions.ts
+index 2ff0df30..51dfb46f 100644
+--- a/browser-features/chrome/common/mouse-gesture/utils/actions.ts
++++ b/browser-features/chrome/common/mouse-gesture/utils/actions.ts
+@@ -1,4 +1,5 @@
+ import type { GestureActionRegistration } from "./gestures.ts";
++import { getScrollTargetContext } from "./scroll-target.ts";
+ import { setShareModeEnabled } from "#features-chrome/common/browser-share-mode/browser-share-mode.tsx";
+ import { toggleZenModeForWindow } from "#features-chrome/common/zen-mode/zen-mode.tsx";
+ import {
+@@ -56,7 +57,13 @@ const sendScrollCommand = (
+   try {
+     const browser = win.gBrowser?.selectedBrowser;
+     if (!browser) return;
+-    const actor = browser.browsingContext?.currentWindowGlobal?.getActor(
++    const selectedContext = browser.browsingContext;
++    if (!selectedContext) return;
++    const context = getScrollTargetContext(
++      selectedContext,
++      Services.focus.focusedContentBrowsingContext,
++    );
++    const actor = context.currentWindowGlobal?.getActor(
+       "NRMouseGestureScroll",
+     );
+     if (!actor) return;
+diff --git a/browser-features/chrome/common/mouse-gesture/utils/scroll-target.ts b/browser-features/chrome/common/mouse-gesture/utils/scroll-target.ts
+new file mode 100644
+index 00000000..d29e2769
+--- /dev/null
++++ b/browser-features/chrome/common/mouse-gesture/utils/scroll-target.ts
+@@ -0,0 +1,9 @@
++// SPDX-License-Identifier: MPL-2.0
++
++/** Keep scrolling in the selected tab, including its focused child frame. */
++export function getScrollTargetContext<T extends { readonly top: unknown }>(
++  selected: T,
++  focused: T | null | undefined,
++): T {
++  return focused && focused.top === selected ? focused : selected;
++}

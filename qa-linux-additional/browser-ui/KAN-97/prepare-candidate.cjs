@@ -1,0 +1,2 @@
+const fs=require('fs'),esbuild=require('/workspace/kan30-full/noraneko/node_modules/.deno/esbuild@0.27.7/node_modules/esbuild/lib/main.js');
+const p='/workspace/floorp-kan97/browser-features/chrome/common/mouse-gesture/utils/scroll-target.ts';let code=esbuild.transformSync(fs.readFileSync(p,'utf8'),{loader:'ts',format:'esm'}).code;code=code.replace(/export\s*\{[^}]*\};?\s*$/,'');if(/export/.test(code))throw Error('unexpected export');fs.writeFileSync('/workspace/qa-linux-additional/browser-ui/KAN-97/helper-compiled.js',code);

@@ -1,0 +1,29 @@
+{
+  "displayRemoved": true,
+  "ownershipChecks": [
+    {
+      "file": "firefox-ownership.json",
+      "allRecordedProcessesEnded": true
+    },
+    {
+      "file": "official-ownership.json",
+      "allRecordedProcessesEnded": true
+    },
+    {
+      "file": "combined-ownership.json",
+      "allRecordedProcessesEnded": true
+    },
+    {
+      "file": "patched-ownership.json",
+      "allRecordedProcessesEnded": true
+    }
+  ],
+  "removedEndedOwnProfiles": [
+    "/workspace/kan97-runtime/official/profile",
+    "/workspace/kan97-runtime/official/preliminary-profile",
+    "/workspace/kan97-runtime/combined/profile",
+    "/workspace/kan97-runtime/firefox/profile",
+    "/workspace/kan97-runtime/patched/profile"
+  ],
+  "productsAndOriginalAttachmentPreserved": true
+}

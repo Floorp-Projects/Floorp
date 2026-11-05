@@ -1,0 +1,521 @@
+{
+  "observations": 56,
+  "officialGesturePass": 4,
+  "officialGestureCases": 8,
+  "combinedGesturePass": 4,
+  "combinedGestureCases": 8,
+  "patchedGesturePass": 8,
+  "patchedGestureCases": 8,
+  "nativeKeyboardAllPass": true,
+  "patchedUntargetedAllUnchanged": true,
+  "gestureContextMenusAllZero": true,
+  "dispatchesPerFloorpProduct": 8,
+  "unitBefore": "5pass/2assertfail old-route adapter, not literal old-module execution",
+  "unitAfter": "7pass/0fail actual source helper in browser",
+  "rows": [
+    {
+      "product": "official",
+      "target": "root",
+      "mode": "gesture",
+      "direction": "top",
+      "endpoint": true,
+      "untargetedUnchanged": true,
+      "popups": 0
+    },
+    {
+      "product": "official",
+      "target": "root",
+      "mode": "gesture",
+      "direction": "bottom",
+      "endpoint": true,
+      "untargetedUnchanged": true,
+      "popups": 0
+    },
+    {
+      "product": "official",
+      "target": "root",
+      "mode": "keyboard",
+      "direction": "top",
+      "endpoint": true,
+      "untargetedUnchanged": true,
+      "popups": 0
+    },
+    {
+      "product": "official",
+      "target": "root",
+      "mode": "keyboard",
+      "direction": "bottom",
+      "endpoint": true,
+      "untargetedUnchanged": true,
+      "popups": 0
+    },
+    {
+      "product": "official",
+      "target": "overflow",
+      "mode": "gesture",
+      "direction": "top",
+      "endpoint": true,
+      "untargetedUnchanged": true,
+      "popups": 0
+    },
+    {
+      "product": "official",
+      "target": "overflow",
+      "mode": "gesture",
+      "direction": "bottom",
+      "endpoint": true,
+      "untargetedUnchanged": true,
+      "popups": 0
+    },
+    {
+      "product": "official",
+      "target": "overflow",
+      "mode": "keyboard",
+      "direction": "top",
+      "endpoint": true,
+      "untargetedUnchanged": true,
+      "popups": 0
+    },
+    {
+      "product": "official",
+      "target": "overflow",
+      "mode": "keyboard",
+      "direction": "bottom",
+      "endpoint": true,
+      "untargetedUnchanged": true,
+      "popups": 0
+    },
+    {
+      "product": "official",
+      "target": "same-frame",
+      "mode": "gesture",
+      "direction": "top",
+      "endpoint": false,
+      "untargetedUnchanged": false,
+      "popups": 0
+    },
+    {
+      "product": "official",
+      "target": "same-frame",
+      "mode": "gesture",
+      "direction": "bottom",
+      "endpoint": false,
+      "untargetedUnchanged": false,
+      "popups": 0
+    },
+    {
+      "product": "official",
+      "target": "same-frame",
+      "mode": "keyboard",
+      "direction": "top",
+      "endpoint": true,
+      "untargetedUnchanged": true,
+      "popups": 0
+    },
+    {
+      "product": "official",
+      "target": "same-frame",
+      "mode": "keyboard",
+      "direction": "bottom",
+      "endpoint": true,
+      "untargetedUnchanged": true,
+      "popups": 0
+    },
+    {
+      "product": "official",
+      "target": "cross-frame",
+      "mode": "gesture",
+      "direction": "top",
+      "endpoint": false,
+      "untargetedUnchanged": false,
+      "popups": 0
+    },
+    {
+      "product": "official",
+      "target": "cross-frame",
+      "mode": "gesture",
+      "direction": "bottom",
+      "endpoint": false,
+      "untargetedUnchanged": false,
+      "popups": 0
+    },
+    {
+      "product": "official",
+      "target": "cross-frame",
+      "mode": "keyboard",
+      "direction": "top",
+      "endpoint": true,
+      "untargetedUnchanged": true,
+      "popups": 0
+    },
+    {
+      "product": "official",
+      "target": "cross-frame",
+      "mode": "keyboard",
+      "direction": "bottom",
+      "endpoint": true,
+      "untargetedUnchanged": true,
+      "popups": 0
+    },
+    {
+      "product": "combined",
+      "target": "root",
+      "mode": "gesture",
+      "direction": "top",
+      "endpoint": true,
+      "untargetedUnchanged": true,
+      "popups": 0
+    },
+    {
+      "product": "combined",
+      "target": "root",
+      "mode": "gesture",
+      "direction": "bottom",
+      "endpoint": true,
+      "untargetedUnchanged": true,
+      "popups": 0
+    },
+    {
+      "product": "combined",
+      "target": "root",
+      "mode": "keyboard",
+      "direction": "top",
+      "endpoint": true,
+      "untargetedUnchanged": true,
+      "popups": 0
+    },
+    {
+      "product": "combined",
+      "target": "root",
+      "mode": "keyboard",
+      "direction": "bottom",
+      "endpoint": true,
+      "untargetedUnchanged": true,
+      "popups": 0
+    },
+    {
+      "product": "combined",
+      "target": "overflow",
+      "mode": "gesture",
+      "direction": "top",
+      "endpoint": true,
+      "untargetedUnchanged": true,
+      "popups": 0
+    },
+    {
+      "product": "combined",
+      "target": "overflow",
+      "mode": "gesture",
+      "direction": "bottom",
+      "endpoint": true,
+      "untargetedUnchanged": true,
+      "popups": 0
+    },
+    {
+      "product": "combined",
+      "target": "overflow",
+      "mode": "keyboard",
+      "direction": "top",
+      "endpoint": true,
+      "untargetedUnchanged": true,
+      "popups": 0
+    },
+    {
+      "product": "combined",
+      "target": "overflow",
+      "mode": "keyboard",
+      "direction": "bottom",
+      "endpoint": true,
+      "untargetedUnchanged": true,
+      "popups": 0
+    },
+    {
+      "product": "combined",
+      "target": "same-frame",
+      "mode": "gesture",
+      "direction": "top",
+      "endpoint": false,
+      "untargetedUnchanged": false,
+      "popups": 0
+    },
+    {
+      "product": "combined",
+      "target": "same-frame",
+      "mode": "gesture",
+      "direction": "bottom",
+      "endpoint": false,
+      "untargetedUnchanged": false,
+      "popups": 0
+    },
+    {
+      "product": "combined",
+      "target": "same-frame",
+      "mode": "keyboard",
+      "direction": "top",
+      "endpoint": true,
+      "untargetedUnchanged": true,
+      "popups": 0
+    },
+    {
+      "product": "combined",
+      "target": "same-frame",
+      "mode": "keyboard",
+      "direction": "bottom",
+      "endpoint": true,
+      "untargetedUnchanged": true,
+      "popups": 0
+    },
+    {
+      "product": "combined",
+      "target": "cross-frame",
+      "mode": "gesture",
+      "direction": "top",
+      "endpoint": false,
+      "untargetedUnchanged": false,
+      "popups": 0
+    },
+    {
+      "product": "combined",
+      "target": "cross-frame",
+      "mode": "gesture",
+      "direction": "bottom",
+      "endpoint": false,
+      "untargetedUnchanged": false,
+      "popups": 0
+    },
+    {
+      "product": "combined",
+      "target": "cross-frame",
+      "mode": "keyboard",
+      "direction": "top",
+      "endpoint": true,
+      "untargetedUnchanged": true,
+      "popups": 0
+    },
+    {
+      "product": "combined",
+      "target": "cross-frame",
+      "mode": "keyboard",
+      "direction": "bottom",
+      "endpoint": true,
+      "untargetedUnchanged": true,
+      "popups": 0
+    },
+    {
+      "product": "firefox",
+      "target": "root",
+      "mode": "keyboard",
+      "direction": "top",
+      "endpoint": true,
+      "untargetedUnchanged": true,
+      "popups": 0
+    },
+    {
+      "product": "firefox",
+      "target": "root",
+      "mode": "keyboard",
+      "direction": "bottom",
+      "endpoint": true,
+      "untargetedUnchanged": true,
+      "popups": 0
+    },
+    {
+      "product": "firefox",
+      "target": "overflow",
+      "mode": "keyboard",
+      "direction": "top",
+      "endpoint": true,
+      "untargetedUnchanged": true,
+      "popups": 0
+    },
+    {
+      "product": "firefox",
+      "target": "overflow",
+      "mode": "keyboard",
+      "direction": "bottom",
+      "endpoint": true,
+      "untargetedUnchanged": true,
+      "popups": 0
+    },
+    {
+      "product": "firefox",
+      "target": "same-frame",
+      "mode": "keyboard",
+      "direction": "top",
+      "endpoint": true,
+      "untargetedUnchanged": true,
+      "popups": 0
+    },
+    {
+      "product": "firefox",
+      "target": "same-frame",
+      "mode": "keyboard",
+      "direction": "bottom",
+      "endpoint": true,
+      "untargetedUnchanged": true,
+      "popups": 0
+    },
+    {
+      "product": "firefox",
+      "target": "cross-frame",
+      "mode": "keyboard",
+      "direction": "top",
+      "endpoint": true,
+      "untargetedUnchanged": true,
+      "popups": 0
+    },
+    {
+      "product": "firefox",
+      "target": "cross-frame",
+      "mode": "keyboard",
+      "direction": "bottom",
+      "endpoint": true,
+      "untargetedUnchanged": true,
+      "popups": 0
+    },
+    {
+      "product": "patched",
+      "target": "root",
+      "mode": "gesture",
+      "direction": "top",
+      "endpoint": true,
+      "untargetedUnchanged": true,
+      "popups": 0
+    },
+    {
+      "product": "patched",
+      "target": "root",
+      "mode": "gesture",
+      "direction": "bottom",
+      "endpoint": true,
+      "untargetedUnchanged": true,
+      "popups": 0
+    },
+    {
+      "product": "patched",
+      "target": "root",
+      "mode": "keyboard",
+      "direction": "top",
+      "endpoint": true,
+      "untargetedUnchanged": true,
+      "popups": 0
+    },
+    {
+      "product": "patched",
+      "target": "root",
+      "mode": "keyboard",
+      "direction": "bottom",
+      "endpoint": true,
+      "untargetedUnchanged": true,
+      "popups": 0
+    },
+    {
+      "product": "patched",
+      "target": "overflow",
+      "mode": "gesture",
+      "direction": "top",
+      "endpoint": true,
+      "untargetedUnchanged": true,
+      "popups": 0
+    },
+    {
+      "product": "patched",
+      "target": "overflow",
+      "mode": "gesture",
+      "direction": "bottom",
+      "endpoint": true,
+      "untargetedUnchanged": true,
+      "popups": 0
+    },
+    {
+      "product": "patched",
+      "target": "overflow",
+      "mode": "keyboard",
+      "direction": "top",
+      "endpoint": true,
+      "untargetedUnchanged": true,
+      "popups": 0
+    },
+    {
+      "product": "patched",
+      "target": "overflow",
+      "mode": "keyboard",
+      "direction": "bottom",
+      "endpoint": true,
+      "untargetedUnchanged": true,
+      "popups": 0
+    },
+    {
+      "product": "patched",
+      "target": "same-frame",
+      "mode": "gesture",
+      "direction": "top",
+      "endpoint": true,
+      "untargetedUnchanged": true,
+      "popups": 0
+    },
+    {
+      "product": "patched",
+      "target": "same-frame",
+      "mode": "gesture",
+      "direction": "bottom",
+      "endpoint": true,
+      "untargetedUnchanged": true,
+      "popups": 0
+    },
+    {
+      "product": "patched",
+      "target": "same-frame",
+      "mode": "keyboard",
+      "direction": "top",
+      "endpoint": true,
+      "untargetedUnchanged": true,
+      "popups": 0
+    },
+    {
+      "product": "patched",
+      "target": "same-frame",
+      "mode": "keyboard",
+      "direction": "bottom",
+      "endpoint": true,
+      "untargetedUnchanged": true,
+      "popups": 0
+    },
+    {
+      "product": "patched",
+      "target": "cross-frame",
+      "mode": "gesture",
+      "direction": "top",
+      "endpoint": true,
+      "untargetedUnchanged": true,
+      "popups": 0
+    },
+    {
+      "product": "patched",
+      "target": "cross-frame",
+      "mode": "gesture",
+      "direction": "bottom",
+      "endpoint": true,
+      "untargetedUnchanged": true,
+      "popups": 0
+    },
+    {
+      "product": "patched",
+      "target": "cross-frame",
+      "mode": "keyboard",
+      "direction": "top",
+      "endpoint": true,
+      "untargetedUnchanged": true,
+      "popups": 0
+    },
+    {
+      "product": "patched",
+      "target": "cross-frame",
+      "mode": "keyboard",
+      "direction": "bottom",
+      "endpoint": true,
+      "untargetedUnchanged": true,
+      "popups": 0
+    }
+  ]
+}

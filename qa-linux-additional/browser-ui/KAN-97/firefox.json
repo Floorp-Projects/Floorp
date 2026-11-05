@@ -1,0 +1,576 @@
+{
+  "productKind": "firefox",
+  "input": "OS XTest synthetic mouse/keyboard; W3C settings toggle; not physical hardware",
+  "observations": [
+    {
+      "target": "root",
+      "mode": "keyboard",
+      "direction": "top",
+      "before": {
+        "root": {
+          "top": 1800,
+          "max": 7095
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "body",
+        "visible": "visible",
+        "frame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 12,
+          "context": null,
+          "top": 12,
+          "frames": [
+            {
+              "id": 17179869185,
+              "uri": "http://127.0.0.1:29971/child"
+            }
+          ]
+        }
+      },
+      "heldLabel": [],
+      "after": {
+        "root": {
+          "top": 0,
+          "max": 7095
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "body",
+        "visible": "visible",
+        "frame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 12,
+          "context": null,
+          "top": 12,
+          "frames": [
+            {
+              "id": 17179869185,
+              "uri": "http://127.0.0.1:29971/child"
+            }
+          ]
+        }
+      },
+      "events": {
+        "events": [],
+        "popups": 0
+      },
+      "expectedTarget": "root",
+      "expectedTop": 0,
+      "actualTop": 0,
+      "atExpectedEndpoint": true
+    },
+    {
+      "target": "root",
+      "mode": "keyboard",
+      "direction": "bottom",
+      "before": {
+        "root": {
+          "top": 1800,
+          "max": 7095
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "body",
+        "visible": "visible",
+        "frame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 12,
+          "context": null,
+          "top": 12,
+          "frames": [
+            {
+              "id": 17179869185,
+              "uri": "http://127.0.0.1:29971/child"
+            }
+          ]
+        }
+      },
+      "heldLabel": [],
+      "after": {
+        "root": {
+          "top": 7095,
+          "max": 7095
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "body",
+        "visible": "visible",
+        "frame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 12,
+          "context": null,
+          "top": 12,
+          "frames": [
+            {
+              "id": 17179869185,
+              "uri": "http://127.0.0.1:29971/child"
+            }
+          ]
+        }
+      },
+      "events": {
+        "events": [],
+        "popups": 0
+      },
+      "expectedTarget": "root",
+      "expectedTop": 7095,
+      "actualTop": 7095,
+      "atExpectedEndpoint": true
+    },
+    {
+      "target": "overflow",
+      "mode": "keyboard",
+      "direction": "top",
+      "before": {
+        "root": {
+          "top": 1800,
+          "max": 7095
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "box",
+        "visible": "visible",
+        "frame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 12,
+          "context": null,
+          "top": 12,
+          "frames": [
+            {
+              "id": 17179869186,
+              "uri": "http://127.0.0.1:29971/child"
+            }
+          ]
+        }
+      },
+      "heldLabel": [],
+      "after": {
+        "root": {
+          "top": 1800,
+          "max": 7095
+        },
+        "overflow": {
+          "top": 0,
+          "max": 5650
+        },
+        "active": "box",
+        "visible": "visible",
+        "frame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 12,
+          "context": null,
+          "top": 12,
+          "frames": [
+            {
+              "id": 17179869186,
+              "uri": "http://127.0.0.1:29971/child"
+            }
+          ]
+        }
+      },
+      "events": {
+        "events": [],
+        "popups": 0
+      },
+      "expectedTarget": "overflow",
+      "expectedTop": 0,
+      "actualTop": 0,
+      "atExpectedEndpoint": true
+    },
+    {
+      "target": "overflow",
+      "mode": "keyboard",
+      "direction": "bottom",
+      "before": {
+        "root": {
+          "top": 1800,
+          "max": 7095
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "box",
+        "visible": "visible",
+        "frame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 12,
+          "context": null,
+          "top": 12,
+          "frames": [
+            {
+              "id": 17179869186,
+              "uri": "http://127.0.0.1:29971/child"
+            }
+          ]
+        }
+      },
+      "heldLabel": [],
+      "after": {
+        "root": {
+          "top": 1800,
+          "max": 7095
+        },
+        "overflow": {
+          "top": 5650,
+          "max": 5650
+        },
+        "active": "box",
+        "visible": "visible",
+        "frame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 12,
+          "context": null,
+          "top": 12,
+          "frames": [
+            {
+              "id": 17179869186,
+              "uri": "http://127.0.0.1:29971/child"
+            }
+          ]
+        }
+      },
+      "events": {
+        "events": [],
+        "popups": 0
+      },
+      "expectedTarget": "overflow",
+      "expectedTop": 5650,
+      "actualTop": 5650,
+      "atExpectedEndpoint": true
+    },
+    {
+      "target": "same-frame",
+      "mode": "keyboard",
+      "direction": "top",
+      "before": {
+        "root": {
+          "top": 1800,
+          "max": 7095
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "frame",
+        "visible": "visible",
+        "frame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 17179869187,
+          "context": null,
+          "top": 12,
+          "frames": [
+            {
+              "id": 17179869187,
+              "uri": "http://127.0.0.1:29971/child"
+            }
+          ]
+        }
+      },
+      "heldLabel": [],
+      "after": {
+        "root": {
+          "top": 1800,
+          "max": 7095
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "frame",
+        "visible": "visible",
+        "frame": {
+          "top": 0,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 17179869187,
+          "context": null,
+          "top": 12,
+          "frames": [
+            {
+              "id": 17179869187,
+              "uri": "http://127.0.0.1:29971/child"
+            }
+          ]
+        }
+      },
+      "events": {
+        "events": [],
+        "popups": 0
+      },
+      "expectedTarget": "frame",
+      "expectedTop": 0,
+      "actualTop": 0,
+      "atExpectedEndpoint": true
+    },
+    {
+      "target": "same-frame",
+      "mode": "keyboard",
+      "direction": "bottom",
+      "before": {
+        "root": {
+          "top": 1800,
+          "max": 7095
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "frame",
+        "visible": "visible",
+        "frame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 17179869187,
+          "context": null,
+          "top": 12,
+          "frames": [
+            {
+              "id": 17179869187,
+              "uri": "http://127.0.0.1:29971/child"
+            }
+          ]
+        }
+      },
+      "heldLabel": [],
+      "after": {
+        "root": {
+          "top": 1800,
+          "max": 7095
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "frame",
+        "visible": "visible",
+        "frame": {
+          "top": 6650,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 17179869187,
+          "context": null,
+          "top": 12,
+          "frames": [
+            {
+              "id": 17179869187,
+              "uri": "http://127.0.0.1:29971/child"
+            }
+          ]
+        }
+      },
+      "events": {
+        "events": [],
+        "popups": 0
+      },
+      "expectedTarget": "frame",
+      "expectedTop": 6650,
+      "actualTop": 6650,
+      "atExpectedEndpoint": true
+    },
+    {
+      "target": "cross-frame",
+      "mode": "keyboard",
+      "direction": "top",
+      "before": {
+        "root": {
+          "top": 1800,
+          "max": 7095
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "frame",
+        "visible": "visible",
+        "frame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 17179869188,
+          "context": null,
+          "top": 12,
+          "frames": [
+            {
+              "id": 17179869188,
+              "uri": "http://localhost:29972/child"
+            }
+          ]
+        }
+      },
+      "heldLabel": [],
+      "after": {
+        "root": {
+          "top": 1800,
+          "max": 7095
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "frame",
+        "visible": "visible",
+        "frame": {
+          "top": 0,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 17179869188,
+          "context": null,
+          "top": 12,
+          "frames": [
+            {
+              "id": 17179869188,
+              "uri": "http://localhost:29972/child"
+            }
+          ]
+        }
+      },
+      "events": {
+        "events": [],
+        "popups": 0
+      },
+      "expectedTarget": "frame",
+      "expectedTop": 0,
+      "actualTop": 0,
+      "atExpectedEndpoint": true
+    },
+    {
+      "target": "cross-frame",
+      "mode": "keyboard",
+      "direction": "bottom",
+      "before": {
+        "root": {
+          "top": 1800,
+          "max": 7095
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "frame",
+        "visible": "visible",
+        "frame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 17179869188,
+          "context": null,
+          "top": 12,
+          "frames": [
+            {
+              "id": 17179869188,
+              "uri": "http://localhost:29972/child"
+            }
+          ]
+        }
+      },
+      "heldLabel": [],
+      "after": {
+        "root": {
+          "top": 1800,
+          "max": 7095
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "frame",
+        "visible": "visible",
+        "frame": {
+          "top": 6650,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 17179869188,
+          "context": null,
+          "top": 12,
+          "frames": [
+            {
+              "id": 17179869188,
+              "uri": "http://localhost:29972/child"
+            }
+          ]
+        }
+      },
+      "events": {
+        "events": [],
+        "popups": 0
+      },
+      "expectedTarget": "frame",
+      "expectedTop": 6650,
+      "actualTop": 6650,
+      "atExpectedEndpoint": true
+    }
+  ],
+  "metadata": {
+    "name": "Firefox",
+    "version": "159.0.1",
+    "build": "20261102144711",
+    "signature": true,
+    "signatureUserSet": false,
+    "sandbox": 6,
+    "focusTestMode": false,
+    "documentFocused": true
+  }
+}

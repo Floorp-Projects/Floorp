@@ -1,0 +1,46 @@
+[
+  {
+    "key": "KAN-97",
+    "github": "https://github.com/Floorp-Projects/Floorp/issues/2692",
+    "sourceSha": "d6bd2fc457774f55ab1f36a2b01c941f908f1ab0",
+    "productVersion": "Floorp12.21.1@159.0.1 Build20261103153232; Firefox159.0.1 Build20261102144711",
+    "environment": "Debian13.6 private Xvfb117+Openbox normal native focus; controlled HTTP root/overflow/same+cross-origin iframe; synthetic OS input",
+    "testCommand": "python run.py official 29974; python run.py combined 29975; python run.py firefox 29976; python run.py patched 29977; see reproduce.sh",
+    "result": "Distinct focused-frame target defect: official and3031+3034candidate each4/8gesturepass with4framefail; patched8/8gesture+8/8keyboardpass, non-targetsunchanged, menuzero, exactly1dispatch/input; all32nativekeyboardcontrols pass. OriginalWindows/HFrootcauseunproven.",
+    "remainingConditions": [
+      "Original Windows11/Floorp12.17.0@154.0 website/profile/focus condition",
+      "Original issue cause and physical input",
+      "New fix only diagnostic compiled-module product tested locally; full production build/package not claimed"
+    ],
+    "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2678",
+    "newPr": "https://github.com/Floorp-Projects/Floorp/pull/3047",
+    "jiraCommentId": null,
+    "evidence": [
+      "report.md",
+      "summary.json",
+      "official.json",
+      "combined.json",
+      "firefox.json",
+      "patched.json",
+      "candidate-runtime-metadata.json",
+      "candidate-patch.json",
+      "canonical-after-hashes.json",
+      "unit/before-browser.json",
+      "unit/after-browser.json",
+      "source.patch",
+      "provenance.json",
+      "jira-proposed.md",
+      "dispatch-excerpts.json"
+    ],
+    "evidenceBase": "KAN-97",
+    "sourceBase": "29a3eb23145da90706d8a94441373278521cc737",
+    "existingPrRole": "related merged actor availability; original cause/focused-frame fix not established",
+    "newPrHead": "d6bd2fc457774f55ab1f36a2b01c941f908f1ab0",
+    "ci": {
+      "run": 42096334025,
+      "headSha": "d6bd2fc457774f55ab1f36a2b01c941f908f1ab0",
+      "status": "in_progress",
+      "smoke": "success"
+    }
+  }
+]

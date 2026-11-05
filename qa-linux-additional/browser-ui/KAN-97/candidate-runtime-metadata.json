@@ -1,0 +1,11 @@
+{
+  "greDirectory": "/workspace/kan97-runtime/candidate",
+  "executable": "/workspace/kan97-runtime/candidate/floorp",
+  "gestureModule": "jar:file:///workspace/kan97-runtime/candidate/omni.ja!/chrome/noraneko/nora-content/assets/js/gestures.js",
+  "version": "159.0.1",
+  "build": "20261103153232",
+  "signature": false,
+  "signatureUserSet": false,
+  "sandbox": 6,
+  "focusTestMode": false
+}

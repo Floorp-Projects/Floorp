@@ -1,0 +1,14 @@
+{
+  "fixture": "compiled-module diagnostic copy; NOT a full production build/package",
+  "sourceBase": "29a3eb23145da90706d8a94441373278521cc737",
+  "onlyChangedEntry": [
+    "chrome/noraneko/nora-content/assets/js/gestures.js"
+  ],
+  "beforeModuleSha256": "594318ae9b3e7911038eab85257cbc6324a9a4108f950ff546b9efbca3f0d709",
+  "afterModuleSha256": "d8481f3651d5f4a33e8a541cb1df1c8b578c08257fd2bf0139ec7ad9b8fac934",
+  "archiveBefore": "159285f967e950e0cd1ac658d713b7770e7763d6d983fc88b6e48c16e4a1f345",
+  "archiveAfter": "079e7cd4b259a374a7adf55d0c6d2f4a463661151d5005fd474bdabeca0eba39",
+  "helperSourceSha256": "c89c29d1d001e9e82425d9e73bed98d014ce3f749b3ad936a722439a59a4d2f9",
+  "nativeBinaryCopyMatches": true,
+  "unchangedResources": "shared static dependencies via existing diagnostic-copy recipe; no build is run against this product; hash audit after execution"
+}

@@ -1,0 +1,1477 @@
+{
+  "productKind": "combined",
+  "input": "OS XTest synthetic mouse/keyboard; W3C settings toggle; not physical hardware",
+  "observations": [
+    {
+      "target": "root",
+      "mode": "gesture",
+      "direction": "top",
+      "before": {
+        "root": {
+          "top": 1800,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "body",
+        "visible": "visible",
+        "frame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 17,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 15032385537,
+              "uri": "http://127.0.0.1:29971/child"
+            }
+          ]
+        }
+      },
+      "heldLabel": [
+        {
+          "id": "mouse-gesture-global-styles",
+          "text": "\n            #mouse-gesture-display-container {\n                position: fixed;\n                top: 0;\n                left: 0;\n                widt"
+        },
+        {
+          "id": "mouse-gesture-display-container",
+          "text": "Scroll to Top"
+        }
+      ],
+      "after": {
+        "root": {
+          "top": 0,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "body",
+        "visible": "visible",
+        "frame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 17,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 15032385537,
+              "uri": "http://127.0.0.1:29971/child"
+            }
+          ]
+        }
+      },
+      "events": {
+        "events": [
+          {
+            "type": "mousedown",
+            "trusted": true,
+            "x": 1168,
+            "y": 373,
+            "prevented": false
+          },
+          {
+            "type": "mouseup",
+            "trusted": true,
+            "x": 1168,
+            "y": 229,
+            "prevented": true
+          },
+          {
+            "type": "contextmenu",
+            "trusted": true,
+            "x": 1168,
+            "y": 229,
+            "prevented": true
+          }
+        ],
+        "popups": 0
+      },
+      "expectedTarget": "root",
+      "expectedTop": 0,
+      "actualTop": 0,
+      "atExpectedEndpoint": true
+    },
+    {
+      "target": "root",
+      "mode": "gesture",
+      "direction": "bottom",
+      "before": {
+        "root": {
+          "top": 1800,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "body",
+        "visible": "visible",
+        "frame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 17,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 15032385537,
+              "uri": "http://127.0.0.1:29971/child"
+            }
+          ]
+        }
+      },
+      "heldLabel": [
+        {
+          "id": "mouse-gesture-global-styles",
+          "text": "\n            #mouse-gesture-display-container {\n                position: fixed;\n                top: 0;\n                left: 0;\n                widt"
+        },
+        {
+          "id": "mouse-gesture-display-container",
+          "text": "Scroll to Bottom"
+        }
+      ],
+      "after": {
+        "root": {
+          "top": 7083,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "body",
+        "visible": "visible",
+        "frame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 17,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 15032385537,
+              "uri": "http://127.0.0.1:29971/child"
+            }
+          ]
+        }
+      },
+      "events": {
+        "events": [
+          {
+            "type": "mousedown",
+            "trusted": true,
+            "x": 1168,
+            "y": 373,
+            "prevented": false
+          },
+          {
+            "type": "mouseup",
+            "trusted": true,
+            "x": 1168,
+            "y": 517,
+            "prevented": true
+          },
+          {
+            "type": "contextmenu",
+            "trusted": true,
+            "x": 1168,
+            "y": 517,
+            "prevented": true
+          }
+        ],
+        "popups": 0
+      },
+      "expectedTarget": "root",
+      "expectedTop": 7083,
+      "actualTop": 7083,
+      "atExpectedEndpoint": true
+    },
+    {
+      "target": "root",
+      "mode": "keyboard",
+      "direction": "top",
+      "before": {
+        "root": {
+          "top": 1800,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "body",
+        "visible": "visible",
+        "frame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 17,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 15032385537,
+              "uri": "http://127.0.0.1:29971/child"
+            }
+          ]
+        }
+      },
+      "heldLabel": [],
+      "after": {
+        "root": {
+          "top": 0,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "body",
+        "visible": "visible",
+        "frame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 17,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 15032385537,
+              "uri": "http://127.0.0.1:29971/child"
+            }
+          ]
+        }
+      },
+      "events": {
+        "events": [],
+        "popups": 0
+      },
+      "expectedTarget": "root",
+      "expectedTop": 0,
+      "actualTop": 0,
+      "atExpectedEndpoint": true
+    },
+    {
+      "target": "root",
+      "mode": "keyboard",
+      "direction": "bottom",
+      "before": {
+        "root": {
+          "top": 1800,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "body",
+        "visible": "visible",
+        "frame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 17,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 15032385537,
+              "uri": "http://127.0.0.1:29971/child"
+            }
+          ]
+        }
+      },
+      "heldLabel": [],
+      "after": {
+        "root": {
+          "top": 7083,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "body",
+        "visible": "visible",
+        "frame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 17,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 15032385537,
+              "uri": "http://127.0.0.1:29971/child"
+            }
+          ]
+        }
+      },
+      "events": {
+        "events": [],
+        "popups": 0
+      },
+      "expectedTarget": "root",
+      "expectedTop": 7083,
+      "actualTop": 7083,
+      "atExpectedEndpoint": true
+    },
+    {
+      "target": "overflow",
+      "mode": "gesture",
+      "direction": "top",
+      "before": {
+        "root": {
+          "top": 1800,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "box",
+        "visible": "visible",
+        "frame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 17,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 15032385538,
+              "uri": "http://127.0.0.1:29971/child"
+            }
+          ]
+        }
+      },
+      "heldLabel": [
+        {
+          "id": "mouse-gesture-global-styles",
+          "text": "\n            #mouse-gesture-display-container {\n                position: fixed;\n                top: 0;\n                left: 0;\n                widt"
+        },
+        {
+          "id": "mouse-gesture-display-container",
+          "text": "Scroll to Top"
+        }
+      ],
+      "after": {
+        "root": {
+          "top": 1800,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 0,
+          "max": 5650
+        },
+        "active": "box",
+        "visible": "visible",
+        "frame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 17,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 15032385538,
+              "uri": "http://127.0.0.1:29971/child"
+            }
+          ]
+        }
+      },
+      "events": {
+        "events": [
+          {
+            "type": "mousedown",
+            "trusted": true,
+            "x": 230,
+            "y": 343,
+            "prevented": false
+          },
+          {
+            "type": "mouseup",
+            "trusted": true,
+            "x": 230,
+            "y": 199,
+            "prevented": true
+          },
+          {
+            "type": "contextmenu",
+            "trusted": true,
+            "x": 230,
+            "y": 199,
+            "prevented": true
+          }
+        ],
+        "popups": 0
+      },
+      "expectedTarget": "overflow",
+      "expectedTop": 0,
+      "actualTop": 0,
+      "atExpectedEndpoint": true
+    },
+    {
+      "target": "overflow",
+      "mode": "gesture",
+      "direction": "bottom",
+      "before": {
+        "root": {
+          "top": 1800,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "box",
+        "visible": "visible",
+        "frame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 17,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 15032385538,
+              "uri": "http://127.0.0.1:29971/child"
+            }
+          ]
+        }
+      },
+      "heldLabel": [
+        {
+          "id": "mouse-gesture-global-styles",
+          "text": "\n            #mouse-gesture-display-container {\n                position: fixed;\n                top: 0;\n                left: 0;\n                widt"
+        },
+        {
+          "id": "mouse-gesture-display-container",
+          "text": "Scroll to Bottom"
+        }
+      ],
+      "after": {
+        "root": {
+          "top": 1800,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 5650,
+          "max": 5650
+        },
+        "active": "box",
+        "visible": "visible",
+        "frame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 17,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 15032385538,
+              "uri": "http://127.0.0.1:29971/child"
+            }
+          ]
+        }
+      },
+      "events": {
+        "events": [
+          {
+            "type": "mousedown",
+            "trusted": true,
+            "x": 230,
+            "y": 343,
+            "prevented": false
+          },
+          {
+            "type": "mouseup",
+            "trusted": true,
+            "x": 230,
+            "y": 487,
+            "prevented": true
+          },
+          {
+            "type": "contextmenu",
+            "trusted": true,
+            "x": 230,
+            "y": 487,
+            "prevented": true
+          }
+        ],
+        "popups": 0
+      },
+      "expectedTarget": "overflow",
+      "expectedTop": 5650,
+      "actualTop": 5650,
+      "atExpectedEndpoint": true
+    },
+    {
+      "target": "overflow",
+      "mode": "keyboard",
+      "direction": "top",
+      "before": {
+        "root": {
+          "top": 1800,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "box",
+        "visible": "visible",
+        "frame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 17,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 15032385538,
+              "uri": "http://127.0.0.1:29971/child"
+            }
+          ]
+        }
+      },
+      "heldLabel": [],
+      "after": {
+        "root": {
+          "top": 1800,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 0,
+          "max": 5650
+        },
+        "active": "box",
+        "visible": "visible",
+        "frame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 17,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 15032385538,
+              "uri": "http://127.0.0.1:29971/child"
+            }
+          ]
+        }
+      },
+      "events": {
+        "events": [],
+        "popups": 0
+      },
+      "expectedTarget": "overflow",
+      "expectedTop": 0,
+      "actualTop": 0,
+      "atExpectedEndpoint": true
+    },
+    {
+      "target": "overflow",
+      "mode": "keyboard",
+      "direction": "bottom",
+      "before": {
+        "root": {
+          "top": 1800,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "box",
+        "visible": "visible",
+        "frame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 17,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 15032385538,
+              "uri": "http://127.0.0.1:29971/child"
+            }
+          ]
+        }
+      },
+      "heldLabel": [],
+      "after": {
+        "root": {
+          "top": 1800,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 5650,
+          "max": 5650
+        },
+        "active": "box",
+        "visible": "visible",
+        "frame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 17,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 15032385538,
+              "uri": "http://127.0.0.1:29971/child"
+            }
+          ]
+        }
+      },
+      "events": {
+        "events": [],
+        "popups": 0
+      },
+      "expectedTarget": "overflow",
+      "expectedTop": 5650,
+      "actualTop": 5650,
+      "atExpectedEndpoint": true
+    },
+    {
+      "target": "same-frame",
+      "mode": "gesture",
+      "direction": "top",
+      "before": {
+        "root": {
+          "top": 1800,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "frame",
+        "visible": "visible",
+        "frame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 15032385539,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 15032385539,
+              "uri": "http://127.0.0.1:29971/child"
+            }
+          ]
+        }
+      },
+      "heldLabel": [
+        {
+          "id": "mouse-gesture-global-styles",
+          "text": "\n            #mouse-gesture-display-container {\n                position: fixed;\n                top: 0;\n                left: 0;\n                widt"
+        },
+        {
+          "id": "mouse-gesture-display-container",
+          "text": "Scroll to Top"
+        }
+      ],
+      "after": {
+        "root": {
+          "top": 0,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "frame",
+        "visible": "visible",
+        "frame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 15032385539,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 15032385539,
+              "uri": "http://127.0.0.1:29971/child"
+            }
+          ]
+        }
+      },
+      "events": {
+        "events": [
+          {
+            "type": "mousedown",
+            "trusted": true,
+            "x": 660,
+            "y": 343,
+            "prevented": false
+          },
+          {
+            "type": "mouseup",
+            "trusted": true,
+            "x": 660,
+            "y": 199,
+            "prevented": true
+          },
+          {
+            "type": "contextmenu",
+            "trusted": true,
+            "x": 660,
+            "y": 199,
+            "prevented": true
+          }
+        ],
+        "popups": 0
+      },
+      "expectedTarget": "frame",
+      "expectedTop": 0,
+      "actualTop": 1800,
+      "atExpectedEndpoint": false
+    },
+    {
+      "target": "same-frame",
+      "mode": "gesture",
+      "direction": "bottom",
+      "before": {
+        "root": {
+          "top": 1800,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "frame",
+        "visible": "visible",
+        "frame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 15032385539,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 15032385539,
+              "uri": "http://127.0.0.1:29971/child"
+            }
+          ]
+        }
+      },
+      "heldLabel": [
+        {
+          "id": "mouse-gesture-global-styles",
+          "text": "\n            #mouse-gesture-display-container {\n                position: fixed;\n                top: 0;\n                left: 0;\n                widt"
+        },
+        {
+          "id": "mouse-gesture-display-container",
+          "text": "Scroll to Bottom"
+        }
+      ],
+      "after": {
+        "root": {
+          "top": 7083,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "frame",
+        "visible": "visible",
+        "frame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 15032385539,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 15032385539,
+              "uri": "http://127.0.0.1:29971/child"
+            }
+          ]
+        }
+      },
+      "events": {
+        "events": [
+          {
+            "type": "mousedown",
+            "trusted": true,
+            "x": 660,
+            "y": 343,
+            "prevented": false
+          },
+          {
+            "type": "mouseup",
+            "trusted": true,
+            "x": 660,
+            "y": 487,
+            "prevented": true
+          },
+          {
+            "type": "contextmenu",
+            "trusted": true,
+            "x": 660,
+            "y": 487,
+            "prevented": true
+          }
+        ],
+        "popups": 0
+      },
+      "expectedTarget": "frame",
+      "expectedTop": 6650,
+      "actualTop": 1800,
+      "atExpectedEndpoint": false
+    },
+    {
+      "target": "same-frame",
+      "mode": "keyboard",
+      "direction": "top",
+      "before": {
+        "root": {
+          "top": 1800,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "frame",
+        "visible": "visible",
+        "frame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 15032385539,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 15032385539,
+              "uri": "http://127.0.0.1:29971/child"
+            }
+          ]
+        }
+      },
+      "heldLabel": [],
+      "after": {
+        "root": {
+          "top": 1800,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "frame",
+        "visible": "visible",
+        "frame": {
+          "top": 0,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 15032385539,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 15032385539,
+              "uri": "http://127.0.0.1:29971/child"
+            }
+          ]
+        }
+      },
+      "events": {
+        "events": [],
+        "popups": 0
+      },
+      "expectedTarget": "frame",
+      "expectedTop": 0,
+      "actualTop": 0,
+      "atExpectedEndpoint": true
+    },
+    {
+      "target": "same-frame",
+      "mode": "keyboard",
+      "direction": "bottom",
+      "before": {
+        "root": {
+          "top": 1800,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "frame",
+        "visible": "visible",
+        "frame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 15032385539,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 15032385539,
+              "uri": "http://127.0.0.1:29971/child"
+            }
+          ]
+        }
+      },
+      "heldLabel": [],
+      "after": {
+        "root": {
+          "top": 1800,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "frame",
+        "visible": "visible",
+        "frame": {
+          "top": 6650,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 15032385539,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 15032385539,
+              "uri": "http://127.0.0.1:29971/child"
+            }
+          ]
+        }
+      },
+      "events": {
+        "events": [],
+        "popups": 0
+      },
+      "expectedTarget": "frame",
+      "expectedTop": 6650,
+      "actualTop": 6650,
+      "atExpectedEndpoint": true
+    },
+    {
+      "target": "cross-frame",
+      "mode": "gesture",
+      "direction": "top",
+      "before": {
+        "root": {
+          "top": 1800,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "frame",
+        "visible": "visible",
+        "frame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 15032385540,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 15032385540,
+              "uri": "http://localhost:29972/child"
+            }
+          ]
+        }
+      },
+      "heldLabel": [
+        {
+          "id": "mouse-gesture-global-styles",
+          "text": "\n            #mouse-gesture-display-container {\n                position: fixed;\n                top: 0;\n                left: 0;\n                widt"
+        },
+        {
+          "id": "mouse-gesture-display-container",
+          "text": "Scroll to Top"
+        }
+      ],
+      "after": {
+        "root": {
+          "top": 0,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "frame",
+        "visible": "visible",
+        "frame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 15032385540,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 15032385540,
+              "uri": "http://localhost:29972/child"
+            }
+          ]
+        }
+      },
+      "events": {
+        "events": [
+          {
+            "type": "mousedown",
+            "trusted": true,
+            "x": 660,
+            "y": 343,
+            "prevented": false
+          },
+          {
+            "type": "mouseup",
+            "trusted": true,
+            "x": 660,
+            "y": 199,
+            "prevented": true
+          },
+          {
+            "type": "contextmenu",
+            "trusted": true,
+            "x": 660,
+            "y": 199,
+            "prevented": true
+          }
+        ],
+        "popups": 0
+      },
+      "expectedTarget": "frame",
+      "expectedTop": 0,
+      "actualTop": 1800,
+      "atExpectedEndpoint": false
+    },
+    {
+      "target": "cross-frame",
+      "mode": "gesture",
+      "direction": "bottom",
+      "before": {
+        "root": {
+          "top": 1800,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "frame",
+        "visible": "visible",
+        "frame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 15032385540,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 15032385540,
+              "uri": "http://localhost:29972/child"
+            }
+          ]
+        }
+      },
+      "heldLabel": [
+        {
+          "id": "mouse-gesture-global-styles",
+          "text": "\n            #mouse-gesture-display-container {\n                position: fixed;\n                top: 0;\n                left: 0;\n                widt"
+        },
+        {
+          "id": "mouse-gesture-display-container",
+          "text": "Scroll to Bottom"
+        }
+      ],
+      "after": {
+        "root": {
+          "top": 7083,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "frame",
+        "visible": "visible",
+        "frame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 15032385540,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 15032385540,
+              "uri": "http://localhost:29972/child"
+            }
+          ]
+        }
+      },
+      "events": {
+        "events": [
+          {
+            "type": "mousedown",
+            "trusted": true,
+            "x": 660,
+            "y": 343,
+            "prevented": false
+          },
+          {
+            "type": "mouseup",
+            "trusted": true,
+            "x": 660,
+            "y": 487,
+            "prevented": true
+          },
+          {
+            "type": "contextmenu",
+            "trusted": true,
+            "x": 660,
+            "y": 487,
+            "prevented": true
+          }
+        ],
+        "popups": 0
+      },
+      "expectedTarget": "frame",
+      "expectedTop": 6650,
+      "actualTop": 1800,
+      "atExpectedEndpoint": false
+    },
+    {
+      "target": "cross-frame",
+      "mode": "keyboard",
+      "direction": "top",
+      "before": {
+        "root": {
+          "top": 1800,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "frame",
+        "visible": "visible",
+        "frame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 15032385540,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 15032385540,
+              "uri": "http://localhost:29972/child"
+            }
+          ]
+        }
+      },
+      "heldLabel": [],
+      "after": {
+        "root": {
+          "top": 1800,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "frame",
+        "visible": "visible",
+        "frame": {
+          "top": 0,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 15032385540,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 15032385540,
+              "uri": "http://localhost:29972/child"
+            }
+          ]
+        }
+      },
+      "events": {
+        "events": [],
+        "popups": 0
+      },
+      "expectedTarget": "frame",
+      "expectedTop": 0,
+      "actualTop": 0,
+      "atExpectedEndpoint": true
+    },
+    {
+      "target": "cross-frame",
+      "mode": "keyboard",
+      "direction": "bottom",
+      "before": {
+        "root": {
+          "top": 1800,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "frame",
+        "visible": "visible",
+        "frame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 15032385540,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 15032385540,
+              "uri": "http://localhost:29972/child"
+            }
+          ]
+        }
+      },
+      "heldLabel": [],
+      "after": {
+        "root": {
+          "top": 1800,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "frame",
+        "visible": "visible",
+        "frame": {
+          "top": 6650,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 15032385540,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 15032385540,
+              "uri": "http://localhost:29972/child"
+            }
+          ]
+        }
+      },
+      "events": {
+        "events": [],
+        "popups": 0
+      },
+      "expectedTarget": "frame",
+      "expectedTop": 6650,
+      "actualTop": 6650,
+      "atExpectedEndpoint": true
+    }
+  ],
+  "metadata": {
+    "name": "Floorp",
+    "version": "159.0.1",
+    "build": "20261103153232",
+    "signature": true,
+    "signatureUserSet": false,
+    "sandbox": 6,
+    "focusTestMode": false,
+    "documentFocused": true
+  },
+  "settingsBefore": {
+    "html": "<input aria-label=\"Enable mouse gestures\" data-setting=\"mouse-gesture-enabled\" role=\"switch\" class=\"_switchInput_1a3lw_98\" type=\"checkbox\">",
+    "x": 1178,
+    "y": 377.20001220703125,
+    "checked": false,
+    "aria": null
+  },
+  "config": {
+    "enabled": true,
+    "config": {
+      "enabled": false,
+      "rockerGesturesEnabled": true,
+      "wheelGesturesEnabled": true,
+      "sensitivity": 40,
+      "showTrail": true,
+      "showLabel": true,
+      "trailColor": "#37ff00",
+      "trailWidth": 6,
+      "contextMenu": {
+        "minDistance": 5,
+        "preventionTimeout": 200
+      },
+      "actions": [
+        {
+          "pattern": [
+            "left"
+          ],
+          "action": "gecko-back"
+        },
+        {
+          "pattern": [
+            "right"
+          ],
+          "action": "gecko-forward"
+        },
+        {
+          "pattern": [
+            "up",
+            "down"
+          ],
+          "action": "gecko-reload"
+        },
+        {
+          "pattern": [
+            "down",
+            "right"
+          ],
+          "action": "gecko-close-tab"
+        },
+        {
+          "pattern": [
+            "down",
+            "up"
+          ],
+          "action": "gecko-open-new-tab"
+        },
+        {
+          "pattern": [
+            "up"
+          ],
+          "action": "gecko-scroll-to-top"
+        },
+        {
+          "pattern": [
+            "down"
+          ],
+          "action": "gecko-scroll-to-bottom"
+        },
+        {
+          "pattern": [
+            "left",
+            "down"
+          ],
+          "action": "gecko-scroll-up"
+        },
+        {
+          "pattern": [
+            "right",
+            "down"
+          ],
+          "action": "gecko-scroll-down"
+        }
+      ],
+      "rockerActions": {
+        "leftRight": "gecko-forward",
+        "rightLeft": "gecko-back"
+      },
+      "wheelActions": {
+        "scrollUp": "gecko-show-previous-tab",
+        "scrollDown": "gecko-show-next-tab"
+      }
+    }
+  }
+}

@@ -1,0 +1,1 @@
+Initial bare-Xvfb run was deliberately stopped to enable Openbox and focusmanager.testmode=false. Partial results are excluded from the accepted focused-target matrix. This is a QA precondition correction, not a product crash or failed reproduction. Raw preliminary files stay local.

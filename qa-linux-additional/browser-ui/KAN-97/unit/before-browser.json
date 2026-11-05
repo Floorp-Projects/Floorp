@@ -1,0 +1,12 @@
+{
+  "passed": false,
+  "error": "Error: scrollTarget.test.ts failures: focused iframe receives scroll commands: focused frame (expected: [object Object], actual: [object Object]) | focused nested descendant receives scroll commands: nested frame (expected: [object Object], actual: [object Object])",
+  "progress": {
+    "moduleName": "scrollTarget.test.ts",
+    "testName": "",
+    "status": "done",
+    "index": 7,
+    "total": 7,
+    "startedAtMs": 1793907817320
+  }
+}

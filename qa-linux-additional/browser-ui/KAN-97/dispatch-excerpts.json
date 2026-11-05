@@ -1,0 +1,116 @@
+{
+  "official": {
+    "rawLogSha256": "ce338e859049ec875cddee72311228618433151e58f6408419aab471323c8d12",
+    "dispatches": [
+      {
+        "lineNumber": 165,
+        "text": "console.debug: \"[mouse-gesture] Sending scroll command to content:\" \"toTop\""
+      },
+      {
+        "lineNumber": 166,
+        "text": "console.debug: \"[mouse-gesture] Sending scroll command to content:\" \"toBottom\""
+      },
+      {
+        "lineNumber": 170,
+        "text": "console.debug: \"[mouse-gesture] Sending scroll command to content:\" \"toTop\""
+      },
+      {
+        "lineNumber": 171,
+        "text": "console.debug: \"[mouse-gesture] Sending scroll command to content:\" \"toBottom\""
+      },
+      {
+        "lineNumber": 180,
+        "text": "console.debug: \"[mouse-gesture] Sending scroll command to content:\" \"toTop\""
+      },
+      {
+        "lineNumber": 181,
+        "text": "console.debug: \"[mouse-gesture] Sending scroll command to content:\" \"toBottom\""
+      },
+      {
+        "lineNumber": 183,
+        "text": "console.debug: \"[mouse-gesture] Sending scroll command to content:\" \"toTop\""
+      },
+      {
+        "lineNumber": 184,
+        "text": "console.debug: \"[mouse-gesture] Sending scroll command to content:\" \"toBottom\""
+      }
+    ],
+    "count": 8
+  },
+  "combined": {
+    "rawLogSha256": "eb3417121c2b674ea14638dda3a92085c34ad91c91fdd8d072fd45dee7da0d80",
+    "dispatches": [
+      {
+        "lineNumber": 167,
+        "text": "console.debug: \"[mouse-gesture] Sending scroll command to content:\" \"toTop\""
+      },
+      {
+        "lineNumber": 168,
+        "text": "console.debug: \"[mouse-gesture] Sending scroll command to content:\" \"toBottom\""
+      },
+      {
+        "lineNumber": 178,
+        "text": "console.debug: \"[mouse-gesture] Sending scroll command to content:\" \"toTop\""
+      },
+      {
+        "lineNumber": 179,
+        "text": "console.debug: \"[mouse-gesture] Sending scroll command to content:\" \"toBottom\""
+      },
+      {
+        "lineNumber": 181,
+        "text": "console.debug: \"[mouse-gesture] Sending scroll command to content:\" \"toTop\""
+      },
+      {
+        "lineNumber": 182,
+        "text": "console.debug: \"[mouse-gesture] Sending scroll command to content:\" \"toBottom\""
+      },
+      {
+        "lineNumber": 184,
+        "text": "console.debug: \"[mouse-gesture] Sending scroll command to content:\" \"toTop\""
+      },
+      {
+        "lineNumber": 185,
+        "text": "console.debug: \"[mouse-gesture] Sending scroll command to content:\" \"toBottom\""
+      }
+    ],
+    "count": 8
+  },
+  "patched": {
+    "rawLogSha256": "a686bb6af0c190d5efc387d4ed5cc339266970432fafac7fa16657c2477ff285",
+    "dispatches": [
+      {
+        "lineNumber": 163,
+        "text": "console.debug: \"[mouse-gesture] Sending scroll command to content:\" \"toTop\""
+      },
+      {
+        "lineNumber": 164,
+        "text": "console.debug: \"[mouse-gesture] Sending scroll command to content:\" \"toBottom\""
+      },
+      {
+        "lineNumber": 174,
+        "text": "console.debug: \"[mouse-gesture] Sending scroll command to content:\" \"toTop\""
+      },
+      {
+        "lineNumber": 175,
+        "text": "console.debug: \"[mouse-gesture] Sending scroll command to content:\" \"toBottom\""
+      },
+      {
+        "lineNumber": 177,
+        "text": "console.debug: \"[mouse-gesture] Sending scroll command to content:\" \"toTop\""
+      },
+      {
+        "lineNumber": 178,
+        "text": "console.debug: \"[mouse-gesture] Sending scroll command to content:\" \"toBottom\""
+      },
+      {
+        "lineNumber": 180,
+        "text": "console.debug: \"[mouse-gesture] Sending scroll command to content:\" \"toTop\""
+      },
+      {
+        "lineNumber": 181,
+        "text": "console.debug: \"[mouse-gesture] Sending scroll command to content:\" \"toBottom\""
+      }
+    ],
+    "count": 8
+  }
+}
