@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: MPL-2.0
 // @colocated-env browser
 
-import { waitForWorkspaceWindow } from "../window-ready.ts";
+import {
+  canInitializeWorkspace,
+  waitForWorkspaceWindow,
+} from "../window-ready.ts";
 import {
   assert,
   assertEquals,
@@ -135,10 +138,48 @@ async function testBrowserBeforeDocument() {
   assert(await pending, "initialization resumes after this window is ready");
 }
 
+async function testReadyThenOwnerDisposed() {
+  const old = fixture();
+  old.win.gBrowser = { tabContainer: {}, selectedTab: {} };
+  const oldContinuation = waitForWorkspaceWindow(
+    old.win as unknown as Window,
+    old.observers,
+    old.abort.signal,
+  ).then((ready) => ready); // The prior caller only checked `!ready`.
+  old.abort.abort();
+  assertEquals(
+    await oldContinuation,
+    true,
+    "prior guard allows disposed owner",
+  );
+  const x = fixture();
+  x.win.gBrowser = { tabContainer: {}, selectedTab: {} };
+  const continuation = waitForWorkspaceWindow(
+    x.win as unknown as Window,
+    x.observers,
+    x.abort.signal,
+  ).then((ready) => canInitializeWorkspace(ready, x.win, x.abort.signal));
+  // Readiness is already resolved, but the awaiting continuation has not run.
+  x.abort.abort();
+  assertEquals(await continuation, false, "disposed owner must not initialize");
+  const closed = fixture();
+  closed.win.gBrowser = { tabContainer: {}, selectedTab: {} };
+  const afterClose = waitForWorkspaceWindow(
+    closed.win as unknown as Window,
+    closed.observers,
+    closed.abort.signal,
+  ).then((ready) =>
+    canInitializeWorkspace(ready, closed.win, closed.abort.signal)
+  );
+  closed.win.closed = true;
+  assertEquals(await afterClose, false, "closed window must not initialize");
+}
+
 export async function runAllTests(): Promise<void> {
   await runTests("windowReady.test.ts", [
     { name: "own versus foreign window", fn: testReadyAndForeignWindow },
     { name: "abort and unavailable browser", fn: testAbortAndMissingBrowser },
     { name: "browser before document", fn: testBrowserBeforeDocument },
+    { name: "owner disposed after ready", fn: testReadyThenOwnerDisposed },
   ]);
 }

@@ -10,6 +10,15 @@ interface StartupObservers {
   removeObserver(observer: nsIObserver, topic: string): void;
 }
 
+/** Recheck lifetime after awaiting readiness; the owner may have been disposed. */
+export function canInitializeWorkspace(
+  ready: boolean,
+  win: Pick<Window, "closed">,
+  signal: AbortSignal,
+): boolean {
+  return ready && !signal.aborted && !win.closed;
+}
+
 /** SessionStore readiness is shared; gBrowser readiness belongs to each window. */
 export function waitForWorkspaceWindow(
   win: WorkspaceWindow,
