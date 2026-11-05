@@ -21,6 +21,7 @@ import {
   getOldTabbarPositionConfig,
   getOldTabbarStyleConfig,
 } from "./utils/old-config-migrator";
+import { addVerticalTabsObserver } from "./utils/vertical-tabs-observer.ts";
 import { type TFloorpDesignConfigs, zFloorpDesignConfigs } from "./type.ts";
 import {} from "#features-chrome/utils/base";
 import { createRootHMR } from "@nora/solid-xul";
@@ -328,7 +329,15 @@ function createConfig(): [
       }
       const mergedResult = zFloorpDesignConfigs.decode(merged);
       if (isRight(mergedResult)) {
-        setConfig(mergedResult.right);
+        // The write-back effect below persists every `setConfig`, and its pref
+        // write calls this observer again. Skip identical values so the
+        // observer -> setConfig -> effect cycle cannot re-write forever. Do not
+        // put this equality on the signal itself: callers rely on a `setConfig`
+        // with an unchanged value to re-run derived effects such as the legacy
+        // chrome-extras pref mirror.
+        if (JSON.stringify(mergedResult.right) !== JSON.stringify(config())) {
+          setConfig(mergedResult.right);
+        }
       }
     } catch (e) {
       console.error("Failed to parse design configs:", e);
@@ -361,6 +370,20 @@ function createConfig(): [
     });
   } catch (e) {
     console.error("Failed to add observer:", e);
+  }
+
+  try {
+    const removeVerticalTabsObserver = addVerticalTabsObserver(
+      () => config().tabbar.tabbarStyle,
+      (tabbarStyle) =>
+        setConfig((prev) => ({
+          ...prev,
+          tabbar: { ...prev.tabbar, tabbarStyle },
+        })),
+    );
+    onCleanup(removeVerticalTabsObserver);
+  } catch (e) {
+    console.error("[Designs]", "Failed to add vertical tabs observer:", e);
   }
 
   return [config, setConfig];
