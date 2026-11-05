@@ -1,0 +1,31 @@
+{
+  "key": "KAN-29",
+  "englishLaunches": 1,
+  "arabicLaunches": 0,
+  "ownedRssPeakKiB": 1508120,
+  "observationLastSeconds": 10.092156132996024,
+  "samplingGapMaxSeconds": 0.6891799560034997,
+  "mainGauges": {
+    "heap-allocated": {
+      "amount": 378967200,
+      "units": 0
+    },
+    "resident": {
+      "amount": 554098688,
+      "units": 0
+    },
+    "resident-unique": {
+      "amount": 428781568,
+      "units": 0
+    },
+    "ghost-windows": {
+      "amount": 0,
+      "units": 1
+    }
+  },
+  "livePid": 119877,
+  "normalChildExit": 0,
+  "profilerAndMemoryReportSamePid": true,
+  "mainReportCategoriesMeasured": true,
+  "arabicCauseAttribution": false
+}

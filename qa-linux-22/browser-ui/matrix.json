@@ -240,6 +240,31 @@
         "profiles/report.md",
         "next-observations.md"
       ]
+    },
+    "instrumentationPreflight": {
+      "key": "KAN-29",
+      "github": "https://github.com/Floorp-Projects/Floorp/issues/2876",
+      "sourceSha": "a6290b5811b8c5309b399ac340ec40b52f97b73c",
+      "productVersion": "Floorp12.20.0 / Gecko157.0.1 / Build20261007125927",
+      "environment": "Debian13, Xvfb130/Openbox, isolated DBus; fresh en-US; actualPID119877",
+      "testCommand": "python3 KAN-29/instrumentation-preflight/run.py",
+      "result": "English instrumentation PASS: API+USR2 samples and same-PID nonminimizing memory report; actual child exit0; Arabic launches0",
+      "remainingConditions": [
+        "Arabic early same-process reporter initialization route",
+        "Arabic heap/DOM/native cause discrimination",
+        "qualified full157 RTL paint",
+        "original LTR CachyOS/Flatpak/physical conditions"
+      ],
+      "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2877",
+      "newPr": null,
+      "jiraCommentId": null,
+      "evidence": [
+        "summary.json",
+        "metrics.json",
+        "resources.json",
+        "run.py",
+        "report.md"
+      ]
     }
   },
   {

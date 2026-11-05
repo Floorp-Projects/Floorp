@@ -1,0 +1,122 @@
+[
+  {
+    "seconds": 1.5136293369941995,
+    "ownedRssKiB": 282956,
+    "cgroupBytes": 4048826368,
+    "outputBytes": 424
+  },
+  {
+    "seconds": 1.9685053399953176,
+    "ownedRssKiB": 357348,
+    "cgroupBytes": 4099309568,
+    "outputBytes": 1188
+  },
+  {
+    "seconds": 2.4711004729979322,
+    "ownedRssKiB": 373392,
+    "cgroupBytes": 4127113216,
+    "outputBytes": 1538
+  },
+  {
+    "seconds": 2.8733232239974313,
+    "ownedRssKiB": 518804,
+    "cgroupBytes": 4202459136,
+    "outputBytes": 1948
+  },
+  {
+    "seconds": 3.377073269999528,
+    "ownedRssKiB": 645012,
+    "cgroupBytes": 4280811520,
+    "outputBytes": 3914
+  },
+  {
+    "seconds": 3.7715428819938097,
+    "ownedRssKiB": 696308,
+    "cgroupBytes": 4296208384,
+    "outputBytes": 3914
+  },
+  {
+    "seconds": 4.143424319998303,
+    "ownedRssKiB": 785136,
+    "cgroupBytes": 4366336000,
+    "outputBytes": 3914
+  },
+  {
+    "seconds": 4.600263210995763,
+    "ownedRssKiB": 834272,
+    "cgroupBytes": 4383444992,
+    "outputBytes": 5030
+  },
+  {
+    "seconds": 4.96100336699601,
+    "ownedRssKiB": 921116,
+    "cgroupBytes": 4429918208,
+    "outputBytes": 8666
+  },
+  {
+    "seconds": 5.4694609379948815,
+    "ownedRssKiB": 1015200,
+    "cgroupBytes": 4507295744,
+    "outputBytes": 9138
+  },
+  {
+    "seconds": 5.837771824997617,
+    "ownedRssKiB": 973104,
+    "cgroupBytes": 4506529792,
+    "outputBytes": 9340
+  },
+  {
+    "seconds": 6.33810809199349,
+    "ownedRssKiB": 1122992,
+    "cgroupBytes": 4567162880,
+    "outputBytes": 9340
+  },
+  {
+    "seconds": 7.02728804799699,
+    "ownedRssKiB": 1299448,
+    "cgroupBytes": 4653723648,
+    "outputBytes": 10209
+  },
+  {
+    "seconds": 7.472534806998738,
+    "ownedRssKiB": 1359272,
+    "cgroupBytes": 4678422528,
+    "outputBytes": 75947
+  },
+  {
+    "seconds": 7.888644864993694,
+    "ownedRssKiB": 1430780,
+    "cgroupBytes": 4705103872,
+    "outputBytes": 102516
+  },
+  {
+    "seconds": 8.295521224994445,
+    "ownedRssKiB": 1464260,
+    "cgroupBytes": 4731228160,
+    "outputBytes": 102516
+  },
+  {
+    "seconds": 8.785762535000686,
+    "ownedRssKiB": 1494728,
+    "cgroupBytes": 4774580224,
+    "outputBytes": 15992674
+  },
+  {
+    "seconds": 9.161689870998089,
+    "ownedRssKiB": 1508120,
+    "cgroupBytes": 4793909248,
+    "outputBytes": 22209953
+  },
+  {
+    "seconds": 9.544180732998939,
+    "ownedRssKiB": 1480856,
+    "cgroupBytes": 4756037632,
+    "outputBytes": 30700990
+  },
+  {
+    "seconds": 10.092156132996024,
+    "ownedRssKiB": 1440472,
+    "cgroupBytes": 4733177856,
+    "outputBytes": 30701259
+  }
+]

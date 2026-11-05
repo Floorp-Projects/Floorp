@@ -1,0 +1,125 @@
+{
+  "sourceSha": "a6290b5811b8c5309b399ac340ec40b52f97b73c",
+  "runtimeSha": "c74fe1a545d275cdd710ab44701c1ee0dd6b0eae",
+  "englishLaunches": 1,
+  "arabicLaunches": 0,
+  "freshProfile": true,
+  "limits": {
+    "wallSeconds": 45,
+    "ownedRssGiB": 2,
+    "cgroupGiB": 6,
+    "outputMiB": 100
+  },
+  "requestedFeatures": [
+    "js",
+    "stackwalk",
+    "processcpu",
+    "memory"
+  ],
+  "normalExit": true,
+  "pid": 119877,
+  "exeSha256": "0eff607fa766d87b89e7f314e455c3b093f5d31dbde8a2f22be2f00044558301",
+  "libxulSha256": "d57a2278f645a7bae91b0cb806a946fd037243a1f938e04ea3deb2168c010c80",
+  "live": {
+    "pid": 119877,
+    "version": "157.0.1",
+    "build": "20261007125927",
+    "locales": [
+      "en-US"
+    ],
+    "rtl": false,
+    "active": true,
+    "available": [
+      "js",
+      "mainthreadio",
+      "fileio",
+      "fileioall",
+      "nomarkerstacks",
+      "screenshots",
+      "seqstyle",
+      "stackwalk",
+      "jsallocations",
+      "nostacksampling",
+      "ipcmessages",
+      "audiocallbacktracing",
+      "cpuallthreads",
+      "samplingallthreads",
+      "markersallthreads",
+      "unregisteredthreads",
+      "processcpu",
+      "power",
+      "cpufreq",
+      "bandwidth",
+      "memory",
+      "tracing",
+      "sandbox",
+      "flows",
+      "jssources"
+    ],
+    "config": {
+      "features": [
+        "js",
+        "stackwalk",
+        "processcpu",
+        "memory"
+      ],
+      "threads": [
+        "GeckoMain"
+      ],
+      "interval": 5,
+      "capacity": 16777216,
+      "activeTabID": 0
+    },
+    "sandbox": 6,
+    "langpackSignature": true
+  },
+  "memoryDump": {
+    "completed": true,
+    "pid": 119877,
+    "minimizeMemoryUsage": false,
+    "anonymize": true
+  },
+  "profilerDump": {
+    "written": true,
+    "pid": 119877
+  },
+  "registeredSignals": {
+    "12": true,
+    "34": true
+  },
+  "usr2Sent": true,
+  "normalQuitRequested": true,
+  "actualChildExit": 0,
+  "profiles": {
+    "profile_0_119877.json": {
+      "bytes": 14896988,
+      "sha256": "a81a00d4581bc36fbb6376b3b749a3827af766b69a4179aaf227dd39af3d418a",
+      "pidSet": [
+        119877
+      ],
+      "threads": 1,
+      "sampleCount": 1408,
+      "hasStacks": true
+    },
+    "api-profile.json": {
+      "bytes": 15701060,
+      "sha256": "d6e91590c26d5a63a64fd4c4a43906a33d66d4c0c6b218532cbc8728aa94fb83",
+      "pidSet": [
+        119877
+      ],
+      "threads": 1,
+      "sampleCount": 1299,
+      "hasStacks": true
+    }
+  },
+  "memoryReport": {
+    "bytes": 92105,
+    "sha256": "8c1c92d584a3cb11a32fe17ddd48a85d780b3946db12ee4ed9a3bb259a985663",
+    "version": 1,
+    "reportCount": 4647,
+    "mainPidReports": 1784,
+    "hasHeapAllocated": true,
+    "hasExplicitJS": true
+  },
+  "success": true
+}
