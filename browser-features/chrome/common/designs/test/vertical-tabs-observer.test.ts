@@ -10,9 +10,7 @@ const PREF = "sidebar.verticalTabs";
 
 function withVerticalTabsPref<T>(value: boolean, fn: () => T): T {
   const hadUserValue = Services.prefs.prefHasUserValue(PREF);
-  const previous = hadUserValue
-    ? Services.prefs.getBoolPref(PREF)
-    : undefined;
+  const previous = hadUserValue ? Services.prefs.getBoolPref(PREF) : undefined;
   const previousConfig = config();
   Services.prefs.setBoolPref(PREF, value);
   try {
@@ -89,7 +87,7 @@ function testTurningVerticalOffAppliesHorizontal(): void {
 }
 
 function testTurningVerticalOffKeepsMultirow(): void {
-  withVerticalTabsPref(true, () => {
+  withVerticalTabsPref(false, () => {
     const state = createObserver("multirow");
     try {
       Services.prefs.setBoolPref(PREF, false);
@@ -106,7 +104,7 @@ function testTurningVerticalOffKeepsMultirow(): void {
 }
 
 function testMatchingStyleIsNoOp(): void {
-  withVerticalTabsPref(false, () => {
+  withVerticalTabsPref(true, () => {
     const state = createObserver("vertical");
     try {
       Services.prefs.setBoolPref(PREF, true);
@@ -115,6 +113,40 @@ function testMatchingStyleIsNoOp(): void {
         0,
         "matching style should not be applied again",
       );
+    } finally {
+      state.remove();
+    }
+  });
+}
+
+function testInitialNativeVerticalReconcilesStoredHorizontal(): void {
+  withVerticalTabsPref(true, () => {
+    const state = createObserver("horizontal");
+    try {
+      assertEquals(
+        state.getStyle(),
+        "vertical",
+        "reconcile before a pref change",
+      );
+      assertEquals(state.applied.length, 1, "initial mismatch applies once");
+    } finally {
+      state.remove();
+    }
+  });
+}
+
+function testInitialNativeHorizontalReconcilesStoredVertical(): void {
+  withVerticalTabsPref(false, () => {
+    const state = createObserver("vertical");
+    try {
+      assertEquals(
+        state.getStyle(),
+        "horizontal",
+        "old profile reconciles immediately",
+      );
+      assertEquals(state.applied.length, 1, "initial mismatch applies once");
+      Services.prefs.setBoolPref(PREF, false);
+      assertEquals(state.applied.length, 1, "matching notification is a no-op");
     } finally {
       state.remove();
     }
@@ -151,6 +183,14 @@ export async function runAllTests(): Promise<void> {
     {
       name: "matching native style is a no-op",
       fn: testMatchingStyleIsNoOp,
+    },
+    {
+      name: "initial native vertical reconciles stored horizontal",
+      fn: testInitialNativeVerticalReconcilesStoredHorizontal,
+    },
+    {
+      name: "initial native horizontal reconciles stored vertical",
+      fn: testInitialNativeHorizontalReconcilesStoredVertical,
     },
     {
       name: "cleanup removes the pref observer",
