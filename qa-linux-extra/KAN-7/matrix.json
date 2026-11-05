@@ -26,7 +26,7 @@
     ],
     "existingPr": null,
     "newPr": null,
-    "jiraCommentId": null,
+    "jiraCommentId": "10347",
     "evidence": [
       "report.md",
       "capabilities.json",
@@ -39,6 +39,19 @@
       "upstream-screening.json"
     ],
     "separateFromOriginal22": true,
-    "originalCMatrixSha256": "4ac5d5f17f97d70e82f7b9f17d6abcc1aa17a92e3708eeadaba6ac7c8415e3cd"
+    "originalCMatrixSha256": "4ac5d5f17f97d70e82f7b9f17d6abcc1aa17a92e3708eeadaba6ac7c8415e3cd",
+    "jiraLabels": [
+      "area-platform",
+      "env-blocked",
+      "floorp-stability-2026-11",
+      "needs-fedora-kde",
+      "needs-hybrid-gpu-driver-info",
+      "needs-intel-tgl-iris-26-2-4",
+      "needs-matched-firefox",
+      "needs-repro",
+      "needs-startup-stack",
+      "p1",
+      "triage-reviewed"
+    ]
   }
 ]
