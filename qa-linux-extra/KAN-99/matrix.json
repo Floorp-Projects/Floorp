@@ -17,7 +17,7 @@
     ],
     "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2699 (merged; real panel tab mapping, bounded control supports this layer)",
     "newPr": null,
-    "jiraCommentId": null,
+    "jiraCommentId": "10364",
     "jiraCommentsRead": [
       "10146",
       "10168"
@@ -47,6 +47,15 @@
       "sandboxContentLevel": 6,
       "signatureRequiredDuringTrials": true,
       "note": "Packaged default signatureRequired false observed then raised to true; no sandbox/TLS/security bypass."
-    }
+    },
+    "jiraLabels": [
+      "area-ui",
+      "floorp-github-import-2026-11",
+      "needs-external-check",
+      "needs-live-youtube-sponsored-ads",
+      "needs-ubo-filter-list-details",
+      "p2",
+      "triage-reviewed"
+    ]
   }
 ]

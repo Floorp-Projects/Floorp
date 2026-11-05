@@ -29,7 +29,7 @@
     ],
     "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2699 (merged real tabbrowser integration; no duplicate repair)",
     "newPr": null,
-    "jiraCommentId": null,
+    "jiraCommentId": "10363",
     "evidence": [
       "report.md",
       "verification.json",
@@ -41,6 +41,14 @@
       "historical/trial/panel-after-close.png",
       "historical/acquisition/summary.json"
     ],
-    "separateFromOriginal22": true
+    "separateFromOriginal22": true,
+    "jiraLabels": [
+      "area-ui",
+      "floorp-stability-2026-11",
+      "historical-repro",
+      "needs-live-youtube-pip",
+      "p2",
+      "triage-reviewed"
+    ]
   }
 ]

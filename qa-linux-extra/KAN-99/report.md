@@ -1,6 +1,6 @@
 # KAN-99 / GitHub2514 signed extension integration
 
-**Partial actual integration pass; original YouTube case remains untested because the Cloud proxy rejects CONNECT with403.** No demonstrated product defect warrants a new PR. No Jira/external writes, merge/release/Done or publication performed.
+**Partial actual integration pass; original YouTube case remains untested because the Cloud proxy rejects CONNECT with403.** No demonstrated product defect warrants a new PR. The agent subtask initially saved local evidence; the root subsequently published approved QA evidence and updated Jira as recorded below. No merge, production release or Done transition.
 
 ## Context read
 
@@ -30,3 +30,5 @@ Harness startup observation had tab-selection and extension-view frame-script mi
 Navigated both actual browsers to https://www.youtube.com/: both reached about:neterror proxyConnectFailure. Independent urllib through inherited approved proxy returned CONNECT403 for YouTube, while example.com returned200. This is network infrastructure evidence, not an ad-blocker product failure or a claim of non-reproduction. No authentication, CAPTCHA, alternate route or TLS bypass attempted.
 
 Remaining: reachable live YouTube sponsored ads with representative lists/version; original Ubuntu condition; full picker select/save; separate TWP integration. Keep needs-external-check/needs-repro, narrow any broader extension-env label to needs-live-youtube-sponsored-ads and these specific conditions. No duplicate PR2699; no new fix without reproduced defect. Parent owns Jira integration; this task issued no new Jira comment ID.
+
+QA publication: evidence commit2834b1aca2dcde0f383b79bed9e066e2cac39f30; Jira KAN-99 comment10364. Labels narrowed to the remaining live-site/filter conditions; issue remains open/未着手.
