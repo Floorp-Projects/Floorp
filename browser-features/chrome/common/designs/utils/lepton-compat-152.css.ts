@@ -260,5 +260,28 @@ export const LEPTON_COMPAT_152_CSS = `
  * The Floorp icon patches that used to be appended here now live in the
  * design-agnostic chrome-extras stylesheets.
  */
-export const LEPTON_COMPAT_CSS =
-  GECKO_152_COLOR_FIX_CSS + "\n" + LEPTON_COMPAT_152_CSS;
+export const LEPTON_CONTAINER_INDICATOR_CSS = `
+/* Photon uses selected="true", but current Gecko represents selection with
+ * selected="". Its inactive animation therefore hides selected containers,
+ * while its identity-color reset also replaces their individual colors.
+ * A container's identity must remain visible independently of selection/hover.
+ * Keep this after the vendored sheet, which is replaced by upstream syncs. */
+@media -moz-pref("userChrome.tab.photon_like_contextline") {
+  #tabbrowser-tabs .tabbrowser-tab[usercontextid] > .tab-stack > .tab-background > .tab-context-line {
+    --identity-icon-color: inherit;
+    background-color: var(--identity-icon-color) !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  /* Photon forces a 2px height for horizontal tabs. Restore the native
+   * vertical indicator's height when the tab strip changes orientation. */
+  #tabbrowser-tabs[orient="vertical"] .tabbrowser-tab[usercontextid] > .tab-stack > .tab-background > .tab-context-line {
+    height: 24px !important;
+    align-self: center;
+  }
+}
+`;
+
+export const LEPTON_COMPAT_CSS = GECKO_152_COLOR_FIX_CSS + "\n" +
+  LEPTON_COMPAT_152_CSS + "\n" +
+  LEPTON_CONTAINER_INDICATOR_CSS;
