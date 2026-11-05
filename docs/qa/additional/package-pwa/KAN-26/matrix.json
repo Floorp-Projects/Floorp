@@ -113,6 +113,15 @@
       "related-pr-3048",
       "reproduced-in-test",
       "triage-reviewed"
-    ]
+    ],
+    "windowsHandoff": {
+      "run": 42120232936,
+      "dispatchCount": 1,
+      "status": "in_progress",
+      "executedInCloud": false,
+      "report": "windows-handoff/report.md",
+      "acceptance": "windows-handoff/acceptance-88.json",
+      "previousQaFullSha": "3235cf0c0ebe31ea79763dd3f2705410949fbaeb"
+    }
   }
 ]

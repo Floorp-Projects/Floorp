@@ -1,0 +1,19 @@
+{
+  "manifestZipSha256": "2b6a1b20190dc7016957ca25f72f8e83f267de51458b515153fd209bb90d9138",
+  "manifestArtifactId": 13274392012,
+  "runtimeRun": 41664957250,
+  "runtimeHead": "8965ffc346d426ccdf919bd18585e4d4a0c21654",
+  "windowsTarget": {
+    "platform": "Windows",
+    "arch": "x86_64",
+    "artifact_name": "floorp-windows-x86_64-moz-artifact",
+    "artifact_id": 13270584849,
+    "artifact_digest": "sha256:9eb4b08f2da5cdd535232edeb37ddd3866d47492e17f5921e115eb4a4f7180c6",
+    "expected_build_id": "20261103153232"
+  },
+  "apiMatchesManifest": true,
+  "expired": false,
+  "buildId": "20261103153232",
+  "windowsProductExecutedInCloud": false,
+  "manifestRetrieval": "gh direct redirect returned403; connected GitHub artifact download succeeded; credentials/redirect URLs not persisted"
+}

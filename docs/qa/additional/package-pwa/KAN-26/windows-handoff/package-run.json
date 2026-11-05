@@ -1,0 +1,10 @@
+{
+  "runId": 42120232936,
+  "url": "https://github.com/Floorp-Projects/Floorp/actions/runs/42120232936",
+  "head": "0e80f14dc439dde7817c0620f0fc112d54dfba80",
+  "dispatchRequests": 1,
+  "platform": "Windows-x64",
+  "signing": false,
+  "status": "in_progress",
+  "executionInCloudWindows": false
+}

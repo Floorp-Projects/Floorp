@@ -1,0 +1,36 @@
+{
+  "key": "KAN-26",
+  "github": "https://github.com/Floorp-Projects/Floorp/issues/2965",
+  "sourceSha": "0e80f14dc439dde7817c0620f0fc112d54dfba80",
+  "dependencyBase": "1c37f3f2c53c5b213e679321e0116d4c7474661f",
+  "environment": "Cloud Debian; Windows package prepared remotely; native Windows execution delegated locally, not performed",
+  "testCommand": "local native Windows harness using acceptance-88.json and chrome-snapshot.js; verify_artifact_zip.py before use",
+  "result": "one pinned unsigned Windows package run in progress; no Windows execution or qualification claimed",
+  "remainingConditions": [
+    "Windows product execution88states",
+    "original Windows12.20.2 comparison",
+    "highDPI",
+    "physicalGPU/input",
+    "actualcollapsedvertical",
+    "historicalLinux normal-control closebuttons missing"
+  ],
+  "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/3041",
+  "newPr": "https://github.com/Floorp-Projects/Floorp/pull/3048",
+  "jiraCommentId": "10448",
+  "packageRun": 42120232936,
+  "dispatchCount": 1,
+  "installer": null,
+  "evidence": [
+    "report.md",
+    "preflight.json",
+    "dispatch.json",
+    "runtime-verification.json",
+    "runtime-manifest.json",
+    "acceptance-88.json",
+    "package-run-api.json",
+    "runtime-windows-artifact-api.json",
+    "runtime-run-api.json"
+  ],
+  "originalLinuxDenominator": 22,
+  "repeatedLinuxTests": 0
+}

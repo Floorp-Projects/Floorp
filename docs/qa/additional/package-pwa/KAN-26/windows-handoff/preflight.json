@@ -1,0 +1,26 @@
+{
+  "head": "0e80f14dc439dde7817c0620f0fc112d54dfba80",
+  "base": "1c37f3f2c53c5b213e679321e0116d4c7474661f",
+  "canonical3041": "1c37f3f2c53c5b213e679321e0116d4c7474661f",
+  "draft": true,
+  "merged": false,
+  "existingWindowsRuns": [],
+  "existingRuns": [
+    {
+      "id": 42113006050,
+      "status": "completed",
+      "conclusion": "success",
+      "title": "\ud83d\udce6\ufe0f Package Linux-x64 (Unsigned)"
+    }
+  ],
+  "manifestZipSha256": "2b6a1b20190dc7016957ca25f72f8e83f267de51458b515153fd209bb90d9138",
+  "runtimeWindows": {
+    "platform": "Windows",
+    "arch": "x86_64",
+    "artifact_name": "floorp-windows-x86_64-moz-artifact",
+    "artifact_id": 13270584849,
+    "artifact_digest": "sha256:9eb4b08f2da5cdd535232edeb37ddd3866d47492e17f5921e115eb4a4f7180c6",
+    "expected_build_id": "20261103153232"
+  },
+  "dispatchRequests": 1
+}

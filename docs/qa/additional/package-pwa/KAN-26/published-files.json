@@ -25,7 +25,7 @@
   },
   {
     "path": "matrix.json",
-    "bytes": 4887
+    "bytes": 5206
   },
   {
     "path": "obsolete-package-run.json",
@@ -6630,5 +6630,57 @@
   {
     "path": "standard-ci/old-head-3a9f99ae/evidence/logs__test__latest.log",
     "bytes": 131919
+  },
+  {
+    "path": "windows-handoff/acceptance-88.json",
+    "bytes": 73229
+  },
+  {
+    "path": "windows-handoff/chrome-snapshot.js",
+    "bytes": 2781
+  },
+  {
+    "path": "windows-handoff/dispatch.json",
+    "bytes": 934
+  },
+  {
+    "path": "windows-handoff/matrix.json",
+    "bytes": 1394
+  },
+  {
+    "path": "windows-handoff/package-run-api.json",
+    "bytes": 406
+  },
+  {
+    "path": "windows-handoff/package-run.json",
+    "bytes": 297
+  },
+  {
+    "path": "windows-handoff/preflight.json",
+    "bytes": 849
+  },
+  {
+    "path": "windows-handoff/report.md",
+    "bytes": 7856
+  },
+  {
+    "path": "windows-handoff/runtime-manifest.json",
+    "bytes": 1507
+  },
+  {
+    "path": "windows-handoff/runtime-run-api.json",
+    "bytes": 276
+  },
+  {
+    "path": "windows-handoff/runtime-verification.json",
+    "bytes": 794
+  },
+  {
+    "path": "windows-handoff/runtime-windows-artifact-api.json",
+    "bytes": 360
+  },
+  {
+    "path": "windows-handoff/verify_artifact_zip.py",
+    "bytes": 1979
   }
 ]
