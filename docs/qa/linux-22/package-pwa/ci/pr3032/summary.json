@@ -1,0 +1,16 @@
+{
+  "pr": 3032,
+  "headSha": "06aaf5893645d2a33106e7657d0e0a58aa6029e0",
+  "runId": 42045615354,
+  "attempt": 1,
+  "UbuntuBrowserJob": "success",
+  "artifactId": 13426070050,
+  "artifactBytes": 109315,
+  "artifactSha256": "d3e115b3e7f82a638a72d13c3778647be646b1e31d1cd9fe591fa06929e4ac55",
+  "artifactDigestMatches": true,
+  "WindowsJob": "attempt1 HTTP504 before product tests; same-head failed-only retry succeeded",
+  "localeCoverage": "Not applicable to window-class test; separate real generated-launcher three-order comparison recorded",
+  "finalRunConclusion": "success",
+  "latestFiveJobConclusions": "success",
+  "attempt1WindowsFailurePreserved": true
+}

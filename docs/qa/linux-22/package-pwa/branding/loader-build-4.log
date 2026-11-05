@@ -1,0 +1,384 @@
+Task build deno run -A npm:vite build
+vite v7.3.3 building client environment for production...
+transforming...
+
+../icons/tab.svg referenced in ../icons/tab.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/tab-copy.svg referenced in ../icons/tab-copy.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/tab-unload.svg referenced in ../icons/tab-unload.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/tab-desktop-multiple.svg referenced in ../icons/tab-desktop-multiple.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/close-tab.svg referenced in ../icons/close-tab.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/close-duplicate-tabs.svg referenced in ../icons/close-duplicate-tabs.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/new-tab.svg referenced in ../icons/new-tab.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/new-tab-forward.svg referenced in ../icons/new-tab-forward.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/new-tab-skip-forward.svg referenced in ../icons/new-tab-skip-forward.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/new-tab-multiple.svg referenced in ../icons/new-tab-multiple.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/whatsnew.svg referenced in ../icons/whatsnew.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/toolbarButton-download.svg referenced in ../icons/toolbarButton-download.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/toolbarButton-upload.svg referenced in ../icons/toolbarButton-upload.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/edit-cut.svg referenced in ../icons/edit-cut.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/edit-copy.svg referenced in ../icons/edit-copy.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/edit-paste.svg referenced in ../icons/edit-paste.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/characterEncoding.svg referenced in ../icons/characterEncoding.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/screenshot-1.svg referenced in ../icons/screenshot-1.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/mail.svg referenced in ../icons/mail.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/forget.svg referenced in ../icons/forget.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/performance.svg referenced in ../icons/performance.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/wrench-filled.svg referenced in ../icons/wrench-filled.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/add-device.svg referenced in ../icons/add-device.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/send-to-device.svg referenced in ../icons/send-to-device.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/sign-out.svg referenced in ../icons/sign-out.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/device-phone.svg referenced in ../icons/device-phone.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/device-tablet.svg referenced in ../icons/device-tablet.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/device-desktop.svg referenced in ../icons/device-desktop.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/device-tv.svg referenced in ../icons/device-tv.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/device-vr.svg referenced in ../icons/device-vr.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/bookmarks-toolbar-alt.svg referenced in ../icons/bookmarks-toolbar-alt.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/restore-session.svg referenced in ../icons/restore-session.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/movetowindow-16.svg referenced in ../icons/movetowindow-16.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/developer.svg referenced in ../icons/developer.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/bug.svg referenced in ../icons/bug.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/window-dev-tools.svg referenced in ../icons/window-dev-tools.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/command-frames.svg referenced in ../icons/command-frames.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/command-console.svg referenced in ../icons/command-console.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/command-responsivemode.svg referenced in ../icons/command-responsivemode.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/command-eyedropper.svg referenced in ../icons/command-eyedropper.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/document-search.svg referenced in ../icons/document-search.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/send.svg referenced in ../icons/send.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/undo.svg referenced in ../icons/undo.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/synced-tabs.svg referenced in ../icons/synced-tabs.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/container-openin-16.svg referenced in ../icons/container-openin-16.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/eye-hide.svg referenced in ../icons/eye-hide.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/eye-show.svg referenced in ../icons/eye-show.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/dashboard.svg referenced in ../icons/dashboard.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/broom.svg referenced in ../icons/broom.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/unpin-tab.svg referenced in ../icons/unpin-tab.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/text-sort-ascending.svg referenced in ../icons/text-sort-ascending.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/refresh-cw.svg referenced in ../icons/refresh-cw.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/pwa-install.svg referenced in ../icons/pwa-install.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/pwa-launch.svg referenced in ../icons/pwa-launch.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/pwa-manage.svg referenced in ../icons/pwa-manage.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/blank.svg referenced in ../icons/blank.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/reload.svg referenced in ../icons/reload.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/play-fill.svg referenced in ../icons/play-fill.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/pin-tab.svg referenced in ../icons/pin-tab.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/align-distribute-top.svg referenced in ../icons/align-distribute-top.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/align-space-evenly-vertical.svg referenced in ../icons/align-space-evenly-vertical.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/arrow-swap.svg referenced in ../icons/arrow-swap.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/share.svg referenced in ../icons/share.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/eye-tracking-off.svg referenced in ../icons/eye-tracking-off.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/drawer-arrow-download.svg referenced in ../icons/drawer-arrow-download.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/calendar-agenda.svg referenced in ../icons/calendar-agenda.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/edit-active.svg referenced in ../icons/edit-active.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/link.svg referenced in ../icons/link.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/timer10.svg referenced in ../icons/timer10.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/weather-snowflake.svg referenced in ../icons/weather-snowflake.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/shield-task.svg referenced in ../icons/shield-task.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/text-number-format.svg referenced in ../icons/text-number-format.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/arrow-sort-down-lines.svg referenced in ../icons/arrow-sort-down-lines.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/highlight.svg referenced in ../icons/highlight.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/text-proofing-tools.svg referenced in ../icons/text-proofing-tools.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/book-add.svg referenced in ../icons/book-add.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/link-square.svg referenced in ../icons/link-square.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/pocket-outline.svg referenced in ../icons/pocket-outline.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/link-no-tracking.svg referenced in ../icons/link-no-tracking.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/time-picker.svg referenced in ../icons/time-picker.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/arrow-repeat-all.svg referenced in ../icons/arrow-repeat-all.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/video.svg referenced in ../icons/video.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/image-arrow-counterclockwise.svg referenced in ../icons/image-arrow-counterclockwise.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/image-add.svg referenced in ../icons/image-add.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/image.svg referenced in ../icons/image.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/video-snapshot.svg referenced in ../icons/video-snapshot.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/image-copy.svg referenced in ../icons/image-copy.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/image-alt-text.svg referenced in ../icons/image-alt-text.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/resize-image.svg referenced in ../icons/resize-image.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/password.svg referenced in ../icons/password.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/relay-logo.svg referenced in ../icons/relay-logo.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/key-multiple.svg referenced in ../icons/key-multiple.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/select-all-on.svg referenced in ../icons/select-all-on.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/toolbarButton-editorHighlight.svg referenced in ../icons/toolbarButton-editorHighlight.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/translations.svg referenced in ../icons/translations.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/chat-sparkle.svg referenced in ../icons/chat-sparkle.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/book.svg referenced in ../icons/book.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/text-direction-horizontal-ltr.svg referenced in ../icons/text-direction-horizontal-ltr.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/document-landscape-split-hint.svg referenced in ../icons/document-landscape-split-hint.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/tool-accessibility.svg referenced in ../icons/tool-accessibility.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/command-pick.svg referenced in ../icons/command-pick.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/apps-list-detail.svg referenced in ../icons/apps-list-detail.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/code-text.svg referenced in ../icons/code-text.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/tetris-app.svg referenced in ../icons/tetris-app.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/arrow-up-exclamation.svg referenced in ../icons/arrow-up-exclamation.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/dismiss-filled.svg referenced in ../icons/dismiss-filled.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/tab-desktop-multiple-bottom.svg referenced in ../icons/tab-desktop-multiple-bottom.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/convert-range.svg referenced in ../icons/convert-range.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/merge.svg referenced in ../icons/merge.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/lock-closed.svg referenced in ../icons/lock-closed.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/checkmark-circle.svg referenced in ../icons/checkmark-circle.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/folder-globe.svg referenced in ../icons/folder-globe.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/fluid.svg referenced in ../icons/fluid.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/eraser.svg referenced in ../icons/eraser.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/vertical-line.svg referenced in ../icons/vertical-line.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/star-line-horizontal.svg referenced in ../icons/star-line-horizontal.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/mail-inbox-all.svg referenced in ../icons/mail-inbox-all.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/content-view.svg referenced in ../icons/content-view.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/toolbox.svg referenced in ../icons/toolbox.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/plug-disconnected.svg referenced in ../icons/plug-disconnected.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/quit.svg referenced in ../icons/quit.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/toolbar.svg referenced in ../icons/toolbar.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/screenshot.svg referenced in ../icons/screenshot.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/document-css.svg referenced in ../icons/document-css.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/resize.svg referenced in ../icons/resize.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/firefox-view.svg referenced in ../icons/firefox-view.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/document-endnote.svg referenced in ../icons/document-endnote.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/arrow-between-down.svg referenced in ../icons/arrow-between-down.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/auto-fit-width.svg referenced in ../icons/auto-fit-width.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/datastore.svg referenced in ../icons/datastore.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/pulse-square.svg referenced in ../icons/pulse-square.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/private-favicon.svg referenced in ../icons/private-favicon.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/organization-horizontal.svg referenced in ../icons/organization-horizontal.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+../icons/pwa-remove.svg referenced in ../icons/pwa-remove.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+✓ 702 modules transformed.
+rendering chunks...
+generate jar.mn
+generate end jar.mn
+_dist/moz.build                                  0.03 kB
+_dist/assets/svg/workspace-sync-cloud.svg        2.30 kB
+_dist/jar.mn                                    15.43 kB
+_dist/assets/js/index22.js                       0.36 kB │ map:   0.55 kB
+_dist/assets/js/tab-identity.js                  0.61 kB │ map:   1.57 kB
+_dist/assets/js/svg/send.svg_inline.js           0.68 kB │ map:   0.80 kB
+_dist/assets/js/index39.js                       0.92 kB │ map:   1.62 kB
+_dist/assets/js/index40.js                       0.95 kB │ map:   1.62 kB
+_dist/assets/js/svg/circle.svg_raw.js            1.10 kB │ map:   1.28 kB
+_dist/assets/js/svg/pwa-launch.svg_inline.js     1.14 kB │ map:   1.25 kB
+_dist/assets/js/svg/pwa-install.svg_inline.js    1.17 kB │ map:   1.28 kB
+_dist/assets/js/svg/notes.svg_raw.js             1.17 kB │ map:   1.36 kB
+_dist/assets/js/index41.js                       1.29 kB │ map:   2.88 kB
+_dist/assets/js/svg/article.svg_raw.js           1.30 kB │ map:   1.48 kB
+_dist/assets/js/svg/chill.svg_raw.js             1.31 kB │ map:   1.50 kB
+_dist/assets/js/svg/moon.svg_raw.js              1.32 kB │ map:   1.50 kB
+_dist/assets/js/svg/smartphone.svg_raw.js        1.36 kB │ map:   1.54 kB
+_dist/assets/js/svg/user.svg_raw.js              1.36 kB │ map:   1.54 kB
+_dist/assets/js/svg/code.svg_raw.js              1.37 kB │ map:   1.55 kB
+_dist/assets/js/svg/lightning.svg_raw.js         1.37 kB │ map:   1.56 kB
+_dist/assets/js/svg/briefcase.svg_raw.js         1.40 kB │ map:   1.59 kB
+_dist/assets/js/svg/chat.svg_raw.js              1.42 kB │ map:   1.60 kB
+_dist/assets/js/svg/paint.svg_raw.js             1.42 kB │ map:   1.60 kB
+_dist/assets/js/svg/compass.svg_raw.js           1.45 kB │ map:   1.64 kB
+_dist/assets/js/svg/star.svg_raw.js              1.46 kB │ map:   1.65 kB
+_dist/assets/js/svg/tree.svg_raw.js              1.52 kB │ map:   1.70 kB
+_dist/assets/js/svg/key.svg_raw.js               1.54 kB │ map:   1.72 kB
+_dist/assets/js/svg/vacation.svg_raw.js          1.56 kB │ map:   1.75 kB
+_dist/assets/js/svg/book.svg_raw.js              1.57 kB │ map:   1.75 kB
+_dist/assets/js/svg/fence.svg_raw.js             1.58 kB │ map:   1.76 kB
+_dist/assets/js/svg/game.svg_raw.js              1.59 kB │ map:   1.78 kB
+_dist/assets/js/svg/pin.svg_raw.js               1.60 kB │ map:   1.78 kB
+_dist/assets/js/svg/cart.svg_raw.js              1.63 kB │ map:   1.81 kB
+_dist/assets/js/svg/dollar.svg_raw.js            1.68 kB │ map:   1.86 kB
+_dist/assets/js/svg/love.svg_raw.js              1.71 kB │ map:   1.89 kB
+_dist/assets/js/svg/network.svg_raw.js           1.73 kB │ map:   1.92 kB
+_dist/assets/js/svg/fruit.svg_raw.js             1.83 kB │ map:   2.01 kB
+_dist/assets/js/svg/gear.svg_raw.js              1.86 kB │ map:   2.04 kB
+_dist/assets/js/svg/music.svg_raw.js             1.88 kB │ map:   2.06 kB
+_dist/assets/js/base.js                          1.94 kB │ map:   7.76 kB
+_dist/assets/js/svg/pet.svg_raw.js               1.97 kB │ map:   2.15 kB
+_dist/assets/js/svg/question.svg_raw.js          2.18 kB │ map:   2.36 kB
+_dist/assets/js/svg/gift.svg_raw.js              2.19 kB │ map:   2.37 kB
+_dist/assets/js/svg/food.svg_raw.js              2.19 kB │ map:   2.37 kB
+_dist/assets/js/svg/photo.svg_raw.js             2.34 kB │ map:   2.52 kB
+_dist/assets/js/PrivateContainer.js              2.36 kB │ map:   4.47 kB
+_dist/assets/js/external/es-toolkit.js           2.40 kB │ map:   3.25 kB
+_dist/assets/js/browser-share-mode.js            2.82 kB │ map:   2.51 kB
+_dist/assets/js/container-color.js               3.07 kB │ map:   5.43 kB
+_dist/assets/js/external/@solid-primitives.js    3.59 kB │ map:  14.81 kB
+_dist/assets/js/index38.js                       3.64 kB │ map:   2.81 kB
+_dist/assets/js/svg/fingerprint.svg_raw.js       4.71 kB │ map:   4.90 kB
+_dist/assets/js/external/fp-ts.js                4.73 kB │ map: 110.61 kB
+_dist/assets/js/browser-action.js                5.04 kB │ map:   9.52 kB
+_dist/assets/js/context-menu.js                  8.12 kB │ map:  17.52 kB
+_dist/assets/js/config.js                        8.53 kB │ map:  21.43 kB
+_dist/assets/js/data.js                         10.55 kB │ map:  22.58 kB
+_dist/assets/js/index42.js                      13.85 kB │ map:  23.68 kB
+_dist/assets/js/index2.js                       14.35 kB │ map:   5.19 kB
+_dist/assets/js/index33.js                      14.90 kB │ map:   6.77 kB
+_dist/assets/js/index25.js                      15.00 kB │ map:   8.32 kB
+_dist/assets/js/index11.js                      15.10 kB │ map:   8.40 kB
+_dist/assets/js/index3.js                       16.35 kB │ map:   9.74 kB
+_dist/assets/js/index37.js                      16.58 kB │ map:  24.60 kB
+_dist/assets/js/index27.js                      16.73 kB │ map:  12.49 kB
+_dist/assets/js/index34.js                      17.24 kB │ map:  12.16 kB
+_dist/assets/js/index18.js                      17.51 kB │ map:  12.63 kB
+_dist/assets/js/index21.js                      18.08 kB │ map:  14.83 kB
+_dist/assets/js/index10.js                      19.12 kB │ map:  16.21 kB
+_dist/assets/js/index30.js                      19.51 kB │ map:  17.06 kB
+_dist/assets/js/index29.js                      19.54 kB │ map:  19.15 kB
+_dist/assets/js/controller.js                   19.86 kB │ map:  46.43 kB
+_dist/assets/js/index36.js                      20.56 kB │ map:  17.97 kB
+_dist/assets/js/index20.js                      20.93 kB │ map:  14.20 kB
+_dist/assets/js/index24.js                      22.67 kB │ map:  20.49 kB
+_dist/assets/js/index17.js                      23.02 kB │ map:  28.27 kB
+_dist/assets/js/index13.js                      25.03 kB │ map:  30.54 kB
+_dist/assets/js/zen-mode.js                     25.81 kB │ map:  43.73 kB
+_dist/assets/js/external/@jsr.js                26.88 kB │ map:  52.26 kB
+_dist/assets/js/index8.js                       26.94 kB │ map:  31.82 kB
+_dist/assets/js/index12.js                      27.32 kB │ map:  39.44 kB
+_dist/assets/js/index14.js                      28.45 kB │ map:  42.37 kB
+_dist/assets/js/index.js                        29.86 kB │ map:  42.72 kB
+_dist/assets/js/index26.js                      31.64 kB │ map:  40.13 kB
+_dist/assets/js/gestures.js                     38.02 kB │ map:  78.70 kB
+_dist/assets/js/index9.js                       39.13 kB │ map:  58.21 kB
+_dist/assets/js/index4.js                       40.32 kB │ map:  66.98 kB
+_dist/assets/js/index31.js                      56.73 kB │ map:  87.09 kB
+_dist/assets/js/layout.js                       59.18 kB │ map: 132.19 kB
+_dist/assets/js/external/solid-js.js            59.41 kB │ map: 188.52 kB
+_dist/assets/js/external/io-ts.js               72.95 kB │ map: 184.49 kB
+_dist/assets/js/external/i18next.js             83.55 kB │ map: 202.65 kB
+_dist/assets/js/index28.js                      87.73 kB │ map: 140.14 kB
+_dist/assets/js/index32.js                      91.29 kB │ map: 121.14 kB
+_dist/assets/js/external/chroma-js.js          103.51 kB │ map: 265.25 kB
+_dist/assets/js/svg/os.svg_raw.js              126.58 kB │ map: 126.84 kB
+_dist/assets/js/index7.js                      134.54 kB │ map: 143.59 kB
+_dist/assets/js/index6.js                      134.70 kB │ map: 248.04 kB
+_dist/assets/js/index19.js                     135.56 kB │ map: 238.60 kB
+_dist/assets/js/index15.js                     135.77 kB │ map: 244.03 kB
+_dist/assets/js/external/qr-code-styling.js    151.63 kB │ map:  52.47 kB
+_dist/assets/js/index16.js                     155.80 kB │ map: 277.03 kB
+_dist/assets/js/index23.js                     163.24 kB │ map: 227.47 kB
+_dist/assets/js/configs.js                     212.19 kB │ map:  65.70 kB
+_dist/assets/js/index5.js                      231.23 kB │ map: 413.06 kB
+_dist/assets/js/index35.js                     262.33 kB │ map: 772.19 kB
+_dist/assets/js/external/budoux.js             357.62 kB │ map: 633.60 kB
+_dist/core.js                                  933.15 kB │ map:  41.35 kB
+✓ built in 25.68s

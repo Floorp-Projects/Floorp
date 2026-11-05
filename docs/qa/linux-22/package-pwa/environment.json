@@ -1,0 +1,24 @@
+{
+  "os": "Debian GNU/Linux13.6",
+  "kernel": "Linux6.18.57 x86_64",
+  "uid": 1000,
+  "sourceSha": "984509d2053be7bae9027133bda7259cd706b208",
+  "worktreeBranch": "codex/qa-linux-package-pwa",
+  "X11": "Xvfb :88 1280x900x24",
+  "KDE": "KWin6.3.6 nested Wayland / Qt6.8.2 / Plasma; running-PWA task model incomplete",
+  "DBus": "normal isolated session buses; host full system bus absent; dedicated incomplete test endpoint used only for isolated Flatpak deployment and documented comparisons",
+  "namespace": "host unshare -Ur/-Umr succeeds in approved execution; default Docker inner userns EPERM; browser inside Flatpak emits nested clone EPERM warning",
+  "Flatpak": "1.16.6 isolated user installation",
+  "network": "default proxy, enforced unrestricted HTTP policy, TLS verification retained; github/Flathub/package downloads actually performed",
+  "docker": "28.4.0; dedicated Debian container used to obtain packages; no product qualification in default Docker namespace",
+  "productArchiveSha256": "7dcedcbfef747819153b0b9c541a9c1f4f4965b0720f16d5d237d39b0c30d613",
+  "productSandbox": "all successful browser probes report content sandbox preference6; disable env absent; not a full kernel sandbox audit",
+  "input": "synthetic Marionette/CLI; physical input not tested",
+  "originalDistrosNotQualified": [
+    "Bazzite44",
+    "Bluefin44",
+    "CachyOS",
+    "Manjaro"
+  ],
+  "sharedData": "no personal browser profile used; no credentials, profile databases or Flatpak/sysroot binaries included in published evidence"
+}

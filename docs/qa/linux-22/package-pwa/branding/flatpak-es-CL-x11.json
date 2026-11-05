@@ -1,0 +1,38 @@
+{
+  "version": "159.0.1",
+  "platformVersion": "159.0.1",
+  "pid": 2,
+  "locale": "es-CL",
+  "requested": [
+    "es-CL"
+  ],
+  "brand": "Firefox",
+  "uri": "chrome://branding/locale/brand.properties",
+  "sandbox": 6,
+  "title": "Ablaze Floorp",
+  "profile": "/workspace/qa-linux-22/package-pwa/branding/flatpak-x11-home-4/.var/app/one.ablaze.floorp/config/branding-profile",
+  "executable": "/app/lib/floorp/floorp",
+  "addons": [
+    {
+      "id": "langpack-es-CL@firefox.mozilla.org",
+      "version": "159.0.20261102.144711",
+      "isActive": true,
+      "signedState": 2,
+      "userDisabled": false
+    },
+    {
+      "id": "langpack-ja@firefox.mozilla.org",
+      "version": "159.0.20261102.144711",
+      "isActive": true,
+      "signedState": 2,
+      "userDisabled": false
+    }
+  ],
+  "windows": [
+    {
+      "id": "2097155",
+      "xpropSha256": "79241dd41c3c8bde9a3f170bcc77a48a087ffefe61cc87c24d15bb2dc5c1513d",
+      "iconPresent": false
+    }
+  ]
+}

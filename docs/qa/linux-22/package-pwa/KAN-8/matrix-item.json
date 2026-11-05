@@ -6,10 +6,24 @@
   "environment": "Debian13; Xvfb X11; isolated normal session bus and separate incomplete system test bus; Flatpak1.16.6; freedesktop26.08; sandbox level6, no disable environment",
   "testCommand": "python3 KAN-8/profile_normal_shutdown.py; python3 -m unittest discover -v -s KAN-8/flathub/tests",
   "result": "reproduced-in-official-flatpak; exact-existing-pr-helper controlled comparison passes; nine unit tests pass; six product runs exit normally",
-  "remainingConditions": ["Bazzite44/Flatseal/Bazaar full desktop", "Full rebuilt candidate Flatpak package", "Complete portal/system service bus", "Exceptional mixed registries in actual package", "Cache-content reuse/migration beyond observed path stability"],
+  "remainingConditions": [
+    "Bazzite44/Flatseal/Bazaar full desktop",
+    "Full rebuilt candidate Flatpak package",
+    "Complete portal/system service bus",
+    "Exceptional mixed registries in actual package",
+    "Cache-content reuse/migration beyond observed path stability"
+  ],
   "existingPr": "https://github.com/flathub/one.ablaze.floorp/pull/198",
   "existingPrHead": "d9aa24d58fe633bf765721f95b4ac13132ee397e",
   "newPr": null,
-  "evidence": ["KAN-8/report.md", "KAN-8/normal-shutdown-result.json", "KAN-8/profile_normal_shutdown.py", "KAN-8/unit-tests.log", "KAN-8/flatpak-info.txt", "KAN-8/test-sha256.txt"],
-  "jiraCommentId": null
+  "evidence": [
+    "KAN-8/report.md",
+    "KAN-8/normal-shutdown-result.json",
+    "KAN-8/profile_normal_shutdown.py",
+    "KAN-8/unit-tests.log",
+    "KAN-8/flatpak-info.txt",
+    "KAN-8/test-sha256.txt"
+  ],
+  "jiraCommentId": "10272",
+  "jiraUrl": "https://floorp-projects.atlassian.net/browse/KAN-8"
 }

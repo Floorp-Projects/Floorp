@@ -1,0 +1,101 @@
+var plasma = getApiVersion(1);
+
+var layout = {
+    "desktops": [
+        {
+            "applets": [
+            ],
+            "config": {
+                "/": {
+                    "ItemGeometries-1000x720": "",
+                    "ItemGeometriesHorizontal": "",
+                    "formfactor": "0",
+                    "immutability": "1",
+                    "lastScreen": "0",
+                    "wallpaperplugin": "org.kde.image"
+                },
+                "/General": {
+                    "positions": "{\"1000x720\":[]}"
+                }
+            },
+            "wallpaperPlugin": "org.kde.image"
+        }
+    ],
+    "panels": [
+        {
+            "alignment": "center",
+            "applets": [
+                {
+                    "config": {
+                        "/": {
+                            "popupHeight": "350",
+                            "popupWidth": "490"
+                        },
+                        "/General": {
+                            "favoritesPortedToKAstats": "true"
+                        }
+                    },
+                    "plugin": "org.kde.plasma.kickoff"
+                },
+                {
+                    "config": {
+                    },
+                    "plugin": "org.kde.plasma.pager"
+                },
+                {
+                    "config": {
+                        "/General": {
+                            "launchers": "applications:systemsettings.desktop,applications:org.kde.discover.desktop"
+                        }
+                    },
+                    "plugin": "org.kde.plasma.icontasks"
+                },
+                {
+                    "config": {
+                    },
+                    "plugin": "org.kde.plasma.marginsseparator"
+                },
+                {
+                    "config": {
+                    },
+                    "plugin": "org.kde.plasma.systemtray"
+                },
+                {
+                    "config": {
+                        "/": {
+                            "popupHeight": "350",
+                            "popupWidth": "490"
+                        },
+                        "/Appearance": {
+                            "fontWeight": "400"
+                        }
+                    },
+                    "plugin": "org.kde.plasma.digitalclock"
+                },
+                {
+                    "config": {
+                    },
+                    "plugin": "org.kde.plasma.showdesktop"
+                }
+            ],
+            "config": {
+                "/": {
+                    "formfactor": "2",
+                    "immutability": "1",
+                    "lastScreen": "0",
+                    "wallpaperplugin": "org.kde.image"
+                }
+            },
+            "height": 3.5714285714285716,
+            "hiding": "normal",
+            "location": "bottom",
+            "maximumLength": 71.42857142857143,
+            "minimumLength": 71.42857142857143,
+            "offset": 0
+        }
+    ],
+    "serializationFormatVersion": "1"
+}
+;
+
+plasma.loadSerializedLayout(layout);

@@ -1,0 +1,5 @@
+[INFO]   - browser-features/modules/modules/pwa/test/SsbCommandLineHandler.test.mts
+[INFO] [231/281] Completed browser-features/modules/modules/pwa/test/SsbCommandLineHandler.test.mts
+[INFO] ✓ browser-features/modules/modules/pwa/test/SsbCommandLineHandler.test.mts (runAllTests, 2833ms)
+[INFO] Browser test result: 281 passed, 0 failed
+[INFO] Downloaded Firefox coverage: 8 file(s), 16 task(s), 16 passed

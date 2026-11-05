@@ -1,0 +1,16 @@
+{
+  "pass": false,
+  "error": "Error: LegacyBranding.test.mts failures: legacy product names retain packaged branding in every UI locale: brandShorterName must not be replaced by an active Firefox language pack (expected: Floorp, actual: Firefox)",
+  "progress": {
+    "moduleName": "LegacyBranding.test.mts",
+    "testName": "",
+    "status": "done",
+    "index": 1,
+    "total": 1,
+    "startedAtMs": 1793889670992
+  },
+  "profile": "/workspace/qa-linux-22/package-pwa/branding/profile-harness",
+  "locale": "ja",
+  "bundleSha256": "fe26001bfd208cff9660b3e242f96c757b3c3fa5abf89fa587e86a835690dfd1",
+  "execution": "complete colocated test module with repository test_harness runTests/assertEquals bundled by esbuild and executed in actual product chrome; top-level colocated orchestration runner not used"
+}

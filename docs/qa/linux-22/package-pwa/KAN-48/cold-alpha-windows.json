@@ -1,0 +1,53 @@
+[
+  {
+    "internalId": "{71e00635-f4a7-423f-ba43-ef1e5622cc1e}",
+    "caption": "",
+    "resourceClass": "plasmashell",
+    "resourceName": "plasmashell",
+    "desktopFileName": "",
+    "pid": 21568,
+    "iconString": "QVariant(QIcon, QIcon(null))",
+    "clientGeometry": {
+      "x": 0,
+      "y": 0,
+      "width": 1000,
+      "height": 720
+    },
+    "normalWindow": false,
+    "active": false
+  },
+  {
+    "internalId": "{4f4fe046-1292-456d-ab51-c895f117cc63}",
+    "caption": "",
+    "resourceClass": "plasmashell",
+    "resourceName": "plasmashell",
+    "desktopFileName": "",
+    "pid": 21568,
+    "iconString": "QVariant(QIcon, QIcon(null))",
+    "clientGeometry": {
+      "x": 0,
+      "y": 670,
+      "width": 1000,
+      "height": 50
+    },
+    "normalWindow": false,
+    "active": false
+  },
+  {
+    "internalId": "{b6894ac1-600b-4548-818c-52a418e289e1}",
+    "caption": "QA PWA Alpha \u2014 Ablaze Floorp",
+    "resourceClass": "floorp-66d7e1e4-333f-4173-ad18-caf95a7fe6a2",
+    "resourceName": "floorp",
+    "desktopFileName": "floorp-66d7e1e4-333f-4173-ad18-caf95a7fe6a2",
+    "pid": 35270,
+    "iconString": "QVariant(QIcon, QIcon(availableSizes[normal,Off]=QList(QSize(128, 128)),cacheKey=0x700000000))",
+    "clientGeometry": {
+      "x": 0,
+      "y": 0,
+      "width": 1000,
+      "height": 686
+    },
+    "normalWindow": true,
+    "active": true
+  }
+]

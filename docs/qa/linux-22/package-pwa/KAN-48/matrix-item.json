@@ -1,0 +1,33 @@
+{
+  "key": "KAN-48",
+  "github": "https://github.com/Floorp-Projects/Floorp/issues/2800",
+  "sourceSha": "984509d2053be7bae9027133bda7259cd706b208",
+  "productVersion": "Floorp12.21.1 / Gecko159.0.1 / BuildID20261103153232",
+  "environment": "Debian13; actual nested KWin6.3.6 Wayland/Qt6.8.2/Plasma; outer XvfbX11; isolated session bus; incomplete task model/portal/PipeWire",
+  "testCommand": "python3 pwa_ui_probe.py --port 2855 --fixture-port 8775 --out KAN-48/ui-create; generated Alpha launcher cold start with --name and --start-ssb; KWin scripting window list/getWindowInfo; kbuildsycoca with Plasma menu prefix",
+  "result": "actual-ui-and-cold-app-id-association-verified; original-wrong-taskbar-icon-unqualified; nested-plasma-taskmodel-not-listing-pwa; browser-first-class-inheritance-observed-and-tracked-separately-in-KAN49",
+  "remainingConditions": [
+    "Working Plasma task model and compositor window-management integration",
+    "Rendered window/taskbar icon pixel comparison",
+    "CachyOS/KDE6.7.5/pacman original package",
+    "Complete portal/system service/PipeWire desktop"
+  ],
+  "existingPr": null,
+  "newPr": null,
+  "evidence": [
+    "KAN-48/report.md",
+    "KAN-48/ui-create/result.json",
+    "KAN-48/cold-alpha-windows.json",
+    "KAN-48/cold-alpha-product.json",
+    "KAN-48/kwin-alpha-info.txt",
+    "KAN-48/alpha-cold-wayland.log",
+    "KAN-48/plasma-layout.txt",
+    "KAN-48/desktop-filter-observation.json",
+    "KAN-48/task-filter-config.json",
+    "KAN-48/kbuildsycoca-plasma-prefix.log",
+    "KAN-48/window-snapshot.js",
+    "KAN-48/observe-kde.sh"
+  ],
+  "jiraCommentId": "10292",
+  "jiraUrl": "https://floorp-projects.atlassian.net/browse/KAN-48"
+}

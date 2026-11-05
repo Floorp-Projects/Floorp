@@ -1,0 +1,29 @@
+{
+  "sourceSha": "984509d2053be7bae9027133bda7259cd706b208",
+  "productVersion": "Floorp12.21.1 / Gecko159.0.1 / BuildID20261103153232",
+  "jiraCommentId": "10275",
+  "key": "KAN-49",
+  "github": "https://github.com/Floorp-Projects/Floorp/issues/2649",
+  "environment": "Debian13.6 Xvfb/X11; actual official product and isolated modified product copy; synthetic automation; normal sessionbus; sandbox pref6",
+  "testCommand": "See report and published reproducible scripts",
+  "result": "observed current shared floorp class defect; candidate matches unique launchers in all three orders; original precise first-PWA inheritance not reproduced",
+  "remainingConditions": [
+    "Manjaro/KDE/Outlook/Teams original conditions",
+    "Wayland qualification and malformed legacy SSB data",
+    "Full source build and standard runner/CI"
+  ],
+  "existingPr": null,
+  "newPr": "https://github.com/Floorp-Projects/Floorp/pull/3032",
+  "evidence": [
+    "KAN-49/report.md",
+    "pwa-order-run/result.json",
+    "pwa-order-candidate/result.json",
+    "regression-baseline.json",
+    "regression-candidate.json",
+    "pwa_order_probe.py"
+  ],
+  "jiraUrl": "https://floorp-projects.atlassian.net/browse/KAN-49",
+  "jiraFollowupCommentIds": [
+    "10296"
+  ]
+}

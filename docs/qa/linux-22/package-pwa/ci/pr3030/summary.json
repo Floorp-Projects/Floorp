@@ -1,0 +1,17 @@
+{
+  "pr": 3030,
+  "headSha": "e55152c559a141001a375ac77098d141b0db3ca7",
+  "runId": 42045064743,
+  "conclusion": "success",
+  "jobs": 5,
+  "artifactId": 13425530774,
+  "artifactBytes": 107599,
+  "artifactSha256": "0e61851f81b6ce0ec275c159cd0275a4ad16aa46f0ec45e1839f3fff962adb6d",
+  "artifactDigestMatches": true,
+  "browserPassed": 282,
+  "browserFailed": 0,
+  "downloadedFirefoxFiles": 8,
+  "downloadedFirefoxTasksPassed": 16,
+  "newTestRunAllTestsRecorded": true,
+  "localeCoverage": "CI artifact does not establish signed language-pack-active locale; en-US-only success would also pass baseline. Separate signed-pack actual-product/harness matrix and generated production jar.mn evidence cover the reported locale condition."
+}

@@ -1,0 +1,27 @@
+{
+  "currentDesktop": "7687c97a-5658-4967-8546-e23c8bddf411",
+  "currentActivity": "80e7a72b-8df8-4017-b1b8-bb10c0595c7c",
+  "pwaDesktopMatches": true,
+  "pwaActivityMatches": true,
+  "taskFilterConfig": [
+    {
+      "type": "org.kde.plasma.icontasks",
+      "showOnlyCurrentDesktop": "default",
+      "showOnlyCurrentActivity": "default",
+      "showOnlyCurrentScreen": "default"
+    }
+  ],
+  "filterDefaults": {
+    "showOnlyCurrentDesktop": true,
+    "showOnlyCurrentActivity": true,
+    "showOnlyCurrentScreen": false
+  },
+  "observedPlasmaEnvironment": {
+    "XDG_CURRENT_DESKTOP": null,
+    "KDE_FULL_SESSION": null,
+    "KDE_SESSION_VERSION": null,
+    "QT_QPA_PLATFORM": "wayland",
+    "WAYLAND_DISPLAY": "qa-kde-wayland"
+  },
+  "environmentFlagsExperiment": "Read-only qdbus calls with KDE flags succeed; no claim these retroactively change the running Plasma process."
+}

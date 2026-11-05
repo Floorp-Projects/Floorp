@@ -1,0 +1,197 @@
+[
+  {
+    "key": "KAN-8",
+    "github": "https://github.com/Floorp-Projects/Floorp/issues/2837",
+    "sourceSha": "984509d2053be7bae9027133bda7259cd706b208",
+    "productVersion": "Floorp 12.21.1 / Gecko 159.0.1 / BuildID 20261103153232",
+    "environment": "Debian13; Xvfb X11; isolated normal session bus and separate incomplete system test bus; Flatpak1.16.6; freedesktop26.08; sandbox level6, no disable environment",
+    "testCommand": "python3 KAN-8/profile_normal_shutdown.py; python3 -m unittest discover -v -s KAN-8/flathub/tests",
+    "result": "reproduced-in-official-flatpak; exact-existing-pr-helper controlled comparison passes; nine unit tests pass; six product runs exit normally",
+    "remainingConditions": [
+      "Bazzite44/Flatseal/Bazaar full desktop",
+      "Full rebuilt candidate Flatpak package",
+      "Complete portal/system service bus",
+      "Exceptional mixed registries in actual package",
+      "Cache-content reuse/migration beyond observed path stability"
+    ],
+    "existingPr": "https://github.com/flathub/one.ablaze.floorp/pull/198",
+    "existingPrHead": "d9aa24d58fe633bf765721f95b4ac13132ee397e",
+    "newPr": null,
+    "evidence": [
+      "KAN-8/report.md",
+      "KAN-8/normal-shutdown-result.json",
+      "KAN-8/profile_normal_shutdown.py",
+      "KAN-8/unit-tests.log",
+      "KAN-8/flatpak-info.txt",
+      "KAN-8/test-sha256.txt"
+    ],
+    "jiraCommentId": "10272",
+    "jiraUrl": "https://floorp-projects.atlassian.net/browse/KAN-8"
+  },
+  {
+    "sourceSha": "984509d2053be7bae9027133bda7259cd706b208",
+    "productVersion": "Floorp12.21.1 / Gecko159.0.1 / BuildID20261103153232",
+    "newPr": null,
+    "jiraCommentId": "10273",
+    "key": "KAN-17",
+    "github": "https://github.com/Floorp-Projects/Floorp/issues/2968",
+    "environment": "Debian13.6; Xvfb/X11; official Flatpak1.16.6; Floorp runtime26.08 / Firefox runtime25.08; normal sessionbus; sandbox pref6; portal incomplete",
+    "testCommand": "python3 KAN-17/font_compare.py",
+    "result": "not-reproduced-in-font-present-condition; 4/4 actual official Flatpak render/normal-quit comparisons pass",
+    "remainingConditions": [
+      "Bluefin44.20261022.1 host fonts/fontconfig/cache and package format",
+      "Reporter page/profile and browser UI Japanese",
+      "Why reporter Firefox renders while Floorp does not"
+    ],
+    "existingPr": null,
+    "evidence": [
+      "KAN-17/report.md",
+      "KAN-17/font-results.json",
+      "KAN-17/font_compare.py",
+      "KAN-17/font-origin.log",
+      "KAN-17/one.ablaze.floorp-default.png",
+      "KAN-17/org.mozilla.firefox-default.png"
+    ],
+    "jiraUrl": "https://floorp-projects.atlassian.net/browse/KAN-17"
+  },
+  {
+    "sourceSha": "984509d2053be7bae9027133bda7259cd706b208",
+    "productVersion": "Floorp12.21.1 / Gecko159.0.1 / BuildID20261103153232",
+    "jiraCommentId": "10274",
+    "key": "KAN-23",
+    "github": "https://github.com/Floorp-Projects/Floorp/issues/2897",
+    "environment": "Debian13.6 Xvfb/X11; actual official product and isolated modified product copy; synthetic automation; normal sessionbus; sandbox pref6",
+    "testCommand": "See report and published reproducible scripts",
+    "result": "reproduced actual X11 langpack/theme wrong icon; candidate properties-only override passes ja/es-CL/en-US",
+    "remainingConditions": [
+      "Full source/package build and standard locale-enabled runner",
+      "Other locales/themes/channels",
+      "Complete desktop qualification"
+    ],
+    "existingPr": null,
+    "newPr": "https://github.com/Floorp-Projects/Floorp/pull/3030",
+    "evidence": [
+      "KAN-23/report.md",
+      "branding/locale-matrix.json",
+      "branding/icon-comparison.json",
+      "branding/candidate-provenance.json",
+      "branding/probe.py",
+      "branding/regression.py"
+    ],
+    "jiraUrl": "https://floorp-projects.atlassian.net/browse/KAN-23",
+    "jiraFollowupCommentIds": [
+      "10295"
+    ]
+  },
+  {
+    "key": "KAN-48",
+    "github": "https://github.com/Floorp-Projects/Floorp/issues/2800",
+    "sourceSha": "984509d2053be7bae9027133bda7259cd706b208",
+    "productVersion": "Floorp12.21.1 / Gecko159.0.1 / BuildID20261103153232",
+    "environment": "Debian13; actual nested KWin6.3.6 Wayland/Qt6.8.2/Plasma; outer XvfbX11; isolated session bus; incomplete task model/portal/PipeWire",
+    "testCommand": "python3 pwa_ui_probe.py --port 2855 --fixture-port 8775 --out KAN-48/ui-create; generated Alpha launcher cold start with --name and --start-ssb; KWin scripting window list/getWindowInfo; kbuildsycoca with Plasma menu prefix",
+    "result": "actual-ui-and-cold-app-id-association-verified; original-wrong-taskbar-icon-unqualified; nested-plasma-taskmodel-not-listing-pwa; browser-first-class-inheritance-observed-and-tracked-separately-in-KAN49",
+    "remainingConditions": [
+      "Working Plasma task model and compositor window-management integration",
+      "Rendered window/taskbar icon pixel comparison",
+      "CachyOS/KDE6.7.5/pacman original package",
+      "Complete portal/system service/PipeWire desktop"
+    ],
+    "existingPr": null,
+    "newPr": null,
+    "evidence": [
+      "KAN-48/report.md",
+      "KAN-48/ui-create/result.json",
+      "KAN-48/cold-alpha-windows.json",
+      "KAN-48/cold-alpha-product.json",
+      "KAN-48/kwin-alpha-info.txt",
+      "KAN-48/alpha-cold-wayland.log",
+      "KAN-48/plasma-layout.txt",
+      "KAN-48/desktop-filter-observation.json",
+      "KAN-48/task-filter-config.json",
+      "KAN-48/kbuildsycoca-plasma-prefix.log",
+      "KAN-48/window-snapshot.js",
+      "KAN-48/observe-kde.sh"
+    ],
+    "jiraCommentId": "10292",
+    "jiraUrl": "https://floorp-projects.atlassian.net/browse/KAN-48"
+  },
+  {
+    "sourceSha": "984509d2053be7bae9027133bda7259cd706b208",
+    "productVersion": "Floorp12.21.1 / Gecko159.0.1 / BuildID20261103153232",
+    "jiraCommentId": "10275",
+    "key": "KAN-49",
+    "github": "https://github.com/Floorp-Projects/Floorp/issues/2649",
+    "environment": "Debian13.6 Xvfb/X11; actual official product and isolated modified product copy; synthetic automation; normal sessionbus; sandbox pref6",
+    "testCommand": "See report and published reproducible scripts",
+    "result": "observed current shared floorp class defect; candidate matches unique launchers in all three orders; original precise first-PWA inheritance not reproduced",
+    "remainingConditions": [
+      "Manjaro/KDE/Outlook/Teams original conditions",
+      "Wayland qualification and malformed legacy SSB data",
+      "Full source build and standard runner/CI"
+    ],
+    "existingPr": null,
+    "newPr": "https://github.com/Floorp-Projects/Floorp/pull/3032",
+    "evidence": [
+      "KAN-49/report.md",
+      "pwa-order-run/result.json",
+      "pwa-order-candidate/result.json",
+      "regression-baseline.json",
+      "regression-candidate.json",
+      "pwa_order_probe.py"
+    ],
+    "jiraUrl": "https://floorp-projects.atlassian.net/browse/KAN-49",
+    "jiraFollowupCommentIds": [
+      "10296"
+    ]
+  },
+  {
+    "sourceSha": "984509d2053be7bae9027133bda7259cd706b208",
+    "productVersion": "Floorp12.21.1 / Gecko159.0.1 / BuildID20261103153232",
+    "jiraCommentId": "10293",
+    "key": "KAN-89",
+    "github": "https://github.com/Floorp-Projects/Floorp/issues/2713",
+    "environment": "Debian13.6 Xvfb/X11 official Flatpak; original KDE/Xorg task switching absent",
+    "testCommand": "python3 branding/flatpak_run.py",
+    "result": "actual Flatpak legacy-brand path observed; original KDE Firefox-icon symptom unqualified; main X11 icon property collection incomplete",
+    "remainingConditions": [
+      "Manjaro/KDE6.7.4/Xorg/Flatpak original environment",
+      "Actual main window icon and Alt+Tab pixel comparison",
+      "Theme/locale conditions and duplication calibration"
+    ],
+    "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/3030",
+    "newPr": null,
+    "evidence": [
+      "KAN-89/report.md",
+      "branding/flatpak_run.py",
+      "branding/flatpak-en-US-x11.json",
+      "branding/flatpak-es-CL-x11.json"
+    ],
+    "jiraUrl": "https://floorp-projects.atlassian.net/browse/KAN-89"
+  },
+  {
+    "sourceSha": "984509d2053be7bae9027133bda7259cd706b208",
+    "productVersion": "Floorp12.21.1 / Gecko159.0.1 / BuildID20261103153232",
+    "newPr": null,
+    "jiraCommentId": "10276",
+    "key": "KAN-96",
+    "github": "https://github.com/Floorp-Projects/Floorp/issues/2695",
+    "environment": "Debian13.6 Xvfb/X11; official native product; synthetic UI; normal sessionbus; sandbox6",
+    "testCommand": "python3 pwa_ui_probe.py --port 2839 --out pwa-ui-run-3; python3 pwa_order_probe.py",
+    "result": "not-reproduced-current-Debian; 2/2 UI create paths and webIsolated actor instantiate; generated app relaunches work",
+    "remainingConditions": [
+      "CachyOS and original safe-mode/YouTube Music conditions",
+      "external sites/COOP+COEP/containers",
+      "full desktop and physical input"
+    ],
+    "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2680",
+    "evidence": [
+      "KAN-96/report.md",
+      "pwa-ui-run-3/result.json",
+      "pwa-order-run/result.json",
+      "pwa_ui_probe.py",
+      "pwa_order_probe.py"
+    ],
+    "jiraUrl": "https://floorp-projects.atlassian.net/browse/KAN-96"
+  }
+]

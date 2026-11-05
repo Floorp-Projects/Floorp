@@ -1,0 +1,4 @@
+Run 42045615354, job 127308415642, head 06aaf5893645d2a33106e7657d0e0a58aa6029e0.
+Validate locked native Runtime artifact failed before product tests.
+Locked Runtime downloads failed after all parallel operations settled: floorp-windows-x86_64-moz-artifact.zip: HTTP 504 while downloading locked Runtime asset.
+This infrastructure download failure is not classified as a product regression or successful Windows verification.

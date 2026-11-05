@@ -1,0 +1,11 @@
+{
+  "sourceCommit": "e55152c559a141001a375ac77098d141b0db3ca7",
+  "command": "deno task --cwd bridge/loader-features build (after standard Symlinker.run function and frozen deno install)",
+  "result": "Vite production build passed; 25.68 seconds",
+  "generatedJarSha256": "c8604b32d5487b91db8f3192d09052e842b36dbf9676921ce3b8191affa1982d",
+  "generatedOverrides": [
+    "% override chrome://branding/locale/brand.properties resource:///chrome/en-US/locale/branding/brand.properties"
+  ],
+  "candidateProductManifestUsesExactlyGeneratedOverride": true,
+  "limitation": "targeted content Vite build; no full Gecko/source product build; native product copy only changes manifest registration"
+}

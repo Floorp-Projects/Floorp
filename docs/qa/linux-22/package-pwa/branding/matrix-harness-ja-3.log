@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/workspace/qa-linux-22/package-pwa/branding/matrix_harness_ja.py", line 31, in <module>
+    if process.poll() is not None:raise RuntimeError(f'{label} browser exited {process.returncode}')
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: candidate-ja browser exited 0

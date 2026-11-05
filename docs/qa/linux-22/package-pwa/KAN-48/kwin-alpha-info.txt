@@ -1,0 +1,27 @@
+activities: 80e7a72b-8df8-4017-b1b8-bb10c0595c7c
+caption: QA PWA Alpha — Ablaze Floorp
+clientMachine:
+desktopFile: floorp-66d7e1e4-333f-4173-ad18-caf95a7fe6a2
+desktops: 7687c97a-5658-4967-8546-e23c8bddf411
+fullscreen: false
+height: 686
+keepAbove: false
+keepBelow: false
+layer: 2
+localhost: true
+maximizeHorizontal: 2
+maximizeVertical: 1
+minimized: false
+noBorder: false
+resourceClass: floorp-66d7e1e4-333f-4173-ad18-caf95a7fe6a2
+resourceName: floorp
+role:
+shaded: false
+skipPager: false
+skipSwitcher: false
+skipTaskbar: false
+type: 0
+uuid: {b6894ac1-600b-4548-818c-52a418e289e1}
+width: 1000
+x: 0
+y: 0
