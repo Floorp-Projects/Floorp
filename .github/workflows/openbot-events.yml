@@ -32,7 +32,9 @@ jobs:
         env:
           OPENBOT_WEBHOOK_URL: ${{ secrets.OPENBOT_WEBHOOK_URL }}
           OPENBOT_WEBHOOK_SECRET: ${{ secrets.OPENBOT_WEBHOOK_SECRET }}
-          OPENBOT_RUN_MAIN: "1"
+          # OpenBot is frozen. Keep the sender for reference; finish silently
+          # without reading the event, validating secrets, or making requests.
+          OPENBOT_RUN_MAIN: "0"
         shell: bash
         run: |
           node --input-type=module <<'NODE'

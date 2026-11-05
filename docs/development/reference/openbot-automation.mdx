@@ -5,6 +5,38 @@ sidebar_label: "OpenBot Automation"
 
 # OpenBot Development Automation
 
+## Current status: paused
+
+OpenBot event delivery is paused as of 2026-11-06 (JST), following the OpenBot
+freeze and the move back to Codex-led development. The workflow sets
+`OPENBOT_RUN_MAIN: "0"`: the inline module loads and exits successfully without
+reading the event payload, validating signing settings, sending requests,
+retrying, or printing delivery messages. Eligible runs retain the existing
+`OpenBot event notification` / `notify` check names and finish green. The existing
+repository and self-loop guards remain in place.
+
+The workflow, triggers, sender implementation, tests and repository secrets are
+retained for investigation and recovery. Other Actions workflows and notification
+integrations are unchanged. Resuming delivery requires a reviewed change to the
+entry-point setting and a separately verified operational OpenBot receiver;
+restoring the receiver or changing secrets alone does not resume delivery.
+
+Investigation found HTTP 503 on all seven delivery attempts in both
+[run 42034476309](https://github.com/Floorp-Projects/Floorp/actions/runs/42034476309)
+and the latest run inspected,
+[42061164399](https://github.com/Floorp-Projects/Floorp/actions/runs/42061164399).
+Both signing settings were present in the reported run. No required status check
+on `main` or repository workflow dependency on `notify` was found at the time of
+this change. The existing smoke job still tests the retained inline sender.
+Historical failed runs are retained; rerunning an old run uses its original
+revision and can still attempt delivery.
+
+The sections below document the retained sender's behavior when enabled. They
+do not imply that the former Debian agent or its reconciliation routine is still
+running.
+
+## Retained design
+
 `.github/workflows/openbot-events.yml` wakes the existing **Floorp 開発** agent for
 `Floorp-Projects/Floorp` (repository ID `437505831`). The sender has no GitHub token
 permissions and performs no triage, checkout, code execution, review, or merge.
@@ -76,7 +108,10 @@ workflow completion is never used to grant an approval or bypass a required chec
 
 Run `node --test tools/test-openbot-events.mjs`. The tests import the workflow's
 actual inline code and use synthetic payloads and a stub transport: no webhook,
-GitHub mutation, secret or real agent is involved. They cover all event actions,
+GitHub mutation, secret or real agent is involved. They also execute the actual
+paused entry point for all five event types, with and without synthetic signing
+settings, and require a silent successful exit before event payload access.
+They cover all event actions,
 successful CI wakeups, fork/no-PR metadata, bot loops, source validation, stable
 revisions, edited review body changes, HMAC bytes, retries, permanent rejection
 and fork-specific versus erroneous missing secrets. The docs

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import { createHmac } from "node:crypto";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -105,6 +106,48 @@ test("the privileged workflow only runs inline Node without repository checkout"
     ]
   ) {
     assert.match(workflow, new RegExp(`^  ${trigger}:`, "m"));
+  }
+});
+
+test("the paused Actions entry point exits silently before reading event payloads", () => {
+  const runMain = workflow.match(/^ {10}OPENBOT_RUN_MAIN: "([^"]+)"$/m);
+  assert.ok(runMain, "use the actual Actions entry-point setting");
+  const folder = mkdtempSync(join(tmpdir(), "floorp-openbot-paused-"));
+  try {
+    for (
+      const eventName of [
+        "issues",
+        "issue_comment",
+        "pull_request_target",
+        "pull_request_review",
+        "workflow_run",
+      ]
+    ) {
+      for (const configured of [false, true]) {
+        const result = spawnSync(process.execPath, ["--input-type=module"], {
+          input: source,
+          encoding: "utf8",
+          timeout: 2000,
+          env: {
+            ...process.env,
+            OPENBOT_RUN_MAIN: runMain[1],
+            GITHUB_EVENT_NAME: eventName,
+            // An accidental main() call fails before any network request.
+            GITHUB_EVENT_PATH: join(folder, "missing-event.json"),
+            OPENBOT_WEBHOOK_URL: configured
+              ? "https://example.invalid/hook"
+              : "",
+            OPENBOT_WEBHOOK_SECRET: configured ? "synthetic" : "",
+          },
+        });
+        assert.ifError(result.error);
+        assert.equal(result.status, 0, `${eventName}: ${result.stderr}`);
+        assert.equal(result.stdout, "");
+        assert.equal(result.stderr, "");
+      }
+    }
+  } finally {
+    rmSync(folder, { recursive: true, force: true });
   }
 });
 
@@ -397,7 +440,9 @@ test("transport failures log only safe cause codes, never the private webhook UR
   /** @type {string[]} */
   const warnings = [];
   let calls = 0;
-  const transportError = new Error("fetch failed: https://private.example/hook?token=secret-value");
+  const transportError = new Error(
+    "fetch failed: https://private.example/hook?token=secret-value",
+  );
   transportError.cause = { code: "ENOTFOUND" };
   await assert.rejects(
     sendEvent(event, {
@@ -411,7 +456,7 @@ test("transport failures log only safe cause codes, never the private webhook UR
         return Promise.reject(transportError);
       },
     }),
-    error => {
+    (error) => {
       assert.ok(error instanceof Error);
       assert.match(error.message, /last: transport ENOTFOUND/);
       assert.doesNotMatch(error.message, /secret-value|private\.example/);
@@ -441,9 +486,11 @@ test("unrecognized transport causes are redacted", async () => {
         return Promise.reject(error);
       },
     }),
-    /last: transport error/
+    /last: transport error/,
   );
-  assert.deepEqual(warnings, ["OpenBot delivery attempt 1/1 failed (transport error)"]);
+  assert.deepEqual(warnings, [
+    "OpenBot delivery attempt 1/1 failed (transport error)",
+  ]);
 });
 
 test("duplicates finish without retry; permanent rejects never retry", async () => {
