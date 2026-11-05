@@ -1,0 +1,91 @@
+{
+  "sourceSha": "29a3eb23145da90706d8a94441373278521cc737",
+  "safeModeCommandLine": true,
+  "input": "actual --safe-mode CLI; synthetic real WebDriver install buttons; no dialog click sent",
+  "normalQuits": [
+    {
+      "response": {
+        "cause": "shutdown",
+        "forced": false,
+        "in_app": true
+      },
+      "exitCode": 0
+    }
+  ],
+  "observedDialogAction": {
+    "skipDialog": true,
+    "observed": "Actual startup screenshot shows normal browser window; no Troubleshoot modal visible. No dialog click sent.",
+    "screenshot": "startup-screen.png"
+  },
+  "before": {
+    "inSafeMode": true,
+    "version": "159.0.1",
+    "buildID": "20261103153232",
+    "profile": "/workspace/qa-linux-22/package-pwa/residual-review/KAN-96/safe-mode/run/profile",
+    "sandbox": 6,
+    "sandboxDisabled": false,
+    "windows": [
+      {
+        "url": "http://127.0.0.1:8789/isolate/",
+        "remoteType": "webCOOP+COEP=http://127.0.0.1",
+        "actor": true,
+        "title": "QA COOP Default — Ablaze Floorp",
+        "taskbartab": null,
+        "floorpSsbWindow": false,
+        "installButton": true
+      }
+    ]
+  },
+  "contentBefore": {
+    "url": "http://127.0.0.1:8789/isolate/",
+    "crossOriginIsolated": true,
+    "isSecureContext": true,
+    "sharedArrayBuffer": "function"
+  },
+  "store": {
+    "path": "/workspace/qa-linux-22/package-pwa/residual-review/KAN-96/safe-mode/run/profile/ssb/ssb.json",
+    "apps": [
+      {
+        "id": "{8955ff1d-a5b2-4862-acc1-eb2322301ae0}",
+        "name": "QA COOP Default",
+        "start_url": "http://127.0.0.1:8789/isolate/",
+        "userContextId": 0
+      }
+    ]
+  },
+  "after": {
+    "inSafeMode": true,
+    "version": "159.0.1",
+    "buildID": "20261103153232",
+    "profile": "/workspace/qa-linux-22/package-pwa/residual-review/KAN-96/safe-mode/run/profile",
+    "sandbox": 6,
+    "sandboxDisabled": false,
+    "windows": [
+      {
+        "url": "http://127.0.0.1:8789/isolate/",
+        "remoteType": "webCOOP+COEP=http://127.0.0.1",
+        "actor": true,
+        "title": "QA COOP Default — Ablaze Floorp",
+        "taskbartab": null,
+        "floorpSsbWindow": false,
+        "installButton": true
+      },
+      {
+        "url": null,
+        "remoteType": null,
+        "actor": null,
+        "title": "Ablaze Floorp",
+        "taskbartab": null,
+        "floorpSsbWindow": false,
+        "installButton": false
+      }
+    ]
+  },
+  "uiInstallSucceeded": true,
+  "console": [],
+  "completed": true,
+  "productUnchanged": true,
+  "ownedProcessesRemaining": 0,
+  "displaySocketAbsent": true,
+  "inputLabelClarification": "startup skeleton mentioned a possible XTest dialog button; observedDialogAction explicitly skipped it because no modal was visible"
+}

@@ -1,0 +1,75 @@
+{
+  "key": "KAN-8",
+  "fields": {
+    "summary": "[Flatpak] filesystem-home権限追加後に既存プロファイルを認識しない（#2837）",
+    "description": "## 原報告\n\nhttps://github.com/Floorp-Projects/Floorp/issues/2837\n\n## 報告内容・影響（GitHub報告、未独立検証）\n\nBazzite 44のFlathub版でFlatsealからfilesystem-home権限を付けると初期状態として起動し、既存の同期・拡張・設定が見えなくなる。権限を戻すと元の状態に復旧。\n\n## 暫定トリアージ\n\nP1。データ喪失ではなく別プロファイル表示の可能性がある。実データ保護を最優先。\n\n## 再現・切り分け手順\n\n既存のテスト用プロファイルでFlatpak権限を変更し、profile groupsとprofile path・prefsの参照先を記録。実データを消さず隔離して検証。\n\n## 完了条件\n\n権限変更時にも正しい既存プロファイルを認識し、データの上書き・誤初期化が起きないことを確認。  \n※ 検証結果・実施ビルド・回帰テストをJiraとGitHubに記録。現行版で再現しなければ既修正／環境依存／情報待ちの判断を残す。\n\n## 次の一手\n\n既存のテスト用プロファイルでFlatpak権限を変更し、profile groupsとprofile path・prefsの参照先を記録。",
+    "status": {
+      "name": "進行中",
+      "statusCategory": {
+        "name": "進行中"
+      }
+    },
+    "labels": [
+      "area-session",
+      "draft-pr",
+      "env-blocked",
+      "floorp-stability-2026-11",
+      "full-package-tested",
+      "needs-bazzite-desktop",
+      "needs-flathub-build-review",
+      "os-linux-bazzite",
+      "p1",
+      "qa-linux-executed",
+      "reproduced-in-test",
+      "triage-reviewed"
+    ]
+  },
+  "commentPagination": {
+    "total": 7,
+    "isLast": true
+  },
+  "comments": [
+    {
+      "id": "10007",
+      "body": "## 再現性調査（2026-11-05）\n\n**分類：環境不足で未検証。** 実データは操作しておらず、権限変更後のプロファイル切替も独立には確認していない。\n\n* 対象コミット：v12.21.1 = `984509d2053be7bae9027133bda7259cd706b208`。本件は実行せず、原因箇所も未確定。\n* 報告環境：Bazzite 44 / Flathub Floorp 12.19.0@157.0、比較 Firefox Flatpak 157.0。手元は Windows 11 / WSL Ubuntu 24.04 で Flatpak は未導入。\n* 再現手順：隔離テスト用プロファイルをカスタマイズし filesystem-home 追加後に再起動。about:profiles と profiles.ini の参照先を比較し権限を戻して確認。報告者は元のディレクトリの存在を確認したが、パス切替原因は不明。\n* 証拠：[原報告](https://github.com/Floorp-Projects/Floorp/issues/2837)（コメントなし）。独立ログ・自動試験なし。\n* 次：Flatpak 対応 Linux の一時 HOME で権限前後の環境、マウント、プロファイル選択を記録し、既存データの上書きを避けて回帰試験を作る。\n\n",
+      "created": "2026-11-05T16:08:11.782+0900",
+      "updated": "2026-11-05T16:08:11.782+0900"
+    },
+    {
+      "id": "10043",
+      "body": "## 再現試験（2026-11-05、隔離環境）\n\n**判定：Flatpak でプロファイル切替を再現。** 原報告の Bazzite/Flatseal の実操作やテーマ・同期状態の表示は未検証。データ消失は確認していない。\n\n* 環境：Debian 13.7 x86_64、Xvfb/X11、Flatpak 1.16.6。Floorp 12.21.1 / Gecko 159.0.1、Flathub app commit `ab3c23d5f3a32863918263c197b483e37d9ed78a6bb9d00a1657e31dc5e04621`。Flathub manifest commit [1c01b0a](https://github.com/flathub/one.ablaze.floorp/tree/1c01b0a7c404aa610059a55a64208a5f92b1e1d9) は公式配布アーカイブを使用、対応する Floorp ソースタグ v12.21.1 は `984509d2053be7bae9027133bda7259cd706b208`。ビルド全体とソースのバイト単位の対応は未検証。\n* 方法：一時 HOME に user Flatpak を用意。既存の実ユーザープロファイルは使わない。Xvfb と `dbus-run-session` 内で `flatpak run --user --no-session-bus --no-a11y-bus one.ablaze.floorp about:blank` を起動し、専用タイムアウトで終了。次に同じ環境で `--filesystem=home` を追加して起動。最後にこの引数を外して起動。永続的な Flatpak の権限設定は変更していない。\n* 結果：初回はアプリデータの `.floorp/profiles.ini` に既定プロファイルを作成。home 権限付きでは同じアプリデータの `config/floorp/profiles.ini` に別の既定プロファイルが作成された。元プロファイルのテスト用 `user.js` に目印を追加してから権限なしで再起動すると、その目印が元プロファイルの `prefs.js` に反映された。権限付き側の新プロファイルには目印がなかった。元プロファイルは残存。各起動は20〜25秒の期限後に終了（終了コード124はタイムアウト）し、試験後に残存 Floorp/Xvfb プロセスがないことを確認。\n* ログ：実行端末 `/tmp/codex-kan8-flatpak-6ZtdcWHJ/{baseline,home-access,recovery}.log` および同ディレクトリの隔離 HOME の2つの `profiles.ini`。Jira には未添付。ログには D-Bus 無効化・sandbox user namespace の EPERM 警告があるため通常デスクトップと同等とはみなさない。\n* 仮説：Flatpak manifest は `--persist=.floorp` を指定している。home を公開すると同 persist の取り扱いが変化し、legacy と XDG 側の選択が変わる可能性がある。Firefox 153 の参考ソースに legacy パス優先の判定があるが、本 Runtime 159 の該当箇所・分岐は未検証で、根本原因は確定していない。公式 [Flatpak コマンド仕様](https://docs.flatpak.org/en/latest/flatpak-command-reference.html) も persist は実ホームへアクセスしない場合に適用されると説明する。\n* 次：現行 Runtime のプロファイル選択コードとマウントを検証し、通常 D-Bus・通常終了、既存 legacy/XDG 双方がある場合、Bazzite/Flatseal、Firefox Flatpak との比較を行う。安易なコピーや上書きはせず、データ保護を優先。修正 PR は未作成。\n\n",
+      "created": "2026-11-05T18:20:45.437+0900",
+      "updated": "2026-11-05T18:20:45.437+0900"
+    },
+    {
+      "id": "10079",
+      "body": "## 原因追跡と自動再現（2026-11-05）\n\n**コード経路・実環境を照合した原因：** [Flathub manifest](https://github.com/flathub/one.ablaze.floorp/blob/1c01b0a7c404aa610059a55a64208a5f92b1e1d9/one.ablaze.floorp.yml) の `--persist=.floorp` は home へのアクセスを与えていない場合、アプリ用の `.floorp` を `$HOME/.floorp` にマウントする。テスト環境の sandbox mountinfo で、`--filesystem=home` を与えるとこの mount がなくなり、同じ旧パスが見えなくなることを確認した。  \nFloorp v12.21.1 の [runtime lock](https://github.com/Floorp-Projects/Floorp/blob/v12.21.1/floorp-runtime.lock.json) は Runtime commit `8965ffc346d426ccdf919bd18585e4d4a0c21654` を指定する。その [nsXREDirProvider.cpp](https://github.com/Floorp-Projects/Floorp-Runtime/blob/8965ffc346d426ccdf919bd18585e4d4a0c21654/toolkit/xre/nsXREDirProvider.cpp) の legacy path 優先判定と XDG fallback は、観測したプロファイル切替と一致する。home 権限を付けた上で `--nofilesystem=~/.floorp` を試しても、旧パスの persist mount は復活しなかった。\n\n**自動再現：** Debian 13.7 / Flatpak 1.16.6 / Floorp 12.21.1 / Gecko 159.0.1、隔離 HOME・Xvfb・一時 session bus、20秒以内の期限付き起動。独立 worktree の `tests/profile_switch_repro.py` で権限なし→あり→なしを自動実行。未修正ではプロファイルが別ディレクトリへ切り替わり、権限除去後に元の目印が読み込まれたため、期待どおり exit 1（不合格）。ログ・profile は実行端末 `/tmp/kan8-profile-test-6jb2fb6p/`、試験スクリプトは作業端末 `work/kan8-flathub-worktree/tests/profile_switch_repro.py`。恒久 CI には未導入。通常 GUI での終了、Bazzite と Flatseal は引き続き未確認。\n\n**修正状況：** 独立ブランチ `codex/kan-8-flatpak-profile` は Flathub manifest commit `1c01b0a7c404aa610059a55a64208a5f92b1e1d9` から作成。home 全体の書換えは通常のファイル動作を変えるため採用していない。既に legacy と XDG の両側に異なるデータがある場合や、ホスト側の legacy プロファイルが home 権限の解除で見えなくなる場合に、どちらを選ぶか・利用不可をどう通知するかの安全設計とテストが必要。データの自動コピー・上書きは行っていない。修正・PR は未完成。",
+      "created": "2026-11-05T18:29:06.161+0900",
+      "updated": "2026-11-05T18:29:06.161+0900"
+    },
+    {
+      "id": "10181",
+      "body": "## 修正候補と検証（2026-11-05）\n\n[Flathub Draft PR #198](https://github.com/flathub/one.ablaze.floorp/pull/198) を作成。対象 branch `codex/kan-8-flatpak-profile`、head `d9aa24d`、base `1c01b0a7c404aa610059a55a64208a5f92b1e1d9`。レビュー・検証待ちでマージしていない。\n\nRuntime の既存 `MOZ_APP_DATA` で Flatpak 内のプロファイルルートのみ固定し、HOME 全体は変更しない。既存の legacy / XDG の片方のみならそのルートを使う。異なる2レジストリ、別の host profile、レジストリを欠く既存データは停止して標準エラーに診断を出す。同じディレクトリへの別経路は許容。明示された既存 `MOZ_APP_DATA` は尊重する。データのコピー・移動・削除は行わない。\n\nDebian 13.7、Flatpak 1.16.6、Floorp 12.21.1 / Gecko 159.0.1、隔離HOME・Xvfbで、変更前の自動テストは権限なし→ありで異なるprofileを生成し exit 1。最終候補 helper を実際の Flatpak sandbox に注入した同テストでは、権限ありでも元のprofile markerを読み込み、権限解除後も保持、別registryなしで exit 0。ログは実行端末 `/tmp/kan8-profile-test-rpg8x3lm/`。9件の選択ロジック単体テスト、bash構文、manifest YAML／helper組込み、diff checkが成功。\n\n制約：候補helperの注入試験であり、修正後Flatpakの再ビルド・通常終了・Bazzite/Flatseal・portal・絶対パスを含む複数profile・キャッシュ挙動・GUI診断は未検証。timeoutによる終了で、通常終了の証拠ではない。host profileにhome権限を外した状態でアクセスすることはできない。PRのREADMEにデータを統合・移動しない一時選択方法を記載。次はパッケージ実ビルド、実デスクトップでの検証とレビュー。",
+      "created": "2026-11-05T18:38:56.053+0900",
+      "updated": "2026-11-05T18:38:56.053+0900"
+    },
+    {
+      "id": "10232",
+      "body": "状態ラベルを既存の実測結果と整合しました。再現済みの Flatpak profile 切替について needs-repro を reproduced-in-test / draft-pr に変更。env-blocked は元報告の Bazzite 実デスクトップ検証不足として保持し、needs-bazzite-desktop と needs-flatpak-package で残条件を明記。PR #198 は head d9aa24d58fe633bf765721f95b4ac13132ee397e / OPEN / Draft、CIチェックは現在表示なし。helper注入試験の成功は完成パッケージの検証ではありません。既存記録の環境・ログ・制約は引き続き有効。マージ・完了化なし。",
+      "created": "2026-11-05T20:47:39.637+0900",
+      "updated": "2026-11-05T20:47:39.637+0900"
+    },
+    {
+      "id": "10272",
+      "body": "## Cloud担当A 実Flatpak追試（2026-11-05）\n\n公式Floorp12.21.1/Gecko159.0.1、source `984509d2053be7bae9027133bda7259cd706b208`、Debian13.6/Xvfb X11/Flatpak1.16.6で通常session D-Bus・通常終了を追加確認。homeなし→あり→なしでprofile/ProfLDが切替、marker保持→欠落→復帰を実再現。既存PR198 head `d9aa24d58fe633bf765721f95b4ac13132ee397e` のhelperを実Flatpak内で使う比較では同一profile/ProfLD・marker保持。全6起動normal quit forced=false/exit0、sandbox pref6・disable envなし。既存9tests成功。\n\nこれはhelper比較で、完成候補Flatpakのbuild/deployではない。Bazzite44/Bazaar/Flatseal、完全systembus/portal、mixed registry実GUIとcache内容検証は残る。ホストsystembus不在のため専用testbusを導入時照会に使用し、完全systembus相当とは扱わない。nested namespace EPERM警告も保持。データ削除の再現ではない。正本[Draft PR198](https://github.com/flathub/one.ablaze.floorp/pull/198)を維持し重複なし、Done化なし。\n\n取得可能な[report/script/result/環境証拠](https://github.com/Floorp-Projects/Floorp/tree/codex/qa-linux-package-pwa/docs/qa/linux-22/package-pwa/KAN-8)。",
+      "created": "2026-11-05T23:33:06.351+0900",
+      "updated": "2026-11-05T23:33:06.351+0900"
+    },
+    {
+      "id": "10308",
+      "body": "完成候補パッケージ条件も実検証できたため追補。PR198 head d9aa24d58fe633bf765721f95b4ac13132ee397eのmanifest/launcher/helperを変更せず標準flatpak-builder1.4.4でbuild/finish/export/--install成功exit0。manifest SHA72117410eddb76798a072361c86c989d7b6b42ac221d63e3fe233dfddba8885f、source tar SHA7dcedcbfef747819153b0b9c541a9c1f4f4965b0720f16d5d237d39b0c30d613を確認。ローカルunsigned試験app commit7a3b387dc2c79a14b8f49b603b5b8d85d720fb233b325238d9d4d7a03bafde5a。署名Flathub配布ではなく、GPG/TLS/source checksum/製品保護を無効化していない。\n\n新規専用HOME/:89で完成packageの実default launcherをhome権限なし→あり→なしで3回起動。helper注入/command override/profile指定なしで、同profile/ProfLD・marker保持、全normal quit forced=false/exit0、sandbox pref6。全タスク合計は公式3＋helper比較3＋完成package3=9正常終了起動、unit9pass。\n\n初期FUSE helperのsetuid metadata不足とAppStream plugin絶対path不足は、OS標準fusermountと同一Debian pluginへの全args転送wrapperで解消。rofiles保護やvalidationを飛ばしていない。残る条件はBazzite/Flatseal/Bazaar、完全portal/systembus、mixed registry GUI、cache内容/migration、公式署名配布qualification。完成候補buildラベルは達成条件として除去し原条件ラベルを保持。正本PR198 Draft・未Done。[full-package report/script/subject/result](https://github.com/Floorp-Projects/Floorp/tree/codex/qa-linux-package-pwa/docs/qa/linux-22/package-pwa/KAN-8)。",
+      "created": "2026-11-06T00:21:53.640+0900",
+      "updated": "2026-11-06T00:21:53.640+0900"
+    }
+  ]
+}

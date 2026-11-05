@@ -1,0 +1,16 @@
+{
+  "previousMatrixSha256": "5d8c722b1c65d891ea393c88a2bd04e9407ef89962484fc9821cc063aeb6e64e",
+  "previousQaCommit": "06a60c9f7c5b6d300a472e1178dde2559f86fc8e",
+  "assignedKeys": [
+    "KAN-8",
+    "KAN-17",
+    "KAN-23",
+    "KAN-48",
+    "KAN-49",
+    "KAN-89",
+    "KAN-96"
+  ],
+  "originalLinuxDenominator": 22,
+  "additionalKAN24Excluded": true,
+  "scope": "reconcile original7 latest evidence/Jira and newly executable residual conditions; do not repeat completed trial conditions"
+}

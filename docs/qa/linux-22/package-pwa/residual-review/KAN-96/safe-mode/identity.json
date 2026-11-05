@@ -1,0 +1,19 @@
+{
+  "inSafeMode": true,
+  "version": "159.0.1",
+  "buildID": "20261103153232",
+  "profile": "/workspace/qa-linux-22/package-pwa/residual-review/KAN-96/safe-mode/run/profile",
+  "sandbox": 6,
+  "sandboxDisabled": false,
+  "windows": [
+    {
+      "url": "about:blank",
+      "remoteType": "web",
+      "actor": "NotSupportedError: WindowGlobalParent.getActor: Window protocol 'NRProgressiveWebApp' doesn't match uri about:blank",
+      "title": "Ablaze Floorp",
+      "taskbartab": null,
+      "floorpSsbWindow": false,
+      "installButton": false
+    }
+  ]
+}

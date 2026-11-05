@@ -1,0 +1,35 @@
+{
+  "sourceSha": "29a3eb23145da90706d8a94441373278521cc737",
+  "productIntake": "/workspace/qa-linux-additional/KAN-24/followup/intake/baseline/product-intake.json",
+  "newCondition": "COOP same-origin / COEP require-corp; real container tab; not original external sites",
+  "input": "synthetic WebDriver real product install buttons; actual Firefox container API creates source tab",
+  "steps": [],
+  "normalQuits": [
+    {
+      "label": "failure-cleanup",
+      "response": {
+        "cause": "shutdown",
+        "forced": false,
+        "in_app": true
+      },
+      "exitCode": 0
+    }
+  ],
+  "containerGate": {
+    "containerExperiment": false,
+    "prefContainersEnabled": true
+  },
+  "completed": false,
+  "error": "WebDriver:ExecuteScript: {'error': 'javascript error', 'message': 'Error: Failed to load resource://gre/modules/ContextualIdentityService.sys.mjs', 'stacktrace': '@pwa_ui_probe.py:2:53\\n@pwa_ui_probe.py:3:8\\nevaluate.sandbox/promise<@chrome://remote/content/marionette/evaluate.sys.mjs:127:10\\nevaluate.sandbox@chrome://remote/content/marionette/evaluate.sys.mjs:103:17\\nexecuteScript@chrome://remote/content/marionette/actors/MarionetteCommandsChild.sys.mjs:358:26\\nreceiveMessage@chrome://remote/content/marionette/actors/MarionetteCommandsChild.sys.mjs:214:31\\n'}",
+  "traceback": "Traceback (most recent call last):\n  File \"/workspace/qa-linux-22/package-pwa/residual-review/KAN-96/probe.py\", line 50, in <module>\n    container=m.script(\"const {ContextualIdentityService}=ChromeUtils.importESModule('resource://gre/modules/ContextualIdentityService.sys.mjs');return ContextualIdentityService.create('QA COOP Container','fingerprint','blue');\");result['containerIdentity']=container\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/workspace/qa-linux-22/package-pwa/pwa_ui_probe.py\", line 61, in script\n    result = self.call('WebDriver:ExecuteScript', {\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/workspace/qa-linux-22/package-pwa/pwa_ui_probe.py\", line 57, in call\n    raise RuntimeError(f'{name}: {result[2]}')\nRuntimeError: WebDriver:ExecuteScript: {'error': 'javascript error', 'message': 'Error: Failed to load resource://gre/modules/ContextualIdentityService.sys.mjs', 'stacktrace': '@pwa_ui_probe.py:2:53\\n@pwa_ui_probe.py:3:8\\nevaluate.sandbox/promise<@chrome://remote/content/marionette/evaluate.sys.mjs:127:10\\nevaluate.sandbox@chrome://remote/content/marionette/evaluate.sys.mjs:103:17\\nexecuteScript@chrome://remote/content/marionette/actors/MarionetteCommandsChild.sys.mjs:358:26\\nreceiveMessage@chrome://remote/content/marionette/actors/MarionetteCommandsChild.sys.mjs:214:31\\n'}\n",
+  "consoleFailure": [
+    "1793909355454\taddons.xpi\tWARN\tChecking /workspace/qa-linux-additional/KAN-24/followup/products/baseline/floorp/distribution/extensions for addons",
+    "Warning: attempting to write 7961 bytes to preference floorp.commandPalette.selectableCommands. This is bad for general performance and memory usage. Such an amount of data should rather be written to an external file.",
+    "Warning: attempting to write 7961 bytes to preference floorp.commandPalette.selectableCommands. This is bad for general performance and memory usage. Such an amount of data should rather be written to an external file.",
+    "[JavaScript Warning: \"unreachable code after return statement\" {file: \"moz-src:///toolkit/components/search/SearchService.sys.mjs\" line: 3024}]",
+    "[JavaScript Warning: \"Layout was forced before the page was fully loaded. If stylesheets are not yet loaded this may cause a flash of unstyled content.\" {file: \"chrome://noraneko-profile-manager/content/index.html\" line: 0}]"
+  ],
+  "productUnchanged": true,
+  "ownedProcessesRemaining": 0,
+  "displaySocketAbsent": true
+}

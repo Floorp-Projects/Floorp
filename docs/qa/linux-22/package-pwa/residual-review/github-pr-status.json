@@ -1,0 +1,72 @@
+[
+  {
+    "number": 198,
+    "url": "https://github.com/flathub/one.ablaze.floorp/pull/198",
+    "state": "open",
+    "merged": false,
+    "draft": true,
+    "title": "Keep the Flatpak profile root stable across home permissions",
+    "base": "master",
+    "base_sha": "1c01b0a7c404aa610059a55a64208a5f92b1e1d9",
+    "head": "codex/kan-8-flatpak-profile",
+    "head_sha": "d9aa24d58fe633bf765721f95b4ac13132ee397e",
+    "merged_at": null,
+    "merge_commit_sha": "d52d180e1f963b8c501389b4998728d299fd07ad"
+  },
+  {
+    "number": 3030,
+    "url": "https://github.com/Floorp-Projects/Floorp/pull/3030",
+    "state": "open",
+    "merged": false,
+    "draft": true,
+    "title": "fix(branding): retain Floorp icon with Firefox language packs",
+    "base": "main",
+    "base_sha": "984509d2053be7bae9027133bda7259cd706b208",
+    "head": "codex/fix-linux-langpack-branding",
+    "head_sha": "e55152c559a141001a375ac77098d141b0db3ca7",
+    "merged_at": null,
+    "merge_commit_sha": "b4703818e95c919fd8b739f143043a6eb0605b8d"
+  },
+  {
+    "number": 3032,
+    "url": "https://github.com/Floorp-Projects/Floorp/pull/3032",
+    "state": "open",
+    "merged": false,
+    "draft": true,
+    "title": "fix(pwa): preserve each Linux window launcher class",
+    "base": "main",
+    "base_sha": "984509d2053be7bae9027133bda7259cd706b208",
+    "head": "codex/linux-pwa-window-class",
+    "head_sha": "8249e234adfbb3e877e4a20cf5f57d7264d9a447",
+    "merged_at": null,
+    "merge_commit_sha": "fbd478c86cc1aa4e7d3556b28c79c50f7ca7b316"
+  },
+  {
+    "number": 3040,
+    "url": "https://github.com/Floorp-Projects/Floorp/pull/3040",
+    "state": "open",
+    "merged": false,
+    "draft": true,
+    "title": "fix(pwa): keep browser Wayland identity after cold PWA launch",
+    "base": "codex/linux-pwa-window-class",
+    "base_sha": "8249e234adfbb3e877e4a20cf5f57d7264d9a447",
+    "head": "codex/linux-browser-wayland-identity",
+    "head_sha": "2deb165d75290ffd4f602ad078512dc42fc3a332",
+    "merged_at": null,
+    "merge_commit_sha": "3cb98da013c3972ac75a274235763679dd70a073"
+  },
+  {
+    "number": 2680,
+    "url": "https://github.com/Floorp-Projects/Floorp/pull/2680",
+    "state": "closed",
+    "merged": true,
+    "draft": false,
+    "title": "fix(actors): restore web actors on Firefox 154",
+    "base": "main",
+    "base_sha": "2e492c86cd54aea7f5cbb05a5258a86cd2ea5cd3",
+    "head": "fix/issue-2672-web-actors",
+    "head_sha": "df48ec8d2e0be84b57723e0a631b50dc245a42dc",
+    "merged_at": "2026-08-23T09:22:02Z",
+    "merge_commit_sha": "313d8e87623ba85d3266b336e0104175a30c59e6"
+  }
+]

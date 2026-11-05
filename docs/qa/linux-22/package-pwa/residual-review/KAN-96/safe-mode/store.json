@@ -1,0 +1,11 @@
+{
+  "path": "/workspace/qa-linux-22/package-pwa/residual-review/KAN-96/safe-mode/run/profile/ssb/ssb.json",
+  "apps": [
+    {
+      "id": "{8955ff1d-a5b2-4862-acc1-eb2322301ae0}",
+      "name": "QA COOP Default",
+      "start_url": "http://127.0.0.1:8789/isolate/",
+      "userContextId": 0
+    }
+  ]
+}

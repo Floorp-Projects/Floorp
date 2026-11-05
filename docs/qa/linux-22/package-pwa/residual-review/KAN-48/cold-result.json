@@ -1,0 +1,86 @@
+{
+  "sourceSha": "29a3eb23145da90706d8a94441373278521cc737",
+  "actualSite": "https://www.vrt.be/vrtmax/",
+  "desktop": {
+    "Name": "VRT MAX",
+    "Exec": "/workspace/qa-linux-additional/KAN-24/followup/products/baseline/floorp/floorp --name floorp-54e02a83-a477-4acf-b027-2a7eea2c788e --profile /workspace/qa-linux-22/package-pwa/residual-review/KAN-48/profile --start-ssb {54e02a83-a477-4acf-b027-2a7eea2c788e}",
+    "Icon": "/workspace/qa-linux-22/package-pwa/residual-review/KAN-48/home/.local/share/icons/hicolor/512x512/apps/floorp-54e02a83-a477-4acf-b027-2a7eea2c788e.png",
+    "StartupWMClass": "floorp-54e02a83-a477-4acf-b027-2a7eea2c788e",
+    "X-Floorp-Id": "{54e02a83-a477-4acf-b027-2a7eea2c788e}",
+    "X-Floorp-StartUrl": "https://www.vrt.be/vrtmax/"
+  },
+  "desktopFile": "floorp-54e02a83-a477-4acf-b027-2a7eea2c788e.desktop",
+  "desktopSha256": "dd3464ac7795f44c6db752b2a7ffb8f55bcd17c9a34fabb00c0ede22b04413f5",
+  "iconSha256": "32102d9ddd532621b880e3bc72352b13b45fc3029a079631d344a1faf0ef91de",
+  "iconDimensions": [
+    128,
+    128
+  ],
+  "productUnchanged": true,
+  "product": {
+    "product": {
+      "name": "Floorp",
+      "version": "159.0.1",
+      "platformVersion": "159.0.1",
+      "buildID": "20261103153232"
+    },
+    "profile": "/workspace/qa-linux-22/package-pwa/residual-review/KAN-48/profile",
+    "remoteType": "webIsolated=https://vrt.be",
+    "url": "https://www.vrt.be/vrtmax/",
+    "actor": {
+      "available": true
+    },
+    "elements": {
+      "ssbPageAction": null,
+      "ssb-panel": null,
+      "ssb-app-install-button": null,
+      "appMenu-ssb-button": null,
+      "appMenu-install-or-open-ssb-current-page-button": null
+    },
+    "experiment": false,
+    "sandbox": 6,
+    "windows": [
+      {
+        "title": "VRT MAX | tv-programma\u2019s, podcasts en live radio \u2014 Ablaze Floorp",
+        "type": "navigator:browser",
+        "ssbid": null,
+        "url": "https://www.vrt.be/vrtmax/"
+      }
+    ]
+  },
+  "native": {
+    "pid": 156698,
+    "profile": "/workspace/qa-linux-22/package-pwa/residual-review/KAN-48/profile",
+    "sandbox": 6,
+    "disable": false,
+    "experiment": false
+  },
+  "kwinWindows": [
+    {
+      "internalId": "{041c28a3-0f1f-44b5-8b51-a72d054fbe74}",
+      "caption": "VRT MAX | tv-programma\u2019s, podcasts en live radio \u2014 Ablaze Floorp",
+      "resourceClass": "floorp-54e02a83-a477-4acf-b027-2a7eea2c788e",
+      "resourceName": "floorp",
+      "desktopFileName": "floorp-54e02a83-a477-4acf-b027-2a7eea2c788e",
+      "pid": 156698,
+      "iconString": "QVariant(QIcon, QIcon(availableSizes[normal,Off]=QList(QSize(128, 128)),cacheKey=0x700000000))",
+      "clientGeometry": {
+        "x": 0,
+        "y": 0,
+        "width": 1100,
+        "height": 716
+      },
+      "normalWindow": true,
+      "active": true
+    }
+  ],
+  "normalQuit": {
+    "cause": "shutdown",
+    "forced": false,
+    "in_app": true
+  },
+  "exitCode": 0,
+  "completed": true,
+  "launcherUnchanged": true,
+  "ownedBrowserRemaining": false
+}

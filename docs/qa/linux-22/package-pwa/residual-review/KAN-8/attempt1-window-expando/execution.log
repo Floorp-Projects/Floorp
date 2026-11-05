@@ -1,0 +1,37 @@
+Traceback (most recent call last):
+  File "/workspace/qa-linux-22/package-pwa/residual-review/KAN-8/residual_probe.py", line 90, in <module>
+    for label,permission in [('legacy-initial',False),('legacy-home-enabled',True),('legacy-home-disabled',False)]:cache_run(label,home,permission)
+                                                                                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/qa-linux-22/package-pwa/residual-review/KAN-8/residual_probe.py", line 67, in cache_run
+    assert isinstance(v,dict) and v['length']==len(PAYLOAD),v
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: None
+
+{
+  "key": "KAN-8",
+  "newConditions": [
+    "HTTP disk cache content reuse across permission transitions",
+    "existing XDG-only actual profile relocation",
+    "mixed registry fail-closed in actual installed full package"
+  ],
+  "packageCommit": "7a3b387dc2c79a14b8f49b603b5b8d85d720fb233b325238d9d4d7a03bafde5a",
+  "manifestHead": "d9aa24d58fe633bf765721f95b4ac13132ee397e",
+  "signatureScope": "locally built unsigned full PR198 Flatpak; not Flathub distribution",
+  "systemBus": "owned incomplete test bus; not full desktop portal/system bus",
+  "physicalInput": false,
+  "display": "Xvfb104 X11",
+  "observedCommit": "7a3b387dc2c79a14b8f49b603b5b8d85d720fb233b325238d9d4d7a03bafde5a",
+  "deployedLauncherHashesBefore": {
+    "files/bin/floorp": "352e6601c6bcaed6ad19c25d68cbd873ce55a65d1b48d59f0fcb813befb48f91",
+    "files/bin/floorp-profile-root.sh": "08b2db27331855fc3d7b207112816c7056c70f34e02553449b07a7206aee3a1e"
+  },
+  "error": "None",
+  "traceback": "Traceback (most recent call last):\n  File \"/workspace/qa-linux-22/package-pwa/residual-review/KAN-8/residual_probe.py\", line 90, in <module>\n    for label,permission in [('legacy-initial',False),('legacy-home-enabled',True),('legacy-home-disabled',False)]:cache_run(label,home,permission)\n                                                                                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/workspace/qa-linux-22/package-pwa/residual-review/KAN-8/residual_probe.py\", line 67, in cache_run\n    assert isinstance(v,dict) and v['length']==len(PAYLOAD),v\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: None\n",
+  "failureQuit": {
+    "cause": "shutdown",
+    "forced": false,
+    "in_app": true
+  },
+  "ownedProcessesRemaining": 0,
+  "displayClean": true
+}

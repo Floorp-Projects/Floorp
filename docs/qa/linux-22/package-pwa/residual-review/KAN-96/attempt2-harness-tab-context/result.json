@@ -1,0 +1,80 @@
+{
+  "sourceSha": "29a3eb23145da90706d8a94441373278521cc737",
+  "productIntake": "/workspace/qa-linux-additional/KAN-24/followup/intake/baseline/product-intake.json",
+  "newCondition": "COOP same-origin / COEP require-corp; real container tab; not original external sites",
+  "input": "synthetic WebDriver real product install buttons; actual Firefox container API creates source tab",
+  "steps": [
+    {
+      "id": "default",
+      "requestedSourceContext": 0,
+      "before": {
+        "profile": "/workspace/qa-linux-22/package-pwa/residual-review/KAN-96/run/profile",
+        "exe": "/workspace/qa-linux-additional/KAN-24/followup/products/baseline/floorp/floorp",
+        "version": "159.0.1",
+        "buildID": "20261103153232",
+        "sandbox": 6,
+        "disabled": false,
+        "windows": [
+          {
+            "url": "http://127.0.0.1:8789/isolate/",
+            "title": "QA COOP Default — Ablaze Floorp",
+            "ssbid": null,
+            "remoteType": "webCOOP+COEP=http://127.0.0.1",
+            "userContextId": null,
+            "originAttributes": {
+              "firstPartyDomain": "",
+              "geckoViewSessionContextId": "",
+              "partitionKey": "",
+              "privateBrowsingId": 0,
+              "userContextId": 0
+            },
+            "actor": true
+          }
+        ]
+      },
+      "contentBefore": {
+        "url": "about:blank",
+        "crossOriginIsolated": false,
+        "isSecureContext": false,
+        "sharedArrayBuffer": "undefined",
+        "title": ""
+      }
+    }
+  ],
+  "normalQuits": [
+    {
+      "label": "failure-cleanup",
+      "response": {
+        "cause": "shutdown",
+        "forced": false,
+        "in_app": true
+      },
+      "exitCode": 0
+    }
+  ],
+  "containerGate": {
+    "containerExperiment": false,
+    "prefContainersEnabled": true
+  },
+  "containerIdentity": {
+    "userContextId": 7,
+    "public": true,
+    "icon": "fingerprint",
+    "color": "blue",
+    "name": "QA COOP Container"
+  },
+  "completed": false,
+  "error": "",
+  "traceback": "Traceback (most recent call last):\n  File \"/workspace/qa-linux-22/package-pwa/residual-review/KAN-96/probe.py\", line 54, in <module>\n    row['before']=save(label+'-before',m.script(SNAP));row['contentBefore']=save(label+'-content-before',content());assert row['contentBefore']['crossOriginIsolated'] is True\n                                                                                                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n",
+  "consoleFailure": [
+    "1793909393371\taddons.xpi\tWARN\tChecking /workspace/qa-linux-additional/KAN-24/followup/products/baseline/floorp/distribution/extensions for addons",
+    "Warning: attempting to write 7961 bytes to preference floorp.commandPalette.selectableCommands. This is bad for general performance and memory usage. Such an amount of data should rather be written to an external file.",
+    "Warning: attempting to write 7961 bytes to preference floorp.commandPalette.selectableCommands. This is bad for general performance and memory usage. Such an amount of data should rather be written to an external file.",
+    "[JavaScript Warning: \"unreachable code after return statement\" {file: \"moz-src:///toolkit/components/search/SearchService.sys.mjs\" line: 3024}]",
+    "[JavaScript Warning: \"Layout was forced before the page was fully loaded. If stylesheets are not yet loaded this may cause a flash of unstyled content.\" {file: \"chrome://noraneko-profile-manager/content/index.html\" line: 0}]",
+    "1793909399268\tapp.normandy.recipe-runner\tWARN\tDisabling Shield because app.normandy.api_url is not set."
+  ],
+  "productUnchanged": true,
+  "ownedProcessesRemaining": 0,
+  "displaySocketAbsent": true
+}

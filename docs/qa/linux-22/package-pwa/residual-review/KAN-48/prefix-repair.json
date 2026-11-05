@@ -1,0 +1,6 @@
+{
+  "originalExec": "/usr/bin/plasmashell",
+  "correctedExec": "/workspace/qa-linux-22/package-pwa/sysroot/usr/bin/plasmashell",
+  "interfaceDeclarationsUnchanged": true,
+  "permissionCheckBypass": false
+}

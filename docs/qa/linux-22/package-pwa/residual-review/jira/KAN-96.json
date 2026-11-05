@@ -1,0 +1,54 @@
+{
+  "key": "KAN-96",
+  "fields": {
+    "summary": "[Linux/PWA] Web Appsの新規作成ボタンが消え作成できない（GitHub #2695）",
+    "description": "## GitHub原報告\n\nhttps://github.com/Floorp-Projects/Floorp/issues/2695\n\n## 内容（報告時点、最新版独立検証前）\n\n12.17.0/CachyOSでWeb Appの作成ボタンが見当たらずメニュー経由でも新規PWA作成に失敗。ログにNRProgressiveWebApp actorのremote type不一致を確認。macOS類似#2683（KAN-10）と関連。\n\n## 暫定トリアージ\n\nP2。今回の安定化Sprintの調査候補だが30日以内の修正確約ではない。\n\n## 次の一手\n\nLinux最新版でURLバー・メニューからPWA作成を確認し、actor remote type・Fission/コンテナ状態を比較。KAN-10との共通コードを切り分ける。\n\n## 完了・整理条件\n\n新規PWAをLinuxで作成・独立起動でき、remote type不整合が発生しない。  \n検証ビルド・再現条件・テスト結果・修正PR等の参照を記録する。",
+    "status": {
+      "name": "未着手",
+      "statusCategory": {
+        "name": "To Do"
+      }
+    },
+    "labels": [
+      "area-pwa",
+      "env-blocked",
+      "floorp-github-import-2026-11",
+      "needs-cachyos-original-site",
+      "needs-repro",
+      "p2",
+      "qa-linux-executed",
+      "related-gh-2683",
+      "triage-reviewed"
+    ]
+  },
+  "commentPagination": {
+    "total": 4,
+    "isLast": true
+  },
+  "comments": [
+    {
+      "id": "10092",
+      "body": "## GitHub / 既存修正照合（2026-11-05）\n\n区分: 報告者環境未検証・既修正候補。[#2695](https://github.com/Floorp-Projects/Floorp/issues/2695) は12.17.0で NRProgressiveWebApp と webIsolated の不整合を記録し、コメントでは12.17.1での修正予定を案内しているが成功の確認はない。KAN-10担当と重複を避け、現行 Linux の実PWA作成時の actor 登録、アイコン・メニュー・ログを確認。main 984509d、今回試験なし。",
+      "created": "2026-11-05T18:30:09.390+0900",
+      "updated": "2026-11-05T18:30:09.390+0900"
+    },
+    {
+      "id": "10166",
+      "body": "## 追加コード根拠（2026-11-05）\n\n追加の静的調査（SHA `1dcbf738be3ed92ae49743e09ac131cdc4520464`）: 関連 [#2680](https://github.com/Floorp-Projects/Floorp/pull/2680) 後、`BrowserGlue.sys.mts` の actor 定義は webIsolated と safeForUntrustedWebProcess を指定し、actor remote type テストがある。報告事象の修正候補だが Linux 実製品で作成・独立起動を検証するまで既修正確定としない。調査元 `E:\\floorp-browser-dev\\outputs\\pwa-webcompat.md`。",
+      "created": "2026-11-05T18:35:12.975+0900",
+      "updated": "2026-11-05T18:35:12.975+0900"
+    },
+    {
+      "id": "10176",
+      "body": "## 環境制約（2026-11-05）\n\n報告された CachyOS の環境は今回確認できていない。 利用を直接確認したLinux機は Debian 13.7 / X11 と Windows上の Ubuntu 24.04 WSLg。接続先を網羅的に調べた結果ではない。したがって報告環境での再現は環境不足で未検証とする。代替として利用可能なLinuxでコード・自動テスト・条件を先に確認し、実環境が確保できたら元報告と比較する。OSを偽装しない。",
+      "created": "2026-11-05T18:36:15.447+0900",
+      "updated": "2026-11-05T18:36:15.447+0900"
+    },
+    {
+      "id": "10276",
+      "body": "## Cloud担当A 現行実UI追試（2026-11-05）\n\n公式Floorp12.21.1/Gecko159.0.1 source `984509d2053be7bae9027133bda7259cd706b208`、Debian13/Xvfb X11、専用HOME/profile・通常sessionbus。実製品のURLバーとメニューの両経路を合成Marionetteクリックし2PWA作成・保存・PWA window生成に成功。webIsolated=http://127.0.0.1でNRProgressiveWebApp取得成功。生成launcherの3起動順でも両PWA起動成功、sandbox pref6、gatefalse。実データstore注入やUI置換なし。\n\n区分: 現行の今回条件ではactor mismatch未再現、既存[PR2680](https://github.com/Floorp-Projects/Floorp/pull/2680)のactor修正と整合。CachyOS/原safe-mode/YouTube Music、HTTPS cross-site/COOP/containers・完全desktop/物理入力は残るため既修正確定やDone化なし。新規duplicate PRなし。初期harness不備は成功結果と分離。WM_CLASS欠陥はKAN49/PR3032で別管理。\n\n[実UI画像/result/script/report](https://github.com/Floorp-Projects/Floorp/tree/codex/qa-linux-package-pwa/docs/qa/linux-22/package-pwa/KAN-96)、[UI結果](https://github.com/Floorp-Projects/Floorp/tree/codex/qa-linux-package-pwa/docs/qa/linux-22/package-pwa/pwa-ui-run-3/result.json)。",
+      "created": "2026-11-05T23:33:10.223+0900",
+      "updated": "2026-11-05T23:33:10.223+0900"
+    }
+  ]
+}

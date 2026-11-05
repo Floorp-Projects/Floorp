@@ -1,0 +1,368 @@
+{
+  "sourceSha": "29a3eb23145da90706d8a94441373278521cc737",
+  "productIntake": "/workspace/qa-linux-additional/KAN-24/followup/intake/baseline/product-intake.json",
+  "newCondition": "COOP same-origin / COEP require-corp; real container tab; not original external sites",
+  "input": "synthetic WebDriver real product install buttons; actual Firefox container API creates source tab",
+  "steps": [
+    {
+      "id": "default",
+      "requestedSourceContext": 0,
+      "before": {
+        "profile": "/workspace/qa-linux-22/package-pwa/residual-review/KAN-96/run/profile",
+        "exe": "/workspace/qa-linux-additional/KAN-24/followup/products/baseline/floorp/floorp",
+        "version": "159.0.1",
+        "buildID": "20261103153232",
+        "sandbox": 6,
+        "disabled": false,
+        "windows": [
+          {
+            "url": "http://127.0.0.1:8789/isolate/",
+            "title": "QA COOP Default — Ablaze Floorp",
+            "ssbid": null,
+            "remoteType": "webCOOP+COEP=http://127.0.0.1",
+            "userContextId": null,
+            "originAttributes": {
+              "firstPartyDomain": "",
+              "geckoViewSessionContextId": "",
+              "partitionKey": "",
+              "privateBrowsingId": 0,
+              "userContextId": 0
+            },
+            "actor": true
+          }
+        ]
+      },
+      "contentBefore": {
+        "url": "http://127.0.0.1:8789/isolate/",
+        "crossOriginIsolated": true,
+        "isSecureContext": true,
+        "sharedArrayBuffer": "function",
+        "title": "QA COOP Default"
+      },
+      "selected": {
+        "remoteType": "webCOOP+COEP=http://127.0.0.1",
+        "originAttributes": {
+          "firstPartyDomain": "",
+          "geckoViewSessionContextId": "",
+          "partitionKey": "",
+          "privateBrowsingId": 0,
+          "userContextId": 0
+        },
+        "context": null,
+        "actor": true
+      },
+      "panelContainerVisible": {
+        "containerRowVisible": false,
+        "installVisible": true
+      },
+      "store": {
+        "path": "/workspace/qa-linux-22/package-pwa/residual-review/KAN-96/run/profile/ssb/ssb.json",
+        "apps": [
+          {
+            "id": "{8bb99720-5e6e-4d6d-b0eb-d19650bb4cd6}",
+            "name": "QA COOP Default",
+            "start_url": "http://127.0.0.1:8789/isolate/",
+            "userContextId": 0
+          }
+        ]
+      },
+      "after": {
+        "profile": "/workspace/qa-linux-22/package-pwa/residual-review/KAN-96/run/profile",
+        "exe": "/workspace/qa-linux-additional/KAN-24/followup/products/baseline/floorp/floorp",
+        "version": "159.0.1",
+        "buildID": "20261103153232",
+        "sandbox": 6,
+        "disabled": false,
+        "windows": [
+          {
+            "url": "http://127.0.0.1:8789/isolate/",
+            "title": "QA COOP Default — Ablaze Floorp",
+            "ssbid": null,
+            "remoteType": "webCOOP+COEP=http://127.0.0.1",
+            "userContextId": null,
+            "originAttributes": {
+              "firstPartyDomain": "",
+              "geckoViewSessionContextId": "",
+              "partitionKey": "",
+              "privateBrowsingId": 0,
+              "userContextId": 0
+            },
+            "actor": true
+          },
+          {
+            "url": "http://127.0.0.1:8789/isolate/",
+            "title": "QA COOP Default — Ablaze Floorp",
+            "ssbid": null,
+            "remoteType": "webCOOP+COEP=http://127.0.0.1",
+            "userContextId": null,
+            "originAttributes": {
+              "firstPartyDomain": "",
+              "geckoViewSessionContextId": "",
+              "partitionKey": "",
+              "privateBrowsingId": 0,
+              "userContextId": 0
+            },
+            "actor": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "container",
+      "requestedSourceContext": 7,
+      "before": {
+        "profile": "/workspace/qa-linux-22/package-pwa/residual-review/KAN-96/run/profile",
+        "exe": "/workspace/qa-linux-additional/KAN-24/followup/products/baseline/floorp/floorp",
+        "version": "159.0.1",
+        "buildID": "20261103153232",
+        "sandbox": 6,
+        "disabled": false,
+        "windows": [
+          {
+            "url": "http://127.0.0.1:8789/container/",
+            "title": "QA COOP Container — Ablaze Floorp",
+            "ssbid": null,
+            "remoteType": "webCOOP+COEP=http://127.0.0.1^userContextId=7",
+            "userContextId": "7",
+            "originAttributes": {
+              "firstPartyDomain": "",
+              "geckoViewSessionContextId": "",
+              "partitionKey": "",
+              "privateBrowsingId": 0,
+              "userContextId": 7
+            },
+            "actor": true
+          },
+          {
+            "url": "http://127.0.0.1:8789/isolate/",
+            "title": "QA COOP Default — Ablaze Floorp",
+            "ssbid": null,
+            "remoteType": "webCOOP+COEP=http://127.0.0.1",
+            "userContextId": null,
+            "originAttributes": {
+              "firstPartyDomain": "",
+              "geckoViewSessionContextId": "",
+              "partitionKey": "",
+              "privateBrowsingId": 0,
+              "userContextId": 0
+            },
+            "actor": true
+          }
+        ]
+      },
+      "contentBefore": {
+        "url": "http://127.0.0.1:8789/container/",
+        "crossOriginIsolated": true,
+        "isSecureContext": true,
+        "sharedArrayBuffer": "function",
+        "title": "QA COOP Container"
+      },
+      "selected": {
+        "remoteType": "webCOOP+COEP=http://127.0.0.1^userContextId=7",
+        "originAttributes": {
+          "firstPartyDomain": "",
+          "geckoViewSessionContextId": "",
+          "partitionKey": "",
+          "privateBrowsingId": 0,
+          "userContextId": 7
+        },
+        "context": "7",
+        "actor": true
+      },
+      "panelContainerVisible": {
+        "containerRowVisible": false,
+        "installVisible": true
+      },
+      "store": {
+        "path": "/workspace/qa-linux-22/package-pwa/residual-review/KAN-96/run/profile/ssb/ssb.json",
+        "apps": [
+          {
+            "id": "{8bb99720-5e6e-4d6d-b0eb-d19650bb4cd6}",
+            "name": "QA COOP Default",
+            "start_url": "http://127.0.0.1:8789/isolate/",
+            "userContextId": 0
+          },
+          {
+            "id": "{8a394a80-8317-42e1-a6c1-7273190d0e62}",
+            "name": "QA COOP Container",
+            "start_url": "http://127.0.0.1:8789/container/",
+            "userContextId": 0
+          }
+        ]
+      },
+      "after": {
+        "profile": "/workspace/qa-linux-22/package-pwa/residual-review/KAN-96/run/profile",
+        "exe": "/workspace/qa-linux-additional/KAN-24/followup/products/baseline/floorp/floorp",
+        "version": "159.0.1",
+        "buildID": "20261103153232",
+        "sandbox": 6,
+        "disabled": false,
+        "windows": [
+          {
+            "url": "http://127.0.0.1:8789/container/",
+            "title": "QA COOP Container — Ablaze Floorp",
+            "ssbid": null,
+            "remoteType": "webCOOP+COEP=http://127.0.0.1^userContextId=7",
+            "userContextId": "7",
+            "originAttributes": {
+              "firstPartyDomain": "",
+              "geckoViewSessionContextId": "",
+              "partitionKey": "",
+              "privateBrowsingId": 0,
+              "userContextId": 7
+            },
+            "actor": true
+          },
+          {
+            "url": "http://127.0.0.1:8789/isolate/",
+            "title": "QA COOP Default — Ablaze Floorp",
+            "ssbid": null,
+            "remoteType": "webCOOP+COEP=http://127.0.0.1",
+            "userContextId": null,
+            "originAttributes": {
+              "firstPartyDomain": "",
+              "geckoViewSessionContextId": "",
+              "partitionKey": "",
+              "privateBrowsingId": 0,
+              "userContextId": 0
+            },
+            "actor": true
+          },
+          {
+            "url": "http://127.0.0.1:8789/container/",
+            "title": "QA COOP Container — Ablaze Floorp",
+            "ssbid": null,
+            "remoteType": "webCOOP+COEP=http://127.0.0.1",
+            "userContextId": null,
+            "originAttributes": {
+              "firstPartyDomain": "",
+              "geckoViewSessionContextId": "",
+              "partitionKey": "",
+              "privateBrowsingId": 0,
+              "userContextId": 0
+            },
+            "actor": true
+          }
+        ]
+      }
+    }
+  ],
+  "normalQuits": [
+    {
+      "label": "post-install",
+      "response": {
+        "cause": "shutdown",
+        "forced": false,
+        "in_app": true
+      },
+      "exitCode": 0
+    },
+    {
+      "label": "failure-cleanup",
+      "response": {
+        "cause": "shutdown",
+        "forced": false,
+        "in_app": true
+      },
+      "exitCode": 0
+    }
+  ],
+  "containerGate": {
+    "containerExperiment": false,
+    "prefContainersEnabled": true
+  },
+  "containerIdentity": {
+    "userContextId": 7,
+    "public": true,
+    "icon": "fingerprint",
+    "color": "blue",
+    "name": "QA COOP Container"
+  },
+  "consoleAfterInstall": [],
+  "launchers": [
+    {
+      "name": "QA COOP Container",
+      "desktopSha256": "48472150f1cb6ae95a4caef82410f597337389de7209df953c16949024c45722",
+      "command": [
+        "/workspace/qa-linux-additional/KAN-24/followup/products/baseline/floorp/floorp",
+        "--name",
+        "floorp-8a394a80-8317-42e1-a6c1-7273190d0e62",
+        "--profile",
+        "/workspace/qa-linux-22/package-pwa/residual-review/KAN-96/run/profile",
+        "--start-ssb",
+        "{8a394a80-8317-42e1-a6c1-7273190d0e62}"
+      ],
+      "identity": {
+        "profile": "/workspace/qa-linux-22/package-pwa/residual-review/KAN-96/run/profile",
+        "exe": "/workspace/qa-linux-additional/KAN-24/followup/products/baseline/floorp/floorp",
+        "version": "159.0.1",
+        "buildID": "20261103153232",
+        "sandbox": 6,
+        "disabled": false,
+        "windows": [
+          {
+            "url": "http://127.0.0.1:8789/container/",
+            "title": "QA COOP Container — Ablaze Floorp",
+            "ssbid": null,
+            "remoteType": "webCOOP+COEP=http://127.0.0.1",
+            "userContextId": null,
+            "originAttributes": {
+              "firstPartyDomain": "",
+              "geckoViewSessionContextId": "",
+              "partitionKey": "",
+              "privateBrowsingId": 0,
+              "userContextId": 0
+            },
+            "actor": true
+          }
+        ]
+      },
+      "snapshot": {
+        "profile": "/workspace/qa-linux-22/package-pwa/residual-review/KAN-96/run/profile",
+        "exe": "/workspace/qa-linux-additional/KAN-24/followup/products/baseline/floorp/floorp",
+        "version": "159.0.1",
+        "buildID": "20261103153232",
+        "sandbox": 6,
+        "disabled": false,
+        "windows": [
+          {
+            "url": "http://127.0.0.1:8789/container/",
+            "title": "QA COOP Container — Ablaze Floorp",
+            "ssbid": null,
+            "remoteType": "webCOOP+COEP=http://127.0.0.1",
+            "userContextId": null,
+            "originAttributes": {
+              "firstPartyDomain": "",
+              "geckoViewSessionContextId": "",
+              "partitionKey": "",
+              "privateBrowsingId": 0,
+              "userContextId": 0
+            },
+            "actor": true
+          }
+        ]
+      },
+      "content": {
+        "url": "http://127.0.0.1:8789/container/",
+        "crossOriginIsolated": true,
+        "isSecureContext": true,
+        "sharedArrayBuffer": "function",
+        "title": "QA COOP Container"
+      }
+    }
+  ],
+  "completed": false,
+  "error": "",
+  "traceback": "Traceback (most recent call last):\n  File \"/workspace/qa-linux-22/package-pwa/residual-review/KAN-96/probe.py\", line 68, in <module>\n    browser=start('relaunch-'+vals['Name'].replace(' ','-'),command+['--marionette']);row['identity']=connect();time.sleep(3);row['snapshot']=save(vals['Name'].replace(' ','-')+'-relaunch',m.script(SNAP));row['content']=save(vals['Name'].replace(' ','-')+'-relaunch-content',content());assert row['content']['crossOriginIsolated'] is True;assert any(w['ssbid'] and w['actor'] is True and 'webCOOP+COEP' in (w['remoteType'] or '') for w in row['snapshot']['windows']);quit('relaunch-'+vals['Name'])\n                                                                                                                                                                                                                                                                                                                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n",
+  "consoleFailure": [
+    "1793909636581\taddons.xpi\tWARN\tChecking /workspace/qa-linux-additional/KAN-24/followup/products/baseline/floorp/distribution/extensions for addons",
+    "Warning: attempting to write 7961 bytes to preference floorp.commandPalette.selectableCommands. This is bad for general performance and memory usage. Such an amount of data should rather be written to an external file.",
+    "Warning: attempting to write 7961 bytes to preference floorp.commandPalette.selectableCommands. This is bad for general performance and memory usage. Such an amount of data should rather be written to an external file.",
+    "[JavaScript Warning: \"unreachable code after return statement\" {file: \"moz-src:///toolkit/components/search/SearchService.sys.mjs\" line: 3024}]",
+    "[JavaScript Warning: \"Layout was forced before the page was fully loaded. If stylesheets are not yet loaded this may cause a flash of unstyled content.\" {file: \"chrome://noraneko-profile-manager/content/index.html\" line: 0}]",
+    "[JavaScript Error: \"TypeError: can't access property \"getShellService\", win is null\" {file: \"moz-src:///browser/components/DefaultBrowserCheck.sys.mjs\" line: 135}]"
+  ],
+  "productUnchanged": true,
+  "ownedProcessesRemaining": 0,
+  "displaySocketAbsent": true
+}

@@ -1,0 +1,55 @@
+{
+  "key": "KAN-89",
+  "fields": {
+    "summary": "[Linux/KDE] タスク切替にFirefoxアイコンが出る（GitHub #2713）",
+    "description": "## GitHub原報告\n\nhttps://github.com/Floorp-Projects/Floorp/issues/2713\n\n## 報告内容（現行ビルド未検証）\n\n12.17.1/Manjaro Xorg FlatpakでFloorpのウィンドウがAlt+TabなどでFirefoxのアイコンになる。言語パック由来のbrandingを指摘した#2897と関連する可能性がある。\n\n## 暫定トリアージ\n\nP3。安定化候補、確定修正ではない。\n\n## 次の一手\n\n日本語/英語言語パック、デスクトップファイル名、GTKアイコンテーマ、\\_NET_WM_ICONを比較しKAN-23との重複を判定。\n\n## 完了・整理条件\n\n原因が同じならKAN-23の修正検証に統合し、異なる場合は追加の対応条件を記録。  \n対象バージョン・再現結果・修正PR等を記録する。",
+    "status": {
+      "name": "未着手",
+      "statusCategory": {
+        "name": "To Do"
+      }
+    },
+    "labels": [
+      "area-platform",
+      "env-blocked",
+      "floorp-github-import-2026-11",
+      "needs-kwin-desktop-association",
+      "needs-original-manjaro-kde",
+      "needs-repro",
+      "p3",
+      "qa-linux-executed",
+      "related-gh-2897",
+      "triage-reviewed"
+    ]
+  },
+  "commentPagination": {
+    "total": 4,
+    "isLast": true
+  },
+  "comments": [
+    {
+      "id": "10141",
+      "body": "## 原報告・現状の照合（2026-11-05）\n\n**分類: 現行版未検証。** [GitHub #2713](https://github.com/Floorp-Projects/Floorp/issues/2713) は OPEN。原報告とコメント、Jira既存記録を確認した。報告者間でFlatpak固有か意見が分かれており、原因確定ではない。\n\n対象コード調査の基準: Floorp main `984509d2053be7bae9027133bda7259cd706b208`。製品の実行・OS/Firefoxバージョン・テストログは今回未取得。報告時の環境と再現手順は上記原報告に記載。Issue のクロス参照は確認したが、参照がないことは他の修正PRの不存在を意味しない。\n\n**次の行動:** 日本語/英語言語パック、デスクトップファイル名、GTKアイコンテーマ、\\_NET_WM_ICONを比較しKAN-23との重複を判定。 この結果で報告症状を再現できたか、上流または既修正かを判定し、環境・版・ログを追記する。",
+      "created": "2026-11-05T18:33:54.342+0900",
+      "updated": "2026-11-05T18:33:54.342+0900"
+    },
+    {
+      "id": "10174",
+      "body": "## 環境制約（2026-11-05）\n\n報告された KDE/Xorg と Flatpak の組合せは今回確認できていない。 利用を直接確認したLinux機は Debian 13.7 / X11 と Windows上の Ubuntu 24.04 WSLg。接続先を網羅的に調べた結果ではない。したがって報告環境での再現は環境不足で未検証とする。代替として利用可能なLinuxでコード・自動テスト・条件を先に確認し、実環境が確保できたら元報告と比較する。OSを偽装しない。",
+      "created": "2026-11-05T18:36:08.050+0900",
+      "updated": "2026-11-05T18:36:08.050+0900"
+    },
+    {
+      "id": "10293",
+      "body": "## Cloud担当A 実Flatpakブランド経路追試（2026-11-05）\n\n公式Flatpak Floorp12.21.1/Gecko159.0.1 runtime26.08 app ab3c23d5…、source `984509d2053be7bae9027133bda7259cd706b208`、Debian13/Xvfb X11、新規専用HOME/profile・通常sessionbus。enUS→通常導入した署名済active esCLでeffective brandShortName Floorp→Firefoxを実測、2起動ともnormal exit0、sandbox pref6。署名/sandbox無効化なし。\n\nmain X11 windowはroot-treeに存在するがFlatpak mainの\\_NET_WM_ICON採取は有効propertyを得られず。leaderとmainでWM_CLASS/namespacePIDが異なり、初期同定方法の不足を記録。これは原KDE Alt+Tab誤アイコンの再現でも合格でもない。KAN23はnative tarball+GTK themeで画像まで実再現し[Draft3030](https://github.com/Floorp-Projects/Floorp/pull/3030)があるが、本件との原因同一・duplicate確定とはしない。\n\n残条件: 原Manjaro/KDE6.7.4/Xorg/Flatpak task switching・theme/locale・main/Alt+Tab実pixel。今回復旧したnested KDEはWaylandで、KDE/Xorgと同一扱いしない。新規duplicate PR・Done化なし。[reportとscript](https://github.com/Floorp-Projects/Floorp/tree/codex/qa-linux-package-pwa/docs/qa/linux-22/package-pwa/KAN-89)、[Flatpak観測](https://github.com/Floorp-Projects/Floorp/tree/codex/qa-linux-package-pwa/docs/qa/linux-22/package-pwa/branding)。",
+      "created": "2026-11-05T23:43:30.348+0900",
+      "updated": "2026-11-05T23:43:30.348+0900"
+    },
+    {
+      "id": "10321",
+      "body": "KAN-89集中追試: 独立Xvfb90/KWin6.3.6 X11/Plasmaで公式Flatpak12.21.1のen-US/ja/es-CLを比較。root \\_NET_CLIENT_LIST/\\_STACKINGからNormal WM_STATE・unique fixture title・class・geometryを照合し、ProfD/実行pathもguard。frame/leader誤同定を除外した実main clientで\\_NET_WM_ICONと\\_PIDは3条件とも不在。属性不在なのでPNG画素一致とは扱わない。\n\n通常AddonManagerのja/esCL signedState2 activeを維持し、GTK standalone helperで実sandboxテーマのfloorp/firefox64px可視を確認。公式desktop exports、通常menu prefix、元desktopのExec先/usr/bin/flatpak不存在を専用copyの実prefixへのExec移設だけで補正（他行/Icon/StartupWMClass/引数完全同一）。通常launcher/KStart対照も実行。最終taskbarは3localeともFloorp32参照とほぼ一致(mean absolute channel差0.01595/max1)、一方Alt+Tabは全言語同一の汎用X画像(RGB SHA bf3a692967beb4e16bad826652f0c594b2a762662530ed9d84c961e0b588f956)。Firefoxロゴは未観測。全3run通常exit0/sandbox6、署名/製品保護/WM制限解除なし。\n\n区分: 元Firefox-logo症状未再現、期待する全画面Floorp表示合格や既修正とはしない。KWin desktopFileName空・generic AltTab associationがこのprefix環境の残条件。原Manjaro/KDE6.7.4/Xorg/package/正常Flatpak portalとの対応を残す。KAN23とはlegacyブランド経路の関連のみで症状/原因一致は未実証、duplicate/3030 verifiedfixとは記録しない。新規製品修正/PR変更なし、未Done。[正確client一覧・3言語画像・既知PNG比較・再現script](https://github.com/Floorp-Projects/Floorp/tree/codex/qa-linux-package-pwa/docs/qa/linux-22/package-pwa/KAN-89/followup)。",
+      "created": "2026-11-06T01:07:48.728+0900",
+      "updated": "2026-11-06T01:07:48.728+0900"
+    }
+  ]
+}

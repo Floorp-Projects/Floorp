@@ -1,0 +1,33 @@
+{
+  "trackedDesktopProcesses": [
+    {
+      "kind": "xvfb",
+      "pid": 154178,
+      "aliveNonZombie": false,
+      "state": "Z"
+    },
+    {
+      "kind": "bus",
+      "pid": 154202,
+      "aliveNonZombie": false,
+      "state": "Z"
+    },
+    {
+      "kind": "kwin",
+      "pid": 154251,
+      "aliveNonZombie": false,
+      "state": null
+    },
+    {
+      "kind": "plasma",
+      "pid": 154546,
+      "aliveNonZombie": false,
+      "state": null
+    }
+  ],
+  "allTrackedDesktopExited": true,
+  "displaySocketPresent": false,
+  "displayLockPresent": false,
+  "browserProcessesRemaining": false,
+  "scope": "tracked owned browser and session pids; no unrelated process killed"
+}

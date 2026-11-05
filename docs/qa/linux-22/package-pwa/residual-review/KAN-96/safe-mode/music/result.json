@@ -1,0 +1,97 @@
+{
+  "sourceSha": "29a3eb23145da90706d8a94441373278521cc737",
+  "actualRequestedSite": "https://music.youtube.com/",
+  "proxy": "inherited normal managedproxy via dedicated-profile standard prefs",
+  "acceptInsecureCerts": false,
+  "noAuthConsentPlaybackOrProxyBypass": true,
+  "normalQuits": [
+    {
+      "response": {
+        "cause": "shutdown",
+        "forced": false,
+        "in_app": true
+      },
+      "exitCode": 0
+    }
+  ],
+  "explicitSessionCapabilities": {
+    "acceptInsecureCerts": false,
+    "browserName": "floorp",
+    "browserVersion": "159.0.1",
+    "platformName": "linux",
+    "setWindowRect": true,
+    "unhandledPromptBehavior": "dismiss and notify",
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64; rv:159.0) Gecko/20100101 Firefox/159.0",
+    "moz:buildID": "20261103153232",
+    "moz:headless": false,
+    "moz:platformVersion": "6.18.57",
+    "moz:processID": 158178,
+    "moz:profile": "/workspace/qa-linux-22/package-pwa/residual-review/KAN-96/safe-mode/music/run/profile",
+    "moz:shutdownTimeout": 73000,
+    "pageLoadStrategy": "normal",
+    "timeouts": {
+      "implicit": 0,
+      "pageLoad": 300000,
+      "script": 30000
+    },
+    "strictFileInteractability": false,
+    "moz:accessibilityChecks": false,
+    "moz:webdriverClick": true,
+    "moz:windowless": false,
+    "capabilities": {
+      "alwaysMatch": {
+        "acceptInsecureCerts": false
+      }
+    },
+    "proxy": {}
+  },
+  "identity": {
+    "inSafeMode": true,
+    "version": "159.0.1",
+    "buildID": "20261103153232",
+    "profile": "/workspace/qa-linux-22/package-pwa/residual-review/KAN-96/safe-mode/music/run/profile",
+    "sandbox": 6,
+    "disabled": false
+  },
+  "normalProxyCaTrust": {
+    "subject": "CN=openai.com,O=\"OpenAI, LLC\",L=San Francisco,ST=California,C=US",
+    "issuer": "CN=openai.com,O=\"OpenAI, LLC\",L=San Francisco,ST=California,C=US",
+    "sha256Fingerprint": "C7:1B:4D:1E:9D:77:75:C5:38:C6:88:AB:10:CE:A9:CE:41:7D:73:12:E8:98:38:F9:D1:5F:F7:32:56:CD:7F:C3",
+    "osDefaultTrustContainsSameCa": true,
+    "source": "existing OS-trusted environment-proxy-ca.crt, exact fingerprint checked; dedicatedNSSprofile only; no certDB/PEM publication"
+  },
+  "navigationError": "WebDriver:Navigate: {'error': 'unknown error', 'message': 'Reached error page: about:neterror 'stacktrace': 'RemoteError@chrome://remote/content/shared/RemoteError.sys.mjs:14:8\\nWebDriverError@chrome://remote/content/shared/webdriver/Errors.sys.mjs:169:5\\nUnknownError@chrome://remote/content/shared/webdriver/Errors.sys.mjs:960:5\\ncheckReadyState@chrome://remote/content/marionette/navigate.sys.mjs:59:24\\nonNavigation@chrome://remote/content/marionette/navigate.sys.mjs:364:39\\nemit@resource://gre/modules/EventEmitter.sys.mjs:156:19\\nreceiveMessage@chrome://remote/content/marionette/actors/MarionetteEventsParent.sys.mjs:33:25\\n'}",
+  "content": {
+    "location": {
+      "url": "https://music.youtube.com/",
+      "queryPresent": false
+    },
+    "documentURI": {
+      "url": "about://neterror",
+      "queryPresent": true
+    },
+    "title": "Problem loading page",
+    "text": "",
+    "ready": "interactive",
+    "isSecureContext": true,
+    "crossOriginIsolated": false,
+    "manifest": null
+  },
+  "browser": {
+    "inSafeMode": true,
+    "url": "https://music.youtube.com/",
+    "remoteType": "webIsolated=https://youtube.com",
+    "actor": "NotSupportedError: WindowGlobalParent.getActor: Window protocol 'NRProgressiveWebApp' doesn't match uri about:neterror",
+    "securityState": 4,
+    "isErrorPage": true,
+    "installButton": false
+  },
+  "blockedOrErrorPage": true,
+  "actualSiteUiInstallAttempted": false,
+  "stopReason": "actual page/network/consent barrier retained; no alternativehost, playback, auth or consent action",
+  "siteElapsedSeconds": 2.94,
+  "completed": true,
+  "productUnchanged": true,
+  "ownedProcessesRemaining": 0,
+  "displaySocketAbsent": true
+}

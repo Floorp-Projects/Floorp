@@ -1,0 +1,52 @@
+[
+  {
+    "url": "https://www.vtmgo.be/vtmgo/assets/vtmgo/manifest.json",
+    "scope": "host verified HTTP metadata only; never substituted into browser",
+    "status": 200,
+    "sha256": "cce26ae5f50296290f1158f23c8fd4e688d2c22556bd1c1a398a2c422bf035d2",
+    "metadata": {
+      "name": "VTM GO",
+      "short_name": "VTM GO",
+      "start_url": "/vtmgo",
+      "scope": null,
+      "display": "standalone",
+      "icons": [
+        {
+          "src": "../../img/vtmgo/icon-192x192.png",
+          "type": "image/png",
+          "sizes": "192x192"
+        },
+        {
+          "src": "../../img/vtmgo/icon-512x512.png",
+          "type": "image/png",
+          "sizes": "512x512"
+        }
+      ]
+    }
+  },
+  {
+    "url": "https://www.vrt.be/vrtnu-resources/manifest/manifest.22-08-2024.json",
+    "scope": "host verified HTTP metadata only; never substituted into browser",
+    "status": 200,
+    "sha256": "19ee174fd2db3ca99dc403709a8ec855299ba5db66f845031f50a44bff9d6894",
+    "metadata": {
+      "name": "VRT MAX",
+      "short_name": "MAX",
+      "start_url": "/vrtmax/",
+      "scope": null,
+      "display": "standalone",
+      "icons": [
+        {
+          "src": "/vrtnu-resources/images/android-chrome-192x192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        },
+        {
+          "src": "/vrtnu-resources/images/android-chrome-384x384.png",
+          "sizes": "384x384",
+          "type": "image/png"
+        }
+      ]
+    }
+  }
+]

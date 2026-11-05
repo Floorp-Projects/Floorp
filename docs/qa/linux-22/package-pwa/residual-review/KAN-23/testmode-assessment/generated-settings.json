@@ -1,0 +1,146 @@
+{
+  "sourceSha": "e55152c559a141001a375ac77098d141b0db3ca7",
+  "generatedBy": "unmodified exported savePrefs(profile,{allowBrowserHttpLoader:true}), same helper called by normal feles-build test",
+  "generatedFileSha256": "80947dc3665507cbba6154fc0f1c8ee7d3c6ff073f471154ff894f06bc652609",
+  "generatedRecipeLaunched": false,
+  "liveBrowserProtectionChanged": false,
+  "generatedPreferences": {
+    "devtools.debugger.prompt-connection": false,
+    "security.disallow_privileged_https_script_loads": false,
+    "security.allow_parent_unrestricted_js_loads": true,
+    "security.sandbox.content.level": 1,
+    "remote.active-protocols": 1,
+    "browser.newtabpage.enabled": true,
+    "floorp.mcp.enabled": true,
+    "browser.sessionstore.resume_from_crash": false,
+    "nora.dev.allow_http_loader": true,
+    "security.chrome_baseline_csp.enabled": false
+  },
+  "sources": [
+    {
+      "path": "tools/feles-build.ts",
+      "gitBlob": "b0b2b6e622f0fe2bb1f6d5fa865f778f20731edd",
+      "sha256": "aa218eae42b46afa48572591f742608874c5963c216d0e5c3f0cf8880536d91c",
+      "contractLines": [
+        {
+          "line": 74,
+          "text": "allowBrowserHttpLoader: true,"
+        },
+        {
+          "line": 76,
+          "text": "DevEnvManager.setup({ allowBrowserHttpLoader: true });"
+        },
+        {
+          "line": 127,
+          "text": "await Initializer.run();"
+        },
+        {
+          "line": 143,
+          "text": "DevEnvManager.setup({ allowBrowserHttpLoader: false });"
+        },
+        {
+          "line": 187,
+          "text": "await Initializer.run();"
+        },
+        {
+          "line": 194,
+          "text": "await Builder.run(\"test\", buildid2);"
+        },
+        {
+          "line": 198,
+          "text": "allowBrowserHttpLoader: true,"
+        },
+        {
+          "line": 200,
+          "text": "DevEnvManager.setup({ allowBrowserHttpLoader: true });"
+        }
+      ]
+    },
+    {
+      "path": "tools/src/dev_env_manager.ts",
+      "gitBlob": "3548ff153011d6ee497efd28a68fd976ad3a2580",
+      "sha256": "a6e48b709de9fa7ad14e893081214c502efecc48cc7e65924ed23cbc3dc22609",
+      "contractLines": [
+        {
+          "line": 15,
+          "text": "'user_pref(\"security.chrome_baseline_csp.enabled\", false);';"
+        },
+        {
+          "line": 29,
+          "text": "user_pref(\"security.disallow_privileged_https_script_loads\", false);"
+        },
+        {
+          "line": 30,
+          "text": "user_pref(\"security.allow_parent_unrestricted_js_loads\", true);"
+        },
+        {
+          "line": 31,
+          "text": "user_pref(\"security.sandbox.content.level\", 1);"
+        },
+        {
+          "line": 47,
+          "text": "Deno.writeTextFileSync(p, buildUserJs(options));"
+        }
+      ]
+    },
+    {
+      "path": "tools/src/initializer.ts",
+      "gitBlob": "f971199ddf57e8fa39059a25be3a48310a15ba97",
+      "sha256": "7d133cbe734f9a259f27cce09f5c1a923eead2eb013324b6d1ea60272bb7a4f5",
+      "contractLines": [
+        {
+          "line": 859,
+          "text": "function markerMatches("
+        },
+        {
+          "line": 980,
+          "text": "if (parsed.version !== artifact.version) {"
+        },
+        {
+          "line": 985,
+          "text": "if (parsed.buildId !== artifact.buildId) {"
+        },
+        {
+          "line": 1169,
+          "text": "parsed.version !== artifact.version ||"
+        },
+        {
+          "line": 1170,
+          "text": "parsed.buildId !== artifact.buildId"
+        },
+        {
+          "line": 1336,
+          "text": "async function isMatchingLockedRuntime("
+        },
+        {
+          "line": 1344,
+          "text": "if (!markerMatches(marker, lockedRuntimeMarker(lock, artifact))) {"
+        },
+        {
+          "line": 1545,
+          "text": "if (await isMatchingLockedRuntime(binRootDir, options.lock, artifact)) {"
+        },
+        {
+          "line": 1573,
+          "text": "await validateLockedRuntimeArtifact({"
+        }
+      ]
+    }
+  ],
+  "decision": "do not invoke normal MODE=test bootstrap because generated sandbox1/CSPfalse conflicts with retained-protection qualification constraint",
+  "existingCache": {
+    "version": "157.0",
+    "buildId": "20260926171135",
+    "sourceCommit": "1553b7b550dfe555684628d175e0c1701a785d0b"
+  },
+  "requiredRuntime": {
+    "version": "159.0.1",
+    "buildId": "20261103153232",
+    "archiveBytes": 86774264,
+    "sourceCommit": "8965ffc346d426ccdf919bd18585e4d4a0c21654"
+  },
+  "freeBytesAtDecision": 934621184,
+  "nativeDownloadAttempted": false,
+  "sourceTrackedChanges": "",
+  "classification": "policy/configuration contract constraint, not product bug or lack of Linux"
+}

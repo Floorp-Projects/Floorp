@@ -1,0 +1,272 @@
+{
+  "sourceSha": "29a3eb23145da90706d8a94441373278521cc737",
+  "packageRun": 42093687541,
+  "artifact": 13446089131,
+  "input": "real product navigation, synthetic WebDriver; no physical-input claim",
+  "environment": "Debian13.6/native nestedKWin6.3.6/X106/normalDBus; no originalCachyOS qualification",
+  "sites": [
+    {
+      "label": "vtmgo",
+      "url": "https://www.vtmgo.be/",
+      "actualSite": true,
+      "content": {
+        "href": "https://myprivacy.dpgmedia.be/consent [query omitted; keys=callbackUrl,isLoggedIn,siteKey]",
+        "documentURI": "https://myprivacy.dpgmedia.be/consent [query omitted; keys=callbackUrl,isLoggedIn,siteKey]",
+        "title": "DPG Media Privacy Gate",
+        "text": "",
+        "ready": "complete",
+        "manifest": null,
+        "icons": [],
+        "secure": true
+      },
+      "product": {
+        "product": {
+          "name": "Floorp",
+          "version": "159.0.1",
+          "platformVersion": "159.0.1",
+          "buildID": "20261103153232"
+        },
+        "profile": "/workspace/qa-linux-22/package-pwa/residual-review/KAN-48/profile",
+        "remoteType": "webIsolated=https://dpgmedia.be",
+        "url": "https://myprivacy.dpgmedia.be/consent [query omitted; keys=callbackUrl,isLoggedIn,siteKey]",
+        "actor": {
+          "available": true
+        },
+        "elements": {
+          "ssbPageAction": null,
+          "ssb-panel": null,
+          "ssb-app-install-button": null,
+          "appMenu-ssb-button": null,
+          "appMenu-install-or-open-ssb-current-page-button": null
+        },
+        "experiment": false,
+        "sandbox": 6,
+        "windows": [
+          {
+            "title": "DPG Media Privacy Gate \u2014 Ablaze Floorp",
+            "type": "navigator:browser",
+            "ssbid": null,
+            "url": "https://myprivacy.dpgmedia.be/consent [query omitted; keys=callbackUrl,isLoggedIn,siteKey]"
+          }
+        ]
+      },
+      "eligibleForActualSiteInstall": false
+    },
+    {
+      "label": "vrtmax",
+      "url": "https://www.vrt.be/vrtmax/",
+      "actualSite": true,
+      "content": {
+        "href": "https://www.vrt.be/vrtmax/",
+        "documentURI": "https://www.vrt.be/vrtmax/",
+        "title": "VRT MAX | tv-programma\u2019s, podcasts en live radio",
+        "text": "Naar hoofdinhoud\nNaar audiodescriptie\nNaar help\nNaar nuttige links\nHoog contrast modus\nToon menu\nontdekken\nAanmelden\nHome\nMijn lijst\nRadio- en TV-gids\nKANALEN\nMEER\nVRT 1\nVRT CANVAS\nRadio 1\nRadio 2\nONTDEKKEN\nZOEK\nRadio\nPodcasts\nTV\nSeries\nFilms\nDocu's\nNieuws\nSport\nMuziek\nBELEEF MEE\nDoe mee\nLees mee\nLeer mee\nHelp\nNuttige links\nKijk en luister naar het strafste aanbod van VRT op VRT MAX\nVRT NWS Pano\n\nMeer dan 1 op de 4 Vlaamse jongeren is mantelzorger. Maar wie zorgt er voor hen? VRT NWS Pano geeft jonge mantelzorgers een gezicht.\n\nOnzichtbare zorg\nMoet je nu zien\nScrol de lijst naar links\nScrol de lijst naar rechts\nDe laatste lach\nVRT NWS Pano\nHet huis\nStart to race\nKamp Fly\nHacks\nAmadeus\nWisting\nEmily\nAlleen Elvis blijft bestaan\nLIVE\nEuropa League: Celta de Vigo - Union\n\nPakt Union de volle buit op bezoek bij Celta de Vigo en blijft het zo meedraaien in de hoogste regionenen van de Europa League?\n\nKijk nu\nEerste hulp bij klassiek\n\nFeestaflevering! Clara en Sander vieren de 100e aflevering groots met een live opname. Ze laten leeuwen brullen, zwanen zingen en kippen kakelen...\n\nVier en luister\nMeest bekeken series\nScrol de lijst naar links\nScrol de lijst naar rechts\nThuis\nFC De Kampioenen\nWisting\nDe twaalf met audiodescriptie\nBreendonk\nWitse met audiodescriptie\nAmadeus\nUnited\nHacks\nDevil in disguise\nKlik hier om meer pagina-inhoud te tonen\n\nVRT MAX is het online streamingplatform van VRT.\n\nMOBIELE APP\n\nVolg VRT MAX op je smartphone of tablet.\nBeschikbaar voor iOS en Android\n\nNIEUWSBRIEF\n\nSchrijf je in op onze nieuwsbrief en ontdek als eerste nieuwe programma's en podcasts\n\nSchrijf je in\nBEOORDEEL JOUW ERVARING\n\nHelp ons VRT MAX te verbeteren\n\nBeoordeel jouw ervaring\nHelp\nVeelgestelde vragen\n(opent in een nieuw venster)\nContact\n(opent in een nieuw venster)\nOver VRT\n(opent i",
+        "ready": "complete",
+        "manifest": "https://www.vrt.be/vrtnu-resources/manifest/manifest.22-08-2024.json",
+        "icons": [
+          {
+            "rel": "shortcut icon",
+            "href": "https://www.vrt.be/vrtnu-resources/images/favicon_max.ico",
+            "sizes": ""
+          },
+          {
+            "rel": "mask-icon",
+            "href": "https://www.vrt.be/vrtnu-resources/images/safari-pinned-tab_max.svg",
+            "sizes": ""
+          },
+          {
+            "rel": "apple-touch-icon",
+            "href": "https://www.vrt.be/vrtnu-resources/images/apple-touch-icon_max.png",
+            "sizes": ""
+          },
+          {
+            "rel": "icon",
+            "href": "https://www.vrt.be/vrtnu-resources/images/favicon-16x16_max.png",
+            "sizes": "16x16"
+          },
+          {
+            "rel": "icon",
+            "href": "https://www.vrt.be/vrtnu-resources/images/favicon-32x32_max.png",
+            "sizes": "32x32"
+          }
+        ],
+        "secure": true
+      },
+      "product": {
+        "product": {
+          "name": "Floorp",
+          "version": "159.0.1",
+          "platformVersion": "159.0.1",
+          "buildID": "20261103153232"
+        },
+        "profile": "/workspace/qa-linux-22/package-pwa/residual-review/KAN-48/profile",
+        "remoteType": "webIsolated=https://vrt.be",
+        "url": "https://www.vrt.be/vrtmax/",
+        "actor": {
+          "available": true
+        },
+        "elements": {
+          "ssbPageAction": {
+            "hidden": false,
+            "disabled": null,
+            "state": null,
+            "label": null,
+            "rect": {
+              "x": 823,
+              "y": 40,
+              "width": 28,
+              "height": 28
+            }
+          },
+          "ssb-panel": {
+            "hidden": false,
+            "disabled": null,
+            "state": "closed",
+            "label": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 0,
+              "height": 0
+            }
+          },
+          "ssb-app-install-button": {
+            "hidden": false,
+            "disabled": false,
+            "state": null,
+            "label": "Install Application",
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 0,
+              "height": 0
+            }
+          },
+          "appMenu-ssb-button": null,
+          "appMenu-install-or-open-ssb-current-page-button": null
+        },
+        "experiment": false,
+        "sandbox": 6,
+        "windows": [
+          {
+            "title": "VRT MAX | tv-programma\u2019s, podcasts en live radio \u2014 Ablaze Floorp",
+            "type": "navigator:browser",
+            "ssbid": null,
+            "url": "https://www.vrt.be/vrtmax/"
+          }
+        ]
+      },
+      "eligibleForActualSiteInstall": true,
+      "storeBefore": {
+        "path": "/workspace/qa-linux-22/package-pwa/residual-review/KAN-48/profile/ssb/ssb.json",
+        "apps": []
+      },
+      "storeAfter": {
+        "path": "/workspace/qa-linux-22/package-pwa/residual-review/KAN-48/profile/ssb/ssb.json",
+        "apps": [
+          {
+            "id": "{54e02a83-a477-4acf-b027-2a7eea2c788e}",
+            "name": "VRT MAX",
+            "start_url": "https://www.vrt.be/vrtmax/",
+            "userContextId": 0
+          }
+        ]
+      },
+      "afterInstall": {
+        "product": {
+          "name": "Floorp",
+          "version": "159.0.1",
+          "platformVersion": "159.0.1",
+          "buildID": "20261103153232"
+        },
+        "profile": "/workspace/qa-linux-22/package-pwa/residual-review/KAN-48/profile",
+        "remoteType": "webIsolated=https://vrt.be",
+        "url": "https://www.vrt.be/vrtmax/",
+        "actor": {
+          "available": true
+        },
+        "elements": {
+          "ssbPageAction": {
+            "hidden": false,
+            "disabled": null,
+            "state": null,
+            "label": null,
+            "rect": {
+              "x": 823,
+              "y": 40,
+              "width": 28,
+              "height": 28
+            }
+          },
+          "ssb-panel": {
+            "hidden": false,
+            "disabled": null,
+            "state": "closed",
+            "label": null,
+            "rect": {
+              "x": 463,
+              "y": 64,
+              "width": 392,
+              "height": 238
+            }
+          },
+          "ssb-app-install-button": {
+            "hidden": false,
+            "disabled": false,
+            "state": null,
+            "label": "Install Application",
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 0,
+              "height": 0
+            }
+          },
+          "appMenu-ssb-button": null,
+          "appMenu-install-or-open-ssb-current-page-button": null
+        },
+        "experiment": false,
+        "sandbox": 6,
+        "windows": [
+          {
+            "title": "VRT MAX | tv-programma\u2019s, podcasts en live radio \u2014 Ablaze Floorp",
+            "type": "navigator:browser",
+            "ssbid": null,
+            "url": "https://www.vrt.be/vrtmax/"
+          },
+          {
+            "title": "VRT MAX \u2014 Ablaze Floorp",
+            "type": "navigator:browser",
+            "ssbid": null,
+            "url": "https://www.vrt.be/vrtmax/"
+          }
+        ]
+      }
+    }
+  ],
+  "proxy": "inherited session proxy selected through normal per-profile network prefs; no credentials printed",
+  "acceptInsecureCerts": false,
+  "identity": {
+    "version": "159.0.1",
+    "buildID": "20261103153232",
+    "profile": "/workspace/qa-linux-22/package-pwa/residual-review/KAN-48/profile",
+    "sandbox": 6,
+    "disable": false,
+    "experiment": false
+  },
+  "browserProxyCaTrust": {
+    "subject": "CN=openai.com,O=\"OpenAI, LLC\",L=San Francisco,ST=California,C=US",
+    "issuer": "CN=openai.com,O=\"OpenAI, LLC\",L=San Francisco,ST=California,C=US",
+    "sha256Fingerprint": "C7:1B:4D:1E:9D:77:75:C5:38:C6:88:AB:10:CE:A9:CE:41:7D:73:12:E8:98:38:F9:D1:5F:F7:32:56:CD:7F:C3",
+    "source": "existing OS-trusted configured environment-proxy-ca.crt, issuer matched to verified host TLS peers; dedicated profile only"
+  },
+  "completed": true,
+  "normalQuit": {
+    "cause": "shutdown",
+    "forced": false,
+    "in_app": true
+  },
+  "exitCode": 0,
+  "productUnchanged": true,
+  "ownedBrowserRemaining": false
+}

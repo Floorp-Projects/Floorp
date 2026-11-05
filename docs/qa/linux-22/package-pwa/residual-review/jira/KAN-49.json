@@ -1,0 +1,82 @@
+{
+  "key": "KAN-49",
+  "fields": {
+    "summary": "[Linux/PWA] 複数のPWAが先に起動したアプリのWindow Classを共有（#2649）",
+    "description": "## 原報告\n\nhttps://github.com/Floorp-Projects/Floorp/issues/2649\n\n## 報告内容・影響（独立検証前）\n\n12.16.4/Manjaro KDEで複数PWAを起動すると、2つ目以降のWindow Class/タスクバーアイコンが最初に起動したPWAのものになるとの報告。\n\n## 暫定トリアージ\n\nP2。#2800との重複可能性があるが『2個目以降が最初のクラスを継承』という別の再現条件があるため独立起票。\n\n## 再現・切り分け手順\n\nOutlook/Teamsなど2 PWAを異なる順番で起動し、WM_CLASS/app_id/WindowGroupとデスクトップファイルの対応を比較。#2800と症状を区別する。\n\n## 完了条件\n\n各PWAウィンドウが固有のclass/アプリIDを持ち、起動順によらず正しく識別される。  \n検証ビルド・回帰テスト結果・未解決時の次のアクションをJiraに残す。\n\n## 次の一手\n\nOutlook/Teamsなど2 PWAを異なる順番で起動し、WM_CLASS/app_id/WindowGroupとデスクトップファイルの対応を比較。",
+    "status": {
+      "name": "進行中",
+      "statusCategory": {
+        "name": "進行中"
+      }
+    },
+    "labels": [
+      "area-pwa",
+      "draft-pr",
+      "env-blocked",
+      "floorp-stability-2026-11",
+      "full-package-verified",
+      "needs-manjaro-kde",
+      "needs-profile-lock-cause",
+      "p2",
+      "qa-linux-executed",
+      "related-gh-2800",
+      "related-pr-3040",
+      "reproduced-in-test",
+      "triage-reviewed"
+    ]
+  },
+  "commentPagination": {
+    "total": 8,
+    "isLast": true
+  },
+  "comments": [
+    {
+      "id": "10098",
+      "body": "## 原報告・既存調査の照合（2026-11-05）\n\nGitHub #2649: Manjaro KDE / 12.16.4 で複数PWAが先に起動したFloorpのクラスやアイコンを共有する報告。#2800と重複可能性はあるが確定しない。次: 新規プロファイルで2 PWAを各起動順序で作成し Wayland/X11 のウィンドウ識別子とdesktop fileを比較。区分: Linux/KDE原環境未検証。\n\n参照 main `984509d2053be7bae9027133bda7259cd706b208`。今回のブラウザーテストは未実施。Issue番号で直接対象を示すPRは検索で確認できず、関連PRが存在しない証明ではない。状態は変更しない。",
+      "created": "2026-11-05T18:30:39.210+0900",
+      "updated": "2026-11-05T18:30:39.210+0900"
+    },
+    {
+      "id": "10162",
+      "body": "## 追加コード照合（2026-11-05）\n\n別セッションの `1dcbf738be3ed92ae49743e09ac131cdc4520464` 調査: `Linux.sys.mts` は launcher名・`--name`・StartupWMClass を同一slugから作るが、同一プロセスの各実ウィンドウで一致する保証ではない。KAN-48の単体起動の報告と条件が異なり、同一原因は未確定。起動順と実IDの計測が必要。\n\n別セッションの調査記録 `E:\\floorp-browser-dev\\outputs\\pwa-webcompat.md`（Jira未添付）。実行結果と静的仮説は区別する。",
+      "created": "2026-11-05T18:34:47.339+0900",
+      "updated": "2026-11-05T18:34:47.339+0900"
+    },
+    {
+      "id": "10275",
+      "body": "## Cloud担当A 実起動順比較とDraft修正（2026-11-05）\n\n公式12.21.1/Gecko159.0.1 source `984509d2053be7bae9027133bda7259cd706b208`、Debian13/Xvfb X11、実UIで2PWAを作成。Alpha→Beta→browser、逆順、browser先行の3順で両PWAのWM_CLASSが共通floorp、desktop固有StartupWMClassと不一致。原報告の「最初PWA固有classを後続が継承」そのものは今回未再現で、現行の共有class欠陥を区別する。\n\n[Draft PR3032](https://github.com/Floorp-Projects/Floorp/pull/3032) head `06aaf5893645d2a33106e7657d0e0a58aa6029e0`。Linux window作成時、既に生成したlauncher identityをGecko既存taskbartabclassへ渡す限定修正。2JS資源だけ変えた製品コピーでは3順全てPWA固有class一致・browser floorp維持。全6試験normal quit forced=false、sandbox pref6、taskbar experiment=false維持。追加test本文を実製品で実行しbaseline fail→candidate pass。型/lint/fmt/diff成功。gate強制なし。\n\nfull source build/標準runner/CI、Manjaro/KDE/Outlook/Teams・Wayland、legacyデータが残る。KAN48 icon表示は別検証。Done化/merge/releaseなし。[report](https://github.com/Floorp-Projects/Floorp/tree/codex/qa-linux-package-pwa/docs/qa/linux-22/package-pwa/KAN-49)、[baseline](https://github.com/Floorp-Projects/Floorp/tree/codex/qa-linux-package-pwa/docs/qa/linux-22/package-pwa/pwa-order-run/result.json)、[candidate](https://github.com/Floorp-Projects/Floorp/tree/codex/qa-linux-package-pwa/docs/qa/linux-22/package-pwa/pwa-order-candidate/result.json)。",
+      "created": "2026-11-05T23:33:09.292+0900",
+      "updated": "2026-11-05T23:33:09.292+0900"
+    },
+    {
+      "id": "10296",
+      "body": "CI追補: PR3032 head06aaf589の[run42045615354](https://github.com/Floorp-Projects/Floorp/actions/runs/42045615354)は最終success。初回Windowsは製品テスト前のlocked RuntimeダウンロードHTTP504で失敗、同SHAのfailed-only再試行を1回実施し成功。初回失敗を残し製品regressionとは扱わない。Ubuntu初回は標準browser281 modules成功0失敗、追加SsbCommandLineHandler.runAllTests含む。artifact13426070050を取得し109315bytes/SHA256 d3e115b3e7f82a638a72d13c3778647be646b1e31d1cd9fe591fa06929e4ac55一致。latest5jobs successを確認。実起動順比較とこの標準CIを区別して保存。[CI要約](https://github.com/Floorp-Projects/Floorp/tree/codex/qa-linux-package-pwa/docs/qa/linux-22/package-pwa/ci/pr3032)。Draft/未Doneを維持。",
+      "created": "2026-11-05T23:48:10.979+0900",
+      "updated": "2026-11-05T23:48:10.979+0900"
+    },
+    {
+      "id": "10302",
+      "body": "追加条件で実regressionを発見し修正: 初期候補06aaf589はnumeric/object型SSB idで、未修正製品が開けたwindowをearly class正規化のTypeErrorで開けなくした。Draft3032に追加した最終head8249e234adfbb3e877e4a20cf5f57d7264d9a447は文字列型候補のみを正規化し、既存name/URL fallbackへ進める最小guard＋回帰test。実API9ケース全てopen成功、通常文字列/欠落/brace-only等は期待launcher classとwindow一致。全フィールド無効なrecordの独立random tokenは従来限界として残し、ID移行へscope拡大していない。\n\n最終候補の新回帰test2本文成功、sandbox6/gatefalse/normalQuit維持。既存3順cold X11でearly importは実行済。追加native Waylandの実UI2PWA作成と全終了後のgenerated launcher cold Alpha→Beta起動でも、app_id・KWin resourceClass/desktopFile・desktop StartupWMClassが各固有値一致。これは原Manjaro/KDE taskbar icon全体の合格ではない。\n\n[補足詳報と再現script/JSON](https://github.com/Floorp-Projects/Floorp/tree/codex/qa-linux-package-pwa/docs/qa/linux-22/package-pwa/KAN-49/followup-validation.md)。旧head CI成功は歴史証拠、新head標準CI42050337102を別確認中。現時点Macは依存取得接続切断のinfra失敗、Ubuntu browser suite継続中。製品バグ/合格を捏造せずDraft/未Done維持。",
+      "created": "2026-11-06T00:08:57.537+0900",
+      "updated": "2026-11-06T00:08:57.537+0900"
+    },
+    {
+      "id": "10309",
+      "body": "最終head8249e234adfbb3e877e4a20cf5f57d7264d9a447の標準CI42050337102が最終success。追加SSB回帰testを含むSsbCommandLineHandler.runAllTestsを標準runnerが7341msで実行し、browser281 modules成功0失敗、downloaded Firefox8files/16tasks成功。artifact13427512330を取得し110385bytes/SHA2569c825202b8265319195d5e168e9d004db2a21468f1c4000508edd60dde3c84b8が公開digestと一致。最新5jobs successを確認。\n\n初回Macはnpm @oxlint/binding-darwin-arm64依存取得のbody-read connection failureで製品テスト前に失敗。同SHAの当該jobをrun終了後1回再試行しsuccess、失敗履歴も保存。run進行中の初回retry要求は403で未実行だったことを区別。旧head06aaf589のCI成功とは混同しない。full source product build・原Manjaro/KDE/Outlook/Teamsとtaskbar icon pixels、全空欄legacy recordの既存random限界は残す。Draft/未Done。[最終head CI実証](https://github.com/Floorp-Projects/Floorp/tree/codex/qa-linux-package-pwa/docs/qa/linux-22/package-pwa/ci/pr3032-final)。",
+      "created": "2026-11-06T00:21:54.676+0900",
+      "updated": "2026-11-06T00:21:54.676+0900"
+    },
+    {
+      "id": "10353",
+      "body": "## 完全製品による冷間PWA対照（2026-11-05 UTC）\n\nDraft3032最終head8249e234adfbb3e877e4a20cf5f57d7264d9a447の既存 unsigned stable-v2-validation完全package [CI42068055038](https://github.com/Floorp-Projects/Floorp/actions/runs/42068055038)成功。baseline984509d2も同工程CI42068377281成功。全本番Floorpソース→mach artifactbuild/inject/packageで、互換Runtime8965ffc346d426ccdf919bd18585e4d4a0c21654/lock不変。Gecko native全再コンパイルや署名配布ではない。\n\n最終artifact13436721142 ZIP SHA256 fc338fa4cd3307c7a8937b2b99c97c18a1665e23b3b561680662fddfc3b336e5をAPI size/digest/head/runで認証。製品資源差替なし。baseline/candidate×X11/native nested Waylandの4fresh環境で、各同製品UIから2PWAを作り、その生成Execを全終了後Alpha→Beta→通常browserで起動。\n\nbaseline X11は両PWA class=floorp。baseline WaylandはBetaがAlpha app_idを継承し、原報告の継承パターンをDebian/KWin6.3.6で再現。候補は両protocolで2PWA各固有class/app_id・生成desktopと一致。Wayland protocolとKWin行で裏付け。36/36旧/不正SSB API window open、12回in-app正常Quit、sandbox6/rolloutfalse、製品inventory不変、ownedprocess0。\n\n重要な残条件: PWA先行後の通常browserはWaylandでAlpha app_idを継承し、baseline/candidate両方で残存。PWAwindowの修正範囲と分け、全window問題解決とは扱わない。原Manjaro/KDE/Outlook/Teams/taskbarpixels、全フィールド無効recordの既存randomidentity限界も残す。実Servicesはnative159.0.1/BuildID20261103153232。未使用と明記されたrootINIのpackaging-time値とは別記録。\n\n[比較報告](https://github.com/Floorp-Projects/Floorp/tree/4e73dd3bc926636591af9b31cfcbcd692bef0e13/docs/qa/linux-22/package-pwa/full-build/pwa-fullpackage-report.md)、[machine matrix](https://github.com/Floorp-Projects/Floorp/tree/4e73dd3bc926636591af9b31cfcbcd692bef0e13/docs/qa/linux-22/package-pwa/full-build/pwa-fullpackage-matrix.json)。full-build条件のみ解消、原OS環境不足は保持。新規推測修正/PR変更、merge/release/Done化なし。",
+      "created": "2026-11-06T02:22:53.622+0900",
+      "updated": "2026-11-06T02:22:53.622+0900"
+    },
+    {
+      "id": "10378",
+      "body": "## KAN-49 通常ブラウザーのWayland識別子を修正・完全製品対照（2026-11-05 UTC）\n\n[依存Draft3040](https://github.com/Floorp-Projects/Floorp/pull/3040) source2deb165d75290ffd4f602ad078512dc42fc3a332。既存Draft3032 head8249e234は変更せず、そのbranchをbaseとする3files/1commitの追補です。\n\n原因: 初回PWAの--nameがGTKプロセス全体の識別子になる一方、3032はPWA窓だけに個別classを指定していた。Linuxのinitial --start-ssb時のみ既存の同期pre-layout categoryを登録し、class未指定の通常窓へcanonical remotingNameを指定。PWA/taskbar/既存classは維持し、通常browser先行・remote PWAでは登録しない。native interface/実験gate/Runtime lock/desktop・profile IDは変更しない。\n\n[標準CI42077116984](https://github.com/Floorp-Projects/Floorp/actions/runs/42077116984)全5jobs成功、281modules成功0失敗、新回帰を含むSSB module実行・artifact13438134467 SHA認証済。実4test moduleもmockなしで成功。[完全packageCI42077174018](https://github.com/Floorp-Projects/Floorp/actions/runs/42077174018)成功、unsigned installer13439144608をAPI source/run/size/digestで認証。\n\n未改変の完全製品・追跡なし最終R2で6/6 nativeWayland条件成功: browser→PWA、PWA→browser、複数PWA、既存QAprofile/旧launcher、custom --name通常browser→remotePWA→2つ目通常窓、実private窓。実set_app_id通信/KWin desktop対応を確認し、通常窓floorp・各PWA固有、custom名/private状態を維持。全product inventory・元profile/home/store不変、sandbox6/rolloutfalse、7正常終了・owned0。3032完全製品の対照6件は通常先行/customの2件成功、継承4件再現。補足X11実WM_CLASSも成功。\n\n重要な保持事項: 初回の完全製品試験は4identity条件が一致したが、writable appdirに.parentlock/lockが追加され保全gateで停止（qualified=false）。既存file bytes不変、残controls未実行を保持。別展開のtrace診断で再現せず、さらに新規の未追跡R2は厳密gate変更なしで6件成功。最初のlock生成源は未特定、修正済み/環境障害とは断定しない。例外登録・保護無効化・推測追加修正なし。\n\n[全報告・最終/失敗matrix・再現script・native通信・cleanup](https://github.com/Floorp-Projects/Floorp/tree/223e6cd2ccbd3d33e8e5bfc60842172219d182b5/docs/qa/linux-22/package-pwa/wayland-browser-identity)。今回の製品は自担当standalone unsigned package由来、互換prebuiltRuntime8965ffc346d426ccdf919bd18585e4d4a0c21654使用。Cloud Bの未取得strict/XPT候補と同一成果扱いしない。新helper XPTは追加していない。\n\nneeds-wayland-browser-groupingは今回満たして除去。原Manjaro/KDE/Outlook/Teams/taskbar pixels・全フィールド無効legacy randomidentity・上記lock原因は残す。進行中/Draft維持、merge/release/配信変更/Done化なし。",
+      "created": "2026-11-06T03:26:52.605+0900",
+      "updated": "2026-11-06T03:26:52.605+0900"
+    }
+  ]
+}

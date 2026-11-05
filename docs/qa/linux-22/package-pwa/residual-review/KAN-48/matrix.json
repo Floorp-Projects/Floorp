@@ -1,0 +1,55 @@
+[
+  {
+    "key": "KAN-48",
+    "github": "https://github.com/Floorp-Projects/Floorp/issues/2800",
+    "sourceSha": "29a3eb23145da90706d8a94441373278521cc737",
+    "productVersion": "Floorp12.21.1/Gecko159.0.1/BuildID20261103153232",
+    "environment": "Debian13.6; native nestedKWin6.3.6/normalDBus/Xvfb106; sandbox6/gatefalse; real synthetic WebDriver; not originalCachyOS/GPU",
+    "testCommand": "python3 session.py start --baseline; python3 session.py repair-prefix; python3 probe.py; python3 cold_site.py; python3 compare_pixels.py; python3 session.py stop",
+    "result": "new real VRTMAX actual-site install/coldlaunch/taskbar icon comparison completed; unique native app_id/launcher/KWin association match; renderedVRTicon close to generatedPNG MAE0.4316/max1 versusFloorp117.61; wrongFloorpicon not reproduced in this current condition",
+    "newConditionsMeasured": [
+      "Real originalreport VRTMAX HTTPS page/manifest/icon rather than flat fixture",
+      "ConfiguredOS proxyCA trust gap recovered normally in dedicatedprofile withoutTLS bypass",
+      "Generatedlauncher coldnativeWayland app_id/KWin/taskbar pixels of actualsite"
+    ],
+    "remainingConditions": [
+      "Original CachyOS/KDE6.7.5/pacman/reporterversion/profile/full desktop",
+      "VTMGO privacygate redirected no actualappmanifest; its originalPWA not qualified",
+      "Original correctassociation/wrongFloorpicon cause stillunreproduced; no GPU/physicalinput claim"
+    ],
+    "existingPr": [
+      "https://github.com/Floorp-Projects/Floorp/pull/3032",
+      "https://github.com/Floorp-Projects/Floorp/pull/3040"
+    ],
+    "prRelation": "related identity fixes only, not demonstrated fix of originalKAN48symptom",
+    "newPr": null,
+    "evidence": [
+      "report.md",
+      "result.json",
+      "cold-result.json",
+      "pixel-comparison.json",
+      "native-app-id-excerpt.txt",
+      "vrtmax-cold-taskbar.png",
+      "actual-vrtmax-task-icon.png",
+      "generated-vrtmax-icon.png",
+      "reference-floorp32.png",
+      "host-site-availability.json",
+      "original-site-manifests.json",
+      "verified-host-peer-issuers.json",
+      "cleanup-final.json",
+      "prefix-repair.json",
+      "product-hashes-before.json",
+      "product-hashes-after.json"
+    ],
+    "normalQuitCount": 3,
+    "productUnchanged": true,
+    "originalLinuxDenominator": 22,
+    "publicationExclusions": [
+      "home",
+      "profile",
+      "runtime",
+      "raw-local"
+    ],
+    "jiraCommentId": null
+  }
+]

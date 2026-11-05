@@ -1,0 +1,25 @@
+{
+  "profile": "/workspace/qa-linux-22/package-pwa/residual-review/KAN-96/run/profile",
+  "exe": "/workspace/qa-linux-additional/KAN-24/followup/products/baseline/floorp/floorp",
+  "version": "159.0.1",
+  "buildID": "20261103153232",
+  "sandbox": 6,
+  "disabled": false,
+  "windows": [
+    {
+      "url": "about:blank",
+      "title": "Ablaze Floorp",
+      "ssbid": null,
+      "remoteType": "web",
+      "userContextId": null,
+      "originAttributes": {
+        "firstPartyDomain": "",
+        "geckoViewSessionContextId": "",
+        "partitionKey": "",
+        "privateBrowsingId": 0,
+        "userContextId": 0
+      },
+      "actor": "NotSupportedError: WindowGlobalParent.getActor: Window protocol 'NRProgressiveWebApp' doesn't match uri about:blank"
+    }
+  ]
+}

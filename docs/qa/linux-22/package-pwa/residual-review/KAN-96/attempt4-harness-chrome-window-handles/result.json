@@ -1,0 +1,47 @@
+{
+  "sourceSha": "29a3eb23145da90706d8a94441373278521cc737",
+  "productIntake": "/workspace/qa-linux-additional/KAN-24/followup/intake/baseline/product-intake.json",
+  "newCondition": "COOP same-origin / COEP require-corp; real container tab; not original external sites",
+  "input": "synthetic WebDriver real product install buttons; actual Firefox container API creates source tab",
+  "steps": [
+    {
+      "id": "default",
+      "requestedSourceContext": 0
+    }
+  ],
+  "normalQuits": [
+    {
+      "label": "failure-cleanup",
+      "response": {
+        "cause": "shutdown",
+        "forced": false,
+        "in_app": true
+      },
+      "exitCode": 0
+    }
+  ],
+  "containerGate": {
+    "containerExperiment": false,
+    "prefContainersEnabled": true
+  },
+  "containerIdentity": {
+    "userContextId": 7,
+    "public": true,
+    "icon": "fingerprint",
+    "color": "blue",
+    "name": "QA COOP Container"
+  },
+  "completed": false,
+  "error": "",
+  "traceback": "Traceback (most recent call last):\n  File \"/workspace/qa-linux-22/package-pwa/residual-review/KAN-96/probe.py\", line 55, in <module>\n    handlesAfter=m.call(\"WebDriver:GetWindowHandles\");newHandles=[h for h in handlesAfter if h not in handlesBefore];assert len(newHandles)==1\n                                                                                                                            ^^^^^^^^^^^^^^^^^^\nAssertionError\n",
+  "consoleFailure": [
+    "1793909534132\taddons.xpi\tWARN\tChecking /workspace/qa-linux-additional/KAN-24/followup/products/baseline/floorp/distribution/extensions for addons",
+    "Warning: attempting to write 7961 bytes to preference floorp.commandPalette.selectableCommands. This is bad for general performance and memory usage. Such an amount of data should rather be written to an external file.",
+    "Warning: attempting to write 7961 bytes to preference floorp.commandPalette.selectableCommands. This is bad for general performance and memory usage. Such an amount of data should rather be written to an external file.",
+    "[JavaScript Warning: \"unreachable code after return statement\" {file: \"moz-src:///toolkit/components/search/SearchService.sys.mjs\" line: 3024}]",
+    "[JavaScript Warning: \"Layout was forced before the page was fully loaded. If stylesheets are not yet loaded this may cause a flash of unstyled content.\" {file: \"chrome://noraneko-profile-manager/content/index.html\" line: 0}]"
+  ],
+  "productUnchanged": true,
+  "ownedProcessesRemaining": 0,
+  "displaySocketAbsent": true
+}

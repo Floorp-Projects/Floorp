@@ -1,0 +1,64 @@
+{
+  "key": "KAN-48",
+  "fields": {
+    "summary": "[Linux/PWA] KDEタスクバーでPWA固有アイコンが表示されない（#2800）",
+    "description": "## 原報告\n\nhttps://github.com/Floorp-Projects/Floorp/issues/2800\n\n## 報告内容・影響（独立検証前）\n\n12.18.1〜12.20.2/CachyOS・KDE WaylandでPWAのdesktop fileとapp_idが合っているのに、タスクバーはFloorpアイコンになる。実験ゲートpwa_taskbar_integration_linuxが公式manifestに存在しないという追加調査あり。\n\n## 暫定トリアージ\n\nP2。実験manifestを現在の配信内容と比較してから有効化・修正判断。\n\n## 再現・切り分け手順\n\nデスクトップファイル・KWin resourceClass/desktopFile・実験manifestと実際のPWAアイコン設定経路を比較。関連#2431/#2649との重複を切り分け。\n\n## 完了条件\n\n各PWAで対応するサイトアイコンがタスクバーに表示され、同時起動・再起動時も正しく紐付く。  \n検証ビルド・回帰テスト結果・未解決時の次のアクションをJiraに残す。\n\n## 次の一手\n\nデスクトップファイル・KWin resourceClass/desktopFile・実験manifestと実際のPWAアイコン設定経路を比較。",
+    "status": {
+      "name": "未着手",
+      "statusCategory": {
+        "name": "To Do"
+      }
+    },
+    "labels": [
+      "area-pwa",
+      "env-blocked",
+      "floorp-stability-2026-11",
+      "needs-cachyos-kde",
+      "needs-original-site-icons",
+      "needs-repro",
+      "p2",
+      "qa-linux-executed",
+      "related-gh-2431",
+      "related-gh-2649",
+      "related-pr-3032",
+      "taskbar-pixels-verified",
+      "triage-reviewed"
+    ]
+  },
+  "commentPagination": {
+    "total": 5,
+    "isLast": true
+  },
+  "comments": [
+    {
+      "id": "10097",
+      "body": "## 原報告・既存調査の照合（2026-11-05）\n\nGitHub #2800: CachyOS / KDE Plasma Wayland / 12.18.1 でPWA固有アイコンがタスクバーに出ない報告。コメントは12.20.2でも継続とし #2649 と関連の可能性があるが同一原因は未確定。次: 個別アプリの desktop file、アプリIDとウィンドウclassを取得し異なる起動順を検証。区分: Linux/KDE原環境未検証。\n\n参照 main `984509d2053be7bae9027133bda7259cd706b208`。今回のブラウザーテストは未実施。Issue番号で直接対象を示すPRは検索で確認できず、関連PRが存在しない証明ではない。状態は変更しない。",
+      "created": "2026-11-05T18:30:38.035+0900",
+      "updated": "2026-11-05T18:30:38.035+0900"
+    },
+    {
+      "id": "10161",
+      "body": "## 追加コード照合（2026-11-05）\n\n別セッションの `1dcbf738be3ed92ae49743e09ac131cdc4520464` 調査: `TaskbarExperiment.sys.mts` は variant がnullなら無効、Linux実装はゲート後に class/icon を設定。調査時配信 manifest に当該 experiment ID はなかったが、個別プロファイルの割当状態は断定できない。報告の原因との因果は未検証であり、一律有効化しない。原報告のKDE/Waylandで設定の有無と識別子を比較する。\n\n別セッションの調査記録 `E:\\floorp-browser-dev\\outputs\\pwa-webcompat.md`（Jira未添付）。実行結果と静的仮説は区別する。",
+      "created": "2026-11-05T18:34:45.771+0900",
+      "updated": "2026-11-05T18:34:45.771+0900"
+    },
+    {
+      "id": "10292",
+      "body": "## Cloud担当A 実nested KDE Wayland追試（2026-11-05）\n\nsource `984509d2053be7bae9027133bda7259cd706b208`、公式12.21.1/Gecko159.0.1、Debian13上の実KWin6.3.6 Wayland/Qt6.8.2/Plasma（外側Xvfb）。実UIで2PWA作成、cold launcher起動でWayland app_id・KWin resourceClass/desktopFile・desktop StartupWMClassの固有値一致。sandbox pref6、taskbar experiment=false、通常sessionbus保持・強制有効化なし。\n\nただしnested Plasmaのtaskmodelが実行中PWAをtaskbarへ列挙せず、原症状のアイコンpixel判定は未完。表示中の紙アイコンはsystemsettings/discoverの初期pinと判明し、PWAバグに数えない。menu prefix修復とkbuildsycoca成功後も未回復。current desktop/ActivityはPWAと一致し単純filter不一致の根拠なし。KWin QIconサイズ128は採取したがpixel同定ではない。portal/PipeWire/systembus・WaylandTaskModel連携不足と原CachyOS/KDE6.7.5/pacmanを具体的残条件とする。「Linuxがない」や未再現合格とはしない。\n\nbrowser先行時の共有classはKAN49/Draft3032へ分離。KAN48のwrong Floorp iconは未実再現・未解消、重複PRなし、Done化なし。[report/script/JSON/画面証拠](https://github.com/Floorp-Projects/Floorp/tree/codex/qa-linux-package-pwa/docs/qa/linux-22/package-pwa/KAN-48)。",
+      "created": "2026-11-05T23:43:29.387+0900",
+      "updated": "2026-11-05T23:43:29.387+0900"
+    },
+    {
+      "id": "10301",
+      "body": "環境回復の追補: read-only確認に加えて、専用Plasmaを実際にXDG_CURRENT_DESKTOP=KDE/KDE_FULL_SESSION=true/KDE_SESSION_VERSION=6/XDG_MENU_PREFIX=plasma-付きで--replace再起動し、対象processの既知フラグを測定。実Alpha PWAはKWin内に存在するが、panelは依然既存pin2個のみでPWAを列挙せず。root画面を視認し記録したため、通常セッションフラグ不足を直せば解決という仮説では回復しなかった。compositor interface制限や製品保護の解除はしていない。残条件はworking WaylandTaskModel/Plasma連携と実アイコンpixel観測のまま。normal-flags-observation.json、normal-flags-desktop.png、専用shellログをQA branchのKAN-48へ保存。原CachyOS条件を解消済とはしない。",
+      "created": "2026-11-06T00:04:47.865+0900",
+      "updated": "2026-11-06T00:04:47.865+0900"
+    },
+    {
+      "id": "10320",
+      "body": "KAN-48集中追試: 前回のPlasma taskmodel不足を実原因まで特定し解消。標準KWriteの同じ窓はKWinに存在するのにtaskbarに出ず、KWinが実sysroot/plasmashellに対しorg_kde_plasma_window_managementを「X-KDE-Wayland-Interfacesにない」と拒否していた。既存org.kde.plasmashell.desktopのExec=/usr/bin/plasmashellが実prefixと不一致だった。専用XDG applicationコピーのExecだけ正しい実行パスへ修正し、元のinterface宣言は完全同一、通常kbuildsycocaとshell再起動で認可成功・protocol bind/同KWrite UUID受信・taskbar表示復帰を確認。permission filter解除やKWIN_WAYLAND_NO_PERMISSION_CHECKSは使用していない。\n\n回復後のDebian13/KWin6.3.6 Waylandで未変更公式Floorp12.21.1を実UIから2PWA作成。各生成launcherを全終了後cold起動すると、固有app_id/resourceClass/desktopFile/StartupWMClassが一致し、実taskbar32x32画像は赤・青PWAそれぞれ1024全RGBA画素が生成PNGと一致。既知FloorpPNGとは不一致。両normal quit0、sandbox6/gatefalse維持。元の「正しいapp_idなのにFloorpアイコン」は今回条件では未再現で、原CachyOS/KDE6.7.5/pacman/実サイト条件は残る。\n\nbrowser先行時の共有floorp classは別条件KAN49。既存3032候補コピーでは同じ正常taskbarで2PWA固有identity＋赤青別アイコン(各1024pixel)も確認したが、3032を本件元症状のverified fixとはしない。新規製品修正/PR変更なし、未Done。[原因・標準窓対照・protocol・実画素証拠](https://github.com/Floorp-Projects/Floorp/tree/codex/qa-linux-package-pwa/docs/qa/linux-22/package-pwa/KAN-48/followup)。",
+      "created": "2026-11-06T01:07:47.430+0900",
+      "updated": "2026-11-06T01:07:47.430+0900"
+    }
+  ]
+}

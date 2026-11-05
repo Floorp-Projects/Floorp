@@ -1,0 +1,2 @@
+true
+Read QA_KAN48_WINDOWS lines from the nested KWin log; getWindowInfo accepts each internalId.

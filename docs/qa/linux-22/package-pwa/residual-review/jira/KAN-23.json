@@ -1,0 +1,55 @@
+{
+  "key": "KAN-23",
+  "fields": {
+    "summary": "[Linux/Branding] 言語パックでFirefoxアイコンになる（#2897）",
+    "description": "## 原報告\n\nhttps://github.com/Floorp-Projects/Floorp/issues/2897\n\n## 報告内容・影響（独立検証前）\n\nX11/GTKでFirefox言語パックが有効になるとタスクバー等にFirefoxのアイコンが表示される報告。WidgetUtils::GetBrandShortNameとnsWindow::SetIconのlocalized brand.properties解決経路にコード上の根拠がある。#2713は症状が重複する可能性。\n\n## 暫定トリアージ\n\nP2。コード経路は分析済みだが実機X11と修正前後の確認が必要。\n\n## 再現・切り分け手順\n\n日本語など非en-USの言語パックと複数GTKアイコンテーマで実効brandShortName・\\_NET_WM_ICON・アプリIDを調べる。#2713との関連を確認。\n\n## 完了条件\n\n言語パックによらずFloorpアイコンが表示され、ロケール切替で回帰しないことを確認。  \n検証ビルド・回帰テスト結果・未解決時の次のアクションをJiraに残す。\n\n## 次の一手\n\n日本語など非en-USの言語パックと複数GTKアイコンテーマで実効brandShortName・\\_NET_WM_ICON・アプリIDを調べる。",
+    "status": {
+      "name": "進行中",
+      "statusCategory": {
+        "name": "進行中"
+      }
+    },
+    "labels": [
+      "area-platform",
+      "draft-pr",
+      "floorp-stability-2026-11",
+      "full-package-verified",
+      "needs-other-locales",
+      "p2",
+      "qa-linux-executed",
+      "related-gh-2713",
+      "reproduced-in-test",
+      "triage-reviewed"
+    ]
+  },
+  "commentPagination": {
+    "total": 4,
+    "isLast": true
+  },
+  "comments": [
+    {
+      "id": "10102",
+      "body": "## 原報告・既存調査の照合（2026-11-05）\n\nGitHub #2897: Linux言語パック使用時の Firefox アイコン表示。原報告とコメントは Runtime GTK のブランド名取得に関するコード根拠を示すが、このセッションで実機再現はしていない。#2713との同一原因も未確定。次: 使用言語・パッケージ・GTK icon themeを固定しコードを現行 Runtime と比較し、X11/Waylandで画像を確認。区分: コード仮説あり・原環境未検証。\n\n参照 main `984509d2053be7bae9027133bda7259cd706b208`。今回の新規ブラウザーテストは未実施。Issue番号のPR検索で直接対象を確認できず、関連PRが存在しない証明ではない。状態は変更しない。",
+      "created": "2026-11-05T18:31:15.186+0900",
+      "updated": "2026-11-05T18:31:15.186+0900"
+    },
+    {
+      "id": "10274",
+      "body": "## Cloud担当A 実再現とDraft修正（2026-11-05）\n\n公式12.21.1/Gecko159.0.1 source `984509d2053be7bae9027133bda7259cd706b208`、Debian13/Xvfb X11、新規専用profile。Mozilla署名済ja/es-CL pack（signedState2）の通常導入でeffective brandShortNameがFirefoxへ変化。firefox iconを持つ専用GTKテーマでは\\_NET_WM_ICONがMozilla公式64px画像と全RGBA画素一致。WM_CLASSはfloorp、titleはAblaze Floorp。テーマにfirefoxがない条件ではFloorp fallbackで隠れる。sandbox pref6、署名・sandbox・gate無効化なし。\n\n[Draft PR3030](https://github.com/Floorp-Projects/Floorp/pull/3030) head `e55152c559a141001a375ac77098d141b0db3ca7`。既存同梱en-US brand.propertiesへのURI override1件のみ。manifestだけ変えた隔離製品コピーでja/esCL/enUSのブランド4値・Floorpアイコン復帰、ja/esCLメニュー言語維持。追加colocated testの同一関数本文を実製品Marionetteで実行しbaseline ja/esCL fail→candidate3locale pass。標準runner/full build/CI未実施。native binary変更なし。\n\nKAN89は関連候補のまま。完全KDE/Flatpak/原Manjaro条件、他channel/localeは残る。Done化/merge/releaseなし。[実試験script・matrix・画像・provenance](https://github.com/Floorp-Projects/Floorp/tree/codex/qa-linux-package-pwa/docs/qa/linux-22/package-pwa/branding)。",
+      "created": "2026-11-05T23:33:08.465+0900",
+      "updated": "2026-11-05T23:33:08.465+0900"
+    },
+    {
+      "id": "10295",
+      "body": "追加検証: head e55152c5の実Vite production build成功。生成jar.mnに唯一のbrand.properties overrideが入り、製品コピーで使用した登録と完全一致（SHA c8604b32d5487b91db8f3192d09052e842b36dbf9676921ce3b8191affa1982d）。追加test module全体とrepository標準runTests/assertEqualsをbundleして言語pack有効の実製品で実行、baseline ja/esCL fail→candidate esCL/enUS pass。candidate jaは先行の関数本文/UI/icon比較成功、追加full-harness launchは未完として区別。top-level標準runnerによるlocale matrixではない。\n\nPR3030 exact-head [CI42045064743](https://github.com/Floorp-Projects/Floorp/actions/runs/42045064743)は成功。Ubuntu標準browser282 modules成功0失敗、新LegacyBranding.runAllTests含む。artifact13425530774を取得し107599bytes/SHA256 0e61851f81b6ce0ec275c159cd0275a4ad16aa46f0ec45e1839f3fff962adb6d一致を確認。ただしこのCI artifactは言語pack有効localeを立証せず、単独では原回帰の証明に使わない。[生成manifest/harness証拠](https://github.com/Floorp-Projects/Floorp/tree/codex/qa-linux-package-pwa/docs/qa/linux-22/package-pwa/branding)、[CI検証要約](https://github.com/Floorp-Projects/Floorp/tree/codex/qa-linux-package-pwa/docs/qa/linux-22/package-pwa/ci/pr3030)。",
+      "created": "2026-11-05T23:48:09.113+0900",
+      "updated": "2026-11-05T23:48:09.113+0900"
+    },
+    {
+      "id": "10352",
+      "body": "## 完全製品ビルドと実ロケール対照（2026-11-05 UTC）\n\nDraft3030 head e55152c559a141001a375ac77098d141b0db3ca7 の既存 package.yml / stable-v2-validation / Linux-x64 / skip_signing=true で、全Floorp本番ソース→mach artifact-mode build→標準inject→完全packageを生成。[CI42067997767](https://github.com/Floorp-Projects/Floorp/actions/runs/42067997767)成功。baseline984509d2も同工程CI42068377281成功。固定Runtime8965ffc346d426ccdf919bd18585e4d4a0c21654とlock不変。これは取得元とハッシュを認証した互換native engineを使う完全アプリpackageで、Gecko C++/Rust再コンパイルではない。\n\n最終artifact13435129152 ZIP SHA256 96ebf4afca0028715039d5154a27fd030e8150cb8117b0249d91eb576411d3fcをAPI digest/size/head/runで照合。baseline最終artifact13435702404も認証。manifest/製品資源の手動差替なし、最終root omni.ja内の生成override1件を直接確認。\n\n4fresh profile比較完了: baseline ja/es-CLともFirefoxブランド、参照Firefox64pxと全画素一致、新回帰test失敗。候補ja/es-CLともFloorpブランド、参照Floorp64pxと全画素一致、新回帰test成功。署名済pack signedState2/active、requested=actual locale、表示中の日本語/es-CLメニュー維持、sandbox6、disableenvなし、全正常終了・製品全filehash前後不変。回帰module全体＋repository harnessを実製品で実行した結果で、top-level標準runnerのlocale有効CIとは区別する。\n\n[完全報告・実行script・JSON・画像](https://github.com/Floorp-Projects/Floorp/tree/4e73dd3bc926636591af9b31cfcbcd692bef0e13/docs/qa/linux-22/package-pwa/full-build/3030/package-test/execution-1)。原desktop全体、他locale/theme/channel、標準locale-enabled runner、署名配布資格は別条件。needs-full-build/needs-locale-matrixを今回満たした範囲で除去し、needs-other-localesを残す。PR/source変更、merge、release、Done化なし。",
+      "created": "2026-11-06T02:22:37.792+0900",
+      "updated": "2026-11-06T02:22:52.640+0900"
+    }
+  ]
+}

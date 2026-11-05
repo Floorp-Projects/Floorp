@@ -1,0 +1,45 @@
+legacy-initial {"label": "legacy-initial", "homePermission": false, "profile": "/workspace/qa-linux-22/package-pwa/residual-review/KAN-8/cache-home/.var/app/one.ablaze.floorp/config/../.floorp/bxho08oj.default-default", "localProfile": "/workspace/qa-linux-22/package-pwa/residual-review/KAN-8/cache-home/.var/app/one.ablaze.floorp/cache/floorp/bxho08oj.default-default", "marker": "retained-cache-profile", "sandbox": 6, "sandboxDisabled": false, "version": "159.0.1", "buildID": "20261103153232", "diskCacheEnabled": true, "payload": {"length": 65555, "prefix": "KAN8-CACHE-CONTENT", "transferSize": 65855}, "payloadRequestsBefore": 0, "payloadRequestsAfter": 1, "quit": {"cause": "shutdown", "forced": false, "in_app": true}, "exitCode": 0, "cacheEntryCountAfterQuit": 1}
+legacy-home-enabled {"label": "legacy-home-enabled", "homePermission": true, "profile": "/workspace/qa-linux-22/package-pwa/residual-review/KAN-8/cache-home/.var/app/one.ablaze.floorp/config/../.floorp/bxho08oj.default-default", "localProfile": "/workspace/qa-linux-22/package-pwa/residual-review/KAN-8/cache-home/.var/app/one.ablaze.floorp/cache/floorp/bxho08oj.default-default", "marker": "retained-cache-profile", "sandbox": 6, "sandboxDisabled": false, "version": "159.0.1", "buildID": "20261103153232", "diskCacheEnabled": true, "payload": {"length": 65555, "prefix": "KAN8-CACHE-CONTENT", "transferSize": 0}, "payloadRequestsBefore": 1, "payloadRequestsAfter": 1, "quit": {"cause": "shutdown", "forced": false, "in_app": true}, "exitCode": 0, "cacheEntryCountAfterQuit": 1}
+legacy-home-disabled {"label": "legacy-home-disabled", "homePermission": false, "profile": "/workspace/qa-linux-22/package-pwa/residual-review/KAN-8/cache-home/.var/app/one.ablaze.floorp/config/../.floorp/bxho08oj.default-default", "localProfile": "/workspace/qa-linux-22/package-pwa/residual-review/KAN-8/cache-home/.var/app/one.ablaze.floorp/cache/floorp/bxho08oj.default-default", "marker": "retained-cache-profile", "sandbox": 6, "sandboxDisabled": false, "version": "159.0.1", "buildID": "20261103153232", "diskCacheEnabled": true, "payload": {"length": 65555, "prefix": "KAN8-CACHE-CONTENT", "transferSize": 0}, "payloadRequestsBefore": 1, "payloadRequestsAfter": 1, "quit": {"cause": "shutdown", "forced": false, "in_app": true}, "exitCode": 0, "cacheEntryCountAfterQuit": 1}
+xdg-only {"label": "xdg-only", "homePermission": false, "profile": "/workspace/qa-linux-22/package-pwa/residual-review/KAN-8/cache-home/.var/app/one.ablaze.floorp/config/floorp/bxho08oj.default-default", "localProfile": "/workspace/qa-linux-22/package-pwa/residual-review/KAN-8/cache-home/.var/app/one.ablaze.floorp/cache/floorp/bxho08oj.default-default", "marker": "retained-cache-profile", "sandbox": 6, "sandboxDisabled": false, "version": "159.0.1", "buildID": "20261103153232", "diskCacheEnabled": true, "payload": {"length": 65555, "prefix": "KAN8-CACHE-CONTENT", "transferSize": 0}, "payloadRequestsBefore": 1, "payloadRequestsAfter": 1, "quit": {"cause": "shutdown", "forced": false, "in_app": true}, "exitCode": 0, "cacheEntryCountAfterQuit": 1}
+xdg-home-enabled {"label": "xdg-home-enabled", "homePermission": true, "profile": "/workspace/qa-linux-22/package-pwa/residual-review/KAN-8/cache-home/.var/app/one.ablaze.floorp/config/floorp/bxho08oj.default-default", "localProfile": "/workspace/qa-linux-22/package-pwa/residual-review/KAN-8/cache-home/.var/app/one.ablaze.floorp/cache/floorp/bxho08oj.default-default", "marker": "retained-cache-profile", "sandbox": 6, "sandboxDisabled": false, "version": "159.0.1", "buildID": "20261103153232", "diskCacheEnabled": true, "payload": {"length": 65555, "prefix": "KAN8-CACHE-CONTENT", "transferSize": 0}, "payloadRequestsBefore": 1, "payloadRequestsAfter": 1, "quit": {"cause": "shutdown", "forced": false, "in_app": true}, "exitCode": 0, "cacheEntryCountAfterQuit": 1}
+both-registries {"case": "both-registries", "exitCode": 1, "expectedDiagnostic": "two Flatpak profile registries", "diagnosticPresent": true, "profileFixturesUnchanged": true, "fixtureHashesBefore": {"both-registries-home/.var/app/one.ablaze.floorp/.floorp/profiles.ini": "a076b96fab104f8f45b3c5fd7666d337d2e374a0212d88429e2c5431a07ea662", "both-registries-home/.var/app/one.ablaze.floorp/.floorp/keep.txt": "c147b9fd794f2e120e95ab1e7e9642c87f6f1f0d1a22a89a4d51523be5439409", "both-registries-home/.var/app/one.ablaze.floorp/config/floorp/profiles.ini": "a076b96fab104f8f45b3c5fd7666d337d2e374a0212d88429e2c5431a07ea662", "both-registries-home/.var/app/one.ablaze.floorp/config/floorp/keep.txt": "4d39ed53a5ce91ee6bad11988a4bd7357f38bcfe978af63166698c2b809005e0"}, "fixtureHashesAfter": {"both-registries-home/.var/app/one.ablaze.floorp/.floorp/profiles.ini": "a076b96fab104f8f45b3c5fd7666d337d2e374a0212d88429e2c5431a07ea662", "both-registries-home/.var/app/one.ablaze.floorp/.floorp/keep.txt": "c147b9fd794f2e120e95ab1e7e9642c87f6f1f0d1a22a89a4d51523be5439409", "both-registries-home/.var/app/one.ablaze.floorp/config/floorp/profiles.ini": "a076b96fab104f8f45b3c5fd7666d337d2e374a0212d88429e2c5431a07ea662", "both-registries-home/.var/app/one.ablaze.floorp/config/floorp/keep.txt": "4d39ed53a5ce91ee6bad11988a4bd7357f38bcfe978af63166698c2b809005e0"}}
+separate-host {"case": "separate-host", "exitCode": 1, "expectedDiagnostic": "separate host profile", "diagnosticPresent": true, "profileFixturesUnchanged": true, "fixtureHashesBefore": {"separate-host-home/.var/app/one.ablaze.floorp/.floorp/profiles.ini": "a076b96fab104f8f45b3c5fd7666d337d2e374a0212d88429e2c5431a07ea662", "separate-host-home/.var/app/one.ablaze.floorp/.floorp/keep.txt": "c147b9fd794f2e120e95ab1e7e9642c87f6f1f0d1a22a89a4d51523be5439409", "separate-host-home/.floorp/profiles.ini": "a076b96fab104f8f45b3c5fd7666d337d2e374a0212d88429e2c5431a07ea662"}, "fixtureHashesAfter": {"separate-host-home/.var/app/one.ablaze.floorp/.floorp/profiles.ini": "a076b96fab104f8f45b3c5fd7666d337d2e374a0212d88429e2c5431a07ea662", "separate-host-home/.var/app/one.ablaze.floorp/.floorp/keep.txt": "c147b9fd794f2e120e95ab1e7e9642c87f6f1f0d1a22a89a4d51523be5439409", "separate-host-home/.floorp/profiles.ini": "a076b96fab104f8f45b3c5fd7666d337d2e374a0212d88429e2c5431a07ea662"}}
+partial-data {"case": "partial-data", "exitCode": 1, "expectedDiagnostic": "without profiles.ini", "diagnosticPresent": true, "profileFixturesUnchanged": true, "fixtureHashesBefore": {"partial-data-home/.var/app/one.ablaze.floorp/.floorp/keep.txt": "c147b9fd794f2e120e95ab1e7e9642c87f6f1f0d1a22a89a4d51523be5439409"}, "fixtureHashesAfter": {"partial-data-home/.var/app/one.ablaze.floorp/.floorp/keep.txt": "c147b9fd794f2e120e95ab1e7e9642c87f6f1f0d1a22a89a4d51523be5439409"}}
+{
+  "key": "KAN-8",
+  "newConditions": [
+    "HTTP disk cache content reuse across permission transitions",
+    "existing XDG-only actual profile relocation",
+    "mixed registry fail-closed in actual installed full package"
+  ],
+  "packageCommit": "7a3b387dc2c79a14b8f49b603b5b8d85d720fb233b325238d9d4d7a03bafde5a",
+  "manifestHead": "d9aa24d58fe633bf765721f95b4ac13132ee397e",
+  "signatureScope": "locally built unsigned full PR198 Flatpak; not Flathub distribution",
+  "systemBus": "owned incomplete test bus; not full desktop portal/system bus",
+  "physicalInput": false,
+  "display": "Xvfb104 X11",
+  "observedCommit": "7a3b387dc2c79a14b8f49b603b5b8d85d720fb233b325238d9d4d7a03bafde5a",
+  "deployedLauncherHashesBefore": {
+    "files/bin/floorp": "352e6601c6bcaed6ad19c25d68cbd873ce55a65d1b48d59f0fcb813befb48f91",
+    "files/bin/floorp-profile-root.sh": "08b2db27331855fc3d7b207112816c7056c70f34e02553449b07a7206aee3a1e"
+  },
+  "controlledRelocation": {
+    "from": "legacy .floorp",
+    "to": "config/floorp",
+    "when": "all browser processes normally quit",
+    "meaning": "existing XDG-only profile fixture; not automatic helper migration"
+  },
+  "cacheReuseAll": true,
+  "allMarkers": true,
+  "localCachePathStable": true,
+  "xdgSelected": true,
+  "deployedLauncherHashesAfter": {
+    "files/bin/floorp": "352e6601c6bcaed6ad19c25d68cbd873ce55a65d1b48d59f0fcb813befb48f91",
+    "files/bin/floorp-profile-root.sh": "08b2db27331855fc3d7b207112816c7056c70f34e02553449b07a7206aee3a1e"
+  },
+  "deployedLauncherUnchanged": true,
+  "completed": true,
+  "ownedProcessesRemaining": 0,
+  "displayClean": true
+}

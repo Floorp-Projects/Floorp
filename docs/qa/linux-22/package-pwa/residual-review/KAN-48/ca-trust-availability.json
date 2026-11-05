@@ -1,0 +1,16 @@
+{
+  "caSelectors": {
+    "SSL_CERT_FILE": "/etc/ssl/certs/ca-certificates.crt",
+    "SSL_CERT_DIR": null,
+    "REQUESTS_CA_BUNDLE": "/etc/ssl/certs/ca-certificates.crt",
+    "CURL_CA_BUNDLE": null
+  },
+  "caFiles": [
+    "/usr/local/share/ca-certificates/chaussette.crt",
+    "/usr/local/share/ca-certificates/mitmproxy-ca-cert.crt",
+    "/usr/local/share/ca-certificates/nebula-dns.crt",
+    "/usr/local/share/ca-certificates/nebula-mitmproxy.crt",
+    "/usr/local/share/ca-certificates/environment-proxy-ca.crt"
+  ],
+  "certutil": false
+}

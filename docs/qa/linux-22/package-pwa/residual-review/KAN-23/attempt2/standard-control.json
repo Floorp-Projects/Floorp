@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "runId": "58dda5b4-1e0e-4cbc-b17b-b2f2fb0778df",
+  "expiresAtMs": 1793911403903,
+  "filter": [
+    "browser-features/modules/modules/i18n/test/LegacyBranding.test.mts"
+  ]
+}

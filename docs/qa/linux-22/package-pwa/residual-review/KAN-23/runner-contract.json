@@ -1,0 +1,108 @@
+{
+  "sourceSha": "e55152c559a141001a375ac77098d141b0db3ca7",
+  "files": [
+    {
+      "path": "tools/src/colocated_test_runner.ts",
+      "gitBlob": "2582f41f909f349cda09d6e4d62f866520e74ea2",
+      "sha256": "05fc9bde55aa3db617cef3fca4fea9e69f67b04fc4ad104737a256ab4b3488cb",
+      "selectedContractLines": [
+        {
+          "line": 1963,
+          "text": "export function writeBrowserTestControlPrefs("
+        },
+        {
+          "line": 2206,
+          "text": "writeBrowserTestControlPrefs("
+        },
+        {
+          "line": 2286,
+          "text": "const browserCollection = await collectBrowserTestResultsFromPrefs("
+        }
+      ]
+    },
+    {
+      "path": "tools/src/browser_test_collector.ts",
+      "gitBlob": "39b1728342bd1d919e9d9738ef32fcf9e0e1fd8a",
+      "sha256": "d7de57b004fb33131fe3a7566a73f66b0b9d39a8df97a7da38dd01644c8851dc",
+      "selectedContractLines": [
+        {
+          "line": 6,
+          "text": "* The browser-side entry point (loader/test/index.ts) writes structured"
+        },
+        {
+          "line": 7,
+          "text": "* results to the Firefox pref \"nora.tests.state\" and flushes it to"
+        },
+        {
+          "line": 55,
+          "text": "// Regex to extract the \"nora.tests.state\" pref value from prefs.js."
+        },
+        {
+          "line": 96,
+          "text": "* Collect browser test results by reading the `nora.tests.state` pref"
+        },
+        {
+          "line": 108,
+          "text": "export async function collectBrowserTestResultsFromPrefs("
+        }
+      ]
+    },
+    {
+      "path": "tools/src/defines.ts",
+      "gitBlob": "e54640c8abaf5ab515f36dfcbf1bcfebd35efa30",
+      "sha256": "ea12b26940e17f91e209cb94e17d43b711f5b9a4cbc6a3fae64045d8a0bc124a",
+      "selectedContractLines": [
+        {
+          "line": 46,
+          "text": "profile_test: path.join(PROJECT_ROOT, \"_dist\", \"profile\", \"test\"),"
+        }
+      ]
+    },
+    {
+      "path": "bridge/startup/src/chrome_root.ts",
+      "gitBlob": "6b0ee5595f1190b8bfa6fe49e8b73eb600882c92",
+      "sha256": "0ad62bf90596dc45e21518cd4abec181eef2997931f62054b512d8c8d926c947",
+      "selectedContractLines": [
+        {
+          "line": 51,
+          "text": "const isTestOwner = import.meta.env.MODE === \"test\" &&"
+        },
+        {
+          "line": 54,
+          "text": "setStartupMarker(\"nora.startup.mode\", import.meta.env.MODE);"
+        },
+        {
+          "line": 73,
+          "text": "} else if (import.meta.env.MODE === \"test\") {"
+        },
+        {
+          "line": 104,
+          "text": "\"http://localhost:5181/loader/test/index.ts\","
+        }
+      ]
+    },
+    {
+      "path": "tools/feles-build.ts",
+      "gitBlob": "b0b2b6e622f0fe2bb1f6d5fa865f778f20731edd",
+      "sha256": "aa218eae42b46afa48572591f742608874c5963c216d0e5c3f0cf8880536d91c",
+      "selectedContractLines": [
+        {
+          "line": 194,
+          "text": "await Builder.run(\"test\", buildid2);"
+        }
+      ]
+    }
+  ],
+  "productTestLoaderInventory": [
+    {
+      "archive": "omni.ja",
+      "loaderTestEntries": [
+        "chrome/noraneko/nora-resource/modules/i18n/test/LegacyBranding.test.mjs"
+      ]
+    },
+    {
+      "archive": "browser/omni.ja",
+      "loaderTestEntries": []
+    }
+  ]
+}

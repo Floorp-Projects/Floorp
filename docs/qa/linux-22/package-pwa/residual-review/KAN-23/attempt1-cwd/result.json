@@ -1,0 +1,12 @@
+{
+  "kind": "standard top-level no-autostart collector against immutable fullproduction product",
+  "product": "/workspace/qa-linux-full-build/products/3030/floorp",
+  "sourceSha": "e55152c559a141001a375ac77098d141b0db3ca7",
+  "display": "Xvfb105 X11",
+  "input": "automation/API setup, no physical claim",
+  "error": "collector ended before control ready",
+  "traceback": "Traceback (most recent call last):\n  File \"/workspace/qa-linux-22/package-pwa/residual-review/KAN-23/probe.py\", line 42, in <module>\n    assert collector.poll() is None,'collector ended before control ready';time.sleep(.1)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: collector ended before control ready\n",
+  "productUnchanged": true,
+  "ownedProcessesRemaining": 0,
+  "testSourceChanged": ""
+}

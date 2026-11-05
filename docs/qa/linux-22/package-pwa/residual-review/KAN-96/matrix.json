@@ -1,0 +1,53 @@
+{
+  "key": "KAN-96",
+  "github": "https://github.com/Floorp-Projects/Floorp/issues/2695",
+  "sourceSha": "29a3eb23145da90706d8a94441373278521cc737",
+  "productVersion": "Floorp12.21.1/Gecko159.0.1/BuildID20261103153232",
+  "environment": "Debian13.6/Xvfb103 X11/normalDBus/sandbox6; syntheticinput",
+  "testCommand": "dbus-run-session -- python3 probe.py; executed installs then --relaunch-only after observation correction",
+  "result": "new controlled COOP+COEP2actualUIinstalls+2generatedPWA relaunches pass; original actor issue not reproduced in this condition",
+  "cases": [
+    {
+      "id": "default",
+      "sourceRemoteType": "webCOOP+COEP=http://127.0.0.1",
+      "sourceUserContextId": 0,
+      "crossOriginIsolated": true,
+      "actor": true,
+      "actualUiInstall": true
+    },
+    {
+      "id": "container",
+      "sourceRemoteType": "webCOOP+COEP=http://127.0.0.1^userContextId=7",
+      "sourceUserContextId": 7,
+      "crossOriginIsolated": true,
+      "actor": true,
+      "actualUiInstall": true
+    }
+  ],
+  "containerExperiment": false,
+  "assignedContainerPwaQualified": false,
+  "remainingConditions": [
+    "OriginalCachyOS/Arch packages and permission/desktop conditions",
+    "Original safe-mode YouTubeMusic and external cross-site resources",
+    "Genuine PWAcontainer rollout enrollment; currentfeatureoff, no forcedoverride",
+    "Physicalinput/fulloriginaldesktop"
+  ],
+  "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2680",
+  "newPr": null,
+  "evidence": [
+    "report.md",
+    "result.json",
+    "install-and-first-relaunch.json",
+    "probe.py",
+    "default-content-before.json",
+    "container-content-before.json",
+    "container-installed.png",
+    "QA-COOP-Default-relaunch.json",
+    "QA-COOP-Container-relaunch.json"
+  ],
+  "normalQuitsAllPreservedAttempts": 8,
+  "productUnchanged": true,
+  "ownedProcessesRemaining": 0,
+  "display103SocketAbsent": true,
+  "originalLinuxDenominator": 22
+}

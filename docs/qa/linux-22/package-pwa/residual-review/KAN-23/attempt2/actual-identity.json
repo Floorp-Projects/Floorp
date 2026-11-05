@@ -1,0 +1,18 @@
+{
+  "version": "159.0.1",
+  "buildID": "20261103153232",
+  "profile": "/workspace/qa-linux-22/package-pwa/residual-review/KAN-23/attempt2/profile",
+  "executable": "/workspace/qa-linux-full-build/products/3030/floorp/floorp",
+  "locale": "ja",
+  "sandbox": 6,
+  "sandboxDisabled": false,
+  "startupMode": "production",
+  "testState": "<absent>",
+  "localeAddons": [
+    {
+      "id": "langpack-ja@firefox.mozilla.org",
+      "signedState": 2,
+      "isActive": true
+    }
+  ]
+}

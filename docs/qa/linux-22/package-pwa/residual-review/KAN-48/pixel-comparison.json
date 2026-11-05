@@ -1,0 +1,56 @@
+{
+  "sameActualIconCropMeanAbsoluteDifference": {
+    "vrtmax": 0.431640625,
+    "floorp": 117.61328125
+  },
+  "outsideIconTaskBackgroundRGB": [
+    158,
+    210,
+    237
+  ],
+  "scope": "rendered taskbar32x32 compared to generated real-site128pxPNG and knownFloorp32; smooth scaling tried, no claim allpixelsidentical unlessdifference0",
+  "comparisons": {
+    "vrtmax": {
+      "meanAbsoluteChannelDifference": 0.431640625,
+      "bbox": [
+        274,
+        722,
+        305,
+        753
+      ],
+      "resample": "BOX",
+      "maxChannelDifference": 1,
+      "referenceSha256": "32102d9ddd532621b880e3bc72352b13b45fc3029a079631d344a1faf0ef91de",
+      "referenceDimensions": [
+        128,
+        128
+      ],
+      "alphaExtrema": [
+        255,
+        255
+      ]
+    },
+    "floorp": {
+      "meanAbsoluteChannelDifference": 69.220703125,
+      "bbox": [
+        315,
+        718,
+        346,
+        749
+      ],
+      "resample": "BICUBIC",
+      "maxChannelDifference": 235,
+      "referenceSha256": "de4c287df3aea68bbba3246a35992e4ee41708d956c225d4ab90fe9532996541",
+      "referenceDimensions": [
+        32,
+        32
+      ],
+      "alphaExtrema": [
+        0,
+        255
+      ]
+    }
+  },
+  "siteCloserThanFloorp": true,
+  "visualReview": "actual rendered taskbar visibly VRTMAX logo; no Floorp logo"
+}

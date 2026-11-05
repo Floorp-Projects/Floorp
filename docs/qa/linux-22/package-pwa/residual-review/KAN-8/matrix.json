@@ -1,0 +1,100 @@
+[
+  {
+    "key": "KAN-8",
+    "github": "https://github.com/Floorp-Projects/Floorp/issues/2837",
+    "sourceSha": {
+      "manifest": "d9aa24d58fe633bf765721f95b4ac13132ee397e",
+      "application": "984509d2053be7bae9027133bda7259cd706b208",
+      "installedOstree": "7a3b387dc2c79a14b8f49b603b5b8d85d720fb233b325238d9d4d7a03bafde5a"
+    },
+    "productVersion": "Floorp12.21.1/native159.0.1/BuildID20261103153232",
+    "environment": "Debian13.6; ownedXvfb104 X11; normalisolatedsessionbus; incompleteownedsystemtestbus; Flatpak1.16.6/runtime26.08; sandbox6; no protectionchange",
+    "testCommand": "python3 residual_probe.py (copy script into fresh evidence directory before replay); python3 validate.py result.json",
+    "result": "5actualcompleteFlatpakruns demonstrateHTTPdiskcachecontent reuse across absent-home/with-home/absent-home and controlled existing-XDG-only migration;3installed-launcherconflictfixtures refuse with dataunchanged; newdefectnotfound",
+    "classification": "new controlled residual conditions passed; original Bazzite/desktop/distribution qualifications remain",
+    "cacheContent": {
+      "launches": 5,
+      "payloadLength": 65555,
+      "contentValidation": "known length and identifying prefix, not bitwise audit of all resource types",
+      "payloadNetworkRequestsTotal": 1,
+      "subsequentTransferSizes": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "sameProfLD": true,
+      "allProfileMarkers": true,
+      "normalQuits": 5,
+      "controlledExistingXdgProfile": true,
+      "automaticHelperMigrationClaim": false
+    },
+    "mixedRegistries": [
+      {
+        "case": "both-registries",
+        "exitCode": 1,
+        "expectedDiagnostic": "two Flatpak profile registries",
+        "diagnosticPresent": true,
+        "profileFixturesUnchanged": true
+      },
+      {
+        "case": "separate-host",
+        "exitCode": 1,
+        "expectedDiagnostic": "separate host profile",
+        "diagnosticPresent": true,
+        "profileFixturesUnchanged": true
+      },
+      {
+        "case": "partial-data",
+        "exitCode": 1,
+        "expectedDiagnostic": "without profiles.ini",
+        "diagnosticPresent": true,
+        "profileFixturesUnchanged": true
+      }
+    ],
+    "existingPr": "https://github.com/flathub/one.ablaze.floorp/pull/198",
+    "newPr": null,
+    "jiraCommentId": null,
+    "remainingConditions": [
+      "Original Bazzite44/Flatseal/Bazaar desktop and permission integration",
+      "Complete real portal/systembus desktop services",
+      "Official Flathub build/signature distribution review",
+      "Other alias/hardlink/custom-override actualpackage combinations not included in these3guardfixtures; previously tested only in unit suite",
+      "Arbitrary cache resource/version transitions not qualified by this bounded HTTPpayload case"
+    ],
+    "labelAdvice": {
+      "removeOnlyIfPresentAndReferringToExactCases": [
+        "needs-cache-content-test",
+        "needs-actual-package-mixed-registry-test"
+      ],
+      "retain": [
+        "needs-bazzite-desktop",
+        "needs-flathub-build-review",
+        "env-blocked when scoped to original Bazzite/portal conditions"
+      ]
+    },
+    "evidence": [
+      "report.md",
+      "result.json",
+      "residual_probe.py",
+      "validate.py",
+      "execution.log",
+      "legacy-home-enabled.png",
+      "xdg-only.png",
+      "both-registries.log",
+      "separate-host.log",
+      "partial-data.log",
+      "attempt1-window-expando/result.json"
+    ],
+    "publicationExclusions": [
+      "*-home/**",
+      "runtime/**",
+      "system-probe-bus",
+      "nested browser profiles"
+    ],
+    "noSourceChanges": true,
+    "noRepeatedBuild": true,
+    "noRepeatedPriorPathOnlySuite": true,
+    "originalLinuxDenominator": 22
+  }
+]

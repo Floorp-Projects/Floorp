@@ -1,0 +1,523 @@
+[
+  {
+    "key": "KAN-8",
+    "github": "https://github.com/Floorp-Projects/Floorp/issues/2837",
+    "sourceSha": "984509d2053be7bae9027133bda7259cd706b208",
+    "productVersion": "Floorp 12.21.1 / Gecko 159.0.1 / BuildID 20261103153232",
+    "environment": "Debian13; Xvfb X11; isolated normal session bus and separate incomplete system test bus; Flatpak1.16.6; freedesktop26.08; sandbox level6, no disable environment",
+    "testCommand": "python3 KAN-8/profile_normal_shutdown.py; python3 -m unittest discover -v -s KAN-8/flathub/tests; full-build-exec.py dbus-run-session -- flatpak-builder --user --assumeyes --install-deps-from=flathub --repo=KAN-8/full-build-repo --force-clean --install KAN-8/full-build-dir KAN-8/flathub/one.ablaze.floorp.yml; python3 KAN-8/full_package_profile.py",
+    "result": "reproduced-in-official-flatpak; full-pinned-pr198-manifest-built-exported-installed; full-candidate-package profile/marker/cache-path comparison passes; nine unit tests pass; nine product runs exit normally; new5cold HTTPdiskcache-content runs reuse networkpayload across permission/XDG-only controlled layout;3actualinstalledlauncher conflictguards refuse unchangedfixtures",
+    "remainingConditions": [
+      "原Bazzite44/Flatseal/Bazaarのpermission/desktop操作",
+      "完全portal/systembus",
+      "公式Flathub build/signature review",
+      "GUI上の拒否通知/任意absolute-path複数profile/同一dir別名等は3最小guard fixtureを超えて未検証"
+    ],
+    "existingPr": "https://github.com/flathub/one.ablaze.floorp/pull/198",
+    "existingPrHead": "d9aa24d58fe633bf765721f95b4ac13132ee397e",
+    "newPr": null,
+    "evidence": [
+      "KAN-8/report.md",
+      "KAN-8/normal-shutdown-result.json",
+      "KAN-8/profile_normal_shutdown.py",
+      "KAN-8/unit-tests.log",
+      "KAN-8/flatpak-info.txt",
+      "KAN-8/test-sha256.txt",
+      "KAN-8/full-package-report.md",
+      "KAN-8/full-package-subject.json",
+      "KAN-8/full-package-normal-result.json",
+      "KAN-8/full-build-final.log",
+      "KAN-8/full_package_profile.py",
+      "KAN-8/full-build-exec.py",
+      "KAN-8/build-tool-bin/appstreamcli",
+      "residual-review/report.md",
+      "residual-review/matrix.json",
+      "residual-review/KAN-8/report.md"
+    ],
+    "jiraCommentId": "10272",
+    "jiraUrl": "https://floorp-projects.atlassian.net/browse/KAN-8",
+    "candidatePackageCommit": "7a3b387dc2c79a14b8f49b603b5b8d85d720fb233b325238d9d4d7a03bafde5a",
+    "candidatePackageSignatureScope": "locally built unsigned test package; not official Flathub signed distribution",
+    "jiraFollowupCommentIds": [
+      "10308"
+    ],
+    "residualReview": {
+      "report": "residual-review/report.md",
+      "row": "residual-review/matrix.json",
+      "satisfiedEnvironmentConditions": [
+        "実Flatpak/通常sessionDBus/正常終了",
+        "完成candidate launcherで権限前後のprofile/marker/ProfLD保持",
+        "NEW: 65555byte HTTP cache、初回1request・後続4coldrun transfer0",
+        "NEW: mixed registry/別host/registry欠落3guardが診断exit1・fixture不変"
+      ],
+      "notReproducedScope": "元の切替欠陥は公式packageで再現、候補で限定修復。データ消失は未確認。",
+      "remainingConditions": [
+        "原Bazzite44/Flatseal/Bazaarのpermission/desktop操作",
+        "完全portal/systembus",
+        "公式Flathub build/signature review",
+        "GUI上の拒否通知/任意absolute-path複数profile/同一dir別名等は3最小guard fixtureを超えて未検証"
+      ],
+      "nextAvailableWork": "今回cache内容・XDG-only既存配置・実launcher3guardを追加実測済み。原Bazzite/署名配布条件は現Debianで代替しない。",
+      "fixPrAndQualification": "Flathub Draft198 d9aa24d; unit9成功、local完全Flatpak build/install成功。現headのGitHub checks/status0。Flathub署名配布資格なし。"
+    },
+    "latestJiraCommentId": "10308"
+  },
+  {
+    "sourceSha": "984509d2053be7bae9027133bda7259cd706b208",
+    "productVersion": "Floorp12.21.1 / Gecko159.0.1 / BuildID20261103153232",
+    "newPr": null,
+    "jiraCommentId": "10273",
+    "key": "KAN-17",
+    "github": "https://github.com/Floorp-Projects/Floorp/issues/2968",
+    "environment": "Debian13.6; Xvfb/X11; official Flatpak1.16.6; Floorp runtime26.08 / Firefox runtime25.08; normal sessionbus; sandbox pref6; portal incomplete",
+    "testCommand": "python3 KAN-17/font_compare.py",
+    "result": "not reproduced in font-present Debian; 4/4 Floorp-Firefox Flatpak render comparisons and signed-ja-pack actual Japanese menu/fixture probes pass with normal quit",
+    "remainingConditions": [
+      "原Bluefin44.20261022.1/Floorp12.20.2@158.0.1のfontconfig/cache",
+      "同一ページ・新規profile（原報告は未確認）",
+      "動くFirefoxの配布形式/runtime/フォント可視性の比較情報"
+    ],
+    "existingPr": null,
+    "evidence": [
+      "KAN-17/report.md",
+      "KAN-17/font-results.json",
+      "KAN-17/font_compare.py",
+      "KAN-17/font-origin.log",
+      "KAN-17/one.ablaze.floorp-default.png",
+      "KAN-17/org.mozilla.firefox-default.png",
+      "KAN-17/ja-ui/report.md",
+      "KAN-17/ja-ui/result.json",
+      "KAN-17/ja-ui/screenshot-result.json",
+      "KAN-17/ja-ui/ja-menu-root.png",
+      "residual-review/report.md",
+      "residual-review/matrix.json"
+    ],
+    "jiraUrl": "https://floorp-projects.atlassian.net/browse/KAN-17",
+    "jiraFollowupCommentIds": [
+      "10300"
+    ],
+    "residualReview": {
+      "report": "residual-review/report.md",
+      "row": "residual-review/matrix.json",
+      "satisfiedEnvironmentConditions": [
+        "Debianで日本語font可視・両製品4render比較成功",
+        "通常signed-ja languagepack/実日本語menu・本文/正常終了",
+        "別WSLのfont欠落では両製品が四角、隔離Notoで改善（Floorp固有原因とはしない）"
+      ],
+      "notReproducedScope": "Noto可視のDebianでは未再現。BluefinでFirefoxのみ正常という差は未解明。",
+      "remainingConditions": [
+        "原Bluefin44.20261022.1/Floorp12.20.2@158.0.1のfontconfig/cache",
+        "同一ページ・新規profile（原報告は未確認）",
+        "動くFirefoxの配布形式/runtime/フォント可視性の比較情報"
+      ],
+      "nextAvailableWork": "原Bluefin側の上記材料が得られればpackage/font差分比較。既済みのNoto-present Debian反復で原条件を解消しない。",
+      "fixPrAndQualification": "根拠ある製品修正PRなし。公式Floorp159 Flatpak26.08/Firefox159 Flatpak25.08比較、signed-ja実UIは既測。"
+    },
+    "latestJiraCommentId": "10300"
+  },
+  {
+    "sourceSha": "984509d2053be7bae9027133bda7259cd706b208",
+    "productVersion": "Floorp12.21.1 / Gecko159.0.1 / BuildID20261103153232",
+    "jiraCommentId": "10274",
+    "key": "KAN-23",
+    "github": "https://github.com/Floorp-Projects/Floorp/issues/2897",
+    "environment": "Debian13.6 Xvfb/X11; actual official product and isolated modified product copy; synthetic automation; normal sessionbus; sandbox pref6",
+    "testCommand": "See report and published reproducible scripts; full-build production package comparison (see full-build/report.md and reproducible scripts)",
+    "result": "reproduced in full baseline production package; full PR3030 production package fixes ja/es-CL brand/icon with signed locale UI preserved; four fresh-profile comparisons pass; newstandardproductioncollector timeout is orchestrationgap, not brandingfailure; normaltestmode recipe sandbox1/CSPfalse was measured but neverlaunched",
+    "remainingConditions": [
+      "他locale/theme/channel",
+      "保護維持での標準test-mode+active signed langpack",
+      "署名配布・原desktop全体資格"
+    ],
+    "existingPr": null,
+    "newPr": "https://github.com/Floorp-Projects/Floorp/pull/3030",
+    "evidence": [
+      "KAN-23/report.md",
+      "branding/locale-matrix.json",
+      "branding/icon-comparison.json",
+      "branding/candidate-provenance.json",
+      "branding/probe.py",
+      "branding/regression.py",
+      "full-build/report.md",
+      "full-build/execution.json",
+      "full-build/3030/package-test/execution-1/summary.json",
+      "full-build/3030/package-test/execution-1/results.json",
+      "full-build/3030/package-test/execution-1/packaged-branding-manifests.json",
+      "residual-review/report.md",
+      "residual-review/matrix.json",
+      "residual-review/KAN-23/report.md"
+    ],
+    "jiraUrl": "https://floorp-projects.atlassian.net/browse/KAN-23",
+    "jiraFollowupCommentIds": [
+      "10295",
+      "10352"
+    ],
+    "fullProductionBuild": {
+      "sourceSha": "e55152c559a141001a375ac77098d141b0db3ca7",
+      "run": 42067997767,
+      "artifact": 13435129152,
+      "zipSha256": "96ebf4afca0028715039d5154a27fd030e8150cb8117b0249d91eb576411d3fc",
+      "scope": "complete production application package with authenticated prebuilt compatible Gecko; not fresh Gecko compilation",
+      "manualProductPatch": false,
+      "baselineRun": 42068377281
+    },
+    "latestJiraCommentId": "10352",
+    "residualReview": {
+      "report": "residual-review/report.md",
+      "row": "residual-review/matrix.json",
+      "satisfiedEnvironmentConditions": [
+        "署名済ja/es-CL有効の完全製品でbrand/icon修復・localemenu保持",
+        "生成manifestと最終omni.ja override確認",
+        "NEW: signed-ja production製品へ標準collector実行、結果なしtimeoutという構成不足を実測"
+      ],
+      "notReproducedScope": "元branding/iconは完全baselineで再現、候補で修復確認。en-USだけのCIは言語pack回帰を単独で証明しない。",
+      "remainingConditions": [
+        "他locale/theme/channel",
+        "保護維持での標準test-mode+active signed langpack",
+        "署名配布・原desktop全体資格"
+      ],
+      "nextAvailableWork": "標準test-mode helperはsandbox1/CSP無効を生成するため起動せず。保護維持の別harness設計が必要。製品不具合とせず同じcollector timeoutも反復しない。",
+      "fixPrAndQualification": "Draft3030 e55152c; 標準CI42045064743 282modules/0fail。完全package42067997767・ja/es-CL対照4件成功。"
+    }
+  },
+  {
+    "key": "KAN-48",
+    "github": "https://github.com/Floorp-Projects/Floorp/issues/2800",
+    "sourceSha": "29a3eb23145da90706d8a94441373278521cc737",
+    "productVersion": "Floorp12.21.1 / Gecko159.0.1",
+    "testedDateLocal": "2026-11-06",
+    "timezone": "Asia/Tokyo",
+    "environment": "Debian13.6; native nestedKWin6.3.6/normalDBus/Xvfb106; sandbox6/gatefalse; real synthetic WebDriver; not originalCachyOS/GPU",
+    "testCommand": "python3 session.py start --baseline; python3 session.py repair-prefix; python3 probe.py; python3 cold_site.py; python3 compare_pixels.py; python3 session.py stop",
+    "result": "taskmodel infrastructure cause identified and resolved; official cold Alpha/Beta app_id and launcher match; actual taskbar32x32 each all1024RGBA pixels equal PWA PNG; original wrong-Floorp-icon not reproduced in this condition; shared browser-first identity is separately related to PR3032; newrealVRTMAX fullmain159 coldnativeWayland actualtaskbar near-generatedlogo MAE0.4316/max1; VTMGO privacygate remainsunqualified",
+    "classification": "environment gap resolved; original symptom not reproduced in current condition, not declared fixed",
+    "remainingConditions": [
+      "原CachyOS/KDE6.7.5/pacman/報告版profileとfull desktop",
+      "VTMGOはprivacy gate転送/no actual manifestで原PWA未資格",
+      "物理GPU/原permission条件は未検証"
+    ],
+    "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/3032",
+    "prRelation": "verified shared-class/grouping comparison only; not a verified fix of original matching-app_id/wrong-icon symptom",
+    "newPr": null,
+    "duplicateOf": null,
+    "jiraCommentId": "10320",
+    "previousJiraCommentIds": [
+      "10292",
+      "10301"
+    ],
+    "evidence": [
+      "KAN-48/followup/report.md",
+      "KAN-48/followup/subject.json",
+      "KAN-48/followup/prefix-repair.json",
+      "KAN-48/followup/standard-before.png",
+      "KAN-48/followup/standard-after.png",
+      "KAN-48/followup/protocol-authorization-excerpt.txt",
+      "KAN-48/followup/plasma-window-protocol-excerpt.txt",
+      "KAN-48/followup/cold-icon-results.json",
+      "KAN-48/followup/alpha-cold-taskbar.png",
+      "KAN-48/followup/beta-cold-taskbar.png",
+      "KAN-48/followup/candidate-taskbar-results.json",
+      "KAN-48/followup/candidate-ui-taskbar.png",
+      "KAN-48/followup/session.py",
+      "KAN-48/followup/cold_icons.py",
+      "residual-review/report.md",
+      "residual-review/matrix.json",
+      "residual-review/KAN-48/report.md"
+    ],
+    "residualReview": {
+      "report": "residual-review/report.md",
+      "row": "residual-review/matrix.json",
+      "satisfiedEnvironmentConditions": [
+        "nested KWin6.3.6のtaskmodelは標準KWrite対照・通常Exec-prefix補正で復旧済み",
+        "既測opaque2PWAのtaskbar各1024pixels一致",
+        "NEW: 元報告VRTMAX実HTTPS/UIinstall/生成launcher coldWayland、app_id/KWin/desktop一致、taskbar VRT画像MAE0.4316/max1"
+      ],
+      "notReproducedScope": "原Floorp誤iconは当初flat fixtureでも今回実VRTMAXでも未再現。既修正/3032 fix/重複扱いしない。",
+      "remainingConditions": [
+        "原CachyOS/KDE6.7.5/pacman/報告版profileとfull desktop",
+        "VTMGOはprivacy gate転送/no actual manifestで原PWA未資格",
+        "物理GPU/原permission条件は未検証"
+      ],
+      "nextAvailableWork": "今回VRTMAXを追加実測。VTMGOのprivacy/原siteflowを同意や認証の突破で置換しない。原OSのmatching-ID/wrong-icon境界へ引継ぎ。",
+      "fixPrAndQualification": "3032/3040はidentity関連のみ。CI各281成功、完全製品あり。ただし元のmatching-ID/wrong-iconを直した証明ではない。"
+    },
+    "latestJiraCommentId": "10320",
+    "jiraFollowupCommentIds": [
+      "10320"
+    ],
+    "priorEnvironment": "Debian13.6; actual KWin6.3.6 nested Wayland/Plasma on Xvfb91; ordinary session DBus; standard KWrite control; task model recovered by Exec-prefix metadata correction; incomplete full system portal/hardware",
+    "priorTestCommand": "python3 KAN-48/followup/session.py start --baseline; standard KWrite control; session.py repair-prefix; actual UI pwa_ui_probe.py --port2885; python3 KAN-48/followup/cold_icons.py",
+    "priorSourceSha": "984509d2053be7bae9027133bda7259cd706b208"
+  },
+  {
+    "sourceSha": "2deb165d75290ffd4f602ad078512dc42fc3a332",
+    "productVersion": "Floorp12.21.1 / Gecko159.0.1 / BuildID20261103153232",
+    "jiraCommentId": "10275",
+    "key": "KAN-49",
+    "github": "https://github.com/Floorp-Projects/Floorp/issues/2649",
+    "environment": "Debian13.6; KWin6.3.6 native nested Wayland; independent normal DBus; synthetic UI/CLI; sandbox6 and rolloutfalse unchanged; authenticated unsigned full application packages",
+    "testCommand": "python3 wayland-browser-identity/run_full_package_suite.py --intake wayland-browser-identity/full-package/intake-r2/product-intake.json --expected-sha 2deb165d75290ffd4f602ad078512dc42fc3a332 --expected-run 42077174018 --out <new-output-directory>",
+    "result": "reproduced in full3032 package; dependent Draft3040 full product passes6 native Wayland identity cases with ordinary/PWA separation, existing profile, custom name and private state preserved; final strict untraced suite qualifies; first-run lock anomaly retained separately",
+    "remainingConditions": [
+      "原Manjaro/KDE/Outlook/Teams/taskbar pixels",
+      "全field無効legacyの既存randomidentity限界",
+      "初回writable product-root lock生成原因未特定（最終fresh6件成功でも抹消しない）"
+    ],
+    "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/3032",
+    "newPr": "https://github.com/Floorp-Projects/Floorp/pull/3040",
+    "evidence": [
+      "KAN-49/report.md",
+      "pwa-order-run/result.json",
+      "pwa-order-candidate/result.json",
+      "regression-baseline.json",
+      "regression-candidate.json",
+      "pwa_order_probe.py",
+      "KAN-49/followup-validation.md",
+      "legacy-guard-candidate.json",
+      "regression-guard-candidate.json",
+      "candidate-kde/cold-launch-result.json",
+      "ci/pr3032-final/summary.json",
+      "ci/pr3032-final/verified-excerpt.txt",
+      "full-build/report.md",
+      "full-build/execution.json",
+      "full-build/3032/x11-product-qa/result.json",
+      "full-build/3032/wayland-product-qa/result.json",
+      "full-build/baseline/x11-product-qa/result.json",
+      "full-build/baseline/wayland-product-qa/result.json",
+      "wayland-browser-identity/report.md",
+      "wayland-browser-identity/subject.json",
+      "wayland-browser-identity/standard-ci/report.md",
+      "wayland-browser-identity/full-package/package-build-report.md",
+      "wayland-browser-identity/full-package/actual-qa-r2/suite-result.json",
+      "wayland-browser-identity/full-package/actual-qa/suite-result.json",
+      "wayland-browser-identity/full-package/product-mutation-observation.json",
+      "wayland-browser-identity/profile-lock-audit/report.md",
+      "residual-review/report.md",
+      "residual-review/matrix.json"
+    ],
+    "jiraUrl": "https://floorp-projects.atlassian.net/browse/KAN-49",
+    "jiraFollowupCommentIds": [
+      "10296",
+      "10302",
+      "10309",
+      "10353",
+      "10378"
+    ],
+    "newPrHead": "2deb165d75290ffd4f602ad078512dc42fc3a332",
+    "ci": {
+      "head": "2deb165d75290ffd4f602ad078512dc42fc3a332",
+      "run": 42077116984,
+      "conclusion": "success",
+      "artifactId": 13438134467,
+      "sha256Verified": true,
+      "browserPassed": 281,
+      "browserFailed": 0
+    },
+    "fullProductionBuild": {
+      "sourceSha": "2deb165d75290ffd4f602ad078512dc42fc3a332",
+      "run": 42077174018,
+      "artifact": 13439144608,
+      "zipSha256": "febce14e382da315a7579464f1052768a0e51854a752de8a926ee898db6ce996",
+      "scope": "unmodified full production application package; precompiled locked native Runtime; no helper XPT added; distinct from uninspected Cloud B strict artifacts",
+      "manualProductPatch": false,
+      "finalSuite": "wayland-browser-identity/full-package/actual-qa-r2/suite-result.json",
+      "qualified": true,
+      "caseCount": 6,
+      "qualifiedFor": "recorded6nativeWayland identity cases, not strict release/helper/XPT/signeddistribution qualification"
+    },
+    "latestJiraCommentId": "10378",
+    "baselineSourceSha": "984509d2053be7bae9027133bda7259cd706b208",
+    "comparisonSourceSha": "8249e234adfbb3e877e4a20cf5f57d7264d9a447",
+    "existingPrHead": "8249e234adfbb3e877e4a20cf5f57d7264d9a447",
+    "priorFullProductionBuild": {
+      "sourceSha": "8249e234adfbb3e877e4a20cf5f57d7264d9a447",
+      "run": 42068055038,
+      "artifact": 13436721142,
+      "zipSha256": "fc338fa4cd3307c7a8937b2b99c97c18a1665e23b3b561680662fddfc3b336e5",
+      "scope": "complete production application package with authenticated prebuilt compatible Gecko; not fresh Gecko compilation",
+      "manualProductPatch": false,
+      "baselineRun": 42068377281
+    },
+    "qualificationAnomaly": {
+      "firstSuiteQualified": false,
+      "reason": "new root .parentlock and lock symlink; preexisting bytes unchanged; source unresolved",
+      "diagnosticReproduced": false,
+      "finalUntracedFreshSuiteQualified": true,
+      "checksWeakened": false
+    },
+    "residualReview": {
+      "report": "residual-review/report.md",
+      "row": "residual-review/matrix.json",
+      "satisfiedEnvironmentConditions": [
+        "cold PWA/nativeapp_idとgenerateddesktop対応",
+        "通常browser/PWAの起動順・複数PWA・既存profile・customname・privateを未追跡完全製品で確認",
+        "X11補足と旧/不正SSB fallbackを実測済み"
+      ],
+      "notReproducedScope": "3032全製品で通常browserのPWA identity継承を再現し3040で修復。原Manjaro/Outlook/Teams全体は未資格。",
+      "remainingConditions": [
+        "原Manjaro/KDE/Outlook/Teams/taskbar pixels",
+        "全field無効legacyの既存randomidentity限界",
+        "初回writable product-root lock生成原因未特定（最終fresh6件成功でも抹消しない）"
+      ],
+      "nextAvailableWork": "既存read-only native比較・trace診断・未追跡fresh比較済み。lockの具体的trigger/callerが得られるまで同じ6成功条件や推測修正を反復しない。",
+      "fixPrAndQualification": "Draft3032 8249e234 +依存3040 2deb165d。標準CI42050337102/42077116984各281/0。完全3040 run42077174018・nativeWayland6条件成功。"
+    },
+    "priorCi": {
+      "head": "8249e234adfbb3e877e4a20cf5f57d7264d9a447",
+      "run": 42050337102,
+      "conclusion": "success",
+      "artifactId": 13427512330,
+      "sha256Verified": true
+    }
+  },
+  {
+    "key": "KAN-89",
+    "github": "https://github.com/Floorp-Projects/Floorp/issues/2713",
+    "sourceSha": "984509d2053be7bae9027133bda7259cd706b208",
+    "productVersion": "Floorp12.21.1/Gecko159.0.1",
+    "environment": "Debian13/independentXvfb90/KWinX11 6.3.6/Plasma/officialFlatpak/dedicatedHOME+DBus",
+    "testCommand": "dbus-run-session -- python3 KAN-89/followup/session_probe.py; python3 KAN-89/followup/compare_switcher_pixels.py",
+    "result": "three official-product locale runs normal-exit0; actual-client _NET_WM_ICON absent; AltTab genericX pixels exactly identical across locales; final Plasma taskbar Floorp32 nearly pixel-identical(max channel difference1) after Exec-only prefix relocation; KWin desktopFileName still empty",
+    "classification": "original-condition environment/association deficit remains; different controlled observation, not a product pass or confirmed original-bug reproduction",
+    "remainingConditions": [
+      "原Manjaro/KDE6.7.4/Xorg/Flatpakの正常desktop/portal",
+      "KWin desktopFileName/icon association原因",
+      "原locale/theme/package154系との差"
+    ],
+    "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/3030",
+    "newPr": null,
+    "tests": [
+      {
+        "locale": "en-US",
+        "completed": true,
+        "windowID": "0x140000d",
+        "clientListMatch": true,
+        "iconPropertyPresent": false,
+        "exitCode": 0
+      },
+      {
+        "locale": "ja",
+        "completed": true,
+        "windowID": "0x140000d",
+        "clientListMatch": true,
+        "iconPropertyPresent": false,
+        "exitCode": 0
+      },
+      {
+        "locale": "es-CL",
+        "completed": true,
+        "windowID": "0x140000d",
+        "clientListMatch": true,
+        "iconPropertyPresent": false,
+        "exitCode": 0
+      }
+    ],
+    "evidence": [
+      "KAN-89/followup/report.md",
+      "KAN-89/followup/result.json",
+      "KAN-89/followup/kwin-window-snapshots.json",
+      "KAN-89/followup/gtk-theme-probe.txt",
+      "KAN-89/followup/desktop-prefix-relocation.json",
+      "KAN-89/followup/pixel-comparison.json",
+      "KAN-89/followup/ja-client-properties.json",
+      "KAN-89/followup/en-US-client-properties.json",
+      "KAN-89/followup/es-CL-client-properties.json",
+      "KAN-89/followup/ja-alt-tab.png",
+      "KAN-89/followup/en-US-alt-tab.png",
+      "KAN-89/followup/es-CL-alt-tab.png",
+      "KAN-89/followup/taskbar-pixel-comparison.json",
+      "KAN-89/followup/cleanup.json",
+      "residual-review/report.md",
+      "residual-review/matrix.json"
+    ],
+    "referenceSha256": {
+      "floorp": "474f20f1407914c689d34c91da62997950fee1a70197bf3d20252a4dcf8e91fa",
+      "firefox": "12130ce8511f4a348c25380ba9b70b80b2ff0680e4ee801367bf0dbb5e94c00a"
+    },
+    "cleanup": "display90 socket absent; additional dedicatedHOME+display90 processes found0",
+    "testedDateLocal": "2026-11-06",
+    "timezone": "Asia/Tokyo",
+    "jiraCommentId": "10321",
+    "previousJiraCommentIds": [
+      "10293"
+    ],
+    "prRelation": "legacy branding path only; symptom/cause equality not established; not a verified KAN-89 fix",
+    "duplicateOf": null,
+    "graphicsBackend": "Plasma QtQuick software rendering in the headless X11 session; no physical GPU qualification",
+    "residualReview": {
+      "report": "residual-review/report.md",
+      "row": "residual-review/matrix.json",
+      "satisfiedEnvironmentConditions": [
+        "実main clientを正確同定・NET_WM_ICON不在を3localeで確認",
+        "KWinX11/Plasma/公式Flatpakのja/es-CL/en-US・signedpack・実AltTab/taskbarpixels採取済み",
+        "taskbar Floorp32近一致、AltTabは全locale同一genericX"
+      ],
+      "notReproducedScope": "原Firefox logoは未再現。genericX/desktopFileName空は原症状と別の関連付け不足で、Floorp表示合格でもない。",
+      "remainingConditions": [
+        "原Manjaro/KDE6.7.4/Xorg/Flatpakの正常desktop/portal",
+        "KWin desktopFileName/icon association原因",
+        "原locale/theme/package154系との差"
+      ],
+      "nextAvailableWork": "正常な原desktop/Flatpak関連付け条件が先決。Exec移設済prefixで同じ3locale反復やKAN23との推測duplicateは行わない。",
+      "fixPrAndQualification": "3030はlegacy-branding経路の関連のみ。KAN89のverified fix/duplicateではない。"
+    },
+    "latestJiraCommentId": "10321",
+    "jiraFollowupCommentIds": [
+      "10321"
+    ]
+  },
+  {
+    "sourceSha": "29a3eb23145da90706d8a94441373278521cc737",
+    "productVersion": "Floorp12.21.1 / Gecko159.0.1 / BuildID20261103153232",
+    "newPr": null,
+    "jiraCommentId": "10276",
+    "key": "KAN-96",
+    "github": "https://github.com/Floorp-Projects/Floorp/issues/2695",
+    "environment": "Debian13.6/Xvfb103 X11/normalDBus/sandbox6; syntheticinput",
+    "testCommand": "dbus-run-session -- python3 probe.py; executed installs then --relaunch-only after observation correction",
+    "result": "not-reproduced-current-Debian; 2/2 UI create paths and webIsolated actor instantiate; generated app relaunches work; newrealCOOP/COEP2UIinstalls+2generatedrelaunches and genuinecontainer-sourceactor pass; actualsafe-mode controlledinstall+coldPWA pass; assignedcontainer rollout remainsfalse; originalMusic proxyCONNECT403 notproductbug",
+    "remainingConditions": [
+      "原CachyOS/Arch package/profile/permission/full desktop",
+      "元safe-mode YouTubeMusicはproxy CONNECT403・実ブラウザー拒否画面。外部cross-site resources未資格",
+      "PWAへのcontainer割当は通常rollout未有効で未資格（source-container検証と区別）",
+      "物理入力/GPU資格なし"
+    ],
+    "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2680",
+    "evidence": [
+      "KAN-96/report.md",
+      "pwa-ui-run-3/result.json",
+      "pwa-order-run/result.json",
+      "pwa_ui_probe.py",
+      "pwa_order_probe.py",
+      "residual-review/report.md",
+      "residual-review/matrix.json",
+      "residual-review/KAN-96/report.md"
+    ],
+    "jiraUrl": "https://floorp-projects.atlassian.net/browse/KAN-96",
+    "residualReview": {
+      "report": "residual-review/report.md",
+      "row": "residual-review/matrix.json",
+      "satisfiedEnvironmentConditions": [
+        "既測webIsolatedとURLbar/menu作成・独立起動",
+        "NEW: 実webCOOP+COEP/crossOriginIsolated/SAB、通常sourceと実userContextId7 sourceでactor/install",
+        "NEW: 実TroubleshootModeでisolated fixtureからUI作成・cold PWA5.01秒で準備完了（inSafeMode=true）"
+      ],
+      "notReproducedScope": "今回の159/制御ページ・実container source・safe-mode制御ページではactor mismatch未再現。CachyOS全体の既修正確定ではない。",
+      "remainingConditions": [
+        "原CachyOS/Arch package/profile/permission/full desktop",
+        "元safe-mode YouTubeMusicはproxy CONNECT403・実ブラウザー拒否画面。外部cross-site resources未資格",
+        "PWAへのcontainer割当は通常rollout未有効で未資格（source-container検証と区別）",
+        "物理入力/GPU資格なし"
+      ],
+      "nextAvailableWork": "今回COOP/COEP・container source・safe-mode coldflowへ追加実測。実YouTubeMusicは現在のproxy CONNECT403を別記録し、迂回/強制rolloutで合格を作らない。",
+      "fixPrAndQualification": "既存merged2680 actor修正と整合。完全main29a3 packageで新COOP/COEP2UIinstall+2generatedlaunch成功、追加PR不要。"
+    },
+    "latestJiraCommentId": "10276",
+    "jiraFollowupCommentIds": [
+      "10276"
+    ],
+    "priorEnvironment": "Debian13.6 Xvfb/X11; official native product; synthetic UI; normal sessionbus; sandbox6",
+    "priorTestCommand": "python3 pwa_ui_probe.py --port 2839 --out pwa-ui-run-3; python3 pwa_order_probe.py",
+    "priorSourceSha": "984509d2053be7bae9027133bda7259cd706b208"
+  }
+]

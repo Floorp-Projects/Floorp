@@ -1,0 +1,22 @@
+[
+  {
+    "kind": "plasma",
+    "pid": 154546,
+    "ownedCommandMatched": true
+  },
+  {
+    "kind": "kwin",
+    "pid": 154251,
+    "ownedCommandMatched": true
+  },
+  {
+    "kind": "xvfb",
+    "pid": 154178,
+    "ownedCommandMatched": true
+  },
+  {
+    "kind": "bus",
+    "pid": 154202,
+    "ownedCommandMatched": true
+  }
+]

@@ -1,0 +1,44 @@
+[
+  {
+    "key": "KAN-17",
+    "github": 2968,
+    "commentIds": [
+      6356678463,
+      6380109461
+    ],
+    "facts": [
+      "Original Bluefin44.20261022.1/Floorp12.20.2@158.0.1 report does not confirm fresh-profile reproduction.",
+      "Working Firefox installation format remains unspecified; maintainer already requested page/UI/new-profile/runtime details, no reporter answer in two fetched comments.",
+      "Noto-present Debian and no-font WSL comparisons do not explain Floorp-only behavior on original Bluefin."
+    ]
+  },
+  {
+    "key": "KAN-48",
+    "github": 2800,
+    "commentIds": [
+      5916236731,
+      5917064666,
+      5917220377,
+      6027002870,
+      6359222556
+    ],
+    "facts": [
+      "Original site examples: https://www.vtmgo.be and VRTMAX; original nativeWayland app_id/desktopFile reportedly match whilewrongFloorpicon persists.",
+      "Reporter observed unassigned taskbar experiment; this does not prove that missing gate causes wrong icon, and no gate is forced in QA.",
+      "Latest original-source comment still reports issue on12.20.2@158.0.1; current159 opaquefixture coldicons not samecondition."
+    ]
+  },
+  {
+    "key": "KAN-89",
+    "github": 2713,
+    "commentIds": [
+      5605298213,
+      5610091831
+    ],
+    "facts": [
+      "Original12.17.1@154.0.2 Manjaro/KDE6.7.4/Xorg/Flathub; actualFirefox logo reported.",
+      "AUR/native good and WaterfoxFlatpak good are reporter controls, not proof Flatpak generallybad orcauseidenticaltoKAN23.",
+      "Current159Flatpak genericAltTab observation is distinct fromoriginalFirefoxlogo; no duplicate/fixed qualification."
+    ]
+  }
+]

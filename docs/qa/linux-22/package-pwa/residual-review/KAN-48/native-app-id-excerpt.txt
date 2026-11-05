@@ -1,0 +1,1 @@
+[ 870204.424] {Default Queue}  -> xdg_toplevel#72.set_app_id("floorp-54e02a83-a477-4acf-b027-2a7eea2c788e")

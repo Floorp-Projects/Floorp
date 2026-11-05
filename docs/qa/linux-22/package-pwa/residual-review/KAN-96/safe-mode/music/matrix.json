@@ -1,0 +1,33 @@
+{
+  "key": "KAN-96",
+  "sourceSha": "29a3eb23145da90706d8a94441373278521cc737",
+  "actualRequestedSite": "https://music.youtube.com/",
+  "inSafeMode": true,
+  "acceptInsecureCerts": false,
+  "osDefaultProxyCaTrustPreserved": true,
+  "classification": "original-site-network-blocked",
+  "result": "one actual Music safe-mode navigation reaches about:neterror proxy refusal; host CONNECT403 beforeTLS; no sitecontent/PWAqualification",
+  "siteSeconds": 2.94,
+  "actualSiteUiInstallAttempted": false,
+  "actorErrorPageConsequenceNotProductBug": true,
+  "remainingConditions": [
+    "Normal managed-proxy HTTPS tunnel to music.youtube.com",
+    "Actual original-site safe-mode page/manifest/actor/PWAcreation",
+    "Original CachyOS/Arch package/reporter profile/full desktoppermissions"
+  ],
+  "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2680",
+  "newPr": null,
+  "normalQuits": 1,
+  "productUnchanged": true,
+  "ownedProcessesRemaining": 0,
+  "evidence": [
+    "report.md",
+    "result.json",
+    "content.json",
+    "browser-state.json",
+    "site.png",
+    "probe.py",
+    "../music-host-tls.json"
+  ],
+  "originalLinuxDenominator": 22
+}

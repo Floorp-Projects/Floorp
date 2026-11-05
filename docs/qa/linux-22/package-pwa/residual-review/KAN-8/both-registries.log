@@ -1,0 +1,3 @@
+dbus-daemon[152958]: [session uid=1000 pid=152958 pidfd=5] Activating service name='org.a11y.Bus' requested by ':1.2' (uid=1000 pid=152959 comm="/workspace/qa-linux-22/package-pwa/sysroot/usr/bin" label="kernel")
+dbus-daemon[152958]: [session uid=1000 pid=152958 pidfd=5] Successfully activated service 'org.a11y.Bus'
+Floorp: two Flatpak profile registries exist: /workspace/qa-linux-22/package-pwa/residual-review/KAN-8/both-registries-home/.var/app/one.ablaze.floorp/config/../.floorp and /workspace/qa-linux-22/package-pwa/residual-review/KAN-8/both-registries-home/.var/app/one.ablaze.floorp/config/floorp. No data was changed; choose which profile to retain before starting.

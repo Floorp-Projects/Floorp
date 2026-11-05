@@ -1,0 +1,16 @@
+{
+  "location": {
+    "url": "https://music.youtube.com/",
+    "queryPresent": false
+  },
+  "documentURI": {
+    "url": "about://neterror",
+    "queryPresent": true
+  },
+  "title": "Problem loading page",
+  "text": "",
+  "ready": "interactive",
+  "isSecureContext": true,
+  "crossOriginIsolated": false,
+  "manifest": null
+}

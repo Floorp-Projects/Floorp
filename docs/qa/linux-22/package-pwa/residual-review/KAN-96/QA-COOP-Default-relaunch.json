@@ -1,0 +1,28 @@
+{
+  "profile": "/workspace/qa-linux-22/package-pwa/residual-review/KAN-96/run/profile",
+  "exe": "/workspace/qa-linux-additional/KAN-24/followup/products/baseline/floorp/floorp",
+  "version": "159.0.1",
+  "buildID": "20261103153232",
+  "sandbox": 6,
+  "disabled": false,
+  "windows": [
+    {
+      "url": "http://127.0.0.1:8789/isolate/",
+      "title": "QA COOP Default — Ablaze Floorp",
+      "ssbid": null,
+      "taskbartab": "{8bb99720-5e6e-4d6d-b0eb-d19650bb4cd6}",
+      "floorpSsbWindow": true,
+      "tabSsb": "true",
+      "remoteType": "webCOOP+COEP=http://127.0.0.1",
+      "userContextId": null,
+      "originAttributes": {
+        "firstPartyDomain": "",
+        "geckoViewSessionContextId": "",
+        "partitionKey": "",
+        "privateBrowsingId": 0,
+        "userContextId": 0
+      },
+      "actor": true
+    }
+  ]
+}

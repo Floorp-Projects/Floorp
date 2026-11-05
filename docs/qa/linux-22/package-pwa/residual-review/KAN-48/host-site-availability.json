@@ -1,0 +1,32 @@
+[
+  {
+    "url": "https://www.vtmgo.be/",
+    "scope": "host HTTP/resource availability only; not browser/PWA/taskbar qualification",
+    "tlsVerification": true,
+    "status": 200,
+    "finalOrigin": "https://www.vtmgo.be",
+    "bytesRead": 962226,
+    "contentSha256": "3238821f48c3abf8c5d61d87ed32c0c1e7179ffa341dd04c594a673245a1e1b2",
+    "title": [
+      "VTM GO - Kijk alles van VTM gratis online"
+    ],
+    "manifestTags": [
+      "<link rel=\"manifest\" href=\"/vtmgo/assets/vtmgo/manifest.json\"/>"
+    ]
+  },
+  {
+    "url": "https://www.vrt.be/vrtmax/",
+    "scope": "host HTTP/resource availability only; not browser/PWA/taskbar qualification",
+    "tlsVerification": true,
+    "status": 200,
+    "finalOrigin": "https://www.vrt.be",
+    "bytesRead": 44295,
+    "contentSha256": "ceefa5b9ddb8be04d3cec15fc807e7431294a8ba0639c51a0ad4e32bc4ced970",
+    "title": [
+      "VRT MAX"
+    ],
+    "manifestTags": [
+      "<link rel=\"manifest\" href=\"/vrtnu-resources/manifest/manifest.22-08-2024.json\" crossorigin=\"use-credentials\">"
+    ]
+  }
+]

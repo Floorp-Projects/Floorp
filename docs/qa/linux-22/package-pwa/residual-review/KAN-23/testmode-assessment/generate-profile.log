@@ -1,0 +1,3 @@
+Download https://jsr.io/@std/path/meta.json
+error: JSR package manifest for '@std/path' failed to load. Import 'https://jsr.io/@std/path/meta.json' failed.
+    at file:///workspace/qa-linux-full-build/floorp3030/tools/src/update.ts:3:23

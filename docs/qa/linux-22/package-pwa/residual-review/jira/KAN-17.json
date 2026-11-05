@@ -1,0 +1,62 @@
+{
+  "key": "KAN-17",
+  "fields": {
+    "summary": "[Linux/Fonts] Flatpakで日本語が豆腐表示になる（#2968）",
+    "description": "## 原報告\n\nhttps://github.com/Floorp-Projects/Floorp/issues/2968\n\n## 報告内容・影響（GitHub報告、未独立検証）\n\nFloorp 12.20.2/Bluefin Linux 44/Flatpakで仮名・漢字が四角に数字の字形で表示される。Firefoxでは表示できると報告。別ユーザーは日本語フォントがある環境で正常表示。\n\n## 暫定トリアージ\n\nP2。環境依存の可能性が高くP2、追加情報待ち。\n\n## 再現・切り分け手順\n\nFlatpak runtime、フォント導入状況、fontconfigキャッシュ、Firefox Flatpakとの差、WebページとUI文字双方を確認。\n\n## 完了条件\n\n日本語フォントが導入済みの場合は正しく解決される。環境側の欠落なら依存・必要なフォントを説明。  \n※ 検証結果・実施ビルド・回帰テストをJiraとGitHubに記録。現行版で再現しなければ既修正／環境依存／情報待ちの判断を残す。\n\n## 次の一手\n\nFlatpak runtime、フォント導入状況、fontconfigキャッシュ、Firefox Flatpakとの差、WebページとUI文字双方を確認。",
+    "status": {
+      "name": "未着手",
+      "statusCategory": {
+        "name": "To Do"
+      }
+    },
+    "labels": [
+      "area-platform",
+      "env-blocked",
+      "floorp-stability-2026-11",
+      "needs-bluefin-44",
+      "needs-bluefin-firefox-control",
+      "needs-info",
+      "needs-reporter-font-details",
+      "needs-repro",
+      "p2",
+      "qa-linux-executed",
+      "triage-reviewed"
+    ]
+  },
+  "commentPagination": {
+    "total": 5,
+    "isLast": true
+  },
+  "comments": [
+    {
+      "id": "10074",
+      "body": "## 原報告・既存調査の照合（2026-11-05）\n\nGitHub #2968: Bluefin 44 / Flathub版 12.20.2 で日本語が豆腐表示。別環境では表示できたとのコメントはあるが条件が異なり原環境の未再現を意味しない。次: Linux Flatpakで日本語フォントのインストール状態、フォント可視性、同じ形式の Firefox と比較。区分: Linux/Flatpak環境不足。\n\n参照 main `984509d2053be7bae9027133bda7259cd706b208`。今回ブラウザーテストは未実施。Issue番号によるPR検索では直接対象を示すPRを確認できなかったが、関連PRが存在しないことの証明ではない。状態は変更しない。",
+      "created": "2026-11-05T18:28:45.834+0900",
+      "updated": "2026-11-05T18:28:45.834+0900"
+    },
+    {
+      "id": "10264",
+      "body": "2026-11-05 controlled **actual Flatpak rendering**, not the reporter's Bluefin environment. Ubuntu 24.04.2 WSL2/WSLg XWayland, isolated per-user Flatpak 1.14.6, official Flathub `one.ablaze.floorp` 12.21.1 / Gecko 159.0.1, app commit `ab3c23d5f3a32863918263c197b483e37d9ed78a6bb9d00a1657e31dc5e04621`, runtime `org.freedesktop.Platform/x86_64/26.08`, Floorp source tag/main `984509d2053be7bae9027133bda7259cd706b208`. No user/system Flatpak installation or normal browser profile was modified. Product was run with an isolated HOME and profile using an isolated D-Bus session and XWayland.\n\nBefore: `fc-list :lang=ja` in both host fontconfig and the Flatpak sandbox returned no Japanese family; `fc-match :lang=ja` selected DejaVu Sans. A static page containing `日本語の文字 漢字 かな カナ` rendered hexadecimal boxes in the actual Flatpak browser; English rendered normally. Browser screenshot `outputs/KAN-17-before.png`, canvas text width 274.7 px at 32px sans-serif. After adding only Ubuntu's `NotoSansCJK-Regular.ttc` to the isolated HOME's user fonts and rebuilding that isolated font cache, Flatpak `fc-list :lang=ja` showed the Noto CJK families and the same page rendered Japanese visibly with the **same isolated browser profile**; screenshot `outputs/KAN-17-after-same-profile.png`, width 414.5 px. Both successful browser runs exited normally. Font SHA-256 `b76b0433203017ca80401b2ee0dd69350349871c4b19d504c34dbdd80541690a`. Note `fc-match :lang=ja` returned Noto Sans CJK JP on the host but Noto Sans CJK KR (same TTC, index 1) inside the sandbox under LANG=C.UTF-8; this observation alone does not prove which face Gecko used or a separate defect.\n\nClassification: a controlled missing-font environment produces the reported _appearance_, and providing a Japanese-capable font fixes it in this test. It does not establish that the reporter's Bluefin host lacks fonts, why their Firefox works, or whether the same happens in browser UI. Before the successful run an intentionally bus-less harness attempt failed due to a GTK/glycin loader; the successful comparison used a session bus, and that harness failure is not classified as the reported bug. Next obtain Bluefin's installed font/runtime details and compare Firefox Flatpak on the same page/profile conditions. No code fix or PR is justified by this test. Evidence and reproducible script are in `outputs/KAN-17-followup.md`, `outputs/KAN-17-render.py`, and the PNG/JSON files.",
+      "created": "2026-11-05T22:48:19.799+0900",
+      "updated": "2026-11-05T22:48:19.799+0900"
+    },
+    {
+      "id": "10268",
+      "body": "2026-11-05 Firefox Flatpak comparison, additional evidence: on the same Ubuntu 24.04.2 WSL2/WSLg XWayland host, installed official Flathub `org.mozilla.firefox` 159.0.1 into a **separate** isolated HOME/profile with no Japanese-capable fonts. Firefox app commit `df51b8005c4cd8f1e185d98ec86d15151ac35a453413e4629c2e46691015b207`, runtime `org.freedesktop.Platform/x86_64/25.08`; Floorp previously used runtime 26.08. Inside the Firefox sandbox, `fc-list :lang=ja` returned no families and `fc-match :lang=ja` selected DejaVu Sans. The same local Japanese fixture visibly rendered codepoint boxes in Firefox as well, English remained legible, canvas width was 274.7px, and Firefox exited normally. Screenshot `outputs/KAN-17-firefox-before.png`, result `outputs/KAN-17-firefox-before.json`, script `outputs/KAN-17-firefox-render.py`. This is consistent with a missing-font explanation in the controlled WSL environment, not proof of the reporter's Bluefin cause: their Firefox reportedly renders correctly and its installation/runtime/fonts remain unknown. Browser UI, Bluefin 44 and matched Flatpak runtimes remain untested. No modification to the earlier Floorp HOME or existing user browser; issue remains open.",
+      "created": "2026-11-05T22:55:12.353+0900",
+      "updated": "2026-11-05T22:55:12.353+0900"
+    },
+    {
+      "id": "10273",
+      "body": "## Cloud担当A package/runtime比較（2026-11-05）\n\nsource `984509d2053be7bae9027133bda7259cd706b208`。Debian13.6/Xvfb X11/Flatpak1.16.6で公式Floorp12.21.1(runtime26.08 app ab3c23d5…)と公式Firefox159.0.1(runtime25.08 app df51b800…)を新規専用HOME/profileで比較。既存host Noto CJKが両sandboxの/run/host/fontsへ見えることを確認。default host fonts／同HOMEにNoto追加の4実行とも日本語fixtureを正常描画（PNG目視・32px幅414.5px）、normal quit forced=false、sandbox pref6。通常sessionbus使用、portal不足・nested namespace EPERM警告は残し無効化なし。\n\n区分: フォントがある今回のDebian条件では未再現。以前のWSLフォント欠落比較の繰返しではなく、両package/runtimeでhost CJK可視時の正常比較を追加した。Bluefin44でFirefoxのみ正常という原報告の原因は未解明。Bluefinのfontconfig/cache、Firefox形式、原ページ/profile・日本語UIが残る。既修正/原因確定とはしない。新規修正PRなし、Done化なし。\n\n取得可能な[4実行result/script/画像/report](https://github.com/Floorp-Projects/Floorp/tree/codex/qa-linux-package-pwa/docs/qa/linux-22/package-pwa/KAN-17)。",
+      "created": "2026-11-05T23:33:07.537+0900",
+      "updated": "2026-11-05T23:33:07.537+0900"
+    },
+    {
+      "id": "10300",
+      "body": "追加UI条件を実検証。公式Floorp Flatpak12.21.1/Gecko159.0.1を新規専用HOME/profileで起動し、ja language packを通常AddonManager導入（signedState2）。enUS→ja正常再起動・終了と追加画像採取も全exit0、actualLocale ja、sandbox pref6、disable envなし。Noto可視条件で本文日本語は正常414.5px。X11 root screenshotで開いた実application menuの「設定」「新しいウィンドウ」等の日本語字形も正常表示を視認。Marionetteのウィンドウ画像はpopupを含まず、UI表示判断にはroot画像を使用。\n\nこれは未実施だったDebianフォント有り・公式Flatpak日本語UI条件の追加比較。Bluefin44の原条件やFirefoxのみ正常という差の原因は未解明維持。新修正不要、Done化なし。[追加script/JSON/実メニュー画像](https://github.com/Floorp-Projects/Floorp/tree/codex/qa-linux-package-pwa/docs/qa/linux-22/package-pwa/KAN-17/ja-ui)。",
+      "created": "2026-11-06T00:04:27.746+0900",
+      "updated": "2026-11-06T00:04:27.746+0900"
+    }
+  ]
+}

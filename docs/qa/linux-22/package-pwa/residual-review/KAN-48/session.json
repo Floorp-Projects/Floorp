@@ -1,0 +1,34 @@
+{
+  "env": {
+    "HOME": "/workspace/qa-linux-22/package-pwa/residual-review/KAN-48/home",
+    "XDG_DATA_HOME": "/workspace/qa-linux-22/package-pwa/residual-review/KAN-48/home/.local/share",
+    "XDG_CONFIG_HOME": "/workspace/qa-linux-22/package-pwa/residual-review/KAN-48/home/.config",
+    "XDG_CACHE_HOME": "/workspace/qa-linux-22/package-pwa/residual-review/KAN-48/home/.cache",
+    "XDG_RUNTIME_DIR": "/workspace/qa-linux-22/package-pwa/residual-review/KAN-48/runtime",
+    "DISPLAY": ":106",
+    "WAYLAND_DISPLAY": "qa-residual48",
+    "QT_QPA_PLATFORM": "wayland",
+    "XDG_CURRENT_DESKTOP": "KDE",
+    "KDE_FULL_SESSION": "true",
+    "KDE_SESSION_VERSION": "6",
+    "DESKTOP_SESSION": "plasmawayland",
+    "XDG_MENU_PREFIX": "plasma-",
+    "XDG_DATA_DIRS": "/workspace/qa-linux-22/package-pwa/residual-review/KAN-48/home/.local/share:/workspace/qa-linux-22/package-pwa/sysroot/usr/share:/usr/share",
+    "XDG_CONFIG_DIRS": "/workspace/qa-linux-22/package-pwa/sysroot/etc/xdg",
+    "QT_PLUGIN_PATH": "/workspace/qa-linux-22/package-pwa/sysroot/usr/lib/x86_64-linux-gnu/qt6/plugins",
+    "QML2_IMPORT_PATH": "/workspace/qa-linux-22/package-pwa/sysroot/usr/lib/x86_64-linux-gnu/qt6/qml",
+    "LD_LIBRARY_PATH": "/workspace/qa-linux-22/package-pwa/sysroot/usr/lib/x86_64-linux-gnu",
+    "LIBGL_DRIVERS_PATH": "/workspace/qa-linux-22/package-pwa/sysroot/usr/lib/x86_64-linux-gnu/dri",
+    "__EGL_VENDOR_LIBRARY_FILENAMES": "/workspace/qa-linux-22/package-pwa/sysroot/usr/share/glvnd/egl_vendor.d/50_mesa.json",
+    "PIPEWIRE_CONFIG_DIR": "/workspace/qa-linux-22/package-pwa/sysroot/usr/share/pipewire",
+    "PATH": "/workspace/qa-linux-22/package-pwa/sysroot/usr/bin:/usr/bin:/bin",
+    "QT_LOGGING_RULES": "kwin_core.debug=true;kwin_wayland_server.debug=true",
+    "DBUS_SESSION_BUS_ADDRESS": "unix:path=/workspace/qa-linux-22/package-pwa/residual-review/KAN-48/runtime/bus,guid=e9173e8b5802e66d347e87596aece373"
+  },
+  "pids": {
+    "xvfb": 154178,
+    "bus": 154202,
+    "kwin": 154251,
+    "plasma": 154546
+  }
+}

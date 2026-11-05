@@ -1,0 +1,13 @@
+
+xwininfo: Window id: 0x21f (the root window) (has no name)
+
+  Root window id: 0x21f (the root window) (has no name)
+  Parent window id: 0x0 (none)
+     3 children:
+     0x20001b "Ablaze Floorp": ("Navigator" "floorp")  1152x810+0+0  +0+0
+        2 children:
+        0x200026 (has no name): ()  1152x810+0+0  +0+0
+        0x20001c (has no name): ()  1x1+-1+-1  +-1+-1
+     0x200027 "Floorp": ()  10x10+-100+-100  +-100+-100
+     0x200001 "Floorp": ("floorp" "Floorp")  10x10+10+10  +10+10
+

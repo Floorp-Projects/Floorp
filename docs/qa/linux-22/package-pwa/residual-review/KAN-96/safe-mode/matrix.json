@@ -1,0 +1,65 @@
+{
+  "key": "KAN-96",
+  "sourceSha": "29a3eb23145da90706d8a94441373278521cc737",
+  "testCommand": "dbus-run-session -- python3 safe-mode/probe.py; explicit observed no-dialog command",
+  "environment": "Debian13.6/normalDBus/Xvfb103/X11/syntheticWebDriver/sandbox6",
+  "result": "actualSafeMode+COOP/COEP actor and actual PWAcreation succeeds; original actor mismatch not reproduced in this controlledcondition",
+  "appinfoInSafeMode": true,
+  "remoteType": "webCOOP+COEP=http://127.0.0.1",
+  "crossOriginIsolated": true,
+  "actorAvailable": true,
+  "uiInstallStored": true,
+  "safeModePwaWindowReadyQualified": true,
+  "remainingConditions": [
+    "Original safe-mode external YouTubeMusic/CachyOS",
+    "Genuine assignedcontainer rollout enrollment",
+    "Original full desktop/permissions/physicalinput and externalcrosssite content"
+  ],
+  "normalQuits": 2,
+  "productUnchanged": true,
+  "ownedProcessesRemaining": 0,
+  "evidence": [
+    "report.md",
+    "result.json",
+    "identity.json",
+    "content-before.json",
+    "before-install.json",
+    "after-install.json",
+    "store.json",
+    "startup-screen.png",
+    "after-install.png",
+    "probe.py",
+    "cold-result.json",
+    "cold-ready.json",
+    "cold-content.json",
+    "cold_relaunch.py",
+    "cold-pwa.png"
+  ],
+  "originalLinuxDenominator": 22,
+  "coldRelaunch": {
+    "completed": true,
+    "readyAfterSeconds": 5.01,
+    "actualGeneratedDesktopUnchanged": true,
+    "addedTestArguments": [
+      "--safe-mode",
+      "--marionette"
+    ],
+    "inSafeMode": true,
+    "remoteType": "webCOOP+COEP=http://127.0.0.1",
+    "actor": true,
+    "crossOriginIsolated": true,
+    "evidence": [
+      "cold-result.json",
+      "cold-ready.json",
+      "cold-content.json",
+      "cold_relaunch.py",
+      "cold-pwa.png"
+    ]
+  },
+  "actualOriginalSite": {
+    "report": "music/report.md",
+    "matrix": "music/matrix.json",
+    "classification": "networkblocked CONNECT403 beforeTLS; actualbrowserproxyerrorpage",
+    "actualSiteQualified": false
+  }
+}

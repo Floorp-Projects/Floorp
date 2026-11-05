@@ -1,0 +1,23 @@
+[
+  {
+    "path": "full-build/baseline/installer-artifact.zip",
+    "bytes": 108206544,
+    "sha256": "83667970ddcfc2d3f350367f511106ddaf6f52c5ca8ae3069a44870aee22913c",
+    "retainedProduct": "baseline",
+    "reason": "re-downloadable authenticated ZIP cache only; extracted product and all evidence retained"
+  },
+  {
+    "path": "full-build/3032/installer-artifact.zip",
+    "bytes": 108203238,
+    "sha256": "fc338fa4cd3307c7a8937b2b99c97c18a1665e23b3b561680662fddfc3b336e5",
+    "retainedProduct": "3032",
+    "reason": "re-downloadable authenticated ZIP cache only; extracted product and all evidence retained"
+  },
+  {
+    "path": "full-build/3030/artifacts/full-linux-installer.zip",
+    "bytes": 108202240,
+    "sha256": "96ebf4afca0028715039d5154a27fd030e8150cb8117b0249d91eb576411d3fc",
+    "retainedProduct": "3030",
+    "reason": "re-downloadable authenticated ZIP cache only; extracted product and all evidence retained"
+  }
+]

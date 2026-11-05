@@ -1,0 +1,1 @@
+error: deno task couldn't find deno.json(c) or package.json. See https://docs.deno.com/go/config

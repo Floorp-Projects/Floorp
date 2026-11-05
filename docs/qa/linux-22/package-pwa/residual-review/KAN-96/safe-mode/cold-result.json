@@ -1,0 +1,76 @@
+{
+  "sourceSha": "29a3eb23145da90706d8a94441373278521cc737",
+  "kind": "new coldsafe-mode actualgeneratedlauncher; no repeatedinstall",
+  "normalQuits": [
+    {
+      "response": {
+        "cause": "shutdown",
+        "forced": false,
+        "in_app": true
+      },
+      "exitCode": 0
+    }
+  ],
+  "launcher": {
+    "path": "/workspace/qa-linux-22/package-pwa/residual-review/KAN-96/safe-mode/run/home/.local/share/applications/floorp-8955ff1d-a5b2-4862-acc1-eb2322301ae0.desktop",
+    "sha256": "d997b30264e97d94fceb431dc9c46b304dd32f824c13ff5c6d5741446639d088",
+    "originalExec": "/workspace/qa-linux-additional/KAN-24/followup/products/baseline/floorp/floorp --name floorp-8955ff1d-a5b2-4862-acc1-eb2322301ae0 --profile /workspace/qa-linux-22/package-pwa/residual-review/KAN-96/safe-mode/run/profile --start-ssb {8955ff1d-a5b2-4862-acc1-eb2322301ae0}",
+    "parsedOriginal": [
+      "/workspace/qa-linux-additional/KAN-24/followup/products/baseline/floorp/floorp",
+      "--name",
+      "floorp-8955ff1d-a5b2-4862-acc1-eb2322301ae0",
+      "--profile",
+      "/workspace/qa-linux-22/package-pwa/residual-review/KAN-96/safe-mode/run/profile",
+      "--start-ssb",
+      "{8955ff1d-a5b2-4862-acc1-eb2322301ae0}"
+    ],
+    "addedTestArguments": [
+      "--safe-mode",
+      "--marionette"
+    ],
+    "actualCommand": [
+      "/workspace/qa-linux-additional/KAN-24/followup/products/baseline/floorp/floorp",
+      "--name",
+      "floorp-8955ff1d-a5b2-4862-acc1-eb2322301ae0",
+      "--profile",
+      "/workspace/qa-linux-22/package-pwa/residual-review/KAN-96/safe-mode/run/profile",
+      "--start-ssb",
+      "{8955ff1d-a5b2-4862-acc1-eb2322301ae0}",
+      "--safe-mode",
+      "--marionette"
+    ],
+    "desktopFileChanged": false
+  },
+  "readyAfterSeconds": 5.01,
+  "ready": {
+    "inSafeMode": true,
+    "version": "159.0.1",
+    "buildID": "20261103153232",
+    "profile": "/workspace/qa-linux-22/package-pwa/residual-review/KAN-96/safe-mode/run/profile",
+    "sandbox": 6,
+    "disabled": false,
+    "windows": [
+      {
+        "ready": true,
+        "url": "http://127.0.0.1:8789/isolate/",
+        "remoteType": "webCOOP+COEP=http://127.0.0.1",
+        "actor": true,
+        "title": "QA COOP Default — Ablaze Floorp",
+        "taskbartab": "{8955ff1d-a5b2-4862-acc1-eb2322301ae0}",
+        "floorpSsbWindow": true
+      }
+    ]
+  },
+  "content": {
+    "url": "http://127.0.0.1:8789/isolate/",
+    "crossOriginIsolated": true,
+    "isSecureContext": true,
+    "sharedArrayBuffer": "function"
+  },
+  "console": [],
+  "desktopUnchanged": true,
+  "completed": true,
+  "productUnchanged": true,
+  "ownedProcessesRemaining": 0,
+  "displaySocketAbsent": true
+}

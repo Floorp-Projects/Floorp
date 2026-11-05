@@ -1,0 +1,8 @@
+{
+  "response": {
+    "cause": "shutdown",
+    "forced": false,
+    "in_app": true
+  },
+  "exitCode": 0
+}

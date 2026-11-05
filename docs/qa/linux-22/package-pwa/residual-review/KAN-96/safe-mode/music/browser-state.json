@@ -1,0 +1,9 @@
+{
+  "inSafeMode": true,
+  "url": "https://music.youtube.com/",
+  "remoteType": "webIsolated=https://youtube.com",
+  "actor": "NotSupportedError: WindowGlobalParent.getActor: Window protocol 'NRProgressiveWebApp' doesn't match uri about:neterror",
+  "securityState": 4,
+  "isErrorPage": true,
+  "installButton": false
+}

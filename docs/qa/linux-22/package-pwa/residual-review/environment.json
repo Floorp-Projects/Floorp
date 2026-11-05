@@ -1,0 +1,25 @@
+{
+  "osRelease": "PRETTY_NAME=\"Debian GNU/Linux 13 (trixie)\"\nNAME=\"Debian GNU/Linux\"\nVERSION_ID=\"13\"\nVERSION=\"13 (trixie)\"\nVERSION_CODENAME=trixie\nDEBIAN_VERSION_FULL=13.6\nID=debian\nHOME_URL=\"https://www.debian.org/\"\nSUPPORT_URL=\"https://www.debian.org/support\"\nBUG_REPORT_URL=\"https://bugs.debian.org/\"\n",
+  "kernel": "6.18.57",
+  "systemBusSocket": false,
+  "driEntries": [],
+  "tools": {
+    "Xvfb": "/workspace/qa-linux-22/package-pwa/sysroot/usr/bin/Xvfb",
+    "kwin_wayland": "/workspace/qa-linux-22/package-pwa/sysroot/usr/bin/kwin_wayland",
+    "flatpak": "/workspace/qa-linux-22/package-pwa/sysroot/usr/bin/flatpak",
+    "flatpak-builder": "/workspace/qa-linux-22/package-pwa/sysroot/usr/bin/flatpak-builder"
+  },
+  "network": "managed current enforced unrestricted HTTP; inherited proxy/CA retained; no secret values inspected",
+  "originalLinuxDenominator": 22,
+  "physicalGPUQualified": false,
+  "userNamespace": {
+    "exitCode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "dbus": {
+    "exitCode": 0,
+    "stdout": "",
+    "stderr": ""
+  }
+}

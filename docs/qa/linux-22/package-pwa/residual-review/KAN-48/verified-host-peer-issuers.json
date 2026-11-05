@@ -1,0 +1,88 @@
+[
+  {
+    "url": "https://www.vtmgo.be/",
+    "verifiedHostPeerIssuer": [
+      [
+        [
+          "countryName",
+          "US"
+        ]
+      ],
+      [
+        [
+          "stateOrProvinceName",
+          "California"
+        ]
+      ],
+      [
+        [
+          "localityName",
+          "San Francisco"
+        ]
+      ],
+      [
+        [
+          "organizationName",
+          "OpenAI, LLC"
+        ]
+      ],
+      [
+        [
+          "commonName",
+          "openai.com"
+        ]
+      ]
+    ],
+    "verifiedHostPeerSubject": [
+      [
+        [
+          "commonName",
+          "www.vtmgo.be"
+        ]
+      ]
+    ]
+  },
+  {
+    "url": "https://www.vrt.be/vrtmax/",
+    "verifiedHostPeerIssuer": [
+      [
+        [
+          "countryName",
+          "US"
+        ]
+      ],
+      [
+        [
+          "stateOrProvinceName",
+          "California"
+        ]
+      ],
+      [
+        [
+          "localityName",
+          "San Francisco"
+        ]
+      ],
+      [
+        [
+          "organizationName",
+          "OpenAI, LLC"
+        ]
+      ],
+      [
+        [
+          "commonName",
+          "openai.com"
+        ]
+      ]
+    ],
+    "verifiedHostPeerSubject": [
+      [
+        [
+          "commonName",
+          "www.vrt.be"
+        ]
+      ]
+    ]
+  }
+]

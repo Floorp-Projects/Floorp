@@ -1,0 +1,19 @@
+{
+  "inSafeMode": true,
+  "version": "159.0.1",
+  "buildID": "20261103153232",
+  "profile": "/workspace/qa-linux-22/package-pwa/residual-review/KAN-96/safe-mode/run/profile",
+  "sandbox": 6,
+  "disabled": false,
+  "windows": [
+    {
+      "ready": true,
+      "url": "http://127.0.0.1:8789/isolate/",
+      "remoteType": "webCOOP+COEP=http://127.0.0.1",
+      "actor": true,
+      "title": "QA COOP Default — Ablaze Floorp",
+      "taskbartab": "{8955ff1d-a5b2-4862-acc1-eb2322301ae0}",
+      "floorpSsbWindow": true
+    }
+  ]
+}

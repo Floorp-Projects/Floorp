@@ -1,0 +1,16 @@
+Task test deno run -A tools/src/colocated_test_runner.ts '--near' 'browser-features/modules/modules/i18n/test/LegacyBranding.test.mts' '--no-autostart' '--timeout-ms' '15000'
+[INFO] Running browser integration tests (layer=all, near=browser-features/modules/modules/i18n/test/LegacyBranding.test.mts)
+[INFO] Configured timeouts: collection=15000ms, startup=1800000ms, overall-cap=1800000ms
+
+[INFO] === Discovered Test Targets ===
+[INFO] Found 1 browser test file(s)
+[INFO]   - browser-features/modules/modules/i18n/test/LegacyBranding.test.mts
+
+[INFO] === Browser Connection ===
+[INFO] Waiting for browser test results via prefs file...
+
+[INFO] === Test Execution ===
+[INFO] Collecting browser test results from prefs file...
+[ERROR] Browser test collection failed: Browser tests timed out after 15000ms (last status: (none)). Check /workspace/qa-linux-full-build/floorp3030/_dist/profile/test/prefs.js for partial results.
+[ERROR] Hint: increase timeout with --timeout-ms <ms> (current: 15000) or ensure browser startup is stable.
+Log written to logs/test/colocated-20261105-201323-869.log
