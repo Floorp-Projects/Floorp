@@ -1,0 +1,12 @@
+
+from /workspace/qa-linux-wayland-browser-fix/browser-features/modules/modules/pwa/test/SsbCommandLineHandler.test.mts:
+215 | -async function testLinuxPwaStartupKeepsOrdinaryBrowserIdentity(): Promise<void> {
+215 | +async function testLinuxPwaStartupKeepsOrdinaryBrowserIdentity(): Promise<
+216 | +  void
+217 | +> {
+    | ...
+295 | -    name: "Linux PWA startup keeps ordinary browser and PWA identities separate",
+297 | +    name:
+298 | +      "Linux PWA startup keeps ordinary browser and PWA identities separate",
+
+error: Found 1 not formatted file in 3 files

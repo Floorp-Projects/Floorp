@@ -1,0 +1,503 @@
+{
+  "input": "synthetic Marionette element clicks; no physical-input claim",
+  "scope": "actual unmodified packaged product UI, local fixture",
+  "steps": [
+    {
+      "fixture": "alpha",
+      "route": "urlbar",
+      "preInstall": {
+        "product": {
+          "name": "Floorp",
+          "version": "159.0.1",
+          "platformVersion": "159.0.1",
+          "buildID": "20261103153232"
+        },
+        "profile": "/workspace/qa-linux-22/package-pwa/wayland-browser-identity/candidate-r1/profile",
+        "remoteType": "webIsolated=http://127.0.0.1",
+        "url": "http://127.0.0.1:8794/alpha/",
+        "actor": {
+          "available": true
+        },
+        "elements": {
+          "ssbPageAction": {
+            "hidden": false,
+            "disabled": null,
+            "state": null,
+            "label": null,
+            "rect": {
+              "x": 723,
+              "y": 40,
+              "width": 28,
+              "height": 28
+            }
+          },
+          "ssb-panel": {
+            "hidden": false,
+            "disabled": null,
+            "state": "closed",
+            "label": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 0,
+              "height": 0
+            }
+          },
+          "ssb-app-install-button": {
+            "hidden": false,
+            "disabled": false,
+            "state": null,
+            "label": "Install Application",
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 0,
+              "height": 0
+            }
+          },
+          "appMenu-ssb-button": null,
+          "appMenu-install-or-open-ssb-current-page-button": null
+        },
+        "experiment": false,
+        "sandbox": 6,
+        "windows": [
+          {
+            "title": "QA PWA Alpha — Ablaze Floorp",
+            "type": "navigator:browser",
+            "ssbid": null,
+            "url": "http://127.0.0.1:8794/alpha/"
+          }
+        ]
+      },
+      "store": {
+        "path": "/workspace/qa-linux-22/package-pwa/wayland-browser-identity/candidate-r1/profile/ssb/ssb.json",
+        "apps": [
+          {
+            "id": "{65ccd29e-0b54-44b3-8fb5-938824cd7167}",
+            "name": "QA PWA Alpha",
+            "start_url": "http://127.0.0.1:8794/alpha/",
+            "userContextId": 0
+          }
+        ]
+      },
+      "afterInstall": {
+        "product": {
+          "name": "Floorp",
+          "version": "159.0.1",
+          "platformVersion": "159.0.1",
+          "buildID": "20261103153232"
+        },
+        "profile": "/workspace/qa-linux-22/package-pwa/wayland-browser-identity/candidate-r1/profile",
+        "remoteType": "webIsolated=http://127.0.0.1",
+        "url": "http://127.0.0.1:8794/alpha/",
+        "actor": {
+          "available": true
+        },
+        "elements": {
+          "ssbPageAction": {
+            "hidden": false,
+            "disabled": null,
+            "state": null,
+            "label": null,
+            "rect": {
+              "x": 723,
+              "y": 40,
+              "width": 28,
+              "height": 28
+            }
+          },
+          "ssb-panel": {
+            "hidden": false,
+            "disabled": null,
+            "state": "closed",
+            "label": null,
+            "rect": {
+              "x": 363,
+              "y": 64,
+              "width": 392,
+              "height": 238
+            }
+          },
+          "ssb-app-install-button": {
+            "hidden": false,
+            "disabled": false,
+            "state": null,
+            "label": "Install Application",
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 0,
+              "height": 0
+            }
+          },
+          "appMenu-ssb-button": null,
+          "appMenu-install-or-open-ssb-current-page-button": null
+        },
+        "experiment": false,
+        "sandbox": 6,
+        "windows": [
+          {
+            "title": "QA PWA Alpha — Ablaze Floorp",
+            "type": "navigator:browser",
+            "ssbid": null,
+            "url": "http://127.0.0.1:8794/alpha/"
+          },
+          {
+            "title": "QA PWA Alpha — Ablaze Floorp",
+            "type": "navigator:browser",
+            "ssbid": null,
+            "url": "http://127.0.0.1:8794/alpha/"
+          }
+        ]
+      }
+    },
+    {
+      "fixture": "beta",
+      "route": "menu",
+      "preInstall": {
+        "product": {
+          "name": "Floorp",
+          "version": "159.0.1",
+          "platformVersion": "159.0.1",
+          "buildID": "20261103153232"
+        },
+        "profile": "/workspace/qa-linux-22/package-pwa/wayland-browser-identity/candidate-r1/profile",
+        "remoteType": "webIsolated=http://127.0.0.1",
+        "url": "http://127.0.0.1:8794/beta/",
+        "actor": {
+          "available": true
+        },
+        "elements": {
+          "ssbPageAction": {
+            "hidden": false,
+            "disabled": null,
+            "state": null,
+            "label": null,
+            "rect": {
+              "x": 723,
+              "y": 40,
+              "width": 28,
+              "height": 28
+            }
+          },
+          "ssb-panel": {
+            "hidden": false,
+            "disabled": null,
+            "state": "closed",
+            "label": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 0,
+              "height": 0
+            }
+          },
+          "ssb-app-install-button": {
+            "hidden": false,
+            "disabled": false,
+            "state": null,
+            "label": "Install Application",
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 0,
+              "height": 0
+            }
+          },
+          "appMenu-ssb-button": null,
+          "appMenu-install-or-open-ssb-current-page-button": null
+        },
+        "experiment": false,
+        "sandbox": 6,
+        "windows": [
+          {
+            "title": "QA PWA Beta — Ablaze Floorp",
+            "type": "navigator:browser",
+            "ssbid": null,
+            "url": "http://127.0.0.1:8794/beta/"
+          },
+          {
+            "title": "QA PWA Alpha — Ablaze Floorp",
+            "type": "navigator:browser",
+            "ssbid": null,
+            "url": "http://127.0.0.1:8794/alpha/"
+          }
+        ]
+      },
+      "store": {
+        "path": "/workspace/qa-linux-22/package-pwa/wayland-browser-identity/candidate-r1/profile/ssb/ssb.json",
+        "apps": [
+          {
+            "id": "{65ccd29e-0b54-44b3-8fb5-938824cd7167}",
+            "name": "QA PWA Alpha",
+            "start_url": "http://127.0.0.1:8794/alpha/",
+            "userContextId": 0
+          },
+          {
+            "id": "{fa884689-c76b-416d-a9d8-1a50d7ed9efd}",
+            "name": "QA PWA Beta",
+            "start_url": "http://127.0.0.1:8794/beta/",
+            "userContextId": 0
+          }
+        ]
+      },
+      "afterInstall": {
+        "product": {
+          "name": "Floorp",
+          "version": "159.0.1",
+          "platformVersion": "159.0.1",
+          "buildID": "20261103153232"
+        },
+        "profile": "/workspace/qa-linux-22/package-pwa/wayland-browser-identity/candidate-r1/profile",
+        "remoteType": "webIsolated=http://127.0.0.1",
+        "url": "http://127.0.0.1:8794/beta/",
+        "actor": {
+          "available": true
+        },
+        "elements": {
+          "ssbPageAction": {
+            "hidden": false,
+            "disabled": null,
+            "state": null,
+            "label": null,
+            "rect": {
+              "x": 723,
+              "y": 40,
+              "width": 28,
+              "height": 28
+            }
+          },
+          "ssb-panel": {
+            "hidden": false,
+            "disabled": null,
+            "state": "closed",
+            "label": null,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 0,
+              "height": 0
+            }
+          },
+          "ssb-app-install-button": {
+            "hidden": false,
+            "disabled": false,
+            "state": null,
+            "label": "Install Application",
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 0,
+              "height": 0
+            }
+          },
+          "appMenu-ssb-button": {
+            "hidden": false,
+            "disabled": false,
+            "state": null,
+            "label": "Web Apps",
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 0,
+              "height": 0
+            }
+          },
+          "appMenu-install-or-open-ssb-current-page-button": {
+            "hidden": false,
+            "disabled": false,
+            "state": null,
+            "label": "Install Current Page as Progressive Web App",
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 0,
+              "height": 0
+            }
+          }
+        },
+        "experiment": false,
+        "sandbox": 6,
+        "windows": [
+          {
+            "title": "QA PWA Beta — Ablaze Floorp",
+            "type": "navigator:browser",
+            "ssbid": null,
+            "url": "http://127.0.0.1:8794/beta/"
+          },
+          {
+            "title": "QA PWA Alpha — Ablaze Floorp",
+            "type": "navigator:browser",
+            "ssbid": null,
+            "url": "http://127.0.0.1:8794/alpha/"
+          },
+          {
+            "title": "QA PWA Beta — Ablaze Floorp",
+            "type": "navigator:browser",
+            "ssbid": null,
+            "url": "http://127.0.0.1:8794/beta/"
+          }
+        ]
+      }
+    }
+  ],
+  "hello": {
+    "applicationType": "gecko",
+    "marionetteProtocol": 3
+  },
+  "before": {
+    "product": {
+      "name": "Floorp",
+      "version": "159.0.1",
+      "platformVersion": "159.0.1",
+      "buildID": "20261103153232"
+    },
+    "profile": "/workspace/qa-linux-22/package-pwa/wayland-browser-identity/candidate-r1/profile",
+    "remoteType": "web",
+    "url": "about:blank",
+    "actor": {
+      "available": false,
+      "error": "NotSupportedError: WindowGlobalParent.getActor: Window protocol 'NRProgressiveWebApp' doesn't match uri about:blank"
+    },
+    "elements": {
+      "ssbPageAction": null,
+      "ssb-panel": null,
+      "ssb-app-install-button": null,
+      "appMenu-ssb-button": null,
+      "appMenu-install-or-open-ssb-current-page-button": null
+    },
+    "experiment": false,
+    "sandbox": 6,
+    "windows": [
+      {
+        "title": "Ablaze Floorp",
+        "type": "navigator:browser",
+        "ssbid": null,
+        "url": "about:blank"
+      }
+    ]
+  },
+  "storeBefore": {
+    "path": "/workspace/qa-linux-22/package-pwa/wayland-browser-identity/candidate-r1/profile/ssb/ssb.json",
+    "apps": []
+  },
+  "after": {
+    "product": {
+      "name": "Floorp",
+      "version": "159.0.1",
+      "platformVersion": "159.0.1",
+      "buildID": "20261103153232"
+    },
+    "profile": "/workspace/qa-linux-22/package-pwa/wayland-browser-identity/candidate-r1/profile",
+    "remoteType": "webIsolated=http://127.0.0.1",
+    "url": "http://127.0.0.1:8794/beta/",
+    "actor": {
+      "available": true
+    },
+    "elements": {
+      "ssbPageAction": {
+        "hidden": false,
+        "disabled": null,
+        "state": null,
+        "label": null,
+        "rect": {
+          "x": 723,
+          "y": 40,
+          "width": 28,
+          "height": 28
+        }
+      },
+      "ssb-panel": {
+        "hidden": false,
+        "disabled": null,
+        "state": "closed",
+        "label": null,
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        }
+      },
+      "ssb-app-install-button": {
+        "hidden": false,
+        "disabled": false,
+        "state": null,
+        "label": "Install Application",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        }
+      },
+      "appMenu-ssb-button": {
+        "hidden": false,
+        "disabled": false,
+        "state": null,
+        "label": "Web Apps",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        }
+      },
+      "appMenu-install-or-open-ssb-current-page-button": {
+        "hidden": false,
+        "disabled": false,
+        "state": null,
+        "label": "Install Current Page as Progressive Web App",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        }
+      }
+    },
+    "experiment": false,
+    "sandbox": 6,
+    "windows": [
+      {
+        "title": "QA PWA Beta — Ablaze Floorp",
+        "type": "navigator:browser",
+        "ssbid": null,
+        "url": "http://127.0.0.1:8794/beta/"
+      },
+      {
+        "title": "QA PWA Alpha — Ablaze Floorp",
+        "type": "navigator:browser",
+        "ssbid": null,
+        "url": "http://127.0.0.1:8794/alpha/"
+      },
+      {
+        "title": "QA PWA Beta — Ablaze Floorp",
+        "type": "navigator:browser",
+        "ssbid": null,
+        "url": "http://127.0.0.1:8794/beta/"
+      }
+    ]
+  },
+  "storeAfter": {
+    "path": "/workspace/qa-linux-22/package-pwa/wayland-browser-identity/candidate-r1/profile/ssb/ssb.json",
+    "apps": [
+      {
+        "id": "{65ccd29e-0b54-44b3-8fb5-938824cd7167}",
+        "name": "QA PWA Alpha",
+        "start_url": "http://127.0.0.1:8794/alpha/",
+        "userContextId": 0
+      },
+      {
+        "id": "{fa884689-c76b-416d-a9d8-1a50d7ed9efd}",
+        "name": "QA PWA Beta",
+        "start_url": "http://127.0.0.1:8794/beta/",
+        "userContextId": 0
+      }
+    ]
+  },
+  "console": [
+    "1793900626670\taddons.xpi\tWARN\tChecking /workspace/qa-linux-22/package-pwa/wayland-browser-identity/candidate-product/floorp/distribution/extensions for addons"
+  ],
+  "completed": true
+}

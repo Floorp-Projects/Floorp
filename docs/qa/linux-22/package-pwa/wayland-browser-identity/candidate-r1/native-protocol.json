@@ -1,0 +1,214 @@
+[
+  {
+    "log": "ui-browser.log",
+    "event": "[ 164382.656] {Default Queue}  -> xdg_toplevel#74.set_title(\"Ablaze Floorp\")"
+  },
+  {
+    "log": "ui-browser.log",
+    "event": "[ 164382.661] {Default Queue}  -> xdg_toplevel#74.set_app_id(\"floorp\")"
+  },
+  {
+    "log": "ui-browser.log",
+    "event": "[ 172979.497] {Default Queue}  -> xdg_toplevel#74.set_title(\"QA PWA Alpha \u2014 Ablaze Floorp\")"
+  },
+  {
+    "log": "ui-browser.log",
+    "event": "[ 180908.071] {Default Queue}  -> xdg_toplevel#91.set_title(\"Ablaze Floorp\")"
+  },
+  {
+    "log": "ui-browser.log",
+    "event": "[ 180908.076] {Default Queue}  -> xdg_toplevel#91.set_app_id(\"floorp\")"
+  },
+  {
+    "log": "ui-browser.log",
+    "event": "[ 180908.359] {Default Queue}  -> xdg_toplevel#91.set_app_id(\"floorp-65ccd29e-0b54-44b3-8fb5-938824cd7167\")"
+  },
+  {
+    "log": "ui-browser.log",
+    "event": "[ 181362.639] {Default Queue}  -> xdg_toplevel#91.set_title(\"QA PWA Alpha \u2014 Ablaze Floorp\")"
+  },
+  {
+    "log": "ui-browser.log",
+    "event": "[ 182558.401] {Default Queue}  -> xdg_toplevel#74.set_title(\"Ablaze Floorp\")"
+  },
+  {
+    "log": "ui-browser.log",
+    "event": "[ 182823.417] {Default Queue}  -> xdg_toplevel#74.set_title(\"QA PWA Beta \u2014 Ablaze Floorp\")"
+  },
+  {
+    "log": "ui-browser.log",
+    "event": "[ 189979.735] {Default Queue}  -> xdg_toplevel#114.set_title(\"Ablaze Floorp\")"
+  },
+  {
+    "log": "ui-browser.log",
+    "event": "[ 189979.740] {Default Queue}  -> xdg_toplevel#114.set_app_id(\"floorp\")"
+  },
+  {
+    "log": "ui-browser.log",
+    "event": "[ 189979.907] {Default Queue}  -> xdg_toplevel#114.set_app_id(\"floorp-fa884689-c76b-416d-a9d8-1a50d7ed9efd\")"
+  },
+  {
+    "log": "ui-browser.log",
+    "event": "[ 190275.848] {Default Queue}  -> xdg_toplevel#114.set_title(\"QA PWA Beta \u2014 Ablaze Floorp\")"
+  },
+  {
+    "log": "existing-profile-migration-0.log",
+    "event": "[ 300690.502] {Default Queue}  -> xdg_toplevel#71.set_title(\"Ablaze Floorp\")"
+  },
+  {
+    "log": "existing-profile-migration-0.log",
+    "event": "[ 300690.507] {Default Queue}  -> xdg_toplevel#71.set_app_id(\"floorp-9c81f296-e163-468d-bded-591d97ede773\")"
+  },
+  {
+    "log": "existing-profile-migration-0.log",
+    "event": "[ 300690.706] {Default Queue}  -> xdg_toplevel#71.set_app_id(\"floorp-9c81f296-e163-468d-bded-591d97ede773\")"
+  },
+  {
+    "log": "existing-profile-migration-0.log",
+    "event": "[ 301963.246] {Default Queue}  -> xdg_toplevel#71.set_title(\"QA PWA Alpha \u2014 Ablaze Floorp\")"
+  },
+  {
+    "log": "existing-profile-migration-0.log",
+    "event": "[ 309019.199] {Default Queue}  -> xdg_toplevel#60.set_title(\"Ablaze Floorp\")"
+  },
+  {
+    "log": "existing-profile-migration-0.log",
+    "event": "[ 309019.205] {Default Queue}  -> xdg_toplevel#60.set_app_id(\"floorp-9c81f296-e163-468d-bded-591d97ede773\")"
+  },
+  {
+    "log": "existing-profile-migration-0.log",
+    "event": "[ 309019.549] {Default Queue}  -> xdg_toplevel#60.set_app_id(\"floorp\")"
+  },
+  {
+    "log": "existing-profile-migration-0.log",
+    "event": "[ 311858.595] {Default Queue}  -> xdg_toplevel#60.set_title(\"QA_TEST_BROWSER_123852_undefined\")"
+  },
+  {
+    "log": "existing-profile-migration-0.log",
+    "event": "[ 313130.467] {Default Queue}  -> xdg_toplevel#57.set_title(\"Ablaze Floorp\")"
+  },
+  {
+    "log": "existing-profile-migration-0.log",
+    "event": "[ 313130.552] {Default Queue}  -> xdg_toplevel#57.set_app_id(\"floorp-9c81f296-e163-468d-bded-591d97ede773\")"
+  },
+  {
+    "log": "existing-profile-migration-0.log",
+    "event": "[ 313130.780] {Default Queue}  -> xdg_toplevel#57.set_app_id(\"floorp-6a449a02-b424-4586-b14a-799c18105ee3\")"
+  },
+  {
+    "log": "existing-profile-migration-0.log",
+    "event": "[ 313585.355] {Default Queue}  -> xdg_toplevel#57.set_title(\"QA PWA Beta \u2014 Ablaze Floorp\")"
+  },
+  {
+    "log": "browser-pwa-0.log",
+    "event": "[ 195978.909] {Default Queue}  -> xdg_toplevel#73.set_title(\"Ablaze Floorp\")"
+  },
+  {
+    "log": "browser-pwa-0.log",
+    "event": "[ 195978.915] {Default Queue}  -> xdg_toplevel#73.set_app_id(\"floorp\")"
+  },
+  {
+    "log": "browser-pwa-0.log",
+    "event": "[ 196674.343] {Default Queue}  -> xdg_toplevel#73.set_title(\"QA PWA Beta \u2014 Ablaze Floorp\")"
+  },
+  {
+    "log": "browser-pwa-0.log",
+    "event": "[ 202449.259] {Default Queue}  -> xdg_toplevel#73.set_title(\"QA_TEST_BROWSER_122501_undefined\")"
+  },
+  {
+    "log": "browser-pwa-0.log",
+    "event": "[ 203628.334] {Default Queue}  -> xdg_toplevel#63.set_title(\"Ablaze Floorp\")"
+  },
+  {
+    "log": "browser-pwa-0.log",
+    "event": "[ 203628.339] {Default Queue}  -> xdg_toplevel#63.set_app_id(\"floorp\")"
+  },
+  {
+    "log": "browser-pwa-0.log",
+    "event": "[ 203628.455] {Default Queue}  -> xdg_toplevel#63.set_app_id(\"floorp-65ccd29e-0b54-44b3-8fb5-938824cd7167\")"
+  },
+  {
+    "log": "browser-pwa-0.log",
+    "event": "[ 204010.597] {Default Queue}  -> xdg_toplevel#63.set_title(\"QA PWA Alpha \u2014 Ablaze Floorp\")"
+  },
+  {
+    "log": "pwa-browser-0.log",
+    "event": "[ 210405.412] {Default Queue}  -> xdg_toplevel#71.set_title(\"Ablaze Floorp\")"
+  },
+  {
+    "log": "pwa-browser-0.log",
+    "event": "[ 210405.417] {Default Queue}  -> xdg_toplevel#71.set_app_id(\"floorp-65ccd29e-0b54-44b3-8fb5-938824cd7167\")"
+  },
+  {
+    "log": "pwa-browser-0.log",
+    "event": "[ 210405.712] {Default Queue}  -> xdg_toplevel#71.set_app_id(\"floorp-65ccd29e-0b54-44b3-8fb5-938824cd7167\")"
+  },
+  {
+    "log": "pwa-browser-0.log",
+    "event": "[ 211239.412] {Default Queue}  -> xdg_toplevel#71.set_title(\"QA PWA Alpha \u2014 Ablaze Floorp\")"
+  },
+  {
+    "log": "pwa-browser-0.log",
+    "event": "[ 218557.705] {Default Queue}  -> xdg_toplevel#86.set_title(\"Ablaze Floorp\")"
+  },
+  {
+    "log": "pwa-browser-0.log",
+    "event": "[ 218557.710] {Default Queue}  -> xdg_toplevel#86.set_app_id(\"floorp-65ccd29e-0b54-44b3-8fb5-938824cd7167\")"
+  },
+  {
+    "log": "pwa-browser-0.log",
+    "event": "[ 218557.999] {Default Queue}  -> xdg_toplevel#86.set_app_id(\"floorp\")"
+  },
+  {
+    "log": "pwa-browser-0.log",
+    "event": "[ 220817.695] {Default Queue}  -> xdg_toplevel#86.set_title(\"QA_TEST_BROWSER_122950_undefined\")"
+  },
+  {
+    "log": "multiple-pwa-0.log",
+    "event": "[ 225641.942] {Default Queue}  -> xdg_toplevel#72.set_title(\"Ablaze Floorp\")"
+  },
+  {
+    "log": "multiple-pwa-0.log",
+    "event": "[ 225641.947] {Default Queue}  -> xdg_toplevel#72.set_app_id(\"floorp-65ccd29e-0b54-44b3-8fb5-938824cd7167\")"
+  },
+  {
+    "log": "multiple-pwa-0.log",
+    "event": "[ 225642.207] {Default Queue}  -> xdg_toplevel#72.set_app_id(\"floorp-65ccd29e-0b54-44b3-8fb5-938824cd7167\")"
+  },
+  {
+    "log": "multiple-pwa-0.log",
+    "event": "[ 227518.894] {Default Queue}  -> xdg_toplevel#72.set_title(\"QA PWA Alpha \u2014 Ablaze Floorp\")"
+  },
+  {
+    "log": "multiple-pwa-0.log",
+    "event": "[ 293966.500] {Default Queue}  -> xdg_toplevel#88.set_title(\"Ablaze Floorp\")"
+  },
+  {
+    "log": "multiple-pwa-0.log",
+    "event": "[ 293966.506] {Default Queue}  -> xdg_toplevel#88.set_app_id(\"floorp-65ccd29e-0b54-44b3-8fb5-938824cd7167\")"
+  },
+  {
+    "log": "multiple-pwa-0.log",
+    "event": "[ 293966.719] {Default Queue}  -> xdg_toplevel#88.set_app_id(\"floorp-fa884689-c76b-416d-a9d8-1a50d7ed9efd\")"
+  },
+  {
+    "log": "multiple-pwa-0.log",
+    "event": "[ 295154.595] {Default Queue}  -> xdg_toplevel#88.set_title(\"QA PWA Beta \u2014 Ablaze Floorp\")"
+  },
+  {
+    "log": "multiple-pwa-0.log",
+    "event": "[ 295366.698] {Default Queue}  -> xdg_toplevel#109.set_title(\"Ablaze Floorp\")"
+  },
+  {
+    "log": "multiple-pwa-0.log",
+    "event": "[ 295366.704] {Default Queue}  -> xdg_toplevel#109.set_app_id(\"floorp-65ccd29e-0b54-44b3-8fb5-938824cd7167\")"
+  },
+  {
+    "log": "multiple-pwa-0.log",
+    "event": "[ 295367.003] {Default Queue}  -> xdg_toplevel#109.set_app_id(\"floorp\")"
+  },
+  {
+    "log": "multiple-pwa-0.log",
+    "event": "[ 296419.565] {Default Queue}  -> xdg_toplevel#109.set_title(\"QA_TEST_BROWSER_123365_undefined\")"
+  }
+]

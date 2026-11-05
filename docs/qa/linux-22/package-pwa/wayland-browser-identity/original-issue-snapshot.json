@@ -1,0 +1,12 @@
+{
+  "github": "https://github.com/Floorp-Projects/Floorp/issues/2649",
+  "title": "[Bug]: PWA launch with the wrong window class (Linux)",
+  "state": "open",
+  "commentCount": 0,
+  "bodySha256": "1a64f482577e259db8897b036614d09e4cbbcf7778a9361c9b4bcaa9316729d3",
+  "commentIds": [],
+  "originalTrigger": "Close all instances; PWA Alpha then Beta then Floorp, inverse PWA order, and Floorp first; all reported to inherit first process identity",
+  "relatedCanonicalPr": 3032,
+  "dependentFollowupPr": 3040,
+  "duplicateCheck": "Open Wayland PR query found3032/3040 for PWA identity; others concern split view/gestures"
+}

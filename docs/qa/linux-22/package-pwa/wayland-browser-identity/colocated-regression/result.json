@@ -1,0 +1,34 @@
+{
+  "kind": "actual candidate product, bundled exact source test module plus repository harness",
+  "display": ":97 Xvfb X11",
+  "product": "/workspace/qa-linux-22/package-pwa/wayland-browser-identity/candidate-product/floorp",
+  "profile": "/workspace/qa-linux-22/package-pwa/wayland-browser-identity/colocated-regression/home/profile",
+  "identity": {
+    "profile": "/workspace/qa-linux-22/package-pwa/wayland-browser-identity/colocated-regression/home/profile",
+    "executable": "/workspace/qa-linux-22/package-pwa/wayland-browser-identity/candidate-product/floorp/floorp",
+    "version": "159.0.1",
+    "buildID": "20261103153232",
+    "sandbox": 6,
+    "sandboxDisable": false
+  },
+  "bundleSha256": "055e5311b3e88e7a6dfd5ed3e51e24333cf2cc09935f5e3fb62ff51bc35d2179",
+  "tests": {
+    "passed": true,
+    "progress": {
+      "moduleName": "SsbCommandLineHandler.test.mts",
+      "testName": "",
+      "status": "done",
+      "index": 4,
+      "total": 4,
+      "startedAtMs": 1793900419755
+    }
+  },
+  "quit": {
+    "cause": "shutdown",
+    "forced": false,
+    "in_app": true
+  },
+  "browserExit": 0,
+  "ownedProcessesRemaining": 0,
+  "allProductFilesUnchanged": true
+}

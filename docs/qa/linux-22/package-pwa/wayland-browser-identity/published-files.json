@@ -1,0 +1,790 @@
+[
+  {
+    "path": "build-report.md",
+    "bytes": 5214
+  },
+  {
+    "path": "candidate-commit-source-binding.json",
+    "bytes": 1123
+  },
+  {
+    "path": "candidate-custom-control.log",
+    "bytes": 14111
+  },
+  {
+    "path": "candidate-private-control.log",
+    "bytes": 14111
+  },
+  {
+    "path": "candidate-r1.log",
+    "bytes": 14111
+  },
+  {
+    "path": "candidate-resource-provenance.json",
+    "bytes": 14925
+  },
+  {
+    "path": "candidate-source-commit-match.json",
+    "bytes": 742
+  },
+  {
+    "path": "ci-runs.json",
+    "bytes": 1045
+  },
+  {
+    "path": "copy-comparison-matrix.json",
+    "bytes": 18381
+  },
+  {
+    "path": "copy-comparison-report.md",
+    "bytes": 5216
+  },
+  {
+    "path": "existing-3032-custom-control.log",
+    "bytes": 745
+  },
+  {
+    "path": "existing-3032-custom-new-window.log",
+    "bytes": 745
+  },
+  {
+    "path": "existing-3032-private-control.log",
+    "bytes": 745
+  },
+  {
+    "path": "existing-3032-r2.log",
+    "bytes": 745
+  },
+  {
+    "path": "existing-3032.log",
+    "bytes": 458
+  },
+  {
+    "path": "fmt-applied.log",
+    "bytes": 128
+  },
+  {
+    "path": "fmt-check-final.log",
+    "bytes": 16
+  },
+  {
+    "path": "fmt-check.log",
+    "bytes": 563
+  },
+  {
+    "path": "frozen-deps.log",
+    "bytes": 29119
+  },
+  {
+    "path": "full-package-dispatch-response.json",
+    "bytes": 0
+  },
+  {
+    "path": "full-package-dispatch.json",
+    "bytes": 936
+  },
+  {
+    "path": "lint-final.log",
+    "bytes": 16
+  },
+  {
+    "path": "lint.log",
+    "bytes": 16
+  },
+  {
+    "path": "materialize-candidate-final.log",
+    "bytes": 2102
+  },
+  {
+    "path": "materialize-candidate.log",
+    "bytes": 711
+  },
+  {
+    "path": "materialize_candidate.py",
+    "bytes": 5233
+  },
+  {
+    "path": "original-issue-snapshot.json",
+    "bytes": 620
+  },
+  {
+    "path": "pr-body.md",
+    "bytes": 1714
+  },
+  {
+    "path": "probe_orders.py",
+    "bytes": 20887
+  },
+  {
+    "path": "production-modules-build-final.log",
+    "bytes": 31600
+  },
+  {
+    "path": "production-modules-build.log",
+    "bytes": 31577
+  },
+  {
+    "path": "project_orders.py",
+    "bytes": 4585
+  },
+  {
+    "path": "publish_evidence.py",
+    "bytes": 1518
+  },
+  {
+    "path": "report.md",
+    "bytes": 6354
+  },
+  {
+    "path": "source-analysis.md",
+    "bytes": 3773
+  },
+  {
+    "path": "subject.json",
+    "bytes": 994
+  },
+  {
+    "path": "typecheck-final.log",
+    "bytes": 218
+  },
+  {
+    "path": "typecheck.log",
+    "bytes": 218
+  },
+  {
+    "path": "worktree.log",
+    "bytes": 152
+  },
+  {
+    "path": "candidate-custom-control/QA_WBID_124884_1_0.js",
+    "bytes": 201
+  },
+  {
+    "path": "candidate-custom-control/QA_WBID_124884_1_1.js",
+    "bytes": 201
+  },
+  {
+    "path": "candidate-custom-control/QA_WBID_124884_1_2.js",
+    "bytes": 201
+  },
+  {
+    "path": "candidate-custom-control/custom-browser-remote-pwa-0.log",
+    "bytes": 257766
+  },
+  {
+    "path": "candidate-custom-control/custom-browser-remote-pwa-1.log",
+    "bytes": 10019
+  },
+  {
+    "path": "candidate-custom-control/custom-browser-remote-pwa-2.log",
+    "bytes": 10023
+  },
+  {
+    "path": "candidate-custom-control/identity-projection.json",
+    "bytes": 21085
+  },
+  {
+    "path": "candidate-custom-control/kwin.log",
+    "bytes": 1868
+  },
+  {
+    "path": "candidate-custom-control/native-protocol.json",
+    "bytes": 1642
+  },
+  {
+    "path": "candidate-custom-control/result.json",
+    "bytes": 28944
+  },
+  {
+    "path": "candidate-custom-control/xvfb.log",
+    "bytes": 64
+  },
+  {
+    "path": "candidate-private-control/QA_WBID_126594_1_0.js",
+    "bytes": 201
+  },
+  {
+    "path": "candidate-private-control/QA_WBID_126594_1_1.js",
+    "bytes": 201
+  },
+  {
+    "path": "candidate-private-control/identity-projection.json",
+    "bytes": 20025
+  },
+  {
+    "path": "candidate-private-control/kwin.log",
+    "bytes": 1286
+  },
+  {
+    "path": "candidate-private-control/native-protocol.json",
+    "bytes": 1491
+  },
+  {
+    "path": "candidate-private-control/private-browser-control-0.log",
+    "bytes": 190243
+  },
+  {
+    "path": "candidate-private-control/private-browser-control-1.log",
+    "bytes": 10019
+  },
+  {
+    "path": "candidate-private-control/result.json",
+    "bytes": 25431
+  },
+  {
+    "path": "candidate-private-control/xvfb.log",
+    "bytes": 64
+  },
+  {
+    "path": "candidate-r1/QA_WBID_121903_1_0.js",
+    "bytes": 201
+  },
+  {
+    "path": "candidate-r1/QA_WBID_121903_1_1.js",
+    "bytes": 201
+  },
+  {
+    "path": "candidate-r1/QA_WBID_121903_2_0.js",
+    "bytes": 201
+  },
+  {
+    "path": "candidate-r1/QA_WBID_121903_2_1.js",
+    "bytes": 201
+  },
+  {
+    "path": "candidate-r1/QA_WBID_121903_3_0.js",
+    "bytes": 201
+  },
+  {
+    "path": "candidate-r1/QA_WBID_121903_3_1.js",
+    "bytes": 201
+  },
+  {
+    "path": "candidate-r1/QA_WBID_121903_3_2.js",
+    "bytes": 201
+  },
+  {
+    "path": "candidate-r1/QA_WBID_121903_4_0.js",
+    "bytes": 201
+  },
+  {
+    "path": "candidate-r1/QA_WBID_121903_4_1.js",
+    "bytes": 201
+  },
+  {
+    "path": "candidate-r1/QA_WBID_121903_4_2.js",
+    "bytes": 201
+  },
+  {
+    "path": "candidate-r1/browser-pwa-0.log",
+    "bytes": 180857
+  },
+  {
+    "path": "candidate-r1/browser-pwa-1.log",
+    "bytes": 10023
+  },
+  {
+    "path": "candidate-r1/existing-profile-migration-0.log",
+    "bytes": 280193
+  },
+  {
+    "path": "candidate-r1/existing-profile-migration-1.log",
+    "bytes": 10027
+  },
+  {
+    "path": "candidate-r1/existing-profile-migration-2.log",
+    "bytes": 10027
+  },
+  {
+    "path": "candidate-r1/identity-projection.json",
+    "bytes": 28998
+  },
+  {
+    "path": "candidate-r1/kwin.log",
+    "bytes": 4114
+  },
+  {
+    "path": "candidate-r1/multiple-pwa-0.log",
+    "bytes": 267058
+  },
+  {
+    "path": "candidate-r1/multiple-pwa-1.log",
+    "bytes": 10027
+  },
+  {
+    "path": "candidate-r1/multiple-pwa-2.log",
+    "bytes": 10027
+  },
+  {
+    "path": "candidate-r1/native-protocol.json",
+    "bytes": 8057
+  },
+  {
+    "path": "candidate-r1/pwa-browser-0.log",
+    "bytes": 175879
+  },
+  {
+    "path": "candidate-r1/pwa-browser-1.log",
+    "bytes": 10023
+  },
+  {
+    "path": "candidate-r1/result.json",
+    "bytes": 62263
+  },
+  {
+    "path": "candidate-r1/ui-browser.log",
+    "bytes": 525994
+  },
+  {
+    "path": "candidate-r1/ui-probe.log",
+    "bytes": 128
+  },
+  {
+    "path": "candidate-r1/xvfb.log",
+    "bytes": 64
+  },
+  {
+    "path": "candidate-r1/ui-create/alpha-after.png",
+    "bytes": 38813
+  },
+  {
+    "path": "candidate-r1/ui-create/beta-after.png",
+    "bytes": 39684
+  },
+  {
+    "path": "candidate-r1/ui-create/result.json",
+    "bytes": 13872
+  },
+  {
+    "path": "colocated-regression/browser.log",
+    "bytes": 116465
+  },
+  {
+    "path": "colocated-regression/build.cjs",
+    "bytes": 477
+  },
+  {
+    "path": "colocated-regression/candidate-provenance.json",
+    "bytes": 14925
+  },
+  {
+    "path": "colocated-regression/exact-tests.js",
+    "bytes": 13227
+  },
+  {
+    "path": "colocated-regression/product-hashes-before.json",
+    "bytes": 4210
+  },
+  {
+    "path": "colocated-regression/report.md",
+    "bytes": 1753
+  },
+  {
+    "path": "colocated-regression/result.json",
+    "bytes": 1178
+  },
+  {
+    "path": "colocated-regression/run.py",
+    "bytes": 4262
+  },
+  {
+    "path": "colocated-regression/source-hashes.json",
+    "bytes": 545
+  },
+  {
+    "path": "colocated-regression/xvfb.log",
+    "bytes": 64
+  },
+  {
+    "path": "existing-3032/kwin.log",
+    "bytes": 332
+  },
+  {
+    "path": "existing-3032/native-protocol.json",
+    "bytes": 2
+  },
+  {
+    "path": "existing-3032/result.json",
+    "bytes": 1381
+  },
+  {
+    "path": "existing-3032/xvfb.log",
+    "bytes": 64
+  },
+  {
+    "path": "existing-3032-custom-control/QA_WBID_121307_1_0.js",
+    "bytes": 201
+  },
+  {
+    "path": "existing-3032-custom-control/QA_WBID_121307_1_1.js",
+    "bytes": 201
+  },
+  {
+    "path": "existing-3032-custom-control/QA_WBID_121307_1_2.js",
+    "bytes": 201
+  },
+  {
+    "path": "existing-3032-custom-control/custom-browser-remote-pwa-0.log",
+    "bytes": 324936
+  },
+  {
+    "path": "existing-3032-custom-control/custom-browser-remote-pwa-1.log",
+    "bytes": 10019
+  },
+  {
+    "path": "existing-3032-custom-control/custom-browser-remote-pwa-2.log",
+    "bytes": 10023
+  },
+  {
+    "path": "existing-3032-custom-control/identity-projection.json",
+    "bytes": 4184
+  },
+  {
+    "path": "existing-3032-custom-control/kwin.log",
+    "bytes": 1620
+  },
+  {
+    "path": "existing-3032-custom-control/native-protocol.json",
+    "bytes": 1440
+  },
+  {
+    "path": "existing-3032-custom-control/result.json",
+    "bytes": 10805
+  },
+  {
+    "path": "existing-3032-custom-control/xvfb.log",
+    "bytes": 64
+  },
+  {
+    "path": "existing-3032-custom-new-window/QA_WBID_124304_1_0.js",
+    "bytes": 201
+  },
+  {
+    "path": "existing-3032-custom-new-window/QA_WBID_124304_1_1.js",
+    "bytes": 201
+  },
+  {
+    "path": "existing-3032-custom-new-window/QA_WBID_124304_1_2.js",
+    "bytes": 201
+  },
+  {
+    "path": "existing-3032-custom-new-window/custom-browser-remote-pwa-0.log",
+    "bytes": 280842
+  },
+  {
+    "path": "existing-3032-custom-new-window/custom-browser-remote-pwa-1.log",
+    "bytes": 10019
+  },
+  {
+    "path": "existing-3032-custom-new-window/custom-browser-remote-pwa-2.log",
+    "bytes": 10023
+  },
+  {
+    "path": "existing-3032-custom-new-window/identity-projection.json",
+    "bytes": 4450
+  },
+  {
+    "path": "existing-3032-custom-new-window/kwin.log",
+    "bytes": 1868
+  },
+  {
+    "path": "existing-3032-custom-new-window/native-protocol.json",
+    "bytes": 1639
+  },
+  {
+    "path": "existing-3032-custom-new-window/result.json",
+    "bytes": 11862
+  },
+  {
+    "path": "existing-3032-custom-new-window/xvfb.log",
+    "bytes": 64
+  },
+  {
+    "path": "existing-3032-private-control/QA_WBID_126056_1_0.js",
+    "bytes": 201
+  },
+  {
+    "path": "existing-3032-private-control/QA_WBID_126056_1_1.js",
+    "bytes": 201
+  },
+  {
+    "path": "existing-3032-private-control/identity-projection.json",
+    "bytes": 3505
+  },
+  {
+    "path": "existing-3032-private-control/kwin.log",
+    "bytes": 1360
+  },
+  {
+    "path": "existing-3032-private-control/native-protocol.json",
+    "bytes": 1350
+  },
+  {
+    "path": "existing-3032-private-control/private-browser-control-0.log",
+    "bytes": 193791
+  },
+  {
+    "path": "existing-3032-private-control/private-browser-control-1.log",
+    "bytes": 10019
+  },
+  {
+    "path": "existing-3032-private-control/result.json",
+    "bytes": 8697
+  },
+  {
+    "path": "existing-3032-private-control/xvfb.log",
+    "bytes": 64
+  },
+  {
+    "path": "existing-3032-r2/QA_WBID_117938_1_0.js",
+    "bytes": 201
+  },
+  {
+    "path": "existing-3032-r2/QA_WBID_117938_1_1.js",
+    "bytes": 201
+  },
+  {
+    "path": "existing-3032-r2/QA_WBID_117938_2_0.js",
+    "bytes": 201
+  },
+  {
+    "path": "existing-3032-r2/QA_WBID_117938_2_1.js",
+    "bytes": 201
+  },
+  {
+    "path": "existing-3032-r2/QA_WBID_117938_3_0.js",
+    "bytes": 201
+  },
+  {
+    "path": "existing-3032-r2/QA_WBID_117938_3_1.js",
+    "bytes": 201
+  },
+  {
+    "path": "existing-3032-r2/QA_WBID_117938_3_2.js",
+    "bytes": 201
+  },
+  {
+    "path": "existing-3032-r2/QA_WBID_117938_4_0.js",
+    "bytes": 201
+  },
+  {
+    "path": "existing-3032-r2/QA_WBID_117938_4_1.js",
+    "bytes": 201
+  },
+  {
+    "path": "existing-3032-r2/QA_WBID_117938_4_2.js",
+    "bytes": 201
+  },
+  {
+    "path": "existing-3032-r2/browser-pwa-0.log",
+    "bytes": 187391
+  },
+  {
+    "path": "existing-3032-r2/browser-pwa-1.log",
+    "bytes": 10023
+  },
+  {
+    "path": "existing-3032-r2/existing-profile-migration-0.log",
+    "bytes": 268345
+  },
+  {
+    "path": "existing-3032-r2/existing-profile-migration-1.log",
+    "bytes": 10027
+  },
+  {
+    "path": "existing-3032-r2/existing-profile-migration-2.log",
+    "bytes": 10027
+  },
+  {
+    "path": "existing-3032-r2/identity-projection.json",
+    "bytes": 12874
+  },
+  {
+    "path": "existing-3032-r2/kwin.log",
+    "bytes": 4535
+  },
+  {
+    "path": "existing-3032-r2/multiple-pwa-0.log",
+    "bytes": 258530
+  },
+  {
+    "path": "existing-3032-r2/multiple-pwa-1.log",
+    "bytes": 10027
+  },
+  {
+    "path": "existing-3032-r2/multiple-pwa-2.log",
+    "bytes": 10027
+  },
+  {
+    "path": "existing-3032-r2/native-protocol.json",
+    "bytes": 7018
+  },
+  {
+    "path": "existing-3032-r2/pwa-browser-0.log",
+    "bytes": 186054
+  },
+  {
+    "path": "existing-3032-r2/pwa-browser-1.log",
+    "bytes": 10023
+  },
+  {
+    "path": "existing-3032-r2/result.json",
+    "bytes": 40705
+  },
+  {
+    "path": "existing-3032-r2/ui-browser.log",
+    "bytes": 510832
+  },
+  {
+    "path": "existing-3032-r2/ui-probe.log",
+    "bytes": 132
+  },
+  {
+    "path": "existing-3032-r2/xvfb.log",
+    "bytes": 64
+  },
+  {
+    "path": "existing-3032-r2/ui-create/alpha-after.png",
+    "bytes": 39061
+  },
+  {
+    "path": "existing-3032-r2/ui-create/beta-after.png",
+    "bytes": 39789
+  },
+  {
+    "path": "existing-3032-r2/ui-create/result.json",
+    "bytes": 13741
+  },
+  {
+    "path": "full-package/initial-progress.json",
+    "bytes": 10036
+  },
+  {
+    "path": "full-package/intake_product.py",
+    "bytes": 3670
+  },
+  {
+    "path": "full-package/package-progress.json",
+    "bytes": 9965
+  },
+  {
+    "path": "full-package/source-subject.json",
+    "bytes": 833
+  },
+  {
+    "path": "standard-ci/authenticated-metadata.json",
+    "bytes": 23994
+  },
+  {
+    "path": "standard-ci/head-test-module.mts",
+    "bytes": 11245
+  },
+  {
+    "path": "standard-ci/report.md",
+    "bytes": 1663
+  },
+  {
+    "path": "standard-ci/status-in-progress.json",
+    "bytes": 18291
+  },
+  {
+    "path": "standard-ci/summary.json",
+    "bytes": 950
+  },
+  {
+    "path": "standard-ci/unpacked/_dist/ci-combined-browser-test.log",
+    "bytes": 87553
+  },
+  {
+    "path": "standard-ci/unpacked/_dist/firefox-tests/SUMMARY.md",
+    "bytes": 832
+  },
+  {
+    "path": "standard-ci/unpacked/_dist/firefox-tests/TRIAGE.md",
+    "bytes": 2058
+  },
+  {
+    "path": "standard-ci/unpacked/_dist/firefox-tests/triage.json",
+    "bytes": 6202
+  },
+  {
+    "path": "standard-ci/unpacked/browser-features/chrome/test/firefox-downloaded/generated/manifest.json",
+    "bytes": 6507
+  },
+  {
+    "path": "standard-ci/unpacked/logs/vite-designs.log",
+    "bytes": 247
+  },
+  {
+    "path": "standard-ci/unpacked/logs/vite-main.log",
+    "bytes": 350
+  },
+  {
+    "path": "standard-ci/unpacked/logs/vite-modal-child.log",
+    "bytes": 273
+  },
+  {
+    "path": "standard-ci/unpacked/logs/vite-newtab.log",
+    "bytes": 274
+  },
+  {
+    "path": "standard-ci/unpacked/logs/vite-notes.log",
+    "bytes": 247
+  },
+  {
+    "path": "standard-ci/unpacked/logs/vite-profile-manager.log",
+    "bytes": 274
+  },
+  {
+    "path": "standard-ci/unpacked/logs/vite-settings.log",
+    "bytes": 246
+  },
+  {
+    "path": "standard-ci/unpacked/logs/vite-welcome.log",
+    "bytes": 247
+  },
+  {
+    "path": "standard-ci/unpacked/logs/vite-workflow-progress.log",
+    "bytes": 246
+  },
+  {
+    "path": "standard-ci/unpacked/logs/test/latest.log",
+    "bytes": 112212
+  },
+  {
+    "path": "x11-native-smoke/browser.log",
+    "bytes": 40654
+  },
+  {
+    "path": "x11-native-smoke/kwin.log",
+    "bytes": 2660
+  },
+  {
+    "path": "x11-native-smoke/product-hashes-before.json",
+    "bytes": 4210
+  },
+  {
+    "path": "x11-native-smoke/remote-beta.log",
+    "bytes": 0
+  },
+  {
+    "path": "x11-native-smoke/remote-browser.log",
+    "bytes": 0
+  },
+  {
+    "path": "x11-native-smoke/report.md",
+    "bytes": 1627
+  },
+  {
+    "path": "x11-native-smoke/result.json",
+    "bytes": 4494
+  },
+  {
+    "path": "x11-native-smoke/run.py",
+    "bytes": 5654
+  },
+  {
+    "path": "x11-native-smoke/xvfb.log",
+    "bytes": 64
+  }
+]

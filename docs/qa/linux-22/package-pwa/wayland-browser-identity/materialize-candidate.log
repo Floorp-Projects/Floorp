@@ -1,0 +1,10 @@
+Traceback (most recent call last):
+  File "/workspace/qa-linux-22/package-pwa/wayland-browser-identity/materialize_candidate.py", line 53, in <module>
+    'beforeSha256':sha(old.read(info.filename)),'afterSha256':sha(data)})
+                       ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/zipfile/__init__.py", line 1585, in read
+    with self.open(name, "r", pwd) as fp:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/zipfile/__init__.py", line 1643, in open
+    raise BadZipFile("Bad magic number for file header")
+zipfile.BadZipFile: Bad magic number for file header

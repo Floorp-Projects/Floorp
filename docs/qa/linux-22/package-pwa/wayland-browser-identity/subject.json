@@ -1,0 +1,20 @@
+{
+  "basePr": "https://github.com/Floorp-Projects/Floorp/pull/3032",
+  "baseSourceSha": "8249e234adfbb3e877e4a20cf5f57d7264d9a447",
+  "latestMainObserved": "29a3eb23145da90706d8a94441373278521cc737",
+  "worktree": "/workspace/qa-linux-wayland-browser-fix",
+  "branch": "codex/linux-browser-wayland-identity",
+  "priorFullPackage": {
+    "run": 42068055038,
+    "artifact": 13436721142,
+    "zipSha256": "fc338fa4cd3307c7a8937b2b99c97c18a1665e23b3b561680662fddfc3b336e5",
+    "sourceSha": "8249e234adfbb3e877e4a20cf5f57d7264d9a447",
+    "origin": "previous standalone unsigned stable-v2-validation package; no Cloud B XPT helper introduced"
+  },
+  "plannedScope": "dependent Draft against PR3032 branch; do not rewrite existing PR head",
+  "runtimeLockChanged": false,
+  "signingPublicationMergeDone": false,
+  "newPr": "https://github.com/Floorp-Projects/Floorp/pull/3040",
+  "sourceSha": "2deb165d75290ffd4f602ad078512dc42fc3a332",
+  "standardRegression": "colocated-regression/result.json"
+}

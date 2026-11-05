@@ -1,0 +1,42 @@
+{
+  "scope": "isolated exact3032 CI product copy with normal production-generated ESM substitutions; NOT full source/package build",
+  "candidateProduct": "/workspace/qa-linux-22/package-pwa/wayland-browser-identity/candidate-product/floorp",
+  "generatedModuleCount": 182,
+  "resourceChanges": [
+    {
+      "path": "chrome/noraneko/nora-resource/Linux.sys-Boapfgj3.mjs",
+      "operation": "remove-obsolete-generated-chunk",
+      "beforeSha256": "58b5c798d4444c65280fc2722b8451e1e8e6e43a8f0a62fb95d17aa9fa50340e"
+    },
+    {
+      "path": "chrome/noraneko/nora-resource/modules/pwa/SsbCommandLineHandler.sys.mjs",
+      "operation": "replace-generated-resource",
+      "beforeSha256": "015796e4f7f1420d898e32105d8acd148ecd445d4846f27a2db60613baeebda5",
+      "afterSha256": "cdf7b4b80b8f9f50e331b9c44f05c8487d5458b7ae75a14865f460c9deed1935"
+    },
+    {
+      "path": "chrome/noraneko/nora-resource/modules/pwa/supports/Linux.sys.mjs",
+      "operation": "replace-generated-resource",
+      "beforeSha256": "bf5f2c42b386edcf2023899b12259a8ad0c3bfd5eb3ad91afe046085a5cced29",
+      "afterSha256": "c472e04c5d191acf2607cb8a223a28bdbed4c7ed618b5304fe823352675cb766"
+    },
+    {
+      "path": "chrome/noraneko/nora-resource/modules/pwa/supports/test/Linux.test.mjs",
+      "operation": "replace-generated-resource",
+      "beforeSha256": "067ef83db3d3caf33f7bfa4db519942c6f94c1766fce9ad470db7e39828e2ef8",
+      "afterSha256": "0e86e09b8b779a220e264aef4447916e71c5b2b30f41dd77eb24b0363e7a0d69"
+    },
+    {
+      "path": "chrome/noraneko/nora-resource/modules/pwa/test/SsbCommandLineHandler.test.mjs",
+      "operation": "replace-generated-resource",
+      "beforeSha256": "51aec11e8cf4d10ce3a992e94a3d04d751ee93eed8348d3d41cc7b14b0e72b52",
+      "afterSha256": "9a71e50075b05b9b45af1a277356705f291c4285f0cdcdf57cd5a3c28a5bf737"
+    },
+    {
+      "path": "chrome/noraneko/nora-resource/Linux.sys-gk7qUyeB.mjs",
+      "operation": "add-generated-chunk",
+      "afterSha256": "b220d97ebabfa0e3f03bd491490232fe629ea8de8c040521771c50a462920b09"
+    }
+  ],
+  "nativeAndOtherProductFilesUnchanged": true
+}

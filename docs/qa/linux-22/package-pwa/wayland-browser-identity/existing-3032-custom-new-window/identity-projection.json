@@ -1,0 +1,148 @@
+{
+  "origin": {
+    "kind": "authenticated-full-package",
+    "baseSourceSha": "8249e234adfbb3e877e4a20cf5f57d7264d9a447",
+    "baseRunId": 42068055038,
+    "baseArtifactId": 13436721142,
+    "baseArtifactDigest": "sha256:fc338fa4cd3307c7a8937b2b99c97c18a1665e23b3b561680662fddfc3b336e5",
+    "productRoot": "/workspace/qa-linux-full-build/products/3032/floorp"
+  },
+  "completed": true,
+  "cases": [
+    {
+      "case": "custom-browser-remote-pwa",
+      "order": [
+        "custom-browser",
+        "alpha",
+        "browser"
+      ],
+      "completed": true,
+      "stages": [
+        {
+          "afterStep": 0,
+          "checks": [
+            {
+              "role": "ordinary-browser",
+              "expectedClass": "qa-floorp-custom",
+              "expectedCount": 1,
+              "observedClasses": [
+                "qa-floorp-custom"
+              ],
+              "observedDesktopFiles": [
+                "qa-floorp-custom"
+              ],
+              "matches": true
+            }
+          ],
+          "allMatch": true,
+          "sandbox": 6,
+          "experiment": false
+        },
+        {
+          "afterStep": 1,
+          "checks": [
+            {
+              "role": "ordinary-browser",
+              "expectedClass": "qa-floorp-custom",
+              "expectedCount": 1,
+              "observedClasses": [
+                "qa-floorp-custom"
+              ],
+              "observedDesktopFiles": [
+                "qa-floorp-custom"
+              ],
+              "matches": true
+            },
+            {
+              "role": "alpha",
+              "expectedClass": "floorp-9c81f296-e163-468d-bded-591d97ede773",
+              "observedClasses": [
+                "floorp-9c81f296-e163-468d-bded-591d97ede773"
+              ],
+              "observedDesktopFiles": [
+                "floorp-9c81f296-e163-468d-bded-591d97ede773"
+              ],
+              "matches": true
+            }
+          ],
+          "allMatch": true,
+          "sandbox": 6,
+          "experiment": false
+        },
+        {
+          "afterStep": 2,
+          "checks": [
+            {
+              "role": "ordinary-browser",
+              "expectedClass": "qa-floorp-custom",
+              "expectedCount": 2,
+              "observedClasses": [
+                "qa-floorp-custom",
+                "qa-floorp-custom"
+              ],
+              "observedDesktopFiles": [
+                "qa-floorp-custom",
+                "qa-floorp-custom"
+              ],
+              "matches": true
+            },
+            {
+              "role": "alpha",
+              "expectedClass": "floorp-9c81f296-e163-468d-bded-591d97ede773",
+              "observedClasses": [
+                "floorp-9c81f296-e163-468d-bded-591d97ede773"
+              ],
+              "observedDesktopFiles": [
+                "floorp-9c81f296-e163-468d-bded-591d97ede773"
+              ],
+              "matches": true
+            }
+          ],
+          "allMatch": true,
+          "sandbox": 6,
+          "experiment": false
+        }
+      ],
+      "finalAllMatch": true,
+      "protocolFinalWindows": [
+        {
+          "toplevel": "73",
+          "set_title": "QA_TEST_BROWSER_124321_cce9d768c1194376a521f657be3743b8",
+          "set_app_id": "qa-floorp-custom"
+        },
+        {
+          "toplevel": "77",
+          "set_title": "QA PWA Alpha — Ablaze Floorp",
+          "set_app_id": "floorp-9c81f296-e163-468d-bded-591d97ede773"
+        },
+        {
+          "toplevel": "75",
+          "set_title": "QA_TEST_BROWSER_124321_a79826a3150a485b9be9f1cec167dbab",
+          "set_app_id": "qa-floorp-custom"
+        }
+      ],
+      "quit": {
+        "cause": "shutdown",
+        "forced": false,
+        "in_app": true
+      }
+    }
+  ],
+  "productUnchanged": true,
+  "originalMigrationFixture": {
+    "sourceProfile": "/workspace/qa-linux-22/package-pwa/full-build/3032/wayland-product-qa/profile",
+    "sourceHome": "/workspace/qa-linux-22/package-pwa/full-build/3032/wayland-product-qa/home",
+    "sourceSsbStoreSha256": "2af3b3be5e0c080a8a4474e9b12c273698ff8376ef4373f8f5016a133f055089",
+    "excludedTransientLocks": [
+      "lock",
+      "parent.lock",
+      ".parentlock"
+    ],
+    "changesBeforeRun": "automation port only; no SSB/identity/desktop edits",
+    "originalProfileUnchanged": true,
+    "originalHomeUnchanged": true,
+    "originalStoreUnchanged": true
+  },
+  "remainingOwnedProcesses": [],
+  "runtimeRemoved": true
+}

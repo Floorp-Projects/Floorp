@@ -1,0 +1,223 @@
+{
+  "origin": {
+    "kind": "authenticated-full-package",
+    "baseSourceSha": "8249e234adfbb3e877e4a20cf5f57d7264d9a447",
+    "baseRunId": 42068055038,
+    "baseArtifactId": 13436721142,
+    "baseArtifactDigest": "sha256:fc338fa4cd3307c7a8937b2b99c97c18a1665e23b3b561680662fddfc3b336e5",
+    "productRoot": "/workspace/qa-linux-full-build/products/3032/floorp"
+  },
+  "runtimeDir": "/tmp/wbid-runtime-zbzb2p6z",
+  "customControlOnly": false,
+  "privateControlOnly": true,
+  "scope": "actual native Wayland protocol/KWin/desktop identities; no mock assignments",
+  "input": "synthetic UI installation and generated-launcher CLI startup; no physical-input claim",
+  "migrationFixture": {
+    "sourceProfile": "/workspace/qa-linux-22/package-pwa/full-build/3032/wayland-product-qa/profile",
+    "sourceHome": "/workspace/qa-linux-22/package-pwa/full-build/3032/wayland-product-qa/home",
+    "sourceSsbStoreSha256": "2af3b3be5e0c080a8a4474e9b12c273698ff8376ef4373f8f5016a133f055089",
+    "excludedTransientLocks": [
+      "lock",
+      "parent.lock",
+      ".parentlock"
+    ],
+    "changesBeforeRun": "automation port only; no SSB/identity/desktop edits",
+    "originalProfileUnchanged": true,
+    "originalHomeUnchanged": true,
+    "originalStoreUnchanged": true
+  },
+  "orders": [
+    {
+      "case": "private-browser-control",
+      "order": [
+        "alpha",
+        "private-browser"
+      ],
+      "profile": "/workspace/qa-linux-22/package-pwa/wayland-browser-identity/existing-3032-private-control/migration-profile",
+      "commands": [
+        [
+          "/workspace/qa-linux-full-build/products/3032/floorp/floorp",
+          "--name",
+          "floorp-9c81f296-e163-468d-bded-591d97ede773",
+          "--profile",
+          "/workspace/qa-linux-22/package-pwa/wayland-browser-identity/existing-3032-private-control/migration-profile",
+          "--start-ssb",
+          "{9c81f296-e163-468d-bded-591d97ede773}",
+          "--marionette"
+        ],
+        [
+          "/workspace/qa-linux-full-build/products/3032/floorp/floorp",
+          "--profile",
+          "/workspace/qa-linux-22/package-pwa/wayland-browser-identity/existing-3032-private-control/migration-profile",
+          "--private-window",
+          "about:blank"
+        ]
+      ],
+      "observations": [
+        {
+          "afterStep": 0,
+          "product": {
+            "pid": 126073,
+            "profile": "/workspace/qa-linux-22/package-pwa/wayland-browser-identity/existing-3032-private-control/migration-profile",
+            "executable": "/workspace/qa-linux-full-build/products/3032/floorp/floorp",
+            "version": "159.0.1",
+            "buildID": "20261103153232",
+            "platformBuildID": "20261103153232",
+            "sandbox": 6,
+            "experiment": false,
+            "windows": [
+              {
+                "title": "QA PWA Alpha \u2014 Ablaze Floorp",
+                "taskbarId": "{9c81f296-e163-468d-bded-591d97ede773}",
+                "ssbArgumentId": "{9c81f296-e163-468d-bded-591d97ede773}",
+                "originalTestTitle": null,
+                "isPrivate": false,
+                "windowClass": "floorp-9c81f296-e163-468d-bded-591d97ede773",
+                "url": "http://127.0.0.1:8784/alpha/"
+              }
+            ]
+          },
+          "ordinaryTitleMarkers": [],
+          "kwinWindows": [
+            {
+              "caption": "QA PWA Alpha \u2014 Ablaze Floorp",
+              "resourceClass": "floorp-9c81f296-e163-468d-bded-591d97ede773",
+              "desktopFileName": "floorp-9c81f296-e163-468d-bded-591d97ede773",
+              "resourceName": "floorp",
+              "pid": 126073
+            }
+          ]
+        },
+        {
+          "afterStep": 1,
+          "product": {
+            "pid": 126073,
+            "profile": "/workspace/qa-linux-22/package-pwa/wayland-browser-identity/existing-3032-private-control/migration-profile",
+            "executable": "/workspace/qa-linux-full-build/products/3032/floorp/floorp",
+            "version": "159.0.1",
+            "buildID": "20261103153232",
+            "platformBuildID": "20261103153232",
+            "sandbox": 6,
+            "experiment": false,
+            "windows": [
+              {
+                "title": "QA PWA Alpha \u2014 Ablaze Floorp",
+                "taskbarId": "{9c81f296-e163-468d-bded-591d97ede773}",
+                "ssbArgumentId": "{9c81f296-e163-468d-bded-591d97ede773}",
+                "originalTestTitle": null,
+                "isPrivate": false,
+                "windowClass": "floorp-9c81f296-e163-468d-bded-591d97ede773",
+                "url": "http://127.0.0.1:8784/alpha/"
+              },
+              {
+                "title": "QA_TEST_BROWSER_126073_7804d37f30074c8685b6d0766ce4b337",
+                "taskbarId": null,
+                "ssbArgumentId": null,
+                "originalTestTitle": "Ablaze Floorp Private Browsing",
+                "isPrivate": true,
+                "windowClass": null,
+                "url": "about:blank"
+              }
+            ]
+          },
+          "ordinaryTitleMarkers": [
+            {
+              "marker": "QA_TEST_BROWSER_126073_7804d37f30074c8685b6d0766ce4b337",
+              "originalTitle": "Ablaze Floorp Private Browsing",
+              "url": "about:blank"
+            }
+          ],
+          "kwinWindows": [
+            {
+              "caption": "QA PWA Alpha \u2014 Ablaze Floorp",
+              "resourceClass": "floorp-9c81f296-e163-468d-bded-591d97ede773",
+              "desktopFileName": "floorp-9c81f296-e163-468d-bded-591d97ede773",
+              "resourceName": "floorp",
+              "pid": 126073
+            },
+            {
+              "caption": "QA_TEST_BROWSER_126073_7804d37f30074c8685b6d0766ce4b337",
+              "resourceClass": "floorp-9c81f296-e163-468d-bded-591d97ede773",
+              "desktopFileName": "floorp-9c81f296-e163-468d-bded-591d97ede773",
+              "resourceName": "floorp",
+              "pid": 126073
+            }
+          ]
+        }
+      ],
+      "quit": {
+        "cause": "shutdown",
+        "forced": false,
+        "in_app": true
+      },
+      "completed": true
+    }
+  ],
+  "completed": true,
+  "freshEntries": {},
+  "migrationEntries": {
+    "alpha": {
+      "app": {
+        "id": "{9c81f296-e163-468d-bded-591d97ede773}",
+        "name": "QA PWA Alpha",
+        "start_url": "http://127.0.0.1:8784/alpha/",
+        "userContextId": 0
+      },
+      "originalExec": [
+        "/workspace/qa-linux-full-build/products/3032/floorp/floorp",
+        "--name",
+        "floorp-9c81f296-e163-468d-bded-591d97ede773",
+        "--profile",
+        "/workspace/qa-linux-22/package-pwa/full-build/3032/wayland-product-qa/profile",
+        "--start-ssb",
+        "{9c81f296-e163-468d-bded-591d97ede773}"
+      ],
+      "effectiveExec": [
+        "/workspace/qa-linux-full-build/products/3032/floorp/floorp",
+        "--name",
+        "floorp-9c81f296-e163-468d-bded-591d97ede773",
+        "--profile",
+        "/workspace/qa-linux-22/package-pwa/wayland-browser-identity/existing-3032-private-control/migration-profile",
+        "--start-ssb",
+        "{9c81f296-e163-468d-bded-591d97ede773}"
+      ],
+      "startupWMClass": "floorp-9c81f296-e163-468d-bded-591d97ede773",
+      "desktopSha256": "7a8cf00b14ecfccbbae972fbfad9f304825f414744f63d45248df48dfa73398b",
+      "relocatedPathsOnly": true
+    },
+    "beta": {
+      "app": {
+        "id": "{6a449a02-b424-4586-b14a-799c18105ee3}",
+        "name": "QA PWA Beta",
+        "start_url": "http://127.0.0.1:8784/beta/",
+        "userContextId": 0
+      },
+      "originalExec": [
+        "/workspace/qa-linux-full-build/products/3032/floorp/floorp",
+        "--name",
+        "floorp-6a449a02-b424-4586-b14a-799c18105ee3",
+        "--profile",
+        "/workspace/qa-linux-22/package-pwa/full-build/3032/wayland-product-qa/profile",
+        "--start-ssb",
+        "{6a449a02-b424-4586-b14a-799c18105ee3}"
+      ],
+      "effectiveExec": [
+        "/workspace/qa-linux-full-build/products/3032/floorp/floorp",
+        "--name",
+        "floorp-6a449a02-b424-4586-b14a-799c18105ee3",
+        "--profile",
+        "/workspace/qa-linux-22/package-pwa/wayland-browser-identity/existing-3032-private-control/migration-profile",
+        "--start-ssb",
+        "{6a449a02-b424-4586-b14a-799c18105ee3}"
+      ],
+      "startupWMClass": "floorp-6a449a02-b424-4586-b14a-799c18105ee3",
+      "desktopSha256": "926ac00f799f23e591590a5d143aaf873cb5105c1f51eb098e68869a2c8acb76",
+      "relocatedPathsOnly": true
+    }
+  },
+  "productUnchanged": true,
+  "baseProductUnchanged": true,
+  "remainingOwnedProcesses": [],
+  "runtimeRemoved": true,
+  "nativeWaylandProtocolObserved": true
+}

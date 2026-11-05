@@ -1,0 +1,164 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "repository": "Floorp-Projects/Floorp-Runtime",
+    "ref": "daily-1179",
+    "commit": "8965ffc346d426ccdf919bd18585e4d4a0c21654",
+    "tree": "53216e352ae9a27c402b707e1384bb5d62e9db7e"
+  },
+  "tests": [
+    {
+      "upstreamPath": "browser/base/content/test/browser-caps/browser_principalSerialization_version1.js",
+      "manifestPath": "browser/base/content/test/browser-caps/browser.toml",
+      "wrapperPath": "browser__base__content__test__browser-caps__browser_principalserialization_version1.test.js",
+      "importSpecifier": "#firefox-tests/browser/base/content/test/browser-caps/browser_principalSerialization_version1.js",
+      "expectedTaskCount": 2,
+      "prefs": [],
+      "headPolicy": "harness-replaced",
+      "supportPolicy": "locked-not-loaded"
+    },
+    {
+      "upstreamPath": "browser/base/content/test/browser-general/browser_bug537474.js",
+      "manifestPath": "browser/base/content/test/browser-general/browser.toml",
+      "wrapperPath": "browser__base__content__test__browser-general__browser_bug537474.test.js",
+      "importSpecifier": "#firefox-tests/browser/base/content/test/browser-general/browser_bug537474.js",
+      "expectedTaskCount": 1,
+      "prefs": [],
+      "headPolicy": "harness-replaced",
+      "supportPolicy": "locked-not-loaded"
+    },
+    {
+      "upstreamPath": "browser/base/content/test/browser-general/browser_bug565575.js",
+      "manifestPath": "browser/base/content/test/browser-general/browser.toml",
+      "wrapperPath": "browser__base__content__test__browser-general__browser_bug565575.test.js",
+      "importSpecifier": "#firefox-tests/browser/base/content/test/browser-general/browser_bug565575.js",
+      "expectedTaskCount": 1,
+      "prefs": [],
+      "headPolicy": "harness-replaced",
+      "supportPolicy": "locked-not-loaded"
+    },
+    {
+      "upstreamPath": "browser/base/content/test/browser-general/browser_bug596687.js",
+      "manifestPath": "browser/base/content/test/browser-general/browser.toml",
+      "wrapperPath": "browser__base__content__test__browser-general__browser_bug596687.test.js",
+      "importSpecifier": "#firefox-tests/browser/base/content/test/browser-general/browser_bug596687.js",
+      "expectedTaskCount": 1,
+      "prefs": [],
+      "headPolicy": "harness-replaced",
+      "supportPolicy": "locked-not-loaded"
+    },
+    {
+      "upstreamPath": "browser/base/content/test/browser-performance/browser_hiddenwindow_existence.js",
+      "manifestPath": "browser/base/content/test/browser-performance/browser.toml",
+      "wrapperPath": "browser__base__content__test__browser-performance__browser_hiddenwindow_existence.test.js",
+      "importSpecifier": "#firefox-tests/browser/base/content/test/browser-performance/browser_hiddenwindow_existence.js",
+      "expectedTaskCount": 1,
+      "prefs": [
+        {
+          "name": "browser.chrome.disableRemoteControlCueForTests",
+          "kind": "bool",
+          "value": true
+        },
+        {
+          "name": "browser.migration.version",
+          "kind": "int",
+          "value": 9999999
+        },
+        {
+          "name": "browser.startup.record",
+          "kind": "bool",
+          "value": true
+        },
+        {
+          "name": "extensions.formautofill.addresses.available",
+          "kind": "string",
+          "value": "on"
+        },
+        {
+          "name": "gfx.canvas.willReadFrequently.enable",
+          "kind": "bool",
+          "value": true
+        }
+      ],
+      "headPolicy": "harness-replaced",
+      "supportPolicy": "locked-not-loaded"
+    },
+    {
+      "upstreamPath": "browser/components/customizableui/test/browser_996364_registerArea_different_properties.js",
+      "manifestPath": "browser/components/customizableui/test/browser.toml",
+      "wrapperPath": "browser__components__customizableui__test__browser_996364_registerarea_different_properties.test.js",
+      "importSpecifier": "#firefox-tests/browser/components/customizableui/test/browser_996364_registerArea_different_properties.js",
+      "expectedTaskCount": 7,
+      "prefs": [
+        {
+          "name": "browser.sessionstore.closedTabsFromAllWindows",
+          "kind": "bool",
+          "value": true
+        },
+        {
+          "name": "browser.sessionstore.closedTabsFromClosedWindows",
+          "kind": "bool",
+          "value": true
+        },
+        {
+          "name": "browser.tabs.groups.alternateMenu",
+          "kind": "bool",
+          "value": true
+        },
+        {
+          "name": "browser.toolbars.share-button.enabled",
+          "kind": "bool",
+          "value": true
+        },
+        {
+          "name": "browser.urlbar.trustPanel.featureGate",
+          "kind": "bool",
+          "value": false
+        },
+        {
+          "name": "sidebar.revamp",
+          "kind": "bool",
+          "value": false
+        }
+      ],
+      "headPolicy": "harness-replaced",
+      "supportPolicy": "locked-not-loaded"
+    },
+    {
+      "upstreamPath": "browser/components/tabbrowser/test/browser/tabs/browser_pinned_and_hidden_tabs.js",
+      "manifestPath": "browser/components/tabbrowser/test/browser/tabs/browser.toml",
+      "wrapperPath": "browser__components__tabbrowser__test__browser__tabs__browser_pinned_and_hidden_tabs.test.js",
+      "importSpecifier": "#firefox-tests/browser/components/tabbrowser/test/browser/tabs/browser_pinned_and_hidden_tabs.js",
+      "expectedTaskCount": 1,
+      "prefs": [
+        {
+          "name": "browser.sessionstore.closedTabsFromAllWindows",
+          "kind": "bool",
+          "value": true
+        },
+        {
+          "name": "browser.sessionstore.closedTabsFromClosedWindows",
+          "kind": "bool",
+          "value": true
+        },
+        {
+          "name": "sidebar.verticalTabs.dragToPinPromo.dismissed",
+          "kind": "bool",
+          "value": true
+        }
+      ],
+      "headPolicy": "harness-replaced",
+      "supportPolicy": "locked-not-loaded"
+    },
+    {
+      "upstreamPath": "browser/components/urlbar/tests/browser-UrlbarInput/browser_a11y.js",
+      "manifestPath": "browser/components/urlbar/tests/browser-UrlbarInput/browser.toml",
+      "wrapperPath": "browser__components__urlbar__tests__browser-urlbarinput__browser_a11y.test.js",
+      "importSpecifier": "#firefox-tests/browser/components/urlbar/tests/browser-UrlbarInput/browser_a11y.js",
+      "expectedTaskCount": 2,
+      "prefs": [],
+      "headPolicy": "harness-replaced",
+      "supportPolicy": "locked-not-loaded"
+    }
+  ]
+}

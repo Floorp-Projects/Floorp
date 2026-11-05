@@ -1,0 +1,107 @@
+{
+  "kind": "actual source-generated candidate copy, cold launcher native WM_CLASS smoke",
+  "display": ":98 Xvfb X11 native WM_CLASS",
+  "product": "/workspace/qa-linux-22/package-pwa/wayland-browser-identity/candidate-product/floorp",
+  "profile": "/workspace/qa-linux-22/package-pwa/wayland-browser-identity/x11-native-smoke/home/profile",
+  "identity": {
+    "profile": "/workspace/qa-linux-22/package-pwa/wayland-browser-identity/x11-native-smoke/home/profile",
+    "executable": "/workspace/qa-linux-22/package-pwa/wayland-browser-identity/candidate-product/floorp/floorp",
+    "version": "159.0.1",
+    "buildID": "20261103153232",
+    "sandbox": 6,
+    "sandboxDisable": false
+  },
+  "stages": [
+    {
+      "after": "alpha",
+      "nativeClients": [
+        {
+          "xid": "0x400003",
+          "properties": "WM_STATE(WM_STATE):\n\t\twindow state: Normal\n\t\ticon window: 0x0\nWM_CLASS(STRING) = \"Navigator\", \"floorp-9c81f296-e163-468d-bded-591d97ede773\"\n_NET_WM_NAME(UTF8_STRING) = \"Problem loading page \u2014 Ablaze Floorp\"\n_NET_WM_PID(CARDINAL) = 125435\n"
+        }
+      ],
+      "windows": [
+        {
+          "taskbartab": "{9c81f296-e163-468d-bded-591d97ede773}",
+          "windowclass": "floorp-9c81f296-e163-468d-bded-591d97ede773",
+          "title": "Problem loading page \u2014 Ablaze Floorp"
+        }
+      ]
+    },
+    {
+      "after": "browser",
+      "nativeClients": [
+        {
+          "xid": "0x400003",
+          "properties": "WM_STATE(WM_STATE):\n\t\twindow state: Normal\n\t\ticon window: 0x0\nWM_CLASS(STRING) = \"Navigator\", \"floorp-9c81f296-e163-468d-bded-591d97ede773\"\n_NET_WM_NAME(UTF8_STRING) = \"Problem loading page \u2014 Ablaze Floorp\"\n_NET_WM_PID(CARDINAL) = 125435\n"
+        },
+        {
+          "xid": "0x400026",
+          "properties": "WM_STATE(WM_STATE):\n\t\twindow state: Normal\n\t\ticon window: 0x0\nWM_CLASS(STRING) = \"Navigator\", \"floorp\"\n_NET_WM_NAME(UTF8_STRING) = \"Ablaze Floorp\"\n_NET_WM_PID(CARDINAL) = 125435\n"
+        }
+      ],
+      "windows": [
+        {
+          "taskbartab": "{9c81f296-e163-468d-bded-591d97ede773}",
+          "windowclass": "floorp-9c81f296-e163-468d-bded-591d97ede773",
+          "title": "Problem loading page \u2014 Ablaze Floorp"
+        },
+        {
+          "taskbartab": null,
+          "windowclass": "floorp",
+          "title": "Ablaze Floorp"
+        }
+      ]
+    },
+    {
+      "after": "beta",
+      "nativeClients": [
+        {
+          "xid": "0x400003",
+          "properties": "WM_STATE(WM_STATE):\n\t\twindow state: Normal\n\t\ticon window: 0x0\nWM_CLASS(STRING) = \"Navigator\", \"floorp-9c81f296-e163-468d-bded-591d97ede773\"\n_NET_WM_NAME(UTF8_STRING) = \"Problem loading page \u2014 Ablaze Floorp\"\n_NET_WM_PID(CARDINAL) = 125435\n"
+        },
+        {
+          "xid": "0x400026",
+          "properties": "WM_STATE(WM_STATE):\n\t\twindow state: Normal\n\t\ticon window: 0x0\nWM_CLASS(STRING) = \"Navigator\", \"floorp\"\n_NET_WM_NAME(UTF8_STRING) = \"Ablaze Floorp\"\n_NET_WM_PID(CARDINAL) = 125435\n"
+        },
+        {
+          "xid": "0x400052",
+          "properties": "WM_STATE(WM_STATE):\n\t\twindow state: Normal\n\t\ticon window: 0x0\nWM_CLASS(STRING) = \"Navigator\", \"floorp-6a449a02-b424-4586-b14a-799c18105ee3\"\n_NET_WM_NAME(UTF8_STRING) = \"Problem loading page \u2014 Ablaze Floorp\"\n_NET_WM_PID(CARDINAL) = 125435\n"
+        }
+      ],
+      "windows": [
+        {
+          "taskbartab": "{9c81f296-e163-468d-bded-591d97ede773}",
+          "windowclass": "floorp-9c81f296-e163-468d-bded-591d97ede773",
+          "title": "Problem loading page \u2014 Ablaze Floorp"
+        },
+        {
+          "taskbartab": null,
+          "windowclass": "floorp",
+          "title": "Ablaze Floorp"
+        },
+        {
+          "taskbartab": "{6a449a02-b424-4586-b14a-799c18105ee3}",
+          "windowclass": "floorp-6a449a02-b424-4586-b14a-799c18105ee3",
+          "title": "Problem loading page \u2014 Ablaze Floorp"
+        }
+      ]
+    }
+  ],
+  "expected": {
+    "alpha": "floorp-9c81f296-e163-468d-bded-591d97ede773",
+    "beta": "floorp-6a449a02-b424-4586-b14a-799c18105ee3",
+    "browser": "floorp"
+  },
+  "nativeClassesMatch": true,
+  "quit": {
+    "cause": "shutdown",
+    "forced": false,
+    "in_app": true
+  },
+  "browserExit": 0,
+  "ownedProcessesRemaining": 0,
+  "allProductFilesUnchanged": true,
+  "ssbStorePreserved": true,
+  "ssbStoreSha256": "2af3b3be5e0c080a8a4474e9b12c273698ff8376ef4373f8f5016a133f055089"
+}

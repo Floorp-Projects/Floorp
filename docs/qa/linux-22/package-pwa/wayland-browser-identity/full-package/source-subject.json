@@ -1,0 +1,20 @@
+{
+  "sourceSha": "2deb165d75290ffd4f602ad078512dc42fc3a332",
+  "baseSha": "8249e234adfbb3e877e4a20cf5f57d7264d9a447",
+  "changedPaths": [
+    "browser-features/modules/modules/pwa/SsbCommandLineHandler.sys.mts",
+    "browser-features/modules/modules/pwa/supports/Linux.sys.mts",
+    "browser-features/modules/modules/pwa/test/SsbCommandLineHandler.test.mts"
+  ],
+  "unchangedLockAndPackageWorkflow": {
+    "floorp-runtime.lock.json": {
+      "baseBlob": "8f3463c04e70cd900c55f4f1fd301403eccdf88a",
+      "headBlob": "8f3463c04e70cd900c55f4f1fd301403eccdf88a"
+    },
+    ".github/workflows/package.yml": {
+      "baseBlob": "0188bac2cd5fc0bef7ee40f2188dc9965641fe1e",
+      "headBlob": "0188bac2cd5fc0bef7ee40f2188dc9965641fe1e"
+    }
+  },
+  "scope": "ordinary browser identity follow-up; no helper/XPT/native/strictRuntime changes"
+}

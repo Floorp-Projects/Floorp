@@ -1,0 +1,34 @@
+[
+  {
+    "log": "private-browser-control-0.log",
+    "event": "[ 514412.885] {Default Queue}  -> xdg_toplevel#71.set_title(\"Ablaze Floorp\")"
+  },
+  {
+    "log": "private-browser-control-0.log",
+    "event": "[ 514412.891] {Default Queue}  -> xdg_toplevel#71.set_app_id(\"floorp-9c81f296-e163-468d-bded-591d97ede773\")"
+  },
+  {
+    "log": "private-browser-control-0.log",
+    "event": "[ 514413.205] {Default Queue}  -> xdg_toplevel#71.set_app_id(\"floorp-9c81f296-e163-468d-bded-591d97ede773\")"
+  },
+  {
+    "log": "private-browser-control-0.log",
+    "event": "[ 516226.110] {Default Queue}  -> xdg_toplevel#71.set_title(\"QA PWA Alpha \u2014 Ablaze Floorp\")"
+  },
+  {
+    "log": "private-browser-control-0.log",
+    "event": "[ 523424.071] {Default Queue}  -> xdg_toplevel#69.set_title(\"Ablaze Floorp\")"
+  },
+  {
+    "log": "private-browser-control-0.log",
+    "event": "[ 523424.076] {Default Queue}  -> xdg_toplevel#69.set_app_id(\"floorp-9c81f296-e163-468d-bded-591d97ede773\")"
+  },
+  {
+    "log": "private-browser-control-0.log",
+    "event": "[ 523646.931] {Default Queue}  -> xdg_toplevel#69.set_title(\"Ablaze Floorp Private Browsing\")"
+  },
+  {
+    "log": "private-browser-control-0.log",
+    "event": "[ 526385.038] {Default Queue}  -> xdg_toplevel#69.set_title(\"QA_TEST_BROWSER_126073_7804d37f30074c8685b6d0766ce4b337\")"
+  }
+]

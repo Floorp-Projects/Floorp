@@ -1,0 +1,18 @@
+{
+  "head": "2deb165d75290ffd4f602ad078512dc42fc3a332",
+  "run": 42077116984,
+  "conclusion": "success",
+  "artifact": 13438134467,
+  "artifactSha256": "1856010f6fc5081dc86292530be029fe05e612e15df5a2034f0e7af183b6d054",
+  "browserModulesPassed": 281,
+  "browserModulesFailed": 0,
+  "downloadedFirefoxFiles": 8,
+  "downloadedFirefoxTasksPassed": 16,
+  "targetModule": "browser-features/modules/modules/pwa/test/SsbCommandLineHandler.test.mts",
+  "targetModuleMs": 12864,
+  "targetModuleCompletedIndex": 231,
+  "newCase": "Linux PWA startup keeps ordinary browser and PWA identities separate",
+  "caseReportingLimit": "Artifact records module-level pass, not independent per-case success records; exact authenticated-head module calls all four cases using collect-and-throw runTests; logs contain Browser Identity Regression app creation.",
+  "sourceModuleSha256": "5c77b9e1ecfaae87d65cf34aec26bcbb3dd5a2466da4dff5613ee2beec498152",
+  "noRetry": true
+}

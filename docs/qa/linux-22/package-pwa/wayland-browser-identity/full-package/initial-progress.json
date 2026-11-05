@@ -1,0 +1,379 @@
+{
+  "run": {
+    "id": 42077174018,
+    "path": ".github/workflows/package.yml",
+    "head_sha": "2deb165d75290ffd4f602ad078512dc42fc3a332",
+    "head_branch": "codex/linux-browser-wayland-identity",
+    "status": "in_progress",
+    "created_at": "2026-11-05T17:42:04Z"
+  },
+  "jobs": [
+    {
+      "id": 127420377991,
+      "status": "in_progress",
+      "conclusion": null,
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1
+        },
+        {
+          "name": "Require Runtime artifact token",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2
+        },
+        {
+          "name": "Validate provenance contract",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3
+        },
+        {
+          "name": "Checkout Floorp-Projects/Floorp-runtime",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4
+        },
+        {
+          "name": "Apply upstream patches",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5
+        },
+        {
+          "name": "Checkout Floorp-Projects/Floorp",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6
+        },
+        {
+          "name": "Apply Floorp common Runtime patches",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7
+        },
+        {
+          "name": "Apply Floorp custom browser icons",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 8
+        },
+        {
+          "name": "Download verified Runtime artifact by ID",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9
+        },
+        {
+          "name": "Stage exact Runtime v2 bundle",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10
+        },
+        {
+          "name": "Preserve verified macOS Runtime packing provenance",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 11
+        },
+        {
+          "name": "Preserve verified compiled Runtime source provenance",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 12
+        },
+        {
+          "name": "Run actions/setup-node@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13
+        },
+        {
+          "name": "Run denoland/setup-deno@v2",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 14
+        },
+        {
+          "name": "Setup Noraneko",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15
+        },
+        {
+          "name": "Setup",
+          "status": "in_progress",
+          "conclusion": null,
+          "number": 16
+        },
+        {
+          "name": "Write Versions",
+          "status": "pending",
+          "conclusion": null,
+          "number": 17
+        },
+        {
+          "name": "Normalize platform",
+          "status": "pending",
+          "conclusion": null,
+          "number": 18
+        },
+        {
+          "name": "Copy branding files from runtime",
+          "status": "pending",
+          "conclusion": null,
+          "number": 19
+        },
+        {
+          "name": "Mach configure",
+          "status": "pending",
+          "conclusion": null,
+          "number": 20
+        },
+        {
+          "name": "Set legacy Runtime run ID",
+          "status": "pending",
+          "conclusion": null,
+          "number": 21
+        },
+        {
+          "name": "Get Artifact Name",
+          "status": "pending",
+          "conclusion": null,
+          "number": 22
+        },
+        {
+          "name": "Download mozilla artifact from Actions",
+          "status": "pending",
+          "conclusion": null,
+          "number": 23
+        },
+        {
+          "name": "Download Mozilla Artifact from GitHub Releases",
+          "status": "pending",
+          "conclusion": null,
+          "number": 24
+        },
+        {
+          "name": "Make Downloaded Artifact to Mozilla Artifact (Actions)",
+          "status": "pending",
+          "conclusion": null,
+          "number": 25
+        },
+        {
+          "name": "Make Download Artifact to Mozilla Artifact (GitHub Releases)",
+          "status": "pending",
+          "conclusion": null,
+          "number": 26
+        },
+        {
+          "name": "Build Noraneko",
+          "status": "pending",
+          "conclusion": null,
+          "number": 27
+        },
+        {
+          "name": "Build",
+          "status": "pending",
+          "conclusion": null,
+          "number": 28
+        },
+        {
+          "name": "Inject Noraneko",
+          "status": "pending",
+          "conclusion": null,
+          "number": 29
+        },
+        {
+          "name": "Upload dist on failure (pre-packaging)",
+          "status": "pending",
+          "conclusion": null,
+          "number": 30
+        },
+        {
+          "name": "Apply Firefox Preferences Override",
+          "status": "pending",
+          "conclusion": null,
+          "number": 31
+        },
+        {
+          "name": "Replace Icon (Beta)",
+          "status": "pending",
+          "conclusion": null,
+          "number": 32
+        },
+        {
+          "name": "Package noraneko",
+          "status": "pending",
+          "conclusion": null,
+          "number": 33
+        },
+        {
+          "name": "Prepare installer workspace",
+          "status": "pending",
+          "conclusion": null,
+          "number": 34
+        },
+        {
+          "name": "Repackage Linux DEB",
+          "status": "pending",
+          "conclusion": null,
+          "number": 35
+        },
+        {
+          "name": "Prepare Linux DEB artifact metadata",
+          "status": "pending",
+          "conclusion": null,
+          "number": 36
+        },
+        {
+          "name": "Upload Linux DEB artifact",
+          "status": "pending",
+          "conclusion": null,
+          "number": 37
+        },
+        {
+          "name": "Upload Noraneko Artifact",
+          "status": "pending",
+          "conclusion": null,
+          "number": 38
+        },
+        {
+          "name": "Prepare un-packaging installer files for windows-codesigning (binary)",
+          "status": "pending",
+          "conclusion": null,
+          "number": 39
+        },
+        {
+          "name": "Publish Unsigned Binary 🎁",
+          "status": "pending",
+          "conclusion": null,
+          "number": 40
+        },
+        {
+          "name": "Sign Binary 🖊️",
+          "status": "pending",
+          "conclusion": null,
+          "number": 41
+        },
+        {
+          "name": "Prepare installer with codesigning and re-packaging (installer)",
+          "status": "pending",
+          "conclusion": null,
+          "number": 42
+        },
+        {
+          "name": "Publish Unsigned Installer 🎁",
+          "status": "pending",
+          "conclusion": null,
+          "number": 43
+        },
+        {
+          "name": "Sign Installer 🖊️",
+          "status": "pending",
+          "conclusion": null,
+          "number": 44
+        },
+        {
+          "name": "Prepare installer with codesigning and re-packaging (without windows)",
+          "status": "pending",
+          "conclusion": null,
+          "number": 45
+        },
+        {
+          "name": "Stage verified Runtime v2 MAR inputs",
+          "status": "pending",
+          "conclusion": null,
+          "number": 46
+        },
+        {
+          "name": "Download artifact of MAR tools (Actions)",
+          "status": "pending",
+          "conclusion": null,
+          "number": 47
+        },
+        {
+          "name": "Download artifact of MAR tools (GitHub Releases)",
+          "status": "pending",
+          "conclusion": null,
+          "number": 48
+        },
+        {
+          "name": "Download artifact of binary for getting build information (Actions)",
+          "status": "pending",
+          "conclusion": null,
+          "number": 49
+        },
+        {
+          "name": "Download artifact of binary for getting build information (GiHub Releases)",
+          "status": "pending",
+          "conclusion": null,
+          "number": 50
+        },
+        {
+          "name": "Create MAR package",
+          "status": "pending",
+          "conclusion": null,
+          "number": 51
+        },
+        {
+          "name": "Verify installer workspace",
+          "status": "pending",
+          "conclusion": null,
+          "number": 52
+        },
+        {
+          "name": "Publish dist",
+          "status": "pending",
+          "conclusion": null,
+          "number": 53
+        },
+        {
+          "name": "Publish MAR",
+          "status": "pending",
+          "conclusion": null,
+          "number": 54
+        },
+        {
+          "name": "Stage macOS finalizer tools and metadata",
+          "status": "pending",
+          "conclusion": null,
+          "number": 55
+        },
+        {
+          "name": "Upload macOS finalizer tools",
+          "status": "pending",
+          "conclusion": null,
+          "number": 56
+        },
+        {
+          "name": "Post Run denoland/setup-deno@v2",
+          "status": "pending",
+          "conclusion": null,
+          "number": 109
+        },
+        {
+          "name": "Post Run actions/setup-node@v4",
+          "status": "pending",
+          "conclusion": null,
+          "number": 110
+        },
+        {
+          "name": "Post Checkout Floorp-Projects/Floorp",
+          "status": "pending",
+          "conclusion": null,
+          "number": 111
+        },
+        {
+          "name": "Post Checkout Floorp-Projects/Floorp-runtime",
+          "status": "pending",
+          "conclusion": null,
+          "number": 112
+        }
+      ]
+    }
+  ]
+}

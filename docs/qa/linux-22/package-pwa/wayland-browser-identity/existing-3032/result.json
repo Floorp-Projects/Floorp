@@ -1,0 +1,33 @@
+{
+  "origin": {
+    "kind": "authenticated-full-package",
+    "baseSourceSha": "8249e234adfbb3e877e4a20cf5f57d7264d9a447",
+    "baseRunId": 42068055038,
+    "baseArtifactId": 13436721142,
+    "baseArtifactDigest": "sha256:fc338fa4cd3307c7a8937b2b99c97c18a1665e23b3b561680662fddfc3b336e5",
+    "productRoot": "/workspace/qa-linux-full-build/products/3032/floorp"
+  },
+  "scope": "actual native Wayland protocol/KWin/desktop identities; no mock assignments",
+  "input": "synthetic UI installation and generated-launcher CLI startup; no physical-input claim",
+  "migrationFixture": {
+    "sourceProfile": "/workspace/qa-linux-22/package-pwa/full-build/3032/wayland-product-qa/profile",
+    "sourceHome": "/workspace/qa-linux-22/package-pwa/full-build/3032/wayland-product-qa/home",
+    "sourceSsbStoreSha256": "2af3b3be5e0c080a8a4474e9b12c273698ff8376ef4373f8f5016a133f055089",
+    "excludedTransientLocks": [
+      "lock",
+      "parent.lock",
+      ".parentlock"
+    ],
+    "changesBeforeRun": "automation port only; no SSB/identity/desktop edits",
+    "originalProfileUnchanged": true,
+    "originalHomeUnchanged": true,
+    "originalStoreUnchanged": true
+  },
+  "orders": [],
+  "completed": false,
+  "error": "Owned Wayland socket unavailable",
+  "productUnchanged": true,
+  "baseProductUnchanged": true,
+  "remainingOwnedProcesses": [],
+  "nativeWaylandProtocolObserved": false
+}

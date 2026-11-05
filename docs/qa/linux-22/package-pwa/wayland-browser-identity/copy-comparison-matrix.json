@@ -1,0 +1,651 @@
+{
+  "scope": "Wayland ordinary-browser identity follow-up; no claim of icon-pixel/Plasma-task-model qualification",
+  "baselineSourceSha": "8249e234adfbb3e877e4a20cf5f57d7264d9a447",
+  "candidateCommittedSourceSha": "2deb165d75290ffd4f602ad078512dc42fc3a332",
+  "candidateOrigin": "isolated patched-product copy, source binding verified; not full source/package build",
+  "candidateSourceBinding": "candidate-commit-source-binding.json",
+  "environment": "Debian13; own Xvfb96 + nested KWin6.3.6 nativeWayland + normal dedicated D-Bus; no compositor protection bypass",
+  "counts": {
+    "baselineCases": 6,
+    "baselineMatches": 2,
+    "candidateCases": 6,
+    "candidateMatches": 6,
+    "normalInAppQuits": 14
+  },
+  "rows": [
+    {
+      "subject": "existing3032",
+      "origin": "authenticated-full-package",
+      "case": "browser-pwa",
+      "matches": true,
+      "order": [
+        "browser",
+        "alpha"
+      ],
+      "checks": [
+        {
+          "role": "ordinary-browser",
+          "expectedClass": "floorp",
+          "expectedCount": 1,
+          "observedClasses": [
+            "floorp"
+          ],
+          "observedDesktopFiles": [
+            "floorp"
+          ],
+          "matches": true
+        },
+        {
+          "role": "alpha",
+          "expectedClass": "floorp-eba6693a-60ac-4e5c-8109-f697017db4f7",
+          "observedClasses": [
+            "floorp-eba6693a-60ac-4e5c-8109-f697017db4f7"
+          ],
+          "observedDesktopFiles": [
+            "floorp-eba6693a-60ac-4e5c-8109-f697017db4f7"
+          ],
+          "matches": true
+        }
+      ],
+      "protection": {
+        "contentSandboxLevel": 6,
+        "taskbarExperiment": false
+      },
+      "completed": true,
+      "normalQuit": {
+        "cause": "shutdown",
+        "forced": false,
+        "in_app": true
+      },
+      "evidence": "existing-3032-r2/identity-projection.json"
+    },
+    {
+      "subject": "existing3032",
+      "origin": "authenticated-full-package",
+      "case": "pwa-browser",
+      "matches": false,
+      "order": [
+        "alpha",
+        "browser"
+      ],
+      "checks": [
+        {
+          "role": "ordinary-browser",
+          "expectedClass": "floorp",
+          "expectedCount": 1,
+          "observedClasses": [
+            "floorp-eba6693a-60ac-4e5c-8109-f697017db4f7"
+          ],
+          "observedDesktopFiles": [
+            "floorp-eba6693a-60ac-4e5c-8109-f697017db4f7"
+          ],
+          "matches": false
+        },
+        {
+          "role": "alpha",
+          "expectedClass": "floorp-eba6693a-60ac-4e5c-8109-f697017db4f7",
+          "observedClasses": [
+            "floorp-eba6693a-60ac-4e5c-8109-f697017db4f7"
+          ],
+          "observedDesktopFiles": [
+            "floorp-eba6693a-60ac-4e5c-8109-f697017db4f7"
+          ],
+          "matches": true
+        }
+      ],
+      "protection": {
+        "contentSandboxLevel": 6,
+        "taskbarExperiment": false
+      },
+      "completed": true,
+      "normalQuit": {
+        "cause": "shutdown",
+        "forced": false,
+        "in_app": true
+      },
+      "evidence": "existing-3032-r2/identity-projection.json"
+    },
+    {
+      "subject": "existing3032",
+      "origin": "authenticated-full-package",
+      "case": "multiple-pwa",
+      "matches": false,
+      "order": [
+        "alpha",
+        "beta",
+        "browser"
+      ],
+      "checks": [
+        {
+          "role": "ordinary-browser",
+          "expectedClass": "floorp",
+          "expectedCount": 1,
+          "observedClasses": [
+            "floorp-eba6693a-60ac-4e5c-8109-f697017db4f7"
+          ],
+          "observedDesktopFiles": [
+            "floorp-eba6693a-60ac-4e5c-8109-f697017db4f7"
+          ],
+          "matches": false
+        },
+        {
+          "role": "alpha",
+          "expectedClass": "floorp-eba6693a-60ac-4e5c-8109-f697017db4f7",
+          "observedClasses": [
+            "floorp-eba6693a-60ac-4e5c-8109-f697017db4f7"
+          ],
+          "observedDesktopFiles": [
+            "floorp-eba6693a-60ac-4e5c-8109-f697017db4f7"
+          ],
+          "matches": true
+        },
+        {
+          "role": "beta",
+          "expectedClass": "floorp-cd8dfc92-0bf1-492c-be13-c052173286a3",
+          "observedClasses": [
+            "floorp-cd8dfc92-0bf1-492c-be13-c052173286a3"
+          ],
+          "observedDesktopFiles": [
+            "floorp-cd8dfc92-0bf1-492c-be13-c052173286a3"
+          ],
+          "matches": true
+        }
+      ],
+      "protection": {
+        "contentSandboxLevel": 6,
+        "taskbarExperiment": false
+      },
+      "completed": true,
+      "normalQuit": {
+        "cause": "shutdown",
+        "forced": false,
+        "in_app": true
+      },
+      "evidence": "existing-3032-r2/identity-projection.json"
+    },
+    {
+      "subject": "existing3032",
+      "origin": "authenticated-full-package",
+      "case": "existing-profile-migration",
+      "matches": false,
+      "order": [
+        "alpha",
+        "browser",
+        "beta"
+      ],
+      "checks": [
+        {
+          "role": "ordinary-browser",
+          "expectedClass": "floorp",
+          "expectedCount": 1,
+          "observedClasses": [
+            "floorp-9c81f296-e163-468d-bded-591d97ede773"
+          ],
+          "observedDesktopFiles": [
+            "floorp-9c81f296-e163-468d-bded-591d97ede773"
+          ],
+          "matches": false
+        },
+        {
+          "role": "alpha",
+          "expectedClass": "floorp-9c81f296-e163-468d-bded-591d97ede773",
+          "observedClasses": [
+            "floorp-9c81f296-e163-468d-bded-591d97ede773"
+          ],
+          "observedDesktopFiles": [
+            "floorp-9c81f296-e163-468d-bded-591d97ede773"
+          ],
+          "matches": true
+        },
+        {
+          "role": "beta",
+          "expectedClass": "floorp-6a449a02-b424-4586-b14a-799c18105ee3",
+          "observedClasses": [
+            "floorp-6a449a02-b424-4586-b14a-799c18105ee3"
+          ],
+          "observedDesktopFiles": [
+            "floorp-6a449a02-b424-4586-b14a-799c18105ee3"
+          ],
+          "matches": true
+        }
+      ],
+      "protection": {
+        "contentSandboxLevel": 6,
+        "taskbarExperiment": false
+      },
+      "completed": true,
+      "normalQuit": {
+        "cause": "shutdown",
+        "forced": false,
+        "in_app": true
+      },
+      "evidence": "existing-3032-r2/identity-projection.json"
+    },
+    {
+      "subject": "existing3032",
+      "origin": "authenticated-full-package",
+      "case": "custom-browser-remote-pwa",
+      "matches": true,
+      "order": [
+        "custom-browser",
+        "alpha",
+        "browser"
+      ],
+      "checks": [
+        {
+          "role": "ordinary-browser",
+          "expectedClass": "qa-floorp-custom",
+          "expectedCount": 2,
+          "observedClasses": [
+            "qa-floorp-custom",
+            "qa-floorp-custom"
+          ],
+          "observedDesktopFiles": [
+            "qa-floorp-custom",
+            "qa-floorp-custom"
+          ],
+          "matches": true
+        },
+        {
+          "role": "alpha",
+          "expectedClass": "floorp-9c81f296-e163-468d-bded-591d97ede773",
+          "observedClasses": [
+            "floorp-9c81f296-e163-468d-bded-591d97ede773"
+          ],
+          "observedDesktopFiles": [
+            "floorp-9c81f296-e163-468d-bded-591d97ede773"
+          ],
+          "matches": true
+        }
+      ],
+      "protection": {
+        "contentSandboxLevel": 6,
+        "taskbarExperiment": false
+      },
+      "completed": true,
+      "normalQuit": {
+        "cause": "shutdown",
+        "forced": false,
+        "in_app": true
+      },
+      "evidence": "existing-3032-custom-new-window/identity-projection.json"
+    },
+    {
+      "subject": "existing3032",
+      "origin": "authenticated-full-package",
+      "case": "private-browser-control",
+      "matches": false,
+      "order": [
+        "alpha",
+        "private-browser"
+      ],
+      "checks": [
+        {
+          "role": "ordinary-browser",
+          "expectedClass": "floorp",
+          "expectedCount": 1,
+          "observedClasses": [
+            "floorp-9c81f296-e163-468d-bded-591d97ede773"
+          ],
+          "observedDesktopFiles": [
+            "floorp-9c81f296-e163-468d-bded-591d97ede773"
+          ],
+          "matches": false
+        },
+        {
+          "role": "alpha",
+          "expectedClass": "floorp-9c81f296-e163-468d-bded-591d97ede773",
+          "observedClasses": [
+            "floorp-9c81f296-e163-468d-bded-591d97ede773"
+          ],
+          "observedDesktopFiles": [
+            "floorp-9c81f296-e163-468d-bded-591d97ede773"
+          ],
+          "matches": true
+        },
+        {
+          "role": "actual-private-window",
+          "observedCount": 1,
+          "matches": true
+        }
+      ],
+      "protection": {
+        "contentSandboxLevel": 6,
+        "taskbarExperiment": false
+      },
+      "completed": true,
+      "normalQuit": {
+        "cause": "shutdown",
+        "forced": false,
+        "in_app": true
+      },
+      "evidence": "existing-3032-private-control/identity-projection.json"
+    },
+    {
+      "subject": "candidateCopy",
+      "origin": "patched-product-copy",
+      "case": "browser-pwa",
+      "matches": true,
+      "order": [
+        "browser",
+        "alpha"
+      ],
+      "checks": [
+        {
+          "role": "ordinary-browser",
+          "expectedClass": "floorp",
+          "expectedCount": 1,
+          "observedClasses": [
+            "floorp"
+          ],
+          "observedDesktopFiles": [
+            "floorp"
+          ],
+          "matches": true
+        },
+        {
+          "role": "alpha",
+          "expectedClass": "floorp-65ccd29e-0b54-44b3-8fb5-938824cd7167",
+          "observedClasses": [
+            "floorp-65ccd29e-0b54-44b3-8fb5-938824cd7167"
+          ],
+          "observedDesktopFiles": [
+            "floorp-65ccd29e-0b54-44b3-8fb5-938824cd7167"
+          ],
+          "matches": true
+        }
+      ],
+      "protection": {
+        "contentSandboxLevel": 6,
+        "taskbarExperiment": false
+      },
+      "completed": true,
+      "normalQuit": {
+        "cause": "shutdown",
+        "forced": false,
+        "in_app": true
+      },
+      "evidence": "candidate-r1/identity-projection.json"
+    },
+    {
+      "subject": "candidateCopy",
+      "origin": "patched-product-copy",
+      "case": "pwa-browser",
+      "matches": true,
+      "order": [
+        "alpha",
+        "browser"
+      ],
+      "checks": [
+        {
+          "role": "ordinary-browser",
+          "expectedClass": "floorp",
+          "expectedCount": 1,
+          "observedClasses": [
+            "floorp"
+          ],
+          "observedDesktopFiles": [
+            "floorp"
+          ],
+          "matches": true
+        },
+        {
+          "role": "alpha",
+          "expectedClass": "floorp-65ccd29e-0b54-44b3-8fb5-938824cd7167",
+          "observedClasses": [
+            "floorp-65ccd29e-0b54-44b3-8fb5-938824cd7167"
+          ],
+          "observedDesktopFiles": [
+            "floorp-65ccd29e-0b54-44b3-8fb5-938824cd7167"
+          ],
+          "matches": true
+        }
+      ],
+      "protection": {
+        "contentSandboxLevel": 6,
+        "taskbarExperiment": false
+      },
+      "completed": true,
+      "normalQuit": {
+        "cause": "shutdown",
+        "forced": false,
+        "in_app": true
+      },
+      "evidence": "candidate-r1/identity-projection.json"
+    },
+    {
+      "subject": "candidateCopy",
+      "origin": "patched-product-copy",
+      "case": "multiple-pwa",
+      "matches": true,
+      "order": [
+        "alpha",
+        "beta",
+        "browser"
+      ],
+      "checks": [
+        {
+          "role": "ordinary-browser",
+          "expectedClass": "floorp",
+          "expectedCount": 1,
+          "observedClasses": [
+            "floorp"
+          ],
+          "observedDesktopFiles": [
+            "floorp"
+          ],
+          "matches": true
+        },
+        {
+          "role": "alpha",
+          "expectedClass": "floorp-65ccd29e-0b54-44b3-8fb5-938824cd7167",
+          "observedClasses": [
+            "floorp-65ccd29e-0b54-44b3-8fb5-938824cd7167"
+          ],
+          "observedDesktopFiles": [
+            "floorp-65ccd29e-0b54-44b3-8fb5-938824cd7167"
+          ],
+          "matches": true
+        },
+        {
+          "role": "beta",
+          "expectedClass": "floorp-fa884689-c76b-416d-a9d8-1a50d7ed9efd",
+          "observedClasses": [
+            "floorp-fa884689-c76b-416d-a9d8-1a50d7ed9efd"
+          ],
+          "observedDesktopFiles": [
+            "floorp-fa884689-c76b-416d-a9d8-1a50d7ed9efd"
+          ],
+          "matches": true
+        }
+      ],
+      "protection": {
+        "contentSandboxLevel": 6,
+        "taskbarExperiment": false
+      },
+      "completed": true,
+      "normalQuit": {
+        "cause": "shutdown",
+        "forced": false,
+        "in_app": true
+      },
+      "evidence": "candidate-r1/identity-projection.json"
+    },
+    {
+      "subject": "candidateCopy",
+      "origin": "patched-product-copy",
+      "case": "existing-profile-migration",
+      "matches": true,
+      "order": [
+        "alpha",
+        "browser",
+        "beta"
+      ],
+      "checks": [
+        {
+          "role": "ordinary-browser",
+          "expectedClass": "floorp",
+          "expectedCount": 1,
+          "observedClasses": [
+            "floorp"
+          ],
+          "observedDesktopFiles": [
+            "floorp"
+          ],
+          "matches": true
+        },
+        {
+          "role": "alpha",
+          "expectedClass": "floorp-9c81f296-e163-468d-bded-591d97ede773",
+          "observedClasses": [
+            "floorp-9c81f296-e163-468d-bded-591d97ede773"
+          ],
+          "observedDesktopFiles": [
+            "floorp-9c81f296-e163-468d-bded-591d97ede773"
+          ],
+          "matches": true
+        },
+        {
+          "role": "beta",
+          "expectedClass": "floorp-6a449a02-b424-4586-b14a-799c18105ee3",
+          "observedClasses": [
+            "floorp-6a449a02-b424-4586-b14a-799c18105ee3"
+          ],
+          "observedDesktopFiles": [
+            "floorp-6a449a02-b424-4586-b14a-799c18105ee3"
+          ],
+          "matches": true
+        }
+      ],
+      "protection": {
+        "contentSandboxLevel": 6,
+        "taskbarExperiment": false
+      },
+      "completed": true,
+      "normalQuit": {
+        "cause": "shutdown",
+        "forced": false,
+        "in_app": true
+      },
+      "evidence": "candidate-r1/identity-projection.json"
+    },
+    {
+      "subject": "candidateCopy",
+      "origin": "patched-product-copy",
+      "case": "custom-browser-remote-pwa",
+      "matches": true,
+      "order": [
+        "custom-browser",
+        "alpha",
+        "browser"
+      ],
+      "checks": [
+        {
+          "role": "ordinary-browser",
+          "expectedClass": "qa-floorp-custom",
+          "expectedCount": 2,
+          "observedClasses": [
+            "qa-floorp-custom",
+            "qa-floorp-custom"
+          ],
+          "observedDesktopFiles": [
+            "qa-floorp-custom",
+            "qa-floorp-custom"
+          ],
+          "matches": true
+        },
+        {
+          "role": "alpha",
+          "expectedClass": "floorp-9c81f296-e163-468d-bded-591d97ede773",
+          "observedClasses": [
+            "floorp-9c81f296-e163-468d-bded-591d97ede773"
+          ],
+          "observedDesktopFiles": [
+            "floorp-9c81f296-e163-468d-bded-591d97ede773"
+          ],
+          "matches": true
+        }
+      ],
+      "protection": {
+        "contentSandboxLevel": 6,
+        "taskbarExperiment": false
+      },
+      "completed": true,
+      "normalQuit": {
+        "cause": "shutdown",
+        "forced": false,
+        "in_app": true
+      },
+      "evidence": "candidate-custom-control/identity-projection.json"
+    },
+    {
+      "subject": "candidateCopy",
+      "origin": "patched-product-copy",
+      "case": "private-browser-control",
+      "matches": true,
+      "order": [
+        "alpha",
+        "private-browser"
+      ],
+      "checks": [
+        {
+          "role": "ordinary-browser",
+          "expectedClass": "floorp",
+          "expectedCount": 1,
+          "observedClasses": [
+            "floorp"
+          ],
+          "observedDesktopFiles": [
+            "floorp"
+          ],
+          "matches": true
+        },
+        {
+          "role": "alpha",
+          "expectedClass": "floorp-9c81f296-e163-468d-bded-591d97ede773",
+          "observedClasses": [
+            "floorp-9c81f296-e163-468d-bded-591d97ede773"
+          ],
+          "observedDesktopFiles": [
+            "floorp-9c81f296-e163-468d-bded-591d97ede773"
+          ],
+          "matches": true
+        },
+        {
+          "role": "actual-private-window",
+          "observedCount": 1,
+          "matches": true
+        }
+      ],
+      "protection": {
+        "contentSandboxLevel": 6,
+        "taskbarExperiment": false
+      },
+      "completed": true,
+      "normalQuit": {
+        "cause": "shutdown",
+        "forced": false,
+        "in_app": true
+      },
+      "evidence": "candidate-private-control/identity-projection.json"
+    }
+  ],
+  "migration": "Original prior3032 actual-UI profile/home preserved; separate copies with transient locks omitted and automation port changed; stored ids/names/URLs and desktop data not manually edited; executable/profile CLI paths only relocated",
+  "titleMarkers": "ordinary window document.title only tagged after reading ssbid/taskbartab so restored content cannot confuse KWin mapping; native class/app_id never assigned by harness",
+  "excludedAttempts": [
+    {
+      "folder": "existing-3032",
+      "reason": "no product run: AF_UNIX complete socket path exceeded108bytes; corrected using normal short private XDG_RUNTIME_DIR"
+    },
+    {
+      "folder": "existing-3032-custom-control",
+      "reason": "CLI URL opened a tab in the existing ordinary window, so requested second normal window was absent; all observed custom identities preserved; corrected with real --new-window"
+    }
+  ],
+  "remainingConditions": [
+    "New3040 full production package run42077174018 not yet consumed by these candidate-copy results",
+    "Original Manjaro/CachyOS/KDE package parity not established",
+    "No physical-input, Plasma taskbar icon-pixel, release/signing or merge qualification"
+  ],
+  "sourceOrProductEditsByHarness": false
+}
