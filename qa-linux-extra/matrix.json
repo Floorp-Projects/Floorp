@@ -770,7 +770,7 @@
         "https://github.com/Floorp-Projects/Floorp/pull/2960 (webpanelcontext, notsame ordinarywebtab)"
       ],
       "newPr": null,
-      "jiraCommentId": "10481",
+      "jiraCommentId": "10491",
       "evidence": [
         "report.md",
         "summary.json",
@@ -794,14 +794,14 @@
         "area-webcompat",
         "env-blocked",
         "floorp-stability-2026-11",
+        "linux-native-clipboard-fixture-tested",
+        "needs-authorized-proton-account",
         "needs-repro",
         "needs-test-account",
+        "needs-windows-proton-composer",
         "p2",
         "triage-reviewed",
-        "linux-native-clipboard-fixture-tested",
-        "needs-windows-proton-composer",
-        "needs-authorized-proton-account",
-        "needs-approved-firefox-control"
+        "firefox-official-test-profile-verified"
       ],
       "qualifiedNativePasteProcesses": 4,
       "totalQualifiedLocalFixtureConditions": 56,
@@ -812,8 +812,12 @@
         "officialSetting": "termsofuse.bypassNotification=true in freshQAprofile; no acceptancevalue write or securityverifier change",
         "conditions": 28,
         "exactFinalHtmlMimeMatches": 28,
-        "jiraCommentId": null
-      }
+        "jiraCommentId": "10491",
+        "inputBlocked": false,
+        "evidenceCommit": "60708c31045ccc3e6c675b97a50ad673391f3151"
+      },
+      "previousJiraCommentId": "10481",
+      "historicalBlockedFirefoxAttempts": 2
     }
   ]
 }

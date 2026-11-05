@@ -29,7 +29,7 @@
     {
       "path": "firefox-test-profile/export-manifest.json",
       "bytes": 79922,
-      "sha256": "a6aecbc9e47010d6bbb1f804195ecb466e5192c5b298064487e82f6dd487d61f"
+      "sha256": "5c568e3db4c5cf57ac13f7791a05dab54d43ae96119dd8175a77595889fc6dc3"
     },
     {
       "path": "firefox-test-profile/official-test-setting.json",
@@ -1988,8 +1988,8 @@
     },
     {
       "path": "firefox-test-profile/summary.json",
-      "bytes": 12316,
-      "sha256": "e19f6814b4272e420416bbbcfd4da0c718e83f62eec22c32d66027018d7c865e"
+      "bytes": 12408,
+      "sha256": "2763cb6438e24647e6a8fcd49d27f663eb35c9184c310a4ae974b10233079bcc"
     },
     {
       "path": "fixture/editor.ts",
@@ -2013,8 +2013,8 @@
     },
     {
       "path": "matrix.json",
-      "bytes": 3700,
-      "sha256": "6c57a56be23828598dfb12ea1624c7756fd280a190f90608f1cabd6be3da891f"
+      "bytes": 3881,
+      "sha256": "ab919636ea8b9f5365caa46e617a403def9758e6241f4ff534473779d99298bd"
     },
     {
       "path": "product-hash-baseline.json",
@@ -4283,8 +4283,8 @@
     },
     {
       "path": "summary.json",
-      "bytes": 263723,
-      "sha256": "a31239c643816f2468c5253c8c67a1d4a113516eb35c88c78703dc500aef3ca2"
+      "bytes": 263753,
+      "sha256": "95bdd00d7c7b7706ff0d3d8ba66d04a071faa6c8f9574ac17d9f876795863a9b"
     }
   ]
 }
