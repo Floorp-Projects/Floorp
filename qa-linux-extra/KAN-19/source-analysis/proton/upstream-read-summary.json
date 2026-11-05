@@ -1,0 +1,17 @@
+[
+  {
+    "number": 352,
+    "url": "https://github.com/microsoft/roosterjs/issues/352",
+    "scope": "Firefox AzureDevOps mixedbold paste inherits formatting; no opacity0Proton finding"
+  },
+  {
+    "number": 380,
+    "url": "https://github.com/microsoft/roosterjs/issues/380",
+    "scope": "Pasting adjacent tohyperlink absorbs text/images inChrome, notFirefox inreport; not proven same bug"
+  },
+  {
+    "number": 1322,
+    "url": "https://github.com/microsoft/roosterjs/issues/1322",
+    "scope": "Chrome8.33.1 table-selection paste collapses table toline; differentcondition"
+  }
+]

@@ -1,0 +1,115 @@
+{
+  "elapsedMs": 12.259682000149041,
+  "rpcMs": 3.004748999956064,
+  "value": {
+    "caseName": "rooster-textarea-recopy",
+    "target": "rooster",
+    "html": "<a href=\"https://example.org/kan19/status/123/video/1\">https://example.org/kan19/status/123/video/1</a>",
+    "text": "https://example.org/kan19/status/123/video/1",
+    "nodes": [
+      {
+        "tag": "A",
+        "text": "https://example.org/kan19/status/123/video/1",
+        "href": "https://example.org/kan19/status/123/video/1",
+        "style": null,
+        "opacity": 1,
+        "display": "inline",
+        "visibility": "visible"
+      }
+    ],
+    "log": [
+      {
+        "type": "mutation",
+        "target": "rooster",
+        "time": 72414,
+        "html": "",
+        "attributes": []
+      },
+      {
+        "type": "mutation",
+        "target": "rooster",
+        "time": 73052,
+        "html": "",
+        "attributes": [
+          {
+            "name": "style",
+            "oldValue": "color: rgb(0, 0, 0); background-color: rgb(255, 255, 255);",
+            "current": "color: rgb(0, 0, 0); background-color: rgb(255, 255, 255);"
+          },
+          {
+            "name": "style",
+            "oldValue": "color: rgb(0, 0, 0); background-color: rgb(255, 255, 255); pointer-events: auto;",
+            "current": "color: rgb(0, 0, 0); background-color: rgb(255, 255, 255);"
+          },
+          {
+            "name": "style",
+            "oldValue": "color: rgb(0, 0, 0); background-color: rgb(255, 255, 255);",
+            "current": "color: rgb(0, 0, 0); background-color: rgb(255, 255, 255);"
+          },
+          {
+            "name": "style",
+            "oldValue": "color: rgb(0, 0, 0); background-color: rgb(255, 255, 255); pointer-events: auto;",
+            "current": "color: rgb(0, 0, 0); background-color: rgb(255, 255, 255);"
+          }
+        ]
+      },
+      {
+        "type": "keydown",
+        "target": "rooster",
+        "time": 73281,
+        "trusted": true,
+        "inputType": null,
+        "key": "v",
+        "ctrl": true,
+        "shift": false,
+        "types": null,
+        "plain": null,
+        "html": null,
+        "defaultPrevented": false
+      },
+      {
+        "type": "paste",
+        "target": "rooster",
+        "time": 73282,
+        "trusted": true,
+        "inputType": null,
+        "key": null,
+        "ctrl": null,
+        "shift": null,
+        "types": [
+          "text/plain"
+        ],
+        "plain": "https://example.org/kan19/status/123/video/1",
+        "html": "",
+        "defaultPrevented": false
+      },
+      {
+        "type": "rooster-BeforePaste",
+        "time": 73283,
+        "types": [
+          "text/plain"
+        ],
+        "plain": "https://example.org/kan19/status/123/video/1",
+        "rawHtml": null,
+        "fragment": "https://example.org/kan19/status/123/video/1"
+      },
+      {
+        "type": "mutation",
+        "target": "rooster",
+        "time": 73284,
+        "html": "https://example.org/kan19/status/123/video/1",
+        "attributes": []
+      },
+      {
+        "type": "mutation",
+        "target": "rooster",
+        "time": 73285,
+        "html": "<a href=\"https://example.org/kan19/status/123/video/1\">https://example.org/kan19/status/123/video/1</a>",
+        "attributes": []
+      }
+    ],
+    "anchors": 1,
+    "opacityZero": false,
+    "fixture": "bare contenteditable + published RoosterJS, not authenticated Proton composer; no Proton custom paste plugin"
+  }
+}

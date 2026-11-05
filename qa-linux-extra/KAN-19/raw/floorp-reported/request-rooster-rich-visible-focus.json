@@ -1,0 +1,7 @@
+{
+  "id": "rooster-rich-visible-focus",
+  "target": "index.html",
+  "context": "content",
+  "click": "#rooster",
+  "script": "return true;"
+}

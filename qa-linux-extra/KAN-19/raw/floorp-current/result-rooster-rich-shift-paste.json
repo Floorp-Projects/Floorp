@@ -1,0 +1,44 @@
+{
+  "elapsedMs": 50.92456499914988,
+  "rpcMs": 3.1713649987068493,
+  "value": {
+    "pid": 90819,
+    "version": "159.0.1",
+    "buildID": "20261103153232",
+    "updatePin": true,
+    "recommended": false,
+    "protections": {
+      "sandbox": 6,
+      "sandboxUser": false,
+      "signatureRequired": false,
+      "signatureUser": false
+    },
+    "shortcutPrefs": [
+      {
+        "key": "floorp.commandPalette.shortcuts",
+        "type": 32,
+        "user": true,
+        "value": "[]"
+      },
+      {
+        "key": "floorp.keyboardshortcut.config",
+        "type": 32,
+        "user": true,
+        "value": "{\"schemaVersion\":2,\"enabled\":true,\"shortcuts\":{\"floorp-toggle-command-palette\":{\"key\":\"F2\",\"modifiers\":{\"alt\":false,\"ctrl\":false,\"meta\":false,\"shift\":false},\"action\":\"floorp-toggle-command-palette\"},\"floorp-toggle-zen-mode\":{\"key\":\"KeyZ\",\"modifiers\":{\"alt\":true,\"ctrl\":true,\"meta\":false,\"shift\":false},\"action\":\"floorp-toggle-zen-mode\"}}}"
+      },
+      {
+        "key": "floorp.keyboardshortcut.enabled",
+        "type": 128,
+        "user": true,
+        "value": true
+      }
+    ],
+    "tabs": [
+      {
+        "url": "http://127.0.0.1:19198/index.html",
+        "title": "KAN19 native clipboard fixture",
+        "selected": true
+      }
+    ]
+  }
+}

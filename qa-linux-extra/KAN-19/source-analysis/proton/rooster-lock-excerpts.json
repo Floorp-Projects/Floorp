@@ -1,0 +1,22 @@
+{
+  "commit": "43ba5f750c48e87e4ea322d7ecd8529f4a3135ec",
+  "lockSha256": "107a6fa0e0c44f0493c2c22987447ff27c960b9899d99cbfc9e2a7c3fe649e9c",
+  "blocks": [
+    "  roosterjs-color-utils@1.1.0:\n    resolution: {integrity: sha512-AdfGX/LSM+wiX6FovBjJLSHDqurIzXfEPCx95aIpEQ/VAvyOAHG9bja4K9aeNX/RpreuQ3kcSaJS0QzxQeFcCw==}\n",
+    "  roosterjs-editor-api@8.62.0:\n    resolution: {integrity: sha512-q/uzfPkXQzaGOzSTjDqI/nwEfl59WBfyvyW9tF2dgmqjq+ZH9BAwkRbCb8Qgtz3wkRLuUUzzHIKzIhTvxvcFWQ==}\n",
+    "  roosterjs-editor-core@8.62.0:\n    resolution: {integrity: sha512-M6zWXu4MDmZVtlz6BEHCyebNvITbEECg5z4pWIC7ln3vegMgbUjxA3IagYsYeU012TXOq7bYPi21TrTeuKmXSg==}\n",
+    "  roosterjs-editor-dom@8.62.0:\n    resolution: {integrity: sha512-EBbUyEi2e6YxQE+YXAMaEb1QtKFmYBEeDUh0xIZ2BEVhCRDQZOCDSqHFA35VBBPNuejpqWBxQc8b4gI1wFy2Fw==}\n",
+    "  roosterjs-editor-plugins@8.62.1:\n    resolution: {integrity: sha512-qFHJLhtSp35cJmiB2K9KJs6oJHVGfGHJRv2CmTDtw9uPqv8wQyXijZu7sqz8RZNb6UJszo0lAwc1IaJjdsXmUA==}\n",
+    "  roosterjs-editor-types-compatible@8.62.0:\n    resolution: {integrity: sha512-uGtlXmAO/IdbLCYZJppKCmHDx71FXhiDr87Xd6V2wtlG8QK+Onb+v57zQF5BLizOztJKPA0LZhXIBZaPG+T1nA==}\n",
+    "  roosterjs-editor-types@8.62.0:\n    resolution: {integrity: sha512-4OTSYKCdCqQPjOgWhVcjMX32T22B1bgyKeQmcq16F+ATBtleKRN4+2b9e2WsPN39L6t2PK+BFvITdoqKKAHVkQ==}\n",
+    "  roosterjs@8.47.0:\n    resolution: {integrity: sha512-ilsWD3AfPuHER1pNybOPP4KwMMoNzJ1dvw8El7X5IZCohunGrYpHSrVRCPCoYQxTaxIGlCL7On1UhchOUnOCIQ==}\n",
+    "  roosterjs-color-utils@1.1.0:\n    dependencies:\n      color: 3.2.1\n",
+    "  roosterjs-editor-api@8.62.0:\n    dependencies:\n      roosterjs-editor-dom: 8.62.0\n      roosterjs-editor-types: 8.62.0\n      tslib: 2.8.1\n",
+    "  roosterjs-editor-core@8.62.0:\n    dependencies:\n      roosterjs-editor-dom: 8.62.0\n      roosterjs-editor-types: 8.62.0\n      tslib: 2.8.1\n",
+    "  roosterjs-editor-dom@8.62.0:\n    dependencies:\n      roosterjs-editor-types: 8.62.0\n      tslib: 2.8.1\n",
+    "  roosterjs-editor-plugins@8.62.1:\n    dependencies:\n      roosterjs-editor-api: 8.62.0\n      roosterjs-editor-dom: 8.62.0\n      roosterjs-editor-types: 8.62.0\n      tslib: 2.8.1\n",
+    "  roosterjs-editor-types-compatible@8.62.0:\n    dependencies:\n      roosterjs-editor-types: 8.62.0\n",
+    "  roosterjs-editor-types@8.62.0: {}\n",
+    "  roosterjs@8.47.0:\n    dependencies:\n      roosterjs-color-utils: 1.1.0\n      roosterjs-editor-api: 8.62.0\n      roosterjs-editor-core: 8.62.0\n      roosterjs-editor-dom: 8.62.0\n      roosterjs-editor-plugins: 8.62.1\n      roosterjs-editor-types: 8.62.0\n      roosterjs-editor-types-compatible: 8.62.0\n"
+  ]
+}

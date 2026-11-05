@@ -1,0 +1,6 @@
+{
+  "id": "fixture-ready",
+  "target": "index.html",
+  "context": "content",
+  "script": "return {ready:window.wrappedJSObject.qaReady,title:document.title};"
+}

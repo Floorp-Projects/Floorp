@@ -1,0 +1,25 @@
+{
+  "elapsedMs": 32.91250099937315,
+  "rpcMs": 5.8438369997020345,
+  "value": {
+    "pid": 91274,
+    "version": "159.0.1",
+    "buildID": "20261102144711",
+    "updatePin": true,
+    "recommended": false,
+    "protections": {
+      "sandbox": 6,
+      "sandboxUser": false,
+      "signatureRequired": true,
+      "signatureUser": false
+    },
+    "shortcutPrefs": [],
+    "tabs": [
+      {
+        "url": "http://127.0.0.1:19199/index.html",
+        "title": "KAN19 native clipboard fixture",
+        "selected": true
+      }
+    ]
+  }
+}

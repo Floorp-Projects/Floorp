@@ -1,0 +1,8 @@
+{
+  "elapsedMs": 5.574654998781625,
+  "rpcMs": 4.353170999820577,
+  "value": {
+    "writer": "nativeClipboardHelper",
+    "plainOnly": true
+  }
+}

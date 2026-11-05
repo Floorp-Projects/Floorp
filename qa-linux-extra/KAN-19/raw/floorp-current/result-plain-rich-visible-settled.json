@@ -1,0 +1,137 @@
+{
+  "elapsedMs": 8.779435000178637,
+  "rpcMs": 3.080274000240024,
+  "value": {
+    "caseName": "plain-rich-visible",
+    "target": "plain",
+    "html": "<a href=\"https://example.org/kan19/status/123/video/1\">https://example.org/kan19/status/123/video/1</a>",
+    "text": "https://example.org/kan19/status/123/video/1",
+    "nodes": [
+      {
+        "tag": "A",
+        "text": "https://example.org/kan19/status/123/video/1",
+        "href": "https://example.org/kan19/status/123/video/1",
+        "style": null,
+        "opacity": 1,
+        "display": "inline",
+        "visibility": "visible"
+      }
+    ],
+    "log": [
+      {
+        "type": "mutation",
+        "target": "plain",
+        "time": 53241,
+        "html": "",
+        "attributes": []
+      },
+      {
+        "type": "mutation",
+        "target": "plain",
+        "time": 53559,
+        "html": "",
+        "attributes": [
+          {
+            "name": "style",
+            "oldValue": null,
+            "current": null
+          },
+          {
+            "name": "style",
+            "oldValue": "pointer-events: auto;",
+            "current": null
+          },
+          {
+            "name": "style",
+            "oldValue": "",
+            "current": null
+          },
+          {
+            "name": "style",
+            "oldValue": null,
+            "current": null
+          },
+          {
+            "name": "style",
+            "oldValue": "pointer-events: auto;",
+            "current": null
+          },
+          {
+            "name": "style",
+            "oldValue": "",
+            "current": null
+          }
+        ]
+      },
+      {
+        "type": "keydown",
+        "target": "plain",
+        "time": 53780,
+        "trusted": true,
+        "inputType": null,
+        "key": "v",
+        "ctrl": true,
+        "shift": false,
+        "types": null,
+        "plain": null,
+        "html": null,
+        "defaultPrevented": false
+      },
+      {
+        "type": "paste",
+        "target": "plain",
+        "time": 53781,
+        "trusted": true,
+        "inputType": null,
+        "key": null,
+        "ctrl": null,
+        "shift": null,
+        "types": [
+          "text/html",
+          "text/plain"
+        ],
+        "plain": "https://example.org/kan19/status/123/video/1",
+        "html": "<a href=\"https://example.org/kan19/status/123/video/1\">https://example.org/kan19/status/123/video/1</a>",
+        "defaultPrevented": false
+      },
+      {
+        "type": "beforeinput",
+        "target": "plain",
+        "time": 53781,
+        "trusted": true,
+        "inputType": "insertFromPaste",
+        "key": null,
+        "ctrl": null,
+        "shift": null,
+        "types": null,
+        "plain": null,
+        "html": null,
+        "defaultPrevented": false
+      },
+      {
+        "type": "input",
+        "target": "plain",
+        "time": 53782,
+        "trusted": true,
+        "inputType": "insertFromPaste",
+        "key": null,
+        "ctrl": null,
+        "shift": null,
+        "types": null,
+        "plain": null,
+        "html": null,
+        "defaultPrevented": false
+      },
+      {
+        "type": "mutation",
+        "target": "plain",
+        "time": 53782,
+        "html": "<a href=\"https://example.org/kan19/status/123/video/1\">https://example.org/kan19/status/123/video/1</a>",
+        "attributes": []
+      }
+    ],
+    "anchors": 1,
+    "opacityZero": false,
+    "fixture": "bare contenteditable + published RoosterJS, not authenticated Proton composer; no Proton custom paste plugin"
+  }
+}

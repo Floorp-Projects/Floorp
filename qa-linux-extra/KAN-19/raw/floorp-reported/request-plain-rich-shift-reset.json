@@ -1,0 +1,6 @@
+{
+  "id": "plain-rich-shift-reset",
+  "target": "index.html",
+  "context": "content",
+  "script": "return window.wrappedJSObject.qaStart(\"plain-rich-shift\",\"plain\");"
+}

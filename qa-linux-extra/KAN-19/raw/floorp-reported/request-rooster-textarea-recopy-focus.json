@@ -1,0 +1,7 @@
+{
+  "id": "rooster-textarea-recopy-focus",
+  "target": "index.html",
+  "context": "content",
+  "click": "#rooster",
+  "script": "return true;"
+}

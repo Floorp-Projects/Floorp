@@ -1,0 +1,7 @@
+{
+  "id": "input-path-diagnostic",
+  "target": "index.html",
+  "context": "content",
+  "script": "return {focused:document.hasFocus(),active:document.activeElement?.outerHTML.slice(0,500),visibility:document.visibilityState};",
+  "screenshot": "input-path-diagnostic.png"
+}

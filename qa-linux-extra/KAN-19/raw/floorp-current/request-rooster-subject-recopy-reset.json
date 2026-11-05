@@ -1,0 +1,6 @@
+{
+  "id": "rooster-subject-recopy-reset",
+  "target": "index.html",
+  "context": "content",
+  "script": "return window.wrappedJSObject.qaStart(\"rooster-subject-recopy\",\"rooster\");"
+}

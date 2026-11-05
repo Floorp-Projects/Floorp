@@ -1,0 +1,6 @@
+{
+  "id": "plain-opacity-control-later",
+  "target": "index.html",
+  "context": "content",
+  "script": "return window.wrappedJSObject.qaSnapshot();"
+}

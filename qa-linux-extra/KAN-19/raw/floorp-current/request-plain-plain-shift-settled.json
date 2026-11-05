@@ -1,0 +1,6 @@
+{
+  "id": "plain-plain-shift-settled",
+  "target": "index.html",
+  "context": "content",
+  "script": "return window.wrappedJSObject.qaSnapshot();"
+}

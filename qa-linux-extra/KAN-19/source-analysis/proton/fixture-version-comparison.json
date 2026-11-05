@@ -1,0 +1,57 @@
+{
+  "publicProtonCommit": "43ba5f750c48e87e4ea322d7ecd8529f4a3135ec",
+  "matchesPublishedDependencyGraph": true,
+  "notDeployedMailVersionClaim": true,
+  "packages": [
+    {
+      "package": "roosterjs",
+      "version": "8.47.0",
+      "npmIntegrity": "sha512-ilsWD3AfPuHER1pNybOPP4KwMMoNzJ1dvw8El7X5IZCohunGrYpHSrVRCPCoYQxTaxIGlCL7On1UhchOUnOCIQ==",
+      "presentInProtonLock": true,
+      "integrityPresentInProtonLock": true
+    },
+    {
+      "package": "roosterjs-editor-api",
+      "version": "8.62.0",
+      "npmIntegrity": "sha512-q/uzfPkXQzaGOzSTjDqI/nwEfl59WBfyvyW9tF2dgmqjq+ZH9BAwkRbCb8Qgtz3wkRLuUUzzHIKzIhTvxvcFWQ==",
+      "presentInProtonLock": true,
+      "integrityPresentInProtonLock": true
+    },
+    {
+      "package": "roosterjs-editor-core",
+      "version": "8.62.0",
+      "npmIntegrity": "sha512-M6zWXu4MDmZVtlz6BEHCyebNvITbEECg5z4pWIC7ln3vegMgbUjxA3IagYsYeU012TXOq7bYPi21TrTeuKmXSg==",
+      "presentInProtonLock": true,
+      "integrityPresentInProtonLock": true
+    },
+    {
+      "package": "roosterjs-editor-dom",
+      "version": "8.62.0",
+      "npmIntegrity": "sha512-EBbUyEi2e6YxQE+YXAMaEb1QtKFmYBEeDUh0xIZ2BEVhCRDQZOCDSqHFA35VBBPNuejpqWBxQc8b4gI1wFy2Fw==",
+      "presentInProtonLock": true,
+      "integrityPresentInProtonLock": true
+    },
+    {
+      "package": "roosterjs-editor-plugins",
+      "version": "8.62.1",
+      "npmIntegrity": "sha512-qFHJLhtSp35cJmiB2K9KJs6oJHVGfGHJRv2CmTDtw9uPqv8wQyXijZu7sqz8RZNb6UJszo0lAwc1IaJjdsXmUA==",
+      "presentInProtonLock": true,
+      "integrityPresentInProtonLock": true
+    },
+    {
+      "package": "roosterjs-editor-types",
+      "version": "8.62.0",
+      "npmIntegrity": "sha512-4OTSYKCdCqQPjOgWhVcjMX32T22B1bgyKeQmcq16F+ATBtleKRN4+2b9e2WsPN39L6t2PK+BFvITdoqKKAHVkQ==",
+      "presentInProtonLock": true,
+      "integrityPresentInProtonLock": true
+    },
+    {
+      "package": "roosterjs-editor-types-compatible",
+      "version": "8.62.0",
+      "npmIntegrity": "sha512-uGtlXmAO/IdbLCYZJppKCmHDx71FXhiDr87Xd6V2wtlG8QK+Onb+v57zQF5BLizOztJKPA0LZhXIBZaPG+T1nA==",
+      "presentInProtonLock": true,
+      "integrityPresentInProtonLock": true
+    }
+  ],
+  "fixtureBundleSha256": "f5930b196edf9170b190dc2dde728e4fee3e53af5ebf83cc874696816a953e71"
+}

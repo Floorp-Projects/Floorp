@@ -1,0 +1,10 @@
+{
+  "fixture": "none",
+  "fixturePrefs": {},
+  "uri": "http://127.0.0.1:19200/index.html",
+  "pinVersionForTesting": true,
+  "profileReused": false,
+  "product": "/workspace/qa-linux-22/C-extra/KAN-19/products/floorp-12.18.1/floorp",
+  "noSecurityPreferenceOverrides": true,
+  "network": "inherited proxy + configured CA; no insecure TLS flag"
+}

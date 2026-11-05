@@ -1,0 +1,7 @@
+{
+  "id": "final-screenshot",
+  "target": "index.html",
+  "context": "content",
+  "script": "return window.wrappedJSObject.qaSnapshot();",
+  "screenshot": "fixture-final.png"
+}

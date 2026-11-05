@@ -1,0 +1,72 @@
+{
+  "key": "KAN-19",
+  "github": "https://github.com/Floorp-Projects/Floorp/issues/2792",
+  "sourceSha": "29a3eb23145da90706d8a94441373278521cc737",
+  "currentProductSourceSha": "984509d2053be7bae9027133bda7259cd706b208",
+  "reportedProductSourceSha": "ac42feadf1140a3c5f015e46db3c64104e97f60a",
+  "publicProtonSourceSha": "43ba5f750c48e87e4ea322d7ecd8529f4a3135ec",
+  "productVersion": {
+    "floorp-current": {
+      "gecko": "159.0.1",
+      "nativeBuildID": "20261103153232"
+    },
+    "floorp-reported": {
+      "gecko": "156.0.1",
+      "nativeBuildID": "20260922152932"
+    },
+    "firefox-current": {
+      "gecko": "159.0.1",
+      "nativeBuildID": "20261102144711"
+    },
+    "firefox-reported": {
+      "gecko": "156.0.1",
+      "nativeBuildID": "20260921121718"
+    }
+  },
+  "environment": {
+    "os": "Debian13",
+    "kernel": "6.18.57",
+    "desktop": "dedicatedXvfb/Openbox/privateDBus + nativeX11clipboard",
+    "nativeInput": "XTest CtrlV/CtrlShiftV/CtrlA/CtrlC; actualpaste isTrustedtrue",
+    "WindowsClipboardTested": false,
+    "realProtonComposerTested": false,
+    "accountsCreatedOrAccessed": false,
+    "physicalInput": false
+  },
+  "testCommand": "scripts/README.md; browser-session.py; run-pastes.py; fixture/editor.ts; verify-evidence.py",
+  "result": "Partial:24ordinary +4explicit opacity-input Floorp localfixtureconditions; no unseededopacity0/duplicateanchor. Firefoxcontrols unqualified dueactualTOUmodal; originalWindows authenticatedProtonunreproduced/unverified",
+  "qualifiedFloorpFixtureConditions": 28,
+  "ordinaryConditions": 24,
+  "explicitOpacityInputControls": 4,
+  "qualifiedFirefoxPasteConditions": 0,
+  "blockedFirefoxAttempts": 2,
+  "normalExitProcesses": 4,
+  "remainingConditions": [
+    "AuthorizednonpersonalProtoncomposer account/session and deployededitorassetversion",
+    "OriginalWindows12.18.1 nativeclipboardCFHTML/plainflavors and trustedpaste/DOMtimeline",
+    "UsableapprovedFirefoxQAcontrol with genuineconsent; noTOUspoof",
+    "Originalprofile/clipboardorigin/theme/extensionstate; Subjectworkaround not reproduced onLinuxfixture"
+  ],
+  "existingRelatedPr": [
+    "https://github.com/Floorp-Projects/Floorp/pull/2960 (webpanelcontext, notsame ordinarywebtab)"
+  ],
+  "newPr": null,
+  "jiraCommentId": null,
+  "evidence": [
+    "report.md",
+    "summary.json",
+    "raw/*/paste-results.json",
+    "raw/*/ready.json",
+    "raw/*/shutdown.json",
+    "raw/firefox-*/input-path-diagnostic.png",
+    "source-analysis/proton/fixture-version-comparison.json",
+    "acquisition/verification.json",
+    "product-hash-baseline.json",
+    "product-hash-final.json",
+    "fixture/editor.ts",
+    "scripts/verify-evidence.py"
+  ],
+  "separateFromOriginal22": true,
+  "originalCMatrixSha256": "4ac5d5f17f97d70e82f7b9f17d6abcc1aa17a92e3708eeadaba6ac7c8415e3cd",
+  "parentKAN37ClarificationCommit": "74c07f3ae51cf3d1fa3b959b9697a2c0be7b39d7"
+}

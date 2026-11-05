@@ -1,0 +1,4 @@
+{
+  "id": "tou-state",
+  "script": "const p=Services.prefs;return {distribution:p.getDefaultBranch('').getStringPref('distribution.id','<unset>'),bypass:p.getBoolPref('termsofuse.bypassNotification',false),bypassUser:p.prefHasUserValue('termsofuse.bypassNotification'),acceptedVersion:p.getIntPref('termsofuse.acceptedVersion',0),acceptedDate:p.getStringPref('termsofuse.acceptedDate','<unset>'),acceptanceUser:p.prefHasUserValue('termsofuse.acceptedVersion'),termsMinimum:p.getIntPref('termsofuse.minimumVersion',0)};"
+}

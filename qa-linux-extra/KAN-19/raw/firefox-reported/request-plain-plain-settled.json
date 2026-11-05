@@ -1,0 +1,6 @@
+{
+  "id": "plain-plain-settled",
+  "target": "index.html",
+  "context": "content",
+  "script": "return window.wrappedJSObject.qaSnapshot();"
+}

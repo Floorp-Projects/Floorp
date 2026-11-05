@@ -1,0 +1,6 @@
+{
+  "id": "plain-rich-visible-reset",
+  "target": "index.html",
+  "context": "content",
+  "script": "return window.wrappedJSObject.qaStart(\"plain-rich-visible\",\"plain\");"
+}

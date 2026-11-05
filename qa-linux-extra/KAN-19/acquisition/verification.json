@@ -1,0 +1,14 @@
+[
+  {
+    "label": "floorp-12.18.1",
+    "sha256": "2891d016b03cee91e030231d709d572b63980780612e4ccaae8e7dca76d86edd",
+    "matchesPublishedHash": true,
+    "bytes": 105895836
+  },
+  {
+    "label": "firefox-156.0.1",
+    "sha256": "7405c0487fa3e517c1e20e5aec0ed14014185dad6357d99a59b53f65acb10ed6",
+    "matchesPublishedHash": true,
+    "bytes": 88308892
+  }
+]

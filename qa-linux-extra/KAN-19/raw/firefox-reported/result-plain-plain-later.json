@@ -1,0 +1,54 @@
+{
+  "elapsedMs": 11.140712998894742,
+  "rpcMs": 3.891260999807855,
+  "value": {
+    "caseName": "plain-plain",
+    "target": "plain",
+    "html": "",
+    "text": "",
+    "nodes": [],
+    "log": [
+      {
+        "type": "mutation",
+        "target": "plain",
+        "time": 42338,
+        "html": "",
+        "attributes": [
+          {
+            "name": "style",
+            "oldValue": null,
+            "current": null
+          },
+          {
+            "name": "style",
+            "oldValue": "pointer-events: auto;",
+            "current": null
+          },
+          {
+            "name": "style",
+            "oldValue": "",
+            "current": null
+          },
+          {
+            "name": "style",
+            "oldValue": null,
+            "current": null
+          },
+          {
+            "name": "style",
+            "oldValue": "pointer-events: auto;",
+            "current": null
+          },
+          {
+            "name": "style",
+            "oldValue": "",
+            "current": null
+          }
+        ]
+      }
+    ],
+    "anchors": 0,
+    "opacityZero": false,
+    "fixture": "bare contenteditable + published RoosterJS, not authenticated Proton composer; no Proton custom paste plugin"
+  }
+}

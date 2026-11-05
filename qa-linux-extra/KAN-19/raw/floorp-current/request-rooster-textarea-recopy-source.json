@@ -1,0 +1,7 @@
+{
+  "id": "rooster-textarea-recopy-source",
+  "target": "index.html",
+  "context": "content",
+  "click": "#notepad",
+  "script": "return true;"
+}

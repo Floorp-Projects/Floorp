@@ -1,0 +1,113 @@
+[
+  {
+    "id": "plain-plain",
+    "source": {
+      "writer": "nativeClipboardHelper",
+      "plainOnly": true
+    },
+    "nativeKey": "ctrl+v",
+    "explicitOpacityControl": false,
+    "snapshots": [
+      {
+        "caseName": "plain-plain",
+        "target": "plain",
+        "html": "",
+        "text": "",
+        "nodes": [],
+        "log": [
+          {
+            "type": "mutation",
+            "target": "plain",
+            "time": 45763,
+            "html": "",
+            "attributes": [
+              {
+                "name": "style",
+                "oldValue": null,
+                "current": null
+              },
+              {
+                "name": "style",
+                "oldValue": "pointer-events: auto;",
+                "current": null
+              },
+              {
+                "name": "style",
+                "oldValue": "",
+                "current": null
+              },
+              {
+                "name": "style",
+                "oldValue": null,
+                "current": null
+              },
+              {
+                "name": "style",
+                "oldValue": "pointer-events: auto;",
+                "current": null
+              },
+              {
+                "name": "style",
+                "oldValue": "",
+                "current": null
+              }
+            ]
+          }
+        ],
+        "anchors": 0,
+        "opacityZero": false,
+        "fixture": "bare contenteditable + published RoosterJS, not authenticated Proton composer; no Proton custom paste plugin"
+      },
+      {
+        "caseName": "plain-plain",
+        "target": "plain",
+        "html": "",
+        "text": "",
+        "nodes": [],
+        "log": [
+          {
+            "type": "mutation",
+            "target": "plain",
+            "time": 45763,
+            "html": "",
+            "attributes": [
+              {
+                "name": "style",
+                "oldValue": null,
+                "current": null
+              },
+              {
+                "name": "style",
+                "oldValue": "pointer-events: auto;",
+                "current": null
+              },
+              {
+                "name": "style",
+                "oldValue": "",
+                "current": null
+              },
+              {
+                "name": "style",
+                "oldValue": null,
+                "current": null
+              },
+              {
+                "name": "style",
+                "oldValue": "pointer-events: auto;",
+                "current": null
+              },
+              {
+                "name": "style",
+                "oldValue": "",
+                "current": null
+              }
+            ]
+          }
+        ],
+        "anchors": 0,
+        "opacityZero": false,
+        "fixture": "bare contenteditable + published RoosterJS, not authenticated Proton composer; no Proton custom paste plugin"
+      }
+    ]
+  }
+]

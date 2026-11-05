@@ -1,0 +1,6 @@
+{
+  "id": "plain-subject-recopy-reset",
+  "target": "index.html",
+  "context": "content",
+  "script": "return window.wrappedJSObject.qaStart(\"plain-subject-recopy\",\"plain\");"
+}

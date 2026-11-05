@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "esbuild": "^0.25.11",
+    "roosterjs": "^8.47.0"
+  }
+}

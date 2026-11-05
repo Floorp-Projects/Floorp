@@ -1,0 +1,7 @@
+{
+  "id": "rooster-rich-shift-focus",
+  "target": "index.html",
+  "context": "content",
+  "click": "#rooster",
+  "script": "return true;"
+}

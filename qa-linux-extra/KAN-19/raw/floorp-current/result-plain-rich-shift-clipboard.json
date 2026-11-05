@@ -1,0 +1,11 @@
+{
+  "elapsedMs": 3.7550109991570935,
+  "rpcMs": 2.960863999760477,
+  "value": {
+    "writer": "nativeTransferable",
+    "flavors": [
+      "text/plain",
+      "text/html"
+    ]
+  }
+}

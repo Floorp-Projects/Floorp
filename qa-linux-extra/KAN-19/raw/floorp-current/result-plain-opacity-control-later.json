@@ -1,0 +1,146 @@
+{
+  "elapsedMs": 7.0920199977990706,
+  "rpcMs": 2.9710689996136352,
+  "value": {
+    "caseName": "plain-opacity-control",
+    "target": "plain",
+    "html": "<span style=\"opacity:0;white-space:pre-wrap;user-select:auto\"><a href=\"https://example.org/kan19/status/123/video/1\">https://example.org/kan19/status/123/video/1</a></span>",
+    "text": "https://example.org/kan19/status/123/video/1",
+    "nodes": [
+      {
+        "tag": "SPAN",
+        "text": "https://example.org/kan19/status/123/video/1",
+        "href": null,
+        "style": "opacity:0;white-space:pre-wrap;user-select:auto",
+        "opacity": 0,
+        "display": "inline",
+        "visibility": "visible"
+      },
+      {
+        "tag": "A",
+        "text": "https://example.org/kan19/status/123/video/1",
+        "href": "https://example.org/kan19/status/123/video/1",
+        "style": null,
+        "opacity": 0,
+        "display": "inline",
+        "visibility": "visible"
+      }
+    ],
+    "log": [
+      {
+        "type": "mutation",
+        "target": "plain",
+        "time": 62189,
+        "html": "",
+        "attributes": []
+      },
+      {
+        "type": "mutation",
+        "target": "plain",
+        "time": 62506,
+        "html": "",
+        "attributes": [
+          {
+            "name": "style",
+            "oldValue": null,
+            "current": null
+          },
+          {
+            "name": "style",
+            "oldValue": "pointer-events: auto;",
+            "current": null
+          },
+          {
+            "name": "style",
+            "oldValue": "",
+            "current": null
+          },
+          {
+            "name": "style",
+            "oldValue": null,
+            "current": null
+          },
+          {
+            "name": "style",
+            "oldValue": "pointer-events: auto;",
+            "current": null
+          },
+          {
+            "name": "style",
+            "oldValue": "",
+            "current": null
+          }
+        ]
+      },
+      {
+        "type": "keydown",
+        "target": "plain",
+        "time": 62730,
+        "trusted": true,
+        "inputType": null,
+        "key": "v",
+        "ctrl": true,
+        "shift": false,
+        "types": null,
+        "plain": null,
+        "html": null,
+        "defaultPrevented": false
+      },
+      {
+        "type": "paste",
+        "target": "plain",
+        "time": 62731,
+        "trusted": true,
+        "inputType": null,
+        "key": null,
+        "ctrl": null,
+        "shift": null,
+        "types": [
+          "text/html",
+          "text/plain"
+        ],
+        "plain": "https://example.org/kan19/status/123/video/1",
+        "html": "<span style=\"opacity:0;white-space:pre-wrap;user-select:auto\"><a href=\"https://example.org/kan19/status/123/video/1\">https://example.org/kan19/status/123/video/1</a></span>",
+        "defaultPrevented": false
+      },
+      {
+        "type": "beforeinput",
+        "target": "plain",
+        "time": 62732,
+        "trusted": true,
+        "inputType": "insertFromPaste",
+        "key": null,
+        "ctrl": null,
+        "shift": null,
+        "types": null,
+        "plain": null,
+        "html": null,
+        "defaultPrevented": false
+      },
+      {
+        "type": "input",
+        "target": "plain",
+        "time": 62733,
+        "trusted": true,
+        "inputType": "insertFromPaste",
+        "key": null,
+        "ctrl": null,
+        "shift": null,
+        "types": null,
+        "plain": null,
+        "html": null,
+        "defaultPrevented": false
+      },
+      {
+        "type": "mutation",
+        "target": "plain",
+        "time": 62733,
+        "html": "<span style=\"opacity:0;white-space:pre-wrap;user-select:auto\"><a href=\"https://example.org/kan19/status/123/video/1\">https://example.org/kan19/status/123/video/1</a></span>",
+        "attributes": []
+      }
+    ],
+    "anchors": 1,
+    "opacityZero": true,
+    "fixture": "bare contenteditable + published RoosterJS, not authenticated Proton composer; no Proton custom paste plugin"
+  }
+}

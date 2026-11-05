@@ -1,0 +1,6 @@
+{
+  "id": "plain-opacity-control-reset",
+  "target": "index.html",
+  "context": "content",
+  "script": "return window.wrappedJSObject.qaStart(\"plain-opacity-control\",\"plain\");"
+}

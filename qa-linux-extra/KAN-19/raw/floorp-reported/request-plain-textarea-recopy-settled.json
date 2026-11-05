@@ -1,0 +1,6 @@
+{
+  "id": "plain-textarea-recopy-settled",
+  "target": "index.html",
+  "context": "content",
+  "script": "return window.wrappedJSObject.qaSnapshot();"
+}

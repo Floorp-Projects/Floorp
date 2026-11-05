@@ -1,0 +1,1000 @@
+[
+  {
+    "case": "floorp-current",
+    "entries": 46,
+    "allUnchangedFromRecordedSnapshot": true,
+    "files": [
+      {
+        "path": "application.ini",
+        "bytes": 642,
+        "sha256": "eebae8546a7feb9d3745c6ec0eb9f3b63ebbe8ae678202a990d1c1396380f333"
+      },
+      {
+        "path": "browser/buildid2",
+        "bytes": 36,
+        "sha256": "52c0dcee353e1d521677610404f9e557e632928aeaf77780a3925d5821cc8578"
+      },
+      {
+        "path": "browser/chrome/icons/default/default128.png",
+        "bytes": 12591,
+        "sha256": "0331b4c3f03a36984734bf3668ce1823504fd44b10e5ecc0977ee8c521641ad9"
+      },
+      {
+        "path": "browser/chrome/icons/default/default16.png",
+        "bytes": 777,
+        "sha256": "501aab2936ddb5562ffde7d8bfe20f6a3cda5bd009fa160c0ed3b10481de778c"
+      },
+      {
+        "path": "browser/chrome/icons/default/default32.png",
+        "bytes": 1801,
+        "sha256": "de4c287df3aea68bbba3246a35992e4ee41708d956c225d4ab90fe9532996541"
+      },
+      {
+        "path": "browser/chrome/icons/default/default48.png",
+        "bytes": 3209,
+        "sha256": "2cc6b61be10980e8fd8c9508dca783df063623e2e17ebc2e301ef9e2d3e38a22"
+      },
+      {
+        "path": "browser/chrome/icons/default/default64.png",
+        "bytes": 4697,
+        "sha256": "474f20f1407914c689d34c91da62997950fee1a70197bf3d20252a4dcf8e91fa"
+      },
+      {
+        "path": "browser/omni.ja",
+        "bytes": 56086790,
+        "sha256": "d6c17ae47f4a62def3d70d927137c920624e38297a38e60a443cf2e6008e1cac"
+      },
+      {
+        "path": "defaults/pref/channel-prefs.js",
+        "bytes": 429,
+        "sha256": "7d9d37eff1dc4e59a6437026602f1953ef58ee46ff3d81dbb8e13b0fd0bec86b"
+      },
+      {
+        "path": "dependentlibs.list",
+        "bytes": 189,
+        "sha256": "621f575eaaf819dd0b18976c6a8a94d1caae95a9c748f4c9058a052395a4d173"
+      },
+      {
+        "path": "floorp",
+        "bytes": 601304,
+        "sha256": "4f05c1330b38e50040440be6a3b6e0e7a5b52bc79edb5c5478d978c81f5a603d"
+      },
+      {
+        "path": "floorp-bin",
+        "bytes": 601304,
+        "sha256": "4f05c1330b38e50040440be6a3b6e0e7a5b52bc79edb5c5478d978c81f5a603d"
+      },
+      {
+        "path": "fonts/TwemojiMozilla.ttf",
+        "bytes": 1474284,
+        "sha256": "6d90152ee0d29e82fe2a87793af5aa4b7ad13e6538360889e141e81ed299ee8e"
+      },
+      {
+        "path": "gfxtest",
+        "bytes": 37928,
+        "sha256": "becfb0b9cee1d9b35fe23dc504f7bbb9345b364c413c0e80656ddb3c9729bdfd"
+      },
+      {
+        "path": "gmp-clearkey/0.1/libclearkey.so",
+        "bytes": 65256,
+        "sha256": "97ffd72483c64964ad9a2b86ca227d93c921ff5c14dd430f25c3eec2f7aa5c02"
+      },
+      {
+        "path": "gmp-clearkey/0.1/manifest.json",
+        "bytes": 225,
+        "sha256": "b7d65e60cccb80ffb2e95b5ae7e355d2c8c37575e886eef4325ca04fa7ba68fc"
+      },
+      {
+        "path": "icons/updater.png",
+        "bytes": 2153,
+        "sha256": "cab5e9bc9511b0690e696b378efa6753705b1182660d9829f5b3dc9f0398e5cc"
+      },
+      {
+        "path": "jogfile.json",
+        "bytes": 1600504,
+        "sha256": "1ea8b491d37ef1e30d1158940469ce068e22fde3f970ec039f2c9511fa93de40"
+      },
+      {
+        "path": "libfreeblpriv3.so",
+        "bytes": 1366504,
+        "sha256": "0e5167b714fc4e7952d8471f5fb8d90a302df98e3cba156769ac733f0fd025b0"
+      },
+      {
+        "path": "libgkcodecs.so",
+        "bytes": 9025544,
+        "sha256": "7804828879bc2967d23bc241c6ecb15fa7e5ca5e06e28049cf8378753b75cbe8"
+      },
+      {
+        "path": "liblgpllibs.so",
+        "bytes": 145024,
+        "sha256": "c29aff12589cb5342e73488619b628b50afda839a063a0e0f3f77831ffd8ff82"
+      },
+      {
+        "path": "libmozavcodec.so",
+        "bytes": 4104816,
+        "sha256": "0687a26be53f8ece0623d6c5ed8b7815b2c05839760ba012baa2ea5b5975b2ea"
+      },
+      {
+        "path": "libmozavutil.so",
+        "bytes": 686624,
+        "sha256": "d957abe02b48afe84f2eb0038252f1f12c627f2db7100fbfda80fc473c2d14d7"
+      },
+      {
+        "path": "libmozgtk.so",
+        "bytes": 4576,
+        "sha256": "a2f42c25563411b7e3378629d2e1ab7f947e9c4b546560b25b436e6fbe94476f"
+      },
+      {
+        "path": "libmozinference.so",
+        "bytes": 2534288,
+        "sha256": "acd4dba98fa405662a725fceebe023e0c78cb67de9ec5174f545f6604299c570"
+      },
+      {
+        "path": "libmozsandbox.so",
+        "bytes": 235280,
+        "sha256": "88c01a993afad42907d569d1f11d890afd0accc7120fd946168ca799065e86fd"
+      },
+      {
+        "path": "libmozsqlite3.so",
+        "bytes": 1559248,
+        "sha256": "d740b271fce254778272866e02b9bd8bca7888475179f76904e9c14a8c96aba0"
+      },
+      {
+        "path": "libmozwayland.so",
+        "bytes": 13392,
+        "sha256": "3164170986fe9bbe1e673b6bd2524f0f05dcc3da26a5fcee1d304c8fe385e457"
+      },
+      {
+        "path": "libnspr4.so",
+        "bytes": 212712,
+        "sha256": "73d59534248a183357f39e547f9d6f5089f084430aba181c9f4b6c9da5988c5d"
+      },
+      {
+        "path": "libnss3.so",
+        "bytes": 753792,
+        "sha256": "6f11158b23027e962bec955f328119efa351db61b3e1f507a451fb1dfada646a"
+      },
+      {
+        "path": "libnssutil3.so",
+        "bytes": 188696,
+        "sha256": "efc899f507b9bcdc313303321ed177bc4768c47c3eaaa8e35609488e6d0e53e8"
+      },
+      {
+        "path": "libonnxruntime.so",
+        "bytes": 14458896,
+        "sha256": "077ac0e3e090dd3d070a497f354f62fa718de4a19be287da5d9a188c950bc71c"
+      },
+      {
+        "path": "libplc4.so",
+        "bytes": 16504,
+        "sha256": "6fa863eff22c1fdf6e75f22fe9433bb50b0f8ba43960046a3816da6532d11fbf"
+      },
+      {
+        "path": "libplds4.so",
+        "bytes": 12520,
+        "sha256": "7f3fb5134ecd4201e532d7160dda31479a02743d6eff7199003e3b4be2dd963b"
+      },
+      {
+        "path": "libsmime3.so",
+        "bytes": 173800,
+        "sha256": "6f3e94a9538ec3a52ee30e80af86fccc5ffd31a06712e61f434dda427b561c99"
+      },
+      {
+        "path": "libsoftokn3.so",
+        "bytes": 376544,
+        "sha256": "bb6a9283048767500190da54a439cf12196448e352db191db50e23e1566ad649"
+      },
+      {
+        "path": "libssl3.so",
+        "bytes": 427024,
+        "sha256": "7a2f6ffcecdbb27c98279657f3db63f56922cb568dc217553d6d5f217bfa378b"
+      },
+      {
+        "path": "libxul.so",
+        "bytes": 183738368,
+        "sha256": "760ff8a689f52c9b1f3c89a45ea8813e59f187990caed747e4a7680020c8dbc7"
+      },
+      {
+        "path": "omni.ja",
+        "bytes": 91403578,
+        "sha256": "159285f967e950e0cd1ac658d713b7770e7763d6d983fc88b6e48c16e4a1f345"
+      },
+      {
+        "path": "pingsender",
+        "bytes": 644592,
+        "sha256": "157ed38af98d795812dfc532739252f9e6c51472d13b9105c496b8b2cf1dbbfd"
+      },
+      {
+        "path": "platform.ini",
+        "bytes": 49,
+        "sha256": "04e241cf7d8dcb5161dbcdf7334c4dd6ecebef2b3d91d20b2e36c90563f4e047"
+      },
+      {
+        "path": "precomplete",
+        "bytes": 1423,
+        "sha256": "d6a5d785324008de66070ef2635fb3ed8f18c7ec04f055f870fbaaa685d4f010"
+      },
+      {
+        "path": "removed-files",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "update-settings.ini",
+        "bytes": 113,
+        "sha256": "c574f9f109b4dca4a6ab379167cd47a6bbee66c0a9640b1d19232da337202707"
+      },
+      {
+        "path": "updater",
+        "bytes": 331440,
+        "sha256": "54fae6b05eb4434bb8650e631085ca0eef3d22b932bf9f525000a93115d93010"
+      },
+      {
+        "path": "updater.ini",
+        "bytes": 636,
+        "sha256": "69ed3e7508f444fb753f7af5535a08321d110ba187baf1f80d8b26bb224af0ec"
+      }
+    ]
+  },
+  {
+    "case": "firefox-current",
+    "entries": 51,
+    "allUnchangedFromRecordedSnapshot": true,
+    "files": [
+      {
+        "path": "application.ini",
+        "bytes": 899,
+        "sha256": "5fb546c7b685990fea54673914fbd367fb38eedf67e1e2061b1e4a3b0b13bc41"
+      },
+      {
+        "path": "browser/chrome/icons/default/default128.png",
+        "bytes": 13513,
+        "sha256": "9926bbb47e152c9747c8e7fbe9d7679fbcf221a4aa13400cbf1d2da3210d1b20"
+      },
+      {
+        "path": "browser/chrome/icons/default/default16.png",
+        "bytes": 722,
+        "sha256": "742a5ed5a88075540a018629b6c4ee7f39a6fc89f4d75c2c136e002204ac024b"
+      },
+      {
+        "path": "browser/chrome/icons/default/default32.png",
+        "bytes": 1948,
+        "sha256": "e4e889d71d93c2a171cbd92ca2fba2fca3a04ab61e6fc8a703683cf4e3d83ba1"
+      },
+      {
+        "path": "browser/chrome/icons/default/default48.png",
+        "bytes": 3448,
+        "sha256": "d9df64a49f932e5f7c8e1f5fccc0b998dafb57f9a7ed2ac9a8e4a43bed45eb1a"
+      },
+      {
+        "path": "browser/chrome/icons/default/default64.png",
+        "bytes": 5459,
+        "sha256": "12130ce8511f4a348c25380ba9b70b80b2ff0680e4ee801367bf0dbb5e94c00a"
+      },
+      {
+        "path": "browser/omni.ja",
+        "bytes": 55019284,
+        "sha256": "b6793b97d5f7c04c4a147975210a240a68006d80338e0974ce8de2eb85d30f68"
+      },
+      {
+        "path": "crashhelper",
+        "bytes": 3422520,
+        "sha256": "dd2391828c4291c043db2a348ec2175b89a737a741c0ac7ecd758f0b5928e53c"
+      },
+      {
+        "path": "crashreporter",
+        "bytes": 4453920,
+        "sha256": "0533521ccfbd5d9e3eea1ce924ddcc124c832d85c87334bd3aea8a716df97495"
+      },
+      {
+        "path": "defaults/pref/channel-prefs.js",
+        "bytes": 429,
+        "sha256": "7d9d37eff1dc4e59a6437026602f1953ef58ee46ff3d81dbb8e13b0fd0bec86b"
+      },
+      {
+        "path": "dependentlibs.list",
+        "bytes": 189,
+        "sha256": "621f575eaaf819dd0b18976c6a8a94d1caae95a9c748f4c9058a052395a4d173"
+      },
+      {
+        "path": "distribution/distribution.ini",
+        "bytes": 77,
+        "sha256": "27dbb82dacc97850681ce51bdaac18b3f69f02fa744415b24d911c45e1461596"
+      },
+      {
+        "path": "firefox",
+        "bytes": 5520,
+        "sha256": "de3f1f70c111692fce304c7af83a7bf2e6f4bc8033191ea8b8ccc25f1aa122ed"
+      },
+      {
+        "path": "firefox-bin",
+        "bytes": 659960,
+        "sha256": "5c848235a91070c76acd553fb26b423492c40b1e4187ed39826e57de2c33e647"
+      },
+      {
+        "path": "firefox-bin.sig",
+        "bytes": 1449,
+        "sha256": "5398e2629d4137ab90e2bc7ba2dd0e8143b0cb8e789603c55af4d90d336599a5"
+      },
+      {
+        "path": "firefox.sig",
+        "bytes": 1449,
+        "sha256": "3a170165e33396cae75d51fd1d36e76d4fd661e9d52b0b4e843248f0f0755200"
+      },
+      {
+        "path": "fonts/TwemojiMozilla.ttf",
+        "bytes": 1474284,
+        "sha256": "6d90152ee0d29e82fe2a87793af5aa4b7ad13e6538360889e141e81ed299ee8e"
+      },
+      {
+        "path": "gfxtest",
+        "bytes": 45000,
+        "sha256": "e050c67ade72710f01816092cba3549c4a0110330cc455d68e3d98038317cb11"
+      },
+      {
+        "path": "gmp-clearkey/0.1/libclearkey.so",
+        "bytes": 83680,
+        "sha256": "075605b43722b247537d1d877084e4707f39d7251cce3041bcff64e032773ca4"
+      },
+      {
+        "path": "gmp-clearkey/0.1/libclearkey.so.sig",
+        "bytes": 1449,
+        "sha256": "41cd1bff9e06c1645e154ec98f7cc7df1f737816c65b5804493af3029f67dde6"
+      },
+      {
+        "path": "gmp-clearkey/0.1/manifest.json",
+        "bytes": 225,
+        "sha256": "b7d65e60cccb80ffb2e95b5ae7e355d2c8c37575e886eef4325ca04fa7ba68fc"
+      },
+      {
+        "path": "icons/updater.png",
+        "bytes": 2153,
+        "sha256": "cab5e9bc9511b0690e696b378efa6753705b1182660d9829f5b3dc9f0398e5cc"
+      },
+      {
+        "path": "libfreeblpriv3.so",
+        "bytes": 1507904,
+        "sha256": "a2a0cc41ebaaa94f961cd0440a187d31b83bd0978883522d64d76407ca7b1f6c"
+      },
+      {
+        "path": "libgkcodecs.so",
+        "bytes": 9388184,
+        "sha256": "119f7ea96945504b6dc7a1620ec3d7034effd9cd8c4ff9ef8a62ce36102c925c"
+      },
+      {
+        "path": "liblgpllibs.so",
+        "bytes": 153128,
+        "sha256": "c455f318a640f48e02ac560085780bd5257ccf937ddc539b33fcc380e9d968c4"
+      },
+      {
+        "path": "libmozavcodec.so",
+        "bytes": 3943888,
+        "sha256": "24eb625cb49688fb3bd4b0c7015d255d9dea05d20cdf6d4f40a563121664b379"
+      },
+      {
+        "path": "libmozavutil.so",
+        "bytes": 688912,
+        "sha256": "316be00c7a6ba3cc51f0549880129e28f7dd4f343703437b72b0cd3e41c27fd1"
+      },
+      {
+        "path": "libmozgtk.so",
+        "bytes": 4576,
+        "sha256": "a6cf569be84c53e630ea6ef3b18f97ef9a1d672ea7de63bc6bc393b2f52d32b6"
+      },
+      {
+        "path": "libmozinference.so",
+        "bytes": 3095576,
+        "sha256": "2bef00c886b2ba14d8c6f38512d2df0be2917ed170b0b4292ca57cd9b34531b1"
+      },
+      {
+        "path": "libmozsandbox.so",
+        "bytes": 246616,
+        "sha256": "af10dc12bc9b82f2244aa320c36217468650bf413e37887ec380bebe1f5b57a0"
+      },
+      {
+        "path": "libmozsqlite3.so",
+        "bytes": 1572976,
+        "sha256": "0ec1d58a6c270e18389870b47d0842a30f9503a20429dbf01b2825347dc4e9ec"
+      },
+      {
+        "path": "libmozwayland.so",
+        "bytes": 13392,
+        "sha256": "c29e02fbba8e0d53372c1e796e56ae6ab93cac6e4afd51c44833290ae233eda5"
+      },
+      {
+        "path": "libnspr4.so",
+        "bytes": 220896,
+        "sha256": "c05dac4a9bc3ed2493c781960e42b4161148ddce2920ec11dab8be2696db92d7"
+      },
+      {
+        "path": "libnss3.so",
+        "bytes": 829040,
+        "sha256": "382be475d11852888b3cd38aea53d32fa9d0e8f2b5bd4ef806641084c527f856"
+      },
+      {
+        "path": "libnssutil3.so",
+        "bytes": 196712,
+        "sha256": "4968a611f87c197270b39ebd540f36ca1e15b7c7cec680a0e0374b8e7cc4f5e8"
+      },
+      {
+        "path": "libonnxruntime.so",
+        "bytes": 14458896,
+        "sha256": "077ac0e3e090dd3d070a497f354f62fa718de4a19be287da5d9a188c950bc71c"
+      },
+      {
+        "path": "libplc4.so",
+        "bytes": 16424,
+        "sha256": "cf644cf5d49a1eb8987a5e3971e45ff3cf16343bf33a91aafcab3c01d37f9c5d"
+      },
+      {
+        "path": "libplds4.so",
+        "bytes": 12408,
+        "sha256": "686be17127e385cb5557382b533bf4a82b1bf4cfc1738efb460569eeffa5fcd0"
+      },
+      {
+        "path": "libsmime3.so",
+        "bytes": 181808,
+        "sha256": "2dbeb3e5f70cdb8e18adf1e78d8219358c97fb390cd3c9a239d4f74e56a7f288"
+      },
+      {
+        "path": "libsoftokn3.so",
+        "bytes": 406480,
+        "sha256": "55d55e60b18e0ca87c5bd683de5a013c22fdf392e499d5354c74f743952badba"
+      },
+      {
+        "path": "libssl3.so",
+        "bytes": 491352,
+        "sha256": "f009bcdeb9f1eca9ceaceaa9ac51394cfaa821d670e77d938a044c01e1301560"
+      },
+      {
+        "path": "libxul.so",
+        "bytes": 189598184,
+        "sha256": "f7696310e0944af87ea9d869422196a993019614d7b32837e6c915d76ad372b0"
+      },
+      {
+        "path": "libxul.so.sig",
+        "bytes": 1449,
+        "sha256": "83f6c5e2f8b6d5534d0dc352cf0fbb43ad4f6a6fdcf075362f85399d1b0b3310"
+      },
+      {
+        "path": "omni.ja",
+        "bytes": 48054383,
+        "sha256": "2ca88cf7d962909c3e42960177e1d418124b50180692bca5cbcad2ffa9a033d4"
+      },
+      {
+        "path": "pingsender",
+        "bytes": 702912,
+        "sha256": "6042aaa5ceb93abfd1d7b51fabd44d725aa6d3545531ba4fd23d1bbe2f6a3aaf"
+      },
+      {
+        "path": "platform.ini",
+        "bytes": 167,
+        "sha256": "6aa726bb15016e374ee22a0a14af43fc42366c9ea946f4d3ff5b517780053ed5"
+      },
+      {
+        "path": "precomplete",
+        "bytes": 1535,
+        "sha256": "2e0986f16f4e1c2a9f9cb55910f3daa74e9998ad0fabc28c261d065b07b94f8e"
+      },
+      {
+        "path": "removed-files",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "update-settings.ini",
+        "bytes": 132,
+        "sha256": "c18489344fdc21ae366b4d957a0b9f11be772483ca46f9ffab6ed0356f946513"
+      },
+      {
+        "path": "updater",
+        "bytes": 312896,
+        "sha256": "3f5cb8fb9f628737f6b3cd335d494479a0420db8b055ba14eee4da91ca476d96"
+      },
+      {
+        "path": "updater.ini",
+        "bytes": 638,
+        "sha256": "334f5b32d0bc780eade423fdcbbf266b7a8d6308de78079a45e567e06f77f37b"
+      }
+    ]
+  },
+  {
+    "case": "floorp-reported",
+    "entries": 46,
+    "allUnchangedFromRecordedSnapshot": true,
+    "files": [
+      {
+        "path": "application.ini",
+        "bytes": 642,
+        "sha256": "601c5fbd9a4e102cd604b46df780e9778ec0c25dfe8cfe6a223bcdc53b69692f"
+      },
+      {
+        "path": "browser/buildid2",
+        "bytes": 36,
+        "sha256": "db89ad5e626fff42b05a56e4946aae3a01254001a6fef45f5721e5529db2619e"
+      },
+      {
+        "path": "browser/chrome/icons/default/default128.png",
+        "bytes": 12591,
+        "sha256": "0331b4c3f03a36984734bf3668ce1823504fd44b10e5ecc0977ee8c521641ad9"
+      },
+      {
+        "path": "browser/chrome/icons/default/default16.png",
+        "bytes": 777,
+        "sha256": "501aab2936ddb5562ffde7d8bfe20f6a3cda5bd009fa160c0ed3b10481de778c"
+      },
+      {
+        "path": "browser/chrome/icons/default/default32.png",
+        "bytes": 1801,
+        "sha256": "de4c287df3aea68bbba3246a35992e4ee41708d956c225d4ab90fe9532996541"
+      },
+      {
+        "path": "browser/chrome/icons/default/default48.png",
+        "bytes": 3209,
+        "sha256": "2cc6b61be10980e8fd8c9508dca783df063623e2e17ebc2e301ef9e2d3e38a22"
+      },
+      {
+        "path": "browser/chrome/icons/default/default64.png",
+        "bytes": 4697,
+        "sha256": "474f20f1407914c689d34c91da62997950fee1a70197bf3d20252a4dcf8e91fa"
+      },
+      {
+        "path": "browser/omni.ja",
+        "bytes": 56974331,
+        "sha256": "ce94aabb88223b4ceba602e76fa1c80b0cd103933bddb9525f95efc953d86907"
+      },
+      {
+        "path": "defaults/pref/channel-prefs.js",
+        "bytes": 429,
+        "sha256": "7d9d37eff1dc4e59a6437026602f1953ef58ee46ff3d81dbb8e13b0fd0bec86b"
+      },
+      {
+        "path": "dependentlibs.list",
+        "bytes": 189,
+        "sha256": "621f575eaaf819dd0b18976c6a8a94d1caae95a9c748f4c9058a052395a4d173"
+      },
+      {
+        "path": "floorp",
+        "bytes": 594936,
+        "sha256": "b8c2f6eeeaa549785413cb4c16c9dc947fe802b9365cc249e9f82157ae781f62"
+      },
+      {
+        "path": "floorp-bin",
+        "bytes": 594936,
+        "sha256": "b8c2f6eeeaa549785413cb4c16c9dc947fe802b9365cc249e9f82157ae781f62"
+      },
+      {
+        "path": "fonts/TwemojiMozilla.ttf",
+        "bytes": 1474284,
+        "sha256": "6d90152ee0d29e82fe2a87793af5aa4b7ad13e6538360889e141e81ed299ee8e"
+      },
+      {
+        "path": "gfxtest",
+        "bytes": 37928,
+        "sha256": "3240f2fb53c1605b19c1e438aaacad1d34ac9a9f80a5d0b7d41971b0c310b9ad"
+      },
+      {
+        "path": "gmp-clearkey/0.1/libclearkey.so",
+        "bytes": 66864,
+        "sha256": "bc1f964555c9aaf057674793103a11e2d57ad329f08d1a0e92c1a4cee0c0d017"
+      },
+      {
+        "path": "gmp-clearkey/0.1/manifest.json",
+        "bytes": 225,
+        "sha256": "b7d65e60cccb80ffb2e95b5ae7e355d2c8c37575e886eef4325ca04fa7ba68fc"
+      },
+      {
+        "path": "icons/updater.png",
+        "bytes": 2153,
+        "sha256": "cab5e9bc9511b0690e696b378efa6753705b1182660d9829f5b3dc9f0398e5cc"
+      },
+      {
+        "path": "jogfile.json",
+        "bytes": 1565424,
+        "sha256": "401e3ea89b3b6ff5d78561b34177bea6d63d7d598485c90d1877255aa214488e"
+      },
+      {
+        "path": "libfreeblpriv3.so",
+        "bytes": 1410968,
+        "sha256": "620651f2d2f1e30ff0bad7d0e321df87efe0ead4c21e959600fbbbfd32fc02be"
+      },
+      {
+        "path": "libgkcodecs.so",
+        "bytes": 9016648,
+        "sha256": "b449cc366f1641b521bb829041f3bf7e964105ac347976b6cfdbda36fb266ad8"
+      },
+      {
+        "path": "liblgpllibs.so",
+        "bytes": 173992,
+        "sha256": "df69c74de1a39d04fa2eedee5e798cd2be6724905dc0f19583cbd6ceb22bd60d"
+      },
+      {
+        "path": "libmozavcodec.so",
+        "bytes": 4124256,
+        "sha256": "e7b0dd3a39d82cb8d4304d02456346f4dd91f12fe7d5d80d1298c09a9cd5ab4e"
+      },
+      {
+        "path": "libmozavutil.so",
+        "bytes": 659848,
+        "sha256": "e323c55da4e2c29cd665d60e4c81b555fba16913daf1fc86a57d8283ae58d0a7"
+      },
+      {
+        "path": "libmozgtk.so",
+        "bytes": 4576,
+        "sha256": "99b232dd2190faa702b46f679559cde0139a2513f4e28685756189d296ce469f"
+      },
+      {
+        "path": "libmozinference.so",
+        "bytes": 2316040,
+        "sha256": "a0ceb723939a6af88fdb8acc3cc4f9e3f39fa81c6be0875c205951f632c7c6d7"
+      },
+      {
+        "path": "libmozsandbox.so",
+        "bytes": 232960,
+        "sha256": "16b67d244c4c0d5eb8487163fc13d043272951028a1ed17c13f6d928ebfd34f6"
+      },
+      {
+        "path": "libmozsqlite3.so",
+        "bytes": 1563824,
+        "sha256": "93819c3856fb63b2dc9162a47f8ac95e470bc7e31e1a1418cd167b7ed13d326a"
+      },
+      {
+        "path": "libmozwayland.so",
+        "bytes": 13392,
+        "sha256": "a8c5af0fd0a31b1c9f48b5f98b9d12ed59d9a0cc3e243a8d50b9a05171f9df90"
+      },
+      {
+        "path": "libnspr4.so",
+        "bytes": 214984,
+        "sha256": "ca25509a5ec4bdac6d9ca3b9860160a6bbe8c4fbc5490634ef02e1ac0905b94f"
+      },
+      {
+        "path": "libnss3.so",
+        "bytes": 749632,
+        "sha256": "a36e5dca4ee37af62312fcaef4afe6b9cead188b6774db50d3b3f19b047c5354"
+      },
+      {
+        "path": "libnssutil3.so",
+        "bytes": 188200,
+        "sha256": "c7a8834fabf0c95b832846073602e2aec8b87d8d9bc0c277a78d53a653f4d246"
+      },
+      {
+        "path": "libonnxruntime.so",
+        "bytes": 10534656,
+        "sha256": "d5f9bbdf034b753bc4352a38a85695e173ca00a3d35224275874152a00b3201d"
+      },
+      {
+        "path": "libplc4.so",
+        "bytes": 16504,
+        "sha256": "f0438efc2dbe507d3e3c8cc379bd30b66ae4dcfdabbdcbf4f315c3c37b81672b"
+      },
+      {
+        "path": "libplds4.so",
+        "bytes": 12416,
+        "sha256": "613465d99929e0c11d6a8c3cc139f98d65d1f81c144d48b441454dcda0a3153d"
+      },
+      {
+        "path": "libsmime3.so",
+        "bytes": 172096,
+        "sha256": "2f7260b66977e913d0789ce2c2035eb7ec24a0bc21315aba06f5840218ddbbeb"
+      },
+      {
+        "path": "libsoftokn3.so",
+        "bytes": 374464,
+        "sha256": "3161d9a55562d1c24da969aa40530650657481d68dc138ddb6b07736b9ad0133"
+      },
+      {
+        "path": "libssl3.so",
+        "bytes": 424640,
+        "sha256": "080133814197e77717b9690b75c2e4cbe4549ba62d6c998a9757d6505f265079"
+      },
+      {
+        "path": "libxul.so",
+        "bytes": 180930912,
+        "sha256": "4ad52e7340edc34fbd24154f2f58c3285365b8d49288a0d08093474c604e6bf7"
+      },
+      {
+        "path": "omni.ja",
+        "bytes": 86669241,
+        "sha256": "5862a7a60bbaf947d34ce658dc2496ba0af9cef663bee1c724e4acf45748068b"
+      },
+      {
+        "path": "pingsender",
+        "bytes": 639368,
+        "sha256": "37bc20d6f580b89863717171ab098aec16e2ed7c31de89eb493f296d5916a45d"
+      },
+      {
+        "path": "platform.ini",
+        "bytes": 49,
+        "sha256": "642c45d0872788f4c6047f488ac3f39d986ce9356613868b101ac6476304659e"
+      },
+      {
+        "path": "precomplete",
+        "bytes": 1423,
+        "sha256": "d6a5d785324008de66070ef2635fb3ed8f18c7ec04f055f870fbaaa685d4f010"
+      },
+      {
+        "path": "removed-files",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "update-settings.ini",
+        "bytes": 113,
+        "sha256": "c574f9f109b4dca4a6ab379167cd47a6bbee66c0a9640b1d19232da337202707"
+      },
+      {
+        "path": "updater",
+        "bytes": 289992,
+        "sha256": "00dbd45c7409248eb2a79c2ccc4442189fc8da2bf9be5345ca034c64ef9e92bf"
+      },
+      {
+        "path": "updater.ini",
+        "bytes": 636,
+        "sha256": "69ed3e7508f444fb753f7af5535a08321d110ba187baf1f80d8b26bb224af0ec"
+      }
+    ]
+  },
+  {
+    "case": "firefox-reported",
+    "entries": 51,
+    "allUnchangedFromRecordedSnapshot": true,
+    "files": [
+      {
+        "path": "application.ini",
+        "bytes": 899,
+        "sha256": "d906cae3fe3d064cefb0dd2a8d249523a559c00cbaf85a0482b20a8e3e85c667"
+      },
+      {
+        "path": "browser/chrome/icons/default/default128.png",
+        "bytes": 13513,
+        "sha256": "9926bbb47e152c9747c8e7fbe9d7679fbcf221a4aa13400cbf1d2da3210d1b20"
+      },
+      {
+        "path": "browser/chrome/icons/default/default16.png",
+        "bytes": 722,
+        "sha256": "742a5ed5a88075540a018629b6c4ee7f39a6fc89f4d75c2c136e002204ac024b"
+      },
+      {
+        "path": "browser/chrome/icons/default/default32.png",
+        "bytes": 1948,
+        "sha256": "e4e889d71d93c2a171cbd92ca2fba2fca3a04ab61e6fc8a703683cf4e3d83ba1"
+      },
+      {
+        "path": "browser/chrome/icons/default/default48.png",
+        "bytes": 3448,
+        "sha256": "d9df64a49f932e5f7c8e1f5fccc0b998dafb57f9a7ed2ac9a8e4a43bed45eb1a"
+      },
+      {
+        "path": "browser/chrome/icons/default/default64.png",
+        "bytes": 5459,
+        "sha256": "12130ce8511f4a348c25380ba9b70b80b2ff0680e4ee801367bf0dbb5e94c00a"
+      },
+      {
+        "path": "browser/omni.ja",
+        "bytes": 55896246,
+        "sha256": "7ef7016a75183e33d58226e32a146cbf17bfc81c516271795ca2217443ce88f9"
+      },
+      {
+        "path": "crashhelper",
+        "bytes": 3353944,
+        "sha256": "20b0f34c8002af28166aaca1b47b577c3781a7bb96ec4a41076b02d925c6634a"
+      },
+      {
+        "path": "crashreporter",
+        "bytes": 4434016,
+        "sha256": "411cdc3a4359811ef1cd4876174a9891c3a612f0834cc516a5674d231d1e990b"
+      },
+      {
+        "path": "defaults/pref/channel-prefs.js",
+        "bytes": 429,
+        "sha256": "7d9d37eff1dc4e59a6437026602f1953ef58ee46ff3d81dbb8e13b0fd0bec86b"
+      },
+      {
+        "path": "dependentlibs.list",
+        "bytes": 189,
+        "sha256": "621f575eaaf819dd0b18976c6a8a94d1caae95a9c748f4c9058a052395a4d173"
+      },
+      {
+        "path": "distribution/distribution.ini",
+        "bytes": 77,
+        "sha256": "27dbb82dacc97850681ce51bdaac18b3f69f02fa744415b24d911c45e1461596"
+      },
+      {
+        "path": "firefox",
+        "bytes": 5520,
+        "sha256": "7ea3daf0cdbe5ec27e4f2e7c644c25032169f8a2f2f15e438ff4379bf737a78a"
+      },
+      {
+        "path": "firefox-bin",
+        "bytes": 656848,
+        "sha256": "48ddb970c51190159e6ed9b32c48b246c0c178aa7aa0b2dbf971bcd7d1186eb3"
+      },
+      {
+        "path": "firefox-bin.sig",
+        "bytes": 1449,
+        "sha256": "8791f8e97538edce44bf7b5337a34470c45e3ee5f0f759e3bbc4a5cabb8eca7f"
+      },
+      {
+        "path": "firefox.sig",
+        "bytes": 1449,
+        "sha256": "17d4813886731bedca5dd79a56657eda6cad1f50ebcccb22220350c6e029ce6d"
+      },
+      {
+        "path": "fonts/TwemojiMozilla.ttf",
+        "bytes": 1474284,
+        "sha256": "6d90152ee0d29e82fe2a87793af5aa4b7ad13e6538360889e141e81ed299ee8e"
+      },
+      {
+        "path": "gfxtest",
+        "bytes": 44776,
+        "sha256": "a0cc7c885cb8d07d060c36dd09da6539725b1a060075e4c06cc6ae05eee37841"
+      },
+      {
+        "path": "gmp-clearkey/0.1/libclearkey.so",
+        "bytes": 82864,
+        "sha256": "795a426dfe6f68497d17190c9d66eaa27f3da9eb42d3904c355a60a94b3ff740"
+      },
+      {
+        "path": "gmp-clearkey/0.1/libclearkey.so.sig",
+        "bytes": 1449,
+        "sha256": "c019ba9eb4578548e41ae8112f75ac75264d2a1ce557eab1c89e4a35d14548ea"
+      },
+      {
+        "path": "gmp-clearkey/0.1/manifest.json",
+        "bytes": 225,
+        "sha256": "b7d65e60cccb80ffb2e95b5ae7e355d2c8c37575e886eef4325ca04fa7ba68fc"
+      },
+      {
+        "path": "icons/updater.png",
+        "bytes": 2153,
+        "sha256": "cab5e9bc9511b0690e696b378efa6753705b1182660d9829f5b3dc9f0398e5cc"
+      },
+      {
+        "path": "libfreeblpriv3.so",
+        "bytes": 1559504,
+        "sha256": "bb43547da3651116cc5bbf6cbe5aa252b3cdd34f733fcc4298b62335fdc4ac8f"
+      },
+      {
+        "path": "libgkcodecs.so",
+        "bytes": 9379048,
+        "sha256": "e4190cc3b8d2ce660a9a0607c096f042d23cb2ed7213b1dfc346a7c522fe4cf0"
+      },
+      {
+        "path": "liblgpllibs.so",
+        "bytes": 182496,
+        "sha256": "aefabc395ff5ddf60a8da94b78c308b7d60337fb0ca154c97c129836800be3ef"
+      },
+      {
+        "path": "libmozavcodec.so",
+        "bytes": 3966224,
+        "sha256": "9db8bbef10a11099d37faa4b5a4d66cfd7fb20b8b226ce28f75677a92ef41bfc"
+      },
+      {
+        "path": "libmozavutil.so",
+        "bytes": 662344,
+        "sha256": "4d0366d698e3adf15e55b9f6506d828edcc031d23aa26570f03229761a571dcf"
+      },
+      {
+        "path": "libmozgtk.so",
+        "bytes": 4576,
+        "sha256": "a7f7193564c24dc05b36d772c70d1593c64786a89bb5df6c20991554da3412dc"
+      },
+      {
+        "path": "libmozinference.so",
+        "bytes": 2840432,
+        "sha256": "8925b0a6f99d430df3c1f5435aa6812563773d0e439c4371863ffe76b5116a1b"
+      },
+      {
+        "path": "libmozsandbox.so",
+        "bytes": 244344,
+        "sha256": "f44c686383aec9b8b67ff365b09ec09cdce859a57500909ca581834ddd348f64"
+      },
+      {
+        "path": "libmozsqlite3.so",
+        "bytes": 1565248,
+        "sha256": "2d5b6854eb4396dbf1171fe940b79094960ae56d2dd16140fb893060e07c4889"
+      },
+      {
+        "path": "libmozwayland.so",
+        "bytes": 13392,
+        "sha256": "1bc149cff163c72dc367b0ca69a095a7a0b72b6873b4343a2924e2168a99bda2"
+      },
+      {
+        "path": "libnspr4.so",
+        "bytes": 221728,
+        "sha256": "5b58ab985ff86df7b5aaa82ae93d30994dca8424dd73874ca1e8d758363cad35"
+      },
+      {
+        "path": "libnss3.so",
+        "bytes": 818672,
+        "sha256": "8779e540e8757dc1fa674f93c976e610473d5f194ab5137ac310126fd80fce64"
+      },
+      {
+        "path": "libnssutil3.so",
+        "bytes": 196312,
+        "sha256": "89b744b46171276076221304d2e0b689fd57fb8b0d88358f8e0b4ca2dd532919"
+      },
+      {
+        "path": "libonnxruntime.so",
+        "bytes": 10534656,
+        "sha256": "d5f9bbdf034b753bc4352a38a85695e173ca00a3d35224275874152a00b3201d"
+      },
+      {
+        "path": "libplc4.so",
+        "bytes": 16424,
+        "sha256": "53500e349938de3e5c85d313893637afda21a005a44d70af48d635d9cd728c48"
+      },
+      {
+        "path": "libplds4.so",
+        "bytes": 12424,
+        "sha256": "5e26b7c04511674f422b52267f72536adf13aab477b93ac330d49570d206bb18"
+      },
+      {
+        "path": "libsmime3.so",
+        "bytes": 180192,
+        "sha256": "bbee10ad70680c397d6cdf1a66bb39a8a867bac92632a5be5ae06e14a450694b"
+      },
+      {
+        "path": "libsoftokn3.so",
+        "bytes": 410512,
+        "sha256": "49145f5588cd450cd59e5197c378631f87c718d2b93295e3c80975e9756cd153"
+      },
+      {
+        "path": "libssl3.so",
+        "bytes": 487976,
+        "sha256": "4f789ceb7bbfeb913a3e5fd461e8f3c07a68bd3046e6159d58b3b1c306aadc02"
+      },
+      {
+        "path": "libxul.so",
+        "bytes": 185967288,
+        "sha256": "d4639727b18b98e0c47da1cbcf8cc3cc36dfa1873b24628c7c965ccc8da59230"
+      },
+      {
+        "path": "libxul.so.sig",
+        "bytes": 1449,
+        "sha256": "6005eed4ecdb8f661403b8e34310c0176c7f682a5e797b085adb0b51e07f94bd"
+      },
+      {
+        "path": "omni.ja",
+        "bytes": 46063999,
+        "sha256": "0d56174897a69544fcafe7dcf1bcee5ea41f35746b335627fa5c786d0b96ba59"
+      },
+      {
+        "path": "pingsender",
+        "bytes": 700624,
+        "sha256": "8facdd3ef931fef7b2d2e2606b337cb4857df3e3a84c2789430168a04291437b"
+      },
+      {
+        "path": "platform.ini",
+        "bytes": 167,
+        "sha256": "104cfd6beb4cd04e2cfe726fd05937db1adbb1ad80ad8827f8a942e11b202a67"
+      },
+      {
+        "path": "precomplete",
+        "bytes": 1535,
+        "sha256": "2e0986f16f4e1c2a9f9cb55910f3daa74e9998ad0fabc28c261d065b07b94f8e"
+      },
+      {
+        "path": "removed-files",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "update-settings.ini",
+        "bytes": 132,
+        "sha256": "c18489344fdc21ae366b4d957a0b9f11be772483ca46f9ffab6ed0356f946513"
+      },
+      {
+        "path": "updater",
+        "bytes": 279520,
+        "sha256": "de137f785183d895a73d7b4c82af168647df089bbde1554fd1d3a91c95a42207"
+      },
+      {
+        "path": "updater.ini",
+        "bytes": 638,
+        "sha256": "334f5b32d0bc780eade423fdcbbf266b7a8d6308de78079a45e567e06f77f37b"
+      }
+    ]
+  }
+]

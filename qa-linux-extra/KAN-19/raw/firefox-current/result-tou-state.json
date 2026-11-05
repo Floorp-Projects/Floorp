@@ -1,0 +1,13 @@
+{
+  "elapsedMs": 14.348104999953648,
+  "rpcMs": 7.6131739988341,
+  "value": {
+    "distribution": "mozilla-official",
+    "bypass": false,
+    "bypassUser": false,
+    "acceptedVersion": 0,
+    "acceptedDate": "0",
+    "acceptanceUser": false,
+    "termsMinimum": 4
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "id": "rooster-rich-visible-settled",
+  "target": "index.html",
+  "context": "content",
+  "script": "return window.wrappedJSObject.qaSnapshot();"
+}

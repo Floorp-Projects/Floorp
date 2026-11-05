@@ -1,0 +1,28 @@
+# KAN-19 / GH2792 Floorp-side source audit
+
+Read-only main29a3eb23145da90706d8a94441373278521cc737 in /workspace/Floorp-newtab-linux while independenttree provisioning. Tree clean at review. No browser/profile/product changes, accounts, clipboard contents, remote writes or patch. Coordinator owns Proton source and real clipboard fixtures. This audit does not prove absence of Runtime/native/extension defects; main is newer than original12.18.1 and nativeWindows clipboard path not executed here.
+
+## Bounded findings
+
+rg scans frontendmodules/chrome/libs, CSS and shipped runtimepatch directories for clipboardData/clipboardwrite/execCommand/copyString/cmdpaste/contenteditable, exact opacity0/prewrap/userselect combinations, Protonhost names and copy/paste handlers found no Floorp code constructing a hidden copy-staging span with the reported combination, no ProtonMail-specific DOM patch, and no global webcontent paste listener. Do not turn a no-match scan into proof of impossibility. Thirdparty webpage/extension code and Gecko native editing are separate surfaces; original12.18.1 packaged source not exhaustively compared here.
+
+mouse-gesture/utils/actions.ts535–555 copy-page-url-as-markdown builds bracketescaped `[title](url)` then navigator.clipboard.writeText; no HTMLflavor/hiddenDOM created. Other obvious frontendclipboard writer is settingsOSservertoken UI (not normalProton context). Workspaceclipboard helper reads text for middleclicknewtab URLnavigation; it doesn't transform pasted editorHTML. pages-notes RichTextEditor clipboardData imagehandling belongs to FloorpNotes route, not arbitrary web pages. Webscraper DOMWriteOperations invokes insertHTML/insertText only via explicit APIoperation; it is not a passive pastehook. No evidence these paths ran in original case.
+
+chrome-web-store offscreen polyfills opacity0 create a hidden iframe with data-floorp-offscreen marker, displaynone/visibilityhidden/width0; this is extension offscreenhost, not clipboardspan or nestedanchor construction. HighlightManager opacityfade is webscraper overlay, not copy staging. No product-side matching staging span found; whether reported opacity0 is Proton's normal temporary copy/paste staging remains a question for coordinator's publicProtoncode review and timed DOM evidence.
+
+keyboard-shortcut/controller.ts76–127 processes real keycode/modifier matches and only preventDefault/stopPropagation when customshortcut matches. Default shortcuts(defaults.ts30–43) areF2 commandpalette and CtrlAltZ Zen(Windows/Linux), noCtrlV/CtrlShiftV. Bareprintable editablefocusguard does not reserve CtrlV universally; actual user-configured Vshortcut could intercept. Inspect actual shortcutconfig/enable state rather than asserting default interception. Even proven interception wouldn't alone explain hidden/nestedanchor HTML since this controller doesn't generate it. Native paste vs contextmenu paste vs plainpaste are useful independent paths, but CtrlShiftV may also be handled by editor; don't presume it bypasses webpage script.
+
+Theme sheets can be registered globally as AGENT_SHEET(browser-design-element.tsx26–59), so don't claim allFloorp CSS is chromeonly. Reviewed leptonContent.css opacity0 rules include nativevideo controlbar[hidden] and internalpage selectors, not generic editable spans; no Protonhost-specific rule found. UserContent.page.proton refers MozillaProtondesign naming, not ProtonMail service. Need actual matchedCSSrule evidence on affectedspan (inline style vs computed cascading rule) before attributing opacity to theme. An inlineopacity0 preserved in pasteHTML is a different mechanism from global stylesheet making normallyvisible nodestransparent.
+
+## Relevant existing PR search (bounded publicGitHub)
+
+No PR reference2792 result at fetch. Pastequery returns2960 clipboardpaste/permissions in webpanels,2901 nativeapp-shim input/editcommanddispatch,2748 Workspace middleclickclipboardURL,2316 OSAPIclipboard/Draft.jsinput and2315 richtextdispatch. These concern distinct explicitcontexts; none establishes fix for ordinaryProton webtab paste. Protonquery mostly MozillaProtondesign PRs, not mailservice. Stored resultJSONs include titles/URLs/bodies for audit; no claim exhaustive GitHubsearch or closedissue resolution.
+
+## Required discriminators before any product fix
+
+- Capture real clipboardflavors text/plain vs text/html beforepaste using nonsensitivefixtureURL, plus pastedDOM inlineattrs immediately/nextframe/timeout. Distinguish normal transient staging removed aftercopy/paste from persistent insertedmarkup. Mutationtimestamps and editoreventorder matter; don't removeopacity programmatically and countfix.
+- Externalplain writer→body, URLbarcopy→body, bodycopy→body and subjectcopy→body under sameprofile; compare reported Subjectrecopy workaround. OSnotepad/plaintext origin should lackHTML; verify rather than assume clipboardmanager/browser didn't addflavor. Nestedanchors may be editorautolink/HTMLrepair; require before/after payload evidence.
+- NaturalCtrlV, contextmenu paste andCtrlShiftV record beforeinput/input/paste, defaultPrevented, types, focusededitable/frame, selection and finaltext/markup. SyntheticKeyboardEvent not equivalent to nativeclipboardshortcut.
+- Defaultcleanfreshprofile vs originalconfig, extensions/CSS provenance, Firefox156.0.1matchedcontrol and latestFloorp/Firefox separately. Linux X11/Waylandclipboard differs from Windows11HTMLclipboard. No account-dependentProton claim from genericfixture pass.
+
+Status: no confirmed Floorp sourcecause and no justified productpatch from this bounded audit. Coordinator can narrow originalconditions using actualfixtures/publicProtoncontract; retain needs-originalWindows/Protonflow if not measured.

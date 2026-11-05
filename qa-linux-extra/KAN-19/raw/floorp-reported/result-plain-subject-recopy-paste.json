@@ -1,0 +1,38 @@
+{
+  "elapsedMs": 39.38220700001693,
+  "rpcMs": 3.9846930012572557,
+  "value": {
+    "pid": 91377,
+    "version": "156.0.1",
+    "buildID": "20260922152932",
+    "updatePin": true,
+    "recommended": false,
+    "protections": {
+      "sandbox": 6,
+      "sandboxUser": false,
+      "signatureRequired": false,
+      "signatureUser": false
+    },
+    "shortcutPrefs": [
+      {
+        "key": "floorp.keyboardshortcut.config",
+        "type": 32,
+        "user": true,
+        "value": "{\"schemaVersion\":2,\"enabled\":true,\"shortcuts\":{\"floorp-toggle-command-palette\":{\"key\":\"F2\",\"modifiers\":{\"alt\":false,\"ctrl\":false,\"meta\":false,\"shift\":false},\"action\":\"floorp-toggle-command-palette\"},\"floorp-toggle-zen-mode\":{\"key\":\"KeyZ\",\"modifiers\":{\"alt\":true,\"ctrl\":true,\"meta\":false,\"shift\":false},\"action\":\"floorp-toggle-zen-mode\"}}}"
+      },
+      {
+        "key": "floorp.keyboardshortcut.enabled",
+        "type": 128,
+        "user": true,
+        "value": true
+      }
+    ],
+    "tabs": [
+      {
+        "url": "http://127.0.0.1:19200/index.html",
+        "title": "KAN19 native clipboard fixture",
+        "selected": true
+      }
+    ]
+  }
+}
