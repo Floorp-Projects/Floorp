@@ -21,6 +21,7 @@ import { createRoot, getOwner, onCleanup, runWithOwner } from "solid-js";
 import { WORKSPACES_INIT_OBSERVER_TOPIC } from "./utils/workspaces-static-names.ts";
 import { WorkspacesLinkContextMenu } from "./link-context-menu.tsx";
 import { WorkspacesSyncController } from "./workspacesSync.ts";
+import { waitForWorkspaceWindow } from "./window-ready.ts";
 
 @noraComponent(import.meta.hot)
 export default class Workspaces extends NoraComponentBase {
@@ -42,7 +43,23 @@ export default class Workspaces extends NoraComponentBase {
     }
 
     const owner = getOwner();
-    migrateWorkspacesData().then(() => {
+    const startup = new AbortController();
+    onCleanup(() => startup.abort());
+    migrateWorkspacesData().then(async () => {
+      const ready = await waitForWorkspaceWindow(
+        window,
+        Services.obs,
+        startup.signal,
+      );
+      if (!ready) {
+        if (!startup.signal.aborted && !window.closed) {
+          console.error(
+            "[Workspaces] Window startup finished without required browser chrome",
+          );
+        }
+        return;
+      }
+      if (!enabled()) return;
       const exec = () => {
         const iconCtx = new WorkspaceIcons();
         const dataManagerCtx = new WorkspacesDataManager();
@@ -89,6 +106,10 @@ export default class Workspaces extends NoraComponentBase {
       };
       if (owner) runWithOwner(owner, exec);
       else createRoot(exec);
+    }).catch((error: unknown) => {
+      if (!startup.signal.aborted && !window.closed) {
+        console.error("[Workspaces] Failed to initialize:", error);
+      }
     });
   }
 }
