@@ -705,6 +705,7 @@
     "qualifiedSessions": 3,
     "all46ArchiveEntriesPreserved": true,
     "profileOnlyVersionPin": "app.update.disabledForTesting=true",
-    "historicalFailedAttemptPreserved": true
+    "historicalFailedAttemptPreserved": true,
+    "jiraCommentId": "10468"
   }
 }

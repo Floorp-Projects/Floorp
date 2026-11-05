@@ -666,7 +666,7 @@
       "windowsFulfillmentComment": "10459",
       "newPr": null,
       "existingRelatedPr": "https://github.com/Floorp-Projects/Floorp/pull/3003 (OPEN separate SpeedDial/RSS feature, not proven fix)",
-      "jiraCommentId": "10462",
+      "jiraCommentId": "10468",
       "remainingConditions": [
         "Original profile/remote thumbnail source/cache and Linuxdesktop unknown",
         "Firefox native readiness/TOU causality unproven; no acceptance spoof",
@@ -691,6 +691,7 @@
       "jiraLabels": [
         "area-ui",
         "floorp-stability-2026-11",
+        "linux-native-newtab-tested",
         "linux-partially-tested",
         "needs-original-thumbnail-context",
         "needs-repro",
@@ -698,10 +699,9 @@
         "related-gh-2997",
         "triage-reviewed",
         "windows-native-newtab-tested",
-        "linux-native-newtab-tested",
-        "needs-linux-12-18-native-context"
+        "linux-12-18-native-tested"
       ],
-      "labelChangeRationale": "currentLinux native init qualified; Windows10459 preserved; originalLinux12.18/context remain unqualified",
+      "labelChangeRationale": "reportedLinux12.18 native init/7paints now qualified with authorized profile-only version pin; prior failures and Windows/currentLinux fulfillment retained; original-thumbnail context still missing",
       "currentNativePaintConditions": 7,
       "reportedNativePaintConditions": 7,
       "qualifiedReportedVersionSessions": 3,
@@ -713,8 +713,10 @@
         "sessions": 3,
         "paints": 7,
         "priorFailureRecordPreserved": true,
-        "jiraCommentId": null
-      }
+        "jiraCommentId": "10468",
+        "evidenceCommit": "646b99887f8b9a14008d715b64569fc0ebeea5f6"
+      },
+      "priorCurrentLinuxJiraCommentId": "10462"
     }
   ]
 }

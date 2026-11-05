@@ -725,5 +725,7 @@
   ],
   "priorFailedAttemptPreserved": true,
   "originalThumbnailBugResult": "not reproduced in bounded native data-favicon conditions; original profile/source/cache/desktop context remains",
-  "firefoxPolicyCausality": "unchanged/unresolved; not retested or spoofed"
+  "firefoxPolicyCausality": "unchanged/unresolved; not retested or spoofed",
+  "jiraCommentId": "10468",
+  "evidenceCommit": "646b99887f8b9a14008d715b64569fc0ebeea5f6"
 }
