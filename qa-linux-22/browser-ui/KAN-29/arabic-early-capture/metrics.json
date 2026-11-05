@@ -1,0 +1,13 @@
+{
+  "englishObservationPeakRssKiB": 1400392,
+  "arabicObservationPeakRssKiB": 2166124,
+  "arabicLastSeconds": 9.881521953997435,
+  "arabicMaxSampleGapSeconds": 0.7214262159977807,
+  "thresholdCaveat": "polling soft guard, not a continuous hard upper bound",
+  "historicalParentAndPR2877CatalogBlob": "e1cee1519cf61cd4c19b2d7a6f4a398590e49792",
+  "pr2883MergeAndMain984CatalogBlob": "a3f91ca4c5c6bc00ecb9854495c33fa31ed061aa",
+  "fixPr": "https://github.com/Floorp-Projects/Floorp/pull/2883",
+  "mergeCommit": "6c3f11dfebe97fee2be25fad915b4e51cc1f1b4f",
+  "candidateEffectThisRun": "not tested",
+  "originalMissingKey": "not retained/unknown"
+}

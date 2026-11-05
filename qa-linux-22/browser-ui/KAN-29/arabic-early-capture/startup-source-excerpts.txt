@@ -1,0 +1,174 @@
+  VTUNE_INIT();
+  ETW::Init();
+  InitPerfetto();
+#if defined(MOZ_REPLACE_MALLOC) && defined(MOZ_PROFILER_MEMORY)
+  mozilla::profiler::memory_hooks_tls_init();
+#endif
+
+  MOZ_RELEASE_ASSERT(!CorePS::Exists());
+
+  if (getenv("MOZ_PROFILER_HELP")) {
+    PrintUsage();
+    exit(0);
+  }
+
+  SharedLibraryInfo::Initialize();
+
+  // We initialize here as well as in baseprofiler because
+  // baseprofiler init doesn't happen in child processes.
+  Flow::Init();
+
+  uint32_t features = DefaultFeatures() & AvailableFeatures();
+
+  UniquePtr<char[]> filterStorage;
+
+  Vector<const char*> filters;
+  MOZ_RELEASE_ASSERT(filters.append("GeckoMain"));
+  MOZ_RELEASE_ASSERT(filters.append("Compositor"));
+  MOZ_RELEASE_ASSERT(filters.append("Renderer"));
+  MOZ_RELEASE_ASSERT(filters.append("DOM Worker"));
+
+  PowerOfTwo32 capacity = PROFILER_DEFAULT_ENTRIES;
+  Maybe<double> duration = Nothing();
+  double interval = PROFILER_DEFAULT_INTERVAL;
+  uint64_t activeTabID = PROFILER_DEFAULT_ACTIVE_TAB_ID;
+
+  ThreadRegistration::RegisterThread(kMainThreadName, aStackTop);
+
+  {
+    PSAutoLock lock;
+
+    // We've passed the possible failure point. Instantiate CorePS, which
+    // indicates that the profiler has initialized successfully.
+    CorePS::Create(lock);
+
+    // Make sure threads already in the ThreadRegistry (like the main thread)
+    // get registered in CorePS as well.
+    {
+      ThreadRegistry::LockedRegistry lockedRegistry;
+      for (ThreadRegistry::OffThreadRef offThreadRef : lockedRegistry) {
+        locked_register_thread(lock, offThreadRef);
+      }
+    }
+    // Platform-specific initialization.
+    PlatformInit(lock);
+
+#if defined(GECKO_PROFILER_ASYNC_POSIX_SIGNAL_CONTROL)
+    // Initialise the background thread to listen for signal handler
+    // communication
+    CorePS::SetAsyncSignalControlThread(new AsyncSignalControlThread);
+
+    // Initialise the signal handlers needed to start/stop the profiler
+    profiler_init_signal_handlers();
+#endif
+
+#if defined(GP_OS_android)
+    if (jni::IsAvailable()) {
+
+    const char* startupDuration = getenv("MOZ_PROFILER_STARTUP_DURATION");
+    if (startupDuration && startupDuration[0] != '\0') {
+      errno = 0;
+      double durationVal = PR_strtod(startupDuration, nullptr);
+      if (errno == 0 && durationVal >= 0.0) {
+        if (durationVal > 0.0) {
+          duration = Some(durationVal);
+        }
+        LOG("- MOZ_PROFILER_STARTUP_DURATION = %f", durationVal);
+      } else {
+        LOG("- MOZ_PROFILER_STARTUP_DURATION not a valid float: %s",
+            startupDuration);
+        PrintUsage();
+        exit(1);
+      }
+    }
+
+    const char* startupInterval = getenv("MOZ_PROFILER_STARTUP_INTERVAL");
+    if (startupInterval && startupInterval[0] != '\0') {
+      errno = 0;
+      interval = PR_strtod(startupInterval, nullptr);
+      if (errno == 0 && interval > 0.0 && interval <= PROFILER_MAX_INTERVAL) {
+        LOG("- MOZ_PROFILER_STARTUP_INTERVAL = %f", interval);
+      } else {
+        LOG("- MOZ_PROFILER_STARTUP_INTERVAL not a valid float: %s",
+            startupInterval);
+        PrintUsage();
+        exit(1);
+      }
+    }
+
+    features |= StartupExtraDefaultFeatures() & AvailableFeatures();
+
+    const char* startupFeaturesBitfield =
+        getenv("MOZ_PROFILER_STARTUP_FEATURES_BITFIELD");
+    if (startupFeaturesBitfield && startupFeaturesBitfield[0] != '\0') {
+      errno = 0;
+      features = strtol(startupFeaturesBitfield, nullptr, 10);
+      if (errno == 0) {
+        LOG("- MOZ_PROFILER_STARTUP_FEATURES_BITFIELD = %d", features);
+      } else {
+        LOG("- MOZ_PROFILER_STARTUP_FEATURES_BITFIELD not a valid integer: %s",
+            startupFeaturesBitfield);
+        PrintUsage();
+        exit(1);
+      }
+    } else {
+      const char* startupFeatures = getenv("MOZ_PROFILER_STARTUP_FEATURES");
+      if (startupFeatures) {
+        // Interpret startupFeatures as a list of feature strings, separated by
+        // commas.
+        UniquePtr<char[]> featureStringStorage;
+        Vector<const char*> featureStringArray =
+            SplitAtCommas(startupFeatures, featureStringStorage);
+        features = ParseFeaturesFromStringArray(featureStringArray.begin(),
+                                                featureStringArray.length(),
+                                                /* aIsStartup */ true);
+        LOG("- MOZ_PROFILER_STARTUP_FEATURES = %d", features);
+      }
+    }
+
+    const char* startupFilters = getenv("MOZ_PROFILER_STARTUP_FILTERS");
+    if (startupFilters && startupFilters[0] != '\0') {
+      filters = SplitAtCommas(startupFilters, filterStorage);
+      LOG("- MOZ_PROFILER_STARTUP_FILTERS = %s", startupFilters);
+void profiler_lookup_async_signal_dump_directory() {
+// This implementation is causing issues on Windows (see Bug 1890154) but as it
+// only exists to support the posix signal handling (on non-windows platforms)
+// we can remove it for now.
+#if !defined(XP_WIN)
+  LOG("profiler_lookup_async_signal_dump_directory");
+
+  MOZ_ASSERT(XRE_IsParentProcess() && NS_IsMainThread(),
+             "We can only get access to the directory service from the parent "
+             "process main thread");
+
+  // Make sure the profiler is actually running~
+  MOZ_RELEASE_ASSERT(CorePS::Exists());
+
+  // take the lock so that we can write to CorePS
+  PSAutoLock lock;
+  nsresult rv;
+
+  // Check to see if we have a `MOZ_UPLOAD_DIR` first - i.e., check to see if
+  // we're running in CI.
+  LOG("Checking if MOZ_UPLOAD_DIR exists");
+  const char* mozUploadDir = getenv("MOZ_UPLOAD_DIR");
+  if (mozUploadDir && mozUploadDir[0] != '\0') {
+    LOG("Found MOZ_UPLOAD_DIR at: %s", mozUploadDir);
+    // We want to do the right thing, and turn this into an nsIFile. Go through
+    // the motions here:
+    nsCOMPtr<nsIFile> mozUploadDirFile;
+    rv = NS_NewNativeLocalFile(nsDependentCString(mozUploadDir),
+                               getter_AddRefs(mozUploadDirFile));
+    if (NS_FAILED(rv)) {
+      LOG("Failed to assign a filepath while creating MOZ_UPLOAD_DIR file "
+          "%s, Error %s ",
+          mozUploadDir, GetStaticErrorName(rv));
+      return;
+    }
+
+    CorePS::SetAsyncSignalDumpDirectory(lock, Some(mozUploadDirFile));
+  } else {
+#  if defined(GP_OS_android)
+    // Bug 1904639: GetPreferredDownloadsDirectory is not implemented for
+    // Android.
+    return;

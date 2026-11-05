@@ -265,6 +265,35 @@
         "run.py",
         "report.md"
       ]
+    },
+    "arabicEarlyCapture": {
+      "key": "KAN-29",
+      "github": "https://github.com/Floorp-Projects/Floorp/issues/2876",
+      "sourceSha": "a6290b5811b8c5309b399ac340ec40b52f97b73c",
+      "productVersion": "Floorp12.20.0/native157.0.1 Build20261007125927",
+      "environment": "Debian13/Xvfb131/Openbox/isolated DBus; fresh normally-ended English setup; first requested-ar; target strictRTL unmeasured",
+      "testCommand": "python3 KAN-29/arabic-early-capture/run.py",
+      "result": "Early Arabic profiler success1035samples; actual child-15 at2GiB RSS polling guard; startup ContextMenu sync Fluent busy path matches existing merged2883; no completed memory report",
+      "remainingConditions": [
+        "exact missing key/resources and native allocation category",
+        "same157 product effect of existing2883 not tested",
+        "qualified full157 RTL paint",
+        "original KAN29 LTR CachyOS/Flatpak/physical conditions"
+      ],
+      "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2877",
+      "relatedExistingFix": "https://github.com/Floorp-Projects/Floorp/pull/2883",
+      "newPr": null,
+      "jiraCommentId": null,
+      "evidence": [
+        "report.md",
+        "summary.json",
+        "stack-analysis.json",
+        "metrics.json",
+        "signal-events.json",
+        "startup-log-excerpt.txt",
+        "pr2883.json",
+        "pr2883.patch"
+      ]
     }
   },
   {

@@ -1,0 +1,104 @@
+diff --git a/browser-features/chrome/common/context-menu/catalog.ts b/browser-features/chrome/common/context-menu/catalog.ts
+index e1cee1519cf6..a3f91ca4c5c6 100644
+--- a/browser-features/chrome/common/context-menu/catalog.ts
++++ b/browser-features/chrome/common/context-menu/catalog.ts
+@@ -149,6 +149,39 @@ export class OptionalContextMenuCatalogReporter
+   }
+ }
+ 
++function createCatalogLocalization(
++  resources: string[],
++): Pick<Localization, "formatMessagesSync"> {
++  // Missing keys must not enumerate combinations of every optional resource.
++  const localizations = resources.map((path) =>
++    new Localization(
++      [
++        ...new Set([
++          "branding/brand.ftl",
++          "toolkit/branding/brandings.ftl",
++          path,
++        ]),
++      ],
++      true,
++    )
++  );
++  return {
++    formatMessagesSync(keys) {
++      return Array.from(keys, (key) => {
++        for (const localization of localizations) {
++          try {
++            const message = localization.formatMessagesSync([key])[0];
++            if (message) return message;
++          } catch {
++            continue;
++          }
++        }
++        return null;
++      });
++    },
++  };
++}
++
+ export class ContextMenuCatalogBuilder {
+   readonly #registry: ContextMenuRegistry;
+   readonly #surfaces = new Map<string, ContextMenuSurfaceDescriptor>();
+@@ -166,11 +199,7 @@ export class ContextMenuCatalogBuilder {
+     registry: ContextMenuRegistry,
+     createLocalization: (
+       resources: string[],
+-    ) => Pick<Localization, "formatMessagesSync"> = (resources) =>
+-      new Localization(
+-        resources.map((path) => ({ path, optional: true })),
+-        true,
+-      ),
++    ) => Pick<Localization, "formatMessagesSync"> = createCatalogLocalization,
+   ) {
+     this.#registry = registry;
+     this.#createLocalization = createLocalization;
+diff --git a/browser-features/chrome/common/context-menu/test/contextMenuRuntime.test.ts b/browser-features/chrome/common/context-menu/test/contextMenuRuntime.test.ts
+index 7ee99ba60b48..397ea44a1a83 100644
+--- a/browser-features/chrome/common/context-menu/test/contextMenuRuntime.test.ts
++++ b/browser-features/chrome/common/context-menu/test/contextMenuRuntime.test.ts
+@@ -800,6 +800,31 @@ function testCatalogResolvesNativeLazyFluentLabelsWithoutChangingDOM(): void {
+   );
+ }
+ 
++function testCatalogMissingFluentKeyWithBrowserResources(): void {
++  const fixture = createCatalogLabelFixture();
++  for (const link of document.querySelectorAll('link[rel="localization"]')) {
++    fixture.ownerDocument.head.appendChild(link.cloneNode(true));
++  }
++  fixture.append("runtime-a", "floorp-nonexistent-diagnostic-key");
++  fixture.append("runtime-b", "reload-tab");
++  const before = fixture.popup.outerHTML;
++  const expected = new Localization(["browser/tabContextMenu.ftl"], true)
++    .formatMessagesSync(["reload-tab"])[0]?.attributes?.find((attribute) =>
++      attribute.name === "label"
++    )?.value;
++  assert(expected, "native lazy tab label exists");
++  assertEquals(
++    fixture.labels().join("|"),
++    `floorp-nonexistent-diagnostic-key|${expected}`,
++    "missing Fluent keys retain rows without preventing later translations",
++  );
++  assertEquals(
++    fixture.popup.outerHTML,
++    before,
++    "catalog leaves native DOM intact",
++  );
++}
++
+ function testCatalogCachesLocalizationAndInvalidatesChangedResources(): void {
+   const resourcesSeen: string[][] = [];
+   const requests: L10nKey[] = [];
+@@ -3642,6 +3667,10 @@ const tests: TestCase[] = [
+     name: "catalog caches localization and invalidates changed resources",
+     fn: testCatalogCachesLocalizationAndInvalidatesChangedResources,
+   },
++  {
++    name: "catalog handles missing Fluent keys with all browser resources",
++    fn: testCatalogMissingFluentKeyWithBrowserResources,
++  },
+   {
+     name: "catalog localization failures preserve rows",
+     fn: testCatalogLocalizationFailuresPreserveRows,

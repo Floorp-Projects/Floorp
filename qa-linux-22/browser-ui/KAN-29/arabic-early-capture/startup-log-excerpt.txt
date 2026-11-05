@@ -1,0 +1,13 @@
+[(null) 120948: Main Thread]: I/prof [120948] locked_profiler_start
+[(null) 120948: Main Thread]: I/prof [120948] - capacity  = 16777216
+[(null) 120948: Main Thread]: I/prof [120948] - interval = 5.00
+[(null) 120948: Main Thread]: I/prof [120948] - feature  = js
+[(null) 120948: Main Thread]: I/prof [120948] - feature  = stackwalk
+[(null) 120948: Main Thread]: I/prof [120948] - feature  = processcpu
+[(null) 120948: Main Thread]: I/prof [120948] - feature  = memory
+[(null) 120948: Main Thread]: I/prof [120948] - threads  = GeckoMain
+[Parent 120948: Main Thread]: I/prof [120948] profiler_lookup_async_signal_dump_directory
+[Parent 120948: Main Thread]: I/prof [120948] Checking if MOZ_UPLOAD_DIR exists
+[Parent 120948: Main Thread]: I/prof [120948] Found MOZ_UPLOAD_DIR at: <private-output>
+[Parent 120948: AsyncSignalControlThread]: I/prof [120948] profiler_save_profile_to_file(<private-output>/profile_0_120948.json)
+[Parent 120948: AsyncSignalControlThread]: I/prof [120948] locked_profiler_save_profile_to_file("<private-output>/profile_0_120948.json")

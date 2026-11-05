@@ -23,3 +23,11 @@ Default tool sandbox denied disposable-child ptrace; authorized native execution
 ## Disposition
 
 No further browser execution, new build, PR2877 modification, CI/config/protection change, release, merge or Done transition. No baseline-failing causal regression/candidate effect exists, so no speculative Draft. Original10/Linux22 denominator and separate additional-KAN table are preserved. Private profiles/raw logs/raw results are excluded from this evidence branch; hashes, technical aggregates, historical scripts and public-source excerpts are included. Historical scripts are not validated profiler recipes; read capture/README.md before any future execution.
+
+## Follow-up: English instrumentation established (2026-11-06 JST)
+
+The earlier “No profiler JSON or memory report” statement describes the historical Arabic capture only. The subsequent [English preflight report](../instrumentation-preflight/report.md) and [summary](../instrumentation-preflight/summary.json) establish one fresh English PID119877: API1299 samples and registered-USR2 parent1408 samples with stacks, same-PID nonminimizing memory report1784 parent entries, actual native child exit0. Jira10490; immutable evidence commit782ebc039cac922c73ce3e10462b4c699fd8785a. This satisfies next-observations1 and English scope of2. It does not establish reporter initialization in a new Arabic process, Arabic output, allocation cause, or qualified RTL. Historical Arabic results remain unchanged.
+
+## Subsequent single Arabic capture
+
+See [early-capture report](../arabic-early-capture/report.md) and [summary](../arabic-early-capture/summary.json): first requested-ar PID120948 yielded1035 parent samples via registered SIGUSR2 at6.100s with valid startup features/cache. Registered nonminimizing SIGRTMIN at6.502s did not produce a completed memory report. RSS2GiB polling guard fired9.882s, actual child-15, not normal exit. ContextMenu startup catalog -> Localization.formatMessagesSync dominates599/612 post3s samples and matches existing merged PR2883; original missing key/candidate effect on157 not measured. Historical failed capture is retained. Full157RTL remains unqualified and PR2877 attribution unproven. No further Arabic run.

@@ -1,7 +1,15 @@
-# Required observations; not executed in this investigation
+# Required observations — original Arabic investigation and subsequent status
 
 1. Before another Arabic attempt, validate instrumentation on a bounded English process using supported `js,stackwalk,processcpu,memory`. Confirm profiler active/features and actual cached output path, and obtain parseable parent JSON with samples. SIGUSR2 registration alone is insufficient. Parent is serialized before child collection; missing output cannot be blamed solely on child gathering.
 2. Verify memory-reporter service initialization in the same target process, registered signal, and an actual non-minimizing report. English-process initialization does not carry into the Arabic process. Do not send an unregistered signal or force GC/minimize memory.
 3. With working low-overhead capture, compare same-parent fresh normally-ended English and requested-ar starts at matched phases. Record locale readiness, SessionStore/window restoration milestones, parent JS heap and DOM counts, native categories, and thread stacks. Keep about:blank/session startup policy explicit. Do not reuse the forced-stopped Arabic profile.
 4. External own-child sampling is a possible fallback, after installing an appropriate userspace sampler and obtaining exact ELF symbols for build-id6f03efb2d7e5d066ccadadc8d799831eeaa18229. No Floorp stack was captured here. Version-matched stock Firefox is an upstream comparison, not automatically identical Runtime.
 5. Only a reproducible causal baseline failure and candidate effect justify a source change/regression test/Draft. Current data cannot choose locale activation vs restore vs initial UI, or JS/DOM vs native allocation.
+
+## Follow-up status (2026-11-06 JST)
+
+Item1 is now satisfied for normal fresh English startup: [report](../instrumentation-preflight/report.md), [summary](../instrumentation-preflight/summary.json), Jira10490/commit782ebc03. Item2 is satisfied in that same English PID119877 via actual nonminimizing API report; SIGRTMIN registration was observed, not signal output. Arabic same-process early registration remains unproven and does not carry across restart. The original numbered text is the historical plan, not a claim these English tasks remain unexecuted. Subsequent bounded Arabic startup sampling, if performed, must be recorded separately and cannot retroactively change the old missing-output result.
+
+## Subsequent single Arabic capture
+
+See [early-capture report](../arabic-early-capture/report.md) and [summary](../arabic-early-capture/summary.json): first requested-ar PID120948 yielded1035 parent samples via registered SIGUSR2 at6.100s with valid startup features/cache. Registered nonminimizing SIGRTMIN at6.502s did not produce a completed memory report. RSS2GiB polling guard fired9.882s, actual child-15, not normal exit. ContextMenu startup catalog -> Localization.formatMessagesSync dominates599/612 post3s samples and matches existing merged PR2883; original missing key/candidate effect on157 not measured. Historical failed capture is retained. Full157RTL remains unqualified and PR2877 attribution unproven. No further Arabic run.

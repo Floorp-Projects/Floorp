@@ -1,0 +1,153 @@
+{
+  "sourceSha": "a6290b5811b8c5309b399ac340ec40b52f97b73c",
+  "runtimeSha": "c74fe1a545d275cdd710ab44701c1ee0dd6b0eae",
+  "freshProfile": true,
+  "englishLaunches": 1,
+  "arabicLaunches": 1,
+  "phases": [
+    {
+      "phase": "english",
+      "pid": 120558,
+      "normalExit": true,
+      "actualExeSha256": "0eff607fa766d87b89e7f314e455c3b093f5d31dbde8a2f22be2f00044558301",
+      "live": {
+        "pid": 120558,
+        "version": "157.0.1",
+        "build": "20261007125927",
+        "locale": "en-US",
+        "rtl": false,
+        "active": true,
+        "config": {
+          "features": [
+            "js",
+            "stackwalk",
+            "processcpu",
+            "memory"
+          ],
+          "threads": [
+            "GeckoMain"
+          ],
+          "interval": 5,
+          "capacity": 16777216,
+          "activeTabID": 0
+        },
+        "sandbox": 6,
+        "langpackSignature": true
+      },
+      "localeInstall": {
+        "id": "langpack-ar@firefox.mozilla.org",
+        "version": "157.0.20261005.135250",
+        "signedState": 2,
+        "appDisabled": false
+      },
+      "normalQuitRequested": true,
+      "actualChildExit": 0
+    },
+    {
+      "phase": "arabic",
+      "pid": 120948,
+      "normalExit": false,
+      "actualExeSha256": "0eff607fa766d87b89e7f314e455c3b093f5d31dbde8a2f22be2f00044558301",
+      "captureEndedSeconds": 9.914772832999006,
+      "normalExitEstablished": false,
+      "actualChildExit": -15
+    }
+  ],
+  "strictArabicRTLQualified": false,
+  "limits": {
+    "ownedRssGiB": 2,
+    "cgroupGiB": 6,
+    "outputMiB": 100,
+    "englishWallSeconds": 40,
+    "arabicCaptureTargetSeconds": 10,
+    "arabicHardStopSeconds": 15
+  },
+  "profilerEnvironment": {
+    "MOZ_PROFILER_STARTUP": "1",
+    "MOZ_PROFILER_STARTUP_ENTRIES": "8MiB",
+    "MOZ_PROFILER_STARTUP_INTERVAL": "5",
+    "MOZ_PROFILER_STARTUP_FILTERS": "GeckoMain",
+    "MOZ_PROFILER_STARTUP_FEATURES": "js,stackwalk,processcpu,memory",
+    "MOZ_LOG": "prof:4"
+  },
+  "cleanBeforeArabic": {
+    "prefsSha256": "cba9ca8c0677224a8e6a90717949041328f30d52472281cf6a7feb7c8e3d2fe2",
+    "extensionsSha256": "f3473d5581e7e696616718f7924d9d29cd13620ae558b78934a08ddf8a60b787",
+    "priorArabicLaunches": 0,
+    "previousNativeChildExit": 0
+  },
+  "guards": [
+    {
+      "phase": "arabic",
+      "seconds": 9.881521953997435,
+      "pid": 120948,
+      "ownedRssKiB": 2166124,
+      "mainRssKiB": 1875560,
+      "mainCpuTicks": 1083,
+      "cgroupBytes": 5884895232,
+      "outputBytes": 18601161
+    }
+  ],
+  "cleanupRequired": true,
+  "profiles": {
+    "english/profile_0_120558.json": {
+      "bytes": 14447884,
+      "sha256": "34c6cef50e1224ecc6d78e0fe146d7d5f2db40ead6b0d3d51edfef4dbc16bc0a",
+      "metaConfiguration": {
+        "features": [
+          "js",
+          "stackwalk",
+          "processcpu",
+          "memory"
+        ],
+        "threads": [
+          "GeckoMain"
+        ],
+        "interval": 5,
+        "capacity": 16777216,
+        "activeTabID": 0
+      },
+      "threadPids": [
+        120558
+      ],
+      "samples": 1156,
+      "hasStacks": true,
+      "firstSampleMs": 15.862629,
+      "lastSampleMs": 7044.307739
+    },
+    "arabic/profile_0_120948.json": {
+      "bytes": 4051138,
+      "sha256": "6edc45ba2a402bdd5d1140e16e76869001772652c9e608b320605bbe76807bba",
+      "metaConfiguration": {
+        "features": [
+          "js",
+          "stackwalk",
+          "processcpu",
+          "memory"
+        ],
+        "threads": [
+          "GeckoMain"
+        ],
+        "interval": 5,
+        "capacity": 16777216,
+        "activeTabID": 0
+      },
+      "threadPids": [
+        120948
+      ],
+      "samples": 1035,
+      "hasStacks": true,
+      "firstSampleMs": 2.012432,
+      "lastSampleMs": 6094.373528
+    }
+  },
+  "memoryReports": {},
+  "productUnchanged": {
+    "floorp": true,
+    "libxul.so": true,
+    "omni.ja": true,
+    "browser/omni.ja": true
+  },
+  "earlyArabicProfileObtained": true,
+  "causeConfirmed": false
+}

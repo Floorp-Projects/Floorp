@@ -1,0 +1,402 @@
+[
+  {
+    "phase": "english",
+    "seconds": 0.4692744650019449,
+    "pid": 120558,
+    "ownedRssKiB": 52392,
+    "mainRssKiB": 52392,
+    "mainCpuTicks": 45,
+    "cgroupBytes": 3977568256,
+    "outputBytes": 1357
+  },
+  {
+    "phase": "english",
+    "seconds": 0.8393957290027174,
+    "pid": 120558,
+    "ownedRssKiB": 75116,
+    "mainRssKiB": 75116,
+    "mainCpuTicks": 82,
+    "cgroupBytes": 3992092672,
+    "outputBytes": 1357
+  },
+  {
+    "phase": "english",
+    "seconds": 1.2268487210021704,
+    "pid": 120558,
+    "ownedRssKiB": 121524,
+    "mainRssKiB": 121524,
+    "mainCpuTicks": 120,
+    "cgroupBytes": 4011208704,
+    "outputBytes": 2205
+  },
+  {
+    "phase": "english",
+    "seconds": 1.5919362580025336,
+    "pid": 120558,
+    "ownedRssKiB": 261284,
+    "mainRssKiB": 166968,
+    "mainCpuTicks": 159,
+    "cgroupBytes": 4046934016,
+    "outputBytes": 5162
+  },
+  {
+    "phase": "english",
+    "seconds": 1.9717243740014965,
+    "pid": 120558,
+    "ownedRssKiB": 309640,
+    "mainRssKiB": 197028,
+    "mainCpuTicks": 197,
+    "cgroupBytes": 4078428160,
+    "outputBytes": 7355
+  },
+  {
+    "phase": "english",
+    "seconds": 2.4506251760030864,
+    "pid": 120558,
+    "ownedRssKiB": 357484,
+    "mainRssKiB": 224916,
+    "mainCpuTicks": 246,
+    "cgroupBytes": 4107730944,
+    "outputBytes": 10423
+  },
+  {
+    "phase": "english",
+    "seconds": 2.816102538999985,
+    "pid": 120558,
+    "ownedRssKiB": 361584,
+    "mainRssKiB": 253828,
+    "mainCpuTicks": 286,
+    "cgroupBytes": 4129300480,
+    "outputBytes": 13452
+  },
+  {
+    "phase": "english",
+    "seconds": 3.2175910490041133,
+    "pid": 120558,
+    "ownedRssKiB": 397148,
+    "mainRssKiB": 288804,
+    "mainCpuTicks": 337,
+    "cgroupBytes": 4169920512,
+    "outputBytes": 17810
+  },
+  {
+    "phase": "english",
+    "seconds": 3.712199492001673,
+    "pid": 120558,
+    "ownedRssKiB": 574356,
+    "mainRssKiB": 347264,
+    "mainCpuTicks": 417,
+    "cgroupBytes": 4252045312,
+    "outputBytes": 20372
+  },
+  {
+    "phase": "english",
+    "seconds": 4.291744191999896,
+    "pid": 120558,
+    "ownedRssKiB": 748816,
+    "mainRssKiB": 417200,
+    "mainCpuTicks": 473,
+    "cgroupBytes": 4353380352,
+    "outputBytes": 25895
+  },
+  {
+    "phase": "english",
+    "seconds": 4.788541405003343,
+    "pid": 120558,
+    "ownedRssKiB": 803956,
+    "mainRssKiB": 444140,
+    "mainCpuTicks": 528,
+    "cgroupBytes": 4405567488,
+    "outputBytes": 31902
+  },
+  {
+    "phase": "english",
+    "seconds": 5.459225302998675,
+    "pid": 120558,
+    "ownedRssKiB": 1013620,
+    "mainRssKiB": 498992,
+    "mainCpuTicks": 634,
+    "cgroupBytes": 4513599488,
+    "outputBytes": 38789
+  },
+  {
+    "phase": "english",
+    "seconds": 5.938513464003336,
+    "pid": 120558,
+    "ownedRssKiB": 979896,
+    "mainRssKiB": 521176,
+    "mainCpuTicks": 700,
+    "cgroupBytes": 4524752896,
+    "outputBytes": 45674
+  },
+  {
+    "phase": "english",
+    "seconds": 7.079835645999992,
+    "pid": 120558,
+    "ownedRssKiB": 1301640,
+    "mainRssKiB": 541428,
+    "mainCpuTicks": 811,
+    "cgroupBytes": 4667662336,
+    "outputBytes": 234836
+  },
+  {
+    "phase": "english",
+    "seconds": 7.47550283199962,
+    "pid": 120558,
+    "ownedRssKiB": 1366832,
+    "mainRssKiB": 545316,
+    "mainCpuTicks": 879,
+    "cgroupBytes": 4711022592,
+    "outputBytes": 7231185
+  },
+  {
+    "phase": "english",
+    "seconds": 7.826018271000066,
+    "pid": 120558,
+    "ownedRssKiB": 1400392,
+    "mainRssKiB": 553516,
+    "mainCpuTicks": 915,
+    "cgroupBytes": 4718501888,
+    "outputBytes": 7233383
+  },
+  {
+    "phase": "english",
+    "seconds": 8.219173926998337,
+    "pid": 120558,
+    "ownedRssKiB": 1389892,
+    "mainRssKiB": 551604,
+    "mainCpuTicks": 960,
+    "cgroupBytes": 4692504576,
+    "outputBytes": 14512942
+  },
+  {
+    "phase": "english",
+    "seconds": 8.57719342999917,
+    "pid": 120558,
+    "ownedRssKiB": 1386188,
+    "mainRssKiB": 547848,
+    "mainCpuTicks": 1003,
+    "cgroupBytes": 4688756736,
+    "outputBytes": 14513678
+  },
+  {
+    "phase": "english",
+    "seconds": 8.948005122001632,
+    "pid": 120558,
+    "ownedRssKiB": 741692,
+    "mainRssKiB": 497736,
+    "mainCpuTicks": 1050,
+    "cgroupBytes": 4406964224,
+    "outputBytes": 14521179
+  },
+  {
+    "phase": "arabic",
+    "seconds": 0.20506529299746035,
+    "pid": 120948,
+    "ownedRssKiB": 41272,
+    "mainRssKiB": 41272,
+    "mainCpuTicks": 19,
+    "cgroupBytes": 4019224576,
+    "outputBytes": 14527411
+  },
+  {
+    "phase": "arabic",
+    "seconds": 0.7491186069964897,
+    "pid": 120948,
+    "ownedRssKiB": 75112,
+    "mainRssKiB": 75112,
+    "mainCpuTicks": 73,
+    "cgroupBytes": 4039401472,
+    "outputBytes": 14527411
+  },
+  {
+    "phase": "arabic",
+    "seconds": 1.2477808729963726,
+    "pid": 120948,
+    "ownedRssKiB": 144000,
+    "mainRssKiB": 144000,
+    "mainCpuTicks": 122,
+    "cgroupBytes": 4070031360,
+    "outputBytes": 14531583
+  },
+  {
+    "phase": "arabic",
+    "seconds": 1.6570899739963352,
+    "pid": 120948,
+    "ownedRssKiB": 337384,
+    "mainRssKiB": 213288,
+    "mainCpuTicks": 169,
+    "cgroupBytes": 4140818432,
+    "outputBytes": 14537652
+  },
+  {
+    "phase": "arabic",
+    "seconds": 2.1212145179961226,
+    "pid": 120948,
+    "ownedRssKiB": 399944,
+    "mainRssKiB": 292004,
+    "mainCpuTicks": 246,
+    "cgroupBytes": 4197273600,
+    "outputBytes": 14539572
+  },
+  {
+    "phase": "arabic",
+    "seconds": 2.8426407339939033,
+    "pid": 120948,
+    "ownedRssKiB": 466612,
+    "mainRssKiB": 358088,
+    "mainCpuTicks": 325,
+    "cgroupBytes": 4295163904,
+    "outputBytes": 14546037
+  },
+  {
+    "phase": "arabic",
+    "seconds": 3.4660392709993175,
+    "pid": 120948,
+    "ownedRssKiB": 852264,
+    "mainRssKiB": 561828,
+    "mainCpuTicks": 396,
+    "cgroupBytes": 4532277248,
+    "outputBytes": 14549411
+  },
+  {
+    "phase": "arabic",
+    "seconds": 3.8677780619982514,
+    "pid": 120948,
+    "ownedRssKiB": 977976,
+    "mainRssKiB": 687540,
+    "mainCpuTicks": 438,
+    "cgroupBytes": 4660166656,
+    "outputBytes": 14549411
+  },
+  {
+    "phase": "arabic",
+    "seconds": 4.2721347529950435,
+    "pid": 120948,
+    "ownedRssKiB": 1072712,
+    "mainRssKiB": 782276,
+    "mainCpuTicks": 480,
+    "cgroupBytes": 4757389312,
+    "outputBytes": 14549411
+  },
+  {
+    "phase": "arabic",
+    "seconds": 4.691051975998562,
+    "pid": 120948,
+    "ownedRssKiB": 1164540,
+    "mainRssKiB": 874040,
+    "mainCpuTicks": 522,
+    "cgroupBytes": 4851740672,
+    "outputBytes": 14549411
+  },
+  {
+    "phase": "arabic",
+    "seconds": 5.2213498130004155,
+    "pid": 120948,
+    "ownedRssKiB": 1260488,
+    "mainRssKiB": 969988,
+    "mainCpuTicks": 576,
+    "cgroupBytes": 4950548480,
+    "outputBytes": 14549411
+  },
+  {
+    "phase": "arabic",
+    "seconds": 5.767004743000143,
+    "pid": 120948,
+    "ownedRssKiB": 1328972,
+    "mainRssKiB": 1038472,
+    "mainCpuTicks": 631,
+    "cgroupBytes": 5020803072,
+    "outputBytes": 14549411
+  },
+  {
+    "phase": "arabic",
+    "seconds": 6.355482002996723,
+    "pid": 120948,
+    "ownedRssKiB": 1414924,
+    "mainRssKiB": 1124424,
+    "mainCpuTicks": 715,
+    "cgroupBytes": 5109141504,
+    "outputBytes": 14697494
+  },
+  {
+    "phase": "arabic",
+    "seconds": 6.882464438996976,
+    "pid": 120948,
+    "ownedRssKiB": 1495060,
+    "mainRssKiB": 1204560,
+    "mainCpuTicks": 777,
+    "cgroupBytes": 5194670080,
+    "outputBytes": 18601161
+  },
+  {
+    "phase": "arabic",
+    "seconds": 7.26066951899702,
+    "pid": 120948,
+    "ownedRssKiB": 1585168,
+    "mainRssKiB": 1294668,
+    "mainCpuTicks": 815,
+    "cgroupBytes": 5287206912,
+    "outputBytes": 18601161
+  },
+  {
+    "phase": "arabic",
+    "seconds": 7.682008972995391,
+    "pid": 120948,
+    "ownedRssKiB": 1680856,
+    "mainRssKiB": 1390356,
+    "mainCpuTicks": 858,
+    "cgroupBytes": 5385510912,
+    "outputBytes": 18601161
+  },
+  {
+    "phase": "arabic",
+    "seconds": 8.103331284997694,
+    "pid": 120948,
+    "ownedRssKiB": 1759572,
+    "mainRssKiB": 1469008,
+    "mainCpuTicks": 901,
+    "cgroupBytes": 5466251264,
+    "outputBytes": 18601161
+  },
+  {
+    "phase": "arabic",
+    "seconds": 8.590022020995093,
+    "pid": 120948,
+    "ownedRssKiB": 1864804,
+    "mainRssKiB": 1574240,
+    "mainCpuTicks": 951,
+    "cgroupBytes": 5573992448,
+    "outputBytes": 18601161
+  },
+  {
+    "phase": "arabic",
+    "seconds": 9.003572011999495,
+    "pid": 120948,
+    "ownedRssKiB": 1950988,
+    "mainRssKiB": 1660424,
+    "mainCpuTicks": 993,
+    "cgroupBytes": 5663907840,
+    "outputBytes": 18601161
+  },
+  {
+    "phase": "arabic",
+    "seconds": 9.43782109899621,
+    "pid": 120948,
+    "ownedRssKiB": 2057064,
+    "mainRssKiB": 1766500,
+    "mainCpuTicks": 1037,
+    "cgroupBytes": 5772697600,
+    "outputBytes": 18601161
+  },
+  {
+    "phase": "arabic",
+    "seconds": 9.881521953997435,
+    "pid": 120948,
+    "ownedRssKiB": 2166124,
+    "mainRssKiB": 1875560,
+    "mainCpuTicks": 1083,
+    "cgroupBytes": 5884895232,
+    "outputBytes": 18601161
+  }
+]

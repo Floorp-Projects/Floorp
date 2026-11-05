@@ -1,0 +1,428 @@
+{
+  "scope": "One fresh English setup and first requested-ar startup; no repeated Arabic runs",
+  "phases": {
+    "english": {
+      "pid": 120558,
+      "parentSamples": 1156,
+      "post3sSamples": 728,
+      "post3sLocalizationFormatMessagesSyncSamples": 0,
+      "perSecond": {
+        "0": {
+          "samples": 38,
+          "syncLocalization": 0,
+          "contextMenuSeed": 0
+        },
+        "1": {
+          "samples": 198,
+          "syncLocalization": 0,
+          "contextMenuSeed": 0
+        },
+        "2": {
+          "samples": 192,
+          "syncLocalization": 1,
+          "contextMenuSeed": 0
+        },
+        "3": {
+          "samples": 188,
+          "syncLocalization": 0,
+          "contextMenuSeed": 0
+        },
+        "4": {
+          "samples": 190,
+          "syncLocalization": 0,
+          "contextMenuSeed": 5
+        },
+        "5": {
+          "samples": 180,
+          "syncLocalization": 0,
+          "contextMenuSeed": 0
+        },
+        "6": {
+          "samples": 161,
+          "syncLocalization": 0,
+          "contextMenuSeed": 0
+        },
+        "7": {
+          "samples": 9,
+          "syncLocalization": 0,
+          "contextMenuSeed": 0
+        }
+      },
+      "post3sInclusiveSymbolicTop": [
+        {
+          "frame": "XREMain::XRE_main",
+          "samples": 728
+        },
+        {
+          "frame": "js::RunScript",
+          "samples": 534
+        },
+        {
+          "frame": "promise callback",
+          "samples": 367
+        },
+        {
+          "frame": "EventDispatcher::Dispatch",
+          "samples": 188
+        },
+        {
+          "frame": "newSession (chrome://remote/content/marionette/driver.sys.mjs:2616:19)[134]",
+          "samples": 112
+        },
+        {
+          "frame": "StartupCache::GetBuffer",
+          "samples": 107
+        },
+        {
+          "frame": "EventDispatcher::Dispatch MozAfterPaint",
+          "samples": 90
+        },
+        {
+          "frame": "ChromeUtils.importESModule",
+          "samples": 77
+        },
+        {
+          "frame": "EventListener.handleEvent",
+          "samples": 71
+        },
+        {
+          "frame": "callSingleListener (resource://gre/modules/BrowserUtils.sys.mjs:763:36)[858]",
+          "samples": 67
+        },
+        {
+          "frame": "fn (resource://gre/modules/BrowserUtils.sys.mjs:49:22)[858]",
+          "samples": 66
+        },
+        {
+          "frame": "nsInputStreamPump::OnInputStreamReady",
+          "samples": 61
+        },
+        {
+          "frame": "callModulesFromCategory (resource://gre/modules/BrowserUtils.sys.mjs:750:26)[858]",
+          "samples": 59
+        },
+        {
+          "frame": "RefreshDriver tick",
+          "samples": 56
+        },
+        {
+          "frame": "XPCWrappedJS method call",
+          "samples": 51
+        },
+        {
+          "frame": "runUpdates (chrome://noraneko/content/assets/js/external/solid-js.js line 655 > importedModule:483:20)[661]",
+          "samples": 51
+        },
+        {
+          "frame": "createRoot (chrome://noraneko/content/assets/js/external/solid-js.js line 655 > importedModule:45:20)[661]",
+          "samples": 38
+        },
+        {
+          "frame": "PresShell::DoFlushPendingNotifications Layout",
+          "samples": 38
+        },
+        {
+          "frame": "createRootHMR (chrome://noraneko/content/core.js:2749:23)[619]",
+          "samples": 37
+        },
+        {
+          "frame": "nsInputStreamPump::OnStateStop",
+          "samples": 36
+        },
+        {
+          "frame": "_delayedStartup (chrome://browser/content/browser-init.js:474:18)[389]",
+          "samples": 36
+        },
+        {
+          "frame": "stencil instantiate",
+          "samples": 35
+        },
+        {
+          "frame": "LifecycleConnectedCallback",
+          "samples": 34
+        },
+        {
+          "frame": "nsFrameLoader::ReallyStartLoadingInternal",
+          "samples": 34
+        },
+        {
+          "frame": "Styles",
+          "samples": 34
+        },
+        {
+          "frame": "initializeModules (chrome://noraneko/content/core.js:3115:33)[619]",
+          "samples": 31
+        },
+        {
+          "frame": "EventDispatcher::Dispatch DOMContentLoaded",
+          "samples": 30
+        },
+        {
+          "frame": "NoraComponentBase (chrome://noraneko/content/assets/js/base.js:25:14)[77]",
+          "samples": 30
+        },
+        {
+          "frame": "nsStreamLoader::OnStopRequest",
+          "samples": 28
+        },
+        {
+          "frame": "createRoot/updateFn< (chrome://noraneko/content/assets/js/external/solid-js.js line 655 > importedModule:51:34)[661]",
+          "samples": 28
+        }
+      ],
+      "lastSymbolicStack": [
+        "ny< (chrome://noraneko-newtab/content/assets/index-BhAFWSYD.js:18:2988)[815]",
+        "mo (chrome://noraneko-newtab/content/assets/index-BhAFWSYD.js:8:47898)[815]",
+        "uf (chrome://noraneko-newtab/content/assets/index-BhAFWSYD.js:8:67399)[815]",
+        "_f (chrome://noraneko-newtab/content/assets/index-BhAFWSYD.js:8:80579)[815]",
+        "If (chrome://noraneko-newtab/content/assets/index-BhAFWSYD.js:8:116871)[815]",
+        "Bm (chrome://noraneko-newtab/content/assets/index-BhAFWSYD.js:8:115908)[815]",
+        "js::RunScript",
+        "nr (chrome://noraneko-newtab/content/assets/index-BhAFWSYD.js:8:115433)[815]",
+        "js::RunScript",
+        "$f (chrome://noraneko-newtab/content/assets/index-BhAFWSYD.js:8:112100)[815]",
+        "cd (chrome://noraneko-newtab/content/assets/index-BhAFWSYD.js:8:124113)[815]",
+        "js::RunScript",
+        "P (chrome://noraneko-newtab/content/assets/index-BhAFWSYD.js:1:10379)[815]",
+        "js::RunScript",
+        "EventHandlerNonNull",
+        "EventDispatcher::Dispatch message",
+        "EventDispatcher::Dispatch",
+        "XREMain::XRE_main"
+      ],
+      "mallocEmittedCumulativeBySecond": {
+        "1": 45186144,
+        "2": 79325296,
+        "3": 125177776,
+        "4": 187251120,
+        "5": 345406944,
+        "6": 418253056,
+        "7": 435690752
+      },
+      "mallocEmittedLast": {
+        "ms": 7044.299051,
+        "emittedCumulativeBytes": 437279120
+      },
+      "mallocCaveat": "cumulative emitted malloc counter, not JS/native/DOM allocation attribution; startup first emitted value and profiler overhead apply",
+      "metaFeatures": [
+        "js",
+        "stackwalk",
+        "processcpu",
+        "memory"
+      ]
+    },
+    "arabic": {
+      "pid": 120948,
+      "parentSamples": 1035,
+      "post3sSamples": 612,
+      "post3sLocalizationFormatMessagesSyncSamples": 599,
+      "perSecond": {
+        "0": {
+          "samples": 45,
+          "syncLocalization": 0,
+          "contextMenuSeed": 0
+        },
+        "1": {
+          "samples": 197,
+          "syncLocalization": 0,
+          "contextMenuSeed": 0
+        },
+        "2": {
+          "samples": 181,
+          "syncLocalization": 1,
+          "contextMenuSeed": 0
+        },
+        "3": {
+          "samples": 196,
+          "syncLocalization": 183,
+          "contextMenuSeed": 184
+        },
+        "4": {
+          "samples": 200,
+          "syncLocalization": 200,
+          "contextMenuSeed": 200
+        },
+        "5": {
+          "samples": 197,
+          "syncLocalization": 197,
+          "contextMenuSeed": 197
+        },
+        "6": {
+          "samples": 19,
+          "syncLocalization": 19,
+          "contextMenuSeed": 19
+        }
+      },
+      "post3sInclusiveSymbolicTop": [
+        {
+          "frame": "XREMain::XRE_main",
+          "samples": 612
+        },
+        {
+          "frame": "EventDispatcher::Dispatch",
+          "samples": 612
+        },
+        {
+          "frame": "EventDispatcher::Dispatch MozAfterPaint",
+          "samples": 612
+        },
+        {
+          "frame": "js::RunScript",
+          "samples": 612
+        },
+        {
+          "frame": "promise callback",
+          "samples": 605
+        },
+        {
+          "frame": "NoraComponentBase/< (chrome://noraneko/content/assets/js/base.js:38:19)[480]",
+          "samples": 601
+        },
+        {
+          "frame": "NoraComponentBase (chrome://noraneko/content/assets/js/base.js:25:14)[480]",
+          "samples": 601
+        },
+        {
+          "frame": "createRoot/updateFn< (chrome://noraneko/content/assets/js/external/solid-js.js line 655 > importedModule:51:34)[519]",
+          "samples": 601
+        },
+        {
+          "frame": "initializeModules (chrome://noraneko/content/core.js:3115:33)[99]",
+          "samples": 601
+        },
+        {
+          "frame": "createRootHMR/< (chrome://noraneko/content/core.js:2750:21)[99]",
+          "samples": 601
+        },
+        {
+          "frame": "runUpdates (chrome://noraneko/content/assets/js/external/solid-js.js line 655 > importedModule:483:20)[519]",
+          "samples": 601
+        },
+        {
+          "frame": "createRoot (chrome://noraneko/content/assets/js/external/solid-js.js line 655 > importedModule:45:20)[519]",
+          "samples": 601
+        },
+        {
+          "frame": "createRootHMR (chrome://noraneko/content/core.js:2749:23)[99]",
+          "samples": 601
+        },
+        {
+          "frame": "recordSurface (chrome://noraneko/content/assets/js/index6.js:245:18)[174]",
+          "samples": 600
+        },
+        {
+          "frame": "init (chrome://noraneko/content/assets/js/index6.js:3332:7)[174]",
+          "samples": 600
+        },
+        {
+          "frame": "ContextMenu (chrome://noraneko/content/assets/js/index6.js:3326:1)[174]",
+          "samples": 600
+        },
+        {
+          "frame": "recordContainer (chrome://noraneko/content/assets/js/index6.js:251:20)[174]",
+          "samples": 600
+        },
+        {
+          "frame": "seed (chrome://noraneko/content/assets/js/index6.js:241:11)[174]",
+          "samples": 600
+        },
+        {
+          "frame": "attach (chrome://noraneko/content/assets/js/index6.js:2683:11)[174]",
+          "samples": 600
+        },
+        {
+          "frame": "seedInitialCatalog (chrome://noraneko/content/assets/js/index6.js:2717:25)[174]",
+          "samples": 600
+        },
+        {
+          "frame": "Localization.formatMessagesSync",
+          "samples": 599
+        },
+        {
+          "frame": "getLabelLocalizer/< (chrome://noraneko/content/assets/js/index6.js:188:16)[174]",
+          "samples": 599
+        },
+        {
+          "frame": "getItemLabel (chrome://noraneko/content/assets/js/index6.js:76:22)[174]",
+          "samples": 599
+        },
+        {
+          "frame": "BG_observe (resource:///modules/BrowserGlue.sys.mjs:206:37)[460]",
+          "samples": 7
+        },
+        {
+          "frame": "fn (resource://gre/modules/BrowserUtils.sys.mjs:49:22)[359]",
+          "samples": 7
+        },
+        {
+          "frame": "_delayedStartup (chrome://browser/content/browser-init.js:474:18)[302]",
+          "samples": 7
+        },
+        {
+          "frame": "nsObserverService::NotifyObservers browser-delayed-startup-finished",
+          "samples": 7
+        },
+        {
+          "frame": "XPCWrappedJS method call",
+          "samples": 7
+        },
+        {
+          "frame": "EventListener.handleEvent",
+          "samples": 7
+        },
+        {
+          "frame": "callModulesFromCategory (resource://gre/modules/BrowserUtils.sys.mjs:750:26)[359]",
+          "samples": 7
+        }
+      ],
+      "lastSymbolicStack": [
+        "Localization.formatMessagesSync",
+        "getLabelLocalizer/< (chrome://noraneko/content/assets/js/index6.js:188:16)[174]",
+        "getItemLabel (chrome://noraneko/content/assets/js/index6.js:76:22)[174]",
+        "recordContainer (chrome://noraneko/content/assets/js/index6.js:251:20)[174]",
+        "recordSurface (chrome://noraneko/content/assets/js/index6.js:245:18)[174]",
+        "seed (chrome://noraneko/content/assets/js/index6.js:241:11)[174]",
+        "seedInitialCatalog (chrome://noraneko/content/assets/js/index6.js:2717:25)[174]",
+        "attach (chrome://noraneko/content/assets/js/index6.js:2683:11)[174]",
+        "init (chrome://noraneko/content/assets/js/index6.js:3332:7)[174]",
+        "NoraComponentBase/< (chrome://noraneko/content/assets/js/base.js:38:19)[480]",
+        "js::RunScript",
+        "createRootHMR/< (chrome://noraneko/content/core.js:2750:21)[99]",
+        "createRoot/updateFn< (chrome://noraneko/content/assets/js/external/solid-js.js line 655 > importedModule:51:34)[519]",
+        "runUpdates (chrome://noraneko/content/assets/js/external/solid-js.js line 655 > importedModule:483:20)[519]",
+        "createRoot (chrome://noraneko/content/assets/js/external/solid-js.js line 655 > importedModule:45:20)[519]",
+        "createRootHMR (chrome://noraneko/content/core.js:2749:23)[99]",
+        "NoraComponentBase (chrome://noraneko/content/assets/js/base.js:25:14)[480]",
+        "js::RunScript",
+        "ContextMenu (chrome://noraneko/content/assets/js/index6.js:3326:1)[174]",
+        "js::RunScript",
+        "initializeModules (chrome://noraneko/content/core.js:3115:33)[99]",
+        "js::RunScript",
+        "promise callback",
+        "EventDispatcher::Dispatch MozAfterPaint",
+        "EventDispatcher::Dispatch",
+        "XREMain::XRE_main"
+      ],
+      "mallocEmittedCumulativeBySecond": {
+        "1": 48122944,
+        "2": 138881616,
+        "3": 307358048,
+        "4": 633401392,
+        "5": 854235760,
+        "6": 992613328,
+        "7": 1000904064
+      },
+      "mallocEmittedLast": {
+        "ms": 6094.369328,
+        "emittedCumulativeBytes": 1000904064
+      },
+      "mallocCaveat": "cumulative emitted malloc counter, not JS/native/DOM allocation attribution; startup first emitted value and profiler overhead apply",
+      "metaFeatures": [
+        "js",
+        "stackwalk",
+        "processcpu",
+        "memory"
+      ]
+    }
+  }
+}

@@ -1,0 +1,29 @@
+[
+  {
+    "phase": "english",
+    "seconds": 7.042317305000324,
+    "pid": 120558,
+    "signal": 12,
+    "label": "English-registered-profiler-path-control",
+    "registered": true,
+    "sent": true
+  },
+  {
+    "phase": "arabic",
+    "seconds": 6.100321474994416,
+    "pid": 120948,
+    "signal": 12,
+    "label": "Arabic-early-profiler-once",
+    "registered": true,
+    "sent": true
+  },
+  {
+    "phase": "arabic",
+    "seconds": 6.502280475993757,
+    "pid": 120948,
+    "signal": 34,
+    "label": "Arabic-nonminimizing-memory-report-if-registered",
+    "registered": true,
+    "sent": true
+  }
+]
