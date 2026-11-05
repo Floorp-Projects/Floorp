@@ -73,7 +73,7 @@ for prior,x in zip(old,latest):
  if k=='KAN-23':row['environment']='Debian13.6/Xvfb105/normalDBus; full3030 productionnative159/sandbox6/signed-ja; collectoronly, helperrecipe neverlaunched';row['sourceSha']={'originalBaseline':'984509d2053be7bae9027133bda7259cd706b208','candidate':'e55152c559a141001a375ac77098d141b0db3ca7'}
  rows.append(row)
  x['residualReview']={'report':'residual-review/report.md','row':'residual-review/matrix.json','satisfiedEnvironmentConditions':s['satisfied'],'notReproducedScope':s['notReproduced'],'remainingConditions':s['remaining'],'nextAvailableWork':s['next'],'fixPrAndQualification':s['fix']}
- x['remainingConditions']=s['remaining'];x['latestJiraCommentId']=row['jiraCommentId'];x.setdefault('jiraFollowupCommentIds',[])
+ x['remainingConditions']=s['remaining'];x['priorJiraCommentId']=x['jiraCommentId'];x['jiraCommentId']=row['jiraCommentId'];x['latestJiraCommentId']=row['jiraCommentId'];x.setdefault('jiraFollowupCommentIds',[])
  if row['jiraCommentId'] not in x['jiraFollowupCommentIds']:x['jiraFollowupCommentIds'].append(row['jiraCommentId'])
  x['evidence']+=['residual-review/report.md','residual-review/matrix.json']
  if k in {'KAN-8','KAN-23','KAN-48','KAN-96'}:x['evidence'].append('residual-review/'+s['newEvidence'])

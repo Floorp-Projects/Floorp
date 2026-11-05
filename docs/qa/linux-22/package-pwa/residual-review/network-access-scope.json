@@ -1,0 +1,11 @@
+{
+  "observationsCurrent": true,
+  "managedHTTPPolicy": "unrestricted",
+  "managedPolicyState": "enforced",
+  "providerDiagnostics": null,
+  "actualMusicHostConnect": "HTTP403 beforeTLS",
+  "actualMusicBrowser": "about:neterror proxyrefusal",
+  "interpretation": "desired/current broadHTTP readiness is not evidence that every destination is reachable or that credentials/permissions are absent",
+  "noProxyTLSRouteBypass": true,
+  "evidence": "KAN-96/safe-mode/music/report.md"
+}

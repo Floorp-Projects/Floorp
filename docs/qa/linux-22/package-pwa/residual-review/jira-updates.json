@@ -1,0 +1,273 @@
+{
+  "KAN-8": {
+    "key": "KAN-8",
+    "commentId": "10423",
+    "status": "進行中",
+    "statusTransition": false,
+    "labelsBefore": [
+      "area-session",
+      "draft-pr",
+      "env-blocked",
+      "floorp-stability-2026-11",
+      "full-package-tested",
+      "needs-bazzite-desktop",
+      "needs-flathub-build-review",
+      "os-linux-bazzite",
+      "p1",
+      "qa-linux-executed",
+      "reproduced-in-test",
+      "triage-reviewed"
+    ],
+    "labelsAfter": [
+      "area-session",
+      "cache-content-tested",
+      "draft-pr",
+      "env-blocked",
+      "floorp-stability-2026-11",
+      "full-package-tested",
+      "mixed-registry-guards-tested",
+      "needs-bazzite-desktop",
+      "needs-flathub-build-review",
+      "os-linux-bazzite",
+      "p1",
+      "qa-linux-executed",
+      "reproduced-in-test",
+      "triage-reviewed"
+    ],
+    "labelsAdded": [
+      "cache-content-tested",
+      "mixed-registry-guards-tested"
+    ],
+    "labelsRemoved": [],
+    "body": "## 元配布/PWA7件・最新資格と原条件の再照合（2026-11-05 UTC）\n\n正本Flathub Draft198 head d9aa24dは無変更。既存local完全Flatpak build/install・unit9成功に加え、完成packageの実default launcherで新5coldrunを実測。65555byte既知payloadは初回1requestだけ、home有効→除去→controlled XDG-only→home有効の後続4回はtransferSize0・server counter1、marker/ProfLD保持・全normalQuit0。XDG-onlyは閉じた新規QAprofileを手で移した入力fixtureであり、helper自動移行の合格ではない。既知length/prefixのbounded内容検証で任意cachebitwise監査ではない。\n\n実package launcherのmixed registry/別host/registry欠落3fixtureは、期待診断付きexit1・fixturehash不変。GUI通知・任意absolute/multiprofile/alias全網羅は未検証。Bazzite44/Flatseal/Bazaar・原permission/desktop・完全portal/systembus・公式Flathub build/signature reviewを保持。現headのGitHub check/statusは0件でありCI/配布合格としない。新欠陥なし、再build/重複PRなし。\n\n[7件統合表・新実測・再現script・matrix（QA345daf99）](https://github.com/Floorp-Projects/Floorp/tree/345daf99df68d6fa47b70a081ed23f3eabad700c/docs/qa/linux-22/package-pwa/residual-review)。元Linux22分母/担当7件を維持、KAN24は別追加表のまま。CIは標準dev harness、完全製品は既存application/package工程＋互換prebuilt nativeでfresh Gecko/strict helper-XPT/公式署名配布と区別。status維持・Done/merge/release/外部メッセージなし。"
+  },
+  "KAN-17": {
+    "key": "KAN-17",
+    "commentId": "10427",
+    "status": "未着手",
+    "statusTransition": false,
+    "labelsBefore": [
+      "area-platform",
+      "env-blocked",
+      "floorp-stability-2026-11",
+      "needs-bluefin-44",
+      "needs-bluefin-firefox-control",
+      "needs-info",
+      "needs-reporter-font-details",
+      "needs-repro",
+      "p2",
+      "qa-linux-executed",
+      "triage-reviewed"
+    ],
+    "labelsAfter": [
+      "area-platform",
+      "env-blocked",
+      "floorp-stability-2026-11",
+      "needs-bluefin-44",
+      "needs-bluefin-firefox-control",
+      "needs-info",
+      "needs-reporter-font-details",
+      "needs-repro",
+      "p2",
+      "qa-linux-executed",
+      "triage-reviewed"
+    ],
+    "labelsAdded": [],
+    "labelsRemoved": [],
+    "body": "## 元配布/PWA7件・最新資格と原条件の再照合（2026-11-05 UTC）\n\nJira全5コメント・原issue全2コメント・現matrixを照合。原Bluefin44.20261022.1/Floorp12.20.2@158.0.1は新規profile確認が未記入で、動くFirefoxがFlatpakかも未回答。元ページ/UI/fontconfig/cache/runtime差の情報は今も不足。\n\n既測のDebian/Noto可視でFloorp-Firefox4render比較・signed-ja実menu/本文・正常終了は達成済み。別WSLではfont欠落で両製品が四角、隔離Notoで改善したが、BluefinでFloorpだけ悪い原因は証明しない。今回同じfont条件の反復はしない。根拠ある製品PRなし。env-blocked/needs-bluefin-44/Firefox-control/font-detailsは原条件不足として保持し、Linux不在とは扱わない。次は原Bluefinの同一ページ/配布形式/font可視性を入力に差分比較。\n\n[7件統合表・新実測・再現script・matrix（QA345daf99）](https://github.com/Floorp-Projects/Floorp/tree/345daf99df68d6fa47b70a081ed23f3eabad700c/docs/qa/linux-22/package-pwa/residual-review)。元Linux22分母/担当7件を維持、KAN24は別追加表のまま。CIは標準dev harness、完全製品は既存application/package工程＋互換prebuilt nativeでfresh Gecko/strict helper-XPT/公式署名配布と区別。status維持・Done/merge/release/外部メッセージなし。"
+  },
+  "KAN-23": {
+    "key": "KAN-23",
+    "commentId": "10428",
+    "status": "進行中",
+    "statusTransition": false,
+    "labelsBefore": [
+      "area-platform",
+      "draft-pr",
+      "floorp-stability-2026-11",
+      "full-package-verified",
+      "needs-other-locales",
+      "p2",
+      "qa-linux-executed",
+      "related-gh-2713",
+      "reproduced-in-test",
+      "triage-reviewed"
+    ],
+    "labelsAfter": [
+      "area-platform",
+      "draft-pr",
+      "floorp-stability-2026-11",
+      "full-package-verified",
+      "needs-other-locales",
+      "needs-standard-runner-langpack",
+      "p2",
+      "qa-linux-executed",
+      "related-gh-2713",
+      "reproduced-in-test",
+      "triage-reviewed"
+    ],
+    "labelsAdded": [
+      "needs-standard-runner-langpack"
+    ],
+    "labelsRemoved": [],
+    "body": "## 元配布/PWA7件・最新資格と原条件の再照合（2026-11-05 UTC）\n\n正本Draft3030 head e55152cは無変更。標準CI42045064743は282modules/0fail（en-USのみでは旧実装も通る範囲）。完全package42067997767とbaselineのja/es-CL4対照、active signedpack/UI保持、最終omni.ja override・完全module実行は既に確認済みで再試験せず。\n\n新しい残条件としてactive signed-ja・sandbox6の完全production製品へ通常トップcollector --no-autostartを実行。1module検出/実control生成後15s結果なしtimeout。productionにはtest bootstrapがなく、製品回帰/言語pack不合格ではない。通常test-mode経路も未変更helperの実生成recipeで評価したがsandbox1/CSP無効を生成するため、ユーザーの保護維持条件に従いブラウザーへ適用・起動していない。生成設定/ソースhash/行を保存。既存標準devCIとsandbox6 fullproduct資格は独立。次は保護維持test harness設計が必要で、推測製品修正はしない。他locale/theme/channel・署名配布資格も保持。\n\n[7件統合表・新実測・再現script・matrix（QA345daf99）](https://github.com/Floorp-Projects/Floorp/tree/345daf99df68d6fa47b70a081ed23f3eabad700c/docs/qa/linux-22/package-pwa/residual-review)。元Linux22分母/担当7件を維持、KAN24は別追加表のまま。CIは標準dev harness、完全製品は既存application/package工程＋互換prebuilt nativeでfresh Gecko/strict helper-XPT/公式署名配布と区別。status維持・Done/merge/release/外部メッセージなし。"
+  },
+  "KAN-48": {
+    "key": "KAN-48",
+    "commentId": "10426",
+    "status": "未着手",
+    "statusTransition": false,
+    "labelsBefore": [
+      "area-pwa",
+      "env-blocked",
+      "floorp-stability-2026-11",
+      "needs-cachyos-kde",
+      "needs-original-site-icons",
+      "needs-repro",
+      "p2",
+      "qa-linux-executed",
+      "related-gh-2431",
+      "related-gh-2649",
+      "related-pr-3032",
+      "taskbar-pixels-verified",
+      "triage-reviewed"
+    ],
+    "labelsAfter": [
+      "area-pwa",
+      "env-blocked",
+      "floorp-stability-2026-11",
+      "needs-cachyos-kde",
+      "needs-original-site-icons",
+      "needs-repro",
+      "needs-vtmgo-privacy-flow",
+      "p2",
+      "qa-linux-executed",
+      "related-gh-2431",
+      "related-gh-2649",
+      "related-pr-3032",
+      "taskbar-pixels-verified",
+      "triage-reviewed",
+      "vrtmax-taskbar-tested"
+    ],
+    "labelsAdded": [
+      "vrtmax-taskbar-tested",
+      "needs-vtmgo-privacy-flow"
+    ],
+    "labelsRemoved": [],
+    "body": "## 元配布/PWA7件・最新資格と原条件の再照合（2026-11-05 UTC）\n\nJira全5コメント/原issue全5コメントと正本3032/3040を照合。両PRはidentity関連（各標準CI281/0・完全製品あり）で、matching-ID/wrong-Floorp-icon原症状のverifiedfixとはしない。\n\nNEW: 完全main29a3/native159、通常nested KWin6.3.6/DBus/Xvfb106、sandbox6/gatefalseで実VRTMAX HTTPS/manifest→実URLbarinstall→正常終了→未変更generated launcher coldWayland。app_id/KWin resourceClass/desktop一致、actualtaskbar VRT32はgenerated PNGの縮小とMAE0.4316/max1、同crop対Floorp32はMAE117.61。原誤Floorp iconはこの実site条件でも未再現。OS既信頼managedproxy公開CAだけを専用profileへ通常NSS登録しTLSを復旧、検証無効化なし。初回certinfra失敗も保持。\n\nVTMGOはprivacy gateへ転送/no manifestで未資格。同意・認証・mirrorによる代替合格なし。原CachyOS/KDE6.7.5/pacman/報告版profile・full desktop/permission/物理GPUは保持。既測taskmodel復旧/opaque画像比較は反復せず、新欠陥・新PRなし。\n\n[7件統合表・新実測・再現script・matrix（QA345daf99）](https://github.com/Floorp-Projects/Floorp/tree/345daf99df68d6fa47b70a081ed23f3eabad700c/docs/qa/linux-22/package-pwa/residual-review)。元Linux22分母/担当7件を維持、KAN24は別追加表のまま。CIは標準dev harness、完全製品は既存application/package工程＋互換prebuilt nativeでfresh Gecko/strict helper-XPT/公式署名配布と区別。status維持・Done/merge/release/外部メッセージなし。"
+  },
+  "KAN-49": {
+    "key": "KAN-49",
+    "commentId": "10422",
+    "status": "進行中",
+    "statusTransition": false,
+    "labelsBefore": [
+      "area-pwa",
+      "draft-pr",
+      "env-blocked",
+      "floorp-stability-2026-11",
+      "full-package-verified",
+      "needs-manjaro-kde",
+      "needs-profile-lock-cause",
+      "p2",
+      "qa-linux-executed",
+      "related-gh-2800",
+      "related-pr-3040",
+      "reproduced-in-test",
+      "triage-reviewed"
+    ],
+    "labelsAfter": [
+      "area-pwa",
+      "draft-pr",
+      "env-blocked",
+      "floorp-stability-2026-11",
+      "full-package-verified",
+      "needs-manjaro-kde",
+      "needs-profile-lock-cause",
+      "p2",
+      "qa-linux-executed",
+      "related-gh-2800",
+      "related-pr-3040",
+      "reproduced-in-test",
+      "triage-reviewed"
+    ],
+    "labelsAdded": [],
+    "labelsRemoved": [],
+    "body": "## 元配布/PWA7件・最新資格と原条件の再照合（2026-11-05 UTC）\n\n正本Draft3032 head8249e234＋依存3040 head2deb165dは無変更。各標準CI42050337102/42077116984の281modules/0failと、3040完全product42077174018/artifact13439144608でnativeWayland6条件を修正確認済み。最新7件matrixのCI欄は旧3032だけでなく依存3040の実head/runへ対応付け、旧欄は履歴として保持した。古いfull-build/reportの通常browser残問題は3040以前の記録として区別。\n\n今回同じ成功6条件・traceを反復しない。原Manjaro/KDE/Outlook/Teams/taskbar pixels、全field無効legacy randomidentity限界、初回writable app-root lock生成原因未特定は保持。後続fresh未追跡6成功やnative27files同一は最初のgate failureを抹消しない。具体的trigger/caller未特定のため追加推測修正なし。env-blockedは原desktop不足で、Linux/Wayland/fullproduct不在という意味ではない。\n\n[7件統合表・新実測・再現script・matrix（QA345daf99）](https://github.com/Floorp-Projects/Floorp/tree/345daf99df68d6fa47b70a081ed23f3eabad700c/docs/qa/linux-22/package-pwa/residual-review)。元Linux22分母/担当7件を維持、KAN24は別追加表のまま。CIは標準dev harness、完全製品は既存application/package工程＋互換prebuilt nativeでfresh Gecko/strict helper-XPT/公式署名配布と区別。status維持・Done/merge/release/外部メッセージなし。"
+  },
+  "KAN-89": {
+    "key": "KAN-89",
+    "commentId": "10424",
+    "status": "未着手",
+    "statusTransition": false,
+    "labelsBefore": [
+      "area-platform",
+      "env-blocked",
+      "floorp-github-import-2026-11",
+      "needs-kwin-desktop-association",
+      "needs-original-manjaro-kde",
+      "needs-repro",
+      "p3",
+      "qa-linux-executed",
+      "related-gh-2897",
+      "triage-reviewed"
+    ],
+    "labelsAfter": [
+      "area-platform",
+      "env-blocked",
+      "floorp-github-import-2026-11",
+      "needs-kwin-desktop-association",
+      "needs-original-manjaro-kde",
+      "needs-repro",
+      "p3",
+      "qa-linux-executed",
+      "related-gh-2897",
+      "triage-reviewed"
+    ],
+    "labelsAdded": [],
+    "labelsRemoved": [],
+    "body": "## 元配布/PWA7件・最新資格と原条件の再照合（2026-11-05 UTC）\n\nJira全4コメント/原issue全2コメントと現matrix/3030を照合。正確main client・3locale signedpack・KWinX11/Plasma・実AltTab/taskbar画像は既測で、同条件の反復はしない。現159 FlatpakはNET_WM_ICON不在、AltTab genericXが3locale同一、taskbar Floorp32近一致、desktopFileName空。これは原154系Manjaro/KDE6.7.4/Xorg/FlathubのFirefox logo再現でも、全画面Floorp表示合格でもない。\n\n3030のlegacy-branding機構は関連のみで、原因/症状同一・duplicate/verifiedfixにしない。原正常Flatpak/portal/desktop関連付け、KWin desktopFileName/icon解決、locale/theme/package差が残るためenv-blocked/needs-original-manjaro-kde/needs-kwin-desktop-associationを保持。完全systembus/物理GPUなしのCloud prefix環境を原desktopに偽装しない。新規製品PRなし。\n\n[7件統合表・新実測・再現script・matrix（QA345daf99）](https://github.com/Floorp-Projects/Floorp/tree/345daf99df68d6fa47b70a081ed23f3eabad700c/docs/qa/linux-22/package-pwa/residual-review)。元Linux22分母/担当7件を維持、KAN24は別追加表のまま。CIは標準dev harness、完全製品は既存application/package工程＋互換prebuilt nativeでfresh Gecko/strict helper-XPT/公式署名配布と区別。status維持・Done/merge/release/外部メッセージなし。"
+  },
+  "KAN-96": {
+    "key": "KAN-96",
+    "commentId": "10425",
+    "status": "未着手",
+    "statusTransition": false,
+    "labelsBefore": [
+      "area-pwa",
+      "env-blocked",
+      "floorp-github-import-2026-11",
+      "needs-cachyos-original-site",
+      "needs-repro",
+      "p2",
+      "qa-linux-executed",
+      "related-gh-2683",
+      "triage-reviewed"
+    ],
+    "labelsAfter": [
+      "area-pwa",
+      "coop-coep-tested",
+      "env-blocked",
+      "floorp-github-import-2026-11",
+      "needs-cachyos-original-site",
+      "needs-music-site-network",
+      "needs-pwa-container-rollout",
+      "needs-repro",
+      "p2",
+      "qa-linux-executed",
+      "related-gh-2683",
+      "safe-mode-fixture-tested",
+      "source-container-tested",
+      "triage-reviewed"
+    ],
+    "labelsAdded": [
+      "coop-coep-tested",
+      "source-container-tested",
+      "safe-mode-fixture-tested",
+      "needs-pwa-container-rollout",
+      "needs-music-site-network"
+    ],
+    "labelsRemoved": [],
+    "body": "## 元配布/PWA7件・最新資格と原条件の再照合（2026-11-05 UTC）\n\n既存merged2680 actor修正と整合する新条件を完全main29a3/native159/sandbox6/通常DBusで実測。実webCOOP+COEP/crossOriginIsolated/SABページから普通sourceと真正userContextId7 sourceの実UIinstall2件＋生成PWA coldlaunch2件が成功。source-container actor/installは達成したが、通常pwa_container_support=falseのため保存/起動PWAはcontext0であり、assigned-container PWA資格は残す（強制rolloutなし）。\n\nさらに実 --safe-mode/appinfo.inSafeMode=trueでisolated fixtureからUI作成、生成launcherに明記したsafe-mode flagでcold起動し5.01sでPWA/actor/isolatedcontent準備完了。desktop/製品不変・正常終了。元YouTube Musicにも通常inheritedproxy/OS既信頼公開CA/厳格TLSで1回アクセスしたが、host CONNECT403 beforeTLS＋実browserのproxy拒否 about:neterror。site/PWA install未資格。エラーページ上のactor例外はHTTP actor対象外であり製品バグ/未再現判定にしない。迂回・再試行・認証/同意/再生なし。\n\n旧plain fixtureは反復せず、手順不備は修正と実製品結果から分離。原CachyOS/package/profile/permission、実外部crosssite、YouTubeMusic到達性、assignedcontainer通常rollout・物理入力/GPUは保持。新製品欠陥なし、重複PRなし。\n\n[7件統合表・新実測・再現script・matrix（QA345daf99）](https://github.com/Floorp-Projects/Floorp/tree/345daf99df68d6fa47b70a081ed23f3eabad700c/docs/qa/linux-22/package-pwa/residual-review)。元Linux22分母/担当7件を維持、KAN24は別追加表のまま。CIは標準dev harness、完全製品は既存application/package工程＋互換prebuilt nativeでfresh Gecko/strict helper-XPT/公式署名配布と区別。status維持・Done/merge/release/外部メッセージなし。"
+  }
+}

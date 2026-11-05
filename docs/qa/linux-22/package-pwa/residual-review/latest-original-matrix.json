@@ -34,12 +34,13 @@
       "residual-review/matrix.json",
       "residual-review/KAN-8/report.md"
     ],
-    "jiraCommentId": "10272",
+    "jiraCommentId": "10423",
     "jiraUrl": "https://floorp-projects.atlassian.net/browse/KAN-8",
     "candidatePackageCommit": "7a3b387dc2c79a14b8f49b603b5b8d85d720fb233b325238d9d4d7a03bafde5a",
     "candidatePackageSignatureScope": "locally built unsigned test package; not official Flathub signed distribution",
     "jiraFollowupCommentIds": [
-      "10308"
+      "10308",
+      "10423"
     ],
     "residualReview": {
       "report": "residual-review/report.md",
@@ -60,13 +61,14 @@
       "nextAvailableWork": "今回cache内容・XDG-only既存配置・実launcher3guardを追加実測済み。原Bazzite/署名配布条件は現Debianで代替しない。",
       "fixPrAndQualification": "Flathub Draft198 d9aa24d; unit9成功、local完全Flatpak build/install成功。現headのGitHub checks/status0。Flathub署名配布資格なし。"
     },
-    "latestJiraCommentId": "10308"
+    "priorJiraCommentId": "10272",
+    "latestJiraCommentId": "10423"
   },
   {
     "sourceSha": "984509d2053be7bae9027133bda7259cd706b208",
     "productVersion": "Floorp12.21.1 / Gecko159.0.1 / BuildID20261103153232",
     "newPr": null,
-    "jiraCommentId": "10273",
+    "jiraCommentId": "10427",
     "key": "KAN-17",
     "github": "https://github.com/Floorp-Projects/Floorp/issues/2968",
     "environment": "Debian13.6; Xvfb/X11; official Flatpak1.16.6; Floorp runtime26.08 / Firefox runtime25.08; normal sessionbus; sandbox pref6; portal incomplete",
@@ -94,7 +96,8 @@
     ],
     "jiraUrl": "https://floorp-projects.atlassian.net/browse/KAN-17",
     "jiraFollowupCommentIds": [
-      "10300"
+      "10300",
+      "10427"
     ],
     "residualReview": {
       "report": "residual-review/report.md",
@@ -113,12 +116,13 @@
       "nextAvailableWork": "原Bluefin側の上記材料が得られればpackage/font差分比較。既済みのNoto-present Debian反復で原条件を解消しない。",
       "fixPrAndQualification": "根拠ある製品修正PRなし。公式Floorp159 Flatpak26.08/Firefox159 Flatpak25.08比較、signed-ja実UIは既測。"
     },
-    "latestJiraCommentId": "10300"
+    "priorJiraCommentId": "10273",
+    "latestJiraCommentId": "10427"
   },
   {
     "sourceSha": "984509d2053be7bae9027133bda7259cd706b208",
     "productVersion": "Floorp12.21.1 / Gecko159.0.1 / BuildID20261103153232",
-    "jiraCommentId": "10274",
+    "jiraCommentId": "10428",
     "key": "KAN-23",
     "github": "https://github.com/Floorp-Projects/Floorp/issues/2897",
     "environment": "Debian13.6 Xvfb/X11; actual official product and isolated modified product copy; synthetic automation; normal sessionbus; sandbox pref6",
@@ -150,7 +154,8 @@
     "jiraUrl": "https://floorp-projects.atlassian.net/browse/KAN-23",
     "jiraFollowupCommentIds": [
       "10295",
-      "10352"
+      "10352",
+      "10428"
     ],
     "fullProductionBuild": {
       "sourceSha": "e55152c559a141001a375ac77098d141b0db3ca7",
@@ -161,7 +166,7 @@
       "manualProductPatch": false,
       "baselineRun": 42068377281
     },
-    "latestJiraCommentId": "10352",
+    "latestJiraCommentId": "10428",
     "residualReview": {
       "report": "residual-review/report.md",
       "row": "residual-review/matrix.json",
@@ -178,7 +183,8 @@
       ],
       "nextAvailableWork": "標準test-mode helperはsandbox1/CSP無効を生成するため起動せず。保護維持の別harness設計が必要。製品不具合とせず同じcollector timeoutも反復しない。",
       "fixPrAndQualification": "Draft3030 e55152c; 標準CI42045064743 282modules/0fail。完全package42067997767・ja/es-CL対照4件成功。"
-    }
+    },
+    "priorJiraCommentId": "10274"
   },
   {
     "key": "KAN-48",
@@ -200,7 +206,7 @@
     "prRelation": "verified shared-class/grouping comparison only; not a verified fix of original matching-app_id/wrong-icon symptom",
     "newPr": null,
     "duplicateOf": null,
-    "jiraCommentId": "10320",
+    "jiraCommentId": "10426",
     "previousJiraCommentIds": [
       "10292",
       "10301"
@@ -241,9 +247,10 @@
       "nextAvailableWork": "今回VRTMAXを追加実測。VTMGOのprivacy/原siteflowを同意や認証の突破で置換しない。原OSのmatching-ID/wrong-icon境界へ引継ぎ。",
       "fixPrAndQualification": "3032/3040はidentity関連のみ。CI各281成功、完全製品あり。ただし元のmatching-ID/wrong-iconを直した証明ではない。"
     },
-    "latestJiraCommentId": "10320",
+    "priorJiraCommentId": "10320",
+    "latestJiraCommentId": "10426",
     "jiraFollowupCommentIds": [
-      "10320"
+      "10426"
     ],
     "priorEnvironment": "Debian13.6; actual KWin6.3.6 nested Wayland/Plasma on Xvfb91; ordinary session DBus; standard KWrite control; task model recovered by Exec-prefix metadata correction; incomplete full system portal/hardware",
     "priorTestCommand": "python3 KAN-48/followup/session.py start --baseline; standard KWrite control; session.py repair-prefix; actual UI pwa_ui_probe.py --port2885; python3 KAN-48/followup/cold_icons.py",
@@ -252,7 +259,7 @@
   {
     "sourceSha": "2deb165d75290ffd4f602ad078512dc42fc3a332",
     "productVersion": "Floorp12.21.1 / Gecko159.0.1 / BuildID20261103153232",
-    "jiraCommentId": "10275",
+    "jiraCommentId": "10422",
     "key": "KAN-49",
     "github": "https://github.com/Floorp-Projects/Floorp/issues/2649",
     "environment": "Debian13.6; KWin6.3.6 native nested Wayland; independent normal DBus; synthetic UI/CLI; sandbox6 and rolloutfalse unchanged; authenticated unsigned full application packages",
@@ -301,7 +308,8 @@
       "10302",
       "10309",
       "10353",
-      "10378"
+      "10378",
+      "10422"
     ],
     "newPrHead": "2deb165d75290ffd4f602ad078512dc42fc3a332",
     "ci": {
@@ -325,7 +333,7 @@
       "caseCount": 6,
       "qualifiedFor": "recorded6nativeWayland identity cases, not strict release/helper/XPT/signeddistribution qualification"
     },
-    "latestJiraCommentId": "10378",
+    "latestJiraCommentId": "10422",
     "baselineSourceSha": "984509d2053be7bae9027133bda7259cd706b208",
     "comparisonSourceSha": "8249e234adfbb3e877e4a20cf5f57d7264d9a447",
     "existingPrHead": "8249e234adfbb3e877e4a20cf5f57d7264d9a447",
@@ -362,6 +370,7 @@
       "nextAvailableWork": "既存read-only native比較・trace診断・未追跡fresh比較済み。lockの具体的trigger/callerが得られるまで同じ6成功条件や推測修正を反復しない。",
       "fixPrAndQualification": "Draft3032 8249e234 +依存3040 2deb165d。標準CI42050337102/42077116984各281/0。完全3040 run42077174018・nativeWayland6条件成功。"
     },
+    "priorJiraCommentId": "10275",
     "priorCi": {
       "head": "8249e234adfbb3e877e4a20cf5f57d7264d9a447",
       "run": 42050337102,
@@ -437,7 +446,7 @@
     "cleanup": "display90 socket absent; additional dedicatedHOME+display90 processes found0",
     "testedDateLocal": "2026-11-06",
     "timezone": "Asia/Tokyo",
-    "jiraCommentId": "10321",
+    "jiraCommentId": "10424",
     "previousJiraCommentIds": [
       "10293"
     ],
@@ -461,16 +470,17 @@
       "nextAvailableWork": "正常な原desktop/Flatpak関連付け条件が先決。Exec移設済prefixで同じ3locale反復やKAN23との推測duplicateは行わない。",
       "fixPrAndQualification": "3030はlegacy-branding経路の関連のみ。KAN89のverified fix/duplicateではない。"
     },
-    "latestJiraCommentId": "10321",
+    "priorJiraCommentId": "10321",
+    "latestJiraCommentId": "10424",
     "jiraFollowupCommentIds": [
-      "10321"
+      "10424"
     ]
   },
   {
     "sourceSha": "29a3eb23145da90706d8a94441373278521cc737",
     "productVersion": "Floorp12.21.1 / Gecko159.0.1 / BuildID20261103153232",
     "newPr": null,
-    "jiraCommentId": "10276",
+    "jiraCommentId": "10425",
     "key": "KAN-96",
     "github": "https://github.com/Floorp-Projects/Floorp/issues/2695",
     "environment": "Debian13.6/Xvfb103 X11/normalDBus/sandbox6; syntheticinput",
@@ -512,9 +522,10 @@
       "nextAvailableWork": "今回COOP/COEP・container source・safe-mode coldflowへ追加実測。実YouTubeMusicは現在のproxy CONNECT403を別記録し、迂回/強制rolloutで合格を作らない。",
       "fixPrAndQualification": "既存merged2680 actor修正と整合。完全main29a3 packageで新COOP/COEP2UIinstall+2generatedlaunch成功、追加PR不要。"
     },
-    "latestJiraCommentId": "10276",
+    "priorJiraCommentId": "10276",
+    "latestJiraCommentId": "10425",
     "jiraFollowupCommentIds": [
-      "10276"
+      "10425"
     ],
     "priorEnvironment": "Debian13.6 Xvfb/X11; official native product; synthetic UI; normal sessionbus; sandbox6",
     "priorTestCommand": "python3 pwa_ui_probe.py --port 2839 --out pwa-ui-run-3; python3 pwa_order_probe.py",

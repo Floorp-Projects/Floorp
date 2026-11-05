@@ -1,7 +1,7 @@
 [
   {
     "path": "build_overview.py",
-    "bytes": 15556
+    "bytes": 15639
   },
   {
     "path": "download-cache-cleanup.json",
@@ -24,12 +24,20 @@
     "bytes": 2306
   },
   {
+    "path": "jira-updates.json",
+    "bytes": 17453
+  },
+  {
     "path": "latest-original-matrix.json",
-    "bytes": 28987
+    "bytes": 29292
   },
   {
     "path": "matrix.json",
     "bytes": 16750
+  },
+  {
+    "path": "network-access-scope.json",
+    "bytes": 481
   },
   {
     "path": "original-condition-audit.json",
@@ -53,7 +61,7 @@
   },
   {
     "path": "scope.json",
-    "bytes": 491
+    "bytes": 821
   },
   {
     "path": "KAN-23/matrix.json",

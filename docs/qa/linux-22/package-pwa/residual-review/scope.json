@@ -12,5 +12,19 @@
   ],
   "originalLinuxDenominator": 22,
   "additionalKAN24Excluded": true,
-  "scope": "reconcile original7 latest evidence/Jira and newly executable residual conditions; do not repeat completed trial conditions"
+  "scope": "reconcile original7 latest evidence/Jira and newly executable residual conditions; do not repeat completed trial conditions",
+  "proofCommit": "345daf99df68d6fa47b70a081ed23f3eabad700c",
+  "latestAssignedIssueCount": 7,
+  "jiraUpdatedKeys": [
+    "KAN-8",
+    "KAN-17",
+    "KAN-23",
+    "KAN-48",
+    "KAN-49",
+    "KAN-89",
+    "KAN-96"
+  ],
+  "originalOsEnvNeedsLabelsRemoved": [],
+  "productSourceOrPrHeadChanged": false,
+  "statusTransitions": false
 }

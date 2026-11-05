@@ -22,7 +22,7 @@
     "existingPr": "https://github.com/flathub/one.ablaze.floorp/pull/198",
     "newPr": null,
     "latestJiraBefore": "10308",
-    "jiraCommentId": "10308",
+    "jiraCommentId": "10423",
     "jiraStatusBefore": "進行中",
     "originalEnvLabelsMeaning": "env-blocked/needs are retained only for the explicit original OS/desktop/permission/site/rollout conditions; no unavailable-Linux claim",
     "evidence": [
@@ -55,7 +55,7 @@
     "existingPr": null,
     "newPr": null,
     "latestJiraBefore": "10300",
-    "jiraCommentId": "10300",
+    "jiraCommentId": "10427",
     "jiraStatusBefore": "未着手",
     "originalEnvLabelsMeaning": "env-blocked/needs are retained only for the explicit original OS/desktop/permission/site/rollout conditions; no unavailable-Linux claim",
     "evidence": [
@@ -91,7 +91,7 @@
     "existingPr": null,
     "newPr": "https://github.com/Floorp-Projects/Floorp/pull/3030",
     "latestJiraBefore": "10352",
-    "jiraCommentId": "10352",
+    "jiraCommentId": "10428",
     "jiraStatusBefore": "進行中",
     "originalEnvLabelsMeaning": "env-blocked/needs are retained only for the explicit original OS/desktop/permission/site/rollout conditions; no unavailable-Linux claim",
     "evidence": [
@@ -124,7 +124,7 @@
     "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/3032",
     "newPr": null,
     "latestJiraBefore": "10320",
-    "jiraCommentId": "10320",
+    "jiraCommentId": "10426",
     "jiraStatusBefore": "未着手",
     "originalEnvLabelsMeaning": "env-blocked/needs are retained only for the explicit original OS/desktop/permission/site/rollout conditions; no unavailable-Linux claim",
     "evidence": [
@@ -157,7 +157,7 @@
     "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/3032",
     "newPr": "https://github.com/Floorp-Projects/Floorp/pull/3040",
     "latestJiraBefore": "10378",
-    "jiraCommentId": "10378",
+    "jiraCommentId": "10422",
     "jiraStatusBefore": "進行中",
     "originalEnvLabelsMeaning": "env-blocked/needs are retained only for the explicit original OS/desktop/permission/site/rollout conditions; no unavailable-Linux claim",
     "evidence": [
@@ -190,7 +190,7 @@
     "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/3030",
     "newPr": null,
     "latestJiraBefore": "10321",
-    "jiraCommentId": "10321",
+    "jiraCommentId": "10424",
     "jiraStatusBefore": "未着手",
     "originalEnvLabelsMeaning": "env-blocked/needs are retained only for the explicit original OS/desktop/permission/site/rollout conditions; no unavailable-Linux claim",
     "evidence": [
@@ -224,7 +224,7 @@
     "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2680",
     "newPr": null,
     "latestJiraBefore": "10276",
-    "jiraCommentId": "10276",
+    "jiraCommentId": "10425",
     "jiraStatusBefore": "未着手",
     "originalEnvLabelsMeaning": "env-blocked/needs are retained only for the explicit original OS/desktop/permission/site/rollout conditions; no unavailable-Linux claim",
     "evidence": [
