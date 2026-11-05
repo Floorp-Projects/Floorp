@@ -5,7 +5,7 @@
   "dependencyBase": "1c37f3f2c53c5b213e679321e0116d4c7474661f",
   "environment": "Cloud Debian; Windows package prepared remotely; native Windows execution delegated locally, not performed",
   "testCommand": "local native Windows harness using acceptance-88.json and chrome-snapshot.js; verify_artifact_zip.py before use",
-  "result": "one pinned unsigned Windows package run in progress; no Windows execution or qualification claimed",
+  "result": "First-attempt pinned unsigned Windows complete application/package success; source/logs/API and actual ZIP/installer EXE digests verified; Windows runtime behavior not executed or qualified in Cloud",
   "remainingConditions": [
     "Windows product execution88states",
     "original Windows12.20.2 comparison",
@@ -19,7 +19,29 @@
   "jiraCommentId": "10448",
   "packageRun": 42120232936,
   "dispatchCount": 1,
-  "installer": null,
+  "installer": {
+    "sourceSha": "0e80f14dc439dde7817c0620f0fc112d54dfba80",
+    "run": 42120232936,
+    "artifact": 13459735586,
+    "artifactName": "noraneko-windows-x86_64-unsigned-installer",
+    "zipSha256": "67df130a88bf1f201621e8f0a1590c59cc9f18aae640350a53ed3bf1c2b2a933",
+    "zipBytes": 116708306,
+    "members": [
+      {
+        "name": "floorp-windows-x86_64.installer.exe",
+        "bytes": 116731728,
+        "sha256": "e125dd8cdc62df753f225bb12b3fa332627220ca24f26939936c4c6031efb2a5"
+      }
+    ],
+    "installerMembers": [
+      {
+        "name": "floorp-windows-x86_64.installer.exe",
+        "bytes": 116731728,
+        "sha256": "e125dd8cdc62df753f225bb12b3fa332627220ca24f26939936c4c6031efb2a5"
+      }
+    ],
+    "executed": false
+  },
   "evidence": [
     "report.md",
     "preflight.json",
@@ -29,8 +51,17 @@
     "acceptance-88.json",
     "package-run-api.json",
     "runtime-windows-artifact-api.json",
-    "runtime-run-api.json"
+    "runtime-run-api.json",
+    "package-jobs-api.json",
+    "package-artifacts-api.json",
+    "source-log-verification.json",
+    "package-job.log",
+    "installer-artifact-api.json",
+    "installer-verification.json",
+    "final-subject-recheck.json"
   ],
   "originalLinuxDenominator": 22,
-  "repeatedLinuxTests": 0
+  "repeatedLinuxTests": 0,
+  "packageConclusion": "success",
+  "attempt": 1
 }

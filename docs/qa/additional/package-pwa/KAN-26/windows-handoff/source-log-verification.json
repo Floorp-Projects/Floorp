@@ -1,0 +1,63 @@
+{
+  "run": 42120232936,
+  "attempt": 1,
+  "conclusion": "success",
+  "job": 127570368936,
+  "sourceSha": "0e80f14dc439dde7817c0620f0fc112d54dfba80",
+  "runtimeSha": "8965ffc346d426ccdf919bd18585e4d4a0c21654",
+  "logFile": "package-job.log",
+  "logSha256": "6aa7acd6815028ccbf5a7d3f7b4e7734b42cf9e3c3e09abbdf098255db1f8fd1",
+  "requiredSteps": {
+    "Validate provenance contract": "success",
+    "Checkout Floorp-Projects/Floorp-runtime": "success",
+    "Checkout Floorp-Projects/Floorp": "success",
+    "Download verified Runtime artifact by ID": "success",
+    "Stage exact Runtime v2 bundle": "success",
+    "Build Noraneko": "success",
+    "Build": "success",
+    "Package noraneko": "success",
+    "Publish Unsigned Installer \ud83c\udf81": "success"
+  },
+  "signingSteps": {
+    "binary": "skipped",
+    "installer": "skipped"
+  },
+  "lines": [
+    {
+      "line": 508,
+      "text": "2026-11-05T22:19:04.6037845Z [command]/usr/bin/git checkout --progress --force 8965ffc346d426ccdf919bd18585e4d4a0c21654"
+    },
+    {
+      "line": 915,
+      "text": "2026-11-05T22:19:43.3908765Z [command]/usr/bin/git checkout --progress --force 0e80f14dc439dde7817c0620f0fc112d54dfba80"
+    },
+    {
+      "line": 1104,
+      "text": "2026-11-05T22:19:44.5296587Z - floorp-windows-x86_64-moz-artifact (ID: 13270584849, Size: 139982539, Expected Digest: sha256:9eb4b08f2da5cdd535232edeb37ddd3866d47492e17f5921e115eb4a4f7180c6)"
+    },
+    {
+      "line": 1236,
+      "text": "2026-11-05T22:19:48.7256922Z Verified compiled Runtime source provenance: 8965ffc346d426ccdf919bd18585e4d4a0c21654"
+    },
+    {
+      "line": 5063,
+      "text": "2026-11-05T22:27:57.6187195Z SHA256 digest of uploaded artifact zip is 67df130a88bf1f201621e8f0a1590c59cc9f18aae640350a53ed3bf1c2b2a933"
+    },
+    {
+      "line": 5065,
+      "text": "2026-11-05T22:27:58.0704675Z Artifact noraneko-windows-x86_64-unsigned-installer.zip successfully finalized. Artifact ID 13459735586"
+    },
+    {
+      "line": 1109,
+      "text": "2026-11-05T22:19:48.6427271Z SHA256 digest of downloaded artifact is 9eb4b08f2da5cdd535232edeb37ddd3866d47492e17f5921e115eb4a4f7180c6"
+    }
+  ],
+  "windowsExecution": false,
+  "rawLogSha256": "adee12927fd8c40d7ea0c812260394e60933e014dcef38591c4a30d83ee0c738",
+  "redactions": {
+    "contact": 1,
+    "transientArtifactTransportUrls": 1,
+    "sourceAndDigestEvidenceUnchanged": true,
+    "rawLocalExcluded": true
+  }
+}

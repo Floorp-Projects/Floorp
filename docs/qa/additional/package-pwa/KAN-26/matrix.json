@@ -117,11 +117,18 @@
     "windowsHandoff": {
       "run": 42120232936,
       "dispatchCount": 1,
-      "status": "in_progress",
+      "status": "completed",
       "executedInCloud": false,
       "report": "windows-handoff/report.md",
       "acceptance": "windows-handoff/acceptance-88.json",
-      "previousQaFullSha": "3235cf0c0ebe31ea79763dd3f2705410949fbaeb"
+      "previousQaFullSha": "3235cf0c0ebe31ea79763dd3f2705410949fbaeb",
+      "conclusion": "success",
+      "attempt": 1,
+      "artifact": 13459735586,
+      "artifactName": "noraneko-windows-x86_64-unsigned-installer",
+      "zipSha256": "67df130a88bf1f201621e8f0a1590c59cc9f18aae640350a53ed3bf1c2b2a933",
+      "installerSha256": "e125dd8cdc62df753f225bb12b3fa332627220ca24f26939936c4c6031efb2a5",
+      "windowsExecution": "not performed; local coordinator handoff"
     }
   }
 ]

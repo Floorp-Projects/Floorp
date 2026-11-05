@@ -9,17 +9,18 @@ import zipfile
 SOURCE = '0e80f14dc439dde7817c0620f0fc112d54dfba80'
 RUN = 42120232936
 
-def verify(archive, metadata):
+def verify_stream(stream, metadata, size):
     assert metadata['expired'] is False
     assert metadata['workflow_run']['id'] == RUN
     assert metadata['workflow_run']['head_sha'] == SOURCE
     assert 'unsigned-installer' in metadata['name']
-    with archive.open('rb') as stream:
-        digest = hashlib.file_digest(stream, 'sha256').hexdigest()
+    stream.seek(0)
+    digest = hashlib.file_digest(stream, 'sha256').hexdigest()
     assert metadata['digest'] == 'sha256:' + digest
-    assert archive.stat().st_size == metadata['size_in_bytes']
+    assert size == metadata['size_in_bytes']
+    stream.seek(0)
     members = []
-    with zipfile.ZipFile(archive) as bundle:
+    with zipfile.ZipFile(stream) as bundle:
         for entry in bundle.infolist():
             if entry.is_dir():
                 continue
@@ -31,8 +32,12 @@ def verify(archive, metadata):
     assert installers, 'No final installer EXE member'
     return {'sourceSha': SOURCE, 'run': RUN, 'artifact': metadata['id'],
             'artifactName': metadata['name'], 'zipSha256': digest,
-            'zipBytes': archive.stat().st_size, 'members': members,
+            'zipBytes': size, 'members': members,
             'installerMembers': installers, 'executed': False}
+
+def verify(archive, metadata):
+    with archive.open('rb') as stream:
+        return verify_stream(stream, metadata, archive.stat().st_size)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)

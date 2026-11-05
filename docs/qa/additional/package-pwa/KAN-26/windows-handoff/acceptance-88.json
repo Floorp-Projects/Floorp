@@ -11,92 +11,8 @@
   ],
   "cases": [
     {
-      "id": "fluerial-h-hover-blue",
-      "design": "fluerial",
-      "verticalMode": false,
-      "expandedVerticalRequired": false,
-      "expectedRoles": [
-        {
-          "role": "blue",
-          "selected": false,
-          "multiselected": false,
-          "hover": true
-        },
-        {
-          "role": "orange",
-          "selected": true,
-          "multiselected": false,
-          "hover": false
-        },
-        {
-          "role": "normal",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        }
-      ],
-      "indicatorSource": "native .tab-context-line",
-      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
-    },
-    {
-      "id": "fluerial-h-multi-hover-blue",
-      "design": "fluerial",
-      "verticalMode": false,
-      "expandedVerticalRequired": false,
-      "expectedRoles": [
-        {
-          "role": "blue",
-          "selected": false,
-          "multiselected": true,
-          "hover": true
-        },
-        {
-          "role": "orange",
-          "selected": true,
-          "multiselected": true,
-          "hover": false
-        },
-        {
-          "role": "normal",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        }
-      ],
-      "indicatorSource": "native .tab-context-line",
-      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
-    },
-    {
-      "id": "fluerial-h-selected-blue",
-      "design": "fluerial",
-      "verticalMode": false,
-      "expandedVerticalRequired": false,
-      "expectedRoles": [
-        {
-          "role": "blue",
-          "selected": true,
-          "multiselected": false,
-          "hover": false
-        },
-        {
-          "role": "orange",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        },
-        {
-          "role": "normal",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        }
-      ],
-      "indicatorSource": "native .tab-context-line",
-      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
-    },
-    {
-      "id": "fluerial-h-selected-normal",
-      "design": "fluerial",
+      "id": "proton-h-selected-normal",
+      "design": "proton",
       "verticalMode": false,
       "expandedVerticalRequired": false,
       "expectedRoles": [
@@ -123,94 +39,10 @@
       "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
     },
     {
-      "id": "fluerial-h-selected-orange",
-      "design": "fluerial",
+      "id": "proton-h-selected-blue",
+      "design": "proton",
       "verticalMode": false,
       "expandedVerticalRequired": false,
-      "expectedRoles": [
-        {
-          "role": "blue",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        },
-        {
-          "role": "orange",
-          "selected": true,
-          "multiselected": false,
-          "hover": false
-        },
-        {
-          "role": "normal",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        }
-      ],
-      "indicatorSource": "native .tab-context-line",
-      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
-    },
-    {
-      "id": "fluerial-v-hover-blue",
-      "design": "fluerial",
-      "verticalMode": true,
-      "expandedVerticalRequired": true,
-      "expectedRoles": [
-        {
-          "role": "blue",
-          "selected": false,
-          "multiselected": false,
-          "hover": true
-        },
-        {
-          "role": "orange",
-          "selected": true,
-          "multiselected": false,
-          "hover": false
-        },
-        {
-          "role": "normal",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        }
-      ],
-      "indicatorSource": "native .tab-context-line",
-      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
-    },
-    {
-      "id": "fluerial-v-multi-hover-blue",
-      "design": "fluerial",
-      "verticalMode": true,
-      "expandedVerticalRequired": true,
-      "expectedRoles": [
-        {
-          "role": "blue",
-          "selected": false,
-          "multiselected": true,
-          "hover": true
-        },
-        {
-          "role": "orange",
-          "selected": true,
-          "multiselected": true,
-          "hover": false
-        },
-        {
-          "role": "normal",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        }
-      ],
-      "indicatorSource": "native .tab-context-line",
-      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
-    },
-    {
-      "id": "fluerial-v-selected-blue",
-      "design": "fluerial",
-      "verticalMode": true,
-      "expandedVerticalRequired": true,
       "expectedRoles": [
         {
           "role": "blue",
@@ -235,38 +67,10 @@
       "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
     },
     {
-      "id": "fluerial-v-selected-normal",
-      "design": "fluerial",
-      "verticalMode": true,
-      "expandedVerticalRequired": true,
-      "expectedRoles": [
-        {
-          "role": "blue",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        },
-        {
-          "role": "orange",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        },
-        {
-          "role": "normal",
-          "selected": true,
-          "multiselected": false,
-          "hover": false
-        }
-      ],
-      "indicatorSource": "native .tab-context-line",
-      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
-    },
-    {
-      "id": "fluerial-v-selected-orange",
-      "design": "fluerial",
-      "verticalMode": true,
-      "expandedVerticalRequired": true,
+      "id": "proton-h-selected-orange",
+      "design": "proton",
+      "verticalMode": false,
+      "expandedVerticalRequired": false,
       "expectedRoles": [
         {
           "role": "blue",
@@ -288,286 +92,6 @@
         }
       ],
       "indicatorSource": "native .tab-context-line",
-      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
-    },
-    {
-      "id": "lepton-h-hover-blue",
-      "design": "lepton",
-      "verticalMode": false,
-      "expandedVerticalRequired": false,
-      "expectedRoles": [
-        {
-          "role": "blue",
-          "selected": false,
-          "multiselected": false,
-          "hover": true
-        },
-        {
-          "role": "orange",
-          "selected": true,
-          "multiselected": false,
-          "hover": false
-        },
-        {
-          "role": "normal",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        }
-      ],
-      "indicatorSource": "alternative .tab-content::before bottom border",
-      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
-    },
-    {
-      "id": "lepton-h-multi-hover-blue",
-      "design": "lepton",
-      "verticalMode": false,
-      "expandedVerticalRequired": false,
-      "expectedRoles": [
-        {
-          "role": "blue",
-          "selected": false,
-          "multiselected": true,
-          "hover": true
-        },
-        {
-          "role": "orange",
-          "selected": true,
-          "multiselected": true,
-          "hover": false
-        },
-        {
-          "role": "normal",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        }
-      ],
-      "indicatorSource": "alternative .tab-content::before bottom border",
-      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
-    },
-    {
-      "id": "lepton-h-selected-blue",
-      "design": "lepton",
-      "verticalMode": false,
-      "expandedVerticalRequired": false,
-      "expectedRoles": [
-        {
-          "role": "blue",
-          "selected": true,
-          "multiselected": false,
-          "hover": false
-        },
-        {
-          "role": "orange",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        },
-        {
-          "role": "normal",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        }
-      ],
-      "indicatorSource": "alternative .tab-content::before bottom border",
-      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
-    },
-    {
-      "id": "lepton-h-selected-normal",
-      "design": "lepton",
-      "verticalMode": false,
-      "expandedVerticalRequired": false,
-      "expectedRoles": [
-        {
-          "role": "blue",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        },
-        {
-          "role": "orange",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        },
-        {
-          "role": "normal",
-          "selected": true,
-          "multiselected": false,
-          "hover": false
-        }
-      ],
-      "indicatorSource": "alternative .tab-content::before bottom border",
-      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
-    },
-    {
-      "id": "lepton-h-selected-orange",
-      "design": "lepton",
-      "verticalMode": false,
-      "expandedVerticalRequired": false,
-      "expectedRoles": [
-        {
-          "role": "blue",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        },
-        {
-          "role": "orange",
-          "selected": true,
-          "multiselected": false,
-          "hover": false
-        },
-        {
-          "role": "normal",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        }
-      ],
-      "indicatorSource": "alternative .tab-content::before bottom border",
-      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
-    },
-    {
-      "id": "lepton-v-hover-blue",
-      "design": "lepton",
-      "verticalMode": true,
-      "expandedVerticalRequired": true,
-      "expectedRoles": [
-        {
-          "role": "blue",
-          "selected": false,
-          "multiselected": false,
-          "hover": true
-        },
-        {
-          "role": "orange",
-          "selected": true,
-          "multiselected": false,
-          "hover": false
-        },
-        {
-          "role": "normal",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        }
-      ],
-      "indicatorSource": "alternative .tab-content::before bottom border",
-      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
-    },
-    {
-      "id": "lepton-v-multi-hover-blue",
-      "design": "lepton",
-      "verticalMode": true,
-      "expandedVerticalRequired": true,
-      "expectedRoles": [
-        {
-          "role": "blue",
-          "selected": false,
-          "multiselected": true,
-          "hover": true
-        },
-        {
-          "role": "orange",
-          "selected": true,
-          "multiselected": true,
-          "hover": false
-        },
-        {
-          "role": "normal",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        }
-      ],
-      "indicatorSource": "alternative .tab-content::before bottom border",
-      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
-    },
-    {
-      "id": "lepton-v-selected-blue",
-      "design": "lepton",
-      "verticalMode": true,
-      "expandedVerticalRequired": true,
-      "expectedRoles": [
-        {
-          "role": "blue",
-          "selected": true,
-          "multiselected": false,
-          "hover": false
-        },
-        {
-          "role": "orange",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        },
-        {
-          "role": "normal",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        }
-      ],
-      "indicatorSource": "alternative .tab-content::before bottom border",
-      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
-    },
-    {
-      "id": "lepton-v-selected-normal",
-      "design": "lepton",
-      "verticalMode": true,
-      "expandedVerticalRequired": true,
-      "expectedRoles": [
-        {
-          "role": "blue",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        },
-        {
-          "role": "orange",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        },
-        {
-          "role": "normal",
-          "selected": true,
-          "multiselected": false,
-          "hover": false
-        }
-      ],
-      "indicatorSource": "alternative .tab-content::before bottom border",
-      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
-    },
-    {
-      "id": "lepton-v-selected-orange",
-      "design": "lepton",
-      "verticalMode": true,
-      "expandedVerticalRequired": true,
-      "expectedRoles": [
-        {
-          "role": "blue",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        },
-        {
-          "role": "orange",
-          "selected": true,
-          "multiselected": false,
-          "hover": false
-        },
-        {
-          "role": "normal",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        }
-      ],
-      "indicatorSource": "alternative .tab-content::before bottom border",
       "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
     },
     {
@@ -627,10 +151,206 @@
       "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
     },
     {
-      "id": "proton-h-selected-blue",
+      "id": "proton-h-extra-selected-blue-hover-blue",
       "design": "proton",
       "verticalMode": false,
       "expandedVerticalRequired": false,
+      "expectedRoles": [
+        {
+          "role": "blue",
+          "selected": true,
+          "multiselected": false,
+          "hover": true
+        },
+        {
+          "role": "orange",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        },
+        {
+          "role": "normal",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        }
+      ],
+      "indicatorSource": "native .tab-context-line",
+      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
+    },
+    {
+      "id": "proton-h-extra-selected-orange-hover-orange",
+      "design": "proton",
+      "verticalMode": false,
+      "expandedVerticalRequired": false,
+      "expectedRoles": [
+        {
+          "role": "blue",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        },
+        {
+          "role": "orange",
+          "selected": true,
+          "multiselected": false,
+          "hover": true
+        },
+        {
+          "role": "normal",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        }
+      ],
+      "indicatorSource": "native .tab-context-line",
+      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
+    },
+    {
+      "id": "proton-h-extra-selected-blue-hover-inactive-orange",
+      "design": "proton",
+      "verticalMode": false,
+      "expandedVerticalRequired": false,
+      "expectedRoles": [
+        {
+          "role": "blue",
+          "selected": true,
+          "multiselected": false,
+          "hover": false
+        },
+        {
+          "role": "orange",
+          "selected": false,
+          "multiselected": false,
+          "hover": true
+        },
+        {
+          "role": "normal",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        }
+      ],
+      "indicatorSource": "native .tab-context-line",
+      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
+    },
+    {
+      "id": "proton-h-extra-multi-selected-blue-hover-blue",
+      "design": "proton",
+      "verticalMode": false,
+      "expandedVerticalRequired": false,
+      "expectedRoles": [
+        {
+          "role": "blue",
+          "selected": true,
+          "multiselected": true,
+          "hover": true
+        },
+        {
+          "role": "orange",
+          "selected": false,
+          "multiselected": true,
+          "hover": false
+        },
+        {
+          "role": "normal",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        }
+      ],
+      "indicatorSource": "native .tab-context-line",
+      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
+    },
+    {
+      "id": "proton-h-extra-multi-selected-orange-hover-orange",
+      "design": "proton",
+      "verticalMode": false,
+      "expandedVerticalRequired": false,
+      "expectedRoles": [
+        {
+          "role": "blue",
+          "selected": false,
+          "multiselected": true,
+          "hover": false
+        },
+        {
+          "role": "orange",
+          "selected": true,
+          "multiselected": true,
+          "hover": true
+        },
+        {
+          "role": "normal",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        }
+      ],
+      "indicatorSource": "native .tab-context-line",
+      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
+    },
+    {
+      "id": "proton-h-extra-selected-normal-hover-normal",
+      "design": "proton",
+      "verticalMode": false,
+      "expandedVerticalRequired": false,
+      "expectedRoles": [
+        {
+          "role": "blue",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        },
+        {
+          "role": "orange",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        },
+        {
+          "role": "normal",
+          "selected": true,
+          "multiselected": false,
+          "hover": true
+        }
+      ],
+      "indicatorSource": "native .tab-context-line",
+      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
+    },
+    {
+      "id": "proton-v-selected-normal",
+      "design": "proton",
+      "verticalMode": true,
+      "expandedVerticalRequired": true,
+      "expectedRoles": [
+        {
+          "role": "blue",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        },
+        {
+          "role": "orange",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        },
+        {
+          "role": "normal",
+          "selected": true,
+          "multiselected": false,
+          "hover": false
+        }
+      ],
+      "indicatorSource": "native .tab-context-line",
+      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
+    },
+    {
+      "id": "proton-v-selected-blue",
+      "design": "proton",
+      "verticalMode": true,
+      "expandedVerticalRequired": true,
       "expectedRoles": [
         {
           "role": "blue",
@@ -655,38 +375,10 @@
       "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
     },
     {
-      "id": "proton-h-selected-normal",
+      "id": "proton-v-selected-orange",
       "design": "proton",
-      "verticalMode": false,
-      "expandedVerticalRequired": false,
-      "expectedRoles": [
-        {
-          "role": "blue",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        },
-        {
-          "role": "orange",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        },
-        {
-          "role": "normal",
-          "selected": true,
-          "multiselected": false,
-          "hover": false
-        }
-      ],
-      "indicatorSource": "native .tab-context-line",
-      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
-    },
-    {
-      "id": "proton-h-selected-orange",
-      "design": "proton",
-      "verticalMode": false,
-      "expandedVerticalRequired": false,
+      "verticalMode": true,
+      "expandedVerticalRequired": true,
       "expectedRoles": [
         {
           "role": "blue",
@@ -767,7 +459,7 @@
       "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
     },
     {
-      "id": "proton-v-selected-blue",
+      "id": "proton-v-extra-selected-blue-hover-blue",
       "design": "proton",
       "verticalMode": true,
       "expandedVerticalRequired": true,
@@ -776,7 +468,7 @@
           "role": "blue",
           "selected": true,
           "multiselected": false,
-          "hover": false
+          "hover": true
         },
         {
           "role": "orange",
@@ -795,7 +487,7 @@
       "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
     },
     {
-      "id": "proton-v-selected-normal",
+      "id": "proton-v-extra-selected-orange-hover-orange",
       "design": "proton",
       "verticalMode": true,
       "expandedVerticalRequired": true,
@@ -808,13 +500,13 @@
         },
         {
           "role": "orange",
-          "selected": false,
+          "selected": true,
           "multiselected": false,
-          "hover": false
+          "hover": true
         },
         {
           "role": "normal",
-          "selected": true,
+          "selected": false,
           "multiselected": false,
           "hover": false
         }
@@ -823,8 +515,484 @@
       "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
     },
     {
-      "id": "proton-v-selected-orange",
+      "id": "proton-v-extra-selected-blue-hover-inactive-orange",
       "design": "proton",
+      "verticalMode": true,
+      "expandedVerticalRequired": true,
+      "expectedRoles": [
+        {
+          "role": "blue",
+          "selected": true,
+          "multiselected": false,
+          "hover": false
+        },
+        {
+          "role": "orange",
+          "selected": false,
+          "multiselected": false,
+          "hover": true
+        },
+        {
+          "role": "normal",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        }
+      ],
+      "indicatorSource": "native .tab-context-line",
+      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
+    },
+    {
+      "id": "proton-v-extra-multi-selected-blue-hover-blue",
+      "design": "proton",
+      "verticalMode": true,
+      "expandedVerticalRequired": true,
+      "expectedRoles": [
+        {
+          "role": "blue",
+          "selected": true,
+          "multiselected": true,
+          "hover": true
+        },
+        {
+          "role": "orange",
+          "selected": false,
+          "multiselected": true,
+          "hover": false
+        },
+        {
+          "role": "normal",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        }
+      ],
+      "indicatorSource": "native .tab-context-line",
+      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
+    },
+    {
+      "id": "proton-v-extra-multi-selected-orange-hover-orange",
+      "design": "proton",
+      "verticalMode": true,
+      "expandedVerticalRequired": true,
+      "expectedRoles": [
+        {
+          "role": "blue",
+          "selected": false,
+          "multiselected": true,
+          "hover": false
+        },
+        {
+          "role": "orange",
+          "selected": true,
+          "multiselected": true,
+          "hover": true
+        },
+        {
+          "role": "normal",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        }
+      ],
+      "indicatorSource": "native .tab-context-line",
+      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
+    },
+    {
+      "id": "proton-v-extra-selected-normal-hover-normal",
+      "design": "proton",
+      "verticalMode": true,
+      "expandedVerticalRequired": true,
+      "expectedRoles": [
+        {
+          "role": "blue",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        },
+        {
+          "role": "orange",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        },
+        {
+          "role": "normal",
+          "selected": true,
+          "multiselected": false,
+          "hover": true
+        }
+      ],
+      "indicatorSource": "native .tab-context-line",
+      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
+    },
+    {
+      "id": "lepton-h-selected-normal",
+      "design": "lepton",
+      "verticalMode": false,
+      "expandedVerticalRequired": false,
+      "expectedRoles": [
+        {
+          "role": "blue",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        },
+        {
+          "role": "orange",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        },
+        {
+          "role": "normal",
+          "selected": true,
+          "multiselected": false,
+          "hover": false
+        }
+      ],
+      "indicatorSource": "alternative .tab-content::before bottom border",
+      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
+    },
+    {
+      "id": "lepton-h-selected-blue",
+      "design": "lepton",
+      "verticalMode": false,
+      "expandedVerticalRequired": false,
+      "expectedRoles": [
+        {
+          "role": "blue",
+          "selected": true,
+          "multiselected": false,
+          "hover": false
+        },
+        {
+          "role": "orange",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        },
+        {
+          "role": "normal",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        }
+      ],
+      "indicatorSource": "alternative .tab-content::before bottom border",
+      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
+    },
+    {
+      "id": "lepton-h-selected-orange",
+      "design": "lepton",
+      "verticalMode": false,
+      "expandedVerticalRequired": false,
+      "expectedRoles": [
+        {
+          "role": "blue",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        },
+        {
+          "role": "orange",
+          "selected": true,
+          "multiselected": false,
+          "hover": false
+        },
+        {
+          "role": "normal",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        }
+      ],
+      "indicatorSource": "alternative .tab-content::before bottom border",
+      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
+    },
+    {
+      "id": "lepton-h-hover-blue",
+      "design": "lepton",
+      "verticalMode": false,
+      "expandedVerticalRequired": false,
+      "expectedRoles": [
+        {
+          "role": "blue",
+          "selected": false,
+          "multiselected": false,
+          "hover": true
+        },
+        {
+          "role": "orange",
+          "selected": true,
+          "multiselected": false,
+          "hover": false
+        },
+        {
+          "role": "normal",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        }
+      ],
+      "indicatorSource": "alternative .tab-content::before bottom border",
+      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
+    },
+    {
+      "id": "lepton-h-multi-hover-blue",
+      "design": "lepton",
+      "verticalMode": false,
+      "expandedVerticalRequired": false,
+      "expectedRoles": [
+        {
+          "role": "blue",
+          "selected": false,
+          "multiselected": true,
+          "hover": true
+        },
+        {
+          "role": "orange",
+          "selected": true,
+          "multiselected": true,
+          "hover": false
+        },
+        {
+          "role": "normal",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        }
+      ],
+      "indicatorSource": "alternative .tab-content::before bottom border",
+      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
+    },
+    {
+      "id": "lepton-h-extra-selected-blue-hover-blue",
+      "design": "lepton",
+      "verticalMode": false,
+      "expandedVerticalRequired": false,
+      "expectedRoles": [
+        {
+          "role": "blue",
+          "selected": true,
+          "multiselected": false,
+          "hover": true
+        },
+        {
+          "role": "orange",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        },
+        {
+          "role": "normal",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        }
+      ],
+      "indicatorSource": "alternative .tab-content::before bottom border",
+      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
+    },
+    {
+      "id": "lepton-h-extra-selected-orange-hover-orange",
+      "design": "lepton",
+      "verticalMode": false,
+      "expandedVerticalRequired": false,
+      "expectedRoles": [
+        {
+          "role": "blue",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        },
+        {
+          "role": "orange",
+          "selected": true,
+          "multiselected": false,
+          "hover": true
+        },
+        {
+          "role": "normal",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        }
+      ],
+      "indicatorSource": "alternative .tab-content::before bottom border",
+      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
+    },
+    {
+      "id": "lepton-h-extra-selected-blue-hover-inactive-orange",
+      "design": "lepton",
+      "verticalMode": false,
+      "expandedVerticalRequired": false,
+      "expectedRoles": [
+        {
+          "role": "blue",
+          "selected": true,
+          "multiselected": false,
+          "hover": false
+        },
+        {
+          "role": "orange",
+          "selected": false,
+          "multiselected": false,
+          "hover": true
+        },
+        {
+          "role": "normal",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        }
+      ],
+      "indicatorSource": "alternative .tab-content::before bottom border",
+      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
+    },
+    {
+      "id": "lepton-h-extra-multi-selected-blue-hover-blue",
+      "design": "lepton",
+      "verticalMode": false,
+      "expandedVerticalRequired": false,
+      "expectedRoles": [
+        {
+          "role": "blue",
+          "selected": true,
+          "multiselected": true,
+          "hover": true
+        },
+        {
+          "role": "orange",
+          "selected": false,
+          "multiselected": true,
+          "hover": false
+        },
+        {
+          "role": "normal",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        }
+      ],
+      "indicatorSource": "alternative .tab-content::before bottom border",
+      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
+    },
+    {
+      "id": "lepton-h-extra-multi-selected-orange-hover-orange",
+      "design": "lepton",
+      "verticalMode": false,
+      "expandedVerticalRequired": false,
+      "expectedRoles": [
+        {
+          "role": "blue",
+          "selected": false,
+          "multiselected": true,
+          "hover": false
+        },
+        {
+          "role": "orange",
+          "selected": true,
+          "multiselected": true,
+          "hover": true
+        },
+        {
+          "role": "normal",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        }
+      ],
+      "indicatorSource": "alternative .tab-content::before bottom border",
+      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
+    },
+    {
+      "id": "lepton-h-extra-selected-normal-hover-normal",
+      "design": "lepton",
+      "verticalMode": false,
+      "expandedVerticalRequired": false,
+      "expectedRoles": [
+        {
+          "role": "blue",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        },
+        {
+          "role": "orange",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        },
+        {
+          "role": "normal",
+          "selected": true,
+          "multiselected": false,
+          "hover": true
+        }
+      ],
+      "indicatorSource": "alternative .tab-content::before bottom border",
+      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
+    },
+    {
+      "id": "lepton-v-selected-normal",
+      "design": "lepton",
+      "verticalMode": true,
+      "expandedVerticalRequired": true,
+      "expectedRoles": [
+        {
+          "role": "blue",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        },
+        {
+          "role": "orange",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        },
+        {
+          "role": "normal",
+          "selected": true,
+          "multiselected": false,
+          "hover": false
+        }
+      ],
+      "indicatorSource": "alternative .tab-content::before bottom border",
+      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
+    },
+    {
+      "id": "lepton-v-selected-blue",
+      "design": "lepton",
+      "verticalMode": true,
+      "expandedVerticalRequired": true,
+      "expectedRoles": [
+        {
+          "role": "blue",
+          "selected": true,
+          "multiselected": false,
+          "hover": false
+        },
+        {
+          "role": "orange",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        },
+        {
+          "role": "normal",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        }
+      ],
+      "indicatorSource": "alternative .tab-content::before bottom border",
+      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
+    },
+    {
+      "id": "lepton-v-selected-orange",
+      "design": "lepton",
       "verticalMode": true,
       "expandedVerticalRequired": true,
       "expectedRoles": [
@@ -847,7 +1015,315 @@
           "hover": false
         }
       ],
-      "indicatorSource": "native .tab-context-line",
+      "indicatorSource": "alternative .tab-content::before bottom border",
+      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
+    },
+    {
+      "id": "lepton-v-hover-blue",
+      "design": "lepton",
+      "verticalMode": true,
+      "expandedVerticalRequired": true,
+      "expectedRoles": [
+        {
+          "role": "blue",
+          "selected": false,
+          "multiselected": false,
+          "hover": true
+        },
+        {
+          "role": "orange",
+          "selected": true,
+          "multiselected": false,
+          "hover": false
+        },
+        {
+          "role": "normal",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        }
+      ],
+      "indicatorSource": "alternative .tab-content::before bottom border",
+      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
+    },
+    {
+      "id": "lepton-v-multi-hover-blue",
+      "design": "lepton",
+      "verticalMode": true,
+      "expandedVerticalRequired": true,
+      "expectedRoles": [
+        {
+          "role": "blue",
+          "selected": false,
+          "multiselected": true,
+          "hover": true
+        },
+        {
+          "role": "orange",
+          "selected": true,
+          "multiselected": true,
+          "hover": false
+        },
+        {
+          "role": "normal",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        }
+      ],
+      "indicatorSource": "alternative .tab-content::before bottom border",
+      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
+    },
+    {
+      "id": "lepton-v-extra-selected-blue-hover-blue",
+      "design": "lepton",
+      "verticalMode": true,
+      "expandedVerticalRequired": true,
+      "expectedRoles": [
+        {
+          "role": "blue",
+          "selected": true,
+          "multiselected": false,
+          "hover": true
+        },
+        {
+          "role": "orange",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        },
+        {
+          "role": "normal",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        }
+      ],
+      "indicatorSource": "alternative .tab-content::before bottom border",
+      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
+    },
+    {
+      "id": "lepton-v-extra-selected-orange-hover-orange",
+      "design": "lepton",
+      "verticalMode": true,
+      "expandedVerticalRequired": true,
+      "expectedRoles": [
+        {
+          "role": "blue",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        },
+        {
+          "role": "orange",
+          "selected": true,
+          "multiselected": false,
+          "hover": true
+        },
+        {
+          "role": "normal",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        }
+      ],
+      "indicatorSource": "alternative .tab-content::before bottom border",
+      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
+    },
+    {
+      "id": "lepton-v-extra-selected-blue-hover-inactive-orange",
+      "design": "lepton",
+      "verticalMode": true,
+      "expandedVerticalRequired": true,
+      "expectedRoles": [
+        {
+          "role": "blue",
+          "selected": true,
+          "multiselected": false,
+          "hover": false
+        },
+        {
+          "role": "orange",
+          "selected": false,
+          "multiselected": false,
+          "hover": true
+        },
+        {
+          "role": "normal",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        }
+      ],
+      "indicatorSource": "alternative .tab-content::before bottom border",
+      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
+    },
+    {
+      "id": "lepton-v-extra-multi-selected-blue-hover-blue",
+      "design": "lepton",
+      "verticalMode": true,
+      "expandedVerticalRequired": true,
+      "expectedRoles": [
+        {
+          "role": "blue",
+          "selected": true,
+          "multiselected": true,
+          "hover": true
+        },
+        {
+          "role": "orange",
+          "selected": false,
+          "multiselected": true,
+          "hover": false
+        },
+        {
+          "role": "normal",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        }
+      ],
+      "indicatorSource": "alternative .tab-content::before bottom border",
+      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
+    },
+    {
+      "id": "lepton-v-extra-multi-selected-orange-hover-orange",
+      "design": "lepton",
+      "verticalMode": true,
+      "expandedVerticalRequired": true,
+      "expectedRoles": [
+        {
+          "role": "blue",
+          "selected": false,
+          "multiselected": true,
+          "hover": false
+        },
+        {
+          "role": "orange",
+          "selected": true,
+          "multiselected": true,
+          "hover": true
+        },
+        {
+          "role": "normal",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        }
+      ],
+      "indicatorSource": "alternative .tab-content::before bottom border",
+      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
+    },
+    {
+      "id": "lepton-v-extra-selected-normal-hover-normal",
+      "design": "lepton",
+      "verticalMode": true,
+      "expandedVerticalRequired": true,
+      "expectedRoles": [
+        {
+          "role": "blue",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        },
+        {
+          "role": "orange",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        },
+        {
+          "role": "normal",
+          "selected": true,
+          "multiselected": false,
+          "hover": true
+        }
+      ],
+      "indicatorSource": "alternative .tab-content::before bottom border",
+      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
+    },
+    {
+      "id": "protonfix-h-selected-normal",
+      "design": "protonfix",
+      "verticalMode": false,
+      "expandedVerticalRequired": false,
+      "expectedRoles": [
+        {
+          "role": "blue",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        },
+        {
+          "role": "orange",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        },
+        {
+          "role": "normal",
+          "selected": true,
+          "multiselected": false,
+          "hover": false
+        }
+      ],
+      "indicatorSource": "alternative .tab-content::before bottom border",
+      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
+    },
+    {
+      "id": "protonfix-h-selected-blue",
+      "design": "protonfix",
+      "verticalMode": false,
+      "expandedVerticalRequired": false,
+      "expectedRoles": [
+        {
+          "role": "blue",
+          "selected": true,
+          "multiselected": false,
+          "hover": false
+        },
+        {
+          "role": "orange",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        },
+        {
+          "role": "normal",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        }
+      ],
+      "indicatorSource": "alternative .tab-content::before bottom border",
+      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
+    },
+    {
+      "id": "protonfix-h-selected-orange",
+      "design": "protonfix",
+      "verticalMode": false,
+      "expandedVerticalRequired": false,
+      "expectedRoles": [
+        {
+          "role": "blue",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        },
+        {
+          "role": "orange",
+          "selected": true,
+          "multiselected": false,
+          "hover": false
+        },
+        {
+          "role": "normal",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        }
+      ],
+      "indicatorSource": "alternative .tab-content::before bottom border",
       "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
     },
     {
@@ -907,10 +1383,206 @@
       "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
     },
     {
-      "id": "protonfix-h-selected-blue",
+      "id": "protonfix-h-extra-selected-blue-hover-blue",
       "design": "protonfix",
       "verticalMode": false,
       "expandedVerticalRequired": false,
+      "expectedRoles": [
+        {
+          "role": "blue",
+          "selected": true,
+          "multiselected": false,
+          "hover": true
+        },
+        {
+          "role": "orange",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        },
+        {
+          "role": "normal",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        }
+      ],
+      "indicatorSource": "alternative .tab-content::before bottom border",
+      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
+    },
+    {
+      "id": "protonfix-h-extra-selected-orange-hover-orange",
+      "design": "protonfix",
+      "verticalMode": false,
+      "expandedVerticalRequired": false,
+      "expectedRoles": [
+        {
+          "role": "blue",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        },
+        {
+          "role": "orange",
+          "selected": true,
+          "multiselected": false,
+          "hover": true
+        },
+        {
+          "role": "normal",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        }
+      ],
+      "indicatorSource": "alternative .tab-content::before bottom border",
+      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
+    },
+    {
+      "id": "protonfix-h-extra-selected-blue-hover-inactive-orange",
+      "design": "protonfix",
+      "verticalMode": false,
+      "expandedVerticalRequired": false,
+      "expectedRoles": [
+        {
+          "role": "blue",
+          "selected": true,
+          "multiselected": false,
+          "hover": false
+        },
+        {
+          "role": "orange",
+          "selected": false,
+          "multiselected": false,
+          "hover": true
+        },
+        {
+          "role": "normal",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        }
+      ],
+      "indicatorSource": "alternative .tab-content::before bottom border",
+      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
+    },
+    {
+      "id": "protonfix-h-extra-multi-selected-blue-hover-blue",
+      "design": "protonfix",
+      "verticalMode": false,
+      "expandedVerticalRequired": false,
+      "expectedRoles": [
+        {
+          "role": "blue",
+          "selected": true,
+          "multiselected": true,
+          "hover": true
+        },
+        {
+          "role": "orange",
+          "selected": false,
+          "multiselected": true,
+          "hover": false
+        },
+        {
+          "role": "normal",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        }
+      ],
+      "indicatorSource": "alternative .tab-content::before bottom border",
+      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
+    },
+    {
+      "id": "protonfix-h-extra-multi-selected-orange-hover-orange",
+      "design": "protonfix",
+      "verticalMode": false,
+      "expandedVerticalRequired": false,
+      "expectedRoles": [
+        {
+          "role": "blue",
+          "selected": false,
+          "multiselected": true,
+          "hover": false
+        },
+        {
+          "role": "orange",
+          "selected": true,
+          "multiselected": true,
+          "hover": true
+        },
+        {
+          "role": "normal",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        }
+      ],
+      "indicatorSource": "alternative .tab-content::before bottom border",
+      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
+    },
+    {
+      "id": "protonfix-h-extra-selected-normal-hover-normal",
+      "design": "protonfix",
+      "verticalMode": false,
+      "expandedVerticalRequired": false,
+      "expectedRoles": [
+        {
+          "role": "blue",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        },
+        {
+          "role": "orange",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        },
+        {
+          "role": "normal",
+          "selected": true,
+          "multiselected": false,
+          "hover": true
+        }
+      ],
+      "indicatorSource": "alternative .tab-content::before bottom border",
+      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
+    },
+    {
+      "id": "protonfix-v-selected-normal",
+      "design": "protonfix",
+      "verticalMode": true,
+      "expandedVerticalRequired": true,
+      "expectedRoles": [
+        {
+          "role": "blue",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        },
+        {
+          "role": "orange",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        },
+        {
+          "role": "normal",
+          "selected": true,
+          "multiselected": false,
+          "hover": false
+        }
+      ],
+      "indicatorSource": "alternative .tab-content::before bottom border",
+      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
+    },
+    {
+      "id": "protonfix-v-selected-blue",
+      "design": "protonfix",
+      "verticalMode": true,
+      "expandedVerticalRequired": true,
       "expectedRoles": [
         {
           "role": "blue",
@@ -935,38 +1607,10 @@
       "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
     },
     {
-      "id": "protonfix-h-selected-normal",
+      "id": "protonfix-v-selected-orange",
       "design": "protonfix",
-      "verticalMode": false,
-      "expandedVerticalRequired": false,
-      "expectedRoles": [
-        {
-          "role": "blue",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        },
-        {
-          "role": "orange",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        },
-        {
-          "role": "normal",
-          "selected": true,
-          "multiselected": false,
-          "hover": false
-        }
-      ],
-      "indicatorSource": "alternative .tab-content::before bottom border",
-      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
-    },
-    {
-      "id": "protonfix-h-selected-orange",
-      "design": "protonfix",
-      "verticalMode": false,
-      "expandedVerticalRequired": false,
+      "verticalMode": true,
+      "expandedVerticalRequired": true,
       "expectedRoles": [
         {
           "role": "blue",
@@ -1047,7 +1691,7 @@
       "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
     },
     {
-      "id": "protonfix-v-selected-blue",
+      "id": "protonfix-v-extra-selected-blue-hover-blue",
       "design": "protonfix",
       "verticalMode": true,
       "expandedVerticalRequired": true,
@@ -1056,7 +1700,7 @@
           "role": "blue",
           "selected": true,
           "multiselected": false,
-          "hover": false
+          "hover": true
         },
         {
           "role": "orange",
@@ -1075,35 +1719,7 @@
       "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
     },
     {
-      "id": "protonfix-v-selected-normal",
-      "design": "protonfix",
-      "verticalMode": true,
-      "expandedVerticalRequired": true,
-      "expectedRoles": [
-        {
-          "role": "blue",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        },
-        {
-          "role": "orange",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        },
-        {
-          "role": "normal",
-          "selected": true,
-          "multiselected": false,
-          "hover": false
-        }
-      ],
-      "indicatorSource": "alternative .tab-content::before bottom border",
-      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
-    },
-    {
-      "id": "protonfix-v-selected-orange",
+      "id": "protonfix-v-extra-selected-orange-hover-orange",
       "design": "protonfix",
       "verticalMode": true,
       "expandedVerticalRequired": true,
@@ -1118,398 +1734,6 @@
           "role": "orange",
           "selected": true,
           "multiselected": false,
-          "hover": false
-        },
-        {
-          "role": "normal",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        }
-      ],
-      "indicatorSource": "alternative .tab-content::before bottom border",
-      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
-    },
-    {
-      "id": "fluerial-h-extra-multi-selected-blue-hover-blue",
-      "design": "fluerial",
-      "verticalMode": false,
-      "expandedVerticalRequired": false,
-      "expectedRoles": [
-        {
-          "role": "blue",
-          "selected": true,
-          "multiselected": true,
-          "hover": true
-        },
-        {
-          "role": "orange",
-          "selected": false,
-          "multiselected": true,
-          "hover": false
-        },
-        {
-          "role": "normal",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        }
-      ],
-      "indicatorSource": "native .tab-context-line",
-      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
-    },
-    {
-      "id": "fluerial-h-extra-multi-selected-orange-hover-orange",
-      "design": "fluerial",
-      "verticalMode": false,
-      "expandedVerticalRequired": false,
-      "expectedRoles": [
-        {
-          "role": "blue",
-          "selected": false,
-          "multiselected": true,
-          "hover": false
-        },
-        {
-          "role": "orange",
-          "selected": true,
-          "multiselected": true,
-          "hover": true
-        },
-        {
-          "role": "normal",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        }
-      ],
-      "indicatorSource": "native .tab-context-line",
-      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
-    },
-    {
-      "id": "fluerial-h-extra-selected-blue-hover-blue",
-      "design": "fluerial",
-      "verticalMode": false,
-      "expandedVerticalRequired": false,
-      "expectedRoles": [
-        {
-          "role": "blue",
-          "selected": true,
-          "multiselected": false,
-          "hover": true
-        },
-        {
-          "role": "orange",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        },
-        {
-          "role": "normal",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        }
-      ],
-      "indicatorSource": "native .tab-context-line",
-      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
-    },
-    {
-      "id": "fluerial-h-extra-selected-blue-hover-inactive-orange",
-      "design": "fluerial",
-      "verticalMode": false,
-      "expandedVerticalRequired": false,
-      "expectedRoles": [
-        {
-          "role": "blue",
-          "selected": true,
-          "multiselected": false,
-          "hover": false
-        },
-        {
-          "role": "orange",
-          "selected": false,
-          "multiselected": false,
-          "hover": true
-        },
-        {
-          "role": "normal",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        }
-      ],
-      "indicatorSource": "native .tab-context-line",
-      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
-    },
-    {
-      "id": "fluerial-h-extra-selected-normal-hover-normal",
-      "design": "fluerial",
-      "verticalMode": false,
-      "expandedVerticalRequired": false,
-      "expectedRoles": [
-        {
-          "role": "blue",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        },
-        {
-          "role": "orange",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        },
-        {
-          "role": "normal",
-          "selected": true,
-          "multiselected": false,
-          "hover": true
-        }
-      ],
-      "indicatorSource": "native .tab-context-line",
-      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
-    },
-    {
-      "id": "fluerial-h-extra-selected-orange-hover-orange",
-      "design": "fluerial",
-      "verticalMode": false,
-      "expandedVerticalRequired": false,
-      "expectedRoles": [
-        {
-          "role": "blue",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        },
-        {
-          "role": "orange",
-          "selected": true,
-          "multiselected": false,
-          "hover": true
-        },
-        {
-          "role": "normal",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        }
-      ],
-      "indicatorSource": "native .tab-context-line",
-      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
-    },
-    {
-      "id": "fluerial-v-extra-multi-selected-blue-hover-blue",
-      "design": "fluerial",
-      "verticalMode": true,
-      "expandedVerticalRequired": true,
-      "expectedRoles": [
-        {
-          "role": "blue",
-          "selected": true,
-          "multiselected": true,
-          "hover": true
-        },
-        {
-          "role": "orange",
-          "selected": false,
-          "multiselected": true,
-          "hover": false
-        },
-        {
-          "role": "normal",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        }
-      ],
-      "indicatorSource": "native .tab-context-line",
-      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
-    },
-    {
-      "id": "fluerial-v-extra-multi-selected-orange-hover-orange",
-      "design": "fluerial",
-      "verticalMode": true,
-      "expandedVerticalRequired": true,
-      "expectedRoles": [
-        {
-          "role": "blue",
-          "selected": false,
-          "multiselected": true,
-          "hover": false
-        },
-        {
-          "role": "orange",
-          "selected": true,
-          "multiselected": true,
-          "hover": true
-        },
-        {
-          "role": "normal",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        }
-      ],
-      "indicatorSource": "native .tab-context-line",
-      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
-    },
-    {
-      "id": "fluerial-v-extra-selected-blue-hover-blue",
-      "design": "fluerial",
-      "verticalMode": true,
-      "expandedVerticalRequired": true,
-      "expectedRoles": [
-        {
-          "role": "blue",
-          "selected": true,
-          "multiselected": false,
-          "hover": true
-        },
-        {
-          "role": "orange",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        },
-        {
-          "role": "normal",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        }
-      ],
-      "indicatorSource": "native .tab-context-line",
-      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
-    },
-    {
-      "id": "fluerial-v-extra-selected-blue-hover-inactive-orange",
-      "design": "fluerial",
-      "verticalMode": true,
-      "expandedVerticalRequired": true,
-      "expectedRoles": [
-        {
-          "role": "blue",
-          "selected": true,
-          "multiselected": false,
-          "hover": false
-        },
-        {
-          "role": "orange",
-          "selected": false,
-          "multiselected": false,
-          "hover": true
-        },
-        {
-          "role": "normal",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        }
-      ],
-      "indicatorSource": "native .tab-context-line",
-      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
-    },
-    {
-      "id": "fluerial-v-extra-selected-normal-hover-normal",
-      "design": "fluerial",
-      "verticalMode": true,
-      "expandedVerticalRequired": true,
-      "expectedRoles": [
-        {
-          "role": "blue",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        },
-        {
-          "role": "orange",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        },
-        {
-          "role": "normal",
-          "selected": true,
-          "multiselected": false,
-          "hover": true
-        }
-      ],
-      "indicatorSource": "native .tab-context-line",
-      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
-    },
-    {
-      "id": "fluerial-v-extra-selected-orange-hover-orange",
-      "design": "fluerial",
-      "verticalMode": true,
-      "expandedVerticalRequired": true,
-      "expectedRoles": [
-        {
-          "role": "blue",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        },
-        {
-          "role": "orange",
-          "selected": true,
-          "multiselected": false,
-          "hover": true
-        },
-        {
-          "role": "normal",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        }
-      ],
-      "indicatorSource": "native .tab-context-line",
-      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
-    },
-    {
-      "id": "lepton-h-extra-multi-selected-blue-hover-blue",
-      "design": "lepton",
-      "verticalMode": false,
-      "expandedVerticalRequired": false,
-      "expectedRoles": [
-        {
-          "role": "blue",
-          "selected": true,
-          "multiselected": true,
-          "hover": true
-        },
-        {
-          "role": "orange",
-          "selected": false,
-          "multiselected": true,
-          "hover": false
-        },
-        {
-          "role": "normal",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        }
-      ],
-      "indicatorSource": "alternative .tab-content::before bottom border",
-      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
-    },
-    {
-      "id": "lepton-h-extra-multi-selected-orange-hover-orange",
-      "design": "lepton",
-      "verticalMode": false,
-      "expandedVerticalRequired": false,
-      "expectedRoles": [
-        {
-          "role": "blue",
-          "selected": false,
-          "multiselected": true,
-          "hover": false
-        },
-        {
-          "role": "orange",
-          "selected": true,
-          "multiselected": true,
           "hover": true
         },
         {
@@ -1523,710 +1747,10 @@
       "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
     },
     {
-      "id": "lepton-h-extra-selected-blue-hover-blue",
-      "design": "lepton",
-      "verticalMode": false,
-      "expandedVerticalRequired": false,
-      "expectedRoles": [
-        {
-          "role": "blue",
-          "selected": true,
-          "multiselected": false,
-          "hover": true
-        },
-        {
-          "role": "orange",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        },
-        {
-          "role": "normal",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        }
-      ],
-      "indicatorSource": "alternative .tab-content::before bottom border",
-      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
-    },
-    {
-      "id": "lepton-h-extra-selected-blue-hover-inactive-orange",
-      "design": "lepton",
-      "verticalMode": false,
-      "expandedVerticalRequired": false,
-      "expectedRoles": [
-        {
-          "role": "blue",
-          "selected": true,
-          "multiselected": false,
-          "hover": false
-        },
-        {
-          "role": "orange",
-          "selected": false,
-          "multiselected": false,
-          "hover": true
-        },
-        {
-          "role": "normal",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        }
-      ],
-      "indicatorSource": "alternative .tab-content::before bottom border",
-      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
-    },
-    {
-      "id": "lepton-h-extra-selected-normal-hover-normal",
-      "design": "lepton",
-      "verticalMode": false,
-      "expandedVerticalRequired": false,
-      "expectedRoles": [
-        {
-          "role": "blue",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        },
-        {
-          "role": "orange",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        },
-        {
-          "role": "normal",
-          "selected": true,
-          "multiselected": false,
-          "hover": true
-        }
-      ],
-      "indicatorSource": "alternative .tab-content::before bottom border",
-      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
-    },
-    {
-      "id": "lepton-h-extra-selected-orange-hover-orange",
-      "design": "lepton",
-      "verticalMode": false,
-      "expandedVerticalRequired": false,
-      "expectedRoles": [
-        {
-          "role": "blue",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        },
-        {
-          "role": "orange",
-          "selected": true,
-          "multiselected": false,
-          "hover": true
-        },
-        {
-          "role": "normal",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        }
-      ],
-      "indicatorSource": "alternative .tab-content::before bottom border",
-      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
-    },
-    {
-      "id": "lepton-v-extra-multi-selected-blue-hover-blue",
-      "design": "lepton",
-      "verticalMode": true,
-      "expandedVerticalRequired": true,
-      "expectedRoles": [
-        {
-          "role": "blue",
-          "selected": true,
-          "multiselected": true,
-          "hover": true
-        },
-        {
-          "role": "orange",
-          "selected": false,
-          "multiselected": true,
-          "hover": false
-        },
-        {
-          "role": "normal",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        }
-      ],
-      "indicatorSource": "alternative .tab-content::before bottom border",
-      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
-    },
-    {
-      "id": "lepton-v-extra-multi-selected-orange-hover-orange",
-      "design": "lepton",
-      "verticalMode": true,
-      "expandedVerticalRequired": true,
-      "expectedRoles": [
-        {
-          "role": "blue",
-          "selected": false,
-          "multiselected": true,
-          "hover": false
-        },
-        {
-          "role": "orange",
-          "selected": true,
-          "multiselected": true,
-          "hover": true
-        },
-        {
-          "role": "normal",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        }
-      ],
-      "indicatorSource": "alternative .tab-content::before bottom border",
-      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
-    },
-    {
-      "id": "lepton-v-extra-selected-blue-hover-blue",
-      "design": "lepton",
-      "verticalMode": true,
-      "expandedVerticalRequired": true,
-      "expectedRoles": [
-        {
-          "role": "blue",
-          "selected": true,
-          "multiselected": false,
-          "hover": true
-        },
-        {
-          "role": "orange",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        },
-        {
-          "role": "normal",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        }
-      ],
-      "indicatorSource": "alternative .tab-content::before bottom border",
-      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
-    },
-    {
-      "id": "lepton-v-extra-selected-blue-hover-inactive-orange",
-      "design": "lepton",
-      "verticalMode": true,
-      "expandedVerticalRequired": true,
-      "expectedRoles": [
-        {
-          "role": "blue",
-          "selected": true,
-          "multiselected": false,
-          "hover": false
-        },
-        {
-          "role": "orange",
-          "selected": false,
-          "multiselected": false,
-          "hover": true
-        },
-        {
-          "role": "normal",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        }
-      ],
-      "indicatorSource": "alternative .tab-content::before bottom border",
-      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
-    },
-    {
-      "id": "lepton-v-extra-selected-normal-hover-normal",
-      "design": "lepton",
-      "verticalMode": true,
-      "expandedVerticalRequired": true,
-      "expectedRoles": [
-        {
-          "role": "blue",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        },
-        {
-          "role": "orange",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        },
-        {
-          "role": "normal",
-          "selected": true,
-          "multiselected": false,
-          "hover": true
-        }
-      ],
-      "indicatorSource": "alternative .tab-content::before bottom border",
-      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
-    },
-    {
-      "id": "lepton-v-extra-selected-orange-hover-orange",
-      "design": "lepton",
-      "verticalMode": true,
-      "expandedVerticalRequired": true,
-      "expectedRoles": [
-        {
-          "role": "blue",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        },
-        {
-          "role": "orange",
-          "selected": true,
-          "multiselected": false,
-          "hover": true
-        },
-        {
-          "role": "normal",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        }
-      ],
-      "indicatorSource": "alternative .tab-content::before bottom border",
-      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
-    },
-    {
-      "id": "proton-h-extra-multi-selected-blue-hover-blue",
-      "design": "proton",
-      "verticalMode": false,
-      "expandedVerticalRequired": false,
-      "expectedRoles": [
-        {
-          "role": "blue",
-          "selected": true,
-          "multiselected": true,
-          "hover": true
-        },
-        {
-          "role": "orange",
-          "selected": false,
-          "multiselected": true,
-          "hover": false
-        },
-        {
-          "role": "normal",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        }
-      ],
-      "indicatorSource": "native .tab-context-line",
-      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
-    },
-    {
-      "id": "proton-h-extra-multi-selected-orange-hover-orange",
-      "design": "proton",
-      "verticalMode": false,
-      "expandedVerticalRequired": false,
-      "expectedRoles": [
-        {
-          "role": "blue",
-          "selected": false,
-          "multiselected": true,
-          "hover": false
-        },
-        {
-          "role": "orange",
-          "selected": true,
-          "multiselected": true,
-          "hover": true
-        },
-        {
-          "role": "normal",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        }
-      ],
-      "indicatorSource": "native .tab-context-line",
-      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
-    },
-    {
-      "id": "proton-h-extra-selected-blue-hover-blue",
-      "design": "proton",
-      "verticalMode": false,
-      "expandedVerticalRequired": false,
-      "expectedRoles": [
-        {
-          "role": "blue",
-          "selected": true,
-          "multiselected": false,
-          "hover": true
-        },
-        {
-          "role": "orange",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        },
-        {
-          "role": "normal",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        }
-      ],
-      "indicatorSource": "native .tab-context-line",
-      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
-    },
-    {
-      "id": "proton-h-extra-selected-blue-hover-inactive-orange",
-      "design": "proton",
-      "verticalMode": false,
-      "expandedVerticalRequired": false,
-      "expectedRoles": [
-        {
-          "role": "blue",
-          "selected": true,
-          "multiselected": false,
-          "hover": false
-        },
-        {
-          "role": "orange",
-          "selected": false,
-          "multiselected": false,
-          "hover": true
-        },
-        {
-          "role": "normal",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        }
-      ],
-      "indicatorSource": "native .tab-context-line",
-      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
-    },
-    {
-      "id": "proton-h-extra-selected-normal-hover-normal",
-      "design": "proton",
-      "verticalMode": false,
-      "expandedVerticalRequired": false,
-      "expectedRoles": [
-        {
-          "role": "blue",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        },
-        {
-          "role": "orange",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        },
-        {
-          "role": "normal",
-          "selected": true,
-          "multiselected": false,
-          "hover": true
-        }
-      ],
-      "indicatorSource": "native .tab-context-line",
-      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
-    },
-    {
-      "id": "proton-h-extra-selected-orange-hover-orange",
-      "design": "proton",
-      "verticalMode": false,
-      "expandedVerticalRequired": false,
-      "expectedRoles": [
-        {
-          "role": "blue",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        },
-        {
-          "role": "orange",
-          "selected": true,
-          "multiselected": false,
-          "hover": true
-        },
-        {
-          "role": "normal",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        }
-      ],
-      "indicatorSource": "native .tab-context-line",
-      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
-    },
-    {
-      "id": "proton-v-extra-multi-selected-blue-hover-blue",
-      "design": "proton",
-      "verticalMode": true,
-      "expandedVerticalRequired": true,
-      "expectedRoles": [
-        {
-          "role": "blue",
-          "selected": true,
-          "multiselected": true,
-          "hover": true
-        },
-        {
-          "role": "orange",
-          "selected": false,
-          "multiselected": true,
-          "hover": false
-        },
-        {
-          "role": "normal",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        }
-      ],
-      "indicatorSource": "native .tab-context-line",
-      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
-    },
-    {
-      "id": "proton-v-extra-multi-selected-orange-hover-orange",
-      "design": "proton",
-      "verticalMode": true,
-      "expandedVerticalRequired": true,
-      "expectedRoles": [
-        {
-          "role": "blue",
-          "selected": false,
-          "multiselected": true,
-          "hover": false
-        },
-        {
-          "role": "orange",
-          "selected": true,
-          "multiselected": true,
-          "hover": true
-        },
-        {
-          "role": "normal",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        }
-      ],
-      "indicatorSource": "native .tab-context-line",
-      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
-    },
-    {
-      "id": "proton-v-extra-selected-blue-hover-blue",
-      "design": "proton",
-      "verticalMode": true,
-      "expandedVerticalRequired": true,
-      "expectedRoles": [
-        {
-          "role": "blue",
-          "selected": true,
-          "multiselected": false,
-          "hover": true
-        },
-        {
-          "role": "orange",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        },
-        {
-          "role": "normal",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        }
-      ],
-      "indicatorSource": "native .tab-context-line",
-      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
-    },
-    {
-      "id": "proton-v-extra-selected-blue-hover-inactive-orange",
-      "design": "proton",
-      "verticalMode": true,
-      "expandedVerticalRequired": true,
-      "expectedRoles": [
-        {
-          "role": "blue",
-          "selected": true,
-          "multiselected": false,
-          "hover": false
-        },
-        {
-          "role": "orange",
-          "selected": false,
-          "multiselected": false,
-          "hover": true
-        },
-        {
-          "role": "normal",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        }
-      ],
-      "indicatorSource": "native .tab-context-line",
-      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
-    },
-    {
-      "id": "proton-v-extra-selected-normal-hover-normal",
-      "design": "proton",
-      "verticalMode": true,
-      "expandedVerticalRequired": true,
-      "expectedRoles": [
-        {
-          "role": "blue",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        },
-        {
-          "role": "orange",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        },
-        {
-          "role": "normal",
-          "selected": true,
-          "multiselected": false,
-          "hover": true
-        }
-      ],
-      "indicatorSource": "native .tab-context-line",
-      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
-    },
-    {
-      "id": "proton-v-extra-selected-orange-hover-orange",
-      "design": "proton",
-      "verticalMode": true,
-      "expandedVerticalRequired": true,
-      "expectedRoles": [
-        {
-          "role": "blue",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        },
-        {
-          "role": "orange",
-          "selected": true,
-          "multiselected": false,
-          "hover": true
-        },
-        {
-          "role": "normal",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        }
-      ],
-      "indicatorSource": "native .tab-context-line",
-      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
-    },
-    {
-      "id": "protonfix-h-extra-multi-selected-blue-hover-blue",
+      "id": "protonfix-v-extra-selected-blue-hover-inactive-orange",
       "design": "protonfix",
-      "verticalMode": false,
-      "expandedVerticalRequired": false,
-      "expectedRoles": [
-        {
-          "role": "blue",
-          "selected": true,
-          "multiselected": true,
-          "hover": true
-        },
-        {
-          "role": "orange",
-          "selected": false,
-          "multiselected": true,
-          "hover": false
-        },
-        {
-          "role": "normal",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        }
-      ],
-      "indicatorSource": "alternative .tab-content::before bottom border",
-      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
-    },
-    {
-      "id": "protonfix-h-extra-multi-selected-orange-hover-orange",
-      "design": "protonfix",
-      "verticalMode": false,
-      "expandedVerticalRequired": false,
-      "expectedRoles": [
-        {
-          "role": "blue",
-          "selected": false,
-          "multiselected": true,
-          "hover": false
-        },
-        {
-          "role": "orange",
-          "selected": true,
-          "multiselected": true,
-          "hover": true
-        },
-        {
-          "role": "normal",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        }
-      ],
-      "indicatorSource": "alternative .tab-content::before bottom border",
-      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
-    },
-    {
-      "id": "protonfix-h-extra-selected-blue-hover-blue",
-      "design": "protonfix",
-      "verticalMode": false,
-      "expandedVerticalRequired": false,
-      "expectedRoles": [
-        {
-          "role": "blue",
-          "selected": true,
-          "multiselected": false,
-          "hover": true
-        },
-        {
-          "role": "orange",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        },
-        {
-          "role": "normal",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        }
-      ],
-      "indicatorSource": "alternative .tab-content::before bottom border",
-      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
-    },
-    {
-      "id": "protonfix-h-extra-selected-blue-hover-inactive-orange",
-      "design": "protonfix",
-      "verticalMode": false,
-      "expandedVerticalRequired": false,
+      "verticalMode": true,
+      "expandedVerticalRequired": true,
       "expectedRoles": [
         {
           "role": "blue",
@@ -2237,62 +1761,6 @@
         {
           "role": "orange",
           "selected": false,
-          "multiselected": false,
-          "hover": true
-        },
-        {
-          "role": "normal",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        }
-      ],
-      "indicatorSource": "alternative .tab-content::before bottom border",
-      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
-    },
-    {
-      "id": "protonfix-h-extra-selected-normal-hover-normal",
-      "design": "protonfix",
-      "verticalMode": false,
-      "expandedVerticalRequired": false,
-      "expectedRoles": [
-        {
-          "role": "blue",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        },
-        {
-          "role": "orange",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        },
-        {
-          "role": "normal",
-          "selected": true,
-          "multiselected": false,
-          "hover": true
-        }
-      ],
-      "indicatorSource": "alternative .tab-content::before bottom border",
-      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
-    },
-    {
-      "id": "protonfix-h-extra-selected-orange-hover-orange",
-      "design": "protonfix",
-      "verticalMode": false,
-      "expandedVerticalRequired": false,
-      "expectedRoles": [
-        {
-          "role": "blue",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        },
-        {
-          "role": "orange",
-          "selected": true,
           "multiselected": false,
           "hover": true
         },
@@ -2363,62 +1831,6 @@
       "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
     },
     {
-      "id": "protonfix-v-extra-selected-blue-hover-blue",
-      "design": "protonfix",
-      "verticalMode": true,
-      "expandedVerticalRequired": true,
-      "expectedRoles": [
-        {
-          "role": "blue",
-          "selected": true,
-          "multiselected": false,
-          "hover": true
-        },
-        {
-          "role": "orange",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        },
-        {
-          "role": "normal",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        }
-      ],
-      "indicatorSource": "alternative .tab-content::before bottom border",
-      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
-    },
-    {
-      "id": "protonfix-v-extra-selected-blue-hover-inactive-orange",
-      "design": "protonfix",
-      "verticalMode": true,
-      "expandedVerticalRequired": true,
-      "expectedRoles": [
-        {
-          "role": "blue",
-          "selected": true,
-          "multiselected": false,
-          "hover": false
-        },
-        {
-          "role": "orange",
-          "selected": false,
-          "multiselected": false,
-          "hover": true
-        },
-        {
-          "role": "normal",
-          "selected": false,
-          "multiselected": false,
-          "hover": false
-        }
-      ],
-      "indicatorSource": "alternative .tab-content::before bottom border",
-      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
-    },
-    {
       "id": "protonfix-v-extra-selected-normal-hover-normal",
       "design": "protonfix",
       "verticalMode": true,
@@ -2447,8 +1859,484 @@
       "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
     },
     {
-      "id": "protonfix-v-extra-selected-orange-hover-orange",
-      "design": "protonfix",
+      "id": "fluerial-h-selected-normal",
+      "design": "fluerial",
+      "verticalMode": false,
+      "expandedVerticalRequired": false,
+      "expectedRoles": [
+        {
+          "role": "blue",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        },
+        {
+          "role": "orange",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        },
+        {
+          "role": "normal",
+          "selected": true,
+          "multiselected": false,
+          "hover": false
+        }
+      ],
+      "indicatorSource": "native .tab-context-line",
+      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
+    },
+    {
+      "id": "fluerial-h-selected-blue",
+      "design": "fluerial",
+      "verticalMode": false,
+      "expandedVerticalRequired": false,
+      "expectedRoles": [
+        {
+          "role": "blue",
+          "selected": true,
+          "multiselected": false,
+          "hover": false
+        },
+        {
+          "role": "orange",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        },
+        {
+          "role": "normal",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        }
+      ],
+      "indicatorSource": "native .tab-context-line",
+      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
+    },
+    {
+      "id": "fluerial-h-selected-orange",
+      "design": "fluerial",
+      "verticalMode": false,
+      "expandedVerticalRequired": false,
+      "expectedRoles": [
+        {
+          "role": "blue",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        },
+        {
+          "role": "orange",
+          "selected": true,
+          "multiselected": false,
+          "hover": false
+        },
+        {
+          "role": "normal",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        }
+      ],
+      "indicatorSource": "native .tab-context-line",
+      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
+    },
+    {
+      "id": "fluerial-h-hover-blue",
+      "design": "fluerial",
+      "verticalMode": false,
+      "expandedVerticalRequired": false,
+      "expectedRoles": [
+        {
+          "role": "blue",
+          "selected": false,
+          "multiselected": false,
+          "hover": true
+        },
+        {
+          "role": "orange",
+          "selected": true,
+          "multiselected": false,
+          "hover": false
+        },
+        {
+          "role": "normal",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        }
+      ],
+      "indicatorSource": "native .tab-context-line",
+      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
+    },
+    {
+      "id": "fluerial-h-multi-hover-blue",
+      "design": "fluerial",
+      "verticalMode": false,
+      "expandedVerticalRequired": false,
+      "expectedRoles": [
+        {
+          "role": "blue",
+          "selected": false,
+          "multiselected": true,
+          "hover": true
+        },
+        {
+          "role": "orange",
+          "selected": true,
+          "multiselected": true,
+          "hover": false
+        },
+        {
+          "role": "normal",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        }
+      ],
+      "indicatorSource": "native .tab-context-line",
+      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
+    },
+    {
+      "id": "fluerial-h-extra-selected-blue-hover-blue",
+      "design": "fluerial",
+      "verticalMode": false,
+      "expandedVerticalRequired": false,
+      "expectedRoles": [
+        {
+          "role": "blue",
+          "selected": true,
+          "multiselected": false,
+          "hover": true
+        },
+        {
+          "role": "orange",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        },
+        {
+          "role": "normal",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        }
+      ],
+      "indicatorSource": "native .tab-context-line",
+      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
+    },
+    {
+      "id": "fluerial-h-extra-selected-orange-hover-orange",
+      "design": "fluerial",
+      "verticalMode": false,
+      "expandedVerticalRequired": false,
+      "expectedRoles": [
+        {
+          "role": "blue",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        },
+        {
+          "role": "orange",
+          "selected": true,
+          "multiselected": false,
+          "hover": true
+        },
+        {
+          "role": "normal",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        }
+      ],
+      "indicatorSource": "native .tab-context-line",
+      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
+    },
+    {
+      "id": "fluerial-h-extra-selected-blue-hover-inactive-orange",
+      "design": "fluerial",
+      "verticalMode": false,
+      "expandedVerticalRequired": false,
+      "expectedRoles": [
+        {
+          "role": "blue",
+          "selected": true,
+          "multiselected": false,
+          "hover": false
+        },
+        {
+          "role": "orange",
+          "selected": false,
+          "multiselected": false,
+          "hover": true
+        },
+        {
+          "role": "normal",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        }
+      ],
+      "indicatorSource": "native .tab-context-line",
+      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
+    },
+    {
+      "id": "fluerial-h-extra-multi-selected-blue-hover-blue",
+      "design": "fluerial",
+      "verticalMode": false,
+      "expandedVerticalRequired": false,
+      "expectedRoles": [
+        {
+          "role": "blue",
+          "selected": true,
+          "multiselected": true,
+          "hover": true
+        },
+        {
+          "role": "orange",
+          "selected": false,
+          "multiselected": true,
+          "hover": false
+        },
+        {
+          "role": "normal",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        }
+      ],
+      "indicatorSource": "native .tab-context-line",
+      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
+    },
+    {
+      "id": "fluerial-h-extra-multi-selected-orange-hover-orange",
+      "design": "fluerial",
+      "verticalMode": false,
+      "expandedVerticalRequired": false,
+      "expectedRoles": [
+        {
+          "role": "blue",
+          "selected": false,
+          "multiselected": true,
+          "hover": false
+        },
+        {
+          "role": "orange",
+          "selected": true,
+          "multiselected": true,
+          "hover": true
+        },
+        {
+          "role": "normal",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        }
+      ],
+      "indicatorSource": "native .tab-context-line",
+      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
+    },
+    {
+      "id": "fluerial-h-extra-selected-normal-hover-normal",
+      "design": "fluerial",
+      "verticalMode": false,
+      "expandedVerticalRequired": false,
+      "expectedRoles": [
+        {
+          "role": "blue",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        },
+        {
+          "role": "orange",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        },
+        {
+          "role": "normal",
+          "selected": true,
+          "multiselected": false,
+          "hover": true
+        }
+      ],
+      "indicatorSource": "native .tab-context-line",
+      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
+    },
+    {
+      "id": "fluerial-v-selected-normal",
+      "design": "fluerial",
+      "verticalMode": true,
+      "expandedVerticalRequired": true,
+      "expectedRoles": [
+        {
+          "role": "blue",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        },
+        {
+          "role": "orange",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        },
+        {
+          "role": "normal",
+          "selected": true,
+          "multiselected": false,
+          "hover": false
+        }
+      ],
+      "indicatorSource": "native .tab-context-line",
+      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
+    },
+    {
+      "id": "fluerial-v-selected-blue",
+      "design": "fluerial",
+      "verticalMode": true,
+      "expandedVerticalRequired": true,
+      "expectedRoles": [
+        {
+          "role": "blue",
+          "selected": true,
+          "multiselected": false,
+          "hover": false
+        },
+        {
+          "role": "orange",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        },
+        {
+          "role": "normal",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        }
+      ],
+      "indicatorSource": "native .tab-context-line",
+      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
+    },
+    {
+      "id": "fluerial-v-selected-orange",
+      "design": "fluerial",
+      "verticalMode": true,
+      "expandedVerticalRequired": true,
+      "expectedRoles": [
+        {
+          "role": "blue",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        },
+        {
+          "role": "orange",
+          "selected": true,
+          "multiselected": false,
+          "hover": false
+        },
+        {
+          "role": "normal",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        }
+      ],
+      "indicatorSource": "native .tab-context-line",
+      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
+    },
+    {
+      "id": "fluerial-v-hover-blue",
+      "design": "fluerial",
+      "verticalMode": true,
+      "expandedVerticalRequired": true,
+      "expectedRoles": [
+        {
+          "role": "blue",
+          "selected": false,
+          "multiselected": false,
+          "hover": true
+        },
+        {
+          "role": "orange",
+          "selected": true,
+          "multiselected": false,
+          "hover": false
+        },
+        {
+          "role": "normal",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        }
+      ],
+      "indicatorSource": "native .tab-context-line",
+      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
+    },
+    {
+      "id": "fluerial-v-multi-hover-blue",
+      "design": "fluerial",
+      "verticalMode": true,
+      "expandedVerticalRequired": true,
+      "expectedRoles": [
+        {
+          "role": "blue",
+          "selected": false,
+          "multiselected": true,
+          "hover": true
+        },
+        {
+          "role": "orange",
+          "selected": true,
+          "multiselected": true,
+          "hover": false
+        },
+        {
+          "role": "normal",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        }
+      ],
+      "indicatorSource": "native .tab-context-line",
+      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
+    },
+    {
+      "id": "fluerial-v-extra-selected-blue-hover-blue",
+      "design": "fluerial",
+      "verticalMode": true,
+      "expandedVerticalRequired": true,
+      "expectedRoles": [
+        {
+          "role": "blue",
+          "selected": true,
+          "multiselected": false,
+          "hover": true
+        },
+        {
+          "role": "orange",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        },
+        {
+          "role": "normal",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        }
+      ],
+      "indicatorSource": "native .tab-context-line",
+      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
+    },
+    {
+      "id": "fluerial-v-extra-selected-orange-hover-orange",
+      "design": "fluerial",
       "verticalMode": true,
       "expandedVerticalRequired": true,
       "expectedRoles": [
@@ -2471,7 +2359,119 @@
           "hover": false
         }
       ],
-      "indicatorSource": "alternative .tab-content::before bottom border",
+      "indicatorSource": "native .tab-context-line",
+      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
+    },
+    {
+      "id": "fluerial-v-extra-selected-blue-hover-inactive-orange",
+      "design": "fluerial",
+      "verticalMode": true,
+      "expandedVerticalRequired": true,
+      "expectedRoles": [
+        {
+          "role": "blue",
+          "selected": true,
+          "multiselected": false,
+          "hover": false
+        },
+        {
+          "role": "orange",
+          "selected": false,
+          "multiselected": false,
+          "hover": true
+        },
+        {
+          "role": "normal",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        }
+      ],
+      "indicatorSource": "native .tab-context-line",
+      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
+    },
+    {
+      "id": "fluerial-v-extra-multi-selected-blue-hover-blue",
+      "design": "fluerial",
+      "verticalMode": true,
+      "expandedVerticalRequired": true,
+      "expectedRoles": [
+        {
+          "role": "blue",
+          "selected": true,
+          "multiselected": true,
+          "hover": true
+        },
+        {
+          "role": "orange",
+          "selected": false,
+          "multiselected": true,
+          "hover": false
+        },
+        {
+          "role": "normal",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        }
+      ],
+      "indicatorSource": "native .tab-context-line",
+      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
+    },
+    {
+      "id": "fluerial-v-extra-multi-selected-orange-hover-orange",
+      "design": "fluerial",
+      "verticalMode": true,
+      "expandedVerticalRequired": true,
+      "expectedRoles": [
+        {
+          "role": "blue",
+          "selected": false,
+          "multiselected": true,
+          "hover": false
+        },
+        {
+          "role": "orange",
+          "selected": true,
+          "multiselected": true,
+          "hover": true
+        },
+        {
+          "role": "normal",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        }
+      ],
+      "indicatorSource": "native .tab-context-line",
+      "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
+    },
+    {
+      "id": "fluerial-v-extra-selected-normal-hover-normal",
+      "design": "fluerial",
+      "verticalMode": true,
+      "expandedVerticalRequired": true,
+      "expectedRoles": [
+        {
+          "role": "blue",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        },
+        {
+          "role": "orange",
+          "selected": false,
+          "multiselected": false,
+          "hover": false
+        },
+        {
+          "role": "normal",
+          "selected": true,
+          "multiselected": false,
+          "hover": true
+        }
+      ],
+      "indicatorSource": "native .tab-context-line",
       "acceptance": "blue/orange correct identity hue>0 and opposite hue=0 inside actual indicator rect; normal identity hues=0; actual interaction flags match"
     }
   ],
@@ -2489,5 +2489,6 @@
     "density",
     "effectivePrefs"
   ],
-  "noLinuxPixelDimensionsAsWindowsOracle": true
+  "noLinuxPixelDimensionsAsWindowsOracle": true,
+  "testOrderSource": "full-product/run/result.json actual88state sequence; probe.py"
 }

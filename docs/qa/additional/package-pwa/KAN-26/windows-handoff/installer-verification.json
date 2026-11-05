@@ -1,0 +1,23 @@
+{
+  "sourceSha": "0e80f14dc439dde7817c0620f0fc112d54dfba80",
+  "run": 42120232936,
+  "artifact": 13459735586,
+  "artifactName": "noraneko-windows-x86_64-unsigned-installer",
+  "zipSha256": "67df130a88bf1f201621e8f0a1590c59cc9f18aae640350a53ed3bf1c2b2a933",
+  "zipBytes": 116708306,
+  "members": [
+    {
+      "name": "floorp-windows-x86_64.installer.exe",
+      "bytes": 116731728,
+      "sha256": "e125dd8cdc62df753f225bb12b3fa332627220ca24f26939936c4c6031efb2a5"
+    }
+  ],
+  "installerMembers": [
+    {
+      "name": "floorp-windows-x86_64.installer.exe",
+      "bytes": 116731728,
+      "sha256": "e125dd8cdc62df753f225bb12b3fa332627220ca24f26939936c4c6031efb2a5"
+    }
+  ],
+  "executed": false
+}

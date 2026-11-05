@@ -5,6 +5,10 @@
   "dispatchRequests": 1,
   "platform": "Windows-x64",
   "signing": false,
-  "status": "in_progress",
-  "executionInCloudWindows": false
+  "status": "completed",
+  "executionInCloudWindows": false,
+  "conclusion": "success",
+  "attempt": 1,
+  "artifact": 13459735586,
+  "installerSha256": "e125dd8cdc62df753f225bb12b3fa332627220ca24f26939936c4c6031efb2a5"
 }

@@ -25,7 +25,7 @@
   },
   {
     "path": "matrix.json",
-    "bytes": 5206
+    "bytes": 5604
   },
   {
     "path": "obsolete-package-run.json",
@@ -77,7 +77,7 @@
   },
   {
     "path": "report.md",
-    "bytes": 10417
+    "bytes": 11064
   },
   {
     "path": "scope.json",
@@ -6633,7 +6633,11 @@
   },
   {
     "path": "windows-handoff/acceptance-88.json",
-    "bytes": 73229
+    "bytes": 73315
+  },
+  {
+    "path": "windows-handoff/artifacts-intake.json",
+    "bytes": 1555
   },
   {
     "path": "windows-handoff/chrome-snapshot.js",
@@ -6644,24 +6648,56 @@
     "bytes": 934
   },
   {
+    "path": "windows-handoff/final-subject-recheck.json",
+    "bytes": 514
+  },
+  {
+    "path": "windows-handoff/installer-artifact-api.json",
+    "bytes": 446
+  },
+  {
+    "path": "windows-handoff/installer-verification.json",
+    "bytes": 701
+  },
+  {
     "path": "windows-handoff/matrix.json",
-    "bytes": 1394
+    "bytes": 2510
+  },
+  {
+    "path": "windows-handoff/monitor_run.py",
+    "bytes": 2024
+  },
+  {
+    "path": "windows-handoff/package-artifacts-api.json",
+    "bytes": 3355
+  },
+  {
+    "path": "windows-handoff/package-job.log",
+    "bytes": 499425
+  },
+  {
+    "path": "windows-handoff/package-jobs-api.json",
+    "bytes": 16011
   },
   {
     "path": "windows-handoff/package-run-api.json",
-    "bytes": 406
+    "bytes": 465
   },
   {
     "path": "windows-handoff/package-run.json",
-    "bytes": 297
+    "bytes": 454
   },
   {
     "path": "windows-handoff/preflight.json",
     "bytes": 849
   },
   {
+    "path": "windows-handoff/progress-history.json",
+    "bytes": 811
+  },
+  {
     "path": "windows-handoff/report.md",
-    "bytes": 7856
+    "bytes": 11041
   },
   {
     "path": "windows-handoff/runtime-manifest.json",
@@ -6672,6 +6708,14 @@
     "bytes": 276
   },
   {
+    "path": "windows-handoff/runtime-source-provenance-artifact.json",
+    "bytes": 188
+  },
+  {
+    "path": "windows-handoff/runtime-source-provenance.json",
+    "bytes": 2232
+  },
+  {
     "path": "windows-handoff/runtime-verification.json",
     "bytes": 794
   },
@@ -6680,7 +6724,11 @@
     "bytes": 360
   },
   {
+    "path": "windows-handoff/source-log-verification.json",
+    "bytes": 2418
+  },
+  {
     "path": "windows-handoff/verify_artifact_zip.py",
-    "bytes": 1979
+    "bytes": 2091
   }
 ]

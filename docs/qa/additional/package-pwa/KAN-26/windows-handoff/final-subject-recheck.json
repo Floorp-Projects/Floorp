@@ -1,0 +1,24 @@
+{
+  "pr3048": {
+    "head": "0e80f14dc439dde7817c0620f0fc112d54dfba80",
+    "base": "1c37f3f2c53c5b213e679321e0116d4c7474661f",
+    "draft": true,
+    "merged": false
+  },
+  "canonical3041": {
+    "head": "1c37f3f2c53c5b213e679321e0116d4c7474661f",
+    "draft": true,
+    "merged": false
+  },
+  "windowsRunsAtHead": [
+    {
+      "id": 42120232936,
+      "status": "completed",
+      "conclusion": "success",
+      "attempt": 1
+    }
+  ],
+  "dispatchRequests": 1,
+  "codeChanges": 0,
+  "windowsExecution": false
+}

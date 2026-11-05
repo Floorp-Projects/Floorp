@@ -1,0 +1,49 @@
+[
+  {
+    "status": "in_progress",
+    "conclusion": null,
+    "active": [
+      "Package noraneko"
+    ]
+  },
+  {
+    "status": "in_progress",
+    "conclusion": null,
+    "active": [
+      "Upload Noraneko Artifact"
+    ]
+  },
+  {
+    "status": "in_progress",
+    "conclusion": null,
+    "active": [
+      "Publish Unsigned Binary \ud83c\udf81"
+    ]
+  },
+  {
+    "status": "in_progress",
+    "conclusion": null,
+    "active": [
+      "Prepare installer with codesigning and re-packaging (installer)"
+    ]
+  },
+  {
+    "status": "in_progress",
+    "conclusion": null,
+    "active": [
+      "Create MAR package"
+    ]
+  },
+  {
+    "status": "in_progress",
+    "conclusion": null,
+    "active": [
+      "Publish MAR"
+    ]
+  },
+  {
+    "status": "completed",
+    "conclusion": "success",
+    "active": []
+  }
+]

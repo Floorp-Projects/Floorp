@@ -25,7 +25,13 @@ and18 supplemental states were not repeated for this handoff. No code changed.
   This is the existing complete application/package pipeline with locked
   prebuilt native Runtime, not a fresh Gecko compile or signed distribution.
 
-Final artifact verification is appended below after this single run finishes.
+The single run completed successfully on its first attempt. Final artifact
+verification is recorded below.
+The job-generated Runtime source-provenance artifact13458585692 was also
+downloaded and authenticated (ZIP SHA256
+22ec0f1dae3a17622ebf082609f742a3034c4b47891c7f36a6c18aa5e9fd24cb).
+It describes prebuilt native Runtime8965, independently of the Floorp
+frontend/application source0e80. No native recompilation is inferred.
 
 ## Reproduction material
 
@@ -45,6 +51,12 @@ All paths below are relative to `docs/qa/additional/package-pwa/KAN-26/`:
 | Windows handoff cases | `windows-handoff/acceptance-88.json` |
 | Chrome snapshot helper, not injected CSS | `windows-handoff/chrome-snapshot.js` |
 | Artifact verification without execution | `windows-handoff/verify_artifact_zip.py` |
+
+The shared Marionette transport dependency is also committed at
+`docs/qa/linux-22/package-pwa/pwa_ui_probe.py` (class Marionette); the
+Linux probe imports its original Cloud absolute path, which must be mapped to
+the checked-out QA helper in a local adapter. Python3.11+/Pillow are the screenshot
+and pixel-analysis dependencies.
 
 The Linux probe includes Xvfb/DBus/sysroot/process handling and is **not a
 ready-to-run Windows launcher**. The local native Windows harness should reuse
@@ -71,9 +83,13 @@ reported as such. A pref value alone does not establish verticalMode.
    OS protections and validation enabled; record their effective state.
    Record Windows version, native/product versions and BuildIDs separately,
    theme, density, display scale/DPR and physical/virtual graphics environment.
-2. Use actual Hub design/orientation controls. Defaults must include container
-   enabled, photon_like_contextline=false, as_titlebar=false and ordinary
-   default theme/density; record effective gate values rather than assuming.
+2. Use actual Hub design/orientation controls and measure shipped defaults.
+   The directly comparable default-gate scope is container enabled,
+   photon_like_contextline=false, as_titlebar=false and ordinary default
+   theme/density. If native Windows defaults differ, retain and report the
+   actual stock test; a separate changed-configuration test must be labeled
+   explicitly and cannot stand in for stock/original acceptance. Record
+   effective gate values rather than assuming.
 3. All176 blue/orange indicator ROIs require positive correct-identity-color
    pixels and zero opposite-identity pixels. For Lepton/protonfix measure the
    intended `.tab-content::before` bottom border, not hidden native contextline.
@@ -122,3 +138,44 @@ vertical and other gates/themes remain unqualified until actually measured.
 The unsigned artifact does not qualify signing/release delivery. Original seven
 issue matrices, KAN24 and Linux22 denominator remain unchanged. No merge,
 release/public distribution or Done transition.
+
+## Authenticated final Windows installer
+
+[Artifact13459735586](https://github.com/Floorp-Projects/Floorp/actions/runs/42120232936/artifacts/13459735586),
+`noraneko-windows-x86_64-unsigned-installer`, ZIP116708306 bytes.
+Downloaded ZIP SHA256:
+`67df130a88bf1f201621e8f0a1590c59cc9f18aae640350a53ed3bf1c2b2a933`
+matches the GitHub artifact API. The single final installer member is
+`floorp-windows-x86_64.installer.exe`,116731728 bytes, SHA256:
+`e125dd8cdc62df753f225bb12b3fa332627220ca24f26939936c4c6031efb2a5`.
+Both hashes were calculated from actual downloaded bytes in memory. No EXE was
+executed, no product resources were substituted, and no installer/cache binary
+is committed to the QA branch. `installer-verification.json` records the
+source/run binding and hashes; `installer-artifact-api.json` contains the
+authenticated artifact metadata.
+
+Local retrieval (extracts the Actions ZIP, does not launch the installer):
+
+```powershell
+gh run download 42120232936 -R Floorp-Projects/Floorp -n noraneko-windows-x86_64-unsigned-installer -D kan26-windows-installer
+Get-FileHash .\kan26-windows-installer\floorp-windows-x86_64.installer.exe -Algorithm SHA256
+```
+
+The EXE hash must equal the full digest above before local use. If downloading
+the raw Actions ZIP instead, verify both API metadata and ZIP/member digests:
+
+```text
+python verify_artifact_zip.py downloaded-artifact.zip installer-artifact-api.json --out local-installer-verification.json
+```
+
+The full workflow completed successfully, attempt1, with main job127570368936
+successful and macOS finalizers skipped. Both Windows signing steps were skipped
+as requested. `source-log-verification.json` records source checkout, verified
+Runtime identity/digest and final artifact log lines. Published `package-job.log`
+redacts one contact address and one transient artifact-transport URL; both raw
+and published SHA256 values are recorded, and unredacted raw-local is excluded
+from shared QA. Product/source/digest evidence lines are unchanged.
+
+Latest subject recheck confirms3048 head/base and canonical3041 still match the
+pinned values, both Draft/unmerged, and exactly one Windows package run exists
+at this head. No duplicate dispatch, retry, release or native Windows execution.

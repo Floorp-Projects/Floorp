@@ -1,0 +1,527 @@
+[
+  {
+    "id": 127570368936,
+    "name": "main",
+    "status": "completed",
+    "conclusion": "success",
+    "steps": [
+      {
+        "name": "Set up job",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 1,
+        "started_at": "2026-11-05T22:17:40Z",
+        "completed_at": "2026-11-05T22:17:43Z"
+      },
+      {
+        "name": "Require Runtime artifact token",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 2,
+        "started_at": "2026-11-05T22:17:43Z",
+        "completed_at": "2026-11-05T22:17:43Z"
+      },
+      {
+        "name": "Validate provenance contract",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 3,
+        "started_at": "2026-11-05T22:17:43Z",
+        "completed_at": "2026-11-05T22:17:44Z"
+      },
+      {
+        "name": "Checkout Floorp-Projects/Floorp-runtime",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 4,
+        "started_at": "2026-11-05T22:17:44Z",
+        "completed_at": "2026-11-05T22:19:39Z"
+      },
+      {
+        "name": "Apply upstream patches",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 5,
+        "started_at": "2026-11-05T22:19:39Z",
+        "completed_at": "2026-11-05T22:19:40Z"
+      },
+      {
+        "name": "Checkout Floorp-Projects/Floorp",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 6,
+        "started_at": "2026-11-05T22:19:40Z",
+        "completed_at": "2026-11-05T22:19:43Z"
+      },
+      {
+        "name": "Apply Floorp common Runtime patches",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 7,
+        "started_at": "2026-11-05T22:19:43Z",
+        "completed_at": "2026-11-05T22:19:43Z"
+      },
+      {
+        "name": "Apply Floorp custom browser icons",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 8,
+        "started_at": "2026-11-05T22:19:43Z",
+        "completed_at": "2026-11-05T22:19:44Z"
+      },
+      {
+        "name": "Download verified Runtime artifact by ID",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 9,
+        "started_at": "2026-11-05T22:19:44Z",
+        "completed_at": "2026-11-05T22:19:48Z"
+      },
+      {
+        "name": "Stage exact Runtime v2 bundle",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 10,
+        "started_at": "2026-11-05T22:19:48Z",
+        "completed_at": "2026-11-05T22:19:48Z"
+      },
+      {
+        "name": "Preserve verified macOS Runtime packing provenance",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 11,
+        "started_at": "2026-11-05T22:19:48Z",
+        "completed_at": "2026-11-05T22:19:48Z"
+      },
+      {
+        "name": "Preserve verified compiled Runtime source provenance",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 12,
+        "started_at": "2026-11-05T22:19:48Z",
+        "completed_at": "2026-11-05T22:19:50Z"
+      },
+      {
+        "name": "Run actions/setup-node@v4",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 13,
+        "started_at": "2026-11-05T22:19:50Z",
+        "completed_at": "2026-11-05T22:19:50Z"
+      },
+      {
+        "name": "Run denoland/setup-deno@v2",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 14,
+        "started_at": "2026-11-05T22:19:50Z",
+        "completed_at": "2026-11-05T22:19:52Z"
+      },
+      {
+        "name": "Setup Noraneko",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 15,
+        "started_at": "2026-11-05T22:19:52Z",
+        "completed_at": "2026-11-05T22:19:57Z"
+      },
+      {
+        "name": "Setup",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 16,
+        "started_at": "2026-11-05T22:19:57Z",
+        "completed_at": "2026-11-05T22:20:59Z"
+      },
+      {
+        "name": "Write Versions",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 17,
+        "started_at": "2026-11-05T22:20:59Z",
+        "completed_at": "2026-11-05T22:21:00Z"
+      },
+      {
+        "name": "Normalize platform",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 18,
+        "started_at": "2026-11-05T22:21:00Z",
+        "completed_at": "2026-11-05T22:21:00Z"
+      },
+      {
+        "name": "Copy branding files from runtime",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 19,
+        "started_at": "2026-11-05T22:21:00Z",
+        "completed_at": "2026-11-05T22:21:00Z"
+      },
+      {
+        "name": "Mach configure",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 20,
+        "started_at": "2026-11-05T22:21:00Z",
+        "completed_at": "2026-11-05T22:21:38Z"
+      },
+      {
+        "name": "Set legacy Runtime run ID",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 21,
+        "started_at": "2026-11-05T22:21:38Z",
+        "completed_at": "2026-11-05T22:21:38Z"
+      },
+      {
+        "name": "Get Artifact Name",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 22,
+        "started_at": "2026-11-05T22:21:38Z",
+        "completed_at": "2026-11-05T22:21:38Z"
+      },
+      {
+        "name": "Download mozilla artifact from Actions",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 23,
+        "started_at": "2026-11-05T22:21:38Z",
+        "completed_at": "2026-11-05T22:21:38Z"
+      },
+      {
+        "name": "Download Mozilla Artifact from GitHub Releases",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 24,
+        "started_at": "2026-11-05T22:21:38Z",
+        "completed_at": "2026-11-05T22:21:38Z"
+      },
+      {
+        "name": "Make Downloaded Artifact to Mozilla Artifact (Actions)",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 25,
+        "started_at": "2026-11-05T22:21:38Z",
+        "completed_at": "2026-11-05T22:21:38Z"
+      },
+      {
+        "name": "Make Download Artifact to Mozilla Artifact (GitHub Releases)",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 26,
+        "started_at": "2026-11-05T22:21:38Z",
+        "completed_at": "2026-11-05T22:21:38Z"
+      },
+      {
+        "name": "Build Noraneko",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 27,
+        "started_at": "2026-11-05T22:21:38Z",
+        "completed_at": "2026-11-05T22:22:09Z"
+      },
+      {
+        "name": "Build",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 28,
+        "started_at": "2026-11-05T22:22:09Z",
+        "completed_at": "2026-11-05T22:22:57Z"
+      },
+      {
+        "name": "Inject Noraneko",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 29,
+        "started_at": "2026-11-05T22:22:57Z",
+        "completed_at": "2026-11-05T22:23:00Z"
+      },
+      {
+        "name": "Upload dist on failure (pre-packaging)",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 30,
+        "started_at": "2026-11-05T22:23:00Z",
+        "completed_at": "2026-11-05T22:23:00Z"
+      },
+      {
+        "name": "Apply Firefox Preferences Override",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 31,
+        "started_at": "2026-11-05T22:23:00Z",
+        "completed_at": "2026-11-05T22:23:01Z"
+      },
+      {
+        "name": "Replace Icon (Beta)",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 32,
+        "started_at": "2026-11-05T22:23:01Z",
+        "completed_at": "2026-11-05T22:23:01Z"
+      },
+      {
+        "name": "Package noraneko",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 33,
+        "started_at": "2026-11-05T22:23:01Z",
+        "completed_at": "2026-11-05T22:25:02Z"
+      },
+      {
+        "name": "Prepare installer workspace",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 34,
+        "started_at": "2026-11-05T22:25:02Z",
+        "completed_at": "2026-11-05T22:25:02Z"
+      },
+      {
+        "name": "Repackage Linux DEB",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 35,
+        "started_at": "2026-11-05T22:25:02Z",
+        "completed_at": "2026-11-05T22:25:02Z"
+      },
+      {
+        "name": "Prepare Linux DEB artifact metadata",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 36,
+        "started_at": "2026-11-05T22:25:02Z",
+        "completed_at": "2026-11-05T22:25:02Z"
+      },
+      {
+        "name": "Upload Linux DEB artifact",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 37,
+        "started_at": "2026-11-05T22:25:02Z",
+        "completed_at": "2026-11-05T22:25:02Z"
+      },
+      {
+        "name": "Upload Noraneko Artifact",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 38,
+        "started_at": "2026-11-05T22:25:02Z",
+        "completed_at": "2026-11-05T22:25:56Z"
+      },
+      {
+        "name": "Prepare un-packaging installer files for windows-codesigning (binary)",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 39,
+        "started_at": "2026-11-05T22:25:56Z",
+        "completed_at": "2026-11-05T22:26:06Z"
+      },
+      {
+        "name": "Publish Unsigned Binary \ud83c\udf81",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 40,
+        "started_at": "2026-11-05T22:26:06Z",
+        "completed_at": "2026-11-05T22:26:19Z"
+      },
+      {
+        "name": "Sign Binary \ud83d\udd8a\ufe0f",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 41,
+        "started_at": "2026-11-05T22:26:19Z",
+        "completed_at": "2026-11-05T22:26:19Z"
+      },
+      {
+        "name": "Prepare installer with codesigning and re-packaging (installer)",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 42,
+        "started_at": "2026-11-05T22:26:19Z",
+        "completed_at": "2026-11-05T22:27:53Z"
+      },
+      {
+        "name": "Publish Unsigned Installer \ud83c\udf81",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 43,
+        "started_at": "2026-11-05T22:27:53Z",
+        "completed_at": "2026-11-05T22:27:58Z"
+      },
+      {
+        "name": "Sign Installer \ud83d\udd8a\ufe0f",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 44,
+        "started_at": "2026-11-05T22:27:58Z",
+        "completed_at": "2026-11-05T22:27:58Z"
+      },
+      {
+        "name": "Prepare installer with codesigning and re-packaging (without windows)",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 45,
+        "started_at": "2026-11-05T22:27:58Z",
+        "completed_at": "2026-11-05T22:27:58Z"
+      },
+      {
+        "name": "Stage verified Runtime v2 MAR inputs",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 46,
+        "started_at": "2026-11-05T22:27:58Z",
+        "completed_at": "2026-11-05T22:27:58Z"
+      },
+      {
+        "name": "Download artifact of MAR tools (Actions)",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 47,
+        "started_at": "2026-11-05T22:27:58Z",
+        "completed_at": "2026-11-05T22:27:58Z"
+      },
+      {
+        "name": "Download artifact of MAR tools (GitHub Releases)",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 48,
+        "started_at": "2026-11-05T22:27:58Z",
+        "completed_at": "2026-11-05T22:27:58Z"
+      },
+      {
+        "name": "Download artifact of binary for getting build information (Actions)",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 49,
+        "started_at": "2026-11-05T22:27:58Z",
+        "completed_at": "2026-11-05T22:27:58Z"
+      },
+      {
+        "name": "Download artifact of binary for getting build information (GiHub Releases)",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 50,
+        "started_at": "2026-11-05T22:27:58Z",
+        "completed_at": "2026-11-05T22:27:58Z"
+      },
+      {
+        "name": "Create MAR package",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 51,
+        "started_at": "2026-11-05T22:27:58Z",
+        "completed_at": "2026-11-05T22:30:13Z"
+      },
+      {
+        "name": "Verify installer workspace",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 52,
+        "started_at": "2026-11-05T22:30:13Z",
+        "completed_at": "2026-11-05T22:30:13Z"
+      },
+      {
+        "name": "Publish dist",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 53,
+        "started_at": "2026-11-05T22:30:13Z",
+        "completed_at": "2026-11-05T22:30:18Z"
+      },
+      {
+        "name": "Publish MAR",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 54,
+        "started_at": "2026-11-05T22:30:18Z",
+        "completed_at": "2026-11-05T22:30:23Z"
+      },
+      {
+        "name": "Stage macOS finalizer tools and metadata",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 55,
+        "started_at": "2026-11-05T22:30:23Z",
+        "completed_at": "2026-11-05T22:30:23Z"
+      },
+      {
+        "name": "Upload macOS finalizer tools",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 56,
+        "started_at": "2026-11-05T22:30:23Z",
+        "completed_at": "2026-11-05T22:30:23Z"
+      },
+      {
+        "name": "Post Run denoland/setup-deno@v2",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 109,
+        "started_at": "2026-11-05T22:30:23Z",
+        "completed_at": "2026-11-05T22:30:23Z"
+      },
+      {
+        "name": "Post Run actions/setup-node@v4",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 110,
+        "started_at": "2026-11-05T22:30:23Z",
+        "completed_at": "2026-11-05T22:30:23Z"
+      },
+      {
+        "name": "Post Checkout Floorp-Projects/Floorp",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 111,
+        "started_at": "2026-11-05T22:30:23Z",
+        "completed_at": "2026-11-05T22:30:23Z"
+      },
+      {
+        "name": "Post Checkout Floorp-Projects/Floorp-runtime",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 112,
+        "started_at": "2026-11-05T22:30:23Z",
+        "completed_at": "2026-11-05T22:30:24Z"
+      },
+      {
+        "name": "Complete job",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 113,
+        "started_at": "2026-11-05T22:30:24Z",
+        "completed_at": "2026-11-05T22:30:24Z"
+      }
+    ],
+    "started_at": "2026-11-05T22:17:39Z",
+    "completed_at": "2026-11-05T22:30:27Z"
+  },
+  {
+    "id": 127576687729,
+    "name": "macos-native-sign",
+    "status": "completed",
+    "conclusion": "skipped",
+    "steps": [],
+    "started_at": "2026-11-05T22:30:27Z",
+    "completed_at": "2026-11-05T22:30:27Z"
+  },
+  {
+    "id": 127576689539,
+    "name": "macos-finalize",
+    "status": "completed",
+    "conclusion": "skipped",
+    "steps": [],
+    "started_at": "2026-11-05T22:30:28Z",
+    "completed_at": "2026-11-05T22:30:27Z"
+  },
+  {
+    "id": 127576689602,
+    "name": "macos-ticket-verify",
+    "status": "completed",
+    "conclusion": "skipped",
+    "steps": [],
+    "started_at": "2026-11-05T22:30:28Z",
+    "completed_at": "2026-11-05T22:30:27Z"
+  }
+]

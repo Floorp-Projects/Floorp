@@ -44,3 +44,7 @@ The single complete candidate run covers88states; baseline current88 and origina
 ## Shared evidence and Jira
 
 Immutable measured evidence: [QA commit481c53f3](https://github.com/Floorp-Projects/Floorp/tree/481c53f308f7c133d53de614e01e153faf1b22c9/docs/qa/additional/package-pwa/KAN-26). Dedicated QA branch codex/qa-linux-package-pwa also stores final publication metadata. Jira KAN-26 comment10448 now records final CI/package/evidence and the strict comparison limitation. Labels needs-full-build and generic needs-repro were narrowed to needs-original-windows-repro, needs-high-dpi, needs-physical-gpu and needs-collapsed-vertical, preserving all other existing labels and in-progress status.
+
+## Native Windows validation handoff
+
+No additional Linux UI tests or product code changes were made. Latest3048head0e80 still depends on unchanged3041head1c37. No Windows package existed, so one pinned unsigned package-only run42120232936 was dispatched and succeeded on attempt1. Final installer artifact13459735586 and actual ZIP/EXE bytes were authenticated; native Windows execution remains for the local coordinator. See [Windows handoff](windows-handoff/report.md),88-state acceptance JSON, source logs and final installer digests. Existing1534/1 historical comparison and all original Windows/highDPI/physicalGPU/collapsed limits remain.

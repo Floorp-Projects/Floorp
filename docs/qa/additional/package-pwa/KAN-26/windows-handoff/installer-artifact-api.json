@@ -1,0 +1,14 @@
+{
+  "digest": "sha256:67df130a88bf1f201621e8f0a1590c59cc9f18aae640350a53ed3bf1c2b2a933",
+  "expired": false,
+  "id": 13459735586,
+  "name": "noraneko-windows-x86_64-unsigned-installer",
+  "size_in_bytes": 116708306,
+  "workflow_run": {
+    "head_branch": "codex/kan26-nonphoton-followup",
+    "head_repository_id": 437505831,
+    "head_sha": "0e80f14dc439dde7817c0620f0fc112d54dfba80",
+    "id": 42120232936,
+    "repository_id": 437505831
+  }
+}
