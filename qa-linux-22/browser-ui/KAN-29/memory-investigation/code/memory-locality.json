@@ -1,0 +1,42 @@
+[
+  {
+    "variant": "wayland",
+    "evidence": "full-product/runs/candidate-f43-30074/runner-result.json",
+    "mainPssKiB": 13041293,
+    "treePssKiB": 13122842,
+    "mainFraction": 0.9937857211113263,
+    "actualPid": 113790,
+    "cgroupBytes": 15163826176,
+    "allPssAvailable": true
+  },
+  {
+    "variant": "x11",
+    "evidence": "full-product/runs/candidate-f43-x11-30075/runner-result.json",
+    "mainPssKiB": 13449818,
+    "treePssKiB": 13532378,
+    "mainFraction": 0.9938990767180758,
+    "actualPid": 114791,
+    "cgroupBytes": 15564976128,
+    "allPssAvailable": true
+  },
+  {
+    "variant": "horizontal-control",
+    "evidence": "full-product/runs/candidate-f43-ar-horizontal-ui-30080/runner-result.json",
+    "mainPssKiB": 12583471,
+    "treePssKiB": 12665986,
+    "mainFraction": 0.9934853078157516,
+    "actualPid": 117008,
+    "cgroupBytes": 14572691456,
+    "allPssAvailable": true
+  },
+  {
+    "variant": "passive-no-session",
+    "evidence": "full-product/passive-no-session/result.json",
+    "mainPssKiB": 12786744,
+    "treePssKiB": 12869105,
+    "mainFraction": 0.9936000988413725,
+    "actualPid": 115562,
+    "cgroupBytes": 14944505856,
+    "allPssAvailable": true
+  }
+]

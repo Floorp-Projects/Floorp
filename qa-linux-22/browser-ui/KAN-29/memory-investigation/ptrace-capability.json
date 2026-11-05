@@ -1,0 +1,7 @@
+{
+  "kind": "OS capability probe, not a browser/product test",
+  "child": 119397,
+  "ptraceAttachReturn": -1,
+  "errno": 1,
+  "probeChildReaped": true
+}

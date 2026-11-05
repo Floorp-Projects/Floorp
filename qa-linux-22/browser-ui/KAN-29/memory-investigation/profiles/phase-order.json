@@ -1,0 +1,219 @@
+[
+  {
+    "run": "baseline-a629-30071",
+    "sourceSha": "a6290b5811b8c5309b399ac340ec40b52f97b73c",
+    "phases": [
+      {
+        "stage": "ltr",
+        "actualFloorpChildPid": 111345,
+        "actualFloorpChildExit": 0,
+        "normalQuitRequested": true,
+        "locale": {
+          "app": [
+            "en-US"
+          ],
+          "rtl": false,
+          "RTL_UI": false,
+          "dir": "ltr"
+        },
+        "install": null
+      },
+      {
+        "stage": "locale-install",
+        "actualFloorpChildPid": 111870,
+        "actualFloorpChildExit": 0,
+        "normalQuitRequested": true,
+        "locale": null,
+        "install": {
+          "id": "langpack-ar@firefox.mozilla.org",
+          "version": "157.0.20261005.135250",
+          "signedState": 2,
+          "appDisabled": false
+        }
+      }
+    ],
+    "errorClass": "TimeoutError"
+  },
+  {
+    "run": "baseline-a629-rtl-resume-30073",
+    "sourceSha": "a6290b5811b8c5309b399ac340ec40b52f97b73c",
+    "phases": [
+      {
+        "stage": "rtl",
+        "actualFloorpChildPid": 112547,
+        "actualFloorpChildExit": -9,
+        "normalQuitRequested": false,
+        "locale": null,
+        "install": null
+      }
+    ],
+    "errorClass": "TimeoutError"
+  },
+  {
+    "run": "baseline-a629-x11-hold500-30078",
+    "sourceSha": "a6290b5811b8c5309b399ac340ec40b52f97b73c",
+    "phases": [
+      {
+        "stage": "ltr",
+        "actualFloorpChildPid": 115917,
+        "actualFloorpChildExit": 0,
+        "normalQuitRequested": true,
+        "locale": {
+          "app": [
+            "en-US"
+          ],
+          "rtl": false,
+          "RTL_UI": false,
+          "dir": "ltr"
+        },
+        "install": null
+      }
+    ],
+    "errorClass": ""
+  },
+  {
+    "run": "baseline-a629-x11-one-30076",
+    "sourceSha": "a6290b5811b8c5309b399ac340ec40b52f97b73c",
+    "phases": [
+      {
+        "stage": "ltr",
+        "actualFloorpChildPid": 115044,
+        "actualFloorpChildExit": 0,
+        "normalQuitRequested": true,
+        "locale": {
+          "app": [
+            "en-US"
+          ],
+          "rtl": false,
+          "RTL_UI": false,
+          "dir": "ltr"
+        },
+        "install": null
+      }
+    ],
+    "errorClass": ""
+  },
+  {
+    "run": "candidate-f43-30074",
+    "sourceSha": "f43b22d34c0728e0ed800b8016d81b3212190954",
+    "phases": [
+      {
+        "stage": "ltr",
+        "actualFloorpChildPid": 112959,
+        "actualFloorpChildExit": 0,
+        "normalQuitRequested": true,
+        "locale": {
+          "app": [
+            "en-US"
+          ],
+          "rtl": false,
+          "RTL_UI": false,
+          "dir": "ltr"
+        },
+        "install": null
+      },
+      {
+        "stage": "locale-install",
+        "actualFloorpChildPid": 113438,
+        "actualFloorpChildExit": 0,
+        "normalQuitRequested": true,
+        "locale": null,
+        "install": {
+          "id": "langpack-ar@firefox.mozilla.org",
+          "version": "157.0.20261005.135250",
+          "signedState": 2,
+          "appDisabled": false
+        }
+      },
+      {
+        "stage": "rtl",
+        "actualFloorpChildPid": 113790,
+        "actualFloorpChildExit": -15,
+        "normalQuitRequested": false,
+        "locale": null,
+        "install": null
+      }
+    ],
+    "errorClass": "ResourceBoundExceeded"
+  },
+  {
+    "run": "candidate-f43-ar-horizontal-ui-30080",
+    "sourceSha": "f43b22d34c0728e0ed800b8016d81b3212190954",
+    "phases": [
+      {
+        "stage": "rtl",
+        "actualFloorpChildPid": 117008,
+        "actualFloorpChildExit": -15,
+        "normalQuitRequested": false,
+        "locale": null,
+        "install": null
+      }
+    ],
+    "errorClass": "ResourceBoundExceeded"
+  },
+  {
+    "run": "candidate-f43-x11-30075",
+    "sourceSha": "f43b22d34c0728e0ed800b8016d81b3212190954",
+    "phases": [
+      {
+        "stage": "ltr",
+        "actualFloorpChildPid": 114048,
+        "actualFloorpChildExit": 0,
+        "normalQuitRequested": true,
+        "locale": {
+          "app": [
+            "en-US"
+          ],
+          "rtl": false,
+          "RTL_UI": false,
+          "dir": "ltr"
+        },
+        "install": null
+      },
+      {
+        "stage": "locale-install",
+        "actualFloorpChildPid": 114459,
+        "actualFloorpChildExit": 0,
+        "normalQuitRequested": true,
+        "locale": null,
+        "install": {
+          "id": "langpack-ar@firefox.mozilla.org",
+          "version": "157.0.20261005.135250",
+          "signedState": 2,
+          "appDisabled": false
+        }
+      },
+      {
+        "stage": "rtl",
+        "actualFloorpChildPid": 114791,
+        "actualFloorpChildExit": -15,
+        "normalQuitRequested": false,
+        "locale": null,
+        "install": null
+      }
+    ],
+    "errorClass": "ResourceBoundExceeded"
+  },
+  {
+    "run": "candidate-f43-x11-hold500-30079",
+    "sourceSha": "f43b22d34c0728e0ed800b8016d81b3212190954",
+    "phases": [
+      {
+        "stage": "ltr",
+        "actualFloorpChildPid": 116378,
+        "actualFloorpChildExit": 0,
+        "normalQuitRequested": true,
+        "locale": {
+          "app": [
+            "en-US"
+          ],
+          "rtl": false,
+          "RTL_UI": false,
+          "dir": "ltr"
+        },
+        "install": null
+      }
+    ],
+    "errorClass": ""
+  }
+]

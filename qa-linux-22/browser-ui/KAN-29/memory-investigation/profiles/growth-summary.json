@@ -1,0 +1,101 @@
+[
+  {
+    "run": "passive-no-session",
+    "pid": 115562,
+    "firstObservedSeconds": 2.148448954001651,
+    "firstAbove1GiBSecondsFromPidFirstObservation": 6.38879223999902,
+    "peakGiB": 12.272934913635254,
+    "mainShareAtPeak": 0.9936000988413725,
+    "caveat": "PSS cached async timestamps; pid first observation is not exact launch/locale activation time"
+  },
+  {
+    "run": "baseline-a629-x11-hold500-30078",
+    "pid": 115917,
+    "firstObservedSeconds": 2.154853465002816,
+    "firstAbove1GiBSecondsFromPidFirstObservation": null,
+    "peakGiB": 0.6035604476928711,
+    "mainShareAtPeak": 0.7088416585160828,
+    "caveat": "PSS cached async timestamps; pid first observation is not exact launch/locale activation time"
+  },
+  {
+    "run": "baseline-a629-x11-one-30076",
+    "pid": 115044,
+    "firstObservedSeconds": 2.4130891320019145,
+    "firstAbove1GiBSecondsFromPidFirstObservation": null,
+    "peakGiB": 0.5920143127441406,
+    "mainShareAtPeak": 0.7260137377330164,
+    "caveat": "PSS cached async timestamps; pid first observation is not exact launch/locale activation time"
+  },
+  {
+    "run": "candidate-f43-30074",
+    "pid": 112959,
+    "firstObservedSeconds": 2.160901693001506,
+    "firstAbove1GiBSecondsFromPidFirstObservation": null,
+    "peakGiB": 0.6073322296142578,
+    "mainShareAtPeak": 0.7156370419921046,
+    "caveat": "PSS cached async timestamps; pid first observation is not exact launch/locale activation time"
+  },
+  {
+    "run": "candidate-f43-30074",
+    "pid": 113438,
+    "firstObservedSeconds": 109.09774278300029,
+    "firstAbove1GiBSecondsFromPidFirstObservation": null,
+    "peakGiB": 0.535731315612793,
+    "mainShareAtPeak": 0.6763980738934233,
+    "caveat": "PSS cached async timestamps; pid first observation is not exact launch/locale activation time"
+  },
+  {
+    "run": "candidate-f43-30074",
+    "pid": 113790,
+    "firstObservedSeconds": 115.81457105799927,
+    "firstAbove1GiBSecondsFromPidFirstObservation": 10.117446619002294,
+    "peakGiB": 12.514917373657227,
+    "mainShareAtPeak": 0.9937857211113263,
+    "caveat": "PSS cached async timestamps; pid first observation is not exact launch/locale activation time"
+  },
+  {
+    "run": "candidate-f43-ar-horizontal-ui-30080",
+    "pid": 117008,
+    "firstObservedSeconds": 2.2395245250008884,
+    "firstAbove1GiBSecondsFromPidFirstObservation": 9.944040608999785,
+    "peakGiB": 12.079225540161133,
+    "mainShareAtPeak": 0.9934853078157516,
+    "caveat": "PSS cached async timestamps; pid first observation is not exact launch/locale activation time"
+  },
+  {
+    "run": "candidate-f43-x11-30075",
+    "pid": 114048,
+    "firstObservedSeconds": 2.119162311999389,
+    "firstAbove1GiBSecondsFromPidFirstObservation": null,
+    "peakGiB": 0.6005315780639648,
+    "mainShareAtPeak": 0.7053436302510866,
+    "caveat": "PSS cached async timestamps; pid first observation is not exact launch/locale activation time"
+  },
+  {
+    "run": "candidate-f43-x11-30075",
+    "pid": 114459,
+    "firstObservedSeconds": 25.986388891000388,
+    "firstAbove1GiBSecondsFromPidFirstObservation": null,
+    "peakGiB": 0.48093223571777344,
+    "mainShareAtPeak": 0.7116463808809941,
+    "caveat": "PSS cached async timestamps; pid first observation is not exact launch/locale activation time"
+  },
+  {
+    "run": "candidate-f43-x11-30075",
+    "pid": 114791,
+    "firstObservedSeconds": 30.380044620000263,
+    "firstAbove1GiBSecondsFromPidFirstObservation": 62.41385393699966,
+    "peakGiB": 12.905481338500977,
+    "mainShareAtPeak": 0.9938990767180758,
+    "caveat": "PSS cached async timestamps; pid first observation is not exact launch/locale activation time"
+  },
+  {
+    "run": "candidate-f43-x11-hold500-30079",
+    "pid": 116378,
+    "firstObservedSeconds": 2.117053089001274,
+    "firstAbove1GiBSecondsFromPidFirstObservation": null,
+    "peakGiB": 0.5919322967529297,
+    "mainShareAtPeak": 0.7247916015505425,
+    "caveat": "PSS cached async timestamps; pid first observation is not exact launch/locale activation time"
+  }
+]

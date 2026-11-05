@@ -1,0 +1,37 @@
+{
+  "rootCause": "unconfirmed",
+  "readonly": true,
+  "browserBuildProfilerOrTestsRun": false,
+  "sourceRefs": {
+    "parent": "a6290b5811b8c5309b399ac340ec40b52f97b73c",
+    "candidate": "f43b22d34c0728e0ed800b8016d81b3212190954",
+    "runtime": "c74fe1a545d275cdd710ab44701c1ee0dd6b0eae"
+  },
+  "mainProcessPssFractionRange": [
+    0.99349,
+    0.9939
+  ],
+  "rankedPaths": [
+    "native/privileged document localization or retained main heap (category not measured)",
+    "shared chrome/native observer/layout feedback (no unbounded producer identified)",
+    "restore/profile-history/locale UI state interaction"
+  ],
+  "weakenedHypotheses": [
+    "direct locale->langpack reinstall recursion",
+    "unsupported ar fallback alone retaining12GiB",
+    "newtab missing-method exception alone discriminates Arabic",
+    "active NewSession is required",
+    "visible vertical tabs are required",
+    "f43-only newly introduced memory cause"
+  ],
+  "importantLimit": "Main process includes possible privileged about/chrome pages; do not infer no page involvement from low remote-content PSS.",
+  "readonlyMainCounter": "native159 error checks differ but no cause/fix established; no version migration",
+  "nextObservation": "Root-only bounded clean-parent preRTL snapshot and early non-minimizing heap/memory category report plus stack if possible; no execution here",
+  "evidence": [
+    "report.md",
+    "source-index.json",
+    "memory-locality.json",
+    "log-pattern-counts.json",
+    "native157-159-readonly-comparison.patch"
+  ]
+}

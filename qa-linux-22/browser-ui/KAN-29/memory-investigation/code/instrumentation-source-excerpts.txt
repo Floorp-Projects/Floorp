@@ -1,0 +1,463 @@
+=== c74fe1a545d275cdd710ab44701c1ee0dd6b0eae:mozglue/baseprofiler/core/platform.cpp:2271-2302 ===
+2271: static uint32_t ParseFeature(const char* aFeature, bool aIsStartup) {
+2272:   if (strcmp(aFeature, "default") == 0) {
+2273:     return (aIsStartup ? (DefaultFeatures() | StartupExtraDefaultFeatures())
+2274:                        : DefaultFeatures()) &
+2275:            AvailableFeatures();
+2276:   }
+2277: 
+2278: #define PARSE_FEATURE_BIT(n_, str_, Name_, desc_) \
+2279:   if (strcmp(aFeature, str_) == 0) {              \
+2280:     return ProfilerFeature::Name_;                \
+2281:   }
+2282: 
+2283:   BASE_PROFILER_FOR_EACH_FEATURE(PARSE_FEATURE_BIT)
+2284: 
+2285: #undef PARSE_FEATURE_BIT
+2286: 
+2287:   PrintToConsole("\nUnrecognized feature \"%s\".\n\n", aFeature);
+2288:   // Since we may have an old feature we don't implement anymore, don't exit.
+2289:   PrintUsage();
+2290:   return 0;
+2291: }
+2292: 
+2293: uint32_t ParseFeaturesFromStringArray(const char** aFeatures,
+2294:                                       uint32_t aFeatureCount,
+2295:                                       bool aIsStartup /* = false */) {
+2296:   uint32_t features = 0;
+2297:   for (size_t i = 0; i < aFeatureCount; i++) {
+2298:     features |= ParseFeature(aFeatures[i], aIsStartup);
+2299:   }
+2300:   return features;
+2301: }
+2302: 
+
+=== c74fe1a545d275cdd710ab44701c1ee0dd6b0eae:mozglue/baseprofiler/public/BaseProfilerState.h:208-228 ===
+208:                                                                            \
+209:   MACRO(18, "unregisteredthreads", UnregisteredThreads,                    \
+210:         "Discover and profile unregistered threads -- beware: expensive!") \
+211:                                                                            \
+212:   MACRO(19, "processcpu", ProcessCPU,                                      \
+213:         "Sample the CPU utilization of each process")                      \
+214:                                                                            \
+215:   MACRO(20, "power", Power, POWER_HELP)                                    \
+216:                                                                            \
+217:   MACRO(21, "cpufreq", CPUFrequency,                                       \
+218:         "Record the clock frequency of "                                   \
+219:         "every CPU core for every profiler sample.")                       \
+220:                                                                            \
+221:   MACRO(22, "bandwidth", Bandwidth,                                        \
+222:         "Record the network bandwidth used for every profiler sample.")    \
+223:                                                                            \
+224:   MACRO(23, "memory", Memory,                                              \
+225:         "Track the memory allocations and deallocations per process over " \
+226:         "time.")                                                           \
+227:                                                                            \
+228:   MACRO(24, "tracing", Tracing,                                            \
+
+=== c74fe1a545d275cdd710ab44701c1ee0dd6b0eae:tools/profiler/core/platform.cpp:5787-5820 ===
+5787: static uint32_t ParseFeature(const char* aFeature, bool aIsStartup) {
+5788:   if (strcmp(aFeature, "default") == 0) {
+5789:     return (aIsStartup ? (DefaultFeatures() | StartupExtraDefaultFeatures())
+5790:                        : DefaultFeatures()) &
+5791:            AvailableFeatures();
+5792:   }
+5793: 
+5794: #define PARSE_FEATURE_BIT(n_, str_, Name_, desc_) \
+5795:   if (strcmp(aFeature, str_) == 0) {              \
+5796:     return ProfilerFeature::Name_;                \
+5797:   }
+5798: 
+5799:   PROFILER_FOR_EACH_FEATURE(PARSE_FEATURE_BIT)
+5800: 
+5801: #undef PARSE_FEATURE_BIT
+5802: 
+5803:   printf("\nUnrecognized feature \"%s\".\n\n", aFeature);
+5804:   // Since we may have an old feature we don't implement anymore, don't exit.
+5805:   PrintUsage();
+5806:   return 0;
+5807: }
+5808: 
+5809: uint32_t ParseFeaturesFromStringArray(const char** aFeatures,
+5810:                                       uint32_t aFeatureCount,
+5811:                                       bool aIsStartup /* = false */) {
+5812:   uint32_t features = 0;
+5813:   for (size_t i = 0; i < aFeatureCount; i++) {
+5814:     features |= ParseFeature(aFeatures[i], aIsStartup);
+5815:   }
+5816:   return features;
+5817: }
+5818: 
+5819: static ProfilingStack* locked_register_thread(
+5820:     PSLockRef aLock, ThreadRegistry::OffThreadRef aOffThreadRef) {
+
+=== c74fe1a545d275cdd710ab44701c1ee0dd6b0eae:tools/profiler/core/platform.cpp:5987-6058 ===
+5987: static void profiler_stop_signal_handler(int signal, siginfo_t* info,
+5988:                                          void* context) {
+5989:   // Signal handlers are limited in what functions they can call, for more
+5990:   // details see: https://man7.org/linux/man-pages/man7/signal-safety.7.html
+5991:   // As we have a background thread already running for checking whether or
+5992:   // not we want to start the profiler, we can re-use the same machinery to
+5993:   // stop the profiler. We use the same mechanism of writing to a pipe/file
+5994:   // descriptor, but with a different control character. Note that `write` is
+5995:   // signal safe.
+5996:   if (sAsyncSignalControlWriteFd != -1) {
+5997:     char signalControlCharacter = sAsyncSignalControlCharStop;
+5998:     [[maybe_unused]] ssize_t _ =
+5999:         write(sAsyncSignalControlWriteFd, &signalControlCharacter,
+6000:               sizeof(signalControlCharacter));
+6001:   }
+6002: }
+6003: #endif
+6004: 
+6005: // This may fail if we have previously had an issue finding the download
+6006: // directory, or if the directory has moved since we cached the path.
+6007: // This is non-ideal, but captured by Bug 1885000
+6008: Maybe<nsAutoCString> profiler_find_dump_path() {
+6009: // Note, this is currently a posix-only implementation, as we currently have
+6010: // issues with fetching the download directory on Windows. See Bug 1890154.
+6011: #if defined(XP_WIN)
+6012:   return Nothing();
+6013: #else
+6014:   Maybe<nsCOMPtr<nsIFile>> directory = Nothing();
+6015:   nsAutoCString path;
+6016: 
+6017:   {
+6018:     // Acquire the lock so that we can get things from CorePS
+6019:     PSAutoLock lock;
+6020:     Maybe<nsCOMPtr<nsIFile>> downloadDir = Nothing();
+6021:     downloadDir = CorePS::AsyncSignalDumpDirectory(lock);
+6022: 
+6023:     // This needs to be done within the context of the lock, as otherwise
+6024:     // another thread might modify CorePS::mAsyncSignalDumpDirectory while we're
+6025:     // cloning the pointer.
+6026:     if (downloadDir) {
+6027:       nsCOMPtr<nsIFile> d;
+6028:       downloadDir.value()->Clone(getter_AddRefs(d));
+6029:       directory = Some(d);
+6030:     } else {
+6031:       return Nothing();
+6032:     }
+6033:   }
+6034: 
+6035:   // Now, we can check to see if we have a directory, and use it to construct
+6036:   // the output file
+6037:   if (directory) {
+6038:     // Set up the name of our profile file
+6039:     path.AppendPrintf("profile_%i_%i.json", XRE_GetProcessType(), getpid());
+6040: 
+6041:     // Append it to the directory we found
+6042:     nsresult rv = directory.value()->AppendNative(path);
+6043:     if (NS_FAILED(rv)) {
+6044:       LOG("Failed to append path to profile file");
+6045:       return Nothing();
+6046:     }
+6047: 
+6048:     // Write the result *back* to the original path
+6049:     rv = directory.value()->GetNativePath(path);
+6050:     if (NS_FAILED(rv)) {
+6051:       LOG("Failed to get native path for temp path");
+6052:       return Nothing();
+6053:     }
+6054: 
+6055:     return Some(path);
+6056:   }
+6057: 
+6058:   return Nothing();
+
+=== c74fe1a545d275cdd710ab44701c1ee0dd6b0eae:tools/profiler/core/platform.cpp:6100-6188 ===
+6100: void profiler_dump_and_stop() {
+6101:   // Do nothing unless we're the parent process, as we're sandboxed and can't
+6102:   // open a file handle anyway.
+6103:   if (!XRE_IsParentProcess()) {
+6104:     return;
+6105:   }
+6106: 
+6107:   // pause the profiler until we are done dumping
+6108:   profiler_pause();
+6109: 
+6110:   // Try to save the profile to a file
+6111:   auto path = profiler_find_dump_path();
+6112: 
+6113:   // Exit quickly if we can't find the path, while stopping the profiler
+6114:   if (!path) {
+6115:     LOG("Failed to find a valid dump path to write profile to disk");
+6116:     profiler_stop();
+6117:     return;
+6118:   }
+6119: 
+6120:   // Dump the profile of this process first, in case the multi-process
+6121:   // gathering is unsuccessful (e.g. due to a blocked main threaed).
+6122:   profiler_save_profile_to_file(path.value().get());
+6123: 
+6124:   // We are probably not the main thread, but check anyway, and dispatch
+6125:   // directly.
+6126:   if (NS_IsMainThread()) {
+6127:     nsCOMPtr<nsIProfiler> nsProfiler(
+6128:         do_GetService("@mozilla.org/tools/profiler;1"));
+6129:     nsProfiler->DumpProfileToFileAsyncNoJs(path.value(), 0)
+6130:         ->Then(
+6131:             GetMainThreadSerialEventTarget(), __func__,
+6132:             [](void_t ok) {
+6133:               LOG("Stopping profiler after dumping profile to disk");
+6134:               profiler_stop();
+6135:             },
+6136:             [](nsresult aRv) {
+6137:               LOG("Dumping to disk failed with error \"%s\", stopping "
+6138:                   "profiler.",
+6139:                   GetStaticErrorName(aRv));
+6140:               profiler_stop();
+6141:             });
+6142:   } else {
+6143:     // Dispatch a runnable, as nsProfiler classes are currently main-thread
+6144:     // only. We also stop the profiler within the runnable, as otherwise we
+6145:     // may find ourselves stopping the profiler before the runnable has
+6146:     // gathered all the profile data.
+6147:     NS_DispatchToMainThread(
+6148:         NS_NewRunnableFunction("WriteProfileDataToFile", [=] {
+6149:           nsCOMPtr<nsIProfiler> nsProfiler(
+6150:               do_GetService("@mozilla.org/tools/profiler;1"));
+6151:           nsProfiler->DumpProfileToFileAsyncNoJs(path.value(), 0)
+6152:               ->Then(
+6153:                   GetMainThreadSerialEventTarget(), __func__,
+6154:                   [](void_t ok) {
+6155:                     LOG("Stopping profiler after dumping profile to disk");
+6156:                     profiler_stop();
+6157:                   },
+6158:                   [](nsresult aRv) {
+6159:                     LOG("Dumping to disk failed with error \"%s\", stopping "
+6160:                         "profiler.",
+6161:                         GetStaticErrorName(aRv));
+6162:                     profiler_stop();
+6163:                   });
+6164:         }));
+6165:   }
+6166: }
+6167: 
+6168: #if defined(GECKO_PROFILER_ASYNC_POSIX_SIGNAL_CONTROL)
+6169: void profiler_init_signal_handlers() {
+6170:   // Set a handler to start the profiler
+6171:   struct sigaction prof_start_sa{};
+6172:   memset(&prof_start_sa, 0, sizeof(struct sigaction));
+6173:   prof_start_sa.sa_sigaction = profiler_start_signal_handler;
+6174:   prof_start_sa.sa_flags = SA_RESTART | SA_SIGINFO;
+6175:   sigemptyset(&prof_start_sa.sa_mask);
+6176:   DebugOnly<int> rstart = sigaction(SIGUSR1, &prof_start_sa, nullptr);
+6177:   MOZ_ASSERT(rstart == 0, "Failed to install Profiler SIGUSR1 handler");
+6178: 
+6179:   // Set a handler to stop the profiler
+6180:   struct sigaction prof_stop_sa{};
+6181:   memset(&prof_stop_sa, 0, sizeof(struct sigaction));
+6182:   prof_stop_sa.sa_sigaction = profiler_stop_signal_handler;
+6183:   prof_stop_sa.sa_flags = SA_RESTART | SA_SIGINFO;
+6184:   sigemptyset(&prof_stop_sa.sa_mask);
+6185:   DebugOnly<int> rstop = sigaction(SIGUSR2, &prof_stop_sa, nullptr);
+6186:   MOZ_ASSERT(rstop == 0, "Failed to install Profiler SIGUSR2 handler");
+6187: }
+6188: #endif
+
+=== c74fe1a545d275cdd710ab44701c1ee0dd6b0eae:tools/profiler/core/platform.cpp:6378-6405 ===
+6378: 
+6379:     const char* startupFeaturesBitfield =
+6380:         getenv("MOZ_PROFILER_STARTUP_FEATURES_BITFIELD");
+6381:     if (startupFeaturesBitfield && startupFeaturesBitfield[0] != '\0') {
+6382:       errno = 0;
+6383:       features = strtol(startupFeaturesBitfield, nullptr, 10);
+6384:       if (errno == 0) {
+6385:         LOG("- MOZ_PROFILER_STARTUP_FEATURES_BITFIELD = %d", features);
+6386:       } else {
+6387:         LOG("- MOZ_PROFILER_STARTUP_FEATURES_BITFIELD not a valid integer: %s",
+6388:             startupFeaturesBitfield);
+6389:         PrintUsage();
+6390:         exit(1);
+6391:       }
+6392:     } else {
+6393:       const char* startupFeatures = getenv("MOZ_PROFILER_STARTUP_FEATURES");
+6394:       if (startupFeatures) {
+6395:         // Interpret startupFeatures as a list of feature strings, separated by
+6396:         // commas.
+6397:         UniquePtr<char[]> featureStringStorage;
+6398:         Vector<const char*> featureStringArray =
+6399:             SplitAtCommas(startupFeatures, featureStringStorage);
+6400:         features = ParseFeaturesFromStringArray(featureStringArray.begin(),
+6401:                                                 featureStringArray.length(),
+6402:                                                 /* aIsStartup */ true);
+6403:         LOG("- MOZ_PROFILER_STARTUP_FEATURES = %d", features);
+6404:       }
+6405:     }
+
+=== c74fe1a545d275cdd710ab44701c1ee0dd6b0eae:tools/profiler/core/platform.cpp:6795-6809 ===
+6795: static void profiler_save_profile_to_file_with_progress(
+6796:     const char* aFilename, RefPtr<ProgressLogger::SharedProgress> aProgress) {
+6797:   MOZ_RELEASE_ASSERT(CorePS::Exists());
+6798: 
+6799:   const auto preRecordedMetaInformation = PreRecordMetaInformation();
+6800: 
+6801:   PSAutoLock lock;
+6802: 
+6803:   if (!ActivePS::Exists(lock)) {
+6804:     return;
+6805:   }
+6806: 
+6807:   locked_profiler_save_profile_to_file(
+6808:       lock, aFilename, preRecordedMetaInformation,
+6809:       /* aIsShuttingDown */ false, std::move(aProgress));
+
+=== c74fe1a545d275cdd710ab44701c1ee0dd6b0eae:tools/profiler/core/platform.cpp:7400-7442 ===
+7400: // This implementation is causing issues on Windows (see Bug 1890154) but as it
+7401: // only exists to support the posix signal handling (on non-windows platforms)
+7402: // we can remove it for now.
+7403: #if !defined(XP_WIN)
+7404:   LOG("profiler_lookup_async_signal_dump_directory");
+7405: 
+7406:   MOZ_ASSERT(XRE_IsParentProcess() && NS_IsMainThread(),
+7407:              "We can only get access to the directory service from the parent "
+7408:              "process main thread");
+7409: 
+7410:   // Make sure the profiler is actually running~
+7411:   MOZ_RELEASE_ASSERT(CorePS::Exists());
+7412: 
+7413:   // take the lock so that we can write to CorePS
+7414:   PSAutoLock lock;
+7415:   nsresult rv;
+7416: 
+7417:   // Check to see if we have a `MOZ_UPLOAD_DIR` first - i.e., check to see if
+7418:   // we're running in CI.
+7419:   LOG("Checking if MOZ_UPLOAD_DIR exists");
+7420:   const char* mozUploadDir = getenv("MOZ_UPLOAD_DIR");
+7421:   if (mozUploadDir && mozUploadDir[0] != '\0') {
+7422:     LOG("Found MOZ_UPLOAD_DIR at: %s", mozUploadDir);
+7423:     // We want to do the right thing, and turn this into an nsIFile. Go through
+7424:     // the motions here:
+7425:     nsCOMPtr<nsIFile> mozUploadDirFile;
+7426:     rv = NS_NewNativeLocalFile(nsDependentCString(mozUploadDir),
+7427:                                getter_AddRefs(mozUploadDirFile));
+7428:     if (NS_FAILED(rv)) {
+7429:       LOG("Failed to assign a filepath while creating MOZ_UPLOAD_DIR file "
+7430:           "%s, Error %s ",
+7431:           mozUploadDir, GetStaticErrorName(rv));
+7432:       return;
+7433:     }
+7434: 
+7435:     CorePS::SetAsyncSignalDumpDirectory(lock, Some(mozUploadDirFile));
+7436:   } else {
+7437: #  if defined(GP_OS_android)
+7438:     // Bug 1904639: GetPreferredDownloadsDirectory is not implemented for
+7439:     // Android.
+7440:     return;
+7441: #  endif
+7442: 
+
+=== c74fe1a545d275cdd710ab44701c1ee0dd6b0eae:toolkit/xre/nsAppRunner.cpp:6198-6220 ===
+6198:     // files can't override JS engine start-up prefs.
+6199:     mDirProvider.FinishInitializingUserPrefs();
+6200: 
+6201:     // Now that the profiler, directory services, and prefs have been
+6202:     // initialized we can find the download directory, where the profiler can
+6203:     // write profiles when user stops the profiler using POSIX signal handling.
+6204:     //
+6205:     // It's possible to start and stop the profiler by sending POSIX signals to
+6206:     // the profiler binary when Firefox is frozen. At the time when stop signal
+6207:     // is handled, Firefox stops the profiler and dumps the profile to disk. But
+6208:     // getting the download directory is not really possible at that time
+6209:     // because main thread will be unresponsive. That's why we are getting this
+6210:     // information right now.
+6211:     profiler_lookup_async_signal_dump_directory();
+6212: 
+6213:     // Do a canary load of a JS based module here. This will help us detect
+6214:     // missing resources during startup and make us react appropriate, that
+6215:     // is inform the user before exiting with a crash.
+6216:     {
+6217:       mozilla::dom::AutoJSAPI jsapi;
+6218:       MOZ_ALWAYS_TRUE(jsapi.Init(xpc::PrivilegedJunkScope()));
+6219:       JS::Rooted<JSObject*> mod(jsapi.cx());
+6220:       // AppConstants.sys.mjs is small, widely used and most likely will
+
+=== c74fe1a545d275cdd710ab44701c1ee0dd6b0eae:xpcom/base/nsMemoryReporterManager.cpp:1788-1808 ===
+1788: 
+1789: #ifdef MOZ_DMD
+1790:     mStrongEternalReporters->AppendElement(new mozilla::dmd::DMDReporter());
+1791: #endif
+1792: 
+1793: #ifdef XP_WIN
+1794:     mStrongEternalReporters->AppendElement(new WindowsAddressSpaceReporter());
+1795: #endif
+1796: 
+1797: #ifdef MOZ_WIDGET_ANDROID
+1798:     mStrongEternalReporters->AppendElement(new AndroidMemoryReporter());
+1799: #endif
+1800:   }  // autoLock(mMutex);
+1801: 
+1802: #ifdef XP_UNIX
+1803:   nsMemoryInfoDumper::Initialize();
+1804: #endif
+1805: 
+1806:   return NS_OK;
+1807: }
+1808: 
+
+=== c74fe1a545d275cdd710ab44701c1ee0dd6b0eae:xpcom/base/nsMemoryInfoDumper.cpp:124-141 ===
+124: namespace {
+125: 
+126: /*
+127:  * The following code supports dumping about:memory upon receiving a signal.
+128:  *
+129:  * We listen for the following signals:
+130:  *
+131:  *  - SIGRTMIN:     Dump our memory reporters (and those of our child
+132:  *                  processes),
+133:  *  - SIGRTMIN + 1: Dump our memory reporters (and those of our child
+134:  *                  processes) after minimizing memory usage, and
+135:  *  - SIGRTMIN + 2: Dump the GC and CC logs in this and our child processes.
+136:  *
+137:  * When we receive one of these signals, we write the signal number to a pipe.
+138:  * The IO thread then notices that the pipe has been written to, and kicks off
+139:  * the appropriate task on the main thread.
+140:  *
+141:  * This scheme is similar to using signalfd(), except it's portable and it
+
+=== c74fe1a545d275cdd710ab44701c1ee0dd6b0eae:xpcom/base/nsMemoryInfoDumper.cpp:242-257 ===
+242: void nsMemoryInfoDumper::Initialize() {
+243: #if defined(MOZ_SUPPORTS_RT_SIGNALS)
+244:   SignalPipeWatcher* sw = SignalPipeWatcher::GetSingleton();
+245: 
+246:   // Dump memory reporters (and those of our child processes)
+247:   sDumpAboutMemorySignum = SIGRTMIN;
+248:   sw->RegisterCallback(sDumpAboutMemorySignum, doMemoryReport);
+249:   // Dump our memory reporters after minimizing memory usage
+250:   sDumpAboutMemoryAfterMMUSignum = SIGRTMIN + 1;
+251:   sw->RegisterCallback(sDumpAboutMemoryAfterMMUSignum, doMemoryReport);
+252:   // Dump the GC and CC logs in this and our child processes.
+253:   sGCAndCCDumpSignum = SIGRTMIN + 2;
+254:   sw->RegisterCallback(sGCAndCCDumpSignum, doGCCCDump);
+255: #endif
+256: 
+257: #if defined(MOZ_SUPPORTS_FIFO)
+
+=== c74fe1a545d275cdd710ab44701c1ee0dd6b0eae:tools/profiler/gecko/nsIProfiler.idl:160-185 ===
+160:   void waitForScheduledDump();
+161: 
+162:   boolean IsActive();
+163: 
+164:   /**
+165:    * Clear all registered and unregistered page information in prifiler.
+166:    */
+167:   void ClearAllPages();
+168: 
+169:   /**
+170:    * Returns an array of the features that are supported in this build.
+171:    * Features may vary depending on platform and build flags.
+172:    */
+173:   Array<AUTF8String> GetFeatures();
+174: 
+175:   /**
+176:    * Returns a JavaScript object that contains a description of the currently configured
+177:    * state of the profiler when the profiler is active. This can be useful to assert
+178:    * the UI of the profiler's recording panel in tests. It returns null when the profiler
+179:    * is not active.
+180:    */
+181:   [implicit_jscontext]
+182:   readonly attribute jsval activeConfiguration;
+183: 
+184:   /**
+185:    * Returns an array of all features that are supported by the profiler.

@@ -1,0 +1,26 @@
+{
+  "additionalExperimentCountAuthorized": 1,
+  "targetCaptureCount": 1,
+  "normalFreshEnglishLocaleBootstrapRequired": true,
+  "sourceProduct": "official12.20.0 exact parent a6290b5811b8c5309b399ac340ec40b52f97b73c",
+  "runtime": "c74fe1a545d275cdd710ab44701c1ee0dd6b0eae",
+  "nativeVersion": "157.0.1",
+  "buildId": "20261007125927",
+  "oldProfileImported": false,
+  "maxTargetSeconds": 20,
+  "ownedRssGuardGiB": 3,
+  "cgroupGuardGiB": 6,
+  "startupProfilerFeatures": [
+    "js",
+    "stackwalk",
+    "cpu",
+    "memory"
+  ],
+  "memorySignal": "SIGRTMIN nonminimizing, only when registered",
+  "profileDumpSignal": "SIGUSR2, only when registered; parent-first asynchronous capture",
+  "productPayloadModified": false,
+  "ciSettingsModified": false,
+  "buildRequested": false,
+  "existingPr2877Modified": false,
+  "noCandidateOrCauseClaimBeforeData": true
+}

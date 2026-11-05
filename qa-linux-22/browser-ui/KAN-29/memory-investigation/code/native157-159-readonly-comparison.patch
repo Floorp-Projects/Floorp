@@ -1,0 +1,121 @@
+diff --git a/browser/components/sidebar/browser-sidebar.js b/browser/components/sidebar/browser-sidebar.js
+index 6a91102899..3a9925d2a3 100644
+--- a/browser/components/sidebar/browser-sidebar.js
++++ b/browser/components/sidebar/browser-sidebar.js
+@@ -13,12 +13,12 @@ const { DeferredTask } = ChromeUtils.importESModule(
+ );
+ 
+ const toolsNameMap = {
++  viewOpenTabsSidebar: "opentabs",
++  viewBookmarksSidebar: "bookmarks",
+   viewGenaiChatSidebar: "aichat",
+   viewGenaiPageAssistSidebar: "aipageassist",
+-  viewTabsSidebar: "syncedtabs",
+   viewHistorySidebar: "history",
+-  viewBookmarksSidebar: "bookmarks",
+-  viewOpenTabsSidebar: "opentabs",
++  viewTabsSidebar: "syncedtabs",
+   viewCPMSidebar: "passwords",
+   viewResourceMonitorSidebar: "resourcemonitor",
+ };
+@@ -424,7 +424,8 @@ var SidebarController = {
+   get inSingleTabWindow() {
+     return (
+       !window.toolbar.visible ||
+-      window.document.documentElement.hasAttribute("taskbartab")
++      window.document.documentElement.hasAttribute("taskbartab") ||
++      window.document.documentElement.hasAttribute("mini-window")
+     );
+   },
+ 
+@@ -1011,6 +1012,8 @@ var SidebarController = {
+     // Indicate we've switched ordering to the box
+     this._box.toggleAttribute("sidebar-positionend", !this._positionStart);
+     sidebarMain.toggleAttribute("sidebar-positionend", !this._positionStart);
++    // The launcher reads the position to place the Customize button.
++    sidebarMain.requestUpdate?.();
+     contentArea.toggleAttribute("sidebar-positionend", !this._positionStart);
+     sidebarContainer.toggleAttribute(
+       "sidebar-positionend",
+@@ -2088,6 +2091,7 @@ var SidebarController = {
+         `url("${sidebar.iconUrl}")`
+       );
+       el.setAttribute("label", sidebar.label);
++      el.toggleAttribute("auto-accesskey", true);
+     };
+ 
+     updateAttributes(document.getElementById(sidebar.menuId), sidebar);
+@@ -2292,12 +2296,12 @@ var SidebarController = {
+       this._box.setAttribute("checked", "true");
+       this._state.command = commandID;
+ 
+-      let { icon, url, title, sourceL10nEl, contextMenuId } =
++      let { iconUrl, url, title, sourceL10nEl, contextMenuId } =
+         this.sidebars.get(commandID);
+-      if (icon) {
++      if (iconUrl) {
+         this._switcherTarget.style.setProperty(
+           "--webextension-menuitem-image",
+-          icon
++          `url("${iconUrl}")`
+         );
+       } else {
+         this._switcherTarget.style.removeProperty(
+diff --git a/dom/l10n/DocumentL10n.cpp b/dom/l10n/DocumentL10n.cpp
+index f17414fed5..7d06ab0822 100644
+--- a/dom/l10n/DocumentL10n.cpp
++++ b/dom/l10n/DocumentL10n.cpp
+@@ -4,6 +4,7 @@
+ 
+ #include "DocumentL10n.h"
+ 
++#include "mozilla/ScopeExit.h"
+ #include "mozilla/dom/AutoEntryScript.h"
+ #include "mozilla/dom/Document.h"
+ #include "mozilla/dom/DocumentL10nBinding.h"
+@@ -153,23 +154,26 @@ void DocumentL10n::TriggerInitialTranslation() {
+     return;
+   }
+ 
++  auto errorExit = MakeScopeExit([&] {
++    InitialTranslationCompleted(false);
++    mReady->MaybeRejectWithUndefined();
++  });
++
+   AutoAllowLegacyScriptExecution exemption;
+ 
+-  nsTArray<RefPtr<Promise>> promises;
++  AutoTArray<RefPtr<Promise>, 2> promises;
+ 
+-  ErrorResult rv;
++  IgnoredErrorResult rv;
+   promises.AppendElement(TranslateDocument(rv));
+   if (NS_WARN_IF(rv.Failed())) {
+-    rv.SuppressException();
+-    InitialTranslationCompleted(false);
+-    mReady->MaybeRejectWithUndefined();
+     return;
+   }
+   promises.AppendElement(TranslateRoots(rv));
++  if (NS_WARN_IF(rv.Failed())) {
++    return;
++  }
+   Element* documentElement = mDocument->GetDocumentElement();
+   if (!documentElement) {
+-    InitialTranslationCompleted(false);
+-    mReady->MaybeRejectWithUndefined();
+     return;
+   }
+ 
+@@ -177,6 +181,11 @@ void DocumentL10n::TriggerInitialTranslation() {
+ 
+   AutoEntryScript aes(mGlobal, "DocumentL10n InitialTranslation");
+   RefPtr<Promise> promise = Promise::All(aes.cx(), promises, rv);
++  if (NS_WARN_IF(rv.Failed())) {
++    return;
++  }
++
++  errorExit.release();
+ 
+   if (promise->State() == Promise::PromiseState::Resolved) {
+     // If the promise is already resolved, we can fast-track

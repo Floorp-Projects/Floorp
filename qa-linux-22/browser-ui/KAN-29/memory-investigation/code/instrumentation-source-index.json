@@ -1,0 +1,93 @@
+[
+  {
+    "runtimeSha": "c74fe1a545d275cdd710ab44701c1ee0dd6b0eae",
+    "file": "mozglue/baseprofiler/core/platform.cpp",
+    "start": 2271,
+    "end": 2302,
+    "sourceSha256": "c0f0194ed994a97beca0f2e9eae03bacf18814edd3800fc00a7b196458e818e7"
+  },
+  {
+    "runtimeSha": "c74fe1a545d275cdd710ab44701c1ee0dd6b0eae",
+    "file": "mozglue/baseprofiler/public/BaseProfilerState.h",
+    "start": 208,
+    "end": 228,
+    "sourceSha256": "b70c9604200ff0f53f711ec467be0a30d6ba4abeecc23565444cab6c1bded405"
+  },
+  {
+    "runtimeSha": "c74fe1a545d275cdd710ab44701c1ee0dd6b0eae",
+    "file": "tools/profiler/core/platform.cpp",
+    "start": 5787,
+    "end": 5820,
+    "sourceSha256": "bde8392bc5ad8176c95b5573dbc699fd7e69c841dc08c132331a4aba9f0c982c"
+  },
+  {
+    "runtimeSha": "c74fe1a545d275cdd710ab44701c1ee0dd6b0eae",
+    "file": "tools/profiler/core/platform.cpp",
+    "start": 5987,
+    "end": 6058,
+    "sourceSha256": "bde8392bc5ad8176c95b5573dbc699fd7e69c841dc08c132331a4aba9f0c982c"
+  },
+  {
+    "runtimeSha": "c74fe1a545d275cdd710ab44701c1ee0dd6b0eae",
+    "file": "tools/profiler/core/platform.cpp",
+    "start": 6100,
+    "end": 6188,
+    "sourceSha256": "bde8392bc5ad8176c95b5573dbc699fd7e69c841dc08c132331a4aba9f0c982c"
+  },
+  {
+    "runtimeSha": "c74fe1a545d275cdd710ab44701c1ee0dd6b0eae",
+    "file": "tools/profiler/core/platform.cpp",
+    "start": 6378,
+    "end": 6405,
+    "sourceSha256": "bde8392bc5ad8176c95b5573dbc699fd7e69c841dc08c132331a4aba9f0c982c"
+  },
+  {
+    "runtimeSha": "c74fe1a545d275cdd710ab44701c1ee0dd6b0eae",
+    "file": "tools/profiler/core/platform.cpp",
+    "start": 6795,
+    "end": 6809,
+    "sourceSha256": "bde8392bc5ad8176c95b5573dbc699fd7e69c841dc08c132331a4aba9f0c982c"
+  },
+  {
+    "runtimeSha": "c74fe1a545d275cdd710ab44701c1ee0dd6b0eae",
+    "file": "tools/profiler/core/platform.cpp",
+    "start": 7400,
+    "end": 7442,
+    "sourceSha256": "bde8392bc5ad8176c95b5573dbc699fd7e69c841dc08c132331a4aba9f0c982c"
+  },
+  {
+    "runtimeSha": "c74fe1a545d275cdd710ab44701c1ee0dd6b0eae",
+    "file": "toolkit/xre/nsAppRunner.cpp",
+    "start": 6198,
+    "end": 6220,
+    "sourceSha256": "0419b2ed48b7d1f8367e1417faae2452e724acd7065f1cf30b796bb896134799"
+  },
+  {
+    "runtimeSha": "c74fe1a545d275cdd710ab44701c1ee0dd6b0eae",
+    "file": "xpcom/base/nsMemoryReporterManager.cpp",
+    "start": 1788,
+    "end": 1808,
+    "sourceSha256": "f3facc5cb9a41b4ae91f0cfb931b65647029982173e2af332dad24a831d64846"
+  },
+  {
+    "runtimeSha": "c74fe1a545d275cdd710ab44701c1ee0dd6b0eae",
+    "file": "xpcom/base/nsMemoryInfoDumper.cpp",
+    "start": 124,
+    "end": 141,
+    "sourceSha256": "839400253984429846b4cb01ed1c0d14adac58322e62f552e5016659ba66a754"
+  },
+  {
+    "runtimeSha": "c74fe1a545d275cdd710ab44701c1ee0dd6b0eae",
+    "file": "xpcom/base/nsMemoryInfoDumper.cpp",
+    "start": 242,
+    "end": 257,
+    "sourceSha256": "839400253984429846b4cb01ed1c0d14adac58322e62f552e5016659ba66a754"
+  },
+  {
+    "runtimeSha": "c74fe1a545d275cdd710ab44701c1ee0dd6b0eae",
+    "file": "tools/profiler/gecko/nsIProfiler.idl",
+    "start": 160,
+    "end": 185,
+    "sourceSha256": "432fb9b0b84efe4a50c95a101346d8665544b8b08b9091561ae0194863915108"
+  }
+]

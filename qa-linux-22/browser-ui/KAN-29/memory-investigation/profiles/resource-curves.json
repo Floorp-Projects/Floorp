@@ -1,0 +1,1778 @@
+[
+  {
+    "file": "passive-no-session/resources.jsonl",
+    "sha256": "621546769bbd5bf8aaa710a3e013aa35d2ff550c3d780970c5bb7699657c3908",
+    "cgroupEventDeltas": {
+      "low": 0,
+      "high": 0,
+      "max": 0,
+      "oom": 0,
+      "oom_kill": 0,
+      "oom_group_kill": 0
+    },
+    "pidCurves": {
+      "115562": [
+        {
+          "secondsFromFirstSample": 2.148448954001651,
+          "utc": "2026-11-05T22:17:25Z",
+          "mainPssKiB": null,
+          "childrenKnownPssKiB": 0,
+          "aggregateKnownPssKiB": 0,
+          "allPssAvailable": false,
+          "cgroupBytes": 1870348288
+        },
+        {
+          "secondsFromFirstSample": 4.286108800002694,
+          "utc": "2026-11-05T22:17:28Z",
+          "mainPssKiB": 260313,
+          "childrenKnownPssKiB": 0,
+          "aggregateKnownPssKiB": 260313,
+          "allPssAvailable": false,
+          "cgroupBytes": 2098855936
+        },
+        {
+          "secondsFromFirstSample": 6.406559991002723,
+          "utc": "2026-11-05T22:17:30Z",
+          "mainPssKiB": 700989,
+          "childrenKnownPssKiB": 81793,
+          "aggregateKnownPssKiB": 782782,
+          "allPssAvailable": true,
+          "cgroupBytes": 2597322752
+        },
+        {
+          "secondsFromFirstSample": 8.537241194000671,
+          "utc": "2026-11-05T22:17:32Z",
+          "mainPssKiB": 1190183,
+          "childrenKnownPssKiB": 81899,
+          "aggregateKnownPssKiB": 1272082,
+          "allPssAvailable": true,
+          "cgroupBytes": 3123195904
+        },
+        {
+          "secondsFromFirstSample": 10.66487344900088,
+          "utc": "2026-11-05T22:17:34Z",
+          "mainPssKiB": 1686099,
+          "childrenKnownPssKiB": 81975,
+          "aggregateKnownPssKiB": 1768074,
+          "allPssAvailable": true,
+          "cgroupBytes": 3639619584
+        },
+        {
+          "secondsFromFirstSample": 12.787165536999964,
+          "utc": "2026-11-05T22:17:36Z",
+          "mainPssKiB": 2176975,
+          "childrenKnownPssKiB": 81975,
+          "aggregateKnownPssKiB": 2258950,
+          "allPssAvailable": true,
+          "cgroupBytes": 4178575360
+        },
+        {
+          "secondsFromFirstSample": 15.145319633000327,
+          "utc": "2026-11-05T22:17:38Z",
+          "mainPssKiB": 2682501,
+          "childrenKnownPssKiB": 82362,
+          "aggregateKnownPssKiB": 2764863,
+          "allPssAvailable": true,
+          "cgroupBytes": 4640411648
+        },
+        {
+          "secondsFromFirstSample": 17.37547322899991,
+          "utc": "2026-11-05T22:17:41Z",
+          "mainPssKiB": 2995905,
+          "childrenKnownPssKiB": 82362,
+          "aggregateKnownPssKiB": 3078267,
+          "allPssAvailable": true,
+          "cgroupBytes": 5089726464
+        },
+        {
+          "secondsFromFirstSample": 19.50965385300151,
+          "utc": "2026-11-05T22:17:43Z",
+          "mainPssKiB": 3349772,
+          "childrenKnownPssKiB": 82361,
+          "aggregateKnownPssKiB": 3432133,
+          "allPssAvailable": true,
+          "cgroupBytes": 5461164032
+        },
+        {
+          "secondsFromFirstSample": 21.648713896000118,
+          "utc": "2026-11-05T22:17:45Z",
+          "mainPssKiB": 3735428,
+          "childrenKnownPssKiB": 82361,
+          "aggregateKnownPssKiB": 3817789,
+          "allPssAvailable": true,
+          "cgroupBytes": 5808762880
+        },
+        {
+          "secondsFromFirstSample": 23.755252138002106,
+          "utc": "2026-11-05T22:17:47Z",
+          "mainPssKiB": 4019524,
+          "childrenKnownPssKiB": 82361,
+          "aggregateKnownPssKiB": 4101885,
+          "allPssAvailable": true,
+          "cgroupBytes": 6088208384
+        },
+        {
+          "secondsFromFirstSample": 25.888416850000795,
+          "utc": "2026-11-05T22:17:49Z",
+          "mainPssKiB": 4344108,
+          "childrenKnownPssKiB": 82361,
+          "aggregateKnownPssKiB": 4426469,
+          "allPssAvailable": true,
+          "cgroupBytes": 6530387968
+        },
+        {
+          "secondsFromFirstSample": 28.445148022001376,
+          "utc": "2026-11-05T22:17:52Z",
+          "mainPssKiB": 4780620,
+          "childrenKnownPssKiB": 82361,
+          "aggregateKnownPssKiB": 4862981,
+          "allPssAvailable": true,
+          "cgroupBytes": 7031189504
+        },
+        {
+          "secondsFromFirstSample": 30.606667025000206,
+          "utc": "2026-11-05T22:17:54Z",
+          "mainPssKiB": 5162756,
+          "childrenKnownPssKiB": 82361,
+          "aggregateKnownPssKiB": 5245117,
+          "allPssAvailable": true,
+          "cgroupBytes": 7509798912
+        },
+        {
+          "secondsFromFirstSample": 32.79218637300073,
+          "utc": "2026-11-05T22:17:56Z",
+          "mainPssKiB": 5614264,
+          "childrenKnownPssKiB": 82361,
+          "aggregateKnownPssKiB": 5696625,
+          "allPssAvailable": true,
+          "cgroupBytes": 7986868224
+        },
+        {
+          "secondsFromFirstSample": 34.97102257500228,
+          "utc": "2026-11-05T22:17:58Z",
+          "mainPssKiB": 6067296,
+          "childrenKnownPssKiB": 82361,
+          "aggregateKnownPssKiB": 6149657,
+          "allPssAvailable": true,
+          "cgroupBytes": 8434552832
+        },
+        {
+          "secondsFromFirstSample": 37.13562800300133,
+          "utc": "2026-11-05T22:18:00Z",
+          "mainPssKiB": 6489440,
+          "childrenKnownPssKiB": 82361,
+          "aggregateKnownPssKiB": 6571801,
+          "allPssAvailable": true,
+          "cgroupBytes": 8910868480
+        },
+        {
+          "secondsFromFirstSample": 39.33780452300198,
+          "utc": "2026-11-05T22:18:03Z",
+          "mainPssKiB": 6941988,
+          "childrenKnownPssKiB": 82361,
+          "aggregateKnownPssKiB": 7024349,
+          "allPssAvailable": true,
+          "cgroupBytes": 9442758656
+        },
+        {
+          "secondsFromFirstSample": 41.50357831300062,
+          "utc": "2026-11-05T22:18:05Z",
+          "mainPssKiB": 7453708,
+          "childrenKnownPssKiB": 82361,
+          "aggregateKnownPssKiB": 7536069,
+          "allPssAvailable": true,
+          "cgroupBytes": 9958395904
+        },
+        {
+          "secondsFromFirstSample": 43.6709745090011,
+          "utc": "2026-11-05T22:18:07Z",
+          "mainPssKiB": 8459168,
+          "childrenKnownPssKiB": 82361,
+          "aggregateKnownPssKiB": 8541529,
+          "allPssAvailable": true,
+          "cgroupBytes": 10480414720
+        },
+        {
+          "secondsFromFirstSample": 45.900712132999615,
+          "utc": "2026-11-05T22:18:09Z",
+          "mainPssKiB": 9163896,
+          "childrenKnownPssKiB": 82361,
+          "aggregateKnownPssKiB": 9246257,
+          "allPssAvailable": true,
+          "cgroupBytes": 11296239616
+        },
+        {
+          "secondsFromFirstSample": 48.048051583002234,
+          "utc": "2026-11-05T22:18:11Z",
+          "mainPssKiB": 10355464,
+          "childrenKnownPssKiB": 82361,
+          "aggregateKnownPssKiB": 10437825,
+          "allPssAvailable": true,
+          "cgroupBytes": 12557410304
+        },
+        {
+          "secondsFromFirstSample": 50.26635904599971,
+          "utc": "2026-11-05T22:18:14Z",
+          "mainPssKiB": 11570896,
+          "childrenKnownPssKiB": 82361,
+          "aggregateKnownPssKiB": 11653257,
+          "allPssAvailable": true,
+          "cgroupBytes": 13760987136
+        },
+        {
+          "secondsFromFirstSample": 52.476124660002824,
+          "utc": "2026-11-05T22:18:16Z",
+          "mainPssKiB": 12304556,
+          "childrenKnownPssKiB": 82361,
+          "aggregateKnownPssKiB": 12386917,
+          "allPssAvailable": true,
+          "cgroupBytes": 14476054528
+        },
+        {
+          "secondsFromFirstSample": 54.65966812100305,
+          "utc": "2026-11-05T22:18:18Z",
+          "mainPssKiB": 12786744,
+          "childrenKnownPssKiB": 82361,
+          "aggregateKnownPssKiB": 12869105,
+          "allPssAvailable": true,
+          "cgroupBytes": 14944505856
+        }
+      ]
+    }
+  },
+  {
+    "file": "runs/baseline-a629-x11-hold500-30078/resources.jsonl",
+    "sha256": "2bec7e745e176c1c4dc5c0d79b6fdf0207cccb81532b8ff700c322c3783ce44c",
+    "cgroupEventDeltas": {
+      "low": 0,
+      "high": 0,
+      "max": 0,
+      "oom": 0,
+      "oom_kill": 0,
+      "oom_group_kill": 0
+    },
+    "pidCurves": {
+      "115917": [
+        {
+          "secondsFromFirstSample": 2.154853465002816,
+          "utc": "2026-11-05T22:22:21Z",
+          "mainPssKiB": null,
+          "childrenKnownPssKiB": 0,
+          "aggregateKnownPssKiB": 0,
+          "allPssAvailable": true,
+          "cgroupBytes": 1578569728
+        },
+        {
+          "secondsFromFirstSample": 4.345843209001032,
+          "utc": "2026-11-05T22:22:23Z",
+          "mainPssKiB": null,
+          "childrenKnownPssKiB": 0,
+          "aggregateKnownPssKiB": 0,
+          "allPssAvailable": false,
+          "cgroupBytes": 1791393792
+        },
+        {
+          "secondsFromFirstSample": 6.459375777001696,
+          "utc": "2026-11-05T22:22:25Z",
+          "mainPssKiB": 396706,
+          "childrenKnownPssKiB": 138208,
+          "aggregateKnownPssKiB": 534914,
+          "allPssAvailable": false,
+          "cgroupBytes": 1998327808
+        },
+        {
+          "secondsFromFirstSample": 8.565458996003144,
+          "utc": "2026-11-05T22:22:27Z",
+          "mainPssKiB": 436753,
+          "childrenKnownPssKiB": 169919,
+          "aggregateKnownPssKiB": 606672,
+          "allPssAvailable": true,
+          "cgroupBytes": 2037850112
+        },
+        {
+          "secondsFromFirstSample": 10.69348655000067,
+          "utc": "2026-11-05T22:22:29Z",
+          "mainPssKiB": 446398,
+          "childrenKnownPssKiB": 170312,
+          "aggregateKnownPssKiB": 616710,
+          "allPssAvailable": true,
+          "cgroupBytes": 2052767744
+        },
+        {
+          "secondsFromFirstSample": 12.811907618000987,
+          "utc": "2026-11-05T22:22:32Z",
+          "mainPssKiB": 448771,
+          "childrenKnownPssKiB": 170620,
+          "aggregateKnownPssKiB": 619391,
+          "allPssAvailable": true,
+          "cgroupBytes": 2059935744
+        },
+        {
+          "secondsFromFirstSample": 14.923989741000696,
+          "utc": "2026-11-05T22:22:34Z",
+          "mainPssKiB": 447915,
+          "childrenKnownPssKiB": 162341,
+          "aggregateKnownPssKiB": 610256,
+          "allPssAvailable": true,
+          "cgroupBytes": 2049486848
+        },
+        {
+          "secondsFromFirstSample": 17.0297490380035,
+          "utc": "2026-11-05T22:22:36Z",
+          "mainPssKiB": 436855,
+          "childrenKnownPssKiB": 158702,
+          "aggregateKnownPssKiB": 595557,
+          "allPssAvailable": true,
+          "cgroupBytes": 2041307136
+        },
+        {
+          "secondsFromFirstSample": 19.213657352000155,
+          "utc": "2026-11-05T22:22:38Z",
+          "mainPssKiB": 434756,
+          "childrenKnownPssKiB": 158133,
+          "aggregateKnownPssKiB": 592889,
+          "allPssAvailable": true,
+          "cgroupBytes": 2038890496
+        },
+        {
+          "secondsFromFirstSample": 21.379137180003454,
+          "utc": "2026-11-05T22:22:40Z",
+          "mainPssKiB": 438114,
+          "childrenKnownPssKiB": 165933,
+          "aggregateKnownPssKiB": 604047,
+          "allPssAvailable": false,
+          "cgroupBytes": 2091388928
+        },
+        {
+          "secondsFromFirstSample": 23.536390533001395,
+          "utc": "2026-11-05T22:22:42Z",
+          "mainPssKiB": 448611,
+          "childrenKnownPssKiB": 184268,
+          "aggregateKnownPssKiB": 632879,
+          "allPssAvailable": true,
+          "cgroupBytes": 2064687104
+        }
+      ]
+    }
+  },
+  {
+    "file": "runs/baseline-a629-x11-one-30076/resources.jsonl",
+    "sha256": "da914514651b7310bd5d67e1adb62d6d314b82a11eaec9ff3e2709ab0461bdeb",
+    "cgroupEventDeltas": {
+      "low": 0,
+      "high": 0,
+      "max": 0,
+      "oom": 0,
+      "oom_kill": 0,
+      "oom_group_kill": 0
+    },
+    "pidCurves": {
+      "115044": [
+        {
+          "secondsFromFirstSample": 2.4130891320019145,
+          "utc": "2026-11-05T22:15:36Z",
+          "mainPssKiB": null,
+          "childrenKnownPssKiB": 0,
+          "aggregateKnownPssKiB": 0,
+          "allPssAvailable": true,
+          "cgroupBytes": 1843654656
+        },
+        {
+          "secondsFromFirstSample": 5.11303295000107,
+          "utc": "2026-11-05T22:15:39Z",
+          "mainPssKiB": null,
+          "childrenKnownPssKiB": 0,
+          "aggregateKnownPssKiB": 0,
+          "allPssAvailable": false,
+          "cgroupBytes": 1927368704
+        },
+        {
+          "secondsFromFirstSample": 7.250929121000809,
+          "utc": "2026-11-05T22:15:41Z",
+          "mainPssKiB": 247716,
+          "childrenKnownPssKiB": 19548,
+          "aggregateKnownPssKiB": 267264,
+          "allPssAvailable": false,
+          "cgroupBytes": 2152259584
+        },
+        {
+          "secondsFromFirstSample": 9.366905494000093,
+          "utc": "2026-11-05T22:15:43Z",
+          "mainPssKiB": 401028,
+          "childrenKnownPssKiB": 137839,
+          "aggregateKnownPssKiB": 538867,
+          "allPssAvailable": false,
+          "cgroupBytes": 2314874880
+        },
+        {
+          "secondsFromFirstSample": 11.516012052001315,
+          "utc": "2026-11-05T22:15:45Z",
+          "mainPssKiB": 440659,
+          "childrenKnownPssKiB": 169650,
+          "aggregateKnownPssKiB": 610309,
+          "allPssAvailable": true,
+          "cgroupBytes": 2336354304
+        },
+        {
+          "secondsFromFirstSample": 13.630602908000583,
+          "utc": "2026-11-05T22:15:47Z",
+          "mainPssKiB": 450689,
+          "childrenKnownPssKiB": 170083,
+          "aggregateKnownPssKiB": 620772,
+          "allPssAvailable": true,
+          "cgroupBytes": 2307256320
+        },
+        {
+          "secondsFromFirstSample": 15.767076749001717,
+          "utc": "2026-11-05T22:15:50Z",
+          "mainPssKiB": 425686,
+          "childrenKnownPssKiB": 170443,
+          "aggregateKnownPssKiB": 596129,
+          "allPssAvailable": true,
+          "cgroupBytes": 2296852480
+        },
+        {
+          "secondsFromFirstSample": 17.911793910003325,
+          "utc": "2026-11-05T22:15:52Z",
+          "mainPssKiB": 423227,
+          "childrenKnownPssKiB": 161904,
+          "aggregateKnownPssKiB": 585131,
+          "allPssAvailable": true,
+          "cgroupBytes": 2298970112
+        },
+        {
+          "secondsFromFirstSample": 20.05431151400262,
+          "utc": "2026-11-05T22:15:54Z",
+          "mainPssKiB": 424403,
+          "childrenKnownPssKiB": 161094,
+          "aggregateKnownPssKiB": 585497,
+          "allPssAvailable": true,
+          "cgroupBytes": 2297036800
+        },
+        {
+          "secondsFromFirstSample": 22.228443529002107,
+          "utc": "2026-11-05T22:15:56Z",
+          "mainPssKiB": 434383,
+          "childrenKnownPssKiB": 168441,
+          "aggregateKnownPssKiB": 602824,
+          "allPssAvailable": true,
+          "cgroupBytes": 2321358848
+        },
+        {
+          "secondsFromFirstSample": 24.340570158001356,
+          "utc": "2026-11-05T22:15:58Z",
+          "mainPssKiB": 439780,
+          "childrenKnownPssKiB": 157021,
+          "aggregateKnownPssKiB": 596801,
+          "allPssAvailable": false,
+          "cgroupBytes": 2353270784
+        },
+        {
+          "secondsFromFirstSample": 26.522510926002724,
+          "utc": "2026-11-05T22:16:00Z",
+          "mainPssKiB": 439166,
+          "childrenKnownPssKiB": 16737,
+          "aggregateKnownPssKiB": 455903,
+          "allPssAvailable": true,
+          "cgroupBytes": 2014015488
+        }
+      ]
+    }
+  },
+  {
+    "file": "runs/candidate-f43-30074/resources.jsonl",
+    "sha256": "0bfb6e7767cb3821c34f08e50c8165ccba9c99773dd9d5d92522e42dc8a5e9bc",
+    "cgroupEventDeltas": {
+      "low": 0,
+      "high": 0,
+      "max": 0,
+      "oom": 0,
+      "oom_kill": 0,
+      "oom_group_kill": 0
+    },
+    "pidCurves": {
+      "112959": [
+        {
+          "secondsFromFirstSample": 2.160901693001506,
+          "utc": "2026-11-05T22:04:54Z",
+          "mainPssKiB": 28645,
+          "childrenKnownPssKiB": 0,
+          "aggregateKnownPssKiB": 28645,
+          "allPssAvailable": true,
+          "cgroupBytes": 1801396224
+        },
+        {
+          "secondsFromFirstSample": 4.357163226999546,
+          "utc": "2026-11-05T22:04:56Z",
+          "mainPssKiB": 130373,
+          "childrenKnownPssKiB": 26961,
+          "aggregateKnownPssKiB": 157334,
+          "allPssAvailable": true,
+          "cgroupBytes": 1877352448
+        },
+        {
+          "secondsFromFirstSample": 6.590635928001575,
+          "utc": "2026-11-05T22:04:59Z",
+          "mainPssKiB": 327086,
+          "childrenKnownPssKiB": 140626,
+          "aggregateKnownPssKiB": 467712,
+          "allPssAvailable": true,
+          "cgroupBytes": 2155474944
+        },
+        {
+          "secondsFromFirstSample": 8.777862967999681,
+          "utc": "2026-11-05T22:05:01Z",
+          "mainPssKiB": 425701,
+          "childrenKnownPssKiB": 171119,
+          "aggregateKnownPssKiB": 596820,
+          "allPssAvailable": true,
+          "cgroupBytes": 2298523648
+        },
+        {
+          "secondsFromFirstSample": 10.95637770599933,
+          "utc": "2026-11-05T22:05:03Z",
+          "mainPssKiB": 445546,
+          "childrenKnownPssKiB": 170877,
+          "aggregateKnownPssKiB": 616423,
+          "allPssAvailable": true,
+          "cgroupBytes": 2333626368
+        },
+        {
+          "secondsFromFirstSample": 13.102443635998497,
+          "utc": "2026-11-05T22:05:05Z",
+          "mainPssKiB": 427040,
+          "childrenKnownPssKiB": 171544,
+          "aggregateKnownPssKiB": 598584,
+          "allPssAvailable": true,
+          "cgroupBytes": 2315169792
+        },
+        {
+          "secondsFromFirstSample": 15.26474464200146,
+          "utc": "2026-11-05T22:05:07Z",
+          "mainPssKiB": 428642,
+          "childrenKnownPssKiB": 165022,
+          "aggregateKnownPssKiB": 593664,
+          "allPssAvailable": true,
+          "cgroupBytes": 2308915200
+        },
+        {
+          "secondsFromFirstSample": 17.44674650899833,
+          "utc": "2026-11-05T22:05:09Z",
+          "mainPssKiB": 422102,
+          "childrenKnownPssKiB": 159793,
+          "aggregateKnownPssKiB": 581895,
+          "allPssAvailable": true,
+          "cgroupBytes": 2296188928
+        },
+        {
+          "secondsFromFirstSample": 19.75943612899937,
+          "utc": "2026-11-05T22:05:12Z",
+          "mainPssKiB": 436835,
+          "childrenKnownPssKiB": 167225,
+          "aggregateKnownPssKiB": 604060,
+          "allPssAvailable": true,
+          "cgroupBytes": 2324627456
+        },
+        {
+          "secondsFromFirstSample": 21.93866621699999,
+          "utc": "2026-11-05T22:05:14Z",
+          "mainPssKiB": 440399,
+          "childrenKnownPssKiB": 186170,
+          "aggregateKnownPssKiB": 626569,
+          "allPssAvailable": true,
+          "cgroupBytes": 2355691520
+        },
+        {
+          "secondsFromFirstSample": 24.16240264299995,
+          "utc": "2026-11-05T22:05:16Z",
+          "mainPssKiB": 432771,
+          "childrenKnownPssKiB": 185355,
+          "aggregateKnownPssKiB": 618126,
+          "allPssAvailable": true,
+          "cgroupBytes": 2337062912
+        },
+        {
+          "secondsFromFirstSample": 26.39520637899841,
+          "utc": "2026-11-05T22:05:18Z",
+          "mainPssKiB": 424363,
+          "childrenKnownPssKiB": 184986,
+          "aggregateKnownPssKiB": 609349,
+          "allPssAvailable": true,
+          "cgroupBytes": 2327908352
+        },
+        {
+          "secondsFromFirstSample": 28.548513061999984,
+          "utc": "2026-11-05T22:05:20Z",
+          "mainPssKiB": 425213,
+          "childrenKnownPssKiB": 184375,
+          "aggregateKnownPssKiB": 609588,
+          "allPssAvailable": true,
+          "cgroupBytes": 2328137728
+        },
+        {
+          "secondsFromFirstSample": 30.71507185899827,
+          "utc": "2026-11-05T22:05:23Z",
+          "mainPssKiB": 417687,
+          "childrenKnownPssKiB": 184389,
+          "aggregateKnownPssKiB": 602076,
+          "allPssAvailable": true,
+          "cgroupBytes": 2320265216
+        },
+        {
+          "secondsFromFirstSample": 32.923832320000656,
+          "utc": "2026-11-05T22:05:25Z",
+          "mainPssKiB": 436993,
+          "childrenKnownPssKiB": 183216,
+          "aggregateKnownPssKiB": 620209,
+          "allPssAvailable": true,
+          "cgroupBytes": 2355396608
+        },
+        {
+          "secondsFromFirstSample": 35.08631980000064,
+          "utc": "2026-11-05T22:05:27Z",
+          "mainPssKiB": 421707,
+          "childrenKnownPssKiB": 183236,
+          "aggregateKnownPssKiB": 604943,
+          "allPssAvailable": true,
+          "cgroupBytes": 2324926464
+        },
+        {
+          "secondsFromFirstSample": 37.225163112998416,
+          "utc": "2026-11-05T22:05:29Z",
+          "mainPssKiB": 418571,
+          "childrenKnownPssKiB": 182744,
+          "aggregateKnownPssKiB": 601315,
+          "allPssAvailable": true,
+          "cgroupBytes": 2320809984
+        },
+        {
+          "secondsFromFirstSample": 39.386731516999134,
+          "utc": "2026-11-05T22:05:31Z",
+          "mainPssKiB": 416104,
+          "childrenKnownPssKiB": 182490,
+          "aggregateKnownPssKiB": 598594,
+          "allPssAvailable": true,
+          "cgroupBytes": 2317733888
+        },
+        {
+          "secondsFromFirstSample": 41.57611942999938,
+          "utc": "2026-11-05T22:05:33Z",
+          "mainPssKiB": 426369,
+          "childrenKnownPssKiB": 182110,
+          "aggregateKnownPssKiB": 608479,
+          "allPssAvailable": true,
+          "cgroupBytes": 2325073920
+        },
+        {
+          "secondsFromFirstSample": 43.75166452900157,
+          "utc": "2026-11-05T22:05:36Z",
+          "mainPssKiB": 432453,
+          "childrenKnownPssKiB": 181838,
+          "aggregateKnownPssKiB": 614291,
+          "allPssAvailable": true,
+          "cgroupBytes": 2334064640
+        },
+        {
+          "secondsFromFirstSample": 45.92220193400135,
+          "utc": "2026-11-05T22:05:38Z",
+          "mainPssKiB": 454350,
+          "childrenKnownPssKiB": 181884,
+          "aggregateKnownPssKiB": 636234,
+          "allPssAvailable": true,
+          "cgroupBytes": 2356142080
+        },
+        {
+          "secondsFromFirstSample": 48.082846970999526,
+          "utc": "2026-11-05T22:05:40Z",
+          "mainPssKiB": 422872,
+          "childrenKnownPssKiB": 181583,
+          "aggregateKnownPssKiB": 604455,
+          "allPssAvailable": true,
+          "cgroupBytes": 2324783104
+        },
+        {
+          "secondsFromFirstSample": 50.23528134099979,
+          "utc": "2026-11-05T22:05:42Z",
+          "mainPssKiB": 421628,
+          "childrenKnownPssKiB": 181587,
+          "aggregateKnownPssKiB": 603215,
+          "allPssAvailable": true,
+          "cgroupBytes": 2323247104
+        },
+        {
+          "secondsFromFirstSample": 52.4218028389987,
+          "utc": "2026-11-05T22:05:44Z",
+          "mainPssKiB": 419952,
+          "childrenKnownPssKiB": 181585,
+          "aggregateKnownPssKiB": 601537,
+          "allPssAvailable": true,
+          "cgroupBytes": 2321928192
+        },
+        {
+          "secondsFromFirstSample": 54.58379204399898,
+          "utc": "2026-11-05T22:05:46Z",
+          "mainPssKiB": 422633,
+          "childrenKnownPssKiB": 181570,
+          "aggregateKnownPssKiB": 604203,
+          "allPssAvailable": true,
+          "cgroupBytes": 2324463616
+        },
+        {
+          "secondsFromFirstSample": 56.76670798900159,
+          "utc": "2026-11-05T22:05:49Z",
+          "mainPssKiB": 439350,
+          "childrenKnownPssKiB": 181572,
+          "aggregateKnownPssKiB": 620922,
+          "allPssAvailable": true,
+          "cgroupBytes": 2357825536
+        },
+        {
+          "secondsFromFirstSample": 58.90641417799998,
+          "utc": "2026-11-05T22:05:51Z",
+          "mainPssKiB": 444419,
+          "childrenKnownPssKiB": 181096,
+          "aggregateKnownPssKiB": 625515,
+          "allPssAvailable": true,
+          "cgroupBytes": 2346659840
+        },
+        {
+          "secondsFromFirstSample": 61.07306601700111,
+          "utc": "2026-11-05T22:05:53Z",
+          "mainPssKiB": 430279,
+          "childrenKnownPssKiB": 181100,
+          "aggregateKnownPssKiB": 611379,
+          "allPssAvailable": true,
+          "cgroupBytes": 2332561408
+        },
+        {
+          "secondsFromFirstSample": 63.24999113499871,
+          "utc": "2026-11-05T22:05:55Z",
+          "mainPssKiB": 420975,
+          "childrenKnownPssKiB": 181100,
+          "aggregateKnownPssKiB": 602075,
+          "allPssAvailable": true,
+          "cgroupBytes": 2322395136
+        },
+        {
+          "secondsFromFirstSample": 65.42687391599975,
+          "utc": "2026-11-05T22:05:57Z",
+          "mainPssKiB": 423317,
+          "childrenKnownPssKiB": 181189,
+          "aggregateKnownPssKiB": 604506,
+          "allPssAvailable": true,
+          "cgroupBytes": 2325164032
+        },
+        {
+          "secondsFromFirstSample": 67.71955371399963,
+          "utc": "2026-11-05T22:06:00Z",
+          "mainPssKiB": 426089,
+          "childrenKnownPssKiB": 181237,
+          "aggregateKnownPssKiB": 607326,
+          "allPssAvailable": true,
+          "cgroupBytes": 2328178688
+        },
+        {
+          "secondsFromFirstSample": 69.93629221800074,
+          "utc": "2026-11-05T22:06:02Z",
+          "mainPssKiB": 435756,
+          "childrenKnownPssKiB": 181219,
+          "aggregateKnownPssKiB": 616975,
+          "allPssAvailable": true,
+          "cgroupBytes": 2353229824
+        },
+        {
+          "secondsFromFirstSample": 72.12313055200138,
+          "utc": "2026-11-05T22:06:04Z",
+          "mainPssKiB": 444273,
+          "childrenKnownPssKiB": 181255,
+          "aggregateKnownPssKiB": 625528,
+          "allPssAvailable": true,
+          "cgroupBytes": 2348670976
+        },
+        {
+          "secondsFromFirstSample": 74.2721527299982,
+          "utc": "2026-11-05T22:06:06Z",
+          "mainPssKiB": 426529,
+          "childrenKnownPssKiB": 181255,
+          "aggregateKnownPssKiB": 607784,
+          "allPssAvailable": true,
+          "cgroupBytes": 2330447872
+        },
+        {
+          "secondsFromFirstSample": 76.44095877400105,
+          "utc": "2026-11-05T22:06:08Z",
+          "mainPssKiB": 426917,
+          "childrenKnownPssKiB": 181255,
+          "aggregateKnownPssKiB": 608172,
+          "allPssAvailable": true,
+          "cgroupBytes": 2330861568
+        },
+        {
+          "secondsFromFirstSample": 78.58448152900019,
+          "utc": "2026-11-05T22:06:11Z",
+          "mainPssKiB": 426321,
+          "childrenKnownPssKiB": 180462,
+          "aggregateKnownPssKiB": 606783,
+          "allPssAvailable": true,
+          "cgroupBytes": 2329391104
+        },
+        {
+          "secondsFromFirstSample": 80.77125789300044,
+          "utc": "2026-11-05T22:06:13Z",
+          "mainPssKiB": 435965,
+          "childrenKnownPssKiB": 180610,
+          "aggregateKnownPssKiB": 616575,
+          "allPssAvailable": true,
+          "cgroupBytes": 2348486656
+        },
+        {
+          "secondsFromFirstSample": 82.93645715900129,
+          "utc": "2026-11-05T22:06:15Z",
+          "mainPssKiB": 438493,
+          "childrenKnownPssKiB": 180618,
+          "aggregateKnownPssKiB": 619111,
+          "allPssAvailable": true,
+          "cgroupBytes": 2341400576
+        },
+        {
+          "secondsFromFirstSample": 85.08744176600158,
+          "utc": "2026-11-05T22:06:17Z",
+          "mainPssKiB": 433573,
+          "childrenKnownPssKiB": 180621,
+          "aggregateKnownPssKiB": 614194,
+          "allPssAvailable": true,
+          "cgroupBytes": 2337415168
+        },
+        {
+          "secondsFromFirstSample": 87.25028949600164,
+          "utc": "2026-11-05T22:06:19Z",
+          "mainPssKiB": 425305,
+          "childrenKnownPssKiB": 180621,
+          "aggregateKnownPssKiB": 605926,
+          "allPssAvailable": true,
+          "cgroupBytes": 2329542656
+        },
+        {
+          "secondsFromFirstSample": 89.42933202900167,
+          "utc": "2026-11-05T22:06:21Z",
+          "mainPssKiB": 426937,
+          "childrenKnownPssKiB": 180625,
+          "aggregateKnownPssKiB": 607562,
+          "allPssAvailable": true,
+          "cgroupBytes": 2331013120
+        },
+        {
+          "secondsFromFirstSample": 91.67060410100021,
+          "utc": "2026-11-05T22:06:24Z",
+          "mainPssKiB": 431137,
+          "childrenKnownPssKiB": 181017,
+          "aggregateKnownPssKiB": 612154,
+          "allPssAvailable": true,
+          "cgroupBytes": 2335035392
+        },
+        {
+          "secondsFromFirstSample": 93.85062157100037,
+          "utc": "2026-11-05T22:06:26Z",
+          "mainPssKiB": 446905,
+          "childrenKnownPssKiB": 181400,
+          "aggregateKnownPssKiB": 628305,
+          "allPssAvailable": true,
+          "cgroupBytes": 2367946752
+        },
+        {
+          "secondsFromFirstSample": 95.99767616299869,
+          "utc": "2026-11-05T22:06:28Z",
+          "mainPssKiB": 444541,
+          "childrenKnownPssKiB": 181496,
+          "aggregateKnownPssKiB": 626037,
+          "allPssAvailable": true,
+          "cgroupBytes": 2351570944
+        },
+        {
+          "secondsFromFirstSample": 98.13014836000002,
+          "utc": "2026-11-05T22:06:30Z",
+          "mainPssKiB": 443309,
+          "childrenKnownPssKiB": 181496,
+          "aggregateKnownPssKiB": 624805,
+          "allPssAvailable": true,
+          "cgroupBytes": 2350546944
+        },
+        {
+          "secondsFromFirstSample": 100.26687423999829,
+          "utc": "2026-11-05T22:06:32Z",
+          "mainPssKiB": 438625,
+          "childrenKnownPssKiB": 181081,
+          "aggregateKnownPssKiB": 619706,
+          "allPssAvailable": true,
+          "cgroupBytes": 2345361408
+        },
+        {
+          "secondsFromFirstSample": 102.42340468100156,
+          "utc": "2026-11-05T22:06:34Z",
+          "mainPssKiB": 437589,
+          "childrenKnownPssKiB": 181085,
+          "aggregateKnownPssKiB": 618674,
+          "allPssAvailable": true,
+          "cgroupBytes": 2344525824
+        },
+        {
+          "secondsFromFirstSample": 104.64191931299865,
+          "utc": "2026-11-05T22:06:37Z",
+          "mainPssKiB": 448838,
+          "childrenKnownPssKiB": 181084,
+          "aggregateKnownPssKiB": 629922,
+          "allPssAvailable": true,
+          "cgroupBytes": 2355937280
+        },
+        {
+          "secondsFromFirstSample": 106.80518829599896,
+          "utc": "2026-11-05T22:06:39Z",
+          "mainPssKiB": 455742,
+          "childrenKnownPssKiB": 181092,
+          "aggregateKnownPssKiB": 636834,
+          "allPssAvailable": true,
+          "cgroupBytes": 2360713216
+        }
+      ],
+      "113438": [
+        {
+          "secondsFromFirstSample": 109.09774278300029,
+          "utc": "2026-11-05T22:06:41Z",
+          "mainPssKiB": 118867,
+          "childrenKnownPssKiB": 28134,
+          "aggregateKnownPssKiB": 147001,
+          "allPssAvailable": true,
+          "cgroupBytes": 1881489408
+        },
+        {
+          "secondsFromFirstSample": 111.25511752500097,
+          "utc": "2026-11-05T22:06:43Z",
+          "mainPssKiB": 294160,
+          "childrenKnownPssKiB": 111812,
+          "aggregateKnownPssKiB": 405972,
+          "allPssAvailable": true,
+          "cgroupBytes": 2102153216
+        },
+        {
+          "secondsFromFirstSample": 113.66774417700071,
+          "utc": "2026-11-05T22:06:46Z",
+          "mainPssKiB": 379970,
+          "childrenKnownPssKiB": 181785,
+          "aggregateKnownPssKiB": 561755,
+          "allPssAvailable": true,
+          "cgroupBytes": 2248630272
+        }
+      ],
+      "113790": [
+        {
+          "secondsFromFirstSample": 115.81457105799927,
+          "utc": "2026-11-05T22:06:48Z",
+          "mainPssKiB": 124937,
+          "childrenKnownPssKiB": 26043,
+          "aggregateKnownPssKiB": 150980,
+          "allPssAvailable": true,
+          "cgroupBytes": 1887252480
+        },
+        {
+          "secondsFromFirstSample": 119.13374344499971,
+          "utc": "2026-11-05T22:06:51Z",
+          "mainPssKiB": 240153,
+          "childrenKnownPssKiB": 80283,
+          "aggregateKnownPssKiB": 320436,
+          "allPssAvailable": true,
+          "cgroupBytes": 2011783168
+        },
+        {
+          "secondsFromFirstSample": 121.59371531400029,
+          "utc": "2026-11-05T22:06:54Z",
+          "mainPssKiB": 383294,
+          "childrenKnownPssKiB": 81300,
+          "aggregateKnownPssKiB": 464594,
+          "allPssAvailable": true,
+          "cgroupBytes": 2164318208
+        },
+        {
+          "secondsFromFirstSample": 123.75710335199983,
+          "utc": "2026-11-05T22:06:56Z",
+          "mainPssKiB": 674178,
+          "childrenKnownPssKiB": 81332,
+          "aggregateKnownPssKiB": 755510,
+          "allPssAvailable": true,
+          "cgroupBytes": 2463072256
+        },
+        {
+          "secondsFromFirstSample": 125.93201767700157,
+          "utc": "2026-11-05T22:06:58Z",
+          "mainPssKiB": 1093742,
+          "childrenKnownPssKiB": 81429,
+          "aggregateKnownPssKiB": 1175171,
+          "allPssAvailable": true,
+          "cgroupBytes": 2895015936
+        },
+        {
+          "secondsFromFirstSample": 128.12268095900072,
+          "utc": "2026-11-05T22:07:00Z",
+          "mainPssKiB": 1565077,
+          "childrenKnownPssKiB": 82457,
+          "aggregateKnownPssKiB": 1647534,
+          "allPssAvailable": true,
+          "cgroupBytes": 3379503104
+        },
+        {
+          "secondsFromFirstSample": 130.31658074900042,
+          "utc": "2026-11-05T22:07:02Z",
+          "mainPssKiB": 2050133,
+          "childrenKnownPssKiB": 81549,
+          "aggregateKnownPssKiB": 2131682,
+          "allPssAvailable": true,
+          "cgroupBytes": 3876384768
+        },
+        {
+          "secondsFromFirstSample": 132.54549495099855,
+          "utc": "2026-11-05T22:07:04Z",
+          "mainPssKiB": 2527737,
+          "childrenKnownPssKiB": 81549,
+          "aggregateKnownPssKiB": 2609286,
+          "allPssAvailable": true,
+          "cgroupBytes": 4366774272
+        },
+        {
+          "secondsFromFirstSample": 134.7665935110017,
+          "utc": "2026-11-05T22:07:07Z",
+          "mainPssKiB": 3020405,
+          "childrenKnownPssKiB": 81549,
+          "aggregateKnownPssKiB": 3101954,
+          "allPssAvailable": true,
+          "cgroupBytes": 4872974336
+        },
+        {
+          "secondsFromFirstSample": 137.0050524239996,
+          "utc": "2026-11-05T22:07:09Z",
+          "mainPssKiB": 3485125,
+          "childrenKnownPssKiB": 81549,
+          "aggregateKnownPssKiB": 3566674,
+          "allPssAvailable": true,
+          "cgroupBytes": 5350076416
+        },
+        {
+          "secondsFromFirstSample": 139.18364353799916,
+          "utc": "2026-11-05T22:07:11Z",
+          "mainPssKiB": 3925113,
+          "childrenKnownPssKiB": 81549,
+          "aggregateKnownPssKiB": 4006662,
+          "allPssAvailable": true,
+          "cgroupBytes": 5801713664
+        },
+        {
+          "secondsFromFirstSample": 141.56837017499856,
+          "utc": "2026-11-05T22:07:13Z",
+          "mainPssKiB": 4403501,
+          "childrenKnownPssKiB": 81549,
+          "aggregateKnownPssKiB": 4485050,
+          "allPssAvailable": true,
+          "cgroupBytes": 6292590592
+        },
+        {
+          "secondsFromFirstSample": 144.3001166030008,
+          "utc": "2026-11-05T22:07:16Z",
+          "mainPssKiB": 4829681,
+          "childrenKnownPssKiB": 81549,
+          "aggregateKnownPssKiB": 4911230,
+          "allPssAvailable": true,
+          "cgroupBytes": 6729584640
+        },
+        {
+          "secondsFromFirstSample": 146.63587632200142,
+          "utc": "2026-11-05T22:07:19Z",
+          "mainPssKiB": 5305269,
+          "childrenKnownPssKiB": 81549,
+          "aggregateKnownPssKiB": 5386818,
+          "allPssAvailable": true,
+          "cgroupBytes": 7219007488
+        },
+        {
+          "secondsFromFirstSample": 149.05355004399826,
+          "utc": "2026-11-05T22:07:21Z",
+          "mainPssKiB": 5785357,
+          "childrenKnownPssKiB": 81549,
+          "aggregateKnownPssKiB": 5866906,
+          "allPssAvailable": true,
+          "cgroupBytes": 7711817728
+        },
+        {
+          "secondsFromFirstSample": 151.2530605969987,
+          "utc": "2026-11-05T22:07:23Z",
+          "mainPssKiB": 6274465,
+          "childrenKnownPssKiB": 81549,
+          "aggregateKnownPssKiB": 6356014,
+          "allPssAvailable": true,
+          "cgroupBytes": 8214687744
+        },
+        {
+          "secondsFromFirstSample": 153.52903171900107,
+          "utc": "2026-11-05T22:07:25Z",
+          "mainPssKiB": 6739445,
+          "childrenKnownPssKiB": 81549,
+          "aggregateKnownPssKiB": 6820994,
+          "allPssAvailable": true,
+          "cgroupBytes": 8692051968
+        },
+        {
+          "secondsFromFirstSample": 155.77192814199952,
+          "utc": "2026-11-05T22:07:28Z",
+          "mainPssKiB": 7248517,
+          "childrenKnownPssKiB": 81549,
+          "aggregateKnownPssKiB": 7330066,
+          "allPssAvailable": true,
+          "cgroupBytes": 9214767104
+        },
+        {
+          "secondsFromFirstSample": 158.5294808590006,
+          "utc": "2026-11-05T22:07:30Z",
+          "mainPssKiB": 7734125,
+          "childrenKnownPssKiB": 81549,
+          "aggregateKnownPssKiB": 7815674,
+          "allPssAvailable": true,
+          "cgroupBytes": 9713098752
+        },
+        {
+          "secondsFromFirstSample": 160.8297092440007,
+          "utc": "2026-11-05T22:07:33Z",
+          "mainPssKiB": 8210913,
+          "childrenKnownPssKiB": 81549,
+          "aggregateKnownPssKiB": 8292462,
+          "allPssAvailable": true,
+          "cgroupBytes": 10202783744
+        },
+        {
+          "secondsFromFirstSample": 163.0583755459993,
+          "utc": "2026-11-05T22:07:35Z",
+          "mainPssKiB": 8667949,
+          "childrenKnownPssKiB": 81549,
+          "aggregateKnownPssKiB": 8749498,
+          "allPssAvailable": true,
+          "cgroupBytes": 10672533504
+        },
+        {
+          "secondsFromFirstSample": 165.78711578000002,
+          "utc": "2026-11-05T22:07:38Z",
+          "mainPssKiB": 9497977,
+          "childrenKnownPssKiB": 81549,
+          "aggregateKnownPssKiB": 9579526,
+          "allPssAvailable": true,
+          "cgroupBytes": 11524763648
+        },
+        {
+          "secondsFromFirstSample": 168.3035027980004,
+          "utc": "2026-11-05T22:07:40Z",
+          "mainPssKiB": 10598445,
+          "childrenKnownPssKiB": 81549,
+          "aggregateKnownPssKiB": 10679994,
+          "allPssAvailable": true,
+          "cgroupBytes": 12654895104
+        },
+        {
+          "secondsFromFirstSample": 170.8415691779992,
+          "utc": "2026-11-05T22:07:43Z",
+          "mainPssKiB": 11675257,
+          "childrenKnownPssKiB": 81549,
+          "aggregateKnownPssKiB": 11756806,
+          "allPssAvailable": true,
+          "cgroupBytes": 13760864256
+        },
+        {
+          "secondsFromFirstSample": 173.22462726600133,
+          "utc": "2026-11-05T22:07:45Z",
+          "mainPssKiB": 12322633,
+          "childrenKnownPssKiB": 81549,
+          "aggregateKnownPssKiB": 12404182,
+          "allPssAvailable": true,
+          "cgroupBytes": 14425923584
+        },
+        {
+          "secondsFromFirstSample": 175.49329443199895,
+          "utc": "2026-11-05T22:07:47Z",
+          "mainPssKiB": 13041293,
+          "childrenKnownPssKiB": 81549,
+          "aggregateKnownPssKiB": 13122842,
+          "allPssAvailable": true,
+          "cgroupBytes": 15163826176
+        }
+      ]
+    }
+  },
+  {
+    "file": "runs/candidate-f43-ar-horizontal-ui-30080/resources.jsonl",
+    "sha256": "254f92254b9c04c77261a8178e44c955c128704f3573221a843951b22f61b59b",
+    "cgroupEventDeltas": {
+      "low": 0,
+      "high": 0,
+      "max": 0,
+      "oom": 0,
+      "oom_kill": 0,
+      "oom_group_kill": 0
+    },
+    "pidCurves": {
+      "117008": [
+        {
+          "secondsFromFirstSample": 2.2395245250008884,
+          "utc": "2026-11-05T22:28:18Z",
+          "mainPssKiB": null,
+          "childrenKnownPssKiB": 0,
+          "aggregateKnownPssKiB": 0,
+          "allPssAvailable": false,
+          "cgroupBytes": 1698078720
+        },
+        {
+          "secondsFromFirstSample": 4.503109116001724,
+          "utc": "2026-11-05T22:28:20Z",
+          "mainPssKiB": 259237,
+          "childrenKnownPssKiB": 0,
+          "aggregateKnownPssKiB": 259237,
+          "allPssAvailable": false,
+          "cgroupBytes": 1877528576
+        },
+        {
+          "secondsFromFirstSample": 6.82404022099945,
+          "utc": "2026-11-05T22:28:23Z",
+          "mainPssKiB": 472588,
+          "childrenKnownPssKiB": 81904,
+          "aggregateKnownPssKiB": 554492,
+          "allPssAvailable": true,
+          "cgroupBytes": 2207416320
+        },
+        {
+          "secondsFromFirstSample": 10.015670098000555,
+          "utc": "2026-11-05T22:28:26Z",
+          "mainPssKiB": 804736,
+          "childrenKnownPssKiB": 81904,
+          "aggregateKnownPssKiB": 886640,
+          "allPssAvailable": true,
+          "cgroupBytes": 2572406784
+        },
+        {
+          "secondsFromFirstSample": 12.183565134000673,
+          "utc": "2026-11-05T22:28:28Z",
+          "mainPssKiB": 1136090,
+          "childrenKnownPssKiB": 81939,
+          "aggregateKnownPssKiB": 1218029,
+          "allPssAvailable": true,
+          "cgroupBytes": 2797735936
+        },
+        {
+          "secondsFromFirstSample": 14.344651497001905,
+          "utc": "2026-11-05T22:28:30Z",
+          "mainPssKiB": 1420651,
+          "childrenKnownPssKiB": 82470,
+          "aggregateKnownPssKiB": 1503121,
+          "allPssAvailable": true,
+          "cgroupBytes": 3107348480
+        },
+        {
+          "secondsFromFirstSample": 16.5602375999988,
+          "utc": "2026-11-05T22:28:33Z",
+          "mainPssKiB": 1683563,
+          "childrenKnownPssKiB": 82470,
+          "aggregateKnownPssKiB": 1766033,
+          "allPssAvailable": true,
+          "cgroupBytes": 3416453120
+        },
+        {
+          "secondsFromFirstSample": 18.76287176400001,
+          "utc": "2026-11-05T22:28:35Z",
+          "mainPssKiB": 2155187,
+          "childrenKnownPssKiB": 82470,
+          "aggregateKnownPssKiB": 2237657,
+          "allPssAvailable": true,
+          "cgroupBytes": 3948036096
+        },
+        {
+          "secondsFromFirstSample": 20.973013947001164,
+          "utc": "2026-11-05T22:28:37Z",
+          "mainPssKiB": 2649219,
+          "childrenKnownPssKiB": 82470,
+          "aggregateKnownPssKiB": 2731689,
+          "allPssAvailable": true,
+          "cgroupBytes": 4490035200
+        },
+        {
+          "secondsFromFirstSample": 23.176169684000342,
+          "utc": "2026-11-05T22:28:39Z",
+          "mainPssKiB": 3152091,
+          "childrenKnownPssKiB": 82470,
+          "aggregateKnownPssKiB": 3234561,
+          "allPssAvailable": true,
+          "cgroupBytes": 5040799744
+        },
+        {
+          "secondsFromFirstSample": 25.33630008700129,
+          "utc": "2026-11-05T22:28:41Z",
+          "mainPssKiB": 3663951,
+          "childrenKnownPssKiB": 82470,
+          "aggregateKnownPssKiB": 3746421,
+          "allPssAvailable": true,
+          "cgroupBytes": 5586726912
+        },
+        {
+          "secondsFromFirstSample": 27.580254544998752,
+          "utc": "2026-11-05T22:28:44Z",
+          "mainPssKiB": 4173283,
+          "childrenKnownPssKiB": 82470,
+          "aggregateKnownPssKiB": 4255753,
+          "allPssAvailable": true,
+          "cgroupBytes": 6146666496
+        },
+        {
+          "secondsFromFirstSample": 29.765309127000364,
+          "utc": "2026-11-05T22:28:46Z",
+          "mainPssKiB": 4670827,
+          "childrenKnownPssKiB": 82470,
+          "aggregateKnownPssKiB": 4753297,
+          "allPssAvailable": true,
+          "cgroupBytes": 6692290560
+        },
+        {
+          "secondsFromFirstSample": 32.048616961001244,
+          "utc": "2026-11-05T22:28:48Z",
+          "mainPssKiB": 5183743,
+          "childrenKnownPssKiB": 82470,
+          "aggregateKnownPssKiB": 5266213,
+          "allPssAvailable": true,
+          "cgroupBytes": 7252025344
+        },
+        {
+          "secondsFromFirstSample": 34.21782363799866,
+          "utc": "2026-11-05T22:28:50Z",
+          "mainPssKiB": 5674239,
+          "childrenKnownPssKiB": 82470,
+          "aggregateKnownPssKiB": 5756709,
+          "allPssAvailable": true,
+          "cgroupBytes": 7792300032
+        },
+        {
+          "secondsFromFirstSample": 36.57260214499911,
+          "utc": "2026-11-05T22:28:53Z",
+          "mainPssKiB": 6185087,
+          "childrenKnownPssKiB": 82470,
+          "aggregateKnownPssKiB": 6267557,
+          "allPssAvailable": true,
+          "cgroupBytes": 8346210304
+        },
+        {
+          "secondsFromFirstSample": 38.79327767799987,
+          "utc": "2026-11-05T22:28:55Z",
+          "mainPssKiB": 6641175,
+          "childrenKnownPssKiB": 82470,
+          "aggregateKnownPssKiB": 6723645,
+          "allPssAvailable": true,
+          "cgroupBytes": 8814137344
+        },
+        {
+          "secondsFromFirstSample": 41.03321143699941,
+          "utc": "2026-11-05T22:28:57Z",
+          "mainPssKiB": 7058039,
+          "childrenKnownPssKiB": 82470,
+          "aggregateKnownPssKiB": 7140509,
+          "allPssAvailable": true,
+          "cgroupBytes": 9235664896
+        },
+        {
+          "secondsFromFirstSample": 43.23203787300008,
+          "utc": "2026-11-05T22:28:59Z",
+          "mainPssKiB": 7448719,
+          "childrenKnownPssKiB": 82470,
+          "aggregateKnownPssKiB": 7531189,
+          "allPssAvailable": true,
+          "cgroupBytes": 9652736000
+        },
+        {
+          "secondsFromFirstSample": 45.62802035899949,
+          "utc": "2026-11-05T22:29:02Z",
+          "mainPssKiB": 7842095,
+          "childrenKnownPssKiB": 82470,
+          "aggregateKnownPssKiB": 7924565,
+          "allPssAvailable": true,
+          "cgroupBytes": 10141048832
+        },
+        {
+          "secondsFromFirstSample": 48.40995202200065,
+          "utc": "2026-11-05T22:29:04Z",
+          "mainPssKiB": 8696455,
+          "childrenKnownPssKiB": 82470,
+          "aggregateKnownPssKiB": 8778925,
+          "allPssAvailable": true,
+          "cgroupBytes": 10638073856
+        },
+        {
+          "secondsFromFirstSample": 50.70597328700023,
+          "utc": "2026-11-05T22:29:07Z",
+          "mainPssKiB": 9189611,
+          "childrenKnownPssKiB": 82470,
+          "aggregateKnownPssKiB": 9272081,
+          "allPssAvailable": true,
+          "cgroupBytes": 11204567040
+        },
+        {
+          "secondsFromFirstSample": 53.0205702509993,
+          "utc": "2026-11-05T22:29:09Z",
+          "mainPssKiB": 9817179,
+          "childrenKnownPssKiB": 82470,
+          "aggregateKnownPssKiB": 9899649,
+          "allPssAvailable": true,
+          "cgroupBytes": 11791769600
+        },
+        {
+          "secondsFromFirstSample": 55.21485627099901,
+          "utc": "2026-11-05T22:29:11Z",
+          "mainPssKiB": 10129679,
+          "childrenKnownPssKiB": 82470,
+          "aggregateKnownPssKiB": 10212149,
+          "allPssAvailable": true,
+          "cgroupBytes": 12060409856
+        },
+        {
+          "secondsFromFirstSample": 57.35003197699916,
+          "utc": "2026-11-05T22:29:13Z",
+          "mainPssKiB": 10466063,
+          "childrenKnownPssKiB": 82470,
+          "aggregateKnownPssKiB": 10548533,
+          "allPssAvailable": true,
+          "cgroupBytes": 12398981120
+        },
+        {
+          "secondsFromFirstSample": 59.485265249000804,
+          "utc": "2026-11-05T22:29:15Z",
+          "mainPssKiB": 10968031,
+          "childrenKnownPssKiB": 82470,
+          "aggregateKnownPssKiB": 11050501,
+          "allPssAvailable": true,
+          "cgroupBytes": 12902293504
+        },
+        {
+          "secondsFromFirstSample": 61.75818198900015,
+          "utc": "2026-11-05T22:29:18Z",
+          "mainPssKiB": 11394371,
+          "childrenKnownPssKiB": 82470,
+          "aggregateKnownPssKiB": 11476841,
+          "allPssAvailable": true,
+          "cgroupBytes": 13346627584
+        },
+        {
+          "secondsFromFirstSample": 64.00037335999878,
+          "utc": "2026-11-05T22:29:20Z",
+          "mainPssKiB": 11856875,
+          "childrenKnownPssKiB": 82470,
+          "aggregateKnownPssKiB": 11939345,
+          "allPssAvailable": true,
+          "cgroupBytes": 13852827648
+        },
+        {
+          "secondsFromFirstSample": 66.11645008499909,
+          "utc": "2026-11-05T22:29:22Z",
+          "mainPssKiB": 12216151,
+          "childrenKnownPssKiB": 82515,
+          "aggregateKnownPssKiB": 12298666,
+          "allPssAvailable": true,
+          "cgroupBytes": 14181031936
+        },
+        {
+          "secondsFromFirstSample": 68.31315967499904,
+          "utc": "2026-11-05T22:29:24Z",
+          "mainPssKiB": 12389015,
+          "childrenKnownPssKiB": 82515,
+          "aggregateKnownPssKiB": 12471530,
+          "allPssAvailable": true,
+          "cgroupBytes": 14362189824
+        },
+        {
+          "secondsFromFirstSample": 70.44813894500112,
+          "utc": "2026-11-05T22:29:26Z",
+          "mainPssKiB": 12583471,
+          "childrenKnownPssKiB": 82515,
+          "aggregateKnownPssKiB": 12665986,
+          "allPssAvailable": true,
+          "cgroupBytes": 14572691456
+        }
+      ]
+    }
+  },
+  {
+    "file": "runs/candidate-f43-x11-30075/resources.jsonl",
+    "sha256": "65b8f2298a58b93da9491762ded8ff8c61f82a7e55d23abe4d827e7b6407a3e4",
+    "cgroupEventDeltas": {
+      "low": 0,
+      "high": 0,
+      "max": 0,
+      "oom": 0,
+      "oom_kill": 0,
+      "oom_group_kill": 0
+    },
+    "pidCurves": {
+      "114048": [
+        {
+          "secondsFromFirstSample": 2.119162311999389,
+          "utc": "2026-11-05T22:11:01Z",
+          "mainPssKiB": 30036,
+          "childrenKnownPssKiB": 0,
+          "aggregateKnownPssKiB": 30036,
+          "allPssAvailable": true,
+          "cgroupBytes": 1824108544
+        },
+        {
+          "secondsFromFirstSample": 4.247907516000851,
+          "utc": "2026-11-05T22:11:03Z",
+          "mainPssKiB": 248186,
+          "childrenKnownPssKiB": 98454,
+          "aggregateKnownPssKiB": 346640,
+          "allPssAvailable": true,
+          "cgroupBytes": 2027581440
+        },
+        {
+          "secondsFromFirstSample": 6.455325800001447,
+          "utc": "2026-11-05T22:11:05Z",
+          "mainPssKiB": 404804,
+          "childrenKnownPssKiB": 173123,
+          "aggregateKnownPssKiB": 577927,
+          "allPssAvailable": true,
+          "cgroupBytes": 2256617472
+        },
+        {
+          "secondsFromFirstSample": 8.588805997002055,
+          "utc": "2026-11-05T22:11:07Z",
+          "mainPssKiB": 432838,
+          "childrenKnownPssKiB": 170943,
+          "aggregateKnownPssKiB": 603781,
+          "allPssAvailable": true,
+          "cgroupBytes": 2297389056
+        },
+        {
+          "secondsFromFirstSample": 10.719012174002273,
+          "utc": "2026-11-05T22:11:09Z",
+          "mainPssKiB": 423850,
+          "childrenKnownPssKiB": 171473,
+          "aggregateKnownPssKiB": 595323,
+          "allPssAvailable": true,
+          "cgroupBytes": 2304655360
+        },
+        {
+          "secondsFromFirstSample": 12.87817606200042,
+          "utc": "2026-11-05T22:11:12Z",
+          "mainPssKiB": 441337,
+          "childrenKnownPssKiB": 164570,
+          "aggregateKnownPssKiB": 605907,
+          "allPssAvailable": true,
+          "cgroupBytes": 2321543168
+        },
+        {
+          "secondsFromFirstSample": 15.018586189999041,
+          "utc": "2026-11-05T22:11:14Z",
+          "mainPssKiB": 433235,
+          "childrenKnownPssKiB": 163043,
+          "aggregateKnownPssKiB": 596278,
+          "allPssAvailable": true,
+          "cgroupBytes": 2302922752
+        },
+        {
+          "secondsFromFirstSample": 17.168239359001745,
+          "utc": "2026-11-05T22:11:16Z",
+          "mainPssKiB": 431919,
+          "childrenKnownPssKiB": 158685,
+          "aggregateKnownPssKiB": 590604,
+          "allPssAvailable": true,
+          "cgroupBytes": 2296688640
+        },
+        {
+          "secondsFromFirstSample": 19.311852708000515,
+          "utc": "2026-11-05T22:11:18Z",
+          "mainPssKiB": 432007,
+          "childrenKnownPssKiB": 158833,
+          "aggregateKnownPssKiB": 590840,
+          "allPssAvailable": true,
+          "cgroupBytes": 2295926784
+        },
+        {
+          "secondsFromFirstSample": 21.5066820380016,
+          "utc": "2026-11-05T22:11:20Z",
+          "mainPssKiB": 444157,
+          "childrenKnownPssKiB": 185546,
+          "aggregateKnownPssKiB": 629703,
+          "allPssAvailable": true,
+          "cgroupBytes": 2349723648
+        },
+        {
+          "secondsFromFirstSample": 23.792399433001265,
+          "utc": "2026-11-05T22:11:23Z",
+          "mainPssKiB": 430093,
+          "childrenKnownPssKiB": 184319,
+          "aggregateKnownPssKiB": 614412,
+          "allPssAvailable": true,
+          "cgroupBytes": 2324074496
+        }
+      ],
+      "114459": [
+        {
+          "secondsFromFirstSample": 25.986388891000388,
+          "utc": "2026-11-05T22:11:25Z",
+          "mainPssKiB": 145515,
+          "childrenKnownPssKiB": 41706,
+          "aggregateKnownPssKiB": 187221,
+          "allPssAvailable": true,
+          "cgroupBytes": 1912463360
+        },
+        {
+          "secondsFromFirstSample": 28.231633406001492,
+          "utc": "2026-11-05T22:11:27Z",
+          "mainPssKiB": 358879,
+          "childrenKnownPssKiB": 145415,
+          "aggregateKnownPssKiB": 504294,
+          "allPssAvailable": true,
+          "cgroupBytes": 2187251712
+        }
+      ],
+      "114791": [
+        {
+          "secondsFromFirstSample": 30.380044620000263,
+          "utc": "2026-11-05T22:11:29Z",
+          "mainPssKiB": 105633,
+          "childrenKnownPssKiB": 27893,
+          "aggregateKnownPssKiB": 133526,
+          "allPssAvailable": true,
+          "cgroupBytes": 1883033600
+        },
+        {
+          "secondsFromFirstSample": 92.79389855699992,
+          "utc": "2026-11-05T22:12:32Z",
+          "mainPssKiB": 13449818,
+          "childrenKnownPssKiB": 82560,
+          "aggregateKnownPssKiB": 13532378,
+          "allPssAvailable": true,
+          "cgroupBytes": 15564976128
+        }
+      ]
+    }
+  },
+  {
+    "file": "runs/candidate-f43-x11-hold500-30079/resources.jsonl",
+    "sha256": "70d7f5d1479af3b13ef7dc005574c80e3e1a2862494da90b458223d416658814",
+    "cgroupEventDeltas": {
+      "low": 0,
+      "high": 0,
+      "max": 0,
+      "oom": 0,
+      "oom_kill": 0,
+      "oom_group_kill": 0
+    },
+    "pidCurves": {
+      "116378": [
+        {
+          "secondsFromFirstSample": 2.117053089001274,
+          "utc": "2026-11-05T22:23:13Z",
+          "mainPssKiB": null,
+          "childrenKnownPssKiB": 0,
+          "aggregateKnownPssKiB": 0,
+          "allPssAvailable": false,
+          "cgroupBytes": 1617211392
+        },
+        {
+          "secondsFromFirstSample": 4.243774210000993,
+          "utc": "2026-11-05T22:23:15Z",
+          "mainPssKiB": 236317,
+          "childrenKnownPssKiB": 0,
+          "aggregateKnownPssKiB": 236317,
+          "allPssAvailable": false,
+          "cgroupBytes": 1815445504
+        },
+        {
+          "secondsFromFirstSample": 6.364599878001172,
+          "utc": "2026-11-05T22:23:17Z",
+          "mainPssKiB": 391586,
+          "childrenKnownPssKiB": 103172,
+          "aggregateKnownPssKiB": 494758,
+          "allPssAvailable": false,
+          "cgroupBytes": 2013392896
+        },
+        {
+          "secondsFromFirstSample": 8.481862327000272,
+          "utc": "2026-11-05T22:23:19Z",
+          "mainPssKiB": 437976,
+          "childrenKnownPssKiB": 153097,
+          "aggregateKnownPssKiB": 591073,
+          "allPssAvailable": false,
+          "cgroupBytes": 2090668032
+        },
+        {
+          "secondsFromFirstSample": 10.594549959998403,
+          "utc": "2026-11-05T22:23:22Z",
+          "mainPssKiB": 449868,
+          "childrenKnownPssKiB": 170818,
+          "aggregateKnownPssKiB": 620686,
+          "allPssAvailable": true,
+          "cgroupBytes": 2099224576
+        },
+        {
+          "secondsFromFirstSample": 12.729687995000859,
+          "utc": "2026-11-05T22:23:24Z",
+          "mainPssKiB": 441750,
+          "childrenKnownPssKiB": 168518,
+          "aggregateKnownPssKiB": 610268,
+          "allPssAvailable": true,
+          "cgroupBytes": 2110849024
+        },
+        {
+          "secondsFromFirstSample": 14.859524797000631,
+          "utc": "2026-11-05T22:23:26Z",
+          "mainPssKiB": 449246,
+          "childrenKnownPssKiB": 160586,
+          "aggregateKnownPssKiB": 609832,
+          "allPssAvailable": true,
+          "cgroupBytes": 2098962432
+        },
+        {
+          "secondsFromFirstSample": 16.982169483999314,
+          "utc": "2026-11-05T22:23:28Z",
+          "mainPssKiB": 437073,
+          "childrenKnownPssKiB": 156872,
+          "aggregateKnownPssKiB": 593945,
+          "allPssAvailable": true,
+          "cgroupBytes": 2086670336
+        },
+        {
+          "secondsFromFirstSample": 19.091555849998258,
+          "utc": "2026-11-05T22:23:30Z",
+          "mainPssKiB": 436883,
+          "childrenKnownPssKiB": 155942,
+          "aggregateKnownPssKiB": 592825,
+          "allPssAvailable": true,
+          "cgroupBytes": 2086129664
+        },
+        {
+          "secondsFromFirstSample": 21.28895380299946,
+          "utc": "2026-11-05T22:23:32Z",
+          "mainPssKiB": 435671,
+          "childrenKnownPssKiB": 155984,
+          "aggregateKnownPssKiB": 591655,
+          "allPssAvailable": true,
+          "cgroupBytes": 2104582144
+        },
+        {
+          "secondsFromFirstSample": 23.419444484999985,
+          "utc": "2026-11-05T22:23:34Z",
+          "mainPssKiB": 443919,
+          "childrenKnownPssKiB": 151600,
+          "aggregateKnownPssKiB": 595519,
+          "allPssAvailable": false,
+          "cgroupBytes": 2138107904
+        },
+        {
+          "secondsFromFirstSample": 25.535083178001514,
+          "utc": "2026-11-05T22:23:37Z",
+          "mainPssKiB": 431722,
+          "childrenKnownPssKiB": 182056,
+          "aggregateKnownPssKiB": 613778,
+          "allPssAvailable": true,
+          "cgroupBytes": 2110660608
+        }
+      ]
+    }
+  }
+]

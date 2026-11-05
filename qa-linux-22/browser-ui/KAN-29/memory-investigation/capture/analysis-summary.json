@@ -1,0 +1,209 @@
+{
+  "sourceSha": "a6290b5811b8c5309b399ac340ec40b52f97b73c",
+  "runtimeSha": "c74fe1a545d275cdd710ab44701c1ee0dd6b0eae",
+  "product": "official parent a629 Floorp12.20.0 / native157.0.1 build20261007125927",
+  "counts": {
+    "englishBootstrapLaunches": 1,
+    "arabicCaptureLaunches": 1,
+    "additionalArabicRetries": 0
+  },
+  "phases": {
+    "bootstrap": {
+      "pid": 118661,
+      "actualChildExit": 0,
+      "normalExit": true,
+      "quitMethod": "normal Services.startup.quit(eAttemptQuit) during connected English bootstrap",
+      "liveProtection": {
+        "signatureRequired": false,
+        "signatureUserSet": false,
+        "langpackSignatureRequired": true,
+        "langpackSignatureUserSet": false,
+        "sandbox": 6,
+        "focusTestMode": false
+      },
+      "blankTabContext": {
+        "tabs": [
+          {
+            "uri": "about:blank",
+            "remote": true,
+            "remoteType": "web",
+            "systemPrincipal": false
+          }
+        ],
+        "startupPage": 3,
+        "resumeOnce": false
+      },
+      "signedLocale": {
+        "id": "langpack-ar@firefox.mozilla.org",
+        "version": "157.0.20261005.135250",
+        "signedState": 2,
+        "appDisabled": false
+      }
+    },
+    "arabic": {
+      "pid": 119072,
+      "actualChildExit": -15,
+      "osCtrlQExit": 0,
+      "normalQuitEstablished": false,
+      "targetCaptureSeconds": 20.082996585999354,
+      "resourceBoundDuringTargetCapture": false,
+      "observedLastSampleSeconds": 24.27830034699946,
+      "guardDuringQuitGrace": {
+        "secondsAfterLaunch": 24.27830034699946,
+        "within20sCapture": false,
+        "ownedRssKiB": 2603176,
+        "mainRssKiB": 2314556,
+        "childrenRssKiB": 288620,
+        "mainCpuTicks": 2457,
+        "childrenCpuTicks": 403,
+        "mainPssKiB": 2165081,
+        "mainPssReadDurationSeconds": 0.04997741899933317,
+        "mainPssAgeSeconds": 0.4026633219982614,
+        "knownAggregatePssKiB": 2333505,
+        "childrenKnownPssKiB": 168424,
+        "childCount": 5,
+        "cgroupBytes": 6485364736,
+        "samplerDurationSeconds": 0.21929747000103816
+      },
+      "abnormalCleanup": true
+    },
+    "runnerWrapper": "runner PID119057 distinct from native PID119072; outer DBus/wrapper exit not recorded here, not inferred from native child status"
+  },
+  "cleanPreRTL": {
+    "nativeChildExit": 0,
+    "entryCount": 72,
+    "snapshotSha256": "10cf1b4d05eb078df012a8539298962c135b0c155925cf6828b0a0b785598772",
+    "normalQuitBeforeFirstArabic": true,
+    "requestedArVerifiedInCopiedPrefs": true,
+    "localeAddons": [
+      {
+        "id": "langpack-ar@firefox.mozilla.org",
+        "version": "157.0.20261005.135250",
+        "active": true,
+        "signedState": 2,
+        "appDisabled": false
+      }
+    ],
+    "profilePrefsSha256": "c1cf81c8639f6a926b5b49c7a0ca0d3f6c998be840afbfd714247b46b33aeda0",
+    "extensionsSha256": "1c0439d0bb5ce843bf857cf17195a6303e54f47378cc1b09498c3d3ac40f5b2b",
+    "noEarlierArabicLaunch": true,
+    "helperFailure": "initial copytree followed dangling lock after successful English quit; repaired copy ignored lock/symlinks and resumed same normally-ended fresh profile without another bootstrap"
+  },
+  "captureLastSample": {
+    "secondsAfterLaunch": 19.89017890100149,
+    "within20sCapture": true,
+    "ownedRssKiB": 1736544,
+    "mainRssKiB": 1448208,
+    "childrenRssKiB": 288336,
+    "mainCpuTicks": 2018,
+    "childrenCpuTicks": 385,
+    "mainPssKiB": 1331487,
+    "mainPssReadDurationSeconds": 0.03497505199993611,
+    "mainPssAgeSeconds": 0.21133388300222578,
+    "knownAggregatePssKiB": 1499673,
+    "childrenKnownPssKiB": 168186,
+    "childCount": 5,
+    "cgroupBytes": 5595389952,
+    "samplerDurationSeconds": 0.19653529400238767
+  },
+  "wholeObservationPeak": {
+    "secondsAfterLaunch": 24.27830034699946,
+    "within20sCapture": false,
+    "ownedRssKiB": 2603176,
+    "mainRssKiB": 2314556,
+    "childrenRssKiB": 288620,
+    "mainCpuTicks": 2457,
+    "childrenCpuTicks": 403,
+    "mainPssKiB": 2165081,
+    "mainPssReadDurationSeconds": 0.04997741899933317,
+    "mainPssAgeSeconds": 0.4026633219982614,
+    "knownAggregatePssKiB": 2333505,
+    "childrenKnownPssKiB": 168424,
+    "childCount": 5,
+    "cgroupBytes": 6485364736,
+    "samplerDurationSeconds": 0.21929747000103816
+  },
+  "lateCaptureSlope": {
+    "intervalSeconds": [
+      14.328449505999743,
+      19.89017890100149
+    ],
+    "ownedRssMiBPerSecond": 199.51078543972403,
+    "mainRssMiBPerSecond": 185.56573557453268,
+    "mainCpuCoreEquivalent": 1.0050830601401892,
+    "childrenCpuCoreEquivalent": 0.2697002844741116,
+    "notAllocationRate": true
+  },
+  "sampling": {
+    "requestedIntervalSeconds": 0.2,
+    "observedGapMin": 0.36501501299790107,
+    "observedGapMedian": 0.40161883250038954,
+    "observedGapMax": 6.652623002999462,
+    "firstOwnedSampleAfterLaunch": 3.879965801999788,
+    "largestGapInterval": [
+      3.879965801999788,
+      10.53258880499925
+    ],
+    "maxSamplerDurationSeconds": 6.265829881998798,
+    "maxMainPssReadDurationSeconds": 1.6033290359991952,
+    "maxMainPssAgeSeconds": 1.0412357800014433,
+    "limitations": "0.2s intended not achieved; delayed PSS cache not contemporaneous, unobserved gaps cannot exclude short excursions or provide continuous hard upper bound"
+  },
+  "signals": [
+    {
+      "t": 32136.944850787,
+      "signal": 34,
+      "label": "nonminimizing-memory-report-3s",
+      "caughtMask": "0x104000a00",
+      "registered": false,
+      "sent": false,
+      "secondsAfterLaunch": 3.4265548100011074
+    },
+    {
+      "t": 32140.59961046,
+      "signal": 34,
+      "label": "nonminimizing-memory-report-7s",
+      "caughtMask": "0x104000a00",
+      "registered": false,
+      "sent": false,
+      "secondsAfterLaunch": 7.081314483002643
+    },
+    {
+      "t": 32143.80628864,
+      "signal": 12,
+      "label": "async-profiler-dump-and-stop",
+      "caughtMask": "0x104000a00",
+      "registered": true,
+      "sent": true,
+      "secondsAfterLaunch": 10.287992663001205
+    }
+  ],
+  "rawCaptureResults": {
+    "profilerJsonFiles": 0,
+    "memoryReportFiles": 0,
+    "cpuFeatureWarning": "Unrecognized feature \"cpu\" appears; does not establish all other features inactive or reason dump missing",
+    "memorySignals": "SIGRTMIN uncaught on both requests; deliberately not sent",
+    "profilerSignal": "SIGUSR2 registered and sent; no output file observed",
+    "jsHeap": "NOT MEASURED",
+    "DOM": "NOT MEASURED",
+    "jsVsNativeAttribution": "UNRESOLVED"
+  },
+  "cgroupEventDeltas": {
+    "low": 0,
+    "high": 0,
+    "max": 0,
+    "oom": 0,
+    "oom_kill": 0,
+    "oom_group_kill": 0
+  },
+  "payloadUnchanged": true,
+  "payloadEntries": 46,
+  "strictRTL_UI": "NOT MEASURED",
+  "KAN29Pass": false,
+  "rawDigests": {
+    "resources": "f11cd786669c8e025f544485fd0282db1c7f376769676586e5fdea9946dde60e",
+    "result": "615ec2134ff405b97cec692e92b71d52262d4c72b7990bc398202f9194efc495",
+    "signalEvents": "af3f967a4a1bb55e6f662b547c0875bd77ea4019cd4b080b84de96b19d7670ee"
+  },
+  "privacy": "Only aggregate numeric curves, technical addon/protection proof and digests curated; no raw profiles, reports, user URLs or log contents"
+}

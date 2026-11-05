@@ -1,0 +1,18 @@
+{
+  "parent": {
+    "sourceSha": "a6290b5811b8c5309b399ac340ec40b52f97b73c",
+    "runtimeSha": "c74fe1a545d275cdd710ab44701c1ee0dd6b0eae",
+    "engine": "157.0.1",
+    "buildId": "20261007125927",
+    "runtimeArtifact": 11501872421,
+    "qualification": "Same Floorp branding/native Runtime; exact PR parent differs only two flex-order files per saved comparison; strongest existing controlled baseline"
+  },
+  "Firefox157": {
+    "availableVerifiedBinaryInReviewedMetadata": false,
+    "qualification": "Same numeric version alone insufficient: Mozilla branding, source/patch/config/native hashes and BuildID may differ; cannot call same native Runtime or isolate Floorp UI without verified metadata",
+    "existingFirefoxProduct": "Existing products/firefox application/platform metadata is159.0.1 build20261102144711, unsuitable same157 control"
+  },
+  "jsHeap": "NOT MEASURED",
+  "domNodeCounts": "NOT MEASURED",
+  "activeRenderer": "NOT MEASURED in passive run; unchanged configuration does not prove active renderer identity"
+}

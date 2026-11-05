@@ -1,0 +1,9 @@
+{
+  "kind": "native-tool permission check on a disposable owned non-browser child",
+  "child": 119473,
+  "attachReturn": 0,
+  "errno": 0,
+  "stopped": true,
+  "detachReturn": 0,
+  "reaped": true
+}

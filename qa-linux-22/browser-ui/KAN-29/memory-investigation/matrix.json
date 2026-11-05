@@ -1,0 +1,29 @@
+[
+  {
+    "key": "KAN-29",
+    "github": "https://github.com/Floorp-Projects/Floorp/issues/2876",
+    "sourceSha": "a6290b5811b8c5309b399ac340ec40b52f97b73c",
+    "productVersion": "Floorp12.20.0 Gecko157.0.1 Build20261007125927",
+    "environment": "Debian13 Xvfb/Openbox isolated DBus; fresh parent profile, signed matching Arabic pack; requested-ar, strict RTL unmeasured",
+    "testCommand": "capture/bootstrap-executed.py then capture/capture-executed.py (historical, not validated profiler recipe)",
+    "result": "parent requested-ar resident growth confirmed; cause unconfirmed; profiler/memory reports unavailable",
+    "remainingConditions": [
+      "working profiler preflight/output",
+      "JS heap/DOM/native breakdown",
+      "startup restore/locale/UI phase discrimination",
+      "qualified full157 RTL paint",
+      "original LTR CachyOS/Flatpak and physical conditions"
+    ],
+    "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2877",
+    "newPr": null,
+    "jiraCommentId": null,
+    "evidence": [
+      "report.md",
+      "capture/analysis-summary.json",
+      "capture/curated-resources.json",
+      "code/report.md",
+      "profiles/report.md",
+      "next-observations.md"
+    ]
+  }
+]

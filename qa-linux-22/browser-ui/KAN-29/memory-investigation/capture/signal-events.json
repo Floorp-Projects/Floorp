@@ -1,0 +1,26 @@
+[
+  {
+    "t": 32136.944850787,
+    "signal": 34,
+    "label": "nonminimizing-memory-report-3s",
+    "caughtMask": "0x104000a00",
+    "registered": false,
+    "sent": false
+  },
+  {
+    "t": 32140.59961046,
+    "signal": 34,
+    "label": "nonminimizing-memory-report-7s",
+    "caughtMask": "0x104000a00",
+    "registered": false,
+    "sent": false
+  },
+  {
+    "t": 32143.80628864,
+    "signal": 12,
+    "label": "async-profiler-dump-and-stop",
+    "caughtMask": "0x104000a00",
+    "registered": true,
+    "sent": true
+  }
+]

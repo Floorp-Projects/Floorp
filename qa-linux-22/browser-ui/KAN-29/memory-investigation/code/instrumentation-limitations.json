@@ -1,0 +1,32 @@
+{
+  "runtimeSha": "c74fe1a545d275cdd710ab44701c1ee0dd6b0eae",
+  "readonly": true,
+  "additionalRuns": 0,
+  "observed": {
+    "unknownFeature": "cpu",
+    "wholeProfilerDisabled": "not established; unknown token returns0, remaining features ORed",
+    "validCpuFeature": "processcpu",
+    "SIGRTMINRegistered": false,
+    "SIGRTMINSent": false,
+    "SIGUSR2Registered": true,
+    "SIGUSR2Sent": true,
+    "profileJsonFound": false,
+    "memoryReportFound": false,
+    "finalChildExit": -15
+  },
+  "unresolvedPrerequisites": [
+    "actual active profiler/features/samples",
+    "signal pipe/thread delivery",
+    "same-process CorePS cached dump directory/path write",
+    "same-process memory reporter service/RT handler initialization",
+    "main-thread reporting progress"
+  ],
+  "nextObservation": "Root-authorized bounded valid-feature/path-output preflight or external owned userspace stack; same-process memory-service gate if approved. No new execution here.",
+  "underlyingRamCause": "unconfirmed; JS heap/DOM/native category not measured",
+  "evidence": [
+    "instrumentation-limitations.md",
+    "instrumentation-source-excerpts.txt",
+    "instrumentation-source-index.json",
+    "../capture/signal-events.json"
+  ]
+}

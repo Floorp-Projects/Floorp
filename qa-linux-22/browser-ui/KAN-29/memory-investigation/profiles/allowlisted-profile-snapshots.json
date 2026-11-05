@@ -1,0 +1,393 @@
+[
+  {
+    "profileRun": "baseline-a629-30071",
+    "prefs": {
+      "prefs.js": {
+        "browser.sessionstore.resume_from_crash": false,
+        "floorp.design.configs": "{\"globalConfigs\":{\"userInterface\":\"lepton\",\"faviconColor\":false,\"appliedUserJs\":\"\"},\"tabbar\":{\"tabbarStyle\":\"vertical\",\"tabbarPosition\":\"default\",\"multiRowTabBar\":{\"maxRowEnabled\":false,\"maxRow\":3}},\"tab\":{\"tabScroll\":{\"enabled\":false,\"reverse\":false,\"wrap\":false},\"tabMinHeight\":30,\"tabMinWidth\":76,\"tabPinTitle\":false,\"tabDoubleClickToClose\":false,\"tabOpenPosition\":-1},\"uiCustomization\":{\"navbar\":{\"position\":\"top\",\"searchBarTop\":false},\"display\":{\"disableFullscreenNotification\":false,\"deleteBrowserBorder\":false},\"special\":{\"optimizeForTreeStyleTab\":false,\"hideForwardBackwardButton\":false,\"stgLikeWorkspaces\":false},\"multirowTab\":{\"newtabInsideEnabled\":false},\"bookmarkBar\":{\"focusExpand\":false,\"position\":\"top\"},\"qrCode\":{\"disableButton\":false},\"chromeExtras\":{\"autohideTab\":false,\"autohideBackButton\":false,\"autohideForwardButton\":false,\"autohidePageAction\":false,\"autohideSidebar\":false,\"autohideNavbar\":false,\"hiddenTabIcon\":false,\"hiddenTabCloseButton\":false,\"hiddenTabAudioIndicator\":false,\"hiddenTabSharingIndicator\":false,\"hiddenTabNoteIcon\":false,\"hiddenTabAttentionIndicator\":false,\"hiddenTabbar\":false,\"hiddenNavbar\":false,\"hiddenSidebarHeader\":false,\"hiddenUrlbarIconbox\":false,\"hiddenBookmarkbarIcon\":false,\"hiddenBookmarkbarLabel\":false,\"hiddenDisabledMenu\":false,\"iconDisabled\":false,\"iconMenu\":true,\"centeredTab\":false,\"centeredUrlbar\":false,\"centeredBookmarkbar\":false,\"urlViewMoveIconToLeft\":false,\"urlViewGoButtonWhenTyping\":false,\"urlViewAlwaysShowPageActions\":false,\"sidebarOverlap\":false,\"tabbarAsTitlebar\":false,\"tabbarOneLiner\":false}}}",
+        "floorp.panelSidebar.config": "{\"globalWidth\":400,\"autoUnload\":false,\"position_start\":true,\"displayed\":true,\"webExtensionRunningEnabled\":false,\"overlay\":false,\"openOnHover\":false}",
+        "intl.locale.requested": "ar",
+        "marionette.port": 30073,
+        "sidebar.verticalTabs": true,
+        "sidebar.visibility": "expand-on-hover"
+      },
+      "user.js": {
+        "marionette.port": 30073,
+        "focusmanager.testmode": false,
+        "sidebar.revamp": true,
+        "sidebar.verticalTabs": true,
+        "sidebar.visibility": "expand-on-hover",
+        "floorp.design.configs": "{\"globalConfigs\": {\"userInterface\": \"lepton\", \"faviconColor\": false, \"appliedUserJs\": \"\"}, \"tabbar\": {\"tabbarStyle\": \"vertical\", \"tabbarPosition\": \"default\", \"multiRowTabBar\": {\"maxRowEnabled\": false, \"maxRow\": 3}}, \"tab\": {\"tabScroll\": {\"enabled\": false, \"reverse\": false, \"wrap\": false}, \"tabMinHeight\": 30, \"tabMinWidth\": 76, \"tabPinTitle\": false, \"tabDoubleClickToClose\": false, \"tabOpenPosition\": -1}, \"uiCustomization\": {\"navbar\": {\"position\": \"top\", \"searchBarTop\": false}, \"display\": {\"disableFullscreenNotification\": false, \"deleteBrowserBorder\": false}, \"special\": {\"optimizeForTreeStyleTab\": false, \"hideForwardBackwardButton\": false, \"stgLikeWorkspaces\": false}, \"multirowTab\": {\"newtabInsideEnabled\": false}, \"bookmarkBar\": {\"focusExpand\": false, \"position\": \"top\"}, \"qrCode\": {\"disableButton\": false}, \"chromeExtras\": {\"autohideTab\": false, \"autohideBackButton\": false, \"autohideForwardButton\": false, \"autohidePageAction\": false, \"autohideSidebar\": false, \"autohideNavbar\": false, \"hiddenTabIcon\": false, \"hiddenTabCloseButton\": false, \"hiddenTabAudioIndicator\": false, \"hiddenTabSharingIndicator\": false, \"hiddenTabNoteIcon\": false, \"hiddenTabAttentionIndicator\": false, \"hiddenTabbar\": false, \"hiddenNavbar\": false, \"hiddenSidebarHeader\": false, \"hiddenUrlbarIconbox\": false, \"hiddenBookmarkbarIcon\": false, \"hiddenBookmarkbarLabel\": false, \"hiddenDisabledMenu\": false, \"iconDisabled\": false, \"iconMenu\": true, \"centeredTab\": false, \"centeredUrlbar\": false, \"centeredBookmarkbar\": false, \"urlViewMoveIconToLeft\": false, \"urlViewGoButtonWhenTyping\": false, \"urlViewAlwaysShowPageActions\": false, \"sidebarOverlap\": false, \"tabbarAsTitlebar\": false, \"tabbarOneLiner\": false}}}",
+        "floorp.panelSidebar.config": "{\"globalWidth\": 400, \"autoUnload\": false, \"position_start\": true, \"displayed\": true, \"webExtensionRunningEnabled\": false, \"overlay\": false, \"openOnHover\": false}"
+      }
+    },
+    "localeAddons": [
+      {
+        "id": "langpack-ar@firefox.mozilla.org",
+        "version": "157.0.20261005.135250",
+        "active": true,
+        "signedState": 2,
+        "appDisabled": false,
+        "userDisabled": false,
+        "type": "locale"
+      }
+    ],
+    "sessionFiles": [
+      {
+        "name": "sessionstore.jsonlz4",
+        "size": 1958,
+        "sha256": "60fb784b83e94678e6c3f24f010e9cb8637cd7af6a98f57e2fc04feb87f440c1"
+      },
+      {
+        "name": "sessionCheckpoints.json",
+        "size": 53,
+        "sha256": "792955295ae9c382986222c6731c5870bd0e921e7f7e34cc4615f5cd67f225da"
+      },
+      {
+        "name": "sessionstore-backups/previous.jsonlz4",
+        "size": 1734,
+        "sha256": "b2866f20453f47dd8d2b899f25cb538dfe8cfaf3e7b703233bdd7775f741f75a"
+      },
+      {
+        "name": "sessionstore-backups/recovery.jsonlz4",
+        "size": 1733,
+        "sha256": "600c34dc5568c4fc97955a4bf211ccec961ba5aacb5d2f3443e6d3b79a9ff0e4"
+      },
+      {
+        "name": "sessionstore-backups/recovery.baklz4",
+        "size": 1736,
+        "sha256": "1a2d8f71230661aa187c1b859c84b12218c0b8c4edba9bd6023070b575e8fe97"
+      },
+      {
+        "name": "sessionstore-backups/upgrade.jsonlz4-20261007125927",
+        "size": 1734,
+        "sha256": "b2866f20453f47dd8d2b899f25cb538dfe8cfaf3e7b703233bdd7775f741f75a"
+      }
+    ],
+    "prefs.jsSha256": "63676595d8c3b59ed92dfb63cef80678712326eae41f1a7c5b497ff9ed8f2dd5",
+    "user.jsSha256": "7644b6023e66f7e1e7ecaaf83ec702c134a596309f34939047e078ce6c67e998",
+    "extensionsJsonSha256": "f7f5e2484c52da1b576ba8c926ec0ccbfb874303a8193c3fb5519f2a038e14e9"
+  },
+  {
+    "profileRun": "baseline-a629-x11-hold500-30078",
+    "prefs": {
+      "prefs.js": {
+        "floorp.design.configs": "{\"globalConfigs\":{\"userInterface\":\"lepton\",\"faviconColor\":false,\"appliedUserJs\":\"\"},\"tabbar\":{\"tabbarStyle\":\"vertical\",\"tabbarPosition\":\"default\",\"multiRowTabBar\":{\"maxRowEnabled\":false,\"maxRow\":3}},\"tab\":{\"tabScroll\":{\"enabled\":false,\"reverse\":false,\"wrap\":false},\"tabMinHeight\":30,\"tabMinWidth\":76,\"tabPinTitle\":false,\"tabDoubleClickToClose\":false,\"tabOpenPosition\":-1},\"uiCustomization\":{\"navbar\":{\"position\":\"top\",\"searchBarTop\":false},\"display\":{\"disableFullscreenNotification\":false,\"deleteBrowserBorder\":false},\"special\":{\"optimizeForTreeStyleTab\":false,\"hideForwardBackwardButton\":false,\"stgLikeWorkspaces\":false},\"multirowTab\":{\"newtabInsideEnabled\":false},\"bookmarkBar\":{\"focusExpand\":false,\"position\":\"top\"},\"qrCode\":{\"disableButton\":false},\"chromeExtras\":{\"autohideTab\":false,\"autohideBackButton\":false,\"autohideForwardButton\":false,\"autohidePageAction\":false,\"autohideSidebar\":false,\"autohideNavbar\":false,\"hiddenTabIcon\":false,\"hiddenTabCloseButton\":false,\"hiddenTabAudioIndicator\":false,\"hiddenTabSharingIndicator\":false,\"hiddenTabNoteIcon\":false,\"hiddenTabAttentionIndicator\":false,\"hiddenTabbar\":false,\"hiddenNavbar\":false,\"hiddenSidebarHeader\":false,\"hiddenUrlbarIconbox\":false,\"hiddenBookmarkbarIcon\":false,\"hiddenBookmarkbarLabel\":false,\"hiddenDisabledMenu\":false,\"iconDisabled\":false,\"iconMenu\":true,\"centeredTab\":false,\"centeredUrlbar\":false,\"centeredBookmarkbar\":false,\"urlViewMoveIconToLeft\":false,\"urlViewGoButtonWhenTyping\":false,\"urlViewAlwaysShowPageActions\":false,\"sidebarOverlap\":false,\"tabbarAsTitlebar\":false,\"tabbarOneLiner\":false}}}",
+        "floorp.panelSidebar.config": "{\"globalWidth\":400,\"autoUnload\":false,\"position_start\":false,\"displayed\":true,\"webExtensionRunningEnabled\":false,\"overlay\":false,\"openOnHover\":false}",
+        "marionette.port": 30078,
+        "sidebar.verticalTabs": true,
+        "sidebar.visibility": "expand-on-hover"
+      },
+      "user.js": {
+        "marionette.port": 30078,
+        "focusmanager.testmode": false,
+        "sidebar.revamp": true,
+        "sidebar.verticalTabs": true,
+        "sidebar.visibility": "expand-on-hover",
+        "floorp.design.configs": "{\"globalConfigs\": {\"userInterface\": \"lepton\", \"faviconColor\": false, \"appliedUserJs\": \"\"}, \"tabbar\": {\"tabbarStyle\": \"vertical\", \"tabbarPosition\": \"default\", \"multiRowTabBar\": {\"maxRowEnabled\": false, \"maxRow\": 3}}, \"tab\": {\"tabScroll\": {\"enabled\": false, \"reverse\": false, \"wrap\": false}, \"tabMinHeight\": 30, \"tabMinWidth\": 76, \"tabPinTitle\": false, \"tabDoubleClickToClose\": false, \"tabOpenPosition\": -1}, \"uiCustomization\": {\"navbar\": {\"position\": \"top\", \"searchBarTop\": false}, \"display\": {\"disableFullscreenNotification\": false, \"deleteBrowserBorder\": false}, \"special\": {\"optimizeForTreeStyleTab\": false, \"hideForwardBackwardButton\": false, \"stgLikeWorkspaces\": false}, \"multirowTab\": {\"newtabInsideEnabled\": false}, \"bookmarkBar\": {\"focusExpand\": false, \"position\": \"top\"}, \"qrCode\": {\"disableButton\": false}, \"chromeExtras\": {\"autohideTab\": false, \"autohideBackButton\": false, \"autohideForwardButton\": false, \"autohidePageAction\": false, \"autohideSidebar\": false, \"autohideNavbar\": false, \"hiddenTabIcon\": false, \"hiddenTabCloseButton\": false, \"hiddenTabAudioIndicator\": false, \"hiddenTabSharingIndicator\": false, \"hiddenTabNoteIcon\": false, \"hiddenTabAttentionIndicator\": false, \"hiddenTabbar\": false, \"hiddenNavbar\": false, \"hiddenSidebarHeader\": false, \"hiddenUrlbarIconbox\": false, \"hiddenBookmarkbarIcon\": false, \"hiddenBookmarkbarLabel\": false, \"hiddenDisabledMenu\": false, \"iconDisabled\": false, \"iconMenu\": true, \"centeredTab\": false, \"centeredUrlbar\": false, \"centeredBookmarkbar\": false, \"urlViewMoveIconToLeft\": false, \"urlViewGoButtonWhenTyping\": false, \"urlViewAlwaysShowPageActions\": false, \"sidebarOverlap\": false, \"tabbarAsTitlebar\": false, \"tabbarOneLiner\": false}}}",
+        "floorp.panelSidebar.config": "{\"globalWidth\": 400, \"autoUnload\": false, \"position_start\": true, \"displayed\": true, \"webExtensionRunningEnabled\": false, \"overlay\": false, \"openOnHover\": false}"
+      }
+    },
+    "localeAddons": [],
+    "sessionFiles": [
+      {
+        "name": "sessionstore.jsonlz4",
+        "size": 1753,
+        "sha256": "c72cc01c302a1440584beeb7f12d56c786ee683b36ca2fb4c39b7c8c459aba48"
+      },
+      {
+        "name": "sessionCheckpoints.json",
+        "size": 288,
+        "sha256": "2fca1f29b73dd5b4159fa1eb16e69276482f5224ba7d2219a547039129a51f0e"
+      },
+      {
+        "name": "sessionstore-backups/recovery.jsonlz4",
+        "size": 1160,
+        "sha256": "83bdbc75217baeb842f63ff670928518d499e9236918bca39efcb8ed84a386c5"
+      }
+    ],
+    "prefs.jsSha256": "2a9b1183b342da730510dee0d1c457b060ee0de7d02f9b981b55bd82583328cf",
+    "user.jsSha256": "5093d0bd0d8c76c18a71edeff68598ef5c1a0b8e91a45d2631609bbbac969ee0",
+    "extensionsJsonSha256": "44292ce1cb935ce851c1cf09eeb8c98bd6c12746245b7631026d06f4e0995d70"
+  },
+  {
+    "profileRun": "baseline-a629-x11-one-30076",
+    "prefs": {
+      "prefs.js": {
+        "floorp.design.configs": "{\"globalConfigs\":{\"userInterface\":\"lepton\",\"faviconColor\":false,\"appliedUserJs\":\"\"},\"tabbar\":{\"tabbarStyle\":\"vertical\",\"tabbarPosition\":\"default\",\"multiRowTabBar\":{\"maxRowEnabled\":false,\"maxRow\":3}},\"tab\":{\"tabScroll\":{\"enabled\":false,\"reverse\":false,\"wrap\":false},\"tabMinHeight\":30,\"tabMinWidth\":76,\"tabPinTitle\":false,\"tabDoubleClickToClose\":false,\"tabOpenPosition\":-1},\"uiCustomization\":{\"navbar\":{\"position\":\"top\",\"searchBarTop\":false},\"display\":{\"disableFullscreenNotification\":false,\"deleteBrowserBorder\":false},\"special\":{\"optimizeForTreeStyleTab\":false,\"hideForwardBackwardButton\":false,\"stgLikeWorkspaces\":false},\"multirowTab\":{\"newtabInsideEnabled\":false},\"bookmarkBar\":{\"focusExpand\":false,\"position\":\"top\"},\"qrCode\":{\"disableButton\":false},\"chromeExtras\":{\"autohideTab\":false,\"autohideBackButton\":false,\"autohideForwardButton\":false,\"autohidePageAction\":false,\"autohideSidebar\":false,\"autohideNavbar\":false,\"hiddenTabIcon\":false,\"hiddenTabCloseButton\":false,\"hiddenTabAudioIndicator\":false,\"hiddenTabSharingIndicator\":false,\"hiddenTabNoteIcon\":false,\"hiddenTabAttentionIndicator\":false,\"hiddenTabbar\":false,\"hiddenNavbar\":false,\"hiddenSidebarHeader\":false,\"hiddenUrlbarIconbox\":false,\"hiddenBookmarkbarIcon\":false,\"hiddenBookmarkbarLabel\":false,\"hiddenDisabledMenu\":false,\"iconDisabled\":false,\"iconMenu\":true,\"centeredTab\":false,\"centeredUrlbar\":false,\"centeredBookmarkbar\":false,\"urlViewMoveIconToLeft\":false,\"urlViewGoButtonWhenTyping\":false,\"urlViewAlwaysShowPageActions\":false,\"sidebarOverlap\":false,\"tabbarAsTitlebar\":false,\"tabbarOneLiner\":false}}}",
+        "floorp.panelSidebar.config": "{\"globalWidth\":400,\"autoUnload\":false,\"position_start\":false,\"displayed\":true,\"webExtensionRunningEnabled\":false,\"overlay\":false,\"openOnHover\":false}",
+        "marionette.port": 30076,
+        "sidebar.verticalTabs": true,
+        "sidebar.visibility": "expand-on-hover"
+      },
+      "user.js": {
+        "marionette.port": 30076,
+        "focusmanager.testmode": false,
+        "sidebar.revamp": true,
+        "sidebar.verticalTabs": true,
+        "sidebar.visibility": "expand-on-hover",
+        "floorp.design.configs": "{\"globalConfigs\": {\"userInterface\": \"lepton\", \"faviconColor\": false, \"appliedUserJs\": \"\"}, \"tabbar\": {\"tabbarStyle\": \"vertical\", \"tabbarPosition\": \"default\", \"multiRowTabBar\": {\"maxRowEnabled\": false, \"maxRow\": 3}}, \"tab\": {\"tabScroll\": {\"enabled\": false, \"reverse\": false, \"wrap\": false}, \"tabMinHeight\": 30, \"tabMinWidth\": 76, \"tabPinTitle\": false, \"tabDoubleClickToClose\": false, \"tabOpenPosition\": -1}, \"uiCustomization\": {\"navbar\": {\"position\": \"top\", \"searchBarTop\": false}, \"display\": {\"disableFullscreenNotification\": false, \"deleteBrowserBorder\": false}, \"special\": {\"optimizeForTreeStyleTab\": false, \"hideForwardBackwardButton\": false, \"stgLikeWorkspaces\": false}, \"multirowTab\": {\"newtabInsideEnabled\": false}, \"bookmarkBar\": {\"focusExpand\": false, \"position\": \"top\"}, \"qrCode\": {\"disableButton\": false}, \"chromeExtras\": {\"autohideTab\": false, \"autohideBackButton\": false, \"autohideForwardButton\": false, \"autohidePageAction\": false, \"autohideSidebar\": false, \"autohideNavbar\": false, \"hiddenTabIcon\": false, \"hiddenTabCloseButton\": false, \"hiddenTabAudioIndicator\": false, \"hiddenTabSharingIndicator\": false, \"hiddenTabNoteIcon\": false, \"hiddenTabAttentionIndicator\": false, \"hiddenTabbar\": false, \"hiddenNavbar\": false, \"hiddenSidebarHeader\": false, \"hiddenUrlbarIconbox\": false, \"hiddenBookmarkbarIcon\": false, \"hiddenBookmarkbarLabel\": false, \"hiddenDisabledMenu\": false, \"iconDisabled\": false, \"iconMenu\": true, \"centeredTab\": false, \"centeredUrlbar\": false, \"centeredBookmarkbar\": false, \"urlViewMoveIconToLeft\": false, \"urlViewGoButtonWhenTyping\": false, \"urlViewAlwaysShowPageActions\": false, \"sidebarOverlap\": false, \"tabbarAsTitlebar\": false, \"tabbarOneLiner\": false}}}",
+        "floorp.panelSidebar.config": "{\"globalWidth\": 400, \"autoUnload\": false, \"position_start\": true, \"displayed\": true, \"webExtensionRunningEnabled\": false, \"overlay\": false, \"openOnHover\": false}"
+      }
+    },
+    "localeAddons": [],
+    "sessionFiles": [
+      {
+        "name": "sessionstore.jsonlz4",
+        "size": 1753,
+        "sha256": "5f1923b1e6b5d9cb721eddd706f6933824878b48da0477d8060e1cc2aae20de3"
+      },
+      {
+        "name": "sessionCheckpoints.json",
+        "size": 288,
+        "sha256": "2fca1f29b73dd5b4159fa1eb16e69276482f5224ba7d2219a547039129a51f0e"
+      },
+      {
+        "name": "sessionstore-backups/recovery.jsonlz4",
+        "size": 1157,
+        "sha256": "61e708b874cde48b72cb981f3b1128f853b626ec7cff3d152069a404db20a161"
+      }
+    ],
+    "prefs.jsSha256": "3982b2d698e4a55d319a75069a0c4055e7f4d288a1cfe70cbe875844127fc4ee",
+    "user.jsSha256": "ad9c8a435375f6d831c6285c4365bb2b2595386b3b434cbd08c02a45c0074193",
+    "extensionsJsonSha256": "0fca10ed10fe25ad012516eb784c02abbca9b9500113d83f062f75ed13716b03"
+  },
+  {
+    "profileRun": "candidate-f43-30074",
+    "prefs": {
+      "prefs.js": {
+        "browser.sessionstore.resume_from_crash": false,
+        "floorp.design.configs": "{\"globalConfigs\":{\"userInterface\":\"lepton\",\"faviconColor\":false,\"appliedUserJs\":\"\"},\"tabbar\":{\"tabbarStyle\":\"vertical\",\"tabbarPosition\":\"default\",\"multiRowTabBar\":{\"maxRowEnabled\":false,\"maxRow\":3}},\"tab\":{\"tabScroll\":{\"enabled\":false,\"reverse\":false,\"wrap\":false},\"tabMinHeight\":30,\"tabMinWidth\":76,\"tabPinTitle\":false,\"tabDoubleClickToClose\":false,\"tabOpenPosition\":-1},\"uiCustomization\":{\"navbar\":{\"position\":\"top\",\"searchBarTop\":false},\"display\":{\"disableFullscreenNotification\":false,\"deleteBrowserBorder\":false},\"special\":{\"optimizeForTreeStyleTab\":false,\"hideForwardBackwardButton\":false,\"stgLikeWorkspaces\":false},\"multirowTab\":{\"newtabInsideEnabled\":false},\"bookmarkBar\":{\"focusExpand\":false,\"position\":\"top\"},\"qrCode\":{\"disableButton\":false},\"chromeExtras\":{\"autohideTab\":false,\"autohideBackButton\":false,\"autohideForwardButton\":false,\"autohidePageAction\":false,\"autohideSidebar\":false,\"autohideNavbar\":false,\"hiddenTabIcon\":false,\"hiddenTabCloseButton\":false,\"hiddenTabAudioIndicator\":false,\"hiddenTabSharingIndicator\":false,\"hiddenTabNoteIcon\":false,\"hiddenTabAttentionIndicator\":false,\"hiddenTabbar\":false,\"hiddenNavbar\":false,\"hiddenSidebarHeader\":false,\"hiddenUrlbarIconbox\":false,\"hiddenBookmarkbarIcon\":false,\"hiddenBookmarkbarLabel\":false,\"hiddenDisabledMenu\":false,\"iconDisabled\":false,\"iconMenu\":true,\"centeredTab\":false,\"centeredUrlbar\":false,\"centeredBookmarkbar\":false,\"urlViewMoveIconToLeft\":false,\"urlViewGoButtonWhenTyping\":false,\"urlViewAlwaysShowPageActions\":false,\"sidebarOverlap\":false,\"tabbarAsTitlebar\":false,\"tabbarOneLiner\":false}}}",
+        "floorp.panelSidebar.config": "{\"globalWidth\":400,\"autoUnload\":false,\"position_start\":true,\"displayed\":true,\"webExtensionRunningEnabled\":false,\"overlay\":false,\"openOnHover\":false}",
+        "intl.locale.requested": "ar",
+        "marionette.port": 30074,
+        "sidebar.verticalTabs": true,
+        "sidebar.visibility": "expand-on-hover"
+      },
+      "user.js": {
+        "marionette.port": 30074,
+        "focusmanager.testmode": false,
+        "sidebar.revamp": true,
+        "sidebar.verticalTabs": true,
+        "sidebar.visibility": "expand-on-hover",
+        "floorp.design.configs": "{\"globalConfigs\": {\"userInterface\": \"lepton\", \"faviconColor\": false, \"appliedUserJs\": \"\"}, \"tabbar\": {\"tabbarStyle\": \"vertical\", \"tabbarPosition\": \"default\", \"multiRowTabBar\": {\"maxRowEnabled\": false, \"maxRow\": 3}}, \"tab\": {\"tabScroll\": {\"enabled\": false, \"reverse\": false, \"wrap\": false}, \"tabMinHeight\": 30, \"tabMinWidth\": 76, \"tabPinTitle\": false, \"tabDoubleClickToClose\": false, \"tabOpenPosition\": -1}, \"uiCustomization\": {\"navbar\": {\"position\": \"top\", \"searchBarTop\": false}, \"display\": {\"disableFullscreenNotification\": false, \"deleteBrowserBorder\": false}, \"special\": {\"optimizeForTreeStyleTab\": false, \"hideForwardBackwardButton\": false, \"stgLikeWorkspaces\": false}, \"multirowTab\": {\"newtabInsideEnabled\": false}, \"bookmarkBar\": {\"focusExpand\": false, \"position\": \"top\"}, \"qrCode\": {\"disableButton\": false}, \"chromeExtras\": {\"autohideTab\": false, \"autohideBackButton\": false, \"autohideForwardButton\": false, \"autohidePageAction\": false, \"autohideSidebar\": false, \"autohideNavbar\": false, \"hiddenTabIcon\": false, \"hiddenTabCloseButton\": false, \"hiddenTabAudioIndicator\": false, \"hiddenTabSharingIndicator\": false, \"hiddenTabNoteIcon\": false, \"hiddenTabAttentionIndicator\": false, \"hiddenTabbar\": false, \"hiddenNavbar\": false, \"hiddenSidebarHeader\": false, \"hiddenUrlbarIconbox\": false, \"hiddenBookmarkbarIcon\": false, \"hiddenBookmarkbarLabel\": false, \"hiddenDisabledMenu\": false, \"iconDisabled\": false, \"iconMenu\": true, \"centeredTab\": false, \"centeredUrlbar\": false, \"centeredBookmarkbar\": false, \"urlViewMoveIconToLeft\": false, \"urlViewGoButtonWhenTyping\": false, \"urlViewAlwaysShowPageActions\": false, \"sidebarOverlap\": false, \"tabbarAsTitlebar\": false, \"tabbarOneLiner\": false}}}",
+        "floorp.panelSidebar.config": "{\"globalWidth\": 400, \"autoUnload\": false, \"position_start\": true, \"displayed\": true, \"webExtensionRunningEnabled\": false, \"overlay\": false, \"openOnHover\": false}"
+      }
+    },
+    "localeAddons": [
+      {
+        "id": "langpack-ar@firefox.mozilla.org",
+        "version": "157.0.20261005.135250",
+        "active": true,
+        "signedState": 2,
+        "appDisabled": false,
+        "userDisabled": false,
+        "type": "locale"
+      }
+    ],
+    "sessionFiles": [
+      {
+        "name": "sessionstore.jsonlz4",
+        "size": 1960,
+        "sha256": "02e37b398f9c2d9548476e32c69740f85de5908ec543ac35741450841c57268b"
+      },
+      {
+        "name": "sessionCheckpoints.json",
+        "size": 53,
+        "sha256": "792955295ae9c382986222c6731c5870bd0e921e7f7e34cc4615f5cd67f225da"
+      },
+      {
+        "name": "sessionstore-backups/previous.jsonlz4",
+        "size": 1747,
+        "sha256": "e12459cb033ee798e229ffb63e5902bc5d1ae1b8187c5ba71400305dd96612ee"
+      },
+      {
+        "name": "sessionstore-backups/recovery.jsonlz4",
+        "size": 1747,
+        "sha256": "80fa90ab2a0a35606bdc83bf721c2fb6fa7aa7a77c9e255190519b0a2487d166"
+      },
+      {
+        "name": "sessionstore-backups/recovery.baklz4",
+        "size": 1745,
+        "sha256": "0db3c71d3a839e82a7ed050b352e2c5aee3c2ed8b67ee56b9a02e72535dcafd4"
+      },
+      {
+        "name": "sessionstore-backups/upgrade.jsonlz4-20261007125927",
+        "size": 1747,
+        "sha256": "e12459cb033ee798e229ffb63e5902bc5d1ae1b8187c5ba71400305dd96612ee"
+      }
+    ],
+    "prefs.jsSha256": "514790dc177d7f75b7880c146c3367157929b32dffebac39cf89966443c874d3",
+    "user.jsSha256": "0b2882a26375b884b84511c342b3998d76f9ac7dee012519db72b3d21fd2cac8",
+    "extensionsJsonSha256": "e9cc33f9c636f8b6ce0555584d8990b197b9d7206c561b08573eee483bfa65ad"
+  },
+  {
+    "profileRun": "candidate-f43-ar-horizontal-ui-30080",
+    "prefs": {
+      "prefs.js": {
+        "browser.sessionstore.resume_from_crash": false,
+        "floorp.design.configs": "{\"globalConfigs\":{\"userInterface\":\"lepton\",\"faviconColor\":false,\"appliedUserJs\":\"\"},\"tabbar\":{\"tabbarStyle\":\"horizontal\",\"tabbarPosition\":\"default\",\"multiRowTabBar\":{\"maxRowEnabled\":false,\"maxRow\":3}},\"tab\":{\"tabScroll\":{\"enabled\":false,\"reverse\":false,\"wrap\":false},\"tabMinHeight\":30,\"tabMinWidth\":76,\"tabPinTitle\":false,\"tabDoubleClickToClose\":false,\"tabOpenPosition\":-1},\"uiCustomization\":{\"navbar\":{\"position\":\"top\",\"searchBarTop\":false},\"display\":{\"disableFullscreenNotification\":false,\"deleteBrowserBorder\":false},\"special\":{\"optimizeForTreeStyleTab\":false,\"hideForwardBackwardButton\":false,\"stgLikeWorkspaces\":false},\"multirowTab\":{\"newtabInsideEnabled\":false},\"bookmarkBar\":{\"focusExpand\":false,\"position\":\"top\"},\"qrCode\":{\"disableButton\":false},\"chromeExtras\":{\"autohideTab\":false,\"autohideBackButton\":false,\"autohideForwardButton\":false,\"autohidePageAction\":false,\"autohideSidebar\":false,\"autohideNavbar\":false,\"hiddenTabIcon\":false,\"hiddenTabCloseButton\":false,\"hiddenTabAudioIndicator\":false,\"hiddenTabSharingIndicator\":false,\"hiddenTabNoteIcon\":false,\"hiddenTabAttentionIndicator\":false,\"hiddenTabbar\":false,\"hiddenNavbar\":false,\"hiddenSidebarHeader\":false,\"hiddenUrlbarIconbox\":false,\"hiddenBookmarkbarIcon\":false,\"hiddenBookmarkbarLabel\":false,\"hiddenDisabledMenu\":false,\"iconDisabled\":false,\"iconMenu\":true,\"centeredTab\":false,\"centeredUrlbar\":false,\"centeredBookmarkbar\":false,\"urlViewMoveIconToLeft\":false,\"urlViewGoButtonWhenTyping\":false,\"urlViewAlwaysShowPageActions\":false,\"sidebarOverlap\":false,\"tabbarAsTitlebar\":false,\"tabbarOneLiner\":false}}}",
+        "floorp.panelSidebar.config": "{\"globalWidth\":400,\"autoUnload\":false,\"position_start\":true,\"displayed\":true,\"webExtensionRunningEnabled\":false,\"overlay\":false,\"openOnHover\":false}",
+        "intl.locale.requested": "ar",
+        "marionette.port": 30080,
+        "sidebar.visibility": "hide-on-close"
+      },
+      "user.js": {
+        "marionette.port": 30080,
+        "focusmanager.testmode": false,
+        "sidebar.revamp": true,
+        "sidebar.verticalTabs": false,
+        "sidebar.visibility": "expand-on-hover",
+        "floorp.design.configs": "{\"globalConfigs\": {\"userInterface\": \"lepton\", \"faviconColor\": false, \"appliedUserJs\": \"\"}, \"tabbar\": {\"tabbarStyle\": \"horizontal\", \"tabbarPosition\": \"default\", \"multiRowTabBar\": {\"maxRowEnabled\": false, \"maxRow\": 3}}, \"tab\": {\"tabScroll\": {\"enabled\": false, \"reverse\": false, \"wrap\": false}, \"tabMinHeight\": 30, \"tabMinWidth\": 76, \"tabPinTitle\": false, \"tabDoubleClickToClose\": false, \"tabOpenPosition\": -1}, \"uiCustomization\": {\"navbar\": {\"position\": \"top\", \"searchBarTop\": false}, \"display\": {\"disableFullscreenNotification\": false, \"deleteBrowserBorder\": false}, \"special\": {\"optimizeForTreeStyleTab\": false, \"hideForwardBackwardButton\": false, \"stgLikeWorkspaces\": false}, \"multirowTab\": {\"newtabInsideEnabled\": false}, \"bookmarkBar\": {\"focusExpand\": false, \"position\": \"top\"}, \"qrCode\": {\"disableButton\": false}, \"chromeExtras\": {\"autohideTab\": false, \"autohideBackButton\": false, \"autohideForwardButton\": false, \"autohidePageAction\": false, \"autohideSidebar\": false, \"autohideNavbar\": false, \"hiddenTabIcon\": false, \"hiddenTabCloseButton\": false, \"hiddenTabAudioIndicator\": false, \"hiddenTabSharingIndicator\": false, \"hiddenTabNoteIcon\": false, \"hiddenTabAttentionIndicator\": false, \"hiddenTabbar\": false, \"hiddenNavbar\": false, \"hiddenSidebarHeader\": false, \"hiddenUrlbarIconbox\": false, \"hiddenBookmarkbarIcon\": false, \"hiddenBookmarkbarLabel\": false, \"hiddenDisabledMenu\": false, \"iconDisabled\": false, \"iconMenu\": true, \"centeredTab\": false, \"centeredUrlbar\": false, \"centeredBookmarkbar\": false, \"urlViewMoveIconToLeft\": false, \"urlViewGoButtonWhenTyping\": false, \"urlViewAlwaysShowPageActions\": false, \"sidebarOverlap\": false, \"tabbarAsTitlebar\": false, \"tabbarOneLiner\": false}}}",
+        "floorp.panelSidebar.config": "{\"globalWidth\": 400, \"autoUnload\": false, \"position_start\": true, \"displayed\": true, \"webExtensionRunningEnabled\": false, \"overlay\": false, \"openOnHover\": false}"
+      }
+    },
+    "localeAddons": [
+      {
+        "id": "langpack-ar@firefox.mozilla.org",
+        "version": "157.0.20261005.135250",
+        "active": true,
+        "signedState": 2,
+        "appDisabled": false,
+        "userDisabled": false,
+        "type": "locale"
+      }
+    ],
+    "sessionFiles": [
+      {
+        "name": "sessionstore.jsonlz4",
+        "size": 1971,
+        "sha256": "8e57858cf9e55913e24d6be7457bb4a3aeb31fde00763a716a1622075f5cd65e"
+      },
+      {
+        "name": "sessionCheckpoints.json",
+        "size": 53,
+        "sha256": "792955295ae9c382986222c6731c5870bd0e921e7f7e34cc4615f5cd67f225da"
+      },
+      {
+        "name": "sessionstore-backups/previous.jsonlz4",
+        "size": 1743,
+        "sha256": "d74fa5b645ff32e8fac77a4c0fe93f29f4d151c6b343fe6e1990419abb920fbc"
+      },
+      {
+        "name": "sessionstore-backups/recovery.jsonlz4",
+        "size": 1159,
+        "sha256": "32b2965e71975b561d7ef798ec372bc91c5f7340b4f031bb8a2e863d49b1865b"
+      },
+      {
+        "name": "sessionstore-backups/upgrade.jsonlz4-20261007125927",
+        "size": 1743,
+        "sha256": "d74fa5b645ff32e8fac77a4c0fe93f29f4d151c6b343fe6e1990419abb920fbc"
+      }
+    ],
+    "prefs.jsSha256": "d9755d63aa35c8424c3a318dfb2e1d6b91d015303e06c5e73eba094c7ffdb8ad",
+    "user.jsSha256": "cce2f5b2ca6f3fcec0081e00c12c91cd18cb0b3c5b713c365a3f7added96c948",
+    "extensionsJsonSha256": "6e96fa478cd4c340efc119ca84763442bea7433bc26846de4b86797fab612345"
+  },
+  {
+    "profileRun": "candidate-f43-x11-30075",
+    "prefs": {
+      "prefs.js": {
+        "browser.sessionstore.resume_from_crash": false,
+        "floorp.design.configs": "{\"globalConfigs\": {\"userInterface\": \"lepton\", \"faviconColor\": false, \"appliedUserJs\": \"\"}, \"tabbar\": {\"tabbarStyle\": \"vertical\", \"tabbarPosition\": \"default\", \"multiRowTabBar\": {\"maxRowEnabled\": false, \"maxRow\": 3}}, \"tab\": {\"tabScroll\": {\"enabled\": false, \"reverse\": false, \"wrap\": false}, \"tabMinHeight\": 30, \"tabMinWidth\": 76, \"tabPinTitle\": false, \"tabDoubleClickToClose\": false, \"tabOpenPosition\": -1}, \"uiCustomization\": {\"navbar\": {\"position\": \"top\", \"searchBarTop\": false}, \"display\": {\"disableFullscreenNotification\": false, \"deleteBrowserBorder\": false}, \"special\": {\"optimizeForTreeStyleTab\": false, \"hideForwardBackwardButton\": false, \"stgLikeWorkspaces\": false}, \"multirowTab\": {\"newtabInsideEnabled\": false}, \"bookmarkBar\": {\"focusExpand\": false, \"position\": \"top\"}, \"qrCode\": {\"disableButton\": false}, \"chromeExtras\": {\"autohideTab\": false, \"autohideBackButton\": false, \"autohideForwardButton\": false, \"autohidePageAction\": false, \"autohideSidebar\": false, \"autohideNavbar\": false, \"hiddenTabIcon\": false, \"hiddenTabCloseButton\": false, \"hiddenTabAudioIndicator\": false, \"hiddenTabSharingIndicator\": false, \"hiddenTabNoteIcon\": false, \"hiddenTabAttentionIndicator\": false, \"hiddenTabbar\": false, \"hiddenNavbar\": false, \"hiddenSidebarHeader\": false, \"hiddenUrlbarIconbox\": false, \"hiddenBookmarkbarIcon\": false, \"hiddenBookmarkbarLabel\": false, \"hiddenDisabledMenu\": false, \"iconDisabled\": false, \"iconMenu\": true, \"centeredTab\": false, \"centeredUrlbar\": false, \"centeredBookmarkbar\": false, \"urlViewMoveIconToLeft\": false, \"urlViewGoButtonWhenTyping\": false, \"urlViewAlwaysShowPageActions\": false, \"sidebarOverlap\": false, \"tabbarAsTitlebar\": false, \"tabbarOneLiner\": false}}}",
+        "floorp.panelSidebar.config": "{\"globalWidth\": 400, \"autoUnload\": false, \"position_start\": true, \"displayed\": true, \"webExtensionRunningEnabled\": false, \"overlay\": false, \"openOnHover\": false}",
+        "intl.locale.requested": "ar",
+        "marionette.port": 30075,
+        "sidebar.verticalTabs": true,
+        "sidebar.visibility": "expand-on-hover"
+      },
+      "user.js": {
+        "marionette.port": 30075,
+        "focusmanager.testmode": false,
+        "sidebar.revamp": true,
+        "sidebar.verticalTabs": true,
+        "sidebar.visibility": "expand-on-hover",
+        "floorp.design.configs": "{\"globalConfigs\": {\"userInterface\": \"lepton\", \"faviconColor\": false, \"appliedUserJs\": \"\"}, \"tabbar\": {\"tabbarStyle\": \"vertical\", \"tabbarPosition\": \"default\", \"multiRowTabBar\": {\"maxRowEnabled\": false, \"maxRow\": 3}}, \"tab\": {\"tabScroll\": {\"enabled\": false, \"reverse\": false, \"wrap\": false}, \"tabMinHeight\": 30, \"tabMinWidth\": 76, \"tabPinTitle\": false, \"tabDoubleClickToClose\": false, \"tabOpenPosition\": -1}, \"uiCustomization\": {\"navbar\": {\"position\": \"top\", \"searchBarTop\": false}, \"display\": {\"disableFullscreenNotification\": false, \"deleteBrowserBorder\": false}, \"special\": {\"optimizeForTreeStyleTab\": false, \"hideForwardBackwardButton\": false, \"stgLikeWorkspaces\": false}, \"multirowTab\": {\"newtabInsideEnabled\": false}, \"bookmarkBar\": {\"focusExpand\": false, \"position\": \"top\"}, \"qrCode\": {\"disableButton\": false}, \"chromeExtras\": {\"autohideTab\": false, \"autohideBackButton\": false, \"autohideForwardButton\": false, \"autohidePageAction\": false, \"autohideSidebar\": false, \"autohideNavbar\": false, \"hiddenTabIcon\": false, \"hiddenTabCloseButton\": false, \"hiddenTabAudioIndicator\": false, \"hiddenTabSharingIndicator\": false, \"hiddenTabNoteIcon\": false, \"hiddenTabAttentionIndicator\": false, \"hiddenTabbar\": false, \"hiddenNavbar\": false, \"hiddenSidebarHeader\": false, \"hiddenUrlbarIconbox\": false, \"hiddenBookmarkbarIcon\": false, \"hiddenBookmarkbarLabel\": false, \"hiddenDisabledMenu\": false, \"iconDisabled\": false, \"iconMenu\": true, \"centeredTab\": false, \"centeredUrlbar\": false, \"centeredBookmarkbar\": false, \"urlViewMoveIconToLeft\": false, \"urlViewGoButtonWhenTyping\": false, \"urlViewAlwaysShowPageActions\": false, \"sidebarOverlap\": false, \"tabbarAsTitlebar\": false, \"tabbarOneLiner\": false}}}",
+        "floorp.panelSidebar.config": "{\"globalWidth\": 400, \"autoUnload\": false, \"position_start\": true, \"displayed\": true, \"webExtensionRunningEnabled\": false, \"overlay\": false, \"openOnHover\": false}"
+      }
+    },
+    "localeAddons": [
+      {
+        "id": "langpack-ar@firefox.mozilla.org",
+        "version": "157.0.20261005.135250",
+        "active": true,
+        "signedState": 2,
+        "appDisabled": false,
+        "userDisabled": false,
+        "type": "locale"
+      }
+    ],
+    "sessionFiles": [
+      {
+        "name": "sessionstore.jsonlz4",
+        "size": 1971,
+        "sha256": "8e57858cf9e55913e24d6be7457bb4a3aeb31fde00763a716a1622075f5cd65e"
+      },
+      {
+        "name": "sessionCheckpoints.json",
+        "size": 53,
+        "sha256": "792955295ae9c382986222c6731c5870bd0e921e7f7e34cc4615f5cd67f225da"
+      },
+      {
+        "name": "sessionstore-backups/previous.jsonlz4",
+        "size": 1743,
+        "sha256": "d74fa5b645ff32e8fac77a4c0fe93f29f4d151c6b343fe6e1990419abb920fbc"
+      },
+      {
+        "name": "sessionstore-backups/recovery.jsonlz4",
+        "size": 1159,
+        "sha256": "32b2965e71975b561d7ef798ec372bc91c5f7340b4f031bb8a2e863d49b1865b"
+      },
+      {
+        "name": "sessionstore-backups/upgrade.jsonlz4-20261007125927",
+        "size": 1743,
+        "sha256": "d74fa5b645ff32e8fac77a4c0fe93f29f4d151c6b343fe6e1990419abb920fbc"
+      }
+    ],
+    "prefs.jsSha256": "fcefd8d2dff0866fcd848dcda63db200389da38fd0fc83ad268aeb8ddf4166a0",
+    "user.jsSha256": "2c42c64c39a368ff8ded8079b4cc73fc8026fd0102776eeb1573815daf6c63e0",
+    "extensionsJsonSha256": "6e96fa478cd4c340efc119ca84763442bea7433bc26846de4b86797fab612345"
+  },
+  {
+    "profileRun": "candidate-f43-x11-hold500-30079",
+    "prefs": {
+      "prefs.js": {
+        "floorp.design.configs": "{\"globalConfigs\":{\"userInterface\":\"lepton\",\"faviconColor\":false,\"appliedUserJs\":\"\"},\"tabbar\":{\"tabbarStyle\":\"vertical\",\"tabbarPosition\":\"default\",\"multiRowTabBar\":{\"maxRowEnabled\":false,\"maxRow\":3}},\"tab\":{\"tabScroll\":{\"enabled\":false,\"reverse\":false,\"wrap\":false},\"tabMinHeight\":30,\"tabMinWidth\":76,\"tabPinTitle\":false,\"tabDoubleClickToClose\":false,\"tabOpenPosition\":-1},\"uiCustomization\":{\"navbar\":{\"position\":\"top\",\"searchBarTop\":false},\"display\":{\"disableFullscreenNotification\":false,\"deleteBrowserBorder\":false},\"special\":{\"optimizeForTreeStyleTab\":false,\"hideForwardBackwardButton\":false,\"stgLikeWorkspaces\":false},\"multirowTab\":{\"newtabInsideEnabled\":false},\"bookmarkBar\":{\"focusExpand\":false,\"position\":\"top\"},\"qrCode\":{\"disableButton\":false},\"chromeExtras\":{\"autohideTab\":false,\"autohideBackButton\":false,\"autohideForwardButton\":false,\"autohidePageAction\":false,\"autohideSidebar\":false,\"autohideNavbar\":false,\"hiddenTabIcon\":false,\"hiddenTabCloseButton\":false,\"hiddenTabAudioIndicator\":false,\"hiddenTabSharingIndicator\":false,\"hiddenTabNoteIcon\":false,\"hiddenTabAttentionIndicator\":false,\"hiddenTabbar\":false,\"hiddenNavbar\":false,\"hiddenSidebarHeader\":false,\"hiddenUrlbarIconbox\":false,\"hiddenBookmarkbarIcon\":false,\"hiddenBookmarkbarLabel\":false,\"hiddenDisabledMenu\":false,\"iconDisabled\":false,\"iconMenu\":true,\"centeredTab\":false,\"centeredUrlbar\":false,\"centeredBookmarkbar\":false,\"urlViewMoveIconToLeft\":false,\"urlViewGoButtonWhenTyping\":false,\"urlViewAlwaysShowPageActions\":false,\"sidebarOverlap\":false,\"tabbarAsTitlebar\":false,\"tabbarOneLiner\":false}}}",
+        "floorp.panelSidebar.config": "{\"globalWidth\":400,\"autoUnload\":false,\"position_start\":false,\"displayed\":true,\"webExtensionRunningEnabled\":false,\"overlay\":false,\"openOnHover\":false}",
+        "marionette.port": 30079,
+        "sidebar.verticalTabs": true,
+        "sidebar.visibility": "expand-on-hover"
+      },
+      "user.js": {
+        "marionette.port": 30079,
+        "focusmanager.testmode": false,
+        "sidebar.revamp": true,
+        "sidebar.verticalTabs": true,
+        "sidebar.visibility": "expand-on-hover",
+        "floorp.design.configs": "{\"globalConfigs\": {\"userInterface\": \"lepton\", \"faviconColor\": false, \"appliedUserJs\": \"\"}, \"tabbar\": {\"tabbarStyle\": \"vertical\", \"tabbarPosition\": \"default\", \"multiRowTabBar\": {\"maxRowEnabled\": false, \"maxRow\": 3}}, \"tab\": {\"tabScroll\": {\"enabled\": false, \"reverse\": false, \"wrap\": false}, \"tabMinHeight\": 30, \"tabMinWidth\": 76, \"tabPinTitle\": false, \"tabDoubleClickToClose\": false, \"tabOpenPosition\": -1}, \"uiCustomization\": {\"navbar\": {\"position\": \"top\", \"searchBarTop\": false}, \"display\": {\"disableFullscreenNotification\": false, \"deleteBrowserBorder\": false}, \"special\": {\"optimizeForTreeStyleTab\": false, \"hideForwardBackwardButton\": false, \"stgLikeWorkspaces\": false}, \"multirowTab\": {\"newtabInsideEnabled\": false}, \"bookmarkBar\": {\"focusExpand\": false, \"position\": \"top\"}, \"qrCode\": {\"disableButton\": false}, \"chromeExtras\": {\"autohideTab\": false, \"autohideBackButton\": false, \"autohideForwardButton\": false, \"autohidePageAction\": false, \"autohideSidebar\": false, \"autohideNavbar\": false, \"hiddenTabIcon\": false, \"hiddenTabCloseButton\": false, \"hiddenTabAudioIndicator\": false, \"hiddenTabSharingIndicator\": false, \"hiddenTabNoteIcon\": false, \"hiddenTabAttentionIndicator\": false, \"hiddenTabbar\": false, \"hiddenNavbar\": false, \"hiddenSidebarHeader\": false, \"hiddenUrlbarIconbox\": false, \"hiddenBookmarkbarIcon\": false, \"hiddenBookmarkbarLabel\": false, \"hiddenDisabledMenu\": false, \"iconDisabled\": false, \"iconMenu\": true, \"centeredTab\": false, \"centeredUrlbar\": false, \"centeredBookmarkbar\": false, \"urlViewMoveIconToLeft\": false, \"urlViewGoButtonWhenTyping\": false, \"urlViewAlwaysShowPageActions\": false, \"sidebarOverlap\": false, \"tabbarAsTitlebar\": false, \"tabbarOneLiner\": false}}}",
+        "floorp.panelSidebar.config": "{\"globalWidth\": 400, \"autoUnload\": false, \"position_start\": true, \"displayed\": true, \"webExtensionRunningEnabled\": false, \"overlay\": false, \"openOnHover\": false}"
+      }
+    },
+    "localeAddons": [],
+    "sessionFiles": [
+      {
+        "name": "sessionstore.jsonlz4",
+        "size": 1752,
+        "sha256": "4b4828ef056e99bd5e1102f921d95abe3376b522187d880c239d6872caf2dd54"
+      },
+      {
+        "name": "sessionCheckpoints.json",
+        "size": 288,
+        "sha256": "2fca1f29b73dd5b4159fa1eb16e69276482f5224ba7d2219a547039129a51f0e"
+      },
+      {
+        "name": "sessionstore-backups/recovery.jsonlz4",
+        "size": 1161,
+        "sha256": "480a144534c91f9d308ed7191f666b27bd2177a7861c23d1448f344389403d77"
+      }
+    ],
+    "prefs.jsSha256": "c92f6763beaf8c351e106dceed970193de8a8c0957e6b27ef9d5d4347b53f82b",
+    "user.jsSha256": "16de70156d9f163816fc62811e0f2b872493b3d2412b20b56588b0296684531c",
+    "extensionsJsonSha256": "fc131c1253fd0d622a09cda494f662d22d3b5a53d84edc7756a918493489fb42"
+  }
+]
