@@ -1,0 +1,16 @@
+{
+  "elapsedMs": 109.73815199758974,
+  "rpcMs": 15.18073999977787,
+  "value": {
+    "url": "about:newtab",
+    "title": "New Tab",
+    "ready": "complete",
+    "rootLength": 18437,
+    "newtabMain": true,
+    "contentMain": false,
+    "text": "Wikipedia\nYouTube\nReddit\nAdd-ons for Firefox\nCustomize",
+    "tiles": 5,
+    "globalKeys": [],
+    "resources": []
+  }
+}

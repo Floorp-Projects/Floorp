@@ -1,0 +1,4 @@
+{
+  "id": "native-lepton-native-cache-clear",
+  "script": "Services.cache2.clear();return true;"
+}

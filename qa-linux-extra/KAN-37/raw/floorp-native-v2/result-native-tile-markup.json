@@ -1,0 +1,19 @@
+{
+  "elapsedMs": 134.91524199707783,
+  "rpcMs": 5.76420200013672,
+  "value": {
+    "tile": "<a class=\"top-site-button\" href=\"http://127.0.0.1:19192/native-local\" tabindex=\"0\" draggable=\"true\" data-is-sponsored-link=\"false\" title=\"KAN37 native fixture\" data-l10n-id=\"topsite-label-pinned\" data-l10n-args=\"{&quot;title&quot;:&quot;KAN37 native fixture&quot;}\" aria-label=\"KAN37 native fixture (pinned)\"><div class=\"tile\" aria-hidden=\"true\"><div class=\"icon-stack\"><div class=\"icon-wrapper\" data-fallback=\"K\"><div></div><div class=\"top-site-icon default-icon\" data-fallback=\"\" style=\"background-image: url(&quot;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAIAAAAlC+aJAAAAbklEQVR4nO3YwQkAMQgAwXj995yrQobATgHK4s+5Z9csL/h2x+8rQCtAK0ArQCtAK0ArQCtAK0ArQCtAK0ArQCtAK0Cbc3Yf+PfO6vznL1CAVoBWgFaAVoBWgFaAVoBWgFaAVoBWgFaAVoBWgPYDiYIFfBxeWoIAAAAASUVORK5CYII=&quot;);\"></div></div></div></div><div class=\"icon icon-pin-small\"></div><div class=\"title has-icon pinned\"><span class=\"title-label\" dir=\"auto\">KAN37 native fixture</span><span class=\"sponsored-label\" data-l10n-id=\"newtab-topsite-sponsored\">Sponsored</span></div></a>",
+    "rect": {
+      "x": 259,
+      "y": 413.25,
+      "width": 120,
+      "height": 122.25,
+      "top": 413.25,
+      "right": 379,
+      "bottom": 535.5,
+      "left": 259
+    },
+    "classes": "",
+    "rootClass": "newtab-main"
+  }
+}

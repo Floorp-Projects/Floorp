@@ -1,0 +1,4 @@
+{
+  "id": "open-newtab",
+  "script": "gBrowser.selectedBrowser.loadURI(Services.io.newURI('about:newtab'),{triggeringPrincipal:Services.scriptSecurityManager.getSystemPrincipal()});return true;"
+}

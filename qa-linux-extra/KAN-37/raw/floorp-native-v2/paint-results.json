@@ -1,0 +1,578 @@
+[
+  {
+    "id": "proton-reload",
+    "case": "floorp-native-v2",
+    "observation": {
+      "url": "about:newtab",
+      "title": "New Tab",
+      "mainClass": "newtab-main",
+      "rootLength": 20878,
+      "tiles": 6,
+      "iconRect": {
+        "x": 299,
+        "y": 434.25,
+        "width": 40,
+        "height": 40,
+        "top": 434.25,
+        "right": 339,
+        "bottom": 474.25,
+        "left": 299
+      },
+      "screen": {
+        "x": 80,
+        "y": 171,
+        "dpr": 1
+      },
+      "style": {
+        "display": "flex",
+        "visibility": "visible",
+        "opacity": "1",
+        "backgroundImageIsDataPng": true
+      },
+      "tileTitle": "KAN37 native fixture"
+    },
+    "screenSampleCoordinates": [
+      [
+        389,
+        615
+      ],
+      [
+        409,
+        615
+      ],
+      [
+        389,
+        635
+      ],
+      [
+        409,
+        635
+      ]
+    ],
+    "pixels": [
+      [
+        255,
+        0,
+        0
+      ],
+      [
+        0,
+        255,
+        0
+      ],
+      [
+        0,
+        0,
+        255
+      ],
+      [
+        255,
+        255,
+        0
+      ]
+    ],
+    "expectedPixels": [
+      [
+        255,
+        0,
+        0
+      ],
+      [
+        0,
+        255,
+        0
+      ],
+      [
+        0,
+        0,
+        255
+      ],
+      [
+        255,
+        255,
+        0
+      ]
+    ],
+    "allExact": true
+  },
+  {
+    "id": "proton-cache",
+    "case": "floorp-native-v2",
+    "observation": {
+      "url": "about:newtab",
+      "title": "New Tab",
+      "mainClass": "newtab-main",
+      "rootLength": 20878,
+      "tiles": 6,
+      "iconRect": {
+        "x": 299,
+        "y": 434.25,
+        "width": 40,
+        "height": 40,
+        "top": 434.25,
+        "right": 339,
+        "bottom": 474.25,
+        "left": 299
+      },
+      "screen": {
+        "x": 80,
+        "y": 171,
+        "dpr": 1
+      },
+      "style": {
+        "display": "flex",
+        "visibility": "visible",
+        "opacity": "1",
+        "backgroundImageIsDataPng": true
+      },
+      "tileTitle": "KAN37 native fixture"
+    },
+    "screenSampleCoordinates": [
+      [
+        389,
+        615
+      ],
+      [
+        409,
+        615
+      ],
+      [
+        389,
+        635
+      ],
+      [
+        409,
+        635
+      ]
+    ],
+    "pixels": [
+      [
+        255,
+        0,
+        0
+      ],
+      [
+        0,
+        255,
+        0
+      ],
+      [
+        0,
+        0,
+        255
+      ],
+      [
+        255,
+        255,
+        0
+      ]
+    ],
+    "expectedPixels": [
+      [
+        255,
+        0,
+        0
+      ],
+      [
+        0,
+        255,
+        0
+      ],
+      [
+        0,
+        0,
+        255
+      ],
+      [
+        255,
+        255,
+        0
+      ]
+    ],
+    "allExact": true
+  },
+  {
+    "id": "fluerial-reload",
+    "case": "floorp-native-v2",
+    "observation": {
+      "url": "about:newtab",
+      "title": "New Tab",
+      "mainClass": "newtab-main",
+      "rootLength": 20878,
+      "tiles": 6,
+      "iconRect": {
+        "x": 299,
+        "y": 436.25,
+        "width": 40,
+        "height": 40,
+        "top": 436.25,
+        "right": 339,
+        "bottom": 476.25,
+        "left": 299
+      },
+      "screen": {
+        "x": 80,
+        "y": 167,
+        "dpr": 1
+      },
+      "style": {
+        "display": "flex",
+        "visibility": "visible",
+        "opacity": "1",
+        "backgroundImageIsDataPng": true
+      },
+      "tileTitle": "KAN37 native fixture"
+    },
+    "screenSampleCoordinates": [
+      [
+        389,
+        613
+      ],
+      [
+        409,
+        613
+      ],
+      [
+        389,
+        633
+      ],
+      [
+        409,
+        633
+      ]
+    ],
+    "pixels": [
+      [
+        255,
+        0,
+        0
+      ],
+      [
+        0,
+        255,
+        0
+      ],
+      [
+        0,
+        0,
+        255
+      ],
+      [
+        255,
+        255,
+        0
+      ]
+    ],
+    "expectedPixels": [
+      [
+        255,
+        0,
+        0
+      ],
+      [
+        0,
+        255,
+        0
+      ],
+      [
+        0,
+        0,
+        255
+      ],
+      [
+        255,
+        255,
+        0
+      ]
+    ],
+    "allExact": true
+  },
+  {
+    "id": "fluerial-cache",
+    "case": "floorp-native-v2",
+    "observation": {
+      "url": "about:newtab",
+      "title": "New Tab",
+      "mainClass": "newtab-main",
+      "rootLength": 20878,
+      "tiles": 6,
+      "iconRect": {
+        "x": 299,
+        "y": 436.25,
+        "width": 40,
+        "height": 40,
+        "top": 436.25,
+        "right": 339,
+        "bottom": 476.25,
+        "left": 299
+      },
+      "screen": {
+        "x": 80,
+        "y": 167,
+        "dpr": 1
+      },
+      "style": {
+        "display": "flex",
+        "visibility": "visible",
+        "opacity": "1",
+        "backgroundImageIsDataPng": true
+      },
+      "tileTitle": "KAN37 native fixture"
+    },
+    "screenSampleCoordinates": [
+      [
+        389,
+        613
+      ],
+      [
+        409,
+        613
+      ],
+      [
+        389,
+        633
+      ],
+      [
+        409,
+        633
+      ]
+    ],
+    "pixels": [
+      [
+        255,
+        0,
+        0
+      ],
+      [
+        0,
+        255,
+        0
+      ],
+      [
+        0,
+        0,
+        255
+      ],
+      [
+        255,
+        255,
+        0
+      ]
+    ],
+    "expectedPixels": [
+      [
+        255,
+        0,
+        0
+      ],
+      [
+        0,
+        255,
+        0
+      ],
+      [
+        0,
+        0,
+        255
+      ],
+      [
+        255,
+        255,
+        0
+      ]
+    ],
+    "allExact": true
+  },
+  {
+    "id": "lepton-reload",
+    "case": "floorp-native-v2",
+    "observation": {
+      "url": "about:newtab",
+      "title": "New Tab",
+      "mainClass": "newtab-main",
+      "rootLength": 20878,
+      "tiles": 6,
+      "iconRect": {
+        "x": 299,
+        "y": 440.25,
+        "width": 40,
+        "height": 40,
+        "top": 440.25,
+        "right": 339,
+        "bottom": 480.25,
+        "left": 299
+      },
+      "screen": {
+        "x": 80,
+        "y": 159,
+        "dpr": 1
+      },
+      "style": {
+        "display": "flex",
+        "visibility": "visible",
+        "opacity": "1",
+        "backgroundImageIsDataPng": true
+      },
+      "tileTitle": "KAN37 native fixture"
+    },
+    "screenSampleCoordinates": [
+      [
+        389,
+        609
+      ],
+      [
+        409,
+        609
+      ],
+      [
+        389,
+        629
+      ],
+      [
+        409,
+        629
+      ]
+    ],
+    "pixels": [
+      [
+        255,
+        0,
+        0
+      ],
+      [
+        0,
+        255,
+        0
+      ],
+      [
+        0,
+        0,
+        255
+      ],
+      [
+        255,
+        255,
+        0
+      ]
+    ],
+    "expectedPixels": [
+      [
+        255,
+        0,
+        0
+      ],
+      [
+        0,
+        255,
+        0
+      ],
+      [
+        0,
+        0,
+        255
+      ],
+      [
+        255,
+        255,
+        0
+      ]
+    ],
+    "allExact": true
+  },
+  {
+    "id": "lepton-cache",
+    "case": "floorp-native-v2",
+    "observation": {
+      "url": "about:newtab",
+      "title": "New Tab",
+      "mainClass": "newtab-main",
+      "rootLength": 20878,
+      "tiles": 6,
+      "iconRect": {
+        "x": 299,
+        "y": 440.25,
+        "width": 40,
+        "height": 40,
+        "top": 440.25,
+        "right": 339,
+        "bottom": 480.25,
+        "left": 299
+      },
+      "screen": {
+        "x": 80,
+        "y": 159,
+        "dpr": 1
+      },
+      "style": {
+        "display": "flex",
+        "visibility": "visible",
+        "opacity": "1",
+        "backgroundImageIsDataPng": true
+      },
+      "tileTitle": "KAN37 native fixture"
+    },
+    "screenSampleCoordinates": [
+      [
+        389,
+        609
+      ],
+      [
+        409,
+        609
+      ],
+      [
+        389,
+        629
+      ],
+      [
+        409,
+        629
+      ]
+    ],
+    "pixels": [
+      [
+        255,
+        0,
+        0
+      ],
+      [
+        0,
+        255,
+        0
+      ],
+      [
+        0,
+        0,
+        255
+      ],
+      [
+        255,
+        255,
+        0
+      ]
+    ],
+    "expectedPixels": [
+      [
+        255,
+        0,
+        0
+      ],
+      [
+        0,
+        255,
+        0
+      ],
+      [
+        0,
+        0,
+        255
+      ],
+      [
+        255,
+        255,
+        0
+      ]
+    ],
+    "allExact": true
+  }
+]

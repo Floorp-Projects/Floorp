@@ -1,0 +1,8 @@
+{
+  "elapsedMs": 16.946517000178574,
+  "rpcMs": 10.923866997472942,
+  "value": {
+    "design": "proton",
+    "disableFloorpStart": true
+  }
+}

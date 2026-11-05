@@ -1,0 +1,7 @@
+{
+  "requestedNormalQuit": true,
+  "errorType": "InvalidSessionIdException",
+  "error": "Please start a session",
+  "forcedTermination": true,
+  "exitCode": -15
+}

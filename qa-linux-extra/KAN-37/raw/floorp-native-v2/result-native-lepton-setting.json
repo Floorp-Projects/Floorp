@@ -1,0 +1,8 @@
+{
+  "elapsedMs": 88.28729599918006,
+  "rpcMs": 84.1989319997083,
+  "value": {
+    "design": "lepton",
+    "disableFloorpStart": true
+  }
+}

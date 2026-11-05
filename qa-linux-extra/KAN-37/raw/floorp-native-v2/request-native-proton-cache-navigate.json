@@ -1,0 +1,4 @@
+{
+  "id": "native-proton-cache-navigate",
+  "script": "gBrowser.selectedBrowser.reload();return true;"
+}

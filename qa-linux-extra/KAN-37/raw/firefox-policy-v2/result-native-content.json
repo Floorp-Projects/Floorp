@@ -1,0 +1,14 @@
+{
+  "elapsedMs": 157.98338600143325,
+  "rpcMs": 17.112835001171334,
+  "value": {
+    "url": "about:newtab",
+    "title": "New Tab",
+    "ready": "complete",
+    "rootLength": 0,
+    "newtabMain": false,
+    "contentMain": false,
+    "text": "",
+    "resources": []
+  }
+}

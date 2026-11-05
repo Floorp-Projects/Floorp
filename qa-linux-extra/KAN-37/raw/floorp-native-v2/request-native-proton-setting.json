@@ -1,0 +1,4 @@
+{
+  "id": "native-proton-setting",
+  "script": "const p=Services.prefs;const d=JSON.parse(p.getStringPref(\"floorp.design.configs\"));d.globalConfigs.userInterface=\"proton\";p.setStringPref(\"floorp.design.configs\",JSON.stringify(d));return {design:JSON.parse(p.getStringPref(\"floorp.design.configs\")).globalConfigs.userInterface,disableFloorpStart:d.uiCustomization.disableFloorpStart};"
+}

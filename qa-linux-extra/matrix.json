@@ -626,6 +626,66 @@
         "needs-original-cachyos"
       ],
       "labelChangeRationale": "Windows10451 and Linux10453 exact-head complete QA products satisfy scoped package check; original429/CachyOS conditions retained"
+    },
+    {
+      "key": "KAN-37",
+      "github": "https://github.com/Floorp-Projects/Floorp/issues/2754",
+      "sourceSha": "29a3eb23145da90706d8a94441373278521cc737",
+      "productSourceSha": "984509d2053be7bae9027133bda7259cd706b208",
+      "reportedProductSourceSha": "1728a7678c34aec1ad502edb06a168fdf2a07be8",
+      "productVersion": {
+        "qualified": "12.21.1@159.0.1/native20261103153232",
+        "firefoxControl": "159.0.1/native20261102144711",
+        "attemptedOriginal": "12.18.0@156.0.1/native20260916130640 atseed; auto-updated before native attempt; original native unqualified"
+      },
+      "environment": {
+        "os": "Debian13 trixie",
+        "kernel": "6.18.57",
+        "machine": "x86_64",
+        "uid": 1000,
+        "display": "privateXvfb236/237/238 Openbox/DBus, syntheticinput",
+        "physicalGUI": false,
+        "originalLinuxDesktopMatched": false,
+        "devices": {
+          "/dev/dri": false,
+          "/dev/nvidia0": false,
+          "/dev/dxg": false
+        },
+        "proxyAndCATrustPreserved": true,
+        "tlsSandboxSignatureChecksNotLowered": true,
+        "TOUAcceptanceOrBypassPrefsNotWritten": true
+      },
+      "testCommand": "scripts/README.md; browser-session.py; native-fixture.py; run-native-paints.py; verify-evidence.py",
+      "result": "Current Linux native whole-page initialization qualified and7native paint conditions pass; original-thumbnail bug unreplicated/partial original context; Firefox null-page not image test",
+      "nativePaintConditions": 7,
+      "exactFourColorPaints": 7,
+      "qualifiedCurrentAndControlSessions": 4,
+      "previousFloorpStart70Decode10PaintRepeated": false,
+      "previousQaCommit": "6031f8efce3953c7d8ef18b09819f08a90815f17",
+      "windowsFulfillmentComment": "10459",
+      "newPr": null,
+      "existingRelatedPr": "https://github.com/Floorp-Projects/Floorp/pull/3003 (OPEN separate SpeedDial/RSS feature, not proven fix)",
+      "jiraCommentId": null,
+      "remainingConditions": [
+        "Original Linux12.18 native context unqualified due standard auto-update; no protection/updates disabled",
+        "Original profile/remote thumbnail source/cache and Linuxdesktop unknown",
+        "Firefox native readiness/TOU causality unproven; no acceptance spoof",
+        "Physical GUI/input not tested"
+      ],
+      "evidence": [
+        "report.md",
+        "summary.json",
+        "raw/*/paint-results.json",
+        "raw/*/*.png",
+        "raw/*/ready.json",
+        "raw/*/shutdown.json",
+        "product-verification.json",
+        "packaged-stock-policy.json",
+        "source-analysis/report.md",
+        "diagnostics/*"
+      ],
+      "separateFromOriginal22": true,
+      "originalCMatrixSha256": "4ac5d5f17f97d70e82f7b9f17d6abcc1aa17a92e3708eeadaba6ac7c8415e3cd"
     }
   ]
 }

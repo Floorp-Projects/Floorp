@@ -1,0 +1,668 @@
+{
+  "allowlistOnly": true,
+  "excluded": [
+    "profiles",
+    "binaries",
+    "cookies",
+    "credentials",
+    "full logs",
+    "signed download URLs"
+  ],
+  "files": [
+    {
+      "path": "diagnostics/firefox-policy/session-error.json",
+      "bytes": 4811,
+      "sha256": "d9a4e8e86719e89af5a14d9a44d5330e4375864c1566a957eb3f44c837cf06c1"
+    },
+    {
+      "path": "diagnostics/floorp-native/session-error.json",
+      "bytes": 4811,
+      "sha256": "d9a4e8e86719e89af5a14d9a44d5330e4375864c1566a957eb3f44c837cf06c1"
+    },
+    {
+      "path": "diagnostics/floorp-reported-native-v2/actual-update-status-lines.json",
+      "bytes": 61,
+      "sha256": "d205d5d32e868f34e9293d3358b238671abd51352c502c5ef0120da3ab3a554d"
+    },
+    {
+      "path": "diagnostics/floorp-reported-native-v2/ready.json",
+      "bytes": 6491,
+      "sha256": "3a2fc6abcdfd32e4adbba127cac5b93dc9ea2034bc170177ca7eefc0aa04b6b9"
+    },
+    {
+      "path": "diagnostics/floorp-reported-native-v2/result-native-initial.json",
+      "bytes": 2555,
+      "sha256": "756962ce200f7f027f0d7d44d5acfc7e5a1cf6a6a6661b1711d3468cd8f2fc9c"
+    },
+    {
+      "path": "diagnostics/floorp-reported-native-v2/shutdown.json",
+      "bytes": 163,
+      "sha256": "939f89c79eb3267997bf7778ff2a99b082c0c2d745872f17b179a0859f3fe370"
+    },
+    {
+      "path": "diagnostics/floorp-reported-seed/ready.json",
+      "bytes": 5278,
+      "sha256": "f8a9fece24fbba812a10ee940fea60892f9752f6ffb10b12b7b4aec27fb08c53"
+    },
+    {
+      "path": "diagnostics/floorp-reported-seed/result-before-quit.json",
+      "bytes": 5271,
+      "sha256": "1017b50704443d89f281c18f520a18a733b37130f24506b482570f125bf068e4"
+    },
+    {
+      "path": "diagnostics/floorp-reported-seed/shutdown.json",
+      "bytes": 51,
+      "sha256": "a6bfff55ed63f8d986c16411c033c0a04b647662330b09654f767a1bd1bd322b"
+    },
+    {
+      "path": "diagnostics/floorp-seed/ready.json",
+      "bytes": 4149,
+      "sha256": "e7ea73870acd80b1d423d3fbe6feca370eb055f9c373962a6a0e6d1e51bf0d74"
+    },
+    {
+      "path": "diagnostics/floorp-seed/result-before-quit.json",
+      "bytes": 3106,
+      "sha256": "e2a6f56ff53429017cb663fee4777ec15d364a909712608bcf38ea0de85b9b53"
+    },
+    {
+      "path": "diagnostics/floorp-seed/shutdown.json",
+      "bytes": 51,
+      "sha256": "a6bfff55ed63f8d986c16411c033c0a04b647662330b09654f767a1bd1bd322b"
+    },
+    {
+      "path": "environment.json",
+      "bytes": 446,
+      "sha256": "390c04fb8e9cf21f68047bd8f3a0aab88826693840ac3a4ea7e2a40b4ce0cb44"
+    },
+    {
+      "path": "fixture-favicon.png",
+      "bytes": 167,
+      "sha256": "7c5a1e91d23308951ebe424434e466eaf1f703ab8495adbd3167cd025f887772"
+    },
+    {
+      "path": "matrix.json",
+      "bytes": 2560,
+      "sha256": "ed93feb5cd35b49c88ef6925ffcea6aeb172b682fe7cc31157908bd15cb949ad"
+    },
+    {
+      "path": "packaged-stock-policy.json",
+      "bytes": 643,
+      "sha256": "9615767dbcbb7aaac8a46601359bbf57d8ba433b94bb1952fb7ff9fb3da81617"
+    },
+    {
+      "path": "product-verification.json",
+      "bytes": 39569,
+      "sha256": "b1d02b53c1dcbab90eb17890889f0dd7c05923e7a131a5f3384b35e80f49315c"
+    },
+    {
+      "path": "raw/firefox-policy-v2/native-console-lines.json",
+      "bytes": 3,
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "path": "raw/firefox-policy-v2/policy-page.png",
+      "bytes": 57050,
+      "sha256": "9c7d25bd6f30067167001cb814165da0b734aea4d8ff640e4931f9f664deebda"
+    },
+    {
+      "path": "raw/firefox-policy-v2/ready.json",
+      "bytes": 4877,
+      "sha256": "9a456a44c2bc11731ed036e71053a525ba572dbc7997bc60889b50bbd42983ad"
+    },
+    {
+      "path": "raw/firefox-policy-v2/request-native-content.json",
+      "bytes": 599,
+      "sha256": "5690d208a3b9adea5078f73e3dff5a7280952947378af81c38de42e5186184a9"
+    },
+    {
+      "path": "raw/firefox-policy-v2/request-policy-final.json",
+      "bytes": 27,
+      "sha256": "24aa714e2d6dddc8de011ab1f2c0546765bebf22316ce560a2c4904a6913e65a"
+    },
+    {
+      "path": "raw/firefox-policy-v2/result-native-content.json",
+      "bytes": 271,
+      "sha256": "80c4163257d6f63bea0fa574d223b4fe5c70a9776b0354e190d05069a7002e5c"
+    },
+    {
+      "path": "raw/firefox-policy-v2/result-policy-final.json",
+      "bytes": 4875,
+      "sha256": "89ddd9fe33debb98a37c75bfa50b8a89ac2cebb399ea2dea6a31f2bc3d7cecaa"
+    },
+    {
+      "path": "raw/firefox-policy-v2/shutdown.json",
+      "bytes": 51,
+      "sha256": "a6bfff55ed63f8d986c16411c033c0a04b647662330b09654f767a1bd1bd322b"
+    },
+    {
+      "path": "raw/firefox-policy-v2/test-definition.json",
+      "bytes": 287,
+      "sha256": "cc4b19b288361fdcbe335ca3b9b44f1228d12fa9d5454f754cafb563e3b78dd7"
+    },
+    {
+      "path": "raw/floorp-native-restart/native-console-lines.json",
+      "bytes": 189,
+      "sha256": "6a3e3db9970341dcad0a43d6af6dd8e21ca3a58b164520f86b72563d699c226a"
+    },
+    {
+      "path": "raw/floorp-native-restart/native-restart-verified.png",
+      "bytes": 72087,
+      "sha256": "d4e1d8156a691164f0cf854598d8c925c3b4023385c9fe7799e103b4aa69cbea"
+    },
+    {
+      "path": "raw/floorp-native-restart/occluded-native-restart.png",
+      "bytes": 81286,
+      "sha256": "2f6fa6f015f9a59c4cc29bd2bae752172da2f447e5657ed55c974faf0875d3bc"
+    },
+    {
+      "path": "raw/floorp-native-restart/occluded-paint-result.json",
+      "bytes": 1546,
+      "sha256": "86730a7ec94d49ad584f8041ef95706cae61ae774dae098f1e00f9e67228935c"
+    },
+    {
+      "path": "raw/floorp-native-restart/paint-results.json",
+      "bytes": 1414,
+      "sha256": "20004579c73b487b7d8ad2d3b301d46e327400d56e80ae30672a67d1720a006f"
+    },
+    {
+      "path": "raw/floorp-native-restart/ready.json",
+      "bytes": 6402,
+      "sha256": "b99617083a63e86a3b0264b7af5ac561ea98cefb4a12d446032c76b793a118a3"
+    },
+    {
+      "path": "raw/floorp-native-restart/request-native-dismiss-standard-default-browser-prompt.json",
+      "bytes": 97,
+      "sha256": "b1bfe57cd6d1134b7e32a9d042fb6e65e64fbce82b69624dda258876b4d6b2f1"
+    },
+    {
+      "path": "raw/floorp-native-restart/request-native-native-restart-verified.json",
+      "bytes": 976,
+      "sha256": "711558d565b814eb2410353da19a52f2b737a259ede97caa2d03cb4a202ae3ad"
+    },
+    {
+      "path": "raw/floorp-native-restart/request-native-native-restart.json",
+      "bytes": 958,
+      "sha256": "816f9a33cd7b73b4b4c072811c70cb1c477257d33d3ce4119fde6befb3669877"
+    },
+    {
+      "path": "raw/floorp-native-restart/request-native-quit.json",
+      "bytes": 42,
+      "sha256": "ef246be8f3f3bcf7551b3e39e97f8fab8f461025f060a99c318a7de7a9cedebf"
+    },
+    {
+      "path": "raw/floorp-native-restart/request-native-state-final.json",
+      "bytes": 33,
+      "sha256": "f4fb34f3a4cba462b7382378a128349306d504dbe428a99d7111322986307cab"
+    },
+    {
+      "path": "raw/floorp-native-restart/result-native-dismiss-standard-default-browser-prompt.json",
+      "bytes": 6400,
+      "sha256": "482b323340cd961ca9361fae3abe09ad1eab1f8032d0c1c148f2a34017fdc507"
+    },
+    {
+      "path": "raw/floorp-native-restart/result-native-native-restart-verified.json",
+      "bytes": 639,
+      "sha256": "2e2cdeb2388587d574f51b1343866968430862b9ea6a13743da315a386ee5b06"
+    },
+    {
+      "path": "raw/floorp-native-restart/result-native-native-restart.json",
+      "bytes": 640,
+      "sha256": "58348cfa29ac601693205053d6308231ef119c1ef1fe056197b7977230785cc8"
+    },
+    {
+      "path": "raw/floorp-native-restart/result-native-state-final.json",
+      "bytes": 6401,
+      "sha256": "0cf63cdd5832282b152d9eb891d9e729d5b86eb6f32eb1ad145f7aa38df5d55b"
+    },
+    {
+      "path": "raw/floorp-native-restart/shutdown.json",
+      "bytes": 51,
+      "sha256": "a6bfff55ed63f8d986c16411c033c0a04b647662330b09654f767a1bd1bd322b"
+    },
+    {
+      "path": "raw/floorp-native-restart/test-definition.json",
+      "bytes": 285,
+      "sha256": "663511de293f1fd8270eeaff383194d846f2bfbe1a74d5ad18b15ef1a179d73b"
+    },
+    {
+      "path": "raw/floorp-native-v2/fixture-native.png",
+      "bytes": 79575,
+      "sha256": "d392d61c627be70c91d6a80e2bf6cc80731738a67a5152589546c69c3d274d78"
+    },
+    {
+      "path": "raw/floorp-native-v2/fluerial-cache.png",
+      "bytes": 70071,
+      "sha256": "5b017dceaa068924060835a6ad163ccfea78f72aa796a58e3a7333eab62f1f65"
+    },
+    {
+      "path": "raw/floorp-native-v2/fluerial-reload.png",
+      "bytes": 70071,
+      "sha256": "5b017dceaa068924060835a6ad163ccfea78f72aa796a58e3a7333eab62f1f65"
+    },
+    {
+      "path": "raw/floorp-native-v2/lepton-cache.png",
+      "bytes": 70507,
+      "sha256": "d19491a1f10ef2478ebb445594ea99bfb420d12e3ecce6801cfe56be19f6d23a"
+    },
+    {
+      "path": "raw/floorp-native-v2/lepton-reload.png",
+      "bytes": 70507,
+      "sha256": "d19491a1f10ef2478ebb445594ea99bfb420d12e3ecce6801cfe56be19f6d23a"
+    },
+    {
+      "path": "raw/floorp-native-v2/native-console-lines.json",
+      "bytes": 189,
+      "sha256": "6a3e3db9970341dcad0a43d6af6dd8e21ca3a58b164520f86b72563d699c226a"
+    },
+    {
+      "path": "raw/floorp-native-v2/native-first.png",
+      "bytes": 76935,
+      "sha256": "4f210a8750dd8b1b2e9bea8ce4b861415d7655f8541480c3dd4ea77c5b3d728e"
+    },
+    {
+      "path": "raw/floorp-native-v2/occluded-paint-result.json",
+      "bytes": 1541,
+      "sha256": "53096ddcdfb81afb699d6b4e90b3c9fef95390cf7e0b3ce644b50e15a97f4c23"
+    },
+    {
+      "path": "raw/floorp-native-v2/paint-results.json",
+      "bytes": 8380,
+      "sha256": "1b83e1b236edd9ed36f25e02b697c7aa8f6aef7a42b0cd73214e478bcc05d7d7"
+    },
+    {
+      "path": "raw/floorp-native-v2/proton-cache.png",
+      "bytes": 70401,
+      "sha256": "b02588ef79b2d6633a26fbf747e848438b4aa9948b50dd6e62bd148db97184dd"
+    },
+    {
+      "path": "raw/floorp-native-v2/proton-reload.png",
+      "bytes": 70401,
+      "sha256": "b02588ef79b2d6633a26fbf747e848438b4aa9948b50dd6e62bd148db97184dd"
+    },
+    {
+      "path": "raw/floorp-native-v2/ready.json",
+      "bytes": 6249,
+      "sha256": "ab606a5646b0a23d67252d62b9d1231a7c3cc31931e336b510bf913136df7518"
+    },
+    {
+      "path": "raw/floorp-native-v2/request-native-content.json",
+      "bytes": 769,
+      "sha256": "8b03a31daabb9bd1e0abd4a056b1a076acfe997f293d7474d1248d43ccd3a69f"
+    },
+    {
+      "path": "raw/floorp-native-v2/request-native-fluerial-cache-navigate.json",
+      "bytes": 107,
+      "sha256": "cdc219888dd2c2dc066b0574c720e3ce98c930f003d21f551eefc460e95ef6f3"
+    },
+    {
+      "path": "raw/floorp-native-v2/request-native-fluerial-cache.json",
+      "bytes": 958,
+      "sha256": "eefbffa6d1cccd5abf013a44f583e79546a0e273e474175e9d32d93f6103cc7a"
+    },
+    {
+      "path": "raw/floorp-native-v2/request-native-fluerial-native-cache-clear.json",
+      "bytes": 101,
+      "sha256": "45f234aa4f144d6370559be4d7f9e4701cb1b5323c351b8408c41bf7bad135b8"
+    },
+    {
+      "path": "raw/floorp-native-v2/request-native-fluerial-reload-navigate.json",
+      "bytes": 108,
+      "sha256": "8b7ca952207bb9a2be7eafda0e5456f89b9e2d4590c5db6a132ad39f18a82f3c"
+    },
+    {
+      "path": "raw/floorp-native-v2/request-native-fluerial-reload.json",
+      "bytes": 960,
+      "sha256": "688c68f95d75d8289261cf5fd60428e5a7273c02cfbbc07c391cb43faf8a6f0d"
+    },
+    {
+      "path": "raw/floorp-native-v2/request-native-fluerial-setting.json",
+      "bytes": 399,
+      "sha256": "2bcb76017000736a841f8f11d71eeb47b59a6431cf686473c5fa42ad8b7a96cc"
+    },
+    {
+      "path": "raw/floorp-native-v2/request-native-lepton-cache-navigate.json",
+      "bytes": 105,
+      "sha256": "d64d7df7f7b1a6d07b9448a2e46d38aacf5dfec3f86e8e53480c71b4ba060b44"
+    },
+    {
+      "path": "raw/floorp-native-v2/request-native-lepton-cache.json",
+      "bytes": 954,
+      "sha256": "3675ea060f2044012ddaad3ad6a501f7c93a15dc843a39d6bb763b3b185fe997"
+    },
+    {
+      "path": "raw/floorp-native-v2/request-native-lepton-native-cache-clear.json",
+      "bytes": 99,
+      "sha256": "304878d6ad16475ddbefc71c3738da24c00cc5af8c6fc96949983dfac08dac7d"
+    },
+    {
+      "path": "raw/floorp-native-v2/request-native-lepton-reload-navigate.json",
+      "bytes": 106,
+      "sha256": "4e950c616036e396ab95772879b8c880fb9544188d477f656009f66f8ce51473"
+    },
+    {
+      "path": "raw/floorp-native-v2/request-native-lepton-reload.json",
+      "bytes": 956,
+      "sha256": "3571586e35d0fb147b2955e67fcc031066a1e1b3a7429b381cd67e6a1d12c4ae"
+    },
+    {
+      "path": "raw/floorp-native-v2/request-native-lepton-setting.json",
+      "bytes": 395,
+      "sha256": "ca8eb8fc45e593720b32a6063a468593653711f56c275535762bc727ca043a2f"
+    },
+    {
+      "path": "raw/floorp-native-v2/request-native-pin-fixture.json",
+      "bytes": 999,
+      "sha256": "42d4bed0e868218265f1eed9137e67869cf7e1a56c093e4b8c6303868bdd59c8"
+    },
+    {
+      "path": "raw/floorp-native-v2/request-native-proton-cache-navigate.json",
+      "bytes": 105,
+      "sha256": "1f4253e125fe429d84d33461a6425e7f81ff1ccdc070db4d57c493a003332765"
+    },
+    {
+      "path": "raw/floorp-native-v2/request-native-proton-cache.json",
+      "bytes": 954,
+      "sha256": "cc36ab8b45fffe7cf66c2fbec62ab67e767aefa9be77b299184385a216a77969"
+    },
+    {
+      "path": "raw/floorp-native-v2/request-native-proton-native-cache-clear.json",
+      "bytes": 99,
+      "sha256": "dfff1fb704ed9be5eda4db1e0c49758fc43d98c64d6dbf805f036316cebf1d25"
+    },
+    {
+      "path": "raw/floorp-native-v2/request-native-proton-reload-navigate.json",
+      "bytes": 106,
+      "sha256": "a21dfdef691b35d3c7ff0f6c59d36a571257459c41e5da1c32f4c43f50f2e449"
+    },
+    {
+      "path": "raw/floorp-native-v2/request-native-proton-reload.json",
+      "bytes": 956,
+      "sha256": "1b02a64b5bd91f4c429f0dc310f5d8bd55ba49779e15181c9dfa6f86ba666c29"
+    },
+    {
+      "path": "raw/floorp-native-v2/request-native-proton-setting.json",
+      "bytes": 395,
+      "sha256": "e3bd1cbeb77b91ddb0f995d3482b544bb9082e7a355a38ec8d6a935f6b465c25"
+    },
+    {
+      "path": "raw/floorp-native-v2/request-native-quit.json",
+      "bytes": 42,
+      "sha256": "ef246be8f3f3bcf7551b3e39e97f8fab8f461025f060a99c318a7de7a9cedebf"
+    },
+    {
+      "path": "raw/floorp-native-v2/request-native-state-final.json",
+      "bytes": 33,
+      "sha256": "f4fb34f3a4cba462b7382378a128349306d504dbe428a99d7111322986307cab"
+    },
+    {
+      "path": "raw/floorp-native-v2/request-native-tile-markup.json",
+      "bytes": 388,
+      "sha256": "f96b9eca7a26ffea93634b67cc4ea3fe4cf4d98571ca73443cff3d8c7f70b1a8"
+    },
+    {
+      "path": "raw/floorp-native-v2/result-native-content.json",
+      "bytes": 369,
+      "sha256": "622f358f6942af011cc8ccd3e86b8f49e390809cdadeffa9f4082925d213ea20"
+    },
+    {
+      "path": "raw/floorp-native-v2/result-native-fluerial-cache-navigate.json",
+      "bytes": 84,
+      "sha256": "53a17d0947dc0fe16858df99afdce7aa9c04c1c0986c69ffaff975ac7671ca31"
+    },
+    {
+      "path": "raw/floorp-native-v2/result-native-fluerial-cache.json",
+      "bytes": 639,
+      "sha256": "1c2eacedd496785b9219709ebbe9c67b8c3da352dabf855e1ba19626e2514ac9"
+    },
+    {
+      "path": "raw/floorp-native-v2/result-native-fluerial-native-cache-clear.json",
+      "bytes": 85,
+      "sha256": "9100e8232b03a0e817a194e8d0a445f8334249077338921c32c570e1fcc35be4"
+    },
+    {
+      "path": "raw/floorp-native-v2/result-native-fluerial-reload-navigate.json",
+      "bytes": 85,
+      "sha256": "1da614bf609be336d270a84cec6bc40309ff7d57e656d1c77ceef36e90b81f73"
+    },
+    {
+      "path": "raw/floorp-native-v2/result-native-fluerial-reload.json",
+      "bytes": 640,
+      "sha256": "eea29a054ec8bb9af0e5315c056dbf06ba36f9cc9327625e92aa9d45ec304d36"
+    },
+    {
+      "path": "raw/floorp-native-v2/result-native-fluerial-setting.json",
+      "bytes": 138,
+      "sha256": "64d350dcf5d79ef39e0b4b2e0ab9dd6c7e8b5ec95a3220058138b5a2959ede94"
+    },
+    {
+      "path": "raw/floorp-native-v2/result-native-lepton-cache-navigate.json",
+      "bytes": 84,
+      "sha256": "640a557b489c43627127016bccd2b64df0896a86659ded2437b7efccb59fceb0"
+    },
+    {
+      "path": "raw/floorp-native-v2/result-native-lepton-cache.json",
+      "bytes": 639,
+      "sha256": "8855c3c2470993983b40073bc7dc61920b07a525ec7890aa6d9ba468ced2a391"
+    },
+    {
+      "path": "raw/floorp-native-v2/result-native-lepton-native-cache-clear.json",
+      "bytes": 85,
+      "sha256": "8f3d186c3e8bc2a1d498564128772b400b3426fb21625122769aefa17abf3113"
+    },
+    {
+      "path": "raw/floorp-native-v2/result-native-lepton-reload-navigate.json",
+      "bytes": 85,
+      "sha256": "785d4533c6995e29ea83bf5265b634f08fa890f3151412bff6b31e01792243de"
+    },
+    {
+      "path": "raw/floorp-native-v2/result-native-lepton-reload.json",
+      "bytes": 639,
+      "sha256": "739ec99f756e846e6b940ed7a02cd626f82949cd3625f5983a72a4f51f7ebed5"
+    },
+    {
+      "path": "raw/floorp-native-v2/result-native-lepton-setting.json",
+      "bytes": 139,
+      "sha256": "8e130eaea4612f4ebaf779ebbb38bd0d01a75e33cbc345be80579d1aa47cf706"
+    },
+    {
+      "path": "raw/floorp-native-v2/result-native-pin-fixture.json",
+      "bytes": 129,
+      "sha256": "063fa89194ca44ec6895366f1c7528312a9082a591909a76b2612b941a680142"
+    },
+    {
+      "path": "raw/floorp-native-v2/result-native-proton-cache-navigate.json",
+      "bytes": 82,
+      "sha256": "cc4ba6d9c3832edcd1c4013b050156dad57db37572bb5f5035eb38b1aa8c895f"
+    },
+    {
+      "path": "raw/floorp-native-v2/result-native-proton-cache.json",
+      "bytes": 640,
+      "sha256": "c2a42a5066edccf77d341adb130469f14306481174da21ff53c8750245bfb728"
+    },
+    {
+      "path": "raw/floorp-native-v2/result-native-proton-native-cache-clear.json",
+      "bytes": 86,
+      "sha256": "f0385d5134721baa9784c2ebcb3d31aa1a2c1edd488c329d020b1f487abf0a6b"
+    },
+    {
+      "path": "raw/floorp-native-v2/result-native-proton-reload-navigate.json",
+      "bytes": 85,
+      "sha256": "1de44c4559be126010b84f99dc63f399ff8b2a7c6aa6c30b197dc4363e39752e"
+    },
+    {
+      "path": "raw/floorp-native-v2/result-native-proton-reload.json",
+      "bytes": 639,
+      "sha256": "e3f08f81214466e41d25272f7b89e37ff4547c3114ed955360b38f3969738832"
+    },
+    {
+      "path": "raw/floorp-native-v2/result-native-proton-setting.json",
+      "bytes": 142,
+      "sha256": "824337447322136c1a94dd39b2944b0901b79114e9fdc443e7fefdf77e3d4c56"
+    },
+    {
+      "path": "raw/floorp-native-v2/result-native-state-final.json",
+      "bytes": 6366,
+      "sha256": "39e9c88854947f3455117d7622d1f547fde0af76de3cbb05ad98d4e68857c1be"
+    },
+    {
+      "path": "raw/floorp-native-v2/result-native-tile-markup.json",
+      "bytes": 1410,
+      "sha256": "961cb0349863dcba5b42ddc7d55374691aa31e2fe33f90a3081c699c6675ca3e"
+    },
+    {
+      "path": "raw/floorp-native-v2/shutdown.json",
+      "bytes": 51,
+      "sha256": "a6bfff55ed63f8d986c16411c033c0a04b647662330b09654f767a1bd1bd322b"
+    },
+    {
+      "path": "raw/floorp-native-v2/test-definition.json",
+      "bytes": 285,
+      "sha256": "663511de293f1fd8270eeaff383194d846f2bfbe1a74d5ad18b15ef1a179d73b"
+    },
+    {
+      "path": "raw/floorp-seed-v2/native-console-lines.json",
+      "bytes": 3,
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "path": "raw/floorp-seed-v2/ready.json",
+      "bytes": 6141,
+      "sha256": "9242157074d043d7ad9167bae41aae0b169c7d580399963f57cfedbca12a01dd"
+    },
+    {
+      "path": "raw/floorp-seed-v2/request-before-quit.json",
+      "bytes": 26,
+      "sha256": "7abee596ab570e6eeb9e1b1f0df6a3920b00e9b469bef76a5c4953de627e04ce"
+    },
+    {
+      "path": "raw/floorp-seed-v2/request-disable.json",
+      "bytes": 207,
+      "sha256": "9a1893a8e7d08c0746329c2ebcf80f5ff3bb7247b671395c9a12960bf2a5dc9a"
+    },
+    {
+      "path": "raw/floorp-seed-v2/request-open-newtab.json",
+      "bytes": 197,
+      "sha256": "a21805ceef85cf15d3a9eb3dfd55579034d38944bb8b27df615abe251eb930f5"
+    },
+    {
+      "path": "raw/floorp-seed-v2/request-settings.json",
+      "bytes": 145,
+      "sha256": "a2f28bd4b649c197abe13f83fd8993730bd9425761e7a1111b66b5f351c90e2a"
+    },
+    {
+      "path": "raw/floorp-seed-v2/result-before-quit.json",
+      "bytes": 6133,
+      "sha256": "a67a42071f223160b68da20756cdce29da25c721517e67de25a373d9d705d1a4"
+    },
+    {
+      "path": "raw/floorp-seed-v2/result-disable.json",
+      "bytes": 107,
+      "sha256": "a7dd889cae953c04e68c0aa00ba46ab78cd9e080ecbdbbe54d370ee6a8325167"
+    },
+    {
+      "path": "raw/floorp-seed-v2/result-open-newtab.json",
+      "bytes": 85,
+      "sha256": "ef7a6eb6198f689dfde6668261c191f29fdf03a503d48673b4991ca4ac73f572"
+    },
+    {
+      "path": "raw/floorp-seed-v2/result-settings.json",
+      "bytes": 85,
+      "sha256": "31a589d3fb473b704b94280882ad2df9142aa5ea62be3a6c3892fcb0b80de700"
+    },
+    {
+      "path": "raw/floorp-seed-v2/shutdown.json",
+      "bytes": 51,
+      "sha256": "a6bfff55ed63f8d986c16411c033c0a04b647662330b09654f767a1bd1bd322b"
+    },
+    {
+      "path": "raw/floorp-seed-v2/test-definition.json",
+      "bytes": 276,
+      "sha256": "805e3489abd3c95ddd7d9a2d4c878202a17c0cb3b93b790157dc2ea8db14c55a"
+    },
+    {
+      "path": "report.md",
+      "bytes": 9178,
+      "sha256": "1962d8dc4e3d4750d2610232c055ab7e6f98ab3d828d426f91b714939c299fc2"
+    },
+    {
+      "path": "scripts/README.md",
+      "bytes": 3170,
+      "sha256": "2571d7bcdd3b259953c27245742beb358bad050665c81db2abb838f4b404bad4"
+    },
+    {
+      "path": "scripts/browser-session.py",
+      "bytes": 12653,
+      "sha256": "ac423d95807f0b3b0eb5891fdc3f116badf8f46581b06f1fbf17a5ad75da1fe2"
+    },
+    {
+      "path": "scripts/control.py",
+      "bytes": 621,
+      "sha256": "e4f834838db2e6b928cdefdfc9084a729bd0e3fdb3b438c6c91b74e6f26d5ec1"
+    },
+    {
+      "path": "scripts/export-evidence.py",
+      "bytes": 2963,
+      "sha256": "642f41eaea3b4bd5dadca58af19a16fa96edba4248d616a578fbf085781cc842"
+    },
+    {
+      "path": "scripts/native-fixture.py",
+      "bytes": 1371,
+      "sha256": "7363e27f78d72fbfe29a91f17b4da1447d90913afce16ed8149b79e1ad32470d"
+    },
+    {
+      "path": "scripts/paint-probe.js",
+      "bytes": 814,
+      "sha256": "2d15cc222f41dac199dd5e57851b689964c5e2f29f716bc0b3bcb3ed6ef7c63c"
+    },
+    {
+      "path": "scripts/run-native-paints.py",
+      "bytes": 2229,
+      "sha256": "adb6b16f41c420044de16e5e20d70cf682db4fefb4ff3190524ac0803e78a38c"
+    },
+    {
+      "path": "scripts/verify-evidence.py",
+      "bytes": 2207,
+      "sha256": "c83949d1a17fe999237d64b75053eca43e2be996fa24e9edc3142a8fecc75dd9"
+    },
+    {
+      "path": "source-analysis/evidence.json",
+      "bytes": 1898,
+      "sha256": "13d6f4170a6db9268746c141cea8e2cf6ec4781de7b7e1c102489fc220023bc6"
+    },
+    {
+      "path": "source-analysis/floorp-chrome_browser_builtin-addons_newtab_lib_ActivityStream.sys.mjs",
+      "bytes": 83985,
+      "sha256": "4e9e66d9fefa6f9822474460a1a6b5fe62b2b8c837f7794c7eb4bd3f5a43fb34"
+    },
+    {
+      "path": "source-analysis/floorp-chrome_remote_content_shared_RecommendedPreferences.sys.mjs",
+      "bytes": 22719,
+      "sha256": "18ac6f2303c9aaf1c32f4bc31e897ef11683be15b0c81730768027c652618a5e"
+    },
+    {
+      "path": "source-analysis/floorp-modules_AboutNewTab.sys.mjs",
+      "bytes": 11259,
+      "sha256": "f0c25c2cdd6adff70d600d7b01c24d1cd77d6dc0881650f02d12e8e2765a962f"
+    },
+    {
+      "path": "source-analysis/floorp-modules_AboutNewTabRedirector.sys.mjs",
+      "bytes": 20343,
+      "sha256": "8084729b041f16ff9a0b955a2dbf2dfc66e93172e1595badac853a76466b11b7"
+    },
+    {
+      "path": "source-analysis/floorp-modules_TelemetryReportingPolicy.sys.mjs",
+      "bytes": 46454,
+      "sha256": "d8b8b222f867f93e1f19b042e4df7b8e6645badf3cbd7a87616a2ad275b204dd"
+    },
+    {
+      "path": "source-analysis/report.md",
+      "bytes": 7780,
+      "sha256": "56973836e0201f6ccb428271124870e5df8a23b32f2317784b15e1411774c57f"
+    },
+    {
+      "path": "summary.json",
+      "bytes": 12477,
+      "sha256": "a1198b4b1aea8237d0e820385a1bd7464b7b57c4db5338377f432f1d275c0a1e"
+    }
+  ]
+}

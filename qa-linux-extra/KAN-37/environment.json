@@ -1,0 +1,17 @@
+{
+  "os": "Debian13 trixie",
+  "kernel": "6.18.57",
+  "machine": "x86_64",
+  "uid": 1000,
+  "display": "privateXvfb236/237/238 Openbox/DBus, syntheticinput",
+  "physicalGUI": false,
+  "originalLinuxDesktopMatched": false,
+  "devices": {
+    "/dev/dri": false,
+    "/dev/nvidia0": false,
+    "/dev/dxg": false
+  },
+  "proxyAndCATrustPreserved": true,
+  "tlsSandboxSignatureChecksNotLowered": true,
+  "TOUAcceptanceOrBypassPrefsNotWritten": true
+}

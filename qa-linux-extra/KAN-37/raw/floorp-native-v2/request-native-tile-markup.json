@@ -1,0 +1,7 @@
+{
+  "id": "native-tile-markup",
+  "target": "about:newtab",
+  "context": "content",
+  "script": "const a=[...document.querySelectorAll('a')].find(x=>x.href.includes('/native-local'));return {tile:a?.outerHTML,rect:a?.getBoundingClientRect().toJSON(),classes:document.documentElement.className,rootClass:document.querySelector('main')?.className};",
+  "screenshot": "fixture-native.png"
+}

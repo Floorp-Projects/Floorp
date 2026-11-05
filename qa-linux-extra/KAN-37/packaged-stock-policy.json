@@ -1,0 +1,8 @@
+{
+  "product": "officialFloorp12.21.1",
+  "omniSha256": "d6c17ae47f4a62def3d70d927137c920624e38297a38e60a443cf2e6008e1cac",
+  "archive": "browser/omni.ja",
+  "member": "defaults/preferences/firefox.js",
+  "stockBypassExcerpt": "eptedDate\", \"0\");\npref(\"termsofuse.currentVersion\", 4);\npref(\"termsofuse.minimumVersion\", 4);\n//@line 1975 \"$SRCDIR/browser/app/profile/firefox.js\"\n  pref(\"termsofuse.bypassNotification\", true);\n//@line 1977 \"$SRCDIR/browser/app/profile/firefox.js\"\n//@line 1983 \"$SRCDIR/browser/app/profile/firefox.js\"\n  pref(\"browser.bypassAutoTriggerActions",
+  "testDoesNotSetBypassOrAcceptPrefs": true
+}

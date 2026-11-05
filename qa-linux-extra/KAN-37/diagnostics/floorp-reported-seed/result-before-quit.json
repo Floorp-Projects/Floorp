@@ -1,0 +1,206 @@
+{
+  "elapsedMs": 21.08363899969845,
+  "rpcMs": 12.071556997398147,
+  "value": {
+    "pid": 86849,
+    "version": "156.0.1",
+    "buildID": "20260916130640",
+    "native": {
+      "initialized": false,
+      "activityStreamPresent": false,
+      "activityStreamInitialized": null,
+      "parentAppInitialized": null,
+      "feedKeys": []
+    },
+    "prefs": {
+      "remote.prefs.recommended": {
+        "value": false,
+        "defaultValue": true,
+        "user": true
+      },
+      "browser.newtabpage.activity-stream.testing.shouldInitializeFeeds": {
+        "value": null,
+        "defaultValue": null,
+        "user": false
+      },
+      "termsofuse.bypassNotification": {
+        "value": true,
+        "defaultValue": true,
+        "user": false
+      },
+      "termsofuse.acceptedVersion": {
+        "value": 0,
+        "defaultValue": 0,
+        "user": false
+      },
+      "termsofuse.currentVersion": {
+        "value": 4,
+        "defaultValue": 4,
+        "user": false
+      },
+      "termsofuse.minimumVersion": {
+        "value": 4,
+        "defaultValue": 4,
+        "user": false
+      },
+      "termsofuse.acceptedDate": {
+        "value": "0",
+        "defaultValue": "0",
+        "user": false
+      },
+      "browser.termsofuse.prefMigrationCheck": {
+        "value": true,
+        "defaultValue": {
+          "unavailable": true,
+          "type": 128,
+          "result": 2147549183
+        },
+        "user": true
+      },
+      "browser.newtabpage.activity-stream.selfLoading.enabled": {
+        "value": true,
+        "defaultValue": true,
+        "user": false
+      },
+      "browser.newtabpage.activity-stream.remote-renderer.enabled": {
+        "value": null,
+        "defaultValue": null,
+        "user": false
+      },
+      "browser.newtabpage.activity-stream.debug": {
+        "value": null,
+        "defaultValue": null,
+        "user": false
+      },
+      "browser.newtabpage.enabled": {
+        "value": true,
+        "defaultValue": true,
+        "user": false
+      },
+      "browser.newtabpage.activity-stream.enabled": {
+        "value": null,
+        "defaultValue": null,
+        "user": false
+      },
+      "browser.newtabpage.activity-stream.feeds.system.topstories": {
+        "value": null,
+        "defaultValue": null,
+        "user": false
+      },
+      "browser.newtabpage.activity-stream.feeds.system.topsites": {
+        "value": null,
+        "defaultValue": null,
+        "user": false
+      },
+      "browser.newtabpage.activity-stream.feeds.newtabinit": {
+        "value": null,
+        "defaultValue": null,
+        "user": false
+      },
+      "browser.newtabpage.activity-stream.feeds.telemetry": {
+        "value": null,
+        "defaultValue": null,
+        "user": false
+      },
+      "browser.newtabpage.activity-stream.newtabWallpapers.enabled": {
+        "value": true,
+        "defaultValue": true,
+        "user": false
+      },
+      "browser.newtabpage.activity-stream.newtabWallpapers.v2.enabled": {
+        "value": null,
+        "defaultValue": null,
+        "user": false
+      },
+      "browser.termsofuse.bypassNotification": {
+        "value": null,
+        "defaultValue": null,
+        "user": false
+      },
+      "browser.termsofuse.prefMigration.completed": {
+        "value": null,
+        "defaultValue": null,
+        "user": false
+      },
+      "browser.termsofuse.prefMigration.enabled": {
+        "value": null,
+        "defaultValue": null,
+        "user": false
+      },
+      "browser.termsofuse.termsAcceptedVersion": {
+        "value": null,
+        "defaultValue": null,
+        "user": false
+      },
+      "browser.termsofuse.termsAcceptedDate": {
+        "value": null,
+        "defaultValue": null,
+        "user": false
+      },
+      "browser.termsofuse.currentDate": {
+        "value": null,
+        "defaultValue": null,
+        "user": false
+      },
+      "browser.termsofuse.currentVersion": {
+        "value": null,
+        "defaultValue": null,
+        "user": false
+      },
+      "datareporting.policy.dataSubmissionPolicyAcceptedVersion": {
+        "value": 0,
+        "defaultValue": 0,
+        "user": false
+      },
+      "datareporting.policy.dataSubmissionPolicyNotifiedTime": {
+        "value": "0",
+        "defaultValue": "0",
+        "user": false
+      },
+      "distribution.id": {
+        "value": null,
+        "defaultValue": null,
+        "user": false
+      }
+    },
+    "policies": {
+      "status": 0,
+      "activeKeys": [],
+      "termsOfUse": null
+    },
+    "design": {
+      "design": "lepton",
+      "disableFloorpStart": true
+    },
+    "protections": {
+      "sandbox": 6,
+      "sandboxUser": false,
+      "signatureRequired": false,
+      "signatureUser": false
+    },
+    "tabs": [
+      {
+        "url": "about:newtab",
+        "title": "Floorp Start",
+        "selected": true,
+        "hidden": false,
+        "loading": false
+      },
+      {
+        "url": "https://blog.floorp.app/en/",
+        "title": "Floorp Blog",
+        "selected": false,
+        "hidden": false,
+        "loading": false
+      },
+      {
+        "url": "https://floorp.app/privacy",
+        "title": "Privacy Policy | Floorp",
+        "selected": false,
+        "hidden": false,
+        "loading": false
+      }
+    ],
+    "events": []
+  }
+}

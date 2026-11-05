@@ -1,0 +1,159 @@
+{
+  "startupSeconds": 6.229392941000697,
+  "value": {
+    "pid": 83637,
+    "version": "159.0.1",
+    "buildID": "20261103153232",
+    "native": {
+      "initialized": true,
+      "activityStreamPresent": true,
+      "activityStreamInitialized": true,
+      "parentAppInitialized": true,
+      "feedKeys": [
+        "feeds.telemetry",
+        "feeds.startupcacheinit",
+        "feeds.aboutpreferences",
+        "feeds.newtabinit",
+        "feeds.places",
+        "feeds.prefs",
+        "feeds.sections",
+        "feeds.systemtick",
+        "feeds.favicon",
+        "feeds.system.topsites",
+        "feeds.discoverystreamfeed",
+        "feeds.sectionslayoutfeed",
+        "feeds.wallpaperfeed",
+        "feeds.weatherfeed",
+        "feeds.webnotificationsfeed",
+        "feeds.stocksfeed",
+        "feeds.adsfeed",
+        "feeds.inferredpersonalizationfeed",
+        "feeds.smartshortcutsfeed",
+        "feeds.newtabattributionfeed",
+        "feeds.newtabmessaging",
+        "feeds.listsfeed",
+        "feeds.privacyfeed",
+        "feeds.recentsearchesfeed",
+        "feeds.pictureofthedayfeed",
+        "feeds.timerfeed",
+        "feeds.externalcomponentsfeed"
+      ]
+    },
+    "prefs": {
+      "remote.prefs.recommended": {
+        "value": false,
+        "user": true
+      },
+      "browser.newtabpage.enabled": {
+        "value": true,
+        "user": false
+      },
+      "browser.newtabpage.activity-stream.enabled": {
+        "value": null,
+        "user": false
+      },
+      "browser.newtabpage.activity-stream.feeds.system.topstories": {
+        "value": false,
+        "user": false
+      },
+      "browser.newtabpage.activity-stream.feeds.system.topsites": {
+        "value": true,
+        "user": false
+      },
+      "browser.newtabpage.activity-stream.feeds.newtabinit": {
+        "value": true,
+        "user": false
+      },
+      "browser.newtabpage.activity-stream.feeds.telemetry": {
+        "value": true,
+        "user": false
+      },
+      "browser.newtabpage.activity-stream.newtabWallpapers.enabled": {
+        "value": true,
+        "user": false
+      },
+      "browser.newtabpage.activity-stream.newtabWallpapers.v2.enabled": {
+        "value": null,
+        "user": false
+      },
+      "browser.termsofuse.bypassNotification": {
+        "value": null,
+        "user": false
+      },
+      "browser.termsofuse.prefMigration.completed": {
+        "value": null,
+        "user": false
+      },
+      "browser.termsofuse.prefMigration.enabled": {
+        "value": null,
+        "user": false
+      },
+      "browser.termsofuse.termsAcceptedVersion": {
+        "value": null,
+        "user": false
+      },
+      "browser.termsofuse.termsAcceptedDate": {
+        "value": null,
+        "user": false
+      },
+      "browser.termsofuse.currentDate": {
+        "value": null,
+        "user": false
+      },
+      "browser.termsofuse.currentVersion": {
+        "value": null,
+        "user": false
+      },
+      "datareporting.policy.dataSubmissionPolicyAcceptedVersion": {
+        "value": 0,
+        "user": false
+      },
+      "datareporting.policy.dataSubmissionPolicyNotifiedTime": {
+        "value": "0",
+        "user": false
+      },
+      "distribution.id": {
+        "value": null,
+        "user": false
+      }
+    },
+    "policies": {
+      "error": "TypeError: can't convert undefined to object"
+    },
+    "design": {
+      "design": null,
+      "disableFloorpStart": null
+    },
+    "protections": {
+      "sandbox": 6,
+      "sandboxUser": false,
+      "signatureRequired": false,
+      "signatureUser": false
+    },
+    "tabs": [
+      {
+        "url": "about:welcome",
+        "title": "Welcome to Floorp",
+        "selected": true,
+        "hidden": false,
+        "loading": false
+      },
+      {
+        "url": "https://blog.floorp.app/en/",
+        "title": "Floorp Blog",
+        "selected": false,
+        "hidden": false,
+        "loading": false
+      },
+      {
+        "url": "https://floorp.app/privacy",
+        "title": "Privacy Policy | Floorp",
+        "selected": false,
+        "hidden": false,
+        "loading": true
+      }
+    ],
+    "events": []
+  },
+  "monitorRootPid": 83637
+}

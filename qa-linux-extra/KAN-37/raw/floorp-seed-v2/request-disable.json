@@ -1,0 +1,7 @@
+{
+  "id": "disable",
+  "target": "about:newtab",
+  "context": "content",
+  "click": "input[type=checkbox].mt-1",
+  "script": "return {checked:document.querySelector('input[type=checkbox].mt-1').checked};"
+}

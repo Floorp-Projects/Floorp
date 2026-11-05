@@ -1,0 +1,9 @@
+{
+  "fixture": "none",
+  "fixturePrefs": {},
+  "uri": null,
+  "profileReused": false,
+  "product": "/workspace/qa-linux-22/C-extra/KAN-37/products/floorp-current",
+  "noSecurityPreferenceOverrides": true,
+  "network": "inherited proxy + configured CA; no insecure TLS flag"
+}

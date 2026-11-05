@@ -1,0 +1,49 @@
+{
+  "key": "KAN-37",
+  "runtimePin": "8965ffc346d426ccdf919bd18585e4d4a0c21654",
+  "productVersion": "Floorp12.21.1 / Firefox159.0.1",
+  "result": "packaged-source read-only audit",
+  "files": [
+    {
+      "name": "firefox-chrome_remote_content_shared_RecommendedPreferences.sys.mjs",
+      "sha256": "18ac6f2303c9aaf1c32f4bc31e897ef11683be15b0c81730768027c652618a5e"
+    },
+    {
+      "name": "floorp-chrome_remote_content_shared_RecommendedPreferences.sys.mjs",
+      "sha256": "18ac6f2303c9aaf1c32f4bc31e897ef11683be15b0c81730768027c652618a5e"
+    },
+    {
+      "name": "firefox-modules_TelemetryReportingPolicy.sys.mjs",
+      "sha256": "d8b8b222f867f93e1f19b042e4df7b8e6645badf3cbd7a87616a2ad275b204dd"
+    },
+    {
+      "name": "floorp-moz-src_browser_components_tabbrowser_NewTabPagePreloading.sys.mjs",
+      "sha256": "3f017bf06d89faaa3c1481e9c9f11cdef475701b1340c8ed48581416e8164b66"
+    },
+    {
+      "name": "firefox-modules_AboutNewTab.sys.mjs",
+      "sha256": "f0c25c2cdd6adff70d600d7b01c24d1cd77d6dc0881650f02d12e8e2765a962f"
+    },
+    {
+      "name": "firefox-modules_AboutNewTabRedirector.sys.mjs",
+      "sha256": "8084729b041f16ff9a0b955a2dbf2dfc66e93172e1595badac853a76466b11b7"
+    },
+    {
+      "name": "floorp-chrome_browser_builtin-addons_newtab_lib_ActivityStream.sys.mjs",
+      "sha256": "4e9e66d9fefa6f9822474460a1a6b5fe62b2b8c837f7794c7eb4bd3f5a43fb34"
+    },
+    {
+      "name": "floorp-modules_TelemetryReportingPolicy.sys.mjs",
+      "sha256": "d8b8b222f867f93e1f19b042e4df7b8e6645badf3cbd7a87616a2ad275b204dd"
+    },
+    {
+      "name": "floorp-modules_AboutNewTabRedirector.sys.mjs",
+      "sha256": "8084729b041f16ff9a0b955a2dbf2dfc66e93172e1595badac853a76466b11b7"
+    },
+    {
+      "name": "floorp-modules_AboutNewTab.sys.mjs",
+      "sha256": "f0c25c2cdd6adff70d600d7b01c24d1cd77d6dc0881650f02d12e8e2765a962f"
+    }
+  ],
+  "noBrowserExecution": true
+}

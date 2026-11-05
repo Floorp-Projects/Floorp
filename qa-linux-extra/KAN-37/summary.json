@@ -1,0 +1,700 @@
+{
+  "currentNativePaints": [
+    {
+      "id": "proton-reload",
+      "case": "floorp-native-v2",
+      "observation": {
+        "url": "about:newtab",
+        "title": "New Tab",
+        "mainClass": "newtab-main",
+        "rootLength": 20878,
+        "tiles": 6,
+        "iconRect": {
+          "x": 299,
+          "y": 434.25,
+          "width": 40,
+          "height": 40,
+          "top": 434.25,
+          "right": 339,
+          "bottom": 474.25,
+          "left": 299
+        },
+        "screen": {
+          "x": 80,
+          "y": 171,
+          "dpr": 1
+        },
+        "style": {
+          "display": "flex",
+          "visibility": "visible",
+          "opacity": "1",
+          "backgroundImageIsDataPng": true
+        },
+        "tileTitle": "KAN37 native fixture"
+      },
+      "screenSampleCoordinates": [
+        [
+          389,
+          615
+        ],
+        [
+          409,
+          615
+        ],
+        [
+          389,
+          635
+        ],
+        [
+          409,
+          635
+        ]
+      ],
+      "pixels": [
+        [
+          255,
+          0,
+          0
+        ],
+        [
+          0,
+          255,
+          0
+        ],
+        [
+          0,
+          0,
+          255
+        ],
+        [
+          255,
+          255,
+          0
+        ]
+      ],
+      "expectedPixels": [
+        [
+          255,
+          0,
+          0
+        ],
+        [
+          0,
+          255,
+          0
+        ],
+        [
+          0,
+          0,
+          255
+        ],
+        [
+          255,
+          255,
+          0
+        ]
+      ],
+      "allExact": true,
+      "screenshotFile": "raw/floorp-native-v2/proton-reload.png"
+    },
+    {
+      "id": "proton-cache",
+      "case": "floorp-native-v2",
+      "observation": {
+        "url": "about:newtab",
+        "title": "New Tab",
+        "mainClass": "newtab-main",
+        "rootLength": 20878,
+        "tiles": 6,
+        "iconRect": {
+          "x": 299,
+          "y": 434.25,
+          "width": 40,
+          "height": 40,
+          "top": 434.25,
+          "right": 339,
+          "bottom": 474.25,
+          "left": 299
+        },
+        "screen": {
+          "x": 80,
+          "y": 171,
+          "dpr": 1
+        },
+        "style": {
+          "display": "flex",
+          "visibility": "visible",
+          "opacity": "1",
+          "backgroundImageIsDataPng": true
+        },
+        "tileTitle": "KAN37 native fixture"
+      },
+      "screenSampleCoordinates": [
+        [
+          389,
+          615
+        ],
+        [
+          409,
+          615
+        ],
+        [
+          389,
+          635
+        ],
+        [
+          409,
+          635
+        ]
+      ],
+      "pixels": [
+        [
+          255,
+          0,
+          0
+        ],
+        [
+          0,
+          255,
+          0
+        ],
+        [
+          0,
+          0,
+          255
+        ],
+        [
+          255,
+          255,
+          0
+        ]
+      ],
+      "expectedPixels": [
+        [
+          255,
+          0,
+          0
+        ],
+        [
+          0,
+          255,
+          0
+        ],
+        [
+          0,
+          0,
+          255
+        ],
+        [
+          255,
+          255,
+          0
+        ]
+      ],
+      "allExact": true,
+      "screenshotFile": "raw/floorp-native-v2/proton-cache.png"
+    },
+    {
+      "id": "fluerial-reload",
+      "case": "floorp-native-v2",
+      "observation": {
+        "url": "about:newtab",
+        "title": "New Tab",
+        "mainClass": "newtab-main",
+        "rootLength": 20878,
+        "tiles": 6,
+        "iconRect": {
+          "x": 299,
+          "y": 436.25,
+          "width": 40,
+          "height": 40,
+          "top": 436.25,
+          "right": 339,
+          "bottom": 476.25,
+          "left": 299
+        },
+        "screen": {
+          "x": 80,
+          "y": 167,
+          "dpr": 1
+        },
+        "style": {
+          "display": "flex",
+          "visibility": "visible",
+          "opacity": "1",
+          "backgroundImageIsDataPng": true
+        },
+        "tileTitle": "KAN37 native fixture"
+      },
+      "screenSampleCoordinates": [
+        [
+          389,
+          613
+        ],
+        [
+          409,
+          613
+        ],
+        [
+          389,
+          633
+        ],
+        [
+          409,
+          633
+        ]
+      ],
+      "pixels": [
+        [
+          255,
+          0,
+          0
+        ],
+        [
+          0,
+          255,
+          0
+        ],
+        [
+          0,
+          0,
+          255
+        ],
+        [
+          255,
+          255,
+          0
+        ]
+      ],
+      "expectedPixels": [
+        [
+          255,
+          0,
+          0
+        ],
+        [
+          0,
+          255,
+          0
+        ],
+        [
+          0,
+          0,
+          255
+        ],
+        [
+          255,
+          255,
+          0
+        ]
+      ],
+      "allExact": true,
+      "screenshotFile": "raw/floorp-native-v2/fluerial-reload.png"
+    },
+    {
+      "id": "fluerial-cache",
+      "case": "floorp-native-v2",
+      "observation": {
+        "url": "about:newtab",
+        "title": "New Tab",
+        "mainClass": "newtab-main",
+        "rootLength": 20878,
+        "tiles": 6,
+        "iconRect": {
+          "x": 299,
+          "y": 436.25,
+          "width": 40,
+          "height": 40,
+          "top": 436.25,
+          "right": 339,
+          "bottom": 476.25,
+          "left": 299
+        },
+        "screen": {
+          "x": 80,
+          "y": 167,
+          "dpr": 1
+        },
+        "style": {
+          "display": "flex",
+          "visibility": "visible",
+          "opacity": "1",
+          "backgroundImageIsDataPng": true
+        },
+        "tileTitle": "KAN37 native fixture"
+      },
+      "screenSampleCoordinates": [
+        [
+          389,
+          613
+        ],
+        [
+          409,
+          613
+        ],
+        [
+          389,
+          633
+        ],
+        [
+          409,
+          633
+        ]
+      ],
+      "pixels": [
+        [
+          255,
+          0,
+          0
+        ],
+        [
+          0,
+          255,
+          0
+        ],
+        [
+          0,
+          0,
+          255
+        ],
+        [
+          255,
+          255,
+          0
+        ]
+      ],
+      "expectedPixels": [
+        [
+          255,
+          0,
+          0
+        ],
+        [
+          0,
+          255,
+          0
+        ],
+        [
+          0,
+          0,
+          255
+        ],
+        [
+          255,
+          255,
+          0
+        ]
+      ],
+      "allExact": true,
+      "screenshotFile": "raw/floorp-native-v2/fluerial-cache.png"
+    },
+    {
+      "id": "lepton-reload",
+      "case": "floorp-native-v2",
+      "observation": {
+        "url": "about:newtab",
+        "title": "New Tab",
+        "mainClass": "newtab-main",
+        "rootLength": 20878,
+        "tiles": 6,
+        "iconRect": {
+          "x": 299,
+          "y": 440.25,
+          "width": 40,
+          "height": 40,
+          "top": 440.25,
+          "right": 339,
+          "bottom": 480.25,
+          "left": 299
+        },
+        "screen": {
+          "x": 80,
+          "y": 159,
+          "dpr": 1
+        },
+        "style": {
+          "display": "flex",
+          "visibility": "visible",
+          "opacity": "1",
+          "backgroundImageIsDataPng": true
+        },
+        "tileTitle": "KAN37 native fixture"
+      },
+      "screenSampleCoordinates": [
+        [
+          389,
+          609
+        ],
+        [
+          409,
+          609
+        ],
+        [
+          389,
+          629
+        ],
+        [
+          409,
+          629
+        ]
+      ],
+      "pixels": [
+        [
+          255,
+          0,
+          0
+        ],
+        [
+          0,
+          255,
+          0
+        ],
+        [
+          0,
+          0,
+          255
+        ],
+        [
+          255,
+          255,
+          0
+        ]
+      ],
+      "expectedPixels": [
+        [
+          255,
+          0,
+          0
+        ],
+        [
+          0,
+          255,
+          0
+        ],
+        [
+          0,
+          0,
+          255
+        ],
+        [
+          255,
+          255,
+          0
+        ]
+      ],
+      "allExact": true,
+      "screenshotFile": "raw/floorp-native-v2/lepton-reload.png"
+    },
+    {
+      "id": "lepton-cache",
+      "case": "floorp-native-v2",
+      "observation": {
+        "url": "about:newtab",
+        "title": "New Tab",
+        "mainClass": "newtab-main",
+        "rootLength": 20878,
+        "tiles": 6,
+        "iconRect": {
+          "x": 299,
+          "y": 440.25,
+          "width": 40,
+          "height": 40,
+          "top": 440.25,
+          "right": 339,
+          "bottom": 480.25,
+          "left": 299
+        },
+        "screen": {
+          "x": 80,
+          "y": 159,
+          "dpr": 1
+        },
+        "style": {
+          "display": "flex",
+          "visibility": "visible",
+          "opacity": "1",
+          "backgroundImageIsDataPng": true
+        },
+        "tileTitle": "KAN37 native fixture"
+      },
+      "screenSampleCoordinates": [
+        [
+          389,
+          609
+        ],
+        [
+          409,
+          609
+        ],
+        [
+          389,
+          629
+        ],
+        [
+          409,
+          629
+        ]
+      ],
+      "pixels": [
+        [
+          255,
+          0,
+          0
+        ],
+        [
+          0,
+          255,
+          0
+        ],
+        [
+          0,
+          0,
+          255
+        ],
+        [
+          255,
+          255,
+          0
+        ]
+      ],
+      "expectedPixels": [
+        [
+          255,
+          0,
+          0
+        ],
+        [
+          0,
+          255,
+          0
+        ],
+        [
+          0,
+          0,
+          255
+        ],
+        [
+          255,
+          255,
+          0
+        ]
+      ],
+      "allExact": true,
+      "screenshotFile": "raw/floorp-native-v2/lepton-cache.png"
+    },
+    {
+      "id": "native-restart-verified",
+      "case": "floorp-native-restart",
+      "observation": {
+        "url": "about:newtab",
+        "title": "New Tab",
+        "mainClass": "newtab-main",
+        "rootLength": 20878,
+        "tiles": 6,
+        "iconRect": {
+          "x": 299,
+          "y": 440.25,
+          "width": 40,
+          "height": 40,
+          "top": 440.25,
+          "right": 339,
+          "bottom": 480.25,
+          "left": 299
+        },
+        "screen": {
+          "x": 80,
+          "y": 159,
+          "dpr": 1
+        },
+        "style": {
+          "display": "flex",
+          "visibility": "visible",
+          "opacity": "1",
+          "backgroundImageIsDataPng": true
+        },
+        "tileTitle": "KAN37 native fixture"
+      },
+      "screenSampleCoordinates": [
+        [
+          389,
+          609
+        ],
+        [
+          409,
+          609
+        ],
+        [
+          389,
+          629
+        ],
+        [
+          409,
+          629
+        ]
+      ],
+      "pixels": [
+        [
+          255,
+          0,
+          0
+        ],
+        [
+          0,
+          255,
+          0
+        ],
+        [
+          0,
+          0,
+          255
+        ],
+        [
+          255,
+          255,
+          0
+        ]
+      ],
+      "expectedPixels": [
+        [
+          255,
+          0,
+          0
+        ],
+        [
+          0,
+          255,
+          0
+        ],
+        [
+          0,
+          0,
+          255
+        ],
+        [
+          255,
+          255,
+          0
+        ]
+      ],
+      "allExact": true,
+      "screenshotFile": "raw/floorp-native-restart/native-restart-verified.png"
+    }
+  ],
+  "qualifiedCurrentAndControlSessions": [
+    "floorp-seed-v2",
+    "floorp-native-v2",
+    "floorp-native-restart",
+    "firefox-policy-v2"
+  ],
+  "nativeRestartNoRendererInjection": true,
+  "priorFloorpStart70NotRepeated": true,
+  "priorQaCommit": "6031f8efce3953c7d8ef18b09819f08a90815f17",
+  "sourceReviewSha": "29a3eb23145da90706d8a94441373278521cc737",
+  "currentProductSourceSha": "984509d2053be7bae9027133bda7259cd706b208",
+  "reportedProductSourceSha": "1728a7678c34aec1ad502edb06a168fdf2a07be8",
+  "currentVersion": "12.21.1@159.0.1",
+  "currentNativeBuildID": "20261103153232",
+  "firefoxControlVersion": "159.0.1",
+  "firefoxNativeBuildID": "20261102144711",
+  "originalLinuxNativeResult": "unqualified: dedicated12.18 prefix automatically updated to12.21.1 before native trial; actual measured159 not attributed to156"
+}

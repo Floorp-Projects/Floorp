@@ -1,0 +1,101 @@
+[
+  {
+    "id": "proton-reload",
+    "case": "floorp-native-v2",
+    "observation": {
+      "url": "about:newtab",
+      "title": "New Tab",
+      "mainClass": "newtab-main",
+      "rootLength": 20878,
+      "tiles": 6,
+      "iconRect": {
+        "x": 299,
+        "y": 434.25,
+        "width": 40,
+        "height": 40,
+        "top": 434.25,
+        "right": 339,
+        "bottom": 474.25,
+        "left": 299
+      },
+      "screen": {
+        "x": 80,
+        "y": 171,
+        "dpr": 1
+      },
+      "style": {
+        "display": "flex",
+        "visibility": "visible",
+        "opacity": "1",
+        "backgroundImageIsDataPng": true
+      },
+      "tileTitle": "KAN37 native fixture"
+    },
+    "screenSampleCoordinates": [
+      [
+        389,
+        615
+      ],
+      [
+        409,
+        615
+      ],
+      [
+        389,
+        635
+      ],
+      [
+        409,
+        635
+      ]
+    ],
+    "pixels": [
+      [
+        127,
+        0,
+        0
+      ],
+      [
+        0,
+        127,
+        0
+      ],
+      [
+        0,
+        0,
+        127
+      ],
+      [
+        127,
+        127,
+        0
+      ]
+    ],
+    "expectedPixels": [
+      [
+        255,
+        0,
+        0
+      ],
+      [
+        0,
+        255,
+        0
+      ],
+      [
+        0,
+        0,
+        255
+      ],
+      [
+        255,
+        255,
+        0
+      ]
+    ],
+    "allExact": false,
+    "qualified": false,
+    "reason": "native default-browser prompt dims screenshot; not blank thumbnail",
+    "screenshotRetained": false
+  }
+]

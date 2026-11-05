@@ -1,0 +1,7 @@
+{
+  "id": "native-content",
+  "target": "about:newtab",
+  "context": "content",
+  "script": "return {url:location.href,title:document.title,ready:document.readyState,rootLength:document.getElementById('root')?.innerHTML.length,newtabMain:!!document.querySelector('.newtab-main'),contentMain:!!document.querySelector('.content-main'),text:document.body.innerText.slice(0,1500),resources:performance.getEntriesByType('resource').filter(x=>/activity-stream|vendor|newtab/.test(x.name)).map(x=>({name:x.name,duration:x.duration,responseStatus:x.responseStatus}))};",
+  "screenshot": "policy-page.png"
+}

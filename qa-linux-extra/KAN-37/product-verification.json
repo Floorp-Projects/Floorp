@@ -1,0 +1,884 @@
+[
+  {
+    "product": "floorp-current",
+    "referenceEntries": 46,
+    "allMatch": true,
+    "referencePath": "/workspace/qa-linux-22/C/products/floorp",
+    "files": [
+      {
+        "path": "application.ini",
+        "referenceSha256": "eebae8546a7feb9d3745c6ec0eb9f3b63ebbe8ae678202a990d1c1396380f333",
+        "actualSha256": "eebae8546a7feb9d3745c6ec0eb9f3b63ebbe8ae678202a990d1c1396380f333",
+        "matchReference": true
+      },
+      {
+        "path": "browser/buildid2",
+        "referenceSha256": "52c0dcee353e1d521677610404f9e557e632928aeaf77780a3925d5821cc8578",
+        "actualSha256": "52c0dcee353e1d521677610404f9e557e632928aeaf77780a3925d5821cc8578",
+        "matchReference": true
+      },
+      {
+        "path": "browser/chrome/icons/default/default128.png",
+        "referenceSha256": "0331b4c3f03a36984734bf3668ce1823504fd44b10e5ecc0977ee8c521641ad9",
+        "actualSha256": "0331b4c3f03a36984734bf3668ce1823504fd44b10e5ecc0977ee8c521641ad9",
+        "matchReference": true
+      },
+      {
+        "path": "browser/chrome/icons/default/default16.png",
+        "referenceSha256": "501aab2936ddb5562ffde7d8bfe20f6a3cda5bd009fa160c0ed3b10481de778c",
+        "actualSha256": "501aab2936ddb5562ffde7d8bfe20f6a3cda5bd009fa160c0ed3b10481de778c",
+        "matchReference": true
+      },
+      {
+        "path": "browser/chrome/icons/default/default32.png",
+        "referenceSha256": "de4c287df3aea68bbba3246a35992e4ee41708d956c225d4ab90fe9532996541",
+        "actualSha256": "de4c287df3aea68bbba3246a35992e4ee41708d956c225d4ab90fe9532996541",
+        "matchReference": true
+      },
+      {
+        "path": "browser/chrome/icons/default/default48.png",
+        "referenceSha256": "2cc6b61be10980e8fd8c9508dca783df063623e2e17ebc2e301ef9e2d3e38a22",
+        "actualSha256": "2cc6b61be10980e8fd8c9508dca783df063623e2e17ebc2e301ef9e2d3e38a22",
+        "matchReference": true
+      },
+      {
+        "path": "browser/chrome/icons/default/default64.png",
+        "referenceSha256": "474f20f1407914c689d34c91da62997950fee1a70197bf3d20252a4dcf8e91fa",
+        "actualSha256": "474f20f1407914c689d34c91da62997950fee1a70197bf3d20252a4dcf8e91fa",
+        "matchReference": true
+      },
+      {
+        "path": "browser/omni.ja",
+        "referenceSha256": "d6c17ae47f4a62def3d70d927137c920624e38297a38e60a443cf2e6008e1cac",
+        "actualSha256": "d6c17ae47f4a62def3d70d927137c920624e38297a38e60a443cf2e6008e1cac",
+        "matchReference": true
+      },
+      {
+        "path": "defaults/pref/channel-prefs.js",
+        "referenceSha256": "7d9d37eff1dc4e59a6437026602f1953ef58ee46ff3d81dbb8e13b0fd0bec86b",
+        "actualSha256": "7d9d37eff1dc4e59a6437026602f1953ef58ee46ff3d81dbb8e13b0fd0bec86b",
+        "matchReference": true
+      },
+      {
+        "path": "dependentlibs.list",
+        "referenceSha256": "621f575eaaf819dd0b18976c6a8a94d1caae95a9c748f4c9058a052395a4d173",
+        "actualSha256": "621f575eaaf819dd0b18976c6a8a94d1caae95a9c748f4c9058a052395a4d173",
+        "matchReference": true
+      },
+      {
+        "path": "floorp",
+        "referenceSha256": "4f05c1330b38e50040440be6a3b6e0e7a5b52bc79edb5c5478d978c81f5a603d",
+        "actualSha256": "4f05c1330b38e50040440be6a3b6e0e7a5b52bc79edb5c5478d978c81f5a603d",
+        "matchReference": true
+      },
+      {
+        "path": "floorp-bin",
+        "referenceSha256": "4f05c1330b38e50040440be6a3b6e0e7a5b52bc79edb5c5478d978c81f5a603d",
+        "actualSha256": "4f05c1330b38e50040440be6a3b6e0e7a5b52bc79edb5c5478d978c81f5a603d",
+        "matchReference": true
+      },
+      {
+        "path": "fonts/TwemojiMozilla.ttf",
+        "referenceSha256": "6d90152ee0d29e82fe2a87793af5aa4b7ad13e6538360889e141e81ed299ee8e",
+        "actualSha256": "6d90152ee0d29e82fe2a87793af5aa4b7ad13e6538360889e141e81ed299ee8e",
+        "matchReference": true
+      },
+      {
+        "path": "gfxtest",
+        "referenceSha256": "becfb0b9cee1d9b35fe23dc504f7bbb9345b364c413c0e80656ddb3c9729bdfd",
+        "actualSha256": "becfb0b9cee1d9b35fe23dc504f7bbb9345b364c413c0e80656ddb3c9729bdfd",
+        "matchReference": true
+      },
+      {
+        "path": "gmp-clearkey/0.1/libclearkey.so",
+        "referenceSha256": "97ffd72483c64964ad9a2b86ca227d93c921ff5c14dd430f25c3eec2f7aa5c02",
+        "actualSha256": "97ffd72483c64964ad9a2b86ca227d93c921ff5c14dd430f25c3eec2f7aa5c02",
+        "matchReference": true
+      },
+      {
+        "path": "gmp-clearkey/0.1/manifest.json",
+        "referenceSha256": "b7d65e60cccb80ffb2e95b5ae7e355d2c8c37575e886eef4325ca04fa7ba68fc",
+        "actualSha256": "b7d65e60cccb80ffb2e95b5ae7e355d2c8c37575e886eef4325ca04fa7ba68fc",
+        "matchReference": true
+      },
+      {
+        "path": "icons/updater.png",
+        "referenceSha256": "cab5e9bc9511b0690e696b378efa6753705b1182660d9829f5b3dc9f0398e5cc",
+        "actualSha256": "cab5e9bc9511b0690e696b378efa6753705b1182660d9829f5b3dc9f0398e5cc",
+        "matchReference": true
+      },
+      {
+        "path": "jogfile.json",
+        "referenceSha256": "1ea8b491d37ef1e30d1158940469ce068e22fde3f970ec039f2c9511fa93de40",
+        "actualSha256": "1ea8b491d37ef1e30d1158940469ce068e22fde3f970ec039f2c9511fa93de40",
+        "matchReference": true
+      },
+      {
+        "path": "libfreeblpriv3.so",
+        "referenceSha256": "0e5167b714fc4e7952d8471f5fb8d90a302df98e3cba156769ac733f0fd025b0",
+        "actualSha256": "0e5167b714fc4e7952d8471f5fb8d90a302df98e3cba156769ac733f0fd025b0",
+        "matchReference": true
+      },
+      {
+        "path": "libgkcodecs.so",
+        "referenceSha256": "7804828879bc2967d23bc241c6ecb15fa7e5ca5e06e28049cf8378753b75cbe8",
+        "actualSha256": "7804828879bc2967d23bc241c6ecb15fa7e5ca5e06e28049cf8378753b75cbe8",
+        "matchReference": true
+      },
+      {
+        "path": "liblgpllibs.so",
+        "referenceSha256": "c29aff12589cb5342e73488619b628b50afda839a063a0e0f3f77831ffd8ff82",
+        "actualSha256": "c29aff12589cb5342e73488619b628b50afda839a063a0e0f3f77831ffd8ff82",
+        "matchReference": true
+      },
+      {
+        "path": "libmozavcodec.so",
+        "referenceSha256": "0687a26be53f8ece0623d6c5ed8b7815b2c05839760ba012baa2ea5b5975b2ea",
+        "actualSha256": "0687a26be53f8ece0623d6c5ed8b7815b2c05839760ba012baa2ea5b5975b2ea",
+        "matchReference": true
+      },
+      {
+        "path": "libmozavutil.so",
+        "referenceSha256": "d957abe02b48afe84f2eb0038252f1f12c627f2db7100fbfda80fc473c2d14d7",
+        "actualSha256": "d957abe02b48afe84f2eb0038252f1f12c627f2db7100fbfda80fc473c2d14d7",
+        "matchReference": true
+      },
+      {
+        "path": "libmozgtk.so",
+        "referenceSha256": "a2f42c25563411b7e3378629d2e1ab7f947e9c4b546560b25b436e6fbe94476f",
+        "actualSha256": "a2f42c25563411b7e3378629d2e1ab7f947e9c4b546560b25b436e6fbe94476f",
+        "matchReference": true
+      },
+      {
+        "path": "libmozinference.so",
+        "referenceSha256": "acd4dba98fa405662a725fceebe023e0c78cb67de9ec5174f545f6604299c570",
+        "actualSha256": "acd4dba98fa405662a725fceebe023e0c78cb67de9ec5174f545f6604299c570",
+        "matchReference": true
+      },
+      {
+        "path": "libmozsandbox.so",
+        "referenceSha256": "88c01a993afad42907d569d1f11d890afd0accc7120fd946168ca799065e86fd",
+        "actualSha256": "88c01a993afad42907d569d1f11d890afd0accc7120fd946168ca799065e86fd",
+        "matchReference": true
+      },
+      {
+        "path": "libmozsqlite3.so",
+        "referenceSha256": "d740b271fce254778272866e02b9bd8bca7888475179f76904e9c14a8c96aba0",
+        "actualSha256": "d740b271fce254778272866e02b9bd8bca7888475179f76904e9c14a8c96aba0",
+        "matchReference": true
+      },
+      {
+        "path": "libmozwayland.so",
+        "referenceSha256": "3164170986fe9bbe1e673b6bd2524f0f05dcc3da26a5fcee1d304c8fe385e457",
+        "actualSha256": "3164170986fe9bbe1e673b6bd2524f0f05dcc3da26a5fcee1d304c8fe385e457",
+        "matchReference": true
+      },
+      {
+        "path": "libnspr4.so",
+        "referenceSha256": "73d59534248a183357f39e547f9d6f5089f084430aba181c9f4b6c9da5988c5d",
+        "actualSha256": "73d59534248a183357f39e547f9d6f5089f084430aba181c9f4b6c9da5988c5d",
+        "matchReference": true
+      },
+      {
+        "path": "libnss3.so",
+        "referenceSha256": "6f11158b23027e962bec955f328119efa351db61b3e1f507a451fb1dfada646a",
+        "actualSha256": "6f11158b23027e962bec955f328119efa351db61b3e1f507a451fb1dfada646a",
+        "matchReference": true
+      },
+      {
+        "path": "libnssutil3.so",
+        "referenceSha256": "efc899f507b9bcdc313303321ed177bc4768c47c3eaaa8e35609488e6d0e53e8",
+        "actualSha256": "efc899f507b9bcdc313303321ed177bc4768c47c3eaaa8e35609488e6d0e53e8",
+        "matchReference": true
+      },
+      {
+        "path": "libonnxruntime.so",
+        "referenceSha256": "077ac0e3e090dd3d070a497f354f62fa718de4a19be287da5d9a188c950bc71c",
+        "actualSha256": "077ac0e3e090dd3d070a497f354f62fa718de4a19be287da5d9a188c950bc71c",
+        "matchReference": true
+      },
+      {
+        "path": "libplc4.so",
+        "referenceSha256": "6fa863eff22c1fdf6e75f22fe9433bb50b0f8ba43960046a3816da6532d11fbf",
+        "actualSha256": "6fa863eff22c1fdf6e75f22fe9433bb50b0f8ba43960046a3816da6532d11fbf",
+        "matchReference": true
+      },
+      {
+        "path": "libplds4.so",
+        "referenceSha256": "7f3fb5134ecd4201e532d7160dda31479a02743d6eff7199003e3b4be2dd963b",
+        "actualSha256": "7f3fb5134ecd4201e532d7160dda31479a02743d6eff7199003e3b4be2dd963b",
+        "matchReference": true
+      },
+      {
+        "path": "libsmime3.so",
+        "referenceSha256": "6f3e94a9538ec3a52ee30e80af86fccc5ffd31a06712e61f434dda427b561c99",
+        "actualSha256": "6f3e94a9538ec3a52ee30e80af86fccc5ffd31a06712e61f434dda427b561c99",
+        "matchReference": true
+      },
+      {
+        "path": "libsoftokn3.so",
+        "referenceSha256": "bb6a9283048767500190da54a439cf12196448e352db191db50e23e1566ad649",
+        "actualSha256": "bb6a9283048767500190da54a439cf12196448e352db191db50e23e1566ad649",
+        "matchReference": true
+      },
+      {
+        "path": "libssl3.so",
+        "referenceSha256": "7a2f6ffcecdbb27c98279657f3db63f56922cb568dc217553d6d5f217bfa378b",
+        "actualSha256": "7a2f6ffcecdbb27c98279657f3db63f56922cb568dc217553d6d5f217bfa378b",
+        "matchReference": true
+      },
+      {
+        "path": "libxul.so",
+        "referenceSha256": "760ff8a689f52c9b1f3c89a45ea8813e59f187990caed747e4a7680020c8dbc7",
+        "actualSha256": "760ff8a689f52c9b1f3c89a45ea8813e59f187990caed747e4a7680020c8dbc7",
+        "matchReference": true
+      },
+      {
+        "path": "omni.ja",
+        "referenceSha256": "159285f967e950e0cd1ac658d713b7770e7763d6d983fc88b6e48c16e4a1f345",
+        "actualSha256": "159285f967e950e0cd1ac658d713b7770e7763d6d983fc88b6e48c16e4a1f345",
+        "matchReference": true
+      },
+      {
+        "path": "pingsender",
+        "referenceSha256": "157ed38af98d795812dfc532739252f9e6c51472d13b9105c496b8b2cf1dbbfd",
+        "actualSha256": "157ed38af98d795812dfc532739252f9e6c51472d13b9105c496b8b2cf1dbbfd",
+        "matchReference": true
+      },
+      {
+        "path": "platform.ini",
+        "referenceSha256": "04e241cf7d8dcb5161dbcdf7334c4dd6ecebef2b3d91d20b2e36c90563f4e047",
+        "actualSha256": "04e241cf7d8dcb5161dbcdf7334c4dd6ecebef2b3d91d20b2e36c90563f4e047",
+        "matchReference": true
+      },
+      {
+        "path": "precomplete",
+        "referenceSha256": "d6a5d785324008de66070ef2635fb3ed8f18c7ec04f055f870fbaaa685d4f010",
+        "actualSha256": "d6a5d785324008de66070ef2635fb3ed8f18c7ec04f055f870fbaaa685d4f010",
+        "matchReference": true
+      },
+      {
+        "path": "removed-files",
+        "referenceSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "actualSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "matchReference": true
+      },
+      {
+        "path": "update-settings.ini",
+        "referenceSha256": "c574f9f109b4dca4a6ab379167cd47a6bbee66c0a9640b1d19232da337202707",
+        "actualSha256": "c574f9f109b4dca4a6ab379167cd47a6bbee66c0a9640b1d19232da337202707",
+        "matchReference": true
+      },
+      {
+        "path": "updater",
+        "referenceSha256": "54fae6b05eb4434bb8650e631085ca0eef3d22b932bf9f525000a93115d93010",
+        "actualSha256": "54fae6b05eb4434bb8650e631085ca0eef3d22b932bf9f525000a93115d93010",
+        "matchReference": true
+      },
+      {
+        "path": "updater.ini",
+        "referenceSha256": "69ed3e7508f444fb753f7af5535a08321d110ba187baf1f80d8b26bb224af0ec",
+        "actualSha256": "69ed3e7508f444fb753f7af5535a08321d110ba187baf1f80d8b26bb224af0ec",
+        "matchReference": true
+      }
+    ]
+  },
+  {
+    "product": "firefox-current",
+    "referenceEntries": 51,
+    "allMatch": true,
+    "referencePath": "/workspace/qa-linux-22/C/products/firefox",
+    "files": [
+      {
+        "path": "application.ini",
+        "referenceSha256": "5fb546c7b685990fea54673914fbd367fb38eedf67e1e2061b1e4a3b0b13bc41",
+        "actualSha256": "5fb546c7b685990fea54673914fbd367fb38eedf67e1e2061b1e4a3b0b13bc41",
+        "matchReference": true
+      },
+      {
+        "path": "browser/chrome/icons/default/default128.png",
+        "referenceSha256": "9926bbb47e152c9747c8e7fbe9d7679fbcf221a4aa13400cbf1d2da3210d1b20",
+        "actualSha256": "9926bbb47e152c9747c8e7fbe9d7679fbcf221a4aa13400cbf1d2da3210d1b20",
+        "matchReference": true
+      },
+      {
+        "path": "browser/chrome/icons/default/default16.png",
+        "referenceSha256": "742a5ed5a88075540a018629b6c4ee7f39a6fc89f4d75c2c136e002204ac024b",
+        "actualSha256": "742a5ed5a88075540a018629b6c4ee7f39a6fc89f4d75c2c136e002204ac024b",
+        "matchReference": true
+      },
+      {
+        "path": "browser/chrome/icons/default/default32.png",
+        "referenceSha256": "e4e889d71d93c2a171cbd92ca2fba2fca3a04ab61e6fc8a703683cf4e3d83ba1",
+        "actualSha256": "e4e889d71d93c2a171cbd92ca2fba2fca3a04ab61e6fc8a703683cf4e3d83ba1",
+        "matchReference": true
+      },
+      {
+        "path": "browser/chrome/icons/default/default48.png",
+        "referenceSha256": "d9df64a49f932e5f7c8e1f5fccc0b998dafb57f9a7ed2ac9a8e4a43bed45eb1a",
+        "actualSha256": "d9df64a49f932e5f7c8e1f5fccc0b998dafb57f9a7ed2ac9a8e4a43bed45eb1a",
+        "matchReference": true
+      },
+      {
+        "path": "browser/chrome/icons/default/default64.png",
+        "referenceSha256": "12130ce8511f4a348c25380ba9b70b80b2ff0680e4ee801367bf0dbb5e94c00a",
+        "actualSha256": "12130ce8511f4a348c25380ba9b70b80b2ff0680e4ee801367bf0dbb5e94c00a",
+        "matchReference": true
+      },
+      {
+        "path": "browser/omni.ja",
+        "referenceSha256": "b6793b97d5f7c04c4a147975210a240a68006d80338e0974ce8de2eb85d30f68",
+        "actualSha256": "b6793b97d5f7c04c4a147975210a240a68006d80338e0974ce8de2eb85d30f68",
+        "matchReference": true
+      },
+      {
+        "path": "crashhelper",
+        "referenceSha256": "dd2391828c4291c043db2a348ec2175b89a737a741c0ac7ecd758f0b5928e53c",
+        "actualSha256": "dd2391828c4291c043db2a348ec2175b89a737a741c0ac7ecd758f0b5928e53c",
+        "matchReference": true
+      },
+      {
+        "path": "crashreporter",
+        "referenceSha256": "0533521ccfbd5d9e3eea1ce924ddcc124c832d85c87334bd3aea8a716df97495",
+        "actualSha256": "0533521ccfbd5d9e3eea1ce924ddcc124c832d85c87334bd3aea8a716df97495",
+        "matchReference": true
+      },
+      {
+        "path": "defaults/pref/channel-prefs.js",
+        "referenceSha256": "7d9d37eff1dc4e59a6437026602f1953ef58ee46ff3d81dbb8e13b0fd0bec86b",
+        "actualSha256": "7d9d37eff1dc4e59a6437026602f1953ef58ee46ff3d81dbb8e13b0fd0bec86b",
+        "matchReference": true
+      },
+      {
+        "path": "dependentlibs.list",
+        "referenceSha256": "621f575eaaf819dd0b18976c6a8a94d1caae95a9c748f4c9058a052395a4d173",
+        "actualSha256": "621f575eaaf819dd0b18976c6a8a94d1caae95a9c748f4c9058a052395a4d173",
+        "matchReference": true
+      },
+      {
+        "path": "distribution/distribution.ini",
+        "referenceSha256": "27dbb82dacc97850681ce51bdaac18b3f69f02fa744415b24d911c45e1461596",
+        "actualSha256": "27dbb82dacc97850681ce51bdaac18b3f69f02fa744415b24d911c45e1461596",
+        "matchReference": true
+      },
+      {
+        "path": "firefox",
+        "referenceSha256": "de3f1f70c111692fce304c7af83a7bf2e6f4bc8033191ea8b8ccc25f1aa122ed",
+        "actualSha256": "de3f1f70c111692fce304c7af83a7bf2e6f4bc8033191ea8b8ccc25f1aa122ed",
+        "matchReference": true
+      },
+      {
+        "path": "firefox-bin",
+        "referenceSha256": "5c848235a91070c76acd553fb26b423492c40b1e4187ed39826e57de2c33e647",
+        "actualSha256": "5c848235a91070c76acd553fb26b423492c40b1e4187ed39826e57de2c33e647",
+        "matchReference": true
+      },
+      {
+        "path": "firefox-bin.sig",
+        "referenceSha256": "5398e2629d4137ab90e2bc7ba2dd0e8143b0cb8e789603c55af4d90d336599a5",
+        "actualSha256": "5398e2629d4137ab90e2bc7ba2dd0e8143b0cb8e789603c55af4d90d336599a5",
+        "matchReference": true
+      },
+      {
+        "path": "firefox.sig",
+        "referenceSha256": "3a170165e33396cae75d51fd1d36e76d4fd661e9d52b0b4e843248f0f0755200",
+        "actualSha256": "3a170165e33396cae75d51fd1d36e76d4fd661e9d52b0b4e843248f0f0755200",
+        "matchReference": true
+      },
+      {
+        "path": "fonts/TwemojiMozilla.ttf",
+        "referenceSha256": "6d90152ee0d29e82fe2a87793af5aa4b7ad13e6538360889e141e81ed299ee8e",
+        "actualSha256": "6d90152ee0d29e82fe2a87793af5aa4b7ad13e6538360889e141e81ed299ee8e",
+        "matchReference": true
+      },
+      {
+        "path": "gfxtest",
+        "referenceSha256": "e050c67ade72710f01816092cba3549c4a0110330cc455d68e3d98038317cb11",
+        "actualSha256": "e050c67ade72710f01816092cba3549c4a0110330cc455d68e3d98038317cb11",
+        "matchReference": true
+      },
+      {
+        "path": "gmp-clearkey/0.1/libclearkey.so",
+        "referenceSha256": "075605b43722b247537d1d877084e4707f39d7251cce3041bcff64e032773ca4",
+        "actualSha256": "075605b43722b247537d1d877084e4707f39d7251cce3041bcff64e032773ca4",
+        "matchReference": true
+      },
+      {
+        "path": "gmp-clearkey/0.1/libclearkey.so.sig",
+        "referenceSha256": "41cd1bff9e06c1645e154ec98f7cc7df1f737816c65b5804493af3029f67dde6",
+        "actualSha256": "41cd1bff9e06c1645e154ec98f7cc7df1f737816c65b5804493af3029f67dde6",
+        "matchReference": true
+      },
+      {
+        "path": "gmp-clearkey/0.1/manifest.json",
+        "referenceSha256": "b7d65e60cccb80ffb2e95b5ae7e355d2c8c37575e886eef4325ca04fa7ba68fc",
+        "actualSha256": "b7d65e60cccb80ffb2e95b5ae7e355d2c8c37575e886eef4325ca04fa7ba68fc",
+        "matchReference": true
+      },
+      {
+        "path": "icons/updater.png",
+        "referenceSha256": "cab5e9bc9511b0690e696b378efa6753705b1182660d9829f5b3dc9f0398e5cc",
+        "actualSha256": "cab5e9bc9511b0690e696b378efa6753705b1182660d9829f5b3dc9f0398e5cc",
+        "matchReference": true
+      },
+      {
+        "path": "libfreeblpriv3.so",
+        "referenceSha256": "a2a0cc41ebaaa94f961cd0440a187d31b83bd0978883522d64d76407ca7b1f6c",
+        "actualSha256": "a2a0cc41ebaaa94f961cd0440a187d31b83bd0978883522d64d76407ca7b1f6c",
+        "matchReference": true
+      },
+      {
+        "path": "libgkcodecs.so",
+        "referenceSha256": "119f7ea96945504b6dc7a1620ec3d7034effd9cd8c4ff9ef8a62ce36102c925c",
+        "actualSha256": "119f7ea96945504b6dc7a1620ec3d7034effd9cd8c4ff9ef8a62ce36102c925c",
+        "matchReference": true
+      },
+      {
+        "path": "liblgpllibs.so",
+        "referenceSha256": "c455f318a640f48e02ac560085780bd5257ccf937ddc539b33fcc380e9d968c4",
+        "actualSha256": "c455f318a640f48e02ac560085780bd5257ccf937ddc539b33fcc380e9d968c4",
+        "matchReference": true
+      },
+      {
+        "path": "libmozavcodec.so",
+        "referenceSha256": "24eb625cb49688fb3bd4b0c7015d255d9dea05d20cdf6d4f40a563121664b379",
+        "actualSha256": "24eb625cb49688fb3bd4b0c7015d255d9dea05d20cdf6d4f40a563121664b379",
+        "matchReference": true
+      },
+      {
+        "path": "libmozavutil.so",
+        "referenceSha256": "316be00c7a6ba3cc51f0549880129e28f7dd4f343703437b72b0cd3e41c27fd1",
+        "actualSha256": "316be00c7a6ba3cc51f0549880129e28f7dd4f343703437b72b0cd3e41c27fd1",
+        "matchReference": true
+      },
+      {
+        "path": "libmozgtk.so",
+        "referenceSha256": "a6cf569be84c53e630ea6ef3b18f97ef9a1d672ea7de63bc6bc393b2f52d32b6",
+        "actualSha256": "a6cf569be84c53e630ea6ef3b18f97ef9a1d672ea7de63bc6bc393b2f52d32b6",
+        "matchReference": true
+      },
+      {
+        "path": "libmozinference.so",
+        "referenceSha256": "2bef00c886b2ba14d8c6f38512d2df0be2917ed170b0b4292ca57cd9b34531b1",
+        "actualSha256": "2bef00c886b2ba14d8c6f38512d2df0be2917ed170b0b4292ca57cd9b34531b1",
+        "matchReference": true
+      },
+      {
+        "path": "libmozsandbox.so",
+        "referenceSha256": "af10dc12bc9b82f2244aa320c36217468650bf413e37887ec380bebe1f5b57a0",
+        "actualSha256": "af10dc12bc9b82f2244aa320c36217468650bf413e37887ec380bebe1f5b57a0",
+        "matchReference": true
+      },
+      {
+        "path": "libmozsqlite3.so",
+        "referenceSha256": "0ec1d58a6c270e18389870b47d0842a30f9503a20429dbf01b2825347dc4e9ec",
+        "actualSha256": "0ec1d58a6c270e18389870b47d0842a30f9503a20429dbf01b2825347dc4e9ec",
+        "matchReference": true
+      },
+      {
+        "path": "libmozwayland.so",
+        "referenceSha256": "c29e02fbba8e0d53372c1e796e56ae6ab93cac6e4afd51c44833290ae233eda5",
+        "actualSha256": "c29e02fbba8e0d53372c1e796e56ae6ab93cac6e4afd51c44833290ae233eda5",
+        "matchReference": true
+      },
+      {
+        "path": "libnspr4.so",
+        "referenceSha256": "c05dac4a9bc3ed2493c781960e42b4161148ddce2920ec11dab8be2696db92d7",
+        "actualSha256": "c05dac4a9bc3ed2493c781960e42b4161148ddce2920ec11dab8be2696db92d7",
+        "matchReference": true
+      },
+      {
+        "path": "libnss3.so",
+        "referenceSha256": "382be475d11852888b3cd38aea53d32fa9d0e8f2b5bd4ef806641084c527f856",
+        "actualSha256": "382be475d11852888b3cd38aea53d32fa9d0e8f2b5bd4ef806641084c527f856",
+        "matchReference": true
+      },
+      {
+        "path": "libnssutil3.so",
+        "referenceSha256": "4968a611f87c197270b39ebd540f36ca1e15b7c7cec680a0e0374b8e7cc4f5e8",
+        "actualSha256": "4968a611f87c197270b39ebd540f36ca1e15b7c7cec680a0e0374b8e7cc4f5e8",
+        "matchReference": true
+      },
+      {
+        "path": "libonnxruntime.so",
+        "referenceSha256": "077ac0e3e090dd3d070a497f354f62fa718de4a19be287da5d9a188c950bc71c",
+        "actualSha256": "077ac0e3e090dd3d070a497f354f62fa718de4a19be287da5d9a188c950bc71c",
+        "matchReference": true
+      },
+      {
+        "path": "libplc4.so",
+        "referenceSha256": "cf644cf5d49a1eb8987a5e3971e45ff3cf16343bf33a91aafcab3c01d37f9c5d",
+        "actualSha256": "cf644cf5d49a1eb8987a5e3971e45ff3cf16343bf33a91aafcab3c01d37f9c5d",
+        "matchReference": true
+      },
+      {
+        "path": "libplds4.so",
+        "referenceSha256": "686be17127e385cb5557382b533bf4a82b1bf4cfc1738efb460569eeffa5fcd0",
+        "actualSha256": "686be17127e385cb5557382b533bf4a82b1bf4cfc1738efb460569eeffa5fcd0",
+        "matchReference": true
+      },
+      {
+        "path": "libsmime3.so",
+        "referenceSha256": "2dbeb3e5f70cdb8e18adf1e78d8219358c97fb390cd3c9a239d4f74e56a7f288",
+        "actualSha256": "2dbeb3e5f70cdb8e18adf1e78d8219358c97fb390cd3c9a239d4f74e56a7f288",
+        "matchReference": true
+      },
+      {
+        "path": "libsoftokn3.so",
+        "referenceSha256": "55d55e60b18e0ca87c5bd683de5a013c22fdf392e499d5354c74f743952badba",
+        "actualSha256": "55d55e60b18e0ca87c5bd683de5a013c22fdf392e499d5354c74f743952badba",
+        "matchReference": true
+      },
+      {
+        "path": "libssl3.so",
+        "referenceSha256": "f009bcdeb9f1eca9ceaceaa9ac51394cfaa821d670e77d938a044c01e1301560",
+        "actualSha256": "f009bcdeb9f1eca9ceaceaa9ac51394cfaa821d670e77d938a044c01e1301560",
+        "matchReference": true
+      },
+      {
+        "path": "libxul.so",
+        "referenceSha256": "f7696310e0944af87ea9d869422196a993019614d7b32837e6c915d76ad372b0",
+        "actualSha256": "f7696310e0944af87ea9d869422196a993019614d7b32837e6c915d76ad372b0",
+        "matchReference": true
+      },
+      {
+        "path": "libxul.so.sig",
+        "referenceSha256": "83f6c5e2f8b6d5534d0dc352cf0fbb43ad4f6a6fdcf075362f85399d1b0b3310",
+        "actualSha256": "83f6c5e2f8b6d5534d0dc352cf0fbb43ad4f6a6fdcf075362f85399d1b0b3310",
+        "matchReference": true
+      },
+      {
+        "path": "omni.ja",
+        "referenceSha256": "2ca88cf7d962909c3e42960177e1d418124b50180692bca5cbcad2ffa9a033d4",
+        "actualSha256": "2ca88cf7d962909c3e42960177e1d418124b50180692bca5cbcad2ffa9a033d4",
+        "matchReference": true
+      },
+      {
+        "path": "pingsender",
+        "referenceSha256": "6042aaa5ceb93abfd1d7b51fabd44d725aa6d3545531ba4fd23d1bbe2f6a3aaf",
+        "actualSha256": "6042aaa5ceb93abfd1d7b51fabd44d725aa6d3545531ba4fd23d1bbe2f6a3aaf",
+        "matchReference": true
+      },
+      {
+        "path": "platform.ini",
+        "referenceSha256": "6aa726bb15016e374ee22a0a14af43fc42366c9ea946f4d3ff5b517780053ed5",
+        "actualSha256": "6aa726bb15016e374ee22a0a14af43fc42366c9ea946f4d3ff5b517780053ed5",
+        "matchReference": true
+      },
+      {
+        "path": "precomplete",
+        "referenceSha256": "2e0986f16f4e1c2a9f9cb55910f3daa74e9998ad0fabc28c261d065b07b94f8e",
+        "actualSha256": "2e0986f16f4e1c2a9f9cb55910f3daa74e9998ad0fabc28c261d065b07b94f8e",
+        "matchReference": true
+      },
+      {
+        "path": "removed-files",
+        "referenceSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "actualSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "matchReference": true
+      },
+      {
+        "path": "update-settings.ini",
+        "referenceSha256": "c18489344fdc21ae366b4d957a0b9f11be772483ca46f9ffab6ed0356f946513",
+        "actualSha256": "c18489344fdc21ae366b4d957a0b9f11be772483ca46f9ffab6ed0356f946513",
+        "matchReference": true
+      },
+      {
+        "path": "updater",
+        "referenceSha256": "3f5cb8fb9f628737f6b3cd335d494479a0420db8b055ba14eee4da91ca476d96",
+        "actualSha256": "3f5cb8fb9f628737f6b3cd335d494479a0420db8b055ba14eee4da91ca476d96",
+        "matchReference": true
+      },
+      {
+        "path": "updater.ini",
+        "referenceSha256": "334f5b32d0bc780eade423fdcbbf266b7a8d6308de78079a45e567e06f77f37b",
+        "actualSha256": "334f5b32d0bc780eade423fdcbbf266b7a8d6308de78079a45e567e06f77f37b",
+        "matchReference": true
+      }
+    ]
+  },
+  {
+    "product": "floorp-reported",
+    "referenceEntries": 46,
+    "allMatch": false,
+    "referencePath": "/workspace/qa-linux-22/C-extra/KAN-86/products/12.18.0/floorp",
+    "files": [
+      {
+        "path": "application.ini",
+        "referenceSha256": "6618151664116deaabc19fe0a0e667333984b763e1751b4412015af5a7bf19f0",
+        "actualSha256": "eebae8546a7feb9d3745c6ec0eb9f3b63ebbe8ae678202a990d1c1396380f333",
+        "matchReference": false
+      },
+      {
+        "path": "browser/buildid2",
+        "referenceSha256": "59efe9ac88d6e73348492a5496652a1f90b74e554f0524f2927cb5f9750591a6",
+        "actualSha256": "52c0dcee353e1d521677610404f9e557e632928aeaf77780a3925d5821cc8578",
+        "matchReference": false
+      },
+      {
+        "path": "browser/chrome/icons/default/default128.png",
+        "referenceSha256": "0331b4c3f03a36984734bf3668ce1823504fd44b10e5ecc0977ee8c521641ad9",
+        "actualSha256": "0331b4c3f03a36984734bf3668ce1823504fd44b10e5ecc0977ee8c521641ad9",
+        "matchReference": true
+      },
+      {
+        "path": "browser/chrome/icons/default/default16.png",
+        "referenceSha256": "501aab2936ddb5562ffde7d8bfe20f6a3cda5bd009fa160c0ed3b10481de778c",
+        "actualSha256": "501aab2936ddb5562ffde7d8bfe20f6a3cda5bd009fa160c0ed3b10481de778c",
+        "matchReference": true
+      },
+      {
+        "path": "browser/chrome/icons/default/default32.png",
+        "referenceSha256": "de4c287df3aea68bbba3246a35992e4ee41708d956c225d4ab90fe9532996541",
+        "actualSha256": "de4c287df3aea68bbba3246a35992e4ee41708d956c225d4ab90fe9532996541",
+        "matchReference": true
+      },
+      {
+        "path": "browser/chrome/icons/default/default48.png",
+        "referenceSha256": "2cc6b61be10980e8fd8c9508dca783df063623e2e17ebc2e301ef9e2d3e38a22",
+        "actualSha256": "2cc6b61be10980e8fd8c9508dca783df063623e2e17ebc2e301ef9e2d3e38a22",
+        "matchReference": true
+      },
+      {
+        "path": "browser/chrome/icons/default/default64.png",
+        "referenceSha256": "474f20f1407914c689d34c91da62997950fee1a70197bf3d20252a4dcf8e91fa",
+        "actualSha256": "474f20f1407914c689d34c91da62997950fee1a70197bf3d20252a4dcf8e91fa",
+        "matchReference": true
+      },
+      {
+        "path": "browser/omni.ja",
+        "referenceSha256": "3a8796510dc5b171789ba559919479760a9fca4c882056ae0ec39b0d80af7611",
+        "actualSha256": "d6c17ae47f4a62def3d70d927137c920624e38297a38e60a443cf2e6008e1cac",
+        "matchReference": false
+      },
+      {
+        "path": "defaults/pref/channel-prefs.js",
+        "referenceSha256": "7d9d37eff1dc4e59a6437026602f1953ef58ee46ff3d81dbb8e13b0fd0bec86b",
+        "actualSha256": "7d9d37eff1dc4e59a6437026602f1953ef58ee46ff3d81dbb8e13b0fd0bec86b",
+        "matchReference": true
+      },
+      {
+        "path": "dependentlibs.list",
+        "referenceSha256": "621f575eaaf819dd0b18976c6a8a94d1caae95a9c748f4c9058a052395a4d173",
+        "actualSha256": "621f575eaaf819dd0b18976c6a8a94d1caae95a9c748f4c9058a052395a4d173",
+        "matchReference": true
+      },
+      {
+        "path": "floorp",
+        "referenceSha256": "c038a94098c6fbbd8019e8840fec9cf4cc40163aceb0190ee8b8a0d61dbf16da",
+        "actualSha256": "4f05c1330b38e50040440be6a3b6e0e7a5b52bc79edb5c5478d978c81f5a603d",
+        "matchReference": false
+      },
+      {
+        "path": "floorp-bin",
+        "referenceSha256": "c038a94098c6fbbd8019e8840fec9cf4cc40163aceb0190ee8b8a0d61dbf16da",
+        "actualSha256": "4f05c1330b38e50040440be6a3b6e0e7a5b52bc79edb5c5478d978c81f5a603d",
+        "matchReference": false
+      },
+      {
+        "path": "fonts/TwemojiMozilla.ttf",
+        "referenceSha256": "6d90152ee0d29e82fe2a87793af5aa4b7ad13e6538360889e141e81ed299ee8e",
+        "actualSha256": "6d90152ee0d29e82fe2a87793af5aa4b7ad13e6538360889e141e81ed299ee8e",
+        "matchReference": true
+      },
+      {
+        "path": "gfxtest",
+        "referenceSha256": "46e1fda4a3384118af74d029489cb82d9ef8050bff392ae0a25f5e8e6a0629ad",
+        "actualSha256": "becfb0b9cee1d9b35fe23dc504f7bbb9345b364c413c0e80656ddb3c9729bdfd",
+        "matchReference": false
+      },
+      {
+        "path": "gmp-clearkey/0.1/libclearkey.so",
+        "referenceSha256": "ac202f56b78ae604d25e908db220704d9fc3948a39d1b0cda563aaabd15a3516",
+        "actualSha256": "97ffd72483c64964ad9a2b86ca227d93c921ff5c14dd430f25c3eec2f7aa5c02",
+        "matchReference": false
+      },
+      {
+        "path": "gmp-clearkey/0.1/manifest.json",
+        "referenceSha256": "b7d65e60cccb80ffb2e95b5ae7e355d2c8c37575e886eef4325ca04fa7ba68fc",
+        "actualSha256": "b7d65e60cccb80ffb2e95b5ae7e355d2c8c37575e886eef4325ca04fa7ba68fc",
+        "matchReference": true
+      },
+      {
+        "path": "icons/updater.png",
+        "referenceSha256": "cab5e9bc9511b0690e696b378efa6753705b1182660d9829f5b3dc9f0398e5cc",
+        "actualSha256": "cab5e9bc9511b0690e696b378efa6753705b1182660d9829f5b3dc9f0398e5cc",
+        "matchReference": true
+      },
+      {
+        "path": "jogfile.json",
+        "referenceSha256": "f2ba77646a8749d445dc36078d5b92bc31edb1273158ac5315fd965dfb41835a",
+        "actualSha256": "1ea8b491d37ef1e30d1158940469ce068e22fde3f970ec039f2c9511fa93de40",
+        "matchReference": false
+      },
+      {
+        "path": "libfreeblpriv3.so",
+        "referenceSha256": "620651f2d2f1e30ff0bad7d0e321df87efe0ead4c21e959600fbbbfd32fc02be",
+        "actualSha256": "0e5167b714fc4e7952d8471f5fb8d90a302df98e3cba156769ac733f0fd025b0",
+        "matchReference": false
+      },
+      {
+        "path": "libgkcodecs.so",
+        "referenceSha256": "ed370d8f61a2fd059fd4d10d0de9f9f4033fb50043a5735a93f3957d077866cb",
+        "actualSha256": "7804828879bc2967d23bc241c6ecb15fa7e5ca5e06e28049cf8378753b75cbe8",
+        "matchReference": false
+      },
+      {
+        "path": "liblgpllibs.so",
+        "referenceSha256": "df69c74de1a39d04fa2eedee5e798cd2be6724905dc0f19583cbd6ceb22bd60d",
+        "actualSha256": "c29aff12589cb5342e73488619b628b50afda839a063a0e0f3f77831ffd8ff82",
+        "matchReference": false
+      },
+      {
+        "path": "libmozavcodec.so",
+        "referenceSha256": "f1ca8a987d86df017474d613c41cdf19c42f40309ea01aec9822cc3ecc105993",
+        "actualSha256": "0687a26be53f8ece0623d6c5ed8b7815b2c05839760ba012baa2ea5b5975b2ea",
+        "matchReference": false
+      },
+      {
+        "path": "libmozavutil.so",
+        "referenceSha256": "c5cdd2e94ade3562fbb1d9e74cdbea511c966585e059667aa7b25fcdfba81ab7",
+        "actualSha256": "d957abe02b48afe84f2eb0038252f1f12c627f2db7100fbfda80fc473c2d14d7",
+        "matchReference": false
+      },
+      {
+        "path": "libmozgtk.so",
+        "referenceSha256": "99b232dd2190faa702b46f679559cde0139a2513f4e28685756189d296ce469f",
+        "actualSha256": "a2f42c25563411b7e3378629d2e1ab7f947e9c4b546560b25b436e6fbe94476f",
+        "matchReference": false
+      },
+      {
+        "path": "libmozinference.so",
+        "referenceSha256": "b748617be62704fc45cbcda048b96db8d2a24ea5456857dc5fca6f7c3f1e2e12",
+        "actualSha256": "acd4dba98fa405662a725fceebe023e0c78cb67de9ec5174f545f6604299c570",
+        "matchReference": false
+      },
+      {
+        "path": "libmozsandbox.so",
+        "referenceSha256": "fdc3732547925496443740cc7e68abb3055258d7f7f518b651be6f33f237c876",
+        "actualSha256": "88c01a993afad42907d569d1f11d890afd0accc7120fd946168ca799065e86fd",
+        "matchReference": false
+      },
+      {
+        "path": "libmozsqlite3.so",
+        "referenceSha256": "343c40b8e812cdc30691bff7634fe519b62734dbd4425a95ef530f712dc2deb9",
+        "actualSha256": "d740b271fce254778272866e02b9bd8bca7888475179f76904e9c14a8c96aba0",
+        "matchReference": false
+      },
+      {
+        "path": "libmozwayland.so",
+        "referenceSha256": "a8c5af0fd0a31b1c9f48b5f98b9d12ed59d9a0cc3e243a8d50b9a05171f9df90",
+        "actualSha256": "3164170986fe9bbe1e673b6bd2524f0f05dcc3da26a5fcee1d304c8fe385e457",
+        "matchReference": false
+      },
+      {
+        "path": "libnspr4.so",
+        "referenceSha256": "a8b6069795296b67cb997571abbb610f8ec228e1501a9189499075031b12a56e",
+        "actualSha256": "73d59534248a183357f39e547f9d6f5089f084430aba181c9f4b6c9da5988c5d",
+        "matchReference": false
+      },
+      {
+        "path": "libnss3.so",
+        "referenceSha256": "a36e5dca4ee37af62312fcaef4afe6b9cead188b6774db50d3b3f19b047c5354",
+        "actualSha256": "6f11158b23027e962bec955f328119efa351db61b3e1f507a451fb1dfada646a",
+        "matchReference": false
+      },
+      {
+        "path": "libnssutil3.so",
+        "referenceSha256": "c7a8834fabf0c95b832846073602e2aec8b87d8d9bc0c277a78d53a653f4d246",
+        "actualSha256": "efc899f507b9bcdc313303321ed177bc4768c47c3eaaa8e35609488e6d0e53e8",
+        "matchReference": false
+      },
+      {
+        "path": "libonnxruntime.so",
+        "referenceSha256": "d5f9bbdf034b753bc4352a38a85695e173ca00a3d35224275874152a00b3201d",
+        "actualSha256": "077ac0e3e090dd3d070a497f354f62fa718de4a19be287da5d9a188c950bc71c",
+        "matchReference": false
+      },
+      {
+        "path": "libplc4.so",
+        "referenceSha256": "f0438efc2dbe507d3e3c8cc379bd30b66ae4dcfdabbdcbf4f315c3c37b81672b",
+        "actualSha256": "6fa863eff22c1fdf6e75f22fe9433bb50b0f8ba43960046a3816da6532d11fbf",
+        "matchReference": false
+      },
+      {
+        "path": "libplds4.so",
+        "referenceSha256": "613465d99929e0c11d6a8c3cc139f98d65d1f81c144d48b441454dcda0a3153d",
+        "actualSha256": "7f3fb5134ecd4201e532d7160dda31479a02743d6eff7199003e3b4be2dd963b",
+        "matchReference": false
+      },
+      {
+        "path": "libsmime3.so",
+        "referenceSha256": "2f7260b66977e913d0789ce2c2035eb7ec24a0bc21315aba06f5840218ddbbeb",
+        "actualSha256": "6f3e94a9538ec3a52ee30e80af86fccc5ffd31a06712e61f434dda427b561c99",
+        "matchReference": false
+      },
+      {
+        "path": "libsoftokn3.so",
+        "referenceSha256": "3161d9a55562d1c24da969aa40530650657481d68dc138ddb6b07736b9ad0133",
+        "actualSha256": "bb6a9283048767500190da54a439cf12196448e352db191db50e23e1566ad649",
+        "matchReference": false
+      },
+      {
+        "path": "libssl3.so",
+        "referenceSha256": "080133814197e77717b9690b75c2e4cbe4549ba62d6c998a9757d6505f265079",
+        "actualSha256": "7a2f6ffcecdbb27c98279657f3db63f56922cb568dc217553d6d5f217bfa378b",
+        "matchReference": false
+      },
+      {
+        "path": "libxul.so",
+        "referenceSha256": "a28ced66261f15009bb3d9ec403319a52ef38e4f423b9b3990308a14343b535e",
+        "actualSha256": "760ff8a689f52c9b1f3c89a45ea8813e59f187990caed747e4a7680020c8dbc7",
+        "matchReference": false
+      },
+      {
+        "path": "omni.ja",
+        "referenceSha256": "9f29cffb20135e9ad0454386a455fa80b9a30dd039f65acfddec9c44727cf5ab",
+        "actualSha256": "159285f967e950e0cd1ac658d713b7770e7763d6d983fc88b6e48c16e4a1f345",
+        "matchReference": false
+      },
+      {
+        "path": "pingsender",
+        "referenceSha256": "e0e9255f33f36643bc6a2cc4f8848c0c0a66d38ace513bad3ea042f1bd54c6f7",
+        "actualSha256": "157ed38af98d795812dfc532739252f9e6c51472d13b9105c496b8b2cf1dbbfd",
+        "matchReference": false
+      },
+      {
+        "path": "platform.ini",
+        "referenceSha256": "e813f4e7d6bd474f5a85bda5b2e51f08a434a26b1cd66da258aa28b37596d9e8",
+        "actualSha256": "04e241cf7d8dcb5161dbcdf7334c4dd6ecebef2b3d91d20b2e36c90563f4e047",
+        "matchReference": false
+      },
+      {
+        "path": "precomplete",
+        "referenceSha256": "d6a5d785324008de66070ef2635fb3ed8f18c7ec04f055f870fbaaa685d4f010",
+        "actualSha256": "d6a5d785324008de66070ef2635fb3ed8f18c7ec04f055f870fbaaa685d4f010",
+        "matchReference": true
+      },
+      {
+        "path": "removed-files",
+        "referenceSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "actualSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "matchReference": true
+      },
+      {
+        "path": "update-settings.ini",
+        "referenceSha256": "c574f9f109b4dca4a6ab379167cd47a6bbee66c0a9640b1d19232da337202707",
+        "actualSha256": "c574f9f109b4dca4a6ab379167cd47a6bbee66c0a9640b1d19232da337202707",
+        "matchReference": true
+      },
+      {
+        "path": "updater",
+        "referenceSha256": "8b77717b669d5ca412c9b221ecd11a1a4be76fe54f9ecbc98e888a3b931838ae",
+        "actualSha256": "54fae6b05eb4434bb8650e631085ca0eef3d22b932bf9f525000a93115d93010",
+        "matchReference": false
+      },
+      {
+        "path": "updater.ini",
+        "referenceSha256": "69ed3e7508f444fb753f7af5535a08321d110ba187baf1f80d8b26bb224af0ec",
+        "actualSha256": "69ed3e7508f444fb753f7af5535a08321d110ba187baf1f80d8b26bb224af0ec",
+        "matchReference": true
+      }
+    ]
+  }
+]

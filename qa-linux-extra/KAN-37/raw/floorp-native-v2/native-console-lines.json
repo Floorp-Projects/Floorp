@@ -1,0 +1,3 @@
+[
+  "console.error: \"[SsbPageAction] Manifest check failed:\" (new AbortError(\"Actor 'ManifestMessages' destroyed before query 'DOM:ManifestObtainer:Obtain' was resolved\", (void 0)))"
+]

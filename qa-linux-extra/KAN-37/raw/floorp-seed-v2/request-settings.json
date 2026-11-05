@@ -1,0 +1,7 @@
+{
+  "id": "settings",
+  "target": "about:newtab",
+  "context": "content",
+  "click": "button[aria-label=Settings]",
+  "script": "return true;"
+}
