@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 // @colocated-env browser
-import { act, useState } from "react";
+import { act, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
   assert,
@@ -8,6 +8,10 @@ import {
   runTests,
 } from "../../../../chrome/test/utils/test_harness.ts";
 import { useGestureColorDraft } from "../../../src/app/gesture/useGestureColorDraft.ts";
+import {
+  createDefaultMouseGestureConfig,
+  createGestureConfigPersistence,
+} from "../../../src/app/gesture/configPersistence.ts";
 
 async function testDraftDuringSave() {
   const host = document.createElement("div");
@@ -109,9 +113,101 @@ async function testDraftDuringSave() {
     host.remove();
   }
 }
+
+async function testSerializedExternalUpdates() {
+  for (const externalFirst of [true, false]) {
+    const host = document.createElement("div");
+    document.body.append(host);
+    const root = createRoot(host);
+    const releases: Array<() => void> = [];
+    const persistence = createGestureConfigPersistence(
+      createDefaultMouseGestureConfig(true),
+      {
+        writeEnabled: () => Promise.resolve(),
+        writeConfig: () =>
+          new Promise<void>((resolve) => releases.push(resolve)),
+      },
+    );
+    const Probe = () => {
+      const [snapshot, setSnapshot] = useState(persistence.getSnapshot());
+      useEffect(() => persistence.subscribe(setSnapshot), []);
+      const [draft, update] = useGestureColorDraft(
+        snapshot.config.trailColor,
+        (trailColor) => persistence.updateConfig({ trailColor }),
+      );
+      return (
+        <input
+          value={draft}
+          onChange={(e) => update(e.currentTarget.value)}
+        />
+      );
+    };
+    try {
+      await act(() => root.render(<Probe />));
+      const input = host.querySelector("input");
+      assert(input, "color input exists");
+      const setter = Object.getOwnPropertyDescriptor(
+        HTMLInputElement.prototype,
+        "value",
+      )?.set;
+      assert(setter, "native value setter exists");
+      if (externalFirst) {
+        await act(async () => {
+          void persistence.updateConfig({ trailColor: "#external" });
+          await Promise.resolve();
+        });
+      }
+      await act(async () => {
+        setter.call(input, "#draft");
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+        await Promise.resolve();
+      });
+      if (!externalFirst) {
+        await act(async () => {
+          void persistence.updateConfig({ trailColor: "#external" });
+          await Promise.resolve();
+        });
+      }
+      assertEquals(
+        input.value,
+        "#draft",
+        "pending color draft remains visible",
+      );
+      await act(async () => {
+        releases[0]();
+        await new Promise((resolve) => setTimeout(resolve, 0));
+      });
+      assertEquals(releases.length, 2, "second queued write started");
+      await act(async () => {
+        releases[1]();
+        await new Promise((resolve) => setTimeout(resolve, 0));
+      });
+      const expected = externalFirst ? "#draft" : "#external";
+      assertEquals(
+        persistence.getSnapshot().config.trailColor,
+        expected,
+        "last queued write wins",
+      );
+      assertEquals(
+        input.value,
+        expected,
+        "input follows the last committed value",
+      );
+    } finally {
+      await act(() => root.unmount());
+      host.remove();
+    }
+  }
+}
 export async function runAllTests(): Promise<void> {
-  await runTests("gestureColorDraft.test.tsx", [{
-    name: "pending saves preserve color draft and caret",
-    fn: testDraftDuringSave,
-  }]);
+  await runTests("gestureColorDraft.test.tsx", [
+    {
+      name: "pending saves preserve color draft and caret",
+      fn: testDraftDuringSave,
+    },
+    {
+      name: "external changes follow the persistence queue",
+      fn: testSerializedExternalUpdates,
+    },
+  ]);
 }
