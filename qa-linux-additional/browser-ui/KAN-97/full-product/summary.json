@@ -18,7 +18,6 @@
       "greExpected": "/workspace/kan97-runtime/full-package/floorp",
       "sourceSha": "d6bd2fc457774f55ab1f36a2b01c941f908f1ab0",
       "productUnmodified": true,
-      "normalProductExit": true,
       "ownedProcesses": {
         "display": 99224,
         "wm": 99227,
@@ -30,14 +29,17 @@
       "changedPayloadEntries": [],
       "addedRuntimeEntries": [],
       "originalPayloadUnchanged": true,
-      "displayRemoved": true
+      "displayRemoved": true,
+      "legacyNormalProductExitFlag": true,
+      "wrapperWaitExit": 0,
+      "independentFloorpChildExit": null,
+      "runnerExit": 1
     },
     "29982": {
       "executable": "/workspace/kan97-runtime/full-package/floorp/floorp",
       "greExpected": "/workspace/kan97-runtime/full-package/floorp",
       "sourceSha": "d6bd2fc457774f55ab1f36a2b01c941f908f1ab0",
       "productUnmodified": true,
-      "normalProductExit": true,
       "ownedProcesses": {
         "display": 100189,
         "wm": 100192,
@@ -49,14 +51,17 @@
       "changedPayloadEntries": [],
       "addedRuntimeEntries": [],
       "originalPayloadUnchanged": true,
-      "displayRemoved": true
+      "displayRemoved": true,
+      "legacyNormalProductExitFlag": true,
+      "wrapperWaitExit": 0,
+      "independentFloorpChildExit": null,
+      "runnerExit": 1
     },
     "29983": {
       "executable": "/workspace/kan97-runtime/full-package/floorp/floorp",
       "greExpected": "/workspace/kan97-runtime/full-package/floorp",
       "sourceSha": "d6bd2fc457774f55ab1f36a2b01c941f908f1ab0",
       "productUnmodified": true,
-      "normalProductExit": null,
       "ownedProcesses": {
         "display": 100654,
         "wm": 100667,
@@ -71,14 +76,17 @@
         "100672": "absent"
       },
       "changedPayloadEntries": [],
-      "addedRuntimeEntries": []
+      "addedRuntimeEntries": [],
+      "legacyNormalProductExitFlag": null,
+      "wrapperWaitExit": null,
+      "independentFloorpChildExit": null,
+      "runnerExit": null
     },
     "29984": {
       "executable": "/workspace/kan97-runtime/full-package/floorp/floorp",
       "greExpected": "/workspace/kan97-runtime/full-package/floorp",
       "sourceSha": "d6bd2fc457774f55ab1f36a2b01c941f908f1ab0",
       "productUnmodified": true,
-      "normalProductExit": true,
       "ownedProcesses": {
         "display": 101862,
         "wm": 101865,
@@ -90,14 +98,17 @@
       "changedPayloadEntries": [],
       "addedRuntimeEntries": [],
       "originalPayloadUnchanged": true,
-      "displayRemoved": true
+      "displayRemoved": true,
+      "legacyNormalProductExitFlag": true,
+      "wrapperWaitExit": 0,
+      "independentFloorpChildExit": null,
+      "runnerExit": 1
     },
     "29985": {
       "executable": "/workspace/kan97-runtime/full-package/floorp/floorp",
       "greExpected": "/workspace/kan97-runtime/full-package/floorp",
       "sourceSha": "d6bd2fc457774f55ab1f36a2b01c941f908f1ab0",
       "productUnmodified": true,
-      "normalProductExit": true,
       "ownedProcesses": {
         "display": 102377,
         "wm": 102387,
@@ -109,7 +120,11 @@
       "changedPayloadEntries": [],
       "addedRuntimeEntries": [],
       "originalPayloadUnchanged": true,
-      "displayRemoved": true
+      "displayRemoved": true,
+      "legacyNormalProductExitFlag": true,
+      "wrapperWaitExit": 0,
+      "independentFloorpChildExit": null,
+      "runnerExit": 0
     }
   },
   "guardCases": [
@@ -174,9 +189,10 @@
       "foreignNativeFocusRetained": true
     }
   ],
-  "result": "Primary24 PASS and six guard cases PASS across preserved29983 five +29985 one;29983 runner interrupted/exit unknown;29985 normal exit0/fulltree unchanged",
+  "result": "Primary24 observations PASS and six guard observations PASS across preserved29983 five +29985 one.29981 probe/runner1 with wrapper wait0;29985 probe/runner0/wrapper wait0;29983 exit unknown. Independent Floorp child exit not measured. Payload unchanged.",
   "remainingConditions": [
     "Original Windows/HuggingFace issue2692 cause and original conditions remain unproven",
     "A stale same-window focused-context mismatch was not observed; native cross-tab guards and actual foreign-window API fixture are distinguished"
-  ]
+  ],
+  "exitStatusInterpretation": "Legacy raw normalProductExit is derived only from dbus-run-session wrapper wait; not independent child exit or whole-suite success."
 }

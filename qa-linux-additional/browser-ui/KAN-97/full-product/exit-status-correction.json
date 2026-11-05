@@ -1,0 +1,31 @@
+{
+  "dateJST": "2026-11-06",
+  "sourceSha": "d6bd2fc457774f55ab1f36a2b01c941f908f1ab0",
+  "productRetested": false,
+  "primaryObservationsPassed": 24,
+  "combinedGuardsPassed": 6,
+  "runs": {
+    "29981": {
+      "probeExit": 1,
+      "runnerExit": 1,
+      "dbusRunSessionWrapperWaitExit": 0,
+      "independentFloorpChildExit": null,
+      "reason": "WindowB guard SSE fixture empty/stale RuntimeError"
+    },
+    "29985": {
+      "probeExit": 0,
+      "runnerExit": 0,
+      "dbusRunSessionWrapperWaitExit": 0,
+      "independentFloorpChildExit": null
+    },
+    "29983": {
+      "probeExit": null,
+      "runnerExit": null,
+      "dbusRunSessionWrapperWaitExit": null,
+      "independentFloorpChildExit": null
+    }
+  },
+  "rawRunRecordsPreserved": true,
+  "jiraCommentCorrected": "10438",
+  "prCorrected": 3047
+}

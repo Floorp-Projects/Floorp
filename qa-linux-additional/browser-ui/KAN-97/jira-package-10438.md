@@ -4,8 +4,10 @@
 
 live app/platform BuildID20261103153232/version159.0.1は実manifest/MARmeta一致。未使用root INIの生成時刻20261105203105と区別し、製品やmetadataは改変なし。完全payload before/after hashで不変。sandbox6、signature=falseは製品既定/userSet=false、保護無効化なし。
 
-Debian13.6/privateXvfb117+Openbox/正常native focus、OSXTest合成入力。直接/nested×same/cross-origin×top/bottomの実iframeジェスチャー8条件PASS、root/overflow4対照PASS、CtrlHome/End12対照PASS＝primary24/24。各端点・実focusedBC・非対象位置不変・menu0を確認。primaryは通常終了0。ガード6/6も成功: OS別タブ2・OS別window2・実別window frameにフォーカスを保持したまま未改変production action APIへ送る明示fixture2。全非対象位置不変、外部windowの実focus維持、menu0。最後の限定29985はprobe0/通常製品終了0・全payload不変。
+Debian13.6/privateXvfb117+Openbox/正常native focus、OSXTest合成入力。直接/nested×same/cross-origin×top/bottomの実iframeジェスチャー8条件PASS、root/overflow4対照PASS、CtrlHome/End12対照PASS＝primary24/24。各端点・実focusedBC・非対象位置不変・menu0を確認。29981は主要24観測成功でもprobeExit=1/runner=1（WindowB guardのSSE fixture空/staleによるRuntimeError）、wrapper待機値0。ガード6/6も成功: OS別タブ2・OS別window2・実別window frameにフォーカスを保持したまま未改変production action APIへ送る明示fixture2。全非対象位置不変、外部windowの実focus維持、menu0。最後の限定29985はprobe0/runner0/dbus-run-session wrapper待機値0・全payload不変。
 
-履歴: 29981はprimary24とtab2成功後にwindow fixture初期化失敗。29982はnavigationで置換されるcontentBCをwindow識別に使った治具誤りでguard前停止。製品FAIL/whole-suitePASS扱いなし。29983は5ガード完了後にrunner中断、正常quitを要請したがexit codeはUNKNOWNとして保持。29984は非選択tabのwindowタイトルを探した治具誤りでcase前停止・通常終了0。29985では実OSでtabを選択し残るAPI下端1件だけ成功。primary24や完了済み5ガードは再試験せず。単一run全suite成功とは主張しない。 原Windows11/HuggingFace・元profile/focus・物理入力の原因一致/解消は未証明を維持。
+履歴: 29981はprimary24とtab2成功後にwindow fixture初期化失敗。29982はnavigationで置換されるcontentBCをwindow識別に使った治具誤りでguard前停止。製品FAIL/whole-suitePASS扱いなし。29983は5ガード完了後にrunner中断、正常quitを要請したがexit codeはUNKNOWNとして保持。29984は非選択tabのwindowタイトルを探した治具誤りでcase前停止・probe/runner1・wrapper待機値0。29985では実OSでtabを選択し残るAPI下端1件だけ成功。primary24や完了済み5ガードは再試験せず。単一run全suite成功とは主張しない。 原Windows11/HuggingFace・元profile/focus・物理入力の原因一致/解消は未証明を維持。
 
 証拠: https://github.com/Floorp-Projects/Floorp/tree/f98dbffff1426594426ec16f4cac13ae31847bc1/qa-linux-additional/browser-ui/KAN-97/full-product 。package run: https://github.com/Floorp-Projects/Floorp/actions/runs/42103462848 。元Linux22の分母維持、追加別表。Done/merge/release/親・Sprint変更なし。
+
+終了コード訂正: wrapper待機値はFloorp子の独立exit値ではなく、子exit0は主張しない。29983終了不明は保持。観測成功と全試験run終了を区別し、訂正のための製品再試験は行わない。

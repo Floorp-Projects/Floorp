@@ -10,6 +10,8 @@ Guards: two real tabs selected through native UI and a second real browser windo
 
 Controlled HTTP pages expose only their own actual scroll/focus state. Measurement requests arrive through SSE and produce fresh passive reports even for background tabs, avoiding tab/window activation to read them. Guard fixture documents establish middle positions once on navigation; no measurement event changes scrolling. Full matrix resets are explicit setup, not a tested action substitute.
 
-Normal Services.startup.quit(eAttemptQuit) is requested at completion, and the runner requires dbus/product exit0. SIGTERM is timeout cleanup only and cannot count as a successful normal shutdown. Every original payload file is hashed before/after; added runtime files and full-tree equality are separately recorded. The actual GRE, module location, protection defaults and source/runtime contract are included. No signing, CSP, sandbox or validation preference is disabled.
+Normal Services.startup.quit(eAttemptQuit) is requested at completion, and the runner waits for dbus-run-session wrapper exit0; this is not an independent Floorp-child exit measurement. SIGTERM is timeout cleanup only and cannot count as a successful normal shutdown. Every original payload file is hashed before/after; added runtime files and full-tree equality are separately recorded. The actual GRE, module location, protection defaults and source/runtime contract are included. No signing, CSP, sandbox or validation preference is disabled.
 
 Prepared code has passed Python syntax compilation only. Product results are not claimed before execution. The parent owns package dispatch/fetch and provenance; artifacts and existing products are preserved.
+
+Measured outcome clarification:29981 completed24 primary observations but probe/runner exit1 after guard fixture failure.29985 probe/runner0/wrapper wait0.29983 remains unknown. Raw legacy flags cannot establish child exit0.

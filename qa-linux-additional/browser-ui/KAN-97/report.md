@@ -48,3 +48,5 @@ Raw per-product JSON, settings/gesture screenshots, source patch, before/after u
 Publication note: full startup browser logs remain private; dispatch-excerpts.json preserves the exact8 command lines per Floorp run with raw-log SHA256. Source CI42096334025 is tracked by the parent. The replay was evidence recovery, excluded from the56 primary observation count.
 
 Final source CI: Draft3047 run42096334025 succeeded, including smoke/all4 nativeplatform checks,282 browser test modules/0fail and16 downloaded Firefox tasks. scrollTarget.test.ts passed7ms. Artifact ZIP SHA f42b0a5134fb0545ab498ce9b22e12a57980335e3f758c0ae2f9845752d1bef1 matches GitHub digest. See ci-3047/summary.json and verified-excerpts.txt. Jira10412/10414 records local and CI results; original Windows/fullpackage limits remain. No source/CI rerun.
+
+Exit-status clarification: KAN97 primary29981 has24 successful observations but probe/runner exit1;29985 probe/runner0; wrapper wait0 is not an independent Floorp-child exit measurement.29983 remains unknown. See full-product/report.md; no repeat product tests.

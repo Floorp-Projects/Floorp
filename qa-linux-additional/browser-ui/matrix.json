@@ -247,10 +247,15 @@
       "payloadUnmodified": true,
       "primaryCasesPassed": 24,
       "guardCasesPassed": 6,
-      "normalExitPrimary": 0,
-      "normalExitFinalGuard": 0,
       "interruptedRunExitUnknown": 29983,
-      "fullSingleRunSuitePassClaimed": false
+      "fullSingleRunSuitePassClaimed": false,
+      "primaryProbeExit": 1,
+      "primaryRunnerExit": 1,
+      "primaryDbusWrapperWaitExit": 0,
+      "finalGuardProbeExit": 0,
+      "finalGuardRunnerExit": 0,
+      "finalGuardDbusWrapperWaitExit": 0,
+      "independentFloorpChildExit": null
     }
   }
 ]

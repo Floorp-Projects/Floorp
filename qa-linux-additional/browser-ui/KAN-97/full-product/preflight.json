@@ -23,5 +23,7 @@
   "expectedScrollDispatchCount": 18,
   "desktop": "Openbox/X11",
   "backgroundMeasurement": "SSE-triggered passive fixture sampling, no scroll changes on sample",
-  "normalShutdown": "Services.startup.quit(eAttemptQuit), wrapper/product exit0 required; timeout cleanup cannot pass"
+  "normalShutdown": "Normal quit requested; probe/runner and DBus wrapper wait recorded separately.29981 probe/runner1,29985 probe/runner0+wrapper0,29983 unknown.",
+  "legacyNormalProductExitZeroRequiredMeaning": "Historical plan flag was implemented by dbus-run-session wrapper wait, not independent child exit",
+  "independentFloorpChildExitMeasured": false
 }
