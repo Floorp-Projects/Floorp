@@ -23,6 +23,13 @@ export const tabContextMenuAdapter: ContextMenuAdapter = {
     { key: "tab.unpin", selectors: ['[id="context_unpinTab"]'] },
     { key: "tab.duplicate", selectors: ['[id="context_duplicateTab"]'] },
     { key: "tab.bookmark", selectors: ['[id="context_bookmarkTab"]'] },
+    {
+      // Firefox's Share row is a <menu> with no id. The class is stable
+      // inside #tabContextMenu, which is the same contract used to hide it
+      // from userChrome.css.
+      key: "tab.share",
+      selectors: ["menu.share-tab-url-item"],
+    },
     { key: "tab.move", selectors: ['[id="context_moveTabOptions"]'] },
     { key: "tab.select-all", selectors: ['[id="context_selectAllTabs"]'] },
     { key: "tab.close", selectors: ['[id="context_closeTab"]'] },
