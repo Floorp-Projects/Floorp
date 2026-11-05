@@ -1,0 +1,22 @@
+{
+  "key": "KAN-24",
+  "commentId": "10403",
+  "status": "進行中",
+  "statusTransition": false,
+  "labels": [
+    "area-workspaces",
+    "existing-pr",
+    "floorp-stability-2026-11",
+    "needs-original-macos-photon",
+    "p2",
+    "qa-additional-executed",
+    "reproduced-in-test",
+    "triage-reviewed",
+    "dependent-pr-3046",
+    "needs-dependent-pr-review",
+    "full-product-verified",
+    "standard-ci-passed"
+  ],
+  "proofCommit": "a411cb5af57b6581667c75f52211ba0fbc18b8ef",
+  "body": "jira-comment-10403.md"
+}

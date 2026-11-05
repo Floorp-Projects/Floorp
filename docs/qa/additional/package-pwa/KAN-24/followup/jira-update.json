@@ -2,5 +2,8 @@
   "jiraCommentId": "10403",
   "draftPr": "https://github.com/Floorp-Projects/Floorp/pull/3046",
   "sourceSubject": "source-subject.json",
-  "state": "running CI and complete product comparison"
+  "state": "completed standardCI and complete production product comparison; pending dependency review/originalMac conditions",
+  "proofCommit": "a411cb5af57b6581667c75f52211ba0fbc18b8ef",
+  "finalJiraState": "jira-final-state.json",
+  "finalPrBody": "pr3046-final-body.md"
 }

@@ -700,8 +700,16 @@
     "bytes": 931
   },
   {
+    "path": "followup/jira-comment-10403.md",
+    "bytes": 3470
+  },
+  {
+    "path": "followup/jira-final-state.json",
+    "bytes": 525
+  },
+  {
     "path": "followup/jira-update.json",
-    "bytes": 198
+    "bytes": 416
   },
   {
     "path": "followup/package-current.json",
@@ -710,6 +718,10 @@
   {
     "path": "followup/package-workflow-scope.json",
     "bytes": 648
+  },
+  {
+    "path": "followup/pr3046-final-body.md",
+    "bytes": 3589
   },
   {
     "path": "followup/report.md",
