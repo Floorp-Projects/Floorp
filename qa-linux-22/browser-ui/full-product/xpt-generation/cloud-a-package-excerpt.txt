@@ -1,0 +1,7 @@
+Read-only comparison: Floorp run42068377281/job127388929731; package step success uses existing optional-empty-archive handling. This is not genuine-XPT strict validation evidence.
+2026-11-05T16:53:55.6682939Z PACKAGER_MK="./toolkit/mozapps/installer/packager.mk"
+2026-11-05T16:53:55.6684487Z   echo "[package] Relaxed empty-archive checks in packager.mk for artifact builds"
+2026-11-05T16:53:58.7335048Z [package] Relaxed empty-archive checks in packager.mk for artifact builds
+2026-11-05T16:54:01.2855128Z  0:02.43 Packaging existing XPT artifacts from artifact build into archive (floorp-12.21.1@159.0.1.en-US.linux-x86_64.xpt_artifacts.zip)
+2026-11-05T16:54:01.2861286Z  0:02.43 BUILDSTATUS@browser/installer START_zip floorp-12.21.1@159.0.1.en-US.linux-x86_64.xpt_artifacts.zip
+2026-11-05T16:54:01.3624849Z  0:02.50 BUILDSTATUS@browser/installer END_zip floorp-12.21.1@159.0.1.en-US.linux-x86_64.xpt_artifacts.zip

@@ -1,0 +1,27 @@
+[
+  {
+    "key": "KAN-39",
+    "github": "https://github.com/Floorp-Projects/Floorp/issues/2736",
+    "sourceSha": "984509d2053be7bae9027133bda7259cd706b208",
+    "productVersion": "Floorp12.21.1/Gecko159.0.1; Firefox159.0.1",
+    "environment": "Debian13.6 Xvfb X11 DPR1 freshprofile 60tabs OS XTest synthetic wheel",
+    "testCommand": "PYTHONPATH=/workspace/qa-linux-22/browser-ui/python python run.py floorp 29839; repeat firefox 29840",
+    "result": "not-reproduced-in-tested-condition; six valid signed-direction cases; Floorp normal ±456px stack ±509.19995px Firefox normal ±456px",
+    "remainingConditions": [
+      "Fedora44 original desktop",
+      "physical mouse wheel and original acceleration/DPI/device",
+      "original Wayland/compositor if applicable"
+    ],
+    "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2763",
+    "newPr": null,
+    "jiraCommentId": "10286",
+    "evidence": [
+      "floorp.json",
+      "firefox.json",
+      "cold-floorp.json",
+      "cold-firefox.json",
+      "report.md",
+      "run.py"
+    ]
+  }
+]

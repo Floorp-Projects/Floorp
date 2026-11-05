@@ -22,3 +22,7 @@ KAN87 extra normal signed Galaxy1.0 AMO theme (signedState2, temporaryfalse) ran
 PR3033 and combined3031+3034 use independent full production asset builds plus Runtime8965/daily-1179 nativeartifact159.0.1, verified digestcb9b..., matching officialRuntime build20261103153232. Existing before-mach/configure/artifactbuild/after-mach succeeded. This is not native Gecko compilation. Signature-disabling preference override omitted; actual candidates require signatures, combined content sandbox6. Existing shared checkout content/branches remain unchanged. Product binaries are not published.
 
 Strict machpackage remains failed: matching XPT auxiliary input unavailable in both the release inventory and verified same-source CIartifact13272530069. No strict pass claimed. Full production assembled product regressions pass;3033also has separately labelled optionalaux archive product evidence. See full-product/build-route.md and per-candidate reports.
+
+## Canonical XPT resolution
+
+Both strict packages now succeed without altering validation. Unchanged Runtime xpidl-process.py generates155modules/801targetIDLs; all903dependencies match both candidates, enabling one generation reused twice. No native C++/Rust build was required. Same-payload audits link the completed product regressions to strict tarballs. Original-native-compiled XPT byte identity and signed-release/default equivalence remain unqualified. See full-product/xpt-generation/report.md.

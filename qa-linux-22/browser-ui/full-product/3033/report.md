@@ -1,3 +1,5 @@
+> Current result: strict packaging subsequently succeeded with all155 genuine Python-generated XPT modules. See ../xpt-generation/report.md, strict-results.json and strict-package.log. The previous missing-XPT/optional-route paragraphs below preserve the earlier phase and are superseded for current package status. Current standard-path strict archive SHA2561230b658bb907482e2a411e0327062c0926a8b495f5609e180027771cdb6e9d2. The historical c10f... optional archive is retained at the sibling `.optional-aux.tar.xz` path, not the current standard path.
+
 # PR3033 full production assembly and limited regression
 
 PR head `e7dda31f660bb865c2ea8a505ece44875796970f` confirmed. Independent main checkout `/workspace/product3033/noraneko`, matching Runtime checkout `/workspace/product3033/runtime` at `8965ffc346d426ccdf919bd18585e4d4a0c21654`. Shared branches/checkouts unchanged. No release, upload, CI dispatch, merge or Done transition.
@@ -20,7 +22,7 @@ PR head `e7dda31f660bb865c2ea8a505ece44875796970f` confirmed. Independent main c
 
 ## Limits and evidence
 
-Strict packaging remains blocked on genuine matching XPT input. Full native compilation, official release/default byte identity, physical input and original Fedora full desktop are not established. Test success does not erase strict packaging failure.
+The initial missing-XPT strict-package failure was resolved by the canonical source-generation follow-up below. Full native compilation, official release/default byte identity, physical input and original Fedora full desktop are not established. The initial failure remains historical evidence; current strict-package success is independently recorded below.
 
 Small evidence: build-progress.json, package-hashes.json, pr-head.json, before-mach.log, upstream-packaging.log, configure-final.log, build-final.log, after-mach.log, built-patches.log, package.log (strict failure), package-final.log (optional route), candidate-29831.json, candidate-29832.json and screenshots. `reproduce.sh` follows the canonical local path and retains strict checks, stopping at the same missing-XPT failure. `run-candidate.py`/`candidate-probe.py`/`nested-candidate.sh` repeat limited product tests. Large native input, extracted package, node_modules, runtime profiles and product logs should not be committed.
 

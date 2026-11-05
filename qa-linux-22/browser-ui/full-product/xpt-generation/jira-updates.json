@@ -1,0 +1,19 @@
+{
+  "KAN-3": {
+    "commentId": "10294",
+    "strictPackaging": "passed"
+  },
+  "KAN-98": {
+    "commentId": "10291",
+    "strictPackaging": "passed"
+  },
+  "KAN-39": {
+    "commentId": "10286",
+    "validNativeStripControl": "completed; limited Linux condition not reproduced"
+  },
+  "statusChanged": false,
+  "done": false,
+  "merge": false,
+  "nativeCompilation": false,
+  "newCiDispatch": false
+}

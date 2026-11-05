@@ -1,0 +1,234 @@
+{
+  "product": "floorp",
+  "input": "OS XTest button4/5, one notch, synthetic not physical",
+  "cases": [
+    {
+      "kind": "normal",
+      "button": 4,
+      "before": {
+        "left": 1782.5,
+        "top": 0,
+        "width": 951,
+        "total": 4516,
+        "x": 28,
+        "y": 0,
+        "height": 36,
+        "screenX": 0,
+        "screenY": 0
+      },
+      "stable": {
+        "left": 1782.5,
+        "top": 0,
+        "width": 951,
+        "total": 4516,
+        "x": 28,
+        "y": 0,
+        "height": 36,
+        "screenX": 0,
+        "screenY": 0
+      },
+      "after": {
+        "left": 1782.5,
+        "top": 0,
+        "width": 951,
+        "total": 4516,
+        "x": 28,
+        "y": 0,
+        "height": 36,
+        "screenX": 0,
+        "screenY": 0
+      },
+      "distance": 0.0,
+      "events": [
+        {
+          "deltaX": 0,
+          "deltaY": -6,
+          "mode": 1,
+          "trusted": true,
+          "path": [
+            "label",
+            "vbox",
+            "hbox",
+            "stack",
+            "tab",
+            "slot"
+          ],
+          "prevented": true
+        }
+      ]
+    },
+    {
+      "kind": "normal",
+      "button": 5,
+      "before": {
+        "left": 1782.5,
+        "top": 0,
+        "width": 951,
+        "total": 4516,
+        "x": 28,
+        "y": 0,
+        "height": 36,
+        "screenX": 0,
+        "screenY": 0
+      },
+      "stable": {
+        "left": 1782.5,
+        "top": 0,
+        "width": 951,
+        "total": 4516,
+        "x": 28,
+        "y": 0,
+        "height": 36,
+        "screenX": 0,
+        "screenY": 0
+      },
+      "after": {
+        "left": 1782.5,
+        "top": 0,
+        "width": 951,
+        "total": 4516,
+        "x": 28,
+        "y": 0,
+        "height": 36,
+        "screenX": 0,
+        "screenY": 0
+      },
+      "distance": 0.0,
+      "events": [
+        {
+          "deltaX": 0,
+          "deltaY": 6,
+          "mode": 1,
+          "trusted": true,
+          "path": [
+            "label",
+            "vbox",
+            "hbox",
+            "stack",
+            "tab",
+            "slot"
+          ],
+          "prevented": true
+        }
+      ]
+    },
+    {
+      "kind": "stack",
+      "button": 4,
+      "before": {
+        "left": 1955.5,
+        "top": 0,
+        "width": 1181,
+        "total": 5092,
+        "x": 32,
+        "y": 36.5,
+        "height": 36,
+        "screenX": 0,
+        "screenY": 0
+      },
+      "stable": {
+        "left": 1955.5,
+        "top": 0,
+        "width": 1181,
+        "total": 5092,
+        "x": 32,
+        "y": 36.5,
+        "height": 36,
+        "screenX": 0,
+        "screenY": 0
+      },
+      "after": {
+        "left": 1446.300048828125,
+        "top": 0,
+        "width": 1181,
+        "total": 5092,
+        "x": 32,
+        "y": 36.5,
+        "height": 36,
+        "screenX": 0,
+        "screenY": 0
+      },
+      "distance": -509.199951171875,
+      "events": [
+        {
+          "deltaX": 0,
+          "deltaY": -6,
+          "mode": 1,
+          "trusted": true,
+          "path": [
+            "hbox",
+            "floorp-stack-items",
+            "floorp-stack-scroller",
+            "floorp-stack-bar",
+            "floorp-stack-mount",
+            "navigator-toolbox"
+          ],
+          "prevented": true
+        }
+      ]
+    },
+    {
+      "kind": "stack",
+      "button": 5,
+      "before": {
+        "left": 1955.5,
+        "top": 0,
+        "width": 1181,
+        "total": 5092,
+        "x": 32,
+        "y": 36.5,
+        "height": 36,
+        "screenX": 0,
+        "screenY": 0
+      },
+      "stable": {
+        "left": 1955.5,
+        "top": 0,
+        "width": 1181,
+        "total": 5092,
+        "x": 32,
+        "y": 36.5,
+        "height": 36,
+        "screenX": 0,
+        "screenY": 0
+      },
+      "after": {
+        "left": 2464.699951171875,
+        "top": 0,
+        "width": 1181,
+        "total": 5092,
+        "x": 32,
+        "y": 36.5,
+        "height": 36,
+        "screenX": 0,
+        "screenY": 0
+      },
+      "distance": 509.199951171875,
+      "events": [
+        {
+          "deltaX": 0,
+          "deltaY": 6,
+          "mode": 1,
+          "trusted": true,
+          "path": [
+            "hbox",
+            "floorp-stack-items",
+            "floorp-stack-scroller",
+            "floorp-stack-bar",
+            "floorp-stack-mount",
+            "navigator-toolbox"
+          ],
+          "prevented": true
+        }
+      ]
+    }
+  ],
+  "environment": {
+    "version": "159.0.1",
+    "build": "20261103153232",
+    "os": "Linux",
+    "dpr": 1,
+    "signature": false,
+    "sandbox": 6
+  }
+}

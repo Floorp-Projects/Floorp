@@ -102,7 +102,7 @@
   "productRoot": "/workspace/full-product-3031-3034/obj-artifact-build-output/dist/bin",
   "xhtmlSha256": "91cbd4465df077463a81ad3dcc5ab0c72d5fd837a78162589f91ba83b5695f01",
   "noranekoManifestSha256": "36b5f6d12af9a1643ed605b9bc5a188f6b006ae605540f0db0b174bd172be573",
-  "strictPackageStatus": "failed: empty auxiliary XPT archive; strict check retained",
+  "strictPackageStatus": "passed: all155 genuine source-generated XPT modules; checks unchanged",
   "regression": {
     "relativeTrail": [
       [
@@ -281,5 +281,10 @@
       "afterMouseup": true,
       "timingLocked": false
     }
-  }
+  },
+  "strictPackageSha256": "9fb23b445994c1ec1716609789b85e7b6ac7d20940ecee360e67b38c626ea1fe",
+  "strictPackageEvidence": "../xpt-generation/strict-results.json",
+  "strictPackageAssetsMatch": 1115,
+  "strictPackageNativeFilesMatch": 26,
+  "nativeCompiledXptByteIdentity": "not independently verified"
 }

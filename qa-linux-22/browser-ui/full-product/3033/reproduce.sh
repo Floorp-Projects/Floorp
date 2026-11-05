@@ -47,7 +47,9 @@ for patch in tools/patches/*.patch; do
 done
 cp _dist/buildid2 ../obj-artifact-build-output/dist/bin/browser/buildid2
 # Do NOT run override.ini: it sets xpinstall.signatures.required=false.
-# Keep strict checks. Current exact native artifact lacks the XPT companion;
-# this command is expected to stop with the preserved package.log failure.
+# Keep strict checks; the native artifact itself lacks the XPT companion.
+# Generate and supply canonical XPT following ../xpt-generation/report.md before
+# this final command for the now-successful strict route. Without that step the
+# preserved initial missing-XPT failure remains reproducible.
 cd ../runtime
 ./mach package

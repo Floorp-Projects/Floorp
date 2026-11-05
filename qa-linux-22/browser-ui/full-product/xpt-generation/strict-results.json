@@ -1,0 +1,28 @@
+{
+  "generator": "unchanged python/mozbuild/mozbuild/action/xpidl-process.py",
+  "nativeCompilation": false,
+  "moduleCount": 155,
+  "idlCount": 801,
+  "generatedFileCount": 2868,
+  "dependencyCount": 903,
+  "products": [
+    {
+      "candidate": "3033",
+      "strictPackagerUnchanged": true,
+      "package": "/workspace/product3033/obj-artifact-build-output/dist/floorp-12.21.1@159.0.1.en-US.linux-x86_64.tar.xz",
+      "packageSha256": "1230b658bb907482e2a411e0327062c0926a8b495f5609e180027771cdb6e9d2",
+      "xptArchive": "/workspace/product3033/obj-artifact-build-output/dist/floorp-12.21.1@159.0.1.en-US.linux-x86_64.xpt_artifacts.zip",
+      "xptArchiveSha256": "e6b1118254c2066921c207741090aa59a165591c5ac564ab239c221e88412889",
+      "verifiedModuleEntries": 155
+    },
+    {
+      "candidate": "3031-3034",
+      "strictPackagerUnchanged": true,
+      "package": "/workspace/full-product-3031-3034/obj-artifact-build-output/dist/floorp-12.21.1@159.0.1.en-US.linux-x86_64.tar.xz",
+      "packageSha256": "9fb23b445994c1ec1716609789b85e7b6ac7d20940ecee360e67b38c626ea1fe",
+      "xptArchive": "/workspace/full-product-3031-3034/obj-artifact-build-output/dist/floorp-12.21.1@159.0.1.en-US.linux-x86_64.xpt_artifacts.zip",
+      "xptArchiveSha256": "e6b1118254c2066921c207741090aa59a165591c5ac564ab239c221e88412889",
+      "verifiedModuleEntries": 155
+    }
+  ]
+}

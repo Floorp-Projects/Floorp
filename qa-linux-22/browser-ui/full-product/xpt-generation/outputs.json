@@ -1,0 +1,932 @@
+[
+  {
+    "module": "Bits",
+    "seconds": 0.069,
+    "bytes": 25040,
+    "sha256": "effc46c1fee8e580e043a2db12c8e17e22d792c7fda5adb2565fa1057c1fb67f"
+  },
+  {
+    "module": "SiteCategories",
+    "seconds": 0.048,
+    "bytes": 687,
+    "sha256": "9419e546744d0a8a1533f1aaeef4a2fe4dce7a7f936b09f9b7125a9cc5280de5"
+  },
+  {
+    "module": "accessibility",
+    "seconds": 0.278,
+    "bytes": 133551,
+    "sha256": "e52f800d05716ef64e9468c92f25de00d6fbb712e882e5bc628c2c44bfe1c251"
+  },
+  {
+    "module": "alerts",
+    "seconds": 0.049,
+    "bytes": 19037,
+    "sha256": "31b0b3ae912f3ffa6ff5bccf335cdb260300afd9cc14a3e63bd51ca6dcc03b66"
+  },
+  {
+    "module": "appshell",
+    "seconds": 0.076,
+    "bytes": 21919,
+    "sha256": "db5ca6ce1006addaee7a1f9da33d9239d238f63567f78d92fce72e939e8cfa02"
+  },
+  {
+    "module": "appstartup",
+    "seconds": 0.038,
+    "bytes": 8459,
+    "sha256": "4a6d2252909974684055bb0226bf4fb4617ebe7f035c3a0196c116f3bfd8638a"
+  },
+  {
+    "module": "autocomplete",
+    "seconds": 0.095,
+    "bytes": 39391,
+    "sha256": "3a79646f79408cda08f9c14bf15b57e559715fe55e7205cf36f14585cdc81617"
+  },
+  {
+    "module": "autoplay",
+    "seconds": 0.034,
+    "bytes": 571,
+    "sha256": "0305bd66352e54da90798b1a74a7530b6608fa71fbd9ecbf584a15fa06b9dd81"
+  },
+  {
+    "module": "backgroundhangmonitor",
+    "seconds": 0.024,
+    "bytes": 2966,
+    "sha256": "4891419e44537d9871615fa49e3eb820c8ebe4abbd838675c0998fbaf1a3f83e"
+  },
+  {
+    "module": "browsercompsbase",
+    "seconds": 0.027,
+    "bytes": 3902,
+    "sha256": "f7d544afa8448c8737cf866441f889548637f93b20a2e30e2e8f22a7557af4eb"
+  },
+  {
+    "module": "caps",
+    "seconds": 0.117,
+    "bytes": 54360,
+    "sha256": "e010e38b745eaf872d17da8edc270d2daaa65f0b79286eb03f6f63930e55f934"
+  },
+  {
+    "module": "captivedetect",
+    "seconds": 0.024,
+    "bytes": 1978,
+    "sha256": "2f1dbeff9f7b6434bad4ab8f82d0e3d34a151c4c2dfc89ae784f8065020df4bf"
+  },
+  {
+    "module": "cascade_bindings",
+    "seconds": 0.024,
+    "bytes": 960,
+    "sha256": "93d2be658d2cb13f07eb338bea9dc56e225b4555f93ebecfc0722bebd72fd0fe"
+  },
+  {
+    "module": "chrome",
+    "seconds": 0.035,
+    "bytes": 3592,
+    "sha256": "5de3951930c7d373cd3c38a016501a87360c27e1c4ad20f00b276e4781796c51"
+  },
+  {
+    "module": "commandhandler",
+    "seconds": 0.034,
+    "bytes": 10688,
+    "sha256": "0dd0d3348d6fcf5b098f0764628e3f87f4c4c992511b9406a15cc3dc88669f3e"
+  },
+  {
+    "module": "commandlines",
+    "seconds": 0.039,
+    "bytes": 7063,
+    "sha256": "e9b29ab19dbfe325f883416dfc6d833714c56f01306f28aa41a58ac6993539be"
+  },
+  {
+    "module": "composer",
+    "seconds": 0.032,
+    "bytes": 3673,
+    "sha256": "d97272d6b06c753190172035e30a20041816738a7bdc3cb6651f447c7968fe64"
+  },
+  {
+    "module": "content-classifier",
+    "seconds": 0.034,
+    "bytes": 9780,
+    "sha256": "0ce6fb39029ed6e148dc431c5969585909ebd2e8763309ab2648ce1443c880c2"
+  },
+  {
+    "module": "content_events",
+    "seconds": 0.024,
+    "bytes": 8541,
+    "sha256": "45f54137d04bc90d602eeddfd0e4e46fcfe914846fc33e928d11aaf01f38ad13"
+  },
+  {
+    "module": "content_geckomediaplugins",
+    "seconds": 0.067,
+    "bytes": 7123,
+    "sha256": "cec3bb7cafdfa25b839e7fec5262c6d887f86b5cbfc537c0797360844cde369b"
+  },
+  {
+    "module": "contextualidentity",
+    "seconds": 0.023,
+    "bytes": 1301,
+    "sha256": "014595a6c0052912080049e158a458d9194e93cd1954e9abc83d4d2fdc7244bd"
+  },
+  {
+    "module": "dap",
+    "seconds": 0.022,
+    "bytes": 4728,
+    "sha256": "9ffc86431e415a8d22f0032a6b41b18be35994b0bdea71b8fbc614e452dda40c"
+  },
+  {
+    "module": "docshell",
+    "seconds": 0.36,
+    "bytes": 105767,
+    "sha256": "b6117a1596ca0940064ef515c350d79ff0b06119717917451dc897ea3363c68f"
+  },
+  {
+    "module": "dom",
+    "seconds": 0.193,
+    "bytes": 67026,
+    "sha256": "d57b139d20fd4a55e759b3dd6e41259b1f985857643cfcda67c28b62e41633a5"
+  },
+  {
+    "module": "dom_audiochannel",
+    "seconds": 0.024,
+    "bytes": 493,
+    "sha256": "cf6d408af2cbfd17b784f8b9a9d938870a1182b3c7e1c51913ea85d498d0a891"
+  },
+  {
+    "module": "dom_base",
+    "seconds": 0.27,
+    "bytes": 234558,
+    "sha256": "ce0ac09eec7ce9c381be5b5febe1d5d4a62507341cb12019d67fe69553c21968"
+  },
+  {
+    "module": "dom_bindings",
+    "seconds": 0.036,
+    "bytes": 15438,
+    "sha256": "f922fcbe50e5bad44083bb88863b9a45c663046a9772b317eb5fc337ba3208d3"
+  },
+  {
+    "module": "dom_events",
+    "seconds": 0.021,
+    "bytes": 2,
+    "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  {
+    "module": "dom_geolocation",
+    "seconds": 0.043,
+    "bytes": 5043,
+    "sha256": "8aac51b5ef0134b84689660ed0d3ae4b694d2cfbfd15beca57862e4dbd0b6c07"
+  },
+  {
+    "module": "dom_identitycredential",
+    "seconds": 0.053,
+    "bytes": 12927,
+    "sha256": "295561aa1b9830060161c8bf6725b0b4dd94a6f69f58c0923635ddc7939bf4c6"
+  },
+  {
+    "module": "dom_indexeddb",
+    "seconds": 0.032,
+    "bytes": 1610,
+    "sha256": "8227bed30f050d6b33b4aa3964a45941f9c32e06941fc88ad16928a3dca47fa3"
+  },
+  {
+    "module": "dom_localstorage",
+    "seconds": 0.023,
+    "bytes": 2080,
+    "sha256": "bec6c14f4ae06ef44793bd6895e68269aa7054537d815a9588c547acd0064b7f"
+  },
+  {
+    "module": "dom_media",
+    "seconds": 0.044,
+    "bytes": 13060,
+    "sha256": "4637d3aea9706fa9dd650261507b3d26ab746c5fb10e37e9caa9b707f6714637"
+  },
+  {
+    "module": "dom_modelcontext",
+    "seconds": 0.025,
+    "bytes": 1486,
+    "sha256": "97a3086a74228e1b865849dcd5d4e1d9274714a459c0b245ada5a2b1877a5f29"
+  },
+  {
+    "module": "dom_network",
+    "seconds": 0.028,
+    "bytes": 4449,
+    "sha256": "fe1070ff3ca65820b6d5d61ed8906b49ec5bced250261c9da9f19498b2884264"
+  },
+  {
+    "module": "dom_notification",
+    "seconds": 0.028,
+    "bytes": 10059,
+    "sha256": "439232507b3311dcae3239af7c6afdfee975b3878e3f0f4356e5028e9d1d6b72"
+  },
+  {
+    "module": "dom_payments",
+    "seconds": 0.153,
+    "bytes": 42142,
+    "sha256": "c5dbf1206a623591a61516574941c6be3724f87ac782b67347e78099594c0ece"
+  },
+  {
+    "module": "dom_permission",
+    "seconds": 0.026,
+    "bytes": 467,
+    "sha256": "ce310bc55d6e3c33a839131505f0310004d8261ce3a1ba75aa40105efa8feb28"
+  },
+  {
+    "module": "dom_power",
+    "seconds": 0.032,
+    "bytes": 3050,
+    "sha256": "23650538436546256eb2e5168079c49e0395178e3ad48af5350948dee65c47dc"
+  },
+  {
+    "module": "dom_push",
+    "seconds": 0.049,
+    "bytes": 19120,
+    "sha256": "a383775c4e65a1cfbbabb3f14fec45a8a110ea777c92809f2378e00af6568e54"
+  },
+  {
+    "module": "dom_quota",
+    "seconds": 0.063,
+    "bytes": 34988,
+    "sha256": "34d6117a6e5b268287fba44c92621fd84c7b9de5fb658034d45e01cbebdb4c2a"
+  },
+  {
+    "module": "dom_security",
+    "seconds": 0.241,
+    "bytes": 28239,
+    "sha256": "b039f89733b5c09d4f5aef1a5f71971a60ed49cecf283a4be5e326662162f483"
+  },
+  {
+    "module": "dom_serializers",
+    "seconds": 0.03,
+    "bytes": 9795,
+    "sha256": "7918885e571453311a326ff92ed9837048465317c0552e19c54459d9581e3f95"
+  },
+  {
+    "module": "dom_sidebar",
+    "seconds": 0.025,
+    "bytes": 1647,
+    "sha256": "3f2bf90091867ee6b93553fc308a51cc098c9b073d07dc32f9d176439c3f617c"
+  },
+  {
+    "module": "dom_simpledb",
+    "seconds": 0.051,
+    "bytes": 7536,
+    "sha256": "9bd2c0cb04ae22c310bfecf246b7de584bcf464c3e36dfbf93df6a425e389b24"
+  },
+  {
+    "module": "dom_storage",
+    "seconds": 0.033,
+    "bytes": 6787,
+    "sha256": "359ba36edc6f6515491c2943b06490479e489cfca23551fab659a19000a3a256"
+  },
+  {
+    "module": "dom_system",
+    "seconds": 0.025,
+    "bytes": 2771,
+    "sha256": "c3ab73b5e9f90f33ff3c190b49f0635394f7350fb6a0b339a35e5a17924706a0"
+  },
+  {
+    "module": "dom_webauthn",
+    "seconds": 0.08,
+    "bytes": 18810,
+    "sha256": "0fe7aa7160aa1c4b397a344cbb08b2efc910ed08f0369fa1b7a3f10ce83c8840"
+  },
+  {
+    "module": "dom_webspeechsynth",
+    "seconds": 0.038,
+    "bytes": 10506,
+    "sha256": "6613d6698dd1fc4591a7546f4b11f59e1991a10cbe26171d2d05a018e5ef9f29"
+  },
+  {
+    "module": "dom_workers",
+    "seconds": 0.04,
+    "bytes": 11900,
+    "sha256": "55cc5f9abfc7a0adb34980272d68a5e64dd7b07cf9e8e279450a94e1817d6c89"
+  },
+  {
+    "module": "dom_xslt",
+    "seconds": 0.028,
+    "bytes": 3012,
+    "sha256": "4fc156293c0418b7dba55654c71ad2cf46cc4dabad5ef8887aac37ce4995c6b1"
+  },
+  {
+    "module": "dom_xul",
+    "seconds": 0.078,
+    "bytes": 26772,
+    "sha256": "2b6a1381943803932eea8e9facb13cf1d77a5074bc309ae714e9169f282c4366"
+  },
+  {
+    "module": "downloads",
+    "seconds": 0.023,
+    "bytes": 2517,
+    "sha256": "58178ae576b66cfa19201992d1eabe41105c7e865b4a8b2cc8ec96c7548d45e2"
+  },
+  {
+    "module": "editor",
+    "seconds": 0.193,
+    "bytes": 68143,
+    "sha256": "091d08b72ababf6dd715514abc74cc4550a0b65d9f541692014746c2bde29d31"
+  },
+  {
+    "module": "enterprisepolicies",
+    "seconds": 0.031,
+    "bytes": 6236,
+    "sha256": "3df01fdbc9ef63dd7cb3b235308df02d90197a8ebddb8a16ee34599d8faacad9"
+  },
+  {
+    "module": "extensions",
+    "seconds": 0.033,
+    "bytes": 4660,
+    "sha256": "6fe81caffb39faab738d32e32b6cc1cf8e7f5d5efd12c274585e7ad5b46c1470"
+  },
+  {
+    "module": "exthandler",
+    "seconds": 0.08,
+    "bytes": 23972,
+    "sha256": "4df332bd47d4cdf9b24f9e78a0e92a9f39a161a01b8dec49028fc7c04a719e9c"
+  },
+  {
+    "module": "fastfind",
+    "seconds": 0.031,
+    "bytes": 8160,
+    "sha256": "e21f38a0324e277821957557a79c285a432a71f0ad64b923db25f0bcaf190c29"
+  },
+  {
+    "module": "floorpLinuxTaskbar",
+    "seconds": 0.035,
+    "bytes": 1343,
+    "sha256": "45b98fcb68ada989cf46bdeaf547ce73763abcbefb4a4e7af4819725780812e8"
+  },
+  {
+    "module": "fog",
+    "seconds": 0.037,
+    "bytes": 17842,
+    "sha256": "0a7ab20e1db3f84e6650db5cd747a259fa39eab18152479bc0b8075d6ac38407"
+  },
+  {
+    "module": "gfx",
+    "seconds": 0.031,
+    "bytes": 3639,
+    "sha256": "c7617425f857faccd722227c94b30b3a68fd496a867830dfccb154c7861234c7"
+  },
+  {
+    "module": "html5",
+    "seconds": 0.03,
+    "bytes": 4356,
+    "sha256": "7927ca860adddce653c6c4e1187884ff73250576e9ddee8cc3b26ba3c8c10b5b"
+  },
+  {
+    "module": "htmlparser",
+    "seconds": 0.027,
+    "bytes": 5285,
+    "sha256": "201d2edf7a401e808bc6f632b5d10f145291279f0c7d611e00153a7a8d44ac2f"
+  },
+  {
+    "module": "http-sfv",
+    "seconds": 0.04,
+    "bytes": 21676,
+    "sha256": "6325835e28439850c842b4fcadc2254f09158bec9fbf0509868531e6a9023676"
+  },
+  {
+    "module": "imglib2",
+    "seconds": 0.146,
+    "bytes": 63541,
+    "sha256": "93bc898ded073897c15c88f61199383a71683225834bc0d72b044ca5a7db4a7e"
+  },
+  {
+    "module": "inspector",
+    "seconds": 0.025,
+    "bytes": 6289,
+    "sha256": "b67c7ff4eb94339aeff54fc5d91fae8682ce985081a16ebd4ab6e5f5f373c0b5"
+  },
+  {
+    "module": "intl",
+    "seconds": 0.025,
+    "bytes": 5773,
+    "sha256": "f141677351c89be7c482adcfd99843ca1b1aa56ea89fcb94fd6813ba5a5a5ee2"
+  },
+  {
+    "module": "jar",
+    "seconds": 0.103,
+    "bytes": 12594,
+    "sha256": "d5efb522a8fed11588069039079c7080348b4799b26375354495e37f748cea46"
+  },
+  {
+    "module": "jsdevtools",
+    "seconds": 0.037,
+    "bytes": 2028,
+    "sha256": "ab3493442ee401a00f36abdd20665d02ff9d5de04ef794340951c70bfc55151c"
+  },
+  {
+    "module": "kvstore",
+    "seconds": 0.04,
+    "bytes": 18495,
+    "sha256": "c955fe4bce9d1e26c36c24271f3d51d276b7811b22257cd3b4b7e46aa66a352a"
+  },
+  {
+    "module": "layout_base",
+    "seconds": 0.03,
+    "bytes": 6625,
+    "sha256": "dde6c63fa4df0e3d85b59aabfa4a68b47cff437dea850401c3b857c9de374d57"
+  },
+  {
+    "module": "layout_style",
+    "seconds": 0.029,
+    "bytes": 3728,
+    "sha256": "0e6e93a3ccb1896064bae7a87e0376d2027477139538d76a87968fd6ea834aa4"
+  },
+  {
+    "module": "layout_xul_tree",
+    "seconds": 0.036,
+    "bytes": 21081,
+    "sha256": "9403b1e336de9f0a9fb4746e9b9e2b47873cde0ac3a6b44a5d5c8a2f7b64f04d"
+  },
+  {
+    "module": "locale",
+    "seconds": 0.039,
+    "bytes": 13219,
+    "sha256": "a838b8682d03dda48dea2c01d441c3e9d787522c6499b162405ef228bb0d921d"
+  },
+  {
+    "module": "loginmgr",
+    "seconds": 0.077,
+    "bytes": 37529,
+    "sha256": "8843b1fda0939a9f54093ebbdf53bba6fcff913ac4b9005a14005071c0910f00"
+  },
+  {
+    "module": "migration",
+    "seconds": 0.032,
+    "bytes": 736,
+    "sha256": "8fadd2b19e2826891d7a643670dbbb677de4e4105c8e75ddfbc14a3f9bc14798"
+  },
+  {
+    "module": "mimetype",
+    "seconds": 0.274,
+    "bytes": 31331,
+    "sha256": "acef77f87a668ddd7cf05fa0fe58f4f1c13f24dd2878eed52173a4ac45256b14"
+  },
+  {
+    "module": "ml",
+    "seconds": 0.044,
+    "bytes": 11119,
+    "sha256": "d3b516cb5cbd96a7859d0e1badc8240f6d24a0b40ba24842c7d0ccbe32541ffc"
+  },
+  {
+    "module": "mozfind",
+    "seconds": 0.038,
+    "bytes": 15474,
+    "sha256": "ed65bcb5251c31793078d314b4385489de3f7d387f351c39144040301b9c72bf"
+  },
+  {
+    "module": "mozintl",
+    "seconds": 0.033,
+    "bytes": 8524,
+    "sha256": "96ebdb483acbdee5959ab2c0d2c348e74136f66204ff9bc1397d3760246721f7"
+  },
+  {
+    "module": "necko",
+    "seconds": 1.321,
+    "bytes": 498544,
+    "sha256": "2c08075bf1030330fa6d12ad40d875c964bcd307b9bd1176ed34f8451202a5c4"
+  },
+  {
+    "module": "necko_about",
+    "seconds": 0.025,
+    "bytes": 3476,
+    "sha256": "b617343bc3c703dedadff6fa88fe1486ac663a68c37127c0aaca8e4bb5ff4743"
+  },
+  {
+    "module": "necko_cache2",
+    "seconds": 0.08,
+    "bytes": 35552,
+    "sha256": "e1febd9d7f96c5ba1d07bbf72ffb293e784083ea8b07885a1141367fdf85c71b"
+  },
+  {
+    "module": "necko_cookie",
+    "seconds": 0.101,
+    "bytes": 44615,
+    "sha256": "31c7083a23e8c3a025b7e1d2cb0af730dff308eabaefc650ddc40006122575e5"
+  },
+  {
+    "module": "necko_dns",
+    "seconds": 0.133,
+    "bytes": 60433,
+    "sha256": "56eb11affabdb1b86ffca67cbe0b6771018d55fea4d1115a3d534029fd304c3a"
+  },
+  {
+    "module": "necko_file",
+    "seconds": 0.035,
+    "bytes": 4870,
+    "sha256": "5dad833e9ed238ac42e5f8a52739ffc98605621e7e07d4a4d1498cc7400b6184"
+  },
+  {
+    "module": "necko_http",
+    "seconds": 0.615,
+    "bytes": 99153,
+    "sha256": "e6163e6f931a879393c0126c9ba674cffa1c693dd36d76aeb1c3fccccfd090f7"
+  },
+  {
+    "module": "necko_res",
+    "seconds": 0.041,
+    "bytes": 3682,
+    "sha256": "11a1b3724bf0128671740151a7becea51e582f4871a636ba547c600da0d5994f"
+  },
+  {
+    "module": "necko_socket",
+    "seconds": 0.033,
+    "bytes": 5310,
+    "sha256": "1c3ce8575996b92310d6b28ce144cbfd7966b30b25c5741d3d10a92ebfd3462e"
+  },
+  {
+    "module": "necko_strconv",
+    "seconds": 0.137,
+    "bytes": 15297,
+    "sha256": "d4d76198997b1c3d615bc79485f09495060d6500a0d89d2e66c934bae1af657e"
+  },
+  {
+    "module": "necko_viewsource",
+    "seconds": 0.076,
+    "bytes": 2,
+    "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  {
+    "module": "necko_websocket",
+    "seconds": 0.07,
+    "bytes": 30112,
+    "sha256": "f659f7fd906e2c115097099c6c27d9a7dd5e00df70f6f29b28aac3fcfef3faf2"
+  },
+  {
+    "module": "necko_webtransport",
+    "seconds": 0.108,
+    "bytes": 27701,
+    "sha256": "fee0785f6d525e5627f8a162f05947673f144c5f613f17f3323438a8e0344a17"
+  },
+  {
+    "module": "necko_wifi",
+    "seconds": 0.04,
+    "bytes": 3426,
+    "sha256": "8f4fbb92e85e4aca094e144a6b6579cd48eb07997c1ac43c978e4fc4fd480312"
+  },
+  {
+    "module": "parentalcontrols",
+    "seconds": 0.023,
+    "bytes": 5657,
+    "sha256": "c080028b6726a15a91596e3ab294a18b93134571c249f3c66c198f57f66543fe"
+  },
+  {
+    "module": "peerconnection",
+    "seconds": 0.048,
+    "bytes": 4409,
+    "sha256": "3a0bc7e03b26ef4a52aff44a14523acf5097091e1c60d604a68bc02bc3fa39dd"
+  },
+  {
+    "module": "permissions",
+    "seconds": 0.029,
+    "bytes": 1214,
+    "sha256": "1053807fec9313ebf4c8b49513fda268b7b4f3766fad2da630715418a72b499a"
+  },
+  {
+    "module": "pipnss",
+    "seconds": 0.339,
+    "bytes": 149631,
+    "sha256": "154d9a26496c990386c4417ab257c47719c55f7e5745051572599f77c328981e"
+  },
+  {
+    "module": "places",
+    "seconds": 0.115,
+    "bytes": 89997,
+    "sha256": "ebe20398ae2938b1a79d032449b88e70dedeea54a6a2b18ee21753b99114ee1a"
+  },
+  {
+    "module": "pref",
+    "seconds": 0.074,
+    "bytes": 25285,
+    "sha256": "0e4d82fec597e889608aa5a13039a1984ccad8e5956a97d4c250790139ac5c7c"
+  },
+  {
+    "module": "prefetch",
+    "seconds": 0.028,
+    "bytes": 2005,
+    "sha256": "1f69d3952b41b3d0a571f6ae34cccb251131d9eb0a161a38dc2cb7a0352aecb7"
+  },
+  {
+    "module": "profiler",
+    "seconds": 0.042,
+    "bytes": 13977,
+    "sha256": "2d3ee956833415d9d37bf72e7e4390a6b723589efb97926abf8ceed413eac9d1"
+  },
+  {
+    "module": "remote",
+    "seconds": 0.035,
+    "bytes": 1629,
+    "sha256": "2a81b2d99b71dc683d8b0d1ccbc04d85b54e3655195f3270e23dbc05a6cb5400"
+  },
+  {
+    "module": "reputationservice",
+    "seconds": 0.026,
+    "bytes": 5863,
+    "sha256": "48177039bc967be2ac90f8cd405c0ff80e35548ec17e3a8c8faf1f9e667e25c0"
+  },
+  {
+    "module": "sandbox",
+    "seconds": 0.224,
+    "bytes": 5508,
+    "sha256": "7bb75ed517311450fb0bd78bed243e891b9eac502f9e3fadfaeb4b7aa37d24a7"
+  },
+  {
+    "module": "satchel",
+    "seconds": 0.024,
+    "bytes": 3574,
+    "sha256": "a00f3044f2cd1011183823d5e968fa95feb8d96b3201afbca6c42da63f4e5c3b"
+  },
+  {
+    "module": "services",
+    "seconds": 0.024,
+    "bytes": 298,
+    "sha256": "7d769c37aad18b5fba2b4394d1d70f6fbf9d3418a549cc91b68a17ff5a258994"
+  },
+  {
+    "module": "sessionstore",
+    "seconds": 0.029,
+    "bytes": 9008,
+    "sha256": "203c3b7ba959fa6e42bb636a14a9251fcb4edf63ed77586ae4280a02e1d18410"
+  },
+  {
+    "module": "shellservice",
+    "seconds": 0.043,
+    "bytes": 9293,
+    "sha256": "1a74016e670871ff2632e5f4b434020b74345f48c5a567c6bf90c54ec6315e36"
+  },
+  {
+    "module": "shistory",
+    "seconds": 0.065,
+    "bytes": 50851,
+    "sha256": "6349bd079f7ee969e6ff19c454c86740f56149247b0b2d9d9093bfa3bb3eb714"
+  },
+  {
+    "module": "spellchecker",
+    "seconds": 0.037,
+    "bytes": 7004,
+    "sha256": "77a14533aa150ce44c6699a02d1db71ea351d2da3cac0ec3dea2e49bf984a560"
+  },
+  {
+    "module": "startupcache",
+    "seconds": 0.026,
+    "bytes": 1457,
+    "sha256": "a71ad463fcd094259b668fd6e5164b81be635146894ab74cd93da9d47f460a78"
+  },
+  {
+    "module": "storage",
+    "seconds": 0.212,
+    "bytes": 74040,
+    "sha256": "126de6486963ec8cbf43a8ee69606a3d793f0113f22a0c7c1308fddef26ca30f"
+  },
+  {
+    "module": "telemetry",
+    "seconds": 0.051,
+    "bytes": 16386,
+    "sha256": "c2bb80ad963d3d544ba0e3c13617d30d126abb4d323bee198570412cd5ffb687"
+  },
+  {
+    "module": "thumbnails",
+    "seconds": 0.023,
+    "bytes": 1395,
+    "sha256": "6f1888460043495271680d9371041ab6ed719efc6c1e2646f100846b50a9a1c9"
+  },
+  {
+    "module": "toolkit_antitracking",
+    "seconds": 0.118,
+    "bytes": 29945,
+    "sha256": "edc83620282f9e9f55c5a8603eb66fa51d1fcc0d84b41bbeaa2a83bcf83e0991"
+  },
+  {
+    "module": "toolkit_asyncshutdown",
+    "seconds": 0.042,
+    "bytes": 7766,
+    "sha256": "4af5303f8044228c50a50c5badf0aad725e3c1b59905d6c58649f58269f6e5c8"
+  },
+  {
+    "module": "toolkit_backgroundtasks",
+    "seconds": 0.049,
+    "bytes": 3406,
+    "sha256": "ff7fcac03b5cf96e1a68267082fd66bb9f0e844573a7f1db8347a38750a04595"
+  },
+  {
+    "module": "toolkit_cleardata",
+    "seconds": 0.039,
+    "bytes": 16748,
+    "sha256": "a4af5c9578a2d503287ebb3d325709fcb49815c1a1ab5bcf87e7ba71646d0cac"
+  },
+  {
+    "module": "toolkit_contentanalysis",
+    "seconds": 0.046,
+    "bytes": 36366,
+    "sha256": "7ca48e51ac363d07b51a6d1cd3e3d1cd8396b57bb124f819cfa1d7335223d349"
+  },
+  {
+    "module": "toolkit_crashservice",
+    "seconds": 0.027,
+    "bytes": 1200,
+    "sha256": "cbd385ac69bc49fa3aa800a836f646570781e5310d6540ee757927776c114ada"
+  },
+  {
+    "module": "toolkit_finalizationwitness",
+    "seconds": 0.023,
+    "bytes": 823,
+    "sha256": "a4f1363dbf188e4dac10a7e19b54e1e76eff07dfc65dcf370fd6ea2ae77142c5"
+  },
+  {
+    "module": "toolkit_geolocation",
+    "seconds": 0.021,
+    "bytes": 303,
+    "sha256": "04d8cd7193a3e724ddc80b5dc148773a49767042d3264f0413d2eb25be21427b"
+  },
+  {
+    "module": "toolkit_media",
+    "seconds": 0.029,
+    "bytes": 2437,
+    "sha256": "72bbb06d6ce3f101401c2fe166246f18b19d7f101469b7cee80b52cd47a37d72"
+  },
+  {
+    "module": "toolkit_modules",
+    "seconds": 0.034,
+    "bytes": 3261,
+    "sha256": "48272c8e119cbd6dc391065b3ebc4bb631b87eb924bed706286c4592af17eb24"
+  },
+  {
+    "module": "toolkit_processtools",
+    "seconds": 0.024,
+    "bytes": 993,
+    "sha256": "6537310da2a9f2530272809f6035bc2c3863ca91bcbb84000626e22101bceae4"
+  },
+  {
+    "module": "toolkit_resistfingerprinting",
+    "seconds": 0.069,
+    "bytes": 8331,
+    "sha256": "c8cd7e812fb72ee0bf7e9715f651f2e2ee39db8925deea80ab1c2b7cac8ad2cb"
+  },
+  {
+    "module": "toolkit_shell",
+    "seconds": 0.023,
+    "bytes": 503,
+    "sha256": "28f9b918a41487f939c7fbd6a28fb36cad522412933195eab7031777101f513e"
+  },
+  {
+    "module": "toolkit_terminator",
+    "seconds": 0.024,
+    "bytes": 784,
+    "sha256": "8559730eba33079053cb067cb502713bd69c9e377729627cb60c527e268d4fcc"
+  },
+  {
+    "module": "toolkit_xulstore",
+    "seconds": 0.023,
+    "bytes": 4863,
+    "sha256": "66842c3e0981c1c5b9a52c600ed6c8ce56bbf09e94fe7ca20155de79fedcf2c9"
+  },
+  {
+    "module": "toolkitprofile",
+    "seconds": 0.056,
+    "bytes": 18684,
+    "sha256": "c46f85bf579858d8f876a5c982f57e2cc6756da06a0154eb620cde7a27f28f87"
+  },
+  {
+    "module": "toolkitremote",
+    "seconds": 0.024,
+    "bytes": 894,
+    "sha256": "02258cd14e7650a7f3ed28df4e7405fa794de6237214b21689d5a5d790c68e57"
+  },
+  {
+    "module": "txmgr",
+    "seconds": 0.033,
+    "bytes": 5151,
+    "sha256": "1bde7c22335510baf8c2c15c0806f6921bf7b891eb6aad094e3ff9ed99801b31"
+  },
+  {
+    "module": "txtsvc",
+    "seconds": 0.045,
+    "bytes": 5126,
+    "sha256": "e88cfd12c42e9910c5db37491ebeebb55e13790f04631d1b557163d99fa473fa"
+  },
+  {
+    "module": "uconv",
+    "seconds": 0.033,
+    "bytes": 5127,
+    "sha256": "7a03329efe1a3a6e78fe9aa85e1d1179c951c7ac8dc503dee56e7327007d1112"
+  },
+  {
+    "module": "update",
+    "seconds": 0.06,
+    "bytes": 44927,
+    "sha256": "dcd8c4112e47bca10241901be7050bed01a090b722e760468ac7b5102b35d6b0"
+  },
+  {
+    "module": "uriloader",
+    "seconds": 0.101,
+    "bytes": 38699,
+    "sha256": "a8600c00334f4315702b7b19aa9d809c8daaf6ca079896e85a11f68f59efc7a9"
+  },
+  {
+    "module": "url-classifier",
+    "seconds": 0.194,
+    "bytes": 69770,
+    "sha256": "ff640459846ae9bdbde1da05d7f47dec05659ef25d75376a55939dc43b6342f8"
+  },
+  {
+    "module": "urlformatter",
+    "seconds": 0.029,
+    "bytes": 1516,
+    "sha256": "d7c01055d0c124bad03499726ad59fd761395113de0e9343f581e4ce80ce76c6"
+  },
+  {
+    "module": "webBrowser_core",
+    "seconds": 0.238,
+    "bytes": 12269,
+    "sha256": "e053ae82d9a8bbc5b1d7ff7c07a65ed5feea438294c2537ba95eff900fdca097"
+  },
+  {
+    "module": "webbrowserpersist",
+    "seconds": 0.05,
+    "bytes": 23289,
+    "sha256": "48bc4b8f0c1ba2f62a2e5372e48dd2092fbf6c97cbfc6ff85e1ec5df2eaa80e9"
+  },
+  {
+    "module": "webextensions",
+    "seconds": 0.053,
+    "bytes": 25458,
+    "sha256": "a88cf542d0e8ae0f9885735e3090e1bd0773b176e8308c2ab42972d92c5ee52a"
+  },
+  {
+    "module": "webvtt",
+    "seconds": 0.033,
+    "bytes": 4061,
+    "sha256": "54fb3622e5f6f21a184a479b36fd3c82d0df2a1cb3b42cbaa40ced1ebb3d92ac"
+  },
+  {
+    "module": "widget",
+    "seconds": 0.496,
+    "bytes": 176929,
+    "sha256": "482f487b2019404a0548884375d5575b3de6aa6a700c88a74976216c2b17706e"
+  },
+  {
+    "module": "windowcreator",
+    "seconds": 0.026,
+    "bytes": 3911,
+    "sha256": "d8355e7710e12edf3894109d14d637b62bdb9db32481bcea114b320877b62cf0"
+  },
+  {
+    "module": "windowwatcher",
+    "seconds": 0.143,
+    "bytes": 58581,
+    "sha256": "9b0bd5bfb9f95daa5f932de4dde559cb181a5b3efef71998fde8df5e80733298"
+  },
+  {
+    "module": "xpcom_base",
+    "seconds": 0.149,
+    "bytes": 59535,
+    "sha256": "df48be8515c5ebebc558dcfa8b31e25cdf5a3a15c67449986e4d41f4f3303de7"
+  },
+  {
+    "module": "xpcom_components",
+    "seconds": 0.068,
+    "bytes": 16414,
+    "sha256": "ec9fd99b848d41afa3077a359105dd511fcc4386a3df2c5455cf5102b012cef3"
+  },
+  {
+    "module": "xpcom_ds",
+    "seconds": 0.181,
+    "bytes": 85772,
+    "sha256": "bf35e21c540cb5b26d69a549bb0cf8647dccda953f330d07df17229aad7d355b"
+  },
+  {
+    "module": "xpcom_io",
+    "seconds": 0.367,
+    "bytes": 85166,
+    "sha256": "3dc9ff1191f9c5900d4dddd9b36a33717b55e1fd02a685114dee87aa24d016b5"
+  },
+  {
+    "module": "xpcom_system",
+    "seconds": 0.152,
+    "bytes": 48618,
+    "sha256": "a15ca7f1027a770dfe7d9e4ca83df3672a4f35f3058dc322a6a8885aeb439511"
+  },
+  {
+    "module": "xpcom_threads",
+    "seconds": 0.171,
+    "bytes": 36500,
+    "sha256": "5163a2b2302a70c5b7881c311015868387307cc055de43a4f389385a7f92dcb9"
+  },
+  {
+    "module": "xpconnect",
+    "seconds": 0.082,
+    "bytes": 36601,
+    "sha256": "9625e36bc822fd5a8f2562db31215258f3fddb6e53cc3cbe926fd7290156f7cb"
+  },
+  {
+    "module": "xul",
+    "seconds": 0.042,
+    "bytes": 8041,
+    "sha256": "5083744c114a1f4ff4293ec79c870349debec324784db220d26098ea35c3ba20"
+  },
+  {
+    "module": "xulapp",
+    "seconds": 0.039,
+    "bytes": 1715,
+    "sha256": "1d66ffeb98978550458190c755fe7cce3f0fdda7e933fb333ab638c6430a4928"
+  }
+]

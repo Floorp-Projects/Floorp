@@ -10,10 +10,9 @@
     "environment": "Debian13.6 x86_64, Xvfb :92, isolated DBus; KWin6.3.6 nested Wayland for visual/layout/controls; software WebRender; additional Fedora44 Container Image userland on shared host kernel, host Xvfb/X11 (not original Fedora desktop)",
     "testCommand": "PYTHONPATH=python python3 run.py floorp 29284 split; bash full-product/3033/reproduce.sh; QA_CANDIDATE=/workspace/product3033/obj-artifact-build-output/dist/bin/floorp PYTHONPATH=python python3 full-product/3033/run-candidate.py floorp 29831 split",
     "result": "実再現・CSS欠陥修正Draft",
-    "observations": "2組のnative splitを作成し、一組をreplaceGroupWithWindow→adoptTabGroup。移動先の最後と復帰後2枚のtitleが空。Firefox159.0.1は同手順で全titleを保持。 原CSSのsource回帰は失敗、修正CSSでtitle/URL保持に成功。Fedora44 Container Imageの公式製品でも同じ移動先・帰還title空化を再現。 Fedora44 container追加試験済（hostのXvfb使用・Flatpakではない）。 非currentのlayout/hit/selected状態8組と14回W3Cクリック成功。移動前後のsplit↔split→normal→split復帰を検証。 最新test head e7dda31fも標準CI282modules/0fail+Firefox16tasks、artifact内容/digest確認済み。 native Wayland追加比較: 同一adoption-only test/CSS差替fixtureで元CSSは移動先第2title消失、候補CSSは往復title/URL保持。両clientのwindowProtocol=waylandを確認。 fullproduction追試: PR3033 e7ddaから全startup/chrome/modules/pagesをproduction build、対応Runtime8965/daily1179/native159.0.1artifact統合machbuild/after-mach成功。組立製品X11と別optionalauxpackage展開品nativeWaylandでCSSfixture=falseのadoption往復pass、署名required defaulttrue/userfalse。厳格machpackageはgenuineXPT不足で失敗し成功に数えない。対応CIartifact13272530069にもXPTなし。公式pref override(署名無効化)は省略、公式defaults一致とはしない。",
+    "observations": "2組のnative splitを作成し、一組をreplaceGroupWithWindow→adoptTabGroup。移動先の最後と復帰後2枚のtitleが空。Firefox159.0.1は同手順で全titleを保持。 原CSSのsource回帰は失敗、修正CSSでtitle/URL保持に成功。Fedora44 Container Imageの公式製品でも同じ移動先・帰還title空化を再現。 Fedora44 container追加試験済（hostのXvfb使用・Flatpakではない）。 非currentのlayout/hit/selected状態8組と14回W3Cクリック成功。移動前後のsplit↔split→normal→split復帰を検証。 最新test head e7dda31fも標準CI282modules/0fail+Firefox16tasks、artifact内容/digest確認済み。 native Wayland追加比較: 同一adoption-only test/CSS差替fixtureで元CSSは移動先第2title消失、候補CSSは往復title/URL保持。両clientのwindowProtocol=waylandを確認。 fullproduction追試: PR3033 e7ddaから全startup/chrome/modules/pagesをproduction build、対応Runtime8965/daily1179/native159.0.1artifact統合machbuild/after-mach成功。組立製品X11と別optionalauxpackage展開品nativeWaylandでCSSfixture=falseのadoption往復pass、署名required defaulttrue/userfalse。厳格machpackageはgenuineXPT不足で失敗し成功に数えない。対応CIartifact13272530069にもXPTなし。公式pref override(署名無効化)は省略、公式defaults一致とはしない。 XPT不足解消: canonical Python processorで同Runtime155module/801IDLを生成、903依存hash一致で両候補へ再利用。検査変更なしstrictpackage両方exit0、全155XPTzipentry照合。3033は既試験品56項目全tree差0、combinedは1115assets+26ELF hash全一致。native全compileなし、元nativecompile時XPTのbyte同一性は未証明。",
     "remainingConditions": [
       "元Fedora desktop/package・物理ドラッグ/メニュー",
-      "genuine matching XPTを供給した厳格package",
       "公式defaults同一性（署名無効化pref工程省略）、正式候補配布形式"
     ],
     "existingPr": null,
@@ -42,7 +41,13 @@
       "full-product/3033/package-hashes.json",
       "full-product/3033/candidate-29831.json",
       "full-product/3033/candidate-29832.json",
-      "full-product/shared/ci-input-manifest.json"
+      "full-product/shared/ci-input-manifest.json",
+      "full-product/xpt-generation/report.md",
+      "full-product/xpt-generation/strict-results.json",
+      "full-product/xpt-generation/inputs.json",
+      "full-product/xpt-generation/outputs.json",
+      "full-product/xpt-generation/dependencies.json",
+      "full-product/xpt-generation/combined-module-comparison.json"
     ],
     "sprintScope": "KAN-1",
     "fixCommit": "1a75d15d2925c9d5bf58964505937d07a35df54c",
@@ -59,8 +64,8 @@
       "productionAssets": true,
       "runtimeArtifactAssembly": true,
       "nativeCompilation": false,
-      "strictPackaging": false,
-      "strictPackagingMissing": "matching XPT auxiliary input",
+      "strictPackaging": true,
+      "strictPackagingMissing": null,
       "officialDefaultsIdentical": false,
       "candidateSourceSha": "e7dda31f660bb865c2ea8a505ece44875796970f",
       "runtimeSourceSha": "8965ffc346d426ccdf919bd18585e4d4a0c21654",
@@ -68,7 +73,12 @@
         "assembledX11": true,
         "separateOptionalAuxPackageWayland": true
       },
-      "publishedBinary": false
+      "publishedBinary": false,
+      "xptSourceGenerated": true,
+      "xptModules": 155,
+      "xptIdls": 801,
+      "strictPackageSha256": "1230b658bb907482e2a411e0327062c0926a8b495f5609e180027771cdb6e9d2",
+      "nativeCompiledXptByteIdentity": "not independently verified"
     }
   },
   {
@@ -193,12 +203,11 @@
       "firefox": "159.0.1 / BuildID20261102144711"
     },
     "environment": "Debian13.6 x86_64, Xvfb :92, isolated DBus; KWin6.3.6 nested Wayland for visual/layout/controls; software WebRender; additional Fedora44 Container Image userland on shared host kernel, host Xvfb/X11 (not original Fedora desktop)",
-    "testCommand": "PYTHONPATH=python python3 run.py floorp 29284 wheel",
-    "result": "正規化実測・原症状の解消は未確定",
-    "observations": "30タブstackで合成pixel120→120px、line1→84.87px、page1→1181px。OS XTest1ノッチはdeltaMode1/deltaY±6、stackは約509.2px移動。通常tabbarでは同入力が届いたが位置不変で、公平な速度比較は成立していない。 Fedora44 container追加試験済（hostのXvfb使用・Flatpakではない）。 Fedora44でもpixel120→120px、line1→86.03px、page1→1181px。",
+    "testCommand": "PYTHONPATH=python python3 run.py floorp 29284 wheel; PYTHONPATH=python python3 KAN-39/followup/run.py floorp 29839; PYTHONPATH=python python3 KAN-39/followup/run.py firefox 29840",
+    "result": "限定Linux条件で未再現・有効な同入力対照済",
+    "observations": "30タブstackで合成pixel120→120px、line1→84.87px、page1→1181px。OS XTest1ノッチはdeltaMode1/deltaY±6、stackは約509.2px移動。通常tabbarでは同入力が届いたが位置不変で、公平な速度比較は成立していない。 Fedora44 container追加試験済（hostのXvfb使用・Flatpakではない）。 Fedora44でもpixel120→120px、line1→86.03px、page1→1181px。 新規freshprofile60tabで正常bar/stack/Firefoxを全てoverflow中央で実XTest比較。初回2wheelを上流軸filterが抑えるため実3notchwarmup後に再配置、handler書換なし。trusted line±6の6有効測定でFloorp正常±456px/stack±509.19995px/Firefox正常±456px、境界非接触。今回stackは遅くない。cold0は比較治具条件として保存。公式Floorp署名requiredfalseは既存default/userfalseで試験が弱めた設定ではない。",
     "remainingConditions": [
-      "Fedora44実desktop/元package/物理wheel・DPI/加速",
-      "通常tabbarとの有効な同入力距離比較"
+      "Fedora44実desktop/元package/物理wheel・DPI/加速"
     ],
     "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2763",
     "newPr": null,
@@ -208,7 +217,12 @@
       "wheel-os-29296.json",
       "KAN-39/harness-at-end.json",
       "KAN-39/stack.png",
-      "wheel-29411.json"
+      "wheel-29411.json",
+      "KAN-39/followup/report.md",
+      "KAN-39/followup/matrix.json",
+      "KAN-39/followup/floorp.json",
+      "KAN-39/followup/firefox.json",
+      "KAN-39/followup/run.py"
     ],
     "sprintScope": "KAN-1"
   },
@@ -342,10 +356,9 @@
     "environment": "Debian13.6 x86_64, Xvfb :92, isolated DBus; KWin6.3.6 nested Wayland for visual/layout/controls; software WebRender",
     "testCommand": "PYTHONPATH=python python3 gesture-run.py floorp 29311 gesture; PYTHONPATH=python python3 kan98-sparse-product-run.py floorp 29333 sparse-product; PYTHONPATH=python python3 full-product/3031-3034/run-regression.py 29721",
     "result": "実再現・独立した2欠陥を限定修正Draft",
-    "observations": "単upは発火するがup-down/dense up-down/down-upはaction label表示後にreleaseで不発。始点終点距離によるactivation gateが原因。最大変位へ修正しcontroller40件成功、旧controllerは新回帰で失敗。専用製品コピーの局所修正でも改善。 right-down追加9/9成功とcaptured trace replayから初期方向fallbackの別欠陥を特定。決定的な疎点列6/6が旧製品で不発、別コピーの局所修正で全成功。recognizer63ケース成功、元コードの新2cases失敗。 PR3031/3034とも標準Ubuntu CI281modules/0fail+Firefox16tasks、artifact内容とdigestを確認。 追加組合せ: minDistance20、[(0,0),(0,-160),(0,16)]は3031単独で逆Close Tab、3031+3034のOS XTestでNew Tab1回・元tab保持・contextmenu残留なし。3034先行または同時適用を両PRへ明記。 全productionasset候補追加: 3031dbafd+3034b21aの統合sourceで全productionビルド/Runtimeartifact159統合machbuild/after-mach成功。run29721実製品自身のcontroller/recognizerでminDistance20 returning16pxのexactXTestがNewTab1/Close0/元tab保持/menu0。signaturetrue/sandbox6 useroverrideなし。strictpackageはgenuine XPT補助不足で失敗、対応CIartifactにもcompanionなし、検査変更/配布tar成功は主張しない。公式署名無効化pref工程省略につき公式defaults同一ではない。",
+    "observations": "単upは発火するがup-down/dense up-down/down-upはaction label表示後にreleaseで不発。始点終点距離によるactivation gateが原因。最大変位へ修正しcontroller40件成功、旧controllerは新回帰で失敗。専用製品コピーの局所修正でも改善。 right-down追加9/9成功とcaptured trace replayから初期方向fallbackの別欠陥を特定。決定的な疎点列6/6が旧製品で不発、別コピーの局所修正で全成功。recognizer63ケース成功、元コードの新2cases失敗。 PR3031/3034とも標準Ubuntu CI281modules/0fail+Firefox16tasks、artifact内容とdigestを確認。 追加組合せ: minDistance20、[(0,0),(0,-160),(0,16)]は3031単独で逆Close Tab、3031+3034のOS XTestでNew Tab1回・元tab保持・contextmenu残留なし。3034先行または同時適用を両PRへ明記。 全productionasset候補追加: 3031dbafd+3034b21aの統合sourceで全productionビルド/Runtimeartifact159統合machbuild/after-mach成功。run29721実製品自身のcontroller/recognizerでminDistance20 returning16pxのexactXTestがNewTab1/Close0/元tab保持/menu0。signaturetrue/sandbox6 useroverrideなし。strictpackageはgenuine XPT補助不足で失敗、対応CIartifactにもcompanionなし、検査変更/配布tar成功は主張しない。公式署名無効化pref工程省略につき公式defaults同一ではない。 XPT不足解消: canonical Python processorで同Runtime155module/801IDLを生成、903依存hash一致で両候補へ再利用。検査変更なしstrictpackage両方exit0、全155XPTzipentry照合。3033は既試験品56項目全tree差0、combinedは1115assets+26ELF hash全一致。native全compileなし、元nativecompile時XPTのbyte同一性は未証明。",
     "remainingConditions": [
       "Arch/Sway/Wayland/物理入力/DPI",
-      "genuine matching XPTを供給した厳格package",
       "公式defaults同一性/正式配布形式（署名無効化pref工程省略）"
     ],
     "existingPr": null,
@@ -376,7 +389,13 @@
       "full-product/3031-3034/returning-29721.json",
       "full-product/shared/ci-input-manifest.json",
       "full-product/3031-3034/summary.json",
-      "full-product/3031-3034/reproduce.sh"
+      "full-product/3031-3034/reproduce.sh",
+      "full-product/xpt-generation/report.md",
+      "full-product/xpt-generation/strict-results.json",
+      "full-product/xpt-generation/inputs.json",
+      "full-product/xpt-generation/outputs.json",
+      "full-product/xpt-generation/dependencies.json",
+      "full-product/xpt-generation/combined-module-comparison.json"
     ],
     "sprintScope": "KAN-1",
     "additionalPrs": [
@@ -396,8 +415,8 @@
       "productionAssets": true,
       "runtimeArtifactAssembly": true,
       "nativeCompilation": false,
-      "strictPackaging": false,
-      "strictPackagingMissing": "matching XPT auxiliary input",
+      "strictPackaging": true,
+      "strictPackagingMissing": null,
       "officialDefaultsIdentical": false,
       "candidatePrHeads": [
         "dbafd082f1f315a49575446e7094177450b1882b",
@@ -408,7 +427,12 @@
       "publishedBinary": false,
       "productionManifestAssets": 1115,
       "productionManifestHashesMatching": 1115,
-      "localIntegratedHead": "0cf1474cba7bc7c45693671dc1690323d85c911b"
+      "localIntegratedHead": "0cf1474cba7bc7c45693671dc1690323d85c911b",
+      "xptSourceGenerated": true,
+      "xptModules": 155,
+      "xptIdls": 801,
+      "strictPackageSha256": "9fb23b445994c1ec1716609789b85e7b6ac7d20940ecee360e67b38c626ea1fe",
+      "nativeCompiledXptByteIdentity": "not independently verified"
     }
   }
 ]

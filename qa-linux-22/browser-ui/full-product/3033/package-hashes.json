@@ -1,6 +1,6 @@
 {
-  "packageKind": "existing workflow optional-aux route; strict packaging not yet successful",
-  "package": "/workspace/product3033/obj-artifact-build-output/dist/floorp-12.21.1@159.0.1.en-US.linux-x86_64.tar.xz",
+  "packageKind": "historical optional-aux route; current strict result in ../xpt-generation/strict-results.json",
+  "package": "/workspace/product3033/obj-artifact-build-output/dist/floorp-12.21.1@159.0.1.en-US.linux-x86_64.optional-aux.tar.xz",
   "sha256": "c10f8375652dd200e4136c6bb1ebb0f444a6f4d552c97a8a57aa2c6d0571f5c8",
   "assets": [
     {

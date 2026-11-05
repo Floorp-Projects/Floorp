@@ -1,0 +1,3614 @@
+[
+  {
+    "path": ".github/assets/pre-build/pwa/linux/nsIFloorpLinuxTaskbar.idl",
+    "sha256": "5299ebb1b466de47ce0d5e5752efddb7d8e9c34b92da84794f23bb063668c75c"
+  },
+  {
+    "path": "accessible/interfaces/nsIAccessibilityService.idl",
+    "sha256": "21ed5054a3f4c87ba179af1ad27ff49c63c0591bf4812a9499b833dfd8f455e2"
+  },
+  {
+    "path": "accessible/interfaces/nsIAccessible.idl",
+    "sha256": "9365ee6114b6ff4ebc3d9d90e64507be01449cace405aacddbceef86fc3419d7"
+  },
+  {
+    "path": "accessible/interfaces/nsIAccessibleAnnouncementEvent.idl",
+    "sha256": "7fc1c4f0783373ecebaf944e9d9364f41c954d02a50088c403aca2ab8025d976"
+  },
+  {
+    "path": "accessible/interfaces/nsIAccessibleApplication.idl",
+    "sha256": "b5b63c472713123849f2cb56a8f0177a8cee357d12418147e7ff2680bef948bd"
+  },
+  {
+    "path": "accessible/interfaces/nsIAccessibleCaretMoveEvent.idl",
+    "sha256": "de32bd8506e665a87d9b40b3e5dc9878332127fa8cfe05100ca4ef8bf2c904d8"
+  },
+  {
+    "path": "accessible/interfaces/nsIAccessibleDocument.idl",
+    "sha256": "7b0b29c56a0361cf6b74434f241efd5066d024967cdf85159b53b9f55e416f3d"
+  },
+  {
+    "path": "accessible/interfaces/nsIAccessibleEditableText.idl",
+    "sha256": "9a14e013b1b7df15efacb199ae7cc2ae5c122ded0ea179ad36e1d046e3802362"
+  },
+  {
+    "path": "accessible/interfaces/nsIAccessibleEvent.idl",
+    "sha256": "c82d097194b261ad78bed7db9d09f2ef0d3b8fcf8cd7a75828dada9b07128ed7"
+  },
+  {
+    "path": "accessible/interfaces/nsIAccessibleHideEvent.idl",
+    "sha256": "1017131948b1cd90c3840664308e16b48d0973a388f778992726d08f58c9553a"
+  },
+  {
+    "path": "accessible/interfaces/nsIAccessibleHyperLink.idl",
+    "sha256": "52e8aebb92bd6b8838c8bcfa19bae37b5c1b7e28078b3e391284d3b749cc77be"
+  },
+  {
+    "path": "accessible/interfaces/nsIAccessibleHyperText.idl",
+    "sha256": "410fba17d5f38aad699b4937a27b08b13eac04c6940f3309a498358be20b7927"
+  },
+  {
+    "path": "accessible/interfaces/nsIAccessibleImage.idl",
+    "sha256": "249530fddca5c575d18c0fb5095d11789bcdb8e828f7c3912b31cf811d08a4c5"
+  },
+  {
+    "path": "accessible/interfaces/nsIAccessibleObjectAttributeChangedEvent.idl",
+    "sha256": "5815fee67e23328560baa40a505875e753eba364c92f8b06ae641113e3208d23"
+  },
+  {
+    "path": "accessible/interfaces/nsIAccessiblePivot.idl",
+    "sha256": "5afbac5ea2850cdfeb94c9767bdafac68810e37bd78cd2f27a58a215f958ad84"
+  },
+  {
+    "path": "accessible/interfaces/nsIAccessibleRelation.idl",
+    "sha256": "b657551fa6f96223253ba60e1fbd9522b15a289140f7c083e5ed2ad62c6bc89a"
+  },
+  {
+    "path": "accessible/interfaces/nsIAccessibleRole.idl",
+    "sha256": "2894d9c8260f59a76a4c7dec3860d8ae3cfec27e090b286a608c7133b36925e8"
+  },
+  {
+    "path": "accessible/interfaces/nsIAccessibleScrollingEvent.idl",
+    "sha256": "633e7d06ff8d332bddd43867706c6c19de57c3f7f1b6b922231310f4e6ccb197"
+  },
+  {
+    "path": "accessible/interfaces/nsIAccessibleSelectable.idl",
+    "sha256": "a4d1a2830e457e8609ce0c9ef79b85c694c72224b531e9461487a205e607399a"
+  },
+  {
+    "path": "accessible/interfaces/nsIAccessibleStateChangeEvent.idl",
+    "sha256": "10c240b9817b15e1393e5530b1be3c3cf8ae9f1474799f3da20613c7c4383bf3"
+  },
+  {
+    "path": "accessible/interfaces/nsIAccessibleStates.idl",
+    "sha256": "4af96ba9767788c1598eb7263dcc5103368c5c365382eb8752b13c012bf5aa0c"
+  },
+  {
+    "path": "accessible/interfaces/nsIAccessibleTable.idl",
+    "sha256": "1fdf8bc72f647a7cadcabb851e2241fda29e3bbbf2d96584bfafe0c259f4d921"
+  },
+  {
+    "path": "accessible/interfaces/nsIAccessibleTableChangeEvent.idl",
+    "sha256": "e0da905b374ea84e1188155b6ae0ac2776f28b9f5dddcaa1d2944b231d04e3ee"
+  },
+  {
+    "path": "accessible/interfaces/nsIAccessibleText.idl",
+    "sha256": "04aa63b83aba6e152eb1ec1689620a318be87c74b891e65bce0e1fb27c4e3cbc"
+  },
+  {
+    "path": "accessible/interfaces/nsIAccessibleTextChangeEvent.idl",
+    "sha256": "b48287170a4a45cabcad07a9fa0ed8861ffc35e0be377d1593fbbd42e48a5b8b"
+  },
+  {
+    "path": "accessible/interfaces/nsIAccessibleTextLeafRange.idl",
+    "sha256": "b053b62265dc10fb5ddd7c095fc20e6106540544edabb8d83969b7487b911752"
+  },
+  {
+    "path": "accessible/interfaces/nsIAccessibleTextRange.idl",
+    "sha256": "03d5463044c8413bdede730964f5c836930a0c124fa89caa8ab555b33609dfd9"
+  },
+  {
+    "path": "accessible/interfaces/nsIAccessibleTextSelectionChangeEvent.idl",
+    "sha256": "e787b0cd170736096e10eca96f7e42e87c5d7944ec8e3d7aedda713f16103676"
+  },
+  {
+    "path": "accessible/interfaces/nsIAccessibleTypes.idl",
+    "sha256": "19ee4ee3f373abec5b4f95df5ed92458ff3bc394fba536a738f2c11e475b6159"
+  },
+  {
+    "path": "accessible/interfaces/nsIAccessibleValue.idl",
+    "sha256": "a59d04ad1413a05416e7fa746e2a18df103433b9ce34f892b152a3ad6ad783a2"
+  },
+  {
+    "path": "browser/components/migration/nsIEdgeMigrationUtils.idl",
+    "sha256": "4d525c6842eef9e84bb49893ad89dcc988169b2b3d02d391e23e457d7a95977b"
+  },
+  {
+    "path": "browser/components/nsIBrowserHandler.idl",
+    "sha256": "6d9abef4c06c8ca12a0d37471e4374d9f5f1ec038d6bd41a3d2d50e2379a10d0"
+  },
+  {
+    "path": "browser/components/shell/nsIGNOMEShellService.idl",
+    "sha256": "2e13f971750c42810f02e2d42e75bb82c63a3b58262366815639dd2963c8354f"
+  },
+  {
+    "path": "browser/components/shell/nsIOpenTabsProvider.idl",
+    "sha256": "6f19cc972d20dc246f411b941edcac0bb31deaac8024c5dfaa9cacfcb472eeda"
+  },
+  {
+    "path": "browser/components/shell/nsIShellService.idl",
+    "sha256": "3902ae1ae20ab11519a15114068c0498dde1f3df617d48b802ac56bbc6a71ffc"
+  },
+  {
+    "path": "build/buildconfig.py",
+    "sha256": "9d9ff6748ba6529fcc992567053bf2aad7bb9a2802a294cef19cbee2ea778aff"
+  },
+  {
+    "path": "caps/nsIAddonPolicyService.idl",
+    "sha256": "cdf3a25f688133a6f6ad7d3f8e7ef48a419981d82031fd155def57612a8789f0"
+  },
+  {
+    "path": "caps/nsIDomainPolicy.idl",
+    "sha256": "fd8eab6b20b61ba6ecfbaefe872fdc8b26100a5e923b5722f9ed35bcd881b55f"
+  },
+  {
+    "path": "caps/nsIPrincipal.idl",
+    "sha256": "1a75ec995cf5a88237167c4fe178c07069e5e69c625cf9259c8cd5f18a6e7c77"
+  },
+  {
+    "path": "caps/nsIScriptSecurityManager.idl",
+    "sha256": "a52fe32619a473a53559e93e156f11246decc46084dfe8ce73f5a55463a755e3"
+  },
+  {
+    "path": "chrome/nsIChromeRegistry.idl",
+    "sha256": "51fa355e41406c92f71c0c9989afd727654d77c858b6da59611d6390b5daf8ed"
+  },
+  {
+    "path": "chrome/nsIToolkitChromeRegistry.idl",
+    "sha256": "0d615dfe35cab25e1668e9b23656b0e56e7bd06275cb60fc561c59f96c01cf89"
+  },
+  {
+    "path": "config/makefiles/xpidl/Makefile.in",
+    "sha256": "f81d38f2ac730ad2ddf9bf2ffe64d7bcf76abfd93f5205bfaa75d80b30f8ad81"
+  },
+  {
+    "path": "devtools/platform/IJSDebugger.idl",
+    "sha256": "4dddf0356a8d0b3221f25785494bc1268894ea7bac1742ac1bf63edf8029533b"
+  },
+  {
+    "path": "devtools/platform/nsIJSInspector.idl",
+    "sha256": "9f7a01cd83f6e999eee95f40b9ab6a0bcdf31dbb089fec36a9c9f8278257c681"
+  },
+  {
+    "path": "docshell/base/nsIDocShell.idl",
+    "sha256": "afab7022581f1ee55f84b21a5f92df5adceb4fda2f2a01b429f4108f2383c7bb"
+  },
+  {
+    "path": "docshell/base/nsIDocShellTreeItem.idl",
+    "sha256": "8a5ac0a8535503d6bf57850486f7531c80c3454f56c2d739570cf02d887b8c9a"
+  },
+  {
+    "path": "docshell/base/nsIDocShellTreeOwner.idl",
+    "sha256": "d51cb5b22547fe0f52f088a52e4471eb3daffa5a78d3744adca35cdde1dd2f79"
+  },
+  {
+    "path": "docshell/base/nsIDocumentLoaderFactory.idl",
+    "sha256": "12ae05dd6818a44c82e53eca9ac21a74861405fd5dd5736e5fea4003ef962e9d"
+  },
+  {
+    "path": "docshell/base/nsIDocumentViewer.idl",
+    "sha256": "85e228aea754921f3e77f5f03e0748b74645a8b902072024a26398075c6ab172"
+  },
+  {
+    "path": "docshell/base/nsIDocumentViewerEdit.idl",
+    "sha256": "5a48e3d3a8ff5aa58437329a8be906f5c0cc940cf28c991cb8e8d38e9687d866"
+  },
+  {
+    "path": "docshell/base/nsILoadContext.idl",
+    "sha256": "cc962b362c8fcfeb1720d1ac610ae7eb70a58a5aa549775077b04666b73060fa"
+  },
+  {
+    "path": "docshell/base/nsILoadURIDelegate.idl",
+    "sha256": "77ad3302328189ebc07c32a9eea1425335c05c1fc831fc9d9142e2754dfc4959"
+  },
+  {
+    "path": "docshell/base/nsIPrivacyTransitionObserver.idl",
+    "sha256": "6064605fcc9a41cbc5c1643b5ba66a73b0de71e775f675997e6b0c8295b0a870"
+  },
+  {
+    "path": "docshell/base/nsIReflowObserver.idl",
+    "sha256": "0cc1caa370628830eceb00aeb41a3d99ed29276ec330526b8e0ffa5a7d3dd336"
+  },
+  {
+    "path": "docshell/base/nsIRefreshURI.idl",
+    "sha256": "9a13adffc41c7741f992dac1ece6e763372dc67c51ac7b556ceacb2bbbb42790"
+  },
+  {
+    "path": "docshell/base/nsITooltipListener.idl",
+    "sha256": "a7a336366d180c44082b5464217cda784d75e07a0d04e4407e74d78aaa3febd7"
+  },
+  {
+    "path": "docshell/base/nsITooltipTextProvider.idl",
+    "sha256": "5e6f09db84c02a6021cfe20c4d3d7506b54d36aa121961dcc467f0b790d9e126"
+  },
+  {
+    "path": "docshell/base/nsIURIFixup.idl",
+    "sha256": "7a669b563e3277a84c83aca3369ef19970a8bf11c1f9df6c4138442cd73a1121"
+  },
+  {
+    "path": "docshell/base/nsIWebNavigation.idl",
+    "sha256": "b485d46ab295cd1cc2d3865f7959a97ac01aa879754e7580bc3e5f2866acbc7a"
+  },
+  {
+    "path": "docshell/base/nsIWebNavigationInfo.idl",
+    "sha256": "6de49b73a33e2151e2cf027107d5af61858ff5c43fada3194b1db3feb9906207"
+  },
+  {
+    "path": "docshell/base/nsIWebPageDescriptor.idl",
+    "sha256": "6ba5e70dffb6b60465d584988a2b7567284be1699b9234db31f1e6a1149385d2"
+  },
+  {
+    "path": "docshell/shistory/nsIBFCacheEntry.idl",
+    "sha256": "13eceb706094355469424094386c015cbb55d685bba645770ce922a746b54ebc"
+  },
+  {
+    "path": "docshell/shistory/nsISHEntry.idl",
+    "sha256": "7d454aa6897fae9fc6c3d63862dbfce909976c32928e32d3d13fc5b5228ae518"
+  },
+  {
+    "path": "docshell/shistory/nsISHistory.idl",
+    "sha256": "83350519ca05688d3799921dbe648dc56cbaf4cc6ee6bb4dbdb3537163498201"
+  },
+  {
+    "path": "docshell/shistory/nsISHistoryListener.idl",
+    "sha256": "b89de2c3a119d1631fd5c5212704e0c868bbb6f4dabffc1d41d36e7d5edb63e0"
+  },
+  {
+    "path": "dom/audiochannel/nsIAudioChannelAgent.idl",
+    "sha256": "c05bdeff7a1cb64b273ec0bc670e6463ab8951e8b6dacb69332567ca22483036"
+  },
+  {
+    "path": "dom/base/mozIDOMWindow.idl",
+    "sha256": "842e7473b87791bea27e1384049b7215b0e202a15326fa2b9dc02f22a61c624e"
+  },
+  {
+    "path": "dom/base/nsIContentPolicy.idl",
+    "sha256": "06adc8953fb153816628e80a2661c49872125fcffabc291b11d7f285dc5ae3da"
+  },
+  {
+    "path": "dom/base/nsIDroppedLinkHandler.idl",
+    "sha256": "fe82e560e5dc5873bda83807280727a9b3e1f131b10b3a9bd683443a44814e67"
+  },
+  {
+    "path": "dom/base/nsIEventSourceEventService.idl",
+    "sha256": "0d5d235dc38831d1ccd0896be9121a8ceed22e54de0f94e05197d7cae6905850"
+  },
+  {
+    "path": "dom/base/nsIImageLoadingContent.idl",
+    "sha256": "c3f33cbb69fe3f76145f390f1f4026b79d78076149d4c61b3621f5fe6ada355e"
+  },
+  {
+    "path": "dom/base/nsIMessageManager.idl",
+    "sha256": "c015393461c52d56c24b0e9891bade8607941304430d403c4087b4047e0b0e32"
+  },
+  {
+    "path": "dom/base/nsIObjectLoadingContent.idl",
+    "sha256": "c9c41ed4150e9d146ef20d5c2d3c916db79711d65b3df7303ed40f6db55e3b96"
+  },
+  {
+    "path": "dom/base/nsIScriptChannel.idl",
+    "sha256": "d077856db724d6489436f521f94ba2bd457cba9b307a0852688e020dcf2810e4"
+  },
+  {
+    "path": "dom/base/nsIScriptableContentIterator.idl",
+    "sha256": "98ecdea45360fb7f9b3620522edb1e31560808730c7c9fd1558fe2c656199c52"
+  },
+  {
+    "path": "dom/base/nsISelectionController.idl",
+    "sha256": "7953f4bb32d51606a284e098f94561e00c65d096172b46697a0418127deb5158"
+  },
+  {
+    "path": "dom/base/nsISelectionDisplay.idl",
+    "sha256": "07bf2c097bddb9e49b5541a6982ad3a314a081850f52f8228e3474a7311de2ee"
+  },
+  {
+    "path": "dom/base/nsISelectionListener.idl",
+    "sha256": "304175146aa71fb259fd13695977be9a4048b745c91b706a092c3531129e3eb2"
+  },
+  {
+    "path": "dom/base/nsISlowScriptDebug.idl",
+    "sha256": "557ac742cbf156cc5d7576b2607e841101ffda290c601a6e5b4a0dd6292a5734"
+  },
+  {
+    "path": "dom/bindings/Bindings.conf",
+    "sha256": "e7db3b55196134041ad06ede0b092d675cef435cf5b6d0b294fef85e0eebceab"
+  },
+  {
+    "path": "dom/bindings/nsIScriptError.idl",
+    "sha256": "f659fcaa5a41f8b2f72683e8bade1d38aaa7e59ddacd0b118a5e1e06b1ee7b74"
+  },
+  {
+    "path": "dom/commandhandler/nsICommandManager.idl",
+    "sha256": "ad4448dd7652928e1db997c43dff5b7f05fe778742802c68b0ad719c414b8501"
+  },
+  {
+    "path": "dom/commandhandler/nsICommandParams.idl",
+    "sha256": "83cbcdf8faa7904e6a7f73cfd2cc8b28a2ba5e86d0cad6618ee6549ac0966e7f"
+  },
+  {
+    "path": "dom/console/nsIConsoleAPIStorage.idl",
+    "sha256": "e9166b20844a76b494a7295138b89dc63414c3722d3722e973b95ad4e416e1df"
+  },
+  {
+    "path": "dom/events/nsIEventListenerService.idl",
+    "sha256": "3aaf9f9b79e96d8e8e0fe117a4388a5b6bcd61149405856494ee21e678cb3e65"
+  },
+  {
+    "path": "dom/file/ipc/mozIRemoteLazyInputStream.idl",
+    "sha256": "a685644758434b439b3cb93b09ccc311754256c4f00083e08692d19847bcc4a8"
+  },
+  {
+    "path": "dom/geolocation/nsIGeolocationUIUtils.idl",
+    "sha256": "b8d1fdaa515be910c3d7f191978d9da86f5d3f6a99ee2b8151a20fb5b49e223a"
+  },
+  {
+    "path": "dom/indexedDB/nsIIDBPermissionsRequest.idl",
+    "sha256": "e4cb6b99f1d3aa7467605d40ea54eedd27dcb03e3154123a6c0d0c8f08de5edf"
+  },
+  {
+    "path": "dom/indexedDB/nsIIndexedDatabaseManager.idl",
+    "sha256": "3a36c6d66d39383c11894382800d5dca1e82e44025682312fa8a22a4e00a8d79"
+  },
+  {
+    "path": "dom/interfaces/base/domstubs.idl",
+    "sha256": "f7c77eff1a07cdab4fe29c89d4c253c55287e14177f4fe8bd4093e403026495c"
+  },
+  {
+    "path": "dom/interfaces/base/nsIBrowser.idl",
+    "sha256": "072168542b7ae6def0c0e935bc7ae9d0417e97a6968f42ef4a04df6e3b1d1e2f"
+  },
+  {
+    "path": "dom/interfaces/base/nsIBrowserChild.idl",
+    "sha256": "fcc18717e39ce8aa6a049c0131b4cc20a99265e31f3384fd47189004b993b546"
+  },
+  {
+    "path": "dom/interfaces/base/nsIBrowserDOMWindow.idl",
+    "sha256": "a75d8ab15efe5fd236d6f457345121a74d858f84398853146dd37d8dc6b42d79"
+  },
+  {
+    "path": "dom/interfaces/base/nsIBrowserUsage.idl",
+    "sha256": "91ed20a5bd31c79727bc111032ae3b493c54963535d18a19f215079da0b1825a"
+  },
+  {
+    "path": "dom/interfaces/base/nsIContentPermissionPrompt.idl",
+    "sha256": "3bbb4e3b385f38e809611e8ba1491998cf97821811f49cea83057f6769c97b6b"
+  },
+  {
+    "path": "dom/interfaces/base/nsIContentPrefService2.idl",
+    "sha256": "3f78099e32846b4701715880a3f8c509080f3a5d3230a73b60b94b79e6a1df19"
+  },
+  {
+    "path": "dom/interfaces/base/nsIDOMGlobalPropertyInitializer.idl",
+    "sha256": "e2ead90337e2fe6d6b9f00c22a778dc84886a005f77c405a66ed0ab1b9412a75"
+  },
+  {
+    "path": "dom/interfaces/base/nsIDOMWindow.idl",
+    "sha256": "98c0adc2b8665d1616decf2a8f64b84af486185d8766e6fe6767e0187dc4f4ff"
+  },
+  {
+    "path": "dom/interfaces/base/nsIDOMWindowUtils.idl",
+    "sha256": "fdfb3b0c6b291a9a335cdfa9f294998cbfa4b220f99fb36550306c977faae76f"
+  },
+  {
+    "path": "dom/interfaces/base/nsIFocusManager.idl",
+    "sha256": "6dccaee09bf7ce9bfda2edebaeec6d07de322c0d9cd7c66e4b70ba0eb8cb094a"
+  },
+  {
+    "path": "dom/interfaces/base/nsIGeckoViewServiceWorker.idl",
+    "sha256": "369b7f3df98fb2ff877174b248ffd1ae84390da7f7bf549336ffa693088cd1f2"
+  },
+  {
+    "path": "dom/interfaces/base/nsIPermissionDelegateHandler.idl",
+    "sha256": "ab911eb561ec727dbe9924789d0a25c8714639791a7993e29296e11202569d17"
+  },
+  {
+    "path": "dom/interfaces/base/nsIQueryContentEventResult.idl",
+    "sha256": "11650b2e87f06516cb314887eaab369910e62f98ce82b7e51af541a4002bfcd8"
+  },
+  {
+    "path": "dom/interfaces/base/nsIRemoteTab.idl",
+    "sha256": "a8efc3e5dc99324413af699ca63a2e0ffd33b0acc1077f4fe02e50278ecaa2d6"
+  },
+  {
+    "path": "dom/interfaces/base/nsIServiceWorkerManager.idl",
+    "sha256": "dd1a36112689384242b54a942676b11a0cc101c1506d8a1a804b0e3a1c03c183"
+  },
+  {
+    "path": "dom/interfaces/base/nsIStructuredCloneContainer.idl",
+    "sha256": "5379776a34e437d45f63ef034a21eba87504f08e58823829a7b4df6755b3b62b"
+  },
+  {
+    "path": "dom/interfaces/base/nsITextInputProcessor.idl",
+    "sha256": "c419f6d51a45059051cb4f6bf30886cc74cff5404d7d0663d8578a54b2672d24"
+  },
+  {
+    "path": "dom/interfaces/base/nsITextInputProcessorCallback.idl",
+    "sha256": "8cd0b40c4618b3056fcd6199c140d96af51e19181632e720ebc6b03143633477"
+  },
+  {
+    "path": "dom/interfaces/events/nsIDOMEventListener.idl",
+    "sha256": "cac9b11b206b73cd5c0f08d15c41725844d57adb6a22ab57974998235bf4beff"
+  },
+  {
+    "path": "dom/interfaces/geolocation/nsIDOMGeoPosition.idl",
+    "sha256": "b653dc9d78f7b84984daf47cc69184215084d4217035643a788b58ec41e3b092"
+  },
+  {
+    "path": "dom/interfaces/geolocation/nsIDOMGeoPositionCallback.idl",
+    "sha256": "bdb1ad0722c43e6aa696d02b58cc13c8cf7604c89d146cb475ff44aab21a55f3"
+  },
+  {
+    "path": "dom/interfaces/geolocation/nsIDOMGeoPositionCoords.idl",
+    "sha256": "899a03bc28f2ac342f5b86d08269a4d7e1c6ddd4b9b70f998228e8145c5c9f91"
+  },
+  {
+    "path": "dom/interfaces/geolocation/nsIDOMGeoPositionErrorCallback.idl",
+    "sha256": "ac7cdc529285788ddc07f02951731f1f1d16b989e13d75c9e9d9bad9304525ff"
+  },
+  {
+    "path": "dom/interfaces/notification/nsINotificationStorage.idl",
+    "sha256": "eb25895204d11bd5ed28343c7670e238f1419ffe52fcd8aa957c02e58a70d20a"
+  },
+  {
+    "path": "dom/interfaces/payments/nsIPaymentActionResponse.idl",
+    "sha256": "94d746b3e6df495dcbaaecec580e5481c9598928b9835c6b33db8e1c7c5b2644"
+  },
+  {
+    "path": "dom/interfaces/payments/nsIPaymentAddress.idl",
+    "sha256": "4e7c450587a09938f0dfcb77aeca7bc5313df5a3219c2b43ce3672c60b43d2e8"
+  },
+  {
+    "path": "dom/interfaces/payments/nsIPaymentRequest.idl",
+    "sha256": "cbf9591026d8f4961c768266ae408e4b01c2caf43ee9f0eb110bcebd2556f873"
+  },
+  {
+    "path": "dom/interfaces/payments/nsIPaymentRequestService.idl",
+    "sha256": "63ff10eecd0cc7c1fa475d5b402b6946a8f9adaecbaf48379cc51318dd2eb64d"
+  },
+  {
+    "path": "dom/interfaces/payments/nsIPaymentUIService.idl",
+    "sha256": "a23b1921634e9b80989549ddcb4b141f8c45c0fad38e85ae961dfa7c111b2a09"
+  },
+  {
+    "path": "dom/interfaces/security/nsIContentSecurityManager.idl",
+    "sha256": "2ab2198b35e6bd392f84f4226a5340a615b8d2aba3bfb6996140a3c00ba10806"
+  },
+  {
+    "path": "dom/interfaces/security/nsIContentSecurityPolicy.idl",
+    "sha256": "fa3a43bd1da815a85e29ecde3c501d5f084fde590415ca9f4856b3e7e9eeb09b"
+  },
+  {
+    "path": "dom/interfaces/security/nsIIntegrityPolicy.idl",
+    "sha256": "c4ae70e54b8131fe99be2dfe6653bd57086cce64c9ffa04e94ac65f10eebd92b"
+  },
+  {
+    "path": "dom/interfaces/security/nsIPolicyContainer.idl",
+    "sha256": "8e0ebf1a968ff890e368e07ac84042616846b6888c07754dedb8c54d51ad9ea3"
+  },
+  {
+    "path": "dom/interfaces/security/nsIReferrerInfo.idl",
+    "sha256": "dd36c24776762d4c53bb74a69c3a0a29122cfe0ac8e87772b617e5176db8ad02"
+  },
+  {
+    "path": "dom/interfaces/sidebar/nsIWebProtocolHandlerRegistrar.idl",
+    "sha256": "25b3dd98fb56042624a569c349030c216ddb57cbea42b0488e82b8d29e1a4e93"
+  },
+  {
+    "path": "dom/interfaces/storage/nsIDOMStorageManager.idl",
+    "sha256": "b8092263f255eb5d25337078322b3197bdfb96d995ea43efc660875bb2cb7012"
+  },
+  {
+    "path": "dom/interfaces/storage/nsIStorageActivityService.idl",
+    "sha256": "aea962c4cbf6efcc6bcce54268eff7606974e6a236c56171942d6a79213301b9"
+  },
+  {
+    "path": "dom/interfaces/xul/nsIDOMXULButtonElement.idl",
+    "sha256": "f9757d313aa66d91f0e9f7e96be53523f835a8adaa93ea47e5fdd9a950df2a40"
+  },
+  {
+    "path": "dom/interfaces/xul/nsIDOMXULCommandDispatcher.idl",
+    "sha256": "7e1e19ed9bf7a2077410ed8340d4299d8bd27592112b707de3dd3cc26dcf2271"
+  },
+  {
+    "path": "dom/interfaces/xul/nsIDOMXULContainerElement.idl",
+    "sha256": "7ebd37477cc5cdadd67ac64675329932cb9a0955fb378fce9e39b7ebcc6f1596"
+  },
+  {
+    "path": "dom/interfaces/xul/nsIDOMXULControlElement.idl",
+    "sha256": "b632894b1f8830c81a0a480a87b28bfec5852e0dfa99471286a32292190f7412"
+  },
+  {
+    "path": "dom/interfaces/xul/nsIDOMXULMenuListElement.idl",
+    "sha256": "5769b853c6a61647f3635dc76faad3b619864b9da523179d78f7896bd1e100cb"
+  },
+  {
+    "path": "dom/interfaces/xul/nsIDOMXULMultSelectCntrlEl.idl",
+    "sha256": "705cb82bf8fb1a37ad5c8e37211bdbc52ba0fa9477df1fadda8fb9edc9c14220"
+  },
+  {
+    "path": "dom/interfaces/xul/nsIDOMXULRadioGroupElement.idl",
+    "sha256": "a299cdb0b39da11e47f1b211b76cc05e6b8d7432a11c81f49963ee11c2fc6f65"
+  },
+  {
+    "path": "dom/interfaces/xul/nsIDOMXULRelatedElement.idl",
+    "sha256": "e3001906d27ef4521e6eec5acfdabf715b0320ad00fa9701574862ccf1b82fe8"
+  },
+  {
+    "path": "dom/interfaces/xul/nsIDOMXULSelectCntrlEl.idl",
+    "sha256": "060e9cac2da14392a9fa74b80e01d09bbe9a95be784e57918ed04e0846132114"
+  },
+  {
+    "path": "dom/interfaces/xul/nsIDOMXULSelectCntrlItemEl.idl",
+    "sha256": "aad2578b9d00947bf2a77b3410fc91dac4e072e77bac9b430382c83321084d83"
+  },
+  {
+    "path": "dom/ipc/nsIDOMProcessChild.idl",
+    "sha256": "8801cefc862bb3618ea75030407c1e5caaa81a942c7b7f70cb695cb58cb8b182"
+  },
+  {
+    "path": "dom/ipc/nsIDOMProcessParent.idl",
+    "sha256": "f6950c6243233c5381fdd6996c2b314442ad9c08cbee6b1b537f1859cac3f434"
+  },
+  {
+    "path": "dom/ipc/nsIHangReport.idl",
+    "sha256": "df1f2312576fdd83a8d238cf35e2f19364538853ba7956a45dff1fe7fc115f93"
+  },
+  {
+    "path": "dom/ipc/nsILoginDetectionService.idl",
+    "sha256": "958bfcc0752dbbffdd1cf2901d6e9ce31ba779ad7a3782fc1eb82c57b0c600fd"
+  },
+  {
+    "path": "dom/localstorage/nsILocalStorageManager.idl",
+    "sha256": "8c75d34e670e3cf5e0557ec18a2d45df290fde2de0a3a9581de976a9e5ad4a98"
+  },
+  {
+    "path": "dom/media/autoplay/nsIAutoplay.idl",
+    "sha256": "6dea84789cedbe60ddc72df8bcb85dc1c29d5b284f62c0c3d900b651f7c1a37a"
+  },
+  {
+    "path": "dom/media/bridge/IPeerConnection.idl",
+    "sha256": "1d94ce02789b1082b0da585b9f688c2ba2eb78f70c4b35b22d547d4105438233"
+  },
+  {
+    "path": "dom/media/gmp/mozIGeckoMediaPluginChromeService.idl",
+    "sha256": "51ae0ed72e63fb77dea52dac1ecbea580eca4db1cf9dea7af2cddaad00779a28"
+  },
+  {
+    "path": "dom/media/gmp/mozIGeckoMediaPluginService.idl",
+    "sha256": "fd61e1be65fa4085bc856cdce57f3d5008e29251eb0535fa52d1b435c23a286e"
+  },
+  {
+    "path": "dom/media/nsIAudioDeviceInfo.idl",
+    "sha256": "b82dc191bacc590abf6c8238f84a816674dc17c7bed46a09243633b2bd79b4b7"
+  },
+  {
+    "path": "dom/media/nsIMediaDevice.idl",
+    "sha256": "11f66ba194cf56cee94a282ce1d4b4f85cd22db2f4a7489155c73b732345b5a4"
+  },
+  {
+    "path": "dom/media/nsIMediaManager.idl",
+    "sha256": "3af0b5a29f62c4a1c2874982dc44f674dc790b89ff6c1995e522e2b4daa37520"
+  },
+  {
+    "path": "dom/media/nsIMediaPictureInPictureProvider.idl",
+    "sha256": "2298fb862fef0b29b2a0cc3bd57ee86c60d46fe0736fec7e2d06400c589100c7"
+  },
+  {
+    "path": "dom/media/webspeech/synth/nsISpeechService.idl",
+    "sha256": "623be25b1e887a0640c8d806824f7830d9e92155d36b38d173c9c5103b58e664"
+  },
+  {
+    "path": "dom/media/webspeech/synth/nsISynthVoiceRegistry.idl",
+    "sha256": "5757a5818f7e1706c0881115bb2b2daf6643a168859a8d0a13d1e365d597977c"
+  },
+  {
+    "path": "dom/media/webvtt/nsIWebVTTListener.idl",
+    "sha256": "6c43dc7cce6260c07859c2ee2b0e425bc8c8e007eb92e215ee1381d431186324"
+  },
+  {
+    "path": "dom/media/webvtt/nsIWebVTTParserWrapper.idl",
+    "sha256": "a696ddf9138e17e14f09bd9fedfeecae3c1ddf002bf4a5995a84439f270f746f"
+  },
+  {
+    "path": "dom/modelcontext/nsIModelContextService.idl",
+    "sha256": "9797d69657749fb1a73af8e8695d2770bee7affc801b789a43c859632c1eaec8"
+  },
+  {
+    "path": "dom/network/interfaces/nsITCPSocketCallback.idl",
+    "sha256": "45fc54109359ad23fa132b41bd4ff2db460abbead615563bc2a332826177ca2f"
+  },
+  {
+    "path": "dom/network/interfaces/nsIUDPSocketChild.idl",
+    "sha256": "de6c3e7716377696301bfb5a0cac1f481c233c2090c05b79a9fcd462112941d6"
+  },
+  {
+    "path": "dom/notification/nsINotificationHandler.idl",
+    "sha256": "af55bb3bf9ee5ecb6f911c7087efe426fe86ca9dcd11a2793a951422370fbf1d"
+  },
+  {
+    "path": "dom/permission/nsIPermissionMonitor.idl",
+    "sha256": "f092bc4675bac106ddabcd48103f0d897cec0be15fe046f94ff12acab7e82ee9"
+  },
+  {
+    "path": "dom/power/nsIDOMWakeLockListener.idl",
+    "sha256": "ac40d267c3430f50ec01eb30e32d3baf8146421143fac50bb5a8d435d20eebec"
+  },
+  {
+    "path": "dom/power/nsIPowerManagerService.idl",
+    "sha256": "1b21d44834bad76cc408b8fa875d9b2713fc56c8fbc652c11fc0ed51a295ff47"
+  },
+  {
+    "path": "dom/power/nsIWakeLock.idl",
+    "sha256": "7acb30692f6672f2ddd8b4b1b1114056b42752881eb7921849f9f2556a133686"
+  },
+  {
+    "path": "dom/push/nsIPushErrorReporter.idl",
+    "sha256": "e97761a03e1a29c69343a78fd5a27a98825c843219f93f3bb8c00f7e08ad65e7"
+  },
+  {
+    "path": "dom/push/nsIPushNotifier.idl",
+    "sha256": "55fe421664775da9508e8ecb2c0da8e5ee2f6b95bddf9036bb405bd649b6fd9b"
+  },
+  {
+    "path": "dom/push/nsIPushService.idl",
+    "sha256": "cb233426e1654f56d128f7ddf39d968506e135d14622369aa5a67faf3404bebd"
+  },
+  {
+    "path": "dom/quota/nsIQuotaArtificialFailure.idl",
+    "sha256": "d4485fae2e4d64dc4d1b20d40766f4ef891b58cba9c3ef98e96bae9420806fc4"
+  },
+  {
+    "path": "dom/quota/nsIQuotaCallbacks.idl",
+    "sha256": "488979a5d91672b8b928c428a1fc019a28ae002cf73141aa8b55806c0ac8ee8e"
+  },
+  {
+    "path": "dom/quota/nsIQuotaManagerService.idl",
+    "sha256": "c64319571cfbca3711f2c4de109ee70f595a70a79f0d6c80ce534d6e7560be7d"
+  },
+  {
+    "path": "dom/quota/nsIQuotaManagerServiceInternal.idl",
+    "sha256": "7ffbaf055b2f9690ceac9aca947fba56fe056dfc2be4ea7d4bc20f93edecc2c1"
+  },
+  {
+    "path": "dom/quota/nsIQuotaRequests.idl",
+    "sha256": "0c9a015f48fc9c9286efa82cdd93da4cc43da1fa30ea820e6318742aaea502bb"
+  },
+  {
+    "path": "dom/quota/nsIQuotaResults.idl",
+    "sha256": "faad74dbc621ca98c9f46f72a5755e422dea2d462f6369672b093d4cb3f9a62d"
+  },
+  {
+    "path": "dom/quota/nsIQuotaUtilsService.idl",
+    "sha256": "304f83d0a3c67fa35a96b4302d2340bcd3bc6320cbc24ca34d20cb435ec497d5"
+  },
+  {
+    "path": "dom/security/nsIHttpsOnlyModePermission.idl",
+    "sha256": "aee9412559248d31857b94fa14d9d9d6ad548368e9db803e1401d684564407bd"
+  },
+  {
+    "path": "dom/serializers/nsIDocumentEncoder.idl",
+    "sha256": "8a1460b4449a288bda1387dc42942d84980145f5247a08215c4f8423f28a6247"
+  },
+  {
+    "path": "dom/simpledb/nsISDBCallbacks.idl",
+    "sha256": "73650ec41048966182ce790e52182af8c83fa223da76f9c3f991720772ad36be"
+  },
+  {
+    "path": "dom/simpledb/nsISDBConnection.idl",
+    "sha256": "9e2a4e169b4d598395919bbf9b6928873505369c1987d06b2eb47f06a7f5604a"
+  },
+  {
+    "path": "dom/simpledb/nsISDBRequest.idl",
+    "sha256": "777a79c4d2c282d1e39a9246c6b538fbf40ccd08d45a0f3fc2586d1a54fbf7c2"
+  },
+  {
+    "path": "dom/simpledb/nsISDBResults.idl",
+    "sha256": "552da839d69e5c2dd380c0afb823a74ac1ed2095ada737e062dc37b273676c93"
+  },
+  {
+    "path": "dom/storage/nsISessionStorageService.idl",
+    "sha256": "f083d5fc5df9306c687a0fbe510f966b69a4b5af5fb379fb8300d7d64f7f6efc"
+  },
+  {
+    "path": "dom/system/nsIOSPermissionRequest.idl",
+    "sha256": "24b05d65b0985b6050cd2feb0a5eaad053c067d5956ac3ff3e5ed46292757d20"
+  },
+  {
+    "path": "dom/webauthn/nsIWebAuthnArgs.idl",
+    "sha256": "6e757d87dae12f0a9871b75f781d1a1c47e299ff10864e028b55b55a9419039f"
+  },
+  {
+    "path": "dom/webauthn/nsIWebAuthnAttObj.idl",
+    "sha256": "34df6db668598562bc36a6a73121f4664fa4c35489ef8e0bc847ad3fe96f6ddc"
+  },
+  {
+    "path": "dom/webauthn/nsIWebAuthnPromise.idl",
+    "sha256": "0700a2aa656e6aed5ee387d7345a77dc7fef2d7f6657449706ec78a860def96c"
+  },
+  {
+    "path": "dom/webauthn/nsIWebAuthnRelatedOriginFetcher.idl",
+    "sha256": "94c8a083514c079d9d6b9d7683d1fdf87ae3234b67bb14f7f16879d72c65cec2"
+  },
+  {
+    "path": "dom/webauthn/nsIWebAuthnResult.idl",
+    "sha256": "e1b3bf861d83bd757f21691713fcaaa66082031645f1ab75c4557ccd0901d6d0"
+  },
+  {
+    "path": "dom/webauthn/nsIWebAuthnService.idl",
+    "sha256": "e35bd9cd886cae39f5a71b240865d815c5b2282f5be0edaa750c885c37178459"
+  },
+  {
+    "path": "dom/webbrowserpersist/nsIWebBrowserPersist.idl",
+    "sha256": "3cd70ceb2eb144f1ca80be2dcd1badaf26ef920425cf49a3e7665446a5ee3ba7"
+  },
+  {
+    "path": "dom/webbrowserpersist/nsIWebBrowserPersistDocument.idl",
+    "sha256": "9baa4b623e352f6ee11753fae531aa346c498e12bed871f2e64930da44790b3f"
+  },
+  {
+    "path": "dom/workers/nsIWorkerChannelInfo.idl",
+    "sha256": "596de2cd7c619b1a1bdb8df90c3b66691bebfb5fd58cd85f99011d79ef6872e6"
+  },
+  {
+    "path": "dom/workers/nsIWorkerDebugger.idl",
+    "sha256": "cd66d3114bcb562765c70306688dcfb177cf9bd4882034838a65e069b486d548"
+  },
+  {
+    "path": "dom/workers/nsIWorkerDebuggerManager.idl",
+    "sha256": "736453a2a5c42619c51e2f584551c3e9d45c3cbe6d5f1954da8dc93b476edb25"
+  },
+  {
+    "path": "dom/xslt/xslt/txIEXSLTFunctions.idl",
+    "sha256": "8afe730185fe2d4632ccb97c25e74a692c192cdd16046d345dbd967aecc9fd90"
+  },
+  {
+    "path": "dom/xul/nsIBrowserController.idl",
+    "sha256": "ee7a0d46b76674cf2659a4c6a216e454526f278697081550337aab56e5c8ca37"
+  },
+  {
+    "path": "dom/xul/nsIController.idl",
+    "sha256": "591c3ef89b3a424349f5c4204f5c4e2cd6bfde8c73fbb99c9a57a93c75dc0b31"
+  },
+  {
+    "path": "dom/xul/nsIControllers.idl",
+    "sha256": "5756248c34e21036ce3a458fce28f538b949bafea8b890c5f7c23eade7ba4850"
+  },
+  {
+    "path": "editor/composer/nsIEditingSession.idl",
+    "sha256": "14e2e83955d44b9a6819a0d5f9a40c160ca9510b226f24ac70cf5ac749dc0006"
+  },
+  {
+    "path": "editor/nsIDocumentStateListener.idl",
+    "sha256": "1d55fa88d3caef07aa6cd277863969bbc16161947f1be273997c1a5bc77fe4ad"
+  },
+  {
+    "path": "editor/nsIEditActionListener.idl",
+    "sha256": "5efdbaaeab0a8cf30a9cb62878d834b436932be8b0d5fae625379abec476988f"
+  },
+  {
+    "path": "editor/nsIEditor.idl",
+    "sha256": "67d2a56cda2dcb806914898a5e3aa936b6dddc751048205ba1864960b243c053"
+  },
+  {
+    "path": "editor/nsIEditorMailSupport.idl",
+    "sha256": "8f692a6caaafec71750c76f97b37890dc24b016d46177b1db5fe9f737110db8e"
+  },
+  {
+    "path": "editor/nsIEditorSpellCheck.idl",
+    "sha256": "452a921b5bde877ff0b3339f5f87ae227c1010b844575b332096d8700fe84f60"
+  },
+  {
+    "path": "editor/nsIHTMLAbsPosEditor.idl",
+    "sha256": "d01f47afcfe645479970c5f69a26ad90960522baeb2530527ca60d40175d621d"
+  },
+  {
+    "path": "editor/nsIHTMLEditor.idl",
+    "sha256": "f805362b6bf53cf1adadd96b851384bd09dcd762f208dfa449d9389885bdb752"
+  },
+  {
+    "path": "editor/nsIHTMLInlineTableEditor.idl",
+    "sha256": "49212858b7b5009dbec5720d0a6433ba15cc0e1caad8e8250c18c29bad62f39e"
+  },
+  {
+    "path": "editor/nsIHTMLObjectResizer.idl",
+    "sha256": "3d0a57297a2ae73b7746b9c10afa1df91c1bae742f7af63d85af5bccc6c5a817"
+  },
+  {
+    "path": "editor/nsITableEditor.idl",
+    "sha256": "72c78297a0ae26a44e2047ed8befdb5047ca4501fd24bbd2832aad1b7e668d87"
+  },
+  {
+    "path": "editor/spellchecker/nsIInlineSpellChecker.idl",
+    "sha256": "9140851a2fb0e8bada6319b963e7575115b78589fabc8e82322cbc85ce7c3fb1"
+  },
+  {
+    "path": "editor/txmgr/nsITransaction.idl",
+    "sha256": "f72aebf5a4d3bbf0224e94f97cf05a586e2ac5cd7fea38700bdef75f9c982164"
+  },
+  {
+    "path": "editor/txmgr/nsITransactionManager.idl",
+    "sha256": "ab5e5274f3206d8106b850b4469aaaa6e65b654592e516c65c81981cd18dd25c"
+  },
+  {
+    "path": "extensions/permissions/nsIRemotePermissionService.idl",
+    "sha256": "1d7dd3d457abc3152a33e25b5f1f72b6c5a6952ca40f9245b634d26157e7fce6"
+  },
+  {
+    "path": "extensions/spellcheck/idl/mozIPersonalDictionary.idl",
+    "sha256": "be74c2f471f5a0cf0c2b7bd868d5003e8bc40a20461f26ab6ebf1f54378ea053"
+  },
+  {
+    "path": "extensions/spellcheck/idl/mozISpellCheckingEngine.idl",
+    "sha256": "3df1d533e3fca1c54be159d7ba58082356d9be279bebc8172c0cc94032839bff"
+  },
+  {
+    "path": "gfx/src/nsIFontEnumerator.idl",
+    "sha256": "7a183aa3b1dee8a77a437c007e69d097a2cd54b9d420900030d535c95d383fff"
+  },
+  {
+    "path": "gfx/thebes/nsIFontLoadCompleteCallback.idl",
+    "sha256": "8b7265182bac09dc427d3fe682ff630ae0040708d14b361be2c8cdc77682611c"
+  },
+  {
+    "path": "image/imgICache.idl",
+    "sha256": "ef046186744a2b886e4e2f6d053cd73c374d86e4c30589dd0da87b1137783c9d"
+  },
+  {
+    "path": "image/imgIContainer.idl",
+    "sha256": "75f7471251b34dc09084d6fb6c203f0b9648419e93bdbdf13a7cf2091a472d88"
+  },
+  {
+    "path": "image/imgIContainerDebug.idl",
+    "sha256": "3b39f02ab932e0ba837a5cd27b2556ca78d62da9851d31bf8b1d65ac7d7cee67"
+  },
+  {
+    "path": "image/imgIEncoder.idl",
+    "sha256": "2fe18f7598a08933bd9a67126ef670bfcfe48f8d8c2daab5a8f16c16081195bf"
+  },
+  {
+    "path": "image/imgILoader.idl",
+    "sha256": "7c40f36044a26931c36989777cd7b2813d766012d3d30aac1db44e132f44c5a6"
+  },
+  {
+    "path": "image/imgINotificationObserver.idl",
+    "sha256": "9612b281e4a11d1b4e19bdeae9dae960f4ad04fd21d85fb54ec5cc651890e896"
+  },
+  {
+    "path": "image/imgIRequest.idl",
+    "sha256": "7bbdf6a361fe5f8184030ce797534e00d63a7a2466974dbb334be50593c6cfca"
+  },
+  {
+    "path": "image/imgIScriptedNotificationObserver.idl",
+    "sha256": "ea3dc63ee4fc6617174a17ecf380505b3f47e3e1df369045603137081673068a"
+  },
+  {
+    "path": "image/imgITools.idl",
+    "sha256": "8897addba9b6132ac3a1ea203ed8613b2898e1d127e8b72314814b95ea5a5e5c"
+  },
+  {
+    "path": "image/nsIIconURI.idl",
+    "sha256": "19f0c1695dbd40dedc6c4fd2e210c8d1506020847a93208f828314e2a4186c70"
+  },
+  {
+    "path": "intl/locale/mozILocaleService.idl",
+    "sha256": "5ee6788066abfda2674f8fada1d996902a966a0e2f3ff6466ff0489e0fceb38e"
+  },
+  {
+    "path": "intl/locale/mozIOSPreferences.idl",
+    "sha256": "2496c1eb28c372e380fc71e14d6ed3b4a33e00aba34c520baf1a41fe7340af2b"
+  },
+  {
+    "path": "intl/strres/nsIStringBundle.idl",
+    "sha256": "17d9eebba5812890f7a052fd3e19866e0f385c5788b536fbe050c397911f7895"
+  },
+  {
+    "path": "intl/uconv/nsIScriptableUConv.idl",
+    "sha256": "0665beb023fe9404c274b2dc6e684f7340838cf528de4edc1fc31b1e046c4fd4"
+  },
+  {
+    "path": "intl/uconv/nsITextToSubURI.idl",
+    "sha256": "473637d76e5984f0c3a314e250f569e0f98654ad409bb8e778f03620386d9a68"
+  },
+  {
+    "path": "js/xpconnect/idl/mozIJSSubScriptLoader.idl",
+    "sha256": "eba10dfdee97eded5d5861af09f3e7316783dbf3cd9dbe40dc827cd5d1f088fc"
+  },
+  {
+    "path": "js/xpconnect/idl/nsIXPCScriptable.idl",
+    "sha256": "23c7fdfdab8163786d4835a037971b897ed4d2c02a8282bd7d6ea941012c5744"
+  },
+  {
+    "path": "js/xpconnect/idl/xpcIJSWeakReference.idl",
+    "sha256": "35fa50b4f3d9514046fd50090bf2d762e852c16d58229da28379449c50a42e21"
+  },
+  {
+    "path": "js/xpconnect/idl/xpccomponents.idl",
+    "sha256": "0423d45373cafd18ce71979c7ff9671ddfaf609f61d7aa89e6ef6c5f4f6ccfe3"
+  },
+  {
+    "path": "layout/base/nsILayoutHistoryState.idl",
+    "sha256": "8102676cdc36a57456a25c701b701c03c20904239ebe67784bdf613b0c2e2683"
+  },
+  {
+    "path": "layout/base/nsISVGPaintContext.idl",
+    "sha256": "64fc61ba92cff2cfc19e103b0211ddedd883f529c4c1097b971a0e0a692eb4d6"
+  },
+  {
+    "path": "layout/inspector/inIDeepTreeWalker.idl",
+    "sha256": "c13bf0470d57556589700c85100e0d3dbe2c31a43bc990c898ee4c9aaafb6147"
+  },
+  {
+    "path": "layout/style/nsIPreloadedStyleSheet.idl",
+    "sha256": "dfc2b237b27f467294fafd158af7dff74f8691aa358ff3749357d3bf95187fa0"
+  },
+  {
+    "path": "layout/style/nsIStyleSheetService.idl",
+    "sha256": "c25fb2781e5d4c0a0bec50a22b3f7ab81ff3971147167982b269edba102e8fe5"
+  },
+  {
+    "path": "layout/tools/reftest/reftest/__init__.py",
+    "sha256": "fdd661f3a3d2518c3afcb61e90f74b3314bce2a2632bf966e337827d51f84697"
+  },
+  {
+    "path": "layout/xul/tree/nsITreeSelection.idl",
+    "sha256": "5928cb9ec93f26619ac77d8f4d0e0a04708201d0e41d3176484d551ede3be082"
+  },
+  {
+    "path": "layout/xul/tree/nsITreeView.idl",
+    "sha256": "7123811b54bdc010067af9392fd4902274f40d80ebd1047f72edadfdab36de5d"
+  },
+  {
+    "path": "modules/libjar/nsIJARChannel.idl",
+    "sha256": "c558226cfb3111ae337e257faf7e64101e8cffc267189e4112f7fb841f255bb5"
+  },
+  {
+    "path": "modules/libjar/nsIJARURI.idl",
+    "sha256": "ee5148c237c0865c503018f841c48ccdf688f2d1f2c33333b1d556b387757f58"
+  },
+  {
+    "path": "modules/libjar/nsIZipReader.idl",
+    "sha256": "d156c98d0fad8d0263624aa243c9d8912367c656388a72ebd8ef1fec7e379d3f"
+  },
+  {
+    "path": "modules/libpref/nsIPrefBranch.idl",
+    "sha256": "78af9e8aa8e97e6be1bca79bd1e0427e0e113ecf9d84c2bba2333ebd468c2b4c"
+  },
+  {
+    "path": "modules/libpref/nsIPrefLocalizedString.idl",
+    "sha256": "361d8349271be7e046bccf6a31d40279d0639d7b1efb61bb7f1aff02d55939f1"
+  },
+  {
+    "path": "modules/libpref/nsIPrefOverrideMap.idl",
+    "sha256": "cbb66fe1b89b117a01d304739de28b513ad3e55a52db8094ec7247d306204f75"
+  },
+  {
+    "path": "modules/libpref/nsIPrefService.idl",
+    "sha256": "0827d6408a69ca8ea0e99c825f8a30f85bff18f9ee35e15a03428419763c8738"
+  },
+  {
+    "path": "modules/libpref/nsIRelativeFilePref.idl",
+    "sha256": "e6a59e3b2321c75c5ecbb42d19b1bdbf56bb1614d434411b37ca791bdb317477"
+  },
+  {
+    "path": "netwerk/base/http-sfv/nsIStructuredFieldValues.idl",
+    "sha256": "5065af8f081752e5b76987f9d63c1602ddb4a48469c96e2b575c76dadd3f3aec"
+  },
+  {
+    "path": "netwerk/base/mozIThirdPartyUtil.idl",
+    "sha256": "ae791370e6836c59942388a21fe86de3ba4fa1ad5182fc0770c1964396c226bd"
+  },
+  {
+    "path": "netwerk/base/nsIAndroidContentInputStream.idl",
+    "sha256": "ed6c700f0da1ef3bb0f385aed42b4011d2db066395263511e755329d174630a9"
+  },
+  {
+    "path": "netwerk/base/nsIArrayBufferInputStream.idl",
+    "sha256": "e96e88744267e5bf858574ebe5b325be4222f6b5d14f6872d2d0869e8163dc63"
+  },
+  {
+    "path": "netwerk/base/nsIAsyncStreamCopier.idl",
+    "sha256": "4975086e7a9edfcd64baf50f1f161409f698aa527d5acc025c085864fc7d2b0a"
+  },
+  {
+    "path": "netwerk/base/nsIAsyncStreamCopier2.idl",
+    "sha256": "40c9d5a0ad5b37cc69c1331dac032b53edf06678739b8de4892ec6cdb697a9c4"
+  },
+  {
+    "path": "netwerk/base/nsIAsyncVerifyRedirectCallback.idl",
+    "sha256": "f5ce6a596b3041ba3c82198b6862dea7b715b94234ad3bde01d6f2d0469c6b36"
+  },
+  {
+    "path": "netwerk/base/nsIAuthInformation.idl",
+    "sha256": "7dba74fea2e8713d2bb06cb2ed99c64b5a8f07df4adc54ab04df16a12f3d5681"
+  },
+  {
+    "path": "netwerk/base/nsIAuthModule.idl",
+    "sha256": "9adc7e2773105de5fd04697142647b22eda85cc147cc993cef37b4b8a25ade4f"
+  },
+  {
+    "path": "netwerk/base/nsIAuthPrompt.idl",
+    "sha256": "b2d8971e83a627c0997c6bfbe6cc26e77549937b90301d8af4d3a6c17016ad33"
+  },
+  {
+    "path": "netwerk/base/nsIAuthPrompt2.idl",
+    "sha256": "8e6e0881c829e6fcecd2b76d750eadc2cdff49b89ec859dadc598c3df974e3d3"
+  },
+  {
+    "path": "netwerk/base/nsIAuthPromptAdapterFactory.idl",
+    "sha256": "79e949e7c6442966782986a53e744e05852573ded5163089545cfd13698c4a29"
+  },
+  {
+    "path": "netwerk/base/nsIAuthPromptCallback.idl",
+    "sha256": "16b39dce44ad432030cd35a9b4c83ed80ca3eb9288d076ce9d49ef51b9502c12"
+  },
+  {
+    "path": "netwerk/base/nsIAuthPromptProvider.idl",
+    "sha256": "b8e5f0b93aef051fe4c0ed3c30cd61cf4f7b15333deec7904b4d4bde9855ddfc"
+  },
+  {
+    "path": "netwerk/base/nsIBackgroundFileSaver.idl",
+    "sha256": "67ed8e932868db1fa1a3d7ef48158ecc16b2eac6136d129cf6685c21c5948ad2"
+  },
+  {
+    "path": "netwerk/base/nsIBaseChannel.idl",
+    "sha256": "77df1aa247f818ee83545ea660582ae7fc224bf7fa6f4c976985880c92011b88"
+  },
+  {
+    "path": "netwerk/base/nsIBufferedStreams.idl",
+    "sha256": "f75a877d181edf03f24409f47351ac0799b50bc2c7218652fc616e89942efa7f"
+  },
+  {
+    "path": "netwerk/base/nsIByteRangeRequest.idl",
+    "sha256": "848e2f45156b1615d8ccf6a2b24136b3c57ee420fe8a3a4ef75b71d56abf1d22"
+  },
+  {
+    "path": "netwerk/base/nsICacheInfoChannel.idl",
+    "sha256": "49a2f9a10b40f8b182bf463eaa759913f74f2766e82ae8baf8cee22cdaeb64a8"
+  },
+  {
+    "path": "netwerk/base/nsICachingChannel.idl",
+    "sha256": "9dca362005b9c76974ebc02c6657863b3a916d120fbed63708914013225b5519"
+  },
+  {
+    "path": "netwerk/base/nsICancelable.idl",
+    "sha256": "ce36693d1b14946898bfd65aa5d086ee0d5472511f0e64f744f90bcb8109a580"
+  },
+  {
+    "path": "netwerk/base/nsICaptivePortalService.idl",
+    "sha256": "b49a5f4f9678266f0f33a4a47ee9090936464c9917f2daddeb095e48d51d470e"
+  },
+  {
+    "path": "netwerk/base/nsIChannel.idl",
+    "sha256": "eb4276d07680ad50413e11bda023054cdfaab18c20457a7b0630901f6b01e6b7"
+  },
+  {
+    "path": "netwerk/base/nsIChannelEventSink.idl",
+    "sha256": "006d7b4b4db0a30154ce04fb1cff6e37858700d45793836797297f85cc0fae8d"
+  },
+  {
+    "path": "netwerk/base/nsIChildChannel.idl",
+    "sha256": "cdb1856f21259f9072589f578ce3b17198861a70c534729d6beb820630f26b27"
+  },
+  {
+    "path": "netwerk/base/nsIClassOfService.idl",
+    "sha256": "4963435734bd6ba8a76445e0d7c12853a6b75c591402ae65600b15632d41ac24"
+  },
+  {
+    "path": "netwerk/base/nsIClassifiedChannel.idl",
+    "sha256": "faa9dfc4fa9e049361bf1cd1d700f1a58d51a0548ebd0a78ae9b4da1d0a5edab"
+  },
+  {
+    "path": "netwerk/base/nsIContentSniffer.idl",
+    "sha256": "dbd31a4b3a41ec8ae70e0b237abc105f019a94353bf6ea4f8ba5a26fc4c868fe"
+  },
+  {
+    "path": "netwerk/base/nsIDHCPClient.idl",
+    "sha256": "b879a797ae2c5f726c783acbb8f683511b7f2f6e6ddb96f48350aa90edc49f43"
+  },
+  {
+    "path": "netwerk/base/nsIDashboard.idl",
+    "sha256": "e4dcadd943c9ab3e9e0e37d86210fc100ada01b897d468176565d33357b991b0"
+  },
+  {
+    "path": "netwerk/base/nsIDashboardEventNotifier.idl",
+    "sha256": "cd635679d2032bc827233ba53f03615f865592457c69d3729a5322f530ad68a9"
+  },
+  {
+    "path": "netwerk/base/nsIDownloader.idl",
+    "sha256": "ee517e70553ddb71e1d6b36099fd701277addd0bb5e2b18ea0135e753dbcb945"
+  },
+  {
+    "path": "netwerk/base/nsIEncodedChannel.idl",
+    "sha256": "bc54801810847c6225d3133596f4dcc878a2ef8bc3eb15d0e38938298f858c64"
+  },
+  {
+    "path": "netwerk/base/nsIExternalProtocolHandler.idl",
+    "sha256": "32b391cec0f88342a97050cd506b7d49797bbf20c5b1a8119ec39cc517e6aa61"
+  },
+  {
+    "path": "netwerk/base/nsIFileStreams.idl",
+    "sha256": "94c5525b81ba7680da4adf19830124e6d11a1643db616227eae63dec648ecaa8"
+  },
+  {
+    "path": "netwerk/base/nsIFileURL.idl",
+    "sha256": "d1a3a5ac24f5c1f1e703b40521344376d5821ae2ec07fbb80a1c914b766eb8af"
+  },
+  {
+    "path": "netwerk/base/nsIForcePendingChannel.idl",
+    "sha256": "633b2d1a69e9b1ba29ccf049f9cec0ab06a97b6db151bc63b1470f77373ec5db"
+  },
+  {
+    "path": "netwerk/base/nsIFormPOSTActionChannel.idl",
+    "sha256": "7e264a9761167099c4495eacad1cc0ca8ce797c6cce55298ca09b60c607f1352"
+  },
+  {
+    "path": "netwerk/base/nsIHttpAuthenticatorCallback.idl",
+    "sha256": "1cad015bad1662d27d97762815b09d3e25d02ac5ea85cf4328b8f6582c67d20d"
+  },
+  {
+    "path": "netwerk/base/nsIIOService.idl",
+    "sha256": "57ad69f3e986e311021ce8097ebad1faed9f89f5e8b772491b3e248cf911332e"
+  },
+  {
+    "path": "netwerk/base/nsIIncrementalDownload.idl",
+    "sha256": "30cef25d10791cf18c8c4d95c0319f34b094d6ac29029ad280c45ca123a61498"
+  },
+  {
+    "path": "netwerk/base/nsIIncrementalStreamLoader.idl",
+    "sha256": "a09bb67e4e3a62b73e032a4c64309bbe358b43716cfd8dd0e2fc42675952553f"
+  },
+  {
+    "path": "netwerk/base/nsIInputStreamChannel.idl",
+    "sha256": "edfb7606fccc3e84cdb4d897ed650f52209fb520fd470bf89a73bd0b8bbdfb2c"
+  },
+  {
+    "path": "netwerk/base/nsIInputStreamPump.idl",
+    "sha256": "a15d37a2ca3f2a623b6e335eb560678c52c54347630eed98f040f54a6fceb1c5"
+  },
+  {
+    "path": "netwerk/base/nsIInterceptionInfo.idl",
+    "sha256": "4132cc503ad89125ff5c3e1f6198e3c9363facdb8b9d0b672b76fe1b14fc6e8a"
+  },
+  {
+    "path": "netwerk/base/nsILoadContextInfo.idl",
+    "sha256": "e1ab7974f63df787dff3dfaadae9e1fc84a1d795b29a5213642d972e28f3794c"
+  },
+  {
+    "path": "netwerk/base/nsILoadGroup.idl",
+    "sha256": "12e5a5a0fa0948b66230862bbc96565992a98ed61cf6bfb21d06564a90e325ea"
+  },
+  {
+    "path": "netwerk/base/nsILoadInfo.idl",
+    "sha256": "4f048168b71429c3574620db0bc84d12aa382b4962318240dedde1fcfd58158d"
+  },
+  {
+    "path": "netwerk/base/nsIMIMEInputStream.idl",
+    "sha256": "e6db7a7f2869f4f4be1576e78f3a098432f0d51ced7156ef77e75106550abf66"
+  },
+  {
+    "path": "netwerk/base/nsIMockNetworkLayerController.idl",
+    "sha256": "7d4c76f8e8fb3b767f0d995263c06d6532a3628293d3c1e5ce895e1d7a2f15c1"
+  },
+  {
+    "path": "netwerk/base/nsIMultiPartChannel.idl",
+    "sha256": "d26b1e8ba8513402dc6a2289bb2359cc5b05dd8c4933c9e8e391cde9965fffc6"
+  },
+  {
+    "path": "netwerk/base/nsINestedURI.idl",
+    "sha256": "3f4f29be03aeca445941a0529f5c28f799423a2066198020ffa53c21f54d0ea9"
+  },
+  {
+    "path": "netwerk/base/nsINetAddr.idl",
+    "sha256": "8d9b43e939e9acfb564cc0fc2c570b2ff715ee80860508653bb7b28c150366e0"
+  },
+  {
+    "path": "netwerk/base/nsINetUtil.idl",
+    "sha256": "b6261ed2dec003bb56e9f64db8e77f726c51613c32a8a1227b28fa9164346c50"
+  },
+  {
+    "path": "netwerk/base/nsINetworkConnectivityService.idl",
+    "sha256": "522f15aae426c42443c860b34b2b9f804b8580db57d3027204611f7e0a7dce7f"
+  },
+  {
+    "path": "netwerk/base/nsINetworkInfoService.idl",
+    "sha256": "fa57cabfe291c48b4310a2883847df4811b13127308a1808f98676b8da5e2524"
+  },
+  {
+    "path": "netwerk/base/nsINetworkInterceptController.idl",
+    "sha256": "1b8abeea8151d834c3a43ea746d569b5e9e25a85001f1e486c67f7518ef962b3"
+  },
+  {
+    "path": "netwerk/base/nsINetworkLinkService.idl",
+    "sha256": "5273889422a09ab2a5bdf136065c0c22618273f73d7be21c20098b1817119c35"
+  },
+  {
+    "path": "netwerk/base/nsINullChannel.idl",
+    "sha256": "5e2ddbf68f06e82c31d195c9dd548fb96ce67c844c97a8f827772a5256e2d85d"
+  },
+  {
+    "path": "netwerk/base/nsIParentChannel.idl",
+    "sha256": "40e807692c6cece2acaa89f525a08a8cb72ae7128af6eac8b9545cfda60f2a58"
+  },
+  {
+    "path": "netwerk/base/nsIParentRedirectingChannel.idl",
+    "sha256": "10084e94436ad6298510f07fa2849b884dbfbfa5cc50ed0b3405e365ca97b3ba"
+  },
+  {
+    "path": "netwerk/base/nsIPermission.idl",
+    "sha256": "de5757c20caaa65054320522217764babf9e35def84ec9058fc0a83154f106c3"
+  },
+  {
+    "path": "netwerk/base/nsIPermissionManager.idl",
+    "sha256": "f67421b29174f25e8c401b9b56e4a710f7f3f04a6e6f59fa5dfaa86d302b5980"
+  },
+  {
+    "path": "netwerk/base/nsIPrivateBrowsingChannel.idl",
+    "sha256": "22a331e1d339c003582ab2d01fb168ac9d70dc4b29a6e7b40ac90ac40962e290"
+  },
+  {
+    "path": "netwerk/base/nsIProgressEventSink.idl",
+    "sha256": "ae5bec957016fa3063455ff2a6adf979e84e2dfc8d64b59718ef5fe8976d1afc"
+  },
+  {
+    "path": "netwerk/base/nsIPrompt.idl",
+    "sha256": "8ac67b16c1e351b3b3bb2416c82eeeb8f7ffd472d4f6cc1a32be43b03b888c05"
+  },
+  {
+    "path": "netwerk/base/nsIProtocolHandler.idl",
+    "sha256": "ed8d50a7c9e8f9a96c5af21b5eb8e97453fe62e6699b4a68180b6da5c0f56808"
+  },
+  {
+    "path": "netwerk/base/nsIProtocolProxyCallback.idl",
+    "sha256": "4a26b443d1e8f3b36879d705e650b8809397b420170737fe579fde0f53d1ba64"
+  },
+  {
+    "path": "netwerk/base/nsIProtocolProxyFilter.idl",
+    "sha256": "896ea9632bc75204dab437d74626d62f698a9b68f35cf00441434d18c422975f"
+  },
+  {
+    "path": "netwerk/base/nsIProtocolProxyService.idl",
+    "sha256": "f31a3492609381efe2467efe88a9dccacc4e521911915b649a508de9362463e2"
+  },
+  {
+    "path": "netwerk/base/nsIProtocolProxyService2.idl",
+    "sha256": "309a7f3262b6b0a69494e77b40529a45ce121fabdc3d6dc1a2e2c857a79ca2d0"
+  },
+  {
+    "path": "netwerk/base/nsIProxiedChannel.idl",
+    "sha256": "6940400802566940e19307a984e5d3149207dbce435a6722aa811cc547d25478"
+  },
+  {
+    "path": "netwerk/base/nsIProxiedProtocolHandler.idl",
+    "sha256": "443d27acdd5f4203c4cffa1529d43294e4d10f7a2c2d5bae5cb682299c33048a"
+  },
+  {
+    "path": "netwerk/base/nsIProxyInfo.idl",
+    "sha256": "7fe8311c605240bbed67a9a269c755aed4427a8a45434ae583e9fc1d7449fc32"
+  },
+  {
+    "path": "netwerk/base/nsIRandomGenerator.idl",
+    "sha256": "1389e054ed4ac7ac7f890071e40a9bab4ae416c08a9ae0b31370905553f85421"
+  },
+  {
+    "path": "netwerk/base/nsIRedirectChannelRegistrar.idl",
+    "sha256": "fbb8f03edd761ffb9c7ba55cfef850f621b08ec3274ef79b418588af1f37e507"
+  },
+  {
+    "path": "netwerk/base/nsIRedirectHistoryEntry.idl",
+    "sha256": "c628ee5195127ee4f5d727e04baab5ff6a2e71dd03c2ebecd78b49bca2ece228"
+  },
+  {
+    "path": "netwerk/base/nsIRedirectResultListener.idl",
+    "sha256": "063044658741a38b5ea51340dc66aa8c581fa0ad59af04a05efccecc61e8434d"
+  },
+  {
+    "path": "netwerk/base/nsIRequest.idl",
+    "sha256": "3773354d8cf65676fef7000b50fbd65eb454d946024d6438d67a6f20dbd63d62"
+  },
+  {
+    "path": "netwerk/base/nsIRequestContext.idl",
+    "sha256": "52704c3de6b250d8aee9c68e40afc7ad9733ec5e5a90779fb5477f6205996efd"
+  },
+  {
+    "path": "netwerk/base/nsIRequestObserver.idl",
+    "sha256": "63ef0c6b1af12e64169990eb6284b5bf352f69bd5235565bae21820ef6cd9b33"
+  },
+  {
+    "path": "netwerk/base/nsIRequestObserverProxy.idl",
+    "sha256": "2f148808260c4d4a9df05a5aa2191be4a175c21ef210251fb83c69f6c94f0a6e"
+  },
+  {
+    "path": "netwerk/base/nsIResumableChannel.idl",
+    "sha256": "c91542e17afbdf683ec24b31ad571ceea6393a0ad938870e9fe1a46e4cf2e694"
+  },
+  {
+    "path": "netwerk/base/nsISSLTokensCache.idl",
+    "sha256": "196c0e8aeeecff3513d2acd03f30542bd1bf373baf0c5628eebde6918995d6d4"
+  },
+  {
+    "path": "netwerk/base/nsISecCheckWrapChannel.idl",
+    "sha256": "04700fb1601c0c48607be6b14da25fa4bcdd6f7770a04ba55fc6dc5869b41947"
+  },
+  {
+    "path": "netwerk/base/nsISecureBrowserUI.idl",
+    "sha256": "b8d00476918f11fc618daab27a70a3860feb7d7a14bc5cdef3a3221c5a4109bb"
+  },
+  {
+    "path": "netwerk/base/nsISensitiveInfoHiddenURI.idl",
+    "sha256": "58d4dfbf0c059c364995319201b549193714f77715467a2cd480e8e56c2cad30"
+  },
+  {
+    "path": "netwerk/base/nsISerializationHelper.idl",
+    "sha256": "b01156aa75e935b10685ee7871b7c2b80e163175ce61c63cec6bbe2071786fd5"
+  },
+  {
+    "path": "netwerk/base/nsIServerSocket.idl",
+    "sha256": "b89c6d7d759bd1a96bb8419a130adf495801a10af9a948699125e1089b866408"
+  },
+  {
+    "path": "netwerk/base/nsISimpleStreamListener.idl",
+    "sha256": "5cce8c7ebbb762986fc7fd40cba52e617212e8c9ede6da8c0309cd71d1fdb10f"
+  },
+  {
+    "path": "netwerk/base/nsISimpleURIMutator.idl",
+    "sha256": "5b23cf0aa90d30f0f98972f7d0c04a602396faa5c799c483d10a95dc90354ba1"
+  },
+  {
+    "path": "netwerk/base/nsISocketFilter.idl",
+    "sha256": "d958bd87ad4c1a430f210da95d257235d53c8f6089561ef2e6d26cb5fc508d1d"
+  },
+  {
+    "path": "netwerk/base/nsISocketTransport.idl",
+    "sha256": "b06dfb1fb1150436c67d1a167798cd42c798bd2f4985f41843a601ce492e0dff"
+  },
+  {
+    "path": "netwerk/base/nsISocketTransportService.idl",
+    "sha256": "ab0ae7b6e8972fab15c347eae3db36a8d2967cac24ce67b542c08f1ab34cf053"
+  },
+  {
+    "path": "netwerk/base/nsISpeculativeConnect.idl",
+    "sha256": "15b504929600b3f305c5bf4e661652ca608d534537823d587033d8612921f48f"
+  },
+  {
+    "path": "netwerk/base/nsIStandardURL.idl",
+    "sha256": "280928d50778f5695af7230870a7363ed1450933a881139a09a0ddfdf291a468"
+  },
+  {
+    "path": "netwerk/base/nsIStreamListener.idl",
+    "sha256": "b4e0012635d13e59db80b205c7a17b6a13011cd2a4c79d5857d4a4058c51fc67"
+  },
+  {
+    "path": "netwerk/base/nsIStreamListenerTee.idl",
+    "sha256": "f185a9b90a770285f5f87cc0d0158f9b8ca4cada0f3a7cdce9992684668329e1"
+  },
+  {
+    "path": "netwerk/base/nsIStreamLoader.idl",
+    "sha256": "16600e1935c541abac93ce294b5953ea526528f079c9a8782214ec657ef7555a"
+  },
+  {
+    "path": "netwerk/base/nsIStreamTransportService.idl",
+    "sha256": "2d862bfd7a3ac96d840952ba68257a1d9f64f42a226f7971c08813d55978a613"
+  },
+  {
+    "path": "netwerk/base/nsISuspendableChannelWrapper.idl",
+    "sha256": "1302c303d5be23a4f119caec2b08e311641f533de43820c349d8dec32316a257"
+  },
+  {
+    "path": "netwerk/base/nsISyncStreamListener.idl",
+    "sha256": "3f096fd86b329de6770b6a173312601b4e3c5df12af2401205c532226bb168e9"
+  },
+  {
+    "path": "netwerk/base/nsISystemProxySettings.idl",
+    "sha256": "63a33f4cc056c2f08c82bd44a75c76bc46d81e7b95faa91da51803f21806fa9b"
+  },
+  {
+    "path": "netwerk/base/nsITLSServerSocket.idl",
+    "sha256": "6ce907ccb46db0b100b5dc44482a99db6dfae28c6dc6fc4207a9ac3d35e55a75"
+  },
+  {
+    "path": "netwerk/base/nsIThreadRetargetableRequest.idl",
+    "sha256": "c85c8babea5a81ce0c89e95eff56960582a885f7778bf7837a478398cade2215"
+  },
+  {
+    "path": "netwerk/base/nsIThreadRetargetableStreamListener.idl",
+    "sha256": "7169b345045293f2ca7ece138b2d12287e4f6bc9f87c4deb41c36badcb8e68d3"
+  },
+  {
+    "path": "netwerk/base/nsIThrottledInputChannel.idl",
+    "sha256": "eae1cd56eb90fd7537d64275f49c9f32e7cd74b966af8709ecb6f557abfa8fa0"
+  },
+  {
+    "path": "netwerk/base/nsITimedChannel.idl",
+    "sha256": "1873d069e5126447f17b9f4589036e2b445e3364ab368580f3545bfd3c4187de"
+  },
+  {
+    "path": "netwerk/base/nsITraceableChannel.idl",
+    "sha256": "2026ba02b7cd2ece1a984075d3a119300d1229ceed4b9a20c2c6f596a5c66254"
+  },
+  {
+    "path": "netwerk/base/nsITransport.idl",
+    "sha256": "275c8196956bd2688d1e7299d0450634eaf0211588eec8ee5b9fa514e3db251b"
+  },
+  {
+    "path": "netwerk/base/nsIUDPSocket.idl",
+    "sha256": "0c3a06195cb375fb65c620b81cdee078010bbb8fab1957b8a6ed24a57b824f34"
+  },
+  {
+    "path": "netwerk/base/nsIURI.idl",
+    "sha256": "044381335f93bf6beec2be8f1b6de9e0183c2694d324fce0ca2a87f2d2ef57a2"
+  },
+  {
+    "path": "netwerk/base/nsIURIMutator.idl",
+    "sha256": "946483587bfb83bb190ac9b3f7ba0347298d78dfd3f903f97759120548736d60"
+  },
+  {
+    "path": "netwerk/base/nsIURIWithSpecialOrigin.idl",
+    "sha256": "3d89c5c163ebb27890bbd7066d3c841156407dbccc0ad5298d74a7daa9a00afe"
+  },
+  {
+    "path": "netwerk/base/nsIURL.idl",
+    "sha256": "a6af17dd3995ad35eb5b65b91c38110ee46a93c3f8e9c5c389339ee55c132a12"
+  },
+  {
+    "path": "netwerk/base/nsIURLParser.idl",
+    "sha256": "28f491c67df6af8d996d913bb78ec4bee67e01c417f3caeed8495e85a9418446"
+  },
+  {
+    "path": "netwerk/base/nsIUploadChannel.idl",
+    "sha256": "8577da397e00de280fcec6835a145c675d37a10156c95b68cc59b508eac7f866"
+  },
+  {
+    "path": "netwerk/base/nsIUploadChannel2.idl",
+    "sha256": "86a39dbb69f85f6a9c413026e7678f94392bc09164302dbf19e5bf77eb4eb0d7"
+  },
+  {
+    "path": "netwerk/base/nsPISocketTransportService.idl",
+    "sha256": "90e23059eb464d17072ac369b60aab627117742e6610e78cbd2c070287c92e13"
+  },
+  {
+    "path": "netwerk/cache2/nsICacheEntry.idl",
+    "sha256": "2646912a1d7f08de41fe919e227a9c10474baad0f7d40d3a82cee2fbac509bc3"
+  },
+  {
+    "path": "netwerk/cache2/nsICacheEntryDoomCallback.idl",
+    "sha256": "c2634eae0562b26d70f2cc1d64e44c39f8680f7161e6bc7c61b0683eadbe8af8"
+  },
+  {
+    "path": "netwerk/cache2/nsICacheEntryOpenCallback.idl",
+    "sha256": "cee76c555aede435c06a7cb10a53f8c52debe8b2b53cfd87fb1f0fac81c957b5"
+  },
+  {
+    "path": "netwerk/cache2/nsICachePurgeLock.idl",
+    "sha256": "b2ea23b62a9fd51f96b1bab581d639deb819f9e602ecc46d13d1ffe4744c77e1"
+  },
+  {
+    "path": "netwerk/cache2/nsICacheStorage.idl",
+    "sha256": "f30219502c279477e12f3e3462c9673b44abf8e4e700bf09d92f9259960b7079"
+  },
+  {
+    "path": "netwerk/cache2/nsICacheStorageService.idl",
+    "sha256": "a1279315530dcd6136e545c8d0ee1a8c02eab0900045ff5f7bcedf79b15051a0"
+  },
+  {
+    "path": "netwerk/cache2/nsICacheStorageVisitor.idl",
+    "sha256": "4f1570db7c8eb43a507b1e43a0a5221c1aa1d862b7f7bcca01c78080320e28e0"
+  },
+  {
+    "path": "netwerk/cache2/nsICacheTesting.idl",
+    "sha256": "31190d131ec65bd411acf11981a2bfc176151a1dc7a29e0e02d4c2e16160753a"
+  },
+  {
+    "path": "netwerk/cookie/nsICookie.idl",
+    "sha256": "7221d1e6eaab80976b58a58fefdfebecad523db1bee0faae61751f26dd7c75ec"
+  },
+  {
+    "path": "netwerk/cookie/nsICookieJarSettings.idl",
+    "sha256": "19b52d2b295cb4b99790253601ca437038d30b6d6bb79562d3358fe114543b0a"
+  },
+  {
+    "path": "netwerk/cookie/nsICookieManager.idl",
+    "sha256": "b9860a3a0c58eeee82d19e094fd48546a4441e02cfcce94719687e7a2f57082c"
+  },
+  {
+    "path": "netwerk/cookie/nsICookieNotification.idl",
+    "sha256": "ef78a092ea874b76d7fa11af84618647063d61094b650b7981ecd35e4d7a4e3a"
+  },
+  {
+    "path": "netwerk/cookie/nsICookiePermission.idl",
+    "sha256": "1365bfd31193b7ce056bd9cf839fa40d0df1c142d88b81d3af84dbea9ef74a35"
+  },
+  {
+    "path": "netwerk/cookie/nsICookieService.idl",
+    "sha256": "f31bc3eef7de8c99756c73aa46bf3c4a5fef2e7dd56e6e285b414317609a8618"
+  },
+  {
+    "path": "netwerk/cookie/nsICookieValidation.idl",
+    "sha256": "556eaac72e51b509793c7231bfcf04d1ea5ca6890f119576060009fb6a0a74e6"
+  },
+  {
+    "path": "netwerk/cookie/nsIThirdPartyCookieBlockingExceptionListService.idl",
+    "sha256": "938ff6cdecebb671b16682f248a6876bc1889df5993cab58cdbe9c16521a97e1"
+  },
+  {
+    "path": "netwerk/dns/nsIDNSAdditionalInfo.idl",
+    "sha256": "0a1df76535bf75f3d8d01c1c3d5b1c89b91016f55d3d74955c50520ce350e786"
+  },
+  {
+    "path": "netwerk/dns/nsIDNSByTypeRecord.idl",
+    "sha256": "03838100d808f6d06760052466f62a8690c375b08517145936340571985e9f3e"
+  },
+  {
+    "path": "netwerk/dns/nsIDNSListener.idl",
+    "sha256": "90b1293730e958d42486775549d18b8a685c0c93319d9f0fcdff193a4b3778ed"
+  },
+  {
+    "path": "netwerk/dns/nsIDNSRecord.idl",
+    "sha256": "7d81a9b4e0324a0c1aa795fe684d67288a5219f4ccc82be56adf52f624a0cdda"
+  },
+  {
+    "path": "netwerk/dns/nsIDNSService.idl",
+    "sha256": "6a4bb13993ea93c911a9a171633690d13adac3246efb724be1a151b1f6fc30d9"
+  },
+  {
+    "path": "netwerk/dns/nsIEffectiveTLDService.idl",
+    "sha256": "da6d16bf107413552ee42f2e3b5ba9a3f7a681721fc84ba24cd3aab450d30a3f"
+  },
+  {
+    "path": "netwerk/dns/nsIIDNService.idl",
+    "sha256": "656699ed56c371979b30b4763b7d582980ccfd4a58353b390c23a64a58c3ecd0"
+  },
+  {
+    "path": "netwerk/dns/nsINativeDNSResolverOverride.idl",
+    "sha256": "b29b3bb3a8c071227a4f7abfe36ee5133f63444d2612cb00c3acb5a33d6f65cd"
+  },
+  {
+    "path": "netwerk/dns/nsITRRSkipReason.idl",
+    "sha256": "8280c3350a65e6ad2e06919ff20acfa5881035284ae90d3be8af2e6617584416"
+  },
+  {
+    "path": "netwerk/dns/nsPIDNSService.idl",
+    "sha256": "87b4f6862ce63d2ea8cb72f3c02017ff471cc20e7d3d7404e28bfbba2ed549c7"
+  },
+  {
+    "path": "netwerk/mime/nsIMIMEHeaderParam.idl",
+    "sha256": "710b897dd9221a45561d666756b0c1dd5ddd31e239099514536a42aa537549a3"
+  },
+  {
+    "path": "netwerk/mime/nsIMIMEInfo.idl",
+    "sha256": "ec15a1a8b597ccd628a0ce07ce30489654cf5e8b8d53cf66205e86a3972a4945"
+  },
+  {
+    "path": "netwerk/mime/nsIMIMEService.idl",
+    "sha256": "31b1b822a82a032b584c6c352c82d066b2ff346374a507c92345f34672041a09"
+  },
+  {
+    "path": "netwerk/protocol/about/nsIAboutModule.idl",
+    "sha256": "aea00b94cc768b3a83e580e80bf6be38e77ff73f9b92b770058f0d898d1a7a23"
+  },
+  {
+    "path": "netwerk/protocol/data/nsIDataChannel.idl",
+    "sha256": "1c8042c0f7a3d2fc1165e05fc9d9eb121904412c81622c742d1f815d19b01fc2"
+  },
+  {
+    "path": "netwerk/protocol/file/nsIFileChannel.idl",
+    "sha256": "4ca3d2dd2e07294606f1c21db02bd51070ca87bced24e1cac4ef5d5e3d09b436"
+  },
+  {
+    "path": "netwerk/protocol/file/nsIFileProtocolHandler.idl",
+    "sha256": "02ad13e6dbc63fe517407ba4f31e05efa9eae795abd06fb2eeb3341bd621252c"
+  },
+  {
+    "path": "netwerk/protocol/http/nsIBackgroundChannelRegistrar.idl",
+    "sha256": "161bbc7e28f1ff282792ea008eed02d0c33fb820f148716185dd4057c2b41222"
+  },
+  {
+    "path": "netwerk/protocol/http/nsIBinaryHttp.idl",
+    "sha256": "570bbd395d28bd5451427b68acc4d6919edde2f6b1bf5c60f6801a70273faeb1"
+  },
+  {
+    "path": "netwerk/protocol/http/nsICORSPreflightCache.idl",
+    "sha256": "c5ee9b644fc9e8e62090fdab17d6ca167957cad080f6a6f870f5a37dea03a406"
+  },
+  {
+    "path": "netwerk/protocol/http/nsICORSPreflightCacheEntry.idl",
+    "sha256": "8a91dcfc41fb56c9b53f3cfa8278ee96019149d112630f989bb3fd8e85165b5d"
+  },
+  {
+    "path": "netwerk/protocol/http/nsIEarlyHintObserver.idl",
+    "sha256": "a19876f62ea60a663d1a2721fe1df3ef6dab4e3f61e8b0b472405a089ed09865"
+  },
+  {
+    "path": "netwerk/protocol/http/nsIHttpActivityObserver.idl",
+    "sha256": "49f09c947a814a0eddca5395ca99c88beca72831df14b3d4a650221c7e94c6cc"
+  },
+  {
+    "path": "netwerk/protocol/http/nsIHttpAuthCache.idl",
+    "sha256": "a9184892e57d38999f83299ba540658d8881af36d1fff1596b2fe72bcb6d5983"
+  },
+  {
+    "path": "netwerk/protocol/http/nsIHttpAuthEntry.idl",
+    "sha256": "933fc78e231421710817a2bd55ba69cc7d5abbd1522ae1a7a8273e9f7c28863a"
+  },
+  {
+    "path": "netwerk/protocol/http/nsIHttpAuthManager.idl",
+    "sha256": "a049edd282683f7a5bb212b39613c544c83ae561c04655ef1c44d2cec84e065a"
+  },
+  {
+    "path": "netwerk/protocol/http/nsIHttpAuthenticableChannel.idl",
+    "sha256": "81e52e8f5d8a581cf56c600e732876a23a68b0ea16878a6f4c48135d1b709453"
+  },
+  {
+    "path": "netwerk/protocol/http/nsIHttpAuthenticator.idl",
+    "sha256": "73724a71f8d4c95fc7a789a0e3f625abd3324cd4450f5462deab4d29658809d4"
+  },
+  {
+    "path": "netwerk/protocol/http/nsIHttpChannel.idl",
+    "sha256": "f4d1e2705eb7ff854a50e72842ba5da49d8ed992b4eb289ee178a42baa0574f9"
+  },
+  {
+    "path": "netwerk/protocol/http/nsIHttpChannelAuthProvider.idl",
+    "sha256": "b16e942c14e0ecaba176226749df30e086d3b07c7e0c258ff2aae8b31efb8fee"
+  },
+  {
+    "path": "netwerk/protocol/http/nsIHttpChannelChild.idl",
+    "sha256": "7b67d1c6c8662d336b7d65dfc193055b20c71727f0b3fa1c9c841d16bb34a0c4"
+  },
+  {
+    "path": "netwerk/protocol/http/nsIHttpChannelInternal.idl",
+    "sha256": "6835efbdceb7bbfd2cca523ffdd98a2366e5501383864f33737c1300b6affc5c"
+  },
+  {
+    "path": "netwerk/protocol/http/nsIHttpHeaderVisitor.idl",
+    "sha256": "a338fd4b66af5e164aad6f4fd6e2939286a06ac5d205bbb8da2dc32dbd1e1412"
+  },
+  {
+    "path": "netwerk/protocol/http/nsIHttpProtocolHandler.idl",
+    "sha256": "4dba176e7e1e626fd6513c481fb0b8121121692a315c166fe56e7a4f6c084212"
+  },
+  {
+    "path": "netwerk/protocol/http/nsINetworkErrorLogging.idl",
+    "sha256": "f2a10ce757accd85451dbedfcff2639c8ad7787ead04de349f1b42efa4aef7ec"
+  },
+  {
+    "path": "netwerk/protocol/http/nsIObliviousHttp.idl",
+    "sha256": "debdf5049b7e53cfc861aa2f26f64bc25f89bb54496005dc1fcb50f27cfbccca"
+  },
+  {
+    "path": "netwerk/protocol/http/nsIObliviousHttpChannel.idl",
+    "sha256": "619712927d580ce79d038981822b364c66e49c722d036c83617f990465fc69c8"
+  },
+  {
+    "path": "netwerk/protocol/http/nsIReplacedHttpResponse.idl",
+    "sha256": "acd0571433452950f842ebd6f824a01f7a1e87188f8739552cba9c0d2f12c8f2"
+  },
+  {
+    "path": "netwerk/protocol/http/nsITlsHandshakeListener.idl",
+    "sha256": "e54d8fc5b537a30ffa8189036375a347e8136a1eccbbe34a87583a483e883b06"
+  },
+  {
+    "path": "netwerk/protocol/http/nsIWellKnownOpportunisticUtils.idl",
+    "sha256": "9bfcd0a52bcbb40419a75545e9f6add132255622e07fd6e1eb17453e70f5f902"
+  },
+  {
+    "path": "netwerk/protocol/res/nsIResProtocolHandler.idl",
+    "sha256": "97077bc334bab027241c879641f28e27936cb4b705322a831a5d18259637e5a1"
+  },
+  {
+    "path": "netwerk/protocol/res/nsISubstitutingProtocolHandler.idl",
+    "sha256": "e742bf30292f1cec01ebd80a35e9d810055bea1b4dbef1f625df5155fbacc2ea"
+  },
+  {
+    "path": "netwerk/protocol/viewsource/nsIViewSourceChannel.idl",
+    "sha256": "aa54a159bc4a035384aa590aa8f2e5c63dbfeb00f8c54e339c335ec7f7553b96"
+  },
+  {
+    "path": "netwerk/protocol/websocket/nsITransportProvider.idl",
+    "sha256": "59d8395bf87332090536aadfe40de7d6b86daabb2574117bc57bdb7d038d784d"
+  },
+  {
+    "path": "netwerk/protocol/websocket/nsIWebSocketChannel.idl",
+    "sha256": "a917d9c43872d4dd7645749938af92a22403465939419fd447331dd1c4e4c604"
+  },
+  {
+    "path": "netwerk/protocol/websocket/nsIWebSocketEventService.idl",
+    "sha256": "c0a5ada904fdaad6d25bc8b7a52644529a4acab2ba8d69c35d57545dbcad7d65"
+  },
+  {
+    "path": "netwerk/protocol/websocket/nsIWebSocketImpl.idl",
+    "sha256": "1543f41e8ecebec5cbe5236eefc4498e5592b6d3dba9221e8940f6a3d160a63d"
+  },
+  {
+    "path": "netwerk/protocol/websocket/nsIWebSocketListener.idl",
+    "sha256": "c4ab2e0d4c106d6ba2e2bb6c6b4d47c689fb5a7fc2605882cf65cec70e4fdd61"
+  },
+  {
+    "path": "netwerk/protocol/websocket/nsIWebSocketProtocolHandler.idl",
+    "sha256": "a7972b35a8a11ee2cc916f5ae41a0356b25bab366716f1707016a1bc5faf1f53"
+  },
+  {
+    "path": "netwerk/protocol/webtransport/nsIWebTransport.idl",
+    "sha256": "2dd8ee2430ac01197f3160e42a089545641ebf2448a51ec7593506d49ca39610"
+  },
+  {
+    "path": "netwerk/protocol/webtransport/nsIWebTransportEventService.idl",
+    "sha256": "2ddbcb8d42602dee3380ef389da8ddec9875a26f2142af965dd9f0463afea258"
+  },
+  {
+    "path": "netwerk/protocol/webtransport/nsIWebTransportStream.idl",
+    "sha256": "935cbcfe39b072e54cb71dd474eaa1a6088faa7f2890b2bfd81eababd80675f3"
+  },
+  {
+    "path": "netwerk/socket/nsISocketProvider.idl",
+    "sha256": "98f55982b634823bd5a8191ee67287623e0de10a88b5fd6f80b45f7cfed7022f"
+  },
+  {
+    "path": "netwerk/socket/nsISocketProviderService.idl",
+    "sha256": "d563b56797dc991bcc0fff30ed8c7e8e0bd557149eb7429a652130f55dc93a18"
+  },
+  {
+    "path": "netwerk/streamconv/converters/nsICompressConvStats.idl",
+    "sha256": "6c15ae6062c30c65b20eed1b487c00f5337da0a47a54eccef33ea4fdc69a5d84"
+  },
+  {
+    "path": "netwerk/streamconv/mozITXTToHTMLConv.idl",
+    "sha256": "e286b97e8763d04a7b5e5fb907ad59e8d933a9e2a16f557fe5a79d920b023319"
+  },
+  {
+    "path": "netwerk/streamconv/nsIDirIndex.idl",
+    "sha256": "a17373a0ffc4e66996197828009f52a504cfafd4ae6690f0feb8b2249ef75323"
+  },
+  {
+    "path": "netwerk/streamconv/nsIDirIndexListener.idl",
+    "sha256": "e467ee0034a7414082d1b3100fd2e00029f0431a988fad4c4784440323698944"
+  },
+  {
+    "path": "netwerk/streamconv/nsIStreamConverter.idl",
+    "sha256": "e535599751c21b7e92e8a17003b01a76954230caecd2189be43491cd378d029a"
+  },
+  {
+    "path": "netwerk/streamconv/nsIStreamConverterService.idl",
+    "sha256": "22bd3d15c6bef57ec2ec41acb89f2cd7c26e708ac2c36939c528458136cb506f"
+  },
+  {
+    "path": "netwerk/streamconv/nsITXTToHTMLConv.idl",
+    "sha256": "c67ff7f62fa6ab5418aa94adb44d56dcc48b791726b3daf36725c060a1df8399"
+  },
+  {
+    "path": "netwerk/url-classifier/nsIChannelClassifierService.idl",
+    "sha256": "84cbf7b9a037aa1e9fdc91d9ac3c3713291e23ae22b9cd61dbb954f918faca21"
+  },
+  {
+    "path": "netwerk/url-classifier/nsIURIClassifier.idl",
+    "sha256": "86bee48d08059e391757e3c82168529977319d3a1e39e36c5638a3c9e36a502a"
+  },
+  {
+    "path": "netwerk/url-classifier/nsIUrlClassifierExceptionList.idl",
+    "sha256": "fc16e9df482485073f6116fa37fb25219b2d6919894f502a24f66c8073e9293b"
+  },
+  {
+    "path": "netwerk/url-classifier/nsIUrlClassifierExceptionListEntry.idl",
+    "sha256": "4535727fb9a95736f5cd0d9fa95af7cd1b72bee5c5ef4712d359ce5363208284"
+  },
+  {
+    "path": "netwerk/url-classifier/nsIUrlClassifierExceptionListService.idl",
+    "sha256": "3bebfd6686feea434ed3f7986319efa6ce855b589d09f557e222fdbec3f82b12"
+  },
+  {
+    "path": "netwerk/url-classifier/nsIUrlClassifierFeature.idl",
+    "sha256": "a92ada45fc0bc7105cf4690a255dba5204191364c24edb7e757776acecbb2f67"
+  },
+  {
+    "path": "netwerk/wifi/nsIWifiAccessPoint.idl",
+    "sha256": "590f5e05343ffb0ab84c25ddcb2567c738a167024d66acfae458824e5b803ac4"
+  },
+  {
+    "path": "netwerk/wifi/nsIWifiListener.idl",
+    "sha256": "51679c99a8c389ca612140e79471d6180dcbbb40c32ad075b528ddc6b1487631"
+  },
+  {
+    "path": "netwerk/wifi/nsIWifiMonitor.idl",
+    "sha256": "53045ea864d1e1ca5ab93dd71c2c975251fa9c088caa822c0e4dc1e17f89a538"
+  },
+  {
+    "path": "parser/html/nsIParserUtils.idl",
+    "sha256": "dbc01e25f83df80d40fd8d6d05e1f0228cdab3e7ee132ea28ccfdd1fa02e0954"
+  },
+  {
+    "path": "parser/htmlparser/nsIExpatSink.idl",
+    "sha256": "b75fad583d6fbda6247afe2a9566bfbcf31aa70ff1c8d01a35dc7aaa7702074f"
+  },
+  {
+    "path": "python/mach/mach/__init__.py",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "python/mach/mach/mixin/__init__.py",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "python/mach/mach/mixin/logging.py",
+    "sha256": "fc797f15d210dddae14dd713cca9163a5fffa7ad661678f94a8661ef1657c18d"
+  },
+  {
+    "path": "python/mach/mach/mixin/process.py",
+    "sha256": "99cce4843bd066c906b1c02670d8a763ba5c57afefa6e5896e227cf81cde6e0f"
+  },
+  {
+    "path": "python/mach/mach/util.py",
+    "sha256": "fe7607bee14530d2b87f4ba9b2a858a926afd9eb5830b7d12d243038e3247f56"
+  },
+  {
+    "path": "python/mozboot/mozboot/__init__.py",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "python/mozboot/mozboot/mozconfig.py",
+    "sha256": "15e36a41cf0a711bf48cb549fd233a6a40f4658a333ec11f111ed54aa92dc9af"
+  },
+  {
+    "path": "python/mozbuild/mozbuild/__init__.py",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "python/mozbuild/mozbuild/action/xpidl-process.py",
+    "sha256": "b70e88d07eb3ee189841d3596ecba9779e1451157ea3b66d465fb13015d5aca3"
+  },
+  {
+    "path": "python/mozbuild/mozbuild/backend/__init__.py",
+    "sha256": "c96ca0a3bba32d238e26b54a927c53eedfadc441f288ef9257e686958d34771b"
+  },
+  {
+    "path": "python/mozbuild/mozbuild/backend/configenvironment.py",
+    "sha256": "d5bf0912793dd0040cf191c784490aad3e3b25992904fe32f56f74b1752ff219"
+  },
+  {
+    "path": "python/mozbuild/mozbuild/base.py",
+    "sha256": "23d86c23ee7068e6be588f6275003a821a7d774e986280a2fc6c8593b610317d"
+  },
+  {
+    "path": "python/mozbuild/mozbuild/configure/__init__.py",
+    "sha256": "46a8ac082ec1918fe125414ba70fbc01fb2d652aa4f785750106d0f4fe4586af"
+  },
+  {
+    "path": "python/mozbuild/mozbuild/configure/constants.py",
+    "sha256": "4cfc4176ff1439914f6da84fdd0aaac9aca5581a060fab14c2198bc925eba28f"
+  },
+  {
+    "path": "python/mozbuild/mozbuild/configure/help.py",
+    "sha256": "c80073494beac4ba497c98fef9236accb8262800f30ca64430fbff0a60fe11cb"
+  },
+  {
+    "path": "python/mozbuild/mozbuild/configure/options.py",
+    "sha256": "374279b6b54f513c5d55fd9318a8b0dc69e2101ea84dce84a0bc352cfeeae560"
+  },
+  {
+    "path": "python/mozbuild/mozbuild/configure/util.py",
+    "sha256": "7a152753a4f9ffb216a0695b7285849128039c3000873a7b9d27ff6bd92cb2cb"
+  },
+  {
+    "path": "python/mozbuild/mozbuild/controller/__init__.py",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "python/mozbuild/mozbuild/controller/clobber.py",
+    "sha256": "275495a2d0008c74b82cf09df7fed212bcae5a094eddbbe4ec509023b41df170"
+  },
+  {
+    "path": "python/mozbuild/mozbuild/dirutils.py",
+    "sha256": "c6928571dc5f668c432b0af83db7a4e55fec5ff685c4e0e3f527e63a37f38b07"
+  },
+  {
+    "path": "python/mozbuild/mozbuild/frontend/__init__.py",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "python/mozbuild/mozbuild/frontend/context.py",
+    "sha256": "5c00fcac4be22c914f298240058832ada98c2b79b4588e2121be2c2d667cc4fd"
+  },
+  {
+    "path": "python/mozbuild/mozbuild/frontend/reader.py",
+    "sha256": "2932a3e6166738c144d61a648eff2560165b51bf5d0215387f7cce8bc149199f"
+  },
+  {
+    "path": "python/mozbuild/mozbuild/frontend/sandbox.py",
+    "sha256": "d5051b1fe30c23d566ecc48179713516509c092a8dce2b276bb00c1c4fafdbce"
+  },
+  {
+    "path": "python/mozbuild/mozbuild/makeutil.py",
+    "sha256": "ec38bdfdcf265d0200b5ce2b6333892439742391e0d12a935d9450b0b54b403b"
+  },
+  {
+    "path": "python/mozbuild/mozbuild/mozconfig.py",
+    "sha256": "06b2f55a3fe56a51bbac721fcfffa2f332a94fa8c2f25be31e7f43eb485c319a"
+  },
+  {
+    "path": "python/mozbuild/mozbuild/preprocessor.py",
+    "sha256": "9681c48645dbaaf85d023af17ad246b70f8a4014833a8698ba04c3257698d1d0"
+  },
+  {
+    "path": "python/mozbuild/mozbuild/pythonutil.py",
+    "sha256": "8e7eb4f44fb18eab6f04572c3fd2d03ece6987e08d4f795617bba4306b70c934"
+  },
+  {
+    "path": "python/mozbuild/mozbuild/schedules.py",
+    "sha256": "05188d0aab55828fc1f67e1d580ea7a2dae95be0e131f617e89e1d3fbb04c7dc"
+  },
+  {
+    "path": "python/mozbuild/mozbuild/testing.py",
+    "sha256": "81a90ee25a97640215805648c03bbd2d08e66ab45abe47e5fcef29508ae81863"
+  },
+  {
+    "path": "python/mozbuild/mozbuild/util.py",
+    "sha256": "ffbf394498699f7fb49e0194d209328225b3b4aaef236dddb77abaf872a2d4c5"
+  },
+  {
+    "path": "python/mozbuild/mozpack/__init__.py",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "python/mozbuild/mozpack/chrome/__init__.py",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "python/mozbuild/mozpack/chrome/flags.py",
+    "sha256": "a41971619d7b9f77252f7e9ff518b6cea2dd43538984968198b8483a550df85d"
+  },
+  {
+    "path": "python/mozbuild/mozpack/chrome/manifest.py",
+    "sha256": "a1fa78c5b07f1ab1d05b689110a055b69fb799fa04120a9b30f1f6adb1ce5476"
+  },
+  {
+    "path": "python/mozbuild/mozpack/copier.py",
+    "sha256": "690c2bd0d006d3fd6cadac46fcbeb1fd2de0afda657eba06e16e4ae1b37b19fb"
+  },
+  {
+    "path": "python/mozbuild/mozpack/errors.py",
+    "sha256": "898e1f97dbee9faa094178b278e8fb9140eb8f00b4dabed6339c9f1f6e06982a"
+  },
+  {
+    "path": "python/mozbuild/mozpack/executables.py",
+    "sha256": "3a11c913f8e5b1c41c3689456bad5fbbc161b67bb5500f55a3f96640749daf8d"
+  },
+  {
+    "path": "python/mozbuild/mozpack/files.py",
+    "sha256": "6e58a7e8e00d9912d374a9330fd3ea2f92bac9728ba9ee341bf8591671f04629"
+  },
+  {
+    "path": "python/mozbuild/mozpack/manifests.py",
+    "sha256": "b316e457059cb58b3b865cc9a49d7d67b44d4d2fac3aa6e1072eb8afcb7eef0e"
+  },
+  {
+    "path": "python/mozbuild/mozpack/mozjar.py",
+    "sha256": "02d7f722e3ff72968a692d0dc67b7d8e99c745583b66158317ab2d122b8a5169"
+  },
+  {
+    "path": "python/mozbuild/mozpack/path.py",
+    "sha256": "a4fda4453be5729d3ba2cdaf9d88c84e508985d255f0a752eedf18a54b26aa51"
+  },
+  {
+    "path": "python/mozversioncontrol/mozversioncontrol/__init__.py",
+    "sha256": "2602c23de61dc93f622ad97e8d01a88fea2a28d96b3d7ec5dc7525dd47b1e8fd"
+  },
+  {
+    "path": "python/mozversioncontrol/mozversioncontrol/errors.py",
+    "sha256": "2ebae104b1b7145d46575ea0e064306a0b832cd9bc202926b0349b9c62ae45f7"
+  },
+  {
+    "path": "python/mozversioncontrol/mozversioncontrol/factory.py",
+    "sha256": "0cb8b6ec651b1499ba940715eec27c397611a053b46cc51b849ed2e133aeb9ea"
+  },
+  {
+    "path": "python/mozversioncontrol/mozversioncontrol/repo/base.py",
+    "sha256": "3ff1d6f67e3dab37f6bc4f1809487de48856cd7873409a24b7bc4d2eeff7f18c"
+  },
+  {
+    "path": "python/mozversioncontrol/mozversioncontrol/repo/git.py",
+    "sha256": "5467a515cd560e2fa2cf2d4f1578632dba61061cd6d65c159ba7ad425e232f46"
+  },
+  {
+    "path": "python/mozversioncontrol/mozversioncontrol/repo/jj.py",
+    "sha256": "d1b138f373b8a3d372f7049a944e9f07d59dfca336c109dddd41882d5cc10679"
+  },
+  {
+    "path": "python/mozversioncontrol/mozversioncontrol/repo/mercurial.py",
+    "sha256": "416aa970ca0da73baac666b35d86ea6c8bf21d05760b8e3615006f2b62514a48"
+  },
+  {
+    "path": "python/mozversioncontrol/mozversioncontrol/repo/source.py",
+    "sha256": "4aa601a251ceb494203ebbea3bc8adb359b3ffb2b8a45f93635f7ad0c5c14cca"
+  },
+  {
+    "path": "remote/components/nsIMarionette.idl",
+    "sha256": "78f95839768d627e600f4f0f660695d2a31594b9174067f026885f714f14a687"
+  },
+  {
+    "path": "remote/components/nsIRemoteAgent.idl",
+    "sha256": "59d9735b435f29f74849dd393a7b90861bb39d4a58bd267525a3281dcbed5978"
+  },
+  {
+    "path": "security/manager/ssl/nsICertOverrideService.idl",
+    "sha256": "b2d7dde18ab2a229587a7ae565f1052f774a36f2dd1b095c9b033880f3294904"
+  },
+  {
+    "path": "security/manager/ssl/nsICertStorage.idl",
+    "sha256": "66a30c61b9df7b2b1d037ecdd534c2e56300d7c10ac70a33cb16b8204e312fdb"
+  },
+  {
+    "path": "security/manager/ssl/nsICertTree.idl",
+    "sha256": "7888f144f5c7c54fb1a2a1da40e721aa98d36a9389990a84f28b8f871a4202ef"
+  },
+  {
+    "path": "security/manager/ssl/nsICertificateDialogs.idl",
+    "sha256": "43e1fb8cfd2440e828ab9acbc368e72b0e2d2bcb6addc5092e136c41bbce3af1"
+  },
+  {
+    "path": "security/manager/ssl/nsIClientAuthDialogService.idl",
+    "sha256": "7a9368ef8767248f9388b5789456df5fc8f1a31b22d518ab33615add1f918672"
+  },
+  {
+    "path": "security/manager/ssl/nsIClientAuthRememberService.idl",
+    "sha256": "94821b9206ff3d31f824652365969fe2d5035461770a67b710a74d1cd6c36b99"
+  },
+  {
+    "path": "security/manager/ssl/nsIContentSignatureVerifier.idl",
+    "sha256": "fea665728cf8b0b3c57232ba08ec6aca87e50a4a651b306affef3e5c9ca88bf1"
+  },
+  {
+    "path": "security/manager/ssl/nsICryptoHash.idl",
+    "sha256": "096ce25d3fb70959ea772286b366422445cc548d90f49bd602941fd627794cce"
+  },
+  {
+    "path": "security/manager/ssl/nsICtapCableChannel.idl",
+    "sha256": "764d39277d4922f81e10a6514422cd27772faeb800491d5074d18e8341dad117"
+  },
+  {
+    "path": "security/manager/ssl/nsICtapCableHandshake.idl",
+    "sha256": "73d7d95ce5a558739068b0bd286c85387eac4a45ed06e6576e7a97b77f5bee5f"
+  },
+  {
+    "path": "security/manager/ssl/nsIDataStorage.idl",
+    "sha256": "efa5bece43734ebeabea663b345b57cb83d2e40c891dc0eef2566bb68cb29e1e"
+  },
+  {
+    "path": "security/manager/ssl/nsIFIPSUtils.idl",
+    "sha256": "b599a275abfff7ce29b702bcd439439545d251099a2037202119e9e12f21fd63"
+  },
+  {
+    "path": "security/manager/ssl/nsINSSComponent.idl",
+    "sha256": "b37253c6275f0232bce1cc460742aacbe5bef89a48a5d5a650765fa170a10768"
+  },
+  {
+    "path": "security/manager/ssl/nsINSSErrorsService.idl",
+    "sha256": "7942259303c07f142c2c36dba9ae03f72e774cf43ff9a6915ee8682657bedc37"
+  },
+  {
+    "path": "security/manager/ssl/nsINSSVersion.idl",
+    "sha256": "788672ffd6bdb65e58441c7567bf2571bcfb98517479594ddfb18fdee60691a0"
+  },
+  {
+    "path": "security/manager/ssl/nsIOSKeyStore.idl",
+    "sha256": "8906ceb4936ecae20b12a60afea33e98ea789d35c9523955509a5f5d1c371570"
+  },
+  {
+    "path": "security/manager/ssl/nsIOSReauthenticator.idl",
+    "sha256": "a7803582bc6e2985842e2565706539fe9e3ea3cabf7880c3cd4e050839808d2c"
+  },
+  {
+    "path": "security/manager/ssl/nsIPKCS11Module.idl",
+    "sha256": "bfcd2bacaa7cee5febc5f604479c1e6e7823b646d0af628902d8945ae069d1ea"
+  },
+  {
+    "path": "security/manager/ssl/nsIPKCS11ModuleDB.idl",
+    "sha256": "3ca46805bb29dee9984caa74d8e360616d1db0e41bad1ae84cf309ef64c280af"
+  },
+  {
+    "path": "security/manager/ssl/nsIPKCS11Slot.idl",
+    "sha256": "33822c29bf3ca043bd5c8972d1fcdcf618d173f70dcca76207a17b3158939c4f"
+  },
+  {
+    "path": "security/manager/ssl/nsIPKCS11Token.idl",
+    "sha256": "bf6c5370e50651b54f40060c4619cb102be2ac525ce8b2329a8f17f9c6902862"
+  },
+  {
+    "path": "security/manager/ssl/nsIPublicKeyPinningService.idl",
+    "sha256": "fe60231179b1c63c77934b90c3782e23308858fdabc66aa0c95235f6b59003f0"
+  },
+  {
+    "path": "security/manager/ssl/nsISecretDecoderRing.idl",
+    "sha256": "5c48cca766554c5eccfd92644f61280a5baad27d68eedb684590938c6cf00e29"
+  },
+  {
+    "path": "security/manager/ssl/nsISecurityUITelemetry.idl",
+    "sha256": "80437f3ee593e72ee13745df65e35e502b6380f3acdece2de771102b347f0ef3"
+  },
+  {
+    "path": "security/manager/ssl/nsISiteIntegrityService.idl",
+    "sha256": "158e45eca27564d4340f83c9363853efd42dff29faec465535e52a916052e591"
+  },
+  {
+    "path": "security/manager/ssl/nsISiteSecurityService.idl",
+    "sha256": "2b31ecc169ecd1d64f149f9335f383cc3731460a11f979a24893642eb61d9381"
+  },
+  {
+    "path": "security/manager/ssl/nsITLSSocketControl.idl",
+    "sha256": "87f7f2848f71b9ae571c0273c06f360dd369f4ac6caa786c3b80b81e6600b49d"
+  },
+  {
+    "path": "security/manager/ssl/nsITransportSecurityInfo.idl",
+    "sha256": "3450e718395e43d63bdcc436ae3719b44a62786542d178745efec1688e31e7e2"
+  },
+  {
+    "path": "security/manager/ssl/nsIX509Cert.idl",
+    "sha256": "a64f7c04e30e07095c3afb99835b14b048798d443218f2a9fd3f520ac7d2363a"
+  },
+  {
+    "path": "security/manager/ssl/nsIX509CertDB.idl",
+    "sha256": "4a115432db81aed5329c9f4d0ec21eaeec31e6508a4e242b86f5453cb8fdd657"
+  },
+  {
+    "path": "security/manager/ssl/nsIX509CertValidity.idl",
+    "sha256": "a560073dcbbae747830a571006092b27afcc2fa69dc7abbf9bb9c1e05c756ee8"
+  },
+  {
+    "path": "security/sandbox/common/mozISandboxSettings.idl",
+    "sha256": "1914451bae4498c48754473935c3f40d10f7afb506fb883b311f7194d1698e4a"
+  },
+  {
+    "path": "security/sandbox/linux/interfaces/mozISandboxReporter.idl",
+    "sha256": "e3ca6c0515a005ca79268d045054acad6551cce9f3020c4f5cb1eb0f60b0607f"
+  },
+  {
+    "path": "services/interfaces/mozIInterruptible.idl",
+    "sha256": "8b47b65d63fe1f385537c92836f9c6a897c5abee7d4ff0fe21204ef0e9927fe7"
+  },
+  {
+    "path": "startupcache/nsIStartupCacheInfo.idl",
+    "sha256": "0f549f9fd86e87a2b9dde4993d8f3cdbcca7567150a8c1c83511d264421cc234"
+  },
+  {
+    "path": "storage/mozIStorageAsyncConnection.idl",
+    "sha256": "b7ed6ea8286cd93d6f3d2a91808232d566c64b6ef5cd8b04ee529198f89c49de"
+  },
+  {
+    "path": "storage/mozIStorageAsyncStatement.idl",
+    "sha256": "865665efd7791a319e51c67ba4e6e548c4b9f848a9a7bed77fd07742a9b65277"
+  },
+  {
+    "path": "storage/mozIStorageBaseStatement.idl",
+    "sha256": "73311a1bf5ca134e2075535696e4d6b5d53992010058d3c4105eb4658fc80bf3"
+  },
+  {
+    "path": "storage/mozIStorageBindingParams.idl",
+    "sha256": "4acd5eef5639c777f5b2d464f7d094587cd3d2c4bb2881e28184ee76194d45a2"
+  },
+  {
+    "path": "storage/mozIStorageBindingParamsArray.idl",
+    "sha256": "6e71954b09792e0a3815fcd466a0e0c09b28bd1083db4f8655dfe0451d3f8d63"
+  },
+  {
+    "path": "storage/mozIStorageCompletionCallback.idl",
+    "sha256": "272ad848ee989a081375a4aafa11fcb8907816c13dccb9f19876720537205f53"
+  },
+  {
+    "path": "storage/mozIStorageConnection.idl",
+    "sha256": "52f6d0db9b0cafbc42b81ac7d6034151ef6d5743e8ee9a0235d9e46495be7003"
+  },
+  {
+    "path": "storage/mozIStorageError.idl",
+    "sha256": "623a671322c350d0ad0376c48367c016f9c86012e8a33941d60a62a0e3d0b652"
+  },
+  {
+    "path": "storage/mozIStorageFunction.idl",
+    "sha256": "4c0d8d200719f4951fa44b4d2ff64daa49770e3131647e8bcbe7e1aba932ad99"
+  },
+  {
+    "path": "storage/mozIStoragePendingStatement.idl",
+    "sha256": "28ff25f23bdaeb1f52c5dd59134748fdb692c81e2293a3fa496550dcaecb14d0"
+  },
+  {
+    "path": "storage/mozIStorageProgressHandler.idl",
+    "sha256": "68d060bb53cdf5901114a768790312067c2015c654aaf44cdb3aa659c11272b0"
+  },
+  {
+    "path": "storage/mozIStorageResultSet.idl",
+    "sha256": "095a40278108a67faa8dddc9b8a4458fb00d796354f169a5838e73f859021ecd"
+  },
+  {
+    "path": "storage/mozIStorageRow.idl",
+    "sha256": "5541e4fa7c26eacea36814efe4f8359270c13f4ffd86ed79f6d0f867e3212897"
+  },
+  {
+    "path": "storage/mozIStorageService.idl",
+    "sha256": "f3ce02b8a4b1d94805e432a1f0df0a5e3c27212544b6b29e5639a999036fe682"
+  },
+  {
+    "path": "storage/mozIStorageStatement.idl",
+    "sha256": "b37902d856723d7387e03020f7d76017639d4dae6a2e6916d622269ab0f8093f"
+  },
+  {
+    "path": "storage/mozIStorageStatementCallback.idl",
+    "sha256": "90120b4b8fddeda8d424126b80e308adff414119fca4548b0ade936bfe24bdb3"
+  },
+  {
+    "path": "storage/mozIStorageVacuumParticipant.idl",
+    "sha256": "a21dba33c8e62ed43d70ea6f58772f45d1274a291473ab3005bfb5d83bdfb571"
+  },
+  {
+    "path": "storage/mozIStorageValueArray.idl",
+    "sha256": "e5fd47fa27d41e3556fe49eb3fadbefcab5efc9a605157eeebb3d838a39eb879"
+  },
+  {
+    "path": "testing/mozbase/manifestparser/manifestparser/__init__.py",
+    "sha256": "4d536cead57e0cc9b71dbb826f890c2086b7060e3b84e599f2cc3f684232b61d"
+  },
+  {
+    "path": "testing/mozbase/manifestparser/manifestparser/expression.py",
+    "sha256": "bdff4d332fe19fa5a7cc6cb87480ceb71ca92068ce52b13f1607074fe158ea59"
+  },
+  {
+    "path": "testing/mozbase/manifestparser/manifestparser/filters.py",
+    "sha256": "6d9b4d1882a5d3306df57af3dc2c330d68fbcf303852658635190661a4653be9"
+  },
+  {
+    "path": "testing/mozbase/manifestparser/manifestparser/ini.py",
+    "sha256": "dd73d8557bcb1f4a53fce2da39ba11e687fe412536380b59c1534c6fea55f8cf"
+  },
+  {
+    "path": "testing/mozbase/manifestparser/manifestparser/logger.py",
+    "sha256": "1a97df72349def729536b1e59cafdab8fa1598cccf8ae60dfd7d2d433063e519"
+  },
+  {
+    "path": "testing/mozbase/manifestparser/manifestparser/manifestparser.py",
+    "sha256": "f5273c0031d46165be0f2448d9234df001685d67e550949806b4225f3d36d273"
+  },
+  {
+    "path": "testing/mozbase/manifestparser/manifestparser/toml.py",
+    "sha256": "c4095805e8a081828e13ee57f9ecc15f91eb9ad10260365bb594be1a82e50535"
+  },
+  {
+    "path": "testing/mozbase/manifestparser/manifestparser/util.py",
+    "sha256": "1a4a29795575bb24273fedde0473b80b79b32d6d4b2e8c1ebf3f69d02ded591f"
+  },
+  {
+    "path": "testing/mozbase/mozfile/mozfile/__init__.py",
+    "sha256": "085df7d631686a6ea315c1e7ff413c9cbba0274ae22f44ec7fc826658761eed0"
+  },
+  {
+    "path": "testing/mozbase/mozfile/mozfile/mozfile.py",
+    "sha256": "196d7a1a26716897bbf5b7433834d6e6d1833d26d4ed7739bad771d566530eb0"
+  },
+  {
+    "path": "testing/mozbase/mozprocess/mozprocess/__init__.py",
+    "sha256": "42a989a5a57ab694876ec0d36ce1c85d003ba8bfd7513552be563e2c81833e21"
+  },
+  {
+    "path": "testing/mozbase/mozprocess/mozprocess/mozprocess.py",
+    "sha256": "c13f500397aa6d808beb3aa773bbc3c8972a8c02c291a66b1b6b7dc221648cfb"
+  },
+  {
+    "path": "testing/mozbase/mozprocess/mozprocess/processhandler.py",
+    "sha256": "fc30554fe1a55addd5becf0899ec6a5eaac7fbf6a069d710f71617aacb015c51"
+  },
+  {
+    "path": "testing/mozbase/mozshellutil/mozshellutil/__init__.py",
+    "sha256": "f335aeaa6183f2a84151757c2bd4eb0fdcaaca43c8b95f6400f51f8852d7dbbf"
+  },
+  {
+    "path": "testing/mozbase/mozshellutil/mozshellutil/shellutil.py",
+    "sha256": "50c830c452be66be8b7a9a4be7a6a49cc20a247659b5c41ae6b948e4487b03e7"
+  },
+  {
+    "path": "third_party/python/looseversion/looseversion/__init__.py",
+    "sha256": "609c63e7339b8ed4707c5cbab8db1f6a861b2ad10ed84e27234775772e61841e"
+  },
+  {
+    "path": "third_party/python/packaging/packaging/__init__.py",
+    "sha256": "ff470388f55fd92f9b35f566660bb1c739ab2185a5c804b1a6aa61e2ab095947"
+  },
+  {
+    "path": "third_party/python/packaging/packaging/_structures.py",
+    "sha256": "ab77953666d62461bf4b40e2b7f4b7028f2a42acffe4f6135c500a0597b9cabe"
+  },
+  {
+    "path": "third_party/python/packaging/packaging/version.py",
+    "sha256": "a257f2ba4fc33db7e5364278c0159eb57435edcef8c770c1e74d5d7a052fec36"
+  },
+  {
+    "path": "third_party/python/ply/ply/__init__.py",
+    "sha256": "ab8b3ce90c11b1845adb42fdb9e4b17e1fa13e28697ed0630cebd86b6fd24b66"
+  },
+  {
+    "path": "third_party/python/ply/ply/lex.py",
+    "sha256": "b2c89e920aaaec62f3089e091c58b9a4f8956930da99276448b6957897c95630"
+  },
+  {
+    "path": "third_party/python/ply/ply/yacc.py",
+    "sha256": "d594b94497075e211266c3588bec4a7b237eb80d84ee39606cf1b4a30de62462"
+  },
+  {
+    "path": "third_party/python/python-hglib/hglib/__init__.py",
+    "sha256": "4042eac41b99f5222177ba872dc88d6db9a24cd79b01cd778150ec18e5287d17"
+  },
+  {
+    "path": "third_party/python/python-hglib/hglib/client.py",
+    "sha256": "c1ab744f7f5bf2497d49b7759f187239a421e58f4ad3c10c21450b40643a2f0a"
+  },
+  {
+    "path": "third_party/python/python-hglib/hglib/context.py",
+    "sha256": "130585ed86419d023588317591a6cedcfaa77333dbe968135cfe7697fd047d66"
+  },
+  {
+    "path": "third_party/python/python-hglib/hglib/error.py",
+    "sha256": "bc00de6d2ba95f7b061a889dcd36c0aa1201b68e1852bac5d61ca8af4f5e1b51"
+  },
+  {
+    "path": "third_party/python/python-hglib/hglib/merge.py",
+    "sha256": "ad85936dfeefeb144cbcefe1fc59d5c969c501e5d1fcbf9f35b51dfd0d266716"
+  },
+  {
+    "path": "third_party/python/python-hglib/hglib/templates.py",
+    "sha256": "2dfac8c86212af2ca4c4598231f0e229258a38b6225ed576ea10bec682cda20a"
+  },
+  {
+    "path": "third_party/python/python-hglib/hglib/util.py",
+    "sha256": "3d89807de59161d5d24f545109fb2d2b0fda70f60f168ed1e7d747cf3392bf78"
+  },
+  {
+    "path": "third_party/python/tomlkit/tomlkit/__init__.py",
+    "sha256": "148d37325022edd8743312cfad372060981896dfcc37dfa95b55f6c297fc5baf"
+  },
+  {
+    "path": "third_party/python/tomlkit/tomlkit/_compat.py",
+    "sha256": "829ecfeea361d32635760d30ca38820db570153754a3ba744308d5e13dc5ba7b"
+  },
+  {
+    "path": "third_party/python/tomlkit/tomlkit/_types.py",
+    "sha256": "e3686dda6fbfa493ef43fb8c28c2097f828be85f4dd0da036b47f299f4de202e"
+  },
+  {
+    "path": "third_party/python/tomlkit/tomlkit/_utils.py",
+    "sha256": "9b83b25aaf67c3930669b1e140a4c8bb562d503f12549ca84c89874cde8bed87"
+  },
+  {
+    "path": "third_party/python/tomlkit/tomlkit/api.py",
+    "sha256": "ab766644cf3bb4a0a18ec9eea9a8fa1201ed4f149f7be7cf8406f931b220ff75"
+  },
+  {
+    "path": "third_party/python/tomlkit/tomlkit/container.py",
+    "sha256": "f78d32961ffc25fad3119b02498eaae4f249f13bc9bce86e55a828441fa1ca88"
+  },
+  {
+    "path": "third_party/python/tomlkit/tomlkit/exceptions.py",
+    "sha256": "7bed222a3bfebb69e013a1ba5cc3b16a804d9ca05f3cd8c32e66b0e180c7a685"
+  },
+  {
+    "path": "third_party/python/tomlkit/tomlkit/items.py",
+    "sha256": "d782acd571735ec25561a06c1da242fc8cfd10aa1da746d1389cc5dc75e305e9"
+  },
+  {
+    "path": "third_party/python/tomlkit/tomlkit/parser.py",
+    "sha256": "19a4d2d0d42511e9647751939670c54f736d41da797c2d63d74fe59cade939d2"
+  },
+  {
+    "path": "third_party/python/tomlkit/tomlkit/source.py",
+    "sha256": "362b61ee698f9a14dfe5d31245ce356d8f5cb88451ff80a8a8e8c2f9fc737c2a"
+  },
+  {
+    "path": "third_party/python/tomlkit/tomlkit/toml_char.py",
+    "sha256": "c37b10674768959d6a8d9d91c63fecbef96944d34607f7e37c17180f48059c3b"
+  },
+  {
+    "path": "third_party/python/tomlkit/tomlkit/toml_document.py",
+    "sha256": "3824e45977773f9f04653e120fcfdd75cd58a6431aaad952e7fb2d1d306630e2"
+  },
+  {
+    "path": "toolkit/components/alerts/nsIAlertsService.idl",
+    "sha256": "80cbb350ad813f3b446f8c27660f2315f7de59e45600bd63b0764b31d6364f88"
+  },
+  {
+    "path": "toolkit/components/antitracking/bouncetrackingprotection/nsIBTPRemoteExceptionList.idl",
+    "sha256": "84b7f02366ff0ffcb6a551a423617af5533f455f200b7f05642478af56ec683b"
+  },
+  {
+    "path": "toolkit/components/antitracking/bouncetrackingprotection/nsIBounceTrackingMapEntry.idl",
+    "sha256": "18df325e3ca6f626c78b632d03563398ebe310a10a96d809544dd72fe1502c0c"
+  },
+  {
+    "path": "toolkit/components/antitracking/bouncetrackingprotection/nsIBounceTrackingProtection.idl",
+    "sha256": "3c191bcdce869e87c4abf6fd1793fc66ac6c73294ed07469bbc1582864b7de9a"
+  },
+  {
+    "path": "toolkit/components/antitracking/bouncetrackingprotection/nsIBounceTrackingRecord.idl",
+    "sha256": "4416f7557d6fd8317c2066a8610ac100ccca4c162cc10184b88c1ecac7a9ed75"
+  },
+  {
+    "path": "toolkit/components/antitracking/nsIContentBlockingAllowList.idl",
+    "sha256": "5d5a79d1bdaacf8b10932501c590fc0c8934e540072309b2aa38db78327b0291"
+  },
+  {
+    "path": "toolkit/components/antitracking/nsIPartitioningExceptionListService.idl",
+    "sha256": "36ad609db56032f3bbd32519ba8872b2bbcf43aa93d7d9718acfba795737a291"
+  },
+  {
+    "path": "toolkit/components/antitracking/nsIPurgeTrackerService.idl",
+    "sha256": "82ded11e499c1fff55e6619a19c6d67872e9cbaf78b8f0a16473235a86efa7d8"
+  },
+  {
+    "path": "toolkit/components/antitracking/nsITrackingDBService.idl",
+    "sha256": "250797a38fb1fce1b3977b31d7d21336ee759359fc4f399f11d1dfbbb85719c5"
+  },
+  {
+    "path": "toolkit/components/antitracking/nsIURLDecorationAnnotationsService.idl",
+    "sha256": "ee8f0ec218dff58994ee9bf09f6ab9ba74ad52e685dc94bb12037f7b3df4a37b"
+  },
+  {
+    "path": "toolkit/components/antitracking/nsIURLQueryStringStripper.idl",
+    "sha256": "3e1504522a34fe82bec7f56b1b09c40c8cc0e00eac004afc4a318e7fd9921634"
+  },
+  {
+    "path": "toolkit/components/antitracking/nsIURLQueryStrippingListService.idl",
+    "sha256": "d3a0c7dcd6cd983ee95248355e655d66dd9802c3e7efa54933f43f0474833ac4"
+  },
+  {
+    "path": "toolkit/components/antitracking/scopedprefs/nsIScopedPrefs.idl",
+    "sha256": "20e558a3c0fde724aa55e97a2f61d55d83d122125d501436c59305f64c3f8fe8"
+  },
+  {
+    "path": "toolkit/components/asyncshutdown/nsIAsyncShutdown.idl",
+    "sha256": "5bbcf06d24ada38c191b6fe75632e3ac05a0eb9a22e0aaadb9f85d442caf6d9f"
+  },
+  {
+    "path": "toolkit/components/autocomplete/nsIAutoCompleteController.idl",
+    "sha256": "1fdd0d7468e2759b36f5fcd4b561aa99c43710c3549088313bb1cf3774ed833b"
+  },
+  {
+    "path": "toolkit/components/autocomplete/nsIAutoCompleteInput.idl",
+    "sha256": "e406de553e9fdb8b4d753e9a10e97d2d26f40b06ff3720e1a020a80ea09d07e4"
+  },
+  {
+    "path": "toolkit/components/autocomplete/nsIAutoCompletePopup.idl",
+    "sha256": "a50ef8f018acdd76038c37b63b85c44f590bc83ca044b5f10ecdf68d0a4b4ae5"
+  },
+  {
+    "path": "toolkit/components/autocomplete/nsIAutoCompleteResult.idl",
+    "sha256": "5f05c13031966312c386279cb13df644b1d317a924a5ce7533d61f2fe3d19898"
+  },
+  {
+    "path": "toolkit/components/autocomplete/nsIAutoCompleteSearch.idl",
+    "sha256": "67aecdae575a69607448c29759d146112d35c6a15e4b7912d19d47c74e5fb93e"
+  },
+  {
+    "path": "toolkit/components/autocomplete/nsIAutoCompleteSimpleResult.idl",
+    "sha256": "ac7dabd4178372cade9e0f5c9f392fa8228987649ebc4cc0c5d84b485ee57a65"
+  },
+  {
+    "path": "toolkit/components/autocomplete/nsIAutoCompleteSimpleSearch.idl",
+    "sha256": "88f9d318ae45bc76a6f32813891e97ae9969873699d7858208ab5b7866fc46e0"
+  },
+  {
+    "path": "toolkit/components/backgroundhangmonitor/nsIHangDetails.idl",
+    "sha256": "7d226020324b91108e9dd44bbf4c8bc472093b141d7577db29c33b64dfe4f111"
+  },
+  {
+    "path": "toolkit/components/backgroundtasks/nsIBackgroundTasks.idl",
+    "sha256": "de11dd15cbc93c38c654d0dff4688ff20ca091372cec726ebc115f2d6979c3d9"
+  },
+  {
+    "path": "toolkit/components/backgroundtasks/nsIBackgroundTasksManager.idl",
+    "sha256": "35572fef101f127f6d0557cecc0464e9b56a0721ed410e2ce8d3506d6e8b8822"
+  },
+  {
+    "path": "toolkit/components/backgroundtasks/nsIBackgroundTasksRunner.idl",
+    "sha256": "0045c8fc88213e8b8f214ce2f9b35f2f02a127fb4cad1a9d2f53a1074a766d0b"
+  },
+  {
+    "path": "toolkit/components/bitsdownload/nsIBits.idl",
+    "sha256": "c14b3192d5cb7cf97c68e4995ac6679bac0b8d39de820c686c8d76d8927fdf33"
+  },
+  {
+    "path": "toolkit/components/browser/nsIWebBrowser.idl",
+    "sha256": "8f28662188db3d1c3904788362484247a074238c81e882de76a913cea0ec0df0"
+  },
+  {
+    "path": "toolkit/components/browser/nsIWebBrowserChrome.idl",
+    "sha256": "fc3c078ca5709fb3861fa93a77ad9bba1b345e1a19e6f84a4e8adcd17306aa78"
+  },
+  {
+    "path": "toolkit/components/browser/nsIWebBrowserPrint.idl",
+    "sha256": "3e028de0449ffcb2e4783bc4a6cbb555f19aa62867b7ff83ac9ac5deb9c80d1c"
+  },
+  {
+    "path": "toolkit/components/captivedetect/nsICaptivePortalDetector.idl",
+    "sha256": "5f2b6bd98ca731fa1a13a350293bf0273f940dbc38fe9fdeeee1b4eb3bc278a0"
+  },
+  {
+    "path": "toolkit/components/cascade_bloom_filter/nsICascadeFilter.idl",
+    "sha256": "983f83af7498b136614ca657c632fbe2b94b4c56808a55894556f783db45438c"
+  },
+  {
+    "path": "toolkit/components/cleardata/nsIClearBySiteEntry.idl",
+    "sha256": "4415fc5f504d265b4d988524159bf9e67211b8ec6526bd8893a1a994c7a316f8"
+  },
+  {
+    "path": "toolkit/components/cleardata/nsIClearDataService.idl",
+    "sha256": "debcebf7c743ca37336cf5f8711729342085646be2b36382cc1ebf1d3249ae4a"
+  },
+  {
+    "path": "toolkit/components/commandlines/nsICommandLine.idl",
+    "sha256": "027fd427453ea3ec1c5dea9bfd61146449a3609c0ad953edb91912d84e63fda8"
+  },
+  {
+    "path": "toolkit/components/commandlines/nsICommandLineHandler.idl",
+    "sha256": "1f712b6e564ca9ace55f8dc48d32f87341c02943c70320de93d28cc17f1cf892"
+  },
+  {
+    "path": "toolkit/components/commandlines/nsICommandLineRunner.idl",
+    "sha256": "f72714e1c862c848592d08e3b8181dea61b818bb94ab3dd296c66a7c112872b6"
+  },
+  {
+    "path": "toolkit/components/commandlines/nsICommandLineValidator.idl",
+    "sha256": "f9d0bf52de61788fd9582e78334ceb2eb1c6d2f22cd9f9ea932d8c15f1a5025c"
+  },
+  {
+    "path": "toolkit/components/content-classifier/nsIContentClassifierRemoteSettingsClient.idl",
+    "sha256": "4d4058f7ce24c7c9047d4dcfcb0dfeb3f02a0bea6aa5357f8a7b75198fd042e9"
+  },
+  {
+    "path": "toolkit/components/content-classifier/nsIContentClassifierService.idl",
+    "sha256": "fab7c7b95d610831e62c93c0e0b23aac60bedcda3f2a66cdaea68906a34e35aa"
+  },
+  {
+    "path": "toolkit/components/contentanalysis/nsIContentAnalysis.idl",
+    "sha256": "e1b8ecdf9778572076ee116fd414ae7c174206bc5a3dab8d07981c413811e043"
+  },
+  {
+    "path": "toolkit/components/contextualidentity/nsISiteContainerService.idl",
+    "sha256": "7dca97d226681e1bb0ff88a9545dd5d971f38f47587090923a6a03254d509f91"
+  },
+  {
+    "path": "toolkit/components/crashes/nsICrashService.idl",
+    "sha256": "855a8cfb25185eea2179a3182a0a045d227ee870e147104876de07e34660c1ea"
+  },
+  {
+    "path": "toolkit/components/credentialmanagement/nsICredentialChooserService.idl",
+    "sha256": "17307d74f047a81418a61e9cbff03f92dd55a74d253fb94d3697f2d5c996a319"
+  },
+  {
+    "path": "toolkit/components/credentialmanagement/nsICredentialChosenCallback.idl",
+    "sha256": "9786fe4a560716c22dd1cf754b161aeaecdb59ae73c4ef036d7e13e9be486f07"
+  },
+  {
+    "path": "toolkit/components/credentialmanagement/nsIIdentityCredentialPromptService.idl",
+    "sha256": "b6a0115075ed74757d720bdde0e207ef8056b3cd290750446944494cbd87d529"
+  },
+  {
+    "path": "toolkit/components/credentialmanagement/nsIIdentityCredentialStorageService.idl",
+    "sha256": "fe3d034ea9e772a38367d93bf5bd6a66b8828c06f0cd8af633fc89634231acc9"
+  },
+  {
+    "path": "toolkit/components/dap/nsIDAPTelemetry.idl",
+    "sha256": "489bf9ab0d8add36eb44662b9d87526e2bc436b9dec75fe0d76d088e89ef08e6"
+  },
+  {
+    "path": "toolkit/components/downloads/mozIDownloadPlatform.idl",
+    "sha256": "8b3ab3aa14bf7b3828666a9702c7174c17e3d10d369db545316a1c53fc7a03b8"
+  },
+  {
+    "path": "toolkit/components/enterprisepolicies/nsIEnterprisePolicies.idl",
+    "sha256": "10fb34ba4b4ef25cd8ff75d62e27d368d87cb10c023559ec0d64377229657738"
+  },
+  {
+    "path": "toolkit/components/extensions/extIWebNavigation.idl",
+    "sha256": "696b71821fc67d021897e511ec0e0f6b581e7584485c4aee5305ba6ad067ebe6"
+  },
+  {
+    "path": "toolkit/components/extensions/mozIExtensionAPIRequestHandling.idl",
+    "sha256": "0089c22af43be10382f339ca9660de02667c5f36e5ffb299638d9aba18574ef8"
+  },
+  {
+    "path": "toolkit/components/extensions/mozIExtensionProcessScript.idl",
+    "sha256": "67798d5ebea49643e5979592925f6168d90b73a3c65a1e429306e06ad06c37a4"
+  },
+  {
+    "path": "toolkit/components/extensions/nsINativeMessagingPortal.idl",
+    "sha256": "debf1ea115b564ba881df22668b73f8365641626b8374ad16cc612510d7be0f8"
+  },
+  {
+    "path": "toolkit/components/extensions/nsINativeMessagingProxy.idl",
+    "sha256": "ffd2187e4600c7ecbd7e2e5484c11f88332a103b4b1b07012f7ccd294d1d3cff"
+  },
+  {
+    "path": "toolkit/components/finalizationwitness/nsIFinalizationWitnessService.idl",
+    "sha256": "6354a81dba23785cb8822eadaf0b7f50c6c417b6fabc1849b8e80382888e0293"
+  },
+  {
+    "path": "toolkit/components/find/nsIFind.idl",
+    "sha256": "c76bea0b1ae1e9c39f677e5273fdbf7253b7f543e02a3698ae3e5557f52a6fea"
+  },
+  {
+    "path": "toolkit/components/find/nsIFindService.idl",
+    "sha256": "362de8dc0d97fa9a038860b2093864d8e0e8e0242252c672ddafd111c1b7e800"
+  },
+  {
+    "path": "toolkit/components/find/nsIWebBrowserFind.idl",
+    "sha256": "23cc9b48654a3381f9c89a7971d2238c165fd9b4c10a076e26034899e07f07ae"
+  },
+  {
+    "path": "toolkit/components/geolocation/nsIGeolocationService.idl",
+    "sha256": "9f137fe78f06956a140283e60e61183dafd246946a85d08d213eaa7d5cebda87"
+  },
+  {
+    "path": "toolkit/components/glean/xpcom/nsIFOG.idl",
+    "sha256": "cd1e18a7dc9cf6650ea491ffde596025fca84dadec44817e986cfbe737baf195"
+  },
+  {
+    "path": "toolkit/components/glean/xpcom/nsIGleanPing.idl",
+    "sha256": "b031273dfe1e8dbb25b290e4d764b937ae1d23b3821556919c5eeebffcf1da99"
+  },
+  {
+    "path": "toolkit/components/kvstore/nsIKeyValue.idl",
+    "sha256": "39808b3e3d44c25fff9a67760e0238bba0047044c6d69ed4fd53002a38d647f5"
+  },
+  {
+    "path": "toolkit/components/media/nsIWindowsMediaFoundationCDMOriginsListService.idl",
+    "sha256": "dbc19d34ae766da0cda71c444ddd9284f17383e09ac8e9a2098c0acecda3bdad"
+  },
+  {
+    "path": "toolkit/components/ml/nsIMLModelHub.idl",
+    "sha256": "b189035f672fa04474d071e236d212faa4f3d60c075335d6ea58207ed3cfb4c0"
+  },
+  {
+    "path": "toolkit/components/ml/nsIMLModelResolver.idl",
+    "sha256": "fc2bdd9fe80b035fe406fc54e83c18455421a50e893bcfee440b546c0cb75ba7"
+  },
+  {
+    "path": "toolkit/components/ml/nsIMLUtils.idl",
+    "sha256": "3e9a9ac22e8c7242040bb76cd803b008ee97fc7c55ba7073ead6cc79b38bd58a"
+  },
+  {
+    "path": "toolkit/components/mozintl/mozIMozIntl.idl",
+    "sha256": "3ac7da3946ea48fa4b86cd3c648f2329e0db513f73f8da8a20d3019edc67ce66"
+  },
+  {
+    "path": "toolkit/components/mozintl/mozIMozIntlHelper.idl",
+    "sha256": "ee19eefa753f765ec74dd434fa87cccc32e203c4723ac420166ced20b0a44c64"
+  },
+  {
+    "path": "toolkit/components/parentalcontrols/nsIParentalControlsService.idl",
+    "sha256": "ade04b89a35de28a69dcb1968585bd87d695578590e0c3e66a8cd5a9f637e69f"
+  },
+  {
+    "path": "toolkit/components/passwordmgr/nsILoginInfo.idl",
+    "sha256": "cfa695bbfda9cb006676d547f3e96399fd01021eb34a23274606080040c7b686"
+  },
+  {
+    "path": "toolkit/components/passwordmgr/nsILoginManager.idl",
+    "sha256": "fdae06995382c9e30ee6682d897be63dcfca8a6a33a52014ffffa2481f5d18a6"
+  },
+  {
+    "path": "toolkit/components/passwordmgr/nsILoginManagerAuthPrompter.idl",
+    "sha256": "88fbaadf9c4020937fee4b4f40f4801fca070d5fcf4076d2ea1867380f73e0d3"
+  },
+  {
+    "path": "toolkit/components/passwordmgr/nsILoginManagerCrypto.idl",
+    "sha256": "82f3481bca5f85bc773785c9d7d9ec10ac6636e9f74148427f361390a8eac429"
+  },
+  {
+    "path": "toolkit/components/passwordmgr/nsILoginManagerPrompter.idl",
+    "sha256": "edb8550d64a3dbdfb44355fe267e29765f183098ef23e801e9a608d5cf7b2488"
+  },
+  {
+    "path": "toolkit/components/passwordmgr/nsILoginMetaInfo.idl",
+    "sha256": "26dbc8f393f069c725a968fd64d78848859144c269495c8f1bd1ee3a1f079175"
+  },
+  {
+    "path": "toolkit/components/passwordmgr/nsIPromptInstance.idl",
+    "sha256": "787b2c5f4dc0da1eafb92f55ca69d9a1a17eabe4c0c5d27301f18580e2335734"
+  },
+  {
+    "path": "toolkit/components/places/mozIAsyncHistory.idl",
+    "sha256": "d9f48b788453b530154529d80026d96bd28474f0a57970b26166f53eb8c3962c"
+  },
+  {
+    "path": "toolkit/components/places/mozIPlacesAutoComplete.idl",
+    "sha256": "d179497d2ca1a94c6e7d983c705b539b1598b20fb0c8a2d3aa757f1bb79a3cc6"
+  },
+  {
+    "path": "toolkit/components/places/mozIPlacesPendingOperation.idl",
+    "sha256": "8d11b83d1bdfc21e42c4c7c3746e853936a3a6123a67fc6178f9ba097edd6824"
+  },
+  {
+    "path": "toolkit/components/places/mozISyncedBookmarksMirror.idl",
+    "sha256": "2c242fbf51de01f44ae8addd2c51b5385aeba6a2185bd54a47206f2eab39a1a6"
+  },
+  {
+    "path": "toolkit/components/places/nsIFaviconService.idl",
+    "sha256": "2e1809b5b3c79250eadd8e2187c364265cfb7219e569fb8f4a6ee11b71dd7abc"
+  },
+  {
+    "path": "toolkit/components/places/nsINavBookmarksService.idl",
+    "sha256": "d2e3d3ca836c11c22eb35e1a4cd7462da47165602df679344048ea3c95b4a553"
+  },
+  {
+    "path": "toolkit/components/places/nsINavHistoryService.idl",
+    "sha256": "42f1bdbdbac8afa9838623742feef181f4f2e9f2efa1ff562561a25c88250b73"
+  },
+  {
+    "path": "toolkit/components/places/nsIPlacesPreviewsHelperService.idl",
+    "sha256": "5096ad47e82d574741eaf7acab1c40777154fe035da4a194c7a64df60f44327d"
+  },
+  {
+    "path": "toolkit/components/places/nsITaggingService.idl",
+    "sha256": "8aabe388c95f094f25f21008c4af9600e467d0abd49c65efede49aee27dc7c4f"
+  },
+  {
+    "path": "toolkit/components/processtools/nsIProcessToolsService.idl",
+    "sha256": "85ffe057c482207e678eb1d91ffdabf98d3aef42437e3ff2e624c8c74d599889"
+  },
+  {
+    "path": "toolkit/components/remote/nsIRemoteService.idl",
+    "sha256": "f8924c4ba1d4638e1056a0a7b60fc5fb50db35ee72ae31ba1b276aaa296d4d16"
+  },
+  {
+    "path": "toolkit/components/reputationservice/nsIApplicationReputation.idl",
+    "sha256": "c889c0e2e5c2713c2bcf02d6f647d788196161ff7c0981a77e122d04a466c000"
+  },
+  {
+    "path": "toolkit/components/resistfingerprinting/nsIFingerprintingWebCompatService.idl",
+    "sha256": "5889a44d9fa1996563b21aaf83fcb9b97754685ac8975d3c19f580c05554fbac"
+  },
+  {
+    "path": "toolkit/components/resistfingerprinting/nsIRFPService.idl",
+    "sha256": "58dfafe552133b981fde65425ba16a0a03407c44e5bbcd9b4a96805ed914c4fe"
+  },
+  {
+    "path": "toolkit/components/resistfingerprinting/nsIRFPTargetSetIDL.idl",
+    "sha256": "20239fa5a0ebf55802474743b15b075cb93b9e3e41dd567c30cbf0ac39c99401"
+  },
+  {
+    "path": "toolkit/components/resistfingerprinting/nsIUserCharacteristicsPageService.idl",
+    "sha256": "fe1c87703257f5d018a3f678f21ce701221dd8f8140b972ab81113c2395f9fc8"
+  },
+  {
+    "path": "toolkit/components/satchel/nsIFormFillController.idl",
+    "sha256": "a6f87b9b24c35635761a1b094d27239d5eb4ac7b8501eb7aba97f77f596c3e54"
+  },
+  {
+    "path": "toolkit/components/sessionstore/nsISessionStoreFunctions.idl",
+    "sha256": "d76ea67177c348a732e2dd8e9b91bee1203a4339be762fc3d7ad84a57200f083"
+  },
+  {
+    "path": "toolkit/components/sessionstore/nsISessionStoreRestoreData.idl",
+    "sha256": "692a0e2430ef18782e5e80f545c850ac2d171e1e56618be8182a96d78c912411"
+  },
+  {
+    "path": "toolkit/components/shell/nsIToolkitShellService.idl",
+    "sha256": "c5a79fa953b7e78af1b8aa634af9c04a034d2fc61956baa563bd928caa4b9411"
+  },
+  {
+    "path": "toolkit/components/sitecategories/nsISiteCategory.idl",
+    "sha256": "993529678e1931c75c6e666c61480a80ea42348ca3a59a89eb840b4094ba0843"
+  },
+  {
+    "path": "toolkit/components/startup/public/nsIAppStartup.idl",
+    "sha256": "0434204c29a45106bfe2c95755653a438328dbd4d197b3ac175ff3cbb4d6991d"
+  },
+  {
+    "path": "toolkit/components/telemetry/core/nsITelemetry.idl",
+    "sha256": "a4c317d7b7e3f254fbce1da07785b9959f948e5c09dd794172d61be98d98e281"
+  },
+  {
+    "path": "toolkit/components/terminator/nsITerminatorTest.idl",
+    "sha256": "1589252812cd7509239f518ee1b265ef59aa6156de233bab4a8cfa918f8d45d7"
+  },
+  {
+    "path": "toolkit/components/thumbnails/nsIPageThumbsStorageService.idl",
+    "sha256": "517481ef1cae3fe80cdfdeb06d933bf11ada71b1f8013492cb894b06ef528191"
+  },
+  {
+    "path": "toolkit/components/timermanager/nsIUpdateTimerManager.idl",
+    "sha256": "ad2087afe2562b212ffbbc523a315197f22782067bb3f36ec219b49e670eb578"
+  },
+  {
+    "path": "toolkit/components/typeaheadfind/nsITypeAheadFind.idl",
+    "sha256": "4be76225a2728d46d527f0ed07f2b8ad5107cf2f7ddce747c4c1454676ad057b"
+  },
+  {
+    "path": "toolkit/components/url-classifier/IUrlClassifierUITelemetry.idl",
+    "sha256": "800861431e3f17c6820b041110f0dbb6fdeebd20fe40e91b6ec32c8b2ea07ac6"
+  },
+  {
+    "path": "toolkit/components/url-classifier/nsIUrlClassifierDBService.idl",
+    "sha256": "bd8e9020ebf7efadcc23ee053acf777a8351bb5390207e2acdf2e1b1e795625e"
+  },
+  {
+    "path": "toolkit/components/url-classifier/nsIUrlClassifierHashCompleter.idl",
+    "sha256": "31e92ae1a04de296ec83f44d6a265a181610f78ee1ef0a738b1145d778c4153c"
+  },
+  {
+    "path": "toolkit/components/url-classifier/nsIUrlClassifierInfo.idl",
+    "sha256": "b2da2bd1fe5ee9893dbf6afe210def4576134b229afe4d42adb4e170ff7db85d"
+  },
+  {
+    "path": "toolkit/components/url-classifier/nsIUrlClassifierPrefixSet.idl",
+    "sha256": "5d836a788c9dc68eb1ade911fedccc31e9820d9fccf459f5bf7df5aef85a459c"
+  },
+  {
+    "path": "toolkit/components/url-classifier/nsIUrlClassifierRemoteSettingsService.idl",
+    "sha256": "d4de7989ea02777ff62f79949db884576a40d47b115c292f747e87b0aa829475"
+  },
+  {
+    "path": "toolkit/components/url-classifier/nsIUrlClassifierStreamUpdater.idl",
+    "sha256": "0d93d29ebd80ee6aa41c3bbf98a0058e6c68e03c694147be9bf5202378f1736b"
+  },
+  {
+    "path": "toolkit/components/url-classifier/nsIUrlClassifierTestUtils.idl",
+    "sha256": "15129a3c814454f23b8a1f95b374c866ded885d5550f74ed9f7dfc9f3a0b628d"
+  },
+  {
+    "path": "toolkit/components/url-classifier/nsIUrlClassifierUtils.idl",
+    "sha256": "536c24be1f85cc8b8bf7ca15661f497c605950204b2f59ec8efdf9aeb396a8fd"
+  },
+  {
+    "path": "toolkit/components/url-classifier/nsIUrlListManager.idl",
+    "sha256": "bdd7d239a380d94344224b19254ecae265befb9b6e24882168ccb0814e9cb598"
+  },
+  {
+    "path": "toolkit/components/urlformatter/nsIURLFormatter.idl",
+    "sha256": "a535e79ae394bdd47185251a2a4d7aa0f7d7f4f39ff6f429cbf774d276b65e6b"
+  },
+  {
+    "path": "toolkit/components/windowcreator/nsIWindowCreator.idl",
+    "sha256": "5ac38fc9bcea5b91fc3638445fd346ad4cb40e19e2d273365822960df508fbf1"
+  },
+  {
+    "path": "toolkit/components/windowcreator/nsIWindowProvider.idl",
+    "sha256": "2b90c1424d1055d8cf74c2e443ddc64975c76bad23848c778b1ebe3ff1f3274b"
+  },
+  {
+    "path": "toolkit/components/windowwatcher/nsIDialogParamBlock.idl",
+    "sha256": "9aaea8579b5b961524432ab396ba63dc48aaeb892301e91a4600fe3560612a0a"
+  },
+  {
+    "path": "toolkit/components/windowwatcher/nsIOpenWindowInfo.idl",
+    "sha256": "82d7be2ab1a4b5ca1986e088f6865ef8abaa439232f4eb337af9679c87e68bee"
+  },
+  {
+    "path": "toolkit/components/windowwatcher/nsIPromptCollection.idl",
+    "sha256": "00c63110190562af776e52fb57245dd33c539b022397b9fa79094c0b4db4f803"
+  },
+  {
+    "path": "toolkit/components/windowwatcher/nsIPromptFactory.idl",
+    "sha256": "82694553fa9f87dccce0f491c17602bca86f4f033dff19ecffa591b4521b31cf"
+  },
+  {
+    "path": "toolkit/components/windowwatcher/nsIPromptService.idl",
+    "sha256": "d8a4c9fcbb77fd94282ef85cee8763f31b9832ff25c9818a1610310a5621415b"
+  },
+  {
+    "path": "toolkit/components/windowwatcher/nsIWindowWatcher.idl",
+    "sha256": "8017a9dff0b8ef499bdfb39fc4541819b3feac65f6c392e8c8ec7c3330ea0b53"
+  },
+  {
+    "path": "toolkit/components/windowwatcher/nsPIWindowWatcher.idl",
+    "sha256": "71a55994a16d8d4dba641e82047740ecaba16406c9e75f538bd56f256ef755fd"
+  },
+  {
+    "path": "toolkit/components/xulstore/nsIXULStore.idl",
+    "sha256": "9c9224c9b1ac94ff7eccd46ac5a608ecc4ae56b91c331012aab475bf30a9dc2a"
+  },
+  {
+    "path": "toolkit/modules/nsIBrowserWindowTracker.idl",
+    "sha256": "47bf0b5dabd7dd0ff23d9f5e96a103921d7b39879a3b98488ce7002cddba1050"
+  },
+  {
+    "path": "toolkit/modules/nsIRegion.idl",
+    "sha256": "923c3bc2c030ecec347db0a73e6790bf8f1762bf64461ad17f999dc98f22a33a"
+  },
+  {
+    "path": "toolkit/mozapps/extensions/amIAddonManagerStartup.idl",
+    "sha256": "f2050378d8a024ce30af7c33c60de55520ddc6e6cfc3fdf65f1f06654ab76b05"
+  },
+  {
+    "path": "toolkit/mozapps/extensions/amIWebInstallPrompt.idl",
+    "sha256": "5d42b432df9c50d47d7230222ab44c4e148240ba60b80a1cffd38cfa36873256"
+  },
+  {
+    "path": "toolkit/mozapps/update/nsIUpdateService.idl",
+    "sha256": "ce48537bbbc62696f33ee15e44dca8e8b3815f442c8e0c6e603db9d3a099aab6"
+  },
+  {
+    "path": "toolkit/profile/nsIProfileMigrator.idl",
+    "sha256": "b03286bd2b27fe0c47e05df3410980861f151916859d5261611497ee010d05cd"
+  },
+  {
+    "path": "toolkit/profile/nsIProfileUnlocker.idl",
+    "sha256": "36e9ca6e3368e5777bd558686b4410f8b3e4554373751e4027eaa00fc34a07a8"
+  },
+  {
+    "path": "toolkit/profile/nsIToolkitProfile.idl",
+    "sha256": "a16ad65530733b9a26f53de630c32bcb0c2140fa403bd282f7ddea2e2d96e45d"
+  },
+  {
+    "path": "toolkit/profile/nsIToolkitProfileService.idl",
+    "sha256": "5f9af31986f76b1813be05a4a4294195cfef20fafb2236ffdf587e9a9f8a851c"
+  },
+  {
+    "path": "toolkit/xre/nsINativeAppSupport.idl",
+    "sha256": "687441060a04019a9a1148039c281a1573d73b8ab4d37781daf748ac143a5e78"
+  },
+  {
+    "path": "toolkit/xre/nsIXREDirProvider.idl",
+    "sha256": "431f27ee12ac4d8af51ee94daeef071b06d5d6e3e6446c8a6807ad3815fc83da"
+  },
+  {
+    "path": "tools/profiler/gecko/nsIProfiler.idl",
+    "sha256": "432fb9b0b84efe4a50c95a101346d8665544b8b08b9091561ae0194863915108"
+  },
+  {
+    "path": "uriloader/base/nsCURILoader.idl",
+    "sha256": "11ad387f998bdd924e7bc2c0403315c50d047f906a4be15299d234d58ccf2ea5"
+  },
+  {
+    "path": "uriloader/base/nsIContentHandler.idl",
+    "sha256": "d44f38733b1fd29c6283871534582ccb77cb47336f47e27970ff116727a9fab4"
+  },
+  {
+    "path": "uriloader/base/nsIDocumentLoader.idl",
+    "sha256": "def6484ebc56ad2168093e1e669fe4946ac5438640184a632d5baba51eb41b32"
+  },
+  {
+    "path": "uriloader/base/nsITransfer.idl",
+    "sha256": "823997d9006ae50743b8ad8f179f29c6e25145764b62ea0402c3f60b1ddf4579"
+  },
+  {
+    "path": "uriloader/base/nsIURIContentListener.idl",
+    "sha256": "e188d04d87cad92ee6f9e97475e8a81fdcf13b586f5450037b6abd06b1de15c5"
+  },
+  {
+    "path": "uriloader/base/nsIURILoader.idl",
+    "sha256": "5ad8dc2135a45e07a64b769c3567864b36acf49e0bf450239ece51101a4e1143"
+  },
+  {
+    "path": "uriloader/base/nsIWebProgress.idl",
+    "sha256": "e79e626ed04c2abd061d985322ef76fee0620938df89e02669c05dc3b8460a15"
+  },
+  {
+    "path": "uriloader/base/nsIWebProgressListener.idl",
+    "sha256": "9109cde3278c8494454ac5b62ce647be2f6e8ae812d08665f678d5aff68fdc67"
+  },
+  {
+    "path": "uriloader/base/nsIWebProgressListener2.idl",
+    "sha256": "25a271d98c97ebc82da89813302a1645ddc63cf850d90be93aacd3861124634d"
+  },
+  {
+    "path": "uriloader/exthandler/nsCExternalHandlerService.idl",
+    "sha256": "7052f68dbad71da33601450b5b2ca371f1f647a2ccd9f7376c17809b274350bc"
+  },
+  {
+    "path": "uriloader/exthandler/nsIContentDispatchChooser.idl",
+    "sha256": "b6c71dcb463c0cdf963deac6f166fc9c3436b1b3cd8197cf3207af1176b6dd32"
+  },
+  {
+    "path": "uriloader/exthandler/nsIExternalHelperAppService.idl",
+    "sha256": "1ee603cd0aff875e891b8079641eea030d8c5e394cceff6706096c6c9b3ad352"
+  },
+  {
+    "path": "uriloader/exthandler/nsIExternalProtocolService.idl",
+    "sha256": "9a44ba9c8e890d7bc77d6ce1e39d3deb2bbe8d2ccafaba9ac8b59eba756d49fa"
+  },
+  {
+    "path": "uriloader/exthandler/nsIHandlerService.idl",
+    "sha256": "8b4be2ad48a0adad71c83629041f0d4b8839229d7d8968189b820d3db8c7cd18"
+  },
+  {
+    "path": "uriloader/exthandler/nsIHelperAppLauncherDialog.idl",
+    "sha256": "55798c1b8124e3b95ccc1a54bbba12aa67822e835f46f460ac1bb3010d0ae223"
+  },
+  {
+    "path": "uriloader/exthandler/nsISharingHandlerApp.idl",
+    "sha256": "2905081123fa330f5a6026a3bd136d8c54a5f1837643da9e3f1f8e1a211ce5b4"
+  },
+  {
+    "path": "uriloader/prefetch/nsIPrefetchService.idl",
+    "sha256": "2f752b94d802c6dce294662df03f3280170a9594a6887cea71fb21681c26b603"
+  },
+  {
+    "path": "widget/nsIAppShell.idl",
+    "sha256": "578fc12276199434e5d8ed13c19926fa8a212d5099c2b6bfd574c633992fe467"
+  },
+  {
+    "path": "widget/nsIApplicationChooser.idl",
+    "sha256": "c6c5cb722dd259b74e2d28692d197d1bf3baa24bfcb1af99b2657264b9dbbf6a"
+  },
+  {
+    "path": "widget/nsIBaseWindow.idl",
+    "sha256": "b8c00962f899fafd4c4dfb51a19948850a14b11e4162f7868920b8d2ca7e7131"
+  },
+  {
+    "path": "widget/nsIBidiKeyboard.idl",
+    "sha256": "60973b9fe8b9d76225cba9123283ddf7a0d01e2703565f6eb3df8a2e41fb213a"
+  },
+  {
+    "path": "widget/nsIClipboard.idl",
+    "sha256": "840371b7117b9d3a773e91a9932d6bed4b15d70488a8ffe73a6197ac02ac6496"
+  },
+  {
+    "path": "widget/nsIClipboardHelper.idl",
+    "sha256": "3ff8ca7ad4d31168b8f9023db0ed1b49a58587a8f85cd1e14c153c59d65845fc"
+  },
+  {
+    "path": "widget/nsIClipboardOwner.idl",
+    "sha256": "556806905bb272a173fe0479b6906ebeb54083b944ca45beb30cbd757e28301f"
+  },
+  {
+    "path": "widget/nsIColorPicker.idl",
+    "sha256": "bd76fb3eab7eea83f0abb6fd6841647fe46426cdc4e06124f39ac29145b89a05"
+  },
+  {
+    "path": "widget/nsIDisplayInfo.idl",
+    "sha256": "2bb9925d9050547885830d0a63f7d27d9c6dbe6900d38a7361d6f18a60f56448"
+  },
+  {
+    "path": "widget/nsIDragService.idl",
+    "sha256": "956765041d27d0ae61a6a187770163db931e99d07d0ed08877a6a129bf38bce0"
+  },
+  {
+    "path": "widget/nsIDragSession.idl",
+    "sha256": "63f942decc875cdf5d48a38a091cf26abab28c2e3b4d34eb1e17b30919d6ddb9"
+  },
+  {
+    "path": "widget/nsIFilePicker.idl",
+    "sha256": "cd07aec41b67f1317d624ce8f4e03b51ce97c7007a900f098ac482e74fb9453d"
+  },
+  {
+    "path": "widget/nsIFormatConverter.idl",
+    "sha256": "1d7b7d4de7f49cb69e862148e207e1ab1bbf5cf6a0db9eeb80a91b22bd3c35c6"
+  },
+  {
+    "path": "widget/nsIGfxInfo.idl",
+    "sha256": "ec4555baaa96f82d2033ee1edbbc43c2efd17a32e0d97d21ec807632ced71e62"
+  },
+  {
+    "path": "widget/nsIGfxInfoDebug.idl",
+    "sha256": "d049a77ebe174f343d8479e170f1daff7e10bbc12490dd31c4db49df001d01b8"
+  },
+  {
+    "path": "widget/nsIGtkTaskbarProgress.idl",
+    "sha256": "d19899ba9c64dc44564555172c41c6b267183bb5f70fa5316a9e7724d943bdcc"
+  },
+  {
+    "path": "widget/nsIMockDragServiceController.idl",
+    "sha256": "b1bd7ba8520e407ec0dc7fba306bbdc8d84e9e074cf35475b9c654ed5b9a0f1f"
+  },
+  {
+    "path": "widget/nsIPaper.idl",
+    "sha256": "50df0f5d7a482a7f7d9152338aee85ac2ffb3bc9ec0c2f5eadcce95099477a2e"
+  },
+  {
+    "path": "widget/nsIPaperMargin.idl",
+    "sha256": "001245ff587e471daac3eea44e2e17b8a39bc6aed649dae2672b631fdb6c03d6"
+  },
+  {
+    "path": "widget/nsIPrintDialogService.idl",
+    "sha256": "c72c467f7dda85658a591fcaa93be41984b4d49f44b59a980d95cbbd0174c9e6"
+  },
+  {
+    "path": "widget/nsIPrintSettings.idl",
+    "sha256": "834f478c652fd5fa43e25a86a9cc7e767103635098cea1bd09c19bbb5ac19655"
+  },
+  {
+    "path": "widget/nsIPrintSettingsService.idl",
+    "sha256": "8ed82e3e5d68f787b61dc24b78f4034e24ccdac62bd66e0a5374da27ab0b6831"
+  },
+  {
+    "path": "widget/nsIPrinter.idl",
+    "sha256": "572af8e421a8d2134d51ff78732e05d54946064aed3c67ff5fc116b6f2016980"
+  },
+  {
+    "path": "widget/nsIPrinterList.idl",
+    "sha256": "c30459f4b431826fc43fea8fc4757bada3ccb7896b5a72a05b3ca6c94ee82507"
+  },
+  {
+    "path": "widget/nsIScreen.idl",
+    "sha256": "d53394aa49dd8e54d54d6bfeaa447ebfd650c7c88b06883d6c99e0ba7bc9d6db"
+  },
+  {
+    "path": "widget/nsIScreenManager.idl",
+    "sha256": "1877be406f54f4569e3129538fca6df68f3a9f193410bb84a8010d888bb076b5"
+  },
+  {
+    "path": "widget/nsISharePicker.idl",
+    "sha256": "66ce31e5ff5558c848962405b14bfe2e24da5125b315d2aa7f7250f2572355c4"
+  },
+  {
+    "path": "widget/nsISound.idl",
+    "sha256": "6d7e89aafa81752d1c6de04e481025c6e6044798ca63fca18d27c154a7c6435f"
+  },
+  {
+    "path": "widget/nsISystemStatusBar.idl",
+    "sha256": "c6b305378dd1c6dc5ac31780369001162a8273a767d46c22fe917df6b45b4303"
+  },
+  {
+    "path": "widget/nsITaskbarProgress.idl",
+    "sha256": "07b63f48f30e4ef88f9a1a24b8813617b02d39bf8bce4821fe6a71bd7f04dc6b"
+  },
+  {
+    "path": "widget/nsITransferable.idl",
+    "sha256": "82dafcee9af6d4376db1f044b1b92c052e408caba66d0b1a39911cffab80e685"
+  },
+  {
+    "path": "widget/nsIUserIdleService.idl",
+    "sha256": "8ebb9ab1ff38532ccdf5085412b0a3f95839c2ebd53a5aca04042e05c5778aa0"
+  },
+  {
+    "path": "widget/nsIUserIdleServiceInternal.idl",
+    "sha256": "70bb9b286f81d4c663598100e280111d9b980b524e5e7d3fca86aae1a632f60a"
+  },
+  {
+    "path": "xpcom/base/nsIAvailableMemoryWatcherBase.idl",
+    "sha256": "5b0b493d8ead0b18745d6a50f4f1d4fc7fe6e365fbfb85a72fe16883051c67ce"
+  },
+  {
+    "path": "xpcom/base/nsIAvailableMemoryWatcherTestingLinux.idl",
+    "sha256": "a8032c34eec85d653c0129bfa01531ef51020eb293b7ff914c2207e49167ae24"
+  },
+  {
+    "path": "xpcom/base/nsIConsoleListener.idl",
+    "sha256": "b8b68db9496306165264267833919f34be28dcb4322bb2238ce852e3de33a723"
+  },
+  {
+    "path": "xpcom/base/nsIConsoleMessage.idl",
+    "sha256": "4f64de35addf94254ce7aa9094b15d1f8fc5943ad1c436535c25e892390044b2"
+  },
+  {
+    "path": "xpcom/base/nsIConsoleService.idl",
+    "sha256": "cccdc236dba71ef4c4c5a522f930dfdb7888d60a21da05328451f7255c8ddeba"
+  },
+  {
+    "path": "xpcom/base/nsICycleCollectorListener.idl",
+    "sha256": "cba8df6e9785cf59cba69ba28827b9896e957ab5a293aa33f4b7bfbd491286f0"
+  },
+  {
+    "path": "xpcom/base/nsIDebug2.idl",
+    "sha256": "aa07f5783d3a04879bc1e5e7d9531e236403f416446f5d989665a6eb8d29b95e"
+  },
+  {
+    "path": "xpcom/base/nsIException.idl",
+    "sha256": "6fb98a9e130be8140acd74c5336b0af5d84bb91ee64baedd35153bdfa87313f9"
+  },
+  {
+    "path": "xpcom/base/nsIInterfaceRequestor.idl",
+    "sha256": "e90c45f92dbd038d98154d7d0e25459143ae20b318be886c4ff2753560094f3c"
+  },
+  {
+    "path": "xpcom/base/nsIKeyedUUIDMapper.idl",
+    "sha256": "4c9b3edc92e18833c5667c5f97997bb4679296806a325b461740ab12f5ed3de1"
+  },
+  {
+    "path": "xpcom/base/nsIMemoryInfoDumper.idl",
+    "sha256": "e5b566ff4c2fc46353046c7ed56c70e12cf51009eb965f81a7901ebbc10750a1"
+  },
+  {
+    "path": "xpcom/base/nsIMemoryReporter.idl",
+    "sha256": "24eb36822bf89ef15359762b19e2f656fd36721bd496b39c9d377695fdc1f66c"
+  },
+  {
+    "path": "xpcom/base/nsISecurityConsoleMessage.idl",
+    "sha256": "5e9eba7cb88936a008042ceee60fabc2efd3fe906c1bb5bd7db1dbb84702173e"
+  },
+  {
+    "path": "xpcom/base/nsISupports.idl",
+    "sha256": "30fcf9302d83942e77bfecd476238e5747f0dd5883fb7c3406322a576c0a8943"
+  },
+  {
+    "path": "xpcom/base/nsIUUIDGenerator.idl",
+    "sha256": "4b4c1b78568f9b64f6477077e263899f37ce900e3161257d50a8a1997562f345"
+  },
+  {
+    "path": "xpcom/base/nsIVersionComparator.idl",
+    "sha256": "700f2c040381a5ff41fea635c0d73ead853fc81268088d04fd6ee19ebdec1c54"
+  },
+  {
+    "path": "xpcom/base/nsIWeakReference.idl",
+    "sha256": "679af4cb721e0a5056f4dc87ce272092d0acd330164f8a927792d6371f57bcae"
+  },
+  {
+    "path": "xpcom/base/nsrootidl.idl",
+    "sha256": "669be8c0c05bf0d81e8ed97a48606a4c1b9b87783bd150723580bb00b4ac6972"
+  },
+  {
+    "path": "xpcom/components/nsICategoryManager.idl",
+    "sha256": "347fb1cbbd0086a1c5b1bfe7e9888b00113e720c1044007672f2a21341b05131"
+  },
+  {
+    "path": "xpcom/components/nsIClassInfo.idl",
+    "sha256": "40ddfc0405c618160aee51cb2c6450c97cbf6b46e6e14a04cf879a55fd4a37f8"
+  },
+  {
+    "path": "xpcom/components/nsIComponentManager.idl",
+    "sha256": "bbcfd17483831eebeaf81322613e46759168c39a2f8599b049f22bde1df9fcf3"
+  },
+  {
+    "path": "xpcom/components/nsIComponentRegistrar.idl",
+    "sha256": "c8110b2e3a9b1ccebec90ade73ff3055e80f197c5b5b311e26daf7842a6c8280"
+  },
+  {
+    "path": "xpcom/components/nsIFactory.idl",
+    "sha256": "a4fff4ba26a16aca2c55f648c84df2c3c2bfdbf76fe65fa77c292476a2bce35c"
+  },
+  {
+    "path": "xpcom/components/nsIServiceManager.idl",
+    "sha256": "e7806808dc2d47c1f33d978cf5ad787e9b12b6647b0a74eed23d23de9eb10ae0"
+  },
+  {
+    "path": "xpcom/ds/nsIArray.idl",
+    "sha256": "c2477e1327623c2414de2692379a6ff19ddab94008923b91c417a303bedbfa3a"
+  },
+  {
+    "path": "xpcom/ds/nsIArrayExtensions.idl",
+    "sha256": "4ea8379f9cc8e098c44817fdcd7f80ed6bb4da19479ad38c8f3ebb06f37647ac"
+  },
+  {
+    "path": "xpcom/ds/nsIINIParser.idl",
+    "sha256": "d836e2e5a5c2ce2de0536dff48c143b5c0f745f1228328124385884b274167c0"
+  },
+  {
+    "path": "xpcom/ds/nsIMutableArray.idl",
+    "sha256": "e991030a75b70ef4f19a25088f20b852fb0d561839b9542342a1f8cd8f328465"
+  },
+  {
+    "path": "xpcom/ds/nsIObserver.idl",
+    "sha256": "e24e26375ed04bf8e69bbb76065b368859c2632b5434b76f01bcce2daa84a883"
+  },
+  {
+    "path": "xpcom/ds/nsIObserverService.idl",
+    "sha256": "757632748dbe1c39a9c1c0649333b30ca44f6d80ffddbd1170438e3525fb552d"
+  },
+  {
+    "path": "xpcom/ds/nsIPersistentProperties2.idl",
+    "sha256": "92ead10bd013f0a6989690d4ca5415b4c9064849501063cffce704c9b2349646"
+  },
+  {
+    "path": "xpcom/ds/nsIProperties.idl",
+    "sha256": "4124c84274f818dec39d7ee3ace3e460e28ec6aa7473d9a2b1e9568a4e99fe3a"
+  },
+  {
+    "path": "xpcom/ds/nsIProperty.idl",
+    "sha256": "934c4b3ae470a6bd685a2fe14898ba092c1cccadff3d52bb5b495371ed246299"
+  },
+  {
+    "path": "xpcom/ds/nsIPropertyBag.idl",
+    "sha256": "e4a08af20b8243c761b5fb87f2f1ca5d990cd4389e7922f785da0dbb90164be5"
+  },
+  {
+    "path": "xpcom/ds/nsIPropertyBag2.idl",
+    "sha256": "6f7bebaa82cf71e95003d6e26820ecb80b00276aee6a5de5e95548e9453a6538"
+  },
+  {
+    "path": "xpcom/ds/nsISerializable.idl",
+    "sha256": "e41421eca0fbab0bf90ecdc0f59887a3fc2f25095197889a02e8dd17abc1f07f"
+  },
+  {
+    "path": "xpcom/ds/nsISimpleEnumerator.idl",
+    "sha256": "947fe643aade6ea2f7f313e936906ea8f24dcd6a8bf08eca5507e973bd81bde4"
+  },
+  {
+    "path": "xpcom/ds/nsIStringEnumerator.idl",
+    "sha256": "46eb13b44f94599f6d8f43956c26ee2506725ee7a9c684453b77b820cfda076a"
+  },
+  {
+    "path": "xpcom/ds/nsISupportsIterators.idl",
+    "sha256": "691a18522992dd82d51624f1c9eb510a673278b79d84ae33d8e8173ca0ca3f9c"
+  },
+  {
+    "path": "xpcom/ds/nsISupportsPrimitives.idl",
+    "sha256": "46c876d69e53848fd6d5d66ef3151f4858c9971acfd66050ef2c8af9053e67d1"
+  },
+  {
+    "path": "xpcom/ds/nsIVariant.idl",
+    "sha256": "7f0314fdbd6044c446f254d25298e58f082c3a2d3d7bed502c783c23c4cf74c6"
+  },
+  {
+    "path": "xpcom/ds/nsIWritablePropertyBag.idl",
+    "sha256": "111f3ac8e2ff84f55c5f17ec5881507e9eba1789a10b061f515003bd26fda2d8"
+  },
+  {
+    "path": "xpcom/ds/nsIWritablePropertyBag2.idl",
+    "sha256": "a9f77f149c00ed7eaf373b1c3d9cedd52c76c7a89b2bfe6bac4e9ea671908406"
+  },
+  {
+    "path": "xpcom/idl-parser/xpidl/__init__.py",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "xpcom/idl-parser/xpidl/header.py",
+    "sha256": "842783c1ea07ea56b57c3dcd0cf5233ef91016043e8cf6c9ca1b252d83438bfa"
+  },
+  {
+    "path": "xpcom/idl-parser/xpidl/jsonxpt.py",
+    "sha256": "01ef28dd183b6cabf3b9b4e2e7c05951272d0c2316716c0244b68c36d927df7d"
+  },
+  {
+    "path": "xpcom/idl-parser/xpidl/rust.py",
+    "sha256": "5bc01403c76c4242e24e40de15821f6d422ca2592619706c9d14482ce16d992e"
+  },
+  {
+    "path": "xpcom/idl-parser/xpidl/rust_macros.py",
+    "sha256": "6a755ad5bbf8b7c13fbe21e75c32859919ab6e48e3336e3b6148488bc5e397ed"
+  },
+  {
+    "path": "xpcom/idl-parser/xpidl/typescript.py",
+    "sha256": "af8bb83458468814c0114d26f223ffa356c0b3211e87bdbe623d78ef0c81f454"
+  },
+  {
+    "path": "xpcom/idl-parser/xpidl/xpidl.py",
+    "sha256": "a09c78744217bf4df7dea585f5725e2568cacbd479bfc86593c138b9acdfc3b7"
+  },
+  {
+    "path": "xpcom/io/nsIAsyncInputStream.idl",
+    "sha256": "6b5933e32113b6fa13294c0d70f6849ff27ee0499dee35c072f2396afddc49ec"
+  },
+  {
+    "path": "xpcom/io/nsIAsyncOutputStream.idl",
+    "sha256": "22a6bb056de97780b7299b428ddbafde2efd362bb565e2cccbd02d2c55762f6c"
+  },
+  {
+    "path": "xpcom/io/nsIBinaryInputStream.idl",
+    "sha256": "1dba29df35ad6901de2221f6e1820ded07f837fd86ac3b3c37a0fea967dae5f3"
+  },
+  {
+    "path": "xpcom/io/nsIBinaryOutputStream.idl",
+    "sha256": "80df4aeaaa09ac8e49e98e556a27dd8cf6b8f74a56b6528e9bb2b451e7025a07"
+  },
+  {
+    "path": "xpcom/io/nsICloneableInputStream.idl",
+    "sha256": "7d5e3610d4be8e447a5b818e40ae6865ec1e21a60955675676920f83367dc38e"
+  },
+  {
+    "path": "xpcom/io/nsIConverterInputStream.idl",
+    "sha256": "ebf3b2ca73fb20272445a4b9423d2668168cb9aebcd862130845dedfcb6a8b87"
+  },
+  {
+    "path": "xpcom/io/nsIConverterOutputStream.idl",
+    "sha256": "8826da3f7e776116a0cbadb6c2c3f29dadeb5bfa8e2f609c6971aa375496d286"
+  },
+  {
+    "path": "xpcom/io/nsIDirectoryEnumerator.idl",
+    "sha256": "c607f65af1e16fb345218ebe508cf676d51f02ebc07c44d887ae18debcd3f8b2"
+  },
+  {
+    "path": "xpcom/io/nsIDirectoryService.idl",
+    "sha256": "5ac4da1f6a859fdac893a63e888036c32aa75ee97df4828b066297df1cd03d29"
+  },
+  {
+    "path": "xpcom/io/nsIFile.idl",
+    "sha256": "ec229cc04ee70dd439ec0db502eb285270ce5e14ab304d3b744822fd5377a5aa"
+  },
+  {
+    "path": "xpcom/io/nsIIOUtil.idl",
+    "sha256": "1a27dd4189b94cac8d9695f45afa9dc6093ccde6a7b6cf2232ed2625a57d487d"
+  },
+  {
+    "path": "xpcom/io/nsIInputStream.idl",
+    "sha256": "446e3c5f0b2926d2e27ffa5386130e0304a103fe26b4c40e2bdb3f1ef7fd4082"
+  },
+  {
+    "path": "xpcom/io/nsIInputStreamLength.idl",
+    "sha256": "56bcad5a155ca6d970d9d0bc1b88e1a6a44e0b2350d99622176787e4fb82015a"
+  },
+  {
+    "path": "xpcom/io/nsIInputStreamPriority.idl",
+    "sha256": "5dc37582d0f395decf1d47898bf3ac9ba96614a8b68656d5c7f5480b3f8230c8"
+  },
+  {
+    "path": "xpcom/io/nsIInputStreamTee.idl",
+    "sha256": "7a1d9cd1d45559fa13bc91019b6e97aeace3f1080b6ebfb41e4ed52eda992374"
+  },
+  {
+    "path": "xpcom/io/nsILineInputStream.idl",
+    "sha256": "a0ac7aa34132da36d0240496a1d87a5b54bbde0682bcea4c183678caa70d2c87"
+  },
+  {
+    "path": "xpcom/io/nsILocalFileWin.idl",
+    "sha256": "3ca6810ea1ff74c08f100aba42727a72a4c0a390762343e54d0857baf7139da4"
+  },
+  {
+    "path": "xpcom/io/nsIMultiplexInputStream.idl",
+    "sha256": "5a34caefe2407e3ab442c656c6ff5174bd49ecc2f834a78ae3bf5c237f1bb92f"
+  },
+  {
+    "path": "xpcom/io/nsIObjectInputStream.idl",
+    "sha256": "0d0aa03f57fb7182acc2d78a6cef421fb91aad4f1bbca983fa8ba53a80362c9f"
+  },
+  {
+    "path": "xpcom/io/nsIObjectOutputStream.idl",
+    "sha256": "7984cc67c84626625281f83e6b0d537f4c259393a96ed6f3a6cd85e50d09322b"
+  },
+  {
+    "path": "xpcom/io/nsIOutputStream.idl",
+    "sha256": "936d7e5f21ce4876d958dece6f454d9bff268bd5afc921ffef793c0c42a16681"
+  },
+  {
+    "path": "xpcom/io/nsIPipe.idl",
+    "sha256": "d27a8c3d4406f7c6178469ab7deb459e80eb05100da2304f3b22a392eeacc7d9"
+  },
+  {
+    "path": "xpcom/io/nsIRandomAccessStream.idl",
+    "sha256": "446bf559a72f2aaa31d9f08d7134731dc3a72d3903558941b99b14f3aa94a3a8"
+  },
+  {
+    "path": "xpcom/io/nsISafeOutputStream.idl",
+    "sha256": "c576db7771d670fc249d7722557f734e084a68de751ee05a5025da66b2e214dc"
+  },
+  {
+    "path": "xpcom/io/nsIScriptableBase64Encoder.idl",
+    "sha256": "04a24f4b295e75142645a7191c3288fd31ac937ca424cd39c276e5b191f87e71"
+  },
+  {
+    "path": "xpcom/io/nsIScriptableInputStream.idl",
+    "sha256": "ddcdcf868534d2f6ad2aa2e09a60d0a2977cb7d1af3d58c55f7575a9baf3c25a"
+  },
+  {
+    "path": "xpcom/io/nsISeekableStream.idl",
+    "sha256": "786ff3f8583348fb01f9e53c6d8d87565ccce7d9a1bb7ebfdb198fde00e77e0d"
+  },
+  {
+    "path": "xpcom/io/nsIStorageStream.idl",
+    "sha256": "b29b783abd555f963ccd56aa92796f27123feb98ea644bf39bfba1ddd0363a89"
+  },
+  {
+    "path": "xpcom/io/nsIStreamBufferAccess.idl",
+    "sha256": "a4702036036d9143de82cfaca053b8502eab41275144ba4ec444aba77c97f2c0"
+  },
+  {
+    "path": "xpcom/io/nsIStringStream.idl",
+    "sha256": "647cccc753d82605f1a8e162b2281fea6dc426871285cb7a73304f4d794a1d51"
+  },
+  {
+    "path": "xpcom/io/nsITellableStream.idl",
+    "sha256": "c5b37d46325ad8a5932cee6d2f2f762e26fa5568110d32d9b0353287eab49f6d"
+  },
+  {
+    "path": "xpcom/io/nsIUnicharInputStream.idl",
+    "sha256": "ed76dadbb1fc850765bed73b29b726fad2bb08fe9452d39cb29e4f7d19ab90db"
+  },
+  {
+    "path": "xpcom/io/nsIUnicharLineInputStream.idl",
+    "sha256": "286c3a21917f1eb29775eabfb0e139c8ff27437b8dd62e54992253bd7d6880a9"
+  },
+  {
+    "path": "xpcom/io/nsIUnicharOutputStream.idl",
+    "sha256": "5a17476fba4ba60389ce1eed7645d377f3f05e2453936627c1d07da43a79ecd4"
+  },
+  {
+    "path": "xpcom/system/nsIBlocklistService.idl",
+    "sha256": "7af0d2bf3f2c0738eda15f5182e185a063b9e975be1f93052e3af17c69d858b2"
+  },
+  {
+    "path": "xpcom/system/nsICrashReporter.idl",
+    "sha256": "b42e6cd6912aa30551e304e3895b13053d9443f3be34414de87a0b7bce072d74"
+  },
+  {
+    "path": "xpcom/system/nsIDeviceSensors.idl",
+    "sha256": "333a8c7013e01561abebc8e6f36afcb08ebc34f3cb2c726815d5751c5e947d38"
+  },
+  {
+    "path": "xpcom/system/nsIGIOService.idl",
+    "sha256": "e2f0ee8900c8fc0b2e680132ccb36b70b83f53fa6cfaeff8ec706b5fc30b7f8e"
+  },
+  {
+    "path": "xpcom/system/nsIGeolocationProvider.idl",
+    "sha256": "883fd5c5508e012954ff0e7c55b1a0004cb5df10c4df05e6ec632ddeb92dee4e"
+  },
+  {
+    "path": "xpcom/system/nsIPlatformInfo.idl",
+    "sha256": "1bac9bac501f6da4d66a59729f0576a604b433af89ad2203a9a7a07d812c362b"
+  },
+  {
+    "path": "xpcom/system/nsISystemInfo.idl",
+    "sha256": "60e672c0e07c593523e7a306e6c4c23b9f6250fa0ac833838f590f86c2bc32bc"
+  },
+  {
+    "path": "xpcom/system/nsIXULAppInfo.idl",
+    "sha256": "92db4a5553f231bb114a5749ebacea61186e7ae6874f66a163bc7aa47f1e8df1"
+  },
+  {
+    "path": "xpcom/system/nsIXULRuntime.idl",
+    "sha256": "c8bcf447ff095005d5305e2f1fc034c63f9ccac6132b98fd2a711f44193348cd"
+  },
+  {
+    "path": "xpcom/threads/nsIDirectTaskDispatcher.idl",
+    "sha256": "03df60dad1463546f332369ecb5318d27364bb51eb14e270f957efb37fb80694"
+  },
+  {
+    "path": "xpcom/threads/nsIEnvironment.idl",
+    "sha256": "951317c3fd7c39e1348d59456009106ce0b61baf070428b4364ee87952654103"
+  },
+  {
+    "path": "xpcom/threads/nsIEventTarget.idl",
+    "sha256": "688b3a3ba5da93128411c924f8d5d9ba368c63af13a4a4c24c39cbbfbe930448"
+  },
+  {
+    "path": "xpcom/threads/nsIIdlePeriod.idl",
+    "sha256": "0449b61df58126a71b9cdc504a791fc3b84676aebef4ecf584a73246c6ee982a"
+  },
+  {
+    "path": "xpcom/threads/nsINamed.idl",
+    "sha256": "177445578f0b3c6e06cac7e33a24583155c5bb2367742f8a11dade7a9f79bf67"
+  },
+  {
+    "path": "xpcom/threads/nsIProcess.idl",
+    "sha256": "a7bc21af2ef9e902996f675e479a232fb5bf305023e03f2975fdc00f701b9932"
+  },
+  {
+    "path": "xpcom/threads/nsIRunnable.idl",
+    "sha256": "90ce02af1de618e328ae96e53a80535a98e9d4e535933abea85c024ddd565ebf"
+  },
+  {
+    "path": "xpcom/threads/nsISerialEventTarget.idl",
+    "sha256": "b0ae1898268d43700d39909f39f27cd4ae8931082cfd54c8f16a654899d875fb"
+  },
+  {
+    "path": "xpcom/threads/nsISupportsPriority.idl",
+    "sha256": "864e82d022bc3b0344b43c85c1eece20a759d2562394002d186e2e9c57a3f790"
+  },
+  {
+    "path": "xpcom/threads/nsIThread.idl",
+    "sha256": "ebf838dbc869fceee36bafb7d51fe935e48ef8cced15179ec0912ae7d4eaeefb"
+  },
+  {
+    "path": "xpcom/threads/nsIThreadInternal.idl",
+    "sha256": "349ef53573f4a8f1e4e5f8f94b4481b5c4607146f57fc7709b2918ea5d2a6d40"
+  },
+  {
+    "path": "xpcom/threads/nsIThreadManager.idl",
+    "sha256": "6668465f6a7cdeadaf3e1bdac18e8698cb6f3dded4e207bb3dce6a59f4fb9875"
+  },
+  {
+    "path": "xpcom/threads/nsIThreadPool.idl",
+    "sha256": "47e18ac30a54aa0d37f69dccfd2da4bceae46e0e705d033f09ec3caf75327e4f"
+  },
+  {
+    "path": "xpcom/threads/nsIThreadShutdown.idl",
+    "sha256": "36fa3d054caad2fb502d7978a5933e5aacebcf25d8c613bb14f3b6b363ea8a6b"
+  },
+  {
+    "path": "xpcom/threads/nsITimer.idl",
+    "sha256": "c179a44a011ce414e9e2e96a081c19d13de2db90600e4a548b2e541d774a1951"
+  },
+  {
+    "path": "xpfe/appshell/nsIAppShellService.idl",
+    "sha256": "b45d6235bd517da7dc70da79aa0c51b33b576fb153356e2f7e9576c16f185ac1"
+  },
+  {
+    "path": "xpfe/appshell/nsIAppWindow.idl",
+    "sha256": "ac25ad99575b0c400917f689e41a6979158fd87447128eb3b02d1953159669ca"
+  },
+  {
+    "path": "xpfe/appshell/nsIWindowMediator.idl",
+    "sha256": "ea2b57560a2c958117c33bd345b754e23cca6576492ab04d3e0cde7672702801"
+  },
+  {
+    "path": "xpfe/appshell/nsIWindowMediatorListener.idl",
+    "sha256": "917fcceaccfd4fbe3058c4b9c325576b57e84177cf6f0053ae9c986d8e7ab2fe"
+  },
+  {
+    "path": "xpfe/appshell/nsIWindowlessBrowser.idl",
+    "sha256": "69eb40df27f86e6726de6ad0bcc87b4c4f31aaf4d500d8ac79098f7f024b5c1f"
+  },
+  {
+    "path": "xpfe/appshell/nsIXULBrowserWindow.idl",
+    "sha256": "8829d55edd8ef1bdb4f7b10c092fcea8a49daaa9ab16a8a437095ac8d9761fc4"
+  }
+]

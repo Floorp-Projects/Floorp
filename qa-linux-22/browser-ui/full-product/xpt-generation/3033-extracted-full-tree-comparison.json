@@ -1,0 +1,552 @@
+{
+  "a": "/workspace/qa-linux-22/browser-ui/full-product/xpt-generation/3033-strict-extracted/floorp",
+  "b": "/workspace/qa-linux-22/browser-ui/full-product/3033/package-extracted/floorp",
+  "countA": 56,
+  "countB": 56,
+  "identical": true,
+  "differences": [],
+  "manifestA": {
+    "application.ini": {
+      "mode": 384,
+      "type": "file",
+      "sha256": "9dbab383d1ee69f1b857aba77ba72c01fa7b896a8f8fe3d60896f18d376fa7c7"
+    },
+    "updater": {
+      "mode": 448,
+      "type": "file",
+      "sha256": "761d86411b87241a6ab57620a1b8cfe297eedd17feddf15a3b51a3b2e36c87a7"
+    },
+    "libmozwayland.so": {
+      "mode": 448,
+      "type": "file",
+      "sha256": "3164170986fe9bbe1e673b6bd2524f0f05dcc3da26a5fcee1d304c8fe385e457"
+    },
+    "removed-files": {
+      "mode": 384,
+      "type": "file",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "platform.ini": {
+      "mode": 384,
+      "type": "file",
+      "sha256": "61b3a340b2ad9279af374ce88acff75204f128db13c170c3c58c77bcbb6ae9ad"
+    },
+    "fonts": {
+      "mode": 448,
+      "type": "dir"
+    },
+    "libxul.so": {
+      "mode": 448,
+      "type": "file",
+      "sha256": "760ff8a689f52c9b1f3c89a45ea8813e59f187990caed747e4a7680020c8dbc7"
+    },
+    "floorp": {
+      "mode": 448,
+      "type": "file",
+      "sha256": "4f05c1330b38e50040440be6a3b6e0e7a5b52bc79edb5c5478d978c81f5a603d"
+    },
+    "libmozavutil.so": {
+      "mode": 448,
+      "type": "file",
+      "sha256": "d957abe02b48afe84f2eb0038252f1f12c627f2db7100fbfda80fc473c2d14d7"
+    },
+    "liblgpllibs.so": {
+      "mode": 448,
+      "type": "file",
+      "sha256": "c29aff12589cb5342e73488619b628b50afda839a063a0e0f3f77831ffd8ff82"
+    },
+    "libsoftokn3.so": {
+      "mode": 448,
+      "type": "file",
+      "sha256": "bb6a9283048767500190da54a439cf12196448e352db191db50e23e1566ad649"
+    },
+    "libonnxruntime.so": {
+      "mode": 448,
+      "type": "file",
+      "sha256": "077ac0e3e090dd3d070a497f354f62fa718de4a19be287da5d9a188c950bc71c"
+    },
+    "libmozgtk.so": {
+      "mode": 448,
+      "type": "file",
+      "sha256": "a2f42c25563411b7e3378629d2e1ab7f947e9c4b546560b25b436e6fbe94476f"
+    },
+    "libnssutil3.so": {
+      "mode": 448,
+      "type": "file",
+      "sha256": "efc899f507b9bcdc313303321ed177bc4768c47c3eaaa8e35609488e6d0e53e8"
+    },
+    "libfreeblpriv3.so": {
+      "mode": 448,
+      "type": "file",
+      "sha256": "0e5167b714fc4e7952d8471f5fb8d90a302df98e3cba156769ac733f0fd025b0"
+    },
+    "defaults": {
+      "mode": 448,
+      "type": "dir"
+    },
+    "floorp-bin": {
+      "mode": 448,
+      "type": "file",
+      "sha256": "4f05c1330b38e50040440be6a3b6e0e7a5b52bc79edb5c5478d978c81f5a603d"
+    },
+    "jogfile.json": {
+      "mode": 384,
+      "type": "file",
+      "sha256": "1ea8b491d37ef1e30d1158940469ce068e22fde3f970ec039f2c9511fa93de40"
+    },
+    "libgkcodecs.so": {
+      "mode": 448,
+      "type": "file",
+      "sha256": "7804828879bc2967d23bc241c6ecb15fa7e5ca5e06e28049cf8378753b75cbe8"
+    },
+    "omni.ja": {
+      "mode": 384,
+      "type": "file",
+      "sha256": "8285b0af7796d09ef6d7cdb4092d6b0c9cc3e9d892d8e45c7a68645f9f3977cf"
+    },
+    "updater.ini": {
+      "mode": 384,
+      "type": "file",
+      "sha256": "19852825ca4c1e02a39299bcc7d5606bf2685a2fae2a8fe5d855e8d11936219f"
+    },
+    "libmozavcodec.so": {
+      "mode": 448,
+      "type": "file",
+      "sha256": "0687a26be53f8ece0623d6c5ed8b7815b2c05839760ba012baa2ea5b5975b2ea"
+    },
+    "libnss3.so": {
+      "mode": 448,
+      "type": "file",
+      "sha256": "6f11158b23027e962bec955f328119efa351db61b3e1f507a451fb1dfada646a"
+    },
+    "libplc4.so": {
+      "mode": 448,
+      "type": "file",
+      "sha256": "6fa863eff22c1fdf6e75f22fe9433bb50b0f8ba43960046a3816da6532d11fbf"
+    },
+    "libplds4.so": {
+      "mode": 448,
+      "type": "file",
+      "sha256": "7f3fb5134ecd4201e532d7160dda31479a02743d6eff7199003e3b4be2dd963b"
+    },
+    "libnspr4.so": {
+      "mode": 448,
+      "type": "file",
+      "sha256": "73d59534248a183357f39e547f9d6f5089f084430aba181c9f4b6c9da5988c5d"
+    },
+    "precomplete": {
+      "mode": 384,
+      "type": "file",
+      "sha256": "d6a5d785324008de66070ef2635fb3ed8f18c7ec04f055f870fbaaa685d4f010"
+    },
+    "libmozinference.so": {
+      "mode": 448,
+      "type": "file",
+      "sha256": "acd4dba98fa405662a725fceebe023e0c78cb67de9ec5174f545f6604299c570"
+    },
+    "libmozsqlite3.so": {
+      "mode": 448,
+      "type": "file",
+      "sha256": "d740b271fce254778272866e02b9bd8bca7888475179f76904e9c14a8c96aba0"
+    },
+    "update-settings.ini": {
+      "mode": 384,
+      "type": "file",
+      "sha256": "c574f9f109b4dca4a6ab379167cd47a6bbee66c0a9640b1d19232da337202707"
+    },
+    "pingsender": {
+      "mode": 448,
+      "type": "file",
+      "sha256": "157ed38af98d795812dfc532739252f9e6c51472d13b9105c496b8b2cf1dbbfd"
+    },
+    "gfxtest": {
+      "mode": 448,
+      "type": "file",
+      "sha256": "becfb0b9cee1d9b35fe23dc504f7bbb9345b364c413c0e80656ddb3c9729bdfd"
+    },
+    "browser": {
+      "mode": 448,
+      "type": "dir"
+    },
+    "dependentlibs.list": {
+      "mode": 384,
+      "type": "file",
+      "sha256": "621f575eaaf819dd0b18976c6a8a94d1caae95a9c748f4c9058a052395a4d173"
+    },
+    "libmozsandbox.so": {
+      "mode": 448,
+      "type": "file",
+      "sha256": "88c01a993afad42907d569d1f11d890afd0accc7120fd946168ca799065e86fd"
+    },
+    "libssl3.so": {
+      "mode": 448,
+      "type": "file",
+      "sha256": "7a2f6ffcecdbb27c98279657f3db63f56922cb568dc217553d6d5f217bfa378b"
+    },
+    "gmp-clearkey": {
+      "mode": 448,
+      "type": "dir"
+    },
+    "libsmime3.so": {
+      "mode": 448,
+      "type": "file",
+      "sha256": "6f3e94a9538ec3a52ee30e80af86fccc5ffd31a06712e61f434dda427b561c99"
+    },
+    "icons": {
+      "mode": 448,
+      "type": "dir"
+    },
+    "fonts/TwemojiMozilla.ttf": {
+      "mode": 384,
+      "type": "file",
+      "sha256": "6d90152ee0d29e82fe2a87793af5aa4b7ad13e6538360889e141e81ed299ee8e"
+    },
+    "defaults/pref": {
+      "mode": 448,
+      "type": "dir"
+    },
+    "browser/omni.ja": {
+      "mode": 384,
+      "type": "file",
+      "sha256": "72550d298e6239c297e5feeb6f6bcacd7c862890eeaf76ab39fb08ac321b87bc"
+    },
+    "browser/buildid2": {
+      "mode": 384,
+      "type": "file",
+      "sha256": "4d3787e36f3e7dffd52939cfefb538a373d048d8786b897ee4f253b501d5fedf"
+    },
+    "browser/chrome": {
+      "mode": 448,
+      "type": "dir"
+    },
+    "gmp-clearkey/0.1": {
+      "mode": 448,
+      "type": "dir"
+    },
+    "icons/updater.png": {
+      "mode": 384,
+      "type": "file",
+      "sha256": "cab5e9bc9511b0690e696b378efa6753705b1182660d9829f5b3dc9f0398e5cc"
+    },
+    "defaults/pref/channel-prefs.js": {
+      "mode": 384,
+      "type": "file",
+      "sha256": "ef9fba57b2c3755b630b44ccfe703e2753d538fa50e3c52fc279c29e6db8200f"
+    },
+    "browser/chrome/icons": {
+      "mode": 448,
+      "type": "dir"
+    },
+    "browser/chrome/icons/default": {
+      "mode": 448,
+      "type": "dir"
+    },
+    "browser/chrome/icons/default/default128.png": {
+      "mode": 384,
+      "type": "file",
+      "sha256": "be2fdb8622b028a2248510793980e8b9294cee66d55ca2cb0a103610bd409ba4"
+    },
+    "browser/chrome/icons/default/default16.png": {
+      "mode": 384,
+      "type": "file",
+      "sha256": "1e8aea59ad881e31e351f7f38143293a45a8e7b916571f3eccce5e89844c1969"
+    },
+    "browser/chrome/icons/default/default48.png": {
+      "mode": 384,
+      "type": "file",
+      "sha256": "9ffbdd36b545394fca032ff753d5422c8092de97acd22ede27ea0b3b0dcb2359"
+    },
+    "browser/chrome/icons/default/default32.png": {
+      "mode": 384,
+      "type": "file",
+      "sha256": "6b7170dd4e0ad2a095f11bb2d84c35bb7495e30e38218045eb85f81882f46a29"
+    },
+    "browser/chrome/icons/default/default64.png": {
+      "mode": 384,
+      "type": "file",
+      "sha256": "060fd5cd86fda946ff84225f3035675e8031e25af55ef49c3bc16c779058fea9"
+    },
+    "gmp-clearkey/0.1/manifest.json": {
+      "mode": 384,
+      "type": "file",
+      "sha256": "b7d65e60cccb80ffb2e95b5ae7e355d2c8c37575e886eef4325ca04fa7ba68fc"
+    },
+    "gmp-clearkey/0.1/libclearkey.so": {
+      "mode": 448,
+      "type": "file",
+      "sha256": "97ffd72483c64964ad9a2b86ca227d93c921ff5c14dd430f25c3eec2f7aa5c02"
+    }
+  },
+  "manifestB": {
+    "application.ini": {
+      "mode": 384,
+      "type": "file",
+      "sha256": "9dbab383d1ee69f1b857aba77ba72c01fa7b896a8f8fe3d60896f18d376fa7c7"
+    },
+    "updater": {
+      "mode": 448,
+      "type": "file",
+      "sha256": "761d86411b87241a6ab57620a1b8cfe297eedd17feddf15a3b51a3b2e36c87a7"
+    },
+    "libmozwayland.so": {
+      "mode": 448,
+      "type": "file",
+      "sha256": "3164170986fe9bbe1e673b6bd2524f0f05dcc3da26a5fcee1d304c8fe385e457"
+    },
+    "removed-files": {
+      "mode": 384,
+      "type": "file",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "platform.ini": {
+      "mode": 384,
+      "type": "file",
+      "sha256": "61b3a340b2ad9279af374ce88acff75204f128db13c170c3c58c77bcbb6ae9ad"
+    },
+    "fonts": {
+      "mode": 448,
+      "type": "dir"
+    },
+    "libxul.so": {
+      "mode": 448,
+      "type": "file",
+      "sha256": "760ff8a689f52c9b1f3c89a45ea8813e59f187990caed747e4a7680020c8dbc7"
+    },
+    "floorp": {
+      "mode": 448,
+      "type": "file",
+      "sha256": "4f05c1330b38e50040440be6a3b6e0e7a5b52bc79edb5c5478d978c81f5a603d"
+    },
+    "libmozavutil.so": {
+      "mode": 448,
+      "type": "file",
+      "sha256": "d957abe02b48afe84f2eb0038252f1f12c627f2db7100fbfda80fc473c2d14d7"
+    },
+    "liblgpllibs.so": {
+      "mode": 448,
+      "type": "file",
+      "sha256": "c29aff12589cb5342e73488619b628b50afda839a063a0e0f3f77831ffd8ff82"
+    },
+    "libsoftokn3.so": {
+      "mode": 448,
+      "type": "file",
+      "sha256": "bb6a9283048767500190da54a439cf12196448e352db191db50e23e1566ad649"
+    },
+    "libonnxruntime.so": {
+      "mode": 448,
+      "type": "file",
+      "sha256": "077ac0e3e090dd3d070a497f354f62fa718de4a19be287da5d9a188c950bc71c"
+    },
+    "libmozgtk.so": {
+      "mode": 448,
+      "type": "file",
+      "sha256": "a2f42c25563411b7e3378629d2e1ab7f947e9c4b546560b25b436e6fbe94476f"
+    },
+    "libnssutil3.so": {
+      "mode": 448,
+      "type": "file",
+      "sha256": "efc899f507b9bcdc313303321ed177bc4768c47c3eaaa8e35609488e6d0e53e8"
+    },
+    "libfreeblpriv3.so": {
+      "mode": 448,
+      "type": "file",
+      "sha256": "0e5167b714fc4e7952d8471f5fb8d90a302df98e3cba156769ac733f0fd025b0"
+    },
+    "defaults": {
+      "mode": 448,
+      "type": "dir"
+    },
+    "floorp-bin": {
+      "mode": 448,
+      "type": "file",
+      "sha256": "4f05c1330b38e50040440be6a3b6e0e7a5b52bc79edb5c5478d978c81f5a603d"
+    },
+    "jogfile.json": {
+      "mode": 384,
+      "type": "file",
+      "sha256": "1ea8b491d37ef1e30d1158940469ce068e22fde3f970ec039f2c9511fa93de40"
+    },
+    "libgkcodecs.so": {
+      "mode": 448,
+      "type": "file",
+      "sha256": "7804828879bc2967d23bc241c6ecb15fa7e5ca5e06e28049cf8378753b75cbe8"
+    },
+    "omni.ja": {
+      "mode": 384,
+      "type": "file",
+      "sha256": "8285b0af7796d09ef6d7cdb4092d6b0c9cc3e9d892d8e45c7a68645f9f3977cf"
+    },
+    "updater.ini": {
+      "mode": 384,
+      "type": "file",
+      "sha256": "19852825ca4c1e02a39299bcc7d5606bf2685a2fae2a8fe5d855e8d11936219f"
+    },
+    "libmozavcodec.so": {
+      "mode": 448,
+      "type": "file",
+      "sha256": "0687a26be53f8ece0623d6c5ed8b7815b2c05839760ba012baa2ea5b5975b2ea"
+    },
+    "libnss3.so": {
+      "mode": 448,
+      "type": "file",
+      "sha256": "6f11158b23027e962bec955f328119efa351db61b3e1f507a451fb1dfada646a"
+    },
+    "libplc4.so": {
+      "mode": 448,
+      "type": "file",
+      "sha256": "6fa863eff22c1fdf6e75f22fe9433bb50b0f8ba43960046a3816da6532d11fbf"
+    },
+    "libplds4.so": {
+      "mode": 448,
+      "type": "file",
+      "sha256": "7f3fb5134ecd4201e532d7160dda31479a02743d6eff7199003e3b4be2dd963b"
+    },
+    "libnspr4.so": {
+      "mode": 448,
+      "type": "file",
+      "sha256": "73d59534248a183357f39e547f9d6f5089f084430aba181c9f4b6c9da5988c5d"
+    },
+    "precomplete": {
+      "mode": 384,
+      "type": "file",
+      "sha256": "d6a5d785324008de66070ef2635fb3ed8f18c7ec04f055f870fbaaa685d4f010"
+    },
+    "libmozinference.so": {
+      "mode": 448,
+      "type": "file",
+      "sha256": "acd4dba98fa405662a725fceebe023e0c78cb67de9ec5174f545f6604299c570"
+    },
+    "libmozsqlite3.so": {
+      "mode": 448,
+      "type": "file",
+      "sha256": "d740b271fce254778272866e02b9bd8bca7888475179f76904e9c14a8c96aba0"
+    },
+    "update-settings.ini": {
+      "mode": 384,
+      "type": "file",
+      "sha256": "c574f9f109b4dca4a6ab379167cd47a6bbee66c0a9640b1d19232da337202707"
+    },
+    "pingsender": {
+      "mode": 448,
+      "type": "file",
+      "sha256": "157ed38af98d795812dfc532739252f9e6c51472d13b9105c496b8b2cf1dbbfd"
+    },
+    "gfxtest": {
+      "mode": 448,
+      "type": "file",
+      "sha256": "becfb0b9cee1d9b35fe23dc504f7bbb9345b364c413c0e80656ddb3c9729bdfd"
+    },
+    "browser": {
+      "mode": 448,
+      "type": "dir"
+    },
+    "dependentlibs.list": {
+      "mode": 384,
+      "type": "file",
+      "sha256": "621f575eaaf819dd0b18976c6a8a94d1caae95a9c748f4c9058a052395a4d173"
+    },
+    "libmozsandbox.so": {
+      "mode": 448,
+      "type": "file",
+      "sha256": "88c01a993afad42907d569d1f11d890afd0accc7120fd946168ca799065e86fd"
+    },
+    "libssl3.so": {
+      "mode": 448,
+      "type": "file",
+      "sha256": "7a2f6ffcecdbb27c98279657f3db63f56922cb568dc217553d6d5f217bfa378b"
+    },
+    "gmp-clearkey": {
+      "mode": 448,
+      "type": "dir"
+    },
+    "libsmime3.so": {
+      "mode": 448,
+      "type": "file",
+      "sha256": "6f3e94a9538ec3a52ee30e80af86fccc5ffd31a06712e61f434dda427b561c99"
+    },
+    "icons": {
+      "mode": 448,
+      "type": "dir"
+    },
+    "fonts/TwemojiMozilla.ttf": {
+      "mode": 384,
+      "type": "file",
+      "sha256": "6d90152ee0d29e82fe2a87793af5aa4b7ad13e6538360889e141e81ed299ee8e"
+    },
+    "defaults/pref": {
+      "mode": 448,
+      "type": "dir"
+    },
+    "browser/omni.ja": {
+      "mode": 384,
+      "type": "file",
+      "sha256": "72550d298e6239c297e5feeb6f6bcacd7c862890eeaf76ab39fb08ac321b87bc"
+    },
+    "browser/buildid2": {
+      "mode": 384,
+      "type": "file",
+      "sha256": "4d3787e36f3e7dffd52939cfefb538a373d048d8786b897ee4f253b501d5fedf"
+    },
+    "browser/chrome": {
+      "mode": 448,
+      "type": "dir"
+    },
+    "gmp-clearkey/0.1": {
+      "mode": 448,
+      "type": "dir"
+    },
+    "icons/updater.png": {
+      "mode": 384,
+      "type": "file",
+      "sha256": "cab5e9bc9511b0690e696b378efa6753705b1182660d9829f5b3dc9f0398e5cc"
+    },
+    "defaults/pref/channel-prefs.js": {
+      "mode": 384,
+      "type": "file",
+      "sha256": "ef9fba57b2c3755b630b44ccfe703e2753d538fa50e3c52fc279c29e6db8200f"
+    },
+    "browser/chrome/icons": {
+      "mode": 448,
+      "type": "dir"
+    },
+    "browser/chrome/icons/default": {
+      "mode": 448,
+      "type": "dir"
+    },
+    "browser/chrome/icons/default/default128.png": {
+      "mode": 384,
+      "type": "file",
+      "sha256": "be2fdb8622b028a2248510793980e8b9294cee66d55ca2cb0a103610bd409ba4"
+    },
+    "browser/chrome/icons/default/default16.png": {
+      "mode": 384,
+      "type": "file",
+      "sha256": "1e8aea59ad881e31e351f7f38143293a45a8e7b916571f3eccce5e89844c1969"
+    },
+    "browser/chrome/icons/default/default48.png": {
+      "mode": 384,
+      "type": "file",
+      "sha256": "9ffbdd36b545394fca032ff753d5422c8092de97acd22ede27ea0b3b0dcb2359"
+    },
+    "browser/chrome/icons/default/default32.png": {
+      "mode": 384,
+      "type": "file",
+      "sha256": "6b7170dd4e0ad2a095f11bb2d84c35bb7495e30e38218045eb85f81882f46a29"
+    },
+    "browser/chrome/icons/default/default64.png": {
+      "mode": 384,
+      "type": "file",
+      "sha256": "060fd5cd86fda946ff84225f3035675e8031e25af55ef49c3bc16c779058fea9"
+    },
+    "gmp-clearkey/0.1/manifest.json": {
+      "mode": 384,
+      "type": "file",
+      "sha256": "b7d65e60cccb80ffb2e95b5ae7e355d2c8c37575e886eef4325ca04fa7ba68fc"
+    },
+    "gmp-clearkey/0.1/libclearkey.so": {
+      "mode": 448,
+      "type": "file",
+      "sha256": "97ffd72483c64964ad9a2b86ca227d93c921ff5c14dd430f25c3eec2f7aa5c02"
+    }
+  }
+}

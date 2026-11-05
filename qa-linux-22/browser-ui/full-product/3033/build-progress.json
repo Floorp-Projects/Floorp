@@ -13,14 +13,14 @@
   "nativeCompilation": false,
   "published": false,
   "remaining": [
-    "strict package with genuine matching XPT companion",
     "full native source compile not performed",
     "official preference byte identity not claimed",
-    "physical input/original Fedora full desktop"
+    "physical input/original Fedora full desktop",
+    "regenerated XPT byte identity to original native CI compilation not proven"
   ],
   "artifactBuild": "passed",
   "afterMach": "passed",
-  "strictPackaging": "blocked: matching runtime inputs contain no XPT companion; package.log",
+  "strictPackaging": "passed with all155 genuine source-generated XPT modules; ../xpt-generation/strict-package.log",
   "optionalAuxPackaging": "existing workflow optional-aux route completed; package-final.log; distinct from strict success",
   "candidateTests": {
     "assembledX11": "candidate-29831.json: passed",

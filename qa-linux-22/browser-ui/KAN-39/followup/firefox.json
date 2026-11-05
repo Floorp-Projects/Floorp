@@ -1,0 +1,177 @@
+{
+  "product": "firefox",
+  "input": "OS XTest button4/5, one notch, synthetic not physical",
+  "cases": [
+    {
+      "kind": "normal",
+      "button": 4,
+      "before": {
+        "left": 1756,
+        "top": 0,
+        "width": 1124,
+        "total": 4636,
+        "x": 28,
+        "y": 0,
+        "height": 44,
+        "screenX": 0,
+        "screenY": 0
+      },
+      "stable": {
+        "left": 1756,
+        "top": 0,
+        "width": 1124,
+        "total": 4636,
+        "x": 28,
+        "y": 0,
+        "height": 44,
+        "screenX": 0,
+        "screenY": 0
+      },
+      "after": {
+        "left": 1300,
+        "top": 0,
+        "width": 1124,
+        "total": 4636,
+        "x": 28,
+        "y": 0,
+        "height": 44,
+        "screenX": 0,
+        "screenY": 0
+      },
+      "distance": -456,
+      "events": [
+        {
+          "deltaX": 0,
+          "deltaY": -6,
+          "mode": 1,
+          "trusted": true,
+          "path": [
+            "label",
+            "vbox",
+            "hbox",
+            "stack",
+            "tab",
+            "slot"
+          ],
+          "prevented": true
+        }
+      ]
+    },
+    {
+      "kind": "normal",
+      "button": 5,
+      "before": {
+        "left": 1756,
+        "top": 0,
+        "width": 1124,
+        "total": 4636,
+        "x": 28,
+        "y": 0,
+        "height": 44,
+        "screenX": 0,
+        "screenY": 0
+      },
+      "stable": {
+        "left": 1756,
+        "top": 0,
+        "width": 1124,
+        "total": 4636,
+        "x": 28,
+        "y": 0,
+        "height": 44,
+        "screenX": 0,
+        "screenY": 0
+      },
+      "after": {
+        "left": 2212,
+        "top": 0,
+        "width": 1124,
+        "total": 4636,
+        "x": 28,
+        "y": 0,
+        "height": 44,
+        "screenX": 0,
+        "screenY": 0
+      },
+      "distance": 456,
+      "events": [
+        {
+          "deltaX": 0,
+          "deltaY": 6,
+          "mode": 1,
+          "trusted": true,
+          "path": [
+            "label",
+            "vbox",
+            "hbox",
+            "stack",
+            "tab",
+            "slot"
+          ],
+          "prevented": true
+        }
+      ]
+    }
+  ],
+  "environment": {
+    "version": "159.0.1",
+    "build": "20261102144711",
+    "os": "Linux",
+    "dpr": 1,
+    "signature": true,
+    "signatureUserSet": false,
+    "sandbox": 6
+  },
+  "warmup": [
+    {
+      "kind": "normal",
+      "events": [
+        {
+          "deltaX": 0,
+          "deltaY": 6,
+          "mode": 1,
+          "trusted": true,
+          "path": [
+            "label",
+            "vbox",
+            "hbox",
+            "stack",
+            "tab",
+            "slot"
+          ],
+          "prevented": true
+        },
+        {
+          "deltaX": 0,
+          "deltaY": 6,
+          "mode": 1,
+          "trusted": true,
+          "path": [
+            "label",
+            "vbox",
+            "hbox",
+            "stack",
+            "tab",
+            "slot"
+          ],
+          "prevented": true
+        },
+        {
+          "deltaX": 0,
+          "deltaY": 6,
+          "mode": 1,
+          "trusted": true,
+          "path": [
+            "label",
+            "vbox",
+            "hbox",
+            "stack",
+            "tab",
+            "slot"
+          ],
+          "prevented": true
+        }
+      ]
+    }
+  ]
+}
