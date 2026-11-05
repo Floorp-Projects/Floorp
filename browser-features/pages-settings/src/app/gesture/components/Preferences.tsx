@@ -14,6 +14,7 @@ import { Seekbar } from "@/components/common/seekbar.tsx";
 import type { MouseGestureConfig } from "@/types/pref.ts";
 import { useAvailableActions } from "../useAvailableActions.ts";
 import type { MouseGestureConfigUpdate } from "../configPersistence.ts";
+import { useGestureColorDraft } from "../useGestureColorDraft.ts";
 import { REPEAT_SAFE_WHEEL_ACTIONS } from "#features-chrome/common/mouse-gesture/wheel-action-policy.ts";
 import {
   Card,
@@ -45,6 +46,10 @@ export function GeneralSettings({
   updateWheelAction,
 }: GeneralSettingsProps) {
   const { t } = useTranslation();
+  const [trailColorDraft, setTrailColorDraft] = useGestureColorDraft(
+    config.trailColor,
+    (trailColor) => updateConfig({ trailColor }),
+  );
   const availableActions = useAvailableActions();
   const wheelActions = useAvailableActions(REPEAT_SAFE_WHEEL_ACTIONS);
 
@@ -66,10 +71,10 @@ export function GeneralSettings({
     await updateConfig({ trailWidth: value });
   };
 
-  const handleTrailColorChange = async (
+  const handleTrailColorChange = (
     e: React.ChangeEvent<HTMLInputElement>,
   ) => {
-    await updateConfig({ trailColor: e.target.value });
+    setTrailColorDraft(e.target.value);
   };
 
   const handleMinDistanceChange = async (value: number) => {
@@ -403,7 +408,7 @@ export function GeneralSettings({
                 <Input
                   type="text"
                   id="gesture-trail-color-text"
-                  value={config.trailColor}
+                  value={trailColorDraft}
                   onChange={handleTrailColorChange}
                   className="w-full max-w-xs"
                   placeholder="#000000"
