@@ -1,0 +1,92 @@
+{
+  "userNamespace": {
+    "command": [
+      "unshare",
+      "-Ur",
+      "true"
+    ],
+    "rc": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "mountNamespace": {
+    "command": [
+      "unshare",
+      "-m",
+      "true"
+    ],
+    "rc": 1,
+    "stdout": "",
+    "stderr": "unshare: unshare failed: Operation not permitted\n"
+  },
+  "bubblewrap": {
+    "command": [
+      "bwrap",
+      "--ro-bind",
+      "/",
+      "/",
+      "--unshare-user",
+      "--",
+      "true"
+    ],
+    "rc": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "dbus": {
+    "command": [
+      "dbus-run-session",
+      "--",
+      "dbus-send",
+      "--session",
+      "--print-reply",
+      "--dest=org.freedesktop.DBus",
+      "/",
+      "org.freedesktop.DBus.ListNames"
+    ],
+    "rc": 0,
+    "stdout": "method return time=1793887964.874330 sender=org.freedesktop.DBus -> destination=:1.0 serial=3 reply_serial=2\n   array [\n      string \"org.freedesktop.DBus\"\n      string \":1.0\"\n   ]\n",
+    "stderr": ""
+  },
+  "network": {
+    "command": [
+      "curl",
+      "-sS",
+      "-o",
+      "/dev/null",
+      "-w",
+      "%{http_code}\n",
+      "--max-time",
+      "20",
+      "https://github.com"
+    ],
+    "rc": 0,
+    "stdout": "200\n",
+    "stderr": ""
+  },
+  "docker": {
+    "command": [
+      "env",
+      "-u",
+      "DOCKER_HOST",
+      "-u",
+      "DOCKER_CONTEXT",
+      "-u",
+      "DOCKER_TLS",
+      "-u",
+      "DOCKER_TLS_VERIFY",
+      "-u",
+      "DOCKER_CERT_PATH",
+      "docker",
+      "--host=unix:///var/run/docker.sock",
+      "info",
+      "--format",
+      "{{.ServerVersion}} {{.SecurityOptions}}"
+    ],
+    "rc": 0,
+    "stdout": "28.4.0 [name=seccomp,profile=builtin name=cgroupns]\n",
+    "stderr": ""
+  },
+  "execution": "approved direct managed environment (default restricted command results separately recorded in probe.json)",
+  "protectionOverrides": []
+}

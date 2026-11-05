@@ -1,0 +1,249 @@
+[
+  {
+    "key": "KAN-20",
+    "github": "https://github.com/Floorp-Projects/Floorp/issues/2919",
+    "sourceSha": "984509d2053be7bae9027133bda7259cd706b208",
+    "productVersion": {
+      "Floorp": "12.21.1 / Gecko159.0.1 archive BuildID20261103231153 Runtime20261103153232",
+      "Firefox": "159.0.1 BuildID20261102144711"
+    },
+    "environment": "Debian13.6 Linux x86_64; Xvfb/X11 without desktop WM; isolated HOME/XDG/new NSS profile; real product browser; default sandbox level6, cookieBehavior5, trackingprotection.enabled false (product default); Cloud proxy configured and its CA trusted without TLS override; Marionette automated system-access enabled",
+    "testCommand": "/workspace/qa-linux-22/C/web-tools/venv/bin/python /workspace/qa-linux-22/C/web-tools/run_web.py; /workspace/qa-linux-22/C/web-tools/venv/bin/python /workspace/qa-linux-22/C/web-tools/run_login.py; /workspace/qa-linux-22/C/web-tools/venv/bin/python /workspace/qa-linux-22/C/web-tools/run_login_click.py",
+    "result": "partial-not-reproduced-in-substitute-environment",
+    "remainingConditions": [
+      "Ubuntu 26.04 Snap and Flatpak product packages on original desktop; workspace/container variants; longer observation and source cause if original loop recurs"
+    ],
+    "existingPr": null,
+    "newPr": null,
+    "jiraCommentId": null,
+    "evidence": [
+      "KAN-20/report.md"
+    ],
+    "localEvidenceRoot": "/workspace/qa-linux-22/C/KAN-20",
+    "cases": [
+      {
+        "name": "firefox-normal-yahoo",
+        "infrastructureFailure": false,
+        "sampleCount": 6
+      },
+      {
+        "name": "firefox-private-yahoo",
+        "infrastructureFailure": true,
+        "sampleCount": 6
+      },
+      {
+        "name": "floorp-normal-yahoo",
+        "infrastructureFailure": false,
+        "sampleCount": 6
+      },
+      {
+        "name": "floorp-private-yahoo",
+        "infrastructureFailure": false,
+        "sampleCount": 6
+      }
+    ]
+  },
+  {
+    "key": "KAN-21",
+    "github": "https://github.com/Floorp-Projects/Floorp/issues/2532",
+    "sourceSha": "984509d2053be7bae9027133bda7259cd706b208",
+    "productVersion": {
+      "Floorp": "12.21.1 / Gecko159.0.1 archive BuildID20261103231153 Runtime20261103153232",
+      "Firefox": "159.0.1 BuildID20261102144711"
+    },
+    "environment": "Debian13.6 Linux x86_64; Xvfb/X11 without desktop WM; isolated HOME/XDG/new NSS profile; real product browser; default sandbox level6, cookieBehavior5, trackingprotection.enabled false (product default); Cloud proxy configured and its CA trusted without TLS override; Marionette automated system-access enabled",
+    "testCommand": "/workspace/qa-linux-22/C/web-tools/venv/bin/python /workspace/qa-linux-22/C/web-tools/run_web.py; /workspace/qa-linux-22/C/web-tools/venv/bin/python /workspace/qa-linux-22/C/web-tools/run_login.py; /workspace/qa-linux-22/C/web-tools/venv/bin/python /workspace/qa-linux-22/C/web-tools/run_login_click.py",
+    "result": "fixture-tested-live-authentication-unproven",
+    "remainingConditions": [
+      "Original Zorin OS and original affected Torbox challenge route/site policy; live non-test-key Turnstile end-to-end verification; Cloud IP and automated-WebDriver effects"
+    ],
+    "existingPr": null,
+    "newPr": null,
+    "jiraCommentId": null,
+    "evidence": [
+      "KAN-21/report.md"
+    ],
+    "localEvidenceRoot": "/workspace/qa-linux-22/C/KAN-21",
+    "cases": [
+      {
+        "name": "firefox-normal-torbox",
+        "infrastructureFailure": true,
+        "sampleCount": 6
+      },
+      {
+        "name": "firefox-normal-torbox-login",
+        "infrastructureFailure": false,
+        "sampleCount": 6
+      },
+      {
+        "name": "firefox-normal-torbox-login-click",
+        "infrastructureFailure": true,
+        "sampleCount": 6
+      },
+      {
+        "name": "firefox-normal-turnstile-demo",
+        "infrastructureFailure": true,
+        "sampleCount": 6
+      },
+      {
+        "name": "firefox-private-torbox",
+        "infrastructureFailure": true,
+        "sampleCount": 6
+      },
+      {
+        "name": "firefox-private-turnstile-demo",
+        "infrastructureFailure": true,
+        "sampleCount": 6
+      },
+      {
+        "name": "floorp-normal-torbox",
+        "infrastructureFailure": false,
+        "sampleCount": 6
+      },
+      {
+        "name": "floorp-normal-torbox-login",
+        "infrastructureFailure": false,
+        "sampleCount": 6
+      },
+      {
+        "name": "floorp-normal-torbox-login-click",
+        "infrastructureFailure": true,
+        "sampleCount": 6
+      },
+      {
+        "name": "floorp-normal-turnstile-demo",
+        "infrastructureFailure": false,
+        "sampleCount": 6
+      },
+      {
+        "name": "floorp-private-torbox",
+        "infrastructureFailure": false,
+        "sampleCount": 6
+      },
+      {
+        "name": "floorp-private-turnstile-demo",
+        "infrastructureFailure": false,
+        "sampleCount": 6
+      }
+    ]
+  },
+  {
+    "key": "KAN-64",
+    "github": "https://github.com/Floorp-Projects/Floorp/issues/2568",
+    "sourceSha": "984509d2053be7bae9027133bda7259cd706b208",
+    "productVersion": {
+      "floorp": "12.21.1@159.0.1",
+      "floorpBuildId": "20261103231153",
+      "runtimeBuildId": "20261103153232",
+      "firefoxControl": "159.0.1",
+      "firefoxBuildId": "20261102144711",
+      "treeStyleTab": "4.4.9",
+      "addonSignedState": 2
+    },
+    "environment": {
+      "osRelease": "PRETTY_NAME=\"Debian GNU/Linux 13 (trixie)\"\nNAME=\"Debian GNU/Linux\"\nVERSION_ID=\"13\"\nVERSION=\"13 (trixie)\"\nVERSION_CODENAME=trixie\nDEBIAN_VERSION_FULL=13.6\nID=debian\nHOME_URL=\"https://www.debian.org/\"\nSUPPORT_URL=\"https://www.debian.org/support\"\nBUG_REPORT_URL=\"https://bugs.debian.org/\"\n",
+      "kernel": "6.18.57",
+      "uid": 1000,
+      "namespaceProbe": 0,
+      "dbusProbe": 0,
+      "display": "Xvfb :164",
+      "windowManager": "none; not KDE/Cinnamon",
+      "input": "Marionette scripted browser APIs; no physical input",
+      "securityOverridesUsed": []
+    },
+    "testCommand": [
+      "python3 /workspace/qa-linux-22/C/KAN-64/probe.py",
+      "python3 /workspace/qa-linux-22/C/KAN-64/firefox-control.py"
+    ],
+    "result": "reproduced; external-extension/upstream integration dependency; no confirmed Floorp-only code defect",
+    "remainingConditions": [
+      "Original Fedora44/KDE not run; reproduction confirmed on Debian13/Xvfb, no KDE equivalence claimed",
+      "Reported Floorp12.16.2 and historical TST version not run",
+      "TST upstream expected behavior/test for groups whose every member is hidden needs agreement",
+      "No physical-input test"
+    ],
+    "existingPr": null,
+    "newPr": null,
+    "jiraCommentId": null,
+    "evidence": [
+      "KAN-64/report.md"
+    ],
+    "localEvidenceRoot": "/workspace/qa-linux-22/C/KAN-64",
+    "observations": {
+      "memberTabsHidden": true,
+      "nativeGroupStyleDisplay": "none",
+      "tstHeaderRemains": true,
+      "matchingFirefoxHideAllControl": true,
+      "signedState": 2,
+      "sandboxLevel": 6
+    }
+  },
+  {
+    "key": "KAN-71",
+    "github": "https://github.com/Floorp-Projects/Floorp/issues/2535",
+    "sourceSha": "984509d2053be7bae9027133bda7259cd706b208",
+    "productVersion": "Floorp12.21.1/Gecko159.0.1; Firefox159.0.1",
+    "environment": "Debian13.6 Xvfb X11, DBus, XFWM4.20.0 / standalone Muffin6.4.1, synthetic input",
+    "testCommand": "dbus-run-session -- /workspace/qa-linux-22/C/web-tools/venv/bin/python /workspace/qa-linux-22/C/KAN-71/run_focus.py",
+    "result": "substitute-environment symptom reproduced equally in Floorp and Firefox; Floorp defect unconfirmed; 8/8 URL GET and original PID survival, 0/8 focus",
+    "remainingConditions": [
+      "Linux Mint full Cinnamon X11",
+      "initiating application trusted activation/startup timestamp",
+      "matching Firefox-different control",
+      "physical input path"
+    ],
+    "existingPr": null,
+    "newPr": null,
+    "jiraCommentId": null,
+    "evidence": [
+      "KAN-71/report.md"
+    ],
+    "localEvidenceRoot": "/workspace/qa-linux-22/C/KAN-71",
+    "observations": {
+      "httpGetAndOriginalPidMaintained": 8,
+      "totalTrials": 8,
+      "focusRaises": 0,
+      "products": [
+        "Floorp12.21.1",
+        "Firefox159.0.1"
+      ],
+      "windowManagers": [
+        "XFWM4.20.0",
+        "Muffin6.4.1"
+      ],
+      "startupIdOrActivationTokenPresent": false
+    }
+  },
+  {
+    "key": "KAN-90",
+    "github": "https://github.com/Floorp-Projects/Floorp/issues/2726",
+    "sourceSha": "984509d2053be7bae9027133bda7259cd706b208",
+    "productVersion": "Floorp12.21.1/Gecko159.0.1 Flathub ab3c23d5f3a32863918263c197b483e37d9ed78a6bb9d00a1657e31dc5e04621",
+    "environment": {
+      "executed": "Debian13.6/Xvfb/Openbox/private DBus, Flatpak1.16.6 Thunderbird140.12.0esr",
+      "originalCapabilityProbe": "Fedora44 container Flatpak1.18.4 Thunderbird158.0; default protected namespaces denied EPERM"
+    },
+    "testCommand": "/workspace/qa-linux-22/C/KAN-90/flatpak-env.sh dbus-run-session -- /workspace/qa-linux-22/C/web-tools/venv/bin/python /workspace/qa-linux-22/C/KAN-90/run-integration.py",
+    "result": "environment-insufficient-for-original; two-actual-Thunderbird-to-Flatpak-remoting-controls-passed",
+    "remainingConditions": [
+      "Fedora44 desktop with functioning protected Flatpak namespaces",
+      "Actual portal OpenURI dispatch, not only SchemeSupported",
+      "Original12.17.2 comparison and symbolized matching-build coredump if reproduced",
+      "Physical input not tested"
+    ],
+    "existingPr": null,
+    "newPr": null,
+    "jiraCommentId": null,
+    "evidence": [
+      "KAN-90/report.md"
+    ],
+    "localEvidenceRoot": "/workspace/qa-linux-22/C/KAN-90",
+    "observations": {
+      "actualMailLinkFlatpakRemotingControls": 2,
+      "httpGet": true,
+      "sameSessionPid": true,
+      "portalOpenUriObserved": false,
+      "fedoraProtectedUserNamespace": "EPERM"
+    }
+  }
+]

@@ -1,0 +1,7 @@
+From: fixture@example.invalid
+To: fixture@example.invalid
+Subject: KAN90 local fixture
+MIME-Version: 1.0
+Content-Type: text/html; charset=UTF-8
+
+<html><body style="font-size:32px"><a href="http://127.0.0.1:19090/from-thunderbird">Open local KAN90 fixture</a></body></html>

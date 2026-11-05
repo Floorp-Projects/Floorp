@@ -1,0 +1,13 @@
+# Linux integration C environment
+
+2026-11-05 UTC / JST. Actual host: Debian GNU/Linux 13.6, x86_64, Linux 6.18.57, UID1000. Repository `/workspace/Floorp` preserved. Independent `/workspace/Floorp-C`, branch `qa/linux-c-integration`, fetched main `984509d2053be7bae9027133bda7259cd706b208`. Repository AGENTS.md and cloud-environment-runtime skill/networking/Docker references read.
+
+`probe.json` records restricted-command failures. Those are **not** host capability findings. `probe-direct.json` repeats the operations in the authorized managed execution context: HTTP through inherited proxy returns200, user namespace and bubblewrap succeed, session DBus succeeds, managed Docker28.4.0 works with default seccomp. Bare mount namespace creation without a user namespace fails EPERM. No root/sudo assumed. No secret environment values were dumped.
+
+Xvfb is available from a saved user-space sysroot. Current work uses isolated HOME/XDG/profiles, dedicated displays and ports. Real window managers and desktop dependencies are added in the C environment sysroot from authenticated Debian package sources; system packages and shared saved configuration are untouched. Floorp/Firefox downloaded official products and signed extensions are used. Saved env.sh was deliberately not sourced because it includes a content-sandbox override. Current runs keep sandbox level6 and TLS verification. Marionette system-access inspection is explicitly opted in; it is not a content sandbox change.
+
+Fedora44 Docker userspace, Flatpak/Thunderbird/portal capabilities and failures are recorded in KAN-90. A container running Fedora userspace is not a full original Fedora desktop. Xvfb is not KDE or Wayland, synthetic input is not physical input, standalone Muffin is not the complete Linux Mint/Cinnamon session. No result is promoted across those boundaries.
+
+All profiles, cookies, NSS databases, raw process environment and downloaded binaries are excluded from the portable evidence branch. Only selected reports, reproduction scripts, small sanitized result logs, screenshots and hashes are exported. Infrastructure errors and harness corrections are retained locally and never classified as product bugs or non-reproduction.
+
+Portable branch scope: only reviewed authored reports/scripts and bounded summary JSON. Screenshots, raw logs, third-party HTML/API source, complete result files and all profiles remain local at /workspace/qa-linux-22/C and are NOT in this branch. References to those files in reports describe local evidence. No private browser content, credential values, user metadata or opaque challenge tokens are included.
