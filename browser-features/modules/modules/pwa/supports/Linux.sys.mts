@@ -132,7 +132,7 @@ export class LinuxSupport {
       `[LinuxSupport] Getting normalized ID for SSB: ${ssb.name} (id: ${ssb.id})`,
     );
     for (const candidate of candidates) {
-      if (candidate) {
+      if (typeof candidate === "string" && candidate) {
         const normalized = this.normalizeToken(candidate);
         if (normalized) {
           console.debug(

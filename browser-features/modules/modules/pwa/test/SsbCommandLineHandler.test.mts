@@ -173,6 +173,45 @@ async function testLinuxWindowsKeepDistinctLauncherClasses(): Promise<void> {
   }
 }
 
+async function testLinuxLegacyIdsKeepFallbackWindowClasses(): Promise<void> {
+  const { SsbRunnerUtils } = ChromeUtils.importESModule(
+    "resource://noraneko/modules/pwa/SsbCommandLineHandler.sys.mjs",
+  ) as typeof import("../SsbCommandLineHandler.sys.mts");
+  const cases = [
+    {
+      id: undefined,
+      name: "Legacy Missing",
+      expected: "floorp-legacy-missing",
+    },
+    { id: "{}", name: "Legacy Braces", expected: "floorp-legacy-braces" },
+    { id: 123, name: "Legacy Number", expected: "floorp-legacy-number" },
+    {
+      id: { invalid: true },
+      name: "Legacy Object",
+      expected: "floorp-legacy-object",
+    },
+  ];
+  for (const { id, name, expected } of cases) {
+    // Old or malformed persisted JSON is only warning-validated by DataManager.
+    const app = {
+      id,
+      name,
+      start_url: "about:blank",
+      icon: "",
+    } as unknown as Parameters<typeof SsbRunnerUtils.openSsbWindow>[0];
+    const win = await SsbRunnerUtils.openSsbWindow(app);
+    try {
+      assertEquals(
+        win.document.documentElement.getAttribute("windowclass"),
+        expected,
+        "An unusable legacy id falls back to the existing name identity",
+      );
+    } finally {
+      win.close();
+    }
+  }
+}
+
 export async function runAllTests(): Promise<void> {
   if (Services.appinfo.OS !== "Linux") {
     console.info(
@@ -187,5 +226,9 @@ export async function runAllTests(): Promise<void> {
   }, {
     name: "Linux PWA windows keep their distinct generated launcher classes",
     fn: testLinuxWindowsKeepDistinctLauncherClasses,
+  }, {
+    name:
+      "Linux PWA legacy ids retain fallback classes without failing startup",
+    fn: testLinuxLegacyIdsKeepFallbackWindowClasses,
   }]);
 }
