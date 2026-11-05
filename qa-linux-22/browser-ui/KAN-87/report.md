@@ -29,3 +29,7 @@ Source: `984509d2053be7bae9027133bda7259cd706b208`。公式Floorp12.21.1 / Gecko
 Jira追記comment ID: `10289`。needs-linuxは実試験によりlinux-testedへ置換し、原ディストリ/物理入力の具体条件とenv-blockedは保持。
 
 Jira最終comment ID: `10289`。
+
+## Normal signed image-theme control
+
+One additional AMO Galaxy1.0 normal signed installation (signedState2, temporaryfalse) completed on native Wayland with real right panel/top simultaneous reveal; red/cyan backdrop difference was zero across measured chrome/panel regions, while all250000 content-control pixels changed. See `qaLinuxKAN87/signed/report.md`, its source URL/hash and raw evidence. Normal signed-theme route is now tested for this one theme; original CachyOS/Niri/Hyprland/MangoWM, GPU/physical-input and other settings remain.

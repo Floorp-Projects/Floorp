@@ -1,0 +1,18 @@
+{
+  "prHead": {
+    "head": "f43b22d34c0728e0ed800b8016d81b3212190954",
+    "files": {
+      "browser-features/chrome/common/flex-order/flex-order.tsx": "d8c658d61584c5774b102cf2e21a722aafea1682",
+      "browser-features/chrome/common/flex-order/test/flexOrder.test.ts": "768f274881b84eb31d998da637f29e99052589a7",
+      "browser-features/chrome/common/panel-sidebar/test/panelSidebarLayout.test.ts": "7ec94801f5b58a9f865c6c55181ff5f61a9b94ab"
+    }
+  },
+  "currentWithPatch": {
+    "head": "984509d2053be7bae9027133bda7259cd706b208",
+    "files": {
+      "browser-features/chrome/common/flex-order/flex-order.tsx": "d8c658d61584c5774b102cf2e21a722aafea1682",
+      "browser-features/chrome/common/flex-order/test/flexOrder.test.ts": "768f274881b84eb31d998da637f29e99052589a7",
+      "browser-features/chrome/common/panel-sidebar/test/panelSidebarLayout.test.ts": "7ec94801f5b58a9f865c6c55181ff5f61a9b94ab"
+    }
+  }
+}

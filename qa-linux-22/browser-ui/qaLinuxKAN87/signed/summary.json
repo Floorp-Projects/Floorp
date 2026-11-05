@@ -1,0 +1,31 @@
+{
+  "key": "KAN-87",
+  "sourceSha": "984509d2053be7bae9027133bda7259cd706b208",
+  "productVersion": "Floorp12.21.1 / Gecko159.0.1 / build20261103153232",
+  "environment": "Debian13.6 nested KWin; native Wayland client; software WebRender",
+  "theme": {
+    "name": "Galaxy",
+    "version": "1.0",
+    "amoUrl": "https://addons.mozilla.org/firefox/addon/galaxy0512145/",
+    "download": "https://addons.mozilla.org/firefox/downloads/file/3680282/galaxy0512145-1.0.xpi",
+    "sha256": "b2ec58ed175f57ac75a23b730713db5d1ccdc69363479c170c037840f8fd2e81",
+    "signedState": 2,
+    "temporarilyInstalled": false,
+    "imageProperty": "additional_backgrounds"
+  },
+  "testCommand": "bash signed/nested.sh 29701 paint",
+  "result": "normal signed image-theme control completed; measured chrome/panel regions invariant between red/cyan backdrop",
+  "remainingConditions": [
+    "original CachyOS / Niri / Hyprland / MangoWM desktop and GPU",
+    "physical input",
+    "other normal signed themes/transparency settings"
+  ],
+  "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2767",
+  "newPr": null,
+  "evidence": [
+    "29701-paint.json",
+    "29701-pixels.json",
+    "screenshots/29701-signed-red-simultaneous.png",
+    "screenshots/29701-signed-cyan-simultaneous.png"
+  ]
+}

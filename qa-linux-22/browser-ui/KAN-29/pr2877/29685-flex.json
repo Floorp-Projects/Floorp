@@ -1,0 +1,19 @@
+{
+  "port": 29685,
+  "test": "flex",
+  "runtimeBinding": "actual production module singleton, diagnostic exports only",
+  "observations": [],
+  "product": {
+    "version": "159.0.1",
+    "build": "20261103153232",
+    "name": "Floorp",
+    "rtl": false,
+    "dir": "ltr",
+    "sidebarMethods": {
+      "setPosition": "function",
+      "toggleVerticalTabs": "function"
+    }
+  },
+  "error": "ScriptTimeoutException('Timed out after 180000 ms')",
+  "traceback": "Traceback (most recent call last):\n  File \"/workspace/qa-linux-22/browser-ui/KAN-29/pr2877/probe-tests.py\", line 9, in <module>\n    r['injection']=m.execute_script('window.__qa2877Result=null;let el=document.createElementNS(\"http://www.w3.org/1999/xhtml\",\"script\");el.type=\"module\";el.src=arguments[0];el.addEventListener(\"error\",()=>window.__qa2877Result={passed:false,error:\"external module failed to load\"});document.documentElement.appendChild(el);return {started:true,src:el.src}',script_args=['chrome://noraneko/content/qa-pr2877-'+kind+'.js'])\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/workspace/qa-linux-22/browser-ui/python/marionette_driver/marionette.py\", line 1959, in execute_async_script\n    rv = self._send_message(\"WebDriver:ExecuteAsyncScript\", body, key=\"value\")\n         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/workspace/qa-linux-22/browser-ui/python/marionette_driver/decorators.py\", line 24, in _\n    return func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File \"/workspace/qa-linux-22/browser-ui/python/marionette_driver/marionette.py\", line 780, in _send_message\n    self._handle_error(err)\n  File \"/workspace/qa-linux-22/browser-ui/python/marionette_driver/marionette.py\", line 792, in _handle_error\n    raise errors.lookup(error)(message, stacktrace=stacktrace)\nmarionette_driver.errors.ScriptTimeoutException: Timed out after 180000 ms\nstacktrace:\n\tRemoteError@chrome://remote/content/shared/RemoteError.sys.mjs:14:8\n\tWebDriverError@chrome://remote/content/shared/webdriver/Errors.sys.mjs:169:5\n\tScriptTimeoutError@chrome://remote/content/shared/webdriver/Errors.sys.mjs:797:5\n\tevaluate.sandbox/timeoutPromise</scriptTimeoutID<@chrome://remote/content/marionette/evaluate.sys.mjs:97:11\n\tnotify@resource://gre/modules/Timer.sys.mjs:66:16\n\n"
+}

@@ -1,0 +1,19 @@
+{
+  "port": 29686,
+  "test": "flex",
+  "runtimeBinding": "actual production module singleton, diagnostic exports only",
+  "observations": [],
+  "product": {
+    "version": "159.0.1",
+    "build": "20261103153232",
+    "name": "Floorp",
+    "rtl": false,
+    "dir": "ltr",
+    "sidebarMethods": {
+      "setPosition": "function",
+      "toggleVerticalTabs": "function"
+    }
+  },
+  "error": "JavascriptException('EvalError: call to eval() blocked by CSP')",
+  "traceback": "Traceback (most recent call last):\n  File \"/workspace/qa-linux-22/browser-ui/KAN-29/pr2877/probe-tests.py\", line 10, in <module>\n    r['injection']=m.execute_script('window.__qa2877Result=null;Components.utils.waiveXrays(document.defaultView).eval(arguments[0]);return {started:true}',script_args=[expression])\n                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/workspace/qa-linux-22/browser-ui/python/marionette_driver/marionette.py\", line 1889, in execute_script\n    rv = self._send_message(\"WebDriver:ExecuteScript\", body, key=\"value\")\n         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/workspace/qa-linux-22/browser-ui/python/marionette_driver/decorators.py\", line 24, in _\n    return func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File \"/workspace/qa-linux-22/browser-ui/python/marionette_driver/marionette.py\", line 780, in _send_message\n    self._handle_error(err)\n  File \"/workspace/qa-linux-22/browser-ui/python/marionette_driver/marionette.py\", line 792, in _handle_error\n    raise errors.lookup(error)(message, stacktrace=stacktrace)\nmarionette_driver.errors.JavascriptException: EvalError: call to eval() blocked by CSP\nstacktrace:\n\t@qa-linux-22/browser-ui/KAN-29/pr2877/probe-tests.py:11:84\n\t@qa-linux-22/browser-ui/KAN-29/pr2877/probe-tests.py:12:8\n\tevaluate.sandbox/promise<@chrome://remote/content/marionette/evaluate.sys.mjs:127:10\n\tevaluate.sandbox@chrome://remote/content/marionette/evaluate.sys.mjs:103:17\n\texecuteScript@chrome://remote/content/marionette/actors/MarionetteCommandsChild.sys.mjs:358:26\n\treceiveMessage@chrome://remote/content/marionette/actors/MarionetteCommandsChild.sys.mjs:214:31\n\n"
+}

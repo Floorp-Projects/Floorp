@@ -10,3 +10,9 @@ Xvfb 1440x1100 and OS XTest operate. KWin 6.3.6 with --x11-display :92 supplies 
 Floorp tarball SHA256 7dcedcbfef747819153b0b9c541a9c1f4f4965b0720f16d5d237d39b0c30d613 matches official release hashes.txt. Firefox archive SHA256 469ce17120018e1c95411d254cf3c5f8db2dd1768a7acde5a2a089b00072ac65 (computed locally; upstream hash not independently compared). TLS verification remained enabled. No secret environment values were printed or saved.
 
 Fedora44: initial missing libX11-xcb caused XPCOM load exit255; installing libX11-xcb/libXt/dbus-glib/Mesa resolved it. User namespace probe inside Docker returns EPERM, while the product starts with default protection settings and no sandbox-disabling environment. Precondition failure and actual successful product executions are retained separately. Repro material: fedora44.sh plus environment/fedora44-second.log and fedora44-more.log.
+
+## Follow-up: genuine localized RTL and normal signed theme
+
+Official Gecko159.0.1 signed Arabic pack installed through normal AddonManager path, normal app quit exit0 before restart. Final runs29665/29666: appLocale ar, isAppLocaleRTL true, RTL_UI true, root computed direction rtl, actual native Wayland. Root-dir fixture is prohibited for these two runs. Candidate is an independent official-product copy with only existingPR2877's offset computation transplanted; exact ZIP/nativebinary hashes are in KAN-29/pr2877/product-patch.json. Earlier failed localization/connection preconditions remain separate.
+
+KAN87 extra normal signed Galaxy1.0 AMO theme (signedState2, temporaryfalse) ran on separate nativeWayland socket29701. No browser signature/security preference changes. See qaLinuxKAN87/signed/report.md.

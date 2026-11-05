@@ -1,0 +1,1250 @@
+{
+  "baselineSource": "984509d2053be7bae9027133bda7259cd706b208",
+  "candidatePrHead": "f43b22d34c0728e0ed800b8016d81b3212190954",
+  "environment": "Debian13.6 / KWin6.3.6 nested Wayland / Software WebRender",
+  "input": "W3C synthetic UI mouse; no physical input",
+  "runs": [
+    {
+      "port": 29665,
+      "variant": "original",
+      "graphics": {
+        "windowProtocol": "wayland",
+        "compositing": "WebRender (Software)"
+      },
+      "initialDirection": {
+        "direction": "rtl",
+        "rtlUI": true,
+        "appLocale": "ar",
+        "appLocaleRTL": true,
+        "uidirection": ""
+      },
+      "setup": {
+        "languagePackUrl": "https://archive.mozilla.org/pub/firefox/releases/159.0.1/linux-x86_64/xpi/ar.xpi",
+        "fixture": "Normal signed-language-pack install via AddonManager API and graceful app quit/restart; no signature/security prefs changed.",
+        "install": {
+          "id": "langpack-ar@firefox.mozilla.org",
+          "type": "locale",
+          "isActive": true,
+          "signedState": 2,
+          "requested": [
+            "ar"
+          ],
+          "signaturePrefUser": false
+        },
+        "preQuitLocale": {
+          "available": [
+            "en-US",
+            "ar"
+          ],
+          "app": [
+            "ar",
+            "en-US"
+          ],
+          "rtl": true
+        },
+        "gracefulInstallExit": 0,
+        "localeWaitSeconds": 0,
+        "postRestart": {
+          "requested": [
+            "ar"
+          ],
+          "available": [
+            "ar",
+            "en-US"
+          ],
+          "app": [
+            "ar",
+            "en-US"
+          ],
+          "rtl": true,
+          "RTL_UI": true,
+          "dir": "rtl",
+          "packs": [
+            {
+              "id": "langpack-ar@firefox.mozilla.org",
+              "active": true,
+              "disabled": false,
+              "userDisabled": false,
+              "signedState": 2
+            }
+          ],
+          "errors": [
+            "[JavaScript Warning: \"Missing resource in locale ar: browser/allTabsMenu.ftl\"]",
+            "[JavaScript Warning: \"Missing resource in locale ar: browser/allTabsMenu.ftl\"]",
+            "[JavaScript Warning: \"Missing resource in locale ar: browser/allTabsMenu.ftl\"]",
+            "[JavaScript Warning: \"Missing resource in locale ar: browser/allTabsMenu.ftl\"]",
+            "[JavaScript Warning: \"Missing resource in locale ar: browser/allTabsMenu.ftl\"]"
+          ]
+        }
+      },
+      "error": null,
+      "states": [
+        {
+          "nativeStartPref": true,
+          "panelEndPref": true,
+          "nativePinned": false,
+          "screenshot": "KAN-29/wayland-29665-1-1-0.png",
+          "rounds": [
+            {
+              "nativeX": 1112.6666259765625,
+              "nativeWidth": 253.3333282470703,
+              "nativeExpanded": true,
+              "lateXDelta": 0.0,
+              "panelX": 42,
+              "panelWidth": 400,
+              "offsetStart": "0px",
+              "offsetEnd": "1366px",
+              "hoverEnabled": true
+            },
+            {
+              "nativeX": 1112.6666259765625,
+              "nativeWidth": 253.3333282470703,
+              "nativeExpanded": true,
+              "lateXDelta": 0.0,
+              "panelX": 42,
+              "panelWidth": 400,
+              "offsetStart": "0px",
+              "offsetEnd": "1366px",
+              "hoverEnabled": true
+            },
+            {
+              "nativeX": 1112.6666259765625,
+              "nativeWidth": 253.3333282470703,
+              "nativeExpanded": true,
+              "lateXDelta": 0.0,
+              "panelX": 42,
+              "panelWidth": 400,
+              "offsetStart": "0px",
+              "offsetEnd": "1366px",
+              "hoverEnabled": true
+            }
+          ],
+          "paintSamples": {
+            "sidebar-container": {
+              "point": [
+                1239,
+                216
+              ],
+              "rgb": [
+                232,
+                232,
+                232
+              ],
+              "cropUniqueColors": 7
+            },
+            "panel-sidebar-box": {
+              "point": [
+                242,
+                216
+              ],
+              "rgb": [
+                235,
+                235,
+                237
+              ],
+              "cropUniqueColors": 1
+            }
+          }
+        },
+        {
+          "nativeStartPref": true,
+          "panelEndPref": true,
+          "nativePinned": true,
+          "screenshot": "KAN-29/wayland-29665-1-1-1.png",
+          "rounds": [
+            {
+              "nativeX": 1113.6666259765625,
+              "nativeWidth": 252.3333282470703,
+              "nativeExpanded": true,
+              "lateXDelta": 0.0,
+              "panelX": 42,
+              "panelWidth": 400,
+              "offsetStart": "0px",
+              "offsetEnd": "1366px",
+              "hoverEnabled": false
+            },
+            {
+              "nativeX": 1113.6666259765625,
+              "nativeWidth": 252.3333282470703,
+              "nativeExpanded": true,
+              "lateXDelta": 0.0,
+              "panelX": 42,
+              "panelWidth": 400,
+              "offsetStart": "0px",
+              "offsetEnd": "1366px",
+              "hoverEnabled": false
+            },
+            {
+              "nativeX": 1113.6666259765625,
+              "nativeWidth": 252.3333282470703,
+              "nativeExpanded": true,
+              "lateXDelta": 0.0,
+              "panelX": 42,
+              "panelWidth": 400,
+              "offsetStart": "0px",
+              "offsetEnd": "1366px",
+              "hoverEnabled": false
+            }
+          ],
+          "paintSamples": {
+            "sidebar-container": {
+              "point": [
+                1239,
+                216
+              ],
+              "rgb": [
+                235,
+                235,
+                237
+              ],
+              "cropUniqueColors": 7
+            },
+            "panel-sidebar-box": {
+              "point": [
+                242,
+                216
+              ],
+              "rgb": [
+                235,
+                235,
+                237
+              ],
+              "cropUniqueColors": 1
+            }
+          }
+        },
+        {
+          "nativeStartPref": true,
+          "panelEndPref": false,
+          "nativePinned": false,
+          "screenshot": "KAN-29/wayland-29665-1-0-0.png",
+          "rounds": [
+            {
+              "nativeX": 860,
+              "nativeWidth": 253.3333282470703,
+              "nativeExpanded": true,
+              "lateXDelta": 1018.5166625976562,
+              "panelX": 924,
+              "panelWidth": 400,
+              "offsetStart": "1366px",
+              "offsetEnd": "0px",
+              "hoverEnabled": true
+            },
+            {
+              "nativeX": 860,
+              "nativeWidth": 58,
+              "nativeExpanded": false,
+              "lateXDelta": 0,
+              "panelX": 924,
+              "panelWidth": 400,
+              "offsetStart": "1366px",
+              "offsetEnd": "0px",
+              "hoverEnabled": true
+            },
+            {
+              "nativeX": 856.566650390625,
+              "nativeWidth": 253.3333282470703,
+              "nativeExpanded": true,
+              "lateXDelta": 979.6499786376953,
+              "panelX": 924,
+              "panelWidth": 400,
+              "offsetStart": "1366px",
+              "offsetEnd": "0px",
+              "hoverEnabled": true
+            }
+          ],
+          "paintSamples": {
+            "sidebar-container": {
+              "point": [
+                983,
+                216
+              ],
+              "rgb": [
+                232,
+                232,
+                232
+              ],
+              "cropUniqueColors": 1
+            },
+            "panel-sidebar-box": {
+              "point": [
+                1124,
+                216
+              ],
+              "rgb": [
+                235,
+                235,
+                237
+              ],
+              "cropUniqueColors": 1
+            }
+          }
+        },
+        {
+          "nativeStartPref": true,
+          "panelEndPref": false,
+          "nativePinned": true,
+          "screenshot": "KAN-29/wayland-29665-1-0-1.png",
+          "rounds": [
+            {
+              "nativeX": 665.6666870117188,
+              "nativeWidth": 252.3333282470703,
+              "nativeExpanded": true,
+              "lateXDelta": 0.0,
+              "panelX": 924,
+              "panelWidth": 400,
+              "offsetStart": "1366px",
+              "offsetEnd": "0px",
+              "hoverEnabled": false
+            },
+            {
+              "nativeX": 665.6666870117188,
+              "nativeWidth": 252.3333282470703,
+              "nativeExpanded": true,
+              "lateXDelta": 0.0,
+              "panelX": 924,
+              "panelWidth": 400,
+              "offsetStart": "1366px",
+              "offsetEnd": "0px",
+              "hoverEnabled": false
+            },
+            {
+              "nativeX": 665.6666870117188,
+              "nativeWidth": 252.3333282470703,
+              "nativeExpanded": true,
+              "lateXDelta": 0.0,
+              "panelX": 924,
+              "panelWidth": 400,
+              "offsetStart": "1366px",
+              "offsetEnd": "0px",
+              "hoverEnabled": false
+            }
+          ],
+          "paintSamples": {
+            "sidebar-container": {
+              "point": [
+                791,
+                216
+              ],
+              "rgb": [
+                235,
+                235,
+                237
+              ],
+              "cropUniqueColors": 7
+            },
+            "panel-sidebar-box": {
+              "point": [
+                1124,
+                216
+              ],
+              "rgb": [
+                235,
+                235,
+                237
+              ],
+              "cropUniqueColors": 1
+            }
+          }
+        },
+        {
+          "nativeStartPref": false,
+          "panelEndPref": true,
+          "nativePinned": false,
+          "screenshot": "KAN-29/wayland-29665-0-1-0.png",
+          "rounds": [
+            {
+              "nativeX": 252.6666717529297,
+              "nativeWidth": 253.3333282470703,
+              "nativeExpanded": true,
+              "lateXDelta": 952.6333770751953,
+              "panelX": 42,
+              "panelWidth": 400,
+              "offsetStart": "0px",
+              "offsetEnd": "1366px",
+              "hoverEnabled": true
+            },
+            {
+              "nativeX": 448,
+              "nativeWidth": 58,
+              "nativeExpanded": false,
+              "lateXDelta": 0,
+              "panelX": 42,
+              "panelWidth": 400,
+              "offsetStart": "0px",
+              "offsetEnd": "1366px",
+              "hoverEnabled": true
+            },
+            {
+              "nativeX": 255.6666717529297,
+              "nativeWidth": 253.3333282470703,
+              "nativeExpanded": true,
+              "lateXDelta": 1015.5166778564453,
+              "panelX": 42,
+              "panelWidth": 400,
+              "offsetStart": "0px",
+              "offsetEnd": "1366px",
+              "hoverEnabled": true
+            }
+          ],
+          "paintSamples": {
+            "sidebar-container": {
+              "point": [
+                382,
+                216
+              ],
+              "rgb": [
+                232,
+                232,
+                232
+              ],
+              "cropUniqueColors": 7
+            },
+            "panel-sidebar-box": {
+              "point": [
+                242,
+                216
+              ],
+              "rgb": [
+                235,
+                235,
+                237
+              ],
+              "cropUniqueColors": 1
+            }
+          }
+        },
+        {
+          "nativeStartPref": false,
+          "panelEndPref": true,
+          "nativePinned": true,
+          "screenshot": "KAN-29/wayland-29665-0-1-1.png",
+          "rounds": [
+            {
+              "nativeX": 448,
+              "nativeWidth": 252.3333282470703,
+              "nativeExpanded": true,
+              "lateXDelta": 0,
+              "panelX": 42,
+              "panelWidth": 400,
+              "offsetStart": "0px",
+              "offsetEnd": "1366px",
+              "hoverEnabled": false
+            },
+            {
+              "nativeX": 448,
+              "nativeWidth": 252.3333282470703,
+              "nativeExpanded": true,
+              "lateXDelta": 0,
+              "panelX": 42,
+              "panelWidth": 400,
+              "offsetStart": "0px",
+              "offsetEnd": "1366px",
+              "hoverEnabled": false
+            },
+            {
+              "nativeX": 448,
+              "nativeWidth": 252.3333282470703,
+              "nativeExpanded": true,
+              "lateXDelta": 0,
+              "panelX": 42,
+              "panelWidth": 400,
+              "offsetStart": "0px",
+              "offsetEnd": "1366px",
+              "hoverEnabled": false
+            }
+          ],
+          "paintSamples": {
+            "sidebar-container": {
+              "point": [
+                574,
+                216
+              ],
+              "rgb": [
+                235,
+                235,
+                237
+              ],
+              "cropUniqueColors": 7
+            },
+            "panel-sidebar-box": {
+              "point": [
+                242,
+                216
+              ],
+              "rgb": [
+                235,
+                235,
+                237
+              ],
+              "cropUniqueColors": 1
+            }
+          }
+        },
+        {
+          "nativeStartPref": false,
+          "panelEndPref": false,
+          "nativePinned": false,
+          "screenshot": "KAN-29/wayland-29665-0-0-0.png",
+          "rounds": [
+            {
+              "nativeX": 0,
+              "nativeWidth": 253.3333282470703,
+              "nativeExpanded": true,
+              "lateXDelta": 0,
+              "panelX": 924,
+              "panelWidth": 400,
+              "offsetStart": "1366px",
+              "offsetEnd": "0px",
+              "hoverEnabled": true
+            },
+            {
+              "nativeX": 0,
+              "nativeWidth": 253.3333282470703,
+              "nativeExpanded": true,
+              "lateXDelta": 0,
+              "panelX": 924,
+              "panelWidth": 400,
+              "offsetStart": "1366px",
+              "offsetEnd": "0px",
+              "hoverEnabled": true
+            },
+            {
+              "nativeX": 0,
+              "nativeWidth": 253.3333282470703,
+              "nativeExpanded": true,
+              "lateXDelta": 0,
+              "panelX": 924,
+              "panelWidth": 400,
+              "offsetStart": "1366px",
+              "offsetEnd": "0px",
+              "hoverEnabled": true
+            }
+          ],
+          "paintSamples": {
+            "sidebar-container": {
+              "point": [
+                126,
+                216
+              ],
+              "rgb": [
+                232,
+                232,
+                232
+              ],
+              "cropUniqueColors": 7
+            },
+            "panel-sidebar-box": {
+              "point": [
+                1124,
+                216
+              ],
+              "rgb": [
+                235,
+                235,
+                237
+              ],
+              "cropUniqueColors": 1
+            }
+          }
+        },
+        {
+          "nativeStartPref": false,
+          "panelEndPref": false,
+          "nativePinned": true,
+          "screenshot": "KAN-29/wayland-29665-0-0-1.png",
+          "rounds": [
+            {
+              "nativeX": 0,
+              "nativeWidth": 252.3333282470703,
+              "nativeExpanded": true,
+              "lateXDelta": 0,
+              "panelX": 924,
+              "panelWidth": 400,
+              "offsetStart": "1366px",
+              "offsetEnd": "0px",
+              "hoverEnabled": false
+            },
+            {
+              "nativeX": 0,
+              "nativeWidth": 252.3333282470703,
+              "nativeExpanded": true,
+              "lateXDelta": 0,
+              "panelX": 924,
+              "panelWidth": 400,
+              "offsetStart": "1366px",
+              "offsetEnd": "0px",
+              "hoverEnabled": false
+            },
+            {
+              "nativeX": 0,
+              "nativeWidth": 252.3333282470703,
+              "nativeExpanded": true,
+              "lateXDelta": 0,
+              "panelX": 924,
+              "panelWidth": 400,
+              "offsetStart": "1366px",
+              "offsetEnd": "0px",
+              "hoverEnabled": false
+            }
+          ],
+          "paintSamples": {
+            "sidebar-container": {
+              "point": [
+                126,
+                216
+              ],
+              "rgb": [
+                235,
+                235,
+                237
+              ],
+              "cropUniqueColors": 7
+            },
+            "panel-sidebar-box": {
+              "point": [
+                1124,
+                216
+              ],
+              "rgb": [
+                235,
+                235,
+                237
+              ],
+              "cropUniqueColors": 1
+            }
+          }
+        }
+      ],
+      "counts": {
+        "states": 8,
+        "attempts": 24,
+        "unreachable": 0,
+        "lateChangesAbove1px": 4,
+        "panel400px": 24,
+        "viewportSizedOffsets": 24
+      }
+    },
+    {
+      "port": 29666,
+      "variant": "PR2877 diagnostic copy",
+      "graphics": {
+        "windowProtocol": "wayland",
+        "compositing": "WebRender (Software)"
+      },
+      "initialDirection": {
+        "direction": "rtl",
+        "rtlUI": true,
+        "appLocale": "ar",
+        "appLocaleRTL": true,
+        "uidirection": ""
+      },
+      "setup": {
+        "languagePackUrl": "https://archive.mozilla.org/pub/firefox/releases/159.0.1/linux-x86_64/xpi/ar.xpi",
+        "fixture": "Normal signed-language-pack install via AddonManager API and graceful app quit/restart; no signature/security prefs changed.",
+        "install": {
+          "id": "langpack-ar@firefox.mozilla.org",
+          "type": "locale",
+          "isActive": true,
+          "signedState": 2,
+          "requested": [
+            "ar"
+          ],
+          "signaturePrefUser": false
+        },
+        "preQuitLocale": {
+          "available": [
+            "en-US",
+            "ar"
+          ],
+          "app": [
+            "ar",
+            "en-US"
+          ],
+          "rtl": true
+        },
+        "gracefulInstallExit": 0,
+        "localeWaitSeconds": 0,
+        "postRestart": {
+          "requested": [
+            "ar"
+          ],
+          "available": [
+            "en-US",
+            "ar"
+          ],
+          "app": [
+            "ar",
+            "en-US"
+          ],
+          "rtl": true,
+          "RTL_UI": true,
+          "dir": "rtl",
+          "packs": [
+            {
+              "id": "langpack-ar@firefox.mozilla.org",
+              "active": true,
+              "disabled": false,
+              "userDisabled": false,
+              "signedState": 2
+            }
+          ],
+          "errors": [
+            "[JavaScript Warning: \"Missing resource in locale ar: browser/allTabsMenu.ftl\"]",
+            "[JavaScript Warning: \"Missing resource in locale ar: browser/allTabsMenu.ftl\"]",
+            "[JavaScript Warning: \"Missing resource in locale ar: browser/allTabsMenu.ftl\"]",
+            "[JavaScript Warning: \"Missing resource in locale ar: browser/allTabsMenu.ftl\"]",
+            "[JavaScript Warning: \"Missing resource in locale ar: browser/allTabsMenu.ftl\"]"
+          ]
+        }
+      },
+      "error": null,
+      "states": [
+        {
+          "nativeStartPref": true,
+          "panelEndPref": true,
+          "nativePinned": false,
+          "screenshot": "KAN-29/wayland-29666-1-1-0.png",
+          "rounds": [
+            {
+              "nativeX": 1112.6666259765625,
+              "nativeWidth": 253.3333282470703,
+              "nativeExpanded": true,
+              "lateXDelta": 0.0,
+              "panelX": 42,
+              "panelWidth": 400,
+              "offsetStart": "0px",
+              "offsetEnd": "448px",
+              "hoverEnabled": true
+            },
+            {
+              "nativeX": 1112.6666259765625,
+              "nativeWidth": 253.3333282470703,
+              "nativeExpanded": true,
+              "lateXDelta": 0.0,
+              "panelX": 42,
+              "panelWidth": 400,
+              "offsetStart": "0px",
+              "offsetEnd": "448px",
+              "hoverEnabled": true
+            },
+            {
+              "nativeX": 1112.6666259765625,
+              "nativeWidth": 253.3333282470703,
+              "nativeExpanded": true,
+              "lateXDelta": 0.0,
+              "panelX": 42,
+              "panelWidth": 400,
+              "offsetStart": "0px",
+              "offsetEnd": "448px",
+              "hoverEnabled": true
+            }
+          ],
+          "paintSamples": {
+            "sidebar-container": {
+              "point": [
+                1239,
+                216
+              ],
+              "rgb": [
+                232,
+                232,
+                232
+              ],
+              "cropUniqueColors": 7
+            },
+            "panel-sidebar-box": {
+              "point": [
+                242,
+                216
+              ],
+              "rgb": [
+                235,
+                235,
+                237
+              ],
+              "cropUniqueColors": 1
+            }
+          }
+        },
+        {
+          "nativeStartPref": true,
+          "panelEndPref": true,
+          "nativePinned": true,
+          "screenshot": "KAN-29/wayland-29666-1-1-1.png",
+          "rounds": [
+            {
+              "nativeX": 1113.6666259765625,
+              "nativeWidth": 252.3333282470703,
+              "nativeExpanded": true,
+              "lateXDelta": 0.0,
+              "panelX": 42,
+              "panelWidth": 400,
+              "offsetStart": "0px",
+              "offsetEnd": "448px",
+              "hoverEnabled": false
+            },
+            {
+              "nativeX": 1113.6666259765625,
+              "nativeWidth": 252.3333282470703,
+              "nativeExpanded": true,
+              "lateXDelta": 0.0,
+              "panelX": 42,
+              "panelWidth": 400,
+              "offsetStart": "0px",
+              "offsetEnd": "448px",
+              "hoverEnabled": false
+            },
+            {
+              "nativeX": 1113.6666259765625,
+              "nativeWidth": 252.3333282470703,
+              "nativeExpanded": true,
+              "lateXDelta": 0.0,
+              "panelX": 42,
+              "panelWidth": 400,
+              "offsetStart": "0px",
+              "offsetEnd": "448px",
+              "hoverEnabled": false
+            }
+          ],
+          "paintSamples": {
+            "sidebar-container": {
+              "point": [
+                1239,
+                216
+              ],
+              "rgb": [
+                235,
+                235,
+                237
+              ],
+              "cropUniqueColors": 7
+            },
+            "panel-sidebar-box": {
+              "point": [
+                242,
+                216
+              ],
+              "rgb": [
+                235,
+                235,
+                237
+              ],
+              "cropUniqueColors": 1
+            }
+          }
+        },
+        {
+          "nativeStartPref": true,
+          "panelEndPref": false,
+          "nativePinned": false,
+          "screenshot": "KAN-29/wayland-29666-1-0-0.png",
+          "rounds": [
+            {
+              "nativeX": 664.6666870117188,
+              "nativeWidth": 253.3333282470703,
+              "nativeExpanded": true,
+              "lateXDelta": 0.0,
+              "panelX": 924,
+              "panelWidth": 400,
+              "offsetStart": "448px",
+              "offsetEnd": "0px",
+              "hoverEnabled": true
+            },
+            {
+              "nativeX": 664.6666870117188,
+              "nativeWidth": 253.3333282470703,
+              "nativeExpanded": true,
+              "lateXDelta": 0.0,
+              "panelX": 924,
+              "panelWidth": 400,
+              "offsetStart": "448px",
+              "offsetEnd": "0px",
+              "hoverEnabled": true
+            },
+            {
+              "nativeX": 664.6666870117188,
+              "nativeWidth": 253.3333282470703,
+              "nativeExpanded": true,
+              "lateXDelta": 0.0,
+              "panelX": 924,
+              "panelWidth": 400,
+              "offsetStart": "448px",
+              "offsetEnd": "0px",
+              "hoverEnabled": true
+            }
+          ],
+          "paintSamples": {
+            "sidebar-container": {
+              "point": [
+                791,
+                216
+              ],
+              "rgb": [
+                232,
+                232,
+                232
+              ],
+              "cropUniqueColors": 7
+            },
+            "panel-sidebar-box": {
+              "point": [
+                1124,
+                216
+              ],
+              "rgb": [
+                235,
+                235,
+                237
+              ],
+              "cropUniqueColors": 1
+            }
+          }
+        },
+        {
+          "nativeStartPref": true,
+          "panelEndPref": false,
+          "nativePinned": true,
+          "screenshot": "KAN-29/wayland-29666-1-0-1.png",
+          "rounds": [
+            {
+              "nativeX": 665.6666870117188,
+              "nativeWidth": 252.3333282470703,
+              "nativeExpanded": true,
+              "lateXDelta": 0.0,
+              "panelX": 924,
+              "panelWidth": 400,
+              "offsetStart": "448px",
+              "offsetEnd": "0px",
+              "hoverEnabled": false
+            },
+            {
+              "nativeX": 665.6666870117188,
+              "nativeWidth": 252.3333282470703,
+              "nativeExpanded": true,
+              "lateXDelta": 0.0,
+              "panelX": 924,
+              "panelWidth": 400,
+              "offsetStart": "448px",
+              "offsetEnd": "0px",
+              "hoverEnabled": false
+            },
+            {
+              "nativeX": 665.6666870117188,
+              "nativeWidth": 252.3333282470703,
+              "nativeExpanded": true,
+              "lateXDelta": 0.0,
+              "panelX": 924,
+              "panelWidth": 400,
+              "offsetStart": "448px",
+              "offsetEnd": "0px",
+              "hoverEnabled": false
+            }
+          ],
+          "paintSamples": {
+            "sidebar-container": {
+              "point": [
+                791,
+                216
+              ],
+              "rgb": [
+                235,
+                235,
+                237
+              ],
+              "cropUniqueColors": 7
+            },
+            "panel-sidebar-box": {
+              "point": [
+                1124,
+                216
+              ],
+              "rgb": [
+                235,
+                235,
+                237
+              ],
+              "cropUniqueColors": 1
+            }
+          }
+        },
+        {
+          "nativeStartPref": false,
+          "panelEndPref": true,
+          "nativePinned": false,
+          "screenshot": "KAN-29/wayland-29666-0-1-0.png",
+          "rounds": [
+            {
+              "nativeX": 448,
+              "nativeWidth": 253.3333282470703,
+              "nativeExpanded": true,
+              "lateXDelta": 0,
+              "panelX": 42,
+              "panelWidth": 400,
+              "offsetStart": "0px",
+              "offsetEnd": "448px",
+              "hoverEnabled": true
+            },
+            {
+              "nativeX": 448,
+              "nativeWidth": 253.3333282470703,
+              "nativeExpanded": true,
+              "lateXDelta": 0,
+              "panelX": 42,
+              "panelWidth": 400,
+              "offsetStart": "0px",
+              "offsetEnd": "448px",
+              "hoverEnabled": true
+            },
+            {
+              "nativeX": 448,
+              "nativeWidth": 253.3333282470703,
+              "nativeExpanded": true,
+              "lateXDelta": 0,
+              "panelX": 42,
+              "panelWidth": 400,
+              "offsetStart": "0px",
+              "offsetEnd": "448px",
+              "hoverEnabled": true
+            }
+          ],
+          "paintSamples": {
+            "sidebar-container": {
+              "point": [
+                574,
+                216
+              ],
+              "rgb": [
+                232,
+                232,
+                232
+              ],
+              "cropUniqueColors": 7
+            },
+            "panel-sidebar-box": {
+              "point": [
+                242,
+                216
+              ],
+              "rgb": [
+                235,
+                235,
+                237
+              ],
+              "cropUniqueColors": 1
+            }
+          }
+        },
+        {
+          "nativeStartPref": false,
+          "panelEndPref": true,
+          "nativePinned": true,
+          "screenshot": "KAN-29/wayland-29666-0-1-1.png",
+          "rounds": [
+            {
+              "nativeX": 448,
+              "nativeWidth": 252.3333282470703,
+              "nativeExpanded": true,
+              "lateXDelta": 0,
+              "panelX": 42,
+              "panelWidth": 400,
+              "offsetStart": "0px",
+              "offsetEnd": "448px",
+              "hoverEnabled": false
+            },
+            {
+              "nativeX": 448,
+              "nativeWidth": 252.3333282470703,
+              "nativeExpanded": true,
+              "lateXDelta": 0,
+              "panelX": 42,
+              "panelWidth": 400,
+              "offsetStart": "0px",
+              "offsetEnd": "448px",
+              "hoverEnabled": false
+            },
+            {
+              "nativeX": 448,
+              "nativeWidth": 252.3333282470703,
+              "nativeExpanded": true,
+              "lateXDelta": 0,
+              "panelX": 42,
+              "panelWidth": 400,
+              "offsetStart": "0px",
+              "offsetEnd": "448px",
+              "hoverEnabled": false
+            }
+          ],
+          "paintSamples": {
+            "sidebar-container": {
+              "point": [
+                574,
+                216
+              ],
+              "rgb": [
+                235,
+                235,
+                237
+              ],
+              "cropUniqueColors": 7
+            },
+            "panel-sidebar-box": {
+              "point": [
+                242,
+                216
+              ],
+              "rgb": [
+                235,
+                235,
+                237
+              ],
+              "cropUniqueColors": 1
+            }
+          }
+        },
+        {
+          "nativeStartPref": false,
+          "panelEndPref": false,
+          "nativePinned": false,
+          "screenshot": "KAN-29/wayland-29666-0-0-0.png",
+          "rounds": [
+            {
+              "nativeX": 0,
+              "nativeWidth": 253.3333282470703,
+              "nativeExpanded": true,
+              "lateXDelta": 0,
+              "panelX": 924,
+              "panelWidth": 400,
+              "offsetStart": "448px",
+              "offsetEnd": "0px",
+              "hoverEnabled": true
+            },
+            {
+              "nativeX": 0,
+              "nativeWidth": 253.3333282470703,
+              "nativeExpanded": true,
+              "lateXDelta": 0,
+              "panelX": 924,
+              "panelWidth": 400,
+              "offsetStart": "448px",
+              "offsetEnd": "0px",
+              "hoverEnabled": true
+            },
+            {
+              "nativeX": 0,
+              "nativeWidth": 253.3333282470703,
+              "nativeExpanded": true,
+              "lateXDelta": 0,
+              "panelX": 924,
+              "panelWidth": 400,
+              "offsetStart": "448px",
+              "offsetEnd": "0px",
+              "hoverEnabled": true
+            }
+          ],
+          "paintSamples": {
+            "sidebar-container": {
+              "point": [
+                126,
+                216
+              ],
+              "rgb": [
+                232,
+                232,
+                232
+              ],
+              "cropUniqueColors": 7
+            },
+            "panel-sidebar-box": {
+              "point": [
+                1124,
+                216
+              ],
+              "rgb": [
+                235,
+                235,
+                237
+              ],
+              "cropUniqueColors": 1
+            }
+          }
+        },
+        {
+          "nativeStartPref": false,
+          "panelEndPref": false,
+          "nativePinned": true,
+          "screenshot": "KAN-29/wayland-29666-0-0-1.png",
+          "rounds": [
+            {
+              "nativeX": 0,
+              "nativeWidth": 252.3333282470703,
+              "nativeExpanded": true,
+              "lateXDelta": 0,
+              "panelX": 924,
+              "panelWidth": 400,
+              "offsetStart": "448px",
+              "offsetEnd": "0px",
+              "hoverEnabled": false
+            },
+            {
+              "nativeX": 0,
+              "nativeWidth": 252.3333282470703,
+              "nativeExpanded": true,
+              "lateXDelta": 0,
+              "panelX": 924,
+              "panelWidth": 400,
+              "offsetStart": "448px",
+              "offsetEnd": "0px",
+              "hoverEnabled": false
+            },
+            {
+              "nativeX": 0,
+              "nativeWidth": 252.3333282470703,
+              "nativeExpanded": true,
+              "lateXDelta": 0,
+              "panelX": 924,
+              "panelWidth": 400,
+              "offsetStart": "448px",
+              "offsetEnd": "0px",
+              "hoverEnabled": false
+            }
+          ],
+          "paintSamples": {
+            "sidebar-container": {
+              "point": [
+                126,
+                216
+              ],
+              "rgb": [
+                235,
+                235,
+                237
+              ],
+              "cropUniqueColors": 7
+            },
+            "panel-sidebar-box": {
+              "point": [
+                1124,
+                216
+              ],
+              "rgb": [
+                235,
+                235,
+                237
+              ],
+              "cropUniqueColors": 1
+            }
+          }
+        }
+      ],
+      "counts": {
+        "states": 8,
+        "attempts": 24,
+        "unreachable": 0,
+        "lateChangesAbove1px": 0,
+        "panel400px": 24,
+        "viewportSizedOffsets": 0
+      }
+    }
+  ]
+}

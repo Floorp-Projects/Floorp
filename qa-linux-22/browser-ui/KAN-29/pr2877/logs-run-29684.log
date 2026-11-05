@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/workspace/qa-linux-22/browser-ui/KAN-29/pr2877/run-tests.py", line 9, in <module>
+    if p.poll() is not None:raise RuntimeError('browser exited '+str(p.returncode))
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: browser exited 1

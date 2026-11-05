@@ -1,0 +1,25 @@
+{
+  "KAN-29": {
+    "commentId": "10284",
+    "labelsRemoved": [
+      "needs-localized-rtl"
+    ],
+    "labelsAdded": [
+      "rtl-tested",
+      "pr-candidate-tested"
+    ],
+    "statusChanged": false,
+    "remaining": [
+      "original LTR CachyOS/Flatpak",
+      "physical input/GPU",
+      "full official candidate build"
+    ]
+  },
+  "KAN-87": {
+    "commentId": "10289",
+    "normalSignedThemeControl": true,
+    "statusChanged": false
+  },
+  "merge": false,
+  "done": false
+}

@@ -1,0 +1,18 @@
+{
+  "sourceSha": "984509d2053be7bae9027133bda7259cd706b208",
+  "prHead": "f43b22d34c0728e0ed800b8016d81b3212190954",
+  "product": "/workspace/qa-linux-22/browser-ui/products/floorp-pr2877",
+  "changes": [
+    {
+      "path": "chrome/noraneko/nora-content/assets/js/index10.js",
+      "beforeSha256": "24657cf8dbe5321bb88e7753eeb8ae3238f7028ebad81b9995a8ca7354aa5ae7",
+      "afterSha256": "c57f8d99002518d5502f549f19b62837879f48405b8dbc4dd4ac3b233617662b"
+    }
+  ],
+  "originalArchiveSha256": "159285f967e950e0cd1ac658d713b7770e7763d6d983fc88b6e48c16e4a1f345",
+  "candidateArchiveSha256": "bfdda188a926178da167a5edfa054f0b67505cfc81688573a4e407cc95abc27d",
+  "binarySha256": "4f05c1330b38e50040440be6a3b6e0e7a5b52bc79edb5c5478d978c81f5a603d",
+  "onlyChangedEntry": [
+    "chrome/noraneko/nora-content/assets/js/index10.js"
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "languagePackUrl": "https://archive.mozilla.org/pub/firefox/releases/159.0.1/linux-x86_64/xpi/ar.xpi",
+  "fixture": "Normal signed-language-pack install via AddonManager API and restart; no signature/security prefs changed.",
+  "install": {
+    "id": "langpack-ar@firefox.mozilla.org",
+    "type": "locale",
+    "isActive": true,
+    "signedState": 2,
+    "requested": [
+      "ar"
+    ],
+    "signaturePrefUser": false
+  },
+  "postRestart": {
+    "requested": [
+      "ar"
+    ],
+    "available": [
+      "en-US"
+    ],
+    "app": [
+      "en-US"
+    ],
+    "rtl": false,
+    "RTL_UI": false,
+    "dir": "ltr",
+    "packs": [
+      {
+        "id": "langpack-ar@firefox.mozilla.org",
+        "active": true,
+        "disabled": false,
+        "userDisabled": false,
+        "signedState": 2
+      }
+    ],
+    "errors": []
+  },
+  "error": "RuntimeError('localized RTL precondition not satisfied; no fixture fallback allowed')",
+  "traceback": "Traceback (most recent call last):\n  File \"/workspace/qa-linux-22/browser-ui/kan29-localized-run.py\", line 34, in <module>\n    if result['postRestart'].get('RTL_UI') is not True or result['postRestart'].get('rtl') is not True:raise RuntimeError('localized RTL precondition not satisfied; no fixture fallback allowed')\n                                                                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: localized RTL precondition not satisfied; no fixture fallback allowed\n"
+}

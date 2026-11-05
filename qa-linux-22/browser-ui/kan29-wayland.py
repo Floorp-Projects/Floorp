@@ -20,6 +20,7 @@ try:
  r['product']=js('return {name:Services.appinfo.name,version:Services.appinfo.version,build:Services.appinfo.appBuildID,os:Services.appinfo.OS}')
  r['graphics']=m.execute_async_script('let done=arguments[arguments.length-1];ChromeUtils.importESModule("resource://gre/modules/Troubleshoot.sys.mjs").Troubleshoot.snapshot().then(s=>done({windowProtocol:s.graphics.windowProtocol,compositing:s.graphics.windowLayerManagerType}));')
  r['initialDirection']=js('return {direction:getComputedStyle(document.documentElement).direction,rtlUI:window.RTL_UI,appLocale:Services.locale.appLocaleAsBCP47,appLocaleRTL:Services.locale.isAppLocaleRTL,uidirection:Services.prefs.getPrefType("intl.uidirection")===64?Services.prefs.getIntPref("intl.uidirection"):Services.prefs.getStringPref("intl.uidirection","")}')
+ if os.environ.get('QA_REQUIRE_RTL') and not (r['initialDirection']['rtlUI'] is True and r['initialDirection']['appLocaleRTL'] is True and r['initialDirection']['direction']=='rtl'):raise RuntimeError('Actual localized RTL required; fixture fallback prohibited')
  if r['initialDirection']['direction']!=r['requestedDirection']:
   js('document.documentElement.setAttribute("dir",arguments[0])',[r['requestedDirection']]);r['fixtures'].append('Root dir attribute fallback: synthetic direction layout, not a localized RTL session.')
  js('CustomizableUI.addWidgetToArea("sidebar-button",CustomizableUI.AREA_NAVBAR,0)');r['fixtures'].append('CustomizableUI.addWidgetToArea places the standard Sidebar widget in nav-bar; pin/unpin then uses W3C UI click.')

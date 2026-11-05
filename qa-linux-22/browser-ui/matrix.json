@@ -88,14 +88,13 @@
       "firefox": "159.0.1 / BuildID20261102144711"
     },
     "environment": "Debian13.6 x86_64, Xvfb :92, isolated DBus; KWin6.3.6 nested Wayland for visual/layout/controls; software WebRender",
-    "testCommand": "dbus-run-session -- bash KAN-29/nested-panel.sh; python3 KAN-29/analyze-wayland.py",
-    "result": "LTR限定未再現／RTL layout fixtureで関連異常",
-    "observations": "nested WaylandでBookmarks panel本体400pxをUIクリックでopen。左右4配置×native launcher pin2状態、各3hoverをLTR/RTLで試験。LTR24roundは最終2sampleの位置差1px以下・panel幅400px。RTLはroot dir fixture（RTL_UI=false、localized RTLではない）でoffset1366px、late変動5round/anchor一時不可1round。PR2877のread-only矩形計算は448px。同PR候補を適用したpaint成功とは扱わない。pinはnative launcher、Floorp panelはclick-pinnedを維持。",
+    "testCommand": "dbus-run-session -- bash KAN-29/nested-panel.sh; python3 KAN-29/analyze-wayland.py; QA_PORT=29665 bash KAN-29/nested-localized.sh; QA_PORT=29666 QA_PRODUCT=floorp-pr2877 bash KAN-29/nested-localized.sh; PYTHONPATH=python python3 KAN-29/analyze-localized.py",
+    "result": "原LTR限定未再現／実localized RTLで関連欠陥再現・既存PR2877候補で改善",
+    "observations": "nested WaylandでBookmarks panel本体400pxをUIクリックでopen。左右4配置×native launcher pin2状態、各3hoverをLTR/RTLで試験。LTR24roundは最終2sampleの位置差1px以下・panel幅400px。RTLはroot dir fixture（RTL_UI=false、localized RTLではない）でoffset1366px、late変動5round/anchor一時不可1round。PR2877のread-only矩形計算は448px。同PR候補を適用したpaint成功とは扱わない。pinはnative launcher、Floorp panelはclick-pinnedを維持。 実ArabicUI追試: matching signedState2 ar pack通常導入・normal app quit/restart後、ar/RTL_UI=true/appLocaleRTL=true/rootdirrtlを両実行で確認。direction fixtureなし。各8state24hover、baseline全24offset1366px/late>1px4round、候補全24offset448px/late>1px0round。両方panelbody400px24/24。候補は既存2877headf43b22dの計算だけをofficial製品独立copyへ移植、他ZIPentry/nativebinary一致。same-right unpinで候補のtab内容paint復帰を実見。原LTR/CachyOS解消は未証明。前提失敗29661/29663は試験成功へ算入せず保存。 現行Runtimeで既存PRflexOrder9/9・panelSidebarLayout8/8成功(run29687)。actual製品singleton/Solidへ外部chrome moduleで接続、アサーション/CSP無変更。UIcandidatecopyとは別のtestexport adapter。 元製品run29688は同じ9case完走でboxless1366px/RTLexpanded anchorの2件失敗、候補9/9との対照成立。",
     "remainingConditions": [
-      "原CachyOS/Flatpak・distro package",
-      "localized RTL session（今回root-dir fixture）",
-      "PR2877候補の実描画比較",
-      "物理入力"
+      "原LTR CachyOS/Flatpak・distro package症状の再現/解消",
+      "物理入力・実GPU/原compositor",
+      "full official candidate product build（今回既存PR計算のみ診断copy）"
     ],
     "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2877",
     "newPr": null,
@@ -111,7 +110,22 @@
       "KAN-29/pr2877-geometry-correlation.json",
       "KAN-29/wayland-29603-1-0-0.png",
       "KAN-29/wayland-29604-0-1-0.png",
-      "KAN-29/nested-panel.sh"
+      "KAN-29/nested-panel.sh",
+      "KAN-29/localized-report.md",
+      "KAN-29/localized-comparison.json",
+      "KAN-29/wayland-panel-29665.json",
+      "KAN-29/wayland-panel-29666.json",
+      "KAN-29/locale/setup-29665.json",
+      "KAN-29/locale/setup-29666.json",
+      "KAN-29/pr2877/product-patch.json",
+      "KAN-29/pr2877/patch-product.py",
+      "KAN-29/nested-localized.sh",
+      "kan29-localized-run.py",
+      "KAN-29/pr2877/29687-flex.json",
+      "KAN-29/pr2877/29687-panel.json",
+      "KAN-29/pr2877/test-copy-hashes.json",
+      "KAN-29/pr2877/29688-flex.json",
+      "KAN-29/pr2877-root-note.md"
     ],
     "sprintScope": "KAN-1"
   },
@@ -235,13 +249,12 @@
       "firefox": "159.0.1 / BuildID20261102144711"
     },
     "environment": "Debian13.6 x86_64, Xvfb :92, isolated DBus; KWin6.3.6 nested Wayland for visual/layout/controls; software WebRender",
-    "testCommand": "dbus-run-session -- bash qaLinuxKAN87/nested-zen.sh 29655 paint; python3 qaLinuxKAN87/measure-pixels.py 29655",
+    "testCommand": "dbus-run-session -- bash qaLinuxKAN87/nested-zen.sh 29655 paint; python3 qaLinuxKAN87/measure-pixels.py 29655; bash qaLinuxKAN87/signed/nested.sh 29701 paint; python3 qaLinuxKAN87/signed/measure-pixels.py 29701",
     "result": "限定条件で未再現・既存修正と整合",
-    "observations": "nested Waylandで右Bookmarks panel本体400pxをUIクリック、ToolsメニューのZenをUIクリック、右上corner hoverでtop+side同時reveal。default/color/image theme×red/cyan背景の6条件完走。frame17500/overlap2750/nav16800/body116000pixelsは背景変更で各0pixel差、page positive control250000pixelsは全変化。画像frame5点はfixture PNGと一致。画像themeは正規temporaryAddon APIのfixtureで署名/保護prefs無変更。",
+    "observations": "nested Waylandで右Bookmarks panel本体400pxをUIクリック、ToolsメニューのZenをUIクリック、右上corner hoverでtop+side同時reveal。default/color/image theme×red/cyan背景の6条件完走。frame17500/overlap2750/nav16800/body116000pixelsは背景変更で各0pixel差、page positive control250000pixelsは全変化。画像frame5点はfixture PNGと一致。画像themeは正規temporaryAddon APIのfixtureで署名/保護prefs無変更。 通常署名画像theme対照1件: AMO Galaxy1.0/file3680282をnormal install/enable、signedState2/temporaryfalse/active。nativeWaylandで実右Bookmarks本体+top同時reveal。red/cyan背面比較でframe17500/overlap2750/toolbar16800/body116000画素はいずれもchanged0、page250000は全変更。画像paint実見、temporary-theme経路不足は充足。",
     "remainingConditions": [
       "原CachyOS/Niri/Hyprland/MangoWM",
-      "物理入力・hardware GPU/monitor",
-      "通常のsigned/AMO theme経路（今回temporary theme fixture）"
+      "物理入力・hardware GPU/monitor"
     ],
     "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2767",
     "newPr": null,
@@ -257,7 +270,11 @@
       "qaLinuxKAN87/29655-paint.json",
       "qaLinuxKAN87/29655-pixels.json",
       "qaLinuxKAN87/theme/frame.png",
-      "qaLinuxKAN87/screenshots/29655-image-red-simultaneous.png"
+      "qaLinuxKAN87/screenshots/29655-image-red-simultaneous.png",
+      "qaLinuxKAN87/signed/report.md",
+      "qaLinuxKAN87/signed/summary.json",
+      "qaLinuxKAN87/signed/29701-paint.json",
+      "qaLinuxKAN87/signed/29701-pixels.json"
     ],
     "sprintScope": "KAN-1"
   },

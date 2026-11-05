@@ -1,0 +1,54 @@
+{
+  "port": 29687,
+  "test": "flex",
+  "runtimeBinding": "actual production module singleton, diagnostic exports only",
+  "observations": [],
+  "product": {
+    "version": "159.0.1",
+    "build": "20261103153232",
+    "name": "Floorp",
+    "rtl": false,
+    "dir": "ltr",
+    "sidebarMethods": {
+      "setPosition": "function",
+      "toggleVerticalTabs": "function"
+    }
+  },
+  "injection": {
+    "started": true,
+    "src": "chrome://noraneko/content/qa-pr2877-flex.js"
+  },
+  "result": {
+    "passed": true,
+    "progress": {
+      "moduleName": "flexOrder.test.ts",
+      "testName": "",
+      "status": "done",
+      "index": 9,
+      "total": 9,
+      "startedAtMs": 1793896128889
+    }
+  },
+  "after": {
+    "progress": {
+      "moduleName": "flexOrder.test.ts",
+      "testName": "",
+      "status": "done",
+      "index": 9,
+      "total": 9,
+      "startedAtMs": 1793896128889
+    },
+    "panelRect": {
+      "x": 0,
+      "y": 0,
+      "width": 0,
+      "height": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0,
+      "left": 0
+    },
+    "offsetStart": "0px",
+    "offsetEnd": "42px"
+  }
+}

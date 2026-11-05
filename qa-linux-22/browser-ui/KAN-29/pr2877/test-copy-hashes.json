@@ -1,0 +1,22 @@
+[
+  {
+    "source": "floorp",
+    "testProduct": "/workspace/qa-linux-22/browser-ui/products/floorp-pr2877-baseline-tests",
+    "diagnosticExportsOnly": [
+      "chrome/noraneko/nora-content/assets/js/data.js",
+      "chrome/noraneko/nora-content/assets/js/index10.js",
+      "chrome/noraneko/nora-content/assets/js/index16.js"
+    ],
+    "archiveSha256": "70cb1e47d8596c6ca4535c5025ab786556097c871ca5f590eab065c3ff31247d"
+  },
+  {
+    "source": "floorp-pr2877",
+    "testProduct": "/workspace/qa-linux-22/browser-ui/products/floorp-pr2877-candidate-tests",
+    "diagnosticExportsOnly": [
+      "chrome/noraneko/nora-content/assets/js/data.js",
+      "chrome/noraneko/nora-content/assets/js/index10.js",
+      "chrome/noraneko/nora-content/assets/js/index16.js"
+    ],
+    "archiveSha256": "9d37ce9260141acf83f9831f9e94ae76e7e5e4424618b3d484fc1b293cc0a08f"
+  }
+]

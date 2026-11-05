@@ -1,0 +1,10 @@
+[
+  {
+    "product": "floorp-pr2877-baseline-tests",
+    "withTestModuleArchiveSha256": "93e2736dbae34236d48c39bd91e1c8f49a760f8909dd8ab61380d9218ed6a553"
+  },
+  {
+    "product": "floorp-pr2877-candidate-tests",
+    "withTestModuleArchiveSha256": "8f4e749418549637a416191aa428f6a640fc0e39443b6ef9e125a2ad9e6f2da8"
+  }
+]

@@ -28,3 +28,7 @@ Source: `984509d2053be7bae9027133bda7259cd706b208`。公式Floorp12.21.1 / Gecko
 Jira追記comment ID: `10284`。needs-linuxは実試験によりlinux-testedへ置換し、原ディストリ/物理入力の具体条件とenv-blockedは保持。
 
 Jira最終comment ID: `10284`。
+
+## Actual localized RTL follow-up
+
+Normal signed Arabic pack plus normal app quit/restart establishes ar/RTL_UI=true in both original29665 and existingPR2877 diagnostic copy29666. Full UI matrix each8states/24hover: original1366pxoffset24/24 and late movement4; candidate448pxoffset24/24 and late movement0. Panel body400px24/24 both. See `localized-report.md` and `localized-comparison.json`, separate from earlier root-dir fixture. Original LTR/CachyOS resolution remains unproven.

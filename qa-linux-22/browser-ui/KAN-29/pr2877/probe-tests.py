@@ -1,0 +1,25 @@
+import sys,json,time,base64,traceback
+from pathlib import Path
+from marionette_driver.marionette import Marionette
+R=Path(__file__).parent;port=int(sys.argv[1]);kind=sys.argv[2];m=Marionette('localhost',port=port,socket_timeout=210,startup_timeout=90);m.start_session();m.set_context('chrome')
+r={'port':port,'test':kind,'runtimeBinding':'actual production module singleton, diagnostic exports only','observations':[]}
+try:
+ r['product']=m.execute_script('return {version:Services.appinfo.version,build:Services.appinfo.appBuildID,name:Services.appinfo.name,rtl:RTL_UI,dir:document.documentElement.getAttribute("dir"),sidebarMethods:{setPosition:typeof SidebarController.setPosition,toggleVerticalTabs:typeof SidebarController.toggleVerticalTabs}}')
+ print('connected',kind,r['product'],flush=True)
+ r['injection']=m.execute_script('window.__qa2877Result=null;let el=document.createElementNS("http://www.w3.org/1999/xhtml","script");el.type="module";el.src=arguments[0];el.addEventListener("error",()=>window.__qa2877Result={passed:false,error:"external module failed to load"});document.documentElement.appendChild(el);return {started:true,src:el.src}',script_args=['chrome://noraneko/content/qa-pr2877-'+kind+'.js'])
+ for attempt in range(180):
+  result=m.execute_script('return document.defaultView.__qa2877Result')
+  if result:r['result']=result;break
+  if attempt%10==0:
+   progress=m.execute_script('return {progress:document.defaultView.__NORA_TEST_PROGRESS__,console:Services.console.getMessageArray().slice(-8).map(x=>x.message?.slice(0,300))}')
+   print('progress',json.dumps(progress),flush=True)
+  time.sleep(.5)
+ else:raise TimeoutError('test promise did not complete after90s')
+ r['after']=m.execute_script('return {progress:window.__NORA_TEST_PROGRESS__,panelRect:document.querySelector("#panel-sidebar-box").getBoundingClientRect().toJSON(),offsetStart:document.querySelector("#browser").style.getPropertyValue("--floorp-panel-start-width"),offsetEnd:document.querySelector("#browser").style.getPropertyValue("--floorp-panel-end-width")}')
+ (R/f'{port}-{kind}.png').write_bytes(base64.b64decode(m.screenshot(format='base64')))
+except Exception as e:r.update(error=repr(e),traceback=traceback.format_exc())
+finally:
+ (R/f'{port}-{kind}.json').write_text(json.dumps(r,indent=2));print(json.dumps(r),flush=True)
+ try:m.delete_session()
+ except Exception:pass
+if r.get('error') or not r.get('result',{}).get('passed'):sys.exit(1)

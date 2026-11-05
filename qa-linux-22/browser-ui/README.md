@@ -37,3 +37,5 @@ KAN-3 and KAN-98 have separate source/diagnostic runners and reports. The contro
 - Flatpak runtimes were acquired with verification enabled, but the Floorp app pull failed during parental-control details lookup because system DBus is unavailable. No Flatpak product run was claimed.
 
 See `matrix.json`, each `KAN-*/report.md`, and `environment/summary.md`. The dedicated QA branch contains only curated scripts, small evidence and screenshots, without browser profiles, user data, credentials, binaries, dependency caches or raw remote metadata.
+
+Follow-up: actual signed Arabic localization (RTL_UI=true) is recorded separately in KAN-29/localized-report.md and localized-comparison.json. Independent existingPR2877 candidate improves the measured RTL defect; original LTR/CachyOS symptom remains unproven. Existing currentRuntime tests: candidate flex9/9 + panel8/8, original flex2fail/9. KAN-29/pr2877-root-note.md is prepared for the PR owner; PRhead is unchanged. KAN87 also has one normally installed signed image-theme control under qaLinuxKAN87/signed/.
