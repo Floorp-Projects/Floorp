@@ -38,3 +38,5 @@ Draft PR3030: https://github.com/Floorp-Projects/Floorp/pull/3030, head e55152c5
 ## Full production package follow-up
 
 Exact PR3030 e55152c5 and baseline984509d2 were built by the existing production application package workflow with unchanged locked native Runtime. Both CI runs succeeded. Four fresh-profile ja/es-CL full-package comparisons reproduce baseline Firefox brand/icon and regression failure, and confirm candidate Floorp brand/icon and regression success with signed active locale packs and localized visible menus preserved. All product files remain unchanged; no manual manifest substitution. Generated override is present in final root omni.ja. See `../full-build/report.md` and `../full-build/3030/package-test/execution-1/summary.json`. Standard top-level locale-enabled runner, other locales/themes/channels and full original desktop qualification remain distinct.
+
+Jira full-package evidence comment: 10352. Status remains in progress; no Done transition.

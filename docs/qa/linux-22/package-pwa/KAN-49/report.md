@@ -97,3 +97,5 @@ Head8249e234 run42050337102 is successful. Ubuntu artifact13427512330 was downlo
 ## Full production package follow-up
 
 Exact final PR3032 8249e234 and baseline984509d2 were built by the existing full production application package workflow with the same unchanged authenticated prebuilt Runtime. Both CI runs succeeded. Baseline X11 has common floorp classes; baseline native Wayland makes Beta inherit Alpha app_id. Full candidate fixes both PWA launcher identities on both protocols. Four fresh UI-install/cold-launch runs complete, all36legacy API windows open, normal quit, sandbox6, rolloutfalse, product inventories unchanged. Ordinary browser after PWA still inherits Alpha native Wayland identity in both baseline/candidate; this pre-existing condition is retained, not silently marked fixed. Original Manjaro/KDE/Outlook/Teams and all-invalid legacy identity limitations remain. See `../full-build/report.md` and full-build per-product result JSON.
+
+Jira full-package evidence comment: 10353. Status remains in progress; no Done transition.

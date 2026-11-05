@@ -4,7 +4,7 @@ from pathlib import Path
 import json,re,shutil
 src=Path(__file__).resolve().parent
 dst=Path('/workspace/qa-linux-package-pwa/docs/qa/linux-22/package-pwa/full-build')
-skip={'pr-info.json','pr-info-after.json','baseline-runs.json','runtime-worktree.log'}
+skip={'pr-info.json','pr-info-after.json','baseline-runs.json','runtime-worktree.log','qa-commit.log','qa-push.log'}
 allowed={'.json','.md','.py','.log','.txt','.png','.mn'}
 files=[]
 for p in sorted(src.rglob('*')):

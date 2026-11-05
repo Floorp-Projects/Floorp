@@ -752,6 +752,10 @@
     "bytes": 21908
   },
   {
+    "path": "jira-full-build-updates.json",
+    "bytes": 4916
+  },
+  {
     "path": "main-ref.txt",
     "bytes": 57
   },
@@ -781,7 +785,7 @@
   },
   {
     "path": "publish_evidence.py",
-    "bytes": 1366
+    "bytes": 1396
   },
   {
     "path": "pwa-fullpackage-matrix.json",
@@ -810,6 +814,10 @@
   {
     "path": "runtime1179-build-manifest-v2.json",
     "bytes": 1506
+  },
+  {
+    "path": "structured-diff-check.log",
+    "bytes": 0
   },
   {
     "path": "workflow-audit-summary.json",

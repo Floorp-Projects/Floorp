@@ -1,0 +1,36 @@
+{
+  "KAN-23": {
+    "commentId": "10352",
+    "labels": [
+      "area-platform",
+      "draft-pr",
+      "floorp-stability-2026-11",
+      "p2",
+      "qa-linux-executed",
+      "related-gh-2713",
+      "reproduced-in-test",
+      "triage-reviewed",
+      "full-package-verified",
+      "needs-other-locales"
+    ],
+    "commentBody": "## 完全製品ビルドと実ロケール対照（2026-11-05 UTC）\n\nDraft3030 head e55152c559a141001a375ac77098d141b0db3ca7 の既存 package.yml / stable-v2-validation / Linux-x64 / skip_signing=true で、全Floorp本番ソース→mach artifact-mode build→標準inject→完全packageを生成。[CI42067997767](https://github.com/Floorp-Projects/Floorp/actions/runs/42067997767)成功。baseline984509d2も同工程CI42068377281成功。固定Runtime8965ffc346d426ccdf919bd18585e4d4a0c21654とlock不変。これは取得元とハッシュを認証した互換native engineを使う完全アプリpackageで、Gecko C++/Rust再コンパイルではない。\n\n最終artifact13435129152 ZIP SHA256 96ebf4afca0028715039d5154a27fd030e8150cb8117b0249d91eb576411d3fcをAPI digest/size/head/runで照合。baseline最終artifact13435702404も認証。manifest/製品資源の手動差替なし、最終root omni.ja内の生成override1件を直接確認。\n\n4fresh profile比較完了: baseline ja/es-CLともFirefoxブランド、参照Firefox64pxと全画素一致、新回帰test失敗。候補ja/es-CLともFloorpブランド、参照Floorp64pxと全画素一致、新回帰test成功。署名済pack signedState2/active、requested=actual locale、表示中の日本語/es-CLメニュー維持、sandbox6、disableenvなし、全正常終了・製品全filehash前後不変。回帰module全体＋repository harnessを実製品で実行した結果で、top-level標準runnerのlocale有効CIとは区別する。\n\n[完全報告・実行script・JSON・画像](https://github.com/Floorp-Projects/Floorp/tree/4e73dd3bc926636591af9b31cfcbcd692bef0e13/docs/qa/linux-22/package-pwa/full-build/3030/package-test/execution-1)。原desktop全体、他locale/theme/channel、標準locale-enabled runner、署名配布資格は別条件。needs-full-build/needs-locale-matrixを今回満たした範囲で除去し、needs-other-localesを残す。PR/source変更、merge、release、Done化なし。"
+  },
+  "KAN-49": {
+    "commentId": "10353",
+    "labels": [
+      "area-pwa",
+      "draft-pr",
+      "env-blocked",
+      "floorp-stability-2026-11",
+      "needs-manjaro-kde",
+      "p2",
+      "qa-linux-executed",
+      "related-gh-2800",
+      "reproduced-in-test",
+      "triage-reviewed",
+      "full-package-verified",
+      "needs-wayland-browser-grouping"
+    ],
+    "commentBody": "## 完全製品による冷間PWA対照（2026-11-05 UTC）\n\nDraft3032最終head8249e234adfbb3e877e4a20cf5f57d7264d9a447の既存 unsigned stable-v2-validation完全package [CI42068055038](https://github.com/Floorp-Projects/Floorp/actions/runs/42068055038)成功。baseline984509d2も同工程CI42068377281成功。全本番Floorpソース→mach artifactbuild/inject/packageで、互換Runtime8965ffc346d426ccdf919bd18585e4d4a0c21654/lock不変。Gecko native全再コンパイルや署名配布ではない。\n\n最終artifact13436721142 ZIP SHA256 fc338fa4cd3307c7a8937b2b99c97c18a1665e23b3b561680662fddfc3b336e5をAPI size/digest/head/runで認証。製品資源差替なし。baseline/candidate×X11/native nested Waylandの4fresh環境で、各同製品UIから2PWAを作り、その生成Execを全終了後Alpha→Beta→通常browserで起動。\n\nbaseline X11は両PWA class=floorp。baseline WaylandはBetaがAlpha app_idを継承し、原報告の継承パターンをDebian/KWin6.3.6で再現。候補は両protocolで2PWA各固有class/app_id・生成desktopと一致。Wayland protocolとKWin行で裏付け。36/36旧/不正SSB API window open、12回in-app正常Quit、sandbox6/rolloutfalse、製品inventory不変、ownedprocess0。\n\n重要な残条件: PWA先行後の通常browserはWaylandでAlpha app_idを継承し、baseline/candidate両方で残存。PWAwindowの修正範囲と分け、全window問題解決とは扱わない。原Manjaro/KDE/Outlook/Teams/taskbarpixels、全フィールド無効recordの既存randomidentity限界も残す。実Servicesはnative159.0.1/BuildID20261103153232。未使用と明記されたrootINIのpackaging-time値とは別記録。\n\n[比較報告](https://github.com/Floorp-Projects/Floorp/tree/4e73dd3bc926636591af9b31cfcbcd692bef0e13/docs/qa/linux-22/package-pwa/full-build/pwa-fullpackage-report.md)、[machine matrix](https://github.com/Floorp-Projects/Floorp/tree/4e73dd3bc926636591af9b31cfcbcd692bef0e13/docs/qa/linux-22/package-pwa/full-build/pwa-fullpackage-matrix.json)。full-build条件のみ解消、原OS環境不足は保持。新規推測修正/PR変更、merge/release/Done化なし。"
+  }
+}
