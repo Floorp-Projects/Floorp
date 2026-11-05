@@ -1,0 +1,34 @@
+Password: su: Authentication failure
+Setting up artifact node.tar.zst
+Downloading artifact to local cache: /workspace/qa-linux-full-build/mach-state/toolchains/c3bc44d3bb729a81-public%2Fbuild%2Fnode.tar.zst
+Downloading c3bc44d3bb729a81-public%2Fbuild%2Fnode.tar.zst... 0.0 %
+Downloading c3bc44d3bb729a81-public%2Fbuild%2Fnode.tar.zst... 37.6 %
+Downloading c3bc44d3bb729a81-public%2Fbuild%2Fnode.tar.zst... 75.1 %
+Downloading c3bc44d3bb729a81-public%2Fbuild%2Fnode.tar.zst... 100.0 %
+untarring "/workspace/qa-linux-full-build/mach-state/node.tar.zst"
+Setting up artifact fix-stacks.tar.zst
+Downloading artifact to local cache: /workspace/qa-linux-full-build/mach-state/toolchains/a5a02912f9b9a040-public%2Fbuild%2Ffix-stacks.tar.zst
+Downloading a5a02912f9b9a040-public%2Fbuild%2Ffix-stacks.tar.zst... 0.0 %
+Downloading a5a02912f9b9a040-public%2Fbuild%2Ffix-stacks.tar.zst... 100.0 %
+untarring "/workspace/qa-linux-full-build/mach-state/fix-stacks.tar.zst"
+Setting up artifact minidump-stackwalk.tar.zst
+Downloading artifact to local cache: /workspace/qa-linux-full-build/mach-state/toolchains/0456295e1de3073d-public%2Fbuild%2Fminidump-stackwalk.tar.zst
+Downloading 0456295e1de3073d-public%2Fbuild%2Fminidump-stackwalk.tar.zst... 0.0 %
+Downloading 0456295e1de3073d-public%2Fbuild%2Fminidump-stackwalk.tar.zst... 100.0 %
+untarring "/workspace/qa-linux-full-build/mach-state/minidump-stackwalk.tar.zst"
+Setting up artifact samply.tar.zst
+Downloading artifact to local cache: /workspace/qa-linux-full-build/mach-state/toolchains/e46ab31209949657-public%2Fbuild%2Fsamply.tar.zst
+Downloading e46ab31209949657-public%2Fbuild%2Fsamply.tar.zst... 0.0 %
+Downloading e46ab31209949657-public%2Fbuild%2Fsamply.tar.zst... 100.0 %
+untarring "/workspace/qa-linux-full-build/mach-state/samply.tar.zst"
+Setting up artifact profiler-node-tools.tar.zst
+Downloading artifact to local cache: /workspace/qa-linux-full-build/mach-state/toolchains/73a14825931b8189-public%2Fbuild%2Fprofiler-node-tools.tar.zst
+Downloading 73a14825931b8189-public%2Fbuild%2Fprofiler-node-tools.tar.zst... 0.0 %
+Downloading 73a14825931b8189-public%2Fbuild%2Fprofiler-node-tools.tar.zst... 100.0 %
+untarring "/workspace/qa-linux-full-build/mach-state/profiler-node-tools.tar.zst"
+Executing as root: su root -c "apt-get install -y watchman"
+Your requested configuration has been written to "/workspace/qa-linux-full-build/runtime/mozconfig".
+
+Your system should be ready to build Firefox for Desktop Artifact Mode!
+
+To build Firefox for Desktop Artifact Mode, please restart the shell (Start a new terminal window)

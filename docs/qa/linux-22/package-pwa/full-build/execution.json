@@ -1,0 +1,89 @@
+{
+  "scope": "Full production Floorp package built from exact PR sources with compatible authenticated native Runtime; artifact mode, not Gecko engine recompilation",
+  "baseline": "984509d2053be7bae9027133bda7259cd706b208",
+  "runtime": "8965ffc346d426ccdf919bd18585e4d4a0c21654",
+  "runs": {
+    "3030": {
+      "sourceSha": "e55152c559a141001a375ac77098d141b0db3ca7",
+      "run": 42067997767,
+      "status": "completed",
+      "conclusion": "success",
+      "artifactId": 13435129152
+    },
+    "3032": {
+      "sourceSha": "8249e234adfbb3e877e4a20cf5f57d7264d9a447",
+      "run": 42068055038,
+      "status": "completed",
+      "conclusion": "success",
+      "artifactId": 13436721142
+    },
+    "baseline": {
+      "sourceSha": "984509d2053be7bae9027133bda7259cd706b208",
+      "run": 42068377281,
+      "status": "completed",
+      "conclusion": "success",
+      "artifactId": 13435702404
+    }
+  },
+  "protection": {
+    "provenance_mode": "stable-v2-validation",
+    "skip_signing": true,
+    "signed_validation": false,
+    "published": false,
+    "runtimeLockChanged": false
+  },
+  "localBootstrap": {
+    "default": "failed: requires su authentication",
+    "noSystemChanges": "exit0",
+    "frontend3030": "standard all production components before-mach exit0; not full product by itself"
+  },
+  "mainObserved": "29a3eb23145da90706d8a94441373278521cc737",
+  "runtimeProducerManifestVerified": "runtime1179-build-manifest-v2.json",
+  "tests": {
+    "3030": {
+      "rowsCompleted": 4,
+      "baselineJaEsCL": "Firefox brand/icon and regression fail reproduced",
+      "candidateJaEsCL": "Floorp brand/icon and regression pass; signed locale UI retained",
+      "productUnchanged": true
+    },
+    "3032": {
+      "x11": {
+        "completed": true,
+        "allPwaIdentitiesMatch": true,
+        "productUnchanged": true,
+        "remainingOwnedProcesses": [],
+        "legacyApiOpened": 9
+      },
+      "wayland": {
+        "completed": true,
+        "allPwaIdentitiesMatch": true,
+        "productUnchanged": true,
+        "remainingOwnedProcesses": [],
+        "legacyApiOpened": 9
+      }
+    },
+    "baseline": {
+      "x11": {
+        "completed": true,
+        "allPwaIdentitiesMatch": false,
+        "productUnchanged": true,
+        "remainingOwnedProcesses": [],
+        "legacyApiOpened": 9
+      },
+      "wayland": {
+        "completed": true,
+        "allPwaIdentitiesMatch": false,
+        "productUnchanged": true,
+        "remainingOwnedProcesses": [],
+        "legacyApiOpened": 9
+      }
+    }
+  },
+  "remainingConditions": [
+    "Original Manjaro/CachyOS package/desktop and Outlook/Teams qualification",
+    "Wayland ordinary browser opened after PWA retains first PWA app_id in baseline and candidate",
+    "Fully unusable legacy records retain existing random identity limitation",
+    "Other locales/themes/channels; top-level standard locale-enabled runner",
+    "Signed distribution and full native Gecko recompilation not claimed"
+  ]
+}

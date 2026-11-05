@@ -1,0 +1,281 @@
+{
+  "key": "KAN-49",
+  "github": "https://github.com/Floorp-Projects/Floorp/issues/2649",
+  "sourceSha": "8249e234adfbb3e877e4a20cf5f57d7264d9a447",
+  "productVersion": "Floorp 12.21.1 package / measured Services.version159.0.1",
+  "environment": "Debian13 cloud; owned Xvfb X11; separate owned nested KWin6.3.6 nativeWayland; freshHOME/profile per source+mode; normal dedicated D-Bus",
+  "testCommand": "dbus-run-session -- python3 full_package_pwa_probe.py --intake <authenticated-intake> --expected-sha <exact-source> --expected-run <exact-run> --out <fresh-root> --mode x11|wayland [--nested-wayland] --display :95 --port <dedicated> --fixture-port <dedicated>",
+  "result": "baseline PWA shared identity reproduced; PR3032 two-PWA identity improvement verified in both full-package modes; ordinary-browser Wayland inheritance persists in both sources",
+  "remainingConditions": [
+    "Preexisting nativeWayland ordinary browser still inherits first PWA app_id when that PWA cold-starts the process",
+    "Original Manjaro/CachyOS package and KDE version parity not established",
+    "KWin native identity is measured; actual Plasma taskbar icon pixels/working task model are not authenticated here",
+    "Wholly invalid records retain the preexisting independent random identity fallback; no migration/repair claimed",
+    "Source-built application package with authenticated prebuilt native engine; not a fresh all-Gecko native compile or signed release qualification"
+  ],
+  "existingPr": null,
+  "newPr": "https://github.com/Floorp-Projects/Floorp/pull/3032",
+  "counts": {
+    "fullPackageRuns": 4,
+    "successfulUiInstallations": 8,
+    "legacyWindowApiOpens": 36,
+    "normalInAppQuits": 12,
+    "candidatePwaIdentityMatches": 4,
+    "candidatePwaIdentityObservations": 4
+  },
+  "runs": [
+    {
+      "subject": "baseline",
+      "mode": "x11",
+      "sourceSha": "984509d2053be7bae9027133bda7259cd706b208",
+      "runId": 42068377281,
+      "artifactId": 13435702404,
+      "artifactDigest": "sha256:83667970ddcfc2d3f350367f511106ddaf6f52c5ca8ae3069a44870aee22913c",
+      "packageTarSha256": "5a087bfd1d385fddb1304b97379a02e780451c07006cc0ffe078f53e21633d82",
+      "actualServicesVersion": "159.0.1",
+      "actualServicesAppBuildID": "20261103153232",
+      "actualServicesPlatformBuildID": "20261103153232",
+      "unusedRootIniVersion": "12.21.1@159.0.1",
+      "unusedRootIniBuildID": "20261105165328",
+      "uiInstallations": 2,
+      "pwaIdentityChecks": [
+        {
+          "name": "QA PWA Alpha",
+          "expectedClass": "floorp-a04965e9-0495-4546-983d-62dfb04c86f8",
+          "observedClasses": [
+            "floorp"
+          ],
+          "matches": false
+        },
+        {
+          "name": "QA PWA Beta",
+          "expectedClass": "floorp-d651ece4-7cf2-45bc-98d7-768511acf2d2",
+          "observedClasses": [
+            "floorp"
+          ],
+          "matches": false
+        }
+      ],
+      "allPwaIdentitiesMatch": false,
+      "ordinaryBrowserMatches": true,
+      "ordinaryBrowserNative": [
+        {
+          "xid": "0x20002c",
+          "title": "Ablaze Floorp",
+          "wmClass": "\"Navigator\", \"floorp\""
+        }
+      ],
+      "legacyApiOpenCount": 9,
+      "legacyLauncherErrors": [
+        {
+          "label": "numeric-id",
+          "error": "TypeError: raw.toLowerCase is not a function"
+        },
+        {
+          "label": "object-id",
+          "error": "TypeError: raw.toLowerCase is not a function"
+        }
+      ],
+      "sandbox": 6,
+      "taskbarExperiment": false,
+      "normalQuitCount": 3,
+      "productUnchanged": true,
+      "remainingOwnedProcesses": [],
+      "nativeWaylandProtocolObserved": null,
+      "evidence": [
+        "baseline/x11-product-qa/result.json",
+        "baseline/x11-product-qa/native-identity-projection.json",
+        "baseline/x11-product-qa/product-inventory-after.json"
+      ],
+      "resultSha256": "f46fa6702f54cd7c15fbad84bb2b2bd18c49f19af8d5674673c6f474d72587e6"
+    },
+    {
+      "subject": "baseline",
+      "mode": "wayland",
+      "sourceSha": "984509d2053be7bae9027133bda7259cd706b208",
+      "runId": 42068377281,
+      "artifactId": 13435702404,
+      "artifactDigest": "sha256:83667970ddcfc2d3f350367f511106ddaf6f52c5ca8ae3069a44870aee22913c",
+      "packageTarSha256": "5a087bfd1d385fddb1304b97379a02e780451c07006cc0ffe078f53e21633d82",
+      "actualServicesVersion": "159.0.1",
+      "actualServicesAppBuildID": "20261103153232",
+      "actualServicesPlatformBuildID": "20261103153232",
+      "unusedRootIniVersion": "12.21.1@159.0.1",
+      "unusedRootIniBuildID": "20261105165328",
+      "uiInstallations": 2,
+      "pwaIdentityChecks": [
+        {
+          "name": "QA PWA Alpha",
+          "expectedClass": "floorp-a8a88169-6ee4-421f-840c-ea969ed7a6f6",
+          "observedClasses": [
+            "floorp-a8a88169-6ee4-421f-840c-ea969ed7a6f6"
+          ],
+          "matches": true
+        },
+        {
+          "name": "QA PWA Beta",
+          "expectedClass": "floorp-413de6fc-57bb-4fae-a517-e8ac3083a13e",
+          "observedClasses": [
+            "floorp-a8a88169-6ee4-421f-840c-ea969ed7a6f6"
+          ],
+          "matches": false
+        }
+      ],
+      "allPwaIdentitiesMatch": false,
+      "ordinaryBrowserMatches": false,
+      "ordinaryBrowserNative": [
+        {
+          "caption": "Ablaze Floorp",
+          "resourceClass": "floorp-a8a88169-6ee4-421f-840c-ea969ed7a6f6",
+          "desktopFileName": "floorp-a8a88169-6ee4-421f-840c-ea969ed7a6f6",
+          "resourceName": "floorp",
+          "pid": 114075
+        }
+      ],
+      "legacyApiOpenCount": 9,
+      "legacyLauncherErrors": [
+        {
+          "label": "numeric-id",
+          "error": "TypeError: raw.toLowerCase is not a function"
+        },
+        {
+          "label": "object-id",
+          "error": "TypeError: raw.toLowerCase is not a function"
+        }
+      ],
+      "sandbox": 6,
+      "taskbarExperiment": false,
+      "normalQuitCount": 3,
+      "productUnchanged": true,
+      "remainingOwnedProcesses": [],
+      "nativeWaylandProtocolObserved": true,
+      "evidence": [
+        "baseline/wayland-product-qa/result.json",
+        "baseline/wayland-product-qa/native-identity-projection.json",
+        "baseline/wayland-product-qa/product-inventory-after.json"
+      ],
+      "resultSha256": "5fdcee6953c8a8a694e40903a1ef957ce2415a2fec8c282abc86863febda11b6"
+    },
+    {
+      "subject": "3032",
+      "mode": "x11",
+      "sourceSha": "8249e234adfbb3e877e4a20cf5f57d7264d9a447",
+      "runId": 42068055038,
+      "artifactId": 13436721142,
+      "artifactDigest": "sha256:fc338fa4cd3307c7a8937b2b99c97c18a1665e23b3b561680662fddfc3b336e5",
+      "packageTarSha256": "cf5e657f87c14a50dc6cfadd63d8e27d475f61d62b0c6b2a657f57db337b7146",
+      "actualServicesVersion": "159.0.1",
+      "actualServicesAppBuildID": "20261103153232",
+      "actualServicesPlatformBuildID": null,
+      "unusedRootIniVersion": "12.21.1@159.0.1",
+      "unusedRootIniBuildID": "20261105165142",
+      "uiInstallations": 2,
+      "pwaIdentityChecks": [
+        {
+          "name": "QA PWA Alpha",
+          "expectedClass": "floorp-0914bacb-edc2-4f54-93b3-7e22842ac953",
+          "observedClasses": [
+            "floorp-0914bacb-edc2-4f54-93b3-7e22842ac953"
+          ],
+          "matches": true
+        },
+        {
+          "name": "QA PWA Beta",
+          "expectedClass": "floorp-16845415-c7e4-447b-b9b5-ff796592abe4",
+          "observedClasses": [
+            "floorp-16845415-c7e4-447b-b9b5-ff796592abe4"
+          ],
+          "matches": true
+        }
+      ],
+      "allPwaIdentitiesMatch": true,
+      "ordinaryBrowserMatches": true,
+      "ordinaryBrowserNative": [
+        {
+          "xid": "0x20002c",
+          "title": "Ablaze Floorp",
+          "wmClass": "\"Navigator\", \"floorp\""
+        }
+      ],
+      "legacyApiOpenCount": 9,
+      "legacyLauncherErrors": [],
+      "sandbox": 6,
+      "taskbarExperiment": false,
+      "normalQuitCount": 3,
+      "productUnchanged": true,
+      "remainingOwnedProcesses": [],
+      "nativeWaylandProtocolObserved": null,
+      "evidence": [
+        "3032/x11-product-qa/result.json",
+        "3032/x11-product-qa/native-identity-projection.json",
+        "3032/x11-product-qa/product-inventory-after.json"
+      ],
+      "resultSha256": "51ff391034f034f2469171aa8f50d3c28aa6a38c26e1cf4e107862fc233291dd"
+    },
+    {
+      "subject": "3032",
+      "mode": "wayland",
+      "sourceSha": "8249e234adfbb3e877e4a20cf5f57d7264d9a447",
+      "runId": 42068055038,
+      "artifactId": 13436721142,
+      "artifactDigest": "sha256:fc338fa4cd3307c7a8937b2b99c97c18a1665e23b3b561680662fddfc3b336e5",
+      "packageTarSha256": "cf5e657f87c14a50dc6cfadd63d8e27d475f61d62b0c6b2a657f57db337b7146",
+      "actualServicesVersion": "159.0.1",
+      "actualServicesAppBuildID": "20261103153232",
+      "actualServicesPlatformBuildID": "20261103153232",
+      "unusedRootIniVersion": "12.21.1@159.0.1",
+      "unusedRootIniBuildID": "20261105165142",
+      "uiInstallations": 2,
+      "pwaIdentityChecks": [
+        {
+          "name": "QA PWA Alpha",
+          "expectedClass": "floorp-9c81f296-e163-468d-bded-591d97ede773",
+          "observedClasses": [
+            "floorp-9c81f296-e163-468d-bded-591d97ede773"
+          ],
+          "matches": true
+        },
+        {
+          "name": "QA PWA Beta",
+          "expectedClass": "floorp-6a449a02-b424-4586-b14a-799c18105ee3",
+          "observedClasses": [
+            "floorp-6a449a02-b424-4586-b14a-799c18105ee3"
+          ],
+          "matches": true
+        }
+      ],
+      "allPwaIdentitiesMatch": true,
+      "ordinaryBrowserMatches": false,
+      "ordinaryBrowserNative": [
+        {
+          "caption": "Ablaze Floorp",
+          "resourceClass": "floorp-9c81f296-e163-468d-bded-591d97ede773",
+          "desktopFileName": "floorp-9c81f296-e163-468d-bded-591d97ede773",
+          "resourceName": "floorp",
+          "pid": 108778
+        }
+      ],
+      "legacyApiOpenCount": 9,
+      "legacyLauncherErrors": [],
+      "sandbox": 6,
+      "taskbarExperiment": false,
+      "normalQuitCount": 3,
+      "productUnchanged": true,
+      "remainingOwnedProcesses": [],
+      "nativeWaylandProtocolObserved": true,
+      "evidence": [
+        "3032/wayland-product-qa/result.json",
+        "3032/wayland-product-qa/native-identity-projection.json",
+        "3032/wayland-product-qa/product-inventory-after.json"
+      ],
+      "resultSha256": "10024912f32635a4c22fdf89e353b0145280a4caed63f7b2527de3df3d496ce3"
+    }
+  ],
+  "evidence": [
+    "baseline/product-intake.json",
+    "3032/product-intake.json",
+    "full_package_pwa_probe.py",
+    "project_pwa_identity.py",
+    "pwa-fullpackage-report.md"
+  ]
+}

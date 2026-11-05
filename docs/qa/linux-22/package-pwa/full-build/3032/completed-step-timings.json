@@ -1,0 +1,81 @@
+{
+  "runId": 42068055038,
+  "mainJobId": 127387701400,
+  "mainStarted": "2026-11-05T16:47:29Z",
+  "mainCompleted": "2026-11-05T17:05:30Z",
+  "steps": [
+    {
+      "name": "Build Noraneko",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 27,
+      "started_at": "2026-11-05T16:50:45Z",
+      "completed_at": "2026-11-05T16:51:16Z",
+      "elapsedSeconds": 31
+    },
+    {
+      "name": "Build",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 28,
+      "started_at": "2026-11-05T16:51:16Z",
+      "completed_at": "2026-11-05T16:52:14Z",
+      "elapsedSeconds": 58
+    },
+    {
+      "name": "Inject Noraneko",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 29,
+      "started_at": "2026-11-05T16:52:14Z",
+      "completed_at": "2026-11-05T16:52:16Z",
+      "elapsedSeconds": 2
+    },
+    {
+      "name": "Package noraneko",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 33,
+      "started_at": "2026-11-05T16:52:17Z",
+      "completed_at": "2026-11-05T16:54:32Z",
+      "elapsedSeconds": 135
+    },
+    {
+      "name": "Repackage Linux DEB",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 35,
+      "started_at": "2026-11-05T16:54:39Z",
+      "completed_at": "2026-11-05T17:02:10Z",
+      "elapsedSeconds": 451
+    },
+    {
+      "name": "Create MAR package",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 51,
+      "started_at": "2026-11-05T17:03:08Z",
+      "completed_at": "2026-11-05T17:05:17Z",
+      "elapsedSeconds": 129
+    },
+    {
+      "name": "Verify installer workspace",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 52,
+      "started_at": "2026-11-05T17:05:17Z",
+      "completed_at": "2026-11-05T17:05:17Z",
+      "elapsedSeconds": 0
+    },
+    {
+      "name": "Publish dist",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 53,
+      "started_at": "2026-11-05T17:05:17Z",
+      "completed_at": "2026-11-05T17:05:21Z",
+      "elapsedSeconds": 4
+    }
+  ],
+  "priorComparison": "KAN11 package42061375408 was macOS and skipped Linux DEB, so it is not a valid DEB timing comparator."
+}

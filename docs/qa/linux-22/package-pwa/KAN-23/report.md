@@ -33,3 +33,8 @@ The complete new LegacyBranding.test.mts and its unchanged repository test_harne
 ## Published review state
 
 Draft PR3030: https://github.com/Floorp-Projects/Floorp/pull/3030, head e55152c559a141001a375ac77098d141b0db3ca7. Standard CI run42045064743 succeeded, downloaded Ubuntu artifact13425530774 digest matches. Standard runner recorded LegacyBranding.runAllTests and282 modules passed/0 failed; language-pack-active coverage is not inferred from this CI. Generated production jar.mn and the separate signed-pack repository-harness matrix provide the additional locale-specific evidence. Jira main comment10274 and follow-up10295. Keep Draft; full product build and remaining locale/desktop conditions persist.
+
+
+## Full production package follow-up
+
+Exact PR3030 e55152c5 and baseline984509d2 were built by the existing production application package workflow with unchanged locked native Runtime. Both CI runs succeeded. Four fresh-profile ja/es-CL full-package comparisons reproduce baseline Firefox brand/icon and regression failure, and confirm candidate Floorp brand/icon and regression success with signed active locale packs and localized visible menus preserved. All product files remain unchanged; no manual manifest substitution. Generated override is present in final root omni.ja. See `../full-build/report.md` and `../full-build/3030/package-test/execution-1/summary.json`. Standard top-level locale-enabled runner, other locales/themes/channels and full original desktop qualification remain distinct.

@@ -1,0 +1,15 @@
+Traceback (most recent call last):
+  File "/workspace/qa-linux-22/package-pwa/full-build/3030/extract_verified_package.py", line 31, in <module>
+    record={'packageKind':'workflow-generated-linux-package','sourceSha':EXPECTED,'workflowRunId':RUN,'workflowArtifactId':m['id'],'artifactName':m['name'],'workflowArtifactDigest':m['digest'],'downloadedArtifactSha256':sha,'workflowArtifactArchive':str(a.zip.resolve()),'packageArchive':str(package.resolve()),'packageArchiveSha256':hashlib.sha256(package.read_bytes()).hexdigest(),'productRoot':str(product.resolve()),'generatedBrandingOverrides':changes,'applicationIni':{s:dict(ini[s]) for s in ini.sections()},'manualProductPatch':False,'nativeRecompilationClaim':False,'releaseOrSigningClaim':False}
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             ^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/configparser.py", line 1231, in __getitem__
+    return self._parser.get(self._name, key)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/configparser.py", line 781, in get
+    return self._interpolation.before_get(self, section, option, value,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/configparser.py", line 367, in before_get
+    self._interpolate_some(parser, option, L, value, section, defaults, 1)
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/configparser.py", line 414, in _interpolate_some
+    raise InterpolationSyntaxError(
+configparser.InterpolationSyntaxError: '%' must be followed by '%' or '(', found: '%PRODUCT%/%VERSION%/%BUILD_ID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%SYSTEM_CAPABILITIES%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/update.xml'

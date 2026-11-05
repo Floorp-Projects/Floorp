@@ -1,0 +1,43 @@
+{
+  "schema_version": 2,
+  "repository": "Floorp-Projects/Floorp-Runtime",
+  "head_sha": "8965ffc346d426ccdf919bd18585e4d4a0c21654",
+  "workflow_run_id": 41664957250,
+  "run_created_at": "2026-11-03T15:32:32Z",
+  "run_attempt": 1,
+  "expected_build_id": "20261103153232",
+  "targets": [
+    {
+      "platform": "Windows",
+      "arch": "x86_64",
+      "artifact_name": "floorp-windows-x86_64-moz-artifact",
+      "artifact_id": 13270584849,
+      "artifact_digest": "sha256:9eb4b08f2da5cdd535232edeb37ddd3866d47492e17f5921e115eb4a4f7180c6",
+      "expected_build_id": "20261103153232"
+    },
+    {
+      "platform": "Linux",
+      "arch": "x86_64",
+      "artifact_name": "floorp-linux-x86_64-moz-artifact",
+      "artifact_id": 13272530069,
+      "artifact_digest": "sha256:ed5a4f97ee7bf42c817f3146d5a843e095710dcc3be25fae0af0bf47274b739a",
+      "expected_build_id": "20261103153232"
+    },
+    {
+      "platform": "Linux",
+      "arch": "aarch64",
+      "artifact_name": "floorp-linux-aarch64-moz-artifact",
+      "artifact_id": 13257492482,
+      "artifact_digest": "sha256:5463f806b89466a54023268272e4dec4af2d8c9269c78eea09cceff7e8a2d655",
+      "expected_build_id": "20261103153232"
+    },
+    {
+      "platform": "Darwin",
+      "arch": "universal",
+      "artifact_name": "floorp-mac-universal-moz-artifact",
+      "artifact_id": 13274402466,
+      "artifact_digest": "sha256:ba222330e910b3f7845cb3513ffaf0979525e7c3645da04b3343102f3e3317de",
+      "expected_build_id": "20261103153232"
+    }
+  ]
+}

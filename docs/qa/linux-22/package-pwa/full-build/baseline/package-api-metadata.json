@@ -1,0 +1,22 @@
+{
+  "run": {
+    "conclusion": "success",
+    "head_sha": "984509d2053be7bae9027133bda7259cd706b208",
+    "id": 42068377281,
+    "status": "completed"
+  },
+  "artifact": {
+    "digest": "sha256:83667970ddcfc2d3f350367f511106ddaf6f52c5ca8ae3069a44870aee22913c",
+    "expired": false,
+    "id": 13435702404,
+    "name": "noraneko-linux-x86_64-installer-unsigned",
+    "size_in_bytes": 108206544,
+    "workflow_run": {
+      "head_branch": "codex/qa-linux-fullpackage-baseline-984509d2",
+      "head_repository_id": 437505831,
+      "head_sha": "984509d2053be7bae9027133bda7259cd706b208",
+      "id": 42068377281,
+      "repository_id": 437505831
+    }
+  }
+}

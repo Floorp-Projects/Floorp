@@ -1,0 +1,66 @@
+{
+  "observedAt": "2026-11-05T16:46:33.401Z",
+  "run": {
+    "id": 41664957250,
+    "path": ".github/workflows/daily-build.yml",
+    "status": "completed",
+    "conclusion": "success",
+    "head_sha": "8965ffc346d426ccdf919bd18585e4d4a0c21654",
+    "head_branch": "nora-0.2.0",
+    "head_repository": "Floorp-Projects/Floorp-Runtime",
+    "created_at": "2026-11-03T15:32:32Z",
+    "run_attempt": 1
+  },
+  "artifacts": [
+    {
+      "id": 13274392012,
+      "name": "floorp-runtime-build-manifest-v2",
+      "digest": "sha256:2b6a1b20190dc7016957ca25f72f8e83f267de51458b515153fd209bb90d9138",
+      "expired": false,
+      "size_in_bytes": 724,
+      "expires_at": "2027-02-01T15:32:34Z",
+      "workflow_run": {
+        "id": 41664957250,
+        "repository_id": 914860957,
+        "head_repository_id": 914860957,
+        "head_branch": "nora-0.2.0",
+        "head_sha": "8965ffc346d426ccdf919bd18585e4d4a0c21654"
+      }
+    },
+    {
+      "id": 13272530069,
+      "name": "floorp-linux-x86_64-moz-artifact",
+      "digest": "sha256:ed5a4f97ee7bf42c817f3146d5a843e095710dcc3be25fae0af0bf47274b739a",
+      "expired": false,
+      "size_in_bytes": 87434468,
+      "expires_at": "2027-02-01T15:32:34Z",
+      "workflow_run": {
+        "id": 41664957250,
+        "repository_id": 914860957,
+        "head_repository_id": 914860957,
+        "head_branch": "nora-0.2.0",
+        "head_sha": "8965ffc346d426ccdf919bd18585e4d4a0c21654"
+      }
+    }
+  ],
+  "pullRequests": [
+    {
+      "number": 3030,
+      "draft": true,
+      "state": "open",
+      "merged": false,
+      "head": "codex/fix-linux-langpack-branding",
+      "head_sha": "e55152c559a141001a375ac77098d141b0db3ca7",
+      "head_repo_full_name": "Floorp-Projects/Floorp"
+    },
+    {
+      "number": 3032,
+      "draft": true,
+      "state": "open",
+      "merged": false,
+      "head": "codex/linux-pwa-window-class",
+      "head_sha": "8249e234adfbb3e877e4a20cf5f57d7264d9a447",
+      "head_repo_full_name": "Floorp-Projects/Floorp"
+    }
+  ]
+}

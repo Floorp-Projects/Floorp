@@ -1,0 +1,10 @@
+theme=qa-fullpackage
+search=/workspace/qa-linux-22/package-pwa/full-build/3030/package-test/execution-1/candidate-ja-home/.local/share/icons
+search=/workspace/qa-linux-22/package-pwa/full-build/3030/package-test/execution-1/candidate-ja-home/.icons
+search=/workspace/qa-linux-22/package-pwa/sysroot/usr/share/icons
+search=/usr/share/icons
+search=/workspace/qa-linux-22/package-pwa/sysroot/usr/share/pixmaps
+search=/usr/share/pixmaps
+icon=floorp sizes=64,
+icon=firefox sizes=64,
+icon=one.ablaze.floorp sizes=

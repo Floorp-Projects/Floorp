@@ -1,0 +1,130 @@
+{
+  "profile": "/workspace/qa-linux-22/package-pwa/full-build/baseline/wayland-product-qa/profile",
+  "calls": {
+    "cases": [
+      {
+        "label": "valid-braced-uuid",
+        "app": {
+          "id": "{01234567-89ab-4cde-8123-456789abcdef}",
+          "name": "Legacy Valid",
+          "start_url": "about:blank",
+          "icon": ""
+        },
+        "launcherClass": "floorp-01234567-89ab-4cde-8123-456789abcdef",
+        "opened": true,
+        "windowClass": null,
+        "taskbarId": "{01234567-89ab-4cde-8123-456789abcdef}"
+      },
+      {
+        "label": "missing-id",
+        "app": {
+          "name": "Legacy Missing ID",
+          "start_url": "about:blank",
+          "icon": ""
+        },
+        "launcherClass": "floorp-legacy-missing-id",
+        "opened": true,
+        "windowClass": null,
+        "taskbarId": "null"
+      },
+      {
+        "label": "brace-only-id",
+        "app": {
+          "id": "{}",
+          "name": "Legacy Braces",
+          "start_url": "about:blank",
+          "icon": ""
+        },
+        "launcherClass": "floorp-legacy-braces",
+        "opened": true,
+        "windowClass": null,
+        "taskbarId": "{}"
+      },
+      {
+        "label": "punctuation-id",
+        "app": {
+          "id": " < > ",
+          "name": "Legacy Punctuation",
+          "start_url": "about:blank",
+          "icon": ""
+        },
+        "launcherClass": "floorp-legacy-punctuation",
+        "opened": true,
+        "windowClass": null,
+        "taskbarId": " < > "
+      },
+      {
+        "label": "uppercase-id",
+        "app": {
+          "id": "{ABCD-1234}",
+          "name": "Legacy Uppercase",
+          "start_url": "about:blank",
+          "icon": ""
+        },
+        "launcherClass": "floorp-abcd-1234",
+        "opened": true,
+        "windowClass": null,
+        "taskbarId": "{ABCD-1234}"
+      },
+      {
+        "label": "missing-id-name",
+        "app": {
+          "start_url": "about:blank",
+          "icon": ""
+        },
+        "launcherClass": "floorp-about-blank",
+        "opened": true,
+        "windowClass": null,
+        "taskbarId": "null"
+      },
+      {
+        "label": "numeric-id",
+        "app": {
+          "id": 123,
+          "name": "Legacy Number",
+          "start_url": "about:blank",
+          "icon": ""
+        },
+        "launcherError": "TypeError: raw.toLowerCase is not a function",
+        "opened": true,
+        "windowClass": null,
+        "taskbarId": "123"
+      },
+      {
+        "label": "object-id",
+        "app": {
+          "id": {
+            "invalid": true
+          },
+          "name": "Legacy Object",
+          "start_url": "about:blank",
+          "icon": ""
+        },
+        "launcherError": "TypeError: raw.toLowerCase is not a function",
+        "opened": true,
+        "windowClass": null,
+        "taskbarId": "[object Object]"
+      },
+      {
+        "label": "no-normalizable-fields",
+        "app": {
+          "id": "{}",
+          "name": "",
+          "start_url": "",
+          "icon": ""
+        },
+        "launcherClass": "floorp-8d8d2148ce40",
+        "opened": true,
+        "windowClass": null,
+        "taskbarId": "{}"
+      }
+    ],
+    "experiment": false,
+    "sandbox": 6
+  },
+  "quit": {
+    "cause": "shutdown",
+    "forced": false,
+    "in_app": true
+  }
+}

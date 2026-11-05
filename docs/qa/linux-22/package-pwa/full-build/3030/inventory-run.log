@@ -1,0 +1,115 @@
+{
+  "sourceSha": "e55152c559a141001a375ac77098d141b0db3ca7",
+  "sourceTreeSha": "80f2dba56e37ad7fac221c9ac258b9ea4c5abfd3",
+  "runtimeCommit": "8965ffc346d426ccdf919bd18585e4d4a0c21654",
+  "runtimeLockSha256": "5838f685f4b375ca69dfaf10f1054f6b7fe1e90290cfb97c9f53514022937fe5",
+  "denoLockSha256": "1eb6c7fa6538a850e216736323edb3eedee85754cb0500e1f171ab945af62d4e",
+  "buildid2": "01a1ac97-e973-7229-993c-0d17bda3b8e7",
+  "componentLinks": {
+    "content": "bridge/loader-features/_dist",
+    "skin": "browser-features/skin",
+    "startup": "bridge/startup/_dist",
+    "resource": "bridge/loader-modules/_dist",
+    "pages-settings": "browser-features/pages-settings/_dist",
+    "pages-modal-child": "browser-features/pages-modal-child/_dist",
+    "pages-newtab": "browser-features/pages-newtab/_dist",
+    "pages-welcome": "browser-features/pages-welcome/_dist",
+    "pages-notes": "browser-features/pages-notes/_dist",
+    "pages-profile-manager": "browser-features/pages-profile-manager/_dist",
+    "pages-aboutDialog": "browser-features/pages-aboutDialog/_dist"
+  },
+  "components": [
+    {
+      "name": "content",
+      "fileCount": 213,
+      "bytes": 10517387,
+      "jarSha256": "c8604b32d5487b91db8f3192d09052e842b36dbf9676921ce3b8191affa1982d",
+      "mozBuildSha256": "8cb8a91bee5561424c8e04885d617abcfca44fd1a8858816444e37e477b15362"
+    },
+    {
+      "name": "skin",
+      "fileCount": 245,
+      "bytes": 2659597,
+      "jarSha256": "505ecefc18793294f9ad136161bf6e8b4c401a38d6a265c969dcea56068783b0",
+      "mozBuildSha256": "8cb8a91bee5561424c8e04885d617abcfca44fd1a8858816444e37e477b15362"
+    },
+    {
+      "name": "startup",
+      "fileCount": 5,
+      "bytes": 31114,
+      "jarSha256": "b31e3fc4a8c5139d26770d65f49c083c2803f4f3ae229ae682ecbc57bd8cc2ef",
+      "mozBuildSha256": "8cb8a91bee5561424c8e04885d617abcfca44fd1a8858816444e37e477b15362"
+    },
+    {
+      "name": "resource",
+      "fileCount": 185,
+      "bytes": 1497720,
+      "jarSha256": "32f976d28a68bc8c375a2a3fbfecd94f03c103380b8f20c6c1de41a4c2bcd9c2",
+      "mozBuildSha256": "8cb8a91bee5561424c8e04885d617abcfca44fd1a8858816444e37e477b15362"
+    },
+    {
+      "name": "pages-settings",
+      "fileCount": 204,
+      "bytes": 8315520,
+      "jarSha256": "8d2dc868e6d58bef6a11919db156dbc7f575f6d8b30b9c5784ee7064860886b7",
+      "mozBuildSha256": "8cb8a91bee5561424c8e04885d617abcfca44fd1a8858816444e37e477b15362"
+    },
+    {
+      "name": "pages-modal-child",
+      "fileCount": 5,
+      "bytes": 274043,
+      "jarSha256": "0d6514865e11e0e7ce2615232fbeadd3d29ba120536f50a5a9ca90f34e44bc8d",
+      "mozBuildSha256": "8cb8a91bee5561424c8e04885d617abcfca44fd1a8858816444e37e477b15362"
+    },
+    {
+      "name": "pages-newtab",
+      "fileCount": 109,
+      "bytes": 12043293,
+      "jarSha256": "778f72106cd2c02c8fdf80217384a41ba34a8243d6da061b46abb134029e8679",
+      "mozBuildSha256": "8cb8a91bee5561424c8e04885d617abcfca44fd1a8858816444e37e477b15362"
+    },
+    {
+      "name": "pages-welcome",
+      "fileCount": 161,
+      "bytes": 6634537,
+      "jarSha256": "62529ae27a287b7420bdd18248fe5220810470828251665e5f04989e306126a2",
+      "mozBuildSha256": "8cb8a91bee5561424c8e04885d617abcfca44fd1a8858816444e37e477b15362"
+    },
+    {
+      "name": "pages-notes",
+      "fileCount": 5,
+      "bytes": 794009,
+      "jarSha256": "7d5aeba2eb6c8501227a9d1bd01734669a2f8802e8ecfc7c513e2aa3586f90a7",
+      "mozBuildSha256": "8cb8a91bee5561424c8e04885d617abcfca44fd1a8858816444e37e477b15362"
+    },
+    {
+      "name": "pages-profile-manager",
+      "fileCount": 5,
+      "bytes": 328160,
+      "jarSha256": "53e36ad510441e9792f2afd081452e0ad9842060671b971628380661b7d48cf8",
+      "mozBuildSha256": "8cb8a91bee5561424c8e04885d617abcfca44fd1a8858816444e37e477b15362"
+    },
+    {
+      "name": "pages-aboutDialog",
+      "fileCount": 6,
+      "bytes": 219961,
+      "jarSha256": "07ebc1158636072992d7716acda45eb6e5be0e2973eb7443fef0f9c1d228c506",
+      "mozBuildSha256": "8cb8a91bee5561424c8e04885d617abcfca44fd1a8858816444e37e477b15362"
+    }
+  ],
+  "fileCount": 1143,
+  "totalBytes": 43315341,
+  "frontendManifestListSha256": "b2f859b00dc7aa07b019bdff76c118031ee6d213d0ec79b18f87ba55a585b892",
+  "contentOverrides": [
+    "% override chrome://branding/locale/brand.properties resource:///chrome/en-US/locale/branding/brand.properties"
+  ],
+  "trackedStatusAfter": "",
+  "frontendBeforeMachCompleted": true,
+  "fullProductCompleted": false,
+  "remainingStages": [
+    "locked Runtime configure",
+    "mach build",
+    "normal product packaging",
+    "full product execution/locale comparison"
+  ]
+}

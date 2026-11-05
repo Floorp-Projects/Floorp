@@ -1,0 +1,6 @@
+kwin_platform_x11_standalone: Bogus refresh rate -1000
+Couldn't start kglobalaccel from org.kde.kglobalaccel.service: QDBusError("org.freedesktop.DBus.Error.ServiceUnknown", "The name org.kde.kglobalaccel was not provided by any .service files")
+kwin_platform_x11_standalone: glSwapInterval is unsupported
+"applications.menu"  not found in  QList("/workspace/qa-linux-22/package-pwa/sysroot/etc/xdg/menus")
+kwin_scene_opengl: Could not delete framebuffer because no context is current
+QThreadStorage: Thread 0x55a8175e84c0 exited after QThreadStorage 7 destroyed

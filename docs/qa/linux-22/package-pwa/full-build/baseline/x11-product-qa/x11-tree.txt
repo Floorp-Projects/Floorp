@@ -1,0 +1,21 @@
+
+xwininfo: Window id: 0x21f (the root window) (has no name)
+
+  Root window id: 0x21f (the root window) (has no name)
+  Parent window id: 0x0 (none)
+     5 children:
+     0x20002c "Ablaze Floorp": ("Navigator" "floorp")  1152x810+0+0  +0+0
+        2 children:
+        0x20003d (has no name): ()  1152x810+0+0  +0+0
+        0x200033 (has no name): ()  1x1+-1+-1  +-1+-1
+     0x20003e "Floorp": ()  10x10+-100+-100  +-100+-100
+     0x20001b "QA PWA Beta — Ablaze Floorp": ("Navigator" "floorp")  1152x810+64+45  +64+45
+        2 children:
+        0x200029 (has no name): ()  1152x810+0+0  +64+45
+        0x20001f (has no name): ()  1x1+-1+-1  +63+44
+     0x200003 "QA PWA Alpha — Ablaze Floorp": ("Navigator" "floorp")  1152x810+64+45  +64+45
+        2 children:
+        0x200010 (has no name): ()  1152x810+0+0  +64+45
+        0x200004 (has no name): ()  1x1+-1+-1  +63+44
+     0x200001 "Floorp": ("floorp-a04965e9-0495-4546-983d-62dfb04c86f8" "Floorp")  10x10+10+10  +10+10
+

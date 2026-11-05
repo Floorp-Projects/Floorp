@@ -1,0 +1,32 @@
+{
+  "sourceSha": "984509d2053be7bae9027133bda7259cd706b208",
+  "run": {
+    "conclusion": "success",
+    "head_sha": "984509d2053be7bae9027133bda7259cd706b208",
+    "id": 42068377281,
+    "status": "completed"
+  },
+  "artifact": {
+    "digest": "sha256:83667970ddcfc2d3f350367f511106ddaf6f52c5ca8ae3069a44870aee22913c",
+    "expired": false,
+    "id": 13435702404,
+    "name": "noraneko-linux-x86_64-installer-unsigned",
+    "size_in_bytes": 108206544,
+    "workflow_run": {
+      "head_branch": "codex/qa-linux-fullpackage-baseline-984509d2",
+      "head_repository_id": 437505831,
+      "head_sha": "984509d2053be7bae9027133bda7259cd706b208",
+      "id": 42068377281,
+      "repository_id": 437505831
+    }
+  },
+  "archiveZipSha256": "83667970ddcfc2d3f350367f511106ddaf6f52c5ca8ae3069a44870aee22913c",
+  "packageTarSha256": "5a087bfd1d385fddb1304b97379a02e780451c07006cc0ffe078f53e21633d82",
+  "productRoot": "/workspace/qa-linux-full-build/products/baseline/floorp",
+  "tarEntryCount": 57,
+  "extractionPolicy": "exact one-member ZIP; expected floorp root; standard tar data filter; no overwrite",
+  "productInventoryFile": "product-inventory-before.json",
+  "applicationIni": "; This file is not used. If you modify it and want the application to use\n; your modifications, move it under the browser/ subdirectory and start with\n; the \"-app /path/to/browser/application.ini\" argument.\n[App]\nVendor=Ablaze\nName=Floorp\nRemotingName=floorp\nVersion=12.21.1@159.0.1\nProfile=Floorp\nBuildID=20261105165328\nID={ec8030f7-c20a-464f-9b0e-13a3a9e97384}\n\n[Gecko]\nMinVersion=159.0.1\nMaxVersion=159.0.1\n\n[XRE]\nEnableProfileMigrator=1\n\n\n[AppUpdate]\nURL=https://aus5.mozilla.org/update/6/%PRODUCT%/%VERSION%/%BUILD_ID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%SYSTEM_CAPABILITIES%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/update.xml\n",
+  "platformIni": "[Build]\nBuildID=20261105165328\nMilestone=159.0.1\n",
+  "signatureScope": "unsigned validation package from exact source; not public signed distribution"
+}

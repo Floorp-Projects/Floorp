@@ -1,0 +1,42 @@
+{
+  "pr": "https://github.com/Floorp-Projects/Floorp/pull/3030",
+  "sourceSha": "e55152c559a141001a375ac77098d141b0db3ca7",
+  "runtimeCommit": "8965ffc346d426ccdf919bd18585e4d4a0c21654",
+  "runtimeLockSha256": "5838f685f4b375ca69dfaf10f1054f6b7fe1e90290cfb97c9f53514022937fe5",
+  "worktree": "/workspace/qa-linux-full-build/floorp3030",
+  "fullProductCompleted": false,
+  "scope": "standard frontend before-mach phase only; mach configure/build/package is separate",
+  "sandboxDisableEnvPresent": false,
+  "stages": [
+    {
+      "name": "frozen-dependencies",
+      "command": [
+        "/workspace/.floorp-cloud/tools/node_modules/.bin/deno",
+        "install",
+        "--frozen"
+      ],
+      "nodeEnv": "not overridden",
+      "exitCode": 0,
+      "elapsedSeconds": 1.68
+    },
+    {
+      "name": "before-mach",
+      "command": [
+        "/workspace/.floorp-cloud/tools/node_modules/.bin/deno",
+        "task",
+        "feles-build",
+        "build",
+        "--phase",
+        "before-mach"
+      ],
+      "nodeEnv": "production",
+      "exitCode": 0,
+      "elapsedSeconds": 92.49
+    }
+  ],
+  "denoVersion": "deno 2.9.6 (stable, release, x86_64-unknown-linux-gnu)\nv8 15.0.245.2-rusty\ntypescript 6.0.3\n",
+  "trackedDiffAfter": "",
+  "runtimeLockUnchanged": true,
+  "frontendBeforeMachCompleted": true,
+  "trackedStatusAfter": ""
+}

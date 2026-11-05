@@ -1,0 +1,528 @@
+[
+  {
+    "themeVariant": "deliberate controlled qa-fullpackage fixture with both known64px PNGs; not default desktop theme",
+    "themeAssetSha256": {
+      "firefox": "4f3b73a8f4aab7a206f6971c553f03ef35bb19161615d34aa682a4e483b45b3a",
+      "floorp": "75647c38818bee99ea1147eb51ad12f65c86e34d07baf9557fc7ddcef08e66ce"
+    },
+    "packagedBrandingOverride": [],
+    "packagedRootApplicationMetadata": {
+      "version": "12.21.1@159.0.1",
+      "buildID": "20261105165328",
+      "iniSha256": "33424e78bab98587aff290476df2021851b52ff9946164eb8d79de242bc068d1",
+      "declaredUnusedByBrowser": true
+    },
+    "expectedNativeRuntimeApplication": {
+      "version": "159.0.1",
+      "buildID": "20261103153232",
+      "sourceCommit": "8965ffc346d426ccdf919bd18585e4d4a0c21654",
+      "sourceArtifactId": 13434248844,
+      "sourceArtifactDigest": "sha256:e829a603183b28181a84c7c6d5c5b93188368e48dba45fbd88afde66c2e8e874",
+      "inputNativeArtifactId": "13272530069",
+      "inputNativeArtifactDigest": "sha256:ed5a4f97ee7bf42c817f3146d5a843e095710dcc3be25fae0af0bf47274b739a"
+    },
+    "kind": "baseline",
+    "locale": "ja",
+    "sourceSha": "984509d2053be7bae9027133bda7259cd706b208",
+    "package": "/workspace/qa-linux-full-build/products/baseline/floorp",
+    "profile": "/workspace/qa-linux-22/package-pwa/full-build/3030/package-test/execution-1/baseline-ja-home/profile",
+    "completed": true,
+    "input": "synthetic Marionette UI click; no physical-input claim",
+    "packageFilesModified": false,
+    "install": {
+      "id": "langpack-ja@firefox.mozilla.org",
+      "signedState": 2,
+      "active": true,
+      "version": "159.0.20261102.144711"
+    },
+    "installQuit": {
+      "request": {
+        "cause": "shutdown",
+        "forced": false,
+        "in_app": true
+      },
+      "exitCode": 0
+    },
+    "product": {
+      "profile": "/workspace/qa-linux-22/package-pwa/full-build/3030/package-test/execution-1/baseline-ja-home/profile",
+      "executable": "/workspace/qa-linux-full-build/products/baseline/floorp/floorp",
+      "version": "159.0.1",
+      "buildID": "20261103153232",
+      "platformVersion": "159.0.1",
+      "platformBuildID": "20261103153232",
+      "locale": "ja",
+      "brand": "Firefox",
+      "sandbox": 6,
+      "sandboxDisableEnv": false,
+      "title": "Fullpackage baseline-ja — Ablaze Floorp",
+      "geometry": {
+        "x": 0,
+        "y": 0,
+        "width": 1280,
+        "height": 900
+      }
+    },
+    "requestedLocales": [
+      "ja"
+    ],
+    "activeLanguagePack": {
+      "id": "langpack-ja@firefox.mozilla.org",
+      "active": true,
+      "signedState": 2,
+      "version": "159.0.20261102.144711"
+    },
+    "regression": {
+      "pass": false,
+      "error": "Error: LegacyBranding.test.mts failures: legacy product names retain packaged branding in every UI locale: brandShorterName must not be replaced by an active Firefox language pack (expected: Floorp, actual: Firefox)",
+      "progress": {
+        "moduleName": "LegacyBranding.test.mts",
+        "testName": "",
+        "status": "done",
+        "index": 1,
+        "total": 1,
+        "startedAtMs": 1793898942303
+      }
+    },
+    "windowID": "0x400003",
+    "iconPresent": true,
+    "icons": [
+      {
+        "width": 64,
+        "height": 64,
+        "matches": {
+          "firefox": true,
+          "floorp": false
+        }
+      }
+    ],
+    "menu": {
+      "state": "open",
+      "settingsVisibility": "visible",
+      "settingsRect": {
+        "width": 317.33331298828125,
+        "height": 36
+      },
+      "labels": [
+        {
+          "id": "appMenu-settings-button",
+          "label": "設定"
+        },
+        {
+          "id": "appMenu-new-window-button2",
+          "label": "新しいウィンドウ"
+        }
+      ]
+    },
+    "quit": {
+      "request": {
+        "cause": "shutdown",
+        "forced": false,
+        "in_app": true
+      },
+      "exitCode": 0
+    },
+    "expectedBrand": "Firefox",
+    "brandingMatchesExpected": true,
+    "regressionMatchesExpected": true,
+    "iconMatchesExpected": true,
+    "menuMatchesLocale": true,
+    "comparisonPass": true
+  },
+  {
+    "themeVariant": "deliberate controlled qa-fullpackage fixture with both known64px PNGs; not default desktop theme",
+    "themeAssetSha256": {
+      "firefox": "4f3b73a8f4aab7a206f6971c553f03ef35bb19161615d34aa682a4e483b45b3a",
+      "floorp": "75647c38818bee99ea1147eb51ad12f65c86e34d07baf9557fc7ddcef08e66ce"
+    },
+    "packagedBrandingOverride": [],
+    "packagedRootApplicationMetadata": {
+      "version": "12.21.1@159.0.1",
+      "buildID": "20261105165328",
+      "iniSha256": "33424e78bab98587aff290476df2021851b52ff9946164eb8d79de242bc068d1",
+      "declaredUnusedByBrowser": true
+    },
+    "expectedNativeRuntimeApplication": {
+      "version": "159.0.1",
+      "buildID": "20261103153232",
+      "sourceCommit": "8965ffc346d426ccdf919bd18585e4d4a0c21654",
+      "sourceArtifactId": 13434248844,
+      "sourceArtifactDigest": "sha256:e829a603183b28181a84c7c6d5c5b93188368e48dba45fbd88afde66c2e8e874",
+      "inputNativeArtifactId": "13272530069",
+      "inputNativeArtifactDigest": "sha256:ed5a4f97ee7bf42c817f3146d5a843e095710dcc3be25fae0af0bf47274b739a"
+    },
+    "kind": "baseline",
+    "locale": "es-CL",
+    "sourceSha": "984509d2053be7bae9027133bda7259cd706b208",
+    "package": "/workspace/qa-linux-full-build/products/baseline/floorp",
+    "profile": "/workspace/qa-linux-22/package-pwa/full-build/3030/package-test/execution-1/baseline-es-CL-home/profile",
+    "completed": true,
+    "input": "synthetic Marionette UI click; no physical-input claim",
+    "packageFilesModified": false,
+    "install": {
+      "id": "langpack-es-CL@firefox.mozilla.org",
+      "signedState": 2,
+      "active": true,
+      "version": "159.0.20261102.144711"
+    },
+    "installQuit": {
+      "request": {
+        "cause": "shutdown",
+        "forced": false,
+        "in_app": true
+      },
+      "exitCode": 0
+    },
+    "product": {
+      "profile": "/workspace/qa-linux-22/package-pwa/full-build/3030/package-test/execution-1/baseline-es-CL-home/profile",
+      "executable": "/workspace/qa-linux-full-build/products/baseline/floorp/floorp",
+      "version": "159.0.1",
+      "buildID": "20261103153232",
+      "platformVersion": "159.0.1",
+      "platformBuildID": "20261103153232",
+      "locale": "es-CL",
+      "brand": "Firefox",
+      "sandbox": 6,
+      "sandboxDisableEnv": false,
+      "title": "Fullpackage baseline-es-CL — Ablaze Floorp",
+      "geometry": {
+        "x": 0,
+        "y": 0,
+        "width": 1280,
+        "height": 900
+      }
+    },
+    "requestedLocales": [
+      "es-CL"
+    ],
+    "activeLanguagePack": {
+      "id": "langpack-es-CL@firefox.mozilla.org",
+      "active": true,
+      "signedState": 2,
+      "version": "159.0.20261102.144711"
+    },
+    "regression": {
+      "pass": false,
+      "error": "Error: LegacyBranding.test.mts failures: legacy product names retain packaged branding in every UI locale: brandShorterName must not be replaced by an active Firefox language pack (expected: Floorp, actual: Firefox)",
+      "progress": {
+        "moduleName": "LegacyBranding.test.mts",
+        "testName": "",
+        "status": "done",
+        "index": 1,
+        "total": 1,
+        "startedAtMs": 1793898970129
+      }
+    },
+    "windowID": "0x400003",
+    "iconPresent": true,
+    "icons": [
+      {
+        "width": 64,
+        "height": 64,
+        "matches": {
+          "firefox": true,
+          "floorp": false
+        }
+      }
+    ],
+    "menu": {
+      "state": "open",
+      "settingsVisibility": "visible",
+      "settingsRect": {
+        "width": 317.33331298828125,
+        "height": 32
+      },
+      "labels": [
+        {
+          "id": "appMenu-settings-button",
+          "label": "Ajustes"
+        },
+        {
+          "id": "appMenu-new-window-button2",
+          "label": "Nueva ventana"
+        }
+      ]
+    },
+    "quit": {
+      "request": {
+        "cause": "shutdown",
+        "forced": false,
+        "in_app": true
+      },
+      "exitCode": 0
+    },
+    "expectedBrand": "Firefox",
+    "brandingMatchesExpected": true,
+    "regressionMatchesExpected": true,
+    "iconMatchesExpected": true,
+    "menuMatchesLocale": true,
+    "comparisonPass": true
+  },
+  {
+    "themeVariant": "deliberate controlled qa-fullpackage fixture with both known64px PNGs; not default desktop theme",
+    "themeAssetSha256": {
+      "firefox": "4f3b73a8f4aab7a206f6971c553f03ef35bb19161615d34aa682a4e483b45b3a",
+      "floorp": "75647c38818bee99ea1147eb51ad12f65c86e34d07baf9557fc7ddcef08e66ce"
+    },
+    "packagedBrandingOverride": [
+      {
+        "archive": "omni.ja",
+        "member": "chrome/chrome.manifest",
+        "registration": "override chrome://branding/locale/brand.properties resource:///chrome/en-US/locale/branding/brand.properties"
+      }
+    ],
+    "packagedRootApplicationMetadata": {
+      "version": "12.21.1@159.0.1",
+      "buildID": "20261105165053",
+      "iniSha256": "28252c6c0ba21c64efcfe5227f7989bced60d854978e1e864832491efd60a804",
+      "declaredUnusedByBrowser": true
+    },
+    "expectedNativeRuntimeApplication": {
+      "version": "159.0.1",
+      "buildID": "20261103153232",
+      "sourceCommit": "8965ffc346d426ccdf919bd18585e4d4a0c21654",
+      "sourceArtifactId": 13434248844,
+      "sourceArtifactDigest": "sha256:e829a603183b28181a84c7c6d5c5b93188368e48dba45fbd88afde66c2e8e874",
+      "inputNativeArtifactId": "13272530069",
+      "inputNativeArtifactDigest": "sha256:ed5a4f97ee7bf42c817f3146d5a843e095710dcc3be25fae0af0bf47274b739a"
+    },
+    "kind": "candidate",
+    "locale": "ja",
+    "sourceSha": "e55152c559a141001a375ac77098d141b0db3ca7",
+    "package": "/workspace/qa-linux-full-build/products/3030/floorp",
+    "profile": "/workspace/qa-linux-22/package-pwa/full-build/3030/package-test/execution-1/candidate-ja-home/profile",
+    "completed": true,
+    "input": "synthetic Marionette UI click; no physical-input claim",
+    "packageFilesModified": false,
+    "install": {
+      "id": "langpack-ja@firefox.mozilla.org",
+      "signedState": 2,
+      "active": true,
+      "version": "159.0.20261102.144711"
+    },
+    "installQuit": {
+      "request": {
+        "cause": "shutdown",
+        "forced": false,
+        "in_app": true
+      },
+      "exitCode": 0
+    },
+    "product": {
+      "profile": "/workspace/qa-linux-22/package-pwa/full-build/3030/package-test/execution-1/candidate-ja-home/profile",
+      "executable": "/workspace/qa-linux-full-build/products/3030/floorp/floorp",
+      "version": "159.0.1",
+      "buildID": "20261103153232",
+      "platformVersion": "159.0.1",
+      "platformBuildID": "20261103153232",
+      "locale": "ja",
+      "brand": "Floorp",
+      "sandbox": 6,
+      "sandboxDisableEnv": false,
+      "title": "Fullpackage candidate-ja — Ablaze Floorp",
+      "geometry": {
+        "x": 0,
+        "y": 0,
+        "width": 1280,
+        "height": 900
+      }
+    },
+    "requestedLocales": [
+      "ja"
+    ],
+    "activeLanguagePack": {
+      "id": "langpack-ja@firefox.mozilla.org",
+      "active": true,
+      "signedState": 2,
+      "version": "159.0.20261102.144711"
+    },
+    "regression": {
+      "pass": true,
+      "progress": {
+        "moduleName": "LegacyBranding.test.mts",
+        "testName": "",
+        "status": "done",
+        "index": 1,
+        "total": 1,
+        "startedAtMs": 1793898990985
+      }
+    },
+    "windowID": "0x400003",
+    "iconPresent": true,
+    "icons": [
+      {
+        "width": 64,
+        "height": 64,
+        "matches": {
+          "firefox": false,
+          "floorp": true
+        }
+      }
+    ],
+    "menu": {
+      "state": "open",
+      "settingsVisibility": "visible",
+      "settingsRect": {
+        "width": 317.33331298828125,
+        "height": 36
+      },
+      "labels": [
+        {
+          "id": "appMenu-settings-button",
+          "label": "設定"
+        },
+        {
+          "id": "appMenu-new-window-button2",
+          "label": "新しいウィンドウ"
+        }
+      ]
+    },
+    "quit": {
+      "request": {
+        "cause": "shutdown",
+        "forced": false,
+        "in_app": true
+      },
+      "exitCode": 0
+    },
+    "expectedBrand": "Floorp",
+    "brandingMatchesExpected": true,
+    "regressionMatchesExpected": true,
+    "iconMatchesExpected": true,
+    "menuMatchesLocale": true,
+    "comparisonPass": true
+  },
+  {
+    "themeVariant": "deliberate controlled qa-fullpackage fixture with both known64px PNGs; not default desktop theme",
+    "themeAssetSha256": {
+      "firefox": "4f3b73a8f4aab7a206f6971c553f03ef35bb19161615d34aa682a4e483b45b3a",
+      "floorp": "75647c38818bee99ea1147eb51ad12f65c86e34d07baf9557fc7ddcef08e66ce"
+    },
+    "packagedBrandingOverride": [
+      {
+        "archive": "omni.ja",
+        "member": "chrome/chrome.manifest",
+        "registration": "override chrome://branding/locale/brand.properties resource:///chrome/en-US/locale/branding/brand.properties"
+      }
+    ],
+    "packagedRootApplicationMetadata": {
+      "version": "12.21.1@159.0.1",
+      "buildID": "20261105165053",
+      "iniSha256": "28252c6c0ba21c64efcfe5227f7989bced60d854978e1e864832491efd60a804",
+      "declaredUnusedByBrowser": true
+    },
+    "expectedNativeRuntimeApplication": {
+      "version": "159.0.1",
+      "buildID": "20261103153232",
+      "sourceCommit": "8965ffc346d426ccdf919bd18585e4d4a0c21654",
+      "sourceArtifactId": 13434248844,
+      "sourceArtifactDigest": "sha256:e829a603183b28181a84c7c6d5c5b93188368e48dba45fbd88afde66c2e8e874",
+      "inputNativeArtifactId": "13272530069",
+      "inputNativeArtifactDigest": "sha256:ed5a4f97ee7bf42c817f3146d5a843e095710dcc3be25fae0af0bf47274b739a"
+    },
+    "kind": "candidate",
+    "locale": "es-CL",
+    "sourceSha": "e55152c559a141001a375ac77098d141b0db3ca7",
+    "package": "/workspace/qa-linux-full-build/products/3030/floorp",
+    "profile": "/workspace/qa-linux-22/package-pwa/full-build/3030/package-test/execution-1/candidate-es-CL-home/profile",
+    "completed": true,
+    "input": "synthetic Marionette UI click; no physical-input claim",
+    "packageFilesModified": false,
+    "install": {
+      "id": "langpack-es-CL@firefox.mozilla.org",
+      "signedState": 2,
+      "active": true,
+      "version": "159.0.20261102.144711"
+    },
+    "installQuit": {
+      "request": {
+        "cause": "shutdown",
+        "forced": false,
+        "in_app": true
+      },
+      "exitCode": 0
+    },
+    "product": {
+      "profile": "/workspace/qa-linux-22/package-pwa/full-build/3030/package-test/execution-1/candidate-es-CL-home/profile",
+      "executable": "/workspace/qa-linux-full-build/products/3030/floorp/floorp",
+      "version": "159.0.1",
+      "buildID": "20261103153232",
+      "platformVersion": "159.0.1",
+      "platformBuildID": "20261103153232",
+      "locale": "es-CL",
+      "brand": "Floorp",
+      "sandbox": 6,
+      "sandboxDisableEnv": false,
+      "title": "Fullpackage candidate-es-CL — Ablaze Floorp",
+      "geometry": {
+        "x": 0,
+        "y": 0,
+        "width": 1280,
+        "height": 900
+      }
+    },
+    "requestedLocales": [
+      "es-CL"
+    ],
+    "activeLanguagePack": {
+      "id": "langpack-es-CL@firefox.mozilla.org",
+      "active": true,
+      "signedState": 2,
+      "version": "159.0.20261102.144711"
+    },
+    "regression": {
+      "pass": true,
+      "progress": {
+        "moduleName": "LegacyBranding.test.mts",
+        "testName": "",
+        "status": "done",
+        "index": 1,
+        "total": 1,
+        "startedAtMs": 1793899011870
+      }
+    },
+    "windowID": "0x400003",
+    "iconPresent": true,
+    "icons": [
+      {
+        "width": 64,
+        "height": 64,
+        "matches": {
+          "firefox": false,
+          "floorp": true
+        }
+      }
+    ],
+    "menu": {
+      "state": "open",
+      "settingsVisibility": "visible",
+      "settingsRect": {
+        "width": 317.33331298828125,
+        "height": 32
+      },
+      "labels": [
+        {
+          "id": "appMenu-settings-button",
+          "label": "Ajustes"
+        },
+        {
+          "id": "appMenu-new-window-button2",
+          "label": "Nueva ventana"
+        }
+      ]
+    },
+    "quit": {
+      "request": {
+        "cause": "shutdown",
+        "forced": false,
+        "in_app": true
+      },
+      "exitCode": 0
+    },
+    "expectedBrand": "Floorp",
+    "brandingMatchesExpected": true,
+    "regressionMatchesExpected": true,
+    "iconMatchesExpected": true,
+    "menuMatchesLocale": true,
+    "comparisonPass": true
+  }
+]

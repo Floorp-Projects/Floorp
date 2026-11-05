@@ -1,0 +1,170 @@
+{
+  "candidateSourceSha": "e55152c559a141001a375ac77098d141b0db3ca7",
+  "candidateWorkflowRunId": 42067997767,
+  "candidateArtifactId": 13435129152,
+  "candidateArtifactDigest": "sha256:96ebf4afca0028715039d5154a27fd030e8150cb8117b0249d91eb576411d3fc",
+  "candidatePackageTarSha256": "b138b808c3fc4f4e54ecff0345b47f24660d10ec6351812ba49ac69f70915593",
+  "sameControlledThemeAcrossFourProfiles": true,
+  "rows": [
+    {
+      "source": "baseline",
+      "sourceSha": "984509d2053be7bae9027133bda7259cd706b208",
+      "locale": "ja",
+      "actualLocale": "ja",
+      "activePack": {
+        "id": "langpack-ja@firefox.mozilla.org",
+        "active": true,
+        "signedState": 2,
+        "version": "159.0.20261102.144711"
+      },
+      "brand": "Firefox",
+      "regressionPass": false,
+      "iconMatches": [
+        {
+          "width": 64,
+          "height": 64,
+          "matches": {
+            "firefox": true,
+            "floorp": false
+          }
+        }
+      ],
+      "menu": [
+        {
+          "id": "appMenu-settings-button",
+          "label": "設定"
+        },
+        {
+          "id": "appMenu-new-window-button2",
+          "label": "新しいウィンドウ"
+        }
+      ],
+      "normalInstallExit": 0,
+      "normalTestExit": 0,
+      "sandboxLevel": 6,
+      "expectedComparisonMatches": true
+    },
+    {
+      "source": "baseline",
+      "sourceSha": "984509d2053be7bae9027133bda7259cd706b208",
+      "locale": "es-CL",
+      "actualLocale": "es-CL",
+      "activePack": {
+        "id": "langpack-es-CL@firefox.mozilla.org",
+        "active": true,
+        "signedState": 2,
+        "version": "159.0.20261102.144711"
+      },
+      "brand": "Firefox",
+      "regressionPass": false,
+      "iconMatches": [
+        {
+          "width": 64,
+          "height": 64,
+          "matches": {
+            "firefox": true,
+            "floorp": false
+          }
+        }
+      ],
+      "menu": [
+        {
+          "id": "appMenu-settings-button",
+          "label": "Ajustes"
+        },
+        {
+          "id": "appMenu-new-window-button2",
+          "label": "Nueva ventana"
+        }
+      ],
+      "normalInstallExit": 0,
+      "normalTestExit": 0,
+      "sandboxLevel": 6,
+      "expectedComparisonMatches": true
+    },
+    {
+      "source": "candidate",
+      "sourceSha": "e55152c559a141001a375ac77098d141b0db3ca7",
+      "locale": "ja",
+      "actualLocale": "ja",
+      "activePack": {
+        "id": "langpack-ja@firefox.mozilla.org",
+        "active": true,
+        "signedState": 2,
+        "version": "159.0.20261102.144711"
+      },
+      "brand": "Floorp",
+      "regressionPass": true,
+      "iconMatches": [
+        {
+          "width": 64,
+          "height": 64,
+          "matches": {
+            "firefox": false,
+            "floorp": true
+          }
+        }
+      ],
+      "menu": [
+        {
+          "id": "appMenu-settings-button",
+          "label": "設定"
+        },
+        {
+          "id": "appMenu-new-window-button2",
+          "label": "新しいウィンドウ"
+        }
+      ],
+      "normalInstallExit": 0,
+      "normalTestExit": 0,
+      "sandboxLevel": 6,
+      "expectedComparisonMatches": true
+    },
+    {
+      "source": "candidate",
+      "sourceSha": "e55152c559a141001a375ac77098d141b0db3ca7",
+      "locale": "es-CL",
+      "actualLocale": "es-CL",
+      "activePack": {
+        "id": "langpack-es-CL@firefox.mozilla.org",
+        "active": true,
+        "signedState": 2,
+        "version": "159.0.20261102.144711"
+      },
+      "brand": "Floorp",
+      "regressionPass": true,
+      "iconMatches": [
+        {
+          "width": 64,
+          "height": 64,
+          "matches": {
+            "firefox": false,
+            "floorp": true
+          }
+        }
+      ],
+      "menu": [
+        {
+          "id": "appMenu-settings-button",
+          "label": "Ajustes"
+        },
+        {
+          "id": "appMenu-new-window-button2",
+          "label": "Nueva ventana"
+        }
+      ],
+      "normalInstallExit": 0,
+      "normalTestExit": 0,
+      "sandboxLevel": 6,
+      "expectedComparisonMatches": true
+    }
+  ],
+  "allProductFilesUnchanged": true,
+  "manualProductPatch": false,
+  "remainingScope": [
+    "unsigned artifact-mode packages, no new native compilation/signing/release qualification",
+    "controlled theme not default theme",
+    "focused complete-test-module controller, not locale-aware top-level colocated CLI",
+    "original Flatpak/KDE KAN-89 is separate"
+  ]
+}

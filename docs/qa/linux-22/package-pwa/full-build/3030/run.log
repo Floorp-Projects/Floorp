@@ -1,0 +1,3 @@
+{"name": "frozen-dependencies", "command": ["/workspace/.floorp-cloud/tools/node_modules/.bin/deno", "install", "--frozen"], "nodeEnv": "not overridden", "exitCode": 0, "elapsedSeconds": 1.68}
+{"name": "before-mach", "command": ["/workspace/.floorp-cloud/tools/node_modules/.bin/deno", "task", "feles-build", "build", "--phase", "before-mach"], "nodeEnv": "production", "exitCode": 0, "elapsedSeconds": 92.49}
+standard frontend before-mach complete; native configure/build/package not yet run

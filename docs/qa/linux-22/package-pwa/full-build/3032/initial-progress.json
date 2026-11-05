@@ -1,0 +1,33 @@
+{
+  "runId": 42068055038,
+  "head": "8249e234adfbb3e877e4a20cf5f57d7264d9a447",
+  "jobId": 127387701400,
+  "status": "in_progress",
+  "conclusion": null,
+  "steps": [
+    {
+      "name": "Set up job",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 1
+    },
+    {
+      "name": "Require Runtime artifact token",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 2
+    },
+    {
+      "name": "Validate provenance contract",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 3
+    },
+    {
+      "name": "Checkout Floorp-Projects/Floorp-runtime",
+      "status": "in_progress",
+      "conclusion": null,
+      "number": 4
+    }
+  ]
+}

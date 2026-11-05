@@ -1,0 +1,43 @@
+{
+  "observedAt": "2026-11-05T17:01:05Z",
+  "currentRun": 42068055038,
+  "current": {
+    "packageStep": {
+      "name": "Package noraneko",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 33,
+      "started_at": "2026-11-05T16:52:17Z",
+      "completed_at": "2026-11-05T16:54:32Z"
+    },
+    "debStep": {
+      "name": "Repackage Linux DEB",
+      "status": "in_progress",
+      "conclusion": null,
+      "number": 35,
+      "started_at": "2026-11-05T16:54:39Z",
+      "completed_at": null
+    },
+    "debElapsedSeconds": 386
+  },
+  "priorRun": 42061375408,
+  "prior": {
+    "packageStep": {
+      "name": "Package noraneko",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 33,
+      "started_at": "2026-11-05T16:12:40Z",
+      "completed_at": "2026-11-05T16:13:06Z"
+    },
+    "debStep": {
+      "name": "Repackage Linux DEB",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 35,
+      "started_at": "2026-11-05T16:13:06Z",
+      "completed_at": "2026-11-05T16:13:06Z"
+    }
+  },
+  "comparisonLimit": "Prior run was macOS and skipped DEB; it provides no valid Linux DEB timing baseline. Current live state has no failure; elapsed alone does not establish a hang."
+}

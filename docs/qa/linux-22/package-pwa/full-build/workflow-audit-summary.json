@@ -1,0 +1,222 @@
+{
+  "scope": "read-only source/workflow audit; no dispatch/build/signing/publication/lock mutation performed",
+  "heads": {
+    "3030": {
+      "sha": "e55152c559a141001a375ac77098d141b0db3ca7",
+      "blobs": {
+        ".github/workflows/package.yml": "0188bac2cd5fc0bef7ee40f2188dc9965641fe1e",
+        ".github/workflows/package_and_publish_release.yml": "20a90fb25c0ef1b16b0a09b63a6617ff98f89d74",
+        ".github/workflows/firefox_runtime_candidate.yml": "42903f51db12c24b3d70218f3be5b239b970b13c",
+        ".github/workflows/validate-runtime-provenance.yml": "fd374ae50e4f802c8887ad19f51f26f4dc9fa76f",
+        "floorp-runtime.lock.json": "8f3463c04e70cd900c55f4f1fd301403eccdf88a",
+        "tools/feles-build.ts": "b0b2b6e622f0fe2bb1f6d5fa865f778f20731edd"
+      },
+      "changedPathsFromBase": [
+        "bridge/loader-features/vite.config.ts",
+        "browser-features/modules/modules/i18n/test/LegacyBranding.test.mts"
+      ]
+    },
+    "3032": {
+      "sha": "8249e234adfbb3e877e4a20cf5f57d7264d9a447",
+      "blobs": {
+        ".github/workflows/package.yml": "0188bac2cd5fc0bef7ee40f2188dc9965641fe1e",
+        ".github/workflows/package_and_publish_release.yml": "20a90fb25c0ef1b16b0a09b63a6617ff98f89d74",
+        ".github/workflows/firefox_runtime_candidate.yml": "42903f51db12c24b3d70218f3be5b239b970b13c",
+        ".github/workflows/validate-runtime-provenance.yml": "fd374ae50e4f802c8887ad19f51f26f4dc9fa76f",
+        "floorp-runtime.lock.json": "8f3463c04e70cd900c55f4f1fd301403eccdf88a",
+        "tools/feles-build.ts": "b0b2b6e622f0fe2bb1f6d5fa865f778f20731edd"
+      },
+      "changedPathsFromBase": [
+        "browser-features/modules/modules/pwa/SsbCommandLineHandler.sys.mts",
+        "browser-features/modules/modules/pwa/supports/Linux.sys.mts",
+        "browser-features/modules/modules/pwa/test/SsbCommandLineHandler.test.mts"
+      ]
+    }
+  },
+  "sameAuditedBlobsAcrossHeads": true,
+  "lockedRuntime": {
+    "repository": "Floorp-Projects/Floorp-Runtime",
+    "commit": "8965ffc346d426ccdf919bd18585e4d4a0c21654",
+    "tree": "53216e352ae9a27c402b707e1384bb5d62e9db7e",
+    "ref": "daily-1179",
+    "release": {
+      "id": 433288890,
+      "immutable": false
+    },
+    "linux": {
+      "platform": "linux",
+      "architecture": "x86_64",
+      "format": "tar.xz",
+      "extractionPolicy": "tar-xz-floorp",
+      "asset": {
+        "id": 707330202,
+        "name": "floorp-linux-x86_64-moz-artifact.tar.xz",
+        "size": 86774264,
+        "sha256": "cb9b01283d5ce3167f4ba046ee7b39ae9d98a692e1beba73bd9f85f460157772"
+      },
+      "applicationIniAsset": {
+        "id": 707330199,
+        "name": "linux-x86_64-application-ini.zip",
+        "size": 535,
+        "sha256": "742bd72ce869d127abefdcbfdd0a0e785786dbd7afd133c6a930833e54d6b956"
+      },
+      "version": "159.0.1",
+      "buildId": "20261103153232"
+    }
+  },
+  "routes": {
+    "linuxPackageOnly": {
+      "workflow": ".github/workflows/package.yml",
+      "platform": "Linux-x64",
+      "provenance_mode": "stable-v2-validation",
+      "beta": false,
+      "skip_signing": true,
+      "signed_validation": false,
+      "runtime_repository": "Floorp-Projects/Floorp-Runtime",
+      "runtime_head_sha": "8965ffc346d426ccdf919bd18585e4d4a0c21654",
+      "expected_build_id": "20261103153232",
+      "runtime_artifact_name": "floorp-linux-x86_64-moz-artifact",
+      "floorp_head_sha": "exact per-PR SHA; must equal caller github.sha",
+      "otherRequiredInputs": [
+        "runtime_workflow_run_id",
+        "runtime_manifest_artifact_id",
+        "runtime_manifest_artifact_digest",
+        "runtime_artifact_id",
+        "runtime_artifact_digest"
+      ],
+      "runtimeArtifactToken": "configured Actions read binding required; value not read",
+      "scope": "production Floorp assets + mach artifact-mode build + package, no full Gecko recompilation; uploads workflow artifacts only"
+    },
+    "fullValidationWrapper": {
+      "workflow": ".github/workflows/package_and_publish_release.yml",
+      "validation_only": true,
+      "requiredInputs": [
+        "runtime_workflow_run_id",
+        "runtime_manifest_artifact_id"
+      ],
+      "scope": "all four platform packages plus five native verifiers and assembled bundle; no signing/publication with supported validation-only flag"
+    },
+    "trackingAudit": {
+      "workflow": ".github/workflows/firefox_runtime_candidate.yml",
+      "productBuild": false,
+      "scope": "data-only locked-material drift inspection against mutable trackingRef; not runtime/compiler artifact producer"
+    },
+    "local": {
+      "layout": "isolated Runtime root at locked commit with exact PR checkout in child directory noraneko",
+      "steps": [
+        "deno install --allow-scripts in exact Floorp checkout",
+        "apply upstream and common Runtime patches as existing workflow does; validate against locked source",
+        "mach browser_artifact_mode bootstrap and platform mozconfig plus standard artifact-build config",
+        "writeVersion; branding/version setup matching workflow",
+        "NODE_ENV=production deno task feles-build build --phase before-mach",
+        "MOZ_ARTIFACT_FILE=<authenticated matching Linux Runtime archive> ./mach build",
+        "deno task feles-build build --phase after-mach; remaining tracked omnijar/pref injection steps",
+        "./mach package, preserve source and Runtime identities, execute resulting product in fresh profile"
+      ],
+      "limitations": [
+        "before-mach alone is not a full product build",
+        "stage mode serves production assets through development layout; not final package",
+        "release asset CLI validate-native/install-native authenticates prebuilt engine but does not compile all product source or automatically run mach pipeline",
+        "full native Gecko compile is a separate Runtime build route"
+      ]
+    }
+  },
+  "unsupportedLiteralInputs": [
+    "existingpackage_only",
+    "build_only"
+  ],
+  "unresolvedBeforeAnyCiDispatch": [
+    "Recheck source branch SHA and selected producer/artifact identities immediately before dispatch",
+    "Cross-repository token binding is not read or proven by this audit; normal protected workflow preflight will verify capability"
+  ],
+  "prohibitedActionsNotTaken": [
+    "workflow dispatch",
+    "signing",
+    "publishing",
+    "delivery change",
+    "Runtime lock change",
+    "merge",
+    "secret value read"
+  ],
+  "evidence": [
+    {
+      "file": ".github/workflows/package.yml",
+      "lines": [
+        240,
+        461,
+        485,
+        539,
+        588,
+        639,
+        703,
+        714,
+        966,
+        1344,
+        1397,
+        1464,
+        1602,
+        1643,
+        2417
+      ]
+    },
+    {
+      "file": ".github/workflows/package_and_publish_release.yml",
+      "lines": [
+        16,
+        153,
+        424,
+        518
+      ]
+    },
+    {
+      "file": ".github/workflows/firefox_runtime_candidate.yml",
+      "lines": [
+        3,
+        40,
+        70,
+        79
+      ]
+    },
+    {
+      "file": "tools/feles-build.ts",
+      "lines": [
+        118,
+        230,
+        237,
+        242
+      ]
+    },
+    {
+      "file": "tools/runtime-lock/runtime_lock_cli.ts",
+      "lines": [
+        31,
+        143
+      ]
+    }
+  ],
+  "liveProducerReadinessFile": "package-dispatch-readiness.json",
+  "payloads": [
+    "package-3030-dispatch-payload.json",
+    "package-3032-dispatch-payload.json"
+  ],
+  "publicationChain": {
+    "directPackagePublisher": false,
+    "sourceWorkflowRunListener": "openbot-events.yml wildcard completion metadata notification only; permissions empty; no publisher call in source",
+    "scope": "source-defined repository workflows only; external webhook service implementation not inspected"
+  },
+  "validationModeHeadPolicy": {
+    "floorpCanonicalOwnerRequired": false,
+    "floorpDefaultBranchRequired": false,
+    "floorpCallerShaEqualityRequired": true,
+    "runtimeCanonicalRepositoryRequired": true,
+    "runtimeDefaultBranchRequired": false,
+    "actualBothPrHeadRepositories": "Floorp-Projects/Floorp"
+  },
+  "runtimeManifestBytesVerified": {
+    "zipSha256": "2b6a1b20190dc7016957ca25f72f8e83f267de51458b515153fd209bb90d9138",
+    "exactZipMember": "runtime-build-manifest-v2.json",
+    "headRunAttemptBuildIdAndLinuxTargetMatchPayload": true,
+    "json": "runtime1179-build-manifest-v2.json",
+    "targetArchiveBytesDownloadedByThisAudit": false
+  }
+}

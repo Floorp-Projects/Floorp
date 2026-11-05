@@ -1,0 +1,9 @@
+Accepting client connections on sockets: QList("qa-fullpackage-pwa-112572")
+"applications.menu"  not found in  QList("/workspace/qa-linux-22/package-pwa/sysroot/etc/xdg/menus")
+kwin_core: Configured compositor not supported by Platform. Falling back to defaults
+[W][17:15:45.527046] pw.conf      | [          conf.c: 1182 try_load_conf()] can't load config client.conf: No such file or directory
+[E][17:15:45.527109] pw.conf      | [          conf.c: 1215 pw_conf_load_conf_for_context()] can't load config client.conf: No such file or directory
+kwin_screencast: Failed to create PipeWire context
+"applications.menu"  not found in  QList("/workspace/qa-linux-22/package-pwa/sysroot/etc/xdg/menus")
+js: QA_FULLPACKAGE_PWA_114075=[{"caption":"QA PWA Alpha — Ablaze Floorp","resourceClass":"floorp-a8a88169-6ee4-421f-840c-ea969ed7a6f6","desktopFileName":"floorp-a8a88169-6ee4-421f-840c-ea969ed7a6f6","resourceName":"floorp","pid":114075},{"caption":"QA PWA Beta — Ablaze Floorp","resourceClass":"floorp-a8a88169-6ee4-421f-840c-ea969ed7a6f6","desktopFileName":"floorp-a8a88169-6ee4-421f-840c-ea969ed7a6f6","resourceName":"floorp","pid":114075},{"caption":"Ablaze Floorp","resourceClass":"floorp-a8a88169-6ee4-421f-840c-ea969ed7a6f6","desktopFileName":"floorp-a8a88169-6ee4-421f-840c-ea969ed7a6f6","resourceName":"floorp","pid":114075}]
+QThreadStorage: Thread 0x5629f32664c0 exited after QThreadStorage 7 destroyed

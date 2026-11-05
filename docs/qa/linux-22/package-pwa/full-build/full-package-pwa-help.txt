@@ -1,0 +1,27 @@
+usage: full_package_pwa_probe.py [-h] --intake INTAKE --expected-sha
+                                 EXPECTED_SHA --expected-run EXPECTED_RUN
+                                 --out OUT [--sysroot SYSROOT] --mode
+                                 {x11,wayland} --port PORT --fixture-port
+                                 FIXTURE_PORT [--kwin-log KWIN_LOG]
+                                 [--display DISPLAY] [--nested-wayland]
+
+Exercise an authenticated, unmodified full workflow package in fresh QA state.
+Requires package-agent product-intake.json and its original complete
+inventory. It never patches a product, copies a previous browser profile, or
+forces rollout. All UI input is synthetic. Artifact/provenance authentication
+remains a separate intake step; its exact source/run/digest and product
+inventory are checked here.
+
+options:
+  -h, --help            show this help message and exit
+  --intake INTAKE
+  --expected-sha EXPECTED_SHA
+  --expected-run EXPECTED_RUN
+  --out OUT
+  --sysroot SYSROOT
+  --mode {x11,wayland}
+  --port PORT
+  --fixture-port FIXTURE_PORT
+  --kwin-log KWIN_LOG
+  --display DISPLAY
+  --nested-wayland

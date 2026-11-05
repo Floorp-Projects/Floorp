@@ -1,0 +1,10 @@
+{
+  "baseline": [],
+  "candidate": [
+    {
+      "archive": "omni.ja",
+      "member": "chrome/chrome.manifest",
+      "registration": "override chrome://branding/locale/brand.properties resource:///chrome/en-US/locale/branding/brand.properties"
+    }
+  ]
+}

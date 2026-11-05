@@ -1,0 +1,42 @@
+{
+  "sourceSha": "8249e234adfbb3e877e4a20cf5f57d7264d9a447",
+  "runId": 42068055038,
+  "mode": "x11",
+  "completed": true,
+  "pwaChecks": [
+    {
+      "name": "QA PWA Alpha",
+      "expectedClass": "floorp-0914bacb-edc2-4f54-93b3-7e22842ac953",
+      "observedClasses": [
+        "floorp-0914bacb-edc2-4f54-93b3-7e22842ac953"
+      ],
+      "matches": true
+    },
+    {
+      "name": "QA PWA Beta",
+      "expectedClass": "floorp-16845415-c7e4-447b-b9b5-ff796592abe4",
+      "observedClasses": [
+        "floorp-16845415-c7e4-447b-b9b5-ff796592abe4"
+      ],
+      "matches": true
+    }
+  ],
+  "expectedOrdinaryBrowserIdentity": "floorp",
+  "ordinaryBrowserProductWindows": [
+    {
+      "title": "Ablaze Floorp",
+      "windowClass": null,
+      "url": "about:blank"
+    }
+  ],
+  "productUnchanged": true,
+  "remainingOwnedProcesses": [],
+  "ordinaryBrowserX11": [
+    {
+      "xid": "0x20002c",
+      "title": "Ablaze Floorp",
+      "wmClass": "\"Navigator\", \"floorp\""
+    }
+  ],
+  "ordinaryBrowserMatches": true
+}

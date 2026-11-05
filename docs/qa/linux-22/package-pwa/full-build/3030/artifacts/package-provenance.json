@@ -1,0 +1,44 @@
+{
+  "packageKind": "workflow-generated-linux-package",
+  "sourceSha": "e55152c559a141001a375ac77098d141b0db3ca7",
+  "workflowRunId": 42067997767,
+  "workflowArtifactId": 13435129152,
+  "artifactName": "noraneko-linux-x86_64-installer-unsigned",
+  "workflowArtifactDigest": "sha256:96ebf4afca0028715039d5154a27fd030e8150cb8117b0249d91eb576411d3fc",
+  "downloadedArtifactSha256": "96ebf4afca0028715039d5154a27fd030e8150cb8117b0249d91eb576411d3fc",
+  "workflowArtifactArchive": "/workspace/qa-linux-22/package-pwa/full-build/3030/artifacts/full-linux-installer.zip",
+  "packageArchive": "/workspace/qa-linux-full-build/products/3030/floorp-linux-x86_64.tar.xz",
+  "packageArchiveSha256": "b138b808c3fc4f4e54ecff0345b47f24660d10ec6351812ba49ac69f70915593",
+  "productRoot": "/workspace/qa-linux-full-build/products/3030/floorp",
+  "generatedBrandingOverrides": [
+    {
+      "archive": "omni.ja",
+      "member": "chrome/chrome.manifest",
+      "registration": "override chrome://branding/locale/brand.properties resource:///chrome/en-US/locale/branding/brand.properties"
+    }
+  ],
+  "applicationIni": {
+    "App": {
+      "vendor": "Ablaze",
+      "name": "Floorp",
+      "remotingname": "floorp",
+      "version": "12.21.1@159.0.1",
+      "profile": "Floorp",
+      "buildid": "20261105165053",
+      "id": "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
+    },
+    "Gecko": {
+      "minversion": "159.0.1",
+      "maxversion": "159.0.1"
+    },
+    "XRE": {
+      "enableprofilemigrator": "1"
+    },
+    "AppUpdate": {
+      "url": "https://aus5.mozilla.org/update/6/%PRODUCT%/%VERSION%/%BUILD_ID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%SYSTEM_CAPABILITIES%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/update.xml"
+    }
+  },
+  "manualProductPatch": false,
+  "nativeRecompilationClaim": false,
+  "releaseOrSigningClaim": false
+}

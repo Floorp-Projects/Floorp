@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/workspace/qa-linux-22/package-pwa/full-build/3030/extract_verified_package.py", line 23, in <module>
+    assert len(changes)==1 and changes[0]['registration']=='override chrome://branding/locale/brand.properties resource:///chrome/en-US/locale/branding/brand.properties',changes
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: []

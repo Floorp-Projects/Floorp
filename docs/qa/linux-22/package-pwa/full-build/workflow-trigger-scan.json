@@ -1,0 +1,131 @@
+{
+  "ref": "e55152c559a141001a375ac77098d141b0db3ca7",
+  "workflows": [
+    {
+      "path": ".github/workflows/assemble-release-bundle.yml",
+      "blob": "6874432607b8a038f27b82e0fd8d06323b9ca7fb",
+      "workflowRunTrigger": false,
+      "repositoryDispatchTrigger": false
+    },
+    {
+      "path": ".github/workflows/build_installers.yml",
+      "blob": "a936030684f32d39494828dc88e99e68f5970107",
+      "workflowRunTrigger": false,
+      "repositoryDispatchTrigger": false
+    },
+    {
+      "path": ".github/workflows/collect_firefox_tests.yml",
+      "blob": "7443bad7d02227f9d68689b157f6cb88fab421b0",
+      "workflowRunTrigger": false,
+      "repositoryDispatchTrigger": false
+    },
+    {
+      "path": ".github/workflows/colocated_runner_test.yml",
+      "blob": "3e993b2e6724fb5db7f5e175a3e9ea1858d6013d",
+      "workflowRunTrigger": false,
+      "repositoryDispatchTrigger": false
+    },
+    {
+      "path": ".github/workflows/docs_pipeline.yml",
+      "blob": "9e376bc683f4ee252acb04d5f03c4ab62661378c",
+      "workflowRunTrigger": false,
+      "repositoryDispatchTrigger": false
+    },
+    {
+      "path": ".github/workflows/firefox_runtime_candidate.yml",
+      "blob": "42903f51db12c24b3d70218f3be5b239b970b13c",
+      "workflowRunTrigger": false,
+      "repositoryDispatchTrigger": false
+    },
+    {
+      "path": ".github/workflows/moderation.yml",
+      "blob": "8296b0e74b9aa9462f21342595b5deba9862c76c",
+      "workflowRunTrigger": false,
+      "repositoryDispatchTrigger": false
+    },
+    {
+      "path": ".github/workflows/openbot-events.yml",
+      "blob": "4dbafa34f1854e398118998d41cf4bf3034a6772",
+      "workflowRunTrigger": true,
+      "repositoryDispatchTrigger": false
+    },
+    {
+      "path": ".github/workflows/organize_issue.yml",
+      "blob": "5db5684a086f7475ad145605327a9e093a92a411",
+      "workflowRunTrigger": false,
+      "repositoryDispatchTrigger": false
+    },
+    {
+      "path": ".github/workflows/package.yml",
+      "blob": "0188bac2cd5fc0bef7ee40f2188dc9965641fe1e",
+      "workflowRunTrigger": false,
+      "repositoryDispatchTrigger": false
+    },
+    {
+      "path": ".github/workflows/package_and_publish_alpha.yml",
+      "blob": "11eb8e03b857a88a0b3f4e2db6f9f1e6a3cd0336",
+      "workflowRunTrigger": false,
+      "repositoryDispatchTrigger": false
+    },
+    {
+      "path": ".github/workflows/package_and_publish_release.yml",
+      "blob": "20a90fb25c0ef1b16b0a09b63a6617ff98f89d74",
+      "workflowRunTrigger": false,
+      "repositoryDispatchTrigger": false
+    },
+    {
+      "path": ".github/workflows/ppa_index_check.yml",
+      "blob": "e43233cb73154731b61f716f220bdfee25a0d13e",
+      "workflowRunTrigger": false,
+      "repositoryDispatchTrigger": false
+    },
+    {
+      "path": ".github/workflows/publish_alpha.yml",
+      "blob": "0402d9a1c95af16482ce10d43351fadca685d7c1",
+      "workflowRunTrigger": false,
+      "repositoryDispatchTrigger": false
+    },
+    {
+      "path": ".github/workflows/publish_ppa.yml",
+      "blob": "1b0db5c5920f14721f20b16429408681bd0be61c",
+      "workflowRunTrigger": false,
+      "repositoryDispatchTrigger": false
+    },
+    {
+      "path": ".github/workflows/publish_release.yml",
+      "blob": "be7f6dcbdfd8c6e55f7a4754fa569f7e321501a5",
+      "workflowRunTrigger": false,
+      "repositoryDispatchTrigger": false
+    },
+    {
+      "path": ".github/workflows/purge_ppa_cache.yml",
+      "blob": "1eff1a070570576f0a3bf7110a73bb02f2532b46",
+      "workflowRunTrigger": false,
+      "repositoryDispatchTrigger": false
+    },
+    {
+      "path": ".github/workflows/update_lepton.yml",
+      "blob": "be88748a6dbfcafa8af7a325dd56d3463a29dd02",
+      "workflowRunTrigger": false,
+      "repositoryDispatchTrigger": false
+    },
+    {
+      "path": ".github/workflows/validate-final-package-qa.yml",
+      "blob": "2cbe4e6d4c673a4b83bce7e0856edaff9b6ef476",
+      "workflowRunTrigger": false,
+      "repositoryDispatchTrigger": false
+    },
+    {
+      "path": ".github/workflows/validate-runtime-provenance.yml",
+      "blob": "fd374ae50e4f802c8887ad19f51f26f4dc9fa76f",
+      "workflowRunTrigger": false,
+      "repositoryDispatchTrigger": false
+    },
+    {
+      "path": ".github/workflows/verify-release-artifact.yml",
+      "blob": "3f8544dc4a377b1d8acade25bd63d21d4bc8e0ac",
+      "workflowRunTrigger": false,
+      "repositoryDispatchTrigger": false
+    }
+  ]
+}

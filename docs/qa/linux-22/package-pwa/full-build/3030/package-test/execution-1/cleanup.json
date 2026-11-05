@@ -1,0 +1,6 @@
+{
+  "display94SocketAbsent": true,
+  "additionalOwnedProcessesFound": [],
+  "remainingAfterCleanup": [],
+  "selection": "DISPLAY exact:94 and HOME under this execution-1 prefix; other QA sessions excluded"
+}

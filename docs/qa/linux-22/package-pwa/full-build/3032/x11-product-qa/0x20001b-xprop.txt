@@ -1,0 +1,3 @@
+WM_CLASS(STRING) = "Navigator", "floorp-16845415-c7e4-447b-b9b5-ff796592abe4"
+_NET_WM_PID(CARDINAL) = 106967
+_NET_WM_NAME(UTF8_STRING) = "QA PWA Beta — Ablaze Floorp"

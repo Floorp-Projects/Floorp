@@ -1,0 +1,86 @@
+{
+  "sourceSha": "8249e234adfbb3e877e4a20cf5f57d7264d9a447",
+  "runId": 42068055038,
+  "mode": "wayland",
+  "completed": true,
+  "pwaChecks": [
+    {
+      "name": "QA PWA Alpha",
+      "expectedClass": "floorp-9c81f296-e163-468d-bded-591d97ede773",
+      "observedClasses": [
+        "floorp-9c81f296-e163-468d-bded-591d97ede773"
+      ],
+      "matches": true
+    },
+    {
+      "name": "QA PWA Beta",
+      "expectedClass": "floorp-6a449a02-b424-4586-b14a-799c18105ee3",
+      "observedClasses": [
+        "floorp-6a449a02-b424-4586-b14a-799c18105ee3"
+      ],
+      "matches": true
+    }
+  ],
+  "expectedOrdinaryBrowserIdentity": "floorp",
+  "ordinaryBrowserProductWindows": [
+    {
+      "title": "Ablaze Floorp",
+      "windowClass": null,
+      "url": "about:blank"
+    }
+  ],
+  "productUnchanged": true,
+  "remainingOwnedProcesses": [],
+  "browserFirstUiProtocol": [
+    {
+      "toplevel": "74",
+      "set_title": "QA PWA Beta — Ablaze Floorp",
+      "set_app_id": "floorp"
+    },
+    {
+      "toplevel": "103",
+      "set_title": "QA PWA Alpha — Ablaze Floorp",
+      "set_app_id": "floorp-9c81f296-e163-468d-bded-591d97ede773"
+    },
+    {
+      "toplevel": "82",
+      "set_title": "QA PWA Beta — Ablaze Floorp",
+      "set_app_id": "floorp-6a449a02-b424-4586-b14a-799c18105ee3"
+    }
+  ],
+  "coldProtocol": [
+    {
+      "toplevel": "71",
+      "set_title": "QA PWA Alpha — Ablaze Floorp",
+      "set_app_id": "floorp-9c81f296-e163-468d-bded-591d97ede773"
+    },
+    {
+      "toplevel": "69",
+      "set_title": "QA PWA Beta — Ablaze Floorp",
+      "set_app_id": "floorp-6a449a02-b424-4586-b14a-799c18105ee3"
+    },
+    {
+      "toplevel": "75",
+      "set_title": "Ablaze Floorp",
+      "set_app_id": "floorp-9c81f296-e163-468d-bded-591d97ede773"
+    }
+  ],
+  "ordinaryBrowserKwin": [
+    {
+      "caption": "Ablaze Floorp",
+      "resourceClass": "floorp-9c81f296-e163-468d-bded-591d97ede773",
+      "desktopFileName": "floorp-9c81f296-e163-468d-bded-591d97ede773",
+      "resourceName": "floorp",
+      "pid": 108778
+    }
+  ],
+  "coldOrdinaryBrowserProtocol": [
+    {
+      "toplevel": "75",
+      "set_title": "Ablaze Floorp",
+      "set_app_id": "floorp-9c81f296-e163-468d-bded-591d97ede773"
+    }
+  ],
+  "ordinaryBrowserMatches": false,
+  "expectedIdentityEvidence": "The browser-first UI phase advertises floorp before any generated PWA --name argument; cold ordinary browser URL is about:blank and has no windowclass override."
+}

@@ -1,0 +1,826 @@
+[
+  {
+    "path": "3030/artifacts/extract.log",
+    "bytes": 512
+  },
+  {
+    "path": "3030/artifacts/installer-metadata.json",
+    "bytes": 776
+  },
+  {
+    "path": "3030/artifacts/intake-complete.log",
+    "bytes": 2329
+  },
+  {
+    "path": "3030/artifacts/intake-verified.log",
+    "bytes": 1823
+  },
+  {
+    "path": "3030/artifacts/package-provenance.json",
+    "bytes": 1822
+  },
+  {
+    "path": "3030/artifacts/runtime-source-artifact-metadata.json",
+    "bytes": 775
+  },
+  {
+    "path": "3030/artifacts/runtime-source-provenance.json",
+    "bytes": 2231
+  },
+  {
+    "path": "3030/before-mach.log",
+    "bytes": 2804
+  },
+  {
+    "path": "3030/build-record.json",
+    "bytes": 1343
+  },
+  {
+    "path": "3030/ci-package-observation.json",
+    "bytes": 9342
+  },
+  {
+    "path": "3030/extract_verified_package.py",
+    "bytes": 3329
+  },
+  {
+    "path": "3030/frontend-files.json",
+    "bytes": 204942
+  },
+  {
+    "path": "3030/frontend-summary.json",
+    "bytes": 4587
+  },
+  {
+    "path": "3030/frozen-dependencies.log",
+    "bytes": 29157
+  },
+  {
+    "path": "3030/generated-content-jar.mn",
+    "bytes": 15428
+  },
+  {
+    "path": "3030/inventory-run.log",
+    "bytes": 4588
+  },
+  {
+    "path": "3030/inventory_frontend.py",
+    "bytes": 3387
+  },
+  {
+    "path": "3030/package-test/README.md",
+    "bytes": 2992
+  },
+  {
+    "path": "3030/package-test/compare_full_packages.py",
+    "bytes": 17995
+  },
+  {
+    "path": "3030/package-test/execution-1/authenticated-runtime-contract.json",
+    "bytes": 403
+  },
+  {
+    "path": "3030/package-test/execution-1/baseline-es-CL-0x400003-xprop.txt",
+    "bytes": 15589
+  },
+  {
+    "path": "3030/package-test/execution-1/baseline-es-CL-browser.log",
+    "bytes": 16803
+  },
+  {
+    "path": "3030/package-test/execution-1/baseline-es-CL-client-list.txt",
+    "bytes": 47
+  },
+  {
+    "path": "3030/package-test/execution-1/baseline-es-CL-gtk-theme.txt",
+    "bytes": 512
+  },
+  {
+    "path": "3030/package-test/execution-1/baseline-es-CL-icon-64x64.png",
+    "bytes": 5753
+  },
+  {
+    "path": "3030/package-test/execution-1/baseline-es-CL-icon-numeric.txt",
+    "bytes": 40886
+  },
+  {
+    "path": "3030/package-test/execution-1/baseline-es-CL-install-browser.log",
+    "bytes": 15812
+  },
+  {
+    "path": "3030/package-test/execution-1/baseline-es-CL-menu-root.png",
+    "bytes": 86073
+  },
+  {
+    "path": "3030/package-test/execution-1/baseline-ja-0x400003-xprop.txt",
+    "bytes": 15586
+  },
+  {
+    "path": "3030/package-test/execution-1/baseline-ja-browser.log",
+    "bytes": 16926
+  },
+  {
+    "path": "3030/package-test/execution-1/baseline-ja-client-list.txt",
+    "bytes": 47
+  },
+  {
+    "path": "3030/package-test/execution-1/baseline-ja-gtk-theme.txt",
+    "bytes": 506
+  },
+  {
+    "path": "3030/package-test/execution-1/baseline-ja-icon-64x64.png",
+    "bytes": 5753
+  },
+  {
+    "path": "3030/package-test/execution-1/baseline-ja-icon-numeric.txt",
+    "bytes": 40886
+  },
+  {
+    "path": "3030/package-test/execution-1/baseline-ja-install-browser.log",
+    "bytes": 14846
+  },
+  {
+    "path": "3030/package-test/execution-1/baseline-ja-menu-root.png",
+    "bytes": 88033
+  },
+  {
+    "path": "3030/package-test/execution-1/candidate-es-CL-0x400003-xprop.txt",
+    "bytes": 16358
+  },
+  {
+    "path": "3030/package-test/execution-1/candidate-es-CL-browser.log",
+    "bytes": 16749
+  },
+  {
+    "path": "3030/package-test/execution-1/candidate-es-CL-client-list.txt",
+    "bytes": 47
+  },
+  {
+    "path": "3030/package-test/execution-1/candidate-es-CL-gtk-theme.txt",
+    "bytes": 514
+  },
+  {
+    "path": "3030/package-test/execution-1/candidate-es-CL-icon-64x64.png",
+    "bytes": 3811
+  },
+  {
+    "path": "3030/package-test/execution-1/candidate-es-CL-icon-numeric.txt",
+    "bytes": 36966
+  },
+  {
+    "path": "3030/package-test/execution-1/candidate-es-CL-install-browser.log",
+    "bytes": 15812
+  },
+  {
+    "path": "3030/package-test/execution-1/candidate-es-CL-menu-root.png",
+    "bytes": 86337
+  },
+  {
+    "path": "3030/package-test/execution-1/candidate-ja-0x400003-xprop.txt",
+    "bytes": 16355
+  },
+  {
+    "path": "3030/package-test/execution-1/candidate-ja-browser.log",
+    "bytes": 16626
+  },
+  {
+    "path": "3030/package-test/execution-1/candidate-ja-client-list.txt",
+    "bytes": 47
+  },
+  {
+    "path": "3030/package-test/execution-1/candidate-ja-gtk-theme.txt",
+    "bytes": 508
+  },
+  {
+    "path": "3030/package-test/execution-1/candidate-ja-icon-64x64.png",
+    "bytes": 3811
+  },
+  {
+    "path": "3030/package-test/execution-1/candidate-ja-icon-numeric.txt",
+    "bytes": 36966
+  },
+  {
+    "path": "3030/package-test/execution-1/candidate-ja-install-browser.log",
+    "bytes": 15812
+  },
+  {
+    "path": "3030/package-test/execution-1/candidate-ja-menu-root.png",
+    "bytes": 88156
+  },
+  {
+    "path": "3030/package-test/execution-1/cleanup.json",
+    "bytes": 207
+  },
+  {
+    "path": "3030/package-test/execution-1/firefox-reference64.png",
+    "bytes": 5753
+  },
+  {
+    "path": "3030/package-test/execution-1/floorp-reference64.png",
+    "bytes": 3811
+  },
+  {
+    "path": "3030/package-test/execution-1/kwin-x11.log",
+    "bytes": 563
+  },
+  {
+    "path": "3030/package-test/execution-1/matrix.json",
+    "bytes": 4484
+  },
+  {
+    "path": "3030/package-test/execution-1/package-hashes-after.json",
+    "bytes": 8643
+  },
+  {
+    "path": "3030/package-test/execution-1/package-hashes-before.json",
+    "bytes": 8643
+  },
+  {
+    "path": "3030/package-test/execution-1/packaged-branding-manifests.json",
+    "bytes": 257
+  },
+  {
+    "path": "3030/package-test/execution-1/provenance.json",
+    "bytes": 4084
+  },
+  {
+    "path": "3030/package-test/execution-1/report.md",
+    "bytes": 5896
+  },
+  {
+    "path": "3030/package-test/execution-1/results.json",
+    "bytes": 16532
+  },
+  {
+    "path": "3030/package-test/execution-1/summary.json",
+    "bytes": 353
+  },
+  {
+    "path": "3030/package-test/execution-1/wm-properties.txt",
+    "bytes": 1752
+  },
+  {
+    "path": "3030/package-test/execution-1/xvfb.log",
+    "bytes": 64
+  },
+  {
+    "path": "3030/package-test/run-1.log",
+    "bytes": 13552
+  },
+  {
+    "path": "3030/package-test/verified-package-provenance.json",
+    "bytes": 4084
+  },
+  {
+    "path": "3030/report.md",
+    "bytes": 3286
+  },
+  {
+    "path": "3030/run.log",
+    "bytes": 493
+  },
+  {
+    "path": "3030/run_frontend_build.py",
+    "bytes": 2840
+  },
+  {
+    "path": "3030-dispatch-response.json",
+    "bytes": 0
+  },
+  {
+    "path": "3030-jobs.json",
+    "bytes": 4692
+  },
+  {
+    "path": "3032/completed-step-timings.json",
+    "bytes": 2232
+  },
+  {
+    "path": "3032/deb-timing-observation.json",
+    "bytes": 1251
+  },
+  {
+    "path": "3032/initial-progress.json",
+    "bytes": 712
+  },
+  {
+    "path": "3032/intake_product.py",
+    "bytes": 3670
+  },
+  {
+    "path": "3032/package-api-metadata.json",
+    "bytes": 1181
+  },
+  {
+    "path": "3032/package-build-report.md",
+    "bytes": 5884
+  },
+  {
+    "path": "3032/product-intake.json",
+    "bytes": 2995
+  },
+  {
+    "path": "3032/product-inventory-before.json",
+    "bytes": 6566
+  },
+  {
+    "path": "3032/terminal-job-results.json",
+    "bytes": 10919
+  },
+  {
+    "path": "3032/wayland-product-qa/cold-0.log",
+    "bytes": 257008
+  },
+  {
+    "path": "3032/wayland-product-qa/cold-1.log",
+    "bytes": 10023
+  },
+  {
+    "path": "3032/wayland-product-qa/cold-browser.log",
+    "bytes": 10023
+  },
+  {
+    "path": "3032/wayland-product-qa/kwin.log",
+    "bytes": 1414
+  },
+  {
+    "path": "3032/wayland-product-qa/legacy-api.json",
+    "bytes": 3441
+  },
+  {
+    "path": "3032/wayland-product-qa/legacy-api.log",
+    "bytes": 2394
+  },
+  {
+    "path": "3032/wayland-product-qa/legacy-browser.log",
+    "bytes": 630373
+  },
+  {
+    "path": "3032/wayland-product-qa/native-identity-projection.json",
+    "bytes": 2462
+  },
+  {
+    "path": "3032/wayland-product-qa/product-inventory-after.json",
+    "bytes": 6566
+  },
+  {
+    "path": "3032/wayland-product-qa/result.json",
+    "bytes": 25045
+  },
+  {
+    "path": "3032/wayland-product-qa/ui-browser.log",
+    "bytes": 513933
+  },
+  {
+    "path": "3032/wayland-product-qa/ui-create/alpha-after.png",
+    "bytes": 39513
+  },
+  {
+    "path": "3032/wayland-product-qa/ui-create/beta-after.png",
+    "bytes": 39445
+  },
+  {
+    "path": "3032/wayland-product-qa/ui-create/result.json",
+    "bytes": 13363
+  },
+  {
+    "path": "3032/wayland-product-qa/ui-probe.log",
+    "bytes": 125
+  },
+  {
+    "path": "3032/wayland-product-qa/wayland-app-id-protocol.txt",
+    "bytes": 2073
+  },
+  {
+    "path": "3032/wayland-product-qa/xvfb.log",
+    "bytes": 64
+  },
+  {
+    "path": "3032/wayland-product-qa.log",
+    "bytes": 459
+  },
+  {
+    "path": "3032/x11-product-qa/0x200001-xprop.txt",
+    "bytes": 143
+  },
+  {
+    "path": "3032/x11-product-qa/0x200003-xprop.txt",
+    "bytes": 170
+  },
+  {
+    "path": "3032/x11-product-qa/0x20001b-xprop.txt",
+    "bytes": 169
+  },
+  {
+    "path": "3032/x11-product-qa/0x20002c-xprop.txt",
+    "bytes": 116
+  },
+  {
+    "path": "3032/x11-product-qa/0x20003e-xprop.txt",
+    "bytes": 90
+  },
+  {
+    "path": "3032/x11-product-qa/cold-0.log",
+    "bytes": 41132
+  },
+  {
+    "path": "3032/x11-product-qa/cold-1.log",
+    "bytes": 0
+  },
+  {
+    "path": "3032/x11-product-qa/cold-browser.log",
+    "bytes": 0
+  },
+  {
+    "path": "3032/x11-product-qa/legacy-api.json",
+    "bytes": 3437
+  },
+  {
+    "path": "3032/x11-product-qa/legacy-api.log",
+    "bytes": 2390
+  },
+  {
+    "path": "3032/x11-product-qa/legacy-browser.log",
+    "bytes": 124160
+  },
+  {
+    "path": "3032/x11-product-qa/native-identity-projection.json",
+    "bytes": 1020
+  },
+  {
+    "path": "3032/x11-product-qa/product-inventory-after.json",
+    "bytes": 6566
+  },
+  {
+    "path": "3032/x11-product-qa/result.json",
+    "bytes": 24966
+  },
+  {
+    "path": "3032/x11-product-qa/ui-browser.log",
+    "bytes": 55331
+  },
+  {
+    "path": "3032/x11-product-qa/ui-create/alpha-after.png",
+    "bytes": 40136
+  },
+  {
+    "path": "3032/x11-product-qa/ui-create/beta-after.png",
+    "bytes": 40684
+  },
+  {
+    "path": "3032/x11-product-qa/ui-create/result.json",
+    "bytes": 13631
+  },
+  {
+    "path": "3032/x11-product-qa/ui-probe.log",
+    "bytes": 121
+  },
+  {
+    "path": "3032/x11-product-qa/x11-tree.txt",
+    "bytes": 1052
+  },
+  {
+    "path": "3032/x11-product-qa/xvfb.log",
+    "bytes": 64
+  },
+  {
+    "path": "3032/x11-product-qa.log",
+    "bytes": 458
+  },
+  {
+    "path": "3032-dispatch-response.json",
+    "bytes": 0
+  },
+  {
+    "path": "baseline/intake_product.py",
+    "bytes": 3670
+  },
+  {
+    "path": "baseline/package-api-metadata.json",
+    "bytes": 655
+  },
+  {
+    "path": "baseline/product-intake.json",
+    "bytes": 2024
+  },
+  {
+    "path": "baseline/product-inventory-before.json",
+    "bytes": 6566
+  },
+  {
+    "path": "baseline/report.md",
+    "bytes": 781
+  },
+  {
+    "path": "baseline/run.json",
+    "bytes": 117
+  },
+  {
+    "path": "baseline/terminal-job-results.json",
+    "bytes": 11261
+  },
+  {
+    "path": "baseline/wayland-identity-projection.log",
+    "bytes": 1972
+  },
+  {
+    "path": "baseline/wayland-product-qa/cold-0.log",
+    "bytes": 262174
+  },
+  {
+    "path": "baseline/wayland-product-qa/cold-1.log",
+    "bytes": 10023
+  },
+  {
+    "path": "baseline/wayland-product-qa/cold-browser.log",
+    "bytes": 10023
+  },
+  {
+    "path": "baseline/wayland-product-qa/kwin.log",
+    "bytes": 1414
+  },
+  {
+    "path": "baseline/wayland-product-qa/legacy-api.json",
+    "bytes": 3306
+  },
+  {
+    "path": "baseline/wayland-product-qa/legacy-api.log",
+    "bytes": 2259
+  },
+  {
+    "path": "baseline/wayland-product-qa/legacy-browser.log",
+    "bytes": 625636
+  },
+  {
+    "path": "baseline/wayland-product-qa/native-identity-projection.json",
+    "bytes": 2391
+  },
+  {
+    "path": "baseline/wayland-product-qa/product-inventory-after.json",
+    "bytes": 6566
+  },
+  {
+    "path": "baseline/wayland-product-qa/result.json",
+    "bytes": 25152
+  },
+  {
+    "path": "baseline/wayland-product-qa/ui-browser.log",
+    "bytes": 493165
+  },
+  {
+    "path": "baseline/wayland-product-qa/ui-create/alpha-after.png",
+    "bytes": 38964
+  },
+  {
+    "path": "baseline/wayland-product-qa/ui-create/beta-after.png",
+    "bytes": 39631
+  },
+  {
+    "path": "baseline/wayland-product-qa/ui-create/result.json",
+    "bytes": 13677
+  },
+  {
+    "path": "baseline/wayland-product-qa/ui-probe.log",
+    "bytes": 129
+  },
+  {
+    "path": "baseline/wayland-product-qa/wayland-app-id-protocol.txt",
+    "bytes": 1642
+  },
+  {
+    "path": "baseline/wayland-product-qa/xvfb.log",
+    "bytes": 64
+  },
+  {
+    "path": "baseline/wayland-product-qa.log",
+    "bytes": 458
+  },
+  {
+    "path": "baseline/x11-product-qa/0x200001-xprop.txt",
+    "bytes": 143
+  },
+  {
+    "path": "baseline/x11-product-qa/0x200003-xprop.txt",
+    "bytes": 133
+  },
+  {
+    "path": "baseline/x11-product-qa/0x20001b-xprop.txt",
+    "bytes": 132
+  },
+  {
+    "path": "baseline/x11-product-qa/0x20002c-xprop.txt",
+    "bytes": 116
+  },
+  {
+    "path": "baseline/x11-product-qa/0x20003e-xprop.txt",
+    "bytes": 90
+  },
+  {
+    "path": "baseline/x11-product-qa/cold-0.log",
+    "bytes": 41595
+  },
+  {
+    "path": "baseline/x11-product-qa/cold-1.log",
+    "bytes": 0
+  },
+  {
+    "path": "baseline/x11-product-qa/cold-browser.log",
+    "bytes": 0
+  },
+  {
+    "path": "baseline/x11-product-qa/legacy-api.json",
+    "bytes": 3302
+  },
+  {
+    "path": "baseline/x11-product-qa/legacy-api.log",
+    "bytes": 2255
+  },
+  {
+    "path": "baseline/x11-product-qa/legacy-browser.log",
+    "bytes": 120595
+  },
+  {
+    "path": "baseline/x11-product-qa/native-identity-projection.json",
+    "bytes": 948
+  },
+  {
+    "path": "baseline/x11-product-qa/product-inventory-after.json",
+    "bytes": 6566
+  },
+  {
+    "path": "baseline/x11-product-qa/result.json",
+    "bytes": 24712
+  },
+  {
+    "path": "baseline/x11-product-qa/ui-browser.log",
+    "bytes": 54131
+  },
+  {
+    "path": "baseline/x11-product-qa/ui-create/alpha-after.png",
+    "bytes": 40126
+  },
+  {
+    "path": "baseline/x11-product-qa/ui-create/beta-after.png",
+    "bytes": 40663
+  },
+  {
+    "path": "baseline/x11-product-qa/ui-create/result.json",
+    "bytes": 13671
+  },
+  {
+    "path": "baseline/x11-product-qa/ui-probe.log",
+    "bytes": 125
+  },
+  {
+    "path": "baseline/x11-product-qa/x11-tree.txt",
+    "bytes": 978
+  },
+  {
+    "path": "baseline/x11-product-qa/xvfb.log",
+    "bytes": 64
+  },
+  {
+    "path": "baseline/x11-product-qa.log",
+    "bytes": 458
+  },
+  {
+    "path": "baseline-artifacts.json",
+    "bytes": 1992
+  },
+  {
+    "path": "baseline-dispatch-response.txt",
+    "bytes": 0
+  },
+  {
+    "path": "baseline-plan.md",
+    "bytes": 4717
+  },
+  {
+    "path": "baseline-ref-create.json",
+    "bytes": 124
+  },
+  {
+    "path": "baseline-ref-created.json",
+    "bytes": 478
+  },
+  {
+    "path": "baseline-remote-refs.txt",
+    "bytes": 57
+  },
+  {
+    "path": "bootstrap-no-system-changes.log",
+    "bytes": 0
+  },
+  {
+    "path": "bootstrap.log",
+    "bytes": 2569
+  },
+  {
+    "path": "display-readiness/kwin-support.txt",
+    "bytes": 39
+  },
+  {
+    "path": "display-readiness/kwin.log",
+    "bytes": 667
+  },
+  {
+    "path": "display-readiness/result.json",
+    "bytes": 78
+  },
+  {
+    "path": "display-readiness/xvfb.log",
+    "bytes": 64
+  },
+  {
+    "path": "execution.json",
+    "bytes": 2977
+  },
+  {
+    "path": "final-pr-refs.txt",
+    "bytes": 167
+  },
+  {
+    "path": "full-package-pwa-help.txt",
+    "bytes": 1135
+  },
+  {
+    "path": "full-package-pwa-runbook.md",
+    "bytes": 4382
+  },
+  {
+    "path": "full_package_pwa_probe.py",
+    "bytes": 21908
+  },
+  {
+    "path": "main-ref.txt",
+    "bytes": 57
+  },
+  {
+    "path": "package-3030-dispatch-payload.json",
+    "bytes": 933
+  },
+  {
+    "path": "package-3032-dispatch-payload.json",
+    "bytes": 928
+  },
+  {
+    "path": "package-baseline-dispatch-payload.json",
+    "bytes": 944
+  },
+  {
+    "path": "package-dispatch-readiness.json",
+    "bytes": 2009
+  },
+  {
+    "path": "package-runs.json",
+    "bytes": 1657
+  },
+  {
+    "path": "project_pwa_identity.py",
+    "bytes": 2446
+  },
+  {
+    "path": "publish_evidence.py",
+    "bytes": 1366
+  },
+  {
+    "path": "pwa-fullpackage-matrix.json",
+    "bytes": 10721
+  },
+  {
+    "path": "pwa-fullpackage-report.md",
+    "bytes": 6772
+  },
+  {
+    "path": "pwa-process-cleanup.json",
+    "bytes": 106
+  },
+  {
+    "path": "report.md",
+    "bytes": 5723
+  },
+  {
+    "path": "runtime-fetch.log",
+    "bytes": 137
+  },
+  {
+    "path": "runtime-release.json",
+    "bytes": 2115
+  },
+  {
+    "path": "runtime1179-build-manifest-v2.json",
+    "bytes": 1506
+  },
+  {
+    "path": "workflow-audit-summary.json",
+    "bytes": 8423
+  },
+  {
+    "path": "workflow-audit.md",
+    "bytes": 22333
+  },
+  {
+    "path": "workflow-trigger-scan.json",
+    "bytes": 4375
+  }
+]

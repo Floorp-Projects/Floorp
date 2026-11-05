@@ -1,0 +1,130 @@
+{
+  "profile": "/workspace/qa-linux-22/package-pwa/full-build/3032/x11-product-qa/profile",
+  "calls": {
+    "cases": [
+      {
+        "label": "valid-braced-uuid",
+        "app": {
+          "id": "{01234567-89ab-4cde-8123-456789abcdef}",
+          "name": "Legacy Valid",
+          "start_url": "about:blank",
+          "icon": ""
+        },
+        "launcherClass": "floorp-01234567-89ab-4cde-8123-456789abcdef",
+        "opened": true,
+        "windowClass": "floorp-01234567-89ab-4cde-8123-456789abcdef",
+        "taskbarId": "{01234567-89ab-4cde-8123-456789abcdef}"
+      },
+      {
+        "label": "missing-id",
+        "app": {
+          "name": "Legacy Missing ID",
+          "start_url": "about:blank",
+          "icon": ""
+        },
+        "launcherClass": "floorp-legacy-missing-id",
+        "opened": true,
+        "windowClass": "floorp-legacy-missing-id",
+        "taskbarId": "null"
+      },
+      {
+        "label": "brace-only-id",
+        "app": {
+          "id": "{}",
+          "name": "Legacy Braces",
+          "start_url": "about:blank",
+          "icon": ""
+        },
+        "launcherClass": "floorp-legacy-braces",
+        "opened": true,
+        "windowClass": "floorp-legacy-braces",
+        "taskbarId": "{}"
+      },
+      {
+        "label": "punctuation-id",
+        "app": {
+          "id": " < > ",
+          "name": "Legacy Punctuation",
+          "start_url": "about:blank",
+          "icon": ""
+        },
+        "launcherClass": "floorp-legacy-punctuation",
+        "opened": true,
+        "windowClass": "floorp-legacy-punctuation",
+        "taskbarId": " < > "
+      },
+      {
+        "label": "uppercase-id",
+        "app": {
+          "id": "{ABCD-1234}",
+          "name": "Legacy Uppercase",
+          "start_url": "about:blank",
+          "icon": ""
+        },
+        "launcherClass": "floorp-abcd-1234",
+        "opened": true,
+        "windowClass": "floorp-abcd-1234",
+        "taskbarId": "{ABCD-1234}"
+      },
+      {
+        "label": "missing-id-name",
+        "app": {
+          "start_url": "about:blank",
+          "icon": ""
+        },
+        "launcherClass": "floorp-about-blank",
+        "opened": true,
+        "windowClass": "floorp-about-blank",
+        "taskbarId": "null"
+      },
+      {
+        "label": "numeric-id",
+        "app": {
+          "id": 123,
+          "name": "Legacy Number",
+          "start_url": "about:blank",
+          "icon": ""
+        },
+        "launcherClass": "floorp-legacy-number",
+        "opened": true,
+        "windowClass": "floorp-legacy-number",
+        "taskbarId": "123"
+      },
+      {
+        "label": "object-id",
+        "app": {
+          "id": {
+            "invalid": true
+          },
+          "name": "Legacy Object",
+          "start_url": "about:blank",
+          "icon": ""
+        },
+        "launcherClass": "floorp-legacy-object",
+        "opened": true,
+        "windowClass": "floorp-legacy-object",
+        "taskbarId": "[object Object]"
+      },
+      {
+        "label": "no-normalizable-fields",
+        "app": {
+          "id": "{}",
+          "name": "",
+          "start_url": "",
+          "icon": ""
+        },
+        "launcherClass": "floorp-729966ed42bf",
+        "opened": true,
+        "windowClass": "floorp-d2a32a14fee6",
+        "taskbarId": "{}"
+      }
+    ],
+    "experiment": false,
+    "sandbox": 6
+  },
+  "quit": {
+    "cause": "shutdown",
+    "forced": false,
+    "in_app": true
+  }
+}

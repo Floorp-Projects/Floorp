@@ -1,0 +1,3 @@
+WM_CLASS:  not found.
+_NET_WM_PID(CARDINAL) = 110541
+_NET_WM_NAME(UTF8_STRING) = "Floorp"

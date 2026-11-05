@@ -92,3 +92,8 @@ Read followup-validation.md for the additional cold command-line, malformed-data
 ## Final-head standard CI
 
 Head8249e234 run42050337102 is successful. Ubuntu artifact13427512330 was downloaded:110385bytes, SHA2569c825202b8265319195d5e168e9d004db2a21468f1c4000508edd60dde3c84b8 matches GitHub metadata. Standard runner records SsbCommandLineHandler.runAllTests7341ms,281 browser modules passed/0 failed and8 downloaded Firefox files/16 tasks passed. Attempt1 Mac npm dependency body-read failure occurred before product tests and is preserved; a single same-head specific-job retry after run completion succeeded. Previous head06aaf589 CI is historical. See ../ci/pr3032-final/.
+
+
+## Full production package follow-up
+
+Exact final PR3032 8249e234 and baseline984509d2 were built by the existing full production application package workflow with the same unchanged authenticated prebuilt Runtime. Both CI runs succeeded. Baseline X11 has common floorp classes; baseline native Wayland makes Beta inherit Alpha app_id. Full candidate fixes both PWA launcher identities on both protocols. Four fresh UI-install/cold-launch runs complete, all36legacy API windows open, normal quit, sandbox6, rolloutfalse, product inventories unchanged. Ordinary browser after PWA still inherits Alpha native Wayland identity in both baseline/candidate; this pre-existing condition is retained, not silently marked fixed. Original Manjaro/KDE/Outlook/Teams and all-invalid legacy identity limitations remain. See `../full-build/report.md` and full-build per-product result JSON.

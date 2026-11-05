@@ -1,0 +1,9 @@
+{
+  "rowsCompleted": 4,
+  "rowsExpected": 4,
+  "allComparisonsPass": true,
+  "allPackageFilesUnchanged": true,
+  "candidateSourceSha": "e55152c559a141001a375ac77098d141b0db3ca7",
+  "nativeBuildOrSigningClaim": "workflow-produced artifact-mode package; no claim of native recompilation/signing beyond workflow provenance",
+  "manualProductPatch": false
+}
