@@ -208,7 +208,8 @@
       "10296",
       "10302",
       "10309",
-      "10353"
+      "10353",
+      "10378"
     ],
     "newPrHead": "2deb165d75290ffd4f602ad078512dc42fc3a332",
     "ci": {
@@ -229,7 +230,7 @@
       "qualified": true,
       "caseCount": 6
     },
-    "latestJiraCommentId": "10353",
+    "latestJiraCommentId": "10378",
     "baselineSourceSha": "984509d2053be7bae9027133bda7259cd706b208",
     "comparisonSourceSha": "8249e234adfbb3e877e4a20cf5f57d7264d9a447",
     "existingPrHead": "8249e234adfbb3e877e4a20cf5f57d7264d9a447",

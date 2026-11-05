@@ -1,0 +1,21 @@
+{
+  "key": "KAN-49",
+  "commentId": "10378",
+  "labels": [
+    "area-pwa",
+    "draft-pr",
+    "env-blocked",
+    "floorp-stability-2026-11",
+    "full-package-verified",
+    "needs-manjaro-kde",
+    "p2",
+    "qa-linux-executed",
+    "related-gh-2800",
+    "reproduced-in-test",
+    "triage-reviewed",
+    "related-pr-3040",
+    "needs-profile-lock-cause"
+  ],
+  "body": "## KAN-49 通常ブラウザーのWayland識別子を修正・完全製品対照（2026-11-05 UTC）\n\n[依存Draft3040](https://github.com/Floorp-Projects/Floorp/pull/3040) source2deb165d75290ffd4f602ad078512dc42fc3a332。既存Draft3032 head8249e234は変更せず、そのbranchをbaseとする3files/1commitの追補です。\n\n原因: 初回PWAの--nameがGTKプロセス全体の識別子になる一方、3032はPWA窓だけに個別classを指定していた。Linuxのinitial --start-ssb時のみ既存の同期pre-layout categoryを登録し、class未指定の通常窓へcanonical remotingNameを指定。PWA/taskbar/既存classは維持し、通常browser先行・remote PWAでは登録しない。native interface/実験gate/Runtime lock/desktop・profile IDは変更しない。\n\n[標準CI42077116984](https://github.com/Floorp-Projects/Floorp/actions/runs/42077116984)全5jobs成功、281modules成功0失敗、新回帰を含むSSB module実行・artifact13438134467 SHA認証済。実4test moduleもmockなしで成功。[完全packageCI42077174018](https://github.com/Floorp-Projects/Floorp/actions/runs/42077174018)成功、unsigned installer13439144608をAPI source/run/size/digestで認証。\n\n未改変の完全製品・追跡なし最終R2で6/6 nativeWayland条件成功: browser→PWA、PWA→browser、複数PWA、既存QAprofile/旧launcher、custom --name通常browser→remotePWA→2つ目通常窓、実private窓。実set_app_id通信/KWin desktop対応を確認し、通常窓floorp・各PWA固有、custom名/private状態を維持。全product inventory・元profile/home/store不変、sandbox6/rolloutfalse、7正常終了・owned0。3032完全製品の対照6件は通常先行/customの2件成功、継承4件再現。補足X11実WM_CLASSも成功。\n\n重要な保持事項: 初回の完全製品試験は4identity条件が一致したが、writable appdirに.parentlock/lockが追加され保全gateで停止（qualified=false）。既存file bytes不変、残controls未実行を保持。別展開のtrace診断で再現せず、さらに新規の未追跡R2は厳密gate変更なしで6件成功。最初のlock生成源は未特定、修正済み/環境障害とは断定しない。例外登録・保護無効化・推測追加修正なし。\n\n[全報告・最終/失敗matrix・再現script・native通信・cleanup](https://github.com/Floorp-Projects/Floorp/tree/223e6cd2ccbd3d33e8e5bfc60842172219d182b5/docs/qa/linux-22/package-pwa/wayland-browser-identity)。今回の製品は自担当standalone unsigned package由来、互換prebuiltRuntime8965ffc346d426ccdf919bd18585e4d4a0c21654使用。Cloud Bの未取得strict/XPT候補と同一成果扱いしない。新helper XPTは追加していない。\n\nneeds-wayland-browser-groupingは今回満たして除去。原Manjaro/KDE/Outlook/Teams/taskbar pixels・全フィールド無効legacy randomidentity・上記lock原因は残す。進行中/Draft維持、merge/release/配信変更/Done化なし。",
+  "statusTransitioned": false
+}

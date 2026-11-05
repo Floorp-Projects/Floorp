@@ -108,6 +108,10 @@
     "bytes": 936
   },
   {
+    "path": "jira-final-update.json",
+    "bytes": 3418
+  },
+  {
     "path": "lint-final.log",
     "bytes": 16
   },
@@ -133,7 +137,7 @@
   },
   {
     "path": "pr-body.md",
-    "bytes": 3349
+    "bytes": 3363
   },
   {
     "path": "probe_orders.py",
@@ -169,7 +173,7 @@
   },
   {
     "path": "subject.json",
-    "bytes": 1653
+    "bytes": 1846
   },
   {
     "path": "typecheck-final.log",

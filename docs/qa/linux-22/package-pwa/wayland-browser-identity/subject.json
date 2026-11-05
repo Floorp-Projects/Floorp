@@ -32,5 +32,12 @@
     "browserModulesFail": 0,
     "artifact": 13438134467,
     "artifactZipSha256": "1856010f6fc5081dc86292530be029fe05e612e15df5a2034f0e7af183b6d054"
+  },
+  "latestJiraCommentId": "10378",
+  "finalNativeSuite": {
+    "path": "full-package/actual-qa-r2/suite-result.json",
+    "qualified": true,
+    "caseCount": 6,
+    "checksWeakened": false
   }
 }

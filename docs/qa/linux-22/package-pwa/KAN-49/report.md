@@ -110,3 +110,5 @@ StandardCI42077116984 succeeds281modules/0fail, actual4case SSB regression modul
 The first full run's root lock additions stopped its invariant despite correct4identity observations; its qualified=false record remains. Fresh diagnostic and untraced final product did not reproduce extra locks, cause unresolved and no allowlist/guessed lock fix introduced. This is separate from the fixed identity defect. Original Manjaro/real services/taskbar pixels and unusable-all-fields legacy records remain. These products are our standalone unsigned artifacts, not CloudB's uninspected strict-XPT output.
 
 See ../wayland-browser-identity/report.md and full-package/actual-qa-r2/suite-result.json for complete provenance and replay.
+
+Final follow-up Jira comment10378 records Draft3040,6/6full-package identity acceptance and the unresolved initial lock anomaly. State remains in progress.
