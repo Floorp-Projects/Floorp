@@ -140,7 +140,7 @@ async function testRestartRestoresOnlyOpenAppsOnce(): Promise<void> {
   );
 }
 
-async function testExistingWindowPreventsDuplicate(): Promise<void> {
+async function testExistingWindowDoesNotConsumeRestore(): Promise<void> {
   const f = fixture();
   f.setWasRestarted(true);
   f.setPending(
@@ -151,7 +151,11 @@ async function testExistingWindowPreventsDuplicate(): Promise<void> {
   );
   f.setWindows([{ id: "alpha", url: "https://example.test/app/already-open" }]);
   await new SsbRestartManager(f.deps).restoreAfterRestart();
-  assertEquals(f.launches.length, 1, "only a missing instance is reopened");
+  assertEquals(
+    f.launches.length,
+    2,
+    "an independently opened window does not consume a queued restore",
+  );
 }
 
 async function testNormalStartAndDisabledFeatureDoNotReplay(): Promise<void> {
@@ -224,8 +228,8 @@ export async function runAllTests(): Promise<void> {
       fn: testRestartRestoresOnlyOpenAppsOnce,
     },
     {
-      name: "existing app instance prevents duplicate",
-      fn: testExistingWindowPreventsDuplicate,
+      name: "existing app instance does not consume a queued restore",
+      fn: testExistingWindowDoesNotConsumeRestore,
     },
     {
       name: "normal start and disabled feature do not replay",

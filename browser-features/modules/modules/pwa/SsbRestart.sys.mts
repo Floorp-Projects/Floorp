@@ -170,14 +170,9 @@ export class SsbRestartManager {
     }
     if (!this.deps.wasRestarted() || !this.deps.enabled()) return;
 
-    const expected = new Map<string, number>();
     for (const entry of parseRestartEntries(value)) {
-      const count = (expected.get(entry.id) ?? 0) + 1;
-      expected.set(entry.id, count);
-      if (
-        this.deps.windows().filter((window) => window.id === entry.id).length >=
-          count
-      ) continue;
+      // An already-open window may be an independent --start-ssb request, not
+      // a restored instance. The consumed queue itself prevents replay.
       try {
         const ssb = await this.deps.getApp(entry.id);
         if (!ssb) continue; // The app may have been uninstalled during restart.
