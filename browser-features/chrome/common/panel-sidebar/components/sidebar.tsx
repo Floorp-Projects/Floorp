@@ -28,10 +28,12 @@ import { FloatingSplitter } from "./floating-splitter";
 import { OverlaySplitter } from "./overlay-splitter";
 import { BrowserBox } from "./browser-box";
 import type { CPanelSidebar } from "./panel-sidebar";
+import { getPanelMountTargets } from "./mount-target.ts";
 
 export class PanelSidebarElem {
   ctx: CPanelSidebar;
   private readonly sidebarReady: Promise<void>;
+  private sidebarMounted = false;
 
   private get documentElement() {
     return document?.documentElement as unknown as XULElement;
@@ -39,22 +41,31 @@ export class PanelSidebarElem {
 
   constructor(ctx: CPanelSidebar) {
     this.ctx = ctx;
-    const parentElem = document?.getElementById("browser");
-    const beforeElem = document?.getElementById("tabbrowser-tabbox");
-
     // Wait for the sidebar controller to be initialized
     // This is a workaround to avoid Extension Sidebar Panels not being loaded
     const owner = getOwner();
     const SidebarController = (globalThis as unknown as {
       SidebarController: { promiseInitialized: Promise<void> };
     }).SidebarController;
-    this.sidebarReady = SidebarController.promiseInitialized.then(() => {
-      const exec = () =>
-        render(() => this.sidebar(), parentElem, {
-          marker: beforeElem as unknown as XULElement,
+    this.sidebarReady = getPanelMountTargets(
+      document,
+      SidebarController.promiseInitialized,
+      window,
+    ).then((targets) => {
+      if (!targets || window.closed) return;
+      const { parent, before } = targets;
+      const exec = () => {
+        render(() => this.sidebar(), parent, {
+          marker: before as unknown as XULElement,
         });
+        this.sidebarMounted = true;
+      };
       if (owner) runWithOwner(owner, exec);
       else createRoot(exec);
+    }).catch((error: unknown) => {
+      if (!window.closed) {
+        console.error("[PanelSidebar] Failed to mount:", error);
+      }
     });
 
     render(() => this.style(), document?.head);
@@ -98,7 +109,7 @@ export class PanelSidebarElem {
     await new Promise<void>((resolve) =>
       requestAnimationFrame(() => resolve())
     );
-    if (!isPanelSidebarEnabled()) return;
+    if (!this.sidebarMounted || !isPanelSidebarEnabled()) return;
     const panel = this.ctx.getPanelData(selectedPanelId() ?? "");
     if (!panel) return;
     this.ctx.setSidebarWidth(panel);
