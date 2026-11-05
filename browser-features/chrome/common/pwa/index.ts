@@ -69,6 +69,20 @@ export default class Pwa extends NoraComponentBase {
     this.initialized = true;
     const manifestProcesser = new ManifestProcesser();
     const dataManager = new DataManager();
+    if (Services.appinfo.OS === "Darwin") {
+      const { MacOSSupport } = ChromeUtils.importESModule(
+        "resource://noraneko/modules/pwa/supports/MacOS.sys.mjs",
+      );
+      // Do not block browser startup on filesystem compilation or signing.
+      void new MacOSSupport().repairExistingLaunchers(dataManager).catch(
+        (error: unknown) => {
+          console.warn(
+            "[Pwa] Could not upgrade installed macOS launchers:",
+            error,
+          );
+        },
+      );
+    }
     const ssbManager = new SiteSpecificBrowserManager(
       manifestProcesser,
       dataManager,
