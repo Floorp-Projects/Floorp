@@ -92,22 +92,24 @@ export const reopenInContainerCommand: PaletteCommand = {
     defaultValue: "Reopen the current tab in a specific container",
   }),
   category: "tabs",
-  keywords: [
-    "container",
-    "reopen",
-    "context",
-    "identity",
-    "reopen in",
-    ...getJapaneseReadings("floorp-reopen-in-container"),
-    ...getEnglishStepCommandKeywords(
-      "commandPalette.reopenInContainer",
-      "commandPalette.reopenInContainerDescription",
-    ),
-    ...getSegmentedKeywordsFromI18nKeys(
-      "commandPalette.reopenInContainer",
-      "commandPalette.reopenInContainerDescription",
-    ),
-  ],
+  get keywords() {
+    return [
+      "container",
+      "reopen",
+      "context",
+      "identity",
+      "reopen in",
+      ...getJapaneseReadings("floorp-reopen-in-container"),
+      ...getEnglishStepCommandKeywords(
+        "commandPalette.reopenInContainer",
+        "commandPalette.reopenInContainerDescription",
+      ),
+      ...getSegmentedKeywordsFromI18nKeys(
+        "commandPalette.reopenInContainer",
+        "commandPalette.reopenInContainerDescription",
+      ),
+    ];
+  },
   steps: [
     {
       id: "container",

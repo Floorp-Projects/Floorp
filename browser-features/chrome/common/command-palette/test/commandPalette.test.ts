@@ -467,6 +467,12 @@ async function testJapaneseReadingLocales(): Promise<void> {
         0,
         "Unknown IDs should not read inherited properties",
       );
+      assert(
+        getCommand("floorp-reopen-in-container")?.keywords.includes(
+          "こんてなでひらきなおす",
+        ),
+        `${locale} should refresh step keywords after language initialization`,
+      );
       const copy = getJapaneseReadings("gecko-back");
       copy.length = 0;
       assertEquals(
@@ -481,6 +487,12 @@ async function testJapaneseReadingLocales(): Promise<void> {
         getJapaneseReadings("gecko-back").length,
         0,
         `${locale} should not add Japanese readings`,
+      );
+      assert(
+        !getCommand("floorp-reopen-in-container")?.keywords.includes(
+          "こんてなでひらきなおす",
+        ),
+        `${locale} should not retain Japanese step keywords after a locale change`,
       );
     }
   } finally {
