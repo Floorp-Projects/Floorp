@@ -1,0 +1,934 @@
+[
+  {
+    "path": "baseline_extra_steps.py",
+    "bytes": 2916
+  },
+  {
+    "path": "baseline_restart_steps.py",
+    "bytes": 1291
+  },
+  {
+    "path": "candidate_roundtrip.py",
+    "bytes": 2065
+  },
+  {
+    "path": "code-review.md",
+    "bytes": 7085
+  },
+  {
+    "path": "control.py",
+    "bytes": 297
+  },
+  {
+    "path": "matrix.json",
+    "bytes": 8344
+  },
+  {
+    "path": "pr2950-ci.json",
+    "bytes": 2842
+  },
+  {
+    "path": "pr2950-files.jsonl",
+    "bytes": 26483
+  },
+  {
+    "path": "publish_evidence.py",
+    "bytes": 2021
+  },
+  {
+    "path": "report.md",
+    "bytes": 6681
+  },
+  {
+    "path": "restart_followup.py",
+    "bytes": 1384
+  },
+  {
+    "path": "run_steps.py",
+    "bytes": 1300
+  },
+  {
+    "path": "scope.json",
+    "bytes": 2202
+  },
+  {
+    "path": "source-audit.json",
+    "bytes": 1221
+  },
+  {
+    "path": "two_window_controls.py",
+    "bytes": 1634
+  },
+  {
+    "path": "ui-matrix.json",
+    "bytes": 6243
+  },
+  {
+    "path": "ui-process-cleanup.json",
+    "bytes": 541
+  },
+  {
+    "path": "ui-report.md",
+    "bytes": 5990
+  },
+  {
+    "path": "ui_server.py",
+    "bytes": 3550
+  },
+  {
+    "path": "workspace_followup.py",
+    "bytes": 2358
+  },
+  {
+    "path": "write_ui_report.py",
+    "bytes": 5756
+  },
+  {
+    "path": "additional/KAN24/code-review.md",
+    "bytes": 7085
+  },
+  {
+    "path": "additional/KAN24/minimal-fix-proposal.patch",
+    "bytes": 1381
+  },
+  {
+    "path": "additional/KAN24/reviewed-files.json",
+    "bytes": 1303
+  },
+  {
+    "path": "baseline-extra/01-before.json",
+    "bytes": 14406
+  },
+  {
+    "path": "baseline-extra/02-newwindow-menu.json",
+    "bytes": 4
+  },
+  {
+    "path": "baseline-extra/03-newwindow-click.json",
+    "bytes": 4
+  },
+  {
+    "path": "baseline-extra/04-ready-0.json",
+    "bytes": 594
+  },
+  {
+    "path": "baseline-extra/05-newwindow-settled.json",
+    "bytes": 14470
+  },
+  {
+    "path": "baseline-extra/05-newwindow-settled.png",
+    "bytes": 89043
+  },
+  {
+    "path": "baseline-extra/06-workspace-popup.json",
+    "bytes": 104
+  },
+  {
+    "path": "baseline-extra/07-workspace-create.json",
+    "bytes": 4
+  },
+  {
+    "path": "baseline-extra/08-workspace-popup.json",
+    "bytes": 272
+  },
+  {
+    "path": "baseline-extra/09-workspace-first.json",
+    "bytes": 14470
+  },
+  {
+    "path": "baseline-extra/09-workspace-first.png",
+    "bytes": 89002
+  },
+  {
+    "path": "baseline-extra/10-workspace-popup.json",
+    "bytes": 4
+  },
+  {
+    "path": "baseline-extra/11-workspace-second.json",
+    "bytes": 14445
+  },
+  {
+    "path": "baseline-extra/11-workspace-second.png",
+    "bytes": 630571
+  },
+  {
+    "path": "baseline-extra/12-workspace-popup.json",
+    "bytes": 4
+  },
+  {
+    "path": "baseline-extra/13-workspace-return.json",
+    "bytes": 14470
+  },
+  {
+    "path": "baseline-extra/14-original-tab.json",
+    "bytes": 4
+  },
+  {
+    "path": "baseline-extra/15-hub-route.json",
+    "bytes": 4
+  },
+  {
+    "path": "baseline-extra/16-hub-ready-0.json",
+    "bytes": 47
+  },
+  {
+    "path": "baseline-extra/17-hub-after-workspace.json",
+    "bytes": 47
+  },
+  {
+    "path": "baseline-extra/17-hub-after-workspace.png",
+    "bytes": 59057
+  },
+  {
+    "path": "baseline-extra/18-normal-quit.json",
+    "bytes": 15847
+  },
+  {
+    "path": "baseline-extra/browser.log",
+    "bytes": 31682
+  },
+  {
+    "path": "baseline-extra/inventory-after.json",
+    "bytes": 5736
+  },
+  {
+    "path": "baseline-extra/inventory-before.json",
+    "bytes": 5736
+  },
+  {
+    "path": "baseline-extra/process.json",
+    "bytes": 167
+  },
+  {
+    "path": "baseline-extra/xvfb.log",
+    "bytes": 64
+  },
+  {
+    "path": "baseline-restart/01-restart-before-hub.json",
+    "bytes": 14408
+  },
+  {
+    "path": "baseline-restart/02-open-hub.json",
+    "bytes": 4
+  },
+  {
+    "path": "baseline-restart/03-hub-ready-0.json",
+    "bytes": 86
+  },
+  {
+    "path": "baseline-restart/04-restart-hub.json",
+    "bytes": 86
+  },
+  {
+    "path": "baseline-restart/04-restart-hub.png",
+    "bytes": 59057
+  },
+  {
+    "path": "baseline-restart/05-restart-ready-geometry.json",
+    "bytes": 265
+  },
+  {
+    "path": "baseline-restart/06-normal-quit.json",
+    "bytes": 15777
+  },
+  {
+    "path": "baseline-restart/browser.log",
+    "bytes": 16984
+  },
+  {
+    "path": "baseline-restart/inventory-after.json",
+    "bytes": 5736
+  },
+  {
+    "path": "baseline-restart/inventory-before.json",
+    "bytes": 5736
+  },
+  {
+    "path": "baseline-restart/process.json",
+    "bytes": 169
+  },
+  {
+    "path": "baseline-restart/xvfb.log",
+    "bytes": 64
+  },
+  {
+    "path": "candidate-build/before-mach.log",
+    "bytes": 2672
+  },
+  {
+    "path": "candidate-build/candidate-resource-provenance.json",
+    "bytes": 70509
+  },
+  {
+    "path": "candidate-build/canonical-source-equivalence.json",
+    "bytes": 1623
+  },
+  {
+    "path": "candidate-build/frozen-install.log",
+    "bytes": 29119
+  },
+  {
+    "path": "candidate-build/generated-assets-inventory.json",
+    "bytes": 203255
+  },
+  {
+    "path": "candidate-build/materialize_candidate.py",
+    "bytes": 3956
+  },
+  {
+    "path": "candidate-build/pr2950.patch",
+    "bytes": 26561
+  },
+  {
+    "path": "candidate-build/report.md",
+    "bytes": 1290
+  },
+  {
+    "path": "candidate-build/source-subject.json",
+    "bytes": 2343
+  },
+  {
+    "path": "candidate-migration/01-startup-before-hub.json",
+    "bytes": 14411
+  },
+  {
+    "path": "candidate-migration/02-open-hub.json",
+    "bytes": 4
+  },
+  {
+    "path": "candidate-migration/03-migration-hub.json",
+    "bytes": 481
+  },
+  {
+    "path": "candidate-migration/03-migration-hub.png",
+    "bytes": 59057
+  },
+  {
+    "path": "candidate-migration/04-hub-vertical.json",
+    "bytes": 10
+  },
+  {
+    "path": "candidate-migration/04-hub-vertical.png",
+    "bytes": 51915
+  },
+  {
+    "path": "candidate-migration/05-vertical-render.json",
+    "bytes": 14409
+  },
+  {
+    "path": "candidate-migration/06-nav-native.json",
+    "bytes": 4
+  },
+  {
+    "path": "candidate-migration/07-native-ready-0.json",
+    "bytes": 197
+  },
+  {
+    "path": "candidate-migration/08-native-off.json",
+    "bytes": 45
+  },
+  {
+    "path": "candidate-migration/08-native-off.png",
+    "bytes": 112130
+  },
+  {
+    "path": "candidate-migration/09-native-off-render.json",
+    "bytes": 14417
+  },
+  {
+    "path": "candidate-migration/10-back-hub.json",
+    "bytes": 4
+  },
+  {
+    "path": "candidate-migration/11-hub-after-off.json",
+    "bytes": 49
+  },
+  {
+    "path": "candidate-migration/11-hub-after-off.png",
+    "bytes": 59057
+  },
+  {
+    "path": "candidate-migration/12-multirow.json",
+    "bytes": 10
+  },
+  {
+    "path": "candidate-migration/12-multirow.png",
+    "bytes": 60140
+  },
+  {
+    "path": "candidate-migration/13-multirow-render.json",
+    "bytes": 14411
+  },
+  {
+    "path": "candidate-migration/14-workspaces-open.json",
+    "bytes": 2139
+  },
+  {
+    "path": "candidate-migration/15-workspaces-route.json",
+    "bytes": 4
+  },
+  {
+    "path": "candidate-migration/16-workspaces-inspect.json",
+    "bytes": 2771
+  },
+  {
+    "path": "candidate-migration/17-workspaces-chrome.json",
+    "bytes": 10405
+  },
+  {
+    "path": "candidate-migration/18-workspace-popup.json",
+    "bytes": 14937
+  },
+  {
+    "path": "candidate-migration/18-workspace-popup.png",
+    "bytes": 109339
+  },
+  {
+    "path": "candidate-migration/19-workspace-controls.json",
+    "bytes": 453
+  },
+  {
+    "path": "candidate-migration/20-create-workspace-dialog.json",
+    "bytes": 630
+  },
+  {
+    "path": "candidate-migration/21-workspace-dialog-inspect.json",
+    "bytes": 2174
+  },
+  {
+    "path": "candidate-migration/22-workspace-after-create.json",
+    "bytes": 773
+  },
+  {
+    "path": "candidate-migration/23-workspace-first.json",
+    "bytes": 14415
+  },
+  {
+    "path": "candidate-migration/23-workspace-first.png",
+    "bytes": 109216
+  },
+  {
+    "path": "candidate-migration/24-workspace-reopen.json",
+    "bytes": 4
+  },
+  {
+    "path": "candidate-migration/25-workspace-second.json",
+    "bytes": 14386
+  },
+  {
+    "path": "candidate-migration/26-workspace-reopen.json",
+    "bytes": 4
+  },
+  {
+    "path": "candidate-migration/27-workspace-return.json",
+    "bytes": 14415
+  },
+  {
+    "path": "candidate-migration/28-hub-return.json",
+    "bytes": 4
+  },
+  {
+    "path": "candidate-migration/29-hub-route.json",
+    "bytes": 4
+  },
+  {
+    "path": "candidate-migration/30-multirow-preserved.json",
+    "bytes": 47
+  },
+  {
+    "path": "candidate-migration/30-multirow-preserved.png",
+    "bytes": 59057
+  },
+  {
+    "path": "candidate-migration/31-native-on-route.json",
+    "bytes": 4
+  },
+  {
+    "path": "candidate-migration/32-native-on-point.json",
+    "bytes": 182
+  },
+  {
+    "path": "candidate-migration/33-native-on.json",
+    "bytes": 5
+  },
+  {
+    "path": "candidate-migration/34-native-on-render.json",
+    "bytes": 14415
+  },
+  {
+    "path": "candidate-migration/35-hub-return.json",
+    "bytes": 4
+  },
+  {
+    "path": "candidate-migration/36-hub-after-native-on.json",
+    "bytes": 47
+  },
+  {
+    "path": "candidate-migration/36-hub-after-native-on.png",
+    "bytes": 59057
+  },
+  {
+    "path": "candidate-migration/37-normal-quit.json",
+    "bytes": 15780
+  },
+  {
+    "path": "candidate-migration/38-restart-render.json",
+    "bytes": 14411
+  },
+  {
+    "path": "candidate-migration/39-native-route.json",
+    "bytes": 4
+  },
+  {
+    "path": "candidate-migration/40-native-on-shadow.json",
+    "bytes": 45
+  },
+  {
+    "path": "candidate-migration/40-native-on-shadow.png",
+    "bytes": 83821
+  },
+  {
+    "path": "candidate-migration/41-native-on-render.json",
+    "bytes": 14413
+  },
+  {
+    "path": "candidate-migration/42-native-on-hub.json",
+    "bytes": 4
+  },
+  {
+    "path": "candidate-migration/43-native-on-hub-state.json",
+    "bytes": 47
+  },
+  {
+    "path": "candidate-migration/43-native-on-hub-state.png",
+    "bytes": 49834
+  },
+  {
+    "path": "candidate-migration/44-newwindow-menu.json",
+    "bytes": 1109
+  },
+  {
+    "path": "candidate-migration/45-new-window-state.json",
+    "bytes": 14474
+  },
+  {
+    "path": "candidate-migration/45-new-window-state.png",
+    "bytes": 100457
+  },
+  {
+    "path": "candidate-migration/46-window-handles.json",
+    "bytes": 822
+  },
+  {
+    "path": "candidate-migration/47-new-window-settled.json",
+    "bytes": 14472
+  },
+  {
+    "path": "candidate-migration/48-new-window-ready-geometry.json",
+    "bytes": 680
+  },
+  {
+    "path": "candidate-migration/49-switch-B.json",
+    "bytes": 12
+  },
+  {
+    "path": "candidate-migration/50-hub-B.json",
+    "bytes": 4
+  },
+  {
+    "path": "candidate-migration/51-B-initial.json",
+    "bytes": 4
+  },
+  {
+    "path": "candidate-migration/52-B-multirow.json",
+    "bytes": 1546
+  },
+  {
+    "path": "candidate-migration/58-final-normal-quit.json",
+    "bytes": 334
+  },
+  {
+    "path": "candidate-migration/browser.log",
+    "bytes": 34087
+  },
+  {
+    "path": "candidate-migration/inventory-after.json",
+    "bytes": 5736
+  },
+  {
+    "path": "candidate-migration/inventory-before.json",
+    "bytes": 5736
+  },
+  {
+    "path": "candidate-migration/process.json",
+    "bytes": 180
+  },
+  {
+    "path": "candidate-migration/xvfb.log",
+    "bytes": 64
+  },
+  {
+    "path": "existing-ci/api-metadata.json",
+    "bytes": 24540
+  },
+  {
+    "path": "existing-ci/report.md",
+    "bytes": 2335
+  },
+  {
+    "path": "existing-ci/target-test-execution.json",
+    "bytes": 2976
+  },
+  {
+    "path": "existing-ci/evidence/_dist/ci-combined-browser-test.log",
+    "bytes": 82749
+  },
+  {
+    "path": "existing-ci/evidence/_dist/firefox-tests/SUMMARY.md",
+    "bytes": 832
+  },
+  {
+    "path": "existing-ci/evidence/_dist/firefox-tests/TRIAGE.md",
+    "bytes": 2058
+  },
+  {
+    "path": "existing-ci/evidence/_dist/firefox-tests/triage.json",
+    "bytes": 6202
+  },
+  {
+    "path": "existing-ci/evidence/browser-features/chrome/test/firefox-downloaded/generated/manifest.json",
+    "bytes": 6507
+  },
+  {
+    "path": "existing-ci/evidence/logs/vite-designs.log",
+    "bytes": 246
+  },
+  {
+    "path": "existing-ci/evidence/logs/vite-main.log",
+    "bytes": 350
+  },
+  {
+    "path": "existing-ci/evidence/logs/vite-modal-child.log",
+    "bytes": 273
+  },
+  {
+    "path": "existing-ci/evidence/logs/vite-newtab.log",
+    "bytes": 274
+  },
+  {
+    "path": "existing-ci/evidence/logs/vite-notes.log",
+    "bytes": 246
+  },
+  {
+    "path": "existing-ci/evidence/logs/vite-profile-manager.log",
+    "bytes": 274
+  },
+  {
+    "path": "existing-ci/evidence/logs/vite-settings.log",
+    "bytes": 247
+  },
+  {
+    "path": "existing-ci/evidence/logs/vite-welcome.log",
+    "bytes": 247
+  },
+  {
+    "path": "existing-ci/evidence/logs/vite-workflow-progress.log",
+    "bytes": 247
+  },
+  {
+    "path": "existing-ci/evidence/logs/test/latest.log",
+    "bytes": 106112
+  },
+  {
+    "path": "product-baseline/01-photon.json",
+    "bytes": 49
+  },
+  {
+    "path": "product-baseline/01-photon.png",
+    "bytes": 82368
+  },
+  {
+    "path": "product-baseline/02-hub-vertical.json",
+    "bytes": 47
+  },
+  {
+    "path": "product-baseline/02-hub-vertical.png",
+    "bytes": 58832
+  },
+  {
+    "path": "product-baseline/03-vertical-render.json",
+    "bytes": 14406
+  },
+  {
+    "path": "product-baseline/04-open-native.json",
+    "bytes": 4
+  },
+  {
+    "path": "product-baseline/05-native-controls.json",
+    "bytes": 281
+  },
+  {
+    "path": "product-baseline/06-native-loaded.json",
+    "bytes": 3496
+  },
+  {
+    "path": "product-baseline/06-native-preferences.png",
+    "bytes": 76144
+  },
+  {
+    "path": "product-baseline/07-native-shadow.json",
+    "bytes": 26900
+  },
+  {
+    "path": "product-baseline/08-native-layout.json",
+    "bytes": 5762
+  },
+  {
+    "path": "product-baseline/09-native-appearance.json",
+    "bytes": 30
+  },
+  {
+    "path": "product-baseline/10-native-off.json",
+    "bytes": 847
+  },
+  {
+    "path": "product-baseline/11-native-off-render.json",
+    "bytes": 45
+  },
+  {
+    "path": "product-baseline/12-return-hub.json",
+    "bytes": 45
+  },
+  {
+    "path": "product-baseline/13-hub-after-native-off.json",
+    "bytes": 45
+  },
+  {
+    "path": "product-baseline/browser.log",
+    "bytes": 20851
+  },
+  {
+    "path": "product-baseline/control.py",
+    "bytes": 301
+  },
+  {
+    "path": "product-baseline/design-inspect.json",
+    "bytes": 13896
+  },
+  {
+    "path": "product-baseline/hub-inspect.json",
+    "bytes": 2834
+  },
+  {
+    "path": "product-baseline/inspect.py",
+    "bytes": 2825
+  },
+  {
+    "path": "product-baseline/processes.json",
+    "bytes": 43
+  },
+  {
+    "path": "product-baseline/snapshot.js",
+    "bytes": 1125
+  },
+  {
+    "path": "product-baseline/step.py",
+    "bytes": 392
+  },
+  {
+    "path": "product-baseline/xvfb.log",
+    "bytes": 64
+  },
+  {
+    "path": "product-baseline/actual-r2/browser.log",
+    "bytes": 32
+  },
+  {
+    "path": "product-baseline/actual-r2/command.json",
+    "bytes": 162
+  },
+  {
+    "path": "product-baseline/actual-r2/inventory-before.json",
+    "bytes": 5736
+  },
+  {
+    "path": "product-baseline/actual-r2/process.json",
+    "bytes": 179
+  },
+  {
+    "path": "product-baseline/actual-r3/01-photon.json",
+    "bytes": 8
+  },
+  {
+    "path": "product-baseline/actual-r3/02-vertical.json",
+    "bytes": 10
+  },
+  {
+    "path": "product-baseline/actual-r3/02-vertical.png",
+    "bytes": 58832
+  },
+  {
+    "path": "product-baseline/actual-r3/03-render.json",
+    "bytes": 14416
+  },
+  {
+    "path": "product-baseline/actual-r3/04-native-open.json",
+    "bytes": 4
+  },
+  {
+    "path": "product-baseline/actual-r3/05-layout.json",
+    "bytes": 1679
+  },
+  {
+    "path": "product-baseline/actual-r3/06-layout-loaded.json",
+    "bytes": 91
+  },
+  {
+    "path": "product-baseline/actual-r3/07-navigate-native.json",
+    "bytes": 4
+  },
+  {
+    "path": "product-baseline/actual-r3/08-native-shadow.json",
+    "bytes": 1338
+  },
+  {
+    "path": "product-baseline/actual-r3/09-native-clickpoint.json",
+    "bytes": 178
+  },
+  {
+    "path": "product-baseline/actual-r3/10-select-current-context.json",
+    "bytes": 72
+  },
+  {
+    "path": "product-baseline/actual-r3/11-native-clickpoint.json",
+    "bytes": 272
+  },
+  {
+    "path": "product-baseline/actual-r3/12-native-off.json",
+    "bytes": 45
+  },
+  {
+    "path": "product-baseline/actual-r3/12-native-off.png",
+    "bytes": 112135
+  },
+  {
+    "path": "product-baseline/actual-r3/13-native-off-render.json",
+    "bytes": 14422
+  },
+  {
+    "path": "product-baseline/actual-r3/14-back-hub.json",
+    "bytes": 4
+  },
+  {
+    "path": "product-baseline/actual-r3/15-hub-mismatch.json",
+    "bytes": 47
+  },
+  {
+    "path": "product-baseline/actual-r3/15-hub-mismatch.png",
+    "bytes": 59057
+  },
+  {
+    "path": "product-baseline/actual-r3/16-normal-quit.json",
+    "bytes": 334
+  },
+  {
+    "path": "product-baseline/actual-r3/browser.log",
+    "bytes": 23107
+  },
+  {
+    "path": "product-baseline/actual-r3/inventory-after.json",
+    "bytes": 5736
+  },
+  {
+    "path": "product-baseline/actual-r3/inventory-before.json",
+    "bytes": 5736
+  },
+  {
+    "path": "product-baseline/actual-r3/process.json",
+    "bytes": 179
+  },
+  {
+    "path": "product-baseline/actual-r3/xvfb.log",
+    "bytes": 64
+  },
+  {
+    "path": "proposal-tests/attempt1-csp-result.json",
+    "bytes": 2407
+  },
+  {
+    "path": "proposal-tests/browser.log",
+    "bytes": 15291
+  },
+  {
+    "path": "proposal-tests/build-provenance.json",
+    "bytes": 1972
+  },
+  {
+    "path": "proposal-tests/build.cjs",
+    "bytes": 2764
+  },
+  {
+    "path": "proposal-tests/build.log",
+    "bytes": 0
+  },
+  {
+    "path": "proposal-tests/canonical-eight-file.patch",
+    "bytes": 26561
+  },
+  {
+    "path": "proposal-tests/canonical.js",
+    "bytes": 205327
+  },
+  {
+    "path": "proposal-tests/cases.js",
+    "bytes": 2934
+  },
+  {
+    "path": "proposal-tests/matrix.json",
+    "bytes": 1808
+  },
+  {
+    "path": "proposal-tests/patch-apply-checks.json",
+    "bytes": 440
+  },
+  {
+    "path": "proposal-tests/product-hashes-before.json",
+    "bytes": 4210
+  },
+  {
+    "path": "proposal-tests/proposed-dataManager.ts",
+    "bytes": 11175
+  },
+  {
+    "path": "proposal-tests/proposed-vertical-tabs-observer.ts",
+    "bytes": 1732
+  },
+  {
+    "path": "proposal-tests/proposed.js",
+    "bytes": 205356
+  },
+  {
+    "path": "proposal-tests/report.md",
+    "bytes": 4934
+  },
+  {
+    "path": "proposal-tests/reproduce.sh",
+    "bytes": 522
+  },
+  {
+    "path": "proposal-tests/result.json",
+    "bytes": 3493
+  },
+  {
+    "path": "proposal-tests/run.py",
+    "bytes": 4281
+  },
+  {
+    "path": "proposal-tests/validate-result.py",
+    "bytes": 809
+  },
+  {
+    "path": "proposal-tests/xvfb.log",
+    "bytes": 64
+  }
+]

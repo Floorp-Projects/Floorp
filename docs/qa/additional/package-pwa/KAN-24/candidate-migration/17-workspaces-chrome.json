@@ -1,0 +1,290 @@
+[
+  {
+    "tag": "menu",
+    "id": "context_MoveTabToOtherWorkspace",
+    "label": "Move Tab to Another Workspace",
+    "html": "<menu xmlns=\"http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul\" id=\"context_MoveTabToOtherWorkspace\" data-floorp-context-menu-key=\"floorp.workspaces.move-tab\" label=\"Move Tab to Another Workspace\" accesskey=\"K\"><menupopup id=\"WorkspacesTabContextMenu\"/></menu>",
+    "r": {
+      "x": 0,
+      "y": 0,
+      "width": 0,
+      "height": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "menupopup",
+    "id": "WorkspacesTabContextMenu",
+    "label": null,
+    "html": "<menupopup xmlns=\"http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul\" id=\"WorkspacesTabContextMenu\"/>",
+    "r": {
+      "x": 0,
+      "y": 0,
+      "width": 0,
+      "height": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "menu",
+    "id": "context_openInWorkspace",
+    "label": "Open Link in Another Workspace",
+    "html": "<menu xmlns=\"http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul\" id=\"context_openInWorkspace\" data-floorp-context-menu-key=\"floorp.workspaces.open-link\" label=\"Open Link in Another Workspace\" hidden=\"\" disabled=\"true\"><menupopup id=\"context_openInWorkspace_popup\"/></menu>",
+    "r": {
+      "x": 0,
+      "y": 0,
+      "width": 0,
+      "height": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "menupopup",
+    "id": "context_openInWorkspace_popup",
+    "label": null,
+    "html": "<menupopup xmlns=\"http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul\" id=\"context_openInWorkspace_popup\"/>",
+    "r": {
+      "x": 0,
+      "y": 0,
+      "width": 0,
+      "height": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "panelview",
+    "id": "workspacesToolbarButtonPanel",
+    "label": null,
+    "html": "<panelview xmlns=\"http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul\" id=\"workspacesToolbarButtonPanel\" type=\"arrow\" position=\"bottomleft topleft\"><vbox id=\"workspacesToolbarButtonPanelBox\"><arrowscrollbox id=\"workspacesPopupBox\" flex=\"1\" smoothscroll=\"true\" scrolledtoend=\"\" scrolledtostart=\"\"><vbox id=\"workspacesPopupContent\" align=\"cen",
+    "r": {
+      "x": 0,
+      "y": 0,
+      "width": 0,
+      "height": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "vbox",
+    "id": "workspacesToolbarButtonPanelBox",
+    "label": null,
+    "html": "<vbox xmlns=\"http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul\" id=\"workspacesToolbarButtonPanelBox\"><arrowscrollbox id=\"workspacesPopupBox\" flex=\"1\" smoothscroll=\"true\" scrolledtoend=\"\" scrolledtostart=\"\"><vbox id=\"workspacesPopupContent\" align=\"center\" flex=\"1\" orient=\"vertical\" class=\"statusbar-padding\" clicktoscroll=\"true\" data-rest",
+    "r": {
+      "x": 0,
+      "y": 0,
+      "width": 0,
+      "height": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "arrowscrollbox",
+    "id": "workspacesPopupBox",
+    "label": null,
+    "html": "<arrowscrollbox xmlns=\"http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul\" id=\"workspacesPopupBox\" flex=\"1\" smoothscroll=\"true\" scrolledtoend=\"\" scrolledtostart=\"\"><vbox id=\"workspacesPopupContent\" align=\"center\" flex=\"1\" orient=\"vertical\" class=\"statusbar-padding\" clicktoscroll=\"true\" data-restore-mode=\"false\"><toolbarbutton context=\"wo",
+    "r": {
+      "x": 0,
+      "y": 0,
+      "width": 0,
+      "height": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "vbox",
+    "id": "workspacesPopupContent",
+    "label": null,
+    "html": "<vbox xmlns=\"http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul\" id=\"workspacesPopupContent\" align=\"center\" flex=\"1\" orient=\"vertical\" class=\"statusbar-padding\" clicktoscroll=\"true\" data-restore-mode=\"false\"><toolbarbutton context=\"workspaces-toolbar-item-context-menu\" class=\"toolbarbutton-1 chromeclass-toolbar-additional workspaceButton",
+    "r": {
+      "x": 0,
+      "y": 0,
+      "width": 10,
+      "height": 0,
+      "top": 0,
+      "right": 10,
+      "bottom": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "toolbarbutton",
+    "id": "workspace-24683412-cc97-4bd5-8f2d-3e4018dc3b01",
+    "label": "New Workspace (0)",
+    "html": "<toolbarbutton xmlns=\"http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul\" context=\"workspaces-toolbar-item-context-menu\" class=\"toolbarbutton-1 chromeclass-toolbar-additional workspaceButton\" tabindex=\"0\" closemenu=\"none\" draggable=\"true\" id=\"workspace-24683412-cc97-4bd5-8f2d-3e4018dc3b01\" label=\"New Workspace (0)\" style=\"list-style-imag",
+    "r": {
+      "x": 5,
+      "y": 0,
+      "width": 19,
+      "height": 24,
+      "top": 0,
+      "right": 24,
+      "bottom": 24,
+      "left": 5
+    }
+  },
+  {
+    "tag": "toolbarseparator",
+    "id": "workspacesPopupSeparator",
+    "label": null,
+    "html": "<toolbarseparator xmlns=\"http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul\" id=\"workspacesPopupSeparator\"/>",
+    "r": {
+      "x": 0,
+      "y": 0,
+      "width": 4,
+      "height": 16,
+      "top": 0,
+      "right": 4,
+      "bottom": 16,
+      "left": 0
+    }
+  },
+  {
+    "tag": "hbox",
+    "id": "workspacesPopupFooter",
+    "label": null,
+    "html": "<hbox xmlns=\"http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul\" id=\"workspacesPopupFooter\" align=\"center\" pack=\"center\"><toolbarbutton id=\"workspacesCreateNewWorkspaceButton\" class=\"toolbarbutton-1 chromeclass-toolbar-additional\" context=\"tab-stacks-toolbar-item-context-menu\" flex=\"1\" label=\"Create New Workspace...\"><image class=\"toolba",
+    "r": {
+      "x": 0,
+      "y": 0,
+      "width": 0,
+      "height": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "toolbarbutton",
+    "id": "workspacesCreateNewWorkspaceButton",
+    "label": "Create New Workspace...",
+    "html": "<toolbarbutton xmlns=\"http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul\" id=\"workspacesCreateNewWorkspaceButton\" class=\"toolbarbutton-1 chromeclass-toolbar-additional\" context=\"tab-stacks-toolbar-item-context-menu\" flex=\"1\" label=\"Create New Workspace...\"><image class=\"toolbarbutton-icon\" label=\"Create New Workspace...\"/><label class=\"t",
+    "r": {
+      "x": 0,
+      "y": 0,
+      "width": 16,
+      "height": 35,
+      "top": 0,
+      "right": 16,
+      "bottom": 35,
+      "left": 0
+    }
+  },
+  {
+    "tag": "toolbarbutton",
+    "id": "workspacesRestoreWorkspaceButton",
+    "label": null,
+    "html": "<toolbarbutton xmlns=\"http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul\" id=\"workspacesRestoreWorkspaceButton\" closemenu=\"none\" class=\"toolbarbutton-1 chromeclass-toolbar-additional workspaceRestoreToggle\" title=\"Toggle restore mode\"><image class=\"toolbarbutton-icon\"/><label class=\"toolbarbutton-text\" crop=\"end\" flex=\"1\"/></toolbarbutto",
+    "r": {
+      "x": 0,
+      "y": 0,
+      "width": 16,
+      "height": 35,
+      "top": 0,
+      "right": 16,
+      "bottom": 35,
+      "left": 0
+    }
+  },
+  {
+    "tag": "toolbarbutton",
+    "id": "workspacesManageworkspacesServicesButton",
+    "label": "Manage Workspaces",
+    "html": "<toolbarbutton xmlns=\"http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul\" id=\"workspacesManageworkspacesServicesButton\" class=\"toolbarbutton-1 chromeclass-toolbar-additional\" context=\"tab-stacks-toolbar-item-context-menu\" label=\"Manage Workspaces\"><image class=\"toolbarbutton-icon\" label=\"Manage Workspaces\"/><label class=\"toolbarbutton-te",
+    "r": {
+      "x": 0,
+      "y": 0,
+      "width": 16,
+      "height": 35,
+      "top": 0,
+      "right": 16,
+      "bottom": 35,
+      "left": 0
+    }
+  },
+  {
+    "tag": "tooltip",
+    "id": "workspace-sync-tooltip-e760c17c-9c35-4f83-894f-0b2fc0109cba",
+    "label": null,
+    "html": "<tooltip xmlns=\"http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul\" id=\"workspace-sync-tooltip-e760c17c-9c35-4f83-894f-0b2fc0109cba\" class=\"workspace-sync-focus-tooltip\" role=\"tooltip\" noautofocus=\"true\"><description class=\"tooltip-label\"/><description class=\"workspace-sync-focus-reason\"/></tooltip>",
+    "r": {
+      "x": 0,
+      "y": 0,
+      "width": 0,
+      "height": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "tooltip",
+    "id": "workspace-sync-tooltip-8eff5b78-83d6-497a-ad0b-3435b0d1bc14",
+    "label": null,
+    "html": "<tooltip xmlns=\"http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul\" id=\"workspace-sync-tooltip-8eff5b78-83d6-497a-ad0b-3435b0d1bc14\" class=\"workspace-sync-focus-tooltip\" role=\"tooltip\" noautofocus=\"true\"><description class=\"tooltip-label\"/><description class=\"workspace-sync-focus-reason\"/></tooltip>",
+    "r": {
+      "x": 0,
+      "y": 0,
+      "width": 0,
+      "height": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "menupopup",
+    "id": "workspaces-toolbar-item-context-menu",
+    "label": null,
+    "html": "<menupopup xmlns=\"http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul\" id=\"workspaces-toolbar-item-context-menu\"/>",
+    "r": {
+      "x": 0,
+      "y": 0,
+      "width": 0,
+      "height": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "toolbarbutton",
+    "id": "workspaces-toolbar-button",
+    "label": "New Workspace (0)",
+    "html": "<toolbarbutton xmlns=\"http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul\" class=\"toolbarbutton-1 chromeclass-toolbar-additional\" delegatesanchor=\"true\" id=\"workspaces-toolbar-button\" widget-id=\"workspaces-toolbar-button\" widget-type=\"view\" removable=\"true\" overflows=\"true\" label=\"New Workspace (0)\" data-workspace-sync-tooltip=\"workspace-",
+    "r": {
+      "x": 979.36669921875,
+      "y": 0,
+      "width": 172.63333129882812,
+      "height": 32,
+      "top": 0,
+      "right": 1152.0000305175781,
+      "bottom": 32,
+      "left": 979.36669921875
+    }
+  }
+]

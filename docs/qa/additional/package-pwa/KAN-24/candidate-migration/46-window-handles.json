@@ -1,0 +1,36 @@
+[
+  {
+    "handle": "1409344b-36c8-4dab-99bb-ce25d77c5ec2",
+    "tabs": [
+      {
+        "handle": "1ef24193-300e-4ba9-ae3a-3b00c844bdbc",
+        "url": "about:hub#/features/design"
+      },
+      {
+        "handle": "dd6128d0-17f6-432b-ad7c-80f01a411d05",
+        "url": "about:preferences#tabsBrowsing"
+      },
+      {
+        "handle": "ac2dcf95-fbae-4703-b658-e392b73c89d1",
+        "url": "about:blank"
+      },
+      {
+        "handle": "8b1d2751-2eb5-4aac-96ed-525bba3cfd4a",
+        "url": "about:home"
+      },
+      {
+        "handle": "49d10496-ebe6-402d-9547-90e73b5ba042",
+        "url": "about:blank"
+      }
+    ]
+  },
+  {
+    "handle": "73dd55fb-af4d-4b09-b5ed-c1d79a3338a0",
+    "tabs": [
+      {
+        "handle": "b31991b2-eb2b-409d-8422-7f0caef3813d",
+        "url": "about:home"
+      }
+    ]
+  }
+]

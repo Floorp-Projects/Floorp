@@ -1,0 +1,52 @@
+{
+  "key": "KAN-24",
+  "scope": "additional target; originalLinux22 denominator unchanged",
+  "originalLinuxDenominator": 22,
+  "originalAssignedMatrixIssueCount": 7,
+  "originalMatrixSha256": "5d8c722b1c65d891ea393c88a2bd04e9407ef89962484fc9821cc063aeb6e64e",
+  "originalMatrixCommit": "52fd12877f013dbfdb027b04b548661cd355a21b",
+  "mainSha": "29a3eb23145da90706d8a94441373278521cc737",
+  "canonicalPr": 2950,
+  "canonicalPrHead": "69d306b11c9e52da9e6270870740d49b1d561659",
+  "sourceCompatibility": [
+    {
+      "path": "browser-features/chrome/common/designs",
+      "sameGitBlobs": true,
+      "treeListingSha256": "0ed25fc55787aa5d82108636912e19305a68ab99e3bc4f0d4b3f663904fda333"
+    },
+    {
+      "path": "browser-features/pages-settings/src/app/design",
+      "sameGitBlobs": true,
+      "treeListingSha256": "e539365e6a79ffa0749aad9540c280348164241a7dd201eec2542f073a1e3907"
+    },
+    {
+      "path": "browser-features/chrome/common/workspaces",
+      "sameGitBlobs": true,
+      "treeListingSha256": "98f8816ac4d095489e4abad72b62d5b49137baa8fa45f2544561e82a9f1c13d1"
+    },
+    {
+      "path": "browser-features/pages-settings/src/lib/rpc",
+      "sameGitBlobs": true,
+      "treeListingSha256": "4c5705a54fd7237ae738c0cabd7bd479f90295595bee49ce6956c32f289409cc"
+    },
+    {
+      "path": "browser-features/modules/actors/NRSettingsParent.sys.mts",
+      "sameGitBlobs": true,
+      "treeListingSha256": "d626d2b46f41b0c2ab512781b6402792de7d9e19fbe02bb1942747685b300828"
+    },
+    {
+      "path": "floorp-runtime.lock.json",
+      "sameGitBlobs": true,
+      "treeListingSha256": "b06e43b2d9438f14168d7b507d2c22644e14a4ae218ef31794d91036b8873fca"
+    }
+  ],
+  "baselineFullProduct": {
+    "sourceSha": "2deb165d75290ffd4f602ad078512dc42fc3a332",
+    "run": 42077174018,
+    "artifact": 13439144608,
+    "nativeVersion": "159.0.1",
+    "nativeBuildId": "20261103153232"
+  },
+  "gpuKAN7": "not tested by these settings/UI cases; original GPU conditions retained",
+  "coordinationCheck": "Jira all3comments, originalGitHubcomments2, canonical2950 review/comments checked; parent recent coordination tracksKAN26/KAN36/11/50, no alternate KAN24 fix identified; no other chat messages sent"
+}

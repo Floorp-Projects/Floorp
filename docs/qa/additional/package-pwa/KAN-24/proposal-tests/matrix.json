@@ -1,0 +1,83 @@
+{
+  "key": "KAN-24",
+  "github": 2949,
+  "canonicalPr": 2950,
+  "sourceSha": "69d306b11c9e52da9e6270870740d49b1d561659",
+  "environment": "actual Floorp159 native lockedRuntime, Xvfb101, API-level source bundles; no UI claim",
+  "rows": [
+    {
+      "case": "initial-observer",
+      "condition": {
+        "native": false,
+        "stored": "vertical"
+      },
+      "canonical": {
+        "actual": "vertical",
+        "passed": false
+      },
+      "proposed": {
+        "actual": "horizontal",
+        "passed": true
+      },
+      "expected": "horizontal"
+    },
+    {
+      "case": "initial-observer",
+      "condition": {
+        "native": true,
+        "stored": "horizontal"
+      },
+      "canonical": {
+        "actual": "horizontal",
+        "passed": false
+      },
+      "proposed": {
+        "actual": "vertical",
+        "passed": true
+      },
+      "expected": "vertical"
+    },
+    {
+      "case": "stale-form-unrelated-save",
+      "condition": {
+        "native": false,
+        "stale": "horizontal",
+        "latest": "multirow"
+      },
+      "canonical": {
+        "actual": "horizontal",
+        "passed": false
+      },
+      "proposed": {
+        "actual": "multirow",
+        "passed": true
+      },
+      "expected": "multirow"
+    },
+    {
+      "case": "stale-form-unrelated-save",
+      "condition": {
+        "native": false,
+        "stale": "multirow",
+        "latest": "horizontal"
+      },
+      "canonical": {
+        "actual": "multirow",
+        "passed": false
+      },
+      "proposed": {
+        "actual": "horizontal",
+        "passed": true
+      },
+      "expected": "horizontal"
+    }
+  ],
+  "normalQuit": {
+    "cause": "shutdown",
+    "forced": false,
+    "in_app": true
+  },
+  "browserExit": 0,
+  "productUnchanged": true,
+  "remainingOwnedProcesses": 0
+}

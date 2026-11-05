@@ -1,0 +1,19 @@
+{
+  "kind": "API-level canonical/proposed source bundles, actual Gecko prefs/direct RPC, no UI claim",
+  "display": ":101 Xvfb X11",
+  "product": "/workspace/qa-linux-full-build/products/3040-r2/floorp",
+  "profile": "/workspace/qa-linux-additional/KAN-24/proposal-tests/home/profile",
+  "identity": {
+    "profile": "/workspace/qa-linux-additional/KAN-24/proposal-tests/home/profile",
+    "executable": "/workspace/qa-linux-full-build/products/3040-r2/floorp/floorp",
+    "version": "159.0.1",
+    "buildID": "20261103153232",
+    "sandbox": 6,
+    "sandboxDisable": false
+  },
+  "variants": {},
+  "error": "WebDriver:ExecuteAsyncScript: {'error': 'javascript error', 'message': 'EvalError: call to eval() blocked by CSP', 'stacktrace': '@pwa_ui_probe.py:2:132\\n@pwa_ui_probe.py:3:8\\nevaluate.sandbox/promise<@chrome://remote/content/marionette/evaluate.sys.mjs:127:10\\nevaluate.sandbox@chrome://remote/content/marionette/evaluate.sys.mjs:103:17\\nexecuteScript@chrome://remote/content/marionette/actors/MarionetteCommandsChild.sys.mjs:358:26\\nreceiveMessage@chrome://remote/content/marionette/actors/MarionetteCommandsChild.sys.mjs:214:31\\n'}",
+  "traceback": "Traceback (most recent call last):\n  File \"/workspace/qa-linux-additional/KAN-24/proposal-tests/run.py\", line 41, in <module>\n    result['variants'][variant]=client.async_script(script,[expression])\n                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/workspace/qa-linux-22/package-pwa/pwa_ui_probe.py\", line 68, in async_script\n    result = self.call('WebDriver:ExecuteAsyncScript', {\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/workspace/qa-linux-22/package-pwa/pwa_ui_probe.py\", line 57, in call\n    raise RuntimeError(f'{name}: {result[2]}')\nRuntimeError: WebDriver:ExecuteAsyncScript: {'error': 'javascript error', 'message': 'EvalError: call to eval() blocked by CSP', 'stacktrace': '@pwa_ui_probe.py:2:132\\n@pwa_ui_probe.py:3:8\\nevaluate.sandbox/promise<@chrome://remote/content/marionette/evaluate.sys.mjs:127:10\\nevaluate.sandbox@chrome://remote/content/marionette/evaluate.sys.mjs:103:17\\nexecuteScript@chrome://remote/content/marionette/actors/MarionetteCommandsChild.sys.mjs:358:26\\nreceiveMessage@chrome://remote/content/marionette/actors/MarionetteCommandsChild.sys.mjs:214:31\\n'}\n",
+  "ownedProcessesRemaining": 0,
+  "allProductFilesUnchanged": true
+}

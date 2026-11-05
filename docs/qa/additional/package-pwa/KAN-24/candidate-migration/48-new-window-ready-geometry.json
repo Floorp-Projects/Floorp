@@ -1,0 +1,36 @@
+[
+  {
+    "url": "about:hub#/features/design",
+    "delayedStartupFinished": true,
+    "vertical": true,
+    "rect": {
+      "x": 0,
+      "y": 36,
+      "width": 247.6666717529297,
+      "height": 720,
+      "top": 36,
+      "right": 247.6666717529297,
+      "bottom": 756,
+      "left": 0
+    },
+    "orient": "vertical",
+    "sidebar": null
+  },
+  {
+    "url": "about:home",
+    "delayedStartupFinished": true,
+    "vertical": true,
+    "rect": {
+      "x": 0,
+      "y": 36,
+      "width": 247.6666717529297,
+      "height": 720,
+      "top": 36,
+      "right": 247.6666717529297,
+      "bottom": 756,
+      "left": 0
+    },
+    "orient": "vertical",
+    "sidebar": null
+  }
+]

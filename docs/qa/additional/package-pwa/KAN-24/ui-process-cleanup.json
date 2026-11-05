@@ -1,0 +1,11 @@
+{
+  "ownedActiveProcesses": [],
+  "noneRemaining": true,
+  "successfulSavedNormalQuitEvidence": [
+    "candidate-migration/37-normal-quit.json",
+    "candidate-migration/58-final-normal-quit.json",
+    "baseline-restart/06-normal-quit.json",
+    "baseline-extra/18-normal-quit.json"
+  ],
+  "baselineInitialQuitNote": "Initial baseline API quit and launcher wait completed; subsequent helper display-cleanup variable-shadow error overwrote response in16-normal-quit.json. Both inventories equal; preserved failure is not a browser failure."
+}

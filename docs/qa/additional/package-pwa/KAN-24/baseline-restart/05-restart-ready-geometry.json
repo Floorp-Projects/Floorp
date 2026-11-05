@@ -1,0 +1,17 @@
+[
+  {
+    "ready": true,
+    "vertical": false,
+    "rect": {
+      "x": 0,
+      "y": 0,
+      "width": 919.36669921875,
+      "height": 32,
+      "top": 0,
+      "right": 919.36669921875,
+      "bottom": 32,
+      "left": 0
+    },
+    "orient": "horizontal"
+  }
+]

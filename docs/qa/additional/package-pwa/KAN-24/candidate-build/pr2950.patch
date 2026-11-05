@@ -1,0 +1,741 @@
+diff --git a/browser-features/chrome/common/designs/configs.ts b/browser-features/chrome/common/designs/configs.ts
+index 8c6dd5df..923e9761 100644
+--- a/browser-features/chrome/common/designs/configs.ts
++++ b/browser-features/chrome/common/designs/configs.ts
+@@ -21,6 +21,7 @@ import {
+   getOldTabbarPositionConfig,
+   getOldTabbarStyleConfig,
+ } from "./utils/old-config-migrator";
++import { addVerticalTabsObserver } from "./utils/vertical-tabs-observer.ts";
+ import { type TFloorpDesignConfigs, zFloorpDesignConfigs } from "./type.ts";
+ import {} from "#features-chrome/utils/base";
+ import { createRootHMR } from "@nora/solid-xul";
+@@ -328,7 +329,15 @@ function createConfig(): [
+       }
+       const mergedResult = zFloorpDesignConfigs.decode(merged);
+       if (isRight(mergedResult)) {
+-        setConfig(mergedResult.right);
++        // The write-back effect below persists every `setConfig`, and its pref
++        // write calls this observer again. Skip identical values so the
++        // observer -> setConfig -> effect cycle cannot re-write forever. Do not
++        // put this equality on the signal itself: callers rely on a `setConfig`
++        // with an unchanged value to re-run derived effects such as the legacy
++        // chrome-extras pref mirror.
++        if (JSON.stringify(mergedResult.right) !== JSON.stringify(config())) {
++          setConfig(mergedResult.right);
++        }
+       }
+     } catch (e) {
+       console.error("Failed to parse design configs:", e);
+@@ -363,6 +372,20 @@ function createConfig(): [
+     console.error("Failed to add observer:", e);
+   }
+ 
++  try {
++    const removeVerticalTabsObserver = addVerticalTabsObserver(
++      () => config().tabbar.tabbarStyle,
++      (tabbarStyle) =>
++        setConfig((prev) => ({
++          ...prev,
++          tabbar: { ...prev.tabbar, tabbarStyle },
++        })),
++    );
++    onCleanup(removeVerticalTabsObserver);
++  } catch (e) {
++    console.error("[Designs]", "Failed to add vertical tabs observer:", e);
++  }
++
+   return [config, setConfig];
+ }
+ 
+diff --git a/browser-features/chrome/common/designs/test/tabbar-style-sync.test.ts b/browser-features/chrome/common/designs/test/tabbar-style-sync.test.ts
+new file mode 100644
+index 00000000..057c9232
+--- /dev/null
++++ b/browser-features/chrome/common/designs/test/tabbar-style-sync.test.ts
+@@ -0,0 +1,71 @@
++// SPDX-License-Identifier: MPL-2.0
++// @colocated-env browser
++
++import { assertEquals, runTests } from "../../../test/utils/test_harness.ts";
++import {
++  normalizeTabbarStyle,
++  resolveTabbarStyleFromNative,
++} from "../utils/tabbar-style-sync.ts";
++
++function testVerticalOnAlwaysVertical(): void {
++  assertEquals(
++    resolveTabbarStyleFromNative(true, "horizontal"),
++    "vertical",
++    "horizontal becomes vertical",
++  );
++  assertEquals(
++    resolveTabbarStyleFromNative(true, "multirow"),
++    "vertical",
++    "multirow becomes vertical",
++  );
++  assertEquals(
++    resolveTabbarStyleFromNative(true, "vertical"),
++    "vertical",
++    "vertical stays vertical",
++  );
++}
++
++function testVerticalOffDemotesOnlyVertical(): void {
++  assertEquals(
++    resolveTabbarStyleFromNative(false, "vertical"),
++    "horizontal",
++    "vertical is demoted to horizontal",
++  );
++  assertEquals(
++    resolveTabbarStyleFromNative(false, "horizontal"),
++    "horizontal",
++    "horizontal stays horizontal",
++  );
++  assertEquals(
++    resolveTabbarStyleFromNative(false, "multirow"),
++    "multirow",
++    "multirow must be preserved",
++  );
++}
++
++function testNormalizeTabbarStyle(): void {
++  assertEquals(normalizeTabbarStyle("horizontal"), "horizontal", "horizontal");
++  assertEquals(normalizeTabbarStyle("vertical"), "vertical", "vertical");
++  assertEquals(normalizeTabbarStyle("multirow"), "multirow", "multirow");
++  assertEquals(normalizeTabbarStyle("circular"), "horizontal", "unknown value");
++  assertEquals(normalizeTabbarStyle(undefined), "horizontal", "undefined");
++  assertEquals(normalizeTabbarStyle(null), "horizontal", "null");
++  assertEquals(normalizeTabbarStyle(42), "horizontal", "number");
++}
++
++export async function runAllTests(): Promise<void> {
++  await runTests("tabbar-style-sync.test.ts", [
++    {
++      name: "native vertical tabs on resolves to vertical",
++      fn: testVerticalOnAlwaysVertical,
++    },
++    {
++      name: "native vertical tabs off only demotes vertical",
++      fn: testVerticalOffDemotesOnlyVertical,
++    },
++    {
++      name: "unknown stored styles fall back to horizontal",
++      fn: testNormalizeTabbarStyle,
++    },
++  ]);
++}
+diff --git a/browser-features/chrome/common/designs/test/vertical-tabs-observer.test.ts b/browser-features/chrome/common/designs/test/vertical-tabs-observer.test.ts
+new file mode 100644
+index 00000000..c0b071b7
+--- /dev/null
++++ b/browser-features/chrome/common/designs/test/vertical-tabs-observer.test.ts
+@@ -0,0 +1,160 @@
++// SPDX-License-Identifier: MPL-2.0
++// @colocated-env browser
++
++import { assertEquals, runTests } from "../../../test/utils/test_harness.ts";
++import { config, setConfig } from "../configs.ts";
++import type { TabbarStyle } from "../utils/tabbar-style-sync.ts";
++import { addVerticalTabsObserver } from "../utils/vertical-tabs-observer.ts";
++
++const PREF = "sidebar.verticalTabs";
++
++function withVerticalTabsPref<T>(value: boolean, fn: () => T): T {
++  const hadUserValue = Services.prefs.prefHasUserValue(PREF);
++  const previous = hadUserValue
++    ? Services.prefs.getBoolPref(PREF)
++    : undefined;
++  const previousConfig = config();
++  Services.prefs.setBoolPref(PREF, value);
++  try {
++    return fn();
++  } finally {
++    // Restore the pref first: the production observer in configs.ts reacts to
++    // this pref and rewrites the design config, so restoring the config has to
++    // be the last step.
++    if (hadUserValue && previous !== undefined) {
++      Services.prefs.setBoolPref(PREF, previous);
++    } else {
++      Services.prefs.clearUserPref(PREF);
++    }
++    setConfig(previousConfig);
++  }
++}
++
++type ObserverState = {
++  applied: TabbarStyle[];
++  getStyle: () => TabbarStyle;
++  remove: () => void;
++};
++
++function createObserver(initialStyle: TabbarStyle): ObserverState {
++  let style = initialStyle;
++  const applied: TabbarStyle[] = [];
++  const remove = addVerticalTabsObserver(
++    () => style,
++    (next) => {
++      style = next;
++      applied.push(next);
++    },
++  );
++  return {
++    applied,
++    getStyle: () => style,
++    remove,
++  };
++}
++
++function testTurningVerticalOnAppliesVertical(): void {
++  withVerticalTabsPref(false, () => {
++    const state = createObserver("horizontal");
++    try {
++      Services.prefs.setBoolPref(PREF, true);
++      assertEquals(state.applied.length, 1, "applyStyle should run once");
++      assertEquals(state.applied[0], "vertical", "style becomes vertical");
++    } finally {
++      state.remove();
++    }
++  });
++}
++
++function testTurningVerticalOffAppliesHorizontal(): void {
++  withVerticalTabsPref(false, () => {
++    const state = createObserver("horizontal");
++    try {
++      Services.prefs.setBoolPref(PREF, true);
++      Services.prefs.setBoolPref(PREF, false);
++      assertEquals(
++        state.applied.length,
++        2,
++        "both transitions should apply",
++      );
++      assertEquals(
++        state.applied[1],
++        "horizontal",
++        "vertical is demoted to horizontal",
++      );
++    } finally {
++      state.remove();
++    }
++  });
++}
++
++function testTurningVerticalOffKeepsMultirow(): void {
++  withVerticalTabsPref(true, () => {
++    const state = createObserver("multirow");
++    try {
++      Services.prefs.setBoolPref(PREF, false);
++      assertEquals(
++        state.applied.length,
++        0,
++        "multirow must not be rewritten",
++      );
++      assertEquals(state.getStyle(), "multirow", "style remains multirow");
++    } finally {
++      state.remove();
++    }
++  });
++}
++
++function testMatchingStyleIsNoOp(): void {
++  withVerticalTabsPref(false, () => {
++    const state = createObserver("vertical");
++    try {
++      Services.prefs.setBoolPref(PREF, true);
++      assertEquals(
++        state.applied.length,
++        0,
++        "matching style should not be applied again",
++      );
++    } finally {
++      state.remove();
++    }
++  });
++}
++
++function testCleanupRemovesObserver(): void {
++  withVerticalTabsPref(false, () => {
++    const state = createObserver("horizontal");
++    state.remove();
++    Services.prefs.setBoolPref(PREF, true);
++    assertEquals(
++      state.applied.length,
++      0,
++      "observer must not run after cleanup",
++    );
++  });
++}
++
++export async function runAllTests(): Promise<void> {
++  await runTests("vertical-tabs-observer.test.ts", [
++    {
++      name: "turning native vertical tabs on applies vertical",
++      fn: testTurningVerticalOnAppliesVertical,
++    },
++    {
++      name: "turning native vertical tabs off applies horizontal",
++      fn: testTurningVerticalOffAppliesHorizontal,
++    },
++    {
++      name: "turning native vertical tabs off keeps multirow",
++      fn: testTurningVerticalOffKeepsMultirow,
++    },
++    {
++      name: "matching native style is a no-op",
++      fn: testMatchingStyleIsNoOp,
++    },
++    {
++      name: "cleanup removes the pref observer",
++      fn: testCleanupRemovesObserver,
++    },
++  ]);
++}
+diff --git a/browser-features/chrome/common/designs/utils/tabbar-style-sync.ts b/browser-features/chrome/common/designs/utils/tabbar-style-sync.ts
+new file mode 100644
+index 00000000..1d0be70f
+--- /dev/null
++++ b/browser-features/chrome/common/designs/utils/tabbar-style-sync.ts
+@@ -0,0 +1,44 @@
++/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
++ * This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this
++ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
++
++import type { TFloorpDesignConfigs } from "../type.ts";
++
++/**
++ * Firefox's own switch for the native vertical tab bar.
++ *
++ * Setting it to `true` also makes Firefox set `sidebar.revamp` to `true`
++ * itself, so Floorp must never write `sidebar.revamp` on its own: doing so
++ * would break Firefox's invariant that vertical tabs imply the revamped
++ * sidebar.
++ */
++export const VERTICAL_TABS_PREF = "sidebar.verticalTabs";
++
++export type TabbarStyle = TFloorpDesignConfigs["tabbar"]["tabbarStyle"];
++
++/** Validate a value read from JSON or another untyped source. */
++export function normalizeTabbarStyle(value: unknown): TabbarStyle {
++  return value === "horizontal" || value === "vertical" || value === "multirow"
++    ? value
++    : "horizontal";
++}
++
++/**
++ * Derive the Floorp tab bar style from the native vertical tabs pref.
++ *
++ * Turning native vertical tabs on always means "vertical". Turning them off
++ * only demotes an existing vertical style back to "horizontal"; horizontal and
++ * multirow styles are left untouched, since the native pref says nothing about
++ * them.
++ *
++ * This module must stay free of `Services` access so the settings page, which
++ * does not load the Gecko typings, can import it too.
++ */
++export function resolveTabbarStyleFromNative(
++  isVertical: boolean,
++  current: TabbarStyle,
++): TabbarStyle {
++  if (isVertical) return "vertical";
++  return current === "vertical" ? "horizontal" : current;
++}
+diff --git a/browser-features/chrome/common/designs/utils/vertical-tabs-observer.ts b/browser-features/chrome/common/designs/utils/vertical-tabs-observer.ts
+new file mode 100644
+index 00000000..a0ee35c5
+--- /dev/null
++++ b/browser-features/chrome/common/designs/utils/vertical-tabs-observer.ts
+@@ -0,0 +1,59 @@
++/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
++ * This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this
++ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
++
++import {
++  resolveTabbarStyleFromNative,
++  type TabbarStyle,
++  VERTICAL_TABS_PREF,
++} from "./tabbar-style-sync.ts";
++
++/**
++ * Mirror native `sidebar.verticalTabs` changes into the Floorp design config.
++ *
++ * `getStyle` reads the current Floorp style and `applyStyle` writes a new one;
++ * `applyStyle` is only called when the resolved style actually differs. Returns
++ * the teardown function for the observer.
++ */
++export function addVerticalTabsObserver(
++  getStyle: () => TabbarStyle,
++  applyStyle: (style: TabbarStyle) => void,
++): () => void {
++  const onPrefChange = () => {
++    try {
++      if (
++        Services.prefs.getPrefType(VERTICAL_TABS_PREF) !==
++          Services.prefs.PREF_BOOL
++      ) {
++        return;
++      }
++      const isVertical = Services.prefs.getBoolPref(VERTICAL_TABS_PREF, false);
++      const current = getStyle();
++      const next = resolveTabbarStyleFromNative(isVertical, current);
++      if (next !== current) {
++        applyStyle(next);
++      }
++    } catch (e) {
++      console.error(
++        "[Designs]",
++        "Failed to sync the tab bar style from the native vertical tabs pref:",
++        e,
++      );
++    }
++  };
++
++  Services.prefs.addObserver(VERTICAL_TABS_PREF, onPrefChange);
++
++  return () => {
++    try {
++      Services.prefs.removeObserver(VERTICAL_TABS_PREF, onPrefChange);
++    } catch (e) {
++      console.error(
++        "[Designs]",
++        "Failed to remove the vertical tabs observer:",
++        e,
++      );
++    }
++  };
++}
+diff --git a/browser-features/pages-settings/src/app/design/dataManager.ts b/browser-features/pages-settings/src/app/design/dataManager.ts
+index 07c56d3f..9dbe41fb 100644
+--- a/browser-features/pages-settings/src/app/design/dataManager.ts
++++ b/browser-features/pages-settings/src/app/design/dataManager.ts
+@@ -5,6 +5,12 @@ import {
+   type ChromeExtrasKey,
+   type ChromeExtrasSettings,
+ } from "#features-chrome/common/designs/chrome-extras.ts";
++import {
++  normalizeTabbarStyle,
++  resolveTabbarStyleFromNative,
++  type TabbarStyle,
++  VERTICAL_TABS_PREF,
++} from "#features-chrome/common/designs/utils/tabbar-style-sync.ts";
+ 
+ const SPLIT_VIEW_DND_CREATE_PREF = "floorp.splitView.dragToSplitCreate.enabled";
+ const DEFAULT_SPLIT_VIEW_DND_CREATE = false;
+@@ -130,6 +136,18 @@ async function saveDesignSettingsUnqueued(
+     return null;
+   }
+   const oldData = JSON.parse(result);
++  const { hasTabStyleChanged = false } = options;
++
++  // Keep the stored style authoritative unless the user changed it. Reading
++  // the native pref here prevents an unrelated edit from writing back a style
++  // that a Firefox-side toggle already changed in another window.
++  const storedStyle = normalizeTabbarStyle(oldData.tabbar?.tabbarStyle);
++  const requestedStyle = normalizeTabbarStyle(settings.style ?? storedStyle);
++  const nativeVerticalTabs = await rpc.getBoolPref(VERTICAL_TABS_PREF);
++  const tabbarStyle =
++    !hasTabStyleChanged && nativeVerticalTabs !== null
++      ? resolveTabbarStyleFromNative(nativeVerticalTabs, requestedStyle)
++      : requestedStyle;
+ 
+   const newData = {
+     ...oldData,
+@@ -141,7 +159,7 @@ async function saveDesignSettingsUnqueued(
+     tabbar: {
+       ...oldData.tabbar,
+       tabbarPosition: settings.position,
+-      tabbarStyle: settings.style,
++      tabbarStyle,
+       multiRowTabBar: {
+         ...oldData.tabbar.multiRowTabBar,
+         maxRowEnabled: settings.maxRowEnabled,
+@@ -203,15 +221,11 @@ async function saveDesignSettingsUnqueued(
+     settings.tabDragToSplitCreate,
+   );
+ 
+-  const { hasTabStyleChanged = false } = options;
+-
+   if (hasTabStyleChanged && settings.style !== undefined) {
+-    const isVertical = settings.style === "vertical";
+-    await rpc.setBoolPref("sidebar.verticalTabs", isVertical);
+-
+-    if (!isVertical) {
+-      await rpc.setBoolPref("sidebar.revamp", false);
+-    }
++    // Firefox derives `sidebar.revamp` from `sidebar.verticalTabs` by itself,
++    // so this is the only pref to write. Writing `sidebar.revamp` here used to
++    // break that invariant.
++    await rpc.setBoolPref(VERTICAL_TABS_PREF, requestedStyle === "vertical");
+   }
+ }
+ 
+@@ -225,10 +239,18 @@ export async function getDesignSettings(): Promise<DesignFormData | null> {
+   const splitViewDndCreateEnabled = await rpc.getBoolPref(
+     SPLIT_VIEW_DND_CREATE_PREF,
+   );
++  // `null` means the pref does not exist in this build, in which case the
++  // stored design config is authoritative.
++  const nativeVerticalTabs = await rpc.getBoolPref(VERTICAL_TABS_PREF);
++  const tabbarStyle: TabbarStyle = normalizeTabbarStyle(
++    data.tabbar?.tabbarStyle,
++  );
+   const formData: DesignFormData = {
+     design: data.globalConfigs.userInterface,
+     position: data.tabbar.tabbarPosition,
+-    style: data.tabbar.tabbarStyle,
++    style: nativeVerticalTabs === null
++      ? tabbarStyle
++      : resolveTabbarStyleFromNative(nativeVerticalTabs, tabbarStyle),
+     tabOpenPosition: data.tab.tabOpenPosition,
+     tabMinHeight: data.tab.tabMinHeight,
+     tabMinWidth: data.tab.tabMinWidth,
+diff --git a/browser-features/pages-settings/src/app/design/page.tsx b/browser-features/pages-settings/src/app/design/page.tsx
+index bda42ac5..1684b962 100644
+--- a/browser-features/pages-settings/src/app/design/page.tsx
++++ b/browser-features/pages-settings/src/app/design/page.tsx
+@@ -43,14 +43,17 @@ export default function Page() {
+ 
+   React.useEffect(() => {
+     let active = true;
++    let fetching = false;
+     mountedRef.current = true;
+     const fetchDefaultValues = async () => {
++      if (fetching) return;
+       // Preserve pending or failed edits when the window regains focus.
+       if (
+         pendingRef.current ||
+         JSON.stringify(lastRequestedSettingsRef.current) !==
+           JSON.stringify(lastSavedSettingsRef.current)
+       ) return;
++      fetching = true;
+       try {
+         const values = await getDesignSettings();
+         if (!active) return;
+@@ -69,14 +72,23 @@ export default function Page() {
+         if (!active) return;
+         console.error("[Settings:design] Load failed", error);
+         setLoadError(true);
++      } finally {
++        fetching = false;
+       }
+     };
+     fetchDefaultValues();
+     globalThis.addEventListener("focus", fetchDefaultValues);
++    const handleVisibilityChange = () => {
++      if (document.visibilityState === "visible") {
++        fetchDefaultValues();
++      }
++    };
++    document.addEventListener("visibilitychange", handleVisibilityChange);
+     return () => {
+       active = false;
+       mountedRef.current = false;
+       globalThis.removeEventListener("focus", fetchDefaultValues);
++      document.removeEventListener("visibilitychange", handleVisibilityChange);
+     };
+   }, [cloneDesignSettings, reset]);
+ 
+diff --git a/browser-features/pages-settings/test/integration/settings.test.ts b/browser-features/pages-settings/test/integration/settings.test.ts
+index e7929eda..fcbab1d0 100644
+--- a/browser-features/pages-settings/test/integration/settings.test.ts
++++ b/browser-features/pages-settings/test/integration/settings.test.ts
+@@ -676,6 +676,197 @@ export async function runPageTests() {
+       },
+     });
+   }
++  tests.push({
++    name: "Design style saves only sidebar.verticalTabs",
++    fn: async () => {
++      const originalDesign = prefs.get(DESIGN);
++      const hadVerticalTabs = prefs.has("sidebar.verticalTabs");
++      const originalVerticalTabs = prefs.get("sidebar.verticalTabs");
++      try {
++        const saved = JSON.parse(String(originalDesign));
++        saved.tabbar.tabbarStyle = "horizontal";
++        prefs.set(DESIGN, JSON.stringify(saved));
++        prefs.delete("sidebar.revamp");
++        await route(
++          "features/design",
++          'input[name="style"][value="horizontal"]',
++        );
++
++        await click('input[name="style"][value="vertical"]');
++        await until(
++          () => prefs.get("sidebar.verticalTabs") === true,
++          "Vertical tabs pref was not enabled",
++        );
++        assert(
++          !prefs.has("sidebar.revamp"),
++          "Floorp must not write sidebar.revamp",
++        );
++
++        await click('input[name="style"][value="multirow"]');
++        await until(
++          () => prefs.get("sidebar.verticalTabs") === false,
++          "Multirow did not disable native vertical tabs",
++        );
++        assert(
++          !prefs.has("sidebar.revamp"),
++          "Floorp must not write sidebar.revamp for multirow",
++        );
++
++        await click('input[name="style"][value="horizontal"]');
++        await until(
++          () => prefs.get("sidebar.verticalTabs") === false,
++          "Horizontal did not disable native vertical tabs",
++        );
++        assert(
++          !prefs.has("sidebar.revamp"),
++          "Floorp must not write sidebar.revamp for horizontal",
++        );
++      } finally {
++        if (originalDesign === undefined) prefs.delete(DESIGN);
++        else prefs.set(DESIGN, originalDesign);
++        if (hadVerticalTabs && originalVerticalTabs !== undefined) {
++          prefs.set("sidebar.verticalTabs", originalVerticalTabs);
++        } else {
++          prefs.delete("sidebar.verticalTabs");
++        }
++        prefs.delete("sidebar.revamp");
++      }
++    },
++  });
++  tests.push({
++    name: "Design reflects native vertical tabs turned off",
++    fn: async () => {
++      const originalDesign = prefs.get(DESIGN);
++      const hadVerticalTabs = prefs.has("sidebar.verticalTabs");
++      const originalVerticalTabs = prefs.get("sidebar.verticalTabs");
++      try {
++        const saved = JSON.parse(String(originalDesign));
++        saved.tabbar.tabbarStyle = "vertical";
++        prefs.set(DESIGN, JSON.stringify(saved));
++        prefs.set("sidebar.verticalTabs", false);
++        await route(
++          "features/design",
++          'input[name="style"][value="horizontal"]',
++        );
++        assert(
++          element<HTMLInputElement>('input[name="style"][value="horizontal"]')
++            .checked,
++          "The Hub must show horizontal when native vertical tabs are off",
++        );
++        assertEquals(
++          valueAt(DESIGN, "tabbar.tabbarStyle"),
++          "vertical",
++          "Loading the page must not rewrite the stored config",
++        );
++      } finally {
++        if (originalDesign === undefined) prefs.delete(DESIGN);
++        else prefs.set(DESIGN, originalDesign);
++        if (hadVerticalTabs && originalVerticalTabs !== undefined) {
++          prefs.set("sidebar.verticalTabs", originalVerticalTabs);
++        } else {
++          prefs.delete("sidebar.verticalTabs");
++        }
++      }
++    },
++  });
++  tests.push({
++    name: "Design keeps vertical when the native pref is unavailable",
++    fn: async () => {
++      const originalDesign = prefs.get(DESIGN);
++      const hadVerticalTabs = prefs.has("sidebar.verticalTabs");
++      const originalVerticalTabs = prefs.get("sidebar.verticalTabs");
++      try {
++        const saved = JSON.parse(String(originalDesign));
++        saved.tabbar.tabbarStyle = "vertical";
++        prefs.set(DESIGN, JSON.stringify(saved));
++        prefs.delete("sidebar.verticalTabs");
++        await route("features/design", 'input[name="style"][value="vertical"]');
++        assert(
++          element<HTMLInputElement>('input[name="style"][value="vertical"]')
++            .checked,
++          "A missing native pref must fall back to the stored config",
++        );
++      } finally {
++        if (originalDesign === undefined) prefs.delete(DESIGN);
++        else prefs.set(DESIGN, originalDesign);
++        if (hadVerticalTabs && originalVerticalTabs !== undefined) {
++          prefs.set("sidebar.verticalTabs", originalVerticalTabs);
++        } else {
++          prefs.delete("sidebar.verticalTabs");
++        }
++      }
++    },
++  });
++  tests.push({
++    name: "Design unrelated edits leave native vertical tabs untouched",
++    fn: async () => {
++      const originalDesign = prefs.get(DESIGN);
++      const hadVerticalTabs = prefs.has("sidebar.verticalTabs");
++      const originalVerticalTabs = prefs.get("sidebar.verticalTabs");
++      try {
++        const saved = JSON.parse(String(originalDesign));
++        saved.tabbar.tabbarStyle = "vertical";
++        saved.globalConfigs.faviconColor = false;
++        prefs.set(DESIGN, JSON.stringify(saved));
++        prefs.set("sidebar.verticalTabs", true);
++        await route("features/design", "#favicon-color");
++        await toggle("#favicon-color", DESIGN, "globalConfigs.faviconColor");
++        assertEquals(
++          prefs.get("sidebar.verticalTabs"),
++          true,
++          "Unrelated edits must not change the native vertical tabs pref",
++        );
++        assertEquals(
++          valueAt(DESIGN, "tabbar.tabbarStyle"),
++          "vertical",
++          "Unrelated edits must keep the effective style",
++        );
++      } finally {
++        if (originalDesign === undefined) prefs.delete(DESIGN);
++        else prefs.set(DESIGN, originalDesign);
++        if (hadVerticalTabs && originalVerticalTabs !== undefined) {
++          prefs.set("sidebar.verticalTabs", originalVerticalTabs);
++        } else {
++          prefs.delete("sidebar.verticalTabs");
++        }
++      }
++    },
++  });
++  tests.push({
++    name: "Design unrelated edits heal a stale vertical config",
++    fn: async () => {
++      const originalDesign = prefs.get(DESIGN);
++      const hadVerticalTabs = prefs.has("sidebar.verticalTabs");
++      const originalVerticalTabs = prefs.get("sidebar.verticalTabs");
++      try {
++        const saved = JSON.parse(String(originalDesign));
++        saved.tabbar.tabbarStyle = "vertical";
++        saved.globalConfigs.faviconColor = false;
++        prefs.set(DESIGN, JSON.stringify(saved));
++        prefs.set("sidebar.verticalTabs", false);
++        await route("features/design", "#favicon-color");
++        await toggle("#favicon-color", DESIGN, "globalConfigs.faviconColor");
++        assertEquals(
++          valueAt(DESIGN, "tabbar.tabbarStyle"),
++          "horizontal",
++          "Saving must persist the effective native style",
++        );
++        assertEquals(
++          prefs.get("sidebar.verticalTabs"),
++          false,
++          "Native vertical tabs must stay off",
++        );
++      } finally {
++        if (originalDesign === undefined) prefs.delete(DESIGN);
++        else prefs.set(DESIGN, originalDesign);
++        if (hadVerticalTabs && originalVerticalTabs !== undefined) {
++          prefs.set("sidebar.verticalTabs", originalVerticalTabs);
++        } else {
++          prefs.delete("sidebar.verticalTabs");
++        }
++      }
++    },
++  });
+   await executeCases(tests);
+ }
+ 

@@ -1,0 +1,117 @@
+{
+  "key": "KAN-24",
+  "github": "https://github.com/Floorp-Projects/Floorp/issues/2949",
+  "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2950",
+  "newPr": null,
+  "jiraCommentId": null,
+  "sourceSha": {
+    "baselineFullPackage": "2deb165d75290ffd4f602ad078512dc42fc3a332",
+    "candidateBase": "29a3eb23145da90706d8a94441373278521cc737",
+    "candidatePrHead": "69d306b11c9e52da9e6270870740d49b1d561659"
+  },
+  "productVersion": {
+    "ServicesVersion": "159.0.1",
+    "ServicesAppBuildID": "20261103153232"
+  },
+  "environment": {
+    "os": "Debian GNU/Linux13.6",
+    "display": "Xvfb :100 X11; actual product GUI, no KDE/Wayland/physical input claim",
+    "input": "synthetic Marionette WebDriver element/shadow-element/pointer clicks",
+    "contentSandboxLevel": 6,
+    "experimentForced": false,
+    "candidateOrigin": "authenticated native package with scoped generated chrome/settings assets; NOT full product build"
+  },
+  "testCommand": "python3 ui_server.py <case-root> <product-root> <port> [startup-url]; run_steps.py/candidate_roundtrip.py/workspace_followup.py/restart_followup.py/baseline_restart_steps.py drive recorded requests",
+  "result": "baseline reproduced; existing candidate corrects live bidirectional synchronization but initial stored-sync gap remains",
+  "remainingConditions": [
+    "Original reported macOS Photon environment not exercised (Linux Photon exercised).",
+    "Initial nativefalse/storedvertical profile remains unsynchronized in candidate until later live change/save; Hub getter alone reads horizontal.",
+    "Two-visible-window pending-save race not established through actual UI; no Apply control exists in current autosave Hub. Two-window extra attempt failed readiness before mutation and is not product evidence.",
+    "Multirow persistence verified with few tabs, not overflowing many-row geometry.",
+    "Candidate scoped asset substitution is not final full-product CI qualification."
+  ],
+  "cases": [
+    {
+      "id": "hub-to-native",
+      "baseline": "pass",
+      "candidate": "pass",
+      "observation": "Photon selected by actual Hub radio; vertical selected by real WebDriver ElementClick; native true and rendered vertical.",
+      "evidence": [
+        "product-baseline/actual-r3/01-photon.json",
+        "product-baseline/actual-r3/03-render.json",
+        "candidate-migration/05-vertical-render.json"
+      ]
+    },
+    {
+      "id": "native-off-to-hub",
+      "baseline": "reproduced",
+      "candidate": "pass",
+      "observation": "Native rendered horizontal picker clicked: baseline native/rendered horizontal but stored/Hub vertical; candidate stored/Hub horizontal.",
+      "evidence": [
+        "product-baseline/actual-r3/12-native-off.json",
+        "product-baseline/actual-r3/13-native-off-render.json",
+        "product-baseline/actual-r3/15-hub-mismatch.json",
+        "candidate-migration/08-native-off.json",
+        "candidate-migration/09-native-off-render.json",
+        "candidate-migration/11-hub-after-off.json"
+      ]
+    },
+    {
+      "id": "native-on-to-hub",
+      "baseline": "not-run",
+      "candidate": "pass",
+      "observation": "Candidate actual shadow-button WebDriver ElementClick enables native vertical, mirrors stored vertical, Hub vertical.",
+      "evidence": [
+        "candidate-migration/40-native-on-shadow.json",
+        "candidate-migration/41-native-on-render.json",
+        "candidate-migration/43-native-on-hub-state.json"
+      ]
+    },
+    {
+      "id": "normal-restart-and-migration",
+      "baseline": "reproduced",
+      "candidate": "partial",
+      "observation": "Natural baseline UI mismatch preserved in frozen profile clone. Baseline restart still Hub/stored vertical but rendered/native horizontal. Candidate startup still stored vertical while native/rendered horizontal, but Hub reads horizontal. After later UI multirow selection, normal restart preserves native false/stored multirow.",
+      "evidence": [
+        "baseline-restart/01-restart-before-hub.json",
+        "baseline-restart/04-restart-hub.json",
+        "baseline-restart/05-restart-ready-geometry.json",
+        "candidate-migration/01-startup-before-hub.json",
+        "candidate-migration/03-migration-hub.json",
+        "candidate-migration/38-restart-render.json"
+      ]
+    },
+    {
+      "id": "new-window",
+      "baseline": "reproduced",
+      "candidate": "pass",
+      "observation": "Actual hamburger New Window clicked. Early startup false/about:blank preserved; after delayedStartupFinished both actual windows vertical with geometry/orient. Baseline natural mismatch survives real NewWindow: both windows delayed startup ready and actually horizontal, storedvertical persists.",
+      "evidence": [
+        "candidate-migration/45-new-window-state.json",
+        "candidate-migration/47-new-window-settled.json",
+        "candidate-migration/48-new-window-ready-geometry.json",
+        "baseline-extra/04-ready-0.json",
+        "baseline-extra/05-newwindow-settled.json"
+      ]
+    },
+    {
+      "id": "workspace-and-multirow-preservation",
+      "baseline": "reproduced",
+      "candidate": "pass-limited",
+      "observation": "Actual toolbar Create New Workspace then first\u2192second\u2192first synthetic clicks preserve native false/stored multirow; Hub reads multirow. No overflow/many-row layout stress claim. Baseline actual create/switch first\u2192second\u2192first preserves nativefalse/storedvertical mismatch and Hubvertical.",
+      "evidence": [
+        "candidate-migration/22-workspace-after-create.json",
+        "candidate-migration/23-workspace-first.json",
+        "candidate-migration/25-workspace-second.json",
+        "candidate-migration/27-workspace-return.json",
+        "candidate-migration/30-multirow-preserved.json",
+        "baseline-extra/08-workspace-popup.json",
+        "baseline-extra/09-workspace-first.json",
+        "baseline-extra/11-workspace-second.json",
+        "baseline-extra/13-workspace-return.json",
+        "baseline-extra/17-hub-after-workspace.json"
+      ]
+    }
+  ],
+  "startupObservationNuance": "Startup snapshots precede explicit test navigation, but recorded selected browser is already session-restored Hub; not a no-Hub-loaded startup claim."
+}

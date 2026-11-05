@@ -1,0 +1,39 @@
+{
+  "button": "New Workspace (1)",
+  "workspaces": [
+    {
+      "id": "workspace-24683412-cc97-4bd5-8f2d-3e4018dc3b01",
+      "label": "New Workspace (0)",
+      "checked": null,
+      "selected": null
+    },
+    {
+      "id": "workspace-b32b2d19-038f-4a1e-9609-74c1664e1be6",
+      "label": "New Workspace (1)",
+      "checked": null,
+      "selected": null
+    }
+  ],
+  "tabs": [
+    {
+      "url": "about:hub#/features/workspaces",
+      "hidden": true,
+      "workspace": null
+    },
+    {
+      "url": "about:preferences#tabsBrowsing",
+      "hidden": true,
+      "workspace": null
+    },
+    {
+      "url": "about:blank",
+      "hidden": true,
+      "workspace": null
+    },
+    {
+      "url": "about:home",
+      "hidden": false,
+      "workspace": null
+    }
+  ]
+}

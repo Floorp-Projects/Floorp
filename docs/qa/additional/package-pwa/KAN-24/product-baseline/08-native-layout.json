@@ -1,0 +1,257 @@
+{
+  "parent": "<moz-visual-picker xmlns=\"http://www.w3.org/1999/xhtml\" id=\"browserLayoutRadioGroup\" data-l10n-attrs=\"description,label,arialabel\"><!--?lit$023874455$--><!----><moz-visual-picker-item id=\"browserLayoutHorizontalTabs\" data-l10n-id=\"browser-layout-horizontal-tabs2\" class=\"setting-chooser-item\" imagesrc=\"chrome://browser/content/preferences/browser-layout-horizontal.svg\" data-l10n-attrs=\"label,description,arialabel\" labelposition=\"inside\" orientation=\"horizontal\" label=\"Horizontal tabs\" description=\"Tabs at the top\"><!--?lit$023874455$--></moz-visual-picker-item><!----><!----><moz-visual-picker-item id=\"browserLayoutVerticalTabs\" data-l10n-id=\"browser-layout-vertical-tabs2\" class=\"setting-chooser-item\" imagesrc=\"chrome://browser/content/preferences/browser-layout-vertical.svg\" data-l10n-attrs=\"label,description,arialabel\" checked=\"\" labelposition=\"inside\" orientation=\"horizontal\" label=\"Vertical tabs\" description=\"Tabs on the side, in the sidebar\"><!--?lit$023874455$--></moz-visual-picker-item><!----></moz-visual-picker>",
+  "anc": [
+    {
+      "tag": "moz-visual-picker-item",
+      "id": "browserLayoutVerticalTabs",
+      "hidden": false
+    },
+    {
+      "tag": "moz-visual-picker",
+      "id": "browserLayoutRadioGroup",
+      "hidden": false
+    },
+    {
+      "tag": "setting-control",
+      "id": "setting-control-browserLayoutRadioGroup",
+      "hidden": false
+    },
+    {
+      "tag": "moz-fieldset",
+      "id": "",
+      "hidden": false
+    },
+    {
+      "tag": "moz-card",
+      "id": "",
+      "hidden": false
+    },
+    {
+      "tag": "setting-group",
+      "id": "",
+      "hidden": false
+    },
+    {
+      "tag": "section",
+      "id": "",
+      "hidden": false
+    },
+    {
+      "tag": "setting-pane",
+      "id": "",
+      "hidden": true
+    },
+    {
+      "tag": "vbox",
+      "id": "mainPrefPane",
+      "hidden": false
+    },
+    {
+      "tag": "vbox",
+      "id": "",
+      "hidden": false
+    },
+    {
+      "tag": "vbox",
+      "id": "",
+      "hidden": false
+    },
+    {
+      "tag": "hbox",
+      "id": "",
+      "hidden": false
+    },
+    {
+      "tag": "stack",
+      "id": "preferences-stack",
+      "hidden": false
+    },
+    {
+      "tag": "html:body",
+      "id": "preferences-body",
+      "hidden": false
+    },
+    {
+      "tag": "html",
+      "id": "preferences-root",
+      "hidden": false
+    }
+  ],
+  "categories": [
+    {
+      "id": "category-general",
+      "label": "General",
+      "view": "paneGeneral"
+    },
+    {
+      "id": "category-nora-link",
+      "label": "Floorp Hub",
+      "view": null
+    },
+    {
+      "id": "category-sync",
+      "label": "Account and sync",
+      "view": "paneSync"
+    },
+    {
+      "id": "category-home",
+      "label": "Home and startup",
+      "view": "paneHome"
+    },
+    {
+      "id": "category-search",
+      "label": "Search",
+      "view": "paneSearch"
+    },
+    {
+      "id": "category-privacy",
+      "label": "Privacy and security",
+      "view": "panePrivacy"
+    },
+    {
+      "id": "category-passwords-autofill",
+      "label": "Passwords and autofill",
+      "view": "panePasswordsAutofill"
+    },
+    {
+      "id": "category-appearance",
+      "label": "Appearance",
+      "view": "paneAppearance"
+    },
+    {
+      "id": "category-downloads",
+      "label": "Downloads",
+      "view": "paneDownloads"
+    },
+    {
+      "id": "category-tabs-browsing",
+      "label": "Tabs and browsing",
+      "view": "paneTabsBrowsing"
+    },
+    {
+      "id": "category-accessibility",
+      "label": "Accessibility",
+      "view": "paneAccessibility"
+    },
+    {
+      "id": "category-languages",
+      "label": "Languages",
+      "view": "paneLanguages"
+    },
+    {
+      "id": "category-ai-features",
+      "label": "AI controls",
+      "view": "paneAi"
+    },
+    {
+      "id": "category-permissions-data",
+      "label": "Permissions and data",
+      "view": "panePermissionsData"
+    },
+    {
+      "id": "category-experimental",
+      "label": "Floorp Labs",
+      "view": "paneExperimental"
+    },
+    {
+      "id": "category-about-firefox",
+      "label": "About Floorp",
+      "view": "paneAbout"
+    },
+    {
+      "id": "",
+      "label": "",
+      "view": "paneProfiles"
+    },
+    {
+      "id": "",
+      "label": "",
+      "view": "paneTranslations"
+    },
+    {
+      "id": "addonsButton",
+      "label": "Extensions and themes",
+      "view": null
+    },
+    {
+      "id": "helpButton",
+      "label": "Floorp support",
+      "view": null
+    },
+    {
+      "id": "",
+      "label": "",
+      "view": "paneConnectionSecurity"
+    },
+    {
+      "id": "",
+      "label": "",
+      "view": "paneDnsOverHttps"
+    },
+    {
+      "id": "",
+      "label": "",
+      "view": "paneEtp"
+    },
+    {
+      "id": "",
+      "label": "",
+      "view": "paneEtpCustomize"
+    },
+    {
+      "id": "",
+      "label": "",
+      "view": "paneHistory"
+    },
+    {
+      "id": "",
+      "label": "",
+      "view": "paneManageAddresses"
+    },
+    {
+      "id": "",
+      "label": "",
+      "view": "paneManagePersonalInfo"
+    },
+    {
+      "id": "",
+      "label": "",
+      "view": "paneManageMemories"
+    },
+    {
+      "id": "",
+      "label": "",
+      "view": "paneManagePayments"
+    },
+    {
+      "id": "",
+      "label": "",
+      "view": "paneProfiles"
+    },
+    {
+      "id": "",
+      "label": "",
+      "view": "panePersonalizeSmartWindow"
+    },
+    {
+      "id": "",
+      "label": "",
+      "view": "paneTranslations"
+    },
+    {
+      "id": "",
+      "label": "",
+      "view": "paneVpnSiteRules"
+    },
+    {
+      "id": "",
+      "label": "",
+      "view": "paneContainers"
+    },
+    {
+      "id": "",
+      "label": "",
+      "view": "paneCustomHomepage"
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+{"click": "label:has(input[name=design][value=photon])", "script": "return document.querySelector(\"input[name=design]:checked\").value", "out": "01-photon.json"}

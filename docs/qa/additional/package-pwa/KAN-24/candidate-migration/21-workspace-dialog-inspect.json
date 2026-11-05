@@ -1,0 +1,42 @@
+{
+  "windows": [
+    {
+      "url": "chrome://browser/content/browser.xhtml",
+      "title": "Floorp Start \u2014 Ablaze Floorp",
+      "text": "    \n          \n        Private browsingFor quick access, place your bookmarks here on the bookmarks toolbar. Manage bookmarks\u2026\n\n\n\n      \n    \n        \n        \n      \n          \n        Anyone using this device can see downloads, even when you close all private windows.\n        \n        \n    \n\n  \n\n\n\n  \n    \n  \n  This document is now full screen\n  \n  \n\n\n\n  \n    \n  \n  This document has control of your pointer. Press Esc to take back control.\n\n\n  \n\n  \n  \n#nora-statusbar {\n  visibility: visible !important;\n  display: flex;\n  align-items: center;\n  width: 100%;\n  border-top: 1px solid var(--chrome-content-separator-color);\n  background: var(--panel-sidebar-background-color) !important;\n\n  :root[inFullscreen]:not([macOSNativeFullscreen])\n    &:not([fullscreentoolbar=\"true\"]) {\n    visibility: collapse !important;\n  }\n\n  :root[customizing] & {\n    display: inherit !important;\n  }\n\n  #statuspanel-label {\n    background: none !important;\n    border: none !important;\n    box-shadow: none !important;\n    color: inherit !important;\n  }\n}\n\n#nora-statusbar #status-text {\n  padding-inline: 8px; /* px-2 */\n  overflow: hidden;\n  order: 1;\n}\n\n#toggle_nora-statusbar {\n  display: none !important;\n}\n\n"
+    }
+  ],
+  "browsers": [
+    {
+      "id": "profile-switcher-browser",
+      "url": "chrome://noraneko-profile-manager/content/index.html"
+    },
+    {
+      "id": "sidebar",
+      "url": "about:blank"
+    },
+    {
+      "id": "",
+      "url": "about:blank"
+    },
+    {
+      "id": "",
+      "url": "about:hub#/features/workspaces"
+    },
+    {
+      "id": "",
+      "url": "about:newtab"
+    },
+    {
+      "id": "",
+      "url": "about:home"
+    },
+    {
+      "id": "modal-child-browser",
+      "url": "chrome://noraneko-modal-child/content/index.html"
+    }
+  ],
+  "dialogs": [
+    "<html:dialog xmlns:html=\"http://www.w3.org/1999/xhtml\" id=\"window-modal-dialog\" style=\"visibility: hidden; height: 0; width: 0\"></html:dialog>"
+  ]
+}

@@ -1,0 +1,30 @@
+diff --git a/browser-features/chrome/common/designs/utils/vertical-tabs-observer.ts b/browser-features/chrome/common/designs/utils/vertical-tabs-observer.ts
+--- a/browser-features/chrome/common/designs/utils/vertical-tabs-observer.ts
++++ b/browser-features/chrome/common/designs/utils/vertical-tabs-observer.ts
+@@ -44,6 +44,7 @@
+   };
+ 
+   Services.prefs.addObserver(VERTICAL_TABS_PREF, onPrefChange);
++  onPrefChange();
+ 
+   return () => {
+     try {
+diff --git a/browser-features/pages-settings/src/app/design/dataManager.ts b/browser-features/pages-settings/src/app/design/dataManager.ts
+--- a/browser-features/pages-settings/src/app/design/dataManager.ts
++++ b/browser-features/pages-settings/src/app/design/dataManager.ts
+@@ -144,10 +144,11 @@
+   const storedStyle = normalizeTabbarStyle(oldData.tabbar?.tabbarStyle);
+   const requestedStyle = normalizeTabbarStyle(settings.style ?? storedStyle);
+   const nativeVerticalTabs = await rpc.getBoolPref(VERTICAL_TABS_PREF);
+-  const tabbarStyle =
+-    !hasTabStyleChanged && nativeVerticalTabs !== null
+-      ? resolveTabbarStyleFromNative(nativeVerticalTabs, requestedStyle)
+-      : requestedStyle;
++  const tabbarStyle = hasTabStyleChanged
++    ? requestedStyle
++    : nativeVerticalTabs !== null
++    ? resolveTabbarStyleFromNative(nativeVerticalTabs, storedStyle)
++    : storedStyle;
+ 
+   const newData = {
+     ...oldData,

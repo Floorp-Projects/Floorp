@@ -1,0 +1,1 @@
+{"error": "'int' object has no attribute 'terminate'", "trace": "Traceback (most recent call last):\n  File \"/workspace/qa-linux-additional/KAN-24/ui_server.py\", line 39, in <module>\n    if r.get('quit'):x.terminate();x.wait(10);break\n                     ^^^^^^^^^^^\nAttributeError: 'int' object has no attribute 'terminate'\n"}

@@ -1,0 +1,104 @@
+{
+  "text": "Skip to content\nWorkspaces\n\nWorkspaces greatly simplify the process of grouping tabs, making it easier to organize and manage your tabs.\n\nBasic Settings\nEnable workspace feature\n\nA restart of Floorp is required to completely enable or disable the workspace feature.\n\nAppearance and behavior\nHow to use\nClose workspace popup when selecting a workspace\nChoose whether to close the workspace popup when selecting a workspace.\nShow workspace name next to the icon\nExit Floorp when last workspace tab is closed\nManage workspaces on Floorp sidebar\nWhen this feature is enabled, you can only manage workspaces on the Floorp sidebar. You won't be able to manage workspaces using the toolbar button.\nReset workspaces\n\nReset workspace data to its default state. All custom workspaces will be removed and all tabs will be reassigned to the new workspace.\n\nInitialize workspaces",
+  "inputs": [
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "type": "button",
+      "text": "",
+      "name": "",
+      "value": "",
+      "checked": null
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "type": "button",
+      "text": "Firefox Settings",
+      "name": "",
+      "value": "",
+      "checked": null
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "type": "button",
+      "text": "",
+      "name": "",
+      "value": "",
+      "checked": null
+    },
+    {
+      "tag": "INPUT",
+      "id": "settings-search-input",
+      "type": "search",
+      "text": "",
+      "name": "",
+      "value": "",
+      "checked": false
+    },
+    {
+      "tag": "BUTTON",
+      "id": "tooltip:_r_6_:trigger",
+      "type": "button",
+      "text": "",
+      "name": "",
+      "value": "",
+      "checked": null
+    },
+    {
+      "tag": "INPUT",
+      "id": "enable-workspaces",
+      "type": "checkbox",
+      "text": "",
+      "name": "",
+      "value": "on",
+      "checked": true
+    },
+    {
+      "tag": "INPUT",
+      "id": "close-popup",
+      "type": "checkbox",
+      "text": "",
+      "name": "",
+      "value": "on",
+      "checked": false
+    },
+    {
+      "tag": "INPUT",
+      "id": "show-name",
+      "type": "checkbox",
+      "text": "",
+      "name": "",
+      "value": "on",
+      "checked": true
+    },
+    {
+      "tag": "INPUT",
+      "id": "exit-on-last-tab-close",
+      "type": "checkbox",
+      "text": "",
+      "name": "",
+      "value": "on",
+      "checked": false
+    },
+    {
+      "tag": "INPUT",
+      "id": "manage-bms",
+      "type": "checkbox",
+      "text": "",
+      "name": "",
+      "value": "on",
+      "checked": false
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "type": "button",
+      "text": "Initialize workspaces",
+      "name": "",
+      "value": "",
+      "checked": null
+    }
+  ]
+}

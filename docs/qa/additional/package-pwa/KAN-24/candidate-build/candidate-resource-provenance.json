@@ -1,0 +1,840 @@
+{
+  "scope": "authenticated3040-r2 product copy with ONLY generated chrome/settings components; NOT full product/source build",
+  "baseProduct": "/workspace/qa-linux-full-build/products/3040-r2/floorp",
+  "candidateProduct": "/workspace/qa-linux-additional/KAN-24/candidate-product/floorp",
+  "baseIntake": "/workspace/qa-linux-22/package-pwa/wayland-browser-identity/full-package/intake-r2/product-intake.json",
+  "baseIntakeSha256": "48f258bea2ca311732c65b0bf41198dc042a55b4be7cb2491cb05f230546baba",
+  "sourceSubject": {
+    "base": "29a3eb23145da90706d8a94441373278521cc737",
+    "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2950",
+    "prHead": "69d306b11c9e52da9e6270870740d49b1d561659",
+    "prBase": "7b72dbf35d9b551aebf2d8bdada943660880b910",
+    "branch": "codex/qa-kan24-pr2950",
+    "patchSha256": "b4fc186910cc0d76d3d81a0e5aef8c56a09bde9607f8d2d4b2b6bd1d7b778ebb",
+    "application": "git apply --3way; all eight paths clean; no unmerged entries",
+    "semanticIntegration": "Not established by clean application or compilation; initial-sync/stale-form behavior requires actual product testing",
+    "files": [
+      {
+        "path": "browser-features/chrome/common/designs/configs.ts",
+        "sha256": "c419f92bc824200f90f5878847b2c9699f8c4c025acb609f7e3b04c2a6d39eb9"
+      },
+      {
+        "path": "browser-features/chrome/common/designs/test/tabbar-style-sync.test.ts",
+        "sha256": "f647318d3b2dfe515e0b18e1a4006740154429e287920103a3ba8f0cf4d3941f"
+      },
+      {
+        "path": "browser-features/chrome/common/designs/test/vertical-tabs-observer.test.ts",
+        "sha256": "dbdec879d1fe6448591fadc33f5a02438e2207a0058a19e7ffe5b9064d27d5e7"
+      },
+      {
+        "path": "browser-features/chrome/common/designs/utils/tabbar-style-sync.ts",
+        "sha256": "d4e362c86c1ac9706a7e17bc40b3dc60adec97c51465283de4e1fb2f10175372"
+      },
+      {
+        "path": "browser-features/chrome/common/designs/utils/vertical-tabs-observer.ts",
+        "sha256": "b9543f2fcea35f3e64c514469857bb370c691f9871ad8eaef618271dc9a2a9fe"
+      },
+      {
+        "path": "browser-features/pages-settings/src/app/design/dataManager.ts",
+        "sha256": "618ec88be7b208ef42e492dbb5b877f384f4deb176668bc1b2c32b094ee7a4a1"
+      },
+      {
+        "path": "browser-features/pages-settings/src/app/design/page.tsx",
+        "sha256": "ffe8c98ad10979f224c92a3ef852e775f0efe78684b328bd94cfef93865b3fed"
+      },
+      {
+        "path": "browser-features/pages-settings/test/integration/settings.test.ts",
+        "sha256": "3a2821f85636d1ce24ebe41afae75c335f01cb2b2b7c6052e263b6b6f5d3417c"
+      }
+    ],
+    "scope": "frontend production assets; not full native/source product build; no push, PR, Jira, materialization",
+    "frozenInstallExitCode": 0,
+    "beforeMachExitCode": 0,
+    "generatedAssetCount": 1142,
+    "generatedAssetBytes": 43324174,
+    "buildid2": "01a1ad05-3637-70ea-83fa-bac925a7e170",
+    "lockUnchanged": true
+  },
+  "manifestInputs": {
+    "bridge/loader-features": {
+      "sha256": "4ef58f78ea848c8e0c80228b777c27b95b5b567b96cb0c7e21205ffa92dcef06",
+      "text": "noraneko.jar:\n% content noraneko %nora-content/ contentaccessible=yes\n nora-content/assets/svg/workspace-sync-cloud.svg (assets/svg/workspace-sync-cloud.svg)\n nora-content/core.js (core.js)\n nora-content/assets/js/external/@jsr.js (assets/js/external/@jsr.js)\n nora-content/assets/js/external/solid-js.js (assets/js/external/solid-js.js)\n nora-content/assets/js/external/fp-ts.js (assets/js/external/fp-ts.js)\n nora-content/assets/js/external/io-ts.js (assets/js/external/io-ts.js)\n nora-content/assets/js/external/i18next.js (assets/js/external/i18next.js)\n nora-content/assets/js/external/es-toolkit.js (assets/js/external/es-toolkit.js)\n nora-content/assets/js/external/chroma-js.js (assets/js/external/chroma-js.js)\n nora-content/assets/js/external/@solid-primitives.js (assets/js/external/@solid-primitives.js)\n nora-content/assets/js/external/budoux.js (assets/js/external/budoux.js)\n nora-content/assets/js/svg/article.svg_raw.js (assets/js/svg/article.svg_raw.js)\n nora-content/assets/js/svg/book.svg_raw.js (assets/js/svg/book.svg_raw.js)\n nora-content/assets/js/svg/briefcase.svg_raw.js (assets/js/svg/briefcase.svg_raw.js)\n nora-content/assets/js/svg/cart.svg_raw.js (assets/js/svg/cart.svg_raw.js)\n nora-content/assets/js/svg/chat.svg_raw.js (assets/js/svg/chat.svg_raw.js)\n nora-content/assets/js/svg/chill.svg_raw.js (assets/js/svg/chill.svg_raw.js)\n nora-content/assets/js/svg/circle.svg_raw.js (assets/js/svg/circle.svg_raw.js)\n nora-content/assets/js/svg/code.svg_raw.js (assets/js/svg/code.svg_raw.js)\n nora-content/assets/js/svg/compass.svg_raw.js (assets/js/svg/compass.svg_raw.js)\n nora-content/assets/js/svg/dollar.svg_raw.js (assets/js/svg/dollar.svg_raw.js)\n nora-content/assets/js/svg/fence.svg_raw.js (assets/js/svg/fence.svg_raw.js)\n nora-content/assets/js/svg/fingerprint.svg_raw.js (assets/js/svg/fingerprint.svg_raw.js)\n nora-content/assets/js/svg/food.svg_raw.js (assets/js/svg/food.svg_raw.js)\n nora-content/assets/js/svg/fruit.svg_raw.js (assets/js/svg/fruit.svg_raw.js)\n nora-content/assets/js/svg/game.svg_raw.js (assets/js/svg/game.svg_raw.js)\n nora-content/assets/js/svg/gear.svg_raw.js (assets/js/svg/gear.svg_raw.js)\n nora-content/assets/js/svg/gift.svg_raw.js (assets/js/svg/gift.svg_raw.js)\n nora-content/assets/js/svg/key.svg_raw.js (assets/js/svg/key.svg_raw.js)\n nora-content/assets/js/svg/lightning.svg_raw.js (assets/js/svg/lightning.svg_raw.js)\n nora-content/assets/js/svg/love.svg_raw.js (assets/js/svg/love.svg_raw.js)\n nora-content/assets/js/svg/moon.svg_raw.js (assets/js/svg/moon.svg_raw.js)\n nora-content/assets/js/svg/music.svg_raw.js (assets/js/svg/music.svg_raw.js)\n nora-content/assets/js/svg/network.svg_raw.js (assets/js/svg/network.svg_raw.js)\n nora-content/assets/js/svg/notes.svg_raw.js (assets/js/svg/notes.svg_raw.js)\n nora-content/assets/js/svg/paint.svg_raw.js (assets/js/svg/paint.svg_raw.js)\n nora-content/assets/js/svg/pet.svg_raw.js (assets/js/svg/pet.svg_raw.js)\n nora-content/assets/js/svg/photo.svg_raw.js (assets/js/svg/photo.svg_raw.js)\n nora-content/assets/js/svg/pin.svg_raw.js (assets/js/svg/pin.svg_raw.js)\n nora-content/assets/js/svg/question.svg_raw.js (assets/js/svg/question.svg_raw.js)\n nora-content/assets/js/svg/smartphone.svg_raw.js (assets/js/svg/smartphone.svg_raw.js)\n nora-content/assets/js/svg/star.svg_raw.js (assets/js/svg/star.svg_raw.js)\n nora-content/assets/js/svg/tree.svg_raw.js (assets/js/svg/tree.svg_raw.js)\n nora-content/assets/js/svg/user.svg_raw.js (assets/js/svg/user.svg_raw.js)\n nora-content/assets/js/svg/vacation.svg_raw.js (assets/js/svg/vacation.svg_raw.js)\n nora-content/assets/js/svg/os.svg_raw.js (assets/js/svg/os.svg_raw.js)\n nora-content/assets/js/svg/pwa-install.svg_inline.js (assets/js/svg/pwa-install.svg_inline.js)\n nora-content/assets/js/svg/pwa-launch.svg_inline.js (assets/js/svg/pwa-launch.svg_inline.js)\n nora-content/assets/js/svg/send.svg_inline.js (assets/js/svg/send.svg_inline.js)\n nora-content/assets/js/external/qr-code-styling.js (assets/js/external/qr-code-styling.js)\n nora-content/assets/js/index.js (assets/js/index.js)\n nora-content/assets/js/index2.js (assets/js/index2.js)\n nora-content/assets/js/index3.js (assets/js/index3.js)\n nora-content/assets/js/index4.js (assets/js/index4.js)\n nora-content/assets/js/index5.js (assets/js/index5.js)\n nora-content/assets/js/index6.js (assets/js/index6.js)\n nora-content/assets/js/index7.js (assets/js/index7.js)\n nora-content/assets/js/index8.js (assets/js/index8.js)\n nora-content/assets/js/index9.js (assets/js/index9.js)\n nora-content/assets/js/index10.js (assets/js/index10.js)\n nora-content/assets/js/index11.js (assets/js/index11.js)\n nora-content/assets/js/index12.js (assets/js/index12.js)\n nora-content/assets/js/index13.js (assets/js/index13.js)\n nora-content/assets/js/index14.js (assets/js/index14.js)\n nora-content/assets/js/index15.js (assets/js/index15.js)\n nora-content/assets/js/index16.js (assets/js/index16.js)\n nora-content/assets/js/index17.js (assets/js/index17.js)\n nora-content/assets/js/index18.js (assets/js/index18.js)\n nora-content/assets/js/index19.js (assets/js/index19.js)\n nora-content/assets/js/index20.js (assets/js/index20.js)\n nora-content/assets/js/index21.js (assets/js/index21.js)\n nora-content/assets/js/index22.js (assets/js/index22.js)\n nora-content/assets/js/index23.js (assets/js/index23.js)\n nora-content/assets/js/index24.js (assets/js/index24.js)\n nora-content/assets/js/index25.js (assets/js/index25.js)\n nora-content/assets/js/index26.js (assets/js/index26.js)\n nora-content/assets/js/index27.js (assets/js/index27.js)\n nora-content/assets/js/index28.js (assets/js/index28.js)\n nora-content/assets/js/index29.js (assets/js/index29.js)\n nora-content/assets/js/index30.js (assets/js/index30.js)\n nora-content/assets/js/index31.js (assets/js/index31.js)\n nora-content/assets/js/index32.js (assets/js/index32.js)\n nora-content/assets/js/index33.js (assets/js/index33.js)\n nora-content/assets/js/index34.js (assets/js/index34.js)\n nora-content/assets/js/index35.js (assets/js/index35.js)\n nora-content/assets/js/index36.js (assets/js/index36.js)\n nora-content/assets/js/index37.js (assets/js/index37.js)\n nora-content/assets/js/index38.js (assets/js/index38.js)\n nora-content/assets/js/index39.js (assets/js/index39.js)\n nora-content/assets/js/base.js (assets/js/base.js)\n nora-content/assets/js/browser-share-mode.js (assets/js/browser-share-mode.js)\n nora-content/assets/js/configs.js (assets/js/configs.js)\n nora-content/assets/js/gestures.js (assets/js/gestures.js)\n nora-content/assets/js/tab-identity.js (assets/js/tab-identity.js)\n nora-content/assets/js/config.js (assets/js/config.js)\n nora-content/assets/js/zen-mode.js (assets/js/zen-mode.js)\n nora-content/assets/js/layout.js (assets/js/layout.js)\n nora-content/assets/js/browser-action.js (assets/js/browser-action.js)\n nora-content/assets/js/container-color.js (assets/js/container-color.js)\n nora-content/assets/js/context-menu.js (assets/js/context-menu.js)\n nora-content/assets/js/data.js (assets/js/data.js)\n nora-content/assets/js/controller.js (assets/js/controller.js)\n nora-content/assets/js/PrivateContainer.js (assets/js/PrivateContainer.js)\n nora-content/assets/js/index40.js (assets/js/index40.js)\n nora-content/assets/js/index41.js (assets/js/index41.js)\n nora-content/assets/js/index42.js (assets/js/index42.js)\n nora-content/assets/js/external/@jsr.js.map (assets/js/external/@jsr.js.map)\n nora-content/assets/js/external/solid-js.js.map (assets/js/external/solid-js.js.map)\n nora-content/assets/js/external/fp-ts.js.map (assets/js/external/fp-ts.js.map)\n nora-content/assets/js/external/io-ts.js.map (assets/js/external/io-ts.js.map)\n nora-content/assets/js/external/i18next.js.map (assets/js/external/i18next.js.map)\n nora-content/assets/js/external/es-toolkit.js.map (assets/js/external/es-toolkit.js.map)\n nora-content/assets/js/external/chroma-js.js.map (assets/js/external/chroma-js.js.map)\n nora-content/assets/js/external/@solid-primitives.js.map (assets/js/external/@solid-primitives.js.map)\n nora-content/assets/js/external/budoux.js.map (assets/js/external/budoux.js.map)\n nora-content/assets/js/svg/article.svg_raw.js.map (assets/js/svg/article.svg_raw.js.map)\n nora-content/assets/js/svg/book.svg_raw.js.map (assets/js/svg/book.svg_raw.js.map)\n nora-content/assets/js/svg/briefcase.svg_raw.js.map (assets/js/svg/briefcase.svg_raw.js.map)\n nora-content/assets/js/svg/cart.svg_raw.js.map (assets/js/svg/cart.svg_raw.js.map)\n nora-content/assets/js/svg/chat.svg_raw.js.map (assets/js/svg/chat.svg_raw.js.map)\n nora-content/assets/js/svg/chill.svg_raw.js.map (assets/js/svg/chill.svg_raw.js.map)\n nora-content/assets/js/svg/circle.svg_raw.js.map (assets/js/svg/circle.svg_raw.js.map)\n nora-content/assets/js/svg/code.svg_raw.js.map (assets/js/svg/code.svg_raw.js.map)\n nora-content/assets/js/svg/compass.svg_raw.js.map (assets/js/svg/compass.svg_raw.js.map)\n nora-content/assets/js/svg/dollar.svg_raw.js.map (assets/js/svg/dollar.svg_raw.js.map)\n nora-content/assets/js/svg/fence.svg_raw.js.map (assets/js/svg/fence.svg_raw.js.map)\n nora-content/assets/js/svg/fingerprint.svg_raw.js.map (assets/js/svg/fingerprint.svg_raw.js.map)\n nora-content/assets/js/svg/food.svg_raw.js.map (assets/js/svg/food.svg_raw.js.map)\n nora-content/assets/js/svg/fruit.svg_raw.js.map (assets/js/svg/fruit.svg_raw.js.map)\n nora-content/assets/js/svg/game.svg_raw.js.map (assets/js/svg/game.svg_raw.js.map)\n nora-content/assets/js/svg/gear.svg_raw.js.map (assets/js/svg/gear.svg_raw.js.map)\n nora-content/assets/js/svg/gift.svg_raw.js.map (assets/js/svg/gift.svg_raw.js.map)\n nora-content/assets/js/svg/key.svg_raw.js.map (assets/js/svg/key.svg_raw.js.map)\n nora-content/assets/js/svg/lightning.svg_raw.js.map (assets/js/svg/lightning.svg_raw.js.map)\n nora-content/assets/js/svg/love.svg_raw.js.map (assets/js/svg/love.svg_raw.js.map)\n nora-content/assets/js/svg/moon.svg_raw.js.map (assets/js/svg/moon.svg_raw.js.map)\n nora-content/assets/js/svg/music.svg_raw.js.map (assets/js/svg/music.svg_raw.js.map)\n nora-content/assets/js/svg/network.svg_raw.js.map (assets/js/svg/network.svg_raw.js.map)\n nora-content/assets/js/svg/notes.svg_raw.js.map (assets/js/svg/notes.svg_raw.js.map)\n nora-content/assets/js/svg/paint.svg_raw.js.map (assets/js/svg/paint.svg_raw.js.map)\n nora-content/assets/js/svg/pet.svg_raw.js.map (assets/js/svg/pet.svg_raw.js.map)\n nora-content/assets/js/svg/photo.svg_raw.js.map (assets/js/svg/photo.svg_raw.js.map)\n nora-content/assets/js/svg/pin.svg_raw.js.map (assets/js/svg/pin.svg_raw.js.map)\n nora-content/assets/js/svg/question.svg_raw.js.map (assets/js/svg/question.svg_raw.js.map)\n nora-content/assets/js/svg/smartphone.svg_raw.js.map (assets/js/svg/smartphone.svg_raw.js.map)\n nora-content/assets/js/svg/star.svg_raw.js.map (assets/js/svg/star.svg_raw.js.map)\n nora-content/assets/js/svg/tree.svg_raw.js.map (assets/js/svg/tree.svg_raw.js.map)\n nora-content/assets/js/svg/user.svg_raw.js.map (assets/js/svg/user.svg_raw.js.map)\n nora-content/assets/js/svg/vacation.svg_raw.js.map (assets/js/svg/vacation.svg_raw.js.map)\n nora-content/assets/js/svg/os.svg_raw.js.map (assets/js/svg/os.svg_raw.js.map)\n nora-content/assets/js/svg/pwa-install.svg_inline.js.map (assets/js/svg/pwa-install.svg_inline.js.map)\n nora-content/assets/js/svg/pwa-launch.svg_inline.js.map (assets/js/svg/pwa-launch.svg_inline.js.map)\n nora-content/assets/js/svg/send.svg_inline.js.map (assets/js/svg/send.svg_inline.js.map)\n nora-content/assets/js/external/qr-code-styling.js.map (assets/js/external/qr-code-styling.js.map)\n nora-content/core.js.map (core.js.map)\n nora-content/assets/js/index.js.map (assets/js/index.js.map)\n nora-content/assets/js/index2.js.map (assets/js/index2.js.map)\n nora-content/assets/js/index3.js.map (assets/js/index3.js.map)\n nora-content/assets/js/index4.js.map (assets/js/index4.js.map)\n nora-content/assets/js/index5.js.map (assets/js/index5.js.map)\n nora-content/assets/js/index6.js.map (assets/js/index6.js.map)\n nora-content/assets/js/index7.js.map (assets/js/index7.js.map)\n nora-content/assets/js/index8.js.map (assets/js/index8.js.map)\n nora-content/assets/js/index9.js.map (assets/js/index9.js.map)\n nora-content/assets/js/index10.js.map (assets/js/index10.js.map)\n nora-content/assets/js/index11.js.map (assets/js/index11.js.map)\n nora-content/assets/js/index12.js.map (assets/js/index12.js.map)\n nora-content/assets/js/index13.js.map (assets/js/index13.js.map)\n nora-content/assets/js/config.js.map (assets/js/config.js.map)\n nora-content/assets/js/index15.js.map (assets/js/index15.js.map)\n nora-content/assets/js/gestures.js.map (assets/js/gestures.js.map)\n nora-content/assets/js/browser-share-mode.js.map (assets/js/browser-share-mode.js.map)\n nora-content/assets/js/index16.js.map (assets/js/index16.js.map)\n nora-content/assets/js/data.js.map (assets/js/data.js.map)\n nora-content/assets/js/index17.js.map (assets/js/index17.js.map)\n nora-content/assets/js/tab-identity.js.map (assets/js/tab-identity.js.map)\n nora-content/assets/js/index18.js.map (assets/js/index18.js.map)\n nora-content/assets/js/index19.js.map (assets/js/index19.js.map)\n nora-content/assets/js/index20.js.map (assets/js/index20.js.map)\n nora-content/assets/js/index21.js.map (assets/js/index21.js.map)\n nora-content/assets/js/index22.js.map (assets/js/index22.js.map)\n nora-content/assets/js/index23.js.map (assets/js/index23.js.map)\n nora-content/assets/js/layout.js.map (assets/js/layout.js.map)\n nora-content/assets/js/index24.js.map (assets/js/index24.js.map)\n nora-content/assets/js/index25.js.map (assets/js/index25.js.map)\n nora-content/assets/js/controller.js.map (assets/js/controller.js.map)\n nora-content/assets/js/index26.js.map (assets/js/index26.js.map)\n nora-content/assets/js/index27.js.map (assets/js/index27.js.map)\n nora-content/assets/js/index28.js.map (assets/js/index28.js.map)\n nora-content/assets/js/index29.js.map (assets/js/index29.js.map)\n nora-content/assets/js/index30.js.map (assets/js/index30.js.map)\n nora-content/assets/js/index31.js.map (assets/js/index31.js.map)\n nora-content/assets/js/base.js.map (assets/js/base.js.map)\n nora-content/assets/js/configs.js.map (assets/js/configs.js.map)\n nora-content/assets/js/index35.js.map (assets/js/index35.js.map)\n nora-content/assets/js/zen-mode.js.map (assets/js/zen-mode.js.map)\n nora-content/assets/js/index14.js.map (assets/js/index14.js.map)\n nora-content/assets/js/browser-action.js.map (assets/js/browser-action.js.map)\n nora-content/assets/js/container-color.js.map (assets/js/container-color.js.map)\n nora-content/assets/js/context-menu.js.map (assets/js/context-menu.js.map)\n nora-content/assets/js/PrivateContainer.js.map (assets/js/PrivateContainer.js.map)\n nora-content/assets/js/index32.js.map (assets/js/index32.js.map)\n nora-content/assets/js/index33.js.map (assets/js/index33.js.map)\n nora-content/assets/js/index34.js.map (assets/js/index34.js.map)\n nora-content/assets/js/index36.js.map (assets/js/index36.js.map)\n nora-content/assets/js/index37.js.map (assets/js/index37.js.map)\n nora-content/assets/js/index38.js.map (assets/js/index38.js.map)\n nora-content/assets/js/index39.js.map (assets/js/index39.js.map)\n nora-content/assets/js/index40.js.map (assets/js/index40.js.map)\n nora-content/assets/js/index41.js.map (assets/js/index41.js.map)\n nora-content/assets/js/index42.js.map (assets/js/index42.js.map)"
+    },
+    "browser-features/pages-settings": {
+      "sha256": "07717601b7e041f0dc2ee69156c9c9243257c4a84b2ba29086888b64e9333f7e",
+      "text": "noraneko.jar:\n% content noraneko-settings %nora-content-settings/ contentaccessible=yes\n nora-content-settings/index.html (index.html)\n nora-content-settings/assets/favicon-BDItZ8l7.svg (assets/favicon-BDItZ8l7.svg)\n nora-content-settings/assets/dcfed08cf8253041-s-C8AgB8Lq.woff2 (assets/dcfed08cf8253041-s-C8AgB8Lq.woff2)\n nora-content-settings/assets/ce2ffa58cf504f22-s-ZyWanQgv.woff2 (assets/ce2ffa58cf504f22-s-ZyWanQgv.woff2)\n nora-content-settings/assets/8cd924c898764602-s-Cnty2VS4.woff2 (assets/8cd924c898764602-s-Cnty2VS4.woff2)\n nora-content-settings/assets/82943446f261735c-s-m_t6v4Zk.woff2 (assets/82943446f261735c-s-m_t6v4Zk.woff2)\n nora-content-settings/assets/ba9851c3c22cd980-s-Cpd2YT5r.woff2 (assets/ba9851c3c22cd980-s-Cpd2YT5r.woff2)\n nora-content-settings/assets/21350d82a1f187e9-s-C5ekK6td.woff2 (assets/21350d82a1f187e9-s-C5ekK6td.woff2)\n nora-content-settings/assets/c5fe6dc8356a8c31-s-Ai74Rjx-.woff2 (assets/c5fe6dc8356a8c31-s-Ai74Rjx-.woff2)\n nora-content-settings/assets/19cfc7226ec3afaa-s-BQL42Lnq.woff2 (assets/19cfc7226ec3afaa-s-BQL42Lnq.woff2)\n nora-content-settings/assets/df0a9ae256c0569c-s-YEzCLjIM.woff2 (assets/df0a9ae256c0569c-s-YEzCLjIM.woff2)\n nora-content-settings/assets/8e9860b6e62d6359-s-B_-bZUTo.woff2 (assets/8e9860b6e62d6359-s-B_-bZUTo.woff2)\n nora-content-settings/assets/e4af272ccee01ff0-s.p-8kRkwJBP.woff2 (assets/e4af272ccee01ff0-s.p-8kRkwJBP.woff2)\n nora-content-settings/assets/ab3bd16111852789-s-CsxYRjZA.woff2 (assets/ab3bd16111852789-s-CsxYRjZA.woff2)\n nora-content-settings/assets/f390640bdede9737-s-kE7TLC7B.woff2 (assets/f390640bdede9737-s-kE7TLC7B.woff2)\n nora-content-settings/assets/da18d495caa1bffe-s-qhfd--9D.woff2 (assets/da18d495caa1bffe-s-qhfd--9D.woff2)\n nora-content-settings/assets/aa7f81ee08e33986-s-C1uFDlJo.woff2 (assets/aa7f81ee08e33986-s-C1uFDlJo.woff2)\n nora-content-settings/assets/ea6791b6c54f602a-s-C1coN051.woff2 (assets/ea6791b6c54f602a-s-C1coN051.woff2)\n nora-content-settings/assets/6ed338a30d658adc-s-BoZvklrr.woff2 (assets/6ed338a30d658adc-s-BoZvklrr.woff2)\n nora-content-settings/assets/27ce5a24390582a5-s-DxgA5CVh.woff2 (assets/27ce5a24390582a5-s-DxgA5CVh.woff2)\n nora-content-settings/assets/7acee6a6ccf7c160-s-uRwmB6x8.woff2 (assets/7acee6a6ccf7c160-s-uRwmB6x8.woff2)\n nora-content-settings/assets/bf2b2885c3a6458d-s-B90O4ED7.woff2 (assets/bf2b2885c3a6458d-s-B90O4ED7.woff2)\n nora-content-settings/assets/fbb40ff93bdf724c-s-Cy2kQwfu.woff2 (assets/fbb40ff93bdf724c-s-Cy2kQwfu.woff2)\n nora-content-settings/assets/4776bfeb2aea0517-s--EQ2snDW.woff2 (assets/4776bfeb2aea0517-s--EQ2snDW.woff2)\n nora-content-settings/assets/f727a342b44db1ab-s-Bjde00pU.woff2 (assets/f727a342b44db1ab-s-Bjde00pU.woff2)\n nora-content-settings/assets/d0dba11c7dec3724-s-DbXCi8Pw.woff2 (assets/d0dba11c7dec3724-s-DbXCi8Pw.woff2)\n nora-content-settings/assets/29d892ad161b9451-s-BKdDn01m.woff2 (assets/29d892ad161b9451-s-BKdDn01m.woff2)\n nora-content-settings/assets/bc5e151c49952aa9-s-BsY0Gn0H.woff2 (assets/bc5e151c49952aa9-s-BsY0Gn0H.woff2)\n nora-content-settings/assets/6501dff1143f1661-s-D2i3DvA9.woff2 (assets/6501dff1143f1661-s-D2i3DvA9.woff2)\n nora-content-settings/assets/ec63b34fcfdf2dab-s-CMq1ZffM.woff2 (assets/ec63b34fcfdf2dab-s-CMq1ZffM.woff2)\n nora-content-settings/assets/2ab9960a0fbb4932-s-Cjbd0yLE.woff2 (assets/2ab9960a0fbb4932-s-Cjbd0yLE.woff2)\n nora-content-settings/assets/ed5fa208fbc9ca0f-s-Cf9F1bmW.woff2 (assets/ed5fa208fbc9ca0f-s-Cf9F1bmW.woff2)\n nora-content-settings/assets/911b88656bd35ee9-s-ZQos2DRj.woff2 (assets/911b88656bd35ee9-s-ZQos2DRj.woff2)\n nora-content-settings/assets/d2612c65769b50a0-s-C2WeKgO2.woff2 (assets/d2612c65769b50a0-s-C2WeKgO2.woff2)\n nora-content-settings/assets/2e969e6022f3b715-s-BIK1l9kl.woff2 (assets/2e969e6022f3b715-s-BIK1l9kl.woff2)\n nora-content-settings/assets/43b0d3a2f27854fa-s-Yn_SuXnW.woff2 (assets/43b0d3a2f27854fa-s-Yn_SuXnW.woff2)\n nora-content-settings/assets/9c991da2ed193b91-s-DvhHYk-k.woff2 (assets/9c991da2ed193b91-s-DvhHYk-k.woff2)\n nora-content-settings/assets/2ac4b011a20e6802-s-C-hOl6tz.woff2 (assets/2ac4b011a20e6802-s-C-hOl6tz.woff2)\n nora-content-settings/assets/f075a9e662050221-s-Cdk1beHg.woff2 (assets/f075a9e662050221-s-Cdk1beHg.woff2)\n nora-content-settings/assets/404a50fe950f3bdb-s-3PeXnD9P.woff2 (assets/404a50fe950f3bdb-s-3PeXnD9P.woff2)\n nora-content-settings/assets/e9bc19284ce29d4a-s-E6glQKld.woff2 (assets/e9bc19284ce29d4a-s-E6glQKld.woff2)\n nora-content-settings/assets/4d6700984d1c60f2-s-CqKsyk4l.woff2 (assets/4d6700984d1c60f2-s-CqKsyk4l.woff2)\n nora-content-settings/assets/dc06d6543efcab71-s-BP0VLHkA.woff2 (assets/dc06d6543efcab71-s-BP0VLHkA.woff2)\n nora-content-settings/assets/75769f6d46055e6f-s-oOodNVOa.woff2 (assets/75769f6d46055e6f-s-oOodNVOa.woff2)\n nora-content-settings/assets/2fdd60a32e4c39ac-s-BMrT-UzU.woff2 (assets/2fdd60a32e4c39ac-s-BMrT-UzU.woff2)\n nora-content-settings/assets/819cceac499e1e4a-s-DDpEu_kq.woff2 (assets/819cceac499e1e4a-s-DDpEu_kq.woff2)\n nora-content-settings/assets/30411cedbea86904-s-iOBIBBSb.woff2 (assets/30411cedbea86904-s-iOBIBBSb.woff2)\n nora-content-settings/assets/3dca2b8719de26e7-s-IJp8kkQX.woff2 (assets/3dca2b8719de26e7-s-IJp8kkQX.woff2)\n nora-content-settings/assets/44ecec4a3238be17-s-CFVxXm7Z.woff2 (assets/44ecec4a3238be17-s-CFVxXm7Z.woff2)\n nora-content-settings/assets/4f1413fd03aed3fa-s-CAp5siRQ.woff2 (assets/4f1413fd03aed3fa-s-CAp5siRQ.woff2)\n nora-content-settings/assets/bd13bff7360df517-s-DQb2YPQA.woff2 (assets/bd13bff7360df517-s-DQb2YPQA.woff2)\n nora-content-settings/assets/4d84180ebe05e949-s-DyvpwvNC.woff2 (assets/4d84180ebe05e949-s-DyvpwvNC.woff2)\n nora-content-settings/assets/be7c57704699d363-s-BF4bMety.woff2 (assets/be7c57704699d363-s-BF4bMety.woff2)\n nora-content-settings/assets/88e49ad8103b8aed-s-Dm-8W25K.woff2 (assets/88e49ad8103b8aed-s-Dm-8W25K.woff2)\n nora-content-settings/assets/f8a14d8db0573703-s-B9tYSMUp.woff2 (assets/f8a14d8db0573703-s-B9tYSMUp.woff2)\n nora-content-settings/assets/45f85d21489ef7d2-s-bh4sEcc4.woff2 (assets/45f85d21489ef7d2-s-bh4sEcc4.woff2)\n nora-content-settings/assets/6b6d52721cb7a233-s-CSvRNxK-.woff2 (assets/6b6d52721cb7a233-s-CSvRNxK-.woff2)\n nora-content-settings/assets/632749ecd0a7c5b3-s-C4tfLaiv.woff2 (assets/632749ecd0a7c5b3-s-C4tfLaiv.woff2)\n nora-content-settings/assets/4275af3529fc4a67-s-BKOG8AuN.woff2 (assets/4275af3529fc4a67-s-BKOG8AuN.woff2)\n nora-content-settings/assets/abc230ac495a1db4-s-CPQFf3mL.woff2 (assets/abc230ac495a1db4-s-CPQFf3mL.woff2)\n nora-content-settings/assets/427a9fda293fbd5e-s-ygWryyLJ.woff2 (assets/427a9fda293fbd5e-s-ygWryyLJ.woff2)\n nora-content-settings/assets/13a4d2345d99b809-s-B8GqC14T.woff2 (assets/13a4d2345d99b809-s-B8GqC14T.woff2)\n nora-content-settings/assets/86f50d1880071a92-s-DI2nyFXO.woff2 (assets/86f50d1880071a92-s-DI2nyFXO.woff2)\n nora-content-settings/assets/dcaeeedb7b47b408-s-DzPW4Ogh.woff2 (assets/dcaeeedb7b47b408-s-DzPW4Ogh.woff2)\n nora-content-settings/assets/bc79e5bf28cb4b21-s-CJezNfoX.woff2 (assets/bc79e5bf28cb4b21-s-CJezNfoX.woff2)\n nora-content-settings/assets/dc6f21fd42e131ea-s-Dyn8naDm.woff2 (assets/dc6f21fd42e131ea-s-Dyn8naDm.woff2)\n nora-content-settings/assets/02d66f46c3aa7786-s-D-h7qrI0.woff2 (assets/02d66f46c3aa7786-s-D-h7qrI0.woff2)\n nora-content-settings/assets/ad41e015bd6d8fed-s-BCWf3uKK.woff2 (assets/ad41e015bd6d8fed-s-BCWf3uKK.woff2)\n nora-content-settings/assets/af98fc3513c26613-s-BZ_CBNWy.woff2 (assets/af98fc3513c26613-s-BZ_CBNWy.woff2)\n nora-content-settings/assets/e3bb8178f3f443d0-s-CSSSc0g5.woff2 (assets/e3bb8178f3f443d0-s-CSSSc0g5.woff2)\n nora-content-settings/assets/3e93e04ecd1e92a6-s-GFds-DhH.woff2 (assets/3e93e04ecd1e92a6-s-GFds-DhH.woff2)\n nora-content-settings/assets/a73e4614973e470c-s-BIskpy9Z.woff2 (assets/a73e4614973e470c-s-BIskpy9Z.woff2)\n nora-content-settings/assets/090c1e6728babb1d-s-Cdx4LZYd.woff2 (assets/090c1e6728babb1d-s-Cdx4LZYd.woff2)\n nora-content-settings/assets/088aec72e165b72d-s-JKzOjv9V.woff2 (assets/088aec72e165b72d-s-JKzOjv9V.woff2)\n nora-content-settings/assets/b7d87d65ee696eb0-s-CaGEVxrz.woff2 (assets/b7d87d65ee696eb0-s-CaGEVxrz.woff2)\n nora-content-settings/assets/5ff7cc68cc035bf3-s-ClcaFWSJ.woff2 (assets/5ff7cc68cc035bf3-s-ClcaFWSJ.woff2)\n nora-content-settings/assets/d9dd1ca3264f51ca-s-DAsPb78w.woff2 (assets/d9dd1ca3264f51ca-s-DAsPb78w.woff2)\n nora-content-settings/assets/fa5948a4c94af6ce-s-BMd8n3p7.woff2 (assets/fa5948a4c94af6ce-s-BMd8n3p7.woff2)\n nora-content-settings/assets/0756fe3da5715237-s-BAqhsv6S.woff2 (assets/0756fe3da5715237-s-BAqhsv6S.woff2)\n nora-content-settings/assets/d7618a0caec70ebc-s-Cm4Laesi.woff2 (assets/d7618a0caec70ebc-s-Cm4Laesi.woff2)\n nora-content-settings/assets/e3bc6cc3dad8f3c4-s-Ci906nwQ.woff2 (assets/e3bc6cc3dad8f3c4-s-Ci906nwQ.woff2)\n nora-content-settings/assets/96d4098b861d6674-s-DaU3KWOQ.woff2 (assets/96d4098b861d6674-s-DaU3KWOQ.woff2)\n nora-content-settings/assets/3b5897c05d5e3f95-s-B5lkf5XZ.woff2 (assets/3b5897c05d5e3f95-s-B5lkf5XZ.woff2)\n nora-content-settings/assets/c6b398537c15c341-s-BJaaGagz.woff2 (assets/c6b398537c15c341-s-BJaaGagz.woff2)\n nora-content-settings/assets/063ee135eef7cd3b-s-Bbz2UGiQ.woff2 (assets/063ee135eef7cd3b-s-Bbz2UGiQ.woff2)\n nora-content-settings/assets/2daa8d4831549fb0-s-BSoHvGtC.woff2 (assets/2daa8d4831549fb0-s-BSoHvGtC.woff2)\n nora-content-settings/assets/a482a5aa0ad36f89-s-BaZKbDzr.woff2 (assets/a482a5aa0ad36f89-s-BaZKbDzr.woff2)\n nora-content-settings/assets/40078b1b742143e9-s-DqL5AU3U.woff2 (assets/40078b1b742143e9-s-DqL5AU3U.woff2)\n nora-content-settings/assets/ecde7a21b4a02a4f-s-BKFm9k1U.woff2 (assets/ecde7a21b4a02a4f-s-BKFm9k1U.woff2)\n nora-content-settings/assets/521f9d0ba2495c27-s-CBKNmZZS.woff2 (assets/521f9d0ba2495c27-s-CBKNmZZS.woff2)\n nora-content-settings/assets/02d4573ad68d3f73-s-C3CesSuu.woff2 (assets/02d4573ad68d3f73-s-C3CesSuu.woff2)\n nora-content-settings/assets/d85860ab7071f9b0-s-Begmn4y2.woff2 (assets/d85860ab7071f9b0-s-Begmn4y2.woff2)\n nora-content-settings/assets/4597d0e70c37a050-s-8D3Njbzo.woff2 (assets/4597d0e70c37a050-s-8D3Njbzo.woff2)\n nora-content-settings/assets/0a478d7db98bc226-s-BOQplIOK.woff2 (assets/0a478d7db98bc226-s-BOQplIOK.woff2)\n nora-content-settings/assets/00eb56735392a68f-s-B_jJe-uE.woff2 (assets/00eb56735392a68f-s-B_jJe-uE.woff2)\n nora-content-settings/assets/e1a6601c0759f20a-s-ColDb8so.woff2 (assets/e1a6601c0759f20a-s-ColDb8so.woff2)\n nora-content-settings/assets/b89d5c6c6d16b1c4-s-BaT-RCkD.woff2 (assets/b89d5c6c6d16b1c4-s-BaT-RCkD.woff2)\n nora-content-settings/assets/82a9205323e1b831-s-C15dS3en.woff2 (assets/82a9205323e1b831-s-C15dS3en.woff2)\n nora-content-settings/assets/fd458b80cf099a0c-s-KBhW0XHn.woff2 (assets/fd458b80cf099a0c-s-KBhW0XHn.woff2)\n nora-content-settings/assets/76873c07f27adac1-s-BxEpFLBE.woff2 (assets/76873c07f27adac1-s-BxEpFLBE.woff2)\n nora-content-settings/assets/90eff47235e8b2a1-s-2chUQ1ho.woff2 (assets/90eff47235e8b2a1-s-2chUQ1ho.woff2)\n nora-content-settings/assets/8892a76196073b13-s-Bl429lyy.woff2 (assets/8892a76196073b13-s-Bl429lyy.woff2)\n nora-content-settings/assets/d4c9432f714176ae-s-tT_YxFOG.woff2 (assets/d4c9432f714176ae-s-tT_YxFOG.woff2)\n nora-content-settings/assets/4bbf9785a6201fe6-s-Die690_7.woff2 (assets/4bbf9785a6201fe6-s-Die690_7.woff2)\n nora-content-settings/assets/8d61d261cd84de3f-s-BCXiKiQM.woff2 (assets/8d61d261cd84de3f-s-BCXiKiQM.woff2)\n nora-content-settings/assets/d82e5334ae84f650-s-DiNV7ZbE.woff2 (assets/d82e5334ae84f650-s-DiNV7ZbE.woff2)\n nora-content-settings/assets/df2c159e9c134cb0-s-BplQvX4T.woff2 (assets/df2c159e9c134cb0-s-BplQvX4T.woff2)\n nora-content-settings/assets/1c498a9bdc1e8255-s-DeCmhslo.woff2 (assets/1c498a9bdc1e8255-s-DeCmhslo.woff2)\n nora-content-settings/assets/ef92818aae4f5f5e-s-ZS7DKxlE.woff2 (assets/ef92818aae4f5f5e-s-ZS7DKxlE.woff2)\n nora-content-settings/assets/0a2a056f534e94ae-s-CTcoWOTC.woff2 (assets/0a2a056f534e94ae-s-CTcoWOTC.woff2)\n nora-content-settings/assets/b508c5345461ec9f-s-DRlDNx-3.woff2 (assets/b508c5345461ec9f-s-DRlDNx-3.woff2)\n nora-content-settings/assets/0fc251d7b5e94461-s-SaPl8Ab_.woff2 (assets/0fc251d7b5e94461-s-SaPl8Ab_.woff2)\n nora-content-settings/assets/f32f0a04f83928aa-s-CNU4DNM6.woff2 (assets/f32f0a04f83928aa-s-CNU4DNM6.woff2)\n nora-content-settings/assets/d7f652cb0cd65681-s-dzXdeU0o.woff2 (assets/d7f652cb0cd65681-s-dzXdeU0o.woff2)\n nora-content-settings/assets/5cfa6886fb32069c-s-kCOXyTCz.woff2 (assets/5cfa6886fb32069c-s-kCOXyTCz.woff2)\n nora-content-settings/assets/89ef8459c90420de-s-DGrM03dm.woff2 (assets/89ef8459c90420de-s-DGrM03dm.woff2)\n nora-content-settings/assets/495784e75eefb2e0-s-Bk2WXZ5j.woff2 (assets/495784e75eefb2e0-s-Bk2WXZ5j.woff2)\n nora-content-settings/assets/b673ea5861c3f654-s-BcObi3Ad.woff2 (assets/b673ea5861c3f654-s-BcObi3Ad.woff2)\n nora-content-settings/assets/1a0fea6a3a286a88-s-aS8cyiYb.woff2 (assets/1a0fea6a3a286a88-s-aS8cyiYb.woff2)\n nora-content-settings/assets/9b22e6c88539b65e-s-DEZW3dl0.woff2 (assets/9b22e6c88539b65e-s-DEZW3dl0.woff2)\n nora-content-settings/assets/583dd5bfbe1db8d7-s-B2dfkU36.woff2 (assets/583dd5bfbe1db8d7-s-B2dfkU36.woff2)\n nora-content-settings/assets/a5738567c88f9b2f-s-CpJqTBTJ.woff2 (assets/a5738567c88f9b2f-s-CpJqTBTJ.woff2)\n nora-content-settings/assets/43d257592faea14b-s-gRPURpBr.woff2 (assets/43d257592faea14b-s-gRPURpBr.woff2)\n nora-content-settings/assets/e732a3b650bfe31e-s-DEH3MYwK.woff2 (assets/e732a3b650bfe31e-s-DEH3MYwK.woff2)\n nora-content-settings/assets/b2d505c0c3611d67-s-CdOl-Cmm.woff2 (assets/b2d505c0c3611d67-s-CdOl-Cmm.woff2)\n nora-content-settings/assets/49de9e0e21829dc4-s-DtJvuwq2.woff2 (assets/49de9e0e21829dc4-s-DtJvuwq2.woff2)\n nora-content-settings/assets/3d545acc6a052f3e-s-BiHMG8MD.woff2 (assets/3d545acc6a052f3e-s-BiHMG8MD.woff2)\n nora-content-settings/assets/774ba156bee7dea0-s-DTE_5_p2.woff2 (assets/774ba156bee7dea0-s-DTE_5_p2.woff2)\n nora-content-settings/assets/f6fcf212bcee5e11-s-C0iJIIKo.woff2 (assets/f6fcf212bcee5e11-s-C0iJIIKo.woff2)\n nora-content-settings/assets/24f6ebe2756575bd-s.p-CNOxKcyn.woff2 (assets/24f6ebe2756575bd-s.p-CNOxKcyn.woff2)\n nora-content-settings/assets/b067e534faca460e-s-xug8kXzz.woff2 (assets/b067e534faca460e-s-xug8kXzz.woff2)\n nora-content-settings/assets/5d9a2f5fff5790da-s-B2RBM5rU.woff2 (assets/5d9a2f5fff5790da-s-B2RBM5rU.woff2)\n nora-content-settings/assets/88dcb6b3fd2ccf60-s-CqwPAQLz.woff2 (assets/88dcb6b3fd2ccf60-s-CqwPAQLz.woff2)\n nora-content-settings/assets/Floorp_UI_ProtonFix_Light-Cw_QTNaa.svg (assets/Floorp_UI_ProtonFix_Light-Cw_QTNaa.svg)\n nora-content-settings/assets/Floorp_UI_Proton_Dark-C_i7cqsv.svg (assets/Floorp_UI_Proton_Dark-C_i7cqsv.svg)\n nora-content-settings/assets/Floorp_UI_Fluerial_Light-5J7q2NNW.svg (assets/Floorp_UI_Fluerial_Light-5J7q2NNW.svg)\n nora-content-settings/assets/Floorp_UI_Proton_Light-BgGUMedo.svg (assets/Floorp_UI_Proton_Light-BgGUMedo.svg)\n nora-content-settings/assets/Floorp_UI_Lepton_Light-tAt5KSqK.svg (assets/Floorp_UI_Lepton_Light-tAt5KSqK.svg)\n nora-content-settings/assets/Floorp_UI_Photon_Light-BILw7GJL.svg (assets/Floorp_UI_Photon_Light-BILw7GJL.svg)\n nora-content-settings/assets/Floorp_UI_Lepton_Dark-FY1DybJE.svg (assets/Floorp_UI_Lepton_Dark-FY1DybJE.svg)\n nora-content-settings/assets/Floorp_UI_Photon_Dark-oYYTSCEh.svg (assets/Floorp_UI_Photon_Dark-oYYTSCEh.svg)\n nora-content-settings/assets/Floorp_UI_ProtonFix_Dark-ChW8wf6U.svg (assets/Floorp_UI_ProtonFix_Dark-ChW8wf6U.svg)\n nora-content-settings/assets/Floorp_UI_Fluerial_Dark-DFZUp3Sa.svg (assets/Floorp_UI_Fluerial_Dark-DFZUp3Sa.svg)\n nora-content-settings/assets/Floorp_Logo_B_Light-DCEfFxzC.svg (assets/Floorp_Logo_B_Light-DCEfFxzC.svg)\n nora-content-settings/assets/Floorp_Logo_B_Dark-BeumFmBx.svg (assets/Floorp_Logo_B_Dark-BeumFmBx.svg)\n nora-content-settings/assets/index-Cqe2o0ME.css (assets/index-Cqe2o0ME.css)\n nora-content-settings/assets/page-YhJN9yHQ.css (assets/page-YhJN9yHQ.css)\n nora-content-settings/assets/page-CBzFpoPw.css (assets/page-CBzFpoPw.css)\n nora-content-settings/assets/page-BPJHuVDx.css (assets/page-BPJHuVDx.css)\n nora-content-settings/assets/settings-sections-D8gkqcN8.css (assets/settings-sections-D8gkqcN8.css)\n nora-content-settings/assets/dialog-SZcwz-kP.css (assets/dialog-SZcwz-kP.css)\n nora-content-settings/assets/index-CzvhYy_T.js (assets/index-CzvhYy_T.js)\n nora-content-settings/assets/page-C1RS5Al9.js (assets/page-C1RS5Al9.js)\n nora-content-settings/assets/page-BF8cAMZD.js (assets/page-BF8cAMZD.js)\n nora-content-settings/assets/moon-BlqwamgD.js (assets/moon-BlqwamgD.js)\n nora-content-settings/assets/page-vUD4smCd.js (assets/page-vUD4smCd.js)\n nora-content-settings/assets/sliders-vertical-ydjQjCfF.js (assets/sliders-vertical-ydjQjCfF.js)\n nora-content-settings/assets/page-D-XgVDe6.js (assets/page-D-XgVDe6.js)\n nora-content-settings/assets/page-D11kM26k.js (assets/page-D11kM26k.js)\n nora-content-settings/assets/page-Cey9wJVh.js (assets/page-Cey9wJVh.js)\n nora-content-settings/assets/noraneko-udIobnSS.js (assets/noraneko-udIobnSS.js)\n nora-content-settings/assets/page-B-zctBVk.js (assets/page-B-zctBVk.js)\n nora-content-settings/assets/dataManager-DbztuXii.js (assets/dataManager-DbztuXii.js)\n nora-content-settings/assets/page-DMkRgHVi.js (assets/page-DMkRgHVi.js)\n nora-content-settings/assets/square-pen-CgS_ywAo.js (assets/square-pen-CgS_ywAo.js)\n nora-content-settings/assets/page-fk9qkVCU.js (assets/page-fk9qkVCU.js)\n nora-content-settings/assets/infotip-BRrAWJ1q.js (assets/infotip-BRrAWJ1q.js)\n nora-content-settings/assets/useAvailableActions-BSU5tvlf.js (assets/useAvailableActions-BSU5tvlf.js)\n nora-content-settings/assets/modal-CwMum6Uh.js (assets/modal-CwMum6Uh.js)\n nora-content-settings/assets/page-CTrkdBuc.js (assets/page-CTrkdBuc.js)\n nora-content-settings/assets/chevron-right-kF9AYNxs.js (assets/chevron-right-kF9AYNxs.js)\n nora-content-settings/assets/chevron-down-BZCFu0R8.js (assets/chevron-down-BZCFu0R8.js)\n nora-content-settings/assets/page-DoYkCXrz.js (assets/page-DoYkCXrz.js)\n nora-content-settings/assets/circle-x-CpICPuYP.js (assets/circle-x-CpICPuYP.js)\n nora-content-settings/assets/trash-2-BehxYeQH.js (assets/trash-2-BehxYeQH.js)\n nora-content-settings/assets/page-CDfSG8BD.js (assets/page-CDfSG8BD.js)\n nora-content-settings/assets/settings-sections.module-D1lWN2in.js (assets/settings-sections.module-D1lWN2in.js)\n nora-content-settings/assets/ChromeExtrasSettings-_Oilcx9q.js (assets/ChromeExtrasSettings-_Oilcx9q.js)\n nora-content-settings/assets/dataManager-BRnLedGb.js (assets/dataManager-BRnLedGb.js)\n nora-content-settings/assets/layout-grid-CWWhKveC.js (assets/layout-grid-CWWhKveC.js)\n nora-content-settings/assets/eye-off-Zjb1JKkw.js (assets/eye-off-Zjb1JKkw.js)\n nora-content-settings/assets/page-CXfGij4d.js (assets/page-CXfGij4d.js)\n nora-content-settings/assets/plus-KtEbkCmG.js (assets/plus-KtEbkCmG.js)\n nora-content-settings/assets/restart-modal-CH9HKi5z.js (assets/restart-modal-CH9HKi5z.js)\n nora-content-settings/assets/index.esm-JtsCQUj3.js (assets/index.esm-JtsCQUj3.js)\n nora-content-settings/assets/seekbar-PmNuAS7n.js (assets/seekbar-PmNuAS7n.js)\n nora-content-settings/assets/dataManager-CVvo1yyj.js (assets/dataManager-CVvo1yyj.js)\n nora-content-settings/assets/rotate-ccw-WO9RlMiF.js (assets/rotate-ccw-WO9RlMiF.js)\n nora-content-settings/assets/modifiers.esm-CnPCbR6j.js (assets/modifiers.esm-CnPCbR6j.js)\n nora-content-settings/assets/dialog-B5Xhocan.js (assets/dialog-B5Xhocan.js)\n nora-content-settings/assets/dialog.module-DZrxjMad.js (assets/dialog.module-DZrxjMad.js)\n nora-content-settings/assets/dropdown-DsAsXj8Y.js (assets/dropdown-DsAsXj8Y.js)\n nora-content-settings/assets/raf-CeTte6VH.js (assets/raf-CeTte6VH.js)\n nora-content-settings/assets/icons-CQx_bZ0W.js (assets/icons-CQx_bZ0W.js)\n nora-content-settings/assets/switch-D9wliAq8.js (assets/switch-D9wliAq8.js)\n nora-content-settings/assets/create-slot-recipe-context-C8Y5I_eL.js (assets/create-slot-recipe-context-C8Y5I_eL.js)\n nora-content-settings/assets/page-BR5MgoON.js (assets/page-BR5MgoON.js)\n nora-content-settings/assets/list-DZOn5Viu.js (assets/list-DZOn5Viu.js)\n nora-content-settings/assets/keyboard-47eT_HQj.js (assets/keyboard-47eT_HQj.js)\n nora-content-settings/assets/section-BpuiHcXc.js (assets/section-BpuiHcXc.js)\n nora-content-settings/licenses/Inter-OFL.txt (licenses/Inter-OFL.txt)\n nora-content-settings/licenses/NotoSansJP-OFL.txt (licenses/NotoSansJP-OFL.txt)"
+    }
+  },
+  "registrationManifestUnchanged": true,
+  "resourceChanges": [
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/ChromeExtrasSettings-BkRNUlkT.js",
+      "operation": "remove",
+      "before": "bb5185c9144747b2b20fb9765d84da9783e3ac249e86a51e967d7d236187f380"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/chevron-down-Dw9Wf0aY.js",
+      "operation": "remove",
+      "before": "3cb4d45ed7593341d0b5458b4530c5c9676e218ee4e22108902fd0ef767b350a"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/chevron-right-Bo23dnXI.js",
+      "operation": "remove",
+      "before": "bee6fec8c1bbdd27d5f96f9e47167781d3472b823aa1cb8fbe6635d81e234054"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/circle-x-ks0buOk0.js",
+      "operation": "remove",
+      "before": "987cebe59c629e96cfdce4318228ae87ac291adfb09de7ee6cf00fd8e163346f"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/create-slot-recipe-context-CD9V6nKz.js",
+      "operation": "remove",
+      "before": "faeae1d8180a242b6460f72b1f12e656c92145b47bcfd12d4b654a5338081966"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/dataManager-D66KQIfh.js",
+      "operation": "remove",
+      "before": "916b3f2c9cdd6f76e3842be2fe608be634460d25369817e2f10cbf7a80b981fc"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/dataManager-DZ7RVlNp.js",
+      "operation": "remove",
+      "before": "59cfcef77fb0c047ec1f2f0d7b5eb36f814652a165d3962ead7056978c203ff3"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/dataManager-hYlo3spC.js",
+      "operation": "remove",
+      "before": "2abecb209e04343055740a19a556554fffc8521a87522e4b6568cab7b0a9db52"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/dialog-Quh2Akkd.js",
+      "operation": "remove",
+      "before": "3d38fc4982ea18dd632b7156704167e33773acd80931a1640782de7293f09f4e"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/dialog.module-D6fqNe91.js",
+      "operation": "remove",
+      "before": "d344a8083353878b0068e48b03f5f3348f2812c5fc6bca434f5a1249867c38c2"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/dropdown-CGXrPTg7.js",
+      "operation": "remove",
+      "before": "1f00d5178e60b37d6e67ec4d5cc8ec51ade982910dca658e22cab4c1d4d3b585"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/eye-off-DqCAjVQt.js",
+      "operation": "remove",
+      "before": "58b67d5081fec7030b562a11e9f6d3a90f1a3a01863d0dfcfac3d3aef9dcfa52"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/icons-aWRm_wKi.js",
+      "operation": "remove",
+      "before": "745b3a670cec3d7fa9bd9d160ba2094940209fa22a10fef24c02bc77bc4deb82"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/index-B4vGR8xY.js",
+      "operation": "remove",
+      "before": "bccc51268c6d0e0bb46f4023d9622326bc030e76c9e88a5ae0d9e12e95331503"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/index.esm-C3rYn3sY.js",
+      "operation": "remove",
+      "before": "dc0664478c0a6a6d181c16977c89d007b37ff0ceeecf7b39ee45b3c868daab17"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/infotip-IFLonKNP.js",
+      "operation": "remove",
+      "before": "d2673f553ecb581f0c8087b07d5dc3a27c8208b9f928b63efa19526796d2eb34"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/keyboard-BZZUFYno.js",
+      "operation": "remove",
+      "before": "83222200c04be3598307d533a3fbe65fb25022570c0deeaee39d80ba4b25e7cc"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/layout-grid-DQG3swch.js",
+      "operation": "remove",
+      "before": "76d62a002cb6c93780ba6ae6275a1b1e19d2c4d4b7e54347150ebf340d74ccbc"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/list-CcOYIHe5.js",
+      "operation": "remove",
+      "before": "e121299dca93b2849b4b9eb6f79fd5252aa1fd9c9ad28a2caa5283b08512ece5"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/modal-C7h2Nhpt.js",
+      "operation": "remove",
+      "before": "4663de35fb75c3f6de79e597eb43e0064c70cfafc0b982c554f970ab20661f5d"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/modifiers.esm-BZjidjuc.js",
+      "operation": "remove",
+      "before": "924de78520a925d8dac9bf97de63df6f8edd9bec7bfc76e905371e59fd385025"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/moon-BYH_oT9n.js",
+      "operation": "remove",
+      "before": "90dae1d1e73b8b86c302ffcf575f0d0f3ae5f5dd072bddb4af9198fc074dfe85"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/noraneko-BvXkq3id.js",
+      "operation": "remove",
+      "before": "4374c97c30bbe761f43197b810d39bcc2fa10c98579f10a7948f81c8068be211"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/page-3BXhNT-W.js",
+      "operation": "remove",
+      "before": "49091a1eb803abfe902f477116b4869d2babd31141dafa4375c9fee22c46db57"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/page-B5144wOn.js",
+      "operation": "remove",
+      "before": "96c7016519e0669a1938ab18b4ae71f5c8aa58ca7440596c6924e6d5e29ab6c6"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/page-BEwiRkxj.js",
+      "operation": "remove",
+      "before": "30dc7a12bacff7df996bfc41459a3b28ccc5b41184ecd94628c27faf1fa98750"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/page-BZpJzlSm.js",
+      "operation": "remove",
+      "before": "4996040039f65503027138afbf9dad1e224ee61f0f7782a6bbefcbbeef5df48c"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/page-Bk5xbitw.js",
+      "operation": "remove",
+      "before": "2f8835024135243b5a261493daf89f810cb1e5cc1d439cdc21c85220cfe5689b"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/page-CJtjcuf9.js",
+      "operation": "remove",
+      "before": "965740729c2dadf0216d7b1a2ff37e5f1ca477966f22f78bdeca91dd139a7aaa"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/page-CRr9udbq.js",
+      "operation": "remove",
+      "before": "851dc1f4bb3849e43f69a38dafe788e9f990833818fadbc334e11ff7710180e9"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/page-CUcoobAq.js",
+      "operation": "remove",
+      "before": "48d33499fc3ab6d1032b39bbcc3a1eb0b675e5abd4467291b7238efd92c980d3"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/page-CVZRpVJY.js",
+      "operation": "remove",
+      "before": "f4dcbab52c6f8f3a85f895be07338d316d0578fd68c2f8db862f3f31e79f5fb3"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/page-DB52wRjy.js",
+      "operation": "remove",
+      "before": "765435449a1df7c863b314bf05a199b7994063c986fc4584e8f5142b41fe8506"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/page-DCYa8z2I.js",
+      "operation": "remove",
+      "before": "e545476b2fde6c41d9fc005563adc73927884a214277f50b6bdffd9de20aebec"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/page-DdqAplMq.js",
+      "operation": "remove",
+      "before": "8bcb6d4a31b4de851528114bf77c2d234c399c3fb669aba4dbc859d7a2ea54f0"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/page-DyYPLUpW.js",
+      "operation": "remove",
+      "before": "777c72516b58cf0296094bb9df733bdf6eae931e9dfb80c0841d98b094feb2ae"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/page-oBigd-sS.js",
+      "operation": "remove",
+      "before": "4915776bae425c81feac7089deee838eb0fbb33fb67d1f01990325b8fa0fc374"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/plus-g48qNo_I.js",
+      "operation": "remove",
+      "before": "8c1428cc6155d6a1cd362bbe1aa77e00272f0d0088101344588c85732b39d883"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/restart-modal-DeNhRsE3.js",
+      "operation": "remove",
+      "before": "abc502d198a0e1063910be0ec7eba25f9916de8c724344c40f941d893b73d558"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/rotate-ccw-C029sK9R.js",
+      "operation": "remove",
+      "before": "e4bf0d3ce9482b0cb18af4cddf586847e35200d4d4f854034e299cbaa6af84e2"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/section-Adnov662.js",
+      "operation": "remove",
+      "before": "2c14c7d76bc276a3167d092c0bc86531d1ac4adbe0de853d2bac324e7e586f9a"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/seekbar-qDMT4pAj.js",
+      "operation": "remove",
+      "before": "fed581d600153299250fc28f74ffe16c58cc978ef963862ed339cb3e277c3b21"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/sliders-vertical-Bp-_bN9o.js",
+      "operation": "remove",
+      "before": "468203d6efe4d1c6abd5473c70ade7e7c841558bc391ac7650643c77607c4e5e"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/square-pen-BzYS1hYb.js",
+      "operation": "remove",
+      "before": "5dd66eb11c72b1076b90ea6c718509329072cf028d4f61ad351ed30a195440b5"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/switch-DdJdC1BS.js",
+      "operation": "remove",
+      "before": "9a1c359d91a442f6ad5d374e3c9c548f7a45d8ff57473cc64fc516349df6b7a9"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/trash-2-CQ8xcaqZ.js",
+      "operation": "remove",
+      "before": "38d9488bb77bd4d33ac7332b22c96bac46a67816ddd7ab3984b6439c5fa4d7fc"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/useAvailableActions-TMd8MRv0.js",
+      "operation": "remove",
+      "before": "3ed203091f301bc9ea1572f3742e7bb319d20670d45600877630f474da878878"
+    },
+    {
+      "path": "chrome/noraneko/nora-content/assets/js/configs.js",
+      "operation": "replace",
+      "before": "85b3d9cc9fb7a1e055266421142e295aaf0462a726b72acc19b7f718793450de",
+      "after": "3f57913d406c9d20999c6a1eee1327f9451fcc084bba5a039235bbcbf07adb24"
+    },
+    {
+      "path": "chrome/noraneko/nora-content/assets/js/configs.js.map",
+      "operation": "replace",
+      "before": "15f951b7e3636078f78d12f1baf2910e26f85a9b37632460bf033bdd383d4bd0",
+      "after": "d453812c7936dbd4b9789231e582ec11ded6e4a5aabdfdffd0f8f1cd6b7fa4bb"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/index.html",
+      "operation": "replace",
+      "before": "744c6d9f4b7a579d3e4075620beb068da484c2584125b12325af3928f4006878",
+      "after": "2091f706ab0fa57123f9a620f5047760d0e93bfcb056f4cac136bd4293485f17"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/index-CzvhYy_T.js",
+      "operation": "add",
+      "before": null,
+      "after": "abeea666d18c1de00562ae3a4be82e477e94c4f706b7c5bd02931dd3787bc6fb"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/page-C1RS5Al9.js",
+      "operation": "add",
+      "before": null,
+      "after": "4e511dc38a16a371d38581bae862efa4453929de631e6dd65491d5152a3db931"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/page-BF8cAMZD.js",
+      "operation": "add",
+      "before": null,
+      "after": "1f39e36254937b4f72b178d105a373d28dd0182b2c2059e4edad7c33f578a08d"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/moon-BlqwamgD.js",
+      "operation": "add",
+      "before": null,
+      "after": "6bf846e61a96552863055dbafba417bca0eee318066e50000a4d87a14b6cde02"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/page-vUD4smCd.js",
+      "operation": "add",
+      "before": null,
+      "after": "1a36a587c950a16cd6e34fe3914aba7f4a6aafc8d43a7c8e6634362ad2780e25"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/sliders-vertical-ydjQjCfF.js",
+      "operation": "add",
+      "before": null,
+      "after": "65b4819d154e443dbba0d3247e677d6f15e1232f549cfd1c415b267010c5374c"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/page-D-XgVDe6.js",
+      "operation": "add",
+      "before": null,
+      "after": "0e8353e4c704364f1ff2e56bf50b87146bc046c636f4136980474fde6c43e75e"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/page-D11kM26k.js",
+      "operation": "add",
+      "before": null,
+      "after": "8d7bba5cdfe0c2b187ceec6171b9d009a2faeb64e6bf41d5493a03d1f1d59242"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/page-Cey9wJVh.js",
+      "operation": "add",
+      "before": null,
+      "after": "441303c366454a9e61e1580910d799471688cc3d97e65f06121cf59b4241f3a6"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/noraneko-udIobnSS.js",
+      "operation": "add",
+      "before": null,
+      "after": "eb0a7336282de2523035afb2db4ef7b98376d9708b924a4898d28f26c492b318"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/page-B-zctBVk.js",
+      "operation": "add",
+      "before": null,
+      "after": "1ed0b720e8af4e1f7c6b8af2cb3bc45219ca84dc51b0c26b1c521ff9783b281c"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/dataManager-DbztuXii.js",
+      "operation": "add",
+      "before": null,
+      "after": "446ea46c7ba130eaa7a1a1a211fcb5ca026029a77e445f06c0103b614c4e75fe"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/page-DMkRgHVi.js",
+      "operation": "add",
+      "before": null,
+      "after": "64a39a4ee696f427c38ef901dd224c521d2a7d59f0ea03cb34e493a3322af6d5"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/square-pen-CgS_ywAo.js",
+      "operation": "add",
+      "before": null,
+      "after": "b040a9b5b7208aecdc0f75a207847fed817898a967b7fffae24ef312191896b3"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/page-fk9qkVCU.js",
+      "operation": "add",
+      "before": null,
+      "after": "acaf4851c68ef479f7bb24c4da22c034f6cdc607ea78dbec1c70feeb5861f073"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/infotip-BRrAWJ1q.js",
+      "operation": "add",
+      "before": null,
+      "after": "5e82f692c86b3251cc0261be48f0f91078c7a95bff3ef8dca3d98250cd4cab4a"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/useAvailableActions-BSU5tvlf.js",
+      "operation": "add",
+      "before": null,
+      "after": "1d86a97346291a1615f1b5848dcf3eb6ba24b879b8cb1dc2f1475a7a567e5cbf"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/modal-CwMum6Uh.js",
+      "operation": "add",
+      "before": null,
+      "after": "4aac0900c8ad5f64904c84d2ce8e7f8a3c6d92e8fce57278ed16f95d18f614e3"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/page-CTrkdBuc.js",
+      "operation": "add",
+      "before": null,
+      "after": "bbf91f2a2958d80d4451171c4e2f18c100b216cda7c0d25ec7e5e0d87f10490e"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/chevron-right-kF9AYNxs.js",
+      "operation": "add",
+      "before": null,
+      "after": "9be62d55acd6f4ac631d31c57c948918b71f6eeed6d3b926ad6a0512eb4f43d0"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/chevron-down-BZCFu0R8.js",
+      "operation": "add",
+      "before": null,
+      "after": "f80a9633432ae60acfbd47c3b0ff26732b776d77f70f8d676de61e1252c6da8f"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/page-DoYkCXrz.js",
+      "operation": "add",
+      "before": null,
+      "after": "d8ed5841b368311bb70ca19643ecdb714cf7146691d6a17b047051f5da2896d9"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/circle-x-CpICPuYP.js",
+      "operation": "add",
+      "before": null,
+      "after": "9ed5d99612c8c91f5c9534cb8ffacc9483b69c78127b885adae6615fd504739e"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/trash-2-BehxYeQH.js",
+      "operation": "add",
+      "before": null,
+      "after": "c768c063420e2d6de9761677316dbdbe4ab3d153a400748b7948186c05223aad"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/page-CDfSG8BD.js",
+      "operation": "add",
+      "before": null,
+      "after": "a6b7412f0334fce593649515d758931144707afb41fcf442ceeb4ad8c7256799"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/ChromeExtrasSettings-_Oilcx9q.js",
+      "operation": "add",
+      "before": null,
+      "after": "746a2aaa2fdbf1b549b2401eac5543313472111d9d7230ed51e5ea1e583e8b23"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/dataManager-BRnLedGb.js",
+      "operation": "add",
+      "before": null,
+      "after": "ef5adec24046ca60ca06ae2d783b7ac478507e58e1d75d2b7cd8b168aa16ae0d"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/layout-grid-CWWhKveC.js",
+      "operation": "add",
+      "before": null,
+      "after": "e6553a2acf8d4740fcff2595a333c2362609ea18019728bef59fa61e656dd82d"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/eye-off-Zjb1JKkw.js",
+      "operation": "add",
+      "before": null,
+      "after": "b768d16d71778a58b9c73654b720f6dda918b7c697cb1b4ec4b8f45b16420aa3"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/page-CXfGij4d.js",
+      "operation": "add",
+      "before": null,
+      "after": "c69588f4f9b25e62d86ca3e87c368d8d5235684de059b88768744812fde72dfc"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/plus-KtEbkCmG.js",
+      "operation": "add",
+      "before": null,
+      "after": "5a6ed8ce80d5100a9512fa1955d97421b2fc6ee70a3befb372ab4094b0363257"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/restart-modal-CH9HKi5z.js",
+      "operation": "add",
+      "before": null,
+      "after": "10c0c610f6dfe6862b60182a80a40fb1ceadca963cb2c8ef8c48f64882ca55fc"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/index.esm-JtsCQUj3.js",
+      "operation": "add",
+      "before": null,
+      "after": "edfff9dfd98169d04d46685d5a9773cdbb167f6a715d8f6d1149d5ed8029f05e"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/seekbar-PmNuAS7n.js",
+      "operation": "add",
+      "before": null,
+      "after": "5439b2119a3a641f70a205226c1e0374e1b8411ca1b28ced0df3c64982994583"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/dataManager-CVvo1yyj.js",
+      "operation": "add",
+      "before": null,
+      "after": "a8c235ce8366660f54e2d520c57f07f24ad29c30fd8c35805f61011f2c09426c"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/rotate-ccw-WO9RlMiF.js",
+      "operation": "add",
+      "before": null,
+      "after": "dad25f6e6b138f055e089674bad77a7965d4202ee9849ef630c3e7138fb721c5"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/modifiers.esm-CnPCbR6j.js",
+      "operation": "add",
+      "before": null,
+      "after": "36d5fd8953f725922731dc534b258b44469ed293ec3643c1c8ea87054c2085ba"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/dialog-B5Xhocan.js",
+      "operation": "add",
+      "before": null,
+      "after": "366ca14a369636926f07bc0385664919e596723c51c423e74ca5e7249e4dac8f"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/dialog.module-DZrxjMad.js",
+      "operation": "add",
+      "before": null,
+      "after": "7da09aecec49f8fea29a7cf3faee9473234d4ff1120e179b94a5546e73592301"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/dropdown-DsAsXj8Y.js",
+      "operation": "add",
+      "before": null,
+      "after": "a5677d074996b365f11b6e82117feb97f843956b45f51b4935dda69fa798232d"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/icons-CQx_bZ0W.js",
+      "operation": "add",
+      "before": null,
+      "after": "9c54ef78355560df4847edcdcaee077f6fb50478325499078f8c7d5b2e20e293"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/switch-D9wliAq8.js",
+      "operation": "add",
+      "before": null,
+      "after": "d99022ac75764479d17f3ad6884968875c631e1dc2d5ab935ae453dcc896c0f7"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/create-slot-recipe-context-C8Y5I_eL.js",
+      "operation": "add",
+      "before": null,
+      "after": "54d51fc3ae44a256fda815524e2c517df5d07c9e5f04eebb2bf867d8038907f3"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/page-BR5MgoON.js",
+      "operation": "add",
+      "before": null,
+      "after": "6b8d3733979a3f4c606d03d32cabe216752e441cb1bb5c8342fae5a6415eea6b"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/list-DZOn5Viu.js",
+      "operation": "add",
+      "before": null,
+      "after": "fcc37ba5e6063e3c458fd22b845be556d29ab808ac0581f227ea0beeae09aab4"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/keyboard-47eT_HQj.js",
+      "operation": "add",
+      "before": null,
+      "after": "c9e6d9f348554249cef983111c6764c20e3f9694a0476b3d3f11943f9faf4d30"
+    },
+    {
+      "path": "chrome/noraneko/nora-content-settings/assets/section-BpuiHcXc.js",
+      "operation": "add",
+      "before": null,
+      "after": "b9e493249e492b77f0933b5e770f0683eac557e787a85507622bbd0dd237c4c5"
+    }
+  ],
+  "productInventory": [
+    {
+      "path": "application.ini",
+      "before": "89ce32919360b00c9db6e6003b96d7130f70f17905fde824a7b691f515f58910",
+      "after": "89ce32919360b00c9db6e6003b96d7130f70f17905fde824a7b691f515f58910"
+    },
+    {
+      "path": "browser/buildid2",
+      "before": "fd7af68fd43b57a5cb3709f84fb2d521c6a21b5715763a46aae5c548cdece9d4",
+      "after": "fd7af68fd43b57a5cb3709f84fb2d521c6a21b5715763a46aae5c548cdece9d4"
+    },
+    {
+      "path": "browser/chrome/icons/default/default128.png",
+      "before": "0331b4c3f03a36984734bf3668ce1823504fd44b10e5ecc0977ee8c521641ad9",
+      "after": "0331b4c3f03a36984734bf3668ce1823504fd44b10e5ecc0977ee8c521641ad9"
+    },
+    {
+      "path": "browser/chrome/icons/default/default16.png",
+      "before": "501aab2936ddb5562ffde7d8bfe20f6a3cda5bd009fa160c0ed3b10481de778c",
+      "after": "501aab2936ddb5562ffde7d8bfe20f6a3cda5bd009fa160c0ed3b10481de778c"
+    },
+    {
+      "path": "browser/chrome/icons/default/default32.png",
+      "before": "de4c287df3aea68bbba3246a35992e4ee41708d956c225d4ab90fe9532996541",
+      "after": "de4c287df3aea68bbba3246a35992e4ee41708d956c225d4ab90fe9532996541"
+    },
+    {
+      "path": "browser/chrome/icons/default/default48.png",
+      "before": "2cc6b61be10980e8fd8c9508dca783df063623e2e17ebc2e301ef9e2d3e38a22",
+      "after": "2cc6b61be10980e8fd8c9508dca783df063623e2e17ebc2e301ef9e2d3e38a22"
+    },
+    {
+      "path": "browser/chrome/icons/default/default64.png",
+      "before": "474f20f1407914c689d34c91da62997950fee1a70197bf3d20252a4dcf8e91fa",
+      "after": "474f20f1407914c689d34c91da62997950fee1a70197bf3d20252a4dcf8e91fa"
+    },
+    {
+      "path": "browser/omni.ja",
+      "before": "d6c17ae47f4a62def3d70d927137c920624e38297a38e60a443cf2e6008e1cac",
+      "after": "d6c17ae47f4a62def3d70d927137c920624e38297a38e60a443cf2e6008e1cac"
+    },
+    {
+      "path": "defaults/pref/channel-prefs.js",
+      "before": "7d9d37eff1dc4e59a6437026602f1953ef58ee46ff3d81dbb8e13b0fd0bec86b",
+      "after": "7d9d37eff1dc4e59a6437026602f1953ef58ee46ff3d81dbb8e13b0fd0bec86b"
+    },
+    {
+      "path": "dependentlibs.list",
+      "before": "621f575eaaf819dd0b18976c6a8a94d1caae95a9c748f4c9058a052395a4d173",
+      "after": "621f575eaaf819dd0b18976c6a8a94d1caae95a9c748f4c9058a052395a4d173"
+    },
+    {
+      "path": "floorp",
+      "before": "4f05c1330b38e50040440be6a3b6e0e7a5b52bc79edb5c5478d978c81f5a603d",
+      "after": "4f05c1330b38e50040440be6a3b6e0e7a5b52bc79edb5c5478d978c81f5a603d"
+    },
+    {
+      "path": "floorp-bin",
+      "before": "4f05c1330b38e50040440be6a3b6e0e7a5b52bc79edb5c5478d978c81f5a603d",
+      "after": "4f05c1330b38e50040440be6a3b6e0e7a5b52bc79edb5c5478d978c81f5a603d"
+    },
+    {
+      "path": "fonts/TwemojiMozilla.ttf",
+      "before": "6d90152ee0d29e82fe2a87793af5aa4b7ad13e6538360889e141e81ed299ee8e",
+      "after": "6d90152ee0d29e82fe2a87793af5aa4b7ad13e6538360889e141e81ed299ee8e"
+    },
+    {
+      "path": "gfxtest",
+      "before": "becfb0b9cee1d9b35fe23dc504f7bbb9345b364c413c0e80656ddb3c9729bdfd",
+      "after": "becfb0b9cee1d9b35fe23dc504f7bbb9345b364c413c0e80656ddb3c9729bdfd"
+    },
+    {
+      "path": "gmp-clearkey/0.1/libclearkey.so",
+      "before": "97ffd72483c64964ad9a2b86ca227d93c921ff5c14dd430f25c3eec2f7aa5c02",
+      "after": "97ffd72483c64964ad9a2b86ca227d93c921ff5c14dd430f25c3eec2f7aa5c02"
+    },
+    {
+      "path": "gmp-clearkey/0.1/manifest.json",
+      "before": "b7d65e60cccb80ffb2e95b5ae7e355d2c8c37575e886eef4325ca04fa7ba68fc",
+      "after": "b7d65e60cccb80ffb2e95b5ae7e355d2c8c37575e886eef4325ca04fa7ba68fc"
+    },
+    {
+      "path": "icons/updater.png",
+      "before": "cab5e9bc9511b0690e696b378efa6753705b1182660d9829f5b3dc9f0398e5cc",
+      "after": "cab5e9bc9511b0690e696b378efa6753705b1182660d9829f5b3dc9f0398e5cc"
+    },
+    {
+      "path": "jogfile.json",
+      "before": "1ea8b491d37ef1e30d1158940469ce068e22fde3f970ec039f2c9511fa93de40",
+      "after": "1ea8b491d37ef1e30d1158940469ce068e22fde3f970ec039f2c9511fa93de40"
+    },
+    {
+      "path": "libfreeblpriv3.so",
+      "before": "0e5167b714fc4e7952d8471f5fb8d90a302df98e3cba156769ac733f0fd025b0",
+      "after": "0e5167b714fc4e7952d8471f5fb8d90a302df98e3cba156769ac733f0fd025b0"
+    },
+    {
+      "path": "libgkcodecs.so",
+      "before": "7804828879bc2967d23bc241c6ecb15fa7e5ca5e06e28049cf8378753b75cbe8",
+      "after": "7804828879bc2967d23bc241c6ecb15fa7e5ca5e06e28049cf8378753b75cbe8"
+    },
+    {
+      "path": "liblgpllibs.so",
+      "before": "c29aff12589cb5342e73488619b628b50afda839a063a0e0f3f77831ffd8ff82",
+      "after": "c29aff12589cb5342e73488619b628b50afda839a063a0e0f3f77831ffd8ff82"
+    },
+    {
+      "path": "libmozavcodec.so",
+      "before": "0687a26be53f8ece0623d6c5ed8b7815b2c05839760ba012baa2ea5b5975b2ea",
+      "after": "0687a26be53f8ece0623d6c5ed8b7815b2c05839760ba012baa2ea5b5975b2ea"
+    },
+    {
+      "path": "libmozavutil.so",
+      "before": "d957abe02b48afe84f2eb0038252f1f12c627f2db7100fbfda80fc473c2d14d7",
+      "after": "d957abe02b48afe84f2eb0038252f1f12c627f2db7100fbfda80fc473c2d14d7"
+    },
+    {
+      "path": "libmozgtk.so",
+      "before": "a2f42c25563411b7e3378629d2e1ab7f947e9c4b546560b25b436e6fbe94476f",
+      "after": "a2f42c25563411b7e3378629d2e1ab7f947e9c4b546560b25b436e6fbe94476f"
+    },
+    {
+      "path": "libmozinference.so",
+      "before": "acd4dba98fa405662a725fceebe023e0c78cb67de9ec5174f545f6604299c570",
+      "after": "acd4dba98fa405662a725fceebe023e0c78cb67de9ec5174f545f6604299c570"
+    },
+    {
+      "path": "libmozsandbox.so",
+      "before": "88c01a993afad42907d569d1f11d890afd0accc7120fd946168ca799065e86fd",
+      "after": "88c01a993afad42907d569d1f11d890afd0accc7120fd946168ca799065e86fd"
+    },
+    {
+      "path": "libmozsqlite3.so",
+      "before": "d740b271fce254778272866e02b9bd8bca7888475179f76904e9c14a8c96aba0",
+      "after": "d740b271fce254778272866e02b9bd8bca7888475179f76904e9c14a8c96aba0"
+    },
+    {
+      "path": "libmozwayland.so",
+      "before": "3164170986fe9bbe1e673b6bd2524f0f05dcc3da26a5fcee1d304c8fe385e457",
+      "after": "3164170986fe9bbe1e673b6bd2524f0f05dcc3da26a5fcee1d304c8fe385e457"
+    },
+    {
+      "path": "libnspr4.so",
+      "before": "73d59534248a183357f39e547f9d6f5089f084430aba181c9f4b6c9da5988c5d",
+      "after": "73d59534248a183357f39e547f9d6f5089f084430aba181c9f4b6c9da5988c5d"
+    },
+    {
+      "path": "libnss3.so",
+      "before": "6f11158b23027e962bec955f328119efa351db61b3e1f507a451fb1dfada646a",
+      "after": "6f11158b23027e962bec955f328119efa351db61b3e1f507a451fb1dfada646a"
+    },
+    {
+      "path": "libnssutil3.so",
+      "before": "efc899f507b9bcdc313303321ed177bc4768c47c3eaaa8e35609488e6d0e53e8",
+      "after": "efc899f507b9bcdc313303321ed177bc4768c47c3eaaa8e35609488e6d0e53e8"
+    },
+    {
+      "path": "libonnxruntime.so",
+      "before": "077ac0e3e090dd3d070a497f354f62fa718de4a19be287da5d9a188c950bc71c",
+      "after": "077ac0e3e090dd3d070a497f354f62fa718de4a19be287da5d9a188c950bc71c"
+    },
+    {
+      "path": "libplc4.so",
+      "before": "6fa863eff22c1fdf6e75f22fe9433bb50b0f8ba43960046a3816da6532d11fbf",
+      "after": "6fa863eff22c1fdf6e75f22fe9433bb50b0f8ba43960046a3816da6532d11fbf"
+    },
+    {
+      "path": "libplds4.so",
+      "before": "7f3fb5134ecd4201e532d7160dda31479a02743d6eff7199003e3b4be2dd963b",
+      "after": "7f3fb5134ecd4201e532d7160dda31479a02743d6eff7199003e3b4be2dd963b"
+    },
+    {
+      "path": "libsmime3.so",
+      "before": "6f3e94a9538ec3a52ee30e80af86fccc5ffd31a06712e61f434dda427b561c99",
+      "after": "6f3e94a9538ec3a52ee30e80af86fccc5ffd31a06712e61f434dda427b561c99"
+    },
+    {
+      "path": "libsoftokn3.so",
+      "before": "bb6a9283048767500190da54a439cf12196448e352db191db50e23e1566ad649",
+      "after": "bb6a9283048767500190da54a439cf12196448e352db191db50e23e1566ad649"
+    },
+    {
+      "path": "libssl3.so",
+      "before": "7a2f6ffcecdbb27c98279657f3db63f56922cb568dc217553d6d5f217bfa378b",
+      "after": "7a2f6ffcecdbb27c98279657f3db63f56922cb568dc217553d6d5f217bfa378b"
+    },
+    {
+      "path": "libxul.so",
+      "before": "760ff8a689f52c9b1f3c89a45ea8813e59f187990caed747e4a7680020c8dbc7",
+      "after": "760ff8a689f52c9b1f3c89a45ea8813e59f187990caed747e4a7680020c8dbc7"
+    },
+    {
+      "path": "omni.ja",
+      "before": "194f6c0125596e63452dd4ac7dc65977ec2f872db52b12d5a6dd34e756b340bc",
+      "after": "d62fac8f48e704f8c6d7c9cb35904f94e945b8cbc37995d831a7393413c96e80"
+    },
+    {
+      "path": "pingsender",
+      "before": "157ed38af98d795812dfc532739252f9e6c51472d13b9105c496b8b2cf1dbbfd",
+      "after": "157ed38af98d795812dfc532739252f9e6c51472d13b9105c496b8b2cf1dbbfd"
+    },
+    {
+      "path": "platform.ini",
+      "before": "df3643332e5fc09d55bd4909125de1ee7c818617aaac0aaf13ee14e5f0650122",
+      "after": "df3643332e5fc09d55bd4909125de1ee7c818617aaac0aaf13ee14e5f0650122"
+    },
+    {
+      "path": "precomplete",
+      "before": "d6a5d785324008de66070ef2635fb3ed8f18c7ec04f055f870fbaaa685d4f010",
+      "after": "d6a5d785324008de66070ef2635fb3ed8f18c7ec04f055f870fbaaa685d4f010"
+    },
+    {
+      "path": "removed-files",
+      "before": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "after": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "update-settings.ini",
+      "before": "c574f9f109b4dca4a6ab379167cd47a6bbee66c0a9640b1d19232da337202707",
+      "after": "c574f9f109b4dca4a6ab379167cd47a6bbee66c0a9640b1d19232da337202707"
+    },
+    {
+      "path": "updater",
+      "before": "54fae6b05eb4434bb8650e631085ca0eef3d22b932bf9f525000a93115d93010",
+      "after": "54fae6b05eb4434bb8650e631085ca0eef3d22b932bf9f525000a93115d93010"
+    },
+    {
+      "path": "updater.ini",
+      "before": "69ed3e7508f444fb753f7af5535a08321d110ba187baf1f80d8b26bb224af0ec",
+      "after": "69ed3e7508f444fb753f7af5535a08321d110ba187baf1f80d8b26bb224af0ec"
+    }
+  ],
+  "onlyProductFileChanged": "omni.ja",
+  "allUnrelatedResourcesAndNativeFilesUnchanged": true
+}

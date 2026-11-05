@@ -1,0 +1,22 @@
+{
+  "value": {
+    "windows": [
+      {
+        "ready": true,
+        "vertical": true
+      },
+      {
+        "ready": true,
+        "vertical": true
+      }
+    ],
+    "native": true,
+    "stored": "vertical"
+  },
+  "normalQuit": {
+    "cause": "shutdown",
+    "forced": false,
+    "in_app": true
+  },
+  "productUnchanged": true
+}

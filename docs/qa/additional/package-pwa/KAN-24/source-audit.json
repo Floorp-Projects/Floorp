@@ -1,0 +1,47 @@
+{
+  "key": "KAN-24",
+  "summary": "[Workspaces/UI] Floorp HubとFirefox垂直タブ設定が同期しない（#2949）",
+  "parent": "KAN-1",
+  "status": "進行中",
+  "labels": [
+    "area-workspaces",
+    "existing-pr",
+    "floorp-stability-2026-11",
+    "needs-pr-check",
+    "needs-repro",
+    "p2",
+    "reproduced-in-test",
+    "triage-reviewed"
+  ],
+  "comments": {
+    "total": 3,
+    "isLast": true,
+    "ids": [
+      "10063",
+      "10148",
+      "10256"
+    ],
+    "facts": [
+      {
+        "id": "10063",
+        "fact": "Existing Draft2950 canonical; actual UI/restart/multirow pending"
+      },
+      {
+        "id": "10148",
+        "fact": "Other-session static one-way-sync analysis, no new product test"
+      },
+      {
+        "id": "10256",
+        "fact": "Other-session Windows11 actual menu command/pref mismatch with initial direct-pref setup; Hub rendering/restart not checked; known initialsync review noted"
+      }
+    ]
+  },
+  "relatedPr": 2950,
+  "head": "69d306b11c9e52da9e6270870740d49b1d561659",
+  "review": {
+    "id": 5611379353,
+    "inlineId": 4346185151,
+    "knownFinding": "No initial reconciliation after registering vertical-tabs observer"
+  },
+  "writesPerformed": false
+}

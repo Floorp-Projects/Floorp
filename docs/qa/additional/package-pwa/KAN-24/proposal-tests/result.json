@@ -1,0 +1,126 @@
+{
+  "kind": "API-level canonical/proposed source bundles, actual Gecko prefs/direct RPC, no UI claim",
+  "display": ":101 Xvfb X11",
+  "product": "/workspace/qa-linux-full-build/products/3040-r2/floorp",
+  "profile": "/workspace/qa-linux-additional/KAN-24/proposal-tests/home-direct/profile",
+  "identity": {
+    "profile": "/workspace/qa-linux-additional/KAN-24/proposal-tests/home-direct/profile",
+    "executable": "/workspace/qa-linux-full-build/products/3040-r2/floorp/floorp",
+    "version": "159.0.1",
+    "buildID": "20261103153232",
+    "sandbox": 6,
+    "sandboxDisable": false
+  },
+  "variants": {
+    "canonical": {
+      "route": {
+        "location": "chrome://browser/content/browser.xhtml",
+        "usesActor": false
+      },
+      "rows": [
+        {
+          "case": "initial-observer",
+          "native": false,
+          "stored": "vertical",
+          "expected": "horizontal",
+          "actual": "vertical",
+          "applied": [],
+          "passed": false
+        },
+        {
+          "case": "initial-observer",
+          "native": true,
+          "stored": "horizontal",
+          "expected": "vertical",
+          "actual": "horizontal",
+          "applied": [],
+          "passed": false
+        },
+        {
+          "case": "stale-form-unrelated-save",
+          "stale": "horizontal",
+          "latest": "multirow",
+          "beforeSave": "multirow",
+          "actual": "horizontal",
+          "expected": "multirow",
+          "native": false,
+          "unrelatedEditSaved": true,
+          "passed": false
+        },
+        {
+          "case": "stale-form-unrelated-save",
+          "stale": "multirow",
+          "latest": "horizontal",
+          "beforeSave": "horizontal",
+          "actual": "multirow",
+          "expected": "horizontal",
+          "native": false,
+          "unrelatedEditSaved": true,
+          "passed": false
+        }
+      ],
+      "allPassed": false
+    },
+    "proposed": {
+      "route": {
+        "location": "chrome://browser/content/browser.xhtml",
+        "usesActor": false
+      },
+      "rows": [
+        {
+          "case": "initial-observer",
+          "native": false,
+          "stored": "vertical",
+          "expected": "horizontal",
+          "actual": "horizontal",
+          "applied": [
+            "horizontal"
+          ],
+          "passed": true
+        },
+        {
+          "case": "initial-observer",
+          "native": true,
+          "stored": "horizontal",
+          "expected": "vertical",
+          "actual": "vertical",
+          "applied": [
+            "vertical"
+          ],
+          "passed": true
+        },
+        {
+          "case": "stale-form-unrelated-save",
+          "stale": "horizontal",
+          "latest": "multirow",
+          "beforeSave": "multirow",
+          "actual": "multirow",
+          "expected": "multirow",
+          "native": false,
+          "unrelatedEditSaved": true,
+          "passed": true
+        },
+        {
+          "case": "stale-form-unrelated-save",
+          "stale": "multirow",
+          "latest": "horizontal",
+          "beforeSave": "horizontal",
+          "actual": "horizontal",
+          "expected": "horizontal",
+          "native": false,
+          "unrelatedEditSaved": true,
+          "passed": true
+        }
+      ],
+      "allPassed": true
+    }
+  },
+  "quit": {
+    "cause": "shutdown",
+    "forced": false,
+    "in_app": true
+  },
+  "browserExit": 0,
+  "ownedProcessesRemaining": 0,
+  "allProductFilesUnchanged": true
+}

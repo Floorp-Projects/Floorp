@@ -1,0 +1,32 @@
+{
+  "head": "69d306b11c9e52da9e6270870740d49b1d561659",
+  "sources": {
+    "browser-features/chrome/common/designs/utils/vertical-tabs-observer.ts": "b9543f2fcea35f3e64c514469857bb370c691f9871ad8eaef618271dc9a2a9fe",
+    "browser-features/pages-settings/src/app/design/dataManager.ts": "618ec88be7b208ef42e492dbb5b877f384f4deb176668bc1b2c32b094ee7a4a1"
+  },
+  "variants": {
+    "canonical": {
+      "bundleSha256": "535c2dd051493a22bc346f4605a955810daa6dcc8a6d544c7156cac325d8ee6e",
+      "transformedFiles": []
+    },
+    "proposed": {
+      "bundleSha256": "56b62143b3529fb1dea41729dbcf2966d230df162433f1c2a7d0653d0c2f864b",
+      "transformedFiles": [
+        "browser-features/chrome/common/designs/utils/vertical-tabs-observer.ts",
+        "browser-features/pages-settings/src/app/design/dataManager.ts"
+      ]
+    }
+  },
+  "additionalSources": {
+    "browser-features/pages-settings/src/lib/rpc/rpc.ts": "5376fbb91de2f4b243344a3961616cbb7596945a50666f736f709a2a18b8fd4e",
+    "libs/ui/settings-rpc-origin.ts": "89a60e5467a6e6b5276c1952bb08376ccab37ddeb09697a4551b664454daca71",
+    "browser-features/chrome/common/designs/utils/tabbar-style-sync.ts": "d4e362c86c1ac9706a7e17bc40b3dc60adec97c51465283de4e1fb2f10175372",
+    "browser-features/chrome/common/designs/chrome-extras.ts": "893a8eea8a53e04d46a12e3b1b52790aa016537034f36e8bfb3b44565f321ffe"
+  },
+  "transformContract": "In-memory onLoad only; exact source files unchanged. import.meta.env.DEV=false production compile flag; real inline CSS loaded as text. RPC, Services and origin routing unmodified.",
+  "proposalResultSources": {
+    "browser-features/chrome/common/designs/utils/vertical-tabs-observer.ts": "a93aef2a9fad9b3c0d17ec3e819479301daa24f390fde3d1d635ee077f11ca26",
+    "browser-features/pages-settings/src/app/design/dataManager.ts": "3ee0a84d1e736c01db1ebd353f8ec99d6a150442df8d83ac7bfbaec2ef0cfff9"
+  },
+  "testBodySha256": "030133c708448abb72cefbd68402f2e53b316f744e078e771191bde77f35df75"
+}

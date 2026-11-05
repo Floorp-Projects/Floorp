@@ -1,0 +1,22 @@
+[
+  {
+    "id": "workspace-24683412-cc97-4bd5-8f2d-3e4018dc3b01",
+    "label": "New Workspace (0)",
+    "visible": true
+  },
+  {
+    "id": "workspacesCreateNewWorkspaceButton",
+    "label": "Create New Workspace...",
+    "visible": true
+  },
+  {
+    "id": "workspacesRestoreWorkspaceButton",
+    "label": null,
+    "visible": true
+  },
+  {
+    "id": "workspacesManageworkspacesServicesButton",
+    "label": "Manage Workspaces",
+    "visible": true
+  }
+]

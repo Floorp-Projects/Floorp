@@ -1,0 +1,146 @@
+[
+  {
+    "tag": "html:moz-page-nav-button",
+    "html": "<html:moz-page-nav-button xmlns:html=\"http://www.w3.org/1999/xhtml\" id=\"category-about-firefox\" view=\"paneAbout\" iconsrc=\"chrome://browser/skin/sidebar/firefox.svg\" data-l10n-id=\"pane-about-firefox-title\" role=\"none\">About Floorp</html:moz-page-nav-button>"
+  },
+  {
+    "tag": "moz-radio",
+    "html": "<moz-radio xmlns=\"http://www.w3.org/1999/xhtml\" id=\"autoDesktop\" data-l10n-id=\"update-application-auto-2\" data-l10n-attrs=\"label,description,accesskey\" inputlayout=\"inline\" checked=\"\" orientation=\"vertical\" label=\"Automatically install updates (recommended)\"><!--?lit$023874455$--><!----><setting-control slot=\"nested\" id=\"setting-control-backgroundUpdate\" hidden=\"\"><!---->\n    <!--?lit$023874455$-->\n    <moz-checkbox id=\"backgroundUpdate\" data-l10n-id=\"update-application-background-enabled\" data-l10n-attrs=\"label,description,accesskey\" inputlayout=\"inline\" checked=\"\" label=\"When Floorp is not running\"><!--?lit$023874455$--></moz-checkbox></setting-control><!----></moz-radio>"
+  },
+  {
+    "tag": "moz-radio",
+    "html": "<moz-radio xmlns=\"http://www.w3.org/1999/xhtml\" id=\"manualDesktop\" data-l10n-id=\"update-application-check-choose-2\" data-l10n-attrs=\"label,description,accesskey\" inputlayout=\"inline\" orientation=\"vertical\" label=\"Check for updates, but choose when to install\"><!--?lit$023874455$--></moz-radio>"
+  },
+  {
+    "tag": "moz-radio",
+    "html": "<moz-radio xmlns=\"http://www.w3.org/1999/xhtml\" id=\"contrastSettingsAuto\" data-l10n-id=\"preferences-contrast-control-use-platform-settings\" data-l10n-attrs=\"label,description,accesskey\" inputlayout=\"inline\" orientation=\"vertical\" label=\"Automatic (use system settings)\"><!--?lit$023874455$--></moz-radio>"
+  },
+  {
+    "tag": "moz-radio",
+    "html": "<moz-radio xmlns=\"http://www.w3.org/1999/xhtml\" id=\"contrastSettingsOff\" data-l10n-id=\"preferences-contrast-control-off\" data-l10n-attrs=\"label,description,accesskey\" inputlayout=\"inline\" checked=\"\" orientation=\"vertical\" label=\"Off\"><!--?lit$023874455$--></moz-radio>"
+  },
+  {
+    "tag": "moz-radio",
+    "html": "<moz-radio xmlns=\"http://www.w3.org/1999/xhtml\" id=\"contrastSettingsOn\" data-l10n-id=\"preferences-contrast-control-custom\" data-l10n-attrs=\"label,description,accesskey\" inputlayout=\"inline\" orientation=\"vertical\" label=\"Custom\"><!--?lit$023874455$--><!----><setting-control slot=\"nested\" id=\"setting-control-colors\"><!---->\n    <!--?lit$023874455$-->\n    <moz-box-button id=\"colors\" data-l10n-id=\"preferences-colors-manage-button2\" search-l10n-ids=\"colors-text-and-background, colors-text.label, colors-text-background.label, colors-links-header, colors-links-unvisited.label, colors-links-visited.label\" data-l10n-attrs=\"label,description,accesskey\" label=\"Manage colors\"><!--?lit$023874455$--></moz-box-button></setting-control><!----></moz-radio>"
+  },
+  {
+    "tag": "moz-fieldset",
+    "html": "<moz-fieldset xmlns=\"http://www.w3.org/1999/xhtml\" data-l10n-id=\"appearance-window-density-group\" headinglevel=\"3\" data-l10n-attrs=\"label,description,arialabel\" label=\"Window density\" description=\"Adjust the spacing around window elements like toolbar, tabs, and sidebar.\" hasheading=\"\"><!--?lit$023874455$--><!----><setting-control id=\"setting-control-uiDensity\" hidden=\"\"><!---->\n    <!--?lit$023874455$-->\n    <moz-radio-group id=\"uiDensity\" data-l10n-id=\"appearance-window-density-radio-group\" data-l10n-attrs=\"description,label,arialabel\"><!--?lit$023874455$--><!----><moz-radio data-l10n-id=\"appearance-window-density-automatic\" data-l10n-attrs=\"label,description,accesskey\" inputlayout=\"inline\" checked=\"\" orientation=\"vertical\" label=\"Automatic (default)\" description=\"Standard, compact, or touch spacing is applied automatically\"><!--?lit$023874455$--></moz-radio><!----><!----><moz-radio data-l10n-id=\"appearance-window-density-standard\" data-l10n-attrs=\"label,description,accesskey\" inputlayout=\"inline\" orientation=\"vertical\" label=\"Standard\" description=\"Balanced spacing for most screens\"><!--?lit$023874455$--><!----><setting-control slot=\"nested\" id=\"setting-control-uiDensityAutoTouchMode\" hidden=\"\"><!---->\n    <!--?lit$023874455$-->\n    <moz-checkbox id=\"uiDensityAutoTouchMode\" data-l10n-id=\"appearance-window-density-auto-touch-mode\" data-l10n-attrs=\"label,description,accesskey\" inputlayout=\"inline\" checked=\"\" label=\"Use touch spacing for tablet mode\"><!--?lit$023874455$--></moz-checkbox></setting-control><!----></moz-radio><!----><!----><moz-radio data-l10n-id=\"appearance-w"
+  },
+  {
+    "tag": "moz-radio",
+    "html": "<moz-radio xmlns=\"http://www.w3.org/1999/xhtml\" data-l10n-id=\"appearance-window-density-automatic\" data-l10n-attrs=\"label,description,accesskey\" inputlayout=\"inline\" checked=\"\" orientation=\"vertical\" label=\"Automatic (default)\" description=\"Standard, compact, or touch spacing is applied automatically\"><!--?lit$023874455$--></moz-radio>"
+  },
+  {
+    "tag": "moz-radio",
+    "html": "<moz-radio xmlns=\"http://www.w3.org/1999/xhtml\" data-l10n-id=\"appearance-window-density-standard\" data-l10n-attrs=\"label,description,accesskey\" inputlayout=\"inline\" orientation=\"vertical\" label=\"Standard\" description=\"Balanced spacing for most screens\"><!--?lit$023874455$--><!----><setting-control slot=\"nested\" id=\"setting-control-uiDensityAutoTouchMode\" hidden=\"\"><!---->\n    <!--?lit$023874455$-->\n    <moz-checkbox id=\"uiDensityAutoTouchMode\" data-l10n-id=\"appearance-window-density-auto-touch-mode\" data-l10n-attrs=\"label,description,accesskey\" inputlayout=\"inline\" checked=\"\" label=\"Use touch spacing for tablet mode\"><!--?lit$023874455$--></moz-checkbox></setting-control><!----></moz-radio>"
+  },
+  {
+    "tag": "moz-radio",
+    "html": "<moz-radio xmlns=\"http://www.w3.org/1999/xhtml\" data-l10n-id=\"appearance-window-density-compact\" data-l10n-attrs=\"label,description,accesskey\" inputlayout=\"inline\" orientation=\"vertical\" label=\"Compact\" description=\"Reduced spacing for smaller screens\"><!--?lit$023874455$--></moz-radio>"
+  },
+  {
+    "tag": "moz-radio",
+    "html": "<moz-radio xmlns=\"http://www.w3.org/1999/xhtml\" data-l10n-id=\"appearance-window-density-touch\" data-l10n-attrs=\"label,description,accesskey\" inputlayout=\"inline\" orientation=\"vertical\" label=\"Touch\" description=\"Larger window elements and click targets, optimized for touch screens\"><!--?lit$023874455$--></moz-radio>"
+  },
+  {
+    "tag": "setting-control",
+    "html": "<setting-control xmlns=\"http://www.w3.org/1999/xhtml\" id=\"setting-control-sidebarChatbotFieldset\"><!---->\n    <!--?lit$023874455$-->\n    <moz-fieldset id=\"sidebarChatbotFieldset\" data-l10n-id=\"preferences-ai-controls-sidebar-chatbot-group-3\" headinglevel=\"3\" iconsrc=\"chrome://browser/skin/sidebar-collapsed.svg\" data-l10n-attrs=\"label,description,arialabel\" label=\"AI chatbot providers in sidebar\" description=\"Keep a chatbot in view as you browse. Choose from multiple providers and switch anytime.\" hasheading=\"\"><!--?lit$023874455$--><!----><setting-control id=\"setting-control-chatbotProviderItem\"><!---->\n    <!--?lit$023874455$-->\n    <moz-box-item id=\"chatbotProviderItem\" data-l10n-attrs=\"label,description\" layout=\"default\"><!--?lit$023874455$--><!----><setting-control id=\"setting-control-aiControlSidebarChatbotSelect\"><!---->\n    <!--?lit$023874455$-->\n    <moz-select id=\"aiControlSidebarChatbotSelect\" data-l10n-id=\"preferences-ai-controls-sidebar-chatbot-control\" inputlayout=\"inline-end\" data-l10n-attrs=\"label,description,accesskey\" size=\"default\" label=\"Chatbot in sidebar\"><!--?lit$023874455$--><!----><moz-option data-l10n-id=\"preferences-ai-controls-state-available\" data-l10n-attrs=\"label\" value=\"available\" label=\"Available\" iconsrc=\"\"><!--?lit$023874455$--></moz-option><!----><!----><moz-option data-l10n-id=\"preferences-ai-controls-state-blocked\" data-l10n-attrs=\"label\" value=\"blocked\" label=\"Blocked\" iconsrc=\"\"><!--?lit$023874455$--></moz-option><!----><!----><hr /><!--?lit$023874455$--><!----><!----><moz-option label=\"Anthropic Claude\" data-l10n-attrs=\"label\" value=\""
+  },
+  {
+    "tag": "moz-fieldset",
+    "html": "<moz-fieldset xmlns=\"http://www.w3.org/1999/xhtml\" id=\"sidebarChatbotFieldset\" data-l10n-id=\"preferences-ai-controls-sidebar-chatbot-group-3\" headinglevel=\"3\" iconsrc=\"chrome://browser/skin/sidebar-collapsed.svg\" data-l10n-attrs=\"label,description,arialabel\" label=\"AI chatbot providers in sidebar\" description=\"Keep a chatbot in view as you browse. Choose from multiple providers and switch anytime.\" hasheading=\"\"><!--?lit$023874455$--><!----><setting-control id=\"setting-control-chatbotProviderItem\"><!---->\n    <!--?lit$023874455$-->\n    <moz-box-item id=\"chatbotProviderItem\" data-l10n-attrs=\"label,description\" layout=\"default\"><!--?lit$023874455$--><!----><setting-control id=\"setting-control-aiControlSidebarChatbotSelect\"><!---->\n    <!--?lit$023874455$-->\n    <moz-select id=\"aiControlSidebarChatbotSelect\" data-l10n-id=\"preferences-ai-controls-sidebar-chatbot-control\" inputlayout=\"inline-end\" data-l10n-attrs=\"label,description,accesskey\" size=\"default\" label=\"Chatbot in sidebar\"><!--?lit$023874455$--><!----><moz-option data-l10n-id=\"preferences-ai-controls-state-available\" data-l10n-attrs=\"label\" value=\"available\" label=\"Available\" iconsrc=\"\"><!--?lit$023874455$--></moz-option><!----><!----><moz-option data-l10n-id=\"preferences-ai-controls-state-blocked\" data-l10n-attrs=\"label\" value=\"blocked\" label=\"Blocked\" iconsrc=\"\"><!--?lit$023874455$--></moz-option><!----><!----><hr /><!--?lit$023874455$--><!----><!----><moz-option label=\"Anthropic Claude\" data-l10n-attrs=\"label\" value=\"https://claude.ai/new\" iconsrc=\"\"><!--?lit$023874455$--></moz-option><!----><!----><moz-option label"
+  },
+  {
+    "tag": "setting-control",
+    "html": "<setting-control xmlns=\"http://www.w3.org/1999/xhtml\" id=\"setting-control-aiControlSidebarChatbotSelect\"><!---->\n    <!--?lit$023874455$-->\n    <moz-select id=\"aiControlSidebarChatbotSelect\" data-l10n-id=\"preferences-ai-controls-sidebar-chatbot-control\" inputlayout=\"inline-end\" data-l10n-attrs=\"label,description,accesskey\" size=\"default\" label=\"Chatbot in sidebar\"><!--?lit$023874455$--><!----><moz-option data-l10n-id=\"preferences-ai-controls-state-available\" data-l10n-attrs=\"label\" value=\"available\" label=\"Available\" iconsrc=\"\"><!--?lit$023874455$--></moz-option><!----><!----><moz-option data-l10n-id=\"preferences-ai-controls-state-blocked\" data-l10n-attrs=\"label\" value=\"blocked\" label=\"Blocked\" iconsrc=\"\"><!--?lit$023874455$--></moz-option><!----><!----><hr /><!--?lit$023874455$--><!----><!----><moz-option label=\"Anthropic Claude\" data-l10n-attrs=\"label\" value=\"https://claude.ai/new\" iconsrc=\"\"><!--?lit$023874455$--></moz-option><!----><!----><moz-option label=\"ChatGPT\" data-l10n-attrs=\"label\" value=\"https://chatgpt.com\" iconsrc=\"\"><!--?lit$023874455$--></moz-option><!----><!----><moz-option label=\"Google Gemini\" data-l10n-attrs=\"label\" value=\"https://gemini.google.com\" iconsrc=\"\"><!--?lit$023874455$--></moz-option><!----><!----><moz-option label=\"HuggingChat\" data-l10n-attrs=\"label\" value=\"https://huggingface.co/chat\" iconsrc=\"\"><!--?lit$023874455$--></moz-option><!----><!----><moz-option label=\"Mistral Vibe\" data-l10n-attrs=\"label\" value=\"https://chat.mistral.ai/chat\" iconsrc=\"\"><!--?lit$023874455$--></moz-option><!----></moz-select></setting-control>"
+  },
+  {
+    "tag": "moz-select",
+    "html": "<moz-select xmlns=\"http://www.w3.org/1999/xhtml\" id=\"aiControlSidebarChatbotSelect\" data-l10n-id=\"preferences-ai-controls-sidebar-chatbot-control\" inputlayout=\"inline-end\" data-l10n-attrs=\"label,description,accesskey\" size=\"default\" label=\"Chatbot in sidebar\"><!--?lit$023874455$--><!----><moz-option data-l10n-id=\"preferences-ai-controls-state-available\" data-l10n-attrs=\"label\" value=\"available\" label=\"Available\" iconsrc=\"\"><!--?lit$023874455$--></moz-option><!----><!----><moz-option data-l10n-id=\"preferences-ai-controls-state-blocked\" data-l10n-attrs=\"label\" value=\"blocked\" label=\"Blocked\" iconsrc=\"\"><!--?lit$023874455$--></moz-option><!----><!----><hr /><!--?lit$023874455$--><!----><!----><moz-option label=\"Anthropic Claude\" data-l10n-attrs=\"label\" value=\"https://claude.ai/new\" iconsrc=\"\"><!--?lit$023874455$--></moz-option><!----><!----><moz-option label=\"ChatGPT\" data-l10n-attrs=\"label\" value=\"https://chatgpt.com\" iconsrc=\"\"><!--?lit$023874455$--></moz-option><!----><!----><moz-option label=\"Google Gemini\" data-l10n-attrs=\"label\" value=\"https://gemini.google.com\" iconsrc=\"\"><!--?lit$023874455$--></moz-option><!----><!----><moz-option label=\"HuggingChat\" data-l10n-attrs=\"label\" value=\"https://huggingface.co/chat\" iconsrc=\"\"><!--?lit$023874455$--></moz-option><!----><!----><moz-option label=\"Mistral Vibe\" data-l10n-attrs=\"label\" value=\"https://chat.mistral.ai/chat\" iconsrc=\"\"><!--?lit$023874455$--></moz-option><!----></moz-select>"
+  },
+  {
+    "tag": "moz-radio",
+    "html": "<moz-radio xmlns=\"http://www.w3.org/1999/xhtml\" data-l10n-id=\"applications-save-for-new-types2\" data-l10n-attrs=\"label,description,accesskey\" inputlayout=\"inline\" checked=\"\" orientation=\"vertical\" label=\"Automatically save files\"><!--?lit$023874455$--></moz-radio>"
+  },
+  {
+    "tag": "moz-radio",
+    "html": "<moz-radio xmlns=\"http://www.w3.org/1999/xhtml\" data-l10n-id=\"applications-ask-before-handling2\" data-l10n-attrs=\"label,description,accesskey\" inputlayout=\"inline\" orientation=\"vertical\" label=\"Ask to open or save files\"><!--?lit$023874455$--></moz-radio>"
+  },
+  {
+    "tag": "moz-radio",
+    "html": "<moz-radio xmlns=\"http://www.w3.org/1999/xhtml\" id=\"httpsOnlyRadioEnabled\" data-l10n-id=\"httpsonly-radio-enabled\" data-l10n-attrs=\"label,description,accesskey\" inputlayout=\"inline\" orientation=\"vertical\" label=\"Enable HTTPS-Only Mode in all windows\"><!--?lit$023874455$--></moz-radio>"
+  },
+  {
+    "tag": "moz-radio",
+    "html": "<moz-radio xmlns=\"http://www.w3.org/1999/xhtml\" id=\"httpsOnlyRadioEnabledPBM\" data-l10n-id=\"httpsonly-radio-enabled-pbm\" data-l10n-attrs=\"label,description,accesskey\" inputlayout=\"inline\" orientation=\"vertical\" label=\"Enable HTTPS-Only Mode in private windows only\"><!--?lit$023874455$--></moz-radio>"
+  },
+  {
+    "tag": "moz-radio",
+    "html": "<moz-radio xmlns=\"http://www.w3.org/1999/xhtml\" id=\"httpsOnlyRadioDisabled\" data-l10n-id=\"httpsonly-radio-disabled3\" data-l10n-attrs=\"label,description,accesskey\" inputlayout=\"inline\" checked=\"\" orientation=\"vertical\" label=\"Don\u2019t enable HTTPS-Only Mode\" description=\"Floorp may still upgrade some connections\"><!--?lit$023874455$--></moz-radio>"
+  },
+  {
+    "tag": "moz-radio",
+    "html": "<moz-radio xmlns=\"http://www.w3.org/1999/xhtml\" id=\"dohRadioDefault\" data-l10n-id=\"preferences-doh-radio-default\" data-l10n-attrs=\"label,description,accesskey\" inputlayout=\"inline\" checked=\"\" orientation=\"vertical\" label=\"Default\" description=\"Use secure DNS in regions where it\u2019s available\"><!--?lit$023874455$--></moz-radio>"
+  },
+  {
+    "tag": "moz-radio",
+    "html": "<moz-radio xmlns=\"http://www.w3.org/1999/xhtml\" id=\"dohRadioCustom\" data-l10n-id=\"preferences-doh-radio-custom\" data-l10n-attrs=\"label,description,accesskey\" inputlayout=\"inline\" orientation=\"vertical\" label=\"Custom\" description=\"Always use secure DNS with control over your provider and fallback behavior\"><!--?lit$023874455$--><!----><setting-control slot=\"nested\" id=\"setting-control-dohFallbackIfCustom\"><!---->\n    <!--?lit$023874455$-->\n    <moz-checkbox id=\"dohFallbackIfCustom\" data-l10n-id=\"preferences-doh-fallback-label\" data-l10n-attrs=\"label,description,accesskey\" inputlayout=\"inline\" checked=\"\" label=\"Always warn me if secure DNS isn\u2019t available\"><!--?lit$023874455$--></moz-checkbox></setting-control><!----><!----><setting-control slot=\"nested\" id=\"setting-control-dohProviderSelect\"><!---->\n    <!--?lit$023874455$-->\n    <moz-select id=\"dohProviderSelect\" data-l10n-id=\"preferences-doh-select-resolver-label\" data-l10n-attrs=\"label,description,accesskey\" inputlayout=\"block\" size=\"default\" label=\"Choose provider:\"><!--?lit$023874455$--><!----><moz-option data-l10n-id=\"connection-dns-over-https-url-custom\" data-l10n-attrs=\"label\" value=\"custom\" label=\"Custom\" iconsrc=\"\"><!--?lit$023874455$--></moz-option><!----></moz-select></setting-control><!----><!----><setting-control slot=\"nested\" id=\"setting-control-dohCustomProvider\"><!---->\n    <!--?lit$023874455$-->\n    <moz-input-text id=\"dohCustomProvider\" data-l10n-id=\"preferences-doh-custom-provider-label\" data-l10n-attrs=\"label,description,accesskey,placeholder\" inputlayout=\"block\"><!--?lit$023874455$--></moz-input-text></"
+  },
+  {
+    "tag": "moz-radio",
+    "html": "<moz-radio xmlns=\"http://www.w3.org/1999/xhtml\" id=\"dohRadioOff\" data-l10n-id=\"preferences-doh-radio-off\" data-l10n-attrs=\"label,description,accesskey\" inputlayout=\"inline\" orientation=\"vertical\" label=\"Off\" description=\"Use your default DNS resolver\"><!--?lit$023874455$--></moz-radio>"
+  },
+  {
+    "tag": "moz-radio",
+    "html": "<moz-radio xmlns=\"http://www.w3.org/1999/xhtml\" id=\"etpLevelStandard\" data-l10n-id=\"preferences-etp-level-standard\" data-l10n-attrs=\"label,description,accesskey\" inputlayout=\"inline\" checked=\"\" orientation=\"vertical\" label=\"Standard (default)\" description=\"Strong, reliable protections that work smoothly with most websites.\"><!--?lit$023874455$--></moz-radio>"
+  },
+  {
+    "tag": "moz-radio",
+    "html": "<moz-radio xmlns=\"http://www.w3.org/1999/xhtml\" id=\"etpLevelStrict\" data-l10n-id=\"preferences-etp-level-strict\" data-subcategory=\"etp-strict-control\" data-l10n-attrs=\"label,description,accesskey\" inputlayout=\"inline\" orientation=\"vertical\" label=\"Strict\" description=\"Stronger protections that block more trackers, but may cause some sites to break.\"><!--?lit$023874455$--><!----><setting-control slot=\"nested\" id=\"setting-control-etpAllowListBaselineEnabled\" hidden=\"\"><!---->\n    <!--?lit$023874455$-->\n    <moz-checkbox id=\"etpAllowListBaselineEnabled\" data-l10n-id=\"content-blocking-baseline-exceptions-3\" data-l10n-attrs=\"label,description,accesskey\" inputlayout=\"inline\" checked=\"\" label=\"Fix major site issues (recommended)\" description=\"Helps load sites and features by unblocking only essential elements that may contain trackers. Covers most common problems.\"><!--?lit$023874455$--><!----><setting-control slot=\"nested\" id=\"setting-control-etpAllowListConvenienceEnabled\"><!---->\n    <!--?lit$023874455$-->\n    <moz-checkbox id=\"etpAllowListConvenienceEnabled\" data-l10n-id=\"content-blocking-convenience-exceptions-3\" data-l10n-attrs=\"label,description,accesskey\" inputlayout=\"inline\" checked=\"\" label=\"Fix minor site issues\" description=\"Restores things like videos in an article or comment sections by unblocking elements that may contain trackers. This can reduce site issues but offers less protection. Must be used with fixes for major issues.\"><!--?lit$023874455$--></moz-checkbox></setting-control><!----></moz-checkbox></setting-control><!----></moz-radio>"
+  },
+  {
+    "tag": "moz-radio",
+    "html": "<moz-radio xmlns=\"http://www.w3.org/1999/xhtml\" id=\"etpLevelCustom\" data-l10n-id=\"preferences-etp-level-custom\" data-subcategory=\"etp-custom-control\" data-l10n-attrs=\"label,description,accesskey\" inputlayout=\"inline\" orientation=\"vertical\" label=\"Custom\" description=\"Choose which protections to turn on or off.\"><!--?lit$023874455$--><!----><setting-control slot=\"nested\" id=\"setting-control-etpCustomizeButton\"><!---->\n    <!--?lit$023874455$-->\n    <moz-box-button id=\"etpCustomizeButton\" data-l10n-id=\"preferences-etp-customize-button\" data-load-pane=\"paneEtpCustomize\" data-l10n-attrs=\"label,description,accesskey\" label=\"Customize tracking protection\"><!--?lit$023874455$--></moz-box-button></setting-control><!----></moz-radio>"
+  },
+  {
+    "tag": "setting-control",
+    "html": "<setting-control xmlns=\"http://www.w3.org/1999/xhtml\" id=\"setting-control-openSidebarByDefault\"><!---->\n    <!--?lit$023874455$-->\n    <moz-checkbox id=\"openSidebarByDefault\" data-l10n-id=\"ai-window-open-sidebar\" data-l10n-attrs=\"label,description,accesskey\" inputlayout=\"inline\" checked=\"\" label=\"Open assistant automatically\" description=\"Show the assistant sidebar on each new tab. Close it anytime.\"><!--?lit$023874455$--></moz-checkbox></setting-control>"
+  },
+  {
+    "tag": "moz-checkbox",
+    "html": "<moz-checkbox xmlns=\"http://www.w3.org/1999/xhtml\" id=\"openSidebarByDefault\" data-l10n-id=\"ai-window-open-sidebar\" data-l10n-attrs=\"label,description,accesskey\" inputlayout=\"inline\" checked=\"\" label=\"Open assistant automatically\" description=\"Show the assistant sidebar on each new tab. Close it anytime.\"><!--?lit$023874455$--></moz-checkbox>"
+  },
+  {
+    "tag": "moz-radio",
+    "html": "<moz-radio xmlns=\"http://www.w3.org/1999/xhtml\" data-l10n-id=\"smart-window-model-personal-v2\" data-l10n-args=\"{&quot;shortName&quot;:&quot;Mistral Small 4&quot;,&quot;model&quot;:&quot;mistral-small-2603&quot;,&quot;ownerName&quot;:&quot;Mistral&quot;}\" data-l10n-attrs=\"label,description,accesskey\" inputlayout=\"inline\" orientation=\"vertical\" label=\"Mistral Small 4: Personal\" description=\"Built for personalized help across languages. Full name: mistral-small-2603 by Mistral\"><!--?lit$023874455$--></moz-radio>"
+  },
+  {
+    "tag": "moz-radio",
+    "html": "<moz-radio xmlns=\"http://www.w3.org/1999/xhtml\" data-l10n-id=\"smart-window-model-fast-v2\" data-l10n-args=\"{&quot;shortName&quot;:&quot;Gemini 3.1 Flash Lite&quot;,&quot;model&quot;:&quot;gemini-3.1-flash-lite&quot;,&quot;ownerName&quot;:&quot;Google&quot;}\" data-l10n-attrs=\"label,description,accesskey\" inputlayout=\"inline\" orientation=\"vertical\" label=\"Gemini 3.1 Flash Lite: Fast\" description=\"Best for quick answers when speed matters. Full name: gemini-3.1-flash-lite by Google\"><!--?lit$023874455$--></moz-radio>"
+  },
+  {
+    "tag": "moz-radio",
+    "html": "<moz-radio xmlns=\"http://www.w3.org/1999/xhtml\" data-l10n-id=\"smart-window-model-flexible-v2\" data-l10n-args=\"{&quot;shortName&quot;:&quot;Qwen 3 235B&quot;,&quot;model&quot;:&quot;qwen3-235b-a22b-instruct-2507-maas&quot;,&quot;ownerName&quot;:&quot;Alibaba&quot;}\" data-l10n-attrs=\"label,description,accesskey\" inputlayout=\"inline\" orientation=\"vertical\" label=\"Qwen 3 235B: Flexible\" description=\"Ready for a variety of tasks. Full name: qwen3-235b-a22b-instruct-2507-maas by Alibaba\"><!--?lit$023874455$--></moz-radio>"
+  },
+  {
+    "tag": "moz-radio",
+    "html": "<moz-radio xmlns=\"http://www.w3.org/1999/xhtml\" data-l10n-id=\"smart-window-model-custom\" data-l10n-attrs=\"label,description,accesskey\" inputlayout=\"inline\" orientation=\"vertical\" label=\"Custom: Use your own LLM\"><!--?lit$023874455$--><!----><setting-control slot=\"nested\" id=\"setting-control-customModelName\" hidden=\"\"><!---->\n    <!--?lit$023874455$-->\n    <moz-input-text id=\"customModelName\" data-l10n-id=\"smart-window-model-custom-name\" data-l10n-attrs=\"label,description,accesskey,placeholder\" inputlayout=\"block\" label=\"Model name\" placeholder=\"Example: glm4\"><!--?lit$023874455$--></moz-input-text></setting-control><!----><!----><setting-control slot=\"nested\" id=\"setting-control-customModelEndpoint\" hidden=\"\"><!---->\n    <!--?lit$023874455$-->\n    <moz-input-url id=\"customModelEndpoint\" data-l10n-id=\"smart-window-model-custom-url\" data-l10n-attrs=\"label,description,accesskey,placeholder\" inputlayout=\"block\" label=\"Model endpoint\" placeholder=\"Example: http://localhost:11434/v1\"><!--?lit$023874455$--></moz-input-url></setting-control><!----><!----><setting-control slot=\"nested\" id=\"setting-control-customModelAuthToken\" hidden=\"\"><!---->\n    <!--?lit$023874455$-->\n    <moz-input-password id=\"customModelAuthToken\" data-l10n-id=\"smart-window-model-custom-token\" data-l10n-attrs=\"label,description,accesskey,placeholder\" inputlayout=\"block\" label=\"API key or auth token, if required\"><!--?lit$023874455$--></moz-input-password></setting-control><!----><!----><setting-control slot=\"nested\" id=\"setting-control-customModelHelpLink\" hidden=\"\"><!---->\n    <!--?lit$023874455$-->\n    <moz-"
+  },
+  {
+    "tag": "moz-radio",
+    "html": "<moz-radio xmlns=\"http://www.w3.org/1999/xhtml\" data-l10n-id=\"history-remember-option-all2\" data-l10n-attrs=\"label,description,accesskey\" inputlayout=\"inline\" checked=\"\" orientation=\"vertical\" label=\"Remember history\"><!--?lit$023874455$--></moz-radio>"
+  },
+  {
+    "tag": "moz-radio",
+    "html": "<moz-radio xmlns=\"http://www.w3.org/1999/xhtml\" data-l10n-id=\"history-remember-option-custom2\" data-l10n-attrs=\"label,description,accesskey\" inputlayout=\"inline\" orientation=\"vertical\" label=\"Customize history\"><!--?lit$023874455$--><!----><setting-control slot=\"nested\" id=\"setting-control-customHistoryButton\"><!---->\n    <!--?lit$023874455$-->\n    <moz-box-button id=\"customHistoryButton\" data-l10n-id=\"history-custom-button\" data-load-pane=\"paneHistory\" data-l10n-attrs=\"label,description,accesskey\" label=\"Choose what you want Floorp to remember\"><!--?lit$023874455$--></moz-box-button></setting-control><!----></moz-radio>"
+  },
+  {
+    "tag": "moz-radio",
+    "html": "<moz-radio xmlns=\"http://www.w3.org/1999/xhtml\" data-l10n-id=\"history-remember-option-never2\" data-l10n-attrs=\"label,description,accesskey\" inputlayout=\"inline\" orientation=\"vertical\" label=\"Never remember history\" description=\"Every window acts like a private window. When on, extensions need to be allowed.\"><!--?lit$023874455$--></moz-radio>"
+  },
+  {
+    "tag": "moz-visual-picker-item",
+    "html": "<moz-visual-picker-item xmlns=\"http://www.w3.org/1999/xhtml\" id=\"browserLayoutVerticalTabs\" data-l10n-id=\"browser-layout-vertical-tabs2\" class=\"setting-chooser-item\" imagesrc=\"chrome://browser/content/preferences/browser-layout-vertical.svg\" data-l10n-attrs=\"label,description,arialabel\" checked=\"\" labelposition=\"inside\" orientation=\"horizontal\" label=\"Vertical tabs\" description=\"Tabs on the side, in the sidebar\"><!--?lit$023874455$--></moz-visual-picker-item>"
+  }
+]

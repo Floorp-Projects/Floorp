@@ -1,0 +1,21 @@
+[
+  {
+    "target": "exact canonical PR2950 head69d306",
+    "exit": 0,
+    "output": ""
+  },
+  {
+    "target": "latest main29a3 scoped files + canonical PR delta check",
+    "exit": 0,
+    "output": ""
+  },
+  {
+    "target": "latest main29a3 + canonical PR2950 delta + minimal proposal check",
+    "exit": 0,
+    "output": ""
+  },
+  {
+    "target": "applied amendment equals actual API-tested transformed source bytes",
+    "exit": 0
+  }
+]

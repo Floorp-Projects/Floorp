@@ -1,0 +1,628 @@
+{
+  "value": {
+    "version": "159.0.1",
+    "buildID": "20261103153232",
+    "profile": "/workspace/qa-linux-additional/KAN-24/baseline-restart/profile",
+    "sandbox": 6,
+    "vertical": false,
+    "revamp": true,
+    "config": {
+      "globalConfigs": {
+        "userInterface": "photon",
+        "faviconColor": false,
+        "appliedUserJs": ""
+      },
+      "tabbar": {
+        "tabbarStyle": "vertical",
+        "tabbarPosition": "default",
+        "multiRowTabBar": {
+          "maxRowEnabled": false,
+          "maxRow": 3
+        }
+      },
+      "tab": {
+        "tabScroll": {
+          "enabled": false,
+          "reverse": false,
+          "wrap": false
+        },
+        "tabMinHeight": 30,
+        "tabMinWidth": 76,
+        "tabPinTitle": false,
+        "tabDoubleClickToClose": false,
+        "tabOpenPosition": -1
+      },
+      "uiCustomization": {
+        "navbar": {
+          "position": "top",
+          "searchBarTop": false
+        },
+        "display": {
+          "disableFullscreenNotification": false,
+          "deleteBrowserBorder": false
+        },
+        "special": {
+          "optimizeForTreeStyleTab": false,
+          "hideForwardBackwardButton": false,
+          "stgLikeWorkspaces": false
+        },
+        "multirowTab": {
+          "newtabInsideEnabled": false
+        },
+        "bookmarkBar": {
+          "focusExpand": false,
+          "position": "top"
+        },
+        "qrCode": {
+          "disableButton": false
+        },
+        "chromeExtras": {
+          "autohideTab": false,
+          "autohideBackButton": false,
+          "autohideForwardButton": false,
+          "autohidePageAction": false,
+          "autohideSidebar": false,
+          "autohideNavbar": false,
+          "hiddenTabIcon": false,
+          "hiddenTabCloseButton": false,
+          "hiddenTabAudioIndicator": false,
+          "hiddenTabSharingIndicator": false,
+          "hiddenTabNoteIcon": false,
+          "hiddenTabAttentionIndicator": false,
+          "hiddenTabbar": false,
+          "hiddenNavbar": false,
+          "hiddenSidebarHeader": false,
+          "hiddenUrlbarIconbox": false,
+          "hiddenBookmarkbarIcon": false,
+          "hiddenBookmarkbarLabel": false,
+          "hiddenDisabledMenu": false,
+          "iconDisabled": false,
+          "iconMenu": true,
+          "centeredTab": false,
+          "centeredUrlbar": false,
+          "centeredBookmarkbar": false,
+          "urlViewMoveIconToLeft": false,
+          "urlViewGoButtonWhenTyping": false,
+          "urlViewAlwaysShowPageActions": false,
+          "sidebarOverlap": false,
+          "tabbarAsTitlebar": false,
+          "tabbarOneLiner": false
+        }
+      }
+    },
+    "tabVerticalMode": false,
+    "tabbar": {
+      "x": 0,
+      "y": 0,
+      "w": 919.36669921875,
+      "h": 32,
+      "display": "flex",
+      "flexDirection": "row",
+      "orient": "horizontal"
+    },
+    "tabsToolbar": {
+      "x": 0,
+      "y": 0,
+      "w": 1152,
+      "h": 32,
+      "display": "flex",
+      "flexDirection": "row",
+      "orient": null
+    },
+    "sidebar": null,
+    "windows": [
+      {
+        "vertical": false,
+        "url": "about:hub#/features/design"
+      }
+    ],
+    "nativeControls": [
+      {
+        "id": "viewBookmarksSidebarKb",
+        "label": null,
+        "hidden": false
+      },
+      {
+        "id": "viewGenaiChatSidebarKb",
+        "label": null,
+        "hidden": false
+      },
+      {
+        "id": "viewOpenTabsSidebarKb",
+        "label": null,
+        "hidden": false
+      },
+      {
+        "id": "toggleSidebarKb",
+        "label": null,
+        "hidden": false
+      },
+      {
+        "id": "sidebar-tools-overflow",
+        "label": null,
+        "hidden": false
+      },
+      {
+        "id": "sidebar-opentabs-preview",
+        "label": null,
+        "hidden": false
+      },
+      {
+        "id": "sidebarMenu-popup",
+        "label": null,
+        "hidden": true
+      },
+      {
+        "id": "sidebar-switcher-bookmarks",
+        "label": "Bookmarks",
+        "hidden": false
+      },
+      {
+        "id": "sidebar-switcher-history",
+        "label": "History",
+        "hidden": false
+      },
+      {
+        "id": "sidebar-switcher-tabs",
+        "label": "Synced Tabs",
+        "hidden": false
+      },
+      {
+        "id": "sidebar-switcher-genai-chat",
+        "label": "AI Chatbot",
+        "hidden": false
+      },
+      {
+        "id": "sidebar-switcher-megalist",
+        "label": "Passwords",
+        "hidden": false
+      },
+      {
+        "id": "sidebar-extensions-separator",
+        "label": null,
+        "hidden": false
+      },
+      {
+        "id": "sidebar-reverse-position",
+        "label": null,
+        "hidden": false
+      },
+      {
+        "id": "sidebar-menu-close",
+        "label": "Close Sidebar",
+        "hidden": false
+      },
+      {
+        "id": "sidebar-context-menu",
+        "label": null,
+        "hidden": false
+      },
+      {
+        "id": "sidebar-context-menu-manage-extension",
+        "label": "Manage extension",
+        "hidden": false
+      },
+      {
+        "id": "sidebar-context-menu-remove-extension",
+        "label": "Remove from Floorp",
+        "hidden": false
+      },
+      {
+        "id": "sidebar-context-menu-report-extension",
+        "label": "Report extension",
+        "hidden": false
+      },
+      {
+        "id": "sidebar-context-menu-unpin-extension",
+        "label": "Remove from Sidebar",
+        "hidden": false
+      },
+      {
+        "id": "sidebar-context-menu-hide-sidebar",
+        "label": "Hide Sidebar",
+        "hidden": false
+      },
+      {
+        "id": "sidebar-context-menu-customize-sidebar",
+        "label": "Customize Sidebar",
+        "hidden": false
+      },
+      {
+        "id": "sidebar-context-menu-enable-vertical-tabs",
+        "label": "Turn on Vertical Tabs",
+        "hidden": false
+      },
+      {
+        "id": "sidebar-history-menu",
+        "label": null,
+        "hidden": false
+      },
+      {
+        "id": "sidebar-history-sort-by-heading",
+        "label": "Sort by:",
+        "hidden": false
+      },
+      {
+        "id": "sidebar-history-sort-by-date",
+        "label": "Date",
+        "hidden": false
+      },
+      {
+        "id": "sidebar-history-sort-by-site",
+        "label": "Site",
+        "hidden": false
+      },
+      {
+        "id": "sidebar-history-sort-by-date-and-site",
+        "label": "Date and site",
+        "hidden": false
+      },
+      {
+        "id": "sidebar-history-sort-by-last-visited",
+        "label": "Last visited",
+        "hidden": false
+      },
+      {
+        "id": "sidebar-history-sort-by-most-visited",
+        "label": "Most visited",
+        "hidden": false
+      },
+      {
+        "id": "sidebar-history-clear",
+        "label": "Clear history",
+        "hidden": false
+      },
+      {
+        "id": "sidebar-history-context-menu",
+        "label": null,
+        "hidden": false
+      },
+      {
+        "id": "sidebar-history-context-open-in-tab",
+        "label": "Open in New Tab",
+        "hidden": false
+      },
+      {
+        "id": "sidebar-history-context-menu-container-tab",
+        "label": "Open in New Container Tab",
+        "hidden": false
+      },
+      {
+        "id": "sidebar-history-context-menu-container-popup",
+        "label": null,
+        "hidden": false
+      },
+      {
+        "id": "sidebar-history-context-open-in-window",
+        "label": "Open in New Window",
+        "hidden": false
+      },
+      {
+        "id": "sidebar-history-context-open-in-private-window",
+        "label": "Open in New Private Window",
+        "hidden": false
+      },
+      {
+        "id": "sidebar-history-context-delete-page",
+        "label": "Delete Page from History",
+        "hidden": false
+      },
+      {
+        "id": "sidebar-history-context-forget-site",
+        "label": "Clear All Data for Website\u2026",
+        "hidden": false
+      },
+      {
+        "id": "sidebar-history-context-copy-link",
+        "label": "Copy Link",
+        "hidden": false
+      },
+      {
+        "id": "sidebar-history-context-bookmark-page",
+        "label": "Bookmark Page\u2026",
+        "hidden": false
+      },
+      {
+        "id": "sidebar-history-context-open-all-in-tabs",
+        "label": "Open All in Tabs",
+        "hidden": false
+      },
+      {
+        "id": "sidebar-history-context-delete-pages",
+        "label": "Delete Pages from History",
+        "hidden": false
+      },
+      {
+        "id": "sidebar-synced-tabs-context-menu",
+        "label": null,
+        "hidden": false
+      },
+      {
+        "id": "sidebar-synced-tabs-context-open-in-tab",
+        "label": "Open in New Tab",
+        "hidden": false
+      },
+      {
+        "id": "sidebar-synced-tabs-context-menu-container-tab",
+        "label": "Open in New Container Tab",
+        "hidden": false
+      },
+      {
+        "id": "sidebar-synced-tabs-context-menu-container-popup",
+        "label": null,
+        "hidden": false
+      },
+      {
+        "id": "sidebar-synced-tabs-context-open-in-window",
+        "label": "Open in New Window",
+        "hidden": false
+      },
+      {
+        "id": "sidebar-synced-tabs-context-open-in-private-window",
+        "label": "Open in New Private Window",
+        "hidden": false
+      },
+      {
+        "id": "sidebar-context-menu-close-remote-tab",
+        "label": "Close tab on ",
+        "hidden": false
+      },
+      {
+        "id": "sidebar-synced-tabs-context-bookmark-tab",
+        "label": "Bookmark Tab\u2026",
+        "hidden": false
+      },
+      {
+        "id": "sidebar-synced-tabs-context-copy-link",
+        "label": "Copy Link",
+        "hidden": false
+      },
+      {
+        "id": "sidebar-synced-tabs-context-open-all-in-tabs",
+        "label": "Open All in Tabs",
+        "hidden": false
+      },
+      {
+        "id": "sidebar-synced-tabs-context-connect-another-device",
+        "label": "Connect Another Device",
+        "hidden": false
+      },
+      {
+        "id": "sidebar-synced-tabs-context-manage-this-device",
+        "label": "Manage This Device",
+        "hidden": false
+      },
+      {
+        "id": "sidebar-opentabs-menu",
+        "label": null,
+        "hidden": false
+      },
+      {
+        "id": "sidebar-opentabs-sort-by-heading",
+        "label": "Sort by",
+        "hidden": false
+      },
+      {
+        "id": "sidebar-opentabs-sort-by-order",
+        "label": "Tab order",
+        "hidden": false
+      },
+      {
+        "id": "sidebar-opentabs-sort-by-recency",
+        "label": "Recently active",
+        "hidden": false
+      },
+      {
+        "id": "sidebar-opentabs-connect-another-device",
+        "label": "Connect Another Device",
+        "hidden": false
+      },
+      {
+        "id": "sidebar-opentabs-context-menu",
+        "label": null,
+        "hidden": false
+      },
+      {
+        "id": "sidebar-opentabs-context-open-in-window",
+        "label": "Open in New Window",
+        "hidden": false
+      },
+      {
+        "id": "sidebar-opentabs-context-open-in-private-window",
+        "label": "Open in New Private Window",
+        "hidden": false
+      },
+      {
+        "id": "sidebar-opentabs-context-copy-link",
+        "label": "Copy Link",
+        "hidden": false
+      },
+      {
+        "id": "sidebar-opentabs-context-close-tab",
+        "label": "Close Tab",
+        "hidden": false
+      },
+      {
+        "id": "sidebar-bookmarks-context-menu",
+        "label": null,
+        "hidden": false
+      },
+      {
+        "id": "sidebar-bookmarks-context-open-all-bookmarks",
+        "label": "Open All Bookmarks",
+        "hidden": false
+      },
+      {
+        "id": "sidebar-bookmarks-context-sep-open-all",
+        "label": null,
+        "hidden": false
+      },
+      {
+        "id": "sidebar-bookmarks-context-open-in-tab",
+        "label": "Open in New Tab",
+        "hidden": false
+      },
+      {
+        "id": "sidebar-bookmarks-context-open-in-container-tab",
+        "label": "Open in New Container Tab",
+        "hidden": false
+      },
+      {
+        "id": "sidebar-bookmarks-context-container-tab-popup",
+        "label": null,
+        "hidden": false
+      },
+      {
+        "id": "sidebar-bookmarks-context-open-in-window",
+        "label": "Open in New Window",
+        "hidden": false
+      },
+      {
+        "id": "sidebar-bookmarks-context-open-in-private-window",
+        "label": "Open in New Private Window",
+        "hidden": false
+      },
+      {
+        "id": "sidebar-bookmarks-context-show-in-folder",
+        "label": "Show in Folder",
+        "hidden": false
+      },
+      {
+        "id": "sidebar-bookmarks-context-sep-open-options",
+        "label": null,
+        "hidden": false
+      },
+      {
+        "id": "sidebar-bookmarks-context-edit-bookmark",
+        "label": "Edit Bookmark\u2026",
+        "hidden": false
+      },
+      {
+        "id": "sidebar-bookmarks-context-delete-bookmark",
+        "label": "Delete Bookmark",
+        "hidden": false
+      },
+      {
+        "id": "sidebar-bookmarks-context-sep-sort",
+        "label": null,
+        "hidden": false
+      },
+      {
+        "id": "sidebar-bookmarks-context-sort-by-name",
+        "label": "Sort By Name",
+        "hidden": false
+      },
+      {
+        "id": "sidebar-bookmarks-context-sep-cut-copy",
+        "label": null,
+        "hidden": false
+      },
+      {
+        "id": "sidebar-bookmarks-context-cut",
+        "label": "Cut",
+        "hidden": false
+      },
+      {
+        "id": "sidebar-bookmarks-context-copy",
+        "label": "Copy",
+        "hidden": false
+      },
+      {
+        "id": "sidebar-bookmarks-context-paste",
+        "label": "Paste",
+        "hidden": false
+      },
+      {
+        "id": "sidebar-bookmarks-context-sep-edit-copy",
+        "label": null,
+        "hidden": false
+      },
+      {
+        "id": "sidebar-bookmarks-context-copy-link",
+        "label": "Copy Link",
+        "hidden": false
+      },
+      {
+        "id": "sidebar-bookmarks-context-sep-add",
+        "label": null,
+        "hidden": false
+      },
+      {
+        "id": "sidebar-bookmarks-context-add-bookmark",
+        "label": "Add Bookmark\u2026",
+        "hidden": false
+      },
+      {
+        "id": "sidebar-bookmarks-context-add-folder",
+        "label": "Add Folder\u2026",
+        "hidden": false
+      },
+      {
+        "id": "sidebar-bookmarks-context-add-separator",
+        "label": "Add Separator",
+        "hidden": false
+      },
+      {
+        "id": "toolbar-context-customize-sidebar",
+        "label": "Customize Sidebar",
+        "hidden": false
+      },
+      {
+        "id": "toolbar-context-toggle-vertical-tabs",
+        "label": "Turn on Vertical Tabs",
+        "hidden": false
+      },
+      {
+        "id": "sidebarRevampSeparator",
+        "label": null,
+        "hidden": false
+      },
+      {
+        "id": "SyncedTabsSidebarContext",
+        "label": null,
+        "hidden": false
+      },
+      {
+        "id": "SyncedTabsSidebarTabsFilterContext",
+        "label": null,
+        "hidden": false
+      },
+      {
+        "id": "viewSidebarMenuMenu",
+        "label": "Sidebar",
+        "hidden": false
+      },
+      {
+        "id": "viewSidebarMenu",
+        "label": null,
+        "hidden": false
+      },
+      {
+        "id": "menu_historySidebar",
+        "label": "History",
+        "hidden": false
+      },
+      {
+        "id": "menu_tabsSidebar",
+        "label": "Synced Tabs",
+        "hidden": false
+      },
+      {
+        "id": "menu_bookmarksSidebar",
+        "label": "Bookmarks",
+        "hidden": false
+      },
+      {
+        "id": "menu_genaiChatSidebar",
+        "label": "AI Chatbot",
+        "hidden": false
+      }
+    ]
+  },
+  "normalQuit": {
+    "cause": "shutdown",
+    "forced": false,
+    "in_app": true
+  },
+  "productUnchanged": true
+}

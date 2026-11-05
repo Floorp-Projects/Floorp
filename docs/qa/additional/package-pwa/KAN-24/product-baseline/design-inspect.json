@@ -1,0 +1,358 @@
+{
+  "url": "about:hub#/features/design",
+  "text": "Skip to content\nOverview\nHome\nFeatures\nTab & Appearance\nPanel Sidebar\nMouse Gestures\nWorkspaces\nKeyboard Shortcuts\nWeb Apps\nCommand Palette\nPerformance\nProfile and Account\nAbout\nFirefox Settings\nAbout Floorp\nUpdates & Experiments\nTab & Appearance\n\nCustomize toolbar positions, tab bar style, and Floorp's appearance.\n\nInterface\n\nChoose the interface design. \"Lepton\" is the default.\n\nInterface\nProton\nLepton\nPhoton\nFirefox UI Fix\nFluerial\nOther Interface Settings\nUse Favicon Color for Navigation Bar Background\nUI Extension Settings\n\nApply optional UI tweaks on top of the currently selected design\n\nOpen UI extension settings\nTab Bar\nStyle\n\nSelect the tab bar style.\n\nHorizontal\nMulti-row\nVertical\nVertical Tabs have been removed from Floorp. Please use Firefox's native Vertical Tab Bar instead. Learn more\nPosition\n\nChoose the tab bar position.\n\nDefault\nHide Tab Bar\nHide Tab Bar & Title Bar\nShow Tab Bar at Bottom of Navigation Bar\nShow Tab Bar at Bottom of Window\nTabs\nScroll\n\nChoose whether to use scrolling for tab switching and select scrolling behavior.\n\nSwitch tabs by scrolling\nReverse tab scroll\nLoop tab scroll\nNew tab opening position\n\nSpecify where new tabs open. Following Firefox's behavior will vary the position based on how you open links.\n\nFollow Firefox's behavior\nOpen at the end of the tab bar\nOpen next to the current tab\nShow pinned tab titles\nAllow creating split view by dragging tabs\nClose tab by double-clicking\nMinimum tab width\n60px - 300px\nMinimum tab height\n20px - 100px\nTab and window behavior\n\nControl where links open and distinguish browser windows from Windows taskbar tab previews.\n\nOpen links that request a new window\n\nChoose whether links that request a new window open in the current window, a new window, or a new tab.\n\nShow tab previews in the taskbar\n\nThis option is available on Windows only.\n\nTab Stacks\n\nGroup tabs into stacks, shown as a chip in the tab bar with a second row of stacked tabs underneath.\n\nEnable/Disable\nEnable tab stacks\nA restart of Floorp is required to completely enable or disable the tab stacks feature.\nTab Sleep Exclusion\n\nExclude specific websites from tab sleep (unloading). Tabs matching these patterns will remain active and won't be automatically unloaded when memory is low.\n\nEnable tab sleep exclusion\nExclusion Patterns\n\nAdd URL patterns to exclude from tab sleep. Tabs matching these patterns will not be unloaded.\n\nAdd\nPattern Examples\nexample.com\n\nMatches any URL containing this domain\n\n*.google.com\n\nMatches all subdomains of google.com\n\nhttps://mail.google.com/*\n\nMatches Gmail URLs only\n\nNo exclusion patterns configured. Add patterns to keep specific tabs active.\n\nUI Customization\nNavigation Bar\nPosition (Experiment)\nTop\nBottom\nMove page inside search bar\nDisplay\nDisable fullscreen notification\nRound the corners of pages\nDisable QR code button\nNew Tab\nDisable Floorp Start\nSpecial Features\nOptimize for Tree Style Tab\nHide Forward/Backward Button\nSimple Tab Groups like workspaces\nBookmark Bar\nPosition (Experiment)\nTop\nBottom\nExpand bookmark bar on focus",
+  "inputs": [
+    {
+      "tag": "INPUT",
+      "type": "search",
+      "name": "",
+      "value": "",
+      "checked": false,
+      "html": "<input class=\"chakra-input pl-9 pr-3 bg-base-100/90 dark:bg-base-800/70 css-17egcvc\" id=\"settings-search-input\" placeholder=\"Search Settings\" aria-label=\"Search Settings\" autocomplete=\"off\" type=\"search\" value=\"\">"
+    },
+    {
+      "tag": "INPUT",
+      "type": "radio",
+      "name": "design",
+      "value": "proton",
+      "checked": false,
+      "html": "<input class=\"_srOnly_1kffx_155\" type=\"radio\" value=\"proton\" name=\"design\">"
+    },
+    {
+      "tag": "INPUT",
+      "type": "radio",
+      "name": "design",
+      "value": "lepton",
+      "checked": true,
+      "html": "<input class=\"_srOnly_1kffx_155\" type=\"radio\" value=\"lepton\" name=\"design\">"
+    },
+    {
+      "tag": "INPUT",
+      "type": "radio",
+      "name": "design",
+      "value": "photon",
+      "checked": false,
+      "html": "<input class=\"_srOnly_1kffx_155\" type=\"radio\" value=\"photon\" name=\"design\">"
+    },
+    {
+      "tag": "INPUT",
+      "type": "radio",
+      "name": "design",
+      "value": "protonfix",
+      "checked": false,
+      "html": "<input class=\"_srOnly_1kffx_155\" type=\"radio\" value=\"protonfix\" name=\"design\">"
+    },
+    {
+      "tag": "INPUT",
+      "type": "radio",
+      "name": "design",
+      "value": "fluerial",
+      "checked": false,
+      "html": "<input class=\"_srOnly_1kffx_155\" type=\"radio\" value=\"fluerial\" name=\"design\">"
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "name": "",
+      "value": "on",
+      "checked": false,
+      "html": "<input id=\"favicon-color\" role=\"switch\" class=\"_switchInput_1a3lw_98\" type=\"checkbox\">"
+    },
+    {
+      "tag": "INPUT",
+      "type": "radio",
+      "name": "style",
+      "value": "horizontal",
+      "checked": true,
+      "html": "<input type=\"radio\" value=\"horizontal\" name=\"style\">"
+    },
+    {
+      "tag": "INPUT",
+      "type": "radio",
+      "name": "style",
+      "value": "multirow",
+      "checked": false,
+      "html": "<input type=\"radio\" value=\"multirow\" name=\"style\">"
+    },
+    {
+      "tag": "INPUT",
+      "type": "radio",
+      "name": "style",
+      "value": "vertical",
+      "checked": false,
+      "html": "<input type=\"radio\" value=\"vertical\" name=\"style\">"
+    },
+    {
+      "tag": "INPUT",
+      "type": "radio",
+      "name": "position",
+      "value": "default",
+      "checked": true,
+      "html": "<input type=\"radio\" value=\"default\" name=\"position\">"
+    },
+    {
+      "tag": "INPUT",
+      "type": "radio",
+      "name": "position",
+      "value": "hide-horizontal-tabbar",
+      "checked": false,
+      "html": "<input type=\"radio\" value=\"hide-horizontal-tabbar\" name=\"position\">"
+    },
+    {
+      "tag": "INPUT",
+      "type": "radio",
+      "name": "position",
+      "value": "optimise-to-vertical-tabbar",
+      "checked": false,
+      "html": "<input type=\"radio\" value=\"optimise-to-vertical-tabbar\" name=\"position\">"
+    },
+    {
+      "tag": "INPUT",
+      "type": "radio",
+      "name": "position",
+      "value": "bottom-of-navigation-toolbar",
+      "checked": false,
+      "html": "<input type=\"radio\" value=\"bottom-of-navigation-toolbar\" name=\"position\">"
+    },
+    {
+      "tag": "INPUT",
+      "type": "radio",
+      "name": "position",
+      "value": "bottom-of-window",
+      "checked": false,
+      "html": "<input type=\"radio\" value=\"bottom-of-window\" name=\"position\">"
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "name": "",
+      "value": "on",
+      "checked": false,
+      "html": "<input id=\"scroll-tab\" role=\"switch\" class=\"_switchInput_1a3lw_98\" type=\"checkbox\">"
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "name": "",
+      "value": "on",
+      "checked": false,
+      "html": "<input id=\"reverse-scroll\" disabled=\"\" role=\"switch\" class=\"_switchInput_1a3lw_98\" type=\"checkbox\">"
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "name": "",
+      "value": "on",
+      "checked": false,
+      "html": "<input id=\"scroll-wrap\" disabled=\"\" role=\"switch\" class=\"_switchInput_1a3lw_98\" type=\"checkbox\">"
+    },
+    {
+      "tag": "INPUT",
+      "type": "radio",
+      "name": "tabOpenPosition",
+      "value": "-1",
+      "checked": true,
+      "html": "<input type=\"radio\" value=\"-1\" name=\"tabOpenPosition\">"
+    },
+    {
+      "tag": "INPUT",
+      "type": "radio",
+      "name": "tabOpenPosition",
+      "value": "0",
+      "checked": false,
+      "html": "<input type=\"radio\" value=\"0\" name=\"tabOpenPosition\">"
+    },
+    {
+      "tag": "INPUT",
+      "type": "radio",
+      "name": "tabOpenPosition",
+      "value": "1",
+      "checked": false,
+      "html": "<input type=\"radio\" value=\"1\" name=\"tabOpenPosition\">"
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "name": "",
+      "value": "on",
+      "checked": false,
+      "html": "<input id=\"pin-title\" role=\"switch\" class=\"_switchInput_1a3lw_98\" type=\"checkbox\">"
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "name": "",
+      "value": "on",
+      "checked": false,
+      "html": "<input id=\"split-view-dnd-create\" role=\"switch\" class=\"_switchInput_1a3lw_98\" type=\"checkbox\">"
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "name": "",
+      "value": "on",
+      "checked": false,
+      "html": "<input id=\"double-click-close\" role=\"switch\" class=\"_switchInput_1a3lw_98\" type=\"checkbox\">"
+    },
+    {
+      "tag": "INPUT",
+      "type": "number",
+      "name": "",
+      "value": "76",
+      "checked": false,
+      "html": "<input class=\"chakra-input w-full css-17egcvc\" id=\"tab-min-width\" type=\"number\" value=\"76\">"
+    },
+    {
+      "tag": "INPUT",
+      "type": "number",
+      "name": "",
+      "value": "30",
+      "checked": false,
+      "html": "<input class=\"chakra-input w-full css-17egcvc\" id=\"tab-min-height\" type=\"number\" value=\"30\">"
+    },
+    {
+      "tag": "SELECT",
+      "type": "select-one",
+      "name": "",
+      "value": "3",
+      "checked": null,
+      "html": "<select id=\"open-new-window-behavior\" class=\"chakra-native-select__field css-qzsldu\"><option value=\"1\">Current window or tab</option><option value=\"2\">New window</option><option value=\"3\">New tab</option></select>"
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "name": "",
+      "value": "on",
+      "checked": false,
+      "html": "<input id=\"taskbar-tab-previews\" disabled=\"\" role=\"switch\" class=\"_switchInput_1a3lw_98\" type=\"checkbox\">"
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "name": "",
+      "value": "on",
+      "checked": false,
+      "html": "<input id=\"enable-tab-stacks\" role=\"switch\" class=\"_switchInput_1a3lw_98\" type=\"checkbox\">"
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "name": "",
+      "value": "on",
+      "checked": true,
+      "html": "<input id=\"tab-sleep-exclusion-enabled\" role=\"switch\" class=\"_switchInput_1a3lw_98\" type=\"checkbox\" checked=\"\">"
+    },
+    {
+      "tag": "INPUT",
+      "type": "text",
+      "name": "",
+      "value": "",
+      "checked": false,
+      "html": "<input class=\"chakra-input flex-1 css-17egcvc\" aria-label=\"Exclusion Patterns\" placeholder=\"Enter URL pattern (e.g., example.com, *.google.com)\" type=\"text\" value=\"\">"
+    },
+    {
+      "tag": "INPUT",
+      "type": "radio",
+      "name": "navbarPosition",
+      "value": "top",
+      "checked": true,
+      "html": "<input type=\"radio\" value=\"top\" name=\"navbarPosition\">"
+    },
+    {
+      "tag": "INPUT",
+      "type": "radio",
+      "name": "navbarPosition",
+      "value": "bottom",
+      "checked": false,
+      "html": "<input type=\"radio\" value=\"bottom\" name=\"navbarPosition\">"
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "name": "",
+      "value": "on",
+      "checked": false,
+      "html": "<input id=\"search-bar-top\" role=\"switch\" class=\"_switchInput_1a3lw_98\" type=\"checkbox\">"
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "name": "",
+      "value": "on",
+      "checked": false,
+      "html": "<input id=\"disable-fullscreen-notification\" role=\"switch\" class=\"_switchInput_1a3lw_98\" type=\"checkbox\">"
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "name": "",
+      "value": "on",
+      "checked": false,
+      "html": "<input id=\"delete-browser-border\" role=\"switch\" class=\"_switchInput_1a3lw_98\" type=\"checkbox\">"
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "name": "",
+      "value": "on",
+      "checked": false,
+      "html": "<input id=\"disable-qr-code-button\" role=\"switch\" class=\"_switchInput_1a3lw_98\" type=\"checkbox\">"
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "name": "",
+      "value": "on",
+      "checked": false,
+      "html": "<input id=\"disable-floorp-start\" role=\"switch\" class=\"_switchInput_1a3lw_98\" type=\"checkbox\">"
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "name": "",
+      "value": "on",
+      "checked": false,
+      "html": "<input id=\"optimize-for-tree-style-tab\" role=\"switch\" class=\"_switchInput_1a3lw_98\" type=\"checkbox\">"
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "name": "",
+      "value": "on",
+      "checked": false,
+      "html": "<input id=\"hide-forward-backward-button\" role=\"switch\" class=\"_switchInput_1a3lw_98\" type=\"checkbox\">"
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "name": "",
+      "value": "on",
+      "checked": false,
+      "html": "<input id=\"stg-like-workspaces\" role=\"switch\" class=\"_switchInput_1a3lw_98\" type=\"checkbox\">"
+    },
+    {
+      "tag": "INPUT",
+      "type": "radio",
+      "name": "bookmarkBarPosition",
+      "value": "top",
+      "checked": true,
+      "html": "<input type=\"radio\" value=\"top\" name=\"bookmarkBarPosition\">"
+    },
+    {
+      "tag": "INPUT",
+      "type": "radio",
+      "name": "bookmarkBarPosition",
+      "value": "bottom",
+      "checked": false,
+      "html": "<input type=\"radio\" value=\"bottom\" name=\"bookmarkBarPosition\">"
+    },
+    {
+      "tag": "INPUT",
+      "type": "checkbox",
+      "name": "",
+      "value": "on",
+      "checked": false,
+      "html": "<input id=\"bookmark-bar-focus-expand\" role=\"switch\" class=\"_switchInput_1a3lw_98\" type=\"checkbox\">"
+    }
+  ]
+}

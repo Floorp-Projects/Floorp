@@ -1,0 +1,94 @@
+{
+  "url": "about:hub#/overview/home",
+  "text": "Skip to content\nOverview\nHome\nFeatures\nTab & Appearance\nPanel Sidebar\nMouse Gestures\nWorkspaces\nKeyboard Shortcuts\nWeb Apps\nCommand Palette\nPerformance\nProfile and Account\nAbout\nFirefox Settings\nAbout Floorp\nUpdates & Experiments\nWelcome, Floorp User \ud83d\udc4b\n\nAdjust the look and controls to suit the way you browse.\n\nMake Floorp yours\nTab & Appearance\nAdjust themes and tab appearance\nWorkspaces\nSwitch between work and personal tabs\nPanel Sidebar\nOpen another site alongside your page\nMouse Gestures\nAssign actions to mouse movements\nCtrl\nK\n\u21b5\nKeyboard Shortcuts\nAssign actions to keyboard shortcuts\nPerformance\nAdjust memory usage\nManage your browser\nAbout privacy\nManage extensions\nGet help",
+  "links": [
+    {
+      "text": "Skip to content",
+      "href": "#settings-content"
+    },
+    {
+      "text": "Home",
+      "href": "/overview/home"
+    },
+    {
+      "text": "Tab & Appearance",
+      "href": "/features/design"
+    },
+    {
+      "text": "Panel Sidebar",
+      "href": "/features/sidebar"
+    },
+    {
+      "text": "Mouse Gestures",
+      "href": "/features/gesture"
+    },
+    {
+      "text": "Workspaces",
+      "href": "/features/workspaces"
+    },
+    {
+      "text": "Keyboard Shortcuts",
+      "href": "/features/shortcuts"
+    },
+    {
+      "text": "Web Apps",
+      "href": "/features/webapps"
+    },
+    {
+      "text": "Command Palette",
+      "href": "/features/command-palette"
+    },
+    {
+      "text": "Performance",
+      "href": "/features/performance"
+    },
+    {
+      "text": "Profile and Account",
+      "href": "/features/accounts"
+    },
+    {
+      "text": "About Floorp",
+      "href": "/about/browser"
+    },
+    {
+      "text": "Updates & Experiments",
+      "href": "/about/updates"
+    },
+    {
+      "text": "Tab & AppearanceAdjust themes and tab appearance",
+      "href": "/features/design"
+    },
+    {
+      "text": "WorkspacesSwitch between work and personal tabs",
+      "href": "/features/workspaces"
+    },
+    {
+      "text": "Panel SidebarOpen another site alongside your page",
+      "href": "/features/sidebar"
+    },
+    {
+      "text": "Mouse GesturesAssign actions to mouse movements",
+      "href": "/features/gesture"
+    },
+    {
+      "text": "CtrlK\u21b5Keyboard ShortcutsAssign actions to keyboard shortcuts",
+      "href": "/features/shortcuts"
+    },
+    {
+      "text": "PerformanceAdjust memory usage",
+      "href": "/features/performance"
+    },
+    {
+      "text": "About privacy",
+      "href": "https://support.mozilla.org/kb/enhanced-tracking-protection-firefox-desktop"
+    },
+    {
+      "text": "Manage extensions",
+      "href": "about:addons"
+    },
+    {
+      "text": "Get help",
+      "href": "https://docs.floorp.app/docs/features/"
+    }
+  ]
+}

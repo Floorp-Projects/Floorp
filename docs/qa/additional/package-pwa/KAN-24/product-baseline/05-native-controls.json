@@ -1,0 +1,5 @@
+{
+  "url": "about:preferences#general",
+  "controls": [],
+  "text": "Floorp-specific settings such as the panel sidebar, Workspaces, and mouse gestures are managed in Floorp Hub.\nTo change the \"Home\" setting, disable Floorp Start from Floorp Hub (about:hub#/features/design)."
+}

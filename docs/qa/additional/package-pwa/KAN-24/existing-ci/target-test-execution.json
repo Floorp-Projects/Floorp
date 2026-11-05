@@ -1,0 +1,72 @@
+{
+  "runId": 39378926878,
+  "sourceHead": "69d306b11c9e52da9e6270870740d49b1d561659",
+  "artifactSha256": "d542e4c668ef814f2bc0fb634d8ccc58ffaa611215ecca8f0b5ee6aa64f842fe",
+  "browserModuleSummary": {
+    "passed": 266,
+    "failed": 0
+  },
+  "runtimeLog": "Locked Runtime 158.0.1/20261014104253 is already installed",
+  "lockedRuntimeSource": "7dd619742b25567e479eeda97ae071d10542ad0b",
+  "tests": {
+    "browser-features/chrome/common/designs/test/tabbar-style-sync.test.ts": {
+      "newSourceDeclaredCases": [
+        "native vertical tabs on resolves to vertical",
+        "native vertical tabs off only demotes vertical",
+        "unknown stored styles fall back to horizontal"
+      ],
+      "newSourceDeclaredCaseCount": 3,
+      "executionEvidence": [
+        {
+          "line": 354,
+          "text": "[INFO] [38/266] Completed browser-features/chrome/common/designs/test/tabbar-style-sync.test.ts"
+        },
+        {
+          "line": 355,
+          "text": "[INFO] \u2713 browser-features/chrome/common/designs/test/tabbar-style-sync.test.ts (runAllTests, 9ms)"
+        }
+      ]
+    },
+    "browser-features/chrome/common/designs/test/vertical-tabs-observer.test.ts": {
+      "newSourceDeclaredCases": [
+        "turning native vertical tabs on applies vertical",
+        "turning native vertical tabs off applies horizontal",
+        "turning native vertical tabs off keeps multirow",
+        "matching native style is a no-op",
+        "cleanup removes the pref observer"
+      ],
+      "newSourceDeclaredCaseCount": 5,
+      "executionEvidence": [
+        {
+          "line": 360,
+          "text": "[INFO] [41/266] Completed browser-features/chrome/common/designs/test/vertical-tabs-observer.test.ts"
+        },
+        {
+          "line": 361,
+          "text": "[INFO] \u2713 browser-features/chrome/common/designs/test/vertical-tabs-observer.test.ts (runAllTests, 469ms)"
+        }
+      ]
+    },
+    "browser-features/pages-settings/test/integration/settings.test.ts": {
+      "newSourceDeclaredCases": [
+        "Design style saves only sidebar.verticalTabs",
+        "Design reflects native vertical tabs turned off",
+        "Design keeps vertical when the native pref is unavailable",
+        "Design unrelated edits leave native vertical tabs untouched",
+        "Design unrelated edits heal a stale vertical config"
+      ],
+      "newSourceDeclaredCaseCount": 5,
+      "executionEvidence": [
+        {
+          "line": 836,
+          "text": "[INFO] [254/266] Completed browser-features/pages-settings/test/integration/settings.test.ts"
+        },
+        {
+          "line": 837,
+          "text": "[INFO] \u2713 browser-features/pages-settings/test/integration/settings.test.ts (runAllTests, 26360ms)"
+        }
+      ]
+    }
+  },
+  "limitation": "Artifact logs prove module runAllTests completion, not per-case results/counts; source case counts are declaration counts. Old158 runtime not current159 UI nor four-case proposal API probe."
+}

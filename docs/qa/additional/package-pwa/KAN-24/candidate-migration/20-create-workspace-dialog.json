@@ -1,0 +1,12 @@
+[
+  {
+    "tag": "input",
+    "id": "urlbar-scheme",
+    "html": "<input xmlns=\"http://www.w3.org/1999/xhtml\" id=\"urlbar-scheme\" required=\"\" />"
+  },
+  {
+    "tag": "input",
+    "id": "urlbar-input",
+    "html": "<input xmlns=\"http://www.w3.org/1999/xhtml\" class=\"urlbar-input textbox-input\" role=\"combobox\" aria-autocomplete=\"both\" inputmode=\"mozAwesomebar\" preserveundohistory=\"\" data-l10n-id=\"urlbar-placeholder-with-name\" aria-controls=\"urlbar-results\" id=\"urlbar-input\" dir=\"auto\" data-l10n-args=\"{&quot;name&quot;:&quot;Google&quot;}\" placeholder=\"Search with Google or enter address\" />"
+  }
+]

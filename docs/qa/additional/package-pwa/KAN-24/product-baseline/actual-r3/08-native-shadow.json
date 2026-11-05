@@ -1,0 +1,15 @@
+{
+  "url": "about:preferences#appearance",
+  "pane": "<setting-pane xmlns=\"http://www.w3.org/1999/xhtml\" data-category=\"paneTabsBrowsing\" hidden=\"\"><!---->\n      <section>\n        <moz-page-header data-l10n-id=\"tabs-browsing-section\" ",
+  "shadow": "<!---->\n      <link xmlns=\"http://www.w3.org/1999/xhtml\" rel=\"stylesheet\" href=\"chrome://global/content/elements/moz-visual-picker-item.css\" />\n      <button xmlns=\"http://www.w3.org/1999/xhtml\" id=\"picker-item\" class=\"picker-item image-item\" role=\"radio\" value=\"false\" aria-checked=\"false\" tabindex=\"-1\" aria-labelledby=\"label\" aria-describedby=\"description\" title=\"Tabs at the top\">\n        <!--?lit$601007985$-->\n      <!--?lit$601007985$--><img role=\"presentation\" part=\"image\" src=\"chrome://browser/content/preferences/browser-layout-horizontal.svg\" />\n      <!--?lit$601007985$--><div class=\"text-content\">\n      <!--?lit$601007985$--><p class=\"label\" id=\"label\"><!--?lit$601007985$-->Horizontal tabs</p>\n      <!--?lit$601007985$--><p class=\"description\" id=\"description\"><!--?lit$601007985$-->Tabs at the top</p>\n    </div>\n    \n      </button>\n      <!--?lit$601007985$-->\n    ",
+  "rect": {
+    "x": 0,
+    "y": 0,
+    "width": 0,
+    "height": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0,
+    "left": 0
+  }
+}

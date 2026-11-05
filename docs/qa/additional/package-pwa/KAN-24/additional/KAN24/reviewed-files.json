@@ -1,0 +1,15 @@
+{
+  "head": "69d306b11c9e52da9e6270870740d49b1d561659",
+  "base": "7b72dbf35d9b551aebf2d8bdada943660880b910",
+  "latestMain": "29a3eb23145da90706d8a94441373278521cc737",
+  "files": {
+    "browser-features/chrome/common/designs/configs.ts": "c419f92bc824200f90f5878847b2c9699f8c4c025acb609f7e3b04c2a6d39eb9",
+    "browser-features/chrome/common/designs/test/tabbar-style-sync.test.ts": "f647318d3b2dfe515e0b18e1a4006740154429e287920103a3ba8f0cf4d3941f",
+    "browser-features/chrome/common/designs/test/vertical-tabs-observer.test.ts": "dbdec879d1fe6448591fadc33f5a02438e2207a0058a19e7ffe5b9064d27d5e7",
+    "browser-features/chrome/common/designs/utils/tabbar-style-sync.ts": "d4e362c86c1ac9706a7e17bc40b3dc60adec97c51465283de4e1fb2f10175372",
+    "browser-features/chrome/common/designs/utils/vertical-tabs-observer.ts": "b9543f2fcea35f3e64c514469857bb370c691f9871ad8eaef618271dc9a2a9fe",
+    "browser-features/pages-settings/src/app/design/dataManager.ts": "618ec88be7b208ef42e492dbb5b877f384f4deb176668bc1b2c32b094ee7a4a1",
+    "browser-features/pages-settings/src/app/design/page.tsx": "ffe8c98ad10979f224c92a3ef852e775f0efe78684b328bd94cfef93865b3fed",
+    "browser-features/pages-settings/test/integration/settings.test.ts": "3a2821f85636d1ce24ebe41afae75c335f01cb2b2b7c6052e263b6b6f5d3417c"
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "base": "29a3eb23145da90706d8a94441373278521cc737",
+  "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2950",
+  "prHead": "69d306b11c9e52da9e6270870740d49b1d561659",
+  "prBase": "7b72dbf35d9b551aebf2d8bdada943660880b910",
+  "branch": "codex/qa-kan24-pr2950",
+  "patchSha256": "b4fc186910cc0d76d3d81a0e5aef8c56a09bde9607f8d2d4b2b6bd1d7b778ebb",
+  "application": "git apply --3way; all eight paths clean; no unmerged entries",
+  "semanticIntegration": "Not established by clean application or compilation; initial-sync/stale-form behavior requires actual product testing",
+  "files": [
+    {
+      "path": "browser-features/chrome/common/designs/configs.ts",
+      "sha256": "c419f92bc824200f90f5878847b2c9699f8c4c025acb609f7e3b04c2a6d39eb9"
+    },
+    {
+      "path": "browser-features/chrome/common/designs/test/tabbar-style-sync.test.ts",
+      "sha256": "f647318d3b2dfe515e0b18e1a4006740154429e287920103a3ba8f0cf4d3941f"
+    },
+    {
+      "path": "browser-features/chrome/common/designs/test/vertical-tabs-observer.test.ts",
+      "sha256": "dbdec879d1fe6448591fadc33f5a02438e2207a0058a19e7ffe5b9064d27d5e7"
+    },
+    {
+      "path": "browser-features/chrome/common/designs/utils/tabbar-style-sync.ts",
+      "sha256": "d4e362c86c1ac9706a7e17bc40b3dc60adec97c51465283de4e1fb2f10175372"
+    },
+    {
+      "path": "browser-features/chrome/common/designs/utils/vertical-tabs-observer.ts",
+      "sha256": "b9543f2fcea35f3e64c514469857bb370c691f9871ad8eaef618271dc9a2a9fe"
+    },
+    {
+      "path": "browser-features/pages-settings/src/app/design/dataManager.ts",
+      "sha256": "618ec88be7b208ef42e492dbb5b877f384f4deb176668bc1b2c32b094ee7a4a1"
+    },
+    {
+      "path": "browser-features/pages-settings/src/app/design/page.tsx",
+      "sha256": "ffe8c98ad10979f224c92a3ef852e775f0efe78684b328bd94cfef93865b3fed"
+    },
+    {
+      "path": "browser-features/pages-settings/test/integration/settings.test.ts",
+      "sha256": "3a2821f85636d1ce24ebe41afae75c335f01cb2b2b7c6052e263b6b6f5d3417c"
+    }
+  ],
+  "scope": "frontend production assets; not full native/source product build; no push, PR, Jira, materialization",
+  "frozenInstallExitCode": 0,
+  "beforeMachExitCode": 0,
+  "generatedAssetCount": 1142,
+  "generatedAssetBytes": 43324174,
+  "buildid2": "01a1ad05-3637-70ea-83fa-bac925a7e170",
+  "lockUnchanged": true
+}

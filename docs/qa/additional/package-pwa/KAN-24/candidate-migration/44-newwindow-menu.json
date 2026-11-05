@@ -1,0 +1,58 @@
+[
+  {
+    "id": "appMenu-new-window-button2",
+    "label": "New Window",
+    "r": {
+      "x": 818,
+      "y": 139.6666717529297,
+      "width": 317.33331298828125,
+      "height": 32,
+      "top": 139.6666717529297,
+      "right": 1135.3333129882812,
+      "bottom": 171.6666717529297,
+      "left": 818
+    }
+  },
+  {
+    "id": "appMenu-new-ai-window-button",
+    "label": null,
+    "r": {
+      "x": 0,
+      "y": 0,
+      "width": 0,
+      "height": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0,
+      "left": 0
+    }
+  },
+  {
+    "id": "appMenu-new-classic-window-button",
+    "label": "New Classic Window",
+    "r": {
+      "x": 0,
+      "y": 0,
+      "width": 0,
+      "height": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0,
+      "left": 0
+    }
+  },
+  {
+    "id": "appMenu-new-private-window-button2",
+    "label": "New Private Window",
+    "r": {
+      "x": 818,
+      "y": 171.6666717529297,
+      "width": 317.33331298828125,
+      "height": 32,
+      "top": 171.6666717529297,
+      "right": 1135.3333129882812,
+      "bottom": 203.6666717529297,
+      "left": 818
+    }
+  }
+]

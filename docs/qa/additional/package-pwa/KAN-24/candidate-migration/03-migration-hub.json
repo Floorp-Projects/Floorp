@@ -1,0 +1,31 @@
+{
+  "url": "about:hub#/features/design",
+  "design": "photon",
+  "style": "horizontal",
+  "buttons": [
+    {
+      "text": "",
+      "disabled": false
+    },
+    {
+      "text": "Firefox Settings",
+      "disabled": false
+    },
+    {
+      "text": "",
+      "disabled": false
+    },
+    {
+      "text": "Open UI extension settings",
+      "disabled": false
+    },
+    {
+      "text": "",
+      "disabled": false
+    },
+    {
+      "text": "Add",
+      "disabled": true
+    }
+  ]
+}
