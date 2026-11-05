@@ -1,0 +1,11 @@
+[
+  {
+    "url": "https://www.youtube.com/",
+    "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+  },
+  {
+    "url": "https://example.com/",
+    "status": 200,
+    "bytes": 577
+  }
+]

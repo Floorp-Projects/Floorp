@@ -1,0 +1,54 @@
+[
+  {
+    "file": "release-browser-features_chrome_common_panel-sidebar_website-panel-window-child.ts",
+    "url": "https://github.com/Floorp-Projects/Floorp/blob/811a5b821e1d9d47b40f22aee6df5db2254a54b1/browser-features/chrome/common/panel-sidebar/website-panel-window-child.ts",
+    "sourceSha": "811a5b821e1d9d47b40f22aee6df5db2254a54b1",
+    "sha256": "abd787dab3f85f974bd79561ead5032b001ff9f58e274e9ed4e19e82b43664e3"
+  },
+  {
+    "file": "release-tools_patches_browser-chrome-browser-content-browser-browser-init.patch",
+    "url": "https://github.com/Floorp-Projects/Floorp/blob/811a5b821e1d9d47b40f22aee6df5db2254a54b1/tools/patches/browser-chrome-browser-content-browser-browser-init.patch",
+    "sourceSha": "811a5b821e1d9d47b40f22aee6df5db2254a54b1",
+    "sha256": "35af8991792e04c86b02a701018e9fc02fa4859e2e476cf41eb21fc49df7bfe5"
+  },
+  {
+    "file": "release-floorp-runtime.lock.json",
+    "error": "fatal: path 'floorp-runtime.lock.json' exists on disk, but not in '811a5b821e1d9d47b40f22aee6df5db2254a54b1'\n"
+  },
+  {
+    "file": "pre2699-browser-features_chrome_common_panel-sidebar_website-panel-window-child.ts",
+    "url": "https://github.com/Floorp-Projects/Floorp/blob/9a67dec39fc1133a74ec05db75e79bdb5a1b0637/browser-features/chrome/common/panel-sidebar/website-panel-window-child.ts",
+    "sourceSha": "9a67dec39fc1133a74ec05db75e79bdb5a1b0637",
+    "sha256": "abd787dab3f85f974bd79561ead5032b001ff9f58e274e9ed4e19e82b43664e3"
+  },
+  {
+    "file": "pre2699-tools_patches_browser-chrome-browser-content-browser-browser-init.patch",
+    "url": "https://github.com/Floorp-Projects/Floorp/blob/9a67dec39fc1133a74ec05db75e79bdb5a1b0637/tools/patches/browser-chrome-browser-content-browser-browser-init.patch",
+    "sourceSha": "9a67dec39fc1133a74ec05db75e79bdb5a1b0637",
+    "sha256": "d186517b652f09c79d24a3c78daa851d1cb367777be01f09f0fe80d551cdcf76"
+  },
+  {
+    "file": "pre2699-floorp-runtime.lock.json",
+    "url": "https://github.com/Floorp-Projects/Floorp/blob/9a67dec39fc1133a74ec05db75e79bdb5a1b0637/floorp-runtime.lock.json",
+    "sourceSha": "9a67dec39fc1133a74ec05db75e79bdb5a1b0637",
+    "sha256": "63680c70030037a3e8149995165c3379aa96c79763cd244fa49fc7ad29397342"
+  },
+  {
+    "file": "merged2699-browser-features_chrome_common_panel-sidebar_website-panel-window-child.ts",
+    "url": "https://github.com/Floorp-Projects/Floorp/blob/0f3269b79cbcfebdce59f53dc2586fadbb96c3e2/browser-features/chrome/common/panel-sidebar/website-panel-window-child.ts",
+    "sourceSha": "0f3269b79cbcfebdce59f53dc2586fadbb96c3e2",
+    "sha256": "67ff97e71a387fc54bc1a4a8f5b2503a58de5b57a130e4c63effac01ecec211f"
+  },
+  {
+    "file": "merged2699-tools_patches_browser-chrome-browser-content-browser-browser-init.patch",
+    "url": "https://github.com/Floorp-Projects/Floorp/blob/0f3269b79cbcfebdce59f53dc2586fadbb96c3e2/tools/patches/browser-chrome-browser-content-browser-browser-init.patch",
+    "sourceSha": "0f3269b79cbcfebdce59f53dc2586fadbb96c3e2",
+    "sha256": "31a86b5da078f912230e52dadefb8290618f43fd015b46ac6b91561bd40aa733"
+  },
+  {
+    "file": "merged2699-floorp-runtime.lock.json",
+    "url": "https://github.com/Floorp-Projects/Floorp/blob/0f3269b79cbcfebdce59f53dc2586fadbb96c3e2/floorp-runtime.lock.json",
+    "sourceSha": "0f3269b79cbcfebdce59f53dc2586fadbb96c3e2",
+    "sha256": "63680c70030037a3e8149995165c3379aa96c79763cd244fa49fc7ad29397342"
+  }
+]

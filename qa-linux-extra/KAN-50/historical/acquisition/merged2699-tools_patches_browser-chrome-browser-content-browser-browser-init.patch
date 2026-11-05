@@ -1,0 +1,63 @@
+diff --git a/browser/chrome/browser/content/browser/browser-init.js b/browser/chrome/browser/content/browser/browser-init.js
+index 8ae8059..3e8dc05 100644
+--- ./browser/chrome/browser/content/browser/browser-init.js
++++ ./browser/chrome/browser/content/browser/browser-init.js
+@@ -252,6 +252,24 @@ var gBrowserInit = {
+   },
+ 
+   onDOMContentLoaded() {
++    let webPanelId = new URL(window.location.href).searchParams.get(
++      "floorpWebPanelId"
++    );
++    if (webPanelId) {
++      document.documentElement.setAttribute("taskbartab", webPanelId);
++      // A web panel still needs a real tabbrowser so WebExtensions can map
++      // its content browser to a tab and populate runtime.MessageSender.tab.
++      BrowserUtils.callModulesFromCategory(
++        {
++          categoryName: "browser-window-domcontentloaded-tabbrowser",
++          jsGlobal: globalThis,
++        },
++        window
++      );
++      this.domContentLoaded = true;
++      return;
++    }
++
+     // All of this needs setting up before we create the first remote browser.
+     window.docShell.treeOwner
+       .QueryInterface(Ci.nsIInterfaceRequestor)
+@@ -309,6 +327,13 @@ var gBrowserInit = {
+   },
+ 
+   onLoad() {
++    let webPanelId = new URL(window.location.href).searchParams.get(
++      "floorpWebPanelId"
++    );
++    if (webPanelId) {
++      return;
++    }
++
+     gBrowser.addEventListener("DOMUpdateBlockedPopups", e =>
+       PopupAndRedirectBlockerObserver.handleEvent(e)
+     );
+@@ -1157,6 +1182,18 @@ var gBrowserInit = {
+     // (e.g. if the window is being closed after browser.js loads but before the
+     // load completes). In that case, there's nothing to do here.
+     if (!this._loadHandled) {
++      let webPanelId = new URL(window.location.href).searchParams.get(
++        "floorpWebPanelId"
++      );
++      if (webPanelId && window.gBrowser) {
++        BrowserUtils.callModulesFromCategory(
++          {
++            categoryName: "browser-window-unload-tabbrowser",
++            jsGlobal: globalThis,
++          },
++          window
++        );
++      }
+       return;
+     }
+ 
+     gGestureSupport.init(false);

@@ -1,0 +1,12 @@
+{
+  "url": "http://127.0.0.1:18799/panel",
+  "iframes": [
+    {
+      "id": "",
+      "src": "",
+      "width": 600,
+      "height": 789
+    }
+  ],
+  "html": "<h1>Signed uBO fixture</h1><div id=\"qa-sponsored\">SPONSORED cosmetic target</div><div class=\"ad-banner\">generic ad-banner target</div><p id=\"qa-keep\">Visible control</p><img src=\"/network-ad.svg?panel\" qfh577ysr=\"\"><button id=\"picker-target\">Pick this element</button>"
+}

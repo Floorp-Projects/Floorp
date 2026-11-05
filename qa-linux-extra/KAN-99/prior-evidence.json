@@ -1,0 +1,29 @@
+{
+  "github": {
+    "url": "https://github.com/Floorp-Projects/Floorp/issues/2514",
+    "body": "### Pre-Submission Checklist\n\n- [x] I have checked the existing/closed issues to ensure this issue has not already been reported.\n- [x] I am using the latest supported version of the browser.\n- [x] I have tried disabling all browser extensions/add-ons to rule out interference from these.\n- [x] I have tried clearing the browser cache and cookies.\n- [x] I have checked with a new profile and the issue still occurs.\n- [x] I have provided detailed step-by-step instructions on how to reproduce the issue.\n- [x] I have included relevant screenshots or console outputs.\n- [x] I have checked that this problem is not occurring in the latest version of Firefox.\n- [x] This issue is specific to this browser and does not occur in other browsers.\n\n### Bug Summary\n\nAfter update to Version 12.15.2@152.0.2 on Ubuntu 24.04.4 LTS, the side panels no longer loads the mozilla extension of UBlock Origin for Youtube. \n\n### Reproduction Steps\n\n1. Have UBlock Origin as mozilla extension.\n2.  Set \"youtube.com\" as a sidepanel\n3. Open the sidepanel of youtube.\n4. See if ads show up.\n\n### Expected Behavior\n\nNo ads should show. Previous versions had the extension work. \n\n### Actual Behavior\n\nAds are present.\n\n### Screenshots\n\n<img width=\"467\" height=\"336\" alt=\"Image\" src=\"https://github.com/user-attachments/assets/c1756de7-0bbf-4be7-8dc0-a3d303f17205\" />\n\n### Browser Version\n\n12.15.2@152.0.2\n\n### Operating System\n\nUbuntu 24.04.4 LTS\n\n### Additional Context\n\nOther extensions still seem to work and ublock seems to be working for other sites as a sidepanel. (Tested on msn.com and speedtest.com). It seems that ublock is still blocking ads from playing on the videos themselves, but sponsored ads on the site only show up when the site is used as a sidepanel.",
+    "comments": [
+      {
+        "id": 5345635551,
+        "url": "https://github.com/Floorp-Projects/Floorp/issues/2514#issuecomment-5345635551",
+        "body": "same bug here.\n\nAlthough I've seen in other places that the uBlock Origin element blocking option doesn't work. Also, the translation option in the TWP - Translate Web Pages extension doesn't work either.\n\nI used Artix and I'm currently using Cachyos. It happened on both distributions.\n\nTo be more specific, the items blocked through that function are still here, and the function to select an item to block it does nothing, can't select an item. And in the case of the translation extension, nothing visible happens too"
+      }
+    ]
+  },
+  "jiraCommentsRead": [
+    {
+      "id": "10146",
+      "body": "## 原報告・現状の照合（2026-11-05）\n\n**分類: 現行版未検証。** [GitHub #2514](https://github.com/Floorp-Projects/Floorp/issues/2514) は OPEN。原報告とコメント、Jira既存記録を確認した。uBOの一部機能と翻訳拡張のパネル内動作の報告。全拡張機能が停止するという意味ではない。\n\n対象コード調査の基準: Floorp main `984509d2053be7bae9027133bda7259cd706b208`。製品の実行・OS/Firefoxバージョン・テストログは今回未取得。報告時の環境と再現手順は上記原報告に記載。Issue のクロス参照は確認したが、参照がないことは他の修正PRの不存在を意味しない。\n\n**次の行動:** パネル内YouTubeと通常タブでuBlock Originのフィルタ適用状態・request context/remoteTypeと権限を比較する。 この結果で報告症状を再現できたか、上流または既修正かを判定し、環境・版・ログを追記する。"
+    },
+    {
+      "id": "10168",
+      "body": "## 追加コード根拠（2026-11-05）\n\n追加静的解析（SHA `1dcbf738be3ed92ae49743e09ac131cdc4520464`）: [#2699](https://github.com/Floorp-Projects/Floorp/pull/2699) はpanelのtab解決を扱い、現行main 984509dと旧SHAの `panel-sidebar/browsers/web-site-browser.tsx` は同一blob。これだけでuBO要素選択やTWP翻訳の報告が解消したとはいえない。拡張版・権限・通常タブとのMessageSender/console差を確認。証拠 `E:\\floorp-browser-dev\\outputs\\extension-deep.md`。"
+    }
+  ],
+  "relatedPr": {
+    "url": "https://github.com/Floorp-Projects/Floorp/pull/2699",
+    "state": "merged; present in current main",
+    "scope": "real tabbrowser initialization and extension tab mapping; not a prior live YouTube PiP/ads qualification"
+  },
+  "exactIssuePrSearchResults": 0
+}

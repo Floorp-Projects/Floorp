@@ -1,0 +1,25 @@
+{
+  "github": {
+    "url": "https://github.com/Floorp-Projects/Floorp/issues/2637",
+    "body": "### Pre-Submission Checklist\n\n- [x] I have checked the existing/closed issues to ensure this issue has not already been reported.\n- [x] I am using the latest supported version of the browser.\n- [x] I have tried disabling all browser extensions/add-ons to rule out interference from these.\n- [x] I have tried clearing the browser cache and cookies.\n- [x] I have checked with a new profile and the issue still occurs.\n- [x] I have provided detailed step-by-step instructions on how to reproduce the issue.\n- [x] I have included relevant screenshots or console outputs.\n- [x] I have checked that this problem is not occurring in the latest version of Firefox.\n- [x] This issue is specific to this browser and does not occur in other browsers.\n\n### Bug Summary\n\nOn older versions Pip used to work on side panel tabs but on recent versions this functionality completely broke and now attempting to press  the pip button from a side panel website will bring up a blank pip pop-up window that cannot be closed at all until the browser is restarted. tested with both yt music and yt as these are the websites i've used this workflow with since i started using floorp\n\n### Reproduction Steps\n\n1. Add a video website on the sidebar and try to pip a playing video from the pip overlay on the video\n\n### Expected Behavior\n\nPip pop out window opens with the video playing on it like on a normal tab\n\n### Actual Behavior\n\nBlank pip pop out window opens - cannot be closed even if you press the x(close) button on it. Pressing the pip button on the sidebar spawns more of these un-closable pop ups. Video continues playing on the side panel\n\n### Screenshots\n\n<img width=\"2335\" height=\"1267\" alt=\"Image\" src=\"https://github.com/user-attachments/assets/62cc926e-54a8-4e41-aca8-fd1f30651392\" />\n\n### Browser Version\n\nVersion 12.16.4@153.0\n\n### Operating System\n\nUbuntu Linux\n\n### Additional Context\n\nThis issue came about around the same time another issue i posted about came up namely  the Ctrl + F bug on side panel websites(which was closed as solved but i can confirm ctrl + F to find on side panel still isn't working on latest version)",
+    "comments": [
+      {
+        "id": 5231179398,
+        "url": "https://github.com/Floorp-Projects/Floorp/issues/2637#issuecomment-5231179398",
+        "body": "It behaved the same way in Windows 11. I was able to close it by right-clicking."
+      }
+    ]
+  },
+  "jiraCommentsRead": [
+    {
+      "id": "10099",
+      "body": "## 原報告・既存調査の照合（2026-11-05）\n\nGitHub #2637: Ubuntu / 12.16.4 のサイドパネル内動画 PiP が空白になり閉じられない報告。コメントでは Windows 11 でも同様で右クリックでは閉じられたという。次: 公開動画の分離プロファイルでパネル/通常タブのPiP、終了操作、Firefox相当機能を比較。区分: 現行実機未検証。\n\n参照 main `984509d2053be7bae9027133bda7259cd706b208`。今回のブラウザーテストは未実施。Issue番号で直接対象を示すPRは検索で確認できず、関連PRが存在しない証明ではない。状態は変更しない。"
+    }
+  ],
+  "relatedPr": {
+    "url": "https://github.com/Floorp-Projects/Floorp/pull/2699",
+    "state": "merged; present in current main",
+    "scope": "real tabbrowser initialization and extension tab mapping; not a prior live YouTube PiP/ads qualification"
+  },
+  "exactIssuePrSearchResults": 0
+}

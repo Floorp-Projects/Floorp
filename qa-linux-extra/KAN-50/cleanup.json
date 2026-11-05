@@ -1,0 +1,35 @@
+{
+  "ownedProductProcesses": [
+    {
+      "source": "result.json",
+      "pid": 49325,
+      "stateAfterOwnedCleanup": "absent"
+    },
+    {
+      "source": "historical/trial/result.json",
+      "pid": 51560,
+      "stateAfterOwnedCleanup": "absent"
+    },
+    {
+      "source": "regression-current/result.json",
+      "pid": 52353,
+      "stateAfterOwnedCleanup": "absent"
+    },
+    {
+      "source": "regression-old/result.json",
+      "pid": 52359,
+      "stateAfterOwnedCleanup": "absent"
+    },
+    {
+      "source": "regression-current-v2/result.json",
+      "pid": 53130,
+      "stateAfterOwnedCleanup": "absent"
+    },
+    {
+      "source": "regression-old-v2/result.json",
+      "pid": 53183,
+      "stateAfterOwnedCleanup": "absent"
+    }
+  ],
+  "remainingOwnedRunningProducts": []
+}

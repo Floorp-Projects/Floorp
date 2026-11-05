@@ -1,0 +1,305 @@
+{
+  "sourceSha": "811a5b821e1d9d47b40f22aee6df5db2254a54b1",
+  "binarySha256": "031e6ee62564ce8b689dd3d3e4fb49bb3889a2deed78ef7dfd8e3268fd2df1f3",
+  "fixture": "generated60s VP8, localhost only; not YouTube",
+  "syntheticInput": "XTest native video play/toggle/close buttons",
+  "readOnlyObservation": "existing browser messageManager frame script only reads video/UA controls state; no PiP/playback mocks",
+  "fixtureSha256": "62acd662d4a1f5a830c8bf9eb77b56879ef75dfd07ef0e50e1b4401af5831da9",
+  "cases": {
+    "normal": {
+      "before": {
+        "time": 0,
+        "duration": 60,
+        "ready": 4,
+        "paused": true,
+        "frames": 0,
+        "cloning": false,
+        "width": 480,
+        "height": 270,
+        "toggleRect": {
+          "x": 422,
+          "y": 222.8333282470703,
+          "width": 0,
+          "height": 2,
+          "top": 222.8333282470703,
+          "right": 422,
+          "bottom": 224.8333282470703,
+          "left": 422
+        },
+        "playRect": {
+          "x": 9,
+          "y": 303.83331298828125,
+          "width": 30,
+          "height": 40,
+          "top": 303.83331298828125,
+          "right": 39,
+          "bottom": 343.83331298828125,
+          "left": 9
+        }
+      },
+      "playing": {
+        "time": 2.085814,
+        "duration": 60,
+        "ready": 4,
+        "paused": false,
+        "frames": 51,
+        "cloning": false,
+        "width": 480,
+        "height": 270,
+        "toggleRect": {
+          "x": 422,
+          "y": 222.8333282470703,
+          "width": 0,
+          "height": 2,
+          "top": 222.8333282470703,
+          "right": 422,
+          "bottom": 224.8333282470703,
+          "left": 422
+        },
+        "playRect": {
+          "x": 9,
+          "y": 303.83331298828125,
+          "width": 30,
+          "height": 40,
+          "top": 303.83331298828125,
+          "right": 39,
+          "bottom": 343.83331298828125,
+          "left": 9
+        }
+      },
+      "windows": [
+        {
+          "closed": false,
+          "hasBrowser": true,
+          "playLabel": "Pause",
+          "width": 480,
+          "height": 270
+        }
+      ],
+      "afterOpen": {
+        "time": 4.758105,
+        "duration": 60,
+        "ready": 4,
+        "paused": false,
+        "frames": 116,
+        "cloning": true,
+        "width": 480,
+        "height": 270,
+        "toggleRect": {
+          "x": 422,
+          "y": 222.8333282470703,
+          "width": 40,
+          "height": 40,
+          "top": 222.8333282470703,
+          "right": 462,
+          "bottom": 262.8333282470703,
+          "left": 422
+        },
+        "playRect": {
+          "x": 9,
+          "y": 303.83331298828125,
+          "width": 30,
+          "height": 40,
+          "top": 303.83331298828125,
+          "right": 39,
+          "bottom": 343.83331298828125,
+          "left": 9
+        }
+      },
+      "afterClose": [],
+      "afterCloseMedia": {
+        "time": 5.356744,
+        "duration": 60,
+        "ready": 4,
+        "paused": true,
+        "frames": 129,
+        "cloning": false,
+        "width": 480,
+        "height": 270,
+        "toggleRect": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        },
+        "playRect": {
+          "x": 9,
+          "y": 303.83331298828125,
+          "width": 30,
+          "height": 40,
+          "top": 303.83331298828125,
+          "right": 39,
+          "bottom": 343.83331298828125,
+          "left": 9
+        }
+      }
+    },
+    "panel": {
+      "before": {
+        "time": 0,
+        "duration": 60,
+        "ready": 4,
+        "paused": true,
+        "frames": 0,
+        "cloning": false,
+        "width": 480,
+        "height": 270,
+        "toggleRect": {
+          "x": 422,
+          "y": 222.8333282470703,
+          "width": 40,
+          "height": 40,
+          "top": 222.8333282470703,
+          "right": 462,
+          "bottom": 262.8333282470703,
+          "left": 422
+        },
+        "playRect": {
+          "x": 9,
+          "y": 303.83331298828125,
+          "width": 30,
+          "height": 40,
+          "top": 303.83331298828125,
+          "right": 39,
+          "bottom": 343.83331298828125,
+          "left": 9
+        }
+      },
+      "playing": {
+        "time": 2.043749,
+        "duration": 60,
+        "ready": 4,
+        "paused": false,
+        "frames": 50,
+        "cloning": false,
+        "width": 480,
+        "height": 270,
+        "toggleRect": {
+          "x": 422,
+          "y": 222.8333282470703,
+          "width": 40,
+          "height": 40,
+          "top": 222.8333282470703,
+          "right": 462,
+          "bottom": 262.8333282470703,
+          "left": 422
+        },
+        "playRect": {
+          "x": 9,
+          "y": 303.83331298828125,
+          "width": 30,
+          "height": 40,
+          "top": 303.83331298828125,
+          "right": 39,
+          "bottom": 343.83331298828125,
+          "left": 9
+        }
+      },
+      "windows": [
+        {
+          "closed": false,
+          "hasBrowser": true,
+          "playLabel": "Pause",
+          "width": 480,
+          "height": 270
+        }
+      ],
+      "afterOpen": {
+        "time": 4.584036,
+        "duration": 60,
+        "ready": 4,
+        "paused": false,
+        "frames": 111,
+        "cloning": false,
+        "width": 480,
+        "height": 270,
+        "toggleRect": {
+          "x": 422,
+          "y": 222.8333282470703,
+          "width": 40,
+          "height": 40,
+          "top": 222.8333282470703,
+          "right": 462,
+          "bottom": 262.8333282470703,
+          "left": 422
+        },
+        "playRect": {
+          "x": 9,
+          "y": 303.83331298828125,
+          "width": 30,
+          "height": 40,
+          "top": 303.83331298828125,
+          "right": 39,
+          "bottom": 343.83331298828125,
+          "left": 9
+        }
+      },
+      "afterClose": [
+        {
+          "closed": false,
+          "hasBrowser": true,
+          "playLabel": "Pause",
+          "width": 480,
+          "height": 270
+        }
+      ],
+      "afterCloseMedia": {
+        "time": 6.344263,
+        "duration": 60,
+        "ready": 4,
+        "paused": false,
+        "frames": 153,
+        "cloning": false,
+        "width": 480,
+        "height": 270,
+        "toggleRect": {
+          "x": 422,
+          "y": 222.8333282470703,
+          "width": 40,
+          "height": 40,
+          "top": 222.8333282470703,
+          "right": 462,
+          "bottom": 262.8333282470703,
+          "left": 422
+        },
+        "playRect": {
+          "x": 9,
+          "y": 303.83331298828125,
+          "width": 30,
+          "height": 40,
+          "top": 303.83331298828125,
+          "right": 39,
+          "bottom": 343.83331298828125,
+          "left": 9
+        }
+      }
+    }
+  },
+  "runtime": {
+    "pid": 53183,
+    "version": "153.0",
+    "buildID": "20260725075208",
+    "sandbox": 6
+  },
+  "panelStructure": {
+    "gBrowserType": "undefined",
+    "mappedTab": false,
+    "remoteType": "webIsolated=http://127.0.0.1"
+  },
+  "runtimeErrors": [
+    {
+      "message": "[JavaScript Error: \"TypeError: can't access property \"getTabForBrowser\", parentWin.gBrowser is undefined\" {file: \"resource://gre/modules/PictureInPicture.sys.mjs\" line: 999}]"
+    }
+  ],
+  "after": {
+    "pid": 53183,
+    "sandbox": 6
+  },
+  "passed": false,
+  "error": "panel video was not visually cloned into PiP",
+  "harnessTrace": "Traceback (most recent call last):\n  File \"/workspace/qa-linux-22/C-extra/KAN-50/pip-regression.py\", line 54, in <module>\n    assert panel['afterOpen']['cloning'],'panel video was not visually cloned into PiP'\n           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^\nAssertionError: panel video was not visually cloned into PiP\n"
+}

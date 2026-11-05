@@ -1,0 +1,10 @@
+{
+  "os": "Linux-6.18.57-x86_64-with-glibc2.41",
+  "display": ":207",
+  "marionettePort": 28799,
+  "fixturePort": 18799,
+  "networkMode": "unrestricted enforced; proxy required; YouTube CONNECT denied403, example.com200",
+  "input": "synthetic Marionette/script-triggered real extension UI; no physical input",
+  "productPath": "/workspace/qa-linux-22/C/products/floorp/floorp",
+  "productExecutableSha256": "4f05c1330b38e50040440be6a3b6e0e7a5b52bc79edb5c5478d978c81f5a603d"
+}

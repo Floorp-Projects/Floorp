@@ -1,0 +1,46 @@
+[
+  {
+    "key": "KAN-50",
+    "github": "https://github.com/Floorp-Projects/Floorp/issues/2637",
+    "sourceSha": "984509d2053be7bae9027133bda7259cd706b208",
+    "sourceInspectionSha": "29a3eb23145da90706d8a94441373278521cc737",
+    "historicalSourceSha": "811a5b821e1d9d47b40f22aee6df5db2254a54b1",
+    "productVersion": {
+      "current": "12.21.1 / Gecko159.0.1 / Runtime20261103153232",
+      "historical": "12.16.4 / Gecko153.0 / Runtime20260725075208"
+    },
+    "environment": "Debian13 Cloud Linux6.18.57; Xvfb/X11/Openbox/private DBus; software GPU only; fresh owned profiles; not original Ubuntu/live YouTube",
+    "testCommand": "dbus-run-session -- <marionette-python> pip-regression.py --binary <verified-official-release> --out <fresh-dir> --display <free> --port <free> --http-port <free> --source-sha <release-target> --video-file <same-generated-60s-VP8>",
+    "result": "historical local-video symptom reproduced with code-confirmed missing-gBrowser initialization; current same-byte native PiP regression passes; live original-site condition pending",
+    "regression": {
+      "normalControlsPassed": 2,
+      "currentExitCode": 0,
+      "historicalExitCode": 1,
+      "historicalFailureExpected": true,
+      "historicalRepeatedBlankPlayers": 2,
+      "nativePiPAndCloseControlsUsed": true,
+      "mockedPiPHandlers": false,
+      "protectionLevelBeforeAfter": 6
+    },
+    "remainingConditions": [
+      "Reachable live YouTube/YouTube Music overlay PiP on representative/original Ubuntu package/GPU",
+      "Separate current forceAppWindowActive NotAllowedError: occlusion/caption/API promise behavior not qualified",
+      "PR2699 mechanism matches; not an isolated backport/bisect of sole fix contribution"
+    ],
+    "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2699 (merged real tabbrowser integration; no duplicate repair)",
+    "newPr": null,
+    "jiraCommentId": null,
+    "evidence": [
+      "report.md",
+      "verification.json",
+      "pip-regression.py",
+      "pip-source-excerpts.json",
+      "regression-current-v2/result.json",
+      "regression-old-v2/result.json",
+      "historical/trial/result.json",
+      "historical/trial/panel-after-close.png",
+      "historical/acquisition/summary.json"
+    ],
+    "separateFromOriginal22": true
+  }
+]

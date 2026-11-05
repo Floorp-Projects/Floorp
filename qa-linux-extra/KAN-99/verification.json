@@ -1,0 +1,16 @@
+{
+  "recordAuditPassed": true,
+  "signedExtension": {
+    "id": "uBlock0@raymondhill.net",
+    "version": "1.75.4",
+    "signedState": 2,
+    "isActive": true,
+    "appDisabled": false
+  },
+  "normalAndPanelCosmeticNetworkFixturePassed": true,
+  "normalAndPanelPickerLaunchPassed": true,
+  "pickerSelectSaveTested": false,
+  "liveYouTubeValidated": false,
+  "liveYouTubeFailure": "Cloud proxy CONNECT403; browser neterror also recorded",
+  "productFixIdentified": false
+}

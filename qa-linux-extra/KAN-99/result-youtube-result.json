@@ -1,0 +1,16 @@
+[
+  {
+    "url": "about:neterror?e=proxyConnectFailure&u=https%3A//www.youtube.com/&c=UTF-8&captivePortalState=unknown&d=Firefox%20is%20configured%20to%20use%20a%20proxy%20server%20that%20is%20refusing%20connections.&a=",
+    "title": "Problem loading page",
+    "ready": "interactive",
+    "text": "",
+    "sponsoredElements": 0
+  },
+  {
+    "url": "about:neterror?e=proxyConnectFailure&u=https%3A//www.youtube.com/&c=UTF-8&captivePortalState=unknown&d=Firefox%20is%20configured%20to%20use%20a%20proxy%20server%20that%20is%20refusing%20connections.&a=",
+    "title": "Problem loading page",
+    "ready": "interactive",
+    "text": "",
+    "sponsoredElements": 0
+  }
+]

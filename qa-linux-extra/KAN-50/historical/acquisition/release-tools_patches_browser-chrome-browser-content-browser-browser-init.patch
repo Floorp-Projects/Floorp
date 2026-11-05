@@ -1,0 +1,65 @@
+diff --git a/browser/chrome/browser/content/browser/browser-init.js b/browser/chrome/browser/content/browser/browser-init.js
+--- ./browser/chrome/browser/content/browser/browser-init.js
++++ ./browser/chrome/browser/content/browser/browser-init.js
+@@ -250,6 +250,14 @@ var gBrowserInit = {
+   },
+ 
+   onDOMContentLoaded() {
++    let webPanelId = new URL(window.location.href).searchParams.get(
++      "floorpWebPanelId"
++    );
++    if (webPanelId) {
++      this.domContentLoaded = true;
++      return;
++    }
++
+     // All of this needs setting up before we create the first remote browser.
+     window.docShell.treeOwner
+       .QueryInterface(Ci.nsIInterfaceRequestor)
+@@ -307,6 +315,13 @@ var gBrowserInit = {
+   },
+ 
+   onLoad() {
++    let webPanelId = new URL(window.location.href).searchParams.get(
++      "floorpWebPanelId"
++    );
++    if (webPanelId) {
++      return;
++    }
++
+     gBrowser.addEventListener("DOMUpdateBlockedPopups", e =>
+       PopupAndRedirectBlockerObserver.handleEvent(e)
+     );
+@@ -1308,17 +1323,22 @@ var gBrowserInit = {
+       PanelUI.uninit();
+     }
+ 
+-    BrowserUtils.callModulesFromCategory(
+-      {
+-        categoryName: "browser-window-unload-tabbrowser",
+-        jsGlobal: globalThis,
+-      },
+-      window
++    let webPanelId = new URL(window.location.href).searchParams.get(
++      "floorpWebPanelId"
+     );
+-    window.XULBrowserWindow = null;
+-    window.docShell.treeOwner
+-      .QueryInterface(Ci.nsIInterfaceRequestor)
+-      .getInterface(Ci.nsIAppWindow).XULBrowserWindow = null;
++    if (!webPanelId) {
++      BrowserUtils.callModulesFromCategory(
++        {
++          categoryName: "browser-window-unload-tabbrowser",
++          jsGlobal: globalThis,
++        },
++        window
++      );
++      window.XULBrowserWindow = null;
++      window.docShell.treeOwner
++        .QueryInterface(Ci.nsIInterfaceRequestor)
++        .getInterface(Ci.nsIAppWindow).XULBrowserWindow = null;
++    }
+ 
+     BrowserUtils.callModulesFromCategory(
+       { categoryName: "browser-window-final-unload", jsGlobal: globalThis },

@@ -1,0 +1,265 @@
+{
+  "sourceSha": "984509d2053be7bae9027133bda7259cd706b208",
+  "environment": "Debian13.6 Xvfb X11 Openbox private DBus; software GPU only; official archive Floorp12.21.1/Gecko159.0.1",
+  "localFixture": true,
+  "syntheticInput": true,
+  "startup": {
+    "pid": 49325,
+    "version": "159.0.1",
+    "buildID": "20261103153232",
+    "sandbox": 6,
+    "panels": "{\"data\":[{\"id\":\"qa-pip\",\"type\":\"web\",\"width\":500,\"url\":\"http://127.0.0.1:19050/index.html\"}]}",
+    "browsers": [
+      {
+        "id": "profile-switcher-browser",
+        "uri": "chrome://noraneko-profile-manager/content/index.html"
+      },
+      {
+        "id": "sidebar",
+        "uri": "about:blank"
+      },
+      {
+        "id": "",
+        "uri": "http://127.0.0.1:19050/index.html"
+      },
+      {
+        "id": "",
+        "uri": "about:newtab"
+      },
+      {
+        "id": "modal-child-browser",
+        "uri": "chrome://noraneko-modal-child/content/index.html"
+      }
+    ],
+    "buttons": [
+      {
+        "id": "qa-pip",
+        "tag": "div",
+        "panel": "qa-pip"
+      }
+    ]
+  },
+  "selectTab": {
+    "tab": "",
+    "uri": "http://127.0.0.1:19050/index.html"
+  },
+  "normalVideoStart": {
+    "time": 1.504875,
+    "ready": 4,
+    "frames": 37,
+    "width": 480,
+    "height": 270
+  },
+  "normalPipWindows": [
+    {
+      "type": "navigator:browser",
+      "url": "chrome://browser/content/browser.xhtml",
+      "title": "KAN50 real VP8 local fixture \u2014 Ablaze Floorp"
+    },
+    {
+      "type": "Toolkit:PictureInPicture",
+      "url": "chrome://global/content/pictureinpicture/player.xhtml",
+      "title": "Picture-in-Picture"
+    }
+  ],
+  "normalPlayer": {
+    "closed": false,
+    "playing": null,
+    "html": "rate-preset\" data-l10n-args=\"{&quot;rate&quot;: 1.5}\">1.5\u00d7</button>\n                <button class=\"playback-rate-preset\" data-rate=\"2\" aria-pressed=\"false\" data-l10n-id=\"pictureinpicture-playback-rate-preset\" data-l10n-args=\"{&quot;rate&quot;: 2}\">2.0\u00d7</button>\n              </div>\n            </fieldset>\n            <div class=\"arrow\"></div>\n          </div>\n          <button id=\"closed-caption\" class=\"control-item control-button tooltip-over-controls center-tooltip closed-caption\" disabled=\"true\" data-l10n-id=\"pictureinpicture-subtitles-btn\" data-l10n-attrs=\"tooltip\" aria-label=\"Subtitles\" tooltip=\"Subtitles\"></button>\n          <div id=\"settings\" class=\"hide panel\">\n            <fieldset class=\"panel-controls-box\">\n              <legend class=\"a11y-only panel-legend\" data-l10n-id=\"pictureinpicture-subtitles-panel-accessible\">Subtitles settings</legend>\n              <moz-toggle id=\"subtitles-toggle\" pressed=\"\" inputlayout=\"inline-end\" data-l10n-id=\"pictureinpicture-subtitles-toggle\" data-l10n-attrs=\"label,description,accesskey,label\" label=\"Subtitles\"></moz-toggle>\n              <div class=\"grey-line\"></div>\n              <moz-radio-group class=\"font-size-selection\" name=\"cc-size\" data-l10n-id=\"pictureinpicture-font-size-group\" data-l10n-attrs=\"description,label,arialabel,label\" label=\"Font size\">\n                <moz-radio id=\"small\" value=\"small\" data-l10n-id=\"pictureinpicture-font-size-small-radio\" data-l10n-attrs=\"label,description,accesskey,label\" label=\"Small\" inputlayout=\"inline\" orientation=\"vertical\"></moz-radio>\n                <moz-radio id=\"medium\" value=\"medium\" data-l10n-id=\"pictureinpicture-font-size-medium-radio\" data-l10n-attrs=\"label,description,accesskey,label\" label=\"Medium\" inputlayout=\"inline\" orientation=\"vertical\" checked=\"\"></moz-radio>\n                <moz-radio id=\"large\" value=\"large\" data-l10n-id=\"pictureinpicture-font-size-large-radio\" data-l10n-attrs=\"label,description,accesskey,label\" label=\"Large\" inputlayout=\"inline\" orientation=\"vertical\"></moz-radio>\n              </moz-radio-group>\n            </fieldset>\n            <div class=\"arrow\"></div>\n          </div>\n          <button id=\"fullscreen\" class=\"control-item control-button tooltip-over-controls inline-end-tooltip\" data-l10n-attrs=\"tooltip\" data-l10n-args=\"{&quot;shortcut&quot;:&quot;F&quot;}\" data-l10n-id=\"pictureinpicture-fullscreen-btn2\" aria-label=\"Fullscreen\" tooltip=\"Fullscreen (double-click or F)\"></button>\n        </div>\n      </div>\n    </div>\n  </div>\n  ",
+    "browsers": [
+      {
+        "id": "browser",
+        "uri": "about:blank",
+        "remote": "webIsolated=http://127.0.0.1"
+      }
+    ],
+    "buttons": [
+      {
+        "id": "unpip",
+        "label": "Send back to tab"
+      },
+      {
+        "id": "close",
+        "label": "Close"
+      },
+      {
+        "id": "seekBackward",
+        "label": "Backward"
+      },
+      {
+        "id": "playpause",
+        "label": "Pause"
+      },
+      {
+        "id": "seekForward",
+        "label": "Forward"
+      },
+      {
+        "id": "audio",
+        "label": "Unmute"
+      },
+      {
+        "id": "playbackRate",
+        "label": "Playback speed"
+      },
+      {
+        "id": "",
+        "label": null
+      },
+      {
+        "id": "",
+        "label": null
+      },
+      {
+        "id": "",
+        "label": null
+      },
+      {
+        "id": "",
+        "label": null
+      },
+      {
+        "id": "",
+        "label": null
+      },
+      {
+        "id": "closed-caption",
+        "label": "Subtitles"
+      },
+      {
+        "id": "fullscreen",
+        "label": "Fullscreen"
+      }
+    ]
+  },
+  "normalClose": {
+    "pipCount": 0
+  },
+  "panelOpen": {
+    "src": "chrome://browser/content/browser.xhtml?floorpWebPanelId=qa-pip",
+    "windowType": "navigator:webpanel",
+    "uri": "http://127.0.0.1:19050/index.html",
+    "tab": true,
+    "outerBc": 20,
+    "innerBc": 22,
+    "innerTop": 22
+  },
+  "qaObserver": true,
+  "panelPipWindows": [],
+  "panelMenuKeyPip": {
+    "pipCount": 0,
+    "panelMenu": "closed"
+  },
+  "console": [
+    {
+      "message": "[JavaScript Error: \"TypeError: can't access property \"state\", PanelUI.panel is undefined\" {file: \"chrome://browser/content/browser.js\" line: 1847}]\nupdateEditUIVisibility@chrome://browser/content/browser.js:1847:48\n@chrome://browser/content/browser-context.js:343:9\n"
+    },
+    {
+      "message": "[JavaScript Error: \"TypeError: can't access property \"state\", PanelUI.panel is undefined\" {file: \"chrome://browser/content/browser.js\" line: 1847}]\nupdateEditUIVisibility@chrome://browser/content/browser.js:1847:48\n@chrome://browser/content/browser-context.js:343:9\n"
+    }
+  ],
+  "panelVideoState": {
+    "time": 3.308146,
+    "ready": 4,
+    "paused": true,
+    "frames": 2783,
+    "width": 480,
+    "height": 270,
+    "cloning": false
+  },
+  "panelNativeMenuU": {
+    "pipCount": 1,
+    "panelMenu": "closed"
+  },
+  "panelPipPlayback": {
+    "time": 5.313029,
+    "ready": 4,
+    "paused": false,
+    "frames": 2832,
+    "cloning": true
+  },
+  "panelClose": {
+    "pipCount": 0,
+    "alive": true,
+    "sandbox": 6
+  },
+  "panelLongBefore": {
+    "time": 6.75,
+    "ready": 4,
+    "paused": false,
+    "duration": 60,
+    "frames": 177,
+    "cloning": false,
+    "ids": [
+      {
+        "id": "pictureInPictureOverlay",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      {
+        "id": "pictureInPicture",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      {
+        "id": "pictureInPictureToggle",
+        "rect": {
+          "x": 422,
+          "y": 222.8333282470703,
+          "width": 40,
+          "height": 40,
+          "top": 222.8333282470703,
+          "right": 462,
+          "bottom": 262.8333282470703,
+          "left": 422
+        }
+      }
+    ]
+  },
+  "panelOverlayOpen": {
+    "pipCount": 1,
+    "players": [
+      {
+        "playLabel": "Pause",
+        "uri": "about:blank"
+      }
+    ]
+  },
+  "panelOverlayPlayback": {
+    "time": 47.991304,
+    "ready": 4,
+    "paused": false,
+    "frames": 1152,
+    "cloning": true
+  },
+  "panelOverlayClose": {
+    "pipCount": 0,
+    "pid": 49325,
+    "sandbox": 6
+  },
+  "runtimeErrors": [
+    {
+      "message": "[JavaScript Error: \"NotAllowedError: CanonicalBrowsingContext.forceAppWindowActive setter: You shouldn't need to force this BrowsingContext to be active, use .isActive instead\" {file: \"moz-src:///toolkit/components/pictureinpicture/PictureInPicture.sys.mjs\" line: 1218}]"
+    },
+    {
+      "message": "[JavaScript Error: \"NotAllowedError: CanonicalBrowsingContext.forceAppWindowActive setter: You shouldn't need to force this BrowsingContext to be active, use .isActive instead\" {file: \"moz-src:///toolkit/components/pictureinpicture/PictureInPicture.sys.mjs\" line: 1218}]"
+    }
+  ],
+  "sourceInspectionSha": "29a3eb23145da90706d8a94441373278521cc737"
+}

@@ -1,0 +1,4 @@
+{
+  "error": "list index out of range",
+  "trace": "Traceback (most recent call last):\n  File \"/workspace/qa-linux-22/C-extra/KAN-99/session.py\", line 30, in <module>\n    if d.get('select') is not None:m.switch_to_window(m.window_handles[d['select']])\n                                                      ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^\nIndexError: list index out of range\n"
+}

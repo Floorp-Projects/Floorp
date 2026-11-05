@@ -1,0 +1,52 @@
+[
+  {
+    "key": "KAN-99",
+    "github": "https://github.com/Floorp-Projects/Floorp/issues/2514",
+    "sourceSha": "984509d2053be7bae9027133bda7259cd706b208",
+    "sourceInspectionSha": "29a3eb23145da90706d8a94441373278521cc737",
+    "productVersion": "Floorp12.21.1/Gecko159.0.1",
+    "runtimeBuildId": "20261103153232",
+    "environment": "Debian13 x86_64, Xvfb X11 display207, isolated HOME/profile, Cloud proxy/IP, synthetic automation input; not original Ubuntu24.04.4",
+    "testCommand": "/workspace/qa-linux-22/C/web-tools/venv/bin/python session.py; see reproduction.md",
+    "result": "real-signed-extension local-fixture cosmetic/network filtering and picker-launch pass in normal tab and panel; original YouTube sponsored-ad case blocked by proxy CONNECT403",
+    "remainingConditions": [
+      "Live YouTube sponsored cosmetic ads on original Ubuntu24.04.4 or representative reachable environment",
+      "Original uBO version/filter lists unspecified",
+      "Picker element selection/filter-save after launch not completed",
+      "TWP separate signed extension not trialed"
+    ],
+    "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2699 (merged; real panel tab mapping, bounded control supports this layer)",
+    "newPr": null,
+    "jiraCommentId": null,
+    "jiraCommentsRead": [
+      "10146",
+      "10168"
+    ],
+    "evidence": [
+      "result-install.json",
+      "result-normal-result.json",
+      "result-panel-result.json",
+      "result-popup-select2.json",
+      "result-normal-picker3.json",
+      "result-panel-picker-ui2.json",
+      "result-panel-picker-result2.json",
+      "panel-picker.png",
+      "result-youtube-result.json",
+      "http-reachability.json",
+      "result-final-metadata.json",
+      "requests.json"
+    ],
+    "extension": {
+      "id": "uBlock0@raymondhill.net",
+      "version": "1.75.4",
+      "signedState": 2,
+      "sha256": "e2df503cce7cf5069130618c349695f62bdddb9eb8c189156d027269ae4ae267",
+      "officialUrl": "https://addons.mozilla.org/firefox/downloads/file/5203014/ublock_origin-1.75.4.xpi"
+    },
+    "protections": {
+      "sandboxContentLevel": 6,
+      "signatureRequiredDuringTrials": true,
+      "note": "Packaged default signatureRequired false observed then raised to true; no sandbox/TLS/security bypass."
+    }
+  }
+]

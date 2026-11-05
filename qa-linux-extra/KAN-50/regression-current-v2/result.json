@@ -1,0 +1,295 @@
+{
+  "sourceSha": "984509d2053be7bae9027133bda7259cd706b208",
+  "binarySha256": "4f05c1330b38e50040440be6a3b6e0e7a5b52bc79edb5c5478d978c81f5a603d",
+  "fixture": "generated60s VP8, localhost only; not YouTube",
+  "syntheticInput": "XTest native video play/toggle/close buttons",
+  "readOnlyObservation": "existing browser messageManager frame script only reads video/UA controls state; no PiP/playback mocks",
+  "fixtureSha256": "62acd662d4a1f5a830c8bf9eb77b56879ef75dfd07ef0e50e1b4401af5831da9",
+  "cases": {
+    "normal": {
+      "before": {
+        "time": 0,
+        "duration": 60,
+        "ready": 4,
+        "paused": true,
+        "frames": 0,
+        "cloning": false,
+        "width": 480,
+        "height": 270,
+        "toggleRect": {
+          "x": 422,
+          "y": 222.8333282470703,
+          "width": 0,
+          "height": 2,
+          "top": 222.8333282470703,
+          "right": 422,
+          "bottom": 224.8333282470703,
+          "left": 422
+        },
+        "playRect": {
+          "x": 9,
+          "y": 303.83331298828125,
+          "width": 30,
+          "height": 40,
+          "top": 303.83331298828125,
+          "right": 39,
+          "bottom": 343.83331298828125,
+          "left": 9
+        }
+      },
+      "playing": {
+        "time": 2.079025,
+        "duration": 60,
+        "ready": 4,
+        "paused": false,
+        "frames": 51,
+        "cloning": false,
+        "width": 480,
+        "height": 270,
+        "toggleRect": {
+          "x": 422,
+          "y": 222.8333282470703,
+          "width": 0,
+          "height": 2,
+          "top": 222.8333282470703,
+          "right": 422,
+          "bottom": 224.8333282470703,
+          "left": 422
+        },
+        "playRect": {
+          "x": 9,
+          "y": 303.83331298828125,
+          "width": 30,
+          "height": 40,
+          "top": 303.83331298828125,
+          "right": 39,
+          "bottom": 343.83331298828125,
+          "left": 9
+        }
+      },
+      "windows": [
+        {
+          "closed": false,
+          "hasBrowser": true,
+          "playLabel": "Pause",
+          "width": 480,
+          "height": 270
+        }
+      ],
+      "afterOpen": {
+        "time": 4.601757,
+        "duration": 60,
+        "ready": 4,
+        "paused": false,
+        "frames": 111,
+        "cloning": true,
+        "width": 480,
+        "height": 270,
+        "toggleRect": {
+          "x": 422,
+          "y": 222.8333282470703,
+          "width": 40,
+          "height": 40,
+          "top": 222.8333282470703,
+          "right": 462,
+          "bottom": 262.8333282470703,
+          "left": 422
+        },
+        "playRect": {
+          "x": 9,
+          "y": 303.83331298828125,
+          "width": 30,
+          "height": 40,
+          "top": 303.83331298828125,
+          "right": 39,
+          "bottom": 343.83331298828125,
+          "left": 9
+        }
+      },
+      "afterClose": [],
+      "afterCloseMedia": {
+        "time": 5.124349,
+        "duration": 60,
+        "ready": 4,
+        "paused": true,
+        "frames": 124,
+        "cloning": false,
+        "width": 480,
+        "height": 270,
+        "toggleRect": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        },
+        "playRect": {
+          "x": 9,
+          "y": 303.83331298828125,
+          "width": 30,
+          "height": 40,
+          "top": 303.83331298828125,
+          "right": 39,
+          "bottom": 343.83331298828125,
+          "left": 9
+        }
+      }
+    },
+    "panel": {
+      "before": {
+        "time": 0,
+        "duration": 60,
+        "ready": 4,
+        "paused": true,
+        "frames": 0,
+        "cloning": false,
+        "width": 480,
+        "height": 270,
+        "toggleRect": {
+          "x": 422,
+          "y": 222.8333282470703,
+          "width": 40,
+          "height": 40,
+          "top": 222.8333282470703,
+          "right": 462,
+          "bottom": 262.8333282470703,
+          "left": 422
+        },
+        "playRect": {
+          "x": 9,
+          "y": 303.83331298828125,
+          "width": 30,
+          "height": 40,
+          "top": 303.83331298828125,
+          "right": 39,
+          "bottom": 343.83331298828125,
+          "left": 9
+        }
+      },
+      "playing": {
+        "time": 2.005991,
+        "duration": 60,
+        "ready": 4,
+        "paused": false,
+        "frames": 49,
+        "cloning": false,
+        "width": 480,
+        "height": 270,
+        "toggleRect": {
+          "x": 422,
+          "y": 222.8333282470703,
+          "width": 40,
+          "height": 40,
+          "top": 222.8333282470703,
+          "right": 462,
+          "bottom": 262.8333282470703,
+          "left": 422
+        },
+        "playRect": {
+          "x": 9,
+          "y": 303.83331298828125,
+          "width": 30,
+          "height": 40,
+          "top": 303.83331298828125,
+          "right": 39,
+          "bottom": 343.83331298828125,
+          "left": 9
+        }
+      },
+      "windows": [
+        {
+          "closed": false,
+          "hasBrowser": true,
+          "playLabel": "Pause",
+          "width": 480,
+          "height": 270
+        }
+      ],
+      "afterOpen": {
+        "time": 4.582647,
+        "duration": 60,
+        "ready": 4,
+        "paused": false,
+        "frames": 111,
+        "cloning": true,
+        "width": 480,
+        "height": 270,
+        "toggleRect": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        },
+        "playRect": {
+          "x": 9,
+          "y": 303.83331298828125,
+          "width": 30,
+          "height": 40,
+          "top": 303.83331298828125,
+          "right": 39,
+          "bottom": 343.83331298828125,
+          "left": 9
+        }
+      },
+      "afterClose": [],
+      "afterCloseMedia": {
+        "time": 5.278087,
+        "duration": 60,
+        "ready": 4,
+        "paused": true,
+        "frames": 127,
+        "cloning": false,
+        "width": 480,
+        "height": 270,
+        "toggleRect": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        },
+        "playRect": {
+          "x": 9,
+          "y": 303.83331298828125,
+          "width": 30,
+          "height": 40,
+          "top": 303.83331298828125,
+          "right": 39,
+          "bottom": 343.83331298828125,
+          "left": 9
+        }
+      }
+    }
+  },
+  "runtime": {
+    "pid": 53130,
+    "version": "159.0.1",
+    "buildID": "20261103153232",
+    "sandbox": 6
+  },
+  "panelStructure": {
+    "gBrowserType": "object",
+    "mappedTab": true,
+    "remoteType": "webIsolated=http://127.0.0.1"
+  },
+  "runtimeErrors": [
+    {
+      "message": "[JavaScript Error: \"NotAllowedError: CanonicalBrowsingContext.forceAppWindowActive setter: You shouldn't need to force this BrowsingContext to be active, use .isActive instead\" {file: \"moz-src:///toolkit/components/pictureinpicture/PictureInPicture.sys.mjs\" line: 1218}]"
+    }
+  ],
+  "after": {
+    "pid": 53130,
+    "sandbox": 6
+  },
+  "passed": true
+}

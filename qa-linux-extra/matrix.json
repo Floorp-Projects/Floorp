@@ -1,0 +1,157 @@
+{
+  "scope": "Additional assignments, separate from original22; original C-five matrix unchanged",
+  "issues": [
+    {
+      "key": "KAN-7",
+      "github": "https://github.com/Floorp-Projects/Floorp/issues/2943",
+      "sourceSha": "29a3eb23145da90706d8a94441373278521cc737",
+      "reportedSourceSha": "576bc4bbca058e4c24dc5bd2c7526d64cedc94cc",
+      "productVersion": {
+        "reportedFloorp": "12.20.2@158.0.1",
+        "reportedFirefoxControl": "158.0",
+        "currentFloorp": "12.21.1 / Gecko159.0.1; not relaunched"
+      },
+      "environment": "Debian13 Cloud kernel6.18.57; EGL software device only; no DRM/NVIDIA/dxg device; original Fedora44/KDE6.7.5/TGL iris26.2.4 unavailable",
+      "testCommand": "python probe-capabilities.py; pinned-source analysis; no software product startup repeat",
+      "result": "original-condition env-blocked, stopping location and Floorp-specific/external attribution unresolved; no new product trials",
+      "newProductTrials": 0,
+      "capabilityMeasurements": [
+        "device inventory",
+        "EGLQueryDevicesEXT",
+        "existing display socket connection",
+        "session/DBus presence without values"
+      ],
+      "remainingConditions": [
+        "native Fedora44 KDE6.7.5/TGL9a60 iris26.2.4/hybrid routing and exact NVIDIA driver",
+        "startup stack and last Wayland protocol/mapping events",
+        "matched-engine Firefox158.0.1 and package/build comparison"
+      ],
+      "existingPr": null,
+      "newPr": null,
+      "jiraCommentId": "10347",
+      "evidence": [
+        "report.md",
+        "capabilities.json",
+        "original-evidence.json",
+        "prior-jira-evidence.json",
+        "source-excerpts.json",
+        "source-analysis/report.md",
+        "source-analysis/summary.json",
+        "source-analysis/hypotheses.json",
+        "upstream-screening.json"
+      ],
+      "separateFromOriginal22": true,
+      "originalCMatrixSha256": "4ac5d5f17f97d70e82f7b9f17d6abcc1aa17a92e3708eeadaba6ac7c8415e3cd",
+      "jiraLabels": [
+        "area-platform",
+        "env-blocked",
+        "floorp-stability-2026-11",
+        "needs-fedora-kde",
+        "needs-hybrid-gpu-driver-info",
+        "needs-intel-tgl-iris-26-2-4",
+        "needs-matched-firefox",
+        "needs-repro",
+        "needs-startup-stack",
+        "p1",
+        "triage-reviewed"
+      ],
+      "evidenceDirectory": "KAN-7"
+    },
+    {
+      "key": "KAN-50",
+      "github": "https://github.com/Floorp-Projects/Floorp/issues/2637",
+      "sourceSha": "984509d2053be7bae9027133bda7259cd706b208",
+      "sourceInspectionSha": "29a3eb23145da90706d8a94441373278521cc737",
+      "historicalSourceSha": "811a5b821e1d9d47b40f22aee6df5db2254a54b1",
+      "productVersion": {
+        "current": "12.21.1 / Gecko159.0.1 / Runtime20261103153232",
+        "historical": "12.16.4 / Gecko153.0 / Runtime20260725075208"
+      },
+      "environment": "Debian13 Cloud Linux6.18.57; Xvfb/X11/Openbox/private DBus; software GPU only; fresh owned profiles; not original Ubuntu/live YouTube",
+      "testCommand": "dbus-run-session -- <marionette-python> pip-regression.py --binary <verified-official-release> --out <fresh-dir> --display <free> --port <free> --http-port <free> --source-sha <release-target> --video-file <same-generated-60s-VP8>",
+      "result": "historical local-video symptom reproduced with code-confirmed missing-gBrowser initialization; current same-byte native PiP regression passes; live original-site condition pending",
+      "regression": {
+        "normalControlsPassed": 2,
+        "currentExitCode": 0,
+        "historicalExitCode": 1,
+        "historicalFailureExpected": true,
+        "historicalRepeatedBlankPlayers": 2,
+        "nativePiPAndCloseControlsUsed": true,
+        "mockedPiPHandlers": false,
+        "protectionLevelBeforeAfter": 6
+      },
+      "remainingConditions": [
+        "Reachable live YouTube/YouTube Music overlay PiP on representative/original Ubuntu package/GPU",
+        "Separate current forceAppWindowActive NotAllowedError: occlusion/caption/API promise behavior not qualified",
+        "PR2699 mechanism matches; not an isolated backport/bisect of sole fix contribution"
+      ],
+      "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2699 (merged real tabbrowser integration; no duplicate repair)",
+      "newPr": null,
+      "jiraCommentId": null,
+      "evidence": [
+        "report.md",
+        "verification.json",
+        "pip-regression.py",
+        "pip-source-excerpts.json",
+        "regression-current-v2/result.json",
+        "regression-old-v2/result.json",
+        "historical/trial/result.json",
+        "historical/trial/panel-after-close.png",
+        "historical/acquisition/summary.json"
+      ],
+      "separateFromOriginal22": true,
+      "evidenceDirectory": "KAN-50"
+    },
+    {
+      "key": "KAN-99",
+      "github": "https://github.com/Floorp-Projects/Floorp/issues/2514",
+      "sourceSha": "984509d2053be7bae9027133bda7259cd706b208",
+      "sourceInspectionSha": "29a3eb23145da90706d8a94441373278521cc737",
+      "productVersion": "Floorp12.21.1/Gecko159.0.1",
+      "runtimeBuildId": "20261103153232",
+      "environment": "Debian13 x86_64, Xvfb X11 display207, isolated HOME/profile, Cloud proxy/IP, synthetic automation input; not original Ubuntu24.04.4",
+      "testCommand": "/workspace/qa-linux-22/C/web-tools/venv/bin/python session.py; see reproduction.md",
+      "result": "real-signed-extension local-fixture cosmetic/network filtering and picker-launch pass in normal tab and panel; original YouTube sponsored-ad case blocked by proxy CONNECT403",
+      "remainingConditions": [
+        "Live YouTube sponsored cosmetic ads on original Ubuntu24.04.4 or representative reachable environment",
+        "Original uBO version/filter lists unspecified",
+        "Picker element selection/filter-save after launch not completed",
+        "TWP separate signed extension not trialed"
+      ],
+      "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2699 (merged; real panel tab mapping, bounded control supports this layer)",
+      "newPr": null,
+      "jiraCommentId": null,
+      "jiraCommentsRead": [
+        "10146",
+        "10168"
+      ],
+      "evidence": [
+        "result-install.json",
+        "result-normal-result.json",
+        "result-panel-result.json",
+        "result-popup-select2.json",
+        "result-normal-picker3.json",
+        "result-panel-picker-ui2.json",
+        "result-panel-picker-result2.json",
+        "panel-picker.png",
+        "result-youtube-result.json",
+        "http-reachability.json",
+        "result-final-metadata.json",
+        "requests.json"
+      ],
+      "extension": {
+        "id": "uBlock0@raymondhill.net",
+        "version": "1.75.4",
+        "signedState": 2,
+        "sha256": "e2df503cce7cf5069130618c349695f62bdddb9eb8c189156d027269ae4ae267",
+        "officialUrl": "https://addons.mozilla.org/firefox/downloads/file/5203014/ublock_origin-1.75.4.xpi"
+      },
+      "protections": {
+        "sandboxContentLevel": 6,
+        "signatureRequiredDuringTrials": true,
+        "note": "Packaged default signatureRequired false observed then raised to true; no sandbox/TLS/security bypass."
+      },
+      "evidenceDirectory": "KAN-99"
+    }
+  ]
+}

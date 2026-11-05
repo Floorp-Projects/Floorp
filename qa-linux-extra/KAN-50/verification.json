@@ -1,0 +1,18 @@
+{
+  "recordAuditPassed": true,
+  "currentExitCode": 0,
+  "historicalExitCode": 1,
+  "historicalFailureExpected": "panel video was not visually cloned into PiP",
+  "sameVideoBytesSha256": "62acd662d4a1f5a830c8bf9eb77b56879ef75dfd07ef0e50e1b4401af5831da9",
+  "normalControlsPassed": 2,
+  "panelCurrentPassed": true,
+  "panelHistoricalReproduced": true,
+  "oldRepeatedBlankPlayers": 2,
+  "currentResidualRuntimeErrorRecorded": true,
+  "scriptSha256": "3a41356d8b85fcfb03b22e688dd12ba871b23e12f4c0afcaac52f842837da460",
+  "newProductCodeChanges": false,
+  "commands": [
+    "dbus-run-session -- <marionette-python> pip-regression.py --binary <official12.21.1> --out <fresh-current> --display 209 --port 28752 --http-port 19052 --source-sha 984509d2053be7bae9027133bda7259cd706b208 --video-file <same-generated60sVP8>",
+    "dbus-run-session -- <marionette-python> pip-regression.py --binary <official12.16.4> --out <fresh-old> --display 210 --port 28753 --http-port 19053 --source-sha 811a5b821e1d9d47b40f22aee6df5db2254a54b1 --video-file <same-generated60sVP8>"
+  ]
+}

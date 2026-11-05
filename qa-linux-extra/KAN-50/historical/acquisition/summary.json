@@ -1,0 +1,23 @@
+{
+  "tag": "v12.16.4",
+  "publishedAt": "2026-07-26T01:41:39Z",
+  "draft": false,
+  "prerelease": false,
+  "floorpSha": "811a5b821e1d9d47b40f22aee6df5db2254a54b1",
+  "archive": {
+    "url": "https://github.com/Floorp-Projects/Floorp/releases/download/v12.16.4/floorp-linux-x86_64.tar.xz",
+    "assetId": 489809680,
+    "bytes": 98230176,
+    "declaredSha256": "sha256:5192fcf1ac000e0f5e56d08cb088de799671958573d2fe5d42b8352f1599bdf7",
+    "actualSha256": "sha256:5192fcf1ac000e0f5e56d08cb088de799671958573d2fe5d42b8352f1599bdf7"
+  },
+  "executable": "/workspace/qa-linux-22/C-extra/KAN-50/historical/products/12.16.4/floorp/floorp",
+  "executableSha256": "031e6ee62564ce8b689dd3d3e4fb49bb3889a2deed78ef7dfd8e3268fd2df1f3",
+  "declaredVersion": "12.16.4@153.0",
+  "declaredRuntimeBuildId": "20260725075208",
+  "runtimeSha": "2d38da4d11be1e0e615f4ddd785ad5e77c95e18d",
+  "productExecutedByThisTask": false,
+  "merge2699": "0f3269b79cbcfebdce59f53dc2586fadbb96c3e2",
+  "merge2699Date": "2026-08-28T03:08:52+09:00",
+  "effectiveRuntimeMetadata": "must measure from actual launched process; outer application.ini explicitly unused"
+}

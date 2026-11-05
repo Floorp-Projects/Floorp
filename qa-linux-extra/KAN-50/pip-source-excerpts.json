@@ -1,0 +1,20 @@
+[
+  {
+    "distribution": "official archive",
+    "productVersion": "12.16.4/Gecko153.0",
+    "archiveMember": "modules/PictureInPicture.sys.mjs",
+    "fullMemberSha256": "13353130fe5e377cb1e9b215fdc9a33c4d977385ac72ce525db6674e34fdff50",
+    "startLine": 980,
+    "endLine": 1023,
+    "text": "    }\n\n    this.currentPlayerCount += 1;\n    this.maxConcurrentPlayerCount = Math.max(\n      this.maxConcurrentPlayerCount,\n      this.currentPlayerCount\n    );\n    Glean.pictureinpicture.mostConcurrentPlayers.set(\n      this.maxConcurrentPlayerCount\n    );\n\n    let browser = wgp.browsingContext.top.embedderElement;\n    let parentWin = browser.documentGlobal;\n\n    let win = await this.openPipWindow(parentWin, videoData);\n    win.setIsPlayingState(videoData.playing);\n    win.setIsMutedState(videoData.isMuted);\n\n    // set attribute which shows pip icon in tab\n    let tab = parentWin.gBrowser.getTabForBrowser(browser);\n    tab.setAttribute(\"pictureinpicture\", true);\n\n    this.setUrlbarPipIconActive(parentWin);\n\n    tab.addEventListener(\"TabSwapPictureInPicture\", this);\n\n    let pipId = gNextWindowID.toString();\n    const { actor: actorRef, setupPromise } = win.setupPlayer(\n      pipId,\n      wgp,\n      videoData.videoRef,\n      isApiRequest,\n      videoData.autoFocus\n    );\n    gNextWindowID++;\n\n    this.weakWinToBrowser.set(win, browser);\n    this.addPiPBrowserToWeakMap(browser);\n    this.addOriginatingWinToWeakMap(browser);\n    if (lazy.PIP_WHEN_SWITCHING_TABS && !browser.docShellIsActive) {\n      // The docshell would only not be active when the video was pip'd via auto toggle\n      browser.docShellIsActive = true;\n      this.weakAutoPipBrowserToParent.set(browser, actorRef);\n    }"
+  },
+  {
+    "distribution": "official archive",
+    "productVersion": "12.21.1/Gecko159.0.1",
+    "archiveMember": "moz-src/toolkit/components/pictureinpicture/PictureInPicture.sys.mjs",
+    "fullMemberSha256": "642c18358f9d9534dc15086b31a2d2d549e8227b77c0b6d623f53634f65ecafc",
+    "startLine": 1138,
+    "endLine": 1180,
+    "text": "      this.currentPlayerCount\n    );\n    Glean.pictureinpicture.mostConcurrentPlayers.set(\n      this.maxConcurrentPlayerCount\n    );\n\n    let browser = wgp.browsingContext.top.embedderElement;\n    let parentWin = browser.documentGlobal;\n\n    let win = await this.openPipWindow(parentWin, videoData);\n    win.setIsPlayingState(videoData.playing);\n    win.setIsMutedState(videoData.isMuted);\n\n    // set attribute which shows pip icon in tab\n    let tab = parentWin.gBrowser.getTabForBrowser(browser);\n    tab.setAttribute(\"pictureinpicture\", true);\n\n    this.setUrlbarPipIconActive(parentWin);\n\n    tab.addEventListener(\"TabSwapPictureInPicture\", this);\n\n    let pipId = gNextWindowID.toString();\n    const { actor: actorRef, setupPromise } = win.setupPlayer(\n      pipId,\n      wgp,\n      videoData.videoRef,\n      isApiRequest,\n      videoData.autoFocus\n    );\n    gNextWindowID++;\n\n    this.weakWinToBrowser.set(win, browser);\n    this.addPiPBrowserToWeakMap(browser);\n    this.addOriginatingWinToWeakMap(browser);\n    if (\n      (lazy.PIP_WHEN_SWITCHING_TABS || lazy.PIP_WHEN_OCCLUDED) &&\n      !browser.docShellIsActive\n    ) {\n      // The docshell would only not be active when the video was pip'd via auto toggle\n      browser.docShellIsActive = true;\n      this.weakAutoPipBrowserToParent.set(browser, actorRef);\n    }\n"
+  }
+]

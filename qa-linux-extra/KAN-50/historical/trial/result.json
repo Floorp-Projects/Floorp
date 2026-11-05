@@ -1,0 +1,288 @@
+{
+  "sourceSha": "811a5b821e1d9d47b40f22aee6df5db2254a54b1",
+  "environment": "Debian13.6 Xvfb X11 Openbox private DBus; software GPU only; official archive Floorp12.16.4/Gecko153.0",
+  "localFixture": true,
+  "syntheticInput": true,
+  "startup": {
+    "pid": 51560,
+    "version": "153.0",
+    "buildID": "20260725075208",
+    "sandbox": 6,
+    "panels": "{\"data\":[{\"id\":\"qa-pip\",\"type\":\"web\",\"width\":500,\"url\":\"http://127.0.0.1:19051/index.html\"}]}",
+    "browsers": [
+      {
+        "id": "profile-switcher-browser",
+        "uri": "chrome://noraneko-profile-manager/content/index.html"
+      },
+      {
+        "id": "sidebar",
+        "uri": "about:blank"
+      },
+      {
+        "id": "",
+        "uri": "http://127.0.0.1:19051/index.html"
+      },
+      {
+        "id": "",
+        "uri": "about:newtab"
+      },
+      {
+        "id": "modal-child-browser",
+        "uri": "chrome://noraneko-modal-child/content/index.html"
+      }
+    ],
+    "buttons": [
+      {
+        "id": "qa-pip",
+        "tag": "div",
+        "panel": "qa-pip"
+      }
+    ]
+  },
+  "selectTab": {
+    "uri": "http://127.0.0.1:19051/index.html"
+  },
+  "normalVideoStart": {
+    "time": 1.476314,
+    "ready": 4,
+    "frames": 37,
+    "width": 480,
+    "height": 270
+  },
+  "normalPipWindows": [
+    {
+      "type": "Toolkit:PictureInPicture",
+      "hasBrowser": true,
+      "playLabel": "Pause"
+    }
+  ],
+  "normalClose": {
+    "pipCount": 0
+  },
+  "panelOpen": {
+    "uri": "http://127.0.0.1:19051/index.html",
+    "gBrowserType": "undefined",
+    "selectedBrowser": false,
+    "tab": false,
+    "browserId": "floorp-webpanel-content-browser",
+    "outerBc": 19,
+    "innerBc": 21,
+    "innerTop": 21
+  },
+  "panelVideoBefore": {
+    "time": 0,
+    "duration": 60,
+    "ready": 4,
+    "paused": true,
+    "frames": 0,
+    "cloning": false,
+    "width": 480,
+    "height": 270,
+    "videoRect": {
+      "x": 0,
+      "y": 73.83332824707031,
+      "width": 480,
+      "height": 270,
+      "top": 73.83332824707031,
+      "right": 480,
+      "bottom": 343.8333282470703,
+      "left": 0
+    },
+    "toggleRect": {
+      "x": 422,
+      "y": 222.8333282470703,
+      "width": 40,
+      "height": 40,
+      "top": 222.8333282470703,
+      "right": 462,
+      "bottom": 262.8333282470703,
+      "left": 422
+    },
+    "playRect": {
+      "x": 9,
+      "y": 303.83331298828125,
+      "width": 30,
+      "height": 40,
+      "top": 303.83331298828125,
+      "right": 39,
+      "bottom": 343.83331298828125,
+      "left": 9
+    }
+  },
+  "panelPlaying": {
+    "time": 2.071243,
+    "duration": 60,
+    "ready": 4,
+    "paused": false,
+    "frames": 51,
+    "cloning": false,
+    "width": 480,
+    "height": 270,
+    "videoRect": {
+      "x": 0,
+      "y": 73.83332824707031,
+      "width": 480,
+      "height": 270,
+      "top": 73.83332824707031,
+      "right": 480,
+      "bottom": 343.8333282470703,
+      "left": 0
+    },
+    "toggleRect": {
+      "x": 422,
+      "y": 222.8333282470703,
+      "width": 40,
+      "height": 40,
+      "top": 222.8333282470703,
+      "right": 462,
+      "bottom": 262.8333282470703,
+      "left": 422
+    },
+    "playRect": {
+      "x": 9,
+      "y": 303.83331298828125,
+      "width": 30,
+      "height": 40,
+      "top": 303.83331298828125,
+      "right": 39,
+      "bottom": 343.83331298828125,
+      "left": 9
+    }
+  },
+  "panelPipWindows": [
+    {
+      "closed": false,
+      "hasBrowser": true,
+      "playLabel": "Pause",
+      "width": 480,
+      "height": 270
+    }
+  ],
+  "panelAfterPip": {
+    "time": 5.598738,
+    "duration": 60,
+    "ready": 4,
+    "paused": false,
+    "frames": 135,
+    "cloning": false,
+    "width": 480,
+    "height": 270,
+    "videoRect": {
+      "x": 0,
+      "y": 73.83332824707031,
+      "width": 480,
+      "height": 270,
+      "top": 73.83332824707031,
+      "right": 480,
+      "bottom": 343.8333282470703,
+      "left": 0
+    },
+    "toggleRect": {
+      "x": 422,
+      "y": 222.8333282470703,
+      "width": 40,
+      "height": 40,
+      "top": 222.8333282470703,
+      "right": 462,
+      "bottom": 262.8333282470703,
+      "left": 422
+    },
+    "playRect": {
+      "x": 9,
+      "y": 303.83331298828125,
+      "width": 30,
+      "height": 40,
+      "top": 303.83331298828125,
+      "right": 39,
+      "bottom": 343.83331298828125,
+      "left": 9
+    }
+  },
+  "panelCloseFirst": [
+    {
+      "closed": false,
+      "hasBrowser": true,
+      "playLabel": "Pause",
+      "width": 480,
+      "height": 270
+    }
+  ],
+  "panelCloseSecond": [
+    {
+      "closed": false,
+      "hasBrowser": true,
+      "playLabel": "Pause",
+      "width": 480,
+      "height": 270
+    }
+  ],
+  "runtimeErrors": [
+    {
+      "message": "[JavaScript Error: \"TypeError: can't access property \"getTabForBrowser\", parentWin.gBrowser is undefined\" {file: \"resource://gre/modules/PictureInPicture.sys.mjs\" line: 999}]"
+    },
+    {
+      "message": "[JavaScript Error: \"TypeError: can't access property \"getTabForBrowser\", parentWin.gBrowser is undefined\" {file: \"resource://gre/modules/PictureInPicture.sys.mjs\" line: 999}]"
+    }
+  ],
+  "panelRepeatPip": [
+    {
+      "closed": false,
+      "hasBrowser": true,
+      "playLabel": "Pause",
+      "width": 480,
+      "height": 270
+    },
+    {
+      "closed": false,
+      "hasBrowser": true,
+      "playLabel": "Pause",
+      "width": 480,
+      "height": 270
+    }
+  ],
+  "panelAfterRepeat": {
+    "time": 11.166744,
+    "duration": 60,
+    "ready": 4,
+    "paused": false,
+    "frames": 3152,
+    "cloning": false,
+    "width": 480,
+    "height": 270,
+    "videoRect": {
+      "x": 0,
+      "y": 73.83332824707031,
+      "width": 480,
+      "height": 270,
+      "top": 73.83332824707031,
+      "right": 480,
+      "bottom": 343.8333282470703,
+      "left": 0
+    },
+    "toggleRect": {
+      "x": 422,
+      "y": 222.8333282470703,
+      "width": 40,
+      "height": 40,
+      "top": 222.8333282470703,
+      "right": 462,
+      "bottom": 262.8333282470703,
+      "left": 422
+    },
+    "playRect": {
+      "x": 9,
+      "y": 303.83331298828125,
+      "width": 30,
+      "height": 40,
+      "top": 303.83331298828125,
+      "right": 39,
+      "bottom": 343.83331298828125,
+      "left": 9
+    }
+  },
+  "after": {
+    "pid": 51560,
+    "sandbox": 6
+  },
+  "cleanupPipWindows": []
+}

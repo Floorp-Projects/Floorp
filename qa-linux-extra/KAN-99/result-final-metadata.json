@@ -1,0 +1,29 @@
+{
+  "product": {
+    "name": "Floorp",
+    "version": "159.0.1",
+    "buildID": "20261103153232"
+  },
+  "extension": {
+    "id": "uBlock0@raymondhill.net",
+    "version": "1.75.4",
+    "signedState": 2,
+    "active": true,
+    "appDisabled": false
+  },
+  "protections": {
+    "contentSandbox": 6,
+    "signatureRequired": true,
+    "tracking": false,
+    "cookieBehavior": 5
+  },
+  "tabs": {
+    "normal": 2,
+    "panel": 3
+  },
+  "panel": {
+    "remoteType": "webIsolated=https://youtube.com",
+    "contextId": 27,
+    "marked": "true"
+  }
+}

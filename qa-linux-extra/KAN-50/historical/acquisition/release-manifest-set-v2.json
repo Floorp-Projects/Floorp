@@ -1,0 +1,241 @@
+{
+  "schema_version": 2,
+  "mode": "production",
+  "manifest_set_id": "sha256:8c34280d080f3032d25fd0503f7f36d020a8a61088714bf8ff7efcf022f44aa0",
+  "version_display": "12.16.4@153.0",
+  "version": "153.0",
+  "noraneko_version": "12.16.4",
+  "channel": "release",
+  "runtime": {
+    "schema_version": 2,
+    "repository": "Floorp-Projects/Floorp-Runtime",
+    "head_sha": "2d38da4d11be1e0e615f4ddd785ad5e77c95e18d",
+    "workflow_run_id": 30150081076,
+    "run_created_at": "2026-07-25T07:52:08Z",
+    "run_attempt": 1,
+    "expected_build_id": "20260725075208",
+    "targets": [
+      {
+        "platform": "Windows",
+        "arch": "x86_64",
+        "artifact_name": "floorp-windows-x86_64-moz-artifact",
+        "artifact_id": 8620292544,
+        "artifact_digest": "sha256:3fb19aa01819cc1f1e90f23d476ece188be0d786b65f746cb6f096a757771e79",
+        "expected_build_id": "20260725075208"
+      },
+      {
+        "platform": "Linux",
+        "arch": "x86_64",
+        "artifact_name": "floorp-linux-x86_64-moz-artifact",
+        "artifact_id": 8619874514,
+        "artifact_digest": "sha256:863edc66249a0d0e07ec6d1a281c250bf1518465140e64f5e33407838309826b",
+        "expected_build_id": "20260725075208"
+      },
+      {
+        "platform": "Linux",
+        "arch": "aarch64",
+        "artifact_name": "floorp-linux-aarch64-moz-artifact",
+        "artifact_id": 8618403497,
+        "artifact_digest": "sha256:20d257dad2cdef74b9a921aa4f70c1c63d1100bf8c88801a3f61e45039169d34",
+        "expected_build_id": "20260725075208"
+      },
+      {
+        "platform": "Darwin",
+        "arch": "universal",
+        "artifact_name": "floorp-mac-universal-moz-artifact",
+        "artifact_id": 8620147567,
+        "artifact_digest": "sha256:ff7d21bcc08a18b743b0e00c1cfeec1bdbdacf65390c4f97836f04beb8f1c1d4",
+        "expected_build_id": "20260725075208"
+      }
+    ],
+    "workflow_path": ".github/workflows/daily-build.yml",
+    "manifest_artifact": {
+      "id": 8620303445,
+      "name": "floorp-runtime-build-manifest-v2",
+      "digest": "sha256:6a2531a275e5934810da50c36aaa34fde48ff2061b17946cef0d419364d36a00"
+    }
+  },
+  "floorp": {
+    "repository": "Floorp-Projects/Floorp",
+    "head_sha": "811a5b821e1d9d47b40f22aee6df5db2254a54b1",
+    "workflow_run_id": 30177045447,
+    "release_tag": "v12.16.4"
+  },
+  "release_files": {
+    "windows": {
+      "name": "floorp-windows-x86_64.installer.exe",
+      "size": 101024216,
+      "sha512": "2f8e5d871fd4d0ac2d78853b240cd964c0578d72c3c911d28c7b19d4a7ca1611599ee96e283208453293da4952bd21640ee9631cad5238a9a7c848c6d3c11122"
+    },
+    "windowsStub": {
+      "name": "floorp-stub.installer.exe",
+      "size": 4414288,
+      "sha512": "2058fd77c178822c1dfbe9d1a223e9c9104db3721320447e7bf0406c3ab38bcc8da35a97f7411ce2d5fcad85af4fe2eeaad2c61da478d47938bb23a4dd33ae65"
+    },
+    "linux": {
+      "name": "floorp-linux-x86_64.tar.xz",
+      "size": 98230176,
+      "sha512": "b03c7b7f86a3194477aac442237753fe0b3a85ae8c7bc88a9b746cc2b2d2b9c407823ebc406f727ab23d63506f94e2d087036ffc6434d3f5a53aa8a07631232d"
+    },
+    "linuxAarch64": {
+      "name": "floorp-linux-aarch64.tar.xz",
+      "size": 85024076,
+      "sha512": "0f4dfee8cabf81a6883cdf9ed3c8a3ed87fcdc7ba709845412ec2f1fcffabca79ef27a39b1156892d390f9043e11fa01caa170bf64e74f7ca8d9935b48004503"
+    },
+    "mac": {
+      "name": "floorp-macOS-universal.dmg",
+      "size": 198097613,
+      "sha512": "29588633b23390680bdaf60c758342928f5178f39034623c2ac782bebbafa143ae6024cf8176fefa3e9bdb0830076694fccbaddff0262f3589f17f02bf65a8e1"
+    },
+    "linuxDeb": {
+      "name": "floorp-12.16.4.deb",
+      "size": 104756834,
+      "sha512": "78a555db1991e90d0d2253671520809b95a83e3c29bb0ab296f9344e0e9f9bc4a8de7fd6a31362410fa07897b5bfaf54f43d7521a77ffb005bc81eeb1fdfb8a9"
+    }
+  },
+  "stub_source": {
+    "repository": "Floorp-Projects/Floorp",
+    "release_tag": "v12.16.3",
+    "release_id": 358304342,
+    "asset_id": 486391256,
+    "asset_name": "floorp-stub.installer.exe",
+    "asset_digest": "sha256:82771672d921d531f9d996ff888c6e1ae5b3ebb3b3baf13c406d115d5c20a43f",
+    "size": 4414288
+  },
+  "targets": [
+    {
+      "target_key": "windows",
+      "platform": "WINNT",
+      "arch": "x86_64",
+      "metadata_name": "win-meta.json",
+      "metadata_sha256": "sha256:7f716b6c8ea01b55269a8db478221138ab8cd0d6b350cae1615fa75858d54d4a",
+      "mar": {
+        "url": "https://github.com/Floorp-Projects/Floorp/releases/download/v12.16.4/floorp-windows-x86_64-full.mar",
+        "name": "floorp-windows-x86_64-full.mar",
+        "size": 108514719,
+        "sha512": "9c404707372b414a904ad202928cef3fc6ef8aac5578bbf8171561b29da25f7f78eaf7bf46d93049bddcdc0fc2a7f9c65663d270383e448f74ba2f19b45b01d9"
+      },
+      "runtime_artifact": {
+        "id": 8620292544,
+        "name": "floorp-windows-x86_64-moz-artifact",
+        "digest": "sha256:3fb19aa01819cc1f1e90f23d476ece188be0d786b65f746cb6f096a757771e79"
+      },
+      "floorp_package": {
+        "artifact_name": "noraneko-windows-x86_64-installer",
+        "artifact_id": 8624701357,
+        "artifact_digest": "sha256:fc0b01440c20e8bb376d915650456f1b2ccfdfbbf088d584106a0b85c1d739ee",
+        "unsigned": false
+      },
+      "native_verifications": [
+        {
+          "native_arch": "x86_64",
+          "app_build_id": "20260725075208",
+          "platform_build_id": "20260725075208",
+          "build_id2": "019f9b57-b84a-70b9-9ede-8131e0213acf"
+        }
+      ]
+    },
+    {
+      "target_key": "linux",
+      "platform": "Linux",
+      "arch": "x86_64",
+      "metadata_name": "linux-meta.json",
+      "metadata_sha256": "sha256:f4112baa6a5859904e92e70ff4f20bc48754bed91817d843ea6f940ce7e81acd",
+      "mar": {
+        "url": "https://github.com/Floorp-Projects/Floorp/releases/download/v12.16.4/floorp-linux-x86_64-full.mar",
+        "name": "floorp-linux-x86_64-full.mar",
+        "size": 98362777,
+        "sha512": "4793ace1c889d3dc35b7de3a7bccaef89fe8df17d096e7eaa577f9069c4ff50deb17958556de7423b2075a3fe90ee3f2e70ffe51f7c3b316046598b2fa8ff514"
+      },
+      "runtime_artifact": {
+        "id": 8619874514,
+        "name": "floorp-linux-x86_64-moz-artifact",
+        "digest": "sha256:863edc66249a0d0e07ec6d1a281c250bf1518465140e64f5e33407838309826b"
+      },
+      "floorp_package": {
+        "artifact_name": "noraneko-linux-x86_64-installer",
+        "artifact_id": 8624650623,
+        "artifact_digest": "sha256:207454bde4a378f6c720390b01eed3df0497925a3bdf59910a0322518fa514a2",
+        "unsigned": false
+      },
+      "native_verifications": [
+        {
+          "native_arch": "x86_64",
+          "app_build_id": "20260725075208",
+          "platform_build_id": "20260725075208",
+          "build_id2": "019f9b57-8d96-7226-8a11-2f703ff459fc"
+        }
+      ]
+    },
+    {
+      "target_key": "linuxAarch64",
+      "platform": "Linux",
+      "arch": "aarch64",
+      "metadata_name": "linux-aarch64-meta.json",
+      "metadata_sha256": "sha256:80588a753302ec69ca1625635baf5c2d19c579a61b274ea34fe90a11bbb61670",
+      "mar": {
+        "url": "https://github.com/Floorp-Projects/Floorp/releases/download/v12.16.4/floorp-linux-aarch64-full.mar",
+        "name": "floorp-linux-aarch64-full.mar",
+        "size": 85164944,
+        "sha512": "fc57992579738b0ab9ed9ef1eff2bd2c637a2b73ee53ab644e00d36958727d05f868c7dc8f2d263832096962aa1b2d37752316ea504b623a4392b1f20003c786"
+      },
+      "runtime_artifact": {
+        "id": 8618403497,
+        "name": "floorp-linux-aarch64-moz-artifact",
+        "digest": "sha256:20d257dad2cdef74b9a921aa4f70c1c63d1100bf8c88801a3f61e45039169d34"
+      },
+      "floorp_package": {
+        "artifact_name": "noraneko-linux-aarch64-installer",
+        "artifact_id": 8624582603,
+        "artifact_digest": "sha256:9e2b054daa87e53a28583824e5b854a95d0c4926170c24453191ace6fb2393e5",
+        "unsigned": false
+      },
+      "native_verifications": [
+        {
+          "native_arch": "aarch64",
+          "app_build_id": "20260725075208",
+          "platform_build_id": "20260725075208",
+          "build_id2": "019f9b57-59e0-7228-9351-2dc8a3ee832d"
+        }
+      ]
+    },
+    {
+      "target_key": "mac",
+      "platform": "Darwin",
+      "arch": "universal",
+      "metadata_name": "mac-meta.json",
+      "metadata_sha256": "sha256:f4f137a21514f4cb18d9e2eb172892d5df6d72f61f0c4b1ffd08eebe0ce9f8fb",
+      "mar": {
+        "url": "https://github.com/Floorp-Projects/Floorp/releases/download/v12.16.4/floorp-mac-universal-full.mar",
+        "name": "floorp-mac-universal-full.mar",
+        "size": 150418893,
+        "sha512": "c18e1d633d8ddeddf282e2c363a154c51abceab9f0f07ab199b8dde8aee36ce2dbf53a460ec90d7873e8d5a8f4e310f60d688c63869bee31193041632ff7e55b"
+      },
+      "runtime_artifact": {
+        "id": 8620147567,
+        "name": "floorp-mac-universal-moz-artifact",
+        "digest": "sha256:ff7d21bcc08a18b743b0e00c1cfeec1bdbdacf65390c4f97836f04beb8f1c1d4"
+      },
+      "floorp_package": {
+        "artifact_name": "noraneko-mac-universal-installer",
+        "artifact_id": 8624664761,
+        "artifact_digest": "sha256:d9b5a34cfa96f074da88d5680800fe5cf728940fc6cc6a7a73c0bcb9bc2a17db",
+        "unsigned": false
+      },
+      "native_verifications": [
+        {
+          "native_arch": "x86_64",
+          "app_build_id": "20260725075208",
+          "platform_build_id": "20260725075208",
+          "build_id2": "019f9b57-7fa8-70a9-812b-5cb70ab9ca3d"
+        },
+        {
+          "native_arch": "aarch64",
+          "app_build_id": "20260725075208",
+          "platform_build_id": "20260725075208",
+          "build_id2": "019f9b57-7fa8-70a9-812b-5cb70ab9ca3d"
+        }
+      ]
+    }
+  ]
+}
