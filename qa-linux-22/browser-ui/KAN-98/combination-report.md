@@ -40,8 +40,9 @@ No existing test suite or old CI run was manually rerun. Lint and diff checks pa
 - `../kan98-combination.py`, `../kan98-combination-run.py`: product test. The runner propagates child failure.
 
 ```sh
-# Products/floorp-gesture-fixed is the existing3031 diagnostic copy.
-python3 KAN-98/patch-combined-product.py
+# Create copies directly from unchanged products/floorp in fresh destinations.
+python3 KAN-98/patch-combined-product.py --variant activation-only
+python3 KAN-98/patch-combined-product.py --variant combined
 QA_COMBO_XTEST=1 QA_COMBO_EXPECT_PASS=1 PYTHONPATH=python \
   python3 kan98-combination-run.py floorp-combined-fixed 29510 combination
 FLOORP_SOURCE=/path/to/PR3034 ESBUILD_MODULE=/path/to/esbuild/lib/main.js \
@@ -49,4 +50,4 @@ FLOORP_SOURCE=/path/to/PR3034 ESBUILD_MODULE=/path/to/esbuild/lib/main.js \
 PYTHONPATH=python python3 kan98-combination-source-run.py floorp-combined-fixed 29506 source
 ```
 
-The combined-copy patch script expects an unmodified3031-only diagnostic copy and asserts the original fallback before replacing it. Recreate the destination before repeating its patch step. The earlier80px candidate was executed before the refined condition arrived; its29501/29502 evidence is retained separately and is not substituted for the16px result.
+The standalone patch recipe starts from unchanged official products/floorp and refuses to overwrite a destination. Its generated asset bytes were compared in memory with both actually tested copies and match exactly (combination-recipe-verification.json). Use fresh destinations before repeating the patch step. The earlier80px candidate was executed before the refined condition arrived; its29501/29502 evidence is retained separately and is not substituted for the16px result.

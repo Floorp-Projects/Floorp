@@ -1,0 +1,12 @@
+[
+  {
+    "variant": "activation-only",
+    "matchesTestedProductAsset": true,
+    "sha256": "d48c5ae252732f498462deb596ffd8888ad369afc3bc17e35de2f9eaa4cfb81c"
+  },
+  {
+    "variant": "combined",
+    "matchesTestedProductAsset": true,
+    "sha256": "bf345522189703999da06e1efa584c6dc5430fa3d8d5828f051f9a7f1be450b6"
+  }
+]
