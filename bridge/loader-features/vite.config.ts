@@ -194,7 +194,13 @@ export default defineConfig({
     },
 
     istanbulPlugin(),
-    genJarmnPlugin("content", "noraneko", "content"),
+    genJarmnPlugin("content", "noraneko", "content", {
+      // Product names are not translated by Firefox language packs. Reuse this
+      // channel's packaged branding while leaving the rest of the UI localized.
+      overrides: [
+        "chrome://branding/locale/brand.properties resource:///chrome/en-US/locale/branding/brand.properties",
+      ],
+    }),
   ],
 
   // 既存の設定...
