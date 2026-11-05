@@ -1,0 +1,147 @@
+{
+  "scope": "Further tests of original B10, not additional issues; Linux22/additional4 denominators unchanged",
+  "originalIssueCount": 10,
+  "followupIssueCount": 2,
+  "environmentLabelsRemoved": [],
+  "rows": [
+    {
+      "key": "KAN-5",
+      "github": "https://github.com/Floorp-Projects/Floorp/issues/2710",
+      "sourceSha": "d6bd2fc457774f55ab1f36a2b01c941f908f1ab0",
+      "productVersion": "Floorp12.21.1/Gecko159.0.1 Build20261103153232",
+      "environment": "Debian13.6 private Xvfb123/Openbox/DBus; OS XTest synthetic, not physical",
+      "testCommand": "QA_KAN5_START_FOLLOWUP=1 QA_PRODUCT=/workspace/kan97-runtime/full-package/floorp/floorp python run.py 30055",
+      "result": "PASS ordinary+individual stack proxy OS drop into an already existing window; exactone/trusted/native two-window/multiset/late guards pass; original issue limited nonreproduction consistent with merged2763",
+      "remainingConditions": [
+        "Original Fedora44 desktop/Flatpak package",
+        "Physical drag"
+      ],
+      "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2763",
+      "newPr": null,
+      "jiraCommentId": null,
+      "normalExit": 0,
+      "payloadUnchanged": true,
+      "evidence": [
+        "KAN-5/drop-30055.json",
+        "KAN-5/final-quit-30055.json",
+        "KAN-5/payload-comparison-30055.json",
+        "KAN-5/root-independent-checks.json"
+      ]
+    },
+    {
+      "key": "KAN-40",
+      "github": 2704,
+      "sourceSha": "d6bd2fc457774f55ab1f36a2b01c941f908f1ab0",
+      "productVersion": "Floorp12.21.1/Gecko159.0.1/build20261103153232",
+      "environment": "Debian13/Xvfb124/Openbox/privateDBus/OS XTest synthetic middle; not physical",
+      "candidateKind": "unmodified complete package; unrelated KAN97 fix, no middleclick candidate",
+      "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2763",
+      "newPr": null,
+      "jiraCommentRead": "10287",
+      "jiraCommentWritten": null,
+      "result": "ordinary and whole-stack chip controls PASS; limited nonreproduction consistent with merged2763",
+      "remainingConditions": [
+        "Fedora44 desktop/original unspecified package",
+        "physical middleclick"
+      ],
+      "tests": [
+        {
+          "kind": "ordinary",
+          "testCommand": "python run.py 30062",
+          "result": "PASS",
+          "beforeCount": 7,
+          "afterCount": 6,
+          "trustedMiddleObserved": true,
+          "allOtherTabsPreserved": true
+        },
+        {
+          "kind": "whole-stack-chip",
+          "testCommand": "python run.py 30063",
+          "result": "PASS",
+          "beforeCount": 12,
+          "afterCount": 9,
+          "trustedMiddleObserved": true,
+          "allOtherTabsPreserved": true
+        }
+      ],
+      "evidence": [
+        "KAN-40/ordinary-derived.json",
+        "KAN-40/chip-derived.json",
+        "KAN-40/run-30062/interactions.json",
+        "KAN-40/run-30063/interactions.json",
+        "KAN-40/run-30062/runner-result.json",
+        "KAN-40/run-30063/runner-result.json"
+      ],
+      "normalExitAndHash": {
+        "30061": {
+          "sourceSha": "d6bd2fc457774f55ab1f36a2b01c941f908f1ab0",
+          "candidateKind": "complete unmodified production package with unrelated KAN97 focused-scroll fix; not a middleclick candidate",
+          "profile": "/workspace/kan40-runtime/30061/profile",
+          "phases": [
+            {
+              "stage": "setup",
+              "dbusPid": 105189,
+              "probeExit": 1,
+              "productDbusExit": 0,
+              "normalExit": true
+            }
+          ],
+          "ownedDisplayPid": 105183,
+          "ownedWmPid": 105186,
+          "error": "AssertionError({'stage': 'setup', 'dbusPid': 105189, 'probeExit': 1, 'productDbusExit': 0, 'normalExit': True})",
+          "traceback": "Traceback (most recent call last):\n  File \"/workspace/qa-linux-additional/browser-ui/followups/KAN-40/run.py\", line 24, in <module>\n    row['productDbusExit']=browser.wait(timeout=25);row['normalExit']=row['productDbusExit']==0;assert row['normalExit'] and test.returncode==0,row\n                                                                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: {'stage': 'setup', 'dbusPid': 105189, 'probeExit': 1, 'productDbusExit': 0, 'normalExit': True}\n",
+          "productUnmodified": true,
+          "displayRemoved": true
+        },
+        "30062": {
+          "sourceSha": "d6bd2fc457774f55ab1f36a2b01c941f908f1ab0",
+          "candidateKind": "complete unmodified production package with unrelated KAN97 focused-scroll fix; not a middleclick candidate",
+          "profile": "/workspace/kan40-runtime/30062/profile",
+          "phases": [
+            {
+              "stage": "setup",
+              "dbusPid": 105679,
+              "probeExit": 0,
+              "productDbusExit": 0,
+              "normalExit": true
+            },
+            {
+              "stage": "interactions",
+              "dbusPid": 106009,
+              "probeExit": 1,
+              "productDbusExit": 0,
+              "normalExit": true
+            }
+          ],
+          "ownedDisplayPid": 105673,
+          "ownedWmPid": 105676,
+          "error": "AssertionError({'stage': 'interactions', 'dbusPid': 106009, 'probeExit': 1, 'productDbusExit': 0, 'normalExit': True})",
+          "traceback": "Traceback (most recent call last):\n  File \"/workspace/qa-linux-additional/browser-ui/followups/KAN-40/run.py\", line 24, in <module>\n    row['productDbusExit']=browser.wait(timeout=25);row['normalExit']=row['productDbusExit']==0;assert row['normalExit'] and test.returncode==0,row\n                                                                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: {'stage': 'interactions', 'dbusPid': 106009, 'probeExit': 1, 'productDbusExit': 0, 'normalExit': True}\n",
+          "productUnmodified": true,
+          "displayRemoved": true
+        },
+        "30063": {
+          "sourceSha": "d6bd2fc457774f55ab1f36a2b01c941f908f1ab0",
+          "candidateKind": "complete unmodified production package with unrelated KAN97 focused-scroll fix; not a middleclick candidate",
+          "profile": "/workspace/kan40-runtime/30062/profile",
+          "phases": [
+            {
+              "stage": "interactions",
+              "dbusPid": 107428,
+              "probeExit": 0,
+              "productDbusExit": 0,
+              "normalExit": true
+            }
+          ],
+          "ownedDisplayPid": 107415,
+          "ownedWmPid": 107419,
+          "complete": true,
+          "productUnmodified": true,
+          "displayRemoved": true
+        }
+      },
+      "jiraCommentId": null,
+      "testCommand": "python KAN-40/run.py 30062; chip-only30063"
+    }
+  ]
+}

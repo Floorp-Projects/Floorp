@@ -1,0 +1,2012 @@
+{
+  "key": "KAN-5",
+  "canonicalPr": 2763,
+  "phase": "drop",
+  "fixture": "actual settings/group UI; data-URL pages; native window rectangles; OS XTest pointer/drag (synthetic, not physical)",
+  "apiAdoptionUsed": false,
+  "observations": [
+    {
+      "case": "ordinary-positive-control",
+      "input": "OS XTest native mouse path; no dispatchEvent/DataTransfer/adoption API",
+      "expectedUri": "data:text/html;charset=utf-8,%3Ctitle%3EQA%20KAN5%20ordinary%20control%3C/title%3E%3Ch1%3EQA%20KAN5%20ordinary%20control%3C/h1%3E",
+      "start": {
+        "x": 336.3916702270508,
+        "y": 103,
+        "width": 116.94999694824219,
+        "height": 36,
+        "label": "QA KAN5 ordinary control",
+        "rect": {
+          "x": 252.9166717529297,
+          "y": 0,
+          "width": 116.94999694824219,
+          "height": 36,
+          "top": 0,
+          "right": 369.8666687011719,
+          "bottom": 36,
+          "left": 252.9166717529297
+        }
+      },
+      "target": {
+        "x": 1112,
+        "y": 103,
+        "rect": {
+          "x": 25,
+          "y": 0,
+          "width": 225,
+          "height": 36,
+          "top": 0,
+          "right": 250,
+          "bottom": 36,
+          "left": 25
+        }
+      },
+      "before": [
+        {
+          "role": "source",
+          "screen": {
+            "x": 20,
+            "y": 80,
+            "width": 750,
+            "height": 760,
+            "state": 3,
+            "sizemode": "normal"
+          },
+          "selected": "QA KAN5 ordinary control",
+          "tabs": [
+            {
+              "uri": "about:blank",
+              "title": "",
+              "pending": false,
+              "group": null,
+              "dragData": false
+            },
+            {
+              "uri": "data:text/html;charset=utf-8,%3Ctitle%3EQA%20KAN5%20source%20A%3C/title%3E%3Ch1%3EQA%20KAN5%20source%20A%3C/h1%3E",
+              "title": "QA KAN5 source A",
+              "pending": false,
+              "group": "1793914016981-80",
+              "dragData": false
+            },
+            {
+              "uri": "data:text/html;charset=utf-8,%3Ctitle%3EQA%20KAN5%20source%20B%3C/title%3E%3Ch1%3EQA%20KAN5%20source%20B%3C/h1%3E",
+              "title": "QA KAN5 source B",
+              "pending": false,
+              "group": "1793914016981-80",
+              "dragData": false
+            },
+            {
+              "uri": "data:text/html;charset=utf-8,%3Ctitle%3EQA%20KAN5%20source%20C%3C/title%3E%3Ch1%3EQA%20KAN5%20source%20C%3C/h1%3E",
+              "title": "QA KAN5 source C",
+              "pending": false,
+              "group": "1793914016981-80",
+              "dragData": false
+            },
+            {
+              "uri": "data:text/html;charset=utf-8,%3Ctitle%3EQA%20KAN5%20ordinary%20control%3C/title%3E%3Ch1%3EQA%20KAN5%20ordinary%20control%3C/h1%3E",
+              "title": "QA KAN5 ordinary control",
+              "pending": false,
+              "group": null,
+              "dragData": false
+            }
+          ],
+          "events": []
+        },
+        {
+          "role": "target",
+          "screen": {
+            "x": 860,
+            "y": 80,
+            "width": 750,
+            "height": 760,
+            "state": 3,
+            "sizemode": "normal"
+          },
+          "selected": "QA KAN5 destination",
+          "tabs": [
+            {
+              "uri": "data:text/html,<title>QA KAN5 destination</title><h1>Existing target</h1>",
+              "title": "QA KAN5 destination",
+              "pending": false,
+              "group": null,
+              "dragData": false
+            }
+          ],
+          "events": []
+        }
+      ],
+      "after": [
+        {
+          "role": "source",
+          "screen": {
+            "x": 20,
+            "y": 80,
+            "width": 750,
+            "height": 760,
+            "state": 3,
+            "sizemode": "normal"
+          },
+          "selected": "QA KAN5 source C",
+          "tabs": [
+            {
+              "uri": "about:blank",
+              "title": "",
+              "pending": false,
+              "group": null,
+              "dragData": false
+            },
+            {
+              "uri": "data:text/html;charset=utf-8,%3Ctitle%3EQA%20KAN5%20source%20A%3C/title%3E%3Ch1%3EQA%20KAN5%20source%20A%3C/h1%3E",
+              "title": "QA KAN5 source A",
+              "pending": false,
+              "group": "1793914016981-80",
+              "dragData": false
+            },
+            {
+              "uri": "data:text/html;charset=utf-8,%3Ctitle%3EQA%20KAN5%20source%20B%3C/title%3E%3Ch1%3EQA%20KAN5%20source%20B%3C/h1%3E",
+              "title": "QA KAN5 source B",
+              "pending": false,
+              "group": "1793914016981-80",
+              "dragData": false
+            },
+            {
+              "uri": "data:text/html;charset=utf-8,%3Ctitle%3EQA%20KAN5%20source%20C%3C/title%3E%3Ch1%3EQA%20KAN5%20source%20C%3C/h1%3E",
+              "title": "QA KAN5 source C",
+              "pending": false,
+              "group": "1793914016981-80",
+              "dragData": false
+            }
+          ],
+          "events": [
+            {
+              "type": "dragstart",
+              "trusted": true,
+              "x": 336,
+              "y": 103,
+              "target": null,
+              "types": []
+            },
+            {
+              "type": "dragover",
+              "trusted": true,
+              "x": 401,
+              "y": 103,
+              "target": "tabs-newtab-button",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal"
+              ]
+            },
+            {
+              "type": "dragover",
+              "trusted": true,
+              "x": 465,
+              "y": 103,
+              "target": "alltabs-button",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal"
+              ]
+            },
+            {
+              "type": "dragover",
+              "trusted": true,
+              "x": 530,
+              "y": 103,
+              "target": "workspaces-toolbar-button",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal"
+              ]
+            },
+            {
+              "type": "dragover",
+              "trusted": true,
+              "x": 594,
+              "y": 103,
+              "target": "workspaces-toolbar-button",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal"
+              ]
+            },
+            {
+              "type": "dragover",
+              "trusted": true,
+              "x": 659,
+              "y": 103,
+              "target": "titlebar-button titlebar-min",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal"
+              ]
+            },
+            {
+              "type": "dragover",
+              "trusted": true,
+              "x": 724,
+              "y": 103,
+              "target": "titlebar-button titlebar-max",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal"
+              ]
+            }
+          ]
+        },
+        {
+          "role": "target",
+          "screen": {
+            "x": 860,
+            "y": 80,
+            "width": 750,
+            "height": 760,
+            "state": 3,
+            "sizemode": "normal"
+          },
+          "selected": "QA KAN5 ordinary control",
+          "tabs": [
+            {
+              "uri": "data:text/html,<title>QA KAN5 destination</title><h1>Existing target</h1>",
+              "title": "QA KAN5 destination",
+              "pending": false,
+              "group": null,
+              "dragData": false
+            },
+            {
+              "uri": "data:text/html;charset=utf-8,%3Ctitle%3EQA%20KAN5%20ordinary%20control%3C/title%3E%3Ch1%3EQA%20KAN5%20ordinary%20control%3C/h1%3E",
+              "title": "QA KAN5 ordinary control",
+              "pending": false,
+              "group": null,
+              "dragData": false
+            }
+          ],
+          "events": [
+            {
+              "type": "dragover",
+              "trusted": true,
+              "x": 918,
+              "y": 103,
+              "target": "tab-text tab-label",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal"
+              ]
+            },
+            {
+              "type": "dragover",
+              "trusted": true,
+              "x": 982,
+              "y": 103,
+              "target": "tab-text tab-label",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal"
+              ]
+            },
+            {
+              "type": "dragover",
+              "trusted": true,
+              "x": 1047,
+              "y": 103,
+              "target": "tab-label-container",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal"
+              ]
+            },
+            {
+              "type": "dragover",
+              "trusted": true,
+              "x": 1112,
+              "y": 103,
+              "target": "tab-content",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal"
+              ]
+            },
+            {
+              "type": "drop",
+              "trusted": true,
+              "x": 1112,
+              "y": 103,
+              "target": "tab-content",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal"
+              ]
+            }
+          ]
+        }
+      ],
+      "late": [
+        {
+          "role": "source",
+          "screen": {
+            "x": 20,
+            "y": 80,
+            "width": 750,
+            "height": 760,
+            "state": 3,
+            "sizemode": "normal"
+          },
+          "selected": "QA KAN5 source C",
+          "tabs": [
+            {
+              "uri": "about:blank",
+              "title": "",
+              "pending": false,
+              "group": null,
+              "dragData": false
+            },
+            {
+              "uri": "data:text/html;charset=utf-8,%3Ctitle%3EQA%20KAN5%20source%20A%3C/title%3E%3Ch1%3EQA%20KAN5%20source%20A%3C/h1%3E",
+              "title": "QA KAN5 source A",
+              "pending": false,
+              "group": "1793914016981-80",
+              "dragData": false
+            },
+            {
+              "uri": "data:text/html;charset=utf-8,%3Ctitle%3EQA%20KAN5%20source%20B%3C/title%3E%3Ch1%3EQA%20KAN5%20source%20B%3C/h1%3E",
+              "title": "QA KAN5 source B",
+              "pending": false,
+              "group": "1793914016981-80",
+              "dragData": false
+            },
+            {
+              "uri": "data:text/html;charset=utf-8,%3Ctitle%3EQA%20KAN5%20source%20C%3C/title%3E%3Ch1%3EQA%20KAN5%20source%20C%3C/h1%3E",
+              "title": "QA KAN5 source C",
+              "pending": false,
+              "group": "1793914016981-80",
+              "dragData": false
+            }
+          ],
+          "events": [
+            {
+              "type": "dragstart",
+              "trusted": true,
+              "x": 336,
+              "y": 103,
+              "target": null,
+              "types": []
+            },
+            {
+              "type": "dragover",
+              "trusted": true,
+              "x": 401,
+              "y": 103,
+              "target": "tabs-newtab-button",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal"
+              ]
+            },
+            {
+              "type": "dragover",
+              "trusted": true,
+              "x": 465,
+              "y": 103,
+              "target": "alltabs-button",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal"
+              ]
+            },
+            {
+              "type": "dragover",
+              "trusted": true,
+              "x": 530,
+              "y": 103,
+              "target": "workspaces-toolbar-button",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal"
+              ]
+            },
+            {
+              "type": "dragover",
+              "trusted": true,
+              "x": 594,
+              "y": 103,
+              "target": "workspaces-toolbar-button",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal"
+              ]
+            },
+            {
+              "type": "dragover",
+              "trusted": true,
+              "x": 659,
+              "y": 103,
+              "target": "titlebar-button titlebar-min",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal"
+              ]
+            },
+            {
+              "type": "dragover",
+              "trusted": true,
+              "x": 724,
+              "y": 103,
+              "target": "titlebar-button titlebar-max",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal"
+              ]
+            }
+          ]
+        },
+        {
+          "role": "target",
+          "screen": {
+            "x": 860,
+            "y": 80,
+            "width": 750,
+            "height": 760,
+            "state": 3,
+            "sizemode": "normal"
+          },
+          "selected": "QA KAN5 ordinary control",
+          "tabs": [
+            {
+              "uri": "data:text/html,<title>QA KAN5 destination</title><h1>Existing target</h1>",
+              "title": "QA KAN5 destination",
+              "pending": false,
+              "group": null,
+              "dragData": false
+            },
+            {
+              "uri": "data:text/html;charset=utf-8,%3Ctitle%3EQA%20KAN5%20ordinary%20control%3C/title%3E%3Ch1%3EQA%20KAN5%20ordinary%20control%3C/h1%3E",
+              "title": "QA KAN5 ordinary control",
+              "pending": false,
+              "group": null,
+              "dragData": false
+            }
+          ],
+          "events": [
+            {
+              "type": "dragover",
+              "trusted": true,
+              "x": 918,
+              "y": 103,
+              "target": "tab-text tab-label",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal"
+              ]
+            },
+            {
+              "type": "dragover",
+              "trusted": true,
+              "x": 982,
+              "y": 103,
+              "target": "tab-text tab-label",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal"
+              ]
+            },
+            {
+              "type": "dragover",
+              "trusted": true,
+              "x": 1047,
+              "y": 103,
+              "target": "tab-label-container",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal"
+              ]
+            },
+            {
+              "type": "dragover",
+              "trusted": true,
+              "x": 1112,
+              "y": 103,
+              "target": "tab-content",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal"
+              ]
+            },
+            {
+              "type": "drop",
+              "trusted": true,
+              "x": 1112,
+              "y": 103,
+              "target": "tab-content",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal"
+              ]
+            }
+          ]
+        }
+      ],
+      "nativeDragStartSeen": true,
+      "trustedTargetDropSeen": true,
+      "eventDelta": {
+        "source": [
+          {
+            "type": "dragstart",
+            "trusted": true,
+            "x": 336,
+            "y": 103,
+            "target": null,
+            "types": []
+          },
+          {
+            "type": "dragover",
+            "trusted": true,
+            "x": 401,
+            "y": 103,
+            "target": "tabs-newtab-button",
+            "types": [
+              "application/x-moz-tabbrowser-tab",
+              "text/x-moz-text-internal"
+            ]
+          },
+          {
+            "type": "dragover",
+            "trusted": true,
+            "x": 465,
+            "y": 103,
+            "target": "alltabs-button",
+            "types": [
+              "application/x-moz-tabbrowser-tab",
+              "text/x-moz-text-internal"
+            ]
+          },
+          {
+            "type": "dragover",
+            "trusted": true,
+            "x": 530,
+            "y": 103,
+            "target": "workspaces-toolbar-button",
+            "types": [
+              "application/x-moz-tabbrowser-tab",
+              "text/x-moz-text-internal"
+            ]
+          },
+          {
+            "type": "dragover",
+            "trusted": true,
+            "x": 594,
+            "y": 103,
+            "target": "workspaces-toolbar-button",
+            "types": [
+              "application/x-moz-tabbrowser-tab",
+              "text/x-moz-text-internal"
+            ]
+          },
+          {
+            "type": "dragover",
+            "trusted": true,
+            "x": 659,
+            "y": 103,
+            "target": "titlebar-button titlebar-min",
+            "types": [
+              "application/x-moz-tabbrowser-tab",
+              "text/x-moz-text-internal"
+            ]
+          },
+          {
+            "type": "dragover",
+            "trusted": true,
+            "x": 724,
+            "y": 103,
+            "target": "titlebar-button titlebar-max",
+            "types": [
+              "application/x-moz-tabbrowser-tab",
+              "text/x-moz-text-internal"
+            ]
+          }
+        ],
+        "target": [
+          {
+            "type": "dragover",
+            "trusted": true,
+            "x": 918,
+            "y": 103,
+            "target": "tab-text tab-label",
+            "types": [
+              "application/x-moz-tabbrowser-tab",
+              "text/x-moz-text-internal"
+            ]
+          },
+          {
+            "type": "dragover",
+            "trusted": true,
+            "x": 982,
+            "y": 103,
+            "target": "tab-text tab-label",
+            "types": [
+              "application/x-moz-tabbrowser-tab",
+              "text/x-moz-text-internal"
+            ]
+          },
+          {
+            "type": "dragover",
+            "trusted": true,
+            "x": 1047,
+            "y": 103,
+            "target": "tab-label-container",
+            "types": [
+              "application/x-moz-tabbrowser-tab",
+              "text/x-moz-text-internal"
+            ]
+          },
+          {
+            "type": "dragover",
+            "trusted": true,
+            "x": 1112,
+            "y": 103,
+            "target": "tab-content",
+            "types": [
+              "application/x-moz-tabbrowser-tab",
+              "text/x-moz-text-internal"
+            ]
+          },
+          {
+            "type": "drop",
+            "trusted": true,
+            "x": 1112,
+            "y": 103,
+            "target": "tab-content",
+            "types": [
+              "application/x-moz-tabbrowser-tab",
+              "text/x-moz-text-internal"
+            ]
+          }
+        ]
+      },
+      "singleTabPayloadPreserved": true
+    },
+    {
+      "case": "individual-stack-proxy-existing-window",
+      "input": "OS XTest native mouse path; no dispatchEvent/DataTransfer/adoption API",
+      "expectedUri": "data:text/html;charset=utf-8,%3Ctitle%3EQA%20KAN5%20source%20B%3C/title%3E%3Ch1%3EQA%20KAN5%20source%20B%3C/h1%3E",
+      "start": {
+        "x": 327,
+        "y": 139.5,
+        "width": 180,
+        "height": 36,
+        "label": "QA KAN5 source B",
+        "rect": {
+          "x": 212,
+          "y": 36.5,
+          "width": 180,
+          "height": 36,
+          "top": 36.5,
+          "right": 392,
+          "bottom": 72.5,
+          "left": 212
+        }
+      },
+      "target": {
+        "x": 1231.8666687011719,
+        "y": 103,
+        "rect": {
+          "x": 196.43333435058594,
+          "y": 0,
+          "width": 173.43333435058594,
+          "height": 36,
+          "top": 0,
+          "right": 369.8666687011719,
+          "bottom": 36,
+          "left": 196.43333435058594
+        }
+      },
+      "before": [
+        {
+          "role": "source",
+          "screen": {
+            "x": 20,
+            "y": 80,
+            "width": 750,
+            "height": 760,
+            "state": 3,
+            "sizemode": "normal"
+          },
+          "selected": "QA KAN5 source A",
+          "tabs": [
+            {
+              "uri": "about:blank",
+              "title": "",
+              "pending": false,
+              "group": null,
+              "dragData": false
+            },
+            {
+              "uri": "data:text/html;charset=utf-8,%3Ctitle%3EQA%20KAN5%20source%20A%3C/title%3E%3Ch1%3EQA%20KAN5%20source%20A%3C/h1%3E",
+              "title": "QA KAN5 source A",
+              "pending": false,
+              "group": "1793914016981-80",
+              "dragData": false
+            },
+            {
+              "uri": "data:text/html;charset=utf-8,%3Ctitle%3EQA%20KAN5%20source%20B%3C/title%3E%3Ch1%3EQA%20KAN5%20source%20B%3C/h1%3E",
+              "title": "QA KAN5 source B",
+              "pending": false,
+              "group": "1793914016981-80",
+              "dragData": false
+            },
+            {
+              "uri": "data:text/html;charset=utf-8,%3Ctitle%3EQA%20KAN5%20source%20C%3C/title%3E%3Ch1%3EQA%20KAN5%20source%20C%3C/h1%3E",
+              "title": "QA KAN5 source C",
+              "pending": false,
+              "group": "1793914016981-80",
+              "dragData": false
+            }
+          ],
+          "events": [
+            {
+              "type": "dragstart",
+              "trusted": true,
+              "x": 336,
+              "y": 103,
+              "target": null,
+              "types": []
+            },
+            {
+              "type": "dragover",
+              "trusted": true,
+              "x": 401,
+              "y": 103,
+              "target": "tabs-newtab-button",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal"
+              ]
+            },
+            {
+              "type": "dragover",
+              "trusted": true,
+              "x": 465,
+              "y": 103,
+              "target": "alltabs-button",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal"
+              ]
+            },
+            {
+              "type": "dragover",
+              "trusted": true,
+              "x": 530,
+              "y": 103,
+              "target": "workspaces-toolbar-button",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal"
+              ]
+            },
+            {
+              "type": "dragover",
+              "trusted": true,
+              "x": 594,
+              "y": 103,
+              "target": "workspaces-toolbar-button",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal"
+              ]
+            },
+            {
+              "type": "dragover",
+              "trusted": true,
+              "x": 659,
+              "y": 103,
+              "target": "titlebar-button titlebar-min",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal"
+              ]
+            },
+            {
+              "type": "dragover",
+              "trusted": true,
+              "x": 724,
+              "y": 103,
+              "target": "titlebar-button titlebar-max",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal"
+              ]
+            }
+          ]
+        },
+        {
+          "role": "target",
+          "screen": {
+            "x": 860,
+            "y": 80,
+            "width": 750,
+            "height": 760,
+            "state": 3,
+            "sizemode": "normal"
+          },
+          "selected": "QA KAN5 ordinary control",
+          "tabs": [
+            {
+              "uri": "data:text/html,<title>QA KAN5 destination</title><h1>Existing target</h1>",
+              "title": "QA KAN5 destination",
+              "pending": false,
+              "group": null,
+              "dragData": false
+            },
+            {
+              "uri": "data:text/html;charset=utf-8,%3Ctitle%3EQA%20KAN5%20ordinary%20control%3C/title%3E%3Ch1%3EQA%20KAN5%20ordinary%20control%3C/h1%3E",
+              "title": "QA KAN5 ordinary control",
+              "pending": false,
+              "group": null,
+              "dragData": false
+            }
+          ],
+          "events": [
+            {
+              "type": "dragover",
+              "trusted": true,
+              "x": 918,
+              "y": 103,
+              "target": "tab-text tab-label",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal"
+              ]
+            },
+            {
+              "type": "dragover",
+              "trusted": true,
+              "x": 982,
+              "y": 103,
+              "target": "tab-text tab-label",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal"
+              ]
+            },
+            {
+              "type": "dragover",
+              "trusted": true,
+              "x": 1047,
+              "y": 103,
+              "target": "tab-label-container",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal"
+              ]
+            },
+            {
+              "type": "dragover",
+              "trusted": true,
+              "x": 1112,
+              "y": 103,
+              "target": "tab-content",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal"
+              ]
+            },
+            {
+              "type": "drop",
+              "trusted": true,
+              "x": 1112,
+              "y": 103,
+              "target": "tab-content",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal"
+              ]
+            }
+          ]
+        }
+      ],
+      "after": [
+        {
+          "role": "source",
+          "screen": {
+            "x": 20,
+            "y": 80,
+            "width": 750,
+            "height": 760,
+            "state": 3,
+            "sizemode": "normal"
+          },
+          "selected": "QA KAN5 source A",
+          "tabs": [
+            {
+              "uri": "about:blank",
+              "title": "",
+              "pending": false,
+              "group": null,
+              "dragData": false
+            },
+            {
+              "uri": "data:text/html;charset=utf-8,%3Ctitle%3EQA%20KAN5%20source%20A%3C/title%3E%3Ch1%3EQA%20KAN5%20source%20A%3C/h1%3E",
+              "title": "QA KAN5 source A",
+              "pending": false,
+              "group": "1793914016981-80",
+              "dragData": false
+            },
+            {
+              "uri": "data:text/html;charset=utf-8,%3Ctitle%3EQA%20KAN5%20source%20C%3C/title%3E%3Ch1%3EQA%20KAN5%20source%20C%3C/h1%3E",
+              "title": "QA KAN5 source C",
+              "pending": false,
+              "group": "1793914016981-80",
+              "dragData": false
+            }
+          ],
+          "events": [
+            {
+              "type": "dragstart",
+              "trusted": true,
+              "x": 336,
+              "y": 103,
+              "target": null,
+              "types": []
+            },
+            {
+              "type": "dragover",
+              "trusted": true,
+              "x": 401,
+              "y": 103,
+              "target": "tabs-newtab-button",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal"
+              ]
+            },
+            {
+              "type": "dragover",
+              "trusted": true,
+              "x": 465,
+              "y": 103,
+              "target": "alltabs-button",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal"
+              ]
+            },
+            {
+              "type": "dragover",
+              "trusted": true,
+              "x": 530,
+              "y": 103,
+              "target": "workspaces-toolbar-button",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal"
+              ]
+            },
+            {
+              "type": "dragover",
+              "trusted": true,
+              "x": 594,
+              "y": 103,
+              "target": "workspaces-toolbar-button",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal"
+              ]
+            },
+            {
+              "type": "dragover",
+              "trusted": true,
+              "x": 659,
+              "y": 103,
+              "target": "titlebar-button titlebar-min",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal"
+              ]
+            },
+            {
+              "type": "dragover",
+              "trusted": true,
+              "x": 724,
+              "y": 103,
+              "target": "titlebar-button titlebar-max",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal"
+              ]
+            },
+            {
+              "type": "dragstart",
+              "trusted": true,
+              "x": 327,
+              "y": 139,
+              "target": null,
+              "types": []
+            },
+            {
+              "type": "dragover",
+              "trusted": true,
+              "x": 402,
+              "y": 136,
+              "target": "floorp-stack-tab",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal",
+                "application/x-floorp-stack-tab"
+              ]
+            },
+            {
+              "type": "dragover",
+              "trusted": true,
+              "x": 477,
+              "y": 133,
+              "target": "floorp-stack-tab-label",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal",
+                "application/x-floorp-stack-tab"
+              ]
+            },
+            {
+              "type": "dragover",
+              "trusted": true,
+              "x": 553,
+              "y": 130,
+              "target": "floorp-stack-tab",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal",
+                "application/x-floorp-stack-tab"
+              ]
+            },
+            {
+              "type": "dragover",
+              "trusted": true,
+              "x": 628,
+              "y": 127,
+              "target": "floorp-stack-items",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal",
+                "application/x-floorp-stack-tab"
+              ]
+            },
+            {
+              "type": "dragover",
+              "trusted": true,
+              "x": 704,
+              "y": 124,
+              "target": "floorp-stack-scroll-down",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal",
+                "application/x-floorp-stack-tab"
+              ]
+            }
+          ]
+        },
+        {
+          "role": "target",
+          "screen": {
+            "x": 860,
+            "y": 80,
+            "width": 750,
+            "height": 760,
+            "state": 3,
+            "sizemode": "normal"
+          },
+          "selected": "QA KAN5 source B",
+          "tabs": [
+            {
+              "uri": "data:text/html,<title>QA KAN5 destination</title><h1>Existing target</h1>",
+              "title": "QA KAN5 destination",
+              "pending": false,
+              "group": null,
+              "dragData": false
+            },
+            {
+              "uri": "data:text/html;charset=utf-8,%3Ctitle%3EQA%20KAN5%20ordinary%20control%3C/title%3E%3Ch1%3EQA%20KAN5%20ordinary%20control%3C/h1%3E",
+              "title": "QA KAN5 ordinary control",
+              "pending": false,
+              "group": null,
+              "dragData": false
+            },
+            {
+              "uri": "data:text/html;charset=utf-8,%3Ctitle%3EQA%20KAN5%20source%20B%3C/title%3E%3Ch1%3EQA%20KAN5%20source%20B%3C/h1%3E",
+              "title": "QA KAN5 source B",
+              "pending": false,
+              "group": null,
+              "dragData": false
+            }
+          ],
+          "events": [
+            {
+              "type": "dragover",
+              "trusted": true,
+              "x": 918,
+              "y": 103,
+              "target": "tab-text tab-label",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal"
+              ]
+            },
+            {
+              "type": "dragover",
+              "trusted": true,
+              "x": 982,
+              "y": 103,
+              "target": "tab-text tab-label",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal"
+              ]
+            },
+            {
+              "type": "dragover",
+              "trusted": true,
+              "x": 1047,
+              "y": 103,
+              "target": "tab-label-container",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal"
+              ]
+            },
+            {
+              "type": "dragover",
+              "trusted": true,
+              "x": 1112,
+              "y": 103,
+              "target": "tab-content",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal"
+              ]
+            },
+            {
+              "type": "drop",
+              "trusted": true,
+              "x": 1112,
+              "y": 103,
+              "target": "tab-content",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal"
+              ]
+            },
+            {
+              "type": "dragover",
+              "trusted": true,
+              "x": 930,
+              "y": 115,
+              "target": "tab-text tab-label",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal",
+                "application/x-floorp-stack-tab"
+              ]
+            },
+            {
+              "type": "dragover",
+              "trusted": true,
+              "x": 1005,
+              "y": 112,
+              "target": "tab-text tab-label",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal",
+                "application/x-floorp-stack-tab"
+              ]
+            },
+            {
+              "type": "dragover",
+              "trusted": true,
+              "x": 1081,
+              "y": 109,
+              "target": "tab-text tab-label",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal",
+                "application/x-floorp-stack-tab"
+              ]
+            },
+            {
+              "type": "dragover",
+              "trusted": true,
+              "x": 1156,
+              "y": 106,
+              "target": "tab-text tab-label",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal",
+                "application/x-floorp-stack-tab"
+              ]
+            },
+            {
+              "type": "dragover",
+              "trusted": true,
+              "x": 1231,
+              "y": 103,
+              "target": "tab-content",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal",
+                "application/x-floorp-stack-tab"
+              ]
+            },
+            {
+              "type": "drop",
+              "trusted": true,
+              "x": 1231,
+              "y": 103,
+              "target": "tab-content",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal",
+                "application/x-floorp-stack-tab"
+              ]
+            }
+          ]
+        }
+      ],
+      "late": [
+        {
+          "role": "source",
+          "screen": {
+            "x": 20,
+            "y": 80,
+            "width": 750,
+            "height": 760,
+            "state": 3,
+            "sizemode": "normal"
+          },
+          "selected": "QA KAN5 source A",
+          "tabs": [
+            {
+              "uri": "about:blank",
+              "title": "",
+              "pending": false,
+              "group": null,
+              "dragData": false
+            },
+            {
+              "uri": "data:text/html;charset=utf-8,%3Ctitle%3EQA%20KAN5%20source%20A%3C/title%3E%3Ch1%3EQA%20KAN5%20source%20A%3C/h1%3E",
+              "title": "QA KAN5 source A",
+              "pending": false,
+              "group": "1793914016981-80",
+              "dragData": false
+            },
+            {
+              "uri": "data:text/html;charset=utf-8,%3Ctitle%3EQA%20KAN5%20source%20C%3C/title%3E%3Ch1%3EQA%20KAN5%20source%20C%3C/h1%3E",
+              "title": "QA KAN5 source C",
+              "pending": false,
+              "group": "1793914016981-80",
+              "dragData": false
+            }
+          ],
+          "events": [
+            {
+              "type": "dragstart",
+              "trusted": true,
+              "x": 336,
+              "y": 103,
+              "target": null,
+              "types": []
+            },
+            {
+              "type": "dragover",
+              "trusted": true,
+              "x": 401,
+              "y": 103,
+              "target": "tabs-newtab-button",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal"
+              ]
+            },
+            {
+              "type": "dragover",
+              "trusted": true,
+              "x": 465,
+              "y": 103,
+              "target": "alltabs-button",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal"
+              ]
+            },
+            {
+              "type": "dragover",
+              "trusted": true,
+              "x": 530,
+              "y": 103,
+              "target": "workspaces-toolbar-button",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal"
+              ]
+            },
+            {
+              "type": "dragover",
+              "trusted": true,
+              "x": 594,
+              "y": 103,
+              "target": "workspaces-toolbar-button",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal"
+              ]
+            },
+            {
+              "type": "dragover",
+              "trusted": true,
+              "x": 659,
+              "y": 103,
+              "target": "titlebar-button titlebar-min",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal"
+              ]
+            },
+            {
+              "type": "dragover",
+              "trusted": true,
+              "x": 724,
+              "y": 103,
+              "target": "titlebar-button titlebar-max",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal"
+              ]
+            },
+            {
+              "type": "dragstart",
+              "trusted": true,
+              "x": 327,
+              "y": 139,
+              "target": null,
+              "types": []
+            },
+            {
+              "type": "dragover",
+              "trusted": true,
+              "x": 402,
+              "y": 136,
+              "target": "floorp-stack-tab",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal",
+                "application/x-floorp-stack-tab"
+              ]
+            },
+            {
+              "type": "dragover",
+              "trusted": true,
+              "x": 477,
+              "y": 133,
+              "target": "floorp-stack-tab-label",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal",
+                "application/x-floorp-stack-tab"
+              ]
+            },
+            {
+              "type": "dragover",
+              "trusted": true,
+              "x": 553,
+              "y": 130,
+              "target": "floorp-stack-tab",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal",
+                "application/x-floorp-stack-tab"
+              ]
+            },
+            {
+              "type": "dragover",
+              "trusted": true,
+              "x": 628,
+              "y": 127,
+              "target": "floorp-stack-items",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal",
+                "application/x-floorp-stack-tab"
+              ]
+            },
+            {
+              "type": "dragover",
+              "trusted": true,
+              "x": 704,
+              "y": 124,
+              "target": "floorp-stack-scroll-down",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal",
+                "application/x-floorp-stack-tab"
+              ]
+            }
+          ]
+        },
+        {
+          "role": "target",
+          "screen": {
+            "x": 860,
+            "y": 80,
+            "width": 750,
+            "height": 760,
+            "state": 3,
+            "sizemode": "normal"
+          },
+          "selected": "QA KAN5 source B",
+          "tabs": [
+            {
+              "uri": "data:text/html,<title>QA KAN5 destination</title><h1>Existing target</h1>",
+              "title": "QA KAN5 destination",
+              "pending": false,
+              "group": null,
+              "dragData": false
+            },
+            {
+              "uri": "data:text/html;charset=utf-8,%3Ctitle%3EQA%20KAN5%20ordinary%20control%3C/title%3E%3Ch1%3EQA%20KAN5%20ordinary%20control%3C/h1%3E",
+              "title": "QA KAN5 ordinary control",
+              "pending": false,
+              "group": null,
+              "dragData": false
+            },
+            {
+              "uri": "data:text/html;charset=utf-8,%3Ctitle%3EQA%20KAN5%20source%20B%3C/title%3E%3Ch1%3EQA%20KAN5%20source%20B%3C/h1%3E",
+              "title": "QA KAN5 source B",
+              "pending": false,
+              "group": null,
+              "dragData": false
+            }
+          ],
+          "events": [
+            {
+              "type": "dragover",
+              "trusted": true,
+              "x": 918,
+              "y": 103,
+              "target": "tab-text tab-label",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal"
+              ]
+            },
+            {
+              "type": "dragover",
+              "trusted": true,
+              "x": 982,
+              "y": 103,
+              "target": "tab-text tab-label",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal"
+              ]
+            },
+            {
+              "type": "dragover",
+              "trusted": true,
+              "x": 1047,
+              "y": 103,
+              "target": "tab-label-container",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal"
+              ]
+            },
+            {
+              "type": "dragover",
+              "trusted": true,
+              "x": 1112,
+              "y": 103,
+              "target": "tab-content",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal"
+              ]
+            },
+            {
+              "type": "drop",
+              "trusted": true,
+              "x": 1112,
+              "y": 103,
+              "target": "tab-content",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal"
+              ]
+            },
+            {
+              "type": "dragover",
+              "trusted": true,
+              "x": 930,
+              "y": 115,
+              "target": "tab-text tab-label",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal",
+                "application/x-floorp-stack-tab"
+              ]
+            },
+            {
+              "type": "dragover",
+              "trusted": true,
+              "x": 1005,
+              "y": 112,
+              "target": "tab-text tab-label",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal",
+                "application/x-floorp-stack-tab"
+              ]
+            },
+            {
+              "type": "dragover",
+              "trusted": true,
+              "x": 1081,
+              "y": 109,
+              "target": "tab-text tab-label",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal",
+                "application/x-floorp-stack-tab"
+              ]
+            },
+            {
+              "type": "dragover",
+              "trusted": true,
+              "x": 1156,
+              "y": 106,
+              "target": "tab-text tab-label",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal",
+                "application/x-floorp-stack-tab"
+              ]
+            },
+            {
+              "type": "dragover",
+              "trusted": true,
+              "x": 1231,
+              "y": 103,
+              "target": "tab-content",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal",
+                "application/x-floorp-stack-tab"
+              ]
+            },
+            {
+              "type": "drop",
+              "trusted": true,
+              "x": 1231,
+              "y": 103,
+              "target": "tab-content",
+              "types": [
+                "application/x-moz-tabbrowser-tab",
+                "text/x-moz-text-internal",
+                "application/x-floorp-stack-tab"
+              ]
+            }
+          ]
+        }
+      ],
+      "nativeDragStartSeen": true,
+      "trustedTargetDropSeen": true,
+      "eventDelta": {
+        "source": [
+          {
+            "type": "dragstart",
+            "trusted": true,
+            "x": 327,
+            "y": 139,
+            "target": null,
+            "types": []
+          },
+          {
+            "type": "dragover",
+            "trusted": true,
+            "x": 402,
+            "y": 136,
+            "target": "floorp-stack-tab",
+            "types": [
+              "application/x-moz-tabbrowser-tab",
+              "text/x-moz-text-internal",
+              "application/x-floorp-stack-tab"
+            ]
+          },
+          {
+            "type": "dragover",
+            "trusted": true,
+            "x": 477,
+            "y": 133,
+            "target": "floorp-stack-tab-label",
+            "types": [
+              "application/x-moz-tabbrowser-tab",
+              "text/x-moz-text-internal",
+              "application/x-floorp-stack-tab"
+            ]
+          },
+          {
+            "type": "dragover",
+            "trusted": true,
+            "x": 553,
+            "y": 130,
+            "target": "floorp-stack-tab",
+            "types": [
+              "application/x-moz-tabbrowser-tab",
+              "text/x-moz-text-internal",
+              "application/x-floorp-stack-tab"
+            ]
+          },
+          {
+            "type": "dragover",
+            "trusted": true,
+            "x": 628,
+            "y": 127,
+            "target": "floorp-stack-items",
+            "types": [
+              "application/x-moz-tabbrowser-tab",
+              "text/x-moz-text-internal",
+              "application/x-floorp-stack-tab"
+            ]
+          },
+          {
+            "type": "dragover",
+            "trusted": true,
+            "x": 704,
+            "y": 124,
+            "target": "floorp-stack-scroll-down",
+            "types": [
+              "application/x-moz-tabbrowser-tab",
+              "text/x-moz-text-internal",
+              "application/x-floorp-stack-tab"
+            ]
+          }
+        ],
+        "target": [
+          {
+            "type": "dragover",
+            "trusted": true,
+            "x": 930,
+            "y": 115,
+            "target": "tab-text tab-label",
+            "types": [
+              "application/x-moz-tabbrowser-tab",
+              "text/x-moz-text-internal",
+              "application/x-floorp-stack-tab"
+            ]
+          },
+          {
+            "type": "dragover",
+            "trusted": true,
+            "x": 1005,
+            "y": 112,
+            "target": "tab-text tab-label",
+            "types": [
+              "application/x-moz-tabbrowser-tab",
+              "text/x-moz-text-internal",
+              "application/x-floorp-stack-tab"
+            ]
+          },
+          {
+            "type": "dragover",
+            "trusted": true,
+            "x": 1081,
+            "y": 109,
+            "target": "tab-text tab-label",
+            "types": [
+              "application/x-moz-tabbrowser-tab",
+              "text/x-moz-text-internal",
+              "application/x-floorp-stack-tab"
+            ]
+          },
+          {
+            "type": "dragover",
+            "trusted": true,
+            "x": 1156,
+            "y": 106,
+            "target": "tab-text tab-label",
+            "types": [
+              "application/x-moz-tabbrowser-tab",
+              "text/x-moz-text-internal",
+              "application/x-floorp-stack-tab"
+            ]
+          },
+          {
+            "type": "dragover",
+            "trusted": true,
+            "x": 1231,
+            "y": 103,
+            "target": "tab-content",
+            "types": [
+              "application/x-moz-tabbrowser-tab",
+              "text/x-moz-text-internal",
+              "application/x-floorp-stack-tab"
+            ]
+          },
+          {
+            "type": "drop",
+            "trusted": true,
+            "x": 1231,
+            "y": 103,
+            "target": "tab-content",
+            "types": [
+              "application/x-moz-tabbrowser-tab",
+              "text/x-moz-text-internal",
+              "application/x-floorp-stack-tab"
+            ]
+          }
+        ]
+      },
+      "singleTabPayloadPreserved": true
+    }
+  ],
+  "product": {
+    "name": "Floorp",
+    "version": "159.0.1",
+    "build": "20261103153232",
+    "gre": "/workspace/kan97-runtime/full-package/floorp",
+    "signatureRequired": false,
+    "signatureUser": false,
+    "sandbox": 6,
+    "focusTestMode": false,
+    "stacksEnabled": true
+  },
+  "selectedBeforeGrouping": {
+    "selected": [
+      {
+        "title": "QA KAN5 source A",
+        "rect": {
+          "x": 25,
+          "y": 0,
+          "width": 225,
+          "height": 36,
+          "top": 0,
+          "right": 250,
+          "bottom": 36,
+          "left": 25
+        }
+      },
+      {
+        "title": "QA KAN5 source B",
+        "rect": {
+          "x": 471,
+          "y": 0,
+          "width": 225,
+          "height": 36,
+          "top": 0,
+          "right": 696,
+          "bottom": 36,
+          "left": 471
+        }
+      },
+      {
+        "title": "QA KAN5 source C",
+        "rect": {
+          "x": 694,
+          "y": 0,
+          "width": 225,
+          "height": 36,
+          "top": 0,
+          "right": 919,
+          "bottom": 36,
+          "left": 694
+        }
+      }
+    ],
+    "all": [
+      {
+        "title": "QA KAN5 source A",
+        "rect": {
+          "x": 25,
+          "y": 0,
+          "width": 225,
+          "height": 36,
+          "top": 0,
+          "right": 250,
+          "bottom": 36,
+          "left": 25
+        }
+      },
+      {
+        "title": "",
+        "rect": {
+          "x": 248,
+          "y": 0,
+          "width": 225,
+          "height": 36,
+          "top": 0,
+          "right": 473,
+          "bottom": 36,
+          "left": 248
+        }
+      },
+      {
+        "title": "QA KAN5 source B",
+        "rect": {
+          "x": 471,
+          "y": 0,
+          "width": 225,
+          "height": 36,
+          "top": 0,
+          "right": 696,
+          "bottom": 36,
+          "left": 471
+        }
+      },
+      {
+        "title": "QA KAN5 source C",
+        "rect": {
+          "x": 694,
+          "y": 0,
+          "width": 225,
+          "height": 36,
+          "top": 0,
+          "right": 919,
+          "bottom": 36,
+          "left": 694
+        }
+      },
+      {
+        "title": "QA KAN5 ordinary control",
+        "rect": {
+          "x": 917,
+          "y": 0,
+          "width": 225,
+          "height": 36,
+          "top": 0,
+          "right": 1142,
+          "bottom": 36,
+          "left": 917
+        }
+      }
+    ]
+  },
+  "contextMenu": [
+    {
+      "id": "context_openANewTab",
+      "label": "New Tab to Right"
+    },
+    {
+      "id": "context_moveTabToNewGroup",
+      "label": "Add Tabs to New Group"
+    },
+    {
+      "id": "context_moveTabToSplitView",
+      "label": "Open in Split View"
+    },
+    {
+      "id": "context_reloadSelectedTabs",
+      "label": "Reload Tabs"
+    },
+    {
+      "id": "context_toggleMuteSelectedTabs",
+      "label": "Mute Tabs"
+    },
+    {
+      "id": "context_pinSelectedTabs",
+      "label": "Pin Tabs"
+    },
+    {
+      "id": "context_unloadTab",
+      "label": "Unload 3 Tabs"
+    },
+    {
+      "id": "context_duplicateTabs",
+      "label": "Duplicate Tabs"
+    },
+    {
+      "id": "context_bookmarkSelectedTabs",
+      "label": "Bookmark Tabs\u2026"
+    },
+    {
+      "id": "context_openInExternalBrowser",
+      "label": "Open Tab in External Browser"
+    },
+    {
+      "id": "context_MoveTabToOtherWorkspace",
+      "label": "Move Tab to Another Workspace"
+    },
+    {
+      "id": "context_moveTabOptions",
+      "label": "Move Tabs"
+    },
+    {
+      "id": "context_reopenInContainer",
+      "label": "Open in New Container Tab"
+    },
+    {
+      "id": "context_toggleToPrivateContainer",
+      "label": "Reopen in Private Container"
+    },
+    {
+      "id": "context_selectAllTabs",
+      "label": "Select All Tabs"
+    },
+    {
+      "id": "context_closeTab",
+      "label": "Close 3 Tabs"
+    },
+    {
+      "id": "context_closeDuplicateTabs",
+      "label": "Close Duplicate Tabs"
+    },
+    {
+      "id": "context_closeTabOptions",
+      "label": "Close Multiple Tabs"
+    },
+    {
+      "id": "context_undoCloseTab",
+      "label": "Reopen Closed Tabs"
+    }
+  ],
+  "groupBeforeMenuCommand": {
+    "groups": [],
+    "proxies": 0
+  },
+  "keyboardMenuSelection": {
+    "activeChild": null,
+    "marked": [
+      "context_moveTabToNewGroup"
+    ]
+  },
+  "groupAfterMenuCommand": {
+    "commands": [
+      {
+        "id": "context_moveTabToNewGroup",
+        "label": "Add Tabs to New Group",
+        "trusted": true
+      }
+    ],
+    "groups": [
+      {
+        "id": "1793914016981-80",
+        "titles": [
+          "QA KAN5 source A",
+          "QA KAN5 source B",
+          "QA KAN5 source C"
+        ]
+      }
+    ],
+    "proxies": 3,
+    "openPopups": [
+      ""
+    ]
+  },
+  "groupEditorFocus": {
+    "tag": "input",
+    "id": "tab-group-name",
+    "type": "text",
+    "role": null,
+    "value": "New Stack"
+  },
+  "groupAfterPopupClose": {
+    "groups": [
+      {
+        "id": "1793914016981-80",
+        "titles": [
+          "QA KAN5 source A",
+          "QA KAN5 source B",
+          "QA KAN5 source C"
+        ]
+      }
+    ],
+    "proxies": 3
+  },
+  "uiStackCreated": true,
+  "windowOwnership": {
+    "sourceXid": "4194325",
+    "targetXid": "4194415",
+    "sourcePid": "109366",
+    "targetPid": "109366",
+    "sourceEwmh": "_NET_WM_STATE(ATOM) = \n_NET_FRAME_EXTENTS(CARDINAL) = 0, 0, 0, 0\n_NET_WM_PID(CARDINAL) = 109366\n",
+    "targetEwmh": "_NET_WM_STATE(ATOM) = \n_NET_FRAME_EXTENTS(CARDINAL) = 0, 0, 0, 0\n_NET_WM_PID(CARDINAL) = 109366\n"
+  },
+  "ordinaryPositiveControl": true,
+  "proxyExistingWindow": true,
+  "completed": true,
+  "originalEnvironmentSatisfied": false
+}

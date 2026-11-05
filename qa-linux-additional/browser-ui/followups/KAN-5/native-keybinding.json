@@ -1,0 +1,8 @@
+{
+  "source": "packaged browser/omni.ja chrome/browser/content/browser/browser.xhtml",
+  "sha256": "91cbd4465df077463a81ad3dcc5ab0c72d5fd837a78162589f91ba83b5695f01",
+  "binding": [
+    "<key id=\"key_selectLastTab\" key=\"9\" modifiers=\"alt\" />"
+  ],
+  "fixtureCorrection": "Ctrl+9 to actual Linux Alt+9; no product change"
+}

@@ -1,0 +1,37 @@
+{
+  "derivation": "Preserved actual URL+native-group multiset. Reused profile restores original stack with duplicate fixture URLs, so URL set alone cannot measure closure. Original set-derived fields are retained, not silently rewritten.",
+  "countBefore": 12,
+  "countAfter": 9,
+  "clickedGroup": "1793913728173-46",
+  "closed": [
+    [
+      "data:text/html,<title>QA40 synthetic 2</title>QA40 2",
+      "1793913728173-46"
+    ],
+    [
+      "data:text/html,<title>QA40 synthetic 3</title>QA40 3",
+      "1793913728173-46"
+    ],
+    [
+      "data:text/html,<title>QA40 synthetic 4</title>QA40 4",
+      "1793913728173-46"
+    ]
+  ],
+  "expected": [
+    [
+      "data:text/html,<title>QA40 synthetic 2</title>QA40 2",
+      "1793913728173-46"
+    ],
+    [
+      "data:text/html,<title>QA40 synthetic 3</title>QA40 3",
+      "1793913728173-46"
+    ],
+    [
+      "data:text/html,<title>QA40 synthetic 4</title>QA40 4",
+      "1793913728173-46"
+    ]
+  ],
+  "allOtherTabsPreserved": true,
+  "trustedMiddleObserved": true,
+  "result": "PASS"
+}

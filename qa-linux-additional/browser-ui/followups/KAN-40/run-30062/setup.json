@@ -1,0 +1,24 @@
+{
+  "stage": "setup",
+  "input": "OS XTest synthetic middle button2; not physical input",
+  "observations": [],
+  "metadata": {
+    "version": "159.0.1",
+    "build": "20261103153232",
+    "platformBuild": "20261103153232",
+    "gre": "/workspace/kan97-runtime/full-package/floorp",
+    "signature": false,
+    "signatureUserSet": false,
+    "sandbox": 6,
+    "focusTestMode": false
+  },
+  "settingBefore": {
+    "checked": false,
+    "disabled": false,
+    "x": 1178,
+    "y": 458.5,
+    "html": "<input id=\"enable-tab-stacks\" role=\"switch\" class=\"_switchInput_1a3lw_98\" type=\"checkbox\">"
+  },
+  "settingEnabled": true,
+  "normalQuitRequested": true
+}

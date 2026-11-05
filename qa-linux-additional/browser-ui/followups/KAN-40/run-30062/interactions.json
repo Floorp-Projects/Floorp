@@ -1,0 +1,181 @@
+{
+  "stage": "interactions",
+  "input": "OS XTest synthetic middle button2; not physical input",
+  "observations": [
+    {
+      "kind": "ordinary",
+      "clickTarget": {
+        "x": 535.4333190917969,
+        "y": 73,
+        "width": 173.76666259765625,
+        "height": 36,
+        "outer": "<tab is=\"tabbrowser-tab\" xmlns=\"http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul\" label=\"QA40 synthetic 0\" labeldirection=\"ltr\" class=\"tabbrowser-tab\" context=\"tabContextMenu\" aria-level=\"1\" linkedpanel=\"tabpanel-3\" floorpWorkspaceId=\"77dc425e-3b8f-4104-888c-e4fc3c8bffc0\" selected=\"\" visuallyselected=\"\" touchdownstartsdrag=\"true\" fadein=\"true\" floorpWorkspaceLastShowId=\"77dc425e-3b8f-4104-888c-e4fc3c8bffc0\"><stack class=\"tab-stack\" flex=\"1\"><vbox class=\"tab-background\" selected=\"\" fadein=\"true\"><hbox class=\"tab-context-line\"/><hbox class=\"tab-loading-burst\" flex=\"1\"/><hbox class=\"tab-group-line\" selected=\"\"/></vbox><hbox class=\"tab-content\" align=\"center\" selected=\"\"><stack class=\"tab-icon-stack\" selected=\"\"><hbox class=\"tab-throbber\" selected=\"\" fadein=\"true\"/><hbox class=\"tab-icon-pending\" selected=\"\" fadein=\"true\"/><html:img xmlns:html=\"http://www.w3.org/1999/xhtml\" class=\"tab-icon-image\" role=\"presentation\" decoding=\"sync\" selected=\"\" fadein=\"true\" /><image class=\"tab-sharing-icon-overlay\" role=\"presentation\" selected=\"\"/><image class=\"tab-icon-overlay\" role=\"presentation\" selected=\"\"/><image class=\"tab-note-icon-overlay\" role=\"presentation\"/></stack><html:moz-button xmlns:html=\"http://www.w3.org/1999/xhtml\" type=\"icon ghost\" size=\"small\" class=\"tab-audio-button\" tabindex=\"-1\" data-l10n-attrs=\"label,tooltiptext\" iconposition=\"start\" menuid=\"\"></html:moz-button><vbox class=\"tab-label-container\" align=\"start\" pack=\"center\" flex=\"1\" labeldirection=\"ltr\" selected=\"\"><label class=\"tab-text tab-label\" role=\"presentation\" selected=\"\" fadein=\"true\">QA40 synthetic 0</label></vbox><image class=\"tab-note-icon\" role=\"presentation\"/><image class=\"tab-close-button close-icon\" role=\"button\" data-l10n-id=\"tabbrowser-close-tabs-button\" data-l10n-args=\"{&quot;tabCount&quot;: 1}\" keyNav=\"false\" selected=\"\" fadein=\"true\" tooltiptext=\"Close tab\"/></hbox></stack></tab>",
+        "hit": "<label xmlns=\"http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul\" class=\"tab-text tab-label\" role=\"presentation\" selected=\"\" fadein=\"true\">QA40 synthetic 0</label>",
+        "focused": true,
+        "nativeScreen": {
+          "x": 80,
+          "y": 55
+        }
+      },
+      "before": [
+        {
+          "id": "",
+          "url": "about:hub#/features/design",
+          "selected": false,
+          "group": null
+        },
+        {
+          "id": "",
+          "url": "about:blank",
+          "selected": false,
+          "group": null
+        },
+        {
+          "id": "",
+          "url": "data:text/html,<title>QA40 synthetic 0</title>QA40 0",
+          "selected": true,
+          "group": null
+        },
+        {
+          "id": "",
+          "url": "data:text/html,<title>QA40 synthetic 1</title>QA40 1",
+          "selected": false,
+          "group": null
+        },
+        {
+          "id": "",
+          "url": "data:text/html,<title>QA40 synthetic 2</title>QA40 2",
+          "selected": false,
+          "group": "1793913641374-63"
+        },
+        {
+          "id": "",
+          "url": "data:text/html,<title>QA40 synthetic 3</title>QA40 3",
+          "selected": false,
+          "group": "1793913641374-63"
+        },
+        {
+          "id": "",
+          "url": "data:text/html,<title>QA40 synthetic 4</title>QA40 4",
+          "selected": false,
+          "group": "1793913641374-63"
+        }
+      ],
+      "after": [
+        {
+          "id": "",
+          "url": "about:hub#/features/design",
+          "selected": false,
+          "group": null
+        },
+        {
+          "id": "",
+          "url": "about:blank",
+          "selected": false,
+          "group": null
+        },
+        {
+          "id": "",
+          "url": "data:text/html,<title>QA40 synthetic 1</title>QA40 1",
+          "selected": true,
+          "group": null
+        },
+        {
+          "id": "",
+          "url": "data:text/html,<title>QA40 synthetic 2</title>QA40 2",
+          "selected": false,
+          "group": "1793913641374-63"
+        },
+        {
+          "id": "",
+          "url": "data:text/html,<title>QA40 synthetic 3</title>QA40 3",
+          "selected": false,
+          "group": "1793913641374-63"
+        },
+        {
+          "id": "",
+          "url": "data:text/html,<title>QA40 synthetic 4</title>QA40 4",
+          "selected": false,
+          "group": "1793913641374-63"
+        }
+      ],
+      "closedUrls": [],
+      "expectedFromOriginalReport": [
+        "about:hub#/features/design",
+        "about:blank",
+        "data:text/html,<title>QA40 synthetic 0</title>QA40 0",
+        "data:text/html,<title>QA40 synthetic 1</title>QA40 1",
+        "data:text/html,<title>QA40 synthetic 2</title>QA40 2",
+        "data:text/html,<title>QA40 synthetic 3</title>QA40 3",
+        "data:text/html,<title>QA40 synthetic 4</title>QA40 4"
+      ],
+      "remainingCount": 6,
+      "events": [
+        {
+          "type": "mousedown",
+          "button": 1,
+          "trusted": true,
+          "target": "tab-text tab-label",
+          "composedPath": [
+            "tab-text tab-label",
+            "tab-label-container",
+            "tab-content",
+            "tab-stack",
+            "tabbrowser-tab"
+          ],
+          "screenX": 535,
+          "screenY": 73,
+          "prevented": false
+        },
+        {
+          "type": "mouseup",
+          "button": 1,
+          "trusted": true,
+          "target": "tab-text tab-label",
+          "composedPath": [
+            "tab-text tab-label",
+            "tab-label-container",
+            "tab-content",
+            "tab-stack",
+            "tabbrowser-tab"
+          ],
+          "screenX": 535,
+          "screenY": 73,
+          "prevented": false
+        },
+        {
+          "type": "click",
+          "button": 1,
+          "trusted": true,
+          "target": "tab-text tab-label",
+          "composedPath": [
+            "tab-text tab-label",
+            "tab-label-container",
+            "tab-content",
+            "tab-stack",
+            "tabbrowser-tab"
+          ],
+          "screenX": 535,
+          "screenY": 73,
+          "prevented": true
+        }
+      ],
+      "trustedMiddleObserved": true,
+      "expectedClosedSetMatches": false
+    }
+  ],
+  "metadata": {
+    "version": "159.0.1",
+    "build": "20261103153232",
+    "platformBuild": "20261103153232",
+    "gre": "/workspace/kan97-runtime/full-package/floorp",
+    "signature": false,
+    "signatureUserSet": false,
+    "sandbox": 6,
+    "focusTestMode": false
+  },
+  "fixture": "Real tabs and a native tab group constructed with gBrowser.addTab/addTabGroup for controlled URLs. Stack feature enabled through real settings UI then normal restart. No close handler or event replaced.",
+  "error": "TimeoutExpired(['/workspace/.floorp-cloud/sysroot/usr/bin/xdotool', 'mousemove', '--sync', '735', '73', 'click', '2'], 11.999985236001521)",
+  "traceback": "Traceback (most recent call last):\n  File \"/workspace/qa-linux-additional/browser-ui/followups/KAN-40/probe.py\", line 36, in <module>\n    xd('mousemove','--sync',int(p['x']),int(p['y']),'click',2);time.sleep(1)\n    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/workspace/qa-linux-additional/browser-ui/followups/KAN-40/probe.py\", line 7, in xd\n    def xd(*args):subprocess.run(['/workspace/.floorp-cloud/sysroot/usr/bin/xdotool',*map(str,args)],check=True,timeout=12)\n                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/subprocess.py\", line 550, in run\n    stdout, stderr = process.communicate(input, timeout=timeout)\n                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/subprocess.py\", line 1209, in communicate\n    stdout, stderr = self._communicate(input, endtime, timeout)\n                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/subprocess.py\", line 2141, in _communicate\n    self.wait(timeout=self._remaining_time(endtime))\n  File \"/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/subprocess.py\", line 1264, in wait\n    return self._wait(timeout=timeout)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/subprocess.py\", line 2045, in _wait\n    raise TimeoutExpired(self.args, timeout)\nsubprocess.TimeoutExpired: Command '['/workspace/.floorp-cloud/sysroot/usr/bin/xdotool', 'mousemove', '--sync', '735', '73', 'click', '2']' timed out after 11.999985236001521 seconds\n",
+  "normalQuitRequested": true
+}

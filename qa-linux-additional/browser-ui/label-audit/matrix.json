@@ -17,7 +17,7 @@
       "key": "KAN-3",
       "latestCommentId": "10294",
       "parent": "KAN-1",
-      "status": "\u9032\u884c\u4e2d",
+      "status": "進行中",
       "currentLabels": [
         "area-tabs",
         "env-blocked",
@@ -85,7 +85,7 @@
       "key": "KAN-5",
       "latestCommentId": "10283",
       "parent": "KAN-1",
-      "status": "\u672a\u7740\u624b",
+      "status": "未着手",
       "currentLabels": [
         "area-tabs",
         "env-blocked",
@@ -108,12 +108,12 @@
       "satisfiedEvidenceConditions": [
         "Linux detach/adopt",
         "Fedora44 container API adoption",
-        "OS XTest new-window individual stack-proxy detach"
+        "OS XTest new-window individual stack-proxy detach",
+        "Native OS individual proxy drop into an existing window with ordinary positive control; followup30055"
       ],
       "remainingConditions": [
         "Original Fedora desktop/Flatpak package",
-        "physical drag",
-        "direct stack-proxy drop into an existing window"
+        "physical drag"
       ],
       "proposedRemoveLabels": [],
       "proposedAddLabels": [],
@@ -151,7 +151,7 @@
       "key": "KAN-29",
       "latestCommentId": "10284",
       "parent": "KAN-1",
-      "status": "\u672a\u7740\u624b",
+      "status": "未着手",
       "currentLabels": [
         "area-tabs",
         "env-blocked",
@@ -220,7 +220,7 @@
       "key": "KAN-31",
       "latestCommentId": "10285",
       "parent": "KAN-1",
-      "status": "\u672a\u7740\u624b",
+      "status": "未着手",
       "currentLabels": [
         "area-ui",
         "env-blocked",
@@ -276,7 +276,7 @@
       "key": "KAN-39",
       "latestCommentId": "10286",
       "parent": "KAN-1",
-      "status": "\u672a\u7740\u624b",
+      "status": "未着手",
       "currentLabels": [
         "area-tabs",
         "env-blocked",
@@ -340,7 +340,7 @@
       "key": "KAN-40",
       "latestCommentId": "10287",
       "parent": "KAN-1",
-      "status": "\u672a\u7740\u624b",
+      "status": "未着手",
       "currentLabels": [
         "area-tabs",
         "env-blocked",
@@ -359,12 +359,12 @@
       ],
       "satisfiedEvidenceConditions": [
         "selected and nonselected stack members close under W3C pointer",
-        "Fedora44 container selected/nonselected member close"
+        "Fedora44 container selected/nonselected member close",
+        "Native OS ordinary-tab and whole-stack controls; followup30062/30063"
       ],
       "remainingConditions": [
-        "Original Fedora desktop/package/Flatpak",
-        "physical middle click",
-        "ordinary tab and whole-stack middle-click controls"
+        "Original Fedora desktop/package type unspecified",
+        "physical middle click"
       ],
       "proposedRemoveLabels": [],
       "proposedAddLabels": [],
@@ -400,7 +400,7 @@
       "key": "KAN-54",
       "latestCommentId": "10288",
       "parent": "KAN-52",
-      "status": "\u672a\u7740\u624b",
+      "status": "未着手",
       "currentLabels": [
         "area-ui",
         "backlog-deferred",
@@ -453,7 +453,7 @@
       "key": "KAN-87",
       "latestCommentId": "10289",
       "parent": "KAN-1",
-      "status": "\u672a\u7740\u624b",
+      "status": "未着手",
       "currentLabels": [
         "area-ui",
         "env-blocked",
@@ -515,7 +515,7 @@
       "key": "KAN-93",
       "latestCommentId": "10290",
       "parent": "KAN-1",
-      "status": "\u672a\u7740\u624b",
+      "status": "未着手",
       "currentLabels": [
         "area-ui",
         "env-blocked",
@@ -570,7 +570,7 @@
       "key": "KAN-98",
       "latestCommentId": "10291",
       "parent": "KAN-1",
-      "status": "\u9032\u884c\u4e2d",
+      "status": "進行中",
       "currentLabels": [
         "area-ui",
         "env-blocked",
@@ -624,5 +624,6 @@
       ],
       "outOfSprintMustRemain": false
     }
-  ]
+  ],
+  "postPackageFollowups": "KAN5 native existing-window drop and KAN40 native ordinary/whole-stack controls completed; no exact original-environment label satisfied"
 }

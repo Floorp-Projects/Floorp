@@ -1,0 +1,13 @@
+{
+  "qaCommit": "f98dbffff1426594426ec16f4cac13ae31847bc1",
+  "branch": "qa/additional-browser-ui-20261106",
+  "jiraCommentId": "10438",
+  "addedLabel": "full-package-tested",
+  "originalConditionLabelsRemoved": [],
+  "pr": 3047,
+  "draft": true,
+  "headUnchanged": "d6bd2fc457774f55ab1f36a2b01c941f908f1ab0",
+  "publicRelease": false,
+  "merge": false,
+  "done": false
+}

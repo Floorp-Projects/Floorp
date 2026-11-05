@@ -1,0 +1,238 @@
+{
+  "stage": "interactions",
+  "input": "OS XTest synthetic middle button2; not physical input",
+  "observations": [
+    {
+      "kind": "whole-stack-chip",
+      "clickTarget": {
+        "x": 912.0583343505859,
+        "y": 73,
+        "width": 105.61666870117188,
+        "height": 36,
+        "outer": "<vbox xmlns=\"http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul\" class=\"tab-group-label-container\" pack=\"start\"><vbox class=\"tab-group-label-hover-highlight\" pack=\"start\"><label class=\"tab-group-label\" role=\"button\" aria-label=\"QA40 whole stack\" aria-level=\"1\" aria-expanded=\"true\" data-floorp-count=\"3\" data-floorp-title=\"QA40 whole stack\" aria-description=\"QA40 whole stack \u2014 Tab Group\" tooltiptext=\"QA40 whole stack \u2014 Expanded\">QA40 whole stack<image class=\"floorp-stack-icon\" src=\"data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2214%22%20height%3D%2214%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22context-stroke%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M12.83%202.18a2%202%200%200%200-1.66%200L2.6%206.08a1%201%200%200%200%200%201.83l8.58%203.91a2%202%200%200%200%201.66%200l8.58-3.9a1%201%200%200%200%200-1.83Z%22%2F%3E%3Cpath%20d%3D%22m22%2017.65-9.17%204.16a2%202%200%200%201-1.66%200L2%2017.65%22%2F%3E%3Cpath%20d%3D%22m22%2012.65-9.17%204.16a2%202%200%200%201-1.66%200L2%2012.65%22%2F%3E%3C%2Fsvg%3E\"/><image class=\"floorp-stack-close\" src=\"chrome://global/skin/icons/close.svg\" tooltiptext=\"Close stack\"/></label></vbox></vbox>",
+        "hit": "<label xmlns=\"http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul\" class=\"tab-group-label\" role=\"button\" aria-label=\"QA40 whole stack\" aria-level=\"1\" aria-expanded=\"true\" data-floorp-count=\"3\" data-floorp-title=\"QA40 whole stack\" aria-description=\"QA40 whole stack \u2014 Tab Group\" tooltiptext=\"QA40 whole stack \u2014 Expanded\">QA40 whole stack<image class=\"floorp-stack-icon\" src=\"data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2214%22%20height%3D%2214%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22context-stroke%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M12.83%202.18a2%202%200%200%200-1.66%200L2.6%206.08a1%201%200%200%200%200%201.83l8.58%203.91a2%202%200%200%200%201.66%200l8.58-3.9a1%201%200%200%200%200-1.83Z%22%2F%3E%3Cpath%20d%3D%22m22%2017.65-9.17%204.16a2%202%200%200%201-1.66%200L2%2017.65%22%2F%3E%3Cpath%20d%3D%22m22%2012.65-9.17%204.16a2%202%200%200%201-1.66%200L2%2012.65%22%2F%3E%3C%2Fsvg%3E\"/><image class=\"floorp-stack-close\" src=\"chrome://global/skin/icons/close.svg\" tooltiptext=\"Close stack\"/></label>",
+        "focused": true,
+        "nativeScreen": {
+          "x": 80,
+          "y": 55
+        }
+      },
+      "before": [
+        {
+          "id": "",
+          "url": "about:hub#/features/design",
+          "selected": false,
+          "group": null
+        },
+        {
+          "id": "",
+          "url": "about:blank",
+          "selected": false,
+          "group": null
+        },
+        {
+          "id": "",
+          "url": "data:text/html,<title>QA40 synthetic 1</title>QA40 1",
+          "selected": false,
+          "group": null
+        },
+        {
+          "id": "",
+          "url": "data:text/html,<title>QA40 synthetic 2</title>QA40 2",
+          "selected": false,
+          "group": "1793913641374-63"
+        },
+        {
+          "id": "",
+          "url": "data:text/html,<title>QA40 synthetic 3</title>QA40 3",
+          "selected": false,
+          "group": "1793913641374-63"
+        },
+        {
+          "id": "",
+          "url": "data:text/html,<title>QA40 synthetic 4</title>QA40 4",
+          "selected": false,
+          "group": "1793913641374-63"
+        },
+        {
+          "id": "",
+          "url": "about:blank",
+          "selected": false,
+          "group": null
+        },
+        {
+          "id": "",
+          "url": "data:text/html,<title>QA40 synthetic 0</title>QA40 0",
+          "selected": false,
+          "group": null
+        },
+        {
+          "id": "",
+          "url": "data:text/html,<title>QA40 synthetic 1</title>QA40 1",
+          "selected": false,
+          "group": null
+        },
+        {
+          "id": "",
+          "url": "data:text/html,<title>QA40 synthetic 2</title>QA40 2",
+          "selected": true,
+          "group": "1793913728173-46"
+        },
+        {
+          "id": "",
+          "url": "data:text/html,<title>QA40 synthetic 3</title>QA40 3",
+          "selected": false,
+          "group": "1793913728173-46"
+        },
+        {
+          "id": "",
+          "url": "data:text/html,<title>QA40 synthetic 4</title>QA40 4",
+          "selected": false,
+          "group": "1793913728173-46"
+        }
+      ],
+      "after": [
+        {
+          "id": "",
+          "url": "about:hub#/features/design",
+          "selected": false,
+          "group": null
+        },
+        {
+          "id": "",
+          "url": "about:blank",
+          "selected": false,
+          "group": null
+        },
+        {
+          "id": "",
+          "url": "data:text/html,<title>QA40 synthetic 1</title>QA40 1",
+          "selected": false,
+          "group": null
+        },
+        {
+          "id": "",
+          "url": "data:text/html,<title>QA40 synthetic 2</title>QA40 2",
+          "selected": false,
+          "group": "1793913641374-63"
+        },
+        {
+          "id": "",
+          "url": "data:text/html,<title>QA40 synthetic 3</title>QA40 3",
+          "selected": false,
+          "group": "1793913641374-63"
+        },
+        {
+          "id": "",
+          "url": "data:text/html,<title>QA40 synthetic 4</title>QA40 4",
+          "selected": false,
+          "group": "1793913641374-63"
+        },
+        {
+          "id": "",
+          "url": "about:blank",
+          "selected": false,
+          "group": null
+        },
+        {
+          "id": "",
+          "url": "data:text/html,<title>QA40 synthetic 0</title>QA40 0",
+          "selected": false,
+          "group": null
+        },
+        {
+          "id": "",
+          "url": "data:text/html,<title>QA40 synthetic 1</title>QA40 1",
+          "selected": true,
+          "group": null
+        }
+      ],
+      "closedUrls": [],
+      "expectedFromOriginalReport": [
+        "data:text/html,<title>QA40 synthetic 2</title>QA40 2",
+        "data:text/html,<title>QA40 synthetic 3</title>QA40 3",
+        "data:text/html,<title>QA40 synthetic 4</title>QA40 4"
+      ],
+      "remainingCount": 9,
+      "events": [
+        {
+          "type": "mousedown",
+          "button": 1,
+          "trusted": true,
+          "target": "tab-group-label",
+          "composedPath": [
+            "tab-group-label",
+            "tab-group-label-hover-highlight",
+            "tab-group-label-container",
+            "1793913728173-46",
+            "html:slot"
+          ],
+          "screenX": 912,
+          "screenY": 73,
+          "prevented": false
+        },
+        {
+          "type": "mouseup",
+          "button": 1,
+          "trusted": true,
+          "target": "tab-group-label",
+          "composedPath": [
+            "tab-group-label",
+            "tab-group-label-hover-highlight",
+            "tab-group-label-container",
+            "1793913728173-46",
+            "html:slot"
+          ],
+          "screenX": 912,
+          "screenY": 73,
+          "prevented": false
+        },
+        {
+          "type": "click",
+          "button": 1,
+          "trusted": true,
+          "target": "tab-group-label",
+          "composedPath": [
+            "tab-group-label",
+            "tab-group-label-hover-highlight",
+            "tab-group-label-container",
+            "1793913728173-46",
+            "html:slot"
+          ],
+          "screenX": 912,
+          "screenY": 73,
+          "prevented": true
+        }
+      ],
+      "trustedMiddleObserved": true,
+      "expectedClosedSetMatches": false
+    }
+  ],
+  "metadata": {
+    "version": "159.0.1",
+    "build": "20261103153232",
+    "platformBuild": "20261103153232",
+    "gre": "/workspace/kan97-runtime/full-package/floorp",
+    "signature": false,
+    "signatureUserSet": false,
+    "sandbox": 6,
+    "focusTestMode": false
+  },
+  "fixture": "Real tabs and a native tab group constructed with gBrowser.addTab/addTabGroup for controlled URLs. Stack feature enabled through real settings UI then normal restart. No close handler or event replaced.",
+  "mouseBeforeMiddle": "X=912\nY=73\nSCREEN=0\nWINDOW=2097523\n",
+  "targetImmediatelyBeforeMiddle": {
+    "x": 912.0583343505859,
+    "y": 73,
+    "width": 105.61666870117188,
+    "height": 36,
+    "outer": "<vbox xmlns=\"http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul\" class=\"tab-group-label-container\" pack=\"start\"><vbox class=\"tab-group-label-hover-highlight\" pack=\"start\"><label class=\"tab-group-label\" role=\"button\" aria-label=\"QA40 whole stack\" aria-level=\"1\" aria-expanded=\"true\" data-floorp-count=\"3\" data-floorp-title=\"QA40 whole stack\" aria-description=\"QA40 whole stack \u2014 Tab Group\" tooltiptext=\"QA40 whole stack \u2014 Expanded\">QA40 whole stack<image class=\"floorp-stack-icon\" src=\"data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2214%22%20height%3D%2214%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22context-stroke%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M12.83%202.18a2%202%200%200%200-1.66%200L2.6%206.08a1%201%200%200%200%200%201.83l8.58%203.91a2%202%200%200%200%201.66%200l8.58-3.9a1%201%200%200%200%200-1.83Z%22%2F%3E%3Cpath%20d%3D%22m22%2017.65-9.17%204.16a2%202%200%200%201-1.66%200L2%2017.65%22%2F%3E%3Cpath%20d%3D%22m22%2012.65-9.17%204.16a2%202%200%200%201-1.66%200L2%2012.65%22%2F%3E%3C%2Fsvg%3E\"/><image class=\"floorp-stack-close\" src=\"chrome://global/skin/icons/close.svg\" tooltiptext=\"Close stack\"/></label></vbox></vbox>",
+    "hit": "<label xmlns=\"http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul\" class=\"tab-group-label\" role=\"button\" aria-label=\"QA40 whole stack\" aria-level=\"1\" aria-expanded=\"true\" data-floorp-count=\"3\" data-floorp-title=\"QA40 whole stack\" aria-description=\"QA40 whole stack \u2014 Tab Group\" tooltiptext=\"QA40 whole stack \u2014 Expanded\">QA40 whole stack<image class=\"floorp-stack-icon\" src=\"data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2214%22%20height%3D%2214%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22context-stroke%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M12.83%202.18a2%202%200%200%200-1.66%200L2.6%206.08a1%201%200%200%200%200%201.83l8.58%203.91a2%202%200%200%200%201.66%200l8.58-3.9a1%201%200%200%200%200-1.83Z%22%2F%3E%3Cpath%20d%3D%22m22%2017.65-9.17%204.16a2%202%200%200%201-1.66%200L2%2017.65%22%2F%3E%3Cpath%20d%3D%22m22%2012.65-9.17%204.16a2%202%200%200%201-1.66%200L2%2012.65%22%2F%3E%3C%2Fsvg%3E\"/><image class=\"floorp-stack-close\" src=\"chrome://global/skin/icons/close.svg\" tooltiptext=\"Close stack\"/></label>",
+    "focused": true,
+    "nativeScreen": {
+      "x": 80,
+      "y": 55
+    }
+  },
+  "allExpected": false,
+  "normalQuitRequested": true
+}

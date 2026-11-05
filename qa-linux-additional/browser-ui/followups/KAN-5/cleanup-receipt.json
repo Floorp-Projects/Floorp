@@ -1,0 +1,68 @@
+{
+  "scope": "only owned ended KAN5 followup profiles; no shared/other artifacts removed",
+  "checkedAtUnix": 1793914159.8491125,
+  "display": ":123",
+  "socketAbsent": true,
+  "profiles": [
+    {
+      "port": 30051,
+      "profile": "/workspace/qa-linux-additional/browser-ui/followups/KAN-5/runtime/30051",
+      "procReferences": [],
+      "finalBrowserExit": 0,
+      "probeExit": 1,
+      "payloadUnchanged": true,
+      "entries": 56,
+      "removedNow": false,
+      "alreadyRemovedPriorOwnedCleanup": true,
+      "profileAbsentAfter": true
+    },
+    {
+      "port": 30052,
+      "profile": "/workspace/qa-linux-additional/browser-ui/followups/KAN-5/runtime/30052",
+      "procReferences": [],
+      "finalBrowserExit": 0,
+      "probeExit": 1,
+      "payloadUnchanged": true,
+      "entries": 56,
+      "removedNow": false,
+      "alreadyRemovedPriorOwnedCleanup": true,
+      "profileAbsentAfter": true
+    },
+    {
+      "port": 30053,
+      "profile": "/workspace/qa-linux-additional/browser-ui/followups/KAN-5/runtime/30053",
+      "procReferences": [],
+      "finalBrowserExit": 0,
+      "probeExit": 1,
+      "payloadUnchanged": true,
+      "entries": 56,
+      "removedNow": false,
+      "alreadyRemovedPriorOwnedCleanup": true,
+      "profileAbsentAfter": true
+    },
+    {
+      "port": 30054,
+      "profile": "/workspace/qa-linux-additional/browser-ui/followups/KAN-5/runtime/30054",
+      "procReferences": [],
+      "finalBrowserExit": 0,
+      "probeExit": 1,
+      "payloadUnchanged": true,
+      "entries": 56,
+      "removedNow": false,
+      "alreadyRemovedPriorOwnedCleanup": true,
+      "profileAbsentAfter": true
+    },
+    {
+      "port": 30055,
+      "profile": "/workspace/qa-linux-additional/browser-ui/followups/KAN-5/runtime/30055",
+      "procReferences": [],
+      "finalBrowserExit": 0,
+      "probeExit": 0,
+      "payloadUnchanged": true,
+      "entries": 56,
+      "removedNow": true,
+      "alreadyRemovedPriorOwnedCleanup": false,
+      "profileAbsentAfter": true
+    }
+  ]
+}

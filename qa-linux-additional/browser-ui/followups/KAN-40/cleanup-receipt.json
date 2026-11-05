@@ -1,0 +1,14 @@
+[
+  {
+    "profile": "/workspace/kan40-runtime/30061/profile",
+    "exactArgProcReferences": [],
+    "removedBytes": 30219204,
+    "scope": "ended owned profiles only; no products/builds/foreign outputs removed"
+  },
+  {
+    "profile": "/workspace/kan40-runtime/30062/profile",
+    "exactArgProcReferences": [],
+    "removedBytes": 30152174,
+    "scope": "ended owned profiles only; no products/builds/foreign outputs removed"
+  }
+]

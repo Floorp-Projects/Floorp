@@ -1,0 +1,13 @@
+{
+  "sourceSha": "d6bd2fc457774f55ab1f36a2b01c941f908f1ab0",
+  "candidateKind": "complete unmodified production package with unrelated KAN97 focused-scroll fix; not a middleclick candidate",
+  "profile": "/workspace/kan40-runtime/30062/profile",
+  "phases": [
+    {
+      "stage": "interactions",
+      "dbusPid": 107428
+    }
+  ],
+  "ownedDisplayPid": 107415,
+  "ownedWmPid": 107419
+}

@@ -1,0 +1,1 @@
+追加対照2条件完了。Debian13/Xvfb124/Openboxの実OS XTest合成中クリックで通常tab1枚のみ閉鎖(7→6)、whole-stack chipは当該3memberのみ閉鎖(12→9)、他tab/既存stack保持。trusted middle events・実target・paint保存。UIでstack有効化→正常終了・再起動、製品全payload不変・各起動正常終了0。selected/nonselected既存試験未反復。集計治具誤り/入力待ち失敗と訂正根拠は生ログを保持。merged2763と整合し新欠陥・新PRなし。通常tab/stack全体追加対照残条件は充足。Fedora実desktop/元package種別不明/物理入力は未充足として維持。Done/merge/release変更なし。

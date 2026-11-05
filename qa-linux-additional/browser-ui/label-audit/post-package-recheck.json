@@ -1,0 +1,235 @@
+{
+  "phase": "after-full-package-completion",
+  "packageRun": 42103462848,
+  "fullProductSourceSha": "d6bd2fc457774f55ab1f36a2b01c941f908f1ab0",
+  "rows": [
+    {
+      "key": "KAN-3",
+      "labels": [
+        "area-tabs",
+        "env-blocked",
+        "floorp-stability-2026-11",
+        "linux-tested",
+        "needs-fedora-desktop",
+        "needs-physical-drag",
+        "p2",
+        "reproduced",
+        "triage-reviewed",
+        "wayland-tested"
+      ],
+      "status": {
+        "name": "進行中",
+        "statusCategory": {
+          "name": "進行中"
+        }
+      },
+      "parent": "KAN-1",
+      "latestCommentId": "10294"
+    },
+    {
+      "key": "KAN-5",
+      "labels": [
+        "area-tabs",
+        "env-blocked",
+        "floorp-stability-2026-11",
+        "linux-tested",
+        "needs-fedora-desktop",
+        "needs-flatpak",
+        "needs-physical-drag",
+        "needs-repro",
+        "needs-spec",
+        "p2",
+        "triage-reviewed"
+      ],
+      "status": {
+        "name": "未着手",
+        "statusCategory": {
+          "name": "To Do"
+        }
+      },
+      "parent": "KAN-1",
+      "latestCommentId": "10283"
+    },
+    {
+      "key": "KAN-29",
+      "labels": [
+        "area-tabs",
+        "env-blocked",
+        "floorp-stability-2026-11",
+        "linux-tested",
+        "needs-cachyos",
+        "needs-flatpak",
+        "needs-repro",
+        "p2",
+        "panel-body-tested",
+        "pr-candidate-tested",
+        "rtl-tested",
+        "triage-reviewed",
+        "wayland-tested"
+      ],
+      "status": {
+        "name": "未着手",
+        "statusCategory": {
+          "name": "To Do"
+        }
+      },
+      "parent": "KAN-1",
+      "latestCommentId": "10284"
+    },
+    {
+      "key": "KAN-31",
+      "labels": [
+        "area-ui",
+        "env-blocked",
+        "floorp-stability-2026-11",
+        "linux-tested",
+        "needs-fedora-desktop",
+        "needs-repro",
+        "p2",
+        "triage-reviewed"
+      ],
+      "status": {
+        "name": "未着手",
+        "statusCategory": {
+          "name": "To Do"
+        }
+      },
+      "parent": "KAN-1",
+      "latestCommentId": "10285"
+    },
+    {
+      "key": "KAN-39",
+      "labels": [
+        "area-tabs",
+        "env-blocked",
+        "floorp-stability-2026-11",
+        "linux-tested",
+        "needs-fedora-desktop",
+        "needs-physical-wheel",
+        "needs-repro",
+        "p2",
+        "triage-reviewed"
+      ],
+      "status": {
+        "name": "未着手",
+        "statusCategory": {
+          "name": "To Do"
+        }
+      },
+      "parent": "KAN-1",
+      "latestCommentId": "10286"
+    },
+    {
+      "key": "KAN-40",
+      "labels": [
+        "area-tabs",
+        "env-blocked",
+        "floorp-stability-2026-11",
+        "linux-tested",
+        "needs-fedora-desktop",
+        "needs-physical-middleclick",
+        "needs-repro",
+        "p2",
+        "triage-reviewed"
+      ],
+      "status": {
+        "name": "未着手",
+        "statusCategory": {
+          "name": "To Do"
+        }
+      },
+      "parent": "KAN-1",
+      "latestCommentId": "10287"
+    },
+    {
+      "key": "KAN-54",
+      "labels": [
+        "area-ui",
+        "backlog-deferred",
+        "env-blocked",
+        "floorp-github-import-2026-11",
+        "linux-tested",
+        "needs-manjaro-plasma",
+        "needs-spec",
+        "p3",
+        "triage-reviewed"
+      ],
+      "status": {
+        "name": "未着手",
+        "statusCategory": {
+          "name": "To Do"
+        }
+      },
+      "parent": "KAN-52",
+      "latestCommentId": "10288"
+    },
+    {
+      "key": "KAN-87",
+      "labels": [
+        "area-ui",
+        "env-blocked",
+        "floorp-github-import-2026-11",
+        "linux-tested",
+        "needs-niri",
+        "needs-repro",
+        "p2",
+        "panel-body-tested",
+        "triage-reviewed",
+        "wayland-tested"
+      ],
+      "status": {
+        "name": "未着手",
+        "statusCategory": {
+          "name": "To Do"
+        }
+      },
+      "parent": "KAN-1",
+      "latestCommentId": "10289"
+    },
+    {
+      "key": "KAN-93",
+      "labels": [
+        "area-ui",
+        "env-blocked",
+        "floorp-github-import-2026-11",
+        "linux-tested",
+        "needs-kde-neon",
+        "needs-repro",
+        "p2",
+        "triage-reviewed"
+      ],
+      "status": {
+        "name": "未着手",
+        "statusCategory": {
+          "name": "To Do"
+        }
+      },
+      "parent": "KAN-1",
+      "latestCommentId": "10290"
+    },
+    {
+      "key": "KAN-98",
+      "labels": [
+        "area-ui",
+        "env-blocked",
+        "floorp-github-import-2026-11",
+        "linux-tested",
+        "needs-arch-sway-wayland",
+        "p2",
+        "reproduced",
+        "triage-reviewed"
+      ],
+      "status": {
+        "name": "進行中",
+        "statusCategory": {
+          "name": "進行中"
+        }
+      },
+      "parent": "KAN-1",
+      "latestCommentId": "10291"
+    }
+  ],
+  "environmentLabelRemovals": [],
+  "writes": [],
+  "note": "Fresh latest labels/status/parent and latest comment IDs match prior audit. Satisfied specific labels already removed; unmet original conditions remain."
+}

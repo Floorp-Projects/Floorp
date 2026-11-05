@@ -1,0 +1,278 @@
+{
+  "key": "KAN-5",
+  "canonicalPr": 2763,
+  "phase": "drop",
+  "fixture": "actual settings/group UI; data-URL pages; native window rectangles; OS XTest pointer/drag (synthetic, not physical)",
+  "apiAdoptionUsed": false,
+  "observations": [],
+  "product": {
+    "name": "Floorp",
+    "version": "159.0.1",
+    "build": "20261103153232",
+    "gre": "/workspace/kan97-runtime/full-package/floorp",
+    "signatureRequired": false,
+    "signatureUser": false,
+    "sandbox": 6,
+    "focusTestMode": false,
+    "stacksEnabled": true
+  },
+  "selectedBeforeGrouping": {
+    "selected": [
+      {
+        "title": "QA KAN5 source A",
+        "rect": {
+          "x": 25,
+          "y": 0,
+          "width": 225,
+          "height": 36,
+          "top": 0,
+          "right": 250,
+          "bottom": 36,
+          "left": 25
+        }
+      },
+      {
+        "title": "QA KAN5 source B",
+        "rect": {
+          "x": 471,
+          "y": 0,
+          "width": 225,
+          "height": 36,
+          "top": 0,
+          "right": 696,
+          "bottom": 36,
+          "left": 471
+        }
+      },
+      {
+        "title": "QA KAN5 source C",
+        "rect": {
+          "x": 694,
+          "y": 0,
+          "width": 225,
+          "height": 36,
+          "top": 0,
+          "right": 919,
+          "bottom": 36,
+          "left": 694
+        }
+      }
+    ],
+    "all": [
+      {
+        "title": "QA KAN5 source A",
+        "rect": {
+          "x": 25,
+          "y": 0,
+          "width": 225,
+          "height": 36,
+          "top": 0,
+          "right": 250,
+          "bottom": 36,
+          "left": 25
+        }
+      },
+      {
+        "title": "",
+        "rect": {
+          "x": 248,
+          "y": 0,
+          "width": 225,
+          "height": 36,
+          "top": 0,
+          "right": 473,
+          "bottom": 36,
+          "left": 248
+        }
+      },
+      {
+        "title": "QA KAN5 source B",
+        "rect": {
+          "x": 471,
+          "y": 0,
+          "width": 225,
+          "height": 36,
+          "top": 0,
+          "right": 696,
+          "bottom": 36,
+          "left": 471
+        }
+      },
+      {
+        "title": "QA KAN5 source C",
+        "rect": {
+          "x": 694,
+          "y": 0,
+          "width": 225,
+          "height": 36,
+          "top": 0,
+          "right": 919,
+          "bottom": 36,
+          "left": 694
+        }
+      },
+      {
+        "title": "QA KAN5 ordinary control",
+        "rect": {
+          "x": 917,
+          "y": 0,
+          "width": 225,
+          "height": 36,
+          "top": 0,
+          "right": 1142,
+          "bottom": 36,
+          "left": 917
+        }
+      }
+    ]
+  },
+  "contextMenu": [
+    {
+      "id": "context_openANewTab",
+      "label": "New Tab to Right"
+    },
+    {
+      "id": "context_moveTabToNewGroup",
+      "label": "Add Tabs to New Group"
+    },
+    {
+      "id": "context_moveTabToSplitView",
+      "label": "Open in Split View"
+    },
+    {
+      "id": "context_reloadSelectedTabs",
+      "label": "Reload Tabs"
+    },
+    {
+      "id": "context_toggleMuteSelectedTabs",
+      "label": "Mute Tabs"
+    },
+    {
+      "id": "context_pinSelectedTabs",
+      "label": "Pin Tabs"
+    },
+    {
+      "id": "context_unloadTab",
+      "label": "Unload 3 Tabs"
+    },
+    {
+      "id": "context_duplicateTabs",
+      "label": "Duplicate Tabs"
+    },
+    {
+      "id": "context_bookmarkSelectedTabs",
+      "label": "Bookmark Tabs\u2026"
+    },
+    {
+      "id": "context_openInExternalBrowser",
+      "label": "Open Tab in External Browser"
+    },
+    {
+      "id": "context_MoveTabToOtherWorkspace",
+      "label": "Move Tab to Another Workspace"
+    },
+    {
+      "id": "context_moveTabOptions",
+      "label": "Move Tabs"
+    },
+    {
+      "id": "context_reopenInContainer",
+      "label": "Open in New Container Tab"
+    },
+    {
+      "id": "context_toggleToPrivateContainer",
+      "label": "Reopen in Private Container"
+    },
+    {
+      "id": "context_selectAllTabs",
+      "label": "Select All Tabs"
+    },
+    {
+      "id": "context_closeTab",
+      "label": "Close 3 Tabs"
+    },
+    {
+      "id": "context_closeDuplicateTabs",
+      "label": "Close Duplicate Tabs"
+    },
+    {
+      "id": "context_closeTabOptions",
+      "label": "Close Multiple Tabs"
+    },
+    {
+      "id": "context_undoCloseTab",
+      "label": "Reopen Closed Tabs"
+    }
+  ],
+  "groupBeforeMenuCommand": {
+    "groups": [],
+    "proxies": 0
+  },
+  "keyboardMenuSelection": {
+    "activeChild": null,
+    "marked": [
+      "context_moveTabToNewGroup"
+    ]
+  },
+  "groupAfterMenuCommand": {
+    "commands": [
+      {
+        "id": "context_moveTabToNewGroup",
+        "label": "Add Tabs to New Group",
+        "trusted": true
+      }
+    ],
+    "groups": [
+      {
+        "id": "1793913876515-92",
+        "titles": [
+          "QA KAN5 source A",
+          "QA KAN5 source B",
+          "QA KAN5 source C"
+        ]
+      }
+    ],
+    "proxies": 3,
+    "openPopups": [
+      ""
+    ]
+  },
+  "groupEditorFocus": {
+    "tag": "input",
+    "id": "tab-group-name",
+    "type": "text",
+    "role": null,
+    "value": "New Stack"
+  },
+  "groupAfterPopupClose": {
+    "groups": [
+      {
+        "id": "1793913876515-92",
+        "titles": [
+          "QA KAN5 source A",
+          "QA KAN5 source B",
+          "QA KAN5 source C"
+        ]
+      }
+    ],
+    "proxies": 3
+  },
+  "uiStackCreated": true,
+  "windowOwnership": {
+    "sourceXid": "4194325",
+    "targetXid": "4194415",
+    "sourcePid": "108383",
+    "targetPid": "108383",
+    "sourceEwmh": "_NET_WM_STATE(ATOM) = \n_NET_FRAME_EXTENTS(CARDINAL) = 0, 0, 0, 0\n_NET_WM_PID(CARDINAL) = 108383\n",
+    "targetEwmh": "_NET_WM_STATE(ATOM) = \n_NET_FRAME_EXTENTS(CARDINAL) = 0, 0, 0, 0\n_NET_WM_PID(CARDINAL) = 108383\n"
+  },
+  "error": "fixture precondition/timeout: native UI selects/scolls ordinary control into view",
+  "traceback": "Traceback (most recent call last):\n  File \"/workspace/qa-linux-additional/browser-ui/followups/KAN-5/probe.py\", line 94, in <module>\n    xd('key','ctrl+9');wait(lambda:js('return gBrowser.selectedBrowser.currentURI.spec')==uris[3],'native UI selects/scolls ordinary control into view')\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/workspace/qa-linux-additional/browser-ui/followups/KAN-5/probe.py\", line 15, in wait\n    raise RuntimeError('fixture precondition/timeout: '+why)\nRuntimeError: fixture precondition/timeout: native UI selects/scolls ordinary control into view\n",
+  "classification": "fixture/infrastructure or observed behavior pending review; not automatically a product defect",
+  "failureUi": {
+    "url": "data:text/html;charset=utf-8,%3Ctitle%3EQA%20KAN5%20source%20A%3C/title%3E%3Ch1%3EQA%20KAN5%20source%20A%3C/h1%3E",
+    "stackEnabled": true,
+    "proxyCount": 3,
+    "menus": []
+  }
+}

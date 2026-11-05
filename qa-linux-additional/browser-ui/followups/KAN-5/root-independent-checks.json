@@ -1,0 +1,39 @@
+{
+  "sourceEvidence": "drop-30055.json",
+  "comparison": "exact URI/title multisets across before/after/late; two real windows; source-1/target+1; expected URI exactly once in target and absent from source",
+  "ordinaryCounts": {
+    "before": [
+      5,
+      1
+    ],
+    "after": [
+      4,
+      2
+    ],
+    "late": [
+      4,
+      2
+    ]
+  },
+  "proxyCounts": {
+    "before": [
+      4,
+      2
+    ],
+    "after": [
+      3,
+      3
+    ],
+    "late": [
+      3,
+      3
+    ]
+  },
+  "bothNativeTrustedDragStart": true,
+  "bothTrustedTargetDrop": true,
+  "bothExactSingleTabMove": true,
+  "browserExit": 0,
+  "probeExit": 0,
+  "payloadEntries": 56,
+  "payloadUnchanged": true
+}

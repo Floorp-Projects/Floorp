@@ -1,0 +1,18 @@
+{
+  "stage": "setup",
+  "input": "OS XTest synthetic middle button2; not physical input",
+  "observations": [],
+  "metadata": {
+    "version": "159.0.1",
+    "build": "20261103153232",
+    "platformBuild": "20261103153232",
+    "gre": "/workspace/kan97-runtime/full-package/floorp",
+    "signature": false,
+    "signatureUserSet": false,
+    "sandbox": 6,
+    "focusTestMode": false
+  },
+  "error": "JavascriptException('TypeError: can\\'t access property \"scrollIntoView\", e is null')",
+  "traceback": "Traceback (most recent call last):\n  File \"/workspace/qa-linux-additional/browser-ui/followups/KAN-40/probe.py\", line 22, in <module>\n    out['settingBefore']=content('let e=document.querySelector(\"#enable-tab-stacks\");e.scrollIntoView({block:\"center\"});let r=e.getBoundingClientRect();return {checked:e.checked,disabled:e.disabled,x:r.x+r.width/2,y:r.y+r.height/2,html:e.outerHTML}')\n                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/workspace/qa-linux-additional/browser-ui/followups/KAN-40/probe.py\", line 6, in content\n    def content(s):m.set_context('content');m.switch_to_frame(None);return m.execute_script(s)\n                                                                           ^^^^^^^^^^^^^^^^^^^\n  File \"/workspace/qa-linux-22/browser-ui/python/marionette_driver/marionette.py\", line 1889, in execute_script\n    rv = self._send_message(\"WebDriver:ExecuteScript\", body, key=\"value\")\n         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/workspace/qa-linux-22/browser-ui/python/marionette_driver/decorators.py\", line 24, in _\n    return func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File \"/workspace/qa-linux-22/browser-ui/python/marionette_driver/marionette.py\", line 780, in _send_message\n    self._handle_error(err)\n  File \"/workspace/qa-linux-22/browser-ui/python/marionette_driver/marionette.py\", line 792, in _handle_error\n    raise errors.lookup(error)(message, stacktrace=stacktrace)\nmarionette_driver.errors.JavascriptException: TypeError: can't access property \"scrollIntoView\", e is null\nstacktrace:\n\t@qa-linux-additional/browser-ui/followups/KAN-40/probe.py:7:58\n\t@qa-linux-additional/browser-ui/followups/KAN-40/probe.py:8:8\n\tevaluate.sandbox/promise<@chrome://remote/content/marionette/evaluate.sys.mjs:127:10\n\tevaluate.sandbox@chrome://remote/content/marionette/evaluate.sys.mjs:103:17\n\texecuteScript@chrome://remote/content/marionette/actors/MarionetteCommandsChild.sys.mjs:358:26\n\treceiveMessage@chrome://remote/content/marionette/actors/MarionetteCommandsChild.sys.mjs:214:31\n\n",
+  "normalQuitRequested": true
+}

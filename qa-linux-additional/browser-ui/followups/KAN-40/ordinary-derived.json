@@ -1,0 +1,14 @@
+{
+  "measurement": "offline derivation from preserved actual before/after controlled unique URLs; original native id fields were all empty, invalid ID-derived fields retained unedited",
+  "closedUrls": [
+    "data:text/html,<title>QA40 synthetic 0</title>QA40 0"
+  ],
+  "countBefore": 7,
+  "countAfter": 6,
+  "expectedClosedUrls": [
+    "data:text/html,<title>QA40 synthetic 0</title>QA40 0"
+  ],
+  "allOtherUrlsPreserved": true,
+  "trustedMiddleObserved": true,
+  "result": "PASS"
+}

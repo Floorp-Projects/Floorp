@@ -1,5 +1,7 @@
 # KAN-97 / GH2692 — scroll-action targeting
 
+> Complete-package follow-up: exact-head remote Linux package42103462848 and unchanged final product now pass24 primary checks plus6 guards; see [full-product/report.md](full-product/report.md). Jira10438 supersedes earlier full-package-unverified statements below. Original Windows/HuggingFace cause remains unproven.
+
 **A distinct focused-frame routing defect was reproduced and fixed in the diagnostic candidate. The original Windows/HuggingFace report is not declared reproduced or resolved.** Draft [3047](https://github.com/Floorp-Projects/Floorp/pull/3047) is limited to the confirmed defect.
 
 ## Prior evidence and duplicate check

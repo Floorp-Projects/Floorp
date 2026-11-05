@@ -1,0 +1,16 @@
+{
+  "key": "KAN-5",
+  "jiraLatestCommentRead": "10283",
+  "originalIssue": 2710,
+  "originalVersion": "12.17.1@154.0.2 Flatpak",
+  "originalOS": "Fedora44",
+  "issueComments": 0,
+  "canonicalPr": 2763,
+  "canonicalPrState": "MERGED",
+  "canonicalPrHead": "b98749d110d5dd4e8cd87120c284394a047a0799",
+  "canonicalPrMergedAt": "2026-09-21T09:40:20Z",
+  "prTopLevelCommentCount": 2,
+  "prInlineCommentCount": 6,
+  "scope": "second-row proxy moves one tab; native first-row retains native multiselection; physical Fedora/Flatpak/desktop input not previously validated",
+  "outstandingPath": "existing-window individual proxy real OS drag; previous existing-window path was native adopt fixture"
+}

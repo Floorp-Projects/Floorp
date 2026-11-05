@@ -1,0 +1,28 @@
+{
+  "key": "KAN-5",
+  "canonicalPr": 2763,
+  "phase": "drop",
+  "fixture": "actual settings/group UI; data-URL pages; native window rectangles; OS XTest pointer/drag (synthetic, not physical)",
+  "apiAdoptionUsed": false,
+  "observations": [],
+  "product": {
+    "name": "Floorp",
+    "version": "159.0.1",
+    "build": "20261103153232",
+    "gre": "/workspace/kan97-runtime/full-package/floorp",
+    "signatureRequired": false,
+    "signatureUser": false,
+    "sandbox": 6,
+    "focusTestMode": false,
+    "stacksEnabled": true
+  },
+  "error": "real UI multiselection failed",
+  "traceback": "Traceback (most recent call last):\n  File \"/workspace/qa-linux-additional/browser-ui/followups/KAN-5/probe.py\", line 54, in <module>\n    assert js('return gBrowser.selectedTabs.length')==3,'real UI multiselection failed'\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: real UI multiselection failed\n",
+  "classification": "fixture/infrastructure or observed behavior pending review; not automatically a product defect",
+  "failureUi": {
+    "url": "data:text/html;charset=utf-8,%3Ctitle%3EQA%20KAN5%20source%20B%3C/title%3E%3Ch1%3EQA%20KAN5%20source%20B%3C/h1%3E",
+    "stackEnabled": true,
+    "proxyCount": 0,
+    "menus": []
+  }
+}

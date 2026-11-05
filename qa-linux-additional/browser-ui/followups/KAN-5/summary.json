@@ -1,0 +1,87 @@
+{
+  "key": "KAN-5",
+  "validRun": 30055,
+  "validCases": 2,
+  "passedCases": 2,
+  "fixtureAttempts": 5,
+  "product": {
+    "name": "Floorp",
+    "version": "159.0.1",
+    "build": "20261103153232",
+    "gre": "/workspace/kan97-runtime/full-package/floorp",
+    "signatureRequired": false,
+    "signatureUser": false,
+    "sandbox": 6,
+    "focusTestMode": false,
+    "stacksEnabled": true
+  },
+  "packageRole": "current-main package plus unrelated KAN97 changes, not stack fix candidate",
+  "canonicalPr": 2763,
+  "canonicalPrHead": "b98749d110d5dd4e8cd87120c284394a047a0799",
+  "input": "actual OS XTest synthetic, not physical",
+  "actualUiGroupCreated": true,
+  "groupAdoptDetachApiUsed": false,
+  "cases": [
+    {
+      "case": "ordinary-positive-control",
+      "passed": true,
+      "nativeTrustedDragStart": true,
+      "nativeTrustedTargetDrop": true,
+      "sourceTargetBefore": {
+        "source": 5,
+        "target": 1
+      },
+      "sourceTargetLate": {
+        "source": 4,
+        "target": 2
+      },
+      "expectedUri": "data:text/html;charset=utf-8,%3Ctitle%3EQA%20KAN5%20ordinary%20control%3C/title%3E%3Ch1%3EQA%20KAN5%20ordinary%20control%3C/h1%3E",
+      "twoWindowsPreserved": true,
+      "allNonpending": true
+    },
+    {
+      "case": "individual-stack-proxy-existing-window",
+      "passed": true,
+      "nativeTrustedDragStart": true,
+      "nativeTrustedTargetDrop": true,
+      "sourceTargetBefore": {
+        "source": 4,
+        "target": 2
+      },
+      "sourceTargetLate": {
+        "source": 3,
+        "target": 3
+      },
+      "expectedUri": "data:text/html;charset=utf-8,%3Ctitle%3EQA%20KAN5%20source%20B%3C/title%3E%3Ch1%3EQA%20KAN5%20source%20B%3C/h1%3E",
+      "twoWindowsPreserved": true,
+      "allNonpending": true
+    }
+  ],
+  "setupQuit": {
+    "setupBrowserExit": 0,
+    "forcedQuit": false,
+    "sameProfileRestart": "/workspace/qa-linux-additional/browser-ui/followups/KAN-5/runtime/30055"
+  },
+  "finalQuit": {
+    "browserExit": 0,
+    "probeExit": 0,
+    "forcedQuit": false
+  },
+  "payloadComparison": {
+    "entriesBefore": 56,
+    "entriesAfter": 56,
+    "unchanged": true,
+    "differences": []
+  },
+  "payloadCanonicalSha256": "7694b792537022888b2b4e888eac633366f0cad98fcb30e1217b0b857d914202",
+  "cleanupReceipt": "cleanup-receipt.json",
+  "denominatorChange": false,
+  "originalEnvironmentSatisfied": false,
+  "remainingConditions": [
+    "original Fedora44 full desktop/original Flatpak",
+    "physical mouse drag",
+    "original release/configuration or other compositor/package combinations"
+  ],
+  "jiraWrites": false,
+  "newPr": null
+}

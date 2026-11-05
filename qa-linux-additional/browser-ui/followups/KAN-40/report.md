@@ -1,0 +1,15 @@
+# KAN-40 / #2704 middleclick controls
+
+Both requested controls passed using actual OS XTest synthetic middlebutton2 on an unchanged complete Linux product. Ordinary tab30062 closed only QA40synthetic0 (7→6 tabs). Whole-stack chip30063 closed exactly its3 native group members (12→9 tabs), preserving the restored original stack and every other tab. Trusted mousedown/up/click button1 targeted the actual tab label and group label. This is Debian13/Xvfb124/Openbox synthetic input, not original Fedora desktop or physical input. Existing selected/nonselected member tests were not repeated.
+
+Read latest Jira including10287, original2704 (no comments) and merged2763 with2 comments before testing. Original explicitly describes whole-stack middleclick closing all members; observations match. No new defect or speculative fix;2763 remains canonical. Original Fedora/physical conditions remain unfulfilled.
+
+Product is standard complete package source d6bd2fc457774f55ab1f36a2b01c941f908f1ab0, containing unrelated KAN97 fix, not a middleclick candidate. Live native Gecko159.0.1/app+platform build20261103153232. Stack enabled through actual about:hub#/features/design switch with W3C input, followed by normal shutdown and restart. Controlled tabs/native groups constructed using gBrowser.addTab/addTabGroup are an explicit fixture; close handlers/events were not replaced. UI switch and stack paint saved. Sandbox6/focusmanager.testmodefalse; signaturefalse is unchanged package default without user override.
+
+30061 stopped before cases due incorrect QA settings route.30062 corrected route and completed ordinary middleclick, then chip move --sync timed out at its already-current pointer position before middlebutton was sent. Authorized chip-only30063 used non-sync movement, actual pointer912,73 readback, DOM hit verification and OS button2. These QA failures remain preserved and are not product failures.
+
+Raw records preserve initial diagnostic mistakes: native tab id attributes were empty, invalidating initial ID-based ordinary summary; reused profile restored duplicate fixture URLs, invalidating URL-set-only chip summary. Raw records were not rewritten. ordinary-derived.json uses unique controlled URL before/after. chip-derived.json uses actual URL+native-group multisets, proving exact3 removed and all other tabs preserved. Before/after paint and actual event path identify the clicked stack.
+
+Every launched product/DBus wrapper exited normally0; full product manifests remained identical. No source/assets/protection changes, new PR, merge/release/Done. Displays removed. Ended owned profiles removed only after exact /proc argv reference check, receipt saved; products/builds/foreign output untouched.
+
+Evidence: matrix.json, summary.json, ordinary-derived.json, chip-derived.json and run-30062/run-30063 raw interactions/screenshots/runner results. Reproduction: `python run.py 30062` for UI setup and controls. Chip-only continuation uses `QA40_CHIP_ONLY=1 QA40_REUSE_PROFILE=<own UI-configured profile> python run.py 30063`. Display124 must be unused. Parent handles Jira/QA publication.

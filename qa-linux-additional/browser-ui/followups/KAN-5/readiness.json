@@ -1,0 +1,29 @@
+{
+  "key": "KAN-5",
+  "state": "completed-limited-linux-OS-drop-passed",
+  "browserExecuted": true,
+  "displayStarted": true,
+  "rootStartGateReceived": true,
+  "syntaxCheck": "python -m py_compile passed",
+  "gateCheck": "run without flag exits2 before any GUI launch",
+  "productMutation": false,
+  "sourceBranchChanges": false,
+  "jiraWrites": false,
+  "newPr": null,
+  "canonicalPr": 2763,
+  "canonicalPrHead": "b98749d110d5dd4e8cd87120c284394a047a0799",
+  "testInput": "OS XTest synthetic actual drag, not physical input",
+  "case": "individual second-row stack proxy -> already existing window",
+  "uiSetup": "normal Hub setting + restart + native context menu group creation; no adoption/group/detach API",
+  "positiveControl": "ordinary native tab same existing-window OS drop",
+  "windowModel": "two actual EWMH normal windows on isolated Openbox; not original compositor",
+  "remainingOriginalConditions": [
+    "Fedora44 full desktop/original Flatpak",
+    "physical drag"
+  ],
+  "denominatorChange": false,
+  "runtimeOutcome": "30055 ordinary/proxy2/2; first4 fixture stops preserved",
+  "defaultPort": 30051,
+  "defaultDisplay": ":123",
+  "cleanedUp": true
+}

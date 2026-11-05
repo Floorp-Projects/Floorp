@@ -1,0 +1,8 @@
+{
+  "display": ":123",
+  "socketAbsentBeforeStart": true,
+  "xvfbPid": 103101,
+  "openboxPid": 103104,
+  "product": "/workspace/kan97-runtime/full-package/floorp/floorp",
+  "profile": "/workspace/qa-linux-additional/browser-ui/followups/KAN-5/runtime/30051"
+}

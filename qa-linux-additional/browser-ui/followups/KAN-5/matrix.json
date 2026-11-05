@@ -1,0 +1,45 @@
+[
+  {
+    "key": "KAN-5",
+    "github": "https://github.com/Floorp-Projects/Floorp/issues/2710",
+    "sourceSha": "d6bd2fc457774f55ab1f36a2b01c941f908f1ab0",
+    "sourceShaMeaning": "exact tested package source; unrelated KAN97 change, not a stack candidate",
+    "productVersion": {
+      "name": "Floorp",
+      "version": "159.0.1",
+      "build": "20261103153232",
+      "gre": "/workspace/kan97-runtime/full-package/floorp",
+      "signatureRequired": false,
+      "signatureUser": false,
+      "sandbox": 6,
+      "focusTestMode": false,
+      "stacksEnabled": true
+    },
+    "environment": "Debian13.6 X11 Xvfb123/Openbox, normal two-window EWMH, OS XTest synthetic",
+    "testCommand": "QA_KAN5_START_FOLLOWUP=1 QA_PRODUCT=/workspace/kan97-runtime/full-package/floorp/floorp PYTHONPATH=/workspace/qa-linux-22/browser-ui/python python3 run.py 30055",
+    "result": "limited Linux actual UI-created stack existing-window OS proxy drop passed with ordinary control;2/2",
+    "remainingConditions": [
+      "original Fedora44 full desktop/original Flatpak",
+      "physical mouse drag",
+      "original release/configuration or other compositor/package combinations"
+    ],
+    "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2763",
+    "newPr": null,
+    "jiraCommentId": null,
+    "evidence": [
+      "summary.json",
+      "drop-30055.json",
+      "normal-quit-30055.json",
+      "final-quit-30055.json",
+      "payload-before-30055.json",
+      "payload-after-30055.json",
+      "payload-comparison-30055.json",
+      "cleanup-receipt.json",
+      "native-keybinding.json",
+      "root-independent-checks.json",
+      "screenshots/30055-individual-stack-proxy-existing-window.png"
+    ],
+    "denominatorChange": false,
+    "sourceBase": "29a3eb23145da90706d8a94441373278521cc737"
+  }
+]

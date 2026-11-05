@@ -14,7 +14,7 @@
     ],
     "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2678",
     "newPr": "https://github.com/Floorp-Projects/Floorp/pull/3047",
-    "jiraCommentId": "10414",
+    "jiraCommentId": "10438",
     "evidence": [
       "report.md",
       "summary.json",
@@ -47,7 +47,8 @@
       "full-product/runs/full-29983/guards.json",
       "full-product/runs/full-29983/runner-result.json",
       "full-product/runs/full-29985/guards.json",
-      "full-product/runs/full-29985/runner-result.json"
+      "full-product/runs/full-29985/runner-result.json",
+      "jira-package-10438.md"
     ],
     "evidenceBase": "KAN-97",
     "sourceBase": "29a3eb23145da90706d8a94441373278521cc737",
@@ -67,7 +68,8 @@
     },
     "jiraCommentIds": [
       "10412",
-      "10414"
+      "10414",
+      "10438"
     ],
     "package": {
       "run": 42103462848,

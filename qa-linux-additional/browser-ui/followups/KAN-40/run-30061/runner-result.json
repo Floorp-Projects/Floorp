@@ -1,0 +1,20 @@
+{
+  "sourceSha": "d6bd2fc457774f55ab1f36a2b01c941f908f1ab0",
+  "candidateKind": "complete unmodified production package with unrelated KAN97 focused-scroll fix; not a middleclick candidate",
+  "profile": "/workspace/kan40-runtime/30061/profile",
+  "phases": [
+    {
+      "stage": "setup",
+      "dbusPid": 105189,
+      "probeExit": 1,
+      "productDbusExit": 0,
+      "normalExit": true
+    }
+  ],
+  "ownedDisplayPid": 105183,
+  "ownedWmPid": 105186,
+  "error": "AssertionError({'stage': 'setup', 'dbusPid': 105189, 'probeExit': 1, 'productDbusExit': 0, 'normalExit': True})",
+  "traceback": "Traceback (most recent call last):\n  File \"/workspace/qa-linux-additional/browser-ui/followups/KAN-40/run.py\", line 24, in <module>\n    row['productDbusExit']=browser.wait(timeout=25);row['normalExit']=row['productDbusExit']==0;assert row['normalExit'] and test.returncode==0,row\n                                                                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: {'stage': 'setup', 'dbusPid': 105189, 'probeExit': 1, 'productDbusExit': 0, 'normalExit': True}\n",
+  "productUnmodified": true,
+  "displayRemoved": true
+}

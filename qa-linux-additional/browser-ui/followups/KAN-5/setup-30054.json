@@ -1,0 +1,29 @@
+{
+  "key": "KAN-5",
+  "canonicalPr": 2763,
+  "phase": "enable",
+  "fixture": "actual settings/group UI; data-URL pages; native window rectangles; OS XTest pointer/drag (synthetic, not physical)",
+  "apiAdoptionUsed": false,
+  "observations": [],
+  "product": {
+    "name": "Floorp",
+    "version": "159.0.1",
+    "build": "20261103153232",
+    "gre": "/workspace/kan97-runtime/full-package/floorp",
+    "signatureRequired": false,
+    "signatureUser": false,
+    "sandbox": 6,
+    "focusTestMode": false,
+    "stacksEnabled": false
+  },
+  "enableUi": {
+    "x": 366.45833587646484,
+    "y": 414.3666687011719,
+    "width": 124.91667175292969,
+    "height": 19,
+    "checked": false,
+    "text": "Enable tab stacks"
+  },
+  "normalRestartRequired": true,
+  "normalQuitRequested": true
+}

@@ -1,0 +1,23 @@
+{
+  "jira": "KAN-40",
+  "readCommentIds": [
+    "10048",
+    "10136",
+    "10263",
+    "10287"
+  ],
+  "github": 2704,
+  "originalVersion": "12.17.1@154.0.2",
+  "originalOS": "Fedora44",
+  "originalOrdinaryAndWholeStackExpectation": "Middleclick normal tab closes one; whole stack closes all members; individual stack member failure was original defect",
+  "githubIssueComments": 0,
+  "existingPr": 2763,
+  "existingPrState": "merged, no duplicate PR",
+  "prCommentsReviewed": [
+    5740510586,
+    5740510832
+  ],
+  "existingQA": "/workspace/floorp-qa-evidence/qa-linux-22/browser-ui/KAN-40/report.md",
+  "priorCasesNotRepeated": "selected/nonselected member W3C middleclick",
+  "originalPackage": "unspecified in original2704; Flatpak must not be inferred from other issues"
+}

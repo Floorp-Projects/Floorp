@@ -1,0 +1,29 @@
+[
+  {
+    "port": 29983,
+    "profile": "/workspace/kan97-runtime/full-product/full-29983/profile",
+    "activeReferences": [],
+    "removedBytes": 31390075,
+    "normalProductExit": null,
+    "productUnmodified": true,
+    "scope": "ended own profile only; all evidence/products retained"
+  },
+  {
+    "port": 29984,
+    "profile": "/workspace/kan97-runtime/full-product/full-29984/profile",
+    "activeReferences": [],
+    "removedBytes": 30417421,
+    "normalProductExit": true,
+    "productUnmodified": true,
+    "scope": "ended own profile only; all evidence/products retained"
+  },
+  {
+    "port": 29985,
+    "profile": "/workspace/kan97-runtime/full-product/full-29985/profile",
+    "activeReferences": [],
+    "removedBytes": 31084156,
+    "normalProductExit": true,
+    "productUnmodified": true,
+    "scope": "ended own profile only; all evidence/products retained"
+  }
+]
