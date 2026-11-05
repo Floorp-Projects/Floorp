@@ -544,6 +544,18 @@ async function initializeExperiments() {
 
 (async () => {
   registerSsbCommandLineHandler();
+  // macOS Web App ownership has a separate native lifecycle; do not replay
+  // those windows until restart has been validated with the native shim.
+  if (isMainBrowser && ["WINNT", "Linux"].includes(Services.appinfo.OS)) {
+    try {
+      const { SsbRestart } = ChromeUtils.importESModule(
+        "resource://noraneko/modules/pwa/SsbRestart.sys.mjs",
+      );
+      SsbRestart.init();
+    } catch (error) {
+      console.error("[NoranekoStartup] PWA restart setup failed:", error);
+    }
+  }
   await registerCustomAboutPages();
   initializeVersionInfo();
   await initializeExperiments();
