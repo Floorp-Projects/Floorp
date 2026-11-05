@@ -1,0 +1,5 @@
+{
+  "id": "normal-hit",
+  "script": "let e=document.querySelector('svg#sea');e.dispatchEvent(new MouseEvent('mousemove',{bubbles:true,clientX:100,clientY:248}));e.dispatchEvent(new MouseEvent('click',{bubbles:true,clientX:100,clientY:248}));return {url:location.href,svg:!!e};\n",
+  "context": "content"
+}

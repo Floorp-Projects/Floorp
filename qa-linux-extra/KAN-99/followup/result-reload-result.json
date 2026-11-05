@@ -1,0 +1,16 @@
+[
+  {
+    "url": "http://127.0.0.1:18899/normal",
+    "normal": "none",
+    "panel": "none",
+    "control": "block",
+    "translation": "The beautiful garden is full of flowers. The children are playing outside in the sunshine."
+  },
+  {
+    "url": "http://127.0.0.1:18899/panel",
+    "normal": "none",
+    "panel": "none",
+    "control": "block",
+    "translation": "The beautiful garden is full of flowers. The children are playing outside in the sunshine."
+  }
+]

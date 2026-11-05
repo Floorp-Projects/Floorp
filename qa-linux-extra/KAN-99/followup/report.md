@@ -1,0 +1,29 @@
+# KAN-99 follow-up: completed signed-extension workflows
+
+**Local fixture: PASS uBO picker selection/save/reload/restart persistence in both tab and panel; PASS real TWP translation in both.** These results do not resolve the original live YouTube sponsored-ad case. No product defect requiring a fix was established, so no speculative code change or duplicate PR2699 was created. YouTube retries:0. Jira/push/publication delegated to parent, none performed here.
+
+## Provenance and isolation
+
+Read latest Jira comments10146/10168/10364 (the parent prior actual-extension report), prior local report/verification, original GitHub2514/comment5345635551 and latest public comments (connector503 fell back to public API). Original site-specific cosmetic symptom and added picker/TWP claims remain separate. Code inspection worktree /workspace/Floorp-KAN99 branchqa/kan99-followup at29a3eb23145da90706d8a94441373278521cc737, with no code edits. Executed published12.21.1 product from release source984509d2053be7bae9027133bda7259cd706b208; actual Gecko159.0.1/build20261103153232. Independent copy of owned prior QA profile, fresh HOME/runtime, Xvfb211/Marionette28899/HTTP18899. Previous evidence/profile untouched.
+
+Debian13/X11 software display and synthetic automation are not original Ubuntu24.04.4 or physical input. Sandbox6, xpinstall.signatures.required=true, TLS validation retained. Official unmodified AMO uBO1.75.4 and TWP10.2.1.0 both measured signedState2/active true/appDisabled false; final metadata and acquisition hash evidence saved. No profile/XPI/cookies/credentials included in export.
+
+## uBO actual picker selection and persistence
+
+Opened genuine signed uBO popup targeted with actual ExtensionParent tab IDs, clicked real picker. The overlay SVG received synthetic coordinate click/move events; the extension itself hit-tested the underlying fixture target and generated ###picker-normal (normal tab) and ###picker-panel (panel). We did **not** type these filters through a filter API or directly hide fixture elements. Captured actual candidate text, enabled Create button, and real Create activation. The normal Create destroys its iframe, causing a subsequent observation command to report discarded context; the save is independently verified in actual My filters UI and subsequent page states, so this is a harness lifecycle error, not product failure.
+
+My filters contains domain-qualified127.0.0.1###picker-normal and127.0.0.1###picker-panel. Both pages hide both selectors with display:none while control remains block. Reload comparison confirms both. Services.startup.quit(eAttemptQuit) normal shutdown/wait completed (runner exit0), same copied profile restarted, and both pages again show both hidden/control block. This closes the earlier picker launch-only gap. Existing prior network-image filter was scoped to18799; this follow-up18899 deliberately displays its red image and makes no new network-image-blocking claim.
+
+## TWP actual translation
+
+Official signed TWP10.2.1.0 acquired from AMO with verified API SHA256 (twp-acquisition.json). Real normal-tab page-action popup (old-popup.html) shows Translate page into English, then its own controls choose Spanish and its real Translate button is clicked. Extension-produced result: “El hermoso jardín está lleno de flores. Los niños juegan afuera bajo el sol.” Network observer records translate.googleapis.com client200 and translate-pa.googleapis.com /v1/translateHtml200. Fixture original is English and no test code writes the Spanish result.
+
+Panel real native context menu opened via synthetic X11 right click. Its TWP item has correct context browser /panel and a real panel gBrowser tab. Item activation runs the extension command. Initially panel stayed English: the panel document had initialized TWP currentTargetLanguage=en before normal popup changed it to es. Official signed XPI source has currentTargetLanguage=twpConfig.get(targetLanguage) at document initialization, and translatePage only replaces it when an explicit argument is supplied; context menu toggle passes no target. After reloading panel to initialize with the chosen es target, same actual menu command translates panel to the identical Spanish text. The final screenshot shows both translated simultaneously. Some requests reuse TWP translation cache; actual external200 responses are recorded for the normal operation, not fabricated as panel-specific network calls.
+
+The menu label remained Show original (global extension UI state) during the initial untransformed panel observation; this alone is not a Floorp diagnosis. Per-document target-language initialization explains the observed no-visible-change control without a service refusal. No repeated blocked service trials, authentication, network bypass or YouTube retry occurred.
+
+## Harness limits and cleanup
+
+Native menu access and picker are real extension UI with synthetic input; not physical input. TWP normal page-action and panel context-menu entry routes differ and are explicitly recorded. A frame-script windowUtils call failed (no sendMouseEvent function), causing observation timeout; reattached Marionette to same browser and used installed native X11 input. These harness errors are retained separately and never counted as product failures. Final browser quit normally through reattached observer; its exit0 is separate from obsolete timed-out runner cleanup InvalidSessionId exit1. No remaining owned processes, cleanup.json.
+
+Export network evidence includes only endpoint host/path/status and fixture text. Headers, bodies, query parameters and keys/tokens excluded; public translation-client bundle path normalized. Original live YouTube sponsored-ad and exact original platform/extension-list conditions remain. No new Jira comment ID assigned by this subtask.

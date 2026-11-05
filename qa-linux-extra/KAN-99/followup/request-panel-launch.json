@@ -1,0 +1,6 @@
+{
+  "id": "panel-launch",
+  "script": "let e=document.querySelector('#gotoPick');let r={url:location.href,classes:e.className};e.click();return r;\n",
+  "uri": "popup-fenix",
+  "context": "content"
+}

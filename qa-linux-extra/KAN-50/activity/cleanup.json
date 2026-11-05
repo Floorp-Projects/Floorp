@@ -1,0 +1,40 @@
+{
+  "ownedProductProcesses": [
+    {
+      "trial": "baseline",
+      "pid": 55265,
+      "stateAfterCleanup": "absent"
+    },
+    {
+      "trial": "baseline-managed",
+      "pid": 57146,
+      "stateAfterCleanup": "absent"
+    },
+    {
+      "trial": "candidate-managed",
+      "pid": 57326,
+      "stateAfterCleanup": "absent"
+    },
+    {
+      "trial": "baseline-managed-v2",
+      "pid": 58183,
+      "stateAfterCleanup": "absent"
+    },
+    {
+      "trial": "candidate-managed-v2",
+      "pid": 58342,
+      "stateAfterCleanup": "absent"
+    },
+    {
+      "trial": "candidate-panel-first",
+      "pid": 59371,
+      "stateAfterCleanup": "absent"
+    },
+    {
+      "trial": "native-baseline",
+      "pid": 59603,
+      "stateAfterCleanup": "absent"
+    }
+  ],
+  "remainingOwnedRunningProducts": []
+}

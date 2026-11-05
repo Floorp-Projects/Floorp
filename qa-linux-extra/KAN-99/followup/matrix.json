@@ -1,0 +1,54 @@
+[
+  {
+    "key": "KAN-99",
+    "github": "https://github.com/Floorp-Projects/Floorp/issues/2514",
+    "sourceSha": "984509d2053be7bae9027133bda7259cd706b208",
+    "sourceInspectionSha": "29a3eb23145da90706d8a94441373278521cc737",
+    "productVersion": "Floorp12.21.1/Gecko159.0.1",
+    "runtimeBuildId": "20261103153232",
+    "environment": "Debian13 XvfbX11 display211 isolated copied QA profile; synthetic inputs; protected sandbox6/signaturesRequiredtrue/TLS validation",
+    "testCommand": "session.py/ctl.py and attach.py/ctl2.py; request-*.json reproduce each real UI action; reproduction.md",
+    "result": "PASS local signed uBO picker selection/create/save/reload/normal restart persistence in tab and panel; PASS actual signed TWP English-to-Spanish translation in tab and panel",
+    "remainingConditions": [
+      "Original live YouTube sponsored cosmetic ads (known proxy403; not retried)",
+      "Original Ubuntu24.04.4, old addon/filter-list versions not matched",
+      "Physical-input path not exercised; tab/page-action vs panel/context-menu routes recorded"
+    ],
+    "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2699 merged; no duplicate",
+    "newPr": null,
+    "jiraCommentId": null,
+    "latestJiraCommentsRead": [
+      "10146",
+      "10168",
+      "10364"
+    ],
+    "evidence": [
+      "result-normal-candidate.json",
+      "result-normal-after-save.json",
+      "result-panel-candidate.json",
+      "result-panel-save.json",
+      "result-saved-filter-list.json",
+      "result-reload-result.json",
+      "result-restart-result.json",
+      "result-twp-normal-result.json",
+      "result-twp-panel-refreshed-result.json",
+      "twp-panel-refreshed.png",
+      "result-final-metadata.json",
+      "cleanup.json"
+    ],
+    "extensions": [
+      {
+        "id": "uBlock0@raymondhill.net",
+        "version": "1.75.4",
+        "signedState": 2
+      },
+      {
+        "id": "{036a55b4-5e72-4d05-a06c-cba2dfcc134a}",
+        "version": "10.2.1.0",
+        "signedState": 2,
+        "sha256": "67f4b90279426590ccf88f85aef14509948b4e661682d938a93c0bcce94c523b"
+      }
+    ],
+    "youTubeRetries": 0
+  }
+]

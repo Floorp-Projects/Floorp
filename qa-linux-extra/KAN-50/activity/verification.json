@@ -1,0 +1,20 @@
+{
+  "recordAuditPassed": true,
+  "baselineActualMediaChecksPassed": 3,
+  "baselineActualMediaChecksTotal": 10,
+  "candidateNormalFirstChecksPassed": 10,
+  "candidatePanelFirstChecksPassed": 11,
+  "nativeBrowserRegressionCases": 2,
+  "nativeBaselineFailedCases": 2,
+  "nativeCandidatePassedCases": 2,
+  "bothBaselineAndCandidateVttCaptionsAdvanced": true,
+  "captionFreezeReproduced": false,
+  "actualMinimizeVerified": true,
+  "candidatePatchCommit": "9d042bc17be83c15d2ff3a25eb712f04c4d3eb45",
+  "sourceTypecheckPassed": true,
+  "scopedLintPassed": true,
+  "formatCheckPassed": true,
+  "patchParityHostTestsPassed": 1,
+  "patchSourceAndArtifactValidationPassed": true,
+  "newNativeBuild": false
+}

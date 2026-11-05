@@ -1,0 +1,41 @@
+292:   let currentTargetLanguage = twpConfig.get("targetLanguage");
+293:   let currentPageTranslatorService = twpConfig.get("pageTranslatorService");
+294:   let customDictionary = sortDictionary(twpConfig.get("customDictionary"));
+
+834:   pageTranslator.translatePage = function (targetLanguage) {
+835:     fooCount++;
+836:     pageTranslator.restorePage();
+837:     showOriginal.enable();
+838:     chrome.runtime.sendMessage({
+839:       action: "removeTranslationsWithError"
+840:     }, checkedLastError);
+841:     if (targetLanguage) {
+842:       currentTargetLanguage = targetLanguage;
+843:     }
+
+931:       if (request.targetLanguage === "original") {
+932:         pageTranslator.restorePage();
+933:       } else {
+934:         pageTranslator.translatePage(request.targetLanguage);
+935:       }
+936:     } else if (request.action === "restorePage") {
+937:       pageTranslator.restorePage();
+938:     } else if (request.action === "getOriginalTabLanguage") {
+939:       pageTranslator.onGetOriginalTabLanguage(function () {
+940:         sendResponse(originalTabLanguage);
+941:       });
+942:       return true;
+943:     } else if (request.action === "getCurrentPageLanguage") {
+944:       sendResponse(currentPageLanguage);
+945:     } else if (request.action === "getCurrentPageLanguageState") {
+946:       sendResponse(pageLanguageState);
+947:     } else if (request.action === "getCurrentPageTranslatorService") {
+948:       sendResponse(currentPageTranslatorService);
+949:     } else if (request.action === "swapTranslationService") {
+950:       pageTranslator.swapTranslationService(request.newServiceName);
+951:     } else if (request.action === "toggle-translation") {
+952:       if (pageLanguageState === "translated") {
+953:         pageTranslator.restorePage();
+954:       } else {
+955:         pageTranslator.translatePage();
+956:       }

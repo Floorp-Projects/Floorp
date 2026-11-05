@@ -1,0 +1,11 @@
+{
+  "display": ":211",
+  "marionettePort": 28899,
+  "fixturePort": 18899,
+  "worktree": "/workspace/Floorp-KAN99",
+  "branch": "qa/kan99-followup",
+  "sourceInspectionSha": "29a3eb23145da90706d8a94441373278521cc737",
+  "profile": "independent copy of previous task-owned QA profile; no personal data",
+  "runtimeStatus": "status tool returned503 on resume; actual socket/product/network behavior measured independently",
+  "newPublication": false
+}

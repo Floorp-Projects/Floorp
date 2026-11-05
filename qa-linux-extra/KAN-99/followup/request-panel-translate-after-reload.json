@@ -1,0 +1,4 @@
+{
+  "id": "panel-translate-after-reload",
+  "script": "let m=window.__pw.document.getElementById('contentAreaContextMenu');let e=Array.from(m.children).find(e=>e.id.includes('036a55'));let r={id:e?.id,label:e?.label,contextBrowser:window.__pw.gContextMenu?.browser.currentURI.spec};e.doCommand();m.hidePopup();return r;\n"
+}

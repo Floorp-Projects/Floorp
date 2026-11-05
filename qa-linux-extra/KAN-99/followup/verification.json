@@ -1,0 +1,7 @@
+{
+  "passed": true,
+  "uBO": "actual generated filters/save/reload/restart assertions pass for both",
+  "TWP": "actual Spanish text matches across tab/panel, service200",
+  "protections": "sandbox6/signaturesRequiredtrue/both signedState2",
+  "cleanup": "no owned processes"
+}

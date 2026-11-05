@@ -1,0 +1,32 @@
+[
+  {
+    "path": "docshell/base/CanonicalBrowsingContext.cpp",
+    "file": "docshell_base_CanonicalBrowsingContext.cpp",
+    "url": "https://raw.githubusercontent.com/Floorp-Projects/Floorp-Runtime/8965ffc346d426ccdf919bd18585e4d4a0c21654/docshell/base/CanonicalBrowsingContext.cpp",
+    "sha256": "d41acdb2ee1c1eaaa9718d93f8b6cc7aff2f3d66c330137fe61c0fe5fda033df"
+  },
+  {
+    "path": "dom/chrome-webidl/BrowsingContext.webidl",
+    "file": "dom_chrome-webidl_BrowsingContext.webidl",
+    "url": "https://raw.githubusercontent.com/Floorp-Projects/Floorp-Runtime/8965ffc346d426ccdf919bd18585e4d4a0c21654/dom/chrome-webidl/BrowsingContext.webidl",
+    "sha256": "eb0e51f6c2de2e45ec6d3dd7b5e15099cad9e3f80ffafe2fe894d369cff5decb"
+  },
+  {
+    "path": "toolkit/components/pictureinpicture/PictureInPicture.sys.mjs",
+    "file": "toolkit_components_pictureinpicture_PictureInPicture.sys.mjs",
+    "url": "https://raw.githubusercontent.com/Floorp-Projects/Floorp-Runtime/8965ffc346d426ccdf919bd18585e4d4a0c21654/toolkit/components/pictureinpicture/PictureInPicture.sys.mjs",
+    "sha256": "642c18358f9d9534dc15086b31a2d2d549e8227b77c0b6d623f53634f65ecafc"
+  },
+  {
+    "path": "toolkit/actors/PictureInPictureChild.sys.mjs",
+    "file": "toolkit_actors_PictureInPictureChild.sys.mjs",
+    "url": "https://raw.githubusercontent.com/Floorp-Projects/Floorp-Runtime/8965ffc346d426ccdf919bd18585e4d4a0c21654/toolkit/actors/PictureInPictureChild.sys.mjs",
+    "sha256": "05e80be9863e74b27525394999b0d5c92cab4431f414eb72548824b8270524cd"
+  },
+  {
+    "path": "toolkit/components/pictureinpicture/content/player.js",
+    "file": "toolkit_components_pictureinpicture_content_player.js",
+    "url": "https://raw.githubusercontent.com/Floorp-Projects/Floorp-Runtime/8965ffc346d426ccdf919bd18585e4d4a0c21654/toolkit/components/pictureinpicture/content/player.js",
+    "sha256": "5e9d885031e37c1629096484361a93a3807e863d9d483b0d805cd7276fc2a8e2"
+  }
+]

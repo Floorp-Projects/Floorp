@@ -1,0 +1,31 @@
+296:   updateInterface();
+297:   function onTranslateClick() {
+298:     currentPageLanguageState = "translated";
+299:     chrome.tabs.query({
+300:       active: true,
+301:       currentWindow: true
+302:     }, tabs => {
+303:       if (twpConfig.get("targetLanguage") !== selectTargetLanguage.value) {
+304:         twpConfig.setTargetLanguage(selectTargetLanguage.value, true);
+305:       } else {
+306:         twpConfig.setTargetLanguage(selectTargetLanguage.value);
+307:       }
+308:       const langs = twpLang.getLanguageList();
+309:       lblTranslate.textContent = twpI18n.getMessage("lblTranslatePageInto", langs[twpConfig.get("targetLanguage")] || twpConfig.get("targetLanguage"));
+310:       lblTranslated.textContent = twpI18n.getMessage("lblPageTranslateInto", langs[twpConfig.get("targetLanguage")] || twpConfig.get("targetLanguage"));
+311:       if (twpConfig.get("enableIframePageTranslation") === "yes") {
+312:         chrome.tabs.sendMessage(tabs[0].id, {
+313:           action: "translatePage",
+314:           targetLanguage: selectTargetLanguage.value
+315:         }, checkedLastError);
+316:       } else {
+317:         chrome.tabs.sendMessage(tabs[0].id, {
+318:           action: "translatePage",
+319:           targetLanguage: selectTargetLanguage.value
+320:         }, {
+321:           frameId: 0
+322:         }, checkedLastError);
+323:       }
+324:     });
+325:     showSelectTargetLanguage = false;
+326:     updateInterface();

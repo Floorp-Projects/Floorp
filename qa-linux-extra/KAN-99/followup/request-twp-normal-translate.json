@@ -1,0 +1,5 @@
+{
+  "id": "twp-normal-translate",
+  "script": "let done=arguments[arguments.length-1],mm=window.__twpPopup.messageManager,n='QATWPTranslate'+Date.now(),timer=setTimeout(()=>done({error:'timeout'}),5000);let fn=m=>{clearTimeout(timer);mm.removeMessageListener(n,fn);done(m.data)};mm.addMessageListener(n,fn);mm.loadFrameScript('data:application/javascript,'+encodeURIComponent(`try{let d=content.document,o=d.querySelector('#btnOptions');o.value='changeLanguage';o.dispatchEvent(new content.Event('change',{bubbles:true}));let s=d.querySelector('#selectTargetLanguage');s.value='es';s.dispatchEvent(new content.Event('change',{bubbles:true}));let button=d.querySelector('#btnTranslate');let r={selected:s.value,button:button.innerText,display:content.getComputedStyle(s).display};button.click();sendAsyncMessage(${JSON.stringify(n)},r)}catch(e){sendAsyncMessage(${JSON.stringify(n)},{error:String(e)})}`),false);\n",
+  "async": true
+}

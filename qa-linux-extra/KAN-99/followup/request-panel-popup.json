@@ -1,0 +1,4 @@
+{
+  "id": "panel-popup",
+  "script": "let t=gBrowser.addTab(window.__uboBase+'popup-fenix.html?tabId='+window.__ptid+'&intab=1',{triggeringPrincipal:Services.scriptSecurityManager.getSystemPrincipal()});gBrowser.selectedTab=t;return true;\n"
+}

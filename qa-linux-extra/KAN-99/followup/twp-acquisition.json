@@ -1,0 +1,8 @@
+{
+  "api": "https://addons.mozilla.org/api/v5/addons/addon/traduzir-paginas-web/",
+  "version": "10.2.1.0",
+  "id": "{036a55b4-5e72-4d05-a06c-cba2dfcc134a}",
+  "url": "https://addons.mozilla.org/firefox/downloads/file/4962745/traduzir_paginas_web-10.2.1.0.xpi",
+  "hash": "sha256:67f4b90279426590ccf88f85aef14509948b4e661682d938a93c0bcce94c523b",
+  "actualSha256": "67f4b90279426590ccf88f85aef14509948b4e661682d938a93c0bcce94c523b"
+}

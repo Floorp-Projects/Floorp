@@ -1,0 +1,5 @@
+{
+  "id": "twp-popup-controls",
+  "script": "let done=arguments[arguments.length-1],b=Array.from(document.querySelectorAll('browser')).find(e=>e.currentURI?.spec.includes('/popup/old-popup.html'));window.__twpPopup=b;let mm=b.messageManager,n='QATWP'+Date.now(),timer=setTimeout(()=>done({error:'popup-observation-timeout'}),5000);let fn=m=>{clearTimeout(timer);mm.removeMessageListener(n,fn);done(m.data)};mm.addMessageListener(n,fn);mm.loadFrameScript('data:application/javascript,'+encodeURIComponent(`try{let d=content.document;sendAsyncMessage(${JSON.stringify(n)},{url:d.URL,selects:Array.from(d.querySelectorAll('select')).map(e=>({id:e.id,value:e.value,display:content.getComputedStyle(e).display,options:Array.from(e.options).slice(0,6).map(o=>({text:o.textContent,value:o.value}))})),text:d.body.innerText.slice(0,900)})}catch(e){sendAsyncMessage(${JSON.stringify(n)},{error:String(e)})}`),false);\n",
+  "async": true
+}

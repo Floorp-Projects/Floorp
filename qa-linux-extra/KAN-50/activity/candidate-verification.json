@@ -1,0 +1,17 @@
+{
+  "diagnosticCopy": true,
+  "fullProductionBuild": false,
+  "executableReleaseSource": "984509d2053be7bae9027133bda7259cd706b208",
+  "patchBaseSource": "29a3eb23145da90706d8a94441373278521cc737",
+  "lockedRuntimeSource": "8965ffc346d426ccdf919bd18585e4d4a0c21654",
+  "changedProductFiles": [
+    "omni.ja"
+  ],
+  "changedArchiveMembers": [
+    "moz-src/toolkit/components/pictureinpicture/PictureInPicture.sys.mjs"
+  ],
+  "nativeFilesUnchanged": {
+    "floorp": "4f05c1330b38e50040440be6a3b6e0e7a5b52bc79edb5c5478d978c81f5a603d",
+    "libxul.so": "760ff8a689f52c9b1f3c89a45ea8813e59f187990caed747e4a7680020c8dbc7"
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "lockedRuntimeSha": "8965ffc346d426ccdf919bd18585e4d4a0c21654",
+  "sourceAndCandidateResourceIdentical": true,
+  "patchedSourceSha256": "6d44e3319e1dbc555ffecb85157c1703eff470f08a021f1443cfbd4244b69fae",
+  "commands": [
+    {
+      "command": [
+        "git",
+        "apply",
+        "--check",
+        "/workspace/Floorp-pip-activity/.github/patches/floorp-runtime/common/picture-in-picture-app-window.patch"
+      ],
+      "returnCode": 0,
+      "stderr": ""
+    },
+    {
+      "command": [
+        "git",
+        "apply",
+        "/workspace/Floorp-pip-activity/.github/patches/floorp-runtime/common/picture-in-picture-app-window.patch"
+      ],
+      "returnCode": 0,
+      "stderr": ""
+    },
+    {
+      "command": [
+        "git",
+        "apply",
+        "--reverse",
+        "--check",
+        "/workspace/Floorp-pip-activity/.github/patches/floorp-runtime/common/picture-in-picture-app-window.patch"
+      ],
+      "returnCode": 0,
+      "stderr": ""
+    }
+  ]
+}

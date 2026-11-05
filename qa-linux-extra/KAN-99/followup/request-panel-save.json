@@ -1,0 +1,5 @@
+{
+  "id": "panel-save",
+  "script": "let done=arguments[arguments.length-1],mm=window.__pb.messageManager,n='QASave'+Date.now();let fn=m=>{mm.removeMessageListener(n,fn);done(m.data)};mm.addMessageListener(n,fn);mm.loadFrameScript('data:application/javascript,'+encodeURIComponent(`let fd=content.document.querySelector('iframe').contentDocument;let e=fd.querySelector('#create');let r={disabled:e.disabled,text:fd.body.innerText};e.click();sendAsyncMessage(${JSON.stringify(n)},r);`),false);\n",
+  "async": true
+}

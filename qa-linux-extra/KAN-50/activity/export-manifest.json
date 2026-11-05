@@ -1,0 +1,82 @@
+[
+  {
+    "path": "report.md",
+    "bytes": 7139,
+    "sha256": "fc3a0dee436ebd703ccdf4e9a521b8d4357cdc2e3c0e2840ccadb3ff15f988c7"
+  },
+  {
+    "path": "verification.json",
+    "bytes": 698,
+    "sha256": "091785d6c34f2d15cbcc77c1eb364e2919472709d79a3f9e0f0aea4fc95ae809"
+  },
+  {
+    "path": "verify-results.py",
+    "bytes": 2538,
+    "sha256": "f3afd7ea4c6f227f4ec48e5aaef62102096b1e4afda085f03dc2509d4e8da2a0"
+  },
+  {
+    "path": "activity-regression.py",
+    "bytes": 15967,
+    "sha256": "e88b2567734cbb63490a1292a461a1ad0c3ae273278902fe542932e518345eae"
+  },
+  {
+    "path": "native-regression.py",
+    "bytes": 12900,
+    "sha256": "ded9eaf710e2f640f9c54b4e8184cd10275d05b7ba18c6a023ff4d1436f870a8"
+  },
+  {
+    "path": "native-test.js",
+    "bytes": 5012,
+    "sha256": "8f9e6e92a3f44a2b889b7a1b6164883113e0b8abca3f4eac431b86291ea7e2a0"
+  },
+  {
+    "path": "candidate-verification.json",
+    "bytes": 622,
+    "sha256": "a287597675225bb86e70ad55751185b2c3d3485eed4070d04c2fdf9cbb6c085b"
+  },
+  {
+    "path": "patch-validation.json",
+    "bytes": 978,
+    "sha256": "af9e36d9e52f1b61aa5b69d3644adcb466a7a43b3fbdecf5b3276254103fc0c8"
+  },
+  {
+    "path": "cleanup.json",
+    "bytes": 807,
+    "sha256": "ab41e4cac7026a8262e4ee00ffd9da8fd23eba538a8b4506344229b2b758a616"
+  },
+  {
+    "path": "source-excerpts.json",
+    "bytes": 3725,
+    "sha256": "f816a698aa07fb52ee39eba057de6da47ed426594dbbc566baf5bdedd44bb2fc"
+  },
+  {
+    "path": "source/manifest.json",
+    "bytes": 1935,
+    "sha256": "fc157e6b79372aee80a498bc16bc81706d7123671e6c90501c978aa3120096c3"
+  },
+  {
+    "path": "baseline-managed-v2/result.json",
+    "bytes": 8578,
+    "sha256": "ea7477bf84b6d059d5827c19ff668e2cc0b330afe6a050e828ac99f2b3da9cc8"
+  },
+  {
+    "path": "candidate-managed-v2/result.json",
+    "bytes": 8249,
+    "sha256": "9320abbb99c26136243c8412567eafeeb49a8dba5948c3630457672877017cf5"
+  },
+  {
+    "path": "candidate-panel-first/result.json",
+    "bytes": 8400,
+    "sha256": "d22dfa6d97c9884cd8f1ba44872d72e22ee9843a3a512f22ae1e0cf3f26ed90f"
+  },
+  {
+    "path": "native-baseline/result.json",
+    "bytes": 3317,
+    "sha256": "7e7c94409bad4bed4045db85db89b2c7d45270398972179a8eb0197fe48b5667"
+  },
+  {
+    "path": "candidate-managed-v2/minimized-panel-captions.png",
+    "bytes": 56556,
+    "sha256": "2f473eb7a802b184ed9d86fcf9fae25952bbdba0701ceabdeda26c9eeae3dbd9"
+  }
+]

@@ -1,0 +1,6 @@
+{
+  "id": "normal-save",
+  "script": "return {clicked:true};\n",
+  "context": "content",
+  "click": "#create"
+}

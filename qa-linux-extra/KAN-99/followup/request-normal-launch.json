@@ -1,0 +1,7 @@
+{
+  "id": "normal-launch",
+  "script": "return {url:location.href};\n",
+  "uri": "popup-fenix",
+  "context": "content",
+  "click": "#gotoPick"
+}

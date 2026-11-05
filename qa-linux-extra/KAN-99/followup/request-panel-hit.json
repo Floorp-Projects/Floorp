@@ -1,0 +1,5 @@
+{
+  "id": "panel-hit",
+  "script": "let done=arguments[arguments.length-1],mm=window.__pb.messageManager,n='QAHit'+Date.now();let fn=m=>{mm.removeMessageListener(n,fn);done(m.data)};mm.addMessageListener(n,fn);mm.loadFrameScript('data:application/javascript,'+encodeURIComponent(`try{let d=content.document,f=d.querySelector('iframe'),fd=f.contentDocument,r=d.querySelector('#picker-panel').getBoundingClientRect(),e=fd.querySelector('svg#sea');for(let type of ['mousemove','click'])e.dispatchEvent(new f.contentWindow.MouseEvent(type,{bubbles:true,clientX:r.x+20,clientY:r.y+r.height/2}));sendAsyncMessage(${JSON.stringify(n)},{clicked:{x:r.x+20,y:r.y+r.height/2},frame:fd.URL});}catch(e){sendAsyncMessage(${JSON.stringify(n)},{error:String(e)})}`),false);\n",
+  "async": true
+}

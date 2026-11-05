@@ -1,0 +1,4 @@
+{
+  "id": "panel-language-refresh",
+  "script": "window.__pb.reload();return {reason:'TWP currentTargetLanguage is initialized per document; target changed en-to-es after panel document startup'};\n"
+}

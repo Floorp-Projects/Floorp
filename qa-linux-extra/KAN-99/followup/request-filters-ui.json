@@ -1,0 +1,4 @@
+{
+  "id": "filters-ui",
+  "script": "let t=gBrowser.addTab(window.__uboBase+'1p-filters.html',{triggeringPrincipal:Services.scriptSecurityManager.getSystemPrincipal()});gBrowser.selectedTab=t;return true;\n"
+}

@@ -1,0 +1,5 @@
+{
+  "id": "panel-candidate",
+  "script": "let done=arguments[arguments.length-1],mm=window.__pb.messageManager,n='QACandidate'+Date.now();let fn=m=>{mm.removeMessageListener(n,fn);done(m.data)};mm.addMessageListener(n,fn);mm.loadFrameScript('data:application/javascript,'+encodeURIComponent(`let fd=content.document.querySelector('iframe').contentDocument;sendAsyncMessage(${JSON.stringify(n)},{text:fd.body.innerText,createDisabled:fd.querySelector('#create').disabled});`),false);\n",
+  "async": true
+}

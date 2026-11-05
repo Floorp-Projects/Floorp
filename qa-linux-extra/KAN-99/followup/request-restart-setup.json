@@ -1,0 +1,4 @@
+{
+  "id": "restart-setup",
+  "script": "window.__nb=gBrowser.selectedBrowser;window.__nt=gBrowser.selectedTab;gBrowser.selectedBrowser.loadURI(Services.io.newURI('http://127.0.0.1:18899/normal-restart'),{triggeringPrincipal:Services.scriptSecurityManager.getSystemPrincipal()});document.querySelector('[data-panel-id=\"qa-ubo\"]').click();window.__pw=document.getElementById('sidebar-panel-qa-ubo')?.browsingContext.associatedWindow;return {panel:!!window.__pw};\n"
+}

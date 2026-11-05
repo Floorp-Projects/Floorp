@@ -1,0 +1,5 @@
+{
+  "id": "normal-candidate",
+  "script": "return {text:document.body.innerText,filter:document.querySelector('.CodeMirror').wrappedJSObject.CodeMirror.getValue(),createDisabled:document.querySelector('#create').disabled};\n",
+  "context": "content"
+}

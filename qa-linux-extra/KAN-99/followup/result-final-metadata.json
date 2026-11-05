@@ -1,0 +1,91 @@
+{
+  "product": {
+    "version": "159.0.1",
+    "buildID": "20261103153232"
+  },
+  "protections": {
+    "contentSandbox": 6,
+    "signatureRequired": true
+  },
+  "extensions": [
+    {
+      "id": "uBlock0@raymondhill.net",
+      "version": "1.75.4",
+      "signedState": 2,
+      "active": true,
+      "appDisabled": false
+    },
+    {
+      "id": "{036a55b4-5e72-4d05-a06c-cba2dfcc134a}",
+      "version": "10.2.1.0",
+      "signedState": 2,
+      "active": true,
+      "appDisabled": false
+    }
+  ],
+  "normalTab": 2,
+  "panelTab": 7,
+  "panelNativeTab": "true",
+  "network": [
+    {
+      "topic": "http-on-modify-request",
+      "origin": "https://translate.googleapis.com",
+      "path": "/public-translation-client.js",
+      "status": null
+    },
+    {
+      "topic": "http-on-examine-response",
+      "origin": "https://translate.googleapis.com",
+      "path": "/public-translation-client.js",
+      "status": 200
+    },
+    {
+      "topic": "http-on-modify-request",
+      "origin": "https://translate-pa.googleapis.com",
+      "path": "/v1/translateHtml",
+      "status": null
+    },
+    {
+      "topic": "http-on-modify-request",
+      "origin": "https://translate-pa.googleapis.com",
+      "path": "/v1/translateHtml",
+      "status": null
+    },
+    {
+      "topic": "http-on-examine-response",
+      "origin": "https://translate-pa.googleapis.com",
+      "path": "/v1/translateHtml",
+      "status": 200
+    },
+    {
+      "topic": "http-on-examine-response",
+      "origin": "https://translate-pa.googleapis.com",
+      "path": "/v1/translateHtml",
+      "status": 200
+    },
+    {
+      "topic": "http-on-modify-request",
+      "origin": "https://translate-pa.googleapis.com",
+      "path": "/v1/translateHtml",
+      "status": null
+    },
+    {
+      "topic": "http-on-modify-request",
+      "origin": "https://translate-pa.googleapis.com",
+      "path": "/v1/translateHtml",
+      "status": null
+    },
+    {
+      "topic": "http-on-examine-response",
+      "origin": "https://translate-pa.googleapis.com",
+      "path": "/v1/translateHtml",
+      "status": 200
+    },
+    {
+      "topic": "http-on-examine-response",
+      "origin": "https://translate-pa.googleapis.com",
+      "path": "/v1/translateHtml",
+      "status": 200
+    }
+  ]
+}

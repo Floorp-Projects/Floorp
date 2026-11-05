@@ -1,0 +1,4 @@
+{
+  "id": "reload-both",
+  "script": "window.__nb.reload();window.__pb.reload();return true;\n"
+}

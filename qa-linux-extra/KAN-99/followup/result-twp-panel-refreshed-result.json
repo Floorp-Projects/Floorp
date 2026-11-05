@@ -1,0 +1,68 @@
+{
+  "content": {
+    "url": "http://127.0.0.1:18899/panel",
+    "text": "El hermoso jard\u00edn est\u00e1 lleno de flores. Los ni\u00f1os juegan afuera bajo el sol."
+  },
+  "network": [
+    {
+      "topic": "http-on-examine-response",
+      "origin": "https://translate-pa.googleapis.com",
+      "path": "/v1/translateHtml",
+      "status": 200
+    },
+    {
+      "topic": "http-on-modify-request",
+      "origin": "https://translate-pa.googleapis.com",
+      "path": "/v1/translateHtml",
+      "status": null
+    },
+    {
+      "topic": "http-on-modify-request",
+      "origin": "https://translate-pa.googleapis.com",
+      "path": "/v1/translateHtml",
+      "status": null
+    },
+    {
+      "topic": "http-on-examine-response",
+      "origin": "https://translate-pa.googleapis.com",
+      "path": "/v1/translateHtml",
+      "status": 200
+    },
+    {
+      "topic": "http-on-examine-response",
+      "origin": "https://translate-pa.googleapis.com",
+      "path": "/v1/translateHtml",
+      "status": 200
+    },
+    {
+      "topic": "http-on-modify-request",
+      "origin": "http://127.0.0.1:18899",
+      "path": "/panel",
+      "status": null
+    },
+    {
+      "topic": "http-on-examine-response",
+      "origin": "http://127.0.0.1:18899",
+      "path": "/panel",
+      "status": 200
+    },
+    {
+      "topic": "http-on-modify-request",
+      "origin": "http://127.0.0.1:18899",
+      "path": "/network-ad.svg",
+      "status": null
+    },
+    {
+      "topic": "http-on-examine-response",
+      "origin": "http://127.0.0.1:18899",
+      "path": "/network-ad.svg",
+      "status": 200
+    },
+    {
+      "topic": "http-on-modify-request",
+      "origin": "http://127.0.0.1:18899",
+      "path": "/favicon.ico",
+      "status": null
+    }
+  ]
+}

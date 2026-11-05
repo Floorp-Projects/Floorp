@@ -1,0 +1,6 @@
+{
+  "remainingOwnedProcesses": [],
+  "firstShutdown": "Services.startup.quit(eAttemptQuit); browser wait completed; initial runner exited0",
+  "finalShutdown": "reattached observer requested timed eAttemptQuit and exited0; obsolete timed-out runner later exited1 on InvalidSessionId during cleanup, after product quit",
+  "physicalInput": false
+}
