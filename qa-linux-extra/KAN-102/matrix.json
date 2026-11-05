@@ -65,7 +65,7 @@
     "existingPr": null,
     "newPr": null,
     "upstreamIssue": "https://github.com/Drive4ik/simple-tab-groups/issues/1325 (unconfirmed user report, no fix)",
-    "jiraCommentId": null,
+    "jiraCommentId": "10410",
     "priorJiraCommentIds": [
       "10150",
       "10169",
@@ -86,6 +86,17 @@
       "KAN50-handoff.json"
     ],
     "separateFromOriginal22": true,
-    "originalCMatrixSha256": "4ac5d5f17f97d70e82f7b9f17d6abcc1aa17a92e3708eeadaba6ac7c8415e3cd"
+    "originalCMatrixSha256": "4ac5d5f17f97d70e82f7b9f17d6abcc1aa17a92e3708eeadaba6ac7c8415e3cd",
+    "jiraLabels": [
+      "area-tabs",
+      "floorp-github-import-2026-11",
+      "needs-import-fixture",
+      "needs-original-environment",
+      "needs-repro",
+      "p2",
+      "triage-reviewed",
+      "repro-workspace-stg-conflict",
+      "needs-visibility-owner-contract"
+    ]
   }
 ]
