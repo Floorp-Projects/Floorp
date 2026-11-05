@@ -45,3 +45,6 @@ Debian13 Cloud Linux6.18.57, real managed Xvfb/X11/Openbox/private session DBus,
 Evidence contains raw numeric/media/activity/caption observations, selected synthetic-fixture screenshot, fixed-source hashes/excerpts, actual native test results, scripts and verification. Profiles, generated media, binaries, cookies, credentials and full environment are not exported. This is an additional follow-up to KAN50, not a new Linux22 denominator entry. Draft PR/Jira publication metadata is recorded after creation; no merge, production release or Done transition.
 
 Publication: Draft PR3042, patch head9d042bc17be83c15d2ff3a25eb712f04c4d3eb45; Jira KAN50 comment10379. Standard CI42084373774 in progress at metadata checkpoint (smoke/ARM/Windows provenance checks passed; Linux browser suite running, macOS job queued). This does not claim complete CI or a production package.
+
+
+Follow-up: exact-head9d042bc standard CI passed; complete stable-v2-validation Linux-x64 unsigned package run42086912660 succeeded. Untouched complete product passes4/4 open/close-order cases (52/52 checks), with all46 product file/symlink entries unchanged. See [full package report](../full-package/report.md). Prior one-resource candidate observations above retain their diagnostic scope.

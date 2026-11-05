@@ -1,0 +1,10 @@
+{
+  "requestedAt": "2026-11-05T18:43:04.673064+00:00",
+  "workflow": "package.yml",
+  "ref": "codex/kan50-pip-app-window-activity",
+  "expectedHead": "9d042bc17be83c15d2ff3a25eb712f04c4d3eb45",
+  "inputSha256": "a77434b25000cc2e92ffef38ffaba4e6e60706a07da8fd9f05b0a891b58577b1",
+  "ghReturnCode": 0,
+  "httpStatus": 204,
+  "dispatchRepeated": false
+}

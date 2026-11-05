@@ -1,13 +1,13 @@
 [
   {
     "path": "report.md",
-    "bytes": 8576,
-    "sha256": "f4c72c509a6bdef134c6562a8e646d1060989a3fc7f01aeb25d1316c8c8dca85"
+    "bytes": 8967,
+    "sha256": "21fc1b5ade153d0697213c97e687b050ef4af82c5454b2cfa464304b051faf06"
   },
   {
     "path": "matrix.json",
-    "bytes": 3092,
-    "sha256": "762dc9147d56a1d147ebe441ac6d637a6026a3c283c5b40a3068224b725b3b25"
+    "bytes": 3654,
+    "sha256": "c02f78e929d7d8819e5c64b956056e15274f1637428f568303a01a6346de1420"
   },
   {
     "path": "verification.json",
@@ -123,5 +123,10 @@
     "path": "historical/acquisition/merged2699-tools_patches_browser-chrome-browser-content-browser-browser-init.patch",
     "bytes": 2113,
     "sha256": "31a86b5da078f912230e52dadefb8290618f43fd015b46ac6b91561bd40aa733"
+  },
+  {
+    "path": "full-package/export-manifest.json",
+    "bytes": 5425,
+    "sha256": "3a86425b8cd631def36ad86398996aff2ee533d7947ab6ad27925fef8d670882"
   }
 ]

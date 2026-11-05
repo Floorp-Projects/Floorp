@@ -1,0 +1,41 @@
+{
+  "sourceSha": "9d042bc17be83c15d2ff3a25eb712f04c4d3eb45",
+  "cases": [
+    {
+      "case": "normal-first-close-normal",
+      "checksPassed": 13,
+      "pid": 61718,
+      "runtimeBuildId": "20261103153232",
+      "rawSha256": "8052d22bee1a40cce96246a1cba496fe374145860d2cc575a780957f36eb206d"
+    },
+    {
+      "case": "normal-first-close-panel",
+      "checksPassed": 13,
+      "pid": 62883,
+      "runtimeBuildId": "20261103153232",
+      "rawSha256": "669e3d5b96c3b5d4b1a0cf48221045c3fd8aa16431a7dc94d1aa63160cefe85d"
+    },
+    {
+      "case": "panel-first-close-normal",
+      "checksPassed": 13,
+      "pid": 61722,
+      "runtimeBuildId": "20261103153232",
+      "rawSha256": "9941adb5d99598a6049e96d95ebd1904af11170efaf4faea636fc1399fdf6682"
+    },
+    {
+      "case": "panel-first-close-panel",
+      "checksPassed": 13,
+      "pid": 62882,
+      "runtimeBuildId": "20261103153232",
+      "rawSha256": "f8f291ffae57cef74d22a9dd5359c62fff23527c3754a2dca88437be3b2bf139"
+    }
+  ],
+  "passedCases": 4,
+  "passedChecks": 52,
+  "productUnchanged": true,
+  "realMinimizeAndCaptionObservations": true,
+  "runtimeBuildId": "20261103153232",
+  "mockedHandlers": false,
+  "productResourceReplacements": false,
+  "liveYouTubeRetried": false
+}

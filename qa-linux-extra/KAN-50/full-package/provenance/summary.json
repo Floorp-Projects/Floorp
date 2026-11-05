@@ -1,0 +1,99 @@
+{
+  "capturedAt": "2026-11-05T18:41:08.575127+00:00",
+  "headSha": "9d042bc17be83c15d2ff3a25eb712f04c4d3eb45",
+  "ref": "codex/kan50-pip-app-window-activity",
+  "ghApiRead": "success; no secret content inspected",
+  "runtimeRun": {
+    "id": 41664957250,
+    "path": ".github/workflows/daily-build.yml",
+    "head_sha": "8965ffc346d426ccdf919bd18585e4d4a0c21654",
+    "head_branch": "nora-0.2.0",
+    "event": "workflow_dispatch",
+    "created_at": "2026-11-03T15:32:32Z",
+    "status": "completed",
+    "conclusion": "success",
+    "html_url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/41664957250"
+  },
+  "manifestArtifact": {
+    "id": 13274392012,
+    "name": "floorp-runtime-build-manifest-v2",
+    "digest": "sha256:2b6a1b20190dc7016957ca25f72f8e83f267de51458b515153fd209bb90d9138",
+    "expired": false,
+    "size_in_bytes": 724
+  },
+  "manifestZipActualSha256": "2b6a1b20190dc7016957ca25f72f8e83f267de51458b515153fd209bb90d9138",
+  "linuxX64Target": {
+    "platform": "Linux",
+    "arch": "x86_64",
+    "artifact_name": "floorp-linux-x86_64-moz-artifact",
+    "artifact_id": 13272530069,
+    "artifact_digest": "sha256:ed5a4f97ee7bf42c817f3146d5a843e095710dcc3be25fae0af0bf47274b739a",
+    "expected_build_id": "20261103153232"
+  },
+  "targetApiMetadata": {
+    "id": 13272530069,
+    "name": "floorp-linux-x86_64-moz-artifact",
+    "digest": "sha256:ed5a4f97ee7bf42c817f3146d5a843e095710dcc3be25fae0af0bf47274b739a",
+    "expired": false,
+    "size_in_bytes": 87434468
+  },
+  "sameHeadPackageRuns": 0,
+  "assertionsPassed": true,
+  "dispatched": false,
+  "productExecuted": false,
+  "targetArtifactBytesDownloaded": false,
+  "sameHeadRunsCompact": {
+    "total_count": 4,
+    "workflow_runs": [
+      {
+        "conclusion": "success",
+        "created_at": "2026-11-05T18:27:17Z",
+        "event": "pull_request",
+        "head_branch": "codex/kan50-pip-app-window-activity",
+        "head_sha": "9d042bc17be83c15d2ff3a25eb712f04c4d3eb45",
+        "html_url": "https://github.com/Floorp-Projects/Floorp/actions/runs/42084373895",
+        "id": 42084373895,
+        "name": "Moderate Content",
+        "path": ".github/workflows/moderation.yml",
+        "status": "completed"
+      },
+      {
+        "conclusion": "success",
+        "created_at": "2026-11-05T18:27:17Z",
+        "event": "pull_request_target",
+        "head_branch": "codex/kan50-pip-app-window-activity",
+        "head_sha": "9d042bc17be83c15d2ff3a25eb712f04c4d3eb45",
+        "html_url": "https://github.com/Floorp-Projects/Floorp/actions/runs/42084373768",
+        "id": 42084373768,
+        "name": "OpenBot event notification",
+        "path": ".github/workflows/openbot-events.yml",
+        "status": "completed"
+      },
+      {
+        "conclusion": "success",
+        "created_at": "2026-11-05T18:27:17Z",
+        "event": "pull_request",
+        "head_branch": "codex/kan50-pip-app-window-activity",
+        "head_sha": "9d042bc17be83c15d2ff3a25eb712f04c4d3eb45",
+        "html_url": "https://github.com/Floorp-Projects/Floorp/actions/runs/42084373837",
+        "id": 42084373837,
+        "name": "(CI) Docs LLM Pipeline",
+        "path": ".github/workflows/docs_pipeline.yml",
+        "status": "completed"
+      },
+      {
+        "conclusion": "success",
+        "created_at": "2026-11-05T18:27:17Z",
+        "event": "pull_request",
+        "head_branch": "codex/kan50-pip-app-window-activity",
+        "head_sha": "9d042bc17be83c15d2ff3a25eb712f04c4d3eb45",
+        "html_url": "https://github.com/Floorp-Projects/Floorp/actions/runs/42084373774",
+        "id": 42084373774,
+        "name": "(CI) \ud83e\uddea Browser Integration + Runner Tests",
+        "path": ".github/workflows/colocated_runner_test.yml",
+        "status": "completed"
+      }
+    ]
+  },
+  "cliArtifactDownload": "gh API metadata reads succeeded; direct binary redirect returned403; GitHub connector download succeeded and returned ZIP bytes verified. Temporary redirect/file URLs not persisted."
+}

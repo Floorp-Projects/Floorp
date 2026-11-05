@@ -1,0 +1,296 @@
+{
+  "sourceSha": "9d042bc17be83c15d2ff3a25eb712f04c4d3eb45",
+  "binarySha256": "4f05c1330b38e50040440be6a3b6e0e7a5b52bc79edb5c5478d978c81f5a603d",
+  "fixture": "generated60s VP8, localhost only; not YouTube",
+  "syntheticInput": "native muted video.play API plus XTest native video context-menu PiP and player close buttons",
+  "readOnlyObservation": "existing browser messageManager frame script only reads video/UA controls state; no PiP/playback mocks",
+  "fixtureSha256": "62acd662d4a1f5a830c8bf9eb77b56879ef75dfd07ef0e50e1b4401af5831da9",
+  "cases": {},
+  "windowManagerEvidence": "_NET_SUPPORTING_WM_CHECK(WINDOW): window id # 0x20011f\n_NET_SUPPORTED(ATOM) = _NET_SUPPORTING_WM_CHECK, _NET_WM_FULL_PLACEMENT, _NET_CURRENT_DESKTOP, _NET_NUMBER_OF_DESKTOPS, _NET_DESKTOP_GEOMETRY, _NET_DESKTOP_VIEWPORT, _NET_ACTIVE_WINDOW, _NET_WORKAREA, _NET_CLIENT_LIST, _NET_CLIENT_LIST_STACKING, _NET_DESKTOP_NAMES, _NET_CLOSE_WINDOW, _NET_DESKTOP_LAYOUT, _NET_SHOWING_DESKTOP, _NET_WM_NAME, _NET_WM_VISIBLE_NAME, _NET_WM_ICON_NAME, _NET_WM_VISIBLE_ICON_NAME, _NET_WM_DESKTOP, _NET_WM_STRUT, _NET_WM_STRUT_PARTIAL, _NET_WM_ICON, _NET_WM_ICON_GEOMETRY, _NET_WM_WINDOW_TYPE, _NET_WM_WINDOW_TYPE_DESKTOP, _NET_WM_WINDOW_TYPE_DOCK, _NET_WM_WINDOW_TYPE_TOOLBAR, _NET_WM_WINDOW_TYPE_MENU, _NET_WM_WINDOW_TYPE_UTILITY, _NET_WM_WINDOW_TYPE_SPLASH, _NET_WM_WINDOW_TYPE_DIALOG, _NET_WM_WINDOW_TYPE_NORMAL, _NET_WM_ALLOWED_ACTIONS, _NET_WM_WINDOW_OPACITY, _NET_WM_ACTION_MOVE, _NET_WM_ACTION_RESIZE, _NET_WM_ACTION_MINIMIZE, _NET_WM_ACTION_SHADE, _NET_WM_ACTION_MAXIMIZE_HORZ, _NET_WM_ACTION_MAXIMIZE_VERT, _NET_WM_ACTION_FULLSCREEN, _NET_WM_ACTION_CHANGE_DESKTOP, _NET_WM_ACTION_CLOSE, _NET_WM_ACTION_ABOVE, _NET_WM_ACTION_BELOW, _NET_WM_STATE, _NET_WM_STATE_MODAL, _NET_WM_STATE_MAXIMIZED_VERT, _NET_WM_STATE_MAXIMIZED_HORZ, _NET_WM_STATE_SHADED, _NET_WM_STATE_SKIP_TASKBAR, _NET_WM_STATE_SKIP_PAGER, _NET_WM_STATE_HIDDEN, _NET_WM_STATE_FULLSCREEN, _NET_WM_STATE_ABOVE, _NET_WM_STATE_BELOW, _NET_WM_STATE_DEMANDS_ATTENTION, _NET_MOVERESIZE_WINDOW, _NET_WM_MOVERESIZE, _NET_WM_USER_TIME, _NET_FRAME_EXTENTS, _NET_REQUEST_FRAME_EXTENTS, _NET_RESTACK_WINDOW, _NET_STARTUP_ID, _NET_WM_SYNC_REQUEST, _NET_WM_SYNC_REQUEST_COUNTER, _NET_WM_PID, _NET_WM_PING, _KDE_WM_CHANGE_STATE, _KDE_NET_WM_FRAME_STRUT, _KDE_NET_WM_WINDOW_TYPE_OVERRIDE, _OB_WM_ACTION_UNDECORATE, _OB_WM_STATE_UNDECORATED, _OPENBOX_PID, _OB_THEME, _OB_CONFIG_FILE, _OB_CONTROL, _OB_VERSION, _OB_APP_ROLE, _OB_APP_TITLE, _OB_APP_NAME, _OB_APP_CLASS, _OB_APP_GROUP_NAME, _OB_APP_GROUP_CLASS, _OB_APP_TYPE\n",
+  "runtime": {
+    "pid": 61718,
+    "version": "159.0.1",
+    "buildID": "20261103153232",
+    "sandbox": 6
+  },
+  "lastProbe": {
+    "browser": "qaVideoBrowser",
+    "media": {
+      "time": 1.509536,
+      "duration": 60,
+      "ready": 4,
+      "paused": false,
+      "frames": 37,
+      "cloning": false,
+      "width": 480,
+      "height": 270,
+      "toggleRect": {
+        "x": 422,
+        "y": 222.8333282470703,
+        "width": 40,
+        "height": 40,
+        "top": 222.8333282470703,
+        "right": 462,
+        "bottom": 262.8333282470703,
+        "left": 422
+      },
+      "playRect": {
+        "x": 9,
+        "y": 303.83331298828125,
+        "width": 30,
+        "height": 40,
+        "top": 303.83331298828125,
+        "right": 39,
+        "bottom": 343.83331298828125,
+        "left": 9
+      }
+    },
+    "videoRect": {
+      "x": 0,
+      "y": 73.83332824707031,
+      "width": 480,
+      "height": 270,
+      "top": 73.83332824707031,
+      "right": 480,
+      "bottom": 343.8333282470703,
+      "left": 0
+    },
+    "origin": {
+      "x": 818,
+      "y": 169
+    },
+    "nativePlayResult": {
+      "time": 0,
+      "paused": false
+    },
+    "menu": {
+      "state": "open",
+      "hidden": false,
+      "key": "u"
+    }
+  },
+  "firstOpen": {
+    "activity": {
+      "rootBC": 2,
+      "rootForced": true,
+      "rootActive": true,
+      "windowState": 3,
+      "normalPipAttribute": "true",
+      "panelBC": 17,
+      "panelTop": 2,
+      "panelForced": false,
+      "panelPipAttribute": null,
+      "rootMap": 1,
+      "panelMap": null,
+      "players": 1,
+      "windows": 1
+    },
+    "video": {
+      "time": 3.95844,
+      "paused": false,
+      "cloning": true,
+      "hidden": false,
+      "visibility": "visible",
+      "cues": [
+        "QA caption 03"
+      ],
+      "trackMode": "showing",
+      "frames": 96
+    },
+    "captions": {
+      "text": "QA caption 03",
+      "hidden": false
+    }
+  },
+  "bothOpen": {
+    "activity": {
+      "rootBC": 2,
+      "rootForced": true,
+      "rootActive": true,
+      "windowState": 3,
+      "normalPipAttribute": "true",
+      "panelBC": 17,
+      "panelTop": 2,
+      "panelForced": false,
+      "panelPipAttribute": "true",
+      "rootMap": 2,
+      "panelMap": null,
+      "players": 2,
+      "windows": 2
+    },
+    "video": {
+      "time": 3.991264,
+      "paused": false,
+      "cloning": true,
+      "hidden": false,
+      "visibility": "visible",
+      "cues": [
+        "QA caption 03"
+      ],
+      "trackMode": "showing",
+      "frames": 97
+    },
+    "captions": {
+      "text": "QA caption 03",
+      "hidden": false
+    }
+  },
+  "openOrder": "normal-first",
+  "closeFirst": "normal",
+  "firstClosedWhileOtherRemains": {
+    "rootBC": 2,
+    "rootForced": true,
+    "rootActive": true,
+    "windowState": 3,
+    "normalPipAttribute": null,
+    "panelBC": 17,
+    "panelTop": 2,
+    "panelForced": false,
+    "panelPipAttribute": "true",
+    "rootMap": 1,
+    "panelMap": null,
+    "players": 1,
+    "windows": 1
+  },
+  "minimized1": {
+    "activity": {
+      "rootBC": 2,
+      "rootForced": true,
+      "rootActive": true,
+      "windowState": 2,
+      "normalPipAttribute": null,
+      "panelBC": 17,
+      "panelTop": 2,
+      "panelForced": false,
+      "panelPipAttribute": "true",
+      "rootMap": 1,
+      "panelMap": null,
+      "players": 1,
+      "windows": 1
+    },
+    "video": {
+      "time": 7.550867,
+      "paused": false,
+      "cloning": true,
+      "hidden": false,
+      "visibility": "visible",
+      "cues": [
+        "QA caption 07"
+      ],
+      "trackMode": "showing",
+      "frames": 182
+    },
+    "captions": {
+      "text": "QA caption 07",
+      "hidden": false
+    }
+  },
+  "minimized2": {
+    "activity": {
+      "rootBC": 2,
+      "rootForced": true,
+      "rootActive": true,
+      "windowState": 2,
+      "normalPipAttribute": null,
+      "panelBC": 17,
+      "panelTop": 2,
+      "panelForced": false,
+      "panelPipAttribute": "true",
+      "rootMap": 1,
+      "panelMap": null,
+      "players": 1,
+      "windows": 1
+    },
+    "video": {
+      "time": 9.580479,
+      "paused": false,
+      "cloning": true,
+      "hidden": false,
+      "visibility": "visible",
+      "cues": [
+        "QA caption 09"
+      ],
+      "trackMode": "showing",
+      "frames": 231
+    },
+    "captions": {
+      "text": "QA caption 09",
+      "hidden": false
+    }
+  },
+  "afterAllClose": {
+    "rootBC": 2,
+    "rootForced": false,
+    "rootActive": true,
+    "windowState": 3,
+    "normalPipAttribute": null,
+    "panelBC": 17,
+    "panelTop": 2,
+    "panelForced": false,
+    "panelPipAttribute": null,
+    "rootMap": null,
+    "panelMap": null,
+    "players": 0,
+    "windows": 0
+  },
+  "runtimeErrors": [],
+  "after": {
+    "pid": 61718,
+    "sandbox": 6
+  },
+  "checks": [
+    {
+      "label": "two players share one root AppWindow count",
+      "passed": true
+    },
+    {
+      "label": "first close retains remaining player AppWindow activity",
+      "passed": true
+    },
+    {
+      "label": "minimized root remains active for remaining PiP",
+      "passed": true
+    },
+    {
+      "label": "source document stays visible for captions",
+      "passed": true
+    },
+    {
+      "label": "actual video remains unpaused and cloned while minimized",
+      "passed": true
+    },
+    {
+      "label": "decoded video frames increase while minimized",
+      "passed": true
+    },
+    {
+      "label": "real WebVTT captions continue while minimized",
+      "passed": true
+    },
+    {
+      "label": "last close releases force and root count",
+      "passed": true
+    },
+    {
+      "label": "last close clears native PiP tab indicators",
+      "passed": true
+    },
+    {
+      "label": "last close returns player count to zero",
+      "passed": true
+    },
+    {
+      "label": "no originating-window activity exception",
+      "passed": true
+    },
+    {
+      "label": "sandbox unchanged",
+      "passed": true
+    },
+    {
+      "label": "same browser PID retained",
+      "passed": true
+    }
+  ],
+  "passed": true
+}

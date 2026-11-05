@@ -69,7 +69,7 @@
       },
       "environment": "Debian13 Cloud Linux6.18.57; Xvfb/X11/Openbox/private DBus; software GPU only; fresh owned profiles; not original Ubuntu/live YouTube",
       "testCommand": "dbus-run-session -- <marionette-python> pip-regression.py --binary <verified-official-release> --out <fresh-dir> --display <free> --port <free> --http-port <free> --source-sha <release-target> --video-file <same-generated-60s-VP8>",
-      "result": "historical blank-player issue reproduced/current basic PiP passes; separate current AppWindow activity/unload defect reproduced and candidate fixed in Draft3042",
+      "result": "historical blank-player reproduced/current basic PiP passes; separate AppWindow activity/unload defect reproduced, fixed in Draft3042, exact-head CI pass and complete Linux package4/4 regression pass",
       "regression": {
         "normalControlsPassed": 2,
         "currentExitCode": 0,
@@ -81,8 +81,8 @@
         "protectionLevelBeforeAfter": 6
       },
       "remainingConditions": [
-        "Reachable live YouTube/YouTube Music and original Ubuntu/native GPU/Wayland occlusion",
-        "Draft3042 review and production/full package qualification; baseline release still contains activity defect"
+        "Reachable live YouTube/YouTube Music and original Ubuntu/native GPU/Wayland occlusion/other OS qualification",
+        "Draft3042 review; baseline official release still contains activity defect"
       ],
       "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2699 (merged real tabbrowser integration; no duplicate repair)",
       "newPr": "https://github.com/Floorp-Projects/Floorp/pull/3042",
@@ -98,7 +98,10 @@
         "historical/trial/panel-after-close.png",
         "historical/acquisition/summary.json",
         "activity/report.md",
-        "activity/verification.json"
+        "activity/verification.json",
+        "full-package/report.md",
+        "full-package/matrix.json",
+        "full-package/verification.json"
       ],
       "separateFromOriginal22": true,
       "jiraLabels": [
@@ -121,10 +124,23 @@
         "realMinimizeVerified": true,
         "candidateType": "one-resource diagnostic copy, not full production build",
         "ciRun": 42084373774,
-        "ciStatus": "in_progress",
-        "draftPr": "https://github.com/Floorp-Projects/Floorp/pull/3042"
+        "ciStatus": "success",
+        "draftPr": "https://github.com/Floorp-Projects/Floorp/pull/3042",
+        "ciArtifactId": 13441309797
       },
-      "evidenceDirectory": "KAN-50"
+      "evidenceDirectory": "KAN-50",
+      "fullPackageFollowup": {
+        "sourceSha": "9d042bc17be83c15d2ff3a25eb712f04c4d3eb45",
+        "run": 42086912660,
+        "status": "success",
+        "artifactId": 13444572566,
+        "fullPackageCasesPassed": 4,
+        "checksPassed": 52,
+        "productFilesUnchanged": 46,
+        "productResourceReplacements": false,
+        "evidenceDirectory": "full-package",
+        "jiraCommentId": null
+      }
     },
     {
       "key": "KAN-99",

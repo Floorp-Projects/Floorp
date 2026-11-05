@@ -1,0 +1,17 @@
+{
+  "scope": "unchanged native Runtime controls; frontend/resources built by package run",
+  "files": [
+    {
+      "file": "floorp",
+      "fullPackageSha256": "4f05c1330b38e50040440be6a3b6e0e7a5b52bc79edb5c5478d978c81f5a603d",
+      "official12211Sha256": "4f05c1330b38e50040440be6a3b6e0e7a5b52bc79edb5c5478d978c81f5a603d",
+      "equal": true
+    },
+    {
+      "file": "libxul.so",
+      "fullPackageSha256": "760ff8a689f52c9b1f3c89a45ea8813e59f187990caed747e4a7680020c8dbc7",
+      "official12211Sha256": "760ff8a689f52c9b1f3c89a45ea8813e59f187990caed747e4a7680020c8dbc7",
+      "equal": true
+    }
+  ]
+}

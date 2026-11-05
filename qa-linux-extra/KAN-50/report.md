@@ -46,3 +46,6 @@ Raw regression-current-v2/result.json and regression-old-v2/result.json preserve
 Remaining: reachable live YouTube/YouTube Music overlay PiP, original Ubuntu/package/GPU conditions and the separate current occlusion/caption error. Keep issue open; classify historical fixture reproduction/current fixture pass rather than universal fix. No new product patch/PR, merge, production release or Done transition. Original22/C-five issue matrices are unchanged; KAN50/KAN99 have a separate additional table.
 
 QA publication: evidence commit2834b1aca2dcde0f383b79bed9e066e2cac39f30; Jira KAN-50 comment10363. Labels narrowed to the remaining live-site/filter conditions; issue remains open/未着手.
+
+
+Follow-up: exact-head9d042bc standard CI passed; complete stable-v2-validation Linux-x64 unsigned package run42086912660 succeeded. Untouched complete product passes4/4 open/close-order cases (52/52 checks), with all46 product file/symlink entries unchanged. See [full package report](full-package/report.md). Prior one-resource candidate observations above retain their diagnostic scope.

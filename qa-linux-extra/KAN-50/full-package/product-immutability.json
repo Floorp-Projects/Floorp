@@ -1,0 +1,10 @@
+{
+  "filesBefore": 46,
+  "filesAfter": 46,
+  "unchanged": true,
+  "beforeInventorySha256": "3a201b3f8b18ab2cb23502b5f10d3417f8b61e79a7470c740037c00c1b77380e",
+  "afterInventorySha256": "3a201b3f8b18ab2cb23502b5f10d3417f8b61e79a7470c740037c00c1b77380e",
+  "productResourceReplacements": false,
+  "fixtureLocation": "outside extracted product",
+  "profilesLocation": "outside extracted product"
+}

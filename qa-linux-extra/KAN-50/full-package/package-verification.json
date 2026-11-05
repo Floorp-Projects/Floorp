@@ -1,0 +1,31 @@
+{
+  "artifactZipSha256": "sha256:1a0b538f14730130a63ac283e94465ca302781525ac44d2c6b91479418271aa0",
+  "tarMember": "floorp-linux-x86_64.tar.xz",
+  "tarSha256": "584e4afd9865df3a5867b145ed75b7c3051a0a26d173da240056a4b355bfcad9",
+  "tarBytes": 108174124,
+  "productRoot": "/workspace/qa-linux-22/C-extra/KAN-50/full-package/package/extracted/floorp",
+  "executable": "/workspace/qa-linux-22/C-extra/KAN-50/full-package/package/extracted/floorp/floorp",
+  "changedProductResources": false,
+  "moduleMember": "moz-src/toolkit/components/pictureinpicture/PictureInPicture.sys.mjs",
+  "moduleSha256": "6d44e3319e1dbc555ffecb85157c1703eff470f08a021f1443cfbd4244b69fae",
+  "sourcePatchMatchesFullPackage": true,
+  "extractedPatchMatchesFullPackage": true,
+  "patchReverseChecks": [
+    {
+      "patchKind": "source",
+      "patch": ".github/patches/floorp-runtime/common/picture-in-picture-app-window.patch",
+      "reverseCheckReturnCode": 0
+    },
+    {
+      "patchKind": "extracted",
+      "patch": "tools/patches/moz-src-toolkit-components-pictureinpicture-PictureInPicture.sys.patch",
+      "reverseCheckReturnCode": 0
+    }
+  ],
+  "productFiles": 46,
+  "declaredIni": {
+    "application.ini": "; This file is not used. If you modify it and want the application to use\n; your modifications, move it under the browser/ subdirectory and start with\n; the \"-app /path/to/browser/application.ini\" argument.\n[App]\nVendor=Ablaze\nName=Floorp\nRemotingName=floorp\nVersion=12.21.1@159.0.1\nProfile=Floorp\nBuildID=20261105184721\nID={ec8030f7-c20a-464f-9b0e-13a3a9e97384}\n\n[Gecko]\nMinVersion=159.0.1\nMaxVersion=159.0.1\n\n[XRE]\nEnableProfileMigrator=1\n\n\n[AppUpdate]\nURL=https://aus5.mozilla.org/update/6/%PRODUCT%/%VERSION%/%BUILD_ID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%SYSTEM_CAPABILITIES%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/update.xml\n",
+    "platform.ini": "[Build]\nBuildID=20261105184721\nMilestone=159.0.1\n"
+  },
+  "classification": "complete package-only installer, untouched extracted product; not diagnostic JS replacement"
+}

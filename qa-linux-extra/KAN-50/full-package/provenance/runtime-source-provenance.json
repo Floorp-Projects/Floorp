@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "runtime_commit": "8965ffc346d426ccdf919bd18585e4d4a0c21654",
+  "upstream": {
+    "repository": "mozilla-firefox/firefox",
+    "version": "159.0.1",
+    "tag": null,
+    "tracking_ref": "refs/heads/release",
+    "commit": "6181e6b5f28a8fbae1d5c3ef6f6626b5a2180213",
+    "tree": "8c0631ba208d74428bad4bc0301de787b0c57d67",
+    "previous_tag": null,
+    "previous_commit": "ae0a60474a1610748ae5a57e21edaf82b36376d4"
+  },
+  "floorp_patch": {
+    "repository": "Floorp-Projects/Floorp",
+    "commit": "0c5b265d73c23f3811b4c2199eb61186e8949003",
+    "path": ".github/patches/floorp-runtime/common/macos-app-shim-pwa-input-and-compositor.patch",
+    "runtime_path": ".github/patches/upstream/macos-app-shim-pwa-input-and-compositor.patch",
+    "sha256": "571a545a9cda7d71cd73af766b71e4e00aba0dd50b21c949f95e67b387383dfc",
+    "patched_files": {
+      "gfx/webrender_bindings/RenderCompositorNative.cpp": "042a14b15959665041ed55e8acbd890811bf64994525ec39f25f1cc632bc45d5",
+      "widget/cocoa/NativeMenuSupport.mm": "a1f724e706bd9366e6d368d5239bca56babeebcdc521f64d879a25895e60d94d",
+      "widget/cocoa/appshim/MacWebAppInput.h": "f11f765719eebb0750ef984ad51e94c0c9ae197279a99f75c984548caf40e954",
+      "widget/cocoa/appshim/MacWebAppInput.mm": "7fd3d83b6e98f6639caf532950088786db557413383cbcbbc142539a04026593",
+      "widget/cocoa/appshim/MacWebAppWidget.h": "9b1df8468cd1cc6bcac75bb2e4439e12e567d775b8a0fb268533d486918927a3",
+      "widget/cocoa/appshim/MacWebAppWidget.mm": "ca795ee6418cce8378d3ecc102c3ca833afdec6119e3a7738ef0bfc5383845b5",
+      "widget/cocoa/appshim/shim/ShimView.mm": "fb3abdb31c5d91b7b5bac3f3f5c8c44ed5df224cf4607ee7d9d423b4b53d01d6",
+      "widget/cocoa/nsCocoaUtils.h": "21bd73593b238d8973acbf9d0f4eb3454a9e6a10668836d6ff574d1620c2ab81",
+      "widget/cocoa/nsCocoaUtils.mm": "4f9d72eadf699be1203d642d945d0ff625f534e39d39cb0cb1325f7a012debb7",
+      "widget/nsIWidget.cpp": "e6f1e08400c75c9010606c024372698fc5c705001e165b3ceb452642d8bc11bd",
+      "widget/tests/gtest/TestMacWebAppPanGesture.mm": "03de4ce729d8a2ee6b752890eb231904df1246e004dd2d0ede9ddfb55b24a7cb",
+      "widget/tests/gtest/moz.build": "f4b7e4de71d880ae6d7e00ac3b60f9001a7a8051541ba4e900d0a9ea175cee3e"
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "osRelease": "PRETTY_NAME=\"Debian GNU/Linux 13 (trixie)\"\nNAME=\"Debian GNU/Linux\"\nVERSION_ID=\"13\"\nVERSION=\"13 (trixie)\"\nVERSION_CODENAME=trixie\nDEBIAN_VERSION_FULL=13.6\nID=debian\nHOME_URL=\"https://www.debian.org/\"\nSUPPORT_URL=\"https://www.debian.org/support\"\nBUG_REPORT_URL=\"https://bugs.debian.org/\"\n",
+  "kernel": "6.18.57",
+  "machine": "x86_64",
+  "uid": 1000,
+  "drmEntries": [],
+  "display": "Xvfb X11; owned Openbox EWMH session asserted in each result",
+  "dbus": "private dbus-run-session per case",
+  "gpu": "software only; no original Ubuntu/native GPU/Wayland qualification",
+  "protections": "content sandbox6 asserted before and after; inherited MOZ_DISABLE_* refused; no TLS bypass",
+  "input": "XTest synthetic clicks/menu keys, native muted HTML video API; no physical-input claim",
+  "fixtures": "local generated VP8/WebVTT, not live YouTube",
+  "runtimeInspectionOptIn": "MOZ_REMOTE_ALLOW_SYSTEM_ACCESS=1, no product resources changed",
+  "dbusExecutable": "/usr/bin/dbus-run-session"
+}

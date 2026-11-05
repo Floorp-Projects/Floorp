@@ -1,0 +1,100 @@
+{
+  "runId": 42084373774,
+  "headSha": "9d042bc17be83c15d2ff3a25eb712f04c4d3eb45",
+  "conclusion": "success",
+  "artifactId": 13441309797,
+  "artifactZipSha256": "ac8c1d3de34882f340df6f38de7660c70b05442ff31990bf2e6af62d72c1f1a2",
+  "zipBytes": 110959,
+  "members": [
+    "_dist/ci-combined-browser-test.log",
+    "_dist/ci-feles-build-test.log",
+    "logs/test/latest.log",
+    "logs/vite-designs.log",
+    "logs/vite-main.log",
+    "logs/vite-modal-child.log",
+    "logs/vite-newtab.log",
+    "logs/vite-notes.log",
+    "logs/vite-profile-manager.log",
+    "logs/vite-settings.log",
+    "logs/vite-welcome.log",
+    "logs/vite-workflow-progress.log",
+    "_dist/firefox-tests/SUMMARY.md",
+    "_dist/firefox-tests/TRIAGE.md",
+    "_dist/firefox-tests/triage.json",
+    "browser-features/chrome/test/firefox-downloaded/generated/manifest.json"
+  ],
+  "selectedEvidence": [
+    {
+      "artifactMember": "_dist/ci-combined-browser-test.log",
+      "memberSha256": "c521805c8719c24453ed3d6bcf7658125fe857a38b5c4005161efe828b22f129",
+      "observations": [
+        {
+          "line": 82,
+          "text": "[INFO]   - browser-features/chrome/common/panel-sidebar/test/pictureInPictureActivity.test.ts"
+        },
+        {
+          "line": 446,
+          "text": "[INFO] [76/282] Completed browser-features/chrome/common/panel-sidebar/test/pictureInPictureActivity.test.ts"
+        },
+        {
+          "line": 447,
+          "text": "[INFO] \u2713 browser-features/chrome/common/panel-sidebar/test/pictureInPictureActivity.test.ts (runAllTests, 465ms)"
+        },
+        {
+          "line": 915,
+          "text": "[INFO] Browser test result: 282 passed, 0 failed"
+        }
+      ]
+    },
+    {
+      "artifactMember": "_dist/ci-feles-build-test.log",
+      "memberSha256": "7f21136d564c9396ba91d8e5bebf71e1883523c3c3ce44c79cad6213ea5bb772",
+      "observations": [
+        {
+          "line": 3764,
+          "text": "console.log: \"[nora@test] Running /link-features-chrome/common/panel-sidebar/test/pictureInPictureActivity.test.ts\""
+        },
+        {
+          "line": 3852,
+          "text": "console.log: \"[nora@test] \\u2713 /link-features-chrome/common/panel-sidebar/test/pictureInPictureActivity.test.ts (runAllTests, 465ms)\""
+        },
+        {
+          "line": 31457,
+          "text": "console.log: \"[nora@test] Done: 282 passed, 0 failed\""
+        }
+      ]
+    },
+    {
+      "artifactMember": "logs/test/latest.log",
+      "memberSha256": "c4d98324d52488742b0f420f74d415a7c174543003bbdc943476b47c16810928",
+      "observations": [
+        {
+          "line": 83,
+          "text": "[2026-11-05T18:30:26.870Z] [INFO]   - browser-features/chrome/common/panel-sidebar/test/pictureInPictureActivity.test.ts"
+        },
+        {
+          "line": 447,
+          "text": "[2026-11-05T18:36:07.843Z] [INFO] [76/282] Completed browser-features/chrome/common/panel-sidebar/test/pictureInPictureActivity.test.ts"
+        },
+        {
+          "line": 448,
+          "text": "[2026-11-05T18:36:07.843Z] [INFO] \u2713 browser-features/chrome/common/panel-sidebar/test/pictureInPictureActivity.test.ts (runAllTests, 465ms)"
+        },
+        {
+          "line": 916,
+          "text": "[2026-11-05T18:36:07.849Z] [INFO] Browser test result: 282 passed, 0 failed"
+        }
+      ]
+    }
+  ],
+  "browserModulesPassed": 282,
+  "browserModulesFailed": 0,
+  "downloadedFirefoxFiles": 8,
+  "downloadedFirefoxTasksPassed": 16,
+  "coverageEvidence": [
+    {
+      "line": 916,
+      "text": "[INFO] Downloaded Firefox coverage: 8 file(s), 16 task(s), 16 passed"
+    }
+  ]
+}

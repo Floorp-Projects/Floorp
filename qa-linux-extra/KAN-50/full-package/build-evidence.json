@@ -1,0 +1,20 @@
+{
+  "runId": 42086912660,
+  "jobId": 127454399181,
+  "logSha256": "38a59946fad4e6e9c26a06fc953a46806a219504a385deb15115df7fa5f2def4",
+  "selectedEvidence": [
+    {
+      "line": 977,
+      "text": "main\tApply Floorp common Runtime patches\t2026-11-05T18:45:00.7226375Z Applying Floorp Runtime patch: picture-in-picture-app-window.patch"
+    },
+    {
+      "line": 4297,
+      "text": "main\tInject Noraneko\t2026-11-05T18:47:56.3567593Z Already applied by the Runtime source build: ./tools/patches/moz-src-toolkit-components-pictureinpicture-PictureInPicture.sys.patch"
+    },
+    {
+      "line": 6061,
+      "text": "main\tVerify installer workspace\t2026-11-05T19:00:39.9182853Z Verified exact stable v2 installer/package: /home/runner/noraneko-installer/floorp-linux-x86_64.tar.xz"
+    }
+  ],
+  "fullLogExported": false
+}

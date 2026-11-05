@@ -1,0 +1,28 @@
+{
+  "binary": "/workspace/qa-linux-22/C-extra/KAN-50/full-package/package/extracted/floorp/floorp",
+  "productResourceReplacements": false,
+  "fixtures": "same generated VP8 bytes and WebVTT",
+  "cases": [
+    {
+      "openOrder": "normal-first",
+      "closeFirst": "normal"
+    },
+    {
+      "openOrder": "normal-first",
+      "closeFirst": "panel"
+    },
+    {
+      "openOrder": "panel-first",
+      "closeFirst": "normal"
+    },
+    {
+      "openOrder": "panel-first",
+      "closeFirst": "panel"
+    }
+  ],
+  "eachCase": "fresh owned profile/display; real native PiP controls; EWMH-verified minimize state2; captions; remaining-player AppWindow force/count; final indicator/count cleanup",
+  "scriptSha256": "c69e52924ebe4679efb84d20b2f9850f25218732e1aa71a8c7f473a4f3848394",
+  "protectionChanges": false,
+  "checksPerCase": 13,
+  "executed": true
+}

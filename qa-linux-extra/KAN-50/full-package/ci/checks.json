@@ -1,0 +1,108 @@
+{
+  "headSha": "9d042bc17be83c15d2ff3a25eb712f04c4d3eb45",
+  "draft": true,
+  "checks": [
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-11-05T18:27:36Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/Floorp-Projects/Floorp/actions/runs/42084373837/job/127445413387",
+      "name": "verify",
+      "startedAt": "2026-11-05T18:27:20Z",
+      "status": "COMPLETED",
+      "workflowName": "(CI) Docs LLM Pipeline"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-11-05T18:28:13Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/Floorp-Projects/Floorp/actions/runs/42084373774/job/127445413082",
+      "name": "smoke",
+      "startedAt": "2026-11-05T18:27:20Z",
+      "status": "COMPLETED",
+      "workflowName": "(CI) \ud83e\uddea Browser Integration + Runner Tests"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-11-05T18:27:26Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/Floorp-Projects/Floorp/actions/runs/42084373895/job/127445414163",
+      "name": "moderate",
+      "startedAt": "2026-11-05T18:27:21Z",
+      "status": "COMPLETED",
+      "workflowName": "Moderate Content"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-11-05T18:27:23Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/Floorp-Projects/Floorp/actions/runs/42084373768/job/127445416003",
+      "name": "notify",
+      "startedAt": "2026-11-05T18:27:20Z",
+      "status": "COMPLETED",
+      "workflowName": "OpenBot event notification"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-11-05T18:27:17Z",
+      "conclusion": "SKIPPED",
+      "detailsUrl": "https://github.com/Floorp-Projects/Floorp/actions/runs/42084373837/job/127445414975",
+      "name": "generate-docs-artifact",
+      "startedAt": "2026-11-05T18:27:18Z",
+      "status": "COMPLETED",
+      "workflowName": "(CI) Docs LLM Pipeline"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-11-05T18:38:26Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/Floorp-Projects/Floorp/actions/runs/42084373774/job/127445930096",
+      "name": "Native Runtime / ubuntu-24.04",
+      "startedAt": "2026-11-05T18:28:16Z",
+      "status": "COMPLETED",
+      "workflowName": "(CI) \ud83e\uddea Browser Integration + Runner Tests"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-11-05T18:28:46Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/Floorp-Projects/Floorp/actions/runs/42084373774/job/127445930081",
+      "name": "Native Runtime / ubuntu-24.04-arm",
+      "startedAt": "2026-11-05T18:28:18Z",
+      "status": "COMPLETED",
+      "workflowName": "(CI) \ud83e\uddea Browser Integration + Runner Tests"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-11-05T18:29:11Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/Floorp-Projects/Floorp/actions/runs/42084373774/job/127445930391",
+      "name": "Native Runtime / windows-latest",
+      "startedAt": "2026-11-05T18:28:16Z",
+      "status": "COMPLETED",
+      "workflowName": "(CI) \ud83e\uddea Browser Integration + Runner Tests"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-11-05T18:34:50Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/Floorp-Projects/Floorp/actions/runs/42084373774/job/127445930023",
+      "name": "Native Runtime / macos-latest",
+      "startedAt": "2026-11-05T18:33:17Z",
+      "status": "COMPLETED",
+      "workflowName": "(CI) \ud83e\uddea Browser Integration + Runner Tests"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-11-05T18:27:23Z",
+      "conclusion": "SKIPPED",
+      "detailsUrl": "https://coderabbit.ai?utm_source=cr_app&utm_medium=github",
+      "name": "CodeRabbit",
+      "startedAt": "2026-11-05T18:27:23Z",
+      "status": "COMPLETED",
+      "workflowName": ""
+    }
+  ],
+  "failureCount": 0,
+  "ciReruns": 0
+}
