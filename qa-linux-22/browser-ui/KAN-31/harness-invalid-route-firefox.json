@@ -1,0 +1,26 @@
+{
+  "scenario": "search",
+  "product": {
+    "version": "159.0.1",
+    "build": "20261102144711",
+    "name": "Firefox",
+    "os": "Linux"
+  },
+  "observations": [
+    {
+      "url": "about:preferences#searchResults",
+      "input": "proxy",
+      "visible": "\nSettings\n\nAccount and sync\n\nHome and startup\n\nSearch\n\nPrivacy and security\n\nPasswords and autofill\n\nAppearance\n\nDownloads\n\nTabs and browsing\n\n\nAccessibility\n\nLanguages\n\nAI controls\n\nPermissions and data\n\nFirefox Labs\n\nAbout Firefox\n\nMore from Mozilla\n\nExtensions and themes\n\nFirefox support\n\n\n\n\n\n\nproxy\nproxy\nSearch results\n\n\nPrivacy and security\n\nAdvanced settings\n\n"
+    },
+    {
+      "url": "about:preferences#sync",
+      "input": "",
+      "visible": "\nSettings\n\nAccount and sync\n\nHome and startup\n\nSearch\n\nPrivacy and security\n\nPasswords and autofill\n\nAppearance\n\nDownloads\n\nTabs and browsing\n\n\nAccessibility\n\nLanguages\n\nAI controls\n\nPermissions and data\n\nFirefox Labs\n\nAbout Firefox\n\nMore from Mozilla\n\nExtensions and themes\n\nFirefox support\n\n\n\n\n\n\nAccount and sync\n\n\nMake default\n\nYou’re not signed in\n Sign in and keep your data private, encrypted, and instantly accessible everywhere you use Firefox.\n\nSign in\n\n\n\nSign in to your account to start syncing\n\n\nm\n\n\n\n                \n                \n              \n\nBackup is OFF\n\nTurn on backup\n\n\nRestore your data\n\n      Use a Firefox backup from another device to restore your data.\n    \n\n"
+    },
+    {
+      "url": "about:preferences#searchResults",
+      "input": "proxy",
+      "visible": "\nSettings\n\nAccount and sync\n\nHome and startup\n\nSearch\n\nPrivacy and security\n\nPasswords and autofill\n\nAppearance\n\nDownloads\n\nTabs and browsing\n\n\nAccessibility\n\nLanguages\n\nAI controls\n\nPermissions and data\n\nAbout Firefox\n\nMore from Mozilla\n\nExtensions and themes\n\nFirefox support\n\n\n\n\n\n\nproxy\nproxy\nSearch results\n\n\nPrivacy and security\n\nAdvanced settings\n\n"
+    }
+  ]
+}

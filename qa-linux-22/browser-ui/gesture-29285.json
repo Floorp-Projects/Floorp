@@ -1,0 +1,43 @@
+{
+  "scenario": "gesture",
+  "product": {
+    "version": "159.0.1",
+    "build": "20261103153232",
+    "name": "Floorp",
+    "os": "Linux"
+  },
+  "observations": [
+    {
+      "points": [
+        [
+          600,
+          650
+        ],
+        [
+          600,
+          450
+        ]
+      ],
+      "beforeTabs": 10,
+      "afterTabs": 11
+    },
+    {
+      "points": [
+        [
+          600,
+          650
+        ],
+        [
+          600,
+          450
+        ],
+        [
+          600,
+          650
+        ]
+      ],
+      "beforeTabs": 12,
+      "afterTabs": 12
+    }
+  ]
+}

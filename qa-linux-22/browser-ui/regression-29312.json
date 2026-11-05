@@ -1,0 +1,53 @@
+{
+  "scenario": "regression",
+  "product": {
+    "version": "159.0.1",
+    "build": "20261103153232",
+    "name": "Floorp",
+    "os": "Linux"
+  },
+  "observations": [],
+  "graphics": {
+    "windowProtocol": "x11",
+    "compositing": "WebRender (Software)",
+    "keys": [
+      "desktopEnvironment",
+      "numTotalWindows",
+      "numAcceleratedWindows",
+      "windowLayerManagerType",
+      "windowLayerManagerRemote",
+      "graphicsDevicePixelRatios",
+      "adapterDescription",
+      "adapterVendorID",
+      "adapterDeviceID",
+      "adapterRAM",
+      "adapterDrivers",
+      "driverVendor",
+      "driverVersion",
+      "driverDate",
+      "adapterVendorID2",
+      "adapterDeviceID2",
+      "isGPU2Active",
+      "targetFrameRate",
+      "windowProtocol",
+      "supportFontDetermination",
+      "webgl1Renderer",
+      "webgl1Version",
+      "webgl1DriverExtensions",
+      "webgl1Extensions",
+      "webgl1WSIInfo",
+      "webgl2Renderer",
+      "webgl2Version",
+      "webgl2DriverExtensions",
+      "webgl2Extensions",
+      "webgl2WSIInfo",
+      "info",
+      "featureLog",
+      "crashGuards",
+      "webgpuDefaultAdapter",
+      "webgpuFallbackAdapter"
+    ]
+  },
+  "error": "JavascriptException('ReferenceError: qaKan3Test is not defined')",
+  "traceback": "Traceback (most recent call last):\n  File \"/workspace/qa-linux-22/browser-ui/KAN-3/regression-probe.py\", line 95, in <module>\n    r['observations'].append(m.execute_async_script('qaKan3Test.runAllTests().then(()=>arguments[0]({passed:true}),e=>arguments[0]({passed:false,error:String(e),stack:e.stack}));',script_timeout=40000))\n                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/workspace/qa-linux-22/browser-ui/python/marionette_driver/marionette.py\", line 1959, in execute_async_script\n    rv = self._send_message(\"WebDriver:ExecuteAsyncScript\", body, key=\"value\")\n         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/workspace/qa-linux-22/browser-ui/python/marionette_driver/decorators.py\", line 24, in _\n    return func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File \"/workspace/qa-linux-22/browser-ui/python/marionette_driver/marionette.py\", line 780, in _send_message\n    self._handle_error(err)\n  File \"/workspace/qa-linux-22/browser-ui/python/marionette_driver/marionette.py\", line 792, in _handle_error\n    raise errors.lookup(error)(message, stacktrace=stacktrace)\nmarionette_driver.errors.JavascriptException: ReferenceError: qaKan3Test is not defined\nstacktrace:\n\t@qa-linux-22/browser-ui/KAN-3/regression-probe.py:96:7\n\t@qa-linux-22/browser-ui/KAN-3/regression-probe.py:97:8\n\tevaluate.sandbox/promise<@chrome://remote/content/marionette/evaluate.sys.mjs:127:10\n\tevaluate.sandbox@chrome://remote/content/marionette/evaluate.sys.mjs:103:17\n\texecuteScript@chrome://remote/content/marionette/actors/MarionetteCommandsChild.sys.mjs:358:26\n\treceiveMessage@chrome://remote/content/marionette/actors/MarionetteCommandsChild.sys.mjs:214:31\n\n"
+}

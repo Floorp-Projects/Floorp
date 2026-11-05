@@ -1,0 +1,20 @@
+F: Opening user flatpak installation at path /workspace/qa-linux-22/browser-ui/runtime/flatpak-data/flatpak
+F: No installations directory in /etc/flatpak/installations.d. Skipping
+F: Fetching summary index file for remote ‘flathub’
+F: Loading https://dl.flathub.org/repo/summary.idx using curl
+F: Received 10001 bytes
+F: Loaded indexed summary file 3acde582f90f068fe5dcb5ec714be08864028b57f3ce8f53d6505ff1b489d4de from cache for remote ‘flathub’
+F: Transaction: install flathub:app/one.ablaze.floorp/x86_64/stable[*]
+F: Looking for remote metadata updates for flathub
+F: marking op install:app/one.ablaze.floorp/x86_64/stable resolved to ab3c23d5f3a32863918263c197b483e37d9ed78a6bb9d00a1657e31dc5e04621
+F: Updating dependency org.freedesktop.Platform/x86_64/26.08 of one.ablaze.floorp/x86_64/stable
+F: Transaction: update flathub:runtime/org.freedesktop.Platform/x86_64/26.08[$old]
+F: marking op update:runtime/org.freedesktop.Platform/x86_64/26.08 resolved to df26daaf9d07610b4a72cc4585566194051275ac68396597b06474396f66427c
+F: Checking installation ‘user’ for EOL unused refs and autoprunes
+F: Checking installation ‘user’ for EOL unused refs and autoprunes
+Installing app/one.ablaze.floorp/x86_64/stable
+F: flatpak_dir_pull: Using commit ab3c23d5f3a32863918263c197b483e37d9ed78a6bb9d00a1657e31dc5e04621 for pull of ref app/one.ablaze.floorp/x86_64/stable from remote flathub
+F: No checksum specified, getting tip of app/one.ablaze.floorp/x86_64/stable from origin flathub
+F: tip resolved to: ab3c23d5f3a32863918263c197b483e37d9ed78a6bb9d00a1657e31dc5e04621
+F: Getting parental controls details for app/one.ablaze.floorp/x86_64/stable from flathub
+Error: Failed to install one.ablaze.floorp: Could not connect: No such file or directory

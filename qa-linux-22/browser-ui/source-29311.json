@@ -1,0 +1,23 @@
+{
+  "scenario": "source",
+  "product": {
+    "version": "159.0.1",
+    "build": "20261103153232",
+    "name": "Floorp",
+    "os": "Linux"
+  },
+  "observations": [],
+  "tests": {
+    "passed": false,
+    "error": "Error: mouseGestureController.test.ts failures: returning gestures stay activated at their starting point: expected built-in action gecko-show-previous-tab to exist | repeated sub-threshold jitter keeps ordinary right clicks: expected built-in action gecko-show-previous-tab to exist | held right button survives a page-cancelled early contextmenu: expected built-in action gecko-show-previous-tab to exist | early contextmenu preserves ordinary right clicks: expected built-in action gecko-show-previous-tab to exist | early contextmenu still suppresses wheel and rocker menus: expected built-in action gecko-show-previous-tab to exist | native contextmenu before mouseup preserves the drawn gesture: expected built-in action gecko-show-previous-tab to exist | wheel gesture suppresses post-mouseup contextmenu: expected built-in action gecko-show-previous-tab to exist | wheel gesture chains while held and consumes residual wheel: expected built-in action gecko-show-previous-tab to exist | disabled wheel gestures remain passive: expected built-in action gecko-show-previous-tab to exist | disabled feature remains passive: expected built-in action gecko-show-previous-tab to exist | zero-delta wheel remains passive: expected built-in action gecko-show-previous-tab to exist | wheel suppression expires without extending: expected built-in action gecko-show-previous-tab to exist | new right click resets wheel suppression: expected built-in action gecko-show-previous-tab to exist | new right click recovers from a lost mouseup: expected built-in action gecko-show-previous-tab to exist | lost wheel release recovery follows physical buttons: expected built-in action gecko-show-previous-tab to exist | blur clears a wheel gesture whose mouseup was lost: expected built-in action gecko-show-previous-tab to exist | disable transition clears wheel suppression: expected built-in action gecko-show-previous-tab to exist | destroy clears wheel suppression timer: expected built-in action gecko-show-previous-tab to exist | wheel gesture cannot become rocker gesture: expected built-in action gecko-show-previous-tab to exist | rocker gesture cannot become wheel gesture: expected built-in action gecko-show-previous-tab to exist | wheel gesture uses configured actions: expected built-in action gecko-show-previous-tab to exist | recognized gesture executes synchronously on mouseup: expected built-in action gecko-show-previous-tab to exist | unrecognized but moved gesture consumes its mouseup: expected built-in action gecko-show-previous-tab to exist | a genuine interruption still resets an active drawn gesture: expected built-in action gecko-show-previous-tab to exist | a new right mousedown recovers from a stale drawn gesture: expected built-in action gecko-show-previous-tab to exist | a stale drawn gesture does not become a rocker on left click: expected built-in action gecko-show-previous-tab to exist | physical button mismatch clears stale drawn state: expected built-in action gecko-show-previous-tab to exist | recognized gesture neutralizes state before action: expected built-in action gecko-show-previous-tab to exist | recognized gesture schedules release after a throwing action: expected built-in action gecko-show-previous-tab to exist | recognized gesture handles timer failure: expected built-in action gecko-show-previous-tab to exist | stale rocker recovery follows physical buttons: expected built-in action gecko-show-previous-tab to exist | partial rocker lost-release cleanup follows physical buttons: expected built-in action gecko-show-previous-tab to exist | leftRight rocker repeats while the left anchor is held: expected built-in action gecko-show-previous-tab to exist | rightLeft rocker repeats while the right anchor is held: expected built-in action gecko-show-previous-tab to exist | rocker gesture consumes mousemove while held: expected built-in action gecko-show-previous-tab to exist | mousedown capture survives content stopPropagation: expected built-in action gecko-show-previous-tab to exist | leftRight rocker lets the left mouseup through: expected built-in action gecko-show-previous-tab to exist | rightLeft rocker suppresses the left mouseup: expected built-in action gecko-show-previous-tab to exist",
+    "stack": "runTests@qa-linux-22/browser-ui/source-probe.py:139:13\n",
+    "progress": {
+      "moduleName": "mouseGestureController.test.ts",
+      "testName": "",
+      "status": "done",
+      "index": 40,
+      "total": 40,
+      "startedAtMs": 1793888516486
+    }
+  }
+}

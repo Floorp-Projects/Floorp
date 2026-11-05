@@ -1,0 +1,231 @@
+{
+  "scenario": "visual",
+  "product": {
+    "version": "159.0.1",
+    "build": "20261103153232",
+    "name": "Floorp",
+    "os": "Linux"
+  },
+  "observations": [
+    {
+      "dark": 0,
+      "normal": [
+        {
+          "selector": "#navigator-toolbox",
+          "color": "rgb(47, 47, 52)",
+          "background": "rgba(0, 0, 0, 0)",
+          "opacity": "1",
+          "rect": {
+            "width": 1366,
+            "height": 73
+          }
+        },
+        {
+          "selector": "#TabsToolbar",
+          "color": "rgb(47, 47, 52)",
+          "background": "rgba(0, 0, 0, 0)",
+          "opacity": "1",
+          "rect": {
+            "width": 1367,
+            "height": 36
+          }
+        },
+        {
+          "selector": "#nav-bar",
+          "color": "rgb(47, 47, 52)",
+          "background": "rgb(255, 255, 255)",
+          "opacity": "1",
+          "rect": {
+            "width": 1366,
+            "height": 36
+          }
+        },
+        {
+          "selector": "#PanelUI-menu-button",
+          "color": "rgb(47, 47, 52)",
+          "background": "rgba(0, 0, 0, 0)",
+          "opacity": "1",
+          "rect": {
+            "width": 42,
+            "height": 36
+          }
+        },
+        {
+          "selector": "#urlbar-input",
+          "color": "rgb(47, 47, 52)",
+          "background": "rgba(0, 0, 0, 0)",
+          "opacity": "1",
+          "rect": {
+            "width": 804.5,
+            "height": 30
+          }
+        }
+      ]
+    },
+    {
+      "dark": 0,
+      "zen": [
+        {
+          "selector": "#navigator-toolbox",
+          "color": "rgb(47, 47, 52)",
+          "background": "rgb(235, 235, 237)",
+          "opacity": "1",
+          "rect": {
+            "width": 1366,
+            "height": 73
+          }
+        },
+        {
+          "selector": "#TabsToolbar",
+          "color": "rgb(47, 47, 52)",
+          "background": "rgba(0, 0, 0, 0)",
+          "opacity": "1",
+          "rect": {
+            "width": 1367,
+            "height": 36
+          }
+        },
+        {
+          "selector": "#nav-bar",
+          "color": "rgb(47, 47, 52)",
+          "background": "rgb(255, 255, 255)",
+          "opacity": "1",
+          "rect": {
+            "width": 1366,
+            "height": 36
+          }
+        },
+        {
+          "selector": "#PanelUI-menu-button",
+          "color": "rgb(47, 47, 52)",
+          "background": "rgba(0, 0, 0, 0)",
+          "opacity": "1",
+          "rect": {
+            "width": 42,
+            "height": 36
+          }
+        },
+        {
+          "selector": "#urlbar-input",
+          "color": "rgb(47, 47, 52)",
+          "background": "rgba(0, 0, 0, 0)",
+          "opacity": "1",
+          "rect": {
+            "width": 804.5,
+            "height": 30
+          }
+        }
+      ]
+    },
+    {
+      "dark": 1,
+      "normal": [
+        {
+          "selector": "#navigator-toolbox",
+          "color": "rgb(255, 255, 255)",
+          "background": "rgba(0, 0, 0, 0)",
+          "opacity": "1",
+          "rect": {
+            "width": 1366,
+            "height": 73
+          }
+        },
+        {
+          "selector": "#TabsToolbar",
+          "color": "rgb(255, 255, 255)",
+          "background": "rgba(0, 0, 0, 0)",
+          "opacity": "1",
+          "rect": {
+            "width": 1367,
+            "height": 36
+          }
+        },
+        {
+          "selector": "#nav-bar",
+          "color": "rgb(255, 255, 255)",
+          "background": "color(srgb 0.33 0.33 0.343333)",
+          "opacity": "1",
+          "rect": {
+            "width": 1366,
+            "height": 36
+          }
+        },
+        {
+          "selector": "#PanelUI-menu-button",
+          "color": "rgb(255, 255, 255)",
+          "background": "rgba(0, 0, 0, 0)",
+          "opacity": "1",
+          "rect": {
+            "width": 42,
+            "height": 36
+          }
+        },
+        {
+          "selector": "#urlbar-input",
+          "color": "rgb(255, 255, 255)",
+          "background": "rgba(0, 0, 0, 0)",
+          "opacity": "1",
+          "rect": {
+            "width": 804.5,
+            "height": 30
+          }
+        }
+      ]
+    },
+    {
+      "dark": 1,
+      "zen": [
+        {
+          "selector": "#navigator-toolbox",
+          "color": "rgb(255, 255, 255)",
+          "background": "rgb(46, 46, 50)",
+          "opacity": "0",
+          "rect": {
+            "width": 1366,
+            "height": 73
+          }
+        },
+        {
+          "selector": "#TabsToolbar",
+          "color": "rgb(255, 255, 255)",
+          "background": "rgba(0, 0, 0, 0)",
+          "opacity": "1",
+          "rect": {
+            "width": 1367,
+            "height": 36
+          }
+        },
+        {
+          "selector": "#nav-bar",
+          "color": "rgb(255, 255, 255)",
+          "background": "color(srgb 0.33 0.33 0.343333)",
+          "opacity": "1",
+          "rect": {
+            "width": 1366,
+            "height": 36
+          }
+        },
+        {
+          "selector": "#PanelUI-menu-button",
+          "color": "rgb(255, 255, 255)",
+          "background": "rgba(0, 0, 0, 0)",
+          "opacity": "1",
+          "rect": {
+            "width": 42,
+            "height": 36
+          }
+        },
+        {
+          "selector": "#urlbar-input",
+          "color": "rgb(255, 255, 255)",
+          "background": "rgba(0, 0, 0, 0)",
+          "opacity": "1",
+          "rect": {
+            "width": 804.5,
+            "height": 30
+          }
+        }
+      ]
+    }
+  ]
+}

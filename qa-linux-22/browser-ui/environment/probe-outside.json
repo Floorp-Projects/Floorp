@@ -1,0 +1,24 @@
+{
+  "namespace": {
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "dbus": {
+    "exit": 0,
+    "stdout": "method return time=1793887921.831886 sender=org.freedesktop.DBus -> destination=:1.0 serial=3 reply_serial=2\n   array [\n      string \"org.freedesktop.DBus\"\n      string \":1.0\"\n   ]\n",
+    "stderr": ""
+  },
+  "devices": {
+    "exit": 2,
+    "stdout": "",
+    "stderr": "ls: cannot access '/dev/dri': No such file or directory\nls: cannot access '/dev/uinput': No such file or directory\nls: cannot access '/dev/input': No such file or directory\n"
+  },
+  "tools": {
+    "flatpak": null,
+    "weston": null,
+    "kwin_wayland": null,
+    "sway": null,
+    "bwrap": "/usr/bin/bwrap"
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "scenario": "wheel",
+  "product": {
+    "version": "159.0.1",
+    "build": "20261103153232",
+    "name": "Floorp",
+    "os": "Linux"
+  },
+  "observations": [
+    {
+      "input": "constructed WheelEvent",
+      "mode": 0,
+      "delta": 120,
+      "before": {
+        "left": 0,
+        "width": 1181,
+        "total": 2546
+      },
+      "after": 120
+    },
+    {
+      "input": "constructed WheelEvent",
+      "mode": 1,
+      "delta": 1,
+      "before": {
+        "left": 0,
+        "width": 1181,
+        "total": 2546
+      },
+      "after": 84.86666870117188
+    },
+    {
+      "input": "constructed WheelEvent",
+      "mode": 2,
+      "delta": 1,
+      "before": {
+        "left": 0,
+        "width": 1181,
+        "total": 2546
+      },
+      "after": 1181
+    }
+  ]
+}

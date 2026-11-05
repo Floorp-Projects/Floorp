@@ -1,0 +1,102 @@
+{
+  "scenario": "wheel-os",
+  "product": {
+    "version": "159.0.1",
+    "build": "20261103153232",
+    "name": "Floorp",
+    "os": "Linux"
+  },
+  "observations": [
+    {
+      "kind": "stack",
+      "input": "OS XTest wheel button4 one notch; not physical",
+      "before": {
+        "left": 1365,
+        "top": 0,
+        "width": 1181,
+        "total": 2546
+      },
+      "after": {
+        "left": 855.7999877929688,
+        "top": 0,
+        "width": 1181,
+        "total": 2546
+      },
+      "events": [
+        {
+          "target": "floorp-stack-tab",
+          "deltaX": 0,
+          "deltaY": -6,
+          "mode": 1,
+          "trusted": true
+        }
+      ]
+    },
+    {
+      "kind": "normal",
+      "input": "OS XTest wheel button4 one notch; not physical",
+      "before": {
+        "left": 1345.63330078125,
+        "top": 0,
+        "width": 951,
+        "total": 2297
+      },
+      "after": {
+        "left": 1345.63330078125,
+        "top": 0,
+        "width": 951,
+        "total": 2297
+      },
+      "events": [
+        {
+          "target": "tab-text tab-label",
+          "deltaX": 0,
+          "deltaY": -6,
+          "mode": 1,
+          "trusted": true
+        }
+      ]
+    }
+  ],
+  "graphics": {
+    "windowProtocol": "x11",
+    "compositing": "WebRender (Software)",
+    "keys": [
+      "desktopEnvironment",
+      "numTotalWindows",
+      "numAcceleratedWindows",
+      "windowLayerManagerType",
+      "windowLayerManagerRemote",
+      "graphicsDevicePixelRatios",
+      "adapterDescription",
+      "adapterVendorID",
+      "adapterDeviceID",
+      "adapterRAM",
+      "adapterDrivers",
+      "driverVendor",
+      "driverVersion",
+      "driverDate",
+      "adapterVendorID2",
+      "adapterDeviceID2",
+      "isGPU2Active",
+      "targetFrameRate",
+      "windowProtocol",
+      "supportFontDetermination",
+      "webgl1Renderer",
+      "webgl1Version",
+      "webgl1DriverExtensions",
+      "webgl1Extensions",
+      "webgl1WSIInfo",
+      "webgl2Renderer",
+      "webgl2Version",
+      "webgl2DriverExtensions",
+      "webgl2Extensions",
+      "webgl2WSIInfo",
+      "info",
+      "featureLog",
+      "crashGuards",
+      "webgpuDefaultAdapter",
+      "webgpuFallbackAdapter"
+    ]
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "scenario": "search",
+  "product": {
+    "version": "159.0.1",
+    "build": "20261103153232",
+    "name": "Floorp",
+    "os": "Linux"
+  },
+  "observations": [],
+  "error": "ElementNotInteractableException('Element <moz-input-search id=\"searchInput\"> is not reachable by keyboard')",
+  "traceback": "Traceback (most recent call last):\n  File \"/workspace/qa-linux-22/browser-ui/probe.py\", line 37, in <module>\n    field=m.find_element(By.ID,'searchInput');field.send_keys('proxy');time.sleep(3)\n                                              ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/workspace/qa-linux-22/browser-ui/python/marionette_driver/marionette.py\", line 301, in send_keys\n    self.marionette._send_message(\n  File \"/workspace/qa-linux-22/browser-ui/python/marionette_driver/decorators.py\", line 24, in _\n    return func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File \"/workspace/qa-linux-22/browser-ui/python/marionette_driver/marionette.py\", line 780, in _send_message\n    self._handle_error(err)\n  File \"/workspace/qa-linux-22/browser-ui/python/marionette_driver/marionette.py\", line 792, in _handle_error\n    raise errors.lookup(error)(message, stacktrace=stacktrace)\nmarionette_driver.errors.ElementNotInteractableException: Element <moz-input-search id=\"searchInput\"> is not reachable by keyboard\nstacktrace:\n\tRemoteError@chrome://remote/content/shared/RemoteError.sys.mjs:14:8\n\tWebDriverError@chrome://remote/content/shared/webdriver/Errors.sys.mjs:169:5\n\tElementNotInteractableError@chrome://remote/content/shared/webdriver/Errors.sys.mjs:338:5\n\twebdriverSendKeysToElement@chrome://remote/content/marionette/interaction.sys.mjs:673:13\n\tinteraction.sendKeysToElement@chrome://remote/content/marionette/interaction.sys.mjs:645:11\n\tsendKeysToElement@chrome://remote/content/marionette/actors/MarionetteCommandsChild.sys.mjs:687:29\n\treceiveMessage@chrome://remote/content/marionette/actors/MarionetteCommandsChild.sys.mjs:279:31\n\n"
+}

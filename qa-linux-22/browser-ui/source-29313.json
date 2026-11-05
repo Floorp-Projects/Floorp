@@ -1,0 +1,23 @@
+{
+  "scenario": "source",
+  "product": {
+    "version": "159.0.1",
+    "build": "20261103153232",
+    "name": "Floorp",
+    "os": "Linux"
+  },
+  "observations": [],
+  "tests": {
+    "passed": false,
+    "error": "Error: mouseGestureController.test.ts failures: returning gestures stay activated at their starting point: returning to the origin must not restore a pre-release native menu (expected: true, actual: false)",
+    "stack": "runTests@qa-linux-22/browser-ui/source-probe.py:139:13\n",
+    "progress": {
+      "moduleName": "mouseGestureController.test.ts",
+      "testName": "",
+      "status": "done",
+      "index": 40,
+      "total": 40,
+      "startedAtMs": 1793888602145
+    }
+  }
+}

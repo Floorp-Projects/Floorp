@@ -1,0 +1,61 @@
+{
+  "scenario": "wheel-os",
+  "product": {
+    "version": "159.0.1",
+    "build": "20261103153232",
+    "name": "Floorp",
+    "os": "Linux"
+  },
+  "observations": [
+    {
+      "kind": "stack",
+      "input": "OS XTest wheel button5 one notch; not physical",
+      "before": {
+        "left": 0,
+        "top": 0,
+        "width": 1181,
+        "total": 2546
+      },
+      "after": {
+        "left": 509.20001220703125,
+        "top": 0,
+        "width": 1181,
+        "total": 2546
+      },
+      "events": [
+        {
+          "target": "floorp-stack-tab",
+          "deltaX": 0,
+          "deltaY": 6,
+          "mode": 1,
+          "trusted": true
+        }
+      ]
+    },
+    {
+      "kind": "normal",
+      "input": "OS XTest wheel button5 one notch; not physical",
+      "before": {
+        "left": 1344.63330078125,
+        "top": 0,
+        "width": 951,
+        "total": 2297
+      },
+      "after": {
+        "left": 1344.63330078125,
+        "top": 0,
+        "width": 951,
+        "total": 2297
+      },
+      "events": [
+        {
+          "target": "tab-text tab-label",
+          "deltaX": 0,
+          "deltaY": 6,
+          "mode": 1,
+          "trusted": true
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,88 @@
+{
+  "scenario": "split",
+  "product": {
+    "version": "159.0.1",
+    "build": "20261103153232",
+    "name": "Floorp",
+    "os": "Linux"
+  },
+  "observations": [
+    {
+      "phase": "before",
+      "tabs": [
+        [
+          {
+            "connected": true,
+            "url": "data:text/html,<title>QA split 0-0</title><h1>QA split 0-0</h1>",
+            "title": "QA split 0-0",
+            "pending": false,
+            "panel": "tabpanel-2",
+            "split": null
+          },
+          {
+            "connected": true,
+            "url": "data:text/html,<title>QA split 0-1</title><h1>QA split 0-1</h1>",
+            "title": "QA split 0-1",
+            "pending": false,
+            "panel": "tabpanel-3",
+            "split": null
+          }
+        ],
+        [
+          {
+            "connected": true,
+            "url": "data:text/html,<title>QA split 1-0</title><h1>QA split 1-0</h1>",
+            "title": "QA split 1-0",
+            "pending": false,
+            "panel": "tabpanel-4",
+            "split": "mw3mrr6hwssss4"
+          },
+          {
+            "connected": true,
+            "url": "data:text/html,<title>QA split 1-1</title><h1>QA split 1-1</h1>",
+            "title": "QA split 1-1",
+            "pending": false,
+            "panel": "tabpanel-5",
+            "split": "mw3mrr6hwssss4"
+          }
+        ]
+      ]
+    },
+    {
+      "phase": "new-window",
+      "tabs": [
+        {
+          "url": "data:text/html,<title>QA split 1-0</title><h1>QA split 1-0</h1>",
+          "title": "QA split 1-0",
+          "pending": false
+        },
+        {
+          "url": "data:text/html,<title>QA split 1-1</title><h1>QA split 1-1</h1>",
+          "title": "QA split 1-1",
+          "pending": false
+        }
+      ]
+    },
+    {
+      "phase": "returned",
+      "tabs": [
+        {
+          "url": "data:text/html,<title>QA split 0-0</title><h1>QA split 0-0</h1>",
+          "title": "QA split 0-0"
+        },
+        {
+          "url": "data:text/html,<title>QA split 0-1</title><h1>QA split 0-1</h1>",
+          "title": "QA split 0-1"
+        },
+        {
+          "url": "data:text/html,<title>QA split 1-0</title><h1>QA split 1-0</h1>",
+          "title": "QA split 1-0"
+        },
+        {
+          "url": "data:text/html,<title>QA split 1-1</title><h1>QA split 1-1</h1>",
+          "title": "QA split 1-1"
+        }
+      ]
+    }
+  ]
+}

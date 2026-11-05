@@ -1,0 +1,32 @@
+{
+  "os": {
+    "exit": 0,
+    "stdout": "PRETTY_NAME=\"Debian GNU/Linux 13 (trixie)\"\nNAME=\"Debian GNU/Linux\"\nVERSION_ID=\"13\"\nVERSION=\"13 (trixie)\"\nVERSION_CODENAME=trixie\nDEBIAN_VERSION_FULL=13.6\nID=debian\nHOME_URL=\"https://www.debian.org/\"\nSUPPORT_URL=\"https://www.debian.org/support\"\nBUG_REPORT_URL=\"https://bugs.debian.org/\"\n",
+    "stderr": ""
+  },
+  "uid": {
+    "exit": 0,
+    "stdout": "uid=1000(agent) gid=1000(agent) groups=1000(agent)\n",
+    "stderr": ""
+  },
+  "namespace": {
+    "exit": 1,
+    "stdout": "",
+    "stderr": "unshare: cannot open /proc/self/uid_map: Read-only file system\n"
+  },
+  "dbus": {
+    "exit": 127,
+    "stdout": "",
+    "stderr": "dbus-daemon[1010]: Failed to start message bus: Failed to bind socket \"/tmp/dbus-zOdYdwgR6E\": Operation not permitted\ndbus-run-session: EOF reading address from bus daemon\n"
+  },
+  "docker": {
+    "exit": 1,
+    "stdout": "Client:\n Version:    28.4.0\n Context:    default\n Debug Mode: false\n Plugins:\n  buildx: Docker Buildx (Docker Inc.)\n    Version:  v0.31.0\n    Path:     /usr/libexec/docker/cli-plugins/docker-buildx\n  compose: Docker Compose (Docker Inc.)\n    Version:  v2.40.3\n    Path:     /usr/libexec/docker/cli-plugins/docker-compose\n\nServer:\n",
+    "stderr": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/info\": dial unix /var/run/docker.sock: connect: operation not permitted\n"
+  },
+  "devices": {
+    "exit": 2,
+    "stdout": "",
+    "stderr": "ls: cannot access '/dev/dri': No such file or directory\nls: cannot access '/dev/uinput': No such file or directory\nls: cannot access '/dev/input': No such file or directory\n"
+  }
+}

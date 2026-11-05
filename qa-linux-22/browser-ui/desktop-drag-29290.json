@@ -1,0 +1,76 @@
+{
+  "scenario": "desktop-drag",
+  "product": {
+    "version": "159.0.1",
+    "build": "20261103153232",
+    "name": "Floorp",
+    "os": "Linux"
+  },
+  "observations": [
+    {
+      "input": "OS XTest synthetic drag; not physical mouse",
+      "start": {
+        "proxy": {
+          "x": 302,
+          "y": 54.5,
+          "w": 180,
+          "h": 36
+        },
+        "window": {
+          "x": 50,
+          "y": 50,
+          "outerX": 50,
+          "outerY": 50,
+          "width": 850,
+          "height": 700
+        }
+      },
+      "events": [
+        {
+          "type": "dragstart",
+          "trusted": true,
+          "x": 352,
+          "y": 104,
+          "target": null
+        },
+        {
+          "type": "dragend",
+          "trusted": true,
+          "x": 1250,
+          "y": 850,
+          "target": "tabbrowser-tab"
+        }
+      ],
+      "windows": [
+        {
+          "x": 50,
+          "y": 50,
+          "tabs": [
+            {
+              "url": "about:blank",
+              "title": ""
+            },
+            {
+              "url": "data:text/html,<title>QA desktop drag 0</title>QA 0",
+              "title": "QA desktop drag 0"
+            },
+            {
+              "url": "data:text/html,<title>QA desktop drag 2</title>QA 2",
+              "title": "QA desktop drag 2"
+            }
+          ]
+        },
+        {
+          "x": 590,
+          "y": 400,
+          "tabs": [
+            {
+              "url": "data:text/html,<title>QA desktop drag 1</title>QA 1",
+              "title": "QA desktop drag 1"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

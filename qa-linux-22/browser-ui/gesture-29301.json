@@ -1,0 +1,2626 @@
+{
+  "scenario": "gesture",
+  "product": {
+    "version": "159.0.1",
+    "build": "20261103153232",
+    "name": "Floorp",
+    "os": "Linux"
+  },
+  "observations": [
+    {
+      "name": "up",
+      "points": [
+        [
+          600,
+          650
+        ],
+        [
+          600,
+          450
+        ]
+      ],
+      "beforeTabs": 6,
+      "afterTabs": 7,
+      "label": [
+        {
+          "id": "mouse-gesture-global-styles",
+          "cls": "",
+          "text": "\n            #mouse-gesture-display-container {\n                position: fixed;\n                top"
+        },
+        {
+          "id": "cmd_gestureRotateLeft",
+          "cls": "",
+          "text": ""
+        },
+        {
+          "id": "cmd_gestureRotateRight",
+          "cls": "",
+          "text": ""
+        },
+        {
+          "id": "cmd_gestureRotateEnd",
+          "cls": "",
+          "text": ""
+        },
+        {
+          "id": "mouse-gesture-display-container",
+          "cls": "",
+          "text": "New Tab"
+        }
+      ],
+      "events": [
+        {
+          "type": "mousemove",
+          "x": 100,
+          "y": 108,
+          "buttons": 0,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 300,
+          "y": 325,
+          "buttons": 0,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 400,
+          "y": 433,
+          "buttons": 0,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 500,
+          "y": 541,
+          "buttons": 0,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 650,
+          "buttons": 0,
+          "trusted": true
+        },
+        {
+          "type": "mousedown",
+          "x": 600,
+          "y": 650,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "contextmenu",
+          "x": 600,
+          "y": 650,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 616,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 450,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mouseup",
+          "x": 600,
+          "y": 450,
+          "buttons": 0,
+          "trusted": true
+        }
+      ]
+    },
+    {
+      "name": "updown",
+      "points": [
+        [
+          600,
+          650
+        ],
+        [
+          600,
+          450
+        ],
+        [
+          600,
+          650
+        ]
+      ],
+      "beforeTabs": 8,
+      "afterTabs": 8,
+      "label": [
+        {
+          "id": "mouse-gesture-global-styles",
+          "cls": "",
+          "text": "\n            #mouse-gesture-display-container {\n                position: fixed;\n                top"
+        },
+        {
+          "id": "cmd_gestureRotateLeft",
+          "cls": "",
+          "text": ""
+        },
+        {
+          "id": "cmd_gestureRotateRight",
+          "cls": "",
+          "text": ""
+        },
+        {
+          "id": "cmd_gestureRotateEnd",
+          "cls": "",
+          "text": ""
+        },
+        {
+          "id": "mouse-gesture-display-container",
+          "cls": "",
+          "text": "New Tab"
+        }
+      ],
+      "events": [
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 483,
+          "buttons": 0,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 483,
+          "buttons": 0,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 650,
+          "buttons": 0,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 650,
+          "buttons": 0,
+          "trusted": true
+        },
+        {
+          "type": "mousedown",
+          "x": 600,
+          "y": 650,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousedown",
+          "x": 600,
+          "y": 650,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "contextmenu",
+          "x": 600,
+          "y": 650,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "contextmenu",
+          "x": 600,
+          "y": 650,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 450,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 450,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 483,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 483,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 616,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 616,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 650,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 650,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mouseup",
+          "x": 600,
+          "y": 650,
+          "buttons": 0,
+          "trusted": true
+        },
+        {
+          "type": "mouseup",
+          "x": 600,
+          "y": 650,
+          "buttons": 0,
+          "trusted": true
+        }
+      ]
+    },
+    {
+      "name": "denseupdown",
+      "points": [
+        [
+          600,
+          650
+        ],
+        [
+          600,
+          640
+        ],
+        [
+          600,
+          630
+        ],
+        [
+          600,
+          620
+        ],
+        [
+          600,
+          610
+        ],
+        [
+          600,
+          600
+        ],
+        [
+          600,
+          590
+        ],
+        [
+          600,
+          580
+        ],
+        [
+          600,
+          570
+        ],
+        [
+          600,
+          560
+        ],
+        [
+          600,
+          550
+        ],
+        [
+          600,
+          540
+        ],
+        [
+          600,
+          530
+        ],
+        [
+          600,
+          520
+        ],
+        [
+          600,
+          510
+        ],
+        [
+          600,
+          500
+        ],
+        [
+          600,
+          490
+        ],
+        [
+          600,
+          480
+        ],
+        [
+          600,
+          470
+        ],
+        [
+          600,
+          460
+        ],
+        [
+          600,
+          450
+        ],
+        [
+          600,
+          460
+        ],
+        [
+          600,
+          470
+        ],
+        [
+          600,
+          480
+        ],
+        [
+          600,
+          490
+        ],
+        [
+          600,
+          500
+        ],
+        [
+          600,
+          510
+        ],
+        [
+          600,
+          520
+        ],
+        [
+          600,
+          530
+        ],
+        [
+          600,
+          540
+        ],
+        [
+          600,
+          550
+        ],
+        [
+          600,
+          560
+        ],
+        [
+          600,
+          570
+        ],
+        [
+          600,
+          580
+        ],
+        [
+          600,
+          590
+        ],
+        [
+          600,
+          600
+        ],
+        [
+          600,
+          610
+        ],
+        [
+          600,
+          620
+        ],
+        [
+          600,
+          630
+        ],
+        [
+          600,
+          640
+        ],
+        [
+          600,
+          650
+        ]
+      ],
+      "beforeTabs": 9,
+      "afterTabs": 9,
+      "label": [
+        {
+          "id": "mouse-gesture-global-styles",
+          "cls": "",
+          "text": "\n            #mouse-gesture-display-container {\n                position: fixed;\n                top"
+        },
+        {
+          "id": "cmd_gestureRotateLeft",
+          "cls": "",
+          "text": ""
+        },
+        {
+          "id": "cmd_gestureRotateRight",
+          "cls": "",
+          "text": ""
+        },
+        {
+          "id": "cmd_gestureRotateEnd",
+          "cls": "",
+          "text": ""
+        },
+        {
+          "id": "mouse-gesture-display-container",
+          "cls": "",
+          "text": "New Tab"
+        }
+      ],
+      "events": [
+        {
+          "type": "mousedown",
+          "x": 600,
+          "y": 650,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousedown",
+          "x": 600,
+          "y": 650,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousedown",
+          "x": 600,
+          "y": 650,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "contextmenu",
+          "x": 600,
+          "y": 650,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "contextmenu",
+          "x": 600,
+          "y": 650,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "contextmenu",
+          "x": 600,
+          "y": 650,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 648,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 648,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 648,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 646,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 646,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 646,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 645,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 645,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 645,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 643,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 643,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 643,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 641,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 641,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 641,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 640,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 640,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 640,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 638,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 638,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 638,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 636,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 636,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 636,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 635,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 635,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 635,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 633,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 633,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 633,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 631,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 631,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 631,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 630,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 630,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 630,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 628,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 628,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 628,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 626,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 626,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 626,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 623,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 623,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 623,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 621,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 621,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 621,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 620,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 620,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 620,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 618,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 618,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 618,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 616,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 616,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 616,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 615,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 615,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 615,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 613,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 613,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 613,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 611,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 611,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 611,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 610,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 610,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 610,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 608,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 608,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 608,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 601,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 601,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 601,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 600,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 600,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 600,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 593,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 593,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 593,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 591,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 591,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 591,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 590,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 590,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 590,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 588,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 588,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 588,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 586,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 586,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 586,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 581,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 581,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 581,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 580,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 580,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 580,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 578,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 578,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 578,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 576,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 576,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 576,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 575,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 575,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 575,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 573,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 573,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 573,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 571,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 571,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 571,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 570,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 570,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 570,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 568,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 568,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 568,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 566,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 566,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 566,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 565,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 565,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 565,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 560,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 560,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 560,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 555,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 555,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 555,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 553,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 553,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 553,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 551,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 551,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 551,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 550,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 550,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 550,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 546,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 546,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 546,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 545,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 545,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 545,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 541,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 541,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 541,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 540,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 540,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 540,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 538,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 538,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 538,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 536,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 536,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 536,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 531,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 531,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 531,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 530,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 530,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 530,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 528,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 528,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 528,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 525,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 525,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 525,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 521,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 521,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 521,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 520,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 520,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 520,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 518,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 518,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 518,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 516,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 516,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 516,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 515,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 515,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 515,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 513,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 513,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 513,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 511,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 511,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 511,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 510,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 510,
+          "buttons": 2,
+          "trusted": true
+        }
+      ]
+    },
+    {
+      "name": "downup",
+      "points": [
+        [
+          600,
+          450
+        ],
+        [
+          600,
+          650
+        ],
+        [
+          600,
+          450
+        ]
+      ],
+      "beforeTabs": 10,
+      "afterTabs": 10,
+      "label": [
+        {
+          "id": "mouse-gesture-global-styles",
+          "cls": "",
+          "text": "\n            #mouse-gesture-display-container {\n                position: fixed;\n                top"
+        },
+        {
+          "id": "cmd_gestureRotateLeft",
+          "cls": "",
+          "text": ""
+        },
+        {
+          "id": "cmd_gestureRotateRight",
+          "cls": "",
+          "text": ""
+        },
+        {
+          "id": "cmd_gestureRotateEnd",
+          "cls": "",
+          "text": ""
+        },
+        {
+          "id": "mouse-gesture-display-container",
+          "cls": "",
+          "text": "New Tab"
+        }
+      ],
+      "events": [
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 616,
+          "buttons": 0,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 616,
+          "buttons": 0,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 616,
+          "buttons": 0,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 616,
+          "buttons": 0,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 583,
+          "buttons": 0,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 583,
+          "buttons": 0,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 583,
+          "buttons": 0,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 583,
+          "buttons": 0,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 550,
+          "buttons": 0,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 550,
+          "buttons": 0,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 550,
+          "buttons": 0,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 550,
+          "buttons": 0,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 516,
+          "buttons": 0,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 516,
+          "buttons": 0,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 516,
+          "buttons": 0,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 516,
+          "buttons": 0,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 483,
+          "buttons": 0,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 483,
+          "buttons": 0,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 483,
+          "buttons": 0,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 483,
+          "buttons": 0,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 450,
+          "buttons": 0,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 450,
+          "buttons": 0,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 450,
+          "buttons": 0,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 450,
+          "buttons": 0,
+          "trusted": true
+        },
+        {
+          "type": "mousedown",
+          "x": 600,
+          "y": 450,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousedown",
+          "x": 600,
+          "y": 450,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousedown",
+          "x": 600,
+          "y": 450,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousedown",
+          "x": 600,
+          "y": 450,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "contextmenu",
+          "x": 600,
+          "y": 450,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "contextmenu",
+          "x": 600,
+          "y": 450,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "contextmenu",
+          "x": 600,
+          "y": 450,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "contextmenu",
+          "x": 600,
+          "y": 450,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 483,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 483,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 483,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 483,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 650,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 650,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 650,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 650,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 616,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 616,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 616,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 616,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 583,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 583,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 583,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 583,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 483,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 483,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 483,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 483,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 450,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 450,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 450,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 450,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mouseup",
+          "x": 600,
+          "y": 450,
+          "buttons": 0,
+          "trusted": true
+        },
+        {
+          "type": "mouseup",
+          "x": 600,
+          "y": 450,
+          "buttons": 0,
+          "trusted": true
+        },
+        {
+          "type": "mouseup",
+          "x": 600,
+          "y": 450,
+          "buttons": 0,
+          "trusted": true
+        },
+        {
+          "type": "mouseup",
+          "x": 600,
+          "y": 450,
+          "buttons": 0,
+          "trusted": true
+        }
+      ]
+    },
+    {
+      "name": "rightdown",
+      "points": [
+        [
+          450,
+          450
+        ],
+        [
+          650,
+          450
+        ],
+        [
+          650,
+          650
+        ]
+      ],
+      "beforeTabs": 11,
+      "afterTabs": 11,
+      "label": [
+        {
+          "id": "mouse-gesture-global-styles",
+          "cls": "",
+          "text": "\n            #mouse-gesture-display-container {\n                position: fixed;\n                top"
+        },
+        {
+          "id": "cmd_gestureRotateLeft",
+          "cls": "",
+          "text": ""
+        },
+        {
+          "id": "cmd_gestureRotateRight",
+          "cls": "",
+          "text": ""
+        },
+        {
+          "id": "cmd_gestureRotateEnd",
+          "cls": "",
+          "text": ""
+        },
+        {
+          "id": "mouse-gesture-display-container",
+          "cls": "",
+          "text": ""
+        }
+      ],
+      "events": [
+        {
+          "type": "mousemove",
+          "x": 450,
+          "y": 450,
+          "buttons": 0,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 450,
+          "y": 450,
+          "buttons": 0,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 450,
+          "y": 450,
+          "buttons": 0,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 450,
+          "y": 450,
+          "buttons": 0,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 450,
+          "y": 450,
+          "buttons": 0,
+          "trusted": true
+        },
+        {
+          "type": "mousedown",
+          "x": 450,
+          "y": 450,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousedown",
+          "x": 450,
+          "y": 450,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousedown",
+          "x": 450,
+          "y": 450,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousedown",
+          "x": 450,
+          "y": 450,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousedown",
+          "x": 450,
+          "y": 450,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "contextmenu",
+          "x": 450,
+          "y": 450,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "contextmenu",
+          "x": 450,
+          "y": 450,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "contextmenu",
+          "x": 450,
+          "y": 450,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "contextmenu",
+          "x": 450,
+          "y": 450,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "contextmenu",
+          "x": 450,
+          "y": 450,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 450,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 450,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 450,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 450,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 450,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 650,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 650,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 650,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 650,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 650,
+          "buttons": 2,
+          "trusted": true
+        },
+        {
+          "type": "mouseup",
+          "x": 650,
+          "y": 650,
+          "buttons": 0,
+          "trusted": true
+        },
+        {
+          "type": "mouseup",
+          "x": 650,
+          "y": 650,
+          "buttons": 0,
+          "trusted": true
+        },
+        {
+          "type": "mouseup",
+          "x": 650,
+          "y": 650,
+          "buttons": 0,
+          "trusted": true
+        },
+        {
+          "type": "mouseup",
+          "x": 650,
+          "y": 650,
+          "buttons": 0,
+          "trusted": true
+        },
+        {
+          "type": "mouseup",
+          "x": 650,
+          "y": 650,
+          "buttons": 0,
+          "trusted": true
+        }
+      ]
+    }
+  ],
+  "config": "{\"enabled\":false,\"rockerGesturesEnabled\":true,\"wheelGesturesEnabled\":true,\"sensitivity\":40,\"showTrail\":true,\"showLabel\":true,\"trailColor\":\"#37ff00\",\"trailWidth\":6,\"contextMenu\":{\"minDistance\":5,\"preventionTimeout\":200},\"actions\":[{\"pattern\":[\"up\"],\"action\":\"gecko-open-new-tab\"},{\"pattern\":[\"up\",\"down\"],\"action\":\"gecko-open-new-tab\"},{\"pattern\":[\"down\",\"up\"],\"action\":\"gecko-open-new-tab\"},{\"pattern\":[\"right\",\"down\"],\"action\":\"gecko-open-new-tab\"}],\"rockerActions\":{\"leftRight\":\"gecko-forward\",\"rightLeft\":\"gecko-back\"},\"wheelActions\":{\"scrollUp\":\"gecko-show-previous-tab\",\"scrollDown\":\"gecko-show-next-tab\"}}"
+}

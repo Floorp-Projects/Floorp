@@ -1,0 +1,162 @@
+{
+  "scenario": "visual",
+  "product": {
+    "version": "159.0.1",
+    "build": "20261102144711",
+    "name": "Firefox",
+    "os": "Linux"
+  },
+  "observations": [
+    {
+      "dark": 0,
+      "normal": [
+        {
+          "selector": "#navigator-toolbox",
+          "color": "rgb(47, 47, 52)",
+          "background": "rgba(0, 0, 0, 0)",
+          "opacity": "1",
+          "rect": {
+            "width": 1366,
+            "height": 84
+          }
+        },
+        {
+          "selector": "#TabsToolbar",
+          "color": "rgb(47, 47, 52)",
+          "background": "rgba(0, 0, 0, 0)",
+          "opacity": "1",
+          "rect": {
+            "width": 1366,
+            "height": 44
+          }
+        },
+        {
+          "selector": "#nav-bar",
+          "color": "rgb(50, 50, 55)",
+          "background": "color(srgb 0.983333 0.983333 0.986667)",
+          "opacity": "1",
+          "rect": {
+            "width": 1366,
+            "height": 40
+          }
+        },
+        {
+          "selector": "#PanelUI-menu-button",
+          "color": "rgb(50, 50, 55)",
+          "background": "rgba(0, 0, 0, 0)",
+          "opacity": "1",
+          "rect": {
+            "width": 40,
+            "height": 40
+          }
+        },
+        {
+          "selector": "#urlbar-input",
+          "color": "rgb(50, 50, 55)",
+          "background": "rgba(0, 0, 0, 0)",
+          "opacity": "1",
+          "rect": {
+            "width": 690.36669921875,
+            "height": 32
+          }
+        }
+      ]
+    },
+    {
+      "dark": 1,
+      "normal": [
+        {
+          "selector": "#navigator-toolbox",
+          "color": "rgb(255, 255, 255)",
+          "background": "rgba(0, 0, 0, 0)",
+          "opacity": "1",
+          "rect": {
+            "width": 1366,
+            "height": 84
+          }
+        },
+        {
+          "selector": "#TabsToolbar",
+          "color": "rgb(255, 255, 255)",
+          "background": "rgba(0, 0, 0, 0)",
+          "opacity": "1",
+          "rect": {
+            "width": 1366,
+            "height": 44
+          }
+        },
+        {
+          "selector": "#nav-bar",
+          "color": "rgb(255, 255, 255)",
+          "background": "color(srgb 0.33 0.33 0.343333)",
+          "opacity": "1",
+          "rect": {
+            "width": 1366,
+            "height": 40
+          }
+        },
+        {
+          "selector": "#PanelUI-menu-button",
+          "color": "rgb(255, 255, 255)",
+          "background": "rgba(0, 0, 0, 0)",
+          "opacity": "1",
+          "rect": {
+            "width": 40,
+            "height": 40
+          }
+        },
+        {
+          "selector": "#urlbar-input",
+          "color": "rgb(255, 255, 255)",
+          "background": "rgba(0, 0, 0, 0)",
+          "opacity": "1",
+          "rect": {
+            "width": 690.36669921875,
+            "height": 32
+          }
+        }
+      ]
+    }
+  ],
+  "graphics": {
+    "windowProtocol": "wayland",
+    "compositing": "WebRender (Software)",
+    "keys": [
+      "desktopEnvironment",
+      "numTotalWindows",
+      "numAcceleratedWindows",
+      "windowLayerManagerType",
+      "windowLayerManagerRemote",
+      "graphicsDevicePixelRatios",
+      "adapterDescription",
+      "adapterVendorID",
+      "adapterDeviceID",
+      "adapterRAM",
+      "adapterDrivers",
+      "driverVendor",
+      "driverVersion",
+      "driverDate",
+      "adapterVendorID2",
+      "adapterDeviceID2",
+      "isGPU2Active",
+      "targetFrameRate",
+      "windowProtocol",
+      "supportFontDetermination",
+      "webgl1Renderer",
+      "webgl1Version",
+      "webgl1DriverExtensions",
+      "webgl1Extensions",
+      "webgl1WSIInfo",
+      "webgl2Renderer",
+      "webgl2Version",
+      "webgl2DriverExtensions",
+      "webgl2Extensions",
+      "webgl2WSIInfo",
+      "info",
+      "featureLog",
+      "crashGuards",
+      "webgpuDefaultAdapter",
+      "webgpuFallbackAdapter"
+    ]
+  }
+}

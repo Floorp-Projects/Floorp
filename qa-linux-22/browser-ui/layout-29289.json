@@ -1,0 +1,1379 @@
+{
+  "scenario": "layout",
+  "product": {
+    "version": "159.0.1",
+    "build": "20261103153232",
+    "name": "Floorp",
+    "os": "Linux"
+  },
+  "observations": [
+    {
+      "nativeStart": true,
+      "panelAtRight": true,
+      "before": {
+        "dir": "ltr",
+        "position": true,
+        "elements": [
+          {
+            "id": "sidebar-main",
+            "rect": null,
+            "expanded": null,
+            "order": null
+          },
+          {
+            "id": "sidebar-container",
+            "rect": {
+              "x": 0,
+              "y": 63,
+              "w": 58,
+              "h": 937
+            },
+            "expanded": null,
+            "order": "1"
+          },
+          {
+            "id": "panel-sidebar-select-box",
+            "rect": {
+              "x": 1324,
+              "y": 63,
+              "w": 42,
+              "h": 937
+            },
+            "expanded": null,
+            "order": "1002"
+          },
+          {
+            "id": "panel-sidebar-box",
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 0,
+              "h": 0
+            },
+            "expanded": null,
+            "order": "1001"
+          },
+          {
+            "id": "tabbrowser-tabbox",
+            "rect": {
+              "x": 60,
+              "y": 63,
+              "w": 1264,
+              "h": 937
+            },
+            "expanded": null,
+            "order": "8"
+          }
+        ]
+      },
+      "hoverSamples": [
+        {
+          "dir": "ltr",
+          "position": true,
+          "elements": [
+            {
+              "id": "sidebar-main",
+              "rect": null,
+              "expanded": null,
+              "order": null
+            },
+            {
+              "id": "sidebar-container",
+              "rect": {
+                "x": -15.333328247070312,
+                "y": 63,
+                "w": 253.3333282470703,
+                "h": 937
+              },
+              "expanded": null,
+              "order": "1"
+            },
+            {
+              "id": "panel-sidebar-select-box",
+              "rect": {
+                "x": 1324,
+                "y": 63,
+                "w": 42,
+                "h": 937
+              },
+              "expanded": null,
+              "order": "1002"
+            },
+            {
+              "id": "panel-sidebar-box",
+              "rect": {
+                "x": 0,
+                "y": 0,
+                "w": 0,
+                "h": 0
+              },
+              "expanded": null,
+              "order": "1001"
+            },
+            {
+              "id": "tabbrowser-tabbox",
+              "rect": {
+                "x": 61,
+                "y": 63,
+                "w": 1263,
+                "h": 937
+              },
+              "expanded": null,
+              "order": "8"
+            }
+          ]
+        },
+        {
+          "dir": "ltr",
+          "position": true,
+          "elements": [
+            {
+              "id": "sidebar-main",
+              "rect": null,
+              "expanded": null,
+              "order": null
+            },
+            {
+              "id": "sidebar-container",
+              "rect": {
+                "x": 0,
+                "y": 63,
+                "w": 253.3333282470703,
+                "h": 937
+              },
+              "expanded": null,
+              "order": "1"
+            },
+            {
+              "id": "panel-sidebar-select-box",
+              "rect": {
+                "x": 1324,
+                "y": 63,
+                "w": 42,
+                "h": 937
+              },
+              "expanded": null,
+              "order": "1002"
+            },
+            {
+              "id": "panel-sidebar-box",
+              "rect": {
+                "x": 0,
+                "y": 0,
+                "w": 0,
+                "h": 0
+              },
+              "expanded": null,
+              "order": "1001"
+            },
+            {
+              "id": "tabbrowser-tabbox",
+              "rect": {
+                "x": 61,
+                "y": 63,
+                "w": 1263,
+                "h": 937
+              },
+              "expanded": null,
+              "order": "8"
+            }
+          ]
+        },
+        {
+          "dir": "ltr",
+          "position": true,
+          "elements": [
+            {
+              "id": "sidebar-main",
+              "rect": null,
+              "expanded": null,
+              "order": null
+            },
+            {
+              "id": "sidebar-container",
+              "rect": {
+                "x": 0,
+                "y": 63,
+                "w": 253.3333282470703,
+                "h": 937
+              },
+              "expanded": null,
+              "order": "1"
+            },
+            {
+              "id": "panel-sidebar-select-box",
+              "rect": {
+                "x": 1324,
+                "y": 63,
+                "w": 42,
+                "h": 937
+              },
+              "expanded": null,
+              "order": "1002"
+            },
+            {
+              "id": "panel-sidebar-box",
+              "rect": {
+                "x": 0,
+                "y": 0,
+                "w": 0,
+                "h": 0
+              },
+              "expanded": null,
+              "order": "1001"
+            },
+            {
+              "id": "tabbrowser-tabbox",
+              "rect": {
+                "x": 61,
+                "y": 63,
+                "w": 1263,
+                "h": 937
+              },
+              "expanded": null,
+              "order": "8"
+            }
+          ]
+        },
+        {
+          "dir": "ltr",
+          "position": true,
+          "elements": [
+            {
+              "id": "sidebar-main",
+              "rect": null,
+              "expanded": null,
+              "order": null
+            },
+            {
+              "id": "sidebar-container",
+              "rect": {
+                "x": 0,
+                "y": 63,
+                "w": 253.3333282470703,
+                "h": 937
+              },
+              "expanded": null,
+              "order": "1"
+            },
+            {
+              "id": "panel-sidebar-select-box",
+              "rect": {
+                "x": 1324,
+                "y": 63,
+                "w": 42,
+                "h": 937
+              },
+              "expanded": null,
+              "order": "1002"
+            },
+            {
+              "id": "panel-sidebar-box",
+              "rect": {
+                "x": 0,
+                "y": 0,
+                "w": 0,
+                "h": 0
+              },
+              "expanded": null,
+              "order": "1001"
+            },
+            {
+              "id": "tabbrowser-tabbox",
+              "rect": {
+                "x": 61,
+                "y": 63,
+                "w": 1263,
+                "h": 937
+              },
+              "expanded": null,
+              "order": "8"
+            }
+          ]
+        },
+        {
+          "dir": "ltr",
+          "position": true,
+          "elements": [
+            {
+              "id": "sidebar-main",
+              "rect": null,
+              "expanded": null,
+              "order": null
+            },
+            {
+              "id": "sidebar-container",
+              "rect": {
+                "x": 0,
+                "y": 63,
+                "w": 253.3333282470703,
+                "h": 937
+              },
+              "expanded": null,
+              "order": "1"
+            },
+            {
+              "id": "panel-sidebar-select-box",
+              "rect": {
+                "x": 1324,
+                "y": 63,
+                "w": 42,
+                "h": 937
+              },
+              "expanded": null,
+              "order": "1002"
+            },
+            {
+              "id": "panel-sidebar-box",
+              "rect": {
+                "x": 0,
+                "y": 0,
+                "w": 0,
+                "h": 0
+              },
+              "expanded": null,
+              "order": "1001"
+            },
+            {
+              "id": "tabbrowser-tabbox",
+              "rect": {
+                "x": 61,
+                "y": 63,
+                "w": 1263,
+                "h": 937
+              },
+              "expanded": null,
+              "order": "8"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "nativeStart": true,
+      "panelAtRight": false,
+      "before": {
+        "dir": "ltr",
+        "position": true,
+        "elements": [
+          {
+            "id": "sidebar-main",
+            "rect": null,
+            "expanded": null,
+            "order": null
+          },
+          {
+            "id": "sidebar-container",
+            "rect": {
+              "x": 0,
+              "y": 63,
+              "w": 253.3333282470703,
+              "h": 937
+            },
+            "expanded": null,
+            "order": "1"
+          },
+          {
+            "id": "panel-sidebar-select-box",
+            "rect": {
+              "x": 0,
+              "y": 63,
+              "w": 42,
+              "h": 937
+            },
+            "expanded": null,
+            "order": "-3"
+          },
+          {
+            "id": "panel-sidebar-box",
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 0,
+              "h": 0
+            },
+            "expanded": null,
+            "order": "-2"
+          },
+          {
+            "id": "tabbrowser-tabbox",
+            "rect": {
+              "x": 103,
+              "y": 63,
+              "w": 1263,
+              "h": 937
+            },
+            "expanded": null,
+            "order": "8"
+          }
+        ]
+      },
+      "hoverSamples": [
+        {
+          "dir": "ltr",
+          "position": true,
+          "elements": [
+            {
+              "id": "sidebar-main",
+              "rect": null,
+              "expanded": null,
+              "order": null
+            },
+            {
+              "id": "sidebar-container",
+              "rect": {
+                "x": 0,
+                "y": 63,
+                "w": 253.3333282470703,
+                "h": 937
+              },
+              "expanded": null,
+              "order": "1"
+            },
+            {
+              "id": "panel-sidebar-select-box",
+              "rect": {
+                "x": 0,
+                "y": 63,
+                "w": 42,
+                "h": 937
+              },
+              "expanded": null,
+              "order": "-3"
+            },
+            {
+              "id": "panel-sidebar-box",
+              "rect": {
+                "x": 0,
+                "y": 0,
+                "w": 0,
+                "h": 0
+              },
+              "expanded": null,
+              "order": "-2"
+            },
+            {
+              "id": "tabbrowser-tabbox",
+              "rect": {
+                "x": 103,
+                "y": 63,
+                "w": 1263,
+                "h": 937
+              },
+              "expanded": null,
+              "order": "8"
+            }
+          ]
+        },
+        {
+          "dir": "ltr",
+          "position": true,
+          "elements": [
+            {
+              "id": "sidebar-main",
+              "rect": null,
+              "expanded": null,
+              "order": null
+            },
+            {
+              "id": "sidebar-container",
+              "rect": {
+                "x": 0,
+                "y": 63,
+                "w": 253.3333282470703,
+                "h": 937
+              },
+              "expanded": null,
+              "order": "1"
+            },
+            {
+              "id": "panel-sidebar-select-box",
+              "rect": {
+                "x": 0,
+                "y": 63,
+                "w": 42,
+                "h": 937
+              },
+              "expanded": null,
+              "order": "-3"
+            },
+            {
+              "id": "panel-sidebar-box",
+              "rect": {
+                "x": 0,
+                "y": 0,
+                "w": 0,
+                "h": 0
+              },
+              "expanded": null,
+              "order": "-2"
+            },
+            {
+              "id": "tabbrowser-tabbox",
+              "rect": {
+                "x": 103,
+                "y": 63,
+                "w": 1263,
+                "h": 937
+              },
+              "expanded": null,
+              "order": "8"
+            }
+          ]
+        },
+        {
+          "dir": "ltr",
+          "position": true,
+          "elements": [
+            {
+              "id": "sidebar-main",
+              "rect": null,
+              "expanded": null,
+              "order": null
+            },
+            {
+              "id": "sidebar-container",
+              "rect": {
+                "x": 0,
+                "y": 63,
+                "w": 253.3333282470703,
+                "h": 937
+              },
+              "expanded": null,
+              "order": "1"
+            },
+            {
+              "id": "panel-sidebar-select-box",
+              "rect": {
+                "x": 0,
+                "y": 63,
+                "w": 42,
+                "h": 937
+              },
+              "expanded": null,
+              "order": "-3"
+            },
+            {
+              "id": "panel-sidebar-box",
+              "rect": {
+                "x": 0,
+                "y": 0,
+                "w": 0,
+                "h": 0
+              },
+              "expanded": null,
+              "order": "-2"
+            },
+            {
+              "id": "tabbrowser-tabbox",
+              "rect": {
+                "x": 103,
+                "y": 63,
+                "w": 1263,
+                "h": 937
+              },
+              "expanded": null,
+              "order": "8"
+            }
+          ]
+        },
+        {
+          "dir": "ltr",
+          "position": true,
+          "elements": [
+            {
+              "id": "sidebar-main",
+              "rect": null,
+              "expanded": null,
+              "order": null
+            },
+            {
+              "id": "sidebar-container",
+              "rect": {
+                "x": 0,
+                "y": 63,
+                "w": 253.3333282470703,
+                "h": 937
+              },
+              "expanded": null,
+              "order": "1"
+            },
+            {
+              "id": "panel-sidebar-select-box",
+              "rect": {
+                "x": 0,
+                "y": 63,
+                "w": 42,
+                "h": 937
+              },
+              "expanded": null,
+              "order": "-3"
+            },
+            {
+              "id": "panel-sidebar-box",
+              "rect": {
+                "x": 0,
+                "y": 0,
+                "w": 0,
+                "h": 0
+              },
+              "expanded": null,
+              "order": "-2"
+            },
+            {
+              "id": "tabbrowser-tabbox",
+              "rect": {
+                "x": 103,
+                "y": 63,
+                "w": 1263,
+                "h": 937
+              },
+              "expanded": null,
+              "order": "8"
+            }
+          ]
+        },
+        {
+          "dir": "ltr",
+          "position": true,
+          "elements": [
+            {
+              "id": "sidebar-main",
+              "rect": null,
+              "expanded": null,
+              "order": null
+            },
+            {
+              "id": "sidebar-container",
+              "rect": {
+                "x": 0,
+                "y": 63,
+                "w": 253.3333282470703,
+                "h": 937
+              },
+              "expanded": null,
+              "order": "1"
+            },
+            {
+              "id": "panel-sidebar-select-box",
+              "rect": {
+                "x": 0,
+                "y": 63,
+                "w": 42,
+                "h": 937
+              },
+              "expanded": null,
+              "order": "-3"
+            },
+            {
+              "id": "panel-sidebar-box",
+              "rect": {
+                "x": 0,
+                "y": 0,
+                "w": 0,
+                "h": 0
+              },
+              "expanded": null,
+              "order": "-2"
+            },
+            {
+              "id": "tabbrowser-tabbox",
+              "rect": {
+                "x": 103,
+                "y": 63,
+                "w": 1263,
+                "h": 937
+              },
+              "expanded": null,
+              "order": "8"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "nativeStart": false,
+      "panelAtRight": true,
+      "before": {
+        "dir": "ltr",
+        "position": false,
+        "elements": [
+          {
+            "id": "sidebar-main",
+            "rect": null,
+            "expanded": null,
+            "order": null
+          },
+          {
+            "id": "sidebar-container",
+            "rect": {
+              "x": 1266,
+              "y": 63,
+              "w": 58,
+              "h": 937
+            },
+            "expanded": null,
+            "order": "11"
+          },
+          {
+            "id": "panel-sidebar-select-box",
+            "rect": {
+              "x": 1324,
+              "y": 63,
+              "w": 42,
+              "h": 937
+            },
+            "expanded": null,
+            "order": "1002"
+          },
+          {
+            "id": "panel-sidebar-box",
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 0,
+              "h": 0
+            },
+            "expanded": null,
+            "order": "1001"
+          },
+          {
+            "id": "tabbrowser-tabbox",
+            "rect": {
+              "x": 0,
+              "y": 63,
+              "w": 1264,
+              "h": 937
+            },
+            "expanded": null,
+            "order": "4"
+          }
+        ]
+      },
+      "hoverSamples": [
+        {
+          "dir": "ltr",
+          "position": false,
+          "elements": [
+            {
+              "id": "sidebar-main",
+              "rect": null,
+              "expanded": null,
+              "order": null
+            },
+            {
+              "id": "sidebar-container",
+              "rect": {
+                "x": 1234.5999755859375,
+                "y": 63,
+                "w": 253.3333282470703,
+                "h": 937
+              },
+              "expanded": null,
+              "order": "11"
+            },
+            {
+              "id": "panel-sidebar-select-box",
+              "rect": {
+                "x": 1324,
+                "y": 63,
+                "w": 42,
+                "h": 937
+              },
+              "expanded": null,
+              "order": "1002"
+            },
+            {
+              "id": "panel-sidebar-box",
+              "rect": {
+                "x": 0,
+                "y": 0,
+                "w": 0,
+                "h": 0
+              },
+              "expanded": null,
+              "order": "1001"
+            },
+            {
+              "id": "tabbrowser-tabbox",
+              "rect": {
+                "x": 0,
+                "y": 63,
+                "w": 1263,
+                "h": 937
+              },
+              "expanded": null,
+              "order": "4"
+            }
+          ]
+        },
+        {
+          "dir": "ltr",
+          "position": false,
+          "elements": [
+            {
+              "id": "sidebar-main",
+              "rect": null,
+              "expanded": null,
+              "order": null
+            },
+            {
+              "id": "sidebar-container",
+              "rect": {
+                "x": 1070.6666259765625,
+                "y": 63,
+                "w": 253.3333282470703,
+                "h": 937
+              },
+              "expanded": null,
+              "order": "11"
+            },
+            {
+              "id": "panel-sidebar-select-box",
+              "rect": {
+                "x": 1324,
+                "y": 63,
+                "w": 42,
+                "h": 937
+              },
+              "expanded": null,
+              "order": "1002"
+            },
+            {
+              "id": "panel-sidebar-box",
+              "rect": {
+                "x": 0,
+                "y": 0,
+                "w": 0,
+                "h": 0
+              },
+              "expanded": null,
+              "order": "1001"
+            },
+            {
+              "id": "tabbrowser-tabbox",
+              "rect": {
+                "x": 0,
+                "y": 63,
+                "w": 1263,
+                "h": 937
+              },
+              "expanded": null,
+              "order": "4"
+            }
+          ]
+        },
+        {
+          "dir": "ltr",
+          "position": false,
+          "elements": [
+            {
+              "id": "sidebar-main",
+              "rect": null,
+              "expanded": null,
+              "order": null
+            },
+            {
+              "id": "sidebar-container",
+              "rect": {
+                "x": 1070.6666259765625,
+                "y": 63,
+                "w": 253.3333282470703,
+                "h": 937
+              },
+              "expanded": null,
+              "order": "11"
+            },
+            {
+              "id": "panel-sidebar-select-box",
+              "rect": {
+                "x": 1324,
+                "y": 63,
+                "w": 42,
+                "h": 937
+              },
+              "expanded": null,
+              "order": "1002"
+            },
+            {
+              "id": "panel-sidebar-box",
+              "rect": {
+                "x": 0,
+                "y": 0,
+                "w": 0,
+                "h": 0
+              },
+              "expanded": null,
+              "order": "1001"
+            },
+            {
+              "id": "tabbrowser-tabbox",
+              "rect": {
+                "x": 0,
+                "y": 63,
+                "w": 1263,
+                "h": 937
+              },
+              "expanded": null,
+              "order": "4"
+            }
+          ]
+        },
+        {
+          "dir": "ltr",
+          "position": false,
+          "elements": [
+            {
+              "id": "sidebar-main",
+              "rect": null,
+              "expanded": null,
+              "order": null
+            },
+            {
+              "id": "sidebar-container",
+              "rect": {
+                "x": 1070.6666259765625,
+                "y": 63,
+                "w": 253.3333282470703,
+                "h": 937
+              },
+              "expanded": null,
+              "order": "11"
+            },
+            {
+              "id": "panel-sidebar-select-box",
+              "rect": {
+                "x": 1324,
+                "y": 63,
+                "w": 42,
+                "h": 937
+              },
+              "expanded": null,
+              "order": "1002"
+            },
+            {
+              "id": "panel-sidebar-box",
+              "rect": {
+                "x": 0,
+                "y": 0,
+                "w": 0,
+                "h": 0
+              },
+              "expanded": null,
+              "order": "1001"
+            },
+            {
+              "id": "tabbrowser-tabbox",
+              "rect": {
+                "x": 0,
+                "y": 63,
+                "w": 1263,
+                "h": 937
+              },
+              "expanded": null,
+              "order": "4"
+            }
+          ]
+        },
+        {
+          "dir": "ltr",
+          "position": false,
+          "elements": [
+            {
+              "id": "sidebar-main",
+              "rect": null,
+              "expanded": null,
+              "order": null
+            },
+            {
+              "id": "sidebar-container",
+              "rect": {
+                "x": 1070.6666259765625,
+                "y": 63,
+                "w": 253.3333282470703,
+                "h": 937
+              },
+              "expanded": null,
+              "order": "11"
+            },
+            {
+              "id": "panel-sidebar-select-box",
+              "rect": {
+                "x": 1324,
+                "y": 63,
+                "w": 42,
+                "h": 937
+              },
+              "expanded": null,
+              "order": "1002"
+            },
+            {
+              "id": "panel-sidebar-box",
+              "rect": {
+                "x": 0,
+                "y": 0,
+                "w": 0,
+                "h": 0
+              },
+              "expanded": null,
+              "order": "1001"
+            },
+            {
+              "id": "tabbrowser-tabbox",
+              "rect": {
+                "x": 0,
+                "y": 63,
+                "w": 1263,
+                "h": 937
+              },
+              "expanded": null,
+              "order": "4"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "nativeStart": false,
+      "panelAtRight": false,
+      "before": {
+        "dir": "ltr",
+        "position": false,
+        "elements": [
+          {
+            "id": "sidebar-main",
+            "rect": null,
+            "expanded": null,
+            "order": null
+          },
+          {
+            "id": "sidebar-container",
+            "rect": {
+              "x": 1070.6666259765625,
+              "y": 63,
+              "w": 253.3333282470703,
+              "h": 937
+            },
+            "expanded": null,
+            "order": "11"
+          },
+          {
+            "id": "panel-sidebar-select-box",
+            "rect": {
+              "x": 0,
+              "y": 63,
+              "w": 42,
+              "h": 937
+            },
+            "expanded": null,
+            "order": "-3"
+          },
+          {
+            "id": "panel-sidebar-box",
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 0,
+              "h": 0
+            },
+            "expanded": null,
+            "order": "-2"
+          },
+          {
+            "id": "tabbrowser-tabbox",
+            "rect": {
+              "x": 42,
+              "y": 63,
+              "w": 1263,
+              "h": 937
+            },
+            "expanded": null,
+            "order": "4"
+          }
+        ]
+      },
+      "hoverSamples": [
+        {
+          "dir": "ltr",
+          "position": false,
+          "elements": [
+            {
+              "id": "sidebar-main",
+              "rect": null,
+              "expanded": null,
+              "order": null
+            },
+            {
+              "id": "sidebar-container",
+              "rect": {
+                "x": 1070.6666259765625,
+                "y": 63,
+                "w": 253.3333282470703,
+                "h": 937
+              },
+              "expanded": null,
+              "order": "11"
+            },
+            {
+              "id": "panel-sidebar-select-box",
+              "rect": {
+                "x": 0,
+                "y": 63,
+                "w": 42,
+                "h": 937
+              },
+              "expanded": null,
+              "order": "-3"
+            },
+            {
+              "id": "panel-sidebar-box",
+              "rect": {
+                "x": 0,
+                "y": 0,
+                "w": 0,
+                "h": 0
+              },
+              "expanded": null,
+              "order": "-2"
+            },
+            {
+              "id": "tabbrowser-tabbox",
+              "rect": {
+                "x": 42,
+                "y": 63,
+                "w": 1263,
+                "h": 937
+              },
+              "expanded": null,
+              "order": "4"
+            }
+          ]
+        },
+        {
+          "dir": "ltr",
+          "position": false,
+          "elements": [
+            {
+              "id": "sidebar-main",
+              "rect": null,
+              "expanded": null,
+              "order": null
+            },
+            {
+              "id": "sidebar-container",
+              "rect": {
+                "x": 1070.6666259765625,
+                "y": 63,
+                "w": 253.3333282470703,
+                "h": 937
+              },
+              "expanded": null,
+              "order": "11"
+            },
+            {
+              "id": "panel-sidebar-select-box",
+              "rect": {
+                "x": 0,
+                "y": 63,
+                "w": 42,
+                "h": 937
+              },
+              "expanded": null,
+              "order": "-3"
+            },
+            {
+              "id": "panel-sidebar-box",
+              "rect": {
+                "x": 0,
+                "y": 0,
+                "w": 0,
+                "h": 0
+              },
+              "expanded": null,
+              "order": "-2"
+            },
+            {
+              "id": "tabbrowser-tabbox",
+              "rect": {
+                "x": 42,
+                "y": 63,
+                "w": 1263,
+                "h": 937
+              },
+              "expanded": null,
+              "order": "4"
+            }
+          ]
+        },
+        {
+          "dir": "ltr",
+          "position": false,
+          "elements": [
+            {
+              "id": "sidebar-main",
+              "rect": null,
+              "expanded": null,
+              "order": null
+            },
+            {
+              "id": "sidebar-container",
+              "rect": {
+                "x": 1070.6666259765625,
+                "y": 63,
+                "w": 253.3333282470703,
+                "h": 937
+              },
+              "expanded": null,
+              "order": "11"
+            },
+            {
+              "id": "panel-sidebar-select-box",
+              "rect": {
+                "x": 0,
+                "y": 63,
+                "w": 42,
+                "h": 937
+              },
+              "expanded": null,
+              "order": "-3"
+            },
+            {
+              "id": "panel-sidebar-box",
+              "rect": {
+                "x": 0,
+                "y": 0,
+                "w": 0,
+                "h": 0
+              },
+              "expanded": null,
+              "order": "-2"
+            },
+            {
+              "id": "tabbrowser-tabbox",
+              "rect": {
+                "x": 42,
+                "y": 63,
+                "w": 1263,
+                "h": 937
+              },
+              "expanded": null,
+              "order": "4"
+            }
+          ]
+        },
+        {
+          "dir": "ltr",
+          "position": false,
+          "elements": [
+            {
+              "id": "sidebar-main",
+              "rect": null,
+              "expanded": null,
+              "order": null
+            },
+            {
+              "id": "sidebar-container",
+              "rect": {
+                "x": 1070.6666259765625,
+                "y": 63,
+                "w": 253.3333282470703,
+                "h": 937
+              },
+              "expanded": null,
+              "order": "11"
+            },
+            {
+              "id": "panel-sidebar-select-box",
+              "rect": {
+                "x": 0,
+                "y": 63,
+                "w": 42,
+                "h": 937
+              },
+              "expanded": null,
+              "order": "-3"
+            },
+            {
+              "id": "panel-sidebar-box",
+              "rect": {
+                "x": 0,
+                "y": 0,
+                "w": 0,
+                "h": 0
+              },
+              "expanded": null,
+              "order": "-2"
+            },
+            {
+              "id": "tabbrowser-tabbox",
+              "rect": {
+                "x": 42,
+                "y": 63,
+                "w": 1263,
+                "h": 937
+              },
+              "expanded": null,
+              "order": "4"
+            }
+          ]
+        },
+        {
+          "dir": "ltr",
+          "position": false,
+          "elements": [
+            {
+              "id": "sidebar-main",
+              "rect": null,
+              "expanded": null,
+              "order": null
+            },
+            {
+              "id": "sidebar-container",
+              "rect": {
+                "x": 1070.6666259765625,
+                "y": 63,
+                "w": 253.3333282470703,
+                "h": 937
+              },
+              "expanded": null,
+              "order": "11"
+            },
+            {
+              "id": "panel-sidebar-select-box",
+              "rect": {
+                "x": 0,
+                "y": 63,
+                "w": 42,
+                "h": 937
+              },
+              "expanded": null,
+              "order": "-3"
+            },
+            {
+              "id": "panel-sidebar-box",
+              "rect": {
+                "x": 0,
+                "y": 0,
+                "w": 0,
+                "h": 0
+              },
+              "expanded": null,
+              "order": "-2"
+            },
+            {
+              "id": "tabbrowser-tabbox",
+              "rect": {
+                "x": 42,
+                "y": 63,
+                "w": 1263,
+                "h": 937
+              },
+              "expanded": null,
+              "order": "4"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

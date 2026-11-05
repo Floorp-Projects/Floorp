@@ -1,0 +1,2 @@
+469ce17120018e1c95411d254cf3c5f8db2dd1768a7acde5a2a089b00072ac65  /workspace/qa-linux-22/browser-ui/products/firefox.tar.xz
+7dcedcbfef747819153b0b9c541a9c1f4f4965b0720f16d5d237d39b0c30d613  /workspace/qa-linux-22/browser-ui/products/floorp.tar.xz

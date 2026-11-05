@@ -1,0 +1,155 @@
+{
+  "scenario": "controls",
+  "product": {
+    "version": "159.0.1",
+    "build": "20261103153232",
+    "name": "Floorp",
+    "os": "Linux"
+  },
+  "observations": [
+    {
+      "style": "horizontal",
+      "inTitlebar": 0,
+      "controls": [
+        {
+          "parent": "toolbar-menubar",
+          "visible": false,
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "w": 0,
+            "h": 0
+          }
+        },
+        {
+          "parent": "TabsToolbar",
+          "visible": false,
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "w": 0,
+            "h": 0
+          }
+        },
+        {
+          "parent": "nav-bar",
+          "visible": false,
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "w": 0,
+            "h": 0
+          }
+        }
+      ]
+    },
+    {
+      "style": "horizontal",
+      "inTitlebar": 1,
+      "controls": [
+        {
+          "parent": "toolbar-menubar",
+          "visible": true,
+          "rect": {
+            "x": 1325.5,
+            "y": 0,
+            "w": 40.5,
+            "h": 0
+          }
+        },
+        {
+          "parent": "TabsToolbar",
+          "visible": true,
+          "rect": {
+            "x": 1325.5,
+            "y": 0,
+            "w": 40.5,
+            "h": 36
+          }
+        },
+        {
+          "parent": "nav-bar",
+          "visible": false,
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "w": 0,
+            "h": 0
+          }
+        }
+      ]
+    },
+    {
+      "style": "multirow",
+      "inTitlebar": 0,
+      "controls": [
+        {
+          "parent": "toolbar-menubar",
+          "visible": false,
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "w": 0,
+            "h": 0
+          }
+        },
+        {
+          "parent": "TabsToolbar",
+          "visible": true,
+          "rect": {
+            "x": 1366,
+            "y": 0,
+            "w": 0,
+            "h": 40
+          }
+        },
+        {
+          "parent": "nav-bar",
+          "visible": false,
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "w": 0,
+            "h": 0
+          }
+        }
+      ]
+    },
+    {
+      "style": "multirow",
+      "inTitlebar": 1,
+      "controls": [
+        {
+          "parent": "toolbar-menubar",
+          "visible": true,
+          "rect": {
+            "x": 1325.5,
+            "y": 0,
+            "w": 40.5,
+            "h": 0
+          }
+        },
+        {
+          "parent": "TabsToolbar",
+          "visible": true,
+          "rect": {
+            "x": 1325.5,
+            "y": 0,
+            "w": 40.5,
+            "h": 40
+          }
+        },
+        {
+          "parent": "nav-bar",
+          "visible": false,
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "w": 0,
+            "h": 0
+          }
+        }
+      ]
+    }
+  ]
+}

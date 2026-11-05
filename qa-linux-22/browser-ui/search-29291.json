@@ -1,0 +1,26 @@
+{
+  "scenario": "search",
+  "product": {
+    "version": "159.0.1",
+    "build": "20261103153232",
+    "name": "Floorp",
+    "os": "Linux"
+  },
+  "observations": [
+    {
+      "url": "about:preferences#searchResults",
+      "input": "proxy",
+      "visible": "\nSettings\n\nFloorp Hub\n\nAccount and sync\n\nHome and startup\n\nSearch\n\nPrivacy and security\n\nPasswords and autofill\n\nAppearance\n\nDownloads\n\nTabs and browsing\n\n\nAccessibility\n\nLanguages\n\nAI controls\n\nPermissions and data\n\nAbout Floorp\n\nExtensions and themes\n\nFloorp support\n\n\n\n\nFloorp-specific settings such as the panel sidebar, Workspaces, and mouse gestures are managed in Floorp Hub.\n\n\n\n\nproxy\nproxy\nSearch results\n\n\nPrivacy and security\n\nAdvanced settings\n\n"
+    },
+    {
+      "url": "about:preferences#connectionSecurity",
+      "input": "",
+      "visible": "\nSettings\n\nFloorp Hub\n\nAccount and sync\n\nHome and startup\n\nSearch\n\nPrivacy and security\n\nPasswords and autofill\n\nAppearance\n\nDownloads\n\nTabs and browsing\n\n\nAccessibility\n\nLanguages\n\nAI controls\n\nPermissions and data\n\nAbout Floorp\n\nExtensions and themes\n\nFloorp support\n\n\n\n\nFloorp-specific settings such as the panel sidebar, Workspaces, and mouse gestures are managed in Floorp Hub.\n\n\n\n\nConnection and software security\n\nPrivacy and security\n\n\n\nEnable HTTPS-Only Mode in all windows\n\n\n\nEnable HTTPS-Only Mode in private windows only\n\n\n\nDon’t enable HTTPS-Only Mode\n\n          Floorp may still upgrade some connections\nLearn more\n\n\nx\n\n\np\n\n      Changing these settings may cause connections issues\n    \n\n\n\ns\n\n\nB\nLearn more\n\n\n\nd\n\n\n\nc\n\n\n\n\n\nc\n\n\nd\n\n"
+    },
+    {
+      "url": "about:preferences#searchResults",
+      "input": "proxy",
+      "visible": "\nSettings\n\nFloorp Hub\n\nAccount and sync\n\nHome and startup\n\nSearch\n\nPrivacy and security\n\nPasswords and autofill\n\nAppearance\n\nDownloads\n\nTabs and browsing\n\n\nAccessibility\n\nLanguages\n\nAI controls\n\nPermissions and data\n\nAbout Floorp\n\nExtensions and themes\n\nFloorp support\n\n\n\n\nFloorp-specific settings such as the panel sidebar, Workspaces, and mouse gestures are managed in Floorp Hub.\n\n\n\n\nproxy\nproxy\nSearch results\n\n\nPrivacy and security\n\nAdvanced settings\n\n"
+    }
+  ]
+}
