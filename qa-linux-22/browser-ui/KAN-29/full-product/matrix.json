@@ -34,7 +34,7 @@
     ],
     "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2877",
     "newPr": null,
-    "jiraCommentWritten": null,
+    "jiraCommentWritten": "10465",
     "phaseExits": [
       {
         "stage": "ltr",
@@ -65,7 +65,9 @@
       "stage": "firstRTL",
       "actualFloorpChildExit": null,
       "reason": "No original directwait receipt; never retroactively infer0"
-    }
+    },
+    "jiraCommentId": "10465",
+    "prCommentId": 6671356954
   },
   {
     "key": "KAN-29",
@@ -84,7 +86,7 @@
     ],
     "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2877",
     "newPr": null,
-    "jiraCommentWritten": null,
+    "jiraCommentWritten": "10465",
     "phaseExits": [
       {
         "stage": "rtl",
@@ -103,7 +105,9 @@
       "runs/baseline-a629-rtl-resume-30073/product-after.json"
     ],
     "jiraContextComment": "10284",
-    "existingPrContextComment": "6663548952"
+    "existingPrContextComment": "6663548952",
+    "jiraCommentId": "10465",
+    "prCommentId": 6671356954
   },
   {
     "key": "KAN-29",
@@ -140,7 +144,7 @@
     ],
     "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2877",
     "newPr": null,
-    "jiraCommentWritten": null,
+    "jiraCommentWritten": "10465",
     "phaseExits": [
       {
         "stage": "ltr",
@@ -173,7 +177,9 @@
       "runs/candidate-f43-30074/product-after.json"
     ],
     "jiraContextComment": "10284",
-    "existingPrContextComment": "6663548952"
+    "existingPrContextComment": "6663548952",
+    "jiraCommentId": "10465",
+    "prCommentId": 6671356954
   },
   {
     "key": "KAN-29",
@@ -210,7 +216,7 @@
     ],
     "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2877",
     "newPr": null,
-    "jiraCommentWritten": null,
+    "jiraCommentWritten": "10465",
     "phaseExits": [
       {
         "stage": "ltr",
@@ -243,7 +249,9 @@
       "runs/candidate-f43-x11-30075/product-after.json"
     ],
     "jiraContextComment": "10284",
-    "existingPrContextComment": "6663548952"
+    "existingPrContextComment": "6663548952",
+    "jiraCommentId": "10465",
+    "prCommentId": 6671356954
   },
   {
     "key": "KAN-29",
@@ -280,7 +288,7 @@
     ],
     "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2877",
     "newPr": null,
-    "jiraCommentWritten": null,
+    "jiraCommentWritten": "10465",
     "phaseExits": [
       {
         "stage": "ltr",
@@ -299,7 +307,9 @@
       "runs/baseline-a629-x11-one-30076/product-after.json"
     ],
     "jiraContextComment": "10284",
-    "existingPrContextComment": "6663548952"
+    "existingPrContextComment": "6663548952",
+    "jiraCommentId": "10465",
+    "prCommentId": 6671356954
   },
   {
     "key": "KAN-29",
@@ -327,7 +337,7 @@
     ],
     "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2877",
     "newPr": null,
-    "jiraCommentWritten": null,
+    "jiraCommentWritten": "10465",
     "phaseExits": [
       {
         "stage": "ltr",
@@ -345,7 +355,9 @@
       "x11-hold500-comparison.json"
     ],
     "jiraContextComment": "10284",
-    "existingPrContextComment": "6663548952"
+    "existingPrContextComment": "6663548952",
+    "jiraCommentId": "10465",
+    "prCommentId": 6671356954
   },
   {
     "key": "KAN-29",
@@ -373,7 +385,7 @@
     ],
     "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2877",
     "newPr": null,
-    "jiraCommentWritten": null,
+    "jiraCommentWritten": "10465",
     "phaseExits": [
       {
         "stage": "ltr",
@@ -391,7 +403,9 @@
       "x11-hold500-comparison.json"
     ],
     "jiraContextComment": "10284",
-    "existingPrContextComment": "6663548952"
+    "existingPrContextComment": "6663548952",
+    "jiraCommentId": "10465",
+    "prCommentId": 6671356954
   },
   {
     "key": "KAN-29",
@@ -414,7 +428,7 @@
     ],
     "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2877",
     "newPr": null,
-    "jiraCommentWritten": null,
+    "jiraCommentWritten": "10465",
     "phaseExits": [
       {
         "stage": "rtl-horizontal-startup-control",
@@ -433,7 +447,9 @@
       "runs/candidate-f43-ar-horizontal-ui-30080/runner-result.json"
     ],
     "jiraContextComment": "10284",
-    "existingPrContextComment": "6663548952"
+    "existingPrContextComment": "6663548952",
+    "jiraCommentId": "10465",
+    "prCommentId": 6671356954
   },
   {
     "key": "KAN-29",
@@ -458,7 +474,7 @@
     ],
     "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2877",
     "newPr": null,
-    "jiraCommentWritten": null,
+    "jiraCommentWritten": "10465",
     "phaseExits": [
       {
         "actualFloorpChildPid": 115562,
@@ -477,6 +493,8 @@
       "passive-no-session/summary.json"
     ],
     "jiraContextComment": "10284",
-    "existingPrContextComment": "6663548952"
+    "existingPrContextComment": "6663548952",
+    "jiraCommentId": "10465",
+    "prCommentId": 6671356954
   }
 ]

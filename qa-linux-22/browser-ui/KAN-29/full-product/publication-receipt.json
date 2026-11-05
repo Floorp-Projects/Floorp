@@ -1,0 +1,42 @@
+{
+  "evidenceCommit": "c411dbd0cfb14c1f0eefd13d7c13e3d7ef7cef68",
+  "jiraCommentId": "10465",
+  "prCommentId": 6671356954,
+  "prCommentUrl": "https://github.com/Floorp-Projects/Floorp/pull/2877#issuecomment-6671356954",
+  "headUnchanged": "f43b22d34c0728e0ed800b8016d81b3212190954",
+  "labels": {
+    "before": [
+      "area-tabs",
+      "env-blocked",
+      "floorp-stability-2026-11",
+      "linux-tested",
+      "needs-cachyos",
+      "needs-flatpak",
+      "needs-repro",
+      "p2",
+      "panel-body-tested",
+      "pr-candidate-tested",
+      "rtl-tested",
+      "triage-reviewed",
+      "wayland-tested"
+    ],
+    "added": [
+      "full-package-built",
+      "needs-rtl-157-startup"
+    ],
+    "removed": [],
+    "status": "未着手",
+    "parent": "KAN-1"
+  },
+  "newPr": null,
+  "qualifiedFullProductRtlStates": 0,
+  "originalB10Count": 10,
+  "originalLinuxCount": 22,
+  "additionalAssignedCount": 4,
+  "sourceChanges": false,
+  "ciSettingsChanged": false,
+  "lockChanged": false,
+  "merge": false,
+  "publicRelease": false,
+  "done": false
+}

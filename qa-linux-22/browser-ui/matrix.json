@@ -132,7 +132,7 @@
     ],
     "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2877",
     "newPr": null,
-    "jiraCommentId": "10284",
+    "jiraCommentId": "10465",
     "evidence": [
       "layout-29289.json",
       "KAN-29/layout-False-True.png",
@@ -178,7 +178,10 @@
       "KAN-29/full-product/existing-ci/summary.json",
       "KAN-29/full-product/x11-hold500-comparison.json",
       "KAN-29/full-product/passive-no-session/summary.json",
-      "KAN-29/full-product/horizontal-control-summary.json"
+      "KAN-29/full-product/horizontal-control-summary.json",
+      "KAN-29/full-product/publication-receipt.json",
+      "KAN-29/full-product/jira-posted-10465.md",
+      "KAN-29/full-product/pr2877-comment-6671356954.md"
     ],
     "sprintScope": "KAN-1",
     "existingPrCommentId": 6663548952,
@@ -208,7 +211,9 @@
       "ciSettingsChanged": false,
       "lockChanged": false,
       "publicRelease": false
-    }
+    },
+    "prCommentId": 6671356954,
+    "prCommentUrl": "https://github.com/Floorp-Projects/Floorp/pull/2877#issuecomment-6671356954"
   },
   {
     "key": "KAN-31",

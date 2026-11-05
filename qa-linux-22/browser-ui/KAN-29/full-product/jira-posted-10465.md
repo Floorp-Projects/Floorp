@@ -1,0 +1,19 @@
+KAN29完全package追補（2026-11-06 JST）。既存Draft2877はhead f43b22d34c0728e0ed800b8016d81b3212190954のまま。正規v2 manifest11506774970/native11501872421を実取得しdigest検証、Runtime c74fe1a545d275cdd710ab44701c1ee0dd6b0eae/Gecko157.0.1/Build20261007125927契約を維持。exact同head package不存在を確認後、既存package-only42115797905を1回だけ起動し成功。CI/public-release/lock設定は変更せず、release公開・signingなし。
+
+最終installer13457062558 ZIP SHA256 4eaf3ff8bc47b18a7bb33509fcd0efc8cac882d065c324a71004c4f3816c5b59、tar SHA256 0e21b01b50834fbecea0ebedc7c155b414ccf1d4025c25c9f792463a7abde991。公式12.20.0 exact親a6290b5811b8c5309b399ac340ec40b52f97b73c（asset620366462、SHA256 8aa033efe583df4d2ee8910ce2b6e77495f81b4b34a3beded7417bfbd747d56f）を同Runtime比較に使用。parent→candidate差は既存PRの実装＋テスト2fileのみ。native floorp/libxul hash完全一致、最終配布archiveをfresh展開して未改変実行。
+
+Debian13/nestedKWin nativeWayland/SoftwareWebRenderのLTR左右×pin8状態×3hoverを両製品で実測。各24hover geometry、各16tab選択/実pixelpaintが成功。parent close/reopen8/8、candidate7/8。1reopen失敗は実クリックがBookmarksでなくnative promo-cardへ届いた。X11即時比較ではparent400/candidate0だが、各500ms hold対照ではparent0/candidate400へ逆転。両headで入力遮蔽を観測し、native animation未収束も記録。候補だけの決定的副作用・原LTR/CachyOS症状の原因一致は未確定で投機修正/重複PRなし。原報告にNiri条件はなく、他課題から転用しない。
+
+【完全製品RTLは未検証】matching署名157Arabic packを通常AddonManagerで導入、signedState2/appDisabledfalseとinstall後の実Floorp直接wait0を確認したが、RTL NewSession/live locale gateを通過せず。baseline最初のRTL子exit不明・限定再開は実wait-9。candidate Wayland/X11は主プロセスPSS約12.44/12.83GiBでQA12GiB PSS又はcgroup90%上限、SIGTERM cleanup後実子wait-15、runner/wrapper1。OOM増分0。初期の同期PSS採取には最大62.41s間隔があり2s確定周期とは表現しない。後続では高速cgroup/RSS samplerを分離。
+
+NewSession/RPC/TCP接続を一切行わない診断でも約54.66sでPSS12.273GiBへ増大。横タブからArabic起動後UIで縦タブへ戻す別経路も、縦タブ移行前に同ガードへ達し未成立。Arabic画面だけをRTL_UI/appLocaleRTL/方向gateの代用にせず、qualified RTL測定は0状態。PSSガードはQA設定であり、元host能力不足やPR/Runtime/locale/profileの原因を断定しない。停止履歴profile使用の交絡も保存。保護・署名・CSP・rendererの検証を無効化して合格を作っていない。
+
+実exe子wait・probe・runner・DBuswrapperは分離。LTR/install等は実子wait0、資源停止は-15、不明は不明のまま。全実行payload hash不変。元159診断copyの実localizedRTL24対24/候補改善という既存結果は保持するが、この157完全製品試験の代わりにしない。
+
+既存通常CI37798617165のartifact11560575529も読取確認: 248modules成功/1失敗（advanced.test.ts Missing Manage Firefox Feature Sync）、flexOrder＋panel-sidebar関連13modulesとFirefox16tasksは成功。原因帰属は未断定、CI全体failureを保持し再CI/source試験/診断copyは再実行しない。
+
+残: 完全157製品のqualified Arabic RTL layout/paint、startupメモリ増大と入力遮蔽の原因、原LTR CachyOS/Flatpak・distro/物理/GPU/compositor。Windows未試験（原報告Linux）。元10件/Linux22分母、追加KAN別表、status/parent/Sprint/Doneは維持。source/既存PRhead変更・merge・releaseなし。
+
+証拠・再現script・matrix・資源曲線: https://github.com/Floorp-Projects/Floorp/tree/c411dbd0cfb14c1f0eefd13d7c13e3d7ef7cef68/qa-linux-22/browser-ui/KAN-29/full-product
+package: https://github.com/Floorp-Projects/Floorp/actions/runs/42115797905
+
