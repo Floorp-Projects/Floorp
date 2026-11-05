@@ -86,7 +86,7 @@ function testTurningVerticalOffAppliesHorizontal(): void {
   });
 }
 
-function testTurningVerticalOffKeepsMultirow(): void {
+function testNativeHorizontalKeepsMultirow(): void {
   withVerticalTabsPref(false, () => {
     const state = createObserver("multirow");
     try {
@@ -177,8 +177,8 @@ export async function runAllTests(): Promise<void> {
       fn: testTurningVerticalOffAppliesHorizontal,
     },
     {
-      name: "turning native vertical tabs off keeps multirow",
-      fn: testTurningVerticalOffKeepsMultirow,
+      name: "native horizontal keeps multirow at registration and notification",
+      fn: testNativeHorizontalKeepsMultirow,
     },
     {
       name: "matching native style is a no-op",
