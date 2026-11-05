@@ -11,7 +11,7 @@ if True:
    if d.get('stop'):
     m.set_context('chrome');m.execute_script('setTimeout(()=>Services.startup.quit(Ci.nsIAppStartup.eAttemptQuit),100);return true;');break
    try:
-    
+
     if d.get('select') is not None:m.switch_to_window(m.window_handles[d['select']])
     if d.get('uri'):
      for h in m.window_handles:

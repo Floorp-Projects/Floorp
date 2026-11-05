@@ -1,0 +1,70 @@
+[
+  {
+    "key": "KAN-50",
+    "github": "https://github.com/Floorp-Projects/Floorp/issues/2637",
+    "sourceSha": "984509d2053be7bae9027133bda7259cd706b208",
+    "sourceInspectionSha": "29a3eb23145da90706d8a94441373278521cc737",
+    "historicalSourceSha": "811a5b821e1d9d47b40f22aee6df5db2254a54b1",
+    "productVersion": {
+      "current": "12.21.1 / Gecko159.0.1 / Runtime20261103153232",
+      "historical": "12.16.4 / Gecko153.0 / Runtime20260725075208"
+    },
+    "environment": "Debian13 Cloud Linux6.18.57; Xvfb/X11/Openbox/private DBus; software GPU only; fresh owned profiles; not original Ubuntu/live YouTube",
+    "testCommand": "dbus-run-session -- <marionette-python> pip-regression.py --binary <verified-official-release> --out <fresh-dir> --display <free> --port <free> --http-port <free> --source-sha <release-target> --video-file <same-generated-60s-VP8>",
+    "result": "historical blank-player issue reproduced/current basic PiP passes; separate current AppWindow activity/unload defect reproduced and candidate fixed in Draft3042",
+    "regression": {
+      "normalControlsPassed": 2,
+      "currentExitCode": 0,
+      "historicalExitCode": 1,
+      "historicalFailureExpected": true,
+      "historicalRepeatedBlankPlayers": 2,
+      "nativePiPAndCloseControlsUsed": true,
+      "mockedPiPHandlers": false,
+      "protectionLevelBeforeAfter": 6
+    },
+    "remainingConditions": [
+      "Reachable live YouTube/YouTube Music and original Ubuntu/native GPU/Wayland occlusion",
+      "Draft3042 review and production/full package qualification; baseline release still contains activity defect"
+    ],
+    "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2699 (merged real tabbrowser integration; no duplicate repair)",
+    "newPr": "https://github.com/Floorp-Projects/Floorp/pull/3042",
+    "jiraCommentId": "10379",
+    "evidence": [
+      "report.md",
+      "verification.json",
+      "pip-regression.py",
+      "pip-source-excerpts.json",
+      "regression-current-v2/result.json",
+      "regression-old-v2/result.json",
+      "historical/trial/result.json",
+      "historical/trial/panel-after-close.png",
+      "historical/acquisition/summary.json",
+      "activity/report.md",
+      "activity/verification.json"
+    ],
+    "separateFromOriginal22": true,
+    "jiraLabels": [
+      "area-ui",
+      "floorp-stability-2026-11",
+      "historical-repro",
+      "needs-live-youtube-pip",
+      "needs-pr-review",
+      "p2",
+      "triage-reviewed"
+    ],
+    "activityFollowup": {
+      "patchCommit": "9d042bc17be83c15d2ff3a25eb712f04c4d3eb45",
+      "baselineFailedLifecycleChecks": 7,
+      "candidateNormalFirstChecksPassed": 10,
+      "candidatePanelFirstChecksPassed": 11,
+      "nativeBrowserTestsPassed": 2,
+      "nativeBaselineTestsFailed": 2,
+      "subtitleFreezeReproduced": false,
+      "realMinimizeVerified": true,
+      "candidateType": "one-resource diagnostic copy, not full production build",
+      "ciRun": 42084373774,
+      "ciStatus": "in_progress",
+      "draftPr": "https://github.com/Floorp-Projects/Floorp/pull/3042"
+    }
+  }
+]

@@ -1,5 +1,5 @@
 {
-  "scope": "Additional assignments, separate from original22; original C-five matrix unchanged",
+  "scope": "Additional assignments; original Linux22/C-five denominator and table unchanged",
   "issues": [
     {
       "key": "KAN-7",
@@ -69,7 +69,7 @@
       },
       "environment": "Debian13 Cloud Linux6.18.57; Xvfb/X11/Openbox/private DBus; software GPU only; fresh owned profiles; not original Ubuntu/live YouTube",
       "testCommand": "dbus-run-session -- <marionette-python> pip-regression.py --binary <verified-official-release> --out <fresh-dir> --display <free> --port <free> --http-port <free> --source-sha <release-target> --video-file <same-generated-60s-VP8>",
-      "result": "historical local-video symptom reproduced with code-confirmed missing-gBrowser initialization; current same-byte native PiP regression passes; live original-site condition pending",
+      "result": "historical blank-player issue reproduced/current basic PiP passes; separate current AppWindow activity/unload defect reproduced and candidate fixed in Draft3042",
       "regression": {
         "normalControlsPassed": 2,
         "currentExitCode": 0,
@@ -81,13 +81,12 @@
         "protectionLevelBeforeAfter": 6
       },
       "remainingConditions": [
-        "Reachable live YouTube/YouTube Music overlay PiP on representative/original Ubuntu package/GPU",
-        "Separate current forceAppWindowActive NotAllowedError: occlusion/caption/API promise behavior not qualified",
-        "PR2699 mechanism matches; not an isolated backport/bisect of sole fix contribution"
+        "Reachable live YouTube/YouTube Music and original Ubuntu/native GPU/Wayland occlusion",
+        "Draft3042 review and production/full package qualification; baseline release still contains activity defect"
       ],
       "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2699 (merged real tabbrowser integration; no duplicate repair)",
-      "newPr": null,
-      "jiraCommentId": "10363",
+      "newPr": "https://github.com/Floorp-Projects/Floorp/pull/3042",
+      "jiraCommentId": "10379",
       "evidence": [
         "report.md",
         "verification.json",
@@ -97,7 +96,9 @@
         "regression-old-v2/result.json",
         "historical/trial/result.json",
         "historical/trial/panel-after-close.png",
-        "historical/acquisition/summary.json"
+        "historical/acquisition/summary.json",
+        "activity/report.md",
+        "activity/verification.json"
       ],
       "separateFromOriginal22": true,
       "jiraLabels": [
@@ -105,9 +106,24 @@
         "floorp-stability-2026-11",
         "historical-repro",
         "needs-live-youtube-pip",
+        "needs-pr-review",
         "p2",
         "triage-reviewed"
       ],
+      "activityFollowup": {
+        "patchCommit": "9d042bc17be83c15d2ff3a25eb712f04c4d3eb45",
+        "baselineFailedLifecycleChecks": 7,
+        "candidateNormalFirstChecksPassed": 10,
+        "candidatePanelFirstChecksPassed": 11,
+        "nativeBrowserTestsPassed": 2,
+        "nativeBaselineTestsFailed": 2,
+        "subtitleFreezeReproduced": false,
+        "realMinimizeVerified": true,
+        "candidateType": "one-resource diagnostic copy, not full production build",
+        "ciRun": 42084373774,
+        "ciStatus": "in_progress",
+        "draftPr": "https://github.com/Floorp-Projects/Floorp/pull/3042"
+      },
       "evidenceDirectory": "KAN-50"
     },
     {
@@ -119,16 +135,15 @@
       "runtimeBuildId": "20261103153232",
       "environment": "Debian13 x86_64, Xvfb X11 display207, isolated HOME/profile, Cloud proxy/IP, synthetic automation input; not original Ubuntu24.04.4",
       "testCommand": "/workspace/qa-linux-22/C/web-tools/venv/bin/python session.py; see reproduction.md",
-      "result": "real-signed-extension local-fixture cosmetic/network filtering and picker-launch pass in normal tab and panel; original YouTube sponsored-ad case blocked by proxy CONNECT403",
+      "result": "PASS local signed uBO picker selection/create/save/reload/normal restart persistence in tab and panel; PASS actual signed TWP English-to-Spanish translation in tab and panel",
       "remainingConditions": [
-        "Live YouTube sponsored cosmetic ads on original Ubuntu24.04.4 or representative reachable environment",
-        "Original uBO version/filter lists unspecified",
-        "Picker element selection/filter-save after launch not completed",
-        "TWP separate signed extension not trialed"
+        "Original live YouTube sponsored cosmetic ads (known proxy403; not retried)",
+        "Original Ubuntu24.04.4, old addon/filter-list versions not matched",
+        "Physical-input path not exercised; tab/page-action vs panel/context-menu routes recorded"
       ],
       "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2699 (merged; real panel tab mapping, bounded control supports this layer)",
       "newPr": null,
-      "jiraCommentId": "10364",
+      "jiraCommentId": "10380",
       "jiraCommentsRead": [
         "10146",
         "10168"
@@ -145,7 +160,9 @@
         "result-youtube-result.json",
         "http-reachability.json",
         "result-final-metadata.json",
-        "requests.json"
+        "requests.json",
+        "followup/report.md",
+        "followup/verification.json"
       ],
       "extension": {
         "id": "uBlock0@raymondhill.net",
@@ -168,6 +185,13 @@
         "p2",
         "triage-reviewed"
       ],
+      "followup": {
+        "uboPickerSelectSaveReloadRestartPassed": true,
+        "twpOfficialSignedTranslationTabPanelPassed": true,
+        "twpVersion": "10.2.1.0",
+        "translationService200": true,
+        "youTubeRetries": 0
+      },
       "evidenceDirectory": "KAN-99"
     }
   ]

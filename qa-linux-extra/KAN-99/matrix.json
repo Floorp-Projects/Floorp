@@ -8,16 +8,15 @@
     "runtimeBuildId": "20261103153232",
     "environment": "Debian13 x86_64, Xvfb X11 display207, isolated HOME/profile, Cloud proxy/IP, synthetic automation input; not original Ubuntu24.04.4",
     "testCommand": "/workspace/qa-linux-22/C/web-tools/venv/bin/python session.py; see reproduction.md",
-    "result": "real-signed-extension local-fixture cosmetic/network filtering and picker-launch pass in normal tab and panel; original YouTube sponsored-ad case blocked by proxy CONNECT403",
+    "result": "PASS local signed uBO picker selection/create/save/reload/normal restart persistence in tab and panel; PASS actual signed TWP English-to-Spanish translation in tab and panel",
     "remainingConditions": [
-      "Live YouTube sponsored cosmetic ads on original Ubuntu24.04.4 or representative reachable environment",
-      "Original uBO version/filter lists unspecified",
-      "Picker element selection/filter-save after launch not completed",
-      "TWP separate signed extension not trialed"
+      "Original live YouTube sponsored cosmetic ads (known proxy403; not retried)",
+      "Original Ubuntu24.04.4, old addon/filter-list versions not matched",
+      "Physical-input path not exercised; tab/page-action vs panel/context-menu routes recorded"
     ],
     "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2699 (merged; real panel tab mapping, bounded control supports this layer)",
     "newPr": null,
-    "jiraCommentId": "10364",
+    "jiraCommentId": "10380",
     "jiraCommentsRead": [
       "10146",
       "10168"
@@ -34,7 +33,9 @@
       "result-youtube-result.json",
       "http-reachability.json",
       "result-final-metadata.json",
-      "requests.json"
+      "requests.json",
+      "followup/report.md",
+      "followup/verification.json"
     ],
     "extension": {
       "id": "uBlock0@raymondhill.net",
@@ -56,6 +57,13 @@
       "needs-ubo-filter-list-details",
       "p2",
       "triage-reviewed"
-    ]
+    ],
+    "followup": {
+      "uboPickerSelectSaveReloadRestartPassed": true,
+      "twpOfficialSignedTranslationTabPanelPassed": true,
+      "twpVersion": "10.2.1.0",
+      "translationService200": true,
+      "youTubeRetries": 0
+    }
   }
 ]

@@ -1,6 +1,6 @@
 # KAN-99 follow-up: completed signed-extension workflows
 
-**Local fixture: PASS uBO picker selection/save/reload/restart persistence in both tab and panel; PASS real TWP translation in both.** These results do not resolve the original live YouTube sponsored-ad case. No product defect requiring a fix was established, so no speculative code change or duplicate PR2699 was created. YouTube retries:0. Jira/push/publication delegated to parent, none performed here.
+**Local fixture: PASS uBO picker selection/save/reload/restart persistence in both tab and panel; PASS real TWP translation in both.** These results do not resolve the original live YouTube sponsored-ad case. No product defect requiring a fix was established, so no speculative code change or duplicate PR2699 was created. YouTube retries:0. The subtask initially saved local evidence; the parent published approved QA evidence and Jira comment10380.
 
 ## Provenance and isolation
 
@@ -27,3 +27,5 @@ The menu label remained Show original (global extension UI state) during the ini
 Native menu access and picker are real extension UI with synthetic input; not physical input. TWP normal page-action and panel context-menu entry routes differ and are explicitly recorded. A frame-script windowUtils call failed (no sendMouseEvent function), causing observation timeout; reattached Marionette to same browser and used installed native X11 input. These harness errors are retained separately and never counted as product failures. Final browser quit normally through reattached observer; its exit0 is separate from obsolete timed-out runner cleanup InvalidSessionId exit1. No remaining owned processes, cleanup.json.
 
 Export network evidence includes only endpoint host/path/status and fixture text. Headers, bodies, query parameters and keys/tokens excluded; public translation-client bundle path normalized. Original live YouTube sponsored-ad and exact original platform/extension-list conditions remain. No new Jira comment ID assigned by this subtask.
+
+Publication: Jira KAN99 comment10380; original live-site/filter-list labels retained. No new product PR.

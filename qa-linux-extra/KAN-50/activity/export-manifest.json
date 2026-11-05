@@ -1,8 +1,13 @@
 [
   {
+    "path": "matrix.json",
+    "bytes": 3092,
+    "sha256": "762dc9147d56a1d147ebe441ac6d637a6026a3c283c5b40a3068224b725b3b25"
+  },
+  {
     "path": "report.md",
-    "bytes": 7139,
-    "sha256": "fc3a0dee436ebd703ccdf4e9a521b8d4357cdc2e3c0e2840ccadb3ff15f988c7"
+    "bytes": 7452,
+    "sha256": "3e2ee5710c6e38aa084997d1614b7bb90dd3ac6dc2f8a8c40beffcae684fb64c"
   },
   {
     "path": "verification.json",

@@ -27,7 +27,7 @@ try:
    if d.get('stop'):
     m.set_context('chrome');m.execute_script('setTimeout(()=>Services.startup.quit(Ci.nsIAppStartup.eAttemptQuit),100);return true;');code=b.wait(timeout=20);(P/'graceful-shutdown.json').write_text(json.dumps({'browserExitCode':code,'requested':'nsIAppStartup.eAttemptQuit'}));break
    try:
-    
+
     if d.get('select') is not None:m.switch_to_window(m.window_handles[d['select']])
     if d.get('uri'):
      for h in m.window_handles:
