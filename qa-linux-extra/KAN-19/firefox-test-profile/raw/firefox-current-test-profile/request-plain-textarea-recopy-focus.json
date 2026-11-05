@@ -1,0 +1,7 @@
+{
+  "id": "plain-textarea-recopy-focus",
+  "target": "index.html",
+  "context": "content",
+  "click": "#plain",
+  "script": "return true;"
+}

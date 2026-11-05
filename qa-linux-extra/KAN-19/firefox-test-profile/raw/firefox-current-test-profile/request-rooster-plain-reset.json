@@ -1,0 +1,6 @@
+{
+  "id": "rooster-plain-reset",
+  "target": "index.html",
+  "context": "content",
+  "script": "return window.wrappedJSObject.qaStart(\"rooster-plain\",\"rooster\");"
+}

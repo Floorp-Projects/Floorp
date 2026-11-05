@@ -1,0 +1,6 @@
+{
+  "id": "rooster-rich-visible-reset",
+  "target": "index.html",
+  "context": "content",
+  "script": "return window.wrappedJSObject.qaStart(\"rooster-rich-visible\",\"rooster\");"
+}

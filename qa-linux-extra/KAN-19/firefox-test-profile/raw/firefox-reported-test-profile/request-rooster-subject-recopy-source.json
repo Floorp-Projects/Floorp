@@ -1,0 +1,7 @@
+{
+  "id": "rooster-subject-recopy-source",
+  "target": "index.html",
+  "context": "content",
+  "click": "#subject",
+  "script": "return true;"
+}

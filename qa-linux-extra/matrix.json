@@ -754,17 +754,16 @@
         "physicalInput": false
       },
       "testCommand": "scripts/README.md; browser-session.py; run-pastes.py; fixture/editor.ts; verify-evidence.py",
-      "result": "Partial:24ordinary +4explicit opacity-input Floorp localfixtureconditions; no unseededopacity0/duplicateanchor. Firefoxcontrols unqualified dueactualTOUmodal; originalWindows authenticatedProtonunreproduced/unverified",
+      "result": "Partial:Floorp28+officialtestprofileFirefox28 localfixtureconditions match; no unseededopacity0/duplicateanchor. OriginalWindows authenticatedProton untested; historicalmodalblockedtrials retained",
       "qualifiedFloorpFixtureConditions": 28,
       "ordinaryConditions": 24,
       "explicitOpacityInputControls": 4,
-      "qualifiedFirefoxPasteConditions": 0,
+      "qualifiedFirefoxPasteConditions": 28,
       "blockedFirefoxAttempts": 2,
-      "normalExitProcesses": 4,
+      "normalExitProcesses": 6,
       "remainingConditions": [
         "AuthorizednonpersonalProtoncomposer account/session and deployededitorassetversion",
         "OriginalWindows12.18.1 nativeclipboardCFHTML/plainflavors and trustedpaste/DOMtimeline",
-        "UsableapprovedFirefoxQAcontrol with genuineconsent; noTOUspoof",
         "Originalprofile/clipboardorigin/theme/extensionstate; Subjectworkaround not reproduced onLinuxfixture"
       ],
       "existingRelatedPr": [
@@ -784,7 +783,8 @@
         "product-hash-baseline.json",
         "product-hash-final.json",
         "fixture/editor.ts",
-        "scripts/verify-evidence.py"
+        "scripts/verify-evidence.py",
+        "firefox-test-profile/report.md"
       ],
       "separateFromOriginal22": true,
       "originalCMatrixSha256": "4ac5d5f17f97d70e82f7b9f17d6abcc1aa17a92e3708eeadaba6ac7c8415e3cd",
@@ -802,7 +802,18 @@
         "needs-windows-proton-composer",
         "needs-authorized-proton-account",
         "needs-approved-firefox-control"
-      ]
+      ],
+      "qualifiedNativePasteProcesses": 4,
+      "totalQualifiedLocalFixtureConditions": 56,
+      "totalOrdinaryConditions": 48,
+      "totalExplicitOpacityInputControls": 8,
+      "officialFirefoxFollowup": {
+        "report": "firefox-test-profile/report.md",
+        "officialSetting": "termsofuse.bypassNotification=true in freshQAprofile; no acceptancevalue write or securityverifier change",
+        "conditions": 28,
+        "exactFinalHtmlMimeMatches": 28,
+        "jiraCommentId": null
+      }
     }
   ]
 }

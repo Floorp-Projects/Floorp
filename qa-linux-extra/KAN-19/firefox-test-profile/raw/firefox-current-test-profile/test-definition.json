@@ -1,0 +1,11 @@
+{
+  "fixture": "none",
+  "fixturePrefs": {},
+  "uri": "http://127.0.0.1:19202/index.html",
+  "officialTestTOUNotification": true,
+  "pinVersionForTesting": true,
+  "profileReused": false,
+  "product": "/workspace/qa-linux-22/C-extra/KAN-19/products/firefox-current",
+  "noSecurityPreferenceOverrides": true,
+  "network": "inherited proxy + configured CA; no insecure TLS flag"
+}

@@ -1,0 +1,6 @@
+{
+  "id": "rooster-textarea-recopy-reset",
+  "target": "index.html",
+  "context": "content",
+  "script": "return window.wrappedJSObject.qaStart(\"rooster-textarea-recopy\",\"rooster\");"
+}

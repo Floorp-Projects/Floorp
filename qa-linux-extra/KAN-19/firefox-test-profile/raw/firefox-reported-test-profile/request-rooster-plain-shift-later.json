@@ -1,0 +1,6 @@
+{
+  "id": "rooster-plain-shift-later",
+  "target": "index.html",
+  "context": "content",
+  "script": "return window.wrappedJSObject.qaSnapshot();"
+}

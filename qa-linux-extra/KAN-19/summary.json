@@ -7043,5 +7043,17 @@
   "ProtonAccountsCreatedOrAccessed": false,
   "noInjectedPasteEvents": true,
   "localFixtureScope": "barecontenteditable + publicRoosterJS core plugins; noProtoncustomplugin/fullapp",
-  "url": "https://example.org/kan19/status/123/video/1"
+  "url": "https://example.org/kan19/status/123/video/1",
+  "officialFirefoxFollowup": {
+    "evidence": "firefox-test-profile/",
+    "qualifiedFirefoxConditions": 28,
+    "ordinary": 24,
+    "explicitOpacityControls": 4,
+    "matchedFloorpFinalHtmlAndMime": 28,
+    "qualifiedProcesses": 2,
+    "normalExit0": true,
+    "TOUAcceptedVersionDateRemain0": true,
+    "historicalBlockedTrialsPreserved": true,
+    "originalWindowsProtonUntested": true
+  }
 }

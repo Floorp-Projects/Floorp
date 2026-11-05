@@ -1,0 +1,1970 @@
+{
+  "allowlistOnly": true,
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 1587,
+      "sha256": "33fc0a1ae78ad130ba70011894b85452775078cb6ac23b3b1590341402272ee1"
+    },
+    {
+      "path": "official-test-setting.json",
+      "bytes": 2675,
+      "sha256": "e1a8407b114955d653fc961629cd5cf885fdcf4b140577450ad3869f5ee77fb0"
+    },
+    {
+      "path": "product-hash-final.json",
+      "bytes": 16924,
+      "sha256": "12fcd197ff1a132d86fa181398b46eb1d41c2319be1573193e1919bce6c35bf7"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/fixture-final.png",
+      "bytes": 70585,
+      "sha256": "3d5b3b0e34a53fce5fca1d89bf28907796f92c332542e18603f882404c7cbe26"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/paste-results.json",
+      "bytes": 109669,
+      "sha256": "88359015ceb62a49cfb46734d95d1402b9abd1f77e7f09d81c44b35a509a09b7"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/ready.json",
+      "bytes": 873,
+      "sha256": "945b83384bf48e42a874329c8b23f994c2f83ae0a9e0373b5a423078b6f8167a"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-dismiss-standard-prompt.json",
+      "bytes": 74,
+      "sha256": "9e230c30f995728cb069adc18942af536806205d7faf1dfcc2facb5b5435eafa"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-final-screenshot.json",
+      "bytes": 177,
+      "sha256": "406579f0f158d4623eaada84241edb71b29fa75bec29fead295d5e3389a3318f"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-fixture-ready.json",
+      "bytes": 161,
+      "sha256": "ceb37c3e702a8719740c93f4f37d247dc8dd69815c234cd3df2e3754fcd589e8"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-plain-opacity-control-clipboard.json",
+      "bytes": 744,
+      "sha256": "f8c2c8437fc671d37db68bd75e4469cc73f565f5d197794807cc41d316d5d69b"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-plain-opacity-control-focus.json",
+      "bytes": 141,
+      "sha256": "e8fc72a0eda28b10c4f1a5853b3993afba7d0710eefe9d15bb7c1b6d816a3d9c"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-plain-opacity-control-later.json",
+      "bytes": 151,
+      "sha256": "4f0723e5a3db5438f85d9d382387a76d701d5f1884488debff4b882288f5301a"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-plain-opacity-control-paste.json",
+      "bytes": 78,
+      "sha256": "8ceed1aeb6fb1d6868cac5c5861bf460cb7c130bc4c8a4cb89c7c4f0dc565e7b"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-plain-opacity-control-reset.json",
+      "bytes": 183,
+      "sha256": "4f0724899333c9946e5665235a02ddc170c978b0466188c86ae641669ad549ea"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-plain-opacity-control-settled.json",
+      "bytes": 153,
+      "sha256": "bd2758a59dc5b1e92eed5ce5ada78020e80e7c3919dc0e7c53cd497c79cdf6db"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-plain-plain-clipboard.json",
+      "bytes": 246,
+      "sha256": "6c5c5f572cf09c41bdaede7f5bbd0b84ae65addd21bb3af7c950d80fa6163b00"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-plain-plain-focus.json",
+      "bytes": 131,
+      "sha256": "297e09ce490692fd76b3a4ac5481b7b344c2eeed848eef8e91959c5864319595"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-plain-plain-later.json",
+      "bytes": 141,
+      "sha256": "811ef92714ccf4103417810b54af34207169d0cb2b6b2ea5e6800dec7e4effca"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-plain-plain-paste.json",
+      "bytes": 68,
+      "sha256": "56ef2c49242d510eb3b3e6c3261549a723253d974d4ecd848e090ce80680b85e"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-plain-plain-reset.json",
+      "bytes": 163,
+      "sha256": "f143c108036365a78059a126437b2e5dc7aef40b9a0ed440eef84dde9e36430f"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-plain-plain-settled.json",
+      "bytes": 143,
+      "sha256": "fc31729f2a6ef29b05d83ab8dc296136e82522773981dac93f9fea194b0b50e0"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-plain-plain-shift-clipboard.json",
+      "bytes": 252,
+      "sha256": "1b53078fd57127a41a2b2fbcc368795f01db3e5af27466d5d5ee962b41ee0a9c"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-plain-plain-shift-focus.json",
+      "bytes": 137,
+      "sha256": "4c78564609682539f4d5d80a8ac84bbcacaadb27dddefc556f660d61498a1505"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-plain-plain-shift-later.json",
+      "bytes": 147,
+      "sha256": "797ca3ba520546568b396c50e2bd46a8f271e0bd832b8665ada0fd70c411b7b3"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-plain-plain-shift-paste.json",
+      "bytes": 80,
+      "sha256": "7413017904bf3f46dbdcf4d78ca12ba6f4284cc2a505be35d2978501ce3bfe0d"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-plain-plain-shift-reset.json",
+      "bytes": 175,
+      "sha256": "7780c75724f15af4a9f14b2c51de3b8d40d4e047261489488555d6fc3eb7432c"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-plain-plain-shift-settled.json",
+      "bytes": 149,
+      "sha256": "10e073c3249dea47a5cd9f08d3a12ca1a32a6957313af9def84520b51ef9fad8"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-plain-rich-shift-clipboard.json",
+      "bytes": 664,
+      "sha256": "4551e29b7646b2385b933ccf47a8516a2fdbe0c3ab388757205ef7bac43e2450"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-plain-rich-shift-focus.json",
+      "bytes": 136,
+      "sha256": "5894e6c5c38d92de01704c66f6a31a8142b13ce4db6e2c92ec0552cc9c16eb2a"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-plain-rich-shift-later.json",
+      "bytes": 146,
+      "sha256": "1a845f6a28d06a78a1700955d410407c445e40ac2577493bcf9026361d9104ce"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-plain-rich-shift-paste.json",
+      "bytes": 79,
+      "sha256": "b712144e2fb9129e7dae0ea6181637d2ae06e1f668aa2803a6dbfbeee14427d9"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-plain-rich-shift-reset.json",
+      "bytes": 173,
+      "sha256": "3a64a52b4f2f260444617a1ce18dfa5c1636b356be3a57cd0cb9162c80988993"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-plain-rich-shift-settled.json",
+      "bytes": 148,
+      "sha256": "9bc941a0cb7c5aba93e762169682def91a13e24f6756f8275c3678642f351fcb"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-plain-rich-visible-clipboard.json",
+      "bytes": 666,
+      "sha256": "036e168ed1276c2951c25467eaa7027d2569db1321562dd002cfdca85b3df088"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-plain-rich-visible-focus.json",
+      "bytes": 138,
+      "sha256": "60468664b964ebe77fd95c2039ccfcb68051f8c5ffff2a928fbe0e5c90880a2c"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-plain-rich-visible-later.json",
+      "bytes": 148,
+      "sha256": "17148375483f07e9c64005b050d72677d690423d152ee766169f42dc06eaa4b1"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-plain-rich-visible-paste.json",
+      "bytes": 75,
+      "sha256": "160caebaed4b26d6fde06ee44a2bb1b6d67e6fe17e4b5377084e81d2d815c35e"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-plain-rich-visible-reset.json",
+      "bytes": 177,
+      "sha256": "48e15768f28ac013a5f97e79efbe9e6665266a16ed8328c21137106c13893664"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-plain-rich-visible-settled.json",
+      "bytes": 150,
+      "sha256": "78395c19ef74ec02d850684294cc5b5a4d9b3713fffe00ef8111f6f851eef649"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-plain-subject-recopy-copy.json",
+      "bytes": 90,
+      "sha256": "73cb63861e5d378cf6bf6eb9658125026008e288d02fb6b55ae5ef7991566e2d"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-plain-subject-recopy-focus.json",
+      "bytes": 140,
+      "sha256": "0d35f79090a1a67e4c45098d0bda9e1f4bee7afcad3935a84ceadd7b5445471f"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-plain-subject-recopy-later.json",
+      "bytes": 150,
+      "sha256": "d1aac1994aed5a889903937278367b4df47f74e796dc3d7cf9e62bb2f4094820"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-plain-subject-recopy-paste.json",
+      "bytes": 77,
+      "sha256": "9ad4f3cbb5e28efa7b685a086e38607507c80f73ed65251c7d3c15955ee93b84"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-plain-subject-recopy-reset.json",
+      "bytes": 181,
+      "sha256": "e84600403ad87361134dbbaf1cd7c5a533f04671f94b9c3c7b6846909a697e72"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-plain-subject-recopy-settled.json",
+      "bytes": 152,
+      "sha256": "6cd292535e6c6a418413b5c685382df0fb61f9ee526878cbfcb6cae767480411"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-plain-subject-recopy-source.json",
+      "bytes": 143,
+      "sha256": "d17af7fe06a966b4dabe827bd6348b1108f07d85b986e4f49df99dc6b7229c19"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-plain-textarea-recopy-copy.json",
+      "bytes": 91,
+      "sha256": "23813abc727fef2a8b0747cfbe9b044450c9077c729ce466bfb74f9f1c0e281f"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-plain-textarea-recopy-focus.json",
+      "bytes": 141,
+      "sha256": "320d094fd234cd3f4441ebe08217875af2487d8bb5ad623f15c67c985a1179bc"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-plain-textarea-recopy-later.json",
+      "bytes": 151,
+      "sha256": "c59fd14cedc871086e6ea199748b37ab2822a8d095292948c24150977a7f2cae"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-plain-textarea-recopy-paste.json",
+      "bytes": 78,
+      "sha256": "bd3110a3375ba01dc78f91145a5d4ed7fea7c631ca0b10ca369c0698066a8ad2"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-plain-textarea-recopy-reset.json",
+      "bytes": 183,
+      "sha256": "a0096be80598548e0824ba303de5ce9b671c8979ec0d0b909c85df920229cd1b"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-plain-textarea-recopy-settled.json",
+      "bytes": 153,
+      "sha256": "2c5fde5a48504ab007397d3ef399a7a9a71f3a4fdf6f60bc5790c44327132b60"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-plain-textarea-recopy-source.json",
+      "bytes": 144,
+      "sha256": "3a4f1e24c1dcd7e39e6f3297549d51459e490aa8be503e8bf14a4eaf7d760554"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-product-final.json",
+      "bytes": 28,
+      "sha256": "0a0c58d055697b8979b9bc7596ccd22364e52249dbaaa348a75fd39fb2bbcf41"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-quit.json",
+      "bytes": 35,
+      "sha256": "52b50e2fc7237c300034a999eedd4b6270bbde3539c7ab1e2400ffa3c45919b2"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-rooster-opacity-control-clipboard.json",
+      "bytes": 746,
+      "sha256": "b7841545ddca7153047d95684f378b90efdddc0e927d7df0223333cdf4d42307"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-rooster-opacity-control-focus.json",
+      "bytes": 145,
+      "sha256": "de8ad3bf3f5ee54ee9a1c4e4f99ae4871c471bcdb26a00118c6ad69a0777a243"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-rooster-opacity-control-later.json",
+      "bytes": 153,
+      "sha256": "f39f817369531c41a27a668b7cde12c2dacf916f7d26e42ebe52feac66ef1e23"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-rooster-opacity-control-paste.json",
+      "bytes": 80,
+      "sha256": "b8718c7100b09fe834464d96cd476ea7c0c49ca90d4f5b60ac6f2c04ecfc5a12"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-rooster-opacity-control-reset.json",
+      "bytes": 189,
+      "sha256": "6a61079d0ba43a3188a9040d06c06cf393d8dde6a46629ff8dfcdb759ceb9168"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-rooster-opacity-control-settled.json",
+      "bytes": 155,
+      "sha256": "e0a518b4cb5b9633b6145911dbc2bed453c3783b5c1e47a70328e5f72bd9924a"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-rooster-plain-clipboard.json",
+      "bytes": 248,
+      "sha256": "21e83019bbd0f6ae66ebbe0b47898eb49cb3c44080ee99dae7b281d7076e55d6"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-rooster-plain-focus.json",
+      "bytes": 135,
+      "sha256": "6ad32e6e010114539266e9d33d14d3846d7776ab338e08cdc371c9bd84f3e441"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-rooster-plain-later.json",
+      "bytes": 143,
+      "sha256": "3f0035c2ab256c0175cc9be628fa21e36f3131217aa39f2b89ee44bdf30ef48d"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-rooster-plain-paste.json",
+      "bytes": 70,
+      "sha256": "ecc48fc68154d2914e6237139b9df6dec735aad284d36db7037b913a432c59bb"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-rooster-plain-reset.json",
+      "bytes": 169,
+      "sha256": "bc58c5d7326bc15846384cc8955437eb524e6eb6d0c317f141fa6e5394ffa9d7"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-rooster-plain-settled.json",
+      "bytes": 145,
+      "sha256": "b1836da385efb84c68f826c6992abc66b3cc905dcad2cd2b6f15e4d5e29facb2"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-rooster-plain-shift-clipboard.json",
+      "bytes": 254,
+      "sha256": "7bb9c4b5f871afbf947fb3b91c9af798dfa5f508b4fcb553a114fd064bf02d17"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-rooster-plain-shift-focus.json",
+      "bytes": 141,
+      "sha256": "c86cf100de51a20ddae4f39c634d0a9c95c214135631e6d29e2c6c74c90bbcbe"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-rooster-plain-shift-later.json",
+      "bytes": 149,
+      "sha256": "ad939b0b717187dc75817a90cb95436c3b63941d6b30f444fb7b45576a87aef0"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-rooster-plain-shift-paste.json",
+      "bytes": 82,
+      "sha256": "03a35a5bbecbc5d5b6e4cfa1af4ec48636ed0bdea7b96766972e7b740ca39893"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-rooster-plain-shift-reset.json",
+      "bytes": 181,
+      "sha256": "4bac9a808ca3526675b770152e3ac8942471b321e16e2ff2dbc71013141ce055"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-rooster-plain-shift-settled.json",
+      "bytes": 151,
+      "sha256": "0e33eecf41ce61add55ec75ce21d4de4c94edebd2da4e9f94b8656c523f781fb"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-rooster-rich-shift-clipboard.json",
+      "bytes": 666,
+      "sha256": "f7cc21c00a7e43c4b31a6c30bce9d538d035a63548e9b6ebf1fc5907e7f5f6de"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-rooster-rich-shift-focus.json",
+      "bytes": 140,
+      "sha256": "f15e496f4f1c603f2cc2b5a8f815e07a19c703889514141f943bf431fe383ff9"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-rooster-rich-shift-later.json",
+      "bytes": 148,
+      "sha256": "05c882ed50dc21d695a9dced77f5746f2a8817e2d416345826e281963f623d74"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-rooster-rich-shift-paste.json",
+      "bytes": 81,
+      "sha256": "0f94abd47633050bad90bc5f1ab268bab7d46415e3e00b418f071ce8ee10acc6"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-rooster-rich-shift-reset.json",
+      "bytes": 179,
+      "sha256": "0de3b30562f060f221104ad29a555b8b7a54213c649d5be961d529843e75cdb9"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-rooster-rich-shift-settled.json",
+      "bytes": 150,
+      "sha256": "b7763250762c999e0088b054dab1b8e74c029d8df1303e03933fd793c3b47d46"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-rooster-rich-visible-clipboard.json",
+      "bytes": 668,
+      "sha256": "569f4a9151d3ddeeb27f329cf040f02cdc55aa6220fd858f0406916a832a211a"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-rooster-rich-visible-focus.json",
+      "bytes": 142,
+      "sha256": "01156563b5945975493f02baad2d4847e52dc218ef857cc9ab78c4510d7c3e39"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-rooster-rich-visible-later.json",
+      "bytes": 150,
+      "sha256": "68ec8e1e2671f3b0d1b301277bbbcf0328d6b03bde289377419f9d1c75cd78a8"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-rooster-rich-visible-paste.json",
+      "bytes": 77,
+      "sha256": "e1155013808ca9adfd87dcbaa0b129d195104c5780cfa8bc8c343ee701ac50ec"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-rooster-rich-visible-reset.json",
+      "bytes": 183,
+      "sha256": "a7b4961b2c779d4b0b35ca7a1562c27c13c3e8f94813c0b717b3cebb383f5926"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-rooster-rich-visible-settled.json",
+      "bytes": 152,
+      "sha256": "f6acac2222f146afc532909a90c1aa71eb668ee806c999dd7a8e5e9e562465de"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-rooster-subject-recopy-copy.json",
+      "bytes": 92,
+      "sha256": "cc9909ff6b2d66ffa23f8a68fd42e91f1252041da9da8e3152435321bcbb0a3a"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-rooster-subject-recopy-focus.json",
+      "bytes": 144,
+      "sha256": "c90bd7aceac3a64598154f1a87ec7657d9d71968cc6f9f5bffba44b8f2a36f31"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-rooster-subject-recopy-later.json",
+      "bytes": 152,
+      "sha256": "987a2511b489f57709798fb541c6f0650a8241c51c2a4c48618d1a930982ba28"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-rooster-subject-recopy-paste.json",
+      "bytes": 79,
+      "sha256": "a2c3ba393ca840662dcbebfbd0c554a939cd9e43e0ffd3551ada9c14f08dcb01"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-rooster-subject-recopy-reset.json",
+      "bytes": 187,
+      "sha256": "04f2c041d46901cd968f3a7b0ec48b1e712b578af95366de0a785d871e0cbf60"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-rooster-subject-recopy-settled.json",
+      "bytes": 154,
+      "sha256": "bbba9c69e7901393c78490e66d4b03545abfbe9f3fd12e1bbb5241dbcd1f6fb4"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-rooster-subject-recopy-source.json",
+      "bytes": 145,
+      "sha256": "4a1bb1fe53959d1939e52a7330f277fbe1a2cc10ebd99658d029986ecacf873d"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-rooster-textarea-recopy-copy.json",
+      "bytes": 93,
+      "sha256": "45846ed5f0fb522aaee268c98ac191da6911e6f39e8c7e009a0a5cf09d4dac95"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-rooster-textarea-recopy-focus.json",
+      "bytes": 145,
+      "sha256": "753c309d226cbefef87a0984494b153bba9d58d04bfce0024653acdd9d80a83a"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-rooster-textarea-recopy-later.json",
+      "bytes": 153,
+      "sha256": "41caa4ee9b0b40dece043e8fb1776f06eedea87b23e4d157ed95f572bdbd8cab"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-rooster-textarea-recopy-paste.json",
+      "bytes": 80,
+      "sha256": "5b5344d694fba4910c950e206ad181bd157b83db996ceb374eae761a2e678e9a"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-rooster-textarea-recopy-reset.json",
+      "bytes": 189,
+      "sha256": "38a4b55cdb46a35b3c7ea49f53ba5afb3cfc24c8be572764a5087bfb74bfcf64"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-rooster-textarea-recopy-settled.json",
+      "bytes": 155,
+      "sha256": "476fcd0dcf0ac5b1a834370da730c7b75b9d21057f6b0f89835a147345c9028a"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/request-rooster-textarea-recopy-source.json",
+      "bytes": 146,
+      "sha256": "ac15f2d281bb02886dc1095b878e623bdd49bcd8fb96508091e462db254f3b28"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-dismiss-standard-prompt.json",
+      "bytes": 871,
+      "sha256": "10d71ba7606bc0d4dd9f07d002f02953f84b367f7a43052e971f1a7aeed97d32"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-final-screenshot.json",
+      "bytes": 4230,
+      "sha256": "cac5a120aa3117cd26c7d32cea7ce6670ed375c57afc49dd88c22111013b821c"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-fixture-ready.json",
+      "bytes": 152,
+      "sha256": "f9a9dedd95887e584159674f1bbebd529fe985399a08d5f93b3cb99eb02aaf4a"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-plain-opacity-control-clipboard.json",
+      "bytes": 184,
+      "sha256": "0df2cc95f7154035258b55a23b681988953688493ff4e5bab0963ce34aadce77"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-plain-opacity-control-focus.json",
+      "bytes": 85,
+      "sha256": "038f269199b0a4e2c5f27d007e8108009d242d93869b0c1f80088dc29fabcb13"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-plain-opacity-control-later.json",
+      "bytes": 4019,
+      "sha256": "acc64e2829dc0eeceff4d04c8a4751f9b1b1ba33ca904aac0895fab44fcc791e"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-plain-opacity-control-paste.json",
+      "bytes": 872,
+      "sha256": "e100ccf29b33d1d33621c6984c3bec55afd06d83ec3b312d8366241474ec827f"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-plain-opacity-control-reset.json",
+      "bytes": 146,
+      "sha256": "65cf35345851504e48e6405da2cbf75234fc4714e62a4ccafd120d1d44835b21"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-plain-opacity-control-settled.json",
+      "bytes": 4020,
+      "sha256": "383093d99b36736f77f2c0f5b398bf660d6b9243a5372f83fa19081adac9986c"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-plain-plain-clipboard.json",
+      "bytes": 148,
+      "sha256": "5ca3447c8d7346739ee71ff35a47b14e19bdc8280d8ad6c852e48c23f5e33011"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-plain-plain-focus.json",
+      "bytes": 84,
+      "sha256": "5451d9dcdab18f54a8ee821427caec7a40c1145c1678040f7ed226dffa9b3b69"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-plain-plain-later.json",
+      "bytes": 2857,
+      "sha256": "35e992874bf114eebf612b9d3cfd8981140a26264350015a03fbc55d6f26bbf1"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-plain-plain-paste.json",
+      "bytes": 871,
+      "sha256": "8d8ed97efb83e7e1a9a76292741b3f9fba677e7bb0d272d085f39272e8901079"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-plain-plain-reset.json",
+      "bytes": 135,
+      "sha256": "de1b9fbae37d88fc4aec0dace5e43440dbc351f8385134975c1d8dcd1c42b9d8"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-plain-plain-settled.json",
+      "bytes": 2857,
+      "sha256": "6f8ec1fc4260543b4be797b71e62543fb68dce57be81f943db545609435f2371"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-plain-plain-shift-clipboard.json",
+      "bytes": 148,
+      "sha256": "11bd5514c78c21359c70272b852492d7e9885c6192a30dd35a3244a3d81e8b67"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-plain-plain-shift-focus.json",
+      "bytes": 85,
+      "sha256": "54e75603062c0daf5792e24b931e32e1ba21f02a520123ccab4b2c59f706bc5e"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-plain-plain-shift-later.json",
+      "bytes": 3000,
+      "sha256": "3eba99ec334983100310e3d9151b36a91cf38e4290e8c78cddd4cb36064276e7"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-plain-plain-shift-paste.json",
+      "bytes": 871,
+      "sha256": "231e78d86cbf4d27570a77ca65081abe65f865d696c1d9abbdfd4c67998ec608"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-plain-plain-shift-reset.json",
+      "bytes": 142,
+      "sha256": "18d4168840cf9c9ea743b7c881da12795b6132c72369c22c0b278a6f182d79a4"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-plain-plain-shift-settled.json",
+      "bytes": 3001,
+      "sha256": "7b57b5caed6d86d321a16c2c99a79f9339c9f7242eb7cbdfa9f85188ad75dc4f"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-plain-rich-shift-clipboard.json",
+      "bytes": 183,
+      "sha256": "0744e7bf294ac3b9cb3213fc39a1998d7ecdcbb75d81103282cdb375eda3e599"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-plain-rich-shift-focus.json",
+      "bytes": 85,
+      "sha256": "8211c441da12d881880c20fc1e9c4a2fa5463c46b864f1934aa34ef603407266"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-plain-rich-shift-later.json",
+      "bytes": 3000,
+      "sha256": "4fcd6bb167dd97eb9b40292c2f63bca1a1bc4ce8eb7b8afef92e9eb3a970bc2e"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-plain-rich-shift-paste.json",
+      "bytes": 870,
+      "sha256": "4c092e076e24c5fb85832f60abb0269ad44c5a923620b6bc6c1ea3613043cc45"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-plain-rich-shift-reset.json",
+      "bytes": 141,
+      "sha256": "133be2d9bc5404cc614ddb9b22e8eda74cf87a31ca7a815e3a19dbe7f06d8f1e"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-plain-rich-shift-settled.json",
+      "bytes": 3001,
+      "sha256": "bc7b9a2d1a4ff17b9d90628d77e5bb1d2c578a84c539cb0411754ade98974075"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-plain-rich-visible-clipboard.json",
+      "bytes": 184,
+      "sha256": "276e3cb343e80f151061724daa1d9cfb252b7296af56d5bd4030db6dff89d9f0"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-plain-rich-visible-focus.json",
+      "bytes": 85,
+      "sha256": "72a5ab5f322341fa2a79f4777da31893b4921f6013833467fc1e274df9dd0795"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-plain-rich-visible-later.json",
+      "bytes": 3528,
+      "sha256": "8584a63292fbaec810bc871efcba8f518c5086d984970251de887286bd14b776"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-plain-rich-visible-paste.json",
+      "bytes": 872,
+      "sha256": "a23a890ecb1a8633c233a7c522ed750459d44cd31f49fc04ce666a060ef8346b"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-plain-rich-visible-reset.json",
+      "bytes": 141,
+      "sha256": "5222b3effb895b6c13706d2306d5408019dace5b88fce713155767b2a5951864"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-plain-rich-visible-settled.json",
+      "bytes": 3527,
+      "sha256": "aa392b102e6d9e8c4ce6dc087e44c174e489518af211224960f7266d7d719f32"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-plain-subject-recopy-copy.json",
+      "bytes": 872,
+      "sha256": "0bfde5088f95e7ecb5ac6ece4dbfc8b048fcc79a1d64ecc4e725ccbd1b3a8e2d"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-plain-subject-recopy-focus.json",
+      "bytes": 84,
+      "sha256": "b597240f2bbc980d5d4d11b3c36f82398565aea5065a8bc7fc92e6735e9e9c8c"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-plain-subject-recopy-later.json",
+      "bytes": 3005,
+      "sha256": "e4352c24b7f6a55327fd90aede49d2e93791be45a4bf2f541a4512cbefe4d00e"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-plain-subject-recopy-paste.json",
+      "bytes": 870,
+      "sha256": "42ab15f3ddd2c374c032d2d437e8ee6298ef4a0c1fc8ab2ad86c9099151b5ad0"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-plain-subject-recopy-reset.json",
+      "bytes": 144,
+      "sha256": "73eb73a0495393fb1f91580a9a18bd1b14ce53e30ab6334d9c96a96809cbb06a"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-plain-subject-recopy-settled.json",
+      "bytes": 3006,
+      "sha256": "cabc00148838d3f64b08ee28fd41eb82354bea722bf8ac1e7bba99a8ede9de2f"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-plain-subject-recopy-source.json",
+      "bytes": 85,
+      "sha256": "c399f7c28328519d9b6a6b5349e0dd45392b9e140e5ad7b0a0d2d1e63e9d3f4b"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-plain-textarea-recopy-copy.json",
+      "bytes": 870,
+      "sha256": "e711f45e4693230040170323d951865e61f8143aa2c2fe5f9ed209ed184ce4d9"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-plain-textarea-recopy-focus.json",
+      "bytes": 84,
+      "sha256": "48b3e2cb615ab9d6323e88dbdf3a6da54d045b162ee522ea46033c2efb7044ac"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-plain-textarea-recopy-later.json",
+      "bytes": 3006,
+      "sha256": "4bbac91453c4debc520dac14f038eb38b65e90f498c86bfa54128558c345804b"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-plain-textarea-recopy-paste.json",
+      "bytes": 870,
+      "sha256": "e8bdad199aea306e33933b371d27c7fb2b7a1ce28d05e1970874b990b24a3b48"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-plain-textarea-recopy-reset.json",
+      "bytes": 144,
+      "sha256": "396f26c745ba18b0e2ee5c6f85aba744b9c95a2378f7f0c183a2136ac3cccc86"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-plain-textarea-recopy-settled.json",
+      "bytes": 3007,
+      "sha256": "7b1bbdcf7623f1bfb9e57a54fe3541d134fc7b3a265531470f828abb6fba60b0"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-plain-textarea-recopy-source.json",
+      "bytes": 86,
+      "sha256": "c93a2ed7e425a1f53647de0820fc27fce64df41c3b4921e1282e57c5456fe535"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-product-final.json",
+      "bytes": 872,
+      "sha256": "9ad6607f64c13f06cf6e293a3078111704df2ac30faab6c15a2646168f6b8e96"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-rooster-opacity-control-clipboard.json",
+      "bytes": 184,
+      "sha256": "6088e1a2a10a4c4099387a60cfd59daca53edf22f0ff5073d2c19815e54f3b34"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-rooster-opacity-control-focus.json",
+      "bytes": 84,
+      "sha256": "d841001d53418ec8a59a6f321aa4574653ff0392deb8f161c841b6c9418d5cbf"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-rooster-opacity-control-later.json",
+      "bytes": 4230,
+      "sha256": "ea6cb1a8b09c1b222311a99969f3993a814e6d4d120f18967947ac04171c2d66"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-rooster-opacity-control-paste.json",
+      "bytes": 869,
+      "sha256": "6988d0e6615462f48c6de83fd3a4aa3e24a7ec9b5d28d1a42804255170a507bd"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-rooster-opacity-control-reset.json",
+      "bytes": 148,
+      "sha256": "7df2e2d61985ce16ed8b6cf4ea51ee1efcfe30aa81c276edcf5c3c12d7731bfe"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-rooster-opacity-control-settled.json",
+      "bytes": 4229,
+      "sha256": "391a25ec89dd191ae21beb54dfb86162a5e64eef08c3f7ab8cb3d71818151c0e"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-rooster-plain-clipboard.json",
+      "bytes": 146,
+      "sha256": "2b6d43a8be6b857fd8f36007eccf571881538acda48d7aaba2e1a25ab2b45443"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-rooster-plain-focus.json",
+      "bytes": 85,
+      "sha256": "3e8efe7d2f095f370fc3fd9d265adffbe0519bcf502a94ccbb0cc7d49d6d5eee"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-rooster-plain-later.json",
+      "bytes": 3460,
+      "sha256": "cc3623e55124377dc56d846d4e86404ad47651375240f6d5c86ce8d11daaf100"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-rooster-plain-paste.json",
+      "bytes": 870,
+      "sha256": "2f64bcde9417535178600e1d890e1b6dbbc42e150a7dc0f838aae8c21bbda608"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-rooster-plain-reset.json",
+      "bytes": 138,
+      "sha256": "cb497efde113e43e8ba156c3f5d93e8d3d22a4ea70a7d07964ba18956f4bb35e"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-rooster-plain-settled.json",
+      "bytes": 3459,
+      "sha256": "21949bdf82b1ace6f808e08e951c27e53bb04409ecf885147d2a6636cb3e37cb"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-rooster-plain-shift-clipboard.json",
+      "bytes": 148,
+      "sha256": "8150193c1afd312f2cd0bd5ee15d1ef36a4632c77444d6caf73f400c1aa82fe3"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-rooster-plain-shift-focus.json",
+      "bytes": 84,
+      "sha256": "3437eef5aa895faee23fabe0634c1cff13f8fe4fa0f69237c86a0ee5a6660718"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-rooster-plain-shift-later.json",
+      "bytes": 3465,
+      "sha256": "cfeae1d72b16ec56c26fe855217ce1ee1fba2fe21cf408a52ae9497507df0c45"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-rooster-plain-shift-paste.json",
+      "bytes": 871,
+      "sha256": "121da81fb8cbfff64d80d4f205d752e7880d6cc9ce713a92c659c2e41410a5c3"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-rooster-plain-shift-reset.json",
+      "bytes": 145,
+      "sha256": "a4fa2e680cd9e3196497c23e169d087a11e4061784568122e3047659f4f7f82c"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-rooster-plain-shift-settled.json",
+      "bytes": 3464,
+      "sha256": "b6579248b99a79b6aa6b773843eb4009f94bd3959781f753955b1ec848d858c7"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-rooster-rich-shift-clipboard.json",
+      "bytes": 182,
+      "sha256": "22c6da4cc6d17987e23a6475f594e8e3dd35575683046ab99c796d4d8bd44859"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-rooster-rich-shift-focus.json",
+      "bytes": 85,
+      "sha256": "563bad1c27ac140b0e4e712802f94887a56c949c27c0a21a2a736fc720f41254"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-rooster-rich-shift-later.json",
+      "bytes": 3463,
+      "sha256": "e2405ed4c4a3ce5cf570a1a18713ad7bbafc69f6846fdfd770fffb39a35ea775"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-rooster-rich-shift-paste.json",
+      "bytes": 870,
+      "sha256": "633b4ac14490d9e4625f5eb007d5d143def57d5f94802f737e4846d82cf55284"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-rooster-rich-shift-reset.json",
+      "bytes": 144,
+      "sha256": "29aa5077588219b21a9b6fcba7ddacf94c5f124fa0f896a7460a2d57b3951c93"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-rooster-rich-shift-settled.json",
+      "bytes": 3463,
+      "sha256": "53426c74f590fc903df45e8b264f2283ff9aaf91501cddaad19c8148191975cf"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-rooster-rich-visible-clipboard.json",
+      "bytes": 182,
+      "sha256": "afbc082f02318a91a6649768d8748d8efd436628330ffe6ad97917af3e68238c"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-rooster-rich-visible-focus.json",
+      "bytes": 84,
+      "sha256": "688c80156ac69f8f7e6bf451b336b5373c9f0555e02ad01dd99a2f6af0e3afa9"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-rooster-rich-visible-later.json",
+      "bytes": 3597,
+      "sha256": "9346b24cd8712aacec211c9850b2fdbc5196799a60fb8ac674fea7f028bc4283"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-rooster-rich-visible-paste.json",
+      "bytes": 870,
+      "sha256": "10d4717e2ee68136f4db60750bb7571a0e06600cce294fd499b4f9ee98f856a9"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-rooster-rich-visible-reset.json",
+      "bytes": 147,
+      "sha256": "984d1e7f50ae810d8cb82df33e9608aace0626f9307443f53bdbeb79121a9d95"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-rooster-rich-visible-settled.json",
+      "bytes": 3596,
+      "sha256": "65dda26e0772ffadf392f9e5e73de6e4535dfca9fdb1c249ccaee6c623757f6a"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-rooster-subject-recopy-copy.json",
+      "bytes": 872,
+      "sha256": "b79cb69e56b58454387b13a6258cc9b2bada2cb90e2373ec04e91f386f9fea4f"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-rooster-subject-recopy-focus.json",
+      "bytes": 85,
+      "sha256": "dc133a09d14d49e8bd580e0e263e55267502d486b68f2bf55264116b35070a90"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-rooster-subject-recopy-later.json",
+      "bytes": 3469,
+      "sha256": "be8c650d5aa2abc51727f71b613f9568fbd7b4fba901c07ef959131a91509f4e"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-rooster-subject-recopy-paste.json",
+      "bytes": 868,
+      "sha256": "933805809b8d8a428898935ddfa48b82d41a2579506411d68f580113f4030447"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-rooster-subject-recopy-reset.json",
+      "bytes": 147,
+      "sha256": "6f35b1ff1ba21c62cc8d43ecf637015be7f08eeb5200be783e350a35c8c57db2"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-rooster-subject-recopy-settled.json",
+      "bytes": 3468,
+      "sha256": "d78b8f26a3014a0363231b85766304800b1253c34545a6e58fee9fc6d4803306"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-rooster-subject-recopy-source.json",
+      "bytes": 84,
+      "sha256": "7fda16eb34f16cd56b3f0bd0b2b760d816eb16193cdc5f7a95ca5244828e2775"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-rooster-textarea-recopy-copy.json",
+      "bytes": 872,
+      "sha256": "b07120b57b30543fa61a5d8225ff108778bd162c890a28ff0b44fe022f3502ed"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-rooster-textarea-recopy-focus.json",
+      "bytes": 84,
+      "sha256": "c398979a881e51f6a513fd11f9031f3a5ca2c0c9bea63f2260d2d79629afd7df"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-rooster-textarea-recopy-later.json",
+      "bytes": 3470,
+      "sha256": "fdaa33e9d765ea58e4ef398a1577a01d696fd4dbdc678b1bb6b1f65cf1bc7845"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-rooster-textarea-recopy-paste.json",
+      "bytes": 870,
+      "sha256": "5f8eea3bb4118d9c33c9e05fe28b65903404a842e89c1f5da19aa23fff5de35e"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-rooster-textarea-recopy-reset.json",
+      "bytes": 149,
+      "sha256": "1e8e414297e767f4ff630546c2e07c948dd2f29d45f69b479f6247bd4d92cffd"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-rooster-textarea-recopy-settled.json",
+      "bytes": 3470,
+      "sha256": "611d3d5db70e6e2d1cbd2af7f0ed9777ba548ed8291e7a8eccbdcaab170f2672"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/result-rooster-textarea-recopy-source.json",
+      "bytes": 85,
+      "sha256": "05a126897e36c451ae3bbe2c17b1495de3bee2a2b3f2bf2debdd604a4568aa11"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/shutdown.json",
+      "bytes": 51,
+      "sha256": "a6bfff55ed63f8d986c16411c033c0a04b647662330b09654f767a1bd1bd322b"
+    },
+    {
+      "path": "raw/firefox-current-test-profile/test-definition.json",
+      "bytes": 379,
+      "sha256": "81bff0d3d8f9faf4fd36b7199ed473c1075d0ccef8b8e40b72d9f68e4b1b1cf5"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/fixture-final.png",
+      "bytes": 69409,
+      "sha256": "fcf42563f7a6c9f9ffca873fe13a0927594496815b6ef4aa5ecf2602dabb20b3"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/paste-results.json",
+      "bytes": 109657,
+      "sha256": "509de099e80efc3bc442996a8667ad7983aa5b71d23a25963d8865fb4b325f7e"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/ready.json",
+      "bytes": 873,
+      "sha256": "8622818ed2c98a6e6a1771f5e8ff9b24d1f738f6c245a715487608768d935d57"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-dismiss-standard-prompt.json",
+      "bytes": 74,
+      "sha256": "9e230c30f995728cb069adc18942af536806205d7faf1dfcc2facb5b5435eafa"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-final-screenshot.json",
+      "bytes": 177,
+      "sha256": "406579f0f158d4623eaada84241edb71b29fa75bec29fead295d5e3389a3318f"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-fixture-ready.json",
+      "bytes": 161,
+      "sha256": "ceb37c3e702a8719740c93f4f37d247dc8dd69815c234cd3df2e3754fcd589e8"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-plain-opacity-control-clipboard.json",
+      "bytes": 744,
+      "sha256": "f8c2c8437fc671d37db68bd75e4469cc73f565f5d197794807cc41d316d5d69b"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-plain-opacity-control-focus.json",
+      "bytes": 141,
+      "sha256": "e8fc72a0eda28b10c4f1a5853b3993afba7d0710eefe9d15bb7c1b6d816a3d9c"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-plain-opacity-control-later.json",
+      "bytes": 151,
+      "sha256": "4f0723e5a3db5438f85d9d382387a76d701d5f1884488debff4b882288f5301a"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-plain-opacity-control-paste.json",
+      "bytes": 78,
+      "sha256": "8ceed1aeb6fb1d6868cac5c5861bf460cb7c130bc4c8a4cb89c7c4f0dc565e7b"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-plain-opacity-control-reset.json",
+      "bytes": 183,
+      "sha256": "4f0724899333c9946e5665235a02ddc170c978b0466188c86ae641669ad549ea"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-plain-opacity-control-settled.json",
+      "bytes": 153,
+      "sha256": "bd2758a59dc5b1e92eed5ce5ada78020e80e7c3919dc0e7c53cd497c79cdf6db"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-plain-plain-clipboard.json",
+      "bytes": 246,
+      "sha256": "6c5c5f572cf09c41bdaede7f5bbd0b84ae65addd21bb3af7c950d80fa6163b00"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-plain-plain-focus.json",
+      "bytes": 131,
+      "sha256": "297e09ce490692fd76b3a4ac5481b7b344c2eeed848eef8e91959c5864319595"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-plain-plain-later.json",
+      "bytes": 141,
+      "sha256": "811ef92714ccf4103417810b54af34207169d0cb2b6b2ea5e6800dec7e4effca"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-plain-plain-paste.json",
+      "bytes": 68,
+      "sha256": "56ef2c49242d510eb3b3e6c3261549a723253d974d4ecd848e090ce80680b85e"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-plain-plain-reset.json",
+      "bytes": 163,
+      "sha256": "f143c108036365a78059a126437b2e5dc7aef40b9a0ed440eef84dde9e36430f"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-plain-plain-settled.json",
+      "bytes": 143,
+      "sha256": "fc31729f2a6ef29b05d83ab8dc296136e82522773981dac93f9fea194b0b50e0"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-plain-plain-shift-clipboard.json",
+      "bytes": 252,
+      "sha256": "1b53078fd57127a41a2b2fbcc368795f01db3e5af27466d5d5ee962b41ee0a9c"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-plain-plain-shift-focus.json",
+      "bytes": 137,
+      "sha256": "4c78564609682539f4d5d80a8ac84bbcacaadb27dddefc556f660d61498a1505"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-plain-plain-shift-later.json",
+      "bytes": 147,
+      "sha256": "797ca3ba520546568b396c50e2bd46a8f271e0bd832b8665ada0fd70c411b7b3"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-plain-plain-shift-paste.json",
+      "bytes": 80,
+      "sha256": "7413017904bf3f46dbdcf4d78ca12ba6f4284cc2a505be35d2978501ce3bfe0d"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-plain-plain-shift-reset.json",
+      "bytes": 175,
+      "sha256": "7780c75724f15af4a9f14b2c51de3b8d40d4e047261489488555d6fc3eb7432c"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-plain-plain-shift-settled.json",
+      "bytes": 149,
+      "sha256": "10e073c3249dea47a5cd9f08d3a12ca1a32a6957313af9def84520b51ef9fad8"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-plain-rich-shift-clipboard.json",
+      "bytes": 664,
+      "sha256": "4551e29b7646b2385b933ccf47a8516a2fdbe0c3ab388757205ef7bac43e2450"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-plain-rich-shift-focus.json",
+      "bytes": 136,
+      "sha256": "5894e6c5c38d92de01704c66f6a31a8142b13ce4db6e2c92ec0552cc9c16eb2a"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-plain-rich-shift-later.json",
+      "bytes": 146,
+      "sha256": "1a845f6a28d06a78a1700955d410407c445e40ac2577493bcf9026361d9104ce"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-plain-rich-shift-paste.json",
+      "bytes": 79,
+      "sha256": "b712144e2fb9129e7dae0ea6181637d2ae06e1f668aa2803a6dbfbeee14427d9"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-plain-rich-shift-reset.json",
+      "bytes": 173,
+      "sha256": "3a64a52b4f2f260444617a1ce18dfa5c1636b356be3a57cd0cb9162c80988993"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-plain-rich-shift-settled.json",
+      "bytes": 148,
+      "sha256": "9bc941a0cb7c5aba93e762169682def91a13e24f6756f8275c3678642f351fcb"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-plain-rich-visible-clipboard.json",
+      "bytes": 666,
+      "sha256": "036e168ed1276c2951c25467eaa7027d2569db1321562dd002cfdca85b3df088"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-plain-rich-visible-focus.json",
+      "bytes": 138,
+      "sha256": "60468664b964ebe77fd95c2039ccfcb68051f8c5ffff2a928fbe0e5c90880a2c"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-plain-rich-visible-later.json",
+      "bytes": 148,
+      "sha256": "17148375483f07e9c64005b050d72677d690423d152ee766169f42dc06eaa4b1"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-plain-rich-visible-paste.json",
+      "bytes": 75,
+      "sha256": "160caebaed4b26d6fde06ee44a2bb1b6d67e6fe17e4b5377084e81d2d815c35e"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-plain-rich-visible-reset.json",
+      "bytes": 177,
+      "sha256": "48e15768f28ac013a5f97e79efbe9e6665266a16ed8328c21137106c13893664"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-plain-rich-visible-settled.json",
+      "bytes": 150,
+      "sha256": "78395c19ef74ec02d850684294cc5b5a4d9b3713fffe00ef8111f6f851eef649"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-plain-subject-recopy-copy.json",
+      "bytes": 90,
+      "sha256": "73cb63861e5d378cf6bf6eb9658125026008e288d02fb6b55ae5ef7991566e2d"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-plain-subject-recopy-focus.json",
+      "bytes": 140,
+      "sha256": "0d35f79090a1a67e4c45098d0bda9e1f4bee7afcad3935a84ceadd7b5445471f"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-plain-subject-recopy-later.json",
+      "bytes": 150,
+      "sha256": "d1aac1994aed5a889903937278367b4df47f74e796dc3d7cf9e62bb2f4094820"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-plain-subject-recopy-paste.json",
+      "bytes": 77,
+      "sha256": "9ad4f3cbb5e28efa7b685a086e38607507c80f73ed65251c7d3c15955ee93b84"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-plain-subject-recopy-reset.json",
+      "bytes": 181,
+      "sha256": "e84600403ad87361134dbbaf1cd7c5a533f04671f94b9c3c7b6846909a697e72"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-plain-subject-recopy-settled.json",
+      "bytes": 152,
+      "sha256": "6cd292535e6c6a418413b5c685382df0fb61f9ee526878cbfcb6cae767480411"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-plain-subject-recopy-source.json",
+      "bytes": 143,
+      "sha256": "d17af7fe06a966b4dabe827bd6348b1108f07d85b986e4f49df99dc6b7229c19"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-plain-textarea-recopy-copy.json",
+      "bytes": 91,
+      "sha256": "23813abc727fef2a8b0747cfbe9b044450c9077c729ce466bfb74f9f1c0e281f"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-plain-textarea-recopy-focus.json",
+      "bytes": 141,
+      "sha256": "320d094fd234cd3f4441ebe08217875af2487d8bb5ad623f15c67c985a1179bc"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-plain-textarea-recopy-later.json",
+      "bytes": 151,
+      "sha256": "c59fd14cedc871086e6ea199748b37ab2822a8d095292948c24150977a7f2cae"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-plain-textarea-recopy-paste.json",
+      "bytes": 78,
+      "sha256": "bd3110a3375ba01dc78f91145a5d4ed7fea7c631ca0b10ca369c0698066a8ad2"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-plain-textarea-recopy-reset.json",
+      "bytes": 183,
+      "sha256": "a0096be80598548e0824ba303de5ce9b671c8979ec0d0b909c85df920229cd1b"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-plain-textarea-recopy-settled.json",
+      "bytes": 153,
+      "sha256": "2c5fde5a48504ab007397d3ef399a7a9a71f3a4fdf6f60bc5790c44327132b60"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-plain-textarea-recopy-source.json",
+      "bytes": 144,
+      "sha256": "3a4f1e24c1dcd7e39e6f3297549d51459e490aa8be503e8bf14a4eaf7d760554"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-product-final.json",
+      "bytes": 28,
+      "sha256": "0a0c58d055697b8979b9bc7596ccd22364e52249dbaaa348a75fd39fb2bbcf41"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-quit.json",
+      "bytes": 35,
+      "sha256": "52b50e2fc7237c300034a999eedd4b6270bbde3539c7ab1e2400ffa3c45919b2"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-rooster-opacity-control-clipboard.json",
+      "bytes": 746,
+      "sha256": "b7841545ddca7153047d95684f378b90efdddc0e927d7df0223333cdf4d42307"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-rooster-opacity-control-focus.json",
+      "bytes": 145,
+      "sha256": "de8ad3bf3f5ee54ee9a1c4e4f99ae4871c471bcdb26a00118c6ad69a0777a243"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-rooster-opacity-control-later.json",
+      "bytes": 153,
+      "sha256": "f39f817369531c41a27a668b7cde12c2dacf916f7d26e42ebe52feac66ef1e23"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-rooster-opacity-control-paste.json",
+      "bytes": 80,
+      "sha256": "b8718c7100b09fe834464d96cd476ea7c0c49ca90d4f5b60ac6f2c04ecfc5a12"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-rooster-opacity-control-reset.json",
+      "bytes": 189,
+      "sha256": "6a61079d0ba43a3188a9040d06c06cf393d8dde6a46629ff8dfcdb759ceb9168"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-rooster-opacity-control-settled.json",
+      "bytes": 155,
+      "sha256": "e0a518b4cb5b9633b6145911dbc2bed453c3783b5c1e47a70328e5f72bd9924a"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-rooster-plain-clipboard.json",
+      "bytes": 248,
+      "sha256": "21e83019bbd0f6ae66ebbe0b47898eb49cb3c44080ee99dae7b281d7076e55d6"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-rooster-plain-focus.json",
+      "bytes": 135,
+      "sha256": "6ad32e6e010114539266e9d33d14d3846d7776ab338e08cdc371c9bd84f3e441"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-rooster-plain-later.json",
+      "bytes": 143,
+      "sha256": "3f0035c2ab256c0175cc9be628fa21e36f3131217aa39f2b89ee44bdf30ef48d"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-rooster-plain-paste.json",
+      "bytes": 70,
+      "sha256": "ecc48fc68154d2914e6237139b9df6dec735aad284d36db7037b913a432c59bb"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-rooster-plain-reset.json",
+      "bytes": 169,
+      "sha256": "bc58c5d7326bc15846384cc8955437eb524e6eb6d0c317f141fa6e5394ffa9d7"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-rooster-plain-settled.json",
+      "bytes": 145,
+      "sha256": "b1836da385efb84c68f826c6992abc66b3cc905dcad2cd2b6f15e4d5e29facb2"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-rooster-plain-shift-clipboard.json",
+      "bytes": 254,
+      "sha256": "7bb9c4b5f871afbf947fb3b91c9af798dfa5f508b4fcb553a114fd064bf02d17"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-rooster-plain-shift-focus.json",
+      "bytes": 141,
+      "sha256": "c86cf100de51a20ddae4f39c634d0a9c95c214135631e6d29e2c6c74c90bbcbe"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-rooster-plain-shift-later.json",
+      "bytes": 149,
+      "sha256": "ad939b0b717187dc75817a90cb95436c3b63941d6b30f444fb7b45576a87aef0"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-rooster-plain-shift-paste.json",
+      "bytes": 82,
+      "sha256": "03a35a5bbecbc5d5b6e4cfa1af4ec48636ed0bdea7b96766972e7b740ca39893"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-rooster-plain-shift-reset.json",
+      "bytes": 181,
+      "sha256": "4bac9a808ca3526675b770152e3ac8942471b321e16e2ff2dbc71013141ce055"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-rooster-plain-shift-settled.json",
+      "bytes": 151,
+      "sha256": "0e33eecf41ce61add55ec75ce21d4de4c94edebd2da4e9f94b8656c523f781fb"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-rooster-rich-shift-clipboard.json",
+      "bytes": 666,
+      "sha256": "f7cc21c00a7e43c4b31a6c30bce9d538d035a63548e9b6ebf1fc5907e7f5f6de"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-rooster-rich-shift-focus.json",
+      "bytes": 140,
+      "sha256": "f15e496f4f1c603f2cc2b5a8f815e07a19c703889514141f943bf431fe383ff9"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-rooster-rich-shift-later.json",
+      "bytes": 148,
+      "sha256": "05c882ed50dc21d695a9dced77f5746f2a8817e2d416345826e281963f623d74"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-rooster-rich-shift-paste.json",
+      "bytes": 81,
+      "sha256": "0f94abd47633050bad90bc5f1ab268bab7d46415e3e00b418f071ce8ee10acc6"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-rooster-rich-shift-reset.json",
+      "bytes": 179,
+      "sha256": "0de3b30562f060f221104ad29a555b8b7a54213c649d5be961d529843e75cdb9"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-rooster-rich-shift-settled.json",
+      "bytes": 150,
+      "sha256": "b7763250762c999e0088b054dab1b8e74c029d8df1303e03933fd793c3b47d46"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-rooster-rich-visible-clipboard.json",
+      "bytes": 668,
+      "sha256": "569f4a9151d3ddeeb27f329cf040f02cdc55aa6220fd858f0406916a832a211a"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-rooster-rich-visible-focus.json",
+      "bytes": 142,
+      "sha256": "01156563b5945975493f02baad2d4847e52dc218ef857cc9ab78c4510d7c3e39"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-rooster-rich-visible-later.json",
+      "bytes": 150,
+      "sha256": "68ec8e1e2671f3b0d1b301277bbbcf0328d6b03bde289377419f9d1c75cd78a8"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-rooster-rich-visible-paste.json",
+      "bytes": 77,
+      "sha256": "e1155013808ca9adfd87dcbaa0b129d195104c5780cfa8bc8c343ee701ac50ec"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-rooster-rich-visible-reset.json",
+      "bytes": 183,
+      "sha256": "a7b4961b2c779d4b0b35ca7a1562c27c13c3e8f94813c0b717b3cebb383f5926"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-rooster-rich-visible-settled.json",
+      "bytes": 152,
+      "sha256": "f6acac2222f146afc532909a90c1aa71eb668ee806c999dd7a8e5e9e562465de"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-rooster-subject-recopy-copy.json",
+      "bytes": 92,
+      "sha256": "cc9909ff6b2d66ffa23f8a68fd42e91f1252041da9da8e3152435321bcbb0a3a"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-rooster-subject-recopy-focus.json",
+      "bytes": 144,
+      "sha256": "c90bd7aceac3a64598154f1a87ec7657d9d71968cc6f9f5bffba44b8f2a36f31"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-rooster-subject-recopy-later.json",
+      "bytes": 152,
+      "sha256": "987a2511b489f57709798fb541c6f0650a8241c51c2a4c48618d1a930982ba28"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-rooster-subject-recopy-paste.json",
+      "bytes": 79,
+      "sha256": "a2c3ba393ca840662dcbebfbd0c554a939cd9e43e0ffd3551ada9c14f08dcb01"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-rooster-subject-recopy-reset.json",
+      "bytes": 187,
+      "sha256": "04f2c041d46901cd968f3a7b0ec48b1e712b578af95366de0a785d871e0cbf60"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-rooster-subject-recopy-settled.json",
+      "bytes": 154,
+      "sha256": "bbba9c69e7901393c78490e66d4b03545abfbe9f3fd12e1bbb5241dbcd1f6fb4"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-rooster-subject-recopy-source.json",
+      "bytes": 145,
+      "sha256": "4a1bb1fe53959d1939e52a7330f277fbe1a2cc10ebd99658d029986ecacf873d"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-rooster-textarea-recopy-copy.json",
+      "bytes": 93,
+      "sha256": "45846ed5f0fb522aaee268c98ac191da6911e6f39e8c7e009a0a5cf09d4dac95"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-rooster-textarea-recopy-focus.json",
+      "bytes": 145,
+      "sha256": "753c309d226cbefef87a0984494b153bba9d58d04bfce0024653acdd9d80a83a"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-rooster-textarea-recopy-later.json",
+      "bytes": 153,
+      "sha256": "41caa4ee9b0b40dece043e8fb1776f06eedea87b23e4d157ed95f572bdbd8cab"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-rooster-textarea-recopy-paste.json",
+      "bytes": 80,
+      "sha256": "5b5344d694fba4910c950e206ad181bd157b83db996ceb374eae761a2e678e9a"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-rooster-textarea-recopy-reset.json",
+      "bytes": 189,
+      "sha256": "38a4b55cdb46a35b3c7ea49f53ba5afb3cfc24c8be572764a5087bfb74bfcf64"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-rooster-textarea-recopy-settled.json",
+      "bytes": 155,
+      "sha256": "476fcd0dcf0ac5b1a834370da730c7b75b9d21057f6b0f89835a147345c9028a"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/request-rooster-textarea-recopy-source.json",
+      "bytes": 146,
+      "sha256": "ac15f2d281bb02886dc1095b878e623bdd49bcd8fb96508091e462db254f3b28"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-dismiss-standard-prompt.json",
+      "bytes": 870,
+      "sha256": "0142e28a49aa5ed493c0ac5fc956e39b2bb292ad3da478ab0ca5dfa1aae2dc26"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-final-screenshot.json",
+      "bytes": 4230,
+      "sha256": "98867068c541a6b998964aad3bd66b43b36bb298a1dde0698c416fe81d6cafd0"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-fixture-ready.json",
+      "bytes": 150,
+      "sha256": "ef71eb92f88d524638fd628dc2cf883ee4ffc261d13503bf9752bef0a85726ec"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-plain-opacity-control-clipboard.json",
+      "bytes": 182,
+      "sha256": "e46c76f4d6b38a3494fb194ddd347e62c08930a55fca55dcf8c522401c6e6469"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-plain-opacity-control-focus.json",
+      "bytes": 85,
+      "sha256": "541b14bbcae4aba0f73ae7ec256926d1a4c89f81dc37552eec6628dd9dd61841"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-plain-opacity-control-later.json",
+      "bytes": 4020,
+      "sha256": "5159cb99be56153e719f191d21103f0088a9e6e5642f2702eeaebe56c16d122f"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-plain-opacity-control-paste.json",
+      "bytes": 870,
+      "sha256": "384960b53c2e08546313fd1c15f34d8388f81d0a61196e402586f33d25e48949"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-plain-opacity-control-reset.json",
+      "bytes": 146,
+      "sha256": "1766a48f9779fe8d93fa39ca02878600f929417a97ccb0d7772abb9cbd420fd3"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-plain-opacity-control-settled.json",
+      "bytes": 4018,
+      "sha256": "5461a09b4178d019b7c0dd63662b2a03dbe1fb9679e59a70667cf60f55e685d4"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-plain-plain-clipboard.json",
+      "bytes": 148,
+      "sha256": "1beefa93c4afc62a9129da21ebc3a0d43a2978b3c310cf70fe7185865b5a1a06"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-plain-plain-focus.json",
+      "bytes": 84,
+      "sha256": "580284ddd09c9fdc574d3316f5a1c1614631a7934dc1a0e127aa16dfb505bab3"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-plain-plain-later.json",
+      "bytes": 2849,
+      "sha256": "b9a1c8afadd095befec43354676f7921d61410da515ba542d2280666762ff856"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-plain-plain-paste.json",
+      "bytes": 870,
+      "sha256": "cf899ad14418e2548eb3149e43c06de9bd541b03fd594325ee8a4b480128fae3"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-plain-plain-reset.json",
+      "bytes": 136,
+      "sha256": "e8a4237fb362670ff2206503965d75a082c30b344e82bd9beaed26c4b242db5b"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-plain-plain-settled.json",
+      "bytes": 2850,
+      "sha256": "509f3ef9b468304d2cc868a94b98d7593b2f48d8208717700726cc46794e3190"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-plain-plain-shift-clipboard.json",
+      "bytes": 147,
+      "sha256": "bae72f3b747b66041539309611f64c285c4393d8a2a9ce00b263bfd0c058de2c"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-plain-plain-shift-focus.json",
+      "bytes": 84,
+      "sha256": "6cfcae29233b1750bb7b4d734943a6b392da4695c35998befecc637019c02632"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-plain-plain-shift-later.json",
+      "bytes": 3001,
+      "sha256": "f4a7eb8f3feaddcc2c4da0e6eecc3fe83193597e4ea119f90cdfef83c66d2ce4"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-plain-plain-shift-paste.json",
+      "bytes": 872,
+      "sha256": "fdb7ed5a56b35f3c22d0b1b99215318b9c7ccbe5eadcd477a0da58cb3e6c978b"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-plain-plain-shift-reset.json",
+      "bytes": 138,
+      "sha256": "e6f435b1fdb562891c53a8aa26f97cc7fead13d87d0b6e6dada1505c4a3c16f5"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-plain-plain-shift-settled.json",
+      "bytes": 3000,
+      "sha256": "a15d5351c25570afd4eeccdef328da154bc8b6b69d473c650749fc80c149c106"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-plain-rich-shift-clipboard.json",
+      "bytes": 184,
+      "sha256": "dea02bfeb4bef42793baa07b1d18daf32e9194b5c878432c5ef8c440e545b55d"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-plain-rich-shift-focus.json",
+      "bytes": 84,
+      "sha256": "7047133496ab4a3c9562e00499d1cd1763de47c706e32281e080dcb6c3edb5d7"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-plain-rich-shift-later.json",
+      "bytes": 3000,
+      "sha256": "f884d6f2def827c11aa37dfaf3a479957425f1088b385b2a2f6bf258bb0d36d4"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-plain-rich-shift-paste.json",
+      "bytes": 870,
+      "sha256": "56bd87be99068bd2c386e418e2e858dd0ea27cf779c1af7e49fbfb08a00a5ecb"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-plain-rich-shift-reset.json",
+      "bytes": 140,
+      "sha256": "299a2112e3c077aac520499b14131062df2e7602c8095b15b0a6dbf922e3fd88"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-plain-rich-shift-settled.json",
+      "bytes": 2999,
+      "sha256": "e1845eba2a1bce4292f1f0d90d92ae012ac0f9b5ce84d184d3d8b8f8be786d37"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-plain-rich-visible-clipboard.json",
+      "bytes": 182,
+      "sha256": "5409f50174029da9fdfeb08f9954d62cd8dba65e0ffac78ab580d40128c93635"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-plain-rich-visible-focus.json",
+      "bytes": 84,
+      "sha256": "8040b2973cf9d0444a13ca49581c7c91119264d631b51ef282b3768c9358e2e4"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-plain-rich-visible-later.json",
+      "bytes": 3526,
+      "sha256": "270d46cbf26b8d41d5635c3b53fc381bd66a097ba349cb751820ff7fa30ed0be"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-plain-rich-visible-paste.json",
+      "bytes": 870,
+      "sha256": "27c4e45949f8eff9c1620639e4b9a7c74672bf55d375a4ac87f41bf3b431acb9"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-plain-rich-visible-reset.json",
+      "bytes": 142,
+      "sha256": "12473fc9eb34c3412b2442a60380a210cba269f43236adf11aec0555f238957a"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-plain-rich-visible-settled.json",
+      "bytes": 3528,
+      "sha256": "e605552a39ece1ecfc4a1384abf50a45239213e8dd10f403775b4bf4bb0e7208"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-plain-subject-recopy-copy.json",
+      "bytes": 870,
+      "sha256": "8483ae717dc93a348be6b956d3ec45013cf6ac5be75081ff01004e5c2af86169"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-plain-subject-recopy-focus.json",
+      "bytes": 85,
+      "sha256": "62107ded147d8d974744dafcba285b9f9ac8a15bde6dcebdb32e09b46151139c"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-plain-subject-recopy-later.json",
+      "bytes": 3006,
+      "sha256": "bc81e6d9056c4a1f275cb72420f9ce6df8a864a121bbc1167af2983a0fb73ce8"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-plain-subject-recopy-paste.json",
+      "bytes": 869,
+      "sha256": "a2c19bb744166574f240531e6a2553e6e9bfd901119b32251c2ab0058f128883"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-plain-subject-recopy-reset.json",
+      "bytes": 145,
+      "sha256": "3b1686cac12405932f6566a8ee4ce3d50e1b7d93cf74270bf7e7d2d57d4ed468"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-plain-subject-recopy-settled.json",
+      "bytes": 3005,
+      "sha256": "e559ae6bbc38f2c9d9fabb29ad37d4b30246b1f2bbc276f66f68567ab321b86a"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-plain-subject-recopy-source.json",
+      "bytes": 84,
+      "sha256": "3be46af729c9c623943ff6661c9dac5aef4f3a981833c18f0b305762af835f9d"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-plain-textarea-recopy-copy.json",
+      "bytes": 870,
+      "sha256": "d5c7a538a1df56531bf083c38d2cc47ecad5e41fce561d1491dc146a887e655c"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-plain-textarea-recopy-focus.json",
+      "bytes": 85,
+      "sha256": "b50fb8997a00e3cea048206806c85ea8d061d4142d6e1435180eb2be8a8edc14"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-plain-textarea-recopy-later.json",
+      "bytes": 3006,
+      "sha256": "3413db9c9abd23a13141f3b2482220492fbdee6fe9e35c867f63b3a9413c564a"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-plain-textarea-recopy-paste.json",
+      "bytes": 870,
+      "sha256": "05bd2bea94d73601802c8d1a375f00fc7323468b5ec45fc9233f313ca5649031"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-plain-textarea-recopy-reset.json",
+      "bytes": 146,
+      "sha256": "c4ebd6eeb052986746221ed6a78ee21872c1ccc5584ada630a04302ac64a52be"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-plain-textarea-recopy-settled.json",
+      "bytes": 3005,
+      "sha256": "e6d4a5b4849b561ab415d442cbc7b5b4dbaa8deeb8295f3d3bcb690af485e36e"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-plain-textarea-recopy-source.json",
+      "bytes": 86,
+      "sha256": "0c2e479579fab10c87c6eab8d7ae6ddf852157fdd7c6d726d855fef0271ac414"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-product-final.json",
+      "bytes": 871,
+      "sha256": "784b556743eb8a43158bccabce9e722856395b5397ddfa88f12df4dfe02ac483"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-rooster-opacity-control-clipboard.json",
+      "bytes": 183,
+      "sha256": "49f9bbf247dd84b5f690e65bc97af935ec71d6f232772f923b3d00212bc82375"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-rooster-opacity-control-focus.json",
+      "bytes": 85,
+      "sha256": "b33983956c0c2963e7ba5ab96bcdd5795f1e848281ce38ecddcee50f4607d631"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-rooster-opacity-control-later.json",
+      "bytes": 4230,
+      "sha256": "2e16b5b54d551125dd22299179494eb92d1652c1eeef0a4b2eeed2145b535b07"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-rooster-opacity-control-paste.json",
+      "bytes": 872,
+      "sha256": "4817a66f3601998d1de8d963319cfa62440abc5b914531a41de23c0aebce06e2"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-rooster-opacity-control-reset.json",
+      "bytes": 149,
+      "sha256": "44cfc1c8aeab24b4ee4faa18358b535510e72ebf938a7bdafa5cee01a3ef6b0b"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-rooster-opacity-control-settled.json",
+      "bytes": 4230,
+      "sha256": "a75d59681e884d9f484f579fc5b062725087e5b0478adb3466c8ff58e14e3488"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-rooster-plain-clipboard.json",
+      "bytes": 146,
+      "sha256": "fa3d01c33b22ea3b35f420242aa0fa0b8296bfabc9bcd0417f5a56fc4abde7fa"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-rooster-plain-focus.json",
+      "bytes": 84,
+      "sha256": "9d87e491e312e6c65a672f7cee761a49f22ad9dc82a26834196029544c262823"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-rooster-plain-later.json",
+      "bytes": 3460,
+      "sha256": "3a1d03624c06a5a6249f30946a2e568c43da93d0870582d64a6470e97ed34045"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-rooster-plain-paste.json",
+      "bytes": 871,
+      "sha256": "dfd66a1b387f7f015fcc37382b9c8005dace75bf8b94f9891a0b6aaad6032b64"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-rooster-plain-reset.json",
+      "bytes": 138,
+      "sha256": "8cee463503694eb9a155c3f8c651a968a2f56773bc61f978a9e242dfe69ce72f"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-rooster-plain-settled.json",
+      "bytes": 3459,
+      "sha256": "5074c6f116c487924d21899be88ade83166c9dcc0740e9cd8adeca43137f0d75"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-rooster-plain-shift-clipboard.json",
+      "bytes": 147,
+      "sha256": "156b777953a1f775cabda62db8df74bd0a0fb8eabd97a5bf91c2b443e265b634"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-rooster-plain-shift-focus.json",
+      "bytes": 85,
+      "sha256": "b6fac99f831f3a6a816b0b3cf51ccfaa4e57c1e296db2976f2be421b76b68ef2"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-rooster-plain-shift-later.json",
+      "bytes": 3465,
+      "sha256": "fa408cec34c7665d9af0c9412a3854938ea92beaa06e4a5c73d72e117dbbe817"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-rooster-plain-shift-paste.json",
+      "bytes": 868,
+      "sha256": "afe422ac3920172d1233881a9dc51852a53dff92b7023afd3feb44fe2eca6eda"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-rooster-plain-shift-reset.json",
+      "bytes": 144,
+      "sha256": "b26b0655372bd52eb3f68b70e611d0c28c89476d635e5e996a6c8251a3a0d0fa"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-rooster-plain-shift-settled.json",
+      "bytes": 3464,
+      "sha256": "9e9a841d96252bb0183db318b874786d649c9fcc0a107a5a62972c42ed5d3e75"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-rooster-rich-shift-clipboard.json",
+      "bytes": 181,
+      "sha256": "8b71789a71f565443fbb42b218e4460239782ebc93dd83a5e1372aaf5614ac00"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-rooster-rich-shift-focus.json",
+      "bytes": 84,
+      "sha256": "33e8885577371a15497636ddf85fdb35b256448c8b3e15201ff9b5b4fdc72aa7"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-rooster-rich-shift-later.json",
+      "bytes": 3463,
+      "sha256": "52160f2642e29bb61d0dcf99a6c664437eaebb57b6b540c91673af72daa68aa8"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-rooster-rich-shift-paste.json",
+      "bytes": 871,
+      "sha256": "6f58f55618eec2b4c9ce18cac934e749b6c8a8bc45fea3135a61106b17e4beaa"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-rooster-rich-shift-reset.json",
+      "bytes": 142,
+      "sha256": "54ef3a771e6023ac4a0f3385a13aa8e054b5a607a845a71e8ecd174323edbe12"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-rooster-rich-shift-settled.json",
+      "bytes": 3463,
+      "sha256": "41a41d6e69af7a75615696c5ba78317b2529c57660079a383e903a71c1f2ffaf"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-rooster-rich-visible-clipboard.json",
+      "bytes": 183,
+      "sha256": "86721d595d36981fecd5214381556ea257b6993e92ae85b40813f9136e68082b"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-rooster-rich-visible-focus.json",
+      "bytes": 83,
+      "sha256": "759f48990df4549b64b20c1408f9486983ef6ef7ebbff864220a6ce9459ddfef"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-rooster-rich-visible-later.json",
+      "bytes": 3596,
+      "sha256": "3d9288b78b2f625e2d57de0670762129f47f32e874d1ada6cd57af808ff910c2"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-rooster-rich-visible-paste.json",
+      "bytes": 871,
+      "sha256": "9b17ec9d9c44bfab16f04157818a1e1237b9d707763e8e57f4006ba2ff4467ff"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-rooster-rich-visible-reset.json",
+      "bytes": 146,
+      "sha256": "57a86ff0cd553c225c873e51ca183dbbaedfd8faee970d1ad222012e35c42b33"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-rooster-rich-visible-settled.json",
+      "bytes": 3595,
+      "sha256": "8a87a8c3f2739235eef833836a663e4af5e643b2dd181c953e1011d9cbbbda65"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-rooster-subject-recopy-copy.json",
+      "bytes": 871,
+      "sha256": "b4dafbffdb69f3389c089bae734962a7152d591a606145b164490fb912731f84"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-rooster-subject-recopy-focus.json",
+      "bytes": 85,
+      "sha256": "503c4bedafb810263250a2f9e0264fa0f92bd579096ae2d42c8321b19d7c9114"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-rooster-subject-recopy-later.json",
+      "bytes": 3470,
+      "sha256": "f2287a2da3e6847d707ea0ff73b01a8e9f3d2036d2945f0e1cdea6c15e5ff509"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-rooster-subject-recopy-paste.json",
+      "bytes": 870,
+      "sha256": "c43b647af977f4ed0c3550f0531de38a490e3805362f44356803fe0aae982494"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-rooster-subject-recopy-reset.json",
+      "bytes": 149,
+      "sha256": "31992a440e56b9212bdbffb532b25ce81fb83ddfdbfe2e04bd3e5160facd92a5"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-rooster-subject-recopy-settled.json",
+      "bytes": 3469,
+      "sha256": "5705df120f54dc7ed2c62d8140b352768ed7baa2834b0d0a53f687bbd43a6c36"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-rooster-subject-recopy-source.json",
+      "bytes": 84,
+      "sha256": "6a87997725a710cd8d15b1bae328a1f4172f8f4e94893d06d2a871bd27c2b335"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-rooster-textarea-recopy-copy.json",
+      "bytes": 871,
+      "sha256": "8a5cf24403d5b2ca20f3f7de23a819cf8a44eed33b2e9a8c7ab414ca9984d8be"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-rooster-textarea-recopy-focus.json",
+      "bytes": 86,
+      "sha256": "ebe84e283471b1761df5236926b1edf9acd848a975916b7bc0a3b20128ef5b9c"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-rooster-textarea-recopy-later.json",
+      "bytes": 3469,
+      "sha256": "fc5f9cc2a8d7b8ac0e96b6190ffce4a8826edc8e8d88ed62778dfbeabb6eff53"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-rooster-textarea-recopy-paste.json",
+      "bytes": 871,
+      "sha256": "66ade3a70d26264e900235e049b68599dbe83a5f4c8bbe41fde190c59951a808"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-rooster-textarea-recopy-reset.json",
+      "bytes": 148,
+      "sha256": "0d6b3458b117df2f7c29a1249afe1e9da60e50274bca69a7c45f2eb711db4b60"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-rooster-textarea-recopy-settled.json",
+      "bytes": 3470,
+      "sha256": "73848049a99a8f9f164090afbd235164a649dd768a3aed06a65224d787ea27d1"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/result-rooster-textarea-recopy-source.json",
+      "bytes": 84,
+      "sha256": "f3096aa564d798f189072c529e7890ae3f5141b6ee62d502e5159a985f16019e"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/shutdown.json",
+      "bytes": 51,
+      "sha256": "a6bfff55ed63f8d986c16411c033c0a04b647662330b09654f767a1bd1bd322b"
+    },
+    {
+      "path": "raw/firefox-reported-test-profile/test-definition.json",
+      "bytes": 387,
+      "sha256": "cf93cb1dc92ba3ebbdd7575e4731a6bedc74eec40e1f00a6e83f28aa5ae94327"
+    },
+    {
+      "path": "report.md",
+      "bytes": 4727,
+      "sha256": "0aa68e228c0f2fc42bdaecb09c7d33c4a9cd46767716b98710881519a0f74f57"
+    },
+    {
+      "path": "scripts/browser-session.py",
+      "bytes": 10587,
+      "sha256": "80da04f5bbbcbe12f851924a3da2bdf1f7844d19df80d3e1d2e69c40b9174f1f"
+    },
+    {
+      "path": "scripts/control.py",
+      "bytes": 621,
+      "sha256": "31b08088027dff95b9bfd275feaeeb5c5bd79205c7b42f1fe545bbf424279c76"
+    },
+    {
+      "path": "scripts/run-pastes.py",
+      "bytes": 3416,
+      "sha256": "a7d9446345188e9365550006239cbbd784fabe107cd78fb7fb7ceb2629ac06ac"
+    },
+    {
+      "path": "scripts/verify-evidence.py",
+      "bytes": 2155,
+      "sha256": "02fabf4bb34f7b06413e3d6e904fcabe83f1605e4271f568fcdf7ee834be216d"
+    },
+    {
+      "path": "source/156-chrome_remote_content_shared_RecommendedPreferences.sys.mjs",
+      "bytes": 19201,
+      "sha256": "27f8de556126042cea3af9c520197bfc66a312a3c195ba5cdde45f86ec7166a7"
+    },
+    {
+      "path": "source/156-modules_TelemetryReportingPolicy.sys.mjs",
+      "bytes": 46454,
+      "sha256": "d8b8b222f867f93e1f19b042e4df7b8e6645badf3cbd7a87616a2ad275b204dd"
+    },
+    {
+      "path": "source/159-chrome_remote_content_shared_RecommendedPreferences.sys.mjs",
+      "bytes": 22719,
+      "sha256": "18ac6f2303c9aaf1c32f4bc31e897ef11683be15b0c81730768027c652618a5e"
+    },
+    {
+      "path": "source/159-modules_TelemetryReportingPolicy.sys.mjs",
+      "bytes": 46454,
+      "sha256": "d8b8b222f867f93e1f19b042e4df7b8e6645badf3cbd7a87616a2ad275b204dd"
+    },
+    {
+      "path": "summary.json",
+      "bytes": 12316,
+      "sha256": "e19f6814b4272e420416bbbcfd4da0c718e83f62eec22c32d66027018d7c865e"
+    }
+  ]
+}

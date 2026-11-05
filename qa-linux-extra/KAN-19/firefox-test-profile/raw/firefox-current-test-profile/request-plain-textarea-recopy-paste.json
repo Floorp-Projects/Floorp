@@ -1,0 +1,6 @@
+{
+  "id": "plain-textarea-recopy-paste",
+  "nativeKeys": [
+    "ctrl+v"
+  ]
+}

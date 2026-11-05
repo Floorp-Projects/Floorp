@@ -1,0 +1,37 @@
+{
+  "elapsedMs": 104.58811499847798,
+  "rpcMs": 11.766978001105599,
+  "value": {
+    "pid": 92937,
+    "version": "159.0.1",
+    "buildID": "20261102144711",
+    "updatePin": true,
+    "recommended": false,
+    "TOU": {
+      "notificationTestPref": true,
+      "acceptedVersion": 0,
+      "acceptedDate": "0",
+      "acceptanceUser": false,
+      "dateUser": false
+    },
+    "protections": {
+      "sandbox": 6,
+      "sandboxUser": false,
+      "signatureRequired": true,
+      "signatureUser": false
+    },
+    "shortcutPrefs": [],
+    "tabs": [
+      {
+        "url": "http://127.0.0.1:19202/index.html",
+        "title": "KAN19 native clipboard fixture",
+        "selected": true
+      },
+      {
+        "url": "https://www.mozilla.org/en-US/privacy/firefox/",
+        "title": "Firefox Privacy Notice \u2014 Mozilla",
+        "selected": false
+      }
+    ]
+  }
+}

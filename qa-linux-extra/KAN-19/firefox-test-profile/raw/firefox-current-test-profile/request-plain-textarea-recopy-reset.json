@@ -1,0 +1,6 @@
+{
+  "id": "plain-textarea-recopy-reset",
+  "target": "index.html",
+  "context": "content",
+  "script": "return window.wrappedJSObject.qaStart(\"plain-textarea-recopy\",\"plain\");"
+}

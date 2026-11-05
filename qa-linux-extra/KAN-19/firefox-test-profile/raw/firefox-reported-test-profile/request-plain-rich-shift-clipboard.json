@@ -1,0 +1,4 @@
+{
+  "id": "plain-rich-shift-clipboard",
+  "script": "const t=Cc['@mozilla.org/widget/transferable;1'].createInstance(Ci.nsITransferable);t.init(null);for(const [type,value] of [[\"text/plain\", \"https://example.org/kan19/status/123/video/1\"], [\"text/html\", \"<a href=\\\"https://example.org/kan19/status/123/video/1\\\">https://example.org/kan19/status/123/video/1</a>\"]]){t.addDataFlavor(type);let s=Cc['@mozilla.org/supports-string;1'].createInstance(Ci.nsISupportsString);s.data=value;t.setTransferData(type,s);}Services.clipboard.setData(t,null,Ci.nsIClipboard.kGlobalClipboard);return {writer:'nativeTransferable',flavors:['text/plain','text/html']};"
+}

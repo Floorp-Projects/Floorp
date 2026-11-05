@@ -1,0 +1,446 @@
+{
+  "officialNotificationSettingOnly": true,
+  "noConsentValuesWritten": true,
+  "noSecurityVerificationDisabled": true,
+  "originalWindowsAuthenticatedProtonStillUntested": true,
+  "qualifiedFirefoxCases": [
+    {
+      "case": "firefox-current-test-profile",
+      "version": "159.0.1",
+      "buildID": "20261102144711",
+      "startup": {
+        "pid": 92937,
+        "version": "159.0.1",
+        "buildID": "20261102144711",
+        "updatePin": true,
+        "recommended": false,
+        "TOU": {
+          "notificationTestPref": true,
+          "acceptedVersion": 0,
+          "acceptedDate": "0",
+          "acceptanceUser": false,
+          "dateUser": false
+        },
+        "protections": {
+          "sandbox": 6,
+          "sandboxUser": false,
+          "signatureRequired": true,
+          "signatureUser": false
+        },
+        "shortcutPrefs": [],
+        "tabs": [
+          {
+            "url": "http://127.0.0.1:19202/index.html",
+            "title": "KAN19 native clipboard fixture",
+            "selected": true
+          },
+          {
+            "url": "https://www.mozilla.org/en-US/privacy/firefox/",
+            "title": "Firefox Privacy Notice \u2014 Mozilla",
+            "selected": false
+          }
+        ]
+      },
+      "final": {
+        "pid": 92937,
+        "version": "159.0.1",
+        "buildID": "20261102144711",
+        "updatePin": true,
+        "recommended": false,
+        "TOU": {
+          "notificationTestPref": true,
+          "acceptedVersion": 0,
+          "acceptedDate": "0",
+          "acceptanceUser": false,
+          "dateUser": false
+        },
+        "protections": {
+          "sandbox": 6,
+          "sandboxUser": false,
+          "signatureRequired": true,
+          "signatureUser": false
+        },
+        "shortcutPrefs": [],
+        "tabs": [
+          {
+            "url": "http://127.0.0.1:19202/index.html",
+            "title": "KAN19 native clipboard fixture",
+            "selected": true
+          },
+          {
+            "url": "https://www.mozilla.org/en-US/privacy/firefox/",
+            "title": "Firefox Privacy Notice \u2014 Mozilla",
+            "selected": false
+          }
+        ]
+      },
+      "normalExit": {
+        "requestedNormalQuit": true,
+        "exitCode": 0
+      },
+      "conditions": 14,
+      "ordinary": 12,
+      "explicitOpacityControls": 2
+    },
+    {
+      "case": "firefox-reported-test-profile",
+      "version": "156.0.1",
+      "buildID": "20260921121718",
+      "startup": {
+        "pid": 93146,
+        "version": "156.0.1",
+        "buildID": "20260921121718",
+        "updatePin": true,
+        "recommended": false,
+        "TOU": {
+          "notificationTestPref": true,
+          "acceptedVersion": 0,
+          "acceptedDate": "0",
+          "acceptanceUser": false,
+          "dateUser": false
+        },
+        "protections": {
+          "sandbox": 6,
+          "sandboxUser": false,
+          "signatureRequired": true,
+          "signatureUser": false
+        },
+        "shortcutPrefs": [],
+        "tabs": [
+          {
+            "url": "http://127.0.0.1:19203/index.html",
+            "title": "KAN19 native clipboard fixture",
+            "selected": true
+          },
+          {
+            "url": "https://www.mozilla.org/en-US/privacy/firefox/",
+            "title": "Firefox Privacy Notice \u2014 Mozilla",
+            "selected": false
+          }
+        ]
+      },
+      "final": {
+        "pid": 93146,
+        "version": "156.0.1",
+        "buildID": "20260921121718",
+        "updatePin": true,
+        "recommended": false,
+        "TOU": {
+          "notificationTestPref": true,
+          "acceptedVersion": 0,
+          "acceptedDate": "0",
+          "acceptanceUser": false,
+          "dateUser": false
+        },
+        "protections": {
+          "sandbox": 6,
+          "sandboxUser": false,
+          "signatureRequired": true,
+          "signatureUser": false
+        },
+        "shortcutPrefs": [],
+        "tabs": [
+          {
+            "url": "http://127.0.0.1:19203/index.html",
+            "title": "KAN19 native clipboard fixture",
+            "selected": true
+          },
+          {
+            "url": "https://www.mozilla.org/en-US/privacy/firefox/",
+            "title": "Firefox Privacy Notice \u2014 Mozilla",
+            "selected": false
+          }
+        ]
+      },
+      "normalExit": {
+        "requestedNormalQuit": true,
+        "exitCode": 0
+      },
+      "conditions": 14,
+      "ordinary": 12,
+      "explicitOpacityControls": 2
+    }
+  ],
+  "comparisons": [
+    {
+      "case": "firefox-current-test-profile",
+      "baseline": "floorp-current",
+      "condition": "plain-plain",
+      "sameText": true,
+      "sameAnchors": true,
+      "sameOpacityZero": true,
+      "samePasteMime": true,
+      "sameFinalHtml": true
+    },
+    {
+      "case": "firefox-current-test-profile",
+      "baseline": "floorp-current",
+      "condition": "plain-plain-shift",
+      "sameText": true,
+      "sameAnchors": true,
+      "sameOpacityZero": true,
+      "samePasteMime": true,
+      "sameFinalHtml": true
+    },
+    {
+      "case": "firefox-current-test-profile",
+      "baseline": "floorp-current",
+      "condition": "plain-rich-visible",
+      "sameText": true,
+      "sameAnchors": true,
+      "sameOpacityZero": true,
+      "samePasteMime": true,
+      "sameFinalHtml": true
+    },
+    {
+      "case": "firefox-current-test-profile",
+      "baseline": "floorp-current",
+      "condition": "plain-rich-shift",
+      "sameText": true,
+      "sameAnchors": true,
+      "sameOpacityZero": true,
+      "samePasteMime": true,
+      "sameFinalHtml": true
+    },
+    {
+      "case": "firefox-current-test-profile",
+      "baseline": "floorp-current",
+      "condition": "plain-textarea-recopy",
+      "sameText": true,
+      "sameAnchors": true,
+      "sameOpacityZero": true,
+      "samePasteMime": true,
+      "sameFinalHtml": true
+    },
+    {
+      "case": "firefox-current-test-profile",
+      "baseline": "floorp-current",
+      "condition": "plain-subject-recopy",
+      "sameText": true,
+      "sameAnchors": true,
+      "sameOpacityZero": true,
+      "samePasteMime": true,
+      "sameFinalHtml": true
+    },
+    {
+      "case": "firefox-current-test-profile",
+      "baseline": "floorp-current",
+      "condition": "plain-opacity-control",
+      "sameText": true,
+      "sameAnchors": true,
+      "sameOpacityZero": true,
+      "samePasteMime": true,
+      "sameFinalHtml": true
+    },
+    {
+      "case": "firefox-current-test-profile",
+      "baseline": "floorp-current",
+      "condition": "rooster-plain",
+      "sameText": true,
+      "sameAnchors": true,
+      "sameOpacityZero": true,
+      "samePasteMime": true,
+      "sameFinalHtml": true
+    },
+    {
+      "case": "firefox-current-test-profile",
+      "baseline": "floorp-current",
+      "condition": "rooster-plain-shift",
+      "sameText": true,
+      "sameAnchors": true,
+      "sameOpacityZero": true,
+      "samePasteMime": true,
+      "sameFinalHtml": true
+    },
+    {
+      "case": "firefox-current-test-profile",
+      "baseline": "floorp-current",
+      "condition": "rooster-rich-visible",
+      "sameText": true,
+      "sameAnchors": true,
+      "sameOpacityZero": true,
+      "samePasteMime": true,
+      "sameFinalHtml": true
+    },
+    {
+      "case": "firefox-current-test-profile",
+      "baseline": "floorp-current",
+      "condition": "rooster-rich-shift",
+      "sameText": true,
+      "sameAnchors": true,
+      "sameOpacityZero": true,
+      "samePasteMime": true,
+      "sameFinalHtml": true
+    },
+    {
+      "case": "firefox-current-test-profile",
+      "baseline": "floorp-current",
+      "condition": "rooster-textarea-recopy",
+      "sameText": true,
+      "sameAnchors": true,
+      "sameOpacityZero": true,
+      "samePasteMime": true,
+      "sameFinalHtml": true
+    },
+    {
+      "case": "firefox-current-test-profile",
+      "baseline": "floorp-current",
+      "condition": "rooster-subject-recopy",
+      "sameText": true,
+      "sameAnchors": true,
+      "sameOpacityZero": true,
+      "samePasteMime": true,
+      "sameFinalHtml": true
+    },
+    {
+      "case": "firefox-current-test-profile",
+      "baseline": "floorp-current",
+      "condition": "rooster-opacity-control",
+      "sameText": true,
+      "sameAnchors": true,
+      "sameOpacityZero": true,
+      "samePasteMime": true,
+      "sameFinalHtml": true
+    },
+    {
+      "case": "firefox-reported-test-profile",
+      "baseline": "floorp-reported",
+      "condition": "plain-plain",
+      "sameText": true,
+      "sameAnchors": true,
+      "sameOpacityZero": true,
+      "samePasteMime": true,
+      "sameFinalHtml": true
+    },
+    {
+      "case": "firefox-reported-test-profile",
+      "baseline": "floorp-reported",
+      "condition": "plain-plain-shift",
+      "sameText": true,
+      "sameAnchors": true,
+      "sameOpacityZero": true,
+      "samePasteMime": true,
+      "sameFinalHtml": true
+    },
+    {
+      "case": "firefox-reported-test-profile",
+      "baseline": "floorp-reported",
+      "condition": "plain-rich-visible",
+      "sameText": true,
+      "sameAnchors": true,
+      "sameOpacityZero": true,
+      "samePasteMime": true,
+      "sameFinalHtml": true
+    },
+    {
+      "case": "firefox-reported-test-profile",
+      "baseline": "floorp-reported",
+      "condition": "plain-rich-shift",
+      "sameText": true,
+      "sameAnchors": true,
+      "sameOpacityZero": true,
+      "samePasteMime": true,
+      "sameFinalHtml": true
+    },
+    {
+      "case": "firefox-reported-test-profile",
+      "baseline": "floorp-reported",
+      "condition": "plain-textarea-recopy",
+      "sameText": true,
+      "sameAnchors": true,
+      "sameOpacityZero": true,
+      "samePasteMime": true,
+      "sameFinalHtml": true
+    },
+    {
+      "case": "firefox-reported-test-profile",
+      "baseline": "floorp-reported",
+      "condition": "plain-subject-recopy",
+      "sameText": true,
+      "sameAnchors": true,
+      "sameOpacityZero": true,
+      "samePasteMime": true,
+      "sameFinalHtml": true
+    },
+    {
+      "case": "firefox-reported-test-profile",
+      "baseline": "floorp-reported",
+      "condition": "plain-opacity-control",
+      "sameText": true,
+      "sameAnchors": true,
+      "sameOpacityZero": true,
+      "samePasteMime": true,
+      "sameFinalHtml": true
+    },
+    {
+      "case": "firefox-reported-test-profile",
+      "baseline": "floorp-reported",
+      "condition": "rooster-plain",
+      "sameText": true,
+      "sameAnchors": true,
+      "sameOpacityZero": true,
+      "samePasteMime": true,
+      "sameFinalHtml": true
+    },
+    {
+      "case": "firefox-reported-test-profile",
+      "baseline": "floorp-reported",
+      "condition": "rooster-plain-shift",
+      "sameText": true,
+      "sameAnchors": true,
+      "sameOpacityZero": true,
+      "samePasteMime": true,
+      "sameFinalHtml": true
+    },
+    {
+      "case": "firefox-reported-test-profile",
+      "baseline": "floorp-reported",
+      "condition": "rooster-rich-visible",
+      "sameText": true,
+      "sameAnchors": true,
+      "sameOpacityZero": true,
+      "samePasteMime": true,
+      "sameFinalHtml": true
+    },
+    {
+      "case": "firefox-reported-test-profile",
+      "baseline": "floorp-reported",
+      "condition": "rooster-rich-shift",
+      "sameText": true,
+      "sameAnchors": true,
+      "sameOpacityZero": true,
+      "samePasteMime": true,
+      "sameFinalHtml": true
+    },
+    {
+      "case": "firefox-reported-test-profile",
+      "baseline": "floorp-reported",
+      "condition": "rooster-textarea-recopy",
+      "sameText": true,
+      "sameAnchors": true,
+      "sameOpacityZero": true,
+      "samePasteMime": true,
+      "sameFinalHtml": true
+    },
+    {
+      "case": "firefox-reported-test-profile",
+      "baseline": "floorp-reported",
+      "condition": "rooster-subject-recopy",
+      "sameText": true,
+      "sameAnchors": true,
+      "sameOpacityZero": true,
+      "samePasteMime": true,
+      "sameFinalHtml": true
+    },
+    {
+      "case": "firefox-reported-test-profile",
+      "baseline": "floorp-reported",
+      "condition": "rooster-opacity-control",
+      "sameText": true,
+      "sameAnchors": true,
+      "sameOpacityZero": true,
+      "samePasteMime": true,
+      "sameFinalHtml": true
+    }
+  ]
+}

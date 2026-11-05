@@ -1,0 +1,119 @@
+{
+  "elapsedMs": 126.99794400396058,
+  "rpcMs": 4.478627000935376,
+  "value": {
+    "caseName": "rooster-opacity-control",
+    "target": "rooster",
+    "html": "<span style=\"opacity:0;white-space:pre-wrap;user-select:auto\"><a href=\"https://example.org/kan19/status/123/video/1\">https://example.org/kan19/status/123/video/1</a></span>",
+    "text": "https://example.org/kan19/status/123/video/1",
+    "nodes": [
+      {
+        "tag": "SPAN",
+        "text": "https://example.org/kan19/status/123/video/1",
+        "href": null,
+        "style": "opacity:0;white-space:pre-wrap;user-select:auto",
+        "opacity": 0,
+        "display": "inline",
+        "visibility": "visible"
+      },
+      {
+        "tag": "A",
+        "text": "https://example.org/kan19/status/123/video/1",
+        "href": "https://example.org/kan19/status/123/video/1",
+        "style": null,
+        "opacity": 0,
+        "display": "inline",
+        "visibility": "visible"
+      }
+    ],
+    "log": [
+      {
+        "type": "mutation",
+        "target": "rooster",
+        "time": 40577,
+        "html": "",
+        "attributes": []
+      },
+      {
+        "type": "mutation",
+        "target": "rooster",
+        "time": 40907,
+        "html": "",
+        "attributes": [
+          {
+            "name": "style",
+            "oldValue": "color: rgb(0, 0, 0); background-color: rgb(255, 255, 255);",
+            "current": "color: rgb(0, 0, 0); background-color: rgb(255, 255, 255);"
+          },
+          {
+            "name": "style",
+            "oldValue": "color: rgb(0, 0, 0); background-color: rgb(255, 255, 255); pointer-events: auto;",
+            "current": "color: rgb(0, 0, 0); background-color: rgb(255, 255, 255);"
+          },
+          {
+            "name": "style",
+            "oldValue": "color: rgb(0, 0, 0); background-color: rgb(255, 255, 255);",
+            "current": "color: rgb(0, 0, 0); background-color: rgb(255, 255, 255);"
+          },
+          {
+            "name": "style",
+            "oldValue": "color: rgb(0, 0, 0); background-color: rgb(255, 255, 255); pointer-events: auto;",
+            "current": "color: rgb(0, 0, 0); background-color: rgb(255, 255, 255);"
+          }
+        ]
+      },
+      {
+        "type": "keydown",
+        "target": "rooster",
+        "time": 41279,
+        "trusted": true,
+        "inputType": null,
+        "key": "v",
+        "ctrl": true,
+        "shift": false,
+        "types": null,
+        "plain": null,
+        "html": null,
+        "defaultPrevented": false
+      },
+      {
+        "type": "paste",
+        "target": "rooster",
+        "time": 41281,
+        "trusted": true,
+        "inputType": null,
+        "key": null,
+        "ctrl": null,
+        "shift": null,
+        "types": [
+          "text/html",
+          "text/plain"
+        ],
+        "plain": "https://example.org/kan19/status/123/video/1",
+        "html": "<span style=\"opacity:0;white-space:pre-wrap;user-select:auto\"><a href=\"https://example.org/kan19/status/123/video/1\">https://example.org/kan19/status/123/video/1</a></span>",
+        "defaultPrevented": false
+      },
+      {
+        "type": "rooster-BeforePaste",
+        "time": 41285,
+        "types": [
+          "text/html",
+          "text/plain"
+        ],
+        "plain": "https://example.org/kan19/status/123/video/1",
+        "rawHtml": "<span style=\"opacity:0;white-space:pre-wrap;user-select:auto\"><a href=\"https://example.org/kan19/status/123/video/1\">https://example.org/kan19/status/123/video/1</a></span>",
+        "fragment": "<span style=\"opacity:0;white-space:pre-wrap;user-select:auto\"><a href=\"https://example.org/kan19/status/123/video/1\">https://example.org/kan19/status/123/video/1</a></span>"
+      },
+      {
+        "type": "mutation",
+        "target": "rooster",
+        "time": 41290,
+        "html": "<span style=\"opacity:0;white-space:pre-wrap;user-select:auto\"><a href=\"https://example.org/kan19/status/123/video/1\">https://example.org/kan19/status/123/video/1</a></span>",
+        "attributes": []
+      }
+    ],
+    "anchors": 1,
+    "opacityZero": true,
+    "fixture": "bare contenteditable + published RoosterJS, not authenticated Proton composer; no Proton custom paste plugin"
+  }
+}

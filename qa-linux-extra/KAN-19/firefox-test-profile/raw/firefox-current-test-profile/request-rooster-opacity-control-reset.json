@@ -1,0 +1,6 @@
+{
+  "id": "rooster-opacity-control-reset",
+  "target": "index.html",
+  "context": "content",
+  "script": "return window.wrappedJSObject.qaStart(\"rooster-opacity-control\",\"rooster\");"
+}

@@ -1,0 +1,7 @@
+{
+  "id": "plain-textarea-recopy-source",
+  "target": "index.html",
+  "context": "content",
+  "click": "#notepad",
+  "script": "return true;"
+}

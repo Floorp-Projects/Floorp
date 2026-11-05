@@ -1,0 +1,4 @@
+{
+  "id": "plain-plain-shift-clipboard",
+  "script": "Cc['@mozilla.org/widget/clipboardhelper;1'].getService(Ci.nsIClipboardHelper).copyString(\"https://example.org/kan19/status/123/video/1\");return {writer:'nativeClipboardHelper',plainOnly:true};"
+}

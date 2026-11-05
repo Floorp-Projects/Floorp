@@ -1,0 +1,30 @@
+{
+  "source": "actual unchanged officialFirefox156/159 packagedmodules",
+  "purpose": "documented WebDriver TOUnotification control only; no consent-value write, no security verifier disable",
+  "modules": [
+    {
+      "generation": "159",
+      "member": "chrome/remote/content/shared/RecommendedPreferences.sys.mjs",
+      "sha256": "18ac6f2303c9aaf1c32f4bc31e897ef11683be15b0c81730768027c652618a5e",
+      "excerpt": "elcome_url\", \"about:blank\"],\n  [\"startup.homepage_welcome_url.additional\", \"\"],\n\n  // Do not show TOU new user modal which can interfere with tests\n  [\"termsofuse.bypassNotification\", true],\n\n  // Prevent starting into safe mode after application crashes\n  [\"toolkit.startup.max_resumed_crashes\", -1],\n\n  // Disable all telemetry pings\n  [\"toolkit.telemetry.server\", \"https://%(server)s/te"
+    },
+    {
+      "generation": "159",
+      "member": "modules/TelemetryReportingPolicy.sys.mjs",
+      "sha256": "d8b8b222f867f93e1f19b042e4df7b8e6645badf3cbd7a87616a2ad275b204dd",
+      "excerpt": " );\n      return false;\n    }\n\n    const bypassNotification = Services.prefs.getBoolPref(\n      TOU_BYPASS_NOTIFICATION_PREF,\n      false\n    );\n\n    if (bypassNotification) {\n      this._log.trace(\"_shouldShowTOU - User bypassing the policy.\");\n      return false;\n    }\n\n    if (this.hasUserAcceptedCurrentTOU) {\n      this._log.trace(\"_shouldShowTOU - User already accep"
+    },
+    {
+      "generation": "156",
+      "member": "chrome/remote/content/shared/RecommendedPreferences.sys.mjs",
+      "sha256": "27f8de556126042cea3af9c520197bfc66a312a3c195ba5cdde45f86ec7166a7",
+      "excerpt": "elcome_url\", \"about:blank\"],\n  [\"startup.homepage_welcome_url.additional\", \"\"],\n\n  // Do not show TOU new user modal which can interfere with tests\n  [\"termsofuse.bypassNotification\", true],\n\n  // Prevent starting into safe mode after application crashes\n  [\"toolkit.startup.max_resumed_crashes\", -1],\n\n  // Disable all telemetry pings\n  [\"toolkit.telemetry.server\", \"https://%(server)s/te"
+    },
+    {
+      "generation": "156",
+      "member": "modules/TelemetryReportingPolicy.sys.mjs",
+      "sha256": "d8b8b222f867f93e1f19b042e4df7b8e6645badf3cbd7a87616a2ad275b204dd",
+      "excerpt": " );\n      return false;\n    }\n\n    const bypassNotification = Services.prefs.getBoolPref(\n      TOU_BYPASS_NOTIFICATION_PREF,\n      false\n    );\n\n    if (bypassNotification) {\n      this._log.trace(\"_shouldShowTOU - User bypassing the policy.\");\n      return false;\n    }\n\n    if (this.hasUserAcceptedCurrentTOU) {\n      this._log.trace(\"_shouldShowTOU - User already accep"
+    }
+  ]
+}
