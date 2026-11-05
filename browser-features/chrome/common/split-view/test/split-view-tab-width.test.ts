@@ -24,6 +24,10 @@ async function waitFor(check: () => boolean, message: string): Promise<void> {
 
 async function testHorizontalTabsWithSplit(): Promise<void> {
   const browser = gBrowser as TestBrowser;
+  const tabContainer = browser.tabContainer as EventTarget & {
+    verticalMode: boolean;
+    arrowScrollbox: { scrollbox: HTMLElement };
+  };
   const originalConfig = structuredClone(config());
   const originalTab = browser.selectedTab;
   const prefNames = [
@@ -51,12 +55,12 @@ async function testHorizontalTabsWithSplit(): Promise<void> {
       tab: { ...previous.tab, tabMinWidth: 76 },
     }));
     await waitFor(
-      () => !browser.tabContainer.verticalMode,
+      () => !tabContainer.verticalMode,
       "horizontal tab bar",
     );
     await waitFor(
       () =>
-        getComputedStyle(document.documentElement).getPropertyValue(
+        getComputedStyle(document.documentElement)?.getPropertyValue(
           "--floorp-tab-min-width",
         ).trim() === "76px",
       "76px configured tab minimum",
@@ -82,7 +86,7 @@ async function testHorizontalTabsWithSplit(): Promise<void> {
         tabs[10].hasAttribute("data-floorp-split-tab"),
       "split toolbar and native pane markers",
     );
-    const strip = browser.tabContainer.arrowScrollbox.scrollbox;
+    const strip = tabContainer.arrowScrollbox.scrollbox;
     await waitFor(
       () => strip.scrollWidth > strip.clientWidth,
       "tabs overflow the viewport",
@@ -103,7 +107,7 @@ async function testHorizontalTabsWithSplit(): Promise<void> {
       }));
       await waitFor(
         () =>
-          getComputedStyle(document.documentElement).getPropertyValue(
+          getComputedStyle(document.documentElement)?.getPropertyValue(
             "--floorp-tab-min-width",
           ).trim() === `${width}px`,
         `configured ${width}px minimum`,
