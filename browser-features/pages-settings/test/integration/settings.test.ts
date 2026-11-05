@@ -556,6 +556,53 @@ export async function runPageTests() {
     },
   });
   tests.push({
+    name: "Memory seconds preserve caret during consecutive insertion",
+    fn: async () => {
+      prefs.set(
+        MEMORY,
+        JSON.stringify({
+          enabled: true,
+          idleThresholdSec: 123,
+          pollIntervalSec: 60,
+          minIntervalSec: 300,
+          minResidentMB: 400,
+          reclaimOnGhostWindows: true,
+        }),
+      );
+      const selector = "#idle-memory-reclaim-idle-threshold";
+      await route("features/performance", selector);
+      const target = element<HTMLInputElement>(selector);
+      await until(
+        () => target.value === "123" && !target.disabled,
+        "Seconds field not ready",
+      );
+      target.focus();
+      target.setSelectionRange(1, 1);
+      for (const digit of ["9", "8", "7"]) {
+        assert(
+          document.execCommand("insertText", false, digit),
+          "Text insertion failed",
+        );
+        await pause(80);
+      }
+      assertEquals(
+        target.value,
+        "198723",
+        "Digits remain in the intended order",
+      );
+      assertEquals(
+        target.selectionStart,
+        4,
+        "Caret remains after inserted digits",
+      );
+      target.blur();
+      await until(
+        () => valueAt(MEMORY, "idleThresholdSec") === 198723,
+        "Seconds were not committed",
+      );
+    },
+  });
+  tests.push({
     name: "Memory fields commit, clamp and reload",
     fn: async () => {
       await route("features/performance", "#idle-memory-reclaim-enabled");

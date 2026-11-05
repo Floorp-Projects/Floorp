@@ -33,12 +33,15 @@ import {
 } from "@/app/performance/dataManager.ts";
 
 // Let React synchronize the native value in Gecko, including stepper changes.
-// Remove Ark's defaultValue when supplying a controlled value through asChild.
+// Ark's input handler also writes the value and restores a captured caret in a
+// later frame, which can race React's controlled onChange. Keep its validation,
+// keyboard and stepper handlers, but let React alone handle text input updates.
+// Drop Ark's defaultValue because this input receives a controlled value.
 const ControlledNumberInput = forwardRef<
   HTMLInputElement,
   ComponentProps<"input">
 >(function ControlledNumberInput(
-  { defaultValue: _defaultValue, ...props },
+  { defaultValue: _defaultValue, onInput: _onInput, ...props },
   ref,
 ) {
   return <input {...props} ref={ref} />;
