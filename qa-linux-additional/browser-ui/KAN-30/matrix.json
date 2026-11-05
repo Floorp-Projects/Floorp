@@ -16,7 +16,7 @@
     "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2934",
     "existingPrHead": "b7866aaa4905be4d86fb3dff1237d6a70c483f10",
     "newPr": "https://github.com/Floorp-Projects/Floorp/pull/3043",
-    "jiraCommentId": "10389",
+    "jiraCommentId": "10398",
     "evidence": [
       "report.md",
       "ui-summary.json",
@@ -47,13 +47,15 @@
       "probe-29950.json",
       "ci-3043/summary.json",
       "ci-3043/verified-excerpts.txt",
-      "manual-repro.md"
+      "manual-repro.md",
+      "jira-final-10398.md"
     ],
     "evidenceBase": "KAN-30",
     "jiraCommentIds": [
       "10383",
       "10385",
-      "10389"
+      "10389",
+      "10398"
     ],
     "newPrHead": "bfb8e5b583e1d8520e8e894e7480276f0250d0f2",
     "newPrBase": "b7866aaa4905be4d86fb3dff1237d6a70c483f10",
