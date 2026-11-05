@@ -173,7 +173,7 @@
     ],
     "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2678",
     "newPr": "https://github.com/Floorp-Projects/Floorp/pull/3047",
-    "jiraCommentId": null,
+    "jiraCommentId": "10414",
     "evidence": [
       "report.md",
       "summary.json",
@@ -189,7 +189,11 @@
       "source.patch",
       "provenance.json",
       "jira-proposed.md",
-      "dispatch-excerpts.json"
+      "dispatch-excerpts.json",
+      "ci-3047/summary.json",
+      "ci-3047/verified-excerpts.txt",
+      "jira-posted-10412.md",
+      "jira-ci-10414.md"
     ],
     "evidenceBase": "KAN-97",
     "sourceBase": "29a3eb23145da90706d8a94441373278521cc737",
@@ -198,8 +202,18 @@
     "ci": {
       "run": 42096334025,
       "headSha": "d6bd2fc457774f55ab1f36a2b01c941f908f1ab0",
-      "status": "in_progress",
-      "smoke": "success"
-    }
+      "conclusion": "success",
+      "browserModulesPassed": 282,
+      "browserModulesFailed": 0,
+      "newPolicyModulePassed": true,
+      "newPolicyCases": 7,
+      "downloadedFirefoxTasksPassed": 16,
+      "artifactId": 13447489059,
+      "artifactDigestVerified": true
+    },
+    "jiraCommentIds": [
+      "10412",
+      "10414"
+    ]
   }
 ]

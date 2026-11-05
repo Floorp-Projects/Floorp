@@ -1,0 +1,31 @@
+{
+  "run": 42096334025,
+  "url": "https://github.com/Floorp-Projects/Floorp/actions/runs/42096334025",
+  "headSha": "d6bd2fc457774f55ab1f36a2b01c941f908f1ab0",
+  "pr": 3047,
+  "conclusion": "success",
+  "smoke": "success",
+  "nativePlatformResults": {
+    "ubuntu-24.04": "success",
+    "ubuntu-24.04-arm": "success",
+    "macos-latest": "success",
+    "windows-latest": "success"
+  },
+  "artifactId": 13447489059,
+  "artifactName": "test-logs-ubuntu-24.04",
+  "zipSha256": "f42b0a5134fb0545ab498ce9b22e12a57980335e3f758c0ae2f9845752d1bef1",
+  "matchesGitHubArtifactDigest": true,
+  "browserModulesPassed": 282,
+  "browserModulesFailed": 0,
+  "scrollTargetModulePassed": true,
+  "newPolicyCases": 7,
+  "newCaseEvidence": "All7 unconditionally registered and awaited in runAllTests; harness throws aggregated failures. Artifact provides module pass line rather than individualcase printouts.",
+  "combinedLogSha256": "fed0aace45387715961ebd9b7b12beab5559b9793367e9114e3babdd523bcb99",
+  "rawArtifactNotPublished": true,
+  "sourcePipelineProductScope": "lockednative source integration; diagnostic product UI verification is separately recorded",
+  "downloadedFirefox": {
+    "files": 8,
+    "tasks": 16,
+    "passed": 16
+  }
+}

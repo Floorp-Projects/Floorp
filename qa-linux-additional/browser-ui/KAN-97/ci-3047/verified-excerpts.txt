@@ -1,0 +1,5 @@
+[INFO]   - browser-features/chrome/common/mouse-gesture/test/scrollTarget.test.ts
+[INFO] [68/282] Completed browser-features/chrome/common/mouse-gesture/test/scrollTarget.test.ts
+[INFO] ✓ browser-features/chrome/common/mouse-gesture/test/scrollTarget.test.ts (runAllTests, 7ms)
+[INFO] Browser test result: 282 passed, 0 failed
+[INFO] Downloaded Firefox coverage: 8 file(s), 16 task(s), 16 passed
