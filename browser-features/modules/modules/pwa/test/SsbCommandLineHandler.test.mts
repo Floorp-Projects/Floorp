@@ -132,6 +132,47 @@ async function testFirstNavigationUsesCachedContainer(): Promise<void> {
   }
 }
 
+async function testLinuxWindowsKeepDistinctLauncherClasses(): Promise<void> {
+  const { SsbRunnerUtils } = ChromeUtils.importESModule(
+    "resource://noraneko/modules/pwa/SsbCommandLineHandler.sys.mjs",
+  ) as typeof import("../SsbCommandLineHandler.sys.mts");
+  const { TaskbarExperiment } = ChromeUtils.importESModule(
+    "resource://noraneko/modules/pwa/TaskbarExperiment.sys.mjs",
+  ) as typeof import("../TaskbarExperiment.sys.mts");
+  const oldGate = TaskbarExperiment.isEnabledForLinux();
+  const apps = ["Alpha", "Beta"].map((name) => ({
+    id: Services.uuid.generateUUID().toString(),
+    name: `Window Class Test ${name}`,
+    start_url: "about:blank",
+    icon: "",
+  }));
+  const windows: Awaited<ReturnType<typeof SsbRunnerUtils.openSsbWindow>>[] =
+    [];
+  try {
+    for (const app of apps) {
+      const win = await SsbRunnerUtils.openSsbWindow(app);
+      windows.push(win);
+      assertEquals(
+        win.document.documentElement.getAttribute("windowclass"),
+        `floorp-${app.id.slice(1, -1)}`,
+        "Each created PWA receives its generated desktop launcher identity",
+      );
+    }
+    assert(
+      windows[0].document.documentElement.getAttribute("windowclass") !==
+        windows[1].document.documentElement.getAttribute("windowclass"),
+      "Two PWA windows in one process keep different classes",
+    );
+    assertEquals(
+      TaskbarExperiment.isEnabledForLinux(),
+      oldGate,
+      "Establishing window identity does not change the rollout gate",
+    );
+  } finally {
+    for (const win of windows) win.close();
+  }
+}
+
 export async function runAllTests(): Promise<void> {
   if (Services.appinfo.OS !== "Linux") {
     console.info(
@@ -143,5 +184,8 @@ export async function runAllTests(): Promise<void> {
     name:
       "the first Linux PWA request uses its container before experiment initialization",
     fn: testFirstNavigationUsesCachedContainer,
+  }, {
+    name: "Linux PWA windows keep their distinct generated launcher classes",
+    fn: testLinuxWindowsKeepDistinctLauncherClasses,
   }]);
 }
