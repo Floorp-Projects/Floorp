@@ -158,8 +158,8 @@
   "runtimeArtifactDigest": "sha256:ed5a4f97ee7bf42c817f3146d5a843e095710dcc3be25fae0af0bf47274b739a",
   "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/3049",
   "newPr": null,
-  "jiraCommentId": null,
-  "prEvidenceComment": null,
+  "jiraCommentId": "10453",
+  "prEvidenceComment": "https://github.com/Floorp-Projects/Floorp/pull/3049#issuecomment-6670508574",
   "remainingConditions": [
     "OriginalCachyOS and reported12.10.1 conditions unmatched",
     "Original Archidekt/Allegro429 causality and networkinitiators unproven",
@@ -180,5 +180,20 @@
     "provenance/runtime-build-manifest-v2.json"
   ],
   "separateFromOriginal22": true,
-  "originalCMatrixSha256": "4ac5d5f17f97d70e82f7b9f17d6abcc1aa17a92e3708eeadaba6ac7c8415e3cd"
+  "originalCMatrixSha256": "4ac5d5f17f97d70e82f7b9f17d6abcc1aa17a92e3708eeadaba6ac7c8415e3cd",
+  "evidenceCommit": "030c129d5c927fd0a5fb8c924b017e215a1cea39",
+  "jiraLabels": [
+    "area-webcompat",
+    "draft-pr",
+    "floorp-github-import-2026-11",
+    "manifest-amplification-reproduced",
+    "needs-network-log",
+    "needs-original-site-causality",
+    "needs-repro",
+    "p2",
+    "triage-reviewed",
+    "full-package-verified",
+    "needs-original-cachyos"
+  ],
+  "labelChangeRationale": "Windows10451 and Linux10453 exact-head complete QA products satisfy scoped package check; original429/CachyOS conditions retained"
 }

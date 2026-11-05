@@ -36,8 +36,8 @@
     },
     {
       "path": "matrix.json",
-      "bytes": 5521,
-      "sha256": "cfa436a589209ef7b1d8d39b896542050af8819e51fbc215b00883edcc3010e8"
+      "bytes": 6130,
+      "sha256": "91832a76ed4762c46b77477b5b705c1096d8ede46969f13ffa13e2b649b060d3"
     },
     {
       "path": "provenance/baseline-pwa-source-comparison.json",
