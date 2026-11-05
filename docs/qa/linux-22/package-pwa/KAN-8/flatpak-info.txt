@@ -1,0 +1,20 @@
+
+Floorp - Customizable Firefox-based browser from Japan
+
+          ID: one.ablaze.floorp
+         Ref: app/one.ablaze.floorp/x86_64/stable
+        Arch: x86_64
+      Branch: stable
+     Version: 12.21.1
+     License: MPL-2.0
+      Origin: flathub
+  Collection: org.flathub.Stable
+Installation: user
+   Installed: 379.8 MB
+     Runtime: org.freedesktop.Platform/x86_64/26.08
+         Sdk: org.freedesktop.Sdk/x86_64/26.08
+
+      Commit: ab3c23d5f3a32863918263c197b483e37d9ed78a6bb9d00a1657e31dc5e04621
+      Parent: 7637311321efa836bf02f5dbc850b763e7ebcee5c2a01d6858e5d04ca0f2773e
+     Subject: Merge pull request #197 from flathub/2 (1c01b0a7c404)
+        Date: 2026-11-04 22:38:47 +0000

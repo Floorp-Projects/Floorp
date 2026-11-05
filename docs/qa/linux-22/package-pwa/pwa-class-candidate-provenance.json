@@ -1,0 +1,19 @@
+{
+  "kind": "isolated patched product copy; not full source build or signed release",
+  "sourceSha": "984509d2053be7bae9027133bda7259cd706b208",
+  "changedResources": [
+    {
+      "path": "chrome/noraneko/nora-resource/Linux.sys-DfscGtff.mjs",
+      "beforeSha256": "6cb0458b774f99f8a7925fad76619eb33f772c00f09d4ae59fd0e0d0afb84360",
+      "afterSha256": "bf681e538437bff04f2ea5944807b7bdc052ccd85bd1de6ddd55e7fb10963893"
+    },
+    {
+      "path": "chrome/noraneko/nora-resource/modules/pwa/SsbCommandLineHandler.sys.mjs",
+      "beforeSha256": "50758b3e8fc386e25dd05ba37f43ecd245129ea464b4ada4b5a8b3a5d4388628",
+      "afterSha256": "015796e4f7f1420d898e32105d8acd148ecd445d4846f27a2db60613baeebda5"
+    }
+  ],
+  "unchangedNonArchiveFiles": 45,
+  "originalOmniSha256": "159285f967e950e0cd1ac658d713b7770e7763d6d983fc88b6e48c16e4a1f345",
+  "candidateOmniSha256": "c7eeb3c7b63053e4354103f18a805c0f6117a306adb85c8d6923eb31ee22a2fa"
+}

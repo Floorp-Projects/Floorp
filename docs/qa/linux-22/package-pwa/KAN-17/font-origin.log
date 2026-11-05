@@ -1,0 +1,12 @@
+dbus-daemon[29672]: [session uid=1000 pid=29672 pidfd=5] Activating service name='org.a11y.Bus' requested by ':1.2' (uid=1000 pid=29673 comm="/workspace/qa-linux-22/package-pwa/sysroot/usr/bin" label="kernel")
+dbus-daemon[29672]: [session uid=1000 pid=29672 pidfd=5] Successfully activated service 'org.a11y.Bus'
+/run/host/fonts/opentype/noto/NotoSansCJK-Bold.ttc:
+/run/host/fonts/opentype/noto/NotoSerifCJK-Bold.ttc:
+/run/host/fonts/opentype/noto/NotoSerifCJK-Regular.ttc:
+/run/host/fonts/opentype/noto/NotoSansCJK-Regular.ttc:
+PRETTY_NAME="Debian GNU/Linux 13 (trixie)"
+NAME="Debian GNU/Linux"
+VERSION_ID="13"
+VERSION="13 (trixie)"
+VERSION_CODENAME=trixie
+DEBIAN_VERSION_FULL=13.6

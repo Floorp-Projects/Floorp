@@ -1,0 +1,19 @@
+# KAN-23 / GitHub #2897 actual Linux branding regression
+
+Source: Floorp main/tag v12.21.1 `984509d2053be7bae9027133bda7259cd706b208`. Fix: `e55152c559a141001a375ac77098d141b0db3ca7`, independent branch `codex/fix-linux-langpack-branding`.
+
+Debian 13 cloud host, Xvfb/X11 display :88, isolated D-Bus sessions, newly created dedicated HOME/profile. Official unchanged Floorp 12.21.1 / Gecko 159.0.1 release archive. Content sandbox level 6 throughout; no sandbox disable, signature bypass, forced experiment, personal profile or physical-input claim. `MOZ_REMOTE_ALLOW_SYSTEM_ACCESS=1` permits the test controller; it does not lower content sandbox settings. ProfD equality is checked before later probes.
+
+Mozilla official 159.0.1 es-CL and ja language packs were installed through normal AddonManager, both signedState=2 and active. The first attempted AMO slug returned 404; successful files came from `https://archive.mozilla.org/pub/firefox/releases/159.0.1/linux-x86_64/xpi/{es-CL,ja}.xpi`.
+
+Unmodified en-US product returned legacy brandShortName Floorp. With an active es-CL pack, the same dedicated profile returned Firefox. Without any resolvable firefox icon, the _NET_WM_ICON remained the bundled Floorp fallback. A dedicated GTK theme containing Mozilla's official 64px Firefox icon under the name firefox made the actual es-CL browser advertise exactly that 64x64 image: all RGBA pixels match the official reference. WM_CLASS remained Navigator/floorp and the title remained Ablaze Floorp. This reproduces the reported interaction and its theme-dependent hiding condition.
+
+The minimal fix registers one Chrome URI override from `chrome://branding/locale/brand.properties` to the channel's **existing packaged** `resource:///chrome/en-US/locale/branding/brand.properties`. It duplicates no brand strings, preserves channel-specific values, and does not change the requested UI locale or Fluent localization. A DTD override was tried in the exploratory copy, then removed as unnecessary to the identified properties-only native call path. The final candidate has only the properties override.
+
+An isolated product copy differs logically in exactly one entry of browser/omni.ja, chrome/chrome.manifest, by that registration. floorp, libxul.so and libmozsandbox.so hashes are unchanged. This is a patched-product integration comparison, **not a full source-built/signed release**. See candidate-provenance.json.
+
+The added colocated test checks all four legacy product/vendor names against the existing packaged branding. Its exact fn body was extracted and executed through Marionette chrome in the actual product (the standard colocated runner was not used). Unchanged ja and es-CL fail; candidate ja, es-CL and en-US pass. Candidate ja menus remain 設定 / 新しいウィンドウ; es-CL remains Ajustes / Nueva ventana. The candidate's advertised icon returns to exactly the original en-US Floorp icon property's SHA. This validates both brand resolution and the actual native SetIcon result. Deno check --frozen, Deno lint and git diff --check pass.
+
+Evidence: locale-matrix.json, baseline-{ja,es-CL}.json and *-regression.json; candidate-{ja,es-CL,en-US}.json and *-regression.json; icon-comparison.json and es-CL-advertised-icon.png; original/reference PNG; xprop logs; browser logs; candidate-provenance.json; probe.py/regression.py/matrix_run.py. All browser input is synthetic test-controller input. Test logs contain expected cloud audio/services/network limitations; they are not counted as the icon bug.
+
+Remaining: native KDE/Xorg task switching on the original Manjaro/Flatpak package for KAN-89; other locales/icon themes/channels and full packaged build/CI. KAN-89 shares a plausible mechanism but cannot be declared a duplicate solely from this Xvfb/tarball reproduction. Root coordinator handles Jira updates and Draft PR creation. No merge/release/Done transition authorized.

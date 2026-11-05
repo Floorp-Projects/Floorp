@@ -1,0 +1,86 @@
+[
+  {
+    "app": "one.ablaze.floorp",
+    "fontAdded": false,
+    "fontconfigExit": 0,
+    "profile": "/workspace/qa-linux-22/package-pwa/KAN-17/one.ablaze.floorp-default/.var/app/one.ablaze.floorp/config/qa-profile",
+    "completed": true,
+    "version": "159.0.1",
+    "os": "Linux",
+    "sandbox": 6,
+    "locale": "en-US",
+    "render": {
+      "text": "日本語の文字 漢字 かな カナ",
+      "width": 414.5,
+      "ready": "loaded"
+    },
+    "quit": {
+      "cause": "shutdown",
+      "forced": false,
+      "in_app": true
+    }
+  },
+  {
+    "app": "one.ablaze.floorp",
+    "fontAdded": true,
+    "fontconfigExit": 0,
+    "profile": "/workspace/qa-linux-22/package-pwa/KAN-17/one.ablaze.floorp-noto/.var/app/one.ablaze.floorp/config/qa-profile",
+    "completed": true,
+    "version": "159.0.1",
+    "os": "Linux",
+    "sandbox": 6,
+    "locale": "en-US",
+    "render": {
+      "text": "日本語の文字 漢字 かな カナ",
+      "width": 414.5,
+      "ready": "loaded"
+    },
+    "quit": {
+      "cause": "shutdown",
+      "forced": false,
+      "in_app": true
+    }
+  },
+  {
+    "app": "org.mozilla.firefox",
+    "fontAdded": false,
+    "fontconfigExit": 0,
+    "profile": "/workspace/qa-linux-22/package-pwa/KAN-17/org.mozilla.firefox-default/.var/app/org.mozilla.firefox/config/qa-profile",
+    "completed": true,
+    "version": "159.0.1",
+    "os": "Linux",
+    "sandbox": 6,
+    "locale": "en-US",
+    "render": {
+      "text": "日本語の文字 漢字 かな カナ",
+      "width": 414.5,
+      "ready": "loaded"
+    },
+    "quit": {
+      "cause": "shutdown",
+      "forced": false,
+      "in_app": true
+    }
+  },
+  {
+    "app": "org.mozilla.firefox",
+    "fontAdded": true,
+    "fontconfigExit": 0,
+    "profile": "/workspace/qa-linux-22/package-pwa/KAN-17/org.mozilla.firefox-noto/.var/app/org.mozilla.firefox/config/qa-profile",
+    "completed": true,
+    "version": "159.0.1",
+    "os": "Linux",
+    "sandbox": 6,
+    "locale": "en-US",
+    "render": {
+      "text": "日本語の文字 漢字 かな カナ",
+      "width": 414.5,
+      "ready": "loaded"
+    },
+    "quit": {
+      "cause": "shutdown",
+      "forced": false,
+      "in_app": true
+    }
+  }
+]

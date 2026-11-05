@@ -1,0 +1,140 @@
+[
+  {
+    "case": "official-normal",
+    "candidateHelper": false,
+    "rows": [
+      {
+        "profile": "/workspace/qa-linux-22/package-pwa/KAN-8/official-normal-home/.floorp/yr11f3ng.default-default",
+        "localProfile": "/workspace/qa-linux-22/package-pwa/KAN-8/official-normal-home/.var/app/one.ablaze.floorp/cache/floorp/yr11f3ng.default-default",
+        "marker": "keep-this-profile",
+        "sandboxLevel": 6,
+        "version": "159.0.1",
+        "buildID": "20261103153232",
+        "appID": "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}",
+        "appName": "Floorp",
+        "sandboxDisableEnv": false,
+        "label": "initial",
+        "homePermission": false,
+        "quit": {
+          "cause": "shutdown",
+          "forced": false,
+          "in_app": true
+        },
+        "exitCode": 0,
+        "normalExit": true
+      },
+      {
+        "profile": "/workspace/qa-linux-22/package-pwa/KAN-8/official-normal-home/.var/app/one.ablaze.floorp/config/floorp/qyb2rs9a.default-default",
+        "localProfile": "/workspace/qa-linux-22/package-pwa/KAN-8/official-normal-home/.var/app/one.ablaze.floorp/cache/floorp/qyb2rs9a.default-default",
+        "marker": "MISSING",
+        "sandboxLevel": 6,
+        "version": "159.0.1",
+        "buildID": "20261103153232",
+        "appID": "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}",
+        "appName": "Floorp",
+        "sandboxDisableEnv": false,
+        "label": "home-enabled",
+        "homePermission": true,
+        "quit": {
+          "cause": "shutdown",
+          "forced": false,
+          "in_app": true
+        },
+        "exitCode": 0,
+        "normalExit": true
+      },
+      {
+        "profile": "/workspace/qa-linux-22/package-pwa/KAN-8/official-normal-home/.floorp/yr11f3ng.default-default",
+        "localProfile": "/workspace/qa-linux-22/package-pwa/KAN-8/official-normal-home/.var/app/one.ablaze.floorp/cache/floorp/yr11f3ng.default-default",
+        "marker": "keep-this-profile",
+        "sandboxLevel": 6,
+        "version": "159.0.1",
+        "buildID": "20261103153232",
+        "appID": "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}",
+        "appName": "Floorp",
+        "sandboxDisableEnv": false,
+        "label": "home-disabled",
+        "homePermission": false,
+        "quit": {
+          "cause": "shutdown",
+          "forced": false,
+          "in_app": true
+        },
+        "exitCode": 0,
+        "normalExit": true
+      }
+    ],
+    "stableProfile": false,
+    "allMarkers": false,
+    "allNormalExits": true
+  },
+  {
+    "case": "candidate-normal",
+    "candidateHelper": true,
+    "rows": [
+      {
+        "profile": "/workspace/qa-linux-22/package-pwa/KAN-8/candidate-normal-home/.var/app/one.ablaze.floorp/config/../.floorp/m5j9rc7c.default-default",
+        "localProfile": "/workspace/qa-linux-22/package-pwa/KAN-8/candidate-normal-home/.var/app/one.ablaze.floorp/cache/floorp/m5j9rc7c.default-default",
+        "marker": "keep-this-profile",
+        "sandboxLevel": 6,
+        "version": "159.0.1",
+        "buildID": "20261103153232",
+        "appID": "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}",
+        "appName": "Floorp",
+        "sandboxDisableEnv": false,
+        "label": "initial",
+        "homePermission": false,
+        "quit": {
+          "cause": "shutdown",
+          "forced": false,
+          "in_app": true
+        },
+        "exitCode": 0,
+        "normalExit": true
+      },
+      {
+        "profile": "/workspace/qa-linux-22/package-pwa/KAN-8/candidate-normal-home/.var/app/one.ablaze.floorp/config/../.floorp/m5j9rc7c.default-default",
+        "localProfile": "/workspace/qa-linux-22/package-pwa/KAN-8/candidate-normal-home/.var/app/one.ablaze.floorp/cache/floorp/m5j9rc7c.default-default",
+        "marker": "keep-this-profile",
+        "sandboxLevel": 6,
+        "version": "159.0.1",
+        "buildID": "20261103153232",
+        "appID": "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}",
+        "appName": "Floorp",
+        "sandboxDisableEnv": false,
+        "label": "home-enabled",
+        "homePermission": true,
+        "quit": {
+          "cause": "shutdown",
+          "forced": false,
+          "in_app": true
+        },
+        "exitCode": 0,
+        "normalExit": true
+      },
+      {
+        "profile": "/workspace/qa-linux-22/package-pwa/KAN-8/candidate-normal-home/.var/app/one.ablaze.floorp/config/../.floorp/m5j9rc7c.default-default",
+        "localProfile": "/workspace/qa-linux-22/package-pwa/KAN-8/candidate-normal-home/.var/app/one.ablaze.floorp/cache/floorp/m5j9rc7c.default-default",
+        "marker": "keep-this-profile",
+        "sandboxLevel": 6,
+        "version": "159.0.1",
+        "buildID": "20261103153232",
+        "appID": "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}",
+        "appName": "Floorp",
+        "sandboxDisableEnv": false,
+        "label": "home-disabled",
+        "homePermission": false,
+        "quit": {
+          "cause": "shutdown",
+          "forced": false,
+          "in_app": true
+        },
+        "exitCode": 0,
+        "normalExit": true
+      }
+    ],
+    "stableProfile": true,
+    "allMarkers": true,
+    "allNormalExits": true
+  }
+]

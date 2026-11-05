@@ -1,0 +1,241 @@
+{
+  "input": "synthetic CLI launch, actual generated desktop Exec, X11 properties",
+  "desktop": "Xvfb X11; this is not a KDE taskbar test",
+  "desktopEntries": {
+    "beta": {
+      "path": "/workspace/qa-linux-22/package-pwa/home/.local/share/applications/floorp-9e21e31d-9b95-43d2-ba63-65bdf8210d8f.desktop",
+      "sha256": "72923042694f077bbc0920d2a6131611ca39783ccf2baf8d00fa836ecad6a135",
+      "startupWMClass": "floorp-9e21e31d-9b95-43d2-ba63-65bdf8210d8f",
+      "exec": [
+        "/workspace/qa-linux-22/package-pwa/product/floorp/floorp",
+        "--name",
+        "floorp-9e21e31d-9b95-43d2-ba63-65bdf8210d8f",
+        "--profile",
+        "/workspace/qa-linux-22/package-pwa/native-profile",
+        "--start-ssb",
+        "{9e21e31d-9b95-43d2-ba63-65bdf8210d8f}"
+      ],
+      "icon": "/workspace/qa-linux-22/package-pwa/home/.local/share/icons/hicolor/512x512/apps/floorp-9e21e31d-9b95-43d2-ba63-65bdf8210d8f.png",
+      "iconSha256": "2b84538769d0a030ba0f2afc85a1882edbef2b748a5ed4d33a2de4790b8a0c57"
+    },
+    "alpha": {
+      "path": "/workspace/qa-linux-22/package-pwa/home/.local/share/applications/floorp-9813d97a-e134-4772-9f3c-fd535657accf.desktop",
+      "sha256": "a0daf67900191758defb2916443d81ce1a4e3ab5813d01e7901ac1cd96ffe020",
+      "startupWMClass": "floorp-9813d97a-e134-4772-9f3c-fd535657accf",
+      "exec": [
+        "/workspace/qa-linux-22/package-pwa/product/floorp/floorp",
+        "--name",
+        "floorp-9813d97a-e134-4772-9f3c-fd535657accf",
+        "--profile",
+        "/workspace/qa-linux-22/package-pwa/native-profile",
+        "--start-ssb",
+        "{9813d97a-e134-4772-9f3c-fd535657accf}"
+      ],
+      "icon": "/workspace/qa-linux-22/package-pwa/home/.local/share/icons/hicolor/512x512/apps/floorp-9813d97a-e134-4772-9f3c-fd535657accf.png",
+      "iconSha256": "eaea99a213c8ba9654b7d625c0358b28d4e0ef8c213cb0680f3ddc3c659cb8e5"
+    }
+  },
+  "orders": [
+    {
+      "order": [
+        "alpha",
+        "beta",
+        "browser"
+      ],
+      "commands": [
+        [
+          "/workspace/qa-linux-22/package-pwa/product/floorp/floorp",
+          "--name",
+          "floorp-9813d97a-e134-4772-9f3c-fd535657accf",
+          "--profile",
+          "/workspace/qa-linux-22/package-pwa/native-profile",
+          "--start-ssb",
+          "{9813d97a-e134-4772-9f3c-fd535657accf}",
+          "--marionette"
+        ],
+        [
+          "/workspace/qa-linux-22/package-pwa/product/floorp/floorp",
+          "--name",
+          "floorp-9e21e31d-9b95-43d2-ba63-65bdf8210d8f",
+          "--profile",
+          "/workspace/qa-linux-22/package-pwa/native-profile",
+          "--start-ssb",
+          "{9e21e31d-9b95-43d2-ba63-65bdf8210d8f}"
+        ],
+        [
+          "/workspace/qa-linux-22/package-pwa/product/floorp/floorp",
+          "--profile",
+          "/workspace/qa-linux-22/package-pwa/native-profile",
+          "about:blank"
+        ]
+      ],
+      "windows": [
+        {
+          "xid": "0x60002c",
+          "title": "Ablaze Floorp",
+          "wmClass": "\"Navigator\", \"floorp\"",
+          "propertyFile": "alpha-beta-browser-0x60002c-properties.txt",
+          "propertiesSha256": "fe31df0be7f45771ae159f61552d4d375bc404ab7d49775ca7d66ab4eacb287f"
+        },
+        {
+          "xid": "0x60001b",
+          "title": "QA PWA Beta \u2014 Ablaze Floorp",
+          "wmClass": "\"Navigator\", \"floorp\"",
+          "propertyFile": "alpha-beta-browser-0x60001b-properties.txt",
+          "propertiesSha256": "fe31df0be7f45771ae159f61552d4d375bc404ab7d49775ca7d66ab4eacb287f"
+        },
+        {
+          "xid": "0x600003",
+          "title": "QA PWA Alpha \u2014 Ablaze Floorp",
+          "wmClass": "\"Navigator\", \"floorp\"",
+          "propertyFile": "alpha-beta-browser-0x600003-properties.txt",
+          "propertiesSha256": "fe31df0be7f45771ae159f61552d4d375bc404ab7d49775ca7d66ab4eacb287f"
+        }
+      ],
+      "observedProfile": "/workspace/qa-linux-22/package-pwa/native-profile",
+      "ownerPid": 21351,
+      "sandbox": 6,
+      "experiment": false,
+      "quit": {
+        "cause": "shutdown",
+        "forced": false,
+        "in_app": true
+      },
+      "completed": true
+    },
+    {
+      "order": [
+        "beta",
+        "alpha",
+        "browser"
+      ],
+      "commands": [
+        [
+          "/workspace/qa-linux-22/package-pwa/product/floorp/floorp",
+          "--name",
+          "floorp-9e21e31d-9b95-43d2-ba63-65bdf8210d8f",
+          "--profile",
+          "/workspace/qa-linux-22/package-pwa/native-profile",
+          "--start-ssb",
+          "{9e21e31d-9b95-43d2-ba63-65bdf8210d8f}",
+          "--marionette"
+        ],
+        [
+          "/workspace/qa-linux-22/package-pwa/product/floorp/floorp",
+          "--name",
+          "floorp-9813d97a-e134-4772-9f3c-fd535657accf",
+          "--profile",
+          "/workspace/qa-linux-22/package-pwa/native-profile",
+          "--start-ssb",
+          "{9813d97a-e134-4772-9f3c-fd535657accf}"
+        ],
+        [
+          "/workspace/qa-linux-22/package-pwa/product/floorp/floorp",
+          "--profile",
+          "/workspace/qa-linux-22/package-pwa/native-profile",
+          "about:blank"
+        ]
+      ],
+      "windows": [
+        {
+          "xid": "0x60002c",
+          "title": "Ablaze Floorp",
+          "wmClass": "\"Navigator\", \"floorp\"",
+          "propertyFile": "beta-alpha-browser-0x60002c-properties.txt",
+          "propertiesSha256": "68c95338897f0b2aebebcba244fc5291c7953d8b02bfa4f78d24192c28f393c0"
+        },
+        {
+          "xid": "0x60001b",
+          "title": "QA PWA Alpha \u2014 Ablaze Floorp",
+          "wmClass": "\"Navigator\", \"floorp\"",
+          "propertyFile": "beta-alpha-browser-0x60001b-properties.txt",
+          "propertiesSha256": "68c95338897f0b2aebebcba244fc5291c7953d8b02bfa4f78d24192c28f393c0"
+        },
+        {
+          "xid": "0x600003",
+          "title": "QA PWA Beta \u2014 Ablaze Floorp",
+          "wmClass": "\"Navigator\", \"floorp\"",
+          "propertyFile": "beta-alpha-browser-0x600003-properties.txt",
+          "propertiesSha256": "68c95338897f0b2aebebcba244fc5291c7953d8b02bfa4f78d24192c28f393c0"
+        }
+      ],
+      "observedProfile": "/workspace/qa-linux-22/package-pwa/native-profile",
+      "ownerPid": 21884,
+      "sandbox": 6,
+      "experiment": false,
+      "quit": {
+        "cause": "shutdown",
+        "forced": false,
+        "in_app": true
+      },
+      "completed": true
+    },
+    {
+      "order": [
+        "browser",
+        "alpha",
+        "beta"
+      ],
+      "commands": [
+        [
+          "/workspace/qa-linux-22/package-pwa/product/floorp/floorp",
+          "--profile",
+          "/workspace/qa-linux-22/package-pwa/native-profile",
+          "about:blank",
+          "--marionette"
+        ],
+        [
+          "/workspace/qa-linux-22/package-pwa/product/floorp/floorp",
+          "--name",
+          "floorp-9813d97a-e134-4772-9f3c-fd535657accf",
+          "--profile",
+          "/workspace/qa-linux-22/package-pwa/native-profile",
+          "--start-ssb",
+          "{9813d97a-e134-4772-9f3c-fd535657accf}"
+        ],
+        [
+          "/workspace/qa-linux-22/package-pwa/product/floorp/floorp",
+          "--name",
+          "floorp-9e21e31d-9b95-43d2-ba63-65bdf8210d8f",
+          "--profile",
+          "/workspace/qa-linux-22/package-pwa/native-profile",
+          "--start-ssb",
+          "{9e21e31d-9b95-43d2-ba63-65bdf8210d8f}"
+        ]
+      ],
+      "windows": [
+        {
+          "xid": "0x60002f",
+          "title": "QA PWA Beta \u2014 Ablaze Floorp",
+          "wmClass": "\"Navigator\", \"floorp\"",
+          "propertyFile": "browser-alpha-beta-0x60002f-properties.txt",
+          "propertiesSha256": "7935b66b084c0345afff97885fc2965b7baad81e6bf848d4469ef49299a17269"
+        },
+        {
+          "xid": "0x60001e",
+          "title": "QA PWA Alpha \u2014 Ablaze Floorp",
+          "wmClass": "\"Navigator\", \"floorp\"",
+          "propertyFile": "browser-alpha-beta-0x60001e-properties.txt",
+          "propertiesSha256": "7935b66b084c0345afff97885fc2965b7baad81e6bf848d4469ef49299a17269"
+        },
+        {
+          "xid": "0x600003",
+          "title": "Ablaze Floorp",
+          "wmClass": "\"Navigator\", \"floorp\"",
+          "propertyFile": "browser-alpha-beta-0x600003-properties.txt",
+          "propertiesSha256": "7935b66b084c0345afff97885fc2965b7baad81e6bf848d4469ef49299a17269"
+        }
+      ],
+      "observedProfile": "/workspace/qa-linux-22/package-pwa/native-profile",
+      "ownerPid": 22633,
+      "sandbox": 6,
+      "experiment": false,
+      "quit": {
+        "cause": "shutdown",
+        "forced": false,
+        "in_app": true
+      },
+      "completed": true
+    }
+  ]
+}

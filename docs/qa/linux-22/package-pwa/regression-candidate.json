@@ -1,0 +1,12 @@
+{
+  "observedProfile": "/workspace/qa-linux-22/package-pwa/native-profile",
+  "sandbox": 6,
+  "test": {
+    "passed": true
+  },
+  "quit": {
+    "cause": "shutdown",
+    "forced": false,
+    "in_app": true
+  }
+}

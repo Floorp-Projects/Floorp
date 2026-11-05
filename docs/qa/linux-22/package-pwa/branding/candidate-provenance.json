@@ -1,0 +1,23 @@
+{
+  "logicalZipChanges": [
+    {
+      "name": "chrome/chrome.manifest",
+      "before": "content activity-stream browser/content/activity-stream/ contentaccessible=yes\ncontent branding browser/content/branding/ contentaccessible=yes\ncontent browser browser/content/browser/ contentaccessible=yes\ncontent screenshots-overlay browser/overlay/\nlocale app-marketplace-icons en-US browser/locale/en-US/app-marketplace-icons/\nskin browser classic/1.0 browser/skin/classic/browser/\ncontent devtools-startup devtools-startup/content/\ncontent devtools devtools/content/\ncontent devtools-jsonview-styles devtools/modules/devtools/client/jsonview/css/ contentaccessible=yes\nskin devtools classic/1.0 devtools/skin/\nlocale branding en-US en-US/locale/branding/\nlocale browser en-US en-US/locale/browser/\nlocale browser-region en-US en-US/locale/browser-region/\nlocale devtools en-US en-US/locale/en-US/devtools/client/\nlocale devtools-shared en-US en-US/locale/en-US/devtools/shared/\noverride chrome://browser/skin/canvas.svg chrome://global/skin/icons/canvas.svg\noverride chrome://global/content/license.html chrome://browser/content/license.html\noverride chrome://global/locale/appstrings.properties chrome://browser/locale/appstrings.properties\nresource activity-stream browser/res/activity-stream/ contentaccessible=yes\nresource builtin-addons browser/builtin-addons/ contentaccessible=yes\nresource builtin-themes browser/content/builtin-themes/\nresource usercontext-content browser/content/usercontext/ contentaccessible=yes\nresource devtools devtools/modules/devtools/\nresource devtools-highlighter-styles resource://devtools/server/actors/highlighters/css/ contentaccessible=yes\nresource devtools-shared-images resource://devtools/shared/images/ contentaccessible=true\nresource devtools-webextension-fallback devtools/webextension-fallback/\n",
+      "after": "content activity-stream browser/content/activity-stream/ contentaccessible=yes\ncontent branding browser/content/branding/ contentaccessible=yes\ncontent browser browser/content/browser/ contentaccessible=yes\ncontent screenshots-overlay browser/overlay/\nlocale app-marketplace-icons en-US browser/locale/en-US/app-marketplace-icons/\nskin browser classic/1.0 browser/skin/classic/browser/\ncontent devtools-startup devtools-startup/content/\ncontent devtools devtools/content/\ncontent devtools-jsonview-styles devtools/modules/devtools/client/jsonview/css/ contentaccessible=yes\nskin devtools classic/1.0 devtools/skin/\nlocale branding en-US en-US/locale/branding/\nlocale browser en-US en-US/locale/browser/\nlocale browser-region en-US en-US/locale/browser-region/\nlocale devtools en-US en-US/locale/en-US/devtools/client/\nlocale devtools-shared en-US en-US/locale/en-US/devtools/shared/\noverride chrome://browser/skin/canvas.svg chrome://global/skin/icons/canvas.svg\noverride chrome://global/content/license.html chrome://browser/content/license.html\noverride chrome://global/locale/appstrings.properties chrome://browser/locale/appstrings.properties\nresource activity-stream browser/res/activity-stream/ contentaccessible=yes\nresource builtin-addons browser/builtin-addons/ contentaccessible=yes\nresource builtin-themes browser/content/builtin-themes/\nresource usercontext-content browser/content/usercontext/ contentaccessible=yes\nresource devtools devtools/modules/devtools/\nresource devtools-highlighter-styles resource://devtools/server/actors/highlighters/css/ contentaccessible=yes\nresource devtools-shared-images resource://devtools/shared/images/ contentaccessible=true\nresource devtools-webextension-fallback devtools/webextension-fallback/\n\noverride chrome://branding/locale/brand.properties resource:///chrome/en-US/locale/branding/brand.properties\n"
+    }
+  ],
+  "nativeHashes": {
+    "floorp": {
+      "original": "4f05c1330b38e50040440be6a3b6e0e7a5b52bc79edb5c5478d978c81f5a603d",
+      "candidate": "4f05c1330b38e50040440be6a3b6e0e7a5b52bc79edb5c5478d978c81f5a603d"
+    },
+    "libxul.so": {
+      "original": "760ff8a689f52c9b1f3c89a45ea8813e59f187990caed747e4a7680020c8dbc7",
+      "candidate": "760ff8a689f52c9b1f3c89a45ea8813e59f187990caed747e4a7680020c8dbc7"
+    },
+    "libmozsandbox.so": {
+      "original": "88c01a993afad42907d569d1f11d890afd0accc7120fd946168ca799065e86fd",
+      "candidate": "88c01a993afad42907d569d1f11d890afd0accc7120fd946168ca799065e86fd"
+    }
+  }
+}

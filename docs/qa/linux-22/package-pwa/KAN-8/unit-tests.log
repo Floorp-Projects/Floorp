@@ -1,0 +1,14 @@
+test_both_existing_registries_fail_closed (test_profile_root.ProfileRootTest.test_both_existing_registries_fail_closed) ... ok
+test_invalid_config_fails_and_explicit_override_is_preserved (test_profile_root.ProfileRootTest.test_invalid_config_fails_and_explicit_override_is_preserved) ... ok
+test_legacy_with_or_without_persist_mount (test_profile_root.ProfileRootTest.test_legacy_with_or_without_persist_mount) ... ok
+test_new_install_uses_legacy_location (test_profile_root.ProfileRootTest.test_new_install_uses_legacy_location) ... ok
+test_partial_data_without_registry_fails_closed (test_profile_root.ProfileRootTest.test_partial_data_without_registry_fails_closed) ... ok
+test_same_registry_file_in_different_directories_is_ambiguous (test_profile_root.ProfileRootTest.test_same_registry_file_in_different_directories_is_ambiguous) ... ok
+test_same_registry_reachable_through_both_paths (test_profile_root.ProfileRootTest.test_same_registry_reachable_through_both_paths) ... ok
+test_separate_host_directory_fails_closed (test_profile_root.ProfileRootTest.test_separate_host_directory_fails_closed) ... ok
+test_xdg_only_is_preserved (test_profile_root.ProfileRootTest.test_xdg_only_is_preserved) ... ok
+
+----------------------------------------------------------------------
+Ran 9 tests in 0.057s
+
+OK

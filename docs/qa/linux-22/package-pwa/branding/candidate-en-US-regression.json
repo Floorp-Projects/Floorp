@@ -1,0 +1,45 @@
+{
+  "pass": true,
+  "rows": [
+    {
+      "actual": "Floorp",
+      "expected": "Floorp",
+      "message": "brandShorterName must not be replaced by an active Firefox language pack",
+      "pass": true
+    },
+    {
+      "actual": "Floorp",
+      "expected": "Floorp",
+      "message": "brandShortName must not be replaced by an active Firefox language pack",
+      "pass": true
+    },
+    {
+      "actual": "Ablaze Floorp",
+      "expected": "Ablaze Floorp",
+      "message": "brandFullName must not be replaced by an active Firefox language pack",
+      "pass": true
+    },
+    {
+      "actual": "Ablaze",
+      "expected": "Ablaze",
+      "message": "vendorShortName must not be replaced by an active Firefox language pack",
+      "pass": true
+    }
+  ],
+  "profile": "/workspace/qa-linux-22/package-pwa/branding/profile",
+  "testFileSha256": "dd8275c9f215e9443698ff1592d58205e65cf1e89875a16557017e43909d610f",
+  "execution": "exact fn body extracted from colocated browser regression; assertion callback records comparisons; standard colocated runner not used",
+  "locale": "en-US",
+  "menu": [
+    {
+      "id": "appMenu-settings-button",
+      "label": "Settings",
+      "text": ""
+    },
+    {
+      "id": "appMenu-new-window-button2",
+      "label": "New Window",
+      "text": ""
+    }
+  ]
+}

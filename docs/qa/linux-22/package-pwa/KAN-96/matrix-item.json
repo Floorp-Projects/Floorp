@@ -1,0 +1,24 @@
+{
+  "sourceSha": "984509d2053be7bae9027133bda7259cd706b208",
+  "productVersion": "Floorp12.21.1 / Gecko159.0.1 / BuildID20261103153232",
+  "newPr": null,
+  "jiraCommentId": null,
+  "key": "KAN-96",
+  "github": "https://github.com/Floorp-Projects/Floorp/issues/2695",
+  "environment": "Debian13.6 Xvfb/X11; official native product; synthetic UI; normal sessionbus; sandbox6",
+  "testCommand": "python3 pwa_ui_probe.py --port 2839 --out pwa-ui-run-3; python3 pwa_order_probe.py",
+  "result": "not-reproduced-current-Debian; 2/2 UI create paths and webIsolated actor instantiate; generated app relaunches work",
+  "remainingConditions": [
+    "CachyOS and original safe-mode/YouTube Music conditions",
+    "external sites/COOP+COEP/containers",
+    "full desktop and physical input"
+  ],
+  "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2680",
+  "evidence": [
+    "KAN-96/report.md",
+    "pwa-ui-run-3/result.json",
+    "pwa-order-run/result.json",
+    "pwa_ui_probe.py",
+    "pwa_order_probe.py"
+  ]
+}

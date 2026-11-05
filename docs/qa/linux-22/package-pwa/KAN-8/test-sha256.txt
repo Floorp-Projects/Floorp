@@ -1,0 +1,2 @@
+08b2db27331855fc3d7b207112816c7056c70f34e02553449b07a7206aee3a1e  /workspace/qa-linux-22/package-pwa/KAN-8/flathub/src/floorp-profile-root.sh
+13f003f0321a4b9012caf2bf468d3a8e049efe0c277c75f3041a848fcee56efb  /workspace/qa-linux-22/package-pwa/KAN-8/profile_normal_shutdown.py

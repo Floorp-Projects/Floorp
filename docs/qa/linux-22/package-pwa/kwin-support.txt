@@ -1,0 +1,200 @@
+KWin Support Information:
+The following information should be used when requesting support on e.g. https://discuss.kde.org.
+It provides information about the currently running instance, which options are used,
+what OpenGL driver and which effects are running.
+Please post the information provided underneath this introductory text to a paste bin service
+like https://paste.kde.org instead of pasting into support threads.
+
+KWin section
+
+Version
+KWin section
+KWin version: 6.3.6
+Qt Version: 6.8.2
+Qt compile version: 6.8.2
+XCB compile version: 1.17.0
+
+Operation Mode: Wayland
+
+Build Options
+KWin section
+KWIN_BUILD_DECORATIONS: yes
+KWIN_BUILD_TABBOX: yes
+KWIN_BUILD_ACTIVITIES: yes
+HAVE_X11_XCB: yes
+HAVE_GLX: yes
+
+Decoration
+KWin section
+Plugin: org.kde.breeze
+Theme:
+Plugin recommends border size: None
+onAllDesktopsAvailable: false
+alphaChannelSupported: true
+closeOnDoubleClickOnMenu: false
+decorationButtonsLeft: 0, 2
+decorationButtonsRight: 6, 3, 4, 5
+borderSize: 0
+gridUnit: 12
+font: OpenAI Sans,12,-1,5,400,0,0,0,0,0,0,0,0,0,0,1
+smallSpacing: 3
+largeSpacing: 12
+
+Output backend
+KWin section
+Name: KWin::X11WindowedBackend
+
+Cursor
+======
+themeName: default
+themeSize: 24
+
+Options
+KWin section
+focusPolicy: ClickToFocus
+xwaylandCrashPolicy: 1
+xwaylandMaxCrashCount: 3
+nextFocusPrefersMouse: false
+clickRaise: true
+autoRaise: false
+autoRaiseInterval: 0
+delayFocusInterval: 0
+shadeHover: false
+shadeHoverInterval: 250
+separateScreenFocus: true
+placement: 5
+activationDesktopPolicy: SwitchToOtherDesktop
+focusPolicyIsReasonable: true
+borderSnapZone: 10
+windowSnapZone: 10
+centerSnapZone: 0
+snapOnlyWhenOverlapping: false
+edgeBarrier: 100
+cornerBarrier: 1
+rollOverDesktops: false
+focusStealingPreventionLevel: 1
+operationTitlebarDblClick: 5000
+operationMaxButtonLeftClick: 5000
+operationMaxButtonMiddleClick: 5015
+operationMaxButtonRightClick: 5014
+commandActiveTitlebar1: MouseRaise
+commandActiveTitlebar2: MouseNothing
+commandActiveTitlebar3: MouseOperationsMenu
+commandInactiveTitlebar1: MouseActivateAndRaise
+commandInactiveTitlebar2: MouseNothing
+commandInactiveTitlebar3: MouseOperationsMenu
+commandWindow1: MouseActivateRaiseOnReleaseAndPassClick
+commandWindow2: MouseActivateAndPassClick
+commandWindow3: MouseActivateAndPassClick
+commandWindowWheel: MouseNothing
+commandAll1: MouseUnrestrictedMove
+commandAll2: MouseToggleRaiseAndLower
+commandAll3: MouseUnrestrictedResize
+keyCmdAllModKey: 16777250
+doubleClickBorderToMaximize: true
+condensedTitle: false
+electricBorderMaximize: true
+electricBorderTiling: true
+electricBorderCornerRatio: 0.25
+borderlessMaximizedWindows: false
+killPingTimeout: 5000
+compositingMode: 1
+useCompositing: true
+hiddenPreviews: 1
+glSmoothScale: 2
+glStrictBinding: true
+glStrictBindingFollowsDriver: true
+glPreferBufferSwap: AutoSwapStrategy
+glPlatformInterface: 2
+windowsBlockCompositing: true
+allowTearing: true
+interactiveWindowMoveEnabled: true
+
+Screen Edges
+KWin section
+desktopSwitching: false
+desktopSwitchingMovingClients: false
+cursorPushBackDistance: 1x1
+actionTopLeft: 0
+actionTop: 0
+actionTopRight: 0
+actionRight: 0
+actionBottomRight: 0
+actionBottom: 0
+actionBottomLeft: 0
+actionLeft: 0
+
+Screens
+KWin section
+Number of Screens: 1
+
+Screen 0:
+---------
+Name: X11-0
+Enabled: 1
+Geometry: 0,0,1000x720
+Physical size: -1x-1mm
+Scale: 1
+Refresh Rate: 60000
+Adaptive Sync: incapable
+
+Compositing
+KWin section
+Compositing is active
+Compositing Type: QPainter
+
+Loaded Effects:
+---------------
+outputlocator
+zoom
+screenedge
+highlightwindow
+kscreen
+
+Currently Active Effects:
+-------------------------
+
+Effect Settings:
+----------------
+outputlocator:
+
+zoom:
+zoomFactor: 1.2
+mousePointer: 0
+mouseTracking: 0
+focusTrackingEnabled: false
+textCaretTrackingEnabled: false
+focusDelay: 350
+moveFactor: 20
+targetZoom: 1
+
+screenedge:
+
+highlightwindow:
+
+kscreen:
+
+
+Loaded Plugins:
+---------------
+BounceKeysPlugin
+KeyNotificationPlugin
+MouseKeysPlugin
+StickyKeysPlugin
+buttonsrebind
+eis
+krunnerintegration
+nightlight
+screencast
+
+Available Plugins:
+------------------
+BounceKeysPlugin
+KeyNotificationPlugin
+MouseKeysPlugin
+StickyKeysPlugin
+buttonsrebind
+eis
+krunnerintegration
+nightlight
+screencast

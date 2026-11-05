@@ -1,0 +1,14 @@
+{
+  "observedProfile": "/workspace/qa-linux-22/package-pwa/native-profile",
+  "sandbox": 6,
+  "test": {
+    "passed": false,
+    "error": "Error: Each created PWA receives its generated desktop launcher identity (expected: floorp-2aa29e0a-8f7c-46f9-a4e0-766cee56eb50, actual: null)",
+    "stack": "assertEquals@pwa_ui_probe.py:36:13\ntestLinuxWindowsKeepDistinctLauncherClasses@pwa_ui_probe.py:222:21\n"
+  },
+  "quit": {
+    "cause": "shutdown",
+    "forced": false,
+    "in_app": true
+  }
+}
