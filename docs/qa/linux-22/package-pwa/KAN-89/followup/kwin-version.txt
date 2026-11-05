@@ -1,0 +1,4 @@
+kwin 6.3.6
+QThreadStorage: Thread 0x55ac050d24c0 exited after QThreadStorage 8 destroyed
+QThreadStorage: Thread 0x55ac050d24c0 exited after QThreadStorage 1 destroyed
+QThreadStorage: Thread 0x55ac050d24c0 exited after QThreadStorage 0 destroyed

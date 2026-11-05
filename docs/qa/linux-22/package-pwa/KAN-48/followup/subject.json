@@ -1,0 +1,20 @@
+{
+  "sourceSha": "984509d2053be7bae9027133bda7259cd706b208",
+  "officialProductArchiveSha256": "7dcedcbfef747819153b0b9c541a9c1f4f4965b0720f16d5d237d39b0c30d613",
+  "productVersion": "Floorp12.21.1 / Gecko159.0.1",
+  "officialExecutableSha256": "4f05c1330b38e50040440be6a3b6e0e7a5b52bc79edb5c5478d978c81f5a603d",
+  "candidateHead": "8249e234adfbb3e877e4a20cf5f57d7264d9a447",
+  "candidateScope": "existing isolated product copy with two JS resources changed; no new PR code change",
+  "KWinVersion": "6.3.6 / Qt6.8.2 / nested Wayland on Xvfb:91",
+  "KWinExecutableSha256": "937c21d9de61d9f878ea3f3c0ee056b648493b9e6d92eeb084f2ecbc876b9b55",
+  "publicSourceReferences": [
+    "https://invent.kde.org/plasma/kwin/-/blob/v6.3.6/src/wayland_server.cpp#L146",
+    "https://invent.kde.org/plasma/kwin/-/blob/v6.3.6/src/utils/serviceutils.h"
+  ],
+  "rawLogsPrivate": true,
+  "input": "synthetic Marionette and ordinary CLI; not physical input",
+  "remaining": [
+    "Original CachyOS/KDE6.7.5 pacman package and actual reported sites/icons",
+    "Complete system desktop/portal/PipeWire; no full original OS qualification"
+  ]
+}

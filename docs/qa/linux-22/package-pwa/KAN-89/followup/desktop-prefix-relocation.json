@@ -1,0 +1,21 @@
+{
+  "originalExecExists": false,
+  "actualExecExists": true,
+  "originalSha256": "e99ca73d7aa2c7c92341dcefe674a58b735462e11e5674c74c57969d034c3412",
+  "relocatedSha256": "61d05aaf69909c9ff1f865e7d5f62c7c06105d48d6f2bdce11a573668da88cdf",
+  "onlyExecPathChanged": true,
+  "StartupWMClass": "floorp",
+  "Icon": "one.ablaze.floorp",
+  "originalExecLines": [
+    "Exec=/usr/bin/flatpak run --branch=stable --arch=x86_64 --command=floorp --file-forwarding one.ablaze.floorp @@u %u @@",
+    "Exec=/usr/bin/flatpak run --branch=stable --arch=x86_64 --command=floorp --file-forwarding one.ablaze.floorp --new-window @@u %u @@",
+    "Exec=/usr/bin/flatpak run --branch=stable --arch=x86_64 --command=floorp --file-forwarding one.ablaze.floorp --private-window @@u %u @@",
+    "Exec=/usr/bin/flatpak run --branch=stable --arch=x86_64 --command=floorp one.ablaze.floorp --ProfileManager"
+  ],
+  "relocatedExecLines": [
+    "Exec=/workspace/qa-linux-22/package-pwa/sysroot/usr/bin/flatpak run --branch=stable --arch=x86_64 --command=floorp --file-forwarding one.ablaze.floorp @@u %u @@",
+    "Exec=/workspace/qa-linux-22/package-pwa/sysroot/usr/bin/flatpak run --branch=stable --arch=x86_64 --command=floorp --file-forwarding one.ablaze.floorp --new-window @@u %u @@",
+    "Exec=/workspace/qa-linux-22/package-pwa/sysroot/usr/bin/flatpak run --branch=stable --arch=x86_64 --command=floorp --file-forwarding one.ablaze.floorp --private-window @@u %u @@",
+    "Exec=/workspace/qa-linux-22/package-pwa/sysroot/usr/bin/flatpak run --branch=stable --arch=x86_64 --command=floorp one.ablaze.floorp --ProfileManager"
+  ]
+}

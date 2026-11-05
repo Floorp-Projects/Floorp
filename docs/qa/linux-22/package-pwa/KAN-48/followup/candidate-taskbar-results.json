@@ -1,0 +1,102 @@
+{
+  "profile": "/workspace/qa-linux-22/package-pwa/KAN-48/followup/candidate-profile",
+  "pid": 92058,
+  "sandbox": 6,
+  "disableEnv": "",
+  "experiment": false,
+  "windows": [
+    {
+      "title": "QA PWA Beta \u2014 Ablaze Floorp",
+      "url": "http://127.0.0.1:8786/beta/",
+      "windowClass": null
+    },
+    {
+      "title": "QA PWA Alpha \u2014 Ablaze Floorp",
+      "url": "http://127.0.0.1:8786/alpha/",
+      "windowClass": "floorp-58f9f487-51ae-4918-9304-77aad7a1ab9e"
+    },
+    {
+      "title": "QA PWA Beta \u2014 Ablaze Floorp",
+      "url": "http://127.0.0.1:8786/beta/",
+      "windowClass": "floorp-da0c53d6-ccad-4f92-bc57-cf89dc7e70fc"
+    }
+  ],
+  "taskbarFixturePixels": {
+    "alpha": {
+      "count": 1024,
+      "bbox": [
+        378,
+        722,
+        409,
+        753
+      ]
+    },
+    "beta": {
+      "count": 1024,
+      "bbox": [
+        430,
+        722,
+        461,
+        753
+      ]
+    }
+  },
+  "quit": {
+    "cause": "shutdown",
+    "forced": false,
+    "in_app": true
+  },
+  "kwinWindows": [
+    {
+      "internalId": "{846d8e79-f333-485a-a04b-42e022f59d90}",
+      "caption": "QA PWA Beta \u2014 Ablaze Floorp",
+      "resourceClass": "floorp",
+      "resourceName": "floorp",
+      "desktopFileName": "floorp",
+      "pid": 92058,
+      "iconString": "QVariant(QIcon, QIcon(\"wayland\",availableSizes[normal,Off]=QList(QSize(16, 16), QSize(22, 22), QSize(32, 32), QSize(48, 48), QSize(64, 64), QSize(128, 128), QSize(256, 256)),cacheKey=0x500000000))",
+      "clientGeometry": {
+        "x": 0,
+        "y": 0,
+        "width": 1100,
+        "height": 716
+      },
+      "normalWindow": true,
+      "active": false
+    },
+    {
+      "internalId": "{0401326e-e725-4ea6-bd63-cd118458688e}",
+      "caption": "QA PWA Alpha \u2014 Ablaze Floorp",
+      "resourceClass": "floorp-58f9f487-51ae-4918-9304-77aad7a1ab9e",
+      "resourceName": "floorp",
+      "desktopFileName": "floorp-58f9f487-51ae-4918-9304-77aad7a1ab9e",
+      "pid": 92058,
+      "iconString": "QVariant(QIcon, QIcon(availableSizes[normal,Off]=QList(QSize(128, 128)),cacheKey=0xa00000000))",
+      "clientGeometry": {
+        "x": 0,
+        "y": 0,
+        "width": 1100,
+        "height": 716
+      },
+      "normalWindow": true,
+      "active": false
+    },
+    {
+      "internalId": "{90766770-fe86-49cd-b31d-4c4bea01a55c}",
+      "caption": "Ablaze Floorp",
+      "resourceClass": "floorp-da0c53d6-ccad-4f92-bc57-cf89dc7e70fc",
+      "resourceName": "floorp",
+      "desktopFileName": "floorp-da0c53d6-ccad-4f92-bc57-cf89dc7e70fc",
+      "pid": 92058,
+      "iconString": "QVariant(QIcon, QIcon(availableSizes[normal,Off]=QList(QSize(128, 128)),cacheKey=0xb00000000))",
+      "clientGeometry": {
+        "x": 0,
+        "y": 0,
+        "width": 1100,
+        "height": 716
+      },
+      "normalWindow": true,
+      "active": true
+    }
+  ]
+}

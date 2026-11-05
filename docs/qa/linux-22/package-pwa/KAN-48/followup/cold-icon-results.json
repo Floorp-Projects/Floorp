@@ -1,0 +1,152 @@
+[
+  {
+    "label": "beta",
+    "launcher": {
+      "path": "/workspace/qa-linux-22/package-pwa/KAN-48/followup/home/.local/share/applications/floorp-ccb7395b-bb3f-4c67-b04d-3444396d59a6.desktop",
+      "exec": "/workspace/qa-linux-22/package-pwa/product/floorp/floorp --name floorp-ccb7395b-bb3f-4c67-b04d-3444396d59a6 --profile /workspace/qa-linux-22/package-pwa/KAN-48/followup/profile --start-ssb {ccb7395b-bb3f-4c67-b04d-3444396d59a6}",
+      "class": "floorp-ccb7395b-bb3f-4c67-b04d-3444396d59a6",
+      "icon": "/workspace/qa-linux-22/package-pwa/KAN-48/followup/home/.local/share/icons/hicolor/512x512/apps/floorp-ccb7395b-bb3f-4c67-b04d-3444396d59a6.png",
+      "iconSha256": "2b84538769d0a030ba0f2afc85a1882edbef2b748a5ed4d33a2de4790b8a0c57"
+    },
+    "iconExpectedPixel": [
+      30,
+      90,
+      220,
+      255
+    ],
+    "completed": true,
+    "product": {
+      "profile": "/workspace/qa-linux-22/package-pwa/KAN-48/followup/profile",
+      "pid": 87102,
+      "sandbox": 6,
+      "disableEnv": "",
+      "experiment": false,
+      "windows": [
+        {
+          "title": "QA PWA Beta \u2014 Ablaze Floorp",
+          "url": "http://127.0.0.1:8785/beta/"
+        }
+      ]
+    },
+    "kwinWindows": [
+      {
+        "internalId": "{6bbf0886-7969-470e-9ea6-40b7c2e5e36f}",
+        "caption": "QA PWA Beta \u2014 Ablaze Floorp",
+        "resourceClass": "floorp-ccb7395b-bb3f-4c67-b04d-3444396d59a6",
+        "resourceName": "floorp",
+        "desktopFileName": "floorp-ccb7395b-bb3f-4c67-b04d-3444396d59a6",
+        "pid": 87102,
+        "iconString": "QVariant(QIcon, QIcon(availableSizes[normal,Off]=QList(QSize(128, 128)),cacheKey=0x800000000))",
+        "clientGeometry": {
+          "x": 0,
+          "y": 0,
+          "width": 1100,
+          "height": 716
+        },
+        "normalWindow": true,
+        "active": true
+      }
+    ],
+    "taskbarExactExpectedColorPixels": 1024,
+    "taskbarExpectedColorBBox": [
+      326,
+      722,
+      357,
+      753
+    ],
+    "quit": {
+      "cause": "shutdown",
+      "forced": false,
+      "in_app": true
+    },
+    "exitCode": 0,
+    "expectedPwaPixelComparison": {
+      "size": [
+        32,
+        32
+      ],
+      "allPixelsEqual": true,
+      "matchedPixels": 1024
+    },
+    "knownFloorpPngComparison": {
+      "path": "product/floorp/browser/chrome/icons/default/default32.png",
+      "sha256": "de4c287df3aea68bbba3246a35992e4ee41708d956c225d4ab90fe9532996541",
+      "allPixelsEqual": false
+    }
+  },
+  {
+    "label": "alpha",
+    "launcher": {
+      "path": "/workspace/qa-linux-22/package-pwa/KAN-48/followup/home/.local/share/applications/floorp-78c4f993-2af8-4fff-be06-59ad0dbb206f.desktop",
+      "exec": "/workspace/qa-linux-22/package-pwa/product/floorp/floorp --name floorp-78c4f993-2af8-4fff-be06-59ad0dbb206f --profile /workspace/qa-linux-22/package-pwa/KAN-48/followup/profile --start-ssb {78c4f993-2af8-4fff-be06-59ad0dbb206f}",
+      "class": "floorp-78c4f993-2af8-4fff-be06-59ad0dbb206f",
+      "icon": "/workspace/qa-linux-22/package-pwa/KAN-48/followup/home/.local/share/icons/hicolor/512x512/apps/floorp-78c4f993-2af8-4fff-be06-59ad0dbb206f.png",
+      "iconSha256": "eaea99a213c8ba9654b7d625c0358b28d4e0ef8c213cb0680f3ddc3c659cb8e5"
+    },
+    "iconExpectedPixel": [
+      220,
+      40,
+      50,
+      255
+    ],
+    "completed": true,
+    "product": {
+      "profile": "/workspace/qa-linux-22/package-pwa/KAN-48/followup/profile",
+      "pid": 87412,
+      "sandbox": 6,
+      "disableEnv": "",
+      "experiment": false,
+      "windows": [
+        {
+          "title": "QA PWA Alpha \u2014 Ablaze Floorp",
+          "url": "http://127.0.0.1:8785/alpha/"
+        }
+      ]
+    },
+    "kwinWindows": [
+      {
+        "internalId": "{a4cb04a8-58b3-46a3-8b36-3422506dd149}",
+        "caption": "QA PWA Alpha \u2014 Ablaze Floorp",
+        "resourceClass": "floorp-78c4f993-2af8-4fff-be06-59ad0dbb206f",
+        "resourceName": "floorp",
+        "desktopFileName": "floorp-78c4f993-2af8-4fff-be06-59ad0dbb206f",
+        "pid": 87412,
+        "iconString": "QVariant(QIcon, QIcon(availableSizes[normal,Off]=QList(QSize(128, 128)),cacheKey=0x900000000))",
+        "clientGeometry": {
+          "x": 0,
+          "y": 0,
+          "width": 1100,
+          "height": 716
+        },
+        "normalWindow": true,
+        "active": true
+      }
+    ],
+    "taskbarExactExpectedColorPixels": 1024,
+    "taskbarExpectedColorBBox": [
+      326,
+      722,
+      357,
+      753
+    ],
+    "quit": {
+      "cause": "shutdown",
+      "forced": false,
+      "in_app": true
+    },
+    "exitCode": 0,
+    "expectedPwaPixelComparison": {
+      "size": [
+        32,
+        32
+      ],
+      "allPixelsEqual": true,
+      "matchedPixels": 1024
+    },
+    "knownFloorpPngComparison": {
+      "path": "product/floorp/browser/chrome/icons/default/default32.png",
+      "sha256": "de4c287df3aea68bbba3246a35992e4ee41708d956c225d4ab90fe9532996541",
+      "allPixelsEqual": false
+    }
+  }
+]

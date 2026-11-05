@@ -1,0 +1,1 @@
+print("QA_KAN89_es-CL="+JSON.stringify(workspace.windowList().map(w=>({caption:w.caption,resourceClass:String(w.resourceClass),resourceName:String(w.resourceName),desktopFileName:String(w.desktopFileName),pid:w.pid,internalId:String(w.internalId)}))));

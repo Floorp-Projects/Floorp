@@ -1,0 +1,16 @@
+[
+  {
+    "path": "/workspace/qa-linux-22/package-pwa/KAN-48/followup/home/.local/share/applications/floorp-ccb7395b-bb3f-4c67-b04d-3444396d59a6.desktop",
+    "exec": "/workspace/qa-linux-22/package-pwa/product/floorp/floorp --name floorp-ccb7395b-bb3f-4c67-b04d-3444396d59a6 --profile /workspace/qa-linux-22/package-pwa/KAN-48/followup/profile --start-ssb {ccb7395b-bb3f-4c67-b04d-3444396d59a6}",
+    "class": "floorp-ccb7395b-bb3f-4c67-b04d-3444396d59a6",
+    "icon": "/workspace/qa-linux-22/package-pwa/KAN-48/followup/home/.local/share/icons/hicolor/512x512/apps/floorp-ccb7395b-bb3f-4c67-b04d-3444396d59a6.png",
+    "iconSha256": "2b84538769d0a030ba0f2afc85a1882edbef2b748a5ed4d33a2de4790b8a0c57"
+  },
+  {
+    "path": "/workspace/qa-linux-22/package-pwa/KAN-48/followup/home/.local/share/applications/floorp-78c4f993-2af8-4fff-be06-59ad0dbb206f.desktop",
+    "exec": "/workspace/qa-linux-22/package-pwa/product/floorp/floorp --name floorp-78c4f993-2af8-4fff-be06-59ad0dbb206f --profile /workspace/qa-linux-22/package-pwa/KAN-48/followup/profile --start-ssb {78c4f993-2af8-4fff-be06-59ad0dbb206f}",
+    "class": "floorp-78c4f993-2af8-4fff-be06-59ad0dbb206f",
+    "icon": "/workspace/qa-linux-22/package-pwa/KAN-48/followup/home/.local/share/icons/hicolor/512x512/apps/floorp-78c4f993-2af8-4fff-be06-59ad0dbb206f.png",
+    "iconSha256": "eaea99a213c8ba9654b7d625c0358b28d4e0ef8c213cb0680f3ddc3c659cb8e5"
+  }
+]

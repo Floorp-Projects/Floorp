@@ -106,38 +106,41 @@
     "key": "KAN-48",
     "github": "https://github.com/Floorp-Projects/Floorp/issues/2800",
     "sourceSha": "984509d2053be7bae9027133bda7259cd706b208",
-    "productVersion": "Floorp12.21.1 / Gecko159.0.1 / BuildID20261103153232",
-    "environment": "Debian13; actual nested KWin6.3.6 Wayland/Qt6.8.2/Plasma; outer XvfbX11; isolated session bus; incomplete task model/portal/PipeWire",
-    "testCommand": "python3 pwa_ui_probe.py --port 2855 --fixture-port 8775 --out KAN-48/ui-create; generated Alpha launcher cold start with --name and --start-ssb; KWin scripting window list/getWindowInfo; kbuildsycoca with Plasma menu prefix",
-    "result": "actual-ui-and-cold-app-id-association-verified; original-wrong-taskbar-icon-unqualified; nested-plasma-taskmodel-not-listing-pwa; browser-first-class-inheritance-observed-and-tracked-separately-in-KAN49",
+    "productVersion": "Floorp12.21.1 / Gecko159.0.1",
+    "testedDateLocal": "2026-11-06",
+    "timezone": "Asia/Tokyo",
+    "environment": "Debian13.6; actual KWin6.3.6 nested Wayland/Plasma on Xvfb91; ordinary session DBus; standard KWrite control; task model recovered by Exec-prefix metadata correction; incomplete full system portal/hardware",
+    "testCommand": "python3 KAN-48/followup/session.py start --baseline; standard KWrite control; session.py repair-prefix; actual UI pwa_ui_probe.py --port2885; python3 KAN-48/followup/cold_icons.py",
+    "result": "taskmodel infrastructure cause identified and resolved; official cold Alpha/Beta app_id and launcher match; actual taskbar32x32 each all1024RGBA pixels equal PWA PNG; original wrong-Floorp-icon not reproduced in this condition; shared browser-first identity is separately related to PR3032",
+    "classification": "environment gap resolved; original symptom not reproduced in current condition, not declared fixed",
     "remainingConditions": [
-      "Working Plasma task model and compositor window-management integration",
-      "Rendered window/taskbar icon pixel comparison",
-      "CachyOS/KDE6.7.5/pacman original package",
-      "Complete portal/system service/PipeWire desktop"
+      "Original CachyOS/KDE6.7.5/pacman product and actual reporter sites/icon formats",
+      "Original full desktop/system portal/hardware context"
     ],
-    "existingPr": null,
+    "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/3032",
+    "prRelation": "verified shared-class/grouping comparison only; not a verified fix of original matching-app_id/wrong-icon symptom",
     "newPr": null,
-    "evidence": [
-      "KAN-48/report.md",
-      "KAN-48/ui-create/result.json",
-      "KAN-48/cold-alpha-windows.json",
-      "KAN-48/cold-alpha-product.json",
-      "KAN-48/kwin-alpha-info.txt",
-      "KAN-48/alpha-cold-wayland.log",
-      "KAN-48/plasma-layout.txt",
-      "KAN-48/desktop-filter-observation.json",
-      "KAN-48/task-filter-config.json",
-      "KAN-48/kbuildsycoca-plasma-prefix.log",
-      "KAN-48/window-snapshot.js",
-      "KAN-48/observe-kde.sh",
-      "KAN-48/normal-flags-observation.json",
-      "KAN-48/normal-flags-desktop.png"
-    ],
-    "jiraCommentId": "10292",
-    "jiraUrl": "https://floorp-projects.atlassian.net/browse/KAN-48",
-    "jiraFollowupCommentIds": [
+    "duplicateOf": null,
+    "jiraCommentId": "10320",
+    "previousJiraCommentIds": [
+      "10292",
       "10301"
+    ],
+    "evidence": [
+      "KAN-48/followup/report.md",
+      "KAN-48/followup/subject.json",
+      "KAN-48/followup/prefix-repair.json",
+      "KAN-48/followup/standard-before.png",
+      "KAN-48/followup/standard-after.png",
+      "KAN-48/followup/protocol-authorization-excerpt.txt",
+      "KAN-48/followup/plasma-window-protocol-excerpt.txt",
+      "KAN-48/followup/cold-icon-results.json",
+      "KAN-48/followup/alpha-cold-taskbar.png",
+      "KAN-48/followup/beta-cold-taskbar.png",
+      "KAN-48/followup/candidate-taskbar-results.json",
+      "KAN-48/followup/candidate-ui-taskbar.png",
+      "KAN-48/followup/session.py",
+      "KAN-48/followup/cold_icons.py"
     ]
   },
   {
@@ -186,28 +189,77 @@
     }
   },
   {
-    "sourceSha": "984509d2053be7bae9027133bda7259cd706b208",
-    "productVersion": "Floorp12.21.1 / Gecko159.0.1 / BuildID20261103153232",
-    "jiraCommentId": "10293",
     "key": "KAN-89",
     "github": "https://github.com/Floorp-Projects/Floorp/issues/2713",
-    "environment": "Debian13.6 Xvfb/X11 official Flatpak; original KDE/Xorg task switching absent",
-    "testCommand": "python3 branding/flatpak_run.py",
-    "result": "actual Flatpak legacy-brand path observed; original KDE Firefox-icon symptom unqualified; main X11 icon property collection incomplete",
+    "sourceSha": "984509d2053be7bae9027133bda7259cd706b208",
+    "productVersion": "Floorp12.21.1/Gecko159.0.1",
+    "environment": "Debian13/independentXvfb90/KWinX11 6.3.6/Plasma/officialFlatpak/dedicatedHOME+DBus",
+    "testCommand": "dbus-run-session -- python3 KAN-89/followup/session_probe.py; python3 KAN-89/followup/compare_switcher_pixels.py",
+    "result": "three official-product locale runs normal-exit0; actual-client _NET_WM_ICON absent; AltTab genericX pixels exactly identical across locales; final Plasma taskbar Floorp32 nearly pixel-identical(max channel difference1) after Exec-only prefix relocation; KWin desktopFileName still empty",
+    "classification": "original-condition environment/association deficit remains; different controlled observation, not a product pass or confirmed original-bug reproduction",
     "remainingConditions": [
-      "Manjaro/KDE6.7.4/Xorg/Flatpak original environment",
-      "Actual main window icon and Alt+Tab pixel comparison",
-      "Theme/locale conditions and duplication calibration"
+      "original Manjaro/KDE6.7.4 Xorg desktop integration",
+      "normally installed Flatpak/portal services rather than isolated prefix",
+      "original locale/theme/package version and KWin desktopFileName/icon resolution"
     ],
     "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/3030",
     "newPr": null,
-    "evidence": [
-      "KAN-89/report.md",
-      "branding/flatpak_run.py",
-      "branding/flatpak-en-US-x11.json",
-      "branding/flatpak-es-CL-x11.json"
+    "tests": [
+      {
+        "locale": "en-US",
+        "completed": true,
+        "windowID": "0x140000d",
+        "clientListMatch": true,
+        "iconPropertyPresent": false,
+        "exitCode": 0
+      },
+      {
+        "locale": "ja",
+        "completed": true,
+        "windowID": "0x140000d",
+        "clientListMatch": true,
+        "iconPropertyPresent": false,
+        "exitCode": 0
+      },
+      {
+        "locale": "es-CL",
+        "completed": true,
+        "windowID": "0x140000d",
+        "clientListMatch": true,
+        "iconPropertyPresent": false,
+        "exitCode": 0
+      }
     ],
-    "jiraUrl": "https://floorp-projects.atlassian.net/browse/KAN-89"
+    "evidence": [
+      "KAN-89/followup/report.md",
+      "KAN-89/followup/result.json",
+      "KAN-89/followup/kwin-window-snapshots.json",
+      "KAN-89/followup/gtk-theme-probe.txt",
+      "KAN-89/followup/desktop-prefix-relocation.json",
+      "KAN-89/followup/pixel-comparison.json",
+      "KAN-89/followup/ja-client-properties.json",
+      "KAN-89/followup/en-US-client-properties.json",
+      "KAN-89/followup/es-CL-client-properties.json",
+      "KAN-89/followup/ja-alt-tab.png",
+      "KAN-89/followup/en-US-alt-tab.png",
+      "KAN-89/followup/es-CL-alt-tab.png",
+      "KAN-89/followup/taskbar-pixel-comparison.json",
+      "KAN-89/followup/cleanup.json"
+    ],
+    "referenceSha256": {
+      "floorp": "474f20f1407914c689d34c91da62997950fee1a70197bf3d20252a4dcf8e91fa",
+      "firefox": "12130ce8511f4a348c25380ba9b70b80b2ff0680e4ee801367bf0dbb5e94c00a"
+    },
+    "cleanup": "display90 socket absent; additional dedicatedHOME+display90 processes found0",
+    "testedDateLocal": "2026-11-06",
+    "timezone": "Asia/Tokyo",
+    "jiraCommentId": "10321",
+    "previousJiraCommentIds": [
+      "10293"
+    ],
+    "prRelation": "legacy branding path only; symptom/cause equality not established; not a verified KAN-89 fix",
+    "duplicateOf": null,
+    "graphicsBackend": "Plasma QtQuick software rendering in the headless X11 session; no physical GPU qualification"
   },
   {
     "sourceSha": "984509d2053be7bae9027133bda7259cd706b208",

@@ -1,0 +1,17 @@
+theme=qa-k89
+search=/workspace/qa-linux-22/package-pwa/KAN-89/followup/home/.var/app/one.ablaze.floorp/data/icons
+search=/workspace/qa-linux-22/package-pwa/KAN-89/followup/home/.icons
+search=/app/share/icons
+search=/usr/share/icons
+search=/usr/share/runtime/share/icons
+search=/run/host/user-share/icons
+search=/run/host/share/icons
+search=/app/share/pixmaps
+search=/usr/share/pixmaps
+search=/usr/share/runtime/share/pixmaps
+search=/run/host/user-share/pixmaps
+search=/run/host/share/pixmaps
+icon=floorp sizes=64,
+icon=firefox sizes=64,
+icon=one.ablaze.floorp sizes=16,32,48,64,128,
+F: Can't get document portal: GDBus.Error:org.freedesktop.DBus.Error.Spawn.ExecFailed: Failed to execute program org.freedesktop.portal.Documents: No such file or directory

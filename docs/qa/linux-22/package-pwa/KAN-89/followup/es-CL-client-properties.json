@@ -1,0 +1,18 @@
+[
+  {
+    "id": "0x1000010",
+    "properties": "WM_STATE(WM_STATE):\n\t\twindow state: Normal\n\t\ticon window: 0x0\nWM_CLASS(STRING) = \"plasmashell\", \"plasmashell\"\n_NET_WM_NAME(UTF8_STRING) = \"Desktop @ QRect(0,0 1280x900) \"\nWM_NAME(STRING) = \"Desktop @ QRect(0,0 1280x900) \"\n_NET_WM_PID(CARDINAL) = 95426\n_NET_WM_ICON:  not found.\n"
+  },
+  {
+    "id": "0x100001e",
+    "properties": "WM_STATE(WM_STATE):\n\t\twindow state: Normal\n\t\ticon window: 0x0\nWM_CLASS(STRING) = \"plasmashell\", \"plasmashell\"\n_NET_WM_NAME(UTF8_STRING) = \"plasmashell\"\nWM_NAME(STRING) = \n_NET_WM_PID(CARDINAL) = 95426\n_NET_WM_ICON:  not found.\n"
+  },
+  {
+    "id": "0x1200024",
+    "properties": "WM_STATE(WM_STATE):\n\t\twindow state: Normal\n\t\ticon window: 0x0\nWM_CLASS(STRING) = \"xmessage\", \"Xmessage\"\n_NET_WM_NAME:  not found.\nWM_NAME(STRING) = \"KAN89 independent control\"\n_NET_WM_PID:  not found.\n_NET_WM_ICON:  not found.\n"
+  },
+  {
+    "id": "0x140000d",
+    "properties": "WM_STATE(WM_STATE):\n\t\twindow state: Normal\n\t\ticon window: 0x0\nWM_CLASS(STRING) = \"Navigator\", \"floorp\"\n_NET_WM_NAME(UTF8_STRING) = \"KAN89 es-CL dedicated \u2014 Ablaze Floorp\"\nWM_NAME(COMPOUND_TEXT) = \"KAN89 es-CL dedicated \u2014 Ablaze Floorp\"\n_NET_WM_PID:  not found.\n_NET_WM_ICON:  not found.\n"
+  }
+]

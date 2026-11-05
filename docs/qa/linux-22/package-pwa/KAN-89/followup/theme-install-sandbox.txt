@@ -1,0 +1,4 @@
+total 16
+-rw------- 1 agent agent 5459 Nov  5 15:56 firefox.png
+-rw------- 1 agent agent 4697 Nov  5 15:56 floorp.png
+F: Can't get document portal: GDBus.Error:org.freedesktop.DBus.Error.Spawn.ExecFailed: Failed to execute program org.freedesktop.portal.Documents: No such file or directory

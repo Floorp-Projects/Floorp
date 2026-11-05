@@ -1,0 +1,173 @@
+Could not load a session backend. Session management operations such as shutdown will not be operational. This is a setup issue.
+kf.plasma.quick: Applet preload policy set to 1
+file:///workspace/qa-linux-22/package-pwa/sysroot/usr/share/plasma/plasmoids/org.kde.desktopcontainment/contents/ui/main.qml:178:25: QML FolderViewDropArea (parent or ancestor of QQuickLayoutAttached): Binding loop detected for property "minimumWidth":
+file:///workspace/qa-linux-22/package-pwa/sysroot/usr/share/plasma/plasmoids/org.kde.desktopcontainment/contents/ui/main.qml:201:9
+Toolbox not loading, toolbox package is either invalid or disabled.
+file:///workspace/qa-linux-22/package-pwa/sysroot/usr/share/plasma/plasmoids/org.kde.plasma.kickoff/contents/ui/main.qml:310:13: QML Image: Cannot open: file:///workspace/qa-linux-22/package-pwa/sysroot/usr/share/plasma/plasmoids/org.kde.plasma.kickoff/contents/ui/start-here-kde-symbolic
+org.kde.plasma.kicker: Entry is not valid "org.kde.kontact.desktop" 0x5595091fbbd0
+org.kde.plasma.kicker: Entry is not valid "systemsettings.desktop" 0x5595091fbbd0
+org.kde.plasma.kicker: Entry is not valid "org.kde.dolphin.desktop" 0x5595091fbbd0
+org.kde.plasma.kicker: Entry is not valid "org.kde.discover.desktop" 0x5595091fbbd0
+org.kde.plasma.kicker: Entry is not valid "org.kde.kontact.desktop" 0x5595091fbbd0
+org.kde.plasma.kicker: Entry is not valid "systemsettings.desktop" 0x5595091fbbd0
+org.kde.plasma.kicker: Entry is not valid "org.kde.dolphin.desktop" 0x5595091fbbd0
+org.kde.plasma.kicker: Entry is not valid "org.kde.discover.desktop" 0x5595091fbbd0
+[W][15:56:31.412547] pw.conf      | [          conf.c: 1182 try_load_conf()] can't load config client.conf: No such file or directory
+[E][15:56:31.412575] pw.conf      | [          conf.c: 1215 pw_conf_load_conf_for_context()] can't load config client.conf: No such file or directory
+kpipewire_logging: Failed to create PipeWire context
+received error while creating the stream "Failed to create PipeWire context" Media monitor will not work.
+kf.solid.backends.udisks2: Failed enumerating UDisks2 objects: "org.freedesktop.DBus.Error.Disconnected"
+ "Not connected to D-Bus server"
+kf.solid.backends.udisks2: Failed enumerating UDisks2 objects: "org.freedesktop.DBus.Error.Disconnected"
+ "Not connected to D-Bus server"
+kf.solid.backends.udisks2: Failed enumerating UDisks2 objects: "org.freedesktop.DBus.Error.Disconnected"
+ "Not connected to D-Bus server"
+kf.solid.backends.udisks2: Failed enumerating UDisks2 objects: "org.freedesktop.DBus.Error.Disconnected"
+ "Not connected to D-Bus server"
+kf.solid.backends.udisks2: Failed enumerating UDisks2 objects: "org.freedesktop.DBus.Error.Disconnected"
+ "Not connected to D-Bus server"
+kf.solid.backends.udisks2: Failed enumerating UDisks2 objects: "org.freedesktop.DBus.Error.Disconnected"
+ "Not connected to D-Bus server"
+kf.solid.backends.udisks2: Failed enumerating UDisks2 objects: "org.freedesktop.DBus.Error.Disconnected"
+ "Not connected to D-Bus server"
+kf.solid.backends.udisks2: Failed enumerating UDisks2 objects: "org.freedesktop.DBus.Error.Disconnected"
+ "Not connected to D-Bus server"
+kf.solid.backends.udisks2: Failed enumerating UDisks2 objects: "org.freedesktop.DBus.Error.Disconnected"
+ "Not connected to D-Bus server"
+kf.solid.backends.udisks2: Failed enumerating UDisks2 objects: "org.freedesktop.DBus.Error.Disconnected"
+ "Not connected to D-Bus server"
+file:///workspace/qa-linux-22/package-pwa/sysroot/usr/share/plasma/plasmoids/org.kde.plasma.notifications/contents/ui/global/PulseAudio.qml:9:1: module "org.kde.plasma.private.volume" is not installed
+kf.solid.backends.udisks2: Failed enumerating UDisks2 objects: "org.freedesktop.DBus.Error.Disconnected"
+ "Not connected to D-Bus server"
+kf.solid.backends.udisks2: Failed enumerating UDisks2 objects: "org.freedesktop.DBus.Error.Disconnected"
+ "Not connected to D-Bus server"
+kf.solid.backends.udisks2: Failed enumerating UDisks2 objects: "org.freedesktop.DBus.Error.Disconnected"
+ "Not connected to D-Bus server"
+kf.solid.backends.udisks2: Failed enumerating UDisks2 objects: "org.freedesktop.DBus.Error.Disconnected"
+ "Not connected to D-Bus server"
+kf.solid.backends.udisks2: Failed enumerating UDisks2 objects: "org.freedesktop.DBus.Error.Disconnected"
+ "Not connected to D-Bus server"
+kf.solid.backends.udisks2: Failed enumerating UDisks2 objects: "org.freedesktop.DBus.Error.Disconnected"
+ "Not connected to D-Bus server"
+kf.solid.backends.udisks2: Failed enumerating UDisks2 objects: "org.freedesktop.DBus.Error.Disconnected"
+ "Not connected to D-Bus server"
+kf.solid.backends.udisks2: Failed enumerating UDisks2 objects: "org.freedesktop.DBus.Error.Disconnected"
+ "Not connected to D-Bus server"
+kf.solid.backends.udisks2: Failed enumerating UDisks2 objects: "org.freedesktop.DBus.Error.Disconnected"
+ "Not connected to D-Bus server"
+kf.solid.backends.udisks2: Failed enumerating UDisks2 objects: "org.freedesktop.DBus.Error.Disconnected"
+ "Not connected to D-Bus server"
+kf.solid.backends.udisks2: Failed enumerating UDisks2 objects: "org.freedesktop.DBus.Error.Disconnected"
+ "Not connected to D-Bus server"
+kf.solid.backends.udisks2: Failed enumerating UDisks2 objects: "org.freedesktop.DBus.Error.Disconnected"
+ "Not connected to D-Bus server"
+kf.solid.backends.udisks2: Failed enumerating UDisks2 objects: "org.freedesktop.DBus.Error.Disconnected"
+ "Not connected to D-Bus server"
+kf.solid.backends.udisks2: Failed enumerating UDisks2 objects: "org.freedesktop.DBus.Error.Disconnected"
+ "Not connected to D-Bus server"
+kf.solid.backends.udisks2: Failed enumerating UDisks2 objects: "org.freedesktop.DBus.Error.Disconnected"
+ "Not connected to D-Bus server"
+kf.solid.backends.udisks2: Failed enumerating UDisks2 objects: "org.freedesktop.DBus.Error.Disconnected"
+ "Not connected to D-Bus server"
+kf.solid.backends.udisks2: Failed enumerating UDisks2 objects: "org.freedesktop.DBus.Error.Disconnected"
+ "Not connected to D-Bus server"
+kf.solid.backends.udisks2: Failed enumerating UDisks2 objects: "org.freedesktop.DBus.Error.Disconnected"
+ "Not connected to D-Bus server"
+kf.solid.backends.udisks2: Failed enumerating UDisks2 objects: "org.freedesktop.DBus.Error.Disconnected"
+ "Not connected to D-Bus server"
+kf.solid.backends.udisks2: Failed enumerating UDisks2 objects: "org.freedesktop.DBus.Error.Disconnected"
+ "Not connected to D-Bus server"
+kf.solid.backends.udisks2: Failed enumerating UDisks2 objects: "org.freedesktop.DBus.Error.Disconnected"
+ "Not connected to D-Bus server"
+kf.solid.backends.udisks2: Failed enumerating UDisks2 objects: "org.freedesktop.DBus.Error.Disconnected"
+ "Not connected to D-Bus server"
+kf.solid.backends.udisks2: Failed enumerating UDisks2 objects: "org.freedesktop.DBus.Error.Disconnected"
+ "Not connected to D-Bus server"
+kf.solid.backends.udisks2: Failed enumerating UDisks2 objects: "org.freedesktop.DBus.Error.Disconnected"
+ "Not connected to D-Bus server"
+[W][15:56:36.163213] pw.conf      | [          conf.c: 1182 try_load_conf()] can't load config client.conf: No such file or directory
+[E][15:56:36.163418] pw.conf      | [          conf.c: 1215 pw_conf_load_conf_for_context()] can't load config client.conf: No such file or directory
+kpipewire_logging: Failed to create PipeWire context
+received error while creating the stream "Failed to create PipeWire context" Media monitor will not work.
+[W][15:56:40.950729] pw.conf      | [          conf.c: 1182 try_load_conf()] can't load config client.conf: No such file or directory
+[E][15:56:40.950754] pw.conf      | [          conf.c: 1215 pw_conf_load_conf_for_context()] can't load config client.conf: No such file or directory
+kpipewire_logging: Failed to create PipeWire context
+received error while creating the stream "Failed to create PipeWire context" Media monitor will not work.
+[W][15:56:45.951191] pw.conf      | [          conf.c: 1182 try_load_conf()] can't load config client.conf: No such file or directory
+[E][15:56:45.951226] pw.conf      | [          conf.c: 1215 pw_conf_load_conf_for_context()] can't load config client.conf: No such file or directory
+kpipewire_logging: Failed to create PipeWire context
+received error while creating the stream "Failed to create PipeWire context" Media monitor will not work.
+[W][15:56:50.951590] pw.conf      | [          conf.c: 1182 try_load_conf()] can't load config client.conf: No such file or directory
+[E][15:56:50.951633] pw.conf      | [          conf.c: 1215 pw_conf_load_conf_for_context()] can't load config client.conf: No such file or directory
+kpipewire_logging: Failed to create PipeWire context
+received error while creating the stream "Failed to create PipeWire context" Media monitor will not work.
+[W][15:56:55.970787] pw.conf      | [          conf.c: 1182 try_load_conf()] can't load config client.conf: No such file or directory
+[E][15:56:55.971002] pw.conf      | [          conf.c: 1215 pw_conf_load_conf_for_context()] can't load config client.conf: No such file or directory
+kpipewire_logging: Failed to create PipeWire context
+received error while creating the stream "Failed to create PipeWire context" Media monitor will not work.
+[W][15:57:00.950464] pw.conf      | [          conf.c: 1182 try_load_conf()] can't load config client.conf: No such file or directory
+[E][15:57:00.950534] pw.conf      | [          conf.c: 1215 pw_conf_load_conf_for_context()] can't load config client.conf: No such file or directory
+kpipewire_logging: Failed to create PipeWire context
+received error while creating the stream "Failed to create PipeWire context" Media monitor will not work.
+[W][15:57:05.951556] pw.conf      | [          conf.c: 1182 try_load_conf()] can't load config client.conf: No such file or directory
+[E][15:57:05.951738] pw.conf      | [          conf.c: 1215 pw_conf_load_conf_for_context()] can't load config client.conf: No such file or directory
+kpipewire_logging: Failed to create PipeWire context
+received error while creating the stream "Failed to create PipeWire context" Media monitor will not work.
+[W][15:57:10.952945] pw.conf      | [          conf.c: 1182 try_load_conf()] can't load config client.conf: No such file or directory
+[E][15:57:10.952998] pw.conf      | [          conf.c: 1215 pw_conf_load_conf_for_context()] can't load config client.conf: No such file or directory
+kpipewire_logging: Failed to create PipeWire context
+received error while creating the stream "Failed to create PipeWire context" Media monitor will not work.
+[W][15:57:15.953851] pw.conf      | [          conf.c: 1182 try_load_conf()] can't load config client.conf: No such file or directory
+[E][15:57:15.953932] pw.conf      | [          conf.c: 1215 pw_conf_load_conf_for_context()] can't load config client.conf: No such file or directory
+kpipewire_logging: Failed to create PipeWire context
+received error while creating the stream "Failed to create PipeWire context" Media monitor will not work.
+[W][15:57:20.955893] pw.conf      | [          conf.c: 1182 try_load_conf()] can't load config client.conf: No such file or directory
+[E][15:57:20.956014] pw.conf      | [          conf.c: 1215 pw_conf_load_conf_for_context()] can't load config client.conf: No such file or directory
+kpipewire_logging: Failed to create PipeWire context
+received error while creating the stream "Failed to create PipeWire context" Media monitor will not work.
+[W][15:57:25.951171] pw.conf      | [          conf.c: 1182 try_load_conf()] can't load config client.conf: No such file or directory
+[E][15:57:25.951214] pw.conf      | [          conf.c: 1215 pw_conf_load_conf_for_context()] can't load config client.conf: No such file or directory
+kpipewire_logging: Failed to create PipeWire context
+received error while creating the stream "Failed to create PipeWire context" Media monitor will not work.
+[W][15:57:30.969413] pw.conf      | [          conf.c: 1182 try_load_conf()] can't load config client.conf: No such file or directory
+[E][15:57:30.969629] pw.conf      | [          conf.c: 1215 pw_conf_load_conf_for_context()] can't load config client.conf: No such file or directory
+kpipewire_logging: Failed to create PipeWire context
+received error while creating the stream "Failed to create PipeWire context" Media monitor will not work.
+[W][15:57:35.977931] pw.conf      | [          conf.c: 1182 try_load_conf()] can't load config client.conf: No such file or directory
+[E][15:57:35.978190] pw.conf      | [          conf.c: 1215 pw_conf_load_conf_for_context()] can't load config client.conf: No such file or directory
+kpipewire_logging: Failed to create PipeWire context
+received error while creating the stream "Failed to create PipeWire context" Media monitor will not work.
+[W][15:57:40.952661] pw.conf      | [          conf.c: 1182 try_load_conf()] can't load config client.conf: No such file or directory
+[E][15:57:40.952733] pw.conf      | [          conf.c: 1215 pw_conf_load_conf_for_context()] can't load config client.conf: No such file or directory
+kpipewire_logging: Failed to create PipeWire context
+received error while creating the stream "Failed to create PipeWire context" Media monitor will not work.
+[W][15:57:45.956035] pw.conf      | [          conf.c: 1182 try_load_conf()] can't load config client.conf: No such file or directory
+[E][15:57:45.956109] pw.conf      | [          conf.c: 1215 pw_conf_load_conf_for_context()] can't load config client.conf: No such file or directory
+kpipewire_logging: Failed to create PipeWire context
+received error while creating the stream "Failed to create PipeWire context" Media monitor will not work.
+[W][15:57:50.956339] pw.conf      | [          conf.c: 1182 try_load_conf()] can't load config client.conf: No such file or directory
+[E][15:57:50.958327] pw.conf      | [          conf.c: 1215 pw_conf_load_conf_for_context()] can't load config client.conf: No such file or directory
+kpipewire_logging: Failed to create PipeWire context
+received error while creating the stream "Failed to create PipeWire context" Media monitor will not work.
+[W][15:57:57.204739] pw.conf      | [          conf.c: 1182 try_load_conf()] can't load config client.conf: No such file or directory
+[E][15:57:57.206805] pw.conf      | [          conf.c: 1215 pw_conf_load_conf_for_context()] can't load config client.conf: No such file or directory
+kpipewire_logging: Failed to create PipeWire context
+received error while creating the stream "Failed to create PipeWire context" Media monitor will not work.
+[W][15:58:02.342817] pw.conf      | [          conf.c: 1182 try_load_conf()] can't load config client.conf: No such file or directory
+[E][15:58:02.343097] pw.conf      | [          conf.c: 1215 pw_conf_load_conf_for_context()] can't load config client.conf: No such file or directory
+kpipewire_logging: Failed to create PipeWire context
+received error while creating the stream "Failed to create PipeWire context" Media monitor will not work.
+[W][15:58:07.097224] pw.conf      | [          conf.c: 1182 try_load_conf()] can't load config client.conf: No such file or directory
+[E][15:58:07.097268] pw.conf      | [          conf.c: 1215 pw_conf_load_conf_for_context()] can't load config client.conf: No such file or directory
+kpipewire_logging: Failed to create PipeWire context
+received error while creating the stream "Failed to create PipeWire context" Media monitor will not work.
+[W][15:58:12.307287] pw.conf      | [          conf.c: 1182 try_load_conf()] can't load config client.conf: No such file or directory
+[E][15:58:12.308298] pw.conf      | [          conf.c: 1215 pw_conf_load_conf_for_context()] can't load config client.conf: No such file or directory
+kpipewire_logging: Failed to create PipeWire context
+received error while creating the stream "Failed to create PipeWire context" Media monitor will not work.
+[W][15:58:17.061427] pw.conf      | [          conf.c: 1182 try_load_conf()] can't load config client.conf: No such file or directory
+[E][15:58:17.062146] pw.conf      | [          conf.c: 1215 pw_conf_load_conf_for_context()] can't load config client.conf: No such file or directory
+kpipewire_logging: Failed to create PipeWire context
+received error while creating the stream "Failed to create PipeWire context" Media monitor will not work.
+file:///workspace/qa-linux-22/package-pwa/sysroot/usr/share/plasma/plasmoids/org.kde.plasma.notifications/contents/ui/global/Globals.qml:130: TypeError: Cannot read property 'screenGeometry' of null
+file:///workspace/qa-linux-22/package-pwa/sysroot/usr/share/plasma/plasmoids/org.kde.plasma.notifications/contents/ui/global/Globals.qml:260: TypeError: Cannot read property 'plasmoid' of undefined

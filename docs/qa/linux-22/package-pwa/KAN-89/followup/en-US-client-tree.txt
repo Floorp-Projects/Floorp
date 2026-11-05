@@ -1,0 +1,8 @@
+
+xwininfo: Window id: 0x140000d "KAN89 en-US dedicated — Ablaze Floorp"
+
+  Root window id: 0x21f (the root window) (has no name)
+  Parent window id: 0xe0004c (has no name)
+     2 children:
+     0x1400007 (has no name): ()  1280x856+0+0  +0+0
+     0x140000e (has no name): ()  1x1+-1+-1  +-1+-1

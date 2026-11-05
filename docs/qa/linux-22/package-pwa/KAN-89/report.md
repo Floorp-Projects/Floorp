@@ -1,3 +1,9 @@
+# KAN-89 — current focused official Flatpak/KDE X11 result
+
+Accurate actual-client probes now completed in en-US/ja/es-CL: main _NET_WM_ICON absent, normal sandbox6/exit0. Final Plasma taskbar matches Floorp reference within one channel level after normal desktop Exec-prefix correction; Alt+Tab remains the same generic X image across locales. The reported Firefox logo is not reproduced, but complete expected display is not qualified due unresolved KWin desktop association and original Manjaro/KDE6.7/host Flatpak conditions. No duplicate or verified PR3030 fix is established. Jira10321. See [focused report](followup/report.md), actual client properties and reference/screenshot comparisons. No product/PR code changes.
+
+## Historical earlier probe — main-window measurement gap superseded
+
 # KAN-89 / GitHub #2713 — Flatpak branding path, KDE/Xorg condition remains
 
 Source984509d2053be7bae9027133bda7259cd706b208, official Flatpak12.21.1/Gecko159.0.1 app ab3c23d5f3a32863918263c197b483e37d9ed78a6bb9d00a1657e31dc5e04621/runtime26.08. Actual Debian13.6/Xvfb X11 runs used a new dedicated Flatpak HOME/profile and normal isolated session D-Bus; sandbox preference6 and signature requirements retained.

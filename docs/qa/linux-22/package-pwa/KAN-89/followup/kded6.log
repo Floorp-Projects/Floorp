@@ -1,0 +1,12 @@
+QDBusObjectPath: invalid path "/modules/oom-notifier"
+kf.dbusaddons: The kded module name "oom-notifier" is invalid!
+kcm_touchpad: Using X11 backend
+kf.solid.backends.udisks2: Failed enumerating UDisks2 objects: "org.freedesktop.DBus.Error.Disconnected"
+ "Not connected to D-Bus server"
+kf.solid.backends.udisks2: Failed enumerating UDisks2 objects: "org.freedesktop.DBus.Error.Disconnected"
+ "Not connected to D-Bus server"
+org.kde.colorcorrectlocationupdater: Geolocator stopped
+Could not load a session backend. Session management operations such as shutdown will not be operational. This is a setup issue.
+QDBusObjectPath: invalid path "/modules/plasma-session-shortcuts"
+kf.dbusaddons: The kded module name "plasma-session-shortcuts" is invalid!
+kf.kded: /usr/lib/x86_64-linux-gnu/libexec/kf6/kconf_update returned -2

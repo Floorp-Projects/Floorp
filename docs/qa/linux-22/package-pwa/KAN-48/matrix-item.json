@@ -2,37 +2,40 @@
   "key": "KAN-48",
   "github": "https://github.com/Floorp-Projects/Floorp/issues/2800",
   "sourceSha": "984509d2053be7bae9027133bda7259cd706b208",
-  "productVersion": "Floorp12.21.1 / Gecko159.0.1 / BuildID20261103153232",
-  "environment": "Debian13; actual nested KWin6.3.6 Wayland/Qt6.8.2/Plasma; outer XvfbX11; isolated session bus; incomplete task model/portal/PipeWire",
-  "testCommand": "python3 pwa_ui_probe.py --port 2855 --fixture-port 8775 --out KAN-48/ui-create; generated Alpha launcher cold start with --name and --start-ssb; KWin scripting window list/getWindowInfo; kbuildsycoca with Plasma menu prefix",
-  "result": "actual-ui-and-cold-app-id-association-verified; original-wrong-taskbar-icon-unqualified; nested-plasma-taskmodel-not-listing-pwa; browser-first-class-inheritance-observed-and-tracked-separately-in-KAN49",
+  "productVersion": "Floorp12.21.1 / Gecko159.0.1",
+  "testedDateLocal": "2026-11-06",
+  "timezone": "Asia/Tokyo",
+  "environment": "Debian13.6; actual KWin6.3.6 nested Wayland/Plasma on Xvfb91; ordinary session DBus; standard KWrite control; task model recovered by Exec-prefix metadata correction; incomplete full system portal/hardware",
+  "testCommand": "python3 KAN-48/followup/session.py start --baseline; standard KWrite control; session.py repair-prefix; actual UI pwa_ui_probe.py --port2885; python3 KAN-48/followup/cold_icons.py",
+  "result": "taskmodel infrastructure cause identified and resolved; official cold Alpha/Beta app_id and launcher match; actual taskbar32x32 each all1024RGBA pixels equal PWA PNG; original wrong-Floorp-icon not reproduced in this condition; shared browser-first identity is separately related to PR3032",
+  "classification": "environment gap resolved; original symptom not reproduced in current condition, not declared fixed",
   "remainingConditions": [
-    "Working Plasma task model and compositor window-management integration",
-    "Rendered window/taskbar icon pixel comparison",
-    "CachyOS/KDE6.7.5/pacman original package",
-    "Complete portal/system service/PipeWire desktop"
+    "Original CachyOS/KDE6.7.5/pacman product and actual reporter sites/icon formats",
+    "Original full desktop/system portal/hardware context"
   ],
-  "existingPr": null,
+  "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/3032",
+  "prRelation": "verified shared-class/grouping comparison only; not a verified fix of original matching-app_id/wrong-icon symptom",
   "newPr": null,
-  "evidence": [
-    "KAN-48/report.md",
-    "KAN-48/ui-create/result.json",
-    "KAN-48/cold-alpha-windows.json",
-    "KAN-48/cold-alpha-product.json",
-    "KAN-48/kwin-alpha-info.txt",
-    "KAN-48/alpha-cold-wayland.log",
-    "KAN-48/plasma-layout.txt",
-    "KAN-48/desktop-filter-observation.json",
-    "KAN-48/task-filter-config.json",
-    "KAN-48/kbuildsycoca-plasma-prefix.log",
-    "KAN-48/window-snapshot.js",
-    "KAN-48/observe-kde.sh",
-    "KAN-48/normal-flags-observation.json",
-    "KAN-48/normal-flags-desktop.png"
-  ],
-  "jiraCommentId": "10292",
-  "jiraUrl": "https://floorp-projects.atlassian.net/browse/KAN-48",
-  "jiraFollowupCommentIds": [
+  "duplicateOf": null,
+  "jiraCommentId": "10320",
+  "previousJiraCommentIds": [
+    "10292",
     "10301"
+  ],
+  "evidence": [
+    "KAN-48/followup/report.md",
+    "KAN-48/followup/subject.json",
+    "KAN-48/followup/prefix-repair.json",
+    "KAN-48/followup/standard-before.png",
+    "KAN-48/followup/standard-after.png",
+    "KAN-48/followup/protocol-authorization-excerpt.txt",
+    "KAN-48/followup/plasma-window-protocol-excerpt.txt",
+    "KAN-48/followup/cold-icon-results.json",
+    "KAN-48/followup/alpha-cold-taskbar.png",
+    "KAN-48/followup/beta-cold-taskbar.png",
+    "KAN-48/followup/candidate-taskbar-results.json",
+    "KAN-48/followup/candidate-ui-taskbar.png",
+    "KAN-48/followup/session.py",
+    "KAN-48/followup/cold_icons.py"
   ]
 }

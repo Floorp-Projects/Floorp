@@ -1,0 +1,4 @@
+kbuildsycoca6 running...
+kf.service.sycoca: Service type not found: "application/x-spkac"
+kf.service.sycoca: Service type not found: "application/x-spkac+base64"
+kf.service.sycoca: Service type not found: "application/x-pem-file"

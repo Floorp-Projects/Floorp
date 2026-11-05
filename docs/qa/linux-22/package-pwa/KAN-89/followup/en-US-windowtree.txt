@@ -1,0 +1,62 @@
+
+xwininfo: Window id: 0x21f (the root window) (has no name)
+
+  Root window id: 0x21f (the root window) (has no name)
+  Parent window id: 0x0 (none)
+     30 children:
+     0x140001a "Floorp": ()  10x10+-100+-100  +-100+-100
+     0x1400001 "Floorp": ("one.ablaze.floorp" "Floorp")  10x10+10+10  +10+10
+     0x1000062 "plasmashell": ("plasmashell" "plasmashell")  568x458+704+382  +704+382
+     0x1000060 "Clipboard Popup": ("plasmashell" "plasmashell")  108x108+0+0  +0+0
+     0x100005e "plasmashell": ("plasmashell" "plasmashell")  440x440+0+416  +0+416
+     0x100005c "plasmashell": ("plasmashell" "plasmashell")  160x160+0+0  +0+0
+     0x100004a "plasmashell": ("plasmashell" "plasmashell")  655x516+7+333  +7+333
+     0xe0002b (has no name): ()  1280x856+0+0  +0+0
+     0x1000016 (has no name): ()  1x1+0+0  +0+0
+     0x1000014 "plasmashell": ("plasmashell" "plasmashell")  160x160+0+0  +0+0
+     0x1000012 "plasmashell": ()  1x1+0+0  +0+0
+     0x1000005 "Qt Selection Owner for plasmashell": ()  3x3+0+0  +0+0
+     0xe00020 (has no name): ()  1x1+0+0  +0+0
+     0xe0001f (has no name): ()  1x1+0+0  +0+0
+     0xe00011 (has no name): ()  1x1+0+0  +0+0
+     0xe0000f (has no name): ()  1x1+-1+-1  +-1+-1
+     0xe0000e (has no name): ()  1x1+0+0  +0+0
+     0xe00005 "Qt Selection Owner for kwin_x11": ()  3x3+0+0  +0+0
+     0x600005 "Qt Selection Owner for kglobalacceld": ()  3x3+0+0  +0+0
+     0x400006 (has no name): ()  1x1+0+0  +0+0
+     0x200005 "Qt Selection Owner for kded6": ()  3x3+0+0  +0+0
+     0x400005 "Qt Selection Owner for kactivitymanagerd": ()  3x3+0+0  +0+0
+     0xe00010 "KWin": ()  1x1+0+0  +0+0
+     0xe0001d (has no name): ()  8x8+0+0  +0+0
+     0xe0001e (has no name): ()  36x36+0+0  +0+0
+     0xe00035 (has no name): ()  1280x60+0+840  +0+840
+        1 child:
+        0xe00036 (has no name): ()  1280x60+0+0  +0+840
+           1 child:
+           0x100001e "plasmashell": ("plasmashell" "plasmashell")  1280x60+0+0  +0+840
+     0xe0004b (has no name): ()  1280x856+0+0  +0+0
+        1 child:
+        0xe0004c (has no name): ()  1280x856+0+0  +0+0
+           1 child:
+           0x140000d "KAN89 en-US dedicated — Ablaze Floorp": ("Navigator" "floorp")  1280x856+0+0  +0+0
+              2 children:
+              0x1400007 (has no name): ()  1280x856+0+0  +0+0
+              0x140000e (has no name): ()  1x1+-1+-1  +-1+-1
+     0xe00044 (has no name): ()  410x107+435+379  +435+379
+     0xe00041 (has no name): ()  390x97+445+379  +445+379
+        1 child:
+        0xe00042 (has no name): ()  388x68+1+28  +446+407
+           1 child:
+           0x1200024 "KAN89 independent control": ("xmessage" "Xmessage")  388x68+0+0  +446+407
+              1 child:
+              0x1200025 (has no name): ()  388x68+0+0  +446+407
+                 2 children:
+                 0x1200029 (has no name): ()  378x26+4+4  +450+411
+                    1 child:
+                    0x120002a (has no name): ()  14x26+-1+-1  +450+411
+                 0x1200026 (has no name): ()  47x25+4+37  +450+444
+     0xe00027 (has no name): ()  1280x900+0+0  +0+0
+        1 child:
+        0xe00028 (has no name): ()  1280x900+0+0  +0+0
+           1 child:
+           0x1000010 "Desktop @ QRect(0,0 1280x900) ": ("plasmashell" "plasmashell")  1280x900+0+0  +0+0

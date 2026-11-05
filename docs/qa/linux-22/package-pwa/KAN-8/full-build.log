@@ -43,9 +43,9 @@ Downloading https://github.com/Floorp-Projects/Floorp/releases/download/v12.21.1
 Initializing build dir
 Committing stage init to cache
 Starting build of one.ablaze.floorp
-========================================================================
+KWin section
 Building module floorp in /workspace/.flatpak-builder/build/floorp-1
-========================================================================
+KWin section
 Running: install -Dm644 one.ablaze.floorp.appdata.xml -t /app/share/metainfo/
 Running: mkdir -p /app/lib/ffmpeg
 Running: mkdir -p /app/etc/floorp

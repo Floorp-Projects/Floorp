@@ -1,0 +1,3 @@
+kf.service.sycoca: Service type not found: "application/x-pem-file"
+kf.service.sycoca: Service type not found: "application/x-spkac+base64"
+kf.service.sycoca: Service type not found: "application/x-spkac"

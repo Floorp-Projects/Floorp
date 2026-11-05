@@ -1,0 +1,41 @@
+[
+  {
+    "locale": "en-US",
+    "cropRect": [
+      222,
+      862,
+      254,
+      894
+    ],
+    "exactRGBMatchToFloorpDefault32OnSampledBackground": false,
+    "meanAbsoluteChannelDifference": 0.015950520833333332,
+    "maximumChannelDifference": 1,
+    "note": "taskbar surface differs from KWin AltTab tile; small alpha compositing differences are not exact PNG identity"
+  },
+  {
+    "locale": "ja",
+    "cropRect": [
+      222,
+      862,
+      254,
+      894
+    ],
+    "exactRGBMatchToFloorpDefault32OnSampledBackground": false,
+    "meanAbsoluteChannelDifference": 0.015950520833333332,
+    "maximumChannelDifference": 1,
+    "note": "taskbar surface differs from KWin AltTab tile; small alpha compositing differences are not exact PNG identity"
+  },
+  {
+    "locale": "es-CL",
+    "cropRect": [
+      222,
+      862,
+      254,
+      894
+    ],
+    "exactRGBMatchToFloorpDefault32OnSampledBackground": false,
+    "meanAbsoluteChannelDifference": 0.015950520833333332,
+    "maximumChannelDifference": 1,
+    "note": "taskbar surface differs from KWin AltTab tile; small alpha compositing differences are not exact PNG identity"
+  }
+]

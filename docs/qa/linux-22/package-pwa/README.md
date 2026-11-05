@@ -8,9 +8,9 @@ All seven assigned issues received actual product probes. The original Bazzite/B
 - KAN-8: official Flatpak profile switch reproduced; exact existing PR198 helper passes six normal-shutdown comparisons and 9 unit tests. Pinned manifest full candidate build/export/install and three normal permission cycles also pass; Bazzite and signed distribution qualification remain.
 - KAN-17: four official Floorp/Firefox font-present Flatpak comparisons render Japanese; original Bluefin divergence remains unresolved.
 - KAN-23: signed-pack/theme wrong icon reproduced; Draft3030, generated production manifest verified, real-product locale comparisons plus repository assertion-harness matrix.
-- KAN-48: actual nested KDE UI/cold app_id association verified; running-PWA Plasma task model unavailable, so original taskbar icon result is unqualified.
+- KAN-48: focused follow-up identifies and resolves the Plasma task-model prefix-registration cause; official cold PWA taskbar icons match generated PNGs in all1024 pixels. Original CachyOS/KDE6.7/site conditions remain.
 - KAN-49: current shared-class defect reproduced and candidate improves three actual launch orders; original first-PWA inheritance wording and full Manjaro/KDE qualification remain separate. Draft3032.
-- KAN-89: actual Flatpak legacy branding path observed; main icon property and original KDE/Xorg task switching still unqualified. Related3030 is not a confirmed duplicate disposition.
+- KAN-89: focused official Flatpak/KDE X11 three-locale main-client probes complete: _NET_WM_ICON absent; taskbar Floorp reference matches within one channel level; Alt+Tab remains genericX. Original Manjaro association and reported Firefox-logo cause remain unqualified; no duplicate/verified3030fix. Related3030 is not a confirmed duplicate disposition.
 - KAN-96: actual current product URL-bar/menu creation and webIsolated actor work; original CachyOS/safe-mode/external-site matrix remains.
 
 ## Reproduction prerequisites
@@ -30,3 +30,7 @@ Raw logs remain in the local dedicated QA directory. Published text log copies n
 No merges, releases or Done transitions. No messages to other chats. No user action is currently required for the completed checks; remaining original-desktop conditions are listed explicitly per issue.
 
 Full KAN-8 package reproduction requires cloning the full canonical Flathub repository into KAN-8/flathub and fetching pull/198/head pinned to d9aa24d58fe633bf765721f95b4ac13132ee397e before running full-build-exec.py. The published flathub subtree contains only the helper/unit-test subset; it is not a complete source checkout. See KAN-8/full-package-report.md for unmodified-manifest source/deployed hashes, unsigned-test-package scope, FUSE/AppStream dependency-path recovery and nine actual normal-exit product runs.
+
+## Focused KAN-48/89 follow-up (2026-11-06 JST)
+
+Read each issue followup/report.md and matrix.json. KAN-48 now has a standard KWrite before/after control, actual KWin denial/authorization and Plasma window-management binding, unchanged original interface grants with only desktop Exec prefix repaired, and actual rendered official/candidate PWA icons. KAN-89 now has authoritative client-list/WM_STATE identification and en-US/ja/es-CL known-theme/known-PNG taskbar/AltTab measurements. The main-window probe gap is resolved; the remaining generic AltTab/empty KWin desktopFileName and original Manjaro/package context are explicit. No product code or PR3030/3032 content changed. Jira10320/10321. All other issue results remain as previously recorded.

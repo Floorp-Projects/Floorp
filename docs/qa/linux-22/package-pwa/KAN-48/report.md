@@ -1,3 +1,9 @@
+# KAN-48 — current follow-up result
+
+The earlier missing Plasma task-model capability is resolved with a standard Exec-prefix registration correction. In the repaired actual KWin Wayland session, official-product cold Alpha/Beta icons each match their generated32x32 PWA image in all1024 pixels. The original correct-app_id/wrong-Floorp-icon symptom is not reproduced in this current Debian/KWin6.3.6 condition; original CachyOS/KDE/site conditions remain. PR3032 relates to a distinct shared-class warm-start condition, not a verified fix of original#2800. Jira10320. See [focused report](followup/report.md) and followup/matrix.json. No product/PR code changes.
+
+## Historical prior run — task-model limitation superseded
+
 # KAN-48 / GitHub #2800 — actual nested KDE Wayland probe
 
 2026-11-05. **Partial product verification; original wrong-Floorp-taskbar-icon symptom remains unqualified because the nested Plasma task model is not listing the actual running PWA.** Do not classify the infrastructure's generic pinned launcher icons as the reported product defect or call the original issue not reproducible.

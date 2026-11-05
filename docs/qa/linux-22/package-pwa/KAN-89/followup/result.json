@@ -1,0 +1,248 @@
+[
+  {
+    "launchMethod": "standard KDE kstart --desktopfile one.ablaze.floorp + official Flatpak command; original desktop metadata unchanged",
+    "command": [
+      "/workspace/qa-linux-22/package-pwa/sysroot/usr/bin/kstart",
+      "--desktopfile",
+      "one.ablaze.floorp",
+      "--",
+      "env",
+      "XDG_DATA_HOME=/workspace/qa-linux-22/package-pwa/flatpak-home/.local/share",
+      "FLATPAK_BWRAP=/usr/bin/bwrap",
+      "FLATPAK_DBUSPROXY=/workspace/qa-linux-22/package-pwa/sysroot/usr/bin/xdg-dbus-proxy",
+      "DBUS_SYSTEM_BUS_ADDRESS=unix:path=/workspace/qa-linux-22/package-pwa/KAN-89/followup/system-probe-bus",
+      "/workspace/qa-linux-22/package-pwa/sysroot/usr/bin/flatpak",
+      "run",
+      "--user",
+      "--env=GDK_BACKEND=x11",
+      "--env=MOZ_ENABLE_WAYLAND=0",
+      "--env=MOZ_REMOTE_ALLOW_SYSTEM_ACCESS=1",
+      "--env=MOZ_MARIONETTE_PREF_STATE_ACROSS_RESTARTS={\"marionette.port\": 2889}",
+      "one.ablaze.floorp",
+      "--no-remote",
+      "--profile",
+      "/workspace/qa-linux-22/package-pwa/KAN-89/followup/home/.var/app/one.ablaze.floorp/config/qa-profile",
+      "--marionette",
+      "http://127.0.0.1:8889/en-US"
+    ],
+    "locale": "en-US",
+    "completed": true,
+    "display": ":90",
+    "windowIdentification": "dedicated fixture title + windowtree + class/PID/geometry, guarded actual ProfD",
+    "input": "synthetic xdotool Alt+Tab; not physical input",
+    "product": {
+      "profile": "/workspace/qa-linux-22/package-pwa/KAN-89/followup/home/.var/app/one.ablaze.floorp/config/qa-profile",
+      "executable": "/app/lib/floorp/floorp",
+      "version": "159.0.1",
+      "pid": 2,
+      "locale": "en-US",
+      "brand": "Floorp",
+      "sandbox": 6,
+      "sandboxDisableEnv": false,
+      "startupIdPresent": false,
+      "title": "KAN89 en-US dedicated — Ablaze Floorp",
+      "screenX": 0,
+      "screenY": 0,
+      "outerWidth": 1280,
+      "outerHeight": 856,
+      "outerWindowID": "undefined",
+      "nativeHandle": "0x7f1b00782160"
+    },
+    "installed": [
+      {
+        "id": "langpack-ja@firefox.mozilla.org",
+        "signedState": 2,
+        "active": true
+      },
+      {
+        "id": "langpack-es-CL@firefox.mozilla.org",
+        "signedState": 2,
+        "active": true
+      }
+    ],
+    "packs": [
+      {
+        "id": "langpack-ja@firefox.mozilla.org",
+        "signedState": 2,
+        "active": true
+      },
+      {
+        "id": "langpack-es-CL@firefox.mozilla.org",
+        "signedState": 2,
+        "active": true
+      }
+    ],
+    "kwinScriptLoad": "0\n",
+    "kwinScriptRun": "",
+    "windowID": "0x140000d",
+    "titleCandidateIDs": [
+      "20971533"
+    ],
+    "clientListMatch": true,
+    "geometry": "WINDOW=20971533\nX=0\nY=0\nWIDTH=1280\nHEIGHT=856\nSCREEN=0\n",
+    "iconPropertyPresent": false,
+    "icons": [],
+    "quit": {
+      "cause": "shutdown",
+      "forced": false,
+      "in_app": true
+    },
+    "exitCode": 0
+  },
+  {
+    "launchMethod": "standard KDE kstart --desktopfile one.ablaze.floorp + official Flatpak command; original desktop metadata unchanged",
+    "command": [
+      "/workspace/qa-linux-22/package-pwa/sysroot/usr/bin/kstart",
+      "--desktopfile",
+      "one.ablaze.floorp",
+      "--",
+      "env",
+      "XDG_DATA_HOME=/workspace/qa-linux-22/package-pwa/flatpak-home/.local/share",
+      "FLATPAK_BWRAP=/usr/bin/bwrap",
+      "FLATPAK_DBUSPROXY=/workspace/qa-linux-22/package-pwa/sysroot/usr/bin/xdg-dbus-proxy",
+      "DBUS_SYSTEM_BUS_ADDRESS=unix:path=/workspace/qa-linux-22/package-pwa/KAN-89/followup/system-probe-bus",
+      "/workspace/qa-linux-22/package-pwa/sysroot/usr/bin/flatpak",
+      "run",
+      "--user",
+      "--env=GDK_BACKEND=x11",
+      "--env=MOZ_ENABLE_WAYLAND=0",
+      "--env=MOZ_REMOTE_ALLOW_SYSTEM_ACCESS=1",
+      "--env=MOZ_MARIONETTE_PREF_STATE_ACROSS_RESTARTS={\"marionette.port\": 2889}",
+      "one.ablaze.floorp",
+      "--no-remote",
+      "--profile",
+      "/workspace/qa-linux-22/package-pwa/KAN-89/followup/home/.var/app/one.ablaze.floorp/config/qa-profile",
+      "--marionette",
+      "http://127.0.0.1:8889/ja"
+    ],
+    "locale": "ja",
+    "completed": true,
+    "display": ":90",
+    "windowIdentification": "dedicated fixture title + windowtree + class/PID/geometry, guarded actual ProfD",
+    "input": "synthetic xdotool Alt+Tab; not physical input",
+    "product": {
+      "profile": "/workspace/qa-linux-22/package-pwa/KAN-89/followup/home/.var/app/one.ablaze.floorp/config/qa-profile",
+      "executable": "/app/lib/floorp/floorp",
+      "version": "159.0.1",
+      "pid": 2,
+      "locale": "ja",
+      "brand": "Firefox",
+      "sandbox": 6,
+      "sandboxDisableEnv": false,
+      "startupIdPresent": false,
+      "title": "KAN89 ja dedicated — Ablaze Floorp",
+      "screenX": 0,
+      "screenY": 0,
+      "outerWidth": 1280,
+      "outerHeight": 856,
+      "outerWindowID": "undefined",
+      "nativeHandle": "0x7f025e066160"
+    },
+    "packs": [
+      {
+        "id": "langpack-ja@firefox.mozilla.org",
+        "signedState": 2,
+        "active": true
+      },
+      {
+        "id": "langpack-es-CL@firefox.mozilla.org",
+        "signedState": 2,
+        "active": true
+      }
+    ],
+    "kwinScriptLoad": "0\n",
+    "kwinScriptRun": "",
+    "windowID": "0x140000d",
+    "titleCandidateIDs": [
+      "20971533"
+    ],
+    "clientListMatch": true,
+    "geometry": "WINDOW=20971533\nX=0\nY=0\nWIDTH=1280\nHEIGHT=856\nSCREEN=0\n",
+    "iconPropertyPresent": false,
+    "icons": [],
+    "quit": {
+      "cause": "shutdown",
+      "forced": false,
+      "in_app": true
+    },
+    "exitCode": 0
+  },
+  {
+    "launchMethod": "standard KDE kstart --desktopfile one.ablaze.floorp + official Flatpak command; original desktop metadata unchanged",
+    "command": [
+      "/workspace/qa-linux-22/package-pwa/sysroot/usr/bin/kstart",
+      "--desktopfile",
+      "one.ablaze.floorp",
+      "--",
+      "env",
+      "XDG_DATA_HOME=/workspace/qa-linux-22/package-pwa/flatpak-home/.local/share",
+      "FLATPAK_BWRAP=/usr/bin/bwrap",
+      "FLATPAK_DBUSPROXY=/workspace/qa-linux-22/package-pwa/sysroot/usr/bin/xdg-dbus-proxy",
+      "DBUS_SYSTEM_BUS_ADDRESS=unix:path=/workspace/qa-linux-22/package-pwa/KAN-89/followup/system-probe-bus",
+      "/workspace/qa-linux-22/package-pwa/sysroot/usr/bin/flatpak",
+      "run",
+      "--user",
+      "--env=GDK_BACKEND=x11",
+      "--env=MOZ_ENABLE_WAYLAND=0",
+      "--env=MOZ_REMOTE_ALLOW_SYSTEM_ACCESS=1",
+      "--env=MOZ_MARIONETTE_PREF_STATE_ACROSS_RESTARTS={\"marionette.port\": 2889}",
+      "one.ablaze.floorp",
+      "--no-remote",
+      "--profile",
+      "/workspace/qa-linux-22/package-pwa/KAN-89/followup/home/.var/app/one.ablaze.floorp/config/qa-profile",
+      "--marionette",
+      "http://127.0.0.1:8889/es-CL"
+    ],
+    "locale": "es-CL",
+    "completed": true,
+    "display": ":90",
+    "windowIdentification": "dedicated fixture title + windowtree + class/PID/geometry, guarded actual ProfD",
+    "input": "synthetic xdotool Alt+Tab; not physical input",
+    "product": {
+      "profile": "/workspace/qa-linux-22/package-pwa/KAN-89/followup/home/.var/app/one.ablaze.floorp/config/qa-profile",
+      "executable": "/app/lib/floorp/floorp",
+      "version": "159.0.1",
+      "pid": 2,
+      "locale": "es-CL",
+      "brand": "Firefox",
+      "sandbox": 6,
+      "sandboxDisableEnv": false,
+      "startupIdPresent": false,
+      "title": "KAN89 es-CL dedicated — Ablaze Floorp",
+      "screenX": 0,
+      "screenY": 0,
+      "outerWidth": 1280,
+      "outerHeight": 856,
+      "outerWindowID": "undefined",
+      "nativeHandle": "0x7f39211fe300"
+    },
+    "packs": [
+      {
+        "id": "langpack-ja@firefox.mozilla.org",
+        "signedState": 2,
+        "active": true
+      },
+      {
+        "id": "langpack-es-CL@firefox.mozilla.org",
+        "signedState": 2,
+        "active": true
+      }
+    ],
+    "kwinScriptLoad": "0\n",
+    "kwinScriptRun": "",
+    "windowID": "0x140000d",
+    "titleCandidateIDs": [
+      "20971533"
+    ],
+    "clientListMatch": true,
+    "geometry": "WINDOW=20971533\nX=0\nY=0\nWIDTH=1280\nHEIGHT=856\nSCREEN=0\n",
+    "iconPropertyPresent": false,
+    "icons": [],
+    "quit": {
+      "cause": "shutdown",
+      "forced": false,
+      "in_app": true
+    },
+    "exitCode": 0
+  }
+]

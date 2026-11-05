@@ -1,0 +1,4 @@
+WM_CLASS(STRING) = "Navigator", "floorp"
+_NET_WM_NAME(UTF8_STRING) = "KAN89 es-CL dedicated — Ablaze Floorp"
+_NET_WM_PID:  not found.
+_NET_WM_ICON:  not found.

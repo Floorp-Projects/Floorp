@@ -1,0 +1,113 @@
+[
+  {
+    "locale": "en-US",
+    "windows": [
+      {
+        "caption": "Desktop @ QRect(0,0 1280x900)",
+        "resourceClass": "plasmashell",
+        "resourceName": "plasmashell",
+        "desktopFileName": "org.kde.plasmashell",
+        "pid": 95426,
+        "internalId": "{04857881-588f-41ea-bff8-ce53da8bc18b}"
+      },
+      {
+        "caption": "plasmashell",
+        "resourceClass": "plasmashell",
+        "resourceName": "plasmashell",
+        "desktopFileName": "org.kde.plasmashell",
+        "pid": 95426,
+        "internalId": "{19fd9703-95e3-4867-bf83-9dee48f30ae3}"
+      },
+      {
+        "caption": "KAN89 independent control",
+        "resourceClass": "Xmessage",
+        "resourceName": "xmessage",
+        "desktopFileName": "",
+        "pid": 0,
+        "internalId": "{b05fd8f5-c069-4078-b662-a5b1e2e96180}"
+      },
+      {
+        "caption": "KAN89 en-US dedicated \u2014 Ablaze Floorp",
+        "resourceClass": "floorp",
+        "resourceName": "Navigator",
+        "desktopFileName": "",
+        "pid": 0,
+        "internalId": "{dc700f5e-9f19-4529-b398-40668294344c}"
+      }
+    ]
+  },
+  {
+    "locale": "ja",
+    "windows": [
+      {
+        "caption": "Desktop @ QRect(0,0 1280x900)",
+        "resourceClass": "plasmashell",
+        "resourceName": "plasmashell",
+        "desktopFileName": "org.kde.plasmashell",
+        "pid": 95426,
+        "internalId": "{04857881-588f-41ea-bff8-ce53da8bc18b}"
+      },
+      {
+        "caption": "plasmashell",
+        "resourceClass": "plasmashell",
+        "resourceName": "plasmashell",
+        "desktopFileName": "org.kde.plasmashell",
+        "pid": 95426,
+        "internalId": "{19fd9703-95e3-4867-bf83-9dee48f30ae3}"
+      },
+      {
+        "caption": "KAN89 independent control",
+        "resourceClass": "Xmessage",
+        "resourceName": "xmessage",
+        "desktopFileName": "",
+        "pid": 0,
+        "internalId": "{b05fd8f5-c069-4078-b662-a5b1e2e96180}"
+      },
+      {
+        "caption": "KAN89 ja dedicated \u2014 Ablaze Floorp",
+        "resourceClass": "floorp",
+        "resourceName": "Navigator",
+        "desktopFileName": "",
+        "pid": 0,
+        "internalId": "{88999964-c040-49ca-9e4d-3be35d79fa55}"
+      }
+    ]
+  },
+  {
+    "locale": "es-CL",
+    "windows": [
+      {
+        "caption": "Desktop @ QRect(0,0 1280x900)",
+        "resourceClass": "plasmashell",
+        "resourceName": "plasmashell",
+        "desktopFileName": "org.kde.plasmashell",
+        "pid": 95426,
+        "internalId": "{04857881-588f-41ea-bff8-ce53da8bc18b}"
+      },
+      {
+        "caption": "plasmashell",
+        "resourceClass": "plasmashell",
+        "resourceName": "plasmashell",
+        "desktopFileName": "org.kde.plasmashell",
+        "pid": 95426,
+        "internalId": "{19fd9703-95e3-4867-bf83-9dee48f30ae3}"
+      },
+      {
+        "caption": "KAN89 independent control",
+        "resourceClass": "Xmessage",
+        "resourceName": "xmessage",
+        "desktopFileName": "",
+        "pid": 0,
+        "internalId": "{b05fd8f5-c069-4078-b662-a5b1e2e96180}"
+      },
+      {
+        "caption": "KAN89 es-CL dedicated \u2014 Ablaze Floorp",
+        "resourceClass": "floorp",
+        "resourceName": "Navigator",
+        "desktopFileName": "",
+        "pid": 0,
+        "internalId": "{c996745a-8568-4f3f-a119-44f0fc1d8ab1}"
+      }
+    ]
+  }
+]

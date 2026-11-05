@@ -1,0 +1,15 @@
+{
+  "originalExec": "/usr/bin/plasmashell",
+  "correctedExec": "/workspace/qa-linux-22/package-pwa/sysroot/usr/bin/plasmashell",
+  "interfaceDeclarationsUnchanged": true,
+  "permissionCheckBypass": false,
+  "originalDesktopSha256": "64a7f172f529903b9b36df72f7bef56054319ca8456ef90fb095e44f2dddde67",
+  "repairedDesktopSha256": "d12e0d9844b7b7be1fec051f7207d00d6905f77e5853d57095c23f6f5c95f7a4",
+  "originalInterfaceDeclarations": [
+    "X-KDE-Wayland-Interfaces=org_kde_plasma_window_management,org_kde_kwin_keystate,zkde_screencast_unstable_v1,org_kde_plasma_activation_feedback"
+  ],
+  "repairedInterfaceDeclarations": [
+    "X-KDE-Wayland-Interfaces=org_kde_plasma_window_management,org_kde_kwin_keystate,zkde_screencast_unstable_v1,org_kde_plasma_activation_feedback"
+  ],
+  "onlyExecChanged": true
+}
