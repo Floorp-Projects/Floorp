@@ -23,7 +23,7 @@ sourceにbrowser colocated testを追加。2組split、別window移動、元wind
 - 原CSS: `regression-29316.json` **期待どおり失敗**。移動先第2titleが空。
 - 修正CSS: `regression-29315.json` **成功**。両方向のtitle/URL保持。
 - Deno typecheck、lint（新規2test files）、git diff --check成功。
-- 完全なFloorpビルド/全browser suiteは未実施。実製品の既存runtime上でsource CSS差分と回帰testを実行した結果。
+- 完全なproductionビルドは未実施。後続の標準browser CIは下記の通り成功。実製品の既存runtime上でsource CSS差分と回帰testを実行した結果。
 
 実行（esbuildをsourceのnode_modulesで解決できない場合、`ESBUILD_MODULE=/absolute/path/to/esbuild`を指定。Marionette Python packageと公式製品をQA rootのpython/productsへ配置。QA rootから。製品は保護を有効にしたまま実行可能なnamespace権限が必要）:
 
@@ -36,7 +36,7 @@ QA_REGRESSION_JS=regression-old.js PYTHONPATH=python python3 run-kan3-regression
 
 既存PR: 直接対応PR未確認（不存在証明ではない）。新Draft PR #3033を公開済み。修正commit `1a75d15d2925c9d5bf58964505937d07a35df54c`。
 
-残条件: 原Fedora44、物理ドラッグ/メニュー経路、正式ビルドと広範囲suite、native Wayland。これらを本試験成功で満たしたと扱わない。
+残条件: 原Fedora44、物理ドラッグ/メニュー経路、正式productionビルド、native Wayland。これらを本試験成功で満たしたと扱わない。
 
 証拠: `../split-29285.json`（Floorp原再現）、`../split-29286.json`（Firefox対照）、`../split-29310.json`（selector override成功）、`../regression-29315.json`、`../regression-29316.json`、`regression-new.log`、`regression-old.log`、`typecheck.log`、`before.png`、`returned.png`。
 
@@ -68,3 +68,5 @@ QA_SOURCE_CSS=/path/to/fix-checkout/browser-features/chrome/common/split-view/st
 標準CI: 初期head1a75d15dは282モジュール/0失敗+Firefox16tasks、artifact digest/内容確認済み。追加head e7dda31fのCIはsnapshot時queued（ローカル拡張回帰と14clickは成功）。
 
 Jira最終comment ID: `10294`。
+
+最終追加head e7dda31fも標準CI run42049710743で282モジュール/0失敗+Firefox16tasks、拡張adoption test成功。artifact13427865928のSHA256 6790f71b731c25c9633491ca20930b72cbe83a09a6381a975da737cdd1f987d6 と内容を確認済み。

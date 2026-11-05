@@ -1,0 +1,5 @@
+[INFO]   - browser-features/chrome/common/split-view/test/splitViewAdoption.test.ts
+[INFO] [105/282] Completed browser-features/chrome/common/split-view/test/splitViewAdoption.test.ts
+[INFO] ✓ browser-features/chrome/common/split-view/test/splitViewAdoption.test.ts (runAllTests, 4701ms)
+[INFO] Browser test result: 282 passed, 0 failed
+[INFO] Downloaded Firefox coverage: 8 file(s), 16 task(s), 16 passed

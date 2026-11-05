@@ -10,12 +10,11 @@
     "environment": "Debian13.6 x86_64, Xvfb :92, isolated DBus; KWin6.3.6 nested Wayland for visual/layout/controls; software WebRender; additional Fedora44 Container Image userland on shared host kernel, host Xvfb/X11 (not original Fedora desktop)",
     "testCommand": "PYTHONPATH=python python3 run.py floorp 29284 split",
     "result": "実再現・CSS欠陥修正Draft",
-    "observations": "2組のnative splitを作成し、一組をreplaceGroupWithWindow→adoptTabGroup。移動先の最後と復帰後2枚のtitleが空。Firefox159.0.1は同手順で全titleを保持。 原CSSのsource回帰は失敗、修正CSSでtitle/URL保持に成功。Fedora44 Container Imageの公式製品でも同じ移動先・帰還title空化を再現。 Fedora44 container追加試験済（hostのXvfb使用・Flatpakではない）。 非currentのlayout/hit/selected状態8組と14回W3Cクリック成功。移動前後のsplit↔split→normal→split復帰を検証。",
+    "observations": "2組のnative splitを作成し、一組をreplaceGroupWithWindow→adoptTabGroup。移動先の最後と復帰後2枚のtitleが空。Firefox159.0.1は同手順で全titleを保持。 原CSSのsource回帰は失敗、修正CSSでtitle/URL保持に成功。Fedora44 Container Imageの公式製品でも同じ移動先・帰還title空化を再現。 Fedora44 container追加試験済（hostのXvfb使用・Flatpakではない）。 非currentのlayout/hit/selected状態8組と14回W3Cクリック成功。移動前後のsplit↔split→normal→split復帰を検証。 最新test head e7dda31fも標準CI282modules/0fail+Firefox16tasks、artifact内容/digest確認済み。",
     "remainingConditions": [
       "元Fedora desktop/package・物理ドラッグ/メニュー",
       "native Wayland adoption",
-      "full production build",
-      "追加test head e7dda31fの標準CI（初期headの282modules CIは成功）"
+      "full production build"
     ],
     "existingPr": null,
     "newPr": "https://github.com/Floorp-Projects/Floorp/pull/3033",
@@ -42,7 +41,9 @@
       "firstHead": "1a75d15d",
       "firstHeadBrowserModulesPassed": 282,
       "latestHead": "e7dda31f",
-      "latestStatus": "in_progress_at_snapshot"
+      "latestStatus": "success",
+      "latestBrowserModulesPassed": 282,
+      "artifactVerified": true
     }
   },
   {

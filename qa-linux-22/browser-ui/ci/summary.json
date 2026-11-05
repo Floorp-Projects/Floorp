@@ -25,8 +25,14 @@
     "adoptionModuleExplicitSuccess": true,
     "latestHead": "e7dda31f660bb865c2ea8a505ece44875796970f",
     "latestRunId": 42049710743,
-    "latestStatus": "in_progress_at_snapshot",
-    "latestLocalSupplement": "expanded source regression passed; 8 states and 14 W3C clicks passed"
+    "latestStatus": "success",
+    "latestLocalSupplement": "expanded source regression passed; 8 states and 14 W3C clicks passed",
+    "latestBrowserModulesPassed": 282,
+    "latestBrowserModulesFailed": 0,
+    "latestDownloadedFirefoxTasksPassed": 16,
+    "latestArtifactId": 13427865928,
+    "latestArtifactSha256": "6790f71b731c25c9633491ca20930b72cbe83a09a6381a975da737cdd1f987d6",
+    "latestArtifactDigestMatched": true
   },
   "3034": {
     "head": "e6f2dbe7b34e73950ddbedd13378f04fa38c5155",
