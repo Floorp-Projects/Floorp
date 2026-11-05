@@ -593,8 +593,8 @@ export async function runAllTests(): Promise<void> {
         const plist = PathUtils.join(contents, "Info.plist");
         const marker = PathUtils.join(contents, "floorp.json");
         const store = {
-          async getCurrentSsbData() {
-            return { [app.start_url + ":0"]: app };
+          getCurrentSsbData() {
+            return Promise.resolve({ [app.start_url + ":0"]: app });
           },
           async saveSsbData() {},
           async removeSsbData() {},
