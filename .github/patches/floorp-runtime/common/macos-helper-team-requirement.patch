@@ -1,0 +1,12 @@
+diff --git a/build/moz.configure/update-programs.configure b/build/moz.configure/update-programs.configure
+--- a/build/moz.configure/update-programs.configure
++++ b/build/moz.configure/update-programs.configure
+@@ -90,7 +90,7 @@ def mac_prod_requirements_string(identifier):
+         f'identifier "{identifier}" and anchor apple generic and '
+         "certificate 1[field.1.2.840.113635.100.6.2.6] and "
+         "certificate leaf[field.1.2.840.113635.100.6.1.13] and "
+-        'certificate leaf[subject.OU] = "43AQ936H96"'
++        'certificate leaf[subject.OU] = "DV2U35YBHT"'
+     )
+ 
+ 

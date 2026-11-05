@@ -2451,6 +2451,7 @@ jobs:
           cp tools/update-packaging/make_full_update.sh \
              tools/update-packaging/common.sh "$stage/update-packaging/"
           cp "$HOME/noraneko-publish/meta.json" "$stage/meta.json"
+          cp noraneko/tools/validate_macos_helper_trust.py "$stage/"
 
       - name: Upload macOS finalizer tools
         if: ${{ steps.provenance.outputs.platform_key == 'mac' && !inputs.skip_signing }}
@@ -2479,6 +2480,13 @@ jobs:
           github-token: ${{ github.token }}
           merge-multiple: true
           path: ${{ runner.temp }}/input
+
+      - name: Download macOS helper trust verifier
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: ${{ needs.main.outputs.macos_stage_artifact_id }}
+          merge-multiple: true
+          path: ${{ runner.temp }}/finalizer-tools
 
       - name: Re-sign browser root with native macOS codesign
         shell: bash
@@ -2551,6 +2559,10 @@ jobs:
             exit 1
           fi
           echo "Native signature retains the Developer ID team"
+          # Both release and Daylight branding use MOZ_MACBUNDLE_ID=Floorp
+          # with --with-distribution-id=app.floorp.
+          python3 "$RUNNER_TEMP/finalizer-tools/validate_macos_helper_trust.py" \
+            --expected-bundle-id app.floorp.Floorp "$app"
           if ! arm_details="$(codesign --architecture arm64 -dv --verbose=5 "$app" 2>&1)"; then
             printf '%s\n' "$arm_details" >&2
             exit 1
