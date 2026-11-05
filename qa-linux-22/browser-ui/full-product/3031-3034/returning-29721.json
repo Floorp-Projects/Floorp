@@ -1,0 +1,179 @@
+{
+  "relativeTrail": [
+    [
+      0,
+      0
+    ],
+    [
+      0,
+      -160
+    ],
+    [
+      0,
+      16
+    ]
+  ],
+  "translatedTrail": [
+    [
+      450,
+      500
+    ],
+    [
+      450,
+      340
+    ],
+    [
+      450,
+      516
+    ]
+  ],
+  "minDistance": 20,
+  "input": "OS XTest synthetic mouse; same 3-point trail; not physical input",
+  "product": {
+    "version": "159.0.1",
+    "build": "20261103153232",
+    "name": "Floorp",
+    "os": "Linux"
+  },
+  "observations": [
+    {
+      "beforeTabs": 2,
+      "heldLabel": [
+        {
+          "id": "mouse-gesture-global-styles",
+          "text": "\n            #mouse-gesture-display-container {\n                position: fixed;\n                top: 0;\n               "
+        },
+        {
+          "id": "cmd_gestureRotateLeft",
+          "text": ""
+        },
+        {
+          "id": "cmd_gestureRotateRight",
+          "text": ""
+        },
+        {
+          "id": "cmd_gestureRotateEnd",
+          "text": ""
+        },
+        {
+          "id": "mouse-gesture-display-container",
+          "text": "New Tab"
+        }
+      ],
+      "after": {
+        "tabs": 3,
+        "originalConnected": true,
+        "tabOpen": 1,
+        "tabClose": 0,
+        "popupShown": 0,
+        "menuState": "closed",
+        "events": [
+          {
+            "type": "mousedown",
+            "x": 450,
+            "y": 500,
+            "buttons": 2,
+            "trusted": true,
+            "defaultPrevented": false
+          },
+          {
+            "type": "mousemove",
+            "x": 450,
+            "y": 340,
+            "buttons": 2,
+            "trusted": true,
+            "defaultPrevented": false
+          },
+          {
+            "type": "mousemove",
+            "x": 450,
+            "y": 516,
+            "buttons": 2,
+            "trusted": true,
+            "defaultPrevented": false
+          },
+          {
+            "type": "mouseup",
+            "x": 450,
+            "y": 516,
+            "buttons": 0,
+            "trusted": true,
+            "defaultPrevented": true
+          },
+          {
+            "type": "contextmenu",
+            "x": 450,
+            "y": 443,
+            "buttons": 0,
+            "trusted": true,
+            "defaultPrevented": true
+          }
+        ]
+      },
+      "correctOnce": true,
+      "noContextMenu": true
+    }
+  ],
+  "productionStartup": {
+    "gFloorp": true,
+    "scripts": [
+      "chrome://browser/content/global-scripts.js",
+      "chrome://browser/content/browser-main.js",
+      "chrome://noraneko-startup/content/chrome_root.js",
+      "chrome://browser/content/places/places-commands.js",
+      "chrome://browser/content/main-popupset.js",
+      "chrome://browser/content/browser-context.js",
+      "chrome://browser/content/places/placesContextMenu.js",
+      "chrome://browser/content/navigator-toolbox.js",
+      "chrome://browser/content/browser-menubar.js"
+    ],
+    "signaturesRequired": true,
+    "signatureUserSet": false,
+    "contentSandboxLevel": 6,
+    "sandboxUserSet": false,
+    "defaultSignatureRequired": true
+  },
+  "config": {
+    "enabledPref": true,
+    "gesture": {
+      "enabled": false,
+      "rockerGesturesEnabled": true,
+      "wheelGesturesEnabled": true,
+      "sensitivity": 40,
+      "showTrail": true,
+      "showLabel": true,
+      "trailColor": "#37ff00",
+      "trailWidth": 6,
+      "contextMenu": {
+        "minDistance": 20,
+        "preventionTimeout": 200
+      },
+      "actions": [
+        {
+          "pattern": [
+            "up",
+            "down"
+          ],
+          "action": "gecko-open-new-tab"
+        },
+        {
+          "pattern": [
+            "down",
+            "up"
+          ],
+          "action": "gecko-close-tab"
+        }
+      ],
+      "rockerActions": {
+        "leftRight": "gecko-forward",
+        "rightLeft": "gecko-back"
+      },
+      "wheelActions": {
+        "scrollUp": "gecko-show-previous-tab",
+        "scrollDown": "gecko-show-next-tab"
+      }
+    },
+    "afterMouseup": true,
+    "timingLocked": false
+  }
+}

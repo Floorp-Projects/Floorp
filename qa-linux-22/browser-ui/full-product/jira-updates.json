@@ -1,0 +1,23 @@
+{
+  "KAN-3": {
+    "commentId": "10294",
+    "fullProductionAssetsBuilt": true,
+    "assembledProductRegression": "passed",
+    "strictPackaging": "failed: missing matching XPT auxiliary input"
+  },
+  "KAN-98": {
+    "commentId": "10291",
+    "fullProductionAssetsBuilt": true,
+    "exactCombinedProductRegression": "passed: TabOpen1/Close0/menuclosed",
+    "strictPackaging": "failed: missing matching XPT auxiliary input"
+  },
+  "KAN-29": {
+    "githubPr": 2877,
+    "githubCommentId": 6663548952,
+    "duplicateFound": false
+  },
+  "statusChanged": false,
+  "merge": false,
+  "done": false,
+  "publishedCandidateBinary": false
+}

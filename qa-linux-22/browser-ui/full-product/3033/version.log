@@ -1,0 +1,3 @@
+Task feles-build deno run -A tools/feles-build.ts 'misc' 'writeVersion'
+[update] Version files written to static/gecko/config
+[32m[feles-build] SUCCESS: Version written to static/gecko/config/[0m

@@ -1,0 +1,14 @@
+Already applied tools/patches/browser-chrome-browser-content-browser-tabbrowser-tabbrowser.patch
+Already applied tools/patches/browser-chrome-browser-skin-classic-browser-tabbrowser-content-area.patch
+Already applied tools/patches/browser-modules-sessionstore-SessionStore.sys.patch
+Already applied tools/patches/browser-modules-sessionstore-TabState.sys.patch
+Already applied tools/patches/chrome-extras-sidebar-header.patch
+warning: /workspace/product3033/obj-artifact-build-output/dist/bin/modules/ResetProfile.sys.mjs has type 100644, expected 100755
+warning: /workspace/product3033/obj-artifact-build-output/dist/bin/modules/ResetProfile.sys.mjs has type 100644, expected 100755
+Already applied tools/patches/modules-services-sync-service.sys.patch
+Already applied tools/patches/moz-src-toolkit-components-search-SearchEngineSelector.sys.patch
+Already applied tools/patches/release-notes-guards.patch
+Already applied tools/patches/tab-context-menu-sections.patch
+Already applied tools/patches/workspace-container-lifecycle.patch
+Already applied tools/patches/workspace-external-containers.patch
+Already applied tools/patches/workspace-last-tab.patch

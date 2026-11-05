@@ -1,0 +1,39 @@
+ 0:00.79 Parallelism determined by memory: using 5 jobs for 5 cores based on 17.6 GiB RAM and estimated job size of 1.0 GiB
+ 0:00.79 /usr/bin/gmake -C . -j5 -s -w package
+ 0:00.84 gmake: Entering directory '/workspace/product3033/obj-artifact-build-output'
+ 0:00.84 gmake[1]: Entering directory '/workspace/product3033/obj-artifact-build-output/browser/installer'
+ 0:00.87 gmake[2]: Entering directory '/workspace/product3033/obj-artifact-build-output/browser/installer'
+ 0:00.88 gmake[3]: Entering directory '/workspace/product3033/obj-artifact-build-output/browser/installer'
+ 0:00.88 BUILDSTATUS@browser/installer START_locale_manifest --output locale-manifest.in --base-path @RESPATH@ --locales  en-US --locale-entries @RESPATH@/browser/chrome/ @RESPATH@/chrome/
+ 0:00.88 BUILDSTATUS@browser/installer START_make_sourcestamp_file --output ../../dist//floorp-12.21.1@159.0.1.en-US.linux-x86_64.txt --buildid-header ../../buildid.h
+ 0:00.88 BUILDSTATUS@browser/installer START_file_generate multilocale.txt
+ 0:00.97 BUILDSTATUS@browser/installer END_locale_manifest --output locale-manifest.in --base-path @RESPATH@ --locales  en-US --locale-entries @RESPATH@/browser/chrome/ @RESPATH@/chrome/
+ 0:01.18 BUILDSTATUS@browser/installer END_file_generate multilocale.txt
+ 0:01.31 BUILDSTATUS@browser/installer END_make_sourcestamp_file --output ../../dist//floorp-12.21.1@159.0.1.en-US.linux-x86_64.txt --buildid-header ../../buildid.h
+ 0:09.08 Packaging JavaScript Shell...
+ 0:09.09 BUILDSTATUS@browser/installer START_zip jsshell-linux-x86_64.zip
+ 0:09.36 BUILDSTATUS@browser/installer END_zip jsshell-linux-x86_64.zip
+ 0:09.36 Packaging existing XPT artifacts from artifact build into archive (floorp-12.21.1@159.0.1.en-US.linux-x86_64.xpt_artifacts.zip)
+ 0:09.36 BUILDSTATUS@browser/installer START_zip floorp-12.21.1@159.0.1.en-US.linux-x86_64.xpt_artifacts.zip
+ 0:09.47 error: No files added to /workspace/product3033/obj-artifact-build-output/dist/floorp-12.21.1@159.0.1.en-US.linux-x86_64.xpt_artifacts.zip
+ 0:09.47 Traceback (most recent call last):
+ 0:09.47   File "<frozen runpy>", line 198, in _run_module_as_main
+ 0:09.47   File "<frozen runpy>", line 88, in _run_code
+ 0:09.47   File "/workspace/product3033/runtime/python/mozbuild/mozbuild/action/zip.py", line 101, in <module>
+ 0:09.47     main(sys.argv[1:])
+ 0:09.47   File "/workspace/product3033/runtime/python/mozbuild/mozbuild/action/zip.py", line 78, in main
+ 0:09.47     with errors.accumulate():
+ 0:09.47          ^^^^^^^^^^^^^^^^^^^
+ 0:09.47   File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/contextlib.py", line 144, in __exit__
+ 0:09.47     next(self.gen)
+ 0:09.47   File "/workspace/product3033/runtime/python/mozbuild/mozpack/errors.py", line 143, in accumulate
+ 0:09.47     raise AccumulatedErrors()
+ 0:09.47 mozpack.errors.AccumulatedErrors
+ 0:09.49 gmake[3]: *** [/workspace/product3033/runtime/toolkit/mozapps/installer/packager.mk:59: prepare-package] Error 1
+ 0:09.49 gmake[3]: Leaving directory '/workspace/product3033/obj-artifact-build-output/browser/installer'
+ 0:09.49 gmake[2]: *** [/workspace/product3033/runtime/toolkit/mozapps/installer/packager.mk:144: make-package] Error 2
+ 0:09.49 gmake[2]: Leaving directory '/workspace/product3033/obj-artifact-build-output/browser/installer'
+ 0:09.49 gmake[1]: *** [/workspace/product3033/runtime/config/rules.mk:315: default] Error 2
+ 0:09.49 gmake[1]: Leaving directory '/workspace/product3033/obj-artifact-build-output/browser/installer'
+ 0:09.49 gmake: *** [/workspace/product3033/runtime/browser/build.mk:6: package] Error 2
+ 0:09.49 gmake: Leaving directory '/workspace/product3033/obj-artifact-build-output'

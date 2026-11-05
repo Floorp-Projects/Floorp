@@ -8,13 +8,13 @@
       "firefox": "159.0.1 / BuildID20261102144711"
     },
     "environment": "Debian13.6 x86_64, Xvfb :92, isolated DBus; KWin6.3.6 nested Wayland for visual/layout/controls; software WebRender; additional Fedora44 Container Image userland on shared host kernel, host Xvfb/X11 (not original Fedora desktop)",
-    "testCommand": "PYTHONPATH=python python3 run.py floorp 29284 split",
+    "testCommand": "PYTHONPATH=python python3 run.py floorp 29284 split; bash full-product/3033/reproduce.sh; QA_CANDIDATE=/workspace/product3033/obj-artifact-build-output/dist/bin/floorp PYTHONPATH=python python3 full-product/3033/run-candidate.py floorp 29831 split",
     "result": "実再現・CSS欠陥修正Draft",
-    "observations": "2組のnative splitを作成し、一組をreplaceGroupWithWindow→adoptTabGroup。移動先の最後と復帰後2枚のtitleが空。Firefox159.0.1は同手順で全titleを保持。 原CSSのsource回帰は失敗、修正CSSでtitle/URL保持に成功。Fedora44 Container Imageの公式製品でも同じ移動先・帰還title空化を再現。 Fedora44 container追加試験済（hostのXvfb使用・Flatpakではない）。 非currentのlayout/hit/selected状態8組と14回W3Cクリック成功。移動前後のsplit↔split→normal→split復帰を検証。 最新test head e7dda31fも標準CI282modules/0fail+Firefox16tasks、artifact内容/digest確認済み。 native Wayland追加比較: 同一adoption-only test/CSS差替fixtureで元CSSは移動先第2title消失、候補CSSは往復title/URL保持。両clientのwindowProtocol=waylandを確認。",
+    "observations": "2組のnative splitを作成し、一組をreplaceGroupWithWindow→adoptTabGroup。移動先の最後と復帰後2枚のtitleが空。Firefox159.0.1は同手順で全titleを保持。 原CSSのsource回帰は失敗、修正CSSでtitle/URL保持に成功。Fedora44 Container Imageの公式製品でも同じ移動先・帰還title空化を再現。 Fedora44 container追加試験済（hostのXvfb使用・Flatpakではない）。 非currentのlayout/hit/selected状態8組と14回W3Cクリック成功。移動前後のsplit↔split→normal→split復帰を検証。 最新test head e7dda31fも標準CI282modules/0fail+Firefox16tasks、artifact内容/digest確認済み。 native Wayland追加比較: 同一adoption-only test/CSS差替fixtureで元CSSは移動先第2title消失、候補CSSは往復title/URL保持。両clientのwindowProtocol=waylandを確認。 fullproduction追試: PR3033 e7ddaから全startup/chrome/modules/pagesをproduction build、対応Runtime8965/daily1179/native159.0.1artifact統合machbuild/after-mach成功。組立製品X11と別optionalauxpackage展開品nativeWaylandでCSSfixture=falseのadoption往復pass、署名required defaulttrue/userfalse。厳格machpackageはgenuineXPT不足で失敗し成功に数えない。対応CIartifact13272530069にもXPTなし。公式pref override(署名無効化)は省略、公式defaults一致とはしない。",
     "remainingConditions": [
       "元Fedora desktop/package・物理ドラッグ/メニュー",
-      "full production build",
-      "候補の正式product build（今回source CSS差替fixture）"
+      "genuine matching XPTを供給した厳格package",
+      "公式defaults同一性（署名無効化pref工程省略）、正式候補配布形式"
     ],
     "existingPr": null,
     "newPr": "https://github.com/Floorp-Projects/Floorp/pull/3033",
@@ -36,7 +36,13 @@
       "regression-29631.json",
       "regression-29632.json",
       "KAN-3/wayland-summary.json",
-      "KAN-3/nested-adoption.sh"
+      "KAN-3/nested-adoption.sh",
+      "full-product/3033/report.md",
+      "full-product/3033/build-progress.json",
+      "full-product/3033/package-hashes.json",
+      "full-product/3033/candidate-29831.json",
+      "full-product/3033/candidate-29832.json",
+      "full-product/shared/ci-input-manifest.json"
     ],
     "sprintScope": "KAN-1",
     "fixCommit": "1a75d15d2925c9d5bf58964505937d07a35df54c",
@@ -48,6 +54,21 @@
       "latestStatus": "success",
       "latestBrowserModulesPassed": 282,
       "artifactVerified": true
+    },
+    "fullProductionBuild": {
+      "productionAssets": true,
+      "runtimeArtifactAssembly": true,
+      "nativeCompilation": false,
+      "strictPackaging": false,
+      "strictPackagingMissing": "matching XPT auxiliary input",
+      "officialDefaultsIdentical": false,
+      "candidateSourceSha": "e7dda31f660bb865c2ea8a505ece44875796970f",
+      "runtimeSourceSha": "8965ffc346d426ccdf919bd18585e4d4a0c21654",
+      "regressions": {
+        "assembledX11": true,
+        "separateOptionalAuxPackageWayland": true
+      },
+      "publishedBinary": false
     }
   },
   {
@@ -125,9 +146,13 @@
       "KAN-29/pr2877/29687-panel.json",
       "KAN-29/pr2877/test-copy-hashes.json",
       "KAN-29/pr2877/29688-flex.json",
-      "KAN-29/pr2877-root-note.md"
+      "KAN-29/pr2877-root-note.md",
+      "full-product/pr2877-comment.json",
+      "full-product/pr2877-comment.md"
     ],
-    "sprintScope": "KAN-1"
+    "sprintScope": "KAN-1",
+    "existingPrCommentId": 6663548952,
+    "existingPrCommentUrl": "https://github.com/Floorp-Projects/Floorp/pull/2877#issuecomment-6663548952"
   },
   {
     "key": "KAN-31",
@@ -315,12 +340,13 @@
       "firefox": "159.0.1 / BuildID20261102144711"
     },
     "environment": "Debian13.6 x86_64, Xvfb :92, isolated DBus; KWin6.3.6 nested Wayland for visual/layout/controls; software WebRender",
-    "testCommand": "PYTHONPATH=python python3 gesture-run.py floorp 29311 gesture; PYTHONPATH=python python3 kan98-sparse-product-run.py floorp 29333 sparse-product",
+    "testCommand": "PYTHONPATH=python python3 gesture-run.py floorp 29311 gesture; PYTHONPATH=python python3 kan98-sparse-product-run.py floorp 29333 sparse-product; PYTHONPATH=python python3 full-product/3031-3034/run-regression.py 29721",
     "result": "実再現・独立した2欠陥を限定修正Draft",
-    "observations": "単upは発火するがup-down/dense up-down/down-upはaction label表示後にreleaseで不発。始点終点距離によるactivation gateが原因。最大変位へ修正しcontroller40件成功、旧controllerは新回帰で失敗。専用製品コピーの局所修正でも改善。 right-down追加9/9成功とcaptured trace replayから初期方向fallbackの別欠陥を特定。決定的な疎点列6/6が旧製品で不発、別コピーの局所修正で全成功。recognizer63ケース成功、元コードの新2cases失敗。 PR3031/3034とも標準Ubuntu CI281modules/0fail+Firefox16tasks、artifact内容とdigestを確認。 追加組合せ: minDistance20、[(0,0),(0,-160),(0,16)]は3031単独で逆Close Tab、3031+3034のOS XTestでNew Tab1回・元tab保持・contextmenu残留なし。3034先行または同時適用を両PRへ明記。",
+    "observations": "単upは発火するがup-down/dense up-down/down-upはaction label表示後にreleaseで不発。始点終点距離によるactivation gateが原因。最大変位へ修正しcontroller40件成功、旧controllerは新回帰で失敗。専用製品コピーの局所修正でも改善。 right-down追加9/9成功とcaptured trace replayから初期方向fallbackの別欠陥を特定。決定的な疎点列6/6が旧製品で不発、別コピーの局所修正で全成功。recognizer63ケース成功、元コードの新2cases失敗。 PR3031/3034とも標準Ubuntu CI281modules/0fail+Firefox16tasks、artifact内容とdigestを確認。 追加組合せ: minDistance20、[(0,0),(0,-160),(0,16)]は3031単独で逆Close Tab、3031+3034のOS XTestでNew Tab1回・元tab保持・contextmenu残留なし。3034先行または同時適用を両PRへ明記。 全productionasset候補追加: 3031dbafd+3034b21aの統合sourceで全productionビルド/Runtimeartifact159統合machbuild/after-mach成功。run29721実製品自身のcontroller/recognizerでminDistance20 returning16pxのexactXTestがNewTab1/Close0/元tab保持/menu0。signaturetrue/sandbox6 useroverrideなし。strictpackageはgenuine XPT補助不足で失敗、対応CIartifactにもcompanionなし、検査変更/配布tar成功は主張しない。公式署名無効化pref工程省略につき公式defaults同一ではない。",
     "remainingConditions": [
       "Arch/Sway/Wayland/物理入力/DPI",
-      "full production build"
+      "genuine matching XPTを供給した厳格package",
+      "公式defaults同一性/正式配布形式（署名無効化pref工程省略）"
     ],
     "existingPr": null,
     "newPr": "https://github.com/Floorp-Projects/Floorp/pull/3031",
@@ -344,7 +370,13 @@
       "KAN-98/combination-29508.json",
       "KAN-98/combination-29510.json",
       "KAN-98/combination-source-baseline-29507.json",
-      "KAN-98/combination-source-patched-29506.json"
+      "KAN-98/combination-source-patched-29506.json",
+      "full-product/3031-3034/report.md",
+      "full-product/3031-3034/production-assets.json",
+      "full-product/3031-3034/returning-29721.json",
+      "full-product/shared/ci-input-manifest.json",
+      "full-product/3031-3034/summary.json",
+      "full-product/3031-3034/reproduce.sh"
     ],
     "sprintScope": "KAN-1",
     "additionalPrs": [
@@ -359,6 +391,24 @@
       "3034": "latest b21a8112 automatic CI:281 modules0failed+16Firefox tasks; artifact digest/content verified"
     },
     "additionalTestCommit": "b21a81120d2354d90ea433410173cac208aabbf8",
-    "applicationOrder": "3034 before3031, or apply together"
+    "applicationOrder": "3034 before3031, or apply together",
+    "fullProductionBuild": {
+      "productionAssets": true,
+      "runtimeArtifactAssembly": true,
+      "nativeCompilation": false,
+      "strictPackaging": false,
+      "strictPackagingMissing": "matching XPT auxiliary input",
+      "officialDefaultsIdentical": false,
+      "candidatePrHeads": [
+        "dbafd082f1f315a49575446e7094177450b1882b",
+        "b21a81120d2354d90ea433410173cac208aabbf8"
+      ],
+      "runtimeSourceSha": "8965ffc346d426ccdf919bd18585e4d4a0c21654",
+      "exactXTestActionOnceMenuClosed": true,
+      "publishedBinary": false,
+      "productionManifestAssets": 1115,
+      "productionManifestHashesMatching": 1115,
+      "localIntegratedHead": "0cf1474cba7bc7c45693671dc1690323d85c911b"
+    }
   }
 ]

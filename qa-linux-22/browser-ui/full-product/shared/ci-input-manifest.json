@@ -1,0 +1,51 @@
+{
+  "repository": "Floorp-Projects/Floorp-Runtime",
+  "runId": 41664957250,
+  "sourceSha": "8965ffc346d426ccdf919bd18585e4d4a0c21654",
+  "artifactId": 13272530069,
+  "sha256": "ed5a4f97ee7bf42c817f3146d5a843e095710dcc3be25fae0af0bf47274b739a",
+  "expectedSha256": "ed5a4f97ee7bf42c817f3146d5a843e095710dcc3be25fae0af0bf47274b739a",
+  "entries": [
+    {
+      "name": "dist-host/bin/mar",
+      "bytes": 25784
+    },
+    {
+      "name": "dist-host/bin/mbsdiff",
+      "bytes": 15352
+    },
+    {
+      "name": "dist-host/bin/wasm2c",
+      "bytes": 2487256
+    },
+    {
+      "name": "floorp-application.ini",
+      "bytes": 488
+    },
+    {
+      "name": "floorp-linux-x86_64-moz-artifact.tar.xz",
+      "bytes": 86774264
+    },
+    {
+      "name": "runtime-source-provenance.json",
+      "bytes": 2232
+    }
+  ],
+  "xptCompanionPresent": false,
+  "nativeTarSha256": "cb9b01283d5ce3167f4ba046ee7b39ae9d98a692e1beba73bd9f85f460157772",
+  "releaseAssetNames": [
+    "floorp-linux-aarch64-moz-artifact.tar.xz",
+    "floorp-linux-x86_64-moz-artifact.tar.xz",
+    "floorp-macOS-universal-moz-artifact.dmg",
+    "floorp-macOS.update_framework_artifacts.zip",
+    "floorp-windows-x86_64-moz-artifact.zip",
+    "linux-aarch64-application-ini.zip",
+    "linux-aarch64-dist-host.zip",
+    "linux-x86_64-application-ini.zip",
+    "linux-x86_64-dist-host.zip",
+    "macOS-universal-application-ini.zip",
+    "macOS-universal-dist-host.zip",
+    "windows-x86_64-application-ini.zip",
+    "windows-x86_64-dist-host.zip"
+  ]
+}

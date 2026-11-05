@@ -1,0 +1,91 @@
+Checking patch intl/l10n/Localization.cpp...
+Hunk #1 succeeded at 74 (offset -2 lines).
+Hunk #2 succeeded at 318 (offset 20 lines).
+Hunk #3 succeeded at 351 (offset 20 lines).
+Hunk #4 succeeded at 419 (offset 20 lines).
+Hunk #5 succeeded at 455 (offset 20 lines).
+Applied patch intl/l10n/Localization.cpp cleanly.
+Checking patch python/mozbuild/mozbuild/artifacts.py...
+Hunk #1 succeeded at 105 (offset 14 lines).
+Applied patch python/mozbuild/mozbuild/artifacts.py cleanly.
+Checking patch python/mozboot/mozboot/bootstrap.py...
+Applied patch python/mozboot/mozboot/bootstrap.py cleanly.
+Checking patch browser/app/moz.build...
+Hunk #1 succeeded at 306 (offset 126 lines).
+Applied patch browser/app/moz.build cleanly.
+Checking patch browser/installer/windows/nsis/shared.nsh...
+Hunk #1 succeeded at 635 (offset -245 lines).
+Applied patch browser/installer/windows/nsis/shared.nsh cleanly.
+Checking patch toolkit/mozapps/installer/windows/nsis/common.nsh...
+Applied patch toolkit/mozapps/installer/windows/nsis/common.nsh cleanly.
+Checking patch toolkit/mozapps/update/common/commonupdatedir.cpp...
+Applied patch toolkit/mozapps/update/common/commonupdatedir.cpp cleanly.
+Checking patch config/external/nspr/pr/moz.build...
+Applied patch config/external/nspr/pr/moz.build cleanly.
+Checking patch intl/l10n/rust/localization-ffi/src/lib.rs...
+Hunk #1 succeeded at 103 (offset 1 line).
+Hunk #2 succeeded at 212 (offset 1 line).
+Hunk #3 succeeded at 243 (offset 1 line).
+Hunk #4 succeeded at 318 (offset 1 line).
+Hunk #5 succeeded at 359 (offset 1 line).
+Applied patch intl/l10n/rust/localization-ffi/src/lib.rs cleanly.
+Already applied .github/patches/upstream/macos-app-shim-pwa-input-and-compositor.patch
+Checking patch moz.build...
+Hunk #1 succeeded at 396 (offset 15 lines).
+Applied patch moz.build cleanly.
+Checking patch browser/moz.configure...
+Applied patch browser/moz.configure cleanly.
+Checking patch toolkit/mozapps/update/nsIUpdateService.idl...
+Hunk #1 succeeded at 226 (offset -2 lines).
+Applied patch toolkit/mozapps/update/nsIUpdateService.idl cleanly.
+Checking patch toolkit/xre/nsXREDirProvider.cpp...
+Hunk #1 succeeded at 1320 (offset -1 lines).
+Hunk #2 succeeded at 1352 (offset -1 lines).
+Hunk #3 succeeded at 1405 (offset -1 lines).
+Hunk #4 succeeded at 1536 (offset -1 lines).
+Hunk #5 succeeded at 1608 (offset -1 lines).
+Applied patch toolkit/xre/nsXREDirProvider.cpp cleanly.
+Checking patch uriloader/exthandler/tests/moz.build...
+Checking patch xpcom/tests/moz.build...
+Applied patch uriloader/exthandler/tests/moz.build cleanly.
+Applied patch xpcom/tests/moz.build cleanly.
+Checking patch python/mozbuild/mozbuild/repackaging/desktop_file.py...
+Applied patch python/mozbuild/mozbuild/repackaging/desktop_file.py cleanly.
+Checking patch browser/installer/removed-files.in...
+Applied patch browser/installer/removed-files.in cleanly.
+Checking patch toolkit/crashreporter/google-breakpad/.gitignore...
+Applied patch toolkit/crashreporter/google-breakpad/.gitignore cleanly.
+Checking patch toolkit/modules/UpdateUtils.sys.mjs...
+Hunk #1 succeeded at 75 (offset -2 lines).
+Applied patch toolkit/modules/UpdateUtils.sys.mjs cleanly.
+Checking patch toolkit/moz.configure...
+Hunk #1 succeeded at 4708 (offset 384 lines).
+Applied patch toolkit/moz.configure cleanly.
+Checking patch toolkit/mozapps/update/UpdateService.sys.mjs...
+Hunk #1 succeeded at 14 (offset -2 lines).
+Hunk #2 succeeded at 1963 (offset 13 lines).
+Hunk #3 succeeded at 2122 (offset 13 lines).
+Hunk #4 succeeded at 2155 (offset 13 lines).
+Hunk #5 succeeded at 2515 (offset 32 lines).
+Hunk #6 succeeded at 2626 (offset 33 lines).
+Hunk #7 succeeded at 2783 (offset 33 lines).
+Hunk #8 succeeded at 4064 (offset 70 lines).
+Hunk #9 succeeded at 4086 (offset 70 lines).
+Applied patch toolkit/mozapps/update/UpdateService.sys.mjs cleanly.
+Already applied .github/patches/upstream/toolkit-mozapps-update-nsIUpdateService.idl.patch
+Checking patch toolkit/mozapps/update/tests/data/sharedUpdateXML.js...
+Hunk #1 succeeded at 355 (offset 1 line).
+Applied patch toolkit/mozapps/update/tests/data/sharedUpdateXML.js cleanly.
+Checking patch toolkit/mozapps/update/tests/unit_aus_update/updateManagerXML.js...
+Hunk #3 succeeded at 133 (offset -1 lines).
+Applied patch toolkit/mozapps/update/tests/unit_aus_update/updateManagerXML.js cleanly.
+Checking patch toolkit/tests/gtest/TestXREAppDir.cpp...
+Applied patch toolkit/tests/gtest/TestXREAppDir.cpp cleanly.
+Checking patch toolkit/xre/nsAppRunner.cpp...
+Hunk #1 succeeded at 270 (offset -3 lines).
+Hunk #2 succeeded at 3964 (offset 13 lines).
+Applied patch toolkit/xre/nsAppRunner.cpp cleanly.
+Checking patch tools/signing/macos/mach_commands.py...
+Hunk #5 succeeded at 589 (offset 23 lines).
+Hunk #6 succeeded at 765 (offset 26 lines).
+Applied patch tools/signing/macos/mach_commands.py cleanly.

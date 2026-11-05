@@ -1,0 +1,74 @@
+# PR3031 + PR3034: full production-assets build and assembled-product regression
+
+## Outcome
+
+**All production assets and the artifact-based product assembly built successfully; the assembled product passes the exact returning regression. Strict distributable packaging remains blocked by missing auxiliary XPT input.** This is substantially beyond replacing a compiled function in an official-product copy, but it is not a successful final installer/tarball build.
+
+No product was published. No shared branch/checkout/configuration was modified. Neither PR was merged, and no issue was moved to Done.
+
+## Immutable inputs and isolation
+
+- Floorp baseline `984509d2053be7bae9027133bda7259cd706b208`.
+- API-confirmed PR3031 head `dbafd082f1f315a49575446e7094177450b1882b`, Draft/open.
+- API-confirmed PR3034 head `b21a81120d2354d90ea433410173cac208aabbf8`, Draft/open, including the exact unbalanced-returning source test.
+- Local integrated source HEAD `0cf1474cba7bc7c45693671dc1690323d85c911b`, branch `qa/full-product-3031-3034` in `/workspace/full-product-3031-3034/noraneko`. Both fixes are present before anything is built; no intermediate3031-only product is used.
+- Independent Runtime worktree `/workspace/full-product-3031-3034/runtime`, HEAD `8965ffc346d426ccdf919bd18585e4d4a0c21654` (daily-1179), with standard workflow source patches. `runtime/noraneko` points to the independent Floorp worktree; the absolute object directory is `/workspace/full-product-3031-3034/obj-artifact-build-output`.
+- Verified Runtime artifact707330202: SHA256 `cb9b01283d5ce3167f4ba046ee7b39ae9d98a692e1beba73bd9f85f460157772`. It is the current159.0.1 material, not the stale saved157 Runtime. Shared input metadata also verifies application.ini159.0.1/BuildID20261103153232.
+
+## Existing build path actually executed
+
+1. Frozen Deno dependency install succeeds in the independent worktree.
+2. `NODE_ENV=production deno task feles-build build --phase before-mach` succeeds. This builds startup, Chrome features, all converted pages and ESM resources, not just the gesture module.
+3. Apply the existing Runtime upstream patches, Floorp common Runtime patches and official branding as the package workflow does. Every patch is checked first; already-applied patches are identified by a reverse check.
+4. Run the workflow's `misc writeVersion`, generating12.21.1 plus the Runtime159.0.1 composite version inputs. Configure succeeds. The first configure attempt lacked the Write Versions prerequisite and rejected `@159.0.1`; that setup failure is preserved and was corrected with the existing command, not a version-check bypass.
+5. Apply the two existing Runtime packaging patches, then `MOZ_ARTIFACT_FILE=<verified artifact> ./mach build`: **success**, about2m14s, 0 compiler warnings. Gecko's frontend/resource processing and the production asset mounts are part of this build; native libraries come from the verified fixed Runtime artifact.
+6. Existing `--phase after-mach` succeeds, with production XHTML injection and `allowBrowserHttpLoader=false`. Follow the existing flatten/frontend-patch/buildid steps. All frontend patches use forward/reverse checks. The local rsync dependency was downloaded through APT and extracted into the task's tool directory; no shared system installation was required.
+7. `./mach package` runs with strict checks retained and stops because no XPT files exist for the auxiliary XPT archive. No final tarball success is claimed.
+
+The entire post-build `override.ini` preference stage is intentionally not applied: it contains `xpinstall.signatures.required=false`. Likewise, the original platform mozconfig's unverified-update option is removed as in the package workflow. No security/CSP/signature validation was disabled. As a result, this candidate's complete defaults are **not identical to the official release's preference-override stage**; that scope difference must remain explicit.
+
+## Product identity and complete asset provenance
+
+All11 production asset mounts are assembled into the live product: content211 entries, startup3, resource182, skin238, settings202, welcome159, newtab107, notes3, modal-child3, profile-manager3 and aboutDialog4. **All1,115 manifest-listed source asset hashes match the assembled product's copies.** See `production-assets.json` and `summary.json`.
+
+Buildid2 source/product match: `01a1ac96-9802-7754-b3bf-adafb3ba38f1`. This identifies the newly built Floorp frontend even though `Services.appinfo.appBuildID` still reports the fixed Runtime's20261103153232 identity.
+
+The assembled native executable and libxul exactly match the corresponding verified artifact members:
+
+| Native file | SHA256 |
+|---|---|
+|floorp|`4f05c1330b38e50040440be6a3b6e0e7a5b52bc79edb5c5478d978c81f5a603d`|
+|libxul.so|`760ff8a689f52c9b1f3c89a45ea8813e59f187990caed747e4a7680020c8dbc7`|
+
+The tested executable is `/workspace/full-product-3031-3034/obj-artifact-build-output/dist/bin/floorp`. Its Chrome assets come from the full production build and normal artifact assembly. No compiled gesture function or CSS was swapped into it after the build, and no mock controller/recognizer was registered.
+
+## Exact assembled-product regression
+
+One fail-fast actual-product run29721, Debian13.6/X11, private Xvfb97 and DBus, fresh profile, **OS XTest synthetic mouse**, not physical hardware:
+
+- Requested/received relative trail `[(0,0),(0,-160),(0,16)]`; translated held points `(450,500) -> (450,340) -> (450,516)` are recorded exactly.
+- `minDistance=20`; both patterns exist: up-down -> built-in New Tab, down-up -> built-in Close Tab. This preference configuration is a test fixture. No custom implementation or action registry replaces the product's behavior.
+- Held label: New Tab. **TabOpen=1, TabClose=0, original tab retained, total tabs+1.** Correct action exactly once.
+- **popupShown=0, contextmenu state=closed**; the release contextmenu event is prevented. No manual popup hiding or forced native timing preference is used. The product's own gesture service sets after_mouseup=true; the probe reads it unlocked.
+- Actual startup has `gFloorp=true` and `chrome://noraneko-startup/content/chrome_root.js`.
+- `xpinstall.signatures.required=true`, default=true, userSet=false. Content sandbox level6, userSet=false. No sandbox-disabling environment is used.
+
+`returning-29721.json`, screenshot and log are the evidence. This is limited integration coverage, not a new full combined browser-suite run, physical-input validation or Arch/Sway/Wayland validation. Existing per-PR CI evidence remains separate.
+
+## Strict packaging blocker
+
+Strict package exit2 at `toolkit/mozapps/installer/packager.mk` auxiliary archive creation:
+
+`error: No files added to ...floorp-12.21.1@159.0.1.en-US.linux-x86_64.xpt_artifacts.zip`
+
+The matching Runtime release assets contain no XPT companion. The parent also fetched/hash-verified matching Runtime CI run41664957250 artifact13272530069 (SHA256 `ed5a4f97ee7bf42c817f3146d5a843e095710dcc3be25fae0af0bf47274b739a`); it contains the same native tar, application.ini, host tools and provenance, but no XPT companion. The precise inventory is `../shared/ci-input-manifest.json`.
+
+The workflow has a later option to remove an empty-archive check, but that is not used here. No dummy XPT, wrong-version companion, skipped check or simulated success was substituted. A standard strict distributable still needs valid matching XPT material or an upstream-supported optional-auxiliary packaging contract. No full native rebuild to generate that material was attempted.
+
+## Reproduction and local artifacts
+
+`prepare-runtime.sh`, `finalize-and-package.sh`, `reproduce.sh`, `run-regression.py`, `regression.py` and `collect-manifests.py` preserve the commands. They assume the isolated worktrees and verified Runtime input paths above and must be adapted for another machine. `reproduce.sh` propagates the strict package failure while still allowing the assembled-product regression to be captured; a package failure is not converted into overall success.
+
+For a fresh setup, create the Runtime worktree at8965..., create the Floorp worktree at984509d under the stage's `noraneko`, and cherry-pick3031 plus both commits of3034 before running the scripts. Install isolated rsync/libpopt tools as shown in `logs/rsync-dependencies.log`; `finalize-and-package.sh` expects them under the stage's `tools/sysroot`.
+
+Generated binaries, product files, object directories, Runtime source tree and browser profiles remain local and non-public. Publish only these small scripts, manifests, reports and selected logs if authorized by the parent workflow; do not publish the stage directory or the shared Runtime/CI archives.

@@ -1,0 +1,27 @@
+ 0:01.13 Parallelism determined by memory: using 5 jobs for 5 cores based on 17.6 GiB RAM and estimated job size of 1.0 GiB
+ 0:01.13 /usr/bin/gmake -C . -j5 -s -w package
+ 0:01.17 gmake: Entering directory '/workspace/product3033/obj-artifact-build-output'
+ 0:01.18 gmake[1]: Entering directory '/workspace/product3033/obj-artifact-build-output/browser/installer'
+ 0:01.21 gmake[2]: Entering directory '/workspace/product3033/obj-artifact-build-output/browser/installer'
+ 0:01.21 gmake[3]: Entering directory '/workspace/product3033/obj-artifact-build-output/browser/installer'
+ 0:01.21 BUILDSTATUS@browser/installer START_file_generate multilocale.txt
+ 0:01.21 BUILDSTATUS@browser/installer START_locale_manifest --output locale-manifest.in --base-path @RESPATH@ --locales  en-US --locale-entries @RESPATH@/browser/chrome/ @RESPATH@/chrome/
+ 0:01.22 BUILDSTATUS@browser/installer START_make_sourcestamp_file --output ../../dist//floorp-12.21.1@159.0.1.en-US.linux-x86_64.txt --buildid-header ../../buildid.h
+ 0:01.34 BUILDSTATUS@browser/installer END_locale_manifest --output locale-manifest.in --base-path @RESPATH@ --locales  en-US --locale-entries @RESPATH@/browser/chrome/ @RESPATH@/chrome/
+ 0:01.50 BUILDSTATUS@browser/installer END_file_generate multilocale.txt
+ 0:01.62 BUILDSTATUS@browser/installer END_make_sourcestamp_file --output ../../dist//floorp-12.21.1@159.0.1.en-US.linux-x86_64.txt --buildid-header ../../buildid.h
+ 0:05.19 Packaging JavaScript Shell...
+ 0:05.20 BUILDSTATUS@browser/installer START_zip jsshell-linux-x86_64.zip
+ 0:05.49 BUILDSTATUS@browser/installer END_zip jsshell-linux-x86_64.zip
+ 0:05.49 Packaging existing XPT artifacts from artifact build into archive (floorp-12.21.1@159.0.1.en-US.linux-x86_64.xpt_artifacts.zip)
+ 0:05.49 BUILDSTATUS@browser/installer START_zip floorp-12.21.1@159.0.1.en-US.linux-x86_64.xpt_artifacts.zip
+ 0:05.64 BUILDSTATUS@browser/installer END_zip floorp-12.21.1@159.0.1.en-US.linux-x86_64.xpt_artifacts.zip
+ 0:05.65 Compressing...
+ 0:05.65 BUILDSTATUS@browser/installer START_package XZ
+ 1:52.33 BUILDSTATUS@browser/installer END_package XZ
+ 1:52.34 gmake[3]: Leaving directory '/workspace/product3033/obj-artifact-build-output/browser/installer'
+ 1:52.34 gmake[2]: Leaving directory '/workspace/product3033/obj-artifact-build-output/browser/installer'
+ 1:52.35 gmake[1]: Leaving directory '/workspace/product3033/obj-artifact-build-output/browser/installer'
+ 1:52.35 gmake: Leaving directory '/workspace/product3033/obj-artifact-build-output'
+ 1:52.46 W Notification center failed: Install notify-send (usually part of the libnotify package) to get a notification when the build finishes.
+ 1:52.46 Created package: /workspace/product3033/obj-artifact-build-output/dist/floorp-12.21.1@159.0.1.en-US.linux-x86_64.tar.xz

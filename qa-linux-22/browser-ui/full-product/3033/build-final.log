@@ -1,0 +1,166 @@
+ 0:00.59 W Warnings in third-party code are being suppressed from the terminal output. Use --show-all-warnings or --verbose to see them.
+ 0:00.59 W All warnings will still be dumped to /workspace/product3033/obj-artifact-build-output/.mozbuild/logs/build/warnings_*.json at the end of the build.
+ 0:00.75 Clobber not needed.
+ 0:00.88 Parallelism determined by memory: using 5 jobs for 5 cores based on 17.6 GiB RAM and estimated job size of 1.0 GiB
+ 0:00.88 W Adding make options from /workspace/product3033/runtime/mozconfig
+    AUTOCLOBBER=1
+    MOZ_OBJDIR=/workspace/product3033/obj-artifact-build-output
+    OBJDIR=/workspace/product3033/obj-artifact-build-output
+    FOUND_MOZCONFIG=/workspace/product3033/runtime/mozconfig
+    export FOUND_MOZCONFIG
+ 0:00.88 /usr/bin/gmake -f client.mk -j5 -s
+ 0:30.67 Elapsed: 0.42s; From dist/xpi-stage: Kept 175 existing; Added/updated 746; Removed 0 files and 0 directories.
+ 0:30.67 Elapsed: 0.46s; From _tests: Kept 11 existing; Added/updated 760; Removed 0 files and 0 directories.
+ 0:40.23 Successfully generated event list for DevTools
+ 1:00.93 Elapsed: 0.10s; From /workspace/product3033/obj-artifact-build-output/dist/bin/gmp-clearkey/0.1: Kept 0 existing; Added/updated 1; Removed 0 files and 0 directories.
+ 1:01.08 Elapsed: 0.06s; From /workspace/product3033/obj-artifact-build-output/dist/bin/browser/localization: Kept 0 existing; Added/updated 137; Removed 0 files and 0 directories.
+ 1:01.59 Elapsed: 0.00s; From /workspace/product3033/obj-artifact-build-output/dist/bin/gmp-fake/1.0: Kept 0 existing; Added/updated 1; Removed 0 files and 0 directories.
+ 1:01.81 Elapsed: 0.00s; From /workspace/product3033/obj-artifact-build-output/dist/bin/gmp-fakeopenh264/1.0: Kept 0 existing; Added/updated 1; Removed 0 files and 0 directories.
+ 1:01.93 Elapsed: 0.05s; From /workspace/product3033/obj-artifact-build-output/dist/bin/localization: Kept 0 existing; Added/updated 104; Removed 0 files and 0 directories.
+ 1:01.97 Elapsed: 0.00s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/browser/components: Kept 0 existing; Added/updated 9; Removed 0 files and 0 directories.
+ 1:02.37 Elapsed: 0.08s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/browser/components/aboutlogins: Kept 0 existing; Added/updated 4; Removed 0 files and 0 directories.
+ 1:02.51 Elapsed: 0.00s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/browser/components/aiwindow/models/agents: Kept 0 existing; Added/updated 4; Removed 0 files and 0 directories.
+ 1:03.01 Elapsed: 0.00s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/browser/components/aiwindow/models/memories: Kept 0 existing; Added/updated 9; Removed 0 files and 0 directories.Elapsed: 0.00s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/browser/components/aiwindow/models/aitab: Kept 0 existing; Added/updated 1; Removed 0 files and 0 directories.
+ 1:03.41 Elapsed: 0.00s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/browser/components/aiwindow/services: Kept 0 existing; Added/updated 2; Removed 0 files and 0 directories.Elapsed: 0.01s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/browser/components/aiwindow/models/search: Kept 0 existing; Added/updated 2; Removed 0 files and 0 directories.
+ 1:03.43 Elapsed: 0.04s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/browser/components/aiwindow/models: Kept 0 existing; Added/updated 23; Removed 0 files and 0 directories.
+ 1:03.80 Elapsed: 0.01s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/browser/components/aiwindow/ui: Kept 0 existing; Added/updated 56; Removed 0 files and 0 directories.
+ 1:03.80 Elapsed: 0.00s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/browser/components/attribution: Kept 0 existing; Added/updated 1; Removed 0 files and 0 directories.
+ 1:04.23 Elapsed: 0.00s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/browser/components/contentanalysis: Kept 0 existing; Added/updated 1; Removed 0 files and 0 directories.
+ 1:04.28 Elapsed: 0.01s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/browser/components/customizableui: Kept 0 existing; Added/updated 8; Removed 0 files and 0 directories.
+ 1:04.70 Elapsed: 0.00s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/browser/components/customkeys: Kept 0 existing; Added/updated 3; Removed 0 files and 0 directories.
+ 1:04.78 Elapsed: 0.00s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/browser/components/downloads: Kept 0 existing; Added/updated 5; Removed 0 files and 0 directories.
+ 1:04.99 Elapsed: 0.00s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/browser/components/genai: Kept 0 existing; Added/updated 10; Removed 0 files and 0 directories.
+ 1:05.11 Elapsed: 0.03s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/browser/components/backup: Kept 0 existing; Added/updated 22; Removed 0 files and 0 directories.
+ 1:05.21 Elapsed: 0.00s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/browser/components/migration: Kept 0 existing; Added/updated 11; Removed 0 files and 0 directories.
+ 1:05.42 Elapsed: 0.00s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/browser/components/miniwindow: Kept 0 existing; Added/updated 5; Removed 0 files and 0 directories.
+ 1:05.61 Elapsed: 0.00s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/browser/components/newtab: Kept 0 existing; Added/updated 3; Removed 0 files and 0 directories.
+ 1:05.83 Elapsed: 0.00s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/browser/components/pagedata: Kept 0 existing; Added/updated 5; Removed 0 files and 0 directories.
+ 1:06.06 Elapsed: 0.00s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/browser/components/permissions: Kept 0 existing; Added/updated 1; Removed 0 files and 0 directories.
+ 1:06.29 Elapsed: 0.00s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/browser/components/pictureinpicture: Kept 0 existing; Added/updated 1; Removed 0 files and 0 directories.
+ 1:06.49 Elapsed: 0.00s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/browser/components/places: Kept 0 existing; Added/updated 4; Removed 0 files and 0 directories.
+ 1:06.71 Elapsed: 0.00s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/browser/components/privatebrowsing: Kept 0 existing; Added/updated 1; Removed 0 files and 0 directories.
+ 1:06.73 Elapsed: 0.02s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/browser/components/mozcachedohttp: Kept 0 existing; Added/updated 2; Removed 0 files and 0 directories.
+ 1:06.91 Elapsed: 0.00s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/browser/components/prompts: Kept 0 existing; Added/updated 1; Removed 0 files and 0 directories.
+ 1:07.10 Elapsed: 0.00s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/browser/components/protections: Kept 0 existing; Added/updated 2; Removed 0 files and 0 directories.
+ 1:07.31 Elapsed: 0.00s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/browser/components/qrcode: Kept 0 existing; Added/updated 2; Removed 0 files and 0 directories.
+ 1:07.52 Elapsed: 0.01s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/browser/components/referrals: Kept 0 existing; Added/updated 1; Removed 0 files and 0 directories.
+ 1:07.59 Elapsed: 0.00s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/browser/components/ipprotection: Kept 0 existing; Added/updated 10; Removed 0 files and 0 directories.
+ 1:07.82 Elapsed: 0.00s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/browser/components/remotecontrol: Kept 0 existing; Added/updated 2; Removed 0 files and 0 directories.
+ 1:07.91 Elapsed: 0.00s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/browser/components/protocolhandler: Kept 0 existing; Added/updated 1; Removed 0 files and 0 directories.
+ 1:07.99 Elapsed: 0.00s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/browser/components/screenshots: Kept 0 existing; Added/updated 4; Removed 0 files and 0 directories.
+ 1:08.33 Elapsed: 0.00s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/browser/components/sharing: Kept 0 existing; Added/updated 3; Removed 0 files and 0 directories.Elapsed: 0.01s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/browser/components/sessionstore: Kept 0 existing; Added/updated 21; Removed 0 files and 0 directories.
+ 1:08.79 Elapsed: 0.01s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/browser/components/sidebar: Kept 0 existing; Added/updated 4; Removed 0 files and 0 directories.
+ 1:08.80 Elapsed: 0.01s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/browser/components/shell: Kept 0 existing; Added/updated 6; Removed 0 files and 0 directories.
+ 1:09.00 Elapsed: 0.00s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/browser/components/reportbrokensite: Kept 0 existing; Added/updated 1; Removed 0 files and 0 directories.
+ 1:09.03 Elapsed: 0.03s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/browser/components/search: Kept 0 existing; Added/updated 6; Removed 0 files and 0 directories.
+ 1:09.38 Elapsed: 0.00s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/browser/components/tabbrowser: Kept 0 existing; Added/updated 9; Removed 0 files and 0 directories.
+ 1:09.38 Elapsed: 0.00s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/browser/components/tabnotes: Kept 0 existing; Added/updated 3; Removed 0 files and 0 directories.
+ 1:09.58 Elapsed: 0.00s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/browser/components/syncedtabs: Kept 0 existing; Added/updated 8; Removed 0 files and 0 directories.
+ 1:09.67 Elapsed: 0.00s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/browser/components/uitour: Kept 0 existing; Added/updated 4; Removed 0 files and 0 directories.
+ 1:09.70 Elapsed: 0.01s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/browser/components/urlbar: Kept 0 existing; Added/updated 72; Removed 0 files and 0 directories.
+ 1:09.94 Elapsed: 0.00s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/browser/components/urlbar/unitconverters: Kept 0 existing; Added/updated 3; Removed 0 files and 0 directories.
+ 1:10.01 Elapsed: 0.00s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/browser/modules: Kept 0 existing; Added/updated 6; Removed 0 files and 0 directories.
+ 1:10.22 Elapsed: 0.00s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/devtools/platform: Kept 0 existing; Added/updated 1; Removed 0 files and 0 directories.
+ 1:10.32 Elapsed: 0.00s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/devtools/startup: Kept 0 existing; Added/updated 3; Removed 0 files and 0 directories.
+ 1:10.33 Elapsed: 0.00s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/browser/components/taskbartabs: Kept 0 existing; Added/updated 8; Removed 0 files and 0 directories.
+ 1:10.57 Elapsed: 0.02s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/browser/themes: Kept 0 existing; Added/updated 2; Removed 0 files and 0 directories.
+ 1:10.61 Elapsed: 0.01s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/docshell/base: Kept 0 existing; Added/updated 1; Removed 0 files and 0 directories.
+ 1:10.62 Elapsed: 0.00s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/dom/base: Kept 0 existing; Added/updated 4; Removed 0 files and 0 directories.
+ 1:11.10 Elapsed: 0.00s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/dom/manifest: Kept 0 existing; Added/updated 7; Removed 0 files and 0 directories.
+ 1:11.11 Elapsed: 0.00s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/dom/ipc: Kept 0 existing; Added/updated 1; Removed 0 files and 0 directories.
+ 1:11.45 Elapsed: 0.00s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/dom/notification: Kept 0 existing; Added/updated 3; Removed 0 files and 0 directories.
+ 1:11.47 Elapsed: 0.00s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/dom/quota: Kept 0 existing; Added/updated 1; Removed 0 files and 0 directories.
+ 1:11.63 Elapsed: 0.00s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/dom/system: Kept 0 existing; Added/updated 1; Removed 0 files and 0 directories.
+ 1:11.74 Elapsed: 0.00s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/dom/xslt/xslt: Kept 0 existing; Added/updated 1; Removed 0 files and 0 directories.
+ 1:11.74 Elapsed: 0.01s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/dom/geolocation: Kept 0 existing; Added/updated 1; Removed 0 files and 0 directories.
+ 1:12.07 Elapsed: 0.00s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/services/crypto: Kept 0 existing; Added/updated 3; Removed 0 files and 0 directories.
+ 1:12.10 Elapsed: 0.00s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/intl/locale: Kept 0 existing; Added/updated 1; Removed 0 files and 0 directories.
+ 1:12.28 Elapsed: 0.03s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/toolkit/actors: Kept 0 existing; Added/updated 59; Removed 0 files and 0 directories.
+ 1:12.41 Elapsed: 0.00s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/toolkit/components/captchadetection: Kept 0 existing; Added/updated 5; Removed 0 files and 0 directories.
+ 1:12.58 Elapsed: 0.00s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/toolkit/components/contextualidentity: Kept 0 existing; Added/updated 1; Removed 0 files and 0 directories.
+ 1:12.63 Elapsed: 0.00s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/toolkit/components/bitsdownload: Kept 0 existing; Added/updated 1; Removed 0 files and 0 directories.
+ 1:12.81 Elapsed: 0.01s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/toolkit/components/certviewer: Kept 0 existing; Added/updated 2; Removed 0 files and 0 directories.
+ 1:12.83 Elapsed: 0.00s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/toolkit/components/forgetaboutsite: Kept 0 existing; Added/updated 1; Removed 0 files and 0 directories.
+ 1:13.02 Elapsed: 0.01s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/toolkit/components/doh: Kept 0 existing; Added/updated 4; Removed 0 files and 0 directories.
+ 1:13.03 Elapsed: 0.00s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/toolkit/components/ipprotection: Kept 0 existing; Added/updated 21; Removed 0 files and 0 directories.
+ 1:13.20 Elapsed: 0.00s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/toolkit/components/kvstore: Kept 0 existing; Added/updated 1; Removed 0 files and 0 directories.
+ 1:13.26 Elapsed: 0.00s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/toolkit/components/ml: Kept 0 existing; Added/updated 2; Removed 0 files and 0 directories.
+ 1:13.37 Elapsed: 0.00s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/toolkit/components/ml/actors: Kept 0 existing; Added/updated 2; Removed 0 files and 0 directories.
+ 1:13.47 Elapsed: 0.01s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/toolkit/components/pageextractor: Kept 0 existing; Added/updated 3; Removed 0 files and 0 directories.
+ 1:13.62 Elapsed: 0.00s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/toolkit/components/qrcode: Kept 0 existing; Added/updated 2; Removed 0 files and 0 directories.
+ 1:13.70 Elapsed: 0.00s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/toolkit/components/passwordmgr: Kept 0 existing; Added/updated 1; Removed 0 files and 0 directories.
+ 1:13.71 Elapsed: 0.00s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/toolkit/components/pictureinpicture: Kept 0 existing; Added/updated 2; Removed 0 files and 0 directories.
+ 1:13.82 Elapsed: 0.00s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/toolkit/components/reader: Kept 0 existing; Added/updated 6; Removed 0 files and 0 directories.
+ 1:13.92 Elapsed: 0.00s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/toolkit/components/reflect: Kept 0 existing; Added/updated 1; Removed 0 files and 0 directories.
+ 1:14.09 Elapsed: 0.01s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/toolkit/components/search: Kept 0 existing; Added/updated 16; Removed 0 files and 0 directories.
+ 1:14.11 Elapsed: 0.00s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/toolkit/components/remotebrowserutils: Kept 0 existing; Added/updated 1; Removed 0 files and 0 directories.
+ 1:14.23 Elapsed: 0.00s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/toolkit/components/uniffi-bindgen-gecko-js/components: Kept 0 existing; Added/updated 18; Removed 0 files and 0 directories.
+ 1:14.29 Elapsed: 0.00s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/toolkit/components/uniffi-js: Kept 0 existing; Added/updated 1; Removed 0 files and 0 directories.
+ 1:14.46 Elapsed: 0.00s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/toolkit/profile: Kept 0 existing; Added/updated 2; Removed 0 files and 0 directories.
+ 1:14.50 Elapsed: 0.00s; From /workspace/product3033/obj-artifact-build-output/dist/bin/moz-src/toolkit/modules: Kept 0 existing; Added/updated 7; Removed 0 files and 0 directories.
+ 1:15.55 Elapsed: 1.00s; From /workspace/product3033/obj-artifact-build-output/dist/bin: Kept 0 existing; Added/updated 3144; Removed 0 files and 0 directories.
+ 1:25.83 vendor:
+ 1:25.83   asset vendor.bundle.js 399 KiB [emitted] [minimized] (name: main)
+ 1:25.83   runtime modules 2.49 KiB 5 modules
+ 1:25.83   orphan modules 682 bytes [orphan] 1 module
+ 1:25.83   modules by path ../../../third_party/node/node_modules/ 1.14 MiB
+ 1:25.83     modules by path ../../../third_party/node/node_modules/react-transition-group/esm/ 54.2 KiB 9 modules
+ 1:25.83     modules by path ../../../third_party/node/node_modules/react-dom/ 1 MiB 7 modules
+ 1:25.83     modules by path ../../../third_party/node/node_modules/@babel/runtime/helpers/esm/*.js 1.23 KiB 5 modules
+ 1:25.83     modules by path ../../../third_party/node/node_modules/prop-types/ 2.58 KiB 3 modules
+ 1:25.83     modules by path ../../../third_party/node/node_modules/dom-helpers/esm/*.js 1.57 KiB 3 modules
+ 1:25.83     modules by path ../../../third_party/node/node_modules/react/ 17 KiB 2 modules
+ 1:25.83     modules by path ../../../third_party/node/node_modules/use-sync-external-store/ 2.81 KiB 2 modules
+ 1:25.83     modules by path ../../../third_party/node/node_modules/scheduler/ 10.1 KiB 2 modules
+ 1:25.83     ../../../third_party/node/node_modules/react-redux/dist/react-redux.mjs 36.6 KiB [built] [code generated]
+ 1:25.83     ../../../third_party/node/node_modules/redux/dist/redux.mjs 16.4 KiB [built] [code generated]
+ 1:25.83   ./content-src/vendor.mjs 1.62 KiB [built] [code generated]
+ 1:25.83   vendor (webpack 5.109.0) compiled successfully in 17135 ms
+ 1:25.83 activity-stream:
+ 1:25.83   asset activity-stream.bundle.js 1.27 MiB [emitted] (name: main)
+ 1:25.83   orphan modules 1.23 MiB [orphan] 163 modules
+ 1:25.83   runtime modules 1.55 KiB 5 modules
+ 1:25.83   ./content-src/activity-stream.jsx + 163 modules 1.23 MiB [not cacheable] [built] [code generated]
+ 1:25.83   activity-stream (webpack 5.109.0) compiled successfully in 17006 ms
+ 1:27.98 Elapsed: 1.21s; From /workspace/product3033/obj-artifact-build-output/dist/bin/browser: Kept 0 existing; Added/updated 4962; Removed 0 files and 0 directories.
+ 1:28.89 ./newtab-sources.stamp.stub
+ 1:29.04 ./built_in_addons.json.stub
+ 1:29.78 Elapsed: 0.00s; From /workspace/product3033/obj-artifact-build-output: Kept 0 existing; Added/updated 4; Removed 0 files and 0 directories.
+ 1:30.22 Elapsed: 0.01s; From /workspace/product3033/obj-artifact-build-output: Kept 0 existing; Added/updated 1; Removed 0 files and 0 directories.
+ 1:31.21 ./vendor.bundle.js.stub
+ 1:31.28 ./activity-stream.css.stub
+ 1:32.52 Elapsed: 0.04s; From /workspace/product3033/obj-artifact-build-output: Kept 0 existing; Added/updated 167; Removed 0 files and 0 directories.
+ 2:08.38 vendor:
+ 2:08.38   asset vendor.bundle.js 399 KiB [emitted] [minimized] (name: main)
+ 2:08.38   runtime modules 2.49 KiB 5 modules
+ 2:08.38   orphan modules 682 bytes [orphan] 1 module
+ 2:08.38   modules by path ../../../third_party/node/node_modules/ 1.14 MiB
+ 2:08.38     modules by path ../../../third_party/node/node_modules/react-transition-group/esm/ 54.2 KiB 9 modules
+ 2:08.38     modules by path ../../../third_party/node/node_modules/react-dom/ 1 MiB 7 modules
+ 2:08.38     modules by path ../../../third_party/node/node_modules/@babel/runtime/helpers/esm/*.js 1.23 KiB 5 modules
+ 2:08.38     modules by path ../../../third_party/node/node_modules/prop-types/ 2.58 KiB 3 modules
+ 2:08.38     modules by path ../../../third_party/node/node_modules/dom-helpers/esm/*.js 1.57 KiB 3 modules
+ 2:08.38     modules by path ../../../third_party/node/node_modules/react/ 17 KiB 2 modules
+ 2:08.38     modules by path ../../../third_party/node/node_modules/use-sync-external-store/ 2.81 KiB 2 modules
+ 2:08.38     modules by path ../../../third_party/node/node_modules/scheduler/ 10.1 KiB 2 modules
+ 2:08.38     ../../../third_party/node/node_modules/react-redux/dist/react-redux.mjs 36.6 KiB [built] [code generated]
+ 2:08.38     ../../../third_party/node/node_modules/redux/dist/redux.mjs 16.4 KiB [built] [code generated]
+ 2:08.38   ./content-src/vendor.mjs 1.62 KiB [built] [code generated]
+ 2:08.38   vendor (webpack 5.109.0) compiled successfully in 27841 ms
+ 2:08.38 activity-stream:
+ 2:08.38   asset activity-stream.bundle.js 1.27 MiB [emitted] (name: main)
+ 2:08.38   orphan modules 1.23 MiB [orphan] 163 modules
+ 2:08.38   runtime modules 1.55 KiB 5 modules
+ 2:08.38   ./content-src/activity-stream.jsx + 163 modules 1.23 MiB [not cacheable] [built] [code generated]
+ 2:08.38   activity-stream (webpack 5.109.0) compiled successfully in 29186 ms
+ 2:09.89 Elapsed: 0.00s; From /workspace/product3033/obj-artifact-build-output: Kept 0 existing; Added/updated 8; Removed 0 files and 0 directories.
+ 2:11.18 Packaging ipp-activator@mozilla.com.xpi...
+ 2:13.31 Packaging webcompat@mozilla.org.xpi...
+ 2:13.96 Packaging newtab@mozilla.org.xpi...
+ 2:14.87 W 0 compiler warnings present.
+ 2:15.00 W Overall system resources - Wall time: 134s; CPU: 75%; Read bytes: 128880640; Write bytes: 200450048; Read time: 9248; Write time: 31843
+ 2:15.00 To view a profile of the build, run |mach resource-usage|.
+ 2:15.01 Your build was successful!
+ 2:15.01 To take your build for a test drive, run: |mach run|
+ 2:15.01 For more information on what to do now, see https://firefox-source-docs.mozilla.org/setup/contributing_code.html
+Streaming resource usage profile to: /workspace/product3033/obj-artifact-build-output/.mozbuild/logs/build/profile_log_20261105_164816.json

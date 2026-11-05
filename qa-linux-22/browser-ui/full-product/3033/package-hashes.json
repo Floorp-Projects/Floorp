@@ -1,0 +1,30 @@
+{
+  "packageKind": "existing workflow optional-aux route; strict packaging not yet successful",
+  "package": "/workspace/product3033/obj-artifact-build-output/dist/floorp-12.21.1@159.0.1.en-US.linux-x86_64.tar.xz",
+  "sha256": "c10f8375652dd200e4136c6bb1ebb0f444a6f4d552c97a8a57aa2c6d0571f5c8",
+  "assets": [
+    {
+      "archive": "omni.ja",
+      "path": "chrome/noraneko/nora-content/assets/js/layout.js",
+      "bytes": 59182,
+      "sha256": "5fb2b654485eaf50fa42b05c81903f278cbb8dba573efc3a2ec9dd97df994296"
+    }
+  ],
+  "archives": [
+    {
+      "path": "omni.ja",
+      "sha256": "8285b0af7796d09ef6d7cdb4092d6b0c9cc3e9d892d8e45c7a68645f9f3977cf",
+      "entries": 3778
+    },
+    {
+      "path": "browser/omni.ja",
+      "sha256": "72550d298e6239c297e5feeb6f6bcacd7c862890eeaf76ab39fb08ac321b87bc",
+      "entries": 5327
+    }
+  ],
+  "productionLayout": {
+    "path": "/workspace/product3033/noraneko/_dist/noraneko/content/assets/js/layout.js",
+    "sha256": "5fb2b654485eaf50fa42b05c81903f278cbb8dba573efc3a2ec9dd97df994296",
+    "sameAsPackaged": true
+  }
+}

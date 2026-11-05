@@ -1,0 +1,8 @@
+{
+  "tag": "daily-1179",
+  "sourceSha": "8965ffc346d426ccdf919bd18585e4d4a0c21654",
+  "artifactId": 707330202,
+  "artifactSha256": "cb9b01283d5ce3167f4ba046ee7b39ae9d98a692e1beba73bd9f85f460157772",
+  "metadataSha256": "742bd72ce869d127abefdcbfdd0a0e785786dbd7afd133c6a930833e54d6b956",
+  "url": "https://github.com/Floorp-Projects/Floorp-Runtime/releases/download/daily-1179/floorp-linux-x86_64-moz-artifact.tar.xz"
+}

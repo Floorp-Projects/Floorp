@@ -1,0 +1,3 @@
+Task feles-build deno run -A tools/feles-build.ts 'build' '--phase' 'after-mach'
+[34m[injector] INFO: CI platform detected, setting binPath to: /workspace/product3033/obj-artifact-build-output/dist/bin[0m
+[32m[injector] SUCCESS: XHTML injection complete.[0m
