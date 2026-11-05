@@ -1,0 +1,164 @@
+{
+  "sourceSha": "38bde3075f197b9a88490875d1534bb79d6159a5",
+  "variant": "12.17.2",
+  "browserDistribution": "official release Linux x86_64 archive",
+  "environment": "Debian13.6 Xvfb/Openbox private session DBus; Flatpak1.16.6; Thunderbird159.0 official Flathub org.mozilla.thunderbird",
+  "syntheticInput": true,
+  "floorpStart": {
+    "pid": 47027,
+    "version": "155.0",
+    "buildID": "20260902101625",
+    "sandbox": 6,
+    "tabs": 1
+  },
+  "floorpBefore": {
+    "pid": 47027,
+    "sandbox": 6,
+    "tabs": [
+      "about:blank"
+    ]
+  },
+  "floorpEnd": {
+    "pid": 47027,
+    "version": "155.0",
+    "tabs": [
+      "about:blank",
+      "http://127.0.0.1:19094/from-thunderbird-origin"
+    ]
+  },
+  "floorpProcessesBefore": {
+    "pid": 47027,
+    "children": [
+      {
+        "pid": 47192,
+        "type": "rdd"
+      },
+      {
+        "pid": 47297,
+        "type": "preallocated"
+      },
+      {
+        "pid": 47179,
+        "type": "forkServer"
+      },
+      {
+        "pid": 47286,
+        "type": "preallocated"
+      },
+      {
+        "pid": 47294,
+        "type": "preallocated"
+      },
+      {
+        "pid": 47283,
+        "type": "utility"
+      },
+      {
+        "pid": 47227,
+        "type": "web"
+      },
+      {
+        "pid": 47183,
+        "type": "extension"
+      },
+      {
+        "pid": 47117,
+        "type": "socket"
+      }
+    ]
+  },
+  "floorpProcessesAfter": {
+    "pid": 47027,
+    "children": [
+      {
+        "pid": 47192,
+        "type": "rdd"
+      },
+      {
+        "pid": 47297,
+        "type": "preallocated"
+      },
+      {
+        "pid": 47179,
+        "type": "forkServer"
+      },
+      {
+        "pid": 47286,
+        "type": "webIsolated"
+      },
+      {
+        "pid": 47294,
+        "type": "preallocated"
+      },
+      {
+        "pid": 47283,
+        "type": "utility"
+      },
+      {
+        "pid": 47227,
+        "type": "web"
+      },
+      {
+        "pid": 47183,
+        "type": "extension"
+      },
+      {
+        "pid": 47654,
+        "type": "preallocated"
+      },
+      {
+        "pid": 47117,
+        "type": "socket"
+      }
+    ]
+  },
+  "thunderbirdRuntime": {
+    "pid": 2,
+    "version": "159.0",
+    "buildID": "20261026161902",
+    "mimeHandler": 2,
+    "openUri": 2,
+    "gtkUsePortal": "",
+    "flatpakId": "org.mozilla.thunderbird",
+    "remotingOverride": "",
+    "sandbox": 5
+  },
+  "handlerInfo": {
+    "preferredAction": 4,
+    "useSystemDefault": 4,
+    "useHelperApp": 2,
+    "alwaysAsk": false,
+    "defaultDescription": "System Handler",
+    "preferredApplication": null,
+    "possibleHandlers": []
+  },
+  "hits": [
+    {
+      "time": 1793897060.9816594,
+      "path": "/from-thunderbird-origin"
+    },
+    {
+      "time": 1793897061.0578334,
+      "path": "/favicon.ico"
+    }
+  ],
+  "dbusSenders": {
+    ":1.2": {
+      "rc": 0,
+      "stdout": "(uint32 47025,)\n",
+      "stderr": "",
+      "processName": "xdg-desktop-por",
+      "flatpakAppId": null
+    },
+    ":1.26": {
+      "rc": 0,
+      "stdout": "(uint32 47424,)\n",
+      "stderr": "",
+      "processName": "xdg-dbus-proxy",
+      "flatpakAppId": "org.mozilla.thunderbird"
+    }
+  },
+  "flatpakInstancesBefore": "3431805418\t47412\torg.mozilla.thunderbird\n",
+  "flatpakInstancesAfter": "3431805418\t47412\torg.mozilla.thunderbird\n",
+  "sourceFileSha256": "39494506a2867163b22b1831b0085920bb5519eb3ec7e310dec58e60456aa8eb"
+}

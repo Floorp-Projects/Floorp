@@ -1,0 +1,35 @@
+[
+  {
+    "asset": "hashes.txt",
+    "url": "https://github.com/Floorp-Projects/Floorp/releases/download/v12.17.2/hashes.txt",
+    "bytes": 1370,
+    "sha256": "9947c580f35f8f53a78b0d7f2d7bac4460126ce6c99e64292e001f9960a37200",
+    "declared": "sha256:9947c580f35f8f53a78b0d7f2d7bac4460126ce6c99e64292e001f9960a37200",
+    "matches": true,
+    "status": 200
+  },
+  {
+    "asset": "linux-meta.json",
+    "url": "https://github.com/Floorp-Projects/Floorp/releases/download/v12.17.2/linux-meta.json",
+    "bytes": 1402,
+    "sha256": "494ebe9375920c901967f87aaadbadc28ecf8317f7a05260cf91077f37f015d3",
+    "declared": "sha256:494ebe9375920c901967f87aaadbadc28ecf8317f7a05260cf91077f37f015d3",
+    "matches": true,
+    "status": 200
+  },
+  {
+    "asset": "release-manifest-set-v2.json",
+    "url": "https://github.com/Floorp-Projects/Floorp/releases/download/v12.17.2/release-manifest-set-v2.json",
+    "bytes": 9610,
+    "sha256": "64d973874723edf90731bdee5c6e64fd954e18a193212781d1bd1579b88dde85",
+    "declared": "sha256:64d973874723edf90731bdee5c6e64fd954e18a193212781d1bd1579b88dde85",
+    "matches": true,
+    "status": 200
+  },
+  {
+    "asset": "floorp-linux-x86_64.tar.xz",
+    "status": 200,
+    "contentLength": "99499888",
+    "retrievableHead": true
+  }
+]

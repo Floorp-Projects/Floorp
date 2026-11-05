@@ -1,0 +1,36 @@
+        ID: one.ablaze.floorp
+       Ref: app/one.ablaze.floorp/x86_64/stable
+      Arch: x86_64
+    Branch: stable
+Collection: org.flathub.Stable
+  Download: 155.5 MB
+ Installed: 379.8 MB
+   Runtime: org.freedesktop.Platform/x86_64/26.08
+       Sdk: org.freedesktop.Sdk/x86_64/26.08
+
+    Commit: ab3c23d5f3a32863918263c197b483e37d9ed78a6bb9d00a1657e31dc5e04621
+    Parent: 7637311321efa836bf02f5dbc850b763e7ebcee5c2a01d6858e5d04ca0f2773e
+   Subject: Merge pull request #197 from flathub/2 (1c01b0a7c404)
+      Date: 2026-11-04 22:38:47 +0000
+   History: 
+
+    Commit: 7637311321efa836bf02f5dbc850b763e7ebcee5c2a01d6858e5d04ca0f2773e
+   Subject: Merge pull request #196 from flathub/update-master-1a4179b (ac8c808423f1)
+      Date: 2026-10-29 06:26:49 +0000
+
+    Commit: 4b3b262a43cde916bd3cc4f841639c5bda31d152015a5ed27a99a9aec13d789e
+   Subject: Merge pull request #195 from flathub/update-master-6da5538 (7b3b745e104c)
+      Date: 2026-10-18 01:21:24 +0000
+
+    Commit: abfe1ec3a0cab27a31d92e4aed10b8945451653508329bbdc59cfa1cf08adc11
+   Subject: Merge pull request #194 from rguhr/master (56c2fec3fceb)
+      Date: 2026-10-09 05:42:25 +0000
+
+    Commit: fc0b9cdd757b4fe17549bc1ce2d4a97f6da0b05fba1ee95e45a2874f66690c29
+   Subject: Merge pull request #193 from rguhr/master (afe327029a86)
+      Date: 2026-10-08 23:52:13 +0000
+
+    Commit: 4a1df6c3fb8c2721dc8e4b43b85bb69c4111f1700ada6a7fe84f1a7dec500124
+   Subject: Merge pull request #192 from flathub/nineteen (77249cb9b3af)
+      Date: 2026-09-30 00:07:51 +0000
+

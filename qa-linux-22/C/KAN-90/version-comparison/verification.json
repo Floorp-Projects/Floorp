@@ -1,0 +1,51 @@
+{
+  "trials": [
+    {
+      "version": "12.17.2",
+      "passed": true,
+      "sender": ":1.26",
+      "senderProxyPid": "(uint32 47424,)",
+      "parentBefore": 47027,
+      "parentAfter": 47027,
+      "forkServerBefore": 47179,
+      "forkServerAfter": 47179,
+      "portalResponse": 0,
+      "httpGet": true,
+      "floorpSandboxBefore": 6,
+      "thunderbirdSandbox": 5,
+      "runtimeVersion": "155.0",
+      "runtimeBuildID": "20260902101625",
+      "noObservedSegv": true
+    },
+    {
+      "version": "12.21.1",
+      "passed": true,
+      "sender": ":1.25",
+      "senderProxyPid": "(uint32 46689,)",
+      "parentBefore": 46279,
+      "parentAfter": 46279,
+      "forkServerBefore": 46438,
+      "forkServerAfter": 46438,
+      "portalResponse": 0,
+      "httpGet": true,
+      "floorpSandboxBefore": 6,
+      "thunderbirdSandbox": 5,
+      "runtimeVersion": "159.0.1",
+      "runtimeBuildID": "20261103153232",
+      "noObservedSegv": true
+    }
+  ],
+  "currentArchiveSha256": "7dcedcbfef747819153b0b9c541a9c1f4f4965b0720f16d5d237d39b0c30d613",
+  "currentTestedFilesMatchArchive": {
+    "floorp": "4f05c1330b38e50040440be6a3b6e0e7a5b52bc79edb5c5478d978c81f5a603d",
+    "libxul.so": "760ff8a689f52c9b1f3c89a45ea8813e59f187990caed747e4a7680020c8dbc7"
+  },
+  "limitations": [
+    "Both Floorp versions are official GitHub Linux archives, not historical Floorp Flatpak comparison",
+    "Debian13.6 Cloud kernel/Xvfb/Openbox/private DBus+fixture system bus; not native Fedora44 desktop",
+    "One mail-link trial per product version; no universal crash-freedom claim",
+    "Floorp sandbox6 measured before each link; no sandbox preference written; Thunderbird default5 unchanged"
+  ],
+  "published": false,
+  "jiraCommentPosted": false
+}

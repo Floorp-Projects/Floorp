@@ -1,0 +1,33 @@
+signal time=1793897025.206544 sender=org.freedesktop.DBus -> destination=:1.1 serial=2 path=/org/freedesktop/DBus; interface=org.freedesktop.DBus; member=NameAcquired
+   string ":1.1"
+signal time=1793897025.206627 sender=org.freedesktop.DBus -> destination=:1.1 serial=4 path=/org/freedesktop/DBus; interface=org.freedesktop.DBus; member=NameLost
+   string ":1.1"
+method call time=1793897060.466629 sender=:1.26 -> destination=:1.2 serial=36 path=/org/freedesktop/portal/desktop; interface=org.freedesktop.portal.OpenURI; member=SchemeSupported
+   string "http"
+   array [
+   ]
+method call time=1793897060.469722 sender=:1.26 -> destination=:1.2 serial=44 path=/org/freedesktop/portal/desktop; interface=org.freedesktop.portal.OpenURI; member=SchemeSupported
+   string "http"
+   array [
+   ]
+method call time=1793897060.760466 sender=:1.26 -> destination=:1.2 serial=52 path=/org/freedesktop/portal/desktop; interface=org.freedesktop.portal.OpenURI; member=SchemeSupported
+   string "http"
+   array [
+   ]
+method call time=1793897060.764217 sender=:1.26 -> destination=:1.2 serial=60 path=/org/freedesktop/portal/desktop; interface=org.freedesktop.portal.OpenURI; member=SchemeSupported
+   string "http"
+   array [
+   ]
+method call time=1793897060.769768 sender=:1.26 -> destination=:1.2 serial=68 path=/org/freedesktop/portal/desktop; interface=org.freedesktop.portal.OpenURI; member=SchemeSupported
+   string "http"
+   array [
+   ]
+method call time=1793897060.772236 sender=:1.26 -> destination=:1.2 serial=72 path=/org/freedesktop/portal/desktop; interface=org.freedesktop.portal.OpenURI; member=OpenURI
+   string ""
+   string "http://127.0.0.1:19094/from-thunderbird-origin"
+   array [
+   ]
+signal time=1793897060.781983 sender=:1.2 -> destination=:1.26 serial=114 path=/org/freedesktop/portal/desktop/request/1_26/t; interface=org.freedesktop.portal.Request; member=Response
+   uint32 0
+   array [
+   ]

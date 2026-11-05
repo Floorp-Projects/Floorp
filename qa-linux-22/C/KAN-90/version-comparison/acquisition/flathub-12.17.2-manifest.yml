@@ -1,0 +1,110 @@
+app-id: one.ablaze.floorp
+runtime: org.freedesktop.Platform
+runtime-version: 25.08
+sdk: org.freedesktop.Sdk
+base: org.mozilla.firefox.BaseApp
+base-version: '25.08'
+add-extensions:
+  one.ablaze.floorp.systemconfig:
+    directory: etc/floorp
+    no-autodownload: true
+command: floorp
+finish-args:
+  - --allow=devel
+  - --share=ipc
+  - --share=network
+  - --socket=pulseaudio
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --socket=pcsc
+  - --socket=cups
+  - --persist=.floorp
+  - --env=DICPATH=/usr/share/hunspell
+  - --filesystem=xdg-config/gtk-3.0:ro
+  - --filesystem=xdg-data/applications:create
+  - --filesystem=xdg-data/icons:create
+  - --filesystem=xdg-download:rw
+  - --filesystem=/run/.heim_org.h5l.kcm-socket
+  - --filesystem=xdg-run/speech-dispatcher:ro
+  - --device=all
+  - --talk-name=org.freedesktop.FileManager1
+  - --system-talk-name=org.freedesktop.NetworkManager
+  - --talk-name=org.a11y.Bus
+  - --talk-name=org.gtk.vfs.*
+  - --own-name=org.mpris.MediaPlayer2.firefox.*
+  - --own-name=org.mozilla.floorp.*
+cleanup:
+  - /include
+  - /lib/pkgconfig
+  - /share/pkgconfig
+  - /share/aclocal
+  - /share/gtk-doc
+  - /share/doc
+  - /share/info
+  - /man
+  - /share/man
+  - '*.la'
+  - '*.a'
+modules:
+  - name: floorp
+    buildsystem: simple
+    build-commands:
+      - install -Dm644 one.ablaze.floorp.appdata.xml -t /app/share/metainfo/
+      - mkdir -p /app/lib/ffmpeg
+      - mkdir -p /app/etc/floorp
+      - mkdir -p /app/bin
+      - mkdir -p /app/share/applications
+      - mv floorp-linux-*.tar.xz floorp.tar.xz
+      - tar -xvf ./floorp.tar.xz -C /app/lib
+      - install -Dm755 floorp.sh /app/bin/floorp
+      - mv one.ablaze.floorp.desktop /app/share/applications/
+      - install -Dm644 -t /app/lib/floorp/defaults/pref/ flatpak-prefs.js
+      - install -Dm644 -t /app/lib/floorp/distribution/ policies.json
+      - >
+        for size in 16 32 48 64 128; do
+          mkdir -p "/app/share/icons/hicolor/${size}x${size}/apps"
+          cp "/app/lib/floorp/browser/chrome/icons/default/default${size}.png" "/app/share/icons/hicolor/${size}x${size}/apps/one.ablaze.floorp.png"
+        done
+      - >
+        export DISTRIBUTION_VERSION=$(cat one.ablaze.floorp.appdata.xml | sed -r 's/\s*?<release\sversion="([0-9\.]*?)"\sdate="([0-9\-]*?)".*?>.*?<\/release>\s*?/\1_\2/gp;d'
+        | head -1)
+
+        echo $DISTRIBUTION_VERSION | grep -E "^[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?_[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+        # validation
+
+        echo "pref(\"distribution.version\", \"$DISTRIBUTION_VERSION\");" >> /app/lib/floorp/defaults/pref/flatpak-prefs.js
+    sources:
+      - type: file
+        only-arches:
+          - x86_64
+        url: https://github.com/Floorp-Projects/Floorp/releases/download/v12.17.2/floorp-linux-x86_64.tar.xz
+        sha256: 2f59e332766d8ca5e966cc655450a0f1d3cf6e286f9f52172f8bd3caa7858ffc
+        x-checker-data:
+          is-main-source: true
+          type: json
+          url: https://api.github.com/repos/Floorp-Projects/Floorp/releases/latest
+          version-query: .tag_name | sub("^v"; "")
+          url-query: '"https://github.com/Floorp-Projects/Floorp/releases/download/v"
+            + $version + "/floorp-linux-x86_64.tar.xz"'
+      - type: file
+        only-arches:
+          - aarch64
+        url: https://github.com/Floorp-Projects/Floorp/releases/download/v12.17.2/floorp-linux-aarch64.tar.xz
+        sha256: 21a47c35a45e208fbf350f1123a0222451dd90b0b6239b0bf46f27b2250a6c0b
+        x-checker-data:
+          type: json
+          url: https://api.github.com/repos/Floorp-Projects/Floorp/releases/latest
+          version-query: .tag_name | sub("^v"; "")
+          url-query: '"https://github.com/Floorp-Projects/Floorp/releases/download/v"
+            + $version + "/floorp-linux-aarch64.tar.xz"'
+
+      - type: file
+        path: one.ablaze.floorp.appdata.xml
+      - type: file
+        path: src/flatpak-prefs.js
+      - type: file
+        path: src/floorp.sh
+      - type: file
+        path: src/one.ablaze.floorp.desktop
+      - type: file
+        path: src/policies.json

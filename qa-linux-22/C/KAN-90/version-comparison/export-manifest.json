@@ -1,0 +1,132 @@
+[
+  {
+    "path": "report.md",
+    "bytes": 6344,
+    "sha256": "87644b2739cf7f927f24288f49274c6264d8b49a4589c9e5a7cf1cec3b70d373"
+  },
+  {
+    "path": "run-comparison.py",
+    "bytes": 10145,
+    "sha256": "ba7d4f21295d1c05dbba89d5244cab14700163325fa248531d21f474f42ff58f"
+  },
+  {
+    "path": "prepare.py",
+    "bytes": 2995,
+    "sha256": "b481246f6bc58864411c3719b7d5cf4b30f0dd6b0679ad1ab062a82a04952c7e"
+  },
+  {
+    "path": "env.sh",
+    "bytes": 532,
+    "sha256": "76c750d6d36f8436aded2aabe44ff0b2b4773798b4d270ba45b9368bbfa9e07b"
+  },
+  {
+    "path": "launch-12.17.2.sh",
+    "bytes": 227,
+    "sha256": "59c9a6f5a2728da13e0bae96e6d432c5a0d5bd92b4c8ccca40d9e3c42f66b7c1"
+  },
+  {
+    "path": "launch-12.21.1.sh",
+    "bytes": 193,
+    "sha256": "a1231b585b1a3626714e8b0960397ab2f32f2135237e90293ff1ac958395e0be"
+  },
+  {
+    "path": "verify.py",
+    "bytes": 3616,
+    "sha256": "34b29f11abbbb62a47eece22ce8bbc4ba03a7fd451897739fe086e2105f96082"
+  },
+  {
+    "path": "verification.json",
+    "bytes": 1744,
+    "sha256": "813c8f23f466993f1d6717c9ef2fe99c8db696b6c32c2a461589f002f035da4c"
+  },
+  {
+    "path": "jira-comment-draft.md",
+    "bytes": 590,
+    "sha256": "31aa8738e457c427fe7c2d79299cb0d058a986207148a3e0e84707cdeb25031b"
+  },
+  {
+    "path": "acquisition/report.md",
+    "bytes": 4222,
+    "sha256": "af9ecc54defbd9b13467a0f8919905846e0cadda4a92c5b1a2f47f0763b9a882"
+  },
+  {
+    "path": "acquisition/summary.json",
+    "bytes": 3424,
+    "sha256": "189497d8a498fc0647bb32700c2b4a26847905ca58691689877a71fb667207ea"
+  },
+  {
+    "path": "acquisition/archive-acquired.json",
+    "bytes": 1240,
+    "sha256": "197ec0aee080c91bdcd6b5de6d31349e98c00ed0685a668bd8e7ceba6ee5c566"
+  },
+  {
+    "path": "acquisition/github-verified-metadata.json",
+    "bytes": 1263,
+    "sha256": "306e8f76e8c242e80b67fb2bcfc366fde1f6c8a8429bccfacc73a4bfb8b92777"
+  },
+  {
+    "path": "acquisition/hashes.txt",
+    "bytes": 1370,
+    "sha256": "9947c580f35f8f53a78b0d7f2d7bac4460126ce6c99e64292e001f9960a37200"
+  },
+  {
+    "path": "acquisition/linux-meta.json",
+    "bytes": 1402,
+    "sha256": "494ebe9375920c901967f87aaadbadc28ecf8317f7a05260cf91077f37f015d3"
+  },
+  {
+    "path": "acquisition/release-manifest-set-v2.json",
+    "bytes": 9610,
+    "sha256": "64d973874723edf90731bdee5c6e64fd954e18a193212781d1bd1579b88dde85"
+  },
+  {
+    "path": "acquisition/flathub-12.17.2-manifest.yml",
+    "bytes": 4033,
+    "sha256": "e209767598659f907db335c23383fb5be437d5d84da5a43c7398ece38758633f"
+  },
+  {
+    "path": "acquisition/flathub-history.txt",
+    "bytes": 1522,
+    "sha256": "d01b4258907e06d8f83bd0901b48834e6d71361c3996739c47019f007ae8a57d"
+  },
+  {
+    "path": "acquisition/flathub-build-evidence.txt",
+    "bytes": 2394,
+    "sha256": "6493b78220b0b837d6bfe8b3cc97fe317b2524daa9870c9729ecc45fab0f048d"
+  },
+  {
+    "path": "acquisition/flathub-build-commit-retrieval.log",
+    "bytes": 34,
+    "sha256": "b3b82a70fce976711b4c2b4c228208cae701833ea2b12651a7626e2cf348beac"
+  },
+  {
+    "path": "acquisition/discovery-env.sh",
+    "bytes": 556,
+    "sha256": "21af9fcee5f3c84a0d709127a10599ca7a92c085399c0ae5832a54c4ceb32506"
+  },
+  {
+    "path": "acquisition/export-files.json",
+    "bytes": 344,
+    "sha256": "c86a2023db702a138f27035674e1171862e77bbcbb95437644029fa3702fa322"
+  },
+  {
+    "path": "raw/12.17.2/observations.json",
+    "bytes": 3388,
+    "sha256": "0ce79b0ad4c3bbc966a262358c3a6cc07d05261176f8942928b174e37e8d2a40"
+  },
+  {
+    "path": "raw/12.17.2/dbus-monitor.log",
+    "bytes": 1908,
+    "sha256": "4a37a7eee8b6a7bbc505038d4a73cba184b2f3aea4ed3ffbece442bf75d8c1aa"
+  },
+  {
+    "path": "raw/12.21.1/observations.json",
+    "bytes": 3470,
+    "sha256": "941b358eecd107b91966b5523d1e53d674d39c4d59a85cd40ff9bf7f89d7c662"
+  },
+  {
+    "path": "raw/12.21.1/dbus-monitor.log",
+    "bytes": 1908,
+    "sha256": "fe69b20a06fb61b2ffb6d2a3c2169d1f34f84258569c1b8d9c511a484574da41"
+  }
+]

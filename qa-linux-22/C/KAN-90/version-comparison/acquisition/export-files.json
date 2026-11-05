@@ -1,0 +1,15 @@
+[
+  "report.md",
+  "summary.json",
+  "archive-acquired.json",
+  "github-verified-metadata.json",
+  "hashes.txt",
+  "linux-meta.json",
+  "release-manifest-set-v2.json",
+  "flathub-12.17.2-manifest.yml",
+  "flathub-history.txt",
+  "flathub-build-evidence.txt",
+  "flathub-build-commit-retrieval.log",
+  "discovery-env.sh",
+  "export-files.json"
+]

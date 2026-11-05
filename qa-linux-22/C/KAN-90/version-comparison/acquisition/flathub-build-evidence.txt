@@ -1,0 +1,15 @@
+2026-09-03T16:15:04.7115199Z Downloading https://github.com/Floorp-Projects/Floorp/releases/download/v12.17.2/floorp-linux-x86_64.tar.xz
+2026-09-03T16:15:07.2247983Z + commit_hash=46747f209ee8
+2026-09-03T16:15:07.2248804Z + subject='Update floorp module (46747f209ee8)'
+2026-09-03T16:15:07.2249767Z + subject='Update floorp module (46747f209ee8)'
+2026-09-03T16:15:07.2250240Z + echo 'Update floorp module (46747f209ee8)'
+2026-09-03T16:15:07.2259398Z + subject='Update floorp module (46747f209ee8)'
+2026-09-03T16:15:07.2268478Z + flatpak-builder -v --force-clean --sandbox --delete-build-dirs --user --install-deps-from=flathub --install-deps-from=flathub-beta --bundle-sources --disable-rofiles-fuse --repo repo --default-branch test --subject 'Update floorp module (46747f209ee8)' --disable-download --ccache --override-source-date-epoch 1321009871 builddir one.ablaze.floorp.yml
+2026-09-03T16:15:43.2070010Z FB: Using org.freedesktop.Platform version 25.08 commit bd44a6230581917d04f89812a4c21090c304d390edb73995af1c2f9fd8abf4e8
+2026-09-03T16:15:43.2195267Z FB: Using org.mozilla.firefox.BaseApp version 25.08 commit 7d5a63c899050c37535753909520a2f54022d134a176616293dbdce64362a2d5
+2026-09-03T16:16:03.9131868Z FB: Running: flatpak build-export --arch=x86_64 --update-appstream '--subject=Update floorp module (46747f209ee8)' '--exclude=/lib/debug/*' --include=/lib/debug/app '--exclude=/share/runtime/locale/*/*' /work/repo builddir test
+2026-09-03T16:16:22.3635658Z Commit: 63ecd176ac8086e8921f0441ba4ebc7cb8639138eed670d91732e4aff4fe096d
+2026-09-03T16:16:22.3733137Z FB: Running: flatpak build-export --arch=x86_64 --update-appstream --runtime '--subject=Update floorp module (46747f209ee8)' --metadata=metadata.locale --files=files/share/runtime/locale/ /work/repo builddir test
+2026-09-03T16:16:22.4440932Z FB: Running: flatpak build-export --arch=x86_64 --update-appstream --runtime '--subject=Update floorp module (46747f209ee8)' --metadata=metadata.debuginfo --files=files/lib/debug /work/repo builddir test
+2026-09-03T16:16:22.4706986Z FB: Running: flatpak build-export --arch=x86_64 --update-appstream --runtime '--subject=Update floorp module (46747f209ee8)' --metadata=metadata.sources --files=sources /work/repo builddir test
+2026-09-03T16:17:45.4486442Z Creating ref app/one.ablaze.floorp/x86_64/test with commit 63ecd176ac8086e8921f0441ba4ebc7cb8639138eed670d91732e4aff4fe096d

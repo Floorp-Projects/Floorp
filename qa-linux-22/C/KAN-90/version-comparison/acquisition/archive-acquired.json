@@ -1,0 +1,15 @@
+{
+  "url": "https://github.com/Floorp-Projects/Floorp/releases/download/v12.17.2/floorp-linux-x86_64.tar.xz",
+  "published_at": "2026-09-03T11:58:08Z",
+  "releaseDraft": false,
+  "assetId": 542589720,
+  "size": 99499888,
+  "sha256": "2f59e332766d8ca5e966cc655450a0f1d3cf6e286f9f52172f8bd3caa7858ffc",
+  "matchesDeclaredDigest": true,
+  "extractedProductPath": "/workspace/qa-linux-22/C/KAN-90/version-comparison/products/12.17.2/floorp",
+  "executed": false,
+  "metadata": {
+    "platform.ini": "[Build]\nBuildID=20260903040334\nMilestone=155.0\n",
+    "application.ini": "; This file is not used. If you modify it and want the application to use\n; your modifications, move it under the browser/ subdirectory and start with\n; the \"-app /path/to/browser/application.ini\" argument.\n[App]\nVendor=Ablaze\nName=Floorp\nRemotingName=floorp\nVersion=12.17.2@155.0\nProfile=Floorp\nBuildID=20260903040334\nID={ec8030f7-c20a-464f-9b0e-13a3a9e97384}\n\n[Gecko]\nMinVersion=155.0\nMaxVersion=155.0\n\n[XRE]\nEnableProfileMigrator=1\n\n\n[AppUpdate]\nURL=https://aus5.mozilla.org/update/6/%PRODUCT%/%VERSION%/%BUILD_ID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%SYSTEM_CAPABILITIES%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/update.xml\n"
+  }
+}

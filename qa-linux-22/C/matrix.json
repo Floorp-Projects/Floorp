@@ -348,12 +348,13 @@
       "/workspace/qa-linux-22/C/KAN-90/flatpak-env.sh dbus-run-session -- /workspace/qa-linux-22/C/web-tools/venv/bin/python /workspace/qa-linux-22/C/KAN-90/run-integration.py",
       "KAN-90/flatpak-env.sh dbus-run-session -- <marionette-python> KAN-90/portal-followup/run-portal.py",
       "KAN-90/flatpak-env.sh dbus-run-session -- <marionette-python> KAN-90/thunderbird-origin/run-flatpak-159.py",
-      "KAN-90/flatpak-env.sh dbus-run-session -- <marionette-python> KAN-90/thunderbird-origin/run-native-140.py"
+      "KAN-90/flatpak-env.sh dbus-run-session -- <marionette-python> KAN-90/thunderbird-origin/run-native-140.py",
+      "KAN-90/version-comparison/env.sh dbus-run-session -- <marionette-python> KAN-90/version-comparison/run-comparison.py <version> <official-archive-binary>"
     ],
-    "result": "original Fedora44 crash unvalidated; real Thunderbird159.0 Flatpak-origin portal path passed with source/config/sender attribution; no confirmed product defect",
+    "result": "original Fedora44 Flatpak crash unvalidated; public12.17.2 and12.21.1 archive real Thunderbird159 Flatpak-origin portal comparison both passed; no confirmed product defect",
     "remainingConditions": [
-      "Native Fedora44 protected Flatpak desktop and original reporter Thunderbird/package/runtime matching",
-      "Reported Floorp12.17.2/current comparison and symbolized matching-build coredump if original SIGSEGV recurs"
+      "Protected native Fedora44 desktop with reporter Floorp12.17.2 Flatpak and Thunderbird/package/runtime conditions; historical signed stable Floorp12.17.2 OSTree not acquired",
+      "Correct-build symbolized crash evidence only if original SIGSEGV recurs"
     ],
     "existingPr": null,
     "newPr": null,
@@ -364,7 +365,10 @@
       "KAN-90/thunderbird-origin/report.md",
       "KAN-90/thunderbird-origin/source-evidence.json",
       "KAN-90/thunderbird-origin/package-identities.json",
-      "KAN-90/thunderbird-origin/verify-thunderbird-origin.py"
+      "KAN-90/thunderbird-origin/verify-thunderbird-origin.py",
+      "KAN-90/version-comparison/report.md",
+      "KAN-90/version-comparison/verification.json",
+      "KAN-90/version-comparison/acquisition/summary.json"
     ],
     "localEvidenceRoot": "/workspace/qa-linux-22/C/KAN-90",
     "jiraLabels": [
@@ -386,7 +390,11 @@
       "raw/KAN-90/thunderbird-origin/flatpak-159-default/gio-events.json",
       "raw/KAN-90/thunderbird-origin/flatpak-159-default/observations.json",
       "raw/KAN-90/thunderbird-origin/mime-handler-1/dbus-events.json",
-      "raw/KAN-90/thunderbird-origin/mime-handler-1/observations.json"
+      "raw/KAN-90/thunderbird-origin/mime-handler-1/observations.json",
+      "KAN-90/version-comparison/raw/12.17.2/observations.json",
+      "KAN-90/version-comparison/raw/12.17.2/dbus-monitor.log",
+      "KAN-90/version-comparison/raw/12.21.1/observations.json",
+      "KAN-90/version-comparison/raw/12.21.1/dbus-monitor.log"
     ],
     "portalFollowup": {
       "passed": true,
@@ -449,6 +457,16 @@
         "thunderbirdSandbox": 5,
         "testCalledOpenUriDirectly": false
       }
+    },
+    "versionComparison": {
+      "testedFloorpDistribution": "official public GitHub archive for both versions",
+      "sender": "official signed Thunderbird159.0 Flatpak, same package/runtime25.08",
+      "trialCount": 2,
+      "passed": 2,
+      "originalFloorpFlatpakConditionSatisfied": false,
+      "published": false,
+      "jiraCommentPosted": false,
+      "lastExistingJiraCommentId": "10322"
     }
   }
 ]

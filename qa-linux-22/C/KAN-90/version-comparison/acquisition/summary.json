@@ -1,0 +1,58 @@
+{
+  "scope": "Read-only public provenance discovery and explicitly authorized separate archive acquisition; no product execution, prefix mutation or publication",
+  "release": {
+    "url": "https://github.com/Floorp-Projects/Floorp/releases/tag/v12.17.2",
+    "id": 381921834,
+    "tag": "v12.17.2",
+    "draft": false,
+    "prerelease": false,
+    "publishedAt": "2026-09-03T11:58:08Z"
+  },
+  "archive": {
+    "url": "https://github.com/Floorp-Projects/Floorp/releases/download/v12.17.2/floorp-linux-x86_64.tar.xz",
+    "published_at": "2026-09-03T11:58:08Z",
+    "releaseDraft": false,
+    "assetId": 542589720,
+    "size": 99499888,
+    "sha256": "2f59e332766d8ca5e966cc655450a0f1d3cf6e286f9f52172f8bd3caa7858ffc",
+    "matchesDeclaredDigest": true,
+    "extractedProductPath": "/workspace/qa-linux-22/C/KAN-90/version-comparison/products/12.17.2/floorp",
+    "executed": false,
+    "metadata": {
+      "platform.ini": "[Build]\nBuildID=20260903040334\nMilestone=155.0\n",
+      "application.ini": "; This file is not used. If you modify it and want the application to use\n; your modifications, move it under the browser/ subdirectory and start with\n; the \"-app /path/to/browser/application.ini\" argument.\n[App]\nVendor=Ablaze\nName=Floorp\nRemotingName=floorp\nVersion=12.17.2@155.0\nProfile=Floorp\nBuildID=20260903040334\nID={ec8030f7-c20a-464f-9b0e-13a3a9e97384}\n\n[Gecko]\nMinVersion=155.0\nMaxVersion=155.0\n\n[XRE]\nEnableProfileMigrator=1\n\n\n[AppUpdate]\nURL=https://aus5.mozilla.org/update/6/%PRODUCT%/%VERSION%/%BUILD_ID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%SYSTEM_CAPABILITIES%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/update.xml\n"
+    }
+  },
+  "runtimeMetadataDeclared": {
+    "runtime_repository": "Floorp-Projects/Floorp-Runtime",
+    "runtime_head_sha": "41fb7de3adb7f33223ae5b24b969a93efa29a9aa",
+    "runtime_run_id": 33618603154,
+    "runtime_artifact_id": 9851055593,
+    "runtime_artifact_digest": "sha256:48cc00366d38f8b7babd3b7a4a1e99a7892431cfe6054939ed5456bb89a767e8",
+    "floorp_repository": "Floorp-Projects/Floorp",
+    "floorp_head_sha": "38bde3075f197b9a88490875d1534bb79d6159a5",
+    "floorp_run_id": 33713343104,
+    "release_tag": "v12.17.2"
+  },
+  "buildIdDiscrepancy": {
+    "releaseLinuxMeta": "20260902101625",
+    "extractedApplicationIni": "20260903040334",
+    "extractedPlatformIni": "20260903040334",
+    "notResolvedByExecution": true
+  },
+  "flathub": {
+    "manifestGitCommit": "46747f209ee88905036ecc9f8933583e975ceaa2",
+    "manifestUrl": "https://github.com/flathub/one.ablaze.floorp/commit/46747f209ee88905036ecc9f8933583e975ceaa2",
+    "runtime": "org.freedesktop.Platform/x86_64/25.08",
+    "baseApp": "org.mozilla.firefox.BaseApp/x86_64/25.08",
+    "inputArchiveSha256": "2f59e332766d8ca5e966cc655450a0f1d3cf6e286f9f52172f8bd3caa7858ffc",
+    "publicBuildRun": "https://github.com/flathub-infra/vorarbeiter/actions/runs/33776994508",
+    "buildTestCommit": "63ecd176ac8086e8921f0441ba4ebc7cb8639138eed670d91732e4aff4fe096d",
+    "buildTestCommitRetrieval": "Server returned404; not a verified stable deployment commit",
+    "stableSignedCommitIdentified": false,
+    "currentSignedRemoteHistoryOldest": "2026-09-30",
+    "currentSignedRemoteHistoryCount": 6,
+    "buildRuntimeCommit": "bd44a6230581917d04f89812a4c21090c304d390edb73995af1c2f9fd8abf4e8",
+    "buildBaseAppCommit": "7d5a63c899050c37535753909520a2f54022d134a176616293dbdce64362a2d5"
+  }
+}
