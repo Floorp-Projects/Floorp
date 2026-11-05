@@ -46,3 +46,5 @@ source patch適用をbuild log行977、extracted guardの既適用確認を行42
 allowlist exportから `python verify-results.py <export-root>` で4つのraw JSONとinventory/immutabilityを再検算できる。元installerをGitHub artifact13444572566から取得すれば、`verify-package.py --zip <artifact.zip> --zip-sha256 sha256:1a0b538f14730130a63ac283e94465ca302781525ac44d2c6b91479418271aa0 --out <new-dir> --expected-module expected-module.sys.mjs --patch-repo <checkout-at-9d042bc>` で元ZIP/実member/両patchを検証できる。
 
 `run-regression.sh <new-dir>/extracted/floorp/floorp <fresh-output>` は依存path/portsを環境に合わせて調整する。QA_MARIONETTE_PYTHON/QA_VIDEO_FILEでMarionette venv/同一動画を指定。生成fixtureは `ffmpeg -f lavfi -i testsrc2=size=480x270:rate=24 -t 60 -c:v libvpx -b:v 350k -an <video.webm>` 相当、実バイト列hashは各rawに記録。今回用いた動画はtimestamp/frame番号を焼き込んだ同一ローカルfixtureであり、別生成バイト列との同一hashを主張しない。Xvfb/Openbox/xdotoolとライブラリ/テーマdata dirsはenvironment/runnerで明記。
+
+PR3042本文を完全製品検証へ更新、Jira KAN-50コメント10397へ追記。needs-live-youtube-pip/needs-pr-review/historical-repro/P2・未着手を維持。証拠初回commit33f12a10a32e636ca2601532d3735b7781e6db95。merge/本番release/Doneなし。

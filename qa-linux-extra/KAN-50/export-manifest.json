@@ -6,8 +6,8 @@
   },
   {
     "path": "matrix.json",
-    "bytes": 3654,
-    "sha256": "c02f78e929d7d8819e5c64b956056e15274f1637428f568303a01a6346de1420"
+    "bytes": 3732,
+    "sha256": "2f1e46a5e1ddcba97a128caf3155886c0fae9ae67cb2aaa248582a7b3016a8c7"
   },
   {
     "path": "verification.json",
@@ -126,7 +126,7 @@
   },
   {
     "path": "full-package/export-manifest.json",
-    "bytes": 5425,
-    "sha256": "3a86425b8cd631def36ad86398996aff2ee533d7947ab6ad27925fef8d670882"
+    "bytes": 5565,
+    "sha256": "786fb4b0bbaae6fa0b492498320e22474074f31f1d4f17cc6d2fc07e260ea012"
   }
 ]

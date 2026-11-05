@@ -1,0 +1,14 @@
+{
+  "key": "KAN-50",
+  "sourceSha": "9d042bc17be83c15d2ff3a25eb712f04c4d3eb45",
+  "draftPr": "https://github.com/Floorp-Projects/Floorp/pull/3042",
+  "prStillDraft": true,
+  "jiraCommentId": "10397",
+  "jiraUrl": "https://floorp-projects.atlassian.net/browse/KAN-50?focusedCommentId=10397",
+  "evidenceCommit": "33f12a10a32e636ca2601532d3735b7781e6db95",
+  "standardCiRun": 42084373774,
+  "packageRun": 42086912660,
+  "mergePerformed": false,
+  "productionReleasePerformed": false,
+  "doneTransitionPerformed": false
+}

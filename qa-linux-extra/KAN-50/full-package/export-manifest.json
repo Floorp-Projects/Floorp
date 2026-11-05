@@ -1,13 +1,13 @@
 [
   {
     "path": "report.md",
-    "bytes": 8275,
-    "sha256": "c2a712b05cd2a7ebd747bba860dbc17e1ed00fbe1916761f76d2c16d15f40c7f"
+    "bytes": 8538,
+    "sha256": "fe5aa7e8812c63ad0d34c892a609b888e66404bc6a2008e86e70f8bfc2745003"
   },
   {
     "path": "matrix.json",
-    "bytes": 5213,
-    "sha256": "cde9e3cd35dc4388293c23ca875f8cf6c07406a4230372c33f929e3fa31c114f"
+    "bytes": 5216,
+    "sha256": "c05424075fc3de1dc3d2e615f6ed03d6a8f592df88492a2b485dcb30b62b3f09"
   },
   {
     "path": "verification.json",
@@ -178,5 +178,10 @@
     "path": "panel-first-close-panel/minimized-panel-captions.png",
     "bytes": 56572,
     "sha256": "79cd736740a50fbdfe94257323ea77f45ac1b3199ce0c76cabf9c3f5967fb8f1"
+  },
+  {
+    "path": "sync-result.json",
+    "bytes": 519,
+    "sha256": "fd60dbf4d899877bab4c5d9b82a8f7a8c270c233769a14e1f75ee957ff4c1e9a"
   }
 ]

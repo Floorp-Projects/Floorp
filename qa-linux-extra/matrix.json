@@ -86,7 +86,7 @@
       ],
       "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2699 (merged real tabbrowser integration; no duplicate repair)",
       "newPr": "https://github.com/Floorp-Projects/Floorp/pull/3042",
-      "jiraCommentId": "10379",
+      "jiraCommentId": "10397",
       "evidence": [
         "report.md",
         "verification.json",
@@ -139,8 +139,13 @@
         "productFilesUnchanged": 46,
         "productResourceReplacements": false,
         "evidenceDirectory": "full-package",
-        "jiraCommentId": null
-      }
+        "jiraCommentId": "10397"
+      },
+      "jiraCommentIds": [
+        "10363",
+        "10379",
+        "10397"
+      ]
     },
     {
       "key": "KAN-99",

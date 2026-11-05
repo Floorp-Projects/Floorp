@@ -32,7 +32,7 @@
     ],
     "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2699 (historical missing-gBrowser symptom)",
     "newPr": "https://github.com/Floorp-Projects/Floorp/pull/3042",
-    "jiraCommentId": null,
+    "jiraCommentId": "10397",
     "ci": {
       "run": 42084373774,
       "status": "success",
