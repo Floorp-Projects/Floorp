@@ -2452,6 +2452,7 @@ jobs:
              tools/update-packaging/common.sh "$stage/update-packaging/"
           cp "$HOME/noraneko-publish/meta.json" "$stage/meta.json"
           cp noraneko/tools/validate_macos_helper_trust.py "$stage/"
+          cp noraneko/tools/finalize_macos_update_metadata.py "$stage/"
 
       - name: Upload macOS finalizer tools
         if: ${{ steps.provenance.outputs.platform_key == 'mac' && !inputs.skip_signing }}
@@ -2656,18 +2657,8 @@ jobs:
           MAR="$tools/mar" MOZ_PRODUCT_VERSION="$version" MAR_CHANNEL_ID="$channel" \
             bash "$tools/update-packaging/make_full_update.sh" "$mar" "$app"
           test -s "$mar"
-          python3 - "$tools/meta.json" "$mar" "$out/meta.json" <<'PY'
-          import hashlib
-          import json
-          from pathlib import Path
-          import sys
-
-          metadata = json.loads(Path(sys.argv[1]).read_text())
-          mar = Path(sys.argv[2])
-          metadata["mar_size"] = mar.stat().st_size
-          metadata["mar_shasum"] = hashlib.sha512(mar.read_bytes()).hexdigest()
-          Path(sys.argv[3]).write_text(json.dumps(metadata, indent=2) + "\n")
-          PY
+          python3 "$tools/finalize_macos_update_metadata.py" \
+            "$app" "$mar" "$tools/meta.json" "$out/meta.json"
           stage="$RUNNER_TEMP/floorp-notarized-stage"
           mkdir -p "$stage"
           cp "$native/floorp-macOS-universal.dmg" "$mar" "$out/meta.json" "$stage/"

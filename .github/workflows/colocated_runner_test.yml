@@ -44,6 +44,8 @@ jobs:
         run: python3 -m unittest discover -s tools -p 'test_validate_runtime_*provenance.py'
       - name: Test macOS privileged helper trust verifier
         run: python3 -m unittest discover -s tools -p 'test_validate_macos_helper_trust.py' -v
+      - name: Test macOS update metadata integrity
+        run: python3 -m unittest discover -s tools -p 'test_finalize_macos_update_metadata.py' -v
       - name: Test OpenBot event notification sender
         run: node --test tools/test-openbot-events.mjs
       - name: Test final package QA source intake
