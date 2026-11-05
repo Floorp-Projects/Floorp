@@ -279,7 +279,7 @@
     "environment": "Debian13.6 x86_64, Xvfb :92, isolated DBus; KWin6.3.6 nested Wayland for visual/layout/controls; software WebRender",
     "testCommand": "PYTHONPATH=python python3 gesture-run.py floorp 29311 gesture; PYTHONPATH=python python3 kan98-sparse-product-run.py floorp 29333 sparse-product",
     "result": "実再現・独立した2欠陥を限定修正Draft",
-    "observations": "単upは発火するがup-down/dense up-down/down-upはaction label表示後にreleaseで不発。始点終点距離によるactivation gateが原因。最大変位へ修正しcontroller40件成功、旧controllerは新回帰で失敗。専用製品コピーの局所修正でも改善。 right-down追加9/9成功とcaptured trace replayから初期方向fallbackの別欠陥を特定。決定的な疎点列6/6が旧製品で不発、別コピーの局所修正で全成功。recognizer63ケース成功、元コードの新2cases失敗。 PR3031/3034とも標準Ubuntu CI281modules/0fail+Firefox16tasks、artifact内容とdigestを確認。",
+    "observations": "単upは発火するがup-down/dense up-down/down-upはaction label表示後にreleaseで不発。始点終点距離によるactivation gateが原因。最大変位へ修正しcontroller40件成功、旧controllerは新回帰で失敗。専用製品コピーの局所修正でも改善。 right-down追加9/9成功とcaptured trace replayから初期方向fallbackの別欠陥を特定。決定的な疎点列6/6が旧製品で不発、別コピーの局所修正で全成功。recognizer63ケース成功、元コードの新2cases失敗。 PR3031/3034とも標準Ubuntu CI281modules/0fail+Firefox16tasks、artifact内容とdigestを確認。 追加組合せ: minDistance20、[(0,0),(0,-160),(0,16)]は3031単独で逆Close Tab、3031+3034のOS XTestでNew Tab1回・元tab保持・contextmenu残留なし。3034先行または同時適用を両PRへ明記。",
     "remainingConditions": [
       "Arch/Sway/Wayland/物理入力/DPI",
       "full production build"
@@ -301,7 +301,12 @@
       "KAN-98/sparse-product-29335.json",
       "KAN-98/sparse-tests-original-29332.json",
       "KAN-98/sparse-tests-patched-29336.json",
-      "ci/summary.json"
+      "ci/summary.json",
+      "KAN-98/combination-report.md",
+      "KAN-98/combination-29508.json",
+      "KAN-98/combination-29510.json",
+      "KAN-98/combination-source-baseline-29507.json",
+      "KAN-98/combination-source-patched-29506.json"
     ],
     "sprintScope": "KAN-1",
     "additionalPrs": [
@@ -313,7 +318,9 @@
     ],
     "ci": {
       "3031": "281 modules passed, 0 failed; artifact verified",
-      "3034": "281 modules passed, 0 failed; artifact verified"
-    }
+      "3034": "earlier e6f2dbe7 passed281 modules; test-only b21a8112 not rechecked in this scoped follow-up"
+    },
+    "additionalTestCommit": "b21a81120d2354d90ea433410173cac208aabbf8",
+    "applicationOrder": "3034 before3031, or apply together"
   }
 ]

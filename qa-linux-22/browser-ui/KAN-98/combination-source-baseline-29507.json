@@ -1,0 +1,5 @@
+{
+  "passed": false,
+  "error": "Error: returning beyond the start must not reverse the configured action: expected=up-down actual=down-up",
+  "stack": "assertEquals@qa-linux-22/browser-ui/kan98-combination-source.py:1769:13\ntestSparseReturningTrailKeepsInitialDirection@qa-linux-22/browser-ui/kan98-combination-source.py:2613:17\n@qa-linux-22/browser-ui/kan98-combination-source.py:2885:19\n@qa-linux-22/browser-ui/kan98-combination-source.py:2886:8\nevaluate.sandbox/promise<@chrome://remote/content/marionette/evaluate.sys.mjs:127:10\nevaluate.sandbox@chrome://remote/content/marionette/evaluate.sys.mjs:103:17\nexecuteScript@chrome://remote/content/marionette/actors/MarionetteCommandsChild.sys.mjs:358:26\nreceiveMessage@chrome://remote/content/marionette/actors/MarionetteCommandsChild.sys.mjs:214:31\n"
+}

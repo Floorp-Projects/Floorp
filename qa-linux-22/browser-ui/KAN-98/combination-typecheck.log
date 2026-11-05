@@ -1,0 +1,85 @@
+Check floorp-kan98-sparse/browser-features/chrome/common/mouse-gesture/test/mouseGestureRecognizer.test.ts
+TS2307 [ERROR]: Import "solid-js" not a dependency
+  hint: If you want to use the npm package, try running `deno add npm:solid-js`
+    at file:///workspace/floorp-kan98-sparse/browser-features/chrome/common/mouse-gesture/config.ts:12:8
+
+TS2307 [ERROR]: Import "@nora/solid-xul" not a dependency
+  hint: If you want to use a JSR or npm package, try running `deno add jsr:@nora/solid-xul` or `deno add npm:@nora/solid-xul`
+    at file:///workspace/floorp-kan98-sparse/browser-features/chrome/common/mouse-gesture/config.ts:13:31
+
+TS2307 [ERROR]: Import "io-ts" not a dependency
+  hint: If you want to use the npm package, try running `deno add npm:io-ts`
+    at file:///workspace/floorp-kan98-sparse/browser-features/chrome/common/mouse-gesture/config.ts:14:20
+
+TS2307 [ERROR]: Import "fp-ts/Either" not a dependency
+  hint: If you want to use the npm package, try running `deno add npm:fp-ts/Either`
+    at file:///workspace/floorp-kan98-sparse/browser-features/chrome/common/mouse-gesture/config.ts:15:25
+
+TS2304 [ERROR]: Cannot find name 'Services'.
+    Services.prefs.getBoolPref(
+    ~~~~~~~~
+    at file:///workspace/floorp-kan98-sparse/browser-features/chrome/common/mouse-gesture/config.ts:173:5
+
+TS2304 [ERROR]: Cannot find name 'Services'.
+    Services.prefs.setBoolPref(MOUSE_GESTURE_ENABLED_PREF, enabled());
+    ~~~~~~~~
+    at file:///workspace/floorp-kan98-sparse/browser-features/chrome/common/mouse-gesture/config.ts:180:5
+
+TS2304 [ERROR]: Cannot find name 'Services'.
+      Services.prefs.getBoolPref(
+      ~~~~~~~~
+    at file:///workspace/floorp-kan98-sparse/browser-features/chrome/common/mouse-gesture/config.ts:185:7
+
+TS2304 [ERROR]: Cannot find name 'Services'.
+  Services.prefs.addObserver(MOUSE_GESTURE_ENABLED_PREF, enabledObserver);
+  ~~~~~~~~
+    at file:///workspace/floorp-kan98-sparse/browser-features/chrome/common/mouse-gesture/config.ts:192:3
+
+TS2304 [ERROR]: Cannot find name 'Services'.
+    Services.prefs.removeObserver(MOUSE_GESTURE_ENABLED_PREF, enabledObserver);
+    ~~~~~~~~
+    at file:///workspace/floorp-kan98-sparse/browser-features/chrome/common/mouse-gesture/config.ts:194:5
+
+TS2304 [ERROR]: Cannot find name 'Services'.
+      Services.prefs.getStringPref(MOUSE_GESTURE_CONFIG_PREF, strDefaultConfig),
+      ~~~~~~~~
+    at file:///workspace/floorp-kan98-sparse/browser-features/chrome/common/mouse-gesture/config.ts:223:7
+
+TS2304 [ERROR]: Cannot find name 'Services'.
+    Services.prefs.setStringPref(
+    ~~~~~~~~
+    at file:///workspace/floorp-kan98-sparse/browser-features/chrome/common/mouse-gesture/config.ts:228:5
+
+TS2304 [ERROR]: Cannot find name 'Services'.
+          Services.prefs.getStringPref(
+          ~~~~~~~~
+    at file:///workspace/floorp-kan98-sparse/browser-features/chrome/common/mouse-gesture/config.ts:238:11
+
+TS2304 [ERROR]: Cannot find name 'Services'.
+      Services.prefs.setStringPref(MOUSE_GESTURE_CONFIG_PREF, strDefaultConfig);
+      ~~~~~~~~
+    at file:///workspace/floorp-kan98-sparse/browser-features/chrome/common/mouse-gesture/config.ts:247:7
+
+TS2304 [ERROR]: Cannot find name 'Services'.
+  Services.prefs.addObserver(MOUSE_GESTURE_CONFIG_PREF, configObserver);
+  ~~~~~~~~
+    at file:///workspace/floorp-kan98-sparse/browser-features/chrome/common/mouse-gesture/config.ts:251:3
+
+TS2304 [ERROR]: Cannot find name 'Services'.
+    Services.prefs.removeObserver(MOUSE_GESTURE_CONFIG_PREF, configObserver);
+    ~~~~~~~~
+    at file:///workspace/floorp-kan98-sparse/browser-features/chrome/common/mouse-gesture/config.ts:253:5
+
+TS2339 [ERROR]: Property 'hot' does not exist on type 'ImportMeta'.
+  import.meta.hot,
+              ~~~
+    at file:///workspace/floorp-kan98-sparse/browser-features/chrome/common/mouse-gesture/config.ts:261:15
+
+TS2339 [ERROR]: Property 'hot' does not exist on type 'ImportMeta'.
+  import.meta.hot,
+              ~~~
+    at file:///workspace/floorp-kan98-sparse/browser-features/chrome/common/mouse-gesture/config.ts:265:15
+
+Found 17 errors.
+
+error: Type checking failed.

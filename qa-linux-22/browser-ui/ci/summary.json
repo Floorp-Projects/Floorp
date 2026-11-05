@@ -48,6 +48,9 @@
     "artifactId": 13428075583,
     "artifactSha256": "d719bd8a501e433027dd6a83786ff143c94990f0aa4057274688dc16976094d0",
     "artifactDigestMatched": true,
-    "recognizerModuleExplicitSuccess": true
+    "recognizerModuleExplicitSuccess": true,
+    "latestHead": "b21a81120d2354d90ea433410173cac208aabbf8",
+    "latestStatus": "not_rechecked_in_scoped_combination_followup",
+    "combinationFocusedCase": "actual browser: baseline wrong down-up; patched up-down pass"
   }
 }

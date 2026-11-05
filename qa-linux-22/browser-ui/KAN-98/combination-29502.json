@@ -1,0 +1,153 @@
+{
+  "relativeTrail": [
+    [
+      0,
+      0
+    ],
+    [
+      0,
+      -160
+    ],
+    [
+      0,
+      80
+    ]
+  ],
+  "translatedTrail": [
+    [
+      450,
+      500
+    ],
+    [
+      450,
+      340
+    ],
+    [
+      450,
+      580
+    ]
+  ],
+  "input": "W3C synthetic pointer, 0ms held moves; not physical input",
+  "product": {
+    "version": "159.0.1",
+    "build": "20261103153232",
+    "name": "Floorp"
+  },
+  "observations": [
+    {
+      "beforeTabs": 2,
+      "heldLabel": [
+        {
+          "id": "mouse-gesture-global-styles",
+          "text": "\n            #mouse-gesture-display-container {\n                position: fixed;\n                top: 0;\n               "
+        },
+        {
+          "id": "cmd_gestureRotateLeft",
+          "text": ""
+        },
+        {
+          "id": "cmd_gestureRotateRight",
+          "text": ""
+        },
+        {
+          "id": "cmd_gestureRotateEnd",
+          "text": ""
+        },
+        {
+          "id": "mouse-gesture-display-container",
+          "text": "New Tab"
+        }
+      ],
+      "after": {
+        "tabs": 3,
+        "originalConnected": true,
+        "tabOpen": 1,
+        "tabClose": 0,
+        "popupShown": 1,
+        "menuState": "open",
+        "events": [
+          {
+            "type": "mousedown",
+            "x": 450,
+            "y": 500,
+            "buttons": 2,
+            "trusted": true,
+            "defaultPrevented": false
+          },
+          {
+            "type": "contextmenu",
+            "x": 450,
+            "y": 500,
+            "buttons": 2,
+            "trusted": true,
+            "defaultPrevented": false
+          },
+          {
+            "type": "mousemove",
+            "x": 450,
+            "y": 340,
+            "buttons": 2,
+            "trusted": true,
+            "defaultPrevented": false
+          },
+          {
+            "type": "mousemove",
+            "x": 450,
+            "y": 580,
+            "buttons": 2,
+            "trusted": true,
+            "defaultPrevented": false
+          },
+          {
+            "type": "mouseup",
+            "x": 450,
+            "y": 580,
+            "buttons": 0,
+            "trusted": true,
+            "defaultPrevented": true
+          }
+        ]
+      },
+      "correctOnce": true,
+      "noContextMenu": false
+    }
+  ],
+  "config": {
+    "enabled": false,
+    "rockerGesturesEnabled": true,
+    "wheelGesturesEnabled": true,
+    "sensitivity": 40,
+    "showTrail": true,
+    "showLabel": true,
+    "trailColor": "#37ff00",
+    "trailWidth": 6,
+    "contextMenu": {
+      "minDistance": 5,
+      "preventionTimeout": 200
+    },
+    "actions": [
+      {
+        "pattern": [
+          "up",
+          "down"
+        ],
+        "action": "gecko-open-new-tab"
+      },
+      {
+        "pattern": [
+          "down",
+          "up"
+        ],
+        "action": "gecko-close-tab"
+      }
+    ],
+    "rockerActions": {
+      "leftRight": "gecko-forward",
+      "rightLeft": "gecko-back"
+    },
+    "wheelActions": {
+      "scrollUp": "gecko-show-previous-tab",
+      "scrollDown": "gecko-show-next-tab"
+    }
+  }
+}

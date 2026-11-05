@@ -51,3 +51,7 @@ See `rightdown-followup.md`: an additional fresh-profile comparison succeeded fo
 Jira最終comment ID: `10291`。
 
 PR3034標準CIも281モジュール/0失敗+Firefox16task、artifact digest/内容確認済み。
+
+## Combined activation/recognizer follow-up
+
+See combination-report.md. For threshold20 and [(0,0),(0,-160),(0,16)],3031 alone executes the opposite Close Tab;3031+3034 executes New Tab once with native OS XTest and no remaining contextmenu. Apply3034 first or together. Added focused source case b21a8112 fails baseline and passes fixed in actual Floorp chrome. W3C pre-trail menu difference and typecheck dependency shortage are recorded separately. Jira10291 updated.

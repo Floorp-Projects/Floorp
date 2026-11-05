@@ -1,0 +1,2 @@
+error: Could not find "fp-ts" in a node_modules folder. Deno expects the node_modules/ directory to be up to date. Did you forget to run `deno install`?
+    at file:///workspace/floorp-kan98-sparse/browser-features/chrome/common/mouse-gesture/config.ts:15:25

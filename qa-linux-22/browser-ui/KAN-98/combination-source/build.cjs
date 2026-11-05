@@ -1,0 +1,5 @@
+const fs=require('fs'),path=require('path');
+const esbuild=require(process.env.ESBUILD_MODULE||'/workspace/Floorp/node_modules/.deno/esbuild@0.27.7/node_modules/esbuild/lib/main.js');
+const root=process.env.FLOORP_SOURCE||'/workspace/floorp-kan98-sparse';
+const entry=path.join(root,'browser-features/chrome/common/mouse-gesture/test/mouseGestureRecognizer.test.ts');
+esbuild.build({entryPoints:[entry],bundle:true,format:'iife',globalName:'qaComboTest',outfile:process.argv[2],plugins:[{name:'focused-combination-case',setup(b){b.onLoad({filter:/mouseGestureRecognizer\.test\.ts$/},a=>({contents:fs.readFileSync(a.path,'utf8')+'\nexport { testSparseReturningTrailKeepsInitialDirection as runCombinationRegression };',loader:'ts',resolveDir:path.dirname(a.path)}));if(process.env.QA_COMBO_BASELINE)b.onLoad({filter:/\/utils\/recognizer\.ts$/},a=>({contents:fs.readFileSync('/workspace/qa-linux-22/browser-ui/KAN-98/sparse-source-test/original-recognizer.ts','utf8'),loader:'ts',resolveDir:path.dirname(a.path)}));}}]}).catch(e=>{console.error(e);process.exit(1)});
