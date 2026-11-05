@@ -345,20 +345,24 @@
     },
     "testCommand": [
       "/workspace/qa-linux-22/C/KAN-90/flatpak-env.sh dbus-run-session -- /workspace/qa-linux-22/C/web-tools/venv/bin/python /workspace/qa-linux-22/C/KAN-90/run-integration.py",
-      "KAN-90/flatpak-env.sh dbus-run-session -- <marionette-python> KAN-90/portal-followup/run-portal.py"
+      "KAN-90/flatpak-env.sh dbus-run-session -- <marionette-python> KAN-90/portal-followup/run-portal.py",
+      "KAN-90/flatpak-env.sh dbus-run-session -- <marionette-python> KAN-90/thunderbird-origin/run-flatpak-159.py"
     ],
-    "result": "environment-insufficient-for-original; two-actual-Thunderbird-to-Flatpak-remoting-controls-passed; independent-real-portal-OpenURI-control-passed",
+    "result": "original Fedora44 crash unvalidated; real Thunderbird159.0 Flatpak-origin portal path passed with source/config/sender attribution; no confirmed product defect",
     "remainingConditions": [
-      "Fedora44 desktop with functioning protected Flatpak namespaces",
-      "Actual Thunderbird-origin portal OpenURI dispatch (independent direct portal control passed)",
-      "Original12.17.2 comparison and symbolized matching-build coredump if reproduced"
+      "Native Fedora44 protected Flatpak desktop and original reporter Thunderbird/package/runtime matching",
+      "Reported Floorp12.17.2/current comparison and symbolized matching-build coredump if original SIGSEGV recurs"
     ],
     "existingPr": null,
     "newPr": null,
     "jiraCommentId": "10305",
     "evidence": [
       "KAN-90/report.md",
-      "KAN-90/portal-followup/report.md"
+      "KAN-90/portal-followup/report.md",
+      "KAN-90/thunderbird-origin/report.md",
+      "KAN-90/thunderbird-origin/source-evidence.json",
+      "KAN-90/thunderbird-origin/package-identities.json",
+      "KAN-90/thunderbird-origin/verify-thunderbird-origin.py"
     ],
     "localEvidenceRoot": "/workspace/qa-linux-22/C/KAN-90",
     "jiraLabels": [
@@ -368,7 +372,6 @@
       "needs-crash-log",
       "needs-fedora-44",
       "needs-repro",
-      "needs-thunderbird-portal",
       "p1",
       "triage-reviewed"
     ],
@@ -376,7 +379,12 @@
       "raw/KAN-90/integration-result.json",
       "raw/KAN-90/portal-followup/result.json",
       "raw/KAN-90/portal-followup/dbus-events.json",
-      "raw/KAN-90/direct-control/integration-result.json"
+      "raw/KAN-90/direct-control/integration-result.json",
+      "raw/KAN-90/thunderbird-origin/flatpak-159-default/dbus-events.json",
+      "raw/KAN-90/thunderbird-origin/flatpak-159-default/gio-events.json",
+      "raw/KAN-90/thunderbird-origin/flatpak-159-default/observations.json",
+      "raw/KAN-90/thunderbird-origin/mime-handler-1/dbus-events.json",
+      "raw/KAN-90/thunderbird-origin/mime-handler-1/observations.json"
     ],
     "portalFollowup": {
       "passed": true,
@@ -403,6 +411,41 @@
     "jiraCommentIds": [
       "10282",
       "10305"
-    ]
+    ],
+    "thunderbirdOriginFollowup": {
+      "nativeControl": {
+        "version": "140.12.0 Debian",
+        "geckoSha": "7df86525c2c876c7c92320e49c3e0771f7a605c0",
+        "mimeHandler": 1,
+        "openUri": 2,
+        "defaultAction": 4,
+        "openUriObserved": false,
+        "directGet": true
+      },
+      "passedRoute": {
+        "version": "159.0",
+        "package": "org.mozilla.thunderbird",
+        "packageCommit": "e3be32008d26a83a5da2e77783688b79a1306bfd71f5c2aa8873922659fd35ec",
+        "geckoSha": "5add844c26613d7e4d84c799d6e23cf987b1240d",
+        "mimeHandler": 2,
+        "openUri": 2,
+        "gtkUsePortal": "",
+        "remotingOverride": "",
+        "portalSender": ":1.182",
+        "senderProxyPid": 45204,
+        "senderObservedAppId": "org.mozilla.thunderbird",
+        "response": 0,
+        "get": "/from-thunderbird-origin",
+        "floorpParentBefore": 2,
+        "floorpParentAfter": 2,
+        "floorpHostBefore": 43914,
+        "floorpHostAfter": 43914,
+        "forkServerBefore": 92,
+        "forkServerAfter": 92,
+        "floorpSandboxBefore": 6,
+        "thunderbirdSandbox": 5,
+        "testCalledOpenUriDirectly": false
+      }
+    }
   }
 ]

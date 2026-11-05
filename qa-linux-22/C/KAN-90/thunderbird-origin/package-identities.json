@@ -1,0 +1,54 @@
+{
+  "native140": {
+    "application": {
+      "vendor": "Mozilla",
+      "name": "Thunderbird",
+      "remotingname": "thunderbird-default",
+      "version": "140.12.0",
+      "profile": "Thunderbird",
+      "buildid": "20260612205621",
+      "sourcerepository": "https://hg.mozilla.org/releases/comm-esr140",
+      "sourcestamp": "0cf57d71a2710903976e503a5e4d7fdae8913cf3",
+      "id": "{3550f703-e582-4d05-9a08-453d09bdfdc6}"
+    },
+    "gecko": {
+      "buildid": "20260612205621",
+      "milestone": "140.12.0",
+      "sourcerepository": "https://hg.mozilla.org/releases/mozilla-esr140",
+      "sourcestamp": "7df86525c2c876c7c92320e49c3e0771f7a605c0"
+    },
+    "binarySha256": "8eae9766ef1a3d3d44b058640cc67a85b63efdfb4f5cde1056037cc082d4bb7c",
+    "libxulSha256": "f0c8feddf248c79bc7971eb9c1e41349d76a2ef174dafc4496a3ca631480cad7",
+    "package": "1:140.12.0esr-1~deb13u1",
+    "desktopId": "thunderbird.desktop"
+  },
+  "flatpak159": {
+    "application": {
+      "vendor": "Mozilla",
+      "name": "Thunderbird",
+      "remotingname": "thunderbird",
+      "version": "159.0",
+      "profile": "thunderbird",
+      "buildid": "20261026161902",
+      "sourcerepository": "https://hg.mozilla.org/releases/comm-release",
+      "sourcestamp": "1e7f8bb744a4a8e407f17b79d3ff59694ef80f54",
+      "id": "{3550f703-e582-4d05-9a08-453d09bdfdc6}"
+    },
+    "gecko": {
+      "buildid": "20261026161902",
+      "milestone": "159.0",
+      "sourcerepository": "https://hg.mozilla.org/releases/mozilla-release",
+      "sourcestamp": "5add844c26613d7e4d84c799d6e23cf987b1240d"
+    },
+    "binarySha256": "eca72b8d48a8c65a7a5938ee1d30126c313f6877382055b3f4939141957e4b32",
+    "libxulSha256": "3bae1ae176ffd85b315c84a3292bb0cec61b2bbd76031cadb81a7088b5381ebb",
+    "appId": "org.mozilla.thunderbird",
+    "commit": "e3be32008d26a83a5da2e77783688b79a1306bfd71f5c2aa8873922659fd35ec",
+    "runtime": "org.freedesktop.Platform/x86_64/25.08",
+    "wrapper": "#!/bin/bash\nexport TMPDIR=\"$XDG_RUNTIME_DIR/app/$FLATPAK_ID\"\nexec /app/lib/thunderbird/thunderbird --name org.mozilla.thunderbird \"$@\"\n"
+  },
+  "harnessInheritedPortalFlags": {
+    "GIO_USE_PORTALS": null,
+    "GTK_USE_PORTAL": null
+  }
+}

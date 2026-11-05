@@ -1,0 +1,168 @@
+{
+  "sourceFile": "KAN-90/thunderbird-origin/flatpak-159-default/result.json",
+  "sourceSha256": "78ac75cb3c4be34dab69ef1ee9c6825a4ea690573da6de9a1b148b1c7b42bcf2",
+  "extraction": "exact selected original fields; only local fixture URLs/process metadata/preferences; no profiles/cookies/credential/environment dump",
+  "observations": {
+    "sourceSha": "984509d2053be7bae9027133bda7259cd706b208",
+    "environment": "Debian13.6 Xvfb/Openbox private session DBus; Flatpak1.16.6; Thunderbird159.0 official Flathub org.mozilla.thunderbird",
+    "syntheticInput": true,
+    "floorpLauncherPid": 43914,
+    "portalSelection": "Signed official Thunderbird159.0 Flatpak; shipped portal prefs unchanged; Flatpak identity automatic, no GTK_USE_PORTAL/remoting override",
+    "thunderbirdRuntime": {
+      "pid": 2,
+      "version": "159.0",
+      "buildID": "20261026161902",
+      "mimeHandler": 2,
+      "openUri": 2,
+      "gtkUsePortal": "",
+      "flatpakId": "org.mozilla.thunderbird",
+      "remotingOverride": "",
+      "sandbox": 5
+    },
+    "handlerInfo": {
+      "preferredAction": 4,
+      "useSystemDefault": 4,
+      "useHelperApp": 2,
+      "alwaysAsk": false,
+      "defaultDescription": "System Handler",
+      "preferredApplication": null,
+      "possibleHandlers": []
+    },
+    "floorpBefore": {
+      "pid": 2,
+      "sandbox": 6,
+      "tabs": [
+        "chrome://browser/content/blanktab.html"
+      ]
+    },
+    "floorpEnd": {
+      "pid": 2,
+      "version": "159.0.1",
+      "tabs": [
+        "chrome://browser/content/blanktab.html",
+        "http://127.0.0.1:19094/from-thunderbird-origin"
+      ]
+    },
+    "floorpProcessesBefore": {
+      "pid": 2,
+      "children": [
+        {
+          "pid": 946,
+          "type": "preallocated"
+        },
+        {
+          "pid": 884,
+          "type": "utility"
+        },
+        {
+          "pid": 150,
+          "type": "rdd"
+        },
+        {
+          "pid": 792,
+          "type": "extension"
+        },
+        {
+          "pid": 920,
+          "type": "preallocated"
+        },
+        {
+          "pid": 922,
+          "type": "preallocated"
+        },
+        {
+          "pid": 40,
+          "type": "socket"
+        },
+        {
+          "pid": 142,
+          "type": "privilegedabout"
+        },
+        {
+          "pid": 92,
+          "type": "forkServer"
+        }
+      ]
+    },
+    "floorpProcessesAfter": {
+      "pid": 2,
+      "children": [
+        {
+          "pid": 946,
+          "type": "preallocated"
+        },
+        {
+          "pid": 1210,
+          "type": "preallocated"
+        },
+        {
+          "pid": 884,
+          "type": "utility"
+        },
+        {
+          "pid": 150,
+          "type": "rdd"
+        },
+        {
+          "pid": 792,
+          "type": "extension"
+        },
+        {
+          "pid": 920,
+          "type": "webIsolated"
+        },
+        {
+          "pid": 922,
+          "type": "preallocated"
+        },
+        {
+          "pid": 40,
+          "type": "socket"
+        },
+        {
+          "pid": 142,
+          "type": "privilegedabout"
+        },
+        {
+          "pid": 92,
+          "type": "forkServer"
+        }
+      ]
+    },
+    "hits": [
+      {
+        "time": 1793893811.951988,
+        "path": "/from-thunderbird-origin"
+      },
+      {
+        "time": 1793893812.1769302,
+        "path": "/favicon.ico"
+      }
+    ],
+    "dbusSenders": {
+      ":1.17": {
+        "rc": 0,
+        "stdout": "(uint32 43967,)\n",
+        "stderr": "",
+        "processName": "xdg-dbus-proxy",
+        "flatpakAppId": "one.ablaze.floorp"
+      },
+      ":1.182": {
+        "rc": 0,
+        "stdout": "(uint32 45204,)\n",
+        "stderr": "",
+        "processName": "xdg-dbus-proxy",
+        "flatpakAppId": "org.mozilla.thunderbird"
+      },
+      ":1.2": {
+        "rc": 0,
+        "stdout": "(uint32 43912,)\n",
+        "stderr": "",
+        "processName": "xdg-desktop-por",
+        "flatpakAppId": null
+      }
+    },
+    "flatpakInstancesBefore": "3196041261\t45195\torg.mozilla.thunderbird\n4162242108\t43914\tone.ablaze.floorp\n",
+    "flatpakInstancesAfter": "3196041261\t45195\torg.mozilla.thunderbird\n4162242108\t43914\tone.ablaze.floorp\n"
+  }
+}

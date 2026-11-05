@@ -1,0 +1,1614 @@
+[
+  {
+    "version": "140",
+    "file": "StaticPrefList.yaml",
+    "sourceUrl": "https://hg.mozilla.org/releases/mozilla-esr140/file/7df86525c2c876c7c92320e49c3e0771f7a605c0/modules/libpref/init/StaticPrefList.yaml",
+    "sha256": "cd9457a86fe488bf599f20d8d78e99f248b69efb29dec33c45e46a66f34f0686",
+    "excerpt": [
+      {
+        "line": 18786,
+        "text": "# Whether to use gtk portal for the mime handler."
+      },
+      {
+        "line": 18787,
+        "text": "#  - 0: never"
+      },
+      {
+        "line": 18788,
+        "text": "#  - 1: always"
+      },
+      {
+        "line": 18789,
+        "text": "#  - 2: auto (for now only true for flatpak, see bug 1516290)"
+      },
+      {
+        "line": 18790,
+        "text": "- name: widget.use-xdg-desktop-portal.mime-handler"
+      },
+      {
+        "line": 18791,
+        "text": "  type: int32_t"
+      },
+      {
+        "line": 18792,
+        "text": "  value: 2"
+      },
+      {
+        "line": 18793,
+        "text": "  mirror: always"
+      },
+      {
+        "line": 18794,
+        "text": ""
+      }
+    ]
+  },
+  {
+    "version": "140",
+    "file": "StaticPrefList.yaml",
+    "sourceUrl": "https://hg.mozilla.org/releases/mozilla-esr140/file/7df86525c2c876c7c92320e49c3e0771f7a605c0/modules/libpref/init/StaticPrefList.yaml",
+    "sha256": "cd9457a86fe488bf599f20d8d78e99f248b69efb29dec33c45e46a66f34f0686",
+    "excerpt": [
+      {
+        "line": 18824,
+        "text": "# Whether to use XDG portal for opening to a file."
+      },
+      {
+        "line": 18825,
+        "text": "# https://flatpak.github.io/xdg-desktop-portal/#gdbus-org.freedesktop.portal.OpenURI"
+      },
+      {
+        "line": 18826,
+        "text": "#  - 0: never"
+      },
+      {
+        "line": 18827,
+        "text": "#  - 1: always"
+      },
+      {
+        "line": 18828,
+        "text": "#  - 2: auto (true for flatpak or GTK_USE_PORTAL=1, false otherwise)"
+      },
+      {
+        "line": 18829,
+        "text": "- name: widget.use-xdg-desktop-portal.open-uri"
+      },
+      {
+        "line": 18830,
+        "text": "  type: int32_t"
+      },
+      {
+        "line": 18831,
+        "text": "  value: 2"
+      },
+      {
+        "line": 18832,
+        "text": "  mirror: always"
+      },
+      {
+        "line": 18833,
+        "text": "#endif"
+      }
+    ]
+  },
+  {
+    "version": "140",
+    "file": "WidgetUtilsGtk.cpp",
+    "sourceUrl": "https://hg.mozilla.org/releases/mozilla-esr140/file/7df86525c2c876c7c92320e49c3e0771f7a605c0/widget/gtk/WidgetUtilsGtk.cpp",
+    "sha256": "0bc5d7ab1cfbadfdbc733a83f5334f91aaeb559fa11f59fc609dc1234472fee5",
+    "excerpt": [
+      {
+        "line": 284,
+        "text": "bool ShouldUsePortal(PortalKind aPortalKind) {"
+      },
+      {
+        "line": 285,
+        "text": "  static bool sPortalEnv = [] {"
+      },
+      {
+        "line": 286,
+        "text": "    if (IsRunningUnderFlatpakOrSnap()) {"
+      },
+      {
+        "line": 287,
+        "text": "      return true;"
+      },
+      {
+        "line": 288,
+        "text": "    }"
+      },
+      {
+        "line": 289,
+        "text": "    const char* portalEnvString = g_getenv(\"GTK_USE_PORTAL\");"
+      },
+      {
+        "line": 290,
+        "text": "    return portalEnvString && atoi(portalEnvString) != 0;"
+      },
+      {
+        "line": 291,
+        "text": "  }();"
+      },
+      {
+        "line": 292,
+        "text": ""
+      },
+      {
+        "line": 293,
+        "text": "  bool autoBehavior = sPortalEnv;"
+      },
+      {
+        "line": 294,
+        "text": "  const int32_t pref = [&] {"
+      },
+      {
+        "line": 295,
+        "text": "    switch (aPortalKind) {"
+      },
+      {
+        "line": 296,
+        "text": "      case PortalKind::FilePicker:"
+      },
+      {
+        "line": 297,
+        "text": "        return StaticPrefs::widget_use_xdg_desktop_portal_file_picker();"
+      },
+      {
+        "line": 298,
+        "text": "      case PortalKind::MimeHandler:"
+      },
+      {
+        "line": 299,
+        "text": "        // Mime portal breaks default browser handling, see bug 1516290."
+      },
+      {
+        "line": 300,
+        "text": "        autoBehavior = IsRunningUnderFlatpakOrSnap();"
+      },
+      {
+        "line": 301,
+        "text": "        return StaticPrefs::widget_use_xdg_desktop_portal_mime_handler();"
+      },
+      {
+        "line": 302,
+        "text": "      case PortalKind::NativeMessaging:"
+      },
+      {
+        "line": 303,
+        "text": "        return StaticPrefs::widget_use_xdg_desktop_portal_native_messaging();"
+      },
+      {
+        "line": 304,
+        "text": "      case PortalKind::Settings:"
+      },
+      {
+        "line": 305,
+        "text": "        autoBehavior = true;"
+      },
+      {
+        "line": 306,
+        "text": "        return StaticPrefs::widget_use_xdg_desktop_portal_settings();"
+      },
+      {
+        "line": 307,
+        "text": "      case PortalKind::Location:"
+      },
+      {
+        "line": 308,
+        "text": "        return StaticPrefs::widget_use_xdg_desktop_portal_location();"
+      },
+      {
+        "line": 309,
+        "text": "      case PortalKind::OpenUri:"
+      },
+      {
+        "line": 310,
+        "text": "        return StaticPrefs::widget_use_xdg_desktop_portal_open_uri();"
+      },
+      {
+        "line": 311,
+        "text": "    }"
+      },
+      {
+        "line": 312,
+        "text": "    return 2;"
+      },
+      {
+        "line": 313,
+        "text": "  }();"
+      },
+      {
+        "line": 314,
+        "text": ""
+      },
+      {
+        "line": 315,
+        "text": "  switch (pref) {"
+      },
+      {
+        "line": 316,
+        "text": "    case 0:"
+      },
+      {
+        "line": 317,
+        "text": "      return false;"
+      },
+      {
+        "line": 318,
+        "text": "    case 1:"
+      },
+      {
+        "line": 319,
+        "text": "      return true;"
+      },
+      {
+        "line": 320,
+        "text": "    default:"
+      },
+      {
+        "line": 321,
+        "text": "      return autoBehavior;"
+      },
+      {
+        "line": 322,
+        "text": "  }"
+      },
+      {
+        "line": 323,
+        "text": "}"
+      },
+      {
+        "line": 324,
+        "text": ""
+      },
+      {
+        "line": 325,
+        "text": "nsTArray<nsCString> ParseTextURIList(const nsACString& aData) {"
+      },
+      {
+        "line": 326,
+        "text": "  UniquePtr<char[]> data(ToNewCString(aData));"
+      },
+      {
+        "line": 327,
+        "text": "  gchar** uris = g_uri_list_extract_uris(data.get());"
+      },
+      {
+        "line": 328,
+        "text": ""
+      },
+      {
+        "line": 329,
+        "text": "  nsTArray<nsCString> result;"
+      },
+      {
+        "line": 330,
+        "text": "  for (size_t i = 0; i < g_strv_length(uris); i++) {"
+      },
+      {
+        "line": 331,
+        "text": "    result.AppendElement(nsCString(uris[i]));"
+      },
+      {
+        "line": 332,
+        "text": "  }"
+      },
+      {
+        "line": 333,
+        "text": ""
+      },
+      {
+        "line": 334,
+        "text": "  g_strfreev(uris);"
+      },
+      {
+        "line": 335,
+        "text": "  return result;"
+      },
+      {
+        "line": 336,
+        "text": "}"
+      },
+      {
+        "line": 337,
+        "text": ""
+      },
+      {
+        "line": 338,
+        "text": "#ifdef MOZ_WAYLAND"
+      },
+      {
+        "line": 339,
+        "text": "static gboolean token_failed(gpointer aData);"
+      },
+      {
+        "line": 340,
+        "text": ""
+      },
+      {
+        "line": 341,
+        "text": "class XDGTokenRequest {"
+      }
+    ]
+  },
+  {
+    "version": "140",
+    "file": "nsGIOService.cpp",
+    "sourceUrl": "https://hg.mozilla.org/releases/mozilla-esr140/file/7df86525c2c876c7c92320e49c3e0771f7a605c0/toolkit/system/gnome/nsGIOService.cpp",
+    "sha256": "d6032a611ca8d7234b8d138cbcccd850e95bf73ea648b2eaa4d139808ced046c",
+    "excerpt": [
+      {
+        "line": 621,
+        "text": "  *aApp = nullptr;"
+      },
+      {
+        "line": 622,
+        "text": ""
+      },
+      {
+        "line": 623,
+        "text": "  // Application in flatpak sandbox does not have access to the list"
+      },
+      {
+        "line": 624,
+        "text": "  // of installed applications on the system. We use SchemeSupported"
+      },
+      {
+        "line": 625,
+        "text": "  // method to check if the URI scheme is supported and then use"
+      },
+      {
+        "line": 626,
+        "text": "  // generic nsFlatpakHandlerApp which forwards launch call to the system."
+      },
+      {
+        "line": 627,
+        "text": "  if (widget::ShouldUsePortal(widget::PortalKind::MimeHandler)) {"
+      },
+      {
+        "line": 628,
+        "text": "    if (mozilla::net::IsLoopbackHostname(aURIScheme)) {"
+      },
+      {
+        "line": 629,
+        "text": "      // When the user writes foo:1234, we try to handle it natively using"
+      },
+      {
+        "line": 630,
+        "text": "      // GetAppForURIScheme, and if that fails, we carry on. On flatpak there's"
+      },
+      {
+        "line": 631,
+        "text": "      // no way to know if an app has handlers or not. Some things like"
+      },
+      {
+        "line": 632,
+        "text": "      // localhost:1234 are really unlikely to be handled by native"
+      },
+      {
+        "line": 633,
+        "text": "      // apps, and we're much better off returning an error here instead."
+      },
+      {
+        "line": 634,
+        "text": "      return NS_ERROR_FAILURE;"
+      },
+      {
+        "line": 635,
+        "text": "    }"
+      },
+      {
+        "line": 636,
+        "text": "    GUniquePtr<GError> error;"
+      },
+      {
+        "line": 637,
+        "text": ""
+      }
+    ]
+  },
+  {
+    "version": "140",
+    "file": "nsGIOService.cpp",
+    "sourceUrl": "https://hg.mozilla.org/releases/mozilla-esr140/file/7df86525c2c876c7c92320e49c3e0771f7a605c0/toolkit/system/gnome/nsGIOService.cpp",
+    "sha256": "d6032a611ca8d7234b8d138cbcccd850e95bf73ea648b2eaa4d139808ced046c",
+    "excerpt": [
+      {
+        "line": 796,
+        "text": "static nsresult ShowURIImpl(nsIURI* aURI, const char* aXDGToken = nullptr) {"
+      },
+      {
+        "line": 797,
+        "text": "  nsAutoCString spec;"
+      },
+      {
+        "line": 798,
+        "text": "  MOZ_TRY(aURI->GetSpec(spec));"
+      },
+      {
+        "line": 799,
+        "text": "  GUniquePtr<GError> error;"
+      },
+      {
+        "line": 800,
+        "text": "#ifdef __OpenBSD__"
+      },
+      {
+        "line": 801,
+        "text": "  if (!g_app_info_launch_default_for_uri_openbsd("
+      },
+      {
+        "line": 802,
+        "text": "          spec.get(), GetLaunchContext(aXDGToken).get(),"
+      },
+      {
+        "line": 803,
+        "text": "#else"
+      },
+      {
+        "line": 804,
+        "text": "  if (!g_app_info_launch_default_for_uri(spec.get(),"
+      },
+      {
+        "line": 805,
+        "text": "                                         GetLaunchContext(aXDGToken).get(),"
+      },
+      {
+        "line": 806,
+        "text": "#endif"
+      },
+      {
+        "line": 807,
+        "text": "          getter_Transfers(error))) {"
+      },
+      {
+        "line": 808,
+        "text": "    g_warning(\"Could not launch default application for URI: %s\","
+      },
+      {
+        "line": 809,
+        "text": "              error->message);"
+      },
+      {
+        "line": 810,
+        "text": "    return NS_ERROR_FAILURE;"
+      },
+      {
+        "line": 811,
+        "text": "  }"
+      },
+      {
+        "line": 812,
+        "text": "  return NS_OK;"
+      },
+      {
+        "line": 813,
+        "text": "}"
+      },
+      {
+        "line": 814,
+        "text": ""
+      },
+      {
+        "line": 815,
+        "text": "nsresult nsGIOService::ShowURI(nsIURI* aURI) {"
+      },
+      {
+        "line": 816,
+        "text": "  auto promise = mozilla::widget::RequestWaylandFocusPromise();"
+      },
+      {
+        "line": 817,
+        "text": "  if (!promise) {"
+      },
+      {
+        "line": 818,
+        "text": "    return ShowURIImpl(aURI);"
+      },
+      {
+        "line": 819,
+        "text": "  }"
+      },
+      {
+        "line": 820,
+        "text": "  promise->Then("
+      },
+      {
+        "line": 821,
+        "text": "      GetMainThreadSerialEventTarget(), __func__,"
+      },
+      {
+        "line": 822,
+        "text": "      /* resolve */"
+      },
+      {
+        "line": 823,
+        "text": "      [uri = RefPtr{aURI}](nsCString token) { ShowURIImpl(uri, token.get()); },"
+      },
+      {
+        "line": 824,
+        "text": "      /* reject */"
+      },
+      {
+        "line": 825,
+        "text": "      [uri = RefPtr{aURI}](bool state) { ShowURIImpl(uri); });"
+      },
+      {
+        "line": 826,
+        "text": "  return NS_OK;"
+      },
+      {
+        "line": 827,
+        "text": "}"
+      },
+      {
+        "line": 828,
+        "text": ""
+      },
+      {
+        "line": 829,
+        "text": "static nsresult LaunchPathImpl(const nsACString& aPath,"
+      },
+      {
+        "line": 830,
+        "text": "                               const char* aXDGToken = nullptr) {"
+      },
+      {
+        "line": 831,
+        "text": "  RefPtr<GFile> file = dont_AddRef("
+      }
+    ]
+  },
+  {
+    "version": "159",
+    "file": "StaticPrefList.yaml",
+    "sourceUrl": "https://hg.mozilla.org/releases/mozilla-release/file/5add844c26613d7e4d84c799d6e23cf987b1240d/modules/libpref/init/StaticPrefList.yaml",
+    "sha256": "d52399cc74e28bb91ec40cc83b57834ce6127452635a8d2a3e3e60a7af2fe330",
+    "excerpt": [
+      {
+        "line": 21229,
+        "text": "# Whether to use gtk portal for the mime handler."
+      },
+      {
+        "line": 21230,
+        "text": "#  - 0: never"
+      },
+      {
+        "line": 21231,
+        "text": "#  - 1: always"
+      },
+      {
+        "line": 21232,
+        "text": "#  - 2: auto (for now only true for flatpak, see bug 1516290)"
+      },
+      {
+        "line": 21233,
+        "text": "- name: widget.use-xdg-desktop-portal.mime-handler"
+      },
+      {
+        "line": 21234,
+        "text": "  type: int32_t"
+      },
+      {
+        "line": 21235,
+        "text": "  value: 2"
+      },
+      {
+        "line": 21236,
+        "text": "  mirror: always"
+      },
+      {
+        "line": 21237,
+        "text": ""
+      }
+    ]
+  },
+  {
+    "version": "159",
+    "file": "StaticPrefList.yaml",
+    "sourceUrl": "https://hg.mozilla.org/releases/mozilla-release/file/5add844c26613d7e4d84c799d6e23cf987b1240d/modules/libpref/init/StaticPrefList.yaml",
+    "sha256": "d52399cc74e28bb91ec40cc83b57834ce6127452635a8d2a3e3e60a7af2fe330",
+    "excerpt": [
+      {
+        "line": 21277,
+        "text": "# Whether to use XDG portal for opening to a file."
+      },
+      {
+        "line": 21278,
+        "text": "# https://flatpak.github.io/xdg-desktop-portal/#gdbus-org.freedesktop.portal.OpenURI"
+      },
+      {
+        "line": 21279,
+        "text": "#  - 0: never"
+      },
+      {
+        "line": 21280,
+        "text": "#  - 1: always"
+      },
+      {
+        "line": 21281,
+        "text": "#  - 2: auto (true for flatpak or GTK_USE_PORTAL=1, false otherwise)"
+      },
+      {
+        "line": 21282,
+        "text": "- name: widget.use-xdg-desktop-portal.open-uri"
+      },
+      {
+        "line": 21283,
+        "text": "  type: int32_t"
+      },
+      {
+        "line": 21284,
+        "text": "  value: 2"
+      },
+      {
+        "line": 21285,
+        "text": "  mirror: always"
+      },
+      {
+        "line": 21286,
+        "text": ""
+      }
+    ]
+  },
+  {
+    "version": "159",
+    "file": "WidgetUtilsGtk.cpp",
+    "sourceUrl": "https://hg.mozilla.org/releases/mozilla-release/file/5add844c26613d7e4d84c799d6e23cf987b1240d/widget/gtk/WidgetUtilsGtk.cpp",
+    "sha256": "f368314462a03f88dde9ce3cb4e01fd3b116cba9dde54475d267721a4538f1de",
+    "excerpt": [
+      {
+        "line": 299,
+        "text": "bool ShouldUsePortal(PortalKind aPortalKind) {"
+      },
+      {
+        "line": 300,
+        "text": "  static bool sPortalEnv = [] {"
+      },
+      {
+        "line": 301,
+        "text": "    if (IsRunningUnderFlatpakOrSnap()) {"
+      },
+      {
+        "line": 302,
+        "text": "      return true;"
+      },
+      {
+        "line": 303,
+        "text": "    }"
+      },
+      {
+        "line": 304,
+        "text": "    const char* portalEnvString = g_getenv(\"GTK_USE_PORTAL\");"
+      },
+      {
+        "line": 305,
+        "text": "    return portalEnvString && atoi(portalEnvString) != 0;"
+      },
+      {
+        "line": 306,
+        "text": "  }();"
+      },
+      {
+        "line": 307,
+        "text": ""
+      },
+      {
+        "line": 308,
+        "text": "  bool autoBehavior = sPortalEnv;"
+      },
+      {
+        "line": 309,
+        "text": "  const int32_t pref = [&] {"
+      },
+      {
+        "line": 310,
+        "text": "    switch (aPortalKind) {"
+      },
+      {
+        "line": 311,
+        "text": "      case PortalKind::FilePicker:"
+      },
+      {
+        "line": 312,
+        "text": "        autoBehavior = true;"
+      },
+      {
+        "line": 313,
+        "text": "        return StaticPrefs::widget_use_xdg_desktop_portal_file_picker();"
+      },
+      {
+        "line": 314,
+        "text": "      case PortalKind::MimeHandler:"
+      },
+      {
+        "line": 315,
+        "text": "        // Mime portal breaks default browser handling, see bug 1516290."
+      },
+      {
+        "line": 316,
+        "text": "        autoBehavior = IsRunningUnderFlatpakOrSnap();"
+      },
+      {
+        "line": 317,
+        "text": "        return StaticPrefs::widget_use_xdg_desktop_portal_mime_handler();"
+      },
+      {
+        "line": 318,
+        "text": "      case PortalKind::NativeMessaging:"
+      },
+      {
+        "line": 319,
+        "text": "        return StaticPrefs::widget_use_xdg_desktop_portal_native_messaging();"
+      },
+      {
+        "line": 320,
+        "text": "      case PortalKind::NativeMessagingProxy:"
+      },
+      {
+        "line": 321,
+        "text": "        return StaticPrefs::"
+      },
+      {
+        "line": 322,
+        "text": "            widget_use_xdg_desktop_portal_native_messaging_proxy();"
+      },
+      {
+        "line": 323,
+        "text": "      case PortalKind::Settings:"
+      },
+      {
+        "line": 324,
+        "text": "        autoBehavior = true;"
+      },
+      {
+        "line": 325,
+        "text": "        return StaticPrefs::widget_use_xdg_desktop_portal_settings();"
+      },
+      {
+        "line": 326,
+        "text": "      case PortalKind::Location:"
+      },
+      {
+        "line": 327,
+        "text": "        return StaticPrefs::widget_use_xdg_desktop_portal_location();"
+      },
+      {
+        "line": 328,
+        "text": "      case PortalKind::OpenUri:"
+      },
+      {
+        "line": 329,
+        "text": "        return StaticPrefs::widget_use_xdg_desktop_portal_open_uri();"
+      },
+      {
+        "line": 330,
+        "text": "      case PortalKind::Notification:"
+      },
+      {
+        "line": 331,
+        "text": "        // The portal notification backend is not feature complete yet, so it"
+      },
+      {
+        "line": 332,
+        "text": "        // is opt-in for now regardless of the environment."
+      },
+      {
+        "line": 333,
+        "text": "        autoBehavior = false;"
+      },
+      {
+        "line": 334,
+        "text": "        return StaticPrefs::widget_use_xdg_desktop_portal_notification();"
+      },
+      {
+        "line": 335,
+        "text": "    }"
+      },
+      {
+        "line": 336,
+        "text": "    return 2;"
+      },
+      {
+        "line": 337,
+        "text": "  }();"
+      },
+      {
+        "line": 338,
+        "text": ""
+      },
+      {
+        "line": 339,
+        "text": "  switch (pref) {"
+      },
+      {
+        "line": 340,
+        "text": "    case 0:"
+      },
+      {
+        "line": 341,
+        "text": "      return false;"
+      },
+      {
+        "line": 342,
+        "text": "    case 1:"
+      },
+      {
+        "line": 343,
+        "text": "      return true;"
+      },
+      {
+        "line": 344,
+        "text": "    default:"
+      },
+      {
+        "line": 345,
+        "text": "      return autoBehavior;"
+      },
+      {
+        "line": 346,
+        "text": "  }"
+      },
+      {
+        "line": 347,
+        "text": "}"
+      },
+      {
+        "line": 348,
+        "text": ""
+      },
+      {
+        "line": 349,
+        "text": "nsTArray<nsCString> ParseTextURIList(const nsACString& aData) {"
+      },
+      {
+        "line": 350,
+        "text": "  UniquePtr<char[]> data(ToNewCString(aData));"
+      },
+      {
+        "line": 351,
+        "text": "  gchar** uris = g_uri_list_extract_uris(data.get());"
+      },
+      {
+        "line": 352,
+        "text": ""
+      },
+      {
+        "line": 353,
+        "text": "  nsTArray<nsCString> result;"
+      },
+      {
+        "line": 354,
+        "text": "  for (size_t i = 0; i < g_strv_length(uris); i++) {"
+      },
+      {
+        "line": 355,
+        "text": "    result.AppendElement(nsCString(uris[i]));"
+      },
+      {
+        "line": 356,
+        "text": "  }"
+      }
+    ]
+  },
+  {
+    "version": "159",
+    "file": "nsGIOService.cpp",
+    "sourceUrl": "https://hg.mozilla.org/releases/mozilla-release/file/5add844c26613d7e4d84c799d6e23cf987b1240d/toolkit/system/gnome/nsGIOService.cpp",
+    "sha256": "aac6668765599d6185e06f054fd6994cc925fee628414d3cac14a08585fa9330",
+    "excerpt": [
+      {
+        "line": 720,
+        "text": "  // Portals works with DBus only."
+      },
+      {
+        "line": 721,
+        "text": "#ifdef MOZ_ENABLE_DBUS"
+      },
+      {
+        "line": 722,
+        "text": "  // Application in flatpak sandbox does not have access to the list"
+      },
+      {
+        "line": 723,
+        "text": "  // of installed applications on the system. We use SchemeSupported"
+      },
+      {
+        "line": 724,
+        "text": "  // method to check if the URI scheme is supported and then use"
+      },
+      {
+        "line": 725,
+        "text": "  // generic nsFlatpakHandlerApp which forwards launch call to the system."
+      },
+      {
+        "line": 726,
+        "text": "  if (widget::ShouldUsePortal(widget::PortalKind::MimeHandler)) {"
+      },
+      {
+        "line": 727,
+        "text": "    LOG(\"  using portal\");"
+      },
+      {
+        "line": 728,
+        "text": "    if (mozilla::net::IsLoopbackHostname(aURIScheme)) {"
+      },
+      {
+        "line": 729,
+        "text": "      LOG(\"  quit, IsLoopbackHostname\");"
+      },
+      {
+        "line": 730,
+        "text": "      // When the user writes foo:1234, we try to handle it natively using"
+      },
+      {
+        "line": 731,
+        "text": "      // GetAppForURIScheme, and if that fails, we carry on. On flatpak there's"
+      },
+      {
+        "line": 732,
+        "text": "      // no way to know if an app has handlers or not. Some things like"
+      },
+      {
+        "line": 733,
+        "text": "      // localhost:1234 are really unlikely to be handled by native"
+      },
+      {
+        "line": 734,
+        "text": "      // apps, and we're much better off returning an error here instead."
+      },
+      {
+        "line": 735,
+        "text": "      return NS_ERROR_FAILURE;"
+      },
+      {
+        "line": 736,
+        "text": "    }"
+      }
+    ]
+  },
+  {
+    "version": "159",
+    "file": "nsGIOService.cpp",
+    "sourceUrl": "https://hg.mozilla.org/releases/mozilla-release/file/5add844c26613d7e4d84c799d6e23cf987b1240d/toolkit/system/gnome/nsGIOService.cpp",
+    "sha256": "aac6668765599d6185e06f054fd6994cc925fee628414d3cac14a08585fa9330",
+    "excerpt": [
+      {
+        "line": 919,
+        "text": "static nsresult ShowURIImpl(nsIURI* aURI, const char* aXDGToken = nullptr) {"
+      },
+      {
+        "line": 920,
+        "text": "  nsAutoCString spec;"
+      },
+      {
+        "line": 921,
+        "text": "  MOZ_TRY(aURI->GetSpec(spec));"
+      },
+      {
+        "line": 922,
+        "text": "  GUniquePtr<GError> error;"
+      },
+      {
+        "line": 923,
+        "text": "  LOG(\"ShowURIImpl() spec %s : aXDGToken %s\", spec.get(),"
+      },
+      {
+        "line": 924,
+        "text": "      aXDGToken ? aXDGToken : \"none\");"
+      },
+      {
+        "line": 925,
+        "text": "#ifdef __OpenBSD__"
+      },
+      {
+        "line": 926,
+        "text": "  if (!g_app_info_launch_default_for_uri_openbsd("
+      },
+      {
+        "line": 927,
+        "text": "          spec.get(), GetLaunchContext(aXDGToken).get(),"
+      },
+      {
+        "line": 928,
+        "text": "#else"
+      },
+      {
+        "line": 929,
+        "text": "  if (!g_app_info_launch_default_for_uri(spec.get(),"
+      },
+      {
+        "line": 930,
+        "text": "                                         GetLaunchContext(aXDGToken).get(),"
+      },
+      {
+        "line": 931,
+        "text": "#endif"
+      },
+      {
+        "line": 932,
+        "text": "          getter_Transfers(error))) {"
+      },
+      {
+        "line": 933,
+        "text": "    g_warning(\"Could not launch default application for URI: %s\","
+      },
+      {
+        "line": 934,
+        "text": "              error->message);"
+      },
+      {
+        "line": 935,
+        "text": "    return NS_ERROR_FAILURE;"
+      },
+      {
+        "line": 936,
+        "text": "  }"
+      },
+      {
+        "line": 937,
+        "text": "  return NS_OK;"
+      },
+      {
+        "line": 938,
+        "text": "}"
+      },
+      {
+        "line": 939,
+        "text": ""
+      },
+      {
+        "line": 940,
+        "text": "nsresult nsGIOService::ShowURI(nsIURI* aURI) {"
+      },
+      {
+        "line": 941,
+        "text": "  auto promise = mozilla::widget::RequestWaylandFocusPromise();"
+      },
+      {
+        "line": 942,
+        "text": "  if (!promise) {"
+      },
+      {
+        "line": 943,
+        "text": "    LOG(\"nsGIOService::ShowURI() failed to get focus promise, fallback to \""
+      },
+      {
+        "line": 944,
+        "text": "        \"ShowURIImpl()\");"
+      },
+      {
+        "line": 945,
+        "text": "    return ShowURIImpl(aURI);"
+      },
+      {
+        "line": 946,
+        "text": "  }"
+      },
+      {
+        "line": 947,
+        "text": "  promise->Then("
+      },
+      {
+        "line": 948,
+        "text": "      GetMainThreadSerialEventTarget(), __func__,"
+      },
+      {
+        "line": 949,
+        "text": "      /* resolve */"
+      },
+      {
+        "line": 950,
+        "text": "      [uri = RefPtr{aURI}](nsCString token) {"
+      },
+      {
+        "line": 951,
+        "text": "        LOG(\"nsGIOService::ShowURI() received XDG focus token\");"
+      },
+      {
+        "line": 952,
+        "text": "        ShowURIImpl(uri, token.get());"
+      },
+      {
+        "line": 953,
+        "text": "      },"
+      },
+      {
+        "line": 954,
+        "text": "      /* reject */"
+      }
+    ]
+  },
+  {
+    "version": "140",
+    "file": "nsMIMEInfoImpl.cpp",
+    "sourceUrl": "https://hg.mozilla.org/releases/mozilla-esr140/file/7df86525c2c876c7c92320e49c3e0771f7a605c0/uriloader/exthandler/nsMIMEInfoImpl.cpp",
+    "sha256": "9bf42baeb7fffc2d5d2d842fc9577ee254a0d30bc598ca0e715a2b70a4da857f",
+    "excerpt": [
+      {
+        "line": 373,
+        "text": "nsMIMEInfoBase::LaunchWithURI(nsIURI* aURI,"
+      },
+      {
+        "line": 374,
+        "text": "                              mozilla::dom::BrowsingContext* aBrowsingContext) {"
+      },
+      {
+        "line": 375,
+        "text": "  // This is only being called with protocol handlers"
+      },
+      {
+        "line": 376,
+        "text": "  NS_ASSERTION(mClass == eProtocolInfo,"
+      },
+      {
+        "line": 377,
+        "text": "               \"nsMIMEInfoBase should be a protocol handler\");"
+      },
+      {
+        "line": 378,
+        "text": ""
+      },
+      {
+        "line": 379,
+        "text": "  if (mPreferredAction == useSystemDefault) {"
+      },
+      {
+        "line": 380,
+        "text": "    // First, ensure we're not accidentally going to call ourselves."
+      },
+      {
+        "line": 381,
+        "text": "    // That'd lead to an infinite loop (see bug 215554)."
+      },
+      {
+        "line": 382,
+        "text": "    nsCOMPtr<nsIExternalProtocolService> extProtService ="
+      },
+      {
+        "line": 383,
+        "text": "        do_GetService(NS_EXTERNALPROTOCOLSERVICE_CONTRACTID);"
+      },
+      {
+        "line": 384,
+        "text": "    if (!extProtService) {"
+      },
+      {
+        "line": 385,
+        "text": "      return NS_ERROR_FAILURE;"
+      },
+      {
+        "line": 386,
+        "text": "    }"
+      },
+      {
+        "line": 387,
+        "text": "    nsAutoCString scheme;"
+      },
+      {
+        "line": 388,
+        "text": "    aURI->GetScheme(scheme);"
+      },
+      {
+        "line": 389,
+        "text": "    bool isDefault = false;"
+      },
+      {
+        "line": 390,
+        "text": "    nsresult rv ="
+      },
+      {
+        "line": 391,
+        "text": "        extProtService->IsCurrentAppOSDefaultForProtocol(scheme, &isDefault);"
+      },
+      {
+        "line": 392,
+        "text": "    if (NS_SUCCEEDED(rv) && isDefault) {"
+      },
+      {
+        "line": 393,
+        "text": "      // Lie. This will trip the handler service into showing a dialog asking"
+      },
+      {
+        "line": 394,
+        "text": "      // what the user wants."
+      },
+      {
+        "line": 395,
+        "text": "      return NS_ERROR_FILE_NOT_FOUND;"
+      },
+      {
+        "line": 396,
+        "text": "    }"
+      },
+      {
+        "line": 397,
+        "text": "    return LoadUriInternal(aURI);"
+      },
+      {
+        "line": 398,
+        "text": "  }"
+      },
+      {
+        "line": 399,
+        "text": ""
+      },
+      {
+        "line": 400,
+        "text": "  if (mPreferredAction == useHelperApp) {"
+      },
+      {
+        "line": 401,
+        "text": "    if (!mPreferredApplication) return NS_ERROR_FILE_NOT_FOUND;"
+      },
+      {
+        "line": 402,
+        "text": ""
+      },
+      {
+        "line": 403,
+        "text": "    EnsureAppDetailsAvailable();"
+      },
+      {
+        "line": 404,
+        "text": "    nsCOMPtr<nsILocalHandlerApp> localPreferredHandler ="
+      },
+      {
+        "line": 405,
+        "text": "        do_QueryInterface(mPreferredApplication);"
+      },
+      {
+        "line": 406,
+        "text": "    if (localPreferredHandler) {"
+      },
+      {
+        "line": 407,
+        "text": "      nsCOMPtr<nsIFile> executable;"
+      },
+      {
+        "line": 408,
+        "text": "      localPreferredHandler->GetExecutable(getter_AddRefs(executable));"
+      },
+      {
+        "line": 409,
+        "text": "      executable = GetCanonicalExecutable(executable);"
+      },
+      {
+        "line": 410,
+        "text": "      bool isOurExecutable = false;"
+      },
+      {
+        "line": 411,
+        "text": "      if (!executable ||"
+      },
+      {
+        "line": 412,
+        "text": "          NS_FAILED(executable->Equals(sOurAppFile, &isOurExecutable)) ||"
+      },
+      {
+        "line": 413,
+        "text": "          isOurExecutable) {"
+      },
+      {
+        "line": 414,
+        "text": "        // Lie. This will trip the handler service into showing a dialog asking"
+      },
+      {
+        "line": 415,
+        "text": "        // what the user wants."
+      },
+      {
+        "line": 416,
+        "text": "        return NS_ERROR_FILE_NOT_FOUND;"
+      },
+      {
+        "line": 417,
+        "text": "      }"
+      },
+      {
+        "line": 418,
+        "text": "    }"
+      },
+      {
+        "line": 419,
+        "text": "    return mPreferredApplication->LaunchWithURI(aURI, aBrowsingContext);"
+      },
+      {
+        "line": 420,
+        "text": "  }"
+      }
+    ]
+  },
+  {
+    "version": "140",
+    "file": "nsGNOMERegistry.cpp",
+    "sourceUrl": "https://hg.mozilla.org/releases/mozilla-esr140/file/7df86525c2c876c7c92320e49c3e0771f7a605c0/uriloader/exthandler/unix/nsGNOMERegistry.cpp",
+    "sha256": "fabdb23758472106e2cb7a84bf7f2ba147aaa5087546b60839608147f502dfec",
+    "excerpt": [
+      {
+        "line": 26,
+        "text": "nsresult nsGNOMERegistry::LoadURL(nsIURI* aURL) {"
+      },
+      {
+        "line": 27,
+        "text": "  nsCOMPtr<nsIGIOService> giovfs = do_GetService(NS_GIOSERVICE_CONTRACTID);"
+      },
+      {
+        "line": 28,
+        "text": "  if (!giovfs) {"
+      },
+      {
+        "line": 29,
+        "text": "    return NS_ERROR_FAILURE;"
+      },
+      {
+        "line": 30,
+        "text": "  }"
+      },
+      {
+        "line": 31,
+        "text": ""
+      },
+      {
+        "line": 32,
+        "text": "  return giovfs->ShowURI(aURL);"
+      },
+      {
+        "line": 33,
+        "text": "}"
+      },
+      {
+        "line": 34,
+        "text": ""
+      },
+      {
+        "line": 35,
+        "text": "/* static */"
+      }
+    ]
+  },
+  {
+    "version": "140",
+    "file": "glib-gappinfo.c",
+    "sourceUrl": "https://github.com/GNOME/glib/blob/2.84.4/gio/gappinfo.c",
+    "sha256": "ee5e31cae102c7f06af8ac51b5dfd1bcdca495ef1e513c1d24f95ca184736df9",
+    "excerpt": [
+      {
+        "line": 1175,
+        "text": ""
+      },
+      {
+        "line": 1176,
+        "text": "  /* g_file_query_default_handler() calls"
+      },
+      {
+        "line": 1177,
+        "text": "   * g_app_info_get_default_for_uri_scheme() too, but we have to do it"
+      },
+      {
+        "line": 1178,
+        "text": "   * here anyway in case GFile can't parse @uri correctly."
+      },
+      {
+        "line": 1179,
+        "text": "   */"
+      },
+      {
+        "line": 1180,
+        "text": "  uri_scheme = g_uri_parse_scheme (uri);"
+      },
+      {
+        "line": 1181,
+        "text": "  if (uri_scheme && uri_scheme[0] != '\\0')"
+      },
+      {
+        "line": 1182,
+        "text": "    app_info = g_app_info_get_default_for_uri_scheme (uri_scheme);"
+      },
+      {
+        "line": 1183,
+        "text": "  g_free (uri_scheme);"
+      },
+      {
+        "line": 1184,
+        "text": ""
+      },
+      {
+        "line": 1185,
+        "text": "  if (!app_info)"
+      },
+      {
+        "line": 1186,
+        "text": "    {"
+      },
+      {
+        "line": 1187,
+        "text": "      GFile *file;"
+      },
+      {
+        "line": 1188,
+        "text": ""
+      },
+      {
+        "line": 1189,
+        "text": "      file = g_file_new_for_uri (uri);"
+      },
+      {
+        "line": 1190,
+        "text": "      app_info = g_file_query_default_handler (file, NULL, error);"
+      },
+      {
+        "line": 1191,
+        "text": "      g_object_unref (file);"
+      },
+      {
+        "line": 1192,
+        "text": "    }"
+      },
+      {
+        "line": 1193,
+        "text": ""
+      },
+      {
+        "line": 1194,
+        "text": "  if (app_info)"
+      },
+      {
+        "line": 1195,
+        "text": "    {"
+      },
+      {
+        "line": 1196,
+        "text": "      GList l;"
+      },
+      {
+        "line": 1197,
+        "text": ""
+      },
+      {
+        "line": 1198,
+        "text": "      l.data = (char *)uri;"
+      },
+      {
+        "line": 1199,
+        "text": "      l.next = l.prev = NULL;"
+      },
+      {
+        "line": 1200,
+        "text": "      res = g_app_info_launch_uris (app_info, &l, launch_context, error);"
+      },
+      {
+        "line": 1201,
+        "text": "      g_object_unref (app_info);"
+      },
+      {
+        "line": 1202,
+        "text": "    }"
+      },
+      {
+        "line": 1203,
+        "text": ""
+      },
+      {
+        "line": 1204,
+        "text": "#ifdef G_OS_UNIX"
+      },
+      {
+        "line": 1205,
+        "text": "  if (!res && glib_should_use_portal ())"
+      },
+      {
+        "line": 1206,
+        "text": "    {"
+      },
+      {
+        "line": 1207,
+        "text": "      GFile *file = NULL;"
+      },
+      {
+        "line": 1208,
+        "text": "      const char *parent_window = NULL;"
+      },
+      {
+        "line": 1209,
+        "text": "      char *startup_id = NULL;"
+      },
+      {
+        "line": 1210,
+        "text": ""
+      },
+      {
+        "line": 1211,
+        "text": "      /* Reset any error previously set by launch_default_for_uri */"
+      },
+      {
+        "line": 1212,
+        "text": "      g_clear_error (error);"
+      },
+      {
+        "line": 1213,
+        "text": ""
+      },
+      {
+        "line": 1214,
+        "text": "      file = g_file_new_for_uri (uri);"
+      },
+      {
+        "line": 1215,
+        "text": ""
+      },
+      {
+        "line": 1216,
+        "text": "      if (launch_context)"
+      },
+      {
+        "line": 1217,
+        "text": "        {"
+      },
+      {
+        "line": 1218,
+        "text": "          GList *file_list;"
+      },
+      {
+        "line": 1219,
+        "text": ""
+      },
+      {
+        "line": 1220,
+        "text": "          if (launch_context->priv->envp)"
+      },
+      {
+        "line": 1221,
+        "text": "            parent_window = g_environ_getenv (launch_context->priv->envp, \"PARENT_WINDOW_ID\");"
+      },
+      {
+        "line": 1222,
+        "text": ""
+      },
+      {
+        "line": 1223,
+        "text": "          file_list = g_list_prepend (NULL, file);"
+      },
+      {
+        "line": 1224,
+        "text": ""
+      },
+      {
+        "line": 1225,
+        "text": "          startup_id = g_app_launch_context_get_startup_notify_id (launch_context,"
+      },
+      {
+        "line": 1226,
+        "text": "                                                                   NULL,"
+      },
+      {
+        "line": 1227,
+        "text": "                                                                   file_list);"
+      },
+      {
+        "line": 1228,
+        "text": "          g_list_free (file_list);"
+      },
+      {
+        "line": 1229,
+        "text": "        }"
+      },
+      {
+        "line": 1230,
+        "text": ""
+      },
+      {
+        "line": 1231,
+        "text": "      res = g_openuri_portal_open_file (file, parent_window, startup_id, error);"
+      },
+      {
+        "line": 1232,
+        "text": ""
+      },
+      {
+        "line": 1233,
+        "text": "      g_object_unref (file);"
+      }
+    ]
+  }
+]

@@ -1,0 +1,153 @@
+{
+  "sourceFile": "KAN-90/thunderbird-origin/mime-handler-1/result.json",
+  "sourceSha256": "ade5fc807ab74a03cbf4f42e0740d4b99e749c68fb466cb19a419daf06f1c703",
+  "extraction": "exact selected original fields; only local fixture URLs/process metadata/preferences; no profiles/cookies/credential/environment dump",
+  "observations": {
+    "sourceSha": "984509d2053be7bae9027133bda7259cd706b208",
+    "environment": "Debian13.6 Xvfb/Openbox private session DBus; Flatpak1.16.6; Thunderbird140.12.0esr",
+    "syntheticInput": true,
+    "floorpLauncherPid": 40259,
+    "portalSelection": "Pinned140 documented mime-handler=1(always), open-uri=2(auto), GTK_USE_PORTAL=1; actual call and sender must be observed",
+    "thunderbirdRuntime": {
+      "pid": 41835,
+      "version": "140.12.0",
+      "buildID": "20260612205621",
+      "mimeHandler": 1,
+      "openUri": 2,
+      "gtkUsePortal": "1",
+      "sandbox": 5
+    },
+    "handlerInfo": {
+      "preferredAction": 4,
+      "useSystemDefault": 4,
+      "useHelperApp": 2,
+      "alwaysAsk": false,
+      "defaultDescription": "System Handler",
+      "preferredApplication": null,
+      "possibleHandlers": []
+    },
+    "floorpBefore": {
+      "pid": 2,
+      "sandbox": 6,
+      "tabs": [
+        "chrome://browser/content/blanktab.html"
+      ]
+    },
+    "floorpEnd": {
+      "pid": 2,
+      "version": "159.0.1",
+      "tabs": [
+        "chrome://browser/content/blanktab.html",
+        "http://127.0.0.1:19093/from-thunderbird-origin"
+      ]
+    },
+    "floorpProcessesBefore": {
+      "pid": 2,
+      "children": [
+        {
+          "pid": 96,
+          "type": "forkServer"
+        },
+        {
+          "pid": 227,
+          "type": "privilegedabout"
+        },
+        {
+          "pid": 41,
+          "type": "socket"
+        },
+        {
+          "pid": 1114,
+          "type": "preallocated"
+        },
+        {
+          "pid": 140,
+          "type": "rdd"
+        },
+        {
+          "pid": 1119,
+          "type": "preallocated"
+        },
+        {
+          "pid": 134,
+          "type": "extension"
+        },
+        {
+          "pid": 1168,
+          "type": "utility"
+        },
+        {
+          "pid": 1207,
+          "type": "preallocated"
+        }
+      ]
+    },
+    "floorpProcessesAfter": {
+      "pid": 2,
+      "children": [
+        {
+          "pid": 96,
+          "type": "forkServer"
+        },
+        {
+          "pid": 227,
+          "type": "privilegedabout"
+        },
+        {
+          "pid": 41,
+          "type": "socket"
+        },
+        {
+          "pid": 1114,
+          "type": "webIsolated"
+        },
+        {
+          "pid": 140,
+          "type": "rdd"
+        },
+        {
+          "pid": 1119,
+          "type": "preallocated"
+        },
+        {
+          "pid": 134,
+          "type": "extension"
+        },
+        {
+          "pid": 1168,
+          "type": "utility"
+        },
+        {
+          "pid": 1359,
+          "type": "preallocated"
+        },
+        {
+          "pid": 1207,
+          "type": "preallocated"
+        }
+      ]
+    },
+    "hits": [
+      {
+        "time": 1793893177.2277873,
+        "path": "/from-thunderbird-origin"
+      },
+      {
+        "time": 1793893180.0188065,
+        "path": "/favicon.ico"
+      }
+    ],
+    "dbusSenders": {
+      ":1.15": {
+        "rc": 0,
+        "stdout": "(uint32 40311,)\n",
+        "stderr": ""
+      },
+      ":1.211": {
+        "rc": 0,
+        "stdout": "(uint32 41835,)\n",
+        "stderr": ""
+      }
+    }
+  }
+}

@@ -116,8 +116,8 @@
   },
   {
     "path": "KAN-90/report.md",
-    "bytes": 5236,
-    "sha256": "c6657ce936d348ffc6712300c49a8478652775ed6ae1ecfd1fa0d9820c406c0b"
+    "bytes": 5852,
+    "sha256": "b0d9e917a118f5199e77597d83e07cf4ba779cc91fa66798446039d4edb45df5"
   },
   {
     "path": "KAN-90/reproduce.sh",
@@ -130,9 +130,49 @@
     "sha256": "b7228edaf32f22557181a17f1c9a41911191cbc3cace2abab3761b287eeb673e"
   },
   {
+    "path": "KAN-90/thunderbird-origin/native-glib-version.json",
+    "bytes": 46,
+    "sha256": "55bbde118c76253c1783619694bf99ab749a0ab4aaffe8cb0756603f5c29b86a"
+  },
+  {
+    "path": "KAN-90/thunderbird-origin/package-identities.json",
+    "bytes": 2191,
+    "sha256": "0e79afb52ddb23ac1afcc877029d23580708ee04528a066f000b0d4ee49abbbf"
+  },
+  {
+    "path": "KAN-90/thunderbird-origin/report.md",
+    "bytes": 8677,
+    "sha256": "3795c3a8fa28306d967a211dd27322058a12cfaade9e9232e057390a9da3aca2"
+  },
+  {
+    "path": "KAN-90/thunderbird-origin/run-flatpak-159.py",
+    "bytes": 9987,
+    "sha256": "b0fb9383a157a7b5702822d620def6007384fc40df10157c5daecf586dc5734b"
+  },
+  {
+    "path": "KAN-90/thunderbird-origin/run-native-140.py",
+    "bytes": 8880,
+    "sha256": "268f749b87f7aa2df61391a677a6c4aa25eae2d8822f70d118c63a298a18f1ba"
+  },
+  {
+    "path": "KAN-90/thunderbird-origin/source-evidence.json",
+    "bytes": 38362,
+    "sha256": "8eb1861e85c06450b2b381105ece815b678db05eb8ba39937fe376c689f2611f"
+  },
+  {
+    "path": "KAN-90/thunderbird-origin/verification.json",
+    "bytes": 685,
+    "sha256": "bd15bb60651a655adb13a947de6b8c48748351ef27d4f999e22822b9d0184b3a"
+  },
+  {
+    "path": "KAN-90/thunderbird-origin/verify-thunderbird-origin.py",
+    "bytes": 2875,
+    "sha256": "1bcc310e28d4fe27c59e7f6c10b78f8299801b9d30eaa2ba304e7d25ce3109c6"
+  },
+  {
     "path": "README.md",
-    "bytes": 3716,
-    "sha256": "e63bd535fe10f5ad972e72cb3fbb1d476586f2b18a2be228776e21b59cfbb88c"
+    "bytes": 4270,
+    "sha256": "fadfb9c5be469390ea521040f9f8a72c8e7f72c9478b27d5e6f0e0b7450d4a61"
   },
   {
     "path": "environment/probe-direct.json",
@@ -146,8 +186,8 @@
   },
   {
     "path": "matrix.json",
-    "bytes": 15914,
-    "sha256": "b4f39e393dcb6beeaac9e92bd29012ff4dcf421fd7e15f7acfe84fdcc9951f79"
+    "bytes": 17751,
+    "sha256": "3b193531216db0f06e51bd79003b5bd9d55ab24518cc009bb478b9ecc170c727"
   },
   {
     "path": "raw/KAN-20/firefox-normal-yahoo/observations.json",
@@ -300,19 +340,44 @@
     "sha256": "538d5a769d635be23fbdbf4d10a53809e56f060aede8cff9f8bb585c1723e900"
   },
   {
+    "path": "raw/KAN-90/thunderbird-origin/flatpak-159-default/dbus-events.json",
+    "bytes": 3033,
+    "sha256": "83ec6d4a4c52750cb1ad8a22bf37fe14a7262a23b99dce63a1931b136a9f98c8"
+  },
+  {
+    "path": "raw/KAN-90/thunderbird-origin/flatpak-159-default/gio-events.json",
+    "bytes": 9500,
+    "sha256": "93dab35de0d38a416ea55803813a1c62986bb830dc077f0caa19ad875928ef68"
+  },
+  {
+    "path": "raw/KAN-90/thunderbird-origin/flatpak-159-default/observations.json",
+    "bytes": 4205,
+    "sha256": "fca1f966c890f421cab54352b2171d1ac5ef36fdc736babe2461412429489f8c"
+  },
+  {
+    "path": "raw/KAN-90/thunderbird-origin/mime-handler-1/dbus-events.json",
+    "bytes": 2317,
+    "sha256": "3ff2f2cf0d1514c66b8bbfe740f9ea0324ce4848dc2ce6f205ab357a086fda01"
+  },
+  {
+    "path": "raw/KAN-90/thunderbird-origin/mime-handler-1/observations.json",
+    "bytes": 3506,
+    "sha256": "40dfa7954014510f2ba0ae7b1a330b1c3ed6466e6244de0a80dd967d468d6eab"
+  },
+  {
     "path": "raw/README.md",
     "bytes": 2455,
     "sha256": "3ad3ada904d49565049926ef65e93ffba7bd83ce1189a887f696d62ab16a6e9f"
   },
   {
     "path": "verification.json",
-    "bytes": 579,
-    "sha256": "06bbb1b97376c98a35de259e066cea0d7bf92f04d5dcd13e4f432f270c3c2903"
+    "bytes": 1594,
+    "sha256": "e029697dbc1fe2a8c48c0518ef4d895e1add4836c513ffa9693e0e98be7378e6"
   },
   {
     "path": "verify-observations.py",
-    "bytes": 3515,
-    "sha256": "bd5ec41eece397a07666c199b5df71954419e0ff230fb680b2519017939636e6"
+    "bytes": 3866,
+    "sha256": "5e89ed9639f9d0bafa99b8e8b0d36e27456847c96c87b390e69eedcf076dd462"
   },
   {
     "path": "web-tools/run_login.py",

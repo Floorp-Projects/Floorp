@@ -29,3 +29,7 @@ A Fedora44 desktop able to run Flatpak/bubblewrap under its normal protection, T
 ## Independent real portal followup
 
 See `portal-followup/report.md`: actual OpenURI plus Response0, localhost GET, original browser/host-instance PID retained, forkServer111 retained, effective sandbox6 measured. This direct portal fixture passed; the earlier Thunderbird trace still does not prove Thunderbird-origin portal dispatch. Original Fedora44 remains unvalidated.
+
+## Thunderbird-origin portal gap closed in a regular package path
+
+See `thunderbird-origin/report.md`: the native140 documented MIME-always control still used system-default direct GIO launch, with sender PID proof. A fresh signed official Flathub Thunderbird159.0 with unchanged portal defaults then sent real OpenURI from its verified org.mozilla.thunderbird sandbox; Response0→GET, Floorp parent2/host43914 and forkServer92 were retained. This is the first proven Thunderbird-origin portal route here, distinct from the earlier direct portal fixture. Original native Fedora44/report-version conditions remain.

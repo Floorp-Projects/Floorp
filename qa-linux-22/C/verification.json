@@ -23,6 +23,42 @@
       "name": "Existing web records only; no network retest",
       "cases": 16,
       "root503Cases": 7
+    },
+    {
+      "name": "KAN90 real Thunderbird-origin portal, source-selected native control and app-id attribution",
+      "result": {
+        "passed": true,
+        "native140": {
+          "mimeHandler": 1,
+          "systemDefaultAction": 4,
+          "openUriObserved": false,
+          "schemeSupportSenderPid": 41835
+        },
+        "flatpak159": {
+          "openUriSender": ":1.182",
+          "senderProxy": {
+            "rc": 0,
+            "stdout": "(uint32 45204,)\n",
+            "stderr": "",
+            "processName": "xdg-dbus-proxy",
+            "flatpakAppId": "org.mozilla.thunderbird"
+          },
+          "portalResponse": 0,
+          "httpGet": true,
+          "parentPidBefore": 2,
+          "parentPidAfter": 2,
+          "forkserverPids": [
+            92
+          ],
+          "hostInstancesUnchanged": true,
+          "floorpSandboxBefore": 6,
+          "thunderbirdSandbox": 5,
+          "shippedPortalPrefs": [
+            2,
+            2
+          ]
+        }
+      }
     }
   ]
 }

@@ -1,5 +1,5 @@
 """Recompute QA claims from the exported small observation records (no browser run)."""
-import json,re
+import json,re,subprocess,sys
 from pathlib import Path
 B=Path(__file__).parent;R=B/'raw'
 def read(path):return json.loads((R/path).read_text())['observations']
@@ -40,4 +40,7 @@ for key in ['KAN-20','KAN-21']:
  for p in (R/key).glob('*/observations.json'):
   case=json.loads(p.read_text())['observations'];responses=[x['status'] for x in case['navigation'] if x['status'] is not None];web.append({'case':p.parent.name,'httpStatuses':responses})
 checks.append({'name':'Existing web records only; no network retest','cases':len(web),'root503Cases':sum(503 in c['httpStatuses'] for c in web)})
+origin=subprocess.run([sys.executable,str(B/'KAN-90/thunderbird-origin/verify-thunderbird-origin.py')],text=True,capture_output=True,check=True)
+origin=json.loads(origin.stdout);assert origin['passed']
+checks.append({'name':'KAN90 real Thunderbird-origin portal, source-selected native control and app-id attribution','result':origin})
 print(json.dumps({'passed':True,'checks':checks},indent=2))
