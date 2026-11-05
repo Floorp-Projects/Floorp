@@ -65,6 +65,7 @@ function testContainerIdentitySurvivesPhotonSelection(): void {
         tab.append(stack);
         tabs.append(tab);
         const computed = getComputedStyle(line);
+        if (!computed) throw new Error("Container line has no computed style");
         assertEquals(
           computed.opacity,
           "1",
@@ -81,8 +82,12 @@ function testContainerIdentitySurvivesPhotonSelection(): void {
           `${state}: container's own color`,
         );
         tabs.setAttribute("orient", "vertical");
+        const verticalStyle = getComputedStyle(line);
+        if (!verticalStyle) {
+          throw new Error("Vertical line has no computed style");
+        }
         assertEquals(
-          getComputedStyle(line).height,
+          verticalStyle.height,
           "24px",
           `${state}: vertical indicator height`,
         );
