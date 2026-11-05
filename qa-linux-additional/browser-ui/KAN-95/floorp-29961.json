@@ -1,0 +1,595 @@
+{
+  "sourceSha": "29a3eb23145da90706d8a94441373278521cc737",
+  "key": "KAN-95",
+  "github": 2670,
+  "environment": "Debian13.6 X11 Xvfb101+Openbox; XDG_CURRENT_DESKTOP=openbox actual WM identity enables native GTK CSD; not Windows10",
+  "observations": [
+    {
+      "screen": {
+        "screenX": 0,
+        "screenY": 0,
+        "mozInnerScreenX": 0,
+        "mozInnerScreenY": 0,
+        "outerWidth": 1600,
+        "outerHeight": 1100,
+        "innerWidth": 1600,
+        "innerHeight": 1100,
+        "windowState": 1,
+        "sizemode": "maximized",
+        "customtitlebar": true,
+        "tabsintitlebar": false
+      },
+      "prefs": [
+        {
+          "name": "browser.tabs.inTitlebar",
+          "type": 64,
+          "user": false,
+          "value": 2
+        },
+        {
+          "name": "userChrome.padding.drag_space",
+          "type": 0,
+          "user": false,
+          "value": null
+        },
+        {
+          "name": "userChrome.padding.drag_space.maximized",
+          "type": 0,
+          "user": false,
+          "value": null
+        }
+      ],
+      "elements": [
+        {
+          "selector": "#navigator-toolbox",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 1600,
+            "height": 73,
+            "top": 0,
+            "right": 1600,
+            "bottom": 73,
+            "left": 0
+          },
+          "css": {
+            "display": "flex",
+            "visibility": "visible",
+            "paddingTop": "0px",
+            "marginTop": "0px",
+            "borderTop": "0px",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          "vars": {
+            "tabMargin": "2px",
+            "dragSpace": ""
+          }
+        },
+        {
+          "selector": "#toolbar-menubar",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 1600,
+            "height": 0,
+            "top": 0,
+            "right": 1600,
+            "bottom": 0,
+            "left": 0
+          },
+          "css": {
+            "display": "flex",
+            "visibility": "visible",
+            "paddingTop": "0px",
+            "marginTop": "0px",
+            "borderTop": "0px",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          "vars": {
+            "tabMargin": "2px",
+            "dragSpace": ""
+          }
+        },
+        {
+          "selector": "#TabsToolbar",
+          "rect": {
+            "x": -1,
+            "y": 0,
+            "width": 1601,
+            "height": 36,
+            "top": 0,
+            "right": 1600,
+            "bottom": 36,
+            "left": -1
+          },
+          "css": {
+            "display": "flex",
+            "visibility": "visible",
+            "paddingTop": "0px",
+            "marginTop": "0px",
+            "borderTop": "0px",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          "vars": {
+            "tabMargin": "2px",
+            "dragSpace": ""
+          }
+        },
+        {
+          "selector": "#TabsToolbar > .toolbar-items",
+          "rect": {
+            "x": -1,
+            "y": 0,
+            "width": 1486.5,
+            "height": 36,
+            "top": 0,
+            "right": 1485.5,
+            "bottom": 36,
+            "left": -1
+          },
+          "css": {
+            "display": "flex",
+            "visibility": "visible",
+            "paddingTop": "0px",
+            "marginTop": "0px",
+            "borderTop": "0px",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          "vars": {
+            "tabMargin": "2px",
+            "dragSpace": ""
+          }
+        },
+        {
+          "selector": "#tabbrowser-tabs",
+          "rect": {
+            "x": -1,
+            "y": 0,
+            "width": 1245.86669921875,
+            "height": 36,
+            "top": 0,
+            "right": 1244.86669921875,
+            "bottom": 36,
+            "left": -1
+          },
+          "css": {
+            "display": "flex",
+            "visibility": "visible",
+            "paddingTop": "0px",
+            "marginTop": "0px",
+            "borderTop": "0px",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          "vars": {
+            "tabMargin": "2px",
+            "dragSpace": ""
+          }
+        },
+        {
+          "selector": ".tabbrowser-tab[selected]",
+          "rect": {
+            "x": -1,
+            "y": 0,
+            "width": 225,
+            "height": 36,
+            "top": 0,
+            "right": 224,
+            "bottom": 36,
+            "left": -1
+          },
+          "css": {
+            "display": "flex",
+            "visibility": "visible",
+            "paddingTop": "0px",
+            "marginTop": "0px",
+            "borderTop": "0px",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          "vars": {
+            "tabMargin": "2px",
+            "dragSpace": ""
+          }
+        },
+        {
+          "selector": ".tabbrowser-tab[selected] .tab-background",
+          "rect": {
+            "x": 1,
+            "y": 4,
+            "width": 221,
+            "height": 36,
+            "top": 4,
+            "right": 222,
+            "bottom": 40,
+            "left": 1
+          },
+          "css": {
+            "display": "flex",
+            "visibility": "visible",
+            "paddingTop": "0px",
+            "marginTop": "4px",
+            "borderTop": "0px",
+            "background": "rgb(255, 255, 255)"
+          },
+          "vars": {
+            "tabMargin": "2px",
+            "dragSpace": ""
+          }
+        }
+      ],
+      "ewmh": "_NET_WM_STATE(ATOM) = _NET_WM_STATE_MAXIMIZED_VERT, _NET_WM_STATE_MAXIMIZED_HORZ\n_NET_FRAME_EXTENTS(CARDINAL) = 0, 0, 0, 0",
+      "osGeometry": "WINDOW=4194325\nX=0\nY=0\nWIDTH=1600\nHEIGHT=1100\nSCREEN=0\n",
+      "paintColumn": [
+        {
+          "y": 0,
+          "rgb": [
+            207,
+            207,
+            211
+          ]
+        },
+        {
+          "y": 1,
+          "rgb": [
+            188,
+            188,
+            196
+          ]
+        },
+        {
+          "y": 2,
+          "rgb": [
+            168,
+            168,
+            178
+          ]
+        },
+        {
+          "y": 3,
+          "rgb": [
+            132,
+            132,
+            147
+          ]
+        },
+        {
+          "y": 4,
+          "rgb": [
+            255,
+            255,
+            255
+          ]
+        },
+        {
+          "y": 5,
+          "rgb": [
+            255,
+            255,
+            255
+          ]
+        },
+        {
+          "y": 6,
+          "rgb": [
+            255,
+            255,
+            255
+          ]
+        },
+        {
+          "y": 7,
+          "rgb": [
+            255,
+            255,
+            255
+          ]
+        },
+        {
+          "y": 8,
+          "rgb": [
+            255,
+            255,
+            255
+          ]
+        },
+        {
+          "y": 9,
+          "rgb": [
+            255,
+            255,
+            255
+          ]
+        },
+        {
+          "y": 10,
+          "rgb": [
+            255,
+            255,
+            255
+          ]
+        },
+        {
+          "y": 11,
+          "rgb": [
+            255,
+            255,
+            255
+          ]
+        },
+        {
+          "y": 12,
+          "rgb": [
+            255,
+            255,
+            255
+          ]
+        },
+        {
+          "y": 13,
+          "rgb": [
+            255,
+            255,
+            255
+          ]
+        },
+        {
+          "y": 14,
+          "rgb": [
+            255,
+            255,
+            255
+          ]
+        },
+        {
+          "y": 15,
+          "rgb": [
+            255,
+            255,
+            255
+          ]
+        },
+        {
+          "y": 16,
+          "rgb": [
+            255,
+            255,
+            255
+          ]
+        },
+        {
+          "y": 17,
+          "rgb": [
+            255,
+            255,
+            255
+          ]
+        },
+        {
+          "y": 18,
+          "rgb": [
+            255,
+            255,
+            255
+          ]
+        },
+        {
+          "y": 19,
+          "rgb": [
+            255,
+            255,
+            255
+          ]
+        },
+        {
+          "y": 20,
+          "rgb": [
+            255,
+            255,
+            255
+          ]
+        },
+        {
+          "y": 21,
+          "rgb": [
+            255,
+            255,
+            255
+          ]
+        },
+        {
+          "y": 22,
+          "rgb": [
+            255,
+            255,
+            255
+          ]
+        },
+        {
+          "y": 23,
+          "rgb": [
+            255,
+            255,
+            255
+          ]
+        },
+        {
+          "y": 24,
+          "rgb": [
+            255,
+            255,
+            255
+          ]
+        },
+        {
+          "y": 25,
+          "rgb": [
+            255,
+            255,
+            255
+          ]
+        },
+        {
+          "y": 26,
+          "rgb": [
+            255,
+            255,
+            255
+          ]
+        },
+        {
+          "y": 27,
+          "rgb": [
+            255,
+            255,
+            255
+          ]
+        },
+        {
+          "y": 28,
+          "rgb": [
+            255,
+            255,
+            255
+          ]
+        },
+        {
+          "y": 29,
+          "rgb": [
+            255,
+            255,
+            255
+          ]
+        },
+        {
+          "y": 30,
+          "rgb": [
+            255,
+            255,
+            255
+          ]
+        },
+        {
+          "y": 31,
+          "rgb": [
+            255,
+            255,
+            255
+          ]
+        },
+        {
+          "y": 32,
+          "rgb": [
+            255,
+            255,
+            255
+          ]
+        },
+        {
+          "y": 33,
+          "rgb": [
+            255,
+            255,
+            255
+          ]
+        },
+        {
+          "y": 34,
+          "rgb": [
+            255,
+            255,
+            255
+          ]
+        },
+        {
+          "y": 35,
+          "rgb": [
+            255,
+            255,
+            255
+          ]
+        },
+        {
+          "y": 36,
+          "rgb": [
+            255,
+            255,
+            255
+          ]
+        },
+        {
+          "y": 37,
+          "rgb": [
+            255,
+            255,
+            255
+          ]
+        },
+        {
+          "y": 38,
+          "rgb": [
+            255,
+            255,
+            255
+          ]
+        },
+        {
+          "y": 39,
+          "rgb": [
+            255,
+            255,
+            255
+          ]
+        }
+      ],
+      "gtkCsdAvailable": true,
+      "theme": "Lepton",
+      "configuration": "default",
+      "mode": "maximized",
+      "screenshot": "screenshots/floorp-29961-Lepton-default-maximized.png"
+    }
+  ],
+  "uiOperations": [
+    {
+      "theme": "Lepton",
+      "visibleLabel": {
+        "x": 705.9999847412109,
+        "y": 408.5,
+        "width": 257.3333435058594,
+        "height": 184,
+        "text": "Lepton"
+      },
+      "storedDesign": "lepton"
+    }
+  ],
+  "role": "current-main full-product rebuild control with unrelated existing PR2934 sidebar fix; not KAN95 fix candidate",
+  "resourceRoot": "/workspace/kan30-full/obj-artifact-build-output/dist/floorp",
+  "product": {
+    "name": "Floorp",
+    "version": "159.0.1",
+    "build": "20261103153232",
+    "os": "Linux",
+    "signatureRequired": true,
+    "signatureUser": false,
+    "sandbox": 6,
+    "focusTestMode": false
+  },
+  "graphics": {
+    "protocol": "x11",
+    "compositor": "WebRender (Software)"
+  },
+  "edgeControls": [
+    {
+      "theme": "Lepton",
+      "geometry": {
+        "x": 557.5,
+        "centerY": 18,
+        "clientY": 0,
+        "selected": false
+      },
+      "absoluteScreenTopSelected": true,
+      "centerSelected": true,
+      "input": "OS XTest synthetic, not physical",
+      "cssFixture": false
+    }
+  ],
+  "completed": true
+}

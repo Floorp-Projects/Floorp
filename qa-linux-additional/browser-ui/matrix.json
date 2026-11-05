@@ -108,5 +108,53 @@
       "fixture-favicon.png"
     ],
     "evidenceBase": "KAN-37"
+  },
+  {
+    "key": "KAN-95",
+    "github": "https://github.com/Floorp-Projects/Floorp/issues/2670",
+    "sourceSha": "29a3eb23145da90706d8a94441373278521cc737",
+    "productVersion": {
+      "Floorp": "12.21.1 / Gecko159.0.1 / build20261103153232",
+      "Firefox": "159.0.1 / build20261102144711"
+    },
+    "environment": "Debian13.6 x86_64 Xvfb101+Openbox X11 softwareWebRender; native CSD enabled with truthful XDG_CURRENT_DESKTOP=openbox; original Windows10 not run",
+    "testCommand": [
+      "python3 run.py 29955 floorp full",
+      "python3 run.py 29956 firefox full",
+      "python3 run-csd.py 29959 floorp full",
+      "python3 run-csd.py 29960 firefox full",
+      "QA_EXECUTABLE=/workspace/kan30-full/obj-artifact-build-output/dist/floorp/floorp python3 run-rebuild.py 29961 floorp full"
+    ],
+    "result": "current Linux paint inset Floorp4px/Firefox6px with hitbox0; native-CSD topedge selects tabs; Fluerial intentional supplemental4px cascade confirmed; original Windows remains unverified, no new defect isolated",
+    "remainingConditions": [
+      "original Windows10 environment and custom titlebar/window configuration",
+      "original12.17.0\u2192current comparison",
+      "physical input; Wayland not tested in this issue"
+    ],
+    "existingPr": [
+      "2854 merged: separate titlebar Boolean-attribute issue2822, not established fix2670"
+    ],
+    "newPr": null,
+    "rebuildControl": {
+      "sourceSha": "1b8f3503df9e8cae6b08118ecbe2d85e2d5158e7",
+      "role": "current-main full product with unrelated PR2934 sidebar fix, not KAN95 fix candidate",
+      "result": "same Lepton4px inset/topedge click succeeds"
+    },
+    "jiraCommentId": null,
+    "jiraExistingCommentRead": "10145",
+    "evidence": [
+      "measurement-summary.json",
+      "product-hashes.json",
+      "floorp-29955.json",
+      "firefox-29956.json",
+      "floorp-29959.json",
+      "firefox-29960.json",
+      "floorp-29961.json",
+      "screenshots/",
+      "cascade-29963.json",
+      "jira-comment.md",
+      "primary-source-summary.json"
+    ],
+    "evidenceBase": "KAN-95"
   }
 ]

@@ -1,0 +1,1123 @@
+{
+  "sourceSha": "29a3eb23145da90706d8a94441373278521cc737",
+  "key": "KAN-95",
+  "github": 2670,
+  "environment": "Debian13.6 X11 Xvfb101+Openbox; XDG_CURRENT_DESKTOP=openbox actual WM identity enables native GTK CSD; not Windows10",
+  "observations": [
+    {
+      "screen": {
+        "screenX": 50,
+        "screenY": 60,
+        "mozInnerScreenX": 55,
+        "mozInnerScreenY": 65,
+        "outerWidth": 1200,
+        "outerHeight": 900,
+        "innerWidth": 1190,
+        "innerHeight": 890,
+        "windowState": 3,
+        "sizemode": "normal",
+        "customtitlebar": true,
+        "tabsintitlebar": false
+      },
+      "prefs": [
+        {
+          "name": "browser.tabs.inTitlebar",
+          "type": 64,
+          "user": false,
+          "value": 2
+        },
+        {
+          "name": "userChrome.padding.drag_space",
+          "type": 0,
+          "user": false,
+          "value": null
+        },
+        {
+          "name": "userChrome.padding.drag_space.maximized",
+          "type": 0,
+          "user": false,
+          "value": null
+        }
+      ],
+      "elements": [
+        {
+          "selector": "#navigator-toolbox",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 1190,
+            "height": 84,
+            "top": 0,
+            "right": 1190,
+            "bottom": 84,
+            "left": 0
+          },
+          "css": {
+            "display": "flex",
+            "visibility": "visible",
+            "paddingTop": "0px",
+            "marginTop": "0px",
+            "borderTop": "0px",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          "vars": {
+            "tabMargin": "",
+            "dragSpace": ""
+          }
+        },
+        {
+          "selector": "#toolbar-menubar",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 1190,
+            "height": 0,
+            "top": 0,
+            "right": 1190,
+            "bottom": 0,
+            "left": 0
+          },
+          "css": {
+            "display": "flex",
+            "visibility": "visible",
+            "paddingTop": "0px",
+            "marginTop": "0px",
+            "borderTop": "0px",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          "vars": {
+            "tabMargin": "",
+            "dragSpace": ""
+          }
+        },
+        {
+          "selector": "#TabsToolbar",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 1190,
+            "height": 44,
+            "top": 0,
+            "right": 1190,
+            "bottom": 44,
+            "left": 0
+          },
+          "css": {
+            "display": "flex",
+            "visibility": "visible",
+            "paddingTop": "0px",
+            "marginTop": "0px",
+            "borderTop": "0px",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          "vars": {
+            "tabMargin": "",
+            "dragSpace": ""
+          }
+        },
+        {
+          "selector": "#TabsToolbar > .toolbar-items",
+          "rect": {
+            "x": 40,
+            "y": 0,
+            "width": 1035.5,
+            "height": 44,
+            "top": 0,
+            "right": 1075.5,
+            "bottom": 44,
+            "left": 40
+          },
+          "css": {
+            "display": "flex",
+            "visibility": "visible",
+            "paddingTop": "0px",
+            "marginTop": "0px",
+            "borderTop": "0px",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          "vars": {
+            "tabMargin": "",
+            "dragSpace": ""
+          }
+        },
+        {
+          "selector": "#tabbrowser-tabs",
+          "rect": {
+            "x": 40,
+            "y": 0,
+            "width": 971.5,
+            "height": 44,
+            "top": 0,
+            "right": 1011.5,
+            "bottom": 44,
+            "left": 40
+          },
+          "css": {
+            "display": "flex",
+            "visibility": "visible",
+            "paddingTop": "0px",
+            "marginTop": "0px",
+            "borderTop": "0px",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          "vars": {
+            "tabMargin": "",
+            "dragSpace": ""
+          }
+        },
+        {
+          "selector": ".tabbrowser-tab[selected]",
+          "rect": {
+            "x": 40,
+            "y": 0,
+            "width": 225,
+            "height": 44,
+            "top": 0,
+            "right": 265,
+            "bottom": 44,
+            "left": 40
+          },
+          "css": {
+            "display": "flex",
+            "visibility": "visible",
+            "paddingTop": "0px",
+            "marginTop": "0px",
+            "borderTop": "0px",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          "vars": {
+            "tabMargin": "",
+            "dragSpace": ""
+          }
+        },
+        {
+          "selector": ".tabbrowser-tab[selected] .tab-background",
+          "rect": {
+            "x": 42,
+            "y": 6,
+            "width": 221,
+            "height": 32,
+            "top": 6,
+            "right": 263,
+            "bottom": 38,
+            "left": 42
+          },
+          "css": {
+            "display": "flex",
+            "visibility": "visible",
+            "paddingTop": "0px",
+            "marginTop": "6px",
+            "borderTop": "1px",
+            "background": "color(srgb 0.983333 0.983333 0.986667)"
+          },
+          "vars": {
+            "tabMargin": "",
+            "dragSpace": ""
+          }
+        }
+      ],
+      "ewmh": "_NET_WM_STATE(ATOM) = \n_NET_FRAME_EXTENTS(CARDINAL) = 0, 0, 0, 0",
+      "osGeometry": "WINDOW=4194325\nX=50\nY=60\nWIDTH=1200\nHEIGHT=900\nSCREEN=0\n",
+      "paintColumn": [
+        {
+          "y": 0,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 1,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 2,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 3,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 4,
+          "rgb": [
+            234,
+            234,
+            236
+          ]
+        },
+        {
+          "y": 5,
+          "rgb": [
+            228,
+            228,
+            230
+          ]
+        },
+        {
+          "y": 6,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 7,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 8,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 9,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 10,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 11,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 12,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 13,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 14,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 15,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 16,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 17,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 18,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 19,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 20,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 21,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 22,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 23,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 24,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 25,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 26,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 27,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 28,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 29,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 30,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 31,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 32,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 33,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 34,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 35,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 36,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 37,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 38,
+          "rgb": [
+            198,
+            198,
+            199
+          ]
+        },
+        {
+          "y": 39,
+          "rgb": [
+            221,
+            221,
+            223
+          ]
+        }
+      ],
+      "gtkCsdAvailable": true,
+      "theme": "Firefox",
+      "configuration": "default",
+      "mode": "normal",
+      "screenshot": "screenshots/firefox-29960-Firefox-default-normal.png"
+    },
+    {
+      "screen": {
+        "screenX": 0,
+        "screenY": 0,
+        "mozInnerScreenX": 0,
+        "mozInnerScreenY": 0,
+        "outerWidth": 1600,
+        "outerHeight": 1100,
+        "innerWidth": 1600,
+        "innerHeight": 1100,
+        "windowState": 1,
+        "sizemode": "maximized",
+        "customtitlebar": true,
+        "tabsintitlebar": false
+      },
+      "prefs": [
+        {
+          "name": "browser.tabs.inTitlebar",
+          "type": 64,
+          "user": false,
+          "value": 2
+        },
+        {
+          "name": "userChrome.padding.drag_space",
+          "type": 0,
+          "user": false,
+          "value": null
+        },
+        {
+          "name": "userChrome.padding.drag_space.maximized",
+          "type": 0,
+          "user": false,
+          "value": null
+        }
+      ],
+      "elements": [
+        {
+          "selector": "#navigator-toolbox",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 1600,
+            "height": 84,
+            "top": 0,
+            "right": 1600,
+            "bottom": 84,
+            "left": 0
+          },
+          "css": {
+            "display": "flex",
+            "visibility": "visible",
+            "paddingTop": "0px",
+            "marginTop": "0px",
+            "borderTop": "0px",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          "vars": {
+            "tabMargin": "",
+            "dragSpace": ""
+          }
+        },
+        {
+          "selector": "#toolbar-menubar",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 1600,
+            "height": 0,
+            "top": 0,
+            "right": 1600,
+            "bottom": 0,
+            "left": 0
+          },
+          "css": {
+            "display": "flex",
+            "visibility": "visible",
+            "paddingTop": "0px",
+            "marginTop": "0px",
+            "borderTop": "0px",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          "vars": {
+            "tabMargin": "",
+            "dragSpace": ""
+          }
+        },
+        {
+          "selector": "#TabsToolbar",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 1600,
+            "height": 44,
+            "top": 0,
+            "right": 1600,
+            "bottom": 44,
+            "left": 0
+          },
+          "css": {
+            "display": "flex",
+            "visibility": "visible",
+            "paddingTop": "0px",
+            "marginTop": "0px",
+            "borderTop": "0px",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          "vars": {
+            "tabMargin": "",
+            "dragSpace": ""
+          }
+        },
+        {
+          "selector": "#TabsToolbar > .toolbar-items",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 1485.5,
+            "height": 44,
+            "top": 0,
+            "right": 1485.5,
+            "bottom": 44,
+            "left": 0
+          },
+          "css": {
+            "display": "flex",
+            "visibility": "visible",
+            "paddingTop": "0px",
+            "marginTop": "0px",
+            "borderTop": "0px",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          "vars": {
+            "tabMargin": "",
+            "dragSpace": ""
+          }
+        },
+        {
+          "selector": "#tabbrowser-tabs",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 1421.5,
+            "height": 44,
+            "top": 0,
+            "right": 1421.5,
+            "bottom": 44,
+            "left": 0
+          },
+          "css": {
+            "display": "flex",
+            "visibility": "visible",
+            "paddingTop": "0px",
+            "marginTop": "0px",
+            "borderTop": "0px",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          "vars": {
+            "tabMargin": "",
+            "dragSpace": ""
+          }
+        },
+        {
+          "selector": ".tabbrowser-tab[selected]",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 225,
+            "height": 44,
+            "top": 0,
+            "right": 225,
+            "bottom": 44,
+            "left": 0
+          },
+          "css": {
+            "display": "flex",
+            "visibility": "visible",
+            "paddingTop": "0px",
+            "marginTop": "0px",
+            "borderTop": "0px",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          "vars": {
+            "tabMargin": "",
+            "dragSpace": ""
+          }
+        },
+        {
+          "selector": ".tabbrowser-tab[selected] .tab-background",
+          "rect": {
+            "x": 2,
+            "y": 6,
+            "width": 221,
+            "height": 32,
+            "top": 6,
+            "right": 223,
+            "bottom": 38,
+            "left": 2
+          },
+          "css": {
+            "display": "flex",
+            "visibility": "visible",
+            "paddingTop": "0px",
+            "marginTop": "6px",
+            "borderTop": "1px",
+            "background": "color(srgb 0.983333 0.983333 0.986667)"
+          },
+          "vars": {
+            "tabMargin": "",
+            "dragSpace": ""
+          }
+        }
+      ],
+      "ewmh": "_NET_WM_STATE(ATOM) = _NET_WM_STATE_MAXIMIZED_VERT, _NET_WM_STATE_MAXIMIZED_HORZ\n_NET_FRAME_EXTENTS(CARDINAL) = 0, 0, 0, 0",
+      "osGeometry": "WINDOW=4194325\nX=0\nY=0\nWIDTH=1600\nHEIGHT=1100\nSCREEN=0\n",
+      "paintColumn": [
+        {
+          "y": 0,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 1,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 2,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 3,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 4,
+          "rgb": [
+            234,
+            234,
+            236
+          ]
+        },
+        {
+          "y": 5,
+          "rgb": [
+            228,
+            228,
+            230
+          ]
+        },
+        {
+          "y": 6,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 7,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 8,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 9,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 10,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 11,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 12,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 13,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 14,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 15,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 16,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 17,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 18,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 19,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 20,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 21,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 22,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 23,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 24,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 25,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 26,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 27,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 28,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 29,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 30,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 31,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 32,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 33,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 34,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 35,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 36,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 37,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 38,
+          "rgb": [
+            198,
+            198,
+            199
+          ]
+        },
+        {
+          "y": 39,
+          "rgb": [
+            221,
+            221,
+            223
+          ]
+        }
+      ],
+      "gtkCsdAvailable": true,
+      "theme": "Firefox",
+      "configuration": "default",
+      "mode": "maximized",
+      "screenshot": "screenshots/firefox-29960-Firefox-default-maximized.png"
+    }
+  ],
+  "uiOperations": [],
+  "product": {
+    "name": "Firefox",
+    "version": "159.0.1",
+    "build": "20261102144711",
+    "os": "Linux",
+    "signatureRequired": true,
+    "signatureUser": false,
+    "sandbox": 6,
+    "focusTestMode": false
+  },
+  "graphics": {
+    "protocol": "x11",
+    "compositor": "WebRender (Software)"
+  },
+  "edgeControls": [
+    {
+      "theme": "Firefox",
+      "geometry": {
+        "x": 562.5,
+        "centerY": 22,
+        "clientY": 0,
+        "selected": false
+      },
+      "absoluteScreenTopSelected": true,
+      "centerSelected": true,
+      "input": "OS XTest synthetic, not physical",
+      "cssFixture": false
+    }
+  ],
+  "completed": true
+}

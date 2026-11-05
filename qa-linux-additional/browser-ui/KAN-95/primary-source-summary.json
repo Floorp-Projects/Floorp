@@ -1,0 +1,38 @@
+{
+  "jira": {
+    "key": "KAN-95",
+    "latestExistingCommentId": "10145",
+    "classificationBeforeTest": "current version independently untested",
+    "labelsBeforeTest": [
+      "area-tabs",
+      "floorp-github-import-2026-11",
+      "needs-repro",
+      "p3",
+      "triage-reviewed"
+    ]
+  },
+  "github": {
+    "issue": 2670,
+    "title": "Lepton/Fluerial themes now have a space on top of the tabs",
+    "originalVersion": "12.17.0",
+    "originalOS": "Windows10",
+    "originalConditionsUnspecified": [
+      "window state",
+      "titlebar mode",
+      "toolbar configuration"
+    ],
+    "comments": 0
+  },
+  "relatedPrs": [
+    {
+      "number": 2854,
+      "status": "merged",
+      "scope": "separate issue2822 titlebar Boolean attribute visibility; not proven fix2670"
+    },
+    {
+      "number": 2767,
+      "status": "merged",
+      "scope": "existing Fluerial group-line/Zen paint changes; not proven fix2670"
+    }
+  ]
+}
