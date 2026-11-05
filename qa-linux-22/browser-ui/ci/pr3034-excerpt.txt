@@ -1,0 +1,5 @@
+[INFO]   - browser-features/chrome/common/mouse-gesture/test/mouseGestureRecognizer.test.ts
+[INFO] [66/281] Completed browser-features/chrome/common/mouse-gesture/test/mouseGestureRecognizer.test.ts
+[INFO] ✓ browser-features/chrome/common/mouse-gesture/test/mouseGestureRecognizer.test.ts (runAllTests, 38ms)
+[INFO] Browser test result: 281 passed, 0 failed
+[INFO] Downloaded Firefox coverage: 8 file(s), 16 task(s), 16 passed

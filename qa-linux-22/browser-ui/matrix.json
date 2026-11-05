@@ -42,7 +42,7 @@
       "firstHead": "1a75d15d",
       "firstHeadBrowserModulesPassed": 282,
       "latestHead": "e7dda31f",
-      "latestStatus": "queued_at_snapshot"
+      "latestStatus": "in_progress_at_snapshot"
     }
   },
   {
@@ -278,11 +278,10 @@
     "environment": "Debian13.6 x86_64, Xvfb :92, isolated DBus; KWin6.3.6 nested Wayland for visual/layout/controls; software WebRender",
     "testCommand": "PYTHONPATH=python python3 gesture-run.py floorp 29311 gesture; PYTHONPATH=python python3 kan98-sparse-product-run.py floorp 29333 sparse-product",
     "result": "実再現・独立した2欠陥を限定修正Draft",
-    "observations": "単upは発火するがup-down/dense up-down/down-upはaction label表示後にreleaseで不発。始点終点距離によるactivation gateが原因。最大変位へ修正しcontroller40件成功、旧controllerは新回帰で失敗。専用製品コピーの局所修正でも改善。 right-down追加9/9成功とcaptured trace replayから初期方向fallbackの別欠陥を特定。決定的な疎点列6/6が旧製品で不発、別コピーの局所修正で全成功。recognizer63ケース成功、元コードの新2cases失敗。",
+    "observations": "単upは発火するがup-down/dense up-down/down-upはaction label表示後にreleaseで不発。始点終点距離によるactivation gateが原因。最大変位へ修正しcontroller40件成功、旧controllerは新回帰で失敗。専用製品コピーの局所修正でも改善。 right-down追加9/9成功とcaptured trace replayから初期方向fallbackの別欠陥を特定。決定的な疎点列6/6が旧製品で不発、別コピーの局所修正で全成功。recognizer63ケース成功、元コードの新2cases失敗。 PR3031/3034とも標準Ubuntu CI281modules/0fail+Firefox16tasks、artifact内容とdigestを確認。",
     "remainingConditions": [
       "Arch/Sway/Wayland/物理入力/DPI",
-      "full production build",
-      "PR3034 full CI（PR3031 full Ubuntu browser CIは成功）"
+      "full production build"
     ],
     "existingPr": null,
     "newPr": "https://github.com/Floorp-Projects/Floorp/pull/3031",
@@ -313,7 +312,7 @@
     ],
     "ci": {
       "3031": "281 modules passed, 0 failed; artifact verified",
-      "3034": "in_progress_at_snapshot"
+      "3034": "281 modules passed, 0 failed; artifact verified"
     }
   }
 ]

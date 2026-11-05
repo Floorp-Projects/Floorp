@@ -30,7 +30,7 @@ The browser source-test bundle uses the real controller, configuration, recogniz
 
 ## Remaining conditions
 
-The separate sparse-input recognizer defect is now addressed in independent Draft #3034 (e6f2dbe7). See sparse-fix-report.md: 63 recognizer cases pass, baseline fails the two new cases, and deterministic sparse W3C product comparisons fail 6/6 before and pass 6/6 after. Neither PR closes KAN-98. Physical input, Arch/Sway/Wayland, varying DPI, full production builds and PR3034 full CI remain open. PR3031 full Ubuntu CI passed 281 modules/0 failed plus16 Firefox tasks; its artifact digest and contents were verified.
+The separate sparse-input recognizer defect is now addressed in independent Draft #3034 (e6f2dbe7). See sparse-fix-report.md: 63 recognizer cases pass, baseline fails the two new cases, and deterministic sparse W3C product comparisons fail 6/6 before and pass 6/6 after. Neither PR closes KAN-98. Physical input, Arch/Sway/Wayland, varying DPI, full production builds and the original environment remain open. PR3031 full Ubuntu CI passed 281 modules/0 failed plus16 Firefox tasks; its artifact digest and contents were verified.
 
 ## Reproduction files
 
@@ -49,3 +49,5 @@ Jira追記comment ID: `10291`。needs-linuxは実試験によりlinux-testedへ�
 See `rightdown-followup.md`: an additional fresh-profile comparison succeeded for right-down at sparse100ms, sparse800ms, and dense10px input (each3/3), plus single-up3/3. Replaying earlier failure and fresh success traces in Gecko identifies sample-sensitive first-direction/sequence recognition: initial sparse jumps skip the 10–50px sample band, producing a diagonal initial direction and null match. Configuration was present. This is outside #3031 and original physical Arch/Sway/Wayland behavior remains unverified.
 
 Jira最終comment ID: `10291`。
+
+PR3034標準CIも281モジュール/0失敗+Firefox16task、artifact digest/内容確認済み。

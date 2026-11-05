@@ -25,16 +25,23 @@
     "adoptionModuleExplicitSuccess": true,
     "latestHead": "e7dda31f660bb865c2ea8a505ece44875796970f",
     "latestRunId": 42049710743,
-    "latestStatus": "queued_at_snapshot",
+    "latestStatus": "in_progress_at_snapshot",
     "latestLocalSupplement": "expanded source regression passed; 8 states and 14 W3C clicks passed"
   },
   "3034": {
     "head": "e6f2dbe7b34e73950ddbedd13378f04fa38c5155",
-    "status": "in_progress_at_snapshot",
+    "status": "success",
     "runId": 42048615534,
     "localRecognizerCasesPassed": 63,
     "baselineNewCasesFailed": 2,
     "sparseProductBeforeFailures": 6,
-    "sparseProductAfterPasses": 6
+    "sparseProductAfterPasses": 6,
+    "ubuntuBrowserModulesPassed": 281,
+    "ubuntuBrowserModulesFailed": 0,
+    "downloadedFirefoxTasksPassed": 16,
+    "artifactId": 13428075583,
+    "artifactSha256": "d719bd8a501e433027dd6a83786ff143c94990f0aa4057274688dc16976094d0",
+    "artifactDigestMatched": true,
+    "recognizerModuleExplicitSuccess": true
   }
 }

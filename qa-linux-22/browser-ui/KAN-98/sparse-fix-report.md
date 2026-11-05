@@ -46,3 +46,7 @@ The recorded paths retain the right-angle corner, so their initial leg is recove
 - `sparse-source-test/bundle.cjs`: bundle test module; `QA_SPARSE_ORIGINAL=1` substitutes only the saved original-recognizer source for the before comparison.
 - `sparse-source-test/original-recognizer.ts`: original pinned source snapshot.
 - Runtime/Python and product paths are centralized under browser-ui in these scripts and must be adapted on another machine. No profile data or credentials are required or intended for publication.
+
+## Native CI follow-up
+
+Run42048615534 on e6f2dbe7 completed successfully. Downloaded artifact13428075583 matches SHA256 d719bd8a501e433027dd6a83786ff143c94990f0aa4057274688dc16976094d0. Explicit recognizer module success, 281 modules/0 failed and16 Firefox tasks passed were read from its logs. Physical/original-compositor conditions remain open.
