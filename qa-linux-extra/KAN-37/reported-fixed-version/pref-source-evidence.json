@@ -1,0 +1,23 @@
+{
+  "archiveSha256": "a4610fa0cf86092c1f0337173d722be874562b482c760bf54cd67917e68ee512",
+  "matches": [
+    {
+      "archive": "omni.ja",
+      "member": "chrome/remote/content/shared/RecommendedPreferences.sys.mjs",
+      "sha256": "27f8de556126042cea3af9c520197bfc66a312a3c195ba5cdde45f86ec7166a7",
+      "excerpt": "eded.\nconst COMMON_PREFERENCES = new Map([\n  // Make sure Shield doesn't hit the network.\n  [\"app.normandy.api_url\", \"\"],\n\n  // Disable automatically upgrading Firefox\n  //\n  // Note: This preference should have already been set by the client when\n  // creating the profile. But if not and to absolutely make sure that updates\n  // of Firefox aren't downloaded and applied, enforce its presence.\n  [\"app.update.disabledForTesting\", true],\n\n  // Disable scroll axis lock, WebDriver should be able to scroll arbitrary\n  // directions.\n  [\"apz.axis_lock.mode\", 0],\n\n  // Increase the APZ content response timeout in tests to 1 minute.\n  // This is to accommodate the fact that test environments tends to be\n  // slower than production environments (with the b2g emulator being\n  // the slowest of them all), resulting in the production timeout value\n  // sometimes being exceeded and causing false-posit"
+    },
+    {
+      "archive": "omni.ja",
+      "member": "modules/UpdateServiceStub.sys.mjs",
+      "sha256": "d7a3be90a2ae4ab3f6c02bf394277a6943d287dea30ed8709e68c02188987e51",
+      "excerpt": " pref prefix below should have the hash of the install path appended to\n// ensure that this is a per-installation pref (i.e. to ensure that migration\n// happens for every install rather than once per profile)\nconst PREF_PREFIX_UPDATE_DIR_MIGRATED = \"app.update.migrated.updateDir3.\";\nconst PREF_APP_UPDATE_ALTUPDATEDIRPATH = \"app.update.altUpdateDirPath\";\nconst PREF_APP_UPDATE_DISABLEDFORTESTING = \"app.update.disabledForTesting\";\n\nfunction getUpdateBaseDirNoCreate() {\n  if (Cu.isInAutomation) {\n    // This allows tests to use an alternate updates directory so they can test\n    // startup behavior.\n    const MAGIC_TEST_ROOT_PREFIX = \"<test-root>\";\n    const PREF_TEST_ROOT = \"mochitest.testRoot\";\n    let alternatePath = Services.prefs.getCharPref(\n      PREF_APP_UPDATE_ALTUPDATEDIRPATH,\n      null\n    );\n    if (alternatePath && alternatePath.startsWith(MAGIC_TEST_ROOT_PREFIX)) {\n      let t"
+    }
+  ],
+  "serviceDelegationAndEarlyReturn": {
+    "disabledForTestingExcerpt": "get disabledForTesting() {\n    return lazy.UpdateServiceStub.updateDisabledForTesting;\n  }\n\n  /**\n   * See nsIUpdateService.idl\n   */\n  get disabled() {\n    return lazy.UpdateServiceStub.updateDisabled;\n  }\n\n  /**\n   * See nsIUpdateService.idl\n   */\n  get manualUpdateOnly() {\n    return (\n      Services.policies && !Services.policies.isAllowed(\"autoAppUpdateChecking\")\n    );\n  }\n\n  /**\n   * See nsIUpdateService.idl\n   */\n  get canUsuallyCheckForU",
+    "canUsuallyCheckForUpdatesExcerpt": "get canUsuallyCheckForUpdates() {\n    if (this.disabled) {\n      LOG(\n        \"UpdateService.canUsuallyCheckForUpdates - unable to automatically check \" +\n          \"for updates, the option has been disabled by the administrator.\"\n      );\n      return false;\n    }\n\n    // If we don't know the binary platform we're updating, we can't update.\n    if (!lazy.UpdateUtils.ABI) {\n      LOG(\n        \"UpdateService.canUsuallyCheckForUpdates - unable to check for updates, \" +\n          \"unknown ABI\"\n      );\n      return false;\n    }\n\n    // If we don't know the OS version we're updating, we can't update.\n    if (!lazy.UpdateUtils.OSVersion) {\n      LOG(\n        \"UpdateService.canUsuallyCheckForUpdates - unable to check for updates, \" +\n          \"unknown OS version\"\n      );\n      return false;\n    }\n\n    LOG(\"UpdateService.canUsuallyCheckForUpda",
+    "moduleSha256": "491782b25d1db55ceaedc3a778f4b7adc2bfa3f50801c3b00db58140d6bc09f1"
+  },
+  "gateQualification": "Shipped Gecko update service/stub reads profile test pref under real Marionette/RemoteAgent; not a standaloneMAR signature bypass"
+}

@@ -1,0 +1,7 @@
+{
+  "id": "native-initial",
+  "target": "about:newtab",
+  "context": "content",
+  "script": "return {title:document.title,rootLength:document.querySelector('#root')?.innerHTML.length,newtabMain:!!document.querySelector('.newtab-main'),contentMain:!!document.querySelector('.content-main'),tiles:document.querySelectorAll('.top-site-outer').length,text:document.body.innerText.slice(0,450)};",
+  "screenshot": "native-initial.png"
+}

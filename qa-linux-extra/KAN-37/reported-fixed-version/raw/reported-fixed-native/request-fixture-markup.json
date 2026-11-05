@@ -1,0 +1,6 @@
+{
+  "id": "fixture-markup",
+  "target": "about:newtab",
+  "context": "content",
+  "script": "const a=[...document.querySelectorAll('a')].find(x=>x.href.includes('/native-local'));return {tile:a?.outerHTML,main:document.querySelector('main')?.className};"
+}

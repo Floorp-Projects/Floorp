@@ -1,0 +1,5 @@
+{
+  "id": "native-pin-fixture",
+  "script": "const done=arguments[arguments.length-1];const {NewTabUtils:N}=ChromeUtils.importESModule('resource://gre/modules/NewTabUtils.sys.mjs');const {AboutNewTab:A}=ChromeUtils.importESModule('resource:///modules/AboutNewTab.sys.mjs');if(!A.activityStream?.store?.feeds?.get('feeds.system.topsites'))throw Error('native feed not naturally initialized');N.pinnedLinks.pin({url:'http://127.0.0.1:19192/native-local',title:'KAN37 native fixture',favicon:\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAIAAAAlC+aJAAAAbklEQVR4nO3YwQkAMQgAwXj995yrQobATgHK4s+5Z9csL/h2x+8rQCtAK0ArQCtAK0ArQCtAK0ArQCtAK0ArQCtAK0Cbc3Yf+PfO6vznL1CAVoBWgFaAVoBWgFaAVoBWgFaAVoBWgFaAVoBWgPYDiYIFfBxeWoIAAAAASUVORK5CYII=\",faviconSize:64},0);const feed=A.activityStream.store.feeds.get('feeds.system.topsites');feed.pinnedCache.expire();feed.refresh({broadcast:true}).then(()=>done({pinned:true,topSiteCount:A.getTopSites().length}),e=>done({error:String(e)}));",
+  "async": true
+}

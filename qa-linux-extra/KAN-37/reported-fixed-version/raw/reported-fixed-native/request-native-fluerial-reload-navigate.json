@@ -1,0 +1,4 @@
+{
+  "id": "native-fluerial-reload-navigate",
+  "script": "gBrowser.selectedBrowser.reload();return true;"
+}

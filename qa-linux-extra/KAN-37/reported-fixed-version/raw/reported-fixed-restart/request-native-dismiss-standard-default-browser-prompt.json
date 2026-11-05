@@ -1,0 +1,6 @@
+{
+  "id": "native-dismiss-standard-default-browser-prompt",
+  "nativeKeys": [
+    "Escape"
+  ]
+}

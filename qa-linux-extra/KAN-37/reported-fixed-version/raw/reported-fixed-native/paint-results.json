@@ -1,0 +1,578 @@
+[
+  {
+    "id": "proton-reload",
+    "case": "reported-fixed-native",
+    "observation": {
+      "url": "about:newtab",
+      "title": "New Tab",
+      "mainClass": "content-main",
+      "rootLength": 25187,
+      "tiles": 8,
+      "iconRect": {
+        "x": 555.86669921875,
+        "y": 447.75,
+        "width": 40,
+        "height": 40,
+        "top": 447.75,
+        "right": 595.86669921875,
+        "bottom": 487.75,
+        "left": 555.86669921875
+      },
+      "screen": {
+        "x": 80,
+        "y": 167,
+        "dpr": 1
+      },
+      "style": {
+        "display": "flex",
+        "visibility": "visible",
+        "opacity": "1",
+        "backgroundImageIsDataPng": true
+      },
+      "tileTitle": "KAN37 native fixture"
+    },
+    "screenSampleCoordinates": [
+      [
+        645,
+        624
+      ],
+      [
+        665,
+        624
+      ],
+      [
+        645,
+        644
+      ],
+      [
+        665,
+        644
+      ]
+    ],
+    "pixels": [
+      [
+        255,
+        0,
+        0
+      ],
+      [
+        0,
+        255,
+        0
+      ],
+      [
+        0,
+        0,
+        255
+      ],
+      [
+        255,
+        255,
+        0
+      ]
+    ],
+    "expectedPixels": [
+      [
+        255,
+        0,
+        0
+      ],
+      [
+        0,
+        255,
+        0
+      ],
+      [
+        0,
+        0,
+        255
+      ],
+      [
+        255,
+        255,
+        0
+      ]
+    ],
+    "allExact": true
+  },
+  {
+    "id": "proton-cache",
+    "case": "reported-fixed-native",
+    "observation": {
+      "url": "about:newtab",
+      "title": "New Tab",
+      "mainClass": "content-main",
+      "rootLength": 25187,
+      "tiles": 8,
+      "iconRect": {
+        "x": 555.86669921875,
+        "y": 447.75,
+        "width": 40,
+        "height": 40,
+        "top": 447.75,
+        "right": 595.86669921875,
+        "bottom": 487.75,
+        "left": 555.86669921875
+      },
+      "screen": {
+        "x": 80,
+        "y": 167,
+        "dpr": 1
+      },
+      "style": {
+        "display": "flex",
+        "visibility": "visible",
+        "opacity": "1",
+        "backgroundImageIsDataPng": true
+      },
+      "tileTitle": "KAN37 native fixture"
+    },
+    "screenSampleCoordinates": [
+      [
+        645,
+        624
+      ],
+      [
+        665,
+        624
+      ],
+      [
+        645,
+        644
+      ],
+      [
+        665,
+        644
+      ]
+    ],
+    "pixels": [
+      [
+        255,
+        0,
+        0
+      ],
+      [
+        0,
+        255,
+        0
+      ],
+      [
+        0,
+        0,
+        255
+      ],
+      [
+        255,
+        255,
+        0
+      ]
+    ],
+    "expectedPixels": [
+      [
+        255,
+        0,
+        0
+      ],
+      [
+        0,
+        255,
+        0
+      ],
+      [
+        0,
+        0,
+        255
+      ],
+      [
+        255,
+        255,
+        0
+      ]
+    ],
+    "allExact": true
+  },
+  {
+    "id": "fluerial-reload",
+    "case": "reported-fixed-native",
+    "observation": {
+      "url": "about:newtab",
+      "title": "New Tab",
+      "mainClass": "content-main",
+      "rootLength": 25187,
+      "tiles": 8,
+      "iconRect": {
+        "x": 555.86669921875,
+        "y": 447.75,
+        "width": 40,
+        "height": 40,
+        "top": 447.75,
+        "right": 595.86669921875,
+        "bottom": 487.75,
+        "left": 555.86669921875
+      },
+      "screen": {
+        "x": 80,
+        "y": 163,
+        "dpr": 1
+      },
+      "style": {
+        "display": "flex",
+        "visibility": "visible",
+        "opacity": "1",
+        "backgroundImageIsDataPng": true
+      },
+      "tileTitle": "KAN37 native fixture"
+    },
+    "screenSampleCoordinates": [
+      [
+        645,
+        620
+      ],
+      [
+        665,
+        620
+      ],
+      [
+        645,
+        640
+      ],
+      [
+        665,
+        640
+      ]
+    ],
+    "pixels": [
+      [
+        255,
+        0,
+        0
+      ],
+      [
+        0,
+        255,
+        0
+      ],
+      [
+        0,
+        0,
+        255
+      ],
+      [
+        255,
+        255,
+        0
+      ]
+    ],
+    "expectedPixels": [
+      [
+        255,
+        0,
+        0
+      ],
+      [
+        0,
+        255,
+        0
+      ],
+      [
+        0,
+        0,
+        255
+      ],
+      [
+        255,
+        255,
+        0
+      ]
+    ],
+    "allExact": true
+  },
+  {
+    "id": "fluerial-cache",
+    "case": "reported-fixed-native",
+    "observation": {
+      "url": "about:newtab",
+      "title": "New Tab",
+      "mainClass": "content-main",
+      "rootLength": 25187,
+      "tiles": 8,
+      "iconRect": {
+        "x": 555.86669921875,
+        "y": 447.75,
+        "width": 40,
+        "height": 40,
+        "top": 447.75,
+        "right": 595.86669921875,
+        "bottom": 487.75,
+        "left": 555.86669921875
+      },
+      "screen": {
+        "x": 80,
+        "y": 163,
+        "dpr": 1
+      },
+      "style": {
+        "display": "flex",
+        "visibility": "visible",
+        "opacity": "1",
+        "backgroundImageIsDataPng": true
+      },
+      "tileTitle": "KAN37 native fixture"
+    },
+    "screenSampleCoordinates": [
+      [
+        645,
+        620
+      ],
+      [
+        665,
+        620
+      ],
+      [
+        645,
+        640
+      ],
+      [
+        665,
+        640
+      ]
+    ],
+    "pixels": [
+      [
+        255,
+        0,
+        0
+      ],
+      [
+        0,
+        255,
+        0
+      ],
+      [
+        0,
+        0,
+        255
+      ],
+      [
+        255,
+        255,
+        0
+      ]
+    ],
+    "expectedPixels": [
+      [
+        255,
+        0,
+        0
+      ],
+      [
+        0,
+        255,
+        0
+      ],
+      [
+        0,
+        0,
+        255
+      ],
+      [
+        255,
+        255,
+        0
+      ]
+    ],
+    "allExact": true
+  },
+  {
+    "id": "lepton-reload",
+    "case": "reported-fixed-native",
+    "observation": {
+      "url": "about:newtab",
+      "title": "New Tab",
+      "mainClass": "content-main",
+      "rootLength": 25187,
+      "tiles": 8,
+      "iconRect": {
+        "x": 555.86669921875,
+        "y": 447.75,
+        "width": 40,
+        "height": 40,
+        "top": 447.75,
+        "right": 595.86669921875,
+        "bottom": 487.75,
+        "left": 555.86669921875
+      },
+      "screen": {
+        "x": 80,
+        "y": 159,
+        "dpr": 1
+      },
+      "style": {
+        "display": "flex",
+        "visibility": "visible",
+        "opacity": "1",
+        "backgroundImageIsDataPng": true
+      },
+      "tileTitle": "KAN37 native fixture"
+    },
+    "screenSampleCoordinates": [
+      [
+        645,
+        616
+      ],
+      [
+        665,
+        616
+      ],
+      [
+        645,
+        636
+      ],
+      [
+        665,
+        636
+      ]
+    ],
+    "pixels": [
+      [
+        255,
+        0,
+        0
+      ],
+      [
+        0,
+        255,
+        0
+      ],
+      [
+        0,
+        0,
+        255
+      ],
+      [
+        255,
+        255,
+        0
+      ]
+    ],
+    "expectedPixels": [
+      [
+        255,
+        0,
+        0
+      ],
+      [
+        0,
+        255,
+        0
+      ],
+      [
+        0,
+        0,
+        255
+      ],
+      [
+        255,
+        255,
+        0
+      ]
+    ],
+    "allExact": true
+  },
+  {
+    "id": "lepton-cache",
+    "case": "reported-fixed-native",
+    "observation": {
+      "url": "about:newtab",
+      "title": "New Tab",
+      "mainClass": "content-main",
+      "rootLength": 25187,
+      "tiles": 8,
+      "iconRect": {
+        "x": 555.86669921875,
+        "y": 447.75,
+        "width": 40,
+        "height": 40,
+        "top": 447.75,
+        "right": 595.86669921875,
+        "bottom": 487.75,
+        "left": 555.86669921875
+      },
+      "screen": {
+        "x": 80,
+        "y": 159,
+        "dpr": 1
+      },
+      "style": {
+        "display": "flex",
+        "visibility": "visible",
+        "opacity": "1",
+        "backgroundImageIsDataPng": true
+      },
+      "tileTitle": "KAN37 native fixture"
+    },
+    "screenSampleCoordinates": [
+      [
+        645,
+        616
+      ],
+      [
+        665,
+        616
+      ],
+      [
+        645,
+        636
+      ],
+      [
+        665,
+        636
+      ]
+    ],
+    "pixels": [
+      [
+        255,
+        0,
+        0
+      ],
+      [
+        0,
+        255,
+        0
+      ],
+      [
+        0,
+        0,
+        255
+      ],
+      [
+        255,
+        255,
+        0
+      ]
+    ],
+    "expectedPixels": [
+      [
+        255,
+        0,
+        0
+      ],
+      [
+        0,
+        255,
+        0
+      ],
+      [
+        0,
+        0,
+        255
+      ],
+      [
+        255,
+        255,
+        0
+      ]
+    ],
+    "allExact": true
+  }
+]

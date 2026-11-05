@@ -1,0 +1,33 @@
+{
+  "elapsedMs": 116.59288900045794,
+  "rpcMs": 12.059977001626976,
+  "value": {
+    "url": "about:newtab",
+    "title": "New Tab",
+    "mainClass": "content-main",
+    "rootLength": 25187,
+    "tiles": 8,
+    "iconRect": {
+      "x": 555.86669921875,
+      "y": 447.75,
+      "width": 40,
+      "height": 40,
+      "top": 447.75,
+      "right": 595.86669921875,
+      "bottom": 487.75,
+      "left": 555.86669921875
+    },
+    "screen": {
+      "x": 80,
+      "y": 159,
+      "dpr": 1
+    },
+    "style": {
+      "display": "flex",
+      "visibility": "visible",
+      "opacity": "1",
+      "backgroundImageIsDataPng": true
+    },
+    "tileTitle": "KAN37 native fixture"
+  }
+}

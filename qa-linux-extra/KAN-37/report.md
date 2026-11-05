@@ -1,3 +1,5 @@
+> Follow-up 2026-11-06 JST: original Linux12.18 native qualification now succeeds with the authorized QA-profile test-pref. See [reported-fixed-version/report.md](reported-fixed-version/report.md). The earlier narrative below is preserved as historical evidence; original-thumbnail and Firefoxpolicy uncertainties remain.
+
 # KAN37 / GH2754 — Linux native NewTab initialization follow-up
 
 Recorded2026-11-06 JST (host2026-11-05UTC). **The current official Linux Floorp native-page initialization limitation is cleared under the normal startup contract.** Classic `.newtab-main` renders; its native pinned favicon paints exactly in7 qualified conditions. This is not a reproduction or global resolution of the original missing-thumbnail report. Firefox fresh-control whole-page absence is recorded separately. No product patch or Draft PR is justified by these observations.

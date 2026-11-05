@@ -1,0 +1,13 @@
+{
+  "elapsedMs": 9.940120002283948,
+  "rpcMs": 5.96552199931466,
+  "value": {
+    "pid": 88265,
+    "version": "156.0.1",
+    "buildID": "20260916130640",
+    "pref": true,
+    "user": true,
+    "disabledForTesting": true,
+    "disabled": true
+  }
+}

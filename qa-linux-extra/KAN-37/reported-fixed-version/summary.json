@@ -1,0 +1,729 @@
+{
+  "key": "KAN-37",
+  "productVersion": "12.18.0@156.0.1",
+  "sourceSha": "1728a7678c34aec1ad502edb06a168fdf2a07be8",
+  "nativeBuildID": "20260916130640",
+  "archiveSha256": "a4610fa0cf86092c1f0337173d722be874562b482c760bf54cd67917e68ee512",
+  "testPref": "app.update.disabledForTesting=true (QAprofile only, before startup)",
+  "noProductIdentifierOverrides": true,
+  "newProductCopyFromArchive": true,
+  "qualifiedSessions": [
+    {
+      "case": "reported-fixed-seed",
+      "pid": 88265,
+      "startupVersion": "156.0.1",
+      "startupBuildID": "20260916130640",
+      "shutdown": {
+        "requestedNormalQuit": true,
+        "exitCode": 0
+      },
+      "all46EntriesMatchArchive": true
+    },
+    {
+      "case": "reported-fixed-native",
+      "pid": 88828,
+      "startupVersion": "156.0.1",
+      "startupBuildID": "20260916130640",
+      "shutdown": {
+        "requestedNormalQuit": true,
+        "exitCode": 0
+      },
+      "all46EntriesMatchArchive": true
+    },
+    {
+      "case": "reported-fixed-restart",
+      "pid": 89473,
+      "startupVersion": "156.0.1",
+      "startupBuildID": "20260916130640",
+      "shutdown": {
+        "requestedNormalQuit": true,
+        "exitCode": 0
+      },
+      "all46EntriesMatchArchive": true
+    }
+  ],
+  "paintResults": [
+    {
+      "id": "proton-reload",
+      "case": "reported-fixed-native",
+      "observation": {
+        "url": "about:newtab",
+        "title": "New Tab",
+        "mainClass": "content-main",
+        "rootLength": 25187,
+        "tiles": 8,
+        "iconRect": {
+          "x": 555.86669921875,
+          "y": 447.75,
+          "width": 40,
+          "height": 40,
+          "top": 447.75,
+          "right": 595.86669921875,
+          "bottom": 487.75,
+          "left": 555.86669921875
+        },
+        "screen": {
+          "x": 80,
+          "y": 167,
+          "dpr": 1
+        },
+        "style": {
+          "display": "flex",
+          "visibility": "visible",
+          "opacity": "1",
+          "backgroundImageIsDataPng": true
+        },
+        "tileTitle": "KAN37 native fixture"
+      },
+      "screenSampleCoordinates": [
+        [
+          645,
+          624
+        ],
+        [
+          665,
+          624
+        ],
+        [
+          645,
+          644
+        ],
+        [
+          665,
+          644
+        ]
+      ],
+      "pixels": [
+        [
+          255,
+          0,
+          0
+        ],
+        [
+          0,
+          255,
+          0
+        ],
+        [
+          0,
+          0,
+          255
+        ],
+        [
+          255,
+          255,
+          0
+        ]
+      ],
+      "expectedPixels": [
+        [
+          255,
+          0,
+          0
+        ],
+        [
+          0,
+          255,
+          0
+        ],
+        [
+          0,
+          0,
+          255
+        ],
+        [
+          255,
+          255,
+          0
+        ]
+      ],
+      "allExact": true,
+      "screenshotFile": "raw/reported-fixed-native/proton-reload.png"
+    },
+    {
+      "id": "proton-cache",
+      "case": "reported-fixed-native",
+      "observation": {
+        "url": "about:newtab",
+        "title": "New Tab",
+        "mainClass": "content-main",
+        "rootLength": 25187,
+        "tiles": 8,
+        "iconRect": {
+          "x": 555.86669921875,
+          "y": 447.75,
+          "width": 40,
+          "height": 40,
+          "top": 447.75,
+          "right": 595.86669921875,
+          "bottom": 487.75,
+          "left": 555.86669921875
+        },
+        "screen": {
+          "x": 80,
+          "y": 167,
+          "dpr": 1
+        },
+        "style": {
+          "display": "flex",
+          "visibility": "visible",
+          "opacity": "1",
+          "backgroundImageIsDataPng": true
+        },
+        "tileTitle": "KAN37 native fixture"
+      },
+      "screenSampleCoordinates": [
+        [
+          645,
+          624
+        ],
+        [
+          665,
+          624
+        ],
+        [
+          645,
+          644
+        ],
+        [
+          665,
+          644
+        ]
+      ],
+      "pixels": [
+        [
+          255,
+          0,
+          0
+        ],
+        [
+          0,
+          255,
+          0
+        ],
+        [
+          0,
+          0,
+          255
+        ],
+        [
+          255,
+          255,
+          0
+        ]
+      ],
+      "expectedPixels": [
+        [
+          255,
+          0,
+          0
+        ],
+        [
+          0,
+          255,
+          0
+        ],
+        [
+          0,
+          0,
+          255
+        ],
+        [
+          255,
+          255,
+          0
+        ]
+      ],
+      "allExact": true,
+      "screenshotFile": "raw/reported-fixed-native/proton-cache.png"
+    },
+    {
+      "id": "fluerial-reload",
+      "case": "reported-fixed-native",
+      "observation": {
+        "url": "about:newtab",
+        "title": "New Tab",
+        "mainClass": "content-main",
+        "rootLength": 25187,
+        "tiles": 8,
+        "iconRect": {
+          "x": 555.86669921875,
+          "y": 447.75,
+          "width": 40,
+          "height": 40,
+          "top": 447.75,
+          "right": 595.86669921875,
+          "bottom": 487.75,
+          "left": 555.86669921875
+        },
+        "screen": {
+          "x": 80,
+          "y": 163,
+          "dpr": 1
+        },
+        "style": {
+          "display": "flex",
+          "visibility": "visible",
+          "opacity": "1",
+          "backgroundImageIsDataPng": true
+        },
+        "tileTitle": "KAN37 native fixture"
+      },
+      "screenSampleCoordinates": [
+        [
+          645,
+          620
+        ],
+        [
+          665,
+          620
+        ],
+        [
+          645,
+          640
+        ],
+        [
+          665,
+          640
+        ]
+      ],
+      "pixels": [
+        [
+          255,
+          0,
+          0
+        ],
+        [
+          0,
+          255,
+          0
+        ],
+        [
+          0,
+          0,
+          255
+        ],
+        [
+          255,
+          255,
+          0
+        ]
+      ],
+      "expectedPixels": [
+        [
+          255,
+          0,
+          0
+        ],
+        [
+          0,
+          255,
+          0
+        ],
+        [
+          0,
+          0,
+          255
+        ],
+        [
+          255,
+          255,
+          0
+        ]
+      ],
+      "allExact": true,
+      "screenshotFile": "raw/reported-fixed-native/fluerial-reload.png"
+    },
+    {
+      "id": "fluerial-cache",
+      "case": "reported-fixed-native",
+      "observation": {
+        "url": "about:newtab",
+        "title": "New Tab",
+        "mainClass": "content-main",
+        "rootLength": 25187,
+        "tiles": 8,
+        "iconRect": {
+          "x": 555.86669921875,
+          "y": 447.75,
+          "width": 40,
+          "height": 40,
+          "top": 447.75,
+          "right": 595.86669921875,
+          "bottom": 487.75,
+          "left": 555.86669921875
+        },
+        "screen": {
+          "x": 80,
+          "y": 163,
+          "dpr": 1
+        },
+        "style": {
+          "display": "flex",
+          "visibility": "visible",
+          "opacity": "1",
+          "backgroundImageIsDataPng": true
+        },
+        "tileTitle": "KAN37 native fixture"
+      },
+      "screenSampleCoordinates": [
+        [
+          645,
+          620
+        ],
+        [
+          665,
+          620
+        ],
+        [
+          645,
+          640
+        ],
+        [
+          665,
+          640
+        ]
+      ],
+      "pixels": [
+        [
+          255,
+          0,
+          0
+        ],
+        [
+          0,
+          255,
+          0
+        ],
+        [
+          0,
+          0,
+          255
+        ],
+        [
+          255,
+          255,
+          0
+        ]
+      ],
+      "expectedPixels": [
+        [
+          255,
+          0,
+          0
+        ],
+        [
+          0,
+          255,
+          0
+        ],
+        [
+          0,
+          0,
+          255
+        ],
+        [
+          255,
+          255,
+          0
+        ]
+      ],
+      "allExact": true,
+      "screenshotFile": "raw/reported-fixed-native/fluerial-cache.png"
+    },
+    {
+      "id": "lepton-reload",
+      "case": "reported-fixed-native",
+      "observation": {
+        "url": "about:newtab",
+        "title": "New Tab",
+        "mainClass": "content-main",
+        "rootLength": 25187,
+        "tiles": 8,
+        "iconRect": {
+          "x": 555.86669921875,
+          "y": 447.75,
+          "width": 40,
+          "height": 40,
+          "top": 447.75,
+          "right": 595.86669921875,
+          "bottom": 487.75,
+          "left": 555.86669921875
+        },
+        "screen": {
+          "x": 80,
+          "y": 159,
+          "dpr": 1
+        },
+        "style": {
+          "display": "flex",
+          "visibility": "visible",
+          "opacity": "1",
+          "backgroundImageIsDataPng": true
+        },
+        "tileTitle": "KAN37 native fixture"
+      },
+      "screenSampleCoordinates": [
+        [
+          645,
+          616
+        ],
+        [
+          665,
+          616
+        ],
+        [
+          645,
+          636
+        ],
+        [
+          665,
+          636
+        ]
+      ],
+      "pixels": [
+        [
+          255,
+          0,
+          0
+        ],
+        [
+          0,
+          255,
+          0
+        ],
+        [
+          0,
+          0,
+          255
+        ],
+        [
+          255,
+          255,
+          0
+        ]
+      ],
+      "expectedPixels": [
+        [
+          255,
+          0,
+          0
+        ],
+        [
+          0,
+          255,
+          0
+        ],
+        [
+          0,
+          0,
+          255
+        ],
+        [
+          255,
+          255,
+          0
+        ]
+      ],
+      "allExact": true,
+      "screenshotFile": "raw/reported-fixed-native/lepton-reload.png"
+    },
+    {
+      "id": "lepton-cache",
+      "case": "reported-fixed-native",
+      "observation": {
+        "url": "about:newtab",
+        "title": "New Tab",
+        "mainClass": "content-main",
+        "rootLength": 25187,
+        "tiles": 8,
+        "iconRect": {
+          "x": 555.86669921875,
+          "y": 447.75,
+          "width": 40,
+          "height": 40,
+          "top": 447.75,
+          "right": 595.86669921875,
+          "bottom": 487.75,
+          "left": 555.86669921875
+        },
+        "screen": {
+          "x": 80,
+          "y": 159,
+          "dpr": 1
+        },
+        "style": {
+          "display": "flex",
+          "visibility": "visible",
+          "opacity": "1",
+          "backgroundImageIsDataPng": true
+        },
+        "tileTitle": "KAN37 native fixture"
+      },
+      "screenSampleCoordinates": [
+        [
+          645,
+          616
+        ],
+        [
+          665,
+          616
+        ],
+        [
+          645,
+          636
+        ],
+        [
+          665,
+          636
+        ]
+      ],
+      "pixels": [
+        [
+          255,
+          0,
+          0
+        ],
+        [
+          0,
+          255,
+          0
+        ],
+        [
+          0,
+          0,
+          255
+        ],
+        [
+          255,
+          255,
+          0
+        ]
+      ],
+      "expectedPixels": [
+        [
+          255,
+          0,
+          0
+        ],
+        [
+          0,
+          255,
+          0
+        ],
+        [
+          0,
+          0,
+          255
+        ],
+        [
+          255,
+          255,
+          0
+        ]
+      ],
+      "allExact": true,
+      "screenshotFile": "raw/reported-fixed-native/lepton-cache.png"
+    },
+    {
+      "id": "native-restart-verified",
+      "case": "reported-fixed-restart",
+      "observation": {
+        "url": "about:newtab",
+        "title": "New Tab",
+        "mainClass": "content-main",
+        "rootLength": 25187,
+        "tiles": 8,
+        "iconRect": {
+          "x": 555.86669921875,
+          "y": 447.75,
+          "width": 40,
+          "height": 40,
+          "top": 447.75,
+          "right": 595.86669921875,
+          "bottom": 487.75,
+          "left": 555.86669921875
+        },
+        "screen": {
+          "x": 80,
+          "y": 159,
+          "dpr": 1
+        },
+        "style": {
+          "display": "flex",
+          "visibility": "visible",
+          "opacity": "1",
+          "backgroundImageIsDataPng": true
+        },
+        "tileTitle": "KAN37 native fixture"
+      },
+      "screenSampleCoordinates": [
+        [
+          645,
+          616
+        ],
+        [
+          665,
+          616
+        ],
+        [
+          645,
+          636
+        ],
+        [
+          665,
+          636
+        ]
+      ],
+      "pixels": [
+        [
+          255,
+          0,
+          0
+        ],
+        [
+          0,
+          255,
+          0
+        ],
+        [
+          0,
+          0,
+          255
+        ],
+        [
+          255,
+          255,
+          0
+        ]
+      ],
+      "expectedPixels": [
+        [
+          255,
+          0,
+          0
+        ],
+        [
+          0,
+          255,
+          0
+        ],
+        [
+          0,
+          0,
+          255
+        ],
+        [
+          255,
+          255,
+          0
+        ]
+      ],
+      "allExact": true,
+      "screenshotFile": "raw/reported-fixed-restart/native-restart-verified.png"
+    }
+  ],
+  "priorFailedAttemptPreserved": true,
+  "originalThumbnailBugResult": "not reproduced in bounded native data-favicon conditions; original profile/source/cache/desktop context remains",
+  "firefoxPolicyCausality": "unchanged/unresolved; not retested or spoofed"
+}

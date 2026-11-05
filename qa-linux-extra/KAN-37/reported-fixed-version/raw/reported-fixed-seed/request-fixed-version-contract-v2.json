@@ -1,0 +1,4 @@
+{
+  "id": "fixed-version-contract-v2",
+  "script": "const p=Services.prefs;const u=Cc['@mozilla.org/updates/update-service;1'].getService(Ci.nsIApplicationUpdateService);return {pid:Services.appinfo.processID,version:Services.appinfo.version,buildID:Services.appinfo.appBuildID,pref:p.getBoolPref('app.update.disabledForTesting',false),user:p.prefHasUserValue('app.update.disabledForTesting'),disabledForTesting:u.disabledForTesting,disabled:u.disabled};"
+}

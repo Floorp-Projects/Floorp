@@ -636,7 +636,8 @@
       "productVersion": {
         "qualified": "12.21.1@159.0.1/native20261103153232",
         "firefoxControl": "159.0.1/native20261102144711",
-        "attemptedOriginal": "12.18.0@156.0.1/native20260916130640 atseed; auto-updated before native attempt; original native unqualified"
+        "historicalOriginalAttempt": "12.18.0@156.0.1/native20260916130640 atseed; auto-updated before native attempt; original native unqualified",
+        "qualifiedOriginal": "12.18.0@156.0.1/native20260916130640, authorized QA-profile test-pref;46archive entries unchanged"
       },
       "environment": {
         "os": "Debian13 trixie",
@@ -656,9 +657,9 @@
         "TOUAcceptanceOrBypassPrefsNotWritten": true
       },
       "testCommand": "scripts/README.md; browser-session.py; native-fixture.py; run-native-paints.py; verify-evidence.py",
-      "result": "Current Linux native whole-page initialization qualified and7native paint conditions pass; original-thumbnail bug unreplicated/partial original context; Firefox null-page not image test",
-      "nativePaintConditions": 7,
-      "exactFourColorPaints": 7,
+      "result": "Current and reported-version Linux native init/7paint each qualify (14total); original missing-thumbnail context unreplicated/partial; Firefoxpolicy causality unresolved",
+      "nativePaintConditions": 14,
+      "exactFourColorPaints": 14,
       "qualifiedCurrentAndControlSessions": 4,
       "previousFloorpStart70Decode10PaintRepeated": false,
       "previousQaCommit": "6031f8efce3953c7d8ef18b09819f08a90815f17",
@@ -667,7 +668,6 @@
       "existingRelatedPr": "https://github.com/Floorp-Projects/Floorp/pull/3003 (OPEN separate SpeedDial/RSS feature, not proven fix)",
       "jiraCommentId": "10462",
       "remainingConditions": [
-        "Original Linux12.18 native context unqualified due standard auto-update; no protection/updates disabled",
         "Original profile/remote thumbnail source/cache and Linuxdesktop unknown",
         "Firefox native readiness/TOU causality unproven; no acceptance spoof",
         "Physical GUI/input not tested"
@@ -682,7 +682,8 @@
         "product-verification.json",
         "packaged-stock-policy.json",
         "source-analysis/report.md",
-        "diagnostics/*"
+        "diagnostics/*",
+        "reported-fixed-version/report.md"
       ],
       "separateFromOriginal22": true,
       "originalCMatrixSha256": "4ac5d5f17f97d70e82f7b9f17d6abcc1aa17a92e3708eeadaba6ac7c8415e3cd",
@@ -700,7 +701,20 @@
         "linux-native-newtab-tested",
         "needs-linux-12-18-native-context"
       ],
-      "labelChangeRationale": "currentLinux native init qualified; Windows10459 preserved; originalLinux12.18/context remain unqualified"
+      "labelChangeRationale": "currentLinux native init qualified; Windows10459 preserved; originalLinux12.18/context remain unqualified",
+      "currentNativePaintConditions": 7,
+      "reportedNativePaintConditions": 7,
+      "qualifiedReportedVersionSessions": 3,
+      "reportedVersionFollowup": {
+        "evidence": "reported-fixed-version/",
+        "originalSourceSha": "1728a7678c34aec1ad502edb06a168fdf2a07be8",
+        "archiveSha256": "a4610fa0cf86092c1f0337173d722be874562b482c760bf54cd67917e68ee512",
+        "pref": "app.update.disabledForTesting=true beforestartup inQAprofile only",
+        "sessions": 3,
+        "paints": 7,
+        "priorFailureRecordPreserved": true,
+        "jiraCommentId": null
+      }
     }
   ]
 }

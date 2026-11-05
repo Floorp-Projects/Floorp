@@ -696,5 +696,15 @@
   "currentNativeBuildID": "20261103153232",
   "firefoxControlVersion": "159.0.1",
   "firefoxNativeBuildID": "20261102144711",
-  "originalLinuxNativeResult": "unqualified: dedicated12.18 prefix automatically updated to12.21.1 before native trial; actual measured159 not attributed to156"
+  "originalLinuxNativeResult": "unqualified: dedicated12.18 prefix automatically updated to12.21.1 before native trial; actual measured159 not attributed to156",
+  "reportedVersionFollowup": {
+    "report": "reported-fixed-version/report.md",
+    "nativeVersion": "156.0.1",
+    "buildID": "20260916130640",
+    "nativePaints": 7,
+    "qualifiedSessions": 3,
+    "all46ArchiveEntriesPreserved": true,
+    "profileOnlyVersionPin": "app.update.disabledForTesting=true",
+    "historicalFailedAttemptPreserved": true
+  }
 }

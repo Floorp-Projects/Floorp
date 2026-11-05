@@ -81,8 +81,8 @@
     },
     {
       "path": "matrix.json",
-      "bytes": 3086,
-      "sha256": "f150726366a12e9fa971461a1795df12bc8c01e92c866da3cc99e587f44b09c4"
+      "bytes": 3672,
+      "sha256": "58784288737f59c831dcffcdee5a1df169bc17ecf25b05485031210e4273c535"
     },
     {
       "path": "packaged-stock-policy.json",
@@ -581,8 +581,623 @@
     },
     {
       "path": "report.md",
-      "bytes": 9178,
-      "sha256": "1962d8dc4e3d4750d2610232c055ab7e6f98ab3d828d426f91b714939c299fc2"
+      "bytes": 9501,
+      "sha256": "2c7d6063f1ac27f309e482fe3d6b54994f2660e4191d1066f0ec322e7b26eb73"
+    },
+    {
+      "path": "reported-fixed-version/README.md",
+      "bytes": 2174,
+      "sha256": "cb83d2a4896b937489439e8f41626e5f09cd986386f5398b6ff6c87b2906b3ff"
+    },
+    {
+      "path": "reported-fixed-version/acquisition/hashes.txt",
+      "bytes": 1370,
+      "sha256": "4276b6954bf2d152bbc09f2dee4c54d8b14842c292844f1197730a3776fa67f9"
+    },
+    {
+      "path": "reported-fixed-version/acquisition/linux-meta.json",
+      "bytes": 1408,
+      "sha256": "39092ab8594eaec355a19ab0bacf3e1123d8ed61e237ab83ce2607eaa4328945"
+    },
+    {
+      "path": "reported-fixed-version/acquisition/release-manifest-set-v2.json",
+      "bytes": 9629,
+      "sha256": "5f3b6d155e0937539850838bcf0207c645ab64a39e4ce1d47b188b6696bdd516"
+    },
+    {
+      "path": "reported-fixed-version/export-manifest.json",
+      "bytes": 22854,
+      "sha256": "20038237c1d00f31d2527134798d19cfb888de1e6681d31a3cc11ad72a33f5e2"
+    },
+    {
+      "path": "reported-fixed-version/files-after-all.json",
+      "bytes": 7123,
+      "sha256": "16e026cd13e87b5a17d0bb1afa567f1caf81b38e740d9029c784b7c935913c58"
+    },
+    {
+      "path": "reported-fixed-version/files-before.json",
+      "bytes": 6613,
+      "sha256": "07cbb5d5c64e976823ad67b03281846ebeba2639abafa7ec9275baa777c0543b"
+    },
+    {
+      "path": "reported-fixed-version/fixture-favicon.png",
+      "bytes": 167,
+      "sha256": "7c5a1e91d23308951ebe424434e466eaf1f703ab8495adbd3167cd025f887772"
+    },
+    {
+      "path": "reported-fixed-version/pref-source-evidence.json",
+      "bytes": 4120,
+      "sha256": "16568aee42c66da5a6be3b6e4f565b9dc8201afac1bb608a5defac5206ff117f"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-native/fixed-version-contract-final.json",
+      "bytes": 7309,
+      "sha256": "739000dc311dae14f067e1ee559d4acc3b7002fc0faf94e50be6a0c1410b8c4f"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-native/fixed-version-contract.json",
+      "bytes": 7309,
+      "sha256": "739000dc311dae14f067e1ee559d4acc3b7002fc0faf94e50be6a0c1410b8c4f"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-native/fluerial-cache.png",
+      "bytes": 77348,
+      "sha256": "aee7accc4a0c59a7d0835984d103efc71d0ec2a1f7dfe6d73f7adc103ebb1b27"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-native/fluerial-reload.png",
+      "bytes": 77348,
+      "sha256": "aee7accc4a0c59a7d0835984d103efc71d0ec2a1f7dfe6d73f7adc103ebb1b27"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-native/lepton-cache.png",
+      "bytes": 77686,
+      "sha256": "9013bd5382043ac1ab93d5878b6ffbd075f728998eedc812a7d7c0f5e3dca73e"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-native/lepton-reload.png",
+      "bytes": 77686,
+      "sha256": "9013bd5382043ac1ab93d5878b6ffbd075f728998eedc812a7d7c0f5e3dca73e"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-native/native-initial.png",
+      "bytes": 76880,
+      "sha256": "a55b1a6676cb94ee42504dd3b86c46ac25ba588bed21c68b87fcefd97c98763f"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-native/paint-results.json",
+      "bytes": 8632,
+      "sha256": "80f9902251380ed820b0ca466f0c3519fcc717a8289f176fdf554e8db8f93399"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-native/proton-cache.png",
+      "bytes": 77697,
+      "sha256": "93c5c79587137e5f16ce4f039cc0bee3005e2c48b94b879d785a46cc538a8611"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-native/proton-reload.png",
+      "bytes": 77697,
+      "sha256": "93c5c79587137e5f16ce4f039cc0bee3005e2c48b94b879d785a46cc538a8611"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-native/ready.json",
+      "bytes": 6555,
+      "sha256": "3e870526cc4dded74e00ab99198ab89ff22a5e6680283774345772ac479b9257"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-native/request-dismiss-default-browser-prompt.json",
+      "bytes": 81,
+      "sha256": "f9184a324d51b39bd6fc7d189c6084dd04d360dc4fb4c71e583269402cbe8b08"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-native/request-fixed-version-contract-v3-final.json",
+      "bytes": 485,
+      "sha256": "8fefdd90b88164252dd5578819f61d327dbf085bfe35e0f5ec926425c8dfe4cf"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-native/request-fixed-version-contract-v3.json",
+      "bytes": 479,
+      "sha256": "9f8d3a2ae6edb7233ef5b80d2211a1443afaf6f5a6b35cb4c6acc718f85fbb87"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-native/request-fixture-markup.json",
+      "bytes": 257,
+      "sha256": "a388a88b69f7e9f4dc6ab2ef3190ff823465609c9c78cc1dde386a2dcbd904d8"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-native/request-native-dismiss-standard-default-browser-prompt.json",
+      "bytes": 97,
+      "sha256": "b1bfe57cd6d1134b7e32a9d042fb6e65e64fbce82b69624dda258876b4d6b2f1"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-native/request-native-fluerial-cache-navigate.json",
+      "bytes": 107,
+      "sha256": "cdc219888dd2c2dc066b0574c720e3ce98c930f003d21f551eefc460e95ef6f3"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-native/request-native-fluerial-cache.json",
+      "bytes": 958,
+      "sha256": "eefbffa6d1cccd5abf013a44f583e79546a0e273e474175e9d32d93f6103cc7a"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-native/request-native-fluerial-native-cache-clear.json",
+      "bytes": 101,
+      "sha256": "45f234aa4f144d6370559be4d7f9e4701cb1b5323c351b8408c41bf7bad135b8"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-native/request-native-fluerial-reload-navigate.json",
+      "bytes": 108,
+      "sha256": "8b7ca952207bb9a2be7eafda0e5456f89b9e2d4590c5db6a132ad39f18a82f3c"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-native/request-native-fluerial-reload.json",
+      "bytes": 960,
+      "sha256": "688c68f95d75d8289261cf5fd60428e5a7273c02cfbbc07c391cb43faf8a6f0d"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-native/request-native-fluerial-setting.json",
+      "bytes": 399,
+      "sha256": "2bcb76017000736a841f8f11d71eeb47b59a6431cf686473c5fa42ad8b7a96cc"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-native/request-native-initial.json",
+      "bytes": 432,
+      "sha256": "7224b4222cf9e61c3cfb452ccbb42ac748e78eb08e4b4140e847a7cbc50b0b51"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-native/request-native-lepton-cache-navigate.json",
+      "bytes": 105,
+      "sha256": "d64d7df7f7b1a6d07b9448a2e46d38aacf5dfec3f86e8e53480c71b4ba060b44"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-native/request-native-lepton-cache.json",
+      "bytes": 954,
+      "sha256": "3675ea060f2044012ddaad3ad6a501f7c93a15dc843a39d6bb763b3b185fe997"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-native/request-native-lepton-native-cache-clear.json",
+      "bytes": 99,
+      "sha256": "304878d6ad16475ddbefc71c3738da24c00cc5af8c6fc96949983dfac08dac7d"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-native/request-native-lepton-reload-navigate.json",
+      "bytes": 106,
+      "sha256": "4e950c616036e396ab95772879b8c880fb9544188d477f656009f66f8ce51473"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-native/request-native-lepton-reload.json",
+      "bytes": 956,
+      "sha256": "3571586e35d0fb147b2955e67fcc031066a1e1b3a7429b381cd67e6a1d12c4ae"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-native/request-native-lepton-setting.json",
+      "bytes": 395,
+      "sha256": "ca8eb8fc45e593720b32a6063a468593653711f56c275535762bc727ca043a2f"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-native/request-native-pin-fixture.json",
+      "bytes": 999,
+      "sha256": "42d4bed0e868218265f1eed9137e67869cf7e1a56c093e4b8c6303868bdd59c8"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-native/request-native-proton-cache-navigate.json",
+      "bytes": 105,
+      "sha256": "1f4253e125fe429d84d33461a6425e7f81ff1ccdc070db4d57c493a003332765"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-native/request-native-proton-cache.json",
+      "bytes": 954,
+      "sha256": "cc36ab8b45fffe7cf66c2fbec62ab67e767aefa9be77b299184385a216a77969"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-native/request-native-proton-native-cache-clear.json",
+      "bytes": 99,
+      "sha256": "dfff1fb704ed9be5eda4db1e0c49758fc43d98c64d6dbf805f036316cebf1d25"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-native/request-native-proton-reload-navigate.json",
+      "bytes": 106,
+      "sha256": "a21dfdef691b35d3c7ff0f6c59d36a571257459c41e5da1c32f4c43f50f2e449"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-native/request-native-proton-reload.json",
+      "bytes": 956,
+      "sha256": "1b02a64b5bd91f4c429f0dc310f5d8bd55ba49779e15181c9dfa6f86ba666c29"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-native/request-native-proton-setting.json",
+      "bytes": 395,
+      "sha256": "e3bd1cbeb77b91ddb0f995d3482b544bb9082e7a355a38ec8d6a935f6b465c25"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-native/request-native-quit.json",
+      "bytes": 42,
+      "sha256": "ef246be8f3f3bcf7551b3e39e97f8fab8f461025f060a99c318a7de7a9cedebf"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-native/request-native-state-final.json",
+      "bytes": 33,
+      "sha256": "f4fb34f3a4cba462b7382378a128349306d504dbe428a99d7111322986307cab"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-native/result-dismiss-default-browser-prompt.json",
+      "bytes": 6672,
+      "sha256": "6e9b2a9d7f3fac0c7ccf74f3f4b541f746794c49d75b4c5fa961877bba53c0a5"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-native/result-fixed-version-contract-v3-final.json",
+      "bytes": 252,
+      "sha256": "13e5e035976362ae5cf7fba3def3b909c3845354a72839089d8645f033bfc559"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-native/result-fixed-version-contract-v3.json",
+      "bytes": 252,
+      "sha256": "148d8b7e8a5000abe188e2350922bd69ffd85c21a3c80816490c92baa84500e9"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-native/result-fixture-markup.json",
+      "bytes": 1207,
+      "sha256": "808dbfe9e0387ff3e2674feb16ad17216ac5785e8af8946fdcb1640ace2f65f9"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-native/result-native-dismiss-standard-default-browser-prompt.json",
+      "bytes": 6787,
+      "sha256": "354c42554d5c5d8d2bc7dbf268c1e0ae5394a683108556595a9c876ee0cd0ab8"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-native/result-native-fluerial-cache-navigate.json",
+      "bytes": 85,
+      "sha256": "351ee0972fd124249b3c4b4aff9a96a6c36218119e23a12becad57858c6678b0"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-native/result-native-fluerial-cache.json",
+      "bytes": 677,
+      "sha256": "5ec2554f370c5fa52b3b310a44876206c56c63d9ad147b869cd99280a401b3c0"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-native/result-native-fluerial-native-cache-clear.json",
+      "bytes": 86,
+      "sha256": "0e6adc49f6f18f396d63b6256dec9515f56f17a567bb2d39b3279430b6434a0c"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-native/result-native-fluerial-reload-navigate.json",
+      "bytes": 84,
+      "sha256": "20a19f74f7090d626dc2ae1d74cda1b35d89eee58e08eb83bda8690420f1878c"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-native/result-native-fluerial-reload.json",
+      "bytes": 676,
+      "sha256": "6d9b7ef9c91d4485613b6b3842b53abd0042b2c1ccac0e48ac5966560c3e6906"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-native/result-native-fluerial-setting.json",
+      "bytes": 142,
+      "sha256": "5d7f9a35c09d37a7acadf922f8f8141b68b1d1813416d3e65c893688efc8dc86"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-native/result-native-initial.json",
+      "bytes": 320,
+      "sha256": "813fa88e3b74a8dd1cbfc007c017f4559e0b1976a61aab1e5834081ef97286ce"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-native/result-native-lepton-cache-navigate.json",
+      "bytes": 84,
+      "sha256": "d1b23165ba53577573555ed035e22a7ff1718a703f9527d30728da57aaf00e1f"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-native/result-native-lepton-cache.json",
+      "bytes": 676,
+      "sha256": "62c51ab520a65225b5c13ec1985a4ea381176b2b76fbe2941d023fa6640bc4b3"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-native/result-native-lepton-native-cache-clear.json",
+      "bytes": 84,
+      "sha256": "7ccb9a918ffdc3b9b94218368640adf0de4834a9c1b81271ef4759c9dbc454dd"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-native/result-native-lepton-reload-navigate.json",
+      "bytes": 86,
+      "sha256": "f4a35d2d67e6fdddd07c985f553929662fc82650bc39cb6d43ac63f9852229f3"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-native/result-native-lepton-reload.json",
+      "bytes": 678,
+      "sha256": "abc888d61313d4718615d50aacaf3246499c28675d9e72c672143411115c1905"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-native/result-native-lepton-setting.json",
+      "bytes": 140,
+      "sha256": "98905240fa1bc87b532d424162d17e18388327a5dd34bb8f007f9285a4de6ae9"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-native/result-native-pin-fixture.json",
+      "bytes": 127,
+      "sha256": "c8ec9382b670150322fabf6298d26b96d0de14835f5180f19b173da99ba40f58"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-native/result-native-proton-cache-navigate.json",
+      "bytes": 85,
+      "sha256": "085f302feed8eb5232b1b99169e29068c3d01a9d427ec81f5bc3110c14b1f31d"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-native/result-native-proton-cache.json",
+      "bytes": 677,
+      "sha256": "b2540d9d7e75ac13dbca67125c5acd1b654de2a3c934734e4b472ad359d99320"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-native/result-native-proton-native-cache-clear.json",
+      "bytes": 84,
+      "sha256": "af04271d37e9b2230fa9f5969f2120da74d759a23586ba5331af13631d3bd5c0"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-native/result-native-proton-reload-navigate.json",
+      "bytes": 85,
+      "sha256": "bf4d67615e4e804174c2627f6cb2cafb87d41d266edca4a2f78bf6a5a03d7978"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-native/result-native-proton-reload.json",
+      "bytes": 676,
+      "sha256": "b2cd43260965d04530976b945029351df790a31045bdbe305474b2166c6f6730"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-native/result-native-proton-setting.json",
+      "bytes": 141,
+      "sha256": "1be1d51a0212618c673d9e5ddaed6630535cfd9f15c02169687b4533fe3eb2ec"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-native/result-native-state-final.json",
+      "bytes": 6785,
+      "sha256": "ca05bf525900543dbe593c7d88138dd7ea49df43a7cd36d71120826e117533c5"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-native/shutdown.json",
+      "bytes": 51,
+      "sha256": "a6bfff55ed63f8d986c16411c033c0a04b647662330b09654f767a1bd1bd322b"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-native/test-definition.json",
+      "bytes": 331,
+      "sha256": "98a1258a813cad220ccb0d9298b4bb172b598c823873456d13a7e509fc008d32"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-restart/fixed-version-contract-final.json",
+      "bytes": 7309,
+      "sha256": "be7081fabfa0859c11214d2b8f705d841915ae1c206227e1f6c3cd62771588c7"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-restart/fixed-version-contract.json",
+      "bytes": 7309,
+      "sha256": "be7081fabfa0859c11214d2b8f705d841915ae1c206227e1f6c3cd62771588c7"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-restart/native-restart-verified.png",
+      "bytes": 79174,
+      "sha256": "22572d85a2d871e0461b1ffaf46c6de0489169c434b1ed651426c77798e4c1f1"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-restart/paint-results.json",
+      "bytes": 1452,
+      "sha256": "74faae356460778eb674e59e5f4132b9498dd119d2d278779090f0d9e360d16e"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-restart/ready.json",
+      "bytes": 6708,
+      "sha256": "285b13317c38484bf7d34686ba966287fdea8076201d3cd8e18dd99f9577b279"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-restart/request-fixed-version-contract-v3-final.json",
+      "bytes": 485,
+      "sha256": "8fefdd90b88164252dd5578819f61d327dbf085bfe35e0f5ec926425c8dfe4cf"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-restart/request-fixed-version-contract-v3.json",
+      "bytes": 479,
+      "sha256": "9f8d3a2ae6edb7233ef5b80d2211a1443afaf6f5a6b35cb4c6acc718f85fbb87"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-restart/request-native-dismiss-standard-default-browser-prompt.json",
+      "bytes": 97,
+      "sha256": "b1bfe57cd6d1134b7e32a9d042fb6e65e64fbce82b69624dda258876b4d6b2f1"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-restart/request-native-native-restart-verified.json",
+      "bytes": 976,
+      "sha256": "711558d565b814eb2410353da19a52f2b737a259ede97caa2d03cb4a202ae3ad"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-restart/request-native-quit.json",
+      "bytes": 42,
+      "sha256": "ef246be8f3f3bcf7551b3e39e97f8fab8f461025f060a99c318a7de7a9cedebf"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-restart/request-native-state-final.json",
+      "bytes": 33,
+      "sha256": "f4fb34f3a4cba462b7382378a128349306d504dbe428a99d7111322986307cab"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-restart/result-fixed-version-contract-v3-final.json",
+      "bytes": 251,
+      "sha256": "cfd3f2b3b85a0105eeb0c186fe1d830a539248b3cd372c92d9c3f8a9154b7cf0"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-restart/result-fixed-version-contract-v3.json",
+      "bytes": 252,
+      "sha256": "38c0040812c9656843dffa236b33207726a63d40953d78a7c62aa045de662be8"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-restart/result-native-dismiss-standard-default-browser-prompt.json",
+      "bytes": 6825,
+      "sha256": "e966522c1280377a089547f39f2d4a752f663e7f291b2bda0507db9da84f4c39"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-restart/result-native-native-restart-verified.json",
+      "bytes": 678,
+      "sha256": "842cb52b0be027c25286b166a73ea684840945f5dafd334d0922d05195be0297"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-restart/result-native-state-final.json",
+      "bytes": 6824,
+      "sha256": "071bf789bf29cc7d7854c27235834183090f2d38d164e11b83053e652aa06cc3"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-restart/shutdown.json",
+      "bytes": 51,
+      "sha256": "a6bfff55ed63f8d986c16411c033c0a04b647662330b09654f767a1bd1bd322b"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-restart/test-definition.json",
+      "bytes": 331,
+      "sha256": "98a1258a813cad220ccb0d9298b4bb172b598c823873456d13a7e509fc008d32"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-seed/fixed-version-contract.json",
+      "bytes": 7309,
+      "sha256": "0294210840819b44eaeb7a13136d0694301f978a15979ae66f1dc5d20f2424f8"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-seed/ready.json",
+      "bytes": 5761,
+      "sha256": "e980c5c9fd7ddf646125726fb0702b4bee85d0e2399501cc4ac9efe7a782a6ee"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-seed/request-before-quit.json",
+      "bytes": 26,
+      "sha256": "7abee596ab570e6eeb9e1b1f0df6a3920b00e9b469bef76a5c4953de627e04ce"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-seed/request-disable.json",
+      "bytes": 207,
+      "sha256": "9a1893a8e7d08c0746329c2ebcf80f5ff3bb7247b671395c9a12960bf2a5dc9a"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-seed/request-fixed-version-contract-v2.json",
+      "bytes": 458,
+      "sha256": "18f678ceee6c9a47854543d6da89c943b5bf970d989389b92089dfbdfe523e80"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-seed/request-fixed-version-contract-v3.json",
+      "bytes": 479,
+      "sha256": "9f8d3a2ae6edb7233ef5b80d2211a1443afaf6f5a6b35cb4c6acc718f85fbb87"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-seed/request-fixed-version-contract.json",
+      "bytes": 444,
+      "sha256": "9e58d3ba1bca5a4cf07ba2d32cb949c402b54ce907ecf3e981880543100ea303"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-seed/request-newtab.json",
+      "bytes": 192,
+      "sha256": "0b9885179d8f0e1fddf204b38f895e4eea618e05cf09a11bc2d2414fa3d4e5af"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-seed/request-quit.json",
+      "bytes": 35,
+      "sha256": "52b50e2fc7237c300034a999eedd4b6270bbde3539c7ab1e2400ffa3c45919b2"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-seed/request-settings.json",
+      "bytes": 145,
+      "sha256": "a2f28bd4b649c197abe13f83fd8993730bd9425761e7a1111b66b5f351c90e2a"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-seed/result-before-quit.json",
+      "bytes": 5753,
+      "sha256": "2246c59c8e455019d7a79ce0cdb6e4ab8ee265ff52d49fca5e6681e9ce71f541"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-seed/result-disable.json",
+      "bytes": 105,
+      "sha256": "e2ef7d8a1c9570033d856873857ab5f0aa682e46460a1cfba0b6b6d5daac79d1"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-seed/result-fixed-version-contract-v2.json",
+      "bytes": 251,
+      "sha256": "113289666d80cfed882f22d6ef1c7681bc4383994faf76a57d6edb294cbd9dbe"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-seed/result-fixed-version-contract-v3.json",
+      "bytes": 250,
+      "sha256": "35d7d27ca8d1c719183992399949837bfedf4c6a3e3f8bef037ebfb8cb174010"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-seed/result-fixed-version-contract.json",
+      "bytes": 3009,
+      "sha256": "f62531049ab5a3f757d45d6234b5485ee54d031fb14cfccb1981fd76debac8a1"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-seed/result-newtab.json",
+      "bytes": 85,
+      "sha256": "040d908373f886d8348d0146fb17438642fad2a87723a1b211feb94210feac55"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-seed/result-settings.json",
+      "bytes": 86,
+      "sha256": "753be96d10233a964287b2045807fd1c96a76a3869bcd2873bed6068c03036ef"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-seed/shutdown.json",
+      "bytes": 51,
+      "sha256": "a6bfff55ed63f8d986c16411c033c0a04b647662330b09654f767a1bd1bd322b"
+    },
+    {
+      "path": "reported-fixed-version/raw/reported-fixed-seed/test-definition.json",
+      "bytes": 322,
+      "sha256": "3c52ecd5f41033b853f1640e5a566310a832c515d521cc884920a8cad0347be6"
+    },
+    {
+      "path": "reported-fixed-version/report.md",
+      "bytes": 5437,
+      "sha256": "256910d5baa40c2a886eff5edcfc86cc7d6bce6dd4f0eaf892d22ffc12714619"
+    },
+    {
+      "path": "reported-fixed-version/scripts/browser-session.py",
+      "bytes": 13102,
+      "sha256": "0e6d467a15053ddf0b1f91dd9c0925df4c83b90e27fb8f53266c4b571e676656"
+    },
+    {
+      "path": "reported-fixed-version/scripts/check-fixed-version.py",
+      "bytes": 1474,
+      "sha256": "8e036daa7c17804f14f26d929afab79339cedee8620c34efcdf1be19884838be"
+    },
+    {
+      "path": "reported-fixed-version/scripts/control.py",
+      "bytes": 621,
+      "sha256": "e4f834838db2e6b928cdefdfc9084a729bd0e3fdb3b438c6c91b74e6f26d5ec1"
+    },
+    {
+      "path": "reported-fixed-version/scripts/native-fixture.py",
+      "bytes": 1371,
+      "sha256": "7363e27f78d72fbfe29a91f17b4da1447d90913afce16ed8149b79e1ad32470d"
+    },
+    {
+      "path": "reported-fixed-version/scripts/paint-probe.js",
+      "bytes": 814,
+      "sha256": "2d15cc222f41dac199dd5e57851b689964c5e2f29f716bc0b3bcb3ed6ef7c63c"
+    },
+    {
+      "path": "reported-fixed-version/scripts/run-native-paints.py",
+      "bytes": 2370,
+      "sha256": "bcf89ab8e99872da351ddbe80c728659ebbb25b9b6702ab6e3d49e17fbdeeb7a"
+    },
+    {
+      "path": "reported-fixed-version/scripts/verify-evidence.py",
+      "bytes": 1987,
+      "sha256": "b5ab46441de2874df7d2f9a1545d9bd745cc64108012d3386cbd6c05b078c113"
+    },
+    {
+      "path": "reported-fixed-version/source/chrome_remote_content_shared_RecommendedPreferences.sys.mjs",
+      "bytes": 19201,
+      "sha256": "27f8de556126042cea3af9c520197bfc66a312a3c195ba5cdde45f86ec7166a7"
+    },
+    {
+      "path": "reported-fixed-version/source/modules_UpdateServiceStub.sys.mjs",
+      "bytes": 16116,
+      "sha256": "d7a3be90a2ae4ab3f6c02bf394277a6943d287dea30ed8709e68c02188987e51"
+    },
+    {
+      "path": "reported-fixed-version/summary.json",
+      "bytes": 13480,
+      "sha256": "affdff95b4252c6ab8e37689822d7fbaa3fc06d5411fee513bca64daaa9cbbd3"
     },
     {
       "path": "scripts/README.md",
@@ -661,8 +1276,8 @@
     },
     {
       "path": "summary.json",
-      "bytes": 12477,
-      "sha256": "a1198b4b1aea8237d0e820385a1bd7464b7b57c4db5338377f432f1d275c0a1e"
+      "bytes": 12833,
+      "sha256": "d3540dda48148e2106077c044279b2bd9bb50742f7d5c38e02824b27fee0431d"
     }
   ]
 }

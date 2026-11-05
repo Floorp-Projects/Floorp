@@ -1,0 +1,12 @@
+{
+  "elapsedMs": 111.65208500096924,
+  "rpcMs": 13.52432300336659,
+  "value": {
+    "title": "New Tab",
+    "rootLength": 22755,
+    "newtabMain": false,
+    "contentMain": true,
+    "tiles": 8,
+    "text": "Amazon\nSponsored\nExpedia\nSponsored\nChewy\nSponsored\nWikipedia\nYouTube\nReddit\nAdd-ons for Firefox"
+  }
+}

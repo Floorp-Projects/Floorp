@@ -1,0 +1,7 @@
+{
+  "id": "native-fluerial-reload",
+  "target": "about:newtab",
+  "context": "content",
+  "script": "const a=[...document.querySelectorAll('a')].find(x=>x.href.includes('/native-local'));if(!a)throw Error('native pinned tile absent');const icon=a.querySelector('.top-site-icon')||a.querySelector('.icon-wrapper');if(!icon)throw Error('native icon absent');const r=icon.getBoundingClientRect();const s=getComputedStyle(icon);return {url:location.href,title:document.title,mainClass:document.querySelector('main')?.className,rootLength:document.querySelector('#root')?.innerHTML.length,tiles:document.querySelectorAll('.top-site-outer').length,iconRect:r.toJSON(),screen:{x:window.mozInnerScreenX,y:window.mozInnerScreenY,dpr:devicePixelRatio},style:{display:s.display,visibility:s.visibility,opacity:s.opacity,backgroundImageIsDataPng:s.backgroundImage.startsWith('url(\"data:image/png;base64,')},tileTitle:a.title};\n",
+  "screenshot": "fluerial-reload.png"
+}
