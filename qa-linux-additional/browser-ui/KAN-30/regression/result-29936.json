@@ -1,0 +1,12 @@
+{
+  "fixture": "MouseEvent hover + synthetic blur/deactivate; not physical or OS XTest",
+  "productCopy": "/workspace/qa-linux-additional/browser-ui/KAN-30/regression/candidate-testcopy/floorp",
+  "resources": {
+    "gre": "/workspace/qa-linux-additional/browser-ui/KAN-30/regression/candidate-testcopy",
+    "module": "jar:file:///workspace/qa-linux-additional/browser-ui/KAN-30/regression/candidate-testcopy/omni.ja!/chrome/noraneko/nora-content/assets/js/index9.js"
+  },
+  "moduleSha256": "82a0d44abfaf62fcde7d18dea37504b5d687cfc772fbc879919f9c03ad401198",
+  "result": {
+    "passed": true
+  }
+}

@@ -1,0 +1,123 @@
+{
+  "sourceSha": "29a3eb23145da90706d8a94441373278521cc737",
+  "productCopy": "official unchanged",
+  "fixture": "startup normal design preference selects overlap+hover; OS XTest synthetic input, not physical",
+  "observations": [],
+  "product": {
+    "name": "Floorp",
+    "version": "159.0.1",
+    "build": "20261103153232",
+    "os": "Linux",
+    "signature": false,
+    "signatureUserSet": false,
+    "sandbox": 6
+  },
+  "nativeFocusFixture": {
+    "method": "xdotool windowfocus on owned product native window; compensates missing X11 window manager",
+    "window": "2097155",
+    "documentFocused": true
+  },
+  "resourceLocation": {
+    "gre": "/workspace/qa-linux-22/browser-ui/products/floorp",
+    "chrome": "jar:file:///workspace/qa-linux-22/browser-ui/products/floorp/omni.ja!/chrome/noraneko/nora-content/assets/js/index9.js"
+  },
+  "sideberyToolbarButton": {
+    "x": 1200,
+    "y": 36,
+    "width": 36,
+    "height": 36,
+    "top": 36,
+    "right": 1236,
+    "bottom": 72,
+    "left": 1200
+  },
+  "toolbarClickEvents": [
+    {
+      "id": "_3c078156-979c-498b-8990-85f7987dd929_-BAP",
+      "tag": "toolbarbutton",
+      "trusted": true,
+      "path": [
+        "_3c078156-979c-498b-8990-85f7987dd929_-BAP",
+        "box",
+        "_3c078156-979c-498b-8990-85f7987dd929_-browser-action",
+        "nav-bar-customization-target"
+      ]
+    }
+  ],
+  "afterSideberyToolbar": {
+    "time": 15639.417700999998,
+    "isOpen": false,
+    "currentID": "",
+    "hidden": true,
+    "opacity": "0",
+    "visibility": "hidden",
+    "box": {
+      "x": 0,
+      "y": 0,
+      "width": 0,
+      "height": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0,
+      "left": 0
+    },
+    "hover": false,
+    "expanded": false,
+    "trigger": {
+      "x": 52,
+      "y": 348.1000061035156,
+      "width": 8,
+      "height": 72,
+      "top": 348.1000061035156,
+      "right": 60,
+      "bottom": 420.1000061035156,
+      "left": 52
+    },
+    "active": "",
+    "selected": "QA A"
+  },
+  "extensionState": {
+    "backgroundState": "running",
+    "hasShutdownPromise": false,
+    "active": true
+  },
+  "sideberySelectionMethod": "W3C trusted click of normal Sidebery toolbar action; subsequent pointer uses OS XTest; explicit native showInitially panel-selection fixture required (not qualified as normal UI entry)",
+  "ordinarySideberySelectionQualified": false,
+  "sideberyApiSetup": {
+    "result": true,
+    "isOpen": true,
+    "id": "_3c078156-979c-498b-8990-85f7987dd929_-sidebar-action"
+  },
+  "sideberyOpen": {
+    "time": 18432.451911,
+    "isOpen": true,
+    "currentID": "_3c078156-979c-498b-8990-85f7987dd929_-sidebar-action",
+    "hidden": false,
+    "opacity": "1",
+    "visibility": "visible",
+    "box": {
+      "x": 52,
+      "y": 73,
+      "width": 240,
+      "height": 917,
+      "top": 73,
+      "right": 292,
+      "bottom": 990,
+      "left": 52
+    },
+    "hover": true,
+    "expanded": true,
+    "trigger": {
+      "x": 52,
+      "y": 348.1000061035156,
+      "width": 8,
+      "height": 72,
+      "top": 348.1000061035156,
+      "right": 60,
+      "bottom": 420.1000061035156,
+      "left": 52
+    },
+    "active": "",
+    "selected": "QA A"
+  }
+}

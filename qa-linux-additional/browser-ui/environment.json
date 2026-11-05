@@ -1,0 +1,13 @@
+{
+  "os": "Linux-6.18.57-x86_64-with-glibc2.41",
+  "osRelease": "PRETTY_NAME=\"Debian GNU/Linux 13 (trixie)\"\nNAME=\"Debian GNU/Linux\"\nVERSION_ID=\"13\"\nVERSION=\"13 (trixie)\"\nVERSION_CODENAME=trixie\nDEBIAN_VERSION_FULL=13.6\nID=debian\nHOME_URL=\"https://www.debian.org/\"\nSUPPORT_URL=\"https://www.debian.org/support\"\nBUG_REPORT_URL=\"https://bugs.debian.org/\"\n",
+  "sourceSha": "29a3eb23145da90706d8a94441373278521cc737",
+  "releaseSourceReference": "984509d2053be7bae9027133bda7259cd706b208",
+  "input": "OS XTest/W3C synthetic; not physical",
+  "display": "private Xvfb109 for KAN30;99/101 KAN37;117 regression",
+  "dbus": "dbus-run-session private",
+  "secrets": "No environment variable values or profile databases included",
+  "protections": "No sandbox/TLS/signature verification disabled by tests; Floorp signature=false existing default userSet=false; sandbox6",
+  "originalConditions": "Windows10 22H2 and original Linux desktop not claimed; no KDE equivalence",
+  "runtimeNote": "Cloud native execution available; KAN37 isolated proxy+environment CA normal trust corrects setup network failure"
+}

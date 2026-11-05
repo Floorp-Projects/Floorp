@@ -1,0 +1,14 @@
+{
+  "existingPr": 2934,
+  "existingPrHead": "b7866aaa4905be4d86fb3dff1237d6a70c483f10",
+  "sourceMain": "29a3eb23145da90706d8a94441373278521cc737",
+  "fixture": "diagnostic copy of official product; exactly existing PR window blur->deactivate computation, no forced UI state",
+  "onlyChangedEntry": [
+    "chrome/noraneko/nora-content/assets/js/index9.js"
+  ],
+  "beforeModuleSha256": "34b45acd991b8795deb1a29245544dc99b5b37d64a75768ccc062f69e7804ef8",
+  "afterModuleSha256": "82a0d44abfaf62fcde7d18dea37504b5d687cfc772fbc879919f9c03ad401198",
+  "originalArchiveSha256": "159285f967e950e0cd1ac658d713b7770e7763d6d983fc88b6e48c16e4a1f345",
+  "candidateArchiveSha256": "852d1baf0d12691452e9524ee9656d1339e81dfd0fe79030725b60baeaa4e59f",
+  "binarySha256": "4f05c1330b38e50040440be6a3b6e0e7a5b52bc79edb5c5478d978c81f5a603d"
+}

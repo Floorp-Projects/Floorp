@@ -1,0 +1,26 @@
+{
+  "key": "KAN-30",
+  "existingPr": 2934,
+  "existingPrHead": "b7866aaa4905be4d86fb3dff1237d6a70c483f10",
+  "sourceSha": "29a3eb23145da90706d8a94441373278521cc737",
+  "patchSha256": "d474d95c7c0a17732404bd82f086359820846307d4f927d57984a12a257f3741",
+  "testModuleSha256": "f587bdb0f1905b2d81a826ff5cfd62307ccb86ede431eccf9e55da7a1883318e",
+  "fixture": "explicit window.dispatchEvent plus MouseEvent hover, not OS XTest",
+  "finalBaseline": 29935,
+  "finalBaselineResult": {
+    "passed": false,
+    "error": "Error: sidebarOverlay.test.ts failures: window activation hover lifecycle: internal window blur must preserve a hover-owned sidebar"
+  },
+  "finalCandidate": 29936,
+  "finalCandidateResult": {
+    "passed": true
+  },
+  "invalidAttempt": {
+    "ports": [
+      29933,
+      29934
+    ],
+    "reason": "globalThis target substitution failed to discriminate baseline; do not use as regression proof"
+  },
+  "privateDisplay117Removed": true
+}

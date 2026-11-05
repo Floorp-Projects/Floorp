@@ -1,0 +1,574 @@
+[
+  {
+    "run": 29922,
+    "resourceLocation": {
+      "gre": "/workspace/qa-linux-22/browser-ui/products/floorp",
+      "chrome": "jar:file:///workspace/qa-linux-22/browser-ui/products/floorp/omni.ja!/chrome/noraneko/nora-content/assets/js/index9.js"
+    },
+    "nativeFocusFixture": {
+      "method": "xdotool windowfocus on owned product native window; compensates missing X11 window manager",
+      "window": "2097155",
+      "documentFocused": true
+    },
+    "cases": [
+      {
+        "case": "ctrl-tab-hover-only",
+        "before": {
+          "time": 8178.519412,
+          "isOpen": true,
+          "currentID": "viewBookmarksSidebar",
+          "hidden": false,
+          "opacity": "1",
+          "visibility": "visible",
+          "box": {
+            "x": 52,
+            "y": 73,
+            "width": 240,
+            "height": 917,
+            "top": 73,
+            "right": 292,
+            "bottom": 990,
+            "left": 52
+          },
+          "hover": true,
+          "expanded": true,
+          "trigger": {
+            "x": 0,
+            "y": 348.1000061035156,
+            "width": 8,
+            "height": 72,
+            "top": 348.1000061035156,
+            "right": 8,
+            "bottom": 420.1000061035156,
+            "left": 0
+          },
+          "active": "",
+          "selected": "QA A"
+        },
+        "final": {
+          "time": 9147.084326,
+          "isOpen": true,
+          "currentID": "viewBookmarksSidebar",
+          "hidden": false,
+          "opacity": "0",
+          "visibility": "hidden",
+          "box": {
+            "x": 52,
+            "y": 73,
+            "width": 240,
+            "height": 917,
+            "top": 73,
+            "right": 292,
+            "bottom": 990,
+            "left": 52
+          },
+          "hover": true,
+          "expanded": false,
+          "trigger": {
+            "x": 0,
+            "y": 348.1000061035156,
+            "width": 8,
+            "height": 72,
+            "top": 348.1000061035156,
+            "right": 8,
+            "bottom": 420.1000061035156,
+            "left": 0
+          },
+          "active": "",
+          "selected": "QA B"
+        },
+        "eventCount": 10
+      },
+      {
+        "case": "ctrl-tab-focused-body",
+        "before": {
+          "time": 12066.201761,
+          "isOpen": true,
+          "currentID": "viewBookmarksSidebar",
+          "hidden": false,
+          "opacity": "1",
+          "visibility": "visible",
+          "box": {
+            "x": 52,
+            "y": 73,
+            "width": 240,
+            "height": 917,
+            "top": 73,
+            "right": 292,
+            "bottom": 990,
+            "left": 52
+          },
+          "hover": true,
+          "expanded": true,
+          "trigger": {
+            "x": 0,
+            "y": 348.1000061035156,
+            "width": 8,
+            "height": 72,
+            "top": 348.1000061035156,
+            "right": 8,
+            "bottom": 420.1000061035156,
+            "left": 0
+          },
+          "active": "sidebar",
+          "selected": "QA B"
+        },
+        "final": {
+          "time": 13028.524448,
+          "isOpen": true,
+          "currentID": "viewBookmarksSidebar",
+          "hidden": false,
+          "opacity": "0",
+          "visibility": "hidden",
+          "box": {
+            "x": 52,
+            "y": 73,
+            "width": 240,
+            "height": 917,
+            "top": 73,
+            "right": 292,
+            "bottom": 990,
+            "left": 52
+          },
+          "hover": true,
+          "expanded": false,
+          "trigger": {
+            "x": 0,
+            "y": 348.1000061035156,
+            "width": 8,
+            "height": 72,
+            "top": 348.1000061035156,
+            "right": 8,
+            "bottom": 420.1000061035156,
+            "left": 0
+          },
+          "active": "",
+          "selected": "New Tab"
+        },
+        "eventCount": 14
+      },
+      {
+        "case": "pointer-leave",
+        "before": {
+          "time": 15480.120796,
+          "isOpen": true,
+          "currentID": "viewBookmarksSidebar",
+          "hidden": false,
+          "opacity": "1",
+          "visibility": "visible",
+          "box": {
+            "x": 52,
+            "y": 73,
+            "width": 240,
+            "height": 917,
+            "top": 73,
+            "right": 292,
+            "bottom": 990,
+            "left": 52
+          },
+          "hover": true,
+          "expanded": true,
+          "trigger": {
+            "x": 0,
+            "y": 348.1000061035156,
+            "width": 8,
+            "height": 72,
+            "top": 348.1000061035156,
+            "right": 8,
+            "bottom": 420.1000061035156,
+            "left": 0
+          },
+          "active": "",
+          "selected": "New Tab"
+        },
+        "final": {
+          "time": 16292.088846999999,
+          "isOpen": true,
+          "currentID": "viewBookmarksSidebar",
+          "hidden": false,
+          "opacity": "0",
+          "visibility": "hidden",
+          "box": {
+            "x": 52,
+            "y": 73,
+            "width": 240,
+            "height": 917,
+            "top": 73,
+            "right": 292,
+            "bottom": 990,
+            "left": 52
+          },
+          "hover": false,
+          "expanded": false,
+          "trigger": {
+            "x": 0,
+            "y": 348.1000061035156,
+            "width": 8,
+            "height": 72,
+            "top": 348.1000061035156,
+            "right": 8,
+            "bottom": 420.1000061035156,
+            "left": 0
+          },
+          "active": "",
+          "selected": "New Tab"
+        },
+        "eventCount": 2
+      },
+      {
+        "case": "real-native-window-focus-loss",
+        "before": {
+          "time": 33882.059536,
+          "isOpen": true,
+          "currentID": "viewBookmarksSidebar",
+          "hidden": false,
+          "opacity": "1",
+          "visibility": "visible",
+          "box": {
+            "x": 52,
+            "y": 73,
+            "width": 240,
+            "height": 917,
+            "top": 73,
+            "right": 292,
+            "bottom": 990,
+            "left": 52
+          },
+          "hover": true,
+          "expanded": true,
+          "trigger": {
+            "x": 0,
+            "y": 348.1000061035156,
+            "width": 8,
+            "height": 72,
+            "top": 348.1000061035156,
+            "right": 8,
+            "bottom": 420.1000061035156,
+            "left": 0
+          },
+          "active": "",
+          "selected": "New Tab"
+        },
+        "final": {
+          "time": 35227.993178,
+          "isOpen": true,
+          "currentID": "viewBookmarksSidebar",
+          "hidden": false,
+          "opacity": "1",
+          "visibility": "visible",
+          "box": {
+            "x": 52,
+            "y": 73,
+            "width": 240,
+            "height": 917,
+            "top": 73,
+            "right": 292,
+            "bottom": 990,
+            "left": 52
+          },
+          "hover": true,
+          "expanded": true,
+          "trigger": {
+            "x": 0,
+            "y": 348.1000061035156,
+            "width": 8,
+            "height": 72,
+            "top": 348.1000061035156,
+            "right": 8,
+            "bottom": 420.1000061035156,
+            "left": 0
+          },
+          "active": "",
+          "selected": "New Tab"
+        },
+        "eventCount": 0
+      }
+    ]
+  },
+  {
+    "run": 29923,
+    "resourceLocation": {
+      "gre": "/workspace/qa-linux-additional/browser-ui/KAN-30/candidate-pr2934",
+      "chrome": "jar:file:///workspace/qa-linux-additional/browser-ui/KAN-30/candidate-pr2934/omni.ja!/chrome/noraneko/nora-content/assets/js/index9.js"
+    },
+    "nativeFocusFixture": {
+      "method": "xdotool windowfocus on owned product native window; compensates missing X11 window manager",
+      "window": "2097155",
+      "documentFocused": true
+    },
+    "cases": [
+      {
+        "case": "ctrl-tab-hover-only",
+        "before": {
+          "time": 8110.697791,
+          "isOpen": true,
+          "currentID": "viewBookmarksSidebar",
+          "hidden": false,
+          "opacity": "1",
+          "visibility": "visible",
+          "box": {
+            "x": 52,
+            "y": 73,
+            "width": 240,
+            "height": 917,
+            "top": 73,
+            "right": 292,
+            "bottom": 990,
+            "left": 52
+          },
+          "hover": true,
+          "expanded": true,
+          "trigger": {
+            "x": 0,
+            "y": 348.1000061035156,
+            "width": 8,
+            "height": 72,
+            "top": 348.1000061035156,
+            "right": 8,
+            "bottom": 420.1000061035156,
+            "left": 0
+          },
+          "active": "",
+          "selected": "QA A"
+        },
+        "final": {
+          "time": 9089.921312,
+          "isOpen": true,
+          "currentID": "viewBookmarksSidebar",
+          "hidden": false,
+          "opacity": "1",
+          "visibility": "visible",
+          "box": {
+            "x": 52,
+            "y": 73,
+            "width": 240,
+            "height": 917,
+            "top": 73,
+            "right": 292,
+            "bottom": 990,
+            "left": 52
+          },
+          "hover": true,
+          "expanded": true,
+          "trigger": {
+            "x": 0,
+            "y": 348.1000061035156,
+            "width": 8,
+            "height": 72,
+            "top": 348.1000061035156,
+            "right": 8,
+            "bottom": 420.1000061035156,
+            "left": 0
+          },
+          "active": "",
+          "selected": "QA B"
+        },
+        "eventCount": 9
+      },
+      {
+        "case": "ctrl-tab-focused-body",
+        "before": {
+          "time": 12029.121124,
+          "isOpen": true,
+          "currentID": "viewBookmarksSidebar",
+          "hidden": false,
+          "opacity": "1",
+          "visibility": "visible",
+          "box": {
+            "x": 52,
+            "y": 73,
+            "width": 240,
+            "height": 917,
+            "top": 73,
+            "right": 292,
+            "bottom": 990,
+            "left": 52
+          },
+          "hover": true,
+          "expanded": true,
+          "trigger": {
+            "x": 0,
+            "y": 348.1000061035156,
+            "width": 8,
+            "height": 72,
+            "top": 348.1000061035156,
+            "right": 8,
+            "bottom": 420.1000061035156,
+            "left": 0
+          },
+          "active": "sidebar",
+          "selected": "QA B"
+        },
+        "final": {
+          "time": 13014.716358,
+          "isOpen": true,
+          "currentID": "viewBookmarksSidebar",
+          "hidden": false,
+          "opacity": "1",
+          "visibility": "visible",
+          "box": {
+            "x": 52,
+            "y": 73,
+            "width": 240,
+            "height": 917,
+            "top": 73,
+            "right": 292,
+            "bottom": 990,
+            "left": 52
+          },
+          "hover": true,
+          "expanded": true,
+          "trigger": {
+            "x": 0,
+            "y": 348.1000061035156,
+            "width": 8,
+            "height": 72,
+            "top": 348.1000061035156,
+            "right": 8,
+            "bottom": 420.1000061035156,
+            "left": 0
+          },
+          "active": "",
+          "selected": "New Tab"
+        },
+        "eventCount": 13
+      },
+      {
+        "case": "pointer-leave",
+        "before": {
+          "time": 15571.545756000001,
+          "isOpen": true,
+          "currentID": "viewBookmarksSidebar",
+          "hidden": false,
+          "opacity": "1",
+          "visibility": "visible",
+          "box": {
+            "x": 52,
+            "y": 73,
+            "width": 240,
+            "height": 917,
+            "top": 73,
+            "right": 292,
+            "bottom": 990,
+            "left": 52
+          },
+          "hover": true,
+          "expanded": true,
+          "trigger": {
+            "x": 0,
+            "y": 348.1000061035156,
+            "width": 8,
+            "height": 72,
+            "top": 348.1000061035156,
+            "right": 8,
+            "bottom": 420.1000061035156,
+            "left": 0
+          },
+          "active": "",
+          "selected": "New Tab"
+        },
+        "final": {
+          "time": 17006.127587000003,
+          "isOpen": true,
+          "currentID": "viewBookmarksSidebar",
+          "hidden": false,
+          "opacity": "0",
+          "visibility": "hidden",
+          "box": {
+            "x": 52,
+            "y": 73,
+            "width": 240,
+            "height": 917,
+            "top": 73,
+            "right": 292,
+            "bottom": 990,
+            "left": 52
+          },
+          "hover": false,
+          "expanded": false,
+          "trigger": {
+            "x": 0,
+            "y": 348.1000061035156,
+            "width": 8,
+            "height": 72,
+            "top": 348.1000061035156,
+            "right": 8,
+            "bottom": 420.1000061035156,
+            "left": 0
+          },
+          "active": "",
+          "selected": "New Tab"
+        },
+        "eventCount": 2
+      },
+      {
+        "case": "real-native-window-focus-loss",
+        "before": {
+          "time": 38978.741596,
+          "isOpen": true,
+          "currentID": "viewBookmarksSidebar",
+          "hidden": false,
+          "opacity": "1",
+          "visibility": "visible",
+          "box": {
+            "x": 52,
+            "y": 73,
+            "width": 240,
+            "height": 917,
+            "top": 73,
+            "right": 292,
+            "bottom": 990,
+            "left": 52
+          },
+          "hover": true,
+          "expanded": true,
+          "trigger": {
+            "x": 0,
+            "y": 348.1000061035156,
+            "width": 8,
+            "height": 72,
+            "top": 348.1000061035156,
+            "right": 8,
+            "bottom": 420.1000061035156,
+            "left": 0
+          },
+          "active": "",
+          "selected": "New Tab"
+        },
+        "final": {
+          "time": 40337.66073,
+          "isOpen": true,
+          "currentID": "viewBookmarksSidebar",
+          "hidden": false,
+          "opacity": "1",
+          "visibility": "visible",
+          "box": {
+            "x": 52,
+            "y": 73,
+            "width": 240,
+            "height": 917,
+            "top": 73,
+            "right": 292,
+            "bottom": 990,
+            "left": 52
+          },
+          "hover": true,
+          "expanded": true,
+          "trigger": {
+            "x": 0,
+            "y": 348.1000061035156,
+            "width": 8,
+            "height": 72,
+            "top": 348.1000061035156,
+            "right": 8,
+            "bottom": 420.1000061035156,
+            "left": 0
+          },
+          "active": "",
+          "selected": "New Tab"
+        },
+        "eventCount": 0
+      }
+    ]
+  }
+]

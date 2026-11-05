@@ -1,0 +1,65 @@
+[
+  {
+    "key": "KAN-30",
+    "github": "https://github.com/Floorp-Projects/Floorp/issues/2907",
+    "sourceSha": "29a3eb23145da90706d8a94441373278521cc737",
+    "productVersion": "Floorp12.21.1@159.0.1 Build20261103153232",
+    "environment": "Debian13.6 private Xvfb109/X11 + DBus; OS synthetic XTest; normal overlap+hover config",
+    "testCommand": "PYTHONPATH=/workspace/qa-linux-22/browser-ui/python python run.py <fresh-port> cases-focus; QA_PRODUCT=$PWD/candidate-pr2934/floorp for diagnostic candidate",
+    "result": "reproduced current Ctrl+Tab collapse despite hover; PR2934 diagnostic candidate holds both focus cases; pointer leave closes both; browser regression baseline FAIL/candidate PASS",
+    "remainingConditions": [
+      "Original Windows10 22H2",
+      "Normal Sidebery entry/row selection",
+      "Full candidate build/standard CI",
+      "Physical input",
+      "Qualified desktop deactivation (no event in bare Xvfb transfer)"
+    ],
+    "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2934",
+    "existingPrHead": "b7866aaa4905be4d86fb3dff1237d6a70c483f10",
+    "newPr": null,
+    "jiraCommentId": null,
+    "evidence": [
+      "report.md",
+      "ui-summary.json",
+      "probe-29922.json",
+      "probe-29923.json",
+      "29922-ctrl-0.png",
+      "29923-ctrl-0.png",
+      "candidate-patch.json",
+      "regression/sidebarOverlay-regression.patch",
+      "regression/final-summary.json",
+      "probe-29921.json",
+      "29921-sidebery-open.png",
+      "run.py",
+      "probe.py",
+      "prepare-candidate.py"
+    ]
+  },
+  {
+    "key": "KAN-37",
+    "github": "https://github.com/Floorp-Projects/Floorp/issues/2754",
+    "sourceSha": "29a3eb23145da90706d8a94441373278521cc737",
+    "productVersion": "Floorp12.21.1@159.0.1 Build20261103153232; Firefox159.0.1 Build20261102144711",
+    "environment": "Debian13.6 private Xvfb99/101 X11 synthetic W3C/XTest; approved session proxy and environment CA normal trust",
+    "testCommand": "QA_PROXY=1 python start.py; PYTHONPATH=/workspace/qa-linux-22/browser-ui/python python capture.py <verified-design>-<stage>; local-fixture.py supplies explicit persisted data fixture",
+    "result": "partially-tested: Floorp Start 10 conditions/70 image-decode checks pass; local four-color actual paint pass each; original classic-thumbnail condition not established",
+    "remainingConditions": [
+      "Original reporter classic New Tab profile and existing tiles",
+      "Native classic renderer initialization limitation (whole-page root0 in Floorp and Firefox controls)",
+      "Original Linux desktop conditions and Windows; real physical UI input not tested"
+    ],
+    "existingPr": null,
+    "relatedPr": "https://github.com/Floorp-Projects/Floorp/pull/3003 (separate redesign, not validated fix)",
+    "newPr": null,
+    "jiraCommentId": null,
+    "evidence": [
+      "report.md",
+      "summary.json",
+      "native-control.json",
+      "capture.py",
+      "start.py",
+      "local-fixture.py",
+      "fixture-favicon.png"
+    ]
+  }
+]

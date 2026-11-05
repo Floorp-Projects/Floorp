@@ -1,0 +1,8 @@
+{
+  "addonId": "{3c078156-979c-498b-8990-85f7987dd929}",
+  "version": "5.6.1",
+  "url": "https://addons.mozilla.org/firefox/downloads/file/4903712/sidebery-5.6.1.xpi",
+  "hash": "sha256:e8a0a4b556ab7dd536897c1816af9d0918030223068ea6683a04376103a6caf2",
+  "bytes": 589881,
+  "source": "normal signed AMO addon for UI integration fixture"
+}

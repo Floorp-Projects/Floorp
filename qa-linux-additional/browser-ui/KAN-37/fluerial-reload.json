@@ -1,0 +1,307 @@
+{
+  "uri": "about:newtab",
+  "title": "Floorp Start",
+  "visible": "visible",
+  "images": [
+    {
+      "title": "Cubesoft (Sponsor)",
+      "src": "https://www.google.com/s2/favicons?domain=www.cube-soft.jp&sz=64",
+      "naturalWidth": 64,
+      "naturalHeight": 64,
+      "complete": true,
+      "rect": {
+        "x": 260,
+        "y": 495.5,
+        "width": 32,
+        "height": 32
+      },
+      "css": {
+        "display": "block",
+        "visibility": "visible",
+        "opacity": "1",
+        "filter": "none"
+      },
+      "paintSamples": [
+        [
+          255,
+          255,
+          255
+        ],
+        [
+          65,
+          65,
+          254
+        ],
+        [
+          204,
+          204,
+          204
+        ],
+        [
+          0,
+          0,
+          191
+        ]
+      ]
+    },
+    {
+      "title": "Floorp Support",
+      "src": "https://www.google.com/s2/favicons?domain=docs.floorp.app&sz=64",
+      "naturalWidth": 64,
+      "naturalHeight": 64,
+      "complete": true,
+      "rect": {
+        "x": 358,
+        "y": 495.5,
+        "width": 32,
+        "height": 32
+      },
+      "css": {
+        "display": "block",
+        "visibility": "visible",
+        "opacity": "1",
+        "filter": "none"
+      },
+      "paintSamples": [
+        [
+          104,
+          35,
+          227
+        ],
+        [
+          99,
+          1,
+          230
+        ],
+        [
+          140,
+          130,
+          225
+        ],
+        [
+          43,
+          12,
+          232
+        ]
+      ]
+    },
+    {
+      "title": "QA local favicon",
+      "src": "data:image/png;base64,[local fixture]",
+      "naturalWidth": 64,
+      "naturalHeight": 64,
+      "complete": true,
+      "rect": {
+        "x": 456,
+        "y": 495.5,
+        "width": 32,
+        "height": 32
+      },
+      "css": {
+        "display": "block",
+        "visibility": "visible",
+        "opacity": "1",
+        "filter": "none"
+      },
+      "paintSamples": [
+        [
+          255,
+          0,
+          0
+        ],
+        [
+          0,
+          255,
+          0
+        ],
+        [
+          0,
+          0,
+          255
+        ],
+        [
+          255,
+          255,
+          0
+        ]
+      ],
+      "srcSha256": "bc821f694edba8ebde8e843aba56c4a04355cdca5c6ead226cd8e247a075fb00"
+    },
+    {
+      "title": "Wikipedia",
+      "src": "chrome://activity-stream/content/data/content/tippytop/favicons/wikipedia-org.ico",
+      "naturalWidth": 48,
+      "naturalHeight": 48,
+      "complete": true,
+      "rect": {
+        "x": 554,
+        "y": 495.5,
+        "width": 32,
+        "height": 32
+      },
+      "css": {
+        "display": "block",
+        "visibility": "visible",
+        "opacity": "1",
+        "filter": "none"
+      },
+      "paintSamples": [
+        [
+          254,
+          254,
+          254
+        ],
+        [
+          254,
+          254,
+          254
+        ],
+        [
+          254,
+          254,
+          254
+        ],
+        [
+          254,
+          254,
+          254
+        ]
+      ]
+    },
+    {
+      "title": "YouTube",
+      "src": "chrome://activity-stream/content/data/content/tippytop/favicons/youtube-com.png",
+      "naturalWidth": 32,
+      "naturalHeight": 32,
+      "complete": true,
+      "rect": {
+        "x": 652,
+        "y": 495.5,
+        "width": 32,
+        "height": 32
+      },
+      "css": {
+        "display": "block",
+        "visibility": "visible",
+        "opacity": "1",
+        "filter": "none"
+      },
+      "paintSamples": [
+        [
+          255,
+          0,
+          0
+        ],
+        [
+          255,
+          0,
+          0
+        ],
+        [
+          255,
+          0,
+          0
+        ],
+        [
+          255,
+          0,
+          0
+        ]
+      ]
+    },
+    {
+      "title": "Reddit",
+      "src": "chrome://activity-stream/content/data/content/tippytop/favicons/reddit-com.png",
+      "naturalWidth": 32,
+      "naturalHeight": 32,
+      "complete": true,
+      "rect": {
+        "x": 750,
+        "y": 495.5,
+        "width": 32,
+        "height": 32
+      },
+      "css": {
+        "display": "block",
+        "visibility": "visible",
+        "opacity": "1",
+        "filter": "none"
+      },
+      "paintSamples": [
+        [
+          255,
+          69,
+          0
+        ],
+        [
+          255,
+          113,
+          87
+        ],
+        [
+          255,
+          39,
+          0
+        ],
+        [
+          255,
+          67,
+          2
+        ]
+      ]
+    },
+    {
+      "title": "Add-ons for Firefox",
+      "src": "chrome://activity-stream/content/data/content/tippytop/favicons/addons-mozilla.png",
+      "naturalWidth": 32,
+      "naturalHeight": 32,
+      "complete": true,
+      "rect": {
+        "x": 848,
+        "y": 495.5,
+        "width": 32,
+        "height": 32
+      },
+      "css": {
+        "display": "block",
+        "visibility": "visible",
+        "opacity": "1",
+        "filter": "none"
+      },
+      "paintSamples": [
+        [
+          204,
+          133,
+          66
+        ],
+        [
+          255,
+          226,
+          67
+        ],
+        [
+          255,
+          56,
+          70
+        ],
+        [
+          255,
+          118,
+          60
+        ]
+      ]
+    }
+  ],
+  "environment": {
+    "version": "159.0.1",
+    "build": "20261103153232",
+    "design": "fluerial",
+    "disableFloorpStart": false,
+    "signatureRequired": false,
+    "signatureUserSet": false,
+    "sandbox": 6,
+    "proxyType": 1,
+    "selfLoading": true,
+    "selfLoadingUserSet": false
+  }
+}

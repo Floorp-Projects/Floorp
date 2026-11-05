@@ -1,0 +1,37 @@
+{
+  "kind": "transcription of actual Marionette measurements; not synthetic test output",
+  "floorp": {
+    "version": "12.21.1@159.0.1",
+    "uiSelection": "W3C Settings DisableFloorpStart checkbox; restart; Proton via Hub radio",
+    "navigation": [
+      "about:newtab",
+      "about:home",
+      "OS XTest Ctrl+T"
+    ],
+    "bodyText": "",
+    "reactRootHtmlLength": 0,
+    "parentAppInitialized": true,
+    "childAppInitialized": false,
+    "visible": true,
+    "focused": true
+  },
+  "firefox": {
+    "version": "159.0.1",
+    "navigation": [
+      "startup about:newtab",
+      "OS XTest Ctrl+T"
+    ],
+    "allMeasuredRootHtmlLengths": [
+      0,
+      0
+    ],
+    "bodyText": "",
+    "RPMAddMessageListener": "function"
+  },
+  "proxyCorrectedControl": "Firefox remained root0 after documented proxy+CA normal trust",
+  "diagnosticOnly": [
+    "native about service/actor read lookup",
+    "selfLoading false without restart had no effect; user pref cleared"
+  ],
+  "classification": "whole-page native renderer initialization limitation in both products, distinct from reported existing blank shortcut tiles"
+}

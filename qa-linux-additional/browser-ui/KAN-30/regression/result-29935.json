@@ -1,0 +1,13 @@
+{
+  "fixture": "MouseEvent hover + synthetic blur/deactivate; not physical or OS XTest",
+  "productCopy": "/workspace/qa-linux-additional/browser-ui/KAN-30/regression/baseline-testcopy/floorp",
+  "resources": {
+    "gre": "/workspace/qa-linux-additional/browser-ui/KAN-30/regression/baseline-testcopy",
+    "module": "jar:file:///workspace/qa-linux-additional/browser-ui/KAN-30/regression/baseline-testcopy/omni.ja!/chrome/noraneko/nora-content/assets/js/index9.js"
+  },
+  "moduleSha256": "34b45acd991b8795deb1a29245544dc99b5b37d64a75768ccc062f69e7804ef8",
+  "result": {
+    "passed": false,
+    "error": "Error: sidebarOverlay.test.ts failures: window activation hover lifecycle: internal window blur must preserve a hover-owned sidebar"
+  }
+}

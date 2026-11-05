@@ -1,0 +1,55 @@
+--- a/browser-features/chrome/common/firefox-sidebar/test/sidebarOverlay.test.ts
++++ b/browser-features/chrome/common/firefox-sidebar/test/sidebarOverlay.test.ts
+@@ -667,8 +667,52 @@
+   });
+ }
+ 
++async function testWindowActivationHoverLifecycle(): Promise<void> {
++  await withSidebar(async () => {
++    native.lastOpenedId = "viewBookmarksSidebar";
++    await setModes(true, true);
++    focusContent();
++    hover(true);
++    await waitFor(
++      () => native.isOpen && Boolean(firefoxSidebarOverlay?.expanded),
++      "hover must open the native sidebar before changing focus",
++    );
++    await settle();
++    // Fixture events distinguish an internal focus change from window deactivation.
++    // deno-lint-ignore no-window-prefix -- target the browser Window, not the test execution sandbox.
++    window.dispatchEvent(new FocusEvent("blur"));
++    await new Promise((resolve) => setTimeout(resolve, 450));
++    assert(
++      native.isOpen && firefoxSidebarOverlay?.expanded,
++      "internal window blur must preserve a hover-owned sidebar",
++    );
++    // deno-lint-ignore no-window-prefix -- use the same browser Window event target.
++    window.dispatchEvent(new Event("deactivate"));
++    await waitFor(
++      () => !firefoxSidebarOverlay?.expanded,
++      "window deactivation must close the hover preview",
++    );
++    hover(false);
++    hover(true);
++    await waitFor(
++      () => native.isOpen && Boolean(firefoxSidebarOverlay?.expanded),
++      "a new hover must reopen after window deactivation",
++    );
++    hover(false);
++    focusContent();
++    await waitFor(
++      () => !firefoxSidebarOverlay?.expanded,
++      "pointer leave must still close the reopened preview",
++    );
++  });
++}
++
+ export async function runAllTests(): Promise<void> {
+   await runTests("sidebarOverlay.test.ts", [
++    {
++      name: "internal focus changes preserve hover and window deactivation closes it",
++      fn: testWindowActivationHoverLifecycle,
++    },
+     {
+       name: "native overlay and resize preserve the viewport on both sides",
+       fn: testOverlayGeometry,

@@ -1,0 +1,88 @@
+{
+  "conditions": 10,
+  "imageChecks": 70,
+  "cases": [
+    {
+      "file": "proton-clear.json",
+      "design": "proton",
+      "images": 7,
+      "localFourColorPaint": "pass",
+      "decoded": "pass",
+      "stage": "proton-clear"
+    },
+    {
+      "file": "proton-initial.json",
+      "design": "proton",
+      "images": 7,
+      "localFourColorPaint": "pass",
+      "decoded": "pass",
+      "stage": "proton-initial"
+    },
+    {
+      "file": "proton-reload.json",
+      "design": "proton",
+      "images": 7,
+      "localFourColorPaint": "pass",
+      "decoded": "pass",
+      "stage": "proton-reload"
+    },
+    {
+      "file": "fluerial-clear.json",
+      "design": "fluerial",
+      "images": 7,
+      "localFourColorPaint": "pass",
+      "decoded": "pass",
+      "stage": "fluerial-clear"
+    },
+    {
+      "file": "fluerial-initial.json",
+      "design": "fluerial",
+      "images": 7,
+      "localFourColorPaint": "pass",
+      "decoded": "pass",
+      "stage": "fluerial-initial"
+    },
+    {
+      "file": "fluerial-reload.json",
+      "design": "fluerial",
+      "images": 7,
+      "localFourColorPaint": "pass",
+      "decoded": "pass",
+      "stage": "fluerial-reload"
+    },
+    {
+      "file": "lepton-clear.json",
+      "design": "lepton",
+      "images": 7,
+      "localFourColorPaint": "pass",
+      "decoded": "pass",
+      "stage": "lepton-clear"
+    },
+    {
+      "file": "lepton-initial.json",
+      "design": "lepton",
+      "images": 7,
+      "localFourColorPaint": "pass",
+      "decoded": "pass",
+      "stage": "lepton-initial"
+    },
+    {
+      "file": "lepton-reload.json",
+      "design": "lepton",
+      "images": 7,
+      "localFourColorPaint": "pass",
+      "decoded": "pass",
+      "stage": "lepton-reload"
+    },
+    {
+      "file": "lepton-restart.json",
+      "design": "lepton",
+      "images": 7,
+      "localFourColorPaint": "pass",
+      "decoded": "pass",
+      "stage": "lepton-restart"
+    }
+  ],
+  "scope": "Floorp Start only; classic New Tab whole-page initialization limitation also seen in Firefox",
+  "protectedPreferencesUnchanged": true
+}
