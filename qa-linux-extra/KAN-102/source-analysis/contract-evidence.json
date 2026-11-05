@@ -1,0 +1,1304 @@
+[
+  {
+    "origin": "STG 5.3.2 signed XPI",
+    "path": "js/tabs.js",
+    "sha256": "5ea08a3ba1720ac981b92de6fe75f756814aff5f89e402619288ff2d6b037aed",
+    "xpiSha256": "efebf6a9f73a1747044624ddbad7a78fd90ffccdb34a426cf6bb555eda307c49",
+    "excerpt": [
+      {
+        "line": 638,
+        "text": "async function browserTabs(funcName, tabs, log) {"
+      },
+      {
+        "line": 639,
+        "text": "    const tabIds = tabs.map(extractId);"
+      },
+      {
+        "line": 640,
+        "text": ""
+      },
+      {
+        "line": 641,
+        "text": "    try {"
+      },
+      {
+        "line": 642,
+        "text": "        await browser.tabs[funcName](tabIds);"
+      },
+      {
+        "line": 643,
+        "text": "    } catch (e) {"
+      },
+      {
+        "line": 644,
+        "text": "        log.runError(e.message, e);"
+      },
+      {
+        "line": 645,
+        "text": ""
+      },
+      {
+        "line": 646,
+        "text": "        log.warn(funcName, 'tabs one by one', tabIds);"
+      },
+      {
+        "line": 647,
+        "text": ""
+      },
+      {
+        "line": 648,
+        "text": "        await Promise.all(tabs.map(tab =>"
+      },
+      {
+        "line": 649,
+        "text": "            browser.tabs[funcName](extractId(tab))"
+      },
+      {
+        "line": 650,
+        "text": "                .catch(log.onCatch([funcName, 'tab', tab], false))"
+      },
+      {
+        "line": 651,
+        "text": "        ));"
+      },
+      {
+        "line": 652,
+        "text": "    }"
+      },
+      {
+        "line": 653,
+        "text": "}"
+      },
+      {
+        "line": 654,
+        "text": ""
+      },
+      {
+        "line": 655,
+        "text": "export async function show(...tabs) {"
+      },
+      {
+        "line": 656,
+        "text": "    tabs = tabs.flat();"
+      },
+      {
+        "line": 657,
+        "text": ""
+      },
+      {
+        "line": 658,
+        "text": "    if (tabs.length) {"
+      },
+      {
+        "line": 659,
+        "text": "        const log = logger.start('show', tabs.map(extractId));"
+      },
+      {
+        "line": 660,
+        "text": ""
+      },
+      {
+        "line": 661,
+        "text": "        await browserTabs('show', tabs, log);"
+      },
+      {
+        "line": 662,
+        "text": ""
+      },
+      {
+        "line": 663,
+        "text": "        log.stop();"
+      },
+      {
+        "line": 664,
+        "text": "    }"
+      },
+      {
+        "line": 665,
+        "text": "}"
+      },
+      {
+        "line": 666,
+        "text": ""
+      },
+      {
+        "line": 667,
+        "text": "export async function hide(...tabs) {"
+      },
+      {
+        "line": 668,
+        "text": "    tabs = tabs.flat();"
+      },
+      {
+        "line": 669,
+        "text": ""
+      },
+      {
+        "line": 670,
+        "text": "    if (tabs.length) {"
+      },
+      {
+        "line": 671,
+        "text": "        const log = logger.start('hide', tabs.map(extractId));"
+      },
+      {
+        "line": 672,
+        "text": ""
+      },
+      {
+        "line": 673,
+        "text": "        await browserTabs('hide', tabs, log);"
+      },
+      {
+        "line": 674,
+        "text": ""
+      },
+      {
+        "line": 675,
+        "text": "        log.stop();"
+      },
+      {
+        "line": 676,
+        "text": "    }"
+      },
+      {
+        "line": 677,
+        "text": "}"
+      },
+      {
+        "line": 678,
+        "text": ""
+      },
+      {
+        "line": 679,
+        "text": "export async function safeHide(...tabs) { // ids or tabs"
+      },
+      {
+        "line": 680,
+        "text": "    tabs = tabs.flat();"
+      },
+      {
+        "line": 681,
+        "text": ""
+      },
+      {
+        "line": 682,
+        "text": "    if (tabs.length) {"
+      },
+      {
+        "line": 683,
+        "text": "        let tabIds = tabs.map(extractId);"
+      },
+      {
+        "line": 684,
+        "text": ""
+      },
+      {
+        "line": 685,
+        "text": "        const log = logger.start('safeHide', tabIds);"
+      },
+      {
+        "line": 686,
+        "text": ""
+      },
+      {
+        "line": 687,
+        "text": "        backgroundSelf.addExcludeTabIds(tabIds);"
+      },
+      {
+        "line": 688,
+        "text": "        await hide(tabIds);"
+      },
+      {
+        "line": 689,
+        "text": "        backgroundSelf.removeExcludeTabIds(tabIds);"
+      },
+      {
+        "line": 690,
+        "text": ""
+      }
+    ]
+  },
+  {
+    "origin": "STG 5.3.2 signed XPI",
+    "path": "stg-background.js",
+    "sha256": "e8e4f9608a52353e44529cf22f6980413e69bd8b8e76586d57a6da37a160dc98",
+    "xpiSha256": "efebf6a9f73a1747044624ddbad7a78fd90ffccdb34a426cf6bb555eda307c49",
+    "excerpt": [
+      {
+        "line": 189,
+        "text": "    windowId = windowId || await Windows.getLastFocusedNormalWindow();"
+      },
+      {
+        "line": 190,
+        "text": ""
+      },
+      {
+        "line": 191,
+        "text": "    if (_loadingGroupInWindow.has(windowId)) {"
+      },
+      {
+        "line": 192,
+        "text": "        log.stopError('window in loading state now', windowId);"
+      },
+      {
+        "line": 193,
+        "text": "        return false;"
+      },
+      {
+        "line": 194,
+        "text": "    }"
+      },
+      {
+        "line": 195,
+        "text": ""
+      },
+      {
+        "line": 196,
+        "text": "    if (groupId && (!Number.isSafeInteger(groupId) || groupId < 1)) {"
+      },
+      {
+        "line": 197,
+        "text": "        log.throwError(['Invalid group id:', groupId]);"
+      },
+      {
+        "line": 198,
+        "text": "    }"
+      },
+      {
+        "line": 199,
+        "text": ""
+      },
+      {
+        "line": 200,
+        "text": "    if (activeTabId && (!Number.isSafeInteger(activeTabId) || activeTabId < 1)) {"
+      },
+      {
+        "line": 201,
+        "text": "        activeTabId = null;"
+      },
+      {
+        "line": 202,
+        "text": "    }"
+      },
+      {
+        "line": 203,
+        "text": ""
+      },
+      {
+        "line": 204,
+        "text": "    _loadingGroupInWindow.add(windowId);"
+      },
+      {
+        "line": 205,
+        "text": ""
+      },
+      {
+        "line": 206,
+        "text": "    const groupWindowId = Cache.getWindowId(groupId);"
+      },
+      {
+        "line": 207,
+        "text": ""
+      },
+      {
+        "line": 208,
+        "text": "    let result = null;"
+      },
+      {
+        "line": 209,
+        "text": ""
+      },
+      {
+        "line": 210,
+        "text": "    try {"
+      },
+      {
+        "line": 211,
+        "text": "        let addTabs = [];"
+      },
+      {
+        "line": 212,
+        "text": ""
+      },
+      {
+        "line": 213,
+        "text": "        if (groupWindowId) {"
+      },
+      {
+        "line": 214,
+        "text": "            if (activeTabId) {"
+      },
+      {
+        "line": 215,
+        "text": "                Tabs.setActive(activeTabId);"
+      },
+      {
+        "line": 216,
+        "text": "            }"
+      },
+      {
+        "line": 217,
+        "text": ""
+      },
+      {
+        "line": 218,
+        "text": "            Windows.setFocus(groupWindowId);"
+      },
+      {
+        "line": 219,
+        "text": "        } else {"
+      },
+      {
+        "line": 220,
+        "text": "            // magic"
+      },
+      {
+        "line": 221,
+        "text": ""
+      },
+      {
+        "line": 222,
+        "text": "            const { group: groupToShow, groups } = await Groups.load(groupId, true),"
+      },
+      {
+        "line": 223,
+        "text": "                oldGroupId = Cache.getWindowGroup(windowId),"
+      },
+      {
+        "line": 224,
+        "text": "                groupToHide = groups.find(gr => gr.id === oldGroupId),"
+      },
+      {
+        "line": 225,
+        "text": "                tabsIdsToRemove = new Set;"
+      },
+      {
+        "line": 226,
+        "text": ""
+      },
+      {
+        "line": 227,
+        "text": "            if (!groupToShow) {"
+      },
+      {
+        "line": 228,
+        "text": "                log.throwError('groupToShow not found');"
+      },
+      {
+        "line": 229,
+        "text": "            }"
+      },
+      {
+        "line": 230,
+        "text": ""
+      },
+      {
+        "line": 231,
+        "text": "            if (groupToShow.isArchive) {"
+      },
+      {
+        "line": 232,
+        "text": "                Utils.notify(['groupIsArchived', groupToShow.title]);"
+      },
+      {
+        "line": 233,
+        "text": "                throw '';"
+      },
+      {
+        "line": 234,
+        "text": "            }"
+      },
+      {
+        "line": 235,
+        "text": ""
+      },
+      {
+        "line": 236,
+        "text": "            if (groupToHide?.tabs.some(Utils.isTabCanNotBeHidden)) {"
+      },
+      {
+        "line": 237,
+        "text": "                Utils.notify(['notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera']);"
+      },
+      {
+        "line": 238,
+        "text": "                throw '';"
+      },
+      {
+        "line": 239,
+        "text": "            }"
+      },
+      {
+        "line": 240,
+        "text": ""
+      },
+      {
+        "line": 241,
+        "text": "            await loadingBrowserAction(true, windowId).catch(log.onCatch('loadingBrowserAction'));"
+      },
+      {
+        "line": 242,
+        "text": ""
+      },
+      {
+        "line": 243,
+        "text": "            // show tabs"
+      },
+      {
+        "line": 244,
+        "text": "            if (groupToShow.tabs.length) {"
+      },
+      {
+        "line": 245,
+        "text": "                let tabIds = groupToShow.tabs.map(Tabs.extractId);"
+      },
+      {
+        "line": 246,
+        "text": ""
+      },
+      {
+        "line": 247,
+        "text": "                addExcludeTabIds(tabIds);"
+      },
+      {
+        "line": 248,
+        "text": ""
+      },
+      {
+        "line": 249,
+        "text": "                if (!groupToShow.tabs.every(tab => tab.windowId === windowId)) {"
+      },
+      {
+        "line": 250,
+        "text": "                    groupToShow.tabs = await Tabs.moveNative(groupToShow.tabs, {"
+      },
+      {
+        "line": 251,
+        "text": "                        index: -1,"
+      },
+      {
+        "line": 252,
+        "text": "                        windowId: windowId,"
+      },
+      {
+        "line": 253,
+        "text": "                    });"
+      },
+      {
+        "line": 254,
+        "text": "                }"
+      },
+      {
+        "line": 255,
+        "text": ""
+      },
+      {
+        "line": 256,
+        "text": "                await Tabs.show(tabIds);"
+      },
+      {
+        "line": 257,
+        "text": ""
+      },
+      {
+        "line": 258,
+        "text": "                removeExcludeTabIds(tabIds);"
+      },
+      {
+        "line": 259,
+        "text": ""
+      },
+      {
+        "line": 260,
+        "text": "                if (groupToShow.muteTabsWhenGroupCloseAndRestoreWhenOpen) {"
+      },
+      {
+        "line": 261,
+        "text": "                    Tabs.setMute(groupToShow.tabs, false).catch(log.onCatch('Tabs.setMute', false));"
+      },
+      {
+        "line": 262,
+        "text": "                }"
+      },
+      {
+        "line": 263,
+        "text": "            }"
+      },
+      {
+        "line": 264,
+        "text": ""
+      },
+      {
+        "line": 265,
+        "text": "            // link group with window"
+      },
+      {
+        "line": 266,
+        "text": "            await Cache.setWindowGroup(windowId, groupToShow.id);"
+      },
+      {
+        "line": 267,
+        "text": ""
+      },
+      {
+        "line": 268,
+        "text": "            // hide tabs"
+      },
+      {
+        "line": 269,
+        "text": "            await hideTabs(groupToHide?.tabs);"
+      },
+      {
+        "line": 270,
+        "text": ""
+      },
+      {
+        "line": 271,
+        "text": "            let activeTabGroupToHide = groupToHide?.tabs.find(tab => tab.active);"
+      },
+      {
+        "line": 272,
+        "text": ""
+      },
+      {
+        "line": 273,
+        "text": "            async function hideTabs(tabs = []) {"
+      },
+      {
+        "line": 274,
+        "text": "                await Tabs.safeHide(tabs);"
+      },
+      {
+        "line": 275,
+        "text": ""
+      },
+      {
+        "line": 500,
+        "text": "const onUpdatedTab = catchFunc(async function(tabId, changeInfo, tab) {"
+      },
+      {
+        "line": 501,
+        "text": "    if (excludeTabIds.has(tab.id)) {"
+      },
+      {
+        "line": 502,
+        "text": "        Cache.setTab(tab);"
+      },
+      {
+        "line": 503,
+        "text": "        logger.log('onUpdatedTab \ud83d\uded1 tab was excluded', tab.id);"
+      },
+      {
+        "line": 504,
+        "text": "        return;"
+      },
+      {
+        "line": 505,
+        "text": "    }"
+      },
+      {
+        "line": 506,
+        "text": ""
+      },
+      {
+        "line": 507,
+        "text": "    changeInfo = Cache.getRealTabStateChanged(tab);"
+      },
+      {
+        "line": 508,
+        "text": ""
+      },
+      {
+        "line": 509,
+        "text": "    Cache.setTab(tab);"
+      },
+      {
+        "line": 510,
+        "text": ""
+      },
+      {
+        "line": 511,
+        "text": "    if (!changeInfo) {"
+      },
+      {
+        "line": 512,
+        "text": "        logger.log('onUpdatedTab \ud83d\uded1 changeInfo keys was not changed', tab.id);"
+      },
+      {
+        "line": 513,
+        "text": "        return;"
+      },
+      {
+        "line": 514,
+        "text": "    }"
+      },
+      {
+        "line": 515,
+        "text": ""
+      },
+      {
+        "line": 516,
+        "text": "    if (Utils.isTabPinned(tab) && !changeInfo.hasOwnProperty('pinned')) {"
+      },
+      {
+        "line": 517,
+        "text": "        logger.log('onUpdatedTab \ud83d\uded1 tab is pinned', tab.id);"
+      },
+      {
+        "line": 518,
+        "text": "        return;"
+      },
+      {
+        "line": 519,
+        "text": "    }"
+      },
+      {
+        "line": 520,
+        "text": ""
+      },
+      {
+        "line": 521,
+        "text": "    const log = logger.start('onUpdatedTab', tabId, { changeInfo });"
+      },
+      {
+        "line": 522,
+        "text": ""
+      },
+      {
+        "line": 523,
+        "text": "    const tabGroupId = Cache.getTabGroup(tab.id),"
+      },
+      {
+        "line": 524,
+        "text": "        winGroupId = Cache.getWindowGroup(tab.windowId);"
+      },
+      {
+        "line": 525,
+        "text": ""
+      },
+      {
+        "line": 526,
+        "text": "    if (changeInfo.favIconUrl/*  && (tabGroupId || winGroupId) */) {"
+      },
+      {
+        "line": 527,
+        "text": "        await Cache.setTabFavIcon(tab.id, changeInfo.favIconUrl).catch(log.onCatch(['cant set favIcon', tab, changeInfo], false));"
+      },
+      {
+        "line": 528,
+        "text": "    }"
+      },
+      {
+        "line": 529,
+        "text": ""
+      },
+      {
+        "line": 530,
+        "text": "    if (changeInfo.hasOwnProperty('pinned') || changeInfo.hasOwnProperty('hidden')) {"
+      },
+      {
+        "line": 531,
+        "text": "        if (changeInfo.pinned || changeInfo.hidden) {"
+      },
+      {
+        "line": 532,
+        "text": "            changeInfo.pinned && log.log('remove group', tabGroupId, 'for pinned tab', tab.id);"
+      },
+      {
+        "line": 533,
+        "text": "            changeInfo.hidden && log.log('remove group', tabGroupId, 'for hidden tab', tab.id);"
+      },
+      {
+        "line": 534,
+        "text": "            Cache.removeTabGroup(tab.id)"
+      },
+      {
+        "line": 535,
+        "text": "                .catch(log.onCatch(['[0] cant remove group from tab', tab.id], false));"
+      },
+      {
+        "line": 536,
+        "text": "        } else {"
+      },
+      {
+        "line": 537,
+        "text": ""
+      },
+      {
+        "line": 538,
+        "text": "            if (false === changeInfo.pinned) {"
+      },
+      {
+        "line": 539,
+        "text": "                if (winGroupId) {"
+      },
+      {
+        "line": 540,
+        "text": "                    log.log('set group', winGroupId, ' for unhidden tab', tab.id);"
+      },
+      {
+        "line": 541,
+        "text": "                    Cache.setTabGroup(tab.id, winGroupId)"
+      },
+      {
+        "line": 542,
+        "text": "                        .catch(log.onCatch(['[1] cant set group', winGroupId, 'to tab', tab.id], false));"
+      },
+      {
+        "line": 543,
+        "text": "                } else {"
+      },
+      {
+        "line": 544,
+        "text": "                    log.log('remove group', tabGroupId, 'for unhidden tab', tab.id);"
+      },
+      {
+        "line": 545,
+        "text": "                    Cache.removeTabGroup(tab.id)"
+      },
+      {
+        "line": 546,
+        "text": "                        .catch(log.onCatch(['[1] cant remove group from tab', tab.id], false));"
+      },
+      {
+        "line": 547,
+        "text": "                }"
+      },
+      {
+        "line": 548,
+        "text": "            } else if (false === changeInfo.hidden) {"
+      },
+      {
+        "line": 549,
+        "text": "                log.log('tab is showing', tab.id);"
+      },
+      {
+        "line": 550,
+        "text": ""
+      },
+      {
+        "line": 551,
+        "text": "                if (tabGroupId) {"
+      },
+      {
+        "line": 552,
+        "text": "                    if (winGroupId) {"
+      },
+      {
+        "line": 553,
+        "text": "                        const { group: winGroup } = await Groups.load(winGroupId, true);"
+      },
+      {
+        "line": 554,
+        "text": ""
+      },
+      {
+        "line": 555,
+        "text": "                        if (winGroup.tabs.length) {"
+      },
+      {
+        "line": 556,
+        "text": "                            log.stop('applyGroup for tab', tab.id);"
+      },
+      {
+        "line": 557,
+        "text": "                            applyGroup(tab.windowId, tabGroupId, tab.id);"
+      },
+      {
+        "line": 558,
+        "text": "                            return;"
+      },
+      {
+        "line": 559,
+        "text": "                        }"
+      },
+      {
+        "line": 560,
+        "text": "                    }"
+      },
+      {
+        "line": 561,
+        "text": ""
+      },
+      {
+        "line": 562,
+        "text": "                    let tabs = await Tabs.get(tab.windowId, null);"
+      },
+      {
+        "line": 563,
+        "text": ""
+      },
+      {
+        "line": 564,
+        "text": "                    tabs = tabs.filter(tab => !tab.groupId);"
+      },
+      {
+        "line": 565,
+        "text": ""
+      },
+      {
+        "line": 566,
+        "text": "                    let activePinnedTab = await Tabs.setActive(null, tabs.filter(tab => tab.pinned));"
+      },
+      {
+        "line": 567,
+        "text": ""
+      },
+      {
+        "line": 568,
+        "text": "                    if (!activePinnedTab) {"
+      },
+      {
+        "line": 569,
+        "text": "                        let unSyncTabs = tabs.filter(tab => !tab.pinned);"
+      },
+      {
+        "line": 570,
+        "text": ""
+      },
+      {
+        "line": 571,
+        "text": "                        if (unSyncTabs.length) {"
+      },
+      {
+        "line": 572,
+        "text": "                            await Tabs.setActive(null, unSyncTabs);"
+      },
+      {
+        "line": 573,
+        "text": "                        } else {"
+      },
+      {
+        "line": 574,
+        "text": "                            await Tabs.createTempActiveTab(tab.windowId, false);"
+      },
+      {
+        "line": 575,
+        "text": "                        }"
+      },
+      {
+        "line": 576,
+        "text": "                    }"
+      },
+      {
+        "line": 577,
+        "text": ""
+      },
+      {
+        "line": 578,
+        "text": "                    await Tabs.safeHide(tab);"
+      },
+      {
+        "line": 579,
+        "text": "                } else {"
+      },
+      {
+        "line": 580,
+        "text": "                    if (winGroupId) {"
+      },
+      {
+        "line": 581,
+        "text": "                        log.log('set group', winGroupId, ' for unhidden tab', tab.id);"
+      },
+      {
+        "line": 582,
+        "text": "                        Cache.setTabGroup(tab.id, winGroupId)"
+      },
+      {
+        "line": 583,
+        "text": "                            .catch(log.onCatch(['[2] cant set group', winGroupId, 'to tab', tab.id], false));"
+      },
+      {
+        "line": 584,
+        "text": "                    } else {"
+      },
+      {
+        "line": 585,
+        "text": "                        log.log('remove group', tabGroupId, 'for unhidden tab', tab.id);"
+      },
+      {
+        "line": 586,
+        "text": "                        Cache.removeTabGroup(tab.id)"
+      },
+      {
+        "line": 587,
+        "text": "                            .catch(log.onCatch(['[2] cant remove group from tab', tab.id], false));"
+      },
+      {
+        "line": 588,
+        "text": "                    }"
+      },
+      {
+        "line": 589,
+        "text": "                }"
+      },
+      {
+        "line": 590,
+        "text": "            }"
+      },
+      {
+        "line": 2040,
+        "text": ""
+      },
+      {
+        "line": 2041,
+        "text": "    browser.tabs.onActivated.addListener(onActivatedTab)"
+      },
+      {
+        "line": 2042,
+        "text": "    browser.tabs.onCreated.addListener(onCreatedTab);"
+      },
+      {
+        "line": 2043,
+        "text": "    browser.tabs.onUpdated.addListener(onUpdatedTab, {"
+      },
+      {
+        "line": 2044,
+        "text": "        properties: Constants.ON_UPDATED_TAB_PROPERTIES,"
+      },
+      {
+        "line": 2045,
+        "text": "    });"
+      },
+      {
+        "line": 2046,
+        "text": "    browser.tabs.onRemoved.addListener(onRemovedTab);"
+      },
+      {
+        "line": 2047,
+        "text": "    browser.tabs.onMoved.addListener(onMovedTab);"
+      },
+      {
+        "line": 2048,
+        "text": ""
+      }
+    ]
+  },
+  {
+    "origin": "STG 5.3.2 signed XPI",
+    "path": "js/constants.js",
+    "sha256": "3657d5f1160f4980f8160c378316ca10f2c7cd828b2ed35adba46d3e2185cc10",
+    "xpiSha256": "efebf6a9f73a1747044624ddbad7a78fd90ffccdb34a426cf6bb555eda307c49",
+    "excerpt": [
+      {
+        "line": 359,
+        "text": "export const ON_UPDATED_TAB_PROPERTIES = browser.tabs ? Object.freeze([ // browser.tabs not defined into web page scripts"
+      },
+      {
+        "line": 360,
+        "text": "    browser.tabs.UpdatePropertyName.TITLE, // for cache"
+      },
+      {
+        "line": 361,
+        "text": "    browser.tabs.UpdatePropertyName.STATUS, // for check update url and thumbnail"
+      },
+      {
+        "line": 362,
+        "text": "    // browser.tabs.UpdatePropertyName.URL, // for check update url and thumbnail"
+      },
+      {
+        "line": 363,
+        "text": "    browser.tabs.UpdatePropertyName.FAVICONURL, // for session"
+      },
+      {
+        "line": 364,
+        "text": "    browser.tabs.UpdatePropertyName.HIDDEN,"
+      },
+      {
+        "line": 365,
+        "text": "    browser.tabs.UpdatePropertyName.PINNED,"
+      },
+      {
+        "line": 366,
+        "text": "]) : null;"
+      }
+    ]
+  },
+  {
+    "origin": "official Floorp12.21.1@159.0.1 packaged browser/omni.ja",
+    "path": "packaged-tabbrowser.js",
+    "sha256": "857e9aa2f93418e123af5c6be41c5e2521c96c21123f6666911285b6f6b53fbc",
+    "excerpt": [
+      {
+        "line": 7864,
+        "text": "  showTab(aTab) {"
+      },
+      {
+        "line": 7865,
+        "text": "    if (!aTab.hidden || aTab == this.documentGlobal.FirefoxViewHandler.tab) {"
+      },
+      {
+        "line": 7866,
+        "text": "      return;"
+      },
+      {
+        "line": 7867,
+        "text": "    }"
+      },
+      {
+        "line": 7868,
+        "text": "    aTab.removeAttribute(\"hidden\");"
+      },
+      {
+        "line": 7869,
+        "text": "    this.tabContainer._invalidateCachedVisibleTabs();"
+      },
+      {
+        "line": 7870,
+        "text": ""
+      },
+      {
+        "line": 7871,
+        "text": "    this.tabContainer._updateCloseButtons();"
+      },
+      {
+        "line": 7872,
+        "text": "    if (aTab.multiselected) {"
+      },
+      {
+        "line": 7873,
+        "text": "      this.#updateMultiselectedTabCloseButtonTooltip();"
+      },
+      {
+        "line": 7874,
+        "text": "    }"
+      },
+      {
+        "line": 7875,
+        "text": ""
+      },
+      {
+        "line": 7876,
+        "text": "    let event = this.document.createEvent(\"Events\");"
+      },
+      {
+        "line": 7877,
+        "text": "    event.initEvent(\"TabShow\", true, false);"
+      },
+      {
+        "line": 7878,
+        "text": "    aTab.dispatchEvent(event);"
+      },
+      {
+        "line": 7879,
+        "text": "    lazy.SessionStore.deleteCustomTabValue(aTab, \"hiddenBy\");"
+      },
+      {
+        "line": 7880,
+        "text": ""
+      },
+      {
+        "line": 7894,
+        "text": "  hideTab(aTab, aSource) {"
+      },
+      {
+        "line": 7895,
+        "text": "    if ("
+      },
+      {
+        "line": 7896,
+        "text": "      aTab.hidden ||"
+      },
+      {
+        "line": 7897,
+        "text": "      aTab.pinned ||"
+      },
+      {
+        "line": 7898,
+        "text": "      aTab.selected ||"
+      },
+      {
+        "line": 7899,
+        "text": "      aTab.closing ||"
+      },
+      {
+        "line": 7900,
+        "text": "      // Tabs that are sharing the screen, microphone or camera cannot be hidden."
+      },
+      {
+        "line": 7901,
+        "text": "      aTab.linkedBrowser._sharingState?.webRTC?.sharing"
+      },
+      {
+        "line": 7902,
+        "text": "    ) {"
+      },
+      {
+        "line": 7903,
+        "text": "      return;"
+      },
+      {
+        "line": 7904,
+        "text": "    }"
+      },
+      {
+        "line": 7905,
+        "text": "    aTab.setAttribute(\"hidden\", \"true\");"
+      },
+      {
+        "line": 7906,
+        "text": "    this.tabContainer._invalidateCachedVisibleTabs();"
+      },
+      {
+        "line": 7907,
+        "text": ""
+      },
+      {
+        "line": 7908,
+        "text": "    this.tabContainer._updateCloseButtons();"
+      },
+      {
+        "line": 7909,
+        "text": "    if (aTab.multiselected) {"
+      },
+      {
+        "line": 7910,
+        "text": "      this.#updateMultiselectedTabCloseButtonTooltip();"
+      },
+      {
+        "line": 7911,
+        "text": "    }"
+      },
+      {
+        "line": 7912,
+        "text": ""
+      },
+      {
+        "line": 7913,
+        "text": "    // Splice this tab out of any lines of succession before any events are"
+      },
+      {
+        "line": 7914,
+        "text": "    // dispatched."
+      },
+      {
+        "line": 7915,
+        "text": "    this.replaceInSuccession(aTab, this.getSuccessor(aTab));"
+      },
+      {
+        "line": 7916,
+        "text": "    this.setSuccessor(aTab, null);"
+      },
+      {
+        "line": 7917,
+        "text": ""
+      },
+      {
+        "line": 7918,
+        "text": "    let event = this.document.createEvent(\"Events\");"
+      },
+      {
+        "line": 7919,
+        "text": "    event.initEvent(\"TabHide\", true, false);"
+      },
+      {
+        "line": 7920,
+        "text": "    aTab.dispatchEvent(event);"
+      },
+      {
+        "line": 7921,
+        "text": "    if (aSource) {"
+      },
+      {
+        "line": 7922,
+        "text": "      lazy.SessionStore.setCustomTabValue(aTab, \"hiddenBy\", aSource);"
+      },
+      {
+        "line": 7923,
+        "text": "    }"
+      },
+      {
+        "line": 7924,
+        "text": ""
+      }
+    ]
+  },
+  {
+    "origin": "official Floorp12.21.1@159.0.1 packaged browser/omni.ja",
+    "path": "packaged-ext-tabs.js",
+    "sha256": "54c835559b0a3d0206ad43fb4e8330dc60f2d01094032eeb0acf396342b7e3ad",
+    "excerpt": [
+      {
+        "line": 1653,
+        "text": "        show(tabIds) {"
+      },
+      {
+        "line": 1654,
+        "text": "          for (let tab of getNativeTabsFromIDArray(tabIds)) {"
+      },
+      {
+        "line": 1655,
+        "text": "            if (tab.documentGlobal) {"
+      },
+      {
+        "line": 1656,
+        "text": "              tab.documentGlobal.gBrowser.showTab(tab);"
+      },
+      {
+        "line": 1657,
+        "text": "            }"
+      },
+      {
+        "line": 1658,
+        "text": "          }"
+      },
+      {
+        "line": 1659,
+        "text": "        },"
+      },
+      {
+        "line": 1660,
+        "text": ""
+      },
+      {
+        "line": 1661,
+        "text": "        hide(tabIds) {"
+      },
+      {
+        "line": 1662,
+        "text": "          let hidden = [];"
+      },
+      {
+        "line": 1663,
+        "text": "          for (let tab of getNativeTabsFromIDArray(tabIds)) {"
+      },
+      {
+        "line": 1664,
+        "text": "            if (tab.documentGlobal && !tab.hidden) {"
+      },
+      {
+        "line": 1665,
+        "text": "              tab.documentGlobal.gBrowser.hideTab(tab, extension.id);"
+      },
+      {
+        "line": 1666,
+        "text": "              if (tab.hidden) {"
+      },
+      {
+        "line": 1667,
+        "text": "                hidden.push(tabTracker.getId(tab));"
+      },
+      {
+        "line": 1668,
+        "text": "              }"
+      },
+      {
+        "line": 1669,
+        "text": "            }"
+      },
+      {
+        "line": 1670,
+        "text": "          }"
+      },
+      {
+        "line": 1671,
+        "text": "          if (hidden.length) {"
+      },
+      {
+        "line": 1672,
+        "text": "            let win = Services.wm.getMostRecentWindow(\"navigator:browser\");"
+      }
+    ]
+  }
+]

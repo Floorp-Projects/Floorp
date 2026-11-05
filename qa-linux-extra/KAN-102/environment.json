@@ -1,0 +1,28 @@
+{
+  "os": "PRETTY_NAME=\"Debian GNU/Linux 13 (trixie)\"\nNAME=\"Debian GNU/Linux\"\nVERSION_ID=\"13\"\nVERSION=\"13 (trixie)\"\nVERSION_CODENAME=trixie\nDEBIAN_VERSION_FULL=13.6\nID=debian\nHOME_URL=\"https://www.debian.org/\"\nSUPPORT_URL=\"https://www.debian.org/support\"\nBUG_REPORT_URL=\"https://bugs.debian.org/\"\n",
+  "kernel": "6.18.57",
+  "machine": "x86_64",
+  "uid": 1000,
+  "drmDevices": [],
+  "display": "dedicated Xvfb X11 + Openbox; actual headful products",
+  "dbus": "private per profile",
+  "input": "WebDriver real element pointer clicks; XTest Escape; no physical-input claim",
+  "fixtures": "2 groups x3 localhost HTML fixture tabs; pinned management and initial about:blank excluded",
+  "tls": "inherited enforced proxy and installed environment CA; acceptInsecureCerts=false",
+  "protections": "fresh profiles, xpinstall.signatures.required=true, sandbox6 before/after; MOZ_DISABLE_* refused",
+  "originalConditionsNotMatched": "Windows10/12.12.2; original STG version/real 200-590 tab import backup/physical input; current Linux software GPU only",
+  "sourceSha": "984509d2053be7bae9027133bda7259cd706b208",
+  "sourceInspectionSha": "29a3eb23145da90706d8a94441373278521cc737",
+  "products": {
+    "floorp": {
+      "binary": "/workspace/qa-linux-22/C/products/floorp/floorp",
+      "binarySha256": "4f05c1330b38e50040440be6a3b6e0e7a5b52bc79edb5c5478d978c81f5a603d",
+      "omniSha256": "159285f967e950e0cd1ac658d713b7770e7763d6d983fc88b6e48c16e4a1f345"
+    },
+    "firefox": {
+      "binary": "/workspace/qa-linux-22/C/products/firefox/firefox",
+      "binarySha256": "de3f1f70c111692fce304c7af83a7bf2e6f4bc8033191ea8b8ccc25f1aa122ed",
+      "omniSha256": "2ca88cf7d962909c3e42960177e1d418124b50180692bca5cbcad2ffa9a033d4"
+    }
+  }
+}

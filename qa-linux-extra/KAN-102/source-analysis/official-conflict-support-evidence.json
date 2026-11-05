@@ -1,0 +1,226 @@
+[
+  {
+    "source": "official signed STG5.3.2 XPI",
+    "xpiSha256": "efebf6a9f73a1747044624ddbad7a78fd90ffccdb34a426cf6bb555eda307c49",
+    "path": "help/extensions-that-conflict-with-stg.html",
+    "sha256": "578715b9f8b2d50e8a51c6278047eacea09db2cc3dc930b2448dc0922dd94482",
+    "excerpt": [
+      {
+        "line": 54,
+        "text": "</head>"
+      },
+      {
+        "line": 55,
+        "text": ""
+      },
+      {
+        "line": 56,
+        "text": "<body>"
+      },
+      {
+        "line": 57,
+        "text": "    <main>"
+      },
+      {
+        "line": 58,
+        "text": "        <div class=\"title\">"
+      },
+      {
+        "line": 59,
+        "text": "            <h1 class=\"title-text\" data-i18n-id=\"helpPageExtensionsThatConflictWithStgDesc1\">"
+      },
+      {
+        "line": 60,
+        "text": "                Simple Tab Groups addon conflicts with the following enabled extensions:"
+      },
+      {
+        "line": 61,
+        "text": "            </h1>"
+      },
+      {
+        "line": 62,
+        "text": "        </div>"
+      },
+      {
+        "line": 63,
+        "text": "        <div>"
+      },
+      {
+        "line": 64,
+        "text": "            <p><span data-i18n-id=\"enabled\">Enabled</span>:</p>"
+      },
+      {
+        "line": 65,
+        "text": "            <div id=\"enabled-conflicted-extensions\"></div>"
+      },
+      {
+        "line": 66,
+        "text": ""
+      },
+      {
+        "line": 67,
+        "text": "            <div class=\"flex-reverse\">"
+      },
+      {
+        "line": 68,
+        "text": "                <div id=\"disabled-conflicted-extensions\" class=\"text-gray\"></div>"
+      },
+      {
+        "line": 69,
+        "text": "                <p><span data-i18n-id=\"disabled\">Disabled</span>:</p>"
+      },
+      {
+        "line": 70,
+        "text": "            </div>"
+      },
+      {
+        "line": 71,
+        "text": ""
+      },
+      {
+        "line": 72,
+        "text": "            <p data-i18n-id=\"helpPageExtensionsThatConflictWithStgDesc2\">To avoid losing tabs or their location in windows and groups, it is strongly recommended to turn off or remove enabled extensions that conflict with the Simple Tab Groups addon. You can do this on the addons settings page \"about:addons\" or by pressing the key combination <code>Ctrl+Shift+A</code></p>"
+      },
+      {
+        "line": 73,
+        "text": "        </div>"
+      }
+    ]
+  },
+  {
+    "source": "official signed STG5.3.2 XPI",
+    "xpiSha256": "efebf6a9f73a1747044624ddbad7a78fd90ffccdb34a426cf6bb555eda307c49",
+    "path": "js/constants.js",
+    "sha256": "3657d5f1160f4980f8160c378316ca10f2c7cd828b2ed35adba46d3e2185cc10",
+    "excerpt": [
+      {
+        "line": 104,
+        "text": "export const CONFLICTED_EXTENSIONS = Object.freeze(["
+      },
+      {
+        "line": 105,
+        "text": "    'tab_open_close_control@felix-kolbe.de', // https://addons.mozilla.org/firefox/addon/tab-open-close-control/"
+      },
+      {
+        "line": 106,
+        "text": "    'extension@one-tab.com', // https://addons.mozilla.org/firefox/addon/onetab/"
+      },
+      {
+        "line": 107,
+        "text": "    '{dcdaadfa-21f1-4853-9b34-aad681fff6f3}', // https://addons.mozilla.org/firefox/addon/tiled-tab-groups/"
+      },
+      {
+        "line": 108,
+        "text": "    'panorama-tab-groups@example.com', // https://addons.mozilla.org/firefox/addon/panorama-tab-groups/"
+      },
+      {
+        "line": 109,
+        "text": "    '{60e27487-c779-464c-8698-ad481b718d5f}', // https://addons.mozilla.org/firefox/addon/panorama-view/"
+      },
+      {
+        "line": 110,
+        "text": "    'panorama@nyordanov.com', // https://addons.mozilla.org/firefox/addon/basic-panorama/"
+      },
+      {
+        "line": 111,
+        "text": "    'firefox-addon@workona.com', // https://addons.mozilla.org/firefox/addon/workona/"
+      },
+      {
+        "line": 112,
+        "text": "    'tab-stash@condordes.net', // https://addons.mozilla.org/firefox/addon/tab-stash/"
+      },
+      {
+        "line": 113,
+        "text": "    'tab-array@menhera.org', // https://addons.mozilla.org/firefox/addon/container-tab-groups/"
+      },
+      {
+        "line": 114,
+        "text": "    '{3c078156-979c-498b-8990-85f7987dd929}', // https://addons.mozilla.org/firefox/addon/sidebery/"
+      },
+      {
+        "line": 115,
+        "text": "    'tab_group_window@crossblade.her.jp', // https://addons.mozilla.org/firefox/addon/tab-group-window/"
+      },
+      {
+        "line": 116,
+        "text": "    'power-tabs@rapptz-addons.com', // https://addons.mozilla.org/firefox/addon/power-tabs/"
+      },
+      {
+        "line": 117,
+        "text": "    '{644e8eb0-c710-47e9-b81c-5dd69bfcf86b}', // https://addons.mozilla.org/firefox/addon/tabs-aside/"
+      },
+      {
+        "line": 118,
+        "text": "    'sync-tab-groups@eric.masseran', // Sync Tab Groups"
+      },
+      {
+        "line": 119,
+        "text": "    'Tab-Session-Manager@sienori', // https://addons.mozilla.org/firefox/addon/tab-session-manager/"
+      },
+      {
+        "line": 120,
+        "text": "]);"
+      },
+      {
+        "line": 121,
+        "text": ""
+      }
+    ]
+  },
+  {
+    "source": "official signed STG5.3.2 XPI",
+    "xpiSha256": "efebf6a9f73a1747044624ddbad7a78fd90ffccdb34a426cf6bb555eda307c49",
+    "path": "js/management.js",
+    "sha256": "28ef639cbacc524e486eb2d315f07a3da0990df772bde31f3a75a44ca182d531",
+    "excerpt": [
+      {
+        "line": 54,
+        "text": "export function detectConflictedExtensions(extensionsStorage = extensions) {"
+      },
+      {
+        "line": 55,
+        "text": "    Constants.CONFLICTED_EXTENSIONS.some(id => {"
+      },
+      {
+        "line": 56,
+        "text": "        if (isEnabled(id, extensionsStorage)) {"
+      },
+      {
+        "line": 57,
+        "text": "            if (!isIgnoredConflictedExtension(id)) {"
+      },
+      {
+        "line": 58,
+        "text": "                Urls.openUrl('extensions-that-conflict-with-stg', true);"
+      },
+      {
+        "line": 59,
+        "text": "                return true;"
+      },
+      {
+        "line": 60,
+        "text": "            }"
+      },
+      {
+        "line": 61,
+        "text": "        } else if (extensionsStorage[id] && isIgnoredConflictedExtension(id)) {"
+      },
+      {
+        "line": 62,
+        "text": "            dontIgnoreConflictedExtension(id);"
+      },
+      {
+        "line": 63,
+        "text": "        }"
+      },
+      {
+        "line": 64,
+        "text": "    });"
+      },
+      {
+        "line": 65,
+        "text": "}"
+      }
+    ]
+  }
+]

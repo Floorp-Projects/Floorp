@@ -1,0 +1,111 @@
+{
+  "at": 99306.40911899999,
+  "workspace": null,
+  "selected": 2,
+  "tabs": [
+    {
+      "id": 2,
+      "url": "moz-extension://40510ba1-8b1f-4280-b213-822a47779b26/manage/manage.html",
+      "pinned": true,
+      "selected": true,
+      "hidden": false,
+      "display": "flex",
+      "visibility": "visible",
+      "width": 38,
+      "height": 36,
+      "workspace": null,
+      "hiddenBy": ""
+    },
+    {
+      "id": 1,
+      "url": "about:blank",
+      "pinned": false,
+      "selected": false,
+      "hidden": false,
+      "display": "flex",
+      "visibility": "visible",
+      "width": 225,
+      "height": 36,
+      "workspace": null,
+      "hiddenBy": ""
+    },
+    {
+      "id": 3,
+      "url": "http://127.0.0.1:19073/A/1",
+      "pinned": false,
+      "selected": false,
+      "hidden": false,
+      "display": "flex",
+      "visibility": "visible",
+      "width": 225,
+      "height": 36,
+      "workspace": null,
+      "hiddenBy": ""
+    },
+    {
+      "id": 4,
+      "url": "http://127.0.0.1:19073/A/2",
+      "pinned": false,
+      "selected": false,
+      "hidden": false,
+      "display": "flex",
+      "visibility": "visible",
+      "width": 225,
+      "height": 36,
+      "workspace": null,
+      "hiddenBy": ""
+    },
+    {
+      "id": 5,
+      "url": "http://127.0.0.1:19073/A/3",
+      "pinned": false,
+      "selected": false,
+      "hidden": false,
+      "display": "flex",
+      "visibility": "visible",
+      "width": 225,
+      "height": 36,
+      "workspace": null,
+      "hiddenBy": ""
+    },
+    {
+      "id": 6,
+      "url": "http://127.0.0.1:19073/B/1",
+      "pinned": false,
+      "selected": false,
+      "hidden": true,
+      "display": "none",
+      "visibility": "visible",
+      "width": 0,
+      "height": 0,
+      "workspace": null,
+      "hiddenBy": "simple-tab-groups@drive4ik"
+    },
+    {
+      "id": 7,
+      "url": "http://127.0.0.1:19073/B/2",
+      "pinned": false,
+      "selected": false,
+      "hidden": true,
+      "display": "none",
+      "visibility": "visible",
+      "width": 0,
+      "height": 0,
+      "workspace": null,
+      "hiddenBy": "simple-tab-groups@drive4ik"
+    },
+    {
+      "id": 8,
+      "url": "http://127.0.0.1:19073/B/3",
+      "pinned": false,
+      "selected": false,
+      "hidden": true,
+      "display": "none",
+      "visibility": "visible",
+      "width": 0,
+      "height": 0,
+      "workspace": null,
+      "hiddenBy": "simple-tab-groups@drive4ik"
+    }
+  ]
+}

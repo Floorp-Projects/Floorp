@@ -1,0 +1,11 @@
+{
+  "commit": "29a3eb23145da90706d8a94441373278521cc737",
+  "path": "browser-features/chrome/common/workspaces/workspacesTabManager.tsx",
+  "startLine": 386,
+  "endLine": 432,
+  "content": "  public updateTabsVisibility() {\n    const currentWorkspaceId = this.dataManagerCtx.getSelectedWorkspaceID();\n    const selectedTab = globalThis.gBrowser.selectedTab;\n    if (\n      selectedTab &&\n      !selectedTab.hasAttribute(WORKSPACE_LAST_SHOW_ID) &&\n      selectedTab.getAttribute(WORKSPACE_TAB_ATTRIBUTION_ID) ===\n        currentWorkspaceId\n    ) {\n      const lastShowWorkspaceTabs = document?.querySelectorAll(\n        `[${WORKSPACE_LAST_SHOW_ID}=\"${currentWorkspaceId}\"]`,\n      );\n\n      if (lastShowWorkspaceTabs) {\n        for (const lastShowWorkspaceTab of lastShowWorkspaceTabs) {\n          lastShowWorkspaceTab.removeAttribute(WORKSPACE_LAST_SHOW_ID);\n        }\n      }\n\n      selectedTab.setAttribute(WORKSPACE_LAST_SHOW_ID, currentWorkspaceId);\n    }\n\n    // Check Tabs visibility\n    const tabs = globalThis.gBrowser.tabs as Array<\n      XULElement | undefined | null\n    >;\n    for (const tab of tabs) {\n      if (!tab) continue;\n      // Set workspaceId if workspaceId is null\n      const workspaceId = this.getWorkspaceIdFromAttribute(tab);\n      if (!workspaceId) {\n        this.setWorkspaceIdToAttribute(tab, currentWorkspaceId);\n      }\n\n      const chackedWorkspaceId = this.getWorkspaceIdFromAttribute(tab);\n      if (chackedWorkspaceId === currentWorkspaceId) {\n        globalThis.gBrowser.showTab(tab);\n      } else {\n        globalThis.gBrowser.hideTab(tab);\n      }\n    }\n\n    // Hide tab groups that have no visible tabs, show those that do\n    const tabGroups = globalThis.gBrowser.tabGroups;\n    for (const group of tabGroups) {\n      const hasVisibleTabInGroup = (group.tabs as Array<XULElement>)\n        .some((tab) =>",
+  "encoding": "utf-8",
+  "sha": "708f750a3c8248121d192c552509b497e1ea3da5",
+  "display_url": "https://github.com/Floorp-Projects/Floorp/blob/29a3eb23145da90706d8a94441373278521cc737/browser-features/chrome/common/workspaces/workspacesTabManager.tsx",
+  "display_title": "workspacesTabManager.tsx"
+}

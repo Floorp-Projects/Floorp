@@ -1,0 +1,12 @@
+{
+  "id": "simple-tab-groups@drive4ik",
+  "version": "5.3.2",
+  "officialUrl": "https://addons.mozilla.org/firefox/downloads/file/4469818/simple_tab_groups-5.3.2.xpi",
+  "amoFileId": 4469818,
+  "sha256": "efebf6a9f73a1747044624ddbad7a78fd90ffccdb34a426cf6bb555eda307c49",
+  "bytes": 854460,
+  "hashVerified": true,
+  "runtimeSignedState": 2,
+  "signatureRequiredAllProfiles": true,
+  "installRoute": "standard non-temporary AddonManager.getInstallForFile + install, no signature bypass"
+}

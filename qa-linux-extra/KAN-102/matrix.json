@@ -1,0 +1,91 @@
+[
+  {
+    "key": "KAN-102",
+    "github": "https://github.com/Floorp-Projects/Floorp/issues/2412",
+    "sourceSha": "984509d2053be7bae9027133bda7259cd706b208",
+    "sourceInspectionSha": "29a3eb23145da90706d8a94441373278521cc737",
+    "productVersion": {
+      "floorp": "12.21.1 /159.0.1 /20261103153232",
+      "firefox": "159.0.1 /20261102144711"
+    },
+    "environment": {
+      "os": "PRETTY_NAME=\"Debian GNU/Linux 13 (trixie)\"\nNAME=\"Debian GNU/Linux\"\nVERSION_ID=\"13\"\nVERSION=\"13 (trixie)\"\nVERSION_CODENAME=trixie\nDEBIAN_VERSION_FULL=13.6\nID=debian\nHOME_URL=\"https://www.debian.org/\"\nSUPPORT_URL=\"https://www.debian.org/support\"\nBUG_REPORT_URL=\"https://bugs.debian.org/\"\n",
+      "kernel": "6.18.57",
+      "machine": "x86_64",
+      "uid": 1000,
+      "drmDevices": [],
+      "display": "dedicated Xvfb X11 + Openbox; actual headful products",
+      "dbus": "private per profile",
+      "input": "WebDriver real element pointer clicks; XTest Escape; no physical-input claim",
+      "fixtures": "2 groups x3 localhost HTML fixture tabs; pinned management and initial about:blank excluded",
+      "tls": "inherited enforced proxy and installed environment CA; acceptInsecureCerts=false",
+      "protections": "fresh profiles, xpinstall.signatures.required=true, sandbox6 before/after; MOZ_DISABLE_* refused",
+      "originalConditionsNotMatched": "Windows10/12.12.2; original STG version/real 200-590 tab import backup/physical input; current Linux software GPU only",
+      "sourceSha": "984509d2053be7bae9027133bda7259cd706b208",
+      "sourceInspectionSha": "29a3eb23145da90706d8a94441373278521cc737",
+      "products": {
+        "floorp": {
+          "binary": "/workspace/qa-linux-22/C/products/floorp/floorp",
+          "binarySha256": "4f05c1330b38e50040440be6a3b6e0e7a5b52bc79edb5c5478d978c81f5a603d",
+          "omniSha256": "159285f967e950e0cd1ac658d713b7770e7763d6d983fc88b6e48c16e4a1f345"
+        },
+        "firefox": {
+          "binary": "/workspace/qa-linux-22/C/products/firefox/firefox",
+          "binarySha256": "de3f1f70c111692fce304c7af83a7bf2e6f4bc8033191ea8b8ccc25f1aa122ed",
+          "omniSha256": "2ca88cf7d962909c3e42960177e1d418124b50180692bca5cbcad2ffa9a033d4"
+        }
+      }
+    },
+    "addon": {
+      "id": "simple-tab-groups@drive4ik",
+      "version": "5.3.2",
+      "officialUrl": "https://addons.mozilla.org/firefox/downloads/file/4469818/simple_tab_groups-5.3.2.xpi",
+      "amoFileId": 4469818,
+      "sha256": "efebf6a9f73a1747044624ddbad7a78fd90ffccdb34a426cf6bb555eda307c49",
+      "bytes": 854460,
+      "hashVerified": true,
+      "runtimeSignedState": 2,
+      "signatureRequiredAllProfiles": true,
+      "installRoute": "standard non-temporary AddonManager.getInstallForFile + install, no signature bypass"
+    },
+    "testCommand": "session.py + setup-case.py; run-on.py; normal manage reload; run-existing-workspaces.py existing2; run-controls.py floorp-off/firefox; verify-results.py <evidence-root>",
+    "result": "bounded Workspace/STG selection and manage-UI desynchronization; original persistent inactive-tab leak not reproduced; two visibility-manager conflict, isolated safe fix unestablished",
+    "observations": {
+      "settledUiSwitchesPassed": 6,
+      "originalPersistentLeakReproduced": false,
+      "workspaceInteractionPathsReproduced": 2,
+      "dataLossEstablished": false,
+      "safeStandaloneFixEstablished": false
+    },
+    "remainingConditions": [
+      "Original Windows10/12.12.2 + actual STG version/sanitized import fixture for persistent leak",
+      "Define coordinated Workspace/STG visibility-owner and selection contract; safe complete repair unestablished",
+      "Physical input/compositor-visible flicker unqualified; software X11 only"
+    ],
+    "existingPr": null,
+    "newPr": null,
+    "upstreamIssue": "https://github.com/Drive4ik/simple-tab-groups/issues/1325 (unconfirmed user report, no fix)",
+    "jiraCommentId": null,
+    "priorJiraCommentIds": [
+      "10150",
+      "10169",
+      "10360"
+    ],
+    "jiraLabelsPlannedAdd": [
+      "repro-workspace-stg-conflict",
+      "needs-visibility-owner-contract"
+    ],
+    "evidence": [
+      "report.md",
+      "verification.json",
+      "verify-results.py",
+      "environment.json",
+      "addon-provenance.json",
+      "source-analysis/contract-evidence.json",
+      "source-analysis/compatibility-support-assessment.md",
+      "KAN50-handoff.json"
+    ],
+    "separateFromOriginal22": true,
+    "originalCMatrixSha256": "4ac5d5f17f97d70e82f7b9f17d6abcc1aa17a92e3708eeadaba6ac7c8415e3cd"
+  }
+]

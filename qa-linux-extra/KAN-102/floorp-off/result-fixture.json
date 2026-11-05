@@ -1,0 +1,23 @@
+{
+  "windowId": 3,
+  "A": [
+    3,
+    4,
+    5
+  ],
+  "B": [
+    6,
+    7,
+    8
+  ],
+  "ga": {
+    "ok": true,
+    "id": 1,
+    "title": "QA Group A"
+  },
+  "gb": {
+    "ok": true,
+    "id": 2,
+    "title": "QA Group B"
+  }
+}

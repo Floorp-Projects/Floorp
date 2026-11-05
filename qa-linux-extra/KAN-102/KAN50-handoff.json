@@ -1,0 +1,24 @@
+{
+  "qaCommit": "2bd52695c32c40123fe97d77e23a7fff6eb521c8",
+  "sourceCommit": "9d042bc17be83c15d2ff3a25eb712f04c4d3eb45",
+  "runtimeCommit": "8965ffc346d426ccdf919bd18585e4d4a0c21654",
+  "report": "qa-linux-extra/KAN-50/full-package/report.md",
+  "matrix": "qa-linux-extra/KAN-50/full-package/matrix.json",
+  "raw": [
+    "qa-linux-extra/KAN-50/full-package/normal-first-close-normal/result.json",
+    "qa-linux-extra/KAN-50/full-package/normal-first-close-panel/result.json",
+    "qa-linux-extra/KAN-50/full-package/panel-first-close-normal/result.json",
+    "qa-linux-extra/KAN-50/full-package/panel-first-close-panel/result.json"
+  ],
+  "packageProvenance": [
+    "qa-linux-extra/KAN-50/full-package/package-run.json",
+    "qa-linux-extra/KAN-50/full-package/package-run-metadata.json",
+    "qa-linux-extra/KAN-50/full-package/package-verification.json",
+    "qa-linux-extra/KAN-50/full-package/provenance/runtime-build-manifest-v2.json",
+    "qa-linux-extra/KAN-50/full-package/dispatch-request.json"
+  ],
+  "installerArtifactId": 13444572566,
+  "installerZipSha256": "1a0b538f14730130a63ac283e94465ca302781525ac44d2c6b91479418271aa0",
+  "innerTarSha256": "584e4afd9865df3a5867b145ed75b7c3051a0a26d173da240056a4b355bfcad9",
+  "jiraCommentId": "10397"
+}

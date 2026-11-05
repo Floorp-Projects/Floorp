@@ -1,0 +1,1432 @@
+{
+  "result-B-after.json": {
+    "final": {
+      "at": 58855.839457999995,
+      "workspace": "4f6e0a8e-b6fa-4bc3-93ff-e486b72596ec",
+      "selected": 6,
+      "fixtureTabs": [
+        {
+          "id": 3,
+          "hidden": true,
+          "hiddenBy": "simple-tab-groups@drive4ik"
+        },
+        {
+          "id": 4,
+          "hidden": true,
+          "hiddenBy": "simple-tab-groups@drive4ik"
+        },
+        {
+          "id": 5,
+          "hidden": true,
+          "hiddenBy": "simple-tab-groups@drive4ik"
+        },
+        {
+          "id": 6,
+          "hidden": false,
+          "hiddenBy": ""
+        },
+        {
+          "id": 7,
+          "hidden": false,
+          "hiddenBy": ""
+        },
+        {
+          "id": 8,
+          "hidden": false,
+          "hiddenBy": ""
+        }
+      ]
+    },
+    "events": [
+      {
+        "event": "TabShow",
+        "target": 6,
+        "at": 56771.435216,
+        "workspace": "4f6e0a8e-b6fa-4bc3-93ff-e486b72596ec",
+        "selected": 2,
+        "fixtureTabs": [
+          {
+            "id": 3,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 4,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 5,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 6,
+            "hidden": false,
+            "hiddenBy": "simple-tab-groups@drive4ik"
+          },
+          {
+            "id": 7,
+            "hidden": true,
+            "hiddenBy": "simple-tab-groups@drive4ik"
+          },
+          {
+            "id": 8,
+            "hidden": true,
+            "hiddenBy": "simple-tab-groups@drive4ik"
+          }
+        ]
+      },
+      {
+        "event": "TabShow",
+        "target": 7,
+        "at": 56775.976542000004,
+        "workspace": "4f6e0a8e-b6fa-4bc3-93ff-e486b72596ec",
+        "selected": 2,
+        "fixtureTabs": [
+          {
+            "id": 3,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 4,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 5,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 6,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 7,
+            "hidden": false,
+            "hiddenBy": "simple-tab-groups@drive4ik"
+          },
+          {
+            "id": 8,
+            "hidden": true,
+            "hiddenBy": "simple-tab-groups@drive4ik"
+          }
+        ]
+      },
+      {
+        "event": "TabShow",
+        "target": 8,
+        "at": 56780.814947000006,
+        "workspace": "4f6e0a8e-b6fa-4bc3-93ff-e486b72596ec",
+        "selected": 2,
+        "fixtureTabs": [
+          {
+            "id": 3,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 4,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 5,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 6,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 7,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 8,
+            "hidden": false,
+            "hiddenBy": "simple-tab-groups@drive4ik"
+          }
+        ]
+      },
+      {
+        "event": "TabHide",
+        "target": 3,
+        "at": 56793.720213,
+        "workspace": "4f6e0a8e-b6fa-4bc3-93ff-e486b72596ec",
+        "selected": 2,
+        "fixtureTabs": [
+          {
+            "id": 3,
+            "hidden": true,
+            "hiddenBy": ""
+          },
+          {
+            "id": 4,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 5,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 6,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 7,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 8,
+            "hidden": false,
+            "hiddenBy": ""
+          }
+        ]
+      },
+      {
+        "event": "TabHide",
+        "target": 4,
+        "at": 56797.52413,
+        "workspace": "4f6e0a8e-b6fa-4bc3-93ff-e486b72596ec",
+        "selected": 2,
+        "fixtureTabs": [
+          {
+            "id": 3,
+            "hidden": true,
+            "hiddenBy": "simple-tab-groups@drive4ik"
+          },
+          {
+            "id": 4,
+            "hidden": true,
+            "hiddenBy": ""
+          },
+          {
+            "id": 5,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 6,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 7,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 8,
+            "hidden": false,
+            "hiddenBy": ""
+          }
+        ]
+      },
+      {
+        "event": "TabHide",
+        "target": 5,
+        "at": 56801.703753,
+        "workspace": "4f6e0a8e-b6fa-4bc3-93ff-e486b72596ec",
+        "selected": 2,
+        "fixtureTabs": [
+          {
+            "id": 3,
+            "hidden": true,
+            "hiddenBy": "simple-tab-groups@drive4ik"
+          },
+          {
+            "id": 4,
+            "hidden": true,
+            "hiddenBy": "simple-tab-groups@drive4ik"
+          },
+          {
+            "id": 5,
+            "hidden": true,
+            "hiddenBy": ""
+          },
+          {
+            "id": 6,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 7,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 8,
+            "hidden": false,
+            "hiddenBy": ""
+          }
+        ]
+      },
+      {
+        "event": "TabSelect",
+        "target": 6,
+        "at": 56823.830307000004,
+        "workspace": "4f6e0a8e-b6fa-4bc3-93ff-e486b72596ec",
+        "selected": 6,
+        "fixtureTabs": [
+          {
+            "id": 3,
+            "hidden": true,
+            "hiddenBy": "simple-tab-groups@drive4ik"
+          },
+          {
+            "id": 4,
+            "hidden": true,
+            "hiddenBy": "simple-tab-groups@drive4ik"
+          },
+          {
+            "id": 5,
+            "hidden": true,
+            "hiddenBy": "simple-tab-groups@drive4ik"
+          },
+          {
+            "id": 6,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 7,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 8,
+            "hidden": false,
+            "hiddenBy": ""
+          }
+        ]
+      }
+    ]
+  },
+  "result-ws-away-after.json": {
+    "final": {
+      "at": 61846.808856,
+      "workspace": "49a94a46-0112-42d2-9684-266e87cff1c2",
+      "selected": 9,
+      "fixtureTabs": [
+        {
+          "id": 3,
+          "hidden": true,
+          "hiddenBy": ""
+        },
+        {
+          "id": 4,
+          "hidden": true,
+          "hiddenBy": ""
+        },
+        {
+          "id": 5,
+          "hidden": true,
+          "hiddenBy": ""
+        },
+        {
+          "id": 6,
+          "hidden": true,
+          "hiddenBy": ""
+        },
+        {
+          "id": 7,
+          "hidden": true,
+          "hiddenBy": ""
+        },
+        {
+          "id": 8,
+          "hidden": true,
+          "hiddenBy": ""
+        }
+      ]
+    },
+    "events": [
+      {
+        "event": "TabShow",
+        "target": 3,
+        "at": 59203.787434,
+        "workspace": "4f6e0a8e-b6fa-4bc3-93ff-e486b72596ec",
+        "selected": 6,
+        "fixtureTabs": [
+          {
+            "id": 3,
+            "hidden": false,
+            "hiddenBy": "simple-tab-groups@drive4ik"
+          },
+          {
+            "id": 4,
+            "hidden": true,
+            "hiddenBy": "simple-tab-groups@drive4ik"
+          },
+          {
+            "id": 5,
+            "hidden": true,
+            "hiddenBy": "simple-tab-groups@drive4ik"
+          },
+          {
+            "id": 6,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 7,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 8,
+            "hidden": false,
+            "hiddenBy": ""
+          }
+        ]
+      },
+      {
+        "event": "TabShow",
+        "target": 4,
+        "at": 59222.84207,
+        "workspace": "4f6e0a8e-b6fa-4bc3-93ff-e486b72596ec",
+        "selected": 6,
+        "fixtureTabs": [
+          {
+            "id": 3,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 4,
+            "hidden": false,
+            "hiddenBy": "simple-tab-groups@drive4ik"
+          },
+          {
+            "id": 5,
+            "hidden": true,
+            "hiddenBy": "simple-tab-groups@drive4ik"
+          },
+          {
+            "id": 6,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 7,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 8,
+            "hidden": false,
+            "hiddenBy": ""
+          }
+        ]
+      },
+      {
+        "event": "TabShow",
+        "target": 5,
+        "at": 59227.94388,
+        "workspace": "4f6e0a8e-b6fa-4bc3-93ff-e486b72596ec",
+        "selected": 6,
+        "fixtureTabs": [
+          {
+            "id": 3,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 4,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 5,
+            "hidden": false,
+            "hiddenBy": "simple-tab-groups@drive4ik"
+          },
+          {
+            "id": 6,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 7,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 8,
+            "hidden": false,
+            "hiddenBy": ""
+          }
+        ]
+      },
+      {
+        "event": "TabSelect",
+        "target": 9,
+        "at": 59274.94799,
+        "workspace": "4f6e0a8e-b6fa-4bc3-93ff-e486b72596ec",
+        "selected": 9,
+        "fixtureTabs": [
+          {
+            "id": 3,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 4,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 5,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 6,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 7,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 8,
+            "hidden": false,
+            "hiddenBy": ""
+          }
+        ]
+      },
+      {
+        "event": "TabHide",
+        "target": 1,
+        "at": 59283.961019,
+        "workspace": "49a94a46-0112-42d2-9684-266e87cff1c2",
+        "selected": 9,
+        "fixtureTabs": [
+          {
+            "id": 3,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 4,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 5,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 6,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 7,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 8,
+            "hidden": false,
+            "hiddenBy": ""
+          }
+        ]
+      },
+      {
+        "event": "TabHide",
+        "target": 3,
+        "at": 59288.726845,
+        "workspace": "49a94a46-0112-42d2-9684-266e87cff1c2",
+        "selected": 9,
+        "fixtureTabs": [
+          {
+            "id": 3,
+            "hidden": true,
+            "hiddenBy": ""
+          },
+          {
+            "id": 4,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 5,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 6,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 7,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 8,
+            "hidden": false,
+            "hiddenBy": ""
+          }
+        ]
+      },
+      {
+        "event": "TabHide",
+        "target": 4,
+        "at": 59292.931742999994,
+        "workspace": "49a94a46-0112-42d2-9684-266e87cff1c2",
+        "selected": 9,
+        "fixtureTabs": [
+          {
+            "id": 3,
+            "hidden": true,
+            "hiddenBy": ""
+          },
+          {
+            "id": 4,
+            "hidden": true,
+            "hiddenBy": ""
+          },
+          {
+            "id": 5,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 6,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 7,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 8,
+            "hidden": false,
+            "hiddenBy": ""
+          }
+        ]
+      },
+      {
+        "event": "TabHide",
+        "target": 5,
+        "at": 59296.405413,
+        "workspace": "49a94a46-0112-42d2-9684-266e87cff1c2",
+        "selected": 9,
+        "fixtureTabs": [
+          {
+            "id": 3,
+            "hidden": true,
+            "hiddenBy": ""
+          },
+          {
+            "id": 4,
+            "hidden": true,
+            "hiddenBy": ""
+          },
+          {
+            "id": 5,
+            "hidden": true,
+            "hiddenBy": ""
+          },
+          {
+            "id": 6,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 7,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 8,
+            "hidden": false,
+            "hiddenBy": ""
+          }
+        ]
+      },
+      {
+        "event": "TabHide",
+        "target": 6,
+        "at": 59299.670236,
+        "workspace": "49a94a46-0112-42d2-9684-266e87cff1c2",
+        "selected": 9,
+        "fixtureTabs": [
+          {
+            "id": 3,
+            "hidden": true,
+            "hiddenBy": ""
+          },
+          {
+            "id": 4,
+            "hidden": true,
+            "hiddenBy": ""
+          },
+          {
+            "id": 5,
+            "hidden": true,
+            "hiddenBy": ""
+          },
+          {
+            "id": 6,
+            "hidden": true,
+            "hiddenBy": ""
+          },
+          {
+            "id": 7,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 8,
+            "hidden": false,
+            "hiddenBy": ""
+          }
+        ]
+      },
+      {
+        "event": "TabHide",
+        "target": 7,
+        "at": 59303.270816000004,
+        "workspace": "49a94a46-0112-42d2-9684-266e87cff1c2",
+        "selected": 9,
+        "fixtureTabs": [
+          {
+            "id": 3,
+            "hidden": true,
+            "hiddenBy": ""
+          },
+          {
+            "id": 4,
+            "hidden": true,
+            "hiddenBy": ""
+          },
+          {
+            "id": 5,
+            "hidden": true,
+            "hiddenBy": ""
+          },
+          {
+            "id": 6,
+            "hidden": true,
+            "hiddenBy": ""
+          },
+          {
+            "id": 7,
+            "hidden": true,
+            "hiddenBy": ""
+          },
+          {
+            "id": 8,
+            "hidden": false,
+            "hiddenBy": ""
+          }
+        ]
+      },
+      {
+        "event": "TabHide",
+        "target": 8,
+        "at": 59307.132453,
+        "workspace": "49a94a46-0112-42d2-9684-266e87cff1c2",
+        "selected": 9,
+        "fixtureTabs": [
+          {
+            "id": 3,
+            "hidden": true,
+            "hiddenBy": ""
+          },
+          {
+            "id": 4,
+            "hidden": true,
+            "hiddenBy": ""
+          },
+          {
+            "id": 5,
+            "hidden": true,
+            "hiddenBy": ""
+          },
+          {
+            "id": 6,
+            "hidden": true,
+            "hiddenBy": ""
+          },
+          {
+            "id": 7,
+            "hidden": true,
+            "hiddenBy": ""
+          },
+          {
+            "id": 8,
+            "hidden": true,
+            "hiddenBy": ""
+          }
+        ]
+      }
+    ]
+  },
+  "result-ws-return-after.json": {
+    "final": {
+      "at": 65854.724221,
+      "workspace": "4f6e0a8e-b6fa-4bc3-93ff-e486b72596ec",
+      "selected": 3,
+      "fixtureTabs": [
+        {
+          "id": 3,
+          "hidden": false,
+          "hiddenBy": ""
+        },
+        {
+          "id": 4,
+          "hidden": false,
+          "hiddenBy": ""
+        },
+        {
+          "id": 5,
+          "hidden": false,
+          "hiddenBy": ""
+        },
+        {
+          "id": 6,
+          "hidden": true,
+          "hiddenBy": "simple-tab-groups@drive4ik"
+        },
+        {
+          "id": 7,
+          "hidden": true,
+          "hiddenBy": "simple-tab-groups@drive4ik"
+        },
+        {
+          "id": 8,
+          "hidden": true,
+          "hiddenBy": "simple-tab-groups@drive4ik"
+        }
+      ]
+    },
+    "events": [
+      {
+        "event": "TabShow",
+        "target": 6,
+        "at": 63139.048396,
+        "workspace": "49a94a46-0112-42d2-9684-266e87cff1c2",
+        "selected": 6,
+        "fixtureTabs": [
+          {
+            "id": 3,
+            "hidden": true,
+            "hiddenBy": ""
+          },
+          {
+            "id": 4,
+            "hidden": true,
+            "hiddenBy": ""
+          },
+          {
+            "id": 5,
+            "hidden": true,
+            "hiddenBy": ""
+          },
+          {
+            "id": 6,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 7,
+            "hidden": true,
+            "hiddenBy": ""
+          },
+          {
+            "id": 8,
+            "hidden": true,
+            "hiddenBy": ""
+          }
+        ]
+      },
+      {
+        "event": "TabSelect",
+        "target": 6,
+        "at": 63171.065353000005,
+        "workspace": "49a94a46-0112-42d2-9684-266e87cff1c2",
+        "selected": 6,
+        "fixtureTabs": [
+          {
+            "id": 3,
+            "hidden": true,
+            "hiddenBy": ""
+          },
+          {
+            "id": 4,
+            "hidden": true,
+            "hiddenBy": ""
+          },
+          {
+            "id": 5,
+            "hidden": true,
+            "hiddenBy": ""
+          },
+          {
+            "id": 6,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 7,
+            "hidden": true,
+            "hiddenBy": ""
+          },
+          {
+            "id": 8,
+            "hidden": true,
+            "hiddenBy": ""
+          }
+        ]
+      },
+      {
+        "event": "TabShow",
+        "target": 1,
+        "at": 63183.448789,
+        "workspace": "4f6e0a8e-b6fa-4bc3-93ff-e486b72596ec",
+        "selected": 6,
+        "fixtureTabs": [
+          {
+            "id": 3,
+            "hidden": true,
+            "hiddenBy": ""
+          },
+          {
+            "id": 4,
+            "hidden": true,
+            "hiddenBy": ""
+          },
+          {
+            "id": 5,
+            "hidden": true,
+            "hiddenBy": ""
+          },
+          {
+            "id": 6,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 7,
+            "hidden": true,
+            "hiddenBy": ""
+          },
+          {
+            "id": 8,
+            "hidden": true,
+            "hiddenBy": ""
+          }
+        ]
+      },
+      {
+        "event": "TabShow",
+        "target": 3,
+        "at": 63195.104951,
+        "workspace": "4f6e0a8e-b6fa-4bc3-93ff-e486b72596ec",
+        "selected": 6,
+        "fixtureTabs": [
+          {
+            "id": 3,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 4,
+            "hidden": true,
+            "hiddenBy": ""
+          },
+          {
+            "id": 5,
+            "hidden": true,
+            "hiddenBy": ""
+          },
+          {
+            "id": 6,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 7,
+            "hidden": true,
+            "hiddenBy": ""
+          },
+          {
+            "id": 8,
+            "hidden": true,
+            "hiddenBy": ""
+          }
+        ]
+      },
+      {
+        "event": "TabShow",
+        "target": 4,
+        "at": 63490.862927,
+        "workspace": "4f6e0a8e-b6fa-4bc3-93ff-e486b72596ec",
+        "selected": 6,
+        "fixtureTabs": [
+          {
+            "id": 3,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 4,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 5,
+            "hidden": true,
+            "hiddenBy": ""
+          },
+          {
+            "id": 6,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 7,
+            "hidden": true,
+            "hiddenBy": ""
+          },
+          {
+            "id": 8,
+            "hidden": true,
+            "hiddenBy": ""
+          }
+        ]
+      },
+      {
+        "event": "TabShow",
+        "target": 5,
+        "at": 63499.252671999995,
+        "workspace": "4f6e0a8e-b6fa-4bc3-93ff-e486b72596ec",
+        "selected": 6,
+        "fixtureTabs": [
+          {
+            "id": 3,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 4,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 5,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 6,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 7,
+            "hidden": true,
+            "hiddenBy": ""
+          },
+          {
+            "id": 8,
+            "hidden": true,
+            "hiddenBy": ""
+          }
+        ]
+      },
+      {
+        "event": "TabShow",
+        "target": 7,
+        "at": 63620.222147,
+        "workspace": "4f6e0a8e-b6fa-4bc3-93ff-e486b72596ec",
+        "selected": 6,
+        "fixtureTabs": [
+          {
+            "id": 3,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 4,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 5,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 6,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 7,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 8,
+            "hidden": true,
+            "hiddenBy": ""
+          }
+        ]
+      },
+      {
+        "event": "TabShow",
+        "target": 8,
+        "at": 63626.232934,
+        "workspace": "4f6e0a8e-b6fa-4bc3-93ff-e486b72596ec",
+        "selected": 6,
+        "fixtureTabs": [
+          {
+            "id": 3,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 4,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 5,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 6,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 7,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 8,
+            "hidden": false,
+            "hiddenBy": ""
+          }
+        ]
+      },
+      {
+        "event": "TabHide",
+        "target": 9,
+        "at": 63631.382346000006,
+        "workspace": "4f6e0a8e-b6fa-4bc3-93ff-e486b72596ec",
+        "selected": 6,
+        "fixtureTabs": [
+          {
+            "id": 3,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 4,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 5,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 6,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 7,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 8,
+            "hidden": false,
+            "hiddenBy": ""
+          }
+        ]
+      },
+      {
+        "event": "TabHide",
+        "target": 1,
+        "at": 63843.644883,
+        "workspace": "4f6e0a8e-b6fa-4bc3-93ff-e486b72596ec",
+        "selected": 6,
+        "fixtureTabs": [
+          {
+            "id": 3,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 4,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 5,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 6,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 7,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 8,
+            "hidden": false,
+            "hiddenBy": ""
+          }
+        ]
+      },
+      {
+        "event": "TabHide",
+        "target": 7,
+        "at": 63858.323008,
+        "workspace": "4f6e0a8e-b6fa-4bc3-93ff-e486b72596ec",
+        "selected": 6,
+        "fixtureTabs": [
+          {
+            "id": 3,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 4,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 5,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 6,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 7,
+            "hidden": true,
+            "hiddenBy": ""
+          },
+          {
+            "id": 8,
+            "hidden": false,
+            "hiddenBy": ""
+          }
+        ]
+      },
+      {
+        "event": "TabHide",
+        "target": 8,
+        "at": 63866.363452000005,
+        "workspace": "4f6e0a8e-b6fa-4bc3-93ff-e486b72596ec",
+        "selected": 6,
+        "fixtureTabs": [
+          {
+            "id": 3,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 4,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 5,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 6,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 7,
+            "hidden": true,
+            "hiddenBy": "simple-tab-groups@drive4ik"
+          },
+          {
+            "id": 8,
+            "hidden": true,
+            "hiddenBy": ""
+          }
+        ]
+      },
+      {
+        "event": "TabSelect",
+        "target": 3,
+        "at": 63939.850682,
+        "workspace": "4f6e0a8e-b6fa-4bc3-93ff-e486b72596ec",
+        "selected": 3,
+        "fixtureTabs": [
+          {
+            "id": 3,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 4,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 5,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 6,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 7,
+            "hidden": true,
+            "hiddenBy": "simple-tab-groups@drive4ik"
+          },
+          {
+            "id": 8,
+            "hidden": true,
+            "hiddenBy": "simple-tab-groups@drive4ik"
+          }
+        ]
+      },
+      {
+        "event": "TabHide",
+        "target": 6,
+        "at": 63984.997755000004,
+        "workspace": "4f6e0a8e-b6fa-4bc3-93ff-e486b72596ec",
+        "selected": 3,
+        "fixtureTabs": [
+          {
+            "id": 3,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 4,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 5,
+            "hidden": false,
+            "hiddenBy": ""
+          },
+          {
+            "id": 6,
+            "hidden": true,
+            "hiddenBy": ""
+          },
+          {
+            "id": 7,
+            "hidden": true,
+            "hiddenBy": "simple-tab-groups@drive4ik"
+          },
+          {
+            "id": 8,
+            "hidden": true,
+            "hiddenBy": "simple-tab-groups@drive4ik"
+          }
+        ]
+      }
+    ]
+  },
+  "extensionFinal": {
+    "windowGroup": 1,
+    "tabs": [
+      {
+        "id": 2,
+        "hidden": false,
+        "active": true,
+        "groupId": null
+      },
+      {
+        "id": 1,
+        "hidden": true,
+        "active": false,
+        "groupId": 2
+      },
+      {
+        "id": 3,
+        "hidden": false,
+        "active": false,
+        "groupId": 1
+      },
+      {
+        "id": 4,
+        "hidden": false,
+        "active": false,
+        "groupId": 1
+      },
+      {
+        "id": 5,
+        "hidden": false,
+        "active": false,
+        "groupId": 1
+      },
+      {
+        "id": 6,
+        "hidden": true,
+        "active": false,
+        "groupId": 2
+      },
+      {
+        "id": 7,
+        "hidden": true,
+        "active": false,
+        "groupId": 2
+      },
+      {
+        "id": 8,
+        "hidden": true,
+        "active": false,
+        "groupId": 2
+      },
+      {
+        "id": 9,
+        "hidden": true,
+        "active": false,
+        "groupId": null
+      }
+    ]
+  }
+}

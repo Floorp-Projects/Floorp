@@ -1,0 +1,122 @@
+{
+  "key": "KAN-102",
+  "sixUiSwitchObservations": [
+    {
+      "case": "floorp-on-v2",
+      "action": "B-after",
+      "settledGroup": "B",
+      "activeFixtureVisible": 3,
+      "inactiveFixtureVisible": 0,
+      "selectedInTarget": true,
+      "transientBothGroupsSampled": true,
+      "rawSha256": "611888bfed46c3f20354baaa3229a48d1ec0897394fb18c9466529bea827d750"
+    },
+    {
+      "case": "floorp-on-v2",
+      "action": "existing2-B-after",
+      "settledGroup": "B",
+      "activeFixtureVisible": 3,
+      "inactiveFixtureVisible": 0,
+      "selectedInTarget": true,
+      "transientBothGroupsSampled": false,
+      "rawSha256": "0ed254e9f8fc7ddd7f5e10142f266523933a3eb0f50c61fe5aecbf3873cb246d"
+    },
+    {
+      "case": "floorp-off",
+      "action": "B-after",
+      "settledGroup": "B",
+      "activeFixtureVisible": 3,
+      "inactiveFixtureVisible": 0,
+      "selectedInTarget": true,
+      "transientBothGroupsSampled": true,
+      "rawSha256": "a1e0c6be2ee009e0f17c6b984ab93a7674b0a2d8c53d89b177e779dd26938010"
+    },
+    {
+      "case": "floorp-off",
+      "action": "A-after",
+      "settledGroup": "A",
+      "activeFixtureVisible": 3,
+      "inactiveFixtureVisible": 0,
+      "selectedInTarget": true,
+      "transientBothGroupsSampled": true,
+      "rawSha256": "5275bcca4df0a8d6cdcb7f869f18d6be439400abb8bda222ac54cd43793becc8"
+    },
+    {
+      "case": "firefox",
+      "action": "B-after",
+      "settledGroup": "B",
+      "activeFixtureVisible": 3,
+      "inactiveFixtureVisible": 0,
+      "selectedInTarget": true,
+      "transientBothGroupsSampled": true,
+      "rawSha256": "040bc1c2c15187c0ee2c7081e686ecdb30b8e22e6450801ce9d8470216dc5cf5"
+    },
+    {
+      "case": "firefox",
+      "action": "A-after",
+      "settledGroup": "A",
+      "activeFixtureVisible": 3,
+      "inactiveFixtureVisible": 0,
+      "selectedInTarget": true,
+      "transientBothGroupsSampled": false,
+      "rawSha256": "2db9fcace75e080401dd0a3b7eb06555af26bb1c6ef30cb4138c8edda4eeff0a"
+    }
+  ],
+  "settledTabStripLeakReproduced": false,
+  "workspaceInteractionReproduced": true,
+  "workspacePaths": [
+    {
+      "raw": "ws-return-after",
+      "groupBefore": "B/2",
+      "groupAfter": "A/1",
+      "selectedBefore": 6,
+      "selectedAfter": 3,
+      "fixtureTabsStillPresent": 6,
+      "nativeSessionMembershipsRemain": true,
+      "manageUi": {
+        "groups": [
+          {
+            "title": "QA Group A",
+            "count": "0/0 tabs active"
+          },
+          {
+            "title": "QA Group B",
+            "count": "0/0 tabs active"
+          }
+        ],
+        "tabCount": 0
+      }
+    },
+    {
+      "raw": "existing2-return-after",
+      "groupBefore": "B/2",
+      "groupAfter": "A/1",
+      "selectedBefore": 6,
+      "selectedAfter": 3,
+      "fixtureTabsStillPresent": 6,
+      "nativeSessionMembershipsRemain": true,
+      "manageUi": {
+        "groups": [
+          {
+            "title": "QA Group A",
+            "count": "3/3 tabs active"
+          },
+          {
+            "title": "QA Group B",
+            "count": "0/0 tabs active"
+          }
+        ],
+        "tabCount": 3
+      }
+    }
+  ],
+  "normalManageReloadRecoveredSixFixtureRows": true,
+  "classification": "bounded Workspace/STG selection and manage-UI desynchronization; original persistent inactive-tab leak not reproduced; two visibility-manager conflict, isolated safe fix unestablished",
+  "samePidAndProtectionsAllThreeProfiles": true,
+  "invalidatedTrials": [
+    "initial command IPC JSON race",
+    "existing-B-click NoSuchElement; no group switch occurred; excluded"
+  ],
+  "dataLossEstablished": false,
+  "safeStandaloneProductFixEstablished": false
+}

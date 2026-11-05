@@ -1,0 +1,61 @@
+{
+  "windowGroup": 1,
+  "tabs": [
+    {
+      "id": 2,
+      "url": "moz-extension://40510ba1-8b1f-4280-b213-822a47779b26/manage/manage.html",
+      "hidden": false,
+      "active": true,
+      "groupId": null
+    },
+    {
+      "id": 1,
+      "url": "about:blank",
+      "hidden": false,
+      "active": false,
+      "groupId": null
+    },
+    {
+      "id": 3,
+      "url": "http://127.0.0.1:19073/A/1",
+      "hidden": false,
+      "active": false,
+      "groupId": 1
+    },
+    {
+      "id": 4,
+      "url": "http://127.0.0.1:19073/A/2",
+      "hidden": false,
+      "active": false,
+      "groupId": 1
+    },
+    {
+      "id": 5,
+      "url": "http://127.0.0.1:19073/A/3",
+      "hidden": false,
+      "active": false,
+      "groupId": 1
+    },
+    {
+      "id": 6,
+      "url": "http://127.0.0.1:19073/B/1",
+      "hidden": true,
+      "active": false,
+      "groupId": 2
+    },
+    {
+      "id": 7,
+      "url": "http://127.0.0.1:19073/B/2",
+      "hidden": true,
+      "active": false,
+      "groupId": 2
+    },
+    {
+      "id": 8,
+      "url": "http://127.0.0.1:19073/B/3",
+      "hidden": true,
+      "active": false,
+      "groupId": 2
+    }
+  ]
+}

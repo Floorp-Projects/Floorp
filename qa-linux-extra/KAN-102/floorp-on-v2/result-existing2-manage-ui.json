@@ -1,0 +1,13 @@
+{
+  "groups": [
+    {
+      "title": "QA Group A",
+      "count": "3/3 tabs active"
+    },
+    {
+      "title": "QA Group B",
+      "count": "0/0 tabs active"
+    }
+  ],
+  "tabCount": 3
+}

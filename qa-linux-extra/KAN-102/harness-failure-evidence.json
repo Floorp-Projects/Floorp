@@ -1,0 +1,19 @@
+{
+  "case": "floorp-on excluded initial trial",
+  "logSha256": "d291b82a33702a4cd4e09404f6a0b98a28248327352ab6f7100b0f53ce8d1b53",
+  "selectedTrace": [
+    "Traceback (most recent call last):",
+    "  File \"/workspace/qa-linux-22/C-extra/KAN-102/session.py\", line 21, in <module>",
+    "    last=c.stat().st_mtime_ns;d=json.loads(c.read_text())",
+    "                                ^^^^^^^^^^^^^^^^^^^^^^^^^",
+    "  File \"/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/json/__init__.py\", line 346, in loads",
+    "    return _default_decoder.decode(s)",
+    "           ^^^^^^^^^^^^^^^^^^^^^^^^^^",
+    "  File \"/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/json/decoder.py\", line 338, in decode",
+    "    obj, end = self.raw_decode(s, idx=_w(s, 0).end())",
+    "               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^",
+    "  File \"/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/json/decoder.py\", line 356, in raw_decode",
+    "    raise JSONDecodeError(\"Expecting value\", s, err.value) from None",
+    "json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)"
+  ]
+}

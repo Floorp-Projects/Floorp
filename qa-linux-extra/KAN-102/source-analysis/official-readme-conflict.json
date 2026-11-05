@@ -1,0 +1,8 @@
+{
+  "commit": "8949384537fcd44210ec4a6bf918f4da9f3a0c57",
+  "content": "* `{\"action\": \"discard-other-groups\"}`\n* `{\"action\": \"reload-all-tabs-in-current-group\"}`\n* `{\"action\": \"create-temp-tab\"}`\n* `{\"action\": \"create-backup\"}`\n\nThis extension may conflict with other programs similar in functionality.\nConflicted addons:\n\n* Tab Open/Close Control\n* OneTab\n* Tiled Tab Groups\n* Totally not Panorama (Tab Groups with tab hiding)\n* Panorama Tab Groups\n* Panorama View (etc.)\n\nOpen popup shortcut: `F8`. [You can change this hotkey](https://support.mozilla.org/kb/manage-extension-shortcuts-firefox)\n",
+  "encoding": "utf-8",
+  "sha": "b00fa179f148449fae22cb877cf06a74d898816f",
+  "display_url": "https://github.com/Drive4ik/simple-tab-groups/blob/8949384537fcd44210ec4a6bf918f4da9f3a0c57/README.md",
+  "display_title": "README.md"
+}

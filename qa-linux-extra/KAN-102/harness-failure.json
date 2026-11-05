@@ -1,0 +1,8 @@
+{
+  "case": "floorp-on initial",
+  "classification": "harness failure, not product failure",
+  "error": "JSONDecodeError reading command.json while non-atomic writer truncated file",
+  "phase": "Workspace return before UI click",
+  "correction": "atomic rename for command IPC and preserve every request; new isolated profile repeats only invalidated new-path trial",
+  "productKilledByHarnessFinally": true
+}

@@ -1,0 +1,88 @@
+{
+  "floorpIssue": {
+    "number": 2412,
+    "url": "https://github.com/Floorp-Projects/Floorp/issues/2412",
+    "title": "[Bug]: Simple Tab Groups does not fully hide tabs from inactive groups when switching groups",
+    "body": "## Pre-Submission Checklist\n- [x] I have checked the existing/closed issues to ensure this issue has not already been reported.\n- [x] I am using the latest supported version of the browser.\n- [x] I have tried disabling all browser extensions/add-ons to rule out interference from these.\n- [x] I have tried clearing the browser cache and cookies.\n- [x] I have checked with a new profile and the issue still occurs.\n- [x] I have provided detailed step-by-step instructions on how to reproduce the issue.\n- [x] I have included relevant screenshots or console outputs.\n- [x] I have checked that this problem is not occurring in the latest version of Firefox.\n- [x] This issue is specific to this browser and does not occur in other browsers.\n\n## Bug Summary\nWhen switching tab groups with the Simple Tab Groups extension in Floorp, tabs from the previously active group are not always fully hidden. As a result, tabs from another group can remain visible in the tab strip, which breaks group isolation and causes confusion.\n\n## Reproduction Steps\n1. Install Floorp (latest stable) on Windows 10.\n2. Install the extension **Simple Tab Groups**.\n3. Create at least 2 tab groups (for example: Group 1 and Group 2).\n4. Open several tabs in Group 1.\n5. Switch to Group 2 using the extension UI.\n6. Repeat switching between groups a few times.\n7. Observe the tab strip after switching.\n\n## Expected Behavior\nAfter switching to another group, only tabs belonging to the currently active group should be visible. Tabs from inactive groups should be completely hidden every time.\n\n## Actual Behavior\nAfter group switching, some tabs from a previously active group remain visible in the tab strip (partial/incomplete hiding). This appears intermittently but is reproducible with repeated switching.\n\n## Screenshots\nI prepared two screenshots showing:\n- Screenshot 1: \n\n<img width=\"353\" height=\"657\" alt=\"Image\" src=\"https://github.com/user-attachments/assets/06f8ea1a-5777-4b24-a039-ebcd89d8801a\" />\n\nnormal/expected grouped view.\n- Screenshot 2: \n\n<img width=\"302\" height=\"695\" alt=\"Image\" src=\"https://github.com/user-attachments/assets/53e5bac9-7be7-419a-810b-4678773b0c86\" />\n\nafter switching groups, tabs from another group are still visible (incomplete hiding).\n\n(If needed, I can provide additional screenshots/video and precise extension version in a follow-up comment.)\n\n## Browser Version\nFloorp 12.12.2\n\n## Operating System\nWindows 10 (build 10.0.26200)\n\n## Additional Context\nThe issue seems related to tab visibility/state synchronization when group switching is triggered by Simple Tab Groups. This behavior impacts workflow because group boundaries are no longer visually reliable.\n",
+    "comments": [
+      {
+        "url": "https://github.com/Floorp-Projects/Floorp/issues/2412#issuecomment-4412966249",
+        "body": "can confirm also happens in Linux(and possibly also in another platform), in case somene think it wasnt such a case.\ntemporary fix was by using another firefox fork, but floorp are just better overall which bummed me."
+      },
+      {
+        "url": "https://github.com/Floorp-Projects/Floorp/issues/2412#issuecomment-5224227231",
+        "body": "This issue or Pull Request is stale because it has been open for 90 days with no activity."
+      },
+      {
+        "url": "https://github.com/Floorp-Projects/Floorp/issues/2412#issuecomment-5259510567",
+        "body": "I don't know if this is the exact same issue but I just tried switching to floorp and when I imported my simple tab groups data it got VERY unhappy. It keeps hiding and unhiding all my tabs in other tab groups, and because I have 590 tabs across all my tab groups, it essentially makes the extension unusable. Not sure what could be causing this behavior."
+      },
+      {
+        "url": "https://github.com/Floorp-Projects/Floorp/issues/2412#issuecomment-5269930674",
+        "body": "> I don't know if this is the exact same issue but I just tried switching to floorp and when I imported my simple tab groups data it got VERY unhappy. It keeps hiding and unhiding all my tabs in other tab groups, and because I have 590 tabs across all my tab groups, it essentially makes the extension unusable. Not sure what could be causing this behavior.\n\nyep! this is what i too am experienced with my 200 tabs grouped in 10 groups, it seems there is no effort to resolve this issues since then(as i tried it again some time ago)."
+      }
+    ]
+  },
+  "floorpPrNumberSearch": {
+    "issues": []
+  },
+  "floorpPrTextSearch": [
+    {
+      "number": 3003,
+      "title": "feat(newtab): add bookmark Speed Dial and RSS reader",
+      "url": "https://github.com/Floorp-Projects/Floorp/pull/3003"
+    },
+    {
+      "number": 2941,
+      "title": "[Bot] Update translated files from i18n repository",
+      "url": "https://github.com/Floorp-Projects/Floorp/pull/2941"
+    },
+    {
+      "number": 2748,
+      "title": "fix(workspaces): fix middle-click on new tab button failing to open clipboard URL",
+      "url": "https://github.com/Floorp-Projects/Floorp/pull/2748"
+    },
+    {
+      "number": 2495,
+      "title": "fix(workspaces): hide split view wrapper when all tabs are hidden",
+      "url": "https://github.com/Floorp-Projects/Floorp/pull/2495"
+    }
+  ],
+  "upstream": [
+    {
+      "number": 1325,
+      "url": "https://github.com/Drive4ik/simple-tab-groups/issues/1325",
+      "title": "STG seems to have completely broken with the new Floorp 12 update (firefox fork)",
+      "state": "open",
+      "body": "Floorp rolled out a mandatory update from 11->12 today and it seems to have broken STG. All tab groups are being merged into one window, reopening whenever I click on a new tab and not properly displaying tab count in the current group. When I try to restore an old backup, all tabs not in that backup are put in an unnamed group, and whenever I try to drag a tab from that into one of the main group it just starts opening new tabs as if I accidentally had a button held down (i don't)\n\n**Desktop (please complete the following information):**\n - OS and version: Windows 11\n - Floorp version: 12.3.5\n - Simple Tab Groups version: 5.3.2\n\n",
+      "comments": []
+    },
+    {
+      "number": 1366,
+      "url": "https://github.com/Drive4ik/simple-tab-groups/issues/1366",
+      "title": "native tab group names/label don't get hidden when switching STG Tab Group",
+      "state": "open",
+      "body": "**Describe the bug**\nNative Grouped Tab Label are not being hidden when switching STG tab groups.  The tabs inside the native (colored) grouped tags are hidden but the group tab names or label does not.\n\n**To Reproduce**\nSteps to reproduce the behavior:\n1. Create two STG Group Tabs and name them `one` and `two` respectively.\n2. Open `one` with any website.\n3. Add that website to a \"native\" group tab, with the name `hello`. (Right-click tab->Add to Group->New Group->hello)\n4. Switch to STG Group `two` and notice that hello tab group label is still there even if the tabs inside it are not there anymore.\n\n**Expected behavior**\nI expect that \"native\" tag group labels would only show in the STG Group where it was created in.\n\n**Screenshots**\n<img width=\"1885\" height=\"1583\" alt=\"Image\" src=\"https://github.com/user-attachments/assets/818fd0f1-0643-4afb-b81b-e885f1b9e87f\" />\n\n**Desktop (please complete the following information):**\n - OS and version: Ubuntu 26.04\n - Firefox version: 153.0\n - Simple Tab Groups version: 5.3.2\n\n**Additional context**\nNone\n",
+      "comments": [
+        {
+          "url": "https://github.com/Drive4ik/simple-tab-groups/issues/1366#issuecomment-5309930181",
+          "body": "duplicate issue",
+          "author": "jtagcat"
+        },
+        {
+          "url": "https://github.com/Drive4ik/simple-tab-groups/issues/1366#issuecomment-5314959292",
+          "body": "Duplicate of:\n- #1237 (original)\n- #1286 \n- #1275 \n- #1288 \n- #1290 \n- #1292 \n- #1296 \n- #1301 \n- #1306 \n- #1315 \n- #1323 \n- #1335 \n- #1336 ",
+          "author": "philg-dev"
+        }
+      ]
+    },
+    {
+      "number": 1237,
+      "url": "https://github.com/Drive4ik/simple-tab-groups/issues/1237",
+      "title": "Compatibility issue between Simple Tab Groups and native tab grouping (browser.tabs.groups)",
+      "state": "open",
+      "body": "**Describe the bug**\r\nMozilla has finally added a native option for basic tab grouping _browser.tabs.groups_, [link](https://www.omgubuntu.co.uk/2024/12/how-to-enable-firefox-tab-groups). Unfortunately, it doesn't work well in conjunction with Simple Tab Groups. When I set `browser.tabs.groups.enabled = true` in about:config, everything seems to work at first glance, and I can use Simple Tab Groups alongside the built-in tab grouping, which is IMHO an awesome combo. However, as soon as I switch to a different group in Simple Tab Groups, I can see the names of grouped tabs created via browser.tabs.groups from another group.\r\n\r\n**To Reproduce**\r\nSteps to reproduce the behavior:\r\n1. `browser.tabs.groups.enabled = true` in about:config\r\n2. Open e.g. any 5 new tabs\r\n3. Drag one tab over another to create native group (you may name it for better visual)\r\n4. Create new _Simple Tab Group_ group and open it\r\n5. Now you can see grouped tabs label from another _Simple Tab Groups_ group (label is visible but expanding does not work)\r\n\r\n**Expected behavior**\r\nHide native grouped tabs label(s) from another _Simple Tab Groups_ group(s)\r\n\r\n**Desktop:**\r\n - OS and version: Windows\r\n - Firefox version: 134\r\n - Simple Tab Groups version: 5.2\r\n\r\n",
+      "comments": []
+    }
+  ]
+}

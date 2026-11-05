@@ -1,0 +1,30 @@
+{
+  "issue": {
+    "url": "https://github.com/Floorp-Projects/Floorp/issues/2412",
+    "title": "[Bug]: Simple Tab Groups does not fully hide tabs from inactive groups when switching groups",
+    "issue_number": 2412,
+    "body": "## Pre-Submission Checklist\n- [x] I have checked the existing/closed issues to ensure this issue has not already been reported.\n- [x] I am using the latest supported version of the browser.\n- [x] I have tried disabling all browser extensions/add-ons to rule out interference from these.\n- [x] I have tried clearing the browser cache and cookies.\n- [x] I have checked with a new profile and the issue still occurs.\n- [x] I have provided detailed step-by-step instructions on how to reproduce the issue.\n- [x] I have included relevant screenshots or console outputs.\n- [x] I have checked that this problem is not occurring in the latest version of Firefox.\n- [x] This issue is specific to this browser and does not occur in other browsers.\n\n## Bug Summary\nWhen switching tab groups with the Simple Tab Groups extension in Floorp, tabs from the previously active group are not always fully hidden. As a result, tabs from another group can remain visible in the tab strip, which breaks group isolation and causes confusion.\n\n## Reproduction Steps\n1. Install Floorp (latest stable) on Windows 10.\n2. Install the extension **Simple Tab Groups**.\n3. Create at least 2 tab groups (for example: Group 1 and Group 2).\n4. Open several tabs in Group 1.\n5. Switch to Group 2 using the extension UI.\n6. Repeat switching between groups a few times.\n7. Observe the tab strip after switching.\n\n## Expected Behavior\nAfter switching to another group, only tabs belonging to the currently active group should be visible. Tabs from inactive groups should be completely hidden every time.\n\n## Actual Behavior\nAfter group switching, some tabs from a previously active group remain visible in the tab strip (partial/incomplete hiding). This appears intermittently but is reproducible with repeated switching.\n\n## Screenshots\nI prepared two screenshots showing:\n- Screenshot 1: \n\n<img width=\"353\" height=\"657\" alt=\"Image\" src=\"https://github.com/user-attachments/assets/06f8ea1a-5777-4b24-a039-ebcd89d8801a\" />\n\nnormal/expected grouped view.\n- Screenshot 2: \n\n<img width=\"302\" height=\"695\" alt=\"Image\" src=\"https://github.com/user-attachments/assets/53e5bac9-7be7-419a-810b-4678773b0c86\" />\n\nafter switching groups, tabs from another group are still visible (incomplete hiding).\n\n(If needed, I can provide additional screenshots/video and precise extension version in a follow-up comment.)\n\n## Browser Version\nFloorp 12.12.2\n\n## Operating System\nWindows 10 (build 10.0.26200)\n\n## Additional Context\nThe issue seems related to tab visibility/state synchronization when group switching is triggered by Simple Tab Groups. This behavior impacts workflow because group boundaries are no longer visually reliable.\n",
+    "state": "open"
+  },
+  "comments": [
+    {
+      "url": "https://github.com/Floorp-Projects/Floorp/issues/2412#issuecomment-4412966249",
+      "body": "can confirm also happens in Linux(and possibly also in another platform), in case somene think it wasnt such a case.\ntemporary fix was by using another firefox fork, but floorp are just better overall which bummed me."
+    },
+    {
+      "url": "https://github.com/Floorp-Projects/Floorp/issues/2412#issuecomment-5224227231",
+      "body": "This issue or Pull Request is stale because it has been open for 90 days with no activity."
+    },
+    {
+      "url": "https://github.com/Floorp-Projects/Floorp/issues/2412#issuecomment-5259510567",
+      "body": "I don't know if this is the exact same issue but I just tried switching to floorp and when I imported my simple tab groups data it got VERY unhappy. It keeps hiding and unhiding all my tabs in other tab groups, and because I have 590 tabs across all my tab groups, it essentially makes the extension unusable. Not sure what could be causing this behavior."
+    },
+    {
+      "url": "https://github.com/Floorp-Projects/Floorp/issues/2412#issuecomment-5269930674",
+      "body": "> I don't know if this is the exact same issue but I just tried switching to floorp and when I imported my simple tab groups data it got VERY unhappy. It keeps hiding and unhiding all my tabs in other tab groups, and because I have 590 tabs across all my tab groups, it essentially makes the extension unusable. Not sure what could be causing this behavior.\n\nyep! this is what i too am experienced with my 200 tabs grouped in 10 groups, it seems there is no effort to resolve this issues since then(as i tried it again some time ago)."
+    }
+  ],
+  "prSearch": {
+    "issues": []
+  }
+}

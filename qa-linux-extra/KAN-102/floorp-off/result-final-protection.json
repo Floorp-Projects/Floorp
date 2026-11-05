@@ -1,0 +1,14 @@
+{
+  "pid": 65827,
+  "version": "159.0.1",
+  "buildID": "20261103153232",
+  "sandbox": 6,
+  "signatureRequired": true,
+  "addon": {
+    "id": "simple-tab-groups@drive4ik",
+    "version": "5.3.2",
+    "signedState": 2,
+    "isActive": true
+  },
+  "workspaceEnabled": false
+}
