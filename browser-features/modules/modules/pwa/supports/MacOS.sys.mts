@@ -128,6 +128,54 @@ export class MacOSSupport {
 
   constructor(private options?: MacAppOptions) {}
 
+  /** A damaged v4 bundle must be rebuilt and signed, never edited in place. */
+  private async isIntactBundle(
+    ssb: Manifest,
+    options: MacAppOptions,
+    bundle: Awaited<ReturnType<typeof getMacAppBundle>>,
+  ): Promise<boolean> {
+    const contents = PathUtils.join(bundle.path, "Contents");
+    const resources = PathUtils.join(contents, "Resources");
+    const executable = PathUtils.join(contents, "MacOS", "applet");
+    const launcher = PathUtils.join(resources, "launcher.sh");
+    const plist = PathUtils.join(contents, "Info.plist");
+    const marker = PathUtils.join(contents, "floorp.json");
+    try {
+      for (
+        const path of [
+          executable,
+          launcher,
+          PathUtils.join(resources, "Scripts", "main.scpt"),
+          PathUtils.join(resources, "app.icns"),
+          plist,
+          marker,
+        ]
+      ) {
+        if (!await IOUtils.exists(path)) return false;
+      }
+      if (
+        await IOUtils.readUTF8(marker) !==
+          JSON.stringify({ version: 4, ssb, ...options }) ||
+        await IOUtils.readUTF8(launcher) !== bundle.launcher ||
+        await IOUtils.readUTF8(plist) !== bundle.plist
+      ) return false;
+      // On Windows this function only runs in portable tests; executable mode
+      // is meaningful on the platforms that provide POSIX-style permissions.
+      if (Services.appinfo.OS !== "WINNT") {
+        for (const path of [executable, launcher]) {
+          const file = Cc["@mozilla.org/file/local;1"].createInstance(
+            Ci.nsIFile,
+          );
+          file.initWithPath(path);
+          if (!file.isExecutable()) return false;
+        }
+      }
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   /** Upgrade owned legacy launchers after normal browser startup. A broken v3
    * Finder launcher cannot itself enter the PWA code path that repairs it. */
   async repairExistingLaunchers(store: MacAppStore): Promise<void> {
@@ -155,7 +203,10 @@ export class MacOSSupport {
             integration?: string;
           };
           if (data.integration === "app-shim") continue;
-          if (data.version === 4 && !await IOUtils.exists(backup)) continue;
+          if (
+            data.version === 4 && !await IOUtils.exists(backup) &&
+            await this.isIntactBundle(app, options, bundle)
+          ) continue;
           await this.repair(app, store);
         } catch (error) {
           console.warn(
@@ -519,12 +570,7 @@ export class MacOSSupport {
           "[MacOSSupport] Refusing to overwrite a signed native bundle with a launcher",
         );
       }
-      if (
-        await IOUtils.readUTF8(markerPath) === marker &&
-        await IOUtils.exists(executable) && await IOUtils.exists(launcher) &&
-        await IOUtils.exists(compiledScript) && await IOUtils.exists(icon) &&
-        await IOUtils.exists(plist)
-      ) {
+      if (await this.isIntactBundle(ssb, options, bundle)) {
         // A previous update may have completed the replacement before being
         // interrupted while removing its verified owned backup.
         if (await IOUtils.exists(backup)) {

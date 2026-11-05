@@ -16,10 +16,11 @@ export class MockMacOSSupport extends MacOSSupport {
       createAncestors: true,
       ignoreExisting: true,
     });
-    await IOUtils.writeUTF8(
-      PathUtils.join(executable, "applet"),
-      "mock native applet",
-    );
+    const applet = PathUtils.join(executable, "applet");
+    await IOUtils.writeUTF8(applet, "mock native applet");
+    if (Services.appinfo.OS !== "WINNT") {
+      await IOUtils.setPermissions(applet, 0o755);
+    }
     await IOUtils.writeUTF8(
       PathUtils.join(scripts, "main.scpt"),
       "mock script",
