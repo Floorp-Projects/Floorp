@@ -144,10 +144,11 @@ async function saveDesignSettingsUnqueued(
   const storedStyle = normalizeTabbarStyle(oldData.tabbar?.tabbarStyle);
   const requestedStyle = normalizeTabbarStyle(settings.style ?? storedStyle);
   const nativeVerticalTabs = await rpc.getBoolPref(VERTICAL_TABS_PREF);
-  const tabbarStyle =
-    !hasTabStyleChanged && nativeVerticalTabs !== null
-      ? resolveTabbarStyleFromNative(nativeVerticalTabs, requestedStyle)
-      : requestedStyle;
+  const tabbarStyle = hasTabStyleChanged
+    ? requestedStyle
+    : nativeVerticalTabs !== null
+    ? resolveTabbarStyleFromNative(nativeVerticalTabs, storedStyle)
+    : storedStyle;
 
   const newData = {
     ...oldData,
