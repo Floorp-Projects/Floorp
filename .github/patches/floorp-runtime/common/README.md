@@ -123,3 +123,12 @@ parent for the top WindowContext before scripts/CSS execute, caching only the
 document identity result. Neither uses the currently selected tab.
 Changing away from support restores future access; reload open blog pages to
 remove already injected content and retry requests.
+
+`picture-in-picture-app-window.patch` accounts for embedded chrome documents in
+PiP activity ownership. Panel and ordinary-tab players share the containing
+AppWindow's active-state reference count and window/selection listeners. Closing
+one player keeps that AppWindow active until its final player closes. This avoids
+an invalid nested-context setter that aborted registration and later cleanup.
+The extracted `moz-src` patch has a parity test; native embedded-chrome regressions
+cover both opening orders in `pictureInPictureActivity.test.ts`. This changes
+JavaScript only and requires no native rebuild.
