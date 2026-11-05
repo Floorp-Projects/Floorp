@@ -264,6 +264,15 @@ export class SSBCommandLineHandler {
   handle(cmdLine: nsICommandLine) {
     const id = cmdLine.handleFlagWithParam("start-ssb", false);
     if (id) {
+      if (
+        AppConstants.platform === "linux" &&
+        cmdLine.state === Ci.nsICommandLine.STATE_INITIAL_LAUNCH
+      ) {
+        const { LinuxSupport } = ChromeUtils.importESModule(
+          "resource://noraneko/modules/pwa/supports/Linux.sys.mjs",
+        );
+        LinuxSupport.registerBrowserWindowIdentity();
+      }
       // Prevent default browser window from opening - PWA should launch standalone
       cmdLine.preventDefault = true;
 

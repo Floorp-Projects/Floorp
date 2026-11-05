@@ -157,6 +157,34 @@ export class LinuxSupport {
     return `floorp-${this.getNormalizedId(ssb)}`;
   }
 
+  static registerBrowserWindowIdentity(): void {
+    Services.catMan.addCategoryEntry(
+      "browser-window-before-initial-xul-layout-document-preparation",
+      "resource://noraneko/modules/pwa/supports/Linux.sys.mjs",
+      "LinuxSupport.prepareBrowserWindow",
+      false,
+      true,
+    );
+  }
+
+  static prepareBrowserWindow(win: Window): void {
+    const root = win.document.documentElement;
+    if (root.hasAttribute("taskbartab") || root.hasAttribute("windowclass")) {
+      return;
+    }
+    const { AppConstants } = ChromeUtils.importESModule(
+      "resource://gre/modules/AppConstants.sys.mjs",
+    );
+    const appInfo = Services.appinfo as typeof Services.appinfo & {
+      readonly remotingName?: string;
+    };
+    // A cold PWA's --name is process-wide; ordinary windows need their own ID.
+    root.setAttribute(
+      "windowclass",
+      appInfo.remotingName || AppConstants.MOZ_APP_NAME,
+    );
+  }
+
   private static getPathInfo(
     ssb: Manifest,
     dataHome = resolveLinuxDataHome(
