@@ -131,8 +131,8 @@
   },
   {
     "path": "README.md",
-    "bytes": 4322,
-    "sha256": "a8c45af369be43cf55a94343a58092c76e1cdb50b5ef04b5efd9fc0cee99f04f"
+    "bytes": 3716,
+    "sha256": "e63bd535fe10f5ad972e72cb3fbb1d476586f2b18a2be228776e21b59cfbb88c"
   },
   {
     "path": "environment/probe-direct.json",
@@ -146,8 +146,8 @@
   },
   {
     "path": "matrix.json",
-    "bytes": 15734,
-    "sha256": "14e809ada8806f0ed347b4d95f9243cc1724eacfcb2518a7c2d76d86a8c8a861"
+    "bytes": 15914,
+    "sha256": "b4f39e393dcb6beeaac9e92bd29012ff4dcf421fd7e15f7acfe84fdcc9951f79"
   },
   {
     "path": "raw/KAN-20/firefox-normal-yahoo/observations.json",

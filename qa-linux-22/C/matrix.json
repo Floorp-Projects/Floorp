@@ -213,7 +213,7 @@
     ],
     "existingPr": null,
     "newPr": null,
-    "jiraCommentId": "10280",
+    "jiraCommentId": "10306",
     "evidence": [
       "KAN-64/report.md",
       "KAN-64/followup/report.md",
@@ -254,7 +254,11 @@
         "webextensions/common/common.js",
         "webextensions/common/tabs-store.js"
       ]
-    }
+    },
+    "jiraCommentIds": [
+      "10280",
+      "10306"
+    ]
   },
   {
     "key": "KAN-71",
@@ -275,7 +279,7 @@
     ],
     "existingPr": null,
     "newPr": null,
-    "jiraCommentId": "10281",
+    "jiraCommentId": "10304",
     "evidence": [
       "KAN-71/report.md",
       "KAN-71/activation-followup/report.md"
@@ -324,7 +328,11 @@
         "Muffin6.4.1"
       ],
       "startupIdOrActivationTokenPresent": false
-    }
+    },
+    "jiraCommentIds": [
+      "10281",
+      "10304"
+    ]
   },
   {
     "key": "KAN-90",
@@ -347,7 +355,7 @@
     ],
     "existingPr": null,
     "newPr": null,
-    "jiraCommentId": "10282",
+    "jiraCommentId": "10305",
     "evidence": [
       "KAN-90/report.md",
       "KAN-90/portal-followup/report.md"
@@ -391,6 +399,10 @@
       "sameSessionPid": true,
       "portalOpenUriObserved": false,
       "fedoraProtectedUserNamespace": "EPERM"
-    }
+    },
+    "jiraCommentIds": [
+      "10282",
+      "10305"
+    ]
   }
 ]
