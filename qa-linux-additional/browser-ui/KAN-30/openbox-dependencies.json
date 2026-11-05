@@ -1,0 +1,16 @@
+{
+  "privateRoot": "/workspace/qa-linux-additional/browser-ui/KAN-30/deps/root",
+  "selectedVersion": "Openbox3.6.1-12+b2",
+  "packages": {
+    "libobrender.deb": "d8d3a2a5ee0250411bb93e8f6e8aeb053d584d55c26e2e2e7e3b237c855c8272",
+    "libobt.deb": "2bcec91af8a0339592cb5e025168ec10bbb88b89137607c9d5a368ff68d3f528",
+    "openbox-b2.deb": "2250f7758694066d67b622b9612e942a9c0a06edb92c72bb948928320f891853",
+    "libobt-b2.deb": "f590a93c50bf7587ba8e6d9999df430566d04dc7447b2135bc7f2eb5ffc34c5a",
+    "xfonts-base.deb": "24446137c63de94283dc808eef438918e243f518629844289a5af50a8e0aec23",
+    "libobrender-b2.deb": "f84c607b744f672429f310a95e3c85bad58a6002781283af62ea2a74e36c70b1",
+    "twm.deb": "0fee84bfee0c434e9e76c49abb69d2d5d9b0caa079f409cefcdefe04c0343eee",
+    "openbox.deb": "39706de322fef4bfa9eff7dec0a17753a3abb6d624ee123d880f111fcbf2a835",
+    "imlib.deb": "0abd807eb797a05bbcaa52f30b31f95c348859a110f5f680d7370661158267a4"
+  },
+  "failedPreflight": "newer b4 requested libxml2.so16; selected Debian13-compatible b2; initial theme lookup corrected with scoped XDG_DATA_DIRS; no product outcome counted"
+}

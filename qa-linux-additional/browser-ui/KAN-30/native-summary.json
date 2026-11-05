@@ -1,0 +1,180 @@
+[
+  {
+    "run": 29944,
+    "product": {
+      "name": "Floorp",
+      "version": "159.0.1",
+      "build": "20261103153232",
+      "os": "Linux",
+      "signature": false,
+      "signatureUserSet": false,
+      "sandbox": 6,
+      "focusTestMode": false,
+      "focusTestModeUser": true
+    },
+    "ewmh": "_NET_SUPPORTING_WM_CHECK(WINDOW): window id # 0x20011f\n_NET_ACTIVE_WINDOW(WINDOW): window id # 0x400003\n",
+    "resourceLocation": {
+      "gre": "/workspace/qa-linux-22/browser-ui/products/floorp",
+      "chrome": "jar:file:///workspace/qa-linux-22/browser-ui/products/floorp/omni.ja!/chrome/noraneko/nora-content/assets/js/index9.js"
+    },
+    "ordinarySideberySelectionQualified": null,
+    "cases": [
+      {
+        "case": "ctrl-tab-hover-only",
+        "qualifiedSelection": null,
+        "beforeSelected": "QA A",
+        "finalSelected": "QA B",
+        "finalOpacity": "0",
+        "finalHover": true,
+        "trustedDeactivateCount": 0
+      },
+      {
+        "case": "ctrl-tab-focused-body",
+        "qualifiedSelection": null,
+        "beforeSelected": "QA B",
+        "finalSelected": "New Tab",
+        "finalOpacity": "0",
+        "finalHover": true,
+        "trustedDeactivateCount": 0
+      },
+      {
+        "case": "pointer-leave",
+        "qualifiedSelection": null,
+        "beforeSelected": "New Tab",
+        "finalSelected": "New Tab",
+        "finalOpacity": "0",
+        "finalHover": false,
+        "trustedDeactivateCount": 0
+      },
+      {
+        "case": "real-native-window-focus-loss",
+        "qualifiedSelection": null,
+        "beforeSelected": "New Tab",
+        "finalSelected": "New Tab",
+        "finalOpacity": "0",
+        "finalHover": true,
+        "trustedDeactivateCount": 1
+      }
+    ]
+  },
+  {
+    "run": 29945,
+    "product": {
+      "name": "Floorp",
+      "version": "159.0.1",
+      "build": "20261103153232",
+      "os": "Linux",
+      "signature": false,
+      "signatureUserSet": false,
+      "sandbox": 6,
+      "focusTestMode": false,
+      "focusTestModeUser": true
+    },
+    "ewmh": "_NET_SUPPORTING_WM_CHECK(WINDOW): window id # 0x20011f\n_NET_ACTIVE_WINDOW(WINDOW): window id # 0x400003\n",
+    "resourceLocation": {
+      "gre": "/workspace/qa-linux-additional/browser-ui/KAN-30/candidate-pr2934",
+      "chrome": "jar:file:///workspace/qa-linux-additional/browser-ui/KAN-30/candidate-pr2934/omni.ja!/chrome/noraneko/nora-content/assets/js/index9.js"
+    },
+    "ordinarySideberySelectionQualified": null,
+    "cases": [
+      {
+        "case": "ctrl-tab-hover-only",
+        "qualifiedSelection": null,
+        "beforeSelected": "QA A",
+        "finalSelected": "QA B",
+        "finalOpacity": "1",
+        "finalHover": true,
+        "trustedDeactivateCount": 0
+      },
+      {
+        "case": "ctrl-tab-focused-body",
+        "qualifiedSelection": null,
+        "beforeSelected": "QA B",
+        "finalSelected": "New Tab",
+        "finalOpacity": "1",
+        "finalHover": true,
+        "trustedDeactivateCount": 0
+      },
+      {
+        "case": "pointer-leave",
+        "qualifiedSelection": null,
+        "beforeSelected": "New Tab",
+        "finalSelected": "New Tab",
+        "finalOpacity": "0",
+        "finalHover": false,
+        "trustedDeactivateCount": 0
+      },
+      {
+        "case": "real-native-window-focus-loss",
+        "qualifiedSelection": null,
+        "beforeSelected": "New Tab",
+        "finalSelected": "New Tab",
+        "finalOpacity": "0",
+        "finalHover": true,
+        "trustedDeactivateCount": 1
+      }
+    ]
+  },
+  {
+    "run": 29946,
+    "product": {
+      "name": "Floorp",
+      "version": "159.0.1",
+      "build": "20261103153232",
+      "os": "Linux",
+      "signature": false,
+      "signatureUserSet": false,
+      "sandbox": 6,
+      "focusTestMode": false,
+      "focusTestModeUser": true
+    },
+    "ewmh": "_NET_SUPPORTING_WM_CHECK(WINDOW): window id # 0x20011f\n_NET_ACTIVE_WINDOW(WINDOW): window id # 0x400003\n",
+    "resourceLocation": {
+      "gre": "/workspace/qa-linux-22/browser-ui/products/floorp",
+      "chrome": "jar:file:///workspace/qa-linux-22/browser-ui/products/floorp/omni.ja!/chrome/noraneko/nora-content/assets/js/index9.js"
+    },
+    "ordinarySideberySelectionQualified": true,
+    "cases": [
+      {
+        "case": "normal-sidebery-row-click",
+        "qualifiedSelection": true,
+        "beforeSelected": "QA A",
+        "finalSelected": "QA B",
+        "finalOpacity": "0",
+        "finalHover": true,
+        "trustedDeactivateCount": 0
+      }
+    ]
+  },
+  {
+    "run": 29947,
+    "product": {
+      "name": "Floorp",
+      "version": "159.0.1",
+      "build": "20261103153232",
+      "os": "Linux",
+      "signature": false,
+      "signatureUserSet": false,
+      "sandbox": 6,
+      "focusTestMode": false,
+      "focusTestModeUser": true
+    },
+    "ewmh": "_NET_SUPPORTING_WM_CHECK(WINDOW): window id # 0x20011f\n_NET_ACTIVE_WINDOW(WINDOW): window id # 0x400003\n",
+    "resourceLocation": {
+      "gre": "/workspace/qa-linux-additional/browser-ui/KAN-30/candidate-pr2934",
+      "chrome": "jar:file:///workspace/qa-linux-additional/browser-ui/KAN-30/candidate-pr2934/omni.ja!/chrome/noraneko/nora-content/assets/js/index9.js"
+    },
+    "ordinarySideberySelectionQualified": true,
+    "cases": [
+      {
+        "case": "normal-sidebery-row-click",
+        "qualifiedSelection": true,
+        "beforeSelected": "QA A",
+        "finalSelected": "QA B",
+        "finalOpacity": "1",
+        "finalHover": true,
+        "trustedDeactivateCount": 0
+      }
+    ]
+  }
+]

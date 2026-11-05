@@ -1,5 +1,7 @@
 # KAN-30 / GH2907 — additional browser UI QA
 
+**Latest:** native-followup.md supersedes the Sidebery/desktop-deactivation remaining conditions below. Normal Sidebery click and trusted native deactivate were qualified under Openbox with native focus restored; dependent test-only Draft3043 created. Historical attempts remain intact.
+
 Latest source review: `29a3eb23145da90706d8a94441373278521cc737`, independent clean worktree. Firefox-sidebar source is identical to release reference984509; this is source provenance, not a claim that the release binary was built from later CI-only main. Official Floorp12.21.1 / Gecko159.0.1 Build20261103153232. Existing PR2934 remains open/non-Draft, head `b7866aaa4905be4d86fb3dff1237d6a70c483f10`; its only change is window blur→deactivate. Current main still uses blur. Original issue, PR and Jira10066/10151 read. No existing PR head or shared settings changed.
 
 Original: Windows10 22H2,12.20.1@157.0.1, overlapping Firefox sidebar + hover; Ctrl+Tab or Sidebery tab selection hides the hovered sidebar. Cloud: Debian13.6, private Xvfb109/X11 and DBus, synthetic OS XTest pointer/keyboard, not physical input. Normal startup config selects overlap+hover. QA tabs are data-page API fixtures; actual selection uses OS Ctrl+Tab. No hover/visibility attributes, CSS or production functions forced.

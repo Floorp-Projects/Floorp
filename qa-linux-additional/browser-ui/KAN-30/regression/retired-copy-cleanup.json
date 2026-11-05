@@ -1,0 +1,8 @@
+{
+  "removed": [
+    "/workspace/qa-linux-additional/browser-ui/KAN-30/regression/runtime",
+    "/workspace/qa-linux-additional/browser-ui/KAN-30/regression/baseline-testcopy",
+    "/workspace/qa-linux-additional/browser-ui/KAN-30/regression/candidate-testcopy"
+  ],
+  "reason": "dedicated isolated disposable regression copies/profiles only; all processes stopped and privateDisplay117Removed=true; evidence/scripts/hashes preserved in6031f8ef; no shared source/package/native artifact touched"
+}

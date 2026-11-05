@@ -11,5 +11,6 @@
     "29926": "candidate CtrlTab opacity1 and leave0; after waiting xmessage maps, X11 windowfocus still emits no deactivate and opacity1; unqualified desktop-deactivation control"
   },
   "conclusion": "twm and direct XSetInputFocus do not establish a qualified desktop app activation protocol; do not call this passing deactivate control or product defect",
-  "remaining": "Original Windows desktop app activation or supported full Wayland/KDE session; synthetic DOM deactivate lifecycle separately passes candidate"
+  "remaining": "Original Windows desktop app activation or supported full Wayland/KDE session; synthetic DOM deactivate lifecycle separately passes candidate",
+  "supersededBy": "native-followup.md/native-summary.json: focusmanager.testmode=false restores real focus; Openbox EWMH normal Sidebery/deactivate qualified"
 }

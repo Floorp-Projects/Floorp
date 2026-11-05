@@ -2,7 +2,7 @@ import os,sys,json,time,socket,signal,subprocess
 from pathlib import Path
 R=Path(__file__).parent;B=Path('/workspace/qa-linux-22/browser-ui');port=int(sys.argv[1]);kind=sys.argv[2]if len(sys.argv)>2 else'probe';product=os.environ.get('QA_PRODUCT',str(B/'products/floorp/floorp'));profile=Path(os.environ.get('QA_PROFILE',str(R/'runtime'/f'profile-{port}')));profile.mkdir(parents=True,exist_ok=bool(os.environ.get('QA_PROFILE')));(R/'logs').mkdir(exist_ok=True)
 design=json.loads(json.loads((B/'inspect-29284.json').read_text())['observations'][0]['design']);design.setdefault('uiCustomization',{}).setdefault('chromeExtras',{}).update(sidebarOverlap=True,autohideSidebar=True)
-prefs={'marionette.port':port,'browser.shell.checkDefaultBrowser':False,'browser.aboutwelcome.enabled':False,'floorp.design.configs':json.dumps(design)}
+prefs={'marionette.port':port,'focusmanager.testmode':False,'browser.shell.checkDefaultBrowser':False,'browser.aboutwelcome.enabled':False,'floorp.design.configs':json.dumps(design)}
 (profile/'user.js').write_text(''.join('user_pref('+json.dumps(k)+','+json.dumps(v)+');\n'for k,v in prefs.items()))
 env=os.environ.copy();env.update(DISPLAY=':109',MOZ_REMOTE_ALLOW_SYSTEM_ACCESS='1',PYTHONPATH=str(B/'python'),XDG_CACHE_HOME=str(R/'runtime/cache'),XDG_CONFIG_HOME=str(R/'runtime/config'));assert 'MOZ_DISABLE_CONTENT_SANDBOX'not in env
 owned=[]
@@ -17,6 +17,12 @@ try:
   config=R/'twmrc';config.write_text('RandomPlacement\nNoTitle\nNoGrabServer\nTitleFont \"fixed\"\nMenuFont \"fixed\"\nIconFont \"fixed\"\nResizeFont \"fixed\"\nIconManagerFont \"fixed\"\n')
   wm=launch([str(R/'deps/root/usr/bin/twm'),'-f',str(config)],f'twm-{port}.log');time.sleep(.8)
   if wm.poll()is not None:raise RuntimeError('private WM failed')
+ if os.environ.get('QA_WM')=='openbox':
+  config=R/'openbox.xml';config.write_text('<openbox_config xmlns="http://openbox.org/3.4/rc"><focus><focusNew>yes</focusNew><followMouse>no</followMouse></focus><placement><policy>Smart</policy></placement></openbox_config>')
+  wmEnv=env.copy();wmEnv['LD_LIBRARY_PATH']=str(R/'deps/root/usr/lib/x86_64-linux-gnu');wmEnv['XDG_DATA_DIRS']=str(R/'deps/root/usr/share')+':/usr/share'
+  with open(R/'logs'/f'openbox-{port}.log','w')as log:wm=subprocess.Popen([str(R/'deps/root/usr/bin/openbox'),'--sm-disable','--config-file',str(config)],env=wmEnv,stdout=log,stderr=log,start_new_session=True)
+  owned.append(wm);time.sleep(.8)
+  if wm.poll()is not None:raise RuntimeError('private EWMH WM failed')
  p=launch(['dbus-run-session','--',product,'--no-remote','--profile',str(profile),'--marionette','about:blank'],f'browser-{port}.log')
  for i in range(180):
   if p.poll()is not None:raise RuntimeError('product exit '+str(p.returncode))

@@ -1,0 +1,926 @@
+{
+  "sourceSha": "29a3eb23145da90706d8a94441373278521cc737",
+  "productCopy": "official unchanged",
+  "fixture": "startup normal design preference selects overlap+hover; OS XTest synthetic input, not physical",
+  "observations": [
+    {
+      "case": "normal-sidebery-row-click",
+      "rowCoordinatesFromPaint": [
+        162,
+        247
+      ],
+      "before": {
+        "time": 16180.308894,
+        "isOpen": true,
+        "currentID": "_3c078156-979c-498b-8990-85f7987dd929_-sidebar-action",
+        "hidden": false,
+        "opacity": "1",
+        "visibility": "visible",
+        "box": {
+          "x": 52,
+          "y": 73,
+          "width": 240,
+          "height": 917,
+          "top": 73,
+          "right": 292,
+          "bottom": 990,
+          "left": 52
+        },
+        "hover": true,
+        "expanded": true,
+        "trigger": {
+          "x": 0,
+          "y": 348.1000061035156,
+          "width": 8,
+          "height": 72,
+          "top": 348.1000061035156,
+          "right": 8,
+          "bottom": 420.1000061035156,
+          "left": 0
+        },
+        "active": "",
+        "selected": "QA A"
+      },
+      "samples": [
+        {
+          "time": 16442.530265999998,
+          "isOpen": true,
+          "currentID": "_3c078156-979c-498b-8990-85f7987dd929_-sidebar-action",
+          "hidden": false,
+          "opacity": "1",
+          "visibility": "visible",
+          "box": {
+            "x": 52,
+            "y": 73,
+            "width": 240,
+            "height": 917,
+            "top": 73,
+            "right": 292,
+            "bottom": 990,
+            "left": 52
+          },
+          "hover": true,
+          "expanded": true,
+          "trigger": {
+            "x": 0,
+            "y": 348.1000061035156,
+            "width": 8,
+            "height": 72,
+            "top": 348.1000061035156,
+            "right": 8,
+            "bottom": 420.1000061035156,
+            "left": 0
+          },
+          "active": "",
+          "selected": "QA B"
+        },
+        {
+          "time": 16596.570154999998,
+          "isOpen": true,
+          "currentID": "_3c078156-979c-498b-8990-85f7987dd929_-sidebar-action",
+          "hidden": false,
+          "opacity": "0.867968",
+          "visibility": "hidden",
+          "box": {
+            "x": 52,
+            "y": 73,
+            "width": 240,
+            "height": 917,
+            "top": 73,
+            "right": 292,
+            "bottom": 990,
+            "left": 52
+          },
+          "hover": true,
+          "expanded": false,
+          "trigger": {
+            "x": 0,
+            "y": 348.1000061035156,
+            "width": 8,
+            "height": 72,
+            "top": 348.1000061035156,
+            "right": 8,
+            "bottom": 420.1000061035156,
+            "left": 0
+          },
+          "active": "",
+          "selected": "QA B"
+        },
+        {
+          "time": 16752.057315,
+          "isOpen": true,
+          "currentID": "_3c078156-979c-498b-8990-85f7987dd929_-sidebar-action",
+          "hidden": false,
+          "opacity": "0",
+          "visibility": "hidden",
+          "box": {
+            "x": 52,
+            "y": 73,
+            "width": 240,
+            "height": 917,
+            "top": 73,
+            "right": 292,
+            "bottom": 990,
+            "left": 52
+          },
+          "hover": true,
+          "expanded": false,
+          "trigger": {
+            "x": 0,
+            "y": 348.1000061035156,
+            "width": 8,
+            "height": 72,
+            "top": 348.1000061035156,
+            "right": 8,
+            "bottom": 420.1000061035156,
+            "left": 0
+          },
+          "active": "",
+          "selected": "QA B"
+        },
+        {
+          "time": 16906.887167,
+          "isOpen": true,
+          "currentID": "_3c078156-979c-498b-8990-85f7987dd929_-sidebar-action",
+          "hidden": false,
+          "opacity": "0",
+          "visibility": "hidden",
+          "box": {
+            "x": 52,
+            "y": 73,
+            "width": 240,
+            "height": 917,
+            "top": 73,
+            "right": 292,
+            "bottom": 990,
+            "left": 52
+          },
+          "hover": true,
+          "expanded": false,
+          "trigger": {
+            "x": 0,
+            "y": 348.1000061035156,
+            "width": 8,
+            "height": 72,
+            "top": 348.1000061035156,
+            "right": 8,
+            "bottom": 420.1000061035156,
+            "left": 0
+          },
+          "active": "",
+          "selected": "QA B"
+        },
+        {
+          "time": 17122.70646,
+          "isOpen": true,
+          "currentID": "_3c078156-979c-498b-8990-85f7987dd929_-sidebar-action",
+          "hidden": false,
+          "opacity": "0",
+          "visibility": "hidden",
+          "box": {
+            "x": 52,
+            "y": 73,
+            "width": 240,
+            "height": 917,
+            "top": 73,
+            "right": 292,
+            "bottom": 990,
+            "left": 52
+          },
+          "hover": true,
+          "expanded": false,
+          "trigger": {
+            "x": 0,
+            "y": 348.1000061035156,
+            "width": 8,
+            "height": 72,
+            "top": 348.1000061035156,
+            "right": 8,
+            "bottom": 420.1000061035156,
+            "left": 0
+          },
+          "active": "",
+          "selected": "QA B"
+        },
+        {
+          "time": 17303.273939,
+          "isOpen": true,
+          "currentID": "_3c078156-979c-498b-8990-85f7987dd929_-sidebar-action",
+          "hidden": false,
+          "opacity": "0",
+          "visibility": "hidden",
+          "box": {
+            "x": 52,
+            "y": 73,
+            "width": 240,
+            "height": 917,
+            "top": 73,
+            "right": 292,
+            "bottom": 990,
+            "left": 52
+          },
+          "hover": true,
+          "expanded": false,
+          "trigger": {
+            "x": 0,
+            "y": 348.1000061035156,
+            "width": 8,
+            "height": 72,
+            "top": 348.1000061035156,
+            "right": 8,
+            "bottom": 420.1000061035156,
+            "left": 0
+          },
+          "active": "",
+          "selected": "QA B"
+        }
+      ],
+      "events": [
+        {
+          "time": 16192.14584,
+          "type": "blur",
+          "target": "browser",
+          "related": null,
+          "trusted": true,
+          "phase": 1,
+          "bubbles": false,
+          "sameWindow": false,
+          "boxHover": true,
+          "expanded": true,
+          "opacity": "1",
+          "active": "",
+          "selected": "QA A"
+        },
+        {
+          "time": 16192.257644000001,
+          "type": "focusout",
+          "target": "browser",
+          "related": null,
+          "trusted": true,
+          "phase": 1,
+          "bubbles": true,
+          "sameWindow": false,
+          "boxHover": true,
+          "expanded": true,
+          "opacity": "1",
+          "active": "",
+          "selected": "QA A"
+        },
+        {
+          "time": 16192.335373999998,
+          "type": "blur",
+          "target": "window",
+          "related": null,
+          "trusted": true,
+          "phase": 1,
+          "bubbles": false,
+          "sameWindow": false,
+          "boxHover": true,
+          "expanded": true,
+          "opacity": "1",
+          "active": "",
+          "selected": "QA A"
+        },
+        {
+          "time": 16192.367921,
+          "type": "blur",
+          "target": "window",
+          "related": null,
+          "trusted": true,
+          "phase": 2,
+          "bubbles": false,
+          "sameWindow": true,
+          "boxHover": true,
+          "expanded": true,
+          "opacity": "1",
+          "active": "",
+          "selected": "QA A"
+        },
+        {
+          "time": 16192.508813,
+          "type": "focus",
+          "target": "window",
+          "related": null,
+          "trusted": true,
+          "phase": 1,
+          "bubbles": false,
+          "sameWindow": false,
+          "boxHover": true,
+          "expanded": true,
+          "opacity": "1",
+          "active": "sidebar",
+          "selected": "QA A"
+        },
+        {
+          "time": 16192.549371999998,
+          "type": "focus",
+          "target": "window",
+          "related": null,
+          "trusted": true,
+          "phase": 1,
+          "bubbles": false,
+          "sameWindow": false,
+          "boxHover": true,
+          "expanded": true,
+          "opacity": "1",
+          "active": "sidebar",
+          "selected": "QA A"
+        },
+        {
+          "time": 16192.736724,
+          "type": "focus",
+          "target": "webext-panels-browser",
+          "related": null,
+          "trusted": true,
+          "phase": 1,
+          "bubbles": false,
+          "sameWindow": false,
+          "boxHover": true,
+          "expanded": true,
+          "opacity": "1",
+          "active": "sidebar",
+          "selected": "QA A"
+        },
+        {
+          "time": 16192.772194,
+          "type": "focusin",
+          "target": "webext-panels-browser",
+          "related": null,
+          "trusted": true,
+          "phase": 1,
+          "bubbles": true,
+          "sameWindow": false,
+          "boxHover": true,
+          "expanded": true,
+          "opacity": "1",
+          "active": "sidebar",
+          "selected": "QA A"
+        },
+        {
+          "time": 16211.57184,
+          "type": "blur",
+          "target": "webext-panels-browser",
+          "related": null,
+          "trusted": true,
+          "phase": 1,
+          "bubbles": false,
+          "sameWindow": false,
+          "boxHover": true,
+          "expanded": true,
+          "opacity": "1",
+          "active": "sidebar",
+          "selected": "QA A"
+        },
+        {
+          "time": 16211.732037000002,
+          "type": "focusout",
+          "target": "webext-panels-browser",
+          "related": null,
+          "trusted": true,
+          "phase": 1,
+          "bubbles": true,
+          "sameWindow": false,
+          "boxHover": true,
+          "expanded": true,
+          "opacity": "1",
+          "active": "sidebar",
+          "selected": "QA A"
+        },
+        {
+          "time": 16211.956661999999,
+          "type": "blur",
+          "target": "window",
+          "related": null,
+          "trusted": true,
+          "phase": 1,
+          "bubbles": false,
+          "sameWindow": false,
+          "boxHover": true,
+          "expanded": true,
+          "opacity": "1",
+          "active": "",
+          "selected": "QA A"
+        },
+        {
+          "time": 16212.076029999998,
+          "type": "blur",
+          "target": "window",
+          "related": null,
+          "trusted": true,
+          "phase": 1,
+          "bubbles": false,
+          "sameWindow": false,
+          "boxHover": true,
+          "expanded": true,
+          "opacity": "1",
+          "active": "",
+          "selected": "QA A"
+        },
+        {
+          "time": 16212.109268999999,
+          "type": "focus",
+          "target": "window",
+          "related": null,
+          "trusted": true,
+          "phase": 1,
+          "bubbles": false,
+          "sameWindow": false,
+          "boxHover": true,
+          "expanded": true,
+          "opacity": "1",
+          "active": "",
+          "selected": "QA A"
+        },
+        {
+          "time": 16212.124997,
+          "type": "focus",
+          "target": "window",
+          "related": null,
+          "trusted": true,
+          "phase": 2,
+          "bubbles": false,
+          "sameWindow": true,
+          "boxHover": true,
+          "expanded": true,
+          "opacity": "1",
+          "active": "",
+          "selected": "QA A"
+        },
+        {
+          "time": 16213.042130000002,
+          "type": "blur",
+          "target": "window",
+          "related": null,
+          "trusted": true,
+          "phase": 1,
+          "bubbles": false,
+          "sameWindow": false,
+          "boxHover": true,
+          "expanded": true,
+          "opacity": "1",
+          "active": "",
+          "selected": "QA A"
+        },
+        {
+          "time": 16213.089190000002,
+          "type": "blur",
+          "target": "window",
+          "related": null,
+          "trusted": true,
+          "phase": 2,
+          "bubbles": false,
+          "sameWindow": true,
+          "boxHover": true,
+          "expanded": true,
+          "opacity": "1",
+          "active": "",
+          "selected": "QA A"
+        },
+        {
+          "time": 16213.165517,
+          "type": "focus",
+          "target": "window",
+          "related": null,
+          "trusted": true,
+          "phase": 1,
+          "bubbles": false,
+          "sameWindow": false,
+          "boxHover": true,
+          "expanded": true,
+          "opacity": "1",
+          "active": "",
+          "selected": "QA A"
+        },
+        {
+          "time": 16213.181062,
+          "type": "focus",
+          "target": "window",
+          "related": null,
+          "trusted": true,
+          "phase": 2,
+          "bubbles": false,
+          "sameWindow": true,
+          "boxHover": true,
+          "expanded": true,
+          "opacity": "1",
+          "active": "",
+          "selected": "QA A"
+        },
+        {
+          "time": 16213.307883999998,
+          "type": "focus",
+          "target": "browser",
+          "related": null,
+          "trusted": true,
+          "phase": 1,
+          "bubbles": false,
+          "sameWindow": false,
+          "boxHover": true,
+          "expanded": true,
+          "opacity": "1",
+          "active": "",
+          "selected": "QA A"
+        },
+        {
+          "time": 16213.352560000001,
+          "type": "focusin",
+          "target": "browser",
+          "related": null,
+          "trusted": true,
+          "phase": 1,
+          "bubbles": true,
+          "sameWindow": false,
+          "boxHover": true,
+          "expanded": true,
+          "opacity": "1",
+          "active": "",
+          "selected": "QA A"
+        },
+        {
+          "time": 16219.850944000002,
+          "type": "TabSelect",
+          "target": "tab",
+          "related": null,
+          "trusted": true,
+          "phase": 1,
+          "bubbles": true,
+          "sameWindow": false,
+          "boxHover": true,
+          "expanded": true,
+          "opacity": "1",
+          "active": "",
+          "selected": "QA B"
+        },
+        {
+          "time": 16564.268709,
+          "type": "mutation",
+          "attribute": "data-floorp-sidebar-expanded",
+          "target": "sidebar-box",
+          "opacity": "1",
+          "hidden": false,
+          "expanded": false
+        }
+      ],
+      "qualifiedSelection": true
+    }
+  ],
+  "product": {
+    "name": "Floorp",
+    "version": "159.0.1",
+    "build": "20261103153232",
+    "os": "Linux",
+    "signature": false,
+    "signatureUserSet": false,
+    "sandbox": 6,
+    "focusTestMode": false,
+    "focusTestModeUser": true
+  },
+  "nativeFocusFixture": {
+    "method": "xdotool windowfocus on owned product native window; compensates missing X11 window manager",
+    "window": "4194307",
+    "documentFocused": true
+  },
+  "windowManager": "openbox",
+  "ewmhSupported": "_NET_SUPPORTING_WM_CHECK(WINDOW): window id # 0x20011f\n_NET_ACTIVE_WINDOW(WINDOW): window id # 0x400003\n",
+  "resourceLocation": {
+    "gre": "/workspace/qa-linux-22/browser-ui/products/floorp",
+    "chrome": "jar:file:///workspace/qa-linux-22/browser-ui/products/floorp/omni.ja!/chrome/noraneko/nora-content/assets/js/index9.js"
+  },
+  "addonInstall": {
+    "id": "{3c078156-979c-498b-8990-85f7987dd929}",
+    "active": true,
+    "signedState": 2,
+    "temporary": false
+  },
+  "sidebarMap": [
+    {
+      "id": "viewHistorySidebar",
+      "title": "History",
+      "extensionId": null,
+      "visible": null
+    },
+    {
+      "id": "viewTabsSidebar",
+      "title": "Synced Tabs",
+      "extensionId": null,
+      "visible": null
+    },
+    {
+      "id": "viewBookmarksSidebar",
+      "title": "Bookmarks",
+      "extensionId": null,
+      "visible": null
+    },
+    {
+      "id": "viewGenaiChatSidebar",
+      "title": "AI Chatbot",
+      "extensionId": null,
+      "visible": true
+    },
+    {
+      "id": "viewGenaiPageAssistSidebar",
+      "title": null,
+      "extensionId": null,
+      "visible": false
+    },
+    {
+      "id": "viewCPMSidebar",
+      "title": "Passwords",
+      "extensionId": null,
+      "visible": true
+    },
+    {
+      "id": "viewResourceMonitorSidebar",
+      "title": null,
+      "extensionId": null,
+      "visible": false
+    },
+    {
+      "id": "viewOpenTabsSidebar",
+      "title": null,
+      "extensionId": null,
+      "visible": false
+    },
+    {
+      "id": "viewCustomizeSidebar",
+      "title": null,
+      "extensionId": null,
+      "visible": null
+    },
+    {
+      "id": "_3c078156-979c-498b-8990-85f7987dd929_-sidebar-action",
+      "title": "Sidebery",
+      "extensionId": "{3c078156-979c-498b-8990-85f7987dd929}",
+      "visible": null
+    }
+  ],
+  "sidebarUI": [
+    {
+      "tag": "menuitem",
+      "id": "menu_historySidebar",
+      "title": null,
+      "label": "History",
+      "aria": null,
+      "view": null,
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0,
+        "left": 0
+      }
+    },
+    {
+      "tag": "menuitem",
+      "id": "menu_tabsSidebar",
+      "title": null,
+      "label": "Synced Tabs",
+      "aria": null,
+      "view": null,
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0,
+        "left": 0
+      }
+    },
+    {
+      "tag": "menuitem",
+      "id": "menu_bookmarksSidebar",
+      "title": null,
+      "label": "Bookmarks",
+      "aria": null,
+      "view": null,
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0,
+        "left": 0
+      }
+    },
+    {
+      "tag": "menuitem",
+      "id": "menu_genaiChatSidebar",
+      "title": null,
+      "label": "AI Chatbot",
+      "aria": null,
+      "view": null,
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0,
+        "left": 0
+      }
+    },
+    {
+      "tag": "menuitem",
+      "id": "menu_genaiPageAssistSidebar",
+      "title": null,
+      "label": "Page Buddy",
+      "aria": null,
+      "view": null,
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0,
+        "left": 0
+      }
+    },
+    {
+      "tag": "menuitem",
+      "id": "menu_megalistSidebar",
+      "title": null,
+      "label": "Passwords",
+      "aria": null,
+      "view": null,
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0,
+        "left": 0
+      }
+    },
+    {
+      "tag": "menuitem",
+      "id": "menu_resourceMonitorSidebar",
+      "title": null,
+      "label": "Resource Monitor",
+      "aria": null,
+      "view": null,
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0,
+        "left": 0
+      }
+    },
+    {
+      "tag": "menuitem",
+      "id": "menu_openTabsSidebar",
+      "title": null,
+      "label": "Open Tabs",
+      "aria": null,
+      "view": null,
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0,
+        "left": 0
+      }
+    },
+    {
+      "tag": "menuitem",
+      "id": "menubar_menu__3c078156-979c-498b-8990-85f7987dd929_-sidebar-action",
+      "title": null,
+      "label": "Tabs",
+      "aria": null,
+      "view": null,
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0,
+        "left": 0
+      }
+    }
+  ],
+  "sideberyToolbarButton": {
+    "x": 1200,
+    "y": 36,
+    "width": 36,
+    "height": 36,
+    "top": 36,
+    "right": 1236,
+    "bottom": 72,
+    "left": 1200
+  },
+  "toolbarClickEvents": [
+    {
+      "id": "_3c078156-979c-498b-8990-85f7987dd929_-BAP",
+      "tag": "toolbarbutton",
+      "trusted": true,
+      "path": [
+        "_3c078156-979c-498b-8990-85f7987dd929_-BAP",
+        "box",
+        "_3c078156-979c-498b-8990-85f7987dd929_-browser-action",
+        "nav-bar-customization-target"
+      ]
+    },
+    {
+      "id": "_3c078156-979c-498b-8990-85f7987dd929_-BAP",
+      "tag": "toolbarbutton",
+      "trusted": true,
+      "path": [
+        "_3c078156-979c-498b-8990-85f7987dd929_-BAP",
+        "box",
+        "_3c078156-979c-498b-8990-85f7987dd929_-browser-action",
+        "nav-bar-customization-target"
+      ]
+    }
+  ],
+  "afterSideberyToolbar": {
+    "time": 14915.45615,
+    "isOpen": true,
+    "currentID": "_3c078156-979c-498b-8990-85f7987dd929_-sidebar-action",
+    "hidden": false,
+    "opacity": "1",
+    "visibility": "visible",
+    "box": {
+      "x": 52,
+      "y": 73,
+      "width": 240,
+      "height": 917,
+      "top": 73,
+      "right": 292,
+      "bottom": 990,
+      "left": 52
+    },
+    "hover": false,
+    "expanded": true,
+    "trigger": {
+      "x": 0,
+      "y": 348.1000061035156,
+      "width": 8,
+      "height": 72,
+      "top": 348.1000061035156,
+      "right": 8,
+      "bottom": 420.1000061035156,
+      "left": 0
+    },
+    "active": "",
+    "selected": "QA A"
+  },
+  "extensionState": {
+    "backgroundState": "running",
+    "hasShutdownPromise": false,
+    "active": true
+  },
+  "sideberySelectionMethod": "W3C trusted click of normal Sidebery toolbar action; subsequent pointer uses OS XTest",
+  "ordinarySideberySelectionQualified": true,
+  "sideberyOpen": {
+    "time": 16063.886505999999,
+    "isOpen": true,
+    "currentID": "_3c078156-979c-498b-8990-85f7987dd929_-sidebar-action",
+    "hidden": false,
+    "opacity": "1",
+    "visibility": "visible",
+    "box": {
+      "x": 52,
+      "y": 73,
+      "width": 240,
+      "height": 917,
+      "top": 73,
+      "right": 292,
+      "bottom": 990,
+      "left": 52
+    },
+    "hover": true,
+    "expanded": true,
+    "trigger": {
+      "x": 0,
+      "y": 348.1000061035156,
+      "width": 8,
+      "height": 72,
+      "top": 348.1000061035156,
+      "right": 8,
+      "bottom": 420.1000061035156,
+      "left": 0
+    },
+    "active": "",
+    "selected": "QA A"
+  }
+}

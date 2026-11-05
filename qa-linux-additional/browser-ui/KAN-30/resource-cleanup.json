@@ -1,0 +1,25 @@
+{
+  "reason": "disk274MiB; browser jobs stopped, evidence retained; remove retired QA profiles and invalid candidate only",
+  "removedProfiles": [
+    "profile-29902",
+    "profile-29906",
+    "profile-29914",
+    "profile-29910",
+    "profile-29908",
+    "profile-29923",
+    "profile-29905",
+    "profile-29912",
+    "profile-29925",
+    "profile-29926",
+    "profile-29911",
+    "profile-29913",
+    "profile-29924",
+    "profile-29909",
+    "profile-29922",
+    "profile-29907",
+    "profile-29903",
+    "profile-29901",
+    "profile-29904"
+  ],
+  "preserved": "profile-29915 signed Sidebery; verified candidate-pr2934; all logs/reports/screenshots; all shared builds"
+}

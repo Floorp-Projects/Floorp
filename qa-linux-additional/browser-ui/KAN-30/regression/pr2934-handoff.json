@@ -1,0 +1,28 @@
+{
+  "existingPr": 2934,
+  "canonicalPr": "https://github.com/Floorp-Projects/Floorp/pull/2934",
+  "base": "b7866aaa4905be4d86fb3dff1237d6a70c483f10",
+  "author": "EldinBegano",
+  "foreignBranch": "EldinBegano/Floorp:fix/firefox-sidebar-hover-tab-switch",
+  "maintainerCanModify": true,
+  "authenticatedUser": "Ryosuke-Asano",
+  "upstreamPushPermission": true,
+  "foreignRepoPushPermission": false,
+  "foreignBranchAgreement": "none found in task; do not push",
+  "worktree": "/workspace/kan30-regression-source",
+  "localBranch": "test/sidebar-hover-regression-pr2934",
+  "preparedHead": "bfb8e5b583e1d8520e8e894e7480276f0250d0f2",
+  "diff": "one existing test file; 44 lines added; no production changes",
+  "sourceFileMatchesValidatedQaCopy": true,
+  "originalTestHelpersPrVsMainIdentical": true,
+  "lint": "passed",
+  "diffCheck": "passed",
+  "actualBrowserEvidence": [
+    "result-29935.json baseline fails",
+    "result-29936.json candidate passes"
+  ],
+  "fixture": "MouseEvent/FocusEvent/Event against browser Window; separate from OS XTest",
+  "pushed": false,
+  "newPr": null,
+  "proposedSubmission": "parent can push own dependency-base mirror at exact canonical PR2934 head and test branch; create dependent Draft with 44-line diff, canonical relationship explicit"
+}
