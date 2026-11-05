@@ -115,9 +115,30 @@ async function testAbortAndMissingBrowser() {
   );
 }
 
+async function testBrowserBeforeDocument() {
+  const x = fixture();
+  x.win.document.readyState = "loading";
+  x.win.gBrowser = { tabContainer: {}, selectedTab: {} };
+  let settled = false;
+  const pending = waitForWorkspaceWindow(
+    x.win as unknown as Window,
+    x.observers,
+    x.abort.signal,
+  ).then((ready) => {
+    settled = true;
+    return ready;
+  });
+  await Promise.resolve();
+  assert(!settled, "gBrowser alone must not initialize an incomplete document");
+  x.win.document.readyState = "complete";
+  x.observers.notify(x.win);
+  assert(await pending, "initialization resumes after this window is ready");
+}
+
 export async function runAllTests(): Promise<void> {
   await runTests("windowReady.test.ts", [
     { name: "own versus foreign window", fn: testReadyAndForeignWindow },
     { name: "abort and unavailable browser", fn: testAbortAndMissingBrowser },
+    { name: "browser before document", fn: testBrowserBeforeDocument },
   ]);
 }
