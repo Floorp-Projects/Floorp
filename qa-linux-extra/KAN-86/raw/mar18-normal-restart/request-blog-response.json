@@ -1,0 +1,6 @@
+{
+  "id": "blog-response",
+  "target": "blog.floorp.app",
+  "context": "content",
+  "script": "const n=performance.getEntriesByType('navigation')[0];return {url:location.href,title:document.title,readyState:document.readyState,textLength:document.body.innerText.length,navigation:n?{duration:n.duration,responseStatus:n.responseStatus,domComplete:n.domComplete}:null};"
+}

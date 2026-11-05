@@ -1,0 +1,26 @@
+[
+  {
+    "file": "floorp-linux-x86_64.tar.xz",
+    "bytes": 105866444,
+    "sha256": "a4610fa0cf86092c1f0337173d722be874562b482c760bf54cd67917e68ee512",
+    "matchesOfficialHashes": true
+  },
+  {
+    "file": "floorp-linux-x86_64-full.mar",
+    "bytes": 106000612,
+    "sha256": "46837dd13191e18fffcabb57df7d973d477ceb3a7f04ffd0f459a6f145005b25",
+    "matchesOfficialHashes": true
+  },
+  {
+    "file": "linux-meta.json",
+    "bytes": 1408,
+    "sha256": "39092ab8594eaec355a19ab0bacf3e1123d8ed61e237ab83ce2607eaa4328945",
+    "matchesOfficialHashes": true
+  },
+  {
+    "file": "release-manifest-set-v2.json",
+    "bytes": 9629,
+    "sha256": "5f3b6d155e0937539850838bcf0207c645ab64a39e4ce1d47b188b6696bdd516",
+    "matchesOfficialHashes": true
+  }
+]

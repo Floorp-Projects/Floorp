@@ -1,0 +1,21 @@
+{
+  "12.18-rpc.ts": "f968ca0b8d249dd8b07865bb8162ee97389d10becc42f4912262843dbb093543",
+  "12.18-release-notes.ts": "e83a3053ba8692d24eb6fdd7deea982a0f60c7e8d71115f91386ca0841a24d60",
+  "main-ReleaseNotesChoice.tsx": "36bff8e4f8f8eb403b07d44d2bcef21b6d15f67f31e6f19f3d45dcef50de94c5",
+  "12.18-ReleaseNotesChoice.tsx": "36bff8e4f8f8eb403b07d44d2bcef21b6d15f67f31e6f19f3d45dcef50de94c5",
+  "updater-firefox155.cpp": "b3f21c222b132733b15605f21434228332973398171acb3139a06f1315ee6d2d",
+  "12.18-App.tsx": "e2f6d5a4ec36d4a3d07201619e434b577941941db2072882db14f6f288612cb2",
+  "12.21.1-release-notes.ts": "e83a3053ba8692d24eb6fdd7deea982a0f60c7e8d71115f91386ca0841a24d60",
+  "12.21.1-NRWelcomePageParent.sys.mts": "80cb54d9b8cd9203781b0d8f1b3afe241f7ef035bdd7e25363e3867628ec68c2",
+  "12.18-NoranekoStartup.sys.mts": "07cd2187c7bbabc4ac12cfe7d651dc63ef110a431c02753260543193eef26f96",
+  "main-release-notes.ts": "e83a3053ba8692d24eb6fdd7deea982a0f60c7e8d71115f91386ca0841a24d60",
+  "12.21.1-App.tsx": "e2f6d5a4ec36d4a3d07201619e434b577941941db2072882db14f6f288612cb2",
+  "12.18-NRWelcomePageParent.sys.mts": "3926b76f90e6607407427767681c9e6078f5941bd4ec7873b32ae7dd5fea5690",
+  "main-NoranekoStartup.sys.mts": "95d69163d6397dd537e66a1233bde514488a5711680465d1adc3b157e13cbd84",
+  "main-App.tsx": "e2f6d5a4ec36d4a3d07201619e434b577941941db2072882db14f6f288612cb2",
+  "12.21.1-NoranekoStartup.sys.mts": "95d69163d6397dd537e66a1233bde514488a5711680465d1adc3b157e13cbd84",
+  "12.18-NoranekoUpdateChecker.sys.mts": "e4bd04623116a659d0b5504545894800c47cbccf72711e06d5bb1fb31629cca5",
+  "12.21.1-ReleaseNotesChoice.tsx": "36bff8e4f8f8eb403b07d44d2bcef21b6d15f67f31e6f19f3d45dcef50de94c5",
+  "main-NRWelcomePageParent.sys.mts": "80cb54d9b8cd9203781b0d8f1b3afe241f7ef035bdd7e25363e3867628ec68c2",
+  "12.18-NRWelcomePageChild.sys.mts": "06692a5e7eac823641b05c263afe972a417424787565cd3a410faeceb14acb03"
+}

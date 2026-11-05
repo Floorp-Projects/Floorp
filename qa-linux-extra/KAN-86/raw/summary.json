@@ -1,0 +1,464 @@
+[
+  {
+    "case": "old-seed-v2",
+    "ready": {
+      "startupSeconds": 4.25926708499901,
+      "value": {
+        "pid": 76640,
+        "version": "155.0",
+        "buildID": "20260902101625",
+        "startup": {
+          "isFirstRun": true,
+          "isUpdated": false
+        },
+        "prefs": {
+          "mstone": {
+            "value": "ignore",
+            "user": true
+          },
+          "oldVersion": {
+            "value": "12.17.2@155.0",
+            "user": true
+          },
+          "audience": {
+            "value": "<unset>",
+            "user": false
+          },
+          "confirmed": {
+            "value": false,
+            "user": false
+          },
+          "promptShown": {
+            "value": false,
+            "user": false
+          },
+          "mode": {
+            "value": "<unset>",
+            "user": false
+          },
+          "welcomeShown": {
+            "value": false,
+            "user": false
+          }
+        },
+        "protections": {
+          "sandbox": 6,
+          "sandboxUser": false,
+          "signatureRequired": false,
+          "signatureUser": false
+        },
+        "tabs": [
+          {
+            "url": "about:home",
+            "title": "Floorp Start",
+            "selected": true,
+            "hidden": false,
+            "loading": false
+          }
+        ],
+        "dialogs": []
+      },
+      "monitorRootPid": 76640
+    },
+    "shutdown": {
+      "requestedNormalQuit": true,
+      "exitCode": 0
+    },
+    "sampleCount": 255,
+    "monitoredSeconds": 144.53748077600176,
+    "cpuPercentSumMax": 290.92699593215383,
+    "cpuPercentSumMedian": 16.81163291020224
+  },
+  {
+    "case": "mar-to18",
+    "ready": {
+      "startupSeconds": 6.704989773999841,
+      "value": {
+        "pid": 77162,
+        "version": "156.0.1",
+        "buildID": "20260916130640",
+        "startup": {
+          "isFirstRun": false,
+          "isUpdated": true
+        },
+        "prefs": {
+          "mstone": {
+            "value": "ignore",
+            "user": true
+          },
+          "oldVersion": {
+            "value": "12.18.0@156.0.1",
+            "user": true
+          },
+          "audience": {
+            "value": "existing",
+            "user": true
+          },
+          "confirmed": {
+            "value": false,
+            "user": false
+          },
+          "promptShown": {
+            "value": true,
+            "user": true
+          },
+          "mode": {
+            "value": "blocking",
+            "user": false
+          },
+          "welcomeShown": {
+            "value": true,
+            "user": true
+          }
+        },
+        "protections": {
+          "sandbox": 6,
+          "sandboxUser": false,
+          "signatureRequired": false,
+          "signatureUser": false
+        },
+        "tabs": [
+          {
+            "url": "about:home",
+            "title": "Floorp Start",
+            "selected": false,
+            "hidden": false,
+            "loading": false
+          },
+          {
+            "url": "https://blog.floorp.app/en/release/12.18.0/",
+            "title": "v12.18.0 Release Notes: A New Settings Design and Release-Note Display Options | Floorp Blog",
+            "selected": false,
+            "hidden": false,
+            "loading": false
+          },
+          {
+            "url": "about:welcome?releaseNotes=1",
+            "title": "Welcome to Floorp",
+            "selected": true,
+            "hidden": false,
+            "loading": false
+          }
+        ],
+        "dialogs": []
+      },
+      "monitorRootPid": 77162
+    },
+    "shutdown": {
+      "requestedNormalQuit": true,
+      "exitCode": 0
+    },
+    "sampleCount": 40,
+    "monitoredSeconds": 22.809310479002306,
+    "cpuPercentSumMax": 262.2669026000284,
+    "cpuPercentSumMedian": 19.61606409693168
+  },
+  {
+    "case": "mar18-normal-restart",
+    "ready": {
+      "startupSeconds": 5.606141227999615,
+      "value": {
+        "pid": 78658,
+        "version": "156.0.1",
+        "buildID": "20260916130640",
+        "startup": {
+          "isFirstRun": false,
+          "isUpdated": false
+        },
+        "prefs": {
+          "mstone": {
+            "value": "ignore",
+            "user": true
+          },
+          "oldVersion": {
+            "value": "12.18.0@156.0.1",
+            "user": true
+          },
+          "audience": {
+            "value": "existing",
+            "user": true
+          },
+          "confirmed": {
+            "value": true,
+            "user": true
+          },
+          "promptShown": {
+            "value": true,
+            "user": true
+          },
+          "mode": {
+            "value": "blocking",
+            "user": false
+          },
+          "welcomeShown": {
+            "value": true,
+            "user": true
+          }
+        },
+        "protections": {
+          "sandbox": 6,
+          "sandboxUser": false,
+          "signatureRequired": false,
+          "signatureUser": false
+        },
+        "tabs": [
+          {
+            "url": "about:home",
+            "title": "Floorp Start",
+            "selected": false,
+            "hidden": false,
+            "loading": false
+          },
+          {
+            "url": "https://blog.floorp.app/en/release/12.18.0/",
+            "title": "v12.18.0 Release Notes: A New Settings Design and Release-Note Display Options | Floorp Blog",
+            "selected": true,
+            "hidden": false,
+            "loading": false
+          }
+        ],
+        "dialogs": []
+      },
+      "monitorRootPid": 78658
+    },
+    "shutdown": {
+      "requestedNormalQuit": true,
+      "exitCode": 0
+    },
+    "sampleCount": 32,
+    "monitoredSeconds": 21.81049028900088,
+    "cpuPercentSumMax": 330.71474541051003,
+    "cpuPercentSumMedian": 128.24746592011087
+  },
+  {
+    "case": "current-fresh",
+    "ready": {
+      "startupSeconds": 8.018554625999968,
+      "value": {
+        "pid": 77690,
+        "version": "159.0.1",
+        "buildID": "20261103153232",
+        "startup": {
+          "isFirstRun": true,
+          "isUpdated": false
+        },
+        "prefs": {
+          "mstone": {
+            "value": "ignore",
+            "user": false
+          },
+          "oldVersion": {
+            "value": "12.21.1@159.0.1",
+            "user": true
+          },
+          "audience": {
+            "value": "new",
+            "user": true
+          },
+          "confirmed": {
+            "value": false,
+            "user": false
+          },
+          "promptShown": {
+            "value": false,
+            "user": false
+          },
+          "mode": {
+            "value": "blocking",
+            "user": false
+          },
+          "welcomeShown": {
+            "value": false,
+            "user": false
+          }
+        },
+        "protections": {
+          "sandbox": 6,
+          "sandboxUser": false,
+          "signatureRequired": false,
+          "signatureUser": false
+        },
+        "tabs": [
+          {
+            "url": "about:home",
+            "title": "Floorp Start",
+            "selected": true,
+            "hidden": false,
+            "loading": false
+          }
+        ],
+        "dialogs": []
+      },
+      "monitorRootPid": 77690
+    },
+    "shutdown": {
+      "requestedNormalQuit": true,
+      "exitCode": 0
+    },
+    "sampleCount": 36,
+    "monitoredSeconds": 21.830991119000828,
+    "cpuPercentSumMax": 329.71632352476956,
+    "cpuPercentSumMedian": 112.81061127058872
+  },
+  {
+    "case": "current-update-fixture",
+    "ready": {
+      "startupSeconds": 7.696130336000351,
+      "value": {
+        "pid": 78124,
+        "version": "159.0.1",
+        "buildID": "20261103153232",
+        "startup": {
+          "isFirstRun": false,
+          "isUpdated": true
+        },
+        "prefs": {
+          "mstone": {
+            "value": "159.0.1",
+            "user": true
+          },
+          "oldVersion": {
+            "value": "12.21.1@159.0.1",
+            "user": true
+          },
+          "audience": {
+            "value": "existing",
+            "user": true
+          },
+          "confirmed": {
+            "value": false,
+            "user": true
+          },
+          "promptShown": {
+            "value": true,
+            "user": true
+          },
+          "mode": {
+            "value": "blocking",
+            "user": false
+          },
+          "welcomeShown": {
+            "value": true,
+            "user": true
+          }
+        },
+        "protections": {
+          "sandbox": 6,
+          "sandboxUser": false,
+          "signatureRequired": false,
+          "signatureUser": false
+        },
+        "tabs": [
+          {
+            "url": "about:home",
+            "title": "Floorp Start",
+            "selected": false,
+            "hidden": false,
+            "loading": false
+          },
+          {
+            "url": "https://blog.floorp.app/en/release/12.21.1/",
+            "title": "v12.21.1 Release Notes: Firefox 159.0.1 security fix | Floorp Blog",
+            "selected": false,
+            "hidden": false,
+            "loading": false
+          },
+          {
+            "url": "about:welcome?releaseNotes=1",
+            "title": "Welcome to Floorp",
+            "selected": true,
+            "hidden": false,
+            "loading": false
+          }
+        ],
+        "dialogs": []
+      },
+      "monitorRootPid": 78124
+    },
+    "shutdown": {
+      "requestedNormalQuit": true,
+      "exitCode": 0
+    },
+    "sampleCount": 46,
+    "monitoredSeconds": 27.724655371999688,
+    "cpuPercentSumMax": 311.08836157971547,
+    "cpuPercentSumMedian": 76.63073018592925
+  },
+  {
+    "case": "current-prompt-save",
+    "ready": {
+      "startupSeconds": 11.113518574999034,
+      "value": {
+        "pid": 79062,
+        "version": "159.0.1",
+        "buildID": "20261103153232",
+        "startup": {
+          "isFirstRun": false,
+          "isUpdated": false
+        },
+        "prefs": {
+          "mstone": {
+            "value": "159.0.1",
+            "user": true
+          },
+          "oldVersion": {
+            "value": "12.21.1@159.0.1",
+            "user": true
+          },
+          "audience": {
+            "value": "existing",
+            "user": true
+          },
+          "confirmed": {
+            "value": false,
+            "user": true
+          },
+          "promptShown": {
+            "value": true,
+            "user": true
+          },
+          "mode": {
+            "value": "blocking",
+            "user": false
+          },
+          "welcomeShown": {
+            "value": true,
+            "user": true
+          }
+        },
+        "protections": {
+          "sandbox": 6,
+          "sandboxUser": false,
+          "signatureRequired": false,
+          "signatureUser": false
+        },
+        "tabs": [
+          {
+            "url": "about:home",
+            "title": "Floorp Start",
+            "selected": true,
+            "hidden": false,
+            "loading": false
+          },
+          {
+            "url": "about:welcome?releaseNotes=1",
+            "title": "Welcome to Floorp",
+            "selected": false,
+            "hidden": false,
+            "loading": false
+          }
+        ],
+        "dialogs": []
+      },
+      "monitorRootPid": 79062
+    },
+    "shutdown": {
+      "requestedNormalQuit": true,
+      "exitCode": 0
+    },
+    "sampleCount": 38,
+    "monitoredSeconds": 24.0350684240002,
+    "cpuPercentSumMax": 238.1409380420868,
+    "cpuPercentSumMedian": 75.83851428715924
+  }
+]

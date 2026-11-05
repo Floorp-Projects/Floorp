@@ -1,0 +1,23 @@
+{
+  "key": "KAN-86",
+  "github": "https://github.com/Floorp-Projects/Floorp/issues/2774",
+  "sourceSha": {
+    "12.18.0": "1728a7678c34aec1ad502edb06a168fdf2a07be8",
+    "12.21.1": "984509d2053be7bae9027133bda7259cd706b208",
+    "main": "29a3eb23145da90706d8a94441373278521cc737"
+  },
+  "result": "source-contract-only; no product execution by this agent",
+  "remainingConditions": [
+    "actual product responsiveness parent-owned",
+    "original Windows11 native environment",
+    "genuine updater/MAR path separate from pref simulation"
+  ],
+  "evidence": [
+    "report.md",
+    "source-hashes.json",
+    "comments.json",
+    "pr-2744.json",
+    "pr-2975.json",
+    "pr-2904.json"
+  ]
+}

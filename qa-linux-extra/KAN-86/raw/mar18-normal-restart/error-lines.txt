@@ -1,0 +1,100 @@
+defaults/preferences/firefox.js:1543: prefs parse error: unknown keyword
+defaults/preferences/firefox.js:1544: prefs parse error: unknown keyword
+defaults/preferences/firefox.js:1550: prefs parse error: unknown keyword
+JavaScript warning: moz-src:///toolkit/components/search/SearchService.sys.mjs, line 3024: unreachable code after return statement
+console.error: AboutNewTabResourceMapping: "Failed to complete resource mapping: " (new TypeError("lazy.aboutRedirector.wrappedJSObject.notifyBuiltInAddonInitialized is not a function", "resource:///modules/AboutNewTabResourceMapping.sys.mjs", 413))
+console.error: "Error in processing browser-first-window-ready for AboutNewTab.init"
+console.error: (new TypeError("lazy.aboutRedirector.wrappedJSObject.notifyBuiltInAddonInitialized is not a function", "resource:///modules/AboutNewTabResourceMapping.sys.mjs", 413))
+console.error: CustomizableUI:
+console.error: CustomizableUI:
+console.debug: nora@split-view: "[effect] layout config changed: horizontal, maxPanes=4"
+console.error: CustomizableUI:
+console.error: CustomizableUI:
+console.error: CustomizableUI:
+console.error: CustomizableUI:
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted], line 1322: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted], line 1322: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted], line 1322: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted], line 1322: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted], line 1322: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted] line 2 > eval, line 1322: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted] line 2 > eval, line 1322: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted] line 2 > eval, line 1: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted] line 2 > eval line 1322 > eval, line 1: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted] line 2 > eval line 1322 > eval, line 1: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted] line 2 > eval line 1322 > eval line 1 > eval, line 1: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted] line 2 > eval, line 1322: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted] line 2 > eval line 1322 > eval line 1 > eval, line 1: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted] line 2 > eval line 1322 > eval line 1 > eval, line 1: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted] line 2 > eval line 1322 > eval line 1 > eval line 1 > eval, line 1: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted] line 2 > eval line 1322 > eval line 1 > eval line 1 > eval, line 1: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted], line 2783: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted], line 2783: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted], line 2783: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted], line 2783: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted], line 2783: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted] line 2 > eval, line 2783: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted] line 2 > eval, line 2783: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted] line 2 > eval, line 1: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted] line 2 > eval line 2783 > eval, line 1: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted] line 2 > eval line 2783 > eval, line 1: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted] line 2 > eval line 2783 > eval line 1 > eval, line 1: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted] line 2 > eval, line 2783: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted] line 2 > eval line 2783 > eval line 1 > eval, line 1: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted] line 2 > eval line 2783 > eval line 1 > eval, line 1: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted] line 2 > eval line 2783 > eval line 1 > eval line 1 > eval, line 1: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted] line 2 > eval line 2783 > eval line 1 > eval line 1 > eval, line 1: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted], line 6747: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted], line 6747: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted], line 6747: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted], line 6747: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted], line 6747: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted] line 2 > eval, line 6747: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted] line 2 > eval, line 6747: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted] line 2 > eval line 6747 > eval, line 1: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted] line 2 > eval line 6747 > eval line 1 > eval, line 1: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted] line 2 > eval line 6747 > eval, line 1: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted] line 2 > eval line 6747 > eval line 1 > eval, line 1: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted] line 2 > eval, line 6747: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted] line 2 > eval line 6747 > eval line 1 > eval, line 1: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted] line 2 > eval line 6747 > eval line 1 > eval, line 1: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted] line 2 > eval line 6747 > eval line 1 > eval line 1 > eval, line 1: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted] line 2 > eval line 6747 > eval line 1 > eval line 1 > eval, line 1: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted], line 199: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted], line 199: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted], line 199: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted], line 199: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted], line 199: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted] line 2 > eval, line 199: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted] line 2 > eval, line 199: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted] line 2 > eval line 199 > eval, line 1: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted] line 2 > eval line 199 > eval line 1 > eval, line 1: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted] line 2 > eval line 199 > eval, line 1: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted] line 2 > eval line 199 > eval line 1 > eval, line 1: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted] line 2 > eval, line 199: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted] line 2 > eval line 199 > eval line 1 > eval, line 1: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted] line 2 > eval line 199 > eval line 1 > eval, line 1: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted] line 2 > eval line 199 > eval line 1 > eval line 1 > eval, line 1: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted] line 2 > eval line 199 > eval line 1 > eval line 1 > eval, line 1: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted], line 7354: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted], line 7354: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted], line 7354: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted], line 7354: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted], line 7354: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted] line 2 > eval, line 7354: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted] line 2 > eval, line 7354: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted] line 2 > eval line 7354 > eval, line 1: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted] line 2 > eval line 7354 > eval line 1 > eval, line 1: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted] line 2 > eval line 7354 > eval, line 1: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted] line 2 > eval line 7354 > eval line 1 > eval, line 1: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted] line 2 > eval, line 7354: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted] line 2 > eval line 7354 > eval line 1 > eval, line 1: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted] line 2 > eval line 7354 > eval line 1 > eval, line 1: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted] line 2 > eval line 7354 > eval line 1 > eval line 1 > eval, line 1: unreachable code after return statement
+JavaScript warning: https://pagead2.googlesyndication.com/[path-redacted] line 2 > eval line 7354 > eval line 1 > eval line 1 > eval, line 1: unreachable code after return statement
+JavaScript error: resource:///actors/LightweightThemeChild.sys.mjs, line 31: TypeError: can't access property "docShell", this.browsingContext.topChromeWindow is null
+JavaScript error: resource:///actors/LightweightThemeChild.sys.mjs, line 31: TypeError: can't access property "docShell", this.browsingContext.topChromeWindow is null
+JavaScript error: , line 0: AbortError: The operation was aborted.
+JavaScript error: , line 0: TypeError: NetworkError when attempting to fetch resource.
+JavaScript error: , line 0: TypeError: NetworkError when attempting to fetch resource.
+JavaScript error: , line 0: TypeError: NetworkError when attempting to fetch resource.

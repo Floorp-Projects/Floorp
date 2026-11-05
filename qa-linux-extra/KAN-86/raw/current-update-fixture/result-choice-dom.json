@@ -1,0 +1,24 @@
+{
+  "elapsedMs": 422.232172000804,
+  "rpcMs": 39.132195997808594,
+  "value": {
+    "text": "Skip to content\nA new choice.\nSupport what comes next.\n\nAdvertising revenue supports Floorp development and operation. You can now choose how release notes open and how blockers work on the Floorp blog.\n\nYour settings stay as they are until you save a selection. You can change it later in Updates & Experiments.\n\nChoose how release notes open\n\nChoose automatic display after updates and how your blockers work on the Floorp blog.\n\nDo not open automatically\nDo not open release notes after updates. Keep your blocker settings when visiting the blog.\nOpen with my blocker settings\nSelected\nKeep your extensions working as configured. This does not install or enable an ad blocker.\nAllow ads to support Floorp\nRestrict uBlock Origin, AdGuard, Adblock Plus, AdBlock and Ghostery on the Floorp blog.\nScope when allowing advertising\n\nThe restriction applies to all HTTPS pages on blog.floorp.app, including manually opened pages, and affects tracking protection and custom filters as well as ad blocking. Other extensions are not restricted by this setting. Ads may still be blocked by other protection tools. Reload open blog pages after changing the setting.\n\nRead about our funding and this setting (Japanese)\n\nCurrent setting: Open with my blocker settings\nYour selection takes effect only when you confirm. Closing this page keeps your current setting.\n\nNot now\nSave selection",
+    "buttons": [
+      {
+        "text": "Not now",
+        "disabled": false,
+        "html": "<button type=\"button\" class=\"_button_1a3lw_5\" data-variant=\"secondary\" data-size=\"default\">Not now</button>"
+      },
+      {
+        "text": "Save selection",
+        "disabled": false,
+        "html": "<button type=\"button\" class=\"_button_1a3lw_5\" data-variant=\"primary\" data-size=\"default\">Save selection</button>"
+      }
+    ],
+    "inputs": [
+      "<input data-ownedby=\"radio-group:_r_0_\" id=\"radio-group:_r_0_:radio:input:disabled\" aria-labelledby=\"radio-group:_r_0_:radio:label:disabled\" style=\"border: 0px; clip: rect(0px, 0px, 0px, 0px); height: 1px; margin: -1px; overflow: hidden; padding: 0px; position: absolute; width: 1px; white-space: nowrap; overflow-wrap: normal;\" type=\"radio\" value=\"disabled\" name=\"release-notes-choice\">",
+      "<input data-ownedby=\"radio-group:_r_0_\" id=\"radio-group:_r_0_:radio:input:blocking\" aria-labelledby=\"radio-group:_r_0_:radio:label:blocking\" style=\"border: 0px; clip: rect(0px, 0px, 0px, 0px); height: 1px; margin: -1px; overflow: hidden; padding: 0px; position: absolute; width: 1px; white-space: nowrap; overflow-wrap: normal;\" type=\"radio\" value=\"blocking\" checked=\"\" name=\"release-notes-choice\">",
+      "<input data-ownedby=\"radio-group:_r_0_\" id=\"radio-group:_r_0_:radio:input:support\" aria-labelledby=\"radio-group:_r_0_:radio:label:support\" style=\"border: 0px; clip: rect(0px, 0px, 0px, 0px); height: 1px; margin: -1px; overflow: hidden; padding: 0px; position: absolute; width: 1px; white-space: nowrap; overflow-wrap: normal;\" type=\"radio\" value=\"support\" name=\"release-notes-choice\">"
+    ]
+  }
+}

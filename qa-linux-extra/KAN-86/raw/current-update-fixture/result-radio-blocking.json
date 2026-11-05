@@ -1,0 +1,18 @@
+{
+  "elapsedMs": 109.85568000251078,
+  "rpcMs": 3.7187380003160797,
+  "value": [
+    {
+      "value": "disabled",
+      "checked": false
+    },
+    {
+      "value": "blocking",
+      "checked": true
+    },
+    {
+      "value": "support",
+      "checked": false
+    }
+  ]
+}

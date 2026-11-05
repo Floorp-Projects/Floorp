@@ -1,0 +1,6 @@
+{
+  "id": "native-close",
+  "nativeKeys": [
+    "ctrl+w"
+  ]
+}

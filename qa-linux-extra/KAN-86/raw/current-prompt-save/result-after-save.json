@@ -1,0 +1,59 @@
+{
+  "elapsedMs": 8.659096998599125,
+  "rpcMs": 7.7759880005032755,
+  "value": {
+    "pid": 79062,
+    "version": "159.0.1",
+    "buildID": "20261103153232",
+    "startup": {
+      "isFirstRun": false,
+      "isUpdated": false
+    },
+    "prefs": {
+      "mstone": {
+        "value": "159.0.1",
+        "user": true
+      },
+      "oldVersion": {
+        "value": "12.21.1@159.0.1",
+        "user": true
+      },
+      "audience": {
+        "value": "existing",
+        "user": true
+      },
+      "confirmed": {
+        "value": true,
+        "user": true
+      },
+      "promptShown": {
+        "value": true,
+        "user": true
+      },
+      "mode": {
+        "value": "blocking",
+        "user": false
+      },
+      "welcomeShown": {
+        "value": true,
+        "user": true
+      }
+    },
+    "protections": {
+      "sandbox": 6,
+      "sandboxUser": false,
+      "signatureRequired": false,
+      "signatureUser": false
+    },
+    "tabs": [
+      {
+        "url": "about:home",
+        "title": "Floorp Start",
+        "selected": true,
+        "hidden": false,
+        "loading": false
+      }
+    ],
+    "dialogs": []
+  }
+}

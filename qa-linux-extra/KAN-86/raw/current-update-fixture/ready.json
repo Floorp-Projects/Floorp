@@ -1,0 +1,73 @@
+{
+  "startupSeconds": 7.696130336000351,
+  "value": {
+    "pid": 78124,
+    "version": "159.0.1",
+    "buildID": "20261103153232",
+    "startup": {
+      "isFirstRun": false,
+      "isUpdated": true
+    },
+    "prefs": {
+      "mstone": {
+        "value": "159.0.1",
+        "user": true
+      },
+      "oldVersion": {
+        "value": "12.21.1@159.0.1",
+        "user": true
+      },
+      "audience": {
+        "value": "existing",
+        "user": true
+      },
+      "confirmed": {
+        "value": false,
+        "user": true
+      },
+      "promptShown": {
+        "value": true,
+        "user": true
+      },
+      "mode": {
+        "value": "blocking",
+        "user": false
+      },
+      "welcomeShown": {
+        "value": true,
+        "user": true
+      }
+    },
+    "protections": {
+      "sandbox": 6,
+      "sandboxUser": false,
+      "signatureRequired": false,
+      "signatureUser": false
+    },
+    "tabs": [
+      {
+        "url": "about:home",
+        "title": "Floorp Start",
+        "selected": false,
+        "hidden": false,
+        "loading": false
+      },
+      {
+        "url": "https://blog.floorp.app/en/release/12.21.1/",
+        "title": "v12.21.1 Release Notes: Firefox 159.0.1 security fix | Floorp Blog",
+        "selected": false,
+        "hidden": false,
+        "loading": false
+      },
+      {
+        "url": "about:welcome?releaseNotes=1",
+        "title": "Welcome to Floorp",
+        "selected": true,
+        "hidden": false,
+        "loading": false
+      }
+    ],
+    "dialogs": []
+  },
+  "monitorRootPid": 78124
+}

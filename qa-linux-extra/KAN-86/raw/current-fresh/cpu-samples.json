@@ -1,0 +1,3290 @@
+[
+  {
+    "timeUnix": 1793913289.2251496,
+    "phase": "launch",
+    "intervalSeconds": 0.664950176000275,
+    "cpuPercentSum": 0.0,
+    "processes": [
+      {
+        "pid": 77690,
+        "comm": "floorp",
+        "state": "R",
+        "ppid": 77675,
+        "ticks": 60,
+        "threads": 14,
+        "start": 2582298,
+        "rssPages": 24221
+      },
+      {
+        "pid": 77700,
+        "comm": "gfxtest",
+        "state": "Z",
+        "ppid": 77690,
+        "ticks": 41,
+        "threads": 1,
+        "start": 2582319,
+        "rssPages": 0
+      }
+    ]
+  },
+  {
+    "timeUnix": 1793913289.7822375,
+    "phase": "launch",
+    "intervalSeconds": 0.5570892060022743,
+    "cpuPercentSum": 96.93241121562774,
+    "processes": [
+      {
+        "pid": 77690,
+        "comm": "floorp",
+        "state": "R",
+        "ppid": 77675,
+        "ticks": 114,
+        "threads": 44,
+        "start": 2582298,
+        "rssPages": 39719
+      },
+      {
+        "pid": 77700,
+        "comm": "gfxtest",
+        "state": "Z",
+        "ppid": 77690,
+        "ticks": 41,
+        "threads": 1,
+        "start": 2582319,
+        "rssPages": 0
+      },
+      {
+        "pid": 77730,
+        "comm": "Socket Process",
+        "state": "S",
+        "ppid": 77690,
+        "ticks": 12,
+        "threads": 6,
+        "start": 2582374,
+        "rssPages": 13289
+      }
+    ]
+  },
+  {
+    "timeUnix": 1793913290.5709748,
+    "phase": "launch",
+    "intervalSeconds": 0.7887362080000457,
+    "cpuPercentSum": 106.49948505976934,
+    "processes": [
+      {
+        "pid": 77690,
+        "comm": "floorp",
+        "state": "R",
+        "ppid": 77675,
+        "ticks": 198,
+        "threads": 73,
+        "start": 2582298,
+        "rssPages": 56436
+      },
+      {
+        "pid": 77730,
+        "comm": "Socket Process",
+        "state": "S",
+        "ppid": 77690,
+        "ticks": 12,
+        "threads": 6,
+        "start": 2582374,
+        "rssPages": 13433
+      },
+      {
+        "pid": 77805,
+        "comm": "forkserver",
+        "state": "S",
+        "ppid": 77690,
+        "ticks": 8,
+        "threads": 1,
+        "start": 2582467,
+        "rssPages": 8943
+      }
+    ]
+  },
+  {
+    "timeUnix": 1793913291.2548683,
+    "phase": "launch",
+    "intervalSeconds": 0.6838939849985763,
+    "cpuPercentSum": 138.9104189886942,
+    "processes": [
+      {
+        "pid": 77690,
+        "comm": "floorp",
+        "state": "R",
+        "ppid": 77675,
+        "ticks": 292,
+        "threads": 90,
+        "start": 2582298,
+        "rssPages": 68252
+      },
+      {
+        "pid": 77730,
+        "comm": "Socket Process",
+        "state": "S",
+        "ppid": 77690,
+        "ticks": 12,
+        "threads": 6,
+        "start": 2582374,
+        "rssPages": 13433
+      },
+      {
+        "pid": 77805,
+        "comm": "forkserver",
+        "state": "S",
+        "ppid": 77690,
+        "ticks": 9,
+        "threads": 1,
+        "start": 2582467,
+        "rssPages": 9161
+      },
+      {
+        "pid": 77833,
+        "comm": "WebExtensions",
+        "state": "R",
+        "ppid": 77805,
+        "ticks": 16,
+        "threads": 13,
+        "start": 2582545,
+        "rssPages": 17082
+      },
+      {
+        "pid": 77834,
+        "comm": "Chroot Helper",
+        "state": "S",
+        "ppid": 77833,
+        "ticks": 0,
+        "threads": 1,
+        "start": 2582545,
+        "rssPages": 2459
+      },
+      {
+        "pid": 77849,
+        "comm": "RDD Process",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 6,
+        "threads": 5,
+        "start": 2582548,
+        "rssPages": 10881
+      }
+    ]
+  },
+  {
+    "timeUnix": 1793913291.811462,
+    "phase": "launch",
+    "intervalSeconds": 0.5565951669996139,
+    "cpuPercentSum": 174.27388118170148,
+    "processes": [
+      {
+        "pid": 77690,
+        "comm": "floorp",
+        "state": "R",
+        "ppid": 77675,
+        "ticks": 368,
+        "threads": 97,
+        "start": 2582298,
+        "rssPages": 83263
+      },
+      {
+        "pid": 77730,
+        "comm": "Socket Process",
+        "state": "S",
+        "ppid": 77690,
+        "ticks": 12,
+        "threads": 6,
+        "start": 2582374,
+        "rssPages": 13433
+      },
+      {
+        "pid": 77805,
+        "comm": "forkserver",
+        "state": "S",
+        "ppid": 77690,
+        "ticks": 9,
+        "threads": 1,
+        "start": 2582467,
+        "rssPages": 9161
+      },
+      {
+        "pid": 77833,
+        "comm": "WebExtensions",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 37,
+        "threads": 16,
+        "start": 2582545,
+        "rssPages": 20873
+      },
+      {
+        "pid": 77849,
+        "comm": "RDD Process",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 6,
+        "threads": 5,
+        "start": 2582548,
+        "rssPages": 10881
+      },
+      {
+        "pid": 77880,
+        "comm": "Privileged Cont",
+        "state": "R",
+        "ppid": 77805,
+        "ticks": 9,
+        "threads": 16,
+        "start": 2582615,
+        "rssPages": 19424
+      }
+    ]
+  },
+  {
+    "timeUnix": 1793913292.3546782,
+    "phase": "launch",
+    "intervalSeconds": 0.5432149939988449,
+    "cpuPercentSum": 132.5442058768965,
+    "processes": [
+      {
+        "pid": 77690,
+        "comm": "floorp",
+        "state": "R",
+        "ppid": 77675,
+        "ticks": 425,
+        "threads": 81,
+        "start": 2582298,
+        "rssPages": 92320
+      },
+      {
+        "pid": 77730,
+        "comm": "Socket Process",
+        "state": "S",
+        "ppid": 77690,
+        "ticks": 12,
+        "threads": 6,
+        "start": 2582374,
+        "rssPages": 13433
+      },
+      {
+        "pid": 77805,
+        "comm": "forkserver",
+        "state": "S",
+        "ppid": 77690,
+        "ticks": 9,
+        "threads": 1,
+        "start": 2582467,
+        "rssPages": 9161
+      },
+      {
+        "pid": 77833,
+        "comm": "WebExtensions",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 51,
+        "threads": 30,
+        "start": 2582545,
+        "rssPages": 23879
+      },
+      {
+        "pid": 77849,
+        "comm": "RDD Process",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 6,
+        "threads": 5,
+        "start": 2582548,
+        "rssPages": 10913
+      },
+      {
+        "pid": 77880,
+        "comm": "Privileged Cont",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 10,
+        "threads": 16,
+        "start": 2582615,
+        "rssPages": 20411
+      }
+    ]
+  },
+  {
+    "timeUnix": 1793913292.9130852,
+    "phase": "launch",
+    "intervalSeconds": 0.5584086720009509,
+    "cpuPercentSum": 114.61140059066099,
+    "processes": [
+      {
+        "pid": 77690,
+        "comm": "floorp",
+        "state": "R",
+        "ppid": 77675,
+        "ticks": 484,
+        "threads": 83,
+        "start": 2582298,
+        "rssPages": 96903
+      },
+      {
+        "pid": 77730,
+        "comm": "Socket Process",
+        "state": "S",
+        "ppid": 77690,
+        "ticks": 12,
+        "threads": 6,
+        "start": 2582374,
+        "rssPages": 13433
+      },
+      {
+        "pid": 77805,
+        "comm": "forkserver",
+        "state": "S",
+        "ppid": 77690,
+        "ticks": 10,
+        "threads": 1,
+        "start": 2582467,
+        "rssPages": 9161
+      },
+      {
+        "pid": 77833,
+        "comm": "WebExtensions",
+        "state": "R",
+        "ppid": 77805,
+        "ticks": 54,
+        "threads": 30,
+        "start": 2582545,
+        "rssPages": 24002
+      },
+      {
+        "pid": 77849,
+        "comm": "RDD Process",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 6,
+        "threads": 5,
+        "start": 2582548,
+        "rssPages": 10913
+      },
+      {
+        "pid": 77880,
+        "comm": "Privileged Cont",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 11,
+        "threads": 17,
+        "start": 2582615,
+        "rssPages": 20869
+      },
+      {
+        "pid": 77918,
+        "comm": "Web Content",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 12,
+        "threads": 16,
+        "start": 2582690,
+        "rssPages": 20242
+      }
+    ]
+  },
+  {
+    "timeUnix": 1793913293.5153198,
+    "phase": "launch",
+    "intervalSeconds": 0.6022274060014752,
+    "cpuPercentSum": 317.15594158717533,
+    "processes": [
+      {
+        "pid": 77690,
+        "comm": "floorp",
+        "state": "R",
+        "ppid": 77675,
+        "ticks": 646,
+        "threads": 89,
+        "start": 2582298,
+        "rssPages": 116693
+      },
+      {
+        "pid": 77730,
+        "comm": "Socket Process",
+        "state": "S",
+        "ppid": 77690,
+        "ticks": 12,
+        "threads": 6,
+        "start": 2582374,
+        "rssPages": 13433
+      },
+      {
+        "pid": 77805,
+        "comm": "forkserver",
+        "state": "S",
+        "ppid": 77690,
+        "ticks": 10,
+        "threads": 1,
+        "start": 2582467,
+        "rssPages": 9161
+      },
+      {
+        "pid": 77833,
+        "comm": "WebExtensions",
+        "state": "R",
+        "ppid": 77805,
+        "ticks": 81,
+        "threads": 30,
+        "start": 2582545,
+        "rssPages": 26866
+      },
+      {
+        "pid": 77849,
+        "comm": "RDD Process",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 7,
+        "threads": 5,
+        "start": 2582548,
+        "rssPages": 10913
+      },
+      {
+        "pid": 77880,
+        "comm": "Privileged Cont",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 12,
+        "threads": 17,
+        "start": 2582615,
+        "rssPages": 21149
+      }
+    ]
+  },
+  {
+    "timeUnix": 1793913294.392178,
+    "phase": "launch",
+    "intervalSeconds": 0.8768573669985926,
+    "cpuPercentSum": 301.0751918566292,
+    "processes": [
+      {
+        "pid": 77690,
+        "comm": "floorp",
+        "state": "R",
+        "ppid": 77675,
+        "ticks": 830,
+        "threads": 89,
+        "start": 2582298,
+        "rssPages": 132065
+      },
+      {
+        "pid": 77730,
+        "comm": "Socket Process",
+        "state": "S",
+        "ppid": 77690,
+        "ticks": 12,
+        "threads": 6,
+        "start": 2582374,
+        "rssPages": 13433
+      },
+      {
+        "pid": 77805,
+        "comm": "forkserver",
+        "state": "S",
+        "ppid": 77690,
+        "ticks": 10,
+        "threads": 1,
+        "start": 2582467,
+        "rssPages": 9161
+      },
+      {
+        "pid": 77833,
+        "comm": "WebExtensions",
+        "state": "R",
+        "ppid": 77805,
+        "ticks": 160,
+        "threads": 26,
+        "start": 2582545,
+        "rssPages": 30004
+      },
+      {
+        "pid": 77849,
+        "comm": "RDD Process",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 7,
+        "threads": 5,
+        "start": 2582548,
+        "rssPages": 10913
+      },
+      {
+        "pid": 77880,
+        "comm": "Privileged Cont",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 13,
+        "threads": 17,
+        "start": 2582615,
+        "rssPages": 21149
+      }
+    ]
+  },
+  {
+    "timeUnix": 1793913295.2201595,
+    "phase": "launch",
+    "intervalSeconds": 0.8279844839998987,
+    "cpuPercentSum": 329.71632352476956,
+    "processes": [
+      {
+        "pid": 77690,
+        "comm": "floorp",
+        "state": "R",
+        "ppid": 77675,
+        "ticks": 1026,
+        "threads": 89,
+        "start": 2582298,
+        "rssPages": 138850
+      },
+      {
+        "pid": 77730,
+        "comm": "Socket Process",
+        "state": "S",
+        "ppid": 77690,
+        "ticks": 12,
+        "threads": 6,
+        "start": 2582374,
+        "rssPages": 13433
+      },
+      {
+        "pid": 77805,
+        "comm": "forkserver",
+        "state": "S",
+        "ppid": 77690,
+        "ticks": 10,
+        "threads": 1,
+        "start": 2582467,
+        "rssPages": 9161
+      },
+      {
+        "pid": 77833,
+        "comm": "WebExtensions",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 236,
+        "threads": 26,
+        "start": 2582545,
+        "rssPages": 31360
+      },
+      {
+        "pid": 77849,
+        "comm": "RDD Process",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 8,
+        "threads": 5,
+        "start": 2582548,
+        "rssPages": 10913
+      },
+      {
+        "pid": 77880,
+        "comm": "Privileged Cont",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 13,
+        "threads": 17,
+        "start": 2582615,
+        "rssPages": 21213
+      }
+    ]
+  },
+  {
+    "timeUnix": 1793913295.8490515,
+    "phase": "launch",
+    "intervalSeconds": 0.6288954230003583,
+    "cpuPercentSum": 208.30172268549867,
+    "processes": [
+      {
+        "pid": 77690,
+        "comm": "floorp",
+        "state": "S",
+        "ppid": 77675,
+        "ticks": 1149,
+        "threads": 92,
+        "start": 2582298,
+        "rssPages": 139726
+      },
+      {
+        "pid": 77730,
+        "comm": "Socket Process",
+        "state": "S",
+        "ppid": 77690,
+        "ticks": 12,
+        "threads": 6,
+        "start": 2582374,
+        "rssPages": 13433
+      },
+      {
+        "pid": 77805,
+        "comm": "forkserver",
+        "state": "S",
+        "ppid": 77690,
+        "ticks": 11,
+        "threads": 1,
+        "start": 2582467,
+        "rssPages": 9161
+      },
+      {
+        "pid": 77833,
+        "comm": "WebExtensions",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 241,
+        "threads": 25,
+        "start": 2582545,
+        "rssPages": 31744
+      },
+      {
+        "pid": 77849,
+        "comm": "RDD Process",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 8,
+        "threads": 5,
+        "start": 2582548,
+        "rssPages": 10913
+      },
+      {
+        "pid": 77880,
+        "comm": "Privileged Cont",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 15,
+        "threads": 22,
+        "start": 2582615,
+        "rssPages": 21602
+      },
+      {
+        "pid": 77978,
+        "comm": "Utility Process",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 3,
+        "threads": 4,
+        "start": 2582988,
+        "rssPages": 8512
+      }
+    ]
+  },
+  {
+    "timeUnix": 1793913296.4440577,
+    "phase": "launch",
+    "intervalSeconds": 0.5949980850018619,
+    "cpuPercentSum": 119.32811514809802,
+    "processes": [
+      {
+        "pid": 77690,
+        "comm": "floorp",
+        "state": "R",
+        "ppid": 77675,
+        "ticks": 1219,
+        "threads": 92,
+        "start": 2582298,
+        "rssPages": 138352
+      },
+      {
+        "pid": 77730,
+        "comm": "Socket Process",
+        "state": "S",
+        "ppid": 77690,
+        "ticks": 12,
+        "threads": 6,
+        "start": 2582374,
+        "rssPages": 13433
+      },
+      {
+        "pid": 77805,
+        "comm": "forkserver",
+        "state": "S",
+        "ppid": 77690,
+        "ticks": 11,
+        "threads": 1,
+        "start": 2582467,
+        "rssPages": 9161
+      },
+      {
+        "pid": 77833,
+        "comm": "WebExtensions",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 241,
+        "threads": 25,
+        "start": 2582545,
+        "rssPages": 31501
+      },
+      {
+        "pid": 77849,
+        "comm": "RDD Process",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 8,
+        "threads": 4,
+        "start": 2582548,
+        "rssPages": 10977
+      },
+      {
+        "pid": 77880,
+        "comm": "Privileged Cont",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 16,
+        "threads": 22,
+        "start": 2582615,
+        "rssPages": 21569
+      },
+      {
+        "pid": 77978,
+        "comm": "Utility Process",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 3,
+        "threads": 4,
+        "start": 2582988,
+        "rssPages": 8512
+      }
+    ]
+  },
+  {
+    "timeUnix": 1793913297.255146,
+    "phase": "launch",
+    "intervalSeconds": 0.8110438609983248,
+    "cpuPercentSum": 215.77131449412633,
+    "processes": [
+      {
+        "pid": 77690,
+        "comm": "floorp",
+        "state": "S",
+        "ppid": 77675,
+        "ticks": 1392,
+        "threads": 93,
+        "start": 2582298,
+        "rssPages": 143913
+      },
+      {
+        "pid": 77730,
+        "comm": "Socket Process",
+        "state": "S",
+        "ppid": 77690,
+        "ticks": 12,
+        "threads": 6,
+        "start": 2582374,
+        "rssPages": 13769
+      },
+      {
+        "pid": 77805,
+        "comm": "forkserver",
+        "state": "S",
+        "ppid": 77690,
+        "ticks": 12,
+        "threads": 1,
+        "start": 2582467,
+        "rssPages": 9161
+      },
+      {
+        "pid": 77833,
+        "comm": "WebExtensions",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 242,
+        "threads": 25,
+        "start": 2582545,
+        "rssPages": 31501
+      },
+      {
+        "pid": 77849,
+        "comm": "RDD Process",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 8,
+        "threads": 4,
+        "start": 2582548,
+        "rssPages": 11357
+      },
+      {
+        "pid": 77880,
+        "comm": "Privileged Cont",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 16,
+        "threads": 22,
+        "start": 2582615,
+        "rssPages": 21569
+      },
+      {
+        "pid": 77978,
+        "comm": "Utility Process",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 3,
+        "threads": 4,
+        "start": 2582988,
+        "rssPages": 8988
+      },
+      {
+        "pid": 77985,
+        "comm": "Web Content",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 19,
+        "threads": 20,
+        "start": 2583096,
+        "rssPages": 19997
+      },
+      {
+        "pid": 77998,
+        "comm": "Web Content",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 18,
+        "threads": 20,
+        "start": 2583102,
+        "rssPages": 19923
+      },
+      {
+        "pid": 78004,
+        "comm": "Web Content",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 21,
+        "threads": 20,
+        "start": 2583104,
+        "rssPages": 20049
+      }
+    ]
+  },
+  {
+    "timeUnix": 1793913297.864019,
+    "phase": "launch",
+    "intervalSeconds": 0.6089227890006441,
+    "cpuPercentSum": 113.31485903695912,
+    "processes": [
+      {
+        "pid": 77690,
+        "comm": "floorp",
+        "state": "S",
+        "ppid": 77675,
+        "ticks": 1461,
+        "threads": 94,
+        "start": 2582298,
+        "rssPages": 143982
+      },
+      {
+        "pid": 77730,
+        "comm": "Socket Process",
+        "state": "S",
+        "ppid": 77690,
+        "ticks": 12,
+        "threads": 6,
+        "start": 2582374,
+        "rssPages": 13769
+      },
+      {
+        "pid": 77805,
+        "comm": "forkserver",
+        "state": "S",
+        "ppid": 77690,
+        "ticks": 12,
+        "threads": 1,
+        "start": 2582467,
+        "rssPages": 9161
+      },
+      {
+        "pid": 77833,
+        "comm": "WebExtensions",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 242,
+        "threads": 25,
+        "start": 2582545,
+        "rssPages": 31501
+      },
+      {
+        "pid": 77849,
+        "comm": "RDD Process",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 8,
+        "threads": 4,
+        "start": 2582548,
+        "rssPages": 11357
+      },
+      {
+        "pid": 77880,
+        "comm": "Privileged Cont",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 16,
+        "threads": 22,
+        "start": 2582615,
+        "rssPages": 21569
+      },
+      {
+        "pid": 77978,
+        "comm": "Utility Process",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 3,
+        "threads": 4,
+        "start": 2582988,
+        "rssPages": 8988
+      },
+      {
+        "pid": 77985,
+        "comm": "Web Content",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 19,
+        "threads": 20,
+        "start": 2583096,
+        "rssPages": 19997
+      },
+      {
+        "pid": 77998,
+        "comm": "Web Content",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 18,
+        "threads": 20,
+        "start": 2583102,
+        "rssPages": 19923
+      },
+      {
+        "pid": 78004,
+        "comm": "Web Content",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 21,
+        "threads": 20,
+        "start": 2583104,
+        "rssPages": 20049
+      }
+    ]
+  },
+  {
+    "timeUnix": 1793913298.4244084,
+    "phase": "launch",
+    "intervalSeconds": 0.5603810479988169,
+    "cpuPercentSum": 142.76000283323089,
+    "processes": [
+      {
+        "pid": 77690,
+        "comm": "floorp",
+        "state": "R",
+        "ppid": 77675,
+        "ticks": 1540,
+        "threads": 93,
+        "start": 2582298,
+        "rssPages": 145684
+      },
+      {
+        "pid": 77730,
+        "comm": "Socket Process",
+        "state": "S",
+        "ppid": 77690,
+        "ticks": 12,
+        "threads": 6,
+        "start": 2582374,
+        "rssPages": 13769
+      },
+      {
+        "pid": 77805,
+        "comm": "forkserver",
+        "state": "S",
+        "ppid": 77690,
+        "ticks": 12,
+        "threads": 1,
+        "start": 2582467,
+        "rssPages": 9161
+      },
+      {
+        "pid": 77833,
+        "comm": "WebExtensions",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 242,
+        "threads": 25,
+        "start": 2582545,
+        "rssPages": 31501
+      },
+      {
+        "pid": 77849,
+        "comm": "RDD Process",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 8,
+        "threads": 4,
+        "start": 2582548,
+        "rssPages": 11357
+      },
+      {
+        "pid": 77880,
+        "comm": "Privileged Cont",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 16,
+        "threads": 22,
+        "start": 2582615,
+        "rssPages": 21569
+      },
+      {
+        "pid": 77978,
+        "comm": "Utility Process",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 3,
+        "threads": 4,
+        "start": 2582988,
+        "rssPages": 8988
+      },
+      {
+        "pid": 77985,
+        "comm": "Web Content",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 20,
+        "threads": 20,
+        "start": 2583096,
+        "rssPages": 19997
+      },
+      {
+        "pid": 77998,
+        "comm": "Web Content",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 18,
+        "threads": 20,
+        "start": 2583102,
+        "rssPages": 19923
+      },
+      {
+        "pid": 78004,
+        "comm": "Web Content",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 21,
+        "threads": 20,
+        "start": 2583104,
+        "rssPages": 20049
+      }
+    ]
+  },
+  {
+    "timeUnix": 1793913299.0387986,
+    "phase": "launch",
+    "intervalSeconds": 0.6143908310004917,
+    "cpuPercentSum": 112.30636350421833,
+    "processes": [
+      {
+        "pid": 77690,
+        "comm": "floorp",
+        "state": "R",
+        "ppid": 77675,
+        "ticks": 1608,
+        "threads": 92,
+        "start": 2582298,
+        "rssPages": 148426
+      },
+      {
+        "pid": 77730,
+        "comm": "Socket Process",
+        "state": "S",
+        "ppid": 77690,
+        "ticks": 12,
+        "threads": 6,
+        "start": 2582374,
+        "rssPages": 13769
+      },
+      {
+        "pid": 77805,
+        "comm": "forkserver",
+        "state": "S",
+        "ppid": 77690,
+        "ticks": 12,
+        "threads": 1,
+        "start": 2582467,
+        "rssPages": 9161
+      },
+      {
+        "pid": 77833,
+        "comm": "WebExtensions",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 242,
+        "threads": 25,
+        "start": 2582545,
+        "rssPages": 31501
+      },
+      {
+        "pid": 77849,
+        "comm": "RDD Process",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 8,
+        "threads": 4,
+        "start": 2582548,
+        "rssPages": 11357
+      },
+      {
+        "pid": 77880,
+        "comm": "Privileged Cont",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 16,
+        "threads": 22,
+        "start": 2582615,
+        "rssPages": 21569
+      },
+      {
+        "pid": 77978,
+        "comm": "Utility Process",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 3,
+        "threads": 4,
+        "start": 2582988,
+        "rssPages": 8988
+      },
+      {
+        "pid": 77985,
+        "comm": "Web Content",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 20,
+        "threads": 20,
+        "start": 2583096,
+        "rssPages": 19966
+      },
+      {
+        "pid": 77998,
+        "comm": "Web Content",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 18,
+        "threads": 20,
+        "start": 2583102,
+        "rssPages": 19892
+      },
+      {
+        "pid": 78004,
+        "comm": "Web Content",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 22,
+        "threads": 20,
+        "start": 2583104,
+        "rssPages": 20018
+      }
+    ]
+  },
+  {
+    "timeUnix": 1793913299.742222,
+    "phase": "launch",
+    "intervalSeconds": 0.703423669001495,
+    "cpuPercentSum": 122.25917862854459,
+    "processes": [
+      {
+        "pid": 77690,
+        "comm": "floorp",
+        "state": "S",
+        "ppid": 77675,
+        "ticks": 1694,
+        "threads": 93,
+        "start": 2582298,
+        "rssPages": 153674
+      },
+      {
+        "pid": 77730,
+        "comm": "Socket Process",
+        "state": "S",
+        "ppid": 77690,
+        "ticks": 12,
+        "threads": 6,
+        "start": 2582374,
+        "rssPages": 13769
+      },
+      {
+        "pid": 77805,
+        "comm": "forkserver",
+        "state": "S",
+        "ppid": 77690,
+        "ticks": 12,
+        "threads": 1,
+        "start": 2582467,
+        "rssPages": 9161
+      },
+      {
+        "pid": 77833,
+        "comm": "WebExtensions",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 242,
+        "threads": 25,
+        "start": 2582545,
+        "rssPages": 31501
+      },
+      {
+        "pid": 77849,
+        "comm": "RDD Process",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 8,
+        "threads": 4,
+        "start": 2582548,
+        "rssPages": 11357
+      },
+      {
+        "pid": 77880,
+        "comm": "Privileged Cont",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 16,
+        "threads": 22,
+        "start": 2582615,
+        "rssPages": 21569
+      },
+      {
+        "pid": 77978,
+        "comm": "Utility Process",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 3,
+        "threads": 4,
+        "start": 2582988,
+        "rssPages": 8988
+      },
+      {
+        "pid": 77985,
+        "comm": "Web Content",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 20,
+        "threads": 20,
+        "start": 2583096,
+        "rssPages": 19966
+      },
+      {
+        "pid": 77998,
+        "comm": "Web Content",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 18,
+        "threads": 20,
+        "start": 2583102,
+        "rssPages": 19892
+      },
+      {
+        "pid": 78004,
+        "comm": "Web Content",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 22,
+        "threads": 20,
+        "start": 2583104,
+        "rssPages": 20018
+      }
+    ]
+  },
+  {
+    "timeUnix": 1793913300.290039,
+    "phase": "launch",
+    "intervalSeconds": 0.5478227450003033,
+    "cpuPercentSum": 98.57202989987228,
+    "processes": [
+      {
+        "pid": 77690,
+        "comm": "floorp",
+        "state": "R",
+        "ppid": 77675,
+        "ticks": 1748,
+        "threads": 91,
+        "start": 2582298,
+        "rssPages": 166001
+      },
+      {
+        "pid": 77730,
+        "comm": "Socket Process",
+        "state": "S",
+        "ppid": 77690,
+        "ticks": 12,
+        "threads": 6,
+        "start": 2582374,
+        "rssPages": 13769
+      },
+      {
+        "pid": 77805,
+        "comm": "forkserver",
+        "state": "S",
+        "ppid": 77690,
+        "ticks": 12,
+        "threads": 1,
+        "start": 2582467,
+        "rssPages": 9161
+      },
+      {
+        "pid": 77833,
+        "comm": "WebExtensions",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 242,
+        "threads": 25,
+        "start": 2582545,
+        "rssPages": 31501
+      },
+      {
+        "pid": 77849,
+        "comm": "RDD Process",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 8,
+        "threads": 4,
+        "start": 2582548,
+        "rssPages": 11357
+      },
+      {
+        "pid": 77880,
+        "comm": "Privileged Cont",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 16,
+        "threads": 22,
+        "start": 2582615,
+        "rssPages": 21601
+      },
+      {
+        "pid": 77978,
+        "comm": "Utility Process",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 3,
+        "threads": 4,
+        "start": 2582988,
+        "rssPages": 8988
+      },
+      {
+        "pid": 77985,
+        "comm": "Web Content",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 20,
+        "threads": 20,
+        "start": 2583096,
+        "rssPages": 19966
+      },
+      {
+        "pid": 77998,
+        "comm": "Web Content",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 18,
+        "threads": 20,
+        "start": 2583102,
+        "rssPages": 19892
+      },
+      {
+        "pid": 78004,
+        "comm": "Web Content",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 22,
+        "threads": 20,
+        "start": 2583104,
+        "rssPages": 20018
+      }
+    ]
+  },
+  {
+    "timeUnix": 1793913300.8287516,
+    "phase": "launch",
+    "intervalSeconds": 0.5387108129980334,
+    "cpuPercentSum": 61.25735590185838,
+    "processes": [
+      {
+        "pid": 77690,
+        "comm": "floorp",
+        "state": "R",
+        "ppid": 77675,
+        "ticks": 1781,
+        "threads": 91,
+        "start": 2582298,
+        "rssPages": 156715
+      },
+      {
+        "pid": 77730,
+        "comm": "Socket Process",
+        "state": "S",
+        "ppid": 77690,
+        "ticks": 12,
+        "threads": 6,
+        "start": 2582374,
+        "rssPages": 13769
+      },
+      {
+        "pid": 77805,
+        "comm": "forkserver",
+        "state": "S",
+        "ppid": 77690,
+        "ticks": 12,
+        "threads": 1,
+        "start": 2582467,
+        "rssPages": 9161
+      },
+      {
+        "pid": 77833,
+        "comm": "WebExtensions",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 242,
+        "threads": 25,
+        "start": 2582545,
+        "rssPages": 31501
+      },
+      {
+        "pid": 77849,
+        "comm": "RDD Process",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 8,
+        "threads": 4,
+        "start": 2582548,
+        "rssPages": 11357
+      },
+      {
+        "pid": 77880,
+        "comm": "Privileged Cont",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 16,
+        "threads": 22,
+        "start": 2582615,
+        "rssPages": 21601
+      },
+      {
+        "pid": 77978,
+        "comm": "Utility Process",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 3,
+        "threads": 4,
+        "start": 2582988,
+        "rssPages": 8988
+      },
+      {
+        "pid": 77985,
+        "comm": "Web Content",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 20,
+        "threads": 20,
+        "start": 2583096,
+        "rssPages": 19966
+      },
+      {
+        "pid": 77998,
+        "comm": "Web Content",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 18,
+        "threads": 20,
+        "start": 2583102,
+        "rssPages": 19892
+      },
+      {
+        "pid": 78004,
+        "comm": "Web Content",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 22,
+        "threads": 20,
+        "start": 2583104,
+        "rssPages": 20018
+      }
+    ]
+  },
+  {
+    "timeUnix": 1793913301.3734562,
+    "phase": "launch",
+    "intervalSeconds": 0.5447092799986422,
+    "cpuPercentSum": 62.418617138457336,
+    "processes": [
+      {
+        "pid": 77690,
+        "comm": "floorp",
+        "state": "S",
+        "ppid": 77675,
+        "ticks": 1812,
+        "threads": 92,
+        "start": 2582298,
+        "rssPages": 157059
+      },
+      {
+        "pid": 77730,
+        "comm": "Socket Process",
+        "state": "S",
+        "ppid": 77690,
+        "ticks": 12,
+        "threads": 6,
+        "start": 2582374,
+        "rssPages": 13769
+      },
+      {
+        "pid": 77805,
+        "comm": "forkserver",
+        "state": "S",
+        "ppid": 77690,
+        "ticks": 12,
+        "threads": 1,
+        "start": 2582467,
+        "rssPages": 9161
+      },
+      {
+        "pid": 77833,
+        "comm": "WebExtensions",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 245,
+        "threads": 25,
+        "start": 2582545,
+        "rssPages": 31789
+      },
+      {
+        "pid": 77849,
+        "comm": "RDD Process",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 8,
+        "threads": 4,
+        "start": 2582548,
+        "rssPages": 11357
+      },
+      {
+        "pid": 77880,
+        "comm": "Privileged Cont",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 16,
+        "threads": 22,
+        "start": 2582615,
+        "rssPages": 21601
+      },
+      {
+        "pid": 77978,
+        "comm": "Utility Process",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 3,
+        "threads": 4,
+        "start": 2582988,
+        "rssPages": 8988
+      },
+      {
+        "pid": 77985,
+        "comm": "Web Content",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 20,
+        "threads": 20,
+        "start": 2583096,
+        "rssPages": 19966
+      },
+      {
+        "pid": 77998,
+        "comm": "Web Content",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 18,
+        "threads": 20,
+        "start": 2583102,
+        "rssPages": 19892
+      },
+      {
+        "pid": 78004,
+        "comm": "Web Content",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 22,
+        "threads": 20,
+        "start": 2583104,
+        "rssPages": 20018
+      }
+    ]
+  },
+  {
+    "timeUnix": 1793913301.9217112,
+    "phase": "launch",
+    "intervalSeconds": 0.5482534760012641,
+    "cpuPercentSum": 16.41576459422074,
+    "processes": [
+      {
+        "pid": 77690,
+        "comm": "floorp",
+        "state": "S",
+        "ppid": 77675,
+        "ticks": 1821,
+        "threads": 93,
+        "start": 2582298,
+        "rssPages": 157059
+      },
+      {
+        "pid": 77730,
+        "comm": "Socket Process",
+        "state": "S",
+        "ppid": 77690,
+        "ticks": 12,
+        "threads": 6,
+        "start": 2582374,
+        "rssPages": 13769
+      },
+      {
+        "pid": 77805,
+        "comm": "forkserver",
+        "state": "S",
+        "ppid": 77690,
+        "ticks": 12,
+        "threads": 1,
+        "start": 2582467,
+        "rssPages": 9161
+      },
+      {
+        "pid": 77833,
+        "comm": "WebExtensions",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 245,
+        "threads": 25,
+        "start": 2582545,
+        "rssPages": 31789
+      },
+      {
+        "pid": 77849,
+        "comm": "RDD Process",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 8,
+        "threads": 4,
+        "start": 2582548,
+        "rssPages": 11357
+      },
+      {
+        "pid": 77880,
+        "comm": "Privileged Cont",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 16,
+        "threads": 22,
+        "start": 2582615,
+        "rssPages": 21601
+      },
+      {
+        "pid": 77978,
+        "comm": "Utility Process",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 3,
+        "threads": 4,
+        "start": 2582988,
+        "rssPages": 8988
+      },
+      {
+        "pid": 77985,
+        "comm": "Web Content",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 20,
+        "threads": 20,
+        "start": 2583096,
+        "rssPages": 19966
+      },
+      {
+        "pid": 77998,
+        "comm": "Web Content",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 18,
+        "threads": 20,
+        "start": 2583102,
+        "rssPages": 19892
+      },
+      {
+        "pid": 78004,
+        "comm": "Web Content",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 22,
+        "threads": 20,
+        "start": 2583104,
+        "rssPages": 20018
+      }
+    ]
+  },
+  {
+    "timeUnix": 1793913302.463996,
+    "phase": "launch",
+    "intervalSeconds": 0.5422786939998332,
+    "cpuPercentSum": 14.75256189947684,
+    "processes": [
+      {
+        "pid": 77690,
+        "comm": "floorp",
+        "state": "R",
+        "ppid": 77675,
+        "ticks": 1828,
+        "threads": 91,
+        "start": 2582298,
+        "rssPages": 157059
+      },
+      {
+        "pid": 77730,
+        "comm": "Socket Process",
+        "state": "S",
+        "ppid": 77690,
+        "ticks": 12,
+        "threads": 6,
+        "start": 2582374,
+        "rssPages": 13769
+      },
+      {
+        "pid": 77805,
+        "comm": "forkserver",
+        "state": "S",
+        "ppid": 77690,
+        "ticks": 12,
+        "threads": 1,
+        "start": 2582467,
+        "rssPages": 9161
+      },
+      {
+        "pid": 77833,
+        "comm": "WebExtensions",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 245,
+        "threads": 25,
+        "start": 2582545,
+        "rssPages": 29721
+      },
+      {
+        "pid": 77849,
+        "comm": "RDD Process",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 8,
+        "threads": 4,
+        "start": 2582548,
+        "rssPages": 11357
+      },
+      {
+        "pid": 77880,
+        "comm": "Privileged Cont",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 17,
+        "threads": 22,
+        "start": 2582615,
+        "rssPages": 22147
+      },
+      {
+        "pid": 77978,
+        "comm": "Utility Process",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 3,
+        "threads": 4,
+        "start": 2582988,
+        "rssPages": 8988
+      },
+      {
+        "pid": 77985,
+        "comm": "Web Content",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 20,
+        "threads": 20,
+        "start": 2583096,
+        "rssPages": 19966
+      },
+      {
+        "pid": 77998,
+        "comm": "Web Content",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 18,
+        "threads": 20,
+        "start": 2583102,
+        "rssPages": 19892
+      },
+      {
+        "pid": 78004,
+        "comm": "Web Content",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 22,
+        "threads": 20,
+        "start": 2583104,
+        "rssPages": 20018
+      }
+    ]
+  },
+  {
+    "timeUnix": 1793913303.0058007,
+    "phase": "launch",
+    "intervalSeconds": 0.5418120639988047,
+    "cpuPercentSum": 14.76526738987054,
+    "processes": [
+      {
+        "pid": 77690,
+        "comm": "floorp",
+        "state": "S",
+        "ppid": 77675,
+        "ticks": 1836,
+        "threads": 91,
+        "start": 2582298,
+        "rssPages": 156444
+      },
+      {
+        "pid": 77730,
+        "comm": "Socket Process",
+        "state": "S",
+        "ppid": 77690,
+        "ticks": 12,
+        "threads": 6,
+        "start": 2582374,
+        "rssPages": 13769
+      },
+      {
+        "pid": 77805,
+        "comm": "forkserver",
+        "state": "S",
+        "ppid": 77690,
+        "ticks": 12,
+        "threads": 1,
+        "start": 2582467,
+        "rssPages": 9161
+      },
+      {
+        "pid": 77833,
+        "comm": "WebExtensions",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 245,
+        "threads": 25,
+        "start": 2582545,
+        "rssPages": 29721
+      },
+      {
+        "pid": 77849,
+        "comm": "RDD Process",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 8,
+        "threads": 4,
+        "start": 2582548,
+        "rssPages": 11357
+      },
+      {
+        "pid": 77880,
+        "comm": "Privileged Cont",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 17,
+        "threads": 22,
+        "start": 2582615,
+        "rssPages": 22147
+      },
+      {
+        "pid": 77978,
+        "comm": "Utility Process",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 3,
+        "threads": 4,
+        "start": 2582988,
+        "rssPages": 8988
+      },
+      {
+        "pid": 77985,
+        "comm": "Web Content",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 20,
+        "threads": 20,
+        "start": 2583096,
+        "rssPages": 19966
+      },
+      {
+        "pid": 77998,
+        "comm": "Web Content",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 18,
+        "threads": 20,
+        "start": 2583102,
+        "rssPages": 19892
+      },
+      {
+        "pid": 78004,
+        "comm": "Web Content",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 22,
+        "threads": 20,
+        "start": 2583104,
+        "rssPages": 20018
+      }
+    ]
+  },
+  {
+    "timeUnix": 1793913303.5442889,
+    "phase": "launch",
+    "intervalSeconds": 0.5384877960023005,
+    "cpuPercentSum": 12.999366098856019,
+    "processes": [
+      {
+        "pid": 77690,
+        "comm": "floorp",
+        "state": "S",
+        "ppid": 77675,
+        "ticks": 1843,
+        "threads": 91,
+        "start": 2582298,
+        "rssPages": 156444
+      },
+      {
+        "pid": 77730,
+        "comm": "Socket Process",
+        "state": "S",
+        "ppid": 77690,
+        "ticks": 12,
+        "threads": 6,
+        "start": 2582374,
+        "rssPages": 13769
+      },
+      {
+        "pid": 77805,
+        "comm": "forkserver",
+        "state": "S",
+        "ppid": 77690,
+        "ticks": 12,
+        "threads": 1,
+        "start": 2582467,
+        "rssPages": 9161
+      },
+      {
+        "pid": 77833,
+        "comm": "WebExtensions",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 245,
+        "threads": 25,
+        "start": 2582545,
+        "rssPages": 29721
+      },
+      {
+        "pid": 77849,
+        "comm": "RDD Process",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 8,
+        "threads": 4,
+        "start": 2582548,
+        "rssPages": 11357
+      },
+      {
+        "pid": 77880,
+        "comm": "Privileged Cont",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 17,
+        "threads": 22,
+        "start": 2582615,
+        "rssPages": 21976
+      },
+      {
+        "pid": 77978,
+        "comm": "Utility Process",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 3,
+        "threads": 4,
+        "start": 2582988,
+        "rssPages": 8988
+      },
+      {
+        "pid": 77985,
+        "comm": "Web Content",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 20,
+        "threads": 20,
+        "start": 2583096,
+        "rssPages": 19966
+      },
+      {
+        "pid": 77998,
+        "comm": "Web Content",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 18,
+        "threads": 20,
+        "start": 2583102,
+        "rssPages": 19892
+      },
+      {
+        "pid": 78004,
+        "comm": "Web Content",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 22,
+        "threads": 20,
+        "start": 2583104,
+        "rssPages": 20018
+      }
+    ]
+  },
+  {
+    "timeUnix": 1793913304.0944774,
+    "phase": "launch",
+    "intervalSeconds": 0.5501809369998227,
+    "cpuPercentSum": 14.540671008386061,
+    "processes": [
+      {
+        "pid": 77690,
+        "comm": "floorp",
+        "state": "S",
+        "ppid": 77675,
+        "ticks": 1851,
+        "threads": 91,
+        "start": 2582298,
+        "rssPages": 156387
+      },
+      {
+        "pid": 77730,
+        "comm": "Socket Process",
+        "state": "S",
+        "ppid": 77690,
+        "ticks": 12,
+        "threads": 6,
+        "start": 2582374,
+        "rssPages": 13769
+      },
+      {
+        "pid": 77805,
+        "comm": "forkserver",
+        "state": "S",
+        "ppid": 77690,
+        "ticks": 12,
+        "threads": 1,
+        "start": 2582467,
+        "rssPages": 9161
+      },
+      {
+        "pid": 77833,
+        "comm": "WebExtensions",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 245,
+        "threads": 25,
+        "start": 2582545,
+        "rssPages": 29721
+      },
+      {
+        "pid": 77849,
+        "comm": "RDD Process",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 8,
+        "threads": 4,
+        "start": 2582548,
+        "rssPages": 11357
+      },
+      {
+        "pid": 77880,
+        "comm": "Privileged Cont",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 17,
+        "threads": 22,
+        "start": 2582615,
+        "rssPages": 21976
+      },
+      {
+        "pid": 77978,
+        "comm": "Utility Process",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 3,
+        "threads": 4,
+        "start": 2582988,
+        "rssPages": 8988
+      },
+      {
+        "pid": 77985,
+        "comm": "Web Content",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 20,
+        "threads": 20,
+        "start": 2583096,
+        "rssPages": 19966
+      },
+      {
+        "pid": 77998,
+        "comm": "Web Content",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 18,
+        "threads": 20,
+        "start": 2583102,
+        "rssPages": 19892
+      },
+      {
+        "pid": 78004,
+        "comm": "Web Content",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 22,
+        "threads": 20,
+        "start": 2583104,
+        "rssPages": 20018
+      }
+    ]
+  },
+  {
+    "timeUnix": 1793913304.644858,
+    "phase": "launch",
+    "intervalSeconds": 0.5503806989981967,
+    "cpuPercentSum": 18.169241796091335,
+    "processes": [
+      {
+        "pid": 77690,
+        "comm": "floorp",
+        "state": "S",
+        "ppid": 77675,
+        "ticks": 1861,
+        "threads": 91,
+        "start": 2582298,
+        "rssPages": 156419
+      },
+      {
+        "pid": 77730,
+        "comm": "Socket Process",
+        "state": "S",
+        "ppid": 77690,
+        "ticks": 12,
+        "threads": 6,
+        "start": 2582374,
+        "rssPages": 13769
+      },
+      {
+        "pid": 77805,
+        "comm": "forkserver",
+        "state": "S",
+        "ppid": 77690,
+        "ticks": 12,
+        "threads": 1,
+        "start": 2582467,
+        "rssPages": 9161
+      },
+      {
+        "pid": 77833,
+        "comm": "WebExtensions",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 245,
+        "threads": 25,
+        "start": 2582545,
+        "rssPages": 29721
+      },
+      {
+        "pid": 77849,
+        "comm": "RDD Process",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 8,
+        "threads": 4,
+        "start": 2582548,
+        "rssPages": 11357
+      },
+      {
+        "pid": 77880,
+        "comm": "Privileged Cont",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 17,
+        "threads": 22,
+        "start": 2582615,
+        "rssPages": 21976
+      },
+      {
+        "pid": 77978,
+        "comm": "Utility Process",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 3,
+        "threads": 4,
+        "start": 2582988,
+        "rssPages": 8988
+      },
+      {
+        "pid": 77985,
+        "comm": "Web Content",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 20,
+        "threads": 20,
+        "start": 2583096,
+        "rssPages": 19966
+      },
+      {
+        "pid": 77998,
+        "comm": "Web Content",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 18,
+        "threads": 20,
+        "start": 2583102,
+        "rssPages": 19892
+      },
+      {
+        "pid": 78004,
+        "comm": "Web Content",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 22,
+        "threads": 20,
+        "start": 2583104,
+        "rssPages": 20018
+      }
+    ]
+  },
+  {
+    "timeUnix": 1793913305.191091,
+    "phase": "launch",
+    "intervalSeconds": 0.5462396270013414,
+    "cpuPercentSum": 34.7832692115421,
+    "processes": [
+      {
+        "pid": 77690,
+        "comm": "floorp",
+        "state": "S",
+        "ppid": 77675,
+        "ticks": 1880,
+        "threads": 89,
+        "start": 2582298,
+        "rssPages": 142647
+      },
+      {
+        "pid": 77730,
+        "comm": "Socket Process",
+        "state": "S",
+        "ppid": 77690,
+        "ticks": 12,
+        "threads": 6,
+        "start": 2582374,
+        "rssPages": 13769
+      },
+      {
+        "pid": 77805,
+        "comm": "forkserver",
+        "state": "S",
+        "ppid": 77690,
+        "ticks": 12,
+        "threads": 1,
+        "start": 2582467,
+        "rssPages": 9161
+      },
+      {
+        "pid": 77833,
+        "comm": "WebExtensions",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 245,
+        "threads": 25,
+        "start": 2582545,
+        "rssPages": 29721
+      },
+      {
+        "pid": 77849,
+        "comm": "RDD Process",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 8,
+        "threads": 4,
+        "start": 2582548,
+        "rssPages": 11357
+      },
+      {
+        "pid": 77880,
+        "comm": "Privileged Cont",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 17,
+        "threads": 22,
+        "start": 2582615,
+        "rssPages": 21976
+      },
+      {
+        "pid": 77978,
+        "comm": "Utility Process",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 3,
+        "threads": 4,
+        "start": 2582988,
+        "rssPages": 8988
+      },
+      {
+        "pid": 77985,
+        "comm": "Web Content",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 20,
+        "threads": 20,
+        "start": 2583096,
+        "rssPages": 19966
+      },
+      {
+        "pid": 77998,
+        "comm": "Web Content",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 18,
+        "threads": 20,
+        "start": 2583102,
+        "rssPages": 19892
+      },
+      {
+        "pid": 78004,
+        "comm": "Web Content",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 22,
+        "threads": 20,
+        "start": 2583104,
+        "rssPages": 20018
+      }
+    ]
+  },
+  {
+    "timeUnix": 1793913305.8658466,
+    "phase": "launch",
+    "intervalSeconds": 0.674446261000412,
+    "cpuPercentSum": 140.8562927742911,
+    "processes": [
+      {
+        "pid": 77690,
+        "comm": "floorp",
+        "state": "S",
+        "ppid": 77675,
+        "ticks": 1952,
+        "threads": 88,
+        "start": 2582298,
+        "rssPages": 131396
+      },
+      {
+        "pid": 77730,
+        "comm": "Socket Process",
+        "state": "S",
+        "ppid": 77690,
+        "ticks": 12,
+        "threads": 6,
+        "start": 2582374,
+        "rssPages": 13769
+      },
+      {
+        "pid": 77805,
+        "comm": "forkserver",
+        "state": "S",
+        "ppid": 77690,
+        "ticks": 12,
+        "threads": 1,
+        "start": 2582467,
+        "rssPages": 9161
+      },
+      {
+        "pid": 77833,
+        "comm": "WebExtensions",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 267,
+        "threads": 25,
+        "start": 2582545,
+        "rssPages": 29192
+      },
+      {
+        "pid": 77849,
+        "comm": "RDD Process",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 8,
+        "threads": 4,
+        "start": 2582548,
+        "rssPages": 11357
+      },
+      {
+        "pid": 77880,
+        "comm": "Privileged Cont",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 18,
+        "threads": 22,
+        "start": 2582615,
+        "rssPages": 21976
+      },
+      {
+        "pid": 77978,
+        "comm": "Utility Process",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 3,
+        "threads": 4,
+        "start": 2582988,
+        "rssPages": 8988
+      },
+      {
+        "pid": 77985,
+        "comm": "Web Content",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 20,
+        "threads": 20,
+        "start": 2583096,
+        "rssPages": 19966
+      },
+      {
+        "pid": 77998,
+        "comm": "Web Content",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 18,
+        "threads": 20,
+        "start": 2583102,
+        "rssPages": 19892
+      },
+      {
+        "pid": 78004,
+        "comm": "Web Content",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 22,
+        "threads": 20,
+        "start": 2583104,
+        "rssPages": 20018
+      }
+    ]
+  },
+  {
+    "timeUnix": 1793913306.41163,
+    "phase": "launch",
+    "intervalSeconds": 0.5460929529981513,
+    "cpuPercentSum": 18.31190083134776,
+    "processes": [
+      {
+        "pid": 77690,
+        "comm": "floorp",
+        "state": "S",
+        "ppid": 77675,
+        "ticks": 1961,
+        "threads": 87,
+        "start": 2582298,
+        "rssPages": 131428
+      },
+      {
+        "pid": 77730,
+        "comm": "Socket Process",
+        "state": "S",
+        "ppid": 77690,
+        "ticks": 12,
+        "threads": 6,
+        "start": 2582374,
+        "rssPages": 13769
+      },
+      {
+        "pid": 77805,
+        "comm": "forkserver",
+        "state": "S",
+        "ppid": 77690,
+        "ticks": 12,
+        "threads": 1,
+        "start": 2582467,
+        "rssPages": 9161
+      },
+      {
+        "pid": 77833,
+        "comm": "WebExtensions",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 268,
+        "threads": 25,
+        "start": 2582545,
+        "rssPages": 29256
+      },
+      {
+        "pid": 77849,
+        "comm": "RDD Process",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 8,
+        "threads": 4,
+        "start": 2582548,
+        "rssPages": 11357
+      },
+      {
+        "pid": 77880,
+        "comm": "Privileged Cont",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 18,
+        "threads": 22,
+        "start": 2582615,
+        "rssPages": 21976
+      },
+      {
+        "pid": 77978,
+        "comm": "Utility Process",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 3,
+        "threads": 4,
+        "start": 2582988,
+        "rssPages": 8988
+      },
+      {
+        "pid": 77985,
+        "comm": "Web Content",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 20,
+        "threads": 20,
+        "start": 2583096,
+        "rssPages": 19966
+      },
+      {
+        "pid": 77998,
+        "comm": "Web Content",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 18,
+        "threads": 20,
+        "start": 2583102,
+        "rssPages": 19892
+      },
+      {
+        "pid": 78004,
+        "comm": "Web Content",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 22,
+        "threads": 20,
+        "start": 2583104,
+        "rssPages": 20018
+      }
+    ]
+  },
+  {
+    "timeUnix": 1793913306.955447,
+    "phase": "launch",
+    "intervalSeconds": 0.5438165470004606,
+    "cpuPercentSum": 18.388554109206854,
+    "processes": [
+      {
+        "pid": 77690,
+        "comm": "floorp",
+        "state": "S",
+        "ppid": 77675,
+        "ticks": 1969,
+        "threads": 87,
+        "start": 2582298,
+        "rssPages": 131460
+      },
+      {
+        "pid": 77730,
+        "comm": "Socket Process",
+        "state": "S",
+        "ppid": 77690,
+        "ticks": 12,
+        "threads": 6,
+        "start": 2582374,
+        "rssPages": 13769
+      },
+      {
+        "pid": 77805,
+        "comm": "forkserver",
+        "state": "S",
+        "ppid": 77690,
+        "ticks": 12,
+        "threads": 1,
+        "start": 2582467,
+        "rssPages": 9161
+      },
+      {
+        "pid": 77833,
+        "comm": "WebExtensions",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 268,
+        "threads": 25,
+        "start": 2582545,
+        "rssPages": 29256
+      },
+      {
+        "pid": 77849,
+        "comm": "RDD Process",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 8,
+        "threads": 4,
+        "start": 2582548,
+        "rssPages": 11357
+      },
+      {
+        "pid": 77880,
+        "comm": "Privileged Cont",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 20,
+        "threads": 22,
+        "start": 2582615,
+        "rssPages": 22012
+      },
+      {
+        "pid": 77978,
+        "comm": "Utility Process",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 3,
+        "threads": 4,
+        "start": 2582988,
+        "rssPages": 8988
+      },
+      {
+        "pid": 77985,
+        "comm": "Web Content",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 20,
+        "threads": 20,
+        "start": 2583096,
+        "rssPages": 19966
+      },
+      {
+        "pid": 77998,
+        "comm": "Web Content",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 18,
+        "threads": 20,
+        "start": 2583102,
+        "rssPages": 19892
+      },
+      {
+        "pid": 78004,
+        "comm": "Web Content",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 22,
+        "threads": 20,
+        "start": 2583104,
+        "rssPages": 20018
+      }
+    ]
+  },
+  {
+    "timeUnix": 1793913307.542501,
+    "phase": "launch",
+    "intervalSeconds": 0.5870257210008276,
+    "cpuPercentSum": 39.18056599085132,
+    "processes": [
+      {
+        "pid": 77690,
+        "comm": "floorp",
+        "state": "S",
+        "ppid": 77675,
+        "ticks": 1991,
+        "threads": 87,
+        "start": 2582298,
+        "rssPages": 131492
+      },
+      {
+        "pid": 77730,
+        "comm": "Socket Process",
+        "state": "S",
+        "ppid": 77690,
+        "ticks": 12,
+        "threads": 6,
+        "start": 2582374,
+        "rssPages": 13769
+      },
+      {
+        "pid": 77805,
+        "comm": "forkserver",
+        "state": "S",
+        "ppid": 77690,
+        "ticks": 12,
+        "threads": 1,
+        "start": 2582467,
+        "rssPages": 9161
+      },
+      {
+        "pid": 77833,
+        "comm": "WebExtensions",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 269,
+        "threads": 25,
+        "start": 2582545,
+        "rssPages": 29256
+      },
+      {
+        "pid": 77849,
+        "comm": "RDD Process",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 8,
+        "threads": 4,
+        "start": 2582548,
+        "rssPages": 11357
+      },
+      {
+        "pid": 77880,
+        "comm": "Privileged Cont",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 20,
+        "threads": 22,
+        "start": 2582615,
+        "rssPages": 22012
+      },
+      {
+        "pid": 77978,
+        "comm": "Utility Process",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 3,
+        "threads": 4,
+        "start": 2582988,
+        "rssPages": 8988
+      },
+      {
+        "pid": 77985,
+        "comm": "Web Content",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 20,
+        "threads": 20,
+        "start": 2583096,
+        "rssPages": 19966
+      },
+      {
+        "pid": 77998,
+        "comm": "Web Content",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 18,
+        "threads": 20,
+        "start": 2583102,
+        "rssPages": 19892
+      },
+      {
+        "pid": 78004,
+        "comm": "Web Content",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 22,
+        "threads": 20,
+        "start": 2583104,
+        "rssPages": 20018
+      }
+    ]
+  },
+  {
+    "timeUnix": 1793913308.1013458,
+    "phase": "native-tab",
+    "intervalSeconds": 0.5588660670000536,
+    "cpuPercentSum": 118.09627368196193,
+    "processes": [
+      {
+        "pid": 77690,
+        "comm": "floorp",
+        "state": "S",
+        "ppid": 77675,
+        "ticks": 2057,
+        "threads": 91,
+        "start": 2582298,
+        "rssPages": 144011
+      },
+      {
+        "pid": 77730,
+        "comm": "Socket Process",
+        "state": "S",
+        "ppid": 77690,
+        "ticks": 12,
+        "threads": 6,
+        "start": 2582374,
+        "rssPages": 13769
+      },
+      {
+        "pid": 77805,
+        "comm": "forkserver",
+        "state": "S",
+        "ppid": 77690,
+        "ticks": 12,
+        "threads": 1,
+        "start": 2582467,
+        "rssPages": 9161
+      },
+      {
+        "pid": 77833,
+        "comm": "WebExtensions",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 269,
+        "threads": 25,
+        "start": 2582545,
+        "rssPages": 29288
+      },
+      {
+        "pid": 77849,
+        "comm": "RDD Process",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 8,
+        "threads": 4,
+        "start": 2582548,
+        "rssPages": 11357
+      },
+      {
+        "pid": 77880,
+        "comm": "Privileged Cont",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 20,
+        "threads": 22,
+        "start": 2582615,
+        "rssPages": 22012
+      },
+      {
+        "pid": 77978,
+        "comm": "Utility Process",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 3,
+        "threads": 4,
+        "start": 2582988,
+        "rssPages": 8988
+      },
+      {
+        "pid": 77985,
+        "comm": "Web Content",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 20,
+        "threads": 20,
+        "start": 2583096,
+        "rssPages": 20010
+      },
+      {
+        "pid": 77998,
+        "comm": "Web Content",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 18,
+        "threads": 20,
+        "start": 2583102,
+        "rssPages": 19892
+      },
+      {
+        "pid": 78004,
+        "comm": "Web Content",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 22,
+        "threads": 20,
+        "start": 2583104,
+        "rssPages": 20062
+      }
+    ]
+  },
+  {
+    "timeUnix": 1793913308.650385,
+    "phase": "quit",
+    "intervalSeconds": 0.5490475320002588,
+    "cpuPercentSum": 100.17347641947707,
+    "processes": [
+      {
+        "pid": 77690,
+        "comm": "floorp",
+        "state": "S",
+        "ppid": 77675,
+        "ticks": 2112,
+        "threads": 88,
+        "start": 2582298,
+        "rssPages": 141158
+      },
+      {
+        "pid": 77730,
+        "comm": "Socket Process",
+        "state": "S",
+        "ppid": 77690,
+        "ticks": 12,
+        "threads": 6,
+        "start": 2582374,
+        "rssPages": 13769
+      },
+      {
+        "pid": 77805,
+        "comm": "forkserver",
+        "state": "S",
+        "ppid": 77690,
+        "ticks": 12,
+        "threads": 1,
+        "start": 2582467,
+        "rssPages": 9161
+      },
+      {
+        "pid": 77833,
+        "comm": "WebExtensions",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 269,
+        "threads": 25,
+        "start": 2582545,
+        "rssPages": 29352
+      },
+      {
+        "pid": 77849,
+        "comm": "RDD Process",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 8,
+        "threads": 4,
+        "start": 2582548,
+        "rssPages": 11357
+      },
+      {
+        "pid": 77880,
+        "comm": "Privileged Cont",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 20,
+        "threads": 22,
+        "start": 2582615,
+        "rssPages": 22012
+      },
+      {
+        "pid": 77978,
+        "comm": "Utility Process",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 3,
+        "threads": 4,
+        "start": 2582988,
+        "rssPages": 8988
+      },
+      {
+        "pid": 77985,
+        "comm": "Web Content",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 20,
+        "threads": 20,
+        "start": 2583096,
+        "rssPages": 20010
+      },
+      {
+        "pid": 77998,
+        "comm": "Web Content",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 18,
+        "threads": 20,
+        "start": 2583102,
+        "rssPages": 19892
+      },
+      {
+        "pid": 78004,
+        "comm": "Web Content",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 22,
+        "threads": 20,
+        "start": 2583104,
+        "rssPages": 20062
+      }
+    ]
+  },
+  {
+    "timeUnix": 1793913309.217878,
+    "phase": "quit",
+    "intervalSeconds": 0.567475021998689,
+    "cpuPercentSum": 146.26194419565437,
+    "processes": [
+      {
+        "pid": 77690,
+        "comm": "floorp",
+        "state": "R",
+        "ppid": 77675,
+        "ticks": 2194,
+        "threads": 88,
+        "start": 2582298,
+        "rssPages": 141198
+      },
+      {
+        "pid": 77730,
+        "comm": "Socket Process",
+        "state": "S",
+        "ppid": 77690,
+        "ticks": 12,
+        "threads": 6,
+        "start": 2582374,
+        "rssPages": 13769
+      },
+      {
+        "pid": 77805,
+        "comm": "forkserver",
+        "state": "S",
+        "ppid": 77690,
+        "ticks": 12,
+        "threads": 1,
+        "start": 2582467,
+        "rssPages": 9161
+      },
+      {
+        "pid": 77833,
+        "comm": "WebExtensions",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 269,
+        "threads": 25,
+        "start": 2582545,
+        "rssPages": 29352
+      },
+      {
+        "pid": 77849,
+        "comm": "RDD Process",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 9,
+        "threads": 4,
+        "start": 2582548,
+        "rssPages": 11357
+      },
+      {
+        "pid": 77880,
+        "comm": "Privileged Cont",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 20,
+        "threads": 22,
+        "start": 2582615,
+        "rssPages": 22012
+      },
+      {
+        "pid": 77978,
+        "comm": "Utility Process",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 3,
+        "threads": 4,
+        "start": 2582988,
+        "rssPages": 8988
+      },
+      {
+        "pid": 77985,
+        "comm": "Web Content",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 20,
+        "threads": 20,
+        "start": 2583096,
+        "rssPages": 20010
+      },
+      {
+        "pid": 77998,
+        "comm": "Web Content",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 18,
+        "threads": 20,
+        "start": 2583102,
+        "rssPages": 19892
+      },
+      {
+        "pid": 78004,
+        "comm": "Web Content",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 22,
+        "threads": 20,
+        "start": 2583104,
+        "rssPages": 20062
+      }
+    ]
+  },
+  {
+    "timeUnix": 1793913309.8173933,
+    "phase": "quit",
+    "intervalSeconds": 0.599531186002423,
+    "cpuPercentSum": 146.78135525654596,
+    "processes": [
+      {
+        "pid": 77690,
+        "comm": "floorp",
+        "state": "R",
+        "ppid": 77675,
+        "ticks": 2282,
+        "threads": 88,
+        "start": 2582298,
+        "rssPages": 139778
+      },
+      {
+        "pid": 77730,
+        "comm": "Socket Process",
+        "state": "S",
+        "ppid": 77690,
+        "ticks": 12,
+        "threads": 6,
+        "start": 2582374,
+        "rssPages": 13769
+      },
+      {
+        "pid": 77805,
+        "comm": "forkserver",
+        "state": "S",
+        "ppid": 77690,
+        "ticks": 12,
+        "threads": 1,
+        "start": 2582467,
+        "rssPages": 9161
+      },
+      {
+        "pid": 77833,
+        "comm": "WebExtensions",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 269,
+        "threads": 25,
+        "start": 2582545,
+        "rssPages": 29352
+      },
+      {
+        "pid": 77849,
+        "comm": "RDD Process",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 9,
+        "threads": 4,
+        "start": 2582548,
+        "rssPages": 11357
+      },
+      {
+        "pid": 77880,
+        "comm": "Privileged Cont",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 20,
+        "threads": 22,
+        "start": 2582615,
+        "rssPages": 22012
+      },
+      {
+        "pid": 77978,
+        "comm": "Utility Process",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 3,
+        "threads": 4,
+        "start": 2582988,
+        "rssPages": 8988
+      },
+      {
+        "pid": 77985,
+        "comm": "Web Content",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 20,
+        "threads": 20,
+        "start": 2583096,
+        "rssPages": 20010
+      },
+      {
+        "pid": 77998,
+        "comm": "Web Content",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 18,
+        "threads": 20,
+        "start": 2583102,
+        "rssPages": 19892
+      },
+      {
+        "pid": 78004,
+        "comm": "Web Content",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 22,
+        "threads": 20,
+        "start": 2583104,
+        "rssPages": 20062
+      }
+    ]
+  },
+  {
+    "timeUnix": 1793913310.3912058,
+    "phase": "quit",
+    "intervalSeconds": 0.5738003279984696,
+    "cpuPercentSum": 127.22195585812683,
+    "processes": [
+      {
+        "pid": 77690,
+        "comm": "floorp",
+        "state": "R",
+        "ppid": 77675,
+        "ticks": 2354,
+        "threads": 70,
+        "start": 2582298,
+        "rssPages": 122287
+      },
+      {
+        "pid": 77730,
+        "comm": "Socket Process",
+        "state": "S",
+        "ppid": 77690,
+        "ticks": 12,
+        "threads": 6,
+        "start": 2582374,
+        "rssPages": 13769
+      },
+      {
+        "pid": 77805,
+        "comm": "forkserver",
+        "state": "S",
+        "ppid": 77690,
+        "ticks": 13,
+        "threads": 1,
+        "start": 2582467,
+        "rssPages": 9161
+      },
+      {
+        "pid": 77849,
+        "comm": "RDD Process",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 9,
+        "threads": 4,
+        "start": 2582548,
+        "rssPages": 11357
+      },
+      {
+        "pid": 77978,
+        "comm": "Utility Process",
+        "state": "S",
+        "ppid": 77805,
+        "ticks": 3,
+        "threads": 4,
+        "start": 2582988,
+        "rssPages": 8988
+      }
+    ]
+  }
+]

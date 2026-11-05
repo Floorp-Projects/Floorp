@@ -1,0 +1,7 @@
+{
+  "id": "save",
+  "target": "about:welcome?",
+  "context": "content",
+  "click": "button[data-variant=primary]",
+  "script": "return true;"
+}

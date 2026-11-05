@@ -1,0 +1,20 @@
+defaults/preferences/firefox.js:1521: prefs parse error: unknown keyword
+defaults/preferences/firefox.js:1522: prefs parse error: unknown keyword
+JavaScript warning: moz-src:///toolkit/components/search/SearchService.sys.mjs, line 3018: unreachable code after return statement
+console.error: AboutNewTabResourceMapping: "Failed to complete resource mapping: " (new TypeError("lazy.aboutRedirector.wrappedJSObject.notifyBuiltInAddonInitialized is not a function", "resource:///modules/AboutNewTabResourceMapping.sys.mjs", 414))
+console.error: "Error in processing browser-first-window-ready for AboutNewTab.init"
+console.error: (new TypeError("lazy.aboutRedirector.wrappedJSObject.notifyBuiltInAddonInitialized is not a function", "resource:///modules/AboutNewTabResourceMapping.sys.mjs", 414))
+console.error: CustomizableUI:
+console.error: CustomizableUI:
+console.debug: nora@split-view: "[effect] layout config changed: horizontal, maxPanes=4"
+console.error: CustomizableUI:
+console.error: CustomizableUI:
+console.error: CustomizableUI:
+console.error: CustomizableUI:
+JavaScript error: resource:///actors/LightweightThemeChild.sys.mjs, line 31: TypeError: can't access property "docShell", this.browsingContext.topChromeWindow is null
+JavaScript error: resource:///actors/LightweightThemeChild.sys.mjs, line 31: TypeError: can't access property "docShell", this.browsingContext.topChromeWindow is null
+JavaScript error: resource://gre/modules/PrivateBrowsingUtils.sys.mjs, line 50: TypeError: can't access property "QueryInterface", aWindow.docShell is null
+JavaScript error: resource://gre/modules/LoginHelper.sys.mjs, line 443: TypeError: can't access property "set", Glean.pwmgr.savingEnabled is undefined
+JavaScript error: resource://gre/modules/LoginHelper.sys.mjs, line 443: TypeError: can't access property "set", Glean.pwmgr.savingEnabled is undefined
+JavaScript error: resource://gre/modules/LoginHelper.sys.mjs, line 443: TypeError: can't access property "set", Glean.pwmgr.savingEnabled is undefined
+JavaScript error: resource://gre/modules/LoginHelper.sys.mjs, line 443: TypeError: can't access property "set", Glean.pwmgr.savingEnabled is undefined

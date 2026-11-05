@@ -1,0 +1,15 @@
+{
+  "elapsedMs": 26.571736998448614,
+  "rpcMs": 12.772807000146713,
+  "value": {
+    "url": "https://blog.floorp.app/en/release/12.18.0/",
+    "title": "v12.18.0 Release Notes: A New Settings Design and Release-Note Display Options | Floorp Blog",
+    "readyState": "complete",
+    "textLength": 5865,
+    "navigation": {
+      "duration": 2011,
+      "responseStatus": 200,
+      "domComplete": 2011
+    }
+  }
+}

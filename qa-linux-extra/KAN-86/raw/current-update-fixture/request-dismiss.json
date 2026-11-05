@@ -1,0 +1,7 @@
+{
+  "id": "dismiss",
+  "target": "about:welcome?",
+  "context": "content",
+  "click": "button[data-variant=secondary]",
+  "script": "return true;"
+}

@@ -1,0 +1,15 @@
+{
+  "fixture": "update",
+  "fixturePrefs": {
+    "browser.startup.homepage_override.mstone": "12.18.0@156.0.1",
+    "floorp.startup.oldVersion": "12.18.0@156.0.1",
+    "floorp.releaseNotes.audience": "existing",
+    "floorp.releaseNotes.choiceConfirmed": false,
+    "floorp.releaseNotes.promptShown": false
+  },
+  "uri": null,
+  "profileReused": false,
+  "product": "/workspace/qa-linux-22/C-extra/KAN-86/products/12.21.1/floorp",
+  "noSecurityPreferenceOverrides": true,
+  "network": "inherited proxy + configured CA; no insecure TLS flag"
+}

@@ -1,0 +1,7 @@
+{
+  "id": "choice-dom",
+  "target": "about:welcome?",
+  "context": "content",
+  "script": "return {text:document.body.innerText,buttons:[...document.querySelectorAll('button')].map(b=>({text:b.innerText,disabled:b.disabled,html:b.outerHTML})),radio:[...document.querySelectorAll('[data-scope=radio-card]')].map(b=>b.outerHTML).slice(0,10)};",
+  "screenshot": "choice.png"
+}

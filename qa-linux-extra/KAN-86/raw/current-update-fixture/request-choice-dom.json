@@ -1,0 +1,7 @@
+{
+  "id": "choice-dom",
+  "target": "about:welcome?",
+  "context": "content",
+  "script": "return {text:document.body.innerText,buttons:[...document.querySelectorAll('button')].map(b=>({text:b.innerText,disabled:b.disabled,html:b.outerHTML})),inputs:[...document.querySelectorAll('input')].map(b=>b.outerHTML)};",
+  "screenshot": "choice.png"
+}

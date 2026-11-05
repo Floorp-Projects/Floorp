@@ -1,0 +1,7 @@
+{
+  "id": "radio-disabled",
+  "target": "about:welcome?",
+  "context": "content",
+  "click": "label[for$=\":disabled\"]",
+  "script": "return [...document.querySelectorAll('input[type=radio]')].map(x=>({value:x.value,checked:x.checked}));"
+}

@@ -1,0 +1,13 @@
+JavaScript warning: moz-src:///toolkit/components/search/SearchService.sys.mjs, line 3024: unreachable code after return statement
+console.error: CustomizableUI:
+console.error: CustomizableUI:
+console.debug: nora@split-view: "[effect] layout config changed: horizontal, maxPanes=4"
+console.error: CustomizableUI:
+console.error: CustomizableUI:
+console.error: CustomizableUI:
+console.error: CustomizableUI:
+JavaScript error: resource:///actors/LightweightThemeChild.sys.mjs, line 31: TypeError: can't access property "docShell", this.browsingContext.topChromeWindow is null
+JavaScript error: resource:///actors/LightweightThemeChild.sys.mjs, line 31: TypeError: can't access property "docShell", this.browsingContext.topChromeWindow is null
+[Parent 77690, Main Thread] WARNING: gtk_container_check_resize: assertion 'GTK_IS_CONTAINER (container)' failed: 'glib warning', file toolkit/xre/nsSigHandlers.cpp:237
+[Parent 77690, Main Thread] WARNING: gtk_widget_get_window: assertion 'GTK_IS_WIDGET (widget)' failed: 'glib warning', file toolkit/xre/nsSigHandlers.cpp:237
+console.error: PushService: "clearOriginData: Error clearing origin data:" "TypeError"

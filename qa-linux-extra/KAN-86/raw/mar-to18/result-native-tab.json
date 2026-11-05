@@ -1,0 +1,73 @@
+{
+  "elapsedMs": 196.34462600151892,
+  "rpcMs": 160.7501049984421,
+  "value": {
+    "pid": 77162,
+    "version": "156.0.1",
+    "buildID": "20260916130640",
+    "startup": {
+      "isFirstRun": false,
+      "isUpdated": true
+    },
+    "prefs": {
+      "mstone": {
+        "value": "ignore",
+        "user": true
+      },
+      "oldVersion": {
+        "value": "12.18.0@156.0.1",
+        "user": true
+      },
+      "audience": {
+        "value": "existing",
+        "user": true
+      },
+      "confirmed": {
+        "value": true,
+        "user": true
+      },
+      "promptShown": {
+        "value": true,
+        "user": true
+      },
+      "mode": {
+        "value": "blocking",
+        "user": false
+      },
+      "welcomeShown": {
+        "value": true,
+        "user": true
+      }
+    },
+    "protections": {
+      "sandbox": 6,
+      "sandboxUser": false,
+      "signatureRequired": false,
+      "signatureUser": false
+    },
+    "tabs": [
+      {
+        "url": "about:home",
+        "title": "Floorp Start",
+        "selected": false,
+        "hidden": false,
+        "loading": false
+      },
+      {
+        "url": "https://blog.floorp.app/en/release/12.18.0/",
+        "title": "v12.18.0 Release Notes: A New Settings Design and Release-Note Display Options | Floorp Blog",
+        "selected": false,
+        "hidden": false,
+        "loading": false
+      },
+      {
+        "url": "about:newtab",
+        "title": "New Tab",
+        "selected": true,
+        "hidden": false,
+        "loading": false
+      }
+    ],
+    "dialogs": []
+  }
+}

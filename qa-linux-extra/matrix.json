@@ -338,6 +338,83 @@
         "10410",
         "10431"
       ]
+    },
+    {
+      "key": "KAN-86",
+      "github": "https://github.com/Floorp-Projects/Floorp/issues/2774",
+      "sourceSha": "29a3eb23145da90706d8a94441373278521cc737",
+      "reportedSourceSha": "1728a7678c34aec1ad502edb06a168fdf2a07be8",
+      "currentProductSourceSha": "984509d2053be7bae9027133bda7259cd706b208",
+      "productVersion": [
+        "12.17.2@155.0 native20260902101625",
+        "12.18.0@156.0.1 native20260916130640",
+        "12.21.1@159.0.1 native20261103153232"
+      ],
+      "environment": "Debian13.6 Cloud Linux6.18.57 Xvfb/X11 Openbox private DBus softwareGPU; not Windows11",
+      "testCommand": "scripts/README.md; browser-session.py and raw request-ID.json; native updater official full MAR",
+      "result": "bounded Linux non-repro; original Windows freeze attribution unresolved",
+      "qualifiedProductSessions": 6,
+      "genuineMarApplications": 1,
+      "prefSimulatedUpdateSessions": 1,
+      "remainingConditions": [
+        "Original Windows11 build/GPU/driver and failing input",
+        "original extension inventory / profile-dependent state",
+        "hang main/UI/native thread stack",
+        "Windows native update/Maintenance Service path",
+        "matched Firefox on reproducible Windows scenario"
+      ],
+      "existingPr": [
+        "2744 introduces flow",
+        "2975 fixes separate homepage/milestone behavior; not proven freeze fix"
+      ],
+      "newPr": null,
+      "jiraCommentId": null,
+      "evidence": [
+        "report.md",
+        "raw/summary.json",
+        "raw/*/cpu-samples.json",
+        "raw/*/result-*.json",
+        "update-chain/patch/update.log",
+        "update-chain/patch/update.status",
+        "update-chain/product-verification.json",
+        "acquisition/verification.json",
+        "source-analysis/report.md",
+        "scripts/README.md"
+      ],
+      "separateFromOriginal22": true,
+      "originalCMatrixSha256": "4ac5d5f17f97d70e82f7b9f17d6abcc1aa17a92e3708eeadaba6ac7c8415e3cd",
+      "cases": [
+        {
+          "case": "old-seed-v2",
+          "normalExitCode": 0,
+          "monitoredSeconds": 144.53748077600176
+        },
+        {
+          "case": "mar-to18",
+          "normalExitCode": 0,
+          "monitoredSeconds": 22.809310479002306
+        },
+        {
+          "case": "mar18-normal-restart",
+          "normalExitCode": 0,
+          "monitoredSeconds": 21.81049028900088
+        },
+        {
+          "case": "current-fresh",
+          "normalExitCode": 0,
+          "monitoredSeconds": 21.830991119000828
+        },
+        {
+          "case": "current-update-fixture",
+          "normalExitCode": 0,
+          "monitoredSeconds": 27.724655371999688
+        },
+        {
+          "case": "current-prompt-save",
+          "normalExitCode": 0,
+          "monitoredSeconds": 24.0350684240002
+        }
+      ]
     }
   ]
 }

@@ -1,0 +1,6 @@
+{
+  "id": "radio-markup",
+  "target": "about:welcome?",
+  "context": "content",
+  "script": "return [...document.querySelectorAll('input[type=radio]')].map(x=>x.parentElement.outerHTML);"
+}
