@@ -1,0 +1,24 @@
+{
+  "checks": {
+    "blueSelectedWasOccluded": true,
+    "blueSelectedRestored": true,
+    "blueNativeGeometryPreserved": true,
+    "orangeSelectedWasOccluded": true,
+    "orangeSelectedRestored": true,
+    "orangeNativeGeometryPreserved": true,
+    "UnregisterRestoresOriginalOcclusion": true,
+    "VerticalIdleGeometryPreserved": true,
+    "VerticalIdlePixelsPreserved": true,
+    "VerticalHoverWasZero": true,
+    "VerticalHoverPositive": true,
+    "VerticalHoverWithinTab": true,
+    "AllLabelAndCloseHitTests": true,
+    "NormalControlPositionPreserved": true,
+    "AgentUnregistered": true,
+    "ProductUnchanged": true,
+    "NormalQuit": true,
+    "OwnedProcessesZero": true
+  },
+  "allPass": true,
+  "qualification": "temporaryAGENTsheetcausaldiagnostic only, not deliveredfixedproduct"
+}

@@ -1,0 +1,17 @@
+{
+  "commit": "53071c62422c82e0e60fd40c49de15415f1d0552",
+  "base": "29a3eb23145da90706d8a94441373278521cc737",
+  "files": [
+    {
+      "path": "browser-features/chrome/common/designs/utils/lepton-compat-152.css.ts",
+      "sha256": "a15e53450027c16106f6eb0f33d762d6efd44b3e574caf1db2a7214c01c6bd7f"
+    },
+    {
+      "path": "browser-features/chrome/common/designs/test/lepton-container-geometry.test.ts",
+      "sha256": "f665544e85ec7e1d23d00b08307744704278cf9d0d8daaf719aa21b6f33f57c5"
+    }
+  ],
+  "typecheck": "deno check --frozen --no-remote passed with existing dependency links, subsequently removed",
+  "fixtureEvidence": "test-final/result.json",
+  "fullProductCandidateClaim": false
+}

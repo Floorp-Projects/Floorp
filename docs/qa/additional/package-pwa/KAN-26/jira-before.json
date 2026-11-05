@@ -1,0 +1,45 @@
+{
+  "key": "KAN-26",
+  "pagination": {
+    "total": 6,
+    "isLast": true
+  },
+  "comments": [
+    {
+      "id": "10104",
+      "body": "## 原報告・既存調査の照合（2026-11-05）\n\nGitHub #2965: Windows 11 / 12.20.2 の選択中コンテナタブの色線欠落。報告者は新規プロファイル、横/縦、Lepton・Photon・Firefox UI Fix・Fluerialでも発生し、Protonは正常と追記。次: 現行版のテーマとアクティブ状態を固定し表示とスタイルを比較。区分: 報告者再現・当方未検証。\n\n参照 main `984509d2053be7bae9027133bda7259cd706b208`。今回の新規ブラウザーテストは未実施。Issue番号のPR検索で直接対象を確認できず、関連PRが存在しない証明ではない。状態は変更しない。",
+      "created": "2026-11-05T18:31:17.268+0900",
+      "updated": "2026-11-05T18:31:17.268+0900"
+    },
+    {
+      "id": "10369",
+      "body": "## 2026-11-06: Photon の実製品対照と Draft PR\n\n分類: Photon では隔離実製品で再現し、候補 CSS の一時適用で表示回復。全デザインの修正完了ではありません。\n\nWindows、公式 Floorp 12.21.1 / Gecko 159.0.1、専用新規 profile。実行ファイル SHA-256 は `outputs/kan26-evidence/verify.json` に記録。ソース比較 base `29a3eb23145da90706d8a94441373278521cc737`、候補 head `316a2cb20a42f`（配布 binary と source SHA の一致は未証明）。\n\n手順: Photon を指定しコンテナ1/2の実タブと非コンテナタブを作成。横/縦 `verticalMode` を実測、選択・非選択時のコンテナ線の computed style と矩形を取得。公式 binary の起動中に候補 CSS のみを一時注入して比較。修正前は選択中 opacity 0、width 0、色はコンテナ色ではない。注入後は青・橙の identity 色、opacity 1、横約195×2 px／縦2×24 px。非コンテナは同ルールの対象外。WebDriver pointer hover と横 multiselected を実確認。縦 multiselected は未確認。\n\n原因候補: Photon の旧 CSS が `selected=\"true\"` を前提とするが現行 tab は空属性を使い、コンテナの identity 色も `none` に上書きする。縦では旧 CSS の高さ2px固定も影響。\n\n候補 [Draft PR #3041](https://github.com/Floorp-Projects/Floorp/pull/3041)。同梱の browser test は2色と選択表現／複数選択／非選択、縦高さを検証。関連 design suite 17/17 modules pass、fmt/lint/diff check pass。証拠: `outputs/kan26-evidence/result.json`, `verify.json`, screenshots と `outputs/KAN-26-followup.md`。\n\n制約／次: CSS注入試験は候補コミットを完全パッケージしたビルドではない。元の12.20.2や Lepton / Firefox UI Fix / Fluerial の報告条件で修正済みとは判断しない。完全ビルドで表示・実サイズ・高DPI、縦 multiple selection、その他デザインを別途検証。マージ前で完了にはしない。",
+      "created": "2026-11-06T03:09:05.751+0900",
+      "updated": "2026-11-06T03:09:05.751+0900"
+    },
+    {
+      "id": "10371",
+      "body": "追記: PR #3041 の初回 CI smoke は追加テストの TypeScript null 判定漏れで失敗。ガードを追加し head `1c37f3f2c53c5b213e679321e0116d4c7474661f` に更新。ローカル deno check および新テスト実ブラウザー 1/1 通過。新 head CI は実行中。17/17 の実ブラウザー結果は前 head であり、差分はテスト側の null ガードのみ。",
+      "created": "2026-11-06T03:11:22.695+0900",
+      "updated": "2026-11-06T03:11:22.695+0900"
+    },
+    {
+      "id": "10377",
+      "body": "## 追加検証開始（2026-11-06）\n\nPR #3041 head `1c37f3f2c53c5b213e679321e0116d4c7474661f` は [CI 42081810744](https://github.com/Floorp-Projects/Floorp/actions/runs/42081810744) の Windows / macOS / Linux ARM / Linux x64 および smoke が成功。署名なし Linux 完全 package [run 42083752770](https://github.com/Floorp-Projects/Floorp/actions/runs/42083752770) を同 head で開始、stable-v2-validation、skip_signing=true、Runtime `8965ffc346d426ccdf919bd18585e4d4a0c21654`。manifest digest と native artifact metadata は検証済み、実行結果はまだ出ていません。\n\n基準 package の ZIP SHA-256 `83667970ddcfc2d3f350367f511106ddaf6f52c5ca8ae3069a44870aee22913c`、既存展開物の全ファイル hash は先の検証記録と一致。Ubuntu 24.04.2 WSL2 / Xvfb の独立 profile で、Photon の青／橙の選択中 indicator が横・縦とも opacity 0・幅0であることを確認。横・縦の hover と複数選択も操作可能。基準 product の全ファイル hash は試験前後で一致。`outputs/kan26-evidence/linux-baseline/result.json`。候補 package の同一条件試験は生成完了後に実施するため、この時点では修正成功とはしない。",
+      "created": "2026-11-06T03:25:25.615+0900",
+      "updated": "2026-11-06T03:25:25.615+0900"
+    },
+    {
+      "id": "10387",
+      "body": "## 完全 Linux パッケージの実製品比較（2026-11-06）\n\n[PR #3041](https://github.com/Floorp-Projects/Floorp/pull/3041) の exact head `1c37f3f2c53c5b213e679321e0116d4c7474661f` は [CI 42081810744](https://github.com/Floorp-Projects/Floorp/actions/runs/42081810744) 全成功。署名なし package [run 42083752770](https://github.com/Floorp-Projects/Floorp/actions/runs/42083752770) も成功。stable-v2-validation、skip_signing=true、Runtime `8965ffc346d426ccdf919bd18585e4d4a0c21654`、manifest artifact 13274392012 の SHA-256 `2b6a1b20190dc7016957ca25f72f8e83f267de51458b515153fd209bb90d9138` と Linux native artifact 13272530069 の digest `ed5a4f97ee7bf42c817f3146d5a843e095710dcc3be25fae0af0bf47274b739a` は API／manifest が一致。候補 artifact 13442059925 ZIP SHA-256 `e103fef03a5e0176a6305969606a7e04bdbe40758acc7af67003dd7c3778f4b0`、内包 tar `3d44d35576cdc2df5eeaba261a21f9784cdc39c206e37cb99f765c1d390c7f61`。基準 ZIP SHA-256 `83667970ddcfc2d3f350367f511106ddaf6f52c5ca8ae3069a44870aee22913c` と既存展開物の全 hash も照合。\n\nUbuntu 24.04.2 WSL2 / Xvfb、別 HOME・profile、WebDriver 入力、変更を注入していない両完全製品で Photon の横/実 verticalMode、青/橙、選択/非選択、hover と複数選択、非コンテナを比較。34/34 assertion pass。基準の選択中 line は opacity 0・幅0、候補はコンテナごとの色と可視寸法に復旧。非コンテナ computed style に差なし。両 product の全ファイル hash は試験前後一致、両 process 正常終了 exit 0。証拠 `outputs/kan26-evidence/linux-baseline/`、`linux-candidate/`、`linux-compare.json` と `linux-package-test.py`。 [PR コメント](https://github.com/Floorp-Projects/Floorp/pull/3041#issuecomment-6666329184)。\n\n区分: 完全 package の限定 Linux 環境では修正検証。Xvfb は物理 GPU／原 Windows 12.20.2 ではなく、署名済み配布物や Photon 以外の報告について修正完了とは判断しない。課題は進行中を維持、マージ・リリースなし。",
+      "created": "2026-11-06T03:47:20.472+0900",
+      "updated": "2026-11-06T03:47:20.472+0900"
+    },
+    {
+      "id": "10388",
+      "body": "10387 の補足: hover + multiselected の状態についても、青いコンテナ線の色・opacity・変形・実寸法を横／縦で明示的に追加検証した。追加2/2 pass、比較結果全体は 36/36 pass に更新。結果は `outputs/kan26-evidence/linux-compare.json`。",
+      "created": "2026-11-06T03:48:14.403+0900",
+      "updated": "2026-11-06T03:48:14.403+0900"
+    }
+  ]
+}

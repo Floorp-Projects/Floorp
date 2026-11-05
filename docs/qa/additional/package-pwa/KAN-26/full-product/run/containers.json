@@ -1,0 +1,16 @@
+{
+  "blue": {
+    "userContextId": 7,
+    "public": true,
+    "icon": "fingerprint",
+    "color": "blue",
+    "name": "QA Blue"
+  },
+  "orange": {
+    "userContextId": 8,
+    "public": true,
+    "icon": "briefcase",
+    "color": "orange",
+    "name": "QA Orange"
+  }
+}

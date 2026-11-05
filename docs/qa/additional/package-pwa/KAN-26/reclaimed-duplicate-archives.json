@@ -1,0 +1,14 @@
+[
+  {
+    "removedDuplicate": "/workspace/qa-linux-22/package-pwa/wayland-browser-identity/full-package/intake-r2/floorp-linux-x86_64.tar.xz",
+    "survivingExactArchive": "/workspace/qa-linux-22/package-pwa/wayland-browser-identity/full-package/floorp-linux-x86_64.tar.xz",
+    "sha256": "bafdaf44e310aa22b41a9cb740dff47b07c51ada37978008c47d6952c6564976",
+    "bytes": 108181052
+  },
+  {
+    "removedDuplicate": "/workspace/qa-linux-22/package-pwa/wayland-browser-identity/full-package/lock-diagnostic-intake/floorp-linux-x86_64.tar.xz",
+    "survivingExactArchive": "/workspace/qa-linux-22/package-pwa/wayland-browser-identity/full-package/floorp-linux-x86_64.tar.xz",
+    "sha256": "bafdaf44e310aa22b41a9cb740dff47b07c51ada37978008c47d6952c6564976",
+    "bytes": 108181052
+  }
+]

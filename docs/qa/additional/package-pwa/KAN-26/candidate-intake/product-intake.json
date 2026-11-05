@@ -1,0 +1,38 @@
+{
+  "sourceSha": "0e80f14dc439dde7817c0620f0fc112d54dfba80",
+  "run": {
+    "id": 42113006050,
+    "head_sha": "0e80f14dc439dde7817c0620f0fc112d54dfba80",
+    "status": "completed",
+    "conclusion": "success",
+    "path": ".github/workflows/package.yml",
+    "event": "workflow_dispatch",
+    "html_url": "https://github.com/Floorp-Projects/Floorp/actions/runs/42113006050",
+    "created_at": "2026-11-05T21:28:49Z",
+    "updated_at": "2026-11-05T21:47:16Z"
+  },
+  "artifact": {
+    "id": 13455701396,
+    "name": "noraneko-linux-x86_64-installer-unsigned",
+    "size_in_bytes": 108199970,
+    "digest": "sha256:8b9dd3f6d2931d237c4944ced4735646678df2e599f48b4c6cc751bab852f8b6",
+    "expired": false,
+    "created_at": "2026-11-05T21:47:05Z",
+    "expires_at": "2027-02-03T21:28:50Z",
+    "workflow_run": {
+      "id": 42113006050,
+      "repository_id": 437505831,
+      "head_repository_id": 437505831,
+      "head_branch": "codex/kan26-nonphoton-followup",
+      "head_sha": "0e80f14dc439dde7817c0620f0fc112d54dfba80"
+    }
+  },
+  "archiveZipSha256": "8b9dd3f6d2931d237c4944ced4735646678df2e599f48b4c6cc751bab852f8b6",
+  "packageTarSha256": "38106ec5ee8d544ed92a32aa04f4b049d18bfa2f8a90ce7bec2fcde41d2d0c33",
+  "tarMemberCount": 57,
+  "product": "/workspace/qa-linux-additional/KAN-26/candidate-product/floorp",
+  "applicationIni": "; This file is not used. If you modify it and want the application to use\n; your modifications, move it under the browser/ subdirectory and start with\n; the \"-app /path/to/browser/application.ini\" argument.\n[App]\nVendor=Ablaze\nName=Floorp\nRemotingName=floorp\nVersion=12.21.1@159.0.1\nProfile=Floorp\nBuildID=20261105213314\nID={ec8030f7-c20a-464f-9b0e-13a3a9e97384}\n\n[Gecko]\nMinVersion=159.0.1\nMaxVersion=159.0.1\n\n[XRE]\nEnableProfileMigrator=1\n\n\n[AppUpdate]\nURL=https://aus5.mozilla.org/update/6/%PRODUCT%/%VERSION%/%BUILD_ID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%SYSTEM_CAPABILITIES%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/update.xml\n",
+  "platformIni": "[Build]\nBuildID=20261105213314\nMilestone=159.0.1\n",
+  "extraction": "fresh root, unique floorp members, standard datafilter; authenticated compressedtar streamed from ZIP without duplicate cache",
+  "qualification": "complete existing unsigned application/package pipeline with locked prebuilt native Runtime; no resource substitution/freshGecko/strictrelease qualification"
+}

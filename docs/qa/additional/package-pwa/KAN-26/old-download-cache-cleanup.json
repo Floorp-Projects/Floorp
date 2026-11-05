@@ -1,0 +1,9 @@
+{
+  "removed": "/workspace/qa-linux-additional/KAN-26/old-product",
+  "reason": "completed original-version comparison; clean public-release downloadcache only, all original snapshots/intake/hash evidence retained",
+  "restoreCommand": "python3 download_original.py --out <fresh-dir>",
+  "archiveSha256": "059a85f0e40c9f3649ae61fe716ecbdde85f06971a600aeec5c3e8f3a0af6004",
+  "productFiles": 46,
+  "bytes": 371401812,
+  "sourceAndUserDataRemoved": false
+}

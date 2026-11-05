@@ -1,0 +1,7 @@
+{
+  "path": "/workspace/qa-kan24-candidate/node_modules",
+  "reason": "ignored reinstallable dependencies of completed isolatedKAN24 candidate worktree only; trackedsource/lock/evidence/globalDeno cache retained",
+  "denoLockSha256": "1eb6c7fa6538a850e216736323edb3eedee85754cb0500e1f171ab945af62d4e",
+  "regenerate": "deno install --frozen",
+  "trackedFilesUnderDirectory": 0
+}

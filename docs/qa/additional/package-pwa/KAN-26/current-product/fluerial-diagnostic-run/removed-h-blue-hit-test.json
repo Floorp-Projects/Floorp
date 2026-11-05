@@ -1,0 +1,35 @@
+{
+  "label": {
+    "rect": {
+      "x": 235,
+      "y": 10.666671752929688,
+      "width": 52.06666564941406,
+      "height": 22.666656494140625,
+      "top": 10.666671752929688,
+      "right": 287.06666564941406,
+      "bottom": 33.33332824707031,
+      "left": 235
+    },
+    "hitTag": "label",
+    "hitClass": "tab-text tab-label",
+    "hitIsTargetOrDescendant": true,
+    "hitInsideTab": true
+  },
+  "close": {
+    "rect": {
+      "x": 426,
+      "y": 10,
+      "width": 18,
+      "height": 24,
+      "top": 10,
+      "right": 444,
+      "bottom": 34,
+      "left": 426
+    },
+    "hitTag": "image",
+    "hitClass": "tab-close-button close-icon",
+    "hitIsTargetOrDescendant": true,
+    "hitInsideTab": true
+  },
+  "normalBackgroundPosition": "relative"
+}

@@ -1,0 +1,1828 @@
+[
+  {
+    "id": "fluerial-diagnostic-after-h-selected-blue",
+    "design": "fluerial",
+    "verticalMode": false,
+    "tabs": [
+      {
+        "role": "blue",
+        "selected": true,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 237,
+            "y": 4,
+            "width": 201,
+            "height": 2
+          },
+          "blueHuePixels": 402,
+          "orangeHuePixels": 0,
+          "zeroGeometry": false
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          225,
+          0,
+          450,
+          40
+        ],
+        "blueHuePixels": 402,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "1",
+          "width": "201px",
+          "height": "2px",
+          "backgroundColor": "rgb(55, 173, 255)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0",
+          "width": "1px",
+          "height": "20px",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "absolute",
+          "bottom": "8px",
+          "left": "0px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": ""
+        },
+        "crop": "fluerial-diagnostic-after-h-selected-blue-tab-blue.png"
+      },
+      {
+        "role": "orange",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 462,
+            "y": 0,
+            "width": 201,
+            "height": 2
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 402,
+          "zeroGeometry": false
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          450,
+          0,
+          675,
+          40
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 402,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "1",
+          "width": "201px",
+          "height": "2px",
+          "backgroundColor": "rgb(255, 159, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0",
+          "width": "1px",
+          "height": "20px",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "absolute",
+          "bottom": "10px",
+          "left": "0px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": ""
+        },
+        "crop": "fluerial-diagnostic-after-h-selected-blue-tab-orange.png"
+      },
+      {
+        "role": "normal",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 677,
+            "y": 0,
+            "width": 221,
+            "height": 0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          675,
+          0,
+          900,
+          40
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "1",
+          "width": "221px",
+          "height": "0px",
+          "backgroundColor": "rgba(0, 0, 0, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0",
+          "width": "1px",
+          "height": "20px",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "absolute",
+          "bottom": "10px",
+          "left": "0px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": ""
+        },
+        "crop": "fluerial-diagnostic-after-h-selected-blue-tab-normal.png"
+      }
+    ]
+  },
+  {
+    "id": "fluerial-diagnostic-after-h-selected-normal",
+    "design": "fluerial",
+    "verticalMode": false,
+    "tabs": [
+      {
+        "role": "blue",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 237,
+            "y": 0,
+            "width": 201,
+            "height": 2
+          },
+          "blueHuePixels": 402,
+          "orangeHuePixels": 0,
+          "zeroGeometry": false
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          225,
+          0,
+          450,
+          40
+        ],
+        "blueHuePixels": 402,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "1",
+          "width": "201px",
+          "height": "2px",
+          "backgroundColor": "rgb(55, 173, 255)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0",
+          "width": "1px",
+          "height": "20px",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "absolute",
+          "bottom": "10px",
+          "left": "0px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": ""
+        },
+        "crop": "fluerial-diagnostic-after-h-selected-normal-tab-blue.png"
+      },
+      {
+        "role": "orange",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 462,
+            "y": 0,
+            "width": 201,
+            "height": 2
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 402,
+          "zeroGeometry": false
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          450,
+          0,
+          675,
+          40
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 402,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "1",
+          "width": "201px",
+          "height": "2px",
+          "backgroundColor": "rgb(255, 159, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0",
+          "width": "1px",
+          "height": "20px",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "absolute",
+          "bottom": "10px",
+          "left": "0px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": ""
+        },
+        "crop": "fluerial-diagnostic-after-h-selected-normal-tab-orange.png"
+      },
+      {
+        "role": "normal",
+        "selected": true,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 677,
+            "y": 4,
+            "width": 221,
+            "height": 0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          675,
+          0,
+          900,
+          40
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "1",
+          "width": "221px",
+          "height": "0px",
+          "backgroundColor": "rgba(0, 0, 0, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0",
+          "width": "1px",
+          "height": "20px",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "absolute",
+          "bottom": "8px",
+          "left": "0px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": ""
+        },
+        "crop": "fluerial-diagnostic-after-h-selected-normal-tab-normal.png"
+      }
+    ]
+  },
+  {
+    "id": "fluerial-diagnostic-after-h-selected-orange",
+    "design": "fluerial",
+    "verticalMode": false,
+    "tabs": [
+      {
+        "role": "blue",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 237,
+            "y": 0,
+            "width": 201,
+            "height": 2
+          },
+          "blueHuePixels": 402,
+          "orangeHuePixels": 0,
+          "zeroGeometry": false
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          225,
+          0,
+          450,
+          40
+        ],
+        "blueHuePixels": 402,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "1",
+          "width": "201px",
+          "height": "2px",
+          "backgroundColor": "rgb(55, 173, 255)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0",
+          "width": "1px",
+          "height": "20px",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "absolute",
+          "bottom": "10px",
+          "left": "0px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": ""
+        },
+        "crop": "fluerial-diagnostic-after-h-selected-orange-tab-blue.png"
+      },
+      {
+        "role": "orange",
+        "selected": true,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 462,
+            "y": 4,
+            "width": 201,
+            "height": 2
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 402,
+          "zeroGeometry": false
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          450,
+          0,
+          675,
+          40
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 402,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "1",
+          "width": "201px",
+          "height": "2px",
+          "backgroundColor": "rgb(255, 159, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0",
+          "width": "1px",
+          "height": "20px",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "absolute",
+          "bottom": "8px",
+          "left": "0px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": ""
+        },
+        "crop": "fluerial-diagnostic-after-h-selected-orange-tab-orange.png"
+      },
+      {
+        "role": "normal",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 677,
+            "y": 0,
+            "width": 221,
+            "height": 0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          675,
+          0,
+          900,
+          40
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "1",
+          "width": "221px",
+          "height": "0px",
+          "backgroundColor": "rgba(0, 0, 0, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0",
+          "width": "1px",
+          "height": "20px",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "absolute",
+          "bottom": "10px",
+          "left": "0px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": ""
+        },
+        "crop": "fluerial-diagnostic-after-h-selected-orange-tab-normal.png"
+      }
+    ]
+  },
+  {
+    "id": "fluerial-diagnostic-after-v-hover-blue",
+    "design": "fluerial",
+    "verticalMode": true,
+    "tabs": [
+      {
+        "role": "blue",
+        "selected": false,
+        "multiselected": false,
+        "hover": true,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 235.6666717529297,
+            "y": 260.33331298828125,
+            "width": 2,
+            "height": 5
+          },
+          "blueHuePixels": 10,
+          "orangeHuePixels": 0,
+          "zeroGeometry": false
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          0,
+          247,
+          248,
+          278
+        ],
+        "blueHuePixels": 10,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "1",
+          "width": "2px",
+          "height": "5px",
+          "backgroundColor": "rgb(55, 173, 255)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0",
+          "width": "1px",
+          "height": "20px",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "absolute",
+          "bottom": "2.5px",
+          "left": "0px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "calc((calc(30px + 2 * 0.75rem) - 16px) / 2)",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": ""
+        },
+        "crop": "fluerial-diagnostic-after-v-hover-blue-tab-blue.png"
+      },
+      {
+        "role": "orange",
+        "selected": true,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 235.6666717529297,
+            "y": 290.33331298828125,
+            "width": 2,
+            "height": 10
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 20,
+          "zeroGeometry": false
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          0,
+          277,
+          248,
+          313
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 20,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "1",
+          "width": "2px",
+          "height": "10px",
+          "backgroundColor": "rgb(255, 159, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0",
+          "width": "1px",
+          "height": "20px",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "absolute",
+          "bottom": "5px",
+          "left": "0px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "calc((calc(30px + 2 * 0.75rem) - 16px) / 2)",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": ""
+        },
+        "crop": "fluerial-diagnostic-after-v-hover-blue-tab-orange.png"
+      },
+      {
+        "role": "normal",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 237.6666717529297,
+            "y": 315.33331298828125,
+            "width": 0,
+            "height": 30
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          0,
+          312,
+          248,
+          348
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "1",
+          "width": "0px",
+          "height": "30px",
+          "backgroundColor": "rgba(0, 0, 0, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0",
+          "width": "1px",
+          "height": "20px",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "absolute",
+          "bottom": "5px",
+          "left": "0px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "calc((calc(30px + 2 * 0.75rem) - 16px) / 2)",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": ""
+        },
+        "crop": "fluerial-diagnostic-after-v-hover-blue-tab-normal.png"
+      }
+    ]
+  },
+  {
+    "id": "fluerial-diagnostic-after-v-idle",
+    "design": "fluerial",
+    "verticalMode": true,
+    "tabs": [
+      {
+        "role": "blue",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 235.6666717529297,
+            "y": 260.33331298828125,
+            "width": 2,
+            "height": 10
+          },
+          "blueHuePixels": 20,
+          "orangeHuePixels": 0,
+          "zeroGeometry": false
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          0,
+          247,
+          248,
+          283
+        ],
+        "blueHuePixels": 20,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "1",
+          "width": "2px",
+          "height": "10px",
+          "backgroundColor": "rgb(55, 173, 255)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0",
+          "width": "1px",
+          "height": "20px",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "absolute",
+          "bottom": "5px",
+          "left": "0px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "calc((calc(30px + 2 * 0.75rem) - 16px) / 2)",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": ""
+        },
+        "crop": "fluerial-diagnostic-after-v-idle-tab-blue.png"
+      },
+      {
+        "role": "orange",
+        "selected": true,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 235.6666717529297,
+            "y": 295.33331298828125,
+            "width": 2,
+            "height": 10
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 20,
+          "zeroGeometry": false
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          0,
+          282,
+          248,
+          318
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 20,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "1",
+          "width": "2px",
+          "height": "10px",
+          "backgroundColor": "rgb(255, 159, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0",
+          "width": "1px",
+          "height": "20px",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "absolute",
+          "bottom": "5px",
+          "left": "0px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "calc((calc(30px + 2 * 0.75rem) - 16px) / 2)",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": ""
+        },
+        "crop": "fluerial-diagnostic-after-v-idle-tab-orange.png"
+      },
+      {
+        "role": "normal",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 237.6666717529297,
+            "y": 320.33331298828125,
+            "width": 0,
+            "height": 30
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          0,
+          317,
+          248,
+          353
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "1",
+          "width": "0px",
+          "height": "30px",
+          "backgroundColor": "rgba(0, 0, 0, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0",
+          "width": "1px",
+          "height": "20px",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "absolute",
+          "bottom": "5px",
+          "left": "0px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "calc((calc(30px + 2 * 0.75rem) - 16px) / 2)",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": ""
+        },
+        "crop": "fluerial-diagnostic-after-v-idle-tab-normal.png"
+      }
+    ]
+  },
+  {
+    "id": "fluerial-diagnostic-before-h-selected-blue",
+    "design": "fluerial",
+    "verticalMode": false,
+    "tabs": [
+      {
+        "role": "blue",
+        "selected": true,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 237,
+            "y": 4,
+            "width": 201,
+            "height": 2
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": false
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          225,
+          0,
+          450,
+          40
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "1",
+          "width": "201px",
+          "height": "2px",
+          "backgroundColor": "rgb(55, 173, 255)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0",
+          "width": "1px",
+          "height": "20px",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "absolute",
+          "bottom": "8px",
+          "left": "0px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": ""
+        },
+        "crop": "fluerial-diagnostic-before-h-selected-blue-tab-blue.png"
+      },
+      {
+        "role": "orange",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 462,
+            "y": 0,
+            "width": 201,
+            "height": 2
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 402,
+          "zeroGeometry": false
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          450,
+          0,
+          675,
+          40
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 402,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "1",
+          "width": "201px",
+          "height": "2px",
+          "backgroundColor": "rgb(255, 159, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0",
+          "width": "1px",
+          "height": "20px",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "absolute",
+          "bottom": "10px",
+          "left": "0px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": ""
+        },
+        "crop": "fluerial-diagnostic-before-h-selected-blue-tab-orange.png"
+      },
+      {
+        "role": "normal",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 677,
+            "y": 0,
+            "width": 221,
+            "height": 0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          675,
+          0,
+          900,
+          40
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "1",
+          "width": "221px",
+          "height": "0px",
+          "backgroundColor": "rgba(0, 0, 0, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0",
+          "width": "1px",
+          "height": "20px",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "absolute",
+          "bottom": "10px",
+          "left": "0px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": ""
+        },
+        "crop": "fluerial-diagnostic-before-h-selected-blue-tab-normal.png"
+      }
+    ]
+  },
+  {
+    "id": "fluerial-diagnostic-before-h-selected-normal",
+    "design": "fluerial",
+    "verticalMode": false,
+    "tabs": [
+      {
+        "role": "blue",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 237,
+            "y": 0,
+            "width": 201,
+            "height": 2
+          },
+          "blueHuePixels": 402,
+          "orangeHuePixels": 0,
+          "zeroGeometry": false
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          225,
+          0,
+          450,
+          40
+        ],
+        "blueHuePixels": 402,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "1",
+          "width": "201px",
+          "height": "2px",
+          "backgroundColor": "rgb(55, 173, 255)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0",
+          "width": "1px",
+          "height": "20px",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "absolute",
+          "bottom": "10px",
+          "left": "0px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": ""
+        },
+        "crop": "fluerial-diagnostic-before-h-selected-normal-tab-blue.png"
+      },
+      {
+        "role": "orange",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 462,
+            "y": 0,
+            "width": 201,
+            "height": 2
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 402,
+          "zeroGeometry": false
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          450,
+          0,
+          675,
+          40
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 402,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "1",
+          "width": "201px",
+          "height": "2px",
+          "backgroundColor": "rgb(255, 159, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0",
+          "width": "1px",
+          "height": "20px",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "absolute",
+          "bottom": "10px",
+          "left": "0px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": ""
+        },
+        "crop": "fluerial-diagnostic-before-h-selected-normal-tab-orange.png"
+      },
+      {
+        "role": "normal",
+        "selected": true,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 677,
+            "y": 4,
+            "width": 221,
+            "height": 0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          675,
+          0,
+          900,
+          40
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "1",
+          "width": "221px",
+          "height": "0px",
+          "backgroundColor": "rgba(0, 0, 0, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0",
+          "width": "1px",
+          "height": "20px",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "absolute",
+          "bottom": "8px",
+          "left": "0px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": ""
+        },
+        "crop": "fluerial-diagnostic-before-h-selected-normal-tab-normal.png"
+      }
+    ]
+  },
+  {
+    "id": "fluerial-diagnostic-before-h-selected-orange",
+    "design": "fluerial",
+    "verticalMode": false,
+    "tabs": [
+      {
+        "role": "blue",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 237,
+            "y": 0,
+            "width": 201,
+            "height": 2
+          },
+          "blueHuePixels": 402,
+          "orangeHuePixels": 0,
+          "zeroGeometry": false
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          225,
+          0,
+          450,
+          40
+        ],
+        "blueHuePixels": 402,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "1",
+          "width": "201px",
+          "height": "2px",
+          "backgroundColor": "rgb(55, 173, 255)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0",
+          "width": "1px",
+          "height": "20px",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "absolute",
+          "bottom": "10px",
+          "left": "0px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": ""
+        },
+        "crop": "fluerial-diagnostic-before-h-selected-orange-tab-blue.png"
+      },
+      {
+        "role": "orange",
+        "selected": true,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 462,
+            "y": 4,
+            "width": 201,
+            "height": 2
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": false
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          450,
+          0,
+          675,
+          40
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "1",
+          "width": "201px",
+          "height": "2px",
+          "backgroundColor": "rgb(255, 159, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0",
+          "width": "1px",
+          "height": "20px",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "absolute",
+          "bottom": "8px",
+          "left": "0px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": ""
+        },
+        "crop": "fluerial-diagnostic-before-h-selected-orange-tab-orange.png"
+      },
+      {
+        "role": "normal",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 677,
+            "y": 0,
+            "width": 221,
+            "height": 0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          675,
+          0,
+          900,
+          40
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "1",
+          "width": "221px",
+          "height": "0px",
+          "backgroundColor": "rgba(0, 0, 0, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0",
+          "width": "1px",
+          "height": "20px",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "absolute",
+          "bottom": "10px",
+          "left": "0px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": ""
+        },
+        "crop": "fluerial-diagnostic-before-h-selected-orange-tab-normal.png"
+      }
+    ]
+  },
+  {
+    "id": "fluerial-diagnostic-before-v-hover-blue",
+    "design": "fluerial",
+    "verticalMode": true,
+    "tabs": [
+      {
+        "role": "blue",
+        "selected": false,
+        "multiselected": false,
+        "hover": true,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 249.46665954589844,
+            "y": 260.33331298828125,
+            "width": 2,
+            "height": 0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          0,
+          247,
+          248,
+          278
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "1",
+          "width": "2px",
+          "height": "0px",
+          "backgroundColor": "rgb(55, 173, 255)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0",
+          "width": "1px",
+          "height": "20px",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "absolute",
+          "bottom": "2.5px",
+          "left": "0px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "calc((calc(30px + 2 * 0.75rem) - 16px) / 2)",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": ""
+        },
+        "crop": "fluerial-diagnostic-before-v-hover-blue-tab-blue.png"
+      },
+      {
+        "role": "orange",
+        "selected": true,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 235.6666717529297,
+            "y": 290.33331298828125,
+            "width": 2,
+            "height": 10
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 20,
+          "zeroGeometry": false
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          0,
+          277,
+          248,
+          313
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 20,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "1",
+          "width": "2px",
+          "height": "10px",
+          "backgroundColor": "rgb(255, 159, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0",
+          "width": "1px",
+          "height": "20px",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "absolute",
+          "bottom": "5px",
+          "left": "0px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "calc((calc(30px + 2 * 0.75rem) - 16px) / 2)",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": ""
+        },
+        "crop": "fluerial-diagnostic-before-v-hover-blue-tab-orange.png"
+      },
+      {
+        "role": "normal",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 237.6666717529297,
+            "y": 315.33331298828125,
+            "width": 0,
+            "height": 30
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          0,
+          312,
+          248,
+          348
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "1",
+          "width": "0px",
+          "height": "30px",
+          "backgroundColor": "rgba(0, 0, 0, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0",
+          "width": "1px",
+          "height": "20px",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "absolute",
+          "bottom": "5px",
+          "left": "0px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "calc((calc(30px + 2 * 0.75rem) - 16px) / 2)",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": ""
+        },
+        "crop": "fluerial-diagnostic-before-v-hover-blue-tab-normal.png"
+      }
+    ]
+  },
+  {
+    "id": "fluerial-diagnostic-before-v-idle",
+    "design": "fluerial",
+    "verticalMode": true,
+    "tabs": [
+      {
+        "role": "blue",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 235.6666717529297,
+            "y": 260.33331298828125,
+            "width": 2,
+            "height": 10
+          },
+          "blueHuePixels": 20,
+          "orangeHuePixels": 0,
+          "zeroGeometry": false
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          0,
+          247,
+          248,
+          283
+        ],
+        "blueHuePixels": 20,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "1",
+          "width": "2px",
+          "height": "10px",
+          "backgroundColor": "rgb(55, 173, 255)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0",
+          "width": "1px",
+          "height": "20px",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "absolute",
+          "bottom": "5px",
+          "left": "0px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "calc((calc(30px + 2 * 0.75rem) - 16px) / 2)",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": ""
+        },
+        "crop": "fluerial-diagnostic-before-v-idle-tab-blue.png"
+      },
+      {
+        "role": "orange",
+        "selected": true,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 235.6666717529297,
+            "y": 295.33331298828125,
+            "width": 2,
+            "height": 10
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 20,
+          "zeroGeometry": false
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          0,
+          282,
+          248,
+          318
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 20,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "1",
+          "width": "2px",
+          "height": "10px",
+          "backgroundColor": "rgb(255, 159, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0",
+          "width": "1px",
+          "height": "20px",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "absolute",
+          "bottom": "5px",
+          "left": "0px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "calc((calc(30px + 2 * 0.75rem) - 16px) / 2)",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": ""
+        },
+        "crop": "fluerial-diagnostic-before-v-idle-tab-orange.png"
+      },
+      {
+        "role": "normal",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 237.6666717529297,
+            "y": 320.33331298828125,
+            "width": 0,
+            "height": 30
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          0,
+          317,
+          248,
+          353
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "1",
+          "width": "0px",
+          "height": "30px",
+          "backgroundColor": "rgba(0, 0, 0, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0",
+          "width": "1px",
+          "height": "20px",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "absolute",
+          "bottom": "5px",
+          "left": "0px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "calc((calc(30px + 2 * 0.75rem) - 16px) / 2)",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": ""
+        },
+        "crop": "fluerial-diagnostic-before-v-idle-tab-normal.png"
+      }
+    ]
+  },
+  {
+    "id": "fluerial-diagnostic-removed-h-selected-blue",
+    "design": "fluerial",
+    "verticalMode": false,
+    "tabs": [
+      {
+        "role": "blue",
+        "selected": true,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 237,
+            "y": 4,
+            "width": 201,
+            "height": 2
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": false
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          225,
+          0,
+          450,
+          40
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "1",
+          "width": "201px",
+          "height": "2px",
+          "backgroundColor": "rgb(55, 173, 255)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0",
+          "width": "1px",
+          "height": "20px",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "absolute",
+          "bottom": "8px",
+          "left": "0px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": ""
+        },
+        "crop": "fluerial-diagnostic-removed-h-selected-blue-tab-blue.png"
+      },
+      {
+        "role": "orange",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 462,
+            "y": 0,
+            "width": 201,
+            "height": 2
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 402,
+          "zeroGeometry": false
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          450,
+          0,
+          675,
+          40
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 402,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "1",
+          "width": "201px",
+          "height": "2px",
+          "backgroundColor": "rgb(255, 159, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0",
+          "width": "1px",
+          "height": "20px",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "absolute",
+          "bottom": "10px",
+          "left": "0px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": ""
+        },
+        "crop": "fluerial-diagnostic-removed-h-selected-blue-tab-orange.png"
+      },
+      {
+        "role": "normal",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 677,
+            "y": 0,
+            "width": 221,
+            "height": 0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          675,
+          0,
+          900,
+          40
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "1",
+          "width": "221px",
+          "height": "0px",
+          "backgroundColor": "rgba(0, 0, 0, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0",
+          "width": "1px",
+          "height": "20px",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "absolute",
+          "bottom": "10px",
+          "left": "0px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": ""
+        },
+        "crop": "fluerial-diagnostic-removed-h-selected-blue-tab-normal.png"
+      }
+    ]
+  }
+]

@@ -1,0 +1,8 @@
+{
+  "conclusion": "success",
+  "databaseId": 42110973642,
+  "headSha": "3a9f99ae12dbb221f63b28ec210b04fafcf2be15",
+  "status": "completed",
+  "url": "https://github.com/Floorp-Projects/Floorp/actions/runs/42110973642",
+  "reason": "Superseded by strict test-composition contract correction at0e80f14d; no product CSS change; never exercised obsolete candidate"
+}

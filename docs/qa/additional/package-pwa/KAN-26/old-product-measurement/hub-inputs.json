@@ -1,0 +1,217 @@
+[
+  {
+    "name": "",
+    "value": "",
+    "type": "search"
+  },
+  {
+    "name": "design",
+    "value": "proton",
+    "type": "radio"
+  },
+  {
+    "name": "design",
+    "value": "lepton",
+    "type": "radio"
+  },
+  {
+    "name": "design",
+    "value": "photon",
+    "type": "radio"
+  },
+  {
+    "name": "design",
+    "value": "protonfix",
+    "type": "radio"
+  },
+  {
+    "name": "design",
+    "value": "fluerial",
+    "type": "radio"
+  },
+  {
+    "name": "",
+    "value": "on",
+    "type": "checkbox"
+  },
+  {
+    "name": "style",
+    "value": "horizontal",
+    "type": "radio"
+  },
+  {
+    "name": "style",
+    "value": "multirow",
+    "type": "radio"
+  },
+  {
+    "name": "style",
+    "value": "vertical",
+    "type": "radio"
+  },
+  {
+    "name": "position",
+    "value": "default",
+    "type": "radio"
+  },
+  {
+    "name": "position",
+    "value": "hide-horizontal-tabbar",
+    "type": "radio"
+  },
+  {
+    "name": "position",
+    "value": "optimise-to-vertical-tabbar",
+    "type": "radio"
+  },
+  {
+    "name": "position",
+    "value": "bottom-of-navigation-toolbar",
+    "type": "radio"
+  },
+  {
+    "name": "position",
+    "value": "bottom-of-window",
+    "type": "radio"
+  },
+  {
+    "name": "",
+    "value": "on",
+    "type": "checkbox"
+  },
+  {
+    "name": "",
+    "value": "on",
+    "type": "checkbox"
+  },
+  {
+    "name": "",
+    "value": "on",
+    "type": "checkbox"
+  },
+  {
+    "name": "tabOpenPosition",
+    "value": "-1",
+    "type": "radio"
+  },
+  {
+    "name": "tabOpenPosition",
+    "value": "0",
+    "type": "radio"
+  },
+  {
+    "name": "tabOpenPosition",
+    "value": "1",
+    "type": "radio"
+  },
+  {
+    "name": "",
+    "value": "on",
+    "type": "checkbox"
+  },
+  {
+    "name": "",
+    "value": "on",
+    "type": "checkbox"
+  },
+  {
+    "name": "",
+    "value": "on",
+    "type": "checkbox"
+  },
+  {
+    "name": "",
+    "value": "76",
+    "type": "number"
+  },
+  {
+    "name": "",
+    "value": "30",
+    "type": "number"
+  },
+  {
+    "name": "",
+    "value": "on",
+    "type": "checkbox"
+  },
+  {
+    "name": "",
+    "value": "on",
+    "type": "checkbox"
+  },
+  {
+    "name": "",
+    "value": "on",
+    "type": "checkbox"
+  },
+  {
+    "name": "",
+    "value": "",
+    "type": "text"
+  },
+  {
+    "name": "navbarPosition",
+    "value": "top",
+    "type": "radio"
+  },
+  {
+    "name": "navbarPosition",
+    "value": "bottom",
+    "type": "radio"
+  },
+  {
+    "name": "",
+    "value": "on",
+    "type": "checkbox"
+  },
+  {
+    "name": "",
+    "value": "on",
+    "type": "checkbox"
+  },
+  {
+    "name": "",
+    "value": "on",
+    "type": "checkbox"
+  },
+  {
+    "name": "",
+    "value": "on",
+    "type": "checkbox"
+  },
+  {
+    "name": "",
+    "value": "on",
+    "type": "checkbox"
+  },
+  {
+    "name": "",
+    "value": "on",
+    "type": "checkbox"
+  },
+  {
+    "name": "",
+    "value": "on",
+    "type": "checkbox"
+  },
+  {
+    "name": "",
+    "value": "on",
+    "type": "checkbox"
+  },
+  {
+    "name": "bookmarkBarPosition",
+    "value": "top",
+    "type": "radio"
+  },
+  {
+    "name": "bookmarkBarPosition",
+    "value": "bottom",
+    "type": "radio"
+  },
+  {
+    "name": "",
+    "value": "on",
+    "type": "checkbox"
+  }
+]

@@ -1,0 +1,257 @@
+{
+  "run": 42112961086,
+  "headSha": "0e80f14dc439dde7817c0620f0fc112d54dfba80",
+  "artifactId": 13456440170,
+  "artifactName": "test-logs-ubuntu-24.04",
+  "apiDigest": "sha256:a67d1c09ef721bfab4db0e0ac66f67f4aaa1de7be4093ba38f9635a48f402568",
+  "actualSha256": "a67d1c09ef721bfab4db0e0ac66f67f4aaa1de7be4093ba38f9635a48f402568",
+  "digestVerified": true,
+  "targetModulesSuccessful": {
+    "lepton-container-geometry.test.ts": true,
+    "fluerial-container.test.ts": true
+  },
+  "existingControlModulesSuccessful": {
+    "container-indicator.test.ts": true,
+    "fluerial-groups.test.ts": true,
+    "lepton-compat.test.ts": true
+  },
+  "summary": {
+    "modulesPassed": 284,
+    "modulesFailed": 0
+  },
+  "downloadedFirefox": {
+    "files": 8,
+    "tasks": 16,
+    "tasksPassed": 16
+  },
+  "excerpts": [
+    {
+      "file": "_dist/ci-combined-browser-test.log",
+      "line": 37,
+      "text": "[INFO]   - browser-features/chrome/common/designs/test/configs.test.ts\n[INFO]   - browser-features/chrome/common/designs/test/container-indicator.test.ts\n[INFO]   - browser-features/chrome/common/designs/test/content-style-lifecycle.test.ts\n[INFO]   - browser-features/chrome/common/designs/test/css.test.ts"
+    },
+    {
+      "file": "_dist/ci-combined-browser-test.log",
+      "line": 40,
+      "text": "[INFO]   - browser-features/chrome/common/designs/test/css.test.ts\n[INFO]   - browser-features/chrome/common/designs/test/fluerial-container.test.ts\n[INFO]   - browser-features/chrome/common/designs/test/fluerial-groups.test.ts\n[INFO]   - browser-features/chrome/common/designs/test/lepton-compat.test.ts"
+    },
+    {
+      "file": "_dist/ci-combined-browser-test.log",
+      "line": 41,
+      "text": "[INFO]   - browser-features/chrome/common/designs/test/fluerial-container.test.ts\n[INFO]   - browser-features/chrome/common/designs/test/fluerial-groups.test.ts\n[INFO]   - browser-features/chrome/common/designs/test/lepton-compat.test.ts\n[INFO]   - browser-features/chrome/common/designs/test/lepton-container-geometry.test.ts"
+    },
+    {
+      "file": "_dist/ci-combined-browser-test.log",
+      "line": 42,
+      "text": "[INFO]   - browser-features/chrome/common/designs/test/fluerial-groups.test.ts\n[INFO]   - browser-features/chrome/common/designs/test/lepton-compat.test.ts\n[INFO]   - browser-features/chrome/common/designs/test/lepton-container-geometry.test.ts\n[INFO]   - browser-features/chrome/common/designs/test/menu-icons.test.ts"
+    },
+    {
+      "file": "_dist/ci-combined-browser-test.log",
+      "line": 43,
+      "text": "[INFO]   - browser-features/chrome/common/designs/test/lepton-compat.test.ts\n[INFO]   - browser-features/chrome/common/designs/test/lepton-container-geometry.test.ts\n[INFO]   - browser-features/chrome/common/designs/test/menu-icons.test.ts\n[INFO]   - browser-features/chrome/common/designs/test/oldConfigMigrator.test.ts"
+    },
+    {
+      "file": "_dist/ci-combined-browser-test.log",
+      "line": 358,
+      "text": "[INFO] \u2713 browser-features/chrome/common/designs/test/configs.test.ts (runAllTests, 666ms)\n[INFO] [31/284] Completed browser-features/chrome/common/designs/test/container-indicator.test.ts\n[INFO] \u2713 browser-features/chrome/common/designs/test/container-indicator.test.ts (runAllTests, 57ms)\n[INFO] [32/284] Completed browser-features/chrome/common/designs/test/content-style-lifecycle.test.ts"
+    },
+    {
+      "file": "_dist/ci-combined-browser-test.log",
+      "line": 359,
+      "text": "[INFO] [31/284] Completed browser-features/chrome/common/designs/test/container-indicator.test.ts\n[INFO] \u2713 browser-features/chrome/common/designs/test/container-indicator.test.ts (runAllTests, 57ms)\n[INFO] [32/284] Completed browser-features/chrome/common/designs/test/content-style-lifecycle.test.ts\n[INFO] \u2713 browser-features/chrome/common/designs/test/content-style-lifecycle.test.ts (runAllTests, 127ms)"
+    },
+    {
+      "file": "_dist/ci-combined-browser-test.log",
+      "line": 364,
+      "text": "[INFO] \u2713 browser-features/chrome/common/designs/test/css.test.ts (runAllTests, 55ms)\n[INFO] [34/284] Completed browser-features/chrome/common/designs/test/fluerial-container.test.ts\n[INFO] \u2713 browser-features/chrome/common/designs/test/fluerial-container.test.ts (runAllTests, 600ms)\n[INFO] [35/284] Completed browser-features/chrome/common/designs/test/fluerial-groups.test.ts"
+    },
+    {
+      "file": "_dist/ci-combined-browser-test.log",
+      "line": 365,
+      "text": "[INFO] [34/284] Completed browser-features/chrome/common/designs/test/fluerial-container.test.ts\n[INFO] \u2713 browser-features/chrome/common/designs/test/fluerial-container.test.ts (runAllTests, 600ms)\n[INFO] [35/284] Completed browser-features/chrome/common/designs/test/fluerial-groups.test.ts\n[INFO] \u2713 browser-features/chrome/common/designs/test/fluerial-groups.test.ts (runAllTests, 371ms)"
+    },
+    {
+      "file": "_dist/ci-combined-browser-test.log",
+      "line": 366,
+      "text": "[INFO] \u2713 browser-features/chrome/common/designs/test/fluerial-container.test.ts (runAllTests, 600ms)\n[INFO] [35/284] Completed browser-features/chrome/common/designs/test/fluerial-groups.test.ts\n[INFO] \u2713 browser-features/chrome/common/designs/test/fluerial-groups.test.ts (runAllTests, 371ms)\n[INFO] [36/284] Completed browser-features/chrome/common/designs/test/lepton-compat.test.ts"
+    },
+    {
+      "file": "_dist/ci-combined-browser-test.log",
+      "line": 367,
+      "text": "[INFO] [35/284] Completed browser-features/chrome/common/designs/test/fluerial-groups.test.ts\n[INFO] \u2713 browser-features/chrome/common/designs/test/fluerial-groups.test.ts (runAllTests, 371ms)\n[INFO] [36/284] Completed browser-features/chrome/common/designs/test/lepton-compat.test.ts\n[INFO] \u2713 browser-features/chrome/common/designs/test/lepton-compat.test.ts (runAllTests, 248ms)"
+    },
+    {
+      "file": "_dist/ci-combined-browser-test.log",
+      "line": 368,
+      "text": "[INFO] \u2713 browser-features/chrome/common/designs/test/fluerial-groups.test.ts (runAllTests, 371ms)\n[INFO] [36/284] Completed browser-features/chrome/common/designs/test/lepton-compat.test.ts\n[INFO] \u2713 browser-features/chrome/common/designs/test/lepton-compat.test.ts (runAllTests, 248ms)\n[INFO] [37/284] Completed browser-features/chrome/common/designs/test/lepton-container-geometry.test.ts"
+    },
+    {
+      "file": "_dist/ci-combined-browser-test.log",
+      "line": 369,
+      "text": "[INFO] [36/284] Completed browser-features/chrome/common/designs/test/lepton-compat.test.ts\n[INFO] \u2713 browser-features/chrome/common/designs/test/lepton-compat.test.ts (runAllTests, 248ms)\n[INFO] [37/284] Completed browser-features/chrome/common/designs/test/lepton-container-geometry.test.ts\n[INFO] \u2713 browser-features/chrome/common/designs/test/lepton-container-geometry.test.ts (runAllTests, 12083ms)"
+    },
+    {
+      "file": "_dist/ci-combined-browser-test.log",
+      "line": 370,
+      "text": "[INFO] \u2713 browser-features/chrome/common/designs/test/lepton-compat.test.ts (runAllTests, 248ms)\n[INFO] [37/284] Completed browser-features/chrome/common/designs/test/lepton-container-geometry.test.ts\n[INFO] \u2713 browser-features/chrome/common/designs/test/lepton-container-geometry.test.ts (runAllTests, 12083ms)\n[INFO] [38/284] Completed browser-features/chrome/common/designs/test/menu-icons.test.ts"
+    },
+    {
+      "file": "_dist/ci-combined-browser-test.log",
+      "line": 371,
+      "text": "[INFO] [37/284] Completed browser-features/chrome/common/designs/test/lepton-container-geometry.test.ts\n[INFO] \u2713 browser-features/chrome/common/designs/test/lepton-container-geometry.test.ts (runAllTests, 12083ms)\n[INFO] [38/284] Completed browser-features/chrome/common/designs/test/menu-icons.test.ts\n[INFO] \u2713 browser-features/chrome/common/designs/test/menu-icons.test.ts (runAllTests, 137ms)"
+    },
+    {
+      "file": "_dist/ci-combined-browser-test.log",
+      "line": 921,
+      "text": "[INFO] === Summary ===\n[INFO] Browser test result: 284 passed, 0 failed\n[INFO] Downloaded Firefox coverage: 8 file(s), 16 task(s), 16 passed\nLog written to logs/test/colocated-20261105-213129-512.log"
+    },
+    {
+      "file": "_dist/ci-combined-browser-test.log",
+      "line": 922,
+      "text": "[INFO] Browser test result: 284 passed, 0 failed\n[INFO] Downloaded Firefox coverage: 8 file(s), 16 task(s), 16 passed\nLog written to logs/test/colocated-20261105-213129-512.log"
+    },
+    {
+      "file": "_dist/ci-feles-build-test.log",
+      "line": 1520,
+      "text": "console.log: \"[nora@test] \\u2713 /link-features-chrome/common/designs/test/configs.test.ts (runAllTests, 666ms)\"\nconsole.log: \"[nora@test] Running /link-features-chrome/common/designs/test/container-indicator.test.ts\"\nconsole.log: \"[nora@test] \\u2713 /link-features-chrome/common/designs/test/container-indicator.test.ts (runAllTests, 57ms)\"\nconsole.log: \"[nora@test] Running /link-features-chrome/common/designs/test/content-style-lifecycle.test.ts\""
+    },
+    {
+      "file": "_dist/ci-feles-build-test.log",
+      "line": 1521,
+      "text": "console.log: \"[nora@test] Running /link-features-chrome/common/designs/test/container-indicator.test.ts\"\nconsole.log: \"[nora@test] \\u2713 /link-features-chrome/common/designs/test/container-indicator.test.ts (runAllTests, 57ms)\"\nconsole.log: \"[nora@test] Running /link-features-chrome/common/designs/test/content-style-lifecycle.test.ts\"\nconsole.log: \"[nora@solid-xul] cleanup\""
+    },
+    {
+      "file": "_dist/ci-feles-build-test.log",
+      "line": 1534,
+      "text": "console.log: \"[nora@test] \\u2713 /link-features-chrome/common/designs/test/css.test.ts (runAllTests, 55ms)\"\nconsole.log: \"[nora@test] Running /link-features-chrome/common/designs/test/fluerial-container.test.ts\"\nconsole.log: \"[nora@solid-xul] cleanup\"\nconsole.log: \"[nora@solid-xul] cleanup\""
+    },
+    {
+      "file": "_dist/ci-feles-build-test.log",
+      "line": 1669,
+      "text": "\u001b[36mconsole.debug: nora@split-view:active-pane: \"[refreshIndicator] no split tabs (no wrapper and splitViewPanels<2) \\u2192 clear\"\u001b[0m\nconsole.log: \"[nora@test] \\u2713 /link-features-chrome/common/designs/test/fluerial-container.test.ts (runAllTests, 600ms)\"\nconsole.log: \"[nora@test] Running /link-features-chrome/common/designs/test/fluerial-groups.test.ts\"\nconsole.log: \"[nora@solid-xul] cleanup\""
+    },
+    {
+      "file": "_dist/ci-feles-build-test.log",
+      "line": 1670,
+      "text": "console.log: \"[nora@test] \\u2713 /link-features-chrome/common/designs/test/fluerial-container.test.ts (runAllTests, 600ms)\"\nconsole.log: \"[nora@test] Running /link-features-chrome/common/designs/test/fluerial-groups.test.ts\"\nconsole.log: \"[nora@solid-xul] cleanup\"\nconsole.log: \"[nora@solid-xul] cleanup\""
+    },
+    {
+      "file": "_dist/ci-feles-build-test.log",
+      "line": 1791,
+      "text": "\u001b[31mconsole.error: \"[SsbPageAction] Manifest check failed:\" (new AbortError(\"Actor 'ManifestMessages' destroyed before query 'DOM:ManifestObtainer:Obtain' was resolved\", (void 0)))\u001b[0m\nconsole.log: \"[nora@test] \\u2713 /link-features-chrome/common/designs/test/fluerial-groups.test.ts (runAllTests, 371ms)\"\nconsole.log: \"[nora@test] Running /link-features-chrome/common/designs/test/lepton-compat.test.ts\"\nconsole.log: \"[nora@test] \\u2713 /link-features-chrome/common/designs/test/lepton-compat.test.ts (runAllTests, 248ms)\""
+    },
+    {
+      "file": "_dist/ci-feles-build-test.log",
+      "line": 1792,
+      "text": "console.log: \"[nora@test] \\u2713 /link-features-chrome/common/designs/test/fluerial-groups.test.ts (runAllTests, 371ms)\"\nconsole.log: \"[nora@test] Running /link-features-chrome/common/designs/test/lepton-compat.test.ts\"\nconsole.log: \"[nora@test] \\u2713 /link-features-chrome/common/designs/test/lepton-compat.test.ts (runAllTests, 248ms)\"\nconsole.log: \"[nora@test] Running /link-features-chrome/common/designs/test/lepton-container-geometry.test.ts\""
+    },
+    {
+      "file": "_dist/ci-feles-build-test.log",
+      "line": 1793,
+      "text": "console.log: \"[nora@test] Running /link-features-chrome/common/designs/test/lepton-compat.test.ts\"\nconsole.log: \"[nora@test] \\u2713 /link-features-chrome/common/designs/test/lepton-compat.test.ts (runAllTests, 248ms)\"\nconsole.log: \"[nora@test] Running /link-features-chrome/common/designs/test/lepton-container-geometry.test.ts\"\nconsole.log: \"[nora@test] \\u2713 /link-features-chrome/common/designs/test/lepton-container-geometry.test.ts (runAllTests, 12083ms)\""
+    },
+    {
+      "file": "_dist/ci-feles-build-test.log",
+      "line": 1794,
+      "text": "console.log: \"[nora@test] \\u2713 /link-features-chrome/common/designs/test/lepton-compat.test.ts (runAllTests, 248ms)\"\nconsole.log: \"[nora@test] Running /link-features-chrome/common/designs/test/lepton-container-geometry.test.ts\"\nconsole.log: \"[nora@test] \\u2713 /link-features-chrome/common/designs/test/lepton-container-geometry.test.ts (runAllTests, 12083ms)\"\nconsole.log: \"[nora@test] Running /link-features-chrome/common/designs/test/menu-icons.test.ts\""
+    },
+    {
+      "file": "_dist/ci-feles-build-test.log",
+      "line": 1795,
+      "text": "console.log: \"[nora@test] Running /link-features-chrome/common/designs/test/lepton-container-geometry.test.ts\"\nconsole.log: \"[nora@test] \\u2713 /link-features-chrome/common/designs/test/lepton-container-geometry.test.ts (runAllTests, 12083ms)\"\nconsole.log: \"[nora@test] Running /link-features-chrome/common/designs/test/menu-icons.test.ts\"\nconsole.log: \"[nora@test] \\u2713 /link-features-chrome/common/designs/test/menu-icons.test.ts (runAllTests, 137ms)\""
+    },
+    {
+      "file": "logs/test/latest.log",
+      "line": 38,
+      "text": "[2026-11-05T21:31:29.559Z] [INFO]   - browser-features/chrome/common/designs/test/configs.test.ts\n[2026-11-05T21:31:29.559Z] [INFO]   - browser-features/chrome/common/designs/test/container-indicator.test.ts\n[2026-11-05T21:31:29.559Z] [INFO]   - browser-features/chrome/common/designs/test/content-style-lifecycle.test.ts\n[2026-11-05T21:31:29.559Z] [INFO]   - browser-features/chrome/common/designs/test/css.test.ts"
+    },
+    {
+      "file": "logs/test/latest.log",
+      "line": 41,
+      "text": "[2026-11-05T21:31:29.559Z] [INFO]   - browser-features/chrome/common/designs/test/css.test.ts\n[2026-11-05T21:31:29.559Z] [INFO]   - browser-features/chrome/common/designs/test/fluerial-container.test.ts\n[2026-11-05T21:31:29.559Z] [INFO]   - browser-features/chrome/common/designs/test/fluerial-groups.test.ts\n[2026-11-05T21:31:29.559Z] [INFO]   - browser-features/chrome/common/designs/test/lepton-compat.test.ts"
+    },
+    {
+      "file": "logs/test/latest.log",
+      "line": 42,
+      "text": "[2026-11-05T21:31:29.559Z] [INFO]   - browser-features/chrome/common/designs/test/fluerial-container.test.ts\n[2026-11-05T21:31:29.559Z] [INFO]   - browser-features/chrome/common/designs/test/fluerial-groups.test.ts\n[2026-11-05T21:31:29.559Z] [INFO]   - browser-features/chrome/common/designs/test/lepton-compat.test.ts\n[2026-11-05T21:31:29.559Z] [INFO]   - browser-features/chrome/common/designs/test/lepton-container-geometry.test.ts"
+    },
+    {
+      "file": "logs/test/latest.log",
+      "line": 43,
+      "text": "[2026-11-05T21:31:29.559Z] [INFO]   - browser-features/chrome/common/designs/test/fluerial-groups.test.ts\n[2026-11-05T21:31:29.559Z] [INFO]   - browser-features/chrome/common/designs/test/lepton-compat.test.ts\n[2026-11-05T21:31:29.559Z] [INFO]   - browser-features/chrome/common/designs/test/lepton-container-geometry.test.ts\n[2026-11-05T21:31:29.559Z] [INFO]   - browser-features/chrome/common/designs/test/menu-icons.test.ts"
+    },
+    {
+      "file": "logs/test/latest.log",
+      "line": 44,
+      "text": "[2026-11-05T21:31:29.559Z] [INFO]   - browser-features/chrome/common/designs/test/lepton-compat.test.ts\n[2026-11-05T21:31:29.559Z] [INFO]   - browser-features/chrome/common/designs/test/lepton-container-geometry.test.ts\n[2026-11-05T21:31:29.559Z] [INFO]   - browser-features/chrome/common/designs/test/menu-icons.test.ts\n[2026-11-05T21:31:29.559Z] [INFO]   - browser-features/chrome/common/designs/test/oldConfigMigrator.test.ts"
+    },
+    {
+      "file": "logs/test/latest.log",
+      "line": 359,
+      "text": "[2026-11-05T21:36:48.254Z] [INFO] \u2713 browser-features/chrome/common/designs/test/configs.test.ts (runAllTests, 666ms)\n[2026-11-05T21:36:48.254Z] [INFO] [31/284] Completed browser-features/chrome/common/designs/test/container-indicator.test.ts\n[2026-11-05T21:36:48.254Z] [INFO] \u2713 browser-features/chrome/common/designs/test/container-indicator.test.ts (runAllTests, 57ms)\n[2026-11-05T21:36:48.254Z] [INFO] [32/284] Completed browser-features/chrome/common/designs/test/content-style-lifecycle.test.ts"
+    },
+    {
+      "file": "logs/test/latest.log",
+      "line": 360,
+      "text": "[2026-11-05T21:36:48.254Z] [INFO] [31/284] Completed browser-features/chrome/common/designs/test/container-indicator.test.ts\n[2026-11-05T21:36:48.254Z] [INFO] \u2713 browser-features/chrome/common/designs/test/container-indicator.test.ts (runAllTests, 57ms)\n[2026-11-05T21:36:48.254Z] [INFO] [32/284] Completed browser-features/chrome/common/designs/test/content-style-lifecycle.test.ts\n[2026-11-05T21:36:48.254Z] [INFO] \u2713 browser-features/chrome/common/designs/test/content-style-lifecycle.test.ts (runAllTests, 127ms)"
+    },
+    {
+      "file": "logs/test/latest.log",
+      "line": 365,
+      "text": "[2026-11-05T21:36:48.255Z] [INFO] \u2713 browser-features/chrome/common/designs/test/css.test.ts (runAllTests, 55ms)\n[2026-11-05T21:36:48.255Z] [INFO] [34/284] Completed browser-features/chrome/common/designs/test/fluerial-container.test.ts\n[2026-11-05T21:36:48.255Z] [INFO] \u2713 browser-features/chrome/common/designs/test/fluerial-container.test.ts (runAllTests, 600ms)\n[2026-11-05T21:36:48.255Z] [INFO] [35/284] Completed browser-features/chrome/common/designs/test/fluerial-groups.test.ts"
+    },
+    {
+      "file": "logs/test/latest.log",
+      "line": 366,
+      "text": "[2026-11-05T21:36:48.255Z] [INFO] [34/284] Completed browser-features/chrome/common/designs/test/fluerial-container.test.ts\n[2026-11-05T21:36:48.255Z] [INFO] \u2713 browser-features/chrome/common/designs/test/fluerial-container.test.ts (runAllTests, 600ms)\n[2026-11-05T21:36:48.255Z] [INFO] [35/284] Completed browser-features/chrome/common/designs/test/fluerial-groups.test.ts\n[2026-11-05T21:36:48.255Z] [INFO] \u2713 browser-features/chrome/common/designs/test/fluerial-groups.test.ts (runAllTests, 371ms)"
+    },
+    {
+      "file": "logs/test/latest.log",
+      "line": 367,
+      "text": "[2026-11-05T21:36:48.255Z] [INFO] \u2713 browser-features/chrome/common/designs/test/fluerial-container.test.ts (runAllTests, 600ms)\n[2026-11-05T21:36:48.255Z] [INFO] [35/284] Completed browser-features/chrome/common/designs/test/fluerial-groups.test.ts\n[2026-11-05T21:36:48.255Z] [INFO] \u2713 browser-features/chrome/common/designs/test/fluerial-groups.test.ts (runAllTests, 371ms)\n[2026-11-05T21:36:48.255Z] [INFO] [36/284] Completed browser-features/chrome/common/designs/test/lepton-compat.test.ts"
+    },
+    {
+      "file": "logs/test/latest.log",
+      "line": 368,
+      "text": "[2026-11-05T21:36:48.255Z] [INFO] [35/284] Completed browser-features/chrome/common/designs/test/fluerial-groups.test.ts\n[2026-11-05T21:36:48.255Z] [INFO] \u2713 browser-features/chrome/common/designs/test/fluerial-groups.test.ts (runAllTests, 371ms)\n[2026-11-05T21:36:48.255Z] [INFO] [36/284] Completed browser-features/chrome/common/designs/test/lepton-compat.test.ts\n[2026-11-05T21:36:48.255Z] [INFO] \u2713 browser-features/chrome/common/designs/test/lepton-compat.test.ts (runAllTests, 248ms)"
+    },
+    {
+      "file": "logs/test/latest.log",
+      "line": 369,
+      "text": "[2026-11-05T21:36:48.255Z] [INFO] \u2713 browser-features/chrome/common/designs/test/fluerial-groups.test.ts (runAllTests, 371ms)\n[2026-11-05T21:36:48.255Z] [INFO] [36/284] Completed browser-features/chrome/common/designs/test/lepton-compat.test.ts\n[2026-11-05T21:36:48.255Z] [INFO] \u2713 browser-features/chrome/common/designs/test/lepton-compat.test.ts (runAllTests, 248ms)\n[2026-11-05T21:36:48.255Z] [INFO] [37/284] Completed browser-features/chrome/common/designs/test/lepton-container-geometry.test.ts"
+    },
+    {
+      "file": "logs/test/latest.log",
+      "line": 370,
+      "text": "[2026-11-05T21:36:48.255Z] [INFO] [36/284] Completed browser-features/chrome/common/designs/test/lepton-compat.test.ts\n[2026-11-05T21:36:48.255Z] [INFO] \u2713 browser-features/chrome/common/designs/test/lepton-compat.test.ts (runAllTests, 248ms)\n[2026-11-05T21:36:48.255Z] [INFO] [37/284] Completed browser-features/chrome/common/designs/test/lepton-container-geometry.test.ts\n[2026-11-05T21:36:48.255Z] [INFO] \u2713 browser-features/chrome/common/designs/test/lepton-container-geometry.test.ts (runAllTests, 12083ms)"
+    },
+    {
+      "file": "logs/test/latest.log",
+      "line": 371,
+      "text": "[2026-11-05T21:36:48.255Z] [INFO] \u2713 browser-features/chrome/common/designs/test/lepton-compat.test.ts (runAllTests, 248ms)\n[2026-11-05T21:36:48.255Z] [INFO] [37/284] Completed browser-features/chrome/common/designs/test/lepton-container-geometry.test.ts\n[2026-11-05T21:36:48.255Z] [INFO] \u2713 browser-features/chrome/common/designs/test/lepton-container-geometry.test.ts (runAllTests, 12083ms)\n[2026-11-05T21:36:48.255Z] [INFO] [38/284] Completed browser-features/chrome/common/designs/test/menu-icons.test.ts"
+    },
+    {
+      "file": "logs/test/latest.log",
+      "line": 372,
+      "text": "[2026-11-05T21:36:48.255Z] [INFO] [37/284] Completed browser-features/chrome/common/designs/test/lepton-container-geometry.test.ts\n[2026-11-05T21:36:48.255Z] [INFO] \u2713 browser-features/chrome/common/designs/test/lepton-container-geometry.test.ts (runAllTests, 12083ms)\n[2026-11-05T21:36:48.255Z] [INFO] [38/284] Completed browser-features/chrome/common/designs/test/menu-icons.test.ts\n[2026-11-05T21:36:48.255Z] [INFO] \u2713 browser-features/chrome/common/designs/test/menu-icons.test.ts (runAllTests, 137ms)"
+    },
+    {
+      "file": "logs/test/latest.log",
+      "line": 922,
+      "text": "[2026-11-05T21:36:48.260Z] [INFO] === Summary ===\n[2026-11-05T21:36:48.260Z] [INFO] Browser test result: 284 passed, 0 failed\n[2026-11-05T21:36:48.260Z] [INFO] Downloaded Firefox coverage: 8 file(s), 16 task(s), 16 passed\n[META] finishedAt=2026-11-05T21:36:48.321Z"
+    },
+    {
+      "file": "logs/test/latest.log",
+      "line": 923,
+      "text": "[2026-11-05T21:36:48.260Z] [INFO] Browser test result: 284 passed, 0 failed\n[2026-11-05T21:36:48.260Z] [INFO] Downloaded Firefox coverage: 8 file(s), 16 task(s), 16 passed\n[META] finishedAt=2026-11-05T21:36:48.321Z\n[META] durationMs=318809"
+    },
+    {
+      "file": "logs/test/latest.log",
+      "line": 926,
+      "text": "[META] durationMs=318809\n[META] exitCode=0"
+    }
+  ],
+  "qualification": "standard repository development harness; independent of sandbox6 complete production product verification",
+  "declaredCasesPerModule": 2,
+  "perCaseSuccessLinesClaimed": false
+}

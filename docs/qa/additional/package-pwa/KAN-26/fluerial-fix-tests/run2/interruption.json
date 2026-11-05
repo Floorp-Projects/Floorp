@@ -1,0 +1,10 @@
+{
+  "interruptedAttempt": "run2",
+  "qualified": false,
+  "ownerPid": 165351,
+  "ownerState": "Z",
+  "socketConnectCode": 1,
+  "reason": "tool/agent interruption before final result; not product regression",
+  "ownedStaleDisplayRemoved": true,
+  "productUnchangedAfterInterruption": true
+}

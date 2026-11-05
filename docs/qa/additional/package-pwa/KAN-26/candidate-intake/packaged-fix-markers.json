@@ -1,0 +1,17 @@
+{
+  "sourceSha": "0e80f14dc439dde7817c0620f0fc112d54dfba80",
+  "entries": [
+    {
+      "archive": "omni.ja",
+      "entry": "chrome/noraneko/nora-content/assets/js/index7.js",
+      "sha256": "d1d6245479e8d6b2b689d60781300e2cca5cea95e398e26db67c6400f48c9c8b",
+      "markers": [
+        "--tab-inline-padding: var(--tab-padding-inline)",
+        "--tab-inner-inline-margin: var(--tab-margin-inline-inner)",
+        "inset-inline-end: var(--tab-margin-inline-inner)"
+      ]
+    }
+  ],
+  "resourceMutation": false,
+  "qualification": "supporting packaging evidence, not substitute for fullbuild/run/source/auth or actualpixel comparisons"
+}

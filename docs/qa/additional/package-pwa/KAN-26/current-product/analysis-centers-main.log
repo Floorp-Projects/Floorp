@@ -1,0 +1,21 @@
+/workspace/qa-linux-additional/KAN-26/current-product/analyze.py:16: DeprecationWarning: Image.Image.getdata is deprecated and will be removed in Pillow 14 (2027-10-15). Use get_flattened_data instead.
+  crop=im.crop(box);px=list(crop.getdata());blue=sum(b>r+70 and g>r+30 and b>g+35 for r,g,b in px);orange=sum(r>200 and 80<g<220 and b<120 and r>b+100 for r,g,b in px)
+/workspace/qa-linux-additional/KAN-26/current-product/analyze.py:26: DeprecationWarning: Image.Image.getdata is deprecated and will be removed in Pillow 14 (2027-10-15). Use get_flattened_data instead.
+  pixels=list(im.crop(bb).getdata());outer_pixels=list(im.crop(outer).getdata())
+cases 40
+fluerial-h-selected-blue bluepixels 0 altwidth 1px nativedisplay flex
+fluerial-h-selected-normal bluepixels 402 altwidth 1px nativedisplay flex
+fluerial-v-selected-blue bluepixels 20 altwidth 1px nativedisplay flex
+fluerial-v-selected-normal bluepixels 20 altwidth 1px nativedisplay flex
+lepton-h-selected-blue bluepixels 0 altwidth 0px nativedisplay none
+lepton-h-selected-normal bluepixels 110 altwidth 55.25px nativedisplay none
+lepton-v-selected-blue bluepixels 0 altwidth 0px nativedisplay none
+lepton-v-selected-normal bluepixels 124 altwidth 61.9167px nativedisplay none
+proton-h-selected-blue bluepixels 426 altwidth auto nativedisplay flex
+proton-h-selected-normal bluepixels 426 altwidth auto nativedisplay flex
+proton-v-selected-blue bluepixels 48 altwidth auto nativedisplay flex
+proton-v-selected-normal bluepixels 48 altwidth auto nativedisplay flex
+protonfix-h-selected-blue bluepixels 0 altwidth 0px nativedisplay none
+protonfix-h-selected-normal bluepixels 110 altwidth 55.25px nativedisplay none
+protonfix-v-selected-blue bluepixels 0 altwidth 0px nativedisplay none
+protonfix-v-selected-normal bluepixels 124 altwidth 61.9167px nativedisplay none

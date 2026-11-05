@@ -1,0 +1,35 @@
+{
+  "sourceHead": "b1ba3ef955a8b96ae2bd9420889685c22c02e86d",
+  "baseline": "29a3eb23145da90706d8a94441373278521cc737",
+  "files": [
+    {
+      "path": "browser-features/chrome/common/designs/utils/tab-color-like-toolbar.css.ts",
+      "sha256": "51cbe1b53438ee0240bf0adb9168dee4c177d135dc9f88f33d400af2af1d12d3"
+    },
+    {
+      "path": "browser-features/chrome/common/designs/test/fluerial-container.test.ts",
+      "sha256": "226c1d9379d070a490d71993d771085d16df4635d996772e3245a2d888cce8a9"
+    }
+  ],
+  "declaredCases": 2,
+  "baselineCaseFailures": 2,
+  "candidateModuleCompleted": true,
+  "candidateNullMeans": "runAllTests returns void after runTests completes both cases without failures",
+  "nativeVersion": "159.0.1",
+  "sandbox": 6,
+  "productUnchanged": true,
+  "normalQuit": {
+    "cause": "shutdown",
+    "forced": false,
+    "in_app": true
+  },
+  "sourceProtectionChange": false,
+  "checks": [
+    "deno check --cached-only --frozen passed",
+    "deno lint passed",
+    "deno fmt passed",
+    "git diff --check passed"
+  ],
+  "qualification": "colocated module with actual vendored CSS and genuine nativecontainer tabs in an immutable fullproduct; stylesheet fixture not delivered fullpackage qualification",
+  "interruptedAttempt": "run2/interruption.json"
+}

@@ -1,0 +1,20 @@
+{
+  "key": "KAN-26",
+  "remove": [
+    "needs-full-build",
+    "needs-repro"
+  ],
+  "add": [
+    "draft-pr",
+    "reproduced-in-test",
+    "full-package-verified",
+    "qa-linux-executed",
+    "related-pr-3048",
+    "needs-original-windows-repro",
+    "needs-high-dpi",
+    "needs-physical-gpu",
+    "needs-collapsed-vertical"
+  ],
+  "reason": "Exact complete final-head candidate executed with176/176identity indicators; initial strict normal comparison retained and supplemented9matchedconditions. OriginalWindows/hardware/collapsedqualification not met. Preserve all other labels and status.",
+  "applied": false
+}

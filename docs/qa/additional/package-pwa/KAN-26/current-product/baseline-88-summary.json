@@ -1,0 +1,40 @@
+{
+  "key": "KAN-26",
+  "sourceSha": "29a3eb23145da90706d8a94441373278521cc737",
+  "nativeVersion": "159.0.1",
+  "runs": [
+    {
+      "directory": "run",
+      "states": 40,
+      "normalQuit": {
+        "cause": "shutdown",
+        "forced": false,
+        "in_app": true
+      },
+      "productUnchanged": true,
+      "sourceSha": "29a3eb23145da90706d8a94441373278521cc737"
+    },
+    {
+      "directory": "extra-hover-run",
+      "states": 48,
+      "normalQuit": {
+        "cause": "shutdown",
+        "forced": false,
+        "in_app": true
+      },
+      "productUnchanged": true,
+      "sourceSha": "29a3eb23145da90706d8a94441373278521cc737"
+    }
+  ],
+  "currentBaselineStates": 88,
+  "original40Repeated": false,
+  "extraStates": 48,
+  "extraInteractionChecks": 48,
+  "allExtraInteractionChecks": true,
+  "all88NormalControlNoIdentityHue": true,
+  "effectivePrefsCapturedStates": 48,
+  "old158ComparisonStates": 40,
+  "old158ExtraHoverClaim": false,
+  "input": "synthetic actual HubWebDriver; genuinecontainer service; nativeAPIselection/multiselection; actualWebDriverpointerhover",
+  "strictQualification": "descriptive baseline, known defects expected; no candidate/deliveredfix pass claim"
+}

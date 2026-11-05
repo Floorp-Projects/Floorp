@@ -1,0 +1,9 @@
+{
+  "version": "159.0.1",
+  "buildID": "20261103153232",
+  "executable": "/workspace/qa-linux-additional/KAN-24/followup/products/baseline/floorp/floorp",
+  "profile": "/workspace/qa-linux-additional/KAN-26/current-product/supplement-run/profile",
+  "sandbox": 6,
+  "disabled": false,
+  "containers": true
+}

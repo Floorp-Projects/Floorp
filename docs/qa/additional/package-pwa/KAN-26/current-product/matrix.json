@@ -1,0 +1,51 @@
+{
+  "key": "KAN-26",
+  "github": "https://github.com/Floorp-Projects/Floorp/issues/2965",
+  "sourceSha": {
+    "current": "29a3eb23145da90706d8a94441373278521cc737",
+    "originalVersion": "576bc4bbca058e4c24dc5bd2c7526d64cedc94cc"
+  },
+  "productVersion": {
+    "current": "159.0.1/20261103153232",
+    "originalVersion": "158.0.1/20261014104253"
+  },
+  "environment": "Debian13.6/Xvfb107/X11/normalDBus/sandbox6/defaulttheme; actual synthetic WebDriver/realcontainers; expanded nativevertical; not Windows/GPU",
+  "testCommand": "dbus-run-session -- python3 probe.py --extra-hover-only --out <fresh48>; fixedcandidate: dbus-run-session -- python3 probe.py --all-states --product <authenticatedcandidate> --source-sha <sha> --out <fresh88>; python3 analyze.py <output>",
+  "result": "both40-state nonPhoton product matrices reproduce Lepton/protonfix selectedalternative width0 and Fluerialhorizontal selectedocclusion; normalFluerialexpandedverticalselected visible; separateFluerialverticalinactivehover zeroheight persists2s",
+  "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/3041",
+  "existingPrRelation": "Photononly; none of these nonPhoton states claimed fixed by3041",
+  "newPr": null,
+  "originalLinuxDenominator": 22,
+  "additionalTarget": true,
+  "remainingConditions": [
+    "Fixed candidate complete-package regression pending parent",
+    "Original Windows12.20.2 not exercised; old158Linux does not qualifyWindows",
+    "Collapsedvertical/otherdensity/closebutton preferences not exercised",
+    "HighDPI/physicalGPU/signeddistribution unqualified"
+  ],
+  "evidence": [
+    "report.md",
+    "run/result.json",
+    "run/identity.json",
+    "run/pixel-matrix.json",
+    "supplement-run/result.json",
+    "supplement-run/fluerial-settled-hover-2.0.json",
+    "version-comparison.json",
+    "../old-product-measurement/result.json",
+    "../old-product-measurement/pixel-matrix.json",
+    "extra-hover-run/result.json",
+    "extra-hover-run/pixel-matrix.json",
+    "baseline-88-pixel-matrix.json",
+    "baseline-88-summary.json"
+  ],
+  "normalQuits": 4,
+  "ownedProcessesRemaining": 0,
+  "productUnchanged": true,
+  "currentBaselineStates": 88,
+  "originalVersionBaselineStates": 40,
+  "extraHoverStates": 48,
+  "effectivePrefsCapturedStates": 48,
+  "normalQuitScope": "non-injected measurements: current40, currentlimitedsupplement, old40, currentextra48",
+  "temporaryCausalDiagnosticNormalQuits": 1,
+  "retainedHarnessAttemptNormalQuits": 1
+}

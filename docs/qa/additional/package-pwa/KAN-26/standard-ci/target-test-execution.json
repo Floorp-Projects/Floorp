@@ -1,0 +1,60 @@
+{
+  "run": 42112961086,
+  "headSha": "0e80f14dc439dde7817c0620f0fc112d54dfba80",
+  "workflowConclusion": "success",
+  "runAttempt": 1,
+  "retryRequests": 0,
+  "artifactId": 13456440170,
+  "zipDigestVerified": true,
+  "newModuleSuccess": {
+    "lepton-container-geometry.test.ts": true,
+    "fluerial-container.test.ts": true
+  },
+  "existingControls": {
+    "container-indicator.test.ts": true,
+    "fluerial-groups.test.ts": true,
+    "lepton-compat.test.ts": true
+  },
+  "summary": {
+    "modulesPassed": 284,
+    "modulesFailed": 0
+  },
+  "downloadedFirefox": {
+    "files": 8,
+    "tasks": 16,
+    "tasksPassed": 16
+  },
+  "actualLogLines": [
+    {
+      "line": 359,
+      "text": "[INFO] \u2713 browser-features/chrome/common/designs/test/container-indicator.test.ts (runAllTests, 57ms)"
+    },
+    {
+      "line": 365,
+      "text": "[INFO] \u2713 browser-features/chrome/common/designs/test/fluerial-container.test.ts (runAllTests, 600ms)"
+    },
+    {
+      "line": 367,
+      "text": "[INFO] \u2713 browser-features/chrome/common/designs/test/fluerial-groups.test.ts (runAllTests, 371ms)"
+    },
+    {
+      "line": 369,
+      "text": "[INFO] \u2713 browser-features/chrome/common/designs/test/lepton-compat.test.ts (runAllTests, 248ms)"
+    },
+    {
+      "line": 371,
+      "text": "[INFO] \u2713 browser-features/chrome/common/designs/test/lepton-container-geometry.test.ts (runAllTests, 12083ms)"
+    },
+    {
+      "line": 921,
+      "text": "[INFO] Browser test result: 284 passed, 0 failed"
+    },
+    {
+      "line": 922,
+      "text": "[INFO] Downloaded Firefox coverage: 8 file(s), 16 task(s), 16 passed"
+    }
+  ],
+  "declaredCasesEachNewModule": 2,
+  "individualCaseSuccessLinesClaimed": false,
+  "priorFailedHeadEvidence": "old-head-3a9f99ae/report.md"
+}

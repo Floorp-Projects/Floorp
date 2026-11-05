@@ -1,0 +1,17 @@
+{
+  "headSha": "3a9f99ae12dbb221f63b28ec210b04fafcf2be15",
+  "testFiles": [
+    {
+      "path": "browser-features/chrome/common/designs/test/lepton-container-geometry.test.ts",
+      "sha256": "f665544e85ec7e1d23d00b08307744704278cf9d0d8daaf719aa21b6f33f57c5",
+      "declaredRunTestsCases": 2,
+      "qualification": "complete-module execution must be established by artifact log; not independent per-case success lines"
+    },
+    {
+      "path": "browser-features/chrome/common/designs/test/fluerial-container.test.ts",
+      "sha256": "226c1d9379d070a490d71993d771085d16df4635d996772e3245a2d888cce8a9",
+      "declaredRunTestsCases": 2,
+      "qualification": "complete-module execution must be established by artifact log; not independent per-case success lines"
+    }
+  ]
+}

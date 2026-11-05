@@ -1,0 +1,3790 @@
+{
+  "effectivePrefs": {
+    "userChrome.tab.container": true,
+    "userChrome.tab.photon_like_contextline": false,
+    "userChrome.tab.close_button_at_hover": true,
+    "userChrome.tab.selected_tab": null,
+    "userChrome.tab.container.always_long": null,
+    "userChrome.tab.container.on_top": null
+  },
+  "tabContainerAttrs": {
+    "id": "tabbrowser-tabs",
+    "is": "tabbrowser-tabs",
+    "aria-multiselectable": "true",
+    "setfocus": "false",
+    "tooltip": "tabbrowser-tab-tooltip",
+    "orient": "horizontal",
+    "stopwatchid": "tabClick",
+    "style": "--tab-min-width-pref: 76px;",
+    "value": "",
+    "removable": "false",
+    "cui-areatype": "toolbar",
+    "hasadjacentnewtabbutton": ""
+  },
+  "design": "protonfix",
+  "native": false,
+  "verticalMode": false,
+  "rootAttrs": {
+    "id": "main-window",
+    "xmlns:html": "http://www.w3.org/1999/xhtml",
+    "xmlns:xul": "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+    "xmlns": "http://www.w3.org/1999/xhtml",
+    "windowtype": "navigator:browser",
+    "macanimationtype": "document",
+    "macnativefullscreen": "true",
+    "windowsmica": "true",
+    "screenX": "0",
+    "screenY": "0",
+    "sizemode": "normal",
+    "retargetdocumentfocus": "urlbar-input",
+    "scrolling": "false",
+    "persist": "screenX screenY width height sizemode",
+    "data-l10n-sync": "true",
+    "lang": "en-US",
+    "dir": "ltr",
+    "width": "1280",
+    "height": "900",
+    "theme-in-app": "",
+    "theme-effective-id": "default-theme@mozilla.org",
+    "fxastatus": "not_configured",
+    "fxatoolbarmenu": "visible",
+    "remotecontrol": "true",
+    "sessionrestored": "true",
+    "style": "--panel-sidebar-background-color: var(--toolbar-bgcolor, var(--toolbar-background-color)); --panel-sidebar-display: none; --zenmode-selectbox-width: 42px;"
+  },
+  "devicePixelRatio": 1,
+  "screen": {
+    "x": 0,
+    "y": 0
+  },
+  "tabs": [
+    {
+      "role": "blue",
+      "hover": false,
+      "tab": {
+        "tag": "tab",
+        "class": "identity-color-blue identity-icon-fingerprint tabbrowser-tab",
+        "attrs": {
+          "label": "New Tab",
+          "usercontextid": "7",
+          "class": "identity-color-blue identity-icon-fingerprint tabbrowser-tab",
+          "context": "tabContextMenu",
+          "aria-level": "1",
+          "linkedpanel": "tabpanel-2",
+          "floorpWorkspaceId": "6037f6be-1e64-4c6f-b8c1-f5686ff34616",
+          "data-kan26-role": "blue",
+          "fadein": "true",
+          "labeldirection": "ltr"
+        },
+        "rect": {
+          "x": 223,
+          "y": 0,
+          "width": 225,
+          "height": 44
+        },
+        "styles": {
+          "display": "flex",
+          "visibility": "visible",
+          "opacity": "1",
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "backgroundImage": "none",
+          "borderTopColor": "rgb(47, 47, 52)",
+          "borderBottomColor": "rgba(0, 0, 0, 0)",
+          "borderLeftColor": "rgb(47, 47, 52)",
+          "borderRightColor": "rgb(47, 47, 52)",
+          "borderTopWidth": "0px",
+          "borderBottomWidth": "0px",
+          "borderLeftWidth": "0px",
+          "borderRightWidth": "0px",
+          "boxShadow": "none",
+          "transform": "none",
+          "height": "44px",
+          "width": "225px",
+          "content": "normal",
+          "position": "relative",
+          "zIndex": "auto",
+          "color": "rgb(47, 47, 52)",
+          "top": "0px",
+          "bottom": "0px",
+          "left": "0px",
+          "right": "0px",
+          "borderBottomStyle": "solid",
+          "borderTopStyle": "none",
+          "borderLeftStyle": "none",
+          "borderRightStyle": "none"
+        },
+        "identity": "#37adff",
+        "identityColor": "#37adff",
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": ""
+        }
+      },
+      "before": {
+        "tag": "tab",
+        "class": "identity-color-blue identity-icon-fingerprint tabbrowser-tab",
+        "attrs": {
+          "label": "New Tab",
+          "usercontextid": "7",
+          "class": "identity-color-blue identity-icon-fingerprint tabbrowser-tab",
+          "context": "tabContextMenu",
+          "aria-level": "1",
+          "linkedpanel": "tabpanel-2",
+          "floorpWorkspaceId": "6037f6be-1e64-4c6f-b8c1-f5686ff34616",
+          "data-kan26-role": "blue",
+          "fadein": "true",
+          "labeldirection": "ltr"
+        },
+        "rect": {
+          "x": 223,
+          "y": 0,
+          "width": 225,
+          "height": 44
+        },
+        "styles": {
+          "display": "inline",
+          "visibility": "visible",
+          "opacity": "1",
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "backgroundImage": "none",
+          "borderTopColor": "rgb(47, 47, 52)",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderLeftColor": "rgb(47, 47, 52)",
+          "borderRightColor": "rgb(47, 47, 52)",
+          "borderTopWidth": "0px",
+          "borderBottomWidth": "0px",
+          "borderLeftWidth": "0px",
+          "borderRightWidth": "0px",
+          "boxShadow": "none",
+          "transform": "none",
+          "height": "auto",
+          "width": "auto",
+          "content": "none",
+          "position": "static",
+          "zIndex": "auto",
+          "color": "rgb(47, 47, 52)",
+          "top": "auto",
+          "bottom": "auto",
+          "left": "auto",
+          "right": "auto",
+          "borderBottomStyle": "none",
+          "borderTopStyle": "none",
+          "borderLeftStyle": "none",
+          "borderRightStyle": "none"
+        },
+        "identity": "#37adff",
+        "identityColor": "#37adff",
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": ""
+        }
+      },
+      "after": {
+        "tag": "tab",
+        "class": "identity-color-blue identity-icon-fingerprint tabbrowser-tab",
+        "attrs": {
+          "label": "New Tab",
+          "usercontextid": "7",
+          "class": "identity-color-blue identity-icon-fingerprint tabbrowser-tab",
+          "context": "tabContextMenu",
+          "aria-level": "1",
+          "linkedpanel": "tabpanel-2",
+          "floorpWorkspaceId": "6037f6be-1e64-4c6f-b8c1-f5686ff34616",
+          "data-kan26-role": "blue",
+          "fadein": "true",
+          "labeldirection": "ltr"
+        },
+        "rect": {
+          "x": 223,
+          "y": 0,
+          "width": 225,
+          "height": 44
+        },
+        "styles": {
+          "display": "inline",
+          "visibility": "visible",
+          "opacity": "1",
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "backgroundImage": "none",
+          "borderTopColor": "rgb(47, 47, 52)",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderLeftColor": "rgb(47, 47, 52)",
+          "borderRightColor": "rgb(47, 47, 52)",
+          "borderTopWidth": "0px",
+          "borderBottomWidth": "0px",
+          "borderLeftWidth": "0px",
+          "borderRightWidth": "0px",
+          "boxShadow": "none",
+          "transform": "none",
+          "height": "auto",
+          "width": "auto",
+          "content": "none",
+          "position": "static",
+          "zIndex": "auto",
+          "color": "rgb(47, 47, 52)",
+          "top": "auto",
+          "bottom": "auto",
+          "left": "auto",
+          "right": "auto",
+          "borderBottomStyle": "none",
+          "borderTopStyle": "none",
+          "borderLeftStyle": "none",
+          "borderRightStyle": "none"
+        },
+        "identity": "#37adff",
+        "identityColor": "#37adff",
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": ""
+        }
+      },
+      "parts": {
+        ".tab-context-line": {
+          "normal": {
+            "tag": "hbox",
+            "class": "tab-context-line",
+            "attrs": {
+              "class": "tab-context-line"
+            },
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 0,
+              "height": 0
+            },
+            "styles": {
+              "display": "none",
+              "visibility": "visible",
+              "opacity": "1",
+              "backgroundColor": "rgb(55, 173, 255)",
+              "backgroundImage": "none",
+              "borderTopColor": "rgb(47, 47, 52)",
+              "borderBottomColor": "rgb(47, 47, 52)",
+              "borderLeftColor": "rgb(47, 47, 52)",
+              "borderRightColor": "rgb(47, 47, 52)",
+              "borderTopWidth": "0px",
+              "borderBottomWidth": "0px",
+              "borderLeftWidth": "0px",
+              "borderRightWidth": "0px",
+              "boxShadow": "none",
+              "transform": "none",
+              "height": "2px",
+              "width": "auto",
+              "content": "normal",
+              "position": "relative",
+              "zIndex": "auto",
+              "color": "rgb(47, 47, 52)",
+              "top": "auto",
+              "bottom": "auto",
+              "left": "auto",
+              "right": "auto",
+              "borderBottomStyle": "none",
+              "borderTopStyle": "none",
+              "borderLeftStyle": "none",
+              "borderRightStyle": "none"
+            },
+            "identity": "#37adff",
+            "identityColor": "#37adff",
+            "tokens": {
+              "--tab-inline-padding": "",
+              "--tab-inner-inline-margin": "",
+              "--tab-padding-inline": "8px",
+              "--tab-margin-inline-inner": "0.75rem",
+              "--usercontext-line-width": ""
+            }
+          },
+          "before": {
+            "tag": "hbox",
+            "class": "tab-context-line",
+            "attrs": {
+              "class": "tab-context-line"
+            },
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 0,
+              "height": 0
+            },
+            "styles": {
+              "display": "inline",
+              "visibility": "visible",
+              "opacity": "1",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "borderTopColor": "rgb(47, 47, 52)",
+              "borderBottomColor": "rgb(47, 47, 52)",
+              "borderLeftColor": "rgb(47, 47, 52)",
+              "borderRightColor": "rgb(47, 47, 52)",
+              "borderTopWidth": "0px",
+              "borderBottomWidth": "0px",
+              "borderLeftWidth": "0px",
+              "borderRightWidth": "0px",
+              "boxShadow": "none",
+              "transform": "none",
+              "height": "auto",
+              "width": "auto",
+              "content": "none",
+              "position": "static",
+              "zIndex": "auto",
+              "color": "rgb(47, 47, 52)",
+              "top": "auto",
+              "bottom": "auto",
+              "left": "auto",
+              "right": "auto",
+              "borderBottomStyle": "none",
+              "borderTopStyle": "none",
+              "borderLeftStyle": "none",
+              "borderRightStyle": "none"
+            },
+            "identity": "#37adff",
+            "identityColor": "#37adff",
+            "tokens": {
+              "--tab-inline-padding": "",
+              "--tab-inner-inline-margin": "",
+              "--tab-padding-inline": "8px",
+              "--tab-margin-inline-inner": "0.75rem",
+              "--usercontext-line-width": ""
+            }
+          },
+          "after": {
+            "tag": "hbox",
+            "class": "tab-context-line",
+            "attrs": {
+              "class": "tab-context-line"
+            },
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 0,
+              "height": 0
+            },
+            "styles": {
+              "display": "inline",
+              "visibility": "visible",
+              "opacity": "1",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "borderTopColor": "rgb(47, 47, 52)",
+              "borderBottomColor": "rgb(47, 47, 52)",
+              "borderLeftColor": "rgb(47, 47, 52)",
+              "borderRightColor": "rgb(47, 47, 52)",
+              "borderTopWidth": "0px",
+              "borderBottomWidth": "0px",
+              "borderLeftWidth": "0px",
+              "borderRightWidth": "0px",
+              "boxShadow": "none",
+              "transform": "none",
+              "height": "auto",
+              "width": "auto",
+              "content": "none",
+              "position": "static",
+              "zIndex": "auto",
+              "color": "rgb(47, 47, 52)",
+              "top": "auto",
+              "bottom": "auto",
+              "left": "auto",
+              "right": "auto",
+              "borderBottomStyle": "none",
+              "borderTopStyle": "none",
+              "borderLeftStyle": "none",
+              "borderRightStyle": "none"
+            },
+            "identity": "#37adff",
+            "identityColor": "#37adff",
+            "tokens": {
+              "--tab-inline-padding": "",
+              "--tab-inner-inline-margin": "",
+              "--tab-padding-inline": "8px",
+              "--tab-margin-inline-inner": "0.75rem",
+              "--usercontext-line-width": ""
+            }
+          }
+        },
+        ".tab-background": {
+          "normal": {
+            "tag": "vbox",
+            "class": "tab-background",
+            "attrs": {
+              "class": "tab-background",
+              "fadein": "true"
+            },
+            "rect": {
+              "x": 225,
+              "y": 4,
+              "width": 221,
+              "height": 36
+            },
+            "styles": {
+              "display": "flex",
+              "visibility": "visible",
+              "opacity": "1",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "borderTopColor": "rgb(47, 47, 52)",
+              "borderBottomColor": "rgb(47, 47, 52)",
+              "borderLeftColor": "rgb(47, 47, 52)",
+              "borderRightColor": "rgb(47, 47, 52)",
+              "borderTopWidth": "0px",
+              "borderBottomWidth": "0px",
+              "borderLeftWidth": "0px",
+              "borderRightWidth": "0px",
+              "boxShadow": "none",
+              "transform": "none",
+              "height": "36px",
+              "width": "221px",
+              "content": "normal",
+              "position": "static",
+              "zIndex": "0",
+              "color": "rgb(47, 47, 52)",
+              "top": "auto",
+              "bottom": "auto",
+              "left": "auto",
+              "right": "auto",
+              "borderBottomStyle": "none",
+              "borderTopStyle": "none",
+              "borderLeftStyle": "none",
+              "borderRightStyle": "none"
+            },
+            "identity": "#37adff",
+            "identityColor": "#37adff",
+            "tokens": {
+              "--tab-inline-padding": "",
+              "--tab-inner-inline-margin": "",
+              "--tab-padding-inline": "8px",
+              "--tab-margin-inline-inner": "0.75rem",
+              "--usercontext-line-width": ""
+            }
+          },
+          "before": {
+            "tag": "vbox",
+            "class": "tab-background",
+            "attrs": {
+              "class": "tab-background",
+              "fadein": "true"
+            },
+            "rect": {
+              "x": 225,
+              "y": 4,
+              "width": 221,
+              "height": 36
+            },
+            "styles": {
+              "display": "inline",
+              "visibility": "visible",
+              "opacity": "1",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "borderTopColor": "rgb(47, 47, 52)",
+              "borderBottomColor": "rgb(47, 47, 52)",
+              "borderLeftColor": "rgb(47, 47, 52)",
+              "borderRightColor": "rgb(47, 47, 52)",
+              "borderTopWidth": "0px",
+              "borderBottomWidth": "0px",
+              "borderLeftWidth": "0px",
+              "borderRightWidth": "0px",
+              "boxShadow": "none",
+              "transform": "none",
+              "height": "auto",
+              "width": "auto",
+              "content": "none",
+              "position": "static",
+              "zIndex": "auto",
+              "color": "rgb(47, 47, 52)",
+              "top": "auto",
+              "bottom": "auto",
+              "left": "auto",
+              "right": "auto",
+              "borderBottomStyle": "none",
+              "borderTopStyle": "none",
+              "borderLeftStyle": "none",
+              "borderRightStyle": "none"
+            },
+            "identity": "#37adff",
+            "identityColor": "#37adff",
+            "tokens": {
+              "--tab-inline-padding": "",
+              "--tab-inner-inline-margin": "",
+              "--tab-padding-inline": "8px",
+              "--tab-margin-inline-inner": "0.75rem",
+              "--usercontext-line-width": ""
+            }
+          },
+          "after": {
+            "tag": "vbox",
+            "class": "tab-background",
+            "attrs": {
+              "class": "tab-background",
+              "fadein": "true"
+            },
+            "rect": {
+              "x": 225,
+              "y": 4,
+              "width": 221,
+              "height": 36
+            },
+            "styles": {
+              "display": "inline",
+              "visibility": "visible",
+              "opacity": "1",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "borderTopColor": "rgb(47, 47, 52)",
+              "borderBottomColor": "rgb(47, 47, 52)",
+              "borderLeftColor": "rgb(47, 47, 52)",
+              "borderRightColor": "rgb(47, 47, 52)",
+              "borderTopWidth": "0px",
+              "borderBottomWidth": "0px",
+              "borderLeftWidth": "0px",
+              "borderRightWidth": "0px",
+              "boxShadow": "none",
+              "transform": "none",
+              "height": "auto",
+              "width": "auto",
+              "content": "none",
+              "position": "static",
+              "zIndex": "auto",
+              "color": "rgb(47, 47, 52)",
+              "top": "auto",
+              "bottom": "auto",
+              "left": "auto",
+              "right": "auto",
+              "borderBottomStyle": "none",
+              "borderTopStyle": "none",
+              "borderLeftStyle": "none",
+              "borderRightStyle": "none"
+            },
+            "identity": "#37adff",
+            "identityColor": "#37adff",
+            "tokens": {
+              "--tab-inline-padding": "",
+              "--tab-inner-inline-margin": "",
+              "--tab-padding-inline": "8px",
+              "--tab-margin-inline-inner": "0.75rem",
+              "--usercontext-line-width": ""
+            }
+          }
+        },
+        ".tab-stack": {
+          "normal": {
+            "tag": "stack",
+            "class": "tab-stack",
+            "attrs": {
+              "class": "tab-stack",
+              "flex": "1"
+            },
+            "rect": {
+              "x": 225,
+              "y": 0,
+              "width": 221,
+              "height": 44
+            },
+            "styles": {
+              "display": "grid",
+              "visibility": "visible",
+              "opacity": "1",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "borderTopColor": "rgb(47, 47, 52)",
+              "borderBottomColor": "rgb(47, 47, 52)",
+              "borderLeftColor": "rgb(47, 47, 52)",
+              "borderRightColor": "rgb(47, 47, 52)",
+              "borderTopWidth": "0px",
+              "borderBottomWidth": "0px",
+              "borderLeftWidth": "0px",
+              "borderRightWidth": "0px",
+              "boxShadow": "none",
+              "transform": "none",
+              "height": "44px",
+              "width": "221px",
+              "content": "normal",
+              "position": "relative",
+              "zIndex": "auto",
+              "color": "rgb(47, 47, 52)",
+              "top": "0px",
+              "bottom": "0px",
+              "left": "0px",
+              "right": "0px",
+              "borderBottomStyle": "none",
+              "borderTopStyle": "none",
+              "borderLeftStyle": "none",
+              "borderRightStyle": "none"
+            },
+            "identity": "#37adff",
+            "identityColor": "#37adff",
+            "tokens": {
+              "--tab-inline-padding": "",
+              "--tab-inner-inline-margin": "",
+              "--tab-padding-inline": "8px",
+              "--tab-margin-inline-inner": "0.75rem",
+              "--usercontext-line-width": ""
+            }
+          },
+          "before": {
+            "tag": "stack",
+            "class": "tab-stack",
+            "attrs": {
+              "class": "tab-stack",
+              "flex": "1"
+            },
+            "rect": {
+              "x": 225,
+              "y": 0,
+              "width": 221,
+              "height": 44
+            },
+            "styles": {
+              "display": "block",
+              "visibility": "visible",
+              "opacity": "1",
+              "backgroundColor": "color(srgb 0.184314 0.184314 0.203922 / 0.2)",
+              "backgroundImage": "none",
+              "borderTopColor": "rgb(47, 47, 52)",
+              "borderBottomColor": "rgb(47, 47, 52)",
+              "borderLeftColor": "rgb(47, 47, 52)",
+              "borderRightColor": "rgb(47, 47, 52)",
+              "borderTopWidth": "0px",
+              "borderBottomWidth": "0px",
+              "borderLeftWidth": "0px",
+              "borderRightWidth": "0px",
+              "boxShadow": "none",
+              "transform": "matrix(1, 0, 0, 1, -2.5, -9)",
+              "height": "20px",
+              "width": "1px",
+              "content": "\"\"",
+              "position": "absolute",
+              "zIndex": "auto",
+              "color": "rgb(47, 47, 52)",
+              "top": "22px",
+              "bottom": "2px",
+              "left": "0px",
+              "right": "220px",
+              "borderBottomStyle": "none",
+              "borderTopStyle": "none",
+              "borderLeftStyle": "none",
+              "borderRightStyle": "none"
+            },
+            "identity": "#37adff",
+            "identityColor": "#37adff",
+            "tokens": {
+              "--tab-inline-padding": "",
+              "--tab-inner-inline-margin": "",
+              "--tab-padding-inline": "8px",
+              "--tab-margin-inline-inner": "0.75rem",
+              "--usercontext-line-width": ""
+            }
+          },
+          "after": {
+            "tag": "stack",
+            "class": "tab-stack",
+            "attrs": {
+              "class": "tab-stack",
+              "flex": "1"
+            },
+            "rect": {
+              "x": 225,
+              "y": 0,
+              "width": 221,
+              "height": 44
+            },
+            "styles": {
+              "display": "inline",
+              "visibility": "visible",
+              "opacity": "1",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "borderTopColor": "rgb(47, 47, 52)",
+              "borderBottomColor": "rgb(47, 47, 52)",
+              "borderLeftColor": "rgb(47, 47, 52)",
+              "borderRightColor": "rgb(47, 47, 52)",
+              "borderTopWidth": "0px",
+              "borderBottomWidth": "0px",
+              "borderLeftWidth": "0px",
+              "borderRightWidth": "0px",
+              "boxShadow": "none",
+              "transform": "none",
+              "height": "auto",
+              "width": "auto",
+              "content": "none",
+              "position": "static",
+              "zIndex": "auto",
+              "color": "rgb(47, 47, 52)",
+              "top": "auto",
+              "bottom": "auto",
+              "left": "auto",
+              "right": "auto",
+              "borderBottomStyle": "none",
+              "borderTopStyle": "none",
+              "borderLeftStyle": "none",
+              "borderRightStyle": "none"
+            },
+            "identity": "#37adff",
+            "identityColor": "#37adff",
+            "tokens": {
+              "--tab-inline-padding": "",
+              "--tab-inner-inline-margin": "",
+              "--tab-padding-inline": "8px",
+              "--tab-margin-inline-inner": "0.75rem",
+              "--usercontext-line-width": ""
+            }
+          }
+        },
+        ".tab-content": {
+          "normal": {
+            "tag": "hbox",
+            "class": "tab-content",
+            "attrs": {
+              "class": "tab-content",
+              "align": "center"
+            },
+            "rect": {
+              "x": 225,
+              "y": 0,
+              "width": 221,
+              "height": 44
+            },
+            "styles": {
+              "display": "flex",
+              "visibility": "visible",
+              "opacity": "1",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "borderTopColor": "rgb(47, 47, 52)",
+              "borderBottomColor": "rgb(47, 47, 52)",
+              "borderLeftColor": "rgb(47, 47, 52)",
+              "borderRightColor": "rgb(47, 47, 52)",
+              "borderTopWidth": "0px",
+              "borderBottomWidth": "0px",
+              "borderLeftWidth": "0px",
+              "borderRightWidth": "0px",
+              "boxShadow": "none",
+              "transform": "none",
+              "height": "44px",
+              "width": "221px",
+              "content": "normal",
+              "position": "relative",
+              "zIndex": "0",
+              "color": "rgb(47, 47, 52)",
+              "top": "0px",
+              "bottom": "0px",
+              "left": "0px",
+              "right": "0px",
+              "borderBottomStyle": "none",
+              "borderTopStyle": "none",
+              "borderLeftStyle": "none",
+              "borderRightStyle": "none"
+            },
+            "identity": "#37adff",
+            "identityColor": "#37adff",
+            "tokens": {
+              "--tab-inline-padding": "8px",
+              "--tab-inner-inline-margin": "0.75rem",
+              "--tab-padding-inline": "8px",
+              "--tab-margin-inline-inner": "0.75rem",
+              "--usercontext-line-width": ""
+            }
+          },
+          "before": {
+            "tag": "hbox",
+            "class": "tab-content",
+            "attrs": {
+              "class": "tab-content",
+              "align": "center"
+            },
+            "rect": {
+              "x": 225,
+              "y": 0,
+              "width": 221,
+              "height": 44
+            },
+            "styles": {
+              "display": "block",
+              "visibility": "visible",
+              "opacity": "0.75",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "borderTopColor": "rgb(47, 47, 52)",
+              "borderBottomColor": "rgb(55, 173, 255)",
+              "borderLeftColor": "rgb(47, 47, 52)",
+              "borderRightColor": "rgb(47, 47, 52)",
+              "borderTopWidth": "0px",
+              "borderBottomWidth": "2px",
+              "borderLeftWidth": "0px",
+              "borderRightWidth": "0px",
+              "boxShadow": "none",
+              "transform": "matrix(1, 0, 0, 1, 9, 12.5)",
+              "height": "0px",
+              "width": "55.25px",
+              "content": "\"\"",
+              "position": "absolute",
+              "zIndex": "auto",
+              "color": "rgb(47, 47, 52)",
+              "top": "22px",
+              "bottom": "20px",
+              "left": "8px",
+              "right": "157.75px",
+              "borderBottomStyle": "solid",
+              "borderTopStyle": "none",
+              "borderLeftStyle": "none",
+              "borderRightStyle": "none"
+            },
+            "identity": "#37adff",
+            "identityColor": "#37adff",
+            "tokens": {
+              "--tab-inline-padding": "8px",
+              "--tab-inner-inline-margin": "0.75rem",
+              "--tab-padding-inline": "8px",
+              "--tab-margin-inline-inner": "0.75rem",
+              "--usercontext-line-width": ""
+            }
+          },
+          "after": {
+            "tag": "hbox",
+            "class": "tab-content",
+            "attrs": {
+              "class": "tab-content",
+              "align": "center"
+            },
+            "rect": {
+              "x": 225,
+              "y": 0,
+              "width": 221,
+              "height": 44
+            },
+            "styles": {
+              "display": "block",
+              "visibility": "visible",
+              "opacity": "1",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "borderTopColor": "rgb(47, 47, 52)",
+              "borderBottomColor": "rgb(47, 47, 52)",
+              "borderLeftColor": "rgb(47, 47, 52)",
+              "borderRightColor": "rgb(47, 47, 52)",
+              "borderTopWidth": "0px",
+              "borderBottomWidth": "0px",
+              "borderLeftWidth": "0px",
+              "borderRightWidth": "0px",
+              "boxShadow": "none",
+              "transform": "none",
+              "height": "auto",
+              "width": "auto",
+              "content": "none",
+              "position": "static",
+              "zIndex": "auto",
+              "color": "rgb(47, 47, 52)",
+              "top": "auto",
+              "bottom": "auto",
+              "left": "auto",
+              "right": "auto",
+              "borderBottomStyle": "none",
+              "borderTopStyle": "none",
+              "borderLeftStyle": "none",
+              "borderRightStyle": "none"
+            },
+            "identity": "#37adff",
+            "identityColor": "#37adff",
+            "tokens": {
+              "--tab-inline-padding": "8px",
+              "--tab-inner-inline-margin": "0.75rem",
+              "--tab-padding-inline": "8px",
+              "--tab-margin-inline-inner": "0.75rem",
+              "--usercontext-line-width": ""
+            }
+          }
+        },
+        ".tab-label-container": {
+          "normal": {
+            "tag": "vbox",
+            "class": "tab-label-container",
+            "attrs": {
+              "class": "tab-label-container",
+              "align": "start",
+              "pack": "center",
+              "flex": "1",
+              "labeldirection": "ltr"
+            },
+            "rect": {
+              "x": 233,
+              "y": 10.666671752929688,
+              "width": 190,
+              "height": 22.666656494140625
+            },
+            "styles": {
+              "display": "flex",
+              "visibility": "visible",
+              "opacity": "1",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "borderTopColor": "rgb(47, 47, 52)",
+              "borderBottomColor": "rgb(47, 47, 52)",
+              "borderLeftColor": "rgb(47, 47, 52)",
+              "borderRightColor": "rgb(47, 47, 52)",
+              "borderTopWidth": "0px",
+              "borderBottomWidth": "0px",
+              "borderLeftWidth": "0px",
+              "borderRightWidth": "0px",
+              "boxShadow": "none",
+              "transform": "none",
+              "height": "22.6667px",
+              "width": "190px",
+              "content": "normal",
+              "position": "static",
+              "zIndex": "auto",
+              "color": "rgb(47, 47, 52)",
+              "top": "auto",
+              "bottom": "auto",
+              "left": "auto",
+              "right": "auto",
+              "borderBottomStyle": "none",
+              "borderTopStyle": "none",
+              "borderLeftStyle": "none",
+              "borderRightStyle": "none"
+            },
+            "identity": "#37adff",
+            "identityColor": "#37adff",
+            "tokens": {
+              "--tab-inline-padding": "8px",
+              "--tab-inner-inline-margin": "0.75rem",
+              "--tab-padding-inline": "8px",
+              "--tab-margin-inline-inner": "0.75rem",
+              "--usercontext-line-width": ""
+            }
+          },
+          "before": {
+            "tag": "vbox",
+            "class": "tab-label-container",
+            "attrs": {
+              "class": "tab-label-container",
+              "align": "start",
+              "pack": "center",
+              "flex": "1",
+              "labeldirection": "ltr"
+            },
+            "rect": {
+              "x": 233,
+              "y": 10.666671752929688,
+              "width": 190,
+              "height": 22.666656494140625
+            },
+            "styles": {
+              "display": "inline",
+              "visibility": "visible",
+              "opacity": "1",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "borderTopColor": "rgb(47, 47, 52)",
+              "borderBottomColor": "rgb(47, 47, 52)",
+              "borderLeftColor": "rgb(47, 47, 52)",
+              "borderRightColor": "rgb(47, 47, 52)",
+              "borderTopWidth": "0px",
+              "borderBottomWidth": "0px",
+              "borderLeftWidth": "0px",
+              "borderRightWidth": "0px",
+              "boxShadow": "none",
+              "transform": "none",
+              "height": "auto",
+              "width": "auto",
+              "content": "none",
+              "position": "static",
+              "zIndex": "auto",
+              "color": "rgb(47, 47, 52)",
+              "top": "auto",
+              "bottom": "auto",
+              "left": "auto",
+              "right": "auto",
+              "borderBottomStyle": "none",
+              "borderTopStyle": "none",
+              "borderLeftStyle": "none",
+              "borderRightStyle": "none"
+            },
+            "identity": "#37adff",
+            "identityColor": "#37adff",
+            "tokens": {
+              "--tab-inline-padding": "8px",
+              "--tab-inner-inline-margin": "0.75rem",
+              "--tab-padding-inline": "8px",
+              "--tab-margin-inline-inner": "0.75rem",
+              "--usercontext-line-width": ""
+            }
+          },
+          "after": {
+            "tag": "vbox",
+            "class": "tab-label-container",
+            "attrs": {
+              "class": "tab-label-container",
+              "align": "start",
+              "pack": "center",
+              "flex": "1",
+              "labeldirection": "ltr"
+            },
+            "rect": {
+              "x": 233,
+              "y": 10.666671752929688,
+              "width": 190,
+              "height": 22.666656494140625
+            },
+            "styles": {
+              "display": "inline",
+              "visibility": "visible",
+              "opacity": "1",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "borderTopColor": "rgb(47, 47, 52)",
+              "borderBottomColor": "rgb(47, 47, 52)",
+              "borderLeftColor": "rgb(47, 47, 52)",
+              "borderRightColor": "rgb(47, 47, 52)",
+              "borderTopWidth": "0px",
+              "borderBottomWidth": "0px",
+              "borderLeftWidth": "0px",
+              "borderRightWidth": "0px",
+              "boxShadow": "none",
+              "transform": "none",
+              "height": "auto",
+              "width": "auto",
+              "content": "none",
+              "position": "static",
+              "zIndex": "auto",
+              "color": "rgb(47, 47, 52)",
+              "top": "auto",
+              "bottom": "auto",
+              "left": "auto",
+              "right": "auto",
+              "borderBottomStyle": "none",
+              "borderTopStyle": "none",
+              "borderLeftStyle": "none",
+              "borderRightStyle": "none"
+            },
+            "identity": "#37adff",
+            "identityColor": "#37adff",
+            "tokens": {
+              "--tab-inline-padding": "8px",
+              "--tab-inner-inline-margin": "0.75rem",
+              "--tab-padding-inline": "8px",
+              "--tab-margin-inline-inner": "0.75rem",
+              "--usercontext-line-width": ""
+            }
+          }
+        },
+        ".tab-icon-stack": {
+          "normal": {
+            "tag": "stack",
+            "class": "tab-icon-stack",
+            "attrs": {
+              "class": "tab-icon-stack"
+            },
+            "rect": {
+              "x": 233,
+              "y": 22,
+              "width": 0,
+              "height": 0
+            },
+            "styles": {
+              "display": "grid",
+              "visibility": "visible",
+              "opacity": "1",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "borderTopColor": "rgb(47, 47, 52)",
+              "borderBottomColor": "rgb(47, 47, 52)",
+              "borderLeftColor": "rgb(47, 47, 52)",
+              "borderRightColor": "rgb(47, 47, 52)",
+              "borderTopWidth": "0px",
+              "borderBottomWidth": "0px",
+              "borderLeftWidth": "0px",
+              "borderRightWidth": "0px",
+              "boxShadow": "none",
+              "transform": "none",
+              "height": "0px",
+              "width": "0px",
+              "content": "normal",
+              "position": "relative",
+              "zIndex": "auto",
+              "color": "rgb(47, 47, 52)",
+              "top": "0px",
+              "bottom": "0px",
+              "left": "0px",
+              "right": "0px",
+              "borderBottomStyle": "none",
+              "borderTopStyle": "none",
+              "borderLeftStyle": "none",
+              "borderRightStyle": "none"
+            },
+            "identity": "#37adff",
+            "identityColor": "#37adff",
+            "tokens": {
+              "--tab-inline-padding": "8px",
+              "--tab-inner-inline-margin": "0.75rem",
+              "--tab-padding-inline": "8px",
+              "--tab-margin-inline-inner": "0.75rem",
+              "--usercontext-line-width": ""
+            }
+          },
+          "before": {
+            "tag": "stack",
+            "class": "tab-icon-stack",
+            "attrs": {
+              "class": "tab-icon-stack"
+            },
+            "rect": {
+              "x": 233,
+              "y": 22,
+              "width": 0,
+              "height": 0
+            },
+            "styles": {
+              "display": "inline",
+              "visibility": "visible",
+              "opacity": "1",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "borderTopColor": "rgb(47, 47, 52)",
+              "borderBottomColor": "rgb(47, 47, 52)",
+              "borderLeftColor": "rgb(47, 47, 52)",
+              "borderRightColor": "rgb(47, 47, 52)",
+              "borderTopWidth": "0px",
+              "borderBottomWidth": "0px",
+              "borderLeftWidth": "0px",
+              "borderRightWidth": "0px",
+              "boxShadow": "none",
+              "transform": "none",
+              "height": "auto",
+              "width": "auto",
+              "content": "none",
+              "position": "static",
+              "zIndex": "auto",
+              "color": "rgb(47, 47, 52)",
+              "top": "auto",
+              "bottom": "auto",
+              "left": "auto",
+              "right": "auto",
+              "borderBottomStyle": "none",
+              "borderTopStyle": "none",
+              "borderLeftStyle": "none",
+              "borderRightStyle": "none"
+            },
+            "identity": "#37adff",
+            "identityColor": "#37adff",
+            "tokens": {
+              "--tab-inline-padding": "8px",
+              "--tab-inner-inline-margin": "0.75rem",
+              "--tab-padding-inline": "8px",
+              "--tab-margin-inline-inner": "0.75rem",
+              "--usercontext-line-width": ""
+            }
+          },
+          "after": {
+            "tag": "stack",
+            "class": "tab-icon-stack",
+            "attrs": {
+              "class": "tab-icon-stack"
+            },
+            "rect": {
+              "x": 233,
+              "y": 22,
+              "width": 0,
+              "height": 0
+            },
+            "styles": {
+              "display": "inline",
+              "visibility": "visible",
+              "opacity": "1",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "borderTopColor": "rgb(47, 47, 52)",
+              "borderBottomColor": "rgb(47, 47, 52)",
+              "borderLeftColor": "rgb(47, 47, 52)",
+              "borderRightColor": "rgb(47, 47, 52)",
+              "borderTopWidth": "0px",
+              "borderBottomWidth": "0px",
+              "borderLeftWidth": "0px",
+              "borderRightWidth": "0px",
+              "boxShadow": "none",
+              "transform": "none",
+              "height": "auto",
+              "width": "auto",
+              "content": "none",
+              "position": "static",
+              "zIndex": "auto",
+              "color": "rgb(47, 47, 52)",
+              "top": "auto",
+              "bottom": "auto",
+              "left": "auto",
+              "right": "auto",
+              "borderBottomStyle": "none",
+              "borderTopStyle": "none",
+              "borderLeftStyle": "none",
+              "borderRightStyle": "none"
+            },
+            "identity": "#37adff",
+            "identityColor": "#37adff",
+            "tokens": {
+              "--tab-inline-padding": "8px",
+              "--tab-inner-inline-margin": "0.75rem",
+              "--tab-padding-inline": "8px",
+              "--tab-margin-inline-inner": "0.75rem",
+              "--usercontext-line-width": ""
+            }
+          }
+        },
+        ".tabbrowser-tab-background": {
+          "normal": null,
+          "before": null,
+          "after": null
+        }
+      }
+    },
+    {
+      "role": "orange",
+      "hover": false,
+      "tab": {
+        "tag": "tab",
+        "class": "identity-color-orange identity-icon-briefcase tabbrowser-tab",
+        "attrs": {
+          "label": "New Tab",
+          "usercontextid": "8",
+          "class": "identity-color-orange identity-icon-briefcase tabbrowser-tab",
+          "context": "tabContextMenu",
+          "aria-level": "1",
+          "linkedpanel": "tabpanel-3",
+          "floorpWorkspaceId": "6037f6be-1e64-4c6f-b8c1-f5686ff34616",
+          "data-kan26-role": "orange",
+          "fadein": "true",
+          "labeldirection": "ltr"
+        },
+        "rect": {
+          "x": 446,
+          "y": 0,
+          "width": 225,
+          "height": 44
+        },
+        "styles": {
+          "display": "flex",
+          "visibility": "visible",
+          "opacity": "1",
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "backgroundImage": "none",
+          "borderTopColor": "rgb(47, 47, 52)",
+          "borderBottomColor": "rgba(0, 0, 0, 0)",
+          "borderLeftColor": "rgb(47, 47, 52)",
+          "borderRightColor": "rgb(47, 47, 52)",
+          "borderTopWidth": "0px",
+          "borderBottomWidth": "0px",
+          "borderLeftWidth": "0px",
+          "borderRightWidth": "0px",
+          "boxShadow": "none",
+          "transform": "none",
+          "height": "44px",
+          "width": "225px",
+          "content": "normal",
+          "position": "relative",
+          "zIndex": "auto",
+          "color": "rgb(47, 47, 52)",
+          "top": "0px",
+          "bottom": "0px",
+          "left": "0px",
+          "right": "0px",
+          "borderBottomStyle": "solid",
+          "borderTopStyle": "none",
+          "borderLeftStyle": "none",
+          "borderRightStyle": "none"
+        },
+        "identity": "#ff9f00",
+        "identityColor": "#ff9f00",
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": ""
+        }
+      },
+      "before": {
+        "tag": "tab",
+        "class": "identity-color-orange identity-icon-briefcase tabbrowser-tab",
+        "attrs": {
+          "label": "New Tab",
+          "usercontextid": "8",
+          "class": "identity-color-orange identity-icon-briefcase tabbrowser-tab",
+          "context": "tabContextMenu",
+          "aria-level": "1",
+          "linkedpanel": "tabpanel-3",
+          "floorpWorkspaceId": "6037f6be-1e64-4c6f-b8c1-f5686ff34616",
+          "data-kan26-role": "orange",
+          "fadein": "true",
+          "labeldirection": "ltr"
+        },
+        "rect": {
+          "x": 446,
+          "y": 0,
+          "width": 225,
+          "height": 44
+        },
+        "styles": {
+          "display": "inline",
+          "visibility": "visible",
+          "opacity": "1",
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "backgroundImage": "none",
+          "borderTopColor": "rgb(47, 47, 52)",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderLeftColor": "rgb(47, 47, 52)",
+          "borderRightColor": "rgb(47, 47, 52)",
+          "borderTopWidth": "0px",
+          "borderBottomWidth": "0px",
+          "borderLeftWidth": "0px",
+          "borderRightWidth": "0px",
+          "boxShadow": "none",
+          "transform": "none",
+          "height": "auto",
+          "width": "auto",
+          "content": "none",
+          "position": "static",
+          "zIndex": "auto",
+          "color": "rgb(47, 47, 52)",
+          "top": "auto",
+          "bottom": "auto",
+          "left": "auto",
+          "right": "auto",
+          "borderBottomStyle": "none",
+          "borderTopStyle": "none",
+          "borderLeftStyle": "none",
+          "borderRightStyle": "none"
+        },
+        "identity": "#ff9f00",
+        "identityColor": "#ff9f00",
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": ""
+        }
+      },
+      "after": {
+        "tag": "tab",
+        "class": "identity-color-orange identity-icon-briefcase tabbrowser-tab",
+        "attrs": {
+          "label": "New Tab",
+          "usercontextid": "8",
+          "class": "identity-color-orange identity-icon-briefcase tabbrowser-tab",
+          "context": "tabContextMenu",
+          "aria-level": "1",
+          "linkedpanel": "tabpanel-3",
+          "floorpWorkspaceId": "6037f6be-1e64-4c6f-b8c1-f5686ff34616",
+          "data-kan26-role": "orange",
+          "fadein": "true",
+          "labeldirection": "ltr"
+        },
+        "rect": {
+          "x": 446,
+          "y": 0,
+          "width": 225,
+          "height": 44
+        },
+        "styles": {
+          "display": "inline",
+          "visibility": "visible",
+          "opacity": "1",
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "backgroundImage": "none",
+          "borderTopColor": "rgb(47, 47, 52)",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderLeftColor": "rgb(47, 47, 52)",
+          "borderRightColor": "rgb(47, 47, 52)",
+          "borderTopWidth": "0px",
+          "borderBottomWidth": "0px",
+          "borderLeftWidth": "0px",
+          "borderRightWidth": "0px",
+          "boxShadow": "none",
+          "transform": "none",
+          "height": "auto",
+          "width": "auto",
+          "content": "none",
+          "position": "static",
+          "zIndex": "auto",
+          "color": "rgb(47, 47, 52)",
+          "top": "auto",
+          "bottom": "auto",
+          "left": "auto",
+          "right": "auto",
+          "borderBottomStyle": "none",
+          "borderTopStyle": "none",
+          "borderLeftStyle": "none",
+          "borderRightStyle": "none"
+        },
+        "identity": "#ff9f00",
+        "identityColor": "#ff9f00",
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": ""
+        }
+      },
+      "parts": {
+        ".tab-context-line": {
+          "normal": {
+            "tag": "hbox",
+            "class": "tab-context-line",
+            "attrs": {
+              "class": "tab-context-line"
+            },
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 0,
+              "height": 0
+            },
+            "styles": {
+              "display": "none",
+              "visibility": "visible",
+              "opacity": "1",
+              "backgroundColor": "rgb(255, 159, 0)",
+              "backgroundImage": "none",
+              "borderTopColor": "rgb(47, 47, 52)",
+              "borderBottomColor": "rgb(47, 47, 52)",
+              "borderLeftColor": "rgb(47, 47, 52)",
+              "borderRightColor": "rgb(47, 47, 52)",
+              "borderTopWidth": "0px",
+              "borderBottomWidth": "0px",
+              "borderLeftWidth": "0px",
+              "borderRightWidth": "0px",
+              "boxShadow": "none",
+              "transform": "none",
+              "height": "2px",
+              "width": "auto",
+              "content": "normal",
+              "position": "relative",
+              "zIndex": "auto",
+              "color": "rgb(47, 47, 52)",
+              "top": "auto",
+              "bottom": "auto",
+              "left": "auto",
+              "right": "auto",
+              "borderBottomStyle": "none",
+              "borderTopStyle": "none",
+              "borderLeftStyle": "none",
+              "borderRightStyle": "none"
+            },
+            "identity": "#ff9f00",
+            "identityColor": "#ff9f00",
+            "tokens": {
+              "--tab-inline-padding": "",
+              "--tab-inner-inline-margin": "",
+              "--tab-padding-inline": "8px",
+              "--tab-margin-inline-inner": "0.75rem",
+              "--usercontext-line-width": ""
+            }
+          },
+          "before": {
+            "tag": "hbox",
+            "class": "tab-context-line",
+            "attrs": {
+              "class": "tab-context-line"
+            },
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 0,
+              "height": 0
+            },
+            "styles": {
+              "display": "inline",
+              "visibility": "visible",
+              "opacity": "1",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "borderTopColor": "rgb(47, 47, 52)",
+              "borderBottomColor": "rgb(47, 47, 52)",
+              "borderLeftColor": "rgb(47, 47, 52)",
+              "borderRightColor": "rgb(47, 47, 52)",
+              "borderTopWidth": "0px",
+              "borderBottomWidth": "0px",
+              "borderLeftWidth": "0px",
+              "borderRightWidth": "0px",
+              "boxShadow": "none",
+              "transform": "none",
+              "height": "auto",
+              "width": "auto",
+              "content": "none",
+              "position": "static",
+              "zIndex": "auto",
+              "color": "rgb(47, 47, 52)",
+              "top": "auto",
+              "bottom": "auto",
+              "left": "auto",
+              "right": "auto",
+              "borderBottomStyle": "none",
+              "borderTopStyle": "none",
+              "borderLeftStyle": "none",
+              "borderRightStyle": "none"
+            },
+            "identity": "#ff9f00",
+            "identityColor": "#ff9f00",
+            "tokens": {
+              "--tab-inline-padding": "",
+              "--tab-inner-inline-margin": "",
+              "--tab-padding-inline": "8px",
+              "--tab-margin-inline-inner": "0.75rem",
+              "--usercontext-line-width": ""
+            }
+          },
+          "after": {
+            "tag": "hbox",
+            "class": "tab-context-line",
+            "attrs": {
+              "class": "tab-context-line"
+            },
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 0,
+              "height": 0
+            },
+            "styles": {
+              "display": "inline",
+              "visibility": "visible",
+              "opacity": "1",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "borderTopColor": "rgb(47, 47, 52)",
+              "borderBottomColor": "rgb(47, 47, 52)",
+              "borderLeftColor": "rgb(47, 47, 52)",
+              "borderRightColor": "rgb(47, 47, 52)",
+              "borderTopWidth": "0px",
+              "borderBottomWidth": "0px",
+              "borderLeftWidth": "0px",
+              "borderRightWidth": "0px",
+              "boxShadow": "none",
+              "transform": "none",
+              "height": "auto",
+              "width": "auto",
+              "content": "none",
+              "position": "static",
+              "zIndex": "auto",
+              "color": "rgb(47, 47, 52)",
+              "top": "auto",
+              "bottom": "auto",
+              "left": "auto",
+              "right": "auto",
+              "borderBottomStyle": "none",
+              "borderTopStyle": "none",
+              "borderLeftStyle": "none",
+              "borderRightStyle": "none"
+            },
+            "identity": "#ff9f00",
+            "identityColor": "#ff9f00",
+            "tokens": {
+              "--tab-inline-padding": "",
+              "--tab-inner-inline-margin": "",
+              "--tab-padding-inline": "8px",
+              "--tab-margin-inline-inner": "0.75rem",
+              "--usercontext-line-width": ""
+            }
+          }
+        },
+        ".tab-background": {
+          "normal": {
+            "tag": "vbox",
+            "class": "tab-background",
+            "attrs": {
+              "class": "tab-background",
+              "fadein": "true"
+            },
+            "rect": {
+              "x": 448,
+              "y": 4,
+              "width": 221,
+              "height": 36
+            },
+            "styles": {
+              "display": "flex",
+              "visibility": "visible",
+              "opacity": "1",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "borderTopColor": "rgb(47, 47, 52)",
+              "borderBottomColor": "rgb(47, 47, 52)",
+              "borderLeftColor": "rgb(47, 47, 52)",
+              "borderRightColor": "rgb(47, 47, 52)",
+              "borderTopWidth": "0px",
+              "borderBottomWidth": "0px",
+              "borderLeftWidth": "0px",
+              "borderRightWidth": "0px",
+              "boxShadow": "none",
+              "transform": "none",
+              "height": "36px",
+              "width": "221px",
+              "content": "normal",
+              "position": "static",
+              "zIndex": "0",
+              "color": "rgb(47, 47, 52)",
+              "top": "auto",
+              "bottom": "auto",
+              "left": "auto",
+              "right": "auto",
+              "borderBottomStyle": "none",
+              "borderTopStyle": "none",
+              "borderLeftStyle": "none",
+              "borderRightStyle": "none"
+            },
+            "identity": "#ff9f00",
+            "identityColor": "#ff9f00",
+            "tokens": {
+              "--tab-inline-padding": "",
+              "--tab-inner-inline-margin": "",
+              "--tab-padding-inline": "8px",
+              "--tab-margin-inline-inner": "0.75rem",
+              "--usercontext-line-width": ""
+            }
+          },
+          "before": {
+            "tag": "vbox",
+            "class": "tab-background",
+            "attrs": {
+              "class": "tab-background",
+              "fadein": "true"
+            },
+            "rect": {
+              "x": 448,
+              "y": 4,
+              "width": 221,
+              "height": 36
+            },
+            "styles": {
+              "display": "inline",
+              "visibility": "visible",
+              "opacity": "1",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "borderTopColor": "rgb(47, 47, 52)",
+              "borderBottomColor": "rgb(47, 47, 52)",
+              "borderLeftColor": "rgb(47, 47, 52)",
+              "borderRightColor": "rgb(47, 47, 52)",
+              "borderTopWidth": "0px",
+              "borderBottomWidth": "0px",
+              "borderLeftWidth": "0px",
+              "borderRightWidth": "0px",
+              "boxShadow": "none",
+              "transform": "none",
+              "height": "auto",
+              "width": "auto",
+              "content": "none",
+              "position": "static",
+              "zIndex": "auto",
+              "color": "rgb(47, 47, 52)",
+              "top": "auto",
+              "bottom": "auto",
+              "left": "auto",
+              "right": "auto",
+              "borderBottomStyle": "none",
+              "borderTopStyle": "none",
+              "borderLeftStyle": "none",
+              "borderRightStyle": "none"
+            },
+            "identity": "#ff9f00",
+            "identityColor": "#ff9f00",
+            "tokens": {
+              "--tab-inline-padding": "",
+              "--tab-inner-inline-margin": "",
+              "--tab-padding-inline": "8px",
+              "--tab-margin-inline-inner": "0.75rem",
+              "--usercontext-line-width": ""
+            }
+          },
+          "after": {
+            "tag": "vbox",
+            "class": "tab-background",
+            "attrs": {
+              "class": "tab-background",
+              "fadein": "true"
+            },
+            "rect": {
+              "x": 448,
+              "y": 4,
+              "width": 221,
+              "height": 36
+            },
+            "styles": {
+              "display": "inline",
+              "visibility": "visible",
+              "opacity": "1",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "borderTopColor": "rgb(47, 47, 52)",
+              "borderBottomColor": "rgb(47, 47, 52)",
+              "borderLeftColor": "rgb(47, 47, 52)",
+              "borderRightColor": "rgb(47, 47, 52)",
+              "borderTopWidth": "0px",
+              "borderBottomWidth": "0px",
+              "borderLeftWidth": "0px",
+              "borderRightWidth": "0px",
+              "boxShadow": "none",
+              "transform": "none",
+              "height": "auto",
+              "width": "auto",
+              "content": "none",
+              "position": "static",
+              "zIndex": "auto",
+              "color": "rgb(47, 47, 52)",
+              "top": "auto",
+              "bottom": "auto",
+              "left": "auto",
+              "right": "auto",
+              "borderBottomStyle": "none",
+              "borderTopStyle": "none",
+              "borderLeftStyle": "none",
+              "borderRightStyle": "none"
+            },
+            "identity": "#ff9f00",
+            "identityColor": "#ff9f00",
+            "tokens": {
+              "--tab-inline-padding": "",
+              "--tab-inner-inline-margin": "",
+              "--tab-padding-inline": "8px",
+              "--tab-margin-inline-inner": "0.75rem",
+              "--usercontext-line-width": ""
+            }
+          }
+        },
+        ".tab-stack": {
+          "normal": {
+            "tag": "stack",
+            "class": "tab-stack",
+            "attrs": {
+              "class": "tab-stack",
+              "flex": "1"
+            },
+            "rect": {
+              "x": 448,
+              "y": 0,
+              "width": 221,
+              "height": 44
+            },
+            "styles": {
+              "display": "grid",
+              "visibility": "visible",
+              "opacity": "1",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "borderTopColor": "rgb(47, 47, 52)",
+              "borderBottomColor": "rgb(47, 47, 52)",
+              "borderLeftColor": "rgb(47, 47, 52)",
+              "borderRightColor": "rgb(47, 47, 52)",
+              "borderTopWidth": "0px",
+              "borderBottomWidth": "0px",
+              "borderLeftWidth": "0px",
+              "borderRightWidth": "0px",
+              "boxShadow": "none",
+              "transform": "none",
+              "height": "44px",
+              "width": "221px",
+              "content": "normal",
+              "position": "relative",
+              "zIndex": "auto",
+              "color": "rgb(47, 47, 52)",
+              "top": "0px",
+              "bottom": "0px",
+              "left": "0px",
+              "right": "0px",
+              "borderBottomStyle": "none",
+              "borderTopStyle": "none",
+              "borderLeftStyle": "none",
+              "borderRightStyle": "none"
+            },
+            "identity": "#ff9f00",
+            "identityColor": "#ff9f00",
+            "tokens": {
+              "--tab-inline-padding": "",
+              "--tab-inner-inline-margin": "",
+              "--tab-padding-inline": "8px",
+              "--tab-margin-inline-inner": "0.75rem",
+              "--usercontext-line-width": ""
+            }
+          },
+          "before": {
+            "tag": "stack",
+            "class": "tab-stack",
+            "attrs": {
+              "class": "tab-stack",
+              "flex": "1"
+            },
+            "rect": {
+              "x": 448,
+              "y": 0,
+              "width": 221,
+              "height": 44
+            },
+            "styles": {
+              "display": "block",
+              "visibility": "visible",
+              "opacity": "1",
+              "backgroundColor": "color(srgb 0.184314 0.184314 0.203922 / 0.2)",
+              "backgroundImage": "none",
+              "borderTopColor": "rgb(47, 47, 52)",
+              "borderBottomColor": "rgb(47, 47, 52)",
+              "borderLeftColor": "rgb(47, 47, 52)",
+              "borderRightColor": "rgb(47, 47, 52)",
+              "borderTopWidth": "0px",
+              "borderBottomWidth": "0px",
+              "borderLeftWidth": "0px",
+              "borderRightWidth": "0px",
+              "boxShadow": "none",
+              "transform": "matrix(1, 0, 0, 1, -2.5, -9)",
+              "height": "20px",
+              "width": "1px",
+              "content": "\"\"",
+              "position": "absolute",
+              "zIndex": "auto",
+              "color": "rgb(47, 47, 52)",
+              "top": "22px",
+              "bottom": "2px",
+              "left": "0px",
+              "right": "220px",
+              "borderBottomStyle": "none",
+              "borderTopStyle": "none",
+              "borderLeftStyle": "none",
+              "borderRightStyle": "none"
+            },
+            "identity": "#ff9f00",
+            "identityColor": "#ff9f00",
+            "tokens": {
+              "--tab-inline-padding": "",
+              "--tab-inner-inline-margin": "",
+              "--tab-padding-inline": "8px",
+              "--tab-margin-inline-inner": "0.75rem",
+              "--usercontext-line-width": ""
+            }
+          },
+          "after": {
+            "tag": "stack",
+            "class": "tab-stack",
+            "attrs": {
+              "class": "tab-stack",
+              "flex": "1"
+            },
+            "rect": {
+              "x": 448,
+              "y": 0,
+              "width": 221,
+              "height": 44
+            },
+            "styles": {
+              "display": "inline",
+              "visibility": "visible",
+              "opacity": "1",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "borderTopColor": "rgb(47, 47, 52)",
+              "borderBottomColor": "rgb(47, 47, 52)",
+              "borderLeftColor": "rgb(47, 47, 52)",
+              "borderRightColor": "rgb(47, 47, 52)",
+              "borderTopWidth": "0px",
+              "borderBottomWidth": "0px",
+              "borderLeftWidth": "0px",
+              "borderRightWidth": "0px",
+              "boxShadow": "none",
+              "transform": "none",
+              "height": "auto",
+              "width": "auto",
+              "content": "none",
+              "position": "static",
+              "zIndex": "auto",
+              "color": "rgb(47, 47, 52)",
+              "top": "auto",
+              "bottom": "auto",
+              "left": "auto",
+              "right": "auto",
+              "borderBottomStyle": "none",
+              "borderTopStyle": "none",
+              "borderLeftStyle": "none",
+              "borderRightStyle": "none"
+            },
+            "identity": "#ff9f00",
+            "identityColor": "#ff9f00",
+            "tokens": {
+              "--tab-inline-padding": "",
+              "--tab-inner-inline-margin": "",
+              "--tab-padding-inline": "8px",
+              "--tab-margin-inline-inner": "0.75rem",
+              "--usercontext-line-width": ""
+            }
+          }
+        },
+        ".tab-content": {
+          "normal": {
+            "tag": "hbox",
+            "class": "tab-content",
+            "attrs": {
+              "class": "tab-content",
+              "align": "center"
+            },
+            "rect": {
+              "x": 448,
+              "y": 0,
+              "width": 221,
+              "height": 44
+            },
+            "styles": {
+              "display": "flex",
+              "visibility": "visible",
+              "opacity": "1",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "borderTopColor": "rgb(47, 47, 52)",
+              "borderBottomColor": "rgb(47, 47, 52)",
+              "borderLeftColor": "rgb(47, 47, 52)",
+              "borderRightColor": "rgb(47, 47, 52)",
+              "borderTopWidth": "0px",
+              "borderBottomWidth": "0px",
+              "borderLeftWidth": "0px",
+              "borderRightWidth": "0px",
+              "boxShadow": "none",
+              "transform": "none",
+              "height": "44px",
+              "width": "221px",
+              "content": "normal",
+              "position": "relative",
+              "zIndex": "0",
+              "color": "rgb(47, 47, 52)",
+              "top": "0px",
+              "bottom": "0px",
+              "left": "0px",
+              "right": "0px",
+              "borderBottomStyle": "none",
+              "borderTopStyle": "none",
+              "borderLeftStyle": "none",
+              "borderRightStyle": "none"
+            },
+            "identity": "#ff9f00",
+            "identityColor": "#ff9f00",
+            "tokens": {
+              "--tab-inline-padding": "8px",
+              "--tab-inner-inline-margin": "0.75rem",
+              "--tab-padding-inline": "8px",
+              "--tab-margin-inline-inner": "0.75rem",
+              "--usercontext-line-width": ""
+            }
+          },
+          "before": {
+            "tag": "hbox",
+            "class": "tab-content",
+            "attrs": {
+              "class": "tab-content",
+              "align": "center"
+            },
+            "rect": {
+              "x": 448,
+              "y": 0,
+              "width": 221,
+              "height": 44
+            },
+            "styles": {
+              "display": "block",
+              "visibility": "visible",
+              "opacity": "0.75",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "borderTopColor": "rgb(47, 47, 52)",
+              "borderBottomColor": "rgb(255, 159, 0)",
+              "borderLeftColor": "rgb(47, 47, 52)",
+              "borderRightColor": "rgb(47, 47, 52)",
+              "borderTopWidth": "0px",
+              "borderBottomWidth": "2px",
+              "borderLeftWidth": "0px",
+              "borderRightWidth": "0px",
+              "boxShadow": "none",
+              "transform": "matrix(1, 0, 0, 1, 9, 12.5)",
+              "height": "0px",
+              "width": "55.25px",
+              "content": "\"\"",
+              "position": "absolute",
+              "zIndex": "auto",
+              "color": "rgb(47, 47, 52)",
+              "top": "22px",
+              "bottom": "20px",
+              "left": "8px",
+              "right": "157.75px",
+              "borderBottomStyle": "solid",
+              "borderTopStyle": "none",
+              "borderLeftStyle": "none",
+              "borderRightStyle": "none"
+            },
+            "identity": "#ff9f00",
+            "identityColor": "#ff9f00",
+            "tokens": {
+              "--tab-inline-padding": "8px",
+              "--tab-inner-inline-margin": "0.75rem",
+              "--tab-padding-inline": "8px",
+              "--tab-margin-inline-inner": "0.75rem",
+              "--usercontext-line-width": ""
+            }
+          },
+          "after": {
+            "tag": "hbox",
+            "class": "tab-content",
+            "attrs": {
+              "class": "tab-content",
+              "align": "center"
+            },
+            "rect": {
+              "x": 448,
+              "y": 0,
+              "width": 221,
+              "height": 44
+            },
+            "styles": {
+              "display": "block",
+              "visibility": "visible",
+              "opacity": "1",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "borderTopColor": "rgb(47, 47, 52)",
+              "borderBottomColor": "rgb(47, 47, 52)",
+              "borderLeftColor": "rgb(47, 47, 52)",
+              "borderRightColor": "rgb(47, 47, 52)",
+              "borderTopWidth": "0px",
+              "borderBottomWidth": "0px",
+              "borderLeftWidth": "0px",
+              "borderRightWidth": "0px",
+              "boxShadow": "none",
+              "transform": "none",
+              "height": "auto",
+              "width": "auto",
+              "content": "none",
+              "position": "static",
+              "zIndex": "auto",
+              "color": "rgb(47, 47, 52)",
+              "top": "auto",
+              "bottom": "auto",
+              "left": "auto",
+              "right": "auto",
+              "borderBottomStyle": "none",
+              "borderTopStyle": "none",
+              "borderLeftStyle": "none",
+              "borderRightStyle": "none"
+            },
+            "identity": "#ff9f00",
+            "identityColor": "#ff9f00",
+            "tokens": {
+              "--tab-inline-padding": "8px",
+              "--tab-inner-inline-margin": "0.75rem",
+              "--tab-padding-inline": "8px",
+              "--tab-margin-inline-inner": "0.75rem",
+              "--usercontext-line-width": ""
+            }
+          }
+        },
+        ".tab-label-container": {
+          "normal": {
+            "tag": "vbox",
+            "class": "tab-label-container",
+            "attrs": {
+              "class": "tab-label-container",
+              "align": "start",
+              "pack": "center",
+              "flex": "1",
+              "labeldirection": "ltr"
+            },
+            "rect": {
+              "x": 456,
+              "y": 10.666671752929688,
+              "width": 190,
+              "height": 22.666656494140625
+            },
+            "styles": {
+              "display": "flex",
+              "visibility": "visible",
+              "opacity": "1",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "borderTopColor": "rgb(47, 47, 52)",
+              "borderBottomColor": "rgb(47, 47, 52)",
+              "borderLeftColor": "rgb(47, 47, 52)",
+              "borderRightColor": "rgb(47, 47, 52)",
+              "borderTopWidth": "0px",
+              "borderBottomWidth": "0px",
+              "borderLeftWidth": "0px",
+              "borderRightWidth": "0px",
+              "boxShadow": "none",
+              "transform": "none",
+              "height": "22.6667px",
+              "width": "190px",
+              "content": "normal",
+              "position": "static",
+              "zIndex": "auto",
+              "color": "rgb(47, 47, 52)",
+              "top": "auto",
+              "bottom": "auto",
+              "left": "auto",
+              "right": "auto",
+              "borderBottomStyle": "none",
+              "borderTopStyle": "none",
+              "borderLeftStyle": "none",
+              "borderRightStyle": "none"
+            },
+            "identity": "#ff9f00",
+            "identityColor": "#ff9f00",
+            "tokens": {
+              "--tab-inline-padding": "8px",
+              "--tab-inner-inline-margin": "0.75rem",
+              "--tab-padding-inline": "8px",
+              "--tab-margin-inline-inner": "0.75rem",
+              "--usercontext-line-width": ""
+            }
+          },
+          "before": {
+            "tag": "vbox",
+            "class": "tab-label-container",
+            "attrs": {
+              "class": "tab-label-container",
+              "align": "start",
+              "pack": "center",
+              "flex": "1",
+              "labeldirection": "ltr"
+            },
+            "rect": {
+              "x": 456,
+              "y": 10.666671752929688,
+              "width": 190,
+              "height": 22.666656494140625
+            },
+            "styles": {
+              "display": "inline",
+              "visibility": "visible",
+              "opacity": "1",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "borderTopColor": "rgb(47, 47, 52)",
+              "borderBottomColor": "rgb(47, 47, 52)",
+              "borderLeftColor": "rgb(47, 47, 52)",
+              "borderRightColor": "rgb(47, 47, 52)",
+              "borderTopWidth": "0px",
+              "borderBottomWidth": "0px",
+              "borderLeftWidth": "0px",
+              "borderRightWidth": "0px",
+              "boxShadow": "none",
+              "transform": "none",
+              "height": "auto",
+              "width": "auto",
+              "content": "none",
+              "position": "static",
+              "zIndex": "auto",
+              "color": "rgb(47, 47, 52)",
+              "top": "auto",
+              "bottom": "auto",
+              "left": "auto",
+              "right": "auto",
+              "borderBottomStyle": "none",
+              "borderTopStyle": "none",
+              "borderLeftStyle": "none",
+              "borderRightStyle": "none"
+            },
+            "identity": "#ff9f00",
+            "identityColor": "#ff9f00",
+            "tokens": {
+              "--tab-inline-padding": "8px",
+              "--tab-inner-inline-margin": "0.75rem",
+              "--tab-padding-inline": "8px",
+              "--tab-margin-inline-inner": "0.75rem",
+              "--usercontext-line-width": ""
+            }
+          },
+          "after": {
+            "tag": "vbox",
+            "class": "tab-label-container",
+            "attrs": {
+              "class": "tab-label-container",
+              "align": "start",
+              "pack": "center",
+              "flex": "1",
+              "labeldirection": "ltr"
+            },
+            "rect": {
+              "x": 456,
+              "y": 10.666671752929688,
+              "width": 190,
+              "height": 22.666656494140625
+            },
+            "styles": {
+              "display": "inline",
+              "visibility": "visible",
+              "opacity": "1",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "borderTopColor": "rgb(47, 47, 52)",
+              "borderBottomColor": "rgb(47, 47, 52)",
+              "borderLeftColor": "rgb(47, 47, 52)",
+              "borderRightColor": "rgb(47, 47, 52)",
+              "borderTopWidth": "0px",
+              "borderBottomWidth": "0px",
+              "borderLeftWidth": "0px",
+              "borderRightWidth": "0px",
+              "boxShadow": "none",
+              "transform": "none",
+              "height": "auto",
+              "width": "auto",
+              "content": "none",
+              "position": "static",
+              "zIndex": "auto",
+              "color": "rgb(47, 47, 52)",
+              "top": "auto",
+              "bottom": "auto",
+              "left": "auto",
+              "right": "auto",
+              "borderBottomStyle": "none",
+              "borderTopStyle": "none",
+              "borderLeftStyle": "none",
+              "borderRightStyle": "none"
+            },
+            "identity": "#ff9f00",
+            "identityColor": "#ff9f00",
+            "tokens": {
+              "--tab-inline-padding": "8px",
+              "--tab-inner-inline-margin": "0.75rem",
+              "--tab-padding-inline": "8px",
+              "--tab-margin-inline-inner": "0.75rem",
+              "--usercontext-line-width": ""
+            }
+          }
+        },
+        ".tab-icon-stack": {
+          "normal": {
+            "tag": "stack",
+            "class": "tab-icon-stack",
+            "attrs": {
+              "class": "tab-icon-stack"
+            },
+            "rect": {
+              "x": 456,
+              "y": 22,
+              "width": 0,
+              "height": 0
+            },
+            "styles": {
+              "display": "grid",
+              "visibility": "visible",
+              "opacity": "1",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "borderTopColor": "rgb(47, 47, 52)",
+              "borderBottomColor": "rgb(47, 47, 52)",
+              "borderLeftColor": "rgb(47, 47, 52)",
+              "borderRightColor": "rgb(47, 47, 52)",
+              "borderTopWidth": "0px",
+              "borderBottomWidth": "0px",
+              "borderLeftWidth": "0px",
+              "borderRightWidth": "0px",
+              "boxShadow": "none",
+              "transform": "none",
+              "height": "0px",
+              "width": "0px",
+              "content": "normal",
+              "position": "relative",
+              "zIndex": "auto",
+              "color": "rgb(47, 47, 52)",
+              "top": "0px",
+              "bottom": "0px",
+              "left": "0px",
+              "right": "0px",
+              "borderBottomStyle": "none",
+              "borderTopStyle": "none",
+              "borderLeftStyle": "none",
+              "borderRightStyle": "none"
+            },
+            "identity": "#ff9f00",
+            "identityColor": "#ff9f00",
+            "tokens": {
+              "--tab-inline-padding": "8px",
+              "--tab-inner-inline-margin": "0.75rem",
+              "--tab-padding-inline": "8px",
+              "--tab-margin-inline-inner": "0.75rem",
+              "--usercontext-line-width": ""
+            }
+          },
+          "before": {
+            "tag": "stack",
+            "class": "tab-icon-stack",
+            "attrs": {
+              "class": "tab-icon-stack"
+            },
+            "rect": {
+              "x": 456,
+              "y": 22,
+              "width": 0,
+              "height": 0
+            },
+            "styles": {
+              "display": "inline",
+              "visibility": "visible",
+              "opacity": "1",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "borderTopColor": "rgb(47, 47, 52)",
+              "borderBottomColor": "rgb(47, 47, 52)",
+              "borderLeftColor": "rgb(47, 47, 52)",
+              "borderRightColor": "rgb(47, 47, 52)",
+              "borderTopWidth": "0px",
+              "borderBottomWidth": "0px",
+              "borderLeftWidth": "0px",
+              "borderRightWidth": "0px",
+              "boxShadow": "none",
+              "transform": "none",
+              "height": "auto",
+              "width": "auto",
+              "content": "none",
+              "position": "static",
+              "zIndex": "auto",
+              "color": "rgb(47, 47, 52)",
+              "top": "auto",
+              "bottom": "auto",
+              "left": "auto",
+              "right": "auto",
+              "borderBottomStyle": "none",
+              "borderTopStyle": "none",
+              "borderLeftStyle": "none",
+              "borderRightStyle": "none"
+            },
+            "identity": "#ff9f00",
+            "identityColor": "#ff9f00",
+            "tokens": {
+              "--tab-inline-padding": "8px",
+              "--tab-inner-inline-margin": "0.75rem",
+              "--tab-padding-inline": "8px",
+              "--tab-margin-inline-inner": "0.75rem",
+              "--usercontext-line-width": ""
+            }
+          },
+          "after": {
+            "tag": "stack",
+            "class": "tab-icon-stack",
+            "attrs": {
+              "class": "tab-icon-stack"
+            },
+            "rect": {
+              "x": 456,
+              "y": 22,
+              "width": 0,
+              "height": 0
+            },
+            "styles": {
+              "display": "inline",
+              "visibility": "visible",
+              "opacity": "1",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "borderTopColor": "rgb(47, 47, 52)",
+              "borderBottomColor": "rgb(47, 47, 52)",
+              "borderLeftColor": "rgb(47, 47, 52)",
+              "borderRightColor": "rgb(47, 47, 52)",
+              "borderTopWidth": "0px",
+              "borderBottomWidth": "0px",
+              "borderLeftWidth": "0px",
+              "borderRightWidth": "0px",
+              "boxShadow": "none",
+              "transform": "none",
+              "height": "auto",
+              "width": "auto",
+              "content": "none",
+              "position": "static",
+              "zIndex": "auto",
+              "color": "rgb(47, 47, 52)",
+              "top": "auto",
+              "bottom": "auto",
+              "left": "auto",
+              "right": "auto",
+              "borderBottomStyle": "none",
+              "borderTopStyle": "none",
+              "borderLeftStyle": "none",
+              "borderRightStyle": "none"
+            },
+            "identity": "#ff9f00",
+            "identityColor": "#ff9f00",
+            "tokens": {
+              "--tab-inline-padding": "8px",
+              "--tab-inner-inline-margin": "0.75rem",
+              "--tab-padding-inline": "8px",
+              "--tab-margin-inline-inner": "0.75rem",
+              "--usercontext-line-width": ""
+            }
+          }
+        },
+        ".tabbrowser-tab-background": {
+          "normal": null,
+          "before": null,
+          "after": null
+        }
+      }
+    },
+    {
+      "role": "normal",
+      "hover": true,
+      "tab": {
+        "tag": "tab",
+        "class": "tabbrowser-tab",
+        "attrs": {
+          "label": "New Tab",
+          "class": "tabbrowser-tab",
+          "context": "tabContextMenu",
+          "aria-level": "1",
+          "linkedpanel": "tabpanel-4",
+          "floorpWorkspaceId": "6037f6be-1e64-4c6f-b8c1-f5686ff34616",
+          "data-kan26-role": "normal",
+          "fadein": "true",
+          "labeldirection": "ltr",
+          "selected": "",
+          "touchdownstartsdrag": "true",
+          "visuallyselected": "",
+          "open": "true"
+        },
+        "rect": {
+          "x": 669,
+          "y": 0,
+          "width": 225,
+          "height": 44
+        },
+        "styles": {
+          "display": "flex",
+          "visibility": "visible",
+          "opacity": "1",
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "backgroundImage": "none",
+          "borderTopColor": "rgb(47, 47, 52)",
+          "borderBottomColor": "rgb(53, 132, 228)",
+          "borderLeftColor": "rgb(47, 47, 52)",
+          "borderRightColor": "rgb(47, 47, 52)",
+          "borderTopWidth": "0px",
+          "borderBottomWidth": "0px",
+          "borderLeftWidth": "0px",
+          "borderRightWidth": "0px",
+          "boxShadow": "none",
+          "transform": "none",
+          "height": "44px",
+          "width": "225px",
+          "content": "normal",
+          "position": "relative",
+          "zIndex": "auto",
+          "color": "rgb(47, 47, 52)",
+          "top": "0px",
+          "bottom": "0px",
+          "left": "0px",
+          "right": "0px",
+          "borderBottomStyle": "solid",
+          "borderTopStyle": "none",
+          "borderLeftStyle": "none",
+          "borderRightStyle": "none"
+        },
+        "identity": "",
+        "identityColor": "",
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": ""
+        }
+      },
+      "before": {
+        "tag": "tab",
+        "class": "tabbrowser-tab",
+        "attrs": {
+          "label": "New Tab",
+          "class": "tabbrowser-tab",
+          "context": "tabContextMenu",
+          "aria-level": "1",
+          "linkedpanel": "tabpanel-4",
+          "floorpWorkspaceId": "6037f6be-1e64-4c6f-b8c1-f5686ff34616",
+          "data-kan26-role": "normal",
+          "fadein": "true",
+          "labeldirection": "ltr",
+          "selected": "",
+          "touchdownstartsdrag": "true",
+          "visuallyselected": "",
+          "open": "true"
+        },
+        "rect": {
+          "x": 669,
+          "y": 0,
+          "width": 225,
+          "height": 44
+        },
+        "styles": {
+          "display": "inline",
+          "visibility": "visible",
+          "opacity": "1",
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "backgroundImage": "none",
+          "borderTopColor": "rgb(47, 47, 52)",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderLeftColor": "rgb(47, 47, 52)",
+          "borderRightColor": "rgb(47, 47, 52)",
+          "borderTopWidth": "0px",
+          "borderBottomWidth": "0px",
+          "borderLeftWidth": "0px",
+          "borderRightWidth": "0px",
+          "boxShadow": "none",
+          "transform": "none",
+          "height": "auto",
+          "width": "auto",
+          "content": "none",
+          "position": "static",
+          "zIndex": "auto",
+          "color": "rgb(47, 47, 52)",
+          "top": "auto",
+          "bottom": "auto",
+          "left": "auto",
+          "right": "auto",
+          "borderBottomStyle": "none",
+          "borderTopStyle": "none",
+          "borderLeftStyle": "none",
+          "borderRightStyle": "none"
+        },
+        "identity": "",
+        "identityColor": "",
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": ""
+        }
+      },
+      "after": {
+        "tag": "tab",
+        "class": "tabbrowser-tab",
+        "attrs": {
+          "label": "New Tab",
+          "class": "tabbrowser-tab",
+          "context": "tabContextMenu",
+          "aria-level": "1",
+          "linkedpanel": "tabpanel-4",
+          "floorpWorkspaceId": "6037f6be-1e64-4c6f-b8c1-f5686ff34616",
+          "data-kan26-role": "normal",
+          "fadein": "true",
+          "labeldirection": "ltr",
+          "selected": "",
+          "touchdownstartsdrag": "true",
+          "visuallyselected": "",
+          "open": "true"
+        },
+        "rect": {
+          "x": 669,
+          "y": 0,
+          "width": 225,
+          "height": 44
+        },
+        "styles": {
+          "display": "inline",
+          "visibility": "visible",
+          "opacity": "1",
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "backgroundImage": "none",
+          "borderTopColor": "rgb(47, 47, 52)",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderLeftColor": "rgb(47, 47, 52)",
+          "borderRightColor": "rgb(47, 47, 52)",
+          "borderTopWidth": "0px",
+          "borderBottomWidth": "0px",
+          "borderLeftWidth": "0px",
+          "borderRightWidth": "0px",
+          "boxShadow": "none",
+          "transform": "none",
+          "height": "auto",
+          "width": "auto",
+          "content": "none",
+          "position": "static",
+          "zIndex": "auto",
+          "color": "rgb(47, 47, 52)",
+          "top": "auto",
+          "bottom": "auto",
+          "left": "auto",
+          "right": "auto",
+          "borderBottomStyle": "none",
+          "borderTopStyle": "none",
+          "borderLeftStyle": "none",
+          "borderRightStyle": "none"
+        },
+        "identity": "",
+        "identityColor": "",
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": ""
+        }
+      },
+      "parts": {
+        ".tab-context-line": {
+          "normal": {
+            "tag": "hbox",
+            "class": "tab-context-line",
+            "attrs": {
+              "class": "tab-context-line"
+            },
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 0,
+              "height": 0
+            },
+            "styles": {
+              "display": "none",
+              "visibility": "visible",
+              "opacity": "1",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "borderTopColor": "rgb(47, 47, 52)",
+              "borderBottomColor": "rgb(47, 47, 52)",
+              "borderLeftColor": "rgb(47, 47, 52)",
+              "borderRightColor": "rgb(47, 47, 52)",
+              "borderTopWidth": "0px",
+              "borderBottomWidth": "0px",
+              "borderLeftWidth": "0px",
+              "borderRightWidth": "0px",
+              "boxShadow": "none",
+              "transform": "none",
+              "height": "auto",
+              "width": "auto",
+              "content": "normal",
+              "position": "static",
+              "zIndex": "auto",
+              "color": "rgb(47, 47, 52)",
+              "top": "auto",
+              "bottom": "auto",
+              "left": "auto",
+              "right": "auto",
+              "borderBottomStyle": "none",
+              "borderTopStyle": "none",
+              "borderLeftStyle": "none",
+              "borderRightStyle": "none"
+            },
+            "identity": "",
+            "identityColor": "",
+            "tokens": {
+              "--tab-inline-padding": "",
+              "--tab-inner-inline-margin": "",
+              "--tab-padding-inline": "8px",
+              "--tab-margin-inline-inner": "0.75rem",
+              "--usercontext-line-width": ""
+            }
+          },
+          "before": {
+            "tag": "hbox",
+            "class": "tab-context-line",
+            "attrs": {
+              "class": "tab-context-line"
+            },
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 0,
+              "height": 0
+            },
+            "styles": {
+              "display": "inline",
+              "visibility": "visible",
+              "opacity": "1",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "borderTopColor": "rgb(47, 47, 52)",
+              "borderBottomColor": "rgb(47, 47, 52)",
+              "borderLeftColor": "rgb(47, 47, 52)",
+              "borderRightColor": "rgb(47, 47, 52)",
+              "borderTopWidth": "0px",
+              "borderBottomWidth": "0px",
+              "borderLeftWidth": "0px",
+              "borderRightWidth": "0px",
+              "boxShadow": "none",
+              "transform": "none",
+              "height": "auto",
+              "width": "auto",
+              "content": "none",
+              "position": "static",
+              "zIndex": "auto",
+              "color": "rgb(47, 47, 52)",
+              "top": "auto",
+              "bottom": "auto",
+              "left": "auto",
+              "right": "auto",
+              "borderBottomStyle": "none",
+              "borderTopStyle": "none",
+              "borderLeftStyle": "none",
+              "borderRightStyle": "none"
+            },
+            "identity": "",
+            "identityColor": "",
+            "tokens": {
+              "--tab-inline-padding": "",
+              "--tab-inner-inline-margin": "",
+              "--tab-padding-inline": "8px",
+              "--tab-margin-inline-inner": "0.75rem",
+              "--usercontext-line-width": ""
+            }
+          },
+          "after": {
+            "tag": "hbox",
+            "class": "tab-context-line",
+            "attrs": {
+              "class": "tab-context-line"
+            },
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 0,
+              "height": 0
+            },
+            "styles": {
+              "display": "inline",
+              "visibility": "visible",
+              "opacity": "1",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "borderTopColor": "rgb(47, 47, 52)",
+              "borderBottomColor": "rgb(47, 47, 52)",
+              "borderLeftColor": "rgb(47, 47, 52)",
+              "borderRightColor": "rgb(47, 47, 52)",
+              "borderTopWidth": "0px",
+              "borderBottomWidth": "0px",
+              "borderLeftWidth": "0px",
+              "borderRightWidth": "0px",
+              "boxShadow": "none",
+              "transform": "none",
+              "height": "auto",
+              "width": "auto",
+              "content": "none",
+              "position": "static",
+              "zIndex": "auto",
+              "color": "rgb(47, 47, 52)",
+              "top": "auto",
+              "bottom": "auto",
+              "left": "auto",
+              "right": "auto",
+              "borderBottomStyle": "none",
+              "borderTopStyle": "none",
+              "borderLeftStyle": "none",
+              "borderRightStyle": "none"
+            },
+            "identity": "",
+            "identityColor": "",
+            "tokens": {
+              "--tab-inline-padding": "",
+              "--tab-inner-inline-margin": "",
+              "--tab-padding-inline": "8px",
+              "--tab-margin-inline-inner": "0.75rem",
+              "--usercontext-line-width": ""
+            }
+          }
+        },
+        ".tab-background": {
+          "normal": {
+            "tag": "vbox",
+            "class": "tab-background",
+            "attrs": {
+              "class": "tab-background",
+              "fadein": "true",
+              "selected": ""
+            },
+            "rect": {
+              "x": 671,
+              "y": 4,
+              "width": 221,
+              "height": 36
+            },
+            "styles": {
+              "display": "flex",
+              "visibility": "visible",
+              "opacity": "1",
+              "backgroundColor": "rgb(255, 255, 255)",
+              "backgroundImage": "none",
+              "borderTopColor": "rgb(47, 47, 52)",
+              "borderBottomColor": "rgb(47, 47, 52)",
+              "borderLeftColor": "rgb(47, 47, 52)",
+              "borderRightColor": "rgb(47, 47, 52)",
+              "borderTopWidth": "0px",
+              "borderBottomWidth": "0px",
+              "borderLeftWidth": "0px",
+              "borderRightWidth": "0px",
+              "boxShadow": "rgba(0, 0, 0, 0.15) 0px 0px 1px 0px, rgba(0, 0, 0, 0.2) 0px 1px 2px 0px",
+              "transform": "none",
+              "height": "36px",
+              "width": "221px",
+              "content": "normal",
+              "position": "static",
+              "zIndex": "0",
+              "color": "rgb(47, 47, 52)",
+              "top": "auto",
+              "bottom": "auto",
+              "left": "auto",
+              "right": "auto",
+              "borderBottomStyle": "none",
+              "borderTopStyle": "none",
+              "borderLeftStyle": "none",
+              "borderRightStyle": "none"
+            },
+            "identity": "",
+            "identityColor": "",
+            "tokens": {
+              "--tab-inline-padding": "",
+              "--tab-inner-inline-margin": "",
+              "--tab-padding-inline": "8px",
+              "--tab-margin-inline-inner": "0.75rem",
+              "--usercontext-line-width": ""
+            }
+          },
+          "before": {
+            "tag": "vbox",
+            "class": "tab-background",
+            "attrs": {
+              "class": "tab-background",
+              "fadein": "true",
+              "selected": ""
+            },
+            "rect": {
+              "x": 671,
+              "y": 4,
+              "width": 221,
+              "height": 36
+            },
+            "styles": {
+              "display": "inline",
+              "visibility": "visible",
+              "opacity": "1",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "borderTopColor": "rgb(47, 47, 52)",
+              "borderBottomColor": "rgb(47, 47, 52)",
+              "borderLeftColor": "rgb(47, 47, 52)",
+              "borderRightColor": "rgb(47, 47, 52)",
+              "borderTopWidth": "0px",
+              "borderBottomWidth": "0px",
+              "borderLeftWidth": "0px",
+              "borderRightWidth": "0px",
+              "boxShadow": "none",
+              "transform": "none",
+              "height": "auto",
+              "width": "auto",
+              "content": "none",
+              "position": "static",
+              "zIndex": "auto",
+              "color": "rgb(47, 47, 52)",
+              "top": "auto",
+              "bottom": "auto",
+              "left": "auto",
+              "right": "auto",
+              "borderBottomStyle": "none",
+              "borderTopStyle": "none",
+              "borderLeftStyle": "none",
+              "borderRightStyle": "none"
+            },
+            "identity": "",
+            "identityColor": "",
+            "tokens": {
+              "--tab-inline-padding": "",
+              "--tab-inner-inline-margin": "",
+              "--tab-padding-inline": "8px",
+              "--tab-margin-inline-inner": "0.75rem",
+              "--usercontext-line-width": ""
+            }
+          },
+          "after": {
+            "tag": "vbox",
+            "class": "tab-background",
+            "attrs": {
+              "class": "tab-background",
+              "fadein": "true",
+              "selected": ""
+            },
+            "rect": {
+              "x": 671,
+              "y": 4,
+              "width": 221,
+              "height": 36
+            },
+            "styles": {
+              "display": "inline",
+              "visibility": "visible",
+              "opacity": "1",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "borderTopColor": "rgb(47, 47, 52)",
+              "borderBottomColor": "rgb(47, 47, 52)",
+              "borderLeftColor": "rgb(47, 47, 52)",
+              "borderRightColor": "rgb(47, 47, 52)",
+              "borderTopWidth": "0px",
+              "borderBottomWidth": "0px",
+              "borderLeftWidth": "0px",
+              "borderRightWidth": "0px",
+              "boxShadow": "none",
+              "transform": "none",
+              "height": "auto",
+              "width": "auto",
+              "content": "none",
+              "position": "static",
+              "zIndex": "auto",
+              "color": "rgb(47, 47, 52)",
+              "top": "auto",
+              "bottom": "auto",
+              "left": "auto",
+              "right": "auto",
+              "borderBottomStyle": "none",
+              "borderTopStyle": "none",
+              "borderLeftStyle": "none",
+              "borderRightStyle": "none"
+            },
+            "identity": "",
+            "identityColor": "",
+            "tokens": {
+              "--tab-inline-padding": "",
+              "--tab-inner-inline-margin": "",
+              "--tab-padding-inline": "8px",
+              "--tab-margin-inline-inner": "0.75rem",
+              "--usercontext-line-width": ""
+            }
+          }
+        },
+        ".tab-stack": {
+          "normal": {
+            "tag": "stack",
+            "class": "tab-stack",
+            "attrs": {
+              "class": "tab-stack",
+              "flex": "1"
+            },
+            "rect": {
+              "x": 671,
+              "y": 0,
+              "width": 221,
+              "height": 44
+            },
+            "styles": {
+              "display": "grid",
+              "visibility": "visible",
+              "opacity": "1",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "borderTopColor": "rgb(47, 47, 52)",
+              "borderBottomColor": "rgb(47, 47, 52)",
+              "borderLeftColor": "rgb(47, 47, 52)",
+              "borderRightColor": "rgb(47, 47, 52)",
+              "borderTopWidth": "0px",
+              "borderBottomWidth": "0px",
+              "borderLeftWidth": "0px",
+              "borderRightWidth": "0px",
+              "boxShadow": "none",
+              "transform": "none",
+              "height": "44px",
+              "width": "221px",
+              "content": "normal",
+              "position": "relative",
+              "zIndex": "auto",
+              "color": "rgb(47, 47, 52)",
+              "top": "0px",
+              "bottom": "0px",
+              "left": "0px",
+              "right": "0px",
+              "borderBottomStyle": "none",
+              "borderTopStyle": "none",
+              "borderLeftStyle": "none",
+              "borderRightStyle": "none"
+            },
+            "identity": "",
+            "identityColor": "",
+            "tokens": {
+              "--tab-inline-padding": "",
+              "--tab-inner-inline-margin": "",
+              "--tab-padding-inline": "8px",
+              "--tab-margin-inline-inner": "0.75rem",
+              "--usercontext-line-width": ""
+            }
+          },
+          "before": {
+            "tag": "stack",
+            "class": "tab-stack",
+            "attrs": {
+              "class": "tab-stack",
+              "flex": "1"
+            },
+            "rect": {
+              "x": 671,
+              "y": 0,
+              "width": 221,
+              "height": 44
+            },
+            "styles": {
+              "display": "block",
+              "visibility": "visible",
+              "opacity": "0",
+              "backgroundColor": "color(srgb 0.184314 0.184314 0.203922 / 0.2)",
+              "backgroundImage": "none",
+              "borderTopColor": "rgb(47, 47, 52)",
+              "borderBottomColor": "rgb(47, 47, 52)",
+              "borderLeftColor": "rgb(47, 47, 52)",
+              "borderRightColor": "rgb(47, 47, 52)",
+              "borderTopWidth": "0px",
+              "borderBottomWidth": "0px",
+              "borderLeftWidth": "0px",
+              "borderRightWidth": "0px",
+              "boxShadow": "none",
+              "transform": "matrix(1, 0, 0, 1, -2.5, -9)",
+              "height": "20px",
+              "width": "1px",
+              "content": "\"\"",
+              "position": "absolute",
+              "zIndex": "auto",
+              "color": "rgb(47, 47, 52)",
+              "top": "22px",
+              "bottom": "2px",
+              "left": "0px",
+              "right": "220px",
+              "borderBottomStyle": "none",
+              "borderTopStyle": "none",
+              "borderLeftStyle": "none",
+              "borderRightStyle": "none"
+            },
+            "identity": "",
+            "identityColor": "",
+            "tokens": {
+              "--tab-inline-padding": "",
+              "--tab-inner-inline-margin": "",
+              "--tab-padding-inline": "8px",
+              "--tab-margin-inline-inner": "0.75rem",
+              "--usercontext-line-width": ""
+            }
+          },
+          "after": {
+            "tag": "stack",
+            "class": "tab-stack",
+            "attrs": {
+              "class": "tab-stack",
+              "flex": "1"
+            },
+            "rect": {
+              "x": 671,
+              "y": 0,
+              "width": 221,
+              "height": 44
+            },
+            "styles": {
+              "display": "block",
+              "visibility": "visible",
+              "opacity": "1",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "borderTopColor": "rgb(47, 47, 52)",
+              "borderBottomColor": "rgb(47, 47, 52)",
+              "borderLeftColor": "rgb(47, 47, 52)",
+              "borderRightColor": "rgb(47, 47, 52)",
+              "borderTopWidth": "0px",
+              "borderBottomWidth": "0px",
+              "borderLeftWidth": "0px",
+              "borderRightWidth": "0px",
+              "boxShadow": "none",
+              "transform": "matrix(1, 0, 0, 1, 1.5, 1)",
+              "height": "auto",
+              "width": "auto",
+              "content": "none",
+              "position": "static",
+              "zIndex": "auto",
+              "color": "rgb(47, 47, 52)",
+              "top": "auto",
+              "bottom": "auto",
+              "left": "auto",
+              "right": "0px",
+              "borderBottomStyle": "none",
+              "borderTopStyle": "none",
+              "borderLeftStyle": "none",
+              "borderRightStyle": "none"
+            },
+            "identity": "",
+            "identityColor": "",
+            "tokens": {
+              "--tab-inline-padding": "",
+              "--tab-inner-inline-margin": "",
+              "--tab-padding-inline": "8px",
+              "--tab-margin-inline-inner": "0.75rem",
+              "--usercontext-line-width": ""
+            }
+          }
+        },
+        ".tab-content": {
+          "normal": {
+            "tag": "hbox",
+            "class": "tab-content",
+            "attrs": {
+              "class": "tab-content",
+              "align": "center",
+              "selected": ""
+            },
+            "rect": {
+              "x": 671,
+              "y": 0,
+              "width": 221,
+              "height": 44
+            },
+            "styles": {
+              "display": "flex",
+              "visibility": "visible",
+              "opacity": "1",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "borderTopColor": "rgb(47, 47, 52)",
+              "borderBottomColor": "rgb(47, 47, 52)",
+              "borderLeftColor": "rgb(47, 47, 52)",
+              "borderRightColor": "rgb(47, 47, 52)",
+              "borderTopWidth": "0px",
+              "borderBottomWidth": "0px",
+              "borderLeftWidth": "0px",
+              "borderRightWidth": "0px",
+              "boxShadow": "none",
+              "transform": "none",
+              "height": "44px",
+              "width": "221px",
+              "content": "normal",
+              "position": "relative",
+              "zIndex": "0",
+              "color": "rgb(47, 47, 52)",
+              "top": "0px",
+              "bottom": "0px",
+              "left": "0px",
+              "right": "0px",
+              "borderBottomStyle": "none",
+              "borderTopStyle": "none",
+              "borderLeftStyle": "none",
+              "borderRightStyle": "none"
+            },
+            "identity": "",
+            "identityColor": "",
+            "tokens": {
+              "--tab-inline-padding": "",
+              "--tab-inner-inline-margin": "",
+              "--tab-padding-inline": "8px",
+              "--tab-margin-inline-inner": "0.75rem",
+              "--usercontext-line-width": ""
+            }
+          },
+          "before": {
+            "tag": "hbox",
+            "class": "tab-content",
+            "attrs": {
+              "class": "tab-content",
+              "align": "center",
+              "selected": ""
+            },
+            "rect": {
+              "x": 671,
+              "y": 0,
+              "width": 221,
+              "height": 44
+            },
+            "styles": {
+              "display": "block",
+              "visibility": "visible",
+              "opacity": "1",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "borderTopColor": "rgb(47, 47, 52)",
+              "borderBottomColor": "rgb(47, 47, 52)",
+              "borderLeftColor": "rgb(47, 47, 52)",
+              "borderRightColor": "rgb(47, 47, 52)",
+              "borderTopWidth": "0px",
+              "borderBottomWidth": "0px",
+              "borderLeftWidth": "0px",
+              "borderRightWidth": "0px",
+              "boxShadow": "none",
+              "transform": "matrix(1, 0, 0, 1, 9, 11.5)",
+              "height": "0px",
+              "width": "0px",
+              "content": "\"\"",
+              "position": "absolute",
+              "zIndex": "auto",
+              "color": "rgb(47, 47, 52)",
+              "top": "22px",
+              "bottom": "22px",
+              "left": "8px",
+              "right": "213px",
+              "borderBottomStyle": "none",
+              "borderTopStyle": "none",
+              "borderLeftStyle": "none",
+              "borderRightStyle": "none"
+            },
+            "identity": "",
+            "identityColor": "",
+            "tokens": {
+              "--tab-inline-padding": "",
+              "--tab-inner-inline-margin": "",
+              "--tab-padding-inline": "8px",
+              "--tab-margin-inline-inner": "0.75rem",
+              "--usercontext-line-width": ""
+            }
+          },
+          "after": {
+            "tag": "hbox",
+            "class": "tab-content",
+            "attrs": {
+              "class": "tab-content",
+              "align": "center",
+              "selected": ""
+            },
+            "rect": {
+              "x": 671,
+              "y": 0,
+              "width": 221,
+              "height": 44
+            },
+            "styles": {
+              "display": "block",
+              "visibility": "visible",
+              "opacity": "1",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "borderTopColor": "rgb(47, 47, 52)",
+              "borderBottomColor": "rgb(47, 47, 52)",
+              "borderLeftColor": "rgb(47, 47, 52)",
+              "borderRightColor": "rgb(47, 47, 52)",
+              "borderTopWidth": "0px",
+              "borderBottomWidth": "0px",
+              "borderLeftWidth": "0px",
+              "borderRightWidth": "0px",
+              "boxShadow": "none",
+              "transform": "none",
+              "height": "auto",
+              "width": "auto",
+              "content": "none",
+              "position": "static",
+              "zIndex": "auto",
+              "color": "rgb(47, 47, 52)",
+              "top": "auto",
+              "bottom": "auto",
+              "left": "auto",
+              "right": "auto",
+              "borderBottomStyle": "none",
+              "borderTopStyle": "none",
+              "borderLeftStyle": "none",
+              "borderRightStyle": "none"
+            },
+            "identity": "",
+            "identityColor": "",
+            "tokens": {
+              "--tab-inline-padding": "",
+              "--tab-inner-inline-margin": "",
+              "--tab-padding-inline": "8px",
+              "--tab-margin-inline-inner": "0.75rem",
+              "--usercontext-line-width": ""
+            }
+          }
+        },
+        ".tab-label-container": {
+          "normal": {
+            "tag": "vbox",
+            "class": "tab-label-container",
+            "attrs": {
+              "class": "tab-label-container",
+              "align": "start",
+              "pack": "center",
+              "flex": "1",
+              "labeldirection": "ltr",
+              "selected": ""
+            },
+            "rect": {
+              "x": 679,
+              "y": 10.666671752929688,
+              "width": 185,
+              "height": 22.666656494140625
+            },
+            "styles": {
+              "display": "flex",
+              "visibility": "visible",
+              "opacity": "1",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "borderTopColor": "rgb(47, 47, 52)",
+              "borderBottomColor": "rgb(47, 47, 52)",
+              "borderLeftColor": "rgb(47, 47, 52)",
+              "borderRightColor": "rgb(47, 47, 52)",
+              "borderTopWidth": "0px",
+              "borderBottomWidth": "0px",
+              "borderLeftWidth": "0px",
+              "borderRightWidth": "0px",
+              "boxShadow": "none",
+              "transform": "none",
+              "height": "22.6667px",
+              "width": "185px",
+              "content": "normal",
+              "position": "static",
+              "zIndex": "auto",
+              "color": "rgb(47, 47, 52)",
+              "top": "auto",
+              "bottom": "auto",
+              "left": "auto",
+              "right": "auto",
+              "borderBottomStyle": "none",
+              "borderTopStyle": "none",
+              "borderLeftStyle": "none",
+              "borderRightStyle": "none"
+            },
+            "identity": "",
+            "identityColor": "",
+            "tokens": {
+              "--tab-inline-padding": "",
+              "--tab-inner-inline-margin": "",
+              "--tab-padding-inline": "8px",
+              "--tab-margin-inline-inner": "0.75rem",
+              "--usercontext-line-width": ""
+            }
+          },
+          "before": {
+            "tag": "vbox",
+            "class": "tab-label-container",
+            "attrs": {
+              "class": "tab-label-container",
+              "align": "start",
+              "pack": "center",
+              "flex": "1",
+              "labeldirection": "ltr",
+              "selected": ""
+            },
+            "rect": {
+              "x": 679,
+              "y": 10.666671752929688,
+              "width": 185,
+              "height": 22.666656494140625
+            },
+            "styles": {
+              "display": "inline",
+              "visibility": "visible",
+              "opacity": "1",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "borderTopColor": "rgb(47, 47, 52)",
+              "borderBottomColor": "rgb(47, 47, 52)",
+              "borderLeftColor": "rgb(47, 47, 52)",
+              "borderRightColor": "rgb(47, 47, 52)",
+              "borderTopWidth": "0px",
+              "borderBottomWidth": "0px",
+              "borderLeftWidth": "0px",
+              "borderRightWidth": "0px",
+              "boxShadow": "none",
+              "transform": "none",
+              "height": "auto",
+              "width": "auto",
+              "content": "none",
+              "position": "static",
+              "zIndex": "auto",
+              "color": "rgb(47, 47, 52)",
+              "top": "auto",
+              "bottom": "auto",
+              "left": "auto",
+              "right": "auto",
+              "borderBottomStyle": "none",
+              "borderTopStyle": "none",
+              "borderLeftStyle": "none",
+              "borderRightStyle": "none"
+            },
+            "identity": "",
+            "identityColor": "",
+            "tokens": {
+              "--tab-inline-padding": "",
+              "--tab-inner-inline-margin": "",
+              "--tab-padding-inline": "8px",
+              "--tab-margin-inline-inner": "0.75rem",
+              "--usercontext-line-width": ""
+            }
+          },
+          "after": {
+            "tag": "vbox",
+            "class": "tab-label-container",
+            "attrs": {
+              "class": "tab-label-container",
+              "align": "start",
+              "pack": "center",
+              "flex": "1",
+              "labeldirection": "ltr",
+              "selected": ""
+            },
+            "rect": {
+              "x": 679,
+              "y": 10.666671752929688,
+              "width": 185,
+              "height": 22.666656494140625
+            },
+            "styles": {
+              "display": "inline",
+              "visibility": "visible",
+              "opacity": "1",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "borderTopColor": "rgb(47, 47, 52)",
+              "borderBottomColor": "rgb(47, 47, 52)",
+              "borderLeftColor": "rgb(47, 47, 52)",
+              "borderRightColor": "rgb(47, 47, 52)",
+              "borderTopWidth": "0px",
+              "borderBottomWidth": "0px",
+              "borderLeftWidth": "0px",
+              "borderRightWidth": "0px",
+              "boxShadow": "none",
+              "transform": "none",
+              "height": "auto",
+              "width": "auto",
+              "content": "none",
+              "position": "static",
+              "zIndex": "auto",
+              "color": "rgb(47, 47, 52)",
+              "top": "auto",
+              "bottom": "auto",
+              "left": "auto",
+              "right": "auto",
+              "borderBottomStyle": "none",
+              "borderTopStyle": "none",
+              "borderLeftStyle": "none",
+              "borderRightStyle": "none"
+            },
+            "identity": "",
+            "identityColor": "",
+            "tokens": {
+              "--tab-inline-padding": "",
+              "--tab-inner-inline-margin": "",
+              "--tab-padding-inline": "8px",
+              "--tab-margin-inline-inner": "0.75rem",
+              "--usercontext-line-width": ""
+            }
+          }
+        },
+        ".tab-icon-stack": {
+          "normal": {
+            "tag": "stack",
+            "class": "tab-icon-stack",
+            "attrs": {
+              "class": "tab-icon-stack",
+              "selected": ""
+            },
+            "rect": {
+              "x": 679,
+              "y": 22,
+              "width": 0,
+              "height": 0
+            },
+            "styles": {
+              "display": "grid",
+              "visibility": "visible",
+              "opacity": "1",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "borderTopColor": "rgb(47, 47, 52)",
+              "borderBottomColor": "rgb(47, 47, 52)",
+              "borderLeftColor": "rgb(47, 47, 52)",
+              "borderRightColor": "rgb(47, 47, 52)",
+              "borderTopWidth": "0px",
+              "borderBottomWidth": "0px",
+              "borderLeftWidth": "0px",
+              "borderRightWidth": "0px",
+              "boxShadow": "none",
+              "transform": "none",
+              "height": "0px",
+              "width": "0px",
+              "content": "normal",
+              "position": "relative",
+              "zIndex": "auto",
+              "color": "rgb(47, 47, 52)",
+              "top": "0px",
+              "bottom": "0px",
+              "left": "0px",
+              "right": "0px",
+              "borderBottomStyle": "none",
+              "borderTopStyle": "none",
+              "borderLeftStyle": "none",
+              "borderRightStyle": "none"
+            },
+            "identity": "",
+            "identityColor": "",
+            "tokens": {
+              "--tab-inline-padding": "",
+              "--tab-inner-inline-margin": "",
+              "--tab-padding-inline": "8px",
+              "--tab-margin-inline-inner": "0.75rem",
+              "--usercontext-line-width": ""
+            }
+          },
+          "before": {
+            "tag": "stack",
+            "class": "tab-icon-stack",
+            "attrs": {
+              "class": "tab-icon-stack",
+              "selected": ""
+            },
+            "rect": {
+              "x": 679,
+              "y": 22,
+              "width": 0,
+              "height": 0
+            },
+            "styles": {
+              "display": "inline",
+              "visibility": "visible",
+              "opacity": "1",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "borderTopColor": "rgb(47, 47, 52)",
+              "borderBottomColor": "rgb(47, 47, 52)",
+              "borderLeftColor": "rgb(47, 47, 52)",
+              "borderRightColor": "rgb(47, 47, 52)",
+              "borderTopWidth": "0px",
+              "borderBottomWidth": "0px",
+              "borderLeftWidth": "0px",
+              "borderRightWidth": "0px",
+              "boxShadow": "none",
+              "transform": "none",
+              "height": "auto",
+              "width": "auto",
+              "content": "none",
+              "position": "static",
+              "zIndex": "auto",
+              "color": "rgb(47, 47, 52)",
+              "top": "auto",
+              "bottom": "auto",
+              "left": "auto",
+              "right": "auto",
+              "borderBottomStyle": "none",
+              "borderTopStyle": "none",
+              "borderLeftStyle": "none",
+              "borderRightStyle": "none"
+            },
+            "identity": "",
+            "identityColor": "",
+            "tokens": {
+              "--tab-inline-padding": "",
+              "--tab-inner-inline-margin": "",
+              "--tab-padding-inline": "8px",
+              "--tab-margin-inline-inner": "0.75rem",
+              "--usercontext-line-width": ""
+            }
+          },
+          "after": {
+            "tag": "stack",
+            "class": "tab-icon-stack",
+            "attrs": {
+              "class": "tab-icon-stack",
+              "selected": ""
+            },
+            "rect": {
+              "x": 679,
+              "y": 22,
+              "width": 0,
+              "height": 0
+            },
+            "styles": {
+              "display": "inline",
+              "visibility": "visible",
+              "opacity": "1",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "borderTopColor": "rgb(47, 47, 52)",
+              "borderBottomColor": "rgb(47, 47, 52)",
+              "borderLeftColor": "rgb(47, 47, 52)",
+              "borderRightColor": "rgb(47, 47, 52)",
+              "borderTopWidth": "0px",
+              "borderBottomWidth": "0px",
+              "borderLeftWidth": "0px",
+              "borderRightWidth": "0px",
+              "boxShadow": "none",
+              "transform": "none",
+              "height": "auto",
+              "width": "auto",
+              "content": "none",
+              "position": "static",
+              "zIndex": "auto",
+              "color": "rgb(47, 47, 52)",
+              "top": "auto",
+              "bottom": "auto",
+              "left": "auto",
+              "right": "auto",
+              "borderBottomStyle": "none",
+              "borderTopStyle": "none",
+              "borderLeftStyle": "none",
+              "borderRightStyle": "none"
+            },
+            "identity": "",
+            "identityColor": "",
+            "tokens": {
+              "--tab-inline-padding": "",
+              "--tab-inner-inline-margin": "",
+              "--tab-padding-inline": "8px",
+              "--tab-margin-inline-inner": "0.75rem",
+              "--usercontext-line-width": ""
+            }
+          }
+        },
+        ".tabbrowser-tab-background": {
+          "normal": null,
+          "before": null,
+          "after": null
+        }
+      }
+    }
+  ],
+  "sheets": [
+    {
+      "href": "chrome://global/skin/global.css",
+      "disabled": false
+    },
+    {
+      "href": "chrome://browser/content/downloads/downloads.css",
+      "disabled": false
+    },
+    {
+      "href": "chrome://browser/content/places/places.css",
+      "disabled": false
+    },
+    {
+      "href": "chrome://browser/content/usercontext/usercontext.css",
+      "disabled": false
+    },
+    {
+      "href": "chrome://browser/skin/browser.css",
+      "disabled": false
+    },
+    {
+      "href": "chrome://browser/skin/controlcenter/panel.css",
+      "disabled": false
+    },
+    {
+      "href": "chrome://browser/skin/customizableui/panelUI.css",
+      "disabled": false
+    },
+    {
+      "href": "chrome://browser/skin/downloads/downloads.css",
+      "disabled": false
+    },
+    {
+      "href": "chrome://browser/skin/translations/panel.css",
+      "disabled": false
+    },
+    {
+      "href": "chrome://browser/skin/places/tree-icons.css",
+      "disabled": false
+    },
+    {
+      "href": "chrome://browser/skin/places/editBookmark.css",
+      "disabled": false
+    },
+    {
+      "href": "chrome://browser/skin/usercontext/container-editor.css",
+      "disabled": false
+    },
+    {
+      "href": "chrome://global/content/resistfingerprinting/letterboxing.css",
+      "disabled": false
+    },
+    {
+      "href": null,
+      "disabled": false
+    },
+    {
+      "href": null,
+      "disabled": false
+    },
+    {
+      "href": null,
+      "disabled": false
+    },
+    {
+      "href": "chrome://noraneko-skin/content/lepton/css/leptonChrome.css",
+      "disabled": false
+    },
+    {
+      "href": "chrome://noraneko-skin/content/lepton/css/leptonContent.css",
+      "disabled": false
+    },
+    {
+      "href": null,
+      "disabled": false
+    },
+    {
+      "href": null,
+      "disabled": false
+    },
+    {
+      "href": null,
+      "disabled": false
+    },
+    {
+      "href": null,
+      "disabled": false
+    },
+    {
+      "href": null,
+      "disabled": false
+    },
+    {
+      "href": null,
+      "disabled": false
+    },
+    {
+      "href": null,
+      "disabled": false
+    },
+    {
+      "href": null,
+      "disabled": false
+    },
+    {
+      "href": null,
+      "disabled": false
+    },
+    {
+      "href": null,
+      "disabled": false
+    },
+    {
+      "href": null,
+      "disabled": false
+    },
+    {
+      "href": null,
+      "disabled": false
+    },
+    {
+      "href": null,
+      "disabled": false
+    },
+    {
+      "href": null,
+      "disabled": false
+    },
+    {
+      "href": null,
+      "disabled": false
+    },
+    {
+      "href": null,
+      "disabled": false
+    },
+    {
+      "href": null,
+      "disabled": false
+    },
+    {
+      "href": "chrome://browser/content/passwordmgr/login-doorhanger-username-field.css",
+      "disabled": false
+    },
+    {
+      "href": null,
+      "disabled": false
+    }
+  ],
+  "requestedInteraction": {
+    "selected": "normal",
+    "hover": "normal",
+    "multi": false
+  }
+}

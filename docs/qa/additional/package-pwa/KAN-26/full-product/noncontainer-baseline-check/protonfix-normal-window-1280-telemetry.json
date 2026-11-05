@@ -1,0 +1,161 @@
+{
+  "nativeVersion": "159.0.1",
+  "design": "protonfix",
+  "verticalMode": false,
+  "containerAttrs": {
+    "id": "tabbrowser-tabs",
+    "is": "tabbrowser-tabs",
+    "aria-multiselectable": "true",
+    "setfocus": "false",
+    "tooltip": "tabbrowser-tab-tooltip",
+    "orient": "horizontal",
+    "stopwatchid": "tabClick",
+    "style": "--tab-min-width-pref: 76px;",
+    "value": "",
+    "removable": "false",
+    "cui-areatype": "toolbar",
+    "hasadjacentnewtabbutton": ""
+  },
+  "closebuttons": null,
+  "windowRect": {
+    "x": 0,
+    "y": 0,
+    "width": 1280,
+    "height": 900
+  },
+  "devicePixelRatio": 1,
+  "fonts": "loaded",
+  "labelText": "New Tab",
+  "hover": false,
+  "selected": true,
+  "content": {
+    "rect": {
+      "x": 671,
+      "y": 0,
+      "width": 221,
+      "height": 44,
+      "top": 0,
+      "right": 892,
+      "bottom": 44,
+      "left": 671
+    },
+    "styles": {
+      "display": "flex",
+      "visibility": "visible",
+      "opacity": "1",
+      "width": "221px",
+      "height": "44px",
+      "fontFamily": "Sans",
+      "fontSize": "13.3333px",
+      "fontWeight": "400",
+      "paddingInlineStart": "8px",
+      "paddingInlineEnd": "8px",
+      "marginInlineStart": "0px",
+      "marginInlineEnd": "0px",
+      "transitionProperty": "all",
+      "transitionDuration": "0s",
+      "transitionDelay": "0s"
+    }
+  },
+  "before": {
+    "rect": {
+      "x": 671,
+      "y": 0,
+      "width": 221,
+      "height": 44,
+      "top": 0,
+      "right": 892,
+      "bottom": 44,
+      "left": 671
+    },
+    "styles": {
+      "display": "block",
+      "visibility": "visible",
+      "opacity": "1",
+      "width": "0px",
+      "height": "0px",
+      "fontFamily": "Sans",
+      "fontSize": "13.3333px",
+      "fontWeight": "400",
+      "paddingInlineStart": "0px",
+      "paddingInlineEnd": "0px",
+      "marginInlineStart": "0px",
+      "marginInlineEnd": "0px",
+      "transitionProperty": "width, transform",
+      "transitionDuration": "0.2s, 0.2s",
+      "transitionDelay": "0s, 0s"
+    }
+  },
+  "label": {
+    "rect": {
+      "x": 679,
+      "y": 10.666671752929688,
+      "width": 190,
+      "height": 22.666656494140625,
+      "top": 10.666671752929688,
+      "right": 869,
+      "bottom": 33.33332824707031,
+      "left": 679
+    },
+    "styles": {
+      "display": "flex",
+      "visibility": "visible",
+      "opacity": "1",
+      "width": "190px",
+      "height": "22.6667px",
+      "fontFamily": "Sans",
+      "fontSize": "13.3333px",
+      "fontWeight": "400",
+      "paddingInlineStart": "0px",
+      "paddingInlineEnd": "0px",
+      "marginInlineStart": "0px",
+      "marginInlineEnd": "0px",
+      "transitionProperty": "width",
+      "transitionDuration": "0.3s",
+      "transitionDelay": "0s"
+    }
+  },
+  "close": {
+    "rect": {
+      "x": 869,
+      "y": 10,
+      "width": 19,
+      "height": 24,
+      "top": 10,
+      "right": 888,
+      "bottom": 34,
+      "left": 869
+    },
+    "styles": {
+      "display": "flex",
+      "visibility": "visible",
+      "opacity": "1",
+      "width": "19px",
+      "height": "24px",
+      "fontFamily": "Sans",
+      "fontSize": "13.3333px",
+      "fontWeight": "400",
+      "paddingInlineStart": "1px",
+      "paddingInlineEnd": "6px",
+      "marginInlineStart": "0px",
+      "marginInlineEnd": "-4px",
+      "transitionProperty": "opacity",
+      "transitionDuration": "0.1s",
+      "transitionDelay": "0s"
+    }
+  },
+  "matchedBeforeRules": {
+    "error": "TypeError: InspectorUtils.getCSSStyleRules is not a function"
+  },
+  "matchedLabelRules": {
+    "error": "TypeError: InspectorUtils.getCSSStyleRules is not a function"
+  },
+  "matchedCloseRules": {
+    "error": "TypeError: InspectorUtils.getCSSStyleRules is not a function"
+  },
+  "animations": [],
+  "activeElement": {
+    "tag": "browser",
+    "id": ""
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "reason": "verifieddownloadcache removed after safe extraction; exact authenticated product retained",
+  "artifact": 13455701396,
+  "zipSha256": "8b9dd3f6d2931d237c4944ced4735646678df2e599f48b4c6cc751bab852f8b6",
+  "packageTarSha256": "38106ec5ee8d544ed92a32aa04f4b049d18bfa2f8a90ce7bec2fcde41d2d0c33",
+  "reDownloadable": true
+}

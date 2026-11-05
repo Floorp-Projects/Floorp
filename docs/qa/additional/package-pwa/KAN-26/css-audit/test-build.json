@@ -1,0 +1,11 @@
+{
+  "testSource": "/workspace/qa-kan26-lepton-fix/browser-features/chrome/common/designs/test/lepton-container-geometry.test.ts",
+  "variants": {
+    "baseline": {
+      "bundleSha256": "18d97ac1c2cb7bd2aa3c9d90993bbb4ab2e9b7515f210567e07779f2e8d1a1e1"
+    },
+    "candidate": {
+      "bundleSha256": "641f5fa04aff3539549ba894b764aaed12a859a89f135a29a561bd710ca619fe"
+    }
+  }
+}

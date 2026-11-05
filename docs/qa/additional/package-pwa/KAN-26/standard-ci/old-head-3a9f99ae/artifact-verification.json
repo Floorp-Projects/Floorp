@@ -1,0 +1,216 @@
+{
+  "run": 42110920041,
+  "headSha": "3a9f99ae12dbb221f63b28ec210b04fafcf2be15",
+  "artifactId": 13454592586,
+  "artifactName": "test-logs-ubuntu-24.04",
+  "apiDigest": "sha256:64491b816ef32cc8afa0f7e1cc579d4b87f2c20c460e6645b3c33b08468ff752",
+  "actualSha256": "64491b816ef32cc8afa0f7e1cc579d4b87f2c20c460e6645b3c33b08468ff752",
+  "digestVerified": true,
+  "targetModulesSuccessful": {
+    "lepton-container-geometry.test.ts": true,
+    "fluerial-container.test.ts": true
+  },
+  "existingControlModulesSuccessful": {
+    "container-indicator.test.ts": true,
+    "fluerial-groups.test.ts": true
+  },
+  "summary": {
+    "modulesPassed": 283,
+    "modulesFailed": 1
+  },
+  "downloadedFirefox": {
+    "files": 8,
+    "tasks": 16,
+    "tasksPassed": 16
+  },
+  "excerpts": [
+    {
+      "file": "_dist/ci-combined-browser-test.log",
+      "line": 37,
+      "text": "[INFO]   - browser-features/chrome/common/designs/test/configs.test.ts\n[INFO]   - browser-features/chrome/common/designs/test/container-indicator.test.ts\n[INFO]   - browser-features/chrome/common/designs/test/content-style-lifecycle.test.ts\n[INFO]   - browser-features/chrome/common/designs/test/css.test.ts"
+    },
+    {
+      "file": "_dist/ci-combined-browser-test.log",
+      "line": 40,
+      "text": "[INFO]   - browser-features/chrome/common/designs/test/css.test.ts\n[INFO]   - browser-features/chrome/common/designs/test/fluerial-container.test.ts\n[INFO]   - browser-features/chrome/common/designs/test/fluerial-groups.test.ts\n[INFO]   - browser-features/chrome/common/designs/test/lepton-compat.test.ts"
+    },
+    {
+      "file": "_dist/ci-combined-browser-test.log",
+      "line": 41,
+      "text": "[INFO]   - browser-features/chrome/common/designs/test/fluerial-container.test.ts\n[INFO]   - browser-features/chrome/common/designs/test/fluerial-groups.test.ts\n[INFO]   - browser-features/chrome/common/designs/test/lepton-compat.test.ts\n[INFO]   - browser-features/chrome/common/designs/test/lepton-container-geometry.test.ts"
+    },
+    {
+      "file": "_dist/ci-combined-browser-test.log",
+      "line": 43,
+      "text": "[INFO]   - browser-features/chrome/common/designs/test/lepton-compat.test.ts\n[INFO]   - browser-features/chrome/common/designs/test/lepton-container-geometry.test.ts\n[INFO]   - browser-features/chrome/common/designs/test/menu-icons.test.ts\n[INFO]   - browser-features/chrome/common/designs/test/oldConfigMigrator.test.ts"
+    },
+    {
+      "file": "_dist/ci-combined-browser-test.log",
+      "line": 358,
+      "text": "[INFO] \u2713 browser-features/chrome/common/designs/test/configs.test.ts (runAllTests, 1010ms)\n[INFO] [31/284] Completed browser-features/chrome/common/designs/test/container-indicator.test.ts\n[INFO] \u2713 browser-features/chrome/common/designs/test/container-indicator.test.ts (runAllTests, 73ms)\n[INFO] [32/284] Completed browser-features/chrome/common/designs/test/content-style-lifecycle.test.ts"
+    },
+    {
+      "file": "_dist/ci-combined-browser-test.log",
+      "line": 359,
+      "text": "[INFO] [31/284] Completed browser-features/chrome/common/designs/test/container-indicator.test.ts\n[INFO] \u2713 browser-features/chrome/common/designs/test/container-indicator.test.ts (runAllTests, 73ms)\n[INFO] [32/284] Completed browser-features/chrome/common/designs/test/content-style-lifecycle.test.ts\n[INFO] \u2713 browser-features/chrome/common/designs/test/content-style-lifecycle.test.ts (runAllTests, 179ms)"
+    },
+    {
+      "file": "_dist/ci-combined-browser-test.log",
+      "line": 364,
+      "text": "[INFO] \u2713 browser-features/chrome/common/designs/test/css.test.ts (runAllTests, 62ms)\n[INFO] [34/284] Completed browser-features/chrome/common/designs/test/fluerial-container.test.ts\n[INFO] \u2713 browser-features/chrome/common/designs/test/fluerial-container.test.ts (runAllTests, 750ms)\n[INFO] [35/284] Completed browser-features/chrome/common/designs/test/fluerial-groups.test.ts"
+    },
+    {
+      "file": "_dist/ci-combined-browser-test.log",
+      "line": 365,
+      "text": "[INFO] [34/284] Completed browser-features/chrome/common/designs/test/fluerial-container.test.ts\n[INFO] \u2713 browser-features/chrome/common/designs/test/fluerial-container.test.ts (runAllTests, 750ms)\n[INFO] [35/284] Completed browser-features/chrome/common/designs/test/fluerial-groups.test.ts\n[INFO] \u2713 browser-features/chrome/common/designs/test/fluerial-groups.test.ts (runAllTests, 484ms)"
+    },
+    {
+      "file": "_dist/ci-combined-browser-test.log",
+      "line": 366,
+      "text": "[INFO] \u2713 browser-features/chrome/common/designs/test/fluerial-container.test.ts (runAllTests, 750ms)\n[INFO] [35/284] Completed browser-features/chrome/common/designs/test/fluerial-groups.test.ts\n[INFO] \u2713 browser-features/chrome/common/designs/test/fluerial-groups.test.ts (runAllTests, 484ms)\n[INFO] [36/284] Completed browser-features/chrome/common/designs/test/lepton-compat.test.ts"
+    },
+    {
+      "file": "_dist/ci-combined-browser-test.log",
+      "line": 367,
+      "text": "[INFO] [35/284] Completed browser-features/chrome/common/designs/test/fluerial-groups.test.ts\n[INFO] \u2713 browser-features/chrome/common/designs/test/fluerial-groups.test.ts (runAllTests, 484ms)\n[INFO] [36/284] Completed browser-features/chrome/common/designs/test/lepton-compat.test.ts\n[ERROR] \u2717 browser-features/chrome/common/designs/test/lepton-compat.test.ts (178ms)"
+    },
+    {
+      "file": "_dist/ci-combined-browser-test.log",
+      "line": 739,
+      "text": ")\n[INFO] [37/284] Completed browser-features/chrome/common/designs/test/lepton-container-geometry.test.ts\n[INFO] \u2713 browser-features/chrome/common/designs/test/lepton-container-geometry.test.ts (runAllTests, 12098ms)\n[INFO] [38/284] Completed browser-features/chrome/common/designs/test/menu-icons.test.ts"
+    },
+    {
+      "file": "_dist/ci-combined-browser-test.log",
+      "line": 740,
+      "text": "[INFO] [37/284] Completed browser-features/chrome/common/designs/test/lepton-container-geometry.test.ts\n[INFO] \u2713 browser-features/chrome/common/designs/test/lepton-container-geometry.test.ts (runAllTests, 12098ms)\n[INFO] [38/284] Completed browser-features/chrome/common/designs/test/menu-icons.test.ts\n[INFO] \u2713 browser-features/chrome/common/designs/test/menu-icons.test.ts (runAllTests, 221ms)"
+    },
+    {
+      "file": "_dist/ci-combined-browser-test.log",
+      "line": 1290,
+      "text": "[INFO] === Summary ===\n[INFO] Browser test result: 283 passed, 1 failed\n[INFO] Downloaded Firefox coverage: 8 file(s), 16 task(s), 16 passed\nLog written to logs/test/colocated-20261105-211817-472.log"
+    },
+    {
+      "file": "_dist/ci-combined-browser-test.log",
+      "line": 1291,
+      "text": "[INFO] Browser test result: 283 passed, 1 failed\n[INFO] Downloaded Firefox coverage: 8 file(s), 16 task(s), 16 passed\nLog written to logs/test/colocated-20261105-211817-472.log"
+    },
+    {
+      "file": "_dist/ci-feles-build-test.log",
+      "line": 1517,
+      "text": "console.log: \"[nora@test] \\u2713 /link-features-chrome/common/designs/test/configs.test.ts (runAllTests, 1010ms)\"\nconsole.log: \"[nora@test] Running /link-features-chrome/common/designs/test/container-indicator.test.ts\"\nconsole.log: \"[nora@test] \\u2713 /link-features-chrome/common/designs/test/container-indicator.test.ts (runAllTests, 73ms)\"\nconsole.log: \"[nora@test] Running /link-features-chrome/common/designs/test/content-style-lifecycle.test.ts\""
+    },
+    {
+      "file": "_dist/ci-feles-build-test.log",
+      "line": 1518,
+      "text": "console.log: \"[nora@test] Running /link-features-chrome/common/designs/test/container-indicator.test.ts\"\nconsole.log: \"[nora@test] \\u2713 /link-features-chrome/common/designs/test/container-indicator.test.ts (runAllTests, 73ms)\"\nconsole.log: \"[nora@test] Running /link-features-chrome/common/designs/test/content-style-lifecycle.test.ts\"\nconsole.log: \"[nora@solid-xul] cleanup\""
+    },
+    {
+      "file": "_dist/ci-feles-build-test.log",
+      "line": 1531,
+      "text": "console.log: \"[nora@test] \\u2713 /link-features-chrome/common/designs/test/css.test.ts (runAllTests, 62ms)\"\nconsole.log: \"[nora@test] Running /link-features-chrome/common/designs/test/fluerial-container.test.ts\"\nconsole.log: \"[nora@solid-xul] cleanup\"\nconsole.log: \"[nora@solid-xul] cleanup\""
+    },
+    {
+      "file": "_dist/ci-feles-build-test.log",
+      "line": 1666,
+      "text": "\u001b[36mconsole.debug: nora@split-view:active-pane: \"[refreshIndicator] no split tabs (no wrapper and splitViewPanels<2) \\u2192 clear\"\u001b[0m\nconsole.log: \"[nora@test] \\u2713 /link-features-chrome/common/designs/test/fluerial-container.test.ts (runAllTests, 750ms)\"\nconsole.log: \"[nora@test] Running /link-features-chrome/common/designs/test/fluerial-groups.test.ts\"\nconsole.log: \"[nora@solid-xul] cleanup\""
+    },
+    {
+      "file": "_dist/ci-feles-build-test.log",
+      "line": 1667,
+      "text": "console.log: \"[nora@test] \\u2713 /link-features-chrome/common/designs/test/fluerial-container.test.ts (runAllTests, 750ms)\"\nconsole.log: \"[nora@test] Running /link-features-chrome/common/designs/test/fluerial-groups.test.ts\"\nconsole.log: \"[nora@solid-xul] cleanup\"\nconsole.log: \"[nora@solid-xul] cleanup\""
+    },
+    {
+      "file": "_dist/ci-feles-build-test.log",
+      "line": 1787,
+      "text": "console.log: \"[nora@solid-xul] cleanup\"\nconsole.log: \"[nora@test] \\u2713 /link-features-chrome/common/designs/test/fluerial-groups.test.ts (runAllTests, 484ms)\"\nconsole.log: \"[nora@test] Running /link-features-chrome/common/designs/test/lepton-compat.test.ts\"\n\u001b[31mconsole.error: \"[SsbPageAction] Manifest check failed:\" (new AbortError(\"Actor 'ManifestMessages' destroyed before query 'DOM:ManifestObtainer:Obtain' was resolved\", (void 0)))\u001b[0m"
+    },
+    {
+      "file": "_dist/ci-feles-build-test.log",
+      "line": 1791,
+      "text": "\u001b[31mconsole.error: \"[nora@test] \\u2717 /link-features-chrome/common/designs/test/lepton-compat.test.ts (178ms): lepton-compat.test.ts failures: bundled compat is color fix + lepton compat: LEPTON_COMPAT_CSS must bundle the color fix + Lepton compat (expected: \\n/* =========================================================================\\n * Floorp Gecko 152 color fix (applied to every design)\\n * See utils/lepton-compat-152.css.ts.\\n * ======================================================================= */\\n\\n/*= Dialog background (the \\\"black dialog\\\" symptom) ==========================\\n * Anchor in-content surfaces to a stable per-scheme value. Only the no-theme\\n * case is pinned; a loaded LWT may still override via its own accent. */\\n@media (prefers-color-scheme: light) {\\n  :root:not([lwtheme]):not(:-moz-lwtheme),\\n  :root:not([lwtheme]):not(:-moz-lwtheme) dialog {\\n    --in-content-page-background: rgb(255, 255, 255);\\n  }\\n}\\n@media (prefers-color-scheme: dark) {\\n  :root:not([lwtheme]):not(:-moz-lwtheme),\\n  :root:not([lwtheme]):not(:-moz-lwtheme) dialog {\\n    --in-content-page-background: rgb(31, 30, 38);\\n  }\\n}\\n/* LWT in-content surface \\u2014 use a safe, content-appropriate token.\\n * The previous revision read --lwt-accent-color directly, which is the\\n * *frame* color (XP Modern: rgb(9,96,224) blue). Painting that onto\\n * in-content surfaces made Customize Floorp solid blue (#2503) and, when the\\n * accent was missing/transparent, left dialogs black (#2403/#2502).\\n * Prefer a content canvas / toolbar value instead. The fallback is in a\\n * low-priority layer so a theme rule that legitimately sets its own\\n * --in-content-page-background still wins, even though this sheet is loaded\\n * after the theme's sheets. */\\n/* Capture the effective root value unlayered so a theme-provided value is\\n * carried onto dialogs; the dialog override below then references it. */\\n:root:is(:-moz-lwtheme, [lwtheme]) {\\n  --floorp-lwt-in-content-page-background: var(--in-content-page-background);\\n}\\n@layer floorp-compat {\\n  :root:is(:-moz-lwtheme, [lwtheme]) dialog {\\n    --in-content-page-background: var(\\n      --floorp-lwt-in-content-page-background,\\n      var(--background-color-canvas, var(--toolbar-background-color, Canvas))\\n    );\\n  }\\n}\\n\\n/*= Panel background default (the \\\"transparent panel\\\" symptom) ==============\\n * Only fill in a default for the no-theme case. A loaded LWT or a custom\\n * theme that sets --arrowpanel-background / --panel-background-color must\\n * keep its value (the alias in gecko-152-var-aliases already chains them). */\\n:root:not([lwtheme]):not(:-moz-lwtheme) {\\n  --arrowpanel-background: var(--panel-background-color, -moz-dialog);\\n  --arrowpanel-color: var(--panel-text-color, -moz-dialogtext);\\n  --arrowpanel-border-color: var(--panel-border-color, rgba(0, 0, 0, 0.1));\\n}\\n\\n\\n/* =========================================================================\\n * Floorp Lepton compat \\u2014 Gecko 152 (Project Nova)\\n * Loaded AFTER leptonChrome.css; equal specificity wins by source order.\\n * ======================================================================= */\\n\\n/*= Built-in light/dark theme palette restoration ==========================\\n * Lepton keys off the built-in-theme attribute and inline-style exact-RGB\\n * substring matchers on :root. On Gecko 152 those signals are unreliable,\\n * so Lepton's !important overrides never apply and the chrome falls back to\\n * raw defaults. Re-establish Lepton's intended palette using the stable\\n * prefers-color-scheme signal instead \\u2014 but ONLY for the no-theme case, so a\\n * loaded LWT is never overridden. */\\n:root {\\n  /* Lepton \\\"Original\\\" intended accent colors (mirrors leptonChrome.css) */\\n  --lepton-compat-accent-light: rgb(229, 229, 235);\\n  --lepton-compat-toolbar-light: rgba(255, 255, 255, 1);\\n  --lepton-compat-accent-dark: rgb(28, 27, 34);\\n  --lepton-compat-toolbar-dark: rgba(43, 42, 51, 1);\\n}\\n\\n/* Built-in theme, no LWT loaded: restore Lepton's light palette.\\n * Chain both negations on :root (AND) so the rule only applies when NO theme\\n * signal is present. */\\n:root:not([lwtheme]):not(:-moz-lwtheme) {\\n  --lwt-accent-color: var(--lepton-compat-accent-light);\\n  --toolbar-bgcolor: var(--lepton-compat-toolbar-light);\\n}\\n@media (prefers-color-scheme: dark) {\\n  :root:not([lwtheme]):not(:-moz-lwtheme) {\\n    --lwt-accent-color: var(--lepton-compat-accent-dark);\\n    --toolbar-bgcolor: var(--lepton-compat-toolbar-dark);\\n  }\\n}\\n\\n/*= Third-party LWT support (Issue #2489 \\u2014 \\\"Windows XP modern\\\" etc.) ========\\n * Lepton writes fixed-color !important overrides keyed to built-in-theme\\n * detection. When an LWT is active that detection can partially match and\\n * paint the whole chrome a single accent color.\\n *\\n * Let the LWT's own values flow by giving the chrome surface a guarded\\n * alias: read the LWT accent first, and only fall back to the toolbar color\\n * when the theme did not provide one. No !important \\u2014 the LWT author wins. */\\n:root:is(:-moz-lwtheme, [lwtheme]) {\\n  --lwt-accent-color: var(--lwt-accent-color, var(--toolbar-background-color));\\n  --toolbar-bgcolor: var(--toolbar-background-color);\\n}\\n/* The navigator toolbox background follows --lwt-accent-color in Lepton; make\\n * sure it reads the live (possibly LWT-provided) value.\\n *\\n * IMPORTANT: only pin --lwt-accent-color as a TOKEN here. Do NOT set\\n * background-color on #navigator-toolbox under LWT. Firefox draws a\\n * Lightweight Theme's additional_backgrounds on <body> and relies on\\n * #navigator-toolbox (and its translucent .browser-toolbar children) being\\n * transparent so that artwork shows through (see browser-shared.css). Giving\\n * #navigator-toolbox an opaque accent fill hides the entire theme background,\\n * which is the bug we are fixing. The toolbox itself stays transparent; the\\n * token alias above is enough for any Lepton rule that reads the accent. */\\n\\n/* Customize Floorp is a content surface, not the theme frame. Gecko paints\\n * LWT header images on the chrome document body, while Lepton leaves the\\n * customization container transparent. With a theme such as Windows XP\\n * Modern that exposes a blue frame accent, that transparency lets the frame\\n * color fill the entire customization page. Keep the toolbox transparent so\\n * the theme still paints its tabs and toolbar, but give the customization\\n * surface the theme's content-safe toolbar/panel color. */\\n:root:is(:-moz-lwtheme, [lwtheme])[customizing] #customization-container {\\n  background-color: var(\\n    --toolbar-background-color,\\n    var(--panel-background-color, -moz-dialog)\\n  ) !important;\\n  background-image: none !important;\\n}\\n\\n/*= Primary button accent (Lepton blue) =====================================\\n * Lepton declares these inside the built-in-theme block that no longer\\n * matches on 152. Re-declare them for the no-theme case so primary buttons\\n * keep their blue rather than inheriting a broken accent. An LWT that sets\\n * its own button tokens wins by the alias layer + source order. */\\n:root:not([lwtheme]):not(:-moz-lwtheme),\\n:root:not([lwtheme]):not(:-moz-lwtheme):host,\\n:root:not([lwtheme]):not(:-moz-lwtheme) dialog {\\n  --in-content-primary-button-text-color: var(--in-content-page-color);\\n  --in-content-primary-button-background: var(--blue-60, #0060df);\\n  --in-content-primary-button-background-hover: var(--blue-50, #0a84ff);\\n  --in-content-primary-button-background-active: var(--blue-40, #4595ff);\\n}\\n\\n/*= Right-positioned native sidebar (Issue #2556) ============================\\n * Gecko 152 exposes the native sidebar's end position on #sidebar-box as the\\n * presence-only [sidebar-positionend] attribute. Vendored Lepton still keys\\n * its overlap layout's direction flip to the former [positionend] attribute,\\n * so its inline-start offset is applied on the wrong side and pushes a right\\n * sidebar partly outside the window.\\n *\\n * Keep the legacy attribute in the selector for older Gecko versions. These\\n * are boolean presence attributes, so intentionally do not match a value. */\\n@media -moz-pref(\\\"userChrome.sidebar.overlap\\\") {\\n  #sidebar-box:is([positionend], [sidebar-positionend]) {\\n    direction: rtl;\\n  }\\n}\\n\\n\\n/* Photon uses selected=\\\"true\\\", but current Gecko represents selection with\\n * selected=\\\"\\\". Its inactive animation therefore hides selected containers,\\n * while its identity-color reset also replaces their individual colors.\\n * A container's identity must remain visible independently of selection/hover.\\n * Keep this after the vendored sheet, which is replaced by upstream syncs. */\\n@media -moz-pref(\\\"userChrome.tab.photon_like_contextline\\\") {\\n  #tabbrowser-tabs .tabbrowser-tab[usercontextid] > .tab-stack > .tab-background > .tab-context-line {\\n    --identity-icon-color: inherit;\\n    background-color: var(--identity-icon-color) !important;\\n    opacity: 1 !important;\\n    transform: none !important;\\n  }\\n  /* Photon forces a 2px height for horizontal tabs. Restore the native\\n   * vertical indicator's height when the tab strip changes orientation. */\\n  #tabbrowser-tabs[orient=\\\"vertical\\\"] .tabbrowser-tab[usercontextid] > .tab-stack > .tab-background > .tab-context-line {\\n    height: 24px !important;\\n    align-self: center;\\n  }\\n}\\n, actual: \\n/* =========================================================================\\n * Floorp Gecko 152 color fix (applied to every design)\\n * See utils/lepton-compat-152.css.ts.\\n * ======================================================================= */\\n\\n/*= Dialog background (the \\\"black dialog\\\" symptom) ==========================\\n * Anchor in-content surfaces to a stable per-scheme value. Only the no-theme\\n * case is pinned; a loaded LWT may still override via its own accent. */\\n@media (prefers-color-scheme: light) {\\n  :root:not([lwtheme]):not(:-moz-lwtheme),\\n  :root:not([lwtheme]):not(:-moz-lwtheme) dialog {\\n    --in-content-page-background: rgb(255, 255, 255);\\n  }\\n}\\n@media (prefers-color-scheme: dark) {\\n  :root:not([lwtheme]):not(:-moz-lwtheme),\\n  :root:not([lwtheme]):not(:-moz-lwtheme) dialog {\\n    --in-content-page-background: rgb(31, 30, 38);\\n  }\\n}\\n/* LWT in-content surface \\u2014 use a safe, content-appropriate token.\\n * The previous revision read --lwt-accent-color directly, which is the\\n * *frame* color (XP Modern: rgb(9,96,224) blue). Painting that onto\\n * in-content surfaces made Customize Floorp solid blue (#2503) and, when the\\n * accent was missing/transparent, left dialogs black (#2403/#2502).\\n * Prefer a content canvas / toolbar value instead. The fallback is in a\\n * low-priority layer so a theme rule that legitimately sets its own\\n * --in-content-page-background still wins, even though this sheet is loaded\\n * after the theme's sheets. */\\n/* Capture the effective root value unlayered so a theme-provided value is\\n * carried onto dialogs; the dialog override below then references it. */\\n:root:is(:-moz-lwtheme, [lwtheme]) {\\n  --floorp-lwt-in-content-page-background: var(--in-content-page-background);\\n}\\n@layer floorp-compat {\\n  :root:is(:-moz-lwtheme, [lwtheme]) dialog {\\n    --in-content-page-background: var(\\n      --floorp-lwt-in-content-page-background,\\n      var(--background-color-canvas, var(--toolbar-background-color, Canvas))\\n    );\\n  }\\n}\\n\\n/*= Panel background default (the \\\"transparent panel\\\" symptom) ==============\\n * Only fill in a default for the no-theme case. A loaded LWT or a custom\\n * theme that sets --arrowpanel-background / --panel-background-color must\\n * keep its value (the alias in gecko-152-var-aliases already chains them). */\\n:root:not([lwtheme]):not(:-moz-lwtheme) {\\n  --arrowpanel-background: var(--panel-background-color, -moz-dialog);\\n  --arrowpanel-color: var(--panel-text-color, -moz-dialogtext);\\n  --arrowpanel-border-color: var(--panel-border-color, rgba(0, 0, 0, 0.1));\\n}\\n\\n\\n/* =========================================================================\\n * Floorp Lepton compat \\u2014 Gecko 152 (Project Nova)\\n * Loaded AFTER leptonChrome.css; equal specificity wins by source order.\\n * ======================================================================= */\\n\\n/*= Built-in light/dark theme palette restoration ==========================\\n * Lepton keys off the built-in-theme attribute and inline-style exact-RGB\\n * substring matchers on :root. On Gecko 152 those signals are unreliable,\\n * so Lepton's !important overrides never apply and the chrome falls back to\\n * raw defaults. Re-establish Lepton's intended palette using the stable\\n * prefers-color-scheme signal instead \\u2014 but ONLY for the no-theme case, so a\\n * loaded LWT is never overridden. */\\n:root {\\n  /* Lepton \\\"Original\\\" intended accent colors (mirrors leptonChrome.css) */\\n  --lepton-compat-accent-light: rgb(229, 229, 235);\\n  --lepton-compat-toolbar-light: rgba(255, 255, 255, 1);\\n  --lepton-compat-accent-dark: rgb(28, 27, 34);\\n  --lepton-compat-toolbar-dark: rgba(43, 42, 51, 1);\\n}\\n\\n/* Built-in theme, no LWT loaded: restore Lepton's light palette.\\n * Chain both negations on :root (AND) so the rule only applies when NO theme\\n * signal is present. */\\n:root:not([lwtheme]):not(:-moz-lwtheme) {\\n  --lwt-accent-color: var(--lepton-compat-accent-light);\\n  --toolbar-bgcolor: var(--lepton-compat-toolbar-light);\\n}\\n@media (prefers-color-scheme: dark) {\\n  :root:not([lwtheme]):not(:-moz-lwtheme) {\\n    --lwt-accent-color: var(--lepton-compat-accent-dark);\\n    --toolbar-bgcolor: var(--lepton-compat-toolbar-dark);\\n  }\\n}\\n\\n/*= Third-party LWT support (Issue #2489 \\u2014 \\\"Windows XP modern\\\" etc.) ========\\n * Lepton writes fixed-color !important overrides keyed to built-in-theme\\n * detection. When an LWT is active that detection can partially match and\\n * paint the whole chrome a single accent color.\\n *\\n * Let the LWT's own values flow by giving the chrome surface a guarded\\n * alias: read the LWT accent first, and only fall back to the toolbar color\\n * when the theme did not provide one. No !important \\u2014 the LWT author wins. */\\n:root:is(:-moz-lwtheme, [lwtheme]) {\\n  --lwt-accent-color: var(--lwt-accent-color, var(--toolbar-background-color));\\n  --toolbar-bgcolor: var(--toolbar-background-color);\\n}\\n/* The navigator toolbox background follows --lwt-accent-color in Lepton; make\\n * sure it reads the live (possibly LWT-provided) value.\\n *\\n * IMPORTANT: only pin --lwt-accent-color as a TOKEN here. Do NOT set\\n * background-color on #navigator-toolbox under LWT. Firefox draws a\\n * Lightweight Theme's additional_backgrounds on <body> and relies on\\n * #navigator-toolbox (and its translucent .browser-toolbar children) being\\n * transparent so that artwork shows through (see browser-shared.css). Giving\\n * #navigator-toolbox an opaque accent fill hides the entire theme background,\\n * which is the bug we are fixing. The toolbox itself stays transparent; the\\n * token alias above is enough for any Lepton rule that reads the accent. */\\n\\n/* Customize Floorp is a content surface, not the theme frame. Gecko paints\\n * LWT header images on the chrome document body, while Lepton leaves the\\n * customization container transparent. With a theme such as Windows XP\\n * Modern that exposes a blue frame accent, that transparency lets the frame\\n * color fill the entire customization page. Keep the toolbox transparent so\\n * the theme still paints its tabs and toolbar, but give the customization\\n * surface the theme's content-safe toolbar/panel color. */\\n:root:is(:-moz-lwtheme, [lwtheme])[customizing] #customization-container {\\n  background-color: var(\\n    --toolbar-background-color,\\n    var(--panel-background-color, -moz-dialog)\\n  ) !important;\\n  background-image: none !important;\\n}\\n\\n/*= Primary button accent (Lepton blue) =====================================\\n * Lepton declares these inside the built-in-theme block that no longer\\n * matches on 152. Re-declare them for the no-theme case so primary buttons\\n * keep their blue rather than inheriting a broken accent. An LWT that sets\\n * its own button tokens wins by the alias layer + source order. */\\n:root:not([lwtheme]):not(:-moz-lwtheme),\\n:root:not([lwtheme]):not(:-moz-lwtheme):host,\\n:root:not([lwtheme]):not(:-moz-lwtheme) dialog {\\n  --in-content-primary-button-text-color: var(--in-content-page-color);\\n  --in-content-primary-button-background: var(--blue-60, #0060df);\\n  --in-content-primary-button-background-hover: var(--blue-50, #0a84ff);\\n  --in-content-primary-button-background-active: var(--blue-40, #4595ff);\\n}\\n\\n/*= Right-positioned native sidebar (Issue #2556) ============================\\n * Gecko 152 exposes the native sidebar's end position on #sidebar-box as the\\n * presence-only [sidebar-positionend] attribute. Vendored Lepton still keys\\n * its overlap layout's direction flip to the former [positionend] attribute,\\n * so its inline-start offset is applied on the wrong side and pushes a right\\n * sidebar partly outside the window.\\n *\\n * Keep the legacy attribute in the selector for older Gecko versions. These\\n * are boolean presence attributes, so intentionally do not match a value. */\\n@media -moz-pref(\\\"userChrome.sidebar.overlap\\\") {\\n  #sidebar-box:is([positionend], [sidebar-positionend]) {\\n    direction: rtl;\\n  }\\n}\\n\\n\\n/* Photon uses selected=\\\"true\\\", but current Gecko represents selection with\\n * selected=\\\"\\\". Its inactive animation therefore hides selected containers,\\n * while its identity-color reset also replaces their individual colors.\\n * A container's identity must remain visible independently of selection/hover.\\n * Keep this after the vendored sheet, which is replaced by upstream syncs. */\\n@media -moz-pref(\\\"userChrome.tab.photon_like_contextline\\\") {\\n  #tabbrowser-tabs .tabbrowser-tab[usercontextid] > .tab-stack > .tab-background > .tab-context-line {\\n    --identity-icon-color: inherit;\\n    background-color: var(--identity-icon-color) !important;\\n    opacity: 1 !important;\\n    transform: none !important;\\n  }\\n  /* Photon forces a 2px height for horizontal tabs. Restore the native\\n   * vertical indicator's height when the tab strip changes orientation. */\\n  #tabbrowser-tabs[orient=\\\"vertical\\\"] .tabbrowser-tab[usercontextid] > .tab-stack > .tab-background > .tab-context-line {\\n    height: 24px !important;\\n    align-self: center;\\n  }\\n}\\n\\n\\n/* Lepton/Firefox UI Fix replace the native line with .tab-content::before.\\n * Its selected width still reads the pre-152 padding/margin token names.\\n * Resolve these aliases at the consuming element, where native tab tokens\\n * are available, rather than inheriting an already-invalid root alias. */\\n@media -moz-pref(\\\"userChrome.tab.container\\\") and\\n  (not -moz-pref(\\\"userChrome.tab.photon_like_contextline\\\")) and\\n  (not -moz-pref(\\\"userChrome.tabbar.as_titlebar\\\")) {\\n  #tabbrowser-tabs .tabbrowser-tab[usercontextid] > .tab-stack > .tab-content {\\n    --tab-inline-padding: var(--tab-padding-inline);\\n    --tab-inner-inline-margin: var(--tab-margin-inline-inner);\\n  }\\n}\\n)\"\u001b[0m\nconsole.log: \"[nora@test] Running /link-features-chrome/common/designs/test/lepton-container-geometry.test.ts\"\nconsole.log: \"[nora@test] \\u2713 /link-features-chrome/common/designs/test/lepton-container-geometry.test.ts (runAllTests, 12098ms)\"\nconsole.log: \"[nora@test] Running /link-features-chrome/common/designs/test/menu-icons.test.ts\""
+    },
+    {
+      "file": "_dist/ci-feles-build-test.log",
+      "line": 1792,
+      "text": "console.log: \"[nora@test] Running /link-features-chrome/common/designs/test/lepton-container-geometry.test.ts\"\nconsole.log: \"[nora@test] \\u2713 /link-features-chrome/common/designs/test/lepton-container-geometry.test.ts (runAllTests, 12098ms)\"\nconsole.log: \"[nora@test] Running /link-features-chrome/common/designs/test/menu-icons.test.ts\"\nconsole.log: \"[nora@test] \\u2713 /link-features-chrome/common/designs/test/menu-icons.test.ts (runAllTests, 221ms)\""
+    },
+    {
+      "file": "logs/test/latest.log",
+      "line": 38,
+      "text": "[2026-11-05T21:18:17.528Z] [INFO]   - browser-features/chrome/common/designs/test/configs.test.ts\n[2026-11-05T21:18:17.528Z] [INFO]   - browser-features/chrome/common/designs/test/container-indicator.test.ts\n[2026-11-05T21:18:17.528Z] [INFO]   - browser-features/chrome/common/designs/test/content-style-lifecycle.test.ts\n[2026-11-05T21:18:17.528Z] [INFO]   - browser-features/chrome/common/designs/test/css.test.ts"
+    },
+    {
+      "file": "logs/test/latest.log",
+      "line": 41,
+      "text": "[2026-11-05T21:18:17.528Z] [INFO]   - browser-features/chrome/common/designs/test/css.test.ts\n[2026-11-05T21:18:17.528Z] [INFO]   - browser-features/chrome/common/designs/test/fluerial-container.test.ts\n[2026-11-05T21:18:17.528Z] [INFO]   - browser-features/chrome/common/designs/test/fluerial-groups.test.ts\n[2026-11-05T21:18:17.528Z] [INFO]   - browser-features/chrome/common/designs/test/lepton-compat.test.ts"
+    },
+    {
+      "file": "logs/test/latest.log",
+      "line": 42,
+      "text": "[2026-11-05T21:18:17.528Z] [INFO]   - browser-features/chrome/common/designs/test/fluerial-container.test.ts\n[2026-11-05T21:18:17.528Z] [INFO]   - browser-features/chrome/common/designs/test/fluerial-groups.test.ts\n[2026-11-05T21:18:17.528Z] [INFO]   - browser-features/chrome/common/designs/test/lepton-compat.test.ts\n[2026-11-05T21:18:17.528Z] [INFO]   - browser-features/chrome/common/designs/test/lepton-container-geometry.test.ts"
+    },
+    {
+      "file": "logs/test/latest.log",
+      "line": 44,
+      "text": "[2026-11-05T21:18:17.528Z] [INFO]   - browser-features/chrome/common/designs/test/lepton-compat.test.ts\n[2026-11-05T21:18:17.528Z] [INFO]   - browser-features/chrome/common/designs/test/lepton-container-geometry.test.ts\n[2026-11-05T21:18:17.528Z] [INFO]   - browser-features/chrome/common/designs/test/menu-icons.test.ts\n[2026-11-05T21:18:17.528Z] [INFO]   - browser-features/chrome/common/designs/test/oldConfigMigrator.test.ts"
+    },
+    {
+      "file": "logs/test/latest.log",
+      "line": 359,
+      "text": "[2026-11-05T21:24:22.857Z] [INFO] \u2713 browser-features/chrome/common/designs/test/configs.test.ts (runAllTests, 1010ms)\n[2026-11-05T21:24:22.857Z] [INFO] [31/284] Completed browser-features/chrome/common/designs/test/container-indicator.test.ts\n[2026-11-05T21:24:22.857Z] [INFO] \u2713 browser-features/chrome/common/designs/test/container-indicator.test.ts (runAllTests, 73ms)\n[2026-11-05T21:24:22.857Z] [INFO] [32/284] Completed browser-features/chrome/common/designs/test/content-style-lifecycle.test.ts"
+    },
+    {
+      "file": "logs/test/latest.log",
+      "line": 360,
+      "text": "[2026-11-05T21:24:22.857Z] [INFO] [31/284] Completed browser-features/chrome/common/designs/test/container-indicator.test.ts\n[2026-11-05T21:24:22.857Z] [INFO] \u2713 browser-features/chrome/common/designs/test/container-indicator.test.ts (runAllTests, 73ms)\n[2026-11-05T21:24:22.857Z] [INFO] [32/284] Completed browser-features/chrome/common/designs/test/content-style-lifecycle.test.ts\n[2026-11-05T21:24:22.857Z] [INFO] \u2713 browser-features/chrome/common/designs/test/content-style-lifecycle.test.ts (runAllTests, 179ms)"
+    },
+    {
+      "file": "logs/test/latest.log",
+      "line": 365,
+      "text": "[2026-11-05T21:24:22.858Z] [INFO] \u2713 browser-features/chrome/common/designs/test/css.test.ts (runAllTests, 62ms)\n[2026-11-05T21:24:22.858Z] [INFO] [34/284] Completed browser-features/chrome/common/designs/test/fluerial-container.test.ts\n[2026-11-05T21:24:22.858Z] [INFO] \u2713 browser-features/chrome/common/designs/test/fluerial-container.test.ts (runAllTests, 750ms)\n[2026-11-05T21:24:22.858Z] [INFO] [35/284] Completed browser-features/chrome/common/designs/test/fluerial-groups.test.ts"
+    },
+    {
+      "file": "logs/test/latest.log",
+      "line": 366,
+      "text": "[2026-11-05T21:24:22.858Z] [INFO] [34/284] Completed browser-features/chrome/common/designs/test/fluerial-container.test.ts\n[2026-11-05T21:24:22.858Z] [INFO] \u2713 browser-features/chrome/common/designs/test/fluerial-container.test.ts (runAllTests, 750ms)\n[2026-11-05T21:24:22.858Z] [INFO] [35/284] Completed browser-features/chrome/common/designs/test/fluerial-groups.test.ts\n[2026-11-05T21:24:22.858Z] [INFO] \u2713 browser-features/chrome/common/designs/test/fluerial-groups.test.ts (runAllTests, 484ms)"
+    },
+    {
+      "file": "logs/test/latest.log",
+      "line": 367,
+      "text": "[2026-11-05T21:24:22.858Z] [INFO] \u2713 browser-features/chrome/common/designs/test/fluerial-container.test.ts (runAllTests, 750ms)\n[2026-11-05T21:24:22.858Z] [INFO] [35/284] Completed browser-features/chrome/common/designs/test/fluerial-groups.test.ts\n[2026-11-05T21:24:22.858Z] [INFO] \u2713 browser-features/chrome/common/designs/test/fluerial-groups.test.ts (runAllTests, 484ms)\n[2026-11-05T21:24:22.858Z] [INFO] [36/284] Completed browser-features/chrome/common/designs/test/lepton-compat.test.ts"
+    },
+    {
+      "file": "logs/test/latest.log",
+      "line": 368,
+      "text": "[2026-11-05T21:24:22.858Z] [INFO] [35/284] Completed browser-features/chrome/common/designs/test/fluerial-groups.test.ts\n[2026-11-05T21:24:22.858Z] [INFO] \u2713 browser-features/chrome/common/designs/test/fluerial-groups.test.ts (runAllTests, 484ms)\n[2026-11-05T21:24:22.858Z] [INFO] [36/284] Completed browser-features/chrome/common/designs/test/lepton-compat.test.ts\n[2026-11-05T21:24:22.858Z] [ERROR] \u2717 browser-features/chrome/common/designs/test/lepton-compat.test.ts (178ms)"
+    },
+    {
+      "file": "logs/test/latest.log",
+      "line": 740,
+      "text": ")\n[2026-11-05T21:24:22.858Z] [INFO] [37/284] Completed browser-features/chrome/common/designs/test/lepton-container-geometry.test.ts\n[2026-11-05T21:24:22.858Z] [INFO] \u2713 browser-features/chrome/common/designs/test/lepton-container-geometry.test.ts (runAllTests, 12098ms)\n[2026-11-05T21:24:22.858Z] [INFO] [38/284] Completed browser-features/chrome/common/designs/test/menu-icons.test.ts"
+    },
+    {
+      "file": "logs/test/latest.log",
+      "line": 741,
+      "text": "[2026-11-05T21:24:22.858Z] [INFO] [37/284] Completed browser-features/chrome/common/designs/test/lepton-container-geometry.test.ts\n[2026-11-05T21:24:22.858Z] [INFO] \u2713 browser-features/chrome/common/designs/test/lepton-container-geometry.test.ts (runAllTests, 12098ms)\n[2026-11-05T21:24:22.858Z] [INFO] [38/284] Completed browser-features/chrome/common/designs/test/menu-icons.test.ts\n[2026-11-05T21:24:22.858Z] [INFO] \u2713 browser-features/chrome/common/designs/test/menu-icons.test.ts (runAllTests, 221ms)"
+    },
+    {
+      "file": "logs/test/latest.log",
+      "line": 1291,
+      "text": "[2026-11-05T21:24:22.869Z] [INFO] === Summary ===\n[2026-11-05T21:24:22.869Z] [INFO] Browser test result: 283 passed, 1 failed\n[2026-11-05T21:24:22.869Z] [INFO] Downloaded Firefox coverage: 8 file(s), 16 task(s), 16 passed\n[META] finishedAt=2026-11-05T21:24:22.945Z"
+    },
+    {
+      "file": "logs/test/latest.log",
+      "line": 1292,
+      "text": "[2026-11-05T21:24:22.869Z] [INFO] Browser test result: 283 passed, 1 failed\n[2026-11-05T21:24:22.869Z] [INFO] Downloaded Firefox coverage: 8 file(s), 16 task(s), 16 passed\n[META] finishedAt=2026-11-05T21:24:22.945Z\n[META] durationMs=365473"
+    },
+    {
+      "file": "logs/test/latest.log",
+      "line": 1295,
+      "text": "[META] durationMs=365473\n[META] exitCode=1"
+    }
+  ],
+  "qualification": "standard repository development harness; independent of sandbox6 complete production product verification",
+  "declaredCasesPerModule": 2,
+  "perCaseSuccessLinesClaimed": false
+}

@@ -1,0 +1,16 @@
+{
+  "issue": "https://github.com/Floorp-Projects/Floorp/issues/2965",
+  "originalCommentIds": [
+    6349160563,
+    6351749209
+  ],
+  "reported": "Windows11 26H2 26300.9457,12.20.2@158.0.1,newprofile/defaulttheme,horizontal+vertical; Lepton/Photon/protonfix/Fluerial affected,Protonnormal",
+  "canonicalPr": 3041,
+  "canonicalHead": "1c37f3f2c53c5b213e679321e0116d4c7474661f",
+  "newPr": 3048,
+  "newHead": "0e80f14dc439dde7817c0620f0fc112d54dfba80",
+  "originalWindowsQualified": false,
+  "originalPhoton36Reexecuted": false,
+  "currentBaselineStates": 88,
+  "oldLinuxVersionStates": 40
+}

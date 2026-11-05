@@ -1,0 +1,118 @@
+{
+  "product": "/workspace/qa-linux-additional/KAN-24/followup/products/baseline/floorp",
+  "sourceSha": "29a3eb23145da90706d8a94441373278521cc737",
+  "input": "real Hub WebDriver clicks; genuine container service/tab APIs; WebDriver pointer hover/multiselect",
+  "cases": [
+    {
+      "id": "fluerial-diagnostic-before-h-selected-blue",
+      "design": "fluerial",
+      "verticalMode": false,
+      "evidence": [
+        "fluerial-diagnostic-before-h-selected-blue.json",
+        "fluerial-diagnostic-before-h-selected-blue.png"
+      ]
+    },
+    {
+      "id": "fluerial-diagnostic-before-h-selected-orange",
+      "design": "fluerial",
+      "verticalMode": false,
+      "evidence": [
+        "fluerial-diagnostic-before-h-selected-orange.json",
+        "fluerial-diagnostic-before-h-selected-orange.png"
+      ]
+    },
+    {
+      "id": "fluerial-diagnostic-before-h-selected-normal",
+      "design": "fluerial",
+      "verticalMode": false,
+      "evidence": [
+        "fluerial-diagnostic-before-h-selected-normal.json",
+        "fluerial-diagnostic-before-h-selected-normal.png"
+      ]
+    },
+    {
+      "id": "fluerial-diagnostic-before-v-idle",
+      "design": "fluerial",
+      "verticalMode": true,
+      "evidence": [
+        "fluerial-diagnostic-before-v-idle.json",
+        "fluerial-diagnostic-before-v-idle.png"
+      ]
+    },
+    {
+      "id": "fluerial-diagnostic-before-v-hover-blue",
+      "design": "fluerial",
+      "verticalMode": true,
+      "evidence": [
+        "fluerial-diagnostic-before-v-hover-blue.json",
+        "fluerial-diagnostic-before-v-hover-blue.png"
+      ]
+    },
+    {
+      "id": "fluerial-diagnostic-after-h-selected-blue",
+      "design": "fluerial",
+      "verticalMode": false,
+      "evidence": [
+        "fluerial-diagnostic-after-h-selected-blue.json",
+        "fluerial-diagnostic-after-h-selected-blue.png"
+      ]
+    },
+    {
+      "id": "fluerial-diagnostic-after-h-selected-orange",
+      "design": "fluerial",
+      "verticalMode": false,
+      "evidence": [
+        "fluerial-diagnostic-after-h-selected-orange.json",
+        "fluerial-diagnostic-after-h-selected-orange.png"
+      ]
+    },
+    {
+      "id": "fluerial-diagnostic-after-h-selected-normal",
+      "design": "fluerial",
+      "verticalMode": false,
+      "evidence": [
+        "fluerial-diagnostic-after-h-selected-normal.json",
+        "fluerial-diagnostic-after-h-selected-normal.png"
+      ]
+    },
+    {
+      "id": "fluerial-diagnostic-after-v-idle",
+      "design": "fluerial",
+      "verticalMode": true,
+      "evidence": [
+        "fluerial-diagnostic-after-v-idle.json",
+        "fluerial-diagnostic-after-v-idle.png"
+      ]
+    },
+    {
+      "id": "fluerial-diagnostic-after-v-hover-blue",
+      "design": "fluerial",
+      "verticalMode": true,
+      "evidence": [
+        "fluerial-diagnostic-after-v-hover-blue.json",
+        "fluerial-diagnostic-after-v-hover-blue.png"
+      ]
+    },
+    {
+      "id": "fluerial-diagnostic-removed-h-selected-blue",
+      "design": "fluerial",
+      "verticalMode": false,
+      "evidence": [
+        "fluerial-diagnostic-removed-h-selected-blue.json",
+        "fluerial-diagnostic-removed-h-selected-blue.png"
+      ]
+    }
+  ],
+  "cssSha256": "e22c5eedf3296047b73f2f546c0067047a2ef0a4e363cdda95c314d4e55b73de",
+  "kind": "temporary AGENT stylesheet causal diagnostic, NOT complete delivered fix",
+  "quit": {
+    "cause": "shutdown",
+    "forced": false,
+    "in_app": true
+  },
+  "browserExit": 0,
+  "completed": true,
+  "productUnchanged": true,
+  "ownedProcessesRemaining": 0,
+  "displaySocketAbsent": true
+}

@@ -1,0 +1,41 @@
+{
+  "key": "KAN-26",
+  "github": "https://github.com/Floorp-Projects/Floorp/issues/2965",
+  "sourceSha": "0e80f14dc439dde7817c0620f0fc112d54dfba80",
+  "productVersion": "native159.0.1 /20261103153232",
+  "environment": "Debian13.6 Xvfb107 X11; default container gates; sandbox6 unchanged",
+  "testCommand": "probe.py --all-states --source-sha 0e80f14dc439dde7817c0620f0fc112d54dfba80 --product candidate-product/floorp --out full-product/run; analyze.py; compare_candidate.py; qualify_composite.py",
+  "result": "Observed nonPhoton indicator defects repaired in complete candidate; bounded normal-control supplement succeeds; historical strict mismatch remains unresolved as to exact original state.",
+  "indicatorPass": 176,
+  "indicatorTotal": 176,
+  "normalOriginalExactCases": 87,
+  "normalOriginalTotalCases": 88,
+  "normalSupplementMatchedPairs": 9,
+  "strictQualified": false,
+  "strictChecksPass": 1534,
+  "strictChecksFail": 1,
+  "compositeEvidenceComplete": true,
+  "remainingConditions": [
+    "Original protonfix-h-selected-normal capture omitted closebuttons attribute: six original style differences are retained, not waived.",
+    "Existing vendor activetab formula predicts original 188px pseudo and 187.5px label; new real window resizing measures both attribute states identically in baseline/candidate. This supports a condition difference but does not prove the original missing attribute.",
+    "InspectorUtils.getCSSStyleRules unavailable in this runtime; matched-rule telemetry records TypeError. Evidence is pinned static CSS plus actual attributes/computed styles and pixels, not successful matched-rule inspection.",
+    "Linux original-version158 comparison covers40 states only; new48 supplemental interaction states were measured on159 baseline/candidate.",
+    "No physical input/GPU/highDPI/Windows or signed-release qualification. Complete package uses compatible locked prebuilt native Runtime; not a fresh Gecko build."
+  ],
+  "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/3041",
+  "newPr": "https://github.com/Floorp-Projects/Floorp/pull/3048",
+  "jiraCommentId": "10448",
+  "jiraUpdateOwner": "parent /root",
+  "evidence": [
+    "report.md",
+    "qualification.json",
+    "comparison.json",
+    "comparison-center-roi.json",
+    "roi-center-refinement.json",
+    "noncontainer-source-comparison.json",
+    "run/",
+    "noncontainer-baseline-check/",
+    "noncontainer-candidate-check/"
+  ],
+  "originalLinux22DenominatorChanged": false
+}

@@ -1,0 +1,25 @@
+#!/usr/bin/env python3
+"""Separate composite evidence; never replaces or relaxes the strict comparison."""
+import ast,json
+from pathlib import Path
+C=Path(__file__).resolve().parent; R=C.parent; F=R/'full-product'
+read=lambda p:json.loads(p.read_text())
+module=ast.parse((C/'compare_candidate.py').read_text());ns={'style_differences':[]}
+exec(compile(ast.Module(body=[n for n in module.body if isinstance(n,ast.FunctionDef) and n.name in ['near','compare_visual']],type_ignores=[]),'<strict-visual-functions>','exec'),ns)
+a=F/'noncontainer-baseline-check';b=F/'noncontainer-candidate-check'; ar=read(a/'result.json');br=read(b/'result.json')
+pa={x['id']:x for x in read(a/'pixel-matrix.json')};pb={x['id']:x for x in read(b/'pixel-matrix.json')};rows=[]
+for case in ar['cases']:
+ id=case['id'];before=read(a/(id+'.json'));after=read(b/(id+'.json')); bt=read(a/(id+'-telemetry.json'));ct=read(b/(id+'-telemetry.json'))
+ bn=next(x for x in before['tabs']if x['role']=='normal');cn=next(x for x in after['tabs']if x['role']=='normal');start=len(ns['style_differences']);ns['compare_visual'](id,'normal',bn,cn)
+ conditions=['closebuttons','windowRect','devicePixelRatio','fonts','labelText','hover','selected','animations']
+ equal=all(bt[k]==ct[k]for k in conditions)
+ hues=[next(t for t in p[id]['tabs']if t['role']=='normal')for p in [pa,pb]]
+ zero=all(t['blueHuePixels']==t['orangeHuePixels']==0 for t in hues)
+ rows.append({'id':id,'sameRecordedConditions':equal,'normalStylesAndGeometryEqual':len(ns['style_differences'])==start,'noIdentityHueInEitherNormalTab':zero,'conditions':{k:ct[k]for k in conditions},'pseudoWidth':ct['before']['styles']['width'],'labelWidth':ct['label']['rect']['width'],'closeWidth':ct['close']['rect']['width'],'pass':equal and zero and len(ns['style_differences'])==start})
+guards={}
+for label,d,result in [('baseline',a,ar),('candidate',b,br)]:
+ guards[label]=result['completed'] and result['browserExit']==0 and result['quit']['in_app'] and not result['quit']['forced'] and result['productUnchanged'] and result['productTreeUnchanged'] and result['ownedProcessesRemaining']==0 and result['displaySocketAbsent'] and read(d/'product-before.json')==read(d/'product-after.json') and read(d/'product-tree-before.json')==read(d/'product-tree-after.json')
+strict=read(F/'comparison-center-roi.json'); initial=read(F/'comparison.json')
+q={'key':'KAN-26','sourceSha':strict['sourceSha'],'scope':'Complete Linux application package; default theme/container gates; Debian Xvfb X11 native159.0.1; synthetic input. Not original Windows qualification.','classification':'Observed nonPhoton indicator defects repaired in complete candidate; bounded normal-control supplement succeeds; historical strict mismatch remains unresolved as to exact original state.','strictQualification':{'qualified':strict['qualified'],'checksPass':strict['checksPass'],'checksFail':strict['checksFail'],'evidence':'comparison-center-roi.json','initialBoundingBoxComparison':{'qualified':initial['qualified'],'checksPass':initial['checksPass'],'checksFail':initial['checksFail'],'evidence':'comparison.json'}},'indicatorEvidence':{'candidatePass':sum(x['pass']for x in strict['indicatorRows']),'candidateTotal':len(strict['indicatorRows']),'baselinePositive':126,'baselineTotal':176,'normalStylesExactCases':87,'normalStylesTotalCases':88,'roiMethodEvidence':'roi-center-refinement.json'},'supplement':{'statePairs':len(rows),'actualBrowserStates':len(rows)*2,'passedPairs':sum(x['pass']for x in rows),'guards':guards,'rows':rows,'visualStyleDifferences':ns['style_differences']},'compositeEvidenceComplete':len(rows)==9 and all(x['pass']for x in rows) and all(guards.values()) and all(x['pass']for x in strict['indicatorRows']),'limitations':['Original protonfix-h-selected-normal capture omitted closebuttons attribute: six original style differences are retained, not waived.','Existing vendor activetab formula predicts original 188px pseudo and 187.5px label; new real window resizing measures both attribute states identically in baseline/candidate. This supports a condition difference but does not prove the original missing attribute.','InspectorUtils.getCSSStyleRules unavailable in this runtime; matched-rule telemetry records TypeError. Evidence is pinned static CSS plus actual attributes/computed styles and pixels, not successful matched-rule inspection.','Linux original-version158 comparison covers40 states only; new48 supplemental interaction states were measured on159 baseline/candidate.','No physical input/GPU/highDPI/Windows or signed-release qualification. Complete package uses compatible locked prebuilt native Runtime; not a fresh Gecko build.'],'evidence':['run/result.json','run/identity.json','noncontainer-source-comparison.json','noncontainer-baseline-check/result.json','noncontainer-candidate-check/result.json']}
+(F/'qualification.json').write_text(json.dumps(q,indent=2)+'\n');print(json.dumps({'compositeEvidenceComplete':q['compositeEvidenceComplete'],'supplementPass':q['supplement']['passedPairs'],'strict':q['strictQualification']}))
+assert q['compositeEvidenceComplete']

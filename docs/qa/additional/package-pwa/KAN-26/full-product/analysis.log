@@ -1,0 +1,53 @@
+/workspace/qa-linux-additional/KAN-26/current-product/analyze.py:16: DeprecationWarning: Image.Image.getdata is deprecated and will be removed in Pillow 14 (2027-10-15). Use get_flattened_data instead.
+  crop=im.crop(box);px=list(crop.getdata());blue=sum(b>r+70 and g>r+30 and b>g+35 for r,g,b in px);orange=sum(r>200 and 80<g<220 and b<120 and r>b+100 for r,g,b in px)
+/workspace/qa-linux-additional/KAN-26/current-product/analyze.py:23: DeprecationWarning: Image.Image.getdata is deprecated and will be removed in Pillow 14 (2027-10-15). Use get_flattened_data instead.
+  pixels=list(im.crop(bb).getdata());return {'rect':rect,'blueHuePixels':sum(b>r+70 and g>r+30 and b>g+35 for r,g,b in pixels),'orangeHuePixels':sum(r>200 and 80<g<220 and b<120 and r>b+100 for r,g,b in pixels),'zeroGeometry':False}
+cases 88
+fluerial-h-extra-multi-selected-blue-hover-blue bluepixels 402 altwidth 1px nativedisplay flex
+fluerial-h-extra-selected-blue-hover-blue bluepixels 402 altwidth 1px nativedisplay flex
+fluerial-h-extra-selected-blue-hover-inactive-orange bluepixels 402 altwidth 1px nativedisplay flex
+fluerial-h-extra-selected-normal-hover-normal bluepixels 402 altwidth 1px nativedisplay flex
+fluerial-h-selected-blue bluepixels 402 altwidth 1px nativedisplay flex
+fluerial-h-selected-normal bluepixels 402 altwidth 1px nativedisplay flex
+fluerial-v-extra-multi-selected-blue-hover-blue bluepixels 1008 altwidth 1px nativedisplay flex
+fluerial-v-extra-selected-blue-hover-blue bluepixels 20 altwidth 1px nativedisplay flex
+fluerial-v-extra-selected-blue-hover-inactive-orange bluepixels 20 altwidth 1px nativedisplay flex
+fluerial-v-extra-selected-normal-hover-normal bluepixels 20 altwidth 1px nativedisplay flex
+fluerial-v-selected-blue bluepixels 20 altwidth 1px nativedisplay flex
+fluerial-v-selected-normal bluepixels 20 altwidth 1px nativedisplay flex
+lepton-h-extra-multi-selected-blue-hover-blue bluepixels 370 altwidth 185px nativedisplay none
+lepton-h-extra-selected-blue-hover-blue bluepixels 370 altwidth 185px nativedisplay none
+lepton-h-extra-selected-blue-hover-inactive-orange bluepixels 370 altwidth 185px nativedisplay none
+lepton-h-extra-selected-normal-hover-normal bluepixels 110 altwidth 55.25px nativedisplay none
+lepton-h-selected-blue bluepixels 370 altwidth 185px nativedisplay none
+lepton-h-selected-normal bluepixels 110 altwidth 55.25px nativedisplay none
+lepton-v-extra-multi-selected-blue-hover-blue bluepixels 376 altwidth 187.667px nativedisplay none
+lepton-v-extra-selected-blue-hover-blue bluepixels 376 altwidth 187.667px nativedisplay none
+lepton-v-extra-selected-blue-hover-inactive-orange bluepixels 376 altwidth 187.667px nativedisplay none
+lepton-v-extra-selected-normal-hover-normal bluepixels 124 altwidth 61.9167px nativedisplay none
+lepton-v-selected-blue bluepixels 376 altwidth 187.667px nativedisplay none
+lepton-v-selected-normal bluepixels 124 altwidth 61.9167px nativedisplay none
+proton-h-extra-multi-selected-blue-hover-blue bluepixels 998 altwidth auto nativedisplay flex
+proton-h-extra-selected-blue-hover-blue bluepixels 426 altwidth auto nativedisplay flex
+proton-h-extra-selected-blue-hover-inactive-orange bluepixels 426 altwidth auto nativedisplay flex
+proton-h-extra-selected-normal-hover-normal bluepixels 426 altwidth auto nativedisplay flex
+proton-h-selected-blue bluepixels 426 altwidth auto nativedisplay flex
+proton-h-selected-normal bluepixels 426 altwidth auto nativedisplay flex
+proton-v-extra-multi-selected-blue-hover-blue bluepixels 1010 altwidth auto nativedisplay flex
+proton-v-extra-selected-blue-hover-blue bluepixels 48 altwidth auto nativedisplay flex
+proton-v-extra-selected-blue-hover-inactive-orange bluepixels 48 altwidth auto nativedisplay flex
+proton-v-extra-selected-normal-hover-normal bluepixels 48 altwidth auto nativedisplay flex
+proton-v-selected-blue bluepixels 48 altwidth auto nativedisplay flex
+proton-v-selected-normal bluepixels 48 altwidth auto nativedisplay flex
+protonfix-h-extra-multi-selected-blue-hover-blue bluepixels 370 altwidth 185px nativedisplay none
+protonfix-h-extra-selected-blue-hover-blue bluepixels 370 altwidth 185px nativedisplay none
+protonfix-h-extra-selected-blue-hover-inactive-orange bluepixels 370 altwidth 185px nativedisplay none
+protonfix-h-extra-selected-normal-hover-normal bluepixels 110 altwidth 55.25px nativedisplay none
+protonfix-h-selected-blue bluepixels 370 altwidth 185px nativedisplay none
+protonfix-h-selected-normal bluepixels 110 altwidth 55.25px nativedisplay none
+protonfix-v-extra-multi-selected-blue-hover-blue bluepixels 376 altwidth 187.667px nativedisplay none
+protonfix-v-extra-selected-blue-hover-blue bluepixels 376 altwidth 187.667px nativedisplay none
+protonfix-v-extra-selected-blue-hover-inactive-orange bluepixels 376 altwidth 187.667px nativedisplay none
+protonfix-v-extra-selected-normal-hover-normal bluepixels 124 altwidth 61.9167px nativedisplay none
+protonfix-v-selected-blue bluepixels 376 altwidth 187.667px nativedisplay none
+protonfix-v-selected-normal bluepixels 124 altwidth 61.9167px nativedisplay none

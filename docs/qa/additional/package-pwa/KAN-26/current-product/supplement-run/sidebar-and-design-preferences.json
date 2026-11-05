@@ -1,0 +1,22 @@
+{
+  "tabContainer": {
+    "id": "tabbrowser-tabs",
+    "is": "tabbrowser-tabs",
+    "aria-multiselectable": "true",
+    "setfocus": "false",
+    "tooltip": "tabbrowser-tab-tooltip",
+    "orient": "horizontal",
+    "stopwatchid": "tabClick",
+    "style": "--tab-min-width-pref: 76px;",
+    "value": "",
+    "hasadjacentnewtabbutton": ""
+  },
+  "sidebarMain": null,
+  "sidebarBox": "<vbox xmlns=\"http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul\" id=\"sidebar-box\" hidden=\"true\" class=\"chromeclass-extrachrome\" style=\"padding-inline-start: unset; order: 3;\"><box id=\"sidebar-header\" align=\"center\" hidden=\"\"><toolbarbutton id=\"sidebar-switcher-target\" class=\"tabbable\" aria-expanded=\"false\"><image id=\"sidebar-icon\" consumeanchor=\"sidebar-switcher-target\"/><label id=\"sidebar-title\" crop=\"end\" control=\"sidebar\"/><image id=\"sidebar-switcher-arrow\"/></toolbarbutton><image id=\"sidebar-throbber\"/><spacer id=\"sidebar-spacer\"/><toolbarbutton id=\"sidebar-close\" class=\"close-icon tabbable\" data-l10n-id=\"sidebar-close-button\" tooltiptext=\"Close sidebar\"><image class=\"toolbarbutton-icon\"/><label class=\"toolbarbutton-text\" crop=\"end\" flex=\"1\"/></toolbarbutton></box><stack cla",
+  "prefs": {
+    "userChrome.tab.lepton_like_padding": true,
+    "userChrome.tab.photon_like_contextline": false,
+    "userChrome.tab.photon_like_padding": false,
+    "userChrome.tab.close_button_at_hover": true
+  }
+}

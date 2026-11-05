@@ -1,0 +1,29 @@
+{
+  "kind": "Actual vendored CSS+compat browser test fixture; not full-product fix qualification",
+  "display": ":113 Xvfb X11",
+  "product": "/workspace/qa-linux-additional/KAN-24/followup/products/baseline/floorp",
+  "profile": "/workspace/qa-linux-additional/KAN-26/fluerial-fix-tests/run3/home-direct/profile",
+  "identity": {
+    "profile": "/workspace/qa-linux-additional/KAN-26/fluerial-fix-tests/run3/home-direct/profile",
+    "executable": "/workspace/qa-linux-additional/KAN-24/followup/products/baseline/floorp/floorp",
+    "version": "159.0.1",
+    "buildID": "20261103153232",
+    "sandbox": 6,
+    "sandboxDisable": false
+  },
+  "variants": {
+    "baseline": {
+      "error": "Error: fluerial-container.test.ts failures: native horizontal container indicators paint over selected and multiselected fills: selected indicator paints above the opaque tab content | native vertical container indicators stay visible and inside tabs on hover: hover retains the vertical line area",
+      "stack": "runTests@pwa_ui_probe.py:244:13\n"
+    },
+    "candidate": null
+  },
+  "quit": {
+    "cause": "shutdown",
+    "forced": false,
+    "in_app": true
+  },
+  "browserExit": 0,
+  "ownedProcessesRemaining": 0,
+  "allProductFilesUnchanged": true
+}

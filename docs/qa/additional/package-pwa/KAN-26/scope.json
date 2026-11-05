@@ -1,0 +1,78 @@
+{
+  "key": "KAN-26",
+  "github": "https://github.com/Floorp-Projects/Floorp/issues/2965",
+  "scope": "additional target, originalLinux22 remains22; nonPhoton only, existingPhoton36 not repeated",
+  "canonicalPhotonPr": 3041,
+  "canonicalHead": "1c37f3f2c53c5b213e679321e0116d4c7474661f",
+  "fixedBaseBranch": "codex/kan26-photon-base-1c37f3f2",
+  "newBranch": "codex/kan26-nonphoton-followup",
+  "relation": "dependent supplement to3041, canonical source/PR unchanged",
+  "priorPhotonQualification": {
+    "packageRun": 42083752770,
+    "artifact": 13442059925,
+    "zipSha256": "e103fef03a5e0176a6305969606a7e04bdbe40758acc7af67003dd7c3778f4b0",
+    "caseCount": 36,
+    "origin": "delegation plus fetchedPRbody/Jira10387+10388; not reexecuted"
+  },
+  "newComparison": {
+    "currentSource": "29a3eb23145da90706d8a94441373278521cc737",
+    "currentFullPackageRun": 42093687541,
+    "currentFullArtifact": 13446089131,
+    "oldOfficialRelease": "v12.20.2",
+    "oldTagCommit": "576bc4bbca058e4c24dc5bd2c7526d64cedc94cc",
+    "oldNativeVersion": "158.0.1",
+    "oldArchiveSha256": "059a85f0e40c9f3649ae61fe716ecbdde85f06971a600aeec5c3e8f3a0af6004",
+    "os": "Debian13.6/Xvfb107/X11; synthetic input; no originalWindows/physicalGPU qualification"
+  },
+  "unmetOriginalConditions": [
+    "Windows11/12.20.2 originalOS",
+    "highDPI/physicalGPU",
+    "collapsedvertical where not exercised",
+    "signed distribution"
+  ],
+  "mergeReleaseDone": false,
+  "newPr": "https://github.com/Floorp-Projects/Floorp/pull/3048",
+  "newPrHead": "0e80f14dc439dde7817c0620f0fc112d54dfba80",
+  "sourceFixCommits": [
+    "86d9b466",
+    "3a9f99ae"
+  ],
+  "newStandardCiRun": 42112961086,
+  "newFullPackageRun": 42113006050,
+  "combinedSourceRegression": {
+    "head": "3a9f99ae12dbb221f63b28ec210b04fafcf2be15",
+    "moduleCount": 2,
+    "declaredCases": 4,
+    "qualification": "actualimmutable159+vendoredCSS sourcefixtures sandbox6; not fullcandidateproduct yet",
+    "evidence": "combined-source-tests/result.json"
+  },
+  "priorStandardCi": {
+    "run": 42110920041,
+    "head": "3a9f99ae12dbb221f63b28ec210b04fafcf2be15",
+    "result": "283modulespass/1strictcompositionexpectationfailure",
+    "newModulesPassed": true,
+    "notInfrastructure": true,
+    "notRetried": true
+  },
+  "testOnlyCorrection": {
+    "commit": "0e80f14dc439dde7817c0620f0fc112d54dfba80",
+    "path": "browser-features/chrome/common/designs/test/lepton-compat.test.ts",
+    "strictEqualityRetained": true,
+    "productionCssUnchanged": true
+  },
+  "original7MatrixSha256": "b0c49faebaf0fa2cb26971920c007597ebad1e0b2530738fb3c4039f6cb9fbb1",
+  "originalLinuxDenominator": 22,
+  "canonicalPrRecheck": {
+    "number": 3041,
+    "head": "1c37f3f2c53c5b213e679321e0116d4c7474661f",
+    "draft": true,
+    "merged": false,
+    "sourceUnmodifiedByThisTask": true
+  },
+  "candidatePrRecheck": {
+    "number": 3048,
+    "head": "0e80f14dc439dde7817c0620f0fc112d54dfba80",
+    "draft": true,
+    "merged": false
+  }
+}

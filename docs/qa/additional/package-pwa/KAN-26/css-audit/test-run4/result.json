@@ -1,0 +1,32 @@
+{
+  "kind": "Actual vendored CSS+compat browser test fixture; not full-product fix qualification",
+  "display": ":101 Xvfb X11",
+  "product": "/workspace/qa-linux-additional/KAN-24/followup/products/baseline/floorp",
+  "profile": "/workspace/qa-linux-additional/KAN-26/css-audit/test-run4/home-direct/profile",
+  "identity": {
+    "profile": "/workspace/qa-linux-additional/KAN-26/css-audit/test-run4/home-direct/profile",
+    "executable": "/workspace/qa-linux-additional/KAN-24/followup/products/baseline/floorp/floorp",
+    "version": "159.0.1",
+    "buildID": "20261103153232",
+    "sandbox": 6,
+    "sandboxDisable": false
+  },
+  "variants": {
+    "baseline": {
+      "error": "Error: lepton-container-geometry failures: vendor container underline keeps native-token geometry: horizontal/selected/false: vendor line keeps its width (expected: 216px, actual: 0px)",
+      "stack": "runTests@pwa_ui_probe.py:31649:13\n"
+    },
+    "candidate": {
+      "error": "Error: lepton-container-geometry failures: vendor container underline keeps native-token geometry: horizontal/selected/false: vendor line keeps its width (expected: 216px, actual: 175.2px) | non-container, Photon and titlebar paths stay outside alias scope: userChrome.tab.container: unrelated rendering path gets no aliases (expected: , actual: 8px)",
+      "stack": "runTests@pwa_ui_probe.py:31663:13\n"
+    }
+  },
+  "quit": {
+    "cause": "shutdown",
+    "forced": false,
+    "in_app": true
+  },
+  "browserExit": 0,
+  "ownedProcessesRemaining": 0,
+  "allProductFilesUnchanged": true
+}

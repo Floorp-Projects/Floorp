@@ -1,0 +1,245 @@
+{
+  "releaseTag": "v12.20.2",
+  "tagCommit": "576bc4bbca058e4c24dc5bd2c7526d64cedc94cc",
+  "assetId": 646221451,
+  "assetName": "floorp-linux-x86_64.tar.xz",
+  "archiveSha256": "059a85f0e40c9f3649ae61fe716ecbdde85f06971a600aeec5c3e8f3a0af6004",
+  "archiveSize": 108466460,
+  "tarMemberCount": 57,
+  "product": "/workspace/qa-linux-additional/KAN-26/old-product/floorp",
+  "files": [
+    {
+      "path": "application.ini",
+      "bytes": 642,
+      "sha256": "cc9728c05b57bdda89271480495f2120fbd58a01fa4b2afc965102088720e64f"
+    },
+    {
+      "path": "browser/buildid2",
+      "bytes": 36,
+      "sha256": "3fccd5afcbe73b276a072c2731899efdc88825177ab24c04b31f0703f8dbb284"
+    },
+    {
+      "path": "browser/chrome/icons/default/default128.png",
+      "bytes": 12591,
+      "sha256": "0331b4c3f03a36984734bf3668ce1823504fd44b10e5ecc0977ee8c521641ad9"
+    },
+    {
+      "path": "browser/chrome/icons/default/default16.png",
+      "bytes": 777,
+      "sha256": "501aab2936ddb5562ffde7d8bfe20f6a3cda5bd009fa160c0ed3b10481de778c"
+    },
+    {
+      "path": "browser/chrome/icons/default/default32.png",
+      "bytes": 1801,
+      "sha256": "de4c287df3aea68bbba3246a35992e4ee41708d956c225d4ab90fe9532996541"
+    },
+    {
+      "path": "browser/chrome/icons/default/default48.png",
+      "bytes": 3209,
+      "sha256": "2cc6b61be10980e8fd8c9508dca783df063623e2e17ebc2e301ef9e2d3e38a22"
+    },
+    {
+      "path": "browser/chrome/icons/default/default64.png",
+      "bytes": 4697,
+      "sha256": "474f20f1407914c689d34c91da62997950fee1a70197bf3d20252a4dcf8e91fa"
+    },
+    {
+      "path": "browser/omni.ja",
+      "bytes": 56950706,
+      "sha256": "6ca1af37cc1da235ae9e9a3caa52ff96857f0b15819e4a20fae33cc67db1ee43"
+    },
+    {
+      "path": "defaults/pref/channel-prefs.js",
+      "bytes": 429,
+      "sha256": "7d9d37eff1dc4e59a6437026602f1953ef58ee46ff3d81dbb8e13b0fd0bec86b"
+    },
+    {
+      "path": "dependentlibs.list",
+      "bytes": 189,
+      "sha256": "621f575eaaf819dd0b18976c6a8a94d1caae95a9c748f4c9058a052395a4d173"
+    },
+    {
+      "path": "floorp",
+      "bytes": 600888,
+      "sha256": "6a3ec18c7b77998ff6891c872b945772f579e274a16f50851787cbadfdf59d29"
+    },
+    {
+      "path": "floorp-bin",
+      "bytes": 600888,
+      "sha256": "6a3ec18c7b77998ff6891c872b945772f579e274a16f50851787cbadfdf59d29"
+    },
+    {
+      "path": "fonts/TwemojiMozilla.ttf",
+      "bytes": 1474284,
+      "sha256": "6d90152ee0d29e82fe2a87793af5aa4b7ad13e6538360889e141e81ed299ee8e"
+    },
+    {
+      "path": "gfxtest",
+      "bytes": 37928,
+      "sha256": "a4e948ba17e7d919d4a3970459f721bf367681ff1a384c78d35e138ae07ff0c2"
+    },
+    {
+      "path": "gmp-clearkey/0.1/libclearkey.so",
+      "bytes": 65256,
+      "sha256": "4d343cb2d43d111f67326827f300d4bb704cbce6ffcd8d55d1a5bbac82ac9fee"
+    },
+    {
+      "path": "gmp-clearkey/0.1/manifest.json",
+      "bytes": 225,
+      "sha256": "b7d65e60cccb80ffb2e95b5ae7e355d2c8c37575e886eef4325ca04fa7ba68fc"
+    },
+    {
+      "path": "icons/updater.png",
+      "bytes": 2153,
+      "sha256": "cab5e9bc9511b0690e696b378efa6753705b1182660d9829f5b3dc9f0398e5cc"
+    },
+    {
+      "path": "jogfile.json",
+      "bytes": 1598909,
+      "sha256": "69b51da686172b2df6c59927b071eafff9e297eab8a5cc5dc5e61dce4e9ff4f4"
+    },
+    {
+      "path": "libfreeblpriv3.so",
+      "bytes": 1367160,
+      "sha256": "fa8f51b3b9e770090e01e454a279849449b8c29ad7a6240b89d9699a556d707d"
+    },
+    {
+      "path": "libgkcodecs.so",
+      "bytes": 9017304,
+      "sha256": "2d0e92b6bbebe516fdff75fd9a32dd54f31839f8afef1ec555fee70e7747156e"
+    },
+    {
+      "path": "liblgpllibs.so",
+      "bytes": 145024,
+      "sha256": "6fbe42550ee06a7152d7b290fccac27d507db1d631a815988d83bc3909503b3b"
+    },
+    {
+      "path": "libmozavcodec.so",
+      "bytes": 4104000,
+      "sha256": "3ff85c64cf0125206de85513fadf8f56922cb053e0f1d84d8be52a5314cb7acc"
+    },
+    {
+      "path": "libmozavutil.so",
+      "bytes": 668432,
+      "sha256": "e8d820e266f85ac3ede8a0b0512e3483fa1c058fa814814775cab8eee83b90c6"
+    },
+    {
+      "path": "libmozgtk.so",
+      "bytes": 4576,
+      "sha256": "dde7948a88dddc7d8e8a4da1c3d886ad9d7a7ae234dba76014ca5606e1d04056"
+    },
+    {
+      "path": "libmozinference.so",
+      "bytes": 2534192,
+      "sha256": "26386b6a9fa11a73826c8ef457d3f16967ae693fd71180a792e39b94c24a4bdf"
+    },
+    {
+      "path": "libmozsandbox.so",
+      "bytes": 235280,
+      "sha256": "169762dcaeaddc5e2c63318eff1a48bb2a3f2f6a1f6727e28da261d1cd7135e8"
+    },
+    {
+      "path": "libmozsqlite3.so",
+      "bytes": 1567040,
+      "sha256": "da40656f9b91ee93d3cd0b929277977734b412887f7d21ff24aec1c104526722"
+    },
+    {
+      "path": "libmozwayland.so",
+      "bytes": 13392,
+      "sha256": "5ce6ba3f50b05440cc9449278b98e2ce4a8979d1f6e6d51c5af61b247df9f6b3"
+    },
+    {
+      "path": "libnspr4.so",
+      "bytes": 212584,
+      "sha256": "23b61f19d9505ba14127ddb5ccec0c19c80cd6b1d674f6fcc487bae993c3d1c1"
+    },
+    {
+      "path": "libnss3.so",
+      "bytes": 754032,
+      "sha256": "75d90a51e9f9d5c40e05b10762a5638624d0175e7ec8ed04a45e9f1716700b47"
+    },
+    {
+      "path": "libnssutil3.so",
+      "bytes": 189256,
+      "sha256": "ac77076799e600e52058bf37dfeb3ef56d5dba999f7ed6742649adc1e8cf1cb6"
+    },
+    {
+      "path": "libonnxruntime.so",
+      "bytes": 14458896,
+      "sha256": "077ac0e3e090dd3d070a497f354f62fa718de4a19be287da5d9a188c950bc71c"
+    },
+    {
+      "path": "libplc4.so",
+      "bytes": 16504,
+      "sha256": "fb732ca01cb603507f14934553ab97ed564ac0d0d611289fd154f892ba886f76"
+    },
+    {
+      "path": "libplds4.so",
+      "bytes": 12520,
+      "sha256": "f347327ea3cc6f0459cf8d2d90083dd20a430bc5b2cfe6618a9cadccacf668dd"
+    },
+    {
+      "path": "libsmime3.so",
+      "bytes": 173592,
+      "sha256": "94efeb7b3cc6d417f6fc7c3909c4ca45eb5a87c2e365b180b7619a350ee4645f"
+    },
+    {
+      "path": "libsoftokn3.so",
+      "bytes": 374976,
+      "sha256": "517b98e332cb9595591273d0de88ef0794574155547a3498cf8ab4f594182be0"
+    },
+    {
+      "path": "libssl3.so",
+      "bytes": 426080,
+      "sha256": "cabee09a026ee4e0dcb0d4ac1f6404f558bb941eec67fe1ab0718d05c05301a1"
+    },
+    {
+      "path": "libxul.so",
+      "bytes": 183251976,
+      "sha256": "e28fb9a1193e1caa44a7e9481cf264708b1f00d256c2d291c4639fadc2607eec"
+    },
+    {
+      "path": "omni.ja",
+      "bytes": 89541567,
+      "sha256": "9dbeb30f30f8e8cee7121e2350422653881cc679ffa482c3c4b37b745eaebcc0"
+    },
+    {
+      "path": "pingsender",
+      "bytes": 644160,
+      "sha256": "308f7462594ace4c0ce437c7b9cef0bfbbd404dd26de2ba89d6f9e0c14a778b2"
+    },
+    {
+      "path": "platform.ini",
+      "bytes": 49,
+      "sha256": "8278df6b943444db7244ff4ea73931909b84c44e9966ed69dd4b1ff38c7474c3"
+    },
+    {
+      "path": "precomplete",
+      "bytes": 1423,
+      "sha256": "d6a5d785324008de66070ef2635fb3ed8f18c7ec04f055f870fbaaa685d4f010"
+    },
+    {
+      "path": "removed-files",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "update-settings.ini",
+      "bytes": 113,
+      "sha256": "c574f9f109b4dca4a6ab379167cd47a6bbee66c0a9640b1d19232da337202707"
+    },
+    {
+      "path": "updater",
+      "bytes": 331440,
+      "sha256": "5baa3b7d9e47a2446273c3bb89ec239a62cb6e6cc38927a7388a87c588d4733f"
+    },
+    {
+      "path": "updater.ini",
+      "bytes": 636,
+      "sha256": "69ed3e7508f444fb753f7af5535a08321d110ba187baf1f80d8b26bb224af0ec"
+    }
+  ],
+  "applicationIni": "; This file is not used. If you modify it and want the application to use\n; your modifications, move it under the browser/ subdirectory and start with\n; the \"-app /path/to/browser/application.ini\" argument.\n[App]\nVendor=Ablaze\nName=Floorp\nRemotingName=floorp\nVersion=12.20.2@158.0.1\nProfile=Floorp\nBuildID=20261016034055\nID={ec8030f7-c20a-464f-9b0e-13a3a9e97384}\n\n[Gecko]\nMinVersion=158.0.1\nMaxVersion=158.0.1\n\n[XRE]\nEnableProfileMigrator=1\n\n\n[AppUpdate]\nURL=https://aus5.mozilla.org/update/6/%PRODUCT%/%VERSION%/%BUILD_ID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%SYSTEM_CAPABILITIES%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/update.xml\n",
+  "platformIni": "[Build]\nBuildID=20261016034055\nMilestone=158.0.1\n",
+  "qualification": "officialLinuxoriginal-versioncomparison; not originalWindows OS and not binarybyte proof of compiled source; liveidentity measured separately"
+}

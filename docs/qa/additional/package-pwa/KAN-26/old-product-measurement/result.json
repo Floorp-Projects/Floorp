@@ -1,0 +1,377 @@
+{
+  "product": "/workspace/qa-linux-additional/KAN-26/old-product/floorp",
+  "sourceSha": "576bc4bbca058e4c24dc5bd2c7526d64cedc94cc",
+  "input": "real Hub WebDriver clicks; genuine container service/tab APIs; WebDriver pointer hover/multiselect",
+  "cases": [
+    {
+      "id": "proton-h-selected-normal",
+      "design": "proton",
+      "verticalMode": false,
+      "evidence": [
+        "proton-h-selected-normal.json",
+        "proton-h-selected-normal.png"
+      ]
+    },
+    {
+      "id": "proton-h-selected-blue",
+      "design": "proton",
+      "verticalMode": false,
+      "evidence": [
+        "proton-h-selected-blue.json",
+        "proton-h-selected-blue.png"
+      ]
+    },
+    {
+      "id": "proton-h-selected-orange",
+      "design": "proton",
+      "verticalMode": false,
+      "evidence": [
+        "proton-h-selected-orange.json",
+        "proton-h-selected-orange.png"
+      ]
+    },
+    {
+      "id": "proton-h-hover-blue",
+      "design": "proton",
+      "verticalMode": false,
+      "evidence": [
+        "proton-h-hover-blue.json",
+        "proton-h-hover-blue.png"
+      ]
+    },
+    {
+      "id": "proton-h-multi-hover-blue",
+      "design": "proton",
+      "verticalMode": false,
+      "evidence": [
+        "proton-h-multi-hover-blue.json",
+        "proton-h-multi-hover-blue.png"
+      ]
+    },
+    {
+      "id": "proton-v-selected-normal",
+      "design": "proton",
+      "verticalMode": true,
+      "evidence": [
+        "proton-v-selected-normal.json",
+        "proton-v-selected-normal.png"
+      ]
+    },
+    {
+      "id": "proton-v-selected-blue",
+      "design": "proton",
+      "verticalMode": true,
+      "evidence": [
+        "proton-v-selected-blue.json",
+        "proton-v-selected-blue.png"
+      ]
+    },
+    {
+      "id": "proton-v-selected-orange",
+      "design": "proton",
+      "verticalMode": true,
+      "evidence": [
+        "proton-v-selected-orange.json",
+        "proton-v-selected-orange.png"
+      ]
+    },
+    {
+      "id": "proton-v-hover-blue",
+      "design": "proton",
+      "verticalMode": true,
+      "evidence": [
+        "proton-v-hover-blue.json",
+        "proton-v-hover-blue.png"
+      ]
+    },
+    {
+      "id": "proton-v-multi-hover-blue",
+      "design": "proton",
+      "verticalMode": true,
+      "evidence": [
+        "proton-v-multi-hover-blue.json",
+        "proton-v-multi-hover-blue.png"
+      ]
+    },
+    {
+      "id": "lepton-h-selected-normal",
+      "design": "lepton",
+      "verticalMode": false,
+      "evidence": [
+        "lepton-h-selected-normal.json",
+        "lepton-h-selected-normal.png"
+      ]
+    },
+    {
+      "id": "lepton-h-selected-blue",
+      "design": "lepton",
+      "verticalMode": false,
+      "evidence": [
+        "lepton-h-selected-blue.json",
+        "lepton-h-selected-blue.png"
+      ]
+    },
+    {
+      "id": "lepton-h-selected-orange",
+      "design": "lepton",
+      "verticalMode": false,
+      "evidence": [
+        "lepton-h-selected-orange.json",
+        "lepton-h-selected-orange.png"
+      ]
+    },
+    {
+      "id": "lepton-h-hover-blue",
+      "design": "lepton",
+      "verticalMode": false,
+      "evidence": [
+        "lepton-h-hover-blue.json",
+        "lepton-h-hover-blue.png"
+      ]
+    },
+    {
+      "id": "lepton-h-multi-hover-blue",
+      "design": "lepton",
+      "verticalMode": false,
+      "evidence": [
+        "lepton-h-multi-hover-blue.json",
+        "lepton-h-multi-hover-blue.png"
+      ]
+    },
+    {
+      "id": "lepton-v-selected-normal",
+      "design": "lepton",
+      "verticalMode": true,
+      "evidence": [
+        "lepton-v-selected-normal.json",
+        "lepton-v-selected-normal.png"
+      ]
+    },
+    {
+      "id": "lepton-v-selected-blue",
+      "design": "lepton",
+      "verticalMode": true,
+      "evidence": [
+        "lepton-v-selected-blue.json",
+        "lepton-v-selected-blue.png"
+      ]
+    },
+    {
+      "id": "lepton-v-selected-orange",
+      "design": "lepton",
+      "verticalMode": true,
+      "evidence": [
+        "lepton-v-selected-orange.json",
+        "lepton-v-selected-orange.png"
+      ]
+    },
+    {
+      "id": "lepton-v-hover-blue",
+      "design": "lepton",
+      "verticalMode": true,
+      "evidence": [
+        "lepton-v-hover-blue.json",
+        "lepton-v-hover-blue.png"
+      ]
+    },
+    {
+      "id": "lepton-v-multi-hover-blue",
+      "design": "lepton",
+      "verticalMode": true,
+      "evidence": [
+        "lepton-v-multi-hover-blue.json",
+        "lepton-v-multi-hover-blue.png"
+      ]
+    },
+    {
+      "id": "protonfix-h-selected-normal",
+      "design": "protonfix",
+      "verticalMode": false,
+      "evidence": [
+        "protonfix-h-selected-normal.json",
+        "protonfix-h-selected-normal.png"
+      ]
+    },
+    {
+      "id": "protonfix-h-selected-blue",
+      "design": "protonfix",
+      "verticalMode": false,
+      "evidence": [
+        "protonfix-h-selected-blue.json",
+        "protonfix-h-selected-blue.png"
+      ]
+    },
+    {
+      "id": "protonfix-h-selected-orange",
+      "design": "protonfix",
+      "verticalMode": false,
+      "evidence": [
+        "protonfix-h-selected-orange.json",
+        "protonfix-h-selected-orange.png"
+      ]
+    },
+    {
+      "id": "protonfix-h-hover-blue",
+      "design": "protonfix",
+      "verticalMode": false,
+      "evidence": [
+        "protonfix-h-hover-blue.json",
+        "protonfix-h-hover-blue.png"
+      ]
+    },
+    {
+      "id": "protonfix-h-multi-hover-blue",
+      "design": "protonfix",
+      "verticalMode": false,
+      "evidence": [
+        "protonfix-h-multi-hover-blue.json",
+        "protonfix-h-multi-hover-blue.png"
+      ]
+    },
+    {
+      "id": "protonfix-v-selected-normal",
+      "design": "protonfix",
+      "verticalMode": true,
+      "evidence": [
+        "protonfix-v-selected-normal.json",
+        "protonfix-v-selected-normal.png"
+      ]
+    },
+    {
+      "id": "protonfix-v-selected-blue",
+      "design": "protonfix",
+      "verticalMode": true,
+      "evidence": [
+        "protonfix-v-selected-blue.json",
+        "protonfix-v-selected-blue.png"
+      ]
+    },
+    {
+      "id": "protonfix-v-selected-orange",
+      "design": "protonfix",
+      "verticalMode": true,
+      "evidence": [
+        "protonfix-v-selected-orange.json",
+        "protonfix-v-selected-orange.png"
+      ]
+    },
+    {
+      "id": "protonfix-v-hover-blue",
+      "design": "protonfix",
+      "verticalMode": true,
+      "evidence": [
+        "protonfix-v-hover-blue.json",
+        "protonfix-v-hover-blue.png"
+      ]
+    },
+    {
+      "id": "protonfix-v-multi-hover-blue",
+      "design": "protonfix",
+      "verticalMode": true,
+      "evidence": [
+        "protonfix-v-multi-hover-blue.json",
+        "protonfix-v-multi-hover-blue.png"
+      ]
+    },
+    {
+      "id": "fluerial-h-selected-normal",
+      "design": "fluerial",
+      "verticalMode": false,
+      "evidence": [
+        "fluerial-h-selected-normal.json",
+        "fluerial-h-selected-normal.png"
+      ]
+    },
+    {
+      "id": "fluerial-h-selected-blue",
+      "design": "fluerial",
+      "verticalMode": false,
+      "evidence": [
+        "fluerial-h-selected-blue.json",
+        "fluerial-h-selected-blue.png"
+      ]
+    },
+    {
+      "id": "fluerial-h-selected-orange",
+      "design": "fluerial",
+      "verticalMode": false,
+      "evidence": [
+        "fluerial-h-selected-orange.json",
+        "fluerial-h-selected-orange.png"
+      ]
+    },
+    {
+      "id": "fluerial-h-hover-blue",
+      "design": "fluerial",
+      "verticalMode": false,
+      "evidence": [
+        "fluerial-h-hover-blue.json",
+        "fluerial-h-hover-blue.png"
+      ]
+    },
+    {
+      "id": "fluerial-h-multi-hover-blue",
+      "design": "fluerial",
+      "verticalMode": false,
+      "evidence": [
+        "fluerial-h-multi-hover-blue.json",
+        "fluerial-h-multi-hover-blue.png"
+      ]
+    },
+    {
+      "id": "fluerial-v-selected-normal",
+      "design": "fluerial",
+      "verticalMode": true,
+      "evidence": [
+        "fluerial-v-selected-normal.json",
+        "fluerial-v-selected-normal.png"
+      ]
+    },
+    {
+      "id": "fluerial-v-selected-blue",
+      "design": "fluerial",
+      "verticalMode": true,
+      "evidence": [
+        "fluerial-v-selected-blue.json",
+        "fluerial-v-selected-blue.png"
+      ]
+    },
+    {
+      "id": "fluerial-v-selected-orange",
+      "design": "fluerial",
+      "verticalMode": true,
+      "evidence": [
+        "fluerial-v-selected-orange.json",
+        "fluerial-v-selected-orange.png"
+      ]
+    },
+    {
+      "id": "fluerial-v-hover-blue",
+      "design": "fluerial",
+      "verticalMode": true,
+      "evidence": [
+        "fluerial-v-hover-blue.json",
+        "fluerial-v-hover-blue.png"
+      ]
+    },
+    {
+      "id": "fluerial-v-multi-hover-blue",
+      "design": "fluerial",
+      "verticalMode": true,
+      "evidence": [
+        "fluerial-v-multi-hover-blue.json",
+        "fluerial-v-multi-hover-blue.png"
+      ]
+    }
+  ],
+  "quit": {
+    "cause": "shutdown",
+    "forced": false,
+    "in_app": true
+  },
+  "browserExit": 0,
+  "completed": true,
+  "productUnchanged": true,
+  "ownedProcessesRemaining": 0,
+  "displaySocketAbsent": true
+}

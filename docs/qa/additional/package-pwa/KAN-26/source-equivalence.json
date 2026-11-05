@@ -1,0 +1,15 @@
+{
+  "head": "3a9f99ae12dbb221f63b28ec210b04fafcf2be15",
+  "fixedPhotonBase": "1c37f3f2c53c5b213e679321e0116d4c7474661f",
+  "photonCssBodyUnchanged": true,
+  "aliasCssEqualsTestedAgentCommit": "53071c62422c82e0e60fd40c49de15415f1d0552",
+  "fluerialTestedCommit": "b1ba3ef955a8b96ae2bd9420889685c22c02e86d",
+  "unchangedPaths": [
+    "browser-features/skin/lepton/css/leptonChrome.css",
+    "browser-features/skin/fluerial/css/fluerial.css",
+    "floorp-runtime.lock.json",
+    ".github/workflows/package.yml",
+    "browser-features/chrome/common/designs/test/container-indicator.test.ts"
+  ],
+  "mergeResolution": "retained both existingPhotonconstant and newnonPhotonconstant in combinedexport; no other resolution"
+}

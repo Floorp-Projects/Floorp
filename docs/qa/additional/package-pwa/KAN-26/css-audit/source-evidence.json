@@ -1,0 +1,3475 @@
+{
+  "kind": "read-only design source audit; no actual rendering claim",
+  "floorpHead": "29a3eb23145da90706d8a94441373278521cc737",
+  "runtimeHead": "8965ffc346d426ccdf919bd18585e4d4a0c21654",
+  "worktreeTrackedChanges": "",
+  "runtimeTrackedChanges": "",
+  "sources": [
+    {
+      "repository": "Floorp",
+      "head": "29a3eb23145da90706d8a94441373278521cc737",
+      "path": "browser-features/chrome/common/designs/utils/css.ts",
+      "gitBlob": "a92d751037d13ffb78b4340c6d2ff5d19f6c6e88",
+      "sha256": "6e47e5c0ef05c6a7f8a1db87120700a082b3405e5ee7635e06e378f7b3ce241e",
+      "ranges": [
+        {
+          "start": 165,
+          "end": 275,
+          "lines": [
+            {
+              "line": 165,
+              "text": "  const isDev = import.meta.env.DEV;"
+            },
+            {
+              "line": 166,
+              "text": "  const uiTheme = pref.globalConfigs.userInterface;"
+            },
+            {
+              "line": 167,
+              "text": ""
+            },
+            {
+              "line": 168,
+              "text": "  switch (uiTheme) {"
+            },
+            {
+              "line": 169,
+              "text": "    case \"fluerial\": {"
+            },
+            {
+              "line": 170,
+              "text": "      if (isDev) {"
+            },
+            {
+              "line": 171,
+              "text": "        return {"
+            },
+            {
+              "line": 172,
+              "text": "          chromeStylesRaw: ["
+            },
+            {
+              "line": 173,
+              "text": "            fluerialStylesRaw,"
+            },
+            {
+              "line": 174,
+              "text": "            TAB_COLOR_LIKE_TOOLBAR_CSS,"
+            },
+            {
+              "line": 175,
+              "text": "            FLUERIAL_TAB_CORNER_CSS,"
+            },
+            {
+              "line": 176,
+              "text": "            // Gecko 152 color stabilization (dialog/panel backgrounds). This"
+            },
+            {
+              "line": 177,
+              "text": "            // is NOT Lepton-specific \u2014 fluerial surfaces the same symptoms"
+            },
+            {
+              "line": 178,
+              "text": "            // once the built-in-theme signals go unreliable on 152."
+            },
+            {
+              "line": 179,
+              "text": "            GECKO_152_COLOR_FIX_CSS,"
+            },
+            {
+              "line": 180,
+              "text": "          ],"
+            },
+            {
+              "line": 181,
+              "text": "          iconBasePath: \"http://localhost:5174/fluerial/icons\","
+            },
+            {
+              "line": 182,
+              "text": "          userjs: null,"
+            },
+            {
+              "line": 183,
+              "text": "          useTabColorAsToolbarColor: true,"
+            },
+            {
+              "line": 184,
+              "text": "        };"
+            },
+            {
+              "line": 185,
+              "text": "      }"
+            },
+            {
+              "line": 186,
+              "text": "      return {"
+            },
+            {
+              "line": 187,
+              "text": "        chromeStylesRaw: ["
+            },
+            {
+              "line": 188,
+              "text": "          fluerialStylesRaw,"
+            },
+            {
+              "line": 189,
+              "text": "          TAB_COLOR_LIKE_TOOLBAR_CSS,"
+            },
+            {
+              "line": 190,
+              "text": "          FLUERIAL_TAB_CORNER_CSS,"
+            },
+            {
+              "line": 191,
+              "text": "          GECKO_152_COLOR_FIX_CSS,"
+            },
+            {
+              "line": 192,
+              "text": "        ],"
+            },
+            {
+              "line": 193,
+              "text": "        iconBasePath: getIconBasePath(\"fluerial\"),"
+            },
+            {
+              "line": 194,
+              "text": "        userjs: null,"
+            },
+            {
+              "line": 195,
+              "text": "        useTabColorAsToolbarColor: true,"
+            },
+            {
+              "line": 196,
+              "text": "      };"
+            },
+            {
+              "line": 197,
+              "text": "    }"
+            },
+            {
+              "line": 198,
+              "text": ""
+            },
+            {
+              "line": 199,
+              "text": "    case \"lepton\": {"
+            },
+            {
+              "line": 200,
+              "text": "      if (isDev) {"
+            },
+            {
+              "line": 201,
+              "text": "        return {"
+            },
+            {
+              "line": 202,
+              "text": "          chromeStylesRaw: ["
+            },
+            {
+              "line": 203,
+              "text": "            leptonChromeStylesRaw,"
+            },
+            {
+              "line": 204,
+              "text": "            leptonContentStylesRaw,"
+            },
+            {
+              "line": 205,
+              "text": "            LEPTON_COMPAT_CSS,"
+            },
+            {
+              "line": 206,
+              "text": "            navBarBackgroundColorCSS,"
+            },
+            {
+              "line": 207,
+              "text": "          ],"
+            },
+            {
+              "line": 208,
+              "text": "          iconBasePath: \"http://localhost:5174/lepton/icons\","
+            },
+            {
+              "line": 209,
+              "text": "          userjs: leptonUserJs,"
+            },
+            {
+              "line": 210,
+              "text": "        };"
+            },
+            {
+              "line": 211,
+              "text": "      }"
+            },
+            {
+              "line": 212,
+              "text": "      return {"
+            },
+            {
+              "line": 213,
+              "text": "        chromeStyles: ["
+            },
+            {
+              "line": 214,
+              "text": "          getStylePath(\"lepton/css/leptonChrome.css\"),"
+            },
+            {
+              "line": 215,
+              "text": "          getStylePath(\"lepton/css/leptonContent.css\"),"
+            },
+            {
+              "line": 216,
+              "text": "        ],"
+            },
+            {
+              "line": 217,
+              "text": "        chromeStylesRaw: [LEPTON_COMPAT_CSS, navBarBackgroundColorCSS],"
+            },
+            {
+              "line": 218,
+              "text": "        userjs: leptonUserJs,"
+            },
+            {
+              "line": 219,
+              "text": "      };"
+            },
+            {
+              "line": 220,
+              "text": "    }"
+            },
+            {
+              "line": 221,
+              "text": ""
+            },
+            {
+              "line": 222,
+              "text": "    case \"photon\": {"
+            },
+            {
+              "line": 223,
+              "text": "      if (isDev) {"
+            },
+            {
+              "line": 224,
+              "text": "        return {"
+            },
+            {
+              "line": 225,
+              "text": "          chromeStylesRaw: ["
+            },
+            {
+              "line": 226,
+              "text": "            leptonChromeStylesRaw,"
+            },
+            {
+              "line": 227,
+              "text": "            LEPTON_COMPAT_CSS,"
+            },
+            {
+              "line": 228,
+              "text": "            navBarBackgroundColorCSS,"
+            },
+            {
+              "line": 229,
+              "text": "          ],"
+            },
+            {
+              "line": 230,
+              "text": "          stylesRaw: [leptonContentStylesRaw],"
+            },
+            {
+              "line": 231,
+              "text": "          iconBasePath: \"http://localhost:5174/lepton/icons\","
+            },
+            {
+              "line": 232,
+              "text": "          userjs: photonUserJs,"
+            },
+            {
+              "line": 233,
+              "text": "        };"
+            },
+            {
+              "line": 234,
+              "text": "      }"
+            },
+            {
+              "line": 235,
+              "text": "      return {"
+            },
+            {
+              "line": 236,
+              "text": "        chromeStyles: ["
+            },
+            {
+              "line": 237,
+              "text": "          getStylePath(\"lepton/css/leptonChrome.css\"),"
+            },
+            {
+              "line": 238,
+              "text": "          getStylePath(\"lepton/css/leptonContent.css\"),"
+            },
+            {
+              "line": 239,
+              "text": "        ],"
+            },
+            {
+              "line": 240,
+              "text": "        chromeStylesRaw: [LEPTON_COMPAT_CSS, navBarBackgroundColorCSS],"
+            },
+            {
+              "line": 241,
+              "text": "        styles: [getStylePath(\"lepton/css/leptonContent.css\")],"
+            },
+            {
+              "line": 242,
+              "text": "        userjs: photonUserJs,"
+            },
+            {
+              "line": 243,
+              "text": "      };"
+            },
+            {
+              "line": 244,
+              "text": "    }"
+            },
+            {
+              "line": 245,
+              "text": ""
+            },
+            {
+              "line": 246,
+              "text": "    case \"protonfix\": {"
+            },
+            {
+              "line": 247,
+              "text": "      if (isDev) {"
+            },
+            {
+              "line": 248,
+              "text": "        return {"
+            },
+            {
+              "line": 249,
+              "text": "          chromeStylesRaw: ["
+            },
+            {
+              "line": 250,
+              "text": "            leptonChromeStylesRaw,"
+            },
+            {
+              "line": 251,
+              "text": "            LEPTON_COMPAT_CSS,"
+            },
+            {
+              "line": 252,
+              "text": "            navBarBackgroundColorCSS,"
+            },
+            {
+              "line": 253,
+              "text": "          ],"
+            },
+            {
+              "line": 254,
+              "text": "          stylesRaw: [leptonContentStylesRaw],"
+            },
+            {
+              "line": 255,
+              "text": "          iconBasePath: \"http://localhost:5174/lepton/icons\","
+            },
+            {
+              "line": 256,
+              "text": "          userjs: protonfixUserJs,"
+            },
+            {
+              "line": 257,
+              "text": "        };"
+            },
+            {
+              "line": 258,
+              "text": "      }"
+            },
+            {
+              "line": 259,
+              "text": "      return {"
+            },
+            {
+              "line": 260,
+              "text": "        chromeStyles: ["
+            },
+            {
+              "line": 261,
+              "text": "          getStylePath(\"lepton/css/leptonChrome.css\"),"
+            },
+            {
+              "line": 262,
+              "text": "          getStylePath(\"lepton/css/leptonContent.css\"),"
+            },
+            {
+              "line": 263,
+              "text": "        ],"
+            },
+            {
+              "line": 264,
+              "text": "        chromeStylesRaw: [LEPTON_COMPAT_CSS, navBarBackgroundColorCSS],"
+            },
+            {
+              "line": 265,
+              "text": "        styles: [getStylePath(\"lepton/css/leptonContent.css\")],"
+            },
+            {
+              "line": 266,
+              "text": "        userjs: protonfixUserJs,"
+            },
+            {
+              "line": 267,
+              "text": "      };"
+            },
+            {
+              "line": 268,
+              "text": "    }"
+            },
+            {
+              "line": 269,
+              "text": ""
+            },
+            {
+              "line": 270,
+              "text": "    case \"proton\": {"
+            },
+            {
+              "line": 271,
+              "text": "      return { userjs: null };"
+            },
+            {
+              "line": 272,
+              "text": "    }"
+            },
+            {
+              "line": 273,
+              "text": ""
+            },
+            {
+              "line": 274,
+              "text": "    default: {"
+            },
+            {
+              "line": 275,
+              "text": "      console.warn(`[getCSSFromConfig] Unknown UI theme: ${uiTheme}`);"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "repository": "Floorp",
+      "head": "29a3eb23145da90706d8a94441373278521cc737",
+      "path": "browser-features/chrome/common/designs/browser-design-element.tsx",
+      "gitBlob": "eeccd24ecfbadfc831fe7aab216bf69c13614296",
+      "sha256": "f454894e4affd36a9a8c6da91136f85ad6c7df3ec0885830b33b42f2c63b25a6",
+      "ranges": [
+        {
+          "start": 125,
+          "end": 175,
+          "lines": [
+            {
+              "line": 125,
+              "text": "  // Apply UserJS preferences"
+            },
+            {
+              "line": 126,
+              "text": "  createEffect(() => {"
+            },
+            {
+              "line": 127,
+              "text": "    const { userjs } = getCSS();"
+            },
+            {
+              "line": 128,
+              "text": "    if (userjs) {"
+            },
+            {
+              "line": 129,
+              "text": "      applyUserJS(userjs);"
+            },
+            {
+              "line": 130,
+              "text": "    }"
+            },
+            {
+              "line": 131,
+              "text": "  });"
+            },
+            {
+              "line": 132,
+              "text": ""
+            },
+            {
+              "line": 133,
+              "text": "  // The Lepton-family designs still load pref-gated vendor CSS. Mirror the"
+            },
+            {
+              "line": 134,
+              "text": "  // migrated settings after applying user.js so turning a toggle off also"
+            },
+            {
+              "line": 135,
+              "text": "  // turns off the corresponding legacy rule."
+            },
+            {
+              "line": 136,
+              "text": "  createEffect(() => {"
+            },
+            {
+              "line": 137,
+              "text": "    const design = config().globalConfigs.userInterface;"
+            },
+            {
+              "line": 138,
+              "text": "    const settings = getChromeExtrasSettings();"
+            },
+            {
+              "line": 139,
+              "text": "    if (design === \"lepton\" || design === \"photon\" || design === \"protonfix\") {"
+            },
+            {
+              "line": 140,
+              "text": "      syncLegacyChromeExtrasPrefs(settings, verticalTabs());"
+            },
+            {
+              "line": 141,
+              "text": "    }"
+            },
+            {
+              "line": 142,
+              "text": "  });"
+            },
+            {
+              "line": 143,
+              "text": ""
+            },
+            {
+              "line": 144,
+              "text": "  // Register content CSS using StyleSheetService (AGENT_SHEET)"
+            },
+            {
+              "line": 145,
+              "text": "  // These styles apply to all documents including web content"
+            },
+            {
+              "line": 146,
+              "text": "  createEffect(() => registerContentStyleSheets(getCSS()));"
+            },
+            {
+              "line": 147,
+              "text": ""
+            },
+            {
+              "line": 148,
+              "text": "  const chromeStyleUrls = createMemo(() => getCSS().chromeStyles ?? []);"
+            },
+            {
+              "line": 149,
+              "text": ""
+            },
+            {
+              "line": 150,
+              "text": "  // Inline Chrome-only CSS (dev bundles + production supplementary rules)"
+            },
+            {
+              "line": 151,
+              "text": "  const chromeInlineStyleContent = createMemo(() => {"
+            },
+            {
+              "line": 152,
+              "text": "    const { chromeStylesRaw, iconBasePath } = getCSS();"
+            },
+            {
+              "line": 153,
+              "text": "    if (!chromeStylesRaw?.length) {"
+            },
+            {
+              "line": 154,
+              "text": "      return \"\";"
+            },
+            {
+              "line": 155,
+              "text": "    }"
+            },
+            {
+              "line": 156,
+              "text": "    return chromeStylesRaw"
+            },
+            {
+              "line": 157,
+              "text": "      .map((css) => replaceIconPaths(css, iconBasePath))"
+            },
+            {
+              "line": 158,
+              "text": "      .join(\"\\n\");"
+            },
+            {
+              "line": 159,
+              "text": "  });"
+            },
+            {
+              "line": 160,
+              "text": ""
+            },
+            {
+              "line": 161,
+              "text": "  return ("
+            },
+            {
+              "line": 162,
+              "text": "    <>"
+            },
+            {
+              "line": 163,
+              "text": "      <style>{styleBrowser}</style>"
+            },
+            {
+              "line": 164,
+              "text": "      {"
+            },
+            {
+              "line": 165,
+              "text": "        /* Gecko 152 variable aliases \u2014 Floorp-wide, applied to every design."
+            },
+            {
+              "line": 166,
+              "text": "          Keep this BEFORE theme-specific chrome styles so per-theme rules can"
+            },
+            {
+              "line": 167,
+              "text": "          still override. */"
+            },
+            {
+              "line": 168,
+              "text": "      }"
+            },
+            {
+              "line": 169,
+              "text": "      <style>{GECKO_152_VAR_ALIASES_CSS}</style>"
+            },
+            {
+              "line": 170,
+              "text": "      <For each={chromeStyleUrls()}>"
+            },
+            {
+              "line": 171,
+              "text": "        {(url) => <link rel=\"stylesheet\" href={url} />}"
+            },
+            {
+              "line": 172,
+              "text": "      </For>"
+            },
+            {
+              "line": 173,
+              "text": "      <Show when={chromeInlineStyleContent()}>"
+            },
+            {
+              "line": 174,
+              "text": "        <style>{chromeInlineStyleContent()}</style>"
+            },
+            {
+              "line": 175,
+              "text": "      </Show>"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "repository": "Floorp",
+      "head": "29a3eb23145da90706d8a94441373278521cc737",
+      "path": "browser-features/skin/lepton/userjs/lepton.js",
+      "gitBlob": "b8ddcbb32c993a4f286affb6cd5fa00e2c85de26",
+      "sha256": "5daceb8b1abd94d25d7893c393ab8b25d296238b363ca39a9a91133c71aeb0d5",
+      "ranges": [
+        {
+          "start": 25,
+          "end": 53,
+          "lines": [
+            {
+              "line": 25,
+              "text": "user_pref(\"userChrome.tab.connect_to_window\",          true); // Original, Photon"
+            },
+            {
+              "line": 26,
+              "text": "user_pref(\"userChrome.tab.color_like_toolbar\",         true); // Original, Photon"
+            },
+            {
+              "line": 27,
+              "text": ""
+            },
+            {
+              "line": 28,
+              "text": "user_pref(\"userChrome.tab.lepton_like_padding\",        true); // Original"
+            },
+            {
+              "line": 29,
+              "text": "user_pref(\"userChrome.tab.photon_like_padding\",       false); // Photon"
+            },
+            {
+              "line": 30,
+              "text": ""
+            },
+            {
+              "line": 31,
+              "text": "user_pref(\"userChrome.tab.dynamic_separator\",          true); // Original, Proton"
+            },
+            {
+              "line": 32,
+              "text": "user_pref(\"userChrome.tab.static_separator\",          false); // Photon"
+            },
+            {
+              "line": 33,
+              "text": "user_pref(\"userChrome.tab.static_separator.selected_accent\", false); // Just option"
+            },
+            {
+              "line": 34,
+              "text": "user_pref(\"userChrome.tab.bar_separator\",             false); // Just option"
+            },
+            {
+              "line": 35,
+              "text": ""
+            },
+            {
+              "line": 36,
+              "text": "user_pref(\"userChrome.tab.newtab_button_like_tab\",     true); // Original"
+            },
+            {
+              "line": 37,
+              "text": "user_pref(\"userChrome.tab.newtab_button_smaller\",     false); // Photon"
+            },
+            {
+              "line": 38,
+              "text": "user_pref(\"userChrome.tab.newtab_button_proton\",      false); // Proton"
+            },
+            {
+              "line": 39,
+              "text": ""
+            },
+            {
+              "line": 40,
+              "text": "user_pref(\"userChrome.icon.panel_full\",                true); // Original, Proton"
+            },
+            {
+              "line": 41,
+              "text": "user_pref(\"userChrome.icon.panel_photon\",             false); // Photon"
+            },
+            {
+              "line": 42,
+              "text": ""
+            },
+            {
+              "line": 43,
+              "text": "// Original Only"
+            },
+            {
+              "line": 44,
+              "text": "user_pref(\"userChrome.tab.box_shadow\",                 true);"
+            },
+            {
+              "line": 45,
+              "text": "user_pref(\"userChrome.tab.bottom_rounded_corner\",      true);"
+            },
+            {
+              "line": 46,
+              "text": ""
+            },
+            {
+              "line": 47,
+              "text": "// Photon Only"
+            },
+            {
+              "line": 48,
+              "text": "user_pref(\"userChrome.tab.photon_like_contextline\",   false);"
+            },
+            {
+              "line": 49,
+              "text": "user_pref(\"userChrome.rounding.square_tab\",           false);"
+            },
+            {
+              "line": 50,
+              "text": ""
+            },
+            {
+              "line": 51,
+              "text": "// Proton Only"
+            },
+            {
+              "line": 52,
+              "text": "// user_pref(\"userChrome.tab.supernova_like_contextline\",   true);"
+            },
+            {
+              "line": 53,
+              "text": ""
+            }
+          ]
+        },
+        {
+          "start": 176,
+          "end": 184,
+          "lines": [
+            {
+              "line": 176,
+              "text": "// user_pref(\"userChrome.tab.close_button_at_pinned\",          true);"
+            },
+            {
+              "line": 177,
+              "text": "// user_pref(\"userChrome.tab.close_button_at_pinned.always\",   true);"
+            },
+            {
+              "line": 178,
+              "text": "// user_pref(\"userChrome.tab.close_button_at_pinned.background\", true);"
+            },
+            {
+              "line": 179,
+              "text": "// user_pref(\"userChrome.tab.close_button_at_hover.always\",    true); // Need close_button_at_hover"
+            },
+            {
+              "line": 180,
+              "text": "// user_pref(\"userChrome.tab.close_button_at_hover.with_selected\", true);  // Need close_button_at_hover"
+            },
+            {
+              "line": 181,
+              "text": "// user_pref(\"userChrome.tab.sound_show_label\",                true); // Need remove sound_hide_label"
+            },
+            {
+              "line": 182,
+              "text": "// user_pref(\"userChrome.tab.container.on_top\",                true);"
+            },
+            {
+              "line": 183,
+              "text": "// user_pref(\"userChrome.tab.container.always_long\",           true);"
+            },
+            {
+              "line": 184,
+              "text": "// user_pref(\"userChrome.tab.sound_with_favicons.on_center\",   true);"
+            }
+          ]
+        },
+        {
+          "start": 245,
+          "end": 255,
+          "lines": [
+            {
+              "line": 245,
+              "text": ""
+            },
+            {
+              "line": 246,
+              "text": "user_pref(\"userChrome.tab.multi_selected\",        true);"
+            },
+            {
+              "line": 247,
+              "text": "user_pref(\"userChrome.tab.unloaded\",              true);"
+            },
+            {
+              "line": 248,
+              "text": "user_pref(\"userChrome.tab.letters_cleary\",        true);"
+            },
+            {
+              "line": 249,
+              "text": "user_pref(\"userChrome.tab.close_button_at_hover\", true);"
+            },
+            {
+              "line": 250,
+              "text": "user_pref(\"userChrome.tab.sound_hide_label\",      true);"
+            },
+            {
+              "line": 251,
+              "text": "user_pref(\"userChrome.tab.sound_with_favicons\",   true);"
+            },
+            {
+              "line": 252,
+              "text": "user_pref(\"userChrome.tab.pip\",                   true);"
+            },
+            {
+              "line": 253,
+              "text": "user_pref(\"userChrome.tab.container\",             true);"
+            },
+            {
+              "line": 254,
+              "text": "user_pref(\"userChrome.tab.crashed\",               true);"
+            },
+            {
+              "line": 255,
+              "text": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "repository": "Floorp",
+      "head": "29a3eb23145da90706d8a94441373278521cc737",
+      "path": "browser-features/skin/lepton/userjs/protonfix.js",
+      "gitBlob": "6d2ab6ad48425ae6ae878bebf02c3be1ef3dfa0e",
+      "sha256": "b5c70b3c51d3113ef656e37b68db8242abbfc28abdddb19c6e0a8f64f693670d",
+      "ranges": [
+        {
+          "start": 25,
+          "end": 53,
+          "lines": [
+            {
+              "line": 25,
+              "text": "user_pref(\"userChrome.tab.connect_to_window\",         false); // Original, Photon"
+            },
+            {
+              "line": 26,
+              "text": "user_pref(\"userChrome.tab.color_like_toolbar\",        false); // Original, Photon"
+            },
+            {
+              "line": 27,
+              "text": ""
+            },
+            {
+              "line": 28,
+              "text": "user_pref(\"userChrome.tab.lepton_like_padding\",       false); // Original"
+            },
+            {
+              "line": 29,
+              "text": "user_pref(\"userChrome.tab.photon_like_padding\",       false); // Photon"
+            },
+            {
+              "line": 30,
+              "text": ""
+            },
+            {
+              "line": 31,
+              "text": "user_pref(\"userChrome.tab.dynamic_separator\",          true); // Original, Proton"
+            },
+            {
+              "line": 32,
+              "text": "user_pref(\"userChrome.tab.static_separator\",          false); // Photon"
+            },
+            {
+              "line": 33,
+              "text": "user_pref(\"userChrome.tab.static_separator.selected_accent\", false); // Just option"
+            },
+            {
+              "line": 34,
+              "text": "user_pref(\"userChrome.tab.bar_separator\",             false); // Just option"
+            },
+            {
+              "line": 35,
+              "text": ""
+            },
+            {
+              "line": 36,
+              "text": "user_pref(\"userChrome.tab.newtab_button_like_tab\",    false); // Original"
+            },
+            {
+              "line": 37,
+              "text": "user_pref(\"userChrome.tab.newtab_button_smaller\",     false); // Photon"
+            },
+            {
+              "line": 38,
+              "text": "user_pref(\"userChrome.tab.newtab_button_proton\",       true); // Proton"
+            },
+            {
+              "line": 39,
+              "text": ""
+            },
+            {
+              "line": 40,
+              "text": "user_pref(\"userChrome.icon.panel_full\",                true); // Original, Proton"
+            },
+            {
+              "line": 41,
+              "text": "user_pref(\"userChrome.icon.panel_photon\",             false); // Photon"
+            },
+            {
+              "line": 42,
+              "text": ""
+            },
+            {
+              "line": 43,
+              "text": "// Original Only"
+            },
+            {
+              "line": 44,
+              "text": "user_pref(\"userChrome.tab.box_shadow\",                false);"
+            },
+            {
+              "line": 45,
+              "text": "user_pref(\"userChrome.tab.bottom_rounded_corner\",     false);"
+            },
+            {
+              "line": 46,
+              "text": ""
+            },
+            {
+              "line": 47,
+              "text": "// Photon Only"
+            },
+            {
+              "line": 48,
+              "text": "user_pref(\"userChrome.tab.photon_like_contextline\",   false);"
+            },
+            {
+              "line": 49,
+              "text": "user_pref(\"userChrome.rounding.square_tab\",           false);"
+            },
+            {
+              "line": 50,
+              "text": ""
+            },
+            {
+              "line": 51,
+              "text": "// Proton Only"
+            },
+            {
+              "line": 52,
+              "text": "// user_pref(\"userChrome.tab.supernova_like_contextline\",   true);"
+            },
+            {
+              "line": 53,
+              "text": ""
+            }
+          ]
+        },
+        {
+          "start": 176,
+          "end": 184,
+          "lines": [
+            {
+              "line": 176,
+              "text": "// user_pref(\"userChrome.tab.close_button_at_pinned\",          true);"
+            },
+            {
+              "line": 177,
+              "text": "// user_pref(\"userChrome.tab.close_button_at_pinned.always\",   true);"
+            },
+            {
+              "line": 178,
+              "text": "// user_pref(\"userChrome.tab.close_button_at_pinned.background\", true);"
+            },
+            {
+              "line": 179,
+              "text": "// user_pref(\"userChrome.tab.close_button_at_hover.always\",    true); // Need close_button_at_hover"
+            },
+            {
+              "line": 180,
+              "text": "// user_pref(\"userChrome.tab.close_button_at_hover.with_selected\", true);  // Need close_button_at_hover"
+            },
+            {
+              "line": 181,
+              "text": "// user_pref(\"userChrome.tab.sound_show_label\",                true); // Need remove sound_hide_label"
+            },
+            {
+              "line": 182,
+              "text": "// user_pref(\"userChrome.tab.container.on_top\",                true);"
+            },
+            {
+              "line": 183,
+              "text": "// user_pref(\"userChrome.tab.container.always_long\",           true);"
+            },
+            {
+              "line": 184,
+              "text": "// user_pref(\"userChrome.tab.sound_with_favicons.on_center\",   true);"
+            }
+          ]
+        },
+        {
+          "start": 245,
+          "end": 255,
+          "lines": [
+            {
+              "line": 245,
+              "text": ""
+            },
+            {
+              "line": 246,
+              "text": "user_pref(\"userChrome.tab.multi_selected\",        true);"
+            },
+            {
+              "line": 247,
+              "text": "user_pref(\"userChrome.tab.unloaded\",              true);"
+            },
+            {
+              "line": 248,
+              "text": "user_pref(\"userChrome.tab.letters_cleary\",        true);"
+            },
+            {
+              "line": 249,
+              "text": "user_pref(\"userChrome.tab.close_button_at_hover\", true);"
+            },
+            {
+              "line": 250,
+              "text": "user_pref(\"userChrome.tab.sound_hide_label\",      true);"
+            },
+            {
+              "line": 251,
+              "text": "user_pref(\"userChrome.tab.sound_with_favicons\",   true);"
+            },
+            {
+              "line": 252,
+              "text": "user_pref(\"userChrome.tab.pip\",                   true);"
+            },
+            {
+              "line": 253,
+              "text": "user_pref(\"userChrome.tab.container\",             true);"
+            },
+            {
+              "line": 254,
+              "text": "user_pref(\"userChrome.tab.crashed\",               true);"
+            },
+            {
+              "line": 255,
+              "text": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "repository": "Floorp",
+      "head": "29a3eb23145da90706d8a94441373278521cc737",
+      "path": "browser-features/skin/lepton/css/leptonChrome.css",
+      "gitBlob": "4cbc056c6863148d88e0bf3ec470866efec10e81",
+      "sha256": "ad62a10bcdfc1d7f54fca6e7f9b4f7aa219135b61b45b16b05ad924e4c303fc9",
+      "ranges": [
+        {
+          "start": 9038,
+          "end": 9118,
+          "lines": [
+            {
+              "line": 9038,
+              "text": "  }"
+            },
+            {
+              "line": 9039,
+              "text": "}"
+            },
+            {
+              "line": 9040,
+              "text": "/*= Container Tab - Color line at icon's bottom ==============================*/"
+            },
+            {
+              "line": 9041,
+              "text": "@media -moz-pref(\"userChrome.tab.container\") {"
+            },
+            {
+              "line": 9042,
+              "text": "  @media not -moz-pref(\"userChrome.tabbar.as_titlebar\") {"
+            },
+            {
+              "line": 9043,
+              "text": "    @media not -moz-pref(\"userChrome.tab.photon_like_contextline\") {"
+            },
+            {
+              "line": 9044,
+              "text": "      .tab-context-line {"
+            },
+            {
+              "line": 9045,
+              "text": "        display: none;"
+            },
+            {
+              "line": 9046,
+              "text": "      }"
+            },
+            {
+              "line": 9047,
+              "text": "    }"
+            },
+            {
+              "line": 9048,
+              "text": "    #tabbrowser-tabs {"
+            },
+            {
+              "line": 9049,
+              "text": "      --uc-container-position-x: 9px;"
+            },
+            {
+              "line": 9050,
+              "text": "      --uc-container-position-y-default: 11.5px;"
+            },
+            {
+              "line": 9051,
+              "text": "      --uc-container-position-y-bottom: calc(50% + var(--uc-container-position-y-default));"
+            },
+            {
+              "line": 9052,
+              "text": "      --uc-container-position-y: var(--uc-container-position-y-bottom);"
+            },
+            {
+              "line": 9053,
+              "text": "      --uc-titlechanged-container-position-x: 32%, 50%, 70%;"
+            },
+            {
+              "line": 9054,
+              "text": "    }"
+            },
+            {
+              "line": 9055,
+              "text": "    #tabbrowser-tabs:-moz-locale-dir(rtl) {"
+            },
+            {
+              "line": 9056,
+              "text": "      --uc-container-position-x: -9px;"
+            },
+            {
+              "line": 9057,
+              "text": "    }"
+            },
+            {
+              "line": 9058,
+              "text": "    @media -moz-pref(\"userChrome.tab.container.on_top\") {"
+            },
+            {
+              "line": 9059,
+              "text": "      #tabbrowser-tabs {"
+            },
+            {
+              "line": 9060,
+              "text": "        --uc-container-position-y: calc(var(--uc-container-position-y-bottom) * -1);"
+            },
+            {
+              "line": 9061,
+              "text": "      }"
+            },
+            {
+              "line": 9062,
+              "text": "    }"
+            },
+            {
+              "line": 9063,
+              "text": "    :root[uidensity=\"compact\"] #tabbrowser-tabs {"
+            },
+            {
+              "line": 9064,
+              "text": "      --uc-container-position-y-default: 10.5px;"
+            },
+            {
+              "line": 9065,
+              "text": "      --uc-titlechanged-container-position-x: 30%, 50%, 70%;"
+            },
+            {
+              "line": 9066,
+              "text": "    }"
+            },
+            {
+              "line": 9067,
+              "text": "    :root[uidensity=\"touch\"] #tabbrowser-tabs {"
+            },
+            {
+              "line": 9068,
+              "text": "      --uc-container-position-y-default: 12.5px;"
+            },
+            {
+              "line": 9069,
+              "text": "    }"
+            },
+            {
+              "line": 9070,
+              "text": "    .tab-content::before {"
+            },
+            {
+              "line": 9071,
+              "text": "      /* Box Model */"
+            },
+            {
+              "line": 9072,
+              "text": "      content: \"\";"
+            },
+            {
+              "line": 9073,
+              "text": "      display: block;"
+            },
+            {
+              "line": 9074,
+              "text": "      position: absolute;"
+            },
+            {
+              "line": 9075,
+              "text": "      top: 50%;"
+            },
+            {
+              "line": 9076,
+              "text": "      left: var(--tab-inline-padding);"
+            },
+            {
+              "line": 9077,
+              "text": "      transform: translate(var(--uc-container-position-x), var(--uc-container-position-y));"
+            },
+            {
+              "line": 9078,
+              "text": "      /* Shape */"
+            },
+            {
+              "line": 9079,
+              "text": "      border-bottom: 2px solid var(--identity-icon-color);"
+            },
+            {
+              "line": 9080,
+              "text": "      width: calc(100% - (var(--tab-inline-padding) + var(--tab-inner-inline-margin)) * 2);"
+            },
+            {
+              "line": 9081,
+              "text": "      opacity: 0.75;"
+            },
+            {
+              "line": 9082,
+              "text": "    }"
+            },
+            {
+              "line": 9083,
+              "text": "    .tabbrowser-tab[visuallyselected] .tab-content::before {"
+            },
+            {
+              "line": 9084,
+              "text": "      opacity: 1;"
+            },
+            {
+              "line": 9085,
+              "text": "    }"
+            },
+            {
+              "line": 9086,
+              "text": "    @media not -moz-pref(\"userChrome.tab.container.always_long\") {"
+            },
+            {
+              "line": 9087,
+              "text": "      .tab-content::before {"
+            },
+            {
+              "line": 9088,
+              "text": "        width: 25%;"
+            },
+            {
+              "line": 9089,
+              "text": "      }"
+            },
+            {
+              "line": 9090,
+              "text": "      .tabbrowser-tab[visuallyselected]:not([pinned]) .tab-content::before {"
+            },
+            {
+              "line": 9091,
+              "text": "        width: calc(100% - (var(--tab-inline-padding) + var(--tab-inner-inline-margin)) * 2);"
+            },
+            {
+              "line": 9092,
+              "text": "      }"
+            },
+            {
+              "line": 9093,
+              "text": "      #tabbrowser-tabs[closebuttons=\"activetab\"] .tabbrowser-tab[visuallyselected]:not([pinned]) .tab-content::before {"
+            },
+            {
+              "line": 9094,
+              "text": "        width: calc(100% - 33px);"
+            },
+            {
+              "line": 9095,
+              "text": "      }"
+            },
+            {
+              "line": 9096,
+              "text": "    }"
+            },
+            {
+              "line": 9097,
+              "text": "    /* Animate */"
+            },
+            {
+              "line": 9098,
+              "text": "    @media (prefers-reduced-motion: no-preference) {"
+            },
+            {
+              "line": 9099,
+              "text": "      .tab-content:not([titlechanged])::before {"
+            },
+            {
+              "line": 9100,
+              "text": "        transition: 0.15s var(--animation-easing-function);"
+            },
+            {
+              "line": 9101,
+              "text": "        transition-property: width, opacity;"
+            },
+            {
+              "line": 9102,
+              "text": "      }"
+            },
+            {
+              "line": 9103,
+              "text": "    }"
+            },
+            {
+              "line": 9104,
+              "text": "    /* Pinned Tab */"
+            },
+            {
+              "line": 9105,
+              "text": "    .tabbrowser-tab[pinned] .tab-content::before,"
+            },
+            {
+              "line": 9106,
+              "text": "    #tabbrowser-tabs[orient=\"vertical\"]:not([expanded]) .tab-content::before {"
+            },
+            {
+              "line": 9107,
+              "text": "      left: unset;"
+            },
+            {
+              "line": 9108,
+              "text": "      transform: translateY(var(--uc-container-position-y));"
+            },
+            {
+              "line": 9109,
+              "text": "      width: 16px !important;"
+            },
+            {
+              "line": 9110,
+              "text": "    }"
+            },
+            {
+              "line": 9111,
+              "text": "    @media -moz-pref(\"userChrome.tab.close_button_at_pinned\") {"
+            },
+            {
+              "line": 9112,
+              "text": "      .tabbrowser-tab[pinned][visuallyselected]:not([busy]):hover .tab-content::before,"
+            },
+            {
+              "line": 9113,
+              "text": "      #tabbrowser-tabs[orient=\"vertical\"]:not([expanded])"
+            },
+            {
+              "line": 9114,
+              "text": "        .tabbrowser-tab[visuallyselected]:not([busy]):hover"
+            },
+            {
+              "line": 9115,
+              "text": "        .tab-content::before {"
+            },
+            {
+              "line": 9116,
+              "text": "        opacity: 0;"
+            },
+            {
+              "line": 9117,
+              "text": "      }"
+            },
+            {
+              "line": 9118,
+              "text": "    }"
+            }
+          ]
+        },
+        {
+          "start": 24523,
+          "end": 24608,
+          "lines": [
+            {
+              "line": 24523,
+              "text": "/*= Container Tab - Color line at icon's bottom ==============================*/"
+            },
+            {
+              "line": 24524,
+              "text": "@media (-moz-bool-pref: \"userChrome.tab.container\") and (not (-moz-bool-pref: \"userChrome.tabbar.as_titlebar\")) {"
+            },
+            {
+              "line": 24525,
+              "text": "  /* Animate */"
+            },
+            {
+              "line": 24526,
+              "text": "  /* Pinned Tab */"
+            },
+            {
+              "line": 24527,
+              "text": "}"
+            },
+            {
+              "line": 24528,
+              "text": "@media (-moz-bool-pref: \"userChrome.tab.container\") and (not (-moz-bool-pref: \"userChrome.tabbar.as_titlebar\")) and (not (-moz-bool-pref: \"userChrome.tab.photon_like_contextline\")) {"
+            },
+            {
+              "line": 24529,
+              "text": "  .tab-context-line {"
+            },
+            {
+              "line": 24530,
+              "text": "    display: none;"
+            },
+            {
+              "line": 24531,
+              "text": "  }"
+            },
+            {
+              "line": 24532,
+              "text": "}"
+            },
+            {
+              "line": 24533,
+              "text": "@media (-moz-bool-pref: \"userChrome.tab.container\") and (not (-moz-bool-pref: \"userChrome.tabbar.as_titlebar\")) {"
+            },
+            {
+              "line": 24534,
+              "text": "  #tabbrowser-tabs {"
+            },
+            {
+              "line": 24535,
+              "text": "    --uc-container-position-x: 9px;"
+            },
+            {
+              "line": 24536,
+              "text": "    --uc-container-position-y-default: 11.5px;"
+            },
+            {
+              "line": 24537,
+              "text": "    --uc-container-position-y-bottom: calc(50% + var(--uc-container-position-y-default));"
+            },
+            {
+              "line": 24538,
+              "text": "    --uc-container-position-y: var(--uc-container-position-y-bottom);"
+            },
+            {
+              "line": 24539,
+              "text": "    --uc-titlechanged-container-position-x: 32%, 50%, 70%;"
+            },
+            {
+              "line": 24540,
+              "text": "  }"
+            },
+            {
+              "line": 24541,
+              "text": "  #tabbrowser-tabs:-moz-locale-dir(rtl) {"
+            },
+            {
+              "line": 24542,
+              "text": "    --uc-container-position-x: -9px;"
+            },
+            {
+              "line": 24543,
+              "text": "  }"
+            },
+            {
+              "line": 24544,
+              "text": "}"
+            },
+            {
+              "line": 24545,
+              "text": "@media (-moz-bool-pref: \"userChrome.tab.container\") and (not (-moz-bool-pref: \"userChrome.tabbar.as_titlebar\")) and (-moz-bool-pref: \"userChrome.tab.container.on_top\") {"
+            },
+            {
+              "line": 24546,
+              "text": "  #tabbrowser-tabs {"
+            },
+            {
+              "line": 24547,
+              "text": "    --uc-container-position-y: calc(var(--uc-container-position-y-bottom) * -1);"
+            },
+            {
+              "line": 24548,
+              "text": "  }"
+            },
+            {
+              "line": 24549,
+              "text": "}"
+            },
+            {
+              "line": 24550,
+              "text": "@media (-moz-bool-pref: \"userChrome.tab.container\") and (not (-moz-bool-pref: \"userChrome.tabbar.as_titlebar\")) {"
+            },
+            {
+              "line": 24551,
+              "text": "  :root[uidensity=\"compact\"] #tabbrowser-tabs {"
+            },
+            {
+              "line": 24552,
+              "text": "    --uc-container-position-y-default: 10.5px;"
+            },
+            {
+              "line": 24553,
+              "text": "    --uc-titlechanged-container-position-x: 30%, 50%, 70%;"
+            },
+            {
+              "line": 24554,
+              "text": "  }"
+            },
+            {
+              "line": 24555,
+              "text": "}"
+            },
+            {
+              "line": 24556,
+              "text": "@media (-moz-bool-pref: \"userChrome.tab.container\") and (not (-moz-bool-pref: \"userChrome.tabbar.as_titlebar\")) {"
+            },
+            {
+              "line": 24557,
+              "text": "  :root[uidensity=\"touch\"] #tabbrowser-tabs {"
+            },
+            {
+              "line": 24558,
+              "text": "    --uc-container-position-y-default: 12.5px;"
+            },
+            {
+              "line": 24559,
+              "text": "  }"
+            },
+            {
+              "line": 24560,
+              "text": "}"
+            },
+            {
+              "line": 24561,
+              "text": "@media (-moz-bool-pref: \"userChrome.tab.container\") and (not (-moz-bool-pref: \"userChrome.tabbar.as_titlebar\")) {"
+            },
+            {
+              "line": 24562,
+              "text": "  .tab-content::before {"
+            },
+            {
+              "line": 24563,
+              "text": "    /* Box Model */"
+            },
+            {
+              "line": 24564,
+              "text": "    content: \"\";"
+            },
+            {
+              "line": 24565,
+              "text": "    display: block;"
+            },
+            {
+              "line": 24566,
+              "text": "    position: absolute;"
+            },
+            {
+              "line": 24567,
+              "text": "    top: 50%;"
+            },
+            {
+              "line": 24568,
+              "text": "    left: var(--tab-inline-padding);"
+            },
+            {
+              "line": 24569,
+              "text": "    transform: translate(var(--uc-container-position-x), var(--uc-container-position-y));"
+            },
+            {
+              "line": 24570,
+              "text": "    /* Shape */"
+            },
+            {
+              "line": 24571,
+              "text": "    border-bottom: 2px solid var(--identity-icon-color);"
+            },
+            {
+              "line": 24572,
+              "text": "    width: calc(100% - (var(--tab-inline-padding) + var(--tab-inner-inline-margin)) * 2);"
+            },
+            {
+              "line": 24573,
+              "text": "    opacity: 0.75;"
+            },
+            {
+              "line": 24574,
+              "text": "  }"
+            },
+            {
+              "line": 24575,
+              "text": "}"
+            },
+            {
+              "line": 24576,
+              "text": "@media (-moz-bool-pref: \"userChrome.tab.container\") and (not (-moz-bool-pref: \"userChrome.tabbar.as_titlebar\")) {"
+            },
+            {
+              "line": 24577,
+              "text": "  .tabbrowser-tab[visuallyselected] .tab-content::before {"
+            },
+            {
+              "line": 24578,
+              "text": "    opacity: 1;"
+            },
+            {
+              "line": 24579,
+              "text": "  }"
+            },
+            {
+              "line": 24580,
+              "text": "}"
+            },
+            {
+              "line": 24581,
+              "text": "@media (-moz-bool-pref: \"userChrome.tab.container\") and (not (-moz-bool-pref: \"userChrome.tabbar.as_titlebar\")) and (not (-moz-bool-pref: \"userChrome.tab.container.always_long\")) {"
+            },
+            {
+              "line": 24582,
+              "text": "  .tab-content::before {"
+            },
+            {
+              "line": 24583,
+              "text": "    width: 25%;"
+            },
+            {
+              "line": 24584,
+              "text": "  }"
+            },
+            {
+              "line": 24585,
+              "text": "  .tabbrowser-tab[visuallyselected]:not([pinned]) .tab-content::before {"
+            },
+            {
+              "line": 24586,
+              "text": "    width: calc(100% - (var(--tab-inline-padding) + var(--tab-inner-inline-margin)) * 2);"
+            },
+            {
+              "line": 24587,
+              "text": "  }"
+            },
+            {
+              "line": 24588,
+              "text": "  #tabbrowser-tabs[closebuttons=\"activetab\"] .tabbrowser-tab[visuallyselected]:not([pinned]) .tab-content::before {"
+            },
+            {
+              "line": 24589,
+              "text": "    width: calc(100% - 33px);"
+            },
+            {
+              "line": 24590,
+              "text": "  }"
+            },
+            {
+              "line": 24591,
+              "text": "}"
+            },
+            {
+              "line": 24592,
+              "text": "@media (-moz-bool-pref: \"userChrome.tab.container\") and (not (-moz-bool-pref: \"userChrome.tabbar.as_titlebar\")) and (prefers-reduced-motion: no-preference) {"
+            },
+            {
+              "line": 24593,
+              "text": "  .tab-content:not([titlechanged])::before {"
+            },
+            {
+              "line": 24594,
+              "text": "    transition: 0.15s var(--animation-easing-function);"
+            },
+            {
+              "line": 24595,
+              "text": "    transition-property: width, opacity;"
+            },
+            {
+              "line": 24596,
+              "text": "  }"
+            },
+            {
+              "line": 24597,
+              "text": "}"
+            },
+            {
+              "line": 24598,
+              "text": "@media (-moz-bool-pref: \"userChrome.tab.container\") and (not (-moz-bool-pref: \"userChrome.tabbar.as_titlebar\")) {"
+            },
+            {
+              "line": 24599,
+              "text": "  .tabbrowser-tab[pinned] .tab-content::before,"
+            },
+            {
+              "line": 24600,
+              "text": "  #tabbrowser-tabs[orient=\"vertical\"]:not([expanded]) .tab-content::before {"
+            },
+            {
+              "line": 24601,
+              "text": "    left: unset;"
+            },
+            {
+              "line": 24602,
+              "text": "    transform: translateY(var(--uc-container-position-y));"
+            },
+            {
+              "line": 24603,
+              "text": "    width: 16px !important;"
+            },
+            {
+              "line": 24604,
+              "text": "  }"
+            },
+            {
+              "line": 24605,
+              "text": "}"
+            },
+            {
+              "line": 24606,
+              "text": "@media (-moz-bool-pref: \"userChrome.tab.container\") and (not (-moz-bool-pref: \"userChrome.tabbar.as_titlebar\")) and (-moz-bool-pref: \"userChrome.tab.close_button_at_pinned\") {"
+            },
+            {
+              "line": 24607,
+              "text": "  .tabbrowser-tab[pinned][visuallyselected]:not([busy]):hover .tab-content::before,"
+            },
+            {
+              "line": 24608,
+              "text": "  #tabbrowser-tabs[orient=\"vertical\"]:not([expanded])"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "repository": "Floorp",
+      "head": "29a3eb23145da90706d8a94441373278521cc737",
+      "path": "browser-features/skin/fluerial/css/fluerial.css",
+      "gitBlob": "33138e261c909af008446a0b8c1077ccab399c34",
+      "sha256": "9eb08fe5d6359800c387b1a8ea42049d66554b8a108a451afd92423d113a0c74",
+      "ranges": [
+        {
+          "start": 118,
+          "end": 183,
+          "lines": [
+            {
+              "line": 118,
+              "text": "  }"
+            },
+            {
+              "line": 119,
+              "text": "}"
+            },
+            {
+              "line": 120,
+              "text": ""
+            },
+            {
+              "line": 121,
+              "text": ".tabbrowser-tab {"
+            },
+            {
+              "line": 122,
+              "text": "  .tab-content {"
+            },
+            {
+              "line": 123,
+              "text": "    position: relative !important;"
+            },
+            {
+              "line": 124,
+              "text": "    overflow: hidden !important;"
+            },
+            {
+              "line": 125,
+              "text": "    background-color: transparent !important;"
+            },
+            {
+              "line": 126,
+              "text": ""
+            },
+            {
+              "line": 127,
+              "text": "    &::before,"
+            },
+            {
+              "line": 128,
+              "text": "    &::after {"
+            },
+            {
+              "line": 129,
+              "text": "      content: \"\" !important;"
+            },
+            {
+              "line": 130,
+              "text": "      display: block !important;"
+            },
+            {
+              "line": 131,
+              "text": "      position: absolute !important;"
+            },
+            {
+              "line": 132,
+              "text": "      background-color: currentColor !important;"
+            },
+            {
+              "line": 133,
+              "text": "      width: 1px !important;"
+            },
+            {
+              "line": 134,
+              "text": "      height: 20px !important;"
+            },
+            {
+              "line": 135,
+              "text": "      transform: translateY(-10px) !important;"
+            },
+            {
+              "line": 136,
+              "text": "      opacity: 0 !important;"
+            },
+            {
+              "line": 137,
+              "text": "      transition: opacity 0.2s var(--ease-basic) !important;"
+            },
+            {
+              "line": 138,
+              "text": "    }"
+            },
+            {
+              "line": 139,
+              "text": ""
+            },
+            {
+              "line": 140,
+              "text": "    &::before {"
+            },
+            {
+              "line": 141,
+              "text": "      left: 0 !important;"
+            },
+            {
+              "line": 142,
+              "text": "    }"
+            },
+            {
+              "line": 143,
+              "text": ""
+            },
+            {
+              "line": 144,
+              "text": "    &::after {"
+            },
+            {
+              "line": 145,
+              "text": "      right: 0 !important;"
+            },
+            {
+              "line": 146,
+              "text": "    }"
+            },
+            {
+              "line": 147,
+              "text": "  }"
+            },
+            {
+              "line": 148,
+              "text": "  .tab-background {"
+            },
+            {
+              "line": 149,
+              "text": "    margin-block: 0 !important;"
+            },
+            {
+              "line": 150,
+              "text": "    /* rounded top corners */"
+            },
+            {
+              "line": 151,
+              "text": "    border-radius: 8px 8px 0 0 !important;"
+            },
+            {
+              "line": 152,
+              "text": "    position: relative !important;"
+            },
+            {
+              "line": 153,
+              "text": "    border: 0 !important;"
+            },
+            {
+              "line": 154,
+              "text": "    transition:"
+            },
+            {
+              "line": 155,
+              "text": "      opacity var(--tab-transition-duration) var(--ease-basic),"
+            },
+            {
+              "line": 156,
+              "text": "      background-color 0s var(--tab-transition-duration) var(--ease-basic)"
+            },
+            {
+              "line": 157,
+              "text": "      !important;"
+            },
+            {
+              "line": 158,
+              "text": "    opacity: var(--tab-opacity) !important;"
+            },
+            {
+              "line": 159,
+              "text": "    visibility: visible !important;"
+            },
+            {
+              "line": 160,
+              "text": "    box-shadow: none !important;"
+            },
+            {
+              "line": 161,
+              "text": ""
+            },
+            {
+              "line": 162,
+              "text": "    /* rounded bottom corners */"
+            },
+            {
+              "line": 163,
+              "text": "    &::before,"
+            },
+            {
+              "line": 164,
+              "text": "    &::after {"
+            },
+            {
+              "line": 165,
+              "text": "      content: \"\" !important;"
+            },
+            {
+              "line": 166,
+              "text": "      display: block !important;"
+            },
+            {
+              "line": 167,
+              "text": "      position: absolute !important;"
+            },
+            {
+              "line": 168,
+              "text": "      width: 8px !important;"
+            },
+            {
+              "line": 169,
+              "text": "      height: 8px !important;"
+            },
+            {
+              "line": 170,
+              "text": "      bottom: 0 !important;"
+            },
+            {
+              "line": 171,
+              "text": "      pointer-events: none !important;"
+            },
+            {
+              "line": 172,
+              "text": "      transition: box-shadow 0s var(--tab-transition-duration) var(--ease-basic)"
+            },
+            {
+              "line": 173,
+              "text": "        !important;"
+            },
+            {
+              "line": 174,
+              "text": "      clip-path: inset(0) !important;"
+            },
+            {
+              "line": 175,
+              "text": "    }"
+            },
+            {
+              "line": 176,
+              "text": ""
+            },
+            {
+              "line": 177,
+              "text": "    &::before {"
+            },
+            {
+              "line": 178,
+              "text": "      border-bottom-right-radius: 8px !important;"
+            },
+            {
+              "line": 179,
+              "text": "      left: 0 !important;"
+            },
+            {
+              "line": 180,
+              "text": "      transform: translateX(-8px) !important;"
+            },
+            {
+              "line": 181,
+              "text": "    }"
+            },
+            {
+              "line": 182,
+              "text": ""
+            },
+            {
+              "line": 183,
+              "text": "    &::after {"
+            }
+          ]
+        },
+        {
+          "start": 213,
+          "end": 243,
+          "lines": [
+            {
+              "line": 213,
+              "text": "  /* ? not selected, hover */"
+            },
+            {
+              "line": 214,
+              "text": "  &:not([visuallyselected], [multiselected]):hover > .tab-stack {"
+            },
+            {
+              "line": 215,
+              "text": "    & > .tab-background {"
+            },
+            {
+              "line": 216,
+              "text": "      background: rgb(0 0 0 / 0.1) !important;"
+            },
+            {
+              "line": 217,
+              "text": "      min-height: 0;"
+            },
+            {
+              "line": 218,
+              "text": "      width: 97.5%;"
+            },
+            {
+              "line": 219,
+              "text": "      height: 75%;"
+            },
+            {
+              "line": 220,
+              "text": "      margin: auto;"
+            },
+            {
+              "line": 221,
+              "text": "      border-radius: 10px !important;"
+            },
+            {
+              "line": 222,
+              "text": "      /* transition: background-color 0.3s ease !important; */"
+            },
+            {
+              "line": 223,
+              "text": "    }"
+            },
+            {
+              "line": 224,
+              "text": "    & > .tab-content {"
+            },
+            {
+              "line": 225,
+              "text": "      background: transparent;"
+            },
+            {
+              "line": 226,
+              "text": "    }"
+            },
+            {
+              "line": 227,
+              "text": "  }"
+            },
+            {
+              "line": 228,
+              "text": "  &:is([visuallyselected], [multiselected]) {"
+            },
+            {
+              "line": 229,
+              "text": "    .tab-background {"
+            },
+            {
+              "line": 230,
+              "text": "      background: var(--toolbar-bgcolor);"
+            },
+            {
+              "line": 231,
+              "text": "      &::before {"
+            },
+            {
+              "line": 232,
+              "text": "        box-shadow: 4px 4px 0 4px var(--toolbar-bgcolor) !important;"
+            },
+            {
+              "line": 233,
+              "text": "      }"
+            },
+            {
+              "line": 234,
+              "text": "      &::after {"
+            },
+            {
+              "line": 235,
+              "text": "        box-shadow: -4px 4px 0 4px var(--toolbar-bgcolor) !important;"
+            },
+            {
+              "line": 236,
+              "text": "      }"
+            },
+            {
+              "line": 237,
+              "text": "    }"
+            },
+            {
+              "line": 238,
+              "text": "  }"
+            },
+            {
+              "line": 239,
+              "text": "}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "repository": "Floorp",
+      "head": "29a3eb23145da90706d8a94441373278521cc737",
+      "path": "browser-features/chrome/common/designs/utils/tab-color-like-toolbar.css.ts",
+      "gitBlob": "87822e108bb386cfdf5fea31a3d6c4d58699caef",
+      "sha256": "e164844293ffc14d6daeca51afcccde09ecc44649a2060a81e4e4ed77b303d46",
+      "ranges": [
+        {
+          "start": 10,
+          "end": 110,
+          "lines": [
+            {
+              "line": 10,
+              "text": "/**"
+            },
+            {
+              "line": 11,
+              "text": " * Fluerial-only: selected tab layout + rounded bottom corners."
+            },
+            {
+              "line": 12,
+              "text": " * Restores --tab-block-margin top gap (TAB_COLOR_LIKE_TOOLBAR fills .tab-content)."
+            },
+            {
+              "line": 13,
+              "text": " */"
+            },
+            {
+              "line": 14,
+              "text": "export const FLUERIAL_TAB_CORNER_CSS = `"
+            },
+            {
+              "line": 15,
+              "text": "/* The native group line lives inside .tab-background. Fluerial shrinks that"
+            },
+            {
+              "line": 16,
+              "text": " * background on hover and paints the selected .tab-content above it. Anchor"
+            },
+            {
+              "line": 17,
+              "text": " * the line to the stable .tab-stack instead, and let it paint above the fill"
+            },
+            {
+              "line": 18,
+              "text": " * without raising the entire background over the tab's label and controls. */"
+            },
+            {
+              "line": 19,
+              "text": "#TabsToolbar #tabbrowser-tabs[orient=\"horizontal\"] tab-group"
+            },
+            {
+              "line": 20,
+              "text": "  .tabbrowser-tab > .tab-stack > .tab-background {"
+            },
+            {
+              "line": 21,
+              "text": "  position: static !important;"
+            },
+            {
+              "line": 22,
+              "text": "  z-index: auto !important;"
+            },
+            {
+              "line": 23,
+              "text": "}"
+            },
+            {
+              "line": 24,
+              "text": ""
+            },
+            {
+              "line": 25,
+              "text": "#TabsToolbar #tabbrowser-tabs[orient=\"horizontal\"] tab-group"
+            },
+            {
+              "line": 26,
+              "text": "  .tabbrowser-tab > .tab-stack > .tab-background > .tab-group-line {"
+            },
+            {
+              "line": 27,
+              "text": "  z-index: 1;"
+            },
+            {
+              "line": 28,
+              "text": "}"
+            },
+            {
+              "line": 29,
+              "text": ""
+            },
+            {
+              "line": 30,
+              "text": "#TabsToolbar"
+            },
+            {
+              "line": 31,
+              "text": "  #tabbrowser-tabs"
+            },
+            {
+              "line": 32,
+              "text": "  .tabbrowser-tab:is([visuallyselected], [multiselected])"
+            },
+            {
+              "line": 33,
+              "text": "  > .tab-stack"
+            },
+            {
+              "line": 34,
+              "text": "  > .tab-content {"
+            },
+            {
+              "line": 35,
+              "text": "  margin-block-start: var(--tab-block-margin, 4px) !important;"
+            },
+            {
+              "line": 36,
+              "text": "  margin-block-end: 0 !important;"
+            },
+            {
+              "line": 37,
+              "text": "  border-radius: 8px 8px 0 0 !important;"
+            },
+            {
+              "line": 38,
+              "text": "  height: calc(100% - var(--tab-block-margin, 4px)) !important;"
+            },
+            {
+              "line": 39,
+              "text": "}"
+            },
+            {
+              "line": 40,
+              "text": ""
+            },
+            {
+              "line": 41,
+              "text": "#TabsToolbar"
+            },
+            {
+              "line": 42,
+              "text": "  #tabbrowser-tabs"
+            },
+            {
+              "line": 43,
+              "text": "  .tabbrowser-tab:is([visuallyselected], [multiselected])"
+            },
+            {
+              "line": 44,
+              "text": "  > .tab-stack"
+            },
+            {
+              "line": 45,
+              "text": "  > .tab-background:is([selected], [multiselected]) {"
+            },
+            {
+              "line": 46,
+              "text": "  margin-block-start: var(--tab-block-margin, 4px) !important;"
+            },
+            {
+              "line": 47,
+              "text": "  margin-block-end: 0 !important;"
+            },
+            {
+              "line": 48,
+              "text": "}"
+            },
+            {
+              "line": 49,
+              "text": ""
+            },
+            {
+              "line": 50,
+              "text": "#TabsToolbar"
+            },
+            {
+              "line": 51,
+              "text": "  #tabbrowser-tabs"
+            },
+            {
+              "line": 52,
+              "text": "  .tabbrowser-tab:is([visuallyselected], [multiselected])"
+            },
+            {
+              "line": 53,
+              "text": "  > .tab-stack"
+            },
+            {
+              "line": 54,
+              "text": "  > .tab-background:is([selected], [multiselected])::before {"
+            },
+            {
+              "line": 55,
+              "text": "  box-shadow: 4px 4px 0 4px ${TOOLBAR_SURFACE} !important;"
+            },
+            {
+              "line": 56,
+              "text": "}"
+            },
+            {
+              "line": 57,
+              "text": ""
+            },
+            {
+              "line": 58,
+              "text": "#TabsToolbar"
+            },
+            {
+              "line": 59,
+              "text": "  #tabbrowser-tabs"
+            },
+            {
+              "line": 60,
+              "text": "  .tabbrowser-tab:is([visuallyselected], [multiselected])"
+            },
+            {
+              "line": 61,
+              "text": "  > .tab-stack"
+            },
+            {
+              "line": 62,
+              "text": "  > .tab-background:is([selected], [multiselected])::after {"
+            },
+            {
+              "line": 63,
+              "text": "  box-shadow: -4px 4px 0 4px ${TOOLBAR_SURFACE} !important;"
+            },
+            {
+              "line": 64,
+              "text": "}"
+            },
+            {
+              "line": 65,
+              "text": "`;"
+            },
+            {
+              "line": 66,
+              "text": ""
+            },
+            {
+              "line": 67,
+              "text": "/**"
+            },
+            {
+              "line": 68,
+              "text": " * Make selected tabs use the nav-bar / toolbar surface color."
+            },
+            {
+              "line": 69,
+              "text": " * Gecko 152 paints tab fill via --tab-background-color-selected and .tab-content."
+            },
+            {
+              "line": 70,
+              "text": " * Does not modify #nav-bar."
+            },
+            {
+              "line": 71,
+              "text": " */"
+            },
+            {
+              "line": 72,
+              "text": "export const TAB_COLOR_LIKE_TOOLBAR_CSS = `"
+            },
+            {
+              "line": 73,
+              "text": ":root {"
+            },
+            {
+              "line": 74,
+              "text": "  --tab-background-color-selected: ${TOOLBAR_SURFACE} !important;"
+            },
+            {
+              "line": 75,
+              "text": "}"
+            },
+            {
+              "line": 76,
+              "text": ""
+            },
+            {
+              "line": 77,
+              "text": ":root:is(:not([lwtheme]), :not(:-moz-lwtheme)) {"
+            },
+            {
+              "line": 78,
+              "text": "  --tab-selected-bgcolor: unset !important;"
+            },
+            {
+              "line": 79,
+              "text": "  --tab-selected-bgimage: unset !important;"
+            },
+            {
+              "line": 80,
+              "text": "}"
+            },
+            {
+              "line": 81,
+              "text": ""
+            },
+            {
+              "line": 82,
+              "text": "#TabsToolbar"
+            },
+            {
+              "line": 83,
+              "text": "  .tabbrowser-tab:is([visuallyselected], [multiselected])"
+            },
+            {
+              "line": 84,
+              "text": "  > .tab-stack"
+            },
+            {
+              "line": 85,
+              "text": "  > .tab-content {"
+            },
+            {
+              "line": 86,
+              "text": "  background-color: ${TOOLBAR_SURFACE} !important;"
+            },
+            {
+              "line": 87,
+              "text": "}"
+            },
+            {
+              "line": 88,
+              "text": ""
+            },
+            {
+              "line": 89,
+              "text": "#TabsToolbar #firefox-view-button[open] > .toolbarbutton-icon,"
+            },
+            {
+              "line": 90,
+              "text": "#TabsToolbar"
+            },
+            {
+              "line": 91,
+              "text": "  .tabbrowser-tab"
+            },
+            {
+              "line": 92,
+              "text": "  > .tab-stack"
+            },
+            {
+              "line": 93,
+              "text": "  > .tab-background:is([selected], [multiselected]) {"
+            },
+            {
+              "line": 94,
+              "text": "  background-color: ${TOOLBAR_SURFACE} !important;"
+            },
+            {
+              "line": 95,
+              "text": "}"
+            },
+            {
+              "line": 96,
+              "text": ""
+            },
+            {
+              "line": 97,
+              "text": ":root:is(:-moz-lwtheme, [lwtheme])"
+            },
+            {
+              "line": 98,
+              "text": "  #TabsToolbar"
+            },
+            {
+              "line": 99,
+              "text": "  #tabbrowser-tabs:not([movingtab])"
+            },
+            {
+              "line": 100,
+              "text": "  .tabbrowser-tab:is([visuallyselected], [multiselected])"
+            },
+            {
+              "line": 101,
+              "text": "  > .tab-stack"
+            },
+            {
+              "line": 102,
+              "text": "  > .tab-background:is([selected], [multiselected]) {"
+            },
+            {
+              "line": 103,
+              "text": "  background-image:"
+            },
+            {
+              "line": 104,
+              "text": "    linear-gradient(transparent, transparent),"
+            },
+            {
+              "line": 105,
+              "text": "    linear-gradient(${TOOLBAR_SURFACE}, ${TOOLBAR_SURFACE}),"
+            },
+            {
+              "line": 106,
+              "text": "    var(--lwt-header-image, none) !important;"
+            },
+            {
+              "line": 107,
+              "text": "  background-position: 0, 0, right top;"
+            },
+            {
+              "line": 108,
+              "text": "  background-attachment: scroll, scroll, fixed;"
+            },
+            {
+              "line": 109,
+              "text": "  background-repeat: repeat-x, repeat-x, no-repeat !important;"
+            },
+            {
+              "line": 110,
+              "text": "}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "repository": "Floorp",
+      "head": "29a3eb23145da90706d8a94441373278521cc737",
+      "path": "browser-features/chrome/common/designs/utils/gecko-152-var-aliases.css.ts",
+      "gitBlob": "c810edcd67e556bf9f62a495eb51897336825147",
+      "sha256": "9d151b2a7d205ce1f4e87935ba064516705afacb0d56862630c6fb73bb2c6802",
+      "ranges": [
+        {
+          "start": 70,
+          "end": 145,
+          "lines": [
+            {
+              "line": 70,
+              "text": " * `legacyName: var(newName)` (no !important, no self-fallback \u2014 see module"
+            },
+            {
+              "line": 71,
+              "text": " * doc). Custom themes / LWTs that set the *new* name therefore flow through,"
+            },
+            {
+              "line": 72,
+              "text": " * and any code that still sets the *old* name wins by source order."
+            },
+            {
+              "line": 73,
+              "text": " */"
+            },
+            {
+              "line": 74,
+              "text": "export const GECKO_152_RENAMED_VARS: ReadonlyArray<"
+            },
+            {
+              "line": 75,
+              "text": "  readonly [string, string]"
+            },
+            {
+              "line": 76,
+              "text": "> = ["
+            },
+            {
+              "line": 77,
+              "text": "  // Toolbar / toolbox surface colors"
+            },
+            {
+              "line": 78,
+              "text": "  // browser/themes/{windows,osx,linux}/browser.css"
+            },
+            {
+              "line": 79,
+              "text": "  [\"--toolbar-bgcolor\", \"--toolbar-background-color\"],"
+            },
+            {
+              "line": 80,
+              "text": "  // browser/themes/shared/browser-colors.css:9-16"
+            },
+            {
+              "line": 81,
+              "text": "  [\"--toolbox-bgcolor\", \"--toolbox-background-color\"],"
+            },
+            {
+              "line": 82,
+              "text": "  [\"--toolbox-textcolor\", \"--toolbox-text-color\"],"
+            },
+            {
+              "line": 83,
+              "text": "  [\"--toolbox-bgcolor-inactive\", \"--toolbox-background-color-inactive\"],"
+            },
+            {
+              "line": 84,
+              "text": "  [\"--toolbox-textcolor-inactive\", \"--toolbox-text-color-inactive\"],"
+            },
+            {
+              "line": 85,
+              "text": ""
+            },
+            {
+              "line": 86,
+              "text": "  // Tab tokens"
+            },
+            {
+              "line": 87,
+              "text": "  // browser-colors.css:70->75, tab.tokens.css:32->15"
+            },
+            {
+              "line": 88,
+              "text": "  [\"--tab-selected-bgcolor\", \"--tab-background-color-selected\"],"
+            },
+            {
+              "line": 89,
+              "text": "  // tab.tokens.css:18->14"
+            },
+            {
+              "line": 90,
+              "text": "  [\"--tab-hover-background-color\", \"--tab-background-color-hover\"],"
+            },
+            {
+              "line": 91,
+              "text": ""
+            },
+            {
+              "line": 92,
+              "text": "  // Toolbar buttons"
+            },
+            {
+              "line": 93,
+              "text": "  // toolbarbuttons.css:768-769 -> 775-776"
+            },
+            {
+              "line": 94,
+              "text": "  [\"--toolbarbutton-hover-background\", \"--toolbarbutton-background-color-hover\"],"
+            },
+            {
+              "line": 95,
+              "text": "  ["
+            },
+            {
+              "line": 96,
+              "text": "    \"--toolbarbutton-active-background\","
+            },
+            {
+              "line": 97,
+              "text": "    \"--toolbarbutton-background-color-active\","
+            },
+            {
+              "line": 98,
+              "text": "  ],"
+            },
+            {
+              "line": 99,
+              "text": "  // toolbarbuttons.css:13,17 \u2014 the padding tokens were renamed too. Vendored"
+            },
+            {
+              "line": 100,
+              "text": "  // Lepton still reads the legacy names inside `calc()` chains (e.g. its"
+            },
+            {
+              "line": 101,
+              "text": "  // `--uc-toolbarbutton-hide-size`), so without these aliases those `calc()`"
+            },
+            {
+              "line": 102,
+              "text": "  // expressions are invalid and the autohide back/forward button rules"
+            },
+            {
+              "line": 103,
+              "text": "  // silently do nothing."
+            },
+            {
+              "line": 104,
+              "text": "  [\"--toolbarbutton-outer-padding\", \"--toolbarbutton-padding-outer\"],"
+            },
+            {
+              "line": 105,
+              "text": "  [\"--toolbarbutton-inner-padding\", \"--toolbarbutton-padding-inner\"],"
+            },
+            {
+              "line": 106,
+              "text": ""
+            },
+            {
+              "line": 107,
+              "text": "  // Panels / arrow panels (arrowpanel-* folded into panel-* in 152)"
+            },
+            {
+              "line": 108,
+              "text": "  // toolkit/themes/shared/popup.css:10 -> --panel-background-color"
+            },
+            {
+              "line": 109,
+              "text": "  [\"--arrowpanel-background\", \"--panel-background-color\"],"
+            },
+            {
+              "line": 110,
+              "text": "  [\"--arrowpanel-color\", \"--panel-text-color\"],"
+            },
+            {
+              "line": 111,
+              "text": "  [\"--arrowpanel-border-color\", \"--panel-border-color\"],"
+            },
+            {
+              "line": 112,
+              "text": "  // The short `--panel-background` (no -color suffix) was also renamed."
+            },
+            {
+              "line": 113,
+              "text": "  [\"--panel-background\", \"--panel-background-color\"],"
+            },
+            {
+              "line": 114,
+              "text": "];"
+            },
+            {
+              "line": 115,
+              "text": ""
+            },
+            {
+              "line": 116,
+              "text": "/**"
+            },
+            {
+              "line": 117,
+              "text": " * Tokens that are referenced on 152 but NOT defined by it, so they must be"
+            },
+            {
+              "line": 118,
+              "text": " * synthesized by Floorp. Each entry is `[name, chain]` and the alias is"
+            },
+            {
+              "line": 119,
+              "text": " * emitted as `name: chain` without !important."
+            },
+            {
+              "line": 120,
+              "text": " *"
+            },
+            {
+              "line": 121,
+              "text": " * `--toolbar-text-color` is the important one: `tab.tokens.css` on 152 reads"
+            },
+            {
+              "line": 122,
+              "text": " * `--tab-selected-textcolor: var(--toolbar-text-color)`, but Mozilla defines"
+            },
+            {
+              "line": 123,
+              "text": " * `--toolbar-text-color` nowhere \u2014 it is expected to come from the active"
+            },
+            {
+              "line": 124,
+              "text": " * theme / LWT / Lepton. On a plain build it is therefore empty and selected"
+            },
+            {
+              "line": 125,
+              "text": " * tab text goes unstyled. Alias it to `--toolbar-color` (the 152-surviving"
+            },
+            {
+              "line": 126,
+              "text": " * token that actually carries the toolbar text color), letting LWTs that set"
+            },
+            {
+              "line": 127,
+              "text": " * `--lwt-text-color` win first."
+            },
+            {
+              "line": 128,
+              "text": " */"
+            },
+            {
+              "line": 129,
+              "text": "export const GECKO_152_SYNTHESIZED_VARS: ReadonlyArray<"
+            },
+            {
+              "line": 130,
+              "text": "  readonly [string, string]"
+            },
+            {
+              "line": 131,
+              "text": "> = ["
+            },
+            {
+              "line": 132,
+              "text": "  // Prefer an LWT-provided text color, then the surviving toolbar token."
+            },
+            {
+              "line": 133,
+              "text": "  [\"--toolbar-text-color\", \"var(--lwt-text-color, var(--toolbar-color))\"],"
+            },
+            {
+              "line": 134,
+              "text": "];"
+            },
+            {
+              "line": 135,
+              "text": ""
+            },
+            {
+              "line": 136,
+              "text": "function buildAliasDeclarations(): string {"
+            },
+            {
+              "line": 137,
+              "text": "  const renamed = GECKO_152_RENAMED_VARS.map(([legacy, renamed]) =>"
+            },
+            {
+              "line": 138,
+              "text": "    `  ${legacy}: var(${renamed});`"
+            },
+            {
+              "line": 139,
+              "text": "  );"
+            },
+            {
+              "line": 140,
+              "text": "  const synthesized = GECKO_152_SYNTHESIZED_VARS.map(([name, chain]) =>"
+            },
+            {
+              "line": 141,
+              "text": "    `  ${name}: ${chain};`"
+            },
+            {
+              "line": 142,
+              "text": "  );"
+            },
+            {
+              "line": 143,
+              "text": "  return [...renamed, ...synthesized].join(\"\\n\");"
+            },
+            {
+              "line": 144,
+              "text": "}"
+            },
+            {
+              "line": 145,
+              "text": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "repository": "Floorp",
+      "head": "29a3eb23145da90706d8a94441373278521cc737",
+      "path": "browser-features/chrome/common/designs/utils/lepton-compat-152.css.ts",
+      "gitBlob": "8a7e6ec275eb452b81886994a47cb25f23282fff",
+      "sha256": "c597fb516007b5279a340ae67b399921e811bc0967ea40584305c08966d2312a",
+      "ranges": [
+        {
+          "start": 145,
+          "end": 175,
+          "lines": [
+            {
+              "line": 145,
+              "text": " * sync path clean and lets us adapt to Gecko 153+ by editing only this file."
+            },
+            {
+              "line": 146,
+              "text": " *"
+            },
+            {
+              "line": 147,
+              "text": " * The selectors below deliberately rely on the stable `:-moz-lwtheme` /"
+            },
+            {
+              "line": 148,
+              "text": " * `[lwtheme]` / `prefers-color-scheme` signals rather than hardcoded RGB"
+            },
+            {
+              "line": 149,
+              "text": " * triples or attributes that Mozilla renames between versions. And, unlike"
+            },
+            {
+              "line": 150,
+              "text": " * the previous revision, they do NOT clobber values a loaded LWT provides."
+            },
+            {
+              "line": 151,
+              "text": " */"
+            },
+            {
+              "line": 152,
+              "text": "export const LEPTON_COMPAT_152_CSS = `"
+            },
+            {
+              "line": 153,
+              "text": "/* ========================================================================="
+            },
+            {
+              "line": 154,
+              "text": " * Floorp Lepton compat \u2014 Gecko 152 (Project Nova)"
+            },
+            {
+              "line": 155,
+              "text": " * Loaded AFTER leptonChrome.css; equal specificity wins by source order."
+            },
+            {
+              "line": 156,
+              "text": " * ======================================================================= */"
+            },
+            {
+              "line": 157,
+              "text": ""
+            },
+            {
+              "line": 158,
+              "text": "/*= Built-in light/dark theme palette restoration =========================="
+            },
+            {
+              "line": 159,
+              "text": " * Lepton keys off the built-in-theme attribute and inline-style exact-RGB"
+            },
+            {
+              "line": 160,
+              "text": " * substring matchers on :root. On Gecko 152 those signals are unreliable,"
+            },
+            {
+              "line": 161,
+              "text": " * so Lepton's !important overrides never apply and the chrome falls back to"
+            },
+            {
+              "line": 162,
+              "text": " * raw defaults. Re-establish Lepton's intended palette using the stable"
+            },
+            {
+              "line": 163,
+              "text": " * prefers-color-scheme signal instead \u2014 but ONLY for the no-theme case, so a"
+            },
+            {
+              "line": 164,
+              "text": " * loaded LWT is never overridden. */"
+            },
+            {
+              "line": 165,
+              "text": ":root {"
+            },
+            {
+              "line": 166,
+              "text": "  /* Lepton \"Original\" intended accent colors (mirrors leptonChrome.css) */"
+            },
+            {
+              "line": 167,
+              "text": "  --lepton-compat-accent-light: rgb(229, 229, 235);"
+            },
+            {
+              "line": 168,
+              "text": "  --lepton-compat-toolbar-light: rgba(255, 255, 255, 1);"
+            },
+            {
+              "line": 169,
+              "text": "  --lepton-compat-accent-dark: rgb(28, 27, 34);"
+            },
+            {
+              "line": 170,
+              "text": "  --lepton-compat-toolbar-dark: rgba(43, 42, 51, 1);"
+            },
+            {
+              "line": 171,
+              "text": "}"
+            },
+            {
+              "line": 172,
+              "text": ""
+            },
+            {
+              "line": 173,
+              "text": "/* Built-in theme, no LWT loaded: restore Lepton's light palette."
+            },
+            {
+              "line": 174,
+              "text": " * Chain both negations on :root (AND) so the rule only applies when NO theme"
+            },
+            {
+              "line": 175,
+              "text": " * signal is present. */"
+            }
+          ]
+        },
+        {
+          "start": 258,
+          "end": 270,
+          "lines": [
+            {
+              "line": 258,
+              "text": " * Injected after Lepton's own sheets."
+            },
+            {
+              "line": 259,
+              "text": " *"
+            },
+            {
+              "line": 260,
+              "text": " * The Floorp icon patches that used to be appended here now live in the"
+            },
+            {
+              "line": 261,
+              "text": " * design-agnostic chrome-extras stylesheets."
+            },
+            {
+              "line": 262,
+              "text": " */"
+            },
+            {
+              "line": 263,
+              "text": "export const LEPTON_COMPAT_CSS ="
+            },
+            {
+              "line": 264,
+              "text": "  GECKO_152_COLOR_FIX_CSS + \"\\n\" + LEPTON_COMPAT_152_CSS;"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "repository": "Floorp-Runtime",
+      "head": "8965ffc346d426ccdf919bd18585e4d4a0c21654",
+      "path": "browser/themes/shared/tabbrowser/tabs.css",
+      "gitBlob": "4508084ee92aab668000115f1887dba00aaf6759",
+      "sha256": "d414976b2baad054da4a6bd2b85d2ac7851d772481653a5122d2a842080fc159",
+      "ranges": [
+        {
+          "start": 354,
+          "end": 374,
+          "lines": [
+            {
+              "line": 354,
+              "text": ".tab-content {"
+            },
+            {
+              "line": 355,
+              "text": "  color: var(--tab-text-color);"
+            },
+            {
+              "line": 356,
+              "text": "  position: relative;"
+            },
+            {
+              "line": 357,
+              "text": "  padding: 0 var(--tab-padding-inline);"
+            },
+            {
+              "line": 358,
+              "text": ""
+            },
+            {
+              "line": 359,
+              "text": "  &:not([pinned]) {"
+            },
+            {
+              "line": 360,
+              "text": "    min-width: 0;"
+            },
+            {
+              "line": 361,
+              "text": "  }"
+            },
+            {
+              "line": 362,
+              "text": ""
+            },
+            {
+              "line": 363,
+              "text": "  .tabbrowser-tab:hover > .tab-stack > &:not([selected], [multiselected]) {"
+            },
+            {
+              "line": 364,
+              "text": "    color: var(--tab-text-color-hover);"
+            },
+            {
+              "line": 365,
+              "text": "  }"
+            },
+            {
+              "line": 366,
+              "text": ""
+            },
+            {
+              "line": 367,
+              "text": "  :root:not([uidensity=\"compact\"], [sidebar-expand-on-hover]) &[pinned] {"
+            },
+            {
+              "line": 368,
+              "text": "    padding: 0 calc((var(--tab-min-height) - var(--icon-size)) / 2);"
+            },
+            {
+              "line": 369,
+              "text": "  }"
+            },
+            {
+              "line": 370,
+              "text": ""
+            },
+            {
+              "line": 371,
+              "text": "  &:is([selected], [multiselected]) {"
+            },
+            {
+              "line": 372,
+              "text": "    color: var(--tab-text-color-selected);"
+            },
+            {
+              "line": 373,
+              "text": "    color-scheme: var(--tab-selected-color-scheme);"
+            },
+            {
+              "line": 374,
+              "text": "  }"
+            }
+          ]
+        },
+        {
+          "start": 1187,
+          "end": 1232,
+          "lines": [
+            {
+              "line": 1187,
+              "text": "   properties set by the container color classes in usercontext.css. */"
+            },
+            {
+              "line": 1188,
+              "text": "@media not -moz-pref(\"browser.nova.enabled\") {"
+            },
+            {
+              "line": 1189,
+              "text": "  .tabbrowser-tab[usercontextid] > .tab-stack > .tab-background > .tab-context-line {"
+            },
+            {
+              "line": 1190,
+              "text": "    background-color: var(--identity-icon-color);"
+            },
+            {
+              "line": 1191,
+              "text": "    height: 2px;"
+            },
+            {
+              "line": 1192,
+              "text": "    border-radius: var(--border-radius-xsmall);"
+            },
+            {
+              "line": 1193,
+              "text": "    margin: 0 calc(var(--tab-border-radius) / 2);"
+            },
+            {
+              "line": 1194,
+              "text": "    position: relative;"
+            },
+            {
+              "line": 1195,
+              "text": ""
+            },
+            {
+              "line": 1196,
+              "text": "    #tabbrowser-tabs[orient=\"vertical\"] & {"
+            },
+            {
+              "line": 1197,
+              "text": "      height: auto;"
+            },
+            {
+              "line": 1198,
+              "text": "      width: 2px;"
+            },
+            {
+              "line": 1199,
+              "text": "      margin: calc(var(--tab-border-radius) / 2) 0;"
+            },
+            {
+              "line": 1200,
+              "text": "    }"
+            },
+            {
+              "line": 1201,
+              "text": "  }"
+            },
+            {
+              "line": 1202,
+              "text": "}"
+            },
+            {
+              "line": 1203,
+              "text": ""
+            },
+            {
+              "line": 1204,
+              "text": "@media -moz-pref(\"browser.nova.enabled\") {"
+            },
+            {
+              "line": 1205,
+              "text": "  .tabbrowser-tab[usercontextid] > .tab-stack > .tab-background > .tab-context-line {"
+            },
+            {
+              "line": 1206,
+              "text": "    height: 0;"
+            },
+            {
+              "line": 1207,
+              "text": "    /* border-block guarantees it's snapped to device pixels */"
+            },
+            {
+              "line": 1208,
+              "text": "    border-block: 1px solid transparent;"
+            },
+            {
+              "line": 1209,
+              "text": "    background: var(--identity-stroke-color) border-box border-box;"
+            },
+            {
+              "line": 1210,
+              "text": "    border-radius: var(--border-radius-xsmall);"
+            },
+            {
+              "line": 1211,
+              "text": "    margin-block-start: var(--tab-context-line-block-offset);"
+            },
+            {
+              "line": 1212,
+              "text": "    width: calc(100% - 2 * var(--tab-context-line-inline-offset));"
+            },
+            {
+              "line": 1213,
+              "text": "    margin-inline-start: var(--tab-context-line-inline-offset);"
+            },
+            {
+              "line": 1214,
+              "text": ""
+            },
+            {
+              "line": 1215,
+              "text": "    /* With expand on hover, size of the stroke is always the collapsed size */"
+            },
+            {
+              "line": 1216,
+              "text": "    :root[sidebar-expand-on-hover] & {"
+            },
+            {
+              "line": 1217,
+              "text": "      width: calc(var(--tab-collapsed-background-width) - 2 * var(--tab-context-line-inline-offset));"
+            },
+            {
+              "line": 1218,
+              "text": "    }"
+            },
+            {
+              "line": 1219,
+              "text": "  }"
+            },
+            {
+              "line": 1220,
+              "text": ""
+            },
+            {
+              "line": 1221,
+              "text": "  :is(#tabbrowser-tabs[orient=\"horizontal\"], :root:not([sidebar-expand-on-hover]) #tabbrowser-tabs[orient=\"vertical\"][expanded])"
+            },
+            {
+              "line": 1222,
+              "text": "    .tabbrowser-tab[usercontextid]:not([visuallyselected], [multiselected], [pinned])"
+            },
+            {
+              "line": 1223,
+              "text": "    > .tab-stack"
+            },
+            {
+              "line": 1224,
+              "text": "    > .tab-background"
+            },
+            {
+              "line": 1225,
+              "text": "    > .tab-context-line {"
+            },
+            {
+              "line": 1226,
+              "text": "    background-color: transparent;"
+            },
+            {
+              "line": 1227,
+              "text": "    background-image: linear-gradient(to left, transparent, var(--identity-stroke-color) var(--tab-label-mask-size));"
+            },
+            {
+              "line": 1228,
+              "text": ""
+            },
+            {
+              "line": 1229,
+              "text": "    &:-moz-locale-dir(rtl) {"
+            },
+            {
+              "line": 1230,
+              "text": "      background-image: linear-gradient(to right, transparent, var(--identity-stroke-color) var(--tab-label-mask-size));"
+            },
+            {
+              "line": 1231,
+              "text": "    }"
+            },
+            {
+              "line": 1232,
+              "text": "  }"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "repository": "Floorp-Runtime",
+      "head": "8965ffc346d426ccdf919bd18585e4d4a0c21654",
+      "path": "browser/themes/shared/tabbrowser/tab.tokens.css",
+      "gitBlob": "04e41efd3e6191a2ab2575252a7c720e748f497c",
+      "sha256": "86bba5cc7c74a5dfeed1145daee0e2b275a84c17e2c55dab290b20af22396c4b",
+      "ranges": [
+        {
+          "start": 75,
+          "end": 85,
+          "lines": [
+            {
+              "line": 75,
+              "text": "    --tab-icon-margin-inline-end: 5.5px;"
+            },
+            {
+              "line": 76,
+              "text": "    --tab-label-line-height: 1.7;"
+            },
+            {
+              "line": 77,
+              "text": "    --tab-margin-block: 4px;"
+            },
+            {
+              "line": 78,
+              "text": "    --tab-margin-block-vertical: 2px;"
+            },
+            {
+              "line": 79,
+              "text": "    --tab-margin-inline-inner: var(--space-medium);"
+            },
+            {
+              "line": 80,
+              "text": "    --tab-margin-inline-pinned-expanded: var(--space-xsmall);"
+            },
+            {
+              "line": 81,
+              "text": "    --tab-margin-overflow-clip: 2px;"
+            },
+            {
+              "line": 82,
+              "text": "    --tab-outline-offset: calc(-1 * var(--border-width));"
+            },
+            {
+              "line": 83,
+              "text": "    --tab-padding-inline: 8px;"
+            },
+            {
+              "line": 84,
+              "text": "    --tab-padding-inline-vertical: var(--space-medium);"
+            },
+            {
+              "line": 85,
+              "text": "    --tab-text-color: var(--toolbox-text-color-current);"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "noProductOrSourceMutation": true
+}

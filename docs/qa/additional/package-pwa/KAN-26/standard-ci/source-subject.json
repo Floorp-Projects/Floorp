@@ -1,0 +1,33 @@
+{
+  "run": 42112961086,
+  "head": "0e80f14dc439dde7817c0620f0fc112d54dfba80",
+  "priorRun": 42110920041,
+  "priorHead": "3a9f99ae12dbb221f63b28ec210b04fafcf2be15",
+  "oldFailurePreserved": "old-head-3a9f99ae/report.md",
+  "unchangedProductionAndNewTests": [
+    {
+      "path": "browser-features/chrome/common/designs/utils/lepton-compat-152.css.ts",
+      "sha256": "f276ee67afcf4ffb5b1933e4e9deebd95efaec38e7ed9a543932b48baa3c5162",
+      "sameBytesOldNew": true
+    },
+    {
+      "path": "browser-features/chrome/common/designs/utils/tab-color-like-toolbar.css.ts",
+      "sha256": "51cbe1b53438ee0240bf0adb9168dee4c177d135dc9f88f33d400af2af1d12d3",
+      "sameBytesOldNew": true
+    },
+    {
+      "path": "browser-features/chrome/common/designs/test/lepton-container-geometry.test.ts",
+      "sha256": "f665544e85ec7e1d23d00b08307744704278cf9d0d8daaf719aa21b6f33f57c5",
+      "sameBytesOldNew": true
+    },
+    {
+      "path": "browser-features/chrome/common/designs/test/fluerial-container.test.ts",
+      "sha256": "226c1d9379d070a490d71993d771085d16df4635d996772e3245a2d888cce8a9",
+      "sameBytesOldNew": true
+    }
+  ],
+  "changeScope": "existing strict bundle-composition test import/expected appended chunk only",
+  "changedPaths": [
+    "browser-features/chrome/common/designs/test/lepton-compat.test.ts"
+  ]
+}

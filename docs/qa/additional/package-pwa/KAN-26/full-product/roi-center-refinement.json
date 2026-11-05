@@ -1,0 +1,321 @@
+{
+  "reason": "Fractional native element rectangles floor/ceil ROI included adjacent blue multi-selection outline, equally in unchanged Proton baseline and candidate. Use exact inside-element pixel centers uniformly; preserve outer measurements and first failed grade.",
+  "browserRerun": false,
+  "sourceOrProductChanged": false,
+  "positiveAndNegativeAssertionsRetained": true,
+  "checks": {
+    "baseline": {
+      "indicators": 176,
+      "positive": 126,
+      "withoutOppositeHue": 176,
+      "missingPositive": [
+        {
+          "case": "fluerial-h-hover-blue",
+          "role": "orange",
+          "positive": false,
+          "noOppositeHue": true
+        },
+        {
+          "case": "fluerial-h-multi-hover-blue",
+          "role": "blue",
+          "positive": false,
+          "noOppositeHue": true
+        },
+        {
+          "case": "fluerial-h-multi-hover-blue",
+          "role": "orange",
+          "positive": false,
+          "noOppositeHue": true
+        },
+        {
+          "case": "fluerial-h-selected-blue",
+          "role": "blue",
+          "positive": false,
+          "noOppositeHue": true
+        },
+        {
+          "case": "fluerial-h-selected-orange",
+          "role": "orange",
+          "positive": false,
+          "noOppositeHue": true
+        },
+        {
+          "case": "fluerial-v-hover-blue",
+          "role": "blue",
+          "positive": false,
+          "noOppositeHue": true
+        },
+        {
+          "case": "lepton-h-hover-blue",
+          "role": "orange",
+          "positive": false,
+          "noOppositeHue": true
+        },
+        {
+          "case": "lepton-h-multi-hover-blue",
+          "role": "orange",
+          "positive": false,
+          "noOppositeHue": true
+        },
+        {
+          "case": "lepton-h-selected-blue",
+          "role": "blue",
+          "positive": false,
+          "noOppositeHue": true
+        },
+        {
+          "case": "lepton-h-selected-orange",
+          "role": "orange",
+          "positive": false,
+          "noOppositeHue": true
+        },
+        {
+          "case": "lepton-v-hover-blue",
+          "role": "orange",
+          "positive": false,
+          "noOppositeHue": true
+        },
+        {
+          "case": "lepton-v-multi-hover-blue",
+          "role": "orange",
+          "positive": false,
+          "noOppositeHue": true
+        },
+        {
+          "case": "lepton-v-selected-blue",
+          "role": "blue",
+          "positive": false,
+          "noOppositeHue": true
+        },
+        {
+          "case": "lepton-v-selected-orange",
+          "role": "orange",
+          "positive": false,
+          "noOppositeHue": true
+        },
+        {
+          "case": "protonfix-h-hover-blue",
+          "role": "orange",
+          "positive": false,
+          "noOppositeHue": true
+        },
+        {
+          "case": "protonfix-h-multi-hover-blue",
+          "role": "orange",
+          "positive": false,
+          "noOppositeHue": true
+        },
+        {
+          "case": "protonfix-h-selected-blue",
+          "role": "blue",
+          "positive": false,
+          "noOppositeHue": true
+        },
+        {
+          "case": "protonfix-h-selected-orange",
+          "role": "orange",
+          "positive": false,
+          "noOppositeHue": true
+        },
+        {
+          "case": "protonfix-v-hover-blue",
+          "role": "orange",
+          "positive": false,
+          "noOppositeHue": true
+        },
+        {
+          "case": "protonfix-v-multi-hover-blue",
+          "role": "orange",
+          "positive": false,
+          "noOppositeHue": true
+        },
+        {
+          "case": "protonfix-v-selected-blue",
+          "role": "blue",
+          "positive": false,
+          "noOppositeHue": true
+        },
+        {
+          "case": "protonfix-v-selected-orange",
+          "role": "orange",
+          "positive": false,
+          "noOppositeHue": true
+        },
+        {
+          "case": "fluerial-h-extra-multi-selected-blue-hover-blue",
+          "role": "blue",
+          "positive": false,
+          "noOppositeHue": true
+        },
+        {
+          "case": "fluerial-h-extra-multi-selected-blue-hover-blue",
+          "role": "orange",
+          "positive": false,
+          "noOppositeHue": true
+        },
+        {
+          "case": "fluerial-h-extra-multi-selected-orange-hover-orange",
+          "role": "blue",
+          "positive": false,
+          "noOppositeHue": true
+        },
+        {
+          "case": "fluerial-h-extra-multi-selected-orange-hover-orange",
+          "role": "orange",
+          "positive": false,
+          "noOppositeHue": true
+        },
+        {
+          "case": "fluerial-h-extra-selected-blue-hover-blue",
+          "role": "blue",
+          "positive": false,
+          "noOppositeHue": true
+        },
+        {
+          "case": "fluerial-h-extra-selected-blue-hover-inactive-orange",
+          "role": "blue",
+          "positive": false,
+          "noOppositeHue": true
+        },
+        {
+          "case": "fluerial-h-extra-selected-orange-hover-orange",
+          "role": "orange",
+          "positive": false,
+          "noOppositeHue": true
+        },
+        {
+          "case": "fluerial-v-extra-selected-blue-hover-inactive-orange",
+          "role": "orange",
+          "positive": false,
+          "noOppositeHue": true
+        },
+        {
+          "case": "lepton-h-extra-multi-selected-blue-hover-blue",
+          "role": "blue",
+          "positive": false,
+          "noOppositeHue": true
+        },
+        {
+          "case": "lepton-h-extra-multi-selected-orange-hover-orange",
+          "role": "orange",
+          "positive": false,
+          "noOppositeHue": true
+        },
+        {
+          "case": "lepton-h-extra-selected-blue-hover-blue",
+          "role": "blue",
+          "positive": false,
+          "noOppositeHue": true
+        },
+        {
+          "case": "lepton-h-extra-selected-blue-hover-inactive-orange",
+          "role": "blue",
+          "positive": false,
+          "noOppositeHue": true
+        },
+        {
+          "case": "lepton-h-extra-selected-orange-hover-orange",
+          "role": "orange",
+          "positive": false,
+          "noOppositeHue": true
+        },
+        {
+          "case": "lepton-v-extra-multi-selected-blue-hover-blue",
+          "role": "blue",
+          "positive": false,
+          "noOppositeHue": true
+        },
+        {
+          "case": "lepton-v-extra-multi-selected-orange-hover-orange",
+          "role": "orange",
+          "positive": false,
+          "noOppositeHue": true
+        },
+        {
+          "case": "lepton-v-extra-selected-blue-hover-blue",
+          "role": "blue",
+          "positive": false,
+          "noOppositeHue": true
+        },
+        {
+          "case": "lepton-v-extra-selected-blue-hover-inactive-orange",
+          "role": "blue",
+          "positive": false,
+          "noOppositeHue": true
+        },
+        {
+          "case": "lepton-v-extra-selected-orange-hover-orange",
+          "role": "orange",
+          "positive": false,
+          "noOppositeHue": true
+        },
+        {
+          "case": "protonfix-h-extra-multi-selected-blue-hover-blue",
+          "role": "blue",
+          "positive": false,
+          "noOppositeHue": true
+        },
+        {
+          "case": "protonfix-h-extra-multi-selected-orange-hover-orange",
+          "role": "orange",
+          "positive": false,
+          "noOppositeHue": true
+        },
+        {
+          "case": "protonfix-h-extra-selected-blue-hover-blue",
+          "role": "blue",
+          "positive": false,
+          "noOppositeHue": true
+        },
+        {
+          "case": "protonfix-h-extra-selected-blue-hover-inactive-orange",
+          "role": "blue",
+          "positive": false,
+          "noOppositeHue": true
+        },
+        {
+          "case": "protonfix-h-extra-selected-orange-hover-orange",
+          "role": "orange",
+          "positive": false,
+          "noOppositeHue": true
+        },
+        {
+          "case": "protonfix-v-extra-multi-selected-blue-hover-blue",
+          "role": "blue",
+          "positive": false,
+          "noOppositeHue": true
+        },
+        {
+          "case": "protonfix-v-extra-multi-selected-orange-hover-orange",
+          "role": "orange",
+          "positive": false,
+          "noOppositeHue": true
+        },
+        {
+          "case": "protonfix-v-extra-selected-blue-hover-blue",
+          "role": "blue",
+          "positive": false,
+          "noOppositeHue": true
+        },
+        {
+          "case": "protonfix-v-extra-selected-blue-hover-inactive-orange",
+          "role": "blue",
+          "positive": false,
+          "noOppositeHue": true
+        },
+        {
+          "case": "protonfix-v-extra-selected-orange-hover-orange",
+          "role": "orange",
+          "positive": false,
+          "noOppositeHue": true
+        }
+      ]
+    },
+    "candidate": {
+      "indicators": 176,
+      "positive": 176,
+      "withoutOppositeHue": 176,
+      "missingPositive": []
+    }
+  }
+}

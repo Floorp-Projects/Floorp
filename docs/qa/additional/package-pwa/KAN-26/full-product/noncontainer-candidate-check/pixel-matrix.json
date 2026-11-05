@@ -1,0 +1,2036 @@
+[
+  {
+    "id": "protonfix-normal-dehover",
+    "design": "protonfix",
+    "verticalMode": false,
+    "tabs": [
+      {
+        "role": "blue",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": {
+          "rect": {
+            "x": 242.0,
+            "y": 34.5,
+            "width": 55.25,
+            "height": 2.0
+          },
+          "pixelBox": [
+            242,
+            34,
+            297,
+            36
+          ],
+          "sampling": "pixel-centers-inside-element",
+          "blueHuePixels": 55,
+          "orangeHuePixels": 0,
+          "outerBoundingBox": [
+            242,
+            34,
+            298,
+            37
+          ],
+          "outerBlueHuePixels": 110,
+          "outerOrangeHuePixels": 0,
+          "zeroGeometry": false
+        },
+        "cropBox": [
+          223,
+          0,
+          448,
+          44
+        ],
+        "blueHuePixels": 110,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "none",
+          "opacity": "1",
+          "width": "auto",
+          "height": "2px",
+          "backgroundColor": "rgb(55, 173, 255)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0.75",
+          "width": "55.25px",
+          "height": "0px",
+          "borderBottomColor": "rgb(55, 173, 255)",
+          "borderBottomWidth": "2px",
+          "position": "absolute",
+          "bottom": "20px",
+          "left": "8px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "8px",
+          "--tab-inner-inline-margin": "0.75rem",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": ""
+        },
+        "crop": "protonfix-normal-dehover-tab-blue.png"
+      },
+      {
+        "role": "orange",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": {
+          "rect": {
+            "x": 465.0,
+            "y": 34.5,
+            "width": 55.25,
+            "height": 2.0
+          },
+          "pixelBox": [
+            465,
+            34,
+            520,
+            36
+          ],
+          "sampling": "pixel-centers-inside-element",
+          "blueHuePixels": 0,
+          "orangeHuePixels": 55,
+          "outerBoundingBox": [
+            465,
+            34,
+            521,
+            37
+          ],
+          "outerBlueHuePixels": 0,
+          "outerOrangeHuePixels": 110,
+          "zeroGeometry": false
+        },
+        "cropBox": [
+          446,
+          0,
+          671,
+          44
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 110,
+        "nativeLine": {
+          "display": "none",
+          "opacity": "1",
+          "width": "auto",
+          "height": "2px",
+          "backgroundColor": "rgb(255, 159, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0.75",
+          "width": "55.25px",
+          "height": "0px",
+          "borderBottomColor": "rgb(255, 159, 0)",
+          "borderBottomWidth": "2px",
+          "position": "absolute",
+          "bottom": "20px",
+          "left": "8px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "8px",
+          "--tab-inner-inline-margin": "0.75rem",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": ""
+        },
+        "crop": "protonfix-normal-dehover-tab-orange.png"
+      },
+      {
+        "role": "normal",
+        "selected": true,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": {
+          "rect": {
+            "x": 688.0,
+            "y": 33.5,
+            "width": 0.0,
+            "height": 0.0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "cropBox": [
+          669,
+          0,
+          894,
+          44
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "none",
+          "opacity": "1",
+          "width": "auto",
+          "height": "auto",
+          "backgroundColor": "rgba(0, 0, 0, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "1",
+          "width": "0px",
+          "height": "0px",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "absolute",
+          "bottom": "22px",
+          "left": "8px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": ""
+        },
+        "crop": "protonfix-normal-dehover-tab-normal.png"
+      }
+    ]
+  },
+  {
+    "id": "protonfix-normal-fonts-ready",
+    "design": "protonfix",
+    "verticalMode": false,
+    "tabs": [
+      {
+        "role": "blue",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": {
+          "rect": {
+            "x": 242.0,
+            "y": 34.5,
+            "width": 55.25,
+            "height": 2.0
+          },
+          "pixelBox": [
+            242,
+            34,
+            297,
+            36
+          ],
+          "sampling": "pixel-centers-inside-element",
+          "blueHuePixels": 55,
+          "orangeHuePixels": 0,
+          "outerBoundingBox": [
+            242,
+            34,
+            298,
+            37
+          ],
+          "outerBlueHuePixels": 110,
+          "outerOrangeHuePixels": 0,
+          "zeroGeometry": false
+        },
+        "cropBox": [
+          223,
+          0,
+          448,
+          44
+        ],
+        "blueHuePixels": 110,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "none",
+          "opacity": "1",
+          "width": "auto",
+          "height": "2px",
+          "backgroundColor": "rgb(55, 173, 255)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0.75",
+          "width": "55.25px",
+          "height": "0px",
+          "borderBottomColor": "rgb(55, 173, 255)",
+          "borderBottomWidth": "2px",
+          "position": "absolute",
+          "bottom": "20px",
+          "left": "8px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "8px",
+          "--tab-inner-inline-margin": "0.75rem",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": ""
+        },
+        "crop": "protonfix-normal-fonts-ready-tab-blue.png"
+      },
+      {
+        "role": "orange",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": {
+          "rect": {
+            "x": 465.0,
+            "y": 34.5,
+            "width": 55.25,
+            "height": 2.0
+          },
+          "pixelBox": [
+            465,
+            34,
+            520,
+            36
+          ],
+          "sampling": "pixel-centers-inside-element",
+          "blueHuePixels": 0,
+          "orangeHuePixels": 55,
+          "outerBoundingBox": [
+            465,
+            34,
+            521,
+            37
+          ],
+          "outerBlueHuePixels": 0,
+          "outerOrangeHuePixels": 110,
+          "zeroGeometry": false
+        },
+        "cropBox": [
+          446,
+          0,
+          671,
+          44
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 110,
+        "nativeLine": {
+          "display": "none",
+          "opacity": "1",
+          "width": "auto",
+          "height": "2px",
+          "backgroundColor": "rgb(255, 159, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0.75",
+          "width": "55.25px",
+          "height": "0px",
+          "borderBottomColor": "rgb(255, 159, 0)",
+          "borderBottomWidth": "2px",
+          "position": "absolute",
+          "bottom": "20px",
+          "left": "8px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "8px",
+          "--tab-inner-inline-margin": "0.75rem",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": ""
+        },
+        "crop": "protonfix-normal-fonts-ready-tab-orange.png"
+      },
+      {
+        "role": "normal",
+        "selected": true,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": {
+          "rect": {
+            "x": 688.0,
+            "y": 33.5,
+            "width": 0.0,
+            "height": 0.0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "cropBox": [
+          669,
+          0,
+          894,
+          44
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "none",
+          "opacity": "1",
+          "width": "auto",
+          "height": "auto",
+          "backgroundColor": "rgba(0, 0, 0, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "1",
+          "width": "0px",
+          "height": "0px",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "absolute",
+          "bottom": "22px",
+          "left": "8px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": ""
+        },
+        "crop": "protonfix-normal-fonts-ready-tab-normal.png"
+      }
+    ]
+  },
+  {
+    "id": "protonfix-normal-hover",
+    "design": "protonfix",
+    "verticalMode": false,
+    "tabs": [
+      {
+        "role": "blue",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": {
+          "rect": {
+            "x": 242.0,
+            "y": 34.5,
+            "width": 55.25,
+            "height": 2.0
+          },
+          "pixelBox": [
+            242,
+            34,
+            297,
+            36
+          ],
+          "sampling": "pixel-centers-inside-element",
+          "blueHuePixels": 55,
+          "orangeHuePixels": 0,
+          "outerBoundingBox": [
+            242,
+            34,
+            298,
+            37
+          ],
+          "outerBlueHuePixels": 110,
+          "outerOrangeHuePixels": 0,
+          "zeroGeometry": false
+        },
+        "cropBox": [
+          223,
+          0,
+          448,
+          44
+        ],
+        "blueHuePixels": 110,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "none",
+          "opacity": "1",
+          "width": "auto",
+          "height": "2px",
+          "backgroundColor": "rgb(55, 173, 255)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0.75",
+          "width": "55.25px",
+          "height": "0px",
+          "borderBottomColor": "rgb(55, 173, 255)",
+          "borderBottomWidth": "2px",
+          "position": "absolute",
+          "bottom": "20px",
+          "left": "8px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "8px",
+          "--tab-inner-inline-margin": "0.75rem",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": ""
+        },
+        "crop": "protonfix-normal-hover-tab-blue.png"
+      },
+      {
+        "role": "orange",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": {
+          "rect": {
+            "x": 465.0,
+            "y": 34.5,
+            "width": 55.25,
+            "height": 2.0
+          },
+          "pixelBox": [
+            465,
+            34,
+            520,
+            36
+          ],
+          "sampling": "pixel-centers-inside-element",
+          "blueHuePixels": 0,
+          "orangeHuePixels": 55,
+          "outerBoundingBox": [
+            465,
+            34,
+            521,
+            37
+          ],
+          "outerBlueHuePixels": 0,
+          "outerOrangeHuePixels": 110,
+          "zeroGeometry": false
+        },
+        "cropBox": [
+          446,
+          0,
+          671,
+          44
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 110,
+        "nativeLine": {
+          "display": "none",
+          "opacity": "1",
+          "width": "auto",
+          "height": "2px",
+          "backgroundColor": "rgb(255, 159, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0.75",
+          "width": "55.25px",
+          "height": "0px",
+          "borderBottomColor": "rgb(255, 159, 0)",
+          "borderBottomWidth": "2px",
+          "position": "absolute",
+          "bottom": "20px",
+          "left": "8px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "8px",
+          "--tab-inner-inline-margin": "0.75rem",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": ""
+        },
+        "crop": "protonfix-normal-hover-tab-orange.png"
+      },
+      {
+        "role": "normal",
+        "selected": true,
+        "multiselected": false,
+        "hover": true,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": {
+          "rect": {
+            "x": 688.0,
+            "y": 33.5,
+            "width": 0.0,
+            "height": 0.0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "cropBox": [
+          669,
+          0,
+          894,
+          44
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "none",
+          "opacity": "1",
+          "width": "auto",
+          "height": "auto",
+          "backgroundColor": "rgba(0, 0, 0, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "1",
+          "width": "0px",
+          "height": "0px",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "absolute",
+          "bottom": "22px",
+          "left": "8px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": ""
+        },
+        "crop": "protonfix-normal-hover-tab-normal.png"
+      }
+    ]
+  },
+  {
+    "id": "protonfix-normal-initial-0.5",
+    "design": "protonfix",
+    "verticalMode": false,
+    "tabs": [
+      {
+        "role": "blue",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": {
+          "rect": {
+            "x": 242.0,
+            "y": 34.5,
+            "width": 55.25,
+            "height": 2.0
+          },
+          "pixelBox": [
+            242,
+            34,
+            297,
+            36
+          ],
+          "sampling": "pixel-centers-inside-element",
+          "blueHuePixels": 55,
+          "orangeHuePixels": 0,
+          "outerBoundingBox": [
+            242,
+            34,
+            298,
+            37
+          ],
+          "outerBlueHuePixels": 110,
+          "outerOrangeHuePixels": 0,
+          "zeroGeometry": false
+        },
+        "cropBox": [
+          223,
+          0,
+          448,
+          44
+        ],
+        "blueHuePixels": 110,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "none",
+          "opacity": "1",
+          "width": "auto",
+          "height": "2px",
+          "backgroundColor": "rgb(55, 173, 255)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0.75",
+          "width": "55.25px",
+          "height": "0px",
+          "borderBottomColor": "rgb(55, 173, 255)",
+          "borderBottomWidth": "2px",
+          "position": "absolute",
+          "bottom": "20px",
+          "left": "8px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "8px",
+          "--tab-inner-inline-margin": "0.75rem",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": ""
+        },
+        "crop": "protonfix-normal-initial-0.5-tab-blue.png"
+      },
+      {
+        "role": "orange",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": {
+          "rect": {
+            "x": 465.0,
+            "y": 34.5,
+            "width": 55.25,
+            "height": 2.0
+          },
+          "pixelBox": [
+            465,
+            34,
+            520,
+            36
+          ],
+          "sampling": "pixel-centers-inside-element",
+          "blueHuePixels": 0,
+          "orangeHuePixels": 55,
+          "outerBoundingBox": [
+            465,
+            34,
+            521,
+            37
+          ],
+          "outerBlueHuePixels": 0,
+          "outerOrangeHuePixels": 110,
+          "zeroGeometry": false
+        },
+        "cropBox": [
+          446,
+          0,
+          671,
+          44
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 110,
+        "nativeLine": {
+          "display": "none",
+          "opacity": "1",
+          "width": "auto",
+          "height": "2px",
+          "backgroundColor": "rgb(255, 159, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0.75",
+          "width": "55.25px",
+          "height": "0px",
+          "borderBottomColor": "rgb(255, 159, 0)",
+          "borderBottomWidth": "2px",
+          "position": "absolute",
+          "bottom": "20px",
+          "left": "8px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "8px",
+          "--tab-inner-inline-margin": "0.75rem",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": ""
+        },
+        "crop": "protonfix-normal-initial-0.5-tab-orange.png"
+      },
+      {
+        "role": "normal",
+        "selected": true,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": {
+          "rect": {
+            "x": 688.0,
+            "y": 33.5,
+            "width": 0.0,
+            "height": 0.0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "cropBox": [
+          669,
+          0,
+          894,
+          44
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "none",
+          "opacity": "1",
+          "width": "auto",
+          "height": "auto",
+          "backgroundColor": "rgba(0, 0, 0, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "1",
+          "width": "0px",
+          "height": "0px",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "absolute",
+          "bottom": "22px",
+          "left": "8px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": ""
+        },
+        "crop": "protonfix-normal-initial-0.5-tab-normal.png"
+      }
+    ]
+  },
+  {
+    "id": "protonfix-normal-initial-0",
+    "design": "protonfix",
+    "verticalMode": false,
+    "tabs": [
+      {
+        "role": "blue",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": {
+          "rect": {
+            "x": 242.0,
+            "y": 34.5,
+            "width": 55.25,
+            "height": 2.0
+          },
+          "pixelBox": [
+            242,
+            34,
+            297,
+            36
+          ],
+          "sampling": "pixel-centers-inside-element",
+          "blueHuePixels": 55,
+          "orangeHuePixels": 0,
+          "outerBoundingBox": [
+            242,
+            34,
+            298,
+            37
+          ],
+          "outerBlueHuePixels": 110,
+          "outerOrangeHuePixels": 0,
+          "zeroGeometry": false
+        },
+        "cropBox": [
+          223,
+          0,
+          448,
+          44
+        ],
+        "blueHuePixels": 110,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "none",
+          "opacity": "1",
+          "width": "auto",
+          "height": "2px",
+          "backgroundColor": "rgb(55, 173, 255)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0.75",
+          "width": "55.25px",
+          "height": "0px",
+          "borderBottomColor": "rgb(55, 173, 255)",
+          "borderBottomWidth": "2px",
+          "position": "absolute",
+          "bottom": "20px",
+          "left": "8px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "8px",
+          "--tab-inner-inline-margin": "0.75rem",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": ""
+        },
+        "crop": "protonfix-normal-initial-0-tab-blue.png"
+      },
+      {
+        "role": "orange",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": {
+          "rect": {
+            "x": 465.0,
+            "y": 34.5,
+            "width": 55.25,
+            "height": 2.0
+          },
+          "pixelBox": [
+            465,
+            34,
+            520,
+            36
+          ],
+          "sampling": "pixel-centers-inside-element",
+          "blueHuePixels": 0,
+          "orangeHuePixels": 55,
+          "outerBoundingBox": [
+            465,
+            34,
+            521,
+            37
+          ],
+          "outerBlueHuePixels": 0,
+          "outerOrangeHuePixels": 110,
+          "zeroGeometry": false
+        },
+        "cropBox": [
+          446,
+          0,
+          671,
+          44
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 110,
+        "nativeLine": {
+          "display": "none",
+          "opacity": "1",
+          "width": "auto",
+          "height": "2px",
+          "backgroundColor": "rgb(255, 159, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0.75",
+          "width": "55.25px",
+          "height": "0px",
+          "borderBottomColor": "rgb(255, 159, 0)",
+          "borderBottomWidth": "2px",
+          "position": "absolute",
+          "bottom": "20px",
+          "left": "8px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "8px",
+          "--tab-inner-inline-margin": "0.75rem",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": ""
+        },
+        "crop": "protonfix-normal-initial-0-tab-orange.png"
+      },
+      {
+        "role": "normal",
+        "selected": true,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": {
+          "rect": {
+            "x": 688.0,
+            "y": 33.5,
+            "width": 0.0,
+            "height": 0.0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "cropBox": [
+          669,
+          0,
+          894,
+          44
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "none",
+          "opacity": "1",
+          "width": "auto",
+          "height": "auto",
+          "backgroundColor": "rgba(0, 0, 0, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "1",
+          "width": "0px",
+          "height": "0px",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "absolute",
+          "bottom": "22px",
+          "left": "8px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": ""
+        },
+        "crop": "protonfix-normal-initial-0-tab-normal.png"
+      }
+    ]
+  },
+  {
+    "id": "protonfix-normal-initial-2",
+    "design": "protonfix",
+    "verticalMode": false,
+    "tabs": [
+      {
+        "role": "blue",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": {
+          "rect": {
+            "x": 242.0,
+            "y": 34.5,
+            "width": 55.25,
+            "height": 2.0
+          },
+          "pixelBox": [
+            242,
+            34,
+            297,
+            36
+          ],
+          "sampling": "pixel-centers-inside-element",
+          "blueHuePixels": 55,
+          "orangeHuePixels": 0,
+          "outerBoundingBox": [
+            242,
+            34,
+            298,
+            37
+          ],
+          "outerBlueHuePixels": 110,
+          "outerOrangeHuePixels": 0,
+          "zeroGeometry": false
+        },
+        "cropBox": [
+          223,
+          0,
+          448,
+          44
+        ],
+        "blueHuePixels": 110,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "none",
+          "opacity": "1",
+          "width": "auto",
+          "height": "2px",
+          "backgroundColor": "rgb(55, 173, 255)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0.75",
+          "width": "55.25px",
+          "height": "0px",
+          "borderBottomColor": "rgb(55, 173, 255)",
+          "borderBottomWidth": "2px",
+          "position": "absolute",
+          "bottom": "20px",
+          "left": "8px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "8px",
+          "--tab-inner-inline-margin": "0.75rem",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": ""
+        },
+        "crop": "protonfix-normal-initial-2-tab-blue.png"
+      },
+      {
+        "role": "orange",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": {
+          "rect": {
+            "x": 465.0,
+            "y": 34.5,
+            "width": 55.25,
+            "height": 2.0
+          },
+          "pixelBox": [
+            465,
+            34,
+            520,
+            36
+          ],
+          "sampling": "pixel-centers-inside-element",
+          "blueHuePixels": 0,
+          "orangeHuePixels": 55,
+          "outerBoundingBox": [
+            465,
+            34,
+            521,
+            37
+          ],
+          "outerBlueHuePixels": 0,
+          "outerOrangeHuePixels": 110,
+          "zeroGeometry": false
+        },
+        "cropBox": [
+          446,
+          0,
+          671,
+          44
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 110,
+        "nativeLine": {
+          "display": "none",
+          "opacity": "1",
+          "width": "auto",
+          "height": "2px",
+          "backgroundColor": "rgb(255, 159, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0.75",
+          "width": "55.25px",
+          "height": "0px",
+          "borderBottomColor": "rgb(255, 159, 0)",
+          "borderBottomWidth": "2px",
+          "position": "absolute",
+          "bottom": "20px",
+          "left": "8px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "8px",
+          "--tab-inner-inline-margin": "0.75rem",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": ""
+        },
+        "crop": "protonfix-normal-initial-2-tab-orange.png"
+      },
+      {
+        "role": "normal",
+        "selected": true,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": {
+          "rect": {
+            "x": 688.0,
+            "y": 33.5,
+            "width": 0.0,
+            "height": 0.0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "cropBox": [
+          669,
+          0,
+          894,
+          44
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "none",
+          "opacity": "1",
+          "width": "auto",
+          "height": "auto",
+          "backgroundColor": "rgba(0, 0, 0, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "1",
+          "width": "0px",
+          "height": "0px",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "absolute",
+          "bottom": "22px",
+          "left": "8px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": ""
+        },
+        "crop": "protonfix-normal-initial-2-tab-normal.png"
+      }
+    ]
+  },
+  {
+    "id": "protonfix-normal-window-1280",
+    "design": "protonfix",
+    "verticalMode": false,
+    "tabs": [
+      {
+        "role": "blue",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": {
+          "rect": {
+            "x": 242.0,
+            "y": 34.5,
+            "width": 55.25,
+            "height": 2.0
+          },
+          "pixelBox": [
+            242,
+            34,
+            297,
+            36
+          ],
+          "sampling": "pixel-centers-inside-element",
+          "blueHuePixels": 55,
+          "orangeHuePixels": 0,
+          "outerBoundingBox": [
+            242,
+            34,
+            298,
+            37
+          ],
+          "outerBlueHuePixels": 110,
+          "outerOrangeHuePixels": 0,
+          "zeroGeometry": false
+        },
+        "cropBox": [
+          223,
+          0,
+          448,
+          44
+        ],
+        "blueHuePixels": 110,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "none",
+          "opacity": "1",
+          "width": "auto",
+          "height": "2px",
+          "backgroundColor": "rgb(55, 173, 255)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0.75",
+          "width": "55.25px",
+          "height": "0px",
+          "borderBottomColor": "rgb(55, 173, 255)",
+          "borderBottomWidth": "2px",
+          "position": "absolute",
+          "bottom": "20px",
+          "left": "8px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "8px",
+          "--tab-inner-inline-margin": "0.75rem",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": ""
+        },
+        "crop": "protonfix-normal-window-1280-tab-blue.png"
+      },
+      {
+        "role": "orange",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": {
+          "rect": {
+            "x": 465.0,
+            "y": 34.5,
+            "width": 55.25,
+            "height": 2.0
+          },
+          "pixelBox": [
+            465,
+            34,
+            520,
+            36
+          ],
+          "sampling": "pixel-centers-inside-element",
+          "blueHuePixels": 0,
+          "orangeHuePixels": 55,
+          "outerBoundingBox": [
+            465,
+            34,
+            521,
+            37
+          ],
+          "outerBlueHuePixels": 0,
+          "outerOrangeHuePixels": 110,
+          "zeroGeometry": false
+        },
+        "cropBox": [
+          446,
+          0,
+          671,
+          44
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 110,
+        "nativeLine": {
+          "display": "none",
+          "opacity": "1",
+          "width": "auto",
+          "height": "2px",
+          "backgroundColor": "rgb(255, 159, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0.75",
+          "width": "55.25px",
+          "height": "0px",
+          "borderBottomColor": "rgb(255, 159, 0)",
+          "borderBottomWidth": "2px",
+          "position": "absolute",
+          "bottom": "20px",
+          "left": "8px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "8px",
+          "--tab-inner-inline-margin": "0.75rem",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": ""
+        },
+        "crop": "protonfix-normal-window-1280-tab-orange.png"
+      },
+      {
+        "role": "normal",
+        "selected": true,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": {
+          "rect": {
+            "x": 688.0,
+            "y": 33.5,
+            "width": 0.0,
+            "height": 0.0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "cropBox": [
+          669,
+          0,
+          894,
+          44
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "none",
+          "opacity": "1",
+          "width": "auto",
+          "height": "auto",
+          "backgroundColor": "rgba(0, 0, 0, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "1",
+          "width": "0px",
+          "height": "0px",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "absolute",
+          "bottom": "22px",
+          "left": "8px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": ""
+        },
+        "crop": "protonfix-normal-window-1280-tab-normal.png"
+      }
+    ]
+  },
+  {
+    "id": "protonfix-normal-window-640",
+    "design": "protonfix",
+    "verticalMode": false,
+    "tabs": [
+      {
+        "role": "blue",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": {
+          "rect": {
+            "x": 116.08332824707031,
+            "y": 34.5,
+            "width": 23.7667,
+            "height": 2.0
+          },
+          "pixelBox": [
+            116,
+            34,
+            140,
+            36
+          ],
+          "sampling": "pixel-centers-inside-element",
+          "blueHuePixels": 24,
+          "orangeHuePixels": 0,
+          "outerBoundingBox": [
+            116,
+            34,
+            140,
+            37
+          ],
+          "outerBlueHuePixels": 48,
+          "outerOrangeHuePixels": 0,
+          "zeroGeometry": false
+        },
+        "cropBox": [
+          97,
+          0,
+          197,
+          44
+        ],
+        "blueHuePixels": 48,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "none",
+          "opacity": "1",
+          "width": "auto",
+          "height": "2px",
+          "backgroundColor": "rgb(55, 173, 255)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0.75",
+          "width": "23.7667px",
+          "height": "0px",
+          "borderBottomColor": "rgb(55, 173, 255)",
+          "borderBottomWidth": "2px",
+          "position": "absolute",
+          "bottom": "20px",
+          "left": "8px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "8px",
+          "--tab-inner-inline-margin": "0.75rem",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": ""
+        },
+        "crop": "protonfix-normal-window-640-tab-blue.png"
+      },
+      {
+        "role": "orange",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": {
+          "rect": {
+            "x": 213.18333435058594,
+            "y": 34.5,
+            "width": 23.7667,
+            "height": 2.0
+          },
+          "pixelBox": [
+            213,
+            34,
+            237,
+            36
+          ],
+          "sampling": "pixel-centers-inside-element",
+          "blueHuePixels": 0,
+          "orangeHuePixels": 24,
+          "outerBoundingBox": [
+            213,
+            34,
+            237,
+            37
+          ],
+          "outerBlueHuePixels": 0,
+          "outerOrangeHuePixels": 48,
+          "zeroGeometry": false
+        },
+        "cropBox": [
+          194,
+          0,
+          294,
+          44
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 48,
+        "nativeLine": {
+          "display": "none",
+          "opacity": "1",
+          "width": "auto",
+          "height": "2px",
+          "backgroundColor": "rgb(255, 159, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0.75",
+          "width": "23.7667px",
+          "height": "0px",
+          "borderBottomColor": "rgb(255, 159, 0)",
+          "borderBottomWidth": "2px",
+          "position": "absolute",
+          "bottom": "20px",
+          "left": "8px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "8px",
+          "--tab-inner-inline-margin": "0.75rem",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": ""
+        },
+        "crop": "protonfix-normal-window-640-tab-orange.png"
+      },
+      {
+        "role": "normal",
+        "selected": true,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": {
+          "rect": {
+            "x": 310.26666259765625,
+            "y": 33.5,
+            "width": 62.1,
+            "height": 0.0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "cropBox": [
+          291,
+          0,
+          391,
+          44
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "none",
+          "opacity": "1",
+          "width": "auto",
+          "height": "auto",
+          "backgroundColor": "rgba(0, 0, 0, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "1",
+          "width": "62.1px",
+          "height": "0px",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "absolute",
+          "bottom": "22px",
+          "left": "8px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": ""
+        },
+        "crop": "protonfix-normal-window-640-tab-normal.png"
+      }
+    ]
+  },
+  {
+    "id": "protonfix-normal-window-760",
+    "design": "protonfix",
+    "verticalMode": false,
+    "tabs": [
+      {
+        "role": "blue",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": {
+          "rect": {
+            "x": 144.0833282470703,
+            "y": 34.5,
+            "width": 30.7667,
+            "height": 2.0
+          },
+          "pixelBox": [
+            144,
+            34,
+            175,
+            36
+          ],
+          "sampling": "pixel-centers-inside-element",
+          "blueHuePixels": 31,
+          "orangeHuePixels": 0,
+          "outerBoundingBox": [
+            144,
+            34,
+            175,
+            37
+          ],
+          "outerBlueHuePixels": 62,
+          "outerOrangeHuePixels": 0,
+          "zeroGeometry": false
+        },
+        "cropBox": [
+          125,
+          0,
+          253,
+          44
+        ],
+        "blueHuePixels": 62,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "none",
+          "opacity": "1",
+          "width": "auto",
+          "height": "2px",
+          "backgroundColor": "rgb(55, 173, 255)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0.75",
+          "width": "30.7667px",
+          "height": "0px",
+          "borderBottomColor": "rgb(55, 173, 255)",
+          "borderBottomWidth": "2px",
+          "position": "absolute",
+          "bottom": "20px",
+          "left": "8px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "8px",
+          "--tab-inner-inline-margin": "0.75rem",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": ""
+        },
+        "crop": "protonfix-normal-window-760-tab-blue.png"
+      },
+      {
+        "role": "orange",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": {
+          "rect": {
+            "x": 269.18333435058594,
+            "y": 34.5,
+            "width": 30.7667,
+            "height": 2.0
+          },
+          "pixelBox": [
+            269,
+            34,
+            300,
+            36
+          ],
+          "sampling": "pixel-centers-inside-element",
+          "blueHuePixels": 0,
+          "orangeHuePixels": 31,
+          "outerBoundingBox": [
+            269,
+            34,
+            300,
+            37
+          ],
+          "outerBlueHuePixels": 0,
+          "outerOrangeHuePixels": 62,
+          "zeroGeometry": false
+        },
+        "cropBox": [
+          250,
+          0,
+          378,
+          44
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 62,
+        "nativeLine": {
+          "display": "none",
+          "opacity": "1",
+          "width": "auto",
+          "height": "2px",
+          "backgroundColor": "rgb(255, 159, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0.75",
+          "width": "30.7667px",
+          "height": "0px",
+          "borderBottomColor": "rgb(255, 159, 0)",
+          "borderBottomWidth": "2px",
+          "position": "absolute",
+          "bottom": "20px",
+          "left": "8px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "8px",
+          "--tab-inner-inline-margin": "0.75rem",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": ""
+        },
+        "crop": "protonfix-normal-window-760-tab-orange.png"
+      },
+      {
+        "role": "normal",
+        "selected": true,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": {
+          "rect": {
+            "x": 394.26666259765625,
+            "y": 33.5,
+            "width": 90.1,
+            "height": 0.0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "cropBox": [
+          375,
+          0,
+          503,
+          44
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "none",
+          "opacity": "1",
+          "width": "auto",
+          "height": "auto",
+          "backgroundColor": "rgba(0, 0, 0, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "1",
+          "width": "90.1px",
+          "height": "0px",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "absolute",
+          "bottom": "22px",
+          "left": "8px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": ""
+        },
+        "crop": "protonfix-normal-window-760-tab-normal.png"
+      }
+    ]
+  }
+]

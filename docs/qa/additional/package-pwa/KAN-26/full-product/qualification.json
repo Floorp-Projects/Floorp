@@ -1,0 +1,279 @@
+{
+  "key": "KAN-26",
+  "sourceSha": "0e80f14dc439dde7817c0620f0fc112d54dfba80",
+  "scope": "Complete Linux application package; default theme/container gates; Debian Xvfb X11 native159.0.1; synthetic input. Not original Windows qualification.",
+  "classification": "Observed nonPhoton indicator defects repaired in complete candidate; bounded normal-control supplement succeeds; historical strict mismatch remains unresolved as to exact original state.",
+  "strictQualification": {
+    "qualified": false,
+    "checksPass": 1534,
+    "checksFail": 1,
+    "evidence": "comparison-center-roi.json",
+    "initialBoundingBoxComparison": {
+      "qualified": false,
+      "checksPass": 1528,
+      "checksFail": 7,
+      "evidence": "comparison.json"
+    }
+  },
+  "indicatorEvidence": {
+    "candidatePass": 176,
+    "candidateTotal": 176,
+    "baselinePositive": 126,
+    "baselineTotal": 176,
+    "normalStylesExactCases": 87,
+    "normalStylesTotalCases": 88,
+    "roiMethodEvidence": "roi-center-refinement.json"
+  },
+  "supplement": {
+    "statePairs": 9,
+    "actualBrowserStates": 18,
+    "passedPairs": 9,
+    "guards": {
+      "baseline": true,
+      "candidate": true
+    },
+    "rows": [
+      {
+        "id": "protonfix-normal-initial-0",
+        "sameRecordedConditions": true,
+        "normalStylesAndGeometryEqual": true,
+        "noIdentityHueInEitherNormalTab": true,
+        "conditions": {
+          "closebuttons": null,
+          "windowRect": {
+            "x": 0,
+            "y": 0,
+            "width": 1280,
+            "height": 900
+          },
+          "devicePixelRatio": 1,
+          "fonts": "loaded",
+          "labelText": "New Tab",
+          "hover": false,
+          "selected": true,
+          "animations": []
+        },
+        "pseudoWidth": "0px",
+        "labelWidth": 190,
+        "closeWidth": 19,
+        "pass": true
+      },
+      {
+        "id": "protonfix-normal-initial-0.5",
+        "sameRecordedConditions": true,
+        "normalStylesAndGeometryEqual": true,
+        "noIdentityHueInEitherNormalTab": true,
+        "conditions": {
+          "closebuttons": null,
+          "windowRect": {
+            "x": 0,
+            "y": 0,
+            "width": 1280,
+            "height": 900
+          },
+          "devicePixelRatio": 1,
+          "fonts": "loaded",
+          "labelText": "New Tab",
+          "hover": false,
+          "selected": true,
+          "animations": []
+        },
+        "pseudoWidth": "0px",
+        "labelWidth": 190,
+        "closeWidth": 19,
+        "pass": true
+      },
+      {
+        "id": "protonfix-normal-initial-2",
+        "sameRecordedConditions": true,
+        "normalStylesAndGeometryEqual": true,
+        "noIdentityHueInEitherNormalTab": true,
+        "conditions": {
+          "closebuttons": null,
+          "windowRect": {
+            "x": 0,
+            "y": 0,
+            "width": 1280,
+            "height": 900
+          },
+          "devicePixelRatio": 1,
+          "fonts": "loaded",
+          "labelText": "New Tab",
+          "hover": false,
+          "selected": true,
+          "animations": []
+        },
+        "pseudoWidth": "0px",
+        "labelWidth": 190,
+        "closeWidth": 19,
+        "pass": true
+      },
+      {
+        "id": "protonfix-normal-fonts-ready",
+        "sameRecordedConditions": true,
+        "normalStylesAndGeometryEqual": true,
+        "noIdentityHueInEitherNormalTab": true,
+        "conditions": {
+          "closebuttons": null,
+          "windowRect": {
+            "x": 0,
+            "y": 0,
+            "width": 1280,
+            "height": 900
+          },
+          "devicePixelRatio": 1,
+          "fonts": "loaded",
+          "labelText": "New Tab",
+          "hover": false,
+          "selected": true,
+          "animations": []
+        },
+        "pseudoWidth": "0px",
+        "labelWidth": 190,
+        "closeWidth": 19,
+        "pass": true
+      },
+      {
+        "id": "protonfix-normal-window-760",
+        "sameRecordedConditions": true,
+        "normalStylesAndGeometryEqual": true,
+        "noIdentityHueInEitherNormalTab": true,
+        "conditions": {
+          "closebuttons": "activetab",
+          "windowRect": {
+            "x": 0,
+            "y": 0,
+            "width": 760,
+            "height": 900
+          },
+          "devicePixelRatio": 1,
+          "fonts": "loaded",
+          "labelText": "New Tab",
+          "hover": false,
+          "selected": true,
+          "animations": []
+        },
+        "pseudoWidth": "90.1px",
+        "labelWidth": 89.60000610351562,
+        "closeWidth": 19,
+        "pass": true
+      },
+      {
+        "id": "protonfix-normal-window-640",
+        "sameRecordedConditions": true,
+        "normalStylesAndGeometryEqual": true,
+        "noIdentityHueInEitherNormalTab": true,
+        "conditions": {
+          "closebuttons": "activetab",
+          "windowRect": {
+            "x": 0,
+            "y": 0,
+            "width": 640,
+            "height": 900
+          },
+          "devicePixelRatio": 1,
+          "fonts": "loaded",
+          "labelText": "New Tab",
+          "hover": false,
+          "selected": true,
+          "animations": []
+        },
+        "pseudoWidth": "62.1px",
+        "labelWidth": 61.600006103515625,
+        "closeWidth": 19,
+        "pass": true
+      },
+      {
+        "id": "protonfix-normal-window-1280",
+        "sameRecordedConditions": true,
+        "normalStylesAndGeometryEqual": true,
+        "noIdentityHueInEitherNormalTab": true,
+        "conditions": {
+          "closebuttons": null,
+          "windowRect": {
+            "x": 0,
+            "y": 0,
+            "width": 1280,
+            "height": 900
+          },
+          "devicePixelRatio": 1,
+          "fonts": "loaded",
+          "labelText": "New Tab",
+          "hover": false,
+          "selected": true,
+          "animations": []
+        },
+        "pseudoWidth": "0px",
+        "labelWidth": 190,
+        "closeWidth": 19,
+        "pass": true
+      },
+      {
+        "id": "protonfix-normal-hover",
+        "sameRecordedConditions": true,
+        "normalStylesAndGeometryEqual": true,
+        "noIdentityHueInEitherNormalTab": true,
+        "conditions": {
+          "closebuttons": null,
+          "windowRect": {
+            "x": 0,
+            "y": 0,
+            "width": 1280,
+            "height": 900
+          },
+          "devicePixelRatio": 1,
+          "fonts": "loaded",
+          "labelText": "New Tab",
+          "hover": true,
+          "selected": true,
+          "animations": []
+        },
+        "pseudoWidth": "0px",
+        "labelWidth": 185,
+        "closeWidth": 24,
+        "pass": true
+      },
+      {
+        "id": "protonfix-normal-dehover",
+        "sameRecordedConditions": true,
+        "normalStylesAndGeometryEqual": true,
+        "noIdentityHueInEitherNormalTab": true,
+        "conditions": {
+          "closebuttons": null,
+          "windowRect": {
+            "x": 0,
+            "y": 0,
+            "width": 1280,
+            "height": 900
+          },
+          "devicePixelRatio": 1,
+          "fonts": "loaded",
+          "labelText": "New Tab",
+          "hover": false,
+          "selected": true,
+          "animations": []
+        },
+        "pseudoWidth": "0px",
+        "labelWidth": 190,
+        "closeWidth": 19,
+        "pass": true
+      }
+    ],
+    "visualStyleDifferences": []
+  },
+  "compositeEvidenceComplete": true,
+  "limitations": [
+    "Original protonfix-h-selected-normal capture omitted closebuttons attribute: six original style differences are retained, not waived.",
+    "Existing vendor activetab formula predicts original 188px pseudo and 187.5px label; new real window resizing measures both attribute states identically in baseline/candidate. This supports a condition difference but does not prove the original missing attribute.",
+    "InspectorUtils.getCSSStyleRules unavailable in this runtime; matched-rule telemetry records TypeError. Evidence is pinned static CSS plus actual attributes/computed styles and pixels, not successful matched-rule inspection.",
+    "Linux original-version158 comparison covers40 states only; new48 supplemental interaction states were measured on159 baseline/candidate.",
+    "No physical input/GPU/highDPI/Windows or signed-release qualification. Complete package uses compatible locked prebuilt native Runtime; not a fresh Gecko build."
+  ],
+  "evidence": [
+    "run/result.json",
+    "run/identity.json",
+    "noncontainer-source-comparison.json",
+    "noncontainer-baseline-check/result.json",
+    "noncontainer-candidate-check/result.json"
+  ]
+}

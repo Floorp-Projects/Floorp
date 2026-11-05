@@ -1,0 +1,9 @@
+{
+  "version": "158.0.1",
+  "buildID": "20261014104253",
+  "executable": "/workspace/qa-linux-additional/KAN-26/old-product/floorp/floorp",
+  "profile": "/workspace/qa-linux-additional/KAN-26/old-product-measurement/profile",
+  "sandbox": 6,
+  "disabled": false,
+  "containers": true
+}

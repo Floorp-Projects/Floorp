@@ -1,0 +1,23 @@
+[
+  {
+    "path": "/workspace/qa-linux-additional/KAN-26/old-product-measurement/profile",
+    "origin": "fresh synthetic QA profile created by this task; no user/imported data",
+    "normalQuitEvidence": "old-product-measurement/result.json",
+    "prefsSha256": "05461d182fb2ea968c0b0e15378cf60c1fd88e351b04099953595eb298c7e323",
+    "reason": "completed sessions; keep all measurements/images/intakes/scripts and latestextra-hoverprofile, reclaim only reproducible excluded browser state"
+  },
+  {
+    "path": "/workspace/qa-linux-additional/KAN-26/current-product/run/profile",
+    "origin": "fresh synthetic QA profile created by this task; no user/imported data",
+    "normalQuitEvidence": "current-product/run/result.json",
+    "prefsSha256": "51be0e7b01101e441abb1f62eeba606d096814cf5d0039cac9f5471922836a3f",
+    "reason": "completed sessions; keep all measurements/images/intakes/scripts and latestextra-hoverprofile, reclaim only reproducible excluded browser state"
+  },
+  {
+    "path": "/workspace/qa-linux-additional/KAN-26/current-product/supplement-run/profile",
+    "origin": "fresh synthetic QA profile created by this task; no user/imported data",
+    "normalQuitEvidence": "current-product/supplement-run/result.json",
+    "prefsSha256": "4a8c865eb8ee97433898c562500fcbbd57304eb85047d875e5abd432d3942676",
+    "reason": "completed sessions; keep all measurements/images/intakes/scripts and latestextra-hoverprofile, reclaim only reproducible excluded browser state"
+  }
+]

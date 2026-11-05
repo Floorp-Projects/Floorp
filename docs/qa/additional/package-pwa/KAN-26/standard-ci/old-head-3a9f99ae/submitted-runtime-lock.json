@@ -1,0 +1,11 @@
+{
+  "headSha": "3a9f99ae12dbb221f63b28ec210b04fafcf2be15",
+  "lockSha256": "5838f685f4b375ca69dfaf10f1054f6b7fe1e90290cfb97c9f53514022937fe5",
+  "source": {
+    "repository": "Floorp-Projects/Floorp-Runtime",
+    "ref": "daily-1179",
+    "commit": "8965ffc346d426ccdf919bd18585e4d4a0c21654",
+    "tree": "53216e352ae9a27c402b707e1384bb5d62e9db7e"
+  },
+  "qualification": "source/lock binding, not a new native build attestation"
+}

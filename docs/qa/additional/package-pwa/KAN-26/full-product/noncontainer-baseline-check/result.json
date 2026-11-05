@@ -1,0 +1,100 @@
+{
+  "product": "/workspace/qa-linux-additional/KAN-24/followup/products/baseline/floorp",
+  "sourceSha": "29a3eb23145da90706d8a94441373278521cc737",
+  "input": "synthetic Hub WebDriver clicks; genuine container service; native tabbrowser API selection/multiselection; real WebDriver pointer hover",
+  "requestedStateMode": "bounded-normal-control-diagnostic",
+  "cases": [
+    {
+      "id": "protonfix-normal-initial-0",
+      "design": "protonfix",
+      "verticalMode": false,
+      "evidence": [
+        "protonfix-normal-initial-0.json",
+        "protonfix-normal-initial-0.png"
+      ]
+    },
+    {
+      "id": "protonfix-normal-initial-0.5",
+      "design": "protonfix",
+      "verticalMode": false,
+      "evidence": [
+        "protonfix-normal-initial-0.5.json",
+        "protonfix-normal-initial-0.5.png"
+      ]
+    },
+    {
+      "id": "protonfix-normal-initial-2",
+      "design": "protonfix",
+      "verticalMode": false,
+      "evidence": [
+        "protonfix-normal-initial-2.json",
+        "protonfix-normal-initial-2.png"
+      ]
+    },
+    {
+      "id": "protonfix-normal-fonts-ready",
+      "design": "protonfix",
+      "verticalMode": false,
+      "evidence": [
+        "protonfix-normal-fonts-ready.json",
+        "protonfix-normal-fonts-ready.png"
+      ]
+    },
+    {
+      "id": "protonfix-normal-window-760",
+      "design": "protonfix",
+      "verticalMode": false,
+      "evidence": [
+        "protonfix-normal-window-760.json",
+        "protonfix-normal-window-760.png"
+      ]
+    },
+    {
+      "id": "protonfix-normal-window-640",
+      "design": "protonfix",
+      "verticalMode": false,
+      "evidence": [
+        "protonfix-normal-window-640.json",
+        "protonfix-normal-window-640.png"
+      ]
+    },
+    {
+      "id": "protonfix-normal-window-1280",
+      "design": "protonfix",
+      "verticalMode": false,
+      "evidence": [
+        "protonfix-normal-window-1280.json",
+        "protonfix-normal-window-1280.png"
+      ]
+    },
+    {
+      "id": "protonfix-normal-hover",
+      "design": "protonfix",
+      "verticalMode": false,
+      "evidence": [
+        "protonfix-normal-hover.json",
+        "protonfix-normal-hover.png"
+      ]
+    },
+    {
+      "id": "protonfix-normal-dehover",
+      "design": "protonfix",
+      "verticalMode": false,
+      "evidence": [
+        "protonfix-normal-dehover.json",
+        "protonfix-normal-dehover.png"
+      ]
+    }
+  ],
+  "quit": {
+    "cause": "shutdown",
+    "forced": false,
+    "in_app": true
+  },
+  "browserExit": 0,
+  "completed": true,
+  "productTreeUnchanged": true,
+  "productUnchanged": true,
+  "ownedProcessesRemaining": 0,
+  "displaySocketAbsent": true
+}

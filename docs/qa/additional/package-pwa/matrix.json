@@ -207,5 +207,105 @@
         }
       ]
     }
+  },
+  {
+    "key": "KAN-26",
+    "github": "https://github.com/Floorp-Projects/Floorp/issues/2965",
+    "sourceSha": {
+      "baselineCurrent": "29a3eb23145da90706d8a94441373278521cc737",
+      "originalLinuxTag": "576bc4bbca058e4c24dc5bd2c7526d64cedc94cc",
+      "fixedPhotonBase": "1c37f3f2c53c5b213e679321e0116d4c7474661f",
+      "newPrHead": "0e80f14dc439dde7817c0620f0fc112d54dfba80"
+    },
+    "productVersion": {
+      "baselineCurrent": "159.0.1/20261103153232",
+      "originalVersionLinux": "158.0.1/20261014104253",
+      "finalCandidate": "12.21.1@159.0.1; native BuildID20261103153232; package BuildID20261105213314"
+    },
+    "environment": "Debian13.6/Xvfb107/X11/normalDBus/defaulttheme/normaldensity; real tabbrowser APIs+WebDriver pointer; sandbox6, no protectiondisable; notWindows/physicalinput/GPU",
+    "testCommand": "current-product/probe.py --all-states --product <authenticatedcandidate> --source-sha 0e80f14dc439dde7817c0620f0fc112d54dfba80 --out <fresh>; current-product/compare_candidate.py (see README)",
+    "result": "Reproduced nonPhoton geometry/layering defects on current159/official158Linux; dependentDraft3048; exact fullcandidate88states176/176 correct indicators; normal same-condition9/9; historical strictcomparison1534pass/1fail retained; standardCI284/0",
+    "remainingConditions": [
+      "Original Windows11/12.20.2 actualrendering",
+      "HighDPI/physicalGPU",
+      "Actual collapsedvertical beyond sourcefixture",
+      "Historical protonfix-h-selected-normal closebuttons state unrecorded; strict style difference retained, supplemented with9same-condition controls"
+    ],
+    "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/3041",
+    "newPr": "https://github.com/Floorp-Projects/Floorp/pull/3048",
+    "dependency": "fixed3041head mirror; not independentlymergeable",
+    "jiraCommentId": "10448",
+    "originalLinuxDenominator": 22,
+    "originalPhoton36Repeated": false,
+    "beforeStates": {
+      "current159": 88,
+      "officialOriginalVersionLinux158": 40
+    },
+    "standardCi": {
+      "run": 42112961086,
+      "head": "0e80f14dc439dde7817c0620f0fc112d54dfba80",
+      "conclusion": "success",
+      "modulesPassed": 284,
+      "modulesFailed": 0,
+      "artifact": 13456440170,
+      "zipSha256": "a67d1c09ef721bfab4db0e0ac66f67f4aaa1de7be4093ba38f9635a48f402568",
+      "qualification": "standarddevelopmentharness, notsafe6fullproductgrade"
+    },
+    "fullPackage": {
+      "run": 42113006050,
+      "head": "0e80f14dc439dde7817c0620f0fc112d54dfba80",
+      "phase": "tested-limited-linux-scope",
+      "runConclusion": "success",
+      "artifact": 13455701396,
+      "zipSha256": "8b9dd3f6d2931d237c4944ced4735646678df2e599f48b4c6cc751bab852f8b6",
+      "tarSha256": "38106ec5ee8d544ed92a32aa04f4b049d18bfa2f8a90ce7bec2fcde41d2d0c33",
+      "candidateStates": 88,
+      "indicators": {
+        "passed": 176,
+        "total": 176,
+        "currentBaselineVisible": 126
+      },
+      "strictOriginalCaptureComparison": {
+        "passed": 1534,
+        "failed": 1,
+        "limitation": "historical normal-control adaptive-closebuttons condition unrecorded"
+      },
+      "normalControlSupplement": {
+        "statesPerProduct": 9,
+        "matched": 9,
+        "attributeForgery": false
+      }
+    },
+    "evidence": [
+      "report.md",
+      "scope.json",
+      "source-audit.json",
+      "source-equivalence.json",
+      "current-product/report.md",
+      "current-product/baseline-88-summary.json",
+      "current-product/baseline-88-pixel-matrix.json",
+      "current-product/version-comparison.json",
+      "current-product/fluerial-diagnostic-report.md",
+      "css-audit/report.md",
+      "fluerial-fix-tests/report.md",
+      "combined-source-tests/report.md",
+      "standard-ci/report.md",
+      "standard-ci/target-test-execution.json",
+      "candidate-intake/product-intake.json",
+      "candidate-intake/packaged-fix-markers.json",
+      "full-product/comparison-initial-bounding-box.json",
+      "full-product/roi-center-refinement.json",
+      "full-product/noncontainer-source-comparison.json",
+      "full-product/qualification.json",
+      "current-product/qualify_composite.py",
+      "full-product/report.md",
+      "full-product/matrix.json",
+      "current-product/noncontainer_diagnostic.py"
+    ],
+    "afterStates": {
+      "completeCandidate": 88,
+      "normalSupplementBaseline": 9,
+      "normalSupplementCandidate": 9
+    }
   }
 ]

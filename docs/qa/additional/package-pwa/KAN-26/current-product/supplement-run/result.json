@@ -1,0 +1,98 @@
+{
+  "product": "/workspace/qa-linux-additional/KAN-24/followup/products/baseline/floorp",
+  "sourceSha": "29a3eb23145da90706d8a94441373278521cc737",
+  "input": "real Hub WebDriver clicks; genuine container service/tab APIs; WebDriver pointer hover/multiselect",
+  "cases": [
+    {
+      "id": "lepton-settled-hover-0",
+      "design": "lepton",
+      "verticalMode": true,
+      "evidence": [
+        "lepton-settled-hover-0.json",
+        "lepton-settled-hover-0.png"
+      ]
+    },
+    {
+      "id": "lepton-settled-hover-0.5",
+      "design": "lepton",
+      "verticalMode": true,
+      "evidence": [
+        "lepton-settled-hover-0.5.json",
+        "lepton-settled-hover-0.5.png"
+      ]
+    },
+    {
+      "id": "lepton-settled-hover-2.0",
+      "design": "lepton",
+      "verticalMode": true,
+      "evidence": [
+        "lepton-settled-hover-2.0.json",
+        "lepton-settled-hover-2.0.png"
+      ]
+    },
+    {
+      "id": "protonfix-settled-hover-0",
+      "design": "protonfix",
+      "verticalMode": true,
+      "evidence": [
+        "protonfix-settled-hover-0.json",
+        "protonfix-settled-hover-0.png"
+      ]
+    },
+    {
+      "id": "protonfix-settled-hover-0.5",
+      "design": "protonfix",
+      "verticalMode": true,
+      "evidence": [
+        "protonfix-settled-hover-0.5.json",
+        "protonfix-settled-hover-0.5.png"
+      ]
+    },
+    {
+      "id": "protonfix-settled-hover-2.0",
+      "design": "protonfix",
+      "verticalMode": true,
+      "evidence": [
+        "protonfix-settled-hover-2.0.json",
+        "protonfix-settled-hover-2.0.png"
+      ]
+    },
+    {
+      "id": "fluerial-settled-hover-0",
+      "design": "fluerial",
+      "verticalMode": true,
+      "evidence": [
+        "fluerial-settled-hover-0.json",
+        "fluerial-settled-hover-0.png"
+      ]
+    },
+    {
+      "id": "fluerial-settled-hover-0.5",
+      "design": "fluerial",
+      "verticalMode": true,
+      "evidence": [
+        "fluerial-settled-hover-0.5.json",
+        "fluerial-settled-hover-0.5.png"
+      ]
+    },
+    {
+      "id": "fluerial-settled-hover-2.0",
+      "design": "fluerial",
+      "verticalMode": true,
+      "evidence": [
+        "fluerial-settled-hover-2.0.json",
+        "fluerial-settled-hover-2.0.png"
+      ]
+    }
+  ],
+  "quit": {
+    "cause": "shutdown",
+    "forced": false,
+    "in_app": true
+  },
+  "browserExit": 0,
+  "completed": true,
+  "productUnchanged": true,
+  "ownedProcessesRemaining": 0,
+  "displaySocketAbsent": true
+}

@@ -1,0 +1,8 @@
+{
+  "key": "KAN-26",
+  "commentId": "10448",
+  "status": "進行中",
+  "statusTransition": false,
+  "phase": "full exact-final-head product validation pending",
+  "body": "## 非Photon条件の実測・依存Draft3048（完全製品検証中）\n\n既存3041 head1c37f3f2c53c5b213e679321e0116d4c7474661fとJira全6コメント/原issue全2コメントを照合。既済Photon36比較は繰り返していない。\n\nDebian13.6/Xvfb107/通常DBus/sandbox6、未改変の現159完全baselineで非Photon88状態（元40+未測定hover48）、公式12.20.2/native158 Linux archive SHA059a85f0…6004で40状態を測定。実Hub選択/真正container/実tabbrowser選択・複数選択/実WebDriverpointerで青橙・非container・横/展開verticalModeを確認。Lepton/protonfixは標準線display:noneが意図通りで、代替pseudoの選択時calcが未定義旧tokenを参照して幅0になる具体的欠陥。Fluerialは水平選択線201x2がopaque content下に隠れ、非選択垂直hoverは背景縮小で2x0/タブ外。Proton対照正常、Fluerial通常垂直選択は可視でその原症状は未再現。Linux旧版対照は原Windows達成ではない。\n\n[依存Draft3048](https://github.com/Floorp-Projects/Floorp/pull/3048) finalhead0e80f14dc439dde7817c0620f0fc112d54dfba80。3041固定headの無変更mirrorをbaseに補足し、canonical3041/vendor/Runtime lockを変更しない。消費要素の2native-token aliasと、Fluerialcontainerlineだけのstable-stack anchoring。Photon/titlebar/非container scope除外、ラベル/closeを遮らない。実Gecko159 sandbox6の新規2module計4case sourcefixtureは赤→緑、Fluerial一時sheet解除で症状再発まで確認。これは完成候補製品の合格ではない。\n\n旧head3a9の標準CI42110920041は283modules成功/1失敗。新2module・既存Photon/groupは成功し、既存strict composition期待値に新CSSchunkを追加し忘れた1件。失敗を保存、弱いassertへ変更せず全文一致の新chunkを追加。0e80はこのtest-only更新（production CSS不変）。新標準CI42112961086/同head完全package42113006050進行中。旧3a9package42110973642は成功したが製品試験せず、最新headに揃えて検証する。\n\n原Windows11/12.20.2、高DPI/物理GPU、実collapsedverticalの資格は未充足。CI開発harnessとsandbox6完全製品を区別。元22分母/元7matrix維持、追加KAN26として記録。進行中/Draftを維持、merge/release/Done化なし。"
+}

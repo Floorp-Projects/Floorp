@@ -1,0 +1,47 @@
+{
+  "sourceBlobs": [
+    {
+      "path": "browser-features/skin/lepton/css/leptonChrome.css",
+      "blobs": {
+        "29a3eb23": "4cbc056c6863148d88e0bf3ec470866efec10e81",
+        "1c37f3f2": "4cbc056c6863148d88e0bf3ec470866efec10e81",
+        "0e80f14d": "4cbc056c6863148d88e0bf3ec470866efec10e81"
+      },
+      "allSame": true
+    },
+    {
+      "path": "browser-features/skin/lepton/userjs/protonfix.js",
+      "blobs": {
+        "29a3eb23": "6d2ab6ad48425ae6ae878bebf02c3be1ef3dfa0e",
+        "1c37f3f2": "6d2ab6ad48425ae6ae878bebf02c3be1ef3dfa0e",
+        "0e80f14d": "6d2ab6ad48425ae6ae878bebf02c3be1ef3dfa0e"
+      },
+      "allSame": true
+    },
+    {
+      "path": "browser-features/skin/fluerial/css/fluerial.css",
+      "blobs": {
+        "29a3eb23": "33138e261c909af008446a0b8c1077ccab399c34",
+        "1c37f3f2": "33138e261c909af008446a0b8c1077ccab399c34",
+        "0e80f14d": "33138e261c909af008446a0b8c1077ccab399c34"
+      },
+      "allSame": true
+    },
+    {
+      "path": "floorp-runtime.lock.json",
+      "blobs": {
+        "29a3eb23": "8f3463c04e70cd900c55f4f1fd301403eccdf88a",
+        "1c37f3f2": "8f3463c04e70cd900c55f4f1fd301403eccdf88a",
+        "0e80f14d": "8f3463c04e70cd900c55f4f1fd301403eccdf88a"
+      },
+      "allSame": true
+    }
+  ],
+  "selectedNativeHashesMatch": {
+    "floorp": true,
+    "libxul.so": true,
+    "libmozgtk.so": true,
+    "libmozsandbox.so": true
+  },
+  "comparison": "main29a3 vs3041fixedbase vsfinal0e80, vendor/pref/native equality; compatibilityhelper CSS changes are separate reviewed patch"
+}

@@ -1,0 +1,56 @@
+{
+  "kind": "Exact combined3a9f99ae browser modules; not candidate full-product or top-level standard-runner qualification",
+  "display": ":114 Xvfb X11",
+  "product": "/workspace/qa-linux-additional/KAN-24/followup/products/baseline/floorp",
+  "profile": "/workspace/qa-linux-additional/KAN-26/combined-source-tests/home-direct/profile",
+  "identity": {
+    "profile": "/workspace/qa-linux-additional/KAN-26/combined-source-tests/home-direct/profile",
+    "executable": "/workspace/qa-linux-additional/KAN-24/followup/products/baseline/floorp/floorp",
+    "version": "159.0.1",
+    "buildID": "20261103153232",
+    "sandbox": 6,
+    "sandboxDisable": false
+  },
+  "variants": {
+    "candidate": {
+      "modules": [
+        {
+          "module": "lepton-container-geometry",
+          "pass": true,
+          "elapsedMs": 12337,
+          "progress": {
+            "moduleName": "lepton-container-geometry",
+            "testName": "",
+            "status": "done",
+            "index": 2,
+            "total": 2,
+            "startedAtMs": 1793913468760
+          }
+        },
+        {
+          "module": "fluerial-container.test.ts",
+          "pass": true,
+          "elapsedMs": 1428,
+          "progress": {
+            "moduleName": "fluerial-container.test.ts",
+            "testName": "",
+            "status": "done",
+            "index": 2,
+            "total": 2,
+            "startedAtMs": 1793913470188
+          }
+        }
+      ],
+      "allPass": true,
+      "declaredCaseCount": 4
+    }
+  },
+  "quit": {
+    "cause": "shutdown",
+    "forced": false,
+    "in_app": true
+  },
+  "browserExit": 0,
+  "ownedProcessesRemaining": 0,
+  "allProductFilesUnchanged": true
+}

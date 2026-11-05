@@ -1,0 +1,22 @@
+{
+  "run": 42110920041,
+  "headSha": "3a9f99ae12dbb221f63b28ec210b04fafcf2be15",
+  "workflowConclusion": "failure",
+  "classification": "existing CSS bundle-composition assertion must include new LEPTON_CONTAINER_GEOMETRY_CSS chunk; not infrastructure; no retry requested",
+  "browserModulesPass": 283,
+  "browserModulesFail": 1,
+  "failureExcerpts": [
+    {
+      "line": 369,
+      "text": "[ERROR] \u2717 browser-features/chrome/common/designs/test/lepton-compat.test.ts (178ms)"
+    },
+    {
+      "line": 370,
+      "text": "[ERROR]   lepton-compat.test.ts failures: bundled compat is color fix + lepton compat: LEPTON_COMPAT_CSS must bundle the color fix + Lepton compat (expected: "
+    }
+  ],
+  "newModulesSuccess": true,
+  "existingPhotonAndGroupControlsSuccess": true,
+  "downloadedFirefoxTasksPass": 16,
+  "next": "Parent updates import/expected combined stylesheet contract in existing test, then new head CI; no source mutation by monitor"
+}

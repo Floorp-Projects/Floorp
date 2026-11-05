@@ -1,0 +1,15 @@
+## 非Photon再現・依存Draft3048・完全Linux製品検証
+
+既存Photon Draft3041固定head1c37f3f2c53c5b213e679321e0116d4c7474661f、原issue/全コメントと既存進行を照合済み。既済Photon36比較は再実行せず、追加KAN26として元Linux22分母と元7matrixを維持。
+
+Lepton/Firefox UI Fixはnative contextline非表示が設計通り。実代替pseudoだけが未定義旧padding tokenにより選択時幅0。Fluerial水平選択線は201x2でもopaque contentに隠れ、垂直非選択hoverは背景縮小で2x0/タブ外。未改変main29a3完全159製品88状態と公式12.20.2/native158 Linux製品40状態で実測。Fluerial通常展開垂直選択は可視で、原症状のその部分は未再現。Proton対照は正常。
+
+[依存Draft3048](https://github.com/Floorp-Projects/Floorp/pull/3048) exacthead0e80f14dc439dde7817c0620f0fc112d54dfba80。3041無変更固定mirrorがbase、独立merge不可。2production互換CSSだけでconsumer限定native-token aliasとFluerialcontainerlineのstable-stack anchoringを補足。vendor/Runtime lock/workflow/canonical3041不変。新規2browser module計4case sourcefixtureは修正前失敗→修正後成功。標準CI42112961086全5job成功、284modules/0fail・Firefox8files16tasks成功。旧3a9のstrict composition期待値1失敗は保存し、新chunk追加だけで全文一致を維持。
+
+同head完全package42113006050成功、installer artifact13455701396、ZIP SHA2568b9dd3f6d2931d237c4944ced4735646678df2e599f48b4c6cc751bab852f8b6、tar38106ec5ee8d544ed92a32aa04f4b049d18bfa2f8a90ce7bec2fcde41d2d0c33。既存production application/package＋固定prebuilt Runtime8965。manifest差替/一時CSS注入ではなく、freshGecko/厳格helper-XPT/署名配布資格とは区別。
+
+Debian13.6/Xvfb/X11/通常DBus/default theme・density/sandbox6、専用profile。実Hubクリック・真正container・tabbrowser選択/複数選択・WebDriver pointerで横/実expandedvertical/青橙/通常/hoverを候補88状態実測。176/176色線で正色が可視かつ逆色なし（baseline126/176）。全file/tree/symlink不変、正常終了0、残process0。物理入力ではない。
+
+厳格比較の初回7失敗を保存。6件は小数座標の外側bounding boxが隣接青選択枠を拾った測定誤りで、未変更Proton baselineも同値。実rect内pixel-center方式を全色/両製品へ一律適用し正負assert維持、baseline欠落50件をなお検出。残りは通常tab1状態の6style差で、元captureのclosebuttons属性未記録。元strict比較1534pass/1failは保持し、all-passへ書換えない。fresh同条件対照9/9状態（fonts ready、通常760/640/1280resize、実activetab分岐、hover/dehover）では両製品が一致。属性偽装や検査除外なし。元条件の原因断定はせず、176/176復旧＋独立同条件対照として報告。
+
+残条件は原Windows11/12.20.2、高DPI/物理GPU、実collapsedvertical、歴史的1snapshotの未記録closebutton条件。Linux旧版はWindows資格ではない。古いneeds-full-build/needs-reproを今回満たした限定製品証拠に基づき具体条件へ絞り、課題は進行中・PRはDraftを維持。merge/release/Doneなし。

@@ -1,0 +1,11 @@
+{
+  "testSource": "/workspace/qa-kan26-fluerial-fix/browser-features/chrome/common/designs/test/fluerial-container.test.ts",
+  "variants": {
+    "baseline": {
+      "bundleSha256": "9b37097ef9685b2a111e1475db3fd1806942665e560a90e76c800a69496d3801"
+    },
+    "candidate": {
+      "bundleSha256": "3ef9b753b2762010630a05f2dade0f8a30b86077665491a899db385b6314f89b"
+    }
+  }
+}

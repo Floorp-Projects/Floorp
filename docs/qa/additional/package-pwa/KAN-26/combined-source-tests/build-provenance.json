@@ -1,0 +1,58 @@
+{
+  "sourceSha": "3a9f99ae12dbb221f63b28ec210b04fafcf2be15",
+  "sourceTrackedChanges": "",
+  "kind": "exact combined source browser regression modules; not full candidate package or standard top-level runner qualification",
+  "sources": [
+    {
+      "path": "browser-features/chrome/common/designs/test/lepton-container-geometry.test.ts",
+      "gitBlob": "e8917cbc57a56dfc778452bf090acd0cff594d6c",
+      "sha256": "f665544e85ec7e1d23d00b08307744704278cf9d0d8daaf719aa21b6f33f57c5"
+    },
+    {
+      "path": "browser-features/chrome/common/designs/test/fluerial-container.test.ts",
+      "gitBlob": "d24e326853316b6ae6c0442ee62febe0d5412b2c",
+      "sha256": "226c1d9379d070a490d71993d771085d16df4635d996772e3245a2d888cce8a9"
+    },
+    {
+      "path": "browser-features/chrome/common/designs/utils/lepton-compat-152.css.ts",
+      "gitBlob": "2c2674251b40c3f0328057e5a0a0d80b12d7a717",
+      "sha256": "f276ee67afcf4ffb5b1933e4e9deebd95efaec38e7ed9a543932b48baa3c5162"
+    },
+    {
+      "path": "browser-features/chrome/common/designs/utils/tab-color-like-toolbar.css.ts",
+      "gitBlob": "518bf41fcafbfac4318dc2c18d51d41c901e1efa",
+      "sha256": "51cbe1b53438ee0240bf0adb9168dee4c177d135dc9f88f33d400af2af1d12d3"
+    },
+    {
+      "path": "browser-features/chrome/common/designs/utils/gecko-152-var-aliases.css.ts",
+      "gitBlob": "c810edcd67e556bf9f62a495eb51897336825147",
+      "sha256": "9d151b2a7d205ce1f4e87935ba064516705afacb0d56862630c6fb73bb2c6802"
+    },
+    {
+      "path": "browser-features/skin/lepton/css/leptonChrome.css",
+      "gitBlob": "4cbc056c6863148d88e0bf3ec470866efec10e81",
+      "sha256": "ad62a10bcdfc1d7f54fca6e7f9b4f7aa219135b61b45b16b05ad924e4c303fc9"
+    },
+    {
+      "path": "browser-features/skin/fluerial/css/fluerial.css",
+      "gitBlob": "33138e261c909af008446a0b8c1077ccab399c34",
+      "sha256": "9eb08fe5d6359800c387b1a8ea42049d66554b8a108a451afd92423d113a0c74"
+    },
+    {
+      "path": "browser-features/chrome/test/utils/test_harness.ts",
+      "gitBlob": "41335d30b4f4f4bf54179660a8ad50551b3f6a04",
+      "sha256": "91a279ad59ccbc50d7df97eca08035314d1fb768f5fa92a12ae48f8f86ed3a2c"
+    }
+  ],
+  "bundleSha256": "94a76569b7473af5e3b1b998c5e9ab3a1294ade5099ec1e00db0c3a2ec16fe5c",
+  "modules": [
+    {
+      "name": "lepton-container-geometry",
+      "declaredCases": 2
+    },
+    {
+      "name": "fluerial-container.test.ts",
+      "declaredCases": 2
+    }
+  ]
+}

@@ -1,0 +1,162 @@
+{
+  "nativeVersion": "159.0.1",
+  "design": "protonfix",
+  "verticalMode": false,
+  "containerAttrs": {
+    "id": "tabbrowser-tabs",
+    "is": "tabbrowser-tabs",
+    "aria-multiselectable": "true",
+    "setfocus": "false",
+    "tooltip": "tabbrowser-tab-tooltip",
+    "orient": "horizontal",
+    "stopwatchid": "tabClick",
+    "style": "--tab-min-width-pref: 76px;",
+    "value": "",
+    "removable": "false",
+    "cui-areatype": "toolbar",
+    "hasadjacentnewtabbutton": "",
+    "closebuttons": "activetab"
+  },
+  "closebuttons": "activetab",
+  "windowRect": {
+    "x": 0,
+    "y": 0,
+    "width": 760,
+    "height": 900
+  },
+  "devicePixelRatio": 1,
+  "fonts": "loaded",
+  "labelText": "New Tab",
+  "hover": false,
+  "selected": true,
+  "content": {
+    "rect": {
+      "x": 377.26666259765625,
+      "y": 0,
+      "width": 123.10000610351562,
+      "height": 44,
+      "top": 0,
+      "right": 500.3666687011719,
+      "bottom": 44,
+      "left": 377.26666259765625
+    },
+    "styles": {
+      "display": "flex",
+      "visibility": "visible",
+      "opacity": "1",
+      "width": "123.1px",
+      "height": "44px",
+      "fontFamily": "Sans",
+      "fontSize": "13.3333px",
+      "fontWeight": "400",
+      "paddingInlineStart": "8px",
+      "paddingInlineEnd": "8px",
+      "marginInlineStart": "0px",
+      "marginInlineEnd": "0px",
+      "transitionProperty": "all",
+      "transitionDuration": "0s",
+      "transitionDelay": "0s"
+    }
+  },
+  "before": {
+    "rect": {
+      "x": 377.26666259765625,
+      "y": 0,
+      "width": 123.10000610351562,
+      "height": 44,
+      "top": 0,
+      "right": 500.3666687011719,
+      "bottom": 44,
+      "left": 377.26666259765625
+    },
+    "styles": {
+      "display": "block",
+      "visibility": "visible",
+      "opacity": "1",
+      "width": "90.1px",
+      "height": "0px",
+      "fontFamily": "Sans",
+      "fontSize": "13.3333px",
+      "fontWeight": "400",
+      "paddingInlineStart": "0px",
+      "paddingInlineEnd": "0px",
+      "marginInlineStart": "0px",
+      "marginInlineEnd": "0px",
+      "transitionProperty": "width, transform",
+      "transitionDuration": "0.2s, 0.2s",
+      "transitionDelay": "0s, 0s"
+    }
+  },
+  "label": {
+    "rect": {
+      "x": 385.26666259765625,
+      "y": 10.666671752929688,
+      "width": 89.60000610351562,
+      "height": 22.666656494140625,
+      "top": 10.666671752929688,
+      "right": 474.8666687011719,
+      "bottom": 33.33332824707031,
+      "left": 385.26666259765625
+    },
+    "styles": {
+      "display": "flex",
+      "visibility": "visible",
+      "opacity": "1",
+      "width": "89.6px",
+      "height": "22.6667px",
+      "fontFamily": "Sans",
+      "fontSize": "13.3333px",
+      "fontWeight": "400",
+      "paddingInlineStart": "0px",
+      "paddingInlineEnd": "0px",
+      "marginInlineStart": "0px",
+      "marginInlineEnd": "0px",
+      "transitionProperty": "width",
+      "transitionDuration": "0.3s",
+      "transitionDelay": "0s"
+    }
+  },
+  "close": {
+    "rect": {
+      "x": 474.8666687011719,
+      "y": 12,
+      "width": 19,
+      "height": 20,
+      "top": 12,
+      "right": 493.8666687011719,
+      "bottom": 32,
+      "left": 474.8666687011719
+    },
+    "styles": {
+      "display": "flex",
+      "visibility": "visible",
+      "opacity": "1",
+      "width": "19px",
+      "height": "20px",
+      "fontFamily": "Sans",
+      "fontSize": "13.3333px",
+      "fontWeight": "400",
+      "paddingInlineStart": "3px",
+      "paddingInlineEnd": "4px",
+      "marginInlineStart": "0px",
+      "marginInlineEnd": "-1.5px",
+      "transitionProperty": "opacity",
+      "transitionDuration": "0.1s",
+      "transitionDelay": "0s"
+    }
+  },
+  "matchedBeforeRules": {
+    "error": "TypeError: InspectorUtils.getCSSStyleRules is not a function"
+  },
+  "matchedLabelRules": {
+    "error": "TypeError: InspectorUtils.getCSSStyleRules is not a function"
+  },
+  "matchedCloseRules": {
+    "error": "TypeError: InspectorUtils.getCSSStyleRules is not a function"
+  },
+  "animations": [],
+  "activeElement": {
+    "tag": "browser",
+    "id": ""
+  }
+}
