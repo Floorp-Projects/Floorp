@@ -1,0 +1,25 @@
+{
+  "jiraCommentId": "10448",
+  "pr": 3048,
+  "head": "0e80f14dc439dde7817c0620f0fc112d54dfba80",
+  "evidenceCommit": "0b10fde7f581e4755e69c1f9dc08a51f7e016f87",
+  "status": "進行中",
+  "labels": [
+    "area-tabs",
+    "draft-pr",
+    "floorp-stability-2026-11",
+    "full-package-verified",
+    "needs-collapsed-vertical",
+    "needs-high-dpi",
+    "needs-original-windows-repro",
+    "needs-physical-gpu",
+    "p3",
+    "qa-linux-executed",
+    "related-pr-3048",
+    "reproduced-in-test",
+    "triage-reviewed"
+  ],
+  "nativeWindowsExecution": false,
+  "linuxTestsRepeated": 0,
+  "codeChanges": 0
+}

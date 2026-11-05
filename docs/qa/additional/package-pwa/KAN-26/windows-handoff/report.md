@@ -179,3 +179,13 @@ from shared QA. Product/source/digest evidence lines are unchanged.
 Latest subject recheck confirms3048 head/base and canonical3041 still match the
 pinned values, both Draft/unmerged, and exactly one Windows package run exists
 at this head. No duplicate dispatch, retry, release or native Windows execution.
+
+## Publication
+
+Final measured Windows handoff evidence fullSHA:
+`0b10fde7f581e4755e69c1f9dc08a51f7e016f87`.
+Report path: `docs/qa/additional/package-pwa/KAN-26/windows-handoff/report.md`.
+PR3048 body and Jira KAN-26 comment10448 now reference this immutable proof.
+Final publication metadata is also saved on the same dedicated QA branch.
+Jira remains in progress with original Windows/highDPI/physicalGPU/collapsed
+needs labels retained; no source change, extra dispatch, Linux rerun or release.

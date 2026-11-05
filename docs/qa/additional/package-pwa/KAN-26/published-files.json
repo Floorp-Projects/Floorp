@@ -21,11 +21,11 @@
   },
   {
     "path": "jira-update.json",
-    "bytes": 4556
+    "bytes": 6124
   },
   {
     "path": "matrix.json",
-    "bytes": 5604
+    "bytes": 5672
   },
   {
     "path": "obsolete-package-run.json",
@@ -49,7 +49,7 @@
   },
   {
     "path": "pr-body.md",
-    "bytes": 4437
+    "bytes": 5736
   },
   {
     "path": "publish_evidence.py",
@@ -6661,7 +6661,7 @@
   },
   {
     "path": "windows-handoff/matrix.json",
-    "bytes": 2510
+    "bytes": 2576
   },
   {
     "path": "windows-handoff/monitor_run.py",
@@ -6696,8 +6696,12 @@
     "bytes": 811
   },
   {
+    "path": "windows-handoff/publication.json",
+    "bytes": 605
+  },
+  {
     "path": "windows-handoff/report.md",
-    "bytes": 11041
+    "bytes": 11540
   },
   {
     "path": "windows-handoff/runtime-manifest.json",

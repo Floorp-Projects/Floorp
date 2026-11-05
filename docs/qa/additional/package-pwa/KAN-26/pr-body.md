@@ -15,3 +15,12 @@ Original Windows11/12.20.2, highDPI, physical GPU/input and actual collapsed-ver
 
 
 Evidence and reproduction scripts: [immutable QA report](https://github.com/Floorp-Projects/Floorp/blob/481c53f308f7c133d53de614e01e153faf1b22c9/docs/qa/additional/package-pwa/KAN-26/report.md), [complete-product comparison](https://github.com/Floorp-Projects/Floorp/blob/481c53f308f7c133d53de614e01e153faf1b22c9/docs/qa/additional/package-pwa/KAN-26/full-product/qualification.json).
+
+
+## Windows package handoff (native execution pending)
+
+The exact same source was rechecked against canonical #3041 and had no Windows package run. One unsigned package-only [run42120232936](https://github.com/Floorp-Projects/Floorp/actions/runs/42120232936) succeeded on attempt1, using authenticated Runtime8965 manifest13274392012 and fixed Windows artifact13270584849. Both signing steps were skipped. No code, Runtime lock, distribution or Linux test changes.
+
+Final artifact13459735586 (`noraneko-windows-x86_64-unsigned-installer`): actual ZIP SHA256 `67df130a88bf1f201621e8f0a1590c59cc9f18aae640350a53ed3bf1c2b2a933`. Its `floorp-windows-x86_64.installer.exe` member is116731728 bytes, actual SHA256 `e125dd8cdc62df753f225bb12b3fa332627220ca24f26939936c4c6031efb2a5`. API metadata, actual downloaded bytes and source/upload log evidence agree.
+
+[Immutable Windows handoff report](https://github.com/Floorp-Projects/Floorp/blob/0b10fde7f581e4755e69c1f9dc08a51f7e016f87/docs/qa/additional/package-pwa/KAN-26/windows-handoff/report.md) includes88-state acceptance, Linux scripts/matrix references, condition recording and installer verification. Cloud did not execute Windows code; original Windows/highDPI/GPU/collapsed qualifications and the historical Linux1534/1 limitation remain pending.

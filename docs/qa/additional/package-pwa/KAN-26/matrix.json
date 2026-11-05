@@ -128,7 +128,8 @@
       "artifactName": "noraneko-windows-x86_64-unsigned-installer",
       "zipSha256": "67df130a88bf1f201621e8f0a1590c59cc9f18aae640350a53ed3bf1c2b2a933",
       "installerSha256": "e125dd8cdc62df753f225bb12b3fa332627220ca24f26939936c4c6031efb2a5",
-      "windowsExecution": "not performed; local coordinator handoff"
+      "windowsExecution": "not performed; local coordinator handoff",
+      "evidenceCommit": "0b10fde7f581e4755e69c1f9dc08a51f7e016f87"
     }
   }
 ]
