@@ -31,8 +31,8 @@
     },
     {
       "path": "matrix.json",
-      "bytes": 2520,
-      "sha256": "f0e573055f2cf5cb967c02a3e7299bddd6a6215b04f9c54a8f429272b97da98d"
+      "bytes": 2840,
+      "sha256": "3f58735f2fe969515781d7cc7870010fc5e6cc546bbc7386e645b44d1a085e26"
     },
     {
       "path": "raw/current-fresh/cpu-samples.json",
