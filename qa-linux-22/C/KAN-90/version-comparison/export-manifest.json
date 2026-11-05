@@ -1,8 +1,8 @@
 [
   {
     "path": "report.md",
-    "bytes": 6344,
-    "sha256": "87644b2739cf7f927f24288f49274c6264d8b49a4589c9e5a7cf1cec3b70d373"
+    "bytes": 6703,
+    "sha256": "7c6c2a0a8619f6ec2cb12f05c953028745049686cc0375b6fa463da74ab86449"
   },
   {
     "path": "run-comparison.py",
@@ -31,18 +31,18 @@
   },
   {
     "path": "verify.py",
-    "bytes": 3616,
-    "sha256": "34b29f11abbbb62a47eece22ce8bbc4ba03a7fd451897739fe086e2105f96082"
+    "bytes": 3572,
+    "sha256": "7c7e9e11ba8a1765924ed120a9391871eda6f834ce12b6e4b7102e3af8724add"
   },
   {
     "path": "verification.json",
-    "bytes": 1744,
-    "sha256": "813c8f23f466993f1d6717c9ef2fe99c8db696b6c32c2a461589f002f035da4c"
+    "bytes": 1692,
+    "sha256": "4097652fc7dda2f2b1fd22e8c89dea6eb5536a2785d39db6ce7218b52f8aeeb2"
   },
   {
     "path": "jira-comment-draft.md",
-    "bytes": 590,
-    "sha256": "31aa8738e457c427fe7c2d79299cb0d058a986207148a3e0e84707cdeb25031b"
+    "bytes": 249,
+    "sha256": "f0ac05026449af9ff3a202bf76075570144e27adc7514f1d8a36de89d2cdc476"
   },
   {
     "path": "acquisition/report.md",
@@ -128,5 +128,10 @@
     "path": "raw/12.21.1/dbus-monitor.log",
     "bytes": 1908,
     "sha256": "fe69b20a06fb61b2ffb6d2a3c2169d1f34f84258569c1b8d9c511a484574da41"
+  },
+  {
+    "path": "publication-status.json",
+    "bytes": 297,
+    "sha256": "0b160a0e0010dce119d03b682df8572574a5988913b9715ee02a3ad60ecf4c9c"
   }
 ]

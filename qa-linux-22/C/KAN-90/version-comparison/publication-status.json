@@ -1,0 +1,11 @@
+{
+  "qaBranch": "qa/linux-c-integration",
+  "evidenceCommit": "a4e39654",
+  "originalLocalCommit": "3378e7450fea3ad1003fae4cd5be418fd5daa1cf",
+  "jiraCommentId": "10337",
+  "published": true,
+  "jiraCommentPosted": true,
+  "productionRelease": false,
+  "merge": false,
+  "doneTransition": false
+}

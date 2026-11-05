@@ -358,7 +358,7 @@
     ],
     "existingPr": null,
     "newPr": null,
-    "jiraCommentId": "10322",
+    "jiraCommentId": "10337",
     "evidence": [
       "KAN-90/report.md",
       "KAN-90/portal-followup/report.md",
@@ -421,7 +421,8 @@
     "jiraCommentIds": [
       "10282",
       "10305",
-      "10322"
+      "10322",
+      "10337"
     ],
     "thunderbirdOriginFollowup": {
       "nativeControl": {
@@ -464,9 +465,9 @@
       "trialCount": 2,
       "passed": 2,
       "originalFloorpFlatpakConditionSatisfied": false,
-      "published": false,
-      "jiraCommentPosted": false,
-      "lastExistingJiraCommentId": "10322"
+      "published": true,
+      "jiraCommentPosted": true,
+      "lastExistingJiraCommentId": "10337"
     }
   }
 ]
