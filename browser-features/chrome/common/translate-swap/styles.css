@@ -1,0 +1,44 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* The language labels sit above the menulists, so the button is aligned to the
+ * bottom edge of the row to line up with the menulists rather than the labels. */
+#select-translations-panel-lang-selection > .floorp-translate-swap-button {
+  appearance: none;
+  -moz-context-properties: fill, fill-opacity;
+  fill: currentColor;
+  list-style-image: url("chrome://global/skin/icons/swap-horizontal-20.svg");
+  align-self: flex-end;
+  flex: 0 0 auto;
+  box-sizing: border-box;
+  width: 29px;
+  min-width: 29px;
+  height: 29px;
+  margin: 0;
+  padding: 0;
+  border-radius: var(--border-radius-small, 4px);
+  /* The icon is the only visible child; center it so the hover background
+   * surrounds it evenly. */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* toolbarbutton always creates an empty text label beside the icon, which
+ * would otherwise claim flex space and push the icon off-center. */
+#select-translations-panel-lang-selection > .floorp-translate-swap-button > .toolbarbutton-text {
+  display: none;
+}
+
+#select-translations-panel-lang-selection > .floorp-translate-swap-button > .toolbarbutton-icon {
+  margin: 0;
+}
+
+#select-translations-panel-lang-selection > .floorp-translate-swap-button:not([disabled]):hover {
+  background-color: var(--button-background-color-hover, rgba(0, 0, 0, 0.08));
+}
+
+#select-translations-panel-lang-selection > .floorp-translate-swap-button[disabled] {
+  opacity: 0.4;
+}

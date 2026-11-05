@@ -2,6 +2,9 @@
   "tab-refresh": {
     "reload": "Reload tab"
   },
+  "translate-swap": {
+    "label": "Swap languages"
+  },
   "undo-closed-tab": {
     "label": "Undo Closed Tab",
     "tooltiptext": "Reopen the last closed tab {{shortcut}}"
