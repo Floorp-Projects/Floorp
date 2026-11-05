@@ -13,6 +13,11 @@ import {
   loadUriInWebPanelBrowser,
   type WebPanelBrowserElement,
 } from "./utils/web-panel-browser.ts";
+import { WebPanelPopupNotifications } from "./utils/web-panel-popup-notifications.ts";
+import {
+  registerWebPanelBrowserId,
+  unregisterWebPanelBrowserId,
+} from "./utils/web-panel-browser-registry.ts";
 
 const PANEL_SIDEBAR_DATA_PREF_NAME = "floorp.panelSidebar.data";
 
@@ -225,6 +230,37 @@ export class WebsitePanelWindowChild {
     return browser;
   }
 
+  /**
+   * Web panel integrations. A failure in one of them must not keep the panel
+   * from loading, so each step is isolated.
+   */
+  private setUpContentBrowser(browser: WebPanelBrowserElement): void {
+    const steps: Array<() => void> = [
+      // The outer panel <browser> disables fullscreen, but Gecko checks that
+      // only in the parent after the page asked, and never answers the page:
+      // its requestFullscreen() stays pending. Deny it in content instead.
+      () => browser.setAttribute("disablefullscreen", "true"),
+      () => WebPanelPopupNotifications.forwardFromWebPanelWindow(),
+      // Lets content-side actors recognize pages loaded in this web panel.
+      () => {
+        const browserId = browser.browserId;
+        registerWebPanelBrowserId(browserId);
+        globalThis.addEventListener(
+          "unload",
+          () => unregisterWebPanelBrowserId(browserId),
+          { once: true },
+        );
+      },
+    ];
+    for (const step of steps) {
+      try {
+        step();
+      } catch (error) {
+        console.error("[WebsitePanelWindowChild]", error);
+      }
+    }
+  }
+
   setZoomLevel(browser: WebPanelBrowserElement) {
     const panelId = this.webpanelId;
     if (!panelId) {
@@ -253,6 +289,7 @@ export class WebsitePanelWindowChild {
     );
 
     const browser = this.getContentBrowser();
+    this.setUpContentBrowser(browser);
 
     globalThis.requestAnimationFrame(() => {
       loadUriInWebPanelBrowser(browser, loadURL);

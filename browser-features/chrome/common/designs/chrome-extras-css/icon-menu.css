@@ -2610,3 +2610,8 @@ menuitem.privatetab-icon {
 #uninstall-ssb-contextmenu {
   --menuitem-image: url("../icons/pwa-remove.svg");
 }
+
+/* Floorp: Gecko's paste confirmation menu */
+#clipboardReadPasteMenuItem {
+  --menuitem-image: url("../icons/edit-paste.svg");
+}

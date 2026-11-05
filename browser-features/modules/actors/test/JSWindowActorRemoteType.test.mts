@@ -29,6 +29,7 @@ const EXPECTED_LOOPBACK_ACTORS = [
   "NRPluginStore",
   "NRKeyboardShortcutFocus",
   "NRMouseGestureScroll",
+  "NRWebPanelClipboard",
 ];
 
 interface TestTab {
