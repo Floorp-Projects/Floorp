@@ -253,6 +253,21 @@ export const LEPTON_COMPAT_152_CSS = `
 }
 `;
 
+export const LEPTON_CONTAINER_GEOMETRY_CSS = `
+/* Lepton/Firefox UI Fix replace the native line with .tab-content::before.
+ * Its selected width still reads the pre-152 padding/margin token names.
+ * Resolve these aliases at the consuming element, where native tab tokens
+ * are available, rather than inheriting an already-invalid root alias. */
+@media -moz-pref("userChrome.tab.container") and
+  (not -moz-pref("userChrome.tab.photon_like_contextline")) and
+  (not -moz-pref("userChrome.tabbar.as_titlebar")) {
+  #tabbrowser-tabs .tabbrowser-tab[usercontextid] > .tab-stack > .tab-content {
+    --tab-inline-padding: var(--tab-padding-inline);
+    --tab-inner-inline-margin: var(--tab-margin-inline-inner);
+  }
+}
+`;
+
 /**
  * Combined Lepton-family stylesheet: color fix + Lepton-specific compat.
  * Injected after Lepton's own sheets.
@@ -284,4 +299,4 @@ export const LEPTON_CONTAINER_INDICATOR_CSS = `
 
 export const LEPTON_COMPAT_CSS = GECKO_152_COLOR_FIX_CSS + "\n" +
   LEPTON_COMPAT_152_CSS + "\n" +
-  LEPTON_CONTAINER_INDICATOR_CSS;
+  LEPTON_CONTAINER_INDICATOR_CSS + "\n" + LEPTON_CONTAINER_GEOMETRY_CSS;
