@@ -15,7 +15,7 @@
     ],
     "existingPr": null,
     "newPr": null,
-    "jiraCommentId": null,
+    "jiraCommentId": "10278",
     "evidence": [
       "KAN-20/report.md"
     ],
@@ -41,6 +41,16 @@
         "infrastructureFailure": false,
         "sampleCount": 6
       }
+    ],
+    "jiraLabels": [
+      "area-webcompat",
+      "env-blocked",
+      "floorp-stability-2026-11",
+      "needs-info",
+      "needs-repro",
+      "p2",
+      "triage-reviewed",
+      "needs-ubuntu26-snap-flatpak"
     ]
   },
   {
@@ -59,7 +69,7 @@
     ],
     "existingPr": null,
     "newPr": null,
-    "jiraCommentId": null,
+    "jiraCommentId": "10279",
     "evidence": [
       "KAN-21/report.md"
     ],
@@ -125,6 +135,16 @@
         "infrastructureFailure": false,
         "sampleCount": 6
       }
+    ],
+    "jiraLabels": [
+      "area-webcompat",
+      "env-blocked",
+      "floorp-stability-2026-11",
+      "needs-info",
+      "needs-repro",
+      "p2",
+      "triage-reviewed",
+      "needs-zorin-live-turnstile"
     ]
   },
   {
@@ -164,7 +184,7 @@
     ],
     "existingPr": null,
     "newPr": null,
-    "jiraCommentId": null,
+    "jiraCommentId": "10280",
     "evidence": [
       "KAN-64/report.md"
     ],
@@ -176,7 +196,17 @@
       "matchingFirefoxHideAllControl": true,
       "signedState": 2,
       "sandboxLevel": 6
-    }
+    },
+    "jiraLabels": [
+      "area-workspaces",
+      "floorp-github-import-2026-11",
+      "needs-external-check",
+      "p2",
+      "triage-reviewed",
+      "reproduced",
+      "external-dependency",
+      "needs-tst-hidden-group-contract"
+    ]
   },
   {
     "key": "KAN-71",
@@ -194,7 +224,7 @@
     ],
     "existingPr": null,
     "newPr": null,
-    "jiraCommentId": null,
+    "jiraCommentId": "10281",
     "evidence": [
       "KAN-71/report.md"
     ],
@@ -212,7 +242,16 @@
         "Muffin6.4.1"
       ],
       "startupIdOrActivationTokenPresent": false
-    }
+    },
+    "jiraLabels": [
+      "area-platform",
+      "env-blocked",
+      "floorp-github-import-2026-11",
+      "needs-repro",
+      "p2",
+      "triage-reviewed",
+      "needs-cinnamon-x11-activation"
+    ]
   },
   {
     "key": "KAN-90",
@@ -233,7 +272,7 @@
     ],
     "existingPr": null,
     "newPr": null,
-    "jiraCommentId": null,
+    "jiraCommentId": "10282",
     "evidence": [
       "KAN-90/report.md"
     ],
@@ -244,6 +283,17 @@
       "sameSessionPid": true,
       "portalOpenUriObserved": false,
       "fedoraProtectedUserNamespace": "EPERM"
-    }
+    },
+    "jiraLabels": [
+      "area-platform",
+      "env-blocked",
+      "floorp-github-import-2026-11",
+      "needs-crash-log",
+      "needs-fedora-44",
+      "needs-repro",
+      "needs-thunderbird-portal",
+      "p1",
+      "triage-reviewed"
+    ]
   }
 ]

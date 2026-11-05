@@ -86,8 +86,8 @@
   },
   {
     "path": "matrix.json",
-    "bytes": 9958,
-    "sha256": "3bbcd876208b16253f4caa288497e1d1b50447a82c0c8a533f55fefef696fc6d"
+    "bytes": 11113,
+    "sha256": "138d19fc75ca7518d88d7aea529b6897b59cf612c6d9701a5957388669869d49"
   },
   {
     "path": "web-tools/run_login.py",
