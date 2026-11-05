@@ -771,7 +771,7 @@
         "https://github.com/Floorp-Projects/Floorp/pull/2960 (webpanelcontext, notsame ordinarywebtab)"
       ],
       "newPr": null,
-      "jiraCommentId": null,
+      "jiraCommentId": "10481",
       "evidence": [
         "report.md",
         "summary.json",
@@ -788,7 +788,21 @@
       ],
       "separateFromOriginal22": true,
       "originalCMatrixSha256": "4ac5d5f17f97d70e82f7b9f17d6abcc1aa17a92e3708eeadaba6ac7c8415e3cd",
-      "parentKAN37ClarificationCommit": "74c07f3ae51cf3d1fa3b959b9697a2c0be7b39d7"
+      "parentKAN37ClarificationCommit": "74c07f3ae51cf3d1fa3b959b9697a2c0be7b39d7",
+      "evidenceCommit": "dc745c22194bbe10c12f59c7adc7d99ae44b4cd2",
+      "jiraLabels": [
+        "area-webcompat",
+        "env-blocked",
+        "floorp-stability-2026-11",
+        "needs-repro",
+        "needs-test-account",
+        "p2",
+        "triage-reviewed",
+        "linux-native-clipboard-fixture-tested",
+        "needs-windows-proton-composer",
+        "needs-authorized-proton-account",
+        "needs-approved-firefox-control"
+      ]
     }
   ]
 }
