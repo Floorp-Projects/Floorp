@@ -81,8 +81,8 @@
     },
     {
       "path": "matrix.json",
-      "bytes": 2560,
-      "sha256": "ed93feb5cd35b49c88ef6925ffcea6aeb172b682fe7cc31157908bd15cb949ad"
+      "bytes": 3086,
+      "sha256": "f150726366a12e9fa971461a1795df12bc8c01e92c866da3cc99e587f44b09c4"
     },
     {
       "path": "packaged-stock-policy.json",
