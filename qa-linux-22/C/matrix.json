@@ -341,12 +341,14 @@
     "productVersion": "Floorp12.21.1/Gecko159.0.1 Flathub ab3c23d5f3a32863918263c197b483e37d9ed78a6bb9d00a1657e31dc5e04621",
     "environment": {
       "executed": "Debian13.6/Xvfb/Openbox/private DBus, Flatpak1.16.6 Thunderbird140.12.0esr",
-      "originalCapabilityProbe": "Fedora44 container Flatpak1.18.4 Thunderbird158.0; default protected namespaces denied EPERM"
+      "originalCapabilityProbe": "Fedora44 container Flatpak1.18.4 Thunderbird158.0; default protected namespaces denied EPERM",
+      "thunderbirdOrigin": "Debian13.6/Xvfb/Openbox/private session+fixture system DBus; official signed Thunderbird159.0 Flatpak25.08 shipped portal defaults; separate native140 source-config control"
     },
     "testCommand": [
       "/workspace/qa-linux-22/C/KAN-90/flatpak-env.sh dbus-run-session -- /workspace/qa-linux-22/C/web-tools/venv/bin/python /workspace/qa-linux-22/C/KAN-90/run-integration.py",
       "KAN-90/flatpak-env.sh dbus-run-session -- <marionette-python> KAN-90/portal-followup/run-portal.py",
-      "KAN-90/flatpak-env.sh dbus-run-session -- <marionette-python> KAN-90/thunderbird-origin/run-flatpak-159.py"
+      "KAN-90/flatpak-env.sh dbus-run-session -- <marionette-python> KAN-90/thunderbird-origin/run-flatpak-159.py",
+      "KAN-90/flatpak-env.sh dbus-run-session -- <marionette-python> KAN-90/thunderbird-origin/run-native-140.py"
     ],
     "result": "original Fedora44 crash unvalidated; real Thunderbird159.0 Flatpak-origin portal path passed with source/config/sender attribution; no confirmed product defect",
     "remainingConditions": [
@@ -355,7 +357,7 @@
     ],
     "existingPr": null,
     "newPr": null,
-    "jiraCommentId": "10305",
+    "jiraCommentId": "10322",
     "evidence": [
       "KAN-90/report.md",
       "KAN-90/portal-followup/report.md",
@@ -410,7 +412,8 @@
     },
     "jiraCommentIds": [
       "10282",
-      "10305"
+      "10305",
+      "10322"
     ],
     "thunderbirdOriginFollowup": {
       "nativeControl": {
