@@ -1,0 +1,13 @@
+{
+  "phase": "before candidate provided to or measured by probe agent; no candidate UI observations",
+  "recordedUtc": "2026-11-05T22:55:46.545864+00:00",
+  "candidateObserved": false,
+  "files": {
+    "probe.py": "861696f101aedfbfc5085767d282030c348548ee61e7fefc824ccb3327dcf732",
+    "compare.py": "124cc1338bff946b27dc72c96b9a74a8bc039cdd0cce26909410a7d3cb207da6",
+    "criteria.json": "ef7da8df284dff189bf4366e89451c07d21d06de29a330da06a64706415deb40",
+    "line_analyze.py": "a718f2b44256bad4f5825e47d91706b3d007cd0b85c1718ba8e01d8edc7b101a",
+    "line_compare.py": "2c72198b4b932b031b341b94762fde088941426daf348387d4f2ce9afcea1b1b"
+  },
+  "updateReason": "Add actual nohover/no-multiselect assertions to explicit24scope before any candidate UI observations"
+}

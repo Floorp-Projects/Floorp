@@ -1,0 +1,46 @@
+{
+  "fluerial": {
+    "visible": 9,
+    "total": 12,
+    "missing": [
+      "fluerial-h-density-0:blue",
+      "fluerial-h-density-1:blue",
+      "fluerial-h-density-2:blue"
+    ]
+  },
+  "lepton": {
+    "visible": 6,
+    "total": 12,
+    "missing": [
+      "lepton-h-density-0:blue",
+      "lepton-h-density-1:blue",
+      "lepton-h-density-2:blue",
+      "lepton-v-density-0:blue",
+      "lepton-v-density-1:blue",
+      "lepton-v-density-2:blue"
+    ]
+  },
+  "photon": {
+    "visible": 0,
+    "total": 12,
+    "missing": [
+      "photon-h-density-0:blue",
+      "photon-h-density-0:orange",
+      "photon-h-density-1:blue",
+      "photon-h-density-1:orange",
+      "photon-h-density-2:blue",
+      "photon-h-density-2:orange",
+      "photon-v-density-0:blue",
+      "photon-v-density-0:orange",
+      "photon-v-density-1:blue",
+      "photon-v-density-1:orange",
+      "photon-v-density-2:blue",
+      "photon-v-density-2:orange"
+    ]
+  },
+  "proton": {
+    "visible": 12,
+    "total": 12,
+    "missing": []
+  }
+}

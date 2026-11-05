@@ -340,5 +340,85 @@
       "windowsExecution": "not performed; local coordinator handoff",
       "evidenceCommit": "0b10fde7f581e4755e69c1f9dc08a51f7e016f87"
     }
+  },
+  {
+    "key": "KAN-95",
+    "github": "https://github.com/Floorp-Projects/Floorp/issues/2670",
+    "sourceSha": {
+      "baseline": "29a3eb23145da90706d8a94441373278521cc737",
+      "candidate": "214ba6657a63314594de3867785441558b7a63b5",
+      "runtime": "8965ffc346d426ccdf919bd18585e4d4a0c21654",
+      "priorLinux39SourceAudit": "29a3eb23145da90706d8a94441373278521cc737",
+      "priorOfficialBinaryFrontendSha": "not inferred"
+    },
+    "productVersion": {
+      "nativeVersion": "159.0.1",
+      "nativeBuildId": "20261103153232",
+      "candidatePackageApplicationIni": "; This file is not used. If you modify it and want the application to use\n; your modifications, move it under the browser/ subdirectory and start with\n; the \"-app /path/to/browser/application.ini\" argument.\n[App]\nVendor=Ablaze\nName=Floorp\nRemotingName=floorp\nVersion=12.21.1@159.0.1\nProfile=Floorp\nBuildID=20261105224633\nID={ec8030f7-c20a-464f-9b0e-13a3a9e97384}\n\n[Gecko]\nMinVersion=159.0.1\nMaxVersion=159.0.1\n\n[XRE]\nEnableProfileMigrator=1\n\n\n[AppUpdate]\nURL=https://aus5.mozilla.org/update/6/%PRODUCT%/%VERSION%/%BUILD_ID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%SYSTEM_CAPABILITIES%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/update.xml\n",
+      "candidatePlatformIni": "[Build]\nBuildID=20261105224633\nMilestone=159.0.1\n"
+    },
+    "environment": "Debian13/Xvfb117/X11/normalDBus/defaulttheme/DPR1/sandbox6; synthetic Hub clicks/native selectedtabs/pointeroff; no physicalWindows10 qualification",
+    "testCommand": "dbus-run-session -- python full-product/probe.py --product <authenticated-product> --source-sha <head> --out <fresh>; full-product/compare.py; line_compare.py",
+    "result": "Complete candidate24states:919pass/0fail; LeptonHnormal/compact three roles start/topgap4to2/endCSS0preserved; touch/vertical/otherdesign margins and geometry unchanged; separate48indicators no newloss/oppositehue,21preexistingmissing retained",
+    "remainingConditions": [
+      "Original Windows10/12.17.0 native titlebar/window config",
+      "physical input/GPU/highDPI",
+      "all custom themes and important overrides beyond parent native-source tests",
+      "new24matrix does not cover pointerhover/multiselection",
+      "prior baselineHub radio checked state not explicitly saved; saveddesign/actualCSS/nativeorientation recorded; candidate checked state saved",
+      "actual collapsed vertical beyond expanded24matrix"
+    ],
+    "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/3052",
+    "newPr": null,
+    "jiraCommentId": null,
+    "package": {
+      "run": 42123754997,
+      "artifact": 13459714736,
+      "attempt": 1,
+      "conclusion": "success",
+      "zipSha256": "d4e89cc7ba88751df704771c89c93017a03a01aaa8877db0f538a62c8aa81502",
+      "tarSha256": "f1404a3d8d23058d6eba83b0875cbc4154bf756e9244c8a32856b9409d961ee4",
+      "qualification": "complete existing production app/package with locked prebuilt native, notfreshGecko/signedrelease"
+    },
+    "uiStates": {
+      "prior39Reexecuted": false,
+      "newBaseline": 24,
+      "newCandidate": 24
+    },
+    "assertions": {
+      "passed": 919,
+      "failed": 0
+    },
+    "containerLines": {
+      "separateFromMargin": true,
+      "perProduct": 48,
+      "newLoss": 0,
+      "oppositeHue": 0,
+      "preexistingMissing": 21,
+      "3041and3048Included": false
+    },
+    "otherRunsUnchanged": [
+      42123057521,
+      42123152394
+    ],
+    "originalLinuxDenominator": 22,
+    "evidenceRoot": "docs/qa/additional/package-pwa/KAN-95/pr3052",
+    "evidence": [
+      "report.md",
+      "scope.json",
+      "source-subject.json",
+      "source-log-verification.json",
+      "package-job.log",
+      "candidate-intake/product-intake.json",
+      "candidate-intake/packaged-alias.json",
+      "full-product/comparison.json",
+      "full-product/line-comparison.json",
+      "full-product/criteria-initial.json",
+      "full-product/criteria-adjustment.json",
+      "full-product/pre-candidate-checker.json",
+      "prior-linux39/reuse-summary.md",
+      "prior-linux39/retrieval-provenance.json",
+      "full-product/vertical-scope.json"
+    ]
   }
 ]

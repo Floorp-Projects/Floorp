@@ -1,0 +1,63 @@
+[
+  {
+    "status": "in_progress",
+    "conclusion": null,
+    "active": [
+      "Checkout Floorp-Projects/Floorp-runtime"
+    ]
+  },
+  {
+    "status": "in_progress",
+    "conclusion": null,
+    "active": [
+      "Setup"
+    ]
+  },
+  {
+    "status": "in_progress",
+    "conclusion": null,
+    "active": [
+      "Mach configure"
+    ]
+  },
+  {
+    "status": "in_progress",
+    "conclusion": null,
+    "active": [
+      "Build"
+    ]
+  },
+  {
+    "status": "in_progress",
+    "conclusion": null,
+    "active": [
+      "Package noraneko"
+    ]
+  },
+  {
+    "status": "in_progress",
+    "conclusion": null,
+    "active": [
+      "Repackage Linux DEB"
+    ]
+  },
+  {
+    "status": "in_progress",
+    "conclusion": null,
+    "active": [
+      "Upload Noraneko Artifact"
+    ]
+  },
+  {
+    "status": "in_progress",
+    "conclusion": null,
+    "active": [
+      "Create MAR package"
+    ]
+  },
+  {
+    "status": "completed",
+    "conclusion": "success",
+    "active": []
+  }
+]

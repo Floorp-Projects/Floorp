@@ -1,0 +1,16 @@
+{
+  "key": "KAN-95",
+  "candidateSource": "214ba6657a63314594de3867785441558b7a63b5",
+  "baselineSource": "29a3eb23145da90706d8a94441373278521cc737",
+  "candidatePackageRun": 42123754997,
+  "caseCount": 24,
+  "designs": ["proton", "lepton", "photon", "fluerial"],
+  "orientation": ["horizontal", "vertical"],
+  "density": [0, 1, 2],
+  "roles": ["blue", "orange", "normal"],
+  "method": "real Hub controls, native tabbrowser containers/selection; no stylesheet injection",
+  "changeAllowed": "Lepton horizontal normal/compact native margins 4px to2px; background paint gaps may follow that intentional change",
+  "unchanged": "Lepton horizontal touch4px; native vertical and other designs remain at measured baseline margins and positive area",
+  "containerLineScope": "Separate side observation only. Base/candidate exclude3041/3048; existing invisible selected-line defects are not3052 regressions",
+  "guards": ["native159", "sandbox6", "noMOZ_DISABLE", "actualexecutable/profile", "authenticatedintakehashes", "completeproducttreeunchanged", "normalquit0", "ownedprocess0", "displaycleanup"]
+}

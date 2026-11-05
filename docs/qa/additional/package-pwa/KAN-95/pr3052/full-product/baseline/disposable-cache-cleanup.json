@@ -1,0 +1,18 @@
+{
+  "removed": [
+    {
+      "path": "profile",
+      "bytes": 31216196
+    },
+    {
+      "path": "home",
+      "bytes": 2394727
+    },
+    {
+      "path": "runtime",
+      "bytes": 2
+    }
+  ],
+  "preservedMeasurementsAndProduct": true,
+  "reason": "dedicated completed fresh-profile cache, free disk for candidate"
+}

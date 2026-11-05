@@ -1,0 +1,218 @@
+{
+  "proton-h-density-0": {
+    "roles": 3,
+    "before": "4px",
+    "after": "4px",
+    "topBefore": 4,
+    "topAfter": 4,
+    "endBefore": 4,
+    "endAfter": 4
+  },
+  "proton-h-density-1": {
+    "roles": 3,
+    "before": "4px",
+    "after": "4px",
+    "topBefore": 4,
+    "topAfter": 4,
+    "endBefore": 4,
+    "endAfter": 4
+  },
+  "proton-h-density-2": {
+    "roles": 3,
+    "before": "4px",
+    "after": "4px",
+    "topBefore": 4,
+    "topAfter": 4,
+    "endBefore": 4,
+    "endAfter": 4
+  },
+  "proton-v-density-0": {
+    "roles": 3,
+    "before": "2px",
+    "after": "2px",
+    "topBefore": 2.0,
+    "topAfter": 2.0,
+    "endBefore": 2.0,
+    "endAfter": 2.0
+  },
+  "proton-v-density-1": {
+    "roles": 3,
+    "before": "2px",
+    "after": "2px",
+    "topBefore": 2.0,
+    "topAfter": 2.0,
+    "endBefore": 2.0,
+    "endAfter": 2.0
+  },
+  "proton-v-density-2": {
+    "roles": 3,
+    "before": "2px",
+    "after": "2px",
+    "topBefore": 2.0,
+    "topAfter": 2.0,
+    "endBefore": 2.0,
+    "endAfter": 2.0
+  },
+  "lepton-h-density-0": {
+    "roles": 3,
+    "before": "4px",
+    "after": "2px",
+    "topBefore": 4,
+    "topAfter": 2,
+    "endBefore": -4,
+    "endAfter": -2
+  },
+  "lepton-h-density-1": {
+    "roles": 3,
+    "before": "4px",
+    "after": "2px",
+    "topBefore": 4,
+    "topAfter": 2,
+    "endBefore": -4,
+    "endAfter": -2
+  },
+  "lepton-h-density-2": {
+    "roles": 3,
+    "before": "4px",
+    "after": "4px",
+    "topBefore": 4,
+    "topAfter": 4,
+    "endBefore": -4,
+    "endAfter": -4
+  },
+  "lepton-v-density-0": {
+    "roles": 3,
+    "before": "2px",
+    "after": "2px",
+    "topBefore": 2.0,
+    "topAfter": 2.0,
+    "endBefore": 2.0,
+    "endAfter": 2.0
+  },
+  "lepton-v-density-1": {
+    "roles": 3,
+    "before": "2px",
+    "after": "2px",
+    "topBefore": 2.0,
+    "topAfter": 2.0,
+    "endBefore": 2.0,
+    "endAfter": 2.0
+  },
+  "lepton-v-density-2": {
+    "roles": 3,
+    "before": "2px",
+    "after": "2px",
+    "topBefore": 2.0,
+    "topAfter": 2.0,
+    "endBefore": 2.0,
+    "endAfter": 2.0
+  },
+  "photon-h-density-0": {
+    "roles": 3,
+    "before": "0px",
+    "after": "0px",
+    "topBefore": 0,
+    "topAfter": 0,
+    "endBefore": 0,
+    "endAfter": 0
+  },
+  "photon-h-density-1": {
+    "roles": 3,
+    "before": "0px",
+    "after": "0px",
+    "topBefore": 0,
+    "topAfter": 0,
+    "endBefore": 0,
+    "endAfter": 0
+  },
+  "photon-h-density-2": {
+    "roles": 3,
+    "before": "0px",
+    "after": "0px",
+    "topBefore": 0,
+    "topAfter": 0,
+    "endBefore": 0,
+    "endAfter": 0
+  },
+  "photon-v-density-0": {
+    "roles": 3,
+    "before": "0px",
+    "after": "0px",
+    "topBefore": 0.0,
+    "topAfter": 0.0,
+    "endBefore": 2.0,
+    "endAfter": 2.0
+  },
+  "photon-v-density-1": {
+    "roles": 3,
+    "before": "0px",
+    "after": "0px",
+    "topBefore": 0.0,
+    "topAfter": 0.0,
+    "endBefore": 2.0,
+    "endAfter": 2.0
+  },
+  "photon-v-density-2": {
+    "roles": 3,
+    "before": "0px",
+    "after": "0px",
+    "topBefore": 0.0,
+    "topAfter": 0.0,
+    "endBefore": 2.0,
+    "endAfter": 2.0
+  },
+  "fluerial-h-density-0": {
+    "roles": 3,
+    "before": "4px",
+    "after": "4px",
+    "topBefore": 4,
+    "topAfter": 4,
+    "endBefore": 0,
+    "endAfter": 0
+  },
+  "fluerial-h-density-1": {
+    "roles": 3,
+    "before": "4px",
+    "after": "4px",
+    "topBefore": 4,
+    "topAfter": 4,
+    "endBefore": 0,
+    "endAfter": 0
+  },
+  "fluerial-h-density-2": {
+    "roles": 3,
+    "before": "4px",
+    "after": "4px",
+    "topBefore": 4,
+    "topAfter": 4,
+    "endBefore": 0,
+    "endAfter": 0
+  },
+  "fluerial-v-density-0": {
+    "roles": 3,
+    "before": "0px",
+    "after": "0px",
+    "topBefore": 0.0,
+    "topAfter": 0.0,
+    "endBefore": 0.0,
+    "endAfter": 0.0
+  },
+  "fluerial-v-density-1": {
+    "roles": 3,
+    "before": "0px",
+    "after": "0px",
+    "topBefore": 0.0,
+    "topAfter": 0.0,
+    "endBefore": 0.0,
+    "endAfter": 0.0
+  },
+  "fluerial-v-density-2": {
+    "roles": 3,
+    "before": "0px",
+    "after": "0px",
+    "topBefore": 0.0,
+    "topAfter": 0.0,
+    "endBefore": 0.0,
+    "endAfter": 0.0
+  }
+}

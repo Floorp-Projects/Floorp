@@ -1,0 +1,82 @@
+[
+  {
+    "id": 13460337768,
+    "name": "floorp-linux-x86_64-mar-full-unsigned",
+    "size_in_bytes": 108494918,
+    "digest": "sha256:3ed8843413043389f21556e067b4833d00cbc0cb1f93b87c6e7523b677ed92ae",
+    "expired": false,
+    "created_at": "2026-11-05T22:58:32Z",
+    "expires_at": "2027-02-03T22:42:31Z",
+    "workflow_run": {
+      "id": 42123754997,
+      "repository_id": 437505831,
+      "head_repository_id": 437505831,
+      "head_branch": "codex/stability-kan95-lepton-margin",
+      "head_sha": "214ba6657a63314594de3867785441558b7a63b5"
+    }
+  },
+  {
+    "id": 13460302895,
+    "name": "floorp-Linux-x64-deb-unsigned",
+    "size_in_bytes": 230314070,
+    "digest": "sha256:a6e17870155ad77df369c35f2a5f92d6d83486c22520f7d4322856da21ef943b",
+    "expired": false,
+    "created_at": "2026-11-05T22:55:28Z",
+    "expires_at": "2027-02-03T22:42:31Z",
+    "workflow_run": {
+      "id": 42123754997,
+      "repository_id": 437505831,
+      "head_repository_id": 437505831,
+      "head_branch": "codex/stability-kan95-lepton-margin",
+      "head_sha": "214ba6657a63314594de3867785441558b7a63b5"
+    }
+  },
+  {
+    "id": 13459714736,
+    "name": "noraneko-linux-x86_64-installer-unsigned",
+    "size_in_bytes": 108198486,
+    "digest": "sha256:d4e89cc7ba88751df704771c89c93017a03a01aaa8877db0f538a62c8aa81502",
+    "expired": false,
+    "created_at": "2026-11-05T22:58:28Z",
+    "expires_at": "2027-02-03T22:42:31Z",
+    "workflow_run": {
+      "id": 42123754997,
+      "repository_id": 437505831,
+      "head_repository_id": 437505831,
+      "head_branch": "codex/stability-kan95-lepton-margin",
+      "head_sha": "214ba6657a63314594de3867785441558b7a63b5"
+    }
+  },
+  {
+    "id": 13459184702,
+    "name": "noraneko-Linux-x64-artifact-test-build-output",
+    "size_in_bytes": 418215950,
+    "digest": "sha256:2bcd490cc14ec5679442a4a77448eed1532cd1d19dcff81b2dc9a0a5c25ac893",
+    "expired": false,
+    "created_at": "2026-11-05T22:56:08Z",
+    "expires_at": "2027-02-03T22:42:31Z",
+    "workflow_run": {
+      "id": 42123754997,
+      "repository_id": 437505831,
+      "head_repository_id": 437505831,
+      "head_branch": "codex/stability-kan95-lepton-margin",
+      "head_sha": "214ba6657a63314594de3867785441558b7a63b5"
+    }
+  },
+  {
+    "id": 13458964378,
+    "name": "noraneko-Linux-x64-runtime-source-provenance",
+    "size_in_bytes": 1282,
+    "digest": "sha256:a6753ea4be6b44896779f39d46cdf9ba12126f8f0a94700e6838442ab188e417",
+    "expired": false,
+    "created_at": "2026-11-05T22:44:30Z",
+    "expires_at": "2027-02-03T22:42:31Z",
+    "workflow_run": {
+      "id": 42123754997,
+      "repository_id": 437505831,
+      "head_repository_id": 437505831,
+      "head_branch": "codex/stability-kan95-lepton-margin",
+      "head_sha": "214ba6657a63314594de3867785441558b7a63b5"
+    }
+  }
+]

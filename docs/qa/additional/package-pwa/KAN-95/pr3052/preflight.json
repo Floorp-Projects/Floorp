@@ -1,0 +1,36 @@
+{
+  "sourceSha": "214ba6657a63314594de3867785441558b7a63b5",
+  "base": "29a3eb23145da90706d8a94441373278521cc737",
+  "branch": "codex/stability-kan95-lepton-margin",
+  "draft": true,
+  "merged": false,
+  "existingRuns": [
+    {
+      "id": 42123152394,
+      "title": "\ud83d\udce6\ufe0f Package Windows-x64 (Unsigned)",
+      "status": "in_progress"
+    }
+  ],
+  "runtimeArtifact": {
+    "id": 13272530069,
+    "name": "floorp-linux-x86_64-moz-artifact",
+    "digest": "sha256:ed5a4f97ee7bf42c817f3146d5a843e095710dcc3be25fae0af0bf47274b739a",
+    "size_in_bytes": 87434468,
+    "expired": false,
+    "workflow_run": {
+      "id": 41664957250,
+      "repository_id": 914860957,
+      "head_repository_id": 914860957,
+      "head_branch": "nora-0.2.0",
+      "head_sha": "8965ffc346d426ccdf919bd18585e4d4a0c21654"
+    }
+  },
+  "runtimeManifestVerification": "KAN26/windows-handoff/runtime-verification.json authenticates same manifest plus Linux target in runtime-manifest.json",
+  "lockSha256": "5838f685f4b375ca69dfaf10f1054f6b7fe1e90290cfb97c9f53514022937fe5",
+  "runtimeAndVendorAndWorkflowUnchanged": true,
+  "dispatchRequests": 1,
+  "protectedOtherRuns": [
+    42123057521,
+    42123152394
+  ]
+}

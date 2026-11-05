@@ -1,0 +1,19 @@
+{
+  "head": "214ba6657a63314594de3867785441558b7a63b5",
+  "base": "29a3eb23145da90706d8a94441373278521cc737",
+  "files": [
+    {
+      "path": "browser-features/chrome/common/designs/utils/lepton-compat-152.css.ts",
+      "sha256": "8626fa9427daac1509c0ab63933e829ee5eb68ebc5762750b61676428255b900",
+      "gitBlob": "11dc7f9b0fe0658f8740419e0067225e3371bee9"
+    },
+    {
+      "path": "browser-features/chrome/common/designs/test/lepton-tab-margin.test.ts",
+      "sha256": "75ba8fc7b5f72eca2e8de00ccaba2e0ad0b26a3c3f27a9cb2bef8c6d33a2f848",
+      "gitBlob": "77539c6e4264a74b5d0ac1cea585eaf76aca47f8"
+    }
+  ],
+  "productionAddedLines": 11,
+  "nativeTestsAdded": 2,
+  "testsNotRerunByThisAgent": "root owns standardCI42123057521 and sourcefixtureevidence in Jira10467"
+}

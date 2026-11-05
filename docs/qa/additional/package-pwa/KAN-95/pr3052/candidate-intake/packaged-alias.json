@@ -1,0 +1,13 @@
+{
+  "baseline": [],
+  "candidate": [
+    {
+      "entry": "chrome/noraneko/nora-content/assets/js/index7.js",
+      "aliasCount": 1,
+      "sha256": "516d07438f7bd24fd8199892ea9d727d0ef06989f504ff48b36af35e7ed4905d"
+    }
+  ],
+  "scope": "Generated application resources only; not native Windows or runtime UI qualification",
+  "sourceSha": "214ba6657a63314594de3867785441558b7a63b5",
+  "expectedAliasOnlyInCandidate": true
+}

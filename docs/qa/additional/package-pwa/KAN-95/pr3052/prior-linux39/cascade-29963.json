@@ -1,0 +1,52 @@
+{
+  "sourceSha": "29a3eb23145da90706d8a94441373278521cc737",
+  "test": "read-only CSS cascade after visible Fluerial UI selection",
+  "cssFixture": false,
+  "uiChecked": [
+    "fluerial",
+    "horizontal",
+    "default",
+    "-1",
+    "top",
+    "top"
+  ],
+  "cascade": {
+    "storedDesign": "fluerial",
+    "gtkCsd": true,
+    "tabBlockMargin": "",
+    "tabMarginBlock": "4px",
+    "computedMarginTop": "4px",
+    "computedMarginBlockStart": "4px",
+    "loadedSupplementMarkers": [
+      {
+        "sheet": 16,
+        "source": null,
+        "marker": true
+      }
+    ],
+    "matchingMarginRules": [
+      {
+        "sheet": "inline:16",
+        "selector": "#TabsToolbar #tabbrowser-tabs .tabbrowser-tab:is([visuallyselected], [multiselected]) > .tab-stack > .tab-background:is([selected], [multiselected])",
+        "parents": [],
+        "margin": "",
+        "marginBlock": "",
+        "marginBlockStart": "var(--tab-block-margin, 4px)",
+        "priority": "important",
+        "css": "#TabsToolbar #tabbrowser-tabs .tabbrowser-tab:is([visuallyselected], [multiselected]) > .tab-stack > .tab-background:is([selected], [multiselected]) { margin-block-start: var(--tab-block-margin, 4px) !important; margin-block-end: 0px !important; }"
+      },
+      {
+        "sheet": "chrome://browser/content/passwordmgr/login-doorhanger-username-field.css",
+        "selector": "&:first-child",
+        "parents": [
+          ".login-doorhanger-field"
+        ],
+        "margin": "",
+        "marginBlock": "",
+        "marginBlockStart": "var(--space-small)",
+        "priority": "",
+        "css": "&:first-child { margin-block-start: var(--space-small); }"
+      }
+    ]
+  }
+}

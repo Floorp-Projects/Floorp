@@ -1,0 +1,194 @@
+[
+  {
+    "id": "fluerial-h-density-0",
+    "legacy": "",
+    "native": "4px",
+    "marginStart": "4px",
+    "marginEnd": "0px",
+    "height": 36
+  },
+  {
+    "id": "fluerial-h-density-1",
+    "legacy": "",
+    "native": "4px",
+    "marginStart": "4px",
+    "marginEnd": "0px",
+    "height": 36
+  },
+  {
+    "id": "fluerial-h-density-2",
+    "legacy": "",
+    "native": "4px",
+    "marginStart": "4px",
+    "marginEnd": "0px",
+    "height": 45
+  },
+  {
+    "id": "fluerial-v-density-0",
+    "legacy": "",
+    "native": "2px",
+    "marginStart": "0px",
+    "marginEnd": "0px",
+    "height": 30
+  },
+  {
+    "id": "fluerial-v-density-1",
+    "legacy": "",
+    "native": "2px",
+    "marginStart": "0px",
+    "marginEnd": "0px",
+    "height": 29
+  },
+  {
+    "id": "fluerial-v-density-2",
+    "legacy": "",
+    "native": "2px",
+    "marginStart": "0px",
+    "marginEnd": "0px",
+    "height": 41
+  },
+  {
+    "id": "lepton-h-density-0",
+    "legacy": "2px",
+    "native": "4px",
+    "marginStart": "4px",
+    "marginEnd": "0px",
+    "height": 36
+  },
+  {
+    "id": "lepton-h-density-1",
+    "legacy": "2px",
+    "native": "4px",
+    "marginStart": "4px",
+    "marginEnd": "0px",
+    "height": 32
+  },
+  {
+    "id": "lepton-h-density-2",
+    "legacy": "4px",
+    "native": "4px",
+    "marginStart": "4px",
+    "marginEnd": "0px",
+    "height": 41
+  },
+  {
+    "id": "lepton-v-density-0",
+    "legacy": "2px",
+    "native": "2px",
+    "marginStart": "2px",
+    "marginEnd": "2px",
+    "height": 36
+  },
+  {
+    "id": "lepton-v-density-1",
+    "legacy": "2px",
+    "native": "2px",
+    "marginStart": "2px",
+    "marginEnd": "2px",
+    "height": 32
+  },
+  {
+    "id": "lepton-v-density-2",
+    "legacy": "4px",
+    "native": "2px",
+    "marginStart": "2px",
+    "marginEnd": "2px",
+    "height": 41
+  },
+  {
+    "id": "photon-h-density-0",
+    "legacy": "0px",
+    "native": "4px",
+    "marginStart": "0px",
+    "marginEnd": "0px",
+    "height": 32
+  },
+  {
+    "id": "photon-h-density-1",
+    "legacy": "0px",
+    "native": "4px",
+    "marginStart": "0px",
+    "marginEnd": "0px",
+    "height": 30
+  },
+  {
+    "id": "photon-h-density-2",
+    "legacy": "4px",
+    "native": "4px",
+    "marginStart": "0px",
+    "marginEnd": "0px",
+    "height": 41
+  },
+  {
+    "id": "photon-v-density-0",
+    "legacy": "0px",
+    "native": "2px",
+    "marginStart": "0px",
+    "marginEnd": "2px",
+    "height": 32
+  },
+  {
+    "id": "photon-v-density-1",
+    "legacy": "0px",
+    "native": "2px",
+    "marginStart": "0px",
+    "marginEnd": "2px",
+    "height": 29
+  },
+  {
+    "id": "photon-v-density-2",
+    "legacy": "4px",
+    "native": "2px",
+    "marginStart": "0px",
+    "marginEnd": "2px",
+    "height": 41
+  },
+  {
+    "id": "proton-h-density-0",
+    "legacy": "",
+    "native": "4px",
+    "marginStart": "4px",
+    "marginEnd": "4px",
+    "height": 36
+  },
+  {
+    "id": "proton-h-density-1",
+    "legacy": "",
+    "native": "4px",
+    "marginStart": "4px",
+    "marginEnd": "4px",
+    "height": 29
+  },
+  {
+    "id": "proton-h-density-2",
+    "legacy": "",
+    "native": "4px",
+    "marginStart": "4px",
+    "marginEnd": "4px",
+    "height": 41
+  },
+  {
+    "id": "proton-v-density-0",
+    "legacy": "",
+    "native": "2px",
+    "marginStart": "2px",
+    "marginEnd": "2px",
+    "height": 32
+  },
+  {
+    "id": "proton-v-density-1",
+    "legacy": "",
+    "native": "2px",
+    "marginStart": "2px",
+    "marginEnd": "2px",
+    "height": 29
+  },
+  {
+    "id": "proton-v-density-2",
+    "legacy": "",
+    "native": "2px",
+    "marginStart": "2px",
+    "marginEnd": "2px",
+    "height": 41
+  }
+]

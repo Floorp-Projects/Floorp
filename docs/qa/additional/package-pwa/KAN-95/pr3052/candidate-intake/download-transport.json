@@ -1,0 +1,7 @@
+{
+  "transport": "connected GitHub artifact download, anonymous memory-backed ZIP, standard tar datafilter",
+  "diskZipCache": false,
+  "resourceSubstitution": false,
+  "urlsPersisted": false,
+  "nativeOrUiExecution": false
+}

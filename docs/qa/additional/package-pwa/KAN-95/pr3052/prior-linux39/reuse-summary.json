@@ -1,0 +1,48 @@
+{
+  "key": "KAN-95",
+  "retrievedCommit": "2c0aeaa8f70ed4876af0fa1d5a421497a5c1b9f0",
+  "retrievedRepositoryPath": "qa-linux-additional/browser-ui/KAN-95",
+  "sourceAuditSha": "29a3eb23145da90706d8a94441373278521cc737",
+  "officialProductGitShaInferred": false,
+  "sourceAuditVsBinaryQualification": "Source audit29a3; official product identified by version/BuildID/binarySHA, not an inferred frontend gitSHA",
+  "layoutMeasurements": 39,
+  "pointerControls": 5,
+  "rawScreenshots": 41,
+  "reexecuted": false,
+  "uiEnvironment": "Debian13.6 Xvfb101+actual Openbox/X11 softwareWebRender, dedicated DBus/profiles; not Windows/KDE/Wayland",
+  "leptonPaintTopPx": 4,
+  "fluerialPaintTopPx": 4,
+  "protonPaintTopPx": 4,
+  "firefoxPaintTopPx": 6,
+  "outerTabHitboxTopPx": 0,
+  "reusableControls": [
+    "normal/maximized explicitEWMHatoms andGecko states",
+    "menubar+25px whole-row movement",
+    "actual GTK CSD enabled truthfullyXDG_CURRENT_DESKTOP=openbox",
+    "CSSOM Fluerial stronger supplement!important fallback4px",
+    "five OS XTest controlfixtures distinct fromphysicalinput"
+  ],
+  "gapsForNew3052Acceptance": [
+    "prior39 is not a3density matrix; browser.uidensity was not captured by priorprobe",
+    "noPhoton in prior39",
+    "noactualverticalMode in prior39",
+    "no3052candidate product",
+    "nohistoricalLinux12.16.4/12.17.0comparison",
+    "official product frontendGitSHA not proven frombinary"
+  ],
+  "classificationCaveat": "Original report no newly isolated defect was a historical conclusion before rootWindows3version token-rename investigation. Do not carry it forward as a disproof of confirmed Lepton regression. Fluerial intentional4px remains separate.",
+  "remainingOriginalConditions": [
+    "originalWindows10/nativeOS titlebar/windowsettings",
+    "physicalinput/GPU",
+    "originalreport imageexacttarget unavailable"
+  ],
+  "immutableLink": "https://github.com/Floorp-Projects/Floorp/tree/2c0aeaa8f70ed4876af0fa1d5a421497a5c1b9f0/qa-linux-additional/browser-ui/KAN-95",
+  "privacyScan": {
+    "personalMetadataKeys": 0,
+    "signedUrls": 0
+  },
+  "relatedExistingPrs": [
+    "2854 separate2822 titlebar Booleanfix",
+    "2767 Fluerial group/paint changes, not established2670fix"
+  ]
+}

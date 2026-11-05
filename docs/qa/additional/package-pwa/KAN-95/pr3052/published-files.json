@@ -1,0 +1,1570 @@
+[
+  {
+    "path": "cache-reclaim.json",
+    "bytes": 1634
+  },
+  {
+    "path": "dispatch.json",
+    "bytes": 935
+  },
+  {
+    "path": "environment.json",
+    "bytes": 476
+  },
+  {
+    "path": "inspect_packaged_alias.py",
+    "bytes": 1549
+  },
+  {
+    "path": "issue-comments.json",
+    "bytes": 3
+  },
+  {
+    "path": "issue.json",
+    "bytes": 1442
+  },
+  {
+    "path": "jira-before.json",
+    "bytes": 6957
+  },
+  {
+    "path": "matrix.json",
+    "bytes": 4152
+  },
+  {
+    "path": "monitor_run.py",
+    "bytes": 2022
+  },
+  {
+    "path": "package-artifacts-api.json",
+    "bytes": 2803
+  },
+  {
+    "path": "package-job.log",
+    "bytes": 536656
+  },
+  {
+    "path": "package-jobs-api.json",
+    "bytes": 16011
+  },
+  {
+    "path": "package-run-api.json",
+    "bytes": 463
+  },
+  {
+    "path": "pr-before.json",
+    "bytes": 2868
+  },
+  {
+    "path": "preflight.json",
+    "bytes": 1202
+  },
+  {
+    "path": "progress-history.json",
+    "bytes": 969
+  },
+  {
+    "path": "publish_evidence.py",
+    "bytes": 2504
+  },
+  {
+    "path": "report.md",
+    "bytes": 7112
+  },
+  {
+    "path": "runtime-manifest-api.json",
+    "bytes": 352
+  },
+  {
+    "path": "runtime-manifest-verification.json",
+    "bytes": 861
+  },
+  {
+    "path": "runtime-manifest.json",
+    "bytes": 1507
+  },
+  {
+    "path": "scope.json",
+    "bytes": 713
+  },
+  {
+    "path": "source-log-verification.json",
+    "bytes": 1977
+  },
+  {
+    "path": "source-subject.json",
+    "bytes": 775
+  },
+  {
+    "path": "verify_package.py",
+    "bytes": 2804
+  },
+  {
+    "path": "baseline-intake/api-metadata.json",
+    "bytes": 985
+  },
+  {
+    "path": "baseline-intake/product-intake.json",
+    "bytes": 2369
+  },
+  {
+    "path": "baseline-intake/product-inventory-before.json",
+    "bytes": 6566
+  },
+  {
+    "path": "candidate-intake/api-metadata.json",
+    "bytes": 1074
+  },
+  {
+    "path": "candidate-intake/download-transport.json",
+    "bytes": 226
+  },
+  {
+    "path": "candidate-intake/packaged-alias.json",
+    "bytes": 426
+  },
+  {
+    "path": "candidate-intake/product-intake.json",
+    "bytes": 2510
+  },
+  {
+    "path": "candidate-intake/product-inventory-before.json",
+    "bytes": 6613
+  },
+  {
+    "path": "full-product/README.md",
+    "bytes": 2898
+  },
+  {
+    "path": "full-product/baseline-report.md",
+    "bytes": 2871
+  },
+  {
+    "path": "full-product/checker-freeze-verification.json",
+    "bytes": 212
+  },
+  {
+    "path": "full-product/compare.py",
+    "bytes": 8765
+  },
+  {
+    "path": "full-product/comparison.json",
+    "bytes": 130571
+  },
+  {
+    "path": "full-product/criteria-adjustment.json",
+    "bytes": 1298
+  },
+  {
+    "path": "full-product/criteria-initial.json",
+    "bytes": 1097
+  },
+  {
+    "path": "full-product/criteria.json",
+    "bytes": 1677
+  },
+  {
+    "path": "full-product/line-comparison.json",
+    "bytes": 27041
+  },
+  {
+    "path": "full-product/line_analyze.py",
+    "bytes": 4304
+  },
+  {
+    "path": "full-product/line_compare.py",
+    "bytes": 2139
+  },
+  {
+    "path": "full-product/margin-pair-summary.json",
+    "bytes": 4077
+  },
+  {
+    "path": "full-product/matrix.json",
+    "bytes": 2110
+  },
+  {
+    "path": "full-product/pre-candidate-checker-v1.json",
+    "bytes": 612
+  },
+  {
+    "path": "full-product/pre-candidate-checker.json",
+    "bytes": 766
+  },
+  {
+    "path": "full-product/probe.py",
+    "bytes": 10746
+  },
+  {
+    "path": "full-product/report.md",
+    "bytes": 6327
+  },
+  {
+    "path": "full-product/vertical-scope.json",
+    "bytes": 2866
+  },
+  {
+    "path": "full-product/baseline/browser.log",
+    "bytes": 19946
+  },
+  {
+    "path": "full-product/baseline/containers.json",
+    "bytes": 268
+  },
+  {
+    "path": "full-product/baseline/disposable-cache-cleanup.json",
+    "bytes": 320
+  },
+  {
+    "path": "full-product/baseline/fluerial-h-density-0-tab-blue.png",
+    "bytes": 1450
+  },
+  {
+    "path": "full-product/baseline/fluerial-h-density-0-tab-normal.png",
+    "bytes": 1320
+  },
+  {
+    "path": "full-product/baseline/fluerial-h-density-0-tab-orange.png",
+    "bytes": 1356
+  },
+  {
+    "path": "full-product/baseline/fluerial-h-density-0.json",
+    "bytes": 141466
+  },
+  {
+    "path": "full-product/baseline/fluerial-h-density-0.png",
+    "bytes": 29253
+  },
+  {
+    "path": "full-product/baseline/fluerial-h-density-1-tab-blue.png",
+    "bytes": 1448
+  },
+  {
+    "path": "full-product/baseline/fluerial-h-density-1-tab-normal.png",
+    "bytes": 1318
+  },
+  {
+    "path": "full-product/baseline/fluerial-h-density-1-tab-orange.png",
+    "bytes": 1354
+  },
+  {
+    "path": "full-product/baseline/fluerial-h-density-1.json",
+    "bytes": 141494
+  },
+  {
+    "path": "full-product/baseline/fluerial-h-density-1.png",
+    "bytes": 29037
+  },
+  {
+    "path": "full-product/baseline/fluerial-h-density-2-tab-blue.png",
+    "bytes": 1488
+  },
+  {
+    "path": "full-product/baseline/fluerial-h-density-2-tab-normal.png",
+    "bytes": 1355
+  },
+  {
+    "path": "full-product/baseline/fluerial-h-density-2-tab-orange.png",
+    "bytes": 1392
+  },
+  {
+    "path": "full-product/baseline/fluerial-h-density-2.json",
+    "bytes": 141550
+  },
+  {
+    "path": "full-product/baseline/fluerial-h-density-2.png",
+    "bytes": 29239
+  },
+  {
+    "path": "full-product/baseline/fluerial-v-density-0-tab-blue.png",
+    "bytes": 2149
+  },
+  {
+    "path": "full-product/baseline/fluerial-v-density-0-tab-normal.png",
+    "bytes": 1730
+  },
+  {
+    "path": "full-product/baseline/fluerial-v-density-0-tab-orange.png",
+    "bytes": 1754
+  },
+  {
+    "path": "full-product/baseline/fluerial-v-density-0.json",
+    "bytes": 145611
+  },
+  {
+    "path": "full-product/baseline/fluerial-v-density-0.png",
+    "bytes": 49454
+  },
+  {
+    "path": "full-product/baseline/fluerial-v-density-1-tab-blue.png",
+    "bytes": 2143
+  },
+  {
+    "path": "full-product/baseline/fluerial-v-density-1-tab-normal.png",
+    "bytes": 1733
+  },
+  {
+    "path": "full-product/baseline/fluerial-v-density-1-tab-orange.png",
+    "bytes": 1766
+  },
+  {
+    "path": "full-product/baseline/fluerial-v-density-1.json",
+    "bytes": 144335
+  },
+  {
+    "path": "full-product/baseline/fluerial-v-density-1.png",
+    "bytes": 49298
+  },
+  {
+    "path": "full-product/baseline/fluerial-v-density-2-tab-blue.png",
+    "bytes": 2218
+  },
+  {
+    "path": "full-product/baseline/fluerial-v-density-2-tab-normal.png",
+    "bytes": 1783
+  },
+  {
+    "path": "full-product/baseline/fluerial-v-density-2-tab-orange.png",
+    "bytes": 1818
+  },
+  {
+    "path": "full-product/baseline/fluerial-v-density-2.json",
+    "bytes": 145725
+  },
+  {
+    "path": "full-product/baseline/fluerial-v-density-2.png",
+    "bytes": 50191
+  },
+  {
+    "path": "full-product/baseline/hub-inputs.json",
+    "bytes": 3148
+  },
+  {
+    "path": "full-product/baseline/identity.json",
+    "bytes": 305
+  },
+  {
+    "path": "full-product/baseline/lepton-h-density-0-tab-blue.png",
+    "bytes": 1599
+  },
+  {
+    "path": "full-product/baseline/lepton-h-density-0-tab-normal.png",
+    "bytes": 1346
+  },
+  {
+    "path": "full-product/baseline/lepton-h-density-0-tab-orange.png",
+    "bytes": 1484
+  },
+  {
+    "path": "full-product/baseline/lepton-h-density-0.json",
+    "bytes": 142096
+  },
+  {
+    "path": "full-product/baseline/lepton-h-density-0.png",
+    "bytes": 29664
+  },
+  {
+    "path": "full-product/baseline/lepton-h-density-1-tab-blue.png",
+    "bytes": 1580
+  },
+  {
+    "path": "full-product/baseline/lepton-h-density-1-tab-normal.png",
+    "bytes": 1328
+  },
+  {
+    "path": "full-product/baseline/lepton-h-density-1-tab-orange.png",
+    "bytes": 1466
+  },
+  {
+    "path": "full-product/baseline/lepton-h-density-1.json",
+    "bytes": 142133
+  },
+  {
+    "path": "full-product/baseline/lepton-h-density-1.png",
+    "bytes": 29544
+  },
+  {
+    "path": "full-product/baseline/lepton-h-density-2-tab-blue.png",
+    "bytes": 1620
+  },
+  {
+    "path": "full-product/baseline/lepton-h-density-2-tab-normal.png",
+    "bytes": 1365
+  },
+  {
+    "path": "full-product/baseline/lepton-h-density-2-tab-orange.png",
+    "bytes": 1508
+  },
+  {
+    "path": "full-product/baseline/lepton-h-density-2.json",
+    "bytes": 142170
+  },
+  {
+    "path": "full-product/baseline/lepton-h-density-2.png",
+    "bytes": 29734
+  },
+  {
+    "path": "full-product/baseline/lepton-v-density-0-tab-blue.png",
+    "bytes": 2562
+  },
+  {
+    "path": "full-product/baseline/lepton-v-density-0-tab-normal.png",
+    "bytes": 1773
+  },
+  {
+    "path": "full-product/baseline/lepton-v-density-0-tab-orange.png",
+    "bytes": 1924
+  },
+  {
+    "path": "full-product/baseline/lepton-v-density-0.json",
+    "bytes": 145509
+  },
+  {
+    "path": "full-product/baseline/lepton-v-density-0.png",
+    "bytes": 50828
+  },
+  {
+    "path": "full-product/baseline/lepton-v-density-1-tab-blue.png",
+    "bytes": 2540
+  },
+  {
+    "path": "full-product/baseline/lepton-v-density-1-tab-normal.png",
+    "bytes": 1760
+  },
+  {
+    "path": "full-product/baseline/lepton-v-density-1-tab-orange.png",
+    "bytes": 1905
+  },
+  {
+    "path": "full-product/baseline/lepton-v-density-1.json",
+    "bytes": 144321
+  },
+  {
+    "path": "full-product/baseline/lepton-v-density-1.png",
+    "bytes": 50829
+  },
+  {
+    "path": "full-product/baseline/lepton-v-density-2-tab-blue.png",
+    "bytes": 2616
+  },
+  {
+    "path": "full-product/baseline/lepton-v-density-2-tab-normal.png",
+    "bytes": 1799
+  },
+  {
+    "path": "full-product/baseline/lepton-v-density-2-tab-orange.png",
+    "bytes": 1952
+  },
+  {
+    "path": "full-product/baseline/lepton-v-density-2.json",
+    "bytes": 145556
+  },
+  {
+    "path": "full-product/baseline/lepton-v-density-2.png",
+    "bytes": 50990
+  },
+  {
+    "path": "full-product/baseline/line-summary.json",
+    "bytes": 1017
+  },
+  {
+    "path": "full-product/baseline/margin-summary.json",
+    "bytes": 3579
+  },
+  {
+    "path": "full-product/baseline/photon-h-density-0-tab-blue.png",
+    "bytes": 1309
+  },
+  {
+    "path": "full-product/baseline/photon-h-density-0-tab-normal.png",
+    "bytes": 1324
+  },
+  {
+    "path": "full-product/baseline/photon-h-density-0-tab-orange.png",
+    "bytes": 1334
+  },
+  {
+    "path": "full-product/baseline/photon-h-density-0.json",
+    "bytes": 141885
+  },
+  {
+    "path": "full-product/baseline/photon-h-density-0.png",
+    "bytes": 29229
+  },
+  {
+    "path": "full-product/baseline/photon-h-density-1-tab-blue.png",
+    "bytes": 1301
+  },
+  {
+    "path": "full-product/baseline/photon-h-density-1-tab-normal.png",
+    "bytes": 1320
+  },
+  {
+    "path": "full-product/baseline/photon-h-density-1-tab-orange.png",
+    "bytes": 1330
+  },
+  {
+    "path": "full-product/baseline/photon-h-density-1.json",
+    "bytes": 141913
+  },
+  {
+    "path": "full-product/baseline/photon-h-density-1.png",
+    "bytes": 29038
+  },
+  {
+    "path": "full-product/baseline/photon-h-density-2-tab-blue.png",
+    "bytes": 1342
+  },
+  {
+    "path": "full-product/baseline/photon-h-density-2-tab-normal.png",
+    "bytes": 1360
+  },
+  {
+    "path": "full-product/baseline/photon-h-density-2-tab-orange.png",
+    "bytes": 1370
+  },
+  {
+    "path": "full-product/baseline/photon-h-density-2.json",
+    "bytes": 141956
+  },
+  {
+    "path": "full-product/baseline/photon-h-density-2.png",
+    "bytes": 29282
+  },
+  {
+    "path": "full-product/baseline/photon-v-density-0-tab-blue.png",
+    "bytes": 2155
+  },
+  {
+    "path": "full-product/baseline/photon-v-density-0-tab-normal.png",
+    "bytes": 1810
+  },
+  {
+    "path": "full-product/baseline/photon-v-density-0-tab-orange.png",
+    "bytes": 1777
+  },
+  {
+    "path": "full-product/baseline/photon-v-density-0.json",
+    "bytes": 146214
+  },
+  {
+    "path": "full-product/baseline/photon-v-density-0.png",
+    "bytes": 49882
+  },
+  {
+    "path": "full-product/baseline/photon-v-density-1-tab-blue.png",
+    "bytes": 2135
+  },
+  {
+    "path": "full-product/baseline/photon-v-density-1-tab-normal.png",
+    "bytes": 1789
+  },
+  {
+    "path": "full-product/baseline/photon-v-density-1-tab-orange.png",
+    "bytes": 1760
+  },
+  {
+    "path": "full-product/baseline/photon-v-density-1.json",
+    "bytes": 144946
+  },
+  {
+    "path": "full-product/baseline/photon-v-density-1.png",
+    "bytes": 49827
+  },
+  {
+    "path": "full-product/baseline/photon-v-density-2-tab-blue.png",
+    "bytes": 2192
+  },
+  {
+    "path": "full-product/baseline/photon-v-density-2-tab-normal.png",
+    "bytes": 1845
+  },
+  {
+    "path": "full-product/baseline/photon-v-density-2-tab-orange.png",
+    "bytes": 1812
+  },
+  {
+    "path": "full-product/baseline/photon-v-density-2.json",
+    "bytes": 146297
+  },
+  {
+    "path": "full-product/baseline/photon-v-density-2.png",
+    "bytes": 50533
+  },
+  {
+    "path": "full-product/baseline/pixel-matrix.json",
+    "bytes": 127470
+  },
+  {
+    "path": "full-product/baseline/product-after.json",
+    "bytes": 4210
+  },
+  {
+    "path": "full-product/baseline/product-before.json",
+    "bytes": 4210
+  },
+  {
+    "path": "full-product/baseline/product-tree-after.json",
+    "bytes": 7432
+  },
+  {
+    "path": "full-product/baseline/product-tree-before.json",
+    "bytes": 7432
+  },
+  {
+    "path": "full-product/baseline/proton-h-density-0-tab-blue.png",
+    "bytes": 1801
+  },
+  {
+    "path": "full-product/baseline/proton-h-density-0-tab-normal.png",
+    "bytes": 1320
+  },
+  {
+    "path": "full-product/baseline/proton-h-density-0-tab-orange.png",
+    "bytes": 1342
+  },
+  {
+    "path": "full-product/baseline/proton-h-density-0.json",
+    "bytes": 140999
+  },
+  {
+    "path": "full-product/baseline/proton-h-density-0.png",
+    "bytes": 29937
+  },
+  {
+    "path": "full-product/baseline/proton-h-density-1-tab-blue.png",
+    "bytes": 1767
+  },
+  {
+    "path": "full-product/baseline/proton-h-density-1-tab-normal.png",
+    "bytes": 1292
+  },
+  {
+    "path": "full-product/baseline/proton-h-density-1-tab-orange.png",
+    "bytes": 1311
+  },
+  {
+    "path": "full-product/baseline/proton-h-density-1.json",
+    "bytes": 141045
+  },
+  {
+    "path": "full-product/baseline/proton-h-density-1.png",
+    "bytes": 29679
+  },
+  {
+    "path": "full-product/baseline/proton-h-density-2-tab-blue.png",
+    "bytes": 1822
+  },
+  {
+    "path": "full-product/baseline/proton-h-density-2-tab-normal.png",
+    "bytes": 1339
+  },
+  {
+    "path": "full-product/baseline/proton-h-density-2-tab-orange.png",
+    "bytes": 1362
+  },
+  {
+    "path": "full-product/baseline/proton-h-density-2.json",
+    "bytes": 141043
+  },
+  {
+    "path": "full-product/baseline/proton-h-density-2.png",
+    "bytes": 29907
+  },
+  {
+    "path": "full-product/baseline/proton-v-density-0-tab-blue.png",
+    "bytes": 2482
+  },
+  {
+    "path": "full-product/baseline/proton-v-density-0-tab-normal.png",
+    "bytes": 1758
+  },
+  {
+    "path": "full-product/baseline/proton-v-density-0-tab-orange.png",
+    "bytes": 1795
+  },
+  {
+    "path": "full-product/baseline/proton-v-density-0.json",
+    "bytes": 146560
+  },
+  {
+    "path": "full-product/baseline/proton-v-density-0.png",
+    "bytes": 50106
+  },
+  {
+    "path": "full-product/baseline/proton-v-density-1-tab-blue.png",
+    "bytes": 2463
+  },
+  {
+    "path": "full-product/baseline/proton-v-density-1-tab-normal.png",
+    "bytes": 1749
+  },
+  {
+    "path": "full-product/baseline/proton-v-density-1-tab-orange.png",
+    "bytes": 1784
+  },
+  {
+    "path": "full-product/baseline/proton-v-density-1.json",
+    "bytes": 143900
+  },
+  {
+    "path": "full-product/baseline/proton-v-density-1.png",
+    "bytes": 50015
+  },
+  {
+    "path": "full-product/baseline/proton-v-density-2-tab-blue.png",
+    "bytes": 2524
+  },
+  {
+    "path": "full-product/baseline/proton-v-density-2-tab-normal.png",
+    "bytes": 1799
+  },
+  {
+    "path": "full-product/baseline/proton-v-density-2-tab-orange.png",
+    "bytes": 1836
+  },
+  {
+    "path": "full-product/baseline/proton-v-density-2.json",
+    "bytes": 145221
+  },
+  {
+    "path": "full-product/baseline/proton-v-density-2.png",
+    "bytes": 50688
+  },
+  {
+    "path": "full-product/baseline/result.json",
+    "bytes": 5394
+  },
+  {
+    "path": "full-product/baseline/xvfb.log",
+    "bytes": 64
+  },
+  {
+    "path": "full-product/candidate/browser.log",
+    "bytes": 19946
+  },
+  {
+    "path": "full-product/candidate/containers.json",
+    "bytes": 268
+  },
+  {
+    "path": "full-product/candidate/disposable-cache-cleanup.json",
+    "bytes": 322
+  },
+  {
+    "path": "full-product/candidate/fluerial-h-density-0-tab-blue.png",
+    "bytes": 1450
+  },
+  {
+    "path": "full-product/candidate/fluerial-h-density-0-tab-normal.png",
+    "bytes": 1320
+  },
+  {
+    "path": "full-product/candidate/fluerial-h-density-0-tab-orange.png",
+    "bytes": 1356
+  },
+  {
+    "path": "full-product/candidate/fluerial-h-density-0.json",
+    "bytes": 141466
+  },
+  {
+    "path": "full-product/candidate/fluerial-h-density-0.png",
+    "bytes": 29253
+  },
+  {
+    "path": "full-product/candidate/fluerial-h-density-1-tab-blue.png",
+    "bytes": 1448
+  },
+  {
+    "path": "full-product/candidate/fluerial-h-density-1-tab-normal.png",
+    "bytes": 1318
+  },
+  {
+    "path": "full-product/candidate/fluerial-h-density-1-tab-orange.png",
+    "bytes": 1354
+  },
+  {
+    "path": "full-product/candidate/fluerial-h-density-1.json",
+    "bytes": 141494
+  },
+  {
+    "path": "full-product/candidate/fluerial-h-density-1.png",
+    "bytes": 29037
+  },
+  {
+    "path": "full-product/candidate/fluerial-h-density-2-tab-blue.png",
+    "bytes": 1488
+  },
+  {
+    "path": "full-product/candidate/fluerial-h-density-2-tab-normal.png",
+    "bytes": 1355
+  },
+  {
+    "path": "full-product/candidate/fluerial-h-density-2-tab-orange.png",
+    "bytes": 1392
+  },
+  {
+    "path": "full-product/candidate/fluerial-h-density-2.json",
+    "bytes": 141550
+  },
+  {
+    "path": "full-product/candidate/fluerial-h-density-2.png",
+    "bytes": 29239
+  },
+  {
+    "path": "full-product/candidate/fluerial-v-density-0-tab-blue.png",
+    "bytes": 2149
+  },
+  {
+    "path": "full-product/candidate/fluerial-v-density-0-tab-normal.png",
+    "bytes": 1730
+  },
+  {
+    "path": "full-product/candidate/fluerial-v-density-0-tab-orange.png",
+    "bytes": 1754
+  },
+  {
+    "path": "full-product/candidate/fluerial-v-density-0.json",
+    "bytes": 145611
+  },
+  {
+    "path": "full-product/candidate/fluerial-v-density-0.png",
+    "bytes": 49454
+  },
+  {
+    "path": "full-product/candidate/fluerial-v-density-1-tab-blue.png",
+    "bytes": 2143
+  },
+  {
+    "path": "full-product/candidate/fluerial-v-density-1-tab-normal.png",
+    "bytes": 1733
+  },
+  {
+    "path": "full-product/candidate/fluerial-v-density-1-tab-orange.png",
+    "bytes": 1766
+  },
+  {
+    "path": "full-product/candidate/fluerial-v-density-1.json",
+    "bytes": 144335
+  },
+  {
+    "path": "full-product/candidate/fluerial-v-density-1.png",
+    "bytes": 49298
+  },
+  {
+    "path": "full-product/candidate/fluerial-v-density-2-tab-blue.png",
+    "bytes": 2218
+  },
+  {
+    "path": "full-product/candidate/fluerial-v-density-2-tab-normal.png",
+    "bytes": 1783
+  },
+  {
+    "path": "full-product/candidate/fluerial-v-density-2-tab-orange.png",
+    "bytes": 1818
+  },
+  {
+    "path": "full-product/candidate/fluerial-v-density-2.json",
+    "bytes": 145725
+  },
+  {
+    "path": "full-product/candidate/fluerial-v-density-2.png",
+    "bytes": 50191
+  },
+  {
+    "path": "full-product/candidate/hub-design-fluerial.json",
+    "bytes": 27
+  },
+  {
+    "path": "full-product/candidate/hub-design-lepton.json",
+    "bytes": 25
+  },
+  {
+    "path": "full-product/candidate/hub-design-photon.json",
+    "bytes": 25
+  },
+  {
+    "path": "full-product/candidate/hub-design-proton.json",
+    "bytes": 25
+  },
+  {
+    "path": "full-product/candidate/hub-inputs.json",
+    "bytes": 3148
+  },
+  {
+    "path": "full-product/candidate/identity.json",
+    "bytes": 304
+  },
+  {
+    "path": "full-product/candidate/lepton-h-density-0-tab-blue.png",
+    "bytes": 1581
+  },
+  {
+    "path": "full-product/candidate/lepton-h-density-0-tab-normal.png",
+    "bytes": 1346
+  },
+  {
+    "path": "full-product/candidate/lepton-h-density-0-tab-orange.png",
+    "bytes": 1498
+  },
+  {
+    "path": "full-product/candidate/lepton-h-density-0.json",
+    "bytes": 142105
+  },
+  {
+    "path": "full-product/candidate/lepton-h-density-0.png",
+    "bytes": 29681
+  },
+  {
+    "path": "full-product/candidate/lepton-h-density-1-tab-blue.png",
+    "bytes": 1561
+  },
+  {
+    "path": "full-product/candidate/lepton-h-density-1-tab-normal.png",
+    "bytes": 1328
+  },
+  {
+    "path": "full-product/candidate/lepton-h-density-1-tab-orange.png",
+    "bytes": 1476
+  },
+  {
+    "path": "full-product/candidate/lepton-h-density-1.json",
+    "bytes": 142133
+  },
+  {
+    "path": "full-product/candidate/lepton-h-density-1.png",
+    "bytes": 29573
+  },
+  {
+    "path": "full-product/candidate/lepton-h-density-2-tab-blue.png",
+    "bytes": 1620
+  },
+  {
+    "path": "full-product/candidate/lepton-h-density-2-tab-normal.png",
+    "bytes": 1365
+  },
+  {
+    "path": "full-product/candidate/lepton-h-density-2-tab-orange.png",
+    "bytes": 1508
+  },
+  {
+    "path": "full-product/candidate/lepton-h-density-2.json",
+    "bytes": 142170
+  },
+  {
+    "path": "full-product/candidate/lepton-h-density-2.png",
+    "bytes": 29734
+  },
+  {
+    "path": "full-product/candidate/lepton-v-density-0-tab-blue.png",
+    "bytes": 2562
+  },
+  {
+    "path": "full-product/candidate/lepton-v-density-0-tab-normal.png",
+    "bytes": 1773
+  },
+  {
+    "path": "full-product/candidate/lepton-v-density-0-tab-orange.png",
+    "bytes": 1924
+  },
+  {
+    "path": "full-product/candidate/lepton-v-density-0.json",
+    "bytes": 145509
+  },
+  {
+    "path": "full-product/candidate/lepton-v-density-0.png",
+    "bytes": 50828
+  },
+  {
+    "path": "full-product/candidate/lepton-v-density-1-tab-blue.png",
+    "bytes": 2540
+  },
+  {
+    "path": "full-product/candidate/lepton-v-density-1-tab-normal.png",
+    "bytes": 1760
+  },
+  {
+    "path": "full-product/candidate/lepton-v-density-1-tab-orange.png",
+    "bytes": 1905
+  },
+  {
+    "path": "full-product/candidate/lepton-v-density-1.json",
+    "bytes": 144321
+  },
+  {
+    "path": "full-product/candidate/lepton-v-density-1.png",
+    "bytes": 50829
+  },
+  {
+    "path": "full-product/candidate/lepton-v-density-2-tab-blue.png",
+    "bytes": 2616
+  },
+  {
+    "path": "full-product/candidate/lepton-v-density-2-tab-normal.png",
+    "bytes": 1799
+  },
+  {
+    "path": "full-product/candidate/lepton-v-density-2-tab-orange.png",
+    "bytes": 1952
+  },
+  {
+    "path": "full-product/candidate/lepton-v-density-2.json",
+    "bytes": 145556
+  },
+  {
+    "path": "full-product/candidate/lepton-v-density-2.png",
+    "bytes": 50990
+  },
+  {
+    "path": "full-product/candidate/photon-h-density-0-tab-blue.png",
+    "bytes": 1309
+  },
+  {
+    "path": "full-product/candidate/photon-h-density-0-tab-normal.png",
+    "bytes": 1324
+  },
+  {
+    "path": "full-product/candidate/photon-h-density-0-tab-orange.png",
+    "bytes": 1334
+  },
+  {
+    "path": "full-product/candidate/photon-h-density-0.json",
+    "bytes": 141885
+  },
+  {
+    "path": "full-product/candidate/photon-h-density-0.png",
+    "bytes": 29229
+  },
+  {
+    "path": "full-product/candidate/photon-h-density-1-tab-blue.png",
+    "bytes": 1301
+  },
+  {
+    "path": "full-product/candidate/photon-h-density-1-tab-normal.png",
+    "bytes": 1320
+  },
+  {
+    "path": "full-product/candidate/photon-h-density-1-tab-orange.png",
+    "bytes": 1330
+  },
+  {
+    "path": "full-product/candidate/photon-h-density-1.json",
+    "bytes": 141913
+  },
+  {
+    "path": "full-product/candidate/photon-h-density-1.png",
+    "bytes": 29038
+  },
+  {
+    "path": "full-product/candidate/photon-h-density-2-tab-blue.png",
+    "bytes": 1342
+  },
+  {
+    "path": "full-product/candidate/photon-h-density-2-tab-normal.png",
+    "bytes": 1360
+  },
+  {
+    "path": "full-product/candidate/photon-h-density-2-tab-orange.png",
+    "bytes": 1370
+  },
+  {
+    "path": "full-product/candidate/photon-h-density-2.json",
+    "bytes": 141956
+  },
+  {
+    "path": "full-product/candidate/photon-h-density-2.png",
+    "bytes": 29282
+  },
+  {
+    "path": "full-product/candidate/photon-v-density-0-tab-blue.png",
+    "bytes": 2155
+  },
+  {
+    "path": "full-product/candidate/photon-v-density-0-tab-normal.png",
+    "bytes": 1810
+  },
+  {
+    "path": "full-product/candidate/photon-v-density-0-tab-orange.png",
+    "bytes": 1777
+  },
+  {
+    "path": "full-product/candidate/photon-v-density-0.json",
+    "bytes": 146214
+  },
+  {
+    "path": "full-product/candidate/photon-v-density-0.png",
+    "bytes": 49882
+  },
+  {
+    "path": "full-product/candidate/photon-v-density-1-tab-blue.png",
+    "bytes": 2135
+  },
+  {
+    "path": "full-product/candidate/photon-v-density-1-tab-normal.png",
+    "bytes": 1789
+  },
+  {
+    "path": "full-product/candidate/photon-v-density-1-tab-orange.png",
+    "bytes": 1760
+  },
+  {
+    "path": "full-product/candidate/photon-v-density-1.json",
+    "bytes": 144946
+  },
+  {
+    "path": "full-product/candidate/photon-v-density-1.png",
+    "bytes": 49827
+  },
+  {
+    "path": "full-product/candidate/photon-v-density-2-tab-blue.png",
+    "bytes": 2192
+  },
+  {
+    "path": "full-product/candidate/photon-v-density-2-tab-normal.png",
+    "bytes": 1845
+  },
+  {
+    "path": "full-product/candidate/photon-v-density-2-tab-orange.png",
+    "bytes": 1812
+  },
+  {
+    "path": "full-product/candidate/photon-v-density-2.json",
+    "bytes": 146297
+  },
+  {
+    "path": "full-product/candidate/photon-v-density-2.png",
+    "bytes": 50533
+  },
+  {
+    "path": "full-product/candidate/pixel-matrix.json",
+    "bytes": 127470
+  },
+  {
+    "path": "full-product/candidate/product-after.json",
+    "bytes": 4210
+  },
+  {
+    "path": "full-product/candidate/product-before.json",
+    "bytes": 4210
+  },
+  {
+    "path": "full-product/candidate/product-tree-after.json",
+    "bytes": 7432
+  },
+  {
+    "path": "full-product/candidate/product-tree-before.json",
+    "bytes": 7432
+  },
+  {
+    "path": "full-product/candidate/proton-h-density-0-tab-blue.png",
+    "bytes": 1801
+  },
+  {
+    "path": "full-product/candidate/proton-h-density-0-tab-normal.png",
+    "bytes": 1320
+  },
+  {
+    "path": "full-product/candidate/proton-h-density-0-tab-orange.png",
+    "bytes": 1342
+  },
+  {
+    "path": "full-product/candidate/proton-h-density-0.json",
+    "bytes": 140999
+  },
+  {
+    "path": "full-product/candidate/proton-h-density-0.png",
+    "bytes": 29937
+  },
+  {
+    "path": "full-product/candidate/proton-h-density-1-tab-blue.png",
+    "bytes": 1767
+  },
+  {
+    "path": "full-product/candidate/proton-h-density-1-tab-normal.png",
+    "bytes": 1292
+  },
+  {
+    "path": "full-product/candidate/proton-h-density-1-tab-orange.png",
+    "bytes": 1311
+  },
+  {
+    "path": "full-product/candidate/proton-h-density-1.json",
+    "bytes": 141045
+  },
+  {
+    "path": "full-product/candidate/proton-h-density-1.png",
+    "bytes": 29679
+  },
+  {
+    "path": "full-product/candidate/proton-h-density-2-tab-blue.png",
+    "bytes": 1822
+  },
+  {
+    "path": "full-product/candidate/proton-h-density-2-tab-normal.png",
+    "bytes": 1339
+  },
+  {
+    "path": "full-product/candidate/proton-h-density-2-tab-orange.png",
+    "bytes": 1362
+  },
+  {
+    "path": "full-product/candidate/proton-h-density-2.json",
+    "bytes": 141043
+  },
+  {
+    "path": "full-product/candidate/proton-h-density-2.png",
+    "bytes": 29907
+  },
+  {
+    "path": "full-product/candidate/proton-v-density-0-tab-blue.png",
+    "bytes": 2482
+  },
+  {
+    "path": "full-product/candidate/proton-v-density-0-tab-normal.png",
+    "bytes": 1758
+  },
+  {
+    "path": "full-product/candidate/proton-v-density-0-tab-orange.png",
+    "bytes": 1795
+  },
+  {
+    "path": "full-product/candidate/proton-v-density-0.json",
+    "bytes": 146560
+  },
+  {
+    "path": "full-product/candidate/proton-v-density-0.png",
+    "bytes": 50106
+  },
+  {
+    "path": "full-product/candidate/proton-v-density-1-tab-blue.png",
+    "bytes": 2463
+  },
+  {
+    "path": "full-product/candidate/proton-v-density-1-tab-normal.png",
+    "bytes": 1749
+  },
+  {
+    "path": "full-product/candidate/proton-v-density-1-tab-orange.png",
+    "bytes": 1784
+  },
+  {
+    "path": "full-product/candidate/proton-v-density-1.json",
+    "bytes": 143900
+  },
+  {
+    "path": "full-product/candidate/proton-v-density-1.png",
+    "bytes": 50015
+  },
+  {
+    "path": "full-product/candidate/proton-v-density-2-tab-blue.png",
+    "bytes": 2524
+  },
+  {
+    "path": "full-product/candidate/proton-v-density-2-tab-normal.png",
+    "bytes": 1799
+  },
+  {
+    "path": "full-product/candidate/proton-v-density-2-tab-orange.png",
+    "bytes": 1836
+  },
+  {
+    "path": "full-product/candidate/proton-v-density-2.json",
+    "bytes": 145221
+  },
+  {
+    "path": "full-product/candidate/proton-v-density-2.png",
+    "bytes": 50688
+  },
+  {
+    "path": "full-product/candidate/result.json",
+    "bytes": 5404
+  },
+  {
+    "path": "full-product/candidate/xvfb.log",
+    "bytes": 64
+  },
+  {
+    "path": "prior-linux39/cascade-29963.json",
+    "bytes": 1675
+  },
+  {
+    "path": "prior-linux39/cascade-probe.py",
+    "bytes": 2854
+  },
+  {
+    "path": "prior-linux39/edge-probe.py",
+    "bytes": 3020
+  },
+  {
+    "path": "prior-linux39/firefox-29956.json",
+    "bytes": 64040
+  },
+  {
+    "path": "prior-linux39/firefox-29960.json",
+    "bytes": 21950
+  },
+  {
+    "path": "prior-linux39/firefox-edge-29958.json",
+    "bytes": 1610
+  },
+  {
+    "path": "prior-linux39/floorp-29955.json",
+    "bytes": 253044
+  },
+  {
+    "path": "prior-linux39/floorp-29959.json",
+    "bytes": 64719
+  },
+  {
+    "path": "prior-linux39/floorp-29961.json",
+    "bytes": 11942
+  },
+  {
+    "path": "prior-linux39/floorp-edge-29957.json",
+    "bytes": 3325
+  },
+  {
+    "path": "prior-linux39/jira-comment.md",
+    "bytes": 2254
+  },
+  {
+    "path": "prior-linux39/matrix.json",
+    "bytes": 2090
+  },
+  {
+    "path": "prior-linux39/measurement-summary.json",
+    "bytes": 22657
+  },
+  {
+    "path": "prior-linux39/primary-source-summary.json",
+    "bytes": 939
+  },
+  {
+    "path": "prior-linux39/probe-csd.py",
+    "bytes": 7734
+  },
+  {
+    "path": "prior-linux39/probe-rebuild.py",
+    "bytes": 7904
+  },
+  {
+    "path": "prior-linux39/probe.py",
+    "bytes": 6270
+  },
+  {
+    "path": "prior-linux39/product-hashes.json",
+    "bytes": 383
+  },
+  {
+    "path": "prior-linux39/publish-list.json",
+    "bytes": 3462
+  },
+  {
+    "path": "prior-linux39/report.md",
+    "bytes": 7831
+  },
+  {
+    "path": "prior-linux39/retrieval-provenance.json",
+    "bytes": 16261
+  },
+  {
+    "path": "prior-linux39/reuse-summary.json",
+    "bytes": 2225
+  },
+  {
+    "path": "prior-linux39/reuse-summary.md",
+    "bytes": 2606
+  },
+  {
+    "path": "prior-linux39/run-cascade.py",
+    "bytes": 2140
+  },
+  {
+    "path": "prior-linux39/run-csd.py",
+    "bytes": 2136
+  },
+  {
+    "path": "prior-linux39/run-edge.py",
+    "bytes": 2107
+  },
+  {
+    "path": "prior-linux39/run-rebuild.py",
+    "bytes": 2172
+  },
+  {
+    "path": "prior-linux39/run.py",
+    "bytes": 2102
+  },
+  {
+    "path": "prior-linux39/sha256.json",
+    "bytes": 7645
+  },
+  {
+    "path": "prior-linux39/source-hashes.json",
+    "bytes": 647
+  },
+  {
+    "path": "prior-linux39/screenshots/firefox-29956-Firefox-default-maximized.png",
+    "bytes": 13806
+  },
+  {
+    "path": "prior-linux39/screenshots/firefox-29956-Firefox-default-normal.png",
+    "bytes": 12739
+  },
+  {
+    "path": "prior-linux39/screenshots/firefox-29956-Firefox-menubar-visible-maximized.png",
+    "bytes": 17801
+  },
+  {
+    "path": "prior-linux39/screenshots/firefox-29956-Firefox-menubar-visible-normal.png",
+    "bytes": 16701
+  },
+  {
+    "path": "prior-linux39/screenshots/firefox-29956-Firefox-native-titlebar-maximized.png",
+    "bytes": 13806
+  },
+  {
+    "path": "prior-linux39/screenshots/firefox-29956-Firefox-native-titlebar-normal.png",
+    "bytes": 12739
+  },
+  {
+    "path": "prior-linux39/screenshots/firefox-29958-edge.png",
+    "bytes": 26742
+  },
+  {
+    "path": "prior-linux39/screenshots/firefox-29960-Firefox-default-maximized.png",
+    "bytes": 14554
+  },
+  {
+    "path": "prior-linux39/screenshots/firefox-29960-Firefox-default-normal.png",
+    "bytes": 13541
+  },
+  {
+    "path": "prior-linux39/screenshots/floorp-29955-Fluerial-default-maximized.png",
+    "bytes": 29234
+  },
+  {
+    "path": "prior-linux39/screenshots/floorp-29955-Fluerial-default-normal.png",
+    "bytes": 28819
+  },
+  {
+    "path": "prior-linux39/screenshots/floorp-29955-Fluerial-menubar-visible-maximized.png",
+    "bytes": 30169
+  },
+  {
+    "path": "prior-linux39/screenshots/floorp-29955-Fluerial-menubar-visible-normal.png",
+    "bytes": 28542
+  },
+  {
+    "path": "prior-linux39/screenshots/floorp-29955-Fluerial-native-titlebar-maximized.png",
+    "bytes": 29235
+  },
+  {
+    "path": "prior-linux39/screenshots/floorp-29955-Fluerial-native-titlebar-normal.png",
+    "bytes": 28886
+  },
+  {
+    "path": "prior-linux39/screenshots/floorp-29955-Lepton-default-maximized.png",
+    "bytes": 28036
+  },
+  {
+    "path": "prior-linux39/screenshots/floorp-29955-Lepton-default-normal.png",
+    "bytes": 26854
+  },
+  {
+    "path": "prior-linux39/screenshots/floorp-29955-Lepton-menubar-visible-maximized.png",
+    "bytes": 32569
+  },
+  {
+    "path": "prior-linux39/screenshots/floorp-29955-Lepton-menubar-visible-normal.png",
+    "bytes": 31365
+  },
+  {
+    "path": "prior-linux39/screenshots/floorp-29955-Lepton-native-titlebar-maximized.png",
+    "bytes": 28037
+  },
+  {
+    "path": "prior-linux39/screenshots/floorp-29955-Lepton-native-titlebar-normal.png",
+    "bytes": 26961
+  },
+  {
+    "path": "prior-linux39/screenshots/floorp-29955-Proton-default-maximized.png",
+    "bytes": 27984
+  },
+  {
+    "path": "prior-linux39/screenshots/floorp-29955-Proton-default-normal.png",
+    "bytes": 26766
+  },
+  {
+    "path": "prior-linux39/screenshots/floorp-29955-Proton-menubar-visible-maximized.png",
+    "bytes": 30354
+  },
+  {
+    "path": "prior-linux39/screenshots/floorp-29955-Proton-menubar-visible-normal.png",
+    "bytes": 29104
+  },
+  {
+    "path": "prior-linux39/screenshots/floorp-29955-Proton-native-titlebar-maximized.png",
+    "bytes": 27984
+  },
+  {
+    "path": "prior-linux39/screenshots/floorp-29955-Proton-native-titlebar-normal.png",
+    "bytes": 26869
+  },
+  {
+    "path": "prior-linux39/screenshots/floorp-29955-default-default-maximized.png",
+    "bytes": 18104
+  },
+  {
+    "path": "prior-linux39/screenshots/floorp-29955-default-default-normal.png",
+    "bytes": 16981
+  },
+  {
+    "path": "prior-linux39/screenshots/floorp-29955-default-menubar-visible-maximized.png",
+    "bytes": 23806
+  },
+  {
+    "path": "prior-linux39/screenshots/floorp-29955-default-menubar-visible-normal.png",
+    "bytes": 22670
+  },
+  {
+    "path": "prior-linux39/screenshots/floorp-29955-default-native-titlebar-maximized.png",
+    "bytes": 18104
+  },
+  {
+    "path": "prior-linux39/screenshots/floorp-29955-default-native-titlebar-normal.png",
+    "bytes": 16981
+  },
+  {
+    "path": "prior-linux39/screenshots/floorp-29957-edge.png",
+    "bytes": 34291
+  },
+  {
+    "path": "prior-linux39/screenshots/floorp-29959-Fluerial-default-maximized.png",
+    "bytes": 28793
+  },
+  {
+    "path": "prior-linux39/screenshots/floorp-29959-Fluerial-default-normal.png",
+    "bytes": 26794
+  },
+  {
+    "path": "prior-linux39/screenshots/floorp-29959-Lepton-default-maximized.png",
+    "bytes": 29038
+  },
+  {
+    "path": "prior-linux39/screenshots/floorp-29959-Lepton-default-normal.png",
+    "bytes": 27858
+  },
+  {
+    "path": "prior-linux39/screenshots/floorp-29959-Proton-default-maximized.png",
+    "bytes": 28906
+  },
+  {
+    "path": "prior-linux39/screenshots/floorp-29959-Proton-default-normal.png",
+    "bytes": 27625
+  },
+  {
+    "path": "prior-linux39/screenshots/floorp-29961-Lepton-default-maximized.png",
+    "bytes": 29056
+  }
+]

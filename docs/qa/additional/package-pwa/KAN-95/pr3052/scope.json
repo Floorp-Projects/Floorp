@@ -1,0 +1,20 @@
+{
+  "key": "KAN-95",
+  "github": "https://github.com/Floorp-Projects/Floorp/issues/2670",
+  "sourceSha": "214ba6657a63314594de3867785441558b7a63b5",
+  "baseSha": "29a3eb23145da90706d8a94441373278521cc737",
+  "runtimeSha": "8965ffc346d426ccdf919bd18585e4d4a0c21654",
+  "linuxRun": 42123754997,
+  "dispatchRequests": 1,
+  "otherRunsUnchanged": [
+    42123057521,
+    42123152394
+  ],
+  "originalLinuxDenominator": 22,
+  "additionalTarget": true,
+  "priorLinux39Reexecuted": false,
+  "priorEvidenceFullSha": "2c0aeaa8f70ed4876af0fa1d5a421497a5c1b9f0",
+  "original7MatrixSha256": "b0c49faebaf0fa2cb26971920c007597ebad1e0b2530738fb3c4039f6cb9fbb1",
+  "KAN26FixesIncluded": false,
+  "nativeWindows10Qualified": false
+}

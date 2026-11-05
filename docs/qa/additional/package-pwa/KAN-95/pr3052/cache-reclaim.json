@@ -1,0 +1,50 @@
+{
+  "purpose": "space for KAN95 independent source/fullcandidate",
+  "removedOnlyCompletedDedicatedKAN26Caches": [
+    {
+      "path": "/workspace/qa-linux-additional/KAN-26/candidate-product",
+      "bytes": 372917093
+    },
+    {
+      "path": "/workspace/qa-linux-additional/KAN-26/full-product/run/profile",
+      "bytes": 31227111
+    },
+    {
+      "path": "/workspace/qa-linux-additional/KAN-26/full-product/run/home",
+      "bytes": 2394703
+    },
+    {
+      "path": "/workspace/qa-linux-additional/KAN-26/full-product/run/runtime",
+      "bytes": 2
+    },
+    {
+      "path": "/workspace/qa-linux-additional/KAN-26/full-product/noncontainer-baseline-check/profile",
+      "bytes": 31188042
+    },
+    {
+      "path": "/workspace/qa-linux-additional/KAN-26/full-product/noncontainer-baseline-check/home",
+      "bytes": 2394727
+    },
+    {
+      "path": "/workspace/qa-linux-additional/KAN-26/full-product/noncontainer-baseline-check/runtime",
+      "bytes": 2
+    },
+    {
+      "path": "/workspace/qa-linux-additional/KAN-26/full-product/noncontainer-candidate-check/profile",
+      "bytes": 31134327
+    },
+    {
+      "path": "/workspace/qa-linux-additional/KAN-26/full-product/noncontainer-candidate-check/home",
+      "bytes": 2394703
+    },
+    {
+      "path": "/workspace/qa-linux-additional/KAN-26/full-product/noncontainer-candidate-check/runtime",
+      "bytes": 2
+    }
+  ],
+  "preservedAllMeasurements": true,
+  "restoreArtifact": 13455701396,
+  "restorePackageRun": 42113006050,
+  "restoreZipSha256": "8b9dd3f6d2931d237c4944ced4735646678df2e599f48b4c6cc751bab852f8b6",
+  "KAN49FailedProfilesUntouched": true
+}

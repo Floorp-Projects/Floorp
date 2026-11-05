@@ -1,0 +1,52 @@
+{
+  "run": 42123754997,
+  "job": 127582502968,
+  "attempt": 1,
+  "conclusion": "success",
+  "sourceSha": "214ba6657a63314594de3867785441558b7a63b5",
+  "runtimeSha": "8965ffc346d426ccdf919bd18585e4d4a0c21654",
+  "rawLogSha256": "94f2bceafcb75794bbbe869a30d403ae7a7284de0f7c750c66ca478f9fcec74e",
+  "publishedLogSha256": "1cbee6bdad59f927bbe0cc0b7c6d1e5cb5e27ddfd4256d79cf042fc9968d0894",
+  "redactions": {
+    "contact": 1,
+    "transientArtifactTransportUrls": 1,
+    "rawLocalExcluded": true
+  },
+  "requiredSteps": {
+    "Validate provenance contract": "success",
+    "Checkout Floorp-Projects/Floorp-runtime": "success",
+    "Checkout Floorp-Projects/Floorp": "success",
+    "Download verified Runtime artifact by ID": "success",
+    "Stage exact Runtime v2 bundle": "success",
+    "Build Noraneko": "success",
+    "Build": "success",
+    "Package noraneko": "success",
+    "Publish dist": "success"
+  },
+  "evidence": [
+    {
+      "line": 508,
+      "text": "2026-11-05T22:43:47.6613132Z [command]/usr/bin/git checkout --progress --force 8965ffc346d426ccdf919bd18585e4d4a0c21654"
+    },
+    {
+      "line": 916,
+      "text": "2026-11-05T22:44:27.1810132Z [command]/usr/bin/git checkout --progress --force 214ba6657a63314594de3867785441558b7a63b5"
+    },
+    {
+      "line": 1061,
+      "text": "2026-11-05T22:44:29.6535737Z SHA256 digest of downloaded artifact is ed5a4f97ee7bf42c817f3146d5a843e095710dcc3be25fae0af0bf47274b739a"
+    },
+    {
+      "line": 1188,
+      "text": "2026-11-05T22:44:29.7368586Z Verified compiled Runtime source provenance: 8965ffc346d426ccdf919bd18585e4d4a0c21654"
+    },
+    {
+      "line": 6098,
+      "text": "2026-11-05T22:58:28.4851255Z SHA256 digest of uploaded artifact zip is d4e89cc7ba88751df704771c89c93017a03a01aaa8877db0f538a62c8aa81502"
+    },
+    {
+      "line": 6100,
+      "text": "2026-11-05T22:58:28.9091270Z Artifact noraneko-linux-x86_64-installer-unsigned.zip successfully finalized. Artifact ID 13459714736"
+    }
+  ]
+}

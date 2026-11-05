@@ -1,0 +1,44 @@
+{
+  "key": "KAN-95",
+  "candidateSource": "214ba6657a63314594de3867785441558b7a63b5",
+  "baselineSource": "29a3eb23145da90706d8a94441373278521cc737",
+  "candidatePackageRun": 42123754997,
+  "caseCount": 24,
+  "designs": [
+    "proton",
+    "lepton",
+    "photon",
+    "fluerial"
+  ],
+  "orientation": [
+    "horizontal",
+    "vertical"
+  ],
+  "density": [
+    0,
+    1,
+    2
+  ],
+  "roles": [
+    "blue",
+    "orange",
+    "normal"
+  ],
+  "method": "real Hub controls, native tabbrowser containers/selection; no stylesheet injection",
+  "changeAllowed": "Lepton horizontal normal/compact native marginBlockStart4px to2px; marginBlockEnd remains preexisting0px override",
+  "unchanged": "Lepton horizontal touch start4/end0; native vertical and other designs retain measured baseline margins and positive area",
+  "containerLineScope": "Separate side observation only. Base/candidate exclude3041/3048; existing invisible selected-line defects are not3052 regressions",
+  "guards": [
+    "native159",
+    "sandbox6",
+    "noMOZ_DISABLE",
+    "actualexecutable/profile",
+    "authenticatedintakehashes",
+    "completeproducttreeunchanged",
+    "normalquit0",
+    "ownedprocess0",
+    "displaycleanup"
+  ],
+  "paintGeometry": "LeptonHnormal/compact actual background.y-stack.y4\u21922; CSSmarginEnd0 retained. Changedcase rect-derived endgap is recorded, not assumed0 or forced unchanged: baseline negative endgap reflects existing background overflow. Otherconditions actual start/end gaps unchanged; allpositive area.",
+  "actualState": "Both effective browser.uidensity and actual root uidensity (none/compact/touch), actualHubdesign/nativeverticalMode/defaulttheme checked"
+}

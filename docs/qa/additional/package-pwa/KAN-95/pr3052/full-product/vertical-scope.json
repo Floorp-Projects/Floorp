@@ -1,0 +1,130 @@
+{
+  "observedOnly": "read-only check of existing snapshots; no new browser run or acceptance relaxation",
+  "all24VerticalSnapshotsExpanded": true,
+  "rows": {
+    "baseline": [
+      {
+        "case": "fluerial-v-density-0",
+        "expanded": true,
+        "orient": "vertical"
+      },
+      {
+        "case": "proton-v-density-1",
+        "expanded": true,
+        "orient": "vertical"
+      },
+      {
+        "case": "photon-v-density-0",
+        "expanded": true,
+        "orient": "vertical"
+      },
+      {
+        "case": "photon-v-density-2",
+        "expanded": true,
+        "orient": "vertical"
+      },
+      {
+        "case": "proton-v-density-0",
+        "expanded": true,
+        "orient": "vertical"
+      },
+      {
+        "case": "fluerial-v-density-1",
+        "expanded": true,
+        "orient": "vertical"
+      },
+      {
+        "case": "fluerial-v-density-2",
+        "expanded": true,
+        "orient": "vertical"
+      },
+      {
+        "case": "proton-v-density-2",
+        "expanded": true,
+        "orient": "vertical"
+      },
+      {
+        "case": "lepton-v-density-2",
+        "expanded": true,
+        "orient": "vertical"
+      },
+      {
+        "case": "photon-v-density-1",
+        "expanded": true,
+        "orient": "vertical"
+      },
+      {
+        "case": "lepton-v-density-0",
+        "expanded": true,
+        "orient": "vertical"
+      },
+      {
+        "case": "lepton-v-density-1",
+        "expanded": true,
+        "orient": "vertical"
+      }
+    ],
+    "candidate": [
+      {
+        "case": "fluerial-v-density-0",
+        "expanded": true,
+        "orient": "vertical"
+      },
+      {
+        "case": "proton-v-density-1",
+        "expanded": true,
+        "orient": "vertical"
+      },
+      {
+        "case": "photon-v-density-0",
+        "expanded": true,
+        "orient": "vertical"
+      },
+      {
+        "case": "photon-v-density-2",
+        "expanded": true,
+        "orient": "vertical"
+      },
+      {
+        "case": "proton-v-density-0",
+        "expanded": true,
+        "orient": "vertical"
+      },
+      {
+        "case": "fluerial-v-density-1",
+        "expanded": true,
+        "orient": "vertical"
+      },
+      {
+        "case": "fluerial-v-density-2",
+        "expanded": true,
+        "orient": "vertical"
+      },
+      {
+        "case": "proton-v-density-2",
+        "expanded": true,
+        "orient": "vertical"
+      },
+      {
+        "case": "lepton-v-density-2",
+        "expanded": true,
+        "orient": "vertical"
+      },
+      {
+        "case": "photon-v-density-1",
+        "expanded": true,
+        "orient": "vertical"
+      },
+      {
+        "case": "lepton-v-density-0",
+        "expanded": true,
+        "orient": "vertical"
+      },
+      {
+        "case": "lepton-v-density-1",
+        "expanded": true,
+        "orient": "vertical"
+      }
+    ]
+  }
+}

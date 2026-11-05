@@ -1,0 +1,17 @@
+{
+  "os": {
+    "PRETTY_NAME": "Debian GNU/Linux 13 (trixie)",
+    "VERSION_ID": "13",
+    "ID": "debian"
+  },
+  "kernelSystem": "Linux",
+  "machine": "x86_64",
+  "uid": 1000,
+  "dbusRunSession": true,
+  "xvfb": true,
+  "realWindows": false,
+  "environmentValuesDumped": false,
+  "display": "private Xvfb117 planned by own probe",
+  "input": "synthetic WebDriver + genuine tabbrowser state; not physical",
+  "scope": "Linux geometry/paint comparison, not originalWindows10"
+}

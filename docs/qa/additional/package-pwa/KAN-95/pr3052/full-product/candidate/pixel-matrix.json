@@ -1,0 +1,4760 @@
+[
+  {
+    "id": "fluerial-h-density-0",
+    "design": "fluerial",
+    "verticalMode": false,
+    "tabs": [
+      {
+        "role": "blue",
+        "selected": true,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 237,
+            "y": 4,
+            "width": 201,
+            "height": 2
+          },
+          "pixelBox": [
+            237,
+            4,
+            438,
+            6
+          ],
+          "sampling": "pixel-centers-inside-element",
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "outerBoundingBox": [
+            237,
+            4,
+            438,
+            6
+          ],
+          "outerBlueHuePixels": 0,
+          "outerOrangeHuePixels": 0,
+          "zeroGeometry": false
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          225,
+          0,
+          450,
+          40
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "1",
+          "width": "201px",
+          "height": "2px",
+          "backgroundColor": "rgb(55, 173, 255)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0",
+          "width": "1px",
+          "height": "20px",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "absolute",
+          "bottom": "8px",
+          "left": "0px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": "",
+          "--tab-block-margin": "",
+          "--tab-margin-block": "4px"
+        },
+        "crop": "fluerial-h-density-0-tab-blue.png"
+      },
+      {
+        "role": "orange",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 462,
+            "y": 0,
+            "width": 201,
+            "height": 2
+          },
+          "pixelBox": [
+            462,
+            0,
+            663,
+            2
+          ],
+          "sampling": "pixel-centers-inside-element",
+          "blueHuePixels": 0,
+          "orangeHuePixels": 402,
+          "outerBoundingBox": [
+            462,
+            0,
+            663,
+            2
+          ],
+          "outerBlueHuePixels": 0,
+          "outerOrangeHuePixels": 402,
+          "zeroGeometry": false
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          450,
+          0,
+          675,
+          40
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 402,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "1",
+          "width": "201px",
+          "height": "2px",
+          "backgroundColor": "rgb(255, 159, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0",
+          "width": "1px",
+          "height": "20px",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "absolute",
+          "bottom": "10px",
+          "left": "0px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": "",
+          "--tab-block-margin": "",
+          "--tab-margin-block": "4px"
+        },
+        "crop": "fluerial-h-density-0-tab-orange.png"
+      },
+      {
+        "role": "normal",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 677,
+            "y": 0,
+            "width": 221,
+            "height": 0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          675,
+          0,
+          900,
+          40
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "1",
+          "width": "221px",
+          "height": "0px",
+          "backgroundColor": "rgba(0, 0, 0, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0",
+          "width": "1px",
+          "height": "20px",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "absolute",
+          "bottom": "10px",
+          "left": "0px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": "",
+          "--tab-block-margin": "",
+          "--tab-margin-block": "4px"
+        },
+        "crop": "fluerial-h-density-0-tab-normal.png"
+      }
+    ]
+  },
+  {
+    "id": "fluerial-h-density-1",
+    "design": "fluerial",
+    "verticalMode": false,
+    "tabs": [
+      {
+        "role": "blue",
+        "selected": true,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 237,
+            "y": 4,
+            "width": 201,
+            "height": 2
+          },
+          "pixelBox": [
+            237,
+            4,
+            438,
+            6
+          ],
+          "sampling": "pixel-centers-inside-element",
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "outerBoundingBox": [
+            237,
+            4,
+            438,
+            6
+          ],
+          "outerBlueHuePixels": 0,
+          "outerOrangeHuePixels": 0,
+          "zeroGeometry": false
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          225,
+          0,
+          450,
+          40
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "1",
+          "width": "201px",
+          "height": "2px",
+          "backgroundColor": "rgb(55, 173, 255)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0",
+          "width": "1px",
+          "height": "20px",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "absolute",
+          "bottom": "8px",
+          "left": "0px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "6px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": "",
+          "--tab-block-margin": "",
+          "--tab-margin-block": "4px"
+        },
+        "crop": "fluerial-h-density-1-tab-blue.png"
+      },
+      {
+        "role": "orange",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 462,
+            "y": 0,
+            "width": 201,
+            "height": 2
+          },
+          "pixelBox": [
+            462,
+            0,
+            663,
+            2
+          ],
+          "sampling": "pixel-centers-inside-element",
+          "blueHuePixels": 0,
+          "orangeHuePixels": 402,
+          "outerBoundingBox": [
+            462,
+            0,
+            663,
+            2
+          ],
+          "outerBlueHuePixels": 0,
+          "outerOrangeHuePixels": 402,
+          "zeroGeometry": false
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          450,
+          0,
+          675,
+          40
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 402,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "1",
+          "width": "201px",
+          "height": "2px",
+          "backgroundColor": "rgb(255, 159, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0",
+          "width": "1px",
+          "height": "20px",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "absolute",
+          "bottom": "10px",
+          "left": "0px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "6px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": "",
+          "--tab-block-margin": "",
+          "--tab-margin-block": "4px"
+        },
+        "crop": "fluerial-h-density-1-tab-orange.png"
+      },
+      {
+        "role": "normal",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 677,
+            "y": 0,
+            "width": 221,
+            "height": 0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          675,
+          0,
+          900,
+          40
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "1",
+          "width": "221px",
+          "height": "0px",
+          "backgroundColor": "rgba(0, 0, 0, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0",
+          "width": "1px",
+          "height": "20px",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "absolute",
+          "bottom": "10px",
+          "left": "0px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "6px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": "",
+          "--tab-block-margin": "",
+          "--tab-margin-block": "4px"
+        },
+        "crop": "fluerial-h-density-1-tab-normal.png"
+      }
+    ]
+  },
+  {
+    "id": "fluerial-h-density-2",
+    "design": "fluerial",
+    "verticalMode": false,
+    "tabs": [
+      {
+        "role": "blue",
+        "selected": true,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 237,
+            "y": 4,
+            "width": 201,
+            "height": 2
+          },
+          "pixelBox": [
+            237,
+            4,
+            438,
+            6
+          ],
+          "sampling": "pixel-centers-inside-element",
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "outerBoundingBox": [
+            237,
+            4,
+            438,
+            6
+          ],
+          "outerBlueHuePixels": 0,
+          "outerOrangeHuePixels": 0,
+          "zeroGeometry": false
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          225,
+          0,
+          450,
+          49
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "1",
+          "width": "201px",
+          "height": "2px",
+          "backgroundColor": "rgb(55, 173, 255)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0",
+          "width": "1px",
+          "height": "20px",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "absolute",
+          "bottom": "12.5px",
+          "left": "0px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": "",
+          "--tab-block-margin": "",
+          "--tab-margin-block": "4px"
+        },
+        "crop": "fluerial-h-density-2-tab-blue.png"
+      },
+      {
+        "role": "orange",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 462,
+            "y": 0,
+            "width": 201,
+            "height": 2
+          },
+          "pixelBox": [
+            462,
+            0,
+            663,
+            2
+          ],
+          "sampling": "pixel-centers-inside-element",
+          "blueHuePixels": 0,
+          "orangeHuePixels": 402,
+          "outerBoundingBox": [
+            462,
+            0,
+            663,
+            2
+          ],
+          "outerBlueHuePixels": 0,
+          "outerOrangeHuePixels": 402,
+          "zeroGeometry": false
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          450,
+          0,
+          675,
+          49
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 402,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "1",
+          "width": "201px",
+          "height": "2px",
+          "backgroundColor": "rgb(255, 159, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0",
+          "width": "1px",
+          "height": "20px",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "absolute",
+          "bottom": "14.5px",
+          "left": "0px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": "",
+          "--tab-block-margin": "",
+          "--tab-margin-block": "4px"
+        },
+        "crop": "fluerial-h-density-2-tab-orange.png"
+      },
+      {
+        "role": "normal",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 677,
+            "y": 0,
+            "width": 221,
+            "height": 0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          675,
+          0,
+          900,
+          49
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "1",
+          "width": "221px",
+          "height": "0px",
+          "backgroundColor": "rgba(0, 0, 0, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0",
+          "width": "1px",
+          "height": "20px",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "absolute",
+          "bottom": "14.5px",
+          "left": "0px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": "",
+          "--tab-block-margin": "",
+          "--tab-margin-block": "4px"
+        },
+        "crop": "fluerial-h-density-2-tab-normal.png"
+      }
+    ]
+  },
+  {
+    "id": "fluerial-v-density-0",
+    "design": "fluerial",
+    "verticalMode": true,
+    "tabs": [
+      {
+        "role": "blue",
+        "selected": true,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 235.6666717529297,
+            "y": 260.33331298828125,
+            "width": 2,
+            "height": 10
+          },
+          "pixelBox": [
+            236,
+            260,
+            238,
+            270
+          ],
+          "sampling": "pixel-centers-inside-element",
+          "blueHuePixels": 20,
+          "orangeHuePixels": 0,
+          "outerBoundingBox": [
+            235,
+            260,
+            238,
+            271
+          ],
+          "outerBlueHuePixels": 20,
+          "outerOrangeHuePixels": 0,
+          "zeroGeometry": false
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          0,
+          247,
+          248,
+          283
+        ],
+        "blueHuePixels": 20,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "1",
+          "width": "2px",
+          "height": "10px",
+          "backgroundColor": "rgb(55, 173, 255)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0",
+          "width": "1px",
+          "height": "20px",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "absolute",
+          "bottom": "5px",
+          "left": "0px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "calc((calc(30px + 2 * 0.75rem) - 16px) / 2)",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": "",
+          "--tab-block-margin": "",
+          "--tab-margin-block": "2px"
+        },
+        "crop": "fluerial-v-density-0-tab-blue.png"
+      },
+      {
+        "role": "orange",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 235.6666717529297,
+            "y": 295.33331298828125,
+            "width": 2,
+            "height": 10
+          },
+          "pixelBox": [
+            236,
+            295,
+            238,
+            305
+          ],
+          "sampling": "pixel-centers-inside-element",
+          "blueHuePixels": 0,
+          "orangeHuePixels": 20,
+          "outerBoundingBox": [
+            235,
+            295,
+            238,
+            306
+          ],
+          "outerBlueHuePixels": 0,
+          "outerOrangeHuePixels": 20,
+          "zeroGeometry": false
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          0,
+          282,
+          248,
+          318
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 20,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "1",
+          "width": "2px",
+          "height": "10px",
+          "backgroundColor": "rgb(255, 159, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0",
+          "width": "1px",
+          "height": "20px",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "absolute",
+          "bottom": "5px",
+          "left": "0px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "calc((calc(30px + 2 * 0.75rem) - 16px) / 2)",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": "",
+          "--tab-block-margin": "",
+          "--tab-margin-block": "2px"
+        },
+        "crop": "fluerial-v-density-0-tab-orange.png"
+      },
+      {
+        "role": "normal",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 237.6666717529297,
+            "y": 320.33331298828125,
+            "width": 0,
+            "height": 30
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          0,
+          317,
+          248,
+          353
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "1",
+          "width": "0px",
+          "height": "30px",
+          "backgroundColor": "rgba(0, 0, 0, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0",
+          "width": "1px",
+          "height": "20px",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "absolute",
+          "bottom": "5px",
+          "left": "0px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "calc((calc(30px + 2 * 0.75rem) - 16px) / 2)",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": "",
+          "--tab-block-margin": "",
+          "--tab-margin-block": "2px"
+        },
+        "crop": "fluerial-v-density-0-tab-normal.png"
+      }
+    ]
+  },
+  {
+    "id": "fluerial-v-density-1",
+    "design": "fluerial",
+    "verticalMode": true,
+    "tabs": [
+      {
+        "role": "blue",
+        "selected": true,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 231,
+            "y": 259.33331298828125,
+            "width": 2,
+            "height": 9
+          },
+          "pixelBox": [
+            231,
+            259,
+            233,
+            268
+          ],
+          "sampling": "pixel-centers-inside-element",
+          "blueHuePixels": 18,
+          "orangeHuePixels": 0,
+          "outerBoundingBox": [
+            231,
+            259,
+            233,
+            269
+          ],
+          "outerBlueHuePixels": 18,
+          "outerOrangeHuePixels": 0,
+          "zeroGeometry": false
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          0,
+          246,
+          240,
+          281
+        ],
+        "blueHuePixels": 18,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "1",
+          "width": "2px",
+          "height": "9px",
+          "backgroundColor": "rgb(55, 173, 255)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0",
+          "width": "1px",
+          "height": "20px",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "absolute",
+          "bottom": "4.5px",
+          "left": "0px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "calc((calc(29px + 2 * 7px) - 16px) / 2)",
+          "--tab-margin-inline-inner": "7px",
+          "--usercontext-line-width": "",
+          "--tab-block-margin": "",
+          "--tab-margin-block": "2px"
+        },
+        "crop": "fluerial-v-density-1-tab-blue.png"
+      },
+      {
+        "role": "orange",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 231,
+            "y": 293.33331298828125,
+            "width": 2,
+            "height": 9
+          },
+          "pixelBox": [
+            231,
+            293,
+            233,
+            302
+          ],
+          "sampling": "pixel-centers-inside-element",
+          "blueHuePixels": 0,
+          "orangeHuePixels": 18,
+          "outerBoundingBox": [
+            231,
+            293,
+            233,
+            303
+          ],
+          "outerBlueHuePixels": 0,
+          "outerOrangeHuePixels": 18,
+          "zeroGeometry": false
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          0,
+          280,
+          240,
+          315
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 18,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "1",
+          "width": "2px",
+          "height": "9px",
+          "backgroundColor": "rgb(255, 159, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0",
+          "width": "1px",
+          "height": "20px",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "absolute",
+          "bottom": "4.5px",
+          "left": "0px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "calc((calc(29px + 2 * 7px) - 16px) / 2)",
+          "--tab-margin-inline-inner": "7px",
+          "--usercontext-line-width": "",
+          "--tab-block-margin": "",
+          "--tab-margin-block": "2px"
+        },
+        "crop": "fluerial-v-density-1-tab-orange.png"
+      },
+      {
+        "role": "normal",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 233,
+            "y": 317.33331298828125,
+            "width": 0,
+            "height": 29
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          0,
+          314,
+          240,
+          349
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "1",
+          "width": "0px",
+          "height": "29px",
+          "backgroundColor": "rgba(0, 0, 0, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0",
+          "width": "1px",
+          "height": "20px",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "absolute",
+          "bottom": "4.5px",
+          "left": "0px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "calc((calc(29px + 2 * 7px) - 16px) / 2)",
+          "--tab-margin-inline-inner": "7px",
+          "--usercontext-line-width": "",
+          "--tab-block-margin": "",
+          "--tab-margin-block": "2px"
+        },
+        "crop": "fluerial-v-density-1-tab-normal.png"
+      }
+    ]
+  },
+  {
+    "id": "fluerial-v-density-2",
+    "design": "fluerial",
+    "verticalMode": true,
+    "tabs": [
+      {
+        "role": "blue",
+        "selected": true,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 235.6666717529297,
+            "y": 275.33331298828125,
+            "width": 2,
+            "height": 21
+          },
+          "pixelBox": [
+            236,
+            275,
+            238,
+            296
+          ],
+          "sampling": "pixel-centers-inside-element",
+          "blueHuePixels": 42,
+          "orangeHuePixels": 0,
+          "outerBoundingBox": [
+            235,
+            275,
+            238,
+            297
+          ],
+          "outerBlueHuePixels": 42,
+          "outerOrangeHuePixels": 0,
+          "zeroGeometry": false
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          0,
+          262,
+          248,
+          309
+        ],
+        "blueHuePixels": 42,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "1",
+          "width": "2px",
+          "height": "21px",
+          "backgroundColor": "rgb(55, 173, 255)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0",
+          "width": "1px",
+          "height": "20px",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "absolute",
+          "bottom": "10.5px",
+          "left": "0px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "calc((calc(41px + 2 * 0.75rem) - 16px) / 2)",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": "",
+          "--tab-block-margin": "",
+          "--tab-margin-block": "2px"
+        },
+        "crop": "fluerial-v-density-2-tab-blue.png"
+      },
+      {
+        "role": "orange",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 235.6666717529297,
+            "y": 321.33331298828125,
+            "width": 2,
+            "height": 21
+          },
+          "pixelBox": [
+            236,
+            321,
+            238,
+            342
+          ],
+          "sampling": "pixel-centers-inside-element",
+          "blueHuePixels": 0,
+          "orangeHuePixels": 42,
+          "outerBoundingBox": [
+            235,
+            321,
+            238,
+            343
+          ],
+          "outerBlueHuePixels": 0,
+          "outerOrangeHuePixels": 42,
+          "zeroGeometry": false
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          0,
+          308,
+          248,
+          355
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 42,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "1",
+          "width": "2px",
+          "height": "21px",
+          "backgroundColor": "rgb(255, 159, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0",
+          "width": "1px",
+          "height": "20px",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "absolute",
+          "bottom": "10.5px",
+          "left": "0px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "calc((calc(41px + 2 * 0.75rem) - 16px) / 2)",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": "",
+          "--tab-block-margin": "",
+          "--tab-margin-block": "2px"
+        },
+        "crop": "fluerial-v-density-2-tab-orange.png"
+      },
+      {
+        "role": "normal",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 237.6666717529297,
+            "y": 357.33331298828125,
+            "width": 0,
+            "height": 41
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          0,
+          354,
+          248,
+          401
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "1",
+          "width": "0px",
+          "height": "41px",
+          "backgroundColor": "rgba(0, 0, 0, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0",
+          "width": "1px",
+          "height": "20px",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "absolute",
+          "bottom": "10.5px",
+          "left": "0px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "calc((calc(41px + 2 * 0.75rem) - 16px) / 2)",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": "",
+          "--tab-block-margin": "",
+          "--tab-margin-block": "2px"
+        },
+        "crop": "fluerial-v-density-2-tab-normal.png"
+      }
+    ]
+  },
+  {
+    "id": "lepton-h-density-0",
+    "design": "lepton",
+    "verticalMode": false,
+    "tabs": [
+      {
+        "role": "blue",
+        "selected": true,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": {
+          "rect": {
+            "x": 242.0,
+            "y": 31.5,
+            "width": 0.0,
+            "height": 2.0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "cropBox": [
+          223,
+          0,
+          448,
+          36
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "none",
+          "opacity": "1",
+          "width": "auto",
+          "height": "2px",
+          "backgroundColor": "rgb(55, 173, 255)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "1",
+          "width": "0px",
+          "height": "0px",
+          "borderBottomColor": "rgb(55, 173, 255)",
+          "borderBottomWidth": "2px",
+          "position": "absolute",
+          "bottom": "17px",
+          "left": "8px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": "",
+          "--tab-block-margin": "2px",
+          "--tab-margin-block": "2px"
+        },
+        "crop": "lepton-h-density-0-tab-blue.png"
+      },
+      {
+        "role": "orange",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": {
+          "rect": {
+            "x": 465.0,
+            "y": 31.5,
+            "width": 55.25,
+            "height": 2.0
+          },
+          "pixelBox": [
+            465,
+            31,
+            520,
+            33
+          ],
+          "sampling": "pixel-centers-inside-element",
+          "blueHuePixels": 0,
+          "orangeHuePixels": 55,
+          "outerBoundingBox": [
+            465,
+            31,
+            521,
+            34
+          ],
+          "outerBlueHuePixels": 0,
+          "outerOrangeHuePixels": 110,
+          "zeroGeometry": false
+        },
+        "cropBox": [
+          446,
+          0,
+          671,
+          36
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 110,
+        "nativeLine": {
+          "display": "none",
+          "opacity": "1",
+          "width": "auto",
+          "height": "2px",
+          "backgroundColor": "rgb(255, 159, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0.75",
+          "width": "55.25px",
+          "height": "0px",
+          "borderBottomColor": "rgb(255, 159, 0)",
+          "borderBottomWidth": "2px",
+          "position": "absolute",
+          "bottom": "17px",
+          "left": "8px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": "",
+          "--tab-block-margin": "2px",
+          "--tab-margin-block": "2px"
+        },
+        "crop": "lepton-h-density-0-tab-orange.png"
+      },
+      {
+        "role": "normal",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": {
+          "rect": {
+            "x": 688.0,
+            "y": 30.5,
+            "width": 55.25,
+            "height": 0.0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "cropBox": [
+          669,
+          0,
+          894,
+          36
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "none",
+          "opacity": "1",
+          "width": "auto",
+          "height": "auto",
+          "backgroundColor": "rgba(0, 0, 0, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0.75",
+          "width": "55.25px",
+          "height": "0px",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "absolute",
+          "bottom": "19px",
+          "left": "8px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": "",
+          "--tab-block-margin": "2px",
+          "--tab-margin-block": "2px"
+        },
+        "crop": "lepton-h-density-0-tab-normal.png"
+      }
+    ]
+  },
+  {
+    "id": "lepton-h-density-1",
+    "design": "lepton",
+    "verticalMode": false,
+    "tabs": [
+      {
+        "role": "blue",
+        "selected": true,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": {
+          "rect": {
+            "x": 240.0,
+            "y": 28.5,
+            "width": 0.0,
+            "height": 2.0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "cropBox": [
+          223,
+          0,
+          448,
+          32
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "none",
+          "opacity": "1",
+          "width": "auto",
+          "height": "2px",
+          "backgroundColor": "rgb(55, 173, 255)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "1",
+          "width": "0px",
+          "height": "0px",
+          "borderBottomColor": "rgb(55, 173, 255)",
+          "borderBottomWidth": "2px",
+          "position": "absolute",
+          "bottom": "15px",
+          "left": "6px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "6px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": "",
+          "--tab-block-margin": "2px",
+          "--tab-margin-block": "2px"
+        },
+        "crop": "lepton-h-density-1-tab-blue.png"
+      },
+      {
+        "role": "orange",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": {
+          "rect": {
+            "x": 463.0,
+            "y": 28.5,
+            "width": 55.25,
+            "height": 2.0
+          },
+          "pixelBox": [
+            463,
+            28,
+            518,
+            30
+          ],
+          "sampling": "pixel-centers-inside-element",
+          "blueHuePixels": 0,
+          "orangeHuePixels": 55,
+          "outerBoundingBox": [
+            463,
+            28,
+            519,
+            31
+          ],
+          "outerBlueHuePixels": 0,
+          "outerOrangeHuePixels": 110,
+          "zeroGeometry": false
+        },
+        "cropBox": [
+          446,
+          0,
+          671,
+          32
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 110,
+        "nativeLine": {
+          "display": "none",
+          "opacity": "1",
+          "width": "auto",
+          "height": "2px",
+          "backgroundColor": "rgb(255, 159, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0.75",
+          "width": "55.25px",
+          "height": "0px",
+          "borderBottomColor": "rgb(255, 159, 0)",
+          "borderBottomWidth": "2px",
+          "position": "absolute",
+          "bottom": "15px",
+          "left": "6px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "6px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": "",
+          "--tab-block-margin": "2px",
+          "--tab-margin-block": "2px"
+        },
+        "crop": "lepton-h-density-1-tab-orange.png"
+      },
+      {
+        "role": "normal",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": {
+          "rect": {
+            "x": 686.0,
+            "y": 27.5,
+            "width": 55.25,
+            "height": 0.0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "cropBox": [
+          669,
+          0,
+          894,
+          32
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "none",
+          "opacity": "1",
+          "width": "auto",
+          "height": "auto",
+          "backgroundColor": "rgba(0, 0, 0, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0.75",
+          "width": "55.25px",
+          "height": "0px",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "absolute",
+          "bottom": "17px",
+          "left": "6px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "6px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": "",
+          "--tab-block-margin": "2px",
+          "--tab-margin-block": "2px"
+        },
+        "crop": "lepton-h-density-1-tab-normal.png"
+      }
+    ]
+  },
+  {
+    "id": "lepton-h-density-2",
+    "design": "lepton",
+    "verticalMode": false,
+    "tabs": [
+      {
+        "role": "blue",
+        "selected": true,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": {
+          "rect": {
+            "x": 242.0,
+            "y": 36.0,
+            "width": 0.0,
+            "height": 2.0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "cropBox": [
+          223,
+          0,
+          448,
+          41
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "none",
+          "opacity": "1",
+          "width": "auto",
+          "height": "2px",
+          "backgroundColor": "rgb(55, 173, 255)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "1",
+          "width": "0px",
+          "height": "0px",
+          "borderBottomColor": "rgb(55, 173, 255)",
+          "borderBottomWidth": "2px",
+          "position": "absolute",
+          "bottom": "20.5px",
+          "left": "8px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": "",
+          "--tab-block-margin": "4px",
+          "--tab-margin-block": "4px"
+        },
+        "crop": "lepton-h-density-2-tab-blue.png"
+      },
+      {
+        "role": "orange",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": {
+          "rect": {
+            "x": 465.0,
+            "y": 36.0,
+            "width": 55.25,
+            "height": 2.0
+          },
+          "pixelBox": [
+            465,
+            36,
+            520,
+            38
+          ],
+          "sampling": "pixel-centers-inside-element",
+          "blueHuePixels": 0,
+          "orangeHuePixels": 110,
+          "outerBoundingBox": [
+            465,
+            36,
+            521,
+            38
+          ],
+          "outerBlueHuePixels": 0,
+          "outerOrangeHuePixels": 110,
+          "zeroGeometry": false
+        },
+        "cropBox": [
+          446,
+          0,
+          671,
+          41
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 110,
+        "nativeLine": {
+          "display": "none",
+          "opacity": "1",
+          "width": "auto",
+          "height": "2px",
+          "backgroundColor": "rgb(255, 159, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0.75",
+          "width": "55.25px",
+          "height": "0px",
+          "borderBottomColor": "rgb(255, 159, 0)",
+          "borderBottomWidth": "2px",
+          "position": "absolute",
+          "bottom": "20.5px",
+          "left": "8px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": "",
+          "--tab-block-margin": "4px",
+          "--tab-margin-block": "4px"
+        },
+        "crop": "lepton-h-density-2-tab-orange.png"
+      },
+      {
+        "role": "normal",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": {
+          "rect": {
+            "x": 688.0,
+            "y": 35.0,
+            "width": 55.25,
+            "height": 0.0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "cropBox": [
+          669,
+          0,
+          894,
+          41
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "none",
+          "opacity": "1",
+          "width": "auto",
+          "height": "auto",
+          "backgroundColor": "rgba(0, 0, 0, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0.75",
+          "width": "55.25px",
+          "height": "0px",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "absolute",
+          "bottom": "22.5px",
+          "left": "8px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": "",
+          "--tab-block-margin": "4px",
+          "--tab-margin-block": "4px"
+        },
+        "crop": "lepton-h-density-2-tab-normal.png"
+      }
+    ]
+  },
+  {
+    "id": "lepton-v-density-0",
+    "design": "lepton",
+    "verticalMode": true,
+    "tabs": [
+      {
+        "role": "blue",
+        "selected": true,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": {
+          "rect": {
+            "x": 29.0,
+            "y": 291.16668701171875,
+            "width": 0.0,
+            "height": 2.0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "cropBox": [
+          0,
+          255,
+          248,
+          301
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "none",
+          "opacity": "1",
+          "width": "2px",
+          "height": "auto",
+          "backgroundColor": "rgb(55, 173, 255)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "1",
+          "width": "0px",
+          "height": "0px",
+          "borderBottomColor": "rgb(55, 173, 255)",
+          "borderBottomWidth": "2px",
+          "position": "absolute",
+          "bottom": "18px",
+          "left": "20px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "calc((calc(36px + 2 * 0.75rem) - 16px) / 2)",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": "",
+          "--tab-block-margin": "4px",
+          "--tab-margin-block": "2px"
+        },
+        "crop": "lepton-v-density-0-tab-blue.png"
+      },
+      {
+        "role": "orange",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": {
+          "rect": {
+            "x": 29.0,
+            "y": 334.16668701171875,
+            "width": 61.9167,
+            "height": 2.0
+          },
+          "pixelBox": [
+            29,
+            334,
+            91,
+            336
+          ],
+          "sampling": "pixel-centers-inside-element",
+          "blueHuePixels": 0,
+          "orangeHuePixels": 124,
+          "outerBoundingBox": [
+            29,
+            334,
+            91,
+            337
+          ],
+          "outerBlueHuePixels": 0,
+          "outerOrangeHuePixels": 124,
+          "zeroGeometry": false
+        },
+        "cropBox": [
+          0,
+          298,
+          248,
+          344
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 124,
+        "nativeLine": {
+          "display": "none",
+          "opacity": "1",
+          "width": "2px",
+          "height": "auto",
+          "backgroundColor": "rgb(255, 159, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0.75",
+          "width": "61.9167px",
+          "height": "0px",
+          "borderBottomColor": "rgb(255, 159, 0)",
+          "borderBottomWidth": "2px",
+          "position": "absolute",
+          "bottom": "18px",
+          "left": "20px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "calc((calc(36px + 2 * 0.75rem) - 16px) / 2)",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": "",
+          "--tab-block-margin": "4px",
+          "--tab-margin-block": "2px"
+        },
+        "crop": "lepton-v-density-0-tab-orange.png"
+      },
+      {
+        "role": "normal",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": {
+          "rect": {
+            "x": 29.0,
+            "y": 376.16668701171875,
+            "width": 61.9167,
+            "height": 0.0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "cropBox": [
+          0,
+          341,
+          248,
+          387
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "none",
+          "opacity": "1",
+          "width": "auto",
+          "height": "auto",
+          "backgroundColor": "rgba(0, 0, 0, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0.75",
+          "width": "61.9167px",
+          "height": "0px",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "absolute",
+          "bottom": "20px",
+          "left": "20px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "calc((calc(36px + 2 * 0.75rem) - 16px) / 2)",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": "",
+          "--tab-block-margin": "4px",
+          "--tab-margin-block": "2px"
+        },
+        "crop": "lepton-v-density-0-tab-normal.png"
+      }
+    ]
+  },
+  {
+    "id": "lepton-v-density-1",
+    "design": "lepton",
+    "verticalMode": true,
+    "tabs": [
+      {
+        "role": "blue",
+        "selected": true,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": {
+          "rect": {
+            "x": 24.0,
+            "y": 280.1666717529297,
+            "width": 0.0,
+            "height": 2.0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "cropBox": [
+          0,
+          247,
+          240,
+          289
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "none",
+          "opacity": "1",
+          "width": "2px",
+          "height": "auto",
+          "backgroundColor": "rgb(55, 173, 255)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "1",
+          "width": "0px",
+          "height": "0px",
+          "borderBottomColor": "rgb(55, 173, 255)",
+          "borderBottomWidth": "2px",
+          "position": "absolute",
+          "bottom": "16px",
+          "left": "15px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "calc((calc(32px + 2 * 7px) - 16px) / 2)",
+          "--tab-margin-inline-inner": "7px",
+          "--usercontext-line-width": "",
+          "--tab-block-margin": "4px",
+          "--tab-margin-block": "2px"
+        },
+        "crop": "lepton-v-density-1-tab-blue.png"
+      },
+      {
+        "role": "orange",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": {
+          "rect": {
+            "x": 24.0,
+            "y": 319.16668701171875,
+            "width": 60.0,
+            "height": 2.0
+          },
+          "pixelBox": [
+            24,
+            319,
+            84,
+            321
+          ],
+          "sampling": "pixel-centers-inside-element",
+          "blueHuePixels": 0,
+          "orangeHuePixels": 120,
+          "outerBoundingBox": [
+            24,
+            319,
+            84,
+            322
+          ],
+          "outerBlueHuePixels": 0,
+          "outerOrangeHuePixels": 120,
+          "zeroGeometry": false
+        },
+        "cropBox": [
+          0,
+          286,
+          240,
+          328
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 120,
+        "nativeLine": {
+          "display": "none",
+          "opacity": "1",
+          "width": "2px",
+          "height": "auto",
+          "backgroundColor": "rgb(255, 159, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0.75",
+          "width": "60px",
+          "height": "0px",
+          "borderBottomColor": "rgb(255, 159, 0)",
+          "borderBottomWidth": "2px",
+          "position": "absolute",
+          "bottom": "16px",
+          "left": "15px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "calc((calc(32px + 2 * 7px) - 16px) / 2)",
+          "--tab-margin-inline-inner": "7px",
+          "--usercontext-line-width": "",
+          "--tab-block-margin": "4px",
+          "--tab-margin-block": "2px"
+        },
+        "crop": "lepton-v-density-1-tab-orange.png"
+      },
+      {
+        "role": "normal",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": {
+          "rect": {
+            "x": 24.0,
+            "y": 357.16668701171875,
+            "width": 60.0,
+            "height": 0.0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "cropBox": [
+          0,
+          325,
+          240,
+          367
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "none",
+          "opacity": "1",
+          "width": "auto",
+          "height": "auto",
+          "backgroundColor": "rgba(0, 0, 0, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0.75",
+          "width": "60px",
+          "height": "0px",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "absolute",
+          "bottom": "18px",
+          "left": "15px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "calc((calc(32px + 2 * 7px) - 16px) / 2)",
+          "--tab-margin-inline-inner": "7px",
+          "--usercontext-line-width": "",
+          "--tab-block-margin": "4px",
+          "--tab-margin-block": "2px"
+        },
+        "crop": "lepton-v-density-1-tab-normal.png"
+      }
+    ]
+  },
+  {
+    "id": "lepton-v-density-2",
+    "design": "lepton",
+    "verticalMode": true,
+    "tabs": [
+      {
+        "role": "blue",
+        "selected": true,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": {
+          "rect": {
+            "x": 31.5,
+            "y": 301.66668701171875,
+            "width": 0.0,
+            "height": 2.0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "cropBox": [
+          0,
+          262,
+          248,
+          313
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "none",
+          "opacity": "1",
+          "width": "2px",
+          "height": "auto",
+          "backgroundColor": "rgb(55, 173, 255)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "1",
+          "width": "0px",
+          "height": "0px",
+          "borderBottomColor": "rgb(55, 173, 255)",
+          "borderBottomWidth": "2px",
+          "position": "absolute",
+          "bottom": "20.5px",
+          "left": "22.5px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "calc((calc(41px + 2 * 0.75rem) - 16px) / 2)",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": "",
+          "--tab-block-margin": "4px",
+          "--tab-margin-block": "2px"
+        },
+        "crop": "lepton-v-density-2-tab-blue.png"
+      },
+      {
+        "role": "orange",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": {
+          "rect": {
+            "x": 31.5,
+            "y": 349.66668701171875,
+            "width": 61.9167,
+            "height": 2.0
+          },
+          "pixelBox": [
+            31,
+            350,
+            93,
+            352
+          ],
+          "sampling": "pixel-centers-inside-element",
+          "blueHuePixels": 0,
+          "orangeHuePixels": 122,
+          "outerBoundingBox": [
+            31,
+            349,
+            94,
+            352
+          ],
+          "outerBlueHuePixels": 0,
+          "outerOrangeHuePixels": 122,
+          "zeroGeometry": false
+        },
+        "cropBox": [
+          0,
+          310,
+          248,
+          361
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 122,
+        "nativeLine": {
+          "display": "none",
+          "opacity": "1",
+          "width": "2px",
+          "height": "auto",
+          "backgroundColor": "rgb(255, 159, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0.75",
+          "width": "61.9167px",
+          "height": "0px",
+          "borderBottomColor": "rgb(255, 159, 0)",
+          "borderBottomWidth": "2px",
+          "position": "absolute",
+          "bottom": "20.5px",
+          "left": "22.5px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "calc((calc(41px + 2 * 0.75rem) - 16px) / 2)",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": "",
+          "--tab-block-margin": "4px",
+          "--tab-margin-block": "2px"
+        },
+        "crop": "lepton-v-density-2-tab-orange.png"
+      },
+      {
+        "role": "normal",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": {
+          "rect": {
+            "x": 31.5,
+            "y": 396.66668701171875,
+            "width": 61.9167,
+            "height": 0.0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "cropBox": [
+          0,
+          358,
+          248,
+          409
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "none",
+          "opacity": "1",
+          "width": "auto",
+          "height": "auto",
+          "backgroundColor": "rgba(0, 0, 0, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0.75",
+          "width": "61.9167px",
+          "height": "0px",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "absolute",
+          "bottom": "22.5px",
+          "left": "22.5px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "calc((calc(41px + 2 * 0.75rem) - 16px) / 2)",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": "",
+          "--tab-block-margin": "4px",
+          "--tab-margin-block": "2px"
+        },
+        "crop": "lepton-v-density-2-tab-normal.png"
+      }
+    ]
+  },
+  {
+    "id": "photon-h-density-0",
+    "design": "photon",
+    "verticalMode": false,
+    "tabs": [
+      {
+        "role": "blue",
+        "selected": true,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 337.5,
+            "y": 0,
+            "width": 0,
+            "height": 2
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          225,
+          0,
+          450,
+          32
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "0",
+          "width": "225px",
+          "height": "2px",
+          "backgroundColor": "rgb(10, 132, 255)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "1",
+          "width": "0px",
+          "height": "0px",
+          "borderBottomColor": "rgb(55, 173, 255)",
+          "borderBottomWidth": "2px",
+          "position": "absolute",
+          "bottom": "14px",
+          "left": "8px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": "",
+          "--tab-block-margin": "0px",
+          "--tab-margin-block": "4px"
+        },
+        "crop": "photon-h-density-0-tab-blue.png"
+      },
+      {
+        "role": "orange",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 562.5,
+            "y": 0,
+            "width": 0,
+            "height": 2
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          450,
+          0,
+          675,
+          32
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 112,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "0",
+          "width": "225px",
+          "height": "2px",
+          "backgroundColor": "rgba(0, 0, 0, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0.75",
+          "width": "56.25px",
+          "height": "0px",
+          "borderBottomColor": "rgb(255, 159, 0)",
+          "borderBottomWidth": "2px",
+          "position": "absolute",
+          "bottom": "14px",
+          "left": "8px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": "",
+          "--tab-block-margin": "0px",
+          "--tab-margin-block": "4px"
+        },
+        "crop": "photon-h-density-0-tab-orange.png"
+      },
+      {
+        "role": "normal",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 787.5,
+            "y": 0,
+            "width": 0,
+            "height": 2
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          675,
+          0,
+          900,
+          32
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "0",
+          "width": "225px",
+          "height": "2px",
+          "backgroundColor": "rgba(0, 0, 0, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0.75",
+          "width": "56.25px",
+          "height": "0px",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "absolute",
+          "bottom": "16px",
+          "left": "8px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": "",
+          "--tab-block-margin": "0px",
+          "--tab-margin-block": "4px"
+        },
+        "crop": "photon-h-density-0-tab-normal.png"
+      }
+    ]
+  },
+  {
+    "id": "photon-h-density-1",
+    "design": "photon",
+    "verticalMode": false,
+    "tabs": [
+      {
+        "role": "blue",
+        "selected": true,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 337.5,
+            "y": 0,
+            "width": 0,
+            "height": 2
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          225,
+          0,
+          450,
+          30
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "0",
+          "width": "225px",
+          "height": "2px",
+          "backgroundColor": "rgb(10, 132, 255)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "1",
+          "width": "0px",
+          "height": "0px",
+          "borderBottomColor": "rgb(55, 173, 255)",
+          "borderBottomWidth": "2px",
+          "position": "absolute",
+          "bottom": "13px",
+          "left": "6px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "6px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": "",
+          "--tab-block-margin": "0px",
+          "--tab-margin-block": "4px"
+        },
+        "crop": "photon-h-density-1-tab-blue.png"
+      },
+      {
+        "role": "orange",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 562.5,
+            "y": 0,
+            "width": 0,
+            "height": 2
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          450,
+          0,
+          675,
+          30
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 112,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "0",
+          "width": "225px",
+          "height": "2px",
+          "backgroundColor": "rgba(0, 0, 0, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0.75",
+          "width": "56.25px",
+          "height": "0px",
+          "borderBottomColor": "rgb(255, 159, 0)",
+          "borderBottomWidth": "2px",
+          "position": "absolute",
+          "bottom": "13px",
+          "left": "6px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "6px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": "",
+          "--tab-block-margin": "0px",
+          "--tab-margin-block": "4px"
+        },
+        "crop": "photon-h-density-1-tab-orange.png"
+      },
+      {
+        "role": "normal",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 787.5,
+            "y": 0,
+            "width": 0,
+            "height": 2
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          675,
+          0,
+          900,
+          30
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "0",
+          "width": "225px",
+          "height": "2px",
+          "backgroundColor": "rgba(0, 0, 0, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0.75",
+          "width": "56.25px",
+          "height": "0px",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "absolute",
+          "bottom": "15px",
+          "left": "6px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "6px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": "",
+          "--tab-block-margin": "0px",
+          "--tab-margin-block": "4px"
+        },
+        "crop": "photon-h-density-1-tab-normal.png"
+      }
+    ]
+  },
+  {
+    "id": "photon-h-density-2",
+    "design": "photon",
+    "verticalMode": false,
+    "tabs": [
+      {
+        "role": "blue",
+        "selected": true,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 337.5,
+            "y": 0,
+            "width": 0,
+            "height": 2
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          225,
+          0,
+          450,
+          41
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "0",
+          "width": "225px",
+          "height": "2px",
+          "backgroundColor": "rgb(10, 132, 255)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "1",
+          "width": "0px",
+          "height": "0px",
+          "borderBottomColor": "rgb(55, 173, 255)",
+          "borderBottomWidth": "2px",
+          "position": "absolute",
+          "bottom": "18.5px",
+          "left": "8px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": "",
+          "--tab-block-margin": "4px",
+          "--tab-margin-block": "4px"
+        },
+        "crop": "photon-h-density-2-tab-blue.png"
+      },
+      {
+        "role": "orange",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 562.5,
+            "y": 0,
+            "width": 0,
+            "height": 2
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          450,
+          0,
+          675,
+          41
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 112,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "0",
+          "width": "225px",
+          "height": "2px",
+          "backgroundColor": "rgba(0, 0, 0, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0.75",
+          "width": "56.25px",
+          "height": "0px",
+          "borderBottomColor": "rgb(255, 159, 0)",
+          "borderBottomWidth": "2px",
+          "position": "absolute",
+          "bottom": "18.5px",
+          "left": "8px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": "",
+          "--tab-block-margin": "4px",
+          "--tab-margin-block": "4px"
+        },
+        "crop": "photon-h-density-2-tab-orange.png"
+      },
+      {
+        "role": "normal",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 787.5,
+            "y": 0,
+            "width": 0,
+            "height": 2
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          675,
+          0,
+          900,
+          41
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "0",
+          "width": "225px",
+          "height": "2px",
+          "backgroundColor": "rgba(0, 0, 0, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0.75",
+          "width": "56.25px",
+          "height": "0px",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "absolute",
+          "bottom": "20.5px",
+          "left": "8px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": "",
+          "--tab-block-margin": "4px",
+          "--tab-margin-block": "4px"
+        },
+        "crop": "photon-h-density-2-tab-normal.png"
+      }
+    ]
+  },
+  {
+    "id": "photon-v-density-0",
+    "design": "photon",
+    "verticalMode": true,
+    "tabs": [
+      {
+        "role": "blue",
+        "selected": true,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 236.6666717529297,
+            "y": 255.6666717529297,
+            "width": 0,
+            "height": 2
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          0,
+          252,
+          248,
+          292
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "0",
+          "width": "2px",
+          "height": "2px",
+          "backgroundColor": "rgb(10, 132, 255)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "1",
+          "width": "0px",
+          "height": "0px",
+          "borderBottomColor": "rgb(55, 173, 255)",
+          "borderBottomWidth": "2px",
+          "position": "absolute",
+          "bottom": "15px",
+          "left": "18px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "calc((calc(32px + 2 * 0.75rem) - 16px) / 2)",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": "",
+          "--tab-block-margin": "0px",
+          "--tab-margin-block": "2px"
+        },
+        "crop": "photon-v-density-0-tab-blue.png"
+      },
+      {
+        "role": "orange",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 236.6666717529297,
+            "y": 294.66668701171875,
+            "width": 0,
+            "height": 2
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          0,
+          291,
+          248,
+          331
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 124,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "0",
+          "width": "2px",
+          "height": "2px",
+          "backgroundColor": "rgba(0, 0, 0, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0.75",
+          "width": "61.9167px",
+          "height": "0px",
+          "borderBottomColor": "rgb(255, 159, 0)",
+          "borderBottomWidth": "2px",
+          "position": "absolute",
+          "bottom": "15px",
+          "left": "18px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "calc((calc(32px + 2 * 0.75rem) - 16px) / 2)",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": "",
+          "--tab-block-margin": "0px",
+          "--tab-margin-block": "2px"
+        },
+        "crop": "photon-v-density-0-tab-orange.png"
+      },
+      {
+        "role": "normal",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 237.6666717529297,
+            "y": 333.66668701171875,
+            "width": 0,
+            "height": 2
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          0,
+          330,
+          248,
+          370
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "0",
+          "width": "0px",
+          "height": "2px",
+          "backgroundColor": "rgba(0, 0, 0, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0.75",
+          "width": "61.9167px",
+          "height": "0px",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "absolute",
+          "bottom": "17px",
+          "left": "18px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "calc((calc(32px + 2 * 0.75rem) - 16px) / 2)",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": "",
+          "--tab-block-margin": "0px",
+          "--tab-margin-block": "2px"
+        },
+        "crop": "photon-v-density-0-tab-normal.png"
+      }
+    ]
+  },
+  {
+    "id": "photon-v-density-1",
+    "design": "photon",
+    "verticalMode": true,
+    "tabs": [
+      {
+        "role": "blue",
+        "selected": true,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 232,
+            "y": 248.6666717529297,
+            "width": 0,
+            "height": 2
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          0,
+          245,
+          240,
+          282
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "0",
+          "width": "2px",
+          "height": "2px",
+          "backgroundColor": "rgb(10, 132, 255)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "1",
+          "width": "0px",
+          "height": "0px",
+          "borderBottomColor": "rgb(55, 173, 255)",
+          "borderBottomWidth": "2px",
+          "position": "absolute",
+          "bottom": "13.5px",
+          "left": "13.5px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "calc((calc(29px + 2 * 7px) - 16px) / 2)",
+          "--tab-margin-inline-inner": "7px",
+          "--usercontext-line-width": "",
+          "--tab-block-margin": "0px",
+          "--tab-margin-block": "2px"
+        },
+        "crop": "photon-v-density-1-tab-blue.png"
+      },
+      {
+        "role": "orange",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 232,
+            "y": 284.66668701171875,
+            "width": 0,
+            "height": 2
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          0,
+          281,
+          240,
+          318
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 120,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "0",
+          "width": "2px",
+          "height": "2px",
+          "backgroundColor": "rgba(0, 0, 0, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0.75",
+          "width": "60px",
+          "height": "0px",
+          "borderBottomColor": "rgb(255, 159, 0)",
+          "borderBottomWidth": "2px",
+          "position": "absolute",
+          "bottom": "13.5px",
+          "left": "13.5px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "calc((calc(29px + 2 * 7px) - 16px) / 2)",
+          "--tab-margin-inline-inner": "7px",
+          "--usercontext-line-width": "",
+          "--tab-block-margin": "0px",
+          "--tab-margin-block": "2px"
+        },
+        "crop": "photon-v-density-1-tab-orange.png"
+      },
+      {
+        "role": "normal",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 233,
+            "y": 320.66668701171875,
+            "width": 0,
+            "height": 2
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          0,
+          317,
+          240,
+          354
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "0",
+          "width": "0px",
+          "height": "2px",
+          "backgroundColor": "rgba(0, 0, 0, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0.75",
+          "width": "60px",
+          "height": "0px",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "absolute",
+          "bottom": "15.5px",
+          "left": "13.5px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "calc((calc(29px + 2 * 7px) - 16px) / 2)",
+          "--tab-margin-inline-inner": "7px",
+          "--usercontext-line-width": "",
+          "--tab-block-margin": "0px",
+          "--tab-margin-block": "2px"
+        },
+        "crop": "photon-v-density-1-tab-normal.png"
+      }
+    ]
+  },
+  {
+    "id": "photon-v-density-2",
+    "design": "photon",
+    "verticalMode": true,
+    "tabs": [
+      {
+        "role": "blue",
+        "selected": true,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 236.6666717529297,
+            "y": 266.66668701171875,
+            "width": 0,
+            "height": 2
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          0,
+          263,
+          248,
+          312
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "0",
+          "width": "2px",
+          "height": "2px",
+          "backgroundColor": "rgb(10, 132, 255)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "1",
+          "width": "0px",
+          "height": "0px",
+          "borderBottomColor": "rgb(55, 173, 255)",
+          "borderBottomWidth": "2px",
+          "position": "absolute",
+          "bottom": "19.5px",
+          "left": "22.5px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "calc((calc(41px + 2 * 0.75rem) - 16px) / 2)",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": "",
+          "--tab-block-margin": "4px",
+          "--tab-margin-block": "2px"
+        },
+        "crop": "photon-v-density-2-tab-blue.png"
+      },
+      {
+        "role": "orange",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 236.6666717529297,
+            "y": 314.66668701171875,
+            "width": 0,
+            "height": 2
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          0,
+          311,
+          248,
+          360
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 122,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "0",
+          "width": "2px",
+          "height": "2px",
+          "backgroundColor": "rgba(0, 0, 0, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0.75",
+          "width": "61.9167px",
+          "height": "0px",
+          "borderBottomColor": "rgb(255, 159, 0)",
+          "borderBottomWidth": "2px",
+          "position": "absolute",
+          "bottom": "19.5px",
+          "left": "22.5px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "calc((calc(41px + 2 * 0.75rem) - 16px) / 2)",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": "",
+          "--tab-block-margin": "4px",
+          "--tab-margin-block": "2px"
+        },
+        "crop": "photon-v-density-2-tab-orange.png"
+      },
+      {
+        "role": "normal",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 237.6666717529297,
+            "y": 362.66668701171875,
+            "width": 0,
+            "height": 2
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          0,
+          359,
+          248,
+          408
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "0",
+          "width": "0px",
+          "height": "2px",
+          "backgroundColor": "rgba(0, 0, 0, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "block",
+          "content": "\"\"",
+          "opacity": "0.75",
+          "width": "61.9167px",
+          "height": "0px",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "absolute",
+          "bottom": "21.5px",
+          "left": "22.5px"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "calc((calc(41px + 2 * 0.75rem) - 16px) / 2)",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": "",
+          "--tab-block-margin": "4px",
+          "--tab-margin-block": "2px"
+        },
+        "crop": "photon-v-density-2-tab-normal.png"
+      }
+    ]
+  },
+  {
+    "id": "proton-h-density-0",
+    "design": "proton",
+    "verticalMode": false,
+    "tabs": [
+      {
+        "role": "blue",
+        "selected": true,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 231,
+            "y": 4,
+            "width": 213,
+            "height": 2
+          },
+          "pixelBox": [
+            231,
+            4,
+            444,
+            6
+          ],
+          "sampling": "pixel-centers-inside-element",
+          "blueHuePixels": 426,
+          "orangeHuePixels": 0,
+          "outerBoundingBox": [
+            231,
+            4,
+            444,
+            6
+          ],
+          "outerBlueHuePixels": 426,
+          "outerOrangeHuePixels": 0,
+          "zeroGeometry": false
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          225,
+          0,
+          450,
+          44
+        ],
+        "blueHuePixels": 426,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "1",
+          "width": "213px",
+          "height": "2px",
+          "backgroundColor": "rgb(55, 173, 255)"
+        },
+        "alternativeContentBefore": {
+          "display": "inline",
+          "content": "none",
+          "opacity": "1",
+          "width": "auto",
+          "height": "auto",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "static",
+          "bottom": "auto",
+          "left": "auto"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": "",
+          "--tab-block-margin": "",
+          "--tab-margin-block": "4px"
+        },
+        "crop": "proton-h-density-0-tab-blue.png"
+      },
+      {
+        "role": "orange",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 456,
+            "y": 4,
+            "width": 213,
+            "height": 2
+          },
+          "pixelBox": [
+            456,
+            4,
+            669,
+            6
+          ],
+          "sampling": "pixel-centers-inside-element",
+          "blueHuePixels": 0,
+          "orangeHuePixels": 426,
+          "outerBoundingBox": [
+            456,
+            4,
+            669,
+            6
+          ],
+          "outerBlueHuePixels": 0,
+          "outerOrangeHuePixels": 426,
+          "zeroGeometry": false
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          450,
+          0,
+          675,
+          44
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 426,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "1",
+          "width": "213px",
+          "height": "2px",
+          "backgroundColor": "rgb(255, 159, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "inline",
+          "content": "none",
+          "opacity": "1",
+          "width": "auto",
+          "height": "auto",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "static",
+          "bottom": "auto",
+          "left": "auto"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": "",
+          "--tab-block-margin": "",
+          "--tab-margin-block": "4px"
+        },
+        "crop": "proton-h-density-0-tab-orange.png"
+      },
+      {
+        "role": "normal",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 677,
+            "y": 4,
+            "width": 221,
+            "height": 0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          675,
+          0,
+          900,
+          44
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "1",
+          "width": "221px",
+          "height": "0px",
+          "backgroundColor": "rgba(0, 0, 0, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "inline",
+          "content": "none",
+          "opacity": "1",
+          "width": "auto",
+          "height": "auto",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "static",
+          "bottom": "auto",
+          "left": "auto"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": "",
+          "--tab-block-margin": "",
+          "--tab-margin-block": "4px"
+        },
+        "crop": "proton-h-density-0-tab-normal.png"
+      }
+    ]
+  },
+  {
+    "id": "proton-h-density-1",
+    "design": "proton",
+    "verticalMode": false,
+    "tabs": [
+      {
+        "role": "blue",
+        "selected": true,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 231,
+            "y": 4,
+            "width": 213,
+            "height": 2
+          },
+          "pixelBox": [
+            231,
+            4,
+            444,
+            6
+          ],
+          "sampling": "pixel-centers-inside-element",
+          "blueHuePixels": 426,
+          "orangeHuePixels": 0,
+          "outerBoundingBox": [
+            231,
+            4,
+            444,
+            6
+          ],
+          "outerBlueHuePixels": 426,
+          "outerOrangeHuePixels": 0,
+          "zeroGeometry": false
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          225,
+          0,
+          450,
+          37
+        ],
+        "blueHuePixels": 426,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "1",
+          "width": "213px",
+          "height": "2px",
+          "backgroundColor": "rgb(55, 173, 255)"
+        },
+        "alternativeContentBefore": {
+          "display": "inline",
+          "content": "none",
+          "opacity": "1",
+          "width": "auto",
+          "height": "auto",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "static",
+          "bottom": "auto",
+          "left": "auto"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "6px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": "",
+          "--tab-block-margin": "",
+          "--tab-margin-block": "4px"
+        },
+        "crop": "proton-h-density-1-tab-blue.png"
+      },
+      {
+        "role": "orange",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 456,
+            "y": 4,
+            "width": 213,
+            "height": 2
+          },
+          "pixelBox": [
+            456,
+            4,
+            669,
+            6
+          ],
+          "sampling": "pixel-centers-inside-element",
+          "blueHuePixels": 0,
+          "orangeHuePixels": 426,
+          "outerBoundingBox": [
+            456,
+            4,
+            669,
+            6
+          ],
+          "outerBlueHuePixels": 0,
+          "outerOrangeHuePixels": 426,
+          "zeroGeometry": false
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          450,
+          0,
+          675,
+          37
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 426,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "1",
+          "width": "213px",
+          "height": "2px",
+          "backgroundColor": "rgb(255, 159, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "inline",
+          "content": "none",
+          "opacity": "1",
+          "width": "auto",
+          "height": "auto",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "static",
+          "bottom": "auto",
+          "left": "auto"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "6px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": "",
+          "--tab-block-margin": "",
+          "--tab-margin-block": "4px"
+        },
+        "crop": "proton-h-density-1-tab-orange.png"
+      },
+      {
+        "role": "normal",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 677,
+            "y": 4,
+            "width": 221,
+            "height": 0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          675,
+          0,
+          900,
+          37
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "1",
+          "width": "221px",
+          "height": "0px",
+          "backgroundColor": "rgba(0, 0, 0, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "inline",
+          "content": "none",
+          "opacity": "1",
+          "width": "auto",
+          "height": "auto",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "static",
+          "bottom": "auto",
+          "left": "auto"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "6px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": "",
+          "--tab-block-margin": "",
+          "--tab-margin-block": "4px"
+        },
+        "crop": "proton-h-density-1-tab-normal.png"
+      }
+    ]
+  },
+  {
+    "id": "proton-h-density-2",
+    "design": "proton",
+    "verticalMode": false,
+    "tabs": [
+      {
+        "role": "blue",
+        "selected": true,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 231,
+            "y": 4,
+            "width": 213,
+            "height": 2
+          },
+          "pixelBox": [
+            231,
+            4,
+            444,
+            6
+          ],
+          "sampling": "pixel-centers-inside-element",
+          "blueHuePixels": 426,
+          "orangeHuePixels": 0,
+          "outerBoundingBox": [
+            231,
+            4,
+            444,
+            6
+          ],
+          "outerBlueHuePixels": 426,
+          "outerOrangeHuePixels": 0,
+          "zeroGeometry": false
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          225,
+          0,
+          450,
+          49
+        ],
+        "blueHuePixels": 426,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "1",
+          "width": "213px",
+          "height": "2px",
+          "backgroundColor": "rgb(55, 173, 255)"
+        },
+        "alternativeContentBefore": {
+          "display": "inline",
+          "content": "none",
+          "opacity": "1",
+          "width": "auto",
+          "height": "auto",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "static",
+          "bottom": "auto",
+          "left": "auto"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": "",
+          "--tab-block-margin": "",
+          "--tab-margin-block": "4px"
+        },
+        "crop": "proton-h-density-2-tab-blue.png"
+      },
+      {
+        "role": "orange",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 456,
+            "y": 4,
+            "width": 213,
+            "height": 2
+          },
+          "pixelBox": [
+            456,
+            4,
+            669,
+            6
+          ],
+          "sampling": "pixel-centers-inside-element",
+          "blueHuePixels": 0,
+          "orangeHuePixels": 426,
+          "outerBoundingBox": [
+            456,
+            4,
+            669,
+            6
+          ],
+          "outerBlueHuePixels": 0,
+          "outerOrangeHuePixels": 426,
+          "zeroGeometry": false
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          450,
+          0,
+          675,
+          49
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 426,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "1",
+          "width": "213px",
+          "height": "2px",
+          "backgroundColor": "rgb(255, 159, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "inline",
+          "content": "none",
+          "opacity": "1",
+          "width": "auto",
+          "height": "auto",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "static",
+          "bottom": "auto",
+          "left": "auto"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": "",
+          "--tab-block-margin": "",
+          "--tab-margin-block": "4px"
+        },
+        "crop": "proton-h-density-2-tab-orange.png"
+      },
+      {
+        "role": "normal",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 677,
+            "y": 4,
+            "width": 221,
+            "height": 0
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          675,
+          0,
+          900,
+          49
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "1",
+          "width": "221px",
+          "height": "0px",
+          "backgroundColor": "rgba(0, 0, 0, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "inline",
+          "content": "none",
+          "opacity": "1",
+          "width": "auto",
+          "height": "auto",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "static",
+          "bottom": "auto",
+          "left": "auto"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "8px",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": "",
+          "--tab-block-margin": "",
+          "--tab-margin-block": "4px"
+        },
+        "crop": "proton-h-density-2-tab-normal.png"
+      }
+    ]
+  },
+  {
+    "id": "proton-v-density-0",
+    "design": "proton",
+    "verticalMode": true,
+    "tabs": [
+      {
+        "role": "blue",
+        "selected": true,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 235.6666717529297,
+            "y": 262.33331298828125,
+            "width": 2,
+            "height": 24
+          },
+          "pixelBox": [
+            236,
+            262,
+            238,
+            286
+          ],
+          "sampling": "pixel-centers-inside-element",
+          "blueHuePixels": 48,
+          "orangeHuePixels": 0,
+          "outerBoundingBox": [
+            235,
+            262,
+            238,
+            287
+          ],
+          "outerBlueHuePixels": 48,
+          "outerOrangeHuePixels": 0,
+          "zeroGeometry": false
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          0,
+          253,
+          248,
+          295
+        ],
+        "blueHuePixels": 48,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "1",
+          "width": "2px",
+          "height": "24px",
+          "backgroundColor": "rgb(55, 173, 255)"
+        },
+        "alternativeContentBefore": {
+          "display": "inline",
+          "content": "none",
+          "opacity": "1",
+          "width": "auto",
+          "height": "auto",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "static",
+          "bottom": "auto",
+          "left": "auto"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "calc((calc(max(32px, calc(1.7 * 1em)) + 2 * 0.75rem) - 16px) / 2)",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": "",
+          "--tab-block-margin": "",
+          "--tab-margin-block": "2px"
+        },
+        "crop": "proton-v-density-0-tab-blue.png"
+      },
+      {
+        "role": "orange",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 235.6666717529297,
+            "y": 303.33331298828125,
+            "width": 2,
+            "height": 24
+          },
+          "pixelBox": [
+            236,
+            303,
+            238,
+            327
+          ],
+          "sampling": "pixel-centers-inside-element",
+          "blueHuePixels": 0,
+          "orangeHuePixels": 48,
+          "outerBoundingBox": [
+            235,
+            303,
+            238,
+            328
+          ],
+          "outerBlueHuePixels": 0,
+          "outerOrangeHuePixels": 48,
+          "zeroGeometry": false
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          0,
+          294,
+          248,
+          336
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 48,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "1",
+          "width": "2px",
+          "height": "24px",
+          "backgroundColor": "rgb(255, 159, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "inline",
+          "content": "none",
+          "opacity": "1",
+          "width": "auto",
+          "height": "auto",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "static",
+          "bottom": "auto",
+          "left": "auto"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "calc((calc(max(32px, calc(1.7 * 1em)) + 2 * 0.75rem) - 16px) / 2)",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": "",
+          "--tab-block-margin": "",
+          "--tab-margin-block": "2px"
+        },
+        "crop": "proton-v-density-0-tab-orange.png"
+      },
+      {
+        "role": "normal",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 237.6666717529297,
+            "y": 340.33331298828125,
+            "width": 0,
+            "height": 32
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          0,
+          335,
+          248,
+          377
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "1",
+          "width": "0px",
+          "height": "32px",
+          "backgroundColor": "rgba(0, 0, 0, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "inline",
+          "content": "none",
+          "opacity": "1",
+          "width": "auto",
+          "height": "auto",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "static",
+          "bottom": "auto",
+          "left": "auto"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "calc((calc(max(32px, calc(1.7 * 1em)) + 2 * 0.75rem) - 16px) / 2)",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": "",
+          "--tab-block-margin": "",
+          "--tab-margin-block": "2px"
+        },
+        "crop": "proton-v-density-0-tab-normal.png"
+      }
+    ]
+  },
+  {
+    "id": "proton-v-density-1",
+    "design": "proton",
+    "verticalMode": true,
+    "tabs": [
+      {
+        "role": "blue",
+        "selected": true,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 231,
+            "y": 253.3333282470703,
+            "width": 2,
+            "height": 21
+          },
+          "pixelBox": [
+            231,
+            253,
+            233,
+            274
+          ],
+          "sampling": "pixel-centers-inside-element",
+          "blueHuePixels": 42,
+          "orangeHuePixels": 0,
+          "outerBoundingBox": [
+            231,
+            253,
+            233,
+            275
+          ],
+          "outerBlueHuePixels": 42,
+          "outerOrangeHuePixels": 0,
+          "zeroGeometry": false
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          0,
+          244,
+          240,
+          283
+        ],
+        "blueHuePixels": 42,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "1",
+          "width": "2px",
+          "height": "21px",
+          "backgroundColor": "rgb(55, 173, 255)"
+        },
+        "alternativeContentBefore": {
+          "display": "inline",
+          "content": "none",
+          "opacity": "1",
+          "width": "auto",
+          "height": "auto",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "static",
+          "bottom": "auto",
+          "left": "auto"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "calc((calc(29px + 2 * 7px) - 16px) / 2)",
+          "--tab-margin-inline-inner": "7px",
+          "--usercontext-line-width": "",
+          "--tab-block-margin": "",
+          "--tab-margin-block": "2px"
+        },
+        "crop": "proton-v-density-1-tab-blue.png"
+      },
+      {
+        "role": "orange",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 231,
+            "y": 291.33331298828125,
+            "width": 2,
+            "height": 21
+          },
+          "pixelBox": [
+            231,
+            291,
+            233,
+            312
+          ],
+          "sampling": "pixel-centers-inside-element",
+          "blueHuePixels": 0,
+          "orangeHuePixels": 42,
+          "outerBoundingBox": [
+            231,
+            291,
+            233,
+            313
+          ],
+          "outerBlueHuePixels": 0,
+          "outerOrangeHuePixels": 42,
+          "zeroGeometry": false
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          0,
+          282,
+          240,
+          321
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 42,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "1",
+          "width": "2px",
+          "height": "21px",
+          "backgroundColor": "rgb(255, 159, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "inline",
+          "content": "none",
+          "opacity": "1",
+          "width": "auto",
+          "height": "auto",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "static",
+          "bottom": "auto",
+          "left": "auto"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "calc((calc(29px + 2 * 7px) - 16px) / 2)",
+          "--tab-margin-inline-inner": "7px",
+          "--usercontext-line-width": "",
+          "--tab-block-margin": "",
+          "--tab-margin-block": "2px"
+        },
+        "crop": "proton-v-density-1-tab-orange.png"
+      },
+      {
+        "role": "normal",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 233,
+            "y": 325.33331298828125,
+            "width": 0,
+            "height": 29
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          0,
+          320,
+          240,
+          359
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "1",
+          "width": "0px",
+          "height": "29px",
+          "backgroundColor": "rgba(0, 0, 0, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "inline",
+          "content": "none",
+          "opacity": "1",
+          "width": "auto",
+          "height": "auto",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "static",
+          "bottom": "auto",
+          "left": "auto"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "calc((calc(29px + 2 * 7px) - 16px) / 2)",
+          "--tab-margin-inline-inner": "7px",
+          "--usercontext-line-width": "",
+          "--tab-block-margin": "",
+          "--tab-margin-block": "2px"
+        },
+        "crop": "proton-v-density-1-tab-normal.png"
+      }
+    ]
+  },
+  {
+    "id": "proton-v-density-2",
+    "design": "proton",
+    "verticalMode": true,
+    "tabs": [
+      {
+        "role": "blue",
+        "selected": true,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 235.6666717529297,
+            "y": 275.33331298828125,
+            "width": 2,
+            "height": 33
+          },
+          "pixelBox": [
+            236,
+            275,
+            238,
+            308
+          ],
+          "sampling": "pixel-centers-inside-element",
+          "blueHuePixels": 66,
+          "orangeHuePixels": 0,
+          "outerBoundingBox": [
+            235,
+            275,
+            238,
+            309
+          ],
+          "outerBlueHuePixels": 66,
+          "outerOrangeHuePixels": 0,
+          "zeroGeometry": false
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          0,
+          266,
+          248,
+          317
+        ],
+        "blueHuePixels": 66,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "1",
+          "width": "2px",
+          "height": "33px",
+          "backgroundColor": "rgb(55, 173, 255)"
+        },
+        "alternativeContentBefore": {
+          "display": "inline",
+          "content": "none",
+          "opacity": "1",
+          "width": "auto",
+          "height": "auto",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "static",
+          "bottom": "auto",
+          "left": "auto"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "calc((calc(41px + 2 * 0.75rem) - 16px) / 2)",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": "",
+          "--tab-block-margin": "",
+          "--tab-margin-block": "2px"
+        },
+        "crop": "proton-v-density-2-tab-blue.png"
+      },
+      {
+        "role": "orange",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 235.6666717529297,
+            "y": 325.33331298828125,
+            "width": 2,
+            "height": 33
+          },
+          "pixelBox": [
+            236,
+            325,
+            238,
+            358
+          ],
+          "sampling": "pixel-centers-inside-element",
+          "blueHuePixels": 0,
+          "orangeHuePixels": 66,
+          "outerBoundingBox": [
+            235,
+            325,
+            238,
+            359
+          ],
+          "outerBlueHuePixels": 0,
+          "outerOrangeHuePixels": 66,
+          "zeroGeometry": false
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          0,
+          316,
+          248,
+          367
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 66,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "1",
+          "width": "2px",
+          "height": "33px",
+          "backgroundColor": "rgb(255, 159, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "inline",
+          "content": "none",
+          "opacity": "1",
+          "width": "auto",
+          "height": "auto",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "static",
+          "bottom": "auto",
+          "left": "auto"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "calc((calc(41px + 2 * 0.75rem) - 16px) / 2)",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": "",
+          "--tab-block-margin": "",
+          "--tab-margin-block": "2px"
+        },
+        "crop": "proton-v-density-2-tab-orange.png"
+      },
+      {
+        "role": "normal",
+        "selected": false,
+        "multiselected": false,
+        "hover": false,
+        "nativeLinePixels": {
+          "rect": {
+            "x": 237.6666717529297,
+            "y": 371.33331298828125,
+            "width": 0,
+            "height": 41
+          },
+          "blueHuePixels": 0,
+          "orangeHuePixels": 0,
+          "zeroGeometry": true
+        },
+        "alternativeBorderPixels": null,
+        "cropBox": [
+          0,
+          366,
+          248,
+          417
+        ],
+        "blueHuePixels": 0,
+        "orangeHuePixels": 0,
+        "nativeLine": {
+          "display": "flex",
+          "opacity": "1",
+          "width": "0px",
+          "height": "41px",
+          "backgroundColor": "rgba(0, 0, 0, 0)"
+        },
+        "alternativeContentBefore": {
+          "display": "inline",
+          "content": "none",
+          "opacity": "1",
+          "width": "auto",
+          "height": "auto",
+          "borderBottomColor": "rgb(47, 47, 52)",
+          "borderBottomWidth": "0px",
+          "position": "static",
+          "bottom": "auto",
+          "left": "auto"
+        },
+        "tokens": {
+          "--tab-inline-padding": "",
+          "--tab-inner-inline-margin": "",
+          "--tab-padding-inline": "calc((calc(41px + 2 * 0.75rem) - 16px) / 2)",
+          "--tab-margin-inline-inner": "0.75rem",
+          "--usercontext-line-width": "",
+          "--tab-block-margin": "",
+          "--tab-margin-block": "2px"
+        },
+        "crop": "proton-v-density-2-tab-normal.png"
+      }
+    ]
+  }
+]

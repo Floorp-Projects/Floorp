@@ -1,0 +1,235 @@
+{
+  "product": "/workspace/qa-linux-additional/KAN-24/followup/products/baseline/floorp",
+  "sourceSha": "29a3eb23145da90706d8a94441373278521cc737",
+  "input": "synthetic Hub WebDriver clicks; genuine container service; native tabbrowser API selection/multiselection; real WebDriver pointer hover",
+  "requestedStateMode": "natural-margin24",
+  "cases": [
+    {
+      "id": "proton-h-density-0",
+      "design": "proton",
+      "verticalMode": false,
+      "evidence": [
+        "proton-h-density-0.json",
+        "proton-h-density-0.png"
+      ]
+    },
+    {
+      "id": "proton-h-density-1",
+      "design": "proton",
+      "verticalMode": false,
+      "evidence": [
+        "proton-h-density-1.json",
+        "proton-h-density-1.png"
+      ]
+    },
+    {
+      "id": "proton-h-density-2",
+      "design": "proton",
+      "verticalMode": false,
+      "evidence": [
+        "proton-h-density-2.json",
+        "proton-h-density-2.png"
+      ]
+    },
+    {
+      "id": "proton-v-density-0",
+      "design": "proton",
+      "verticalMode": true,
+      "evidence": [
+        "proton-v-density-0.json",
+        "proton-v-density-0.png"
+      ]
+    },
+    {
+      "id": "proton-v-density-1",
+      "design": "proton",
+      "verticalMode": true,
+      "evidence": [
+        "proton-v-density-1.json",
+        "proton-v-density-1.png"
+      ]
+    },
+    {
+      "id": "proton-v-density-2",
+      "design": "proton",
+      "verticalMode": true,
+      "evidence": [
+        "proton-v-density-2.json",
+        "proton-v-density-2.png"
+      ]
+    },
+    {
+      "id": "lepton-h-density-0",
+      "design": "lepton",
+      "verticalMode": false,
+      "evidence": [
+        "lepton-h-density-0.json",
+        "lepton-h-density-0.png"
+      ]
+    },
+    {
+      "id": "lepton-h-density-1",
+      "design": "lepton",
+      "verticalMode": false,
+      "evidence": [
+        "lepton-h-density-1.json",
+        "lepton-h-density-1.png"
+      ]
+    },
+    {
+      "id": "lepton-h-density-2",
+      "design": "lepton",
+      "verticalMode": false,
+      "evidence": [
+        "lepton-h-density-2.json",
+        "lepton-h-density-2.png"
+      ]
+    },
+    {
+      "id": "lepton-v-density-0",
+      "design": "lepton",
+      "verticalMode": true,
+      "evidence": [
+        "lepton-v-density-0.json",
+        "lepton-v-density-0.png"
+      ]
+    },
+    {
+      "id": "lepton-v-density-1",
+      "design": "lepton",
+      "verticalMode": true,
+      "evidence": [
+        "lepton-v-density-1.json",
+        "lepton-v-density-1.png"
+      ]
+    },
+    {
+      "id": "lepton-v-density-2",
+      "design": "lepton",
+      "verticalMode": true,
+      "evidence": [
+        "lepton-v-density-2.json",
+        "lepton-v-density-2.png"
+      ]
+    },
+    {
+      "id": "photon-h-density-0",
+      "design": "photon",
+      "verticalMode": false,
+      "evidence": [
+        "photon-h-density-0.json",
+        "photon-h-density-0.png"
+      ]
+    },
+    {
+      "id": "photon-h-density-1",
+      "design": "photon",
+      "verticalMode": false,
+      "evidence": [
+        "photon-h-density-1.json",
+        "photon-h-density-1.png"
+      ]
+    },
+    {
+      "id": "photon-h-density-2",
+      "design": "photon",
+      "verticalMode": false,
+      "evidence": [
+        "photon-h-density-2.json",
+        "photon-h-density-2.png"
+      ]
+    },
+    {
+      "id": "photon-v-density-0",
+      "design": "photon",
+      "verticalMode": true,
+      "evidence": [
+        "photon-v-density-0.json",
+        "photon-v-density-0.png"
+      ]
+    },
+    {
+      "id": "photon-v-density-1",
+      "design": "photon",
+      "verticalMode": true,
+      "evidence": [
+        "photon-v-density-1.json",
+        "photon-v-density-1.png"
+      ]
+    },
+    {
+      "id": "photon-v-density-2",
+      "design": "photon",
+      "verticalMode": true,
+      "evidence": [
+        "photon-v-density-2.json",
+        "photon-v-density-2.png"
+      ]
+    },
+    {
+      "id": "fluerial-h-density-0",
+      "design": "fluerial",
+      "verticalMode": false,
+      "evidence": [
+        "fluerial-h-density-0.json",
+        "fluerial-h-density-0.png"
+      ]
+    },
+    {
+      "id": "fluerial-h-density-1",
+      "design": "fluerial",
+      "verticalMode": false,
+      "evidence": [
+        "fluerial-h-density-1.json",
+        "fluerial-h-density-1.png"
+      ]
+    },
+    {
+      "id": "fluerial-h-density-2",
+      "design": "fluerial",
+      "verticalMode": false,
+      "evidence": [
+        "fluerial-h-density-2.json",
+        "fluerial-h-density-2.png"
+      ]
+    },
+    {
+      "id": "fluerial-v-density-0",
+      "design": "fluerial",
+      "verticalMode": true,
+      "evidence": [
+        "fluerial-v-density-0.json",
+        "fluerial-v-density-0.png"
+      ]
+    },
+    {
+      "id": "fluerial-v-density-1",
+      "design": "fluerial",
+      "verticalMode": true,
+      "evidence": [
+        "fluerial-v-density-1.json",
+        "fluerial-v-density-1.png"
+      ]
+    },
+    {
+      "id": "fluerial-v-density-2",
+      "design": "fluerial",
+      "verticalMode": true,
+      "evidence": [
+        "fluerial-v-density-2.json",
+        "fluerial-v-density-2.png"
+      ]
+    }
+  ],
+  "quit": {
+    "cause": "shutdown",
+    "forced": false,
+    "in_app": true
+  },
+  "browserExit": 0,
+  "completed": true,
+  "productTreeUnchanged": true,
+  "productUnchanged": true,
+  "ownedProcessesRemaining": 0,
+  "displaySocketAbsent": true
+}

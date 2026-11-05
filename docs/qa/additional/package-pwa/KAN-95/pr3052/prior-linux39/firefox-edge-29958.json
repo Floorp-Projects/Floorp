@@ -1,0 +1,49 @@
+{
+  "key": "KAN-95",
+  "product": "firefox",
+  "input": "OS XTest synthetic click; not physical input",
+  "cssFixture": false,
+  "defaultDesign": null,
+  "geometry": {
+    "tab": {
+      "x": 450,
+      "y": 0,
+      "width": 225,
+      "height": 44,
+      "top": 0,
+      "right": 675,
+      "bottom": 44,
+      "left": 450
+    },
+    "background": {
+      "x": 452,
+      "y": 6,
+      "width": 221,
+      "height": 32,
+      "top": 6,
+      "right": 673,
+      "bottom": 38,
+      "left": 452
+    },
+    "screen": {
+      "x": 0,
+      "y": 19,
+      "screenY": 0,
+      "sizemode": "maximized"
+    },
+    "css": {
+      "backgroundMarginTop": "6px"
+    },
+    "gtkCsdAvailable": false
+  },
+  "ruleInspectionError": "TypeError: InspectorUtils.getCSSStyleRules is not a function\nstacktrace:\n\t@qa-linux-additional/browser-ui/KAN-95/edge-probe.py:6:33\n\t@qa-linux-additional/browser-ui/KAN-95/edge-probe.py:7:8\n\tevaluate.sandbox/promise<@chrome://remote/content/marionette/evaluate.sys.mjs:127:10\n\tevaluate.sandbox@chrome://remote/content/marionette/evaluate.sys.mjs:103:17\n\texecuteScript@chrome://remote/content/marionette/actors/MarionetteCommandsChild.sys.mjs:358:26\n\treceiveMessage@chrome://remote/content/marionette/actors/MarionetteCommandsChild.sys.mjs:214:31\n",
+  "before": false,
+  "clientTabTopClick": {
+    "screenX": 562,
+    "screenY": 19,
+    "selectedTarget": true
+  },
+  "centerControlSelected": true,
+  "absoluteScreenEdgeSelected": false,
+  "ewmh": "_NET_WM_STATE(ATOM) = _NET_WM_STATE_MAXIMIZED_VERT, _NET_WM_STATE_MAXIMIZED_HORZ\n_NET_FRAME_EXTENTS(CARDINAL) = 0, 0, 19, 0\n"
+}

@@ -1,0 +1,12 @@
+[
+  {
+    "product": "floorp",
+    "binary": "/workspace/qa-linux-22/browser-ui/products/floorp/floorp",
+    "sha256": "4f05c1330b38e50040440be6a3b6e0e7a5b52bc79edb5c5478d978c81f5a603d"
+  },
+  {
+    "product": "firefox",
+    "binary": "/workspace/qa-linux-22/browser-ui/products/firefox/firefox",
+    "sha256": "de3f1f70c111692fce304c7af83a7bf2e6f4bc8033191ea8b8ccc25f1aa122ed"
+  }
+]

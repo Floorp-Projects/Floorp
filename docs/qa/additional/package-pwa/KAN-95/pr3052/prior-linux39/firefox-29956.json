@@ -1,0 +1,3270 @@
+{
+  "sourceSha": "29a3eb23145da90706d8a94441373278521cc737",
+  "key": "KAN-95",
+  "github": 2670,
+  "environment": "Debian13.6 X11 Xvfb101+Openbox, synthetic W3C UI input; not Windows10",
+  "observations": [
+    {
+      "screen": {
+        "screenX": 50,
+        "screenY": 60,
+        "mozInnerScreenX": 51,
+        "mozInnerScreenY": 80,
+        "outerWidth": 1200,
+        "outerHeight": 900,
+        "innerWidth": 1198,
+        "innerHeight": 875,
+        "windowState": 3,
+        "sizemode": "normal",
+        "customtitlebar": false,
+        "tabsintitlebar": false
+      },
+      "prefs": [
+        {
+          "name": "browser.tabs.inTitlebar",
+          "type": 64,
+          "user": false,
+          "value": 2
+        },
+        {
+          "name": "userChrome.padding.drag_space",
+          "type": 0,
+          "user": false,
+          "value": null
+        },
+        {
+          "name": "userChrome.padding.drag_space.maximized",
+          "type": 0,
+          "user": false,
+          "value": null
+        }
+      ],
+      "elements": [
+        {
+          "selector": "#navigator-toolbox",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 1198,
+            "height": 84,
+            "top": 0,
+            "right": 1198,
+            "bottom": 84,
+            "left": 0
+          },
+          "css": {
+            "display": "flex",
+            "visibility": "visible",
+            "paddingTop": "0px",
+            "marginTop": "0px",
+            "borderTop": "0px",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          "vars": {
+            "tabMargin": "",
+            "dragSpace": ""
+          }
+        },
+        {
+          "selector": "#toolbar-menubar",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 1198,
+            "height": 0,
+            "top": 0,
+            "right": 1198,
+            "bottom": 0,
+            "left": 0
+          },
+          "css": {
+            "display": "flex",
+            "visibility": "visible",
+            "paddingTop": "0px",
+            "marginTop": "0px",
+            "borderTop": "0px",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          "vars": {
+            "tabMargin": "",
+            "dragSpace": ""
+          }
+        },
+        {
+          "selector": "#TabsToolbar",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 1198,
+            "height": 44,
+            "top": 0,
+            "right": 1198,
+            "bottom": 44,
+            "left": 0
+          },
+          "css": {
+            "display": "flex",
+            "visibility": "visible",
+            "paddingTop": "0px",
+            "marginTop": "0px",
+            "borderTop": "0px",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          "vars": {
+            "tabMargin": "",
+            "dragSpace": ""
+          }
+        },
+        {
+          "selector": "#TabsToolbar > .toolbar-items",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 1198,
+            "height": 44,
+            "top": 0,
+            "right": 1198,
+            "bottom": 44,
+            "left": 0
+          },
+          "css": {
+            "display": "flex",
+            "visibility": "visible",
+            "paddingTop": "0px",
+            "marginTop": "0px",
+            "borderTop": "0px",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          "vars": {
+            "tabMargin": "",
+            "dragSpace": ""
+          }
+        },
+        {
+          "selector": "#tabbrowser-tabs",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 1134,
+            "height": 44,
+            "top": 0,
+            "right": 1134,
+            "bottom": 44,
+            "left": 0
+          },
+          "css": {
+            "display": "flex",
+            "visibility": "visible",
+            "paddingTop": "0px",
+            "marginTop": "0px",
+            "borderTop": "0px",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          "vars": {
+            "tabMargin": "",
+            "dragSpace": ""
+          }
+        },
+        {
+          "selector": ".tabbrowser-tab[selected]",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 225,
+            "height": 44,
+            "top": 0,
+            "right": 225,
+            "bottom": 44,
+            "left": 0
+          },
+          "css": {
+            "display": "flex",
+            "visibility": "visible",
+            "paddingTop": "0px",
+            "marginTop": "0px",
+            "borderTop": "0px",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          "vars": {
+            "tabMargin": "",
+            "dragSpace": ""
+          }
+        },
+        {
+          "selector": ".tabbrowser-tab[selected] .tab-background",
+          "rect": {
+            "x": 2,
+            "y": 6,
+            "width": 221,
+            "height": 32,
+            "top": 6,
+            "right": 223,
+            "bottom": 38,
+            "left": 2
+          },
+          "css": {
+            "display": "flex",
+            "visibility": "visible",
+            "paddingTop": "0px",
+            "marginTop": "6px",
+            "borderTop": "1px",
+            "background": "color(srgb 0.983333 0.983333 0.986667)"
+          },
+          "vars": {
+            "tabMargin": "",
+            "dragSpace": ""
+          }
+        }
+      ],
+      "ewmh": "_NET_WM_STATE(ATOM) = \n_NET_FRAME_EXTENTS(CARDINAL) = 1, 1, 20, 5",
+      "osGeometry": "WINDOW=4194307\nX=52\nY=100\nWIDTH=1198\nHEIGHT=875\nSCREEN=0\n",
+      "paintColumn": [
+        {
+          "y": 0,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 1,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 2,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 3,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 4,
+          "rgb": [
+            234,
+            234,
+            236
+          ]
+        },
+        {
+          "y": 5,
+          "rgb": [
+            228,
+            228,
+            230
+          ]
+        },
+        {
+          "y": 6,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 7,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 8,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 9,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 10,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 11,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 12,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 13,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 14,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 15,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 16,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 17,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 18,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 19,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 20,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 21,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 22,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 23,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 24,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 25,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 26,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 27,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 28,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 29,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 30,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 31,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 32,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 33,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 34,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 35,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 36,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 37,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 38,
+          "rgb": [
+            198,
+            198,
+            199
+          ]
+        },
+        {
+          "y": 39,
+          "rgb": [
+            221,
+            221,
+            223
+          ]
+        }
+      ],
+      "theme": "Firefox",
+      "configuration": "default",
+      "mode": "normal",
+      "screenshot": "screenshots/firefox-29956-Firefox-default-normal.png"
+    },
+    {
+      "screen": {
+        "screenX": 0,
+        "screenY": 0,
+        "mozInnerScreenX": 0,
+        "mozInnerScreenY": 19,
+        "outerWidth": 1600,
+        "outerHeight": 1100,
+        "innerWidth": 1600,
+        "innerHeight": 1081,
+        "windowState": 1,
+        "sizemode": "maximized",
+        "customtitlebar": false,
+        "tabsintitlebar": false
+      },
+      "prefs": [
+        {
+          "name": "browser.tabs.inTitlebar",
+          "type": 64,
+          "user": false,
+          "value": 2
+        },
+        {
+          "name": "userChrome.padding.drag_space",
+          "type": 0,
+          "user": false,
+          "value": null
+        },
+        {
+          "name": "userChrome.padding.drag_space.maximized",
+          "type": 0,
+          "user": false,
+          "value": null
+        }
+      ],
+      "elements": [
+        {
+          "selector": "#navigator-toolbox",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 1600,
+            "height": 84,
+            "top": 0,
+            "right": 1600,
+            "bottom": 84,
+            "left": 0
+          },
+          "css": {
+            "display": "flex",
+            "visibility": "visible",
+            "paddingTop": "0px",
+            "marginTop": "0px",
+            "borderTop": "0px",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          "vars": {
+            "tabMargin": "",
+            "dragSpace": ""
+          }
+        },
+        {
+          "selector": "#toolbar-menubar",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 1600,
+            "height": 0,
+            "top": 0,
+            "right": 1600,
+            "bottom": 0,
+            "left": 0
+          },
+          "css": {
+            "display": "flex",
+            "visibility": "visible",
+            "paddingTop": "0px",
+            "marginTop": "0px",
+            "borderTop": "0px",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          "vars": {
+            "tabMargin": "",
+            "dragSpace": ""
+          }
+        },
+        {
+          "selector": "#TabsToolbar",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 1600,
+            "height": 44,
+            "top": 0,
+            "right": 1600,
+            "bottom": 44,
+            "left": 0
+          },
+          "css": {
+            "display": "flex",
+            "visibility": "visible",
+            "paddingTop": "0px",
+            "marginTop": "0px",
+            "borderTop": "0px",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          "vars": {
+            "tabMargin": "",
+            "dragSpace": ""
+          }
+        },
+        {
+          "selector": "#TabsToolbar > .toolbar-items",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 1600,
+            "height": 44,
+            "top": 0,
+            "right": 1600,
+            "bottom": 44,
+            "left": 0
+          },
+          "css": {
+            "display": "flex",
+            "visibility": "visible",
+            "paddingTop": "0px",
+            "marginTop": "0px",
+            "borderTop": "0px",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          "vars": {
+            "tabMargin": "",
+            "dragSpace": ""
+          }
+        },
+        {
+          "selector": "#tabbrowser-tabs",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 1536,
+            "height": 44,
+            "top": 0,
+            "right": 1536,
+            "bottom": 44,
+            "left": 0
+          },
+          "css": {
+            "display": "flex",
+            "visibility": "visible",
+            "paddingTop": "0px",
+            "marginTop": "0px",
+            "borderTop": "0px",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          "vars": {
+            "tabMargin": "",
+            "dragSpace": ""
+          }
+        },
+        {
+          "selector": ".tabbrowser-tab[selected]",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 225,
+            "height": 44,
+            "top": 0,
+            "right": 225,
+            "bottom": 44,
+            "left": 0
+          },
+          "css": {
+            "display": "flex",
+            "visibility": "visible",
+            "paddingTop": "0px",
+            "marginTop": "0px",
+            "borderTop": "0px",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          "vars": {
+            "tabMargin": "",
+            "dragSpace": ""
+          }
+        },
+        {
+          "selector": ".tabbrowser-tab[selected] .tab-background",
+          "rect": {
+            "x": 2,
+            "y": 6,
+            "width": 221,
+            "height": 32,
+            "top": 6,
+            "right": 223,
+            "bottom": 38,
+            "left": 2
+          },
+          "css": {
+            "display": "flex",
+            "visibility": "visible",
+            "paddingTop": "0px",
+            "marginTop": "6px",
+            "borderTop": "1px",
+            "background": "color(srgb 0.983333 0.983333 0.986667)"
+          },
+          "vars": {
+            "tabMargin": "",
+            "dragSpace": ""
+          }
+        }
+      ],
+      "ewmh": "_NET_WM_STATE(ATOM) = _NET_WM_STATE_MAXIMIZED_VERT, _NET_WM_STATE_MAXIMIZED_HORZ\n_NET_FRAME_EXTENTS(CARDINAL) = 0, 0, 19, 0",
+      "osGeometry": "WINDOW=4194307\nX=0\nY=38\nWIDTH=1600\nHEIGHT=1081\nSCREEN=0\n",
+      "paintColumn": [
+        {
+          "y": 0,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 1,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 2,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 3,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 4,
+          "rgb": [
+            234,
+            234,
+            236
+          ]
+        },
+        {
+          "y": 5,
+          "rgb": [
+            228,
+            228,
+            230
+          ]
+        },
+        {
+          "y": 6,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 7,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 8,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 9,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 10,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 11,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 12,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 13,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 14,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 15,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 16,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 17,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 18,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 19,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 20,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 21,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 22,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 23,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 24,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 25,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 26,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 27,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 28,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 29,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 30,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 31,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 32,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 33,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 34,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 35,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 36,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 37,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 38,
+          "rgb": [
+            198,
+            198,
+            199
+          ]
+        },
+        {
+          "y": 39,
+          "rgb": [
+            221,
+            221,
+            223
+          ]
+        }
+      ],
+      "theme": "Firefox",
+      "configuration": "default",
+      "mode": "maximized",
+      "screenshot": "screenshots/firefox-29956-Firefox-default-maximized.png"
+    },
+    {
+      "screen": {
+        "screenX": 50,
+        "screenY": 60,
+        "mozInnerScreenX": 51,
+        "mozInnerScreenY": 80,
+        "outerWidth": 1200,
+        "outerHeight": 900,
+        "innerWidth": 1198,
+        "innerHeight": 875,
+        "windowState": 3,
+        "sizemode": "normal",
+        "customtitlebar": false,
+        "tabsintitlebar": false
+      },
+      "prefs": [
+        {
+          "name": "browser.tabs.inTitlebar",
+          "type": 64,
+          "user": false,
+          "value": 2
+        },
+        {
+          "name": "userChrome.padding.drag_space",
+          "type": 0,
+          "user": false,
+          "value": null
+        },
+        {
+          "name": "userChrome.padding.drag_space.maximized",
+          "type": 0,
+          "user": false,
+          "value": null
+        }
+      ],
+      "elements": [
+        {
+          "selector": "#navigator-toolbox",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 1198,
+            "height": 109.33332824707031,
+            "top": 0,
+            "right": 1198,
+            "bottom": 109.33332824707031,
+            "left": 0
+          },
+          "css": {
+            "display": "flex",
+            "visibility": "visible",
+            "paddingTop": "0px",
+            "marginTop": "0px",
+            "borderTop": "0px",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          "vars": {
+            "tabMargin": "",
+            "dragSpace": ""
+          }
+        },
+        {
+          "selector": "#toolbar-menubar",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 1198,
+            "height": 25.333328247070312,
+            "top": 0,
+            "right": 1198,
+            "bottom": 25.333328247070312,
+            "left": 0
+          },
+          "css": {
+            "display": "flex",
+            "visibility": "visible",
+            "paddingTop": "1px",
+            "marginTop": "0px",
+            "borderTop": "0px",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          "vars": {
+            "tabMargin": "",
+            "dragSpace": ""
+          }
+        },
+        {
+          "selector": "#TabsToolbar",
+          "rect": {
+            "x": 0,
+            "y": 25.333328247070312,
+            "width": 1198,
+            "height": 44,
+            "top": 25.333328247070312,
+            "right": 1198,
+            "bottom": 69.33332824707031,
+            "left": 0
+          },
+          "css": {
+            "display": "flex",
+            "visibility": "visible",
+            "paddingTop": "0px",
+            "marginTop": "0px",
+            "borderTop": "0px",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          "vars": {
+            "tabMargin": "",
+            "dragSpace": ""
+          }
+        },
+        {
+          "selector": "#TabsToolbar > .toolbar-items",
+          "rect": {
+            "x": 0,
+            "y": 25.333328247070312,
+            "width": 1198,
+            "height": 44,
+            "top": 25.333328247070312,
+            "right": 1198,
+            "bottom": 69.33332824707031,
+            "left": 0
+          },
+          "css": {
+            "display": "flex",
+            "visibility": "visible",
+            "paddingTop": "0px",
+            "marginTop": "0px",
+            "borderTop": "0px",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          "vars": {
+            "tabMargin": "",
+            "dragSpace": ""
+          }
+        },
+        {
+          "selector": "#tabbrowser-tabs",
+          "rect": {
+            "x": 0,
+            "y": 25.333328247070312,
+            "width": 1134,
+            "height": 44,
+            "top": 25.333328247070312,
+            "right": 1134,
+            "bottom": 69.33332824707031,
+            "left": 0
+          },
+          "css": {
+            "display": "flex",
+            "visibility": "visible",
+            "paddingTop": "0px",
+            "marginTop": "0px",
+            "borderTop": "0px",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          "vars": {
+            "tabMargin": "",
+            "dragSpace": ""
+          }
+        },
+        {
+          "selector": ".tabbrowser-tab[selected]",
+          "rect": {
+            "x": 0,
+            "y": 25.333328247070312,
+            "width": 225,
+            "height": 44,
+            "top": 25.333328247070312,
+            "right": 225,
+            "bottom": 69.33332824707031,
+            "left": 0
+          },
+          "css": {
+            "display": "flex",
+            "visibility": "visible",
+            "paddingTop": "0px",
+            "marginTop": "0px",
+            "borderTop": "0px",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          "vars": {
+            "tabMargin": "",
+            "dragSpace": ""
+          }
+        },
+        {
+          "selector": ".tabbrowser-tab[selected] .tab-background",
+          "rect": {
+            "x": 2,
+            "y": 31.333328247070312,
+            "width": 221,
+            "height": 32,
+            "top": 31.333328247070312,
+            "right": 223,
+            "bottom": 63.33332824707031,
+            "left": 2
+          },
+          "css": {
+            "display": "flex",
+            "visibility": "visible",
+            "paddingTop": "0px",
+            "marginTop": "6px",
+            "borderTop": "1px",
+            "background": "color(srgb 0.983333 0.983333 0.986667)"
+          },
+          "vars": {
+            "tabMargin": "",
+            "dragSpace": ""
+          }
+        }
+      ],
+      "ewmh": "_NET_WM_STATE(ATOM) = \n_NET_FRAME_EXTENTS(CARDINAL) = 1, 1, 20, 5",
+      "osGeometry": "WINDOW=4194307\nX=52\nY=100\nWIDTH=1198\nHEIGHT=875\nSCREEN=0\n",
+      "paintColumn": [
+        {
+          "y": 0,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 1,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 2,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 3,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 4,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 5,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 6,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 7,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 8,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 9,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 10,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 11,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 12,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 13,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 14,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 15,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 16,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 17,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 18,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 19,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 20,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 21,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 22,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 23,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 24,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 25,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 26,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 27,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 28,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 29,
+          "rgb": [
+            234,
+            234,
+            236
+          ]
+        },
+        {
+          "y": 30,
+          "rgb": [
+            228,
+            228,
+            230
+          ]
+        },
+        {
+          "y": 31,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 32,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 33,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 34,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 35,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 36,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 37,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 38,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 39,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        }
+      ],
+      "theme": "Firefox",
+      "configuration": "menubar-visible",
+      "mode": "normal",
+      "screenshot": "screenshots/firefox-29956-Firefox-menubar-visible-normal.png"
+    },
+    {
+      "screen": {
+        "screenX": 0,
+        "screenY": 0,
+        "mozInnerScreenX": 0,
+        "mozInnerScreenY": 19,
+        "outerWidth": 1600,
+        "outerHeight": 1100,
+        "innerWidth": 1600,
+        "innerHeight": 1081,
+        "windowState": 1,
+        "sizemode": "maximized",
+        "customtitlebar": false,
+        "tabsintitlebar": false
+      },
+      "prefs": [
+        {
+          "name": "browser.tabs.inTitlebar",
+          "type": 64,
+          "user": false,
+          "value": 2
+        },
+        {
+          "name": "userChrome.padding.drag_space",
+          "type": 0,
+          "user": false,
+          "value": null
+        },
+        {
+          "name": "userChrome.padding.drag_space.maximized",
+          "type": 0,
+          "user": false,
+          "value": null
+        }
+      ],
+      "elements": [
+        {
+          "selector": "#navigator-toolbox",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 1600,
+            "height": 109.33332824707031,
+            "top": 0,
+            "right": 1600,
+            "bottom": 109.33332824707031,
+            "left": 0
+          },
+          "css": {
+            "display": "flex",
+            "visibility": "visible",
+            "paddingTop": "0px",
+            "marginTop": "0px",
+            "borderTop": "0px",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          "vars": {
+            "tabMargin": "",
+            "dragSpace": ""
+          }
+        },
+        {
+          "selector": "#toolbar-menubar",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 1600,
+            "height": 25.333328247070312,
+            "top": 0,
+            "right": 1600,
+            "bottom": 25.333328247070312,
+            "left": 0
+          },
+          "css": {
+            "display": "flex",
+            "visibility": "visible",
+            "paddingTop": "1px",
+            "marginTop": "0px",
+            "borderTop": "0px",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          "vars": {
+            "tabMargin": "",
+            "dragSpace": ""
+          }
+        },
+        {
+          "selector": "#TabsToolbar",
+          "rect": {
+            "x": 0,
+            "y": 25.333328247070312,
+            "width": 1600,
+            "height": 44,
+            "top": 25.333328247070312,
+            "right": 1600,
+            "bottom": 69.33332824707031,
+            "left": 0
+          },
+          "css": {
+            "display": "flex",
+            "visibility": "visible",
+            "paddingTop": "0px",
+            "marginTop": "0px",
+            "borderTop": "0px",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          "vars": {
+            "tabMargin": "",
+            "dragSpace": ""
+          }
+        },
+        {
+          "selector": "#TabsToolbar > .toolbar-items",
+          "rect": {
+            "x": 0,
+            "y": 25.333328247070312,
+            "width": 1600,
+            "height": 44,
+            "top": 25.333328247070312,
+            "right": 1600,
+            "bottom": 69.33332824707031,
+            "left": 0
+          },
+          "css": {
+            "display": "flex",
+            "visibility": "visible",
+            "paddingTop": "0px",
+            "marginTop": "0px",
+            "borderTop": "0px",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          "vars": {
+            "tabMargin": "",
+            "dragSpace": ""
+          }
+        },
+        {
+          "selector": "#tabbrowser-tabs",
+          "rect": {
+            "x": 0,
+            "y": 25.333328247070312,
+            "width": 1536,
+            "height": 44,
+            "top": 25.333328247070312,
+            "right": 1536,
+            "bottom": 69.33332824707031,
+            "left": 0
+          },
+          "css": {
+            "display": "flex",
+            "visibility": "visible",
+            "paddingTop": "0px",
+            "marginTop": "0px",
+            "borderTop": "0px",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          "vars": {
+            "tabMargin": "",
+            "dragSpace": ""
+          }
+        },
+        {
+          "selector": ".tabbrowser-tab[selected]",
+          "rect": {
+            "x": 0,
+            "y": 25.333328247070312,
+            "width": 225,
+            "height": 44,
+            "top": 25.333328247070312,
+            "right": 225,
+            "bottom": 69.33332824707031,
+            "left": 0
+          },
+          "css": {
+            "display": "flex",
+            "visibility": "visible",
+            "paddingTop": "0px",
+            "marginTop": "0px",
+            "borderTop": "0px",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          "vars": {
+            "tabMargin": "",
+            "dragSpace": ""
+          }
+        },
+        {
+          "selector": ".tabbrowser-tab[selected] .tab-background",
+          "rect": {
+            "x": 2,
+            "y": 31.333328247070312,
+            "width": 221,
+            "height": 32,
+            "top": 31.333328247070312,
+            "right": 223,
+            "bottom": 63.33332824707031,
+            "left": 2
+          },
+          "css": {
+            "display": "flex",
+            "visibility": "visible",
+            "paddingTop": "0px",
+            "marginTop": "6px",
+            "borderTop": "1px",
+            "background": "color(srgb 0.983333 0.983333 0.986667)"
+          },
+          "vars": {
+            "tabMargin": "",
+            "dragSpace": ""
+          }
+        }
+      ],
+      "ewmh": "_NET_WM_STATE(ATOM) = _NET_WM_STATE_MAXIMIZED_VERT, _NET_WM_STATE_MAXIMIZED_HORZ\n_NET_FRAME_EXTENTS(CARDINAL) = 0, 0, 19, 0",
+      "osGeometry": "WINDOW=4194307\nX=0\nY=38\nWIDTH=1600\nHEIGHT=1081\nSCREEN=0\n",
+      "paintColumn": [
+        {
+          "y": 0,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 1,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 2,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 3,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 4,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 5,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 6,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 7,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 8,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 9,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 10,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 11,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 12,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 13,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 14,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 15,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 16,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 17,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 18,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 19,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 20,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 21,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 22,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 23,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 24,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 25,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 26,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 27,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 28,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 29,
+          "rgb": [
+            234,
+            234,
+            236
+          ]
+        },
+        {
+          "y": 30,
+          "rgb": [
+            228,
+            228,
+            230
+          ]
+        },
+        {
+          "y": 31,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 32,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 33,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 34,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 35,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 36,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 37,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 38,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 39,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        }
+      ],
+      "theme": "Firefox",
+      "configuration": "menubar-visible",
+      "mode": "maximized",
+      "screenshot": "screenshots/firefox-29956-Firefox-menubar-visible-maximized.png"
+    },
+    {
+      "screen": {
+        "screenX": 50,
+        "screenY": 60,
+        "mozInnerScreenX": 51,
+        "mozInnerScreenY": 80,
+        "outerWidth": 1200,
+        "outerHeight": 900,
+        "innerWidth": 1198,
+        "innerHeight": 875,
+        "windowState": 3,
+        "sizemode": "normal",
+        "customtitlebar": false,
+        "tabsintitlebar": false
+      },
+      "prefs": [
+        {
+          "name": "browser.tabs.inTitlebar",
+          "type": 64,
+          "user": true,
+          "value": 0
+        },
+        {
+          "name": "userChrome.padding.drag_space",
+          "type": 0,
+          "user": false,
+          "value": null
+        },
+        {
+          "name": "userChrome.padding.drag_space.maximized",
+          "type": 0,
+          "user": false,
+          "value": null
+        }
+      ],
+      "elements": [
+        {
+          "selector": "#navigator-toolbox",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 1198,
+            "height": 84,
+            "top": 0,
+            "right": 1198,
+            "bottom": 84,
+            "left": 0
+          },
+          "css": {
+            "display": "flex",
+            "visibility": "visible",
+            "paddingTop": "0px",
+            "marginTop": "0px",
+            "borderTop": "0px",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          "vars": {
+            "tabMargin": "",
+            "dragSpace": ""
+          }
+        },
+        {
+          "selector": "#toolbar-menubar",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 1198,
+            "height": 0,
+            "top": 0,
+            "right": 1198,
+            "bottom": 0,
+            "left": 0
+          },
+          "css": {
+            "display": "flex",
+            "visibility": "visible",
+            "paddingTop": "0px",
+            "marginTop": "0px",
+            "borderTop": "0px",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          "vars": {
+            "tabMargin": "",
+            "dragSpace": ""
+          }
+        },
+        {
+          "selector": "#TabsToolbar",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 1198,
+            "height": 44,
+            "top": 0,
+            "right": 1198,
+            "bottom": 44,
+            "left": 0
+          },
+          "css": {
+            "display": "flex",
+            "visibility": "visible",
+            "paddingTop": "0px",
+            "marginTop": "0px",
+            "borderTop": "0px",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          "vars": {
+            "tabMargin": "",
+            "dragSpace": ""
+          }
+        },
+        {
+          "selector": "#TabsToolbar > .toolbar-items",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 1198,
+            "height": 44,
+            "top": 0,
+            "right": 1198,
+            "bottom": 44,
+            "left": 0
+          },
+          "css": {
+            "display": "flex",
+            "visibility": "visible",
+            "paddingTop": "0px",
+            "marginTop": "0px",
+            "borderTop": "0px",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          "vars": {
+            "tabMargin": "",
+            "dragSpace": ""
+          }
+        },
+        {
+          "selector": "#tabbrowser-tabs",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 1134,
+            "height": 44,
+            "top": 0,
+            "right": 1134,
+            "bottom": 44,
+            "left": 0
+          },
+          "css": {
+            "display": "flex",
+            "visibility": "visible",
+            "paddingTop": "0px",
+            "marginTop": "0px",
+            "borderTop": "0px",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          "vars": {
+            "tabMargin": "",
+            "dragSpace": ""
+          }
+        },
+        {
+          "selector": ".tabbrowser-tab[selected]",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 225,
+            "height": 44,
+            "top": 0,
+            "right": 225,
+            "bottom": 44,
+            "left": 0
+          },
+          "css": {
+            "display": "flex",
+            "visibility": "visible",
+            "paddingTop": "0px",
+            "marginTop": "0px",
+            "borderTop": "0px",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          "vars": {
+            "tabMargin": "",
+            "dragSpace": ""
+          }
+        },
+        {
+          "selector": ".tabbrowser-tab[selected] .tab-background",
+          "rect": {
+            "x": 2,
+            "y": 6,
+            "width": 221,
+            "height": 32,
+            "top": 6,
+            "right": 223,
+            "bottom": 38,
+            "left": 2
+          },
+          "css": {
+            "display": "flex",
+            "visibility": "visible",
+            "paddingTop": "0px",
+            "marginTop": "6px",
+            "borderTop": "1px",
+            "background": "color(srgb 0.983333 0.983333 0.986667)"
+          },
+          "vars": {
+            "tabMargin": "",
+            "dragSpace": ""
+          }
+        }
+      ],
+      "ewmh": "_NET_WM_STATE(ATOM) = \n_NET_FRAME_EXTENTS(CARDINAL) = 1, 1, 20, 5",
+      "osGeometry": "WINDOW=4194307\nX=52\nY=100\nWIDTH=1198\nHEIGHT=875\nSCREEN=0\n",
+      "paintColumn": [
+        {
+          "y": 0,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 1,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 2,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 3,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 4,
+          "rgb": [
+            234,
+            234,
+            236
+          ]
+        },
+        {
+          "y": 5,
+          "rgb": [
+            228,
+            228,
+            230
+          ]
+        },
+        {
+          "y": 6,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 7,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 8,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 9,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 10,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 11,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 12,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 13,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 14,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 15,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 16,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 17,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 18,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 19,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 20,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 21,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 22,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 23,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 24,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 25,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 26,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 27,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 28,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 29,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 30,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 31,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 32,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 33,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 34,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 35,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 36,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 37,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 38,
+          "rgb": [
+            198,
+            198,
+            199
+          ]
+        },
+        {
+          "y": 39,
+          "rgb": [
+            221,
+            221,
+            223
+          ]
+        }
+      ],
+      "theme": "Firefox",
+      "configuration": "native-titlebar",
+      "mode": "normal",
+      "screenshot": "screenshots/firefox-29956-Firefox-native-titlebar-normal.png"
+    },
+    {
+      "screen": {
+        "screenX": 0,
+        "screenY": 0,
+        "mozInnerScreenX": 0,
+        "mozInnerScreenY": 19,
+        "outerWidth": 1600,
+        "outerHeight": 1100,
+        "innerWidth": 1600,
+        "innerHeight": 1081,
+        "windowState": 1,
+        "sizemode": "maximized",
+        "customtitlebar": false,
+        "tabsintitlebar": false
+      },
+      "prefs": [
+        {
+          "name": "browser.tabs.inTitlebar",
+          "type": 64,
+          "user": true,
+          "value": 0
+        },
+        {
+          "name": "userChrome.padding.drag_space",
+          "type": 0,
+          "user": false,
+          "value": null
+        },
+        {
+          "name": "userChrome.padding.drag_space.maximized",
+          "type": 0,
+          "user": false,
+          "value": null
+        }
+      ],
+      "elements": [
+        {
+          "selector": "#navigator-toolbox",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 1600,
+            "height": 84,
+            "top": 0,
+            "right": 1600,
+            "bottom": 84,
+            "left": 0
+          },
+          "css": {
+            "display": "flex",
+            "visibility": "visible",
+            "paddingTop": "0px",
+            "marginTop": "0px",
+            "borderTop": "0px",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          "vars": {
+            "tabMargin": "",
+            "dragSpace": ""
+          }
+        },
+        {
+          "selector": "#toolbar-menubar",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 1600,
+            "height": 0,
+            "top": 0,
+            "right": 1600,
+            "bottom": 0,
+            "left": 0
+          },
+          "css": {
+            "display": "flex",
+            "visibility": "visible",
+            "paddingTop": "0px",
+            "marginTop": "0px",
+            "borderTop": "0px",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          "vars": {
+            "tabMargin": "",
+            "dragSpace": ""
+          }
+        },
+        {
+          "selector": "#TabsToolbar",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 1600,
+            "height": 44,
+            "top": 0,
+            "right": 1600,
+            "bottom": 44,
+            "left": 0
+          },
+          "css": {
+            "display": "flex",
+            "visibility": "visible",
+            "paddingTop": "0px",
+            "marginTop": "0px",
+            "borderTop": "0px",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          "vars": {
+            "tabMargin": "",
+            "dragSpace": ""
+          }
+        },
+        {
+          "selector": "#TabsToolbar > .toolbar-items",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 1600,
+            "height": 44,
+            "top": 0,
+            "right": 1600,
+            "bottom": 44,
+            "left": 0
+          },
+          "css": {
+            "display": "flex",
+            "visibility": "visible",
+            "paddingTop": "0px",
+            "marginTop": "0px",
+            "borderTop": "0px",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          "vars": {
+            "tabMargin": "",
+            "dragSpace": ""
+          }
+        },
+        {
+          "selector": "#tabbrowser-tabs",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 1536,
+            "height": 44,
+            "top": 0,
+            "right": 1536,
+            "bottom": 44,
+            "left": 0
+          },
+          "css": {
+            "display": "flex",
+            "visibility": "visible",
+            "paddingTop": "0px",
+            "marginTop": "0px",
+            "borderTop": "0px",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          "vars": {
+            "tabMargin": "",
+            "dragSpace": ""
+          }
+        },
+        {
+          "selector": ".tabbrowser-tab[selected]",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 225,
+            "height": 44,
+            "top": 0,
+            "right": 225,
+            "bottom": 44,
+            "left": 0
+          },
+          "css": {
+            "display": "flex",
+            "visibility": "visible",
+            "paddingTop": "0px",
+            "marginTop": "0px",
+            "borderTop": "0px",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          "vars": {
+            "tabMargin": "",
+            "dragSpace": ""
+          }
+        },
+        {
+          "selector": ".tabbrowser-tab[selected] .tab-background",
+          "rect": {
+            "x": 2,
+            "y": 6,
+            "width": 221,
+            "height": 32,
+            "top": 6,
+            "right": 223,
+            "bottom": 38,
+            "left": 2
+          },
+          "css": {
+            "display": "flex",
+            "visibility": "visible",
+            "paddingTop": "0px",
+            "marginTop": "6px",
+            "borderTop": "1px",
+            "background": "color(srgb 0.983333 0.983333 0.986667)"
+          },
+          "vars": {
+            "tabMargin": "",
+            "dragSpace": ""
+          }
+        }
+      ],
+      "ewmh": "_NET_WM_STATE(ATOM) = _NET_WM_STATE_MAXIMIZED_VERT, _NET_WM_STATE_MAXIMIZED_HORZ\n_NET_FRAME_EXTENTS(CARDINAL) = 0, 0, 19, 0",
+      "osGeometry": "WINDOW=4194307\nX=0\nY=38\nWIDTH=1600\nHEIGHT=1081\nSCREEN=0\n",
+      "paintColumn": [
+        {
+          "y": 0,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 1,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 2,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 3,
+          "rgb": [
+            235,
+            235,
+            237
+          ]
+        },
+        {
+          "y": 4,
+          "rgb": [
+            234,
+            234,
+            236
+          ]
+        },
+        {
+          "y": 5,
+          "rgb": [
+            228,
+            228,
+            230
+          ]
+        },
+        {
+          "y": 6,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 7,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 8,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 9,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 10,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 11,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 12,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 13,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 14,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 15,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 16,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 17,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 18,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 19,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 20,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 21,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 22,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 23,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 24,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 25,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 26,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 27,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 28,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 29,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 30,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 31,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 32,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 33,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 34,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 35,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 36,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 37,
+          "rgb": [
+            251,
+            251,
+            252
+          ]
+        },
+        {
+          "y": 38,
+          "rgb": [
+            198,
+            198,
+            199
+          ]
+        },
+        {
+          "y": 39,
+          "rgb": [
+            221,
+            221,
+            223
+          ]
+        }
+      ],
+      "theme": "Firefox",
+      "configuration": "native-titlebar",
+      "mode": "maximized",
+      "screenshot": "screenshots/firefox-29956-Firefox-native-titlebar-maximized.png"
+    }
+  ],
+  "uiOperations": [],
+  "product": {
+    "name": "Firefox",
+    "version": "159.0.1",
+    "build": "20261102144711",
+    "os": "Linux",
+    "signatureRequired": true,
+    "signatureUser": false,
+    "sandbox": 6,
+    "focusTestMode": false
+  },
+  "graphics": {
+    "protocol": "x11",
+    "compositor": "WebRender (Software)"
+  },
+  "completed": true
+}

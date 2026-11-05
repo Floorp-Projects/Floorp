@@ -1,0 +1,18 @@
+{
+  "removed": [
+    {
+      "path": "profile",
+      "bytes": 31175843
+    },
+    {
+      "path": "home",
+      "bytes": 2394719
+    },
+    {
+      "path": "runtime",
+      "bytes": 2
+    }
+  ],
+  "preservedMeasurementsAndProduct": true,
+  "reason": "dedicated completed fresh-profile cache after allguards, free disk"
+}

@@ -1,0 +1,40 @@
+{
+  "sourceSha": "214ba6657a63314594de3867785441558b7a63b5",
+  "run": {
+    "id": 42123754997,
+    "head_sha": "214ba6657a63314594de3867785441558b7a63b5",
+    "status": "completed",
+    "conclusion": "success",
+    "event": "workflow_dispatch",
+    "path": ".github/workflows/package.yml",
+    "display_title": "\ud83d\udce6\ufe0f Package Linux-x64 (Unsigned)",
+    "html_url": "https://github.com/Floorp-Projects/Floorp/actions/runs/42123754997",
+    "run_attempt": 1,
+    "created_at": "2026-11-05T22:42:30Z",
+    "updated_at": "2026-11-05T22:58:35Z"
+  },
+  "artifact": {
+    "id": 13459714736,
+    "name": "noraneko-linux-x86_64-installer-unsigned",
+    "size_in_bytes": 108198486,
+    "digest": "sha256:d4e89cc7ba88751df704771c89c93017a03a01aaa8877db0f538a62c8aa81502",
+    "expired": false,
+    "created_at": "2026-11-05T22:58:28Z",
+    "expires_at": "2027-02-03T22:42:31Z",
+    "workflow_run": {
+      "id": 42123754997,
+      "repository_id": 437505831,
+      "head_repository_id": 437505831,
+      "head_branch": "codex/stability-kan95-lepton-margin",
+      "head_sha": "214ba6657a63314594de3867785441558b7a63b5"
+    }
+  },
+  "archiveZipSha256": "d4e89cc7ba88751df704771c89c93017a03a01aaa8877db0f538a62c8aa81502",
+  "packageTarSha256": "f1404a3d8d23058d6eba83b0875cbc4154bf756e9244c8a32856b9409d961ee4",
+  "tarMemberCount": 57,
+  "product": "/workspace/qa-linux-additional/KAN-95/pr3052/candidate-product/floorp",
+  "applicationIni": "; This file is not used. If you modify it and want the application to use\n; your modifications, move it under the browser/ subdirectory and start with\n; the \"-app /path/to/browser/application.ini\" argument.\n[App]\nVendor=Ablaze\nName=Floorp\nRemotingName=floorp\nVersion=12.21.1@159.0.1\nProfile=Floorp\nBuildID=20261105224633\nID={ec8030f7-c20a-464f-9b0e-13a3a9e97384}\n\n[Gecko]\nMinVersion=159.0.1\nMaxVersion=159.0.1\n\n[XRE]\nEnableProfileMigrator=1\n\n\n[AppUpdate]\nURL=https://aus5.mozilla.org/update/6/%PRODUCT%/%VERSION%/%BUILD_ID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%SYSTEM_CAPABILITIES%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/update.xml\n",
+  "platformIni": "[Build]\nBuildID=20261105224633\nMilestone=159.0.1\n",
+  "extraction": "fresh root, unique floorp members, standard datafilter; authenticated compressedtar streamed from ZIP without duplicate cache",
+  "qualification": "complete existing unsigned application/package pipeline with locked prebuilt native Runtime; no resource substitution/freshGecko/strictrelease qualification"
+}

@@ -1,0 +1,18 @@
+[
+  {
+    "path": "browser-features/chrome/common/designs/utils/tab-color-like-toolbar.css.ts",
+    "sha256": "e164844293ffc14d6daeca51afcccde09ecc44649a2060a81e4e4ed77b303d46"
+  },
+  {
+    "path": "browser-features/chrome/common/designs/utils/css.ts",
+    "sha256": "6e47e5c0ef05c6a7f8a1db87120700a082b3405e5ee7635e06e378f7b3ce241e"
+  },
+  {
+    "path": "browser-features/skin/fluerial/css/fluerial.css",
+    "sha256": "9eb08fe5d6359800c387b1a8ea42049d66554b8a108a451afd92423d113a0c74"
+  },
+  {
+    "path": "browser-features/skin/lepton/css/leptonChrome.css",
+    "sha256": "ad62a10bcdfc1d7f54fca6e7f9b4f7aa219135b61b45b16b05ad924e4c303fc9"
+  }
+]

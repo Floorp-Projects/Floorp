@@ -1,0 +1,57 @@
+{
+  "key": "KAN-95",
+  "github": "https://github.com/Floorp-Projects/Floorp/issues/2670",
+  "sourceSha": {
+    "baseline": "29a3eb23145da90706d8a94441373278521cc737",
+    "candidate": "214ba6657a63314594de3867785441558b7a63b5"
+  },
+  "productVersion": "bothnative159.0.1/BuildID20261103153232",
+  "environment": "Debian13/Xvfb117/X11/privateDBus/defaulttheme/DPR1/sandbox6; synthetic Hub and native tabbrowser; no WM/native OS-edge grade",
+  "testCommand": "dbus-run-session -- python3 probe.py --product <authenticatedcomplete> --source-sha <source> --out <fresh>; compare.py; line_analyze.py; line_compare.py (README)",
+  "result": "Measured LeptonHnormal/compact startmargin and realtopgap4to2, CSSend0 retained; touch/vertical/3otherdesigns unchanged; strict919pass/0fail",
+  "remainingConditions": [
+    "OriginalWindows10/12.17.0/nativeOS titlebar",
+    "physicalinput/GPU/highDPI",
+    "customthemes/explicitimportantoverrides beyondsourcefixtures",
+    "hover/multiselection/collapsedvertical beyondnew24states"
+  ],
+  "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/3052",
+  "newPr": null,
+  "jiraCommentId": null,
+  "jiraUpdateOwner": "root",
+  "relatedJiraComments": [
+    "10406",
+    "10463",
+    "10467"
+  ],
+  "packageRun": 42123754997,
+  "artifact": 13459714736,
+  "zipSha256": "d4e89cc7ba88751df704771c89c93017a03a01aaa8877db0f538a62c8aa81502",
+  "tarSha256": "f1404a3d8d23058d6eba83b0875cbc4154bf756e9244c8a32856b9409d961ee4",
+  "counts": {
+    "statesEach": 24,
+    "statesTotal": 48,
+    "tabBackgroundsEach": 72,
+    "checksPass": 919,
+    "checksFail": 0,
+    "containerIndicatorsEach": 48,
+    "newLineLosses": 0,
+    "newWrongHue": 0,
+    "preexistingMissingLineIndicatorsEach": 21
+  },
+  "originalLinuxDenominator": 22,
+  "evidence": [
+    "report.md",
+    "comparison.json",
+    "criteria-initial.json",
+    "criteria-adjustment.json",
+    "criteria.json",
+    "pre-candidate-checker.json",
+    "checker-freeze-verification.json",
+    "baseline/result.json",
+    "candidate/result.json",
+    "margin-pair-summary.json",
+    "line-comparison.json",
+    "README.md"
+  ]
+}

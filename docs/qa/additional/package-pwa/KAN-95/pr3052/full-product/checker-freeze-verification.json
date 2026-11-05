@@ -1,0 +1,10 @@
+{
+  "matchesPreCandidate": {
+    "probe.py": true,
+    "compare.py": true,
+    "criteria.json": true,
+    "line_analyze.py": true,
+    "line_compare.py": true
+  },
+  "noCheckerChangeAfterCandidateAccess": true
+}

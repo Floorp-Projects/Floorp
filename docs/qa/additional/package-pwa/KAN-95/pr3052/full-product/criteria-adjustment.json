@@ -1,0 +1,22 @@
+{
+  "phase": "baseline finished, before candidate intake/execution",
+  "initialAssumption": "both marginBlockStart/End4px to2px",
+  "actualBaseline": "Lepton horizontal allroles marginBlockStart4px, marginBlockEnd0px across all3densities",
+  "adjustment": "Only start4to2 is expected; existing end0 must remain0, not forced to2. All other margins compared unchanged.",
+  "rawBaselineRewritten": false,
+  "candidateObserved": false,
+  "reason": "Acceptance must distinguish measured native top-gap defect from existing bottom-margin override; not treating initial assumption as a product bug",
+  "vendorEvidence": {
+    "file": "browser-features/skin/lepton/css/leptonChrome.css",
+    "lines": "7063-7066",
+    "rule": "nonvertical .tab-background margin-bottom:0px!important",
+    "rootReviewedBeforeCandidate": true
+  },
+  "secondGeometryClarification": {
+    "phase": "before candidate intake/execution",
+    "initialMistake": "CSSmarginEnd0 was confused with rect-derived bottomgap0",
+    "actualBaseline": "LeptonHnormal background.y=4 stack.y=0, equal36px heights => topgap4 and endgap-4",
+    "correctedAcceptance": "CSSmarginEnd0 retained; actualtopgap4to2; changedcase rect-endgap recorded without forcing0 or unchanged; othercases bothgaps unchanged",
+    "candidateObserved": false
+  }
+}
