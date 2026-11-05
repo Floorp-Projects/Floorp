@@ -1,0 +1,225 @@
+[
+  {
+    "query": "\"hidden\" \"group\" in:title",
+    "repository": "piroor/treestyletab",
+    "limit": 30,
+    "results": [
+      {
+        "number": 2697,
+        "title": "Featue Request: Display Hidden Tabs - see the \"Simpl Tab Groups\" Add on.",
+        "url": "https://github.com/piroor/treestyletab/issues/2697"
+      }
+    ]
+  },
+  {
+    "query": "\"tab group\" \"hidden\"",
+    "repository": "piroor/treestyletab",
+    "limit": 30,
+    "results": [
+      {
+        "number": 3806,
+        "title": "[Enhancement] Support Firefox Split View",
+        "url": "https://github.com/piroor/treestyletab/issues/3806"
+      },
+      {
+        "number": 3822,
+        "title": "[Bug] After \"Flip sidebar.revamp to true\", changed Tree Style Tab pane",
+        "url": "https://github.com/piroor/treestyletab/issues/3822"
+      },
+      {
+        "number": 3869,
+        "title": "[Bug] Tab groups are interwoven when partially collapsed (Edit: plus other tab group issues)",
+        "url": "https://github.com/piroor/treestyletab/issues/3869"
+      },
+      {
+        "number": 3925,
+        "title": "[Enhancement] (i have too many groups, add seperator )",
+        "url": "https://github.com/piroor/treestyletab/issues/3925"
+      },
+      {
+        "number": 1778,
+        "title": "Suddenly unable to move tabs",
+        "url": "https://github.com/piroor/treestyletab/issues/1778"
+      },
+      {
+        "number": 3825,
+        "title": "[Bug] moving tabs in the tree takes seconds per line when tab count is in thousands.",
+        "url": "https://github.com/piroor/treestyletab/issues/3825"
+      },
+      {
+        "number": 3899,
+        "title": "[Bug] Duplicating an unloaded tab creates a new tab not visible in the side bar",
+        "url": "https://github.com/piroor/treestyletab/issues/3899"
+      },
+      {
+        "number": 1831,
+        "title": "[feature request] Hide/show tabs when tab group is closed/open",
+        "url": "https://github.com/piroor/treestyletab/issues/1831"
+      },
+      {
+        "number": 2546,
+        "title": "Conflict with \"Simple Tab Groups\" : Tree structure flattened when opening new window",
+        "url": "https://github.com/piroor/treestyletab/issues/2546"
+      },
+      {
+        "number": 2270,
+        "title": "How to disable automatic overview tab in settings?",
+        "url": "https://github.com/piroor/treestyletab/issues/2270"
+      },
+      {
+        "number": 1553,
+        "title": "The sidebar stays on the left side even when the setting \"Right side\" is selected",
+        "url": "https://github.com/piroor/treestyletab/issues/1553"
+      },
+      {
+        "number": 3203,
+        "title": "[Bug] \"open all in tabs\" auto-grouping is not working in Fx 105.0rc2 and TST 3.9.2",
+        "url": "https://github.com/piroor/treestyletab/issues/3203"
+      },
+      {
+        "number": 2181,
+        "title": "redacted",
+        "url": "https://github.com/piroor/treestyletab/issues/2181"
+      },
+      {
+        "number": 3012,
+        "title": "Takes time to load when I open it",
+        "url": "https://github.com/piroor/treestyletab/issues/3012"
+      },
+      {
+        "number": 3018,
+        "title": "TST's sidebar doubles keyboard input lag",
+        "url": "https://github.com/piroor/treestyletab/issues/3018"
+      },
+      {
+        "number": 2864,
+        "title": "Make numbered browser tabs clickable by voice",
+        "url": "https://github.com/piroor/treestyletab/issues/2864"
+      },
+      {
+        "number": 2894,
+        "title": "Children tabs often disappear when parent is expanded",
+        "url": "https://github.com/piroor/treestyletab/issues/2894"
+      },
+      {
+        "number": 2767,
+        "title": "[Feature request] More options to finetune animation settings",
+        "url": "https://github.com/piroor/treestyletab/issues/2767"
+      },
+      {
+        "number": 1661,
+        "title": "Feature request: tab counter",
+        "url": "https://github.com/piroor/treestyletab/issues/1661"
+      },
+      {
+        "number": 2837,
+        "title": "Can't Turn Off New \"Force TST Behaviour on Tab Strip-triggered Actions\" Behaviour",
+        "url": "https://github.com/piroor/treestyletab/issues/2837"
+      },
+      {
+        "number": 1677,
+        "title": "Tabs from pinned tabs append to the end not working",
+        "url": "https://github.com/piroor/treestyletab/issues/1677"
+      },
+      {
+        "number": 2762,
+        "title": "Wrong tab is activated when using Tree style tab in conjunction with panorama tab groups",
+        "url": "https://github.com/piroor/treestyletab/issues/2762"
+      },
+      {
+        "number": 2697,
+        "title": "Featue Request: Display Hidden Tabs - see the \"Simpl Tab Groups\" Add on.",
+        "url": "https://github.com/piroor/treestyletab/issues/2697"
+      },
+      {
+        "number": 2659,
+        "title": "Restoring closed tab - Incompatibility with Simple Tab Group addon",
+        "url": "https://github.com/piroor/treestyletab/issues/2659"
+      },
+      {
+        "number": 2756,
+        "title": "Version 3.6.0 out of purpose",
+        "url": "https://github.com/piroor/treestyletab/issues/2756"
+      },
+      {
+        "number": 2750,
+        "title": "Add option to disable drag and drop",
+        "url": "https://github.com/piroor/treestyletab/issues/2750"
+      },
+      {
+        "number": 2613,
+        "title": "open/collapse group with click on title?",
+        "url": "https://github.com/piroor/treestyletab/issues/2613"
+      },
+      {
+        "number": 2607,
+        "title": "group-tab improvements",
+        "url": "https://github.com/piroor/treestyletab/issues/2607"
+      },
+      {
+        "number": 2272,
+        "title": "TST randomly turned grey, and reloaded itself, upon finishing that my entire tree structure was lost",
+        "url": "https://github.com/piroor/treestyletab/issues/2272"
+      },
+      {
+        "number": 2453,
+        "title": "SUCCESSOR_TAB_CONTROL_IN_TREE should skip hidden tabs",
+        "url": "https://github.com/piroor/treestyletab/issues/2453"
+      }
+    ]
+  },
+  {
+    "query": "\"renderHiddenTabs\"",
+    "repository": "piroor/treestyletab",
+    "limit": 30,
+    "results": [
+      {
+        "number": 3495,
+        "title": "[Enhancement] Return ability to show hidden tabs",
+        "url": "https://github.com/piroor/treestyletab/issues/3495"
+      }
+    ]
+  },
+  {
+    "query": "\"native tab groups\"",
+    "repository": "piroor/treestyletab",
+    "limit": 30,
+    "results": [
+      {
+        "number": 3976,
+        "title": "[Bug] (Tree structure no longer being restored with Tab Session Manager)",
+        "url": "https://github.com/piroor/treestyletab/issues/3976"
+      },
+      {
+        "number": 3756,
+        "title": "[Bug?] TST does not work with Firefox Extended Support Release",
+        "url": "https://github.com/piroor/treestyletab/issues/3756"
+      },
+      {
+        "number": 3877,
+        "title": "[Enhancement] Two improvements for Tab Groups in TST",
+        "url": "https://github.com/piroor/treestyletab/issues/3877"
+      },
+      {
+        "number": 3825,
+        "title": "[Bug] moving tabs in the tree takes seconds per line when tab count is in thousands.",
+        "url": "https://github.com/piroor/treestyletab/issues/3825"
+      },
+      {
+        "number": 3743,
+        "title": "[Enhancement] I would like to be able to incorporate Firefox native tab groups into the tree.",
+        "url": "https://github.com/piroor/treestyletab/issues/3743"
+      },
+      {
+        "number": 3012,
+        "title": "Takes time to load when I open it",
+        "url": "https://github.com/piroor/treestyletab/issues/3012"
+      },
+      {
+        "number": 1248,
+        "title": "[TabGroups Manager Revived] Wrong tab selection when switching from first to last",
+        "url": "https://github.com/piroor/treestyletab/issues/1248"
+      }
+    ]
+  }
+]

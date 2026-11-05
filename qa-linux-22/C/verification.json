@@ -1,0 +1,28 @@
+{
+  "passed": true,
+  "checks": [
+    {
+      "name": "KAN71 baseline focus recomputed",
+      "trials": 8
+    },
+    {
+      "name": "KAN71 real GUI timestamps/X11/focus recomputed",
+      "trials": 10,
+      "raises": 0
+    },
+    {
+      "name": "KAN64 native hidden member state and Firefox control verified"
+    },
+    {
+      "name": "KAN90 actual portal response/GET/parent/forkserver verified",
+      "forkServerPids": [
+        111
+      ]
+    },
+    {
+      "name": "Existing web records only; no network retest",
+      "cases": 16,
+      "root503Cases": 7
+    }
+  ]
+}

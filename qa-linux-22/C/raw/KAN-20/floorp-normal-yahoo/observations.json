@@ -1,0 +1,101 @@
+{
+  "sourceFile": "KAN-20/floorp-normal-yahoo/result.json",
+  "sourceSha256": "bc054e4551fe11582dc8371e6b459bf7d741e97e7c5cc0f5c07a482dd7f9e5ad",
+  "extraction": "field allowlist; selected observation values copied without change; cookie/body/credential fields excluded; navigation limited to exact test apex/page path and redirect Yahoo root; no subresource URLs",
+  "observations": {
+    "product": "floorp",
+    "private": false,
+    "url": "https://yahoo.com",
+    "version": {
+      "name": "Floorp",
+      "version": "159.0.1",
+      "buildID": "20261103153232",
+      "ua": "Mozilla/5.0 (X11; Linux x86_64; rv:159.0) Gecko/20100101 Firefox/159.0",
+      "sandbox": 6,
+      "tracking": false,
+      "cookieBehavior": 5
+    },
+    "control": {
+      "title": "QA local fixture",
+      "text": "Browser content process control",
+      "url": "http://127.0.0.1:18734/control"
+    },
+    "navigationError": null,
+    "navigation": [
+      {
+        "time": 1793888043745,
+        "topic": "http-on-modify-request",
+        "url": "https://yahoo.com/",
+        "status": null
+      },
+      {
+        "time": 1793888044352,
+        "topic": "http-on-examine-response",
+        "url": "https://yahoo.com/",
+        "status": 301
+      },
+      {
+        "time": 1793888044355,
+        "topic": "http-on-modify-request",
+        "url": "https://www.yahoo.com/",
+        "status": null
+      },
+      {
+        "time": 1793888044997,
+        "topic": "http-on-examine-response",
+        "url": "https://www.yahoo.com/",
+        "status": 200
+      }
+    ],
+    "samples": [
+      {
+        "time": 1793888054653,
+        "title": "Yahoo | Mail, Weather, Search, Politics, News, Finance, Sports & Videos",
+        "url": "https://www.yahoo.com/",
+        "ready": "complete",
+        "turnstileResponsePresent": false,
+        "webdriver": true
+      },
+      {
+        "time": 1793888061842,
+        "title": "Yahoo | Mail, Weather, Search, Politics, News, Finance, Sports & Videos",
+        "url": "https://www.yahoo.com/",
+        "ready": "complete",
+        "turnstileResponsePresent": false,
+        "webdriver": true
+      },
+      {
+        "time": 1793888067167,
+        "title": "Yahoo | Mail, Weather, Search, Politics, News, Finance, Sports & Videos",
+        "url": "https://www.yahoo.com/",
+        "ready": "complete",
+        "turnstileResponsePresent": false,
+        "webdriver": true
+      },
+      {
+        "time": 1793888072350,
+        "title": "Yahoo | Mail, Weather, Search, Politics, News, Finance, Sports & Videos",
+        "url": "https://www.yahoo.com/",
+        "ready": "complete",
+        "turnstileResponsePresent": false,
+        "webdriver": true
+      },
+      {
+        "time": 1793888077374,
+        "title": "Yahoo | Mail, Weather, Search, Politics, News, Finance, Sports & Videos",
+        "url": "https://www.yahoo.com/",
+        "ready": "complete",
+        "turnstileResponsePresent": false,
+        "webdriver": true
+      },
+      {
+        "time": 1793888082394,
+        "title": "Yahoo | Mail, Weather, Search, Politics, News, Finance, Sports & Videos",
+        "url": "https://www.yahoo.com/",
+        "ready": "complete",
+        "turnstileResponsePresent": false,
+        "webdriver": true
+      }
+    ]
+  }
+}

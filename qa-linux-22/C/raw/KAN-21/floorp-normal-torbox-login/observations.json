@@ -1,0 +1,89 @@
+{
+  "sourceFile": "KAN-21/floorp-normal-torbox-login/result.json",
+  "sourceSha256": "ef4fba14256867194903306a5a0b7811137fc6b12aa1e7c8ca473aaf880d7a43",
+  "extraction": "field allowlist; selected observation values copied without change; cookie/body/credential fields excluded; navigation limited to exact test apex/page path and redirect Yahoo root; no subresource URLs",
+  "observations": {
+    "product": "floorp",
+    "private": false,
+    "url": "https://torbox.app/login",
+    "version": {
+      "name": "Floorp",
+      "version": "159.0.1",
+      "buildID": "20261103153232",
+      "ua": "Mozilla/5.0 (X11; Linux x86_64; rv:159.0) Gecko/20100101 Firefox/159.0",
+      "sandbox": 6,
+      "tracking": false,
+      "cookieBehavior": 5
+    },
+    "control": {
+      "title": "QA local fixture",
+      "text": "Browser content process control",
+      "url": "http://127.0.0.1:18735/control"
+    },
+    "navigationError": null,
+    "navigation": [
+      {
+        "time": 1793888269924,
+        "topic": "http-on-modify-request",
+        "url": "https://torbox.app/login",
+        "status": null
+      },
+      {
+        "time": 1793888270314,
+        "topic": "http-on-examine-response",
+        "url": "https://torbox.app/login",
+        "status": 200
+      }
+    ],
+    "samples": [
+      {
+        "time": 1793888277927,
+        "title": "Login | TorBox",
+        "url": "https://torbox.app/login",
+        "ready": "complete",
+        "turnstileResponsePresent": false,
+        "webdriver": true
+      },
+      {
+        "time": 1793888301474,
+        "title": "Login | TorBox",
+        "url": "https://torbox.app/login",
+        "ready": "complete",
+        "turnstileResponsePresent": false,
+        "webdriver": true
+      },
+      {
+        "time": 1793888307776,
+        "title": "Login | TorBox",
+        "url": "https://torbox.app/login",
+        "ready": "complete",
+        "turnstileResponsePresent": false,
+        "webdriver": true
+      },
+      {
+        "time": 1793888318236,
+        "title": "Login | TorBox",
+        "url": "https://torbox.app/login",
+        "ready": "complete",
+        "turnstileResponsePresent": false,
+        "webdriver": true
+      },
+      {
+        "time": 1793888323319,
+        "title": "Login | TorBox",
+        "url": "https://torbox.app/login",
+        "ready": "complete",
+        "turnstileResponsePresent": false,
+        "webdriver": true
+      },
+      {
+        "time": 1793888328421,
+        "title": "Login | TorBox",
+        "url": "https://torbox.app/login",
+        "ready": "complete",
+        "turnstileResponsePresent": false,
+        "webdriver": true
+      }
+    ]
+  }
+}

@@ -51,7 +51,18 @@
       "p2",
       "triage-reviewed",
       "needs-ubuntu26-snap-flatpak"
-    ]
+    ],
+    "rawEvidence": [
+      "raw/KAN-20/floorp-private-yahoo/observations.json",
+      "raw/KAN-20/floorp-normal-yahoo/observations.json",
+      "raw/KAN-20/firefox-normal-yahoo/observations.json",
+      "raw/KAN-20/firefox-private-yahoo/observations.json"
+    ],
+    "coordinatorEvidence": {
+      "jiraCommentId": "10297",
+      "origin": "reported by coordinating session; no local repeat",
+      "scope": "WSL Ubuntu24.04 control, browser200 stable; network/package differs from Cloud"
+    }
   },
   {
     "key": "KAN-21",
@@ -145,7 +156,27 @@
       "p2",
       "triage-reviewed",
       "needs-zorin-live-turnstile"
-    ]
+    ],
+    "rawEvidence": [
+      "raw/KAN-21/demo-fixture-evidence.json",
+      "raw/KAN-21/firefox-normal-torbox-login-click/observations.json",
+      "raw/KAN-21/firefox-private-torbox/observations.json",
+      "raw/KAN-21/firefox-normal-torbox-login/observations.json",
+      "raw/KAN-21/floorp-normal-torbox/observations.json",
+      "raw/KAN-21/firefox-normal-torbox/observations.json",
+      "raw/KAN-21/firefox-private-turnstile-demo/observations.json",
+      "raw/KAN-21/floorp-normal-turnstile-demo/observations.json",
+      "raw/KAN-21/firefox-normal-turnstile-demo/observations.json",
+      "raw/KAN-21/floorp-normal-torbox-login/observations.json",
+      "raw/KAN-21/floorp-private-torbox/observations.json",
+      "raw/KAN-21/floorp-private-turnstile-demo/observations.json",
+      "raw/KAN-21/floorp-normal-torbox-login-click/observations.json"
+    ],
+    "coordinatorEvidence": {
+      "jiraCommentId": "10298",
+      "origin": "reported by coordinating session; no local repeat",
+      "scope": "WSL Torbox/login200 password field; no challenge interaction/authentication; not cause proof for Cloud503"
+    }
   },
   {
     "key": "KAN-64",
@@ -175,18 +206,18 @@
       "python3 /workspace/qa-linux-22/C/KAN-64/probe.py",
       "python3 /workspace/qa-linux-22/C/KAN-64/firefox-control.py"
     ],
-    "result": "reproduced; external-extension/upstream integration dependency; no confirmed Floorp-only code defect",
+    "result": "reproduced; official TST native-group visibility policy/integration gap; no confirmed exact upstream bug or Floorp-only code defect",
     "remainingConditions": [
-      "Original Fedora44/KDE not run; reproduction confirmed on Debian13/Xvfb, no KDE equivalence claimed",
-      "Reported Floorp12.16.2 and historical TST version not run",
-      "TST upstream expected behavior/test for groups whose every member is hidden needs agreement",
-      "No physical-input test"
+      "Upstream agreement whether all-hidden native group header should be omitted; current rendering always includes groups",
+      "Original Fedora44/KDE and historical product/extension not run; current symptom already reproduced"
     ],
     "existingPr": null,
     "newPr": null,
     "jiraCommentId": "10280",
     "evidence": [
-      "KAN-64/report.md"
+      "KAN-64/report.md",
+      "KAN-64/followup/report.md",
+      "KAN-64/followup/official-source-evidence.json"
     ],
     "localEvidenceRoot": "/workspace/qa-linux-22/C/KAN-64",
     "observations": {
@@ -206,30 +237,81 @@
       "reproduced",
       "external-dependency",
       "needs-tst-hidden-group-contract"
-    ]
+    ],
+    "rawEvidence": [
+      "raw/KAN-64/firefox-observations.json",
+      "raw/KAN-64/workspace-observations.json"
+    ],
+    "upstreamContract": {
+      "repository": "piroor/treestyletab",
+      "testedVersion": "4.4.9",
+      "tagObject": "bb0582d503c9b77a1a2d6b9b84636ba1ff7689e6",
+      "tagCommit": "123e698f8c96822453f4fef57e12dd5852e46fbe",
+      "currentBranch": "trunk",
+      "currentCommit": "ad17fdfed02b357ffb73ea4dcf775c34d7a03365",
+      "signedXpiSourceMatch": [
+        "webextensions/sidebar/scroll.js",
+        "webextensions/common/common.js",
+        "webextensions/common/tabs-store.js"
+      ]
+    }
   },
   {
     "key": "KAN-71",
     "github": "https://github.com/Floorp-Projects/Floorp/issues/2535",
     "sourceSha": "984509d2053be7bae9027133bda7259cd706b208",
     "productVersion": "Floorp12.21.1/Gecko159.0.1; Firefox159.0.1",
-    "environment": "Debian13.6 Xvfb X11, DBus, XFWM4.20.0 / standalone Muffin6.4.1, synthetic input",
-    "testCommand": "dbus-run-session -- /workspace/qa-linux-22/C/web-tools/venv/bin/python /workspace/qa-linux-22/C/KAN-71/run_focus.py",
-    "result": "substitute-environment symptom reproduced equally in Floorp and Firefox; Floorp defect unconfirmed; 8/8 URL GET and original PID survival, 0/8 focus",
+    "environment": "Debian13.6 Xvfb X11, private DBus, standalone Muffin6.4.1 and vendor Cinnamon session/shell6.4.10 with native system services absent; real GTK LinkButton with synthetic XTest input",
+    "testCommand": [
+      "dbus-run-session -- <marionette-python> KAN-71/activation-followup/run_activation.py floorp muffin",
+      "dbus-run-session -- <marionette-python> KAN-71/activation-followup/run_activation.py firefox muffin",
+      "dbus-run-session -- <marionette-python> KAN-71/activation-followup/run_activation.py floorp cinnamon",
+      "dbus-run-session -- <marionette-python> KAN-71/activation-followup/run_activation.py firefox cinnamon"
+    ],
+    "result": "substitute Cinnamon session and Muffin real-GUI startup-notification path exercised; 10/10 GET and parent retained,0/10 focus, both products alike; Floorp-specific contrast unconfirmed",
     "remainingConditions": [
-      "Linux Mint full Cinnamon X11",
-      "initiating application trusted activation/startup timestamp",
-      "matching Firefox-different control",
-      "physical input path"
+      "Native Linux Mint/Cinnamon desktop/system services and matched Firefox-vs-Floorp contrast",
+      "X11 activation transfer/WM policy stage if a product difference can be observed"
     ],
     "existingPr": null,
     "newPr": null,
     "jiraCommentId": "10281",
     "evidence": [
-      "KAN-71/report.md"
+      "KAN-71/report.md",
+      "KAN-71/activation-followup/report.md"
     ],
     "localEvidenceRoot": "/workspace/qa-linux-22/C/KAN-71",
-    "observations": {
+    "jiraLabels": [
+      "area-platform",
+      "env-blocked",
+      "floorp-github-import-2026-11",
+      "needs-repro",
+      "p2",
+      "triage-reviewed",
+      "needs-mint-firefox-contrast"
+    ],
+    "rawEvidence": [
+      "raw/KAN-71/baseline-observations.json",
+      "raw/KAN-71/activation-followup/cinnamon-firefox/observations.json",
+      "raw/KAN-71/activation-followup/cinnamon-firefox-audit/observations.json",
+      "raw/KAN-71/activation-followup/muffin-floorp/observations.json",
+      "raw/KAN-71/activation-followup/muffin-firefox/observations.json",
+      "raw/KAN-71/activation-followup/cinnamon-floorp/observations.json",
+      "raw/KAN-71/activation-followup/cinnamon-floorp-audit/observations.json"
+    ],
+    "activationFollowup": {
+      "guiTrials": 10,
+      "getReceived": 10,
+      "focusRaises": 0,
+      "generatedStartupTimestampObserved": true,
+      "actualX11StartupMessagesObserved": true,
+      "tokenVariableObserved": true,
+      "waylandProtocolTested": false,
+      "physicalInputRequired": false,
+      "muffinTrials": 4,
+      "cinnamonTrials": 6
+    },
+    "baselineObservations": {
       "httpGetAndOriginalPidMaintained": 8,
       "totalTrials": 8,
       "focusRaises": 0,
@@ -242,16 +324,7 @@
         "Muffin6.4.1"
       ],
       "startupIdOrActivationTokenPresent": false
-    },
-    "jiraLabels": [
-      "area-platform",
-      "env-blocked",
-      "floorp-github-import-2026-11",
-      "needs-repro",
-      "p2",
-      "triage-reviewed",
-      "needs-cinnamon-x11-activation"
-    ]
+    }
   },
   {
     "key": "KAN-90",
@@ -262,28 +335,24 @@
       "executed": "Debian13.6/Xvfb/Openbox/private DBus, Flatpak1.16.6 Thunderbird140.12.0esr",
       "originalCapabilityProbe": "Fedora44 container Flatpak1.18.4 Thunderbird158.0; default protected namespaces denied EPERM"
     },
-    "testCommand": "/workspace/qa-linux-22/C/KAN-90/flatpak-env.sh dbus-run-session -- /workspace/qa-linux-22/C/web-tools/venv/bin/python /workspace/qa-linux-22/C/KAN-90/run-integration.py",
-    "result": "environment-insufficient-for-original; two-actual-Thunderbird-to-Flatpak-remoting-controls-passed",
+    "testCommand": [
+      "/workspace/qa-linux-22/C/KAN-90/flatpak-env.sh dbus-run-session -- /workspace/qa-linux-22/C/web-tools/venv/bin/python /workspace/qa-linux-22/C/KAN-90/run-integration.py",
+      "KAN-90/flatpak-env.sh dbus-run-session -- <marionette-python> KAN-90/portal-followup/run-portal.py"
+    ],
+    "result": "environment-insufficient-for-original; two-actual-Thunderbird-to-Flatpak-remoting-controls-passed; independent-real-portal-OpenURI-control-passed",
     "remainingConditions": [
       "Fedora44 desktop with functioning protected Flatpak namespaces",
-      "Actual portal OpenURI dispatch, not only SchemeSupported",
-      "Original12.17.2 comparison and symbolized matching-build coredump if reproduced",
-      "Physical input not tested"
+      "Actual Thunderbird-origin portal OpenURI dispatch (independent direct portal control passed)",
+      "Original12.17.2 comparison and symbolized matching-build coredump if reproduced"
     ],
     "existingPr": null,
     "newPr": null,
     "jiraCommentId": "10282",
     "evidence": [
-      "KAN-90/report.md"
+      "KAN-90/report.md",
+      "KAN-90/portal-followup/report.md"
     ],
     "localEvidenceRoot": "/workspace/qa-linux-22/C/KAN-90",
-    "observations": {
-      "actualMailLinkFlatpakRemotingControls": 2,
-      "httpGet": true,
-      "sameSessionPid": true,
-      "portalOpenUriObserved": false,
-      "fedoraProtectedUserNamespace": "EPERM"
-    },
     "jiraLabels": [
       "area-platform",
       "env-blocked",
@@ -294,6 +363,34 @@
       "needs-thunderbird-portal",
       "p1",
       "triage-reviewed"
-    ]
+    ],
+    "rawEvidence": [
+      "raw/KAN-90/integration-result.json",
+      "raw/KAN-90/portal-followup/result.json",
+      "raw/KAN-90/portal-followup/dbus-events.json",
+      "raw/KAN-90/direct-control/integration-result.json"
+    ],
+    "portalFollowup": {
+      "passed": true,
+      "portalResponse": 0,
+      "httpGet": "/from-real-portal",
+      "browserPidBefore": 2,
+      "browserPidAfter": 2,
+      "hostInstancePidBefore": 31151,
+      "hostInstancePidAfter": 31151,
+      "forkServerPidBefore": 111,
+      "forkServerPidAfter": 111,
+      "contentSandboxLevelBefore": 6,
+      "contentSandboxLevelAfter": 6,
+      "noObservedSegv": true,
+      "thunderbirdIncluded": false
+    },
+    "thunderbirdObservations": {
+      "actualMailLinkFlatpakRemotingControls": 2,
+      "httpGet": true,
+      "sameSessionPid": true,
+      "portalOpenUriObserved": false,
+      "fedoraProtectedUserNamespace": "EPERM"
+    }
   }
 ]

@@ -25,3 +25,7 @@ A Fedora44 desktop able to run Flatpak/bubblewrap under its normal protection, T
 ## Evidence / reproduction
 
 `reproduce.sh`, `flatpak-env.sh`, `run-integration.py`, `fixture.eml`, `integration-result.json`, `dbus-monitor.log`, `before-link.png`, `after-link.png`; first successful comparison under `direct-control/`. `fedora-probe.log`, `fedora-capability.log`, `docker-pull.log`, `product-info.txt`. Bulky dependencies, profiles, cookies, private cert/key stores and generated databases are excluded from the export allowlist.
+
+## Independent real portal followup
+
+See `portal-followup/report.md`: actual OpenURI plus Response0, localhost GET, original browser/host-instance PID retained, forkServer111 retained, effective sandbox6 measured. This direct portal fixture passed; the earlier Thunderbird trace still does not prove Thunderbird-origin portal dispatch. Original Fedora44 remains unvalidated.

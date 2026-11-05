@@ -1,0 +1,74 @@
+{
+  "sourceFile": "KAN-71/activation-followup/cinnamon-floorp-audit/result.json",
+  "sourceSha256": "cc33069502bda59d6b82af3371031576fb9484a8508af7dbe042626f1b2e6ec3",
+  "extraction": "exact selected recorded fields; includes real localhost server GET records; no startup ID/token text",
+  "observations": {
+    "product": "floorp",
+    "windowManager": "cinnamon",
+    "input": "synthetic XTest pointer click on independent native GTK LinkButton",
+    "version": {
+      "version": "159.0.1",
+      "buildID": "20261103153232",
+      "parentPid": 38438,
+      "sandbox": 6
+    },
+    "tests": [
+      {
+        "trial": 0,
+        "event": {
+          "monotonic": 3661.908686659,
+          "eventTimestamp": 3661901,
+          "eventType": "<enum GDK_BUTTON_RELEASE of type Gdk.EventType>",
+          "handler": "Gtk.LinkButton default activate-link handler; no fabricated startup ID"
+        },
+        "launcher": {
+          "monotonic": 3662.139982947,
+          "startupIdPresent": true,
+          "startupTimestamp": 3661892,
+          "activationTokenPresent": true
+        },
+        "startupMessages": [
+          {
+            "kind": "new",
+            "startupTimestamp": 3661892,
+            "actualX11StartupMessage": true
+          }
+        ],
+        "before": {
+          "rc": 0,
+          "stdout": "_NET_ACTIVE_WINDOW(WINDOW): window id # 0x2e00003\n",
+          "stderr": ""
+        },
+        "after": {
+          "rc": 0,
+          "stdout": "_NET_ACTIVE_WINDOW(WINDOW): window id # 0x2e00003\n",
+          "stderr": ""
+        },
+        "browserWindowIds": [
+          "44040214"
+        ],
+        "focusedBrowser": false,
+        "requestReceived": true,
+        "originalParentAlive": true,
+        "windowManagerAlive": true
+      }
+    ],
+    "end": {
+      "parentPid": 38438,
+      "urls": [
+        "about:blank",
+        "http://127.0.0.1:18775/cinnamon-floorp-0"
+      ]
+    },
+    "hits": [
+      {
+        "path": "/cinnamon-floorp-0",
+        "time": 3662.673463406
+      },
+      {
+        "path": "/favicon.ico",
+        "time": 3663.033911922
+      }
+    ]
+  }
+}

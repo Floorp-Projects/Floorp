@@ -1,0 +1,114 @@
+{
+  "sourceFile": "KAN-71/activation-followup/cinnamon-floorp/result.json",
+  "sourceSha256": "076ffa8ab4b9f1153aa164a9f3cbe953caed1f0ecaa8483d50e54d60f535944a",
+  "extraction": "exact selected fields; generated startup ID/token text was never recorded; numeric timestamp and actual X11 messages retained",
+  "observations": {
+    "product": "floorp",
+    "windowManager": "cinnamon",
+    "input": "synthetic XTest pointer click on independent native GTK LinkButton",
+    "version": {
+      "version": "159.0.1",
+      "buildID": "20261103153232",
+      "parentPid": 36783,
+      "sandbox": 6
+    },
+    "tests": [
+      {
+        "trial": 0,
+        "event": {
+          "monotonic": 3319.560189813,
+          "eventTimestamp": 3319556,
+          "eventType": "<enum GDK_BUTTON_RELEASE of type Gdk.EventType>",
+          "handler": "Gtk.LinkButton default activate-link handler; no fabricated startup ID"
+        },
+        "launcher": {
+          "monotonic": 3319.634959556,
+          "startupIdPresent": true,
+          "startupTimestamp": 3319556,
+          "activationTokenPresent": true
+        },
+        "startupMessages": [
+          {
+            "kind": "new",
+            "startupTimestamp": 3319556,
+            "actualX11StartupMessage": true
+          }
+        ],
+        "before": {
+          "rc": 0,
+          "stdout": "_NET_ACTIVE_WINDOW(WINDOW): window id # 0x2e00003\n",
+          "stderr": ""
+        },
+        "after": {
+          "rc": 0,
+          "stdout": "_NET_ACTIVE_WINDOW(WINDOW): window id # 0x2e00003\n",
+          "stderr": ""
+        },
+        "browserWindowIds": [
+          "44040214"
+        ],
+        "focusedBrowser": false,
+        "requestReceived": true,
+        "originalParentAlive": true,
+        "windowManagerAlive": true
+      },
+      {
+        "trial": 1,
+        "event": {
+          "monotonic": 3343.010947351,
+          "eventTimestamp": 3343008,
+          "eventType": "<enum GDK_BUTTON_RELEASE of type Gdk.EventType>",
+          "handler": "Gtk.LinkButton default activate-link handler; no fabricated startup ID"
+        },
+        "launcher": {
+          "monotonic": 3343.076999398,
+          "startupIdPresent": true,
+          "startupTimestamp": 3343006,
+          "activationTokenPresent": true
+        },
+        "startupMessages": [
+          {
+            "kind": "new",
+            "startupTimestamp": 3319556,
+            "actualX11StartupMessage": true
+          },
+          {
+            "kind": "remove",
+            "startupTimestamp": 3319556,
+            "actualX11StartupMessage": true
+          },
+          {
+            "kind": "new",
+            "startupTimestamp": 3343006,
+            "actualX11StartupMessage": true
+          }
+        ],
+        "before": {
+          "rc": 0,
+          "stdout": "_NET_ACTIVE_WINDOW(WINDOW): window id # 0x2e00003\n",
+          "stderr": ""
+        },
+        "after": {
+          "rc": 0,
+          "stdout": "_NET_ACTIVE_WINDOW(WINDOW): window id # 0x2e00003\n",
+          "stderr": ""
+        },
+        "browserWindowIds": [
+          "44040214"
+        ],
+        "focusedBrowser": false,
+        "requestReceived": true,
+        "originalParentAlive": true,
+        "windowManagerAlive": true
+      }
+    ],
+    "end": {
+      "parentPid": 36783,
+      "urls": [
+        "about:blank",
+        "http://127.0.0.1:18775/cinnamon-floorp-0",
+        "http://127.0.0.1:18775/cinnamon-floorp-1"
+      ]
+    }
+  }
+}

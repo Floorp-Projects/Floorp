@@ -1,0 +1,101 @@
+{
+  "sourceFile": "KAN-20/firefox-normal-yahoo/result.json",
+  "sourceSha256": "31bdba220640abfcf0f6fc60f96e61aa6c151d8167ee26bf4bb16a1bd230ba81",
+  "extraction": "field allowlist; selected observation values copied without change; cookie/body/credential fields excluded; navigation limited to exact test apex/page path and redirect Yahoo root; no subresource URLs",
+  "observations": {
+    "product": "firefox",
+    "private": false,
+    "url": "https://yahoo.com",
+    "version": {
+      "name": "Firefox",
+      "version": "159.0.1",
+      "buildID": "20261102144711",
+      "ua": "Mozilla/5.0 (X11; Linux x86_64; rv:159.0) Gecko/20100101 Firefox/159.0",
+      "sandbox": 6,
+      "tracking": false,
+      "cookieBehavior": 5
+    },
+    "control": {
+      "title": "QA local fixture",
+      "text": "Browser content process control",
+      "url": "http://127.0.0.1:18734/control"
+    },
+    "navigationError": null,
+    "navigation": [
+      {
+        "time": 1793888327674,
+        "topic": "http-on-modify-request",
+        "url": "https://yahoo.com/",
+        "status": null
+      },
+      {
+        "time": 1793888328296,
+        "topic": "http-on-examine-response",
+        "url": "https://yahoo.com/",
+        "status": 301
+      },
+      {
+        "time": 1793888328307,
+        "topic": "http-on-modify-request",
+        "url": "https://www.yahoo.com/",
+        "status": null
+      },
+      {
+        "time": 1793888329045,
+        "topic": "http-on-examine-response",
+        "url": "https://www.yahoo.com/",
+        "status": 200
+      }
+    ],
+    "samples": [
+      {
+        "time": 1793888341009,
+        "title": "Yahoo | Mail, Weather, Search, Politics, News, Finance, Sports & Videos",
+        "url": "https://www.yahoo.com/",
+        "ready": "complete",
+        "turnstileResponsePresent": false,
+        "webdriver": true
+      },
+      {
+        "time": 1793888355980,
+        "title": "Yahoo | Mail, Weather, Search, Politics, News, Finance, Sports & Videos",
+        "url": "https://www.yahoo.com/",
+        "ready": "complete",
+        "turnstileResponsePresent": false,
+        "webdriver": true
+      },
+      {
+        "time": 1793888375381,
+        "title": "Yahoo | Mail, Weather, Search, Politics, News, Finance, Sports & Videos",
+        "url": "https://www.yahoo.com/",
+        "ready": "complete",
+        "turnstileResponsePresent": false,
+        "webdriver": true
+      },
+      {
+        "time": 1793888388831,
+        "title": "Yahoo | Mail, Weather, Search, Politics, News, Finance, Sports & Videos",
+        "url": "https://www.yahoo.com/",
+        "ready": "complete",
+        "turnstileResponsePresent": false,
+        "webdriver": true
+      },
+      {
+        "time": 1793888405408,
+        "title": "Yahoo | Mail, Weather, Search, Politics, News, Finance, Sports & Videos",
+        "url": "https://www.yahoo.com/",
+        "ready": "complete",
+        "turnstileResponsePresent": false,
+        "webdriver": true
+      },
+      {
+        "time": 1793888412895,
+        "title": "Yahoo | Mail, Weather, Search, Politics, News, Finance, Sports & Videos",
+        "url": "https://www.yahoo.com/",
+        "ready": "complete",
+        "turnstileResponsePresent": false,
+        "webdriver": true
+      }
+    ]
+  }
+}

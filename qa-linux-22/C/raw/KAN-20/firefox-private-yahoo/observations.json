@@ -1,0 +1,89 @@
+{
+  "sourceFile": "KAN-20/firefox-private-yahoo/result.json",
+  "sourceSha256": "cb3b25cbf3c50fe432cff7fc3642ff627ed3742ec236901ecd7292eba909a76c",
+  "extraction": "field allowlist; selected observation values copied without change; cookie/body/credential fields excluded; navigation limited to exact test apex/page path and redirect Yahoo root; no subresource URLs",
+  "observations": {
+    "product": "firefox",
+    "private": true,
+    "url": "https://yahoo.com",
+    "version": {
+      "name": "Firefox",
+      "version": "159.0.1",
+      "buildID": "20261102144711",
+      "ua": "Mozilla/5.0 (X11; Linux x86_64; rv:159.0) Gecko/20100101 Firefox/159.0",
+      "sandbox": 6,
+      "tracking": false,
+      "cookieBehavior": 5
+    },
+    "control": {
+      "title": "QA local fixture",
+      "text": "Browser content process control",
+      "url": "http://127.0.0.1:18734/control"
+    },
+    "navigationError": null,
+    "navigation": [
+      {
+        "time": 1793888487735,
+        "topic": "http-on-modify-request",
+        "url": "https://yahoo.com/",
+        "status": null
+      },
+      {
+        "time": 1793888487999,
+        "topic": "http-on-examine-response",
+        "url": "https://yahoo.com/",
+        "status": 503
+      }
+    ],
+    "samples": [
+      {
+        "time": 1793888493264,
+        "title": "",
+        "url": "https://yahoo.com/",
+        "ready": "complete",
+        "turnstileResponsePresent": false,
+        "webdriver": true
+      },
+      {
+        "time": 1793888498314,
+        "title": "",
+        "url": "https://yahoo.com/",
+        "ready": "complete",
+        "turnstileResponsePresent": false,
+        "webdriver": true
+      },
+      {
+        "time": 1793888503330,
+        "title": "",
+        "url": "https://yahoo.com/",
+        "ready": "complete",
+        "turnstileResponsePresent": false,
+        "webdriver": true
+      },
+      {
+        "time": 1793888508434,
+        "title": "",
+        "url": "https://yahoo.com/",
+        "ready": "complete",
+        "turnstileResponsePresent": false,
+        "webdriver": true
+      },
+      {
+        "time": 1793888513451,
+        "title": "",
+        "url": "https://yahoo.com/",
+        "ready": "complete",
+        "turnstileResponsePresent": false,
+        "webdriver": true
+      },
+      {
+        "time": 1793888518459,
+        "title": "",
+        "url": "https://yahoo.com/",
+        "ready": "complete",
+        "turnstileResponsePresent": false,
+        "webdriver": true
+      }
+    ]
+  }
+}

@@ -1,0 +1,100 @@
+{
+  "sourceFile": "KAN-64/probe.json",
+  "sourceSha256": "b6b5ad207bbbb3751b00422c1be2818e655fa117f9c9253af214db10d834fa60",
+  "extraction": "field allowlist; selected observation values copied without change; cookie/body/credential fields excluded",
+  "observations": {
+    "created": {
+      "a": "2a006234-c50e-4823-9e44-7e5bfbe192cf",
+      "group": "1793888364035-5",
+      "tabs": [
+        {
+          "id": "",
+          "ws": "2a006234-c50e-4823-9e44-7e5bfbe192cf"
+        },
+        {
+          "id": "",
+          "ws": "2a006234-c50e-4823-9e44-7e5bfbe192cf"
+        }
+      ]
+    },
+    "signature": {
+      "id": "treestyletab@piro.sakura.ne.jp",
+      "version": "4.4.9",
+      "signedState": 2,
+      "isActive": true,
+      "appDisabled": false
+    },
+    "security": {
+      "sandboxLevel": 6,
+      "signaturesRequired": false,
+      "allowInsecureCertificates": false
+    },
+    "switch": {
+      "a": "2a006234-c50e-4823-9e44-7e5bfbe192cf",
+      "b": "3db8576f-cde9-4bc6-ae16-13c493ca7f7c",
+      "selected": "3db8576f-cde9-4bc6-ae16-13c493ca7f7c"
+    },
+    "cycles": [
+      {
+        "returnA": {
+          "display": "",
+          "tabs": [
+            false,
+            false
+          ]
+        },
+        "switchB": {
+          "display": "none",
+          "tabs": [
+            true,
+            true
+          ]
+        }
+      },
+      {
+        "returnA": {
+          "display": "",
+          "tabs": [
+            false,
+            false
+          ]
+        },
+        "switchB": {
+          "display": "none",
+          "tabs": [
+            true,
+            true
+          ]
+        }
+      }
+    ],
+    "before": {
+      "display": "",
+      "hidden": false,
+      "tabs": [
+        {
+          "hidden": false,
+          "ws": "2a006234-c50e-4823-9e44-7e5bfbe192cf"
+        },
+        {
+          "hidden": false,
+          "ws": "2a006234-c50e-4823-9e44-7e5bfbe192cf"
+        }
+      ]
+    },
+    "after": {
+      "display": "none",
+      "hidden": false,
+      "tabs": [
+        {
+          "hidden": true,
+          "ws": "2a006234-c50e-4823-9e44-7e5bfbe192cf"
+        },
+        {
+          "hidden": true,
+          "ws": "2a006234-c50e-4823-9e44-7e5bfbe192cf"
+        }
+      ]
+    }
+  }
+}

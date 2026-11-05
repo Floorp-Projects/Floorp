@@ -1,0 +1,89 @@
+{
+  "sourceFile": "KAN-21/floorp-private-turnstile-demo/result.json",
+  "sourceSha256": "542dbe025c24dc1b90b765336171fb5850720f5d0080d3d3116fcad71b4f9912",
+  "extraction": "field allowlist; selected observation values copied without change; cookie/body/credential fields excluded; navigation limited to exact test apex/page path and redirect Yahoo root; no subresource URLs",
+  "observations": {
+    "product": "floorp",
+    "private": true,
+    "url": "https://demo.turnstile.workers.dev",
+    "version": {
+      "name": "Floorp",
+      "version": "159.0.1",
+      "buildID": "20261103153232",
+      "ua": "Mozilla/5.0 (X11; Linux x86_64; rv:159.0) Gecko/20100101 Firefox/159.0",
+      "sandbox": 6,
+      "tracking": false,
+      "cookieBehavior": 5
+    },
+    "control": {
+      "title": "QA local fixture",
+      "text": "Browser content process control",
+      "url": "http://127.0.0.1:18734/control"
+    },
+    "navigationError": null,
+    "navigation": [
+      {
+        "time": 1793888204987,
+        "topic": "http-on-modify-request",
+        "url": "https://demo.turnstile.workers.dev/",
+        "status": null
+      },
+      {
+        "time": 1793888205229,
+        "topic": "http-on-examine-response",
+        "url": "https://demo.turnstile.workers.dev/",
+        "status": 200
+      }
+    ],
+    "samples": [
+      {
+        "time": 1793888213893,
+        "title": "Turnstile ‐ Dummy Login Demo",
+        "url": "https://demo.turnstile.workers.dev/",
+        "ready": "complete",
+        "turnstileResponsePresent": true,
+        "webdriver": true
+      },
+      {
+        "time": 1793888218977,
+        "title": "Turnstile ‐ Dummy Login Demo",
+        "url": "https://demo.turnstile.workers.dev/",
+        "ready": "complete",
+        "turnstileResponsePresent": true,
+        "webdriver": true
+      },
+      {
+        "time": 1793888224236,
+        "title": "Turnstile ‐ Dummy Login Demo",
+        "url": "https://demo.turnstile.workers.dev/",
+        "ready": "complete",
+        "turnstileResponsePresent": true,
+        "webdriver": true
+      },
+      {
+        "time": 1793888229605,
+        "title": "Turnstile ‐ Dummy Login Demo",
+        "url": "https://demo.turnstile.workers.dev/",
+        "ready": "complete",
+        "turnstileResponsePresent": true,
+        "webdriver": true
+      },
+      {
+        "time": 1793888234789,
+        "title": "Turnstile ‐ Dummy Login Demo",
+        "url": "https://demo.turnstile.workers.dev/",
+        "ready": "complete",
+        "turnstileResponsePresent": true,
+        "webdriver": true
+      },
+      {
+        "time": 1793888239820,
+        "title": "Turnstile ‐ Dummy Login Demo",
+        "url": "https://demo.turnstile.workers.dev/",
+        "ready": "complete",
+        "turnstileResponsePresent": true,
+        "webdriver": true
+      }
+    ]
+  }
+}

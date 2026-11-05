@@ -1,0 +1,114 @@
+{
+  "sourceFile": "KAN-71/activation-followup/muffin-firefox/result.json",
+  "sourceSha256": "baaefdbd442a43388f5bed556b3dd86e12fc820fd2a961b86abd13e7c1a8940e",
+  "extraction": "exact selected fields; generated startup ID/token text was never recorded; numeric timestamp and actual X11 messages retained",
+  "observations": {
+    "product": "firefox",
+    "windowManager": "muffin",
+    "input": "synthetic XTest pointer click on independent native GTK LinkButton",
+    "version": {
+      "version": "159.0.1",
+      "buildID": "20261102144711",
+      "parentPid": 35748,
+      "sandbox": 6
+    },
+    "tests": [
+      {
+        "trial": 0,
+        "event": {
+          "monotonic": 3054.132869958,
+          "eventTimestamp": 3054131,
+          "eventType": "<enum GDK_BUTTON_RELEASE of type Gdk.EventType>",
+          "handler": "Gtk.LinkButton default activate-link handler; no fabricated startup ID"
+        },
+        "launcher": {
+          "monotonic": 3054.198935492,
+          "startupIdPresent": true,
+          "startupTimestamp": 3054131,
+          "activationTokenPresent": true
+        },
+        "startupMessages": [
+          {
+            "kind": "new",
+            "startupTimestamp": 3054131,
+            "actualX11StartupMessage": true
+          }
+        ],
+        "before": {
+          "rc": 0,
+          "stdout": "_NET_ACTIVE_WINDOW(WINDOW): window id # 0xa00003\n",
+          "stderr": ""
+        },
+        "after": {
+          "rc": 0,
+          "stdout": "_NET_ACTIVE_WINDOW(WINDOW): window id # 0xa00003\n",
+          "stderr": ""
+        },
+        "browserWindowIds": [
+          "8388630"
+        ],
+        "focusedBrowser": false,
+        "requestReceived": true,
+        "originalParentAlive": true,
+        "windowManagerAlive": true
+      },
+      {
+        "trial": 1,
+        "event": {
+          "monotonic": 3077.333422695,
+          "eventTimestamp": 3077331,
+          "eventType": "<enum GDK_BUTTON_RELEASE of type Gdk.EventType>",
+          "handler": "Gtk.LinkButton default activate-link handler; no fabricated startup ID"
+        },
+        "launcher": {
+          "monotonic": 3077.382123404,
+          "startupIdPresent": true,
+          "startupTimestamp": 3077330,
+          "activationTokenPresent": true
+        },
+        "startupMessages": [
+          {
+            "kind": "new",
+            "startupTimestamp": 3054131,
+            "actualX11StartupMessage": true
+          },
+          {
+            "kind": "remove",
+            "startupTimestamp": 3054131,
+            "actualX11StartupMessage": true
+          },
+          {
+            "kind": "new",
+            "startupTimestamp": 3077330,
+            "actualX11StartupMessage": true
+          }
+        ],
+        "before": {
+          "rc": 0,
+          "stdout": "_NET_ACTIVE_WINDOW(WINDOW): window id # 0xa00003\n",
+          "stderr": ""
+        },
+        "after": {
+          "rc": 0,
+          "stdout": "_NET_ACTIVE_WINDOW(WINDOW): window id # 0xa00003\n",
+          "stderr": ""
+        },
+        "browserWindowIds": [
+          "8388630"
+        ],
+        "focusedBrowser": false,
+        "requestReceived": true,
+        "originalParentAlive": true,
+        "windowManagerAlive": true
+      }
+    ],
+    "end": {
+      "parentPid": 35748,
+      "urls": [
+        "about:blank",
+        "http://127.0.0.1:18775/muffin-firefox-0",
+        "http://127.0.0.1:18775/muffin-firefox-1"
+      ]
+    }
+  }
+}

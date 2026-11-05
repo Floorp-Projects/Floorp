@@ -1,0 +1,114 @@
+{
+  "sourceFile": "KAN-71/activation-followup/cinnamon-firefox/result.json",
+  "sourceSha256": "6be9c6c61eaee4bedf3a0cb152412f47cb5d9bdebdff5ae79a9ae28729a46cae",
+  "extraction": "exact selected fields; generated startup ID/token text was never recorded; numeric timestamp and actual X11 messages retained",
+  "observations": {
+    "product": "firefox",
+    "windowManager": "cinnamon",
+    "input": "synthetic XTest pointer click on independent native GTK LinkButton",
+    "version": {
+      "version": "159.0.1",
+      "buildID": "20261102144711",
+      "parentPid": 37631,
+      "sandbox": 6
+    },
+    "tests": [
+      {
+        "trial": 0,
+        "event": {
+          "monotonic": 3432.454608274,
+          "eventTimestamp": 3432453,
+          "eventType": "<enum GDK_BUTTON_RELEASE of type Gdk.EventType>",
+          "handler": "Gtk.LinkButton default activate-link handler; no fabricated startup ID"
+        },
+        "launcher": {
+          "monotonic": 3432.528963373,
+          "startupIdPresent": true,
+          "startupTimestamp": 3432448,
+          "activationTokenPresent": true
+        },
+        "startupMessages": [
+          {
+            "kind": "new",
+            "startupTimestamp": 3432448,
+            "actualX11StartupMessage": true
+          }
+        ],
+        "before": {
+          "rc": 0,
+          "stdout": "_NET_ACTIVE_WINDOW(WINDOW): window id # 0x2e00003\n",
+          "stderr": ""
+        },
+        "after": {
+          "rc": 0,
+          "stdout": "_NET_ACTIVE_WINDOW(WINDOW): window id # 0x2e00003\n",
+          "stderr": ""
+        },
+        "browserWindowIds": [
+          "44040214"
+        ],
+        "focusedBrowser": false,
+        "requestReceived": true,
+        "originalParentAlive": true,
+        "windowManagerAlive": true
+      },
+      {
+        "trial": 1,
+        "event": {
+          "monotonic": 3456.446458329,
+          "eventTimestamp": 3456441,
+          "eventType": "<enum GDK_BUTTON_RELEASE of type Gdk.EventType>",
+          "handler": "Gtk.LinkButton default activate-link handler; no fabricated startup ID"
+        },
+        "launcher": {
+          "monotonic": 3456.512593261,
+          "startupIdPresent": true,
+          "startupTimestamp": 3456439,
+          "activationTokenPresent": true
+        },
+        "startupMessages": [
+          {
+            "kind": "new",
+            "startupTimestamp": 3432448,
+            "actualX11StartupMessage": true
+          },
+          {
+            "kind": "remove",
+            "startupTimestamp": 3432448,
+            "actualX11StartupMessage": true
+          },
+          {
+            "kind": "new",
+            "startupTimestamp": 3456439,
+            "actualX11StartupMessage": true
+          }
+        ],
+        "before": {
+          "rc": 0,
+          "stdout": "_NET_ACTIVE_WINDOW(WINDOW): window id # 0x2e00003\n",
+          "stderr": ""
+        },
+        "after": {
+          "rc": 0,
+          "stdout": "_NET_ACTIVE_WINDOW(WINDOW): window id # 0x2e00003\n",
+          "stderr": ""
+        },
+        "browserWindowIds": [
+          "44040214"
+        ],
+        "focusedBrowser": false,
+        "requestReceived": true,
+        "originalParentAlive": true,
+        "windowManagerAlive": true
+      }
+    ],
+    "end": {
+      "parentPid": 37631,
+      "urls": [
+        "about:blank",
+        "http://127.0.0.1:18775/cinnamon-firefox-0",
+        "http://127.0.0.1:18775/cinnamon-firefox-1"
+      ]
+    }
+  }
+}

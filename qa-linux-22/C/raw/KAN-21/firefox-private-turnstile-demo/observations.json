@@ -1,0 +1,89 @@
+{
+  "sourceFile": "KAN-21/firefox-private-turnstile-demo/result.json",
+  "sourceSha256": "c6435fb2234f192bdcc6075c896cdd043d93b02bc3bb98239a77bfb7e7976139",
+  "extraction": "field allowlist; selected observation values copied without change; cookie/body/credential fields excluded; navigation limited to exact test apex/page path and redirect Yahoo root; no subresource URLs",
+  "observations": {
+    "product": "firefox",
+    "private": true,
+    "url": "https://demo.turnstile.workers.dev",
+    "version": {
+      "name": "Firefox",
+      "version": "159.0.1",
+      "buildID": "20261102144711",
+      "ua": "Mozilla/5.0 (X11; Linux x86_64; rv:159.0) Gecko/20100101 Firefox/159.0",
+      "sandbox": 6,
+      "tracking": false,
+      "cookieBehavior": 5
+    },
+    "control": {
+      "title": "QA local fixture",
+      "text": "Browser content process control",
+      "url": "http://127.0.0.1:18734/control"
+    },
+    "navigationError": null,
+    "navigation": [
+      {
+        "time": 1793888518561,
+        "topic": "http-on-modify-request",
+        "url": "https://demo.turnstile.workers.dev/",
+        "status": null
+      },
+      {
+        "time": 1793888518757,
+        "topic": "http-on-examine-response",
+        "url": "https://demo.turnstile.workers.dev/",
+        "status": 503
+      }
+    ],
+    "samples": [
+      {
+        "time": 1793888523860,
+        "title": "",
+        "url": "https://demo.turnstile.workers.dev/",
+        "ready": "complete",
+        "turnstileResponsePresent": false,
+        "webdriver": true
+      },
+      {
+        "time": 1793888528875,
+        "title": "",
+        "url": "https://demo.turnstile.workers.dev/",
+        "ready": "complete",
+        "turnstileResponsePresent": false,
+        "webdriver": true
+      },
+      {
+        "time": 1793888533899,
+        "title": "",
+        "url": "https://demo.turnstile.workers.dev/",
+        "ready": "complete",
+        "turnstileResponsePresent": false,
+        "webdriver": true
+      },
+      {
+        "time": 1793888538918,
+        "title": "",
+        "url": "https://demo.turnstile.workers.dev/",
+        "ready": "complete",
+        "turnstileResponsePresent": false,
+        "webdriver": true
+      },
+      {
+        "time": 1793888543929,
+        "title": "",
+        "url": "https://demo.turnstile.workers.dev/",
+        "ready": "complete",
+        "turnstileResponsePresent": false,
+        "webdriver": true
+      },
+      {
+        "time": 1793888549029,
+        "title": "",
+        "url": "https://demo.turnstile.workers.dev/",
+        "ready": "complete",
+        "turnstileResponsePresent": false,
+        "webdriver": true
+      }
+    ]
+  }
+}

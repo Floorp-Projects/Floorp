@@ -1,0 +1,22 @@
+{
+  "sourceFile": "KAN-64/firefox-control.json",
+  "sourceSha256": "66b47261bc5632cb2dd7fc2d2908bc3742d5aefcd978f9e2c0dfa20390398923",
+  "extraction": "field allowlist; selected observation values copied without change; cookie/body/credential fields excluded",
+  "observations": {
+    "created": {
+      "group": "1793888221895-8"
+    },
+    "hide": {
+      "tabs": [
+        {
+          "hidden": true
+        },
+        {
+          "hidden": true
+        }
+      ],
+      "groupDisplay": "",
+      "groupHidden": false
+    }
+  }
+}

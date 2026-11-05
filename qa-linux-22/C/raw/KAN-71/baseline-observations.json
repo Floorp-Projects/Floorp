@@ -1,0 +1,303 @@
+{
+  "sourceFile": "KAN-71/results.json",
+  "sourceSha256": "f632149268f53f23440e7f6ed5aa614be3a0d18081d37844e5e926239b77ce8a",
+  "extraction": "field allowlist; selected observation values copied without change; cookie/body/credential fields excluded",
+  "observations": [
+    {
+      "product": "floorp",
+      "windowManager": "xfwm4",
+      "environment": "Debian13 Xvfb X11 isolated DBus session; synthetic input, not physical; Muffin standalone is not full Cinnamon/Linux Mint",
+      "version": {
+        "version": "159.0.1",
+        "buildID": "20261103153232",
+        "sandbox": 6
+      },
+      "tests": [
+        {
+          "mode": "shell",
+          "before": {
+            "rc": 0,
+            "stdout": "_NET_ACTIVE_WINDOW(WINDOW): window id # 0x60000c, 0x0\n",
+            "stderr": ""
+          },
+          "after": {
+            "rc": 0,
+            "stdout": "_NET_ACTIVE_WINDOW(WINDOW): window id # 0x60000c, 0x0\n",
+            "stderr": ""
+          },
+          "invocation": {
+            "rc": 0,
+            "stdout": "",
+            "stderr": ""
+          },
+          "requestReceived": true,
+          "originalProcessAlive": true,
+          "browserWindows": [
+            {
+              "id": "4194325",
+              "props": {
+                "rc": 0,
+                "stdout": "WM_CLASS(STRING) = \"Navigator\", \"qa-c71-xfwm4-floorp\"\nWM_NAME(COMPOUND_TEXT) = \"External link fixture — Ablaze Floorp\"\nWM_HINTS(WM_HINTS):\n\t\tClient accepts input or input focus: True\n\t\tInitial state is Normal State.\n\t\tbitmap id # to use for icon: 0x400039\n\t\tbitmap id # of mask for icon: 0x40003f\n\t\twindow id # of group leader: 0x400001\n_NET_WM_USER_TIME:  not found.\n_NET_WM_STATE(ATOM) = _NET_WM_STATE_MAXIMIZED_HORZ, _NET_WM_STATE_MAXIMIZED_VERT\n",
+                "stderr": ""
+              }
+            }
+          ],
+          "focusedBrowser": false
+        },
+        {
+          "mode": "synthetic-terminal",
+          "before": {
+            "rc": 0,
+            "stdout": "_NET_ACTIVE_WINDOW(WINDOW): window id # 0x60000c, 0x0\n",
+            "stderr": ""
+          },
+          "after": {
+            "rc": 0,
+            "stdout": "_NET_ACTIVE_WINDOW(WINDOW): window id # 0x60000c, 0x0\n",
+            "stderr": ""
+          },
+          "invocation": {
+            "rc": 0,
+            "stdout": "",
+            "stderr": ""
+          },
+          "requestReceived": true,
+          "originalProcessAlive": true,
+          "browserWindows": [
+            {
+              "id": "4194325",
+              "props": {
+                "rc": 0,
+                "stdout": "WM_CLASS(STRING) = \"Navigator\", \"qa-c71-xfwm4-floorp\"\nWM_NAME(COMPOUND_TEXT) = \"External link fixture — Ablaze Floorp\"\nWM_HINTS(WM_HINTS):\n\t\tClient accepts input or input focus: True\n\t\tInitial state is Normal State.\n\t\tbitmap id # to use for icon: 0x400039\n\t\tbitmap id # of mask for icon: 0x40003f\n\t\twindow id # of group leader: 0x400001\n_NET_WM_USER_TIME:  not found.\n_NET_WM_STATE(ATOM) = _NET_WM_STATE_MAXIMIZED_HORZ, _NET_WM_STATE_MAXIMIZED_VERT\n",
+                "stderr": ""
+              }
+            }
+          ],
+          "focusedBrowser": false
+        }
+      ]
+    },
+    {
+      "product": "firefox",
+      "windowManager": "xfwm4",
+      "environment": "Debian13 Xvfb X11 isolated DBus session; synthetic input, not physical; Muffin standalone is not full Cinnamon/Linux Mint",
+      "version": {
+        "version": "159.0.1",
+        "buildID": "20261102144711",
+        "sandbox": 6
+      },
+      "tests": [
+        {
+          "mode": "shell",
+          "before": {
+            "rc": 0,
+            "stdout": "_NET_ACTIVE_WINDOW(WINDOW): window id # 0x60000c, 0x0\n",
+            "stderr": ""
+          },
+          "after": {
+            "rc": 0,
+            "stdout": "_NET_ACTIVE_WINDOW(WINDOW): window id # 0x60000c, 0x0\n",
+            "stderr": ""
+          },
+          "invocation": {
+            "rc": 0,
+            "stdout": "",
+            "stderr": ""
+          },
+          "requestReceived": true,
+          "originalProcessAlive": true,
+          "browserWindows": [
+            {
+              "id": "4194325",
+              "props": {
+                "rc": 0,
+                "stdout": "WM_CLASS(STRING) = \"Navigator\", \"qa-c71-xfwm4-firefox\"\nWM_NAME(STRING) = \"Mozilla Firefox\"\nWM_HINTS(WM_HINTS):\n\t\tClient accepts input or input focus: True\n\t\tInitial state is Normal State.\n\t\tbitmap id # to use for icon: 0x400039\n\t\tbitmap id # of mask for icon: 0x40003f\n\t\twindow id # of group leader: 0x400001\n_NET_WM_USER_TIME:  not found.\n_NET_WM_STATE(ATOM) = _NET_WM_STATE_MAXIMIZED_HORZ, _NET_WM_STATE_MAXIMIZED_VERT\n",
+                "stderr": ""
+              }
+            }
+          ],
+          "focusedBrowser": false
+        },
+        {
+          "mode": "synthetic-terminal",
+          "before": {
+            "rc": 0,
+            "stdout": "_NET_ACTIVE_WINDOW(WINDOW): window id # 0x60000c, 0x0\n",
+            "stderr": ""
+          },
+          "after": {
+            "rc": 0,
+            "stdout": "_NET_ACTIVE_WINDOW(WINDOW): window id # 0x60000c, 0x0\n",
+            "stderr": ""
+          },
+          "invocation": {
+            "rc": 0,
+            "stdout": "",
+            "stderr": ""
+          },
+          "requestReceived": true,
+          "originalProcessAlive": true,
+          "browserWindows": [
+            {
+              "id": "4194325",
+              "props": {
+                "rc": 0,
+                "stdout": "WM_CLASS(STRING) = \"Navigator\", \"qa-c71-xfwm4-firefox\"\nWM_NAME(COMPOUND_TEXT) = \"External link fixture — Mozilla Firefox\"\nWM_HINTS(WM_HINTS):\n\t\tClient accepts input or input focus: True\n\t\tInitial state is Normal State.\n\t\tbitmap id # to use for icon: 0x400039\n\t\tbitmap id # of mask for icon: 0x40003f\n\t\twindow id # of group leader: 0x400001\n_NET_WM_USER_TIME:  not found.\n_NET_WM_STATE(ATOM) = _NET_WM_STATE_MAXIMIZED_HORZ, _NET_WM_STATE_MAXIMIZED_VERT\n",
+                "stderr": ""
+              }
+            }
+          ],
+          "focusedBrowser": false
+        }
+      ]
+    },
+    {
+      "product": "floorp",
+      "windowManager": "muffin",
+      "environment": "Debian13 Xvfb X11 isolated DBus session; synthetic input, not physical; Muffin standalone is not full Cinnamon/Linux Mint",
+      "version": {
+        "version": "159.0.1",
+        "buildID": "20261103153232",
+        "sandbox": 6
+      },
+      "tests": [
+        {
+          "mode": "shell",
+          "before": {
+            "rc": 0,
+            "stdout": "_NET_ACTIVE_WINDOW(WINDOW): window id # 0x80000c\n",
+            "stderr": ""
+          },
+          "after": {
+            "rc": 0,
+            "stdout": "_NET_ACTIVE_WINDOW(WINDOW): window id # 0x80000c\n",
+            "stderr": ""
+          },
+          "invocation": {
+            "rc": 0,
+            "stdout": "",
+            "stderr": ""
+          },
+          "requestReceived": true,
+          "originalProcessAlive": true,
+          "browserWindows": [
+            {
+              "id": "6291478",
+              "props": {
+                "rc": 0,
+                "stdout": "WM_CLASS(STRING) = \"Navigator\", \"qa-c71-muffin-floorp\"\nWM_NAME(COMPOUND_TEXT) = \"External link fixture — Ablaze Floorp\"\nWM_HINTS(WM_HINTS):\n\t\tClient accepts input or input focus: True\n\t\tInitial state is Normal State.\n\t\tbitmap id # to use for icon: 0x60003a\n\t\tbitmap id # of mask for icon: 0x600040\n\t\twindow id # of group leader: 0x600001\n_NET_WM_USER_TIME:  not found.\n_NET_WM_STATE(ATOM) = _NET_WM_STATE_MAXIMIZED_HORZ, _NET_WM_STATE_MAXIMIZED_VERT\n",
+                "stderr": ""
+              }
+            }
+          ],
+          "focusedBrowser": false
+        },
+        {
+          "mode": "synthetic-terminal",
+          "before": {
+            "rc": 0,
+            "stdout": "_NET_ACTIVE_WINDOW(WINDOW): window id # 0x80000c\n",
+            "stderr": ""
+          },
+          "after": {
+            "rc": 0,
+            "stdout": "_NET_ACTIVE_WINDOW(WINDOW): window id # 0x80000c\n",
+            "stderr": ""
+          },
+          "invocation": {
+            "rc": 0,
+            "stdout": "",
+            "stderr": ""
+          },
+          "requestReceived": true,
+          "originalProcessAlive": true,
+          "browserWindows": [
+            {
+              "id": "6291478",
+              "props": {
+                "rc": 0,
+                "stdout": "WM_CLASS(STRING) = \"Navigator\", \"qa-c71-muffin-floorp\"\nWM_NAME(COMPOUND_TEXT) = \"External link fixture — Ablaze Floorp\"\nWM_HINTS(WM_HINTS):\n\t\tClient accepts input or input focus: True\n\t\tInitial state is Normal State.\n\t\tbitmap id # to use for icon: 0x60003a\n\t\tbitmap id # of mask for icon: 0x600040\n\t\twindow id # of group leader: 0x600001\n_NET_WM_USER_TIME:  not found.\n_NET_WM_STATE(ATOM) = _NET_WM_STATE_MAXIMIZED_HORZ, _NET_WM_STATE_MAXIMIZED_VERT\n",
+                "stderr": ""
+              }
+            }
+          ],
+          "focusedBrowser": false
+        }
+      ]
+    },
+    {
+      "product": "firefox",
+      "windowManager": "muffin",
+      "environment": "Debian13 Xvfb X11 isolated DBus session; synthetic input, not physical; Muffin standalone is not full Cinnamon/Linux Mint",
+      "version": {
+        "version": "159.0.1",
+        "buildID": "20261102144711",
+        "sandbox": 6
+      },
+      "tests": [
+        {
+          "mode": "shell",
+          "before": {
+            "rc": 0,
+            "stdout": "_NET_ACTIVE_WINDOW(WINDOW): window id # 0x80000c\n",
+            "stderr": ""
+          },
+          "after": {
+            "rc": 0,
+            "stdout": "_NET_ACTIVE_WINDOW(WINDOW): window id # 0x80000c\n",
+            "stderr": ""
+          },
+          "invocation": {
+            "rc": 0,
+            "stdout": "",
+            "stderr": ""
+          },
+          "requestReceived": true,
+          "originalProcessAlive": true,
+          "browserWindows": [
+            {
+              "id": "6291478",
+              "props": {
+                "rc": 0,
+                "stdout": "WM_CLASS(STRING) = \"Navigator\", \"qa-c71-muffin-firefox\"\nWM_NAME(COMPOUND_TEXT) = \"External link fixture — Mozilla Firefox\"\nWM_HINTS(WM_HINTS):\n\t\tClient accepts input or input focus: True\n\t\tInitial state is Normal State.\n\t\tbitmap id # to use for icon: 0x60003a\n\t\tbitmap id # of mask for icon: 0x600040\n\t\twindow id # of group leader: 0x600001\n_NET_WM_USER_TIME:  not found.\n_NET_WM_STATE(ATOM) = _NET_WM_STATE_MAXIMIZED_HORZ, _NET_WM_STATE_MAXIMIZED_VERT\n",
+                "stderr": ""
+              }
+            }
+          ],
+          "focusedBrowser": false
+        },
+        {
+          "mode": "synthetic-terminal",
+          "before": {
+            "rc": 0,
+            "stdout": "_NET_ACTIVE_WINDOW(WINDOW): window id # 0x80000c\n",
+            "stderr": ""
+          },
+          "after": {
+            "rc": 0,
+            "stdout": "_NET_ACTIVE_WINDOW(WINDOW): window id # 0x80000c\n",
+            "stderr": ""
+          },
+          "invocation": {
+            "rc": 0,
+            "stdout": "",
+            "stderr": ""
+          },
+          "requestReceived": true,
+          "originalProcessAlive": true,
+          "browserWindows": [
+            {
+              "id": "6291478",
+              "props": {
+                "rc": 0,
+                "stdout": "WM_CLASS(STRING) = \"Navigator\", \"qa-c71-muffin-firefox\"\nWM_NAME(COMPOUND_TEXT) = \"External link fixture — Mozilla Firefox\"\nWM_HINTS(WM_HINTS):\n\t\tClient accepts input or input focus: True\n\t\tInitial state is Normal State.\n\t\tbitmap id # to use for icon: 0x60003a\n\t\tbitmap id # of mask for icon: 0x600040\n\t\twindow id # of group leader: 0x600001\n_NET_WM_USER_TIME:  not found.\n_NET_WM_STATE(ATOM) = _NET_WM_STATE_MAXIMIZED_HORZ, _NET_WM_STATE_MAXIMIZED_VERT\n",
+                "stderr": ""
+              }
+            }
+          ],
+          "focusedBrowser": false
+        }
+      ]
+    }
+  ]
+}

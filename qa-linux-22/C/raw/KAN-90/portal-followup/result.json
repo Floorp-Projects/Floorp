@@ -1,0 +1,199 @@
+{
+  "sourceFile": "KAN-90/portal-followup/result.json",
+  "sourceSha256": "99bcce8ecf523a75bdcc2aaeaedf320f8c5a9c251fb18b0ed5b6ecab16fddf3f",
+  "extraction": "field allowlist; selected observation values copied without change; cookie/body/credential fields excluded",
+  "observations": {
+    "key": "KAN-90",
+    "sourceSha": "984509d2053be7bae9027133bda7259cd706b208",
+    "control": "Independent direct real portal invocation; Thunderbird is not part of this followup",
+    "environment": "Debian13.6 Xvfb/Openbox/private session+fixture system DBus; Flatpak1.16.6 Floorp12.21.1 Gecko159.0.1",
+    "input": "gdbus OpenURI API call; any chooser input is synthetic X11",
+    "dbusActivation": {
+      "command": [
+        "dbus-update-activation-environment",
+        "DISPLAY",
+        "XDG_CURRENT_DESKTOP",
+        "XDG_DATA_DIRS",
+        "MOZ_APP_REMOTINGNAME",
+        "FLATPAK_DBUSPROXY"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "before": {
+      "pid": 2,
+      "version": "159.0.1",
+      "sandboxLevel": 6,
+      "tabs": [
+        "about:blank"
+      ]
+    },
+    "processesBefore": {
+      "pid": 2,
+      "type": "browser",
+      "children": [
+        {
+          "pid": 704,
+          "type": "preallocated",
+          "children": []
+        },
+        {
+          "pid": 41,
+          "type": "socket",
+          "children": []
+        },
+        {
+          "pid": 732,
+          "type": "utility",
+          "children": []
+        },
+        {
+          "pid": 771,
+          "type": "preallocated",
+          "children": []
+        },
+        {
+          "pid": 153,
+          "type": "rdd",
+          "children": []
+        },
+        {
+          "pid": 111,
+          "type": "forkServer",
+          "children": []
+        },
+        {
+          "pid": 145,
+          "type": "extension",
+          "children": []
+        },
+        {
+          "pid": 236,
+          "type": "web",
+          "children": []
+        },
+        {
+          "pid": 681,
+          "type": "preallocated",
+          "children": []
+        }
+      ]
+    },
+    "flatpakInstancesBefore": {
+      "command": [
+        "flatpak",
+        "ps",
+        "--columns=pid,application"
+      ],
+      "rc": 0,
+      "stdout": "31151\tone.ablaze.floorp\n",
+      "stderr": ""
+    },
+    "portalCall": {
+      "command": [
+        "gdbus",
+        "call",
+        "--session",
+        "--dest",
+        "org.freedesktop.portal.Desktop",
+        "--object-path",
+        "/org/freedesktop/portal/desktop",
+        "--method",
+        "org.freedesktop.portal.OpenURI.OpenURI",
+        "",
+        "http://127.0.0.1:19092/from-real-portal",
+        "{'ask': <false>}"
+      ],
+      "rc": 0,
+      "stdout": "(objectpath '/org/freedesktop/portal/desktop/request/1_120/t',)\n",
+      "stderr": ""
+    },
+    "hits": [
+      {
+        "time": 1793890286.6382365,
+        "path": "/from-real-portal"
+      },
+      {
+        "time": 1793890288.430801,
+        "path": "/favicon.ico"
+      }
+    ],
+    "after": {
+      "pid": 2,
+      "version": "159.0.1",
+      "sandboxLevel": 6,
+      "tabs": [
+        "about:blank",
+        "http://127.0.0.1:19092/from-real-portal"
+      ]
+    },
+    "processesAfter": {
+      "pid": 2,
+      "type": "browser",
+      "children": [
+        {
+          "pid": 704,
+          "type": "preallocated",
+          "children": []
+        },
+        {
+          "pid": 41,
+          "type": "socket",
+          "children": []
+        },
+        {
+          "pid": 732,
+          "type": "utility",
+          "children": []
+        },
+        {
+          "pid": 771,
+          "type": "preallocated",
+          "children": []
+        },
+        {
+          "pid": 153,
+          "type": "rdd",
+          "children": []
+        },
+        {
+          "pid": 111,
+          "type": "forkServer",
+          "children": []
+        },
+        {
+          "pid": 1099,
+          "type": "preallocated",
+          "children": []
+        },
+        {
+          "pid": 145,
+          "type": "extension",
+          "children": []
+        },
+        {
+          "pid": 236,
+          "type": "web",
+          "children": []
+        },
+        {
+          "pid": 681,
+          "type": "webIsolated",
+          "children": []
+        }
+      ]
+    },
+    "flatpakInstancesAfter": {
+      "command": [
+        "flatpak",
+        "ps",
+        "--columns=pid,application"
+      ],
+      "rc": 0,
+      "stdout": "31151\tone.ablaze.floorp\n",
+      "stderr": ""
+    },
+    "originalParentRetained": true
+  }
+}

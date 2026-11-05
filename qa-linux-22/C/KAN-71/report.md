@@ -19,3 +19,7 @@ Classification: symptom reproduced in a substitute environment; **Floorp-specifi
 Remaining: Linux Mint/Cinnamon X11 with an actual initiating application's startup timestamp/context; a matching Firefox control demonstrating the reported difference; physical-input path if that changes focus policy. Retain the unresolved environment condition, narrowed from generic Linux absence to `needs-cinnamon-x11-activation`. Do not call this fixed, ordinary unreproduced, or an upstream bug solely from this comparison. No code patch/Draft PR is justified yet.
 
 Earlier harness runs (missing inspection opt-in, desktop helper dispatch, missing Muffin schema) are retained locally as setup evidence. Their results are not product tests and are excluded from the final 8-trial count.
+
+## Additional GUI activation follow-up
+
+See `activation-followup/report.md`: independent real GTK links generated nonzero startup timestamps and actual X11 startup notifications. Eight further trials across standalone Muffin and real user-space Cinnamon session all received GET with original parent retained; neither Floorp nor Firefox raised (0/8). Timestamp absence is no longer the unresolved condition. Native Mint/system desktop services and the reported Firefox contrast remain unvalidated. Small raw observation subsets are now exported for independent audit.

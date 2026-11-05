@@ -1,0 +1,530 @@
+[
+  {
+    "version": "4.4.9",
+    "commit": "123e698f8c96822453f4fef57e12dd5852e46fbe",
+    "path": "webextensions/sidebar/scroll.js",
+    "url": "https://raw.githubusercontent.com/piroor/treestyletab/123e698f8c96822453f4fef57e12dd5852e46fbe/webextensions/sidebar/scroll.js",
+    "githubUrl": "https://github.com/piroor/treestyletab/blob/123e698f8c96822453f4fef57e12dd5852e46fbe/webextensions/sidebar/scroll.js",
+    "sha256": "19a8aaf14146c6df5c2c0731cd71d43219e687e32c63e6517e21c90f5c0e0429",
+    "signedXpiFileSha256": "19a8aaf14146c6df5c2c0731cd71d43219e687e32c63e6517e21c90f5c0e0429",
+    "matchesSignedXpi": true,
+    "excerpt": [
+      {
+        "line": 262,
+        "text": "function getRenderableTreeItems(windowId = null) {"
+      },
+      {
+        "line": 263,
+        "text": "  if (!windowId) {"
+      },
+      {
+        "line": 264,
+        "text": "    windowId = TabsStore.getCurrentWindowId();"
+      },
+      {
+        "line": 265,
+        "text": "  }"
+      },
+      {
+        "line": 266,
+        "text": ""
+      },
+      {
+        "line": 267,
+        "text": "  if (TabsStore.nativelyGroupedTabsInWindow.get(windowId).size == 0) {"
+      },
+      {
+        "line": 268,
+        "text": "    log('getRenderableTreeItems: no native tab group');"
+      },
+      {
+        "line": 269,
+        "text": "    return TabsStore.queryAll({"
+      },
+      {
+        "line": 270,
+        "text": "      windowId,"
+      },
+      {
+        "line": 271,
+        "text": "      tabs:         TabsStore.getTabsMap(TabsStore.virtualScrollRenderableTabsInWindow, windowId),"
+      },
+      {
+        "line": 272,
+        "text": "      skipMatching: true,"
+      },
+      {
+        "line": 273,
+        "text": "      ordered:      true,"
+      },
+      {
+        "line": 274,
+        "text": "    }).filter(splitViewHiddenTabFilter);"
+      },
+      {
+        "line": 275,
+        "text": "  }"
+      },
+      {
+        "line": 276,
+        "text": ""
+      },
+      {
+        "line": 277,
+        "text": "  const mixedItems = TreeItem.sort(["
+      },
+      {
+        "line": 278,
+        "text": "    ...TabsStore.queryAll({"
+      },
+      {
+        "line": 279,
+        "text": "      windowId,"
+      },
+      {
+        "line": 280,
+        "text": "      tabs:         TabsStore.getTabsMap(TabsStore.virtualScrollRenderableTabsInWindow, windowId),"
+      },
+      {
+        "line": 281,
+        "text": "      skipMatching: true,"
+      },
+      {
+        "line": 282,
+        "text": "    }).filter(splitViewHiddenTabFilter),"
+      },
+      {
+        "line": 283,
+        "text": "    ...mapAndFilter("
+      },
+      {
+        "line": 284,
+        "text": "      [...TabsStore.windows.get(windowId).tabGroups.values()],"
+      },
+      {
+        "line": 285,
+        "text": "      group => {"
+      },
+      {
+        "line": 286,
+        "text": "        group.$TST.reindex();"
+      },
+      {
+        "line": 287,
+        "text": "        if (group.collapsed) {"
+      },
+      {
+        "line": 288,
+        "text": "          const members = group.$TST.members;"
+      },
+      {
+        "line": 289,
+        "text": "          if (members.length > 1 && members.some(tab => tab.active)) {"
+      },
+      {
+        "line": 290,
+        "text": "            const counterItem = group.$TST.collapsedMembersCounterItem;"
+      },
+      {
+        "line": 291,
+        "text": "            counterItem.$TST.update();"
+      },
+      {
+        "line": 292,
+        "text": "            return [group, counterItem];"
+      },
+      {
+        "line": 293,
+        "text": "          }"
+      },
+      {
+        "line": 294,
+        "text": "        }"
+      },
+      {
+        "line": 295,
+        "text": "        return group;"
+      },
+      {
+        "line": 296,
+        "text": "      }"
+      },
+      {
+        "line": 297,
+        "text": "    ).flat(),"
+      },
+      {
+        "line": 298,
+        "text": "  ]);"
+      },
+      {
+        "line": 299,
+        "text": "  log('getRenderableTreeItems: mixedItems = ', mixedItems);"
+      },
+      {
+        "line": 300,
+        "text": "  return mixedItems;"
+      },
+      {
+        "line": 301,
+        "text": "}"
+      }
+    ]
+  },
+  {
+    "version": "4.4.9",
+    "commit": "123e698f8c96822453f4fef57e12dd5852e46fbe",
+    "path": "webextensions/common/common.js",
+    "url": "https://raw.githubusercontent.com/piroor/treestyletab/123e698f8c96822453f4fef57e12dd5852e46fbe/webextensions/common/common.js",
+    "githubUrl": "https://github.com/piroor/treestyletab/blob/123e698f8c96822453f4fef57e12dd5852e46fbe/webextensions/common/common.js",
+    "sha256": "676af00ae2aa4f70083e5f30a3e970637c208c8162c693a43ad57c21b19420ad",
+    "signedXpiFileSha256": "676af00ae2aa4f70083e5f30a3e970637c208c8162c693a43ad57c21b19420ad",
+    "matchesSignedXpi": true,
+    "excerpt": [
+      {
+        "line": 237,
+        "text": "  renderHiddenTabs:              false,"
+      }
+    ]
+  },
+  {
+    "version": "4.4.9",
+    "commit": "123e698f8c96822453f4fef57e12dd5852e46fbe",
+    "path": "webextensions/common/tabs-store.js",
+    "url": "https://raw.githubusercontent.com/piroor/treestyletab/123e698f8c96822453f4fef57e12dd5852e46fbe/webextensions/common/tabs-store.js",
+    "githubUrl": "https://github.com/piroor/treestyletab/blob/123e698f8c96822453f4fef57e12dd5852e46fbe/webextensions/common/tabs-store.js",
+    "sha256": "cd90425014667708505d8246f23ba06f7f3d80cabfe0c3f09442a31678e9db7e",
+    "signedXpiFileSha256": "cd90425014667708505d8246f23ba06f7f3d80cabfe0c3f09442a31678e9db7e",
+    "matchesSignedXpi": true,
+    "excerpt": [
+      {
+        "line": 534,
+        "text": "export function updateVirtualScrollRenderabilityIndexForTab(tab) {"
+      },
+      {
+        "line": 535,
+        "text": "  if (!tab)"
+      },
+      {
+        "line": 536,
+        "text": "    return;"
+      },
+      {
+        "line": 537,
+        "text": ""
+      },
+      {
+        "line": 538,
+        "text": "  if (tab.pinned ||"
+      },
+      {
+        "line": 539,
+        "text": "      (tab.hidden &&"
+      },
+      {
+        "line": 540,
+        "text": "       ((tab.url == 'about:firefoxview' &&"
+      },
+      {
+        "line": 541,
+        "text": "         tab.cookieStoreId == 'firefox-default') ||"
+      },
+      {
+        "line": 542,
+        "text": "        !configs.renderHiddenTabs)) ||"
+      },
+      {
+        "line": 543,
+        "text": "      tab.$TST?.states.has(Constants.kTAB_STATE_COLLAPSED_DONE) ||"
+      },
+      {
+        "line": 544,
+        "text": "      (tabGroups.get(tab.groupId)?.$TST?.states.has(Constants.kTAB_STATE_COLLAPSED_DONE) &&"
+      },
+      {
+        "line": 545,
+        "text": "       !tab.active))"
+      },
+      {
+        "line": 546,
+        "text": "    removeVirtualScrollRenderableTab(tab);"
+      },
+      {
+        "line": 547,
+        "text": "  else"
+      },
+      {
+        "line": 548,
+        "text": "    addVirtualScrollRenderableTab(tab);"
+      },
+      {
+        "line": 549,
+        "text": "}"
+      }
+    ]
+  },
+  {
+    "version": "trunk",
+    "commit": "ad17fdfed02b357ffb73ea4dcf775c34d7a03365",
+    "path": "webextensions/sidebar/scroll.js",
+    "url": "https://raw.githubusercontent.com/piroor/treestyletab/ad17fdfed02b357ffb73ea4dcf775c34d7a03365/webextensions/sidebar/scroll.js",
+    "githubUrl": "https://github.com/piroor/treestyletab/blob/ad17fdfed02b357ffb73ea4dcf775c34d7a03365/webextensions/sidebar/scroll.js",
+    "sha256": "25b5e6cb970400bf91645329bd0ff3ee4d574b29aba1b5e52a3fb67b704c1120",
+    "signedXpiFileSha256": "19a8aaf14146c6df5c2c0731cd71d43219e687e32c63e6517e21c90f5c0e0429",
+    "matchesSignedXpi": false,
+    "excerpt": [
+      {
+        "line": 278,
+        "text": "function getRenderableTreeItems(windowId = null) {"
+      },
+      {
+        "line": 279,
+        "text": "  if (!windowId) {"
+      },
+      {
+        "line": 280,
+        "text": "    windowId = TabsStore.getCurrentWindowId();"
+      },
+      {
+        "line": 281,
+        "text": "  }"
+      },
+      {
+        "line": 282,
+        "text": ""
+      },
+      {
+        "line": 283,
+        "text": "  if (TabsStore.nativelyGroupedTabsInWindow.get(windowId).size == 0) {"
+      },
+      {
+        "line": 284,
+        "text": "    log('getRenderableTreeItems: no native tab group');"
+      },
+      {
+        "line": 285,
+        "text": "    return TabsStore.queryAll({"
+      },
+      {
+        "line": 286,
+        "text": "      windowId,"
+      },
+      {
+        "line": 287,
+        "text": "      tabs:         TabsStore.getTabsMap(TabsStore.virtualScrollRenderableTabsInWindow, windowId),"
+      },
+      {
+        "line": 288,
+        "text": "      skipMatching: true,"
+      },
+      {
+        "line": 289,
+        "text": "      ordered:      true,"
+      },
+      {
+        "line": 290,
+        "text": "    }).filter(splitViewHiddenTabFilter);"
+      },
+      {
+        "line": 291,
+        "text": "  }"
+      },
+      {
+        "line": 292,
+        "text": ""
+      },
+      {
+        "line": 293,
+        "text": "  const mixedItems = TreeItem.sort(["
+      },
+      {
+        "line": 294,
+        "text": "    ...TabsStore.queryAll({"
+      },
+      {
+        "line": 295,
+        "text": "      windowId,"
+      },
+      {
+        "line": 296,
+        "text": "      tabs:         TabsStore.getTabsMap(TabsStore.virtualScrollRenderableTabsInWindow, windowId),"
+      },
+      {
+        "line": 297,
+        "text": "      skipMatching: true,"
+      },
+      {
+        "line": 298,
+        "text": "    }).filter(splitViewHiddenTabFilter),"
+      },
+      {
+        "line": 299,
+        "text": "    ...mapAndFilter("
+      },
+      {
+        "line": 300,
+        "text": "      [...TabsStore.windows.get(windowId).tabGroups.values()],"
+      },
+      {
+        "line": 301,
+        "text": "      group => {"
+      },
+      {
+        "line": 302,
+        "text": "        group.$TST.reindex();"
+      },
+      {
+        "line": 303,
+        "text": "        if (group.collapsed) {"
+      },
+      {
+        "line": 304,
+        "text": "          const members = group.$TST.members;"
+      },
+      {
+        "line": 305,
+        "text": "          if (members.length > 1 && members.some(tab => tab.active)) {"
+      },
+      {
+        "line": 306,
+        "text": "            const counterItem = group.$TST.collapsedMembersCounterItem;"
+      },
+      {
+        "line": 307,
+        "text": "            counterItem.$TST.update();"
+      },
+      {
+        "line": 308,
+        "text": "            return [group, counterItem];"
+      },
+      {
+        "line": 309,
+        "text": "          }"
+      },
+      {
+        "line": 310,
+        "text": "        }"
+      },
+      {
+        "line": 311,
+        "text": "        return group;"
+      },
+      {
+        "line": 312,
+        "text": "      }"
+      },
+      {
+        "line": 313,
+        "text": "    ).flat(),"
+      },
+      {
+        "line": 314,
+        "text": "  ]);"
+      },
+      {
+        "line": 315,
+        "text": "  log('getRenderableTreeItems: mixedItems = ', mixedItems);"
+      },
+      {
+        "line": 316,
+        "text": "  return mixedItems;"
+      },
+      {
+        "line": 317,
+        "text": "}"
+      }
+    ]
+  },
+  {
+    "version": "trunk",
+    "commit": "ad17fdfed02b357ffb73ea4dcf775c34d7a03365",
+    "path": "webextensions/common/common.js",
+    "url": "https://raw.githubusercontent.com/piroor/treestyletab/ad17fdfed02b357ffb73ea4dcf775c34d7a03365/webextensions/common/common.js",
+    "githubUrl": "https://github.com/piroor/treestyletab/blob/ad17fdfed02b357ffb73ea4dcf775c34d7a03365/webextensions/common/common.js",
+    "sha256": "ee712145e8e05a9c26dafbe2718cd1b6a7c6d431b898b404f22b7e0833d7e180",
+    "signedXpiFileSha256": "676af00ae2aa4f70083e5f30a3e970637c208c8162c693a43ad57c21b19420ad",
+    "matchesSignedXpi": false,
+    "excerpt": [
+      {
+        "line": 238,
+        "text": "  renderHiddenTabs:              false,"
+      }
+    ]
+  },
+  {
+    "version": "trunk",
+    "commit": "ad17fdfed02b357ffb73ea4dcf775c34d7a03365",
+    "path": "webextensions/common/tabs-store.js",
+    "url": "https://raw.githubusercontent.com/piroor/treestyletab/ad17fdfed02b357ffb73ea4dcf775c34d7a03365/webextensions/common/tabs-store.js",
+    "githubUrl": "https://github.com/piroor/treestyletab/blob/ad17fdfed02b357ffb73ea4dcf775c34d7a03365/webextensions/common/tabs-store.js",
+    "sha256": "d5a3df07b3294b9376fba22155085246bf4c6f2e50012a56595f8a003f828d75",
+    "signedXpiFileSha256": "cd90425014667708505d8246f23ba06f7f3d80cabfe0c3f09442a31678e9db7e",
+    "matchesSignedXpi": false,
+    "excerpt": [
+      {
+        "line": 538,
+        "text": "export function updateVirtualScrollRenderabilityIndexForTab(tab) {"
+      },
+      {
+        "line": 539,
+        "text": "  if (!tab)"
+      },
+      {
+        "line": 540,
+        "text": "    return;"
+      },
+      {
+        "line": 541,
+        "text": ""
+      },
+      {
+        "line": 542,
+        "text": "  if (tab.pinned ||"
+      },
+      {
+        "line": 543,
+        "text": "      (tab.hidden &&"
+      },
+      {
+        "line": 544,
+        "text": "       ((tab.url == 'about:firefoxview' &&"
+      },
+      {
+        "line": 545,
+        "text": "         tab.cookieStoreId == 'firefox-default') ||"
+      },
+      {
+        "line": 546,
+        "text": "        !configs.renderHiddenTabs)) ||"
+      },
+      {
+        "line": 547,
+        "text": "      tab.$TST?.states.has(Constants.kTAB_STATE_COLLAPSED_DONE) ||"
+      },
+      {
+        "line": 548,
+        "text": "      (tabGroups.get(tab.groupId)?.$TST?.states.has(Constants.kTAB_STATE_COLLAPSED_DONE) &&"
+      },
+      {
+        "line": 549,
+        "text": "       !tab.active))"
+      },
+      {
+        "line": 550,
+        "text": "    removeVirtualScrollRenderableTab(tab);"
+      },
+      {
+        "line": 551,
+        "text": "  else"
+      },
+      {
+        "line": 552,
+        "text": "    addVirtualScrollRenderableTab(tab);"
+      },
+      {
+        "line": 553,
+        "text": "}"
+      }
+    ]
+  }
+]

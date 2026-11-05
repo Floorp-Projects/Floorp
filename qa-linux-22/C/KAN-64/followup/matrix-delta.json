@@ -1,0 +1,47 @@
+{
+  "key": "KAN-64",
+  "github": "https://github.com/Floorp-Projects/Floorp/issues/2568",
+  "sourceSha": "984509d2053be7bae9027133bda7259cd706b208",
+  "followupType": "read-only official upstream contract trace; prior product runs retained, no additional product tests",
+  "resultDelta": "Reproduced symptom retained. Narrow classification: external TST native-group visibility policy/integration gap; no maintainer-confirmed exact upstream bug or documented all-members-hidden group-header requirement found. No confirmed Floorp-only defect.",
+  "upstreamSource": {
+    "repository": "piroor/treestyletab",
+    "testedVersion": "4.4.9",
+    "tagObject": "bb0582d503c9b77a1a2d6b9b84636ba1ff7689e6",
+    "tagCommit": "123e698f8c96822453f4fef57e12dd5852e46fbe",
+    "currentBranch": "trunk",
+    "currentCommit": "ad17fdfed02b357ffb73ea4dcf775c34d7a03365",
+    "signedXpiSourceMatch": [
+      "webextensions/sidebar/scroll.js",
+      "webextensions/common/common.js",
+      "webextensions/common/tabs-store.js"
+    ]
+  },
+  "relatedUpstream": [
+    "https://github.com/piroor/treestyletab/issues/3495",
+    "https://github.com/piroor/treestyletab/issues/3617",
+    "https://github.com/piroor/treestyletab/issues/3743",
+    "https://github.com/piroor/treestyletab/issues/3877"
+  ],
+  "exactUpstreamDuplicate": null,
+  "remainingConditionsDelta": {
+    "replace": [
+      "TST upstream expected behavior/test for groups whose every member is hidden needs agreement"
+    ],
+    "with": [
+      "Agree with upstream whether native group headers with every member hidden should be omitted when renderHiddenTabs=false; current source always adds native group headers independently of filtered tabs",
+      "Original Fedora44/KDE, reported old Floorp12.16.2/TST version, physical input remain untested",
+      "Current trunk statically inspected only; not executed or claimed fixed/unfixed by runtime test"
+    ]
+  },
+  "existingPr": null,
+  "newPr": null,
+  "externalWrites": false,
+  "evidence": [
+    "followup/report.md",
+    "followup/official-source-evidence.json",
+    "followup/related-upstream.json",
+    "followup/search-summary.json",
+    "followup/head-summary.json"
+  ]
+}

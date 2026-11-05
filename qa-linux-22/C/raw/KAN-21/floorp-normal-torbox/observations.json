@@ -1,0 +1,89 @@
+{
+  "sourceFile": "KAN-21/floorp-normal-torbox/result.json",
+  "sourceSha256": "2e1bfe001b7c77f7c6c258409911ca9065a67581aff1fcdab25cbb30460def2b",
+  "extraction": "field allowlist; selected observation values copied without change; cookie/body/credential fields excluded; navigation limited to exact test apex/page path and redirect Yahoo root; no subresource URLs",
+  "observations": {
+    "product": "floorp",
+    "private": false,
+    "url": "https://torbox.app",
+    "version": {
+      "name": "Floorp",
+      "version": "159.0.1",
+      "buildID": "20261103153232",
+      "ua": "Mozilla/5.0 (X11; Linux x86_64; rv:159.0) Gecko/20100101 Firefox/159.0",
+      "sandbox": 6,
+      "tracking": false,
+      "cookieBehavior": 5
+    },
+    "control": {
+      "title": "QA local fixture",
+      "text": "Browser content process control",
+      "url": "http://127.0.0.1:18734/control"
+    },
+    "navigationError": null,
+    "navigation": [
+      {
+        "time": 1793888119905,
+        "topic": "http-on-modify-request",
+        "url": "https://torbox.app/",
+        "status": null
+      },
+      {
+        "time": 1793888120299,
+        "topic": "http-on-examine-response",
+        "url": "https://torbox.app/",
+        "status": 200
+      }
+    ],
+    "samples": [
+      {
+        "time": 1793888128772,
+        "title": "TorBox - Fast, Secure, Private",
+        "url": "https://torbox.app/",
+        "ready": "complete",
+        "turnstileResponsePresent": false,
+        "webdriver": true
+      },
+      {
+        "time": 1793888133803,
+        "title": "TorBox - Fast, Secure, Private",
+        "url": "https://torbox.app/",
+        "ready": "complete",
+        "turnstileResponsePresent": false,
+        "webdriver": true
+      },
+      {
+        "time": 1793888138818,
+        "title": "TorBox - Fast, Secure, Private",
+        "url": "https://torbox.app/",
+        "ready": "complete",
+        "turnstileResponsePresent": false,
+        "webdriver": true
+      },
+      {
+        "time": 1793888143839,
+        "title": "TorBox - Fast, Secure, Private",
+        "url": "https://torbox.app/",
+        "ready": "complete",
+        "turnstileResponsePresent": false,
+        "webdriver": true
+      },
+      {
+        "time": 1793888148856,
+        "title": "TorBox - Fast, Secure, Private",
+        "url": "https://torbox.app/",
+        "ready": "complete",
+        "turnstileResponsePresent": false,
+        "webdriver": true
+      },
+      {
+        "time": 1793888153893,
+        "title": "TorBox - Fast, Secure, Private",
+        "url": "https://torbox.app/",
+        "ready": "complete",
+        "turnstileResponsePresent": false,
+        "webdriver": true
+      }
+    ]
+  }
+}

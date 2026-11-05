@@ -1,0 +1,89 @@
+{
+  "sourceFile": "KAN-21/firefox-private-torbox/result.json",
+  "sourceSha256": "54d963896a274baf217a105ab0b64d70238203a8e3b2a81af4101d05a0a0f68b",
+  "extraction": "field allowlist; selected observation values copied without change; cookie/body/credential fields excluded; navigation limited to exact test apex/page path and redirect Yahoo root; no subresource URLs",
+  "observations": {
+    "product": "firefox",
+    "private": true,
+    "url": "https://torbox.app",
+    "version": {
+      "name": "Firefox",
+      "version": "159.0.1",
+      "buildID": "20261102144711",
+      "ua": "Mozilla/5.0 (X11; Linux x86_64; rv:159.0) Gecko/20100101 Firefox/159.0",
+      "sandbox": 6,
+      "tracking": false,
+      "cookieBehavior": 5
+    },
+    "control": {
+      "title": "QA local fixture",
+      "text": "Browser content process control",
+      "url": "http://127.0.0.1:18734/control"
+    },
+    "navigationError": null,
+    "navigation": [
+      {
+        "time": 1793888549291,
+        "topic": "http-on-modify-request",
+        "url": "https://torbox.app/",
+        "status": null
+      },
+      {
+        "time": 1793888549530,
+        "topic": "http-on-examine-response",
+        "url": "https://torbox.app/",
+        "status": 503
+      }
+    ],
+    "samples": [
+      {
+        "time": 1793888554789,
+        "title": "",
+        "url": "https://torbox.app/",
+        "ready": "complete",
+        "turnstileResponsePresent": false,
+        "webdriver": true
+      },
+      {
+        "time": 1793888559955,
+        "title": "",
+        "url": "https://torbox.app/",
+        "ready": "complete",
+        "turnstileResponsePresent": false,
+        "webdriver": true
+      },
+      {
+        "time": 1793888564982,
+        "title": "",
+        "url": "https://torbox.app/",
+        "ready": "complete",
+        "turnstileResponsePresent": false,
+        "webdriver": true
+      },
+      {
+        "time": 1793888569993,
+        "title": "",
+        "url": "https://torbox.app/",
+        "ready": "complete",
+        "turnstileResponsePresent": false,
+        "webdriver": true
+      },
+      {
+        "time": 1793888575020,
+        "title": "",
+        "url": "https://torbox.app/",
+        "ready": "complete",
+        "turnstileResponsePresent": false,
+        "webdriver": true
+      },
+      {
+        "time": 1793888580033,
+        "title": "",
+        "url": "https://torbox.app/",
+        "ready": "complete",
+        "turnstileResponsePresent": false,
+        "webdriver": true
+      }
+    ]
+  }
+}

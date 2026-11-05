@@ -1,0 +1,74 @@
+{
+  "sourceFile": "KAN-71/activation-followup/cinnamon-firefox-audit/result.json",
+  "sourceSha256": "897bfc689e7475c998761350c96aa88048e06c2985baeced05c8a41ba5798f3b",
+  "extraction": "exact selected recorded fields; includes real localhost server GET records; no startup ID/token text",
+  "observations": {
+    "product": "firefox",
+    "windowManager": "cinnamon",
+    "input": "synthetic XTest pointer click on independent native GTK LinkButton",
+    "version": {
+      "version": "159.0.1",
+      "buildID": "20261102144711",
+      "parentPid": 39198,
+      "sandbox": 6
+    },
+    "tests": [
+      {
+        "trial": 0,
+        "event": {
+          "monotonic": 3739.608609282,
+          "eventTimestamp": 3739605,
+          "eventType": "<enum GDK_BUTTON_RELEASE of type Gdk.EventType>",
+          "handler": "Gtk.LinkButton default activate-link handler; no fabricated startup ID"
+        },
+        "launcher": {
+          "monotonic": 3739.678491489,
+          "startupIdPresent": true,
+          "startupTimestamp": 3739604,
+          "activationTokenPresent": true
+        },
+        "startupMessages": [
+          {
+            "kind": "new",
+            "startupTimestamp": 3739604,
+            "actualX11StartupMessage": true
+          }
+        ],
+        "before": {
+          "rc": 0,
+          "stdout": "_NET_ACTIVE_WINDOW(WINDOW): window id # 0x2e00003\n",
+          "stderr": ""
+        },
+        "after": {
+          "rc": 0,
+          "stdout": "_NET_ACTIVE_WINDOW(WINDOW): window id # 0x2e00003\n",
+          "stderr": ""
+        },
+        "browserWindowIds": [
+          "44040214"
+        ],
+        "focusedBrowser": false,
+        "requestReceived": true,
+        "originalParentAlive": true,
+        "windowManagerAlive": true
+      }
+    ],
+    "end": {
+      "parentPid": 39198,
+      "urls": [
+        "about:blank",
+        "http://127.0.0.1:18775/cinnamon-firefox-0"
+      ]
+    },
+    "hits": [
+      {
+        "path": "/cinnamon-firefox-0",
+        "time": 3739.982721183
+      },
+      {
+        "path": "/favicon.ico",
+        "time": 3740.069664925
+      }
+    ]
+  }
+}

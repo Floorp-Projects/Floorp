@@ -1,0 +1,68 @@
+{
+  "sourceFile": "KAN-90/integration-result.json",
+  "sourceSha256": "a9109bb0a6628b116b00bb6fd3ce03899bc832a6c47b43683ff676e717748415",
+  "extraction": "field allowlist; selected observation values copied without change; cookie/body/credential fields excluded",
+  "observations": {
+    "sourceSha": "984509d2053be7bae9027133bda7259cd706b208",
+    "environment": "Debian13.6 Xvfb/Openbox private session DBus; Flatpak1.16.6; Thunderbird140.12.0esr",
+    "syntheticInput": true,
+    "floorpLauncherPid": 28650,
+    "floorpStart": {
+      "pid": 2,
+      "version": "159.0.1",
+      "tabs": 1
+    },
+    "portalSelection": "Thunderbird GTK_USE_PORTAL=1 and widget.use-xdg-desktop-portal.open-uri=2; actual OpenURI must be observed",
+    "thunderbirdWindows": [
+      {
+        "title": "Account Setup - Mozilla Thunderbird",
+        "url": "chrome://messenger/content/messenger.xhtml"
+      },
+      {
+        "title": "KAN90 local fixture - Mozilla Thunderbird",
+        "url": "chrome://messenger/content/messageWindow.xhtml"
+      }
+    ],
+    "thunderbirdDom": [
+      {
+        "id": "conv-log-browser",
+        "src": "",
+        "uri": "about:blank"
+      },
+      {
+        "id": "mail3PaneTabBrowser1",
+        "src": "about:3pane",
+        "uri": "about:3pane"
+      },
+      {
+        "id": "contentTabBrowser0",
+        "src": "",
+        "uri": "about:accountsetup"
+      },
+      {
+        "id": "hiddenPrintContent",
+        "src": "",
+        "uri": "about:blank"
+      },
+      {
+        "id": "preferencesbrowser",
+        "src": "",
+        "uri": "about:blank"
+      }
+    ],
+    "hits": [
+      {
+        "time": 1793888732.3139205,
+        "path": "/from-thunderbird"
+      }
+    ],
+    "floorpEnd": {
+      "pid": 2,
+      "version": "159.0.1",
+      "tabs": [
+        "chrome://browser/content/blanktab.html",
+        "http://127.0.0.1:19090/from-thunderbird"
+      ]
+    }
+  }
+}

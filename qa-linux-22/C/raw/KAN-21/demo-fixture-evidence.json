@@ -1,0 +1,9 @@
+{
+  "sourceFile": "/workspace/qa-linux-22/C/web-tools/turnstile-demo-source.html",
+  "sourceSha256": "b64bf2b96edbe6d377a5f90a3a1569f6509d402948f74f324aa4dd47de26c00d",
+  "publicUrl": "https://demo.turnstile.workers.dev",
+  "sitekeyExcerpt": [
+    "      <div class=\"cf-turnstile\" data-sitekey=\"1x00000000000000000000AA\" data-theme=\"light\"></div>"
+  ],
+  "meaning": "public always-pass test key; not a live authentication result"
+}
