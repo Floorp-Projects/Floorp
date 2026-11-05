@@ -212,6 +212,72 @@ async function testLinuxLegacyIdsKeepFallbackWindowClasses(): Promise<void> {
   }
 }
 
+async function testLinuxPwaStartupKeepsOrdinaryBrowserIdentity(): Promise<
+  void
+> {
+  const { LinuxSupport } = ChromeUtils.importESModule(
+    "resource://noraneko/modules/pwa/supports/Linux.sys.mjs",
+  ) as typeof import("../supports/Linux.sys.mts");
+  const { SsbRunnerUtils } = ChromeUtils.importESModule(
+    "resource://noraneko/modules/pwa/SsbCommandLineHandler.sys.mjs",
+  ) as typeof import("../SsbCommandLineHandler.sys.mts");
+  const { BrowserWindowTracker } = ChromeUtils.importESModule(
+    "resource:///modules/BrowserWindowTracker.sys.mjs",
+  );
+  const { AppConstants } = ChromeUtils.importESModule(
+    "resource://gre/modules/AppConstants.sys.mjs",
+  );
+  const category =
+    "browser-window-before-initial-xul-layout-document-preparation";
+  const entry = "resource://noraneko/modules/pwa/supports/Linux.sys.mjs";
+  let previous: string | undefined;
+  try {
+    previous = Services.catMan.getCategoryEntry(category, entry);
+  } catch {
+    // Ordinary browser-first processes have no PWA startup registration.
+  }
+  const windows: { close(): void }[] = [];
+  try {
+    LinuxSupport.registerBrowserWindowIdentity();
+    const args = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
+    const url = Cc["@mozilla.org/supports-string;1"].createInstance(
+      Ci.nsISupportsString,
+    );
+    url.data = "about:blank";
+    args.appendElement(url);
+    const browser = await BrowserWindowTracker.promiseOpenWindow({ args });
+    windows.push(browser);
+    const appInfo = Services.appinfo as typeof Services.appinfo & {
+      readonly remotingName?: string;
+    };
+    assertEquals(
+      browser.document.documentElement.getAttribute("windowclass"),
+      appInfo.remotingName || AppConstants.MOZ_APP_NAME,
+      "The pre-layout category gives ordinary windows the browser identity",
+    );
+    const app = {
+      id: Services.uuid.generateUUID().toString(),
+      name: "Browser Identity Regression",
+      start_url: "about:blank",
+      icon: "",
+    };
+    const pwa = await SsbRunnerUtils.openSsbWindow(app);
+    windows.push(pwa);
+    assertEquals(
+      pwa.document.documentElement.getAttribute("windowclass"),
+      LinuxSupport.getWindowClass(app),
+      "Browser identity preparation preserves the PWA launcher identity",
+    );
+  } finally {
+    for (const win of windows) win.close();
+    if (previous === undefined) {
+      Services.catMan.deleteCategoryEntry(category, entry, false);
+    } else {
+      Services.catMan.addCategoryEntry(category, entry, previous, false, true);
+    }
+  }
+}
+
 export async function runAllTests(): Promise<void> {
   if (Services.appinfo.OS !== "Linux") {
     console.info(
@@ -230,5 +296,9 @@ export async function runAllTests(): Promise<void> {
     name:
       "Linux PWA legacy ids retain fallback classes without failing startup",
     fn: testLinuxLegacyIdsKeepFallbackWindowClasses,
+  }, {
+    name:
+      "Linux PWA startup keeps ordinary browser and PWA identities separate",
+    fn: testLinuxPwaStartupKeepsOrdinaryBrowserIdentity,
   }]);
 }
