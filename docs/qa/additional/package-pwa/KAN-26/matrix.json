@@ -97,6 +97,22 @@
       "completeCandidate": 88,
       "normalSupplementBaseline": 9,
       "normalSupplementCandidate": 9
-    }
+    },
+    "qaEvidenceCommit": "481c53f308f7c133d53de614e01e153faf1b22c9",
+    "jiraLabels": [
+      "area-tabs",
+      "draft-pr",
+      "floorp-stability-2026-11",
+      "full-package-verified",
+      "needs-collapsed-vertical",
+      "needs-high-dpi",
+      "needs-original-windows-repro",
+      "needs-physical-gpu",
+      "p3",
+      "qa-linux-executed",
+      "related-pr-3048",
+      "reproduced-in-test",
+      "triage-reviewed"
+    ]
   }
 ]

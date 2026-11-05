@@ -16,5 +16,20 @@
     "needs-collapsed-vertical"
   ],
   "reason": "Exact complete final-head candidate executed with176/176identity indicators; initial strict normal comparison retained and supplemented9matchedconditions. OriginalWindows/hardware/collapsedqualification not met. Preserve all other labels and status.",
-  "applied": false
+  "applied": true,
+  "actualLabels": [
+    "area-tabs",
+    "draft-pr",
+    "floorp-stability-2026-11",
+    "full-package-verified",
+    "needs-collapsed-vertical",
+    "needs-high-dpi",
+    "needs-original-windows-repro",
+    "needs-physical-gpu",
+    "p3",
+    "qa-linux-executed",
+    "related-pr-3048",
+    "reproduced-in-test",
+    "triage-reviewed"
+  ]
 }
