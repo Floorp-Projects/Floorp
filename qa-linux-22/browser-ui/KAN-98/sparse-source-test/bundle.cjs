@@ -1,0 +1,3 @@
+const fs=require('fs'),path=require('path'),esbuild=require('/workspace/Floorp/node_modules/.deno/esbuild@0.27.7/node_modules/esbuild/lib/main.js');
+const dir='/workspace/floorp-kan98-sparse/browser-features/chrome/common/mouse-gesture';
+esbuild.build({entryPoints:[dir+'/test/mouseGestureRecognizer.test.ts'],bundle:true,format:'iife',globalName:'qaSparseTests',outfile:process.argv[2],plugins:process.env.QA_SPARSE_ORIGINAL?[{name:'baseline-recognizer',setup(b){b.onLoad({filter:/\/utils\/recognizer\.ts$/},a=>({contents:fs.readFileSync('/workspace/qa-linux-22/browser-ui/KAN-98/sparse-source-test/original-recognizer.ts','utf8'),loader:'ts',resolveDir:path.dirname(a.path)}))}}]:[]}).catch(e=>{console.error(e);process.exit(1)});

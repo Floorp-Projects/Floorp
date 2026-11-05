@@ -1,0 +1,14 @@
+{
+  "scenario": "layout-and-w3c-click",
+  "input": "synthetic W3C pointer, not physical",
+  "observations": [],
+  "product": {
+    "name": "Floorp",
+    "version": "159.0.1",
+    "build": "20261103153232",
+    "os": "Linux"
+  },
+  "error": "SyntaxError: unexpected token: identifier\nstacktrace:\n\tevaluate.sandbox/promise<@chrome://remote/content/marionette/evaluate.sys.mjs:127:10\n\tevaluate.sandbox@chrome://remote/content/marionette/evaluate.sys.mjs:103:17\n\texecuteScript@chrome://remote/content/marionette/actors/MarionetteCommandsChild.sys.mjs:358:26\n\treceiveMessage@chrome://remote/content/marionette/actors/MarionetteCommandsChild.sys.mjs:214:31\n",
+  "traceback": "Traceback (most recent call last):\n  File \"/workspace/qa-linux-22/browser-ui/KAN-3/layout-probe.py\", line 15, in <module>\n    js('''window.qaSets=[];\n  File \"/workspace/qa-linux-22/browser-ui/KAN-3/layout-probe.py\", line 9, in js\n    def js(code, args=None): return m.execute_script(code, script_args=args or [])\n                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/workspace/qa-linux-22/browser-ui/python/marionette_driver/marionette.py\", line 1889, in execute_script\n    rv = self._send_message(\"WebDriver:ExecuteScript\", body, key=\"value\")\n         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/workspace/qa-linux-22/browser-ui/python/marionette_driver/decorators.py\", line 24, in _\n    return func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File \"/workspace/qa-linux-22/browser-ui/python/marionette_driver/marionette.py\", line 780, in _send_message\n    self._handle_error(err)\n  File \"/workspace/qa-linux-22/browser-ui/python/marionette_driver/marionette.py\", line 792, in _handle_error\n    raise errors.lookup(error)(message, stacktrace=stacktrace)\nmarionette_driver.errors.JavascriptException: SyntaxError: unexpected token: identifier\nstacktrace:\n\tevaluate.sandbox/promise<@chrome://remote/content/marionette/evaluate.sys.mjs:127:10\n\tevaluate.sandbox@chrome://remote/content/marionette/evaluate.sys.mjs:103:17\n\texecuteScript@chrome://remote/content/marionette/actors/MarionetteCommandsChild.sys.mjs:358:26\n\treceiveMessage@chrome://remote/content/marionette/actors/MarionetteCommandsChild.sys.mjs:214:31\n\n",
+  "passed": false
+}

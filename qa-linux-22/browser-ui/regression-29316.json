@@ -1,0 +1,57 @@
+{
+  "scenario": "regression",
+  "product": {
+    "version": "159.0.1",
+    "build": "20261103153232",
+    "name": "Floorp",
+    "os": "Linux"
+  },
+  "observations": [
+    {
+      "passed": false,
+      "error": "Error: splitViewAdoption.test.ts failures: split group preserves loaded panes across a window round trip: moving a split group must preserve both loaded documents (expected: QA moved 0\nQA moved 1, actual: QA moved 0\n)",
+      "stack": "runTests@qa-linux-22/browser-ui/KAN-3/regression-probe.py:94:13\n"
+    }
+  ],
+  "graphics": {
+    "windowProtocol": "x11",
+    "compositing": "WebRender (Software)",
+    "keys": [
+      "desktopEnvironment",
+      "numTotalWindows",
+      "numAcceleratedWindows",
+      "windowLayerManagerType",
+      "windowLayerManagerRemote",
+      "graphicsDevicePixelRatios",
+      "adapterDescription",
+      "adapterVendorID",
+      "adapterDeviceID",
+      "adapterRAM",
+      "adapterDrivers",
+      "driverVendor",
+      "driverVersion",
+      "driverDate",
+      "adapterVendorID2",
+      "adapterDeviceID2",
+      "isGPU2Active",
+      "targetFrameRate",
+      "windowProtocol",
+      "supportFontDetermination",
+      "webgl1Renderer",
+      "webgl1Version",
+      "webgl1DriverExtensions",
+      "webgl1Extensions",
+      "webgl1WSIInfo",
+      "webgl2Renderer",
+      "webgl2Version",
+      "webgl2DriverExtensions",
+      "webgl2Extensions",
+      "webgl2WSIInfo",
+      "info",
+      "featureLog",
+      "crashGuards",
+      "webgpuDefaultAdapter",
+      "webgpuFallbackAdapter"
+    ]
+  }
+}

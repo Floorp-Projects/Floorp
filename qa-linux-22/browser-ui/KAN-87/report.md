@@ -23,3 +23,7 @@ Source: `984509d2053be7bae9027133bda7259cd706b208`。公式Floorp12.21.1 / Gecko
 - `../KAN-87/zen-1.png`
 
 状態・Sprint所属・Doneは変更しない。
+
+Jira追記comment ID: `10289`。needs-linuxは実試験によりlinux-testedへ置換し、原ディストリ/物理入力の具体条件とenv-blockedは保持。
+
+Jira最終comment ID: `10289`。

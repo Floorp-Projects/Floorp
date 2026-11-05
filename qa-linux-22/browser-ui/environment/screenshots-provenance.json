@@ -1,0 +1,15 @@
+{
+  "KAN-3/before,moved,returned.png": "Fedora44 container/host Xvfb; split-29412.json (fixed names overwritten)",
+  "KAN-5/detach.png": "Fedora44 container; detach-29412.json",
+  "KAN-5/desktop-before,desktop-after.png": "Debian13.6 Xvfb; OS XTest desktop-drag-29290.json",
+  "KAN-40/before,after.png": "Fedora44 container; latest successful middle-29413.json (prior 29411 also passed)",
+  "KAN-39/stack.png": "Fedora44 container; wheel-29411.json",
+  "KAN-39/os-*.png": "Debian13.6 Xvfb; wheel-os-29296.json",
+  "KAN-29/layout-*.png": "Debian KWin nested Wayland; layout-29289.json",
+  "KAN-54/controls-*.png": "Debian KWin nested Wayland; controls-29289.json",
+  "KAN-87/zen-*.png": "Debian KWin nested Wayland; visual-29297.json",
+  "KAN-93/Floorp-chrome-*.png": "Debian KWin nested Wayland; visual-29297.json",
+  "KAN-93/Firefox-chrome-*.png": "Debian KWin nested Wayland; visual-29295.json",
+  "KAN-31/<port>-*.png": "29291 Floorp Debian;29292 Firefox Debian;29411 Floorp Fedora44 container",
+  "KAN-98": "Fixed-name initial gesture shots reflect local patched product run; port-named later files identify density/sparse trial. JSON is primary before/after evidence."
+}

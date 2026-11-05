@@ -1,3 +1,5 @@
+Current Drafts: [#3031](https://github.com/Floorp-Projects/Floorp/pull/3031) and [#3034](https://github.com/Floorp-Projects/Floorp/pull/3034).
+
 # KAN-98 / GitHub #2244: returning gestures rejected before recognition
 
 Source baseline: `984509d2053be7bae9027133bda7259cd706b208`.
@@ -28,7 +30,7 @@ The browser source-test bundle uses the real controller, configuration, recogniz
 
 ## Remaining conditions
 
-A configured right-down gesture remained unfired before and after this limited fix, with no action label. Its pattern/action is present in the captured config, so this is not a missing mapping. Its cause is not established; sparse initial pointer samples and initial-direction sampling are a candidate. The returning-gesture fix does not claim to resolve every multipart gesture. Physical input, Arch/Sway/Wayland, varying DPI, and complete native CI remain unverified. Keep KAN-98 open; do not mark all Linux/Wayland conditions satisfied.
+The separate sparse-input recognizer defect is now addressed in independent Draft #3034 (e6f2dbe7). See sparse-fix-report.md: 63 recognizer cases pass, baseline fails the two new cases, and deterministic sparse W3C product comparisons fail 6/6 before and pass 6/6 after. Neither PR closes KAN-98. Physical input, Arch/Sway/Wayland, varying DPI, full production builds and PR3034 full CI remain open. PR3031 full Ubuntu CI passed 281 modules/0 failed plus16 Firefox tasks; its artifact digest and contents were verified.
 
 ## Reproduction files
 
@@ -39,3 +41,11 @@ A configured right-down gesture remained unfired before and after this limited f
 - `../source-29312.json`, `../source-29313.json`: exact browser test results; `../gesture-29301.json`, `../gesture-29314.json`: W3C observations.
 
 Existing merged #2212/#2642/#2763 address other gesture behavior and do not remove this displacement gate in the pinned main source.
+
+Jira追記comment ID: `10291`。needs-linuxは実試験によりlinux-testedへ置換し、原ディストリ/物理入力の具体条件とenv-blockedは保持。
+
+## Right-down follow-up
+
+See `rightdown-followup.md`: an additional fresh-profile comparison succeeded for right-down at sparse100ms, sparse800ms, and dense10px input (each3/3), plus single-up3/3. Replaying earlier failure and fresh success traces in Gecko identifies sample-sensitive first-direction/sequence recognition: initial sparse jumps skip the 10–50px sample band, producing a diagonal initial direction and null match. Configuration was present. This is outside #3031 and original physical Arch/Sway/Wayland behavior remains unverified.
+
+Jira最終comment ID: `10291`。

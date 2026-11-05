@@ -1,0 +1,13 @@
+{
+  "passed": false,
+  "error": "Error: mouseGestureRecognizer.test.ts failures: sparse initial direction retains the first leg: retain sparse first leg: expected=right-down actual=undefined | sparse direction variants ignore initial jitter: ignore initial jitter: expected=right-down actual=undefined",
+  "stack": "runTests@qa-linux-22/browser-ui/kan98-sparse-tests.py:1761:13\n",
+  "progress": {
+    "moduleName": "mouseGestureRecognizer.test.ts",
+    "testName": "",
+    "status": "done",
+    "index": 63,
+    "total": 63,
+    "startedAtMs": 1793889804601
+  }
+}

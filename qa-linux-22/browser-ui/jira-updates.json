@@ -1,0 +1,250 @@
+[
+  {
+    "key": "KAN-5",
+    "commentId": "10283",
+    "labels": {
+      "old": [
+        "area-tabs",
+        "env-blocked",
+        "floorp-stability-2026-11",
+        "needs-flatpak",
+        "needs-linux",
+        "needs-repro",
+        "needs-spec",
+        "p2",
+        "triage-reviewed"
+      ],
+      "labels": [
+        "area-tabs",
+        "env-blocked",
+        "floorp-stability-2026-11",
+        "needs-flatpak",
+        "needs-repro",
+        "needs-spec",
+        "p2",
+        "triage-reviewed",
+        "linux-tested",
+        "needs-fedora-44",
+        "needs-physical-drag"
+      ],
+      "error": false
+    }
+  },
+  {
+    "key": "KAN-29",
+    "commentId": "10284",
+    "labels": {
+      "old": [
+        "area-tabs",
+        "env-blocked",
+        "floorp-stability-2026-11",
+        "needs-flatpak",
+        "needs-linux",
+        "needs-repro",
+        "p2",
+        "triage-reviewed"
+      ],
+      "labels": [
+        "area-tabs",
+        "env-blocked",
+        "floorp-stability-2026-11",
+        "needs-flatpak",
+        "needs-repro",
+        "p2",
+        "triage-reviewed",
+        "linux-tested",
+        "needs-cachyos",
+        "needs-panel-open"
+      ],
+      "error": false
+    }
+  },
+  {
+    "key": "KAN-31",
+    "commentId": "10285",
+    "labels": {
+      "old": [
+        "area-ui",
+        "env-blocked",
+        "floorp-stability-2026-11",
+        "needs-fedora-44",
+        "needs-linux",
+        "needs-repro",
+        "p2",
+        "triage-reviewed"
+      ],
+      "labels": [
+        "area-ui",
+        "env-blocked",
+        "floorp-stability-2026-11",
+        "needs-fedora-44",
+        "needs-repro",
+        "p2",
+        "triage-reviewed",
+        "linux-tested"
+      ],
+      "error": false
+    }
+  },
+  {
+    "key": "KAN-39",
+    "commentId": "10286",
+    "labels": {
+      "old": [
+        "area-tabs",
+        "env-blocked",
+        "floorp-stability-2026-11",
+        "needs-linux",
+        "needs-repro",
+        "p2",
+        "triage-reviewed"
+      ],
+      "labels": [
+        "area-tabs",
+        "env-blocked",
+        "floorp-stability-2026-11",
+        "needs-repro",
+        "p2",
+        "triage-reviewed",
+        "linux-tested",
+        "needs-fedora-44",
+        "needs-physical-wheel"
+      ],
+      "error": false
+    }
+  },
+  {
+    "key": "KAN-40",
+    "commentId": "10287",
+    "labels": {
+      "old": [
+        "area-tabs",
+        "env-blocked",
+        "floorp-stability-2026-11",
+        "needs-linux",
+        "needs-repro",
+        "p2",
+        "triage-reviewed"
+      ],
+      "labels": [
+        "area-tabs",
+        "env-blocked",
+        "floorp-stability-2026-11",
+        "needs-repro",
+        "p2",
+        "triage-reviewed",
+        "linux-tested",
+        "needs-fedora-44",
+        "needs-physical-middleclick"
+      ],
+      "error": false
+    }
+  },
+  {
+    "key": "KAN-54",
+    "commentId": "10288",
+    "labels": {
+      "old": [
+        "area-ui",
+        "backlog-deferred",
+        "env-blocked",
+        "floorp-github-import-2026-11",
+        "needs-linux",
+        "needs-spec",
+        "p3",
+        "triage-reviewed"
+      ],
+      "labels": [
+        "area-ui",
+        "backlog-deferred",
+        "env-blocked",
+        "floorp-github-import-2026-11",
+        "needs-spec",
+        "p3",
+        "triage-reviewed",
+        "linux-tested",
+        "needs-manjaro-plasma"
+      ],
+      "error": false
+    }
+  },
+  {
+    "key": "KAN-87",
+    "commentId": "10289",
+    "labels": {
+      "old": [
+        "area-ui",
+        "env-blocked",
+        "floorp-github-import-2026-11",
+        "needs-linux",
+        "needs-repro",
+        "p2",
+        "triage-reviewed"
+      ],
+      "labels": [
+        "area-ui",
+        "env-blocked",
+        "floorp-github-import-2026-11",
+        "needs-repro",
+        "p2",
+        "triage-reviewed",
+        "linux-tested",
+        "needs-niri",
+        "needs-right-panel-reveal"
+      ],
+      "error": false
+    }
+  },
+  {
+    "key": "KAN-93",
+    "commentId": "10290",
+    "labels": {
+      "old": [
+        "area-ui",
+        "env-blocked",
+        "floorp-github-import-2026-11",
+        "needs-linux",
+        "needs-repro",
+        "p2",
+        "triage-reviewed"
+      ],
+      "labels": [
+        "area-ui",
+        "env-blocked",
+        "floorp-github-import-2026-11",
+        "needs-repro",
+        "p2",
+        "triage-reviewed",
+        "linux-tested",
+        "needs-kde-neon"
+      ],
+      "error": false
+    }
+  },
+  {
+    "key": "KAN-98",
+    "commentId": "10291",
+    "labels": {
+      "old": [
+        "area-ui",
+        "env-blocked",
+        "floorp-github-import-2026-11",
+        "needs-linux",
+        "needs-repro",
+        "p2",
+        "triage-reviewed"
+      ],
+      "labels": [
+        "area-ui",
+        "env-blocked",
+        "floorp-github-import-2026-11",
+        "p2",
+        "triage-reviewed",
+        "linux-tested",
+        "needs-arch-sway-wayland",
+        "reproduced"
+      ],
+      "error": false
+    }
+  }
+]

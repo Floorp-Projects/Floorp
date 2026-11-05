@@ -7,24 +7,43 @@
       "floorp": "12.21.1 / Gecko159.0.1 / BuildID20261103153232",
       "firefox": "159.0.1 / BuildID20261102144711"
     },
-    "environment": "Debian13.6 x86_64, Xvfb :92, isolated DBus; KWin6.3.6 nested Wayland for visual/layout/controls; software WebRender",
+    "environment": "Debian13.6 x86_64, Xvfb :92, isolated DBus; KWin6.3.6 nested Wayland for visual/layout/controls; software WebRender; additional Fedora44 Container Image userland on shared host kernel, host Xvfb/X11 (not original Fedora desktop)",
     "testCommand": "PYTHONPATH=python python3 run.py floorp 29284 split",
-    "result": "実再現・Floorp固有CSS経路",
-    "observations": "2組のnative splitを作成し、一組をreplaceGroupWithWindow→adoptTabGroup。移動先の最後と復帰後2枚のtitleが空。Firefox159.0.1は同手順で全titleを保持。",
+    "result": "実再現・CSS欠陥修正Draft",
+    "observations": "2組のnative splitを作成し、一組をreplaceGroupWithWindow→adoptTabGroup。移動先の最後と復帰後2枚のtitleが空。Firefox159.0.1は同手順で全titleを保持。 原CSSのsource回帰は失敗、修正CSSでtitle/URL保持に成功。Fedora44 Container Imageの公式製品でも同じ移動先・帰還title空化を再現。 Fedora44 container追加試験済（hostのXvfb使用・Flatpakではない）。 非currentのlayout/hit/selected状態8組と14回W3Cクリック成功。移動前後のsplit↔split→normal→split復帰を検証。",
     "remainingConditions": [
-      "Fedora44/物理ドラッグ/メニュー操作",
-      "CSS修正の回帰試験と正式ビルド"
+      "元Fedora desktop/package・物理ドラッグ/メニュー",
+      "native Wayland adoption",
+      "full production build",
+      "追加test head e7dda31fの標準CI（初期headの282modules CIは成功）"
     ],
     "existingPr": null,
-    "newPr": null,
-    "jiraCommentId": null,
+    "newPr": "https://github.com/Floorp-Projects/Floorp/pull/3033",
+    "jiraCommentId": "10294",
     "evidence": [
       "split-29285.json",
       "split-29286.json",
       "KAN-3/before.png",
-      "KAN-3/returned.png"
+      "KAN-3/returned.png",
+      "regression-29315.json",
+      "regression-29316.json",
+      "regression-29317.json",
+      "split-29412.json",
+      "KAN-3/build-test.cjs",
+      "layout-29424.json",
+      "regression-29426.json",
+      "KAN-3/layout-probe.py",
+      "ci/summary.json"
     ],
-    "sprintScope": "KAN-1"
+    "sprintScope": "KAN-1",
+    "fixCommit": "1a75d15d2925c9d5bf58964505937d07a35df54c",
+    "testCommit": "e7dda31f660bb865c2ea8a505ece44875796970f",
+    "ci": {
+      "firstHead": "1a75d15d",
+      "firstHeadBrowserModulesPassed": 282,
+      "latestHead": "e7dda31f",
+      "latestStatus": "queued_at_snapshot"
+    }
   },
   {
     "key": "KAN-5",
@@ -34,23 +53,24 @@
       "floorp": "12.21.1 / Gecko159.0.1 / BuildID20261103153232",
       "firefox": "159.0.1 / BuildID20261102144711"
     },
-    "environment": "Debian13.6 x86_64, Xvfb :92, isolated DBus; KWin6.3.6 nested Wayland for visual/layout/controls; software WebRender",
+    "environment": "Debian13.6 x86_64, Xvfb :92, isolated DBus; KWin6.3.6 nested Wayland for visual/layout/controls; software WebRender; additional Fedora44 Container Image userland on shared host kernel, host Xvfb/X11 (not original Fedora desktop)",
     "testCommand": "PYTHONPATH=python python3 run.py floorp 29284 desktop-drag",
     "result": "限定条件で未再現・既存修正と整合",
-    "observations": "native detach/adoptはURL/titleを保持。OS XTestでstack proxyを窓外へドラッグすると実dragstart/dragendを経て1タブだけ新規窓へ移動し、他2枚は元窓に残った。",
+    "observations": "native detach/adoptはURL/titleを保持。OS XTestでstack proxyを窓外へドラッグすると実dragstart/dragendを経て1タブだけ新規窓へ移動し、他2枚は元窓に残った。 Fedora44 container追加試験済（hostのXvfb使用・Flatpakではない）。",
     "remainingConditions": [
-      "Fedora44/Flatpak",
+      "Fedora44実desktop/元package/Flatpak",
       "物理入力",
       "既存窓へのproxyドラッグ（native adoptのみ実施）"
     ],
     "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2763",
     "newPr": null,
-    "jiraCommentId": null,
+    "jiraCommentId": "10283",
     "evidence": [
       "detach-29285.json",
       "desktop-drag-29290.json",
       "KAN-5/desktop-before.png",
-      "KAN-5/desktop-after.png"
+      "KAN-5/desktop-after.png",
+      "detach-29412.json"
     ],
     "sprintScope": "KAN-1"
   },
@@ -63,7 +83,7 @@
       "firefox": "159.0.1 / BuildID20261102144711"
     },
     "environment": "Debian13.6 x86_64, Xvfb :92, isolated DBus; KWin6.3.6 nested Wayland for visual/layout/controls; software WebRender",
-    "testCommand": "PYTHONPATH=python python3 run.py floorp 29284 layout",
+    "testCommand": "dbus-run-session -- bash nested.sh (isolated KWin + Floorp visual/controls/layout)",
     "result": "限定条件で未再現",
     "observations": "KWin nested Wayland、LTR、縦タブhoverとpanel rail左右4組合せを測定。展開後の5標本中、遷移後は幅253.33pxと端位置が安定。panel本体は閉じた条件。",
     "remainingConditions": [
@@ -73,7 +93,7 @@
     ],
     "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2877",
     "newPr": null,
-    "jiraCommentId": null,
+    "jiraCommentId": "10284",
     "evidence": [
       "layout-29289.json",
       "KAN-29/layout-False-True.png"
@@ -88,22 +108,25 @@
       "floorp": "12.21.1 / Gecko159.0.1 / BuildID20261103153232",
       "firefox": "159.0.1 / BuildID20261102144711"
     },
-    "environment": "Debian13.6 x86_64, Xvfb :92, isolated DBus; KWin6.3.6 nested Wayland for visual/layout/controls; software WebRender",
+    "environment": "Debian13.6 x86_64, Xvfb :92, isolated DBus; KWin6.3.6 nested Wayland for visual/layout/controls; software WebRender; additional Fedora44 Container Image userland on shared host kernel, host Xvfb/X11 (not original Fedora desktop)",
     "testCommand": "PYTHONPATH=python python3 run.py floorp 29284 search",
     "result": "限定条件で未再現",
-    "observations": "新規profileで標準about:preferences初回proxy検索にW3Cキー入力。初回から接続設定カードを画面確認。正しい#connectionSecurity訪問後も結果保持。Firefox159.0.1も同様。初期治具の誤URL#connectionはsyncに戻ったため、その試行を最終比較から除外。",
+    "observations": "新規profileで標準about:preferences初回proxy検索にW3Cキー入力。初回から接続設定カードを画面確認。正しい#connectionSecurity訪問後も結果保持。Firefox159.0.1も同様。初期治具の誤URL#connectionはsyncに戻ったため、その試行を最終比較から除外。 Fedora44 container追加試験済（hostのXvfb使用・Flatpakではない）。",
     "remainingConditions": [
-      "Fedora44/元配布形式",
+      "Fedora44実desktop/元package/元配布形式",
       "起動直後のより早期入力/他言語"
     ],
     "existingPr": null,
     "newPr": null,
-    "jiraCommentId": null,
+    "jiraCommentId": "10285",
     "evidence": [
       "search-29291.json",
       "search-29292.json",
       "KAN-31/29291-first.png",
-      "KAN-31/29292-first.png"
+      "KAN-31/29292-first.png",
+      "search-29411.json",
+      "KAN-31/29411-first.png",
+      "KAN-31/29411-after.png"
     ],
     "sprintScope": "KAN-1"
   },
@@ -115,22 +138,23 @@
       "floorp": "12.21.1 / Gecko159.0.1 / BuildID20261103153232",
       "firefox": "159.0.1 / BuildID20261102144711"
     },
-    "environment": "Debian13.6 x86_64, Xvfb :92, isolated DBus; KWin6.3.6 nested Wayland for visual/layout/controls; software WebRender",
+    "environment": "Debian13.6 x86_64, Xvfb :92, isolated DBus; KWin6.3.6 nested Wayland for visual/layout/controls; software WebRender; additional Fedora44 Container Image userland on shared host kernel, host Xvfb/X11 (not original Fedora desktop)",
     "testCommand": "PYTHONPATH=python python3 run.py floorp 29284 wheel",
     "result": "正規化実測・原症状の解消は未確定",
-    "observations": "30タブstackで合成pixel120→120px、line1→84.87px、page1→1181px。OS XTest1ノッチはdeltaMode1/deltaY±6、stackは約509.2px移動。通常tabbarでは同入力が届いたが位置不変で、公平な速度比較は成立していない。",
+    "observations": "30タブstackで合成pixel120→120px、line1→84.87px、page1→1181px。OS XTest1ノッチはdeltaMode1/deltaY±6、stackは約509.2px移動。通常tabbarでは同入力が届いたが位置不変で、公平な速度比較は成立していない。 Fedora44 container追加試験済（hostのXvfb使用・Flatpakではない）。 Fedora44でもpixel120→120px、line1→86.03px、page1→1181px。",
     "remainingConditions": [
-      "Fedora44/物理wheel・DPI/加速",
+      "Fedora44実desktop/元package/物理wheel・DPI/加速",
       "通常tabbarとの有効な同入力距離比較"
     ],
     "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2763",
     "newPr": null,
-    "jiraCommentId": null,
+    "jiraCommentId": "10286",
     "evidence": [
       "wheel-29284.json",
       "wheel-os-29296.json",
       "KAN-39/harness-at-end.json",
-      "KAN-39/stack.png"
+      "KAN-39/stack.png",
+      "wheel-29411.json"
     ],
     "sprintScope": "KAN-1"
   },
@@ -142,21 +166,22 @@
       "floorp": "12.21.1 / Gecko159.0.1 / BuildID20261103153232",
       "firefox": "159.0.1 / BuildID20261102144711"
     },
-    "environment": "Debian13.6 x86_64, Xvfb :92, isolated DBus; KWin6.3.6 nested Wayland for visual/layout/controls; software WebRender",
+    "environment": "Debian13.6 x86_64, Xvfb :92, isolated DBus; KWin6.3.6 nested Wayland for visual/layout/controls; software WebRender; additional Fedora44 Container Image userland on shared host kernel, host Xvfb/X11 (not original Fedora desktop)",
     "testCommand": "PYTHONPATH=python python3 run.py floorp 29284 middle",
     "result": "限定条件で未再現・既存修正と整合",
-    "observations": "3枚stackにW3C pointer中ボタンdown/up。非選択memberのみ閉じ選択保持、続いて選択memberを閉じ残り1枚へ選択移動。画面とDOMを保存。",
+    "observations": "3枚stackにW3C pointer中ボタンdown/up。非選択memberのみ閉じ選択保持、続いて選択memberを閉じ残り1枚へ選択移動。画面とDOMを保存。 Fedora44 container追加試験済（hostのXvfb使用・Flatpakではない）。",
     "remainingConditions": [
-      "Fedora44/Flatpak/物理中クリック",
+      "Fedora44実desktop/元package/Flatpak/物理中クリック",
       "通常タブ・stack全体中クリックの追加対照"
     ],
     "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2763",
     "newPr": null,
-    "jiraCommentId": null,
+    "jiraCommentId": "10287",
     "evidence": [
       "middle-29284.json",
       "KAN-40/before.png",
-      "KAN-40/after.png"
+      "KAN-40/after.png",
+      "middle-29411.json"
     ],
     "sprintScope": "KAN-1"
   },
@@ -169,7 +194,7 @@
       "firefox": "159.0.1 / BuildID20261102144711"
     },
     "environment": "Debian13.6 x86_64, Xvfb :92, isolated DBus; KWin6.3.6 nested Wayland for visual/layout/controls; software WebRender",
-    "testCommand": "PYTHONPATH=python python3 run.py floorp 29284 controls",
+    "testCommand": "dbus-run-session -- bash nested.sh (isolated KWin + Floorp visual/controls/layout)",
     "result": "表示重複を実観測・Sprint対象外",
     "observations": "KWin nested Wayland/Lepton、標準menu表示、horizontal/multirow×inTitlebar0/1を比較。multirow+inTitlebar1でmenuとtabbarに各1つのclose群を画面確認。horizontalはmenu側のみ。実画面にmin/maxは出ないnested条件。仕様違反とは未判定。",
     "remainingConditions": [
@@ -178,7 +203,7 @@
     ],
     "existingPr": null,
     "newPr": null,
-    "jiraCommentId": null,
+    "jiraCommentId": "10288",
     "evidence": [
       "controls-29289.json",
       "KAN-54/controls-multirow-1.png",
@@ -195,21 +220,22 @@
       "firefox": "159.0.1 / BuildID20261102144711"
     },
     "environment": "Debian13.6 x86_64, Xvfb :92, isolated DBus; KWin6.3.6 nested Wayland for visual/layout/controls; software WebRender",
-    "testCommand": "PYTHONPATH=python python3 run.py floorp 29284 visual",
+    "testCommand": "dbus-run-session -- bash nested-floorp-final.sh; dbus-run-session -- bash nested-firefox.sh",
     "result": "限定条件で未再現・既存修正と整合",
-    "observations": "XvfbとKWin nested Waylandでlight/dark、normal/Zenを比較。Zenのnavigator-toolboxはalpha1の背景（light rgb235,235,237）で、カラフルなページ上でも背景が透けない画面を確認。右側panel railは同時表示。",
+    "observations": "XvfbとKWin nested Waylandでlight/dark、normal/Zenを比較。Zenのnavigator-toolboxはalpha1の背景（light rgb235,235,237）で、カラフルなページ上でも背景が透けない画面を確認。右側panel railは同時表示。 Floorp自身のTroubleshootからwindowProtocol=waylandを実測。",
     "remainingConditions": [
       "CachyOS/Niri/Hyprland/MangoWM",
       "右panel本体の同時reveal/画像theme"
     ],
     "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2767",
     "newPr": null,
-    "jiraCommentId": null,
+    "jiraCommentId": "10289",
     "evidence": [
       "visual-29285.json",
       "visual-29289.json",
       "KAN-87/zen-0.png",
-      "KAN-87/zen-1.png"
+      "KAN-87/zen-1.png",
+      "visual-29297.json"
     ],
     "sprintScope": "KAN-1"
   },
@@ -222,21 +248,22 @@
       "firefox": "159.0.1 / BuildID20261102144711"
     },
     "environment": "Debian13.6 x86_64, Xvfb :92, isolated DBus; KWin6.3.6 nested Wayland for visual/layout/controls; software WebRender",
-    "testCommand": "PYTHONPATH=python python3 run.py floorp 29284 visual",
+    "testCommand": "dbus-run-session -- bash nested-floorp-final.sh; dbus-run-session -- bash nested-firefox.sh",
     "result": "限定条件で未再現",
-    "observations": "KWin nested WaylandのFloorpとFirefox159.0.1でlight/darkのchrome色・opacity・画面を比較。lightは文字rgb47,47,52/opacity1、nav白背景。薄い文字・iconの原症状は見られない。Firefoxはstock theme対照でありFirefox154+Leptonではない。",
+    "observations": "KWin nested WaylandのFloorpとFirefox159.0.1でlight/darkのchrome色・opacity・画面を比較。lightは文字rgb47,47,52/opacity1、nav白背景。薄い文字・iconの原症状は見られない。Firefoxはstock theme対照でありFirefox154+Leptonではない。 Floorp自身のTroubleshootからwindowProtocol=waylandを実測。",
     "remainingConditions": [
       "KDE Neon/実theme・accent・font条件",
       "元版12.17.1/Firefox154+Lepton"
     ],
     "existingPr": null,
     "newPr": null,
-    "jiraCommentId": null,
+    "jiraCommentId": "10290",
     "evidence": [
       "visual-29289.json",
       "visual-29295.json",
       "KAN-93/chrome-0.png",
-      "KAN-93/Firefox-chrome-0.png"
+      "KAN-93/Firefox-chrome-0.png",
+      "visual-29297.json"
     ],
     "sprintScope": "KAN-1"
   },
@@ -249,24 +276,44 @@
       "firefox": "159.0.1 / BuildID20261102144711"
     },
     "environment": "Debian13.6 x86_64, Xvfb :92, isolated DBus; KWin6.3.6 nested Wayland for visual/layout/controls; software WebRender",
-    "testCommand": "PYTHONPATH=python python3 run.py floorp 29284 gesture",
-    "result": "実再現・限定修正Draft PR",
-    "observations": "単upは発火するがup-down/dense up-down/down-upはaction label表示後にreleaseで不発。始点終点距離によるactivation gateが原因。最大変位へ修正しcontroller40件成功、旧controllerは新回帰で失敗。専用製品コピーの局所修正でも改善。",
+    "testCommand": "PYTHONPATH=python python3 gesture-run.py floorp 29311 gesture; PYTHONPATH=python python3 kan98-sparse-product-run.py floorp 29333 sparse-product",
+    "result": "実再現・独立した2欠陥を限定修正Draft",
+    "observations": "単upは発火するがup-down/dense up-down/down-upはaction label表示後にreleaseで不発。始点終点距離によるactivation gateが原因。最大変位へ修正しcontroller40件成功、旧controllerは新回帰で失敗。専用製品コピーの局所修正でも改善。 right-down追加9/9成功とcaptured trace replayから初期方向fallbackの別欠陥を特定。決定的な疎点列6/6が旧製品で不発、別コピーの局所修正で全成功。recognizer63ケース成功、元コードの新2cases失敗。",
     "remainingConditions": [
       "Arch/Sway/Wayland/物理入力/DPI",
-      "right-downの別認識条件",
-      "full build/full CI"
+      "full production build",
+      "PR3034 full CI（PR3031 full Ubuntu browser CIは成功）"
     ],
     "existingPr": null,
     "newPr": "https://github.com/Floorp-Projects/Floorp/pull/3031",
-    "jiraCommentId": null,
+    "jiraCommentId": "10291",
     "evidence": [
       "gesture-29301.json",
       "gesture-29314.json",
       "source-29312.json",
       "source-29313.json",
-      "KAN-98/product-patch.json"
+      "KAN-98/product-patch.json",
+      "KAN-98/rightdown-followup.md",
+      "KAN-98/rightdown-29321.json",
+      "KAN-98/rightdown-replay-29322.json",
+      "KAN-98/sparse-fix-report.md",
+      "KAN-98/sparse-product-29333.json",
+      "KAN-98/sparse-product-29335.json",
+      "KAN-98/sparse-tests-original-29332.json",
+      "KAN-98/sparse-tests-patched-29336.json",
+      "ci/summary.json"
     ],
-    "sprintScope": "KAN-1"
+    "sprintScope": "KAN-1",
+    "additionalPrs": [
+      "https://github.com/Floorp-Projects/Floorp/pull/3034"
+    ],
+    "fixCommits": [
+      "dbafd082f1f315a49575446e7094177450b1882b",
+      "e6f2dbe7b34e73950ddbedd13378f04fa38c5155"
+    ],
+    "ci": {
+      "3031": "281 modules passed, 0 failed; artifact verified",
+      "3034": "in_progress_at_snapshot"
+    }
   }
 ]

@@ -1,0 +1,40 @@
+{
+  "3031": {
+    "head": "dbafd082f1f315a49575446e7094177450b1882b",
+    "runId": 42045200076,
+    "status": "success",
+    "ubuntuBrowserModulesPassed": 281,
+    "ubuntuBrowserModulesFailed": 0,
+    "downloadedFirefoxTasksPassed": 16,
+    "artifactId": 13425681016,
+    "artifactSha256": "ef328d1fd7c376657052a4106d89fb26616431ffeffe88b01cddffda61bc077c",
+    "artifactDigestMatched": true,
+    "controllerModuleExplicitSuccess": true,
+    "otherOsJobs": "Runtime/helper checks; browser suite skipped"
+  },
+  "3033": {
+    "head": "1a75d15d2925c9d5bf58964505937d07a35df54c",
+    "runId": 42047184597,
+    "status": "success",
+    "ubuntuBrowserModulesPassed": 282,
+    "ubuntuBrowserModulesFailed": 0,
+    "downloadedFirefoxTasksPassed": 16,
+    "artifactId": 13425513395,
+    "artifactSha256": "5726c8e60190869aacd3615c3ba92b46439fd7e91253b3961ca6db2f00a0e25e",
+    "artifactDigestMatched": true,
+    "adoptionModuleExplicitSuccess": true,
+    "latestHead": "e7dda31f660bb865c2ea8a505ece44875796970f",
+    "latestRunId": 42049710743,
+    "latestStatus": "queued_at_snapshot",
+    "latestLocalSupplement": "expanded source regression passed; 8 states and 14 W3C clicks passed"
+  },
+  "3034": {
+    "head": "e6f2dbe7b34e73950ddbedd13378f04fa38c5155",
+    "status": "in_progress_at_snapshot",
+    "runId": 42048615534,
+    "localRecognizerCasesPassed": 63,
+    "baselineNewCasesFailed": 2,
+    "sparseProductBeforeFailures": 6,
+    "sparseProductAfterPasses": 6
+  }
+}

@@ -1,0 +1,4006 @@
+{
+  "product": {
+    "version": "159.0.1",
+    "build": "20261103153232",
+    "name": "Floorp",
+    "os": "Linux"
+  },
+  "observations": [
+    {
+      "case": "recorded-three-points",
+      "repeat": 0,
+      "points": [
+        [
+          450,
+          450
+        ],
+        [
+          650,
+          450
+        ],
+        [
+          650,
+          650
+        ]
+      ],
+      "durationPerMoveMs": 0,
+      "beforeTabs": 2,
+      "afterTabs": 3,
+      "label": "New Tab",
+      "events": [
+        {
+          "type": "mousemove",
+          "x": 75,
+          "y": 75,
+          "screenX": 75,
+          "screenY": 75,
+          "buttons": 0,
+          "trusted": true,
+          "time": 5787.497376
+        },
+        {
+          "type": "mousemove",
+          "x": 375,
+          "y": 375,
+          "screenX": 375,
+          "screenY": 375,
+          "buttons": 0,
+          "trusted": true,
+          "time": 5840.623601
+        },
+        {
+          "type": "mousemove",
+          "x": 450,
+          "y": 450,
+          "screenX": 450,
+          "screenY": 450,
+          "buttons": 0,
+          "trusted": true,
+          "time": 5862.771264
+        },
+        {
+          "type": "mousedown",
+          "x": 450,
+          "y": 450,
+          "screenX": 450,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 5877.685821
+        },
+        {
+          "type": "contextmenu",
+          "x": 450,
+          "y": 450,
+          "screenX": 450,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 5894.349691
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 450,
+          "screenX": 650,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 5895.733212
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 650,
+          "screenX": 650,
+          "screenY": 650,
+          "buttons": 2,
+          "trusted": true,
+          "time": 5926.044527
+        },
+        {
+          "type": "mouseup",
+          "x": 650,
+          "y": 650,
+          "screenX": 650,
+          "screenY": 650,
+          "buttons": 0,
+          "trusted": true,
+          "time": 6210.539062999999
+        }
+      ]
+    },
+    {
+      "case": "recorded-five-points",
+      "repeat": 0,
+      "points": [
+        [
+          450,
+          450
+        ],
+        [
+          550,
+          450
+        ],
+        [
+          650,
+          450
+        ],
+        [
+          650,
+          483
+        ],
+        [
+          650,
+          650
+        ]
+      ],
+      "durationPerMoveMs": 0,
+      "beforeTabs": 4,
+      "afterTabs": 5,
+      "label": "New Tab",
+      "events": [
+        {
+          "type": "mousemove",
+          "x": 616,
+          "y": 616,
+          "screenX": 616,
+          "screenY": 616,
+          "buttons": 0,
+          "trusted": true,
+          "time": 7167.689363
+        },
+        {
+          "type": "mousemove",
+          "x": 583,
+          "y": 583,
+          "screenX": 583,
+          "screenY": 583,
+          "buttons": 0,
+          "trusted": true,
+          "time": 7190.000338
+        },
+        {
+          "type": "mousemove",
+          "x": 550,
+          "y": 550,
+          "screenX": 550,
+          "screenY": 550,
+          "buttons": 0,
+          "trusted": true,
+          "time": 7206.139079
+        },
+        {
+          "type": "mousemove",
+          "x": 516,
+          "y": 516,
+          "screenX": 516,
+          "screenY": 516,
+          "buttons": 0,
+          "trusted": true,
+          "time": 7222.553451
+        },
+        {
+          "type": "mousemove",
+          "x": 483,
+          "y": 483,
+          "screenX": 483,
+          "screenY": 483,
+          "buttons": 0,
+          "trusted": true,
+          "time": 7241.306304
+        },
+        {
+          "type": "mousemove",
+          "x": 450,
+          "y": 450,
+          "screenX": 450,
+          "screenY": 450,
+          "buttons": 0,
+          "trusted": true,
+          "time": 7272.828485
+        },
+        {
+          "type": "mousedown",
+          "x": 450,
+          "y": 450,
+          "screenX": 450,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 7275.765177
+        },
+        {
+          "type": "contextmenu",
+          "x": 450,
+          "y": 450,
+          "screenX": 450,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 7280.332831
+        },
+        {
+          "type": "mousemove",
+          "x": 550,
+          "y": 450,
+          "screenX": 550,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 7282.439576
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 450,
+          "screenX": 650,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 7290.494758000001
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 483,
+          "screenX": 650,
+          "screenY": 483,
+          "buttons": 2,
+          "trusted": true,
+          "time": 7295.747955000001
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 650,
+          "screenX": 650,
+          "screenY": 650,
+          "buttons": 2,
+          "trusted": true,
+          "time": 7299.332364999999
+        },
+        {
+          "type": "mouseup",
+          "x": 650,
+          "y": 650,
+          "screenX": 650,
+          "screenY": 650,
+          "buttons": 0,
+          "trusted": true,
+          "time": 7626.965324000001
+        }
+      ]
+    },
+    {
+      "case": "dense",
+      "repeat": 0,
+      "points": [
+        [
+          450,
+          450
+        ],
+        [
+          460,
+          450
+        ],
+        [
+          470,
+          450
+        ],
+        [
+          480,
+          450
+        ],
+        [
+          490,
+          450
+        ],
+        [
+          500,
+          450
+        ],
+        [
+          510,
+          450
+        ],
+        [
+          520,
+          450
+        ],
+        [
+          530,
+          450
+        ],
+        [
+          540,
+          450
+        ],
+        [
+          550,
+          450
+        ],
+        [
+          560,
+          450
+        ],
+        [
+          570,
+          450
+        ],
+        [
+          580,
+          450
+        ],
+        [
+          590,
+          450
+        ],
+        [
+          600,
+          450
+        ],
+        [
+          610,
+          450
+        ],
+        [
+          620,
+          450
+        ],
+        [
+          630,
+          450
+        ],
+        [
+          640,
+          450
+        ],
+        [
+          650,
+          450
+        ],
+        [
+          650,
+          460
+        ],
+        [
+          650,
+          470
+        ],
+        [
+          650,
+          480
+        ],
+        [
+          650,
+          490
+        ],
+        [
+          650,
+          500
+        ],
+        [
+          650,
+          510
+        ],
+        [
+          650,
+          520
+        ],
+        [
+          650,
+          530
+        ],
+        [
+          650,
+          540
+        ],
+        [
+          650,
+          550
+        ],
+        [
+          650,
+          560
+        ],
+        [
+          650,
+          570
+        ],
+        [
+          650,
+          580
+        ],
+        [
+          650,
+          590
+        ],
+        [
+          650,
+          600
+        ],
+        [
+          650,
+          610
+        ],
+        [
+          650,
+          620
+        ],
+        [
+          650,
+          630
+        ],
+        [
+          650,
+          640
+        ],
+        [
+          650,
+          650
+        ]
+      ],
+      "durationPerMoveMs": 40,
+      "beforeTabs": 6,
+      "afterTabs": 7,
+      "label": "New Tab",
+      "events": [
+        {
+          "type": "mousemove",
+          "x": 583,
+          "y": 583,
+          "screenX": 583,
+          "screenY": 583,
+          "buttons": 0,
+          "trusted": true,
+          "time": 8699.768540000001
+        },
+        {
+          "type": "mousemove",
+          "x": 550,
+          "y": 550,
+          "screenX": 550,
+          "screenY": 550,
+          "buttons": 0,
+          "trusted": true,
+          "time": 8723.918331
+        },
+        {
+          "type": "mousemove",
+          "x": 516,
+          "y": 516,
+          "screenX": 516,
+          "screenY": 516,
+          "buttons": 0,
+          "trusted": true,
+          "time": 8737.642833
+        },
+        {
+          "type": "mousemove",
+          "x": 483,
+          "y": 483,
+          "screenX": 483,
+          "screenY": 483,
+          "buttons": 0,
+          "trusted": true,
+          "time": 8754.135269
+        },
+        {
+          "type": "mousemove",
+          "x": 450,
+          "y": 450,
+          "screenX": 450,
+          "screenY": 450,
+          "buttons": 0,
+          "trusted": true,
+          "time": 8785.216819000001
+        },
+        {
+          "type": "mousedown",
+          "x": 450,
+          "y": 450,
+          "screenX": 450,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 8788.110011
+        },
+        {
+          "type": "contextmenu",
+          "x": 450,
+          "y": 450,
+          "screenX": 450,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 8791.632263
+        },
+        {
+          "type": "mousemove",
+          "x": 460,
+          "y": 450,
+          "screenX": 460,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 8834.217938
+        },
+        {
+          "type": "mousemove",
+          "x": 465,
+          "y": 450,
+          "screenX": 465,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 8854.141803999999
+        },
+        {
+          "type": "mousemove",
+          "x": 470,
+          "y": 450,
+          "screenX": 470,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 8886.442086000001
+        },
+        {
+          "type": "mousemove",
+          "x": 475,
+          "y": 450,
+          "screenX": 475,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 8918.596610999999
+        },
+        {
+          "type": "mousemove",
+          "x": 480,
+          "y": 450,
+          "screenX": 480,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 8938.389044
+        },
+        {
+          "type": "mousemove",
+          "x": 485,
+          "y": 450,
+          "screenX": 485,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 8959.359521
+        },
+        {
+          "type": "mousemove",
+          "x": 490,
+          "y": 450,
+          "screenX": 490,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 8987.34638
+        },
+        {
+          "type": "mousemove",
+          "x": 495,
+          "y": 450,
+          "screenX": 495,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 9020.531353
+        },
+        {
+          "type": "mousemove",
+          "x": 500,
+          "y": 450,
+          "screenX": 500,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 9039.980931
+        },
+        {
+          "type": "mousemove",
+          "x": 505,
+          "y": 450,
+          "screenX": 505,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 9072.41316
+        },
+        {
+          "type": "mousemove",
+          "x": 510,
+          "y": 450,
+          "screenX": 510,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 9090.097507999999
+        },
+        {
+          "type": "mousemove",
+          "x": 515,
+          "y": 450,
+          "screenX": 515,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 9106.006011
+        },
+        {
+          "type": "mousemove",
+          "x": 520,
+          "y": 450,
+          "screenX": 520,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 9139.905041
+        },
+        {
+          "type": "mousemove",
+          "x": 525,
+          "y": 450,
+          "screenX": 525,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 9156.965967
+        },
+        {
+          "type": "mousemove",
+          "x": 530,
+          "y": 450,
+          "screenX": 530,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 9189.997249
+        },
+        {
+          "type": "mousemove",
+          "x": 535,
+          "y": 450,
+          "screenX": 535,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 9209.969202
+        },
+        {
+          "type": "mousemove",
+          "x": 540,
+          "y": 450,
+          "screenX": 540,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 9243.706128
+        },
+        {
+          "type": "mousemove",
+          "x": 545,
+          "y": 450,
+          "screenX": 545,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 9259.82024
+        },
+        {
+          "type": "mousemove",
+          "x": 550,
+          "y": 450,
+          "screenX": 550,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 9291.71154
+        },
+        {
+          "type": "mousemove",
+          "x": 555,
+          "y": 450,
+          "screenX": 555,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 9309.425989
+        },
+        {
+          "type": "mousemove",
+          "x": 560,
+          "y": 450,
+          "screenX": 560,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 9342.367227
+        },
+        {
+          "type": "mousemove",
+          "x": 565,
+          "y": 450,
+          "screenX": 565,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 9361.01034
+        },
+        {
+          "type": "mousemove",
+          "x": 570,
+          "y": 450,
+          "screenX": 570,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 9394.247346
+        },
+        {
+          "type": "mousemove",
+          "x": 575,
+          "y": 450,
+          "screenX": 575,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 9412.035896000001
+        },
+        {
+          "type": "mousemove",
+          "x": 580,
+          "y": 450,
+          "screenX": 580,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 9444.944265
+        },
+        {
+          "type": "mousemove",
+          "x": 585,
+          "y": 450,
+          "screenX": 585,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 9462.080719
+        },
+        {
+          "type": "mousemove",
+          "x": 590,
+          "y": 450,
+          "screenX": 590,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 9498.581596
+        },
+        {
+          "type": "mousemove",
+          "x": 595,
+          "y": 450,
+          "screenX": 595,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 9513.062619
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 450,
+          "screenX": 600,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 9546.560719000001
+        },
+        {
+          "type": "mousemove",
+          "x": 605,
+          "y": 450,
+          "screenX": 605,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 9563.238727
+        },
+        {
+          "type": "mousemove",
+          "x": 610,
+          "y": 450,
+          "screenX": 610,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 9598.153354
+        },
+        {
+          "type": "mousemove",
+          "x": 615,
+          "y": 450,
+          "screenX": 615,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 9620.338757000001
+        },
+        {
+          "type": "mousemove",
+          "x": 620,
+          "y": 450,
+          "screenX": 620,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 9649.748597
+        },
+        {
+          "type": "mousemove",
+          "x": 625,
+          "y": 450,
+          "screenX": 625,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 9681.794427
+        },
+        {
+          "type": "mousemove",
+          "x": 630,
+          "y": 450,
+          "screenX": 630,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 9699.701498999999
+        },
+        {
+          "type": "mousemove",
+          "x": 635,
+          "y": 450,
+          "screenX": 635,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 9716.057762
+        },
+        {
+          "type": "mousemove",
+          "x": 640,
+          "y": 450,
+          "screenX": 640,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 9749.363751
+        },
+        {
+          "type": "mousemove",
+          "x": 645,
+          "y": 450,
+          "screenX": 645,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 9767.78394
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 450,
+          "screenX": 650,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 9801.626194
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 455,
+          "screenX": 650,
+          "screenY": 455,
+          "buttons": 2,
+          "trusted": true,
+          "time": 9817.085502
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 460,
+          "screenX": 650,
+          "screenY": 460,
+          "buttons": 2,
+          "trusted": true,
+          "time": 9851.234974
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 465,
+          "screenX": 650,
+          "screenY": 465,
+          "buttons": 2,
+          "trusted": true,
+          "time": 9885.355235
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 470,
+          "screenX": 650,
+          "screenY": 470,
+          "buttons": 2,
+          "trusted": true,
+          "time": 9902.999961000001
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 475,
+          "screenX": 650,
+          "screenY": 475,
+          "buttons": 2,
+          "trusted": true,
+          "time": 9919.161439
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 480,
+          "screenX": 650,
+          "screenY": 480,
+          "buttons": 2,
+          "trusted": true,
+          "time": 9953.07212
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 485,
+          "screenX": 650,
+          "screenY": 485,
+          "buttons": 2,
+          "trusted": true,
+          "time": 9970.169862
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 490,
+          "screenX": 650,
+          "screenY": 490,
+          "buttons": 2,
+          "trusted": true,
+          "time": 10003.642472
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 495,
+          "screenX": 650,
+          "screenY": 495,
+          "buttons": 2,
+          "trusted": true,
+          "time": 10022.518349
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 500,
+          "screenX": 650,
+          "screenY": 500,
+          "buttons": 2,
+          "trusted": true,
+          "time": 10056.073642
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 510,
+          "screenX": 650,
+          "screenY": 510,
+          "buttons": 2,
+          "trusted": true,
+          "time": 10214.500704
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 515,
+          "screenX": 650,
+          "screenY": 515,
+          "buttons": 2,
+          "trusted": true,
+          "time": 10245.458284
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 520,
+          "screenX": 650,
+          "screenY": 520,
+          "buttons": 2,
+          "trusted": true,
+          "time": 10279.208843999999
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 525,
+          "screenX": 650,
+          "screenY": 525,
+          "buttons": 2,
+          "trusted": true,
+          "time": 10297.929382
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 530,
+          "screenX": 650,
+          "screenY": 530,
+          "buttons": 2,
+          "trusted": true,
+          "time": 10335.322744000001
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 540,
+          "screenX": 650,
+          "screenY": 540,
+          "buttons": 2,
+          "trusted": true,
+          "time": 10408.878831999999
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 545,
+          "screenX": 650,
+          "screenY": 545,
+          "buttons": 2,
+          "trusted": true,
+          "time": 10433.208089000002
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 550,
+          "screenX": 650,
+          "screenY": 550,
+          "buttons": 2,
+          "trusted": true,
+          "time": 10467.417917
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 555,
+          "screenX": 650,
+          "screenY": 555,
+          "buttons": 2,
+          "trusted": true,
+          "time": 10488.580855
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 560,
+          "screenX": 650,
+          "screenY": 560,
+          "buttons": 2,
+          "trusted": true,
+          "time": 10519.312615
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 565,
+          "screenX": 650,
+          "screenY": 565,
+          "buttons": 2,
+          "trusted": true,
+          "time": 10535.857202000001
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 570,
+          "screenX": 650,
+          "screenY": 570,
+          "buttons": 2,
+          "trusted": true,
+          "time": 10579.208222
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 575,
+          "screenX": 650,
+          "screenY": 575,
+          "buttons": 2,
+          "trusted": true,
+          "time": 10612.885763999999
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 580,
+          "screenX": 650,
+          "screenY": 580,
+          "buttons": 2,
+          "trusted": true,
+          "time": 10642.052954
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 585,
+          "screenX": 650,
+          "screenY": 585,
+          "buttons": 2,
+          "trusted": true,
+          "time": 10674.996637
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 590,
+          "screenX": 650,
+          "screenY": 590,
+          "buttons": 2,
+          "trusted": true,
+          "time": 10696.458281
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 595,
+          "screenX": 650,
+          "screenY": 595,
+          "buttons": 2,
+          "trusted": true,
+          "time": 10718.073661
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 600,
+          "screenX": 650,
+          "screenY": 600,
+          "buttons": 2,
+          "trusted": true,
+          "time": 10752.526683
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 605,
+          "screenX": 650,
+          "screenY": 605,
+          "buttons": 2,
+          "trusted": true,
+          "time": 10780.042299
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 610,
+          "screenX": 650,
+          "screenY": 610,
+          "buttons": 2,
+          "trusted": true,
+          "time": 10808.658818
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 615,
+          "screenX": 650,
+          "screenY": 615,
+          "buttons": 2,
+          "trusted": true,
+          "time": 10845.984623
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 620,
+          "screenX": 650,
+          "screenY": 620,
+          "buttons": 2,
+          "trusted": true,
+          "time": 10891.42828
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 625,
+          "screenX": 650,
+          "screenY": 625,
+          "buttons": 2,
+          "trusted": true,
+          "time": 10909.998429
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 630,
+          "screenX": 650,
+          "screenY": 630,
+          "buttons": 2,
+          "trusted": true,
+          "time": 10951.518283000001
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 635,
+          "screenX": 650,
+          "screenY": 635,
+          "buttons": 2,
+          "trusted": true,
+          "time": 10971.475009
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 640,
+          "screenX": 650,
+          "screenY": 640,
+          "buttons": 2,
+          "trusted": true,
+          "time": 11010.222847
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 645,
+          "screenX": 650,
+          "screenY": 645,
+          "buttons": 2,
+          "trusted": true,
+          "time": 11028.728489000001
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 650,
+          "screenX": 650,
+          "screenY": 650,
+          "buttons": 2,
+          "trusted": true,
+          "time": 11067.075515999999
+        },
+        {
+          "type": "mouseup",
+          "x": 650,
+          "y": 650,
+          "screenX": 650,
+          "screenY": 650,
+          "buttons": 0,
+          "trusted": true,
+          "time": 11365.738894
+        }
+      ]
+    },
+    {
+      "case": "recorded-three-points",
+      "repeat": 1,
+      "points": [
+        [
+          450,
+          450
+        ],
+        [
+          650,
+          450
+        ],
+        [
+          650,
+          650
+        ]
+      ],
+      "durationPerMoveMs": 0,
+      "beforeTabs": 8,
+      "afterTabs": 9,
+      "label": "New Tab",
+      "events": [
+        {
+          "type": "mousemove",
+          "x": 616,
+          "y": 616,
+          "screenX": 616,
+          "screenY": 616,
+          "buttons": 0,
+          "trusted": true,
+          "time": 12407.541150000001
+        },
+        {
+          "type": "mousemove",
+          "x": 583,
+          "y": 583,
+          "screenX": 583,
+          "screenY": 583,
+          "buttons": 0,
+          "trusted": true,
+          "time": 12427.375510999998
+        },
+        {
+          "type": "mousemove",
+          "x": 550,
+          "y": 550,
+          "screenX": 550,
+          "screenY": 550,
+          "buttons": 0,
+          "trusted": true,
+          "time": 12444.180371
+        },
+        {
+          "type": "mousemove",
+          "x": 516,
+          "y": 516,
+          "screenX": 516,
+          "screenY": 516,
+          "buttons": 0,
+          "trusted": true,
+          "time": 12466.432759
+        },
+        {
+          "type": "mousemove",
+          "x": 483,
+          "y": 483,
+          "screenX": 483,
+          "screenY": 483,
+          "buttons": 0,
+          "trusted": true,
+          "time": 12482.051349000001
+        },
+        {
+          "type": "mousemove",
+          "x": 450,
+          "y": 450,
+          "screenX": 450,
+          "screenY": 450,
+          "buttons": 0,
+          "trusted": true,
+          "time": 12516.799291
+        },
+        {
+          "type": "mousedown",
+          "x": 450,
+          "y": 450,
+          "screenX": 450,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 12519.682995000001
+        },
+        {
+          "type": "contextmenu",
+          "x": 450,
+          "y": 450,
+          "screenX": 450,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 12522.508734000001
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 450,
+          "screenX": 650,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 12523.62484
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 650,
+          "screenX": 650,
+          "screenY": 650,
+          "buttons": 2,
+          "trusted": true,
+          "time": 12530.968422999998
+        },
+        {
+          "type": "mouseup",
+          "x": 650,
+          "y": 650,
+          "screenX": 650,
+          "screenY": 650,
+          "buttons": 0,
+          "trusted": true,
+          "time": 12692.754044000001
+        }
+      ]
+    },
+    {
+      "case": "recorded-five-points",
+      "repeat": 1,
+      "points": [
+        [
+          450,
+          450
+        ],
+        [
+          550,
+          450
+        ],
+        [
+          650,
+          450
+        ],
+        [
+          650,
+          483
+        ],
+        [
+          650,
+          650
+        ]
+      ],
+      "durationPerMoveMs": 0,
+      "beforeTabs": 10,
+      "afterTabs": 11,
+      "label": "New Tab",
+      "events": [
+        {
+          "type": "mousemove",
+          "x": 616,
+          "y": 616,
+          "screenX": 616,
+          "screenY": 616,
+          "buttons": 0,
+          "trusted": true,
+          "time": 13645.750316000001
+        },
+        {
+          "type": "mousemove",
+          "x": 583,
+          "y": 583,
+          "screenX": 583,
+          "screenY": 583,
+          "buttons": 0,
+          "trusted": true,
+          "time": 13668.035628
+        },
+        {
+          "type": "mousemove",
+          "x": 550,
+          "y": 550,
+          "screenX": 550,
+          "screenY": 550,
+          "buttons": 0,
+          "trusted": true,
+          "time": 13684.028663
+        },
+        {
+          "type": "mousemove",
+          "x": 483,
+          "y": 483,
+          "screenX": 483,
+          "screenY": 483,
+          "buttons": 0,
+          "trusted": true,
+          "time": 13702.968843
+        },
+        {
+          "type": "mousemove",
+          "x": 450,
+          "y": 450,
+          "screenX": 450,
+          "screenY": 450,
+          "buttons": 0,
+          "trusted": true,
+          "time": 13728.448723
+        },
+        {
+          "type": "mousedown",
+          "x": 450,
+          "y": 450,
+          "screenX": 450,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 13732.384581
+        },
+        {
+          "type": "contextmenu",
+          "x": 450,
+          "y": 450,
+          "screenX": 450,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 13735.511603
+        },
+        {
+          "type": "mousemove",
+          "x": 550,
+          "y": 450,
+          "screenX": 550,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 13739.67706
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 450,
+          "screenX": 650,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 13743.253714
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 483,
+          "screenX": 650,
+          "screenY": 483,
+          "buttons": 2,
+          "trusted": true,
+          "time": 13745.501471000001
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 650,
+          "screenX": 650,
+          "screenY": 650,
+          "buttons": 2,
+          "trusted": true,
+          "time": 13748.597829
+        },
+        {
+          "type": "mouseup",
+          "x": 650,
+          "y": 650,
+          "screenX": 650,
+          "screenY": 650,
+          "buttons": 0,
+          "trusted": true,
+          "time": 13926.708728
+        }
+      ]
+    },
+    {
+      "case": "dense",
+      "repeat": 1,
+      "points": [
+        [
+          450,
+          450
+        ],
+        [
+          460,
+          450
+        ],
+        [
+          470,
+          450
+        ],
+        [
+          480,
+          450
+        ],
+        [
+          490,
+          450
+        ],
+        [
+          500,
+          450
+        ],
+        [
+          510,
+          450
+        ],
+        [
+          520,
+          450
+        ],
+        [
+          530,
+          450
+        ],
+        [
+          540,
+          450
+        ],
+        [
+          550,
+          450
+        ],
+        [
+          560,
+          450
+        ],
+        [
+          570,
+          450
+        ],
+        [
+          580,
+          450
+        ],
+        [
+          590,
+          450
+        ],
+        [
+          600,
+          450
+        ],
+        [
+          610,
+          450
+        ],
+        [
+          620,
+          450
+        ],
+        [
+          630,
+          450
+        ],
+        [
+          640,
+          450
+        ],
+        [
+          650,
+          450
+        ],
+        [
+          650,
+          460
+        ],
+        [
+          650,
+          470
+        ],
+        [
+          650,
+          480
+        ],
+        [
+          650,
+          490
+        ],
+        [
+          650,
+          500
+        ],
+        [
+          650,
+          510
+        ],
+        [
+          650,
+          520
+        ],
+        [
+          650,
+          530
+        ],
+        [
+          650,
+          540
+        ],
+        [
+          650,
+          550
+        ],
+        [
+          650,
+          560
+        ],
+        [
+          650,
+          570
+        ],
+        [
+          650,
+          580
+        ],
+        [
+          650,
+          590
+        ],
+        [
+          650,
+          600
+        ],
+        [
+          650,
+          610
+        ],
+        [
+          650,
+          620
+        ],
+        [
+          650,
+          630
+        ],
+        [
+          650,
+          640
+        ],
+        [
+          650,
+          650
+        ]
+      ],
+      "durationPerMoveMs": 40,
+      "beforeTabs": 12,
+      "afterTabs": 13,
+      "label": "New Tab",
+      "events": [
+        {
+          "type": "mousemove",
+          "x": 616,
+          "y": 616,
+          "screenX": 616,
+          "screenY": 616,
+          "buttons": 0,
+          "trusted": true,
+          "time": 14903.097285
+        },
+        {
+          "type": "mousemove",
+          "x": 583,
+          "y": 583,
+          "screenX": 583,
+          "screenY": 583,
+          "buttons": 0,
+          "trusted": true,
+          "time": 14925.256217
+        },
+        {
+          "type": "mousemove",
+          "x": 550,
+          "y": 550,
+          "screenX": 550,
+          "screenY": 550,
+          "buttons": 0,
+          "trusted": true,
+          "time": 14939.105988
+        },
+        {
+          "type": "mousemove",
+          "x": 516,
+          "y": 516,
+          "screenX": 516,
+          "screenY": 516,
+          "buttons": 0,
+          "trusted": true,
+          "time": 14961.457908
+        },
+        {
+          "type": "mousemove",
+          "x": 483,
+          "y": 483,
+          "screenX": 483,
+          "screenY": 483,
+          "buttons": 0,
+          "trusted": true,
+          "time": 14984.69457
+        },
+        {
+          "type": "mousemove",
+          "x": 450,
+          "y": 450,
+          "screenX": 450,
+          "screenY": 450,
+          "buttons": 0,
+          "trusted": true,
+          "time": 14991.705536
+        },
+        {
+          "type": "mousedown",
+          "x": 450,
+          "y": 450,
+          "screenX": 450,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 14993.65897
+        },
+        {
+          "type": "contextmenu",
+          "x": 450,
+          "y": 450,
+          "screenX": 450,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 14996.087934000001
+        },
+        {
+          "type": "mousemove",
+          "x": 455,
+          "y": 450,
+          "screenX": 455,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 15015.453338000001
+        },
+        {
+          "type": "mousemove",
+          "x": 460,
+          "y": 450,
+          "screenX": 460,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 15043.712442
+        },
+        {
+          "type": "mousemove",
+          "x": 465,
+          "y": 450,
+          "screenX": 465,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 15072.412784
+        },
+        {
+          "type": "mousemove",
+          "x": 470,
+          "y": 450,
+          "screenX": 470,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 15105.863053000001
+        },
+        {
+          "type": "mousemove",
+          "x": 475,
+          "y": 450,
+          "screenX": 475,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 15125.632953
+        },
+        {
+          "type": "mousemove",
+          "x": 480,
+          "y": 450,
+          "screenX": 480,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 15157.931510999999
+        },
+        {
+          "type": "mousemove",
+          "x": 485,
+          "y": 450,
+          "screenX": 485,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 15184.041435
+        },
+        {
+          "type": "mousemove",
+          "x": 490,
+          "y": 450,
+          "screenX": 490,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 15209.091483
+        },
+        {
+          "type": "mousemove",
+          "x": 495,
+          "y": 450,
+          "screenX": 495,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 15241.728563
+        },
+        {
+          "type": "mousemove",
+          "x": 500,
+          "y": 450,
+          "screenX": 500,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 15262.790064
+        },
+        {
+          "type": "mousemove",
+          "x": 505,
+          "y": 450,
+          "screenX": 505,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 15293.501812
+        },
+        {
+          "type": "mousemove",
+          "x": 510,
+          "y": 450,
+          "screenX": 510,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 15309.338455000001
+        },
+        {
+          "type": "mousemove",
+          "x": 515,
+          "y": 450,
+          "screenX": 515,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 15328.875625
+        },
+        {
+          "type": "mousemove",
+          "x": 520,
+          "y": 450,
+          "screenX": 520,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 15362.013123
+        },
+        {
+          "type": "mousemove",
+          "x": 525,
+          "y": 450,
+          "screenX": 525,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 15394.012933
+        },
+        {
+          "type": "mousemove",
+          "x": 530,
+          "y": 450,
+          "screenX": 530,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 15429.882206
+        },
+        {
+          "type": "mousemove",
+          "x": 535,
+          "y": 450,
+          "screenX": 535,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 15461.920584
+        },
+        {
+          "type": "mousemove",
+          "x": 540,
+          "y": 450,
+          "screenX": 540,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 15479.832138000002
+        },
+        {
+          "type": "mousemove",
+          "x": 545,
+          "y": 450,
+          "screenX": 545,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 15512.376883
+        },
+        {
+          "type": "mousemove",
+          "x": 550,
+          "y": 450,
+          "screenX": 550,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 15546.558818
+        },
+        {
+          "type": "mousemove",
+          "x": 555,
+          "y": 450,
+          "screenX": 555,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 15564.166335
+        },
+        {
+          "type": "mousemove",
+          "x": 560,
+          "y": 450,
+          "screenX": 560,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 15598.921555
+        },
+        {
+          "type": "mousemove",
+          "x": 565,
+          "y": 450,
+          "screenX": 565,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 15614.49171
+        },
+        {
+          "type": "mousemove",
+          "x": 570,
+          "y": 450,
+          "screenX": 570,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 15650.080064000002
+        },
+        {
+          "type": "mousemove",
+          "x": 575,
+          "y": 450,
+          "screenX": 575,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 15666.198936
+        },
+        {
+          "type": "mousemove",
+          "x": 580,
+          "y": 450,
+          "screenX": 580,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 15699.198598
+        },
+        {
+          "type": "mousemove",
+          "x": 585,
+          "y": 450,
+          "screenX": 585,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 15716.886232
+        },
+        {
+          "type": "mousemove",
+          "x": 590,
+          "y": 450,
+          "screenX": 590,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 15752.059046999999
+        },
+        {
+          "type": "mousemove",
+          "x": 595,
+          "y": 450,
+          "screenX": 595,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 15784.606073
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 450,
+          "screenX": 600,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 15800.870662
+        },
+        {
+          "type": "mousemove",
+          "x": 605,
+          "y": 450,
+          "screenX": 605,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 15818.002938
+        },
+        {
+          "type": "mousemove",
+          "x": 610,
+          "y": 450,
+          "screenX": 610,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 15852.068361000001
+        },
+        {
+          "type": "mousemove",
+          "x": 615,
+          "y": 450,
+          "screenX": 615,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 15869.590321
+        },
+        {
+          "type": "mousemove",
+          "x": 620,
+          "y": 450,
+          "screenX": 620,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 15903.648428
+        },
+        {
+          "type": "mousemove",
+          "x": 625,
+          "y": 450,
+          "screenX": 625,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 15919.199994999999
+        },
+        {
+          "type": "mousemove",
+          "x": 630,
+          "y": 450,
+          "screenX": 630,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 15953.795442
+        },
+        {
+          "type": "mousemove",
+          "x": 635,
+          "y": 450,
+          "screenX": 635,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 15972.280724999999
+        },
+        {
+          "type": "mousemove",
+          "x": 640,
+          "y": 450,
+          "screenX": 640,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 16004.264438
+        },
+        {
+          "type": "mousemove",
+          "x": 645,
+          "y": 450,
+          "screenX": 645,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 16021.468244000002
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 450,
+          "screenX": 650,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 16054.788963
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 455,
+          "screenX": 650,
+          "screenY": 455,
+          "buttons": 2,
+          "trusted": true,
+          "time": 16072.236908
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 460,
+          "screenX": 650,
+          "screenY": 460,
+          "buttons": 2,
+          "trusted": true,
+          "time": 16106.44096
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 465,
+          "screenX": 650,
+          "screenY": 465,
+          "buttons": 2,
+          "trusted": true,
+          "time": 16124.889606
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 470,
+          "screenX": 650,
+          "screenY": 470,
+          "buttons": 2,
+          "trusted": true,
+          "time": 16157.079122
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 475,
+          "screenX": 650,
+          "screenY": 475,
+          "buttons": 2,
+          "trusted": true,
+          "time": 16174.089576
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 480,
+          "screenX": 650,
+          "screenY": 480,
+          "buttons": 2,
+          "trusted": true,
+          "time": 16207.772037000002
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 485,
+          "screenX": 650,
+          "screenY": 485,
+          "buttons": 2,
+          "trusted": true,
+          "time": 16224.59444
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 490,
+          "screenX": 650,
+          "screenY": 490,
+          "buttons": 2,
+          "trusted": true,
+          "time": 16258.750795000002
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 495,
+          "screenX": 650,
+          "screenY": 495,
+          "buttons": 2,
+          "trusted": true,
+          "time": 16279.176513999999
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 500,
+          "screenX": 650,
+          "screenY": 500,
+          "buttons": 2,
+          "trusted": true,
+          "time": 16363.797505
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 505,
+          "screenX": 650,
+          "screenY": 505,
+          "buttons": 2,
+          "trusted": true,
+          "time": 16404.174116
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 510,
+          "screenX": 650,
+          "screenY": 510,
+          "buttons": 2,
+          "trusted": true,
+          "time": 16438.258579999998
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 515,
+          "screenX": 650,
+          "screenY": 515,
+          "buttons": 2,
+          "trusted": true,
+          "time": 16454.508713
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 520,
+          "screenX": 650,
+          "screenY": 520,
+          "buttons": 2,
+          "trusted": true,
+          "time": 16489.15104
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 525,
+          "screenX": 650,
+          "screenY": 525,
+          "buttons": 2,
+          "trusted": true,
+          "time": 16528.343927
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 530,
+          "screenX": 650,
+          "screenY": 530,
+          "buttons": 2,
+          "trusted": true,
+          "time": 16540.828415
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 535,
+          "screenX": 650,
+          "screenY": 535,
+          "buttons": 2,
+          "trusted": true,
+          "time": 16561.263731
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 540,
+          "screenX": 650,
+          "screenY": 540,
+          "buttons": 2,
+          "trusted": true,
+          "time": 16590.8539
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 545,
+          "screenX": 650,
+          "screenY": 545,
+          "buttons": 2,
+          "trusted": true,
+          "time": 16608.104598
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 550,
+          "screenX": 650,
+          "screenY": 550,
+          "buttons": 2,
+          "trusted": true,
+          "time": 16641.171981
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 555,
+          "screenX": 650,
+          "screenY": 555,
+          "buttons": 2,
+          "trusted": true,
+          "time": 16661.659999
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 560,
+          "screenX": 650,
+          "screenY": 560,
+          "buttons": 2,
+          "trusted": true,
+          "time": 16686.759307
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 565,
+          "screenX": 650,
+          "screenY": 565,
+          "buttons": 2,
+          "trusted": true,
+          "time": 16715.367682
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 570,
+          "screenX": 650,
+          "screenY": 570,
+          "buttons": 2,
+          "trusted": true,
+          "time": 16747.789923
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 575,
+          "screenX": 650,
+          "screenY": 575,
+          "buttons": 2,
+          "trusted": true,
+          "time": 16786.558279
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 580,
+          "screenX": 650,
+          "screenY": 580,
+          "buttons": 2,
+          "trusted": true,
+          "time": 16797.076645
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 585,
+          "screenX": 650,
+          "screenY": 585,
+          "buttons": 2,
+          "trusted": true,
+          "time": 16816.538531
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 590,
+          "screenX": 650,
+          "screenY": 590,
+          "buttons": 2,
+          "trusted": true,
+          "time": 16848.810812
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 595,
+          "screenX": 650,
+          "screenY": 595,
+          "buttons": 2,
+          "trusted": true,
+          "time": 16864.709917
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 600,
+          "screenX": 650,
+          "screenY": 600,
+          "buttons": 2,
+          "trusted": true,
+          "time": 16899.780915
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 605,
+          "screenX": 650,
+          "screenY": 605,
+          "buttons": 2,
+          "trusted": true,
+          "time": 16916.060555
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 610,
+          "screenX": 650,
+          "screenY": 610,
+          "buttons": 2,
+          "trusted": true,
+          "time": 16950.768511
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 615,
+          "screenX": 650,
+          "screenY": 615,
+          "buttons": 2,
+          "trusted": true,
+          "time": 16965.209193
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 620,
+          "screenX": 650,
+          "screenY": 620,
+          "buttons": 2,
+          "trusted": true,
+          "time": 17014.810077
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 625,
+          "screenX": 650,
+          "screenY": 625,
+          "buttons": 2,
+          "trusted": true,
+          "time": 17034.037356
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 630,
+          "screenX": 650,
+          "screenY": 630,
+          "buttons": 2,
+          "trusted": true,
+          "time": 17071.762687
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 640,
+          "screenX": 650,
+          "screenY": 640,
+          "buttons": 2,
+          "trusted": true,
+          "time": 17116.089484
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 645,
+          "screenX": 650,
+          "screenY": 645,
+          "buttons": 2,
+          "trusted": true,
+          "time": 17135.47956
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 650,
+          "screenX": 650,
+          "screenY": 650,
+          "buttons": 2,
+          "trusted": true,
+          "time": 17168.015646
+        },
+        {
+          "type": "mouseup",
+          "x": 650,
+          "y": 650,
+          "screenX": 650,
+          "screenY": 650,
+          "buttons": 0,
+          "trusted": true,
+          "time": 17331.762369
+        }
+      ]
+    },
+    {
+      "case": "recorded-three-points",
+      "repeat": 2,
+      "points": [
+        [
+          450,
+          450
+        ],
+        [
+          650,
+          450
+        ],
+        [
+          650,
+          650
+        ]
+      ],
+      "durationPerMoveMs": 0,
+      "beforeTabs": 14,
+      "afterTabs": 15,
+      "label": "New Tab",
+      "events": [
+        {
+          "type": "mousemove",
+          "x": 616,
+          "y": 616,
+          "screenX": 616,
+          "screenY": 616,
+          "buttons": 0,
+          "trusted": true,
+          "time": 18302.859035
+        },
+        {
+          "type": "mousemove",
+          "x": 583,
+          "y": 583,
+          "screenX": 583,
+          "screenY": 583,
+          "buttons": 0,
+          "trusted": true,
+          "time": 18322.193534
+        },
+        {
+          "type": "mousemove",
+          "x": 550,
+          "y": 550,
+          "screenX": 550,
+          "screenY": 550,
+          "buttons": 0,
+          "trusted": true,
+          "time": 18339.080041999998
+        },
+        {
+          "type": "mousemove",
+          "x": 516,
+          "y": 516,
+          "screenX": 516,
+          "screenY": 516,
+          "buttons": 0,
+          "trusted": true,
+          "time": 18402.44182
+        },
+        {
+          "type": "mousemove",
+          "x": 450,
+          "y": 450,
+          "screenX": 450,
+          "screenY": 450,
+          "buttons": 0,
+          "trusted": true,
+          "time": 18424.272494
+        },
+        {
+          "type": "mousedown",
+          "x": 450,
+          "y": 450,
+          "screenX": 450,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 18430.54192
+        },
+        {
+          "type": "contextmenu",
+          "x": 450,
+          "y": 450,
+          "screenX": 450,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 18434.483083
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 450,
+          "screenX": 650,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 18435.493782
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 650,
+          "screenX": 650,
+          "screenY": 650,
+          "buttons": 2,
+          "trusted": true,
+          "time": 18442.180003
+        },
+        {
+          "type": "mouseup",
+          "x": 650,
+          "y": 650,
+          "screenX": 650,
+          "screenY": 650,
+          "buttons": 0,
+          "trusted": true,
+          "time": 18603.742892
+        }
+      ]
+    },
+    {
+      "case": "recorded-five-points",
+      "repeat": 2,
+      "points": [
+        [
+          450,
+          450
+        ],
+        [
+          550,
+          450
+        ],
+        [
+          650,
+          450
+        ],
+        [
+          650,
+          483
+        ],
+        [
+          650,
+          650
+        ]
+      ],
+      "durationPerMoveMs": 0,
+      "beforeTabs": 16,
+      "afterTabs": 17,
+      "label": "New Tab",
+      "events": [
+        {
+          "type": "mousemove",
+          "x": 616,
+          "y": 616,
+          "screenX": 616,
+          "screenY": 616,
+          "buttons": 0,
+          "trusted": true,
+          "time": 19593.845147
+        },
+        {
+          "type": "mousemove",
+          "x": 583,
+          "y": 583,
+          "screenX": 583,
+          "screenY": 583,
+          "buttons": 0,
+          "trusted": true,
+          "time": 19611.008839000002
+        },
+        {
+          "type": "mousemove",
+          "x": 550,
+          "y": 550,
+          "screenX": 550,
+          "screenY": 550,
+          "buttons": 0,
+          "trusted": true,
+          "time": 19629.558455000002
+        },
+        {
+          "type": "mousemove",
+          "x": 516,
+          "y": 516,
+          "screenX": 516,
+          "screenY": 516,
+          "buttons": 0,
+          "trusted": true,
+          "time": 19647.33851
+        },
+        {
+          "type": "mousemove",
+          "x": 483,
+          "y": 483,
+          "screenX": 483,
+          "screenY": 483,
+          "buttons": 0,
+          "trusted": true,
+          "time": 19661.412515
+        },
+        {
+          "type": "mousemove",
+          "x": 450,
+          "y": 450,
+          "screenX": 450,
+          "screenY": 450,
+          "buttons": 0,
+          "trusted": true,
+          "time": 19681.912997000003
+        },
+        {
+          "type": "mousedown",
+          "x": 450,
+          "y": 450,
+          "screenX": 450,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 19684.198549
+        },
+        {
+          "type": "contextmenu",
+          "x": 450,
+          "y": 450,
+          "screenX": 450,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 19687.433789
+        },
+        {
+          "type": "mousemove",
+          "x": 550,
+          "y": 450,
+          "screenX": 550,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 19688.536632000003
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 450,
+          "screenX": 650,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 19692.604502
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 483,
+          "screenX": 650,
+          "screenY": 483,
+          "buttons": 2,
+          "trusted": true,
+          "time": 19698.023859999998
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 650,
+          "screenX": 650,
+          "screenY": 650,
+          "buttons": 2,
+          "trusted": true,
+          "time": 19701.941064
+        },
+        {
+          "type": "mouseup",
+          "x": 650,
+          "y": 650,
+          "screenX": 650,
+          "screenY": 650,
+          "buttons": 0,
+          "trusted": true,
+          "time": 19860.118782
+        }
+      ]
+    },
+    {
+      "case": "dense",
+      "repeat": 2,
+      "points": [
+        [
+          450,
+          450
+        ],
+        [
+          460,
+          450
+        ],
+        [
+          470,
+          450
+        ],
+        [
+          480,
+          450
+        ],
+        [
+          490,
+          450
+        ],
+        [
+          500,
+          450
+        ],
+        [
+          510,
+          450
+        ],
+        [
+          520,
+          450
+        ],
+        [
+          530,
+          450
+        ],
+        [
+          540,
+          450
+        ],
+        [
+          550,
+          450
+        ],
+        [
+          560,
+          450
+        ],
+        [
+          570,
+          450
+        ],
+        [
+          580,
+          450
+        ],
+        [
+          590,
+          450
+        ],
+        [
+          600,
+          450
+        ],
+        [
+          610,
+          450
+        ],
+        [
+          620,
+          450
+        ],
+        [
+          630,
+          450
+        ],
+        [
+          640,
+          450
+        ],
+        [
+          650,
+          450
+        ],
+        [
+          650,
+          460
+        ],
+        [
+          650,
+          470
+        ],
+        [
+          650,
+          480
+        ],
+        [
+          650,
+          490
+        ],
+        [
+          650,
+          500
+        ],
+        [
+          650,
+          510
+        ],
+        [
+          650,
+          520
+        ],
+        [
+          650,
+          530
+        ],
+        [
+          650,
+          540
+        ],
+        [
+          650,
+          550
+        ],
+        [
+          650,
+          560
+        ],
+        [
+          650,
+          570
+        ],
+        [
+          650,
+          580
+        ],
+        [
+          650,
+          590
+        ],
+        [
+          650,
+          600
+        ],
+        [
+          650,
+          610
+        ],
+        [
+          650,
+          620
+        ],
+        [
+          650,
+          630
+        ],
+        [
+          650,
+          640
+        ],
+        [
+          650,
+          650
+        ]
+      ],
+      "durationPerMoveMs": 40,
+      "beforeTabs": 18,
+      "afterTabs": 19,
+      "label": "New Tab",
+      "events": [
+        {
+          "type": "mousemove",
+          "x": 583,
+          "y": 583,
+          "screenX": 583,
+          "screenY": 583,
+          "buttons": 0,
+          "trusted": true,
+          "time": 21018.876417
+        },
+        {
+          "type": "mousemove",
+          "x": 516,
+          "y": 516,
+          "screenX": 516,
+          "screenY": 516,
+          "buttons": 0,
+          "trusted": true,
+          "time": 21053.035769000002
+        },
+        {
+          "type": "mousemove",
+          "x": 483,
+          "y": 483,
+          "screenX": 483,
+          "screenY": 483,
+          "buttons": 0,
+          "trusted": true,
+          "time": 21086.006183999998
+        },
+        {
+          "type": "mousemove",
+          "x": 450,
+          "y": 450,
+          "screenX": 450,
+          "screenY": 450,
+          "buttons": 0,
+          "trusted": true,
+          "time": 21102.45336
+        },
+        {
+          "type": "mousedown",
+          "x": 450,
+          "y": 450,
+          "screenX": 450,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 21106.143843
+        },
+        {
+          "type": "contextmenu",
+          "x": 450,
+          "y": 450,
+          "screenX": 450,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 21109.66234
+        },
+        {
+          "type": "mousemove",
+          "x": 455,
+          "y": 450,
+          "screenX": 455,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 21152.173496
+        },
+        {
+          "type": "mousemove",
+          "x": 460,
+          "y": 450,
+          "screenX": 460,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 21169.264408
+        },
+        {
+          "type": "mousemove",
+          "x": 465,
+          "y": 450,
+          "screenX": 465,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 21200.041439
+        },
+        {
+          "type": "mousemove",
+          "x": 470,
+          "y": 450,
+          "screenX": 470,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 21220.120321
+        },
+        {
+          "type": "mousemove",
+          "x": 475,
+          "y": 450,
+          "screenX": 475,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 21251.611668999998
+        },
+        {
+          "type": "mousemove",
+          "x": 480,
+          "y": 450,
+          "screenX": 480,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 21269.363899999997
+        },
+        {
+          "type": "mousemove",
+          "x": 485,
+          "y": 450,
+          "screenX": 485,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 21285.403087
+        },
+        {
+          "type": "mousemove",
+          "x": 490,
+          "y": 450,
+          "screenX": 490,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 21320.199029
+        },
+        {
+          "type": "mousemove",
+          "x": 495,
+          "y": 450,
+          "screenX": 495,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 21352.776770999997
+        },
+        {
+          "type": "mousemove",
+          "x": 500,
+          "y": 450,
+          "screenX": 500,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 21385.870667
+        },
+        {
+          "type": "mousemove",
+          "x": 505,
+          "y": 450,
+          "screenX": 505,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 21403.009274
+        },
+        {
+          "type": "mousemove",
+          "x": 510,
+          "y": 450,
+          "screenX": 510,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 21437.088721
+        },
+        {
+          "type": "mousemove",
+          "x": 515,
+          "y": 450,
+          "screenX": 515,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 21456.975029999998
+        },
+        {
+          "type": "mousemove",
+          "x": 520,
+          "y": 450,
+          "screenX": 520,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 21487.77576
+        },
+        {
+          "type": "mousemove",
+          "x": 525,
+          "y": 450,
+          "screenX": 525,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 21507.210172
+        },
+        {
+          "type": "mousemove",
+          "x": 530,
+          "y": 450,
+          "screenX": 530,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 21538.395285
+        },
+        {
+          "type": "mousemove",
+          "x": 535,
+          "y": 450,
+          "screenX": 535,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 21557.716889000003
+        },
+        {
+          "type": "mousemove",
+          "x": 540,
+          "y": 450,
+          "screenX": 540,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 21590.939714
+        },
+        {
+          "type": "mousemove",
+          "x": 545,
+          "y": 450,
+          "screenX": 545,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 21623.454084999998
+        },
+        {
+          "type": "mousemove",
+          "x": 550,
+          "y": 450,
+          "screenX": 550,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 21640.687945
+        },
+        {
+          "type": "mousemove",
+          "x": 555,
+          "y": 450,
+          "screenX": 555,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 21657.52578
+        },
+        {
+          "type": "mousemove",
+          "x": 560,
+          "y": 450,
+          "screenX": 560,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 21690.992992000003
+        },
+        {
+          "type": "mousemove",
+          "x": 565,
+          "y": 450,
+          "screenX": 565,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 21708.428930000002
+        },
+        {
+          "type": "mousemove",
+          "x": 570,
+          "y": 450,
+          "screenX": 570,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 21741.919278
+        },
+        {
+          "type": "mousemove",
+          "x": 575,
+          "y": 450,
+          "screenX": 575,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 21759.649026000003
+        },
+        {
+          "type": "mousemove",
+          "x": 580,
+          "y": 450,
+          "screenX": 580,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 21793.251690999998
+        },
+        {
+          "type": "mousemove",
+          "x": 590,
+          "y": 450,
+          "screenX": 590,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 21862.964044999997
+        },
+        {
+          "type": "mousemove",
+          "x": 595,
+          "y": 450,
+          "screenX": 595,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 21892.282531
+        },
+        {
+          "type": "mousemove",
+          "x": 600,
+          "y": 450,
+          "screenX": 600,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 21909.556902
+        },
+        {
+          "type": "mousemove",
+          "x": 605,
+          "y": 450,
+          "screenX": 605,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 21928.238911
+        },
+        {
+          "type": "mousemove",
+          "x": 610,
+          "y": 450,
+          "screenX": 610,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 21961.533091
+        },
+        {
+          "type": "mousemove",
+          "x": 615,
+          "y": 450,
+          "screenX": 615,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 21981.031592
+        },
+        {
+          "type": "mousemove",
+          "x": 620,
+          "y": 450,
+          "screenX": 620,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 22055.3996
+        },
+        {
+          "type": "mousemove",
+          "x": 625,
+          "y": 450,
+          "screenX": 625,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 22081.811850000002
+        },
+        {
+          "type": "mousemove",
+          "x": 630,
+          "y": 450,
+          "screenX": 630,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 22099.103293
+        },
+        {
+          "type": "mousemove",
+          "x": 635,
+          "y": 450,
+          "screenX": 635,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 22116.572311
+        },
+        {
+          "type": "mousemove",
+          "x": 640,
+          "y": 450,
+          "screenX": 640,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 22149.696899
+        },
+        {
+          "type": "mousemove",
+          "x": 645,
+          "y": 450,
+          "screenX": 645,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 22167.600227000003
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 450,
+          "screenX": 650,
+          "screenY": 450,
+          "buttons": 2,
+          "trusted": true,
+          "time": 22201.938434
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 455,
+          "screenX": 650,
+          "screenY": 455,
+          "buttons": 2,
+          "trusted": true,
+          "time": 22217.030082
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 460,
+          "screenX": 650,
+          "screenY": 460,
+          "buttons": 2,
+          "trusted": true,
+          "time": 22251.455435
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 465,
+          "screenX": 650,
+          "screenY": 465,
+          "buttons": 2,
+          "trusted": true,
+          "time": 22270.430602
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 470,
+          "screenX": 650,
+          "screenY": 470,
+          "buttons": 2,
+          "trusted": true,
+          "time": 22301.734247
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 475,
+          "screenX": 650,
+          "screenY": 475,
+          "buttons": 2,
+          "trusted": true,
+          "time": 22319.00519
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 480,
+          "screenX": 650,
+          "screenY": 480,
+          "buttons": 2,
+          "trusted": true,
+          "time": 22353.008428999998
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 485,
+          "screenX": 650,
+          "screenY": 485,
+          "buttons": 2,
+          "trusted": true,
+          "time": 22370.3115
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 490,
+          "screenX": 650,
+          "screenY": 490,
+          "buttons": 2,
+          "trusted": true,
+          "time": 22403.415803
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 495,
+          "screenX": 650,
+          "screenY": 495,
+          "buttons": 2,
+          "trusted": true,
+          "time": 22422.514928999997
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 500,
+          "screenX": 650,
+          "screenY": 500,
+          "buttons": 2,
+          "trusted": true,
+          "time": 22460.136378000003
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 505,
+          "screenX": 650,
+          "screenY": 505,
+          "buttons": 2,
+          "trusted": true,
+          "time": 22493.83581
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 510,
+          "screenX": 650,
+          "screenY": 510,
+          "buttons": 2,
+          "trusted": true,
+          "time": 22557.236041
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 515,
+          "screenX": 650,
+          "screenY": 515,
+          "buttons": 2,
+          "trusted": true,
+          "time": 22574.218600999997
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 520,
+          "screenX": 650,
+          "screenY": 520,
+          "buttons": 2,
+          "trusted": true,
+          "time": 22607.062418
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 525,
+          "screenX": 650,
+          "screenY": 525,
+          "buttons": 2,
+          "trusted": true,
+          "time": 22625.99768
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 530,
+          "screenX": 650,
+          "screenY": 530,
+          "buttons": 2,
+          "trusted": true,
+          "time": 22665.945315999998
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 535,
+          "screenX": 650,
+          "screenY": 535,
+          "buttons": 2,
+          "trusted": true,
+          "time": 22691.721268999998
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 540,
+          "screenX": 650,
+          "screenY": 540,
+          "buttons": 2,
+          "trusted": true,
+          "time": 22708.724366
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 545,
+          "screenX": 650,
+          "screenY": 545,
+          "buttons": 2,
+          "trusted": true,
+          "time": 22726.937746
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 550,
+          "screenX": 650,
+          "screenY": 550,
+          "buttons": 2,
+          "trusted": true,
+          "time": 22760.796819
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 555,
+          "screenX": 650,
+          "screenY": 555,
+          "buttons": 2,
+          "trusted": true,
+          "time": 22795.135296
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 560,
+          "screenX": 650,
+          "screenY": 560,
+          "buttons": 2,
+          "trusted": true,
+          "time": 22822.154549
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 565,
+          "screenX": 650,
+          "screenY": 565,
+          "buttons": 2,
+          "trusted": true,
+          "time": 22846.362160999997
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 570,
+          "screenX": 650,
+          "screenY": 570,
+          "buttons": 2,
+          "trusted": true,
+          "time": 22884.80424
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 575,
+          "screenX": 650,
+          "screenY": 575,
+          "buttons": 2,
+          "trusted": true,
+          "time": 22921.387053
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 580,
+          "screenX": 650,
+          "screenY": 580,
+          "buttons": 2,
+          "trusted": true,
+          "time": 22932.393643
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 585,
+          "screenX": 650,
+          "screenY": 585,
+          "buttons": 2,
+          "trusted": true,
+          "time": 22960.391044
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 590,
+          "screenX": 650,
+          "screenY": 590,
+          "buttons": 2,
+          "trusted": true,
+          "time": 22985.81539
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 595,
+          "screenX": 650,
+          "screenY": 595,
+          "buttons": 2,
+          "trusted": true,
+          "time": 23010.920471999998
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 600,
+          "screenX": 650,
+          "screenY": 600,
+          "buttons": 2,
+          "trusted": true,
+          "time": 23074.387009
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 605,
+          "screenX": 650,
+          "screenY": 605,
+          "buttons": 2,
+          "trusted": true,
+          "time": 23102.444996
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 610,
+          "screenX": 650,
+          "screenY": 610,
+          "buttons": 2,
+          "trusted": true,
+          "time": 23135.792871999998
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 615,
+          "screenX": 650,
+          "screenY": 615,
+          "buttons": 2,
+          "trusted": true,
+          "time": 23169.190659
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 620,
+          "screenX": 650,
+          "screenY": 620,
+          "buttons": 2,
+          "trusted": true,
+          "time": 23185.949913999997
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 625,
+          "screenX": 650,
+          "screenY": 625,
+          "buttons": 2,
+          "trusted": true,
+          "time": 23217.094418999997
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 630,
+          "screenX": 650,
+          "screenY": 630,
+          "buttons": 2,
+          "trusted": true,
+          "time": 23246.502699
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 635,
+          "screenX": 650,
+          "screenY": 635,
+          "buttons": 2,
+          "trusted": true,
+          "time": 23279.161064
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 640,
+          "screenX": 650,
+          "screenY": 640,
+          "buttons": 2,
+          "trusted": true,
+          "time": 23312.781388
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 645,
+          "screenX": 650,
+          "screenY": 645,
+          "buttons": 2,
+          "trusted": true,
+          "time": 23341.540798
+        },
+        {
+          "type": "mousemove",
+          "x": 650,
+          "y": 650,
+          "screenX": 650,
+          "screenY": 650,
+          "buttons": 2,
+          "trusted": true,
+          "time": 23371.570757
+        },
+        {
+          "type": "mouseup",
+          "x": 650,
+          "y": 650,
+          "screenX": 650,
+          "screenY": 650,
+          "buttons": 0,
+          "trusted": true,
+          "time": 23532.253446
+        }
+      ]
+    }
+  ],
+  "config": {
+    "enabled": true,
+    "config": {
+      "enabled": false,
+      "rockerGesturesEnabled": true,
+      "wheelGesturesEnabled": true,
+      "sensitivity": 40,
+      "showTrail": true,
+      "showLabel": true,
+      "trailColor": "#37ff00",
+      "trailWidth": 6,
+      "contextMenu": {
+        "minDistance": 5,
+        "preventionTimeout": 200
+      },
+      "actions": [
+        {
+          "pattern": [
+            "up"
+          ],
+          "action": "gecko-open-new-tab"
+        },
+        {
+          "pattern": [
+            "right",
+            "down"
+          ],
+          "action": "gecko-open-new-tab"
+        }
+      ],
+      "rockerActions": {
+        "leftRight": "gecko-forward",
+        "rightLeft": "gecko-back"
+      },
+      "wheelActions": {
+        "scrollUp": "gecko-show-previous-tab",
+        "scrollDown": "gecko-show-next-tab"
+      }
+    }
+  }
+}

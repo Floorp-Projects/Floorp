@@ -1,0 +1,22 @@
+{
+  "image": "fedora:44",
+  "variant": "Fedora Container Image",
+  "display": "host Xvfb :92/X11",
+  "kernel": "shared host kernel",
+  "user": "uid1000 qa",
+  "input": "synthetic W3C and constructed events",
+  "firstFailure": {
+    "exit": 255,
+    "log": "floorp-run-29410.log",
+    "cause": "missing libX11-xcb.so.1; namespace probe separately EPERM"
+  },
+  "success": {
+    "search": "search-29411.json",
+    "middle": "middle-29411.json",
+    "wheel": "wheel-29411.json",
+    "split": "split-29412.json",
+    "detach": "detach-29412.json"
+  },
+  "protections": "No disabling environment or flags used; default product sandbox configuration retained",
+  "remaining": "Original Fedora desktop/kernel/package, Flatpak, physical devices"
+}

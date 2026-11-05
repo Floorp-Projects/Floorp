@@ -1,0 +1,227 @@
+[
+  {
+    "file": "libappstream5_1.0.5-1_amd64.deb",
+    "bytes": 225908,
+    "sha256": "532cdb01d8b8bc522719bba46fa61d16f91a3efbad32394466b97d4a69340a7d"
+  },
+  {
+    "file": "libplasmaactivities6_6.3.4-1_amd64.deb",
+    "bytes": 77600,
+    "sha256": "276499e21615e56a5641a8d4e066339721e4d15c83577e73830b68924c061035"
+  },
+  {
+    "file": "libkwaylandclient6_4%3a6.3.4-1_amd64.deb",
+    "bytes": 197880,
+    "sha256": "06094fad361549c888ed9a1525fc707d21516a943ab75029bc39d89ec222dbd1"
+  },
+  {
+    "file": "libxcb-damage0_1.17.0-2+b1_amd64.deb",
+    "bytes": 104516,
+    "sha256": "24ca1425c163bc8e5314304b62296a669a2f66ebf7e4a68c2d6671d0d9146e4e"
+  },
+  {
+    "file": "libneatvnc0_0.9.1+dfsg-1_amd64.deb",
+    "bytes": 70964,
+    "sha256": "ac2c8f3f8f44a31d65e19afc7e1a092ec6f32255dbe763c52f7f2b44f0db42d7"
+  },
+  {
+    "file": "libxmlb2_0.3.22-1_amd64.deb",
+    "bytes": 63096,
+    "sha256": "21288db65dd4b5b4e7f054674d383a5af328663d0cd81e6871e8bcde221b2f0e"
+  },
+  {
+    "file": "libkf6idletime6_6.13.0-1_amd64.deb",
+    "bytes": 59460,
+    "sha256": "ff1f8de2f888dfa358dcfca54434defb7de86386d4053cc964eba354e7ee504e"
+  },
+  {
+    "file": "libstemmer0d_2.2.0-4+b2_amd64.deb",
+    "bytes": 118780,
+    "sha256": "ee9510a4f48b6efad845cad80b8773d72219291d325e4e3c3d07b3930a7bf2ee"
+  },
+  {
+    "file": "libavahi-glib1_0.8-16_amd64.deb",
+    "bytes": 29888,
+    "sha256": "b6eb34e6a24c7c82709a0f8dd4f26a1936534a7f1a1050f7cec8d29fc4fa749e"
+  },
+  {
+    "file": "libqaccessibilityclient-qt6-0_0.6.0-3_amd64.deb",
+    "bytes": 88432,
+    "sha256": "c56e8a2c860bba9f401bfd815dc9bf2077f462041bd716d20c182451abca4230"
+  },
+  {
+    "file": "liblayershellqtinterface6_6.3.4-1_amd64.deb",
+    "bytes": 29600,
+    "sha256": "b9dcb58b0732c315cfd44167fe421d79fd7283ecdf5a3b9bc9e9a997fb50dd15"
+  },
+  {
+    "file": "libfreerdp3-3_3.15.0+dfsg-2.1+deb13u3_amd64.deb",
+    "bytes": 734080,
+    "sha256": "ef5bb23c1ee7d7c62e52c5adef9429f23205bc0defef65a0730c17c570841d6a"
+  },
+  {
+    "file": "libmalcontent-0-0_0.13.0-2+deb13u1_amd64.deb",
+    "bytes": 22480,
+    "sha256": "b75e27a22a3a23aac0adc1e46ec8c927ac60e32df90a0c2d9ac6f5b759ca97d1"
+  },
+  {
+    "file": "libkwin6_4%3a6.3.6-1_amd64.deb",
+    "bytes": 2169440,
+    "sha256": "151e89c420a8954d8bbadf265a7f87f49771832442d7aff41f25af8d531b7a0c"
+  },
+  {
+    "file": "qml6-module-org-kde-iconthemes_6.13.0-2_amd64.deb",
+    "bytes": 17340,
+    "sha256": "8e70e376e5e23b544f6eaecb052622bb99ae78ef9f78d23bb5d5c45cd042bdb1"
+  },
+  {
+    "file": "libkf6svg6_6.13.0-1_amd64.deb",
+    "bytes": 103068,
+    "sha256": "30c385de33ce79c966b5ecc68f95e39eadb5010cd9b5c21a297be5ae7d536361"
+  },
+  {
+    "file": "libxcb-composite0_1.17.0-2+b1_amd64.deb",
+    "bytes": 104820,
+    "sha256": "5e9eb63ce6ae1fb282059510078f2df88c3780bfea37ac2dac5c374250cb4789"
+  },
+  {
+    "file": "kio-fuse_5.1.0-1+b1_amd64.deb",
+    "bytes": 75508,
+    "sha256": "d83a32f4d02741d36b129623e62c1dbc263f36ea047719096f4418ae564cf01b"
+  },
+  {
+    "file": "xdg-desktop-portal-kde_6.3.5-1_amd64.deb",
+    "bytes": 462512,
+    "sha256": "55246efa9fc5a12e72d02667be7850f37ae6c541ac99664c2dbb1f470b10cad5"
+  },
+  {
+    "file": "weston_14.0.2-1_amd64.deb",
+    "bytes": 934724,
+    "sha256": "cb2cddfc082a6f14d15e4682cdbb9778439f9b89123ed41356f108ccb3ebb48e"
+  },
+  {
+    "file": "kwin-wayland_4%3a6.3.6-1_amd64.deb",
+    "bytes": 471000,
+    "sha256": "223b659bf45c9fdf39deba121255d87094108a4d6953bbfa1a14cc4169e114ce"
+  },
+  {
+    "file": "flatpak_1.16.6-1~deb13u2_amd64.deb",
+    "bytes": 1551900,
+    "sha256": "394685e73bb5c9ca59cdf630353f21f88290b4b3b26731a7dd1f2be5a2f87d0a"
+  },
+  {
+    "file": "libaml0t64_0.3.0-3_amd64.deb",
+    "bytes": 11096,
+    "sha256": "06c7b1107490f4809e721f1d1acd9850c1e363ccc15c41fc66ca1068ca730e7e"
+  },
+  {
+    "file": "libkscreenlocker6_6.3.5-1_amd64.deb",
+    "bytes": 155232,
+    "sha256": "5780b00abad71a019fb75b93e5d8007bb06603d7bb26a90ffea32359258f53f8"
+  },
+  {
+    "file": "kwayland6-data_4%3a6.3.4-1_all.deb",
+    "bytes": 7084,
+    "sha256": "d05196d18dd2fa0ca49527732281311a98265818424abd87c6f5a93080e57453"
+  },
+  {
+    "file": "libkf6screendpms8_4%3a6.3.4-1_amd64.deb",
+    "bytes": 29028,
+    "sha256": "996c4b8d958b08c30ed2410d22fab3d283feaba1e3cc3013a100b67ef0eeede1"
+  },
+  {
+    "file": "xdg-desktop-portal_1.20.3+ds-1_amd64.deb",
+    "bytes": 408456,
+    "sha256": "9dce4bf7ca1cc9afce6d48735a4a9897a27bcfd17791a05031eb73ac76788922"
+  },
+  {
+    "file": "libturbojpeg0_1%3a2.1.5-4_amd64.deb",
+    "bytes": 211540,
+    "sha256": "41e47391d822b61b7ca70002c793c1aa003bce6e31d30a28edda432e2b842a80"
+  },
+  {
+    "file": "libseat1_0.9.1-1_amd64.deb",
+    "bytes": 28036,
+    "sha256": "20c08d9460b87f98f36ffe200ef9ac074c3ca23961cb5fd47399f20946f5b185"
+  },
+  {
+    "file": "libostree-1-1_2025.2-1_amd64.deb",
+    "bytes": 353412,
+    "sha256": "bb1ce62a7c39b942bea7f8430588ff5b16fdf1ca019e1942746a482acfbe38f8"
+  },
+  {
+    "file": "libkglobalacceld0_6.3.6-1_amd64.deb",
+    "bytes": 98684,
+    "sha256": "aa74afe6028a2d6376f0ebf797d2d23984112ab0f56fe5f08fae095e6f7b96fb"
+  },
+  {
+    "file": "libqt6sensors6_6.8.2-3_amd64.deb",
+    "bytes": 95612,
+    "sha256": "04bab53e3b8056be1ca5f068d72f2d99b7fb3ba4b5cda42d7668e149f78ee0da"
+  },
+  {
+    "file": "libxcb-dpms0_1.17.0-2+b1_amd64.deb",
+    "bytes": 104876,
+    "sha256": "1db11e01f3f4b5a6249cb239c263c6ade7bc1e1f6576fa059134e4c928c331c9"
+  },
+  {
+    "file": "libwinpr3-3_3.15.0+dfsg-2.1+deb13u3_amd64.deb",
+    "bytes": 364108,
+    "sha256": "21d58d1d06452001c049d56804cb005e02c09b73b76a2f4a533d7745928c5957"
+  },
+  {
+    "file": "libkf6statusnotifieritem6_6.13.0-1_amd64.deb",
+    "bytes": 107908,
+    "sha256": "47031e27b37c2718563422acf5d606d5525cc2aa0fa64fcb7196888677931785"
+  },
+  {
+    "file": "libplasmaquick6_6.3.5-1_amd64.deb",
+    "bytes": 195020,
+    "sha256": "7d55644786f53456090de2beb17ac95a60da893afbeeb41ea9c0e345ebde138e"
+  },
+  {
+    "file": "xdg-dbus-proxy_0.1.6-1+deb13u2_amd64.deb",
+    "bytes": 25640,
+    "sha256": "ab3d712fc62e7ac401aef2d08242721544917f8161859d8e650fef8e147a7001"
+  },
+  {
+    "file": "libkf6statusnotifieritem-data_6.13.0-1_all.deb",
+    "bytes": 9588,
+    "sha256": "a32871e4bdffdb78d2645ff72b0a010af1d63fded9e01c5cef8901d5f6e5b155"
+  },
+  {
+    "file": "libfreerdp-server3-3_3.15.0+dfsg-2.1+deb13u3_amd64.deb",
+    "bytes": 133056,
+    "sha256": "8a13d5483af10050b7f4f704ed5f40e4a43cd8722023c0bc359f8fc6731b23de"
+  },
+  {
+    "file": "libplasma6_6.3.5-1_amd64.deb",
+    "bytes": 135480,
+    "sha256": "05bb0ea1b49c7b1c965d388484c8470e71a4ebd7979d1b679b3dde531726bd77"
+  },
+  {
+    "file": "libkscreen-data_4%3a6.3.4-1_all.deb",
+    "bytes": 14764,
+    "sha256": "f7fa2484b99a24fb32c9fc3f764ba99c9b584fbf83845d704caf06e6e796592b"
+  },
+  {
+    "file": "libweston-14-0_14.0.2-1_amd64.deb",
+    "bytes": 416384,
+    "sha256": "882469912622c4ef2b0cf85d9cba56906250a6da7e935580feca868bb7dfe942"
+  },
+  {
+    "file": "libxcb-record0_1.17.0-2+b1_amd64.deb",
+    "bytes": 106880,
+    "sha256": "71ae133ecc8614ba3fcbfb8ced553309ace2cab1eefb82683fff92102a1f35cd"
+  },
+  {
+    "file": "libgles2_1.7.0-1+b2_amd64.deb",
+    "bytes": 17256,
+    "sha256": "e12c18aa77939d122ee1dea520ba0440b97dc19200b7396e03dff03a3ece74c1"
+  },
+  {
+    "file": "xwayland_2%3a24.1.6-1_amd64.deb",
+    "bytes": 904212,
+    "sha256": "7e51a144e858d5be7e91d6644c2758a618e425c7222234d2e8f059e5aba6c1f5"
+  }
+]

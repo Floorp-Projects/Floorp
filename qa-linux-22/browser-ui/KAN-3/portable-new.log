@@ -1,0 +1,2 @@
+RUN floorp regression
+{"scenario": "regression", "observations": [{"passed": true}], "product": {"name": "Floorp", "version": "159.0.1", "build": "20261103153232", "os": "Linux"}}

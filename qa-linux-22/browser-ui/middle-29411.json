@@ -1,0 +1,100 @@
+{
+  "scenario": "middle",
+  "product": {
+    "version": "159.0.1",
+    "build": "20261103153232",
+    "name": "Floorp",
+    "os": "Linux"
+  },
+  "observations": [
+    {
+      "proxies": 3,
+      "tabs": [
+        {
+          "connected": true,
+          "selected": true,
+          "url": "data:text/html,<title>QA middle 0</title>QA 0"
+        },
+        {
+          "connected": true,
+          "selected": false,
+          "url": "data:text/html,<title>QA middle 1</title>QA 1"
+        },
+        {
+          "connected": true,
+          "selected": false,
+          "url": "data:text/html,<title>QA middle 2</title>QA 2"
+        }
+      ]
+    },
+    [
+      {
+        "connected": true,
+        "selected": true
+      },
+      {
+        "connected": false,
+        "selected": false
+      },
+      {
+        "connected": true,
+        "selected": false
+      }
+    ],
+    [
+      {
+        "connected": false,
+        "selected": false
+      },
+      {
+        "connected": false,
+        "selected": false
+      },
+      {
+        "connected": true,
+        "selected": true
+      }
+    ]
+  ],
+  "graphics": {
+    "windowProtocol": "x11",
+    "compositing": "WebRender (Software)",
+    "keys": [
+      "desktopEnvironment",
+      "numTotalWindows",
+      "numAcceleratedWindows",
+      "windowLayerManagerType",
+      "windowLayerManagerRemote",
+      "graphicsDevicePixelRatios",
+      "adapterDescription",
+      "adapterVendorID",
+      "adapterDeviceID",
+      "adapterRAM",
+      "adapterDrivers",
+      "driverVendor",
+      "driverVersion",
+      "driverDate",
+      "adapterVendorID2",
+      "adapterDeviceID2",
+      "isGPU2Active",
+      "targetFrameRate",
+      "windowProtocol",
+      "supportFontDetermination",
+      "webgl1Renderer",
+      "webgl1Version",
+      "webgl1DriverExtensions",
+      "webgl1Extensions",
+      "webgl1WSIInfo",
+      "webgl2Renderer",
+      "webgl2Version",
+      "webgl2DriverExtensions",
+      "webgl2Extensions",
+      "webgl2WSIInfo",
+      "info",
+      "featureLog",
+      "crashGuards",
+      "webgpuDefaultAdapter",
+      "webgpuFallbackAdapter"
+    ]
+  }
+}

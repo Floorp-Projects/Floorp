@@ -1,0 +1,7 @@
+Returning mouse gestures such as up-down show their configured action while held, then fail on release when the pointer comes back to its starting point. The controller checks start-to-end displacement before invoking the recognizer, so it discards a completed returning gesture as an ordinary right click.
+
+Measure the maximum excursion from the start for activation. This keeps returning gestures active without accumulating tiny pointer jitter. Add controller coverage for both up-down/down-up, native menu suppression around release, the next ordinary right click, and repeated movement below the threshold.
+
+Related to #2244; this is a limited fix and does not close the issue. A configured right-down gesture still failed in a sparse W3C test before and after this change; its cause remains unestablished. Arch/Sway/Wayland and physical input remain unverified.
+
+Validation: Debian 13.6/Xvfb, official Floorp 12.21.1 / Gecko159.0.1. Unmodified product reproduces up-down, dense up-down, and down-up failure; a separate product copy with only the matching function changed passes all three and retains single-up behavior. The actual controller test module executed in Floorp chrome passes 40 cases after the patch; the new returning-gesture case fails against the baseline controller. That focused test bundle replaces HMR setup and built-in action registrations; it is not the full integration runner. Targeted lint, formatting, and diff checks pass. Full production build and full suite were not run.

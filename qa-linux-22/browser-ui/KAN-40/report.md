@@ -22,3 +22,13 @@ Source: `984509d2053be7bae9027133bda7259cd706b208`。公式Floorp12.21.1 / Gecko
 - `../KAN-40/after.png`
 
 状態・Sprint所属・Doneは変更しない。
+
+Jira追記comment ID: `10287`。needs-linuxは実試験によりlinux-testedへ置換し、原ディストリ/物理入力の具体条件とenv-blockedは保持。
+
+## Fedora44 container追加試験
+
+実Fedora44 Container Imageのuserlandで依存を隔離導入し、host Xvfb/X11に接続した公式Floorp12.21.1を一般ユーザーで実行。共有host kernelと仮想画面を使用し、元Fedora desktop/Flatpak/物理入力とは異なる。securityを無効化するenv/flagは使用していない。初回XPCOM起動はlibX11-xcb不足でexit255、その依存を補って製品起動と試験に成功。
+
+W3C中ボタンで非選択member、次いで選択memberが閉じ、他tab保持（middle-29411.json）。
+
+Jira最終comment ID: `10287`。
