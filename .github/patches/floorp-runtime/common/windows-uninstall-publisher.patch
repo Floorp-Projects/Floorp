@@ -1,0 +1,37 @@
+diff --git a/browser/installer/windows/nsis/shared.nsh b/browser/installer/windows/nsis/shared.nsh
+--- a/browser/installer/windows/nsis/shared.nsh
++++ b/browser/installer/windows/nsis/shared.nsh
+@@ -701,7 +701,11 @@
+     ${WriteRegStr2} $RegHive "$0" "DisplayName" "${BrandFullNameInternal}$3 (${ARCH} ${AB_CD})" 0
+     ${WriteRegStr2} $RegHive "$0" "HelpLink" "${HelpLink}" 0
+     ${WriteRegStr2} $RegHive "$0" "InstallLocation" "$8" 0
++!ifdef BrandUninstallPublisher
++    ${WriteRegStr2} $RegHive "$0" "Publisher" "${BrandUninstallPublisher}" 0
++!else
+     ${WriteRegStr2} $RegHive "$0" "Publisher" "Mozilla" 0
++!endif
+     ${WriteRegStr2} $RegHive "$0" "UninstallString" "$\"$8\uninstall\helper.exe$\"" 0
+     DeleteRegValue SHCTX "$0" "URLInfoAbout"
+ ; Don't add URLUpdateInfo which is the release notes url except for the release
+diff --git a/.github/assets/branding/floorp-official/branding.nsi b/.github/assets/branding/floorp-official/branding.nsi
+--- a/.github/assets/branding/floorp-official/branding.nsi
++++ b/.github/assets/branding/floorp-official/branding.nsi
+@@ -12,6 +12,7 @@
+ !define BrandFullNameInternal "Ablaze Floorp"
+ !define BrandFullName         "Ablaze Floorp"
+ !define CompanyName           "Ablaze"
++!define BrandUninstallPublisher "Floorp Projects"
+ !define URLInfoAbout          "https://www.ablaze.one"
+ !define URLUpdateInfo         "https://blog.ablaze.one"
+ !define HelpLink              "https://support.ablaze.one"
+diff --git a/.github/assets/branding/floorp-daylight/branding.nsi b/.github/assets/branding/floorp-daylight/branding.nsi
+--- a/.github/assets/branding/floorp-daylight/branding.nsi
++++ b/.github/assets/branding/floorp-daylight/branding.nsi
+@@ -11,6 +11,7 @@
+ !define BrandFullNameInternal "Floorp Daylight"
+ !define BrandFullName         "Floorp Daylight"
+ !define CompanyName           "Ablaze"
++!define BrandUninstallPublisher "Floorp Projects"
+ !define URLInfoAbout          "https://Ablaze.one"
+ !define URLUpdateInfo         "https://www.mozilla.org/firefox/${AppVersion}/releasenotes"
+ !define HelpLink              "https://support.ablaze.one"
