@@ -1,0 +1,21 @@
+{
+  "result": "QA resource guard stop; no KAN29 PASS",
+  "elapsedFromMonitorBaselineSeconds": 54.65966812100305,
+  "ownedPssGiBAtGuard": 12.272934913635254,
+  "cgroupGiBAtGuard": 13.918155670166016,
+  "eventDeltas": {
+    "low": 0,
+    "high": 0,
+    "max": 0,
+    "oom": 0,
+    "oom_kill": 0,
+    "oom_group_kill": 0
+  },
+  "visibleArabic": "15s image visibly Arabic toolbar, new-tab labels and vertical-tab onboarding; strict locale APIs not queried",
+  "renderer": "Same copied preferences and original X11 environment; no renderer overrides. Actual active renderer not queried because all RPC prohibited. Cannot claim active renderer identity from this run.",
+  "confound": "Source profile already contains prior resource-stop/recovery history; not a clean pre-RTL snapshot. Single planned factor NewSession omission does not make strict causal proof. CLI Marionette flag remains.",
+  "normalQuit": false,
+  "actualNativeChildExit": -15,
+  "payloadEntries": 46,
+  "payloadUnmodified": true
+}

@@ -1,0 +1,43 @@
+{
+  "sourceSha": "a6290b5811b8c5309b399ac340ec40b52f97b73c",
+  "ltr": {
+    "states": 8,
+    "hoverRounds": 24,
+    "productPass": true,
+    "actualChildExit": 0,
+    "probeExit": 0
+  },
+  "signedLocaleInstall": {
+    "signedState": 2,
+    "appDisabled": false,
+    "actualChildExit": 0
+  },
+  "rtl": {
+    "states": 0,
+    "hoverRounds": 0,
+    "productPass": null,
+    "classification": "startup/session precondition failure; resource pressure observed, causal attribution unresolved",
+    "firstChildExit": null,
+    "resumeChildExit": -9,
+    "normalQuitRequested": false,
+    "resumeRunnerExit": 1,
+    "resumeDbusWrapperExit": 1
+  },
+  "firstAttempt": {
+    "run": "baseline-a629-30071",
+    "collection": "LTR8states/24hover complete, RTL not measured due NewSession45s timeout",
+    "ltrProductPass": true,
+    "actualChildExit": {
+      "ltr": 0,
+      "locale-install": 0,
+      "rtl": null
+    },
+    "unknownRtlChildExit": "No direct wait receipt captured; never infer0 from other phases/wrappers",
+    "runnerExit": 1,
+    "dbusWrapperExit": 1,
+    "payloadUnchanged": true,
+    "resume": "Only RTL, same owned signed-ar profile; pageLoadStrategy:none is test navigation wait control, not weakened live/locale/Wayland or security validation"
+  },
+  "payloadUnchangedBoth": true,
+  "additionalBaselineBrowserForbidden": true
+}

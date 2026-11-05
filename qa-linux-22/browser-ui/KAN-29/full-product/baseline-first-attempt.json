@@ -1,0 +1,15 @@
+{
+  "run": "baseline-a629-30071",
+  "collection": "LTR8states/24hover complete, RTL not measured due NewSession45s timeout",
+  "ltrProductPass": true,
+  "actualChildExit": {
+    "ltr": 0,
+    "locale-install": 0,
+    "rtl": null
+  },
+  "unknownRtlChildExit": "No direct wait receipt captured; never infer0 from other phases/wrappers",
+  "runnerExit": 1,
+  "dbusWrapperExit": 1,
+  "payloadUnchanged": true,
+  "resume": "Only RTL, same owned signed-ar profile; pageLoadStrategy:none is test navigation wait control, not weakened live/locale/Wayland or security validation"
+}

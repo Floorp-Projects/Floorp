@@ -1,0 +1,19 @@
+{
+  "sourceSha": "f43b22d34c0728e0ed800b8016d81b3212190954",
+  "profile": "/workspace/kan29-full-runtime/candidate-f43-ar-horizontal-ui-30080/profile",
+  "phases": [
+    {
+      "stage": "rtl",
+      "actualFloorpChildPid": 117008,
+      "actualFloorpExecutable": "/workspace/kan29-package/candidate/floorp/floorp",
+      "normalQuitRequested": false,
+      "sessionCapabilities": {
+        "pageLoadStrategy": "none"
+      },
+      "sessionTimeoutSeconds": 90
+    }
+  ],
+  "normalExitRequired": true,
+  "runnerPid": 116994,
+  "exitSemantics": "actualFloorpChildExit is direct Popen.wait on executable child inside DBus; dbusWrapperExit and runnerExit are separate. No child status inferred from wrapper."
+}

@@ -1,0 +1,10 @@
+{
+  "files": [
+    "report.md",
+    "summary.json",
+    "combined-excerpts.txt",
+    "publish-list.json"
+  ],
+  "excludedFromQACommit": [],
+  "rawExecutionEvidenceUnchanged": true
+}

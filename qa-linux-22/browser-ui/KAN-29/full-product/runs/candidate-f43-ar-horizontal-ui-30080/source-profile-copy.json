@@ -1,0 +1,17 @@
+{
+  "source": "/workspace/kan29-full-runtime/candidate-f43-x11-30075/profile",
+  "copy": "/workspace/kan29-full-runtime/candidate-f43-ar-horizontal-ui-30080/profile",
+  "activeReferences": [],
+  "before": {
+    "prefs.js": "fcefd8d2dff0866fcd848dcda63db200389da38fd0fc83ad268aeb8ddf4166a0",
+    "user.js": "2c42c64c39a368ff8ded8079b4cc73fc8026fd0102776eeb1573815daf6c63e0",
+    "extensions.json": "6e96fa478cd4c340efc119ca84763442bea7433bc26846de4b86797fab612345"
+  },
+  "fixture": "Independent full owned profile copy except stale lockfiles; source kept immutable. Only control startup native verticalTabs=false and design horizontal; locale/protection/renderer unchanged.",
+  "after": {
+    "prefs.js": "fcefd8d2dff0866fcd848dcda63db200389da38fd0fc83ad268aeb8ddf4166a0",
+    "user.js": "2c42c64c39a368ff8ded8079b4cc73fc8026fd0102776eeb1573815daf6c63e0",
+    "extensions.json": "6e96fa478cd4c340efc119ca84763442bea7433bc26846de4b86797fab612345"
+  },
+  "sourceUnchanged": true
+}

@@ -1,0 +1,24 @@
+{
+  "runId": "pending-exact-pr2877",
+  "sourceSha": "f43b22d34c0728e0ed800b8016d81b3212190954",
+  "productRoot": "/workspace/PENDING-actual-unmodified-package/floorp",
+  "display": 125,
+  "port": 30071,
+  "live": {
+    "version": "157.0.1",
+    "build": "20261007125927",
+    "platformBuild": "20261007125927",
+    "gre": "/workspace/PENDING-actual-unmodified-package/floorp"
+  },
+  "payloadSha256": {
+    "floorp": null,
+    "libxul.so": null,
+    "omni.ja": null,
+    "browser/omni.ja": null
+  },
+  "languagePack": {
+    "path": "/workspace/qa-linux-22/browser-ui/KAN-29/full-product/locale/ar-157.0.1.xpi",
+    "sha256": "e05634d2c9aef02b6c7cfd77ca1b9f9846f5d29be674062c394a4ed46c04b43e"
+  },
+  "note": "ExactPR2877 verified native contract157.0.1/build20261007125927. Package path/digests remain pending and must be populated from acquired complete package, not guessed."
+}

@@ -1,0 +1,1001 @@
+{
+  "comparison": "single identical requested W3C pointer route/duration100ms and UIsettle450ms, nativeRight/panelRight/unpinned, fresh en-US profiles, complete unmodified packages with same native157 bytes",
+  "cases": [
+    {
+      "role": "baseline",
+      "run": "baseline-a629-x11-one-30076",
+      "sourceSha": "a6290b5811b8c5309b399ac340ec40b52f97b73c",
+      "protocol": {
+        "windowProtocol": "x11",
+        "compositing": "WebRender (Software)"
+      },
+      "locale": {
+        "direction": "ltr",
+        "rtlUI": false,
+        "appLocale": "en-US",
+        "appLocaleRTL": false,
+        "uidirection": ""
+      },
+      "requestedNativePositionStart": false,
+      "requestedPanelEnd": true,
+      "requestedPinned": false,
+      "hoverGeometry": [
+        {
+          "withinViewport": true,
+          "panel400": true,
+          "lateHorizontalMotion": 0
+        },
+        {
+          "withinViewport": true,
+          "panel400": true,
+          "lateHorizontalMotion": 0
+        },
+        {
+          "withinViewport": true,
+          "panel400": true,
+          "lateHorizontalMotion": 0
+        }
+      ],
+      "tabClicksPass": true,
+      "paintPass": true,
+      "beforeClose": {
+        "direction": "ltr",
+        "rtlUI": false,
+        "hover": true,
+        "state": {
+          "command": "",
+          "panelOpen": false,
+          "bookmarksExpandedFolders": [],
+          "launcherWidth": 248,
+          "launcherExpanded": true,
+          "launcherVisible": true
+        },
+        "startWidth": "0px",
+        "endWidth": "448px",
+        "elements": [
+          {
+            "id": "browser",
+            "rect": {
+              "x": 0,
+              "y": 36,
+              "width": 1280,
+              "height": 954,
+              "top": 36,
+              "right": 1280,
+              "bottom": 990,
+              "left": 0
+            },
+            "expanded": false,
+            "display": "flex",
+            "visibility": "visible",
+            "position": "relative",
+            "order": "0",
+            "opacity": "1"
+          },
+          {
+            "id": "sidebar-container",
+            "rect": {
+              "x": 583.3499755859375,
+              "y": 36,
+              "width": 248.64999389648438,
+              "height": 954,
+              "top": 36,
+              "right": 831.9999694824219,
+              "bottom": 990,
+              "left": 583.3499755859375
+            },
+            "expanded": true,
+            "display": "flex",
+            "visibility": "visible",
+            "position": "absolute",
+            "order": "11",
+            "opacity": "1"
+          },
+          {
+            "id": "panel-sidebar-select-box",
+            "rect": {
+              "x": 1238,
+              "y": 36,
+              "width": 42,
+              "height": 954,
+              "top": 36,
+              "right": 1280,
+              "bottom": 990,
+              "left": 1238
+            },
+            "expanded": false,
+            "display": "flex",
+            "visibility": "visible",
+            "position": "static",
+            "order": "1002",
+            "opacity": "1"
+          },
+          {
+            "id": "panel-sidebar-box",
+            "rect": {
+              "x": 838,
+              "y": 36,
+              "width": 400,
+              "height": 954,
+              "top": 36,
+              "right": 1238,
+              "bottom": 990,
+              "left": 838
+            },
+            "expanded": false,
+            "display": "flex",
+            "visibility": "visible",
+            "position": "static",
+            "order": "1001",
+            "opacity": "1"
+          },
+          {
+            "id": "panel-sidebar-splitter",
+            "rect": {
+              "x": 832,
+              "y": 36,
+              "width": 6,
+              "height": 954,
+              "top": 36,
+              "right": 838,
+              "bottom": 990,
+              "left": 832
+            },
+            "expanded": false,
+            "display": "flex",
+            "visibility": "visible",
+            "position": "static",
+            "order": "1000",
+            "opacity": "1"
+          },
+          {
+            "id": "tabbrowser-tabbox",
+            "rect": {
+              "x": 0,
+              "y": 36,
+              "width": 778,
+              "height": 954,
+              "top": 36,
+              "right": 778,
+              "bottom": 990,
+              "left": 0
+            },
+            "expanded": true,
+            "display": "flex",
+            "visibility": "visible",
+            "position": "relative",
+            "order": "4",
+            "opacity": "1"
+          },
+          {
+            "id": "tabbrowser-tabs",
+            "rect": {
+              "x": 584.3499755859375,
+              "y": 36,
+              "width": 247.64999389648438,
+              "height": 904.6666870117188,
+              "top": 36,
+              "right": 831.9999694824219,
+              "bottom": 940.6666870117188,
+              "left": 584.3499755859375
+            },
+            "expanded": false,
+            "display": "flex",
+            "visibility": "visible",
+            "position": "static",
+            "order": "0",
+            "opacity": "1"
+          }
+        ]
+      },
+      "closed": {
+        "direction": "ltr",
+        "rtlUI": false,
+        "hover": true,
+        "state": {
+          "command": "",
+          "panelOpen": false,
+          "bookmarksExpandedFolders": [],
+          "launcherWidth": 56,
+          "launcherExpanded": false,
+          "launcherVisible": true
+        },
+        "startWidth": "0px",
+        "endWidth": "42px",
+        "elements": [
+          {
+            "id": "browser",
+            "rect": {
+              "x": 0,
+              "y": 36,
+              "width": 1280,
+              "height": 954,
+              "top": 36,
+              "right": 1280,
+              "bottom": 990,
+              "left": 0
+            },
+            "expanded": false,
+            "display": "flex",
+            "visibility": "visible",
+            "position": "relative",
+            "order": "0",
+            "opacity": "1"
+          },
+          {
+            "id": "sidebar-container",
+            "rect": {
+              "x": 1182,
+              "y": 36,
+              "width": 56,
+              "height": 954,
+              "top": 36,
+              "right": 1238,
+              "bottom": 990,
+              "left": 1182
+            },
+            "expanded": false,
+            "display": "flex",
+            "visibility": "visible",
+            "position": "relative",
+            "order": "11",
+            "opacity": "1"
+          },
+          {
+            "id": "panel-sidebar-select-box",
+            "rect": {
+              "x": 1238,
+              "y": 36,
+              "width": 42,
+              "height": 954,
+              "top": 36,
+              "right": 1280,
+              "bottom": 990,
+              "left": 1238
+            },
+            "expanded": false,
+            "display": "flex",
+            "visibility": "visible",
+            "position": "static",
+            "order": "1002",
+            "opacity": "1"
+          },
+          {
+            "id": "panel-sidebar-box",
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 0,
+              "height": 0,
+              "top": 0,
+              "right": 0,
+              "bottom": 0,
+              "left": 0
+            },
+            "expanded": false,
+            "display": "none",
+            "visibility": "visible",
+            "position": "static",
+            "order": "1001",
+            "opacity": "1"
+          },
+          {
+            "id": "panel-sidebar-splitter",
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 0,
+              "height": 0,
+              "top": 0,
+              "right": 0,
+              "bottom": 0,
+              "left": 0
+            },
+            "expanded": false,
+            "display": "none",
+            "visibility": "visible",
+            "position": "static",
+            "order": "1000",
+            "opacity": "1"
+          },
+          {
+            "id": "tabbrowser-tabbox",
+            "rect": {
+              "x": 0,
+              "y": 36,
+              "width": 1180,
+              "height": 954,
+              "top": 36,
+              "right": 1180,
+              "bottom": 990,
+              "left": 0
+            },
+            "expanded": false,
+            "display": "flex",
+            "visibility": "visible",
+            "position": "relative",
+            "order": "4",
+            "opacity": "1"
+          },
+          {
+            "id": "tabbrowser-tabs",
+            "rect": {
+              "x": 1182,
+              "y": 36,
+              "width": 76,
+              "height": 898,
+              "top": 36,
+              "right": 1258,
+              "bottom": 934,
+              "left": 1182
+            },
+            "expanded": false,
+            "display": "flex",
+            "visibility": "visible",
+            "position": "static",
+            "order": "0",
+            "opacity": "1"
+          }
+        ]
+      },
+      "closedWidth": 0,
+      "reopenedWidth": 400,
+      "closeReopenTrace": [
+        {
+          "selector": "#panel-sidebar-close",
+          "rect": {
+            "x": 1200,
+            "y": 39,
+            "width": 32,
+            "height": 32,
+            "top": 39,
+            "right": 1232,
+            "bottom": 71,
+            "left": 1200
+          },
+          "point": [
+            1216.0,
+            55.0
+          ],
+          "hitBefore": {
+            "id": "panel-sidebar-close",
+            "tag": "toolbarbutton",
+            "classes": "panel-sidebar-actions",
+            "outer": "<toolbarbutton xmlns=\"http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul\" id=\"panel-sidebar-close\" class=\"panel-sidebar-actions\"><image class=\"toolbarbutton-icon\"/><label class=\"toolbarbutton-text\" crop=\"end\" flex=\"1\"/></toolbarbutton>"
+          },
+          "events": [
+            {
+              "type": "mousedown",
+              "trusted": true,
+              "button": 0,
+              "target": "panel-sidebar-close",
+              "path": [
+                "panel-sidebar-close",
+                "panel-sidebar-header",
+                "panel-sidebar-box",
+                "browser",
+                "html:body"
+              ]
+            },
+            {
+              "type": "mouseup",
+              "trusted": true,
+              "button": 0,
+              "target": "panel-sidebar-close",
+              "path": [
+                "panel-sidebar-close",
+                "panel-sidebar-header",
+                "panel-sidebar-box",
+                "browser",
+                "html:body"
+              ]
+            },
+            {
+              "type": "click",
+              "trusted": true,
+              "button": 0,
+              "target": "panel-sidebar-close",
+              "path": [
+                "panel-sidebar-close",
+                "panel-sidebar-header",
+                "panel-sidebar-box",
+                "browser",
+                "html:body"
+              ]
+            }
+          ]
+        },
+        {
+          "selector": "#default-panel-bookmarks",
+          "rect": {
+            "x": 1240,
+            "y": 41,
+            "width": 36,
+            "height": 36,
+            "top": 41,
+            "right": 1276,
+            "bottom": 77,
+            "left": 1240
+          },
+          "point": [
+            1258.0,
+            59.0
+          ],
+          "hitBefore": {
+            "id": "",
+            "tag": "img",
+            "classes": "",
+            "outer": "<img xmlns=\"http://www.w3.org/1999/xhtml\" width=\"16\" height=\"16\" src=\"chrome://browser/skin/bookmark.svg\" />"
+          },
+          "events": [
+            {
+              "type": "mousedown",
+              "trusted": true,
+              "button": 0,
+              "target": "",
+              "path": [
+                "img",
+                "default-panel-bookmarks",
+                "panel-sidebar-button-wrapper",
+                "panel-sidebar-select-box",
+                "browser"
+              ]
+            },
+            {
+              "type": "mouseup",
+              "trusted": true,
+              "button": 0,
+              "target": "",
+              "path": [
+                "img",
+                "default-panel-bookmarks",
+                "panel-sidebar-button-wrapper",
+                "panel-sidebar-select-box",
+                "browser"
+              ]
+            },
+            {
+              "type": "click",
+              "trusted": true,
+              "button": 0,
+              "target": "",
+              "path": [
+                "img",
+                "default-panel-bookmarks",
+                "panel-sidebar-button-wrapper",
+                "panel-sidebar-select-box",
+                "browser"
+              ]
+            }
+          ]
+        }
+      ],
+      "reopenSamples": [
+        {
+          "requestedSeconds": 0.3,
+          "actualSeconds": 0.3001179200000479,
+          "width": 400
+        },
+        {
+          "requestedSeconds": 0.8,
+          "actualSeconds": 0.8019892070005881,
+          "width": 400
+        },
+        {
+          "requestedSeconds": 1.5,
+          "actualSeconds": 1.5001349320009467,
+          "width": 400
+        }
+      ],
+      "actualChildWait": 0,
+      "normalQuitRequested": true,
+      "probeExit": 0,
+      "runnerExit": 0,
+      "dbusWrapperExit": 0,
+      "payloadUnchanged": true,
+      "screenshot": "runs/baseline-a629-x11-one-30076/ltr-30076-0-1-0.png"
+    },
+    {
+      "role": "candidate",
+      "run": "candidate-f43-x11-30075",
+      "sourceSha": "f43b22d34c0728e0ed800b8016d81b3212190954",
+      "protocol": {
+        "windowProtocol": "x11",
+        "compositing": "WebRender (Software)"
+      },
+      "locale": {
+        "direction": "ltr",
+        "rtlUI": false,
+        "appLocale": "en-US",
+        "appLocaleRTL": false,
+        "uidirection": ""
+      },
+      "requestedNativePositionStart": false,
+      "requestedPanelEnd": true,
+      "requestedPinned": false,
+      "hoverGeometry": [
+        {
+          "withinViewport": true,
+          "panel400": true,
+          "lateHorizontalMotion": 0
+        },
+        {
+          "withinViewport": true,
+          "panel400": true,
+          "lateHorizontalMotion": 0
+        },
+        {
+          "withinViewport": true,
+          "panel400": true,
+          "lateHorizontalMotion": 0
+        }
+      ],
+      "tabClicksPass": true,
+      "paintPass": true,
+      "beforeClose": {
+        "direction": "ltr",
+        "rtlUI": false,
+        "hover": true,
+        "state": {
+          "command": "",
+          "panelOpen": false,
+          "bookmarksExpandedFolders": [],
+          "launcherWidth": 248,
+          "launcherExpanded": true,
+          "launcherVisible": true
+        },
+        "startWidth": "0px",
+        "endWidth": "448px",
+        "elements": [
+          {
+            "id": "browser",
+            "rect": {
+              "x": 0,
+              "y": 36,
+              "width": 1280,
+              "height": 954,
+              "top": 36,
+              "right": 1280,
+              "bottom": 990,
+              "left": 0
+            },
+            "expanded": false,
+            "display": "flex",
+            "visibility": "visible",
+            "position": "relative",
+            "order": "0",
+            "opacity": "1"
+          },
+          {
+            "id": "sidebar-container",
+            "rect": {
+              "x": 583.3499755859375,
+              "y": 36,
+              "width": 248.64999389648438,
+              "height": 954,
+              "top": 36,
+              "right": 831.9999694824219,
+              "bottom": 990,
+              "left": 583.3499755859375
+            },
+            "expanded": true,
+            "display": "flex",
+            "visibility": "visible",
+            "position": "absolute",
+            "order": "11",
+            "opacity": "1"
+          },
+          {
+            "id": "panel-sidebar-select-box",
+            "rect": {
+              "x": 1238,
+              "y": 36,
+              "width": 42,
+              "height": 954,
+              "top": 36,
+              "right": 1280,
+              "bottom": 990,
+              "left": 1238
+            },
+            "expanded": false,
+            "display": "flex",
+            "visibility": "visible",
+            "position": "static",
+            "order": "1002",
+            "opacity": "1"
+          },
+          {
+            "id": "panel-sidebar-box",
+            "rect": {
+              "x": 838,
+              "y": 36,
+              "width": 400,
+              "height": 954,
+              "top": 36,
+              "right": 1238,
+              "bottom": 990,
+              "left": 838
+            },
+            "expanded": false,
+            "display": "flex",
+            "visibility": "visible",
+            "position": "static",
+            "order": "1001",
+            "opacity": "1"
+          },
+          {
+            "id": "panel-sidebar-splitter",
+            "rect": {
+              "x": 832,
+              "y": 36,
+              "width": 6,
+              "height": 954,
+              "top": 36,
+              "right": 838,
+              "bottom": 990,
+              "left": 832
+            },
+            "expanded": false,
+            "display": "flex",
+            "visibility": "visible",
+            "position": "static",
+            "order": "1000",
+            "opacity": "1"
+          },
+          {
+            "id": "tabbrowser-tabbox",
+            "rect": {
+              "x": 0,
+              "y": 36,
+              "width": 778,
+              "height": 954,
+              "top": 36,
+              "right": 778,
+              "bottom": 990,
+              "left": 0
+            },
+            "expanded": true,
+            "display": "flex",
+            "visibility": "visible",
+            "position": "relative",
+            "order": "4",
+            "opacity": "1"
+          },
+          {
+            "id": "tabbrowser-tabs",
+            "rect": {
+              "x": 584.3499755859375,
+              "y": 36,
+              "width": 247.64999389648438,
+              "height": 904.6666870117188,
+              "top": 36,
+              "right": 831.9999694824219,
+              "bottom": 940.6666870117188,
+              "left": 584.3499755859375
+            },
+            "expanded": false,
+            "display": "flex",
+            "visibility": "visible",
+            "position": "static",
+            "order": "0",
+            "opacity": "1"
+          }
+        ]
+      },
+      "closed": {
+        "direction": "ltr",
+        "rtlUI": false,
+        "hover": true,
+        "state": {
+          "command": "",
+          "panelOpen": false,
+          "bookmarksExpandedFolders": [],
+          "launcherWidth": 56,
+          "launcherExpanded": false,
+          "launcherVisible": true
+        },
+        "startWidth": "0px",
+        "endWidth": "42px",
+        "elements": [
+          {
+            "id": "browser",
+            "rect": {
+              "x": 0,
+              "y": 36,
+              "width": 1280,
+              "height": 954,
+              "top": 36,
+              "right": 1280,
+              "bottom": 990,
+              "left": 0
+            },
+            "expanded": false,
+            "display": "flex",
+            "visibility": "visible",
+            "position": "relative",
+            "order": "0",
+            "opacity": "1"
+          },
+          {
+            "id": "sidebar-container",
+            "rect": {
+              "x": 1182,
+              "y": 36,
+              "width": 56,
+              "height": 954,
+              "top": 36,
+              "right": 1238,
+              "bottom": 990,
+              "left": 1182
+            },
+            "expanded": false,
+            "display": "flex",
+            "visibility": "visible",
+            "position": "relative",
+            "order": "11",
+            "opacity": "1"
+          },
+          {
+            "id": "panel-sidebar-select-box",
+            "rect": {
+              "x": 1238,
+              "y": 36,
+              "width": 42,
+              "height": 954,
+              "top": 36,
+              "right": 1280,
+              "bottom": 990,
+              "left": 1238
+            },
+            "expanded": false,
+            "display": "flex",
+            "visibility": "visible",
+            "position": "static",
+            "order": "1002",
+            "opacity": "1"
+          },
+          {
+            "id": "panel-sidebar-box",
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 0,
+              "height": 0,
+              "top": 0,
+              "right": 0,
+              "bottom": 0,
+              "left": 0
+            },
+            "expanded": false,
+            "display": "none",
+            "visibility": "visible",
+            "position": "static",
+            "order": "1001",
+            "opacity": "1"
+          },
+          {
+            "id": "panel-sidebar-splitter",
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 0,
+              "height": 0,
+              "top": 0,
+              "right": 0,
+              "bottom": 0,
+              "left": 0
+            },
+            "expanded": false,
+            "display": "none",
+            "visibility": "visible",
+            "position": "static",
+            "order": "1000",
+            "opacity": "1"
+          },
+          {
+            "id": "tabbrowser-tabbox",
+            "rect": {
+              "x": 0,
+              "y": 36,
+              "width": 1180,
+              "height": 954,
+              "top": 36,
+              "right": 1180,
+              "bottom": 990,
+              "left": 0
+            },
+            "expanded": false,
+            "display": "flex",
+            "visibility": "visible",
+            "position": "relative",
+            "order": "4",
+            "opacity": "1"
+          },
+          {
+            "id": "tabbrowser-tabs",
+            "rect": {
+              "x": 1182,
+              "y": 36,
+              "width": 76,
+              "height": 898,
+              "top": 36,
+              "right": 1258,
+              "bottom": 934,
+              "left": 1182
+            },
+            "expanded": false,
+            "display": "flex",
+            "visibility": "visible",
+            "position": "static",
+            "order": "0",
+            "opacity": "1"
+          }
+        ]
+      },
+      "closedWidth": 0,
+      "reopenedWidth": 0,
+      "closeReopenTrace": [
+        {
+          "selector": "#panel-sidebar-close",
+          "rect": {
+            "x": 1200,
+            "y": 39,
+            "width": 32,
+            "height": 32,
+            "top": 39,
+            "right": 1232,
+            "bottom": 71,
+            "left": 1200
+          },
+          "point": [
+            1216.0,
+            55.0
+          ],
+          "hitBefore": {
+            "id": "panel-sidebar-close",
+            "tag": "toolbarbutton",
+            "classes": "panel-sidebar-actions",
+            "outer": "<toolbarbutton xmlns=\"http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul\" id=\"panel-sidebar-close\" class=\"panel-sidebar-actions\"><image class=\"toolbarbutton-icon\"/><label class=\"toolbarbutton-text\" crop=\"end\" flex=\"1\"/></toolbarbutton>"
+          },
+          "events": [
+            {
+              "type": "mousedown",
+              "trusted": true,
+              "button": 0,
+              "target": "panel-sidebar-close",
+              "path": [
+                "panel-sidebar-close",
+                "panel-sidebar-header",
+                "panel-sidebar-box",
+                "browser",
+                "html:body"
+              ]
+            },
+            {
+              "type": "mouseup",
+              "trusted": true,
+              "button": 0,
+              "target": "panel-sidebar-close",
+              "path": [
+                "panel-sidebar-close",
+                "panel-sidebar-header",
+                "panel-sidebar-box",
+                "browser",
+                "html:body"
+              ]
+            },
+            {
+              "type": "click",
+              "trusted": true,
+              "button": 0,
+              "target": "panel-sidebar-close",
+              "path": [
+                "panel-sidebar-close",
+                "panel-sidebar-header",
+                "panel-sidebar-box",
+                "browser",
+                "html:body"
+              ]
+            }
+          ]
+        },
+        {
+          "selector": "#default-panel-bookmarks",
+          "rect": {
+            "x": 1240,
+            "y": 41,
+            "width": 36,
+            "height": 36,
+            "top": 41,
+            "right": 1276,
+            "bottom": 77,
+            "left": 1240
+          },
+          "point": [
+            1258.0,
+            59.0
+          ],
+          "hitBefore": {
+            "id": "",
+            "tag": "img",
+            "classes": "",
+            "outer": "<img xmlns=\"http://www.w3.org/1999/xhtml\" width=\"16\" height=\"16\" src=\"chrome://browser/skin/bookmark.svg\" />"
+          },
+          "events": [
+            {
+              "type": "mousedown",
+              "trusted": true,
+              "button": 0,
+              "target": "drag-to-pin-promo-card",
+              "path": [
+                "moz-card",
+                "undefined",
+                "promo-card",
+                "undefined",
+                "drag-to-pin-promo-card"
+              ]
+            },
+            {
+              "type": "mouseup",
+              "trusted": true,
+              "button": 0,
+              "target": "drag-to-pin-promo-card",
+              "path": [
+                "moz-card",
+                "undefined",
+                "promo-card",
+                "undefined",
+                "drag-to-pin-promo-card"
+              ]
+            },
+            {
+              "type": "click",
+              "trusted": true,
+              "button": 0,
+              "target": "drag-to-pin-promo-card",
+              "path": [
+                "moz-card",
+                "undefined",
+                "promo-card",
+                "undefined",
+                "drag-to-pin-promo-card"
+              ]
+            }
+          ]
+        }
+      ],
+      "reopenSamples": [
+        {
+          "requestedSeconds": 0.3,
+          "actualSeconds": 0.30009945900019375,
+          "width": 0
+        },
+        {
+          "requestedSeconds": 0.8,
+          "actualSeconds": 0.8001318960014032,
+          "width": 0
+        },
+        {
+          "requestedSeconds": 1.5,
+          "actualSeconds": 1.500122260000353,
+          "width": 0
+        }
+      ],
+      "actualChildWait": 0,
+      "normalQuitRequested": true,
+      "probeExit": 0,
+      "runnerExit": 1,
+      "dbusWrapperExit": 1,
+      "payloadUnchanged": true,
+      "screenshot": "runs/candidate-f43-x11-30075/ltr-30075-0-1-0.png"
+    }
+  ],
+  "observedDifference": "Baseline trustedclick reached bookmark descendant and reopened400; candidate click reached native drag-to-pin promo card and stayed0 at0.3/0.8/1.5s. Rectangles before close/after close and requested reopen point match.",
+  "classification": "observed input occlusion difference in bounded samples; not established PR regression or harness-only issue",
+  "limitations": [
+    "one sample each, actual hover microtiming not independently timestamped",
+    "candidate used synchronous PSS sampling; baseline sampler had been corrected to independent slow-PSS thread; code-requested input timing unchanged, scheduling impact not isolated",
+    "no corrective retry/avoidance or rewriting candidate failed observation as PASS",
+    "no new source changes/PR; additional browsers stopped as instructed"
+  ]
+}

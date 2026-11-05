@@ -1,0 +1,19 @@
+{
+  "sourceSha": "a6290b5811b8c5309b399ac340ec40b52f97b73c",
+  "profile": "/workspace/kan29-full-runtime/baseline-a629-30071/profile",
+  "phases": [
+    {
+      "stage": "rtl",
+      "actualFloorpChildPid": 112547,
+      "actualFloorpExecutable": "/workspace/kan29-package/baseline/floorp/floorp",
+      "normalQuitRequested": false,
+      "sessionCapabilities": {
+        "pageLoadStrategy": "none"
+      },
+      "sessionTimeoutSeconds": 90
+    }
+  ],
+  "normalExitRequired": true,
+  "runnerPid": 112536,
+  "exitSemantics": "actualFloorpChildExit is direct Popen.wait on executable child inside DBus; dbusWrapperExit and runnerExit are separate. No child status inferred from wrapper."
+}

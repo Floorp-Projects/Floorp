@@ -1,0 +1,7 @@
+{
+  "sourceRef": "f43b22d34c0728e0ed800b8016d81b3212190954",
+  "path": ".github/patches/floorp-runtime/common/macos-app-shim-pwa-input-and-compositor.patch",
+  "bytes": 20960,
+  "sha256": "43a278bedfe0faeb9b747f47b32b9b060683ddbb2e58953d03d3b5470e47c2e8",
+  "matchesRuntimePin": true
+}

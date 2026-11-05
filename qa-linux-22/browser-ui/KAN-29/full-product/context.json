@@ -1,0 +1,39 @@
+{
+  "key": "KAN-29",
+  "pr": 2877,
+  "prHead": "f43b22d34c0728e0ed800b8016d81b3212190954",
+  "prBase": "a6290b5811b8c5309b399ac340ec40b52f97b73c",
+  "branch": "fix/2876-right-hover",
+  "state": "open",
+  "draft": true,
+  "body": "Floorp's hover offset uses logical flex ordering to choose physical DOMRect edges. In RTL windows this reserves nearly the whole browser width and moves Firefox's launcher when it becomes absolute. Elements without a rendered box can produce the same excessive offset on the right. Measure the physical edge using the browser's inline direction, ignore empty rectangles, and keep publishing offsets under their existing logical start/end names.\n\nRegression tests exercise both Firefox positions independently of both Floorp panel positions in LTR and RTL, expanded and collapsing states, and actual rail resizes delivered through ResizeObserver. A separate case verifies that `display: contents` cannot reserve the entire viewport. Firefox remains responsible for its position attribute and native child ordering; the existing CSS selects the corresponding logical offset and the expansion/animation measurement guard remains intact.\n\nRelated to #2876. **The reported repeated movement in an ordinary LTR CachyOS/Flatpak session has not been reproduced or established as fixed.** Keep this PR as a draft pending that verification; it does not close the issue. In a Linux headless development build of the v12.20.0 sources and locked runtime, ordinary right-side hover remained expanded with a stable right edge (1324px). Both defects covered by the new tests are present in the unmodified v12.20.0 source: the boxless case recorded a 1366px offset and the RTL hover anchor moved. The relevant flex-order logic is also present in v12.19.0. The locked Firefox sources for those two releases have identical sidebar controller and sidebar CSS files, including the ResizeObserver stale-width guard.\n\nValidation:\n- New regression cases fail against unmodified v12.20.0 and pass with this patch; all 9 cases in `flexOrder.test.ts` pass in the actual browser.\n- Existing `panelSidebarLayout.test.ts` passes in the actual browser, including left/right native hover anchors with Floorp panels open/closed and floating-panel layout.\n- `deno check --sloppy-imports browser-features/chrome/common/flex-order/test/flexOrder.test.ts`\n- `deno lint` and `deno fmt --check` for both changed files; `git diff --check`.\n",
+  "jiraCommentIds": [
+    "10284",
+    "10149",
+    "10065"
+  ],
+  "labels": [
+    "area-tabs",
+    "env-blocked",
+    "floorp-stability-2026-11",
+    "linux-tested",
+    "needs-cachyos",
+    "needs-flatpak",
+    "needs-repro",
+    "p2",
+    "panel-body-tested",
+    "pr-candidate-tested",
+    "rtl-tested",
+    "triage-reviewed",
+    "wayland-tested"
+  ],
+  "priorPrEvidenceComment": 6663548952,
+  "prohibited": [
+    "CI settings changes",
+    "public release settings changes",
+    "lock changes",
+    "merge",
+    "Done"
+  ],
+  "sourceTestReplayPlanned": false
+}

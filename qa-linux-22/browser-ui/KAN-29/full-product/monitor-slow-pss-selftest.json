@@ -1,0 +1,7 @@
+{
+  "test": "QA sampler only; intentionally blocked PSS worker for7s; no browser launched",
+  "completedFastSamples": 5,
+  "maxGapSeconds": 2.1163737879978726,
+  "pass": true,
+  "limitations": "Synthetic harness responsiveness check, not native product/UI evidence. Actual scheduling/load can still delay sampling."
+}

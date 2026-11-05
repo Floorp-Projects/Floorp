@@ -1,0 +1,17 @@
+{
+  "platform": "Linux-x64",
+  "beta": "false",
+  "provenance_mode": "stable-v2-validation",
+  "skip_signing": "true",
+  "signed_validation": "false",
+  "runtime_repository": "Floorp-Projects/Floorp-Runtime",
+  "runtime_workflow_run_id": "37625027712",
+  "runtime_manifest_artifact_id": "11506774970",
+  "runtime_manifest_artifact_digest": "sha256:dd2c05c61c43a81a61a623fb9229a8bba6fc2f67acca3b70f065c34d4cf30077",
+  "runtime_head_sha": "c74fe1a545d275cdd710ab44701c1ee0dd6b0eae",
+  "expected_build_id": "20261007125927",
+  "runtime_artifact_name": "floorp-linux-x86_64-moz-artifact",
+  "runtime_artifact_id": "11501872421",
+  "runtime_artifact_digest": "sha256:93d8a2e78a75e07c23df5d02941795f3b42689db032127b6768ea738087fef70",
+  "floorp_head_sha": "f43b22d34c0728e0ed800b8016d81b3212190954"
+}

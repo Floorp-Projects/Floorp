@@ -1,0 +1,19 @@
+[
+  {
+    "file": "candidate-installer.zip",
+    "sha256": "4eaf3ff8bc47b18a7bb33509fcd0efc8cac882d065c324a71004c4f3816c5b59",
+    "digestVerified": true,
+    "entries": [
+      "floorp-linux-x86_64.tar.xz"
+    ]
+  },
+  {
+    "file": "candidate-mar.zip",
+    "sha256": "55fc9f3399fd6388fb0ffe3061746006831229ef87aa4a14987cab843daca463",
+    "digestVerified": true,
+    "entries": [
+      "floorp-linux-x86_64-full.mar",
+      "meta.json"
+    ]
+  }
+]

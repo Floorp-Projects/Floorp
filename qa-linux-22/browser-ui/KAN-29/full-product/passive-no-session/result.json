@@ -1,0 +1,120 @@
+{
+  "singleFactor": "No Marionette NewSession; no RPC/TCP connections at all; CLI --marionette retained",
+  "profileCopy": "/workspace/kan29-passive-no-session/profile",
+  "sourceProfile": "/workspace/kan29-full-runtime/candidate-f43-x11-30075/profile",
+  "port": 30078,
+  "display": ":127",
+  "strictRTL_UI": "NOT MEASURED",
+  "KAN29Pass": false,
+  "durationRequestedSeconds": 60,
+  "pid": 115562,
+  "actualExecutable": "/workspace/kan29-package/candidate/floorp/floorp",
+  "screenshot15": {
+    "exit": 0
+  },
+  "error": "ResourceBoundExceeded('passive resource bound')",
+  "resourceBound": {
+    "observation": {
+      "monotonic": 29618.782198428,
+      "utc": "2026-11-05T22:18:18Z",
+      "cgroupBytes": 14944505856,
+      "cgroupMax": "17179869184",
+      "cgroupEvents": {
+        "low": 0,
+        "high": 0,
+        "max": 135621,
+        "oom": 3,
+        "oom_kill": 2,
+        "oom_group_kill": 0
+      },
+      "actualFloorpChildPid": 115562,
+      "floorpTree": [
+        {
+          "pid": 115562,
+          "ppid": 115553,
+          "name": "floorp",
+          "rssKiB": 12883224,
+          "pssKiB": 12786744,
+          "pssTiming": {
+            "pssKiB": 12786744,
+            "readStarted": 29618.489426722,
+            "readCompleted": 29618.712111398
+          }
+        },
+        {
+          "pid": 115602,
+          "ppid": 115562,
+          "name": "Socket Process",
+          "rssKiB": 44144,
+          "pssKiB": 19590,
+          "pssTiming": {
+            "pssKiB": 19590,
+            "readStarted": 29618.712115256,
+            "readCompleted": 29618.713381452
+          }
+        },
+        {
+          "pid": 115649,
+          "ppid": 115562,
+          "name": "forkserver",
+          "rssKiB": 31224,
+          "pssKiB": 9827,
+          "pssTiming": {
+            "pssKiB": 9827,
+            "readStarted": 29618.713383719,
+            "readCompleted": 29618.71464957
+          }
+        },
+        {
+          "pid": 115670,
+          "ppid": 115649,
+          "name": "Web Content",
+          "rssKiB": 78616,
+          "pssKiB": 36724,
+          "pssTiming": {
+            "pssKiB": 36724,
+            "readStarted": 29618.714651839,
+            "readCompleted": 29618.716639097
+          }
+        },
+        {
+          "pid": 115680,
+          "ppid": 115649,
+          "name": "RDD Process",
+          "rssKiB": 39348,
+          "pssKiB": 16220,
+          "pssTiming": {
+            "pssKiB": 16220,
+            "readStarted": 29618.716641764,
+            "readCompleted": 29618.71875866
+          }
+        }
+      ],
+      "aggregateFloorpRssKiB": 13076556,
+      "aggregateFloorpKnownPssKiB": 12869105,
+      "allOwnedPssAvailable": true,
+      "rssWarningOnly": true,
+      "otherOwnedProcesses": [
+        {
+          "pid": 115556,
+          "ppid": 115553,
+          "name": "Xvfb",
+          "rssKiB": 51432
+        },
+        {
+          "pid": 115559,
+          "ppid": 115553,
+          "name": "openbox",
+          "rssKiB": 11720
+        }
+      ],
+      "note": "Fast2s cgroup/statusRSS sampler is independent of potentially slow PSS thread; PSS read start/completion timestamps retained. Aggregate RSS may count shared pages more than once; cgroup includes other tasks. OOM counters alone do not identify victim/cause."
+    },
+    "bound": "QA safety bound: measured owned Floorp known PSS12GiB or cgroup90%; RSS8GiB warning only. Not proof of original host inadequacy/product cause; never PASS"
+  },
+  "osCtrlQExit": 0,
+  "quitError": "TimeoutExpired(['/workspace/kan29-package/candidate/floorp/floorp', '--no-remote', '--profile', '/workspace/kan29-passive-no-session/profile', '--marionette', 'about:blank'], 12)",
+  "abnormalCleanup": true,
+  "actualNativeChildExit": -15,
+  "fullPayloadUnchanged": true
+}

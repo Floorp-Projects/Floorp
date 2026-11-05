@@ -1,0 +1,31 @@
+{
+  "kind": "non-target horizontal Arabic startup control on independent copied signed profile",
+  "sourceSha": "f43b22d34c0728e0ed800b8016d81b3212190954",
+  "actualStrictLiveRtlGatePassed": false,
+  "horizontalSuccess": false,
+  "targetVerticalUiReached": false,
+  "qualifiedTargetRtlStates": 0,
+  "observedNativePaint": "Arabic horizontal tabstrip, passive image; not substituted for metadata gate",
+  "peakOwnPssKiB": 12665986,
+  "peakMainPssKiB": 12583471,
+  "peakCgroupBytes": 14572691456,
+  "maxFastSampleGapSeconds": 10.33637500199984,
+  "eventDelta": {
+    "low": 0,
+    "high": 0,
+    "max": 0,
+    "oom": 0,
+    "oom_kill": 0,
+    "oom_group_kill": 0
+  },
+  "actualChildPid": 117008,
+  "actualChildExit": -15,
+  "normalQuitRequested": false,
+  "probeExit": null,
+  "runnerExit": 1,
+  "dbusWrapperExit": 1,
+  "payloadUnchanged": true,
+  "sourceProfileUnchanged": true,
+  "resourceClassification": "QA ceiling; root cause unisolated; no proof original host inadequate",
+  "additionalBrowserForbidden": true
+}

@@ -1,0 +1,17 @@
+{
+  "run": 42115797905,
+  "attempt": 1,
+  "sourceSha": "f43b22d34c0728e0ed800b8016d81b3212190954",
+  "branch": "fix/2876-right-hover",
+  "dispatchCount": 1,
+  "existingSameHeadPackageRunsBefore": [],
+  "mode": "stable-v2-validation",
+  "publicRelease": false,
+  "signing": false,
+  "workflowChanged": false,
+  "lockChanged": false,
+  "mainObserved": "29a3eb23145da90706d8a94441373278521cc737",
+  "runtimeSha": "c74fe1a545d275cdd710ab44701c1ee0dd6b0eae",
+  "manifestArtifact": 11506774970,
+  "nativeArtifact": 11501872421
+}

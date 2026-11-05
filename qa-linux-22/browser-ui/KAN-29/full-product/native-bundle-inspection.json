@@ -1,0 +1,13 @@
+{
+  "artifactId": 11501872421,
+  "zipSha256": "93d8a2e78a75e07c23df5d02941795f3b42689db032127b6768ea738087fef70",
+  "digestVerified": true,
+  "entries": [
+    "dist-host/bin/mar",
+    "dist-host/bin/wasm2c",
+    "dist-host/bin/mbsdiff",
+    "floorp-application.ini",
+    "floorp-linux-x86_64-moz-artifact.tar.xz",
+    "runtime-source-provenance.json"
+  ]
+}

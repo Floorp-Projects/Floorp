@@ -1,0 +1,80 @@
+{
+  "ownedProfileReferences": {
+    "/workspace/kan29-full-runtime/baseline-a629-x11-one-30076/profile": [],
+    "/workspace/kan29-full-runtime/candidate-f43-ar-horizontal-ui-30080/profile": [],
+    "/workspace/kan29-full-runtime/candidate-f43-x11-hold500-30079/profile": [],
+    "/workspace/kan29-full-runtime/baseline-a629-x11-hold500-30078/profile": [],
+    "/workspace/kan29-full-runtime/baseline-a629-30071/profile": [],
+    "/workspace/kan29-full-runtime/candidate-f43-x11-30075/profile": [],
+    "/workspace/kan29-full-runtime/candidate-f43-30074/profile": []
+  },
+  "recordedChildren": [
+    {
+      "pid": 115044,
+      "procExists": false,
+      "recordedDirectExit": 0
+    },
+    {
+      "pid": 117008,
+      "procExists": false,
+      "recordedDirectExit": -15
+    },
+    {
+      "pid": 116378,
+      "procExists": false,
+      "recordedDirectExit": 0
+    },
+    {
+      "pid": 115917,
+      "procExists": false,
+      "recordedDirectExit": 0
+    },
+    {
+      "pid": 112547,
+      "procExists": false,
+      "recordedDirectExit": -9
+    },
+    {
+      "pid": 111345,
+      "procExists": false,
+      "recordedDirectExit": 0
+    },
+    {
+      "pid": 111870,
+      "procExists": false,
+      "recordedDirectExit": 0
+    },
+    {
+      "pid": 114048,
+      "procExists": false,
+      "recordedDirectExit": 0
+    },
+    {
+      "pid": 114459,
+      "procExists": false,
+      "recordedDirectExit": 0
+    },
+    {
+      "pid": 114791,
+      "procExists": false,
+      "recordedDirectExit": -15
+    },
+    {
+      "pid": 112959,
+      "procExists": false,
+      "recordedDirectExit": 0
+    },
+    {
+      "pid": 113438,
+      "procExists": false,
+      "recordedDirectExit": 0
+    },
+    {
+      "pid": 113790,
+      "procExists": false,
+      "recordedDirectExit": -15
+    }
+  ],
+  "profilesDeleted": [],
+  "reason": "All tests ended; preserve source/copy supply relationships and raw profiles, no cleanup needed/performed. No product/build/foreign profile touched."
+}

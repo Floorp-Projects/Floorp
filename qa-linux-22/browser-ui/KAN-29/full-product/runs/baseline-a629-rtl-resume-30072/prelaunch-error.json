@@ -1,0 +1,6 @@
+{
+  "browserStarted": false,
+  "runnerExit": 1,
+  "dbusWrapperExit": 1,
+  "error": "owned reused-profile work parent absent before runtime.mkdir; corrected parents=True; no product launched"
+}

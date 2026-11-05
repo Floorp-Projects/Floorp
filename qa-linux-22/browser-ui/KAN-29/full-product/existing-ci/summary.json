@@ -1,0 +1,68 @@
+{
+  "key": "KAN-29",
+  "existingPr": 2877,
+  "sourceSha": "f43b22d34c0728e0ed800b8016d81b3212190954",
+  "runId": 37798617165,
+  "jobId": 113385030314,
+  "conclusion": "failure",
+  "artifact": {
+    "id": 11560575529,
+    "name": "test-logs-ubuntu-24.04",
+    "bytes": 88825,
+    "sha256": "588cf0a37e4753273a0468e5fc9a9f49f4ac8f630d2c6445f554ee9e6f70fc42",
+    "apiDigestMatches": true
+  },
+  "combinedLogSha256": "1a6a19e197ea531bf98357b107c2148d1a427c385d7aafdec69c5b6b6336b6aa",
+  "archiveMemberDigests": {
+    "_dist/ci-combined-browser-test.log": "1a6a19e197ea531bf98357b107c2148d1a427c385d7aafdec69c5b6b6336b6aa",
+    "_dist/ci-feles-build-test.log": "e7bc4dff63634b02f1417f79713d88c42e5eb631ec456be804ecbe6cbe138e87",
+    "_dist/firefox-tests/SUMMARY.md": "912e7dccecf4af8eab9979e5b70b49b4c69be57a0f85383c26198c33f2cb9d34",
+    "_dist/firefox-tests/TRIAGE.md": "f79be0427fddb40ba2a6de7f93c97fe441868500355587756893e58fec3197ce",
+    "_dist/firefox-tests/triage.json": "8e004c3a9d483e18e899a2c01323df123b10c266135ad54188efab1da18c0833",
+    "browser-features/chrome/test/firefox-downloaded/generated/manifest.json": "eec5a79fe06f328d5c4bf911e1e12af1a6519c73e5f4f5fc598e2a71b1c14e84",
+    "logs/test/latest.log": "f312144e009e7220945c0475a443ff320e8d4eed19e897bccf726acb8b609145",
+    "logs/vite-designs.log": "002f2d0c70c82f24102041b7161f9163c118866104a0bac9a10d6873be834ee8",
+    "logs/vite-main.log": "fca8da25d95a7650aa467642165b24eba437e7d67172be167936d3399700013e",
+    "logs/vite-modal-child.log": "e6edcbfcf88d0111c39202419dcd97568eadc10c1b82f3d9cf32f5ca55e859c2",
+    "logs/vite-newtab.log": "b9727d77a0106a8464c84ab7f707788bd4c969cc190808af0e45de463b6f0cf9",
+    "logs/vite-notes.log": "4a043bda5d8528b1f7eb2ce8cd1d90a640b1edf5376ec8fffbe26d64c51e9082",
+    "logs/vite-profile-manager.log": "fe1f0637a11e36a9e0ab3f1f18c7d475b0606b26d3021d56c1b449bb4e28bc42",
+    "logs/vite-settings.log": "c0dd7c6808ce693b9fc0b92e83d2c05bf9068e78d1eec8de9f24080ca3daa140",
+    "logs/vite-welcome.log": "1a18c0ab9d660f160f6a34efa83ac30053047601e6e9517b3b8a42c2d39ec0ed",
+    "logs/vite-workflow-progress.log": "2ee45c2e10b5b1c29f9271646c8ffeaa068c02b0ac9c24ad1ff61f8618b27ffe"
+  },
+  "browserModules": {
+    "passed": 248,
+    "failed": 1,
+    "failingModule": "browser-features/pages-settings/test/integration/advanced.test.ts",
+    "failingCase": "Account sync and profile manager links call browser actions",
+    "message": "Error: Missing Manage Firefox Feature Sync"
+  },
+  "relatedModulePasses": [
+    "[INFO] \u2713 browser-features/chrome/common/flex-order/test/flexOrder.test.ts (runAllTests, 2889ms)",
+    "[INFO] \u2713 browser-features/chrome/common/panel-sidebar/test/modalCallerRequestLifecycle.test.ts (runAllTests, 29ms)",
+    "[INFO] \u2713 browser-features/chrome/common/panel-sidebar/test/panelSidebarFavicon.test.ts (runAllTests, 10ms)",
+    "[INFO] \u2713 browser-features/chrome/common/panel-sidebar/test/panelSidebarLayout.test.ts (runAllTests, 4010ms)",
+    "[INFO] \u2713 browser-features/chrome/common/panel-sidebar/test/panelSidebarMigration.test.ts (runAllTests, 17ms)",
+    "[INFO] \u2713 browser-features/chrome/common/panel-sidebar/test/panelSidebarOverlay.test.ts (runAllTests, 7380ms)",
+    "[INFO] \u2713 browser-features/chrome/common/panel-sidebar/test/panelSidebarStaticNames.test.ts (runAllTests, 6ms)",
+    "[INFO] \u2713 browser-features/chrome/common/panel-sidebar/test/panelSidebarStaticPanels.test.ts (runAllTests, 4ms)",
+    "[INFO] \u2713 browser-features/chrome/common/panel-sidebar/test/userContextColor.test.ts (runAllTests, 5ms)",
+    "[INFO] \u2713 browser-features/chrome/common/panel-sidebar/test/webPanelBrowserLoad.test.ts (runAllTests, 5ms)",
+    "[INFO] \u2713 browser-features/chrome/common/panel-sidebar/test/webPanelFindController.test.ts (runAllTests, 132ms)",
+    "[INFO] \u2713 browser-features/chrome/common/panel-sidebar/test/webPanelUserAgent.test.ts (runAllTests, 5ms)",
+    "[INFO] \u2713 browser-features/chrome/common/panel-sidebar/test/webPanelUserAgentNetwork.test.ts (runAllTests, 2643ms)"
+  ],
+  "downloadedFirefox": {
+    "files": 8,
+    "tasks": 16,
+    "passed": 16
+  },
+  "limits": [
+    "Whole original CI remains failed; focused product validation does not replace it",
+    "Failure root cause and relationship to PR changes not established by readonly log inspection",
+    "Module PASS lines do not enumerate individual assertions",
+    "No source test/CI rerun or build performed",
+    "Only curated excerpts and digests published; raw log archive not for publication"
+  ]
+}

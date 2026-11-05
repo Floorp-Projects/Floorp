@@ -1,0 +1,12 @@
+{
+  "profile": "/workspace/kan29-passive-no-session/profile",
+  "procReferencesBeforeRemoval": [],
+  "copiedUserJsOnlyPortChange": true,
+  "sourceUserJsSha256": "2c42c64c39a368ff8ded8079b4cc73fc8026fd0102776eeb1573815daf6c63e0",
+  "copyUserJsSha256": "11da596fcb8398afc8e807ebae0585c416eb46c320d2496840b8764f002d1018",
+  "actualExecutableSha256": "0eff607fa766d87b89e7f314e455c3b093f5d31dbde8a2f22be2f00044558301",
+  "nativeLibxulSha256": "d57a2278f645a7bae91b0cb806a946fd037243a1f938e04ea3deb2168c010c80",
+  "productEntries": 46,
+  "productUnmodified": true,
+  "cleanup": "only dedicated ended profile/cache/config runtime removed; original source profile retained"
+}

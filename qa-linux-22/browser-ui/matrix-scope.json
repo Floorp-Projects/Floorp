@@ -1,0 +1,19 @@
+{
+  "baseEvidenceCommit": "5bad47baae11f062af39b477cd6e55640922cddc",
+  "modifiedIssueKeys": [
+    "KAN-29"
+  ],
+  "originalB10Count": 10,
+  "originalLinuxCount": 22,
+  "other9Rows": "Historical base snapshots unchanged; import this update for KAN29 only",
+  "laterKAN5And40EvidenceCommit": "69dca4c467e958b715098dcfc09b741c2b5f3454",
+  "additionalAssignedIssues": [
+    "KAN-30",
+    "KAN-37",
+    "KAN-95",
+    "KAN-97"
+  ],
+  "additionalMatrix": "https://github.com/Floorp-Projects/Floorp/blob/6539814d917536c6670abbe49b26fb8a6339d499/qa-linux-additional/browser-ui/matrix.json",
+  "KAN97ExitCorrectionCommit": "6539814d917536c6670abbe49b26fb8a6339d499",
+  "KAN97CorrectionJiraComment": "10438"
+}

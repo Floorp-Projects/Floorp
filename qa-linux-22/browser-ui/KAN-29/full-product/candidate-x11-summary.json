@@ -1,0 +1,97 @@
+{
+  "sourceSha": "f43b22d34c0728e0ed800b8016d81b3212190954",
+  "backend": "x11/Openbox; MOZ_ENABLE_WAYLAND=0 selects backend only",
+  "ltr": {
+    "state": "nativeRight/panelRight/unpinned",
+    "hoverRounds": 3,
+    "hoverGeometryPass": true,
+    "tabClicksAndPaint": true,
+    "closedWidth": 0,
+    "reopenWidths": [
+      {
+        "seconds": 0.30009945900019375,
+        "width": 0
+      },
+      {
+        "seconds": 0.8001318960014032,
+        "width": 0
+      },
+      {
+        "seconds": 1.500122260000353,
+        "width": 0
+      }
+    ],
+    "actualReopenEventTarget": [
+      {
+        "type": "mousedown",
+        "trusted": true,
+        "button": 0,
+        "target": "drag-to-pin-promo-card",
+        "path": [
+          "moz-card",
+          "undefined",
+          "promo-card",
+          "undefined",
+          "drag-to-pin-promo-card"
+        ]
+      },
+      {
+        "type": "mouseup",
+        "trusted": true,
+        "button": 0,
+        "target": "drag-to-pin-promo-card",
+        "path": [
+          "moz-card",
+          "undefined",
+          "promo-card",
+          "undefined",
+          "drag-to-pin-promo-card"
+        ]
+      },
+      {
+        "type": "click",
+        "trusted": true,
+        "button": 0,
+        "target": "drag-to-pin-promo-card",
+        "path": [
+          "moz-card",
+          "undefined",
+          "promo-card",
+          "undefined",
+          "drag-to-pin-promo-card"
+        ]
+      }
+    ],
+    "classification": "Observed real input occlusion by native sidebar drag-to-pin promo card during pointer hover. Cause unisolated: not declared harness-only or product bug. No corrective retry/pass rewrite."
+  },
+  "rtl": {
+    "states": 0,
+    "actualFloorpChildPid": 114791,
+    "actualFloorpChildExit": -15,
+    "normalQuitRequested": false,
+    "classification": "QA memory bound during NewSession before actual live/RTL gates; no fullRTL result"
+  },
+  "maxOwnPssKiB": 13532378,
+  "maxMainPssKiB": 13449818,
+  "peakCgroupBytes": 15564976128,
+  "eventDelta": {
+    "low": 0,
+    "high": 0,
+    "max": 0,
+    "oom": 0,
+    "oom_kill": 0,
+    "oom_group_kill": 0
+  },
+  "maxActualSampleGapSeconds": 62.41385393699966,
+  "monitorCaveat": "Sampling requests every2s; smaps/proc reads and scheduling can delay completed samples; actual monotonic timestamps preserved. No2s maximum-cadence claim.",
+  "resourceBound": "QA safety bound: measured owned Floorp known PSS12GiB or cgroup90%; RSS8GiB warning only. Not proof of original host inadequacy/product cause; never PASS",
+  "normalUiQuitCommand": {
+    "exit": 0,
+    "stderr": ""
+  },
+  "normalUiQuitResult": "No product exit within8s, ownSIGTERM afterward; never normalPASS",
+  "runnerExit": 1,
+  "dbusWrapperExit": 1,
+  "payloadUnchanged": true,
+  "newPr": null
+}

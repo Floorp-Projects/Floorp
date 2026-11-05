@@ -1,0 +1,8 @@
+{
+  "memory.current": "1036808192",
+  "memory.max": "17179869184",
+  "memory.peak": "17180016640",
+  "memory.events": "low 0\nhigh 0\nmax 135621\noom 3\noom_kill 2\noom_group_kill 0",
+  "memory.events.local": "low 0\nhigh 0\nmax 135621\noom 3\noom_kill 0\noom_group_kill 0",
+  "observedUTC": "2026-11-05T22:01:51.612872+00:00"
+}

@@ -1,0 +1,5 @@
+{
+  "source": "/workspace/qa-linux-22/browser-ui/inspect-29284.json",
+  "sha256": "b5c806aeaef9227c2d8c8e8eebe97f7b0b25ec246bacd7be74389e1b3af732b7",
+  "change": "tabbar.tabbarStyle=vertical; startup preference fixture, not UI-native default"
+}

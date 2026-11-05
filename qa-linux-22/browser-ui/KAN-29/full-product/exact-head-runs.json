@@ -1,0 +1,32 @@
+{
+  "total_count": 3,
+  "workflow_runs": [
+    {
+      "conclusion": "success",
+      "created_at": "2026-10-08T15:11:00Z",
+      "event": "pull_request",
+      "head_sha": "f43b22d34c0728e0ed800b8016d81b3212190954",
+      "id": 37798617149,
+      "name": "Moderate Content",
+      "path": ".github/workflows/moderation.yml"
+    },
+    {
+      "conclusion": "success",
+      "created_at": "2026-10-08T15:11:00Z",
+      "event": "pull_request",
+      "head_sha": "f43b22d34c0728e0ed800b8016d81b3212190954",
+      "id": 37798617150,
+      "name": "(CI) Docs LLM Pipeline",
+      "path": ".github/workflows/docs_pipeline.yml"
+    },
+    {
+      "conclusion": "failure",
+      "created_at": "2026-10-08T15:11:00Z",
+      "event": "pull_request",
+      "head_sha": "f43b22d34c0728e0ed800b8016d81b3212190954",
+      "id": 37798617165,
+      "name": "(CI) 🧪 Browser Integration + Runner Tests",
+      "path": ".github/workflows/colocated_runner_test.yml"
+    }
+  ]
+}

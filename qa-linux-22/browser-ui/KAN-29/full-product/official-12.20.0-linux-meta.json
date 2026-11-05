@@ -1,0 +1,35 @@
+{
+  "schema_version": 2,
+  "version_display": "12.20.0@157.0.1",
+  "version": "157.0.1",
+  "noraneko_version": "12.20.0",
+  "buildid": "20261007125927",
+  "noraneko_buildid": "01a1185a-ef28-7075-ab23-ec53efabc732",
+  "channel": "release",
+  "platform": "Linux",
+  "arch": "x86_64",
+  "manifest_set_id": "sha256:2c53f14e398b25954eef2bacaff7a21b179d53079cbe326f17880b5d3f1eacc9",
+  "mar": {
+    "url": "https://github.com/Floorp-Projects/Floorp/releases/download/v12.20.0/floorp-linux-x86_64-full.mar",
+    "name": "floorp-linux-x86_64-full.mar",
+    "size": 106898200,
+    "sha512": "ddd62624bddc4387fe98e14d44c6ba7a66d1e2b61bf68425e1c64d8903c19138f0c51c22cbfe71f472f6b5522d2fd1bbc0f2b32ad07d69e6b3af1361cb45f230"
+  },
+  "provenance": {
+    "runtime_repository": "Floorp-Projects/Floorp-Runtime",
+    "runtime_head_sha": "c74fe1a545d275cdd710ab44701c1ee0dd6b0eae",
+    "runtime_run_id": 37625027712,
+    "runtime_artifact_id": 11501872421,
+    "runtime_artifact_digest": "sha256:93d8a2e78a75e07c23df5d02941795f3b42689db032127b6768ea738087fef70",
+    "floorp_repository": "Floorp-Projects/Floorp",
+    "floorp_head_sha": "a6290b5811b8c5309b399ac340ec40b52f97b73c",
+    "floorp_run_id": 37691742310,
+    "release_tag": "v12.20.0"
+  },
+  "verification": {
+    "status": "verified",
+    "method": "full-version",
+    "app_build_id": "20261007125927",
+    "build_id2": "01a1185a-ef28-7075-ab23-ec53efabc732"
+  }
+}

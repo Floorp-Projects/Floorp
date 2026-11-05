@@ -1,0 +1,7 @@
+{
+  "actualFloorpChildPid": 115917,
+  "actualFloorpExecutable": "/workspace/kan29-package/baseline/floorp/floorp",
+  "actualFloorpChildExit": 0,
+  "normalQuitRequested": true,
+  "measurement": "direct Popen.wait, including failed startup; abnormal cleanup separately recorded"
+}

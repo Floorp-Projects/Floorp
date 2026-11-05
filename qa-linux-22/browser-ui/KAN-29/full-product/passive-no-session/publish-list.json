@@ -1,0 +1,21 @@
+{
+  "files": [
+    "cleanup-receipt.json",
+    "product-after.json",
+    "product-before.json",
+    "report.md",
+    "resources.jsonl",
+    "result.json",
+    "run.py",
+    "screen-15s.png",
+    "summary.json",
+    "publish-list.json",
+    "sha256.json"
+  ],
+  "excludedFromQACommit": [
+    "browser.log",
+    "openbox.log",
+    "xvfb.log"
+  ],
+  "rawExecutionEvidenceUnchanged": true
+}

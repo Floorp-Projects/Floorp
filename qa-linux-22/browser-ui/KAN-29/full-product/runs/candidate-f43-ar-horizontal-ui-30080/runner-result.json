@@ -1,0 +1,134 @@
+{
+  "sourceSha": "f43b22d34c0728e0ed800b8016d81b3212190954",
+  "profile": "/workspace/kan29-full-runtime/candidate-f43-ar-horizontal-ui-30080/profile",
+  "phases": [
+    {
+      "stage": "rtl",
+      "actualFloorpChildPid": 117008,
+      "actualFloorpExecutable": "/workspace/kan29-package/candidate/floorp/floorp",
+      "normalQuitRequested": false,
+      "sessionCapabilities": {
+        "pageLoadStrategy": "none"
+      },
+      "sessionTimeoutSeconds": 90,
+      "actualFloorpChildExit": -15
+    }
+  ],
+  "normalExitRequired": true,
+  "runnerPid": 116994,
+  "exitSemantics": "actualFloorpChildExit is direct Popen.wait on executable child inside DBus; dbusWrapperExit and runnerExit are separate. No child status inferred from wrapper.",
+  "error": "ResourceBoundExceeded('resource bound reached; no product PASS')",
+  "traceback": "Traceback (most recent call last):\n  File \"/workspace/qa-linux-22/browser-ui/KAN-29/full-product/run.py\", line 113, in <module>\n    m,row=start('rtl');row['locale']=m.execute_script('return {app:Services.locale.appLocalesAsBCP47,rtl:Services.locale.isAppLocaleRTL,RTL_UI:window.RTL_UI,dir:getComputedStyle(document.documentElement).direction}');assert row['locale']['rtl'] and row['locale']['RTL_UI'] and row['locale']['dir']=='rtl'\n          ^^^^^^^^^^^^\n  File \"/workspace/qa-linux-22/browser-ui/KAN-29/full-product/run.py\", line 71, in start\n    row={'stage':stage,'actualFloorpChildPid':browser.pid,'actualFloorpExecutable':os.readlink('/proc/'+str(browser.pid)+'/exe'),'normalQuitRequested':False,'sessionCapabilities':{'pageLoadStrategy':'none'},'sessionTimeoutSeconds':90};result['phases'].append(row);(out/'ownership.json').write_text(json.dumps(result,indent=2));m=Marionette('localhost',port=port,socket_timeout=90);m.start_session(capabilities={'pageLoadStrategy':'none'});m.set_context('chrome');actual=m.execute_script('return {name:Services.appinfo.name,version:Services.appinfo.version,build:Services.appinfo.appBuildID,platformBuild:Services.appinfo.platformBuildID,gre:Services.dirsvc.get(\"GreD\",Ci.nsIFile).path,signature:Services.prefs.getBoolPref(\"xpinstall.signatures.required\"),signatureUserSet:Services.prefs.prefHasUserValue(\"xpinstall.signatures.required\"),langpackSignature:Services.prefs.getBoolPref(\"extensions.langpacks.signatures.required\"),langpackSignatureUserSet:Services.prefs.prefHasUserValue(\"extensions.langpacks.signatures.required\"),sandbox:Services.prefs.getIntPref(\"security.sandbox.content.level\"),focusTestMode:Services.prefs.getBoolPref(\"focusmanager.testmode\")}');assert all(actual[k]==v for k,v in c['live'].items()),(actual,c['live']);row['live']=actual;(out/'ownership.json').write_text(json.dumps(result,indent=2));return m,row\n                                                                                                                                                                                                                                                                                                                                                                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/workspace/qa-linux-22/browser-ui/python/marionette_driver/decorators.py\", line 24, in _\n    return func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File \"/workspace/qa-linux-22/browser-ui/python/marionette_driver/marionette.py\", line 1371, in start_session\n    resp = self._send_message(\"WebDriver:NewSession\", capabilities)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/workspace/qa-linux-22/browser-ui/python/marionette_driver/decorators.py\", line 24, in _\n    return func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File \"/workspace/qa-linux-22/browser-ui/python/marionette_driver/marionette.py\", line 773, in _send_message\n    msg = self.client.request(name, params)\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/workspace/qa-linux-22/browser-ui/python/marionette_driver/transport.py\", line 368, in request\n    return self.receive()\n           ^^^^^^^^^^^^^^\n  File \"/workspace/qa-linux-22/browser-ui/python/marionette_driver/transport.py\", line 217, in receive\n    chunk = sock.recv(recv_bytes)\n            ^^^^^^^^^^^^^^^^^^^^^\n  File \"/workspace/qa-linux-22/browser-ui/KAN-29/full-product/run.py\", line 60, in on_resource_bound\n    def on_resource_bound(signum,frame):raise ResourceBoundExceeded('resource bound reached; no product PASS')\n                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nresource_monitor.ResourceBoundExceeded: resource bound reached; no product PASS\n",
+  "resourceBound": {
+    "observation": {
+      "monotonic": 30287.301699461,
+      "utc": "2026-11-05T22:29:26Z",
+      "cgroupBytes": 14572691456,
+      "cgroupMax": "17179869184",
+      "cgroupEvents": {
+        "low": 0,
+        "high": 0,
+        "max": 135621,
+        "oom": 3,
+        "oom_kill": 2,
+        "oom_group_kill": 0
+      },
+      "actualFloorpChildPid": 117008,
+      "floorpTree": [
+        {
+          "pid": 117008,
+          "ppid": 116994,
+          "name": "floorp",
+          "rssKiB": 12686172,
+          "pssKiB": 12583471,
+          "pssTiming": {
+            "pssKiB": 12583471,
+            "readStarted": 30286.849190661,
+            "readCompleted": 30286.963726883
+          }
+        },
+        {
+          "pid": 117046,
+          "ppid": 117008,
+          "name": "Socket Process",
+          "rssKiB": 46000,
+          "pssKiB": 20543,
+          "pssTiming": {
+            "pssKiB": 20543,
+            "readStarted": 30286.963731499,
+            "readCompleted": 30286.964804641
+          }
+        },
+        {
+          "pid": 117093,
+          "ppid": 117008,
+          "name": "forkserver",
+          "rssKiB": 30732,
+          "pssKiB": 9463,
+          "pssTiming": {
+            "pssKiB": 9463,
+            "readStarted": 30286.964807497,
+            "readCompleted": 30286.965392794
+          }
+        },
+        {
+          "pid": 117113,
+          "ppid": 117093,
+          "name": "Web Content",
+          "rssKiB": 78100,
+          "pssKiB": 36240,
+          "pssTiming": {
+            "pssKiB": 36240,
+            "readStarted": 30286.965394241,
+            "readCompleted": 30286.96685036
+          }
+        },
+        {
+          "pid": 117122,
+          "ppid": 117093,
+          "name": "RDD Process",
+          "rssKiB": 39408,
+          "pssKiB": 16269,
+          "pssTiming": {
+            "pssKiB": 16269,
+            "readStarted": 30286.966852511,
+            "readCompleted": 30286.967775487
+          }
+        }
+      ],
+      "aggregateFloorpRssKiB": 12880412,
+      "aggregateFloorpKnownPssKiB": 12665986,
+      "allOwnedPssAvailable": true,
+      "rssWarningOnly": true,
+      "otherOwnedProcesses": [
+        {
+          "pid": 117002,
+          "ppid": 116994,
+          "name": "Xvfb",
+          "rssKiB": 49540
+        },
+        {
+          "pid": 117005,
+          "ppid": 116994,
+          "name": "openbox",
+          "rssKiB": 13232
+        }
+      ],
+      "note": "Fast2s cgroup/statusRSS sampler is independent of potentially slow PSS thread; PSS read start/completion timestamps retained. Aggregate RSS may count shared pages more than once; cgroup includes other tasks. OOM counters alone do not identify victim/cause."
+    },
+    "bound": "QA safety bound: measured owned Floorp known PSS12GiB or cgroup90%; RSS8GiB warning only. Not proof of original host inadequacy/product cause; never PASS"
+  },
+  "productPass": false,
+  "resourceClassification": "QA safety bound reached; not proof of original host inadequacy/product cause, never PASS",
+  "resourceBoundNormalUiQuitAttempt": "OS CtrlQ on private nested display; no claim of normal quit until direct child wait observed",
+  "resourceBoundUiCommand": {
+    "exit": 0,
+    "stderr": ""
+  },
+  "resourceBoundUiQuitError": "TimeoutExpired(['/workspace/kan29-package/candidate/floorp/floorp', '--no-remote', '--profile', '/workspace/kan29-full-runtime/candidate-f43-ar-horizontal-ui-30080/profile', '--marionette', 'about:blank'], 8)",
+  "abnormalProductCleanup": true,
+  "productUnmodified": true,
+  "changedEntries": [],
+  "addedEntries": [],
+  "runnerExit": 1
+}

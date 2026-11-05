@@ -1,0 +1,17 @@
+L340: [INFO] ✓ browser-features/chrome/common/flex-order/test/flexOrder.test.ts (runAllTests, 2889ms)
+L384: [INFO] ✓ browser-features/chrome/common/panel-sidebar/test/modalCallerRequestLifecycle.test.ts (runAllTests, 29ms)
+L386: [INFO] ✓ browser-features/chrome/common/panel-sidebar/test/panelSidebarFavicon.test.ts (runAllTests, 10ms)
+L388: [INFO] ✓ browser-features/chrome/common/panel-sidebar/test/panelSidebarLayout.test.ts (runAllTests, 4010ms)
+L390: [INFO] ✓ browser-features/chrome/common/panel-sidebar/test/panelSidebarMigration.test.ts (runAllTests, 17ms)
+L392: [INFO] ✓ browser-features/chrome/common/panel-sidebar/test/panelSidebarOverlay.test.ts (runAllTests, 7380ms)
+L394: [INFO] ✓ browser-features/chrome/common/panel-sidebar/test/panelSidebarStaticNames.test.ts (runAllTests, 6ms)
+L396: [INFO] ✓ browser-features/chrome/common/panel-sidebar/test/panelSidebarStaticPanels.test.ts (runAllTests, 4ms)
+L398: [INFO] ✓ browser-features/chrome/common/panel-sidebar/test/userContextColor.test.ts (runAllTests, 5ms)
+L400: [INFO] ✓ browser-features/chrome/common/panel-sidebar/test/webPanelBrowserLoad.test.ts (runAllTests, 5ms)
+L402: [INFO] ✓ browser-features/chrome/common/panel-sidebar/test/webPanelFindController.test.ts (runAllTests, 132ms)
+L404: [INFO] ✓ browser-features/chrome/common/panel-sidebar/test/webPanelUserAgent.test.ts (runAllTests, 5ms)
+L406: [INFO] ✓ browser-features/chrome/common/panel-sidebar/test/webPanelUserAgentNetwork.test.ts (runAllTests, 2643ms)
+L782: [ERROR] ✗ browser-features/pages-settings/test/integration/advanced.test.ts (36279ms)
+L783: [ERROR]   Account sync and profile manager links call browser actions: Error: Missing Manage Firefox Feature Sync
+L814: [INFO] Browser test result: 248 passed, 1 failed
+L815: [INFO] Downloaded Firefox coverage: 8 file(s), 16 task(s), 16 passed

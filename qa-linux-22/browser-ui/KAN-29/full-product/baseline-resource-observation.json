@@ -1,0 +1,14 @@
+{
+  "utc": "2026-11-05T22:02:53Z",
+  "memoryCurrent": 1041575936,
+  "memoryMax": "17179869184",
+  "events": {
+    "low": 0,
+    "high": 0,
+    "max": 135621,
+    "oom": 3,
+    "oom_kill": 2,
+    "oom_group_kill": 0
+  },
+  "attribution": "Post-run snapshot only; per-run pre-snapshot unavailable for first two starts. OOM resource bound confirmed; victim/PID and product-nativeRTL-vs-other-environment cause remain unestablished."
+}

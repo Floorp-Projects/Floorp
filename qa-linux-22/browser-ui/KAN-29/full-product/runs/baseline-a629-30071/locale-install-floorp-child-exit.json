@@ -1,0 +1,7 @@
+{
+  "actualFloorpChildPid": 111870,
+  "actualFloorpExecutable": "/workspace/kan29-package/baseline/floorp/floorp",
+  "actualFloorpChildExit": 0,
+  "normalQuitRequested": true,
+  "measurement": "direct Popen.wait on actual executable child, not DBus wrapper"
+}

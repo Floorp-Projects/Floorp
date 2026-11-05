@@ -1,0 +1,20 @@
+{
+  "url": "https://archive.mozilla.org/pub/firefox/releases/157.0.1/linux-x86_64/xpi/ar.xpi",
+  "path": "/workspace/qa-linux-22/browser-ui/KAN-29/full-product/locale/ar-157.0.1.xpi",
+  "sha256": "e05634d2c9aef02b6c7cfd77ca1b9f9846f5d29be674062c394a4ed46c04b43e",
+  "bytes": 546827,
+  "version": "157.0.20261005.135250",
+  "compatibility": {
+    "id": "langpack-ar@firefox.mozilla.org",
+    "strict_min_version": "157.0",
+    "strict_max_version": "157.*"
+  },
+  "signatureEntries": [
+    "META-INF/cose.manifest",
+    "META-INF/cose.sig",
+    "META-INF/manifest.mf",
+    "META-INF/mozilla.sf",
+    "META-INF/mozilla.rsa"
+  ],
+  "download": "Inherited proxy and normal TLS verification, no bypass. Initial default-sandbox proxy connection failure is isolated infrastructure; authorized native execution succeeded. Signature validated only later by normal AddonManager."
+}

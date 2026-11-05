@@ -1,0 +1,18 @@
+{
+  "baselineSource": "a6290b5811b8c5309b399ac340ec40b52f97b73c",
+  "candidateSource": "f43b22d34c0728e0ed800b8016d81b3212190954",
+  "exactParent": true,
+  "changedFiles": [
+    "browser-features/chrome/common/flex-order/flex-order.tsx",
+    "browser-features/chrome/common/flex-order/test/flexOrder.test.ts"
+  ],
+  "productionPatchSha256": "0e2905ec7d776ddd5275d64cd8fc91a418a1619307f3b8e5ac8bb7e943babea5",
+  "ciSettingsChanged": false,
+  "lockChanged": false,
+  "publicReleaseSettingsChanged": false,
+  "nativeRuntimeEqual": true,
+  "notes": [
+    "Direction branch is algebraically unchanged in genuine LTR; zero-size rectangle skip remains a functional LTR difference.",
+    "Existing PR remains canonical; no new source patch or duplicate PR created."
+  ]
+}

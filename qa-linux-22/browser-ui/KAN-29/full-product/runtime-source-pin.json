@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "upstream": {
+    "repository": "mozilla-firefox/firefox",
+    "version": "157.0.1",
+    "tag": "FIREFOX_157_0_1_RELEASE",
+    "commit": "0c469c2352451630bc69fc328c9f0c589c6c534d",
+    "previous_tag": "FIREFOX_157_0_RELEASE",
+    "previous_commit": "fdd757a2e09c9471cddf383e64e631e4ce178499"
+  },
+  "floorp_patch": {
+    "repository": "Floorp-Projects/Floorp",
+    "commit": "e1da5a98af5fa72065994514dc9618f2a38ba338",
+    "path": ".github/patches/floorp-runtime/common/macos-app-shim-pwa-input-and-compositor.patch",
+    "runtime_path": ".github/patches/upstream/macos-app-shim-pwa-input-and-compositor.patch",
+    "sha256": "43a278bedfe0faeb9b747f47b32b9b060683ddbb2e58953d03d3b5470e47c2e8",
+    "patched_files": {
+      "gfx/webrender_bindings/RenderCompositorNative.cpp": "74a0c3f1fde983237156ee0721a296b10fe70011ca2a943e58c1fc4b8bcc4148",
+      "widget/cocoa/NativeMenuSupport.mm": "2945ea32b12af69fbfc712c62014bdfad939c25c4fc2307dc331219b17745b9c",
+      "widget/cocoa/appshim/MacWebAppInput.h": "7d0e555f20da6058eb9442dc4a547d8410c4f2340f1daa4ec69bed897c42e788",
+      "widget/cocoa/appshim/MacWebAppInput.mm": "7d980071a7a9f04488b16422f9ecce89ebcdf05844bca9f92b43532d5f0bcec3",
+      "widget/cocoa/appshim/MacWebAppWidget.h": "9b1df8468cd1cc6bcac75bb2e4439e12e567d775b8a0fb268533d486918927a3",
+      "widget/cocoa/appshim/MacWebAppWidget.mm": "78ab9402f65ce8ea2e81d1efd8f9854bf3435a63a5f0cb18ebed780aaa531386",
+      "widget/cocoa/appshim/shim/ShimView.mm": "fba1bda4459a1d5ba9d24f5aa816e04eca59b81158dbe5e349a7089d49b68e7b",
+      "widget/cocoa/nsCocoaUtils.h": "41c9033c12da4dceddbd956b00a9c640d1a6beaf9ebcae60f76aa42c7faa8caf",
+      "widget/cocoa/nsCocoaUtils.mm": "0c22ada126518e43137001559ebced91723f81a74110bc2ef5800e9c010cf335",
+      "widget/nsIWidget.cpp": "795a237b3fcb3eca58e1f05a9972ff840778305e2743c987ea52fb23d614119c",
+      "widget/tests/gtest/TestMacWebAppPanGesture.mm": "03de4ce729d8a2ee6b752890eb231904df1246e004dd2d0ede9ddfb55b24a7cb",
+      "widget/tests/gtest/moz.build": "93eb94092710ce968e477ea4606cd3b6ecabcb94cc48f3d78f8fc095c45a7578"
+    }
+  }
+}

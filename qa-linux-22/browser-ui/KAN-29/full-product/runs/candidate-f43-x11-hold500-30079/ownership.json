@@ -1,0 +1,32 @@
+{
+  "sourceSha": "f43b22d34c0728e0ed800b8016d81b3212190954",
+  "profile": "/workspace/kan29-full-runtime/candidate-f43-x11-hold500-30079/profile",
+  "phases": [
+    {
+      "stage": "ltr",
+      "actualFloorpChildPid": 116378,
+      "actualFloorpExecutable": "/workspace/kan29-package/candidate/floorp/floorp",
+      "normalQuitRequested": false,
+      "sessionCapabilities": {
+        "pageLoadStrategy": "none"
+      },
+      "sessionTimeoutSeconds": 90,
+      "live": {
+        "name": "Floorp",
+        "version": "157.0.1",
+        "build": "20261007125927",
+        "platformBuild": "20261007125927",
+        "gre": "/workspace/kan29-package/candidate/floorp",
+        "signature": false,
+        "signatureUserSet": false,
+        "langpackSignature": true,
+        "langpackSignatureUserSet": false,
+        "sandbox": 6,
+        "focusTestMode": false
+      }
+    }
+  ],
+  "normalExitRequired": true,
+  "runnerPid": 116364,
+  "exitSemantics": "actualFloorpChildExit is direct Popen.wait on executable child inside DBus; dbusWrapperExit and runnerExit are separate. No child status inferred from wrapper."
+}

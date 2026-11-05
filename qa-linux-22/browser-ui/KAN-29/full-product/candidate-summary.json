@@ -1,0 +1,67 @@
+{
+  "key": "KAN-29",
+  "github": 2876,
+  "sourceSha": "f43b22d34c0728e0ed800b8016d81b3212190954",
+  "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2877",
+  "candidateKind": "unchanged exact-head complete standard package; no diagnostic source replacement",
+  "productVersion": "Floorp12.20.0 / Gecko157.0.1 / nativeApp+Platform Build20261007125927",
+  "environment": "Debian13/Xvfb125/nestedKWin/nativeWayland/SoftwareWebRender; W3C synthetic input",
+  "ltr": {
+    "statesCollected": 8,
+    "hoverRounds": 24,
+    "hoverGeometryPass": true,
+    "tabClicks": 16,
+    "allTabClicksAndPaint": true,
+    "closeReopenPassStates": 7,
+    "productPassStates": 7
+  },
+  "rtl": {
+    "statesCollected": 0,
+    "classification": "startup NewSession pending before live/RTL_UI/Wayland gates; measured own-main PSS growth hit QA bound",
+    "actualFloorpChildPid": 113790,
+    "actualFloorpChildExit": -15,
+    "normalQuitRequested": false
+  },
+  "phaseExits": [
+    {
+      "stage": "ltr",
+      "actualFloorpChildPid": 112959,
+      "actualFloorpChildExit": 0,
+      "normalQuitRequested": true,
+      "probeExit": 0
+    },
+    {
+      "stage": "locale-install",
+      "actualFloorpChildPid": 113438,
+      "actualFloorpChildExit": 0,
+      "normalQuitRequested": true,
+      "probeExit": null
+    },
+    {
+      "stage": "rtl",
+      "actualFloorpChildPid": 113790,
+      "actualFloorpChildExit": -15,
+      "normalQuitRequested": false,
+      "probeExit": null
+    }
+  ],
+  "runnerExit": 1,
+  "dbusWrapperExit": 1,
+  "productPass": false,
+  "payloadUnchanged": true,
+  "remainingConditions": [
+    "RTL8states/24hover and side effects not collected",
+    "One LTR unpinned native-right/panel-right immediate reopen remained width0; UI hit/timing vs product defect not isolated",
+    "Original CachyOS/Flatpak/physical input not fulfilled"
+  ],
+  "newPr": null,
+  "jiraCommentWritten": null,
+  "evidence": [
+    "baseline-summary.json",
+    "baseline-report.md",
+    "candidate-resources-summary.json",
+    "runs/candidate-f43-30074/runner-result.json",
+    "runs/candidate-f43-30074/measure-ltr-30074.json",
+    "runs/candidate-f43-30074/resources.jsonl"
+  ]
+}

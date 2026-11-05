@@ -1,0 +1,104 @@
+{
+  "key": "KAN-29",
+  "github": 2876,
+  "existingPr": 2877,
+  "sourceSha": "f43b22d34c0728e0ed800b8016d81b3212190954",
+  "prState": "OPEN Draft",
+  "scope": "Readonly metadata/source inspection; no dispatch/build/push/config/lock/source/PR changes",
+  "runtime": {
+    "ref": "daily-1142",
+    "head": "c74fe1a545d275cdd710ab44701c1ee0dd6b0eae",
+    "runId": 37625027712,
+    "workflow": ".github/workflows/daily-build.yml",
+    "conclusion": "success",
+    "version": "157.0.1",
+    "buildId": "20261007125927",
+    "releaseId": 406108663,
+    "nativeReleaseAsset": {
+      "id": 619643710,
+      "size": 85429504,
+      "sha256": "9df9045b44cf4abd609b7a2b70d0ca9ebdc20abcd76a126b4b784b46a775eb82"
+    },
+    "appIniReleaseAsset": {
+      "id": 619643684,
+      "sha256": "c00635156431e2d95fb1786036914537bdcc6c1f40e3d3ad19ecf5a7501484e8",
+      "downloadedBytesVerified": true
+    },
+    "actionsArtifacts": [
+      {
+        "created_at": "2026-10-07T19:49:32Z",
+        "digest": "sha256:dd2c05c61c43a81a61a623fb9229a8bba6fc2f67acca3b70f065c34d4cf30077",
+        "expired": false,
+        "expires_at": "2027-01-05T12:59:29Z",
+        "id": 11506774970,
+        "name": "floorp-runtime-build-manifest-v2",
+        "size_in_bytes": 724,
+        "workflow_run": {
+          "head_sha": "c74fe1a545d275cdd710ab44701c1ee0dd6b0eae",
+          "id": 37625027712
+        }
+      },
+      {
+        "created_at": "2026-10-07T17:57:19Z",
+        "digest": "sha256:93d8a2e78a75e07c23df5d02941795f3b42689db032127b6768ea738087fef70",
+        "expired": false,
+        "expires_at": "2027-01-05T12:59:29Z",
+        "id": 11501872421,
+        "name": "floorp-linux-x86_64-moz-artifact",
+        "size_in_bytes": 86100784,
+        "workflow_run": {
+          "head_sha": "c74fe1a545d275cdd710ab44701c1ee0dd6b0eae",
+          "id": 37625027712
+        }
+      }
+    ]
+  },
+  "contract": {
+    "mode": "stable-v2-validation",
+    "callerConstraint": "floorp_head_sha must equal CURRENT_FLOORP_SHA; main caller cannot substitute old source",
+    "manifestChecks": "distinct artifact IDs; exact names; run/head/digest/size/expiry and successful daily workflow; expected BuildID",
+    "nativeContentRequired": [
+      "native tar.xz",
+      "dist-host",
+      "floorp-application.ini",
+      "runtime-source-provenance.json"
+    ],
+    "sourcePinPresent": true,
+    "floorpPatchMatchesPin": true,
+    "assessment": "Metadata and source pin compatible; actual manifest/native provenance content verification delegated to parent before dispatch"
+  },
+  "transport": {
+    "childManifestDownload": "HTTP403 on blob redirect; cause undetermined; no retained signed URL",
+    "artifactExpiredAccordingToAPI": false,
+    "manifestAndNativeBundleContentReadByChild": false,
+    "additionalDownloadAttemptsStopped": true
+  },
+  "existingExactHeadProduct": {
+    "found": false,
+    "scope": "API exact-head inventory: 3 runs, none package; source run37798617165 failed combined test step; sole artifact11560575529 test logs, not product",
+    "sourceFailureIsNotPackageFailure": true
+  },
+  "sameRuntimeOfficialBaseline": {
+    "release": "v12.20.0",
+    "releaseId": 406321612,
+    "sourceSha": "a6290b5811b8c5309b399ac340ec40b52f97b73c",
+    "packageRunId": 37691742310,
+    "metadataAssetId": 620366461,
+    "metadataSha256": "e448c97b7241e3f038df7aeb4fb0de5cc5a9f70df2a03497797efe64bc275d37",
+    "metadataDownloadedHashVerified": true,
+    "metadataVerification": "full-version",
+    "runtimeMatchesExactPrLock": true,
+    "completeTarAsset": {
+      "id": 620366462,
+      "size": 106738544,
+      "sha256": "8aa033efe583df4d2ee8910ce2b6e77495f81b4b34a3beded7417bfbd747d56f"
+    },
+    "binaryDownloadedOrExecutedByChild": false,
+    "comparison": "PR head is one commit ahead, exactly flex-order.tsx and flexOrder.test.ts modified; no lock/workflow/config differences"
+  },
+  "remainingConditions": [
+    "Parent verifies actual v2 manifest JSON and native bundle provenance content",
+    "Exact-head candidate packaging and product regression not yet performed by this readonly audit",
+    "Original issue conditions remain governed by existing KAN-29 matrix"
+  ]
+}

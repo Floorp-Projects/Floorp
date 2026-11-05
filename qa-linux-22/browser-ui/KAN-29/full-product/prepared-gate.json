@@ -1,0 +1,15 @@
+{
+  "mode": "--prepare",
+  "manifest": "/workspace/qa-linux-22/browser-ui/KAN-29/full-product/manifest-template.json",
+  "issues": [
+    "missing expected package digest floorp",
+    "missing expected package digest libxul.so",
+    "missing expected package digest omni.ja",
+    "missing expected package digest browser/omni.ja"
+  ],
+  "ready": false,
+  "browserStarted": false,
+  "sourceSha": "f43b22d34c0728e0ed800b8016d81b3212190954",
+  "productRoot": "/workspace/PENDING-actual-unmodified-package/floorp",
+  "fixture": "Startup vertical/hover/panel prefs and native API side selection; actual pin/open/close/tab clicks. Signed locale installed normally then normal quit/restart. No dir fallback/protection override."
+}

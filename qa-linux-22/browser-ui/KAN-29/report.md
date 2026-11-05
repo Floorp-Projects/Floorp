@@ -1,3 +1,5 @@
+> Exact-head complete-package follow-up: see [full-product/report.md](full-product/report.md). Package42115797905 succeeded, but complete157 ArabicRTL remains unqualified due startup/resource limits; historical159 diagnostic results below are separate. Original LTR/CachyOS/Flatpak fix remains unproved.
+
 最新follow-up: panel本体open・反復hover・native pin差をWaylandで実施。[wayland-followup.md](wayland-followup.md)を参照。LTR限定未再現、RTLはroot-dir fixtureで関連offset異常（localized RTLではない）。
 
 # KAN-29 / GitHub #2876

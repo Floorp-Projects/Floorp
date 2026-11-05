@@ -1,0 +1,482 @@
+[
+  {
+    "key": "KAN-29",
+    "github": "https://github.com/Floorp-Projects/Floorp/issues/2876",
+    "variant": "baseline-wayland",
+    "sourceSha": "a6290b5811b8c5309b399ac340ec40b52f97b73c",
+    "productVersion": "Floorp12.20.0/Gecko157.0.1/nativeBuild20261007125927",
+    "environment": "baseline-wayland Debian13/virtualdisplay/syntheticW3C",
+    "testCommand": "python run.py --execute /workspace/qa-linux-22/browser-ui/KAN-29/full-product/runs/baseline-a629-30071/contract.json",
+    "result": "partial; see actual measurements/exits, no complete RTL PASS",
+    "measurements": {
+      "ltr": {
+        "protocol": {
+          "windowProtocol": "wayland",
+          "compositing": "WebRender (Software)"
+        },
+        "locale": {
+          "direction": "ltr",
+          "rtlUI": false,
+          "appLocale": "en-US",
+          "appLocaleRTL": false,
+          "uidirection": ""
+        },
+        "states": 8,
+        "rounds": 24,
+        "productPass": true,
+        "collectionComplete": true
+      }
+    },
+    "remainingConditions": [
+      "full-product RTL8states/24hover",
+      "original CachyOS/Flatpak/physical input",
+      "input-occlusion difference root cause unisolated"
+    ],
+    "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2877",
+    "newPr": null,
+    "jiraCommentWritten": null,
+    "phaseExits": [
+      {
+        "stage": "ltr",
+        "actualFloorpChildPid": 111345,
+        "actualFloorpChildExit": 0,
+        "normalQuitRequested": true,
+        "probeExit": 0
+      },
+      {
+        "stage": "locale-install",
+        "actualFloorpChildPid": 111870,
+        "actualFloorpChildExit": 0,
+        "normalQuitRequested": true,
+        "probeExit": null
+      }
+    ],
+    "runnerExit": 1,
+    "dbusWrapperExit": 1,
+    "payloadUnchanged": true,
+    "evidence": [
+      "runs/baseline-a629-30071/runner-result.json",
+      "runs/baseline-a629-30071/product-before.json",
+      "runs/baseline-a629-30071/product-after.json"
+    ],
+    "jiraContextComment": "10284",
+    "existingPrContextComment": "6663548952",
+    "unrecordedStartupChild": {
+      "stage": "firstRTL",
+      "actualFloorpChildExit": null,
+      "reason": "No original directwait receipt; never retroactively infer0"
+    }
+  },
+  {
+    "key": "KAN-29",
+    "github": "https://github.com/Floorp-Projects/Floorp/issues/2876",
+    "variant": "baseline-rtl-resume",
+    "sourceSha": "a6290b5811b8c5309b399ac340ec40b52f97b73c",
+    "productVersion": "Floorp12.20.0/Gecko157.0.1/nativeBuild20261007125927",
+    "environment": "baseline-rtl-resume Debian13/virtualdisplay/syntheticW3C",
+    "testCommand": "python run.py --execute /workspace/qa-linux-22/browser-ui/KAN-29/full-product/runs/baseline-a629-rtl-resume-30073/contract.json",
+    "result": "partial; see actual measurements/exits, no complete RTL PASS",
+    "measurements": {},
+    "remainingConditions": [
+      "full-product RTL8states/24hover",
+      "original CachyOS/Flatpak/physical input",
+      "input-occlusion difference root cause unisolated"
+    ],
+    "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2877",
+    "newPr": null,
+    "jiraCommentWritten": null,
+    "phaseExits": [
+      {
+        "stage": "rtl",
+        "actualFloorpChildPid": 112547,
+        "actualFloorpChildExit": -9,
+        "normalQuitRequested": false,
+        "probeExit": null
+      }
+    ],
+    "runnerExit": 1,
+    "dbusWrapperExit": 1,
+    "payloadUnchanged": true,
+    "evidence": [
+      "runs/baseline-a629-rtl-resume-30073/runner-result.json",
+      "runs/baseline-a629-rtl-resume-30073/product-before.json",
+      "runs/baseline-a629-rtl-resume-30073/product-after.json"
+    ],
+    "jiraContextComment": "10284",
+    "existingPrContextComment": "6663548952"
+  },
+  {
+    "key": "KAN-29",
+    "github": "https://github.com/Floorp-Projects/Floorp/issues/2876",
+    "variant": "candidate-wayland",
+    "sourceSha": "f43b22d34c0728e0ed800b8016d81b3212190954",
+    "productVersion": "Floorp12.20.0/Gecko157.0.1/nativeBuild20261007125927",
+    "environment": "candidate-wayland Debian13/virtualdisplay/syntheticW3C",
+    "testCommand": "python run.py --execute /workspace/qa-linux-22/browser-ui/KAN-29/full-product/runs/candidate-f43-30074/contract.json",
+    "result": "partial; see actual measurements/exits, no complete RTL PASS",
+    "measurements": {
+      "ltr": {
+        "protocol": {
+          "windowProtocol": "wayland",
+          "compositing": "WebRender (Software)"
+        },
+        "locale": {
+          "direction": "ltr",
+          "rtlUI": false,
+          "appLocale": "en-US",
+          "appLocaleRTL": false,
+          "uidirection": ""
+        },
+        "states": 8,
+        "rounds": 24,
+        "productPass": false,
+        "collectionComplete": true
+      }
+    },
+    "remainingConditions": [
+      "full-product RTL8states/24hover",
+      "original CachyOS/Flatpak/physical input",
+      "input-occlusion difference root cause unisolated"
+    ],
+    "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2877",
+    "newPr": null,
+    "jiraCommentWritten": null,
+    "phaseExits": [
+      {
+        "stage": "ltr",
+        "actualFloorpChildPid": 112959,
+        "actualFloorpChildExit": 0,
+        "normalQuitRequested": true,
+        "probeExit": 0
+      },
+      {
+        "stage": "locale-install",
+        "actualFloorpChildPid": 113438,
+        "actualFloorpChildExit": 0,
+        "normalQuitRequested": true,
+        "probeExit": null
+      },
+      {
+        "stage": "rtl",
+        "actualFloorpChildPid": 113790,
+        "actualFloorpChildExit": -15,
+        "normalQuitRequested": false,
+        "probeExit": null
+      }
+    ],
+    "runnerExit": 1,
+    "dbusWrapperExit": 1,
+    "payloadUnchanged": true,
+    "evidence": [
+      "runs/candidate-f43-30074/runner-result.json",
+      "runs/candidate-f43-30074/product-before.json",
+      "runs/candidate-f43-30074/product-after.json"
+    ],
+    "jiraContextComment": "10284",
+    "existingPrContextComment": "6663548952"
+  },
+  {
+    "key": "KAN-29",
+    "github": "https://github.com/Floorp-Projects/Floorp/issues/2876",
+    "variant": "candidate-x11",
+    "sourceSha": "f43b22d34c0728e0ed800b8016d81b3212190954",
+    "productVersion": "Floorp12.20.0/Gecko157.0.1/nativeBuild20261007125927",
+    "environment": "candidate-x11 Debian13/virtualdisplay/syntheticW3C",
+    "testCommand": "python run.py --execute /workspace/qa-linux-22/browser-ui/KAN-29/full-product/runs/candidate-f43-x11-30075/contract.json",
+    "result": "partial; see actual measurements/exits, no complete RTL PASS",
+    "measurements": {
+      "ltr": {
+        "protocol": {
+          "windowProtocol": "x11",
+          "compositing": "WebRender (Software)"
+        },
+        "locale": {
+          "direction": "ltr",
+          "rtlUI": false,
+          "appLocale": "en-US",
+          "appLocaleRTL": false,
+          "uidirection": ""
+        },
+        "states": 1,
+        "rounds": 3,
+        "productPass": false,
+        "collectionComplete": true
+      }
+    },
+    "remainingConditions": [
+      "full-product RTL8states/24hover",
+      "original CachyOS/Flatpak/physical input",
+      "input-occlusion difference root cause unisolated"
+    ],
+    "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2877",
+    "newPr": null,
+    "jiraCommentWritten": null,
+    "phaseExits": [
+      {
+        "stage": "ltr",
+        "actualFloorpChildPid": 114048,
+        "actualFloorpChildExit": 0,
+        "normalQuitRequested": true,
+        "probeExit": 0
+      },
+      {
+        "stage": "locale-install",
+        "actualFloorpChildPid": 114459,
+        "actualFloorpChildExit": 0,
+        "normalQuitRequested": true,
+        "probeExit": null
+      },
+      {
+        "stage": "rtl",
+        "actualFloorpChildPid": 114791,
+        "actualFloorpChildExit": -15,
+        "normalQuitRequested": false,
+        "probeExit": null
+      }
+    ],
+    "runnerExit": 1,
+    "dbusWrapperExit": 1,
+    "payloadUnchanged": true,
+    "evidence": [
+      "runs/candidate-f43-x11-30075/runner-result.json",
+      "runs/candidate-f43-x11-30075/product-before.json",
+      "runs/candidate-f43-x11-30075/product-after.json"
+    ],
+    "jiraContextComment": "10284",
+    "existingPrContextComment": "6663548952"
+  },
+  {
+    "key": "KAN-29",
+    "github": "https://github.com/Floorp-Projects/Floorp/issues/2876",
+    "variant": "baseline-x11-one",
+    "sourceSha": "a6290b5811b8c5309b399ac340ec40b52f97b73c",
+    "productVersion": "Floorp12.20.0/Gecko157.0.1/nativeBuild20261007125927",
+    "environment": "baseline-x11-one Debian13/virtualdisplay/syntheticW3C",
+    "testCommand": "python run.py --execute /workspace/qa-linux-22/browser-ui/KAN-29/full-product/runs/baseline-a629-x11-one-30076/contract.json",
+    "result": "single requested LTR control PASS",
+    "measurements": {
+      "ltr": {
+        "protocol": {
+          "windowProtocol": "x11",
+          "compositing": "WebRender (Software)"
+        },
+        "locale": {
+          "direction": "ltr",
+          "rtlUI": false,
+          "appLocale": "en-US",
+          "appLocaleRTL": false,
+          "uidirection": ""
+        },
+        "states": 1,
+        "rounds": 3,
+        "productPass": true,
+        "collectionComplete": true
+      }
+    },
+    "remainingConditions": [
+      "full-product RTL8states/24hover",
+      "original CachyOS/Flatpak/physical input",
+      "input-occlusion difference root cause unisolated"
+    ],
+    "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2877",
+    "newPr": null,
+    "jiraCommentWritten": null,
+    "phaseExits": [
+      {
+        "stage": "ltr",
+        "actualFloorpChildPid": 115044,
+        "actualFloorpChildExit": 0,
+        "normalQuitRequested": true,
+        "probeExit": 0
+      }
+    ],
+    "runnerExit": 0,
+    "dbusWrapperExit": 0,
+    "payloadUnchanged": true,
+    "evidence": [
+      "runs/baseline-a629-x11-one-30076/runner-result.json",
+      "runs/baseline-a629-x11-one-30076/product-before.json",
+      "runs/baseline-a629-x11-one-30076/product-after.json"
+    ],
+    "jiraContextComment": "10284",
+    "existingPrContextComment": "6663548952"
+  },
+  {
+    "key": "KAN-29",
+    "github": "https://github.com/Floorp-Projects/Floorp/issues/2876",
+    "variant": "baseline-x11-hold500",
+    "sourceSha": "a6290b5811b8c5309b399ac340ec40b52f97b73c",
+    "productVersion": "Floorp12.20.0/Gecko157.0.1/nativeBuild20261007125927",
+    "environment": "Debian13/Xvfb128/Openbox/X11/en-US/W3Csynthetic",
+    "testCommand": "python run.py --execute /workspace/qa-linux-22/browser-ui/KAN-29/full-product/runs/baseline-a629-x11-hold500-30078/contract.json",
+    "result": "single500ms diagnostic case collected; reopen0px",
+    "measurements": {
+      "states": 1,
+      "hoverRounds": 3,
+      "productPass": false,
+      "reopenWidths": [
+        0,
+        0,
+        0
+      ]
+    },
+    "remainingConditions": [
+      "full-product RTL unvalidated",
+      "input-occlusion root cause unresolved; observed baseline too",
+      "original CachyOS/Flatpak/physical input"
+    ],
+    "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2877",
+    "newPr": null,
+    "jiraCommentWritten": null,
+    "phaseExits": [
+      {
+        "stage": "ltr",
+        "actualFloorpChildPid": 115917,
+        "actualFloorpChildExit": 0,
+        "normalQuitRequested": true,
+        "probeExit": 0
+      }
+    ],
+    "runnerExit": 0,
+    "dbusWrapperExit": 0,
+    "payloadUnchanged": true,
+    "evidence": [
+      "runs/baseline-a629-x11-hold500-30078/measure-ltr-30078.json",
+      "x11-hold500-comparison.json"
+    ],
+    "jiraContextComment": "10284",
+    "existingPrContextComment": "6663548952"
+  },
+  {
+    "key": "KAN-29",
+    "github": "https://github.com/Floorp-Projects/Floorp/issues/2876",
+    "variant": "candidate-x11-hold500",
+    "sourceSha": "f43b22d34c0728e0ed800b8016d81b3212190954",
+    "productVersion": "Floorp12.20.0/Gecko157.0.1/nativeBuild20261007125927",
+    "environment": "Debian13/Xvfb128/Openbox/X11/en-US/W3Csynthetic",
+    "testCommand": "python run.py --execute /workspace/qa-linux-22/browser-ui/KAN-29/full-product/runs/candidate-f43-x11-hold500-30079/contract.json",
+    "result": "single500ms diagnostic case collected; reopen400px",
+    "measurements": {
+      "states": 1,
+      "hoverRounds": 3,
+      "productPass": true,
+      "reopenWidths": [
+        400,
+        400,
+        400
+      ]
+    },
+    "remainingConditions": [
+      "full-product RTL unvalidated",
+      "input-occlusion root cause unresolved; observed baseline too",
+      "original CachyOS/Flatpak/physical input"
+    ],
+    "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2877",
+    "newPr": null,
+    "jiraCommentWritten": null,
+    "phaseExits": [
+      {
+        "stage": "ltr",
+        "actualFloorpChildPid": 116378,
+        "actualFloorpChildExit": 0,
+        "normalQuitRequested": true,
+        "probeExit": 0
+      }
+    ],
+    "runnerExit": 0,
+    "dbusWrapperExit": 0,
+    "payloadUnchanged": true,
+    "evidence": [
+      "runs/candidate-f43-x11-hold500-30079/measure-ltr-30079.json",
+      "x11-hold500-comparison.json"
+    ],
+    "jiraContextComment": "10284",
+    "existingPrContextComment": "6663548952"
+  },
+  {
+    "key": "KAN-29",
+    "github": "https://github.com/Floorp-Projects/Floorp/issues/2876",
+    "variant": "candidate-horizontal-ar-startup-control",
+    "sourceSha": "f43b22d34c0728e0ed800b8016d81b3212190954",
+    "productVersion": "package native157.0.1/build20261007125927 contract; live API gate not reached",
+    "environment": "Debian13/Xvfb130/Openbox/X11; independent copied signedArabic profile; startup horizontal control only",
+    "testCommand": "python run.py --execute /workspace/qa-linux-22/browser-ui/KAN-29/full-product/runs/candidate-f43-ar-horizontal-ui-30080/contract.json",
+    "result": "QA resource bound; horizontal not validated success; targetRTL0",
+    "measurements": {
+      "targetRtlStates": 0,
+      "actualStrictLocaleGate": false,
+      "verticalHubTransitionReached": false
+    },
+    "remainingConditions": [
+      "qualified full-product RTL8states/24hover",
+      "original CachyOS/Flatpak and physical input",
+      "resource-growth and input-occlusion causes unresolved"
+    ],
+    "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2877",
+    "newPr": null,
+    "jiraCommentWritten": null,
+    "phaseExits": [
+      {
+        "stage": "rtl-horizontal-startup-control",
+        "actualFloorpChildPid": 117008,
+        "actualFloorpChildExit": -15,
+        "normalQuitRequested": false,
+        "probeExit": null
+      }
+    ],
+    "runnerExit": 1,
+    "dbusWrapperExit": 1,
+    "payloadUnchanged": true,
+    "evidence": [
+      "horizontal-control-summary.json",
+      "runs/candidate-f43-ar-horizontal-ui-30080/source-profile-copy.json",
+      "runs/candidate-f43-ar-horizontal-ui-30080/runner-result.json"
+    ],
+    "jiraContextComment": "10284",
+    "existingPrContextComment": "6663548952"
+  },
+  {
+    "key": "KAN-29",
+    "github": "https://github.com/Floorp-Projects/Floorp/issues/2876",
+    "variant": "candidate-passive-no-session-other-agent",
+    "sourceSha": "f43b22d34c0728e0ed800b8016d81b3212190954",
+    "productVersion": "package native157.0.1 contract; live API not queried",
+    "environment": "X11/Openbox/copied stopped signedArabic profile, no TCP/RPC/NewSession; CLI marionette retained; active renderer unqueried",
+    "testCommand": "see passive-no-session/run.py; one bounded recorded execution, no repeat",
+    "result": "QA resource guard stop; no KAN29 PASS",
+    "measurements": {
+      "targetRtlStates": 0,
+      "connections": 0,
+      "elapsedSeconds": 54.65966812100305,
+      "ownPssGiBAtGuard": 12.272934913635254,
+      "oomEventDelta": 0
+    },
+    "remainingConditions": [
+      "strict live locale/RTL_UI unmeasured",
+      "source profile has prior resource-stop history; no clean preRTL snapshot",
+      "original CachyOS/Flatpak/physical input"
+    ],
+    "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2877",
+    "newPr": null,
+    "jiraCommentWritten": null,
+    "phaseExits": [
+      {
+        "actualFloorpChildPid": 115562,
+        "actualFloorpChildExit": -15,
+        "normalQuitRequested": false,
+        "probeExit": null
+      }
+    ],
+    "runnerExit": null,
+    "dbusWrapperExit": null,
+    "unrecordedExitLimit": "Other agent supplies direct child -15; separate runner/DBus exit values not present in result.json, not inferred",
+    "payloadUnchanged": true,
+    "evidence": [
+      "passive-no-session/report.md",
+      "passive-no-session/result.json",
+      "passive-no-session/summary.json"
+    ],
+    "jiraContextComment": "10284",
+    "existingPrContextComment": "6663548952"
+  }
+]

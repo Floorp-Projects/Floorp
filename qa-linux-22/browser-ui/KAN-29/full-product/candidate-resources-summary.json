@@ -1,0 +1,133 @@
+{
+  "before": {
+    "monotonic": 28812.803589002,
+    "utc": "2026-11-05T22:04:52Z",
+    "cgroupBytes": 1758519296,
+    "cgroupMax": "17179869184",
+    "cgroupEvents": {
+      "low": 0,
+      "high": 0,
+      "max": 135621,
+      "oom": 3,
+      "oom_kill": 2,
+      "oom_group_kill": 0
+    },
+    "actualFloorpChildPid": null,
+    "floorpTree": [],
+    "aggregateFloorpRssKiB": 0,
+    "aggregateFloorpKnownPssKiB": 0,
+    "allOwnedPssAvailable": true,
+    "rssWarningOnly": false,
+    "otherOwnedProcesses": [],
+    "note": "Aggregate RSS may count shared pages more than once; cgroup includes other tasks. OOM counters alone do not identify victim/cause.",
+    "kind": "before-any-browser"
+  },
+  "after": {
+    "monotonic": 28997.319456973,
+    "utc": "2026-11-05T22:07:56Z",
+    "cgroupBytes": 1786015744,
+    "cgroupMax": "17179869184",
+    "cgroupEvents": {
+      "low": 0,
+      "high": 0,
+      "max": 135621,
+      "oom": 3,
+      "oom_kill": 2,
+      "oom_group_kill": 0
+    },
+    "actualFloorpChildPid": null,
+    "floorpTree": [],
+    "aggregateFloorpRssKiB": 0,
+    "aggregateFloorpKnownPssKiB": 0,
+    "allOwnedPssAvailable": true,
+    "rssWarningOnly": false,
+    "otherOwnedProcesses": [],
+    "note": "Aggregate RSS may count shared pages more than once; cgroup includes other tasks. OOM counters alone do not identify victim/cause.",
+    "kind": "after-owned-products"
+  },
+  "peakOwnedPss": {
+    "monotonic": 28988.296883434,
+    "utc": "2026-11-05T22:07:47Z",
+    "cgroupBytes": 15163826176,
+    "cgroupMax": "17179869184",
+    "cgroupEvents": {
+      "low": 0,
+      "high": 0,
+      "max": 135621,
+      "oom": 3,
+      "oom_kill": 2,
+      "oom_group_kill": 0
+    },
+    "actualFloorpChildPid": 113790,
+    "floorpTree": [
+      {
+        "pid": 113790,
+        "ppid": 112947,
+        "name": "floorp",
+        "rssKiB": 13093144,
+        "pssKiB": 13041293
+      },
+      {
+        "pid": 113831,
+        "ppid": 113790,
+        "name": "Socket Process",
+        "rssKiB": 43936,
+        "pssKiB": 19338
+      },
+      {
+        "pid": 113877,
+        "ppid": 113790,
+        "name": "forkserver",
+        "rssKiB": 31124,
+        "pssKiB": 9321
+      },
+      {
+        "pid": 113901,
+        "ppid": 113877,
+        "name": "Web Content",
+        "rssKiB": 78692,
+        "pssKiB": 36725
+      },
+      {
+        "pid": 113910,
+        "ppid": 113877,
+        "name": "RDD Process",
+        "rssKiB": 39284,
+        "pssKiB": 16165
+      }
+    ],
+    "aggregateFloorpRssKiB": 13286180,
+    "aggregateFloorpKnownPssKiB": 13122842,
+    "allOwnedPssAvailable": true,
+    "rssWarningOnly": true,
+    "otherOwnedProcesses": [
+      {
+        "pid": 112954,
+        "ppid": 112947,
+        "name": "Xvfb",
+        "rssKiB": 44040
+      },
+      {
+        "pid": 112957,
+        "ppid": 112947,
+        "name": "kwin_wayland",
+        "rssKiB": 80676
+      }
+    ],
+    "note": "Aggregate RSS may count shared pages more than once; cgroup includes other tasks. OOM counters alone do not identify victim/cause."
+  },
+  "eventDelta": {
+    "low": 0,
+    "high": 0,
+    "max": 0,
+    "oom": 0,
+    "oom_kill": 0,
+    "oom_group_kill": 0
+  },
+  "maxCgroupBytes": 15163826176,
+  "maxOwnedPssKiB": 13122842,
+  "maxMainPssKiB": 13041293,
+  "sampleCount": 80,
+  "normalUiRecoveryLimitation": "xdotool loader failed libxdo.so.3 under nested KWin LD_LIBRARY_PATH; CtrlQ was not delivered. Product was ended with own SIGTERM and direct child wait -15, never normalPASS.",
+  "causalLimit": "Actual own main-process growth during RTL startup is measured. No isolated attribution to PR2877/native engine/locale/profile/NewSession established; QA bound does not prove original host inadequacy or product root cause."
+}

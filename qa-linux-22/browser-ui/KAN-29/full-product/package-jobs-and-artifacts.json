@@ -1,0 +1,377 @@
+{
+  "run": 42115797905,
+  "sourceSha": "f43b22d34c0728e0ed800b8016d81b3212190954",
+  "conclusion": "success",
+  "dispatchCount": 1,
+  "runAttempt": 1,
+  "jobs": [
+    {
+      "id": 127554980773,
+      "name": "main",
+      "status": "completed",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Require Runtime artifact token",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Validate provenance contract",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Checkout Floorp-Projects/Floorp-runtime",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Apply upstream patches",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Checkout Floorp-Projects/Floorp",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Apply Floorp common Runtime patches",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Apply Floorp custom browser icons",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Download verified Runtime artifact by ID",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Stage exact Runtime v2 bundle",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Preserve verified macOS Runtime packing provenance",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Preserve verified compiled Runtime source provenance",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-node@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run denoland/setup-deno@v2",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Setup Noraneko",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Setup",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Write Versions",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Normalize platform",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Copy branding files from runtime",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Mach configure",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Set legacy Runtime run ID",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Get Artifact Name",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Download mozilla artifact from Actions",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Download Mozilla Artifact from GitHub Releases",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Make Downloaded Artifact to Mozilla Artifact (Actions)",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Make Download Artifact to Mozilla Artifact (GitHub Releases)",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Build Noraneko",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Build",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Inject Noraneko",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Upload dist on failure (pre-packaging)",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Apply Firefox Preferences Override",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Replace Icon (Beta)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Package noraneko",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Prepare installer workspace",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Repackage Linux DEB",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Prepare Linux DEB artifact metadata",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Upload Linux DEB artifact",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Upload Noraneko Artifact",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Prepare un-packaging installer files for windows-codesigning (binary)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Publish Unsigned Binary 🎁",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Sign Binary 🖊️",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Prepare installer with codesigning and re-packaging (installer)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Publish Unsigned Installer 🎁",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Sign Installer 🖊️",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Prepare installer with codesigning and re-packaging (without windows)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Stage verified Runtime v2 MAR inputs",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Download artifact of MAR tools (Actions)",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Download artifact of MAR tools (GitHub Releases)",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Download artifact of binary for getting build information (Actions)",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Download artifact of binary for getting build information (GiHub Releases)",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Create MAR package",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Verify installer workspace",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Publish dist",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Publish MAR",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Stage macOS finalizer tools and metadata",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Upload macOS finalizer tools",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Post Run denoland/setup-deno@v2",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-node@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Checkout Floorp-Projects/Floorp",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Checkout Floorp-Projects/Floorp-runtime",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "id": 127562694175,
+      "name": "macos-finalize",
+      "status": "completed",
+      "conclusion": "skipped"
+    },
+    {
+      "id": 127562694356,
+      "name": "macos-native-sign",
+      "status": "completed",
+      "conclusion": "skipped"
+    },
+    {
+      "id": 127562694681,
+      "name": "macos-ticket-verify",
+      "status": "completed",
+      "conclusion": "skipped"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": 13457666581,
+      "name": "noraneko-Linux-x64-artifact-test-build-output",
+      "digest": "sha256:416a1c11514a3c23bfec68b1bb185b695b830106c3d8f664021b22f32b1c0ab4",
+      "bytes": 412397532,
+      "expired": false
+    },
+    {
+      "id": 13457337236,
+      "name": "floorp-linux-x86_64-mar-full-unsigned",
+      "digest": "sha256:55fc9f3399fd6388fb0ffe3061746006831229ef87aa4a14987cab843daca463",
+      "bytes": 106919249,
+      "expired": false
+    },
+    {
+      "id": 13457062558,
+      "name": "noraneko-linux-x86_64-installer-unsigned",
+      "digest": "sha256:4eaf3ff8bc47b18a7bb33509fcd0efc8cac882d065c324a71004c4f3816c5b59",
+      "bytes": 106615308,
+      "expired": false
+    },
+    {
+      "id": 13456807348,
+      "name": "floorp-Linux-x64-deb-unsigned",
+      "digest": "sha256:ac83d334ff3587e45f9b3a2777cafaaf5a6b8ed4fa45b92dd04c5d78f1c229d5",
+      "bytes": 226954791,
+      "expired": false
+    },
+    {
+      "id": 13455882881,
+      "name": "noraneko-Linux-x64-runtime-source-provenance",
+      "digest": "sha256:f6766d40d0086e3eb27d17b6a2d520a0588461e28c20f089dcb8315a054a2d0c",
+      "bytes": 1247,
+      "expired": false
+    }
+  ]
+}

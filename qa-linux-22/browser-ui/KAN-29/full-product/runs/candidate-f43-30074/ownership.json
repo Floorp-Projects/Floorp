@@ -1,0 +1,88 @@
+{
+  "sourceSha": "f43b22d34c0728e0ed800b8016d81b3212190954",
+  "profile": "/workspace/kan29-full-runtime/candidate-f43-30074/profile",
+  "phases": [
+    {
+      "stage": "ltr",
+      "actualFloorpChildPid": 112959,
+      "actualFloorpExecutable": "/workspace/kan29-package/candidate/floorp/floorp",
+      "normalQuitRequested": true,
+      "sessionCapabilities": {
+        "pageLoadStrategy": "none"
+      },
+      "sessionTimeoutSeconds": 90,
+      "live": {
+        "name": "Floorp",
+        "version": "157.0.1",
+        "build": "20261007125927",
+        "platformBuild": "20261007125927",
+        "gre": "/workspace/kan29-package/candidate/floorp",
+        "signature": false,
+        "signatureUserSet": false,
+        "langpackSignature": true,
+        "langpackSignatureUserSet": false,
+        "sandbox": 6,
+        "focusTestMode": false
+      },
+      "locale": {
+        "app": [
+          "en-US"
+        ],
+        "rtl": false,
+        "RTL_UI": false,
+        "dir": "ltr"
+      },
+      "probeExit": 0,
+      "probeKind": "separate measure.py process",
+      "collectionComplete": true,
+      "productPass": false,
+      "hoverRoundsCollected": 24,
+      "actualFloorpChildExit": 0,
+      "exitMeasurement": "direct Popen.wait on actual executable child, not DBus wrapper"
+    },
+    {
+      "stage": "locale-install",
+      "actualFloorpChildPid": 113438,
+      "actualFloorpExecutable": "/workspace/kan29-package/candidate/floorp/floorp",
+      "normalQuitRequested": true,
+      "sessionCapabilities": {
+        "pageLoadStrategy": "none"
+      },
+      "sessionTimeoutSeconds": 90,
+      "live": {
+        "name": "Floorp",
+        "version": "157.0.1",
+        "build": "20261007125927",
+        "platformBuild": "20261007125927",
+        "gre": "/workspace/kan29-package/candidate/floorp",
+        "signature": false,
+        "signatureUserSet": false,
+        "langpackSignature": true,
+        "langpackSignatureUserSet": false,
+        "sandbox": 6,
+        "focusTestMode": false
+      },
+      "install": {
+        "id": "langpack-ar@firefox.mozilla.org",
+        "version": "157.0.20261005.135250",
+        "signedState": 2,
+        "appDisabled": false
+      },
+      "actualFloorpChildExit": 0,
+      "exitMeasurement": "direct Popen.wait on actual executable child, not DBus wrapper"
+    },
+    {
+      "stage": "rtl",
+      "actualFloorpChildPid": 113790,
+      "actualFloorpExecutable": "/workspace/kan29-package/candidate/floorp/floorp",
+      "normalQuitRequested": false,
+      "sessionCapabilities": {
+        "pageLoadStrategy": "none"
+      },
+      "sessionTimeoutSeconds": 90
+    }
+  ],
+  "normalExitRequired": true,
+  "runnerPid": 112947,
+  "exitSemantics": "actualFloorpChildExit is direct Popen.wait on executable child inside DBus; dbusWrapperExit and runnerExit are separate. No child status inferred from wrapper."
+}

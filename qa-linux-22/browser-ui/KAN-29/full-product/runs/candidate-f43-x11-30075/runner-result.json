@@ -1,0 +1,178 @@
+{
+  "sourceSha": "f43b22d34c0728e0ed800b8016d81b3212190954",
+  "profile": "/workspace/kan29-full-runtime/candidate-f43-x11-30075/profile",
+  "phases": [
+    {
+      "stage": "ltr",
+      "actualFloorpChildPid": 114048,
+      "actualFloorpExecutable": "/workspace/kan29-package/candidate/floorp/floorp",
+      "normalQuitRequested": true,
+      "sessionCapabilities": {
+        "pageLoadStrategy": "none"
+      },
+      "sessionTimeoutSeconds": 90,
+      "live": {
+        "name": "Floorp",
+        "version": "157.0.1",
+        "build": "20261007125927",
+        "platformBuild": "20261007125927",
+        "gre": "/workspace/kan29-package/candidate/floorp",
+        "signature": false,
+        "signatureUserSet": false,
+        "langpackSignature": true,
+        "langpackSignatureUserSet": false,
+        "sandbox": 6,
+        "focusTestMode": false
+      },
+      "locale": {
+        "app": [
+          "en-US"
+        ],
+        "rtl": false,
+        "RTL_UI": false,
+        "dir": "ltr"
+      },
+      "probeExit": 0,
+      "probeKind": "separate measure.py process",
+      "collectionComplete": true,
+      "productPass": false,
+      "hoverRoundsCollected": 3,
+      "actualFloorpChildExit": 0,
+      "exitMeasurement": "direct Popen.wait on actual executable child, not DBus wrapper"
+    },
+    {
+      "stage": "locale-install",
+      "actualFloorpChildPid": 114459,
+      "actualFloorpExecutable": "/workspace/kan29-package/candidate/floorp/floorp",
+      "normalQuitRequested": true,
+      "sessionCapabilities": {
+        "pageLoadStrategy": "none"
+      },
+      "sessionTimeoutSeconds": 90,
+      "live": {
+        "name": "Floorp",
+        "version": "157.0.1",
+        "build": "20261007125927",
+        "platformBuild": "20261007125927",
+        "gre": "/workspace/kan29-package/candidate/floorp",
+        "signature": false,
+        "signatureUserSet": false,
+        "langpackSignature": true,
+        "langpackSignatureUserSet": false,
+        "sandbox": 6,
+        "focusTestMode": false
+      },
+      "install": {
+        "id": "langpack-ar@firefox.mozilla.org",
+        "version": "157.0.20261005.135250",
+        "signedState": 2,
+        "appDisabled": false
+      },
+      "actualFloorpChildExit": 0,
+      "exitMeasurement": "direct Popen.wait on actual executable child, not DBus wrapper"
+    },
+    {
+      "stage": "rtl",
+      "actualFloorpChildPid": 114791,
+      "actualFloorpExecutable": "/workspace/kan29-package/candidate/floorp/floorp",
+      "normalQuitRequested": false,
+      "sessionCapabilities": {
+        "pageLoadStrategy": "none"
+      },
+      "sessionTimeoutSeconds": 90,
+      "actualFloorpChildExit": -15
+    }
+  ],
+  "normalExitRequired": true,
+  "runnerPid": 114035,
+  "exitSemantics": "actualFloorpChildExit is direct Popen.wait on executable child inside DBus; dbusWrapperExit and runnerExit are separate. No child status inferred from wrapper.",
+  "error": "ResourceBoundExceeded('resource bound reached; no product PASS')",
+  "traceback": "Traceback (most recent call last):\n  File \"/workspace/qa-linux-22/browser-ui/KAN-29/full-product/run.py\", line 80, in <module>\n    m,row=start('rtl');row['locale']=m.execute_script('return {app:Services.locale.appLocalesAsBCP47,rtl:Services.locale.isAppLocaleRTL,RTL_UI:window.RTL_UI,dir:getComputedStyle(document.documentElement).direction}');assert row['locale']['rtl'] and row['locale']['RTL_UI'] and row['locale']['dir']=='rtl';m.delete_session();env.update(QA_DIR='rtl',QA_REQUIRE_RTL='1',QA29_SINGLE_STATE='');measured=subprocess.run([sys.executable,str(R/'measure.py'),'panel',str(port)],env=env,timeout=240,stdout=open(out/'rtl-measure.log','w'),stderr=subprocess.STDOUT);row['probeExit']=measured.returncode;row['probeKind']='separate measure.py process';assessment=json.loads((out/('measure-'+env['QA_DIR']+'-'+str(port)+'.json')).read_text());row['collectionComplete']=assessment.get('collectionComplete',False);row['productPass']=assessment.get('productPass',False);row['hoverRoundsCollected']=assessment.get('hoverRoundsCollected',0);m=Marionette('localhost',port=port,socket_timeout=45);m.start_session(capabilities={'pageLoadStrategy':'none'});m.set_context('chrome');quit(m,row);assert measured.returncode==0;result['collectionComplete']=True;result['productPass']=all(x.get('productPass',False) for x in result['phases'] if x['stage'] in ['ltr','rtl'])\n          ^^^^^^^^^^^^\n  File \"/workspace/qa-linux-22/browser-ui/KAN-29/full-product/run.py\", line 58, in start\n    row={'stage':stage,'actualFloorpChildPid':browser.pid,'actualFloorpExecutable':os.readlink('/proc/'+str(browser.pid)+'/exe'),'normalQuitRequested':False,'sessionCapabilities':{'pageLoadStrategy':'none'},'sessionTimeoutSeconds':90};result['phases'].append(row);(out/'ownership.json').write_text(json.dumps(result,indent=2));m=Marionette('localhost',port=port,socket_timeout=90);m.start_session(capabilities={'pageLoadStrategy':'none'});m.set_context('chrome');actual=m.execute_script('return {name:Services.appinfo.name,version:Services.appinfo.version,build:Services.appinfo.appBuildID,platformBuild:Services.appinfo.platformBuildID,gre:Services.dirsvc.get(\"GreD\",Ci.nsIFile).path,signature:Services.prefs.getBoolPref(\"xpinstall.signatures.required\"),signatureUserSet:Services.prefs.prefHasUserValue(\"xpinstall.signatures.required\"),langpackSignature:Services.prefs.getBoolPref(\"extensions.langpacks.signatures.required\"),langpackSignatureUserSet:Services.prefs.prefHasUserValue(\"extensions.langpacks.signatures.required\"),sandbox:Services.prefs.getIntPref(\"security.sandbox.content.level\"),focusTestMode:Services.prefs.getBoolPref(\"focusmanager.testmode\")}');assert all(actual[k]==v for k,v in c['live'].items()),(actual,c['live']);row['live']=actual;(out/'ownership.json').write_text(json.dumps(result,indent=2));return m,row\n                                                                                                                                                                                                                                                                                                                                                                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/workspace/qa-linux-22/browser-ui/python/marionette_driver/decorators.py\", line 24, in _\n    return func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File \"/workspace/qa-linux-22/browser-ui/python/marionette_driver/marionette.py\", line 1371, in start_session\n    resp = self._send_message(\"WebDriver:NewSession\", capabilities)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/workspace/qa-linux-22/browser-ui/python/marionette_driver/decorators.py\", line 24, in _\n    return func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File \"/workspace/qa-linux-22/browser-ui/python/marionette_driver/marionette.py\", line 773, in _send_message\n    msg = self.client.request(name, params)\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/workspace/qa-linux-22/browser-ui/python/marionette_driver/transport.py\", line 368, in request\n    return self.receive()\n           ^^^^^^^^^^^^^^\n  File \"/workspace/qa-linux-22/browser-ui/python/marionette_driver/transport.py\", line 217, in receive\n    chunk = sock.recv(recv_bytes)\n            ^^^^^^^^^^^^^^^^^^^^^\n  File \"/workspace/qa-linux-22/browser-ui/KAN-29/full-product/run.py\", line 47, in on_resource_bound\n    def on_resource_bound(signum,frame):raise ResourceBoundExceeded('resource bound reached; no product PASS')\n                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nresource_monitor.ResourceBoundExceeded: resource bound reached; no product PASS\n",
+  "resourceBound": {
+    "observation": {
+      "monotonic": 29272.421210685,
+      "utc": "2026-11-05T22:12:32Z",
+      "cgroupBytes": 15564976128,
+      "cgroupMax": "17179869184",
+      "cgroupEvents": {
+        "low": 0,
+        "high": 0,
+        "max": 135621,
+        "oom": 3,
+        "oom_kill": 2,
+        "oom_group_kill": 0
+      },
+      "actualFloorpChildPid": 114791,
+      "floorpTree": [
+        {
+          "pid": 114791,
+          "ppid": 114035,
+          "name": "floorp",
+          "rssKiB": 13500692,
+          "pssKiB": 13449818
+        },
+        {
+          "pid": 114831,
+          "ppid": 114791,
+          "name": "Socket Process",
+          "rssKiB": 45400,
+          "pssKiB": 20176
+        },
+        {
+          "pid": 114882,
+          "ppid": 114791,
+          "name": "forkserver",
+          "rssKiB": 30896,
+          "pssKiB": 9575
+        },
+        {
+          "pid": 114904,
+          "ppid": 114882,
+          "name": "Web Content",
+          "rssKiB": 77856,
+          "pssKiB": 36642
+        },
+        {
+          "pid": 114914,
+          "ppid": 114882,
+          "name": "RDD Process",
+          "rssKiB": 39088,
+          "pssKiB": 16167
+        }
+      ],
+      "aggregateFloorpRssKiB": 13693932,
+      "aggregateFloorpKnownPssKiB": 13532378,
+      "allOwnedPssAvailable": true,
+      "rssWarningOnly": true,
+      "otherOwnedProcesses": [
+        {
+          "pid": 114042,
+          "ppid": 114035,
+          "name": "Xvfb",
+          "rssKiB": 51924
+        },
+        {
+          "pid": 114045,
+          "ppid": 114035,
+          "name": "openbox",
+          "rssKiB": 13352
+        }
+      ],
+      "note": "Aggregate RSS may count shared pages more than once; cgroup includes other tasks. OOM counters alone do not identify victim/cause."
+    },
+    "bound": "QA safety bound: measured owned Floorp known PSS12GiB or cgroup90%; RSS8GiB warning only. Not proof of original host inadequacy/product cause; never PASS"
+  },
+  "productPass": false,
+  "resourceClassification": "QA safety bound reached; not proof of original host inadequacy/product cause, never PASS",
+  "resourceBoundNormalUiQuitAttempt": "OS CtrlQ on private nested display; no claim of normal quit until direct child wait observed",
+  "resourceBoundUiCommand": {
+    "exit": 0,
+    "stderr": ""
+  },
+  "resourceBoundUiQuitError": "TimeoutExpired(['/workspace/kan29-package/candidate/floorp/floorp', '--no-remote', '--profile', '/workspace/kan29-full-runtime/candidate-f43-x11-30075/profile', '--marionette', 'about:blank'], 8)",
+  "abnormalProductCleanup": true,
+  "productUnmodified": true,
+  "changedEntries": [],
+  "addedEntries": [],
+  "runnerExit": 1
+}

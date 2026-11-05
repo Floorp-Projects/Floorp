@@ -1,0 +1,35 @@
+{
+  "runId": "candidate-f43-30074",
+  "sourceSha": "f43b22d34c0728e0ed800b8016d81b3212190954",
+  "productRoot": "/workspace/kan29-package/candidate/floorp",
+  "role": "candidate",
+  "display": 125,
+  "port": 30074,
+  "live": {
+    "version": "157.0.1",
+    "build": "20261007125927",
+    "platformBuild": "20261007125927",
+    "gre": "/workspace/kan29-package/candidate/floorp"
+  },
+  "payloadSha256": {
+    "floorp": "0eff607fa766d87b89e7f314e455c3b093f5d31dbde8a2f22be2f00044558301",
+    "libxul.so": "d57a2278f645a7bae91b0cb806a946fd037243a1f938e04ea3deb2168c010c80",
+    "omni.ja": "b4ef11dd55e44eab30ebbfb53db061fa19c5b346902d62ec36b99f6026a54f9e",
+    "browser/omni.ja": "adc8e48632690dc743e12e2907242fc73535b589f5055ca953c447ef55eb8ebf"
+  },
+  "languagePack": {
+    "path": "/workspace/qa-linux-22/browser-ui/KAN-29/full-product/locale/ar-157.0.1.xpi",
+    "sha256": "e05634d2c9aef02b6c7cfd77ca1b9f9846f5d29be674062c394a4ed46c04b43e"
+  },
+  "archive": {
+    "packageRun": 42115797905,
+    "artifactId": 13457062558,
+    "zipDigest": "sha256:4eaf3ff8bc47b18a7bb33509fcd0efc8cac882d065c324a71004c4f3816c5b59",
+    "tarSha256": "0e21b01b50834fbecea0ebedc7c155b414ccf1d4025c25c9f792463a7abde991"
+  },
+  "sourceRelation": "exact PR2877 parent; candidate changes2sourcefiles only; same locked Runtime",
+  "nativeMatchesBaseline": {
+    "floorp": true,
+    "libxul.so": true
+  }
+}

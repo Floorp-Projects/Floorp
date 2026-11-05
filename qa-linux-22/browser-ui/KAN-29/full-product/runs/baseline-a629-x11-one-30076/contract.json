@@ -1,0 +1,39 @@
+{
+  "runId": "baseline-a629-x11-one-30076",
+  "sourceSha": "a6290b5811b8c5309b399ac340ec40b52f97b73c",
+  "productRoot": "/workspace/kan29-package/baseline/floorp",
+  "role": "baseline",
+  "display": 126,
+  "port": 30076,
+  "live": {
+    "version": "157.0.1",
+    "build": "20261007125927",
+    "platformBuild": "20261007125927",
+    "gre": "/workspace/kan29-package/baseline/floorp"
+  },
+  "payloadSha256": {
+    "floorp": "0eff607fa766d87b89e7f314e455c3b093f5d31dbde8a2f22be2f00044558301",
+    "libxul.so": "d57a2278f645a7bae91b0cb806a946fd037243a1f938e04ea3deb2168c010c80",
+    "omni.ja": "fd1f9e72b8b75b7485cc3b28c6d4e909343d7f89e33246b8950e22f8da2d1786",
+    "browser/omni.ja": "adc8e48632690dc743e12e2907242fc73535b589f5055ca953c447ef55eb8ebf"
+  },
+  "languagePack": {
+    "path": "/workspace/qa-linux-22/browser-ui/KAN-29/full-product/locale/ar-157.0.1.xpi",
+    "sha256": "e05634d2c9aef02b6c7cfd77ca1b9f9846f5d29be674062c394a4ed46c04b43e"
+  },
+  "archive": {
+    "release": "v12.20.0",
+    "assetId": 620366462,
+    "sha256": "8aa033efe583df4d2ee8910ce2b6e77495f81b4b34a3beded7417bfbd747d56f",
+    "bytes": 106738544,
+    "members": 57
+  },
+  "sourceRelation": "exact PR2877 parent; candidate changes2sourcefiles only; same locked Runtime",
+  "backend": "x11",
+  "expectedProtocol": "x11",
+  "singleLtrState": true,
+  "stages": [
+    "ltr"
+  ],
+  "note": "One authorized exact-parent baseline fresh-en-US X11/Openbox nativeRight/panelRight/unpinned input-occlusion control. Same candidate pointer/hover/timing. No Arabic startup, no full24hover replay."
+}
