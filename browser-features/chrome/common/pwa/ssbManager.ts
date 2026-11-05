@@ -144,8 +144,16 @@ export class SiteSpecificBrowserManager {
   }
 
   private listener = {
-    onLocationChange: () => {
-      this.onCurrentTabChangedOrLoaded();
+    onLocationChange: (browser: Browser, webProgress: nsIWebProgress) => {
+      if (
+        !webProgress.isTopLevel ||
+        browser !== globalThis.gBrowser.selectedBrowser
+      ) {
+        return;
+      }
+      void this.onCurrentTabChangedOrLoaded(browser).catch((error) => {
+        console.error("[SiteSpecificBrowserManager] Page check failed:", error);
+      });
     },
   };
 
@@ -448,11 +456,12 @@ export class SiteSpecificBrowserManager {
     await this.ssbRunner.runSsbByUrl(url, userContextId);
   }
 
-  private async onCurrentTabChangedOrLoaded() {
-    const browser = globalThis.gBrowser.selectedBrowser as Browser;
+  private async onCurrentTabChangedOrLoaded(browser: Browser) {
+    const requestedUrl = browser.currentURI.spec;
     const currentPageCanBeInstalled = this.checkSiteCanBeInstall(
       browser.currentURI,
     );
+    if (!currentPageCanBeInstalled) return;
     const currentPageHasSsbManifest = await this.manifestProcesser
       .getManifestFromBrowser(browser, true);
     const currentPageIsInstalled = await this.checkCurrentPageIsInstalled(
@@ -460,16 +469,18 @@ export class SiteSpecificBrowserManager {
     );
 
     if (
-      (!currentPageCanBeInstalled || !currentPageHasSsbManifest) &&
-      !currentPageIsInstalled
-    ) {
+      browser !== globalThis.gBrowser.selectedBrowser ||
+      !browserStillShowsUrl(browser, requestedUrl)
+    ) return;
+
+    if (!currentPageHasSsbManifest && !currentPageIsInstalled) {
       return;
     }
 
     // Update UI elements
     this.updateUIElements(currentPageIsInstalled);
     Services.obs.notifyObservers(
-      {} as nsISupports,
+      browser as unknown as nsISupports,
       "nora-pwa-check-page-has-manifest",
     );
   }
