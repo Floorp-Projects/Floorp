@@ -10,7 +10,7 @@
   "remainingConditions": [
     "Original Manjaro/KDE/Outlook/Teams package and taskbar icon pixels",
     "Fully unusable legacy records keep pre-existing random-identity limitation",
-    "Full production source build and current-head CI qualification"
+    "Full production source build"
   ],
   "existingPr": null,
   "newPr": "https://github.com/Floorp-Projects/Floorp/pull/3032",
@@ -24,11 +24,22 @@
     "KAN-49/followup-validation.md",
     "legacy-guard-candidate.json",
     "regression-guard-candidate.json",
-    "candidate-kde/cold-launch-result.json"
+    "candidate-kde/cold-launch-result.json",
+    "ci/pr3032-final/summary.json",
+    "ci/pr3032-final/verified-excerpt.txt"
   ],
   "jiraUrl": "https://floorp-projects.atlassian.net/browse/KAN-49",
   "jiraFollowupCommentIds": [
-    "10296"
+    "10296",
+    "10302",
+    "10309"
   ],
-  "newPrHead": "8249e234adfbb3e877e4a20cf5f57d7264d9a447"
+  "newPrHead": "8249e234adfbb3e877e4a20cf5f57d7264d9a447",
+  "ci": {
+    "head": "8249e234adfbb3e877e4a20cf5f57d7264d9a447",
+    "run": 42050337102,
+    "conclusion": "success",
+    "artifactId": 13427512330,
+    "sha256Verified": true
+  }
 }

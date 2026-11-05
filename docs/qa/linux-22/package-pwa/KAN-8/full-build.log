@@ -1,0 +1,131 @@
+
+** (flatpak-builder:48411): WARNING **: 15:09:39.861: 3:18: '26.08' will be parsed as a number by many YAML parsers
+Dependency Sdk: org.freedesktop.Sdk 26.08
+Installing org.freedesktop.Sdk/x86_64/26.08 from flathub
+Installing runtime/org.freedesktop.Platform.GL.default/x86_64/26.08
+Installing runtime/org.freedesktop.Platform.GL.default/x86_64/26.08-extra
+Installing runtime/org.freedesktop.Platform.codecs-extra/x86_64/26.08-extra
+Installing runtime/org.freedesktop.Sdk.Locale/x86_64/26.08
+Installing runtime/org.freedesktop.Sdk/x86_64/26.08
+Dependency Runtime: org.freedesktop.Platform 26.08
+Installing org.freedesktop.Platform/x86_64/26.08 from flathub
+Installing runtime/org.freedesktop.Platform.Locale/x86_64/26.08
+Installing runtime/org.freedesktop.Platform/x86_64/26.08
+Dependency Base: org.mozilla.firefox.BaseApp 26.08
+Installing org.mozilla.firefox.BaseApp/x86_64/26.08 from flathub
+Info: org.mozilla.firefox.BaseApp is end-of-life, with reason: This BaseApp is meant to be used by Firefox and Thunderbird, and should not be installed directly.
+Installing app/org.mozilla.firefox.BaseApp/x86_64/26.08
+dbus-daemon[48410]: [session uid=1000 pid=48410 pidfd=5] Reloaded configuration
+Downloading sources
+Downloading https://github.com/Floorp-Projects/Floorp/releases/download/v12.21.1/floorp-linux-x86_64.tar.xz
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+  0     0    0     0    0     0      0      0 --:--:--  0:00:01 --:--:--     0
+  0     0    0     0    0     0      0      0 --:--:--  0:00:02 --:--:--     0
+  0     0    0     0    0     0      0      0 --:--:--  0:00:03 --:--:--     0
+  0     0    0     0    0     0      0      0 --:--:--  0:00:04 --:--:--     0
+  0     0    0     0    0     0      0      0 --:--:--  0:00:05 --:--:--     0
+  0     0    0     0    0     0      0      0 --:--:--  0:00:06 --:--:--     0
+  0     0    0     0    0     0      0      0 --:--:--  0:00:06 --:--:--     0
+
+  0  103M    0     0    0     0      0      0 --:--:--  0:00:07 --:--:--     0
+ 13  103M   13 14.0M    0     0  1789k      0  0:00:59  0:00:08  0:00:51 17.4M
+ 27  103M   27 28.1M    0     0  3189k      0  0:00:33  0:00:09  0:00:24 15.5M
+ 40  103M   40 42.2M    0     0  4317k      0  0:00:24  0:00:10  0:00:14 15.0M
+ 56  103M   56 58.7M    0     0  5461k      0  0:00:19  0:00:11  0:00:08 15.4M
+ 71  103M   71 73.2M    0     0  6245k      0  0:00:16  0:00:12  0:00:04 15.2M
+ 79  103M   79 81.8M    0     0  6316k      0  0:00:16  0:00:13  0:00:03 12.9M
+ 89  103M   89 92.4M    0     0  6755k      0  0:00:15  0:00:14  0:00:01 12.9M
+100  103M  100  103M    0     0  7203k      0  0:00:14  0:00:14 --:--:-- 13.1M
+Initializing build dir
+Committing stage init to cache
+Starting build of one.ablaze.floorp
+========================================================================
+Building module floorp in /workspace/.flatpak-builder/build/floorp-1
+========================================================================
+Running: install -Dm644 one.ablaze.floorp.appdata.xml -t /app/share/metainfo/
+Running: mkdir -p /app/lib/ffmpeg
+Running: mkdir -p /app/etc/floorp
+Running: mkdir -p /app/bin
+Running: mkdir -p /app/share/applications
+Running: mv floorp-linux-*.tar.xz floorp.tar.xz
+Running: tar -xvf ./floorp.tar.xz -C /app/lib
+floorp/
+floorp/icons/
+floorp/icons/updater.png
+floorp/gfxtest
+floorp/libnssutil3.so
+floorp/libxul.so
+floorp/libsoftokn3.so
+floorp/libmozsqlite3.so
+floorp/libmozavutil.so
+floorp/libnspr4.so
+floorp/libnss3.so
+floorp/platform.ini
+floorp/libmozgtk.so
+floorp/omni.ja
+floorp/dependentlibs.list
+floorp/application.ini
+floorp/defaults/
+floorp/defaults/pref/
+floorp/defaults/pref/channel-prefs.js
+floorp/libonnxruntime.so
+floorp/libfreeblpriv3.so
+floorp/gmp-clearkey/
+floorp/gmp-clearkey/0.1/
+floorp/gmp-clearkey/0.1/manifest.json
+floorp/gmp-clearkey/0.1/libclearkey.so
+floorp/libsmime3.so
+floorp/pingsender
+floorp/libmozsandbox.so
+floorp/libplds4.so
+floorp/removed-files
+floorp/floorp
+floorp/libmozinference.so
+floorp/libplc4.so
+floorp/libmozavcodec.so
+floorp/precomplete
+floorp/libssl3.so
+floorp/jogfile.json
+floorp/fonts/
+floorp/fonts/TwemojiMozilla.ttf
+floorp/floorp-bin
+floorp/browser/
+floorp/browser/omni.ja
+floorp/browser/buildid2
+floorp/browser/chrome/
+floorp/browser/chrome/icons/
+floorp/browser/chrome/icons/default/
+floorp/browser/chrome/icons/default/default16.png
+floorp/browser/chrome/icons/default/default64.png
+floorp/browser/chrome/icons/default/default48.png
+floorp/browser/chrome/icons/default/default128.png
+floorp/browser/chrome/icons/default/default32.png
+floorp/libgkcodecs.so
+floorp/updater
+floorp/libmozwayland.so
+floorp/liblgpllibs.so
+floorp/updater.ini
+floorp/update-settings.ini
+Running: install -Dm755 floorp.sh /app/bin/floorp
+Running: install -Dm644 floorp-profile-root.sh /app/bin/floorp-profile-root.sh
+Running: mv one.ablaze.floorp.desktop /app/share/applications/
+Running: install -Dm644 -t /app/lib/floorp/defaults/pref/ flatpak-prefs.js
+Running: install -Dm644 -t /app/lib/floorp/distribution/ policies.json
+Running: for size in 16 32 48 64 128; do
+  mkdir -p "/app/share/icons/hicolor/${size}x${size}/apps"
+  cp "/app/lib/floorp/browser/chrome/icons/default/default${size}.png" "/app/share/icons/hicolor/${size}x${size}/apps/one.ablaze.floorp.png"
+done
+
+Running: export DISTRIBUTION_VERSION=$(cat one.ablaze.floorp.appdata.xml | sed -r 's/\s*?<release\sversion="([0-9\.]*?)"\sdate="([0-9\-]*?)".*?>.*?<\/release>\s*?/\1_\2/gp;d' | head -1)
+echo $DISTRIBUTION_VERSION | grep -E "^[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?_[0-9]{4}-[0-9]{2}-[0-9]{2}$" # validation
+echo "pref(\"distribution.version\", \"$DISTRIBUTION_VERSION\");" >> /app/lib/floorp/defaults/pref/flatpak-prefs.js
+
+fusermount: failed to unmount /workspace/.flatpak-builder/rofiles/rofiles-KrYAJe: Operation not permitted
+Committing stage build-floorp to cache
+Cleaning up
+fusermount3: failed to access mountpoint /workspace/.flatpak-builder/rofiles/rofiles-KrYAJe: Permission denied
+Error: Failure spawning rofiles-fuse, exit_status: 1024

@@ -1,0 +1,11 @@
+{
+  "productRunsExitedNormally": true,
+  "stopped": [
+    {
+      "pid": 48600,
+      "kind": "dedicated Xvfb89"
+    }
+  ],
+  "otherDaemons": "untouched",
+  "dependencyContainer": "qa-package-pwa stopped"
+}

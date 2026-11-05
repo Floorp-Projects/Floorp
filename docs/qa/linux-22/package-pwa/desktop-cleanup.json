@@ -1,0 +1,12 @@
+[
+  {
+    "pid": 18517,
+    "command": "/workspace/qa-linux-22/package-pwa/sysroot/usr/bin/kwin_wayland",
+    "signal": "SIGTERM"
+  },
+  {
+    "pid": 1202,
+    "command": "/workspace/.floorp-cloud/sysroot/usr/bin/Xvfb",
+    "signal": "SIGTERM"
+  }
+]

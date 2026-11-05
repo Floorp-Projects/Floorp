@@ -1,0 +1,9 @@
+{
+  "profile": "/workspace/qa-linux-22/package-pwa/KAN-48/kde-profile",
+  "quit": {
+    "cause": "shutdown",
+    "forced": false,
+    "in_app": true
+  },
+  "note": "End-of-task cleanup only; no additional product assertion"
+}

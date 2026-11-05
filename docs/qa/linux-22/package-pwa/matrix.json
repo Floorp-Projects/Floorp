@@ -5,14 +5,14 @@
     "sourceSha": "984509d2053be7bae9027133bda7259cd706b208",
     "productVersion": "Floorp 12.21.1 / Gecko 159.0.1 / BuildID 20261103153232",
     "environment": "Debian13; Xvfb X11; isolated normal session bus and separate incomplete system test bus; Flatpak1.16.6; freedesktop26.08; sandbox level6, no disable environment",
-    "testCommand": "python3 KAN-8/profile_normal_shutdown.py; python3 -m unittest discover -v -s KAN-8/flathub/tests",
-    "result": "reproduced-in-official-flatpak; exact-existing-pr-helper controlled comparison passes; nine unit tests pass; six product runs exit normally",
+    "testCommand": "python3 KAN-8/profile_normal_shutdown.py; python3 -m unittest discover -v -s KAN-8/flathub/tests; full-build-exec.py dbus-run-session -- flatpak-builder --user --assumeyes --install-deps-from=flathub --repo=KAN-8/full-build-repo --force-clean --install KAN-8/full-build-dir KAN-8/flathub/one.ablaze.floorp.yml; python3 KAN-8/full_package_profile.py",
+    "result": "reproduced-in-official-flatpak; full-pinned-pr198-manifest-built-exported-installed; full-candidate-package profile/marker/cache-path comparison passes; nine unit tests pass; nine product runs exit normally",
     "remainingConditions": [
       "Bazzite44/Flatseal/Bazaar full desktop",
-      "Full rebuilt candidate Flatpak package",
       "Complete portal/system service bus",
       "Exceptional mixed registries in actual package",
-      "Cache-content reuse/migration beyond observed path stability"
+      "Cache-content reuse/migration beyond observed path stability",
+      "Official Flathub-signed distribution/build review"
     ],
     "existingPr": "https://github.com/flathub/one.ablaze.floorp/pull/198",
     "existingPrHead": "d9aa24d58fe633bf765721f95b4ac13132ee397e",
@@ -23,10 +23,22 @@
       "KAN-8/profile_normal_shutdown.py",
       "KAN-8/unit-tests.log",
       "KAN-8/flatpak-info.txt",
-      "KAN-8/test-sha256.txt"
+      "KAN-8/test-sha256.txt",
+      "KAN-8/full-package-report.md",
+      "KAN-8/full-package-subject.json",
+      "KAN-8/full-package-normal-result.json",
+      "KAN-8/full-build-final.log",
+      "KAN-8/full_package_profile.py",
+      "KAN-8/full-build-exec.py",
+      "KAN-8/build-tool-bin/appstreamcli"
     ],
     "jiraCommentId": "10272",
-    "jiraUrl": "https://floorp-projects.atlassian.net/browse/KAN-8"
+    "jiraUrl": "https://floorp-projects.atlassian.net/browse/KAN-8",
+    "candidatePackageCommit": "7a3b387dc2c79a14b8f49b603b5b8d85d720fb233b325238d9d4d7a03bafde5a",
+    "candidatePackageSignatureScope": "locally built unsigned test package; not official Flathub signed distribution",
+    "jiraFollowupCommentIds": [
+      "10308"
+    ]
   },
   {
     "sourceSha": "984509d2053be7bae9027133bda7259cd706b208",
@@ -140,7 +152,7 @@
     "remainingConditions": [
       "Original Manjaro/KDE/Outlook/Teams package and taskbar icon pixels",
       "Fully unusable legacy records keep pre-existing random-identity limitation",
-      "Full production source build and current-head CI qualification"
+      "Full production source build"
     ],
     "existingPr": null,
     "newPr": "https://github.com/Floorp-Projects/Floorp/pull/3032",
@@ -154,13 +166,24 @@
       "KAN-49/followup-validation.md",
       "legacy-guard-candidate.json",
       "regression-guard-candidate.json",
-      "candidate-kde/cold-launch-result.json"
+      "candidate-kde/cold-launch-result.json",
+      "ci/pr3032-final/summary.json",
+      "ci/pr3032-final/verified-excerpt.txt"
     ],
     "jiraUrl": "https://floorp-projects.atlassian.net/browse/KAN-49",
     "jiraFollowupCommentIds": [
-      "10296"
+      "10296",
+      "10302",
+      "10309"
     ],
-    "newPrHead": "8249e234adfbb3e877e4a20cf5f57d7264d9a447"
+    "newPrHead": "8249e234adfbb3e877e4a20cf5f57d7264d9a447",
+    "ci": {
+      "head": "8249e234adfbb3e877e4a20cf5f57d7264d9a447",
+      "run": 42050337102,
+      "conclusion": "success",
+      "artifactId": 13427512330,
+      "sha256Verified": true
+    }
   },
   {
     "sourceSha": "984509d2053be7bae9027133bda7259cd706b208",

@@ -1,0 +1,72 @@
+[
+  {
+    "case": "full-package-normal",
+    "rows": [
+      {
+        "profile": "/workspace/qa-linux-22/package-pwa/KAN-8/full-package-normal-home/.var/app/one.ablaze.floorp/config/../.floorp/4gzgwq5h.default-default",
+        "localProfile": "/workspace/qa-linux-22/package-pwa/KAN-8/full-package-normal-home/.var/app/one.ablaze.floorp/cache/floorp/4gzgwq5h.default-default",
+        "marker": "keep-this-profile",
+        "sandboxLevel": 6,
+        "version": "159.0.1",
+        "buildID": "20261103153232",
+        "appID": "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}",
+        "appName": "Floorp",
+        "sandboxDisableEnv": false,
+        "label": "initial",
+        "homePermission": false,
+        "quit": {
+          "cause": "shutdown",
+          "forced": false,
+          "in_app": true
+        },
+        "exitCode": 0,
+        "normalExit": true
+      },
+      {
+        "profile": "/workspace/qa-linux-22/package-pwa/KAN-8/full-package-normal-home/.var/app/one.ablaze.floorp/config/../.floorp/4gzgwq5h.default-default",
+        "localProfile": "/workspace/qa-linux-22/package-pwa/KAN-8/full-package-normal-home/.var/app/one.ablaze.floorp/cache/floorp/4gzgwq5h.default-default",
+        "marker": "keep-this-profile",
+        "sandboxLevel": 6,
+        "version": "159.0.1",
+        "buildID": "20261103153232",
+        "appID": "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}",
+        "appName": "Floorp",
+        "sandboxDisableEnv": false,
+        "label": "home-enabled",
+        "homePermission": true,
+        "quit": {
+          "cause": "shutdown",
+          "forced": false,
+          "in_app": true
+        },
+        "exitCode": 0,
+        "normalExit": true
+      },
+      {
+        "profile": "/workspace/qa-linux-22/package-pwa/KAN-8/full-package-normal-home/.var/app/one.ablaze.floorp/config/../.floorp/4gzgwq5h.default-default",
+        "localProfile": "/workspace/qa-linux-22/package-pwa/KAN-8/full-package-normal-home/.var/app/one.ablaze.floorp/cache/floorp/4gzgwq5h.default-default",
+        "marker": "keep-this-profile",
+        "sandboxLevel": 6,
+        "version": "159.0.1",
+        "buildID": "20261103153232",
+        "appID": "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}",
+        "appName": "Floorp",
+        "sandboxDisableEnv": false,
+        "label": "home-disabled",
+        "homePermission": false,
+        "quit": {
+          "cause": "shutdown",
+          "forced": false,
+          "in_app": true
+        },
+        "exitCode": 0,
+        "normalExit": true
+      }
+    ],
+    "stableProfile": true,
+    "allMarkers": true,
+    "allNormalExits": true,
+    "helperInjected": false,
+    "fullCandidatePackage": true
+  }
+]

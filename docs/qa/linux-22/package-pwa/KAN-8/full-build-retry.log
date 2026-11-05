@@ -1,0 +1,26 @@
+
+** (flatpak-builder:48855): WARNING **: 15:14:31.987: 3:18: '26.08' will be parsed as a number by many YAML parsers
+Dependency Sdk: org.freedesktop.Sdk 26.08
+Updating org.freedesktop.Sdk/x86_64/26.08
+
+Nothing to do.
+Dependency Runtime: org.freedesktop.Platform 26.08
+Updating org.freedesktop.Platform/x86_64/26.08
+
+Nothing to do.
+Dependency Base: org.mozilla.firefox.BaseApp 26.08
+Updating org.mozilla.firefox.BaseApp/x86_64/26.08
+Info: org.mozilla.firefox.BaseApp is end-of-life, with reason: This BaseApp is meant to be used by Firefox and Thunderbird, and should not be installed directly.
+
+Nothing to do.
+Emptying app dir '/workspace/qa-linux-22/package-pwa/KAN-8/full-build-dir'
+Downloading sources
+Starting build of one.ablaze.floorp
+Cache hit for floorp, skipping build
+Cache miss, checking out last cache hit
+Cleaning up
+Renaming one.ablaze.floorp.appdata.xml to share/metainfo/one.ablaze.floorp.metainfo.xml
+Running appstreamcli compose
+AppStream Compose binary '/usr/libexec/appstreamcli-compose' was not found! Can not continue.
+You may be able to install the AppStream Compose addon via: `sudo appstreamcli install org.freedesktop.appstream.compose`
+Error: ERROR: appstreamcli compose failed: Child process exited with code 4

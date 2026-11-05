@@ -1,6 +1,6 @@
 # KAN-8 / GitHub #2837 — actual Flatpak profile follow-up
 
-2026-11-05. Classification: **reproduced in the official Flatpak; existing PR198 helper passes the controlled comparison**. This is not full Bazzite/Flatseal qualification and does not establish a complete rebuilt candidate Flatpak package.
+2026-11-05. Classification: **reproduced in the official Flatpak; existing PR198 helper and the subsequently fully built candidate Flatpak both pass controlled profile comparisons**. Full pinned-manifest build/export/install and three additional normal product runs are documented in `full-package-report.md`. Bazzite/Flatseal qualification remains incomplete.
 
 ## Immutable subjects
 
@@ -35,7 +35,7 @@ The official profile remains on disk and is recovered after removing home permis
 ## Remaining conditions and disposition
 
 - Bazzite44 with Bazaar/Flatseal and its complete desktop/portal system service configuration.
-- A complete candidate Flatpak package built from PR198's manifest/launcher, rather than injecting only the exact helper into the official installed application.
+- **Resolved in follow-up:** a complete candidate Flatpak package was built from the unchanged PR198 manifest/launcher, exported, installed in a new dedicated user installation and actually run without helper injection. See `full-package-report.md` and `full-package-normal-result.json`. It is a local unsigned test package, not official signed Flathub distribution.
 - Mixed real-world legacy/XDG/host registries under actual package execution, normal shutdown of those exceptional startup cases, explicit override usability, and deeper cache reuse/migration validation. PR's unit tests cover fail-closed selection but do not qualify all GUI flows.
 - Keep the existing Draft PR as canonical. Do not merge, release, mark Done, or remove the Bazzite/package-specific remaining-condition labels from this comparison alone.
 

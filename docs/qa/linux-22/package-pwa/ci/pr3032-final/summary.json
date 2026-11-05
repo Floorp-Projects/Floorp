@@ -1,0 +1,17 @@
+{
+  "pr": 3032,
+  "headSha": "8249e234adfbb3e877e4a20cf5f57d7264d9a447",
+  "runId": 42050337102,
+  "attempt1UbuntuBrowserJob": "success",
+  "artifactId": 13427512330,
+  "artifactBytes": 110385,
+  "artifactSha256": "9c825202b8265319195d5e168e9d004db2a21468f1c4000508edd60dde3c84b8",
+  "artifactDigestMatches": true,
+  "newTestModuleRunAllTestsRecorded": true,
+  "attempt1MacJob": "npm @oxlint/binding-darwin-arm64 dependency download connection body-read failure before product tests; same-head specific-job retry requested after completion",
+  "priorHeadRun": "42045615354 success is historical, not final-head qualification",
+  "finalRunConclusion": "success",
+  "latestFiveJobConclusions": "success",
+  "attempt1MacFailurePreserved": true,
+  "MacRetry": "one same-head specific-job retry after workflow completion; earlier request while running rejected403 and did not execute a retry"
+}

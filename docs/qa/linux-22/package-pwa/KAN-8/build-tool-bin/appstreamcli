@@ -1,0 +1,10 @@
+#!/bin/sh
+# Resolve only Debian's absolute-path compose plugin after local extraction.
+# Forward every compose argument unchanged to the unmodified packaged binary.
+set -eu
+qa_sysroot=/workspace/qa-linux-22/package-pwa/sysroot
+if [ "${1:-}" = compose ]; then
+  shift
+  exec "$qa_sysroot/usr/libexec/appstreamcli-compose" "$@"
+fi
+exec "$qa_sysroot/usr/bin/appstreamcli" "$@"

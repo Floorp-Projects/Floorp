@@ -80,8 +80,7 @@ worktree symlink; no shared dependency settings were changed.
 
 KDE taskbar icon behavior and native Wayland app_id remain separately measured
 under KAN-48. This X11 correction alone does not establish the original
-Manjaro/KDE version or Outlook/Teams startup conditions. Full production source
-build and standard colocated runner/CI remain required before merge. Review the
+Manjaro/KDE version or Outlook/Teams startup conditions. Full production source build remains required; final-head standard runner/CI is verified in the final section below. Review the
 new import dependency at early Linux command-line startup and malformed legacy
 SSB records; valid UUID fixture launchers and all tested creation orders pass.
 Draft PR only; no merge, release or Done transition is authorized.
@@ -89,3 +88,7 @@ Draft PR only; no merge, release or Done transition is authorized.
 ## Follow-up at final head8249e234
 
 Read followup-validation.md for the additional cold command-line, malformed-data and native Wayland evidence. Follow-up found a real numeric/object-ID startup regression in initial candidate06aaf589 and corrected it in8249e234 with a string-type guard plus additional colocated coverage. All9 API cases open in the final candidate; wholly unusable records retain the pre-existing random-identity limit. Native Wayland UI and cold generated-launcher tests preserve distinct PWA app_id/desktop/KWin identity. This does not qualify the separate taskbar icon pixel condition. Prior-head CI success remains historical; new-head run42050337102 is checked separately.
+
+## Final-head standard CI
+
+Head8249e234 run42050337102 is successful. Ubuntu artifact13427512330 was downloaded:110385bytes, SHA2569c825202b8265319195d5e168e9d004db2a21468f1c4000508edd60dde3c84b8 matches GitHub metadata. Standard runner records SsbCommandLineHandler.runAllTests7341ms,281 browser modules passed/0 failed and8 downloaded Firefox files/16 tasks passed. Attempt1 Mac npm dependency body-read failure occurred before product tests and is preserved; a single same-head specific-job retry after run completion succeeded. Previous head06aaf589 CI is historical. See ../ci/pr3032-final/.

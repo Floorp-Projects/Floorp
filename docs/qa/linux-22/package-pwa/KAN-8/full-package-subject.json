@@ -1,0 +1,24 @@
+{
+  "one.ablaze.floorp": "7a3b387dc2c79a14b8f49b603b5b8d85d720fb233b325238d9d4d7a03bafde5a",
+  "org.freedesktop.Sdk//26.08": "a1b744b072d9f55d061e35382547ae80dad8d92abecc1da7dc1818de2daabfd3",
+  "org.freedesktop.Platform//26.08": "df26daaf9d07610b4a72cc4585566194051275ac68396597b06474396f66427c",
+  "org.mozilla.firefox.BaseApp//26.08": "e3a6bba88801b1daacf5cd9a6fd1d350a83a7a2da8924d0788b1167506eb6d12",
+  "deployedFiles": {
+    "floorp": "352e6601c6bcaed6ad19c25d68cbd873ce55a65d1b48d59f0fcb813befb48f91",
+    "floorp-profile-root.sh": "08b2db27331855fc3d7b207112816c7056c70f34e02553449b07a7206aee3a1e"
+  },
+  "sourceFiles": {
+    "one.ablaze.floorp.yml": "72117410eddb76798a072361c86c989d7b6b42ac221d63e3fe233dfddba8885f",
+    "src/floorp.sh": "352e6601c6bcaed6ad19c25d68cbd873ce55a65d1b48d59f0fcb813befb48f91",
+    "src/floorp-profile-root.sh": "08b2db27331855fc3d7b207112816c7056c70f34e02553449b07a7206aee3a1e"
+  },
+  "productSourceArchiveSha256": "7dcedcbfef747819153b0b9c541a9c1f4f4965b0720f16d5d237d39b0c30d613",
+  "manifestSourceSha": "d9aa24d58fe633bf765721f95b4ac13132ee397e",
+  "officialFloorpSourceSha": "984509d2053be7bae9027133bda7259cd706b208",
+  "signatureScope": "locally built unsigned test package; not the official signed Flathub app",
+  "scriptsSha256": {
+    "full_package_profile.py": "687206e7ec0e13a3bf6d2b9460b322e34750828bf72ceba415813ae159f40471",
+    "full-build-exec.py": "539d304e2cb41adedea567e8a4b7f2166180d4ee7a40468bcddf26fad6479ab7",
+    "build-tool-bin/appstreamcli": "310f98d1f54872344cec2070df46346159d579ef0b38ab080ecab636ad9e2251"
+  }
+}

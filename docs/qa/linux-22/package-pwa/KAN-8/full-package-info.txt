@@ -1,0 +1,19 @@
+
+Floorp - Customizable Firefox-based browser from Japan
+
+          ID: one.ablaze.floorp
+         Ref: app/one.ablaze.floorp/x86_64/master
+        Arch: x86_64
+      Branch: master
+     Version: 12.21.1
+     License: MPL-2.0
+      Origin: floorp-origin
+  Collection:
+Installation: user
+   Installed: 376.6 MB
+     Runtime: org.freedesktop.Platform/x86_64/26.08
+         Sdk: org.freedesktop.Sdk/x86_64/26.08
+
+      Commit: 7a3b387dc2c79a14b8f49b603b5b8d85d720fb233b325238d9d4d7a03bafde5a
+     Subject: Export one.ablaze.floorp
+        Date: 2026-11-05 15:16:31 +0000
