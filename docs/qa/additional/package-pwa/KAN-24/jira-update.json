@@ -1,0 +1,20 @@
+{
+  "key": "KAN-24",
+  "commentId": "10399",
+  "body": "## KAN-24 追加対象・実UI対照と既存2950補足案（2026-11-05 UTC）\n\nLinux22の分母・元担当7件matrixは変更なし。Jira全3コメント、原issue全2コメント、既存Draft2950の全review/inline/commentと直近統括状況を照合。正本2950 head69d306b11c9e52da9e6270870740d49b1d561659はopen/Draftのまま変更せず、重複PRなし。\n\nDebian13.6/Xvfb X11/通常DBus、native159.0.1・BuildID20261103153232・sandbox6。認証済み完全製品(source2deb165d、CI42077174018/artifact13439144608)の当該design/workspace/RPC/lockは最新main29a3eb23とGit blob同一を確認。製品全体のsourceをmainと偽称しない。\n\n**実UIで再現:** Photon/垂直をHubの実radioクリックで選び、Firefox設定の表示中shadowボタンをWebDriverで水平へ切替。nativefalse/実タブ水平になるが、保存値と戻ったHubはvertical。通常再起動、startup-ready新窓、実Workspace作成/往復でも不一致保持。原報告の「実タブ表示が垂直のまま」は今回未再現で区別する。\n\n**既存2950候補:** 最新main+正本8file差分から標準production生成し、隔離コピーのchrome/settings資源だけ反映（完全候補package buildではない）。ライブ双方向同期は改善し、multirowのWorkspace/再起動保持、新窓の実垂直geometryも確認。一方、上記自然な不一致profileを引継ぐとnativefalse/storedverticalが残り、Hub getterだけhorizontal表示。session restoreで既にHubは復元済みなので「Hub未読込前」とは主張しない。\n\n**補足提案:** 既知review4346185151のobserver初期同期に加え、古いform horizontal↔最新multirowを無関係な保存で上書きするsource/API欠陥を確認。2file最小案＋回帰runnerを保存。実Gecko prefs/未変更RPC directServices経路・mockなしで正本4件失敗→案4件成功。外部pref writerが他窓の新値をモデル化したAPI試験であり、実2窓UI race再現とは区別。現在HubはautosaveでApplyなし、pending-save raceは実UI未確立。案は正本/latestmain+正本に適用でき、API試験sourceとbyte一致。既存observerの不整合fixture更新とrepo統合テストはなお必要。\n\n既存CI39378926878/artifact12244273619もSHA認証し、helper/observer/settings各module実行・全266成功0失敗を確認。ただし当時Runtime158.0.1/20261014104253で、今回159 UIや案4APIとは別証拠。案の全製品/標準CI成功は主張しない。保存済normalQuit4件、全product不変、所有process0。\n\n[追加表・全UI/CI/API証拠・最小案](https://github.com/Floorp-Projects/Floorp/tree/dfc63535bb0a22b50711134cb12cab5d289d4fd6/docs/qa/additional/package-pwa/KAN-24)。元7件matrixはbyte不変。残条件: 正本への初期同期/最新style保持とfixture統合、最終候補fullbuild/CI、原macOS Photon、多数タブmultirow形状、必要な実UI race。KAN7等GPU専用条件は未試験のまま保持。merge/release/配信変更/Done化なし、進行中を維持。",
+  "labels": [
+    "area-workspaces",
+    "existing-pr",
+    "floorp-stability-2026-11",
+    "p2",
+    "reproduced-in-test",
+    "triage-reviewed",
+    "qa-additional-executed",
+    "needs-pr2950-startup-sync",
+    "needs-pr2950-stale-form-style",
+    "needs-original-macos-photon"
+  ],
+  "statusTransitioned": false,
+  "newPr": null,
+  "canonicalPr": 2950
+}

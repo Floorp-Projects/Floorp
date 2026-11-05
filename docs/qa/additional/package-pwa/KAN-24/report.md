@@ -37,3 +37,5 @@ The patch applies to exact2950 and main+2950, and resulting source bytes equal t
 ## Remaining work and scope
 
 Existing2950 needs the initial reconciliation and stale nonvertical save amendment, corrected/integrated regression tests, a final amended full product/CI, original macOS Photon qualification, and optional actual pending-save race/overflowing multirow coverage. Broad field-level cross-window atomicity is not claimed by the small style proposal. The original seven Linux records and KAN-7's unmet GPU conditions remain intact. No merge, release, distribution change, Runtime-lock change or Done transition was performed.
+
+Jira final evidence/proposal comment10399 records the measured split and retained conditions. Issue remains in progress; canonical2950 head remains69d306b1. Original7matrix/22denominator and KAN7conditions remain unchanged.

@@ -20,8 +20,16 @@
     "bytes": 297
   },
   {
+    "path": "final-canonical-pr-state.json",
+    "bytes": 163
+  },
+  {
+    "path": "jira-update.json",
+    "bytes": 3514
+  },
+  {
     "path": "matrix.json",
-    "bytes": 8344
+    "bytes": 8417
   },
   {
     "path": "pr2950-ci.json",
@@ -37,7 +45,7 @@
   },
   {
     "path": "report.md",
-    "bytes": 6681
+    "bytes": 6906
   },
   {
     "path": "restart_followup.py",
@@ -56,12 +64,16 @@
     "bytes": 1221
   },
   {
+    "path": "structured-diff-check.log",
+    "bytes": 2372
+  },
+  {
     "path": "two_window_controls.py",
     "bytes": 1634
   },
   {
     "path": "ui-matrix.json",
-    "bytes": 6243
+    "bytes": 6303
   },
   {
     "path": "ui-process-cleanup.json",

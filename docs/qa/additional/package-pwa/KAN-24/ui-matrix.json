@@ -3,7 +3,7 @@
   "github": "https://github.com/Floorp-Projects/Floorp/issues/2949",
   "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2950",
   "newPr": null,
-  "jiraCommentId": null,
+  "jiraCommentId": "10399",
   "sourceSha": {
     "baselineFullPackage": "2deb165d75290ffd4f602ad078512dc42fc3a332",
     "candidateBase": "29a3eb23145da90706d8a94441373278521cc737",
@@ -98,7 +98,7 @@
       "id": "workspace-and-multirow-preservation",
       "baseline": "reproduced",
       "candidate": "pass-limited",
-      "observation": "Actual toolbar Create New Workspace then first\u2192second\u2192first synthetic clicks preserve native false/stored multirow; Hub reads multirow. No overflow/many-row layout stress claim. Baseline actual create/switch first\u2192second\u2192first preserves nativefalse/storedvertical mismatch and Hubvertical.",
+      "observation": "Actual toolbar Create New Workspace then first→second→first synthetic clicks preserve native false/stored multirow; Hub reads multirow. No overflow/many-row layout stress claim. Baseline actual create/switch first→second→first preserves nativefalse/storedvertical mismatch and Hubvertical.",
       "evidence": [
         "candidate-migration/22-workspace-after-create.json",
         "candidate-migration/23-workspace-first.json",
@@ -113,5 +113,6 @@
       ]
     }
   ],
-  "startupObservationNuance": "Startup snapshots precede explicit test navigation, but recorded selected browser is already session-restored Hub; not a no-Hub-loaded startup claim."
+  "startupObservationNuance": "Startup snapshots precede explicit test navigation, but recorded selected browser is already session-restored Hub; not a no-Hub-loaded startup claim.",
+  "jiraUrl": "https://floorp-projects.atlassian.net/browse/KAN-24"
 }

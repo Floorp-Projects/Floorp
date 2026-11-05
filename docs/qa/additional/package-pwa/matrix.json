@@ -4,7 +4,7 @@
     "github": "https://github.com/Floorp-Projects/Floorp/issues/2949",
     "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2950",
     "newPr": null,
-    "jiraCommentId": null,
+    "jiraCommentId": "10399",
     "sourceSha": {
       "main": "29a3eb23145da90706d8a94441373278521cc737",
       "baselineFullProduct": "2deb165d75290ffd4f602ad078512dc42fc3a332",
@@ -154,6 +154,7 @@
       "proposal-tests/patch-apply-checks.json",
       "existing-ci/report.md"
     ],
-    "existingPrHead": "69d306b11c9e52da9e6270870740d49b1d561659"
+    "existingPrHead": "69d306b11c9e52da9e6270870740d49b1d561659",
+    "jiraUrl": "https://floorp-projects.atlassian.net/browse/KAN-24"
   }
 ]
