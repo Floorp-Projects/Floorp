@@ -1,0 +1,110 @@
+{
+  "version": "159.0.1",
+  "buildID": "20261103153232",
+  "executable": "/workspace/qa-linux-additional/KAN-24/followup/products/baseline/floorp/floorp",
+  "profile": "/workspace/qa-linux-additional/KAN-24/followup/full-product/baseline/profile",
+  "sandbox": 6,
+  "sandboxDisabled": false,
+  "vertical": true,
+  "config": {
+    "globalConfigs": {
+      "userInterface": "photon",
+      "faviconColor": false,
+      "appliedUserJs": ""
+    },
+    "tabbar": {
+      "tabbarStyle": "vertical",
+      "tabbarPosition": "default",
+      "multiRowTabBar": {
+        "maxRowEnabled": false,
+        "maxRow": 3
+      }
+    },
+    "tab": {
+      "tabScroll": {
+        "enabled": false,
+        "reverse": false,
+        "wrap": false
+      },
+      "tabMinHeight": 30,
+      "tabMinWidth": 76,
+      "tabPinTitle": false,
+      "tabDoubleClickToClose": false,
+      "tabOpenPosition": -1
+    },
+    "uiCustomization": {
+      "navbar": {
+        "position": "top",
+        "searchBarTop": false
+      },
+      "display": {
+        "disableFullscreenNotification": false,
+        "deleteBrowserBorder": false
+      },
+      "special": {
+        "optimizeForTreeStyleTab": false,
+        "hideForwardBackwardButton": false,
+        "stgLikeWorkspaces": false
+      },
+      "multirowTab": {
+        "newtabInsideEnabled": false
+      },
+      "bookmarkBar": {
+        "focusExpand": false,
+        "position": "top"
+      },
+      "qrCode": {
+        "disableButton": false
+      },
+      "chromeExtras": {
+        "autohideTab": false,
+        "autohideBackButton": false,
+        "autohideForwardButton": false,
+        "autohidePageAction": false,
+        "autohideSidebar": false,
+        "autohideNavbar": false,
+        "hiddenTabIcon": false,
+        "hiddenTabCloseButton": false,
+        "hiddenTabAudioIndicator": false,
+        "hiddenTabSharingIndicator": false,
+        "hiddenTabNoteIcon": false,
+        "hiddenTabAttentionIndicator": false,
+        "hiddenTabbar": false,
+        "hiddenNavbar": false,
+        "hiddenSidebarHeader": false,
+        "hiddenUrlbarIconbox": false,
+        "hiddenBookmarkbarIcon": false,
+        "hiddenBookmarkbarLabel": false,
+        "hiddenDisabledMenu": false,
+        "iconDisabled": false,
+        "iconMenu": true,
+        "centeredTab": false,
+        "centeredUrlbar": false,
+        "centeredBookmarkbar": false,
+        "urlViewMoveIconToLeft": false,
+        "urlViewGoButtonWhenTyping": false,
+        "urlViewAlwaysShowPageActions": false,
+        "sidebarOverlap": false,
+        "tabbarAsTitlebar": false,
+        "tabbarOneLiner": false
+      }
+    }
+  },
+  "windows": [
+    {
+      "ready": true,
+      "url": "about:hub#/features/design",
+      "vertical": true,
+      "tabURLs": [
+        "about:hub#/features/design"
+      ],
+      "orient": "vertical",
+      "rect": {
+        "x": 0,
+        "y": 36,
+        "width": 247.6666717529297,
+        "height": 720
+      }
+    }
+  ]
+}

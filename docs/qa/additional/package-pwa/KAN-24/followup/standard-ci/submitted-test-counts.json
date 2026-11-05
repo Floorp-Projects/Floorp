@@ -1,0 +1,21 @@
+{
+  "sourceSha": "d058d7001b822f0ef2413b1307c98a463dfdcdb9",
+  "testFiles": [
+    {
+      "path": "browser-features/chrome/common/designs/test/vertical-tabs-observer.test.ts",
+      "declaredCases": 7,
+      "sha256": "29c73117c30d6e1baeea384e8a88e3bfbd85cfde1ba5ccda0353eeb4e44fe445",
+      "integrationSha256": "29c73117c30d6e1baeea384e8a88e3bfbd85cfde1ba5ccda0353eeb4e44fe445",
+      "integrationBytesIdentical": true
+    },
+    {
+      "path": "browser-features/pages-settings/test/app/design/verticalTabsSync.test.ts",
+      "declaredCases": 3,
+      "sha256": "e253937f044990e924da0701493b4fd227a2c0b89be2ecb7b935d1815c7864da",
+      "integrationSha256": "e253937f044990e924da0701493b4fd227a2c0b89be2ecb7b935d1815c7864da",
+      "integrationBytesIdentical": true
+    }
+  ],
+  "note": "Declared case counts from submitted exact source, to be matched to successful complete-module standard browser execution. Not independent per-case CI logs.",
+  "integrationHead": "493d2974e00e6902d86585d329eea1f9040ff791"
+}

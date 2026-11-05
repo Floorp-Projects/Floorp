@@ -1,3 +1,5 @@
+> Latest continuation: dependent Draft3046, standard158/159 CI and six complete-product trials are complete. Both cold-start mismatch directions and shipped stale-save2cases are fixed in the full159 integration. See [current report](followup/report.md). The scoped-copy limits below describe the earlier investigation, not the newer complete-product results. Original7matrix/Linux22 unchanged.
+
 # Additional KAN-24: Hub / native vertical-tabs synchronization
 
 KAN-24 / GitHub2949 is an **additional target**. The original Linux22 denominator and package-pwa seven-issue matrix are unchanged. KAN-7 GPU-specific conditions were not exercised or reclassified by these software-display/UI tests.

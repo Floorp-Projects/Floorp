@@ -1,0 +1,21 @@
+{
+  "ref": "codex/qa-kan24-main-fullproduct-29a3eb23",
+  "inputs": {
+    "platform": "Linux-x64",
+    "beta": "false",
+    "provenance_mode": "stable-v2-validation",
+    "runtime_artifact_workflow_run_id": "",
+    "runtime_repository": "Floorp-Projects/Floorp-Runtime",
+    "runtime_workflow_run_id": "41664957250",
+    "runtime_manifest_artifact_id": "13274392012",
+    "runtime_manifest_artifact_digest": "sha256:2b6a1b20190dc7016957ca25f72f8e83f267de51458b515153fd209bb90d9138",
+    "runtime_head_sha": "8965ffc346d426ccdf919bd18585e4d4a0c21654",
+    "expected_build_id": "20261103153232",
+    "runtime_artifact_name": "floorp-linux-x86_64-moz-artifact",
+    "runtime_artifact_id": "13272530069",
+    "runtime_artifact_digest": "sha256:ed5a4f97ee7bf42c817f3146d5a843e095710dcc3be25fae0af0bf47274b739a",
+    "skip_signing": "true",
+    "signed_validation": "false",
+    "floorp_head_sha": "29a3eb23145da90706d8a94441373278521cc737"
+  }
+}

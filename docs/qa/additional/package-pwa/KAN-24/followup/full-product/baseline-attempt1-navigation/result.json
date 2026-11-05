@@ -1,0 +1,31 @@
+{
+  "mode": "baseline",
+  "migrationDirection": "horizontal",
+  "product": "/workspace/qa-linux-additional/KAN-24/followup/products/baseline/floorp",
+  "input": "synthetic real WebDriver ElementClick, native shadow buttons",
+  "display": "Xvfb102 X11",
+  "fullProductResourceMutation": false,
+  "originalMacOSQualified": false,
+  "completed": false,
+  "error": "WebDriver:ExecuteScript: {'error': 'javascript error', 'message': \"TypeError: Location.href setter: Access to 'about:hub#/features/design' from script denied.\", 'stacktrace': '@pwa_ui_probe.py:2:7\\n@pwa_ui_probe.py:3:8\\n'}",
+  "traceback": "Traceback (most recent call last):\n  File \"/workspace/qa-linux-additional/KAN-24/followup/ui/full_ui.py\", line 289, in run\n    getattr(self, self.args.mode)()\n  File \"/workspace/qa-linux-additional/KAN-24/followup/ui/full_ui.py\", line 194, in baseline\n    self.hub('02-initial-hub')\n  File \"/workspace/qa-linux-additional/KAN-24/followup/ui/full_ui.py\", line 156, in hub\n    self.navigate('about:hub#/features/design')\n  File \"/workspace/qa-linux-additional/KAN-24/followup/ui/full_ui.py\", line 152, in navigate\n    self.client.script('location.href=arguments[0];return true;', [url])\n  File \"/workspace/qa-linux-22/package-pwa/pwa_ui_probe.py\", line 61, in script\n    result = self.call('WebDriver:ExecuteScript', {\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/workspace/qa-linux-22/package-pwa/pwa_ui_probe.py\", line 57, in call\n    raise RuntimeError(f'{name}: {result[2]}')\nRuntimeError: WebDriver:ExecuteScript: {'error': 'javascript error', 'message': \"TypeError: Location.href setter: Access to 'about:hub#/features/design' from script denied.\", 'stacktrace': '@pwa_ui_probe.py:2:7\\n@pwa_ui_probe.py:3:8\\n'}\n",
+  "productUnchanged": true,
+  "normalQuits": [
+    {
+      "response": {
+        "cause": "shutdown",
+        "forced": false,
+        "in_app": true
+      },
+      "exitCode": 0,
+      "forced": false
+    }
+  ],
+  "ownedProcessesRemaining": 0,
+  "records": [
+    {
+      "name": "01-initial-startup-before-hub",
+      "file": "01-initial-startup-before-hub.json"
+    }
+  ]
+}

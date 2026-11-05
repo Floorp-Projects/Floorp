@@ -1,0 +1,88 @@
+[
+  {
+    "id": "stale-horizontal-latest-multirow",
+    "staleFromActualShippedGetter": {
+      "design": "lepton",
+      "position": "default",
+      "style": "horizontal",
+      "tabOpenPosition": -1,
+      "tabMinHeight": 30,
+      "tabMinWidth": 76,
+      "tabPinTitle": false,
+      "tabDragToSplitCreate": false,
+      "tabScrollReverse": false,
+      "tabScrollWrap": false,
+      "tabDoubleClickToClose": false,
+      "tabScroll": false,
+      "faviconColor": false,
+      "maxRowEnabled": false,
+      "maxRow": 3,
+      "navbarPosition": "top",
+      "searchBarTop": false,
+      "disableFullscreenNotification": false,
+      "deleteBrowserBorder": false,
+      "optimizeForTreeStyleTab": false,
+      "hideForwardBackwardButton": false,
+      "stgLikeWorkspaces": false,
+      "multirowTabNewtabInside": false,
+      "bookmarkBarFocusExpand": false,
+      "bookmarkBarPosition": "top",
+      "disableQRCodeButton": false,
+      "disableFloorpStart": null
+    },
+    "externalActualPrefWriter": {
+      "style": "multirow",
+      "native": false
+    },
+    "unrelatedFaviconChange": true,
+    "observed": {
+      "style": "horizontal",
+      "faviconColor": true,
+      "native": false
+    },
+    "pass": false
+  },
+  {
+    "id": "stale-multirow-latest-horizontal",
+    "staleFromActualShippedGetter": {
+      "design": "lepton",
+      "position": "default",
+      "style": "multirow",
+      "tabOpenPosition": -1,
+      "tabMinHeight": 30,
+      "tabMinWidth": 76,
+      "tabPinTitle": false,
+      "tabDragToSplitCreate": false,
+      "tabScrollReverse": false,
+      "tabScrollWrap": false,
+      "tabDoubleClickToClose": false,
+      "tabScroll": false,
+      "faviconColor": true,
+      "maxRowEnabled": false,
+      "maxRow": 3,
+      "navbarPosition": "top",
+      "searchBarTop": false,
+      "disableFullscreenNotification": false,
+      "deleteBrowserBorder": false,
+      "optimizeForTreeStyleTab": false,
+      "hideForwardBackwardButton": false,
+      "stgLikeWorkspaces": false,
+      "multirowTabNewtabInside": false,
+      "bookmarkBarFocusExpand": false,
+      "bookmarkBarPosition": "top",
+      "disableQRCodeButton": false,
+      "disableFloorpStart": null
+    },
+    "externalActualPrefWriter": {
+      "style": "horizontal",
+      "native": false
+    },
+    "unrelatedFaviconChange": false,
+    "observed": {
+      "style": "multirow",
+      "faviconColor": false,
+      "native": false
+    },
+    "pass": false
+  }
+]

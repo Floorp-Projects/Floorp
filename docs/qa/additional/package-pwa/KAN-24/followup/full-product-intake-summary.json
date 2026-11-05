@@ -1,0 +1,20 @@
+[
+  {
+    "label": "baseline",
+    "sourceSha": "29a3eb23145da90706d8a94441373278521cc737",
+    "run": 42093687541,
+    "artifact": 13446089131,
+    "archiveZipSha256": "05164de082b5b6c1f18ec70155e6ae4eebec14486cb983b1a013660fbf00239d",
+    "packageTarSha256": "2a87bb410637485d90a428445b9d75c10aa9e9a009061f6ec10834e08ecc9fd4",
+    "qualification": "complete existing unsigned application/package pipeline, locked prebuilt native Runtime; no resource substitution; not fresh Gecko or strict release qualification"
+  },
+  {
+    "label": "integration",
+    "sourceSha": "493d2974e00e6902d86585d329eea1f9040ff791",
+    "run": 42094061748,
+    "artifact": 13447726956,
+    "archiveZipSha256": "210665cbe6a8b6e8d25dcaf3906d77b6d6e12066fd708631b7ef7cd4b40d8a26",
+    "packageTarSha256": "721de14c6b89eaa89cbc27c8fb00ec90282e4621756439d480c26ba4a3fa1ee2",
+    "qualification": "complete existing unsigned application/package pipeline, locked prebuilt native Runtime; no resource substitution; not fresh Gecko or strict release qualification"
+  }
+]

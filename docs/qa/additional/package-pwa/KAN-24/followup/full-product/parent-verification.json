@@ -1,0 +1,101 @@
+{
+  "runs": [
+    {
+      "label": "baseline",
+      "completed": true,
+      "checks": {
+        "hubToNativeMatchesChosenInitialStyle": true,
+        "naturalMismatchReproduced": true,
+        "actualTabstripMatchesNative": true,
+        "mismatchSurvivesNormalRestart": true,
+        "restartSelectedURLsAllBlank": true,
+        "restartAllTabsNoHub": true
+      },
+      "productUnchanged": true,
+      "normalQuits": 2,
+      "ownedProcessesRemaining": 0
+    },
+    {
+      "label": "candidate",
+      "completed": true,
+      "checks": {
+        "naturalMigrationProfileProvided": true,
+        "startupReconciledBeforeHubNavigation": true,
+        "startupSelectedURLsAllBlank": true,
+        "startupAllTabsNoHub": true,
+        "hubToNativeVertical": true,
+        "nativeOffToHubHorizontal": true,
+        "nativeOnToHubVertical": true,
+        "settledNewWindowsVertical": true,
+        "workspaceMultirowPreserved": true,
+        "normalRestartMultirowPreserved": true
+      },
+      "productUnchanged": true,
+      "normalQuits": 2,
+      "ownedProcessesRemaining": 0
+    },
+    {
+      "label": "baseline-reverse",
+      "completed": true,
+      "checks": {
+        "hubToNativeMatchesChosenInitialStyle": true,
+        "naturalMismatchReproduced": true,
+        "actualTabstripMatchesNative": true,
+        "mismatchSurvivesNormalRestart": true,
+        "restartSelectedURLsAllBlank": true,
+        "restartAllTabsNoHub": true
+      },
+      "productUnchanged": true,
+      "normalQuits": 2,
+      "ownedProcessesRemaining": 0
+    },
+    {
+      "label": "candidate-reverse",
+      "completed": true,
+      "checks": {
+        "naturalMigrationProfileProvided": true,
+        "startupReconciledBeforeHubNavigation": true,
+        "startupSelectedURLsAllBlank": true,
+        "startupAllTabsNoHub": true,
+        "hubToNativeVertical": true,
+        "nativeOffToHubHorizontal": true,
+        "nativeOnToHubVertical": true,
+        "settledNewWindowsVertical": true,
+        "workspaceMultirowPreserved": true,
+        "normalRestartMultirowPreserved": true
+      },
+      "productUnchanged": true,
+      "normalQuits": 2,
+      "ownedProcessesRemaining": 0
+    },
+    {
+      "label": "api-baseline",
+      "completed": true,
+      "checks": {
+        "stale-horizontal-latest-multirow": false,
+        "stale-multirow-latest-horizontal": false
+      },
+      "productUnchanged": true,
+      "normalQuits": 1,
+      "ownedProcessesRemaining": 0
+    },
+    {
+      "label": "api-candidate",
+      "completed": true,
+      "checks": {
+        "stale-horizontal-latest-multirow": true,
+        "stale-multirow-latest-horizontal": true
+      },
+      "productUnchanged": true,
+      "normalQuits": 1,
+      "ownedProcessesRemaining": 0
+    }
+  ],
+  "normalQuits": 10,
+  "passedUiRuns": 4,
+  "shippedApiBaselineFailures": 2,
+  "shippedApiCandidatePasses": 2,
+  "physicalInput": false,
+  "display": "Xvfb102 X11",
+  "fullProductResourceSubstitution": false
+}

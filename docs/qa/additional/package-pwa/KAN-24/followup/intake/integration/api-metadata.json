@@ -1,0 +1,29 @@
+{
+  "run": {
+    "id": 42094061748,
+    "head_sha": "493d2974e00e6902d86585d329eea1f9040ff791",
+    "status": "completed",
+    "conclusion": "success",
+    "path": ".github/workflows/package.yml",
+    "event": "workflow_dispatch",
+    "html_url": "https://github.com/Floorp-Projects/Floorp/actions/runs/42094061748",
+    "created_at": "2026-11-05T19:27:30Z",
+    "updated_at": "2026-11-05T19:43:16Z"
+  },
+  "artifact": {
+    "id": 13447726956,
+    "name": "noraneko-linux-x86_64-installer-unsigned",
+    "size_in_bytes": 108194696,
+    "digest": "sha256:210665cbe6a8b6e8d25dcaf3906d77b6d6e12066fd708631b7ef7cd4b40d8a26",
+    "expired": false,
+    "created_at": "2026-11-05T19:43:08Z",
+    "expires_at": "2027-02-03T19:27:31Z",
+    "workflow_run": {
+      "id": 42094061748,
+      "repository_id": 437505831,
+      "head_repository_id": 437505831,
+      "head_branch": "codex/qa-kan24-main-integration",
+      "head_sha": "493d2974e00e6902d86585d329eea1f9040ff791"
+    }
+  }
+}

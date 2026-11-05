@@ -1,0 +1,244 @@
+{
+  "id": 127489120992,
+  "run_id": 42094068516,
+  "workflow_name": "(CI) \ud83e\uddea Browser Integration + Runner Tests",
+  "head_branch": "codex/qa-kan24-main-integration",
+  "run_url": "https://api.github.com/repos/Floorp-Projects/Floorp/actions/runs/42094068516",
+  "run_attempt": 2,
+  "node_id": "CR_kwDOGhPPJ88AAAAdrvGa4A",
+  "head_sha": "493d2974e00e6902d86585d329eea1f9040ff791",
+  "url": "https://api.github.com/repos/Floorp-Projects/Floorp/actions/jobs/127489120992",
+  "html_url": "https://github.com/Floorp-Projects/Floorp/actions/runs/42094068516/job/127489120992",
+  "status": "completed",
+  "conclusion": "success",
+  "created_at": "2026-11-05T19:45:14Z",
+  "started_at": "2026-11-05T19:45:18Z",
+  "completed_at": "2026-11-05T19:46:36Z",
+  "name": "Native Runtime / macos-latest",
+  "steps": [
+    {
+      "name": "Set up job",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 1,
+      "started_at": "2026-11-05T19:45:18Z",
+      "completed_at": "2026-11-05T19:45:20Z"
+    },
+    {
+      "name": "Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 2,
+      "started_at": "2026-11-05T19:45:20Z",
+      "completed_at": "2026-11-05T19:45:23Z"
+    },
+    {
+      "name": "Run denoland/setup-deno@667a34cdef165d8d2b2e98dde39547c9daac7282",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 3,
+      "started_at": "2026-11-05T19:45:23Z",
+      "completed_at": "2026-11-05T19:45:25Z"
+    },
+    {
+      "name": "Run actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 4,
+      "started_at": "2026-11-05T19:45:25Z",
+      "completed_at": "2026-11-05T19:45:25Z"
+    },
+    {
+      "name": "Cache locked Linux x64 browser Runtime",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 5,
+      "started_at": "2026-11-05T19:45:25Z",
+      "completed_at": "2026-11-05T19:45:25Z"
+    },
+    {
+      "name": "Run deno install",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 6,
+      "started_at": "2026-11-05T19:45:25Z",
+      "completed_at": "2026-11-05T19:45:34Z"
+    },
+    {
+      "name": "Validate canonical Runtime lock",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 7,
+      "started_at": "2026-11-05T19:45:34Z",
+      "completed_at": "2026-11-05T19:45:34Z"
+    },
+    {
+      "name": "Validate locked native Runtime artifact",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 8,
+      "started_at": "2026-11-05T19:45:34Z",
+      "completed_at": "2026-11-05T19:46:13Z"
+    },
+    {
+      "name": "Verify macOS G5 lifecycle helper foundation",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 9,
+      "started_at": "2026-11-05T19:46:13Z",
+      "completed_at": "2026-11-05T19:46:16Z"
+    },
+    {
+      "name": "Build and test universal macOS App Shim",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 10,
+      "started_at": "2026-11-05T19:46:16Z",
+      "completed_at": "2026-11-05T19:46:31Z"
+    },
+    {
+      "name": "Install locked Runtime for browser suite",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 11,
+      "started_at": "2026-11-05T19:46:31Z",
+      "completed_at": "2026-11-05T19:46:31Z"
+    },
+    {
+      "name": "Read locked Runtime source",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 12,
+      "started_at": "2026-11-05T19:46:31Z",
+      "completed_at": "2026-11-05T19:46:31Z"
+    },
+    {
+      "name": "Checkout locked Floorp Runtime source",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 13,
+      "started_at": "2026-11-05T19:46:31Z",
+      "completed_at": "2026-11-05T19:46:31Z"
+    },
+    {
+      "name": "Verify locked Runtime source identity",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 14,
+      "started_at": "2026-11-05T19:46:31Z",
+      "completed_at": "2026-11-05T19:46:31Z"
+    },
+    {
+      "name": "Collect locked Firefox browser tests",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 15,
+      "started_at": "2026-11-05T19:46:31Z",
+      "completed_at": "2026-11-05T19:46:31Z"
+    },
+    {
+      "name": "Triage locked Firefox browser tests",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 16,
+      "started_at": "2026-11-05T19:46:31Z",
+      "completed_at": "2026-11-05T19:46:31Z"
+    },
+    {
+      "name": "Prepare locked Firefox browser test wrappers",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 17,
+      "started_at": "2026-11-05T19:46:31Z",
+      "completed_at": "2026-11-05T19:46:31Z"
+    },
+    {
+      "name": "Verify generated wrappers exist before browser startup",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 18,
+      "started_at": "2026-11-05T19:46:31Z",
+      "completed_at": "2026-11-05T19:46:31Z"
+    },
+    {
+      "name": "Set up virtual display",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 19,
+      "started_at": "2026-11-05T19:46:31Z",
+      "completed_at": "2026-11-05T19:46:31Z"
+    },
+    {
+      "name": "Run combined browser test suite against locked Runtime",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 20,
+      "started_at": "2026-11-05T19:46:31Z",
+      "completed_at": "2026-11-05T19:46:31Z"
+    },
+    {
+      "name": "Verify downloaded Firefox execution coverage",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 21,
+      "started_at": "2026-11-05T19:46:31Z",
+      "completed_at": "2026-11-05T19:46:31Z"
+    },
+    {
+      "name": "Run runner unit tests",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 22,
+      "started_at": "2026-11-05T19:46:31Z",
+      "completed_at": "2026-11-05T19:46:31Z"
+    },
+    {
+      "name": "Upload browser integration evidence",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 23,
+      "started_at": "2026-11-05T19:46:31Z",
+      "completed_at": "2026-11-05T19:46:31Z"
+    },
+    {
+      "name": "Post Run actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 44,
+      "started_at": "2026-11-05T19:46:31Z",
+      "completed_at": "2026-11-05T19:46:31Z"
+    },
+    {
+      "name": "Post Run denoland/setup-deno@667a34cdef165d8d2b2e98dde39547c9daac7282",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 45,
+      "started_at": "2026-11-05T19:46:31Z",
+      "completed_at": "2026-11-05T19:46:31Z"
+    },
+    {
+      "name": "Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 46,
+      "started_at": "2026-11-05T19:46:31Z",
+      "completed_at": "2026-11-05T19:46:32Z"
+    },
+    {
+      "name": "Complete job",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 47,
+      "started_at": "2026-11-05T19:46:32Z",
+      "completed_at": "2026-11-05T19:46:33Z"
+    }
+  ],
+  "check_run_url": "https://api.github.com/repos/Floorp-Projects/Floorp/check-runs/127489120992",
+  "labels": [
+    "macos-latest"
+  ],
+  "runner_id": 1000052238,
+  "runner_name": "GitHub Actions 1000052238",
+  "runner_group_id": 0,
+  "runner_group_name": "GitHub Actions"
+}

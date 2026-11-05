@@ -1,0 +1,27 @@
+{
+  "id": 127479784463,
+  "run_id": 42094068516,
+  "workflow_name": "(CI) \ud83e\uddea Browser Integration + Runner Tests",
+  "head_branch": "codex/qa-kan24-main-integration",
+  "run_url": "https://api.github.com/repos/Floorp-Projects/Floorp/actions/runs/42094068516",
+  "run_attempt": 1,
+  "node_id": "CR_kwDOGhPPJ88AAAAdrmMkDw",
+  "head_sha": "493d2974e00e6902d86585d329eea1f9040ff791",
+  "url": "https://api.github.com/repos/Floorp-Projects/Floorp/actions/jobs/127479784463",
+  "html_url": "https://github.com/Floorp-Projects/Floorp/actions/runs/42094068516/job/127479784463",
+  "status": "completed",
+  "conclusion": "cancelled",
+  "created_at": "2026-11-05T19:28:15Z",
+  "started_at": "2026-11-05T19:28:15Z",
+  "completed_at": "2026-11-05T19:43:18Z",
+  "name": "Native Runtime / macos-latest",
+  "steps": [],
+  "check_run_url": "https://api.github.com/repos/Floorp-Projects/Floorp/check-runs/127479784463",
+  "labels": [
+    "macos-latest"
+  ],
+  "runner_id": 0,
+  "runner_name": "",
+  "runner_group_id": 0,
+  "runner_group_name": ""
+}

@@ -1,0 +1,13 @@
+{
+  "archive": "omni.ja",
+  "entry": "chrome/noraneko/nora-content-settings/assets/dataManager-DZ7RVlNp.js",
+  "sha256": "59cfcef77fb0c047ec1f2f0d7b5eb36f814652a165d3962ead7056978c203ff3",
+  "uri": "chrome://noraneko-settings/content/assets/dataManager-DZ7RVlNp.js",
+  "getLocal": "S",
+  "getExport": "a",
+  "saveLocal": "B",
+  "saveExport": "c",
+  "saveInternalLocal": "T",
+  "saveAcceptsOptions": true,
+  "exportDeclaration": "export{l as C,S as a,z as b,B as c,I as d,P as g,C as s};\n"
+}

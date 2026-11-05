@@ -1,0 +1,11 @@
+{
+  "reason": "first baseline process loaded harness before explicit identity assert addition; saved live startup snapshots checked after completion",
+  "snapshots": [
+    "01-initial-startup-before-hub.json",
+    "08-baseline-restart-startup-before-hub.json"
+  ],
+  "version": "159.0.1",
+  "buildID": "20261103153232",
+  "sandbox": 6,
+  "pass": true
+}

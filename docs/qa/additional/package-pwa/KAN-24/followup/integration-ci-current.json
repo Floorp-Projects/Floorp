@@ -1,0 +1,9 @@
+{
+  "run": 42094068516,
+  "headSha": "493d2974e00e6902d86585d329eea1f9040ff791",
+  "status": "completed",
+  "conclusion": "success",
+  "runAttempt": 2,
+  "evidence": "standard-ci/report.md",
+  "note": "integration attempt1 macOS hosted-capacity failure retained separately; only that job retried"
+}

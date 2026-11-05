@@ -1,0 +1,10 @@
+{
+  "requestedAt": "2026-11-05T19:45:12.665418+00:00",
+  "originalRun": 42094068516,
+  "originalJob": 127479784463,
+  "action": "rerun cancelled macOS job only",
+  "reason": "hosted macOS arm64 runner not acquired after multiple attempts; runner_id0 and no steps",
+  "returncode": 0,
+  "stdout": "{}",
+  "stderr": ""
+}

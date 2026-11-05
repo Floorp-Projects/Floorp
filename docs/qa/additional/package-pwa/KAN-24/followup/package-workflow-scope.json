@@ -1,0 +1,17 @@
+{
+  "workflowSha256": "7686cdb5d4088fbc8aeb304fd851f091ead59063b9755b2550dbb3c6bc20874f",
+  "workflowUnmodified": true,
+  "existingAuxiliaryEmptyArchiveRelaxation": [
+    {
+      "line": 1643,
+      "text": "sed -i 's/--error-if-empty -C/-C/g' \"$PACKAGER_MK\""
+    },
+    {
+      "line": 1644,
+      "text": "echo \"[package] Relaxed empty-archive checks in packager.mk for artifact builds\""
+    }
+  ],
+  "qualification": "Complete application/package assembly through the existing unchanged workflow, not strict final-release/helper/XPT or fresh Gecko build qualification; no new bypass introduced",
+  "unsigned": true,
+  "publication": false
+}

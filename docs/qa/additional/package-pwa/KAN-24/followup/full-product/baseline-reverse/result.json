@@ -1,0 +1,83 @@
+{
+  "mode": "baseline",
+  "migrationDirection": "vertical",
+  "product": "/workspace/qa-linux-additional/KAN-24/followup/products/baseline/floorp",
+  "input": "synthetic real WebDriver ElementClick, native shadow buttons",
+  "display": "Xvfb102 X11",
+  "fullProductResourceMutation": false,
+  "originalMacOSQualified": false,
+  "completed": true,
+  "checks": {
+    "hubToNativeMatchesChosenInitialStyle": true,
+    "naturalMismatchReproduced": true,
+    "actualTabstripMatchesNative": true,
+    "mismatchSurvivesNormalRestart": true,
+    "restartSelectedURLsAllBlank": true,
+    "restartAllTabsNoHub": true
+  },
+  "allExpectedChecksPass": true,
+  "productUnchanged": true,
+  "normalQuits": [
+    {
+      "response": {
+        "cause": "shutdown",
+        "forced": false,
+        "in_app": true
+      },
+      "exitCode": 0,
+      "forced": false
+    },
+    {
+      "response": {
+        "cause": "shutdown",
+        "forced": false,
+        "in_app": true
+      },
+      "exitCode": 0,
+      "forced": false
+    }
+  ],
+  "ownedProcessesRemaining": 0,
+  "records": [
+    {
+      "name": "01-initial-startup-before-hub",
+      "file": "01-initial-startup-before-hub.json"
+    },
+    {
+      "name": "02-initial-hub",
+      "file": "02-initial-hub.json"
+    },
+    {
+      "name": "03-hub-to-native-hub",
+      "file": "03-hub-to-native-hub.json"
+    },
+    {
+      "name": "03-hub-to-native-render",
+      "file": "03-hub-to-native-render.json"
+    },
+    {
+      "name": "04-native-on-native-control",
+      "file": "04-native-on-native-control.json"
+    },
+    {
+      "name": "04-native-on-render",
+      "file": "04-native-on-render.json"
+    },
+    {
+      "name": "05-hub-after-on",
+      "file": "05-hub-after-on.json"
+    },
+    {
+      "name": "06-natural-mismatch",
+      "file": "06-natural-mismatch.json"
+    },
+    {
+      "name": "08-baseline-restart-startup-before-hub",
+      "file": "08-baseline-restart-startup-before-hub.json"
+    },
+    {
+      "name": "09-baseline-restarted-hub",
+      "file": "09-baseline-restarted-hub.json"
+    }
+  ]
+}

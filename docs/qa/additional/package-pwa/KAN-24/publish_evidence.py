@@ -4,11 +4,11 @@ import hashlib,json,os,re,shutil
 from pathlib import Path
 src=Path(__file__).resolve().parent
 dst=Path('/workspace/qa-linux-package-pwa/docs/qa/additional/package-pwa/KAN-24')
-skip={'github-issue.json','github-comments.json','pr2950.json','pr2950-comments.json','pr2950-reviews.json','pr2950-inline.json','pr-search.json','qa-commit.log','qa-push.log'}
+skip={'github-issue.json','github-comments.json','pr2950.json','pr2950-comments.json','pr2950-reviews.json','pr2950-inline.json','pr-search.json','qa-commit.log','qa-push.log','integration-macos-check.json','attempt1-integration-macos-check.json'}
 allowed={'.json','.jsonl','.md','.py','.log','.txt','.png','.js','.cjs','.mjs','.mts','.ts','.patch','.sh'}
 files=[]
 for directory,dirs,names in os.walk(src):
- dirs[:]=sorted(d for d in dirs if d not in {'runtime','__pycache__','node_modules','products'} and not d.startswith(('home','profile','candidate-product')) and not d.endswith(('-profile','-home')))
+ dirs[:]=sorted(d for d in dirs if d not in {'runtime','migration-seed','__pycache__','node_modules','products'} and not d.startswith(('home','profile','candidate-product')) and not d.endswith(('-profile','-home')))
  for name in sorted(names):
   p=Path(directory)/name
   if p.is_symlink() or name in skip or p.suffix not in allowed or p.stat().st_size>1500000:continue

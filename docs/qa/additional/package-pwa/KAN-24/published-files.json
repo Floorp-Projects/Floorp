@@ -29,7 +29,7 @@
   },
   {
     "path": "matrix.json",
-    "bytes": 8417
+    "bytes": 10470
   },
   {
     "path": "pr2950-ci.json",
@@ -41,11 +41,11 @@
   },
   {
     "path": "publish_evidence.py",
-    "bytes": 2021
+    "bytes": 2109
   },
   {
     "path": "report.md",
-    "bytes": 6906
+    "bytes": 7301
   },
   {
     "path": "restart_followup.py",
@@ -650,6 +650,922 @@
   {
     "path": "existing-ci/evidence/logs/test/latest.log",
     "bytes": 106112
+  },
+  {
+    "path": "followup/README.md",
+    "bytes": 1945
+  },
+  {
+    "path": "followup/baseline-package-dispatch.json",
+    "bytes": 940
+  },
+  {
+    "path": "followup/canonical2950.patch",
+    "bytes": 26561
+  },
+  {
+    "path": "followup/dependency-report.md",
+    "bytes": 1464
+  },
+  {
+    "path": "followup/dependent-ci-current.json",
+    "bytes": 224
+  },
+  {
+    "path": "followup/fetch_package.py",
+    "bytes": 2190
+  },
+  {
+    "path": "followup/final-source-refs.json",
+    "bytes": 474
+  },
+  {
+    "path": "followup/full-product-intake-summary.json",
+    "bytes": 1042
+  },
+  {
+    "path": "followup/intake_product.py",
+    "bytes": 3751
+  },
+  {
+    "path": "followup/integration-ci-current.json",
+    "bytes": 299
+  },
+  {
+    "path": "followup/integration-equivalence.json",
+    "bytes": 1351
+  },
+  {
+    "path": "followup/integration-package-dispatch.json",
+    "bytes": 931
+  },
+  {
+    "path": "followup/jira-update.json",
+    "bytes": 198
+  },
+  {
+    "path": "followup/package-current.json",
+    "bytes": 179
+  },
+  {
+    "path": "followup/package-workflow-scope.json",
+    "bytes": 648
+  },
+  {
+    "path": "followup/report.md",
+    "bytes": 5863
+  },
+  {
+    "path": "followup/source-subject.json",
+    "bytes": 901
+  },
+  {
+    "path": "followup/full-product/cleanup.json",
+    "bytes": 183
+  },
+  {
+    "path": "followup/full-product/matrix.json",
+    "bytes": 16232
+  },
+  {
+    "path": "followup/full-product/parent-verification.json",
+    "bytes": 2967
+  },
+  {
+    "path": "followup/full-product/report.md",
+    "bytes": 7733
+  },
+  {
+    "path": "followup/full-product/api-baseline/01-shipped-api-startup-before-hub.json",
+    "bytes": 2918
+  },
+  {
+    "path": "followup/full-product/api-baseline/01-shipped-api-startup-before-hub.png",
+    "bytes": 25110
+  },
+  {
+    "path": "followup/full-product/api-baseline/01-shipped-api.log",
+    "bytes": 16311
+  },
+  {
+    "path": "followup/full-product/api-baseline/02-actual-hub-origin.json",
+    "bytes": 88
+  },
+  {
+    "path": "followup/full-product/api-baseline/02-actual-hub-origin.png",
+    "bytes": 87458
+  },
+  {
+    "path": "followup/full-product/api-baseline/03-normal-quit.json",
+    "bytes": 124
+  },
+  {
+    "path": "followup/full-product/api-baseline/product-hashes-after.json",
+    "bytes": 4210
+  },
+  {
+    "path": "followup/full-product/api-baseline/product-hashes-before.json",
+    "bytes": 4210
+  },
+  {
+    "path": "followup/full-product/api-baseline/product-ini-metadata.json",
+    "bytes": 767
+  },
+  {
+    "path": "followup/full-product/api-baseline/result.json",
+    "bytes": 966
+  },
+  {
+    "path": "followup/full-product/api-baseline/shipped-api-cases.json",
+    "bytes": 2449
+  },
+  {
+    "path": "followup/full-product/api-baseline/shipped-module-discovery.json",
+    "bytes": 491
+  },
+  {
+    "path": "followup/full-product/api-baseline/xvfb.log",
+    "bytes": 64
+  },
+  {
+    "path": "followup/full-product/api-candidate/01-shipped-api-startup-before-hub.json",
+    "bytes": 2922
+  },
+  {
+    "path": "followup/full-product/api-candidate/01-shipped-api-startup-before-hub.png",
+    "bytes": 25110
+  },
+  {
+    "path": "followup/full-product/api-candidate/01-shipped-api.log",
+    "bytes": 16231
+  },
+  {
+    "path": "followup/full-product/api-candidate/02-actual-hub-origin.json",
+    "bytes": 88
+  },
+  {
+    "path": "followup/full-product/api-candidate/02-actual-hub-origin.png",
+    "bytes": 87458
+  },
+  {
+    "path": "followup/full-product/api-candidate/03-normal-quit.json",
+    "bytes": 124
+  },
+  {
+    "path": "followup/full-product/api-candidate/product-hashes-after.json",
+    "bytes": 4210
+  },
+  {
+    "path": "followup/full-product/api-candidate/product-hashes-before.json",
+    "bytes": 4210
+  },
+  {
+    "path": "followup/full-product/api-candidate/product-ini-metadata.json",
+    "bytes": 767
+  },
+  {
+    "path": "followup/full-product/api-candidate/result.json",
+    "bytes": 966
+  },
+  {
+    "path": "followup/full-product/api-candidate/shipped-api-cases.json",
+    "bytes": 2447
+  },
+  {
+    "path": "followup/full-product/api-candidate/shipped-module-discovery.json",
+    "bytes": 491
+  },
+  {
+    "path": "followup/full-product/api-candidate/xvfb.log",
+    "bytes": 64
+  },
+  {
+    "path": "followup/full-product/baseline/01-initial-startup-before-hub.json",
+    "bytes": 2914
+  },
+  {
+    "path": "followup/full-product/baseline/01-initial-startup-before-hub.png",
+    "bytes": 25110
+  },
+  {
+    "path": "followup/full-product/baseline/01-initial.log",
+    "bytes": 19681
+  },
+  {
+    "path": "followup/full-product/baseline/02-initial-hub.json",
+    "bytes": 88
+  },
+  {
+    "path": "followup/full-product/baseline/02-initial-hub.png",
+    "bytes": 82762
+  },
+  {
+    "path": "followup/full-product/baseline/03-hub-to-native-hub.json",
+    "bytes": 86
+  },
+  {
+    "path": "followup/full-product/baseline/03-hub-to-native-hub.png",
+    "bytes": 58832
+  },
+  {
+    "path": "followup/full-product/baseline/03-hub-to-native-render.json",
+    "bytes": 2942
+  },
+  {
+    "path": "followup/full-product/baseline/04-native-off-native-control.json",
+    "bytes": 45
+  },
+  {
+    "path": "followup/full-product/baseline/04-native-off-native-control.png",
+    "bytes": 112133
+  },
+  {
+    "path": "followup/full-product/baseline/04-native-off-render.json",
+    "bytes": 2950
+  },
+  {
+    "path": "followup/full-product/baseline/05-hub-after-off.json",
+    "bytes": 86
+  },
+  {
+    "path": "followup/full-product/baseline/05-hub-after-off.png",
+    "bytes": 59057
+  },
+  {
+    "path": "followup/full-product/baseline/06-natural-mismatch.json",
+    "bytes": 2942
+  },
+  {
+    "path": "followup/full-product/baseline/07-normal-quit.json",
+    "bytes": 124
+  },
+  {
+    "path": "followup/full-product/baseline/08-baseline-restart-startup-before-hub.json",
+    "bytes": 2935
+  },
+  {
+    "path": "followup/full-product/baseline/08-baseline-restart-startup-before-hub.png",
+    "bytes": 31283
+  },
+  {
+    "path": "followup/full-product/baseline/08-baseline-restart.log",
+    "bytes": 16666
+  },
+  {
+    "path": "followup/full-product/baseline/09-baseline-restarted-hub.json",
+    "bytes": 86
+  },
+  {
+    "path": "followup/full-product/baseline/09-baseline-restarted-hub.png",
+    "bytes": 59057
+  },
+  {
+    "path": "followup/full-product/baseline/10-normal-quit.json",
+    "bytes": 124
+  },
+  {
+    "path": "followup/full-product/baseline/identity-postvalidation.json",
+    "bytes": 353
+  },
+  {
+    "path": "followup/full-product/baseline/product-hashes-after.json",
+    "bytes": 4210
+  },
+  {
+    "path": "followup/full-product/baseline/product-hashes-before.json",
+    "bytes": 4210
+  },
+  {
+    "path": "followup/full-product/baseline/product-ini-metadata.json",
+    "bytes": 767
+  },
+  {
+    "path": "followup/full-product/baseline/result.json",
+    "bytes": 2067
+  },
+  {
+    "path": "followup/full-product/baseline/xvfb.log",
+    "bytes": 64
+  },
+  {
+    "path": "followup/full-product/baseline-attempt1-navigation/01-initial-startup-before-hub.json",
+    "bytes": 2914
+  },
+  {
+    "path": "followup/full-product/baseline-attempt1-navigation/01-initial-startup-before-hub.png",
+    "bytes": 25110
+  },
+  {
+    "path": "followup/full-product/baseline-attempt1-navigation/01-initial.log",
+    "bytes": 15137
+  },
+  {
+    "path": "followup/full-product/baseline-attempt1-navigation/failure-normal-quit.json",
+    "bytes": 124
+  },
+  {
+    "path": "followup/full-product/baseline-attempt1-navigation/product-hashes-after.json",
+    "bytes": 4210
+  },
+  {
+    "path": "followup/full-product/baseline-attempt1-navigation/product-hashes-before.json",
+    "bytes": 4210
+  },
+  {
+    "path": "followup/full-product/baseline-attempt1-navigation/product-ini-metadata.json",
+    "bytes": 767
+  },
+  {
+    "path": "followup/full-product/baseline-attempt1-navigation/result.json",
+    "bytes": 2147
+  },
+  {
+    "path": "followup/full-product/baseline-attempt1-navigation/xvfb.log",
+    "bytes": 64
+  },
+  {
+    "path": "followup/full-product/baseline-reverse/01-initial-startup-before-hub.json",
+    "bytes": 2922
+  },
+  {
+    "path": "followup/full-product/baseline-reverse/01-initial-startup-before-hub.png",
+    "bytes": 25110
+  },
+  {
+    "path": "followup/full-product/baseline-reverse/01-initial.log",
+    "bytes": 19231
+  },
+  {
+    "path": "followup/full-product/baseline-reverse/02-initial-hub.json",
+    "bytes": 88
+  },
+  {
+    "path": "followup/full-product/baseline-reverse/02-initial-hub.png",
+    "bytes": 87458
+  },
+  {
+    "path": "followup/full-product/baseline-reverse/03-hub-to-native-hub.json",
+    "bytes": 88
+  },
+  {
+    "path": "followup/full-product/baseline-reverse/03-hub-to-native-hub.png",
+    "bytes": 84169
+  },
+  {
+    "path": "followup/full-product/baseline-reverse/03-hub-to-native-render.json",
+    "bytes": 2952
+  },
+  {
+    "path": "followup/full-product/baseline-reverse/04-native-on-native-control.json",
+    "bytes": 45
+  },
+  {
+    "path": "followup/full-product/baseline-reverse/04-native-on-native-control.png",
+    "bytes": 83820
+  },
+  {
+    "path": "followup/full-product/baseline-reverse/04-native-on-render.json",
+    "bytes": 2960
+  },
+  {
+    "path": "followup/full-product/baseline-reverse/05-hub-after-on.json",
+    "bytes": 88
+  },
+  {
+    "path": "followup/full-product/baseline-reverse/05-hub-after-on.png",
+    "bytes": 59290
+  },
+  {
+    "path": "followup/full-product/baseline-reverse/06-natural-mismatch.json",
+    "bytes": 2952
+  },
+  {
+    "path": "followup/full-product/baseline-reverse/07-normal-quit.json",
+    "bytes": 124
+  },
+  {
+    "path": "followup/full-product/baseline-reverse/08-baseline-restart-startup-before-hub.json",
+    "bytes": 2945
+  },
+  {
+    "path": "followup/full-product/baseline-reverse/08-baseline-restart-startup-before-hub.png",
+    "bytes": 52832
+  },
+  {
+    "path": "followup/full-product/baseline-reverse/08-baseline-restart.log",
+    "bytes": 16773
+  },
+  {
+    "path": "followup/full-product/baseline-reverse/09-baseline-restarted-hub.json",
+    "bytes": 88
+  },
+  {
+    "path": "followup/full-product/baseline-reverse/09-baseline-restarted-hub.png",
+    "bytes": 59290
+  },
+  {
+    "path": "followup/full-product/baseline-reverse/10-normal-quit.json",
+    "bytes": 124
+  },
+  {
+    "path": "followup/full-product/baseline-reverse/product-hashes-after.json",
+    "bytes": 4210
+  },
+  {
+    "path": "followup/full-product/baseline-reverse/product-hashes-before.json",
+    "bytes": 4210
+  },
+  {
+    "path": "followup/full-product/baseline-reverse/product-ini-metadata.json",
+    "bytes": 767
+  },
+  {
+    "path": "followup/full-product/baseline-reverse/result.json",
+    "bytes": 2059
+  },
+  {
+    "path": "followup/full-product/baseline-reverse/xvfb.log",
+    "bytes": 64
+  },
+  {
+    "path": "followup/full-product/candidate/01-candidate-startup-before-hub.json",
+    "bytes": 2941
+  },
+  {
+    "path": "followup/full-product/candidate/01-candidate-startup-before-hub.png",
+    "bytes": 33713
+  },
+  {
+    "path": "followup/full-product/candidate/01-candidate.log",
+    "bytes": 37429
+  },
+  {
+    "path": "followup/full-product/candidate/02-migration-hub.json",
+    "bytes": 88
+  },
+  {
+    "path": "followup/full-product/candidate/02-migration-hub.png",
+    "bytes": 59057
+  },
+  {
+    "path": "followup/full-product/candidate/03-hub-to-native-hub.json",
+    "bytes": 86
+  },
+  {
+    "path": "followup/full-product/candidate/03-hub-to-native-hub.png",
+    "bytes": 51915
+  },
+  {
+    "path": "followup/full-product/candidate/03-hub-to-native-render.json",
+    "bytes": 2969
+  },
+  {
+    "path": "followup/full-product/candidate/04-native-off-native-control.json",
+    "bytes": 45
+  },
+  {
+    "path": "followup/full-product/candidate/04-native-off-native-control.png",
+    "bytes": 112154
+  },
+  {
+    "path": "followup/full-product/candidate/04-native-off-render.json",
+    "bytes": 2979
+  },
+  {
+    "path": "followup/full-product/candidate/05-hub-after-off.json",
+    "bytes": 88
+  },
+  {
+    "path": "followup/full-product/candidate/05-hub-after-off.png",
+    "bytes": 59057
+  },
+  {
+    "path": "followup/full-product/candidate/06-native-on-native-control.json",
+    "bytes": 45
+  },
+  {
+    "path": "followup/full-product/candidate/06-native-on-native-control.png",
+    "bytes": 83819
+  },
+  {
+    "path": "followup/full-product/candidate/06-native-on-render.json",
+    "bytes": 2977
+  },
+  {
+    "path": "followup/full-product/candidate/07-hub-after-on.json",
+    "bytes": 86
+  },
+  {
+    "path": "followup/full-product/candidate/07-hub-after-on.png",
+    "bytes": 49834
+  },
+  {
+    "path": "followup/full-product/candidate/08-new-window-ready.json",
+    "bytes": 3246
+  },
+  {
+    "path": "followup/full-product/candidate/08-new-window-ready.png",
+    "bytes": 97536
+  },
+  {
+    "path": "followup/full-product/candidate/09-original-window-hub.json",
+    "bytes": 86
+  },
+  {
+    "path": "followup/full-product/candidate/09-original-window-hub.png",
+    "bytes": 49834
+  },
+  {
+    "path": "followup/full-product/candidate/10-multirow-hub.json",
+    "bytes": 86
+  },
+  {
+    "path": "followup/full-product/candidate/10-multirow-hub.png",
+    "bytes": 57129
+  },
+  {
+    "path": "followup/full-product/candidate/10-multirow-render.json",
+    "bytes": 2969
+  },
+  {
+    "path": "followup/full-product/candidate/11-workspace-first.json",
+    "bytes": 2991
+  },
+  {
+    "path": "followup/full-product/candidate/12-workspace-second.json",
+    "bytes": 2966
+  },
+  {
+    "path": "followup/full-product/candidate/13-workspace-return.json",
+    "bytes": 2991
+  },
+  {
+    "path": "followup/full-product/candidate/14-multirow-after-workspace.json",
+    "bytes": 86
+  },
+  {
+    "path": "followup/full-product/candidate/14-multirow-after-workspace.png",
+    "bytes": 57129
+  },
+  {
+    "path": "followup/full-product/candidate/15-normal-quit.json",
+    "bytes": 124
+  },
+  {
+    "path": "followup/full-product/candidate/16-normal-restart-startup-before-hub.json",
+    "bytes": 2984
+  },
+  {
+    "path": "followup/full-product/candidate/16-normal-restart-startup-before-hub.png",
+    "bytes": 34821
+  },
+  {
+    "path": "followup/full-product/candidate/16-normal-restart.log",
+    "bytes": 16773
+  },
+  {
+    "path": "followup/full-product/candidate/17-multirow-after-restart.json",
+    "bytes": 86
+  },
+  {
+    "path": "followup/full-product/candidate/17-multirow-after-restart.png",
+    "bytes": 59057
+  },
+  {
+    "path": "followup/full-product/candidate/18-final-normal-quit.json",
+    "bytes": 124
+  },
+  {
+    "path": "followup/full-product/candidate/product-hashes-after.json",
+    "bytes": 4210
+  },
+  {
+    "path": "followup/full-product/candidate/product-hashes-before.json",
+    "bytes": 4210
+  },
+  {
+    "path": "followup/full-product/candidate/product-ini-metadata.json",
+    "bytes": 767
+  },
+  {
+    "path": "followup/full-product/candidate/result.json",
+    "bytes": 3154
+  },
+  {
+    "path": "followup/full-product/candidate/xvfb.log",
+    "bytes": 64
+  },
+  {
+    "path": "followup/full-product/candidate-reverse/01-candidate-startup-before-hub.json",
+    "bytes": 2947
+  },
+  {
+    "path": "followup/full-product/candidate-reverse/01-candidate-startup-before-hub.png",
+    "bytes": 50523
+  },
+  {
+    "path": "followup/full-product/candidate-reverse/01-candidate.log",
+    "bytes": 37269
+  },
+  {
+    "path": "followup/full-product/candidate-reverse/02-migration-hub.json",
+    "bytes": 86
+  },
+  {
+    "path": "followup/full-product/candidate-reverse/02-migration-hub.png",
+    "bytes": 59288
+  },
+  {
+    "path": "followup/full-product/candidate-reverse/03-hub-to-native-hub.json",
+    "bytes": 86
+  },
+  {
+    "path": "followup/full-product/candidate-reverse/03-hub-to-native-hub.png",
+    "bytes": 54087
+  },
+  {
+    "path": "followup/full-product/candidate-reverse/03-hub-to-native-render.json",
+    "bytes": 2977
+  },
+  {
+    "path": "followup/full-product/candidate-reverse/04-native-off-native-control.json",
+    "bytes": 45
+  },
+  {
+    "path": "followup/full-product/candidate-reverse/04-native-off-native-control.png",
+    "bytes": 112130
+  },
+  {
+    "path": "followup/full-product/candidate-reverse/04-native-off-render.json",
+    "bytes": 2987
+  },
+  {
+    "path": "followup/full-product/candidate-reverse/05-hub-after-off.json",
+    "bytes": 88
+  },
+  {
+    "path": "followup/full-product/candidate-reverse/05-hub-after-off.png",
+    "bytes": 56213
+  },
+  {
+    "path": "followup/full-product/candidate-reverse/06-native-on-native-control.json",
+    "bytes": 45
+  },
+  {
+    "path": "followup/full-product/candidate-reverse/06-native-on-native-control.png",
+    "bytes": 83820
+  },
+  {
+    "path": "followup/full-product/candidate-reverse/06-native-on-render.json",
+    "bytes": 2985
+  },
+  {
+    "path": "followup/full-product/candidate-reverse/07-hub-after-on.json",
+    "bytes": 86
+  },
+  {
+    "path": "followup/full-product/candidate-reverse/07-hub-after-on.png",
+    "bytes": 59288
+  },
+  {
+    "path": "followup/full-product/candidate-reverse/08-new-window-ready.json",
+    "bytes": 3254
+  },
+  {
+    "path": "followup/full-product/candidate-reverse/08-new-window-ready.png",
+    "bytes": 105705
+  },
+  {
+    "path": "followup/full-product/candidate-reverse/09-original-window-hub.json",
+    "bytes": 86
+  },
+  {
+    "path": "followup/full-product/candidate-reverse/09-original-window-hub.png",
+    "bytes": 59288
+  },
+  {
+    "path": "followup/full-product/candidate-reverse/10-multirow-hub.json",
+    "bytes": 86
+  },
+  {
+    "path": "followup/full-product/candidate-reverse/10-multirow-hub.png",
+    "bytes": 55425
+  },
+  {
+    "path": "followup/full-product/candidate-reverse/10-multirow-render.json",
+    "bytes": 2977
+  },
+  {
+    "path": "followup/full-product/candidate-reverse/11-workspace-first.json",
+    "bytes": 2999
+  },
+  {
+    "path": "followup/full-product/candidate-reverse/12-workspace-second.json",
+    "bytes": 2974
+  },
+  {
+    "path": "followup/full-product/candidate-reverse/13-workspace-return.json",
+    "bytes": 2999
+  },
+  {
+    "path": "followup/full-product/candidate-reverse/14-multirow-after-workspace.json",
+    "bytes": 86
+  },
+  {
+    "path": "followup/full-product/candidate-reverse/14-multirow-after-workspace.png",
+    "bytes": 57854
+  },
+  {
+    "path": "followup/full-product/candidate-reverse/15-normal-quit.json",
+    "bytes": 124
+  },
+  {
+    "path": "followup/full-product/candidate-reverse/16-normal-restart-startup-before-hub.json",
+    "bytes": 2992
+  },
+  {
+    "path": "followup/full-product/candidate-reverse/16-normal-restart-startup-before-hub.png",
+    "bytes": 34821
+  },
+  {
+    "path": "followup/full-product/candidate-reverse/16-normal-restart.log",
+    "bytes": 16773
+  },
+  {
+    "path": "followup/full-product/candidate-reverse/17-multirow-after-restart.json",
+    "bytes": 86
+  },
+  {
+    "path": "followup/full-product/candidate-reverse/17-multirow-after-restart.png",
+    "bytes": 57854
+  },
+  {
+    "path": "followup/full-product/candidate-reverse/18-final-normal-quit.json",
+    "bytes": 124
+  },
+  {
+    "path": "followup/full-product/candidate-reverse/product-hashes-after.json",
+    "bytes": 4210
+  },
+  {
+    "path": "followup/full-product/candidate-reverse/product-hashes-before.json",
+    "bytes": 4210
+  },
+  {
+    "path": "followup/full-product/candidate-reverse/product-ini-metadata.json",
+    "bytes": 767
+  },
+  {
+    "path": "followup/full-product/candidate-reverse/result.json",
+    "bytes": 3152
+  },
+  {
+    "path": "followup/full-product/candidate-reverse/xvfb.log",
+    "bytes": 64
+  },
+  {
+    "path": "followup/intake/baseline/api-metadata.json",
+    "bytes": 985
+  },
+  {
+    "path": "followup/intake/baseline/download-cache-cleanup.json",
+    "bytes": 335
+  },
+  {
+    "path": "followup/intake/baseline/product-intake.json",
+    "bytes": 2369
+  },
+  {
+    "path": "followup/intake/baseline/product-inventory-before.json",
+    "bytes": 6566
+  },
+  {
+    "path": "followup/intake/integration/api-metadata.json",
+    "bytes": 976
+  },
+  {
+    "path": "followup/intake/integration/download-cache-cleanup.json",
+    "bytes": 335
+  },
+  {
+    "path": "followup/intake/integration/product-intake.json",
+    "bytes": 2363
+  },
+  {
+    "path": "followup/intake/integration/product-inventory-before.json",
+    "bytes": 6566
+  },
+  {
+    "path": "followup/standard-ci/42093984715-artifact-verification.json",
+    "bytes": 9533
+  },
+  {
+    "path": "followup/standard-ci/42093984715-artifacts.json",
+    "bytes": 922
+  },
+  {
+    "path": "followup/standard-ci/42093984715-metadata.json",
+    "bytes": 24306
+  },
+  {
+    "path": "followup/standard-ci/42094068516-artifact-verification.json",
+    "bytes": 9531
+  },
+  {
+    "path": "followup/standard-ci/42094068516-artifacts.json",
+    "bytes": 927
+  },
+  {
+    "path": "followup/standard-ci/42094068516-metadata.json",
+    "bytes": 24306
+  },
+  {
+    "path": "followup/standard-ci/attempt1-42094068516-metadata.json",
+    "bytes": 19599
+  },
+  {
+    "path": "followup/standard-ci/attempt1-integration-macos-annotations.json",
+    "bytes": 1696
+  },
+  {
+    "path": "followup/standard-ci/attempt1-integration-macos-check-public.json",
+    "bytes": 523
+  },
+  {
+    "path": "followup/standard-ci/attempt1-integration-macos-job.json",
+    "bytes": 1041
+  },
+  {
+    "path": "followup/standard-ci/attempt2-42094068516-metadata.json",
+    "bytes": 24306
+  },
+  {
+    "path": "followup/standard-ci/attempt2-integration-macos-job.json",
+    "bytes": 7574
+  },
+  {
+    "path": "followup/standard-ci/collect.py",
+    "bytes": 3206
+  },
+  {
+    "path": "followup/standard-ci/integration-macos-annotations.json",
+    "bytes": 1696
+  },
+  {
+    "path": "followup/standard-ci/integration-macos-check-public.json",
+    "bytes": 523
+  },
+  {
+    "path": "followup/standard-ci/integration-macos-job.json",
+    "bytes": 1041
+  },
+  {
+    "path": "followup/standard-ci/macos-retry-request.json",
+    "bytes": 319
+  },
+  {
+    "path": "followup/standard-ci/report.md",
+    "bytes": 2517
+  },
+  {
+    "path": "followup/standard-ci/submitted-test-counts.json",
+    "bytes": 1015
+  },
+  {
+    "path": "followup/standard-ci/target-test-execution.json",
+    "bytes": 13641
+  },
+  {
+    "path": "followup/standard-ci/42093984715-evidence/_dist__ci-combined-browser-test.log",
+    "bytes": 83063
+  },
+  {
+    "path": "followup/standard-ci/42093984715-evidence/logs__test__latest.log",
+    "bytes": 106507
+  },
+  {
+    "path": "followup/standard-ci/42094068516-evidence/_dist__ci-combined-browser-test.log",
+    "bytes": 88384
+  },
+  {
+    "path": "followup/standard-ci/42094068516-evidence/logs__test__latest.log",
+    "bytes": 113286
+  },
+  {
+    "path": "followup/ui/README.md",
+    "bytes": 3913
+  },
+  {
+    "path": "followup/ui/full_ui.py",
+    "bytes": 19170
+  },
+  {
+    "path": "followup/ui/shipped_api.py",
+    "bytes": 7603
+  },
+  {
+    "path": "followup/ui/summarize.py",
+    "bytes": 6380
   },
   {
     "path": "product-baseline/01-photon.json",

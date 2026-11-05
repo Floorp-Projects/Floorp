@@ -1,0 +1,9 @@
+{
+  "run": 42093984715,
+  "headSha": "d058d7001b822f0ef2413b1307c98a463dfdcdb9",
+  "status": "completed",
+  "conclusion": "success",
+  "runAttempt": 1,
+  "evidence": "standard-ci/report.md",
+  "note": "all jobs succeeded"
+}

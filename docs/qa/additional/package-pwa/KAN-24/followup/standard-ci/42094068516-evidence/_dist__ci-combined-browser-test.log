@@ -1,0 +1,923 @@
+[0m[32mTask[0m [0m[36mtest[0m deno run -A tools/src/colocated_test_runner.ts '--layer' 'all' '--timeout-ms' '1800000' '--startup-timeout-ms' '180000' '--no-autostart'
+[INFO] Running browser integration tests (layer=all)
+[INFO] Configured timeouts: collection=1800000ms, startup=180000ms, overall-cap=1800000ms
+
+[INFO] === Discovered Test Targets ===
+[INFO] Found 284 browser test file(s)
+[INFO]   - browser-features/chrome/common/addons/test/addonsObserver.test.ts
+[INFO]   - browser-features/chrome/common/addons/test/lifecycle.test.ts
+[INFO]   - browser-features/chrome/common/addons/test/notificationCustomizer.test.ts
+[INFO]   - browser-features/chrome/common/browser-share-mode/test/browserShareMode.test.ts
+[INFO]   - browser-features/chrome/common/browser-tab-color/test/browserTabColor.test.ts
+[INFO]   - browser-features/chrome/common/chrome-css/test/chromeCSS.test.ts
+[INFO]   - browser-features/chrome/common/command-palette/multiInputCommand/switcher/test/bookmark-switcher.test.ts
+[INFO]   - browser-features/chrome/common/command-palette/multiInputCommand/switcher/test/closed-tab-switcher.test.ts
+[INFO]   - browser-features/chrome/common/command-palette/multiInputCommand/switcher/test/closed-window-switcher.test.ts
+[INFO]   - browser-features/chrome/common/command-palette/multiInputCommand/switcher/test/tab-switcher.test.ts
+[INFO]   - browser-features/chrome/common/command-palette/test/category-priority.test.ts
+[INFO]   - browser-features/chrome/common/command-palette/test/commandPalette.test.ts
+[INFO]   - browser-features/chrome/common/command-palette/test/commandPaletteController.test.ts
+[INFO]   - browser-features/chrome/common/command-palette/test/config.test.ts
+[INFO]   - browser-features/chrome/common/command-palette/test/historySwitcher.test.ts
+[INFO]   - browser-features/chrome/common/command-palette/test/nativeTabTargets.test.ts
+[INFO]   - browser-features/chrome/common/command-palette/test/providers.test.ts
+[INFO]   - browser-features/chrome/common/command-palette/test/service.test.ts
+[INFO]   - browser-features/chrome/common/command-palette/test/targetContext.test.ts
+[INFO]   - browser-features/chrome/common/context-menu/test/contextMenuComponent.test.ts
+[INFO]   - browser-features/chrome/common/context-menu/test/contextMenuFlasco.test.ts
+[INFO]   - browser-features/chrome/common/context-menu/test/contextMenuFlascoClient.test.ts
+[INFO]   - browser-features/chrome/common/context-menu/test/contextMenuRuntime.test.ts
+[INFO]   - browser-features/chrome/common/context-menu/test/contextMenuStyle.test.ts
+[INFO]   - browser-features/chrome/common/context-menu/test/nativeMenuLayout.test.ts
+[INFO]   - browser-features/chrome/common/designs/test/browser-design-element.test.ts
+[INFO]   - browser-features/chrome/common/designs/test/chrome-extras.test.ts
+[INFO]   - browser-features/chrome/common/designs/test/color-consistency.test.ts
+[INFO]   - browser-features/chrome/common/designs/test/config-migration.test.ts
+[INFO]   - browser-features/chrome/common/designs/test/configs.test.ts
+[INFO]   - browser-features/chrome/common/designs/test/content-style-lifecycle.test.ts
+[INFO]   - browser-features/chrome/common/designs/test/css.test.ts
+[INFO]   - browser-features/chrome/common/designs/test/fluerial-groups.test.ts
+[INFO]   - browser-features/chrome/common/designs/test/lepton-compat.test.ts
+[INFO]   - browser-features/chrome/common/designs/test/menu-icons.test.ts
+[INFO]   - browser-features/chrome/common/designs/test/oldConfigMigrator.test.ts
+[INFO]   - browser-features/chrome/common/designs/test/sidebar-header.test.ts
+[INFO]   - browser-features/chrome/common/designs/test/tab-color-like-toolbar.test.ts
+[INFO]   - browser-features/chrome/common/designs/test/tabbar-as-titlebar.test.ts
+[INFO]   - browser-features/chrome/common/designs/test/tabbar-style-sync.test.ts
+[INFO]   - browser-features/chrome/common/designs/test/type.test.ts
+[INFO]   - browser-features/chrome/common/designs/test/userjsParser.test.ts
+[INFO]   - browser-features/chrome/common/designs/test/vertical-tabs-observer.test.ts
+[INFO]   - browser-features/chrome/common/external-browser/test/externalBrowserService.test.ts
+[INFO]   - browser-features/chrome/common/external-browser/test/linkContextMenu.test.ts
+[INFO]   - browser-features/chrome/common/external-browser/test/tabContextMenu.test.ts
+[INFO]   - browser-features/chrome/common/firefox-sidebar/test/sidebarOverlay.test.ts
+[INFO]   - browser-features/chrome/common/flex-order/test/flexOrder.test.ts
+[INFO]   - browser-features/chrome/common/hub-panel-menu/test/HubPanelMenu.test.ts
+[INFO]   - browser-features/chrome/common/idle-memory-reclaim/test/constructorLifecycle.test.ts
+[INFO]   - browser-features/chrome/common/idle-memory-reclaim/test/idleMemoryReclaim.test.ts
+[INFO]   - browser-features/chrome/common/idle-memory-reclaim/test/reclaimLifecycle.test.ts
+[INFO]   - browser-features/chrome/common/keyboard-shortcut/test/keyboardShortcutActionCatalog.test.ts
+[INFO]   - browser-features/chrome/common/keyboard-shortcut/test/keyboardShortcutConfig.test.ts
+[INFO]   - browser-features/chrome/common/keyboard-shortcut/test/keyboardShortcutController.test.ts
+[INFO]   - browser-features/chrome/common/keyboard-shortcut/test/keyboardShortcutMigration.test.ts
+[INFO]   - browser-features/chrome/common/keyboard-shortcut/test/keyboardShortcutOption.test.ts
+[INFO]   - browser-features/chrome/common/keyboard-shortcut/test/keyboardShortcutSchemaV2.test.ts
+[INFO]   - browser-features/chrome/common/keyboard-shortcut/test/keyboardShortcutTypingGuard.test.ts
+[INFO]   - browser-features/chrome/common/modal-parent/test/modalData.test.ts
+[INFO]   - browser-features/chrome/common/modal-parent/test/modalParent.test.ts
+[INFO]   - browser-features/chrome/common/modal-parent/test/modalRequestLifecycle.test.ts
+[INFO]   - browser-features/chrome/common/mouse-gesture/test/contextMenuPolicy.test.ts
+[INFO]   - browser-features/chrome/common/mouse-gesture/test/dollarRecognizer.test.ts
+[INFO]   - browser-features/chrome/common/mouse-gesture/test/mouseGestureActions.test.ts
+[INFO]   - browser-features/chrome/common/mouse-gesture/test/mouseGestureConfig.test.ts
+[INFO]   - browser-features/chrome/common/mouse-gesture/test/mouseGestureController.test.ts
+[INFO]   - browser-features/chrome/common/mouse-gesture/test/mouseGestureRecognizer.test.ts
+[INFO]   - browser-features/chrome/common/mouse-gesture/test/mouseGestureService.test.ts
+[INFO]   - browser-features/chrome/common/mouse-gesture/test/zenModeAction.test.ts
+[INFO]   - browser-features/chrome/common/panel-sidebar/test/modalCallerRequestLifecycle.test.ts
+[INFO]   - browser-features/chrome/common/panel-sidebar/test/panelSidebarFavicon.test.ts
+[INFO]   - browser-features/chrome/common/panel-sidebar/test/panelSidebarLayout.test.ts
+[INFO]   - browser-features/chrome/common/panel-sidebar/test/panelSidebarMigration.test.ts
+[INFO]   - browser-features/chrome/common/panel-sidebar/test/panelSidebarOverlay.test.ts
+[INFO]   - browser-features/chrome/common/panel-sidebar/test/panelSidebarStaticNames.test.ts
+[INFO]   - browser-features/chrome/common/panel-sidebar/test/panelSidebarStaticPanels.test.ts
+[INFO]   - browser-features/chrome/common/panel-sidebar/test/userContextColor.test.ts
+[INFO]   - browser-features/chrome/common/panel-sidebar/test/webPanelBrowserLoad.test.ts
+[INFO]   - browser-features/chrome/common/panel-sidebar/test/webPanelFindController.test.ts
+[INFO]   - browser-features/chrome/common/panel-sidebar/test/webPanelRequestLifecycle.test.ts
+[INFO]   - browser-features/chrome/common/panel-sidebar/test/webPanelUserAgent.test.ts
+[INFO]   - browser-features/chrome/common/panel-sidebar/test/webPanelUserAgentNetwork.test.ts
+[INFO]   - browser-features/chrome/common/private-container/test/privateContainer.test.ts
+[INFO]   - browser-features/chrome/common/private-container/test/privateContainerReopen.test.ts
+[INFO]   - browser-features/chrome/common/private-container/test/sessionStoreRestoreClosed.test.js
+[INFO]   - browser-features/chrome/common/private-container/test/sessionStoreRestoreOpen.test.js
+[INFO]   - browser-features/chrome/common/profile-manager/test/profileManagerService.test.ts
+[INFO]   - browser-features/chrome/common/pwa/test/configLifecycle.test.ts
+[INFO]   - browser-features/chrome/common/pwa/test/containerUtils.test.ts
+[INFO]   - browser-features/chrome/common/pwa/test/dataStore.test.ts
+[INFO]   - browser-features/chrome/common/pwa/test/iconProcesserBuildIconList.test.ts
+[INFO]   - browser-features/chrome/common/pwa/test/imageToolsUtils.test.ts
+[INFO]   - browser-features/chrome/common/pwa/test/manifestProcesser.test.ts
+[INFO]   - browser-features/chrome/common/pwa/test/pageActionLifecycle.test.ts
+[INFO]   - browser-features/chrome/common/pwa/test/pwaDefaultPref.test.ts
+[INFO]   - browser-features/chrome/common/pwa/test/ssbManager.test.ts
+[INFO]   - browser-features/chrome/common/pwa/test/toolbarVisibility.test.ts
+[INFO]   - browser-features/chrome/common/qr-code-generator/test/qrCodeGenerator.test.ts
+[INFO]   - browser-features/chrome/common/qr-code-generator/test/qrCodeGeneratorExtended.test.ts
+[INFO]   - browser-features/chrome/common/reboot-panel-menu/test/rebootPanelMenu.test.ts
+[INFO]   - browser-features/chrome/common/reverse-sidebar-position/test/reverseSidebarPosition.test.ts
+[INFO]   - browser-features/chrome/common/search-engine-selector/test/contextualSearch.test.ts
+[INFO]   - browser-features/chrome/common/split-view/components/test/split-view-tab-drop.test.ts
+[INFO]   - browser-features/chrome/common/split-view/test/context-menu-policy.test.ts
+[INFO]   - browser-features/chrome/common/split-view/test/patchState.test.ts
+[INFO]   - browser-features/chrome/common/split-view/test/splitViewUtilities.test.ts
+[INFO]   - browser-features/chrome/common/statusbar/test/observer-lifecycle.test.ts
+[INFO]   - browser-features/chrome/common/statusbar/test/statusbar.test.ts
+[INFO]   - browser-features/chrome/common/statusbar/test/window-lifecycle.test.ts
+[INFO]   - browser-features/chrome/common/tab-inline-edit/test/tabInlineEditController.test.ts
+[INFO]   - browser-features/chrome/common/tab-refresh/test/tabRefresh.test.ts
+[INFO]   - browser-features/chrome/common/tab-sleep-exclusion/test/tabSleepExclusion.test.ts
+[INFO]   - browser-features/chrome/common/tab-stacks/test/tabStacksDragLifecycle.test.ts
+[INFO]   - browser-features/chrome/common/tab-stacks/test/tabStacksEventContract.test.ts
+[INFO]   - browser-features/chrome/common/tab-stacks/test/tabStacksFoundation.test.ts
+[INFO]   - browser-features/chrome/common/tab-stacks/test/tabStacksInteractions.test.ts
+[INFO]   - browser-features/chrome/common/tab-stacks/test/tabStacksNative.test.ts
+[INFO]   - browser-features/chrome/common/tab-stacks/test/tabStacksSessionRestore.test.ts
+[INFO]   - browser-features/chrome/common/tab-stacks/test/tabStacksStartup.test.ts
+[INFO]   - browser-features/chrome/common/tab-strip-wheel-guard/test/tabStripWheelGuard.test.ts
+[INFO]   - browser-features/chrome/common/tab/test/tabDoubleClickClose.test.ts
+[INFO]   - browser-features/chrome/common/tab/test/tabOpenPosition.test.ts
+[INFO]   - browser-features/chrome/common/tab/test/tabPreferenceSync.test.ts
+[INFO]   - browser-features/chrome/common/tab/test/tabScroll.test.ts
+[INFO]   - browser-features/chrome/common/tabbar/test/pinned-tab-controller.test.ts
+[INFO]   - browser-features/chrome/common/tabbar/test/tab-drag-drop-manager.test.ts
+[INFO]   - browser-features/chrome/common/tabbar/test/tabbarDomUtils.test.ts
+[INFO]   - browser-features/chrome/common/tabbar/test/tabbarMultirowCss.test.ts
+[INFO]   - browser-features/chrome/common/ui-custom/test/bookmarkWorkspaceContainer.test.ts
+[INFO]   - browser-features/chrome/common/ui-custom/test/movePageInsideSearchbar.test.ts
+[INFO]   - browser-features/chrome/common/undo-closed-tab/test/undoClosedTab.test.ts
+[INFO]   - browser-features/chrome/common/undo-closed-tab/test/undoClosedTabStyleElement.test.ts
+[INFO]   - browser-features/chrome/common/window-drag/test/windowDragSession.test.ts
+[INFO]   - browser-features/chrome/common/workspaces/test/configPersistence.test.ts
+[INFO]   - browser-features/chrome/common/workspaces/test/containerColor.test.ts
+[INFO]   - browser-features/chrome/common/workspaces/test/explicitTabUserContext.test.ts
+[INFO]   - browser-features/chrome/common/workspaces/test/menuAccessKey.test.ts
+[INFO]   - browser-features/chrome/common/workspaces/test/modalCallerRequestLifecycle.test.ts
+[INFO]   - browser-features/chrome/common/workspaces/test/nativeLastTabDisabledClose.test.ts
+[INFO]   - browser-features/chrome/common/workspaces/test/nativeLastTabDisabledKeepOpen.test.ts
+[INFO]   - browser-features/chrome/common/workspaces/test/nativeLastTabWorkspacesEnabled.test.ts
+[INFO]   - browser-features/chrome/common/workspaces/test/tabReplacementLifecycle.test.ts
+[INFO]   - browser-features/chrome/common/workspaces/test/workspaceContainerAdapter.test.ts
+[INFO]   - browser-features/chrome/common/workspaces/test/workspaceContainerSetup.test.ts
+[INFO]   - browser-features/chrome/common/workspaces/test/workspaceIconRawValue.test.ts
+[INFO]   - browser-features/chrome/common/workspaces/test/workspaceIcons.test.ts
+[INFO]   - browser-features/chrome/common/workspaces/test/workspaceLastTabPolicy.test.ts
+[INFO]   - browser-features/chrome/common/workspaces/test/workspaceLastTabPreservation.test.ts
+[INFO]   - browser-features/chrome/common/workspaces/test/workspacesArchiveHelpers.test.ts
+[INFO]   - browser-features/chrome/common/workspaces/test/workspaceSnapshotUtils.test.ts
+[INFO]   - browser-features/chrome/common/workspaces/test/workspacesOldType.test.ts
+[INFO]   - browser-features/chrome/common/workspaces/test/workspacesStaticNames.test.ts
+[INFO]   - browser-features/chrome/common/workspaces/test/workspaceSyncIndicator.test.ts
+[INFO]   - browser-features/chrome/common/workspaces/test/workspaceSyncIndicatorWindows.test.ts
+[INFO]   - browser-features/chrome/common/workspaces/test/workspaceSyncMenu.test.ts
+[INFO]   - browser-features/chrome/common/zen-mode/test/zenMode.test.ts
+[INFO]   - browser-features/chrome/common/zen-mode/test/zenModeBackground.test.ts
+[INFO]   - browser-features/chrome/common/zen-mode/test/zenModeStyleElement.test.ts
+[INFO]   - browser-features/chrome/static/overrides/modules/workspaces/test/clipboard.test.ts
+[INFO]   - browser-features/chrome/static/overrides/modules/workspaces/test/openLinkUserContext.test.ts
+[INFO]   - browser-features/chrome/static/overrides/modules/workspaces/test/pendingWorkspaceContainer.test.ts
+[INFO]   - browser-features/chrome/test/firefox-downloaded/generated/browser__base__content__test__browser-caps__browser_principalserialization_version1.test.js
+[INFO]   - browser-features/chrome/test/firefox-downloaded/generated/browser__base__content__test__browser-general__browser_bug537474.test.js
+[INFO]   - browser-features/chrome/test/firefox-downloaded/generated/browser__base__content__test__browser-general__browser_bug565575.test.js
+[INFO]   - browser-features/chrome/test/firefox-downloaded/generated/browser__base__content__test__browser-general__browser_bug596687.test.js
+[INFO]   - browser-features/chrome/test/firefox-downloaded/generated/browser__base__content__test__browser-performance__browser_hiddenwindow_existence.test.js
+[INFO]   - browser-features/chrome/test/firefox-downloaded/generated/browser__components__customizableui__test__browser_996364_registerarea_different_properties.test.js
+[INFO]   - browser-features/chrome/test/firefox-downloaded/generated/browser__components__tabbrowser__test__browser__tabs__browser_pinned_and_hidden_tabs.test.js
+[INFO]   - browser-features/chrome/test/firefox-downloaded/generated/browser__components__urlbar__tests__browser-urlbarinput__browser_a11y.test.js
+[INFO]   - browser-features/chrome/test/firefox-imported/notificationStacking.test.js
+[INFO]   - browser-features/chrome/test/firefox-imported/unloadDialogs.test.js
+[INFO]   - browser-features/chrome/test/mochitest-compat/mochitestCompat.test.js
+[INFO]   - browser-features/chrome/test/mochitest-compat/tabLifecycleMozillaStyle.test.js
+[INFO]   - browser-features/chrome/test/unit/browserChromeElements.test.ts
+[INFO]   - browser-features/chrome/test/unit/browserChromeLayout.test.ts
+[INFO]   - browser-features/chrome/test/unit/browserChromeVisibility.test.ts
+[INFO]   - browser-features/chrome/test/unit/cssVariablesUI.test.ts
+[INFO]   - browser-features/chrome/test/unit/multirowTabbarUI.test.ts
+[INFO]   - browser-features/chrome/test/unit/navigationBarUI.test.ts
+[INFO]   - browser-features/chrome/test/unit/onModuleLoaded.test.ts
+[INFO]   - browser-features/chrome/test/unit/panelSidebarUI.test.ts
+[INFO]   - browser-features/chrome/test/unit/sidebarLayout.test.ts
+[INFO]   - browser-features/chrome/test/unit/solidXulNullProps.test.ts
+[INFO]   - browser-features/chrome/test/unit/tabOperations.test.ts
+[INFO]   - browser-features/chrome/test/unit/workspacesUI.test.ts
+[INFO]   - browser-features/chrome/utils/test/contextMenu.test.ts
+[INFO]   - browser-features/chrome/utils/test/iconUrlParser.test.ts
+[INFO]   - browser-features/chrome/utils/test/rootLifecycle.test.ts
+[INFO]   - browser-features/chrome/utils/test/stylesheetService.test.ts
+[INFO]   - browser-features/modules/actors/NRChromeModalChild.request.test.mts
+[INFO]   - browser-features/modules/actors/NRMouseGestureScrollUtils.test.ts
+[INFO]   - browser-features/modules/actors/test/JSWindowActorRemoteType.test.mts
+[INFO]   - browser-features/modules/actors/test/NRContextMenuPackaging.test.mts
+[INFO]   - browser-features/modules/actors/test/NRKeyboardShortcutFocusActors.test.ts
+[INFO]   - browser-features/modules/actors/test/NRPwaManagerContainers.test.mts
+[INFO]   - browser-features/modules/actors/test/NRPwaManagerParent.test.mts
+[INFO]   - browser-features/modules/actors/test/NRSettingsContextMenuCatalog.test.mts
+[INFO]   - browser-features/modules/actors/webscraper/test/DOMActionOperations.test.ts
+[INFO]   - browser-features/modules/actors/webscraper/test/HighlightManager.test.ts
+[INFO]   - browser-features/modules/actors/webscraper/turndown/fingerprintDom.test.ts
+[INFO]   - browser-features/modules/actors/webscraper/turndown/fingerprintParsing.test.ts
+[INFO]   - browser-features/modules/actors/webscraper/utils.test.ts
+[INFO]   - browser-features/modules/common/NRKeyboardShortcutFocusStore.test.ts
+[INFO]   - browser-features/modules/modules/chrome-web-store/test/CodeValidator.test.mts
+[INFO]   - browser-features/modules/modules/chrome-web-store/test/Constants.test.mts
+[INFO]   - browser-features/modules/modules/chrome-web-store/test/CRXConverter.test.mts
+[INFO]   - browser-features/modules/modules/chrome-web-store/test/CRXParser.test.mts
+[INFO]   - browser-features/modules/modules/chrome-web-store/test/DNRTransformer.test.mts
+[INFO]   - browser-features/modules/modules/chrome-web-store/test/DOMUtils.test.mts
+[INFO]   - browser-features/modules/modules/chrome-web-store/test/FileUtils.test.mts
+[INFO]   - browser-features/modules/modules/chrome-web-store/test/ManifestTransformer.test.mts
+[INFO]   - browser-features/modules/modules/chrome-web-store/test/polyfills/documentId/DocumentIdPolyfill.test.mts
+[INFO]   - browser-features/modules/modules/chrome-web-store/test/polyfills/offscreen/OffscreenPolyfill.test.mts
+[INFO]   - browser-features/modules/modules/chrome-web-store/test/types.test.mts
+[INFO]   - browser-features/modules/modules/chrome-web-store/test/ZipUtils.test.mts
+[INFO]   - browser-features/modules/modules/context-menu/ContextMenuCatalogService.test.mts
+[INFO]   - browser-features/modules/modules/ipprotection/test/FloorpIPProtectionDisclosure.test.mts
+[INFO]   - browser-features/modules/modules/ipprotection/test/FloorpIPProtectionGate.test.mts
+[INFO]   - browser-features/modules/modules/ipprotection/test/FloorpIPProtectionUI.test.mts
+[INFO]   - browser-features/modules/modules/notes/test/FloorpNotesStorage.test.mts
+[INFO]   - browser-features/modules/modules/os-apis/web/shared/UploadFileReader.test.mts
+[INFO]   - browser-features/modules/modules/os-apis/workspaces/WorkspacesApiService.test.mts
+[INFO]   - browser-features/modules/modules/os-server/test/http/utils.test.mts
+[INFO]   - browser-features/modules/modules/os-server/test/router.test.mts
+[INFO]   - browser-features/modules/modules/plugin-store/test/Policy.test.mts
+[INFO]   - browser-features/modules/modules/pwa/supports/test/Linux.test.mts
+[INFO]   - browser-features/modules/modules/pwa/supports/test/MacOS.test.mts
+[INFO]   - browser-features/modules/modules/pwa/supports/test/Windows.test.mts
+[INFO]   - browser-features/modules/modules/pwa/test/appLifecycle.test.mts
+[INFO]   - browser-features/modules/modules/pwa/test/MacAppShimExperiment.test.mts
+[INFO]   - browser-features/modules/modules/pwa/test/MacAppShimInstaller.test.mts
+[INFO]   - browser-features/modules/modules/pwa/test/NativeAppRuntime.test.mts
+[INFO]   - browser-features/modules/modules/pwa/test/SsbCommandLineHandler.test.mts
+[INFO]   - browser-features/modules/test/workspaces/workspaceContainerBindings.test.mts
+[INFO]   - browser-features/modules/test/workspaces/workspaceContainerMigration.test.mts
+[INFO]   - browser-features/modules/test/workspaces/workspaceContainers.test.mts
+[INFO]   - browser-features/modules/test/workspaces/workspaceSync.test.mts
+[INFO]   - browser-features/modules/test/workspaces/workspaceSyncRecord.test.mts
+[INFO]   - browser-features/pages-aboutDialog/test/AboutDialog.test.ts
+[INFO]   - browser-features/pages-modal-child/test/modalProtocol.test.ts
+[INFO]   - browser-features/pages-modal-child/test/workspaceIconPickerModel.test.ts
+[INFO]   - browser-features/pages-newtab/src/utils/nrRetry.test.ts
+[INFO]   - browser-features/pages-newtab/test/lib/utils.test.ts
+[INFO]   - browser-features/pages-newtab/test/utils/backgroundImages.test.ts
+[INFO]   - browser-features/pages-newtab/test/utils/imageCompression.test.ts
+[INFO]   - browser-features/pages-newtab/test/utils/nrRetry.test.ts
+[INFO]   - browser-features/pages-notes/test/lib/contentMigration.test.ts
+[INFO]   - browser-features/pages-notes/test/lib/exportFilename.test.ts
+[INFO]   - browser-features/pages-notes/test/lib/exportMarkdown.test.ts
+[INFO]   - browser-features/pages-notes/test/lib/extractText.test.ts
+[INFO]   - browser-features/pages-notes/test/lib/imageCompressor.test.ts
+[INFO]   - browser-features/pages-notes/test/lib/mergeFixture.test.ts
+[INFO]   - browser-features/pages-notes/test/lib/migrateLexicalToTiptap.test.ts
+[INFO]   - browser-features/pages-notes/test/lib/syncPrerequisites.test.ts
+[INFO]   - browser-features/pages-notes/test/lib/utils.test.ts
+[INFO]   - browser-features/pages-profile-manager/test/lib/profileDataManager.test.ts
+[INFO]   - browser-features/pages-profile-manager/test/lib/utils.test.ts
+[INFO]   - browser-features/pages-settings/test/app/command-palette/dataManager.test.ts
+[INFO]   - browser-features/pages-settings/test/app/context-menu/ContextMenuDataManager.test.tsx
+[INFO]   - browser-features/pages-settings/test/app/context-menu/ContextMenuEditor.test.tsx
+[INFO]   - browser-features/pages-settings/test/app/context-menu/contextMenuPersistence.test.ts
+[INFO]   - browser-features/pages-settings/test/app/design/tabWindowBehavior.test.ts
+[INFO]   - browser-features/pages-settings/test/app/design/verticalTabsSync.test.ts
+[INFO]   - browser-features/pages-settings/test/app/gesture/configPersistence.test.ts
+[INFO]   - browser-features/pages-settings/test/app/keyboard-shortcut/inlineUrlAction.test.ts
+[INFO]   - browser-features/pages-settings/test/app/keyboard-shortcut/keyboardShortcutEditorPolicy.test.ts
+[INFO]   - browser-features/pages-settings/test/app/keyboard-shortcut/keyboardShortcutMigration.test.ts
+[INFO]   - browser-features/pages-settings/test/app/performance/idleMemoryReclaim.test.ts
+[INFO]   - browser-features/pages-settings/test/integration/advanced.test.ts
+[INFO]   - browser-features/pages-settings/test/integration/management.test.ts
+[INFO]   - browser-features/pages-settings/test/integration/settings.test.ts
+[INFO]   - browser-features/pages-settings/test/lib/context-menu-availability.test.tsx
+[INFO]   - browser-features/pages-settings/test/lib/rpc-origin.test.ts
+[INFO]   - browser-features/pages-settings/test/lib/rpc/experiments.test.ts
+[INFO]   - browser-features/pages-settings/test/lib/rpc/rpc.test.ts
+[INFO]   - browser-features/pages-settings/test/lib/search-documents.test.ts
+[INFO]   - browser-features/pages-settings/test/lib/utils.test.ts
+[INFO]   - browser-features/pages-welcome/test/app/localization/system-locale.test.ts
+[INFO]   - browser-features/pages-welcome/test/integration/dismiss-tab.test.ts
+[INFO]   - browser-features/pages-welcome/test/integration/release-notes-prompt.test.ts
+[INFO]   - browser-features/pages-welcome/test/integration/welcome.test.ts
+[INFO]   - browser-features/pages-welcome/test/lib/theme-value.test.ts
+[INFO]   - browser-features/pages-workflow-progress/test/lib/utils.test.ts
+
+[INFO] === Browser Connection ===
+[INFO] Waiting for browser test results via prefs file...
+
+[INFO] === Test Execution ===
+[INFO] Collecting browser test results from prefs file...
+
+[INFO] [1/284] Completed browser-features/chrome/common/addons/test/addonsObserver.test.ts
+[INFO] ✓ browser-features/chrome/common/addons/test/addonsObserver.test.ts (runAllTests, 659ms)
+[INFO] [2/284] Completed browser-features/chrome/common/addons/test/lifecycle.test.ts
+[INFO] ✓ browser-features/chrome/common/addons/test/lifecycle.test.ts (runAllTests, 13ms)
+[INFO] [3/284] Completed browser-features/chrome/common/addons/test/notificationCustomizer.test.ts
+[INFO] ✓ browser-features/chrome/common/addons/test/notificationCustomizer.test.ts (runAllTests, 24ms)
+[INFO] [4/284] Completed browser-features/chrome/common/browser-share-mode/test/browserShareMode.test.ts
+[INFO] ✓ browser-features/chrome/common/browser-share-mode/test/browserShareMode.test.ts (runAllTests, 32ms)
+[INFO] [5/284] Completed browser-features/chrome/common/browser-tab-color/test/browserTabColor.test.ts
+[INFO] ✓ browser-features/chrome/common/browser-tab-color/test/browserTabColor.test.ts (runAllTests, 14ms)
+[INFO] [6/284] Completed browser-features/chrome/common/chrome-css/test/chromeCSS.test.ts
+[INFO] ✓ browser-features/chrome/common/chrome-css/test/chromeCSS.test.ts (runAllTests, 652ms)
+[INFO] [7/284] Completed browser-features/chrome/common/command-palette/multiInputCommand/switcher/test/bookmark-switcher.test.ts
+[INFO] ✓ browser-features/chrome/common/command-palette/multiInputCommand/switcher/test/bookmark-switcher.test.ts (runAllTests, 9ms)
+[INFO] [8/284] Completed browser-features/chrome/common/command-palette/multiInputCommand/switcher/test/closed-tab-switcher.test.ts
+[INFO] ✓ browser-features/chrome/common/command-palette/multiInputCommand/switcher/test/closed-tab-switcher.test.ts (runAllTests, 31ms)
+[INFO] [9/284] Completed browser-features/chrome/common/command-palette/multiInputCommand/switcher/test/closed-window-switcher.test.ts
+[INFO] ✓ browser-features/chrome/common/command-palette/multiInputCommand/switcher/test/closed-window-switcher.test.ts (runAllTests, 5ms)
+[INFO] [10/284] Completed browser-features/chrome/common/command-palette/multiInputCommand/switcher/test/tab-switcher.test.ts
+[INFO] ✓ browser-features/chrome/common/command-palette/multiInputCommand/switcher/test/tab-switcher.test.ts (runAllTests, 4ms)
+[INFO] [11/284] Completed browser-features/chrome/common/command-palette/test/category-priority.test.ts
+[INFO] ✓ browser-features/chrome/common/command-palette/test/category-priority.test.ts (runAllTests, 7ms)
+[INFO] [12/284] Completed browser-features/chrome/common/command-palette/test/commandPalette.test.ts
+[INFO] ✓ browser-features/chrome/common/command-palette/test/commandPalette.test.ts (runAllTests, 46ms)
+[INFO] [13/284] Completed browser-features/chrome/common/command-palette/test/commandPaletteController.test.ts
+[INFO] ✓ browser-features/chrome/common/command-palette/test/commandPaletteController.test.ts (runAllTests, 22098ms)
+[INFO] [14/284] Completed browser-features/chrome/common/command-palette/test/config.test.ts
+[INFO] ✓ browser-features/chrome/common/command-palette/test/config.test.ts (runAllTests, 12ms)
+[INFO] [15/284] Completed browser-features/chrome/common/command-palette/test/historySwitcher.test.ts
+[INFO] ✓ browser-features/chrome/common/command-palette/test/historySwitcher.test.ts (runAllTests, 13ms)
+[INFO] [16/284] Completed browser-features/chrome/common/command-palette/test/nativeTabTargets.test.ts
+[INFO] ✓ browser-features/chrome/common/command-palette/test/nativeTabTargets.test.ts (runAllTests, 2633ms)
+[INFO] [17/284] Completed browser-features/chrome/common/command-palette/test/providers.test.ts
+[INFO] ✓ browser-features/chrome/common/command-palette/test/providers.test.ts (runAllTests, 49ms)
+[INFO] [18/284] Completed browser-features/chrome/common/command-palette/test/service.test.ts
+[INFO] ✓ browser-features/chrome/common/command-palette/test/service.test.ts (runAllTests, 92ms)
+[INFO] [19/284] Completed browser-features/chrome/common/command-palette/test/targetContext.test.ts
+[INFO] ✓ browser-features/chrome/common/command-palette/test/targetContext.test.ts (runAllTests, 19ms)
+[INFO] [20/284] Completed browser-features/chrome/common/context-menu/test/contextMenuComponent.test.ts
+[INFO] ✓ browser-features/chrome/common/context-menu/test/contextMenuComponent.test.ts (runAllTests, 133ms)
+[INFO] [21/284] Completed browser-features/chrome/common/context-menu/test/contextMenuFlasco.test.ts
+[INFO] ✓ browser-features/chrome/common/context-menu/test/contextMenuFlasco.test.ts (runAllTests, 213ms)
+[INFO] [22/284] Completed browser-features/chrome/common/context-menu/test/contextMenuFlascoClient.test.ts
+[INFO] ✓ browser-features/chrome/common/context-menu/test/contextMenuFlascoClient.test.ts (runAllTests, 26194ms)
+[INFO] [23/284] Completed browser-features/chrome/common/context-menu/test/contextMenuRuntime.test.ts
+[INFO] ✓ browser-features/chrome/common/context-menu/test/contextMenuRuntime.test.ts (runAllTests, 310ms)
+[INFO] [24/284] Completed browser-features/chrome/common/context-menu/test/contextMenuStyle.test.ts
+[INFO] ✓ browser-features/chrome/common/context-menu/test/contextMenuStyle.test.ts (runAllTests, 5ms)
+[INFO] [25/284] Completed browser-features/chrome/common/context-menu/test/nativeMenuLayout.test.ts
+[INFO] ✓ browser-features/chrome/common/context-menu/test/nativeMenuLayout.test.ts (runAllTests, 12ms)
+[INFO] [26/284] Completed browser-features/chrome/common/designs/test/browser-design-element.test.ts
+[INFO] ✓ browser-features/chrome/common/designs/test/browser-design-element.test.ts (runAllTests, 6ms)
+[INFO] [27/284] Completed browser-features/chrome/common/designs/test/chrome-extras.test.ts
+[INFO] ✓ browser-features/chrome/common/designs/test/chrome-extras.test.ts (runAllTests, 704ms)
+[INFO] [28/284] Completed browser-features/chrome/common/designs/test/color-consistency.test.ts
+[INFO] ✓ browser-features/chrome/common/designs/test/color-consistency.test.ts (runAllTests, 3875ms)
+[INFO] [29/284] Completed browser-features/chrome/common/designs/test/config-migration.test.ts
+[INFO] ✓ browser-features/chrome/common/designs/test/config-migration.test.ts (runAllTests, 122ms)
+[INFO] [30/284] Completed browser-features/chrome/common/designs/test/configs.test.ts
+[INFO] ✓ browser-features/chrome/common/designs/test/configs.test.ts (runAllTests, 495ms)
+[INFO] [31/284] Completed browser-features/chrome/common/designs/test/content-style-lifecycle.test.ts
+[INFO] ✓ browser-features/chrome/common/designs/test/content-style-lifecycle.test.ts (runAllTests, 109ms)
+[INFO] [32/284] Completed browser-features/chrome/common/designs/test/css.test.ts
+[INFO] ✓ browser-features/chrome/common/designs/test/css.test.ts (runAllTests, 44ms)
+[INFO] [33/284] Completed browser-features/chrome/common/designs/test/fluerial-groups.test.ts
+[INFO] ✓ browser-features/chrome/common/designs/test/fluerial-groups.test.ts (runAllTests, 395ms)
+[INFO] [34/284] Completed browser-features/chrome/common/designs/test/lepton-compat.test.ts
+[INFO] ✓ browser-features/chrome/common/designs/test/lepton-compat.test.ts (runAllTests, 340ms)
+[INFO] [35/284] Completed browser-features/chrome/common/designs/test/menu-icons.test.ts
+[INFO] ✓ browser-features/chrome/common/designs/test/menu-icons.test.ts (runAllTests, 266ms)
+[INFO] [36/284] Completed browser-features/chrome/common/designs/test/oldConfigMigrator.test.ts
+[INFO] ✓ browser-features/chrome/common/designs/test/oldConfigMigrator.test.ts (runAllTests, 10ms)
+[INFO] [37/284] Completed browser-features/chrome/common/designs/test/sidebar-header.test.ts
+[INFO] ✓ browser-features/chrome/common/designs/test/sidebar-header.test.ts (runAllTests, 11635ms)
+[INFO] [38/284] Completed browser-features/chrome/common/designs/test/tab-color-like-toolbar.test.ts
+[INFO] ✓ browser-features/chrome/common/designs/test/tab-color-like-toolbar.test.ts (runAllTests, 6ms)
+[INFO] [39/284] Completed browser-features/chrome/common/designs/test/tabbar-as-titlebar.test.ts
+[INFO] ✓ browser-features/chrome/common/designs/test/tabbar-as-titlebar.test.ts (import, 7025ms)
+[INFO] [40/284] Completed browser-features/chrome/common/designs/test/tabbar-style-sync.test.ts
+[INFO] ✓ browser-features/chrome/common/designs/test/tabbar-style-sync.test.ts (runAllTests, 5ms)
+[INFO] [41/284] Completed browser-features/chrome/common/designs/test/type.test.ts
+[INFO] ✓ browser-features/chrome/common/designs/test/type.test.ts (runAllTests, 7ms)
+[INFO] [42/284] Completed browser-features/chrome/common/designs/test/userjsParser.test.ts
+[INFO] ✓ browser-features/chrome/common/designs/test/userjsParser.test.ts (runAllTests, 32ms)
+[INFO] [43/284] Completed browser-features/chrome/common/designs/test/vertical-tabs-observer.test.ts
+[INFO] ✓ browser-features/chrome/common/designs/test/vertical-tabs-observer.test.ts (runAllTests, 596ms)
+[INFO] [44/284] Completed browser-features/chrome/common/external-browser/test/externalBrowserService.test.ts
+[INFO] ✓ browser-features/chrome/common/external-browser/test/externalBrowserService.test.ts (runAllTests, 92ms)
+[INFO] [45/284] Completed browser-features/chrome/common/external-browser/test/linkContextMenu.test.ts
+[INFO] ✓ browser-features/chrome/common/external-browser/test/linkContextMenu.test.ts (runAllTests, 93ms)
+[INFO] [46/284] Completed browser-features/chrome/common/external-browser/test/tabContextMenu.test.ts
+[INFO] ✓ browser-features/chrome/common/external-browser/test/tabContextMenu.test.ts (runAllTests, 45ms)
+[INFO] [47/284] Completed browser-features/chrome/common/firefox-sidebar/test/sidebarOverlay.test.ts
+[INFO] ✓ browser-features/chrome/common/firefox-sidebar/test/sidebarOverlay.test.ts (runAllTests, 13735ms)
+[INFO] [48/284] Completed browser-features/chrome/common/flex-order/test/flexOrder.test.ts
+[INFO] ✓ browser-features/chrome/common/flex-order/test/flexOrder.test.ts (runAllTests, 288ms)
+[INFO] [49/284] Completed browser-features/chrome/common/hub-panel-menu/test/HubPanelMenu.test.ts
+[INFO] ✓ browser-features/chrome/common/hub-panel-menu/test/HubPanelMenu.test.ts (runAllTests, 16ms)
+[INFO] [50/284] Completed browser-features/chrome/common/idle-memory-reclaim/test/constructorLifecycle.test.ts
+[INFO] ✓ browser-features/chrome/common/idle-memory-reclaim/test/constructorLifecycle.test.ts (runAllTests, 8ms)
+[INFO] [51/284] Completed browser-features/chrome/common/idle-memory-reclaim/test/idleMemoryReclaim.test.ts
+[INFO] ✓ browser-features/chrome/common/idle-memory-reclaim/test/idleMemoryReclaim.test.ts (runAllTests, 6ms)
+[INFO] [52/284] Completed browser-features/chrome/common/idle-memory-reclaim/test/reclaimLifecycle.test.ts
+[INFO] ✓ browser-features/chrome/common/idle-memory-reclaim/test/reclaimLifecycle.test.ts (runAllTests, 6ms)
+[INFO] [53/284] Completed browser-features/chrome/common/keyboard-shortcut/test/keyboardShortcutActionCatalog.test.ts
+[INFO] ✓ browser-features/chrome/common/keyboard-shortcut/test/keyboardShortcutActionCatalog.test.ts (runAllTests, 5ms)
+[INFO] [54/284] Completed browser-features/chrome/common/keyboard-shortcut/test/keyboardShortcutConfig.test.ts
+[INFO] ✓ browser-features/chrome/common/keyboard-shortcut/test/keyboardShortcutConfig.test.ts (runAllTests, 10ms)
+[INFO] [55/284] Completed browser-features/chrome/common/keyboard-shortcut/test/keyboardShortcutController.test.ts
+[INFO] ✓ browser-features/chrome/common/keyboard-shortcut/test/keyboardShortcutController.test.ts (runAllTests, 42ms)
+[INFO] [56/284] Completed browser-features/chrome/common/keyboard-shortcut/test/keyboardShortcutMigration.test.ts
+[INFO] ✓ browser-features/chrome/common/keyboard-shortcut/test/keyboardShortcutMigration.test.ts (runAllTests, 14ms)
+[INFO] [57/284] Completed browser-features/chrome/common/keyboard-shortcut/test/keyboardShortcutOption.test.ts
+[INFO] ✓ browser-features/chrome/common/keyboard-shortcut/test/keyboardShortcutOption.test.ts (runAllTests, 47ms)
+[INFO] [58/284] Completed browser-features/chrome/common/keyboard-shortcut/test/keyboardShortcutSchemaV2.test.ts
+[INFO] ✓ browser-features/chrome/common/keyboard-shortcut/test/keyboardShortcutSchemaV2.test.ts (runAllTests, 5ms)
+[INFO] [59/284] Completed browser-features/chrome/common/keyboard-shortcut/test/keyboardShortcutTypingGuard.test.ts
+[INFO] ✓ browser-features/chrome/common/keyboard-shortcut/test/keyboardShortcutTypingGuard.test.ts (runAllTests, 8ms)
+[INFO] [60/284] Completed browser-features/chrome/common/modal-parent/test/modalData.test.ts
+[INFO] ✓ browser-features/chrome/common/modal-parent/test/modalData.test.ts (runAllTests, 6ms)
+[INFO] [61/284] Completed browser-features/chrome/common/modal-parent/test/modalParent.test.ts
+[INFO] ✓ browser-features/chrome/common/modal-parent/test/modalParent.test.ts (runAllTests, 8ms)
+[INFO] [62/284] Completed browser-features/chrome/common/modal-parent/test/modalRequestLifecycle.test.ts
+[INFO] ✓ browser-features/chrome/common/modal-parent/test/modalRequestLifecycle.test.ts (runAllTests, 7ms)
+[INFO] [63/284] Completed browser-features/chrome/common/mouse-gesture/test/contextMenuPolicy.test.ts
+[INFO] ✓ browser-features/chrome/common/mouse-gesture/test/contextMenuPolicy.test.ts (runAllTests, 7ms)
+[INFO] [64/284] Completed browser-features/chrome/common/mouse-gesture/test/dollarRecognizer.test.ts
+[INFO] ✓ browser-features/chrome/common/mouse-gesture/test/dollarRecognizer.test.ts (runAllTests, 23ms)
+[INFO] [65/284] Completed browser-features/chrome/common/mouse-gesture/test/mouseGestureActions.test.ts
+[INFO] ✓ browser-features/chrome/common/mouse-gesture/test/mouseGestureActions.test.ts (runAllTests, 47ms)
+[INFO] [66/284] Completed browser-features/chrome/common/mouse-gesture/test/mouseGestureConfig.test.ts
+[INFO] ✓ browser-features/chrome/common/mouse-gesture/test/mouseGestureConfig.test.ts (runAllTests, 11ms)
+[INFO] [67/284] Completed browser-features/chrome/common/mouse-gesture/test/mouseGestureController.test.ts
+[INFO] ✓ browser-features/chrome/common/mouse-gesture/test/mouseGestureController.test.ts (runAllTests, 420ms)
+[INFO] [68/284] Completed browser-features/chrome/common/mouse-gesture/test/mouseGestureRecognizer.test.ts
+[INFO] ✓ browser-features/chrome/common/mouse-gesture/test/mouseGestureRecognizer.test.ts (runAllTests, 37ms)
+[INFO] [69/284] Completed browser-features/chrome/common/mouse-gesture/test/mouseGestureService.test.ts
+[INFO] ✓ browser-features/chrome/common/mouse-gesture/test/mouseGestureService.test.ts (runAllTests, 35ms)
+[INFO] [70/284] Completed browser-features/chrome/common/mouse-gesture/test/zenModeAction.test.ts
+[INFO] ✓ browser-features/chrome/common/mouse-gesture/test/zenModeAction.test.ts (runAllTests, 36ms)
+[INFO] [71/284] Completed browser-features/chrome/common/panel-sidebar/test/modalCallerRequestLifecycle.test.ts
+[INFO] ✓ browser-features/chrome/common/panel-sidebar/test/modalCallerRequestLifecycle.test.ts (runAllTests, 43ms)
+[INFO] [72/284] Completed browser-features/chrome/common/panel-sidebar/test/panelSidebarFavicon.test.ts
+[INFO] ✓ browser-features/chrome/common/panel-sidebar/test/panelSidebarFavicon.test.ts (runAllTests, 7ms)
+[INFO] [73/284] Completed browser-features/chrome/common/panel-sidebar/test/panelSidebarLayout.test.ts
+[INFO] ✓ browser-features/chrome/common/panel-sidebar/test/panelSidebarLayout.test.ts (runAllTests, 4163ms)
+[INFO] [74/284] Completed browser-features/chrome/common/panel-sidebar/test/panelSidebarMigration.test.ts
+[INFO] ✓ browser-features/chrome/common/panel-sidebar/test/panelSidebarMigration.test.ts (runAllTests, 10ms)
+[INFO] [75/284] Completed browser-features/chrome/common/panel-sidebar/test/panelSidebarOverlay.test.ts
+[INFO] ✓ browser-features/chrome/common/panel-sidebar/test/panelSidebarOverlay.test.ts (runAllTests, 7337ms)
+[INFO] [76/284] Completed browser-features/chrome/common/panel-sidebar/test/panelSidebarStaticNames.test.ts
+[INFO] ✓ browser-features/chrome/common/panel-sidebar/test/panelSidebarStaticNames.test.ts (runAllTests, 5ms)
+[INFO] [77/284] Completed browser-features/chrome/common/panel-sidebar/test/panelSidebarStaticPanels.test.ts
+[INFO] ✓ browser-features/chrome/common/panel-sidebar/test/panelSidebarStaticPanels.test.ts (runAllTests, 4ms)
+[INFO] [78/284] Completed browser-features/chrome/common/panel-sidebar/test/userContextColor.test.ts
+[INFO] ✓ browser-features/chrome/common/panel-sidebar/test/userContextColor.test.ts (runAllTests, 4ms)
+[INFO] [79/284] Completed browser-features/chrome/common/panel-sidebar/test/webPanelBrowserLoad.test.ts
+[INFO] ✓ browser-features/chrome/common/panel-sidebar/test/webPanelBrowserLoad.test.ts (runAllTests, 5ms)
+[INFO] [80/284] Completed browser-features/chrome/common/panel-sidebar/test/webPanelFindController.test.ts
+[INFO] ✓ browser-features/chrome/common/panel-sidebar/test/webPanelFindController.test.ts (runAllTests, 131ms)
+[INFO] [81/284] Completed browser-features/chrome/common/panel-sidebar/test/webPanelRequestLifecycle.test.ts
+[INFO] ✓ browser-features/chrome/common/panel-sidebar/test/webPanelRequestLifecycle.test.ts (runAllTests, 809ms)
+[INFO] [82/284] Completed browser-features/chrome/common/panel-sidebar/test/webPanelUserAgent.test.ts
+[INFO] ✓ browser-features/chrome/common/panel-sidebar/test/webPanelUserAgent.test.ts (runAllTests, 6ms)
+[INFO] [83/284] Completed browser-features/chrome/common/panel-sidebar/test/webPanelUserAgentNetwork.test.ts
+[INFO] ✓ browser-features/chrome/common/panel-sidebar/test/webPanelUserAgentNetwork.test.ts (runAllTests, 2445ms)
+[INFO] [84/284] Completed browser-features/chrome/common/private-container/test/privateContainer.test.ts
+[INFO] ✓ browser-features/chrome/common/private-container/test/privateContainer.test.ts (runAllTests, 30ms)
+[INFO] [85/284] Completed browser-features/chrome/common/private-container/test/privateContainerReopen.test.ts
+[INFO] ✓ browser-features/chrome/common/private-container/test/privateContainerReopen.test.ts (runAllTests, 618ms)
+[INFO] [86/284] Completed browser-features/chrome/common/private-container/test/sessionStoreRestoreClosed.test.js
+[INFO] ✓ browser-features/chrome/common/private-container/test/sessionStoreRestoreClosed.test.js (mozillaTasks, 1189ms)
+[INFO]   ✓ task 1: closedPrivateContainerTabIsNotRecorded (89ms)
+[INFO]   ✓ task 2: legacyClosedTabsAndGroupsAreSanitized (30ms)
+[INFO]   ✓ task 3: legacyClosedWindowIsSanitizedWithoutLosingNormalData (47ms)
+[INFO]   ✓ task 4: containerClearPreservesOnlyUnrelatedClosedData (54ms)
+[INFO]   ✓ task 5: containerClearRemapsClosedWindowMetadata (63ms)
+[INFO]   ✓ task 6: containerClearKeepsRecentCloseBookkeeping (295ms)
+[INFO] [87/284] Completed browser-features/chrome/common/private-container/test/sessionStoreRestoreOpen.test.js
+[INFO] ✓ browser-features/chrome/common/private-container/test/sessionStoreRestoreOpen.test.js (mozillaTasks, 320ms)
+[INFO]   ✓ task 1: mixedRestoreKeepsNormalTabsAndMetadataConsistent (53ms)
+[INFO]   ✓ task 2: allPrivateRestoreKeepsTheExistingBlankTab (58ms)
+[INFO]   ✓ task 3: privateOnlyWindowIsDroppedWhenANormalWindowSurvives (36ms)
+[INFO]   ✓ task 4: directTabbrowserCallerReceivesASanitizedPlaceholder (51ms)
+[INFO]   ✓ task 5: reusedSelectedTabClearsAbsentFloorpMetadata (47ms)
+[INFO] [88/284] Completed browser-features/chrome/common/profile-manager/test/profileManagerService.test.ts
+[INFO] ✓ browser-features/chrome/common/profile-manager/test/profileManagerService.test.ts (runAllTests, 294ms)
+[INFO] [89/284] Completed browser-features/chrome/common/pwa/test/configLifecycle.test.ts
+[INFO] ✓ browser-features/chrome/common/pwa/test/configLifecycle.test.ts (runAllTests, 46ms)
+[INFO] [90/284] Completed browser-features/chrome/common/pwa/test/containerUtils.test.ts
+[INFO] ✓ browser-features/chrome/common/pwa/test/containerUtils.test.ts (runAllTests, 22ms)
+[INFO] [91/284] Completed browser-features/chrome/common/pwa/test/dataStore.test.ts
+[INFO] ✓ browser-features/chrome/common/pwa/test/dataStore.test.ts (runAllTests, 22ms)
+[INFO] [92/284] Completed browser-features/chrome/common/pwa/test/iconProcesserBuildIconList.test.ts
+[INFO] ✓ browser-features/chrome/common/pwa/test/iconProcesserBuildIconList.test.ts (runAllTests, 42ms)
+[INFO] [93/284] Completed browser-features/chrome/common/pwa/test/imageToolsUtils.test.ts
+[INFO] ✓ browser-features/chrome/common/pwa/test/imageToolsUtils.test.ts (runAllTests, 35ms)
+[INFO] [94/284] Completed browser-features/chrome/common/pwa/test/manifestProcesser.test.ts
+[INFO] ✓ browser-features/chrome/common/pwa/test/manifestProcesser.test.ts (runAllTests, 49ms)
+[INFO] [95/284] Completed browser-features/chrome/common/pwa/test/pageActionLifecycle.test.ts
+[INFO] ✓ browser-features/chrome/common/pwa/test/pageActionLifecycle.test.ts (runAllTests, 5633ms)
+[INFO] [96/284] Completed browser-features/chrome/common/pwa/test/pwaDefaultPref.test.ts
+[INFO] ✓ browser-features/chrome/common/pwa/test/pwaDefaultPref.test.ts (runAllTests, 9ms)
+[INFO] [97/284] Completed browser-features/chrome/common/pwa/test/ssbManager.test.ts
+[INFO] ✓ browser-features/chrome/common/pwa/test/ssbManager.test.ts (runAllTests, 35ms)
+[INFO] [98/284] Completed browser-features/chrome/common/pwa/test/toolbarVisibility.test.ts
+[INFO] ✓ browser-features/chrome/common/pwa/test/toolbarVisibility.test.ts (runAllTests, 113ms)
+[INFO] [99/284] Completed browser-features/chrome/common/qr-code-generator/test/qrCodeGenerator.test.ts
+[INFO] ✓ browser-features/chrome/common/qr-code-generator/test/qrCodeGenerator.test.ts (runAllTests, 13ms)
+[INFO] [100/284] Completed browser-features/chrome/common/qr-code-generator/test/qrCodeGeneratorExtended.test.ts
+[INFO] ✓ browser-features/chrome/common/qr-code-generator/test/qrCodeGeneratorExtended.test.ts (runAllTests, 29ms)
+[INFO] [101/284] Completed browser-features/chrome/common/reboot-panel-menu/test/rebootPanelMenu.test.ts
+[INFO] ✓ browser-features/chrome/common/reboot-panel-menu/test/rebootPanelMenu.test.ts (runAllTests, 63ms)
+[INFO] [102/284] Completed browser-features/chrome/common/reverse-sidebar-position/test/reverseSidebarPosition.test.ts
+[INFO] ✓ browser-features/chrome/common/reverse-sidebar-position/test/reverseSidebarPosition.test.ts (runAllTests, 7ms)
+[INFO] [103/284] Completed browser-features/chrome/common/search-engine-selector/test/contextualSearch.test.ts
+[INFO] ✓ browser-features/chrome/common/search-engine-selector/test/contextualSearch.test.ts (runAllTests, 66ms)
+[INFO] [104/284] Completed browser-features/chrome/common/split-view/components/test/split-view-tab-drop.test.ts
+[INFO] ✓ browser-features/chrome/common/split-view/components/test/split-view-tab-drop.test.ts (runAllTests, 6089ms)
+[INFO] [105/284] Completed browser-features/chrome/common/split-view/test/context-menu-policy.test.ts
+[INFO] ✓ browser-features/chrome/common/split-view/test/context-menu-policy.test.ts (runAllTests, 9ms)
+[INFO] [106/284] Completed browser-features/chrome/common/split-view/test/patchState.test.ts
+[INFO] ✓ browser-features/chrome/common/split-view/test/patchState.test.ts (runAllTests, 4ms)
+[INFO] [107/284] Completed browser-features/chrome/common/split-view/test/splitViewUtilities.test.ts
+[INFO] ✓ browser-features/chrome/common/split-view/test/splitViewUtilities.test.ts (runAllTests, 6ms)
+[INFO] [108/284] Completed browser-features/chrome/common/statusbar/test/observer-lifecycle.test.ts
+[INFO] ✓ browser-features/chrome/common/statusbar/test/observer-lifecycle.test.ts (runAllTests, 273ms)
+[INFO] [109/284] Completed browser-features/chrome/common/statusbar/test/statusbar.test.ts
+[INFO] ✓ browser-features/chrome/common/statusbar/test/statusbar.test.ts (runAllTests, 32ms)
+[INFO] [110/284] Completed browser-features/chrome/common/statusbar/test/window-lifecycle.test.ts
+[INFO] ✓ browser-features/chrome/common/statusbar/test/window-lifecycle.test.ts (runAllTests, 2629ms)
+[INFO] [111/284] Completed browser-features/chrome/common/tab-inline-edit/test/tabInlineEditController.test.ts
+[INFO] ✓ browser-features/chrome/common/tab-inline-edit/test/tabInlineEditController.test.ts (runAllTests, 54ms)
+[INFO] [112/284] Completed browser-features/chrome/common/tab-refresh/test/tabRefresh.test.ts
+[INFO] ✓ browser-features/chrome/common/tab-refresh/test/tabRefresh.test.ts (runAllTests, 109ms)
+[INFO] [113/284] Completed browser-features/chrome/common/tab-sleep-exclusion/test/tabSleepExclusion.test.ts
+[INFO] ✓ browser-features/chrome/common/tab-sleep-exclusion/test/tabSleepExclusion.test.ts (runAllTests, 23ms)
+[INFO] [114/284] Completed browser-features/chrome/common/tab-stacks/test/tabStacksDragLifecycle.test.ts
+[INFO] ✓ browser-features/chrome/common/tab-stacks/test/tabStacksDragLifecycle.test.ts (runAllTests, 6ms)
+[INFO] [115/284] Completed browser-features/chrome/common/tab-stacks/test/tabStacksEventContract.test.ts
+[INFO] ✓ browser-features/chrome/common/tab-stacks/test/tabStacksEventContract.test.ts (runAllTests, 6ms)
+[INFO] [116/284] Completed browser-features/chrome/common/tab-stacks/test/tabStacksFoundation.test.ts
+[INFO] ✓ browser-features/chrome/common/tab-stacks/test/tabStacksFoundation.test.ts (runAllTests, 8ms)
+[INFO] [117/284] Completed browser-features/chrome/common/tab-stacks/test/tabStacksInteractions.test.ts
+[INFO] ✓ browser-features/chrome/common/tab-stacks/test/tabStacksInteractions.test.ts (runAllTests, 6841ms)
+[INFO] [118/284] Completed browser-features/chrome/common/tab-stacks/test/tabStacksNative.test.ts
+[INFO] ✓ browser-features/chrome/common/tab-stacks/test/tabStacksNative.test.ts (runAllTests, 3245ms)
+[INFO] [119/284] Completed browser-features/chrome/common/tab-stacks/test/tabStacksSessionRestore.test.ts
+[INFO] ✓ browser-features/chrome/common/tab-stacks/test/tabStacksSessionRestore.test.ts (runAllTests, 5914ms)
+[INFO] [120/284] Completed browser-features/chrome/common/tab-stacks/test/tabStacksStartup.test.ts
+[INFO] ✓ browser-features/chrome/common/tab-stacks/test/tabStacksStartup.test.ts (runAllTests, 147ms)
+[INFO] [121/284] Completed browser-features/chrome/common/tab-strip-wheel-guard/test/tabStripWheelGuard.test.ts
+[INFO] ✓ browser-features/chrome/common/tab-strip-wheel-guard/test/tabStripWheelGuard.test.ts (runAllTests, 21ms)
+[INFO] [122/284] Completed browser-features/chrome/common/tab/test/tabDoubleClickClose.test.ts
+[INFO] ✓ browser-features/chrome/common/tab/test/tabDoubleClickClose.test.ts (runAllTests, 489ms)
+[INFO] [123/284] Completed browser-features/chrome/common/tab/test/tabOpenPosition.test.ts
+[INFO] ✓ browser-features/chrome/common/tab/test/tabOpenPosition.test.ts (runAllTests, 731ms)
+[INFO] [124/284] Completed browser-features/chrome/common/tab/test/tabPreferenceSync.test.ts
+[INFO] ✓ browser-features/chrome/common/tab/test/tabPreferenceSync.test.ts (runAllTests, 261ms)
+[INFO] [125/284] Completed browser-features/chrome/common/tab/test/tabScroll.test.ts
+[INFO] ✓ browser-features/chrome/common/tab/test/tabScroll.test.ts (runAllTests, 1081ms)
+[INFO] [126/284] Completed browser-features/chrome/common/tabbar/test/pinned-tab-controller.test.ts
+[INFO] ✓ browser-features/chrome/common/tabbar/test/pinned-tab-controller.test.ts (runAllTests, 79ms)
+[INFO] [127/284] Completed browser-features/chrome/common/tabbar/test/tab-drag-drop-manager.test.ts
+[INFO] ✓ browser-features/chrome/common/tabbar/test/tab-drag-drop-manager.test.ts (import, 72ms)
+[INFO] [128/284] Completed browser-features/chrome/common/tabbar/test/tabbarDomUtils.test.ts
+[INFO] ✓ browser-features/chrome/common/tabbar/test/tabbarDomUtils.test.ts (runAllTests, 11ms)
+[INFO] [129/284] Completed browser-features/chrome/common/tabbar/test/tabbarMultirowCss.test.ts
+[INFO] ✓ browser-features/chrome/common/tabbar/test/tabbarMultirowCss.test.ts (runAllTests, 15ms)
+[INFO] [130/284] Completed browser-features/chrome/common/ui-custom/test/bookmarkWorkspaceContainer.test.ts
+[INFO] ✓ browser-features/chrome/common/ui-custom/test/bookmarkWorkspaceContainer.test.ts (runAllTests, 2509ms)
+[INFO] [131/284] Completed browser-features/chrome/common/ui-custom/test/movePageInsideSearchbar.test.ts
+[INFO] ✓ browser-features/chrome/common/ui-custom/test/movePageInsideSearchbar.test.ts (runAllTests, 175ms)
+[INFO] [132/284] Completed browser-features/chrome/common/undo-closed-tab/test/undoClosedTab.test.ts
+[INFO] ✓ browser-features/chrome/common/undo-closed-tab/test/undoClosedTab.test.ts (runAllTests, 33ms)
+[INFO] [133/284] Completed browser-features/chrome/common/undo-closed-tab/test/undoClosedTabStyleElement.test.ts
+[INFO] ✓ browser-features/chrome/common/undo-closed-tab/test/undoClosedTabStyleElement.test.ts (runAllTests, 64ms)
+[INFO] [134/284] Completed browser-features/chrome/common/window-drag/test/windowDragSession.test.ts
+[INFO] ✓ browser-features/chrome/common/window-drag/test/windowDragSession.test.ts (runAllTests, 25ms)
+[INFO] [135/284] Completed browser-features/chrome/common/workspaces/test/configPersistence.test.ts
+[INFO] ✓ browser-features/chrome/common/workspaces/test/configPersistence.test.ts (runAllTests, 24ms)
+[INFO] [136/284] Completed browser-features/chrome/common/workspaces/test/containerColor.test.ts
+[INFO] ✓ browser-features/chrome/common/workspaces/test/containerColor.test.ts (runAllTests, 26ms)
+[INFO] [137/284] Completed browser-features/chrome/common/workspaces/test/explicitTabUserContext.test.ts
+[INFO] ✓ browser-features/chrome/common/workspaces/test/explicitTabUserContext.test.ts (runAllTests, 24ms)
+[INFO] [138/284] Completed browser-features/chrome/common/workspaces/test/menuAccessKey.test.ts
+[INFO] ✓ browser-features/chrome/common/workspaces/test/menuAccessKey.test.ts (runAllTests, 95ms)
+[INFO] [139/284] Completed browser-features/chrome/common/workspaces/test/modalCallerRequestLifecycle.test.ts
+[INFO] ✓ browser-features/chrome/common/workspaces/test/modalCallerRequestLifecycle.test.ts (runAllTests, 20ms)
+[INFO] [140/284] Completed browser-features/chrome/common/workspaces/test/nativeLastTabDisabledClose.test.ts
+[INFO] ✓ browser-features/chrome/common/workspaces/test/nativeLastTabDisabledClose.test.ts (runAllTests, 7397ms)
+[INFO] [141/284] Completed browser-features/chrome/common/workspaces/test/nativeLastTabDisabledKeepOpen.test.ts
+[INFO] ✓ browser-features/chrome/common/workspaces/test/nativeLastTabDisabledKeepOpen.test.ts (runAllTests, 8072ms)
+[INFO] [142/284] Completed browser-features/chrome/common/workspaces/test/nativeLastTabWorkspacesEnabled.test.ts
+[INFO] ✓ browser-features/chrome/common/workspaces/test/nativeLastTabWorkspacesEnabled.test.ts (runAllTests, 11560ms)
+[INFO] [143/284] Completed browser-features/chrome/common/workspaces/test/tabReplacementLifecycle.test.ts
+[INFO] ✓ browser-features/chrome/common/workspaces/test/tabReplacementLifecycle.test.ts (runAllTests, 17ms)
+[INFO] [144/284] Completed browser-features/chrome/common/workspaces/test/workspaceContainerAdapter.test.ts
+[INFO] ✓ browser-features/chrome/common/workspaces/test/workspaceContainerAdapter.test.ts (runAllTests, 117ms)
+[INFO] [145/284] Completed browser-features/chrome/common/workspaces/test/workspaceContainerSetup.test.ts
+[INFO] ✓ browser-features/chrome/common/workspaces/test/workspaceContainerSetup.test.ts (runAllTests, 35ms)
+[INFO] [146/284] Completed browser-features/chrome/common/workspaces/test/workspaceIconRawValue.test.ts
+[INFO] ✓ browser-features/chrome/common/workspaces/test/workspaceIconRawValue.test.ts (runAllTests, 112ms)
+[INFO] [147/284] Completed browser-features/chrome/common/workspaces/test/workspaceIcons.test.ts
+[INFO] ✓ browser-features/chrome/common/workspaces/test/workspaceIcons.test.ts (runAllTests, 42ms)
+[INFO] [148/284] Completed browser-features/chrome/common/workspaces/test/workspaceLastTabPolicy.test.ts
+[INFO] ✓ browser-features/chrome/common/workspaces/test/workspaceLastTabPolicy.test.ts (runAllTests, 10866ms)
+[INFO] [149/284] Completed browser-features/chrome/common/workspaces/test/workspaceLastTabPreservation.test.ts
+[INFO] ✓ browser-features/chrome/common/workspaces/test/workspaceLastTabPreservation.test.ts (runAllTests, 8888ms)
+[INFO] [150/284] Completed browser-features/chrome/common/workspaces/test/workspaceSnapshotUtils.test.ts
+[INFO] ✓ browser-features/chrome/common/workspaces/test/workspaceSnapshotUtils.test.ts (runAllTests, 23ms)
+[INFO] [151/284] Completed browser-features/chrome/common/workspaces/test/workspaceSyncIndicator.test.ts
+[INFO] ✓ browser-features/chrome/common/workspaces/test/workspaceSyncIndicator.test.ts (runAllTests, 378ms)
+[INFO] [152/284] Completed browser-features/chrome/common/workspaces/test/workspaceSyncIndicatorWindows.test.ts
+[INFO] ✓ browser-features/chrome/common/workspaces/test/workspaceSyncIndicatorWindows.test.ts (runAllTests, 3428ms)
+[INFO] [153/284] Completed browser-features/chrome/common/workspaces/test/workspaceSyncMenu.test.ts
+[INFO] ✓ browser-features/chrome/common/workspaces/test/workspaceSyncMenu.test.ts (runAllTests, 28ms)
+[INFO] [154/284] Completed browser-features/chrome/common/workspaces/test/workspacesArchiveHelpers.test.ts
+[INFO] ✓ browser-features/chrome/common/workspaces/test/workspacesArchiveHelpers.test.ts (runAllTests, 33ms)
+[INFO] [155/284] Completed browser-features/chrome/common/workspaces/test/workspacesOldType.test.ts
+[INFO] ✓ browser-features/chrome/common/workspaces/test/workspacesOldType.test.ts (runAllTests, 33ms)
+[INFO] [156/284] Completed browser-features/chrome/common/workspaces/test/workspacesStaticNames.test.ts
+[INFO] ✓ browser-features/chrome/common/workspaces/test/workspacesStaticNames.test.ts (runAllTests, 30ms)
+[INFO] [157/284] Completed browser-features/chrome/common/zen-mode/test/zenMode.test.ts
+[INFO] ✓ browser-features/chrome/common/zen-mode/test/zenMode.test.ts (runAllTests, 2301ms)
+[INFO] [158/284] Completed browser-features/chrome/common/zen-mode/test/zenModeBackground.test.ts
+[INFO] ✓ browser-features/chrome/common/zen-mode/test/zenModeBackground.test.ts (runAllTests, 290ms)
+[INFO] [159/284] Completed browser-features/chrome/common/zen-mode/test/zenModeStyleElement.test.ts
+[INFO] ✓ browser-features/chrome/common/zen-mode/test/zenModeStyleElement.test.ts (runAllTests, 42ms)
+[INFO] [160/284] Completed browser-features/chrome/static/overrides/modules/workspaces/test/clipboard.test.ts
+[INFO] ✓ browser-features/chrome/static/overrides/modules/workspaces/test/clipboard.test.ts (runAllTests, 5ms)
+[INFO] [161/284] Completed browser-features/chrome/static/overrides/modules/workspaces/test/openLinkUserContext.test.ts
+[INFO] ✓ browser-features/chrome/static/overrides/modules/workspaces/test/openLinkUserContext.test.ts (runAllTests, 5ms)
+[INFO] [162/284] Completed browser-features/chrome/static/overrides/modules/workspaces/test/pendingWorkspaceContainer.test.ts
+[INFO] ✓ browser-features/chrome/static/overrides/modules/workspaces/test/pendingWorkspaceContainer.test.ts (runAllTests, 4ms)
+[INFO] [163/284] Completed browser-features/chrome/test/firefox-downloaded/generated/browser__base__content__test__browser-caps__browser_principalserialization_version1.test.js
+[INFO]   Firefox source: browser/base/content/test/browser-caps/browser_principalSerialization_version1.js (browser/base/content/test/browser-caps/browser.toml)
+[INFO] ✓ browser-features/chrome/test/firefox-downloaded/generated/browser__base__content__test__browser-caps__browser_principalserialization_version1.test.js (mozillaTasks, 41ms)
+[INFO]   ✓ task 1: test_nullPrincipal (0ms)
+[INFO]   ✓ task 2: test_realHistoryCheck (0ms)
+[INFO] [164/284] Completed browser-features/chrome/test/firefox-downloaded/generated/browser__base__content__test__browser-general__browser_bug537474.test.js
+[INFO]   Firefox source: browser/base/content/test/browser-general/browser_bug537474.js (browser/base/content/test/browser-general/browser.toml)
+[INFO] ✓ browser-features/chrome/test/firefox-downloaded/generated/browser__base__content__test__browser-general__browser_bug537474.test.js (mozillaTasks, 77ms)
+[INFO]   ✓ task 1: task 1 (34ms)
+[INFO] [165/284] Completed browser-features/chrome/test/firefox-downloaded/generated/browser__base__content__test__browser-general__browser_bug565575.test.js
+[INFO]   Firefox source: browser/base/content/test/browser-general/browser_bug565575.js (browser/base/content/test/browser-general/browser.toml)
+[INFO] ✓ browser-features/chrome/test/firefox-downloaded/generated/browser__base__content__test__browser-general__browser_bug565575.test.js (mozillaTasks, 111ms)
+[INFO]   ✓ task 1: task 1 (66ms)
+[INFO] [166/284] Completed browser-features/chrome/test/firefox-downloaded/generated/browser__base__content__test__browser-general__browser_bug596687.test.js
+[INFO]   Firefox source: browser/base/content/test/browser-general/browser_bug596687.js (browser/base/content/test/browser-general/browser.toml)
+[INFO] ✓ browser-features/chrome/test/firefox-downloaded/generated/browser__base__content__test__browser-general__browser_bug596687.test.js (mozillaTasks, 91ms)
+[INFO]   ✓ task 1: test (43ms)
+[INFO] [167/284] Completed browser-features/chrome/test/firefox-downloaded/generated/browser__base__content__test__browser-performance__browser_hiddenwindow_existence.test.js
+[INFO]   Firefox source: browser/base/content/test/browser-performance/browser_hiddenwindow_existence.js (browser/base/content/test/browser-performance/browser.toml)
+[INFO] ✓ browser-features/chrome/test/firefox-downloaded/generated/browser__base__content__test__browser-performance__browser_hiddenwindow_existence.test.js (mozillaTasks, 72ms)
+[INFO]   ✓ task 1: test_hiddenwindow_existence (0ms)
+[INFO] [168/284] Completed browser-features/chrome/test/firefox-downloaded/generated/browser__components__customizableui__test__browser_996364_registerarea_different_properties.test.js
+[INFO]   Firefox source: browser/components/customizableui/test/browser_996364_registerArea_different_properties.js (browser/components/customizableui/test/browser.toml)
+[INFO] ✓ browser-features/chrome/test/firefox-downloaded/generated/browser__components__customizableui__test__browser_996364_registerarea_different_properties.test.js (mozillaTasks, 142ms)
+[INFO]   ✓ task 1: task 1 (1ms)
+[INFO]   ✓ task 2: task 2 (0ms)
+[INFO]   ✓ task 3: task 3 (0ms)
+[INFO]   ✓ task 4: task 4 (0ms)
+[INFO]   ✓ task 5: task 5 (0ms)
+[INFO]   ✓ task 6: task 6 (1ms)
+[INFO]   ✓ task 7: task 7 (0ms)
+[INFO] [169/284] Completed browser-features/chrome/test/firefox-downloaded/generated/browser__components__tabbrowser__test__browser__tabs__browser_pinned_and_hidden_tabs.test.js
+[INFO]   Firefox source: browser/components/tabbrowser/test/browser/tabs/browser_pinned_and_hidden_tabs.js (browser/components/tabbrowser/test/browser/tabs/browser.toml)
+[INFO] ✓ browser-features/chrome/test/firefox-downloaded/generated/browser__components__tabbrowser__test__browser__tabs__browser_pinned_and_hidden_tabs.test.js (mozillaTasks, 145ms)
+[INFO]   ✓ task 1: test_pinned_and_hidden_tabs (59ms)
+[INFO] [170/284] Completed browser-features/chrome/test/firefox-downloaded/generated/browser__components__urlbar__tests__browser-urlbarinput__browser_a11y.test.js
+[INFO]   Firefox source: browser/components/urlbar/tests/browser-UrlbarInput/browser_a11y.js (browser/components/urlbar/tests/browser-UrlbarInput/browser.toml)
+[INFO] ✓ browser-features/chrome/test/firefox-downloaded/generated/browser__components__urlbar__tests__browser-urlbarinput__browser_a11y.test.js (mozillaTasks, 238ms)
+[INFO]   ✓ task 1: test_combobox_controls_listbox (0ms)
+[INFO]   ✓ task 2: test_searchmode_switcher_exposed_once (107ms)
+[INFO] [171/284] Completed browser-features/chrome/test/firefox-imported/notificationStacking.test.js
+[INFO] ✓ browser-features/chrome/test/firefox-imported/notificationStacking.test.js (mozillaTasks, 122ms)
+[INFO]   ✓ task 1: testStackingOrder (75ms)
+[INFO] [172/284] Completed browser-features/chrome/test/firefox-imported/unloadDialogs.test.js
+[INFO] ✓ browser-features/chrome/test/firefox-imported/unloadDialogs.test.js (mozillaTasks, 207ms)
+[INFO]   ✓ task 1: testUnloadDialogsDoNotAppear (154ms)
+[INFO] [173/284] Completed browser-features/chrome/test/mochitest-compat/mochitestCompat.test.js
+[INFO] ✓ browser-features/chrome/test/mochitest-compat/mochitestCompat.test.js (mozillaTasks, 93ms)
+[INFO]   ✓ task 1: assertionsAreAvailable (1ms)
+[INFO]   ✓ task 2: asyncTasksAreAwaited (0ms)
+[INFO]   ✓ task 3: mozillaTaskProgressIsPublished (0ms)
+[INFO]   ✓ task 4: waitForConditionHelpersResolveAndReject (6ms)
+[INFO]   ✓ task 5: browserTestUtilsWaitForEventResolvesMatchingEvent (11ms)
+[INFO]   ✓ task 6: browserTestUtilsWaitForMutationConditionResolves (0ms)
+[INFO]   ✓ task 7: browserTestUtilsWaitForNotificationBoxResolves (26ms)
+[INFO]   ✓ task 8: cleanupIsDeferredUntilTasksFinish (0ms)
+[INFO] [174/284] Completed browser-features/chrome/test/mochitest-compat/tabLifecycleMozillaStyle.test.js
+[INFO] ✓ browser-features/chrome/test/mochitest-compat/tabLifecycleMozillaStyle.test.js (mozillaTasks, 383ms)
+[INFO]   ✓ task 1: browserStartsWithCleanSingleTab (1ms)
+[INFO]   ✓ task 2: activeSplitViewUsesNativePrivateReceiver (0ms)
+[INFO]   ✓ task 3: browserBug565575PreservesUrlbarFocusAcrossTabSwitches (78ms)
+[INFO]   ✓ task 4: openTabAndCloseIt (30ms)
+[INFO]   ✓ task 5: browserTestUtilsAddTabReturnsTab (82ms)
+[INFO]   ✓ task 6: browserTestUtilsRemovesHiddenAndPinnedTabsWithoutAwait (47ms)
+[INFO]   ✓ task 7: noAwaitTabRemovalsDrainBeforeNextTask (0ms)
+[INFO]   ✓ task 8: browserTestUtilsWithNewTabPassesBrowser (95ms)
+[INFO] [175/284] Completed browser-features/chrome/test/unit/browserChromeElements.test.ts
+[INFO] ✓ browser-features/chrome/test/unit/browserChromeElements.test.ts (runAllTests, 15ms)
+[INFO] [176/284] Completed browser-features/chrome/test/unit/browserChromeLayout.test.ts
+[INFO] ✓ browser-features/chrome/test/unit/browserChromeLayout.test.ts (runAllTests, 11ms)
+[INFO] [177/284] Completed browser-features/chrome/test/unit/browserChromeVisibility.test.ts
+[INFO] ✓ browser-features/chrome/test/unit/browserChromeVisibility.test.ts (runAllTests, 12ms)
+[INFO] [178/284] Completed browser-features/chrome/test/unit/cssVariablesUI.test.ts
+[INFO] ✓ browser-features/chrome/test/unit/cssVariablesUI.test.ts (runAllTests, 6ms)
+[INFO] [179/284] Completed browser-features/chrome/test/unit/multirowTabbarUI.test.ts
+[INFO] ✓ browser-features/chrome/test/unit/multirowTabbarUI.test.ts (runAllTests, 5ms)
+[INFO] [180/284] Completed browser-features/chrome/test/unit/navigationBarUI.test.ts
+[INFO] ✓ browser-features/chrome/test/unit/navigationBarUI.test.ts (runAllTests, 5ms)
+[INFO] [181/284] Completed browser-features/chrome/test/unit/onModuleLoaded.test.ts
+[INFO] ✓ browser-features/chrome/test/unit/onModuleLoaded.test.ts (runAllTests, 3ms)
+[INFO] [182/284] Completed browser-features/chrome/test/unit/panelSidebarUI.test.ts
+[INFO] ✓ browser-features/chrome/test/unit/panelSidebarUI.test.ts (runAllTests, 4ms)
+[INFO] [183/284] Completed browser-features/chrome/test/unit/sidebarLayout.test.ts
+[INFO] ✓ browser-features/chrome/test/unit/sidebarLayout.test.ts (runAllTests, 4ms)
+[INFO] [184/284] Completed browser-features/chrome/test/unit/solidXulNullProps.test.ts
+[INFO] ✓ browser-features/chrome/test/unit/solidXulNullProps.test.ts (runAllTests, 4ms)
+[INFO] [185/284] Completed browser-features/chrome/test/unit/tabOperations.test.ts
+[INFO] ✓ browser-features/chrome/test/unit/tabOperations.test.ts (runAllTests, 19ms)
+[INFO] [186/284] Completed browser-features/chrome/test/unit/workspacesUI.test.ts
+[INFO] ✓ browser-features/chrome/test/unit/workspacesUI.test.ts (runAllTests, 8ms)
+[INFO] [187/284] Completed browser-features/chrome/utils/test/contextMenu.test.ts
+[INFO] ✓ browser-features/chrome/utils/test/contextMenu.test.ts (runAllTests, 9ms)
+[INFO] [188/284] Completed browser-features/chrome/utils/test/iconUrlParser.test.ts
+[INFO] ✓ browser-features/chrome/utils/test/iconUrlParser.test.ts (runAllTests, 14ms)
+[INFO] [189/284] Completed browser-features/chrome/utils/test/rootLifecycle.test.ts
+[INFO] ✓ browser-features/chrome/utils/test/rootLifecycle.test.ts (runAllTests, 10ms)
+[INFO] [190/284] Completed browser-features/chrome/utils/test/stylesheetService.test.ts
+[INFO] ✓ browser-features/chrome/utils/test/stylesheetService.test.ts (runAllTests, 37ms)
+[INFO] [191/284] Completed browser-features/modules/actors/NRChromeModalChild.request.test.mts
+[INFO] ✓ browser-features/modules/actors/NRChromeModalChild.request.test.mts (runAllTests, 8ms)
+[INFO] [192/284] Completed browser-features/modules/actors/NRMouseGestureScrollUtils.test.ts
+[INFO] ✓ browser-features/modules/actors/NRMouseGestureScrollUtils.test.ts (runAllTests, 11ms)
+[INFO] [193/284] Completed browser-features/modules/actors/test/JSWindowActorRemoteType.test.mts
+[INFO] ✓ browser-features/modules/actors/test/JSWindowActorRemoteType.test.mts (runAllTests, 82ms)
+[INFO] [194/284] Completed browser-features/modules/actors/test/NRContextMenuPackaging.test.mts
+[INFO] ✓ browser-features/modules/actors/test/NRContextMenuPackaging.test.mts (runAllTests, 13ms)
+[INFO] [195/284] Completed browser-features/modules/actors/test/NRKeyboardShortcutFocusActors.test.ts
+[INFO] ✓ browser-features/modules/actors/test/NRKeyboardShortcutFocusActors.test.ts (runAllTests, 10ms)
+[INFO] [196/284] Completed browser-features/modules/actors/test/NRPwaManagerContainers.test.mts
+[INFO] ✓ browser-features/modules/actors/test/NRPwaManagerContainers.test.mts (runAllTests, 9ms)
+[INFO] [197/284] Completed browser-features/modules/actors/test/NRPwaManagerParent.test.mts
+[INFO] ✓ browser-features/modules/actors/test/NRPwaManagerParent.test.mts (runAllTests, 127ms)
+[INFO] [198/284] Completed browser-features/modules/actors/test/NRSettingsContextMenuCatalog.test.mts
+[INFO] ✓ browser-features/modules/actors/test/NRSettingsContextMenuCatalog.test.mts (runAllTests, 59ms)
+[INFO] [199/284] Completed browser-features/modules/actors/webscraper/test/DOMActionOperations.test.ts
+[INFO] ✓ browser-features/modules/actors/webscraper/test/DOMActionOperations.test.ts (runAllTests, 26ms)
+[INFO] [200/284] Completed browser-features/modules/actors/webscraper/test/HighlightManager.test.ts
+[INFO] ✓ browser-features/modules/actors/webscraper/test/HighlightManager.test.ts (runAllTests, 7ms)
+[INFO] [201/284] Completed browser-features/modules/actors/webscraper/turndown/fingerprintDom.test.ts
+[INFO] ✓ browser-features/modules/actors/webscraper/turndown/fingerprintDom.test.ts (runAllTests, 477ms)
+[INFO] [202/284] Completed browser-features/modules/actors/webscraper/turndown/fingerprintParsing.test.ts
+[INFO] ✓ browser-features/modules/actors/webscraper/turndown/fingerprintParsing.test.ts (runAllTests, 7ms)
+[INFO] [203/284] Completed browser-features/modules/actors/webscraper/utils.test.ts
+[INFO] ✓ browser-features/modules/actors/webscraper/utils.test.ts (runAllTests, 6ms)
+[INFO] [204/284] Completed browser-features/modules/common/NRKeyboardShortcutFocusStore.test.ts
+[INFO] ✓ browser-features/modules/common/NRKeyboardShortcutFocusStore.test.ts (runAllTests, 3ms)
+[INFO] [205/284] Completed browser-features/modules/modules/chrome-web-store/test/CRXConverter.test.mts
+[INFO] ✓ browser-features/modules/modules/chrome-web-store/test/CRXConverter.test.mts (runAllTests, 54ms)
+[INFO] [206/284] Completed browser-features/modules/modules/chrome-web-store/test/CRXParser.test.mts
+[INFO] ✓ browser-features/modules/modules/chrome-web-store/test/CRXParser.test.mts (runAllTests, 5ms)
+[INFO] [207/284] Completed browser-features/modules/modules/chrome-web-store/test/CodeValidator.test.mts
+[INFO] ✓ browser-features/modules/modules/chrome-web-store/test/CodeValidator.test.mts (runAllTests, 4ms)
+[INFO] [208/284] Completed browser-features/modules/modules/chrome-web-store/test/Constants.test.mts
+[INFO] ✓ browser-features/modules/modules/chrome-web-store/test/Constants.test.mts (runAllTests, 4ms)
+[INFO] [209/284] Completed browser-features/modules/modules/chrome-web-store/test/DNRTransformer.test.mts
+[INFO] ✓ browser-features/modules/modules/chrome-web-store/test/DNRTransformer.test.mts (runAllTests, 4ms)
+[INFO] [210/284] Completed browser-features/modules/modules/chrome-web-store/test/DOMUtils.test.mts
+[INFO] ✓ browser-features/modules/modules/chrome-web-store/test/DOMUtils.test.mts (runAllTests, 5ms)
+[INFO] [211/284] Completed browser-features/modules/modules/chrome-web-store/test/FileUtils.test.mts
+[INFO] ✓ browser-features/modules/modules/chrome-web-store/test/FileUtils.test.mts (runAllTests, 7ms)
+[INFO] [212/284] Completed browser-features/modules/modules/chrome-web-store/test/ManifestTransformer.test.mts
+[INFO] ✓ browser-features/modules/modules/chrome-web-store/test/ManifestTransformer.test.mts (runAllTests, 4ms)
+[INFO] [213/284] Completed browser-features/modules/modules/chrome-web-store/test/ZipUtils.test.mts
+[INFO] ✓ browser-features/modules/modules/chrome-web-store/test/ZipUtils.test.mts (runAllTests, 5ms)
+[INFO] [214/284] Completed browser-features/modules/modules/chrome-web-store/test/polyfills/documentId/DocumentIdPolyfill.test.mts
+[INFO] ✓ browser-features/modules/modules/chrome-web-store/test/polyfills/documentId/DocumentIdPolyfill.test.mts (runAllTests, 33ms)
+[INFO] [215/284] Completed browser-features/modules/modules/chrome-web-store/test/polyfills/offscreen/OffscreenPolyfill.test.mts
+[INFO] ✓ browser-features/modules/modules/chrome-web-store/test/polyfills/offscreen/OffscreenPolyfill.test.mts (runAllTests, 21ms)
+[INFO] [216/284] Completed browser-features/modules/modules/chrome-web-store/test/types.test.mts
+[INFO] ✓ browser-features/modules/modules/chrome-web-store/test/types.test.mts (runAllTests, 3ms)
+[INFO] [217/284] Completed browser-features/modules/modules/context-menu/ContextMenuCatalogService.test.mts
+[INFO] ✓ browser-features/modules/modules/context-menu/ContextMenuCatalogService.test.mts (runAllTests, 8ms)
+[INFO] [218/284] Completed browser-features/modules/modules/ipprotection/test/FloorpIPProtectionDisclosure.test.mts
+[INFO] ✓ browser-features/modules/modules/ipprotection/test/FloorpIPProtectionDisclosure.test.mts (runAllTests, 9ms)
+[INFO] [219/284] Completed browser-features/modules/modules/ipprotection/test/FloorpIPProtectionGate.test.mts
+[INFO] ✓ browser-features/modules/modules/ipprotection/test/FloorpIPProtectionGate.test.mts (runAllTests, 5ms)
+[INFO] [220/284] Completed browser-features/modules/modules/ipprotection/test/FloorpIPProtectionUI.test.mts
+[INFO] ✓ browser-features/modules/modules/ipprotection/test/FloorpIPProtectionUI.test.mts (runAllTests, 8ms)
+[INFO] [221/284] Completed browser-features/modules/modules/notes/test/FloorpNotesStorage.test.mts
+[INFO] ✓ browser-features/modules/modules/notes/test/FloorpNotesStorage.test.mts (runAllTests, 7ms)
+[INFO] [222/284] Completed browser-features/modules/modules/os-apis/web/shared/UploadFileReader.test.mts
+[INFO] ✓ browser-features/modules/modules/os-apis/web/shared/UploadFileReader.test.mts (runAllTests, 5ms)
+[INFO] [223/284] Completed browser-features/modules/modules/os-apis/workspaces/WorkspacesApiService.test.mts
+[INFO] ✓ browser-features/modules/modules/os-apis/workspaces/WorkspacesApiService.test.mts (runAllTests, 5ms)
+[INFO] [224/284] Completed browser-features/modules/modules/os-server/test/http/utils.test.mts
+[INFO] ✓ browser-features/modules/modules/os-server/test/http/utils.test.mts (runAllTests, 8ms)
+[INFO] [225/284] Completed browser-features/modules/modules/os-server/test/router.test.mts
+[INFO] ✓ browser-features/modules/modules/os-server/test/router.test.mts (runAllTests, 6ms)
+[INFO] [226/284] Completed browser-features/modules/modules/plugin-store/test/Policy.test.mts
+[INFO] ✓ browser-features/modules/modules/plugin-store/test/Policy.test.mts (runAllTests, 6ms)
+[INFO] [227/284] Completed browser-features/modules/modules/pwa/supports/test/Linux.test.mts
+[INFO] ✓ browser-features/modules/modules/pwa/supports/test/Linux.test.mts (runAllTests, 58ms)
+[INFO] [228/284] Completed browser-features/modules/modules/pwa/supports/test/MacOS.test.mts
+[INFO] ✓ browser-features/modules/modules/pwa/supports/test/MacOS.test.mts (runAllTests, 283ms)
+[INFO] [229/284] Completed browser-features/modules/modules/pwa/supports/test/Windows.test.mts
+[INFO] ✓ browser-features/modules/modules/pwa/supports/test/Windows.test.mts (runAllTests, 12ms)
+[INFO] [230/284] Completed browser-features/modules/modules/pwa/test/MacAppShimExperiment.test.mts
+[INFO] ✓ browser-features/modules/modules/pwa/test/MacAppShimExperiment.test.mts (runAllTests, 9ms)
+[INFO] [231/284] Completed browser-features/modules/modules/pwa/test/MacAppShimInstaller.test.mts
+[INFO] ✓ browser-features/modules/modules/pwa/test/MacAppShimInstaller.test.mts (runAllTests, 21ms)
+[INFO] [232/284] Completed browser-features/modules/modules/pwa/test/NativeAppRuntime.test.mts
+[INFO] ✓ browser-features/modules/modules/pwa/test/NativeAppRuntime.test.mts (runAllTests, 24ms)
+[INFO] [233/284] Completed browser-features/modules/modules/pwa/test/SsbCommandLineHandler.test.mts
+[INFO] ✓ browser-features/modules/modules/pwa/test/SsbCommandLineHandler.test.mts (runAllTests, 1169ms)
+[INFO] [234/284] Completed browser-features/modules/modules/pwa/test/appLifecycle.test.mts
+[INFO] ✓ browser-features/modules/modules/pwa/test/appLifecycle.test.mts (runAllTests, 131ms)
+[INFO] [235/284] Completed browser-features/modules/test/workspaces/workspaceContainerBindings.test.mts
+[INFO] ✓ browser-features/modules/test/workspaces/workspaceContainerBindings.test.mts (runAllTests, 20ms)
+[INFO] [236/284] Completed browser-features/modules/test/workspaces/workspaceContainerMigration.test.mts
+[INFO] ✓ browser-features/modules/test/workspaces/workspaceContainerMigration.test.mts (runAllTests, 31ms)
+[INFO] [237/284] Completed browser-features/modules/test/workspaces/workspaceContainers.test.mts
+[INFO] ✓ browser-features/modules/test/workspaces/workspaceContainers.test.mts (runAllTests, 27ms)
+[INFO] [238/284] Completed browser-features/modules/test/workspaces/workspaceSync.test.mts
+[INFO] ✓ browser-features/modules/test/workspaces/workspaceSync.test.mts (runAllTests, 42ms)
+[INFO] [239/284] Completed browser-features/modules/test/workspaces/workspaceSyncRecord.test.mts
+[INFO] ✓ browser-features/modules/test/workspaces/workspaceSyncRecord.test.mts (runAllTests, 14ms)
+[INFO] [240/284] Completed browser-features/pages-aboutDialog/test/AboutDialog.test.ts
+[INFO] ✓ browser-features/pages-aboutDialog/test/AboutDialog.test.ts (runAllTests, 0ms)
+[INFO] [241/284] Completed browser-features/pages-modal-child/test/modalProtocol.test.ts
+[INFO] ✓ browser-features/pages-modal-child/test/modalProtocol.test.ts (runAllTests, 0ms)
+[INFO] [242/284] Completed browser-features/pages-modal-child/test/workspaceIconPickerModel.test.ts
+[INFO] ✓ browser-features/pages-modal-child/test/workspaceIconPickerModel.test.ts (runAllTests, 0ms)
+[INFO] [243/284] Completed browser-features/pages-newtab/src/utils/nrRetry.test.ts
+[INFO] ✓ browser-features/pages-newtab/src/utils/nrRetry.test.ts (runAllTests, 212ms)
+[INFO] [244/284] Completed browser-features/pages-newtab/test/lib/utils.test.ts
+[INFO] ✓ browser-features/pages-newtab/test/lib/utils.test.ts (runAllTests, 4ms)
+[INFO] [245/284] Completed browser-features/pages-newtab/test/utils/backgroundImages.test.ts
+[INFO] ✓ browser-features/pages-newtab/test/utils/backgroundImages.test.ts (runAllTests, 109ms)
+[INFO] [246/284] Completed browser-features/pages-newtab/test/utils/imageCompression.test.ts
+[INFO] ✓ browser-features/pages-newtab/test/utils/imageCompression.test.ts (runAllTests, 0ms)
+[INFO] [247/284] Completed browser-features/pages-newtab/test/utils/nrRetry.test.ts
+[INFO] ✓ browser-features/pages-newtab/test/utils/nrRetry.test.ts (runAllTests, 192ms)
+[INFO] [248/284] Completed browser-features/pages-notes/test/lib/contentMigration.test.ts
+[INFO] ✓ browser-features/pages-notes/test/lib/contentMigration.test.ts (runAllTests, 1ms)
+[INFO] [249/284] Completed browser-features/pages-notes/test/lib/exportFilename.test.ts
+[INFO] ✓ browser-features/pages-notes/test/lib/exportFilename.test.ts (runAllTests, 2ms)
+[INFO] [250/284] Completed browser-features/pages-notes/test/lib/exportMarkdown.test.ts
+[INFO] ✓ browser-features/pages-notes/test/lib/exportMarkdown.test.ts (runAllTests, 2ms)
+[INFO] [251/284] Completed browser-features/pages-notes/test/lib/extractText.test.ts
+[INFO] ✓ browser-features/pages-notes/test/lib/extractText.test.ts (runAllTests, 0ms)
+[INFO] [252/284] Completed browser-features/pages-notes/test/lib/imageCompressor.test.ts
+[INFO] ✓ browser-features/pages-notes/test/lib/imageCompressor.test.ts (runAllTests, 16ms)
+[INFO] [253/284] Completed browser-features/pages-notes/test/lib/mergeFixture.test.ts
+[INFO] ✓ browser-features/pages-notes/test/lib/mergeFixture.test.ts (runAllTests, 6ms)
+[INFO] [254/284] Completed browser-features/pages-notes/test/lib/migrateLexicalToTiptap.test.ts
+[INFO] ✓ browser-features/pages-notes/test/lib/migrateLexicalToTiptap.test.ts (runAllTests, 0ms)
+[INFO] [255/284] Completed browser-features/pages-notes/test/lib/syncPrerequisites.test.ts
+[INFO] ✓ browser-features/pages-notes/test/lib/syncPrerequisites.test.ts (runAllTests, 1ms)
+[INFO] [256/284] Completed browser-features/pages-notes/test/lib/utils.test.ts
+[INFO] ✓ browser-features/pages-notes/test/lib/utils.test.ts (runAllTests, 0ms)
+[INFO] [257/284] Completed browser-features/pages-profile-manager/test/lib/profileDataManager.test.ts
+[INFO] ✓ browser-features/pages-profile-manager/test/lib/profileDataManager.test.ts (runAllTests, 1ms)
+[INFO] [258/284] Completed browser-features/pages-profile-manager/test/lib/utils.test.ts
+[INFO] ✓ browser-features/pages-profile-manager/test/lib/utils.test.ts (runAllTests, 0ms)
+[INFO] [259/284] Completed browser-features/pages-settings/test/app/command-palette/dataManager.test.ts
+[INFO] ✓ browser-features/pages-settings/test/app/command-palette/dataManager.test.ts (runAllTests, 35ms)
+[INFO] [260/284] Completed browser-features/pages-settings/test/app/context-menu/ContextMenuDataManager.test.tsx
+[INFO] ✓ browser-features/pages-settings/test/app/context-menu/ContextMenuDataManager.test.tsx (runAllTests, 54ms)
+[INFO] [261/284] Completed browser-features/pages-settings/test/app/context-menu/ContextMenuEditor.test.tsx
+[INFO] ✓ browser-features/pages-settings/test/app/context-menu/ContextMenuEditor.test.tsx (runAllTests, 1028ms)
+[INFO] [262/284] Completed browser-features/pages-settings/test/app/context-menu/contextMenuPersistence.test.ts
+[INFO] ✓ browser-features/pages-settings/test/app/context-menu/contextMenuPersistence.test.ts (runAllTests, 3ms)
+[INFO] [263/284] Completed browser-features/pages-settings/test/app/design/tabWindowBehavior.test.ts
+[INFO] ✓ browser-features/pages-settings/test/app/design/tabWindowBehavior.test.ts (runAllTests, 0ms)
+[INFO] [264/284] Completed browser-features/pages-settings/test/app/design/verticalTabsSync.test.ts
+[INFO] ✓ browser-features/pages-settings/test/app/design/verticalTabsSync.test.ts (runAllTests, 571ms)
+[INFO] [265/284] Completed browser-features/pages-settings/test/app/gesture/configPersistence.test.ts
+[INFO] ✓ browser-features/pages-settings/test/app/gesture/configPersistence.test.ts (runAllTests, 1ms)
+[INFO] [266/284] Completed browser-features/pages-settings/test/app/keyboard-shortcut/inlineUrlAction.test.ts
+[INFO] ✓ browser-features/pages-settings/test/app/keyboard-shortcut/inlineUrlAction.test.ts (runAllTests, 0ms)
+[INFO] [267/284] Completed browser-features/pages-settings/test/app/keyboard-shortcut/keyboardShortcutEditorPolicy.test.ts
+[INFO] ✓ browser-features/pages-settings/test/app/keyboard-shortcut/keyboardShortcutEditorPolicy.test.ts (runAllTests, 0ms)
+[INFO] [268/284] Completed browser-features/pages-settings/test/app/keyboard-shortcut/keyboardShortcutMigration.test.ts
+[INFO] ✓ browser-features/pages-settings/test/app/keyboard-shortcut/keyboardShortcutMigration.test.ts (runAllTests, 0ms)
+[INFO] [269/284] Completed browser-features/pages-settings/test/app/performance/idleMemoryReclaim.test.ts
+[INFO] ✓ browser-features/pages-settings/test/app/performance/idleMemoryReclaim.test.ts (runAllTests, 0ms)
+[INFO] [270/284] Completed browser-features/pages-settings/test/integration/advanced.test.ts
+[INFO] ✓ browser-features/pages-settings/test/integration/advanced.test.ts (runAllTests, 34689ms)
+[INFO] [271/284] Completed browser-features/pages-settings/test/integration/management.test.ts
+[INFO] ✓ browser-features/pages-settings/test/integration/management.test.ts (runAllTests, 5555ms)
+[INFO] [272/284] Completed browser-features/pages-settings/test/integration/settings.test.ts
+[INFO] ✓ browser-features/pages-settings/test/integration/settings.test.ts (runAllTests, 26427ms)
+[INFO] [273/284] Completed browser-features/pages-settings/test/lib/context-menu-availability.test.tsx
+[INFO] ✓ browser-features/pages-settings/test/lib/context-menu-availability.test.tsx (runAllTests, 871ms)
+[INFO] [274/284] Completed browser-features/pages-settings/test/lib/rpc-origin.test.ts
+[INFO] ✓ browser-features/pages-settings/test/lib/rpc-origin.test.ts (runAllTests, 0ms)
+[INFO] [275/284] Completed browser-features/pages-settings/test/lib/rpc/experiments.test.ts
+[INFO] ✓ browser-features/pages-settings/test/lib/rpc/experiments.test.ts (runAllTests, 0ms)
+[INFO] [276/284] Completed browser-features/pages-settings/test/lib/rpc/rpc.test.ts
+[INFO] ✓ browser-features/pages-settings/test/lib/rpc/rpc.test.ts (runAllTests, 0ms)
+[INFO] [277/284] Completed browser-features/pages-settings/test/lib/search-documents.test.ts
+[INFO] ✓ browser-features/pages-settings/test/lib/search-documents.test.ts (runAllTests, 3ms)
+[INFO] [278/284] Completed browser-features/pages-settings/test/lib/utils.test.ts
+[INFO] ✓ browser-features/pages-settings/test/lib/utils.test.ts (runAllTests, 1ms)
+[INFO] [279/284] Completed browser-features/pages-welcome/test/app/localization/system-locale.test.ts
+[INFO] ✓ browser-features/pages-welcome/test/app/localization/system-locale.test.ts (runAllTests, 0ms)
+[INFO] [280/284] Completed browser-features/pages-welcome/test/integration/dismiss-tab.test.ts
+[INFO] ✓ browser-features/pages-welcome/test/integration/dismiss-tab.test.ts (runAllTests, 1ms)
+[INFO] [281/284] Completed browser-features/pages-welcome/test/integration/release-notes-prompt.test.ts
+[INFO] ✓ browser-features/pages-welcome/test/integration/release-notes-prompt.test.ts (runAllTests, 2374ms)
+[INFO] [282/284] Completed browser-features/pages-welcome/test/integration/welcome.test.ts
+[INFO] ✓ browser-features/pages-welcome/test/integration/welcome.test.ts (runAllTests, 4333ms)
+[INFO] [283/284] Completed browser-features/pages-welcome/test/lib/theme-value.test.ts
+[INFO] ✓ browser-features/pages-welcome/test/lib/theme-value.test.ts (runAllTests, 0ms)
+[INFO] [284/284] Completed browser-features/pages-workflow-progress/test/lib/utils.test.ts
+[INFO] ✓ browser-features/pages-workflow-progress/test/lib/utils.test.ts (runAllTests, 1ms)
+
+[INFO] === Summary ===
+[INFO] Browser test result: 284 passed, 0 failed
+[INFO] Downloaded Firefox coverage: 8 file(s), 16 task(s), 16 passed
+Log written to logs/test/colocated-20261105-193024-871.log

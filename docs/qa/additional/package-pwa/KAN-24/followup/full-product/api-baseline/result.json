@@ -1,0 +1,38 @@
+{
+  "mode": "shipped_api",
+  "migrationDirection": null,
+  "product": "/workspace/qa-linux-additional/KAN-24/followup/products/baseline/floorp",
+  "input": "synthetic real WebDriver ElementClick, native shadow buttons",
+  "display": "Xvfb102 X11",
+  "fullProductResourceMutation": false,
+  "originalMacOSQualified": false,
+  "completed": true,
+  "checks": {
+    "stale-horizontal-latest-multirow": false,
+    "stale-multirow-latest-horizontal": false
+  },
+  "allExpectedChecksPass": false,
+  "productUnchanged": true,
+  "normalQuits": [
+    {
+      "response": {
+        "cause": "shutdown",
+        "forced": false,
+        "in_app": true
+      },
+      "exitCode": 0,
+      "forced": false
+    }
+  ],
+  "ownedProcessesRemaining": 0,
+  "records": [
+    {
+      "name": "01-shipped-api-startup-before-hub",
+      "file": "01-shipped-api-startup-before-hub.json"
+    },
+    {
+      "name": "02-actual-hub-origin",
+      "file": "02-actual-hub-origin.json"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "key": "KAN-24",
+  "canonical": {
+    "pr": 2950,
+    "sha": "69d306b11c9e52da9e6270870740d49b1d561659",
+    "runtimeMajor": 158
+  },
+  "dependent": {
+    "pr": 3046,
+    "base": "codex/kan24-pr2950-base-69d306b1",
+    "head": "d058d7001b822f0ef2413b1307c98a463dfdcdb9",
+    "ci": 42093984715
+  },
+  "main": {
+    "sha": "29a3eb23145da90706d8a94441373278521cc737",
+    "runtimeMajor": 159,
+    "packageRun": 42093687541
+  },
+  "integration": {
+    "sha": "493d2974e00e6902d86585d329eea1f9040ff791",
+    "branch": "codex/qa-kan24-main-integration",
+    "ci": 42094068516,
+    "packageRun": 42094061748
+  },
+  "packaging": "existing complete frontend/application/package pipeline with locked prebuilt native runtime; not fresh Gecko compilation; unsigned stable-v2-validation; no publication",
+  "macOS": "not accessed; original macOS Photon remains outstanding",
+  "originalLinuxDenominator": 22
+}

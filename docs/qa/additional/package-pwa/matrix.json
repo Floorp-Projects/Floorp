@@ -3,13 +3,16 @@
     "key": "KAN-24",
     "github": "https://github.com/Floorp-Projects/Floorp/issues/2949",
     "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2950",
-    "newPr": null,
-    "jiraCommentId": "10399",
+    "newPr": "https://github.com/Floorp-Projects/Floorp/pull/3046",
+    "jiraCommentId": "10403",
     "sourceSha": {
       "main": "29a3eb23145da90706d8a94441373278521cc737",
-      "baselineFullProduct": "2deb165d75290ffd4f602ad078512dc42fc3a332",
+      "baselineFullProduct": "29a3eb23145da90706d8a94441373278521cc737",
       "canonicalPrHead": "69d306b11c9e52da9e6270870740d49b1d561659",
-      "candidatePatchSha256": "b4fc186910cc0d76d3d81a0e5aef8c56a09bde9607f8d2d4b2b6bd1d7b778ebb"
+      "candidatePatchSha256": "b4fc186910cc0d76d3d81a0e5aef8c56a09bde9607f8d2d4b2b6bd1d7b778ebb",
+      "priorBaselineFullProduct": "2deb165d75290ffd4f602ad078512dc42fc3a332",
+      "dependentPrHead": "d058d7001b822f0ef2413b1307c98a463dfdcdb9",
+      "fullIntegration": "493d2974e00e6902d86585d329eea1f9040ff791"
     },
     "productVersion": {
       "ServicesVersion": "159.0.1",
@@ -17,24 +20,68 @@
     },
     "environment": {
       "os": "Debian GNU/Linux13.6",
-      "display": "Xvfb :100 X11; actual product GUI, no KDE/Wayland/physical input claim",
+      "display": "Xvfb102 X11; normalDBus; actual complete unsigned product, no KDE/Wayland/physical input claim",
       "input": "synthetic Marionette WebDriver element/shadow-element/pointer clicks",
       "contentSandboxLevel": 6,
       "experimentForced": false,
-      "candidateOrigin": "authenticated native package with scoped generated chrome/settings assets; NOT full product build"
+      "candidateOrigin": "authenticated complete current-main+canonical2950+supplement production application/package pipeline, locked prebuilt native Runtime; no resource substitution; not fresh Gecko/strict final-release qualification"
     },
-    "testCommand": "python3 ui_server.py <case-root> <product-root> <port> [startup-url]; run_steps.py/candidate_roundtrip.py/workspace_followup.py/restart_followup.py/baseline_restart_steps.py drive recorded requests",
-    "result": "actual baseline UI desynchronization reproduced; canonical2950 fixes live roundtrip and passes persistence/regression controls but initial stored-sync remains; two-file proposal fixes4actual-source API regressions, not an amended full build",
+    "testCommand": "dbus-run-session -- python3 followup/ui/full_ui.py --product <authenticated-product> --out <fresh-output> --mode baseline|candidate --migration-direction horizontal|vertical [--migration-from <normally-quit-natural-profile>]; dbus-run-session -- python3 followup/ui/shipped_api.py --product <authenticated-product> --out <fresh-output>",
+    "result": "reproduced in complete current-main159 product; dependent Draft3046 fixes both natural cold-start mismatch directions and shipped-module stale unrelated-save2cases in complete main+2950+supplement product; live bidirectional/newwindow/Workspace/multirow/restart controls pass; standard158/159CI267/284modules0fail",
     "remainingConditions": [
-      "Original reported macOS Photon environment not exercised (Linux Photon exercised).",
-      "Initial nativefalse/storedvertical profile remains unsynchronized in candidate until later live change/save; Hub getter alone reads horizontal.",
-      "Two-visible-window pending-save race not established through actual UI; no Apply control exists in current autosave Hub. Two-window extra attempt failed readiness before mutation and is not product evidence.",
-      "Multirow persistence verified with few tabs, not overflowing many-row geometry.",
-      "Candidate scoped asset substitution is not final full-product CI qualification.",
-      "Existing PR needs tested initial-reconcile and latest-stored-style amendment plus updated observer fixtures/integrated repository regression tests",
-      "Amendment4case API test is not a full amended product/UI/standard-CI qualification"
+      "Original macOS Photon not accessed while current Mac owner active.",
+      "Two-visible-window pending autosave timing not established; actual shipped-module API reproduces/fixes stale-form persistence using a real external preference writer.",
+      "Many-tab multirow overflow geometry not tested.",
+      "Canonical2950 and dependent3046 require review/integration in dependency order; no merge/Done.",
+      "Unsigned complete package assembly with locked prebuilt native Runtime is not fresh Gecko compilation or strict final-release/helper/XPT/signed-distribution qualification."
     ],
-    "cases": [
+    "startupObservationNuance": "New complete-product runs verify all tabs blank/noHub in both natural-profile migration directions before explicit Hub navigation. Earlier scoped-copy snapshots with restoredHub remain historical evidence.",
+    "scope": "additional target; originalLinux22 denominator and original7matrix unchanged",
+    "originalLinuxDenominator": 22,
+    "proposal": {
+      "patch": "additional/KAN24/minimal-fix-proposal.patch",
+      "testCommand": "bash proposal-tests/reproduce.sh; python3 proposal-tests/validate-result.py proposal-tests/result.json",
+      "canonicalApiFailures": 4,
+      "proposedApiPasses": 4,
+      "rpcOrServicesMocks": false,
+      "fullUiOrIntegratedCiClaim": false,
+      "evidence": "proposal-tests/report.md"
+    },
+    "existingCi": {
+      "run": 39378926878,
+      "artifact": 12244273619,
+      "head": "69d306b11c9e52da9e6270870740d49b1d561659",
+      "browserModulesPass": 266,
+      "browserModulesFail": 0,
+      "nativeVersion": "158.0.1",
+      "buildId": "20261014104253",
+      "zipSha256": "d542e4c668ef814f2bc0fb634d8ccc58ffaa611215ecca8f0b5ee6aa64f842fe"
+    },
+    "evidence": [
+      "report.md",
+      "ui-report.md",
+      "ui-matrix.json",
+      "ui-process-cleanup.json",
+      "scope.json",
+      "source-audit.json",
+      "code-review.md",
+      "candidate-build/candidate-resource-provenance.json",
+      "candidate-build/canonical-source-equivalence.json",
+      "proposal-tests/report.md",
+      "proposal-tests/result.json",
+      "proposal-tests/patch-apply-checks.json",
+      "existing-ci/report.md",
+      "followup/report.md",
+      "followup/full-product/parent-verification.json",
+      "followup/full-product/matrix.json",
+      "followup/standard-ci/report.md",
+      "followup/standard-ci/target-test-execution.json",
+      "followup/full-product-intake-summary.json",
+      "followup/integration-equivalence.json"
+    ],
+    "existingPrHead": "69d306b11c9e52da9e6270870740d49b1d561659",
+    "jiraUrl": "https://floorp-projects.atlassian.net/browse/KAN-24",
+    "priorScopedCandidateCases": [
       {
         "id": "hub-to-native",
         "baseline": "pass",
@@ -117,44 +164,48 @@
         ]
       }
     ],
-    "startupObservationNuance": "Startup snapshots precede explicit test navigation, but recorded selected browser is already session-restored Hub; not a no-Hub-loaded startup claim.",
-    "scope": "additional target; originalLinux22 denominator and original7matrix unchanged",
-    "originalLinuxDenominator": 22,
-    "proposal": {
-      "patch": "additional/KAN24/minimal-fix-proposal.patch",
-      "testCommand": "bash proposal-tests/reproduce.sh; python3 proposal-tests/validate-result.py proposal-tests/result.json",
-      "canonicalApiFailures": 4,
-      "proposedApiPasses": 4,
-      "rpcOrServicesMocks": false,
-      "fullUiOrIntegratedCiClaim": false,
-      "evidence": "proposal-tests/report.md"
-    },
-    "existingCi": {
-      "run": 39378926878,
-      "artifact": 12244273619,
-      "head": "69d306b11c9e52da9e6270870740d49b1d561659",
-      "browserModulesPass": 266,
-      "browserModulesFail": 0,
-      "nativeVersion": "158.0.1",
-      "buildId": "20261014104253",
-      "zipSha256": "d542e4c668ef814f2bc0fb634d8ccc58ffaa611215ecca8f0b5ee6aa64f842fe"
-    },
-    "evidence": [
-      "report.md",
-      "ui-report.md",
-      "ui-matrix.json",
-      "ui-process-cleanup.json",
-      "scope.json",
-      "source-audit.json",
-      "code-review.md",
-      "candidate-build/candidate-resource-provenance.json",
-      "candidate-build/canonical-source-equivalence.json",
-      "proposal-tests/report.md",
-      "proposal-tests/result.json",
-      "proposal-tests/patch-apply-checks.json",
-      "existing-ci/report.md"
-    ],
-    "existingPrHead": "69d306b11c9e52da9e6270870740d49b1d561659",
-    "jiraUrl": "https://floorp-projects.atlassian.net/browse/KAN-24"
+    "priorJiraCommentId": "10399",
+    "dependentPr": "https://github.com/Floorp-Projects/Floorp/pull/3046",
+    "followup": {
+      "report": "followup/report.md",
+      "fullProductMatrix": "followup/full-product/matrix.json",
+      "fullProductRuns": 6,
+      "normalQuits": 10,
+      "sourceEquivalence": "followup/integration-equivalence.json",
+      "shippedApiBaselineFailures": 2,
+      "shippedApiCandidatePasses": 2,
+      "standardCi": [
+        {
+          "run": 42093984715,
+          "runtime": "158.0.1",
+          "modulesPass": 267,
+          "modulesFail": 0,
+          "conclusion": "success"
+        },
+        {
+          "run": 42094068516,
+          "runtime": "159.0.1",
+          "modulesPass": 284,
+          "modulesFail": 0,
+          "conclusion": "success",
+          "runAttempt": 2,
+          "initialFailure": "macOS hostedcapacity; no runner/code executed; only thisjob retried"
+        }
+      ],
+      "packages": [
+        {
+          "label": "baseline",
+          "run": 42093687541,
+          "artifact": 13446089131,
+          "sourceSha": "29a3eb23145da90706d8a94441373278521cc737"
+        },
+        {
+          "label": "integration",
+          "run": 42094061748,
+          "artifact": 13447726956,
+          "sourceSha": "493d2974e00e6902d86585d329eea1f9040ff791"
+        }
+      ]
+    }
   }
 ]

@@ -1,0 +1,20 @@
+{
+  "canonical": {
+    "pr": 2950,
+    "state": "open",
+    "draft": true,
+    "head": "69d306b11c9e52da9e6270870740d49b1d561659",
+    "unchanged": true
+  },
+  "dependent": {
+    "pr": 3046,
+    "state": "open",
+    "draft": true,
+    "base": "69d306b11c9e52da9e6270870740d49b1d561659",
+    "head": "d058d7001b822f0ef2413b1307c98a463dfdcdb9",
+    "commits": 2,
+    "changedFiles": 4,
+    "inlineReviewComments": 0
+  },
+  "main": "29a3eb23145da90706d8a94441373278521cc737"
+}

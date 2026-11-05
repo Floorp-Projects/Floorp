@@ -1,0 +1,31 @@
+{
+  "supplementPaths": [
+    "browser-features/chrome/common/designs/test/vertical-tabs-observer.test.ts",
+    "browser-features/chrome/common/designs/utils/vertical-tabs-observer.ts",
+    "browser-features/pages-settings/src/app/design/dataManager.ts",
+    "browser-features/pages-settings/test/app/design/verticalTabsSync.test.ts"
+  ],
+  "sameSupplementBlobs": [
+    {
+      "path": "browser-features/chrome/common/designs/test/vertical-tabs-observer.test.ts",
+      "dependentBlob": "6cb775477887afc02ce37a70ac195349e43c9af5",
+      "integrationBlob": "6cb775477887afc02ce37a70ac195349e43c9af5"
+    },
+    {
+      "path": "browser-features/chrome/common/designs/utils/vertical-tabs-observer.ts",
+      "dependentBlob": "5290d6ed9abb31ec8925934c1ce0be337980b2ac",
+      "integrationBlob": "5290d6ed9abb31ec8925934c1ce0be337980b2ac"
+    },
+    {
+      "path": "browser-features/pages-settings/src/app/design/dataManager.ts",
+      "dependentBlob": "b663ccf6c202e4564ec9789d0779854329bf9225",
+      "integrationBlob": "b663ccf6c202e4564ec9789d0779854329bf9225"
+    },
+    {
+      "path": "browser-features/pages-settings/test/app/design/verticalTabsSync.test.ts",
+      "dependentBlob": "679cb00ae6b4cd017999af2b5fa21827da2de657",
+      "integrationBlob": "679cb00ae6b4cd017999af2b5fa21827da2de657"
+    }
+  ],
+  "lockUnchangedMainIntegration": true
+}

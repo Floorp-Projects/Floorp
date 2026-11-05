@@ -1,0 +1,106 @@
+{
+  "run": 42094068516,
+  "headSha": "493d2974e00e6902d86585d329eea1f9040ff791",
+  "artifactId": 13446747884,
+  "artifactName": "test-logs-ubuntu-24.04",
+  "apiDigest": "sha256:dcf76bb9c6485d3474d93eb92774799affd7267a12f2c58f08503d2548263aa2",
+  "actualSha256": "dcf76bb9c6485d3474d93eb92774799affd7267a12f2c58f08503d2548263aa2",
+  "digestVerified": true,
+  "excerpts": [
+    {
+      "file": "_dist/ci-combined-browser-test.log",
+      "line": 49,
+      "text": "[INFO]   - browser-features/chrome/common/designs/test/userjsParser.test.ts\n[INFO]   - browser-features/chrome/common/designs/test/vertical-tabs-observer.test.ts\n[INFO]   - browser-features/chrome/common/external-browser/test/externalBrowserService.test.ts\n[INFO]   - browser-features/chrome/common/external-browser/test/linkContextMenu.test.ts"
+    },
+    {
+      "file": "_dist/ci-combined-browser-test.log",
+      "line": 270,
+      "text": "[INFO]   - browser-features/pages-settings/test/app/design/tabWindowBehavior.test.ts\n[INFO]   - browser-features/pages-settings/test/app/design/verticalTabsSync.test.ts\n[INFO]   - browser-features/pages-settings/test/app/gesture/configPersistence.test.ts\n[INFO]   - browser-features/pages-settings/test/app/keyboard-shortcut/inlineUrlAction.test.ts"
+    },
+    {
+      "file": "_dist/ci-combined-browser-test.log",
+      "line": 382,
+      "text": "[INFO] \u2713 browser-features/chrome/common/designs/test/userjsParser.test.ts (runAllTests, 32ms)\n[INFO] [43/284] Completed browser-features/chrome/common/designs/test/vertical-tabs-observer.test.ts\n[INFO] \u2713 browser-features/chrome/common/designs/test/vertical-tabs-observer.test.ts (runAllTests, 596ms)\n[INFO] [44/284] Completed browser-features/chrome/common/external-browser/test/externalBrowserService.test.ts"
+    },
+    {
+      "file": "_dist/ci-combined-browser-test.log",
+      "line": 383,
+      "text": "[INFO] [43/284] Completed browser-features/chrome/common/designs/test/vertical-tabs-observer.test.ts\n[INFO] \u2713 browser-features/chrome/common/designs/test/vertical-tabs-observer.test.ts (runAllTests, 596ms)\n[INFO] [44/284] Completed browser-features/chrome/common/external-browser/test/externalBrowserService.test.ts\n[INFO] \u2713 browser-features/chrome/common/external-browser/test/externalBrowserService.test.ts (runAllTests, 92ms)"
+    },
+    {
+      "file": "_dist/ci-combined-browser-test.log",
+      "line": 877,
+      "text": "[INFO] \u2713 browser-features/pages-settings/test/app/design/tabWindowBehavior.test.ts (runAllTests, 0ms)\n[INFO] [264/284] Completed browser-features/pages-settings/test/app/design/verticalTabsSync.test.ts\n[INFO] \u2713 browser-features/pages-settings/test/app/design/verticalTabsSync.test.ts (runAllTests, 571ms)\n[INFO] [265/284] Completed browser-features/pages-settings/test/app/gesture/configPersistence.test.ts"
+    },
+    {
+      "file": "_dist/ci-combined-browser-test.log",
+      "line": 878,
+      "text": "[INFO] [264/284] Completed browser-features/pages-settings/test/app/design/verticalTabsSync.test.ts\n[INFO] \u2713 browser-features/pages-settings/test/app/design/verticalTabsSync.test.ts (runAllTests, 571ms)\n[INFO] [265/284] Completed browser-features/pages-settings/test/app/gesture/configPersistence.test.ts\n[INFO] \u2713 browser-features/pages-settings/test/app/gesture/configPersistence.test.ts (runAllTests, 1ms)"
+    },
+    {
+      "file": "_dist/ci-combined-browser-test.log",
+      "line": 922,
+      "text": "[INFO] Browser test result: 284 passed, 0 failed\n[INFO] Downloaded Firefox coverage: 8 file(s), 16 task(s), 16 passed\nLog written to logs/test/colocated-20261105-193024-871.log"
+    },
+    {
+      "file": "_dist/ci-feles-build-test.log",
+      "line": 2570,
+      "text": "console.log: \"[nora@test] \\u2713 /link-features-chrome/common/designs/test/userjsParser.test.ts (runAllTests, 32ms)\"\nconsole.log: \"[nora@test] Running /link-features-chrome/common/designs/test/vertical-tabs-observer.test.ts\"\nconsole.log: \"[nora@solid-xul] cleanup\"\nconsole.log: \"[nora@solid-xul] cleanup\""
+    },
+    {
+      "file": "_dist/ci-feles-build-test.log",
+      "line": 2601,
+      "text": "console.log: \"[nora@solid-xul] cleanup\"\nconsole.log: \"[nora@test] \\u2713 /link-features-chrome/common/designs/test/vertical-tabs-observer.test.ts (runAllTests, 596ms)\"\nconsole.log: \"[nora@test] Running /link-features-chrome/common/external-browser/test/externalBrowserService.test.ts\"\nconsole.info: \"[ExternalBrowser] Detecting installed browsers...\""
+    },
+    {
+      "file": "_dist/ci-feles-build-test.log",
+      "line": 26752,
+      "text": "console.log: \"[nora@test] \\u2713 ../../browser-features/pages-settings/test/app/design/tabWindowBehavior.test.ts (runAllTests, 0ms)\"\nconsole.log: \"[nora@test] Running ../../browser-features/pages-settings/test/app/design/verticalTabsSync.test.ts\"\nconsole.log: \"[nora@solid-xul] cleanup\"\nconsole.log: \"[nora@solid-xul] cleanup\""
+    },
+    {
+      "file": "_dist/ci-feles-build-test.log",
+      "line": 26803,
+      "text": "console.log: \"[nora@solid-xul] cleanup\"\nconsole.log: \"[nora@test] \\u2713 ../../browser-features/pages-settings/test/app/design/verticalTabsSync.test.ts (runAllTests, 571ms)\"\nconsole.log: \"[nora@test] Running ../../browser-features/pages-settings/test/app/gesture/configPersistence.test.ts\"\nconsole.log: \"[nora@test] \\u2713 ../../browser-features/pages-settings/test/app/gesture/configPersistence.test.ts (runAllTests, 1ms)\""
+    },
+    {
+      "file": "logs/test/latest.log",
+      "line": 50,
+      "text": "[2026-11-05T19:30:24.926Z] [INFO]   - browser-features/chrome/common/designs/test/userjsParser.test.ts\n[2026-11-05T19:30:24.926Z] [INFO]   - browser-features/chrome/common/designs/test/vertical-tabs-observer.test.ts\n[2026-11-05T19:30:24.926Z] [INFO]   - browser-features/chrome/common/external-browser/test/externalBrowserService.test.ts\n[2026-11-05T19:30:24.926Z] [INFO]   - browser-features/chrome/common/external-browser/test/linkContextMenu.test.ts"
+    },
+    {
+      "file": "logs/test/latest.log",
+      "line": 271,
+      "text": "[2026-11-05T19:30:24.928Z] [INFO]   - browser-features/pages-settings/test/app/design/tabWindowBehavior.test.ts\n[2026-11-05T19:30:24.928Z] [INFO]   - browser-features/pages-settings/test/app/design/verticalTabsSync.test.ts\n[2026-11-05T19:30:24.928Z] [INFO]   - browser-features/pages-settings/test/app/gesture/configPersistence.test.ts\n[2026-11-05T19:30:24.928Z] [INFO]   - browser-features/pages-settings/test/app/keyboard-shortcut/inlineUrlAction.test.ts"
+    },
+    {
+      "file": "logs/test/latest.log",
+      "line": 383,
+      "text": "[2026-11-05T19:36:01.012Z] [INFO] \u2713 browser-features/chrome/common/designs/test/userjsParser.test.ts (runAllTests, 32ms)\n[2026-11-05T19:36:01.012Z] [INFO] [43/284] Completed browser-features/chrome/common/designs/test/vertical-tabs-observer.test.ts\n[2026-11-05T19:36:01.012Z] [INFO] \u2713 browser-features/chrome/common/designs/test/vertical-tabs-observer.test.ts (runAllTests, 596ms)\n[2026-11-05T19:36:01.012Z] [INFO] [44/284] Completed browser-features/chrome/common/external-browser/test/externalBrowserService.test.ts"
+    },
+    {
+      "file": "logs/test/latest.log",
+      "line": 384,
+      "text": "[2026-11-05T19:36:01.012Z] [INFO] [43/284] Completed browser-features/chrome/common/designs/test/vertical-tabs-observer.test.ts\n[2026-11-05T19:36:01.012Z] [INFO] \u2713 browser-features/chrome/common/designs/test/vertical-tabs-observer.test.ts (runAllTests, 596ms)\n[2026-11-05T19:36:01.012Z] [INFO] [44/284] Completed browser-features/chrome/common/external-browser/test/externalBrowserService.test.ts\n[2026-11-05T19:36:01.012Z] [INFO] \u2713 browser-features/chrome/common/external-browser/test/externalBrowserService.test.ts (runAllTests, 92ms)"
+    },
+    {
+      "file": "logs/test/latest.log",
+      "line": 878,
+      "text": "[2026-11-05T19:36:01.020Z] [INFO] \u2713 browser-features/pages-settings/test/app/design/tabWindowBehavior.test.ts (runAllTests, 0ms)\n[2026-11-05T19:36:01.020Z] [INFO] [264/284] Completed browser-features/pages-settings/test/app/design/verticalTabsSync.test.ts\n[2026-11-05T19:36:01.020Z] [INFO] \u2713 browser-features/pages-settings/test/app/design/verticalTabsSync.test.ts (runAllTests, 571ms)\n[2026-11-05T19:36:01.021Z] [INFO] [265/284] Completed browser-features/pages-settings/test/app/gesture/configPersistence.test.ts"
+    },
+    {
+      "file": "logs/test/latest.log",
+      "line": 879,
+      "text": "[2026-11-05T19:36:01.020Z] [INFO] [264/284] Completed browser-features/pages-settings/test/app/design/verticalTabsSync.test.ts\n[2026-11-05T19:36:01.020Z] [INFO] \u2713 browser-features/pages-settings/test/app/design/verticalTabsSync.test.ts (runAllTests, 571ms)\n[2026-11-05T19:36:01.021Z] [INFO] [265/284] Completed browser-features/pages-settings/test/app/gesture/configPersistence.test.ts\n[2026-11-05T19:36:01.021Z] [INFO] \u2713 browser-features/pages-settings/test/app/gesture/configPersistence.test.ts (runAllTests, 1ms)"
+    },
+    {
+      "file": "logs/test/latest.log",
+      "line": 923,
+      "text": "[2026-11-05T19:36:01.021Z] [INFO] Browser test result: 284 passed, 0 failed\n[2026-11-05T19:36:01.021Z] [INFO] Downloaded Firefox coverage: 8 file(s), 16 task(s), 16 passed\n[META] finishedAt=2026-11-05T19:36:01.109Z\n[META] durationMs=336238"
+    },
+    {
+      "file": "logs/test/latest.log",
+      "line": 926,
+      "text": "[META] durationMs=336238\n[META] exitCode=0"
+    }
+  ]
+}

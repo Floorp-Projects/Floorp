@@ -1,0 +1,127 @@
+{
+  "mode": "candidate",
+  "migrationDirection": "vertical",
+  "product": "/workspace/qa-linux-additional/KAN-24/followup/products/integration/floorp",
+  "input": "synthetic real WebDriver ElementClick, native shadow buttons",
+  "display": "Xvfb102 X11",
+  "fullProductResourceMutation": false,
+  "originalMacOSQualified": false,
+  "completed": true,
+  "checks": {
+    "naturalMigrationProfileProvided": true,
+    "startupReconciledBeforeHubNavigation": true,
+    "startupSelectedURLsAllBlank": true,
+    "startupAllTabsNoHub": true,
+    "hubToNativeVertical": true,
+    "nativeOffToHubHorizontal": true,
+    "nativeOnToHubVertical": true,
+    "settledNewWindowsVertical": true,
+    "workspaceMultirowPreserved": true,
+    "normalRestartMultirowPreserved": true
+  },
+  "allExpectedChecksPass": true,
+  "productUnchanged": true,
+  "normalQuits": [
+    {
+      "response": {
+        "cause": "shutdown",
+        "forced": false,
+        "in_app": true
+      },
+      "exitCode": 0,
+      "forced": false
+    },
+    {
+      "response": {
+        "cause": "shutdown",
+        "forced": false,
+        "in_app": true
+      },
+      "exitCode": 0,
+      "forced": false
+    }
+  ],
+  "ownedProcessesRemaining": 0,
+  "records": [
+    {
+      "name": "01-candidate-startup-before-hub",
+      "file": "01-candidate-startup-before-hub.json"
+    },
+    {
+      "name": "02-migration-hub",
+      "file": "02-migration-hub.json"
+    },
+    {
+      "name": "03-hub-to-native-hub",
+      "file": "03-hub-to-native-hub.json"
+    },
+    {
+      "name": "03-hub-to-native-render",
+      "file": "03-hub-to-native-render.json"
+    },
+    {
+      "name": "04-native-off-native-control",
+      "file": "04-native-off-native-control.json"
+    },
+    {
+      "name": "04-native-off-render",
+      "file": "04-native-off-render.json"
+    },
+    {
+      "name": "05-hub-after-off",
+      "file": "05-hub-after-off.json"
+    },
+    {
+      "name": "06-native-on-native-control",
+      "file": "06-native-on-native-control.json"
+    },
+    {
+      "name": "06-native-on-render",
+      "file": "06-native-on-render.json"
+    },
+    {
+      "name": "07-hub-after-on",
+      "file": "07-hub-after-on.json"
+    },
+    {
+      "name": "08-new-window-ready",
+      "file": "08-new-window-ready.json"
+    },
+    {
+      "name": "09-original-window-hub",
+      "file": "09-original-window-hub.json"
+    },
+    {
+      "name": "10-multirow-hub",
+      "file": "10-multirow-hub.json"
+    },
+    {
+      "name": "10-multirow-render",
+      "file": "10-multirow-render.json"
+    },
+    {
+      "name": "11-workspace-first",
+      "file": "11-workspace-first.json"
+    },
+    {
+      "name": "12-workspace-second",
+      "file": "12-workspace-second.json"
+    },
+    {
+      "name": "13-workspace-return",
+      "file": "13-workspace-return.json"
+    },
+    {
+      "name": "14-multirow-after-workspace",
+      "file": "14-multirow-after-workspace.json"
+    },
+    {
+      "name": "16-normal-restart-startup-before-hub",
+      "file": "16-normal-restart-startup-before-hub.json"
+    },
+    {
+      "name": "17-multirow-after-restart",
+      "file": "17-multirow-after-restart.json"
+    }
+  ]
+}

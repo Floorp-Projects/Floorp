@@ -1,0 +1,497 @@
+{
+  "key": "KAN-24",
+  "scope": "additional target, originalLinux22 denominator unchanged",
+  "originalLinuxDenominator": 22,
+  "products": [
+    {
+      "label": "baseline",
+      "sourceSha": "29a3eb23145da90706d8a94441373278521cc737",
+      "run": 42093687541,
+      "artifact": 13446089131,
+      "archiveZipSha256": "05164de082b5b6c1f18ec70155e6ae4eebec14486cb983b1a013660fbf00239d",
+      "packageTarSha256": "2a87bb410637485d90a428445b9d75c10aa9e9a009061f6ec10834e08ecc9fd4",
+      "qualification": "complete existing unsigned application/package pipeline, locked prebuilt native Runtime; no resource substitution; not fresh Gecko or strict release qualification"
+    },
+    {
+      "label": "integration",
+      "sourceSha": "493d2974e00e6902d86585d329eea1f9040ff791",
+      "run": 42094061748,
+      "artifact": 13447726956,
+      "archiveZipSha256": "210665cbe6a8b6e8d25dcaf3906d77b6d6e12066fd708631b7ef7cd4b40d8a26",
+      "packageTarSha256": "721de14c6b89eaa89cbc27c8fb00ec90282e4621756439d480c26ba4a3fa1ee2",
+      "qualification": "complete existing unsigned application/package pipeline, locked prebuilt native Runtime; no resource substitution; not fresh Gecko or strict release qualification"
+    }
+  ],
+  "liveIdentity": [
+    {
+      "file": "baseline/01-initial-startup-before-hub.json",
+      "version": "159.0.1",
+      "buildID": "20261103153232",
+      "sandbox": 6
+    },
+    {
+      "file": "baseline/08-baseline-restart-startup-before-hub.json",
+      "version": "159.0.1",
+      "buildID": "20261103153232",
+      "sandbox": 6
+    },
+    {
+      "file": "candidate/16-normal-restart-startup-before-hub.json",
+      "version": "159.0.1",
+      "buildID": "20261103153232",
+      "sandbox": 6
+    },
+    {
+      "file": "candidate/01-candidate-startup-before-hub.json",
+      "version": "159.0.1",
+      "buildID": "20261103153232",
+      "sandbox": 6
+    },
+    {
+      "file": "baseline-reverse/01-initial-startup-before-hub.json",
+      "version": "159.0.1",
+      "buildID": "20261103153232",
+      "sandbox": 6
+    },
+    {
+      "file": "baseline-reverse/08-baseline-restart-startup-before-hub.json",
+      "version": "159.0.1",
+      "buildID": "20261103153232",
+      "sandbox": 6
+    },
+    {
+      "file": "candidate-reverse/16-normal-restart-startup-before-hub.json",
+      "version": "159.0.1",
+      "buildID": "20261103153232",
+      "sandbox": 6
+    },
+    {
+      "file": "candidate-reverse/01-candidate-startup-before-hub.json",
+      "version": "159.0.1",
+      "buildID": "20261103153232",
+      "sandbox": 6
+    },
+    {
+      "file": "api-baseline/01-shipped-api-startup-before-hub.json",
+      "version": "159.0.1",
+      "buildID": "20261103153232",
+      "sandbox": 6
+    },
+    {
+      "file": "api-candidate/01-shipped-api-startup-before-hub.json",
+      "version": "159.0.1",
+      "buildID": "20261103153232",
+      "sandbox": 6
+    }
+  ],
+  "separatePackageIniMetadata": {
+    "baseline": {
+      "application.ini": {
+        "App": {
+          "vendor": "Ablaze",
+          "name": "Floorp",
+          "remotingname": "floorp",
+          "version": "12.21.1@159.0.1",
+          "profile": "Floorp",
+          "buildid": "20261105192938",
+          "id": "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
+        },
+        "Gecko": {
+          "minversion": "159.0.1",
+          "maxversion": "159.0.1"
+        },
+        "XRE": {
+          "enableprofilemigrator": "1"
+        },
+        "AppUpdate": {
+          "url": "https://aus5.mozilla.org/update/6/%PRODUCT%/%VERSION%/%BUILD_ID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%SYSTEM_CAPABILITIES%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/update.xml"
+        }
+      },
+      "platform.ini": {
+        "Build": {
+          "buildid": "20261105192938",
+          "milestone": "159.0.1"
+        }
+      }
+    },
+    "candidate": {
+      "application.ini": {
+        "App": {
+          "vendor": "Ablaze",
+          "name": "Floorp",
+          "remotingname": "floorp",
+          "version": "12.21.1@159.0.1",
+          "profile": "Floorp",
+          "buildid": "20261105193108",
+          "id": "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
+        },
+        "Gecko": {
+          "minversion": "159.0.1",
+          "maxversion": "159.0.1"
+        },
+        "XRE": {
+          "enableprofilemigrator": "1"
+        },
+        "AppUpdate": {
+          "url": "https://aus5.mozilla.org/update/6/%PRODUCT%/%VERSION%/%BUILD_ID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%SYSTEM_CAPABILITIES%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/update.xml"
+        }
+      },
+      "platform.ini": {
+        "Build": {
+          "buildid": "20261105193108",
+          "milestone": "159.0.1"
+        }
+      }
+    }
+  },
+  "conditions": [
+    {
+      "condition": "cold nativefalse/storedvertical, all tabs blank before Hub",
+      "baseline": "reproduced, persists normal restart",
+      "candidate": "pass false/horizontal",
+      "evidence": [
+        "baseline/08-baseline-restart-startup-before-hub.json",
+        "candidate/01-candidate-startup-before-hub.json"
+      ]
+    },
+    {
+      "condition": "cold nativetrue/storedhorizontal, all tabs blank before Hub",
+      "baseline": "reproduced, persists normal restart",
+      "candidate": "pass true/vertical",
+      "evidence": [
+        "baseline-reverse/08-baseline-restart-startup-before-hub.json",
+        "candidate-reverse/01-candidate-startup-before-hub.json"
+      ]
+    },
+    {
+      "condition": "Hub Vertical -> actual native/rendered vertical",
+      "baseline": "pass",
+      "candidate": "pass both migrated profiles",
+      "evidence": [
+        "baseline/03-hub-to-native-render.json",
+        "candidate/03-hub-to-native-render.json",
+        "candidate-reverse/03-hub-to-native-render.json"
+      ]
+    },
+    {
+      "condition": "native Horizontal -> Hub/persisted horizontal",
+      "baseline": "reproduced stale vertical",
+      "candidate": "pass both profiles",
+      "evidence": [
+        "baseline/05-hub-after-off.json",
+        "candidate/05-hub-after-off.json",
+        "candidate-reverse/05-hub-after-off.json"
+      ]
+    },
+    {
+      "condition": "native Vertical -> Hub/persisted vertical",
+      "baseline": "reproduced stale horizontal",
+      "candidate": "pass both profiles",
+      "evidence": [
+        "baseline-reverse/05-hub-after-on.json",
+        "candidate/07-hub-after-on.json",
+        "candidate-reverse/07-hub-after-on.json"
+      ]
+    },
+    {
+      "condition": "real settled New Window",
+      "baseline": "not repeated in new complete-product runs",
+      "candidate": "pass both profiles, two ready windows actually vertical",
+      "evidence": [
+        "candidate/08-new-window-ready.json",
+        "candidate-reverse/08-new-window-ready.json"
+      ]
+    },
+    {
+      "condition": "actual Workspace first/second/first and multirow",
+      "baseline": "not repeated in new complete-product runs",
+      "candidate": "pass both profiles; few tabs only",
+      "evidence": [
+        "candidate/11-workspace-first.json",
+        "candidate/12-workspace-second.json",
+        "candidate/13-workspace-return.json",
+        "candidate/14-multirow-after-workspace.json",
+        "candidate-reverse/14-multirow-after-workspace.json"
+      ]
+    },
+    {
+      "condition": "multirow through normal restart",
+      "baseline": "not repeated in new complete-product runs",
+      "candidate": "pass both profiles",
+      "evidence": [
+        "candidate/16-normal-restart-startup-before-hub.json",
+        "candidate/17-multirow-after-restart.json",
+        "candidate-reverse/16-normal-restart-startup-before-hub.json",
+        "candidate-reverse/17-multirow-after-restart.json"
+      ]
+    },
+    {
+      "condition": "shipped API stale horizontal/latest multirow, unrelated favicon save",
+      "baseline": "fail, wrongly persists horizontal",
+      "candidate": "pass, latest multirow and favicon edit persist/nativefalse",
+      "evidence": [
+        "api-baseline/shipped-api-cases.json",
+        "api-candidate/shipped-api-cases.json"
+      ]
+    },
+    {
+      "condition": "shipped API stale multirow/latest horizontal, unrelated favicon save",
+      "baseline": "fail, wrongly persists multirow",
+      "candidate": "pass, latest horizontal and favicon edit persist/nativefalse",
+      "evidence": [
+        "api-baseline/shipped-api-cases.json",
+        "api-candidate/shipped-api-cases.json"
+      ]
+    }
+  ],
+  "executionRuns": [
+    {
+      "label": "baseline",
+      "mode": "baseline",
+      "migrationDirection": "horizontal",
+      "product": "/workspace/qa-linux-additional/KAN-24/followup/products/baseline/floorp",
+      "input": "synthetic real WebDriver ElementClick, native shadow buttons",
+      "display": "Xvfb102 X11",
+      "fullProductResourceMutation": false,
+      "originalMacOSQualified": false,
+      "completed": true,
+      "checks": {
+        "hubToNativeMatchesChosenInitialStyle": true,
+        "naturalMismatchReproduced": true,
+        "actualTabstripMatchesNative": true,
+        "mismatchSurvivesNormalRestart": true,
+        "restartSelectedURLsAllBlank": true,
+        "restartAllTabsNoHub": true
+      },
+      "allExpectedChecksPass": true,
+      "productUnchanged": true,
+      "normalQuits": [
+        {
+          "response": {
+            "cause": "shutdown",
+            "forced": false,
+            "in_app": true
+          },
+          "exitCode": 0,
+          "forced": false
+        },
+        {
+          "response": {
+            "cause": "shutdown",
+            "forced": false,
+            "in_app": true
+          },
+          "exitCode": 0,
+          "forced": false
+        }
+      ],
+      "ownedProcessesRemaining": 0
+    },
+    {
+      "label": "candidate",
+      "mode": "candidate",
+      "migrationDirection": "horizontal",
+      "product": "/workspace/qa-linux-additional/KAN-24/followup/products/integration/floorp",
+      "input": "synthetic real WebDriver ElementClick, native shadow buttons",
+      "display": "Xvfb102 X11",
+      "fullProductResourceMutation": false,
+      "originalMacOSQualified": false,
+      "completed": true,
+      "checks": {
+        "naturalMigrationProfileProvided": true,
+        "startupReconciledBeforeHubNavigation": true,
+        "startupSelectedURLsAllBlank": true,
+        "startupAllTabsNoHub": true,
+        "hubToNativeVertical": true,
+        "nativeOffToHubHorizontal": true,
+        "nativeOnToHubVertical": true,
+        "settledNewWindowsVertical": true,
+        "workspaceMultirowPreserved": true,
+        "normalRestartMultirowPreserved": true
+      },
+      "allExpectedChecksPass": true,
+      "productUnchanged": true,
+      "normalQuits": [
+        {
+          "response": {
+            "cause": "shutdown",
+            "forced": false,
+            "in_app": true
+          },
+          "exitCode": 0,
+          "forced": false
+        },
+        {
+          "response": {
+            "cause": "shutdown",
+            "forced": false,
+            "in_app": true
+          },
+          "exitCode": 0,
+          "forced": false
+        }
+      ],
+      "ownedProcessesRemaining": 0
+    },
+    {
+      "label": "baseline-reverse",
+      "mode": "baseline",
+      "migrationDirection": "vertical",
+      "product": "/workspace/qa-linux-additional/KAN-24/followup/products/baseline/floorp",
+      "input": "synthetic real WebDriver ElementClick, native shadow buttons",
+      "display": "Xvfb102 X11",
+      "fullProductResourceMutation": false,
+      "originalMacOSQualified": false,
+      "completed": true,
+      "checks": {
+        "hubToNativeMatchesChosenInitialStyle": true,
+        "naturalMismatchReproduced": true,
+        "actualTabstripMatchesNative": true,
+        "mismatchSurvivesNormalRestart": true,
+        "restartSelectedURLsAllBlank": true,
+        "restartAllTabsNoHub": true
+      },
+      "allExpectedChecksPass": true,
+      "productUnchanged": true,
+      "normalQuits": [
+        {
+          "response": {
+            "cause": "shutdown",
+            "forced": false,
+            "in_app": true
+          },
+          "exitCode": 0,
+          "forced": false
+        },
+        {
+          "response": {
+            "cause": "shutdown",
+            "forced": false,
+            "in_app": true
+          },
+          "exitCode": 0,
+          "forced": false
+        }
+      ],
+      "ownedProcessesRemaining": 0
+    },
+    {
+      "label": "candidate-reverse",
+      "mode": "candidate",
+      "migrationDirection": "vertical",
+      "product": "/workspace/qa-linux-additional/KAN-24/followup/products/integration/floorp",
+      "input": "synthetic real WebDriver ElementClick, native shadow buttons",
+      "display": "Xvfb102 X11",
+      "fullProductResourceMutation": false,
+      "originalMacOSQualified": false,
+      "completed": true,
+      "checks": {
+        "naturalMigrationProfileProvided": true,
+        "startupReconciledBeforeHubNavigation": true,
+        "startupSelectedURLsAllBlank": true,
+        "startupAllTabsNoHub": true,
+        "hubToNativeVertical": true,
+        "nativeOffToHubHorizontal": true,
+        "nativeOnToHubVertical": true,
+        "settledNewWindowsVertical": true,
+        "workspaceMultirowPreserved": true,
+        "normalRestartMultirowPreserved": true
+      },
+      "allExpectedChecksPass": true,
+      "productUnchanged": true,
+      "normalQuits": [
+        {
+          "response": {
+            "cause": "shutdown",
+            "forced": false,
+            "in_app": true
+          },
+          "exitCode": 0,
+          "forced": false
+        },
+        {
+          "response": {
+            "cause": "shutdown",
+            "forced": false,
+            "in_app": true
+          },
+          "exitCode": 0,
+          "forced": false
+        }
+      ],
+      "ownedProcessesRemaining": 0
+    },
+    {
+      "label": "api-baseline",
+      "mode": "shipped_api",
+      "migrationDirection": null,
+      "product": "/workspace/qa-linux-additional/KAN-24/followup/products/baseline/floorp",
+      "input": "synthetic real WebDriver ElementClick, native shadow buttons",
+      "display": "Xvfb102 X11",
+      "fullProductResourceMutation": false,
+      "originalMacOSQualified": false,
+      "completed": true,
+      "checks": {
+        "stale-horizontal-latest-multirow": false,
+        "stale-multirow-latest-horizontal": false
+      },
+      "allExpectedChecksPass": false,
+      "productUnchanged": true,
+      "normalQuits": [
+        {
+          "response": {
+            "cause": "shutdown",
+            "forced": false,
+            "in_app": true
+          },
+          "exitCode": 0,
+          "forced": false
+        }
+      ],
+      "ownedProcessesRemaining": 0
+    },
+    {
+      "label": "api-candidate",
+      "mode": "shipped_api",
+      "migrationDirection": null,
+      "product": "/workspace/qa-linux-additional/KAN-24/followup/products/integration/floorp",
+      "input": "synthetic real WebDriver ElementClick, native shadow buttons",
+      "display": "Xvfb102 X11",
+      "fullProductResourceMutation": false,
+      "originalMacOSQualified": false,
+      "completed": true,
+      "checks": {
+        "stale-horizontal-latest-multirow": true,
+        "stale-multirow-latest-horizontal": true
+      },
+      "allExpectedChecksPass": true,
+      "productUnchanged": true,
+      "normalQuits": [
+        {
+          "response": {
+            "cause": "shutdown",
+            "forced": false,
+            "in_app": true
+          },
+          "exitCode": 0,
+          "forced": false
+        }
+      ],
+      "ownedProcessesRemaining": 0
+    }
+  ],
+  "normalQuits": 10,
+  "retainedHarnessAttempt": "baseline-attempt1-navigation/result.json",
+  "remainingConditions": [
+    "Original macOS Photon not accessed; wait for KAN10 owner.",
+    "Two-visible-window pending autosave race not established; shipped API uses real external pref writer.",
+    "Few-tab multirow persistence only, not overflowing geometry.",
+    "Complete package uses locked prebuilt native Runtime; not fresh Gecko compilation or strict release qualification."
+  ],
+  "visualInspection": [
+    "baseline/03-hub-to-native-hub.png",
+    "baseline-reverse/05-hub-after-on.png",
+    "candidate/08-new-window-ready.png",
+    "candidate-reverse/02-migration-hub.png"
+  ]
+}
