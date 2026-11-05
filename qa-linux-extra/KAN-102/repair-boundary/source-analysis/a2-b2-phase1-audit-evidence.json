@@ -1,0 +1,1464 @@
+{
+  "native-owned-v2": {
+    "provenance": {
+      "kind": "native-owned-v2",
+      "sourceInspectionSha": "29a3eb23145da90706d8a94441373278521cc737",
+      "originalReleaseSha": "984509d2053be7bae9027133bda7259cd706b208",
+      "product": "diagnostic isolated one-resource copy; not a complete build or production candidate",
+      "binarySha256": "4f05c1330b38e50040440be6a3b6e0e7a5b52bc79edb5c5478d978c81f5a603d",
+      "originalMemberSha256": "33ece721dda86f5b9f852903956e972dbba4cee2a33a29a04e6ab4eb7eeeff19",
+      "changedMemberSha256": "137f426b323cac6b45667df51966a33e89bf2bcfcdf3895ad96d9cf10a5e81c3",
+      "changedFiles": [
+        "omni.ja"
+      ],
+      "changedMembers": [
+        "chrome/noraneko/nora-content/assets/js/index35.js"
+      ],
+      "mockedExtension": false,
+      "nativeEventsSuppressed": false,
+      "sourceDiff": "native-owned-v2-source.diff",
+      "bundleDiff": "native-owned-v2-bundle.diff",
+      "revision": "persistent Workspace-owned hidden marker read before restoring; extension ownership and selection guard preserved; initial seed unused for formal trials"
+    },
+    "phases": {
+      "initial": {
+        "selected": 2,
+        "fixtureNativeVisible": [
+          3,
+          4,
+          5
+        ],
+        "fixtureTabs": [
+          {
+            "id": 3,
+            "hidden": false,
+            "visible": true,
+            "display": "flex",
+            "cssWorkspaceHidden": false,
+            "hiddenBy": "",
+            "workspaceOwned": ""
+          },
+          {
+            "id": 4,
+            "hidden": false,
+            "visible": true,
+            "display": "flex",
+            "cssWorkspaceHidden": false,
+            "hiddenBy": "",
+            "workspaceOwned": ""
+          },
+          {
+            "id": 5,
+            "hidden": false,
+            "visible": true,
+            "display": "flex",
+            "cssWorkspaceHidden": false,
+            "hiddenBy": "",
+            "workspaceOwned": ""
+          },
+          {
+            "id": 6,
+            "hidden": true,
+            "visible": false,
+            "display": "none",
+            "cssWorkspaceHidden": false,
+            "hiddenBy": "simple-tab-groups@drive4ik",
+            "workspaceOwned": ""
+          },
+          {
+            "id": 7,
+            "hidden": true,
+            "visible": false,
+            "display": "none",
+            "cssWorkspaceHidden": false,
+            "hiddenBy": "simple-tab-groups@drive4ik",
+            "workspaceOwned": ""
+          },
+          {
+            "id": 8,
+            "hidden": true,
+            "visible": false,
+            "display": "none",
+            "cssWorkspaceHidden": false,
+            "hiddenBy": "simple-tab-groups@drive4ik",
+            "workspaceOwned": ""
+          }
+        ],
+        "extensionGroups": [
+          {
+            "id": 3,
+            "focused": true,
+            "group": 1
+          }
+        ],
+        "members": [
+          {
+            "id": 3,
+            "group": 1,
+            "hidden": false,
+            "active": false
+          },
+          {
+            "id": 4,
+            "group": 1,
+            "hidden": false,
+            "active": false
+          },
+          {
+            "id": 5,
+            "group": 1,
+            "hidden": false,
+            "active": false
+          },
+          {
+            "id": 6,
+            "group": 2,
+            "hidden": true,
+            "active": false
+          },
+          {
+            "id": 7,
+            "group": 2,
+            "hidden": true,
+            "active": false
+          },
+          {
+            "id": 8,
+            "group": 2,
+            "hidden": true,
+            "active": false
+          }
+        ],
+        "manage": {
+          "groups": [
+            {
+              "title": "QA Group A",
+              "count": "3/3 tabs active"
+            },
+            {
+              "title": "QA Group B",
+              "count": "3/3 tabs active"
+            }
+          ],
+          "fixtureRows": [
+            {
+              "title": "STG QA /A/1\nhttp://127.0.0.1:19082/A/1",
+              "text": "   \u3007 STG QA /A/1 "
+            },
+            {
+              "title": "STG QA /A/2\nhttp://127.0.0.1:19082/A/2",
+              "text": "   \u3007 STG QA /A/2 "
+            },
+            {
+              "title": "STG QA /A/3\nhttp://127.0.0.1:19082/A/3",
+              "text": "   \u3007 STG QA /A/3 "
+            },
+            {
+              "title": "STG QA /B/1\nhttp://127.0.0.1:19082/B/1",
+              "text": "   \u3007 STG QA /B/1 "
+            },
+            {
+              "title": "STG QA /B/2\nhttp://127.0.0.1:19082/B/2",
+              "text": "   \u3007 STG QA /B/2 "
+            },
+            {
+              "title": "STG QA /B/3\nhttp://127.0.0.1:19082/B/3",
+              "text": "   \u3007 STG QA /B/3 "
+            }
+          ]
+        }
+      },
+      "existing-away": {
+        "selected": 9,
+        "fixtureNativeVisible": [],
+        "fixtureTabs": [
+          {
+            "id": 3,
+            "hidden": true,
+            "visible": false,
+            "display": "none",
+            "cssWorkspaceHidden": false,
+            "hiddenBy": "simple-tab-groups@drive4ik",
+            "workspaceOwned": ""
+          },
+          {
+            "id": 4,
+            "hidden": true,
+            "visible": false,
+            "display": "none",
+            "cssWorkspaceHidden": false,
+            "hiddenBy": "simple-tab-groups@drive4ik",
+            "workspaceOwned": ""
+          },
+          {
+            "id": 5,
+            "hidden": true,
+            "visible": false,
+            "display": "none",
+            "cssWorkspaceHidden": false,
+            "hiddenBy": "simple-tab-groups@drive4ik",
+            "workspaceOwned": ""
+          },
+          {
+            "id": 6,
+            "hidden": true,
+            "visible": false,
+            "display": "none",
+            "cssWorkspaceHidden": false,
+            "hiddenBy": "",
+            "workspaceOwned": "1"
+          },
+          {
+            "id": 7,
+            "hidden": true,
+            "visible": false,
+            "display": "none",
+            "cssWorkspaceHidden": false,
+            "hiddenBy": "",
+            "workspaceOwned": "1"
+          },
+          {
+            "id": 8,
+            "hidden": true,
+            "visible": false,
+            "display": "none",
+            "cssWorkspaceHidden": false,
+            "hiddenBy": "",
+            "workspaceOwned": "1"
+          }
+        ],
+        "extensionGroups": [
+          {
+            "id": 3,
+            "focused": true,
+            "group": 2
+          }
+        ],
+        "members": [
+          {
+            "id": 3,
+            "group": 1,
+            "hidden": true,
+            "active": false
+          },
+          {
+            "id": 4,
+            "group": 1,
+            "hidden": true,
+            "active": false
+          },
+          {
+            "id": 5,
+            "group": 1,
+            "hidden": true,
+            "active": false
+          },
+          {
+            "id": 6,
+            "group": null,
+            "hidden": true,
+            "active": false
+          },
+          {
+            "id": 7,
+            "group": null,
+            "hidden": true,
+            "active": false
+          },
+          {
+            "id": 8,
+            "group": null,
+            "hidden": true,
+            "active": false
+          }
+        ],
+        "manage": {
+          "groups": [
+            {
+              "title": "QA Group A",
+              "count": "3/3 tabs active"
+            },
+            {
+              "title": "QA Group B",
+              "count": "0/0 tabs active"
+            }
+          ],
+          "fixtureRows": [
+            {
+              "title": "STG QA /A/1\nhttp://127.0.0.1:19082/A/1",
+              "text": "   \u3007 STG QA /A/1 "
+            },
+            {
+              "title": "STG QA /A/2\nhttp://127.0.0.1:19082/A/2",
+              "text": "   \u3007 STG QA /A/2 "
+            },
+            {
+              "title": "STG QA /A/3\nhttp://127.0.0.1:19082/A/3",
+              "text": "   \u3007 STG QA /A/3 "
+            }
+          ]
+        }
+      },
+      "existing-return": {
+        "selected": 6,
+        "fixtureNativeVisible": [
+          6,
+          7,
+          8
+        ],
+        "fixtureTabs": [
+          {
+            "id": 3,
+            "hidden": true,
+            "visible": false,
+            "display": "none",
+            "cssWorkspaceHidden": false,
+            "hiddenBy": "simple-tab-groups@drive4ik",
+            "workspaceOwned": ""
+          },
+          {
+            "id": 4,
+            "hidden": true,
+            "visible": false,
+            "display": "none",
+            "cssWorkspaceHidden": false,
+            "hiddenBy": "simple-tab-groups@drive4ik",
+            "workspaceOwned": ""
+          },
+          {
+            "id": 5,
+            "hidden": true,
+            "visible": false,
+            "display": "none",
+            "cssWorkspaceHidden": false,
+            "hiddenBy": "simple-tab-groups@drive4ik",
+            "workspaceOwned": ""
+          },
+          {
+            "id": 6,
+            "hidden": false,
+            "visible": true,
+            "display": "flex",
+            "cssWorkspaceHidden": false,
+            "hiddenBy": "",
+            "workspaceOwned": ""
+          },
+          {
+            "id": 7,
+            "hidden": false,
+            "visible": true,
+            "display": "flex",
+            "cssWorkspaceHidden": false,
+            "hiddenBy": "",
+            "workspaceOwned": ""
+          },
+          {
+            "id": 8,
+            "hidden": false,
+            "visible": true,
+            "display": "flex",
+            "cssWorkspaceHidden": false,
+            "hiddenBy": "",
+            "workspaceOwned": ""
+          }
+        ],
+        "extensionGroups": [
+          {
+            "id": 3,
+            "focused": true,
+            "group": 2
+          }
+        ],
+        "members": [
+          {
+            "id": 3,
+            "group": 1,
+            "hidden": true,
+            "active": false
+          },
+          {
+            "id": 4,
+            "group": 1,
+            "hidden": true,
+            "active": false
+          },
+          {
+            "id": 5,
+            "group": 1,
+            "hidden": true,
+            "active": false
+          },
+          {
+            "id": 6,
+            "group": 2,
+            "hidden": false,
+            "active": true
+          },
+          {
+            "id": 7,
+            "group": 2,
+            "hidden": false,
+            "active": false
+          },
+          {
+            "id": 8,
+            "group": 2,
+            "hidden": false,
+            "active": false
+          }
+        ],
+        "manage": {
+          "groups": [
+            {
+              "title": "QA Group A",
+              "count": "3/3 tabs active"
+            },
+            {
+              "title": "QA Group B",
+              "count": "0/0 tabs active"
+            }
+          ],
+          "fixtureRows": [
+            {
+              "title": "STG QA /A/1\nhttp://127.0.0.1:19082/A/1",
+              "text": "   \u3007 STG QA /A/1 "
+            },
+            {
+              "title": "STG QA /A/2\nhttp://127.0.0.1:19082/A/2",
+              "text": "   \u3007 STG QA /A/2 "
+            },
+            {
+              "title": "STG QA /A/3\nhttp://127.0.0.1:19082/A/3",
+              "text": "   \u3007 STG QA /A/3 "
+            }
+          ]
+        }
+      },
+      "new-away": {
+        "selected": 9,
+        "fixtureNativeVisible": [],
+        "fixtureTabs": [
+          {
+            "id": 3,
+            "hidden": true,
+            "visible": false,
+            "display": "none",
+            "cssWorkspaceHidden": false,
+            "hiddenBy": "simple-tab-groups@drive4ik",
+            "workspaceOwned": ""
+          },
+          {
+            "id": 4,
+            "hidden": true,
+            "visible": false,
+            "display": "none",
+            "cssWorkspaceHidden": false,
+            "hiddenBy": "simple-tab-groups@drive4ik",
+            "workspaceOwned": ""
+          },
+          {
+            "id": 5,
+            "hidden": true,
+            "visible": false,
+            "display": "none",
+            "cssWorkspaceHidden": false,
+            "hiddenBy": "simple-tab-groups@drive4ik",
+            "workspaceOwned": ""
+          },
+          {
+            "id": 6,
+            "hidden": true,
+            "visible": false,
+            "display": "none",
+            "cssWorkspaceHidden": false,
+            "hiddenBy": "",
+            "workspaceOwned": "1"
+          },
+          {
+            "id": 7,
+            "hidden": true,
+            "visible": false,
+            "display": "none",
+            "cssWorkspaceHidden": false,
+            "hiddenBy": "",
+            "workspaceOwned": "1"
+          },
+          {
+            "id": 8,
+            "hidden": true,
+            "visible": false,
+            "display": "none",
+            "cssWorkspaceHidden": false,
+            "hiddenBy": "",
+            "workspaceOwned": "1"
+          }
+        ],
+        "extensionGroups": [
+          {
+            "id": 3,
+            "focused": true,
+            "group": 2
+          }
+        ],
+        "members": [
+          {
+            "id": 3,
+            "group": 1,
+            "hidden": true,
+            "active": false
+          },
+          {
+            "id": 4,
+            "group": 1,
+            "hidden": true,
+            "active": false
+          },
+          {
+            "id": 5,
+            "group": 1,
+            "hidden": true,
+            "active": false
+          },
+          {
+            "id": 6,
+            "group": null,
+            "hidden": true,
+            "active": false
+          },
+          {
+            "id": 7,
+            "group": null,
+            "hidden": true,
+            "active": false
+          },
+          {
+            "id": 8,
+            "group": null,
+            "hidden": true,
+            "active": false
+          }
+        ],
+        "manage": {
+          "groups": [
+            {
+              "title": "QA Group A",
+              "count": "3/3 tabs active"
+            },
+            {
+              "title": "QA Group B",
+              "count": "0/0 tabs active"
+            }
+          ],
+          "fixtureRows": [
+            {
+              "title": "STG QA /A/1\nhttp://127.0.0.1:19082/A/1",
+              "text": "   \u3007 STG QA /A/1 "
+            },
+            {
+              "title": "STG QA /A/2\nhttp://127.0.0.1:19082/A/2",
+              "text": "   \u3007 STG QA /A/2 "
+            },
+            {
+              "title": "STG QA /A/3\nhttp://127.0.0.1:19082/A/3",
+              "text": "   \u3007 STG QA /A/3 "
+            }
+          ]
+        }
+      },
+      "new-return": {
+        "selected": 6,
+        "fixtureNativeVisible": [
+          6,
+          7,
+          8
+        ],
+        "fixtureTabs": [
+          {
+            "id": 3,
+            "hidden": true,
+            "visible": false,
+            "display": "none",
+            "cssWorkspaceHidden": false,
+            "hiddenBy": "simple-tab-groups@drive4ik",
+            "workspaceOwned": ""
+          },
+          {
+            "id": 4,
+            "hidden": true,
+            "visible": false,
+            "display": "none",
+            "cssWorkspaceHidden": false,
+            "hiddenBy": "simple-tab-groups@drive4ik",
+            "workspaceOwned": ""
+          },
+          {
+            "id": 5,
+            "hidden": true,
+            "visible": false,
+            "display": "none",
+            "cssWorkspaceHidden": false,
+            "hiddenBy": "simple-tab-groups@drive4ik",
+            "workspaceOwned": ""
+          },
+          {
+            "id": 6,
+            "hidden": false,
+            "visible": true,
+            "display": "flex",
+            "cssWorkspaceHidden": false,
+            "hiddenBy": "",
+            "workspaceOwned": ""
+          },
+          {
+            "id": 7,
+            "hidden": false,
+            "visible": true,
+            "display": "flex",
+            "cssWorkspaceHidden": false,
+            "hiddenBy": "",
+            "workspaceOwned": ""
+          },
+          {
+            "id": 8,
+            "hidden": false,
+            "visible": true,
+            "display": "flex",
+            "cssWorkspaceHidden": false,
+            "hiddenBy": "",
+            "workspaceOwned": ""
+          }
+        ],
+        "extensionGroups": [
+          {
+            "id": 3,
+            "focused": true,
+            "group": 2
+          }
+        ],
+        "members": [
+          {
+            "id": 3,
+            "group": 1,
+            "hidden": true,
+            "active": false
+          },
+          {
+            "id": 4,
+            "group": 1,
+            "hidden": true,
+            "active": false
+          },
+          {
+            "id": 5,
+            "group": 1,
+            "hidden": true,
+            "active": false
+          },
+          {
+            "id": 6,
+            "group": 2,
+            "hidden": false,
+            "active": true
+          },
+          {
+            "id": 7,
+            "group": 2,
+            "hidden": false,
+            "active": false
+          },
+          {
+            "id": 8,
+            "group": 2,
+            "hidden": false,
+            "active": false
+          }
+        ],
+        "manage": {
+          "groups": [
+            {
+              "title": "QA Group A",
+              "count": "3/3 tabs active"
+            },
+            {
+              "title": "QA Group B",
+              "count": "0/0 tabs active"
+            }
+          ],
+          "fixtureRows": [
+            {
+              "title": "STG QA /A/1\nhttp://127.0.0.1:19082/A/1",
+              "text": "   \u3007 STG QA /A/1 "
+            },
+            {
+              "title": "STG QA /A/2\nhttp://127.0.0.1:19082/A/2",
+              "text": "   \u3007 STG QA /A/2 "
+            },
+            {
+              "title": "STG QA /A/3\nhttp://127.0.0.1:19082/A/3",
+              "text": "   \u3007 STG QA /A/3 "
+            }
+          ]
+        }
+      }
+    }
+  },
+  "css-layer-v2": {
+    "provenance": {
+      "kind": "css-layer-v2",
+      "sourceInspectionSha": "29a3eb23145da90706d8a94441373278521cc737",
+      "originalReleaseSha": "984509d2053be7bae9027133bda7259cd706b208",
+      "product": "diagnostic isolated one-resource copy; not a complete build or production candidate",
+      "binarySha256": "4f05c1330b38e50040440be6a3b6e0e7a5b52bc79edb5c5478d978c81f5a603d",
+      "originalMemberSha256": "33ece721dda86f5b9f852903956e972dbba4cee2a33a29a04e6ab4eb7eeeff19",
+      "changedMemberSha256": "8b61b29550f0de39f091cc358a272be783cb2c6cc5bff51b3af0caa821c27255",
+      "changedFiles": [
+        "omni.ja"
+      ],
+      "changedMembers": [
+        "chrome/noraneko/nora-content/assets/js/index35.js"
+      ],
+      "mockedExtension": false,
+      "nativeEventsSuppressed": false,
+      "sourceDiff": "css-layer-v2-source.diff",
+      "bundleDiff": "css-layer-v2-bundle.diff",
+      "revision": "preserve native globally pinned tab visibility; initial CSS prototype not a release candidate"
+    },
+    "phases": {
+      "initial": {
+        "selected": 2,
+        "fixtureNativeVisible": [
+          3,
+          4,
+          5
+        ],
+        "fixtureTabs": [
+          {
+            "id": 3,
+            "hidden": false,
+            "visible": true,
+            "display": "flex",
+            "cssWorkspaceHidden": false,
+            "hiddenBy": "",
+            "workspaceOwned": ""
+          },
+          {
+            "id": 4,
+            "hidden": false,
+            "visible": true,
+            "display": "flex",
+            "cssWorkspaceHidden": false,
+            "hiddenBy": "",
+            "workspaceOwned": ""
+          },
+          {
+            "id": 5,
+            "hidden": false,
+            "visible": true,
+            "display": "flex",
+            "cssWorkspaceHidden": false,
+            "hiddenBy": "",
+            "workspaceOwned": ""
+          },
+          {
+            "id": 6,
+            "hidden": true,
+            "visible": false,
+            "display": "none",
+            "cssWorkspaceHidden": false,
+            "hiddenBy": "simple-tab-groups@drive4ik",
+            "workspaceOwned": ""
+          },
+          {
+            "id": 7,
+            "hidden": true,
+            "visible": false,
+            "display": "none",
+            "cssWorkspaceHidden": false,
+            "hiddenBy": "simple-tab-groups@drive4ik",
+            "workspaceOwned": ""
+          },
+          {
+            "id": 8,
+            "hidden": true,
+            "visible": false,
+            "display": "none",
+            "cssWorkspaceHidden": false,
+            "hiddenBy": "simple-tab-groups@drive4ik",
+            "workspaceOwned": ""
+          }
+        ],
+        "extensionGroups": [
+          {
+            "id": 3,
+            "focused": true,
+            "group": 1
+          }
+        ],
+        "members": [
+          {
+            "id": 3,
+            "group": 1,
+            "hidden": false,
+            "active": false
+          },
+          {
+            "id": 4,
+            "group": 1,
+            "hidden": false,
+            "active": false
+          },
+          {
+            "id": 5,
+            "group": 1,
+            "hidden": false,
+            "active": false
+          },
+          {
+            "id": 6,
+            "group": 2,
+            "hidden": true,
+            "active": false
+          },
+          {
+            "id": 7,
+            "group": 2,
+            "hidden": true,
+            "active": false
+          },
+          {
+            "id": 8,
+            "group": 2,
+            "hidden": true,
+            "active": false
+          }
+        ],
+        "manage": {
+          "groups": [
+            {
+              "title": "QA Group A",
+              "count": "3/3 tabs active"
+            },
+            {
+              "title": "QA Group B",
+              "count": "3/3 tabs active"
+            }
+          ],
+          "fixtureRows": [
+            {
+              "title": "STG QA /A/1\nhttp://127.0.0.1:19083/A/1",
+              "text": "   \u3007 STG QA /A/1 "
+            },
+            {
+              "title": "STG QA /A/2\nhttp://127.0.0.1:19083/A/2",
+              "text": "   \u3007 STG QA /A/2 "
+            },
+            {
+              "title": "STG QA /A/3\nhttp://127.0.0.1:19083/A/3",
+              "text": "   \u3007 STG QA /A/3 "
+            },
+            {
+              "title": "STG QA /B/1\nhttp://127.0.0.1:19083/B/1",
+              "text": "   \u3007 STG QA /B/1 "
+            },
+            {
+              "title": "STG QA /B/2\nhttp://127.0.0.1:19083/B/2",
+              "text": "   \u3007 STG QA /B/2 "
+            },
+            {
+              "title": "STG QA /B/3\nhttp://127.0.0.1:19083/B/3",
+              "text": "   \u3007 STG QA /B/3 "
+            }
+          ]
+        }
+      },
+      "existing-away": {
+        "selected": 9,
+        "fixtureNativeVisible": [
+          6,
+          7,
+          8
+        ],
+        "fixtureTabs": [
+          {
+            "id": 3,
+            "hidden": true,
+            "visible": false,
+            "display": "none",
+            "cssWorkspaceHidden": true,
+            "hiddenBy": "simple-tab-groups@drive4ik",
+            "workspaceOwned": ""
+          },
+          {
+            "id": 4,
+            "hidden": true,
+            "visible": false,
+            "display": "none",
+            "cssWorkspaceHidden": true,
+            "hiddenBy": "simple-tab-groups@drive4ik",
+            "workspaceOwned": ""
+          },
+          {
+            "id": 5,
+            "hidden": true,
+            "visible": false,
+            "display": "none",
+            "cssWorkspaceHidden": true,
+            "hiddenBy": "simple-tab-groups@drive4ik",
+            "workspaceOwned": ""
+          },
+          {
+            "id": 6,
+            "hidden": false,
+            "visible": true,
+            "display": "none",
+            "cssWorkspaceHidden": true,
+            "hiddenBy": "",
+            "workspaceOwned": ""
+          },
+          {
+            "id": 7,
+            "hidden": false,
+            "visible": true,
+            "display": "none",
+            "cssWorkspaceHidden": true,
+            "hiddenBy": "",
+            "workspaceOwned": ""
+          },
+          {
+            "id": 8,
+            "hidden": false,
+            "visible": true,
+            "display": "none",
+            "cssWorkspaceHidden": true,
+            "hiddenBy": "",
+            "workspaceOwned": ""
+          }
+        ],
+        "extensionGroups": [
+          {
+            "id": 3,
+            "focused": true,
+            "group": 2
+          }
+        ],
+        "members": [
+          {
+            "id": 3,
+            "group": 1,
+            "hidden": true,
+            "active": false
+          },
+          {
+            "id": 4,
+            "group": 1,
+            "hidden": true,
+            "active": false
+          },
+          {
+            "id": 5,
+            "group": 1,
+            "hidden": true,
+            "active": false
+          },
+          {
+            "id": 6,
+            "group": 2,
+            "hidden": false,
+            "active": false
+          },
+          {
+            "id": 7,
+            "group": 2,
+            "hidden": false,
+            "active": false
+          },
+          {
+            "id": 8,
+            "group": 2,
+            "hidden": false,
+            "active": false
+          }
+        ],
+        "manage": {
+          "groups": [
+            {
+              "title": "QA Group A",
+              "count": "3/3 tabs active"
+            },
+            {
+              "title": "QA Group B",
+              "count": "4/4 tabs active"
+            }
+          ],
+          "fixtureRows": [
+            {
+              "title": "STG QA /A/1\nhttp://127.0.0.1:19083/A/1",
+              "text": "   \u3007 STG QA /A/1 "
+            },
+            {
+              "title": "STG QA /A/2\nhttp://127.0.0.1:19083/A/2",
+              "text": "   \u3007 STG QA /A/2 "
+            },
+            {
+              "title": "STG QA /A/3\nhttp://127.0.0.1:19083/A/3",
+              "text": "   \u3007 STG QA /A/3 "
+            },
+            {
+              "title": "STG QA /B/1\nhttp://127.0.0.1:19083/B/1",
+              "text": "   \u3007 STG QA /B/1 "
+            },
+            {
+              "title": "STG QA /B/2\nhttp://127.0.0.1:19083/B/2",
+              "text": "   \u3007 STG QA /B/2 "
+            },
+            {
+              "title": "STG QA /B/3\nhttp://127.0.0.1:19083/B/3",
+              "text": "   \u3007 STG QA /B/3 "
+            }
+          ]
+        }
+      },
+      "existing-return": {
+        "selected": 6,
+        "fixtureNativeVisible": [
+          6,
+          7,
+          8
+        ],
+        "fixtureTabs": [
+          {
+            "id": 3,
+            "hidden": true,
+            "visible": false,
+            "display": "none",
+            "cssWorkspaceHidden": false,
+            "hiddenBy": "simple-tab-groups@drive4ik",
+            "workspaceOwned": ""
+          },
+          {
+            "id": 4,
+            "hidden": true,
+            "visible": false,
+            "display": "none",
+            "cssWorkspaceHidden": false,
+            "hiddenBy": "simple-tab-groups@drive4ik",
+            "workspaceOwned": ""
+          },
+          {
+            "id": 5,
+            "hidden": true,
+            "visible": false,
+            "display": "none",
+            "cssWorkspaceHidden": false,
+            "hiddenBy": "simple-tab-groups@drive4ik",
+            "workspaceOwned": ""
+          },
+          {
+            "id": 6,
+            "hidden": false,
+            "visible": true,
+            "display": "flex",
+            "cssWorkspaceHidden": false,
+            "hiddenBy": "",
+            "workspaceOwned": ""
+          },
+          {
+            "id": 7,
+            "hidden": false,
+            "visible": true,
+            "display": "flex",
+            "cssWorkspaceHidden": false,
+            "hiddenBy": "",
+            "workspaceOwned": ""
+          },
+          {
+            "id": 8,
+            "hidden": false,
+            "visible": true,
+            "display": "flex",
+            "cssWorkspaceHidden": false,
+            "hiddenBy": "",
+            "workspaceOwned": ""
+          }
+        ],
+        "extensionGroups": [
+          {
+            "id": 3,
+            "focused": true,
+            "group": 2
+          }
+        ],
+        "members": [
+          {
+            "id": 3,
+            "group": 1,
+            "hidden": true,
+            "active": false
+          },
+          {
+            "id": 4,
+            "group": 1,
+            "hidden": true,
+            "active": false
+          },
+          {
+            "id": 5,
+            "group": 1,
+            "hidden": true,
+            "active": false
+          },
+          {
+            "id": 6,
+            "group": 2,
+            "hidden": false,
+            "active": true
+          },
+          {
+            "id": 7,
+            "group": 2,
+            "hidden": false,
+            "active": false
+          },
+          {
+            "id": 8,
+            "group": 2,
+            "hidden": false,
+            "active": false
+          }
+        ],
+        "manage": {
+          "groups": [
+            {
+              "title": "QA Group A",
+              "count": "3/3 tabs active"
+            },
+            {
+              "title": "QA Group B",
+              "count": "4/4 tabs active"
+            }
+          ],
+          "fixtureRows": [
+            {
+              "title": "STG QA /A/1\nhttp://127.0.0.1:19083/A/1",
+              "text": "   \u3007 STG QA /A/1 "
+            },
+            {
+              "title": "STG QA /A/2\nhttp://127.0.0.1:19083/A/2",
+              "text": "   \u3007 STG QA /A/2 "
+            },
+            {
+              "title": "STG QA /A/3\nhttp://127.0.0.1:19083/A/3",
+              "text": "   \u3007 STG QA /A/3 "
+            },
+            {
+              "title": "STG QA /B/1\nhttp://127.0.0.1:19083/B/1",
+              "text": "   \u3007 STG QA /B/1 "
+            },
+            {
+              "title": "STG QA /B/2\nhttp://127.0.0.1:19083/B/2",
+              "text": "   \u3007 STG QA /B/2 "
+            },
+            {
+              "title": "STG QA /B/3\nhttp://127.0.0.1:19083/B/3",
+              "text": "   \u3007 STG QA /B/3 "
+            }
+          ]
+        }
+      },
+      "new-away": {
+        "selected": 9,
+        "fixtureNativeVisible": [
+          6,
+          7,
+          8
+        ],
+        "fixtureTabs": [
+          {
+            "id": 3,
+            "hidden": true,
+            "visible": false,
+            "display": "none",
+            "cssWorkspaceHidden": true,
+            "hiddenBy": "simple-tab-groups@drive4ik",
+            "workspaceOwned": ""
+          },
+          {
+            "id": 4,
+            "hidden": true,
+            "visible": false,
+            "display": "none",
+            "cssWorkspaceHidden": true,
+            "hiddenBy": "simple-tab-groups@drive4ik",
+            "workspaceOwned": ""
+          },
+          {
+            "id": 5,
+            "hidden": true,
+            "visible": false,
+            "display": "none",
+            "cssWorkspaceHidden": true,
+            "hiddenBy": "simple-tab-groups@drive4ik",
+            "workspaceOwned": ""
+          },
+          {
+            "id": 6,
+            "hidden": false,
+            "visible": true,
+            "display": "none",
+            "cssWorkspaceHidden": true,
+            "hiddenBy": "",
+            "workspaceOwned": ""
+          },
+          {
+            "id": 7,
+            "hidden": false,
+            "visible": true,
+            "display": "none",
+            "cssWorkspaceHidden": true,
+            "hiddenBy": "",
+            "workspaceOwned": ""
+          },
+          {
+            "id": 8,
+            "hidden": false,
+            "visible": true,
+            "display": "none",
+            "cssWorkspaceHidden": true,
+            "hiddenBy": "",
+            "workspaceOwned": ""
+          }
+        ],
+        "extensionGroups": [
+          {
+            "id": 3,
+            "focused": true,
+            "group": 2
+          }
+        ],
+        "members": [
+          {
+            "id": 3,
+            "group": 1,
+            "hidden": true,
+            "active": false
+          },
+          {
+            "id": 4,
+            "group": 1,
+            "hidden": true,
+            "active": false
+          },
+          {
+            "id": 5,
+            "group": 1,
+            "hidden": true,
+            "active": false
+          },
+          {
+            "id": 6,
+            "group": 2,
+            "hidden": false,
+            "active": false
+          },
+          {
+            "id": 7,
+            "group": 2,
+            "hidden": false,
+            "active": false
+          },
+          {
+            "id": 8,
+            "group": 2,
+            "hidden": false,
+            "active": false
+          }
+        ],
+        "manage": {
+          "groups": [
+            {
+              "title": "QA Group A",
+              "count": "3/3 tabs active"
+            },
+            {
+              "title": "QA Group B",
+              "count": "4/4 tabs active"
+            }
+          ],
+          "fixtureRows": [
+            {
+              "title": "STG QA /A/1\nhttp://127.0.0.1:19083/A/1",
+              "text": "   \u3007 STG QA /A/1 "
+            },
+            {
+              "title": "STG QA /A/2\nhttp://127.0.0.1:19083/A/2",
+              "text": "   \u3007 STG QA /A/2 "
+            },
+            {
+              "title": "STG QA /A/3\nhttp://127.0.0.1:19083/A/3",
+              "text": "   \u3007 STG QA /A/3 "
+            },
+            {
+              "title": "STG QA /B/1\nhttp://127.0.0.1:19083/B/1",
+              "text": "   \u3007 STG QA /B/1 "
+            },
+            {
+              "title": "STG QA /B/2\nhttp://127.0.0.1:19083/B/2",
+              "text": "   \u3007 STG QA /B/2 "
+            },
+            {
+              "title": "STG QA /B/3\nhttp://127.0.0.1:19083/B/3",
+              "text": "   \u3007 STG QA /B/3 "
+            }
+          ]
+        }
+      },
+      "new-return": {
+        "selected": 6,
+        "fixtureNativeVisible": [
+          6,
+          7,
+          8
+        ],
+        "fixtureTabs": [
+          {
+            "id": 3,
+            "hidden": true,
+            "visible": false,
+            "display": "none",
+            "cssWorkspaceHidden": false,
+            "hiddenBy": "simple-tab-groups@drive4ik",
+            "workspaceOwned": ""
+          },
+          {
+            "id": 4,
+            "hidden": true,
+            "visible": false,
+            "display": "none",
+            "cssWorkspaceHidden": false,
+            "hiddenBy": "simple-tab-groups@drive4ik",
+            "workspaceOwned": ""
+          },
+          {
+            "id": 5,
+            "hidden": true,
+            "visible": false,
+            "display": "none",
+            "cssWorkspaceHidden": false,
+            "hiddenBy": "simple-tab-groups@drive4ik",
+            "workspaceOwned": ""
+          },
+          {
+            "id": 6,
+            "hidden": false,
+            "visible": true,
+            "display": "flex",
+            "cssWorkspaceHidden": false,
+            "hiddenBy": "",
+            "workspaceOwned": ""
+          },
+          {
+            "id": 7,
+            "hidden": false,
+            "visible": true,
+            "display": "flex",
+            "cssWorkspaceHidden": false,
+            "hiddenBy": "",
+            "workspaceOwned": ""
+          },
+          {
+            "id": 8,
+            "hidden": false,
+            "visible": true,
+            "display": "flex",
+            "cssWorkspaceHidden": false,
+            "hiddenBy": "",
+            "workspaceOwned": ""
+          }
+        ],
+        "extensionGroups": [
+          {
+            "id": 3,
+            "focused": true,
+            "group": 2
+          }
+        ],
+        "members": [
+          {
+            "id": 3,
+            "group": 1,
+            "hidden": true,
+            "active": false
+          },
+          {
+            "id": 4,
+            "group": 1,
+            "hidden": true,
+            "active": false
+          },
+          {
+            "id": 5,
+            "group": 1,
+            "hidden": true,
+            "active": false
+          },
+          {
+            "id": 6,
+            "group": 2,
+            "hidden": false,
+            "active": true
+          },
+          {
+            "id": 7,
+            "group": 2,
+            "hidden": false,
+            "active": false
+          },
+          {
+            "id": 8,
+            "group": 2,
+            "hidden": false,
+            "active": false
+          }
+        ],
+        "manage": {
+          "groups": [
+            {
+              "title": "QA Group A",
+              "count": "3/3 tabs active"
+            },
+            {
+              "title": "QA Group B",
+              "count": "4/4 tabs active"
+            }
+          ],
+          "fixtureRows": [
+            {
+              "title": "STG QA /A/1\nhttp://127.0.0.1:19083/A/1",
+              "text": "   \u3007 STG QA /A/1 "
+            },
+            {
+              "title": "STG QA /A/2\nhttp://127.0.0.1:19083/A/2",
+              "text": "   \u3007 STG QA /A/2 "
+            },
+            {
+              "title": "STG QA /A/3\nhttp://127.0.0.1:19083/A/3",
+              "text": "   \u3007 STG QA /A/3 "
+            },
+            {
+              "title": "STG QA /B/1\nhttp://127.0.0.1:19083/B/1",
+              "text": "   \u3007 STG QA /B/1 "
+            },
+            {
+              "title": "STG QA /B/2\nhttp://127.0.0.1:19083/B/2",
+              "text": "   \u3007 STG QA /B/2 "
+            },
+            {
+              "title": "STG QA /B/3\nhttp://127.0.0.1:19083/B/3",
+              "text": "   \u3007 STG QA /B/3 "
+            }
+          ]
+        }
+      }
+    }
+  }
+}

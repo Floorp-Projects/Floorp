@@ -1,0 +1,1173 @@
+{
+  "schemaVersion": 1,
+  "case": "css-cross",
+  "classification": "unmodified retained raw native/API/manage observations; event/trace bulk omitted; not a unique native-event ledger",
+  "observations": {
+    "install": {
+      "originalFile": "result-install.json",
+      "originalRawSha256": "7e03c3ac232fd5cddd83b0f92f448340b1de482a0b638334f6b0acbaf21a8779",
+      "omittedFields": [],
+      "value": {
+        "id": "simple-tab-groups@drive4ik",
+        "version": "5.3.2",
+        "signedState": 2,
+        "isActive": true,
+        "base": "moz-extension://22f4e77a-97e6-4b68-bf5c-21bc581dd31e/",
+        "signatureRequired": true
+      }
+    },
+    "fixture": {
+      "originalFile": "result-fixture.json",
+      "originalRawSha256": "fc6af86d107b0239baadbbb1172e63822cda50b0db9e0c676348890c711e5f76",
+      "omittedFields": [],
+      "value": {
+        "windowId": 3,
+        "A": [
+          3,
+          4,
+          5
+        ],
+        "B": [
+          6,
+          7,
+          8
+        ],
+        "ga": {
+          "ok": true,
+          "id": 1,
+          "title": "QA Group A"
+        },
+        "gb": {
+          "ok": true,
+          "id": 2,
+          "title": "QA Group B"
+        }
+      }
+    },
+    "boundary-final-safety": {
+      "originalFile": "result-boundary-final-safety.json",
+      "originalRawSha256": "1b6729012aea9d09aeaeeacf1c03ce72e8bcef20938a568db05fe824d399541a",
+      "omittedFields": [],
+      "value": {
+        "pid": 74023,
+        "version": "159.0.1",
+        "buildID": "20261103153232",
+        "sandbox": 6,
+        "signatureRequired": true,
+        "addon": {
+          "signedState": 2,
+          "isActive": false
+        },
+        "native": {
+          "at": 1793910181023,
+          "workspace": "f4657bc6-1cd2-4e6c-a179-5077f046799a",
+          "selected": 6,
+          "nativeVisible": [
+            1,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9
+          ],
+          "nativeNonHidden": [
+            1,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9
+          ],
+          "tabs": [
+            {
+              "id": 1,
+              "url": "about:blank",
+              "workspace": "f4657bc6-1cd2-4e6c-a179-5077f046799a",
+              "hidden": false,
+              "visible": true,
+              "selected": false,
+              "pinned": false,
+              "display": "flex",
+              "visibility": "visible",
+              "width": 144.61666870117188,
+              "height": 36,
+              "cssWorkspaceHidden": false,
+              "hiddenBy": "",
+              "workspaceOwned": ""
+            },
+            {
+              "id": 3,
+              "url": "http://127.0.0.1:19086/A/1",
+              "workspace": "f4657bc6-1cd2-4e6c-a179-5077f046799a",
+              "hidden": false,
+              "visible": true,
+              "selected": false,
+              "pinned": false,
+              "display": "flex",
+              "visibility": "visible",
+              "width": 144.63333129882812,
+              "height": 36,
+              "cssWorkspaceHidden": false,
+              "hiddenBy": "",
+              "workspaceOwned": ""
+            },
+            {
+              "id": 4,
+              "url": "http://127.0.0.1:19086/A/2",
+              "workspace": "f4657bc6-1cd2-4e6c-a179-5077f046799a",
+              "hidden": false,
+              "visible": true,
+              "selected": false,
+              "pinned": false,
+              "display": "flex",
+              "visibility": "visible",
+              "width": 144.61666870117188,
+              "height": 36,
+              "cssWorkspaceHidden": false,
+              "hiddenBy": "",
+              "workspaceOwned": ""
+            },
+            {
+              "id": 5,
+              "url": "http://127.0.0.1:19086/A/3",
+              "workspace": "f4657bc6-1cd2-4e6c-a179-5077f046799a",
+              "hidden": false,
+              "visible": true,
+              "selected": false,
+              "pinned": false,
+              "display": "flex",
+              "visibility": "visible",
+              "width": 144.63333129882812,
+              "height": 36,
+              "cssWorkspaceHidden": false,
+              "hiddenBy": "",
+              "workspaceOwned": ""
+            },
+            {
+              "id": 6,
+              "url": "http://127.0.0.1:19086/B/1",
+              "workspace": "f4657bc6-1cd2-4e6c-a179-5077f046799a",
+              "hidden": false,
+              "visible": true,
+              "selected": true,
+              "pinned": false,
+              "display": "flex",
+              "visibility": "visible",
+              "width": 144.61666870117188,
+              "height": 36,
+              "cssWorkspaceHidden": false,
+              "hiddenBy": "",
+              "workspaceOwned": ""
+            },
+            {
+              "id": 7,
+              "url": "http://127.0.0.1:19086/B/2",
+              "workspace": "f4657bc6-1cd2-4e6c-a179-5077f046799a",
+              "hidden": false,
+              "visible": true,
+              "selected": false,
+              "pinned": false,
+              "display": "flex",
+              "visibility": "visible",
+              "width": 144.63333129882812,
+              "height": 36,
+              "cssWorkspaceHidden": false,
+              "hiddenBy": "",
+              "workspaceOwned": ""
+            },
+            {
+              "id": 8,
+              "url": "http://127.0.0.1:19086/B/3",
+              "workspace": "f4657bc6-1cd2-4e6c-a179-5077f046799a",
+              "hidden": false,
+              "visible": true,
+              "selected": false,
+              "pinned": false,
+              "display": "flex",
+              "visibility": "visible",
+              "width": 144.61666870117188,
+              "height": 36,
+              "cssWorkspaceHidden": false,
+              "hiddenBy": "",
+              "workspaceOwned": ""
+            },
+            {
+              "id": 9,
+              "url": "about:home",
+              "workspace": "47c80f46-626b-4841-8149-b13f582bfe81",
+              "hidden": false,
+              "visible": true,
+              "selected": false,
+              "pinned": false,
+              "display": "none",
+              "visibility": "visible",
+              "width": 0,
+              "height": 0,
+              "cssWorkspaceHidden": true,
+              "hiddenBy": "",
+              "workspaceOwned": ""
+            }
+          ]
+        }
+      }
+    },
+    "cross-before-switch": {
+      "originalFile": "result-cross-before-switch.json",
+      "originalRawSha256": "e9e7567c6728385ea8f0891ef84ec18196ef86b464f332d04d6463b7d25ba4c8",
+      "omittedFields": [],
+      "value": {
+        "native": {
+          "at": 1793909977130,
+          "workspace": "47c80f46-626b-4841-8149-b13f582bfe81",
+          "selected": 9,
+          "nativeVisible": [
+            2,
+            1,
+            3,
+            4,
+            5,
+            9
+          ],
+          "nativeNonHidden": [
+            2,
+            1,
+            3,
+            4,
+            5,
+            9
+          ],
+          "tabs": [
+            {
+              "id": 2,
+              "url": "moz-extension://22f4e77a-97e6-4b68-bf5c-21bc581dd31e/manage/manage.html",
+              "workspace": "f4657bc6-1cd2-4e6c-a179-5077f046799a",
+              "hidden": false,
+              "visible": true,
+              "selected": false,
+              "pinned": true,
+              "display": "flex",
+              "visibility": "visible",
+              "width": 38,
+              "height": 36,
+              "cssWorkspaceHidden": false,
+              "hiddenBy": "",
+              "workspaceOwned": ""
+            },
+            {
+              "id": 1,
+              "url": "about:blank",
+              "workspace": "f4657bc6-1cd2-4e6c-a179-5077f046799a",
+              "hidden": false,
+              "visible": true,
+              "selected": false,
+              "pinned": false,
+              "display": "none",
+              "visibility": "visible",
+              "width": 0,
+              "height": 0,
+              "cssWorkspaceHidden": true,
+              "hiddenBy": "",
+              "workspaceOwned": ""
+            },
+            {
+              "id": 3,
+              "url": "http://127.0.0.1:19086/A/1",
+              "workspace": "f4657bc6-1cd2-4e6c-a179-5077f046799a",
+              "hidden": false,
+              "visible": true,
+              "selected": false,
+              "pinned": false,
+              "display": "none",
+              "visibility": "visible",
+              "width": 0,
+              "height": 0,
+              "cssWorkspaceHidden": true,
+              "hiddenBy": "",
+              "workspaceOwned": ""
+            },
+            {
+              "id": 4,
+              "url": "http://127.0.0.1:19086/A/2",
+              "workspace": "f4657bc6-1cd2-4e6c-a179-5077f046799a",
+              "hidden": false,
+              "visible": true,
+              "selected": false,
+              "pinned": false,
+              "display": "none",
+              "visibility": "visible",
+              "width": 0,
+              "height": 0,
+              "cssWorkspaceHidden": true,
+              "hiddenBy": "",
+              "workspaceOwned": ""
+            },
+            {
+              "id": 5,
+              "url": "http://127.0.0.1:19086/A/3",
+              "workspace": "f4657bc6-1cd2-4e6c-a179-5077f046799a",
+              "hidden": false,
+              "visible": true,
+              "selected": false,
+              "pinned": false,
+              "display": "none",
+              "visibility": "visible",
+              "width": 0,
+              "height": 0,
+              "cssWorkspaceHidden": true,
+              "hiddenBy": "",
+              "workspaceOwned": ""
+            },
+            {
+              "id": 6,
+              "url": "http://127.0.0.1:19086/B/1",
+              "workspace": "f4657bc6-1cd2-4e6c-a179-5077f046799a",
+              "hidden": true,
+              "visible": false,
+              "selected": false,
+              "pinned": false,
+              "display": "none",
+              "visibility": "visible",
+              "width": 0,
+              "height": 0,
+              "cssWorkspaceHidden": true,
+              "hiddenBy": "simple-tab-groups@drive4ik",
+              "workspaceOwned": ""
+            },
+            {
+              "id": 7,
+              "url": "http://127.0.0.1:19086/B/2",
+              "workspace": "f4657bc6-1cd2-4e6c-a179-5077f046799a",
+              "hidden": true,
+              "visible": false,
+              "selected": false,
+              "pinned": false,
+              "display": "none",
+              "visibility": "visible",
+              "width": 0,
+              "height": 0,
+              "cssWorkspaceHidden": true,
+              "hiddenBy": "simple-tab-groups@drive4ik",
+              "workspaceOwned": ""
+            },
+            {
+              "id": 8,
+              "url": "http://127.0.0.1:19086/B/3",
+              "workspace": "f4657bc6-1cd2-4e6c-a179-5077f046799a",
+              "hidden": true,
+              "visible": false,
+              "selected": false,
+              "pinned": false,
+              "display": "none",
+              "visibility": "visible",
+              "width": 0,
+              "height": 0,
+              "cssWorkspaceHidden": true,
+              "hiddenBy": "simple-tab-groups@drive4ik",
+              "workspaceOwned": ""
+            },
+            {
+              "id": 9,
+              "url": "about:home",
+              "workspace": "47c80f46-626b-4841-8149-b13f582bfe81",
+              "hidden": false,
+              "visible": true,
+              "selected": true,
+              "pinned": false,
+              "display": "flex",
+              "visibility": "visible",
+              "width": 225,
+              "height": 36,
+              "cssWorkspaceHidden": false,
+              "hiddenBy": "",
+              "workspaceOwned": ""
+            }
+          ]
+        },
+        "extension": {
+          "windows": [
+            {
+              "id": 3,
+              "focused": true,
+              "group": 1
+            }
+          ],
+          "tabs": [
+            {
+              "id": 2,
+              "windowId": 3,
+              "url": "moz-extension://22f4e77a-97e6-4b68-bf5c-21bc581dd31e/manage/manage.html",
+              "hidden": false,
+              "active": false,
+              "pinned": true
+            },
+            {
+              "id": 1,
+              "windowId": 3,
+              "url": "about:blank",
+              "hidden": false,
+              "active": false,
+              "pinned": false
+            },
+            {
+              "id": 3,
+              "windowId": 3,
+              "url": "http://127.0.0.1:19086/A/1",
+              "hidden": false,
+              "active": false,
+              "pinned": false,
+              "group": 1
+            },
+            {
+              "id": 4,
+              "windowId": 3,
+              "url": "http://127.0.0.1:19086/A/2",
+              "hidden": false,
+              "active": false,
+              "pinned": false,
+              "group": 1
+            },
+            {
+              "id": 5,
+              "windowId": 3,
+              "url": "http://127.0.0.1:19086/A/3",
+              "hidden": false,
+              "active": false,
+              "pinned": false,
+              "group": 1
+            },
+            {
+              "id": 6,
+              "windowId": 3,
+              "url": "http://127.0.0.1:19086/B/1",
+              "hidden": true,
+              "active": false,
+              "pinned": false,
+              "group": 2
+            },
+            {
+              "id": 7,
+              "windowId": 3,
+              "url": "http://127.0.0.1:19086/B/2",
+              "hidden": true,
+              "active": false,
+              "pinned": false,
+              "group": 2
+            },
+            {
+              "id": 8,
+              "windowId": 3,
+              "url": "http://127.0.0.1:19086/B/3",
+              "hidden": true,
+              "active": false,
+              "pinned": false,
+              "group": 2
+            },
+            {
+              "id": 9,
+              "windowId": 3,
+              "url": "about:home",
+              "hidden": false,
+              "active": true,
+              "pinned": false,
+              "group": 1
+            }
+          ]
+        },
+        "manage": {
+          "groups": [
+            {
+              "title": "QA Group A",
+              "count": "4/4 tabs active"
+            },
+            {
+              "title": "QA Group B",
+              "count": "3/3 tabs active"
+            }
+          ],
+          "fixtureRows": [
+            {
+              "title": "STG QA /A/1\nhttp://127.0.0.1:19086/A/1",
+              "text": "   \u3007 STG QA /A/1 "
+            },
+            {
+              "title": "STG QA /A/2\nhttp://127.0.0.1:19086/A/2",
+              "text": "   \u3007 STG QA /A/2 "
+            },
+            {
+              "title": "STG QA /A/3\nhttp://127.0.0.1:19086/A/3",
+              "text": "   \u3007 STG QA /A/3 "
+            },
+            {
+              "title": "STG QA /B/1\nhttp://127.0.0.1:19086/B/1",
+              "text": "   \u3007 STG QA /B/1 "
+            },
+            {
+              "title": "STG QA /B/2\nhttp://127.0.0.1:19086/B/2",
+              "text": "   \u3007 STG QA /B/2 "
+            },
+            {
+              "title": "STG QA /B/3\nhttp://127.0.0.1:19086/B/3",
+              "text": "   \u3007 STG QA /B/3 "
+            }
+          ]
+        }
+      }
+    },
+    "cross-group-B-click": {
+      "originalFile": "result-cross-group-B-click.json",
+      "originalRawSha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b",
+      "omittedFields": [],
+      "value": true
+    },
+    "cross-disable": {
+      "originalFile": "result-cross-disable.json",
+      "originalRawSha256": "25c31918a23b042082f38a66f637496762fa9f187cdbea721a86e003eef56ed5",
+      "omittedFields": [],
+      "value": {
+        "signedState": 2,
+        "isActive": false,
+        "sandbox": 6
+      }
+    },
+    "cross-after-disable-away": {
+      "originalFile": "result-cross-after-disable-away.json",
+      "originalRawSha256": "41b0c5689efbdac191cfc850c064a9c034cec7a2a76e399f7ead9f9a8c0c0b8b",
+      "omittedFields": [],
+      "value": {
+        "native": {
+          "at": 1793909981353,
+          "workspace": "47c80f46-626b-4841-8149-b13f582bfe81",
+          "selected": 6,
+          "nativeVisible": [
+            1,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9
+          ],
+          "nativeNonHidden": [
+            1,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9
+          ],
+          "tabs": [
+            {
+              "id": 1,
+              "url": "about:blank",
+              "workspace": "f4657bc6-1cd2-4e6c-a179-5077f046799a",
+              "hidden": false,
+              "visible": true,
+              "selected": false,
+              "pinned": false,
+              "display": "none",
+              "visibility": "visible",
+              "width": 0,
+              "height": 0,
+              "cssWorkspaceHidden": true,
+              "hiddenBy": "",
+              "workspaceOwned": ""
+            },
+            {
+              "id": 3,
+              "url": "http://127.0.0.1:19086/A/1",
+              "workspace": "f4657bc6-1cd2-4e6c-a179-5077f046799a",
+              "hidden": false,
+              "visible": true,
+              "selected": false,
+              "pinned": false,
+              "display": "none",
+              "visibility": "visible",
+              "width": 0,
+              "height": 0,
+              "cssWorkspaceHidden": true,
+              "hiddenBy": "",
+              "workspaceOwned": ""
+            },
+            {
+              "id": 4,
+              "url": "http://127.0.0.1:19086/A/2",
+              "workspace": "f4657bc6-1cd2-4e6c-a179-5077f046799a",
+              "hidden": false,
+              "visible": true,
+              "selected": false,
+              "pinned": false,
+              "display": "none",
+              "visibility": "visible",
+              "width": 0,
+              "height": 0,
+              "cssWorkspaceHidden": true,
+              "hiddenBy": "",
+              "workspaceOwned": ""
+            },
+            {
+              "id": 5,
+              "url": "http://127.0.0.1:19086/A/3",
+              "workspace": "f4657bc6-1cd2-4e6c-a179-5077f046799a",
+              "hidden": false,
+              "visible": true,
+              "selected": false,
+              "pinned": false,
+              "display": "none",
+              "visibility": "visible",
+              "width": 0,
+              "height": 0,
+              "cssWorkspaceHidden": true,
+              "hiddenBy": "",
+              "workspaceOwned": ""
+            },
+            {
+              "id": 6,
+              "url": "http://127.0.0.1:19086/B/1",
+              "workspace": "f4657bc6-1cd2-4e6c-a179-5077f046799a",
+              "hidden": false,
+              "visible": true,
+              "selected": true,
+              "pinned": false,
+              "display": "none",
+              "visibility": "visible",
+              "width": 0,
+              "height": 0,
+              "cssWorkspaceHidden": true,
+              "hiddenBy": "",
+              "workspaceOwned": ""
+            },
+            {
+              "id": 7,
+              "url": "http://127.0.0.1:19086/B/2",
+              "workspace": "f4657bc6-1cd2-4e6c-a179-5077f046799a",
+              "hidden": false,
+              "visible": true,
+              "selected": false,
+              "pinned": false,
+              "display": "none",
+              "visibility": "visible",
+              "width": 0,
+              "height": 0,
+              "cssWorkspaceHidden": true,
+              "hiddenBy": "",
+              "workspaceOwned": ""
+            },
+            {
+              "id": 8,
+              "url": "http://127.0.0.1:19086/B/3",
+              "workspace": "f4657bc6-1cd2-4e6c-a179-5077f046799a",
+              "hidden": false,
+              "visible": true,
+              "selected": false,
+              "pinned": false,
+              "display": "none",
+              "visibility": "visible",
+              "width": 0,
+              "height": 0,
+              "cssWorkspaceHidden": true,
+              "hiddenBy": "",
+              "workspaceOwned": ""
+            },
+            {
+              "id": 9,
+              "url": "about:home",
+              "workspace": "47c80f46-626b-4841-8149-b13f582bfe81",
+              "hidden": false,
+              "visible": true,
+              "selected": false,
+              "pinned": false,
+              "display": "flex",
+              "visibility": "visible",
+              "width": 225,
+              "height": 36,
+              "cssWorkspaceHidden": false,
+              "hiddenBy": "",
+              "workspaceOwned": ""
+            }
+          ]
+        },
+        "extension": {
+          "extensionInactive": true
+        },
+        "manage": {
+          "extensionInactive": true
+        }
+      }
+    },
+    "cross-final": {
+      "originalFile": "result-cross-final.json",
+      "originalRawSha256": "352820e72a89f69ba65862e495340dfaa5ec94102b804089a8dd87c5b1f78721",
+      "omittedFields": [],
+      "value": {
+        "native": {
+          "at": 1793909983291,
+          "workspace": "f4657bc6-1cd2-4e6c-a179-5077f046799a",
+          "selected": 6,
+          "nativeVisible": [
+            1,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9
+          ],
+          "nativeNonHidden": [
+            1,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9
+          ],
+          "tabs": [
+            {
+              "id": 1,
+              "url": "about:blank",
+              "workspace": "f4657bc6-1cd2-4e6c-a179-5077f046799a",
+              "hidden": false,
+              "visible": true,
+              "selected": false,
+              "pinned": false,
+              "display": "flex",
+              "visibility": "visible",
+              "width": 144.61666870117188,
+              "height": 36,
+              "cssWorkspaceHidden": false,
+              "hiddenBy": "",
+              "workspaceOwned": ""
+            },
+            {
+              "id": 3,
+              "url": "http://127.0.0.1:19086/A/1",
+              "workspace": "f4657bc6-1cd2-4e6c-a179-5077f046799a",
+              "hidden": false,
+              "visible": true,
+              "selected": false,
+              "pinned": false,
+              "display": "flex",
+              "visibility": "visible",
+              "width": 144.63333129882812,
+              "height": 36,
+              "cssWorkspaceHidden": false,
+              "hiddenBy": "",
+              "workspaceOwned": ""
+            },
+            {
+              "id": 4,
+              "url": "http://127.0.0.1:19086/A/2",
+              "workspace": "f4657bc6-1cd2-4e6c-a179-5077f046799a",
+              "hidden": false,
+              "visible": true,
+              "selected": false,
+              "pinned": false,
+              "display": "flex",
+              "visibility": "visible",
+              "width": 144.61666870117188,
+              "height": 36,
+              "cssWorkspaceHidden": false,
+              "hiddenBy": "",
+              "workspaceOwned": ""
+            },
+            {
+              "id": 5,
+              "url": "http://127.0.0.1:19086/A/3",
+              "workspace": "f4657bc6-1cd2-4e6c-a179-5077f046799a",
+              "hidden": false,
+              "visible": true,
+              "selected": false,
+              "pinned": false,
+              "display": "flex",
+              "visibility": "visible",
+              "width": 144.63333129882812,
+              "height": 36,
+              "cssWorkspaceHidden": false,
+              "hiddenBy": "",
+              "workspaceOwned": ""
+            },
+            {
+              "id": 6,
+              "url": "http://127.0.0.1:19086/B/1",
+              "workspace": "f4657bc6-1cd2-4e6c-a179-5077f046799a",
+              "hidden": false,
+              "visible": true,
+              "selected": true,
+              "pinned": false,
+              "display": "flex",
+              "visibility": "visible",
+              "width": 144.61666870117188,
+              "height": 36,
+              "cssWorkspaceHidden": false,
+              "hiddenBy": "",
+              "workspaceOwned": ""
+            },
+            {
+              "id": 7,
+              "url": "http://127.0.0.1:19086/B/2",
+              "workspace": "f4657bc6-1cd2-4e6c-a179-5077f046799a",
+              "hidden": false,
+              "visible": true,
+              "selected": false,
+              "pinned": false,
+              "display": "flex",
+              "visibility": "visible",
+              "width": 144.63333129882812,
+              "height": 36,
+              "cssWorkspaceHidden": false,
+              "hiddenBy": "",
+              "workspaceOwned": ""
+            },
+            {
+              "id": 8,
+              "url": "http://127.0.0.1:19086/B/3",
+              "workspace": "f4657bc6-1cd2-4e6c-a179-5077f046799a",
+              "hidden": false,
+              "visible": true,
+              "selected": false,
+              "pinned": false,
+              "display": "flex",
+              "visibility": "visible",
+              "width": 144.61666870117188,
+              "height": 36,
+              "cssWorkspaceHidden": false,
+              "hiddenBy": "",
+              "workspaceOwned": ""
+            },
+            {
+              "id": 9,
+              "url": "about:home",
+              "workspace": "47c80f46-626b-4841-8149-b13f582bfe81",
+              "hidden": false,
+              "visible": true,
+              "selected": false,
+              "pinned": false,
+              "display": "none",
+              "visibility": "visible",
+              "width": 0,
+              "height": 0,
+              "cssWorkspaceHidden": true,
+              "hiddenBy": "",
+              "workspaceOwned": ""
+            }
+          ]
+        },
+        "extension": {
+          "extensionInactive": true
+        },
+        "manage": {
+          "extensionInactive": true
+        }
+      }
+    },
+    "cross-after-switch": {
+      "originalFile": "result-cross-after-switch.json",
+      "originalRawSha256": "7418fbc550b563afeafb1549d080aded7c9f245cfa652e75007c80751a4b2936",
+      "omittedFields": [],
+      "value": {
+        "native": {
+          "at": 1793909979358,
+          "workspace": "47c80f46-626b-4841-8149-b13f582bfe81",
+          "selected": 6,
+          "nativeVisible": [
+            2,
+            1,
+            6,
+            7,
+            8
+          ],
+          "nativeNonHidden": [
+            2,
+            1,
+            6,
+            7,
+            8
+          ],
+          "tabs": [
+            {
+              "id": 2,
+              "url": "moz-extension://22f4e77a-97e6-4b68-bf5c-21bc581dd31e/manage/manage.html",
+              "workspace": "f4657bc6-1cd2-4e6c-a179-5077f046799a",
+              "hidden": false,
+              "visible": true,
+              "selected": false,
+              "pinned": true,
+              "display": "flex",
+              "visibility": "visible",
+              "width": 38,
+              "height": 36,
+              "cssWorkspaceHidden": false,
+              "hiddenBy": "",
+              "workspaceOwned": ""
+            },
+            {
+              "id": 1,
+              "url": "about:blank",
+              "workspace": "f4657bc6-1cd2-4e6c-a179-5077f046799a",
+              "hidden": false,
+              "visible": true,
+              "selected": false,
+              "pinned": false,
+              "display": "none",
+              "visibility": "visible",
+              "width": 0,
+              "height": 0,
+              "cssWorkspaceHidden": true,
+              "hiddenBy": "",
+              "workspaceOwned": ""
+            },
+            {
+              "id": 3,
+              "url": "http://127.0.0.1:19086/A/1",
+              "workspace": "f4657bc6-1cd2-4e6c-a179-5077f046799a",
+              "hidden": true,
+              "visible": false,
+              "selected": false,
+              "pinned": false,
+              "display": "none",
+              "visibility": "visible",
+              "width": 0,
+              "height": 0,
+              "cssWorkspaceHidden": true,
+              "hiddenBy": "simple-tab-groups@drive4ik",
+              "workspaceOwned": ""
+            },
+            {
+              "id": 4,
+              "url": "http://127.0.0.1:19086/A/2",
+              "workspace": "f4657bc6-1cd2-4e6c-a179-5077f046799a",
+              "hidden": true,
+              "visible": false,
+              "selected": false,
+              "pinned": false,
+              "display": "none",
+              "visibility": "visible",
+              "width": 0,
+              "height": 0,
+              "cssWorkspaceHidden": true,
+              "hiddenBy": "simple-tab-groups@drive4ik",
+              "workspaceOwned": ""
+            },
+            {
+              "id": 5,
+              "url": "http://127.0.0.1:19086/A/3",
+              "workspace": "f4657bc6-1cd2-4e6c-a179-5077f046799a",
+              "hidden": true,
+              "visible": false,
+              "selected": false,
+              "pinned": false,
+              "display": "none",
+              "visibility": "visible",
+              "width": 0,
+              "height": 0,
+              "cssWorkspaceHidden": true,
+              "hiddenBy": "simple-tab-groups@drive4ik",
+              "workspaceOwned": ""
+            },
+            {
+              "id": 6,
+              "url": "http://127.0.0.1:19086/B/1",
+              "workspace": "f4657bc6-1cd2-4e6c-a179-5077f046799a",
+              "hidden": false,
+              "visible": true,
+              "selected": true,
+              "pinned": false,
+              "display": "none",
+              "visibility": "visible",
+              "width": 0,
+              "height": 0,
+              "cssWorkspaceHidden": true,
+              "hiddenBy": "",
+              "workspaceOwned": ""
+            },
+            {
+              "id": 7,
+              "url": "http://127.0.0.1:19086/B/2",
+              "workspace": "f4657bc6-1cd2-4e6c-a179-5077f046799a",
+              "hidden": false,
+              "visible": true,
+              "selected": false,
+              "pinned": false,
+              "display": "none",
+              "visibility": "visible",
+              "width": 0,
+              "height": 0,
+              "cssWorkspaceHidden": true,
+              "hiddenBy": "",
+              "workspaceOwned": ""
+            },
+            {
+              "id": 8,
+              "url": "http://127.0.0.1:19086/B/3",
+              "workspace": "f4657bc6-1cd2-4e6c-a179-5077f046799a",
+              "hidden": false,
+              "visible": true,
+              "selected": false,
+              "pinned": false,
+              "display": "none",
+              "visibility": "visible",
+              "width": 0,
+              "height": 0,
+              "cssWorkspaceHidden": true,
+              "hiddenBy": "",
+              "workspaceOwned": ""
+            },
+            {
+              "id": 9,
+              "url": "about:home",
+              "workspace": "47c80f46-626b-4841-8149-b13f582bfe81",
+              "hidden": true,
+              "visible": false,
+              "selected": false,
+              "pinned": false,
+              "display": "none",
+              "visibility": "visible",
+              "width": 0,
+              "height": 0,
+              "cssWorkspaceHidden": false,
+              "hiddenBy": "simple-tab-groups@drive4ik",
+              "workspaceOwned": ""
+            }
+          ]
+        },
+        "extension": {
+          "windows": [
+            {
+              "id": 3,
+              "focused": true,
+              "group": 2
+            }
+          ],
+          "tabs": [
+            {
+              "id": 2,
+              "windowId": 3,
+              "url": "moz-extension://22f4e77a-97e6-4b68-bf5c-21bc581dd31e/manage/manage.html",
+              "hidden": false,
+              "active": false,
+              "pinned": true
+            },
+            {
+              "id": 1,
+              "windowId": 3,
+              "url": "about:blank",
+              "hidden": false,
+              "active": false,
+              "pinned": false
+            },
+            {
+              "id": 3,
+              "windowId": 3,
+              "url": "http://127.0.0.1:19086/A/1",
+              "hidden": true,
+              "active": false,
+              "pinned": false,
+              "group": 1
+            },
+            {
+              "id": 4,
+              "windowId": 3,
+              "url": "http://127.0.0.1:19086/A/2",
+              "hidden": true,
+              "active": false,
+              "pinned": false,
+              "group": 1
+            },
+            {
+              "id": 5,
+              "windowId": 3,
+              "url": "http://127.0.0.1:19086/A/3",
+              "hidden": true,
+              "active": false,
+              "pinned": false,
+              "group": 1
+            },
+            {
+              "id": 6,
+              "windowId": 3,
+              "url": "http://127.0.0.1:19086/B/1",
+              "hidden": false,
+              "active": true,
+              "pinned": false,
+              "group": 2
+            },
+            {
+              "id": 7,
+              "windowId": 3,
+              "url": "http://127.0.0.1:19086/B/2",
+              "hidden": false,
+              "active": false,
+              "pinned": false,
+              "group": 2
+            },
+            {
+              "id": 8,
+              "windowId": 3,
+              "url": "http://127.0.0.1:19086/B/3",
+              "hidden": false,
+              "active": false,
+              "pinned": false,
+              "group": 2
+            },
+            {
+              "id": 9,
+              "windowId": 3,
+              "url": "about:home",
+              "hidden": true,
+              "active": false,
+              "pinned": false,
+              "group": 1
+            }
+          ]
+        },
+        "manage": {
+          "groups": [
+            {
+              "title": "QA Group A",
+              "count": "4/4 tabs active"
+            },
+            {
+              "title": "QA Group B",
+              "count": "3/3 tabs active"
+            }
+          ],
+          "fixtureRows": [
+            {
+              "title": "STG QA /A/1\nhttp://127.0.0.1:19086/A/1",
+              "text": "   \u3007 STG QA /A/1 "
+            },
+            {
+              "title": "STG QA /A/2\nhttp://127.0.0.1:19086/A/2",
+              "text": "   \u3007 STG QA /A/2 "
+            },
+            {
+              "title": "STG QA /A/3\nhttp://127.0.0.1:19086/A/3",
+              "text": "   \u3007 STG QA /A/3 "
+            },
+            {
+              "title": "STG QA /B/1\nhttp://127.0.0.1:19086/B/1",
+              "text": "   \u3007 STG QA /B/1 "
+            },
+            {
+              "title": "STG QA /B/2\nhttp://127.0.0.1:19086/B/2",
+              "text": "   \u3007 STG QA /B/2 "
+            },
+            {
+              "title": "STG QA /B/3\nhttp://127.0.0.1:19086/B/3",
+              "text": "   \u3007 STG QA /B/3 "
+            }
+          ]
+        }
+      }
+    }
+  }
+}

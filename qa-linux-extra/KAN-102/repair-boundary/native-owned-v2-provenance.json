@@ -1,0 +1,27 @@
+{
+  "kind": "native-owned-v2",
+  "sourceInspectionSha": "29a3eb23145da90706d8a94441373278521cc737",
+  "originalReleaseSha": "984509d2053be7bae9027133bda7259cd706b208",
+  "product": "diagnostic isolated one-resource copy; not a complete build or production candidate",
+  "binarySha256": "4f05c1330b38e50040440be6a3b6e0e7a5b52bc79edb5c5478d978c81f5a603d",
+  "originalMemberSha256": "33ece721dda86f5b9f852903956e972dbba4cee2a33a29a04e6ab4eb7eeeff19",
+  "changedMemberSha256": "137f426b323cac6b45667df51966a33e89bf2bcfcdf3895ad96d9cf10a5e81c3",
+  "changedFiles": [
+    "omni.ja"
+  ],
+  "changedMembers": [
+    "chrome/noraneko/nora-content/assets/js/index35.js"
+  ],
+  "mockedExtension": false,
+  "nativeEventsSuppressed": false,
+  "sourceDiff": "native-owned-v2-source.diff",
+  "bundleDiff": "native-owned-v2-bundle.diff",
+  "revision": "persistent Workspace-owned hidden marker read before restoring; extension ownership and selection guard preserved; initial seed unused for formal trials",
+  "sourceDiffSha256": "076152cc4cb1a26d5990cc4a7fabf04b78a8322cc15a1dc087520c3a888294d2",
+  "bundleDiffSha256": "918fe088543eef63a0d76bd541fe1ad25febe203ceba761f4796f91082a8588b",
+  "finalProductIntegrityRechecked": true,
+  "nativeExecutableAndAllOtherFilesUnchanged": true,
+  "sourceWorktreeBlobSha": "f18227c10adac953804ff4b41b96508f1511cb16",
+  "sourceReverseCheck": true,
+  "independentBundleDiffApplicationMatchesObservedProduct": true
+}

@@ -1,0 +1,21 @@
+{
+  "classification": "test driver X11 access permission failure, not product failure",
+  "observations": {
+    "native-owned-v2": [
+      "Error: Can't open display: (null)",
+      "    raise CalledProcessError(retcode, process.args,",
+      "subprocess.CalledProcessError: Command '['/workspace/.floorp-cloud/bin/xdotool', 'key', 'Escape']' returned non-zero exit status 1."
+    ],
+    "css-layer-v2": [
+      "Error: Can't open display: (null)",
+      "    raise CalledProcessError(retcode, process.args,",
+      "subprocess.CalledProcessError: Command '['/workspace/.floorp-cloud/bin/xdotool', 'key', 'Escape']' returned non-zero exit status 1."
+    ],
+    "baseline": [
+      "Error: Can't open display: (null)",
+      "    raise CalledProcessError(retcode, process.args,",
+      "subprocess.CalledProcessError: Command '['/workspace/.floorp-cloud/bin/xdotool', 'key', 'Escape']' returned non-zero exit status 1."
+    ]
+  },
+  "correction": "resume only unexecuted keyboard/lifecycle tail with authorized X11 capability; browser sandbox unchanged"
+}

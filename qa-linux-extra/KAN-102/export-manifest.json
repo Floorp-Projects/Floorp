@@ -1,13 +1,13 @@
 [
   {
     "path": "report.md",
-    "bytes": 9820,
-    "sha256": "a362259e94730b5d82621e9756494bef5fee4e668a6e1a4d62407ec2ade91777"
+    "bytes": 10241,
+    "sha256": "fb9f110f1e4b35ae4057dcbcff7da5ce57826386cfc074ed2a7b5d1e1153aefb"
   },
   {
     "path": "matrix.json",
-    "bytes": 4862,
-    "sha256": "3c1747e5307e8501b2903cb80e513b4eddd58fa3df3484baf049f292413ef570"
+    "bytes": 5462,
+    "sha256": "7da3ec3f1772947f973bdff2f13f212f80707f9b900b35066fdadd3b2d4ae48a"
   },
   {
     "path": "verification.json",
@@ -348,5 +348,10 @@
     "path": "sync-result.json",
     "bytes": 834,
     "sha256": "d9587188696250950bdf78c25de955f55b7dde91efc6512a993ffc9c5275cbe7"
+  },
+  {
+    "path": "repair-boundary/export-manifest.json",
+    "bytes": 7924,
+    "sha256": "a0ff0fcae152a3d7a42e5d1564ccce0bb5b316c471c2044b96578380490d5246"
   }
 ]

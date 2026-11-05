@@ -1,0 +1,147 @@
+{
+  "key": "KAN-102",
+  "verificationPassed": true,
+  "safeCandidateEstablished": false,
+  "draftPr": null,
+  "completeProductBuildStarted": false,
+  "originalPersistentTabStripLeakReproduced": false,
+  "variants": {
+    "native-owned-v2": {
+      "sameWorkspaceUiSwitches": 3,
+      "selectedBPreserved": true,
+      "managerRecovery": "FAIL (B0/0; only A fixture rows)",
+      "verdict": "REJECT as complete compatibility repair"
+    },
+    "css-layer-v2": {
+      "sameWorkspaceUiSwitches": 3,
+      "selectedBPreserved": true,
+      "managerRecovery": "six fixture rows remain",
+      "nativeVisibility": "FAIL (three CSS-hidden foreign fixture tabs native-visible/API hidden=false)",
+      "verdict": "REJECT as same-contract Workspace repair"
+    }
+  },
+  "lifecycle": {
+    "baseline": {
+      "multipleWindow1SelectionPreserved": false,
+      "keyboardSelected": {
+        "id": 2,
+        "pinned": true,
+        "workspace": "49ef3dbd-f2c1-4653-bec3-5ed1bdf0ab78",
+        "currentWorkspace": "f118fd8f-7ec6-47b4-a763-d5b3f0c14f0e",
+        "display": "flex",
+        "url": "moz-extension://c67e1414-fdb2-4c90-8fb2-3e49bc1549f0/manage/manage.html"
+      },
+      "twoRealNormalRestartsPidChain": [
+        70026,
+        71139,
+        72649
+      ],
+      "sixFixtureTabRecordsRestored": true,
+      "disableRemoveAndRemovedRestartSixFixturesRecovered": true,
+      "sandbox": 6,
+      "signaturesRequired": true,
+      "normalFinalExit": 0,
+      "beforeRestartFixtureGroupMappingCount": 3,
+      "afterRestartFixtureGroupMappingCount": 3
+    },
+    "native-owned-v2": {
+      "multipleWindow1SelectionPreserved": true,
+      "keyboardSelected": {
+        "id": 2,
+        "pinned": true,
+        "workspace": "1223fe0b-aeda-4cbc-9ee8-6266ce4dd43b",
+        "currentWorkspace": "69a1cc98-ce34-42df-8072-ac0d822bcb4e",
+        "display": "flex",
+        "url": "moz-extension://f7a298af-7c05-4969-9a5a-4552e2348019/manage/manage.html"
+      },
+      "twoRealNormalRestartsPidChain": [
+        68904,
+        71133,
+        72537
+      ],
+      "sixFixtureTabRecordsRestored": true,
+      "disableRemoveAndRemovedRestartSixFixturesRecovered": true,
+      "sandbox": 6,
+      "signaturesRequired": true,
+      "normalFinalExit": 0,
+      "beforeRestartFixtureGroupMappingCount": 3,
+      "afterRestartFixtureGroupMappingCount": 3
+    },
+    "css-layer-v2": {
+      "multipleWindow1SelectionPreserved": true,
+      "keyboardSelected": {
+        "id": 8,
+        "pinned": false,
+        "workspace": "83e4e753-3986-4237-88b8-b34251ed2fdc",
+        "currentWorkspace": "313405e3-fe21-4f75-9cfa-00bec3073505",
+        "display": "none",
+        "url": "http://127.0.0.1:19083/B/3"
+      },
+      "twoRealNormalRestartsPidChain": [
+        69518,
+        71135,
+        72575
+      ],
+      "sixFixtureTabRecordsRestored": true,
+      "disableRemoveAndRemovedRestartSixFixturesRecovered": true,
+      "sandbox": 6,
+      "signaturesRequired": true,
+      "normalFinalExit": 0,
+      "beforeRestartFixtureGroupMappingCount": 6,
+      "afterRestartFixtureGroupMappingCount": 6
+    }
+  },
+  "crossWorkspaceGroupSwitch": {
+    "native-cross": {
+      "selectedTab": {
+        "id": 6,
+        "url": "http://127.0.0.1:19085/B/1",
+        "workspace": "369253d5-f012-4ed4-a4ef-69ca01461f50",
+        "hidden": false,
+        "visible": true,
+        "selected": true,
+        "pinned": false,
+        "display": "flex",
+        "visibility": "visible",
+        "width": 225,
+        "height": 36,
+        "cssWorkspaceHidden": false,
+        "hiddenBy": "",
+        "workspaceOwned": ""
+      },
+      "currentWorkspace": "35d1c643-4398-41e5-b1f9-9b83285d8e3d",
+      "fixtureGroupRows": 3,
+      "afterDisableReturnSixFixturesRecovered": true,
+      "normalFinalExit": 0
+    },
+    "css-cross": {
+      "selectedTab": {
+        "id": 6,
+        "url": "http://127.0.0.1:19086/B/1",
+        "workspace": "f4657bc6-1cd2-4e6c-a179-5077f046799a",
+        "hidden": false,
+        "visible": true,
+        "selected": true,
+        "pinned": false,
+        "display": "none",
+        "visibility": "visible",
+        "width": 0,
+        "height": 0,
+        "cssWorkspaceHidden": true,
+        "hiddenBy": "",
+        "workspaceOwned": ""
+      },
+      "currentWorkspace": "47c80f46-626b-4841-8149-b13f582bfe81",
+      "fixtureGroupRows": 6,
+      "afterDisableReturnSixFixturesRecovered": true,
+      "normalFinalExit": 0
+    },
+    "baseline-cross": {
+      "action": "BLOCKED by actual missing STG B row; no switch executed",
+      "fixtureRowsBeforeAttempt": 0,
+      "afterDisableReturnSixFixturesRecovered": true,
+      "normalFinalExit": 0
+    }
+  },
+  "requiredDecision": "Define Workspace/STG selection and visibility UX: same native hide slot cannot honor both current contracts without coordinated change; no selective event masking or extension-private storage repair."
+}

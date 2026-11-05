@@ -1,0 +1,14 @@
+[
+  {
+    "variant": "native-owned-v2",
+    "sourceBlob": "f18227c10adac953804ff4b41b96508f1511cb16",
+    "sourceDiffSha256": "076152cc4cb1a26d5990cc4a7fabf04b78a8322cc15a1dc087520c3a888294d2",
+    "bundleSha256": "137f426b323cac6b45667df51966a33e89bf2bcfcdf3895ad96d9cf10a5e81c3"
+  },
+  {
+    "variant": "css-layer-v2",
+    "sourceBlob": "5b390892a1f9a05fd3c41c3f6a44c638b41de224",
+    "sourceDiffSha256": "9a77bb1f6c8e31228302bada6a510f155b5691a89fe3346eca0403bd6474bc6b",
+    "bundleSha256": "8b61b29550f0de39f091cc358a272be783cb2c6cc5bff51b3af0caa821c27255"
+  }
+]

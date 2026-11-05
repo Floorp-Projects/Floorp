@@ -1,0 +1,219 @@
+{
+  "crossWorkspace": {
+    "native-cross": {
+      "source": "native-cross/result-cross-after-switch.json",
+      "currentWorkspace": "35d1c643-4398-41e5-b1f9-9b83285d8e3d",
+      "selected": 6,
+      "selectedTab": {
+        "id": 6,
+        "workspace": "369253d5-f012-4ed4-a4ef-69ca01461f50",
+        "hidden": false,
+        "display": "flex",
+        "width": 225,
+        "visible": true
+      },
+      "nativeVisible": [
+        2,
+        6,
+        7,
+        8
+      ]
+    },
+    "css-cross": {
+      "source": "css-cross/result-cross-after-switch.json",
+      "currentWorkspace": "47c80f46-626b-4841-8149-b13f582bfe81",
+      "selected": 6,
+      "selectedTab": {
+        "id": 6,
+        "workspace": "f4657bc6-1cd2-4e6c-a179-5077f046799a",
+        "hidden": false,
+        "display": "none",
+        "width": 0,
+        "visible": true
+      },
+      "nativeVisible": [
+        2,
+        1,
+        6,
+        7,
+        8
+      ]
+    }
+  },
+  "lifecycleSelectedSnapshots": {
+    "baseline": {
+      "result-life-keyboard-after.json": {
+        "currentWorkspace": "f118fd8f-7ec6-47b4-a763-d5b3f0c14f0e",
+        "selected": 2,
+        "selectedTab": {
+          "id": 2,
+          "workspace": "49ef3dbd-f2c1-4653-bec3-5ed1bdf0ab78",
+          "hidden": false,
+          "display": "flex",
+          "width": 38,
+          "visible": true
+        },
+        "fixtureCount": 6,
+        "fixtureDisplayedCount": 0
+      },
+      "result-life-after-disable.json": {
+        "currentWorkspace": "49ef3dbd-f2c1-4653-bec3-5ed1bdf0ab78",
+        "selected": 7,
+        "selectedTab": {
+          "id": 7,
+          "workspace": "49ef3dbd-f2c1-4653-bec3-5ed1bdf0ab78",
+          "hidden": false,
+          "display": "flex",
+          "width": 144.61666870117188,
+          "visible": true
+        },
+        "fixtureCount": 6,
+        "fixtureDisplayedCount": 6
+      },
+      "result-life-after-remove.json": {
+        "currentWorkspace": "49ef3dbd-f2c1-4653-bec3-5ed1bdf0ab78",
+        "selected": 7,
+        "selectedTab": {
+          "id": 7,
+          "workspace": "49ef3dbd-f2c1-4653-bec3-5ed1bdf0ab78",
+          "hidden": false,
+          "display": "flex",
+          "width": 144.61666870117188,
+          "visible": true
+        },
+        "fixtureCount": 6,
+        "fixtureDisplayedCount": 6
+      },
+      "result-life-after-restart-removed.json": {
+        "currentWorkspace": "49ef3dbd-f2c1-4653-bec3-5ed1bdf0ab78",
+        "selected": 1,
+        "selectedTab": {
+          "id": 1,
+          "workspace": "49ef3dbd-f2c1-4653-bec3-5ed1bdf0ab78",
+          "hidden": false,
+          "display": "flex",
+          "width": 144.61666870117188,
+          "visible": true
+        },
+        "fixtureCount": 6,
+        "fixtureDisplayedCount": 6
+      }
+    },
+    "native-owned-v2": {
+      "result-life-keyboard-after.json": {
+        "currentWorkspace": "69a1cc98-ce34-42df-8072-ac0d822bcb4e",
+        "selected": 2,
+        "selectedTab": {
+          "id": 2,
+          "workspace": "1223fe0b-aeda-4cbc-9ee8-6266ce4dd43b",
+          "hidden": false,
+          "display": "flex",
+          "width": 38,
+          "visible": true
+        },
+        "fixtureCount": 6,
+        "fixtureDisplayedCount": 0
+      },
+      "result-life-after-disable.json": {
+        "currentWorkspace": "1223fe0b-aeda-4cbc-9ee8-6266ce4dd43b",
+        "selected": 7,
+        "selectedTab": {
+          "id": 7,
+          "workspace": "1223fe0b-aeda-4cbc-9ee8-6266ce4dd43b",
+          "hidden": false,
+          "display": "flex",
+          "width": 144.61666870117188,
+          "visible": true
+        },
+        "fixtureCount": 6,
+        "fixtureDisplayedCount": 6
+      },
+      "result-life-after-remove.json": {
+        "currentWorkspace": "1223fe0b-aeda-4cbc-9ee8-6266ce4dd43b",
+        "selected": 7,
+        "selectedTab": {
+          "id": 7,
+          "workspace": "1223fe0b-aeda-4cbc-9ee8-6266ce4dd43b",
+          "hidden": false,
+          "display": "flex",
+          "width": 144.61666870117188,
+          "visible": true
+        },
+        "fixtureCount": 6,
+        "fixtureDisplayedCount": 6
+      },
+      "result-life-after-restart-removed.json": {
+        "currentWorkspace": "1223fe0b-aeda-4cbc-9ee8-6266ce4dd43b",
+        "selected": 1,
+        "selectedTab": {
+          "id": 1,
+          "workspace": "1223fe0b-aeda-4cbc-9ee8-6266ce4dd43b",
+          "hidden": false,
+          "display": "flex",
+          "width": 144.61666870117188,
+          "visible": true
+        },
+        "fixtureCount": 6,
+        "fixtureDisplayedCount": 6
+      }
+    },
+    "css-layer-v2": {
+      "result-life-keyboard-after.json": {
+        "currentWorkspace": "313405e3-fe21-4f75-9cfa-00bec3073505",
+        "selected": 8,
+        "selectedTab": {
+          "id": 8,
+          "workspace": "83e4e753-3986-4237-88b8-b34251ed2fdc",
+          "hidden": false,
+          "display": "none",
+          "width": 0,
+          "visible": true
+        },
+        "fixtureCount": 6,
+        "fixtureDisplayedCount": 0
+      },
+      "result-life-after-disable.json": {
+        "currentWorkspace": "83e4e753-3986-4237-88b8-b34251ed2fdc",
+        "selected": 7,
+        "selectedTab": {
+          "id": 7,
+          "workspace": "83e4e753-3986-4237-88b8-b34251ed2fdc",
+          "hidden": false,
+          "display": "flex",
+          "width": 144.61666870117188,
+          "visible": true
+        },
+        "fixtureCount": 6,
+        "fixtureDisplayedCount": 6
+      },
+      "result-life-after-remove.json": {
+        "currentWorkspace": "83e4e753-3986-4237-88b8-b34251ed2fdc",
+        "selected": 7,
+        "selectedTab": {
+          "id": 7,
+          "workspace": "83e4e753-3986-4237-88b8-b34251ed2fdc",
+          "hidden": false,
+          "display": "flex",
+          "width": 144.61666870117188,
+          "visible": true
+        },
+        "fixtureCount": 6,
+        "fixtureDisplayedCount": 6
+      },
+      "result-life-after-restart-removed.json": {
+        "currentWorkspace": "83e4e753-3986-4237-88b8-b34251ed2fdc",
+        "selected": 1,
+        "selectedTab": {
+          "id": 1,
+          "workspace": "83e4e753-3986-4237-88b8-b34251ed2fdc",
+          "hidden": false,
+          "display": "flex",
+          "width": 144.61666870117188,
+          "visible": true
+        },
+        "fixtureCount": 6,
+        "fixtureDisplayedCount": 6
+      }
+    }
+  }
+}

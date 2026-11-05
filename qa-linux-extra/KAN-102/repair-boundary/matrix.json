@@ -1,0 +1,268 @@
+[
+  {
+    "key": "KAN-102",
+    "github": "https://github.com/Floorp-Projects/Floorp/issues/2412",
+    "sourceSha": "984509d2053be7bae9027133bda7259cd706b208",
+    "sourceInspectionSha": "29a3eb23145da90706d8a94441373278521cc737",
+    "latestMainRechecked": "29a3eb23145da90706d8a94441373278521cc737",
+    "productVersion": "official12.21.1/Gecko159.0.1/Runtime20261103153232; two isolated one-resource diagnostic variants, not complete builds",
+    "environment": {
+      "os": "PRETTY_NAME=\"Debian GNU/Linux 13 (trixie)\"\nNAME=\"Debian GNU/Linux\"\nVERSION_ID=\"13\"\nVERSION=\"13 (trixie)\"\nVERSION_CODENAME=trixie\nDEBIAN_VERSION_FULL=13.6\nID=debian\nHOME_URL=\"https://www.debian.org/\"\nSUPPORT_URL=\"https://www.debian.org/support\"\nBUG_REPORT_URL=\"https://bugs.debian.org/\"\n",
+      "kernel": "6.18.57",
+      "machine": "x86_64",
+      "uid": 1000,
+      "drmDevices": [],
+      "display": "dedicated Xvfb X11 + Openbox; actual headful products",
+      "dbus": "private per profile",
+      "input": "WebDriver real element pointer clicks; XTest Escape; no physical-input claim",
+      "fixtures": "2 groups x3 localhost HTML fixture tabs; pinned management and initial about:blank excluded",
+      "tls": "inherited enforced proxy and installed environment CA; acceptInsecureCerts=false",
+      "protections": "fresh profiles, xpinstall.signatures.required=true, sandbox6 before/after; MOZ_DISABLE_* refused",
+      "originalConditionsNotMatched": "Windows10/12.12.2; original STG version/real 200-590 tab import backup/physical input; current Linux software GPU only",
+      "sourceSha": "984509d2053be7bae9027133bda7259cd706b208",
+      "sourceInspectionSha": "29a3eb23145da90706d8a94441373278521cc737",
+      "products": {
+        "floorp": {
+          "binary": "/workspace/qa-linux-22/C/products/floorp/floorp",
+          "binarySha256": "4f05c1330b38e50040440be6a3b6e0e7a5b52bc79edb5c5478d978c81f5a603d",
+          "omniSha256": "159285f967e950e0cd1ac658d713b7770e7763d6d983fc88b6e48c16e4a1f345"
+        },
+        "firefox": {
+          "binary": "/workspace/qa-linux-22/C/products/firefox/firefox",
+          "binarySha256": "de3f1f70c111692fce304c7af83a7bf2e6f4bc8033191ea8b8ccc25f1aa122ed",
+          "omniSha256": "2ca88cf7d962909c3e42960177e1d418124b50180692bca5cbcad2ffa9a033d4"
+        }
+      },
+      "newScope": "repair-boundary diagnostic candidates; baseline + two candidates and three cross-Workspace profiles; no original user data"
+    },
+    "testCommand": "materialize.py; real signed-STG setup; experiment.py; lifecycle.py plus recorded continuation tails; cross-group.py; verify-boundary.py",
+    "result": "two diagnostic candidates rejected; explicit Workspace/STG UX/visibility contract decision required; original persistent leak remains unreplicated",
+    "diagnosticVariants": {
+      "native-owned-v2": {
+        "kind": "native-owned-v2",
+        "sourceInspectionSha": "29a3eb23145da90706d8a94441373278521cc737",
+        "originalReleaseSha": "984509d2053be7bae9027133bda7259cd706b208",
+        "product": "diagnostic isolated one-resource copy; not a complete build or production candidate",
+        "binarySha256": "4f05c1330b38e50040440be6a3b6e0e7a5b52bc79edb5c5478d978c81f5a603d",
+        "originalMemberSha256": "33ece721dda86f5b9f852903956e972dbba4cee2a33a29a04e6ab4eb7eeeff19",
+        "changedMemberSha256": "137f426b323cac6b45667df51966a33e89bf2bcfcdf3895ad96d9cf10a5e81c3",
+        "changedFiles": [
+          "omni.ja"
+        ],
+        "changedMembers": [
+          "chrome/noraneko/nora-content/assets/js/index35.js"
+        ],
+        "mockedExtension": false,
+        "nativeEventsSuppressed": false,
+        "sourceDiff": "native-owned-v2-source.diff",
+        "bundleDiff": "native-owned-v2-bundle.diff",
+        "revision": "persistent Workspace-owned hidden marker read before restoring; extension ownership and selection guard preserved; initial seed unused for formal trials",
+        "sourceDiffSha256": "076152cc4cb1a26d5990cc4a7fabf04b78a8322cc15a1dc087520c3a888294d2",
+        "bundleDiffSha256": "918fe088543eef63a0d76bd541fe1ad25febe203ceba761f4796f91082a8588b",
+        "finalProductIntegrityRechecked": true,
+        "nativeExecutableAndAllOtherFilesUnchanged": true,
+        "sourceWorktreeBlobSha": "f18227c10adac953804ff4b41b96508f1511cb16",
+        "sourceReverseCheck": true,
+        "independentBundleDiffApplicationMatchesObservedProduct": true
+      },
+      "css-layer-v2": {
+        "kind": "css-layer-v2",
+        "sourceInspectionSha": "29a3eb23145da90706d8a94441373278521cc737",
+        "originalReleaseSha": "984509d2053be7bae9027133bda7259cd706b208",
+        "product": "diagnostic isolated one-resource copy; not a complete build or production candidate",
+        "binarySha256": "4f05c1330b38e50040440be6a3b6e0e7a5b52bc79edb5c5478d978c81f5a603d",
+        "originalMemberSha256": "33ece721dda86f5b9f852903956e972dbba4cee2a33a29a04e6ab4eb7eeeff19",
+        "changedMemberSha256": "8b61b29550f0de39f091cc358a272be783cb2c6cc5bff51b3af0caa821c27255",
+        "changedFiles": [
+          "omni.ja"
+        ],
+        "changedMembers": [
+          "chrome/noraneko/nora-content/assets/js/index35.js"
+        ],
+        "mockedExtension": false,
+        "nativeEventsSuppressed": false,
+        "sourceDiff": "css-layer-v2-source.diff",
+        "bundleDiff": "css-layer-v2-bundle.diff",
+        "revision": "preserve native globally pinned tab visibility; initial CSS prototype not a release candidate",
+        "sourceDiffSha256": "9a77bb1f6c8e31228302bada6a510f155b5691a89fe3346eca0403bd6474bc6b",
+        "bundleDiffSha256": "35324cab11a0993db729f586c8feb753a0793647e8cb7f8b7786a26cf626773e",
+        "finalProductIntegrityRechecked": true,
+        "nativeExecutableAndAllOtherFilesUnchanged": true,
+        "sourceWorktreeBlobSha": "5b390892a1f9a05fd3c41c3f6a44c638b41de224",
+        "sourceReverseCheck": true,
+        "independentBundleDiffApplicationMatchesObservedProduct": true
+      }
+    },
+    "verification": {
+      "key": "KAN-102",
+      "verificationPassed": true,
+      "safeCandidateEstablished": false,
+      "draftPr": null,
+      "completeProductBuildStarted": false,
+      "originalPersistentTabStripLeakReproduced": false,
+      "variants": {
+        "native-owned-v2": {
+          "sameWorkspaceUiSwitches": 3,
+          "selectedBPreserved": true,
+          "managerRecovery": "FAIL (B0/0; only A fixture rows)",
+          "verdict": "REJECT as complete compatibility repair"
+        },
+        "css-layer-v2": {
+          "sameWorkspaceUiSwitches": 3,
+          "selectedBPreserved": true,
+          "managerRecovery": "six fixture rows remain",
+          "nativeVisibility": "FAIL (three CSS-hidden foreign fixture tabs native-visible/API hidden=false)",
+          "verdict": "REJECT as same-contract Workspace repair"
+        }
+      },
+      "lifecycle": {
+        "baseline": {
+          "multipleWindow1SelectionPreserved": false,
+          "keyboardSelected": {
+            "id": 2,
+            "pinned": true,
+            "workspace": "49ef3dbd-f2c1-4653-bec3-5ed1bdf0ab78",
+            "currentWorkspace": "f118fd8f-7ec6-47b4-a763-d5b3f0c14f0e",
+            "display": "flex",
+            "url": "moz-extension://c67e1414-fdb2-4c90-8fb2-3e49bc1549f0/manage/manage.html"
+          },
+          "twoRealNormalRestartsPidChain": [
+            70026,
+            71139,
+            72649
+          ],
+          "sixFixtureTabRecordsRestored": true,
+          "disableRemoveAndRemovedRestartSixFixturesRecovered": true,
+          "sandbox": 6,
+          "signaturesRequired": true,
+          "normalFinalExit": 0,
+          "beforeRestartFixtureGroupMappingCount": 3,
+          "afterRestartFixtureGroupMappingCount": 3
+        },
+        "native-owned-v2": {
+          "multipleWindow1SelectionPreserved": true,
+          "keyboardSelected": {
+            "id": 2,
+            "pinned": true,
+            "workspace": "1223fe0b-aeda-4cbc-9ee8-6266ce4dd43b",
+            "currentWorkspace": "69a1cc98-ce34-42df-8072-ac0d822bcb4e",
+            "display": "flex",
+            "url": "moz-extension://f7a298af-7c05-4969-9a5a-4552e2348019/manage/manage.html"
+          },
+          "twoRealNormalRestartsPidChain": [
+            68904,
+            71133,
+            72537
+          ],
+          "sixFixtureTabRecordsRestored": true,
+          "disableRemoveAndRemovedRestartSixFixturesRecovered": true,
+          "sandbox": 6,
+          "signaturesRequired": true,
+          "normalFinalExit": 0,
+          "beforeRestartFixtureGroupMappingCount": 3,
+          "afterRestartFixtureGroupMappingCount": 3
+        },
+        "css-layer-v2": {
+          "multipleWindow1SelectionPreserved": true,
+          "keyboardSelected": {
+            "id": 8,
+            "pinned": false,
+            "workspace": "83e4e753-3986-4237-88b8-b34251ed2fdc",
+            "currentWorkspace": "313405e3-fe21-4f75-9cfa-00bec3073505",
+            "display": "none",
+            "url": "http://127.0.0.1:19083/B/3"
+          },
+          "twoRealNormalRestartsPidChain": [
+            69518,
+            71135,
+            72575
+          ],
+          "sixFixtureTabRecordsRestored": true,
+          "disableRemoveAndRemovedRestartSixFixturesRecovered": true,
+          "sandbox": 6,
+          "signaturesRequired": true,
+          "normalFinalExit": 0,
+          "beforeRestartFixtureGroupMappingCount": 6,
+          "afterRestartFixtureGroupMappingCount": 6
+        }
+      },
+      "crossWorkspaceGroupSwitch": {
+        "native-cross": {
+          "selectedTab": {
+            "id": 6,
+            "url": "http://127.0.0.1:19085/B/1",
+            "workspace": "369253d5-f012-4ed4-a4ef-69ca01461f50",
+            "hidden": false,
+            "visible": true,
+            "selected": true,
+            "pinned": false,
+            "display": "flex",
+            "visibility": "visible",
+            "width": 225,
+            "height": 36,
+            "cssWorkspaceHidden": false,
+            "hiddenBy": "",
+            "workspaceOwned": ""
+          },
+          "currentWorkspace": "35d1c643-4398-41e5-b1f9-9b83285d8e3d",
+          "fixtureGroupRows": 3,
+          "afterDisableReturnSixFixturesRecovered": true,
+          "normalFinalExit": 0
+        },
+        "css-cross": {
+          "selectedTab": {
+            "id": 6,
+            "url": "http://127.0.0.1:19086/B/1",
+            "workspace": "f4657bc6-1cd2-4e6c-a179-5077f046799a",
+            "hidden": false,
+            "visible": true,
+            "selected": true,
+            "pinned": false,
+            "display": "none",
+            "visibility": "visible",
+            "width": 0,
+            "height": 0,
+            "cssWorkspaceHidden": true,
+            "hiddenBy": "",
+            "workspaceOwned": ""
+          },
+          "currentWorkspace": "47c80f46-626b-4841-8149-b13f582bfe81",
+          "fixtureGroupRows": 6,
+          "afterDisableReturnSixFixturesRecovered": true,
+          "normalFinalExit": 0
+        },
+        "baseline-cross": {
+          "action": "BLOCKED by actual missing STG B row; no switch executed",
+          "fixtureRowsBeforeAttempt": 0,
+          "afterDisableReturnSixFixturesRecovered": true,
+          "normalFinalExit": 0
+        }
+      },
+      "requiredDecision": "Define Workspace/STG selection and visibility UX: same native hide slot cannot honor both current contracts without coordinated change; no selective event masking or extension-private storage repair."
+    },
+    "remainingConditions": [
+      "Define simultaneous-use UX: single manager, owning-Workspace handoff/group scope, or coordinated native/API visibility",
+      "A2 fails live manager recovery and cross-Workspace extension show; B2 fails native API/keyboard/selection equivalence",
+      "Legacy unowned hidden migration and pinned marker correctness not qualified for shipping",
+      "Original Windows10/old STG/import fixture and original persistent tabstrip symptom remain"
+    ],
+    "existingPr": null,
+    "newPr": null,
+    "completeProductBuildStarted": false,
+    "jiraCommentId": null,
+    "priorJiraCommentId": "10410",
+    "evidence": [
+      "report.md",
+      "verification.json",
+      "verify-boundary.py",
+      "patch-verification.json",
+      "installed-addon-integrity.json",
+      "native-owned-v2-source.diff",
+      "css-layer-v2-source.diff",
+      "native-owned-v2-bundle.diff",
+      "css-layer-v2-bundle.diff"
+    ],
+    "separateFromOriginal22": true,
+    "originalCMatrixSha256": "4ac5d5f17f97d70e82f7b9f17d6abcc1aa17a92e3708eeadaba6ac7c8415e3cd"
+  }
+]

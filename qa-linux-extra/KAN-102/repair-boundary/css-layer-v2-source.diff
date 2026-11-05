@@ -1,0 +1,58 @@
+diff --git a/browser-features/chrome/common/workspaces/workspacesTabManager.tsx b/browser-features/chrome/common/workspaces/workspacesTabManager.tsx
+index 708f750a..5b390892 100644
+--- a/browser-features/chrome/common/workspaces/workspacesTabManager.tsx
++++ b/browser-features/chrome/common/workspaces/workspacesTabManager.tsx
+@@ -38,6 +38,11 @@ interface TabEvent extends Event {
+ }
+
+ export class WorkspacesTabManager {
++    // Diagnostic only: preserve the native extension hide owner; never suppress events.
++    isExtensionHidden(tab: XULElement): boolean {
++        return tab.hasAttribute("hidden") && !!globalThis.SessionStore.getCustomTabValue(tab, "hiddenBy");
++    }
++
+   dataManagerCtx: WorkspacesDataManager;
+   iconCtx: WorkspaceIcons;
+   // When true, handleTabClose skips its workspace-empty logic. Used during
+@@ -418,11 +423,13 @@ export class WorkspacesTabManager {
+       }
+
+       const chackedWorkspaceId = this.getWorkspaceIdFromAttribute(tab);
+-      if (chackedWorkspaceId === currentWorkspaceId) {
+-        globalThis.gBrowser.showTab(tab);
+-      } else {
+-        globalThis.gBrowser.hideTab(tab);
++      if (!document.getElementById("qa-workspace-independent-layer")) {
++        const sheet = document.createElementNS("http://www.w3.org/1999/xhtml", "style");
++        sheet.id = "qa-workspace-independent-layer";
++        sheet.textContent = "tab[data-qa-workspace-hidden] { display: none !important; }";
++        document.documentElement.appendChild(sheet);
+       }
++      tab.toggleAttribute("data-qa-workspace-hidden", chackedWorkspaceId !== currentWorkspaceId && !tab.hasAttribute("pinned"));
+     }
+
+     // Hide tab groups that have no visible tabs, show those that do
+@@ -711,8 +718,7 @@ export class WorkspacesTabManager {
+       // startup selection and avoids overriding it with the first tab in
+       // DOM order (which is a pinned tab after restore, causing #2053).
+       const currentTab = globalThis.gBrowser.selectedTab as XULElement | null;
+-      const currentTabInTargetWorkspace = currentTab &&
+-        this.getWorkspaceIdFromAttribute(currentTab) === workspaceId;
++      const currentTabInTargetWorkspace = currentTab && !this.isExtensionHidden(currentTab) && this.getWorkspaceIdFromAttribute(currentTab) === workspaceId;
+
+       if (currentTabInTargetWorkspace) {
+         // Keep the existing selection — SessionStore (or a previous switch)
+@@ -735,11 +741,11 @@ export class WorkspacesTabManager {
+           ] as XULElement | undefined)
+           : undefined;
+
+-        if (willChangeWorkspaceLastShowTab) {
++        if (willChangeWorkspaceLastShowTab && !this.isExtensionHidden(willChangeWorkspaceLastShowTab)) {
+           globalThis.gBrowser.selectedTab = willChangeWorkspaceLastShowTab;
+         } else {
+           // Priority 3: Fall back to the first tab in this workspace.
+-          const tabToSelect = this.workspaceHasTabs(workspaceId);
++          const tabToSelect = Array.from(globalThis.gBrowser.tabs).find((tab) => this.getWorkspaceIdFromAttribute(tab) === workspaceId && !this.isExtensionHidden(tab));
+           if (tabToSelect) {
+             globalThis.gBrowser.selectedTab = tabToSelect;
+           } else {

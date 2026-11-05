@@ -1,0 +1,55 @@
+--- a/chrome/noraneko/nora-content/assets/js/index35.js
++++ b/chrome/noraneko/nora-content/assets/js/index35.js
+@@ -386,6 +386,11 @@
+ }
+
+ class WorkspacesTabManager {
++    // Diagnostic only: preserve the native extension hide owner; never suppress events.
++    isExtensionHidden(tab) {
++        return tab.hidden && !!globalThis.SessionStore.getCustomTabValue(tab, "hiddenBy");
++    }
++
+     dataManagerCtx;
+     iconCtx;
+     // When true, handleTabClose skips its workspace-empty logic. Used during
+@@ -650,10 +655,13 @@
+             }
+             const chackedWorkspaceId = this.getWorkspaceIdFromAttribute(tab);
+             if (chackedWorkspaceId === currentWorkspaceId) {
+-                globalThis.gBrowser.showTab(tab);
+-            } else {
+-                globalThis.gBrowser.hideTab(tab);
+-            }
++        const workspaceOwnedHidden = globalThis.SessionStore.getCustomTabValue(tab, "floorpQaWorkspaceHidden") === "1";
++        globalThis.SessionStore.deleteCustomTabValue(tab, "floorpQaWorkspaceHidden");
++        if (!this.isExtensionHidden(tab) && (workspaceOwnedHidden || !tab.hasAttribute("hidden"))) globalThis.gBrowser.showTab(tab);
++      } else if (!tab.hasAttribute("hidden")) {
++        globalThis.SessionStore.setCustomTabValue(tab, "floorpQaWorkspaceHidden", "1");
++        globalThis.gBrowser.hideTab(tab);
++      }
+         }
+         // Hide tab groups that have no visible tabs, show those that do
+         const tabGroups = globalThis.gBrowser.tabGroups;
+@@ -849,7 +857,7 @@
+             // startup selection and avoids overriding it with the first tab in
+             // DOM order (which is a pinned tab after restore, causing #2053).
+             const currentTab = globalThis.gBrowser.selectedTab;
+-            const currentTabInTargetWorkspace = currentTab && this.getWorkspaceIdFromAttribute(currentTab) === workspaceId;
++            const currentTabInTargetWorkspace = currentTab && !this.isExtensionHidden(currentTab) && this.getWorkspaceIdFromAttribute(currentTab) === workspaceId;
+             if (currentTabInTargetWorkspace) {
+             // Keep the existing selection — SessionStore (or a previous switch)
+             // already chose the correct tab for this workspace.
+@@ -864,11 +872,11 @@
+                 // it is only a deterministic fallback for legacy duplicates.
+                 const willChangeWorkspaceLastShowTabs = document?.querySelectorAll(`[${WORKSPACE_LAST_SHOW_ID}="${workspaceId}"]`);
+                 const willChangeWorkspaceLastShowTab = willChangeWorkspaceLastShowTabs ? willChangeWorkspaceLastShowTabs[willChangeWorkspaceLastShowTabs.length - 1] : undefined;
+-                if (willChangeWorkspaceLastShowTab) {
++                if (willChangeWorkspaceLastShowTab && !this.isExtensionHidden(willChangeWorkspaceLastShowTab)) {
+                     globalThis.gBrowser.selectedTab = willChangeWorkspaceLastShowTab;
+                 } else {
+                     // Priority 3: Fall back to the first tab in this workspace.
+-                    const tabToSelect = this.workspaceHasTabs(workspaceId);
++                    const tabToSelect = Array.from(globalThis.gBrowser.tabs).find((tab) => this.getWorkspaceIdFromAttribute(tab) === workspaceId && !this.isExtensionHidden(tab));
+                     if (tabToSelect) {
+                         globalThis.gBrowser.selectedTab = tabToSelect;
+                     } else {

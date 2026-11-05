@@ -1,0 +1,804 @@
+[
+  {
+    "origin": "signed STG5.3.2 XPI",
+    "path": "stg-source/stg-background.js",
+    "sha256": "e8e4f9608a52353e44529cf22f6980413e69bd8b8e76586d57a6da37a160dc98",
+    "excerpt": [
+      {
+        "line": 500,
+        "text": "const onUpdatedTab = catchFunc(async function(tabId, changeInfo, tab) {"
+      },
+      {
+        "line": 501,
+        "text": "    if (excludeTabIds.has(tab.id)) {"
+      },
+      {
+        "line": 502,
+        "text": "        Cache.setTab(tab);"
+      },
+      {
+        "line": 503,
+        "text": "        logger.log('onUpdatedTab \ud83d\uded1 tab was excluded', tab.id);"
+      },
+      {
+        "line": 504,
+        "text": "        return;"
+      },
+      {
+        "line": 505,
+        "text": "    }"
+      },
+      {
+        "line": 506,
+        "text": ""
+      },
+      {
+        "line": 507,
+        "text": "    changeInfo = Cache.getRealTabStateChanged(tab);"
+      },
+      {
+        "line": 508,
+        "text": ""
+      },
+      {
+        "line": 509,
+        "text": "    Cache.setTab(tab);"
+      },
+      {
+        "line": 510,
+        "text": ""
+      },
+      {
+        "line": 511,
+        "text": "    if (!changeInfo) {"
+      },
+      {
+        "line": 512,
+        "text": "        logger.log('onUpdatedTab \ud83d\uded1 changeInfo keys was not changed', tab.id);"
+      },
+      {
+        "line": 513,
+        "text": "        return;"
+      },
+      {
+        "line": 514,
+        "text": "    }"
+      },
+      {
+        "line": 515,
+        "text": ""
+      },
+      {
+        "line": 516,
+        "text": "    if (Utils.isTabPinned(tab) && !changeInfo.hasOwnProperty('pinned')) {"
+      },
+      {
+        "line": 517,
+        "text": "        logger.log('onUpdatedTab \ud83d\uded1 tab is pinned', tab.id);"
+      },
+      {
+        "line": 518,
+        "text": "        return;"
+      },
+      {
+        "line": 519,
+        "text": "    }"
+      },
+      {
+        "line": 520,
+        "text": ""
+      },
+      {
+        "line": 521,
+        "text": "    const log = logger.start('onUpdatedTab', tabId, { changeInfo });"
+      },
+      {
+        "line": 522,
+        "text": ""
+      },
+      {
+        "line": 523,
+        "text": "    const tabGroupId = Cache.getTabGroup(tab.id),"
+      },
+      {
+        "line": 524,
+        "text": "        winGroupId = Cache.getWindowGroup(tab.windowId);"
+      },
+      {
+        "line": 525,
+        "text": ""
+      },
+      {
+        "line": 526,
+        "text": "    if (changeInfo.favIconUrl/*  && (tabGroupId || winGroupId) */) {"
+      },
+      {
+        "line": 527,
+        "text": "        await Cache.setTabFavIcon(tab.id, changeInfo.favIconUrl).catch(log.onCatch(['cant set favIcon', tab, changeInfo], false));"
+      },
+      {
+        "line": 528,
+        "text": "    }"
+      },
+      {
+        "line": 529,
+        "text": ""
+      },
+      {
+        "line": 530,
+        "text": "    if (changeInfo.hasOwnProperty('pinned') || changeInfo.hasOwnProperty('hidden')) {"
+      },
+      {
+        "line": 531,
+        "text": "        if (changeInfo.pinned || changeInfo.hidden) {"
+      },
+      {
+        "line": 532,
+        "text": "            changeInfo.pinned && log.log('remove group', tabGroupId, 'for pinned tab', tab.id);"
+      },
+      {
+        "line": 533,
+        "text": "            changeInfo.hidden && log.log('remove group', tabGroupId, 'for hidden tab', tab.id);"
+      },
+      {
+        "line": 534,
+        "text": "            Cache.removeTabGroup(tab.id)"
+      },
+      {
+        "line": 535,
+        "text": "                .catch(log.onCatch(['[0] cant remove group from tab', tab.id], false));"
+      },
+      {
+        "line": 536,
+        "text": "        } else {"
+      },
+      {
+        "line": 537,
+        "text": ""
+      },
+      {
+        "line": 538,
+        "text": "            if (false === changeInfo.pinned) {"
+      }
+    ]
+  },
+  {
+    "origin": "signed STG5.3.2 XPI",
+    "path": "stg-source/js/cache.js",
+    "sha256": "f3c245c0db8aa47f9d8d1d39eaf6a9a55d595501af6ecb1061867cb83e6f6dd5",
+    "excerpt": [
+      {
+        "line": 17,
+        "text": "export function setLastTabState({id, url, title, status, hidden, pinned, favIconUrl}) {"
+      },
+      {
+        "line": 18,
+        "text": "    lastTabsState[id] = {id, url, title, status, hidden, pinned, favIconUrl};"
+      },
+      {
+        "line": 19,
+        "text": "}"
+      },
+      {
+        "line": 20,
+        "text": ""
+      },
+      {
+        "line": 21,
+        "text": "// don't forget for pinned tabs events"
+      },
+      {
+        "line": 22,
+        "text": "export function getRealTabStateChanged(tab) {"
+      },
+      {
+        "line": 23,
+        "text": "    let changeInfo = null;"
+      },
+      {
+        "line": 24,
+        "text": ""
+      },
+      {
+        "line": 25,
+        "text": "    if (lastTabsState[tab.id]) {"
+      },
+      {
+        "line": 26,
+        "text": "        Constants.ON_UPDATED_TAB_PROPERTIES.forEach(key => {"
+      },
+      {
+        "line": 27,
+        "text": "            if (tab[key] !== lastTabsState[tab.id][key]) {"
+      },
+      {
+        "line": 28,
+        "text": "                changeInfo ??= {};"
+      },
+      {
+        "line": 29,
+        "text": "                changeInfo[key] = tab[key];"
+      },
+      {
+        "line": 30,
+        "text": "            }"
+      },
+      {
+        "line": 31,
+        "text": "        });"
+      },
+      {
+        "line": 32,
+        "text": "    }"
+      },
+      {
+        "line": 80,
+        "text": "export async function setTabGroup(tabId, groupId) {"
+      },
+      {
+        "line": 81,
+        "text": "    if (groupId) {"
+      },
+      {
+        "line": 82,
+        "text": "        if (tabs[tabId]) {"
+      },
+      {
+        "line": 83,
+        "text": "            tabs[tabId].groupId = groupId;"
+      },
+      {
+        "line": 84,
+        "text": "        } else {"
+      },
+      {
+        "line": 85,
+        "text": "            tabs[tabId] = {groupId};"
+      },
+      {
+        "line": 86,
+        "text": "        }"
+      },
+      {
+        "line": 87,
+        "text": ""
+      },
+      {
+        "line": 88,
+        "text": "        return browser.sessions.setTabValue(tabId, 'groupId', groupId);"
+      },
+      {
+        "line": 89,
+        "text": "    }"
+      },
+      {
+        "line": 90,
+        "text": "}"
+      },
+      {
+        "line": 91,
+        "text": ""
+      },
+      {
+        "line": 92,
+        "text": "export function getTabGroup(tabId) {"
+      },
+      {
+        "line": 93,
+        "text": "    return tabs[tabId]?.groupId;"
+      },
+      {
+        "line": 94,
+        "text": "}"
+      },
+      {
+        "line": 95,
+        "text": ""
+      },
+      {
+        "line": 96,
+        "text": "export async function removeTabGroup(tabId) {"
+      },
+      {
+        "line": 97,
+        "text": "    delete tabs[tabId]?.groupId;"
+      },
+      {
+        "line": 98,
+        "text": "    return browser.sessions.removeTabValue(tabId, 'groupId').catch(() => {});"
+      },
+      {
+        "line": 99,
+        "text": "}"
+      }
+    ]
+  },
+  {
+    "origin": "official Floorp12.21.1 Runtime browser/omni.ja",
+    "path": "repair-boundary/source-analysis/packaged-ext-browser.js",
+    "sha256": "f499f9ab3cba3bd8edb7b16cb41a929143ab5411e5c28f73aaf4099504fdc24c",
+    "excerpt": [
+      {
+        "line": 821,
+        "text": "  get hidden() {"
+      },
+      {
+        "line": 822,
+        "text": "    return this.nativeTab.hidden;"
+      },
+      {
+        "line": 823,
+        "text": "  }"
+      },
+      {
+        "line": 1299,
+        "text": "  canAccessTab(nativeTab) {"
+      },
+      {
+        "line": 1300,
+        "text": "    // Check private browsing access at browser window level."
+      },
+      {
+        "line": 1301,
+        "text": "    if (!this.extension.canAccessWindow(nativeTab.documentGlobal)) {"
+      },
+      {
+        "line": 1302,
+        "text": "      return false;"
+      },
+      {
+        "line": 1303,
+        "text": "    }"
+      },
+      {
+        "line": 1304,
+        "text": "    if ("
+      },
+      {
+        "line": 1305,
+        "text": "      this.extension.userContextIsolation &&"
+      },
+      {
+        "line": 1306,
+        "text": "      !this.extension.canAccessContainer(nativeTab.userContextId)"
+      },
+      {
+        "line": 1307,
+        "text": "    ) {"
+      },
+      {
+        "line": 1308,
+        "text": "      return false;"
+      },
+      {
+        "line": 1309,
+        "text": "    }"
+      },
+      {
+        "line": 1310,
+        "text": "    return true;"
+      },
+      {
+        "line": 1311,
+        "text": "  }"
+      },
+      {
+        "line": 1312,
+        "text": ""
+      }
+    ]
+  },
+  {
+    "origin": "official Floorp12.21.1 Runtime browser/omni.ja",
+    "path": "repair-boundary/source-analysis/packaged-tabs-container.js",
+    "sha256": "930be95fdd6997b87ee7c62995a5f6d057954ab53ebf9f82fc971e775050a6b3",
+    "excerpt": [
+      {
+        "line": 907,
+        "text": "   * Returns all tabs in the current window, including hidden tabs and tabs"
+      },
+      {
+        "line": 908,
+        "text": "   * in collapsed groups, but excluding closing tabs and the Firefox View tab."
+      },
+      {
+        "line": 909,
+        "text": "   */"
+      },
+      {
+        "line": 910,
+        "text": "  get openTabs() {"
+      },
+      {
+        "line": 911,
+        "text": "    if (!this.#openTabs) {"
+      },
+      {
+        "line": 912,
+        "text": "      this.#openTabs = this.allTabs.filter(tab => tab.isOpen);"
+      },
+      {
+        "line": 913,
+        "text": "    }"
+      },
+      {
+        "line": 914,
+        "text": "    return this.#openTabs;"
+      },
+      {
+        "line": 915,
+        "text": "  }"
+      },
+      {
+        "line": 916,
+        "text": "  #openTabs;"
+      },
+      {
+        "line": 917,
+        "text": ""
+      },
+      {
+        "line": 918,
+        "text": "  /**"
+      },
+      {
+        "line": 919,
+        "text": "   * Same as `openTabs` but excluding hidden tabs."
+      },
+      {
+        "line": 920,
+        "text": "   */"
+      },
+      {
+        "line": 921,
+        "text": "  get nonHiddenTabs() {"
+      },
+      {
+        "line": 922,
+        "text": "    if (!this.#nonHiddenTabs) {"
+      },
+      {
+        "line": 923,
+        "text": "      this.#nonHiddenTabs = this.openTabs.filter(tab => !tab.hidden);"
+      },
+      {
+        "line": 924,
+        "text": "    }"
+      },
+      {
+        "line": 925,
+        "text": "    return this.#nonHiddenTabs;"
+      },
+      {
+        "line": 926,
+        "text": "  }"
+      },
+      {
+        "line": 927,
+        "text": "  #nonHiddenTabs;"
+      },
+      {
+        "line": 928,
+        "text": ""
+      },
+      {
+        "line": 929,
+        "text": "  /**"
+      },
+      {
+        "line": 930,
+        "text": "   * Same as `openTabs` but excluding hidden tabs and tabs in collapsed groups."
+      },
+      {
+        "line": 931,
+        "text": "   */"
+      },
+      {
+        "line": 932,
+        "text": "  get visibleTabs() {"
+      },
+      {
+        "line": 933,
+        "text": "    if (!this.#visibleTabs) {"
+      },
+      {
+        "line": 934,
+        "text": "      this.#visibleTabs = this.openTabs.filter(tab => tab.visible);"
+      },
+      {
+        "line": 935,
+        "text": "    }"
+      },
+      {
+        "line": 936,
+        "text": "    return this.#visibleTabs;"
+      },
+      {
+        "line": 937,
+        "text": "  }"
+      },
+      {
+        "line": 938,
+        "text": "  #visibleTabs;"
+      },
+      {
+        "line": 939,
+        "text": ""
+      }
+    ]
+  },
+  {
+    "origin": "official Floorp12.21.1 Runtime browser/omni.ja",
+    "path": "repair-boundary/source-analysis/packaged-tab-element.js",
+    "sha256": "12805b7cb92c0d977be3a99e12a311e53444826e40f4d7c3eb4f00ddf742e487",
+    "excerpt": [
+      {
+        "line": 253,
+        "text": "  get visible() {"
+      },
+      {
+        "line": 254,
+        "text": "    return ("
+      },
+      {
+        "line": 255,
+        "text": "      this.isOpen &&"
+      },
+      {
+        "line": 256,
+        "text": "      !this.hidden &&"
+      },
+      {
+        "line": 257,
+        "text": "      (!this.group || this.group.isTabVisibleInGroup(this))"
+      },
+      {
+        "line": 258,
+        "text": "    );"
+      },
+      {
+        "line": 259,
+        "text": "  }"
+      },
+      {
+        "line": 260,
+        "text": ""
+      },
+      {
+        "line": 261,
+        "text": "  get hidden() {"
+      },
+      {
+        "line": 262,
+        "text": "    // This getter makes `hidden` read-only"
+      },
+      {
+        "line": 263,
+        "text": "    return super.hidden;"
+      },
+      {
+        "line": 264,
+        "text": "  }"
+      }
+    ]
+  },
+  {
+    "origin": "official Floorp12.21.1 Runtime browser/omni.ja",
+    "path": "source-analysis/packaged-ext-tabs.js",
+    "sha256": "54c835559b0a3d0206ad43fb4e8330dc60f2d01094032eeb0acf396342b7e3ad",
+    "excerpt": [
+      {
+        "line": 55,
+        "text": "function showHiddenTabs(id) {"
+      },
+      {
+        "line": 56,
+        "text": "  for (let win of Services.wm.getEnumerator(\"navigator:browser\")) {"
+      },
+      {
+        "line": 57,
+        "text": "    if (win.closed || !win.gBrowser) {"
+      },
+      {
+        "line": 58,
+        "text": "      continue;"
+      },
+      {
+        "line": 59,
+        "text": "    }"
+      },
+      {
+        "line": 60,
+        "text": ""
+      },
+      {
+        "line": 61,
+        "text": "    for (let tab of win.gBrowser.tabs) {"
+      },
+      {
+        "line": 62,
+        "text": "      if ("
+      },
+      {
+        "line": 63,
+        "text": "        tab.hidden &&"
+      },
+      {
+        "line": 64,
+        "text": "        tab.documentGlobal &&"
+      },
+      {
+        "line": 65,
+        "text": "        SessionStore.getCustomTabValue(tab, \"hiddenBy\") === id"
+      },
+      {
+        "line": 66,
+        "text": "      ) {"
+      },
+      {
+        "line": 67,
+        "text": "        win.gBrowser.showTab(tab);"
+      },
+      {
+        "line": 68,
+        "text": "      }"
+      },
+      {
+        "line": 69,
+        "text": "    }"
+      },
+      {
+        "line": 70,
+        "text": "  }"
+      },
+      {
+        "line": 71,
+        "text": "}"
+      },
+      {
+        "line": 72,
+        "text": ""
+      },
+      {
+        "line": 73,
+        "text": "const allAttrs = new Set(["
+      },
+      {
+        "line": 102,
+        "text": "this.tabs = class extends ExtensionAPIPersistent {"
+      },
+      {
+        "line": 103,
+        "text": "  static onUpdate(id, manifest) {"
+      },
+      {
+        "line": 104,
+        "text": "    if (!manifest.permissions || !manifest.permissions.includes(\"tabHide\")) {"
+      },
+      {
+        "line": 105,
+        "text": "      showHiddenTabs(id);"
+      },
+      {
+        "line": 106,
+        "text": "    }"
+      },
+      {
+        "line": 107,
+        "text": "  }"
+      },
+      {
+        "line": 108,
+        "text": ""
+      },
+      {
+        "line": 109,
+        "text": "  static onDisable(id) {"
+      },
+      {
+        "line": 110,
+        "text": "    showHiddenTabs(id);"
+      },
+      {
+        "line": 111,
+        "text": "    tabHidePopup.clearConfirmation(id);"
+      },
+      {
+        "line": 112,
+        "text": "  }"
+      },
+      {
+        "line": 113,
+        "text": ""
+      },
+      {
+        "line": 114,
+        "text": "  static onUninstall(id) {"
+      },
+      {
+        "line": 115,
+        "text": "    tabHidePopup.clearConfirmation(id);"
+      },
+      {
+        "line": 1653,
+        "text": "        show(tabIds) {"
+      },
+      {
+        "line": 1654,
+        "text": "          for (let tab of getNativeTabsFromIDArray(tabIds)) {"
+      },
+      {
+        "line": 1655,
+        "text": "            if (tab.documentGlobal) {"
+      },
+      {
+        "line": 1656,
+        "text": "              tab.documentGlobal.gBrowser.showTab(tab);"
+      },
+      {
+        "line": 1657,
+        "text": "            }"
+      },
+      {
+        "line": 1658,
+        "text": "          }"
+      },
+      {
+        "line": 1659,
+        "text": "        },"
+      },
+      {
+        "line": 1660,
+        "text": ""
+      },
+      {
+        "line": 1661,
+        "text": "        hide(tabIds) {"
+      },
+      {
+        "line": 1662,
+        "text": "          let hidden = [];"
+      },
+      {
+        "line": 1663,
+        "text": "          for (let tab of getNativeTabsFromIDArray(tabIds)) {"
+      },
+      {
+        "line": 1664,
+        "text": "            if (tab.documentGlobal && !tab.hidden) {"
+      },
+      {
+        "line": 1665,
+        "text": "              tab.documentGlobal.gBrowser.hideTab(tab, extension.id);"
+      },
+      {
+        "line": 1666,
+        "text": "              if (tab.hidden) {"
+      },
+      {
+        "line": 1667,
+        "text": "                hidden.push(tabTracker.getId(tab));"
+      },
+      {
+        "line": 1668,
+        "text": "              }"
+      },
+      {
+        "line": 1669,
+        "text": "            }"
+      },
+      {
+        "line": 1670,
+        "text": "          }"
+      },
+      {
+        "line": 1671,
+        "text": "          if (hidden.length) {"
+      },
+      {
+        "line": 1672,
+        "text": "            let win = Services.wm.getMostRecentWindow(\"navigator:browser\");"
+      }
+    ]
+  }
+]

@@ -1,0 +1,14 @@
+{
+  "native-cross": {
+    "installedSignedXpiSha256": "efebf6a9f73a1747044624ddbad7a78fd90ffccdb34a426cf6bb555eda307c49",
+    "bytes": 854460
+  },
+  "css-cross": {
+    "installedSignedXpiSha256": "efebf6a9f73a1747044624ddbad7a78fd90ffccdb34a426cf6bb555eda307c49",
+    "bytes": 854460
+  },
+  "baseline-cross": {
+    "installedSignedXpiSha256": "efebf6a9f73a1747044624ddbad7a78fd90ffccdb34a426cf6bb555eda307c49",
+    "bytes": 854460
+  }
+}

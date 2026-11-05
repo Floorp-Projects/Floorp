@@ -1,0 +1,27 @@
+{
+  "kind": "css-layer-v2",
+  "sourceInspectionSha": "29a3eb23145da90706d8a94441373278521cc737",
+  "originalReleaseSha": "984509d2053be7bae9027133bda7259cd706b208",
+  "product": "diagnostic isolated one-resource copy; not a complete build or production candidate",
+  "binarySha256": "4f05c1330b38e50040440be6a3b6e0e7a5b52bc79edb5c5478d978c81f5a603d",
+  "originalMemberSha256": "33ece721dda86f5b9f852903956e972dbba4cee2a33a29a04e6ab4eb7eeeff19",
+  "changedMemberSha256": "8b61b29550f0de39f091cc358a272be783cb2c6cc5bff51b3af0caa821c27255",
+  "changedFiles": [
+    "omni.ja"
+  ],
+  "changedMembers": [
+    "chrome/noraneko/nora-content/assets/js/index35.js"
+  ],
+  "mockedExtension": false,
+  "nativeEventsSuppressed": false,
+  "sourceDiff": "css-layer-v2-source.diff",
+  "bundleDiff": "css-layer-v2-bundle.diff",
+  "revision": "preserve native globally pinned tab visibility; initial CSS prototype not a release candidate",
+  "sourceDiffSha256": "9a77bb1f6c8e31228302bada6a510f155b5691a89fe3346eca0403bd6474bc6b",
+  "bundleDiffSha256": "35324cab11a0993db729f586c8feb753a0793647e8cb7f8b7786a26cf626773e",
+  "finalProductIntegrityRechecked": true,
+  "nativeExecutableAndAllOtherFilesUnchanged": true,
+  "sourceWorktreeBlobSha": "5b390892a1f9a05fd3c41c3f6a44c638b41de224",
+  "sourceReverseCheck": true,
+  "independentBundleDiffApplicationMatchesObservedProduct": true
+}

@@ -274,9 +274,9 @@
         "safeStandaloneFixEstablished": false
       },
       "remainingConditions": [
-        "Original Windows10/12.12.2 + actual STG version/sanitized import fixture for persistent leak",
-        "Define coordinated Workspace/STG visibility-owner and selection contract; safe complete repair unestablished",
-        "Physical input/compositor-visible flicker unqualified; software X11 only"
+        "Define simultaneous Workspace/STG selection and visibility UX; both small candidates rejected by measured counterexamples",
+        "Original Windows10/12.12.2/STG version/import fixture for original persistent leak",
+        "Native/API/navigation integration and legacy ownership migration if combined use is chosen"
       ],
       "existingPr": null,
       "newPr": null,
@@ -299,7 +299,10 @@
         "addon-provenance.json",
         "source-analysis/contract-evidence.json",
         "source-analysis/compatibility-support-assessment.md",
-        "KAN50-handoff.json"
+        "KAN50-handoff.json",
+        "repair-boundary/report.md",
+        "repair-boundary/matrix.json",
+        "repair-boundary/verification.json"
       ],
       "separateFromOriginal22": true,
       "originalCMatrixSha256": "4ac5d5f17f97d70e82f7b9f17d6abcc1aa17a92e3708eeadaba6ac7c8415e3cd",
@@ -314,7 +317,19 @@
         "triage-reviewed",
         "repro-workspace-stg-conflict",
         "needs-visibility-owner-contract"
-      ]
+      ],
+      "repairBoundary": {
+        "sourceInspectionSha": "29a3eb23145da90706d8a94441373278521cc737",
+        "diagnosticCandidates": 2,
+        "safeCandidateEstablished": false,
+        "observedNormalProductRestarts": 6,
+        "normalFinalProfileExits": 6,
+        "result": "explicit UX/visibility contract decision required",
+        "evidenceDirectory": "repair-boundary",
+        "jiraCommentId": null,
+        "newPr": null,
+        "completeProductBuildStarted": false
+      }
     }
   ]
 }

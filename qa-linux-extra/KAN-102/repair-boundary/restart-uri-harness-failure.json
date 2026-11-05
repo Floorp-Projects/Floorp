@@ -1,0 +1,6 @@
+{
+  "classification": "harness content-handle selection error after successful real product restart",
+  "error": "NoneType URL from URI lookup while enumerating Chrome handles",
+  "productRestartsSucceeded": 3,
+  "correction": "continue remaining addon operations in healthy Chrome window; fixture chosen by native URI; no repeat restart/create/UI tests"
+}
