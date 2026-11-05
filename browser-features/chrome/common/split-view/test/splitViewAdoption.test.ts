@@ -21,6 +21,88 @@ async function waitUntil(check: () => boolean, message: string): Promise<void> {
   assert(check(), message);
 }
 
+/** Check that hidden browser frames neither take flex space nor intercept hits. */
+async function assertPaneLayout(
+  browser: AdoptionBrowser,
+  visible: AdoptionTab[],
+  hidden: AdoptionTab[],
+): Promise<void> {
+  browser.selectedTab = visible[0];
+  await new Promise((resolve) => setTimeout(resolve, 300));
+  const panels = document.getElementById("tabbrowser-tabpanels")!;
+  const bounds = panels.getBoundingClientRect();
+  const panelFor = (tab: AdoptionTab): Element => {
+    let panel: Element = tab.linkedBrowser;
+    while (panel.parentElement && panel.parentElement !== panels) {
+      panel = panel.parentElement;
+    }
+    assert(panel.parentElement === panels, "browser must belong to tabpanels");
+    return panel;
+  };
+  const rects = visible.map((tab) => {
+    const panel = panelFor(tab);
+    const rect = panel.getBoundingClientRect();
+    assertEquals(
+      getComputedStyle(panel)!.visibility,
+      "visible",
+      "active pane is visible",
+    );
+    assert(
+      rect.width >= bounds.width / visible.length - 24,
+      "inactive panes must not shrink active panes",
+    );
+    assert(
+      rect.height > bounds.height * 0.9,
+      "active pane fills content height",
+    );
+    const hit = document.elementFromPoint(
+      rect.x + rect.width / 2,
+      rect.y + rect.height / 2,
+    );
+    assert(
+      hit !== null && panel.contains(hit),
+      "active pane must own its center hit target",
+    );
+    return rect;
+  });
+  if (rects.length === 2) {
+    assert(
+      rects[0].right <= rects[1].left + 2 ||
+        rects[1].right <= rects[0].left + 2,
+      "split panes must not overlap",
+    );
+  }
+  for (const tab of hidden) {
+    const panel = panelFor(tab);
+    const rect = panel.getBoundingClientRect();
+    const hit = document.elementFromPoint(
+      rect.x + rect.width / 2,
+      rect.y + rect.height / 2,
+    );
+    assert(
+      !hit || !panel.contains(hit),
+      "inactive pane must not own a pointer hit",
+    );
+    if (visible.length === 2) {
+      assertEquals(
+        getComputedStyle(panel)!.position,
+        "absolute",
+        "inactive pane is outside split layout",
+      );
+      assertEquals(
+        getComputedStyle(panel)!.visibility,
+        "hidden",
+        "inactive pane cannot receive pointer hits",
+      );
+    }
+  }
+  assertEquals(
+    browser.selectedTab,
+    visible[0],
+    "layout must retain selected tab",
+  );
+}
+
 /** A second split keeps the source in flex layout during the native browser swap. */
 async function testSplitGroupRoundTrip(): Promise<void> {
   const browser = (window as unknown as AdoptionWindow).gBrowser;
@@ -52,6 +134,14 @@ async function testSplitGroupRoundTrip(): Promise<void> {
         ),
       "all source panes must finish loading before adoption",
     );
+    const normal = browser.addTab("data:text/html,<title>QA normal</title>", {
+      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+    });
+    created.push(normal);
+    await assertPaneLayout(browser, firstTabs, [...movedTabs, normal]);
+    await assertPaneLayout(browser, movedTabs, [...firstTabs, normal]);
+    await assertPaneLayout(browser, [normal], [...firstTabs, ...movedTabs]);
+    await assertPaneLayout(browser, movedTabs, [...firstTabs, normal]);
     const expectedTitles = movedTabs.map((tab) =>
       tab.linkedBrowser.contentTitle
     );
@@ -100,6 +190,13 @@ async function testSplitGroupRoundTrip(): Promise<void> {
       expectedUrls.join("\n"),
       "adoption must preserve both document URLs",
     );
+    await assertPaneLayout(browser, firstTabs, [...returnedGroup.tabs, normal]);
+    await assertPaneLayout(browser, returnedGroup.tabs, [...firstTabs, normal]);
+    await assertPaneLayout(browser, [normal], [
+      ...firstTabs,
+      ...returnedGroup.tabs,
+    ]);
+    await assertPaneLayout(browser, returnedGroup.tabs, [...firstTabs, normal]);
   } finally {
     if (originalTab.isConnected) browser.selectedTab = originalTab;
     if (destination && !destination.closed) destination.close();

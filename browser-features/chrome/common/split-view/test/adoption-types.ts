@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: MPL-2.0
 
 export type AdoptionTab = XULElement & {
-  linkedBrowser: { contentTitle: string; currentURI: { spec: string } };
+  linkedBrowser: Element & {
+    contentTitle: string;
+    currentURI: { spec: string };
+  };
 };
 
 export type AdoptionGroup = XULElement & { tabs: AdoptionTab[] };
