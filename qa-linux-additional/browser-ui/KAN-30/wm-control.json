@@ -1,0 +1,15 @@
+{
+  "environment": "Debian13.6 private Xvfb109 + isolated official Debian twm1.0.10-1+b1/xfonts-base1.0.5+nmu1",
+  "install": "apt package index unavailable; official Debian pool .deb extracted privately, mkfontdir; no host installation",
+  "dependencyHashes": {
+    "xfonts-base.deb": "24446137c63de94283dc808eef438918e243f518629844289a5af50a8e0aec23",
+    "twm.deb": "0fee84bfee0c434e9e76c49abb69d2d5d9b0caa079f409cefcdefe04c0343eee"
+  },
+  "attempts": {
+    "29924": "twm failed missing X11 font; not product result",
+    "29925": "baseline CtrlTab opacity0 reproduced in WM; xmessage not mapped within initial0.5s, focus control unqualified",
+    "29926": "candidate CtrlTab opacity1 and leave0; after waiting xmessage maps, X11 windowfocus still emits no deactivate and opacity1; unqualified desktop-deactivation control"
+  },
+  "conclusion": "twm and direct XSetInputFocus do not establish a qualified desktop app activation protocol; do not call this passing deactivate control or product defect",
+  "remaining": "Original Windows desktop app activation or supported full Wayland/KDE session; synthetic DOM deactivate lifecycle separately passes candidate"
+}

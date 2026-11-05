@@ -15,7 +15,7 @@
     "existingPr": null,
     "relatedPr": "https://github.com/Floorp-Projects/Floorp/pull/3003 (separate redesign, not validated fix)",
     "newPr": null,
-    "jiraCommentId": null,
+    "jiraCommentId": "10384",
     "evidence": [
       "report.md",
       "summary.json",
@@ -24,6 +24,7 @@
       "start.py",
       "local-fixture.py",
       "fixture-favicon.png"
-    ]
+    ],
+    "evidenceBase": "KAN-37"
   }
 ]

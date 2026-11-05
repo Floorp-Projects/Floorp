@@ -10,11 +10,11 @@ def launch(args,name):
  f=open(R/'logs'/name,'w');p=subprocess.Popen(args,env=env,stdout=f,stderr=f,start_new_session=True);owned.append(p);return p
 try:
  assert not Path('/tmp/.X11-unix/X109').exists(),'display109 already owned'
- x=launch(['/workspace/.floorp-cloud/sysroot/usr/bin/Xvfb',':109','-screen','0','1440x1100x24','-nolisten','tcp'],f'xvfb-{port}.log');time.sleep(1)
+ x=launch(['/workspace/.floorp-cloud/sysroot/usr/bin/Xvfb',':109','-screen','0','1440x1100x24','-nolisten','tcp',*(['-fp',str(R/'deps/root/usr/share/fonts/X11/misc')]if os.environ.get('QA_WM')=='twm'else[])],f'xvfb-{port}.log');time.sleep(1)
  if x.poll()is not None:raise RuntimeError('private Xvfb failed; do not reuse any display')
  (R/f'ownership-{port}.json').write_text(json.dumps({'display':':109','xvfbPid':x.pid,'privateSocketWasAbsent':True,'xvfbAlive':True}))
  if os.environ.get('QA_WM')=='twm':
-  config=R/'twmrc';config.write_text('RandomPlacement\nNoTitle\nNoGrabServer\n')
+  config=R/'twmrc';config.write_text('RandomPlacement\nNoTitle\nNoGrabServer\nTitleFont \"fixed\"\nMenuFont \"fixed\"\nIconFont \"fixed\"\nResizeFont \"fixed\"\nIconManagerFont \"fixed\"\n')
   wm=launch([str(R/'deps/root/usr/bin/twm'),'-f',str(config)],f'twm-{port}.log');time.sleep(.8)
   if wm.poll()is not None:raise RuntimeError('private WM failed')
  p=launch(['dbus-run-session','--',product,'--no-remote','--profile',str(profile),'--marionette','about:blank'],f'browser-{port}.log')

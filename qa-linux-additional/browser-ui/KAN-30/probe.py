@@ -74,8 +74,12 @@ try:
   open_body();js('qaEvents.length=0');before=snap();focuslog=open(R/f'logs/focus-control-{port}.log','w')
   other=subprocess.Popen(['/usr/bin/xmessage','-title','KAN30 focus control','-geometry','200x100+1100+980','QA focus control'],env=os.environ.copy(),stdout=focuslog,stderr=focuslog,start_new_session=True)
   try:
-   time.sleep(.5)
-   win=subprocess.check_output(['/workspace/.floorp-cloud/sysroot/usr/bin/xdotool','search','--onlyvisible','--name','^KAN30 focus control$'],env=toolenv,text=True).split()[0]
+   for attempt in range(30):
+    time.sleep(.2)
+    found=subprocess.run(['/workspace/.floorp-cloud/sysroot/usr/bin/xdotool','search','--onlyvisible','--name','^KAN30 focus control$'],env=toolenv,text=True,capture_output=True)
+    if found.returncode==0 and found.stdout.strip():break
+   else:raise RuntimeError('owned xmessage not visible after6s; desktop focus control unqualified')
+   win=found.stdout.split()[0]
    xd('windowfocus','--sync',win);time.sleep(.8)
    r['observations'].append({'case':'real-native-window-focus-loss','fixture':'X11 windowfocus to owned visible xmessage while pointer remains stationary; native event, not a dispatched DOM event or physical app switch','before':before,'after':snap(),'events':js('return qaEvents')})
    (R/f'{port}-window-focus-loss.png').write_bytes(base64.b64decode(m.screenshot(format='base64')))

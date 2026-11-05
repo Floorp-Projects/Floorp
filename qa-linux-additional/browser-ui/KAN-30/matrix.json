@@ -17,7 +17,7 @@
     "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2934",
     "existingPrHead": "b7866aaa4905be4d86fb3dff1237d6a70c483f10",
     "newPr": null,
-    "jiraCommentId": null,
+    "jiraCommentId": "10383",
     "evidence": [
       "report.md",
       "ui-summary.json",
@@ -32,7 +32,9 @@
       "29921-sidebery-open.png",
       "run.py",
       "probe.py",
-      "prepare-candidate.py"
-    ]
+      "prepare-candidate.py",
+      "wm-control.json"
+    ],
+    "evidenceBase": "KAN-30"
   }
 ]

@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/workspace/qa-linux-additional/browser-ui/KAN-30/run.py", line 19, in <module>
+    if wm.poll()is not None:raise RuntimeError('private WM failed')
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: private WM failed
