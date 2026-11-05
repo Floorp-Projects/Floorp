@@ -43,6 +43,11 @@ async function checkDetachedBookmark(folder: boolean, background: boolean) {
     }
     Services.prefs.setBoolPref(pref, background);
     bar.removeAttribute("collapsed");
+    // The shared runner can start with the toolbar hidden and its Places view
+    // uninitialized. Making the element visible alone does not create that view.
+    await (window as unknown as {
+      PlacesToolbarHelper: { init(): Promise<void> };
+    }).PlacesToolbarHelper.init();
     const deadline = Date.now() + 10_000;
     let button: Element | undefined;
     while (!button && Date.now() < deadline) {
