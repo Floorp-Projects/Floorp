@@ -9,7 +9,7 @@
     "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2763",
     "newPr": null,
     "jiraCommentRead": "10287",
-    "jiraCommentWritten": null,
+    "jiraCommentWritten": "10446",
     "result": "ordinary and whole-stack chip controls PASS; limited nonreproduction consistent with merged2763",
     "remainingConditions": [
       "Fedora44 desktop/original unspecified package",
@@ -41,7 +41,8 @@
       "run-30062/interactions.json",
       "run-30063/interactions.json",
       "run-30062/runner-result.json",
-      "run-30063/runner-result.json"
+      "run-30063/runner-result.json",
+      "jira-posted-10446.md"
     ],
     "normalExitAndHash": {
       "30061": {
@@ -111,6 +112,7 @@
         "displayRemoved": true
       }
     },
-    "testCommand": "python run.py 30062; QA40_CHIP_ONLY=1 QA40_REUSE_PROFILE=<own configured profile> python run.py 30063"
+    "testCommand": "python run.py 30062; QA40_CHIP_ONLY=1 QA40_REUSE_PROFILE=<own configured profile> python run.py 30063",
+    "jiraCommentId": "10446"
   }
 ]

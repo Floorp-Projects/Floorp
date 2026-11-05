@@ -25,7 +25,7 @@
     ],
     "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2763",
     "newPr": null,
-    "jiraCommentId": null,
+    "jiraCommentId": "10445",
     "evidence": [
       "summary.json",
       "drop-30055.json",
@@ -37,9 +37,11 @@
       "cleanup-receipt.json",
       "native-keybinding.json",
       "root-independent-checks.json",
-      "screenshots/30055-individual-stack-proxy-existing-window.png"
+      "screenshots/30055-individual-stack-proxy-existing-window.png",
+      "jira-posted-10445.md"
     ],
     "denominatorChange": false,
-    "sourceBase": "29a3eb23145da90706d8a94441373278521cc737"
+    "sourceBase": "29a3eb23145da90706d8a94441373278521cc737",
+    "jiraCommentWritten": "10445"
   }
 ]

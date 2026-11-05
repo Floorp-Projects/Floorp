@@ -625,5 +625,9 @@
       "outOfSprintMustRemain": false
     }
   ],
-  "postPackageFollowups": "KAN5 native existing-window drop and KAN40 native ordinary/whole-stack controls completed; no exact original-environment label satisfied"
+  "postPackageFollowups": "KAN5 native existing-window drop and KAN40 native ordinary/whole-stack controls completed; no exact original-environment label satisfied",
+  "followupPublicationCommentIds": {
+    "KAN-5": "10445",
+    "KAN-40": "10446"
+  }
 }

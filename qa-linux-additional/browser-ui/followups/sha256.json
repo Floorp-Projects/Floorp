@@ -2,7 +2,8 @@
   "KAN-40/chip-derived.json": "d281b14abb08253b9599a111a7f3c68b086bb91ce31f6f4efba7248595b1b239",
   "KAN-40/cleanup-receipt.json": "f06475deb2236fea77789aad96b14c905e00a4bb4231e7a619eceef182064385",
   "KAN-40/context-review.json": "573bc6e84889cc60d820bacad4fbf17fa6e9a6c8cf41600c0f9fe581c4b58e08",
-  "KAN-40/matrix.json": "872486cc7d809d060285fabf3b409fe0226942169377daf51938ff836fc38183",
+  "KAN-40/jira-posted-10446.md": "a70336777c03949b7067b3cfa3bc2ab55e38283835273e48a1a7e4650f19c9ae",
+  "KAN-40/matrix.json": "9d6e083f61d40f4f33b82de647b4759c581c5e36080708cc17c565b2b6cd68fa",
   "KAN-40/ordinary-derived.json": "003bb79f3016060db5b85b1121e73ea379fde7487b36d98aa3649deb7e850f90",
   "KAN-40/probe.py": "7fb70e3579ec3a6b401d6151d998d383245a8337019dbd3ade6477a688fed8a6",
   "KAN-40/proposed-jira-comment.md": "5a1cf521b53e33d018b45c0eb38631e29bb89a18bb028406a0ed10971ebca425",
@@ -46,7 +47,8 @@
   "KAN-5/final-quit-30054.json": "207f7ce35ac20ce0ebed969124b66e6665e76bb38abd6cb3c557f2cff0307083",
   "KAN-5/final-quit-30055.json": "be0334bd4dabb78b2db93bf1db2a76cd3b04c7e7e123238a09f296082c0e0249",
   "KAN-5/jira-comment.md": "ddbd12f355876ee1ddfa8ba7a9d11199a1c64ff7c3179f4309810e631102c272",
-  "KAN-5/matrix.json": "b66fd3a5156c503b41e10418b4a96c0154d0d44ece2e3be003b460a8ec50cc00",
+  "KAN-5/jira-posted-10445.md": "50607a3d53ce3b7ec2df314faf4f51c756eb96a03380fa3692a9083557e3afe2",
+  "KAN-5/matrix.json": "7af056bfcef6f152a65d54feb09f29fcd0adcab499ec595e0da3a1479d06f5a9",
   "KAN-5/native-keybinding.json": "10f6a9813ac128ee48f2dad5b5affae07f98cb699e3d7717173f42a98ba6d91b",
   "KAN-5/normal-quit-30051.json": "c62ba5f409572e6ee6f35b523b1f7a8ceab0828b8c3a961fefecd11758517e16",
   "KAN-5/normal-quit-30052.json": "65c7b0382370bf7c8d6cc6d6adaabbe7ca93a73b2a59123bf47ab9116bd3059a",
@@ -78,8 +80,8 @@
   "KAN-5/probe.py": "6e6722f882ca003b9c98cfce35d5f40b156ecf78c83279fd806b5d988f1ccea2",
   "KAN-5/publish-list.json": "707cbcf2c8ebc9c65f4137ae143618ea4c03922db1c9bfd5a22c465b911debec",
   "KAN-5/readiness.json": "66d0264cefc0b9e0dbb79bf09192bdab8657b5907dfbb7778ddfef35ad3e8ad0",
-  "KAN-5/report.md": "79b7d132a8ce2aafe6f0120207e6b4a53b2d3198ba5da8b8a5838e87887fab23",
-  "KAN-5/root-independent-checks.json": "53ae7dc9f70667094a525b16bc941ec5dd0b9a45a3fcaf67272324f2bf22dc9f",
+  "KAN-5/report.md": "50e421b035ea0feb87b45d59c8f27b6e160da087f8a2fc2c6de9016dc5d611ea",
+  "KAN-5/root-independent-checks.json": "61a8e6bfa73dc05ea73b658877a5180ea3ba2a23ee7624e2906d6b2e3aa9bf82",
   "KAN-5/run.py": "61e51536f28e8f36689cc648f288d1d3d8fef652844dcae7f58d4205b624bc87",
   "KAN-5/screenshots/30051-fixture-error.png": "0940e106e08276c91f71e06ed0d004a843791925849f500568a45cbc44e0e0e2",
   "KAN-5/screenshots/30052-fixture-error.png": "ceff6f2578d017212d435a88255a9469eb46d060e98327f930d8813b1f7cf2e8",
@@ -102,5 +104,6 @@
   "KAN-5/setup-30054.json": "df53376ea3fed1ff244723c2b029ebf46f5ceb9b6323ae092baf7bb115e08a6c",
   "KAN-5/setup-30055.json": "df53376ea3fed1ff244723c2b029ebf46f5ceb9b6323ae092baf7bb115e08a6c",
   "KAN-5/summary.json": "97eb56a8487f849dc975e9831324c9f81d2f8d1c19564abab0b4b74020df1c3f",
-  "matrix.json": "d07920560006d90f4ad64ad22fc8fed5b75cd862a649e803fe55d7d74a7287a1"
+  "matrix.json": "95721c22ca7f07c0726f4a699af0f76b17eda9f5d14ca8b03d74e74a50669a28",
+  "publication-receipt.json": "de51829bab40507b24b28628d6dfa5cfb664ef30abd7f8dda6b6c992b01c83b6"
 }

@@ -18,7 +18,7 @@
       ],
       "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2763",
       "newPr": null,
-      "jiraCommentId": null,
+      "jiraCommentId": "10445",
       "normalExit": 0,
       "payloadUnchanged": true,
       "evidence": [
@@ -140,7 +140,7 @@
           "displayRemoved": true
         }
       },
-      "jiraCommentId": null,
+      "jiraCommentId": "10446",
       "testCommand": "python KAN-40/run.py 30062; chip-only30063"
     }
   ]

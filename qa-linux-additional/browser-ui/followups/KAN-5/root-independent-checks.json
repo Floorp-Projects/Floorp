@@ -35,5 +35,6 @@
   "browserExit": 0,
   "probeExit": 0,
   "payloadEntries": 56,
-  "payloadUnchanged": true
+  "payloadUnchanged": true,
+  "paintIndependentlyViewed": "destination renders QA KAN5 source B; source stack retains A/C and count2"
 }

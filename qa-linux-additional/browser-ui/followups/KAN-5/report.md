@@ -25,7 +25,7 @@ Setup and final browser exits0, probe exit0, no forced browser termination. All5
 -30054:actual name input/Enter kept group1/proxies3; ordinary-control preselection used incorrect Ctrl+9. Product's Linux key definition is Alt+9. No drag.
 -30055:only that proven key-binding correction; both actual drop cases passed. The ordinary preselection is native UI, not selection state injection. Known-empty-blank predicate was corrected while maintaining all payload/trust/count checks.
 
-Each setup/final browser exited0 and each run's full56-entry product comparison has zero differences; probe exits1 on the first four fixture stops,0 on the final valid run. No more browsers are needed. All owned ended profiles were removed after /proc reference check; display123 socket is absent. cleanup-receipt.json documents only owned removals, never other task profiles/builds.
+Each setup/final browser exited0 and each run's full56-entry product comparison has zero differences; probe exits1 on the first four fixture stops,0 on the final valid run. No more browsers are needed. The remaining owned ended profile was removed after /proc reference check; earlier owned profiles had already been removed after normal-exit/socket checks. The final scan confirms no process references any of the five profile paths and display123 socket is absent. cleanup-receipt.json distinguishes earlier removals from the final removal; no other task profiles/builds were touched.
 
 ## Remaining conditions and handoff
 

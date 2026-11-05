@@ -1,0 +1,16 @@
+{
+  "evidenceCommit": "7208c78814f2acd8e8029b90f855d1bfeffdd51f",
+  "jiraCommentIds": {
+    "KAN-5": "10445",
+    "KAN-40": "10446"
+  },
+  "environmentLabelsRemoved": [],
+  "newPr": null,
+  "sourceChanges": false,
+  "originalB10Count": 10,
+  "originalLinuxTotal": 22,
+  "additionalAssignedCount": 4,
+  "done": false,
+  "merge": false,
+  "publicRelease": false
+}
