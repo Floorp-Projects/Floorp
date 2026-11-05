@@ -132,7 +132,7 @@ export class LinuxSupport {
       `[LinuxSupport] Getting normalized ID for SSB: ${ssb.name} (id: ${ssb.id})`,
     );
     for (const candidate of candidates) {
-      if (candidate) {
+      if (typeof candidate === "string" && candidate) {
         const normalized = this.normalizeToken(candidate);
         if (normalized) {
           console.debug(
@@ -152,6 +152,11 @@ export class LinuxSupport {
     return fallbackId;
   }
 
+  /** Match the generated launcher identity without activating taskbar integration. */
+  static getWindowClass(ssb: Manifest): string {
+    return `floorp-${this.getNormalizedId(ssb)}`;
+  }
+
   private static getPathInfo(
     ssb: Manifest,
     dataHome = resolveLinuxDataHome(
@@ -159,8 +164,7 @@ export class LinuxSupport {
       Services.env.get("XDG_DATA_HOME"),
     ),
   ): LinuxPathInfo {
-    const slug = this.getNormalizedId(ssb);
-    const desktopBasename = `floorp-${slug}`;
+    const desktopBasename = this.getWindowClass(ssb);
     const iconDir = PathUtils.join(
       dataHome,
       "icons",
