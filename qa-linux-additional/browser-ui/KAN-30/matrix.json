@@ -3,20 +3,20 @@
     "key": "KAN-30",
     "github": "https://github.com/Floorp-Projects/Floorp/issues/2907",
     "sourceSha": "29a3eb23145da90706d8a94441373278521cc737",
-    "productVersion": "Floorp12.21.1@159.0.1 Build20261103153232",
+    "productVersion": "Official baseline Floorp12.21.1@159.0.1 Build20261103153232; full currentmain+2934 candidate same native build, frontend buildid2 01a1ad0a-6135-7717-8ec5-d54d679fd122",
     "environment": "Debian13.6/private Xvfb109+Openbox EWMH+DBus; OS XTest synthetic; focusmanager.testmode=false restores native focus",
-    "testCommand": "PYTHONPATH=/workspace/qa-linux-22/browser-ui/python python run.py <fresh-port> cases-focus; QA_PRODUCT=$PWD/candidate-pr2934/floorp for diagnostic candidate",
-    "result": "reproduced current Ctrl+Tab and normal Sidebery row click collapse despite hover; existingPR2934 diagnostic candidate holds; both native trusted deactivate and pointer leave close correctly; synthetic regression baselineFAIL/candidatePASS; dependent test-only Draft3043",
+    "testCommand": "QA_WM=openbox PYTHONPATH=/workspace/qa-linux-22/browser-ui/python python run.py <fresh-port> cases-focus; kind sidebery-row for normal extension selection; diagnostic candidate via QA_PRODUCT",
+    "result": "reproduced current release; canonicalPR2934 resolves tested Linux CtrlTab/normalSidebery hover; full currentmain production package passes all5 UI cases including trusted native deactivate; dependent test-only3043 standard CI261modules/0fail",
     "remainingConditions": [
-      "Original Windows10 22H2",
-      "Full compatible candidate package and standard CI (in progress)",
+      "Original Windows10 22H2/hardware",
       "Physical input",
-      "Cloud Sidebery row-label paint blank (real tab selection independently confirmed)"
+      "Cloud Sidebery row-label paint blank, actual selection verified; cause not established",
+      "Old Runtime158 exact-head full package not generated; exact-head test CI succeeded; fullcurrent159 integration package separately qualified"
     ],
     "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2934",
     "existingPrHead": "b7866aaa4905be4d86fb3dff1237d6a70c483f10",
     "newPr": "https://github.com/Floorp-Projects/Floorp/pull/3043",
-    "jiraCommentId": "10383",
+    "jiraCommentId": "10389",
     "evidence": [
       "report.md",
       "ui-summary.json",
@@ -39,14 +39,44 @@
       "probe-29944.json",
       "probe-29945.json",
       "probe-29946.json",
-      "probe-29947.json"
+      "probe-29947.json",
+      "full-product/report.md",
+      "full-product/provenance.json",
+      "full-product/summary.json",
+      "full-product-ui-summary.json",
+      "probe-29950.json",
+      "ci-3043/summary.json",
+      "ci-3043/verified-excerpts.txt",
+      "manual-repro.md"
     ],
     "evidenceBase": "KAN-30",
     "jiraCommentIds": [
       "10383",
-      "10385"
+      "10385",
+      "10389"
     ],
     "newPrHead": "bfb8e5b583e1d8520e8e894e7480276f0250d0f2",
-    "newPrBase": "b7866aaa4905be4d86fb3dff1237d6a70c483f10"
+    "newPrBase": "b7866aaa4905be4d86fb3dff1237d6a70c483f10",
+    "newPrKind": "dependent-test-only",
+    "existingPrCanonical": true,
+    "fullCandidate": {
+      "sourceSha": "1b8f3503df9e8cae6b08118ecbe2d85e2d5158e7",
+      "strictPackageExit": 0,
+      "packageSha256": "388f2543413cc44783e8fcd114a4149081394793693ecb79924a3137604f5bb3",
+      "archiveMembersCompared": 57,
+      "productionAssetsMatched": 1115,
+      "uiRun": 29950,
+      "uiCasesPassed": 5,
+      "runnableKind": "archive-identical standard staged package payload; not independent extraction",
+      "publishedBinary": false
+    },
+    "ci": {
+      "run": 42088237697,
+      "conclusion": "success",
+      "modulesPassed": 261,
+      "modulesFailed": 0,
+      "artifactId": 13444846344,
+      "digestVerified": true
+    }
   }
 ]

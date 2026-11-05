@@ -1,0 +1,32 @@
+{
+  "passed": true,
+  "run": 29950,
+  "sourceSha": "1b8f3503df9e8cae6b08118ecbe2d85e2d5158e7",
+  "candidateKind": "currentmain-plus-PR2934-strict-production-package-payload",
+  "product": {
+    "name": "Floorp",
+    "version": "159.0.1",
+    "build": "20261103153232",
+    "os": "Linux",
+    "signature": true,
+    "signatureUserSet": false,
+    "sandbox": 6,
+    "focusTestMode": false,
+    "focusTestModeUser": true
+  },
+  "GreD": "/workspace/kan30-full/obj-artifact-build-output/dist/floorp",
+  "cases": [
+    "normal-sidebery-row-click",
+    "ctrl-tab-hover-only",
+    "ctrl-tab-focused-body",
+    "pointer-leave",
+    "real-native-window-focus-loss"
+  ],
+  "actualNormalSideberySelection": true,
+  "syntheticOsInputNotPhysical": true,
+  "nativeFocusTrueToFalse": true,
+  "trustedDeactivate": true,
+  "signatureRequiredTrueDefault": true,
+  "productPayload": "strict mach package standard staged payload; archive byte/type identity audited, not separate tar extraction",
+  "inputJsonSha256": "c1808a8bf2dd2d3d4561388df98e5502f4131e858641716fa3bed184c042e427"
+}

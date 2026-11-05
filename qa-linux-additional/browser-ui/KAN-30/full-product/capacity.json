@@ -1,0 +1,13 @@
+{
+  "rawTrackedEntries": 484172,
+  "rawTrackedBytes": 3657015593,
+  "rawManifestSha256": "9a977fa7c194ac2fa8af16d7b82541774b807339d1b4e9340e67ad283c5d8e2f",
+  "rawManifestLocalOnly": "/workspace/kan30-full/runtime-tree-sizes.txt",
+  "initialDiskFreeBytesApprox": 287309824,
+  "readonlyBindSucceeded": true,
+  "overlayUpperUnsupported": true,
+  "reflinkUnsupported": true,
+  "hardlinkApproachRejected": true,
+  "canonicalOutputDeletionRejected": true,
+  "resolvedWith": "private read-only source+tool mounts, independent frontend/config/object; only candidate-own duplicate tool cleanup"
+}

@@ -1,0 +1,23 @@
+[
+  {
+    "item": "archive",
+    "path": "/workspace/kan30-full/obj-artifact-build-output/dist/floorp-12.21.1@159.0.1.en-US.linux-x86_64.tar.xz",
+    "before": "388f2543413cc44783e8fcd114a4149081394793693ecb79924a3137604f5bb3",
+    "afterRootUi": "388f2543413cc44783e8fcd114a4149081394793693ecb79924a3137604f5bb3",
+    "unchanged": true
+  },
+  {
+    "item": "floorp",
+    "path": "/workspace/kan30-full/obj-artifact-build-output/dist/floorp/floorp",
+    "before": "4f05c1330b38e50040440be6a3b6e0e7a5b52bc79edb5c5478d978c81f5a603d",
+    "afterRootUi": "4f05c1330b38e50040440be6a3b6e0e7a5b52bc79edb5c5478d978c81f5a603d",
+    "unchanged": true
+  },
+  {
+    "item": "libxul",
+    "path": "/workspace/kan30-full/obj-artifact-build-output/dist/floorp/libxul.so",
+    "before": "760ff8a689f52c9b1f3c89a45ea8813e59f187990caed747e4a7680020c8dbc7",
+    "afterRootUi": "760ff8a689f52c9b1f3c89a45ea8813e59f187990caed747e4a7680020c8dbc7",
+    "unchanged": true
+  }
+]

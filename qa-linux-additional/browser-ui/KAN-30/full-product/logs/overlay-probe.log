@@ -1,0 +1,2 @@
+mount: /workspace/kan30-full/runtime: fsconfig() failed: overlay: filesystem on /workspace/kan30-full/overlay-upper not supported as upperdir.
+       dmesg(1) may have more information after failed mount system call.

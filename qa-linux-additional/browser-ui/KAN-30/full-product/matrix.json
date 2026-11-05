@@ -1,0 +1,30 @@
+[
+  {
+    "key": "KAN-30",
+    "github": "https://github.com/Floorp-Projects/Floorp/issues/2907",
+    "sourceSha": "1b8f3503df9e8cae6b08118ecbe2d85e2d5158e7",
+    "productVersion": "Floorp12.21.1@159.0.1 build20261103153232",
+    "environment": "Linux Debian13; private read-only Runtime mount + independent production assets/object; parent real UI on Xvfb/window manager; synthetic W3C/OS input, not physical",
+    "testCommand": "reproduce.sh for build/package/audit; parent29950 native Sidebery/CtrlTab/leave/deactivation regression",
+    "result": "strict-full-package-pass;1115/1115productionassets;155genuineXPT;57/57archive-stageidentity;parentlimitedUIpass",
+    "remainingConditions": [
+      "No full native rebuild or official release identity",
+      "Original Runtime CI XPT companion unavailable; matching source-generated set used",
+      "Original hardware/distribution and exhaustive UI not claimed"
+    ],
+    "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2934",
+    "newPr": null,
+    "relatedTestPr": "https://github.com/Floorp-Projects/Floorp/pull/3043 (parent)",
+    "jiraCommentId": null,
+    "evidence": [
+      "report.md",
+      "summary.json",
+      "provenance.json",
+      "production-assets.json",
+      "archive-stage-comparison.json",
+      "xpt-comparison.json",
+      "post-ui-hashes.json",
+      "../probe-29950.json"
+    ]
+  }
+]

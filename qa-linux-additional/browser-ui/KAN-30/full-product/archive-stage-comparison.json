@@ -1,0 +1,477 @@
+{
+  "archive": "/workspace/kan30-full/obj-artifact-build-output/dist/floorp-12.21.1@159.0.1.en-US.linux-x86_64.tar.xz",
+  "archiveSha256": "388f2543413cc44783e8fcd114a4149081394793693ecb79924a3137604f5bb3",
+  "scope": "normal standard-packager staged payload, not independently tar-extracted",
+  "members": [
+    {
+      "path": "floorp",
+      "type": "directory",
+      "matches": true
+    },
+    {
+      "path": "floorp/application.ini",
+      "type": "file",
+      "archiveSha256": "0e5dd1160e29d4a266829cda36a80f990a825880dbbae1fbf5e0b5fd2576b214",
+      "stagedSha256": "0e5dd1160e29d4a266829cda36a80f990a825880dbbae1fbf5e0b5fd2576b214",
+      "modeArchive": "0o600",
+      "modeStaged": "0o600",
+      "matches": true
+    },
+    {
+      "path": "floorp/updater",
+      "type": "file",
+      "archiveSha256": "761d86411b87241a6ab57620a1b8cfe297eedd17feddf15a3b51a3b2e36c87a7",
+      "stagedSha256": "761d86411b87241a6ab57620a1b8cfe297eedd17feddf15a3b51a3b2e36c87a7",
+      "modeArchive": "0o755",
+      "modeStaged": "0o755",
+      "matches": true
+    },
+    {
+      "path": "floorp/libmozwayland.so",
+      "type": "file",
+      "archiveSha256": "3164170986fe9bbe1e673b6bd2524f0f05dcc3da26a5fcee1d304c8fe385e457",
+      "stagedSha256": "3164170986fe9bbe1e673b6bd2524f0f05dcc3da26a5fcee1d304c8fe385e457",
+      "modeArchive": "0o755",
+      "modeStaged": "0o755",
+      "matches": true
+    },
+    {
+      "path": "floorp/removed-files",
+      "type": "file",
+      "archiveSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stagedSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "modeArchive": "0o600",
+      "modeStaged": "0o600",
+      "matches": true
+    },
+    {
+      "path": "floorp/platform.ini",
+      "type": "file",
+      "archiveSha256": "fcfb484cc885d2164f80a9e2a2f2ad9a5ae5312c5780dea7ae8a7e77b869a42e",
+      "stagedSha256": "fcfb484cc885d2164f80a9e2a2f2ad9a5ae5312c5780dea7ae8a7e77b869a42e",
+      "modeArchive": "0o600",
+      "modeStaged": "0o600",
+      "matches": true
+    },
+    {
+      "path": "floorp/fonts",
+      "type": "directory",
+      "matches": true
+    },
+    {
+      "path": "floorp/fonts/TwemojiMozilla.ttf",
+      "type": "file",
+      "archiveSha256": "6d90152ee0d29e82fe2a87793af5aa4b7ad13e6538360889e141e81ed299ee8e",
+      "stagedSha256": "6d90152ee0d29e82fe2a87793af5aa4b7ad13e6538360889e141e81ed299ee8e",
+      "modeArchive": "0o600",
+      "modeStaged": "0o600",
+      "matches": true
+    },
+    {
+      "path": "floorp/libxul.so",
+      "type": "file",
+      "archiveSha256": "760ff8a689f52c9b1f3c89a45ea8813e59f187990caed747e4a7680020c8dbc7",
+      "stagedSha256": "760ff8a689f52c9b1f3c89a45ea8813e59f187990caed747e4a7680020c8dbc7",
+      "modeArchive": "0o755",
+      "modeStaged": "0o755",
+      "matches": true
+    },
+    {
+      "path": "floorp/floorp",
+      "type": "file",
+      "archiveSha256": "4f05c1330b38e50040440be6a3b6e0e7a5b52bc79edb5c5478d978c81f5a603d",
+      "stagedSha256": "4f05c1330b38e50040440be6a3b6e0e7a5b52bc79edb5c5478d978c81f5a603d",
+      "modeArchive": "0o755",
+      "modeStaged": "0o755",
+      "matches": true
+    },
+    {
+      "path": "floorp/libmozavutil.so",
+      "type": "file",
+      "archiveSha256": "d957abe02b48afe84f2eb0038252f1f12c627f2db7100fbfda80fc473c2d14d7",
+      "stagedSha256": "d957abe02b48afe84f2eb0038252f1f12c627f2db7100fbfda80fc473c2d14d7",
+      "modeArchive": "0o755",
+      "modeStaged": "0o755",
+      "matches": true
+    },
+    {
+      "path": "floorp/liblgpllibs.so",
+      "type": "file",
+      "archiveSha256": "c29aff12589cb5342e73488619b628b50afda839a063a0e0f3f77831ffd8ff82",
+      "stagedSha256": "c29aff12589cb5342e73488619b628b50afda839a063a0e0f3f77831ffd8ff82",
+      "modeArchive": "0o755",
+      "modeStaged": "0o755",
+      "matches": true
+    },
+    {
+      "path": "floorp/libsoftokn3.so",
+      "type": "file",
+      "archiveSha256": "bb6a9283048767500190da54a439cf12196448e352db191db50e23e1566ad649",
+      "stagedSha256": "bb6a9283048767500190da54a439cf12196448e352db191db50e23e1566ad649",
+      "modeArchive": "0o755",
+      "modeStaged": "0o755",
+      "matches": true
+    },
+    {
+      "path": "floorp/libonnxruntime.so",
+      "type": "file",
+      "archiveSha256": "077ac0e3e090dd3d070a497f354f62fa718de4a19be287da5d9a188c950bc71c",
+      "stagedSha256": "077ac0e3e090dd3d070a497f354f62fa718de4a19be287da5d9a188c950bc71c",
+      "modeArchive": "0o755",
+      "modeStaged": "0o755",
+      "matches": true
+    },
+    {
+      "path": "floorp/libmozgtk.so",
+      "type": "file",
+      "archiveSha256": "a2f42c25563411b7e3378629d2e1ab7f947e9c4b546560b25b436e6fbe94476f",
+      "stagedSha256": "a2f42c25563411b7e3378629d2e1ab7f947e9c4b546560b25b436e6fbe94476f",
+      "modeArchive": "0o755",
+      "modeStaged": "0o755",
+      "matches": true
+    },
+    {
+      "path": "floorp/libnssutil3.so",
+      "type": "file",
+      "archiveSha256": "efc899f507b9bcdc313303321ed177bc4768c47c3eaaa8e35609488e6d0e53e8",
+      "stagedSha256": "efc899f507b9bcdc313303321ed177bc4768c47c3eaaa8e35609488e6d0e53e8",
+      "modeArchive": "0o755",
+      "modeStaged": "0o755",
+      "matches": true
+    },
+    {
+      "path": "floorp/libfreeblpriv3.so",
+      "type": "file",
+      "archiveSha256": "0e5167b714fc4e7952d8471f5fb8d90a302df98e3cba156769ac733f0fd025b0",
+      "stagedSha256": "0e5167b714fc4e7952d8471f5fb8d90a302df98e3cba156769ac733f0fd025b0",
+      "modeArchive": "0o755",
+      "modeStaged": "0o755",
+      "matches": true
+    },
+    {
+      "path": "floorp/defaults",
+      "type": "directory",
+      "matches": true
+    },
+    {
+      "path": "floorp/defaults/pref",
+      "type": "directory",
+      "matches": true
+    },
+    {
+      "path": "floorp/defaults/pref/channel-prefs.js",
+      "type": "file",
+      "archiveSha256": "7d9d37eff1dc4e59a6437026602f1953ef58ee46ff3d81dbb8e13b0fd0bec86b",
+      "stagedSha256": "7d9d37eff1dc4e59a6437026602f1953ef58ee46ff3d81dbb8e13b0fd0bec86b",
+      "modeArchive": "0o600",
+      "modeStaged": "0o600",
+      "matches": true
+    },
+    {
+      "path": "floorp/floorp-bin",
+      "type": "file",
+      "archiveSha256": "4f05c1330b38e50040440be6a3b6e0e7a5b52bc79edb5c5478d978c81f5a603d",
+      "stagedSha256": "4f05c1330b38e50040440be6a3b6e0e7a5b52bc79edb5c5478d978c81f5a603d",
+      "modeArchive": "0o755",
+      "modeStaged": "0o755",
+      "matches": true
+    },
+    {
+      "path": "floorp/jogfile.json",
+      "type": "file",
+      "archiveSha256": "1ea8b491d37ef1e30d1158940469ce068e22fde3f970ec039f2c9511fa93de40",
+      "stagedSha256": "1ea8b491d37ef1e30d1158940469ce068e22fde3f970ec039f2c9511fa93de40",
+      "modeArchive": "0o600",
+      "modeStaged": "0o600",
+      "matches": true
+    },
+    {
+      "path": "floorp/libgkcodecs.so",
+      "type": "file",
+      "archiveSha256": "7804828879bc2967d23bc241c6ecb15fa7e5ca5e06e28049cf8378753b75cbe8",
+      "stagedSha256": "7804828879bc2967d23bc241c6ecb15fa7e5ca5e06e28049cf8378753b75cbe8",
+      "modeArchive": "0o755",
+      "modeStaged": "0o755",
+      "matches": true
+    },
+    {
+      "path": "floorp/omni.ja",
+      "type": "file",
+      "archiveSha256": "d3ba74ac6fb796cf81e4e1ac249b633ec00c1c91db0f95f2c204609bfc810eaa",
+      "stagedSha256": "d3ba74ac6fb796cf81e4e1ac249b633ec00c1c91db0f95f2c204609bfc810eaa",
+      "modeArchive": "0o600",
+      "modeStaged": "0o600",
+      "matches": true
+    },
+    {
+      "path": "floorp/updater.ini",
+      "type": "file",
+      "archiveSha256": "69ed3e7508f444fb753f7af5535a08321d110ba187baf1f80d8b26bb224af0ec",
+      "stagedSha256": "69ed3e7508f444fb753f7af5535a08321d110ba187baf1f80d8b26bb224af0ec",
+      "modeArchive": "0o600",
+      "modeStaged": "0o600",
+      "matches": true
+    },
+    {
+      "path": "floorp/libmozavcodec.so",
+      "type": "file",
+      "archiveSha256": "0687a26be53f8ece0623d6c5ed8b7815b2c05839760ba012baa2ea5b5975b2ea",
+      "stagedSha256": "0687a26be53f8ece0623d6c5ed8b7815b2c05839760ba012baa2ea5b5975b2ea",
+      "modeArchive": "0o755",
+      "modeStaged": "0o755",
+      "matches": true
+    },
+    {
+      "path": "floorp/libnss3.so",
+      "type": "file",
+      "archiveSha256": "6f11158b23027e962bec955f328119efa351db61b3e1f507a451fb1dfada646a",
+      "stagedSha256": "6f11158b23027e962bec955f328119efa351db61b3e1f507a451fb1dfada646a",
+      "modeArchive": "0o755",
+      "modeStaged": "0o755",
+      "matches": true
+    },
+    {
+      "path": "floorp/libplc4.so",
+      "type": "file",
+      "archiveSha256": "6fa863eff22c1fdf6e75f22fe9433bb50b0f8ba43960046a3816da6532d11fbf",
+      "stagedSha256": "6fa863eff22c1fdf6e75f22fe9433bb50b0f8ba43960046a3816da6532d11fbf",
+      "modeArchive": "0o755",
+      "modeStaged": "0o755",
+      "matches": true
+    },
+    {
+      "path": "floorp/libplds4.so",
+      "type": "file",
+      "archiveSha256": "7f3fb5134ecd4201e532d7160dda31479a02743d6eff7199003e3b4be2dd963b",
+      "stagedSha256": "7f3fb5134ecd4201e532d7160dda31479a02743d6eff7199003e3b4be2dd963b",
+      "modeArchive": "0o755",
+      "modeStaged": "0o755",
+      "matches": true
+    },
+    {
+      "path": "floorp/libnspr4.so",
+      "type": "file",
+      "archiveSha256": "73d59534248a183357f39e547f9d6f5089f084430aba181c9f4b6c9da5988c5d",
+      "stagedSha256": "73d59534248a183357f39e547f9d6f5089f084430aba181c9f4b6c9da5988c5d",
+      "modeArchive": "0o755",
+      "modeStaged": "0o755",
+      "matches": true
+    },
+    {
+      "path": "floorp/precomplete",
+      "type": "file",
+      "archiveSha256": "d6a5d785324008de66070ef2635fb3ed8f18c7ec04f055f870fbaaa685d4f010",
+      "stagedSha256": "d6a5d785324008de66070ef2635fb3ed8f18c7ec04f055f870fbaaa685d4f010",
+      "modeArchive": "0o600",
+      "modeStaged": "0o600",
+      "matches": true
+    },
+    {
+      "path": "floorp/libmozinference.so",
+      "type": "file",
+      "archiveSha256": "acd4dba98fa405662a725fceebe023e0c78cb67de9ec5174f545f6604299c570",
+      "stagedSha256": "acd4dba98fa405662a725fceebe023e0c78cb67de9ec5174f545f6604299c570",
+      "modeArchive": "0o755",
+      "modeStaged": "0o755",
+      "matches": true
+    },
+    {
+      "path": "floorp/libmozsqlite3.so",
+      "type": "file",
+      "archiveSha256": "d740b271fce254778272866e02b9bd8bca7888475179f76904e9c14a8c96aba0",
+      "stagedSha256": "d740b271fce254778272866e02b9bd8bca7888475179f76904e9c14a8c96aba0",
+      "modeArchive": "0o755",
+      "modeStaged": "0o755",
+      "matches": true
+    },
+    {
+      "path": "floorp/update-settings.ini",
+      "type": "file",
+      "archiveSha256": "c574f9f109b4dca4a6ab379167cd47a6bbee66c0a9640b1d19232da337202707",
+      "stagedSha256": "c574f9f109b4dca4a6ab379167cd47a6bbee66c0a9640b1d19232da337202707",
+      "modeArchive": "0o600",
+      "modeStaged": "0o600",
+      "matches": true
+    },
+    {
+      "path": "floorp/pingsender",
+      "type": "file",
+      "archiveSha256": "157ed38af98d795812dfc532739252f9e6c51472d13b9105c496b8b2cf1dbbfd",
+      "stagedSha256": "157ed38af98d795812dfc532739252f9e6c51472d13b9105c496b8b2cf1dbbfd",
+      "modeArchive": "0o755",
+      "modeStaged": "0o755",
+      "matches": true
+    },
+    {
+      "path": "floorp/gfxtest",
+      "type": "file",
+      "archiveSha256": "becfb0b9cee1d9b35fe23dc504f7bbb9345b364c413c0e80656ddb3c9729bdfd",
+      "stagedSha256": "becfb0b9cee1d9b35fe23dc504f7bbb9345b364c413c0e80656ddb3c9729bdfd",
+      "modeArchive": "0o755",
+      "modeStaged": "0o755",
+      "matches": true
+    },
+    {
+      "path": "floorp/browser",
+      "type": "directory",
+      "matches": true
+    },
+    {
+      "path": "floorp/browser/omni.ja",
+      "type": "file",
+      "archiveSha256": "d66d1caf5ee10c9885faf6eb9a710580924b35e7c2192ab82f76c382a193676b",
+      "stagedSha256": "d66d1caf5ee10c9885faf6eb9a710580924b35e7c2192ab82f76c382a193676b",
+      "modeArchive": "0o600",
+      "modeStaged": "0o600",
+      "matches": true
+    },
+    {
+      "path": "floorp/browser/buildid2",
+      "type": "file",
+      "archiveSha256": "bd0b75ec10714d732188ad202fde2879d20d0ebfa6adcc80abd1752934ff0601",
+      "stagedSha256": "bd0b75ec10714d732188ad202fde2879d20d0ebfa6adcc80abd1752934ff0601",
+      "modeArchive": "0o600",
+      "modeStaged": "0o600",
+      "matches": true
+    },
+    {
+      "path": "floorp/browser/chrome",
+      "type": "directory",
+      "matches": true
+    },
+    {
+      "path": "floorp/browser/chrome/icons",
+      "type": "directory",
+      "matches": true
+    },
+    {
+      "path": "floorp/browser/chrome/icons/default",
+      "type": "directory",
+      "matches": true
+    },
+    {
+      "path": "floorp/browser/chrome/icons/default/default128.png",
+      "type": "file",
+      "archiveSha256": "0331b4c3f03a36984734bf3668ce1823504fd44b10e5ecc0977ee8c521641ad9",
+      "stagedSha256": "0331b4c3f03a36984734bf3668ce1823504fd44b10e5ecc0977ee8c521641ad9",
+      "modeArchive": "0o600",
+      "modeStaged": "0o600",
+      "matches": true
+    },
+    {
+      "path": "floorp/browser/chrome/icons/default/default16.png",
+      "type": "file",
+      "archiveSha256": "501aab2936ddb5562ffde7d8bfe20f6a3cda5bd009fa160c0ed3b10481de778c",
+      "stagedSha256": "501aab2936ddb5562ffde7d8bfe20f6a3cda5bd009fa160c0ed3b10481de778c",
+      "modeArchive": "0o600",
+      "modeStaged": "0o600",
+      "matches": true
+    },
+    {
+      "path": "floorp/browser/chrome/icons/default/default48.png",
+      "type": "file",
+      "archiveSha256": "2cc6b61be10980e8fd8c9508dca783df063623e2e17ebc2e301ef9e2d3e38a22",
+      "stagedSha256": "2cc6b61be10980e8fd8c9508dca783df063623e2e17ebc2e301ef9e2d3e38a22",
+      "modeArchive": "0o600",
+      "modeStaged": "0o600",
+      "matches": true
+    },
+    {
+      "path": "floorp/browser/chrome/icons/default/default32.png",
+      "type": "file",
+      "archiveSha256": "de4c287df3aea68bbba3246a35992e4ee41708d956c225d4ab90fe9532996541",
+      "stagedSha256": "de4c287df3aea68bbba3246a35992e4ee41708d956c225d4ab90fe9532996541",
+      "modeArchive": "0o600",
+      "modeStaged": "0o600",
+      "matches": true
+    },
+    {
+      "path": "floorp/browser/chrome/icons/default/default64.png",
+      "type": "file",
+      "archiveSha256": "474f20f1407914c689d34c91da62997950fee1a70197bf3d20252a4dcf8e91fa",
+      "stagedSha256": "474f20f1407914c689d34c91da62997950fee1a70197bf3d20252a4dcf8e91fa",
+      "modeArchive": "0o600",
+      "modeStaged": "0o600",
+      "matches": true
+    },
+    {
+      "path": "floorp/dependentlibs.list",
+      "type": "file",
+      "archiveSha256": "621f575eaaf819dd0b18976c6a8a94d1caae95a9c748f4c9058a052395a4d173",
+      "stagedSha256": "621f575eaaf819dd0b18976c6a8a94d1caae95a9c748f4c9058a052395a4d173",
+      "modeArchive": "0o644",
+      "modeStaged": "0o644",
+      "matches": true
+    },
+    {
+      "path": "floorp/libmozsandbox.so",
+      "type": "file",
+      "archiveSha256": "88c01a993afad42907d569d1f11d890afd0accc7120fd946168ca799065e86fd",
+      "stagedSha256": "88c01a993afad42907d569d1f11d890afd0accc7120fd946168ca799065e86fd",
+      "modeArchive": "0o755",
+      "modeStaged": "0o755",
+      "matches": true
+    },
+    {
+      "path": "floorp/libssl3.so",
+      "type": "file",
+      "archiveSha256": "7a2f6ffcecdbb27c98279657f3db63f56922cb568dc217553d6d5f217bfa378b",
+      "stagedSha256": "7a2f6ffcecdbb27c98279657f3db63f56922cb568dc217553d6d5f217bfa378b",
+      "modeArchive": "0o755",
+      "modeStaged": "0o755",
+      "matches": true
+    },
+    {
+      "path": "floorp/gmp-clearkey",
+      "type": "directory",
+      "matches": true
+    },
+    {
+      "path": "floorp/gmp-clearkey/0.1",
+      "type": "directory",
+      "matches": true
+    },
+    {
+      "path": "floorp/gmp-clearkey/0.1/manifest.json",
+      "type": "file",
+      "archiveSha256": "b7d65e60cccb80ffb2e95b5ae7e355d2c8c37575e886eef4325ca04fa7ba68fc",
+      "stagedSha256": "b7d65e60cccb80ffb2e95b5ae7e355d2c8c37575e886eef4325ca04fa7ba68fc",
+      "modeArchive": "0o600",
+      "modeStaged": "0o600",
+      "matches": true
+    },
+    {
+      "path": "floorp/gmp-clearkey/0.1/libclearkey.so",
+      "type": "file",
+      "archiveSha256": "97ffd72483c64964ad9a2b86ca227d93c921ff5c14dd430f25c3eec2f7aa5c02",
+      "stagedSha256": "97ffd72483c64964ad9a2b86ca227d93c921ff5c14dd430f25c3eec2f7aa5c02",
+      "modeArchive": "0o755",
+      "modeStaged": "0o755",
+      "matches": true
+    },
+    {
+      "path": "floorp/libsmime3.so",
+      "type": "file",
+      "archiveSha256": "6f3e94a9538ec3a52ee30e80af86fccc5ffd31a06712e61f434dda427b561c99",
+      "stagedSha256": "6f3e94a9538ec3a52ee30e80af86fccc5ffd31a06712e61f434dda427b561c99",
+      "modeArchive": "0o755",
+      "modeStaged": "0o755",
+      "matches": true
+    },
+    {
+      "path": "floorp/icons",
+      "type": "directory",
+      "matches": true
+    },
+    {
+      "path": "floorp/icons/updater.png",
+      "type": "file",
+      "archiveSha256": "cab5e9bc9511b0690e696b378efa6753705b1182660d9829f5b3dc9f0398e5cc",
+      "stagedSha256": "cab5e9bc9511b0690e696b378efa6753705b1182660d9829f5b3dc9f0398e5cc",
+      "modeArchive": "0o600",
+      "modeStaged": "0o600",
+      "matches": true
+    }
+  ],
+  "allMatching": true
+}

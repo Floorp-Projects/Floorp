@@ -1,0 +1,36 @@
+{
+  "run": 42088237697,
+  "url": "https://github.com/Floorp-Projects/Floorp/actions/runs/42088237697",
+  "headSha": "bfb8e5b583e1d8520e8e894e7480276f0250d0f2",
+  "draftPr": 3043,
+  "canonicalDependencyPr": 2934,
+  "baseSha": "b7866aaa4905be4d86fb3dff1237d6a70c483f10",
+  "conclusion": "success",
+  "smoke": "success",
+  "nativePlatforms": {
+    "ubuntu-24.04": "success",
+    "ubuntu-24.04-arm": "success",
+    "macos-latest": "success",
+    "windows-latest": "success"
+  },
+  "artifactId": 13444846344,
+  "artifactName": "test-logs-ubuntu-24.04",
+  "downloadedZipSha256": "d08245e6267020626b1d60c165f5b46c76b2e07d5ad1b38016055f128d666c35",
+  "matchesGitHubArtifactDigest": true,
+  "combinedBrowserModuleResults": {
+    "passed": 261,
+    "failed": 0
+  },
+  "downloadedFirefox": {
+    "files": 8,
+    "tasks": 16,
+    "passed": 16
+  },
+  "sidebarOverlayModule": {
+    "result": "pass",
+    "durationMs": 16549
+  },
+  "newCaseEvidence": "unconditional first entry in runAllTests at exact head; harness awaits each test and throws aggregated failures. Artifact logs module success, not individual case result lines.",
+  "retrieval": "CLI blob redirect403; connector file reference retrieved; ZIP digest verified. No signed URLs/raw logs published.",
+  "combinedLogSha256": "cd7fda7be3043ee4dae1a7710adba7add249dc17dd8a3ca1153fa18a5577a4cf"
+}

@@ -1,0 +1,81 @@
+{
+  "sourceBaseline": "29a3eb23145da90706d8a94441373278521cc737",
+  "existingPr": 2934,
+  "existingPrHead": "b7866aaa4905be4d86fb3dff1237d6a70c483f10",
+  "candidateSourceSha": "1b8f3503df9e8cae6b08118ecbe2d85e2d5158e7",
+  "candidateKind": "current main plus exact existing PR one-line change; not old PR full-source build",
+  "runtimeSha": "8965ffc346d426ccdf919bd18585e4d4a0c21654",
+  "runtimeView": "private namespace read-only bind of existing matching patched source; own config/object and frontend",
+  "productionAssetCount": 1115,
+  "productionAssetMatches": 1115,
+  "mounts": [
+    {
+      "name": "content",
+      "assetCount": 211
+    },
+    {
+      "name": "pages-aboutDialog",
+      "assetCount": 4
+    },
+    {
+      "name": "pages-modal-child",
+      "assetCount": 3
+    },
+    {
+      "name": "pages-newtab",
+      "assetCount": 107
+    },
+    {
+      "name": "pages-notes",
+      "assetCount": 3
+    },
+    {
+      "name": "pages-profile-manager",
+      "assetCount": 3
+    },
+    {
+      "name": "pages-settings",
+      "assetCount": 202
+    },
+    {
+      "name": "pages-welcome",
+      "assetCount": 159
+    },
+    {
+      "name": "resource",
+      "assetCount": 182
+    },
+    {
+      "name": "skin",
+      "assetCount": 238
+    },
+    {
+      "name": "startup",
+      "assetCount": 3
+    }
+  ],
+  "buildid2": "01a1ad0a-6135-7717-8ec5-d54d679fd122",
+  "artifactBuildNativeCompilation": false,
+  "strictChecks": "canonical packager.mk byte compare before mach package; error-if-empty preserved",
+  "strictPackageExit": 0,
+  "package": "/workspace/kan30-full/obj-artifact-build-output/dist/floorp-12.21.1@159.0.1.en-US.linux-x86_64.tar.xz",
+  "packageSha256": "388f2543413cc44783e8fcd114a4149081394793693ecb79924a3137604f5bb3",
+  "archiveMembersCompared": 57,
+  "archiveStageAllMatching": true,
+  "runnable": "/workspace/kan30-full/obj-artifact-build-output/dist/floorp/floorp",
+  "runnableKind": "standard-packager staged payload, verified against every archive member; not independent extraction",
+  "expectedGeckoVersion": "159.0.1",
+  "nativeFloorpSha256": "4f05c1330b38e50040440be6a3b6e0e7a5b52bc79edb5c5478d978c81f5a603d",
+  "nativeLibxulSha256": "760ff8a689f52c9b1f3c89a45ea8813e59f187990caed747e4a7680020c8dbc7",
+  "xptZipSha256": "e6b1118254c2066921c207741090aa59a165591c5ac564ab239c221e88412889",
+  "xptModules": 155,
+  "xptAllMatchingCanonicalGenerated": true,
+  "securityPreferencesOverrideApplied": false,
+  "sourceCppRustChanges": false,
+  "remainingLimits": [
+    "No native recompilation",
+    "Original Runtime CI XPT companion bytes unavailable; source-generated matching IDLs used",
+    "No signing/release/publication",
+    "No UI regression executed by this child; parent runs final limited real-UI tests"
+  ]
+}

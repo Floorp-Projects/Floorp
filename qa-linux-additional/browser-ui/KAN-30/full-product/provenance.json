@@ -1,0 +1,17 @@
+{
+  "sourceMain": "29a3eb23145da90706d8a94441373278521cc737",
+  "existingPr": 2934,
+  "existingPrHead": "b7866aaa4905be4d86fb3dff1237d6a70c483f10",
+  "candidateSourceSha": "1b8f3503df9e8cae6b08118ecbe2d85e2d5158e7",
+  "sourceBranch": "https://github.com/Floorp-Projects/Floorp/tree/qa/kan30-full-pr2934-current",
+  "cleanSourceWorktree": true,
+  "runtimeSha": "8965ffc346d426ccdf919bd18585e4d4a0c21654",
+  "runtimeArtifactSha256": "cb9b01283d5ce3167f4ba046ee7b39ae9d98a692e1beba73bd9f85f460157772",
+  "packageSha256": "388f2543413cc44783e8fcd114a4149081394793693ecb79924a3137604f5bb3",
+  "buildid2": "01a1ad0a-6135-7717-8ec5-d54d679fd122",
+  "packageLocalOnly": true,
+  "noNativeCompilation": true,
+  "noSharedRuntimeWrites": true,
+  "noSecurityOverrideStep": true,
+  "parentTestDraft": "https://github.com/Floorp-Projects/Floorp/pull/3043"
+}

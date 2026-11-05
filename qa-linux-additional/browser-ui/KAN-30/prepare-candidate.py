@@ -1,6 +1,6 @@
 from pathlib import Path
-import shutil,zipfile,hashlib,json
-R=Path(__file__).parent;src=Path('/workspace/qa-linux-22/browser-ui/products/floorp');dest=R/'candidate-pr2934'
+import shutil,zipfile,hashlib,json,os
+R=Path(__file__).parent;src=Path(os.environ.get('QA_OFFICIAL_PRODUCT_DIR','/workspace/qa-linux-22/browser-ui/products/floorp'));dest=R/'candidate-pr2934'
 assert not dest.exists();dest.mkdir()
 for p in src.iterdir():
  if p.name in ['omni.ja','floorp','floorp-bin']:shutil.copy2(p,dest/p.name)

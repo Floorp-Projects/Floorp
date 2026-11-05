@@ -1,0 +1,167 @@
+ 0:00.63 W Warnings in third-party code are being suppressed from the terminal output. Use --show-all-warnings or --verbose to see them.
+ 0:00.63 W All warnings will still be dumped to /workspace/kan30-full/obj-artifact-build-output/.mozbuild/logs/build/warnings_*.json at the end of the build.
+ 0:00.73 Clobber not needed.
+ 0:00.78 Parallelism determined by memory: using 5 jobs for 5 cores based on 17.6 GiB RAM and estimated job size of 1.0 GiB
+ 0:00.78 W Adding make options from /workspace/kan30-full/mozconfig
+    AUTOCLOBBER=1
+    MOZ_OBJDIR=/workspace/kan30-full/obj-artifact-build-output
+    OBJDIR=/workspace/kan30-full/obj-artifact-build-output
+    FOUND_MOZCONFIG=/workspace/kan30-full/mozconfig
+    export FOUND_MOZCONFIG
+ 0:00.78 /usr/bin/gmake -f client.mk -j5 -s
+ 0:04.45 Elapsed: 0.13s; From dist/xpi-stage: Kept 175 existing; Added/updated 746; Removed 0 files and 0 directories.
+ 0:04.55 Elapsed: 0.19s; From _tests: Kept 11 existing; Added/updated 762; Removed 0 files and 0 directories.
+ 0:07.75 Successfully generated event list for DevTools
+ 0:21.15 Elapsed: 0.04s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/browser/localization: Kept 0 existing; Added/updated 137; Removed 0 files and 0 directories.
+ 0:21.43 Elapsed: 0.00s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/gmp-fake/1.0: Kept 0 existing; Added/updated 1; Removed 0 files and 0 directories.
+ 0:21.73 Elapsed: 0.29s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/gmp-clearkey/0.1: Kept 0 existing; Added/updated 1; Removed 0 files and 0 directories.
+ 0:22.01 Elapsed: 0.01s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/gmp-fakeopenh264/1.0: Kept 0 existing; Added/updated 1; Removed 0 files and 0 directories.
+ 0:22.20 Elapsed: 0.06s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/localization: Kept 0 existing; Added/updated 104; Removed 0 files and 0 directories.
+ 0:22.40 Elapsed: 0.01s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/browser/components/aboutlogins: Kept 0 existing; Added/updated 4; Removed 0 files and 0 directories.
+ 0:22.54 Elapsed: 0.00s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/browser/components: Kept 0 existing; Added/updated 9; Removed 0 files and 0 directories.
+ 0:22.58 Elapsed: 0.01s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/browser/components/aiwindow/models: Kept 0 existing; Added/updated 23; Removed 0 files and 0 directories.
+ 0:22.74 Elapsed: 0.00s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/browser/components/aiwindow/models/agents: Kept 0 existing; Added/updated 4; Removed 0 files and 0 directories.
+ 0:22.96 Elapsed: 0.00s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/browser/components/aiwindow/models/aitab: Kept 0 existing; Added/updated 1; Removed 0 files and 0 directories.
+ 0:23.01 Elapsed: 0.00s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/browser/components/aiwindow/models/memories: Kept 0 existing; Added/updated 9; Removed 0 files and 0 directories.
+ 0:23.04 Elapsed: 0.00s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/browser/components/aiwindow/models/search: Kept 0 existing; Added/updated 2; Removed 0 files and 0 directories.
+ 0:23.34 Elapsed: 0.00s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/browser/components/attribution: Kept 0 existing; Added/updated 1; Removed 0 files and 0 directories.
+ 0:23.41 Elapsed: 0.01s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/browser/components/aiwindow/services: Kept 0 existing; Added/updated 2; Removed 0 files and 0 directories.
+ 0:23.57 Elapsed: 0.02s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/browser/components/aiwindow/ui: Kept 0 existing; Added/updated 56; Removed 0 files and 0 directories.
+ 0:23.57 Elapsed: 0.00s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/browser/components/backup: Kept 0 existing; Added/updated 22; Removed 0 files and 0 directories.
+ 0:23.79 Elapsed: 0.00s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/browser/components/contentanalysis: Kept 0 existing; Added/updated 1; Removed 0 files and 0 directories.
+ 0:23.90 Elapsed: 0.01s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/browser/components/customizableui: Kept 0 existing; Added/updated 8; Removed 0 files and 0 directories.
+ 0:24.11 Elapsed: 0.00s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/browser/components/customkeys: Kept 0 existing; Added/updated 3; Removed 0 files and 0 directories.
+ 0:24.15 Elapsed: 0.00s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/browser/components/genai: Kept 0 existing; Added/updated 10; Removed 0 files and 0 directories.
+ 0:24.18 Elapsed: 0.00s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/browser/components/downloads: Kept 0 existing; Added/updated 5; Removed 0 files and 0 directories.
+ 0:24.43 Elapsed: 0.00s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/browser/components/miniwindow: Kept 0 existing; Added/updated 5; Removed 0 files and 0 directories.
+ 0:24.51 Elapsed: 0.00s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/browser/components/ipprotection: Kept 0 existing; Added/updated 10; Removed 0 files and 0 directories.
+ 0:24.58 Elapsed: 0.00s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/browser/components/mozcachedohttp: Kept 0 existing; Added/updated 2; Removed 0 files and 0 directories.
+ 0:24.74 Elapsed: 0.00s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/browser/components/newtab: Kept 0 existing; Added/updated 3; Removed 0 files and 0 directories.
+ 0:24.80 Elapsed: 0.00s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/browser/components/permissions: Kept 0 existing; Added/updated 1; Removed 0 files and 0 directories.
+ 0:24.83 Elapsed: 0.01s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/browser/components/migration: Kept 0 existing; Added/updated 11; Removed 0 files and 0 directories.
+ 0:24.86 Elapsed: 0.00s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/browser/components/pagedata: Kept 0 existing; Added/updated 5; Removed 0 files and 0 directories.
+ 0:25.14 Elapsed: 0.00s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/browser/components/privatebrowsing: Kept 0 existing; Added/updated 1; Removed 0 files and 0 directories.
+ 0:25.23 Elapsed: 0.01s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/browser/components/prompts: Kept 0 existing; Added/updated 1; Removed 0 files and 0 directories.
+ 0:25.30 Elapsed: 0.00s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/browser/components/places: Kept 0 existing; Added/updated 4; Removed 0 files and 0 directories.
+ 0:25.39 Elapsed: 0.00s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/browser/components/protections: Kept 0 existing; Added/updated 2; Removed 0 files and 0 directories.
+ 0:25.58 Elapsed: 0.00s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/browser/components/protocolhandler: Kept 0 existing; Added/updated 1; Removed 0 files and 0 directories.
+ 0:25.65 Elapsed: 0.00s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/browser/components/qrcode: Kept 0 existing; Added/updated 2; Removed 0 files and 0 directories.
+ 0:25.71 Elapsed: 0.00s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/browser/components/referrals: Kept 0 existing; Added/updated 1; Removed 0 files and 0 directories.
+ 0:25.98 Elapsed: 0.00s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/browser/components/remotecontrol: Kept 0 existing; Added/updated 2; Removed 0 files and 0 directories.
+ 0:25.98 Elapsed: 0.01s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/browser/components/pictureinpicture: Kept 0 existing; Added/updated 1; Removed 0 files and 0 directories.
+ 0:26.10 Elapsed: 0.00s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/browser/components/screenshots: Kept 0 existing; Added/updated 4; Removed 0 files and 0 directories.
+ 0:26.16 Elapsed: 0.00s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/browser/components/reportbrokensite: Kept 0 existing; Added/updated 1; Removed 0 files and 0 directories.
+ 0:26.35 Elapsed: 0.00s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/browser/components/search: Kept 0 existing; Added/updated 6; Removed 0 files and 0 directories.
+ 0:26.36 Elapsed: 0.00s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/browser/components/sharing: Kept 0 existing; Added/updated 3; Removed 0 files and 0 directories.
+ 0:26.42 Elapsed: 0.00s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/browser/components/sessionstore: Kept 0 existing; Added/updated 21; Removed 0 files and 0 directories.
+ 0:26.63 Elapsed: 0.00s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/browser/components/syncedtabs: Kept 0 existing; Added/updated 8; Removed 0 files and 0 directories.
+ 0:26.64 Elapsed: 0.00s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/browser/components/sidebar: Kept 0 existing; Added/updated 4; Removed 0 files and 0 directories.
+ 0:26.72 Elapsed: 0.00s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/browser/components/tabbrowser: Kept 0 existing; Added/updated 9; Removed 0 files and 0 directories.
+ 0:26.75 Elapsed: 0.00s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/browser/components/shell: Kept 0 existing; Added/updated 6; Removed 0 files and 0 directories.
+ 0:26.94 Elapsed: 0.00s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/browser/components/taskbartabs: Kept 0 existing; Added/updated 8; Removed 0 files and 0 directories.
+ 0:27.00 Elapsed: 0.00s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/browser/components/uitour: Kept 0 existing; Added/updated 4; Removed 0 files and 0 directories.
+ 0:27.14 Elapsed: 0.01s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/browser/components/urlbar: Kept 0 existing; Added/updated 72; Removed 0 files and 0 directories.
+ 0:27.21 Elapsed: 0.00s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/browser/components/urlbar/unitconverters: Kept 0 existing; Added/updated 3; Removed 0 files and 0 directories.
+ 0:27.21 Elapsed: 0.00s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/browser/components/tabnotes: Kept 0 existing; Added/updated 3; Removed 0 files and 0 directories.
+ 0:27.25 Elapsed: 0.00s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/browser/modules: Kept 0 existing; Added/updated 6; Removed 0 files and 0 directories.
+ 0:27.39 Elapsed: 0.00s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/browser/themes: Kept 0 existing; Added/updated 2; Removed 0 files and 0 directories.
+ 0:27.51 Elapsed: 0.00s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/devtools/startup: Kept 0 existing; Added/updated 3; Removed 0 files and 0 directories.
+ 0:27.55 Elapsed: 0.00s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/devtools/platform: Kept 0 existing; Added/updated 1; Removed 0 files and 0 directories.
+ 0:27.63 Elapsed: 0.00s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/dom/base: Kept 0 existing; Added/updated 4; Removed 0 files and 0 directories.
+ 0:27.73 Elapsed: 0.00s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/dom/geolocation: Kept 0 existing; Added/updated 1; Removed 0 files and 0 directories.
+ 0:27.79 Elapsed: 0.00s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/dom/ipc: Kept 0 existing; Added/updated 1; Removed 0 files and 0 directories.
+ 0:27.82 Elapsed: 0.00s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/docshell/base: Kept 0 existing; Added/updated 1; Removed 0 files and 0 directories.
+ 0:27.99 Elapsed: 0.00s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/dom/manifest: Kept 0 existing; Added/updated 7; Removed 0 files and 0 directories.
+ 0:28.01 Elapsed: 0.00s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/dom/notification: Kept 0 existing; Added/updated 3; Removed 0 files and 0 directories.
+ 0:28.17 Elapsed: 0.00s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/dom/quota: Kept 0 existing; Added/updated 1; Removed 0 files and 0 directories.
+ 0:28.25 Elapsed: 0.00s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/dom/xslt/xslt: Kept 0 existing; Added/updated 1; Removed 0 files and 0 directories.
+ 0:28.34 Elapsed: 0.00s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/dom/system: Kept 0 existing; Added/updated 1; Removed 0 files and 0 directories.
+ 0:28.43 Elapsed: 0.00s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/services/crypto: Kept 0 existing; Added/updated 3; Removed 0 files and 0 directories.
+ 0:28.44 Elapsed: 0.00s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/intl/locale: Kept 0 existing; Added/updated 1; Removed 0 files and 0 directories.
+ 0:28.56 Elapsed: 0.01s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/toolkit/actors: Kept 0 existing; Added/updated 59; Removed 0 files and 0 directories.
+ 0:28.77 Elapsed: 0.00s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/toolkit/components/captchadetection: Kept 0 existing; Added/updated 5; Removed 0 files and 0 directories.
+ 0:28.82 Elapsed: 0.00s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/toolkit/components/certviewer: Kept 0 existing; Added/updated 2; Removed 0 files and 0 directories.
+ 0:28.83 Elapsed: 0.00s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/toolkit/components/contextualidentity: Kept 0 existing; Added/updated 1; Removed 0 files and 0 directories.
+ 0:29.15 Elapsed: 0.00s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/toolkit/components/doh: Kept 0 existing; Added/updated 4; Removed 0 files and 0 directories.
+ 0:29.25 Elapsed: 0.00s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/toolkit/components/bitsdownload: Kept 0 existing; Added/updated 1; Removed 0 files and 0 directories.
+ 0:29.37 Elapsed: 0.00s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/toolkit/components/forgetaboutsite: Kept 0 existing; Added/updated 1; Removed 0 files and 0 directories.
+ 0:29.40 Elapsed: 0.00s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/toolkit/components/ipprotection: Kept 0 existing; Added/updated 21; Removed 0 files and 0 directories.
+ 0:29.62 Elapsed: 0.00s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/toolkit/components/kvstore: Kept 0 existing; Added/updated 1; Removed 0 files and 0 directories.
+ 0:30.11 Elapsed: 0.01s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/toolkit/components/ml: Kept 0 existing; Added/updated 2; Removed 0 files and 0 directories.
+ 0:30.30 Elapsed: 0.00s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/toolkit/components/ml/actors: Kept 0 existing; Added/updated 2; Removed 0 files and 0 directories.
+ 0:30.33 Elapsed: 0.00s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/toolkit/components/passwordmgr: Kept 0 existing; Added/updated 1; Removed 0 files and 0 directories.Elapsed: 0.00s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/toolkit/components/pageextractor: Kept 0 existing; Added/updated 3; Removed 0 files and 0 directories.
+ 0:30.58 Elapsed: 0.00s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/toolkit/components/qrcode: Kept 0 existing; Added/updated 2; Removed 0 files and 0 directories.
+ 0:30.70 Elapsed: 0.00s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/toolkit/components/reader: Kept 0 existing; Added/updated 6; Removed 0 files and 0 directories.
+ 0:30.91 Elapsed: 0.00s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/toolkit/components/remotebrowserutils: Kept 0 existing; Added/updated 1; Removed 0 files and 0 directories.
+ 0:31.01 Elapsed: 0.01s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/toolkit/components/pictureinpicture: Kept 0 existing; Added/updated 2; Removed 0 files and 0 directories.
+ 0:31.10 Elapsed: 0.05s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/toolkit/components/search: Kept 0 existing; Added/updated 16; Removed 0 files and 0 directories.
+ 0:31.31 Elapsed: 0.00s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/toolkit/components/uniffi-bindgen-gecko-js/components: Kept 0 existing; Added/updated 18; Removed 0 files and 0 directories.Elapsed: 0.00s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/toolkit/components/reflect: Kept 0 existing; Added/updated 1; Removed 0 files and 0 directories.
+ 0:31.44 Elapsed: 0.00s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/toolkit/components/uniffi-js: Kept 0 existing; Added/updated 1; Removed 0 files and 0 directories.
+ 0:31.50 Elapsed: 0.00s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/toolkit/modules: Kept 0 existing; Added/updated 7; Removed 0 files and 0 directories.
+ 0:31.72 Elapsed: 0.00s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/moz-src/toolkit/profile: Kept 0 existing; Added/updated 2; Removed 0 files and 0 directories.
+ 0:33.73 Elapsed: 2.00s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin: Kept 0 existing; Added/updated 3144; Removed 0 files and 0 directories.
+ 0:38.31 vendor:
+ 0:38.31   asset vendor.bundle.js 399 KiB [emitted] [minimized] (name: main)
+ 0:38.31   runtime modules 2.49 KiB 5 modules
+ 0:38.31   orphan modules 682 bytes [orphan] 1 module
+ 0:38.31   modules by path ../../../third_party/node/node_modules/ 1.14 MiB
+ 0:38.31     modules by path ../../../third_party/node/node_modules/react-transition-group/esm/ 54.2 KiB 9 modules
+ 0:38.31     modules by path ../../../third_party/node/node_modules/react-dom/ 1 MiB 7 modules
+ 0:38.31     modules by path ../../../third_party/node/node_modules/@babel/runtime/helpers/esm/*.js 1.23 KiB 5 modules
+ 0:38.31     modules by path ../../../third_party/node/node_modules/prop-types/ 2.58 KiB 3 modules
+ 0:38.31     modules by path ../../../third_party/node/node_modules/dom-helpers/esm/*.js 1.57 KiB 3 modules
+ 0:38.31     modules by path ../../../third_party/node/node_modules/react/ 17 KiB 2 modules
+ 0:38.31     modules by path ../../../third_party/node/node_modules/use-sync-external-store/ 2.81 KiB 2 modules
+ 0:38.31     modules by path ../../../third_party/node/node_modules/scheduler/ 10.1 KiB 2 modules
+ 0:38.31     ../../../third_party/node/node_modules/react-redux/dist/react-redux.mjs 36.6 KiB [built] [code generated]
+ 0:38.31     ../../../third_party/node/node_modules/redux/dist/redux.mjs 16.4 KiB [built] [code generated]
+ 0:38.31   ./content-src/vendor.mjs 1.62 KiB [built] [code generated]
+ 0:38.31   vendor (webpack 5.109.0) compiled successfully in 15475 ms
+ 0:38.31 activity-stream:
+ 0:38.31   asset activity-stream.bundle.js 1.27 MiB [emitted] (name: main)
+ 0:38.31   orphan modules 1.23 MiB [orphan] 163 modules
+ 0:38.31   runtime modules 1.55 KiB 5 modules
+ 0:38.31   ./content-src/activity-stream.jsx + 163 modules 1.23 MiB [not cacheable] [built] [code generated]
+ 0:38.31   activity-stream (webpack 5.109.0) compiled successfully in 15406 ms
+ 0:39.51 Elapsed: 0.90s; From /workspace/kan30-full/obj-artifact-build-output/dist/bin/browser: Kept 0 existing; Added/updated 4964; Removed 0 files and 0 directories.
+ 0:39.83 ./newtab-sources.stamp.stub
+ 0:39.88 ./built_in_addons.json.stub
+ 0:40.15 Elapsed: 0.00s; From /workspace/kan30-full/obj-artifact-build-output: Kept 0 existing; Added/updated 1; Removed 0 files and 0 directories.
+ 0:40.45 ./vendor.bundle.js.stub
+ 0:40.46 ./activity-stream.css.stub
+ 0:41.03 Elapsed: 0.01s; From /workspace/kan30-full/obj-artifact-build-output: Kept 0 existing; Added/updated 4; Removed 0 files and 0 directories.
+ 0:41.44 Elapsed: 0.21s; From /workspace/kan30-full/obj-artifact-build-output: Kept 0 existing; Added/updated 167; Removed 0 files and 0 directories.
+ 1:00.88 vendor:
+ 1:00.88   asset vendor.bundle.js 399 KiB [emitted] [minimized] (name: main)
+ 1:00.88   runtime modules 2.49 KiB 5 modules
+ 1:00.88   orphan modules 682 bytes [orphan] 1 module
+ 1:00.88   modules by path ../../../third_party/node/node_modules/ 1.14 MiB
+ 1:00.88     modules by path ../../../third_party/node/node_modules/react-transition-group/esm/ 54.2 KiB 9 modules
+ 1:00.88     modules by path ../../../third_party/node/node_modules/react-dom/ 1 MiB 7 modules
+ 1:00.88     modules by path ../../../third_party/node/node_modules/@babel/runtime/helpers/esm/*.js 1.23 KiB 5 modules
+ 1:00.88     modules by path ../../../third_party/node/node_modules/prop-types/ 2.58 KiB 3 modules
+ 1:00.88     modules by path ../../../third_party/node/node_modules/dom-helpers/esm/*.js 1.57 KiB 3 modules
+ 1:00.88     modules by path ../../../third_party/node/node_modules/react/ 17 KiB 2 modules
+ 1:00.88     modules by path ../../../third_party/node/node_modules/use-sync-external-store/ 2.81 KiB 2 modules
+ 1:00.88     modules by path ../../../third_party/node/node_modules/scheduler/ 10.1 KiB 2 modules
+ 1:00.88     ../../../third_party/node/node_modules/react-redux/dist/react-redux.mjs 36.6 KiB [built] [code generated]
+ 1:00.88     ../../../third_party/node/node_modules/redux/dist/redux.mjs 16.4 KiB [built] [code generated]
+ 1:00.88   ./content-src/vendor.mjs 1.62 KiB [built] [code generated]
+ 1:00.88   vendor (webpack 5.109.0) compiled successfully in 18973 ms
+ 1:00.88 activity-stream:
+ 1:00.88   asset activity-stream.bundle.js 1.27 MiB [emitted] (name: main)
+ 1:00.88   orphan modules 1.23 MiB [orphan] 163 modules
+ 1:00.88   runtime modules 1.55 KiB 5 modules
+ 1:00.88   ./content-src/activity-stream.jsx + 163 modules 1.23 MiB [not cacheable] [built] [code generated]
+ 1:00.88   activity-stream (webpack 5.109.0) compiled successfully in 17366 ms
+ 1:01.26 Elapsed: 0.00s; From /workspace/kan30-full/obj-artifact-build-output: Kept 0 existing; Added/updated 8; Removed 0 files and 0 directories.
+ 1:02.23 Packaging ipp-activator@mozilla.com.xpi...
+ 1:02.40 Packaging webcompat@mozilla.org.xpi...
+ 1:02.91 Packaging newtab@mozilla.org.xpi...
+ 1:04.67 W 0 compiler warnings present.
+ 1:04.73 W Overall system resources - Wall time: 64s; CPU: 67%; Read bytes: 69644288; Write bytes: 199929856; Read time: 268; Write time: 10464
+ 1:04.74 To view a profile of the build, run |mach resource-usage|.
+ 1:04.74 Your build was successful!
+ 1:04.74 To take your build for a test drive, run: |mach run|
+ 1:04.74 For more information on what to do now, see https://firefox-source-docs.mozilla.org/setup/contributing_code.html
+Streaming resource usage profile to: /workspace/kan30-full/obj-artifact-build-output/.mozbuild/logs/build/profile_log_20261105_185507.json
