@@ -365,8 +365,14 @@ export class MacOSSupport {
       if (
         await IOUtils.readUTF8(markerPath) === marker &&
         await IOUtils.exists(executable) && await IOUtils.exists(icon) &&
-        await IOUtils.exists(plist)
+        await IOUtils.exists(plist) &&
+        await IOUtils.readUTF8(executable) === bundle.launcher &&
+        await IOUtils.readUTF8(plist) === bundle.plist
       ) {
+        // An intact marker does not prove that generated files or their mode
+        // survived copying/restoring the bundle. Restore executable permission
+        // even when its content needs no rewrite.
+        await IOUtils.setPermissions(executable, 0o755);
         // The browser itself can acquire quarantine after the launcher was
         // installed, so also repair a complete bundle without rewriting it.
         await this.clearQuarantine(bundlePaths);
