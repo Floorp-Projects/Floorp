@@ -35,6 +35,10 @@
       "prepare-candidate.py",
       "wm-control.json"
     ],
-    "evidenceBase": "KAN-30"
+    "evidenceBase": "KAN-30",
+    "jiraCommentIds": [
+      "10383",
+      "10385"
+    ]
   }
 ]
