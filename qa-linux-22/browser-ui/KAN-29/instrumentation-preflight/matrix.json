@@ -15,7 +15,7 @@
     ],
     "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2877",
     "newPr": null,
-    "jiraCommentId": null,
+    "jiraCommentId": "10490",
     "evidence": [
       "summary.json",
       "metrics.json",
