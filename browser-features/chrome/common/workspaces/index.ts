@@ -21,7 +21,10 @@ import { createRoot, getOwner, onCleanup, runWithOwner } from "solid-js";
 import { WORKSPACES_INIT_OBSERVER_TOPIC } from "./utils/workspaces-static-names.ts";
 import { WorkspacesLinkContextMenu } from "./link-context-menu.tsx";
 import { WorkspacesSyncController } from "./workspacesSync.ts";
-import { waitForWorkspaceWindow } from "./window-ready.ts";
+import {
+  canInitializeWorkspace,
+  waitForWorkspaceWindow,
+} from "./window-ready.ts";
 
 @noraComponent(import.meta.hot)
 export default class Workspaces extends NoraComponentBase {
@@ -51,8 +54,8 @@ export default class Workspaces extends NoraComponentBase {
         Services.obs,
         startup.signal,
       );
-      if (!ready) {
-        if (!startup.signal.aborted && !window.closed) {
+      if (!canInitializeWorkspace(ready, window, startup.signal)) {
+        if (!ready && !startup.signal.aborted && !window.closed) {
           console.error(
             "[Workspaces] Window startup finished without required browser chrome",
           );
