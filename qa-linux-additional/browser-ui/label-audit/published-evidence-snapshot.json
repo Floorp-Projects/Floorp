@@ -1,0 +1,823 @@
+{
+  "publishedCommit": "5bad47baae11f062af39b477cd6e55640922cddc",
+  "branch": "qa/linux22-browser-ui-evidence-20261105",
+  "matrixSha256": "71766c741aa86e470abba1c7f7232047d13d5c5555dcb8ca2aad3b44897271fb",
+  "rows": [
+    {
+      "key": "KAN-3",
+      "result": "\u5b9f\u518d\u73fe\u30fbCSS\u6b20\u9665\u4fee\u6b63Draft",
+      "remainingConditions": [
+        "\u5143Fedora desktop/package\u30fb\u7269\u7406\u30c9\u30e9\u30c3\u30b0/\u30e1\u30cb\u30e5\u30fc",
+        "\u516c\u5f0fdefaults\u540c\u4e00\u6027\uff08\u7f72\u540d\u7121\u52b9\u5316pref\u5de5\u7a0b\u7701\u7565\uff09\u3001\u6b63\u5f0f\u5019\u88dc\u914d\u5e03\u5f62\u5f0f"
+      ],
+      "existingPr": null,
+      "newPr": "https://github.com/Floorp-Projects/Floorp/pull/3033",
+      "jiraCommentId": "10294",
+      "evidence": [
+        {
+          "path": "split-29285.json",
+          "exists": true,
+          "sha256": "81e03ded3ca4d874563d31ac463a56b1baf83e12e530cca2eb3eb32c47511a33"
+        },
+        {
+          "path": "split-29286.json",
+          "exists": true,
+          "sha256": "30c648769702f7929e8ea724de63bc3a9fff03ab19098d6a873b6a66f3571e6f"
+        },
+        {
+          "path": "KAN-3/before.png",
+          "exists": true,
+          "sha256": "21102ae2386a00746bfa622440dd214838eb2b77cc13cb9f96d8c6aa22d58cb5"
+        },
+        {
+          "path": "KAN-3/returned.png",
+          "exists": true,
+          "sha256": "506012aa12b256d2fd4329829207d147d78076ceb5bc8aa2078ff526d29cb665"
+        },
+        {
+          "path": "regression-29315.json",
+          "exists": true,
+          "sha256": "046e4629c1523c90d01f49dff102d0d092b4e7e5aacc8efd8cce2993ce0ab76a"
+        },
+        {
+          "path": "regression-29316.json",
+          "exists": true,
+          "sha256": "f2781a29b0943127e014cf98bad674383557bc65086373bdae92d6baccfe1897"
+        },
+        {
+          "path": "regression-29317.json",
+          "exists": true,
+          "sha256": "6710fac4dc620984fe92e0031e5fd1bf76576bddb75882a2f70000cc0b705133"
+        },
+        {
+          "path": "split-29412.json",
+          "exists": true,
+          "sha256": "6569d8ca9826cdab9a8e84f6927bbd324e176d8d660abd530a4e2f2163615692"
+        },
+        {
+          "path": "KAN-3/build-test.cjs",
+          "exists": true,
+          "sha256": "a754867b36506b0e6b34bb94cdad816ff8fe14e29992d832c738b5c1b845df59"
+        },
+        {
+          "path": "layout-29424.json",
+          "exists": true,
+          "sha256": "7111c1e0675fdb51a2b20b9764159cab0a261aa8ba21c36b0c2c916df0a39a56"
+        },
+        {
+          "path": "regression-29426.json",
+          "exists": true,
+          "sha256": "6710fac4dc620984fe92e0031e5fd1bf76576bddb75882a2f70000cc0b705133"
+        },
+        {
+          "path": "KAN-3/layout-probe.py",
+          "exists": true,
+          "sha256": "858b216afac8e8c06d252c136742b673062b369f0d5d249a23136e7d6e4de1a2"
+        },
+        {
+          "path": "ci/summary.json",
+          "exists": true,
+          "sha256": "cef140344f8971aee59c3a7125ef30a2f96fb986c0fcae7f3e4c97c953ba4f38"
+        },
+        {
+          "path": "regression-29631.json",
+          "exists": true,
+          "sha256": "496fc843936f3704e38bda8190280aff52bf3efab340be58f4677f30e996477c"
+        },
+        {
+          "path": "regression-29632.json",
+          "exists": true,
+          "sha256": "443b6838667dd131da432cb9ac7dc8fdc754d4b6aaa2440a21a653c464c1b46f"
+        },
+        {
+          "path": "KAN-3/wayland-summary.json",
+          "exists": true,
+          "sha256": "fcb8a522e79f3d4f4e25e4667f004fbba83507fb38e84f2546913e3efe819860"
+        },
+        {
+          "path": "KAN-3/nested-adoption.sh",
+          "exists": true,
+          "sha256": "2c45eaa2f45d9ec80ef252d602c81f8ccd32e1c234faa03de77cca1aabf06708"
+        },
+        {
+          "path": "full-product/3033/report.md",
+          "exists": true,
+          "sha256": "8d4f9cd9940e19d3fc0c27a70e5e913d1c43c51308c3e5e50d32a036da0aaa6e"
+        },
+        {
+          "path": "full-product/3033/build-progress.json",
+          "exists": true,
+          "sha256": "ab3c81cef6130a25619904c769a87457bf2f2619fab90faf977fcb757fe6d903"
+        },
+        {
+          "path": "full-product/3033/package-hashes.json",
+          "exists": true,
+          "sha256": "6c509d49ce57e97ff17d59651f6d53d0f350359ed7aea56f6492f96f6e435c76"
+        },
+        {
+          "path": "full-product/3033/candidate-29831.json",
+          "exists": true,
+          "sha256": "fe5d6b188eb68a91ec672aebeee20524ee22c50bb0856eed5a37f19124b6cd2a"
+        },
+        {
+          "path": "full-product/3033/candidate-29832.json",
+          "exists": true,
+          "sha256": "879b6a7c4b6380558a3fade80df617c4f17bdbe77e1e2d91f0964f5618a2d4e4"
+        },
+        {
+          "path": "full-product/shared/ci-input-manifest.json",
+          "exists": true,
+          "sha256": "57e8c917ec1daa99c4fe19a99ac6a19a3af0c23c13d4774a8e5fc6838df77c30"
+        },
+        {
+          "path": "full-product/xpt-generation/report.md",
+          "exists": true,
+          "sha256": "2566b936efd5d8252b2181e77b12375c49ca873a09aa1680a2943825ee1a5108"
+        },
+        {
+          "path": "full-product/xpt-generation/strict-results.json",
+          "exists": true,
+          "sha256": "8aa6b921ff98f7a83c34088f73682f26bff79db6e477f263ae412b08dea971f8"
+        },
+        {
+          "path": "full-product/xpt-generation/inputs.json",
+          "exists": true,
+          "sha256": "5f293a3a0e7df93346b4888b0b0cf4f515e14f150705864569b9f227f4887ad6"
+        },
+        {
+          "path": "full-product/xpt-generation/outputs.json",
+          "exists": true,
+          "sha256": "3c460ca3df47560be53bf4650f06d6593194a0a7e52c16adf050b7416a2c2fb1"
+        },
+        {
+          "path": "full-product/xpt-generation/dependencies.json",
+          "exists": true,
+          "sha256": "4568477deda9358929976350984a92920e41091bd4dc48c1a6aa93eec3deabe9"
+        },
+        {
+          "path": "full-product/xpt-generation/combined-module-comparison.json",
+          "exists": true,
+          "sha256": "b74203875c1edaad16be5477b20c920a2ae1aecdd264283b3884a908ff4b3010"
+        }
+      ]
+    },
+    {
+      "key": "KAN-5",
+      "result": "\u9650\u5b9a\u6761\u4ef6\u3067\u672a\u518d\u73fe\u30fb\u65e2\u5b58\u4fee\u6b63\u3068\u6574\u5408",
+      "remainingConditions": [
+        "Fedora44\u5b9fdesktop/\u5143package/Flatpak",
+        "\u7269\u7406\u5165\u529b",
+        "\u65e2\u5b58\u7a93\u3078\u306eproxy\u30c9\u30e9\u30c3\u30b0\uff08native adopt\u306e\u307f\u5b9f\u65bd\uff09"
+      ],
+      "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2763",
+      "newPr": null,
+      "jiraCommentId": "10283",
+      "evidence": [
+        {
+          "path": "detach-29285.json",
+          "exists": true,
+          "sha256": "5e32aec69b2dc42d9a839b66cca949a9955ae1d4cb16970bd107cb2cea0866c3"
+        },
+        {
+          "path": "desktop-drag-29290.json",
+          "exists": true,
+          "sha256": "670cd3c65a79538e4ea8a10dda4c0a54cfdc657feb4fe070a07ef1314dd61209"
+        },
+        {
+          "path": "KAN-5/desktop-before.png",
+          "exists": true,
+          "sha256": "783dc748f62f04380e3072eb080825cdf4219899d03b3ad74a6347d67a28a692"
+        },
+        {
+          "path": "KAN-5/desktop-after.png",
+          "exists": true,
+          "sha256": "b9879450fc91f834e4bde3de8fc0827768f639241c465230e1a5b1e3898e6221"
+        },
+        {
+          "path": "detach-29412.json",
+          "exists": true,
+          "sha256": "a3e9be845c9f6c6704964b193c083610701b58a7a023791a9822174207a32289"
+        }
+      ]
+    },
+    {
+      "key": "KAN-29",
+      "result": "\u539fLTR\u9650\u5b9a\u672a\u518d\u73fe\uff0f\u5b9flocalized RTL\u3067\u95a2\u9023\u6b20\u9665\u518d\u73fe\u30fb\u65e2\u5b58PR2877\u5019\u88dc\u3067\u6539\u5584",
+      "remainingConditions": [
+        "\u539fLTR CachyOS/Flatpak\u30fbdistro package\u75c7\u72b6\u306e\u518d\u73fe/\u89e3\u6d88",
+        "\u7269\u7406\u5165\u529b\u30fb\u5b9fGPU/\u539fcompositor",
+        "full official candidate product build\uff08\u4eca\u56de\u65e2\u5b58PR\u8a08\u7b97\u306e\u307f\u8a3a\u65adcopy\uff09"
+      ],
+      "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2877",
+      "newPr": null,
+      "jiraCommentId": "10284",
+      "evidence": [
+        {
+          "path": "layout-29289.json",
+          "exists": true,
+          "sha256": "bbf7ee6050ea880740a0ec2a46bcf35cdea6fc4a326151914c316fbf293e5358"
+        },
+        {
+          "path": "KAN-29/layout-False-True.png",
+          "exists": true,
+          "sha256": "c67ff47b2fca009c69d6ea292604f5a062d7d71495733133641e7adb59c23153"
+        },
+        {
+          "path": "KAN-29/wayland-followup.md",
+          "exists": true,
+          "sha256": "2952b715346d297c40ed12e170749a4c54f17c4ac45774af1591e81bca2875aa"
+        },
+        {
+          "path": "KAN-29/wayland-summary.json",
+          "exists": true,
+          "sha256": "e465f38ffb9ae979464072619b51eba97332c1706450ca5867ba94716b152b58"
+        },
+        {
+          "path": "KAN-29/wayland-panel-29603.json",
+          "exists": true,
+          "sha256": "d26ee5476fa9e99bd0b34b0285b2c83f2da39774e6e919f6a87403bd0b28ec3c"
+        },
+        {
+          "path": "KAN-29/wayland-panel-29604.json",
+          "exists": true,
+          "sha256": "ac4c37ad365645c505d0c926997f3e1554575bf8ed61b05f69000d6a6540edaf"
+        },
+        {
+          "path": "KAN-29/wayland-panel-29605.json",
+          "exists": true,
+          "sha256": "e3477f0620b6af3fe8d765f2b885e9094f3cec43ccf0926728866e2bc0e8251b"
+        },
+        {
+          "path": "KAN-29/pr2877-geometry-correlation.json",
+          "exists": true,
+          "sha256": "f2f7fb4875b94858a650f66e8dec3b6997110c8b61bf28ace4deadd8015c012d"
+        },
+        {
+          "path": "KAN-29/wayland-29603-1-0-0.png",
+          "exists": true,
+          "sha256": "86598f587fec6e70c7e1c730267184e50a74d766ac9bbccf8b5eda57161d2779"
+        },
+        {
+          "path": "KAN-29/wayland-29604-0-1-0.png",
+          "exists": true,
+          "sha256": "414c089f786f25bc34a019b43bfef662b6604e3d9756c3dad1ccbc4264975758"
+        },
+        {
+          "path": "KAN-29/nested-panel.sh",
+          "exists": true,
+          "sha256": "3370df72cf77684681a61e34e469752e1f3f63af11203b4e8a878a0795b6728d"
+        },
+        {
+          "path": "KAN-29/localized-report.md",
+          "exists": true,
+          "sha256": "dc28b3679c8d052b7cfe2784068c6562f1a20ebb1331769b92ad151275befe91"
+        },
+        {
+          "path": "KAN-29/localized-comparison.json",
+          "exists": true,
+          "sha256": "ba5b0eed5bc37b7306ca48ec1568f45b27afb0c7eafb47ec03945bfd74d5fcee"
+        },
+        {
+          "path": "KAN-29/wayland-panel-29665.json",
+          "exists": true,
+          "sha256": "1868f9a7f4c66119e02816d7d27fb4ca103683f1fc64106891b4350c87fd3860"
+        },
+        {
+          "path": "KAN-29/wayland-panel-29666.json",
+          "exists": true,
+          "sha256": "a280d5c4193c447488ef0ea484242af29f31acb0e6e6aef1eceb24681f22b1e7"
+        },
+        {
+          "path": "KAN-29/locale/setup-29665.json",
+          "exists": true,
+          "sha256": "efbaf5edc1808f3018002e1390707850e180fe0b439b9dacd4faf764c9f33f07"
+        },
+        {
+          "path": "KAN-29/locale/setup-29666.json",
+          "exists": true,
+          "sha256": "d47e5ba2786005395f6535302f480fc06a51c58b50892c68d50423e2dba1dce0"
+        },
+        {
+          "path": "KAN-29/pr2877/product-patch.json",
+          "exists": true,
+          "sha256": "28e3467750f7e5957189f5b48e87fa178f02a6c2f292ea0231e6f1f1b67ceed2"
+        },
+        {
+          "path": "KAN-29/pr2877/patch-product.py",
+          "exists": true,
+          "sha256": "6f55d01aab6b6ced7c75f2fdda6c721a42f11fb33119edfe47ab4de74ca39b90"
+        },
+        {
+          "path": "KAN-29/nested-localized.sh",
+          "exists": true,
+          "sha256": "0fe94b226a28af29bdd5b7b887fce863a5a32d137a95cf80b86796b4d6a535a5"
+        },
+        {
+          "path": "kan29-localized-run.py",
+          "exists": true,
+          "sha256": "a0e1953333136202aa3155387375f0c3f3e1dabc4e789c61f7a83a68f81cdae1"
+        },
+        {
+          "path": "KAN-29/pr2877/29687-flex.json",
+          "exists": true,
+          "sha256": "c9a5cc291b9fdb757de68042aab33ad1dc915761d76b5523db98fdcda3d1ccef"
+        },
+        {
+          "path": "KAN-29/pr2877/29687-panel.json",
+          "exists": true,
+          "sha256": "2e771dafcfd95b3a5a8ead5ccde06856b15d5718fc75faa56edba628aa823552"
+        },
+        {
+          "path": "KAN-29/pr2877/test-copy-hashes.json",
+          "exists": true,
+          "sha256": "9ae1da5c589275f509877df409d70d526797682fdaf0b6ffda386fcf67f1c313"
+        },
+        {
+          "path": "KAN-29/pr2877/29688-flex.json",
+          "exists": true,
+          "sha256": "036639bbf58ae307590f293c0804cfa1a7bdfcb8e3b33b1e6fe66268ef3084b1"
+        },
+        {
+          "path": "KAN-29/pr2877-root-note.md",
+          "exists": true,
+          "sha256": "2631043c3a0d7440681f6b74fb805511fa88eb0b7c784c4d85208e45bb6b4a35"
+        },
+        {
+          "path": "full-product/pr2877-comment.json",
+          "exists": true,
+          "sha256": "f3f2a8b7391567f608da41c536dc2547b140bea61c67f0ec33f44998324cc5f8"
+        },
+        {
+          "path": "full-product/pr2877-comment.md",
+          "exists": true,
+          "sha256": "e7a1a8763ce44f84e3f14a1bca85693dfba5888a7fd0626dea55392d30dc6a64"
+        }
+      ]
+    },
+    {
+      "key": "KAN-31",
+      "result": "\u9650\u5b9a\u6761\u4ef6\u3067\u672a\u518d\u73fe",
+      "remainingConditions": [
+        "Fedora44\u5b9fdesktop/\u5143package/\u5143\u914d\u5e03\u5f62\u5f0f",
+        "\u8d77\u52d5\u76f4\u5f8c\u306e\u3088\u308a\u65e9\u671f\u5165\u529b/\u4ed6\u8a00\u8a9e"
+      ],
+      "existingPr": null,
+      "newPr": null,
+      "jiraCommentId": "10285",
+      "evidence": [
+        {
+          "path": "search-29291.json",
+          "exists": true,
+          "sha256": "01ab0827e2a121d7730df133798715007145643f9ff4d36e1265e30b67d82ab4"
+        },
+        {
+          "path": "search-29292.json",
+          "exists": true,
+          "sha256": "3d04baa1e31009529b06c5ec77293cac15d49293ae5ec5867a349afc86c78122"
+        },
+        {
+          "path": "KAN-31/29291-first.png",
+          "exists": true,
+          "sha256": "81b374f97dda15d0f6283e01c4539591097de7e8e40a40e0843607285b61f36f"
+        },
+        {
+          "path": "KAN-31/29292-first.png",
+          "exists": true,
+          "sha256": "2d92ce49f731174be4b68613a7c48c8d22b66f9e2a676b9a1eecb3264dc77d00"
+        },
+        {
+          "path": "search-29411.json",
+          "exists": true,
+          "sha256": "3e8766f2b933955872f62ff8a0e136f0bdeeabef33e99abb333ef710db122e6d"
+        },
+        {
+          "path": "KAN-31/29411-first.png",
+          "exists": true,
+          "sha256": "9061a314d3eca1d57f2a70d5098982450cf72230598765f679e5d2ca3a1dbb44"
+        },
+        {
+          "path": "KAN-31/29411-after.png",
+          "exists": true,
+          "sha256": "9061a314d3eca1d57f2a70d5098982450cf72230598765f679e5d2ca3a1dbb44"
+        }
+      ]
+    },
+    {
+      "key": "KAN-39",
+      "result": "\u9650\u5b9aLinux\u6761\u4ef6\u3067\u672a\u518d\u73fe\u30fb\u6709\u52b9\u306a\u540c\u5165\u529b\u5bfe\u7167\u6e08",
+      "remainingConditions": [
+        "Fedora44\u5b9fdesktop/\u5143package/\u7269\u7406wheel\u30fbDPI/\u52a0\u901f"
+      ],
+      "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2763",
+      "newPr": null,
+      "jiraCommentId": "10286",
+      "evidence": [
+        {
+          "path": "wheel-29284.json",
+          "exists": true,
+          "sha256": "e5bc91922ef9cacdddc08211f7933e94caabaa26b30fd6899d51ea5eb4005623"
+        },
+        {
+          "path": "wheel-os-29296.json",
+          "exists": true,
+          "sha256": "bc30cb92ca242010c9a94d3fcdcb787b4d225f6a669c6ad022bc8cff76fe93da"
+        },
+        {
+          "path": "KAN-39/harness-at-end.json",
+          "exists": true,
+          "sha256": "1dd0d5f4c207c0a56778e91bc4d05529ca3c7ea682e39171f13b461481649063"
+        },
+        {
+          "path": "KAN-39/stack.png",
+          "exists": true,
+          "sha256": "33ff3a5c8849bd30fe2d6a289b2b17c31232a6bc3b5cbecf4508ad65fea9f2d3"
+        },
+        {
+          "path": "wheel-29411.json",
+          "exists": true,
+          "sha256": "3960e0f42842254b8642c6dcfbe0473f32904f1d47e40ce5a3b39399f54d46ee"
+        },
+        {
+          "path": "KAN-39/followup/report.md",
+          "exists": true,
+          "sha256": "d1e1cbcf8cc71a2238d1d8b50782a0d557f215e5e071b56954008a08541e27f6"
+        },
+        {
+          "path": "KAN-39/followup/matrix.json",
+          "exists": true,
+          "sha256": "472c9fa7576d292a17956a8cd5397e5869745ca3e46a9acb1fc9c833eb45e959"
+        },
+        {
+          "path": "KAN-39/followup/floorp.json",
+          "exists": true,
+          "sha256": "895c2cdba1cc61d5e0ff17d86cd9522379b408c1d5be78775f4845d30b78945a"
+        },
+        {
+          "path": "KAN-39/followup/firefox.json",
+          "exists": true,
+          "sha256": "c5be00ff8fa1f81c212e58e38bfae2b18fe7e41b6760af6441797aa18f1418db"
+        },
+        {
+          "path": "KAN-39/followup/run.py",
+          "exists": true,
+          "sha256": "2ea917318e38f0cdae0222fdf115b45ccbd02a54c9c17d9452dbc75fb67b29c1"
+        }
+      ]
+    },
+    {
+      "key": "KAN-40",
+      "result": "\u9650\u5b9a\u6761\u4ef6\u3067\u672a\u518d\u73fe\u30fb\u65e2\u5b58\u4fee\u6b63\u3068\u6574\u5408",
+      "remainingConditions": [
+        "Fedora44\u5b9fdesktop/\u5143package/Flatpak/\u7269\u7406\u4e2d\u30af\u30ea\u30c3\u30af",
+        "\u901a\u5e38\u30bf\u30d6\u30fbstack\u5168\u4f53\u4e2d\u30af\u30ea\u30c3\u30af\u306e\u8ffd\u52a0\u5bfe\u7167"
+      ],
+      "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2763",
+      "newPr": null,
+      "jiraCommentId": "10287",
+      "evidence": [
+        {
+          "path": "middle-29284.json",
+          "exists": true,
+          "sha256": "8e2408a6289aeaa75650920c88b10bd62d6e281e02eae25ca95f82e4c59d1323"
+        },
+        {
+          "path": "KAN-40/before.png",
+          "exists": true,
+          "sha256": "c95ff22d684518021e5ce91eb2e0750466869a26760d7d24213f69358e3ff64a"
+        },
+        {
+          "path": "KAN-40/after.png",
+          "exists": true,
+          "sha256": "8d74052a374a255eed235b0af319491035d992e4ce83a4c90536ecf84d6e2769"
+        },
+        {
+          "path": "middle-29411.json",
+          "exists": true,
+          "sha256": "7a55b1fee944b81c3ca79401bc8083d90d017f0a401544739d701ed8a979984e"
+        }
+      ]
+    },
+    {
+      "key": "KAN-54",
+      "result": "\u8868\u793a\u91cd\u8907\u3092\u5b9f\u89b3\u6e2c\u30fbSprint\u5bfe\u8c61\u5916",
+      "remainingConditions": [
+        "Manjaro/\u5b8c\u5168\u306aPlasma session",
+        "minimize/maximize\u542b\u30803\u30dc\u30bf\u30f3/\u4ed5\u69d8\u78ba\u8a8d"
+      ],
+      "existingPr": null,
+      "newPr": null,
+      "jiraCommentId": "10288",
+      "evidence": [
+        {
+          "path": "controls-29289.json",
+          "exists": true,
+          "sha256": "8c8a6ed2234a47f174150a02d9566578728fb173ad5f46c0c434eda3955a12f2"
+        },
+        {
+          "path": "KAN-54/controls-multirow-1.png",
+          "exists": true,
+          "sha256": "b1d2ebdcb7ab4547faa10d31b712f50a3ba25fd7510e38cee5c9022d9d27c1c5"
+        },
+        {
+          "path": "KAN-54/controls-horizontal-1.png",
+          "exists": true,
+          "sha256": "a26e97cde807eba759053f3cb050a8cb88900d1b47e68f0def485b9a57d5387d"
+        }
+      ]
+    },
+    {
+      "key": "KAN-87",
+      "result": "\u9650\u5b9a\u6761\u4ef6\u3067\u672a\u518d\u73fe\u30fb\u65e2\u5b58\u4fee\u6b63\u3068\u6574\u5408",
+      "remainingConditions": [
+        "\u539fCachyOS/Niri/Hyprland/MangoWM",
+        "\u7269\u7406\u5165\u529b\u30fbhardware GPU/monitor"
+      ],
+      "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2767",
+      "newPr": null,
+      "jiraCommentId": "10289",
+      "evidence": [
+        {
+          "path": "visual-29285.json",
+          "exists": true,
+          "sha256": "ccd037c7d10da735d6a14cea43b9d18062757c565468516cb3ed865fd840acb2"
+        },
+        {
+          "path": "visual-29289.json",
+          "exists": true,
+          "sha256": "9927e32111bed7f03a579dbf2d433fc91ebd1798fa9784fd7e828a81fd151df1"
+        },
+        {
+          "path": "KAN-87/zen-0.png",
+          "exists": true,
+          "sha256": "67e3a2283742897311ffe792c3bfd54f1dc79f4b11a958d6835d11e75ff3b811"
+        },
+        {
+          "path": "KAN-87/zen-1.png",
+          "exists": true,
+          "sha256": "a13ac25e9a47b8fe0b0f1f120f432adcdb3bea8f0b711cd694a6e1a81f608043"
+        },
+        {
+          "path": "visual-29297.json",
+          "exists": true,
+          "sha256": "f0073f19dcf1946b044d8c5d07079cf3c8ecfb9804a9adf58676a0acac0377d6"
+        },
+        {
+          "path": "qaLinuxKAN87/report.md",
+          "exists": true,
+          "sha256": "5d6c874c1ef338f6ef87b0c15ef3eba4b6ad0ecf5e830d65b7dd766c21cf3552"
+        },
+        {
+          "path": "qaLinuxKAN87/summary.json",
+          "exists": true,
+          "sha256": "89fd60711269364faaf3b36e0ee5264c26d851628dd7e7fb0c6a5fa1534957f8"
+        },
+        {
+          "path": "qaLinuxKAN87/29655-paint.json",
+          "exists": true,
+          "sha256": "cb34846bf0b178ef48c60511b0c30900ca45804309fb3706612a019907d182ba"
+        },
+        {
+          "path": "qaLinuxKAN87/29655-pixels.json",
+          "exists": true,
+          "sha256": "99ecdeb4103d79956f229d930c4599c58ea28d80f7527e8508a04cb0c6ecd6ca"
+        },
+        {
+          "path": "qaLinuxKAN87/theme/frame.png",
+          "exists": true,
+          "sha256": "3e7510af686517addc2b615e546571e00065a0489c10ee53ff1b7fda6735d8c5"
+        },
+        {
+          "path": "qaLinuxKAN87/screenshots/29655-image-red-simultaneous.png",
+          "exists": true,
+          "sha256": "01c0cba5afb2462e91fbf7f622af47c6a68819c9367e61d0d9a63768c49e2945"
+        },
+        {
+          "path": "qaLinuxKAN87/signed/report.md",
+          "exists": true,
+          "sha256": "3f8d293eaa3c4d0b158474f8ccdc040c6a24b977d53ea1e96ac64729a90d8671"
+        },
+        {
+          "path": "qaLinuxKAN87/signed/summary.json",
+          "exists": true,
+          "sha256": "26ffcb9d259ac35228840bd476e447915a5684d32939b208bff4a749c75de05d"
+        },
+        {
+          "path": "qaLinuxKAN87/signed/29701-paint.json",
+          "exists": true,
+          "sha256": "64c3b2b88ae7ae57b06ba6282275a30ecf420af33a6906d3cb52986d36d21508"
+        },
+        {
+          "path": "qaLinuxKAN87/signed/29701-pixels.json",
+          "exists": true,
+          "sha256": "bc8e7a54a4a734f38d74d99eaef38a0402933a9ef97c64039c63a170ecd23a3f"
+        }
+      ]
+    },
+    {
+      "key": "KAN-93",
+      "result": "\u9650\u5b9a\u6761\u4ef6\u3067\u672a\u518d\u73fe",
+      "remainingConditions": [
+        "KDE Neon/\u5b9ftheme\u30fbaccent\u30fbfont\u6761\u4ef6",
+        "\u5143\u724812.17.1/Firefox154+Lepton"
+      ],
+      "existingPr": null,
+      "newPr": null,
+      "jiraCommentId": "10290",
+      "evidence": [
+        {
+          "path": "visual-29289.json",
+          "exists": true,
+          "sha256": "9927e32111bed7f03a579dbf2d433fc91ebd1798fa9784fd7e828a81fd151df1"
+        },
+        {
+          "path": "visual-29295.json",
+          "exists": true,
+          "sha256": "162d40d35bb451e3e3d2bf4476714a0c3b6975d4e70ee9905363c13830c89497"
+        },
+        {
+          "path": "KAN-93/chrome-0.png",
+          "exists": true,
+          "sha256": "ffba98617f446a1a032dd67db31a31b0c910d4eb5afaee076d970fe852d5fc64"
+        },
+        {
+          "path": "KAN-93/Firefox-chrome-0.png",
+          "exists": true,
+          "sha256": "48c8257edee72be770ce48ebe46aeaf74c758e06e439826522155c5edb2e27c4"
+        },
+        {
+          "path": "visual-29297.json",
+          "exists": true,
+          "sha256": "f0073f19dcf1946b044d8c5d07079cf3c8ecfb9804a9adf58676a0acac0377d6"
+        }
+      ]
+    },
+    {
+      "key": "KAN-98",
+      "result": "\u5b9f\u518d\u73fe\u30fb\u72ec\u7acb\u3057\u305f2\u6b20\u9665\u3092\u9650\u5b9a\u4fee\u6b63Draft",
+      "remainingConditions": [
+        "Arch/Sway/Wayland/\u7269\u7406\u5165\u529b/DPI",
+        "\u516c\u5f0fdefaults\u540c\u4e00\u6027/\u6b63\u5f0f\u914d\u5e03\u5f62\u5f0f\uff08\u7f72\u540d\u7121\u52b9\u5316pref\u5de5\u7a0b\u7701\u7565\uff09"
+      ],
+      "existingPr": null,
+      "newPr": "https://github.com/Floorp-Projects/Floorp/pull/3031",
+      "jiraCommentId": "10291",
+      "evidence": [
+        {
+          "path": "gesture-29301.json",
+          "exists": true,
+          "sha256": "641e19c3051a1c36bcd72a9c72024ccce6e93ca56ccd66abd247221ad38ff9ff"
+        },
+        {
+          "path": "gesture-29314.json",
+          "exists": true,
+          "sha256": "11b4231f407df190b5cea0ca4aab9c11ae3531d830bec348c44180fcaf2e443a"
+        },
+        {
+          "path": "source-29312.json",
+          "exists": true,
+          "sha256": "6d0b5522643a2cc3bd091ab4cdfbeda364b573071b7d0be6c373d5848fc1d989"
+        },
+        {
+          "path": "source-29313.json",
+          "exists": true,
+          "sha256": "a3732a3421d531e827bd38dd1304f0913a2699d5ef63cf406d8500e774d0d317"
+        },
+        {
+          "path": "KAN-98/product-patch.json",
+          "exists": true,
+          "sha256": "83aba9d853ff3f755bb62052ceb7389c3a15e0538e6c843e44677df43240c6e5"
+        },
+        {
+          "path": "KAN-98/rightdown-followup.md",
+          "exists": true,
+          "sha256": "336eee04d42714998f50d4d534421588c0a8095db4645d101bfd94279eb67b14"
+        },
+        {
+          "path": "KAN-98/rightdown-29321.json",
+          "exists": true,
+          "sha256": "10508d3535d1e2c128d1dc679558f9d436e9a212447fa262633812c3548f926b"
+        },
+        {
+          "path": "KAN-98/rightdown-replay-29322.json",
+          "exists": true,
+          "sha256": "87e25379205fda5574d2ef3571cac4ef0cbd7d3ba9ed06fec90f68e9a30edfef"
+        },
+        {
+          "path": "KAN-98/sparse-fix-report.md",
+          "exists": true,
+          "sha256": "851eb6006ae8581133d13f97dc98c2b088d2cf1092f1cba5fcf5016b3fea989f"
+        },
+        {
+          "path": "KAN-98/sparse-product-29333.json",
+          "exists": true,
+          "sha256": "6d76feff8a6afacfd18373db07f3348295db2dbc509e17fecca02b9ff0cc508b"
+        },
+        {
+          "path": "KAN-98/sparse-product-29335.json",
+          "exists": true,
+          "sha256": "a7469dd0c11e336cb7c72b1d1def16f2b41aa05f6026dca580519e0c045b2515"
+        },
+        {
+          "path": "KAN-98/sparse-tests-original-29332.json",
+          "exists": true,
+          "sha256": "47915d44dce985b2e4714998f6b084cb12f87a90cbdb52787da20e2332250ca6"
+        },
+        {
+          "path": "KAN-98/sparse-tests-patched-29336.json",
+          "exists": true,
+          "sha256": "aa5ba5c55010690577869a2a4f5096d3dba52c8a4f22c22bc8cf274a5315c32b"
+        },
+        {
+          "path": "ci/summary.json",
+          "exists": true,
+          "sha256": "cef140344f8971aee59c3a7125ef30a2f96fb986c0fcae7f3e4c97c953ba4f38"
+        },
+        {
+          "path": "KAN-98/combination-report.md",
+          "exists": true,
+          "sha256": "1d114013008f463a44d7b1a326c4bedaa9d489c53cc808cb8fef444e7ce9a2b9"
+        },
+        {
+          "path": "KAN-98/combination-29508.json",
+          "exists": true,
+          "sha256": "a572a733ac188cf0f8f1780187a7e68534fd5fd0eca2f40abdeecf5aa7733ced"
+        },
+        {
+          "path": "KAN-98/combination-29510.json",
+          "exists": true,
+          "sha256": "f931c1e34ae3c0510112a2311f4787f3e0c861cac646b97c49cee7e19f2634cc"
+        },
+        {
+          "path": "KAN-98/combination-source-baseline-29507.json",
+          "exists": true,
+          "sha256": "3466f76d2a154ee4e11938703ccb835ff9f8de8b9be7b61446d13787121ccfc9"
+        },
+        {
+          "path": "KAN-98/combination-source-patched-29506.json",
+          "exists": true,
+          "sha256": "3dcac20b39db21e07313b9d0b87578b0c340bc2ef0a629e10c05703b27ba0041"
+        },
+        {
+          "path": "full-product/3031-3034/report.md",
+          "exists": true,
+          "sha256": "7205416329e43289ffc487834d8b5b52a770b0f9cd9a914b53e01e4564983ea6"
+        },
+        {
+          "path": "full-product/3031-3034/production-assets.json",
+          "exists": true,
+          "sha256": "8f701a9a2c7b11416cd7f5f1b6dadf7893704a2ea7411c5c51b0df5cae68b942"
+        },
+        {
+          "path": "full-product/3031-3034/returning-29721.json",
+          "exists": true,
+          "sha256": "088e300bfaffce7ecfa00b8f68d2d60157eb74a986b2247f99c2d9bf76e1b490"
+        },
+        {
+          "path": "full-product/shared/ci-input-manifest.json",
+          "exists": true,
+          "sha256": "57e8c917ec1daa99c4fe19a99ac6a19a3af0c23c13d4774a8e5fc6838df77c30"
+        },
+        {
+          "path": "full-product/3031-3034/summary.json",
+          "exists": true,
+          "sha256": "5adfdd521e7a9bec224d2e22ef6a24fd69197a906f8c9ba01bd09cca84a7008e"
+        },
+        {
+          "path": "full-product/3031-3034/reproduce.sh",
+          "exists": true,
+          "sha256": "958868e33c75cb6d65ce23799a4a03df726244e118d6daf5b8d62c87ff1e6978"
+        },
+        {
+          "path": "full-product/xpt-generation/report.md",
+          "exists": true,
+          "sha256": "2566b936efd5d8252b2181e77b12375c49ca873a09aa1680a2943825ee1a5108"
+        },
+        {
+          "path": "full-product/xpt-generation/strict-results.json",
+          "exists": true,
+          "sha256": "8aa6b921ff98f7a83c34088f73682f26bff79db6e477f263ae412b08dea971f8"
+        },
+        {
+          "path": "full-product/xpt-generation/inputs.json",
+          "exists": true,
+          "sha256": "5f293a3a0e7df93346b4888b0b0cf4f515e14f150705864569b9f227f4887ad6"
+        },
+        {
+          "path": "full-product/xpt-generation/outputs.json",
+          "exists": true,
+          "sha256": "3c460ca3df47560be53bf4650f06d6593194a0a7e52c16adf050b7416a2c2fb1"
+        },
+        {
+          "path": "full-product/xpt-generation/dependencies.json",
+          "exists": true,
+          "sha256": "4568477deda9358929976350984a92920e41091bd4dc48c1a6aa93eec3deabe9"
+        },
+        {
+          "path": "full-product/xpt-generation/combined-module-comparison.json",
+          "exists": true,
+          "sha256": "b74203875c1edaad16be5477b20c920a2ae1aecdd264283b3884a908ff4b3010"
+        }
+      ]
+    }
+  ]
+}

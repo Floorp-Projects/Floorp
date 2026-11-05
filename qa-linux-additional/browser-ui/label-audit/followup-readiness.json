@@ -1,0 +1,27 @@
+{
+  "browserLaunched": false,
+  "availablePaths": {
+    "/workspace/.floorp-cloud/sysroot/usr/bin/Xvfb": true,
+    "/workspace/.floorp-cloud/sysroot/usr/bin/xdotool": true,
+    "/workspace/qa-linux-additional/browser-ui/KAN-30/deps/root/usr/bin/openbox": true,
+    "/workspace/qa-linux-22/browser-ui/products/floorp/floorp": true,
+    "/workspace/qa-linux-22/browser-ui/products/firefox/firefox": true,
+    "/workspace/qa-linux-22/browser-ui/sysroot/usr/bin/flatpak": true
+  },
+  "flatpakActiveDeploymentMetadataPresent": false,
+  "flatpakConclusion": "binary and partial app directory do not prove runnable deployed app; original package tests not ready from this probe alone",
+  "recommendedOneFollowup": {
+    "key": "KAN-5",
+    "condition": "direct individual stack-proxy OS drag/drop into an already existing window",
+    "why": "Published coverage used native adoption for existing-window path; new-window OS drag only. Actual Openbox/native focus infrastructure now exists without package installation. Direct UI route can differ from adoption API.",
+    "scope": "after package, one official product/fresh profile/two windows; synthetic OS XTest with source/target/window ownership and tab URL/title/count validation; optional ordinary-tab positive control",
+    "limits": "success cannot remove needs-physical-drag/needs-fedora-desktop/needs-flatpak; no original distro or physical input equivalence",
+    "runNow": false
+  },
+  "alternativeLowCost": {
+    "key": "KAN-40",
+    "condition": "ordinary tab versus whole stack OS middle-click controls",
+    "reason": "Selected/nonselected stack member paths already covered, comparator classes remain explicitly unmet",
+    "limits": "does not satisfy physical-middleclick/original Fedora"
+  }
+}

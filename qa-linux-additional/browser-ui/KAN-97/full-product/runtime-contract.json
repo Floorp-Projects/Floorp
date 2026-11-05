@@ -1,0 +1,15 @@
+{
+  "floorpHead": "d6bd2fc457774f55ab1f36a2b01c941f908f1ab0",
+  "mainObserved": "29a3eb23145da90706d8a94441373278521cc737",
+  "runtimeHead": "8965ffc346d426ccdf919bd18585e4d4a0c21654",
+  "lockRuntimeHead": "8965ffc346d426ccdf919bd18585e4d4a0c21654",
+  "runtimeRelease": "daily-1179",
+  "runtimeBuildId": "20261103153232",
+  "lockBuildId": "20261103153232",
+  "manifestArtifactId": 13274392012,
+  "manifestDigest": "sha256:2b6a1b20190dc7016957ca25f72f8e83f267de51458b515153fd209bb90d9138",
+  "runtimeArtifactId": 13272530069,
+  "runtimeArtifactDigest": "sha256:ed5a4f97ee7bf42c817f3146d5a843e095710dcc3be25fae0af0bf47274b739a",
+  "lockedReleaseTarSha256": "cb9b01283d5ce3167f4ba046ee7b39ae9d98a692e1beba73bd9f85f460157772",
+  "noContractOverride": true
+}

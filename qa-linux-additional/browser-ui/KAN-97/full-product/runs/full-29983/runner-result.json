@@ -1,0 +1,22 @@
+{
+  "executable": "/workspace/kan97-runtime/full-package/floorp/floorp",
+  "greExpected": "/workspace/kan97-runtime/full-package/floorp",
+  "sourceSha": "d6bd2fc457774f55ab1f36a2b01c941f908f1ab0",
+  "productUnmodified": true,
+  "normalProductExit": null,
+  "ownedProcesses": {
+    "display": 100654,
+    "wm": 100667,
+    "browser": 100670
+  },
+  "profile": "/workspace/kan97-runtime/full-product/full-29983/profile",
+  "runStatus": "runner interrupted; original process wait unavailable",
+  "normalQuitRequestedRecovery": true,
+  "dbusProductExit": null,
+  "processStatusAfterQuit": {
+    "100670": "100670 (dbus-run-sessio) Z 1 100670 100670 0 -1 4227340 335 328323 0 39 0 0 4366 1138 20 0 1 0 2520020 0 0 18446744073709551615 0 0 0 0 0 0 0 0 0 1 0 0 17 2 0 0 0 0 0 0 0 0 0 0 0 0 0\n",
+    "100672": "absent"
+  },
+  "changedPayloadEntries": [],
+  "addedRuntimeEntries": []
+}

@@ -1,0 +1,11 @@
+{
+  "mode": "proposal-only",
+  "operations": [],
+  "reason": "No currently present environment label has its exact original condition satisfied by published evidence. Prior satisfied generic labels were removed already.",
+  "jiraWritesPerformed": false,
+  "browsersLaunched": false,
+  "sourceChanges": false,
+  "branchChanges": false,
+  "KAN54Parent": "KAN-52",
+  "KAN54SprintChange": false
+}

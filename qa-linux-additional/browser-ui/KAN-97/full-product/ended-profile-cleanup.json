@@ -1,0 +1,20 @@
+[
+  {
+    "port": 29981,
+    "profile": "/workspace/kan97-runtime/full-product/full-29981/profile",
+    "activeReferences": [],
+    "normalExit": true,
+    "payloadUnchanged": true,
+    "removedBytes": 31110339,
+    "scope": "ended owned profile only; products/builds untouched"
+  },
+  {
+    "port": 29982,
+    "profile": "/workspace/kan97-runtime/full-product/full-29982/profile",
+    "activeReferences": [],
+    "normalExit": true,
+    "payloadUnchanged": true,
+    "removedBytes": 30365127,
+    "scope": "ended owned profile only; products/builds untouched"
+  }
+]

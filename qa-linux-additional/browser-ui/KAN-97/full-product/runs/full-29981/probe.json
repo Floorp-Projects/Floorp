@@ -1,0 +1,3028 @@
+{
+  "productKind": "full-product",
+  "input": "OS XTest synthetic mouse/keyboard; W3C settings toggle; not physical hardware",
+  "observations": [
+    {
+      "target": "root",
+      "mode": "gesture",
+      "direction": "top",
+      "before": {
+        "root": {
+          "top": 1800,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "body",
+        "visible": "visible",
+        "frame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 17,
+          "focusedTop": 17,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 17179869185,
+              "uri": "http://127.0.0.1:29971/child?token=matrix-root&auto=0",
+              "children": []
+            }
+          ]
+        }
+      },
+      "heldLabel": [
+        {
+          "id": "mouse-gesture-global-styles",
+          "text": "\n            #mouse-gesture-display-container {\n                position: fixed;\n                top: 0;\n                left: 0;\n                widt"
+        },
+        {
+          "id": "mouse-gesture-display-container",
+          "text": "Scroll to Top"
+        }
+      ],
+      "after": {
+        "root": {
+          "top": 0,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "body",
+        "visible": "visible",
+        "frame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 17,
+          "focusedTop": 17,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 17179869185,
+              "uri": "http://127.0.0.1:29971/child?token=matrix-root&auto=0",
+              "children": []
+            }
+          ]
+        }
+      },
+      "events": {
+        "events": [
+          {
+            "type": "mousedown",
+            "trusted": true,
+            "x": 1168,
+            "y": 373,
+            "prevented": false
+          },
+          {
+            "type": "mouseup",
+            "trusted": true,
+            "x": 1168,
+            "y": 229,
+            "prevented": true
+          },
+          {
+            "type": "contextmenu",
+            "trusted": true,
+            "x": 1168,
+            "y": 229,
+            "prevented": true
+          }
+        ],
+        "popups": 0
+      },
+      "expectedTarget": "root",
+      "expectedTop": 0,
+      "actualTop": 0,
+      "atExpectedEndpoint": true,
+      "nonTargetsUnchanged": true,
+      "actualFocusedContextQualified": true,
+      "expectedFocusedContext": 17
+    },
+    {
+      "target": "root",
+      "mode": "gesture",
+      "direction": "bottom",
+      "before": {
+        "root": {
+          "top": 1800,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "body",
+        "visible": "visible",
+        "frame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 17,
+          "focusedTop": 17,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 17179869185,
+              "uri": "http://127.0.0.1:29971/child?token=matrix-root&auto=0",
+              "children": []
+            }
+          ]
+        }
+      },
+      "heldLabel": [
+        {
+          "id": "mouse-gesture-global-styles",
+          "text": "\n            #mouse-gesture-display-container {\n                position: fixed;\n                top: 0;\n                left: 0;\n                widt"
+        },
+        {
+          "id": "mouse-gesture-display-container",
+          "text": "Scroll to Bottom"
+        }
+      ],
+      "after": {
+        "root": {
+          "top": 7083,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "body",
+        "visible": "visible",
+        "frame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 17,
+          "focusedTop": 17,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 17179869185,
+              "uri": "http://127.0.0.1:29971/child?token=matrix-root&auto=0",
+              "children": []
+            }
+          ]
+        }
+      },
+      "events": {
+        "events": [
+          {
+            "type": "mousedown",
+            "trusted": true,
+            "x": 1168,
+            "y": 373,
+            "prevented": false
+          },
+          {
+            "type": "mouseup",
+            "trusted": true,
+            "x": 1168,
+            "y": 517,
+            "prevented": true
+          },
+          {
+            "type": "contextmenu",
+            "trusted": true,
+            "x": 1168,
+            "y": 517,
+            "prevented": true
+          }
+        ],
+        "popups": 0
+      },
+      "expectedTarget": "root",
+      "expectedTop": 7083,
+      "actualTop": 7083,
+      "atExpectedEndpoint": true,
+      "nonTargetsUnchanged": true,
+      "actualFocusedContextQualified": true,
+      "expectedFocusedContext": 17
+    },
+    {
+      "target": "root",
+      "mode": "keyboard",
+      "direction": "top",
+      "before": {
+        "root": {
+          "top": 1800,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "body",
+        "visible": "visible",
+        "frame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 17,
+          "focusedTop": 17,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 17179869185,
+              "uri": "http://127.0.0.1:29971/child?token=matrix-root&auto=0",
+              "children": []
+            }
+          ]
+        }
+      },
+      "heldLabel": [],
+      "after": {
+        "root": {
+          "top": 0,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "body",
+        "visible": "visible",
+        "frame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 17,
+          "focusedTop": 17,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 17179869185,
+              "uri": "http://127.0.0.1:29971/child?token=matrix-root&auto=0",
+              "children": []
+            }
+          ]
+        }
+      },
+      "events": {
+        "events": [],
+        "popups": 0
+      },
+      "expectedTarget": "root",
+      "expectedTop": 0,
+      "actualTop": 0,
+      "atExpectedEndpoint": true,
+      "nonTargetsUnchanged": true,
+      "actualFocusedContextQualified": true,
+      "expectedFocusedContext": 17
+    },
+    {
+      "target": "root",
+      "mode": "keyboard",
+      "direction": "bottom",
+      "before": {
+        "root": {
+          "top": 1800,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "body",
+        "visible": "visible",
+        "frame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 17,
+          "focusedTop": 17,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 17179869185,
+              "uri": "http://127.0.0.1:29971/child?token=matrix-root&auto=0",
+              "children": []
+            }
+          ]
+        }
+      },
+      "heldLabel": [],
+      "after": {
+        "root": {
+          "top": 7083,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "body",
+        "visible": "visible",
+        "frame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 17,
+          "focusedTop": 17,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 17179869185,
+              "uri": "http://127.0.0.1:29971/child?token=matrix-root&auto=0",
+              "children": []
+            }
+          ]
+        }
+      },
+      "events": {
+        "events": [],
+        "popups": 0
+      },
+      "expectedTarget": "root",
+      "expectedTop": 7083,
+      "actualTop": 7083,
+      "atExpectedEndpoint": true,
+      "nonTargetsUnchanged": true,
+      "actualFocusedContextQualified": true,
+      "expectedFocusedContext": 17
+    },
+    {
+      "target": "overflow",
+      "mode": "gesture",
+      "direction": "top",
+      "before": {
+        "root": {
+          "top": 1800,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "box",
+        "visible": "visible",
+        "frame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 17,
+          "focusedTop": 17,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 17179869186,
+              "uri": "http://127.0.0.1:29971/child?token=matrix-overflow&auto=0",
+              "children": []
+            }
+          ]
+        }
+      },
+      "heldLabel": [
+        {
+          "id": "mouse-gesture-global-styles",
+          "text": "\n            #mouse-gesture-display-container {\n                position: fixed;\n                top: 0;\n                left: 0;\n                widt"
+        },
+        {
+          "id": "mouse-gesture-display-container",
+          "text": "Scroll to Top"
+        }
+      ],
+      "after": {
+        "root": {
+          "top": 1800,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 0,
+          "max": 5650
+        },
+        "active": "box",
+        "visible": "visible",
+        "frame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 17,
+          "focusedTop": 17,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 17179869186,
+              "uri": "http://127.0.0.1:29971/child?token=matrix-overflow&auto=0",
+              "children": []
+            }
+          ]
+        }
+      },
+      "events": {
+        "events": [
+          {
+            "type": "mousedown",
+            "trusted": true,
+            "x": 230,
+            "y": 343,
+            "prevented": false
+          },
+          {
+            "type": "mouseup",
+            "trusted": true,
+            "x": 230,
+            "y": 199,
+            "prevented": true
+          },
+          {
+            "type": "contextmenu",
+            "trusted": true,
+            "x": 230,
+            "y": 199,
+            "prevented": true
+          }
+        ],
+        "popups": 0
+      },
+      "expectedTarget": "overflow",
+      "expectedTop": 0,
+      "actualTop": 0,
+      "atExpectedEndpoint": true,
+      "nonTargetsUnchanged": true,
+      "actualFocusedContextQualified": true,
+      "expectedFocusedContext": 17
+    },
+    {
+      "target": "overflow",
+      "mode": "gesture",
+      "direction": "bottom",
+      "before": {
+        "root": {
+          "top": 1800,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "box",
+        "visible": "visible",
+        "frame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 17,
+          "focusedTop": 17,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 17179869186,
+              "uri": "http://127.0.0.1:29971/child?token=matrix-overflow&auto=0",
+              "children": []
+            }
+          ]
+        }
+      },
+      "heldLabel": [
+        {
+          "id": "mouse-gesture-global-styles",
+          "text": "\n            #mouse-gesture-display-container {\n                position: fixed;\n                top: 0;\n                left: 0;\n                widt"
+        },
+        {
+          "id": "mouse-gesture-display-container",
+          "text": "Scroll to Bottom"
+        }
+      ],
+      "after": {
+        "root": {
+          "top": 1800,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 5650,
+          "max": 5650
+        },
+        "active": "box",
+        "visible": "visible",
+        "frame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 17,
+          "focusedTop": 17,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 17179869186,
+              "uri": "http://127.0.0.1:29971/child?token=matrix-overflow&auto=0",
+              "children": []
+            }
+          ]
+        }
+      },
+      "events": {
+        "events": [
+          {
+            "type": "mousedown",
+            "trusted": true,
+            "x": 230,
+            "y": 343,
+            "prevented": false
+          },
+          {
+            "type": "mouseup",
+            "trusted": true,
+            "x": 230,
+            "y": 487,
+            "prevented": true
+          },
+          {
+            "type": "contextmenu",
+            "trusted": true,
+            "x": 230,
+            "y": 487,
+            "prevented": true
+          }
+        ],
+        "popups": 0
+      },
+      "expectedTarget": "overflow",
+      "expectedTop": 5650,
+      "actualTop": 5650,
+      "atExpectedEndpoint": true,
+      "nonTargetsUnchanged": true,
+      "actualFocusedContextQualified": true,
+      "expectedFocusedContext": 17
+    },
+    {
+      "target": "overflow",
+      "mode": "keyboard",
+      "direction": "top",
+      "before": {
+        "root": {
+          "top": 1800,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "box",
+        "visible": "visible",
+        "frame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 17,
+          "focusedTop": 17,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 17179869186,
+              "uri": "http://127.0.0.1:29971/child?token=matrix-overflow&auto=0",
+              "children": []
+            }
+          ]
+        }
+      },
+      "heldLabel": [],
+      "after": {
+        "root": {
+          "top": 1800,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 0,
+          "max": 5650
+        },
+        "active": "box",
+        "visible": "visible",
+        "frame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 17,
+          "focusedTop": 17,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 17179869186,
+              "uri": "http://127.0.0.1:29971/child?token=matrix-overflow&auto=0",
+              "children": []
+            }
+          ]
+        }
+      },
+      "events": {
+        "events": [],
+        "popups": 0
+      },
+      "expectedTarget": "overflow",
+      "expectedTop": 0,
+      "actualTop": 0,
+      "atExpectedEndpoint": true,
+      "nonTargetsUnchanged": true,
+      "actualFocusedContextQualified": true,
+      "expectedFocusedContext": 17
+    },
+    {
+      "target": "overflow",
+      "mode": "keyboard",
+      "direction": "bottom",
+      "before": {
+        "root": {
+          "top": 1800,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "box",
+        "visible": "visible",
+        "frame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 17,
+          "focusedTop": 17,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 17179869186,
+              "uri": "http://127.0.0.1:29971/child?token=matrix-overflow&auto=0",
+              "children": []
+            }
+          ]
+        }
+      },
+      "heldLabel": [],
+      "after": {
+        "root": {
+          "top": 1800,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 5650,
+          "max": 5650
+        },
+        "active": "box",
+        "visible": "visible",
+        "frame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 17,
+          "focusedTop": 17,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 17179869186,
+              "uri": "http://127.0.0.1:29971/child?token=matrix-overflow&auto=0",
+              "children": []
+            }
+          ]
+        }
+      },
+      "events": {
+        "events": [],
+        "popups": 0
+      },
+      "expectedTarget": "overflow",
+      "expectedTop": 5650,
+      "actualTop": 5650,
+      "atExpectedEndpoint": true,
+      "nonTargetsUnchanged": true,
+      "actualFocusedContextQualified": true,
+      "expectedFocusedContext": 17
+    },
+    {
+      "target": "same-frame",
+      "mode": "gesture",
+      "direction": "top",
+      "before": {
+        "root": {
+          "top": 1800,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "frame",
+        "visible": "visible",
+        "frame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 17179869187,
+          "focusedTop": 17,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 17179869187,
+              "uri": "http://127.0.0.1:29971/child?token=matrix-same-frame&auto=0",
+              "children": []
+            }
+          ]
+        }
+      },
+      "heldLabel": [
+        {
+          "id": "mouse-gesture-global-styles",
+          "text": "\n            #mouse-gesture-display-container {\n                position: fixed;\n                top: 0;\n                left: 0;\n                widt"
+        },
+        {
+          "id": "mouse-gesture-display-container",
+          "text": "Scroll to Top"
+        }
+      ],
+      "after": {
+        "root": {
+          "top": 1800,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "frame",
+        "visible": "visible",
+        "frame": {
+          "top": 0,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 17179869187,
+          "focusedTop": 17,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 17179869187,
+              "uri": "http://127.0.0.1:29971/child?token=matrix-same-frame&auto=0",
+              "children": []
+            }
+          ]
+        }
+      },
+      "events": {
+        "events": [
+          {
+            "type": "mousedown",
+            "trusted": true,
+            "x": 660,
+            "y": 343,
+            "prevented": false
+          },
+          {
+            "type": "mouseup",
+            "trusted": true,
+            "x": 660,
+            "y": 199,
+            "prevented": true
+          },
+          {
+            "type": "contextmenu",
+            "trusted": true,
+            "x": 660,
+            "y": 199,
+            "prevented": true
+          }
+        ],
+        "popups": 0
+      },
+      "expectedTarget": "frame",
+      "expectedTop": 0,
+      "actualTop": 0,
+      "atExpectedEndpoint": true,
+      "nonTargetsUnchanged": true,
+      "actualFocusedContextQualified": true,
+      "expectedFocusedContext": 17179869187
+    },
+    {
+      "target": "same-frame",
+      "mode": "gesture",
+      "direction": "bottom",
+      "before": {
+        "root": {
+          "top": 1800,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "frame",
+        "visible": "visible",
+        "frame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 17179869187,
+          "focusedTop": 17,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 17179869187,
+              "uri": "http://127.0.0.1:29971/child?token=matrix-same-frame&auto=0",
+              "children": []
+            }
+          ]
+        }
+      },
+      "heldLabel": [
+        {
+          "id": "mouse-gesture-global-styles",
+          "text": "\n            #mouse-gesture-display-container {\n                position: fixed;\n                top: 0;\n                left: 0;\n                widt"
+        },
+        {
+          "id": "mouse-gesture-display-container",
+          "text": "Scroll to Bottom"
+        }
+      ],
+      "after": {
+        "root": {
+          "top": 1800,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "frame",
+        "visible": "visible",
+        "frame": {
+          "top": 6650,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 17179869187,
+          "focusedTop": 17,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 17179869187,
+              "uri": "http://127.0.0.1:29971/child?token=matrix-same-frame&auto=0",
+              "children": []
+            }
+          ]
+        }
+      },
+      "events": {
+        "events": [
+          {
+            "type": "mousedown",
+            "trusted": true,
+            "x": 660,
+            "y": 343,
+            "prevented": false
+          },
+          {
+            "type": "mouseup",
+            "trusted": true,
+            "x": 660,
+            "y": 487,
+            "prevented": true
+          },
+          {
+            "type": "contextmenu",
+            "trusted": true,
+            "x": 660,
+            "y": 487,
+            "prevented": true
+          }
+        ],
+        "popups": 0
+      },
+      "expectedTarget": "frame",
+      "expectedTop": 6650,
+      "actualTop": 6650,
+      "atExpectedEndpoint": true,
+      "nonTargetsUnchanged": true,
+      "actualFocusedContextQualified": true,
+      "expectedFocusedContext": 17179869187
+    },
+    {
+      "target": "same-frame",
+      "mode": "keyboard",
+      "direction": "top",
+      "before": {
+        "root": {
+          "top": 1800,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "frame",
+        "visible": "visible",
+        "frame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 17179869187,
+          "focusedTop": 17,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 17179869187,
+              "uri": "http://127.0.0.1:29971/child?token=matrix-same-frame&auto=0",
+              "children": []
+            }
+          ]
+        }
+      },
+      "heldLabel": [],
+      "after": {
+        "root": {
+          "top": 1800,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "frame",
+        "visible": "visible",
+        "frame": {
+          "top": 0,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 17179869187,
+          "focusedTop": 17,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 17179869187,
+              "uri": "http://127.0.0.1:29971/child?token=matrix-same-frame&auto=0",
+              "children": []
+            }
+          ]
+        }
+      },
+      "events": {
+        "events": [],
+        "popups": 0
+      },
+      "expectedTarget": "frame",
+      "expectedTop": 0,
+      "actualTop": 0,
+      "atExpectedEndpoint": true,
+      "nonTargetsUnchanged": true,
+      "actualFocusedContextQualified": true,
+      "expectedFocusedContext": 17179869187
+    },
+    {
+      "target": "same-frame",
+      "mode": "keyboard",
+      "direction": "bottom",
+      "before": {
+        "root": {
+          "top": 1800,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "frame",
+        "visible": "visible",
+        "frame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 17179869187,
+          "focusedTop": 17,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 17179869187,
+              "uri": "http://127.0.0.1:29971/child?token=matrix-same-frame&auto=0",
+              "children": []
+            }
+          ]
+        }
+      },
+      "heldLabel": [],
+      "after": {
+        "root": {
+          "top": 1800,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "frame",
+        "visible": "visible",
+        "frame": {
+          "top": 6650,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 17179869187,
+          "focusedTop": 17,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 17179869187,
+              "uri": "http://127.0.0.1:29971/child?token=matrix-same-frame&auto=0",
+              "children": []
+            }
+          ]
+        }
+      },
+      "events": {
+        "events": [],
+        "popups": 0
+      },
+      "expectedTarget": "frame",
+      "expectedTop": 6650,
+      "actualTop": 6650,
+      "atExpectedEndpoint": true,
+      "nonTargetsUnchanged": true,
+      "actualFocusedContextQualified": true,
+      "expectedFocusedContext": 17179869187
+    },
+    {
+      "target": "cross-frame",
+      "mode": "gesture",
+      "direction": "top",
+      "before": {
+        "root": {
+          "top": 1800,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "frame",
+        "visible": "visible",
+        "frame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 17179869188,
+          "focusedTop": 17,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 17179869188,
+              "uri": "http://localhost:29972/child?token=matrix-cross-frame&auto=0",
+              "children": []
+            }
+          ]
+        }
+      },
+      "heldLabel": [
+        {
+          "id": "mouse-gesture-global-styles",
+          "text": "\n            #mouse-gesture-display-container {\n                position: fixed;\n                top: 0;\n                left: 0;\n                widt"
+        },
+        {
+          "id": "mouse-gesture-display-container",
+          "text": "Scroll to Top"
+        }
+      ],
+      "after": {
+        "root": {
+          "top": 1800,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "frame",
+        "visible": "visible",
+        "frame": {
+          "top": 0,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 17179869188,
+          "focusedTop": 17,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 17179869188,
+              "uri": "http://localhost:29972/child?token=matrix-cross-frame&auto=0",
+              "children": []
+            }
+          ]
+        }
+      },
+      "events": {
+        "events": [
+          {
+            "type": "mousedown",
+            "trusted": true,
+            "x": 660,
+            "y": 343,
+            "prevented": false
+          },
+          {
+            "type": "mouseup",
+            "trusted": true,
+            "x": 660,
+            "y": 199,
+            "prevented": true
+          },
+          {
+            "type": "contextmenu",
+            "trusted": true,
+            "x": 660,
+            "y": 199,
+            "prevented": true
+          }
+        ],
+        "popups": 0
+      },
+      "expectedTarget": "frame",
+      "expectedTop": 0,
+      "actualTop": 0,
+      "atExpectedEndpoint": true,
+      "nonTargetsUnchanged": true,
+      "actualFocusedContextQualified": true,
+      "expectedFocusedContext": 17179869188
+    },
+    {
+      "target": "cross-frame",
+      "mode": "gesture",
+      "direction": "bottom",
+      "before": {
+        "root": {
+          "top": 1800,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "frame",
+        "visible": "visible",
+        "frame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 17179869188,
+          "focusedTop": 17,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 17179869188,
+              "uri": "http://localhost:29972/child?token=matrix-cross-frame&auto=0",
+              "children": []
+            }
+          ]
+        }
+      },
+      "heldLabel": [
+        {
+          "id": "mouse-gesture-global-styles",
+          "text": "\n            #mouse-gesture-display-container {\n                position: fixed;\n                top: 0;\n                left: 0;\n                widt"
+        },
+        {
+          "id": "mouse-gesture-display-container",
+          "text": "Scroll to Bottom"
+        }
+      ],
+      "after": {
+        "root": {
+          "top": 1800,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "frame",
+        "visible": "visible",
+        "frame": {
+          "top": 6650,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 17179869188,
+          "focusedTop": 17,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 17179869188,
+              "uri": "http://localhost:29972/child?token=matrix-cross-frame&auto=0",
+              "children": []
+            }
+          ]
+        }
+      },
+      "events": {
+        "events": [
+          {
+            "type": "mousedown",
+            "trusted": true,
+            "x": 660,
+            "y": 343,
+            "prevented": false
+          },
+          {
+            "type": "mouseup",
+            "trusted": true,
+            "x": 660,
+            "y": 487,
+            "prevented": true
+          },
+          {
+            "type": "contextmenu",
+            "trusted": true,
+            "x": 660,
+            "y": 487,
+            "prevented": true
+          }
+        ],
+        "popups": 0
+      },
+      "expectedTarget": "frame",
+      "expectedTop": 6650,
+      "actualTop": 6650,
+      "atExpectedEndpoint": true,
+      "nonTargetsUnchanged": true,
+      "actualFocusedContextQualified": true,
+      "expectedFocusedContext": 17179869188
+    },
+    {
+      "target": "cross-frame",
+      "mode": "keyboard",
+      "direction": "top",
+      "before": {
+        "root": {
+          "top": 1800,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "frame",
+        "visible": "visible",
+        "frame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 17179869188,
+          "focusedTop": 17,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 17179869188,
+              "uri": "http://localhost:29972/child?token=matrix-cross-frame&auto=0",
+              "children": []
+            }
+          ]
+        }
+      },
+      "heldLabel": [],
+      "after": {
+        "root": {
+          "top": 1800,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "frame",
+        "visible": "visible",
+        "frame": {
+          "top": 0,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 17179869188,
+          "focusedTop": 17,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 17179869188,
+              "uri": "http://localhost:29972/child?token=matrix-cross-frame&auto=0",
+              "children": []
+            }
+          ]
+        }
+      },
+      "events": {
+        "events": [],
+        "popups": 0
+      },
+      "expectedTarget": "frame",
+      "expectedTop": 0,
+      "actualTop": 0,
+      "atExpectedEndpoint": true,
+      "nonTargetsUnchanged": true,
+      "actualFocusedContextQualified": true,
+      "expectedFocusedContext": 17179869188
+    },
+    {
+      "target": "cross-frame",
+      "mode": "keyboard",
+      "direction": "bottom",
+      "before": {
+        "root": {
+          "top": 1800,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "frame",
+        "visible": "visible",
+        "frame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 17179869188,
+          "focusedTop": 17,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 17179869188,
+              "uri": "http://localhost:29972/child?token=matrix-cross-frame&auto=0",
+              "children": []
+            }
+          ]
+        }
+      },
+      "heldLabel": [],
+      "after": {
+        "root": {
+          "top": 1800,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "frame",
+        "visible": "visible",
+        "frame": {
+          "top": 6650,
+          "max": 6650,
+          "active": "body"
+        },
+        "focus": {
+          "contentContext": 17179869188,
+          "focusedTop": 17,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 17179869188,
+              "uri": "http://localhost:29972/child?token=matrix-cross-frame&auto=0",
+              "children": []
+            }
+          ]
+        }
+      },
+      "events": {
+        "events": [],
+        "popups": 0
+      },
+      "expectedTarget": "frame",
+      "expectedTop": 6650,
+      "actualTop": 6650,
+      "atExpectedEndpoint": true,
+      "nonTargetsUnchanged": true,
+      "actualFocusedContextQualified": true,
+      "expectedFocusedContext": 17179869188
+    },
+    {
+      "target": "nested-same-frame",
+      "mode": "gesture",
+      "direction": "top",
+      "before": {
+        "root": {
+          "top": 1800,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "frame",
+        "visible": "visible",
+        "frame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "body"
+        },
+        "ancestorFrame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "leaf"
+        },
+        "focus": {
+          "contentContext": 17179869190,
+          "focusedTop": 17,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 17179869189,
+              "uri": "http://127.0.0.1:29971/middle?token=matrix-nested-same-frame&cross=0&auto=0",
+              "children": [
+                {
+                  "id": 17179869190,
+                  "uri": "http://127.0.0.1:29971/child?token=matrix-nested-same-frame&role=leaf&auto=0"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "heldLabel": [
+        {
+          "id": "mouse-gesture-global-styles",
+          "text": "\n            #mouse-gesture-display-container {\n                position: fixed;\n                top: 0;\n                left: 0;\n                widt"
+        },
+        {
+          "id": "mouse-gesture-display-container",
+          "text": "Scroll to Top"
+        }
+      ],
+      "after": {
+        "root": {
+          "top": 1800,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "frame",
+        "visible": "visible",
+        "frame": {
+          "top": 0,
+          "max": 6650,
+          "active": "body"
+        },
+        "ancestorFrame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "leaf"
+        },
+        "focus": {
+          "contentContext": 17179869190,
+          "focusedTop": 17,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 17179869189,
+              "uri": "http://127.0.0.1:29971/middle?token=matrix-nested-same-frame&cross=0&auto=0",
+              "children": [
+                {
+                  "id": 17179869190,
+                  "uri": "http://127.0.0.1:29971/child?token=matrix-nested-same-frame&role=leaf&auto=0"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "events": {
+        "events": [
+          {
+            "type": "mousedown",
+            "trusted": true,
+            "x": 660,
+            "y": 343,
+            "prevented": false
+          },
+          {
+            "type": "mouseup",
+            "trusted": true,
+            "x": 660,
+            "y": 199,
+            "prevented": true
+          },
+          {
+            "type": "contextmenu",
+            "trusted": true,
+            "x": 660,
+            "y": 199,
+            "prevented": true
+          }
+        ],
+        "popups": 0
+      },
+      "expectedTarget": "frame",
+      "expectedTop": 0,
+      "actualTop": 0,
+      "atExpectedEndpoint": true,
+      "nonTargetsUnchanged": true,
+      "actualFocusedContextQualified": true,
+      "expectedFocusedContext": 17179869190
+    },
+    {
+      "target": "nested-same-frame",
+      "mode": "gesture",
+      "direction": "bottom",
+      "before": {
+        "root": {
+          "top": 1800,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "frame",
+        "visible": "visible",
+        "frame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "body"
+        },
+        "ancestorFrame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "leaf"
+        },
+        "focus": {
+          "contentContext": 17179869190,
+          "focusedTop": 17,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 17179869189,
+              "uri": "http://127.0.0.1:29971/middle?token=matrix-nested-same-frame&cross=0&auto=0",
+              "children": [
+                {
+                  "id": 17179869190,
+                  "uri": "http://127.0.0.1:29971/child?token=matrix-nested-same-frame&role=leaf&auto=0"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "heldLabel": [
+        {
+          "id": "mouse-gesture-global-styles",
+          "text": "\n            #mouse-gesture-display-container {\n                position: fixed;\n                top: 0;\n                left: 0;\n                widt"
+        },
+        {
+          "id": "mouse-gesture-display-container",
+          "text": "Scroll to Bottom"
+        }
+      ],
+      "after": {
+        "root": {
+          "top": 1800,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "frame",
+        "visible": "visible",
+        "frame": {
+          "top": 6650,
+          "max": 6650,
+          "active": "body"
+        },
+        "ancestorFrame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "leaf"
+        },
+        "focus": {
+          "contentContext": 17179869190,
+          "focusedTop": 17,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 17179869189,
+              "uri": "http://127.0.0.1:29971/middle?token=matrix-nested-same-frame&cross=0&auto=0",
+              "children": [
+                {
+                  "id": 17179869190,
+                  "uri": "http://127.0.0.1:29971/child?token=matrix-nested-same-frame&role=leaf&auto=0"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "events": {
+        "events": [
+          {
+            "type": "mousedown",
+            "trusted": true,
+            "x": 660,
+            "y": 343,
+            "prevented": false
+          },
+          {
+            "type": "mouseup",
+            "trusted": true,
+            "x": 660,
+            "y": 487,
+            "prevented": true
+          },
+          {
+            "type": "contextmenu",
+            "trusted": true,
+            "x": 660,
+            "y": 487,
+            "prevented": true
+          }
+        ],
+        "popups": 0
+      },
+      "expectedTarget": "frame",
+      "expectedTop": 6650,
+      "actualTop": 6650,
+      "atExpectedEndpoint": true,
+      "nonTargetsUnchanged": true,
+      "actualFocusedContextQualified": true,
+      "expectedFocusedContext": 17179869190
+    },
+    {
+      "target": "nested-same-frame",
+      "mode": "keyboard",
+      "direction": "top",
+      "before": {
+        "root": {
+          "top": 1800,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "frame",
+        "visible": "visible",
+        "frame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "body"
+        },
+        "ancestorFrame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "leaf"
+        },
+        "focus": {
+          "contentContext": 17179869190,
+          "focusedTop": 17,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 17179869189,
+              "uri": "http://127.0.0.1:29971/middle?token=matrix-nested-same-frame&cross=0&auto=0",
+              "children": [
+                {
+                  "id": 17179869190,
+                  "uri": "http://127.0.0.1:29971/child?token=matrix-nested-same-frame&role=leaf&auto=0"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "heldLabel": [],
+      "after": {
+        "root": {
+          "top": 1800,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "frame",
+        "visible": "visible",
+        "frame": {
+          "top": 0,
+          "max": 6650,
+          "active": "body"
+        },
+        "ancestorFrame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "leaf"
+        },
+        "focus": {
+          "contentContext": 17179869190,
+          "focusedTop": 17,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 17179869189,
+              "uri": "http://127.0.0.1:29971/middle?token=matrix-nested-same-frame&cross=0&auto=0",
+              "children": [
+                {
+                  "id": 17179869190,
+                  "uri": "http://127.0.0.1:29971/child?token=matrix-nested-same-frame&role=leaf&auto=0"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "events": {
+        "events": [],
+        "popups": 0
+      },
+      "expectedTarget": "frame",
+      "expectedTop": 0,
+      "actualTop": 0,
+      "atExpectedEndpoint": true,
+      "nonTargetsUnchanged": true,
+      "actualFocusedContextQualified": true,
+      "expectedFocusedContext": 17179869190
+    },
+    {
+      "target": "nested-same-frame",
+      "mode": "keyboard",
+      "direction": "bottom",
+      "before": {
+        "root": {
+          "top": 1800,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "frame",
+        "visible": "visible",
+        "frame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "body"
+        },
+        "ancestorFrame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "leaf"
+        },
+        "focus": {
+          "contentContext": 17179869190,
+          "focusedTop": 17,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 17179869189,
+              "uri": "http://127.0.0.1:29971/middle?token=matrix-nested-same-frame&cross=0&auto=0",
+              "children": [
+                {
+                  "id": 17179869190,
+                  "uri": "http://127.0.0.1:29971/child?token=matrix-nested-same-frame&role=leaf&auto=0"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "heldLabel": [],
+      "after": {
+        "root": {
+          "top": 1800,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "frame",
+        "visible": "visible",
+        "frame": {
+          "top": 6650,
+          "max": 6650,
+          "active": "body"
+        },
+        "ancestorFrame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "leaf"
+        },
+        "focus": {
+          "contentContext": 17179869190,
+          "focusedTop": 17,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 17179869189,
+              "uri": "http://127.0.0.1:29971/middle?token=matrix-nested-same-frame&cross=0&auto=0",
+              "children": [
+                {
+                  "id": 17179869190,
+                  "uri": "http://127.0.0.1:29971/child?token=matrix-nested-same-frame&role=leaf&auto=0"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "events": {
+        "events": [],
+        "popups": 0
+      },
+      "expectedTarget": "frame",
+      "expectedTop": 6650,
+      "actualTop": 6650,
+      "atExpectedEndpoint": true,
+      "nonTargetsUnchanged": true,
+      "actualFocusedContextQualified": true,
+      "expectedFocusedContext": 17179869190
+    },
+    {
+      "target": "nested-cross-frame",
+      "mode": "gesture",
+      "direction": "top",
+      "before": {
+        "root": {
+          "top": 1800,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "frame",
+        "visible": "visible",
+        "frame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "body"
+        },
+        "ancestorFrame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "leaf"
+        },
+        "focus": {
+          "contentContext": 17179869192,
+          "focusedTop": 17,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 17179869191,
+              "uri": "http://127.0.0.1:29971/middle?token=matrix-nested-cross-frame&cross=1&auto=0",
+              "children": [
+                {
+                  "id": 17179869192,
+                  "uri": "http://localhost:29972/child?token=matrix-nested-cross-frame&role=leaf&auto=0"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "heldLabel": [
+        {
+          "id": "mouse-gesture-global-styles",
+          "text": "\n            #mouse-gesture-display-container {\n                position: fixed;\n                top: 0;\n                left: 0;\n                widt"
+        },
+        {
+          "id": "mouse-gesture-display-container",
+          "text": "Scroll to Top"
+        }
+      ],
+      "after": {
+        "root": {
+          "top": 1800,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "frame",
+        "visible": "visible",
+        "frame": {
+          "top": 0,
+          "max": 6650,
+          "active": "body"
+        },
+        "ancestorFrame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "leaf"
+        },
+        "focus": {
+          "contentContext": 17179869192,
+          "focusedTop": 17,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 17179869191,
+              "uri": "http://127.0.0.1:29971/middle?token=matrix-nested-cross-frame&cross=1&auto=0",
+              "children": [
+                {
+                  "id": 17179869192,
+                  "uri": "http://localhost:29972/child?token=matrix-nested-cross-frame&role=leaf&auto=0"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "events": {
+        "events": [
+          {
+            "type": "mousedown",
+            "trusted": true,
+            "x": 660,
+            "y": 343,
+            "prevented": false
+          },
+          {
+            "type": "mouseup",
+            "trusted": true,
+            "x": 660,
+            "y": 199,
+            "prevented": true
+          },
+          {
+            "type": "contextmenu",
+            "trusted": true,
+            "x": 660,
+            "y": 199,
+            "prevented": true
+          }
+        ],
+        "popups": 0
+      },
+      "expectedTarget": "frame",
+      "expectedTop": 0,
+      "actualTop": 0,
+      "atExpectedEndpoint": true,
+      "nonTargetsUnchanged": true,
+      "actualFocusedContextQualified": true,
+      "expectedFocusedContext": 17179869192
+    },
+    {
+      "target": "nested-cross-frame",
+      "mode": "gesture",
+      "direction": "bottom",
+      "before": {
+        "root": {
+          "top": 1800,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "frame",
+        "visible": "visible",
+        "frame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "body"
+        },
+        "ancestorFrame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "leaf"
+        },
+        "focus": {
+          "contentContext": 17179869192,
+          "focusedTop": 17,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 17179869191,
+              "uri": "http://127.0.0.1:29971/middle?token=matrix-nested-cross-frame&cross=1&auto=0",
+              "children": [
+                {
+                  "id": 17179869192,
+                  "uri": "http://localhost:29972/child?token=matrix-nested-cross-frame&role=leaf&auto=0"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "heldLabel": [
+        {
+          "id": "mouse-gesture-global-styles",
+          "text": "\n            #mouse-gesture-display-container {\n                position: fixed;\n                top: 0;\n                left: 0;\n                widt"
+        },
+        {
+          "id": "mouse-gesture-display-container",
+          "text": "Scroll to Bottom"
+        }
+      ],
+      "after": {
+        "root": {
+          "top": 1800,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "frame",
+        "visible": "visible",
+        "frame": {
+          "top": 6650,
+          "max": 6650,
+          "active": "body"
+        },
+        "ancestorFrame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "leaf"
+        },
+        "focus": {
+          "contentContext": 17179869192,
+          "focusedTop": 17,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 17179869191,
+              "uri": "http://127.0.0.1:29971/middle?token=matrix-nested-cross-frame&cross=1&auto=0",
+              "children": [
+                {
+                  "id": 17179869192,
+                  "uri": "http://localhost:29972/child?token=matrix-nested-cross-frame&role=leaf&auto=0"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "events": {
+        "events": [
+          {
+            "type": "mousedown",
+            "trusted": true,
+            "x": 660,
+            "y": 343,
+            "prevented": false
+          },
+          {
+            "type": "mouseup",
+            "trusted": true,
+            "x": 660,
+            "y": 487,
+            "prevented": true
+          },
+          {
+            "type": "contextmenu",
+            "trusted": true,
+            "x": 660,
+            "y": 487,
+            "prevented": true
+          }
+        ],
+        "popups": 0
+      },
+      "expectedTarget": "frame",
+      "expectedTop": 6650,
+      "actualTop": 6650,
+      "atExpectedEndpoint": true,
+      "nonTargetsUnchanged": true,
+      "actualFocusedContextQualified": true,
+      "expectedFocusedContext": 17179869192
+    },
+    {
+      "target": "nested-cross-frame",
+      "mode": "keyboard",
+      "direction": "top",
+      "before": {
+        "root": {
+          "top": 1800,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "frame",
+        "visible": "visible",
+        "frame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "body"
+        },
+        "ancestorFrame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "leaf"
+        },
+        "focus": {
+          "contentContext": 17179869192,
+          "focusedTop": 17,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 17179869191,
+              "uri": "http://127.0.0.1:29971/middle?token=matrix-nested-cross-frame&cross=1&auto=0",
+              "children": [
+                {
+                  "id": 17179869192,
+                  "uri": "http://localhost:29972/child?token=matrix-nested-cross-frame&role=leaf&auto=0"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "heldLabel": [],
+      "after": {
+        "root": {
+          "top": 1800,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "frame",
+        "visible": "visible",
+        "frame": {
+          "top": 0,
+          "max": 6650,
+          "active": "body"
+        },
+        "ancestorFrame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "leaf"
+        },
+        "focus": {
+          "contentContext": 17179869192,
+          "focusedTop": 17,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 17179869191,
+              "uri": "http://127.0.0.1:29971/middle?token=matrix-nested-cross-frame&cross=1&auto=0",
+              "children": [
+                {
+                  "id": 17179869192,
+                  "uri": "http://localhost:29972/child?token=matrix-nested-cross-frame&role=leaf&auto=0"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "events": {
+        "events": [],
+        "popups": 0
+      },
+      "expectedTarget": "frame",
+      "expectedTop": 0,
+      "actualTop": 0,
+      "atExpectedEndpoint": true,
+      "nonTargetsUnchanged": true,
+      "actualFocusedContextQualified": true,
+      "expectedFocusedContext": 17179869192
+    },
+    {
+      "target": "nested-cross-frame",
+      "mode": "keyboard",
+      "direction": "bottom",
+      "before": {
+        "root": {
+          "top": 1800,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "frame",
+        "visible": "visible",
+        "frame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "body"
+        },
+        "ancestorFrame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "leaf"
+        },
+        "focus": {
+          "contentContext": 17179869192,
+          "focusedTop": 17,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 17179869191,
+              "uri": "http://127.0.0.1:29971/middle?token=matrix-nested-cross-frame&cross=1&auto=0",
+              "children": [
+                {
+                  "id": 17179869192,
+                  "uri": "http://localhost:29972/child?token=matrix-nested-cross-frame&role=leaf&auto=0"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "heldLabel": [],
+      "after": {
+        "root": {
+          "top": 1800,
+          "max": 7083
+        },
+        "overflow": {
+          "top": 1800,
+          "max": 5650
+        },
+        "active": "frame",
+        "visible": "visible",
+        "frame": {
+          "top": 6650,
+          "max": 6650,
+          "active": "body"
+        },
+        "ancestorFrame": {
+          "top": 1800,
+          "max": 6650,
+          "active": "leaf"
+        },
+        "focus": {
+          "contentContext": 17179869192,
+          "focusedTop": 17,
+          "context": null,
+          "top": 17,
+          "frames": [
+            {
+              "id": 17179869191,
+              "uri": "http://127.0.0.1:29971/middle?token=matrix-nested-cross-frame&cross=1&auto=0",
+              "children": [
+                {
+                  "id": 17179869192,
+                  "uri": "http://localhost:29972/child?token=matrix-nested-cross-frame&role=leaf&auto=0"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "events": {
+        "events": [],
+        "popups": 0
+      },
+      "expectedTarget": "frame",
+      "expectedTop": 6650,
+      "actualTop": 6650,
+      "atExpectedEndpoint": true,
+      "nonTargetsUnchanged": true,
+      "actualFocusedContextQualified": true,
+      "expectedFocusedContext": 17179869192
+    }
+  ],
+  "sourceSha": "d6bd2fc457774f55ab1f36a2b01c941f908f1ab0",
+  "candidateKind": "unmodified extracted full Linux product; no diagnostic asset replacement",
+  "metadata": {
+    "name": "Floorp",
+    "version": "159.0.1",
+    "build": "20261103153232",
+    "platformBuild": "20261103153232",
+    "platformVersion": "159.0.1",
+    "signature": false,
+    "signatureUserSet": false,
+    "sandbox": 6,
+    "focusTestMode": false,
+    "documentFocused": true
+  },
+  "resourceLocation": {
+    "gre": "/workspace/kan97-runtime/full-package/floorp",
+    "executable": "/workspace/kan97-runtime/full-package/floorp/floorp",
+    "module": "jar:file:///workspace/kan97-runtime/full-package/floorp/omni.ja!/chrome/noraneko/nora-content/assets/js/gestures.js"
+  },
+  "liveRuntimeGate": "passed native App+Platform BuildID 20261103153232; packaged INI recorded separately",
+  "settingsBefore": {
+    "html": "<input aria-label=\"Enable mouse gestures\" data-setting=\"mouse-gesture-enabled\" role=\"switch\" class=\"_switchInput_1a3lw_98\" type=\"checkbox\">",
+    "x": 1178,
+    "y": 377.20001220703125,
+    "checked": false,
+    "aria": null
+  },
+  "config": {
+    "enabled": true,
+    "config": {
+      "enabled": false,
+      "rockerGesturesEnabled": true,
+      "wheelGesturesEnabled": true,
+      "sensitivity": 40,
+      "showTrail": true,
+      "showLabel": true,
+      "trailColor": "#37ff00",
+      "trailWidth": 6,
+      "contextMenu": {
+        "minDistance": 5,
+        "preventionTimeout": 200
+      },
+      "actions": [
+        {
+          "pattern": [
+            "left"
+          ],
+          "action": "gecko-back"
+        },
+        {
+          "pattern": [
+            "right"
+          ],
+          "action": "gecko-forward"
+        },
+        {
+          "pattern": [
+            "up",
+            "down"
+          ],
+          "action": "gecko-reload"
+        },
+        {
+          "pattern": [
+            "down",
+            "right"
+          ],
+          "action": "gecko-close-tab"
+        },
+        {
+          "pattern": [
+            "down",
+            "up"
+          ],
+          "action": "gecko-open-new-tab"
+        },
+        {
+          "pattern": [
+            "up"
+          ],
+          "action": "gecko-scroll-to-top"
+        },
+        {
+          "pattern": [
+            "down"
+          ],
+          "action": "gecko-scroll-to-bottom"
+        },
+        {
+          "pattern": [
+            "left",
+            "down"
+          ],
+          "action": "gecko-scroll-up"
+        },
+        {
+          "pattern": [
+            "right",
+            "down"
+          ],
+          "action": "gecko-scroll-down"
+        }
+      ],
+      "rockerActions": {
+        "leftRight": "gecko-forward",
+        "rightLeft": "gecko-back"
+      },
+      "wheelActions": {
+        "scrollUp": "gecko-show-previous-tab",
+        "scrollDown": "gecko-show-next-tab"
+      }
+    }
+  },
+  "error": "RuntimeError(\"fixture did not initialize middle positions: AssertionError(('stale fixture measurement', {'nonce': 11, 'serverNow': 24691.506523247, 'values': {'g97-29981-windowB-5': {}}, 'fresh': False}))\")",
+  "traceback": "Traceback (most recent call last):\n  File \"/workspace/qa-linux-additional/browser-ui/KAN-97/full-product/probe.py\", line 73, in <module>\n    out['guards']=run_guards(m,xd,R)\n                  ^^^^^^^^^^^^^^^^^^\n  File \"/workspace/qa-linux-additional/browser-ui/KAN-97/full-product/guards.py\", line 68, in run\n    tw=load('windowB');framefocus('B');js('let w=window.qa97WindowB;w.__qaGuardPopups=0;w.__qaGuardEvents=[];w.addEventListener(\"popupshown\",e=>{if(e.target.id===\"contentAreaContextMenu\")w.__qaGuardPopups++},true);for(let n of [\"mousedown\",\"mouseup\",\"contextmenu\"])w.addEventListener(n,e=>{let r={type:n,trusted:e.isTrusted,x:e.clientX,y:e.clientY};w.__qaGuardEvents.push(r);w.setTimeout(()=>r.prevented=e.defaultPrevented,0)},true)')\n       ^^^^^^^^^^^^^^^\n  File \"/workspace/qa-linux-additional/browser-ui/KAN-97/full-product/guards.py\", line 22, in load\n    t=token(name);url='http://127.0.0.1:29971/cross?token='+t+'&auto=1';xd('key','ctrl+l');xd('type','--clearmodifiers','--delay','1',url);xd('key','Return');waitpage(t);return t\n                                                                                                                                                              ^^^^^^^^^^^\n  File \"/workspace/qa-linux-additional/browser-ui/KAN-97/full-product/guards.py\", line 17, in waitpage\n    raise RuntimeError('fixture did not initialize middle positions: '+str(error))\nRuntimeError: fixture did not initialize middle positions: AssertionError(('stale fixture measurement', {'nonce': 11, 'serverNow': 24691.506523247, 'values': {'g97-29981-windowB-5': {}}, 'fresh': False}))\n",
+  "guards": {
+    "measurement": "passive controlled HTTP page/iframe scroll reports, sampled by SSE; no background tab switching to read state",
+    "cases": [
+      {
+        "kind": "native-selected-tab-gesture",
+        "direction": "top",
+        "input": "normal OS tab header selection and OS gesture",
+        "focusBefore": {
+          "activeWindow": null,
+          "focusedContext": 17179869194,
+          "focusedTop": 17,
+          "A": {
+            "id": null,
+            "focused": true,
+            "selected": 17,
+            "uri": "http://127.0.0.1:29971/cross?token=g97-29981-tabA-top-3&auto=1",
+            "tabs": [
+              {
+                "id": 17,
+                "uri": "http://127.0.0.1:29971/cross?token=g97-29981-tabA-top-3&auto=1"
+              },
+              {
+                "id": 19,
+                "uri": "http://127.0.0.1:29971/cross?token=g97-29981-tabB-2&auto=1"
+              }
+            ]
+          },
+          "B": null
+        },
+        "focusAfter": {
+          "activeWindow": null,
+          "focusedContext": 17179869194,
+          "focusedTop": 17,
+          "A": {
+            "id": null,
+            "focused": true,
+            "selected": 17,
+            "uri": "http://127.0.0.1:29971/cross?token=g97-29981-tabA-top-3&auto=1",
+            "tabs": [
+              {
+                "id": 17,
+                "uri": "http://127.0.0.1:29971/cross?token=g97-29981-tabA-top-3&auto=1"
+              },
+              {
+                "id": 19,
+                "uri": "http://127.0.0.1:29971/cross?token=g97-29981-tabB-2&auto=1"
+              }
+            ]
+          },
+          "B": null
+        },
+        "heldLabel": "Scroll to Top",
+        "before": {
+          "nonce": 4,
+          "serverNow": 24636.999958461,
+          "values": {
+            "g97-29981-tabA-top-3": {
+              "root": {
+                "top": 1800,
+                "max": 7083,
+                "overflow": {
+                  "top": 1800,
+                  "max": 5650
+                },
+                "active": "frame",
+                "documentFocused": true,
+                "visibility": "visible",
+                "nonce": 4,
+                "seenAt": 24636.983369034
+              },
+              "frame": {
+                "top": 1800,
+                "max": 6650,
+                "overflow": null,
+                "active": "body",
+                "documentFocused": true,
+                "visibility": "visible",
+                "nonce": 4,
+                "seenAt": 24636.98167913
+              }
+            },
+            "g97-29981-tabB-2": {
+              "root": {
+                "top": 1800,
+                "max": 7083,
+                "overflow": {
+                  "top": 1800,
+                  "max": 5650
+                },
+                "active": "frame",
+                "documentFocused": false,
+                "visibility": "hidden",
+                "nonce": 4,
+                "seenAt": 24636.987118143
+              },
+              "frame": {
+                "top": 1800,
+                "max": 6650,
+                "overflow": null,
+                "active": "body",
+                "documentFocused": false,
+                "visibility": "hidden",
+                "nonce": 4,
+                "seenAt": 24636.986237097
+              }
+            }
+          },
+          "fresh": true
+        },
+        "after": {
+          "nonce": 5,
+          "serverNow": 24653.705630125,
+          "values": {
+            "g97-29981-tabA-top-3": {
+              "root": {
+                "top": 1800,
+                "max": 7083,
+                "overflow": {
+                  "top": 1800,
+                  "max": 5650
+                },
+                "active": "frame",
+                "documentFocused": true,
+                "visibility": "visible",
+                "nonce": 5,
+                "seenAt": 24653.684106504
+              },
+              "frame": {
+                "top": 0,
+                "max": 6650,
+                "overflow": null,
+                "active": "body",
+                "documentFocused": true,
+                "visibility": "visible",
+                "nonce": 5,
+                "seenAt": 24653.6864853
+              }
+            },
+            "g97-29981-tabB-2": {
+              "root": {
+                "top": 1800,
+                "max": 7083,
+                "overflow": {
+                  "top": 1800,
+                  "max": 5650
+                },
+                "active": "frame",
+                "documentFocused": false,
+                "visibility": "hidden",
+                "nonce": 5,
+                "seenAt": 24653.683792414
+              },
+              "frame": {
+                "top": 1800,
+                "max": 6650,
+                "overflow": null,
+                "active": "body",
+                "documentFocused": false,
+                "visibility": "hidden",
+                "nonce": 5,
+                "seenAt": 24653.684919446
+              }
+            }
+          },
+          "fresh": true
+        },
+        "check": {
+          "atExpectedEndpoint": true,
+          "expected": 0,
+          "actual": 0,
+          "nonTargetsUnchanged": true,
+          "beforePositions": {
+            "g97-29981-tabA-top-3:root": 1800,
+            "g97-29981-tabA-top-3:overflow": 1800,
+            "g97-29981-tabA-top-3:frame": 1800,
+            "g97-29981-tabB-2:root": 1800,
+            "g97-29981-tabB-2:overflow": 1800,
+            "g97-29981-tabB-2:frame": 1800
+          },
+          "afterPositions": {
+            "g97-29981-tabA-top-3:root": 1800,
+            "g97-29981-tabA-top-3:overflow": 1800,
+            "g97-29981-tabA-top-3:frame": 0,
+            "g97-29981-tabB-2:root": 1800,
+            "g97-29981-tabB-2:overflow": 1800,
+            "g97-29981-tabB-2:frame": 1800
+          }
+        },
+        "popups": 0,
+        "events": [
+          {
+            "type": "mousedown",
+            "trusted": true,
+            "x": 655,
+            "y": 338,
+            "prevented": false
+          },
+          {
+            "type": "mouseup",
+            "trusted": true,
+            "x": 655,
+            "y": 194,
+            "prevented": true
+          },
+          {
+            "type": "contextmenu",
+            "trusted": true,
+            "x": 655,
+            "y": 194,
+            "prevented": true
+          }
+        ]
+      },
+      {
+        "kind": "native-selected-tab-gesture",
+        "direction": "bottom",
+        "input": "normal OS tab header selection and OS gesture",
+        "focusBefore": {
+          "activeWindow": null,
+          "focusedContext": 17179869195,
+          "focusedTop": 17,
+          "A": {
+            "id": null,
+            "focused": true,
+            "selected": 17,
+            "uri": "http://127.0.0.1:29971/cross?token=g97-29981-tabA-bottom-4&auto=1",
+            "tabs": [
+              {
+                "id": 17,
+                "uri": "http://127.0.0.1:29971/cross?token=g97-29981-tabA-bottom-4&auto=1"
+              },
+              {
+                "id": 19,
+                "uri": "http://127.0.0.1:29971/cross?token=g97-29981-tabB-2&auto=1"
+              }
+            ]
+          },
+          "B": null
+        },
+        "focusAfter": {
+          "activeWindow": null,
+          "focusedContext": 17179869195,
+          "focusedTop": 17,
+          "A": {
+            "id": null,
+            "focused": true,
+            "selected": 17,
+            "uri": "http://127.0.0.1:29971/cross?token=g97-29981-tabA-bottom-4&auto=1",
+            "tabs": [
+              {
+                "id": 17,
+                "uri": "http://127.0.0.1:29971/cross?token=g97-29981-tabA-bottom-4&auto=1"
+              },
+              {
+                "id": 19,
+                "uri": "http://127.0.0.1:29971/cross?token=g97-29981-tabB-2&auto=1"
+              }
+            ]
+          },
+          "B": null
+        },
+        "heldLabel": "Scroll to Bottom",
+        "before": {
+          "nonce": 7,
+          "serverNow": 24656.092795469,
+          "values": {
+            "g97-29981-tabA-bottom-4": {
+              "root": {
+                "top": 1800,
+                "max": 7083,
+                "overflow": {
+                  "top": 1800,
+                  "max": 5650
+                },
+                "active": "frame",
+                "documentFocused": true,
+                "visibility": "visible",
+                "nonce": 7,
+                "seenAt": 24656.073463478
+              },
+              "frame": {
+                "top": 1800,
+                "max": 6650,
+                "overflow": null,
+                "active": "body",
+                "documentFocused": true,
+                "visibility": "visible",
+                "nonce": 7,
+                "seenAt": 24656.072919086
+              }
+            },
+            "g97-29981-tabB-2": {
+              "root": {
+                "top": 1800,
+                "max": 7083,
+                "overflow": {
+                  "top": 1800,
+                  "max": 5650
+                },
+                "active": "frame",
+                "documentFocused": false,
+                "visibility": "hidden",
+                "nonce": 7,
+                "seenAt": 24656.069581582
+              },
+              "frame": {
+                "top": 1800,
+                "max": 6650,
+                "overflow": null,
+                "active": "body",
+                "documentFocused": false,
+                "visibility": "hidden",
+                "nonce": 7,
+                "seenAt": 24656.072685656
+              }
+            }
+          },
+          "fresh": true
+        },
+        "after": {
+          "nonce": 8,
+          "serverNow": 24674.018267347,
+          "values": {
+            "g97-29981-tabA-bottom-4": {
+              "root": {
+                "top": 1800,
+                "max": 7083,
+                "overflow": {
+                  "top": 1800,
+                  "max": 5650
+                },
+                "active": "frame",
+                "documentFocused": true,
+                "visibility": "visible",
+                "nonce": 8,
+                "seenAt": 24674.007920101
+              },
+              "frame": {
+                "top": 6650,
+                "max": 6650,
+                "overflow": null,
+                "active": "body",
+                "documentFocused": true,
+                "visibility": "visible",
+                "nonce": 8,
+                "seenAt": 24674.007016974
+              }
+            },
+            "g97-29981-tabB-2": {
+              "root": {
+                "top": 1800,
+                "max": 7083,
+                "overflow": {
+                  "top": 1800,
+                  "max": 5650
+                },
+                "active": "frame",
+                "documentFocused": false,
+                "visibility": "hidden",
+                "nonce": 8,
+                "seenAt": 24674.004202546
+              },
+              "frame": {
+                "top": 1800,
+                "max": 6650,
+                "overflow": null,
+                "active": "body",
+                "documentFocused": false,
+                "visibility": "hidden",
+                "nonce": 8,
+                "seenAt": 24674.006555667
+              }
+            }
+          },
+          "fresh": true
+        },
+        "check": {
+          "atExpectedEndpoint": true,
+          "expected": 6650,
+          "actual": 6650,
+          "nonTargetsUnchanged": true,
+          "beforePositions": {
+            "g97-29981-tabA-bottom-4:root": 1800,
+            "g97-29981-tabA-bottom-4:overflow": 1800,
+            "g97-29981-tabA-bottom-4:frame": 1800,
+            "g97-29981-tabB-2:root": 1800,
+            "g97-29981-tabB-2:overflow": 1800,
+            "g97-29981-tabB-2:frame": 1800
+          },
+          "afterPositions": {
+            "g97-29981-tabA-bottom-4:root": 1800,
+            "g97-29981-tabA-bottom-4:overflow": 1800,
+            "g97-29981-tabA-bottom-4:frame": 6650,
+            "g97-29981-tabB-2:root": 1800,
+            "g97-29981-tabB-2:overflow": 1800,
+            "g97-29981-tabB-2:frame": 1800
+          }
+        },
+        "popups": 0,
+        "events": [
+          {
+            "type": "mousedown",
+            "trusted": true,
+            "x": 655,
+            "y": 338,
+            "prevented": false
+          },
+          {
+            "type": "mouseup",
+            "trusted": true,
+            "x": 655,
+            "y": 482,
+            "prevented": true
+          },
+          {
+            "type": "contextmenu",
+            "trusted": true,
+            "x": 655,
+            "y": 482,
+            "prevented": true
+          }
+        ]
+      }
+    ],
+    "sameWindowStaleFocusProbes": [
+      {
+        "direction": "top",
+        "afterNativeTabClick": {
+          "activeWindow": null,
+          "focusedContext": 17,
+          "focusedTop": 17,
+          "A": {
+            "id": null,
+            "focused": true,
+            "selected": 17,
+            "uri": "http://127.0.0.1:29971/cross?token=g97-29981-tabA-1&auto=1",
+            "tabs": [
+              {
+                "id": 17,
+                "uri": "http://127.0.0.1:29971/cross?token=g97-29981-tabA-1&auto=1"
+              },
+              {
+                "id": 19,
+                "uri": "http://127.0.0.1:29971/cross?token=g97-29981-tabB-2&auto=1"
+              }
+            ]
+          },
+          "B": null
+        },
+        "afterNativeUrlbarFocus": {
+          "activeWindow": null,
+          "focusedContext": 17,
+          "focusedTop": 17,
+          "A": {
+            "id": null,
+            "focused": true,
+            "selected": 17,
+            "uri": "http://127.0.0.1:29971/cross?token=g97-29981-tabA-1&auto=1",
+            "tabs": [
+              {
+                "id": 17,
+                "uri": "http://127.0.0.1:29971/cross?token=g97-29981-tabA-1&auto=1"
+              },
+              {
+                "id": 19,
+                "uri": "http://127.0.0.1:29971/cross?token=g97-29981-tabB-2&auto=1"
+              }
+            ]
+          },
+          "B": null
+        },
+        "foreignBackgroundFocusActuallyObserved": false
+      },
+      {
+        "direction": "bottom",
+        "afterNativeTabClick": {
+          "activeWindow": null,
+          "focusedContext": 17179869194,
+          "focusedTop": 17,
+          "A": {
+            "id": null,
+            "focused": true,
+            "selected": 17,
+            "uri": "http://127.0.0.1:29971/cross?token=g97-29981-tabA-top-3&auto=1",
+            "tabs": [
+              {
+                "id": 17,
+                "uri": "http://127.0.0.1:29971/cross?token=g97-29981-tabA-top-3&auto=1"
+              },
+              {
+                "id": 19,
+                "uri": "http://127.0.0.1:29971/cross?token=g97-29981-tabB-2&auto=1"
+              }
+            ]
+          },
+          "B": null
+        },
+        "afterNativeUrlbarFocus": {
+          "activeWindow": null,
+          "focusedContext": 17179869194,
+          "focusedTop": 17,
+          "A": {
+            "id": null,
+            "focused": true,
+            "selected": 17,
+            "uri": "http://127.0.0.1:29971/cross?token=g97-29981-tabA-top-3&auto=1",
+            "tabs": [
+              {
+                "id": 17,
+                "uri": "http://127.0.0.1:29971/cross?token=g97-29981-tabA-top-3&auto=1"
+              },
+              {
+                "id": 19,
+                "uri": "http://127.0.0.1:29971/cross?token=g97-29981-tabB-2&auto=1"
+              }
+            ]
+          },
+          "B": null
+        },
+        "foreignBackgroundFocusActuallyObserved": false
+      }
+    ],
+    "actionApiFixture": "unmodified production executeGestureAction imported in the existing window realm through a temporary resource: test module; real Window/BrowsingContext objects only",
+    "allRequiredPass": false,
+    "screenshotMethod": "actual X11 root capture without focus changes"
+  },
+  "normalQuitRequested": true
+}

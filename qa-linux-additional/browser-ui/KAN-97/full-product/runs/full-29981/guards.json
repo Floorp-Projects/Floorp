@@ -1,0 +1,526 @@
+{
+  "measurement": "passive controlled HTTP page/iframe scroll reports, sampled by SSE; no background tab switching to read state",
+  "cases": [
+    {
+      "kind": "native-selected-tab-gesture",
+      "direction": "top",
+      "input": "normal OS tab header selection and OS gesture",
+      "focusBefore": {
+        "activeWindow": null,
+        "focusedContext": 17179869194,
+        "focusedTop": 17,
+        "A": {
+          "id": null,
+          "focused": true,
+          "selected": 17,
+          "uri": "http://127.0.0.1:29971/cross?token=g97-29981-tabA-top-3&auto=1",
+          "tabs": [
+            {
+              "id": 17,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29981-tabA-top-3&auto=1"
+            },
+            {
+              "id": 19,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29981-tabB-2&auto=1"
+            }
+          ]
+        },
+        "B": null
+      },
+      "focusAfter": {
+        "activeWindow": null,
+        "focusedContext": 17179869194,
+        "focusedTop": 17,
+        "A": {
+          "id": null,
+          "focused": true,
+          "selected": 17,
+          "uri": "http://127.0.0.1:29971/cross?token=g97-29981-tabA-top-3&auto=1",
+          "tabs": [
+            {
+              "id": 17,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29981-tabA-top-3&auto=1"
+            },
+            {
+              "id": 19,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29981-tabB-2&auto=1"
+            }
+          ]
+        },
+        "B": null
+      },
+      "heldLabel": "Scroll to Top",
+      "before": {
+        "nonce": 4,
+        "serverNow": 24636.999958461,
+        "values": {
+          "g97-29981-tabA-top-3": {
+            "root": {
+              "top": 1800,
+              "max": 7083,
+              "overflow": {
+                "top": 1800,
+                "max": 5650
+              },
+              "active": "frame",
+              "documentFocused": true,
+              "visibility": "visible",
+              "nonce": 4,
+              "seenAt": 24636.983369034
+            },
+            "frame": {
+              "top": 1800,
+              "max": 6650,
+              "overflow": null,
+              "active": "body",
+              "documentFocused": true,
+              "visibility": "visible",
+              "nonce": 4,
+              "seenAt": 24636.98167913
+            }
+          },
+          "g97-29981-tabB-2": {
+            "root": {
+              "top": 1800,
+              "max": 7083,
+              "overflow": {
+                "top": 1800,
+                "max": 5650
+              },
+              "active": "frame",
+              "documentFocused": false,
+              "visibility": "hidden",
+              "nonce": 4,
+              "seenAt": 24636.987118143
+            },
+            "frame": {
+              "top": 1800,
+              "max": 6650,
+              "overflow": null,
+              "active": "body",
+              "documentFocused": false,
+              "visibility": "hidden",
+              "nonce": 4,
+              "seenAt": 24636.986237097
+            }
+          }
+        },
+        "fresh": true
+      },
+      "after": {
+        "nonce": 5,
+        "serverNow": 24653.705630125,
+        "values": {
+          "g97-29981-tabA-top-3": {
+            "root": {
+              "top": 1800,
+              "max": 7083,
+              "overflow": {
+                "top": 1800,
+                "max": 5650
+              },
+              "active": "frame",
+              "documentFocused": true,
+              "visibility": "visible",
+              "nonce": 5,
+              "seenAt": 24653.684106504
+            },
+            "frame": {
+              "top": 0,
+              "max": 6650,
+              "overflow": null,
+              "active": "body",
+              "documentFocused": true,
+              "visibility": "visible",
+              "nonce": 5,
+              "seenAt": 24653.6864853
+            }
+          },
+          "g97-29981-tabB-2": {
+            "root": {
+              "top": 1800,
+              "max": 7083,
+              "overflow": {
+                "top": 1800,
+                "max": 5650
+              },
+              "active": "frame",
+              "documentFocused": false,
+              "visibility": "hidden",
+              "nonce": 5,
+              "seenAt": 24653.683792414
+            },
+            "frame": {
+              "top": 1800,
+              "max": 6650,
+              "overflow": null,
+              "active": "body",
+              "documentFocused": false,
+              "visibility": "hidden",
+              "nonce": 5,
+              "seenAt": 24653.684919446
+            }
+          }
+        },
+        "fresh": true
+      },
+      "check": {
+        "atExpectedEndpoint": true,
+        "expected": 0,
+        "actual": 0,
+        "nonTargetsUnchanged": true,
+        "beforePositions": {
+          "g97-29981-tabA-top-3:root": 1800,
+          "g97-29981-tabA-top-3:overflow": 1800,
+          "g97-29981-tabA-top-3:frame": 1800,
+          "g97-29981-tabB-2:root": 1800,
+          "g97-29981-tabB-2:overflow": 1800,
+          "g97-29981-tabB-2:frame": 1800
+        },
+        "afterPositions": {
+          "g97-29981-tabA-top-3:root": 1800,
+          "g97-29981-tabA-top-3:overflow": 1800,
+          "g97-29981-tabA-top-3:frame": 0,
+          "g97-29981-tabB-2:root": 1800,
+          "g97-29981-tabB-2:overflow": 1800,
+          "g97-29981-tabB-2:frame": 1800
+        }
+      },
+      "popups": 0,
+      "events": [
+        {
+          "type": "mousedown",
+          "trusted": true,
+          "x": 655,
+          "y": 338,
+          "prevented": false
+        },
+        {
+          "type": "mouseup",
+          "trusted": true,
+          "x": 655,
+          "y": 194,
+          "prevented": true
+        },
+        {
+          "type": "contextmenu",
+          "trusted": true,
+          "x": 655,
+          "y": 194,
+          "prevented": true
+        }
+      ]
+    },
+    {
+      "kind": "native-selected-tab-gesture",
+      "direction": "bottom",
+      "input": "normal OS tab header selection and OS gesture",
+      "focusBefore": {
+        "activeWindow": null,
+        "focusedContext": 17179869195,
+        "focusedTop": 17,
+        "A": {
+          "id": null,
+          "focused": true,
+          "selected": 17,
+          "uri": "http://127.0.0.1:29971/cross?token=g97-29981-tabA-bottom-4&auto=1",
+          "tabs": [
+            {
+              "id": 17,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29981-tabA-bottom-4&auto=1"
+            },
+            {
+              "id": 19,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29981-tabB-2&auto=1"
+            }
+          ]
+        },
+        "B": null
+      },
+      "focusAfter": {
+        "activeWindow": null,
+        "focusedContext": 17179869195,
+        "focusedTop": 17,
+        "A": {
+          "id": null,
+          "focused": true,
+          "selected": 17,
+          "uri": "http://127.0.0.1:29971/cross?token=g97-29981-tabA-bottom-4&auto=1",
+          "tabs": [
+            {
+              "id": 17,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29981-tabA-bottom-4&auto=1"
+            },
+            {
+              "id": 19,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29981-tabB-2&auto=1"
+            }
+          ]
+        },
+        "B": null
+      },
+      "heldLabel": "Scroll to Bottom",
+      "before": {
+        "nonce": 7,
+        "serverNow": 24656.092795469,
+        "values": {
+          "g97-29981-tabA-bottom-4": {
+            "root": {
+              "top": 1800,
+              "max": 7083,
+              "overflow": {
+                "top": 1800,
+                "max": 5650
+              },
+              "active": "frame",
+              "documentFocused": true,
+              "visibility": "visible",
+              "nonce": 7,
+              "seenAt": 24656.073463478
+            },
+            "frame": {
+              "top": 1800,
+              "max": 6650,
+              "overflow": null,
+              "active": "body",
+              "documentFocused": true,
+              "visibility": "visible",
+              "nonce": 7,
+              "seenAt": 24656.072919086
+            }
+          },
+          "g97-29981-tabB-2": {
+            "root": {
+              "top": 1800,
+              "max": 7083,
+              "overflow": {
+                "top": 1800,
+                "max": 5650
+              },
+              "active": "frame",
+              "documentFocused": false,
+              "visibility": "hidden",
+              "nonce": 7,
+              "seenAt": 24656.069581582
+            },
+            "frame": {
+              "top": 1800,
+              "max": 6650,
+              "overflow": null,
+              "active": "body",
+              "documentFocused": false,
+              "visibility": "hidden",
+              "nonce": 7,
+              "seenAt": 24656.072685656
+            }
+          }
+        },
+        "fresh": true
+      },
+      "after": {
+        "nonce": 8,
+        "serverNow": 24674.018267347,
+        "values": {
+          "g97-29981-tabA-bottom-4": {
+            "root": {
+              "top": 1800,
+              "max": 7083,
+              "overflow": {
+                "top": 1800,
+                "max": 5650
+              },
+              "active": "frame",
+              "documentFocused": true,
+              "visibility": "visible",
+              "nonce": 8,
+              "seenAt": 24674.007920101
+            },
+            "frame": {
+              "top": 6650,
+              "max": 6650,
+              "overflow": null,
+              "active": "body",
+              "documentFocused": true,
+              "visibility": "visible",
+              "nonce": 8,
+              "seenAt": 24674.007016974
+            }
+          },
+          "g97-29981-tabB-2": {
+            "root": {
+              "top": 1800,
+              "max": 7083,
+              "overflow": {
+                "top": 1800,
+                "max": 5650
+              },
+              "active": "frame",
+              "documentFocused": false,
+              "visibility": "hidden",
+              "nonce": 8,
+              "seenAt": 24674.004202546
+            },
+            "frame": {
+              "top": 1800,
+              "max": 6650,
+              "overflow": null,
+              "active": "body",
+              "documentFocused": false,
+              "visibility": "hidden",
+              "nonce": 8,
+              "seenAt": 24674.006555667
+            }
+          }
+        },
+        "fresh": true
+      },
+      "check": {
+        "atExpectedEndpoint": true,
+        "expected": 6650,
+        "actual": 6650,
+        "nonTargetsUnchanged": true,
+        "beforePositions": {
+          "g97-29981-tabA-bottom-4:root": 1800,
+          "g97-29981-tabA-bottom-4:overflow": 1800,
+          "g97-29981-tabA-bottom-4:frame": 1800,
+          "g97-29981-tabB-2:root": 1800,
+          "g97-29981-tabB-2:overflow": 1800,
+          "g97-29981-tabB-2:frame": 1800
+        },
+        "afterPositions": {
+          "g97-29981-tabA-bottom-4:root": 1800,
+          "g97-29981-tabA-bottom-4:overflow": 1800,
+          "g97-29981-tabA-bottom-4:frame": 6650,
+          "g97-29981-tabB-2:root": 1800,
+          "g97-29981-tabB-2:overflow": 1800,
+          "g97-29981-tabB-2:frame": 1800
+        }
+      },
+      "popups": 0,
+      "events": [
+        {
+          "type": "mousedown",
+          "trusted": true,
+          "x": 655,
+          "y": 338,
+          "prevented": false
+        },
+        {
+          "type": "mouseup",
+          "trusted": true,
+          "x": 655,
+          "y": 482,
+          "prevented": true
+        },
+        {
+          "type": "contextmenu",
+          "trusted": true,
+          "x": 655,
+          "y": 482,
+          "prevented": true
+        }
+      ]
+    }
+  ],
+  "sameWindowStaleFocusProbes": [
+    {
+      "direction": "top",
+      "afterNativeTabClick": {
+        "activeWindow": null,
+        "focusedContext": 17,
+        "focusedTop": 17,
+        "A": {
+          "id": null,
+          "focused": true,
+          "selected": 17,
+          "uri": "http://127.0.0.1:29971/cross?token=g97-29981-tabA-1&auto=1",
+          "tabs": [
+            {
+              "id": 17,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29981-tabA-1&auto=1"
+            },
+            {
+              "id": 19,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29981-tabB-2&auto=1"
+            }
+          ]
+        },
+        "B": null
+      },
+      "afterNativeUrlbarFocus": {
+        "activeWindow": null,
+        "focusedContext": 17,
+        "focusedTop": 17,
+        "A": {
+          "id": null,
+          "focused": true,
+          "selected": 17,
+          "uri": "http://127.0.0.1:29971/cross?token=g97-29981-tabA-1&auto=1",
+          "tabs": [
+            {
+              "id": 17,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29981-tabA-1&auto=1"
+            },
+            {
+              "id": 19,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29981-tabB-2&auto=1"
+            }
+          ]
+        },
+        "B": null
+      },
+      "foreignBackgroundFocusActuallyObserved": false
+    },
+    {
+      "direction": "bottom",
+      "afterNativeTabClick": {
+        "activeWindow": null,
+        "focusedContext": 17179869194,
+        "focusedTop": 17,
+        "A": {
+          "id": null,
+          "focused": true,
+          "selected": 17,
+          "uri": "http://127.0.0.1:29971/cross?token=g97-29981-tabA-top-3&auto=1",
+          "tabs": [
+            {
+              "id": 17,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29981-tabA-top-3&auto=1"
+            },
+            {
+              "id": 19,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29981-tabB-2&auto=1"
+            }
+          ]
+        },
+        "B": null
+      },
+      "afterNativeUrlbarFocus": {
+        "activeWindow": null,
+        "focusedContext": 17179869194,
+        "focusedTop": 17,
+        "A": {
+          "id": null,
+          "focused": true,
+          "selected": 17,
+          "uri": "http://127.0.0.1:29971/cross?token=g97-29981-tabA-top-3&auto=1",
+          "tabs": [
+            {
+              "id": 17,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29981-tabA-top-3&auto=1"
+            },
+            {
+              "id": 19,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29981-tabB-2&auto=1"
+            }
+          ]
+        },
+        "B": null
+      },
+      "foreignBackgroundFocusActuallyObserved": false
+    }
+  ],
+  "actionApiFixture": "unmodified production executeGestureAction imported in the existing window realm through a temporary resource: test module; real Window/BrowsingContext objects only",
+  "allRequiredPass": false,
+  "screenshotMethod": "actual X11 root capture without focus changes"
+}

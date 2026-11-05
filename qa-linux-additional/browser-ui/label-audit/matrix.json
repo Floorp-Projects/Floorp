@@ -1,0 +1,628 @@
+{
+  "operation": "read-only audit; no Jira mutations authorized or executed",
+  "publishedCommit": "5bad47baae11f062af39b477cd6e55640922cddc",
+  "publishedMatrixMatchesCommit": true,
+  "issueCount": 10,
+  "environmentLabelsToRemoveCount": 0,
+  "proposedLabelWrites": [],
+  "notes": [
+    "No currently present needs-linux labels",
+    "Prior needs-fedora-44 narrowed to needs-fedora-desktop already",
+    "Prior needs-panel-open/needs-localized-rtl/needs-right-panel-reveal already removed",
+    "env-blocked retained per current comment meaning: unmet original condition, not no Linux runtime",
+    "KAN54 parentKAN52/backlog-deferred/status unchanged"
+  ],
+  "rows": [
+    {
+      "key": "KAN-3",
+      "latestCommentId": "10294",
+      "parent": "KAN-1",
+      "status": "\u9032\u884c\u4e2d",
+      "currentLabels": [
+        "area-tabs",
+        "env-blocked",
+        "floorp-stability-2026-11",
+        "linux-tested",
+        "needs-fedora-desktop",
+        "needs-physical-drag",
+        "p2",
+        "reproduced",
+        "triage-reviewed",
+        "wayland-tested"
+      ],
+      "environmentLabelsAudited": [
+        "env-blocked",
+        "needs-fedora-desktop",
+        "needs-physical-drag"
+      ],
+      "satisfiedEvidenceConditions": [
+        "Linux actual product/Firefox control",
+        "Fedora44 container userland",
+        "native Wayland adoption",
+        "full production assets + strict local package/CI/XPT"
+      ],
+      "remainingConditions": [
+        "Original Fedora desktop/package",
+        "physical drag or native UI-menu path",
+        "official signed/default package identity"
+      ],
+      "proposedRemoveLabels": [],
+      "proposedAddLabels": [],
+      "proposedLabels": [
+        "area-tabs",
+        "env-blocked",
+        "floorp-stability-2026-11",
+        "linux-tested",
+        "needs-fedora-desktop",
+        "needs-physical-drag",
+        "p2",
+        "reproduced",
+        "triage-reviewed",
+        "wayland-tested"
+      ],
+      "decision": "retain: each currently present environment label denotes unmet original conditions; no satisfied-condition label remains",
+      "evidence": [
+        {
+          "path": "split-29412.json",
+          "sha256": "6569d8ca9826cdab9a8e84f6927bbd324e176d8d660abd530a4e2f2163615692"
+        },
+        {
+          "path": "regression-29631.json",
+          "sha256": "496fc843936f3704e38bda8190280aff52bf3efab340be58f4677f30e996477c"
+        },
+        {
+          "path": "regression-29632.json",
+          "sha256": "443b6838667dd131da432cb9ac7dc8fdc754d4b6aaa2440a21a653c464c1b46f"
+        },
+        {
+          "path": "full-product/xpt-generation/strict-results.json",
+          "sha256": "8aa6b921ff98f7a83c34088f73682f26bff79db6e477f263ae412b08dea971f8"
+        }
+      ],
+      "outOfSprintMustRemain": false
+    },
+    {
+      "key": "KAN-5",
+      "latestCommentId": "10283",
+      "parent": "KAN-1",
+      "status": "\u672a\u7740\u624b",
+      "currentLabels": [
+        "area-tabs",
+        "env-blocked",
+        "floorp-stability-2026-11",
+        "linux-tested",
+        "needs-fedora-desktop",
+        "needs-flatpak",
+        "needs-physical-drag",
+        "needs-repro",
+        "needs-spec",
+        "p2",
+        "triage-reviewed"
+      ],
+      "environmentLabelsAudited": [
+        "env-blocked",
+        "needs-fedora-desktop",
+        "needs-flatpak",
+        "needs-physical-drag"
+      ],
+      "satisfiedEvidenceConditions": [
+        "Linux detach/adopt",
+        "Fedora44 container API adoption",
+        "OS XTest new-window individual stack-proxy detach"
+      ],
+      "remainingConditions": [
+        "Original Fedora desktop/Flatpak package",
+        "physical drag",
+        "direct stack-proxy drop into an existing window"
+      ],
+      "proposedRemoveLabels": [],
+      "proposedAddLabels": [],
+      "proposedLabels": [
+        "area-tabs",
+        "env-blocked",
+        "floorp-stability-2026-11",
+        "linux-tested",
+        "needs-fedora-desktop",
+        "needs-flatpak",
+        "needs-physical-drag",
+        "needs-repro",
+        "needs-spec",
+        "p2",
+        "triage-reviewed"
+      ],
+      "decision": "retain: each currently present environment label denotes unmet original conditions; no satisfied-condition label remains",
+      "evidence": [
+        {
+          "path": "detach-29412.json",
+          "sha256": "a3e9be845c9f6c6704964b193c083610701b58a7a023791a9822174207a32289"
+        },
+        {
+          "path": "desktop-drag-29290.json",
+          "sha256": "670cd3c65a79538e4ea8a10dda4c0a54cfdc657feb4fe070a07ef1314dd61209"
+        },
+        {
+          "path": "KAN-5/report.md",
+          "sha256": "fa8f016b8e152b945a6595655976fbe9b4c3f90aedeff9195572b6404aae4b36"
+        }
+      ],
+      "outOfSprintMustRemain": false
+    },
+    {
+      "key": "KAN-29",
+      "latestCommentId": "10284",
+      "parent": "KAN-1",
+      "status": "\u672a\u7740\u624b",
+      "currentLabels": [
+        "area-tabs",
+        "env-blocked",
+        "floorp-stability-2026-11",
+        "linux-tested",
+        "needs-cachyos",
+        "needs-flatpak",
+        "needs-repro",
+        "p2",
+        "panel-body-tested",
+        "pr-candidate-tested",
+        "rtl-tested",
+        "triage-reviewed",
+        "wayland-tested"
+      ],
+      "environmentLabelsAudited": [
+        "env-blocked",
+        "needs-cachyos",
+        "needs-flatpak"
+      ],
+      "satisfiedEvidenceConditions": [
+        "native Wayland panel body open/pin/hover",
+        "true localized Arabic RTL",
+        "existing PR2877 candidate computation/test comparison"
+      ],
+      "remainingConditions": [
+        "Original LTR CachyOS/Flatpak/distro package",
+        "physical input/original compositor/GPU",
+        "full official candidate build for PR2877"
+      ],
+      "proposedRemoveLabels": [],
+      "proposedAddLabels": [],
+      "proposedLabels": [
+        "area-tabs",
+        "env-blocked",
+        "floorp-stability-2026-11",
+        "linux-tested",
+        "needs-cachyos",
+        "needs-flatpak",
+        "needs-repro",
+        "p2",
+        "panel-body-tested",
+        "pr-candidate-tested",
+        "rtl-tested",
+        "triage-reviewed",
+        "wayland-tested"
+      ],
+      "decision": "retain: each currently present environment label denotes unmet original conditions; no satisfied-condition label remains",
+      "evidence": [
+        {
+          "path": "KAN-29/wayland-summary.json",
+          "sha256": "e465f38ffb9ae979464072619b51eba97332c1706450ca5867ba94716b152b58"
+        },
+        {
+          "path": "KAN-29/localized-comparison.json",
+          "sha256": "ba5b0eed5bc37b7306ca48ec1568f45b27afb0c7eafb47ec03945bfd74d5fcee"
+        },
+        {
+          "path": "KAN-29/pr2877/29687-flex.json",
+          "sha256": "c9a5cc291b9fdb757de68042aab33ad1dc915761d76b5523db98fdcda3d1ccef"
+        }
+      ],
+      "outOfSprintMustRemain": false
+    },
+    {
+      "key": "KAN-31",
+      "latestCommentId": "10285",
+      "parent": "KAN-1",
+      "status": "\u672a\u7740\u624b",
+      "currentLabels": [
+        "area-ui",
+        "env-blocked",
+        "floorp-stability-2026-11",
+        "linux-tested",
+        "needs-fedora-desktop",
+        "needs-repro",
+        "p2",
+        "triage-reviewed"
+      ],
+      "environmentLabelsAudited": [
+        "env-blocked",
+        "needs-fedora-desktop"
+      ],
+      "satisfiedEvidenceConditions": [
+        "initial proxy search in fresh Linux profile with Firefox control",
+        "Fedora44 container product search"
+      ],
+      "remainingConditions": [
+        "Original Fedora desktop/package",
+        "earlier-start input timing and other locales"
+      ],
+      "proposedRemoveLabels": [],
+      "proposedAddLabels": [],
+      "proposedLabels": [
+        "area-ui",
+        "env-blocked",
+        "floorp-stability-2026-11",
+        "linux-tested",
+        "needs-fedora-desktop",
+        "needs-repro",
+        "p2",
+        "triage-reviewed"
+      ],
+      "decision": "retain: each currently present environment label denotes unmet original conditions; no satisfied-condition label remains",
+      "evidence": [
+        {
+          "path": "search-29291.json",
+          "sha256": "01ab0827e2a121d7730df133798715007145643f9ff4d36e1265e30b67d82ab4"
+        },
+        {
+          "path": "search-29292.json",
+          "sha256": "3d04baa1e31009529b06c5ec77293cac15d49293ae5ec5867a349afc86c78122"
+        },
+        {
+          "path": "search-29411.json",
+          "sha256": "3e8766f2b933955872f62ff8a0e136f0bdeeabef33e99abb333ef710db122e6d"
+        }
+      ],
+      "outOfSprintMustRemain": false
+    },
+    {
+      "key": "KAN-39",
+      "latestCommentId": "10286",
+      "parent": "KAN-1",
+      "status": "\u672a\u7740\u624b",
+      "currentLabels": [
+        "area-tabs",
+        "env-blocked",
+        "floorp-stability-2026-11",
+        "linux-tested",
+        "needs-fedora-desktop",
+        "needs-physical-wheel",
+        "needs-repro",
+        "p2",
+        "triage-reviewed"
+      ],
+      "environmentLabelsAudited": [
+        "env-blocked",
+        "needs-fedora-desktop",
+        "needs-physical-wheel"
+      ],
+      "satisfiedEvidenceConditions": [
+        "Fedora44 container constructed wheel normalization",
+        "six valid interior actual OS XTest matched-input comparisons with Firefox"
+      ],
+      "remainingConditions": [
+        "Original Fedora desktop/package",
+        "physical wheel with original acceleration/DPI",
+        "wheel-specific Wayland path not established by another issue"
+      ],
+      "proposedRemoveLabels": [],
+      "proposedAddLabels": [],
+      "proposedLabels": [
+        "area-tabs",
+        "env-blocked",
+        "floorp-stability-2026-11",
+        "linux-tested",
+        "needs-fedora-desktop",
+        "needs-physical-wheel",
+        "needs-repro",
+        "p2",
+        "triage-reviewed"
+      ],
+      "decision": "retain: each currently present environment label denotes unmet original conditions; no satisfied-condition label remains",
+      "evidence": [
+        {
+          "path": "wheel-29411.json",
+          "sha256": "3960e0f42842254b8642c6dcfbe0473f32904f1d47e40ce5a3b39399f54d46ee"
+        },
+        {
+          "path": "KAN-39/followup/report.md",
+          "sha256": "d1e1cbcf8cc71a2238d1d8b50782a0d557f215e5e071b56954008a08541e27f6"
+        },
+        {
+          "path": "KAN-39/followup/floorp.json",
+          "sha256": "895c2cdba1cc61d5e0ff17d86cd9522379b408c1d5be78775f4845d30b78945a"
+        },
+        {
+          "path": "KAN-39/followup/firefox.json",
+          "sha256": "c5be00ff8fa1f81c212e58e38bfae2b18fe7e41b6760af6441797aa18f1418db"
+        }
+      ],
+      "outOfSprintMustRemain": false
+    },
+    {
+      "key": "KAN-40",
+      "latestCommentId": "10287",
+      "parent": "KAN-1",
+      "status": "\u672a\u7740\u624b",
+      "currentLabels": [
+        "area-tabs",
+        "env-blocked",
+        "floorp-stability-2026-11",
+        "linux-tested",
+        "needs-fedora-desktop",
+        "needs-physical-middleclick",
+        "needs-repro",
+        "p2",
+        "triage-reviewed"
+      ],
+      "environmentLabelsAudited": [
+        "env-blocked",
+        "needs-fedora-desktop",
+        "needs-physical-middleclick"
+      ],
+      "satisfiedEvidenceConditions": [
+        "selected and nonselected stack members close under W3C pointer",
+        "Fedora44 container selected/nonselected member close"
+      ],
+      "remainingConditions": [
+        "Original Fedora desktop/package/Flatpak",
+        "physical middle click",
+        "ordinary tab and whole-stack middle-click controls"
+      ],
+      "proposedRemoveLabels": [],
+      "proposedAddLabels": [],
+      "proposedLabels": [
+        "area-tabs",
+        "env-blocked",
+        "floorp-stability-2026-11",
+        "linux-tested",
+        "needs-fedora-desktop",
+        "needs-physical-middleclick",
+        "needs-repro",
+        "p2",
+        "triage-reviewed"
+      ],
+      "decision": "retain: each currently present environment label denotes unmet original conditions; no satisfied-condition label remains",
+      "evidence": [
+        {
+          "path": "middle-29284.json",
+          "sha256": "8e2408a6289aeaa75650920c88b10bd62d6e281e02eae25ca95f82e4c59d1323"
+        },
+        {
+          "path": "middle-29411.json",
+          "sha256": "7a55b1fee944b81c3ca79401bc8083d90d017f0a401544739d701ed8a979984e"
+        },
+        {
+          "path": "KAN-40/report.md",
+          "sha256": "c5e65ed7cdde7123fe42d07e054910d7af4a549814fbdaae322ff97c84cb1bdc"
+        }
+      ],
+      "outOfSprintMustRemain": false
+    },
+    {
+      "key": "KAN-54",
+      "latestCommentId": "10288",
+      "parent": "KAN-52",
+      "status": "\u672a\u7740\u624b",
+      "currentLabels": [
+        "area-ui",
+        "backlog-deferred",
+        "env-blocked",
+        "floorp-github-import-2026-11",
+        "linux-tested",
+        "needs-manjaro-plasma",
+        "needs-spec",
+        "p3",
+        "triage-reviewed"
+      ],
+      "environmentLabelsAudited": [
+        "env-blocked",
+        "needs-manjaro-plasma"
+      ],
+      "satisfiedEvidenceConditions": [
+        "nested KWin real duplicate close-button groups observed in multirow condition"
+      ],
+      "remainingConditions": [
+        "Original Manjaro full Plasma session",
+        "all minimize/maximize/close buttons and specification clarification"
+      ],
+      "proposedRemoveLabels": [],
+      "proposedAddLabels": [],
+      "proposedLabels": [
+        "area-ui",
+        "backlog-deferred",
+        "env-blocked",
+        "floorp-github-import-2026-11",
+        "linux-tested",
+        "needs-manjaro-plasma",
+        "needs-spec",
+        "p3",
+        "triage-reviewed"
+      ],
+      "decision": "retain: each currently present environment label denotes unmet original conditions; no satisfied-condition label remains",
+      "evidence": [
+        {
+          "path": "controls-29289.json",
+          "sha256": "8c8a6ed2234a47f174150a02d9566578728fb173ad5f46c0c434eda3955a12f2"
+        },
+        {
+          "path": "KAN-54/report.md",
+          "sha256": "dd60a0fd20a225e9ad0f7928f004ce9b909bad6e73b56633cc66b9444144fdc2"
+        }
+      ],
+      "outOfSprintMustRemain": true
+    },
+    {
+      "key": "KAN-87",
+      "latestCommentId": "10289",
+      "parent": "KAN-1",
+      "status": "\u672a\u7740\u624b",
+      "currentLabels": [
+        "area-ui",
+        "env-blocked",
+        "floorp-github-import-2026-11",
+        "linux-tested",
+        "needs-niri",
+        "needs-repro",
+        "p2",
+        "panel-body-tested",
+        "triage-reviewed",
+        "wayland-tested"
+      ],
+      "environmentLabelsAudited": [
+        "env-blocked",
+        "needs-niri"
+      ],
+      "satisfiedEvidenceConditions": [
+        "native Wayland real right panel body/top simultaneous reveal",
+        "default/color/image paint controls",
+        "one normal signed AMO image theme install and paint control"
+      ],
+      "remainingConditions": [
+        "Original CachyOS Niri/Hyprland/MangoWM",
+        "physical input and hardware GPU/monitor",
+        "other theme alpha/settings not exhausted"
+      ],
+      "proposedRemoveLabels": [],
+      "proposedAddLabels": [],
+      "proposedLabels": [
+        "area-ui",
+        "env-blocked",
+        "floorp-github-import-2026-11",
+        "linux-tested",
+        "needs-niri",
+        "needs-repro",
+        "p2",
+        "panel-body-tested",
+        "triage-reviewed",
+        "wayland-tested"
+      ],
+      "decision": "retain: each currently present environment label denotes unmet original conditions; no satisfied-condition label remains",
+      "evidence": [
+        {
+          "path": "qaLinuxKAN87/summary.json",
+          "sha256": "89fd60711269364faaf3b36e0ee5264c26d851628dd7e7fb0c6a5fa1534957f8"
+        },
+        {
+          "path": "qaLinuxKAN87/signed/summary.json",
+          "sha256": "26ffcb9d259ac35228840bd476e447915a5684d32939b208bff4a749c75de05d"
+        },
+        {
+          "path": "qaLinuxKAN87/signed/29701-pixels.json",
+          "sha256": "bc8e7a54a4a734f38d74d99eaef38a0402933a9ef97c64039c63a170ecd23a3f"
+        }
+      ],
+      "outOfSprintMustRemain": false
+    },
+    {
+      "key": "KAN-93",
+      "latestCommentId": "10290",
+      "parent": "KAN-1",
+      "status": "\u672a\u7740\u624b",
+      "currentLabels": [
+        "area-ui",
+        "env-blocked",
+        "floorp-github-import-2026-11",
+        "linux-tested",
+        "needs-kde-neon",
+        "needs-repro",
+        "p2",
+        "triage-reviewed"
+      ],
+      "environmentLabelsAudited": [
+        "env-blocked",
+        "needs-kde-neon"
+      ],
+      "satisfiedEvidenceConditions": [
+        "nested KWin light/dark product and current stock Firefox contrast control"
+      ],
+      "remainingConditions": [
+        "Original KDE Neon theme/accent/font conditions",
+        "reported Floorp12.17.1 and Firefox154+Lepton control"
+      ],
+      "proposedRemoveLabels": [],
+      "proposedAddLabels": [],
+      "proposedLabels": [
+        "area-ui",
+        "env-blocked",
+        "floorp-github-import-2026-11",
+        "linux-tested",
+        "needs-kde-neon",
+        "needs-repro",
+        "p2",
+        "triage-reviewed"
+      ],
+      "decision": "retain: each currently present environment label denotes unmet original conditions; no satisfied-condition label remains",
+      "evidence": [
+        {
+          "path": "visual-29289.json",
+          "sha256": "9927e32111bed7f03a579dbf2d433fc91ebd1798fa9784fd7e828a81fd151df1"
+        },
+        {
+          "path": "visual-29295.json",
+          "sha256": "162d40d35bb451e3e3d2bf4476714a0c3b6975d4e70ee9905363c13830c89497"
+        },
+        {
+          "path": "KAN-93/report.md",
+          "sha256": "e1d1f5e41503fc0ec0a1715fb1a08504ac657dcc555293490177e872a773ba63"
+        }
+      ],
+      "outOfSprintMustRemain": false
+    },
+    {
+      "key": "KAN-98",
+      "latestCommentId": "10291",
+      "parent": "KAN-1",
+      "status": "\u9032\u884c\u4e2d",
+      "currentLabels": [
+        "area-ui",
+        "env-blocked",
+        "floorp-github-import-2026-11",
+        "linux-tested",
+        "needs-arch-sway-wayland",
+        "p2",
+        "reproduced",
+        "triage-reviewed"
+      ],
+      "environmentLabelsAudited": [
+        "env-blocked",
+        "needs-arch-sway-wayland"
+      ],
+      "satisfiedEvidenceConditions": [
+        "returning-path and sparse classifier defects reproduced and covered by Drafts",
+        "CI/source tests",
+        "full production combined candidate and strict local package"
+      ],
+      "remainingConditions": [
+        "Original Arch/Sway/Wayland combination",
+        "physical input/DPI",
+        "official signed/default package identity"
+      ],
+      "proposedRemoveLabels": [],
+      "proposedAddLabels": [],
+      "proposedLabels": [
+        "area-ui",
+        "env-blocked",
+        "floorp-github-import-2026-11",
+        "linux-tested",
+        "needs-arch-sway-wayland",
+        "p2",
+        "reproduced",
+        "triage-reviewed"
+      ],
+      "decision": "retain: each currently present environment label denotes unmet original conditions; no satisfied-condition label remains",
+      "evidence": [
+        {
+          "path": "KAN-98/sparse-fix-report.md",
+          "sha256": "851eb6006ae8581133d13f97dc98c2b088d2cf1092f1cba5fcf5016b3fea989f"
+        },
+        {
+          "path": "KAN-98/combination-report.md",
+          "sha256": "1d114013008f463a44d7b1a326c4bedaa9d489c53cc808cb8fef444e7ce9a2b9"
+        },
+        {
+          "path": "full-product/xpt-generation/strict-results.json",
+          "sha256": "8aa6b921ff98f7a83c34088f73682f26bff79db6e477f263ae412b08dea971f8"
+        }
+      ],
+      "outOfSprintMustRemain": false
+    }
+  ]
+}

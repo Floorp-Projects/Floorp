@@ -1,0 +1,243 @@
+{
+  "productKind": "full-product",
+  "input": "OS XTest synthetic mouse/keyboard; W3C settings toggle; not physical hardware",
+  "observations": [],
+  "sourceSha": "d6bd2fc457774f55ab1f36a2b01c941f908f1ab0",
+  "scope": "guards-only; primary24 retained in full-29981",
+  "candidateKind": "unmodified extracted full Linux product; no diagnostic asset replacement",
+  "metadata": {
+    "name": "Floorp",
+    "version": "159.0.1",
+    "build": "20261103153232",
+    "platformBuild": "20261103153232",
+    "platformVersion": "159.0.1",
+    "signature": false,
+    "signatureUserSet": false,
+    "sandbox": 6,
+    "focusTestMode": false,
+    "documentFocused": true
+  },
+  "resourceLocation": {
+    "gre": "/workspace/kan97-runtime/full-package/floorp",
+    "executable": "/workspace/kan97-runtime/full-package/floorp/floorp",
+    "module": "jar:file:///workspace/kan97-runtime/full-package/floorp/omni.ja!/chrome/noraneko/nora-content/assets/js/gestures.js"
+  },
+  "liveRuntimeGate": "passed native App+Platform BuildID 20261103153232; packaged INI recorded separately",
+  "settingsBefore": {
+    "html": "<input aria-label=\"Enable mouse gestures\" data-setting=\"mouse-gesture-enabled\" role=\"switch\" class=\"_switchInput_1a3lw_98\" type=\"checkbox\">",
+    "x": 1178,
+    "y": 377.20001220703125,
+    "checked": false,
+    "aria": null
+  },
+  "config": {
+    "enabled": true,
+    "config": {
+      "enabled": false,
+      "rockerGesturesEnabled": true,
+      "wheelGesturesEnabled": true,
+      "sensitivity": 40,
+      "showTrail": true,
+      "showLabel": true,
+      "trailColor": "#37ff00",
+      "trailWidth": 6,
+      "contextMenu": {
+        "minDistance": 5,
+        "preventionTimeout": 200
+      },
+      "actions": [
+        {
+          "pattern": [
+            "left"
+          ],
+          "action": "gecko-back"
+        },
+        {
+          "pattern": [
+            "right"
+          ],
+          "action": "gecko-forward"
+        },
+        {
+          "pattern": [
+            "up",
+            "down"
+          ],
+          "action": "gecko-reload"
+        },
+        {
+          "pattern": [
+            "down",
+            "right"
+          ],
+          "action": "gecko-close-tab"
+        },
+        {
+          "pattern": [
+            "down",
+            "up"
+          ],
+          "action": "gecko-open-new-tab"
+        },
+        {
+          "pattern": [
+            "up"
+          ],
+          "action": "gecko-scroll-to-top"
+        },
+        {
+          "pattern": [
+            "down"
+          ],
+          "action": "gecko-scroll-to-bottom"
+        },
+        {
+          "pattern": [
+            "left",
+            "down"
+          ],
+          "action": "gecko-scroll-up"
+        },
+        {
+          "pattern": [
+            "right",
+            "down"
+          ],
+          "action": "gecko-scroll-down"
+        }
+      ],
+      "rockerActions": {
+        "leftRight": "gecko-forward",
+        "rightLeft": "gecko-back"
+      },
+      "wheelActions": {
+        "scrollUp": "gecko-show-previous-tab",
+        "scrollDown": "gecko-show-next-tab"
+      }
+    }
+  },
+  "error": "CalledProcessError(1, ['/workspace/.floorp-cloud/sysroot/usr/bin/xdotool', 'search', '--onlyvisible', '--name', 'KAN97 full g97-29984-tabA-1'])",
+  "traceback": "Traceback (most recent call last):\n  File \"/workspace/qa-linux-additional/browser-ui/KAN-97/full-product/probe.py\", line 74, in <module>\n    out['guards']=run_guards(m,xd,R)\n                  ^^^^^^^^^^^^^^^^^^\n  File \"/workspace/qa-linux-additional/browser-ui/KAN-97/full-product/guards.py\", line 83, in run\n    nativeA=activate(ta);nativePid=subprocess.check_output(['/workspace/.floorp-cloud/sysroot/usr/bin/xdotool','getwindowpid',nativeA],env=os.environ.copy(),text=True).strip()\n            ^^^^^^^^^^^^\n  File \"/workspace/qa-linux-additional/browser-ui/KAN-97/full-product/guards.py\", line 73, in activate\n    ids=subprocess.check_output(['/workspace/.floorp-cloud/sysroot/usr/bin/xdotool','search','--onlyvisible','--name','KAN97 full '+t],env=os.environ.copy(),text=True).split();assert ids,('native owned window not found',t);xd('windowactivate','--sync',ids[0]);time.sleep(.3);return ids[0]\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/subprocess.py\", line 466, in check_output\n    return run(*popenargs, stdout=PIPE, timeout=timeout, check=True,\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/subprocess.py\", line 571, in run\n    raise CalledProcessError(retcode, process.args,\nsubprocess.CalledProcessError: Command '['/workspace/.floorp-cloud/sysroot/usr/bin/xdotool', 'search', '--onlyvisible', '--name', 'KAN97 full g97-29984-tabA-1']' returned non-zero exit status 1.\n",
+  "guards": {
+    "measurement": "passive controlled HTTP page/iframe scroll reports, sampled by SSE; no background tab switching to read state",
+    "cases": [],
+    "sameWindowStaleFocusProbes": [],
+    "actionApiFixture": "unmodified production executeGestureAction imported in the existing window realm through a temporary resource: test module; real Window/BrowsingContext objects only",
+    "allRequiredPass": false,
+    "loadDiagnostics": [
+      {
+        "token": "g97-29984-tabA-1",
+        "nativeBefore": "4194325",
+        "focusBefore": {
+          "activeIsA": true,
+          "activeIsB": false,
+          "focusedContext": null,
+          "focusedTop": null,
+          "A": {
+            "chromeContext": 2,
+            "focused": true,
+            "delayedStartupFinished": true,
+            "documentReady": "complete",
+            "controllerAttached": true,
+            "selected": 16,
+            "uri": "about:hub#/features/gesture",
+            "tabs": [
+              {
+                "id": 16,
+                "uri": "about:hub#/features/gesture"
+              }
+            ]
+          },
+          "B": null,
+          "nativeActiveWindow": "4194325"
+        },
+        "nativeImmediatelyBeforeKeys": "4194325",
+        "nativeAfter": "4194325",
+        "focusAfter": {
+          "activeIsA": true,
+          "activeIsB": false,
+          "focusedContext": 17,
+          "focusedTop": 17,
+          "A": {
+            "chromeContext": 2,
+            "focused": true,
+            "delayedStartupFinished": true,
+            "documentReady": "complete",
+            "controllerAttached": true,
+            "selected": 17,
+            "uri": "http://127.0.0.1:29971/cross?token=g97-29984-tabA-1&auto=1",
+            "tabs": [
+              {
+                "id": 17,
+                "uri": "http://127.0.0.1:29971/cross?token=g97-29984-tabA-1&auto=1"
+              }
+            ]
+          },
+          "B": null,
+          "nativeActiveWindow": "4194325"
+        }
+      },
+      {
+        "token": "g97-29984-tabB-2",
+        "nativeBefore": "4194325",
+        "focusBefore": {
+          "activeIsA": true,
+          "activeIsB": false,
+          "focusedContext": 17,
+          "focusedTop": 17,
+          "A": {
+            "chromeContext": 2,
+            "focused": true,
+            "delayedStartupFinished": true,
+            "documentReady": "complete",
+            "controllerAttached": true,
+            "selected": 15,
+            "uri": "about:newtab",
+            "tabs": [
+              {
+                "id": 17,
+                "uri": "http://127.0.0.1:29971/cross?token=g97-29984-tabA-1&auto=1"
+              },
+              {
+                "id": 15,
+                "uri": "about:newtab"
+              }
+            ]
+          },
+          "B": null,
+          "nativeActiveWindow": "4194325"
+        },
+        "nativeImmediatelyBeforeKeys": "4194325",
+        "nativeAfter": "4194325",
+        "focusAfter": {
+          "activeIsA": true,
+          "activeIsB": false,
+          "focusedContext": 19,
+          "focusedTop": 19,
+          "A": {
+            "chromeContext": 2,
+            "focused": true,
+            "delayedStartupFinished": true,
+            "documentReady": "complete",
+            "controllerAttached": true,
+            "selected": 19,
+            "uri": "http://127.0.0.1:29971/cross?token=g97-29984-tabB-2&auto=1",
+            "tabs": [
+              {
+                "id": 17,
+                "uri": "http://127.0.0.1:29971/cross?token=g97-29984-tabA-1&auto=1"
+              },
+              {
+                "id": 19,
+                "uri": "http://127.0.0.1:29971/cross?token=g97-29984-tabB-2&auto=1"
+              }
+            ]
+          },
+          "B": null,
+          "nativeActiveWindow": "4194325"
+        }
+      }
+    ]
+  },
+  "normalQuitRequested": true
+}

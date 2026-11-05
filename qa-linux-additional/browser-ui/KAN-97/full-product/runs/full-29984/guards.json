@@ -1,0 +1,121 @@
+{
+  "measurement": "passive controlled HTTP page/iframe scroll reports, sampled by SSE; no background tab switching to read state",
+  "cases": [],
+  "sameWindowStaleFocusProbes": [],
+  "actionApiFixture": "unmodified production executeGestureAction imported in the existing window realm through a temporary resource: test module; real Window/BrowsingContext objects only",
+  "allRequiredPass": false,
+  "loadDiagnostics": [
+    {
+      "token": "g97-29984-tabA-1",
+      "nativeBefore": "4194325",
+      "focusBefore": {
+        "activeIsA": true,
+        "activeIsB": false,
+        "focusedContext": null,
+        "focusedTop": null,
+        "A": {
+          "chromeContext": 2,
+          "focused": true,
+          "delayedStartupFinished": true,
+          "documentReady": "complete",
+          "controllerAttached": true,
+          "selected": 16,
+          "uri": "about:hub#/features/gesture",
+          "tabs": [
+            {
+              "id": 16,
+              "uri": "about:hub#/features/gesture"
+            }
+          ]
+        },
+        "B": null,
+        "nativeActiveWindow": "4194325"
+      },
+      "nativeImmediatelyBeforeKeys": "4194325",
+      "nativeAfter": "4194325",
+      "focusAfter": {
+        "activeIsA": true,
+        "activeIsB": false,
+        "focusedContext": 17,
+        "focusedTop": 17,
+        "A": {
+          "chromeContext": 2,
+          "focused": true,
+          "delayedStartupFinished": true,
+          "documentReady": "complete",
+          "controllerAttached": true,
+          "selected": 17,
+          "uri": "http://127.0.0.1:29971/cross?token=g97-29984-tabA-1&auto=1",
+          "tabs": [
+            {
+              "id": 17,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29984-tabA-1&auto=1"
+            }
+          ]
+        },
+        "B": null,
+        "nativeActiveWindow": "4194325"
+      }
+    },
+    {
+      "token": "g97-29984-tabB-2",
+      "nativeBefore": "4194325",
+      "focusBefore": {
+        "activeIsA": true,
+        "activeIsB": false,
+        "focusedContext": 17,
+        "focusedTop": 17,
+        "A": {
+          "chromeContext": 2,
+          "focused": true,
+          "delayedStartupFinished": true,
+          "documentReady": "complete",
+          "controllerAttached": true,
+          "selected": 15,
+          "uri": "about:newtab",
+          "tabs": [
+            {
+              "id": 17,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29984-tabA-1&auto=1"
+            },
+            {
+              "id": 15,
+              "uri": "about:newtab"
+            }
+          ]
+        },
+        "B": null,
+        "nativeActiveWindow": "4194325"
+      },
+      "nativeImmediatelyBeforeKeys": "4194325",
+      "nativeAfter": "4194325",
+      "focusAfter": {
+        "activeIsA": true,
+        "activeIsB": false,
+        "focusedContext": 19,
+        "focusedTop": 19,
+        "A": {
+          "chromeContext": 2,
+          "focused": true,
+          "delayedStartupFinished": true,
+          "documentReady": "complete",
+          "controllerAttached": true,
+          "selected": 19,
+          "uri": "http://127.0.0.1:29971/cross?token=g97-29984-tabB-2&auto=1",
+          "tabs": [
+            {
+              "id": 17,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29984-tabA-1&auto=1"
+            },
+            {
+              "id": 19,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29984-tabB-2&auto=1"
+            }
+          ]
+        },
+        "B": null,
+        "nativeActiveWindow": "4194325"
+      }
+    }
+  ]
+}

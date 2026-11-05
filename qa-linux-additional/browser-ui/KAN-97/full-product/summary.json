@@ -1,0 +1,182 @@
+{
+  "key": "KAN-97",
+  "github": 2692,
+  "sourceSha": "d6bd2fc457774f55ab1f36a2b01c941f908f1ab0",
+  "packageTarSha256": "dcad8272354b639220d1e3e0677d2aa140ee3ed02c7b60888cfa4dc26266f7a5",
+  "primaryCases": 24,
+  "primaryEndpointPass": 24,
+  "primaryNonTargetsUnchanged": true,
+  "primaryFocusQualified": true,
+  "actualIframeGestureCases": 8,
+  "contextMenuPopups": 0,
+  "guardsCompleted": 6,
+  "guardsRemaining": [],
+  "original2692WindowsCause": "unproven",
+  "runs": {
+    "29981": {
+      "executable": "/workspace/kan97-runtime/full-package/floorp/floorp",
+      "greExpected": "/workspace/kan97-runtime/full-package/floorp",
+      "sourceSha": "d6bd2fc457774f55ab1f36a2b01c941f908f1ab0",
+      "productUnmodified": true,
+      "normalProductExit": true,
+      "ownedProcesses": {
+        "display": 99224,
+        "wm": 99227,
+        "browser": 99230
+      },
+      "profile": "/workspace/kan97-runtime/full-product/full-29981/profile",
+      "probeExit": 1,
+      "dbusProductExit": 0,
+      "changedPayloadEntries": [],
+      "addedRuntimeEntries": [],
+      "originalPayloadUnchanged": true,
+      "displayRemoved": true
+    },
+    "29982": {
+      "executable": "/workspace/kan97-runtime/full-package/floorp/floorp",
+      "greExpected": "/workspace/kan97-runtime/full-package/floorp",
+      "sourceSha": "d6bd2fc457774f55ab1f36a2b01c941f908f1ab0",
+      "productUnmodified": true,
+      "normalProductExit": true,
+      "ownedProcesses": {
+        "display": 100189,
+        "wm": 100192,
+        "browser": 100209
+      },
+      "profile": "/workspace/kan97-runtime/full-product/full-29982/profile",
+      "probeExit": 1,
+      "dbusProductExit": 0,
+      "changedPayloadEntries": [],
+      "addedRuntimeEntries": [],
+      "originalPayloadUnchanged": true,
+      "displayRemoved": true
+    },
+    "29983": {
+      "executable": "/workspace/kan97-runtime/full-package/floorp/floorp",
+      "greExpected": "/workspace/kan97-runtime/full-package/floorp",
+      "sourceSha": "d6bd2fc457774f55ab1f36a2b01c941f908f1ab0",
+      "productUnmodified": true,
+      "normalProductExit": null,
+      "ownedProcesses": {
+        "display": 100654,
+        "wm": 100667,
+        "browser": 100670
+      },
+      "profile": "/workspace/kan97-runtime/full-product/full-29983/profile",
+      "runStatus": "runner interrupted; original process wait unavailable",
+      "normalQuitRequestedRecovery": true,
+      "dbusProductExit": null,
+      "processStatusAfterQuit": {
+        "100670": "100670 (dbus-run-sessio) Z 1 100670 100670 0 -1 4227340 335 328323 0 39 0 0 4366 1138 20 0 1 0 2520020 0 0 18446744073709551615 0 0 0 0 0 0 0 0 0 1 0 0 17 2 0 0 0 0 0 0 0 0 0 0 0 0 0\n",
+        "100672": "absent"
+      },
+      "changedPayloadEntries": [],
+      "addedRuntimeEntries": []
+    },
+    "29984": {
+      "executable": "/workspace/kan97-runtime/full-package/floorp/floorp",
+      "greExpected": "/workspace/kan97-runtime/full-package/floorp",
+      "sourceSha": "d6bd2fc457774f55ab1f36a2b01c941f908f1ab0",
+      "productUnmodified": true,
+      "normalProductExit": true,
+      "ownedProcesses": {
+        "display": 101862,
+        "wm": 101865,
+        "browser": 101868
+      },
+      "profile": "/workspace/kan97-runtime/full-product/full-29984/profile",
+      "probeExit": 1,
+      "dbusProductExit": 0,
+      "changedPayloadEntries": [],
+      "addedRuntimeEntries": [],
+      "originalPayloadUnchanged": true,
+      "displayRemoved": true
+    },
+    "29985": {
+      "executable": "/workspace/kan97-runtime/full-package/floorp/floorp",
+      "greExpected": "/workspace/kan97-runtime/full-package/floorp",
+      "sourceSha": "d6bd2fc457774f55ab1f36a2b01c941f908f1ab0",
+      "productUnmodified": true,
+      "normalProductExit": true,
+      "ownedProcesses": {
+        "display": 102377,
+        "wm": 102387,
+        "browser": 102390
+      },
+      "profile": "/workspace/kan97-runtime/full-product/full-29985/profile",
+      "probeExit": 0,
+      "dbusProductExit": 0,
+      "changedPayloadEntries": [],
+      "addedRuntimeEntries": [],
+      "originalPayloadUnchanged": true,
+      "displayRemoved": true
+    }
+  },
+  "guardCases": [
+    {
+      "run": 29983,
+      "kind": "native-selected-tab-gesture",
+      "direction": "top",
+      "atExpectedEndpoint": true,
+      "nonTargetsUnchanged": true,
+      "popups": 0,
+      "qualifiedActualFocusMismatch": null,
+      "foreignNativeFocusRetained": null
+    },
+    {
+      "run": 29983,
+      "kind": "native-selected-tab-gesture",
+      "direction": "bottom",
+      "atExpectedEndpoint": true,
+      "nonTargetsUnchanged": true,
+      "popups": 0,
+      "qualifiedActualFocusMismatch": null,
+      "foreignNativeFocusRetained": null
+    },
+    {
+      "run": 29983,
+      "kind": "native-second-window-gesture",
+      "direction": "top",
+      "atExpectedEndpoint": true,
+      "nonTargetsUnchanged": true,
+      "popups": 0,
+      "qualifiedActualFocusMismatch": null,
+      "foreignNativeFocusRetained": null
+    },
+    {
+      "run": 29983,
+      "kind": "native-second-window-gesture",
+      "direction": "bottom",
+      "atExpectedEndpoint": true,
+      "nonTargetsUnchanged": true,
+      "popups": 0,
+      "qualifiedActualFocusMismatch": null,
+      "foreignNativeFocusRetained": null
+    },
+    {
+      "run": 29983,
+      "kind": "production-action-api-foreign-native-window-focus",
+      "direction": "top",
+      "atExpectedEndpoint": true,
+      "nonTargetsUnchanged": true,
+      "popups": 0,
+      "qualifiedActualFocusMismatch": true,
+      "foreignNativeFocusRetained": true
+    },
+    {
+      "run": 29985,
+      "kind": "production-action-api-foreign-native-window-focus",
+      "direction": "bottom",
+      "atExpectedEndpoint": true,
+      "nonTargetsUnchanged": true,
+      "popups": 0,
+      "qualifiedActualFocusMismatch": true,
+      "foreignNativeFocusRetained": true
+    }
+  ],
+  "result": "Primary24 PASS and six guard cases PASS across preserved29983 five +29985 one;29983 runner interrupted/exit unknown;29985 normal exit0/fulltree unchanged",
+  "remainingConditions": [
+    "Original Windows/HuggingFace issue2692 cause and original conditions remain unproven",
+    "A stale same-window focused-context mismatch was not observed; native cross-tab guards and actual foreign-window API fixture are distinguished"
+  ]
+}

@@ -1,0 +1,78 @@
+{
+  "run": 42103462848,
+  "sourceSha": "d6bd2fc457774f55ab1f36a2b01c941f908f1ab0",
+  "dispatchCount": 1,
+  "runAttempt": 1,
+  "artifactRecords": [
+    {
+      "artifactId": 13452071690,
+      "zipSha256": "6c4a6d689c9138d8c29a3166274f5f811ec44f4cd486c3be4757ad55a68228d2",
+      "matchesGitHubDigest": true,
+      "names": [
+        "floorp-linux-x86_64.tar.xz"
+      ]
+    },
+    {
+      "artifactId": 13451527153,
+      "zipSha256": "da6021043540e6cf4ef8c2bdaa90f83799446c040d50407cd3614c1ae9ac06a0",
+      "matchesGitHubDigest": true,
+      "names": [
+        "floorp-linux-x86_64-full.mar",
+        "meta.json"
+      ]
+    }
+  ],
+  "tarSha256": "dcad8272354b639220d1e3e0677d2aa140ee3ed02c7b60888cfa4dc26266f7a5",
+  "tarPath": "/workspace/kan97-runtime/package-delivery/floorp-linux-x86_64.tar.xz",
+  "tarMembers": 57,
+  "uncompressedBytes": 372911611,
+  "executable": "/workspace/kan97-runtime/full-package/floorp/floorp",
+  "gre": "/workspace/kan97-runtime/full-package/floorp",
+  "packagingIni": {
+    "application.ini": {
+      "App": {
+        "vendor": "Ablaze",
+        "name": "Floorp",
+        "remotingname": "floorp",
+        "version": "12.21.1@159.0.1",
+        "profile": "Floorp",
+        "buildid": "20261105203105",
+        "id": "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
+      },
+      "Gecko": {
+        "minversion": "159.0.1",
+        "maxversion": "159.0.1"
+      },
+      "XRE": {
+        "enableprofilemigrator": "1"
+      },
+      "AppUpdate": {
+        "url": "https://aus5.mozilla.org/update/6/%PRODUCT%/%VERSION%/%BUILD_ID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%SYSTEM_CAPABILITIES%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/update.xml"
+      }
+    },
+    "platform.ini": {
+      "Build": {
+        "buildid": "20261105203105",
+        "milestone": "159.0.1"
+      }
+    }
+  },
+  "nativeHashes": {
+    "floorp": "4f05c1330b38e50040440be6a3b6e0e7a5b52bc79edb5c5478d978c81f5a603d",
+    "libxul.so": "760ff8a689f52c9b1f3c89a45ea8813e59f187990caed747e4a7680020c8dbc7",
+    "omni.ja": "8a330d911200a8244601844915412be0ed93e18a8b56cb6ad0794fe9b417be64"
+  },
+  "buildid2": "01a1ad67-8c6b-73d9-9e6b-4b68b9861f19",
+  "buildid2MatchesActualPackageMeta": true,
+  "noPayloadPatch": true,
+  "liveRuntimeIdentityGate": {
+    "appBuildId": "20261103153232",
+    "platformBuildId": "20261103153232",
+    "version": "159.0.1",
+    "matchesPackageMeta": true,
+    "matchesRuntimeManifest": true,
+    "probeRun": 29981
+  },
+  "excludedHarnessAssertion": "initial acquisition incorrectly equated packaging-generated INI timestamps with live compiled Runtime ID; no product/metadata edits made",
+  "contractReference": "verify-release-artifact.yml live app/platform ID checks; prior withdrawn3039 illustrates why INI is not authoritative"
+}

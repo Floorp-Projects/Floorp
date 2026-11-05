@@ -1,0 +1,14 @@
+{
+  "windows": [
+    {
+      "uri": "http://127.0.0.1:29971/cross?token=g97-29983-inactive-A-bottom-9&auto=1",
+      "focus": false
+    },
+    {
+      "uri": "http://127.0.0.1:29971/cross?token=g97-29983-windowB-bottom-7&auto=1",
+      "focus": true
+    }
+  ],
+  "liveBuild": "20261103153232",
+  "normalQuitRequested": true
+}

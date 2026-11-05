@@ -1,0 +1,7 @@
+{
+  "measurement": "passive controlled HTTP page/iframe scroll reports, sampled by SSE; no background tab switching to read state",
+  "cases": [],
+  "sameWindowStaleFocusProbes": [],
+  "actionApiFixture": "unmodified production executeGestureAction imported in the existing window realm through a temporary resource: test module; real Window/BrowsingContext objects only",
+  "allRequiredPass": false
+}

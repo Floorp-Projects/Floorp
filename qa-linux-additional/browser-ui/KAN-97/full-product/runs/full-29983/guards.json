@@ -1,0 +1,2191 @@
+{
+  "measurement": "passive controlled HTTP page/iframe scroll reports, sampled by SSE; no background tab switching to read state",
+  "cases": [
+    {
+      "kind": "native-selected-tab-gesture",
+      "direction": "top",
+      "input": "normal OS tab header selection and OS gesture",
+      "focusBefore": {
+        "activeIsA": true,
+        "activeIsB": false,
+        "focusedContext": 17179869186,
+        "focusedTop": 17,
+        "A": {
+          "chromeContext": 2,
+          "focused": true,
+          "delayedStartupFinished": true,
+          "documentReady": "complete",
+          "controllerAttached": true,
+          "selected": 17,
+          "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabA-top-3&auto=1",
+          "tabs": [
+            {
+              "id": 17,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabA-top-3&auto=1"
+            },
+            {
+              "id": 19,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabB-2&auto=1"
+            }
+          ]
+        },
+        "B": null,
+        "nativeActiveWindow": "4194325"
+      },
+      "focusAfter": {
+        "activeIsA": true,
+        "activeIsB": false,
+        "focusedContext": 17179869186,
+        "focusedTop": 17,
+        "A": {
+          "chromeContext": 2,
+          "focused": true,
+          "delayedStartupFinished": true,
+          "documentReady": "complete",
+          "controllerAttached": true,
+          "selected": 17,
+          "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabA-top-3&auto=1",
+          "tabs": [
+            {
+              "id": 17,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabA-top-3&auto=1"
+            },
+            {
+              "id": 19,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabB-2&auto=1"
+            }
+          ]
+        },
+        "B": null,
+        "nativeActiveWindow": "4194325"
+      },
+      "heldLabel": "Scroll to Top",
+      "before": {
+        "nonce": 4,
+        "serverNow": 25211.907456756,
+        "values": {
+          "g97-29983-tabA-top-3": {
+            "root": {
+              "top": 1800,
+              "max": 7083,
+              "overflow": {
+                "top": 1800,
+                "max": 5650
+              },
+              "active": "frame",
+              "documentFocused": true,
+              "visibility": "visible",
+              "nonce": 4,
+              "seenAt": 25211.885190284
+            },
+            "frame": {
+              "top": 1800,
+              "max": 6650,
+              "overflow": null,
+              "active": "body",
+              "documentFocused": true,
+              "visibility": "visible",
+              "nonce": 4,
+              "seenAt": 25211.885459807
+            }
+          },
+          "g97-29983-tabB-2": {
+            "root": {
+              "top": 1800,
+              "max": 7083,
+              "overflow": {
+                "top": 1800,
+                "max": 5650
+              },
+              "active": "frame",
+              "documentFocused": false,
+              "visibility": "hidden",
+              "nonce": 4,
+              "seenAt": 25211.889483875
+            },
+            "frame": {
+              "top": 1800,
+              "max": 6650,
+              "overflow": null,
+              "active": "body",
+              "documentFocused": false,
+              "visibility": "hidden",
+              "nonce": 4,
+              "seenAt": 25211.890512437
+            }
+          }
+        },
+        "fresh": true
+      },
+      "after": {
+        "nonce": 5,
+        "serverNow": 25228.773422748,
+        "values": {
+          "g97-29983-tabA-top-3": {
+            "root": {
+              "top": 1800,
+              "max": 7083,
+              "overflow": {
+                "top": 1800,
+                "max": 5650
+              },
+              "active": "frame",
+              "documentFocused": true,
+              "visibility": "visible",
+              "nonce": 5,
+              "seenAt": 25228.763793937
+            },
+            "frame": {
+              "top": 0,
+              "max": 6650,
+              "overflow": null,
+              "active": "body",
+              "documentFocused": true,
+              "visibility": "visible",
+              "nonce": 5,
+              "seenAt": 25228.758903508
+            }
+          },
+          "g97-29983-tabB-2": {
+            "root": {
+              "top": 1800,
+              "max": 7083,
+              "overflow": {
+                "top": 1800,
+                "max": 5650
+              },
+              "active": "frame",
+              "documentFocused": false,
+              "visibility": "hidden",
+              "nonce": 5,
+              "seenAt": 25228.75656863
+            },
+            "frame": {
+              "top": 1800,
+              "max": 6650,
+              "overflow": null,
+              "active": "body",
+              "documentFocused": false,
+              "visibility": "hidden",
+              "nonce": 5,
+              "seenAt": 25228.761461393
+            }
+          }
+        },
+        "fresh": true
+      },
+      "check": {
+        "atExpectedEndpoint": true,
+        "expected": 0,
+        "actual": 0,
+        "nonTargetsUnchanged": true,
+        "beforePositions": {
+          "g97-29983-tabA-top-3:root": 1800,
+          "g97-29983-tabA-top-3:overflow": 1800,
+          "g97-29983-tabA-top-3:frame": 1800,
+          "g97-29983-tabB-2:root": 1800,
+          "g97-29983-tabB-2:overflow": 1800,
+          "g97-29983-tabB-2:frame": 1800
+        },
+        "afterPositions": {
+          "g97-29983-tabA-top-3:root": 1800,
+          "g97-29983-tabA-top-3:overflow": 1800,
+          "g97-29983-tabA-top-3:frame": 0,
+          "g97-29983-tabB-2:root": 1800,
+          "g97-29983-tabB-2:overflow": 1800,
+          "g97-29983-tabB-2:frame": 1800
+        }
+      },
+      "popups": 0,
+      "events": [
+        {
+          "type": "mousedown",
+          "trusted": true,
+          "x": 655,
+          "y": 338,
+          "prevented": false
+        },
+        {
+          "type": "mouseup",
+          "trusted": true,
+          "x": 655,
+          "y": 194,
+          "prevented": true
+        },
+        {
+          "type": "contextmenu",
+          "trusted": true,
+          "x": 655,
+          "y": 194,
+          "prevented": true
+        }
+      ]
+    },
+    {
+      "kind": "native-selected-tab-gesture",
+      "direction": "bottom",
+      "input": "normal OS tab header selection and OS gesture",
+      "focusBefore": {
+        "activeIsA": true,
+        "activeIsB": false,
+        "focusedContext": 17179869187,
+        "focusedTop": 17,
+        "A": {
+          "chromeContext": 2,
+          "focused": true,
+          "delayedStartupFinished": true,
+          "documentReady": "complete",
+          "controllerAttached": true,
+          "selected": 17,
+          "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabA-bottom-4&auto=1",
+          "tabs": [
+            {
+              "id": 17,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabA-bottom-4&auto=1"
+            },
+            {
+              "id": 19,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabB-2&auto=1"
+            }
+          ]
+        },
+        "B": null,
+        "nativeActiveWindow": "4194325"
+      },
+      "focusAfter": {
+        "activeIsA": true,
+        "activeIsB": false,
+        "focusedContext": 17179869187,
+        "focusedTop": 17,
+        "A": {
+          "chromeContext": 2,
+          "focused": true,
+          "delayedStartupFinished": true,
+          "documentReady": "complete",
+          "controllerAttached": true,
+          "selected": 17,
+          "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabA-bottom-4&auto=1",
+          "tabs": [
+            {
+              "id": 17,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabA-bottom-4&auto=1"
+            },
+            {
+              "id": 19,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabB-2&auto=1"
+            }
+          ]
+        },
+        "B": null,
+        "nativeActiveWindow": "4194325"
+      },
+      "heldLabel": "Scroll to Bottom",
+      "before": {
+        "nonce": 7,
+        "serverNow": 25231.224052357,
+        "values": {
+          "g97-29983-tabA-bottom-4": {
+            "root": {
+              "top": 1800,
+              "max": 7083,
+              "overflow": {
+                "top": 1800,
+                "max": 5650
+              },
+              "active": "frame",
+              "documentFocused": true,
+              "visibility": "visible",
+              "nonce": 7,
+              "seenAt": 25231.203554826
+            },
+            "frame": {
+              "top": 1800,
+              "max": 6650,
+              "overflow": null,
+              "active": "body",
+              "documentFocused": true,
+              "visibility": "visible",
+              "nonce": 7,
+              "seenAt": 25231.202424649
+            }
+          },
+          "g97-29983-tabB-2": {
+            "root": {
+              "top": 1800,
+              "max": 7083,
+              "overflow": {
+                "top": 1800,
+                "max": 5650
+              },
+              "active": "frame",
+              "documentFocused": false,
+              "visibility": "hidden",
+              "nonce": 7,
+              "seenAt": 25231.202127346
+            },
+            "frame": {
+              "top": 1800,
+              "max": 6650,
+              "overflow": null,
+              "active": "body",
+              "documentFocused": false,
+              "visibility": "hidden",
+              "nonce": 7,
+              "seenAt": 25231.202979836
+            }
+          }
+        },
+        "fresh": true
+      },
+      "after": {
+        "nonce": 8,
+        "serverNow": 25248.020392638,
+        "values": {
+          "g97-29983-tabA-bottom-4": {
+            "root": {
+              "top": 1800,
+              "max": 7083,
+              "overflow": {
+                "top": 1800,
+                "max": 5650
+              },
+              "active": "frame",
+              "documentFocused": true,
+              "visibility": "visible",
+              "nonce": 8,
+              "seenAt": 25248.005510932
+            },
+            "frame": {
+              "top": 6650,
+              "max": 6650,
+              "overflow": null,
+              "active": "body",
+              "documentFocused": true,
+              "visibility": "visible",
+              "nonce": 8,
+              "seenAt": 25248.004357382
+            }
+          },
+          "g97-29983-tabB-2": {
+            "root": {
+              "top": 1800,
+              "max": 7083,
+              "overflow": {
+                "top": 1800,
+                "max": 5650
+              },
+              "active": "frame",
+              "documentFocused": false,
+              "visibility": "hidden",
+              "nonce": 8,
+              "seenAt": 25248.002942666
+            },
+            "frame": {
+              "top": 1800,
+              "max": 6650,
+              "overflow": null,
+              "active": "body",
+              "documentFocused": false,
+              "visibility": "hidden",
+              "nonce": 8,
+              "seenAt": 25248.003439538
+            }
+          }
+        },
+        "fresh": true
+      },
+      "check": {
+        "atExpectedEndpoint": true,
+        "expected": 6650,
+        "actual": 6650,
+        "nonTargetsUnchanged": true,
+        "beforePositions": {
+          "g97-29983-tabA-bottom-4:root": 1800,
+          "g97-29983-tabA-bottom-4:overflow": 1800,
+          "g97-29983-tabA-bottom-4:frame": 1800,
+          "g97-29983-tabB-2:root": 1800,
+          "g97-29983-tabB-2:overflow": 1800,
+          "g97-29983-tabB-2:frame": 1800
+        },
+        "afterPositions": {
+          "g97-29983-tabA-bottom-4:root": 1800,
+          "g97-29983-tabA-bottom-4:overflow": 1800,
+          "g97-29983-tabA-bottom-4:frame": 6650,
+          "g97-29983-tabB-2:root": 1800,
+          "g97-29983-tabB-2:overflow": 1800,
+          "g97-29983-tabB-2:frame": 1800
+        }
+      },
+      "popups": 0,
+      "events": [
+        {
+          "type": "mousedown",
+          "trusted": true,
+          "x": 655,
+          "y": 338,
+          "prevented": false
+        },
+        {
+          "type": "mouseup",
+          "trusted": true,
+          "x": 655,
+          "y": 482,
+          "prevented": true
+        },
+        {
+          "type": "contextmenu",
+          "trusted": true,
+          "x": 655,
+          "y": 482,
+          "prevented": true
+        }
+      ]
+    },
+    {
+      "kind": "native-second-window-gesture",
+      "direction": "top",
+      "input": "normal OS Ctrl+N window, OS focus and OS gesture",
+      "focusBefore": {
+        "activeIsA": false,
+        "activeIsB": true,
+        "focusedContext": 25769803778,
+        "focusedTop": 28,
+        "A": {
+          "chromeContext": 2,
+          "focused": false,
+          "delayedStartupFinished": true,
+          "documentReady": "complete",
+          "controllerAttached": true,
+          "selected": 17,
+          "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabA-bottom-4&auto=1",
+          "tabs": [
+            {
+              "id": 17,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabA-bottom-4&auto=1"
+            },
+            {
+              "id": 19,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabB-2&auto=1"
+            }
+          ]
+        },
+        "B": {
+          "chromeContext": 20,
+          "focused": true,
+          "delayedStartupFinished": true,
+          "documentReady": "complete",
+          "controllerAttached": true,
+          "selected": 28,
+          "uri": "http://127.0.0.1:29971/cross?token=g97-29983-windowB-top-6&auto=1",
+          "tabs": [
+            {
+              "id": 28,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29983-windowB-top-6&auto=1"
+            }
+          ]
+        },
+        "nativeActiveWindow": "4194407"
+      },
+      "focusAfter": {
+        "activeIsA": false,
+        "activeIsB": true,
+        "focusedContext": 25769803778,
+        "focusedTop": 28,
+        "A": {
+          "chromeContext": 2,
+          "focused": false,
+          "delayedStartupFinished": true,
+          "documentReady": "complete",
+          "controllerAttached": true,
+          "selected": 17,
+          "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabA-bottom-4&auto=1",
+          "tabs": [
+            {
+              "id": 17,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabA-bottom-4&auto=1"
+            },
+            {
+              "id": 19,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabB-2&auto=1"
+            }
+          ]
+        },
+        "B": {
+          "chromeContext": 20,
+          "focused": true,
+          "delayedStartupFinished": true,
+          "documentReady": "complete",
+          "controllerAttached": true,
+          "selected": 28,
+          "uri": "http://127.0.0.1:29971/cross?token=g97-29983-windowB-top-6&auto=1",
+          "tabs": [
+            {
+              "id": 28,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29983-windowB-top-6&auto=1"
+            }
+          ]
+        },
+        "nativeActiveWindow": "4194407"
+      },
+      "heldLabel": "Scroll to Top",
+      "before": {
+        "nonce": 11,
+        "serverNow": 25268.050843725,
+        "values": {
+          "g97-29983-tabA-bottom-4": {
+            "root": {
+              "top": 1800,
+              "max": 7083,
+              "overflow": {
+                "top": 1800,
+                "max": 5650
+              },
+              "active": "frame",
+              "documentFocused": false,
+              "visibility": "visible",
+              "nonce": 11,
+              "seenAt": 25268.050139813
+            },
+            "frame": {
+              "top": 6650,
+              "max": 6650,
+              "overflow": null,
+              "active": "body",
+              "documentFocused": false,
+              "visibility": "visible",
+              "nonce": 11,
+              "seenAt": 25268.034412108
+            }
+          },
+          "g97-29983-tabB-2": {
+            "root": {
+              "top": 1800,
+              "max": 7083,
+              "overflow": {
+                "top": 1800,
+                "max": 5650
+              },
+              "active": "frame",
+              "documentFocused": false,
+              "visibility": "hidden",
+              "nonce": 11,
+              "seenAt": 25268.035081635
+            },
+            "frame": {
+              "top": 1800,
+              "max": 6650,
+              "overflow": null,
+              "active": "body",
+              "documentFocused": false,
+              "visibility": "hidden",
+              "nonce": 11,
+              "seenAt": 25268.037284942
+            }
+          },
+          "g97-29983-windowB-top-6": {
+            "root": {
+              "top": 1800,
+              "max": 7083,
+              "overflow": {
+                "top": 1800,
+                "max": 5650
+              },
+              "active": "frame",
+              "documentFocused": true,
+              "visibility": "visible",
+              "nonce": 11,
+              "seenAt": 25268.035567656
+            },
+            "frame": {
+              "top": 1800,
+              "max": 6650,
+              "overflow": null,
+              "active": "body",
+              "documentFocused": true,
+              "visibility": "visible",
+              "nonce": 11,
+              "seenAt": 25268.034224688
+            }
+          }
+        },
+        "fresh": true
+      },
+      "after": {
+        "nonce": 12,
+        "serverNow": 25284.968170011,
+        "values": {
+          "g97-29983-tabA-bottom-4": {
+            "root": {
+              "top": 1800,
+              "max": 7083,
+              "overflow": {
+                "top": 1800,
+                "max": 5650
+              },
+              "active": "frame",
+              "documentFocused": false,
+              "visibility": "visible",
+              "nonce": 12,
+              "seenAt": 25284.951568971
+            },
+            "frame": {
+              "top": 6650,
+              "max": 6650,
+              "overflow": null,
+              "active": "body",
+              "documentFocused": false,
+              "visibility": "visible",
+              "nonce": 12,
+              "seenAt": 25284.950268758
+            }
+          },
+          "g97-29983-tabB-2": {
+            "root": {
+              "top": 1800,
+              "max": 7083,
+              "overflow": {
+                "top": 1800,
+                "max": 5650
+              },
+              "active": "frame",
+              "documentFocused": false,
+              "visibility": "hidden",
+              "nonce": 12,
+              "seenAt": 25284.946204812
+            },
+            "frame": {
+              "top": 1800,
+              "max": 6650,
+              "overflow": null,
+              "active": "body",
+              "documentFocused": false,
+              "visibility": "hidden",
+              "nonce": 12,
+              "seenAt": 25284.958083924
+            }
+          },
+          "g97-29983-windowB-top-6": {
+            "root": {
+              "top": 1800,
+              "max": 7083,
+              "overflow": {
+                "top": 1800,
+                "max": 5650
+              },
+              "active": "frame",
+              "documentFocused": true,
+              "visibility": "visible",
+              "nonce": 12,
+              "seenAt": 25284.949304211
+            },
+            "frame": {
+              "top": 0,
+              "max": 6650,
+              "overflow": null,
+              "active": "body",
+              "documentFocused": true,
+              "visibility": "visible",
+              "nonce": 12,
+              "seenAt": 25284.947953407
+            }
+          }
+        },
+        "fresh": true
+      },
+      "check": {
+        "atExpectedEndpoint": true,
+        "expected": 0,
+        "actual": 0,
+        "nonTargetsUnchanged": true,
+        "beforePositions": {
+          "g97-29983-tabA-bottom-4:root": 1800,
+          "g97-29983-tabA-bottom-4:overflow": 1800,
+          "g97-29983-tabA-bottom-4:frame": 6650,
+          "g97-29983-tabB-2:root": 1800,
+          "g97-29983-tabB-2:overflow": 1800,
+          "g97-29983-tabB-2:frame": 1800,
+          "g97-29983-windowB-top-6:root": 1800,
+          "g97-29983-windowB-top-6:overflow": 1800,
+          "g97-29983-windowB-top-6:frame": 1800
+        },
+        "afterPositions": {
+          "g97-29983-tabA-bottom-4:root": 1800,
+          "g97-29983-tabA-bottom-4:overflow": 1800,
+          "g97-29983-tabA-bottom-4:frame": 6650,
+          "g97-29983-tabB-2:root": 1800,
+          "g97-29983-tabB-2:overflow": 1800,
+          "g97-29983-tabB-2:frame": 1800,
+          "g97-29983-windowB-top-6:root": 1800,
+          "g97-29983-windowB-top-6:overflow": 1800,
+          "g97-29983-windowB-top-6:frame": 0
+        }
+      },
+      "popups": 0,
+      "events": [
+        {
+          "type": "mousedown",
+          "trusted": true,
+          "x": 655,
+          "y": 338,
+          "prevented": false
+        },
+        {
+          "type": "mouseup",
+          "trusted": true,
+          "x": 655,
+          "y": 194,
+          "prevented": true
+        },
+        {
+          "type": "contextmenu",
+          "trusted": true,
+          "x": 655,
+          "y": 194,
+          "prevented": true
+        }
+      ]
+    },
+    {
+      "kind": "native-second-window-gesture",
+      "direction": "bottom",
+      "input": "normal OS Ctrl+N window, OS focus and OS gesture",
+      "focusBefore": {
+        "activeIsA": false,
+        "activeIsB": true,
+        "focusedContext": 25769803779,
+        "focusedTop": 28,
+        "A": {
+          "chromeContext": 2,
+          "focused": false,
+          "delayedStartupFinished": true,
+          "documentReady": "complete",
+          "controllerAttached": true,
+          "selected": 17,
+          "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabA-bottom-4&auto=1",
+          "tabs": [
+            {
+              "id": 17,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabA-bottom-4&auto=1"
+            },
+            {
+              "id": 19,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabB-2&auto=1"
+            }
+          ]
+        },
+        "B": {
+          "chromeContext": 20,
+          "focused": true,
+          "delayedStartupFinished": true,
+          "documentReady": "complete",
+          "controllerAttached": true,
+          "selected": 28,
+          "uri": "http://127.0.0.1:29971/cross?token=g97-29983-windowB-bottom-7&auto=1",
+          "tabs": [
+            {
+              "id": 28,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29983-windowB-bottom-7&auto=1"
+            }
+          ]
+        },
+        "nativeActiveWindow": "4194407"
+      },
+      "focusAfter": {
+        "activeIsA": false,
+        "activeIsB": true,
+        "focusedContext": 25769803779,
+        "focusedTop": 28,
+        "A": {
+          "chromeContext": 2,
+          "focused": false,
+          "delayedStartupFinished": true,
+          "documentReady": "complete",
+          "controllerAttached": true,
+          "selected": 17,
+          "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabA-bottom-4&auto=1",
+          "tabs": [
+            {
+              "id": 17,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabA-bottom-4&auto=1"
+            },
+            {
+              "id": 19,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabB-2&auto=1"
+            }
+          ]
+        },
+        "B": {
+          "chromeContext": 20,
+          "focused": true,
+          "delayedStartupFinished": true,
+          "documentReady": "complete",
+          "controllerAttached": true,
+          "selected": 28,
+          "uri": "http://127.0.0.1:29971/cross?token=g97-29983-windowB-bottom-7&auto=1",
+          "tabs": [
+            {
+              "id": 28,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29983-windowB-bottom-7&auto=1"
+            }
+          ]
+        },
+        "nativeActiveWindow": "4194407"
+      },
+      "heldLabel": "Scroll to Bottom",
+      "before": {
+        "nonce": 14,
+        "serverNow": 25286.909963881,
+        "values": {
+          "g97-29983-tabA-bottom-4": {
+            "root": {
+              "top": 1800,
+              "max": 7083,
+              "overflow": {
+                "top": 1800,
+                "max": 5650
+              },
+              "active": "frame",
+              "documentFocused": false,
+              "visibility": "visible",
+              "nonce": 14,
+              "seenAt": 25286.887639277
+            },
+            "frame": {
+              "top": 6650,
+              "max": 6650,
+              "overflow": null,
+              "active": "body",
+              "documentFocused": false,
+              "visibility": "visible",
+              "nonce": 14,
+              "seenAt": 25286.890177074
+            }
+          },
+          "g97-29983-tabB-2": {
+            "root": {
+              "top": 1800,
+              "max": 7083,
+              "overflow": {
+                "top": 1800,
+                "max": 5650
+              },
+              "active": "frame",
+              "documentFocused": false,
+              "visibility": "hidden",
+              "nonce": 14,
+              "seenAt": 25286.890657959
+            },
+            "frame": {
+              "top": 1800,
+              "max": 6650,
+              "overflow": null,
+              "active": "body",
+              "documentFocused": false,
+              "visibility": "hidden",
+              "nonce": 14,
+              "seenAt": 25286.891156496
+            }
+          },
+          "g97-29983-windowB-bottom-7": {
+            "root": {
+              "top": 1800,
+              "max": 7083,
+              "overflow": {
+                "top": 1800,
+                "max": 5650
+              },
+              "active": "frame",
+              "documentFocused": true,
+              "visibility": "visible",
+              "nonce": 14,
+              "seenAt": 25286.899597817
+            },
+            "frame": {
+              "top": 1800,
+              "max": 6650,
+              "overflow": null,
+              "active": "body",
+              "documentFocused": true,
+              "visibility": "visible",
+              "nonce": 14,
+              "seenAt": 25286.888885387
+            }
+          }
+        },
+        "fresh": true
+      },
+      "after": {
+        "nonce": 15,
+        "serverNow": 25305.483895191,
+        "values": {
+          "g97-29983-tabA-bottom-4": {
+            "root": {
+              "top": 1800,
+              "max": 7083,
+              "overflow": {
+                "top": 1800,
+                "max": 5650
+              },
+              "active": "frame",
+              "documentFocused": false,
+              "visibility": "visible",
+              "nonce": 15,
+              "seenAt": 25305.452690681
+            },
+            "frame": {
+              "top": 6650,
+              "max": 6650,
+              "overflow": null,
+              "active": "body",
+              "documentFocused": false,
+              "visibility": "visible",
+              "nonce": 15,
+              "seenAt": 25305.446386404
+            }
+          },
+          "g97-29983-tabB-2": {
+            "root": {
+              "top": 1800,
+              "max": 7083,
+              "overflow": {
+                "top": 1800,
+                "max": 5650
+              },
+              "active": "frame",
+              "documentFocused": false,
+              "visibility": "hidden",
+              "nonce": 15,
+              "seenAt": 25305.451284894
+            },
+            "frame": {
+              "top": 1800,
+              "max": 6650,
+              "overflow": null,
+              "active": "body",
+              "documentFocused": false,
+              "visibility": "hidden",
+              "nonce": 15,
+              "seenAt": 25305.449115589
+            }
+          },
+          "g97-29983-windowB-bottom-7": {
+            "root": {
+              "top": 1800,
+              "max": 7083,
+              "overflow": {
+                "top": 1800,
+                "max": 5650
+              },
+              "active": "frame",
+              "documentFocused": true,
+              "visibility": "visible",
+              "nonce": 15,
+              "seenAt": 25305.468264314
+            },
+            "frame": {
+              "top": 6650,
+              "max": 6650,
+              "overflow": null,
+              "active": "body",
+              "documentFocused": true,
+              "visibility": "visible",
+              "nonce": 15,
+              "seenAt": 25305.449471311
+            }
+          }
+        },
+        "fresh": true
+      },
+      "check": {
+        "atExpectedEndpoint": true,
+        "expected": 6650,
+        "actual": 6650,
+        "nonTargetsUnchanged": true,
+        "beforePositions": {
+          "g97-29983-tabA-bottom-4:root": 1800,
+          "g97-29983-tabA-bottom-4:overflow": 1800,
+          "g97-29983-tabA-bottom-4:frame": 6650,
+          "g97-29983-tabB-2:root": 1800,
+          "g97-29983-tabB-2:overflow": 1800,
+          "g97-29983-tabB-2:frame": 1800,
+          "g97-29983-windowB-bottom-7:root": 1800,
+          "g97-29983-windowB-bottom-7:overflow": 1800,
+          "g97-29983-windowB-bottom-7:frame": 1800
+        },
+        "afterPositions": {
+          "g97-29983-tabA-bottom-4:root": 1800,
+          "g97-29983-tabA-bottom-4:overflow": 1800,
+          "g97-29983-tabA-bottom-4:frame": 6650,
+          "g97-29983-tabB-2:root": 1800,
+          "g97-29983-tabB-2:overflow": 1800,
+          "g97-29983-tabB-2:frame": 1800,
+          "g97-29983-windowB-bottom-7:root": 1800,
+          "g97-29983-windowB-bottom-7:overflow": 1800,
+          "g97-29983-windowB-bottom-7:frame": 6650
+        }
+      },
+      "popups": 0,
+      "events": [
+        {
+          "type": "mousedown",
+          "trusted": true,
+          "x": 655,
+          "y": 338,
+          "prevented": false
+        },
+        {
+          "type": "mouseup",
+          "trusted": true,
+          "x": 655,
+          "y": 482,
+          "prevented": true
+        },
+        {
+          "type": "contextmenu",
+          "trusted": true,
+          "x": 655,
+          "y": 482,
+          "prevented": true
+        }
+      ]
+    },
+    {
+      "kind": "production-action-api-foreign-native-window-focus",
+      "direction": "top",
+      "input": "explicit API fixture; real inactive target window A and native-focused frame/window B, not a physical gesture on inactive A",
+      "qualifiedActualFocusMismatch": true,
+      "actionReturned": true,
+      "popups": 0,
+      "focusBefore": {
+        "activeIsA": false,
+        "activeIsB": true,
+        "focusedContext": 25769803779,
+        "focusedTop": 28,
+        "A": {
+          "chromeContext": 2,
+          "focused": false,
+          "delayedStartupFinished": true,
+          "documentReady": "complete",
+          "controllerAttached": true,
+          "selected": 17,
+          "uri": "http://127.0.0.1:29971/cross?token=g97-29983-inactive-A-top-8&auto=1",
+          "tabs": [
+            {
+              "id": 17,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29983-inactive-A-top-8&auto=1"
+            },
+            {
+              "id": 19,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabB-2&auto=1"
+            }
+          ]
+        },
+        "B": {
+          "chromeContext": 20,
+          "focused": true,
+          "delayedStartupFinished": true,
+          "documentReady": "complete",
+          "controllerAttached": true,
+          "selected": 28,
+          "uri": "http://127.0.0.1:29971/cross?token=g97-29983-windowB-bottom-7&auto=1",
+          "tabs": [
+            {
+              "id": 28,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29983-windowB-bottom-7&auto=1"
+            }
+          ]
+        },
+        "nativeActiveWindow": "4194407"
+      },
+      "focusAfter": {
+        "activeIsA": false,
+        "activeIsB": true,
+        "focusedContext": 25769803779,
+        "focusedTop": 28,
+        "A": {
+          "chromeContext": 2,
+          "focused": false,
+          "delayedStartupFinished": true,
+          "documentReady": "complete",
+          "controllerAttached": true,
+          "selected": 17,
+          "uri": "http://127.0.0.1:29971/cross?token=g97-29983-inactive-A-top-8&auto=1",
+          "tabs": [
+            {
+              "id": 17,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29983-inactive-A-top-8&auto=1"
+            },
+            {
+              "id": 19,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabB-2&auto=1"
+            }
+          ]
+        },
+        "B": {
+          "chromeContext": 20,
+          "focused": true,
+          "delayedStartupFinished": true,
+          "documentReady": "complete",
+          "controllerAttached": true,
+          "selected": 28,
+          "uri": "http://127.0.0.1:29971/cross?token=g97-29983-windowB-bottom-7&auto=1",
+          "tabs": [
+            {
+              "id": 28,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29983-windowB-bottom-7&auto=1"
+            }
+          ]
+        },
+        "nativeActiveWindow": "4194407"
+      },
+      "before": {
+        "nonce": 17,
+        "serverNow": 25308.081688905,
+        "values": {
+          "g97-29983-inactive-A-top-8": {
+            "root": {
+              "top": 1800,
+              "max": 7083,
+              "overflow": {
+                "top": 1800,
+                "max": 5650
+              },
+              "active": "body",
+              "documentFocused": false,
+              "visibility": "visible",
+              "nonce": 17,
+              "seenAt": 25308.069908937
+            },
+            "frame": {
+              "top": 1800,
+              "max": 6650,
+              "overflow": null,
+              "active": "body",
+              "documentFocused": false,
+              "visibility": "visible",
+              "nonce": 17,
+              "seenAt": 25308.077635524
+            }
+          },
+          "g97-29983-tabB-2": {
+            "root": {
+              "top": 1800,
+              "max": 7083,
+              "overflow": {
+                "top": 1800,
+                "max": 5650
+              },
+              "active": "frame",
+              "documentFocused": false,
+              "visibility": "hidden",
+              "nonce": 17,
+              "seenAt": 25308.072311705
+            },
+            "frame": {
+              "top": 1800,
+              "max": 6650,
+              "overflow": null,
+              "active": "body",
+              "documentFocused": false,
+              "visibility": "hidden",
+              "nonce": 17,
+              "seenAt": 25308.061669167
+            }
+          },
+          "g97-29983-windowB-bottom-7": {
+            "root": {
+              "top": 1800,
+              "max": 7083,
+              "overflow": {
+                "top": 1800,
+                "max": 5650
+              },
+              "active": "frame",
+              "documentFocused": true,
+              "visibility": "visible",
+              "nonce": 17,
+              "seenAt": 25308.076995194
+            },
+            "frame": {
+              "top": 6650,
+              "max": 6650,
+              "overflow": null,
+              "active": "body",
+              "documentFocused": true,
+              "visibility": "visible",
+              "nonce": 17,
+              "seenAt": 25308.066020096
+            }
+          }
+        },
+        "fresh": true
+      },
+      "after": {
+        "nonce": 18,
+        "serverNow": 25309.303432139,
+        "values": {
+          "g97-29983-inactive-A-top-8": {
+            "root": {
+              "top": 0,
+              "max": 7083,
+              "overflow": {
+                "top": 1800,
+                "max": 5650
+              },
+              "active": "body",
+              "documentFocused": false,
+              "visibility": "visible",
+              "nonce": 18,
+              "seenAt": 25309.275034551
+            },
+            "frame": {
+              "top": 1800,
+              "max": 6650,
+              "overflow": null,
+              "active": "body",
+              "documentFocused": false,
+              "visibility": "visible",
+              "nonce": 18,
+              "seenAt": 25309.267739041
+            }
+          },
+          "g97-29983-tabB-2": {
+            "root": {
+              "top": 1800,
+              "max": 7083,
+              "overflow": {
+                "top": 1800,
+                "max": 5650
+              },
+              "active": "frame",
+              "documentFocused": false,
+              "visibility": "hidden",
+              "nonce": 18,
+              "seenAt": 25309.255478126
+            },
+            "frame": {
+              "top": 1800,
+              "max": 6650,
+              "overflow": null,
+              "active": "body",
+              "documentFocused": false,
+              "visibility": "hidden",
+              "nonce": 18,
+              "seenAt": 25309.265351005
+            }
+          },
+          "g97-29983-windowB-bottom-7": {
+            "root": {
+              "top": 1800,
+              "max": 7083,
+              "overflow": {
+                "top": 1800,
+                "max": 5650
+              },
+              "active": "frame",
+              "documentFocused": true,
+              "visibility": "visible",
+              "nonce": 18,
+              "seenAt": 25309.28214524
+            },
+            "frame": {
+              "top": 6650,
+              "max": 6650,
+              "overflow": null,
+              "active": "body",
+              "documentFocused": true,
+              "visibility": "visible",
+              "nonce": 18,
+              "seenAt": 25309.273208156
+            }
+          }
+        },
+        "fresh": true
+      },
+      "check": {
+        "atExpectedEndpoint": true,
+        "expected": 0,
+        "actual": 0,
+        "nonTargetsUnchanged": true,
+        "beforePositions": {
+          "g97-29983-inactive-A-top-8:root": 1800,
+          "g97-29983-inactive-A-top-8:overflow": 1800,
+          "g97-29983-inactive-A-top-8:frame": 1800,
+          "g97-29983-tabB-2:root": 1800,
+          "g97-29983-tabB-2:overflow": 1800,
+          "g97-29983-tabB-2:frame": 1800,
+          "g97-29983-windowB-bottom-7:root": 1800,
+          "g97-29983-windowB-bottom-7:overflow": 1800,
+          "g97-29983-windowB-bottom-7:frame": 6650
+        },
+        "afterPositions": {
+          "g97-29983-inactive-A-top-8:root": 0,
+          "g97-29983-inactive-A-top-8:overflow": 1800,
+          "g97-29983-inactive-A-top-8:frame": 1800,
+          "g97-29983-tabB-2:root": 1800,
+          "g97-29983-tabB-2:overflow": 1800,
+          "g97-29983-tabB-2:frame": 1800,
+          "g97-29983-windowB-bottom-7:root": 1800,
+          "g97-29983-windowB-bottom-7:overflow": 1800,
+          "g97-29983-windowB-bottom-7:frame": 6650
+        }
+      },
+      "foreignNativeFocusRetained": true
+    }
+  ],
+  "sameWindowStaleFocusProbes": [
+    {
+      "direction": "top",
+      "afterNativeTabClick": {
+        "activeIsA": true,
+        "activeIsB": false,
+        "focusedContext": 17,
+        "focusedTop": 17,
+        "A": {
+          "chromeContext": 2,
+          "focused": true,
+          "delayedStartupFinished": true,
+          "documentReady": "complete",
+          "controllerAttached": true,
+          "selected": 17,
+          "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabA-1&auto=1",
+          "tabs": [
+            {
+              "id": 17,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabA-1&auto=1"
+            },
+            {
+              "id": 19,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabB-2&auto=1"
+            }
+          ]
+        },
+        "B": null,
+        "nativeActiveWindow": "4194325"
+      },
+      "afterNativeUrlbarFocus": {
+        "activeIsA": true,
+        "activeIsB": false,
+        "focusedContext": 17,
+        "focusedTop": 17,
+        "A": {
+          "chromeContext": 2,
+          "focused": true,
+          "delayedStartupFinished": true,
+          "documentReady": "complete",
+          "controllerAttached": true,
+          "selected": 17,
+          "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabA-1&auto=1",
+          "tabs": [
+            {
+              "id": 17,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabA-1&auto=1"
+            },
+            {
+              "id": 19,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabB-2&auto=1"
+            }
+          ]
+        },
+        "B": null,
+        "nativeActiveWindow": "4194325"
+      },
+      "foreignBackgroundFocusActuallyObserved": false
+    },
+    {
+      "direction": "bottom",
+      "afterNativeTabClick": {
+        "activeIsA": true,
+        "activeIsB": false,
+        "focusedContext": 17179869186,
+        "focusedTop": 17,
+        "A": {
+          "chromeContext": 2,
+          "focused": true,
+          "delayedStartupFinished": true,
+          "documentReady": "complete",
+          "controllerAttached": true,
+          "selected": 17,
+          "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabA-top-3&auto=1",
+          "tabs": [
+            {
+              "id": 17,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabA-top-3&auto=1"
+            },
+            {
+              "id": 19,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabB-2&auto=1"
+            }
+          ]
+        },
+        "B": null,
+        "nativeActiveWindow": "4194325"
+      },
+      "afterNativeUrlbarFocus": {
+        "activeIsA": true,
+        "activeIsB": false,
+        "focusedContext": 17179869186,
+        "focusedTop": 17,
+        "A": {
+          "chromeContext": 2,
+          "focused": true,
+          "delayedStartupFinished": true,
+          "documentReady": "complete",
+          "controllerAttached": true,
+          "selected": 17,
+          "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabA-top-3&auto=1",
+          "tabs": [
+            {
+              "id": 17,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabA-top-3&auto=1"
+            },
+            {
+              "id": 19,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabB-2&auto=1"
+            }
+          ]
+        },
+        "B": null,
+        "nativeActiveWindow": "4194325"
+      },
+      "foreignBackgroundFocusActuallyObserved": false
+    }
+  ],
+  "actionApiFixture": "unmodified production executeGestureAction imported in the existing window realm through a temporary resource: test module; real Window/BrowsingContext objects only",
+  "allRequiredPass": false,
+  "loadDiagnostics": [
+    {
+      "token": "g97-29983-tabA-1",
+      "nativeBefore": "4194325",
+      "focusBefore": {
+        "activeIsA": true,
+        "activeIsB": false,
+        "focusedContext": null,
+        "focusedTop": null,
+        "A": {
+          "chromeContext": 2,
+          "focused": true,
+          "delayedStartupFinished": true,
+          "documentReady": "complete",
+          "controllerAttached": true,
+          "selected": 16,
+          "uri": "about:hub#/features/gesture",
+          "tabs": [
+            {
+              "id": 16,
+              "uri": "about:hub#/features/gesture"
+            }
+          ]
+        },
+        "B": null,
+        "nativeActiveWindow": "4194325"
+      },
+      "nativeImmediatelyBeforeKeys": "4194325",
+      "nativeAfter": "4194325",
+      "focusAfter": {
+        "activeIsA": true,
+        "activeIsB": false,
+        "focusedContext": 17,
+        "focusedTop": 17,
+        "A": {
+          "chromeContext": 2,
+          "focused": true,
+          "delayedStartupFinished": true,
+          "documentReady": "complete",
+          "controllerAttached": true,
+          "selected": 17,
+          "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabA-1&auto=1",
+          "tabs": [
+            {
+              "id": 17,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabA-1&auto=1"
+            }
+          ]
+        },
+        "B": null,
+        "nativeActiveWindow": "4194325"
+      }
+    },
+    {
+      "token": "g97-29983-tabB-2",
+      "nativeBefore": "4194325",
+      "focusBefore": {
+        "activeIsA": true,
+        "activeIsB": false,
+        "focusedContext": 17,
+        "focusedTop": 17,
+        "A": {
+          "chromeContext": 2,
+          "focused": true,
+          "delayedStartupFinished": true,
+          "documentReady": "complete",
+          "controllerAttached": true,
+          "selected": 15,
+          "uri": "about:newtab",
+          "tabs": [
+            {
+              "id": 17,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabA-1&auto=1"
+            },
+            {
+              "id": 15,
+              "uri": "about:newtab"
+            }
+          ]
+        },
+        "B": null,
+        "nativeActiveWindow": "4194325"
+      },
+      "nativeImmediatelyBeforeKeys": "4194325",
+      "nativeAfter": "4194325",
+      "focusAfter": {
+        "activeIsA": true,
+        "activeIsB": false,
+        "focusedContext": 19,
+        "focusedTop": 19,
+        "A": {
+          "chromeContext": 2,
+          "focused": true,
+          "delayedStartupFinished": true,
+          "documentReady": "complete",
+          "controllerAttached": true,
+          "selected": 19,
+          "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabB-2&auto=1",
+          "tabs": [
+            {
+              "id": 17,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabA-1&auto=1"
+            },
+            {
+              "id": 19,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabB-2&auto=1"
+            }
+          ]
+        },
+        "B": null,
+        "nativeActiveWindow": "4194325"
+      }
+    },
+    {
+      "token": "g97-29983-tabA-top-3",
+      "nativeBefore": "4194325",
+      "focusBefore": {
+        "activeIsA": true,
+        "activeIsB": false,
+        "focusedContext": 17,
+        "focusedTop": 17,
+        "A": {
+          "chromeContext": 2,
+          "focused": true,
+          "delayedStartupFinished": true,
+          "documentReady": "complete",
+          "controllerAttached": true,
+          "selected": 17,
+          "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabA-1&auto=1",
+          "tabs": [
+            {
+              "id": 17,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabA-1&auto=1"
+            },
+            {
+              "id": 19,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabB-2&auto=1"
+            }
+          ]
+        },
+        "B": null,
+        "nativeActiveWindow": "4194325"
+      },
+      "nativeImmediatelyBeforeKeys": "4194325",
+      "nativeAfter": "4194325",
+      "focusAfter": {
+        "activeIsA": true,
+        "activeIsB": false,
+        "focusedContext": 17,
+        "focusedTop": 17,
+        "A": {
+          "chromeContext": 2,
+          "focused": true,
+          "delayedStartupFinished": true,
+          "documentReady": "complete",
+          "controllerAttached": true,
+          "selected": 17,
+          "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabA-top-3&auto=1",
+          "tabs": [
+            {
+              "id": 17,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabA-top-3&auto=1"
+            },
+            {
+              "id": 19,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabB-2&auto=1"
+            }
+          ]
+        },
+        "B": null,
+        "nativeActiveWindow": "4194325"
+      }
+    },
+    {
+      "token": "g97-29983-tabA-bottom-4",
+      "nativeBefore": "4194325",
+      "focusBefore": {
+        "activeIsA": true,
+        "activeIsB": false,
+        "focusedContext": 17179869186,
+        "focusedTop": 17,
+        "A": {
+          "chromeContext": 2,
+          "focused": true,
+          "delayedStartupFinished": true,
+          "documentReady": "complete",
+          "controllerAttached": true,
+          "selected": 17,
+          "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabA-top-3&auto=1",
+          "tabs": [
+            {
+              "id": 17,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabA-top-3&auto=1"
+            },
+            {
+              "id": 19,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabB-2&auto=1"
+            }
+          ]
+        },
+        "B": null,
+        "nativeActiveWindow": "4194325"
+      },
+      "nativeImmediatelyBeforeKeys": "4194325",
+      "nativeAfter": "4194325",
+      "focusAfter": {
+        "activeIsA": true,
+        "activeIsB": false,
+        "focusedContext": null,
+        "focusedTop": null,
+        "A": {
+          "chromeContext": 2,
+          "focused": true,
+          "delayedStartupFinished": true,
+          "documentReady": "complete",
+          "controllerAttached": true,
+          "selected": 17,
+          "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabA-bottom-4&auto=1",
+          "tabs": [
+            {
+              "id": 17,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabA-bottom-4&auto=1"
+            },
+            {
+              "id": 19,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabB-2&auto=1"
+            }
+          ]
+        },
+        "B": null,
+        "nativeActiveWindow": "4194325"
+      }
+    },
+    {
+      "token": "g97-29983-windowB-5",
+      "nativeBefore": "4194407",
+      "focusBefore": {
+        "activeIsA": false,
+        "activeIsB": true,
+        "focusedContext": 17179869187,
+        "focusedTop": 17,
+        "A": {
+          "chromeContext": 2,
+          "focused": false,
+          "delayedStartupFinished": true,
+          "documentReady": "complete",
+          "controllerAttached": true,
+          "selected": 17,
+          "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabA-bottom-4&auto=1",
+          "tabs": [
+            {
+              "id": 17,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabA-bottom-4&auto=1"
+            },
+            {
+              "id": 19,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabB-2&auto=1"
+            }
+          ]
+        },
+        "B": {
+          "chromeContext": 20,
+          "focused": true,
+          "delayedStartupFinished": true,
+          "documentReady": "complete",
+          "controllerAttached": true,
+          "selected": 26,
+          "uri": "about:home",
+          "tabs": [
+            {
+              "id": 26,
+              "uri": "about:home"
+            }
+          ]
+        },
+        "nativeActiveWindow": "4194407"
+      },
+      "nativeImmediatelyBeforeKeys": "4194407",
+      "nativeAfter": "4194407",
+      "focusAfter": {
+        "activeIsA": false,
+        "activeIsB": true,
+        "focusedContext": 28,
+        "focusedTop": 28,
+        "A": {
+          "chromeContext": 2,
+          "focused": false,
+          "delayedStartupFinished": true,
+          "documentReady": "complete",
+          "controllerAttached": true,
+          "selected": 17,
+          "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabA-bottom-4&auto=1",
+          "tabs": [
+            {
+              "id": 17,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabA-bottom-4&auto=1"
+            },
+            {
+              "id": 19,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabB-2&auto=1"
+            }
+          ]
+        },
+        "B": {
+          "chromeContext": 20,
+          "focused": true,
+          "delayedStartupFinished": true,
+          "documentReady": "complete",
+          "controllerAttached": true,
+          "selected": 28,
+          "uri": "http://127.0.0.1:29971/cross?token=g97-29983-windowB-5&auto=1",
+          "tabs": [
+            {
+              "id": 28,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29983-windowB-5&auto=1"
+            }
+          ]
+        },
+        "nativeActiveWindow": "4194407"
+      }
+    },
+    {
+      "token": "g97-29983-windowB-top-6",
+      "nativeBefore": "4194407",
+      "focusBefore": {
+        "activeIsA": false,
+        "activeIsB": true,
+        "focusedContext": 25769803777,
+        "focusedTop": 28,
+        "A": {
+          "chromeContext": 2,
+          "focused": false,
+          "delayedStartupFinished": true,
+          "documentReady": "complete",
+          "controllerAttached": true,
+          "selected": 17,
+          "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabA-bottom-4&auto=1",
+          "tabs": [
+            {
+              "id": 17,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabA-bottom-4&auto=1"
+            },
+            {
+              "id": 19,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabB-2&auto=1"
+            }
+          ]
+        },
+        "B": {
+          "chromeContext": 20,
+          "focused": true,
+          "delayedStartupFinished": true,
+          "documentReady": "complete",
+          "controllerAttached": true,
+          "selected": 28,
+          "uri": "http://127.0.0.1:29971/cross?token=g97-29983-windowB-5&auto=1",
+          "tabs": [
+            {
+              "id": 28,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29983-windowB-5&auto=1"
+            }
+          ]
+        },
+        "nativeActiveWindow": "4194407"
+      },
+      "nativeImmediatelyBeforeKeys": "4194407",
+      "nativeAfter": "4194407",
+      "focusAfter": {
+        "activeIsA": false,
+        "activeIsB": true,
+        "focusedContext": null,
+        "focusedTop": null,
+        "A": {
+          "chromeContext": 2,
+          "focused": false,
+          "delayedStartupFinished": true,
+          "documentReady": "complete",
+          "controllerAttached": true,
+          "selected": 17,
+          "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabA-bottom-4&auto=1",
+          "tabs": [
+            {
+              "id": 17,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabA-bottom-4&auto=1"
+            },
+            {
+              "id": 19,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabB-2&auto=1"
+            }
+          ]
+        },
+        "B": {
+          "chromeContext": 20,
+          "focused": true,
+          "delayedStartupFinished": true,
+          "documentReady": "complete",
+          "controllerAttached": true,
+          "selected": 28,
+          "uri": "http://127.0.0.1:29971/cross?token=g97-29983-windowB-top-6&auto=1",
+          "tabs": [
+            {
+              "id": 28,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29983-windowB-top-6&auto=1"
+            }
+          ]
+        },
+        "nativeActiveWindow": "4194407"
+      }
+    },
+    {
+      "token": "g97-29983-windowB-bottom-7",
+      "nativeBefore": "4194407",
+      "focusBefore": {
+        "activeIsA": false,
+        "activeIsB": true,
+        "focusedContext": 25769803778,
+        "focusedTop": 28,
+        "A": {
+          "chromeContext": 2,
+          "focused": false,
+          "delayedStartupFinished": true,
+          "documentReady": "complete",
+          "controllerAttached": true,
+          "selected": 17,
+          "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabA-bottom-4&auto=1",
+          "tabs": [
+            {
+              "id": 17,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabA-bottom-4&auto=1"
+            },
+            {
+              "id": 19,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabB-2&auto=1"
+            }
+          ]
+        },
+        "B": {
+          "chromeContext": 20,
+          "focused": true,
+          "delayedStartupFinished": true,
+          "documentReady": "complete",
+          "controllerAttached": true,
+          "selected": 28,
+          "uri": "http://127.0.0.1:29971/cross?token=g97-29983-windowB-top-6&auto=1",
+          "tabs": [
+            {
+              "id": 28,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29983-windowB-top-6&auto=1"
+            }
+          ]
+        },
+        "nativeActiveWindow": "4194407"
+      },
+      "nativeImmediatelyBeforeKeys": "4194407",
+      "nativeAfter": "4194407",
+      "focusAfter": {
+        "activeIsA": false,
+        "activeIsB": true,
+        "focusedContext": null,
+        "focusedTop": null,
+        "A": {
+          "chromeContext": 2,
+          "focused": false,
+          "delayedStartupFinished": true,
+          "documentReady": "complete",
+          "controllerAttached": true,
+          "selected": 17,
+          "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabA-bottom-4&auto=1",
+          "tabs": [
+            {
+              "id": 17,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabA-bottom-4&auto=1"
+            },
+            {
+              "id": 19,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabB-2&auto=1"
+            }
+          ]
+        },
+        "B": {
+          "chromeContext": 20,
+          "focused": true,
+          "delayedStartupFinished": true,
+          "documentReady": "complete",
+          "controllerAttached": true,
+          "selected": 28,
+          "uri": "http://127.0.0.1:29971/cross?token=g97-29983-windowB-bottom-7&auto=1",
+          "tabs": [
+            {
+              "id": 28,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29983-windowB-bottom-7&auto=1"
+            }
+          ]
+        },
+        "nativeActiveWindow": "4194407"
+      }
+    },
+    {
+      "token": "g97-29983-inactive-A-top-8",
+      "nativeBefore": "4194325",
+      "focusBefore": {
+        "activeIsA": true,
+        "activeIsB": false,
+        "focusedContext": 17179869187,
+        "focusedTop": 17,
+        "A": {
+          "chromeContext": 2,
+          "focused": true,
+          "delayedStartupFinished": true,
+          "documentReady": "complete",
+          "controllerAttached": true,
+          "selected": 17,
+          "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabA-bottom-4&auto=1",
+          "tabs": [
+            {
+              "id": 17,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabA-bottom-4&auto=1"
+            },
+            {
+              "id": 19,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabB-2&auto=1"
+            }
+          ]
+        },
+        "B": {
+          "chromeContext": 20,
+          "focused": false,
+          "delayedStartupFinished": true,
+          "documentReady": "complete",
+          "controllerAttached": true,
+          "selected": 28,
+          "uri": "http://127.0.0.1:29971/cross?token=g97-29983-windowB-bottom-7&auto=1",
+          "tabs": [
+            {
+              "id": 28,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29983-windowB-bottom-7&auto=1"
+            }
+          ]
+        },
+        "nativeActiveWindow": "4194325"
+      },
+      "nativeImmediatelyBeforeKeys": "4194325",
+      "nativeAfter": "4194325",
+      "focusAfter": {
+        "activeIsA": true,
+        "activeIsB": false,
+        "focusedContext": null,
+        "focusedTop": null,
+        "A": {
+          "chromeContext": 2,
+          "focused": true,
+          "delayedStartupFinished": true,
+          "documentReady": "complete",
+          "controllerAttached": true,
+          "selected": 17,
+          "uri": "http://127.0.0.1:29971/cross?token=g97-29983-inactive-A-top-8&auto=1",
+          "tabs": [
+            {
+              "id": 17,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29983-inactive-A-top-8&auto=1"
+            },
+            {
+              "id": 19,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabB-2&auto=1"
+            }
+          ]
+        },
+        "B": {
+          "chromeContext": 20,
+          "focused": false,
+          "delayedStartupFinished": true,
+          "documentReady": "complete",
+          "controllerAttached": true,
+          "selected": 28,
+          "uri": "http://127.0.0.1:29971/cross?token=g97-29983-windowB-bottom-7&auto=1",
+          "tabs": [
+            {
+              "id": 28,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29983-windowB-bottom-7&auto=1"
+            }
+          ]
+        },
+        "nativeActiveWindow": "4194325"
+      }
+    },
+    {
+      "token": "g97-29983-inactive-A-bottom-9",
+      "nativeBefore": "4194325",
+      "focusBefore": {
+        "activeIsA": true,
+        "activeIsB": false,
+        "focusedContext": 17,
+        "focusedTop": 17,
+        "A": {
+          "chromeContext": 2,
+          "focused": true,
+          "delayedStartupFinished": true,
+          "documentReady": "complete",
+          "controllerAttached": true,
+          "selected": 17,
+          "uri": "http://127.0.0.1:29971/cross?token=g97-29983-inactive-A-top-8&auto=1",
+          "tabs": [
+            {
+              "id": 17,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29983-inactive-A-top-8&auto=1"
+            },
+            {
+              "id": 19,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabB-2&auto=1"
+            }
+          ]
+        },
+        "B": {
+          "chromeContext": 20,
+          "focused": false,
+          "delayedStartupFinished": true,
+          "documentReady": "complete",
+          "controllerAttached": true,
+          "selected": 28,
+          "uri": "http://127.0.0.1:29971/cross?token=g97-29983-windowB-bottom-7&auto=1",
+          "tabs": [
+            {
+              "id": 28,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29983-windowB-bottom-7&auto=1"
+            }
+          ]
+        },
+        "nativeActiveWindow": "4194325"
+      },
+      "nativeImmediatelyBeforeKeys": "4194325",
+      "nativeAfter": "4194325",
+      "focusAfter": {
+        "activeIsA": true,
+        "activeIsB": false,
+        "focusedContext": 17,
+        "focusedTop": 17,
+        "A": {
+          "chromeContext": 2,
+          "focused": true,
+          "delayedStartupFinished": true,
+          "documentReady": "complete",
+          "controllerAttached": true,
+          "selected": 17,
+          "uri": "http://127.0.0.1:29971/cross?token=g97-29983-inactive-A-bottom-9&auto=1",
+          "tabs": [
+            {
+              "id": 17,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29983-inactive-A-bottom-9&auto=1"
+            },
+            {
+              "id": 19,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabB-2&auto=1"
+            }
+          ]
+        },
+        "B": {
+          "chromeContext": 20,
+          "focused": false,
+          "delayedStartupFinished": true,
+          "documentReady": "complete",
+          "controllerAttached": true,
+          "selected": 28,
+          "uri": "http://127.0.0.1:29971/cross?token=g97-29983-windowB-bottom-7&auto=1",
+          "tabs": [
+            {
+              "id": 28,
+              "uri": "http://127.0.0.1:29971/cross?token=g97-29983-windowB-bottom-7&auto=1"
+            }
+          ]
+        },
+        "nativeActiveWindow": "4194325"
+      }
+    }
+  ],
+  "screenshotMethod": "actual X11 root capture without focus changes",
+  "nativeWindowMapping": {
+    "A": "4194325",
+    "B": "4194407",
+    "pid": "100672",
+    "beforeClients": [
+      "4194325"
+    ],
+    "afterClients": [
+      "4194325",
+      "4194407"
+    ],
+    "beforeFirstLoad": {
+      "activeIsA": false,
+      "activeIsB": true,
+      "focusedContext": 17179869187,
+      "focusedTop": 17,
+      "A": {
+        "chromeContext": 2,
+        "focused": false,
+        "delayedStartupFinished": true,
+        "documentReady": "complete",
+        "controllerAttached": true,
+        "selected": 17,
+        "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabA-bottom-4&auto=1",
+        "tabs": [
+          {
+            "id": 17,
+            "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabA-bottom-4&auto=1"
+          },
+          {
+            "id": 19,
+            "uri": "http://127.0.0.1:29971/cross?token=g97-29983-tabB-2&auto=1"
+          }
+        ]
+      },
+      "B": {
+        "chromeContext": 20,
+        "focused": true,
+        "delayedStartupFinished": true,
+        "documentReady": "complete",
+        "controllerAttached": true,
+        "selected": 26,
+        "uri": "about:home",
+        "tabs": [
+          {
+            "id": 26,
+            "uri": "about:home"
+          }
+        ]
+      },
+      "nativeActiveWindow": "4194407"
+    }
+  },
+  "productionActionImport": {
+    "module": "chrome://noraneko/content/assets/js/gestures.js",
+    "exportBinding": "e",
+    "unmodifiedModuleSha256": "9a2020a53db53d2db253e4de88c64485fc8bf2a6ca969965ccad4b0e59ebaa4c",
+    "fixtureSource": "/workspace/qa-linux-additional/browser-ui/KAN-97/full-product/runs/full-29983/guard-api.mjs",
+    "notReplacement": "imports the existing window-realm module and function; no registry callback/scroll code substituted"
+  }
+}

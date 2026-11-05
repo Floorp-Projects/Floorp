@@ -1,0 +1,322 @@
+[
+  {
+    "key": "KAN-3",
+    "labels": [
+      "area-tabs",
+      "env-blocked",
+      "floorp-stability-2026-11",
+      "linux-tested",
+      "needs-fedora-desktop",
+      "needs-physical-drag",
+      "p2",
+      "reproduced",
+      "triage-reviewed",
+      "wayland-tested"
+    ],
+    "parent": "KAN-1",
+    "status": "進行中",
+    "updated": "2026-11-06T02:28:49.736+0900",
+    "latestCommentId": "10294",
+    "commentIds": [
+      "10294",
+      "10185",
+      "10128",
+      "10106"
+    ],
+    "commentTotal": 4,
+    "commentsComplete": true,
+    "environmentRetentionExcerpts": [
+      {
+        "commentId": "10294",
+        "text": "残る環境条件はFedora実desktop/元package・物理入力等へ限定。needs-fedora-44はneeds-fedora-desktopへ絞り、env-blockedは原条件が未充足のため保持します。専用QA branchのmatrix/reportに実行条件と証拠を保存します。"
+      }
+    ]
+  },
+  {
+    "key": "KAN-5",
+    "labels": [
+      "area-tabs",
+      "env-blocked",
+      "floorp-stability-2026-11",
+      "linux-tested",
+      "needs-fedora-desktop",
+      "needs-flatpak",
+      "needs-physical-drag",
+      "needs-repro",
+      "needs-spec",
+      "p2",
+      "triage-reviewed"
+    ],
+    "parent": "KAN-1",
+    "status": "未着手",
+    "updated": "2026-11-05T23:53:08.034+0900",
+    "latestCommentId": "10283",
+    "commentIds": [
+      "10283",
+      "10131",
+      "10037"
+    ],
+    "commentTotal": 3,
+    "commentsComplete": true,
+    "environmentRetentionExcerpts": [
+      {
+        "commentId": "10283",
+        "text": "残る環境条件はFedora実desktop/元package・物理入力等へ限定。needs-fedora-44はneeds-fedora-desktopへ絞り、env-blockedは原条件が未充足のため保持します。専用QA branchのmatrix/reportに実行条件と証拠を保存します。"
+      }
+    ]
+  },
+  {
+    "key": "KAN-29",
+    "labels": [
+      "area-tabs",
+      "env-blocked",
+      "floorp-stability-2026-11",
+      "linux-tested",
+      "needs-cachyos",
+      "needs-flatpak",
+      "needs-repro",
+      "p2",
+      "panel-body-tested",
+      "pr-candidate-tested",
+      "rtl-tested",
+      "triage-reviewed",
+      "wayland-tested"
+    ],
+    "parent": "KAN-1",
+    "status": "未着手",
+    "updated": "2026-11-06T01:31:24.483+0900",
+    "latestCommentId": "10284",
+    "commentIds": [
+      "10284",
+      "10149",
+      "10065"
+    ],
+    "commentTotal": 3,
+    "commentsComplete": true,
+    "environmentRetentionExcerpts": [
+      {
+        "commentId": "10284",
+        "text": "証拠: `KAN-29/wayland-followup.md`,`wayland-panel-29603/29604/29605.json`,`wayland-summary.json`,`pr2877-geometry-correlation.json`、16状態PNGと再現script。最初のmissing Sidebar UI targetは治具不足として分離。needs-panel-openは実本体open確認により除去し、原CachyOS/Flatpak、localized RTL、候補PRの現環境paint、物理入力は未充足で維持。Done/mergeなし。"
+      },
+      {
+        "commentId": "10284",
+        "text": "根拠: 専用QA branch qa/linux22-browser-ui-evidence-20261105 の KAN-29/localized-report.md、localized-comparison.json、wayland-panel-29665/29666.json、locale/setup-29665/29666.json、16PNG、pr2877/product-patch.json、再現script。needs-localized-rtlは実条件充足により除去、原needs-cachyos/needs-flatpak/needs-repro/env-blockedは維持。Done/merge/status変更なし。"
+      }
+    ]
+  },
+  {
+    "key": "KAN-31",
+    "labels": [
+      "area-ui",
+      "env-blocked",
+      "floorp-stability-2026-11",
+      "linux-tested",
+      "needs-fedora-desktop",
+      "needs-repro",
+      "p2",
+      "triage-reviewed"
+    ],
+    "parent": "KAN-1",
+    "status": "未着手",
+    "updated": "2026-11-05T23:53:14.045+0900",
+    "latestCommentId": "10285",
+    "commentIds": [
+      "10285",
+      "10260",
+      "10152",
+      "10081"
+    ],
+    "commentTotal": 4,
+    "commentsComplete": true,
+    "environmentRetentionExcerpts": [
+      {
+        "commentId": "10285",
+        "text": "残る環境条件はFedora実desktop/元package・物理入力等へ限定。needs-fedora-44はneeds-fedora-desktopへ絞り、env-blockedは原条件が未充足のため保持します。専用QA branchのmatrix/reportに実行条件と証拠を保存します。"
+      },
+      {
+        "commentId": "10260",
+        "text": "残存条件：Fedora44、報告版12.15.3/12.16.2と同配布形式（Flatpakコメントあり）、他言語、起動直後の早期入力。Fedora環境不足をenv-blocked/needs-fedora-44/needs-linuxとして追加。次は同環境で初回検索索引の準備状態と検索完了を取得する。PRなし、Done移行なし。"
+      }
+    ]
+  },
+  {
+    "key": "KAN-39",
+    "labels": [
+      "area-tabs",
+      "env-blocked",
+      "floorp-stability-2026-11",
+      "linux-tested",
+      "needs-fedora-desktop",
+      "needs-physical-wheel",
+      "needs-repro",
+      "p2",
+      "triage-reviewed"
+    ],
+    "parent": "KAN-1",
+    "status": "未着手",
+    "updated": "2026-11-06T02:28:52.330+0900",
+    "latestCommentId": "10286",
+    "commentIds": [
+      "10286",
+      "10266",
+      "10135",
+      "10047"
+    ],
+    "commentTotal": 4,
+    "commentsComplete": true,
+    "environmentRetentionExcerpts": [
+      {
+        "commentId": "10286",
+        "text": "残る環境条件はFedora実desktop/元package・物理入力等へ限定。needs-fedora-44はneeds-fedora-desktopへ絞り、env-blockedは原条件が未充足のため保持します。専用QA branchのmatrix/reportに実行条件と証拠を保存します。"
+      },
+      {
+        "commentId": "10266",
+        "text": "既存 #2763 のコード差分はpixel値そのまま、line単位は平均タブ幅に変換し表示幅程度に上限、page単位は表示幅を乗算する処理を追加。overflowが1px以下なら介入せず、方向とRTLを処理。今回のline合成比較はその差と整合するが、Fedora物理デバイスが実際に送るdeltaModeや1ノッチとの対応、加速・DPI・通常タブバーとの差は未検証。現行版で原症状解消とは断定しない。生ログ `work/kan39/{old,new,old-line,new-line}.log`、スクリプト同directory。次: Fedora 44で通常／stack双方に同じ物理ホイールを送りdeltaMode・距離・時間・端の挙動を採取。env-blocked/needs-linux維持、未完了、重複PRなし。"
+      }
+    ]
+  },
+  {
+    "key": "KAN-40",
+    "labels": [
+      "area-tabs",
+      "env-blocked",
+      "floorp-stability-2026-11",
+      "linux-tested",
+      "needs-fedora-desktop",
+      "needs-physical-middleclick",
+      "needs-repro",
+      "p2",
+      "triage-reviewed"
+    ],
+    "parent": "KAN-1",
+    "status": "未着手",
+    "updated": "2026-11-05T23:53:22.349+0900",
+    "latestCommentId": "10287",
+    "commentIds": [
+      "10287",
+      "10263",
+      "10136",
+      "10048"
+    ],
+    "commentTotal": 4,
+    "commentsComplete": true,
+    "environmentRetentionExcerpts": [
+      {
+        "commentId": "10287",
+        "text": "残る環境条件はFedora実desktop/元package・物理入力等へ限定。needs-fedora-44はneeds-fedora-desktopへ絞り、env-blockedは原条件が未充足のため保持します。専用QA branchのmatrix/reportに実行条件と証拠を保存します。"
+      },
+      {
+        "commentId": "10263",
+        "text": "マージ済み #2763 の差分は中ボタンauxclickで実tabをremoveTabする分岐を追加し、この前後の結果と整合するが、他の版差もあるので当該コミット単独の因果を実証したものではない。原報告Fedora 44およびFlatpakでの動作・物理中クリックは未検証、needs-linux/env-blockedを維持。ログ `work/kan40/old-control.log`, `stack-middle-v2.log`、スクリプト同directory。次: Fedora現行版で同じ選択／非選択ケースを物理入力でも確認。状態は未完了、追加PRなし。"
+      }
+    ]
+  },
+  {
+    "key": "KAN-54",
+    "labels": [
+      "area-ui",
+      "backlog-deferred",
+      "env-blocked",
+      "floorp-github-import-2026-11",
+      "linux-tested",
+      "needs-manjaro-plasma",
+      "needs-spec",
+      "p3",
+      "triage-reviewed"
+    ],
+    "parent": "KAN-52",
+    "status": "未着手",
+    "updated": "2026-11-05T23:35:18.829+0900",
+    "latestCommentId": "10288",
+    "commentIds": [
+      "10288",
+      "10170",
+      "10107"
+    ],
+    "commentTotal": 3,
+    "commentsComplete": true,
+    "environmentRetentionExcerpts": []
+  },
+  {
+    "key": "KAN-87",
+    "labels": [
+      "area-ui",
+      "env-blocked",
+      "floorp-github-import-2026-11",
+      "linux-tested",
+      "needs-niri",
+      "needs-repro",
+      "p2",
+      "panel-body-tested",
+      "triage-reviewed",
+      "wayland-tested"
+    ],
+    "parent": "KAN-1",
+    "status": "未着手",
+    "updated": "2026-11-06T01:26:26.250+0900",
+    "latestCommentId": "10289",
+    "commentIds": [
+      "10289",
+      "10173",
+      "10061"
+    ],
+    "commentTotal": 3,
+    "commentsComplete": true,
+    "environmentRetentionExcerpts": [
+      {
+        "commentId": "10289",
+        "text": "証拠 `qaLinuxKAN87/report.md`,`summary.json`,`29655-paint.json`,`29655-pixels.json`、6PNG、画像/manifest生成資材を専用QA branchへ保存。needs-right-panel-revealは実本体との同時表示確認により除去、needs-niri/env-blockedは原条件未充足で保持。重複PR/Done/mergeなし。"
+      }
+    ]
+  },
+  {
+    "key": "KAN-93",
+    "labels": [
+      "area-ui",
+      "env-blocked",
+      "floorp-github-import-2026-11",
+      "linux-tested",
+      "needs-kde-neon",
+      "needs-repro",
+      "p2",
+      "triage-reviewed"
+    ],
+    "parent": "KAN-1",
+    "status": "未着手",
+    "updated": "2026-11-05T23:35:23.091+0900",
+    "latestCommentId": "10290",
+    "commentIds": [
+      "10290",
+      "10175",
+      "10144"
+    ],
+    "commentTotal": 3,
+    "commentsComplete": true,
+    "environmentRetentionExcerpts": []
+  },
+  {
+    "key": "KAN-98",
+    "labels": [
+      "area-ui",
+      "env-blocked",
+      "floorp-github-import-2026-11",
+      "linux-tested",
+      "needs-arch-sway-wayland",
+      "p2",
+      "reproduced",
+      "triage-reviewed"
+    ],
+    "parent": "KAN-1",
+    "status": "進行中",
+    "updated": "2026-11-06T02:28:51.178+0900",
+    "latestCommentId": "10291",
+    "commentIds": [
+      "10291",
+      "10177",
+      "10094"
+    ],
+    "commentTotal": 3,
+    "commentsComplete": true,
+    "environmentRetentionExcerpts": []
+  }
+]

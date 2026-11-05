@@ -1,0 +1,27 @@
+{
+  "status": "prepared-not-product-executed",
+  "syntaxChecked": [
+    "run.py",
+    "probe.py",
+    "fixture.py",
+    "guards.py"
+  ],
+  "sourceSha": "d6bd2fc457774f55ab1f36a2b01c941f908f1ab0",
+  "actualIframeGestureConditions": 8,
+  "rootOverflowGestureControls": 4,
+  "keyboardControls": 12,
+  "nativeCrossTabWindowGuards": 4,
+  "realForeignWindowActionApiGuards": 2,
+  "oldCandidateUiReplayed": false,
+  "normalProductExitZeroRequired": true,
+  "sourceUntouched": true,
+  "actualNestedSameOriginLeafDirections": 2,
+  "actualNestedCrossOriginLeafDirections": 2,
+  "actualShallowSameOriginFrameDirections": 2,
+  "actualShallowCrossOriginFrameDirections": 2,
+  "nonTargetNestedAncestorRequired": true,
+  "expectedScrollDispatchCount": 18,
+  "desktop": "Openbox/X11",
+  "backgroundMeasurement": "SSE-triggered passive fixture sampling, no scroll changes on sample",
+  "normalShutdown": "Services.startup.quit(eAttemptQuit), wrapper/product exit0 required; timeout cleanup cannot pass"
+}

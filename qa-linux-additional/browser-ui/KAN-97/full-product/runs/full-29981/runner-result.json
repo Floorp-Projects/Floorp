@@ -1,0 +1,19 @@
+{
+  "executable": "/workspace/kan97-runtime/full-package/floorp/floorp",
+  "greExpected": "/workspace/kan97-runtime/full-package/floorp",
+  "sourceSha": "d6bd2fc457774f55ab1f36a2b01c941f908f1ab0",
+  "productUnmodified": true,
+  "normalProductExit": true,
+  "ownedProcesses": {
+    "display": 99224,
+    "wm": 99227,
+    "browser": 99230
+  },
+  "profile": "/workspace/kan97-runtime/full-product/full-29981/profile",
+  "probeExit": 1,
+  "dbusProductExit": 0,
+  "changedPayloadEntries": [],
+  "addedRuntimeEntries": [],
+  "originalPayloadUnchanged": true,
+  "displayRemoved": true
+}

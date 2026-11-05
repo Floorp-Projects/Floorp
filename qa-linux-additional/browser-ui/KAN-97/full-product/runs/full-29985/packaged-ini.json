@@ -1,0 +1,29 @@
+{
+  "application.ini": {
+    "App": {
+      "vendor": "Ablaze",
+      "name": "Floorp",
+      "remotingname": "floorp",
+      "version": "12.21.1@159.0.1",
+      "profile": "Floorp",
+      "buildid": "20261105203105",
+      "id": "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
+    },
+    "Gecko": {
+      "minversion": "159.0.1",
+      "maxversion": "159.0.1"
+    },
+    "XRE": {
+      "enableprofilemigrator": "1"
+    },
+    "AppUpdate": {
+      "url": "https://aus5.mozilla.org/update/6/%PRODUCT%/%VERSION%/%BUILD_ID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%SYSTEM_CAPABILITIES%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/update.xml"
+    }
+  },
+  "platform.ini": {
+    "Build": {
+      "buildid": "20261105203105",
+      "milestone": "159.0.1"
+    }
+  }
+}

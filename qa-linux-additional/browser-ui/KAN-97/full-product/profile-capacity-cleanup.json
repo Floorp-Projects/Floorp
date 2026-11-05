@@ -1,0 +1,23 @@
+{
+  "scope": "ended own Linux22-browser-ui early synthetic profiles only; no Flatpak data/products/other task path",
+  "evidenceRetainedAt": "5bad47baae11f062af39b477cd6e55640922cddc",
+  "noActiveReferences": true,
+  "removed": [
+    "/workspace/qa-linux-22/browser-ui/runtime/profile-firefox-1793888169",
+    "/workspace/qa-linux-22/browser-ui/runtime/profile-firefox-1793888786",
+    "/workspace/qa-linux-22/browser-ui/runtime/profile-firefox-1793888904",
+    "/workspace/qa-linux-22/browser-ui/runtime/profile-floorp-1793887991",
+    "/workspace/qa-linux-22/browser-ui/runtime/profile-floorp-1793888095",
+    "/workspace/qa-linux-22/browser-ui/runtime/profile-floorp-1793888284",
+    "/workspace/qa-linux-22/browser-ui/runtime/profile-floorp-1793888317",
+    "/workspace/qa-linux-22/browser-ui/runtime/profile-floorp-1793888318",
+    "/workspace/qa-linux-22/browser-ui/runtime/profile-floorp-1793888340",
+    "/workspace/qa-linux-22/browser-ui/runtime/profile-floorp-1793888363",
+    "/workspace/qa-linux-22/browser-ui/runtime/profile-floorp-1793888380",
+    "/workspace/qa-linux-22/browser-ui/runtime/profile-floorp-1793888426",
+    "/workspace/qa-linux-22/browser-ui/runtime/profile-floorp-1793888508",
+    "/workspace/qa-linux-22/browser-ui/runtime/profile-floorp-1793888543",
+    "/workspace/qa-linux-22/browser-ui/runtime/profile-floorp-1793888565",
+    "/workspace/qa-linux-22/browser-ui/runtime/profile-floorp-1793888590"
+  ]
+}

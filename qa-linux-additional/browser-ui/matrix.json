@@ -128,7 +128,7 @@
     "result": "current Linux paint inset Floorp4px/Firefox6px with hitbox0; native-CSD topedge selects tabs; Fluerial intentional supplemental4px cascade confirmed; original Windows remains unverified, no new defect isolated",
     "remainingConditions": [
       "original Windows10 environment and custom titlebar/window configuration",
-      "original12.17.0\u2192current comparison",
+      "original12.17.0→current comparison",
       "physical input; Wayland not tested in this issue"
     ],
     "existingPr": [
@@ -164,12 +164,12 @@
     "sourceSha": "d6bd2fc457774f55ab1f36a2b01c941f908f1ab0",
     "productVersion": "Floorp12.21.1@159.0.1 Build20261103153232; Firefox159.0.1 Build20261102144711",
     "environment": "Debian13.6 private Xvfb117+Openbox normal native focus; controlled HTTP root/overflow/same+cross-origin iframe; synthetic OS input",
-    "testCommand": "python run.py official 29974; python run.py combined 29975; python run.py firefox 29976; python run.py patched 29977; see reproduce.sh",
-    "result": "Distinct focused-frame target defect: official and3031+3034candidate each4/8gesturepass with4framefail; patched8/8gesture+8/8keyboardpass, non-targetsunchanged, menuzero, exactly1dispatch/input; all32nativekeyboardcontrols pass. OriginalWindows/HFrootcauseunproven.",
+    "testCommand": "python run.py official 29974; python run.py combined 29975; python run.py firefox 29976; python run.py patched 29977; see reproduce.sh; python full-product/run.py /workspace/kan97-runtime/full-package/floorp/floorp 29981; guards-only29983; QA97_API_BOTTOM_ONLY=1 guards-only29985",
+    "result": "Confirmed focused-frame routing defect; diagnostic comparison superseded by exact-head complete Linux package verification: primary24/24 (iframe gestures8, root/overflow4, keyboard12), guards6/6 (native tab/window4, explicit real-foreign-window API2). Unmodified payload, live Runtime manifest agreement. Original Windows/HuggingFace cause unproven.",
     "remainingConditions": [
       "Original Windows11/Floorp12.17.0@154.0 website/profile/focus condition",
       "Original issue cause and physical input",
-      "New fix only diagnostic compiled-module product tested locally; full production build/package not claimed"
+      "Native same-window stale foreign-focused-context state not observed; ordinary native tab isolation and real foreign-window API mismatch tested separately"
     ],
     "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2678",
     "newPr": "https://github.com/Floorp-Projects/Floorp/pull/3047",
@@ -193,7 +193,20 @@
       "ci-3047/summary.json",
       "ci-3047/verified-excerpts.txt",
       "jira-posted-10412.md",
-      "jira-ci-10414.md"
+      "jira-ci-10414.md",
+      "full-product/report.md",
+      "full-product/summary.json",
+      "full-product/package-contract-notes.md",
+      "full-product/package-acquisition.json",
+      "full-product/package-run.json",
+      "full-product/runtime-contract.json",
+      "full-product/runtime-build-manifest-v2.json",
+      "full-product/reproduce-package.md",
+      "full-product/runs/full-29981/probe.json",
+      "full-product/runs/full-29983/guards.json",
+      "full-product/runs/full-29983/runner-result.json",
+      "full-product/runs/full-29985/guards.json",
+      "full-product/runs/full-29985/runner-result.json"
     ],
     "evidenceBase": "KAN-97",
     "sourceBase": "29a3eb23145da90706d8a94441373278521cc737",
@@ -214,6 +227,28 @@
     "jiraCommentIds": [
       "10412",
       "10414"
-    ]
+    ],
+    "package": {
+      "run": 42103462848,
+      "dispatchCount": 1,
+      "attempt": 1,
+      "conclusion": "success",
+      "sourceSha": "d6bd2fc457774f55ab1f36a2b01c941f908f1ab0",
+      "runtimeSha": "8965ffc346d426ccdf919bd18585e4d4a0c21654",
+      "manifestArtifactId": 13274392012,
+      "installerArtifactId": 13452071690,
+      "installerZipDigest": "sha256:6c4a6d689c9138d8c29a3166274f5f811ec44f4cd486c3be4757ad55a68228d2",
+      "tarSha256": "dcad8272354b639220d1e3e0677d2aa140ee3ed02c7b60888cfa4dc26266f7a5",
+      "marArtifactId": 13451527153,
+      "marZipDigest": "sha256:da6021043540e6cf4ef8c2bdaa90f83799446c040d50407cd3614c1ae9ac06a0",
+      "liveBuildId": "20261103153232",
+      "payloadUnmodified": true,
+      "primaryCasesPassed": 24,
+      "guardCasesPassed": 6,
+      "normalExitPrimary": 0,
+      "normalExitFinalGuard": 0,
+      "interruptedRunExitUnknown": 29983,
+      "fullSingleRunSuitePassClaimed": false
+    }
   }
 ]

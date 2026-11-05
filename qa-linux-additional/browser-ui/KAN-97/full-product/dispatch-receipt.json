@@ -1,0 +1,15 @@
+{
+  "head": "d6bd2fc457774f55ab1f36a2b01c941f908f1ab0",
+  "workflow": ".github/workflows/package.yml",
+  "ref": "qa/kan97-scroll-target",
+  "run": 42103462848,
+  "url": "https://github.com/Floorp-Projects/Floorp/actions/runs/42103462848",
+  "dispatchCount": 1,
+  "sameHeadExistingPackageRunsBeforeDispatch": [],
+  "sameHeadAllExistingRunsChecked": "standardCI/docs/moderation/bot only; no package",
+  "mode": "stable-v2-validation",
+  "skipSigning": true,
+  "publicRelease": false,
+  "mainObserved": "29a3eb23145da90706d8a94441373278521cc737",
+  "lockSha256": "5838f685f4b375ca69dfaf10f1054f6b7fe1e90290cfb97c9f53514022937fe5"
+}
