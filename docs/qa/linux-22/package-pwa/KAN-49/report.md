@@ -85,3 +85,7 @@ build and standard colocated runner/CI remain required before merge. Review the
 new import dependency at early Linux command-line startup and malformed legacy
 SSB records; valid UUID fixture launchers and all tested creation orders pass.
 Draft PR only; no merge, release or Done transition is authorized.
+
+## Follow-up at final head8249e234
+
+Read followup-validation.md for the additional cold command-line, malformed-data and native Wayland evidence. Follow-up found a real numeric/object-ID startup regression in initial candidate06aaf589 and corrected it in8249e234 with a string-type guard plus additional colocated coverage. All9 API cases open in the final candidate; wholly unusable records retain the pre-existing random-identity limit. Native Wayland UI and cold generated-launcher tests preserve distinct PWA app_id/desktop/KWin identity. This does not qualify the separate taskbar icon pixel condition. Prior-head CI success remains historical; new-head run42050337102 is checked separately.

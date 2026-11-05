@@ -5,7 +5,7 @@
     {
       "path": "chrome/noraneko/nora-resource/Linux.sys-DfscGtff.mjs",
       "beforeSha256": "6cb0458b774f99f8a7925fad76619eb33f772c00f09d4ae59fd0e0d0afb84360",
-      "afterSha256": "bf681e538437bff04f2ea5944807b7bdc052ccd85bd1de6ddd55e7fb10963893"
+      "afterSha256": "2ee654beb6d4a03dec03698a47ba9ec8aa58fe73290b81aee4e6884528245f61"
     },
     {
       "path": "chrome/noraneko/nora-resource/modules/pwa/SsbCommandLineHandler.sys.mjs",
@@ -15,5 +15,5 @@
   ],
   "unchangedNonArchiveFiles": 45,
   "originalOmniSha256": "159285f967e950e0cd1ac658d713b7770e7763d6d983fc88b6e48c16e4a1f345",
-  "candidateOmniSha256": "c7eeb3c7b63053e4354103f18a805c0f6117a306adb85c8d6923eb31ee22a2fa"
+  "candidateOmniSha256": "2dbcfe0c437a388e79ca8d856c798a7e04de9ff9e925fe1d5e91c6c9570f4172"
 }

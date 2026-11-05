@@ -1,0 +1,85 @@
+{
+  "kind": "isolated patched product copy, native Wayland cold CLI test",
+  "commands": [
+    [
+      "/workspace/qa-linux-22/package-pwa/product-candidate/floorp/floorp",
+      "--name",
+      "floorp-bddea580-d33c-489c-9b23-2d6a71e7652b",
+      "--profile",
+      "/workspace/qa-linux-22/package-pwa/candidate-kde/profile",
+      "--start-ssb",
+      "{bddea580-d33c-489c-9b23-2d6a71e7652b}",
+      "--marionette"
+    ],
+    [
+      "/workspace/qa-linux-22/package-pwa/product-candidate/floorp/floorp",
+      "--name",
+      "floorp-c76a3601-395e-495f-900a-fdbe0ab73cc6",
+      "--profile",
+      "/workspace/qa-linux-22/package-pwa/candidate-kde/profile",
+      "--start-ssb",
+      "{c76a3601-395e-495f-900a-fdbe0ab73cc6}"
+    ]
+  ],
+  "expectedProfile": "/workspace/qa-linux-22/package-pwa/candidate-kde/profile",
+  "product": {
+    "pid": 46138,
+    "profile": "/workspace/qa-linux-22/package-pwa/candidate-kde/profile",
+    "sandbox": 6,
+    "experiment": false,
+    "windows": [
+      {
+        "title": "QA PWA Alpha \u2014 Ablaze Floorp",
+        "class": "floorp-bddea580-d33c-489c-9b23-2d6a71e7652b",
+        "url": "http://127.0.0.1:8776/alpha/"
+      },
+      {
+        "title": "QA PWA Beta \u2014 Ablaze Floorp",
+        "class": "floorp-c76a3601-395e-495f-900a-fdbe0ab73cc6",
+        "url": "http://127.0.0.1:8776/beta/"
+      }
+    ]
+  },
+  "kwinWindows": [
+    {
+      "internalId": "{9182ed50-b75f-4474-9c53-fdf7c9804d70}",
+      "caption": "QA PWA Alpha \u2014 Ablaze Floorp",
+      "resourceClass": "floorp-bddea580-d33c-489c-9b23-2d6a71e7652b",
+      "resourceName": "floorp",
+      "desktopFileName": "floorp-bddea580-d33c-489c-9b23-2d6a71e7652b",
+      "pid": 46138,
+      "iconString": "QVariant(QIcon, QIcon(availableSizes[normal,Off]=QList(QSize(128, 128)),cacheKey=0xa00000000))",
+      "clientGeometry": {
+        "x": 0,
+        "y": 0,
+        "width": 1000,
+        "height": 686
+      },
+      "normalWindow": true,
+      "active": false
+    },
+    {
+      "internalId": "{3fa27a9b-71b0-4b8c-89cf-ef7aeb0cc8f6}",
+      "caption": "QA PWA Beta \u2014 Ablaze Floorp",
+      "resourceClass": "floorp-c76a3601-395e-495f-900a-fdbe0ab73cc6",
+      "resourceName": "floorp",
+      "desktopFileName": "floorp-c76a3601-395e-495f-900a-fdbe0ab73cc6",
+      "pid": 46138,
+      "iconString": "QVariant(QIcon, QIcon(availableSizes[normal,Off]=QList(QSize(128, 128)),cacheKey=0xc00000000))",
+      "clientGeometry": {
+        "x": 0,
+        "y": 0,
+        "width": 1000,
+        "height": 686
+      },
+      "normalWindow": true,
+      "active": true
+    }
+  ],
+  "quit": {
+    "cause": "shutdown",
+    "forced": false,
+    "in_app": true
+  },
+  "completed": true
+}

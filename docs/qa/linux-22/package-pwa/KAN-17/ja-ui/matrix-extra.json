@@ -1,0 +1,28 @@
+{
+  "key": "KAN-17",
+  "github": "https://github.com/Floorp-Projects/Floorp/issues/2968",
+  "sourceSha": "984509d2053be7bae9027133bda7259cd706b208",
+  "productVersion": "Floorp12.21.1/Gecko159.0.1",
+  "environment": "Debian13/Xvfb-X11/officialFlatpak/Noto-visible/signed-ja-pack",
+  "testCommand": "python3 KAN-17/ja-ui/ja_ui_probe.py && python3 KAN-17/ja-ui/ja_ui_screenshot.py",
+  "result": "controlled-ja-UI-and-web-rendering-pass",
+  "remainingConditions": [
+    "original Bluefin44 host/font availability",
+    "reporter Firefox packaging/runtime comparison",
+    "original failure cause not established"
+  ],
+  "existingPr": null,
+  "newPr": null,
+  "evidence": [
+    "KAN-17/ja-ui/report.md",
+    "KAN-17/ja-ui/result.json",
+    "KAN-17/ja-ui/screenshot-result.json",
+    "KAN-17/ja-ui/ja-fixture.png",
+    "KAN-17/ja-ui/ja-menu-root.png",
+    "KAN-17/ja-ui/fontconfig.log"
+  ],
+  "normalExit": true,
+  "signedState": 2,
+  "sandboxLevel": 6,
+  "actualLocale": "ja"
+}

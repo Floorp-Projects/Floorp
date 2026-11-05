@@ -37,10 +37,10 @@
     "github": "https://github.com/Floorp-Projects/Floorp/issues/2968",
     "environment": "Debian13.6; Xvfb/X11; official Flatpak1.16.6; Floorp runtime26.08 / Firefox runtime25.08; normal sessionbus; sandbox pref6; portal incomplete",
     "testCommand": "python3 KAN-17/font_compare.py",
-    "result": "not-reproduced-in-font-present-condition; 4/4 actual official Flatpak render/normal-quit comparisons pass",
+    "result": "not reproduced in font-present Debian; 4/4 Floorp-Firefox Flatpak render comparisons and signed-ja-pack actual Japanese menu/fixture probes pass with normal quit",
     "remainingConditions": [
-      "Bluefin44.20261022.1 host fonts/fontconfig/cache and package format",
-      "Reporter page/profile and browser UI Japanese",
+      "Bluefin44.20261022.1 fontconfig/cache and Firefox installation format",
+      "Reporter page/profile and original Bluefin UI conditions",
       "Why reporter Firefox renders while Floorp does not"
     ],
     "existingPr": null,
@@ -50,9 +50,16 @@
       "KAN-17/font_compare.py",
       "KAN-17/font-origin.log",
       "KAN-17/one.ablaze.floorp-default.png",
-      "KAN-17/org.mozilla.firefox-default.png"
+      "KAN-17/org.mozilla.firefox-default.png",
+      "KAN-17/ja-ui/report.md",
+      "KAN-17/ja-ui/result.json",
+      "KAN-17/ja-ui/screenshot-result.json",
+      "KAN-17/ja-ui/ja-menu-root.png"
     ],
-    "jiraUrl": "https://floorp-projects.atlassian.net/browse/KAN-17"
+    "jiraUrl": "https://floorp-projects.atlassian.net/browse/KAN-17",
+    "jiraFollowupCommentIds": [
+      "10300"
+    ]
   },
   {
     "sourceSha": "984509d2053be7bae9027133bda7259cd706b208",
@@ -111,10 +118,15 @@
       "KAN-48/task-filter-config.json",
       "KAN-48/kbuildsycoca-plasma-prefix.log",
       "KAN-48/window-snapshot.js",
-      "KAN-48/observe-kde.sh"
+      "KAN-48/observe-kde.sh",
+      "KAN-48/normal-flags-observation.json",
+      "KAN-48/normal-flags-desktop.png"
     ],
     "jiraCommentId": "10292",
-    "jiraUrl": "https://floorp-projects.atlassian.net/browse/KAN-48"
+    "jiraUrl": "https://floorp-projects.atlassian.net/browse/KAN-48",
+    "jiraFollowupCommentIds": [
+      "10301"
+    ]
   },
   {
     "sourceSha": "984509d2053be7bae9027133bda7259cd706b208",
@@ -124,11 +136,11 @@
     "github": "https://github.com/Floorp-Projects/Floorp/issues/2649",
     "environment": "Debian13.6 Xvfb/X11; actual official product and isolated modified product copy; synthetic automation; normal sessionbus; sandbox pref6",
     "testCommand": "See report and published reproducible scripts",
-    "result": "observed current shared floorp class defect; candidate matches unique launchers in all three orders; original precise first-PWA inheritance not reproduced",
+    "result": "current shared-class defect reproduced; final guarded candidate passes X11 three-order comparison, nine malformed/legacy API calls, native Wayland UI/cold launcher identity and regression probes",
     "remainingConditions": [
-      "Manjaro/KDE/Outlook/Teams original conditions",
-      "Wayland qualification and malformed legacy SSB data",
-      "Full source build and standard runner/CI"
+      "Original Manjaro/KDE/Outlook/Teams package and taskbar icon pixels",
+      "Fully unusable legacy records keep pre-existing random-identity limitation",
+      "Full production source build and current-head CI qualification"
     ],
     "existingPr": null,
     "newPr": "https://github.com/Floorp-Projects/Floorp/pull/3032",
@@ -138,12 +150,17 @@
       "pwa-order-candidate/result.json",
       "regression-baseline.json",
       "regression-candidate.json",
-      "pwa_order_probe.py"
+      "pwa_order_probe.py",
+      "KAN-49/followup-validation.md",
+      "legacy-guard-candidate.json",
+      "regression-guard-candidate.json",
+      "candidate-kde/cold-launch-result.json"
     ],
     "jiraUrl": "https://floorp-projects.atlassian.net/browse/KAN-49",
     "jiraFollowupCommentIds": [
       "10296"
-    ]
+    ],
+    "newPrHead": "8249e234adfbb3e877e4a20cf5f57d7264d9a447"
   },
   {
     "sourceSha": "984509d2053be7bae9027133bda7259cd706b208",

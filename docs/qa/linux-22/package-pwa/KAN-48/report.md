@@ -47,3 +47,7 @@ Actual KDE Wayland product/UI/launcher/app_id tests ran. The Linux taskbar exper
 No new PR is justified by the partial #2800 evidence. Keep open; do not merge, release or mark Done. Preserve specific original-environment and working-Plasma-task-model labels rather than declaring Linux unavailable.
 
 Reproduction artifacts: `../pwa_ui_probe.py`, `serve_fixture.py`, `window-snapshot.js`, `observe-kde.sh`, actual generated launch command in this report, JSON snapshots, product/Wayland log, three whole-desktop PNGs, and `plasma-layout.txt`. Keep browser HOME/profile data and retrieved `sources.json` out of any QA commit.
+
+## Additional normal-session flag recovery attempt
+
+The owned Plasma shell was actually restarted with XDG_CURRENT_DESKTOP=KDE, KDE_FULL_SESSION=true, KDE_SESSION_VERSION=6 and XDG_MENU_PREFIX=plasma-. Selected process flags were then measured. The panel still showed only its two existing generic pins and did not list the actual Alpha PWA; normal-flags-desktop.png was visually inspected. This extends the earlier read-only flag check into a real recovery attempt, without relaxing compositor interfaces or product protections. The same task-model/icon-observation condition remains. See normal-flags-observation.json and plasmashell-normal-flags.log.

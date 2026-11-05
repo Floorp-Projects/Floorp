@@ -1,0 +1,54 @@
+[
+  {
+    "requestedLocale": "ja",
+    "profile": "/workspace/qa-linux-22/package-pwa/KAN-17/ja-ui/new-home/.var/app/one.ablaze.floorp/config/qa-ja-ui-profile",
+    "completed": true,
+    "input": "synthetic Marionette element click; not physical input",
+    "fixture": "local controlled Japanese/English text",
+    "fontSha256": "b76b0433203017ca80401b2ee0dd69350349871c4b19d504c34dbdd80541690a",
+    "jaXpiSha256": "b1fb2b5c13feb17d89f59824e6567dbfe50d154ca5868a27bb58c580417b8592",
+    "actualLocale": "ja",
+    "executable": "/app/lib/floorp/floorp",
+    "version": "159.0.1",
+    "buildID": "20261103153232",
+    "sandbox": 6,
+    "sandboxDisableEnv": false,
+    "pack": {
+      "id": "langpack-ja@firefox.mozilla.org",
+      "signedState": 2,
+      "active": true,
+      "version": "159.0.20261102.144711"
+    },
+    "render": {
+      "text": "日本語の文字 漢字 かな カナ",
+      "width": 414.5,
+      "fontStatus": "loaded"
+    },
+    "popup": {
+      "state": "open",
+      "settingsRect": {
+        "x": 818,
+        "y": 627.3333129882812,
+        "width": 317.33331298828125,
+        "height": 36
+      },
+      "settingsVisibility": "visible"
+    },
+    "menu": [
+      {
+        "id": "appMenu-settings-button",
+        "label": "設定"
+      },
+      {
+        "id": "appMenu-new-window-button2",
+        "label": "新しいウィンドウ"
+      }
+    ],
+    "quit": {
+      "cause": "shutdown",
+      "forced": false,
+      "in_app": true
+    },
+    "exitCode": 0
+  }
+]

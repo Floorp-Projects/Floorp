@@ -1,0 +1,10 @@
+{
+  "action": "Restarted only owned nested Plasma --replace with normal KDE session flags; no compositor/security interface change",
+  "observedProcesses": [],
+  "result": "Actual PWA still absent from panel task list; only two existing generic pinned apps shown. No wrong-Floorp-icon verdict. Screenshot visually inspected.",
+  "evidence": [
+    "normal-flags-desktop.png",
+    "plasmashell-normal-flags.log"
+  ],
+  "remaining": "Working WaylandTaskModel/compositor integration and actual taskbar icon pixel observation"
+}

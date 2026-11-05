@@ -1,0 +1,24 @@
+{
+  "pid": 44264,
+  "profile": "/workspace/qa-linux-22/package-pwa/candidate-kde/profile",
+  "widget": "gtk",
+  "sandbox": 6,
+  "experiment": false,
+  "windows": [
+    {
+      "title": "QA PWA Beta \u2014 Ablaze Floorp",
+      "windowClass": null,
+      "url": "http://127.0.0.1:8776/beta/"
+    },
+    {
+      "title": "QA PWA Alpha \u2014 Ablaze Floorp",
+      "windowClass": "floorp-bddea580-d33c-489c-9b23-2d6a71e7652b",
+      "url": "http://127.0.0.1:8776/alpha/"
+    },
+    {
+      "title": "QA PWA Beta \u2014 Ablaze Floorp",
+      "windowClass": "floorp-c76a3601-395e-495f-900a-fdbe0ab73cc6",
+      "url": "http://127.0.0.1:8776/beta/"
+    }
+  ]
+}

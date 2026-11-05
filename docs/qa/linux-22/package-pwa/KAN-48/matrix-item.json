@@ -26,8 +26,13 @@
     "KAN-48/task-filter-config.json",
     "KAN-48/kbuildsycoca-plasma-prefix.log",
     "KAN-48/window-snapshot.js",
-    "KAN-48/observe-kde.sh"
+    "KAN-48/observe-kde.sh",
+    "KAN-48/normal-flags-observation.json",
+    "KAN-48/normal-flags-desktop.png"
   ],
   "jiraCommentId": "10292",
-  "jiraUrl": "https://floorp-projects.atlassian.net/browse/KAN-48"
+  "jiraUrl": "https://floorp-projects.atlassian.net/browse/KAN-48",
+  "jiraFollowupCommentIds": [
+    "10301"
+  ]
 }

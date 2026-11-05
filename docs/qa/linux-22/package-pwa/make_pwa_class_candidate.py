@@ -29,6 +29,8 @@ patches={
  'chrome/noraneko/nora-resource/Linux.sys-DfscGtff.mjs':[
   ('\tstatic getPathInfo(ssb, dataHome',
    '\tstatic getWindowClass(ssb) {\n\t\treturn `floorp-${this.getNormalizedId(ssb)}`;\n\t}\n\tstatic getPathInfo(ssb, dataHome'),
+  ('for (const candidate of candidates) if (candidate) {',
+   'for (const candidate of candidates) if (typeof candidate === \"string\" && candidate) {'),
   ('const desktopBasename = `floorp-${this.getNormalizedId(ssb)}`;',
    'const desktopBasename = this.getWindowClass(ssb);')]
 }

@@ -1,0 +1,18 @@
+[
+  {
+    "name": "QA PWA Alpha",
+    "id": "{bddea580-d33c-489c-9b23-2d6a71e7652b}",
+    "desktopPath": "/workspace/qa-linux-22/package-pwa/kde-home/.local/share/applications/floorp-bddea580-d33c-489c-9b23-2d6a71e7652b.desktop",
+    "exec": "/workspace/qa-linux-22/package-pwa/product-candidate/floorp/floorp --name floorp-bddea580-d33c-489c-9b23-2d6a71e7652b --profile /workspace/qa-linux-22/package-pwa/candidate-kde/profile --start-ssb {bddea580-d33c-489c-9b23-2d6a71e7652b}",
+    "startupWMClass": "floorp-bddea580-d33c-489c-9b23-2d6a71e7652b",
+    "iconSha256": "eaea99a213c8ba9654b7d625c0358b28d4e0ef8c213cb0680f3ddc3c659cb8e5"
+  },
+  {
+    "name": "QA PWA Beta",
+    "id": "{c76a3601-395e-495f-900a-fdbe0ab73cc6}",
+    "desktopPath": "/workspace/qa-linux-22/package-pwa/kde-home/.local/share/applications/floorp-c76a3601-395e-495f-900a-fdbe0ab73cc6.desktop",
+    "exec": "/workspace/qa-linux-22/package-pwa/product-candidate/floorp/floorp --name floorp-c76a3601-395e-495f-900a-fdbe0ab73cc6 --profile /workspace/qa-linux-22/package-pwa/candidate-kde/profile --start-ssb {c76a3601-395e-495f-900a-fdbe0ab73cc6}",
+    "startupWMClass": "floorp-c76a3601-395e-495f-900a-fdbe0ab73cc6",
+    "iconSha256": "2b84538769d0a030ba0f2afc85a1882edbef2b748a5ed4d33a2de4790b8a0c57"
+  }
+]

@@ -11,3 +11,7 @@ Executed font_compare.py: Floorp and Firefox, each with default host fonts and w
 This adds a font-present package/runtime comparison to the earlier WSL font-missing tests. It does not establish that Bluefin44 lacks fonts or explain why the reporter's Firefox works. Do not call the original report fixed or unconditionally unreproducible. Remaining: Bluefin44.20261022.1 package/runtime/font visibility and cache, reporter page/profile, browser UI Japanese and Firefox installation format. Original issue already requests those details; no duplicate request sent.
 
 Evidence: font_compare.py; font-results.json; four PNGs and fontconfig/browser logs; font-origin.log. Fixture and profiles contain only local synthetic test text. Browser HOMEs/Flatpak installation are not for publication.
+
+## Additional official Flatpak Japanese UI check
+
+See ja-ui/report.md and result.json. A new dedicated official Flatpak profile normally installed the signed Japanese language pack (signedState2), restarted into actual locale ja, and rendered the local Japanese fixture and actual application menu normally with Noto visible. X11 root screenshot ja-menu-root.png visibly confirms Japanese menu glyphs; the Marionette window screenshot omitted popup content and is not used for that UI verdict. Three added install/restart/screenshot launches exited normally, sandbox6, no disable env. Original Bluefin package/font/Firefox difference remains unresolved; this is a Debian font-present menu/UI comparison.

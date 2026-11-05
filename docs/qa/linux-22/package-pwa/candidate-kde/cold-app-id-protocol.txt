@@ -1,0 +1,8 @@
+[3185903.363] {Default Queue}  -> xdg_toplevel#72.set_title("Ablaze Floorp")
+[3185903.369] {Default Queue}  -> xdg_toplevel#72.set_app_id("floorp-bddea580-d33c-489c-9b23-2d6a71e7652b")
+[3185903.637] {Default Queue}  -> xdg_toplevel#72.set_app_id("floorp-bddea580-d33c-489c-9b23-2d6a71e7652b")
+[3187324.209] {Default Queue}  -> xdg_toplevel#72.set_title("QA PWA Alpha — Ablaze Floorp")
+[3194914.998] {Default Queue}  -> xdg_toplevel#70.set_title("Ablaze Floorp")
+[3194915.004] {Default Queue}  -> xdg_toplevel#70.set_app_id("floorp-bddea580-d33c-489c-9b23-2d6a71e7652b")
+[3194915.117] {Default Queue}  -> xdg_toplevel#70.set_app_id("floorp-c76a3601-395e-495f-900a-fdbe0ab73cc6")
+[3195411.586] {Default Queue}  -> xdg_toplevel#70.set_title("QA PWA Beta — Ablaze Floorp")

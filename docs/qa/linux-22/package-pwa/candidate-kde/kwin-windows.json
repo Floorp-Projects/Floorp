@@ -1,0 +1,53 @@
+[
+  {
+    "internalId": "{c4041122-e98f-4969-802b-a7c07935185b}",
+    "caption": "QA PWA Beta \u2014 Ablaze Floorp",
+    "resourceClass": "floorp",
+    "resourceName": "floorp",
+    "desktopFileName": "floorp",
+    "pid": 44264,
+    "iconString": "QVariant(QIcon, QIcon(\"wayland\",availableSizes[normal,Off]=QList(QSize(48, 48), QSize(48, 48), QSize(48, 48)),cacheKey=0x500000000))",
+    "clientGeometry": {
+      "x": 0,
+      "y": 0,
+      "width": 1000,
+      "height": 686
+    },
+    "normalWindow": true,
+    "active": false
+  },
+  {
+    "internalId": "{5923d951-4bce-40f4-bff7-55da658e30e7}",
+    "caption": "QA PWA Alpha \u2014 Ablaze Floorp",
+    "resourceClass": "floorp-bddea580-d33c-489c-9b23-2d6a71e7652b",
+    "resourceName": "floorp",
+    "desktopFileName": "floorp-bddea580-d33c-489c-9b23-2d6a71e7652b",
+    "pid": 44264,
+    "iconString": "QVariant(QIcon, QIcon(availableSizes[normal,Off]=QList(QSize(128, 128)),cacheKey=0x800000000))",
+    "clientGeometry": {
+      "x": 0,
+      "y": 0,
+      "width": 1000,
+      "height": 686
+    },
+    "normalWindow": true,
+    "active": false
+  },
+  {
+    "internalId": "{1e69a345-6662-488e-b3c7-4316358bb834}",
+    "caption": "QA PWA Beta \u2014 Ablaze Floorp",
+    "resourceClass": "floorp-c76a3601-395e-495f-900a-fdbe0ab73cc6",
+    "resourceName": "floorp",
+    "desktopFileName": "floorp-c76a3601-395e-495f-900a-fdbe0ab73cc6",
+    "pid": 44264,
+    "iconString": "QVariant(QIcon, QIcon(availableSizes[normal,Off]=QList(QSize(128, 128)),cacheKey=0x900000000))",
+    "clientGeometry": {
+      "x": 0,
+      "y": 0,
+      "width": 1000,
+      "height": 686
+    },
+    "normalWindow": true,
+    "active": true
+  }
+]

@@ -6,11 +6,11 @@
   "github": "https://github.com/Floorp-Projects/Floorp/issues/2649",
   "environment": "Debian13.6 Xvfb/X11; actual official product and isolated modified product copy; synthetic automation; normal sessionbus; sandbox pref6",
   "testCommand": "See report and published reproducible scripts",
-  "result": "observed current shared floorp class defect; candidate matches unique launchers in all three orders; original precise first-PWA inheritance not reproduced",
+  "result": "current shared-class defect reproduced; final guarded candidate passes X11 three-order comparison, nine malformed/legacy API calls, native Wayland UI/cold launcher identity and regression probes",
   "remainingConditions": [
-    "Manjaro/KDE/Outlook/Teams original conditions",
-    "Wayland qualification and malformed legacy SSB data",
-    "Full source build and standard runner/CI"
+    "Original Manjaro/KDE/Outlook/Teams package and taskbar icon pixels",
+    "Fully unusable legacy records keep pre-existing random-identity limitation",
+    "Full production source build and current-head CI qualification"
   ],
   "existingPr": null,
   "newPr": "https://github.com/Floorp-Projects/Floorp/pull/3032",
@@ -20,10 +20,15 @@
     "pwa-order-candidate/result.json",
     "regression-baseline.json",
     "regression-candidate.json",
-    "pwa_order_probe.py"
+    "pwa_order_probe.py",
+    "KAN-49/followup-validation.md",
+    "legacy-guard-candidate.json",
+    "regression-guard-candidate.json",
+    "candidate-kde/cold-launch-result.json"
   ],
   "jiraUrl": "https://floorp-projects.atlassian.net/browse/KAN-49",
   "jiraFollowupCommentIds": [
     "10296"
-  ]
+  ],
+  "newPrHead": "8249e234adfbb3e877e4a20cf5f57d7264d9a447"
 }
