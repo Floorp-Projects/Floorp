@@ -1,0 +1,86 @@
+[
+  {
+    "key": "KAN-3",
+    "old": [
+      "area-tabs",
+      "env-blocked",
+      "floorp-stability-2026-11",
+      "linux-tested",
+      "needs-fedora-desktop",
+      "needs-physical-drag",
+      "p2",
+      "reproduced",
+      "triage-reviewed"
+    ],
+    "labels": [
+      "area-tabs",
+      "env-blocked",
+      "floorp-stability-2026-11",
+      "linux-tested",
+      "needs-fedora-desktop",
+      "needs-physical-drag",
+      "p2",
+      "reproduced",
+      "triage-reviewed",
+      "wayland-tested"
+    ],
+    "error": false
+  },
+  {
+    "key": "KAN-29",
+    "old": [
+      "area-tabs",
+      "env-blocked",
+      "floorp-stability-2026-11",
+      "linux-tested",
+      "needs-cachyos",
+      "needs-flatpak",
+      "needs-panel-open",
+      "needs-repro",
+      "p2",
+      "triage-reviewed"
+    ],
+    "labels": [
+      "area-tabs",
+      "env-blocked",
+      "floorp-stability-2026-11",
+      "linux-tested",
+      "needs-cachyos",
+      "needs-flatpak",
+      "needs-repro",
+      "p2",
+      "triage-reviewed",
+      "wayland-tested",
+      "panel-body-tested",
+      "needs-localized-rtl"
+    ],
+    "error": false
+  },
+  {
+    "key": "KAN-87",
+    "old": [
+      "area-ui",
+      "env-blocked",
+      "floorp-github-import-2026-11",
+      "linux-tested",
+      "needs-niri",
+      "needs-repro",
+      "needs-right-panel-reveal",
+      "p2",
+      "triage-reviewed"
+    ],
+    "labels": [
+      "area-ui",
+      "env-blocked",
+      "floorp-github-import-2026-11",
+      "linux-tested",
+      "needs-niri",
+      "needs-repro",
+      "p2",
+      "triage-reviewed",
+      "wayland-tested",
+      "panel-body-tested"
+    ],
+    "error": false
+  }
+]

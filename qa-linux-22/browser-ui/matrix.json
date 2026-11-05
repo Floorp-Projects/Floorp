@@ -10,11 +10,11 @@
     "environment": "Debian13.6 x86_64, Xvfb :92, isolated DBus; KWin6.3.6 nested Wayland for visual/layout/controls; software WebRender; additional Fedora44 Container Image userland on shared host kernel, host Xvfb/X11 (not original Fedora desktop)",
     "testCommand": "PYTHONPATH=python python3 run.py floorp 29284 split",
     "result": "実再現・CSS欠陥修正Draft",
-    "observations": "2組のnative splitを作成し、一組をreplaceGroupWithWindow→adoptTabGroup。移動先の最後と復帰後2枚のtitleが空。Firefox159.0.1は同手順で全titleを保持。 原CSSのsource回帰は失敗、修正CSSでtitle/URL保持に成功。Fedora44 Container Imageの公式製品でも同じ移動先・帰還title空化を再現。 Fedora44 container追加試験済（hostのXvfb使用・Flatpakではない）。 非currentのlayout/hit/selected状態8組と14回W3Cクリック成功。移動前後のsplit↔split→normal→split復帰を検証。 最新test head e7dda31fも標準CI282modules/0fail+Firefox16tasks、artifact内容/digest確認済み。",
+    "observations": "2組のnative splitを作成し、一組をreplaceGroupWithWindow→adoptTabGroup。移動先の最後と復帰後2枚のtitleが空。Firefox159.0.1は同手順で全titleを保持。 原CSSのsource回帰は失敗、修正CSSでtitle/URL保持に成功。Fedora44 Container Imageの公式製品でも同じ移動先・帰還title空化を再現。 Fedora44 container追加試験済（hostのXvfb使用・Flatpakではない）。 非currentのlayout/hit/selected状態8組と14回W3Cクリック成功。移動前後のsplit↔split→normal→split復帰を検証。 最新test head e7dda31fも標準CI282modules/0fail+Firefox16tasks、artifact内容/digest確認済み。 native Wayland追加比較: 同一adoption-only test/CSS差替fixtureで元CSSは移動先第2title消失、候補CSSは往復title/URL保持。両clientのwindowProtocol=waylandを確認。",
     "remainingConditions": [
       "元Fedora desktop/package・物理ドラッグ/メニュー",
-      "native Wayland adoption",
-      "full production build"
+      "full production build",
+      "候補の正式product build（今回source CSS差替fixture）"
     ],
     "existingPr": null,
     "newPr": "https://github.com/Floorp-Projects/Floorp/pull/3033",
@@ -32,7 +32,11 @@
       "layout-29424.json",
       "regression-29426.json",
       "KAN-3/layout-probe.py",
-      "ci/summary.json"
+      "ci/summary.json",
+      "regression-29631.json",
+      "regression-29632.json",
+      "KAN-3/wayland-summary.json",
+      "KAN-3/nested-adoption.sh"
     ],
     "sprintScope": "KAN-1",
     "fixCommit": "1a75d15d2925c9d5bf58964505937d07a35df54c",
@@ -84,20 +88,30 @@
       "firefox": "159.0.1 / BuildID20261102144711"
     },
     "environment": "Debian13.6 x86_64, Xvfb :92, isolated DBus; KWin6.3.6 nested Wayland for visual/layout/controls; software WebRender",
-    "testCommand": "dbus-run-session -- bash nested.sh (isolated KWin + Floorp visual/controls/layout)",
-    "result": "限定条件で未再現",
-    "observations": "KWin nested Wayland、LTR、縦タブhoverとpanel rail左右4組合せを測定。展開後の5標本中、遷移後は幅253.33pxと端位置が安定。panel本体は閉じた条件。",
+    "testCommand": "dbus-run-session -- bash KAN-29/nested-panel.sh; python3 KAN-29/analyze-wayland.py",
+    "result": "LTR限定未再現／RTL layout fixtureで関連異常",
+    "observations": "nested WaylandでBookmarks panel本体400pxをUIクリックでopen。左右4配置×native launcher pin2状態、各3hoverをLTR/RTLで試験。LTR24roundは最終2sampleの位置差1px以下・panel幅400px。RTLはroot dir fixture（RTL_UI=false、localized RTLではない）でoffset1366px、late変動5round/anchor一時不可1round。PR2877のread-only矩形計算は448px。同PR候補を適用したpaint成功とは扱わない。pinはnative launcher、Floorp panelはclick-pinnedを維持。",
     "remainingConditions": [
-      "CachyOS/Flatpak",
-      "panel本体open・反復hover・ピン留め差",
-      "PR2877適用時のRTL/boxless比較"
+      "原CachyOS/Flatpak・distro package",
+      "localized RTL session（今回root-dir fixture）",
+      "PR2877候補の実描画比較",
+      "物理入力"
     ],
     "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2877",
     "newPr": null,
     "jiraCommentId": "10284",
     "evidence": [
       "layout-29289.json",
-      "KAN-29/layout-False-True.png"
+      "KAN-29/layout-False-True.png",
+      "KAN-29/wayland-followup.md",
+      "KAN-29/wayland-summary.json",
+      "KAN-29/wayland-panel-29603.json",
+      "KAN-29/wayland-panel-29604.json",
+      "KAN-29/wayland-panel-29605.json",
+      "KAN-29/pr2877-geometry-correlation.json",
+      "KAN-29/wayland-29603-1-0-0.png",
+      "KAN-29/wayland-29604-0-1-0.png",
+      "KAN-29/nested-panel.sh"
     ],
     "sprintScope": "KAN-1"
   },
@@ -221,12 +235,13 @@
       "firefox": "159.0.1 / BuildID20261102144711"
     },
     "environment": "Debian13.6 x86_64, Xvfb :92, isolated DBus; KWin6.3.6 nested Wayland for visual/layout/controls; software WebRender",
-    "testCommand": "dbus-run-session -- bash nested-floorp-final.sh; dbus-run-session -- bash nested-firefox.sh",
+    "testCommand": "dbus-run-session -- bash qaLinuxKAN87/nested-zen.sh 29655 paint; python3 qaLinuxKAN87/measure-pixels.py 29655",
     "result": "限定条件で未再現・既存修正と整合",
-    "observations": "XvfbとKWin nested Waylandでlight/dark、normal/Zenを比較。Zenのnavigator-toolboxはalpha1の背景（light rgb235,235,237）で、カラフルなページ上でも背景が透けない画面を確認。右側panel railは同時表示。 Floorp自身のTroubleshootからwindowProtocol=waylandを実測。",
+    "observations": "nested Waylandで右Bookmarks panel本体400pxをUIクリック、ToolsメニューのZenをUIクリック、右上corner hoverでtop+side同時reveal。default/color/image theme×red/cyan背景の6条件完走。frame17500/overlap2750/nav16800/body116000pixelsは背景変更で各0pixel差、page positive control250000pixelsは全変化。画像frame5点はfixture PNGと一致。画像themeは正規temporaryAddon APIのfixtureで署名/保護prefs無変更。",
     "remainingConditions": [
-      "CachyOS/Niri/Hyprland/MangoWM",
-      "右panel本体の同時reveal/画像theme"
+      "原CachyOS/Niri/Hyprland/MangoWM",
+      "物理入力・hardware GPU/monitor",
+      "通常のsigned/AMO theme経路（今回temporary theme fixture）"
     ],
     "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2767",
     "newPr": null,
@@ -236,7 +251,13 @@
       "visual-29289.json",
       "KAN-87/zen-0.png",
       "KAN-87/zen-1.png",
-      "visual-29297.json"
+      "visual-29297.json",
+      "qaLinuxKAN87/report.md",
+      "qaLinuxKAN87/summary.json",
+      "qaLinuxKAN87/29655-paint.json",
+      "qaLinuxKAN87/29655-pixels.json",
+      "qaLinuxKAN87/theme/frame.png",
+      "qaLinuxKAN87/screenshots/29655-image-red-simultaneous.png"
     ],
     "sprintScope": "KAN-1"
   },
@@ -318,7 +339,7 @@
     ],
     "ci": {
       "3031": "281 modules passed, 0 failed; artifact verified",
-      "3034": "earlier e6f2dbe7 passed281 modules; test-only b21a8112 not rechecked in this scoped follow-up"
+      "3034": "latest b21a8112 automatic CI:281 modules0failed+16Firefox tasks; artifact digest/content verified"
     },
     "additionalTestCommit": "b21a81120d2354d90ea433410173cac208aabbf8",
     "applicationOrder": "3034 before3031, or apply together"

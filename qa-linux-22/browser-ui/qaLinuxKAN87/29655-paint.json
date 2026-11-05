@@ -1,0 +1,1494 @@
+{
+  "scenario": "paint",
+  "product": {
+    "version": "159.0.1",
+    "build": "20261103153232",
+    "name": "Floorp",
+    "os": "Linux"
+  },
+  "observations": [
+    {
+      "dom": [
+        {
+          "id": "menu_ToolsPopup",
+          "localName": "menupopup",
+          "role": null,
+          "label": null,
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0,
+            "top": 0,
+            "right": 0,
+            "bottom": 0,
+            "left": 0
+          },
+          "parent": "tools-menu",
+          "hidden": false,
+          "display": "flex",
+          "visibility": "visible"
+        },
+        {
+          "id": "toggle_zenmode",
+          "localName": "menuitem",
+          "role": null,
+          "label": "Toggle Zen Mode",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0,
+            "top": 0,
+            "right": 0,
+            "bottom": 0,
+            "left": 0
+          },
+          "parent": "menu_ToolsPopup",
+          "hidden": false,
+          "display": "",
+          "visibility": ""
+        },
+        {
+          "id": "panel-sidebar-box",
+          "localName": "vbox",
+          "role": null,
+          "label": null,
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0,
+            "top": 0,
+            "right": 0,
+            "bottom": 0,
+            "left": 0
+          },
+          "parent": "browser",
+          "hidden": false,
+          "display": "none",
+          "visibility": "visible"
+        },
+        {
+          "id": "panel-sidebar-header",
+          "localName": "box",
+          "role": null,
+          "label": null,
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0,
+            "top": 0,
+            "right": 0,
+            "bottom": 0,
+            "left": 0
+          },
+          "parent": "panel-sidebar-box",
+          "hidden": false,
+          "display": "flex",
+          "visibility": "visible"
+        },
+        {
+          "id": "panel-sidebar-close",
+          "localName": "toolbarbutton",
+          "role": null,
+          "label": null,
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0,
+            "top": 0,
+            "right": 0,
+            "bottom": 0,
+            "left": 0
+          },
+          "parent": "panel-sidebar-header",
+          "hidden": false,
+          "display": "flex",
+          "visibility": "visible"
+        },
+        {
+          "id": "panel-sidebar-select-box",
+          "localName": "vbox",
+          "role": null,
+          "label": null,
+          "rect": {
+            "x": 1324,
+            "y": 73,
+            "width": 42,
+            "height": 927,
+            "top": 73,
+            "right": 1366,
+            "bottom": 1000,
+            "left": 1324
+          },
+          "parent": "browser",
+          "hidden": false,
+          "display": "flex",
+          "visibility": "visible"
+        },
+        {
+          "id": "default-panel-bookmarks",
+          "localName": "div",
+          "role": "button",
+          "label": null,
+          "rect": {
+            "x": 1326,
+            "y": 78,
+            "width": 36,
+            "height": 36,
+            "top": 78,
+            "right": 1362,
+            "bottom": 114,
+            "left": 1326
+          },
+          "parent": "",
+          "hidden": false,
+          "display": "flex",
+          "visibility": "visible"
+        }
+      ],
+      "panelConfig": "{\"globalWidth\":400,\"autoUnload\":false,\"position_start\":true,\"displayed\":true,\"webExtensionRunningEnabled\":false,\"overlay\":false,\"openOnHover\":false}"
+    },
+    {
+      "phase": "panel-ui-open",
+      "state": {
+        "attrs": [],
+        "elements": [
+          {
+            "selector": "#navigator-toolbox",
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 1366,
+              "height": 73,
+              "top": 0,
+              "right": 1366,
+              "bottom": 73,
+              "left": 0
+            },
+            "color": "rgb(47, 47, 52)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "backgroundImage": "none",
+            "opacity": "1",
+            "zIndex": "0",
+            "transform": "none",
+            "display": "flex",
+            "pointerEvents": "auto"
+          },
+          {
+            "selector": "#TabsToolbar",
+            "rect": {
+              "x": -1,
+              "y": 0,
+              "width": 1367,
+              "height": 36,
+              "top": 0,
+              "right": 1366,
+              "bottom": 36,
+              "left": -1
+            },
+            "color": "rgb(47, 47, 52)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "backgroundImage": "none",
+            "opacity": "1",
+            "zIndex": "auto",
+            "transform": "none",
+            "display": "flex",
+            "pointerEvents": "auto"
+          },
+          {
+            "selector": "#nav-bar",
+            "rect": {
+              "x": 0,
+              "y": 36,
+              "width": 1366,
+              "height": 36,
+              "top": 36,
+              "right": 1366,
+              "bottom": 72,
+              "left": 0
+            },
+            "color": "rgb(47, 47, 52)",
+            "backgroundColor": "rgb(255, 255, 255)",
+            "backgroundImage": "none",
+            "opacity": "1",
+            "zIndex": "auto",
+            "transform": "none",
+            "display": "flex",
+            "pointerEvents": "auto"
+          },
+          {
+            "selector": "#panel-sidebar-box",
+            "rect": {
+              "x": 924,
+              "y": 73,
+              "width": 400,
+              "height": 927,
+              "top": 73,
+              "right": 1324,
+              "bottom": 1000,
+              "left": 924
+            },
+            "color": "rgb(47, 47, 52)",
+            "backgroundColor": "rgb(255, 255, 255)",
+            "backgroundImage": "none",
+            "opacity": "1",
+            "zIndex": "auto",
+            "transform": "none",
+            "display": "flex",
+            "pointerEvents": "auto"
+          },
+          {
+            "selector": "#panel-sidebar-select-box",
+            "rect": {
+              "x": 1324,
+              "y": 73,
+              "width": 42,
+              "height": 927,
+              "top": 73,
+              "right": 1366,
+              "bottom": 1000,
+              "left": 1324
+            },
+            "color": "rgb(47, 47, 52)",
+            "backgroundColor": "rgb(255, 255, 255)",
+            "backgroundImage": "none",
+            "opacity": "1",
+            "zIndex": "auto",
+            "transform": "none",
+            "display": "flex",
+            "pointerEvents": "auto"
+          },
+          {
+            "selector": "#panel-sidebar-header",
+            "rect": {
+              "x": 924,
+              "y": 73,
+              "width": 400,
+              "height": 38,
+              "top": 73,
+              "right": 1324,
+              "bottom": 111,
+              "left": 924
+            },
+            "color": "rgb(47, 47, 52)",
+            "backgroundColor": "rgb(255, 255, 255)",
+            "backgroundImage": "none",
+            "opacity": "1",
+            "zIndex": "auto",
+            "transform": "none",
+            "display": "flex",
+            "pointerEvents": "auto"
+          }
+        ],
+        "panelBrowsers": [
+          {
+            "id": "sidebar-panel-default-panel-bookmarks",
+            "url": "chrome://browser/content/places/bookmarksSidebar.xhtml",
+            "rect": {
+              "x": 924,
+              "y": 111,
+              "width": 400,
+              "height": 889,
+              "top": 111,
+              "right": 1324,
+              "bottom": 1000,
+              "left": 924
+            }
+          }
+        ]
+      }
+    },
+    {
+      "phase": "tools-menu",
+      "dom": [
+        {
+          "id": "menu_ToolsPopup",
+          "localName": "menupopup",
+          "role": null,
+          "label": null,
+          "rect": {
+            "x": 343,
+            "y": 39,
+            "width": 305.83331298828125,
+            "height": 242.3333282470703,
+            "top": 39,
+            "right": 648.8333129882812,
+            "bottom": 281.3333282470703,
+            "left": 343
+          },
+          "parent": "tools-menu",
+          "hidden": false,
+          "display": "flex",
+          "visibility": "visible"
+        },
+        {
+          "id": "toggle_zenmode",
+          "localName": "menuitem",
+          "role": null,
+          "label": "Toggle Zen Mode",
+          "rect": {
+            "x": 352,
+            "y": 144,
+            "width": 287.83331298828125,
+            "height": 24,
+            "top": 144,
+            "right": 639.8333129882812,
+            "bottom": 168,
+            "left": 352
+          },
+          "parent": "menu_ToolsPopup",
+          "hidden": false,
+          "display": "flex",
+          "visibility": "visible"
+        },
+        {
+          "id": "panel-sidebar-box",
+          "localName": "vbox",
+          "role": null,
+          "label": null,
+          "rect": {
+            "x": 924,
+            "y": 117,
+            "width": 400,
+            "height": 883,
+            "top": 117,
+            "right": 1324,
+            "bottom": 1000,
+            "left": 924
+          },
+          "parent": "browser",
+          "hidden": false,
+          "display": "flex",
+          "visibility": "visible"
+        },
+        {
+          "id": "panel-sidebar-header",
+          "localName": "box",
+          "role": null,
+          "label": null,
+          "rect": {
+            "x": 924,
+            "y": 117,
+            "width": 400,
+            "height": 38,
+            "top": 117,
+            "right": 1324,
+            "bottom": 155,
+            "left": 924
+          },
+          "parent": "panel-sidebar-box",
+          "hidden": false,
+          "display": "flex",
+          "visibility": "visible"
+        },
+        {
+          "id": "panel-sidebar-close",
+          "localName": "toolbarbutton",
+          "role": null,
+          "label": null,
+          "rect": {
+            "x": 1286,
+            "y": 120,
+            "width": 32,
+            "height": 32,
+            "top": 120,
+            "right": 1318,
+            "bottom": 152,
+            "left": 1286
+          },
+          "parent": "panel-sidebar-header",
+          "hidden": false,
+          "display": "flex",
+          "visibility": "visible"
+        },
+        {
+          "id": "panel-sidebar-select-box",
+          "localName": "vbox",
+          "role": null,
+          "label": null,
+          "rect": {
+            "x": 1324,
+            "y": 117,
+            "width": 42,
+            "height": 883,
+            "top": 117,
+            "right": 1366,
+            "bottom": 1000,
+            "left": 1324
+          },
+          "parent": "browser",
+          "hidden": false,
+          "display": "flex",
+          "visibility": "visible"
+        },
+        {
+          "id": "default-panel-bookmarks",
+          "localName": "div",
+          "role": "button",
+          "label": null,
+          "rect": {
+            "x": 1326,
+            "y": 122,
+            "width": 36,
+            "height": 36,
+            "top": 122,
+            "right": 1362,
+            "bottom": 158,
+            "left": 1326
+          },
+          "parent": "",
+          "hidden": false,
+          "display": "flex",
+          "visibility": "visible"
+        }
+      ]
+    },
+    {
+      "phase": "simultaneous",
+      "theme": "default",
+      "backdrop": "red",
+      "state": {
+        "attrs": [
+          [
+            "zenmode",
+            ""
+          ],
+          [
+            "zenmode-reveal-top",
+            ""
+          ],
+          [
+            "zenmode-reveal-side",
+            ""
+          ]
+        ],
+        "elements": [
+          {
+            "selector": "#navigator-toolbox",
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 1366,
+              "height": 73,
+              "top": 0,
+              "right": 1366,
+              "bottom": 73,
+              "left": 0
+            },
+            "color": "rgb(47, 47, 52)",
+            "backgroundColor": "rgb(235, 235, 237)",
+            "backgroundImage": "none, image(rgb(235, 235, 237))",
+            "opacity": "1",
+            "zIndex": "101",
+            "transform": "none",
+            "display": "flex",
+            "pointerEvents": "auto"
+          },
+          {
+            "selector": "#TabsToolbar",
+            "rect": {
+              "x": -1,
+              "y": 0,
+              "width": 1367,
+              "height": 36,
+              "top": 0,
+              "right": 1366,
+              "bottom": 36,
+              "left": -1
+            },
+            "color": "rgb(47, 47, 52)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "backgroundImage": "none",
+            "opacity": "1",
+            "zIndex": "auto",
+            "transform": "none",
+            "display": "flex",
+            "pointerEvents": "auto"
+          },
+          {
+            "selector": "#nav-bar",
+            "rect": {
+              "x": 0,
+              "y": 36,
+              "width": 1366,
+              "height": 36,
+              "top": 36,
+              "right": 1366,
+              "bottom": 72,
+              "left": 0
+            },
+            "color": "rgb(47, 47, 52)",
+            "backgroundColor": "rgb(255, 255, 255)",
+            "backgroundImage": "none",
+            "opacity": "1",
+            "zIndex": "auto",
+            "transform": "none",
+            "display": "flex",
+            "pointerEvents": "auto"
+          },
+          {
+            "selector": "#panel-sidebar-box",
+            "rect": {
+              "x": 924,
+              "y": 0,
+              "width": 400,
+              "height": 1000,
+              "top": 0,
+              "right": 1324,
+              "bottom": 1000,
+              "left": 924
+            },
+            "color": "rgb(47, 47, 52)",
+            "backgroundColor": "rgb(255, 255, 255)",
+            "backgroundImage": "none",
+            "opacity": "1",
+            "zIndex": "auto",
+            "transform": "none",
+            "display": "flex",
+            "pointerEvents": "auto"
+          },
+          {
+            "selector": "#panel-sidebar-select-box",
+            "rect": {
+              "x": 1324,
+              "y": 0,
+              "width": 42,
+              "height": 1000,
+              "top": 0,
+              "right": 1366,
+              "bottom": 1000,
+              "left": 1324
+            },
+            "color": "rgb(47, 47, 52)",
+            "backgroundColor": "rgb(255, 255, 255)",
+            "backgroundImage": "none",
+            "opacity": "1",
+            "zIndex": "auto",
+            "transform": "none",
+            "display": "flex",
+            "pointerEvents": "auto"
+          },
+          {
+            "selector": "#panel-sidebar-header",
+            "rect": {
+              "x": 924,
+              "y": 0,
+              "width": 400,
+              "height": 38,
+              "top": 0,
+              "right": 1324,
+              "bottom": 38,
+              "left": 924
+            },
+            "color": "rgb(47, 47, 52)",
+            "backgroundColor": "rgb(255, 255, 255)",
+            "backgroundImage": "none",
+            "opacity": "1",
+            "zIndex": "auto",
+            "transform": "none",
+            "display": "flex",
+            "pointerEvents": "auto"
+          }
+        ],
+        "panelBrowsers": [
+          {
+            "id": "sidebar-panel-default-panel-bookmarks",
+            "url": "chrome://browser/content/places/bookmarksSidebar.xhtml",
+            "rect": {
+              "x": 924,
+              "y": 38,
+              "width": 400,
+              "height": 962,
+              "top": 38,
+              "right": 1324,
+              "bottom": 1000,
+              "left": 924
+            }
+          }
+        ]
+      }
+    },
+    {
+      "phase": "simultaneous",
+      "theme": "default",
+      "backdrop": "cyan",
+      "state": {
+        "attrs": [
+          [
+            "zenmode",
+            ""
+          ],
+          [
+            "zenmode-reveal-top",
+            ""
+          ],
+          [
+            "zenmode-reveal-side",
+            ""
+          ]
+        ],
+        "elements": [
+          {
+            "selector": "#navigator-toolbox",
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 1366,
+              "height": 73,
+              "top": 0,
+              "right": 1366,
+              "bottom": 73,
+              "left": 0
+            },
+            "color": "rgb(47, 47, 52)",
+            "backgroundColor": "rgb(235, 235, 237)",
+            "backgroundImage": "none, image(rgb(235, 235, 237))",
+            "opacity": "1",
+            "zIndex": "101",
+            "transform": "none",
+            "display": "flex",
+            "pointerEvents": "auto"
+          },
+          {
+            "selector": "#TabsToolbar",
+            "rect": {
+              "x": -1,
+              "y": 0,
+              "width": 1367,
+              "height": 36,
+              "top": 0,
+              "right": 1366,
+              "bottom": 36,
+              "left": -1
+            },
+            "color": "rgb(47, 47, 52)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "backgroundImage": "none",
+            "opacity": "1",
+            "zIndex": "auto",
+            "transform": "none",
+            "display": "flex",
+            "pointerEvents": "auto"
+          },
+          {
+            "selector": "#nav-bar",
+            "rect": {
+              "x": 0,
+              "y": 36,
+              "width": 1366,
+              "height": 36,
+              "top": 36,
+              "right": 1366,
+              "bottom": 72,
+              "left": 0
+            },
+            "color": "rgb(47, 47, 52)",
+            "backgroundColor": "rgb(255, 255, 255)",
+            "backgroundImage": "none",
+            "opacity": "1",
+            "zIndex": "auto",
+            "transform": "none",
+            "display": "flex",
+            "pointerEvents": "auto"
+          },
+          {
+            "selector": "#panel-sidebar-box",
+            "rect": {
+              "x": 924,
+              "y": 0,
+              "width": 400,
+              "height": 1000,
+              "top": 0,
+              "right": 1324,
+              "bottom": 1000,
+              "left": 924
+            },
+            "color": "rgb(47, 47, 52)",
+            "backgroundColor": "rgb(255, 255, 255)",
+            "backgroundImage": "none",
+            "opacity": "1",
+            "zIndex": "auto",
+            "transform": "none",
+            "display": "flex",
+            "pointerEvents": "auto"
+          },
+          {
+            "selector": "#panel-sidebar-select-box",
+            "rect": {
+              "x": 1324,
+              "y": 0,
+              "width": 42,
+              "height": 1000,
+              "top": 0,
+              "right": 1366,
+              "bottom": 1000,
+              "left": 1324
+            },
+            "color": "rgb(47, 47, 52)",
+            "backgroundColor": "rgb(255, 255, 255)",
+            "backgroundImage": "none",
+            "opacity": "1",
+            "zIndex": "auto",
+            "transform": "none",
+            "display": "flex",
+            "pointerEvents": "auto"
+          },
+          {
+            "selector": "#panel-sidebar-header",
+            "rect": {
+              "x": 924,
+              "y": 0,
+              "width": 400,
+              "height": 38,
+              "top": 0,
+              "right": 1324,
+              "bottom": 38,
+              "left": 924
+            },
+            "color": "rgb(47, 47, 52)",
+            "backgroundColor": "rgb(255, 255, 255)",
+            "backgroundImage": "none",
+            "opacity": "1",
+            "zIndex": "auto",
+            "transform": "none",
+            "display": "flex",
+            "pointerEvents": "auto"
+          }
+        ],
+        "panelBrowsers": [
+          {
+            "id": "sidebar-panel-default-panel-bookmarks",
+            "url": "chrome://browser/content/places/bookmarksSidebar.xhtml",
+            "rect": {
+              "x": 924,
+              "y": 38,
+              "width": 400,
+              "height": 962,
+              "top": 38,
+              "right": 1324,
+              "bottom": 1000,
+              "left": 924
+            }
+          }
+        ]
+      }
+    },
+    {
+      "phase": "simultaneous",
+      "theme": "color",
+      "backdrop": "red",
+      "state": {
+        "attrs": [
+          [
+            "zenmode",
+            ""
+          ],
+          [
+            "zenmode-reveal-top",
+            ""
+          ],
+          [
+            "zenmode-reveal-side",
+            ""
+          ]
+        ],
+        "elements": [
+          {
+            "selector": "#navigator-toolbox",
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 1366,
+              "height": 73,
+              "top": 0,
+              "right": 1366,
+              "bottom": 73,
+              "left": 0
+            },
+            "color": "rgb(20, 33, 52)",
+            "backgroundColor": "rgb(235, 235, 237)",
+            "backgroundImage": "none, image(rgb(174, 200, 240))",
+            "opacity": "1",
+            "zIndex": "101",
+            "transform": "none",
+            "display": "flex",
+            "pointerEvents": "auto"
+          },
+          {
+            "selector": "#TabsToolbar",
+            "rect": {
+              "x": -1,
+              "y": 0,
+              "width": 1367,
+              "height": 36,
+              "top": 0,
+              "right": 1366,
+              "bottom": 36,
+              "left": -1
+            },
+            "color": "rgb(20, 33, 52)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "backgroundImage": "none",
+            "opacity": "1",
+            "zIndex": "auto",
+            "transform": "none",
+            "display": "flex",
+            "pointerEvents": "auto"
+          },
+          {
+            "selector": "#nav-bar",
+            "rect": {
+              "x": 0,
+              "y": 36,
+              "width": 1366,
+              "height": 36,
+              "top": 36,
+              "right": 1366,
+              "bottom": 72,
+              "left": 0
+            },
+            "color": "rgb(20, 33, 52)",
+            "backgroundColor": "rgb(237, 241, 247)",
+            "backgroundImage": "none",
+            "opacity": "1",
+            "zIndex": "auto",
+            "transform": "none",
+            "display": "flex",
+            "pointerEvents": "auto"
+          },
+          {
+            "selector": "#panel-sidebar-box",
+            "rect": {
+              "x": 924,
+              "y": 0,
+              "width": 400,
+              "height": 1000,
+              "top": 0,
+              "right": 1324,
+              "bottom": 1000,
+              "left": 924
+            },
+            "color": "rgb(20, 33, 52)",
+            "backgroundColor": "rgb(237, 241, 247)",
+            "backgroundImage": "none",
+            "opacity": "1",
+            "zIndex": "auto",
+            "transform": "none",
+            "display": "flex",
+            "pointerEvents": "auto"
+          },
+          {
+            "selector": "#panel-sidebar-select-box",
+            "rect": {
+              "x": 1324,
+              "y": 0,
+              "width": 42,
+              "height": 1000,
+              "top": 0,
+              "right": 1366,
+              "bottom": 1000,
+              "left": 1324
+            },
+            "color": "rgb(20, 33, 52)",
+            "backgroundColor": "rgb(237, 241, 247)",
+            "backgroundImage": "none",
+            "opacity": "1",
+            "zIndex": "auto",
+            "transform": "none",
+            "display": "flex",
+            "pointerEvents": "auto"
+          },
+          {
+            "selector": "#panel-sidebar-header",
+            "rect": {
+              "x": 924,
+              "y": 0,
+              "width": 400,
+              "height": 38,
+              "top": 0,
+              "right": 1324,
+              "bottom": 38,
+              "left": 924
+            },
+            "color": "rgb(20, 33, 52)",
+            "backgroundColor": "rgb(237, 241, 247)",
+            "backgroundImage": "none",
+            "opacity": "1",
+            "zIndex": "auto",
+            "transform": "none",
+            "display": "flex",
+            "pointerEvents": "auto"
+          }
+        ],
+        "panelBrowsers": [
+          {
+            "id": "sidebar-panel-default-panel-bookmarks",
+            "url": "chrome://browser/content/places/bookmarksSidebar.xhtml",
+            "rect": {
+              "x": 924,
+              "y": 38,
+              "width": 400,
+              "height": 962,
+              "top": 38,
+              "right": 1324,
+              "bottom": 1000,
+              "left": 924
+            }
+          }
+        ]
+      }
+    },
+    {
+      "phase": "simultaneous",
+      "theme": "color",
+      "backdrop": "cyan",
+      "state": {
+        "attrs": [
+          [
+            "zenmode",
+            ""
+          ],
+          [
+            "zenmode-reveal-top",
+            ""
+          ],
+          [
+            "zenmode-reveal-side",
+            ""
+          ]
+        ],
+        "elements": [
+          {
+            "selector": "#navigator-toolbox",
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 1366,
+              "height": 73,
+              "top": 0,
+              "right": 1366,
+              "bottom": 73,
+              "left": 0
+            },
+            "color": "rgb(20, 33, 52)",
+            "backgroundColor": "rgb(235, 235, 237)",
+            "backgroundImage": "none, image(rgb(174, 200, 240))",
+            "opacity": "1",
+            "zIndex": "101",
+            "transform": "none",
+            "display": "flex",
+            "pointerEvents": "auto"
+          },
+          {
+            "selector": "#TabsToolbar",
+            "rect": {
+              "x": -1,
+              "y": 0,
+              "width": 1367,
+              "height": 36,
+              "top": 0,
+              "right": 1366,
+              "bottom": 36,
+              "left": -1
+            },
+            "color": "rgb(20, 33, 52)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "backgroundImage": "none",
+            "opacity": "1",
+            "zIndex": "auto",
+            "transform": "none",
+            "display": "flex",
+            "pointerEvents": "auto"
+          },
+          {
+            "selector": "#nav-bar",
+            "rect": {
+              "x": 0,
+              "y": 36,
+              "width": 1366,
+              "height": 36,
+              "top": 36,
+              "right": 1366,
+              "bottom": 72,
+              "left": 0
+            },
+            "color": "rgb(20, 33, 52)",
+            "backgroundColor": "rgb(237, 241, 247)",
+            "backgroundImage": "none",
+            "opacity": "1",
+            "zIndex": "auto",
+            "transform": "none",
+            "display": "flex",
+            "pointerEvents": "auto"
+          },
+          {
+            "selector": "#panel-sidebar-box",
+            "rect": {
+              "x": 924,
+              "y": 0,
+              "width": 400,
+              "height": 1000,
+              "top": 0,
+              "right": 1324,
+              "bottom": 1000,
+              "left": 924
+            },
+            "color": "rgb(20, 33, 52)",
+            "backgroundColor": "rgb(237, 241, 247)",
+            "backgroundImage": "none",
+            "opacity": "1",
+            "zIndex": "auto",
+            "transform": "none",
+            "display": "flex",
+            "pointerEvents": "auto"
+          },
+          {
+            "selector": "#panel-sidebar-select-box",
+            "rect": {
+              "x": 1324,
+              "y": 0,
+              "width": 42,
+              "height": 1000,
+              "top": 0,
+              "right": 1366,
+              "bottom": 1000,
+              "left": 1324
+            },
+            "color": "rgb(20, 33, 52)",
+            "backgroundColor": "rgb(237, 241, 247)",
+            "backgroundImage": "none",
+            "opacity": "1",
+            "zIndex": "auto",
+            "transform": "none",
+            "display": "flex",
+            "pointerEvents": "auto"
+          },
+          {
+            "selector": "#panel-sidebar-header",
+            "rect": {
+              "x": 924,
+              "y": 0,
+              "width": 400,
+              "height": 38,
+              "top": 0,
+              "right": 1324,
+              "bottom": 38,
+              "left": 924
+            },
+            "color": "rgb(20, 33, 52)",
+            "backgroundColor": "rgb(237, 241, 247)",
+            "backgroundImage": "none",
+            "opacity": "1",
+            "zIndex": "auto",
+            "transform": "none",
+            "display": "flex",
+            "pointerEvents": "auto"
+          }
+        ],
+        "panelBrowsers": [
+          {
+            "id": "sidebar-panel-default-panel-bookmarks",
+            "url": "chrome://browser/content/places/bookmarksSidebar.xhtml",
+            "rect": {
+              "x": 924,
+              "y": 38,
+              "width": 400,
+              "height": 962,
+              "top": 38,
+              "right": 1324,
+              "bottom": 1000,
+              "left": 924
+            }
+          }
+        ]
+      }
+    },
+    {
+      "phase": "simultaneous",
+      "theme": "image",
+      "backdrop": "red",
+      "state": {
+        "attrs": [
+          [
+            "zenmode",
+            ""
+          ],
+          [
+            "zenmode-reveal-top",
+            ""
+          ],
+          [
+            "zenmode-reveal-side",
+            ""
+          ]
+        ],
+        "elements": [
+          {
+            "selector": "#navigator-toolbox",
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 1366,
+              "height": 73,
+              "top": 0,
+              "right": 1366,
+              "bottom": 73,
+              "left": 0
+            },
+            "color": "rgb(20, 33, 52)",
+            "backgroundColor": "rgb(235, 235, 237)",
+            "backgroundImage": "url(\"moz-extension://ba282d16-6113-4e17-aa03-3b6292b95dbd/frame.png\"), none, image(rgb(174, 200, 240))",
+            "opacity": "1",
+            "zIndex": "101",
+            "transform": "none",
+            "display": "flex",
+            "pointerEvents": "auto"
+          },
+          {
+            "selector": "#TabsToolbar",
+            "rect": {
+              "x": -1,
+              "y": 0,
+              "width": 1367,
+              "height": 36,
+              "top": 0,
+              "right": 1366,
+              "bottom": 36,
+              "left": -1
+            },
+            "color": "rgb(20, 33, 52)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "backgroundImage": "none",
+            "opacity": "1",
+            "zIndex": "auto",
+            "transform": "none",
+            "display": "flex",
+            "pointerEvents": "auto"
+          },
+          {
+            "selector": "#nav-bar",
+            "rect": {
+              "x": 0,
+              "y": 36,
+              "width": 1366,
+              "height": 36,
+              "top": 36,
+              "right": 1366,
+              "bottom": 72,
+              "left": 0
+            },
+            "color": "rgb(20, 33, 52)",
+            "backgroundColor": "rgb(237, 241, 247)",
+            "backgroundImage": "none",
+            "opacity": "1",
+            "zIndex": "auto",
+            "transform": "none",
+            "display": "flex",
+            "pointerEvents": "auto"
+          },
+          {
+            "selector": "#panel-sidebar-box",
+            "rect": {
+              "x": 924,
+              "y": 0,
+              "width": 400,
+              "height": 1000,
+              "top": 0,
+              "right": 1324,
+              "bottom": 1000,
+              "left": 924
+            },
+            "color": "rgb(20, 33, 52)",
+            "backgroundColor": "rgb(237, 241, 247)",
+            "backgroundImage": "none",
+            "opacity": "1",
+            "zIndex": "auto",
+            "transform": "none",
+            "display": "flex",
+            "pointerEvents": "auto"
+          },
+          {
+            "selector": "#panel-sidebar-select-box",
+            "rect": {
+              "x": 1324,
+              "y": 0,
+              "width": 42,
+              "height": 1000,
+              "top": 0,
+              "right": 1366,
+              "bottom": 1000,
+              "left": 1324
+            },
+            "color": "rgb(20, 33, 52)",
+            "backgroundColor": "rgb(237, 241, 247)",
+            "backgroundImage": "none",
+            "opacity": "1",
+            "zIndex": "auto",
+            "transform": "none",
+            "display": "flex",
+            "pointerEvents": "auto"
+          },
+          {
+            "selector": "#panel-sidebar-header",
+            "rect": {
+              "x": 924,
+              "y": 0,
+              "width": 400,
+              "height": 38,
+              "top": 0,
+              "right": 1324,
+              "bottom": 38,
+              "left": 924
+            },
+            "color": "rgb(20, 33, 52)",
+            "backgroundColor": "rgb(237, 241, 247)",
+            "backgroundImage": "none",
+            "opacity": "1",
+            "zIndex": "auto",
+            "transform": "none",
+            "display": "flex",
+            "pointerEvents": "auto"
+          }
+        ],
+        "panelBrowsers": [
+          {
+            "id": "sidebar-panel-default-panel-bookmarks",
+            "url": "chrome://browser/content/places/bookmarksSidebar.xhtml",
+            "rect": {
+              "x": 924,
+              "y": 38,
+              "width": 400,
+              "height": 962,
+              "top": 38,
+              "right": 1324,
+              "bottom": 1000,
+              "left": 924
+            }
+          }
+        ]
+      }
+    },
+    {
+      "phase": "simultaneous",
+      "theme": "image",
+      "backdrop": "cyan",
+      "state": {
+        "attrs": [
+          [
+            "zenmode",
+            ""
+          ],
+          [
+            "zenmode-reveal-top",
+            ""
+          ],
+          [
+            "zenmode-reveal-side",
+            ""
+          ]
+        ],
+        "elements": [
+          {
+            "selector": "#navigator-toolbox",
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 1366,
+              "height": 73,
+              "top": 0,
+              "right": 1366,
+              "bottom": 73,
+              "left": 0
+            },
+            "color": "rgb(20, 33, 52)",
+            "backgroundColor": "rgb(235, 235, 237)",
+            "backgroundImage": "url(\"moz-extension://ba282d16-6113-4e17-aa03-3b6292b95dbd/frame.png\"), none, image(rgb(174, 200, 240))",
+            "opacity": "1",
+            "zIndex": "101",
+            "transform": "none",
+            "display": "flex",
+            "pointerEvents": "auto"
+          },
+          {
+            "selector": "#TabsToolbar",
+            "rect": {
+              "x": -1,
+              "y": 0,
+              "width": 1367,
+              "height": 36,
+              "top": 0,
+              "right": 1366,
+              "bottom": 36,
+              "left": -1
+            },
+            "color": "rgb(20, 33, 52)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "backgroundImage": "none",
+            "opacity": "1",
+            "zIndex": "auto",
+            "transform": "none",
+            "display": "flex",
+            "pointerEvents": "auto"
+          },
+          {
+            "selector": "#nav-bar",
+            "rect": {
+              "x": 0,
+              "y": 36,
+              "width": 1366,
+              "height": 36,
+              "top": 36,
+              "right": 1366,
+              "bottom": 72,
+              "left": 0
+            },
+            "color": "rgb(20, 33, 52)",
+            "backgroundColor": "rgb(237, 241, 247)",
+            "backgroundImage": "none",
+            "opacity": "1",
+            "zIndex": "auto",
+            "transform": "none",
+            "display": "flex",
+            "pointerEvents": "auto"
+          },
+          {
+            "selector": "#panel-sidebar-box",
+            "rect": {
+              "x": 924,
+              "y": 0,
+              "width": 400,
+              "height": 1000,
+              "top": 0,
+              "right": 1324,
+              "bottom": 1000,
+              "left": 924
+            },
+            "color": "rgb(20, 33, 52)",
+            "backgroundColor": "rgb(237, 241, 247)",
+            "backgroundImage": "none",
+            "opacity": "1",
+            "zIndex": "auto",
+            "transform": "none",
+            "display": "flex",
+            "pointerEvents": "auto"
+          },
+          {
+            "selector": "#panel-sidebar-select-box",
+            "rect": {
+              "x": 1324,
+              "y": 0,
+              "width": 42,
+              "height": 1000,
+              "top": 0,
+              "right": 1366,
+              "bottom": 1000,
+              "left": 1324
+            },
+            "color": "rgb(20, 33, 52)",
+            "backgroundColor": "rgb(237, 241, 247)",
+            "backgroundImage": "none",
+            "opacity": "1",
+            "zIndex": "auto",
+            "transform": "none",
+            "display": "flex",
+            "pointerEvents": "auto"
+          },
+          {
+            "selector": "#panel-sidebar-header",
+            "rect": {
+              "x": 924,
+              "y": 0,
+              "width": 400,
+              "height": 38,
+              "top": 0,
+              "right": 1324,
+              "bottom": 38,
+              "left": 924
+            },
+            "color": "rgb(20, 33, 52)",
+            "backgroundColor": "rgb(237, 241, 247)",
+            "backgroundImage": "none",
+            "opacity": "1",
+            "zIndex": "auto",
+            "transform": "none",
+            "display": "flex",
+            "pointerEvents": "auto"
+          }
+        ],
+        "panelBrowsers": [
+          {
+            "id": "sidebar-panel-default-panel-bookmarks",
+            "url": "chrome://browser/content/places/bookmarksSidebar.xhtml",
+            "rect": {
+              "x": 924,
+              "y": 38,
+              "width": 400,
+              "height": 962,
+              "top": 38,
+              "right": 1324,
+              "bottom": 1000,
+              "left": 924
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "wayland": {
+    "windowProtocol": "wayland",
+    "compositor": "WebRender (Software)",
+    "adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+    "application": {
+      "name": "Floorp",
+      "osVersion": "Linux 6.18.57 #1 SMP Tue Oct 20 21:56:04 UTC 2026",
+      "version": "12.21.1@159.0.1",
+      "buildID": "20261103153232",
+      "distributionID": "",
+      "userAgent": "Mozilla/5.0 (X11; Linux x86_64; rv:159.0) Gecko/20100101 Firefox/159.0",
+      "safeMode": false,
+      "memorySizeBytes": 18882662400,
+      "diskAvailableBytes": 20192542720,
+      "updateChannel": "release",
+      "supportURL": "https://support.mozilla.org/1/firefox/159.0.1/Linux/en-US/",
+      "osTheme": "Adwaita / Adwaita",
+      "pointingDevices": [],
+      "numTotalWindows": 1,
+      "numFissionWindows": 1,
+      "numRemoteWindows": 1,
+      "fissionAutoStart": true,
+      "fissionDecisionStatus": "enabledByDefault",
+      "remoteAutoStart": true,
+      "policiesStatus": 0,
+      "keyLocationServiceGoogleFound": false,
+      "keySafebrowsingGoogleFound": false,
+      "keyMozillaFound": false
+    }
+  },
+  "fixtures": [
+    "synthetic W3C keyboard Alt+T and pointer click on Tools > Toggle Zen Mode",
+    "synthetic W3C click on default-panel-bookmarks to open real panel body",
+    "test data URL with red/cyan backdrop",
+    "temporary theme install via AddonManager.installTemporaryAddon; no signing/security preferences changed"
+  ],
+  "themeInstalls": [
+    {
+      "id": "qa-zen-color@floorp.test",
+      "type": "theme",
+      "isActive": true,
+      "temporarilyInstalled": true,
+      "signedState": 0
+    },
+    {
+      "id": "qa-zen-image@floorp.test",
+      "type": "theme",
+      "isActive": true,
+      "temporarilyInstalled": true,
+      "signedState": 0
+    }
+  ],
+  "completedPaintConditions": 6
+}

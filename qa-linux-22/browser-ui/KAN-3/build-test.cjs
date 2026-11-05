@@ -14,6 +14,10 @@ esbuild.build({
   globalName: 'qaKan3Test',
   outfile: process.argv[2] || path.join(__dirname, 'regression-new.js'),
   plugins: [{ name: 'inline-css', setup(build) {
+    build.onLoad({ filter: /splitViewAdoption\.test\.ts$/ }, args => process.env.QA_TEST_REF ? ({
+      contents: cp.execFileSync('git', ['-C', source, 'show', `${process.env.QA_TEST_REF}:browser-features/chrome/common/split-view/test/splitViewAdoption.test.ts`], { encoding: 'utf8' }),
+      loader: 'ts', resolveDir: path.dirname(args.path),
+    }) : undefined);
     build.onResolve({ filter: /\.css\?inline$/ }, args => ({
       path: path.resolve(args.resolveDir, args.path.replace(/\?inline$/, '')),
       namespace: 'inline-css',

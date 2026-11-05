@@ -1,0 +1,2025 @@
+{
+  "scenario": "KAN29 panel-open repeat hover/native-pin",
+  "input": "W3C synthetic UI mouse; not physical",
+  "requestedDirection": "ltr",
+  "fixtures": [
+    "Startup prefs select vertical tabs/expand-on-hover and design; live prefs and SidebarController.setPosition select side. Panel open and launcher pin use actual UI clicks. RTL fallback, if needed, is explicitly recorded."
+  ],
+  "observations": [
+    {
+      "nativePositionStart": true,
+      "panelPositionAtEndPref": true,
+      "requestedNativePin": false,
+      "panelOpenedBy": "W3C click #default-panel-bookmarks",
+      "rounds": [
+        {
+          "collapsed": {
+            "direction": "ltr",
+            "rtlUI": false,
+            "hover": true,
+            "state": {
+              "command": "",
+              "panelOpen": false,
+              "bookmarksExpandedFolders": [],
+              "launcherWidth": 58,
+              "launcherExpanded": false,
+              "launcherVisible": true
+            },
+            "startWidth": "0px",
+            "endWidth": "448px",
+            "elements": [
+              {
+                "id": "browser",
+                "rect": {
+                  "x": 0,
+                  "y": 36,
+                  "width": 1366,
+                  "height": 964,
+                  "top": 36,
+                  "right": 1366,
+                  "bottom": 1000,
+                  "left": 0
+                },
+                "expanded": false,
+                "display": "flex",
+                "visibility": "visible",
+                "position": "relative",
+                "order": "0",
+                "opacity": "1"
+              },
+              {
+                "id": "sidebar-container",
+                "rect": {
+                  "x": 0,
+                  "y": 36,
+                  "width": 58,
+                  "height": 964,
+                  "top": 36,
+                  "right": 58,
+                  "bottom": 1000,
+                  "left": 0
+                },
+                "expanded": false,
+                "display": "flex",
+                "visibility": "visible",
+                "position": "relative",
+                "order": "1",
+                "opacity": "1"
+              },
+              {
+                "id": "panel-sidebar-select-box",
+                "rect": {
+                  "x": 1324,
+                  "y": 36,
+                  "width": 42,
+                  "height": 964,
+                  "top": 36,
+                  "right": 1366,
+                  "bottom": 1000,
+                  "left": 1324
+                },
+                "expanded": false,
+                "display": "flex",
+                "visibility": "visible",
+                "position": "static",
+                "order": "1002",
+                "opacity": "1"
+              },
+              {
+                "id": "panel-sidebar-box",
+                "rect": {
+                  "x": 924,
+                  "y": 36,
+                  "width": 400,
+                  "height": 964,
+                  "top": 36,
+                  "right": 1324,
+                  "bottom": 1000,
+                  "left": 924
+                },
+                "expanded": false,
+                "display": "flex",
+                "visibility": "visible",
+                "position": "static",
+                "order": "1001",
+                "opacity": "1"
+              },
+              {
+                "id": "tabbrowser-tabbox",
+                "rect": {
+                  "x": 60,
+                  "y": 36,
+                  "width": 858,
+                  "height": 964,
+                  "top": 36,
+                  "right": 918,
+                  "bottom": 1000,
+                  "left": 60
+                },
+                "expanded": false,
+                "display": "flex",
+                "visibility": "visible",
+                "position": "relative",
+                "order": "8",
+                "opacity": "1"
+              },
+              {
+                "id": "tabbrowser-tabs",
+                "rect": {
+                  "x": 0,
+                  "y": 36,
+                  "width": 76,
+                  "height": 906,
+                  "top": 36,
+                  "right": 76,
+                  "bottom": 942,
+                  "left": 0
+                },
+                "expanded": false,
+                "display": "flex",
+                "visibility": "visible",
+                "position": "static",
+                "order": "0",
+                "opacity": "1"
+              }
+            ]
+          },
+          "hoverPoint": [
+            20,
+            216
+          ],
+          "samples": [
+            {
+              "direction": "ltr",
+              "rtlUI": false,
+              "hover": true,
+              "state": {
+                "command": "",
+                "panelOpen": false,
+                "bookmarksExpandedFolders": [],
+                "launcherWidth": 253,
+                "launcherExpanded": true,
+                "launcherVisible": true
+              },
+              "startWidth": "0px",
+              "endWidth": "448px",
+              "elements": [
+                {
+                  "id": "browser",
+                  "rect": {
+                    "x": 0,
+                    "y": 36,
+                    "width": 1366,
+                    "height": 964,
+                    "top": 36,
+                    "right": 1366,
+                    "bottom": 1000,
+                    "left": 0
+                  },
+                  "expanded": false,
+                  "display": "flex",
+                  "visibility": "visible",
+                  "position": "relative",
+                  "order": "0",
+                  "opacity": "1"
+                },
+                {
+                  "id": "sidebar-container",
+                  "rect": {
+                    "x": -174.85000610351562,
+                    "y": 36,
+                    "width": 253.33334350585938,
+                    "height": 964,
+                    "top": 36,
+                    "right": 78.48333740234375,
+                    "bottom": 1000,
+                    "left": -174.85000610351562
+                  },
+                  "expanded": true,
+                  "display": "flex",
+                  "visibility": "visible",
+                  "position": "absolute",
+                  "order": "1",
+                  "opacity": "1"
+                },
+                {
+                  "id": "panel-sidebar-select-box",
+                  "rect": {
+                    "x": 1324,
+                    "y": 36,
+                    "width": 42,
+                    "height": 964,
+                    "top": 36,
+                    "right": 1366,
+                    "bottom": 1000,
+                    "left": 1324
+                  },
+                  "expanded": false,
+                  "display": "flex",
+                  "visibility": "visible",
+                  "position": "static",
+                  "order": "1002",
+                  "opacity": "1"
+                },
+                {
+                  "id": "panel-sidebar-box",
+                  "rect": {
+                    "x": 924,
+                    "y": 36,
+                    "width": 400,
+                    "height": 964,
+                    "top": 36,
+                    "right": 1324,
+                    "bottom": 1000,
+                    "left": 924
+                  },
+                  "expanded": false,
+                  "display": "flex",
+                  "visibility": "visible",
+                  "position": "static",
+                  "order": "1001",
+                  "opacity": "1"
+                },
+                {
+                  "id": "tabbrowser-tabbox",
+                  "rect": {
+                    "x": 56,
+                    "y": 36,
+                    "width": 862,
+                    "height": 964,
+                    "top": 36,
+                    "right": 918,
+                    "bottom": 1000,
+                    "left": 56
+                  },
+                  "expanded": true,
+                  "display": "flex",
+                  "visibility": "visible",
+                  "position": "relative",
+                  "order": "8",
+                  "opacity": "1"
+                },
+                {
+                  "id": "tabbrowser-tabs",
+                  "rect": {
+                    "x": 0,
+                    "y": 36,
+                    "width": 252.3333282470703,
+                    "height": 913.3333129882812,
+                    "top": 36,
+                    "right": 252.3333282470703,
+                    "bottom": 949.3333129882812,
+                    "left": 0
+                  },
+                  "expanded": false,
+                  "display": "flex",
+                  "visibility": "visible",
+                  "position": "static",
+                  "order": "0",
+                  "opacity": "1"
+                }
+              ]
+            },
+            {
+              "direction": "ltr",
+              "rtlUI": false,
+              "hover": true,
+              "state": {
+                "command": "",
+                "panelOpen": false,
+                "bookmarksExpandedFolders": [],
+                "launcherWidth": 253,
+                "launcherExpanded": true,
+                "launcherVisible": true
+              },
+              "startWidth": "0px",
+              "endWidth": "448px",
+              "elements": [
+                {
+                  "id": "browser",
+                  "rect": {
+                    "x": 0,
+                    "y": 36,
+                    "width": 1366,
+                    "height": 964,
+                    "top": 36,
+                    "right": 1366,
+                    "bottom": 1000,
+                    "left": 0
+                  },
+                  "expanded": false,
+                  "display": "flex",
+                  "visibility": "visible",
+                  "position": "relative",
+                  "order": "0",
+                  "opacity": "1"
+                },
+                {
+                  "id": "sidebar-container",
+                  "rect": {
+                    "x": -0.1833343505859375,
+                    "y": 36,
+                    "width": 253.3333282470703,
+                    "height": 964,
+                    "top": 36,
+                    "right": 253.14999389648438,
+                    "bottom": 1000,
+                    "left": -0.1833343505859375
+                  },
+                  "expanded": true,
+                  "display": "flex",
+                  "visibility": "visible",
+                  "position": "absolute",
+                  "order": "1",
+                  "opacity": "1"
+                },
+                {
+                  "id": "panel-sidebar-select-box",
+                  "rect": {
+                    "x": 1324,
+                    "y": 36,
+                    "width": 42,
+                    "height": 964,
+                    "top": 36,
+                    "right": 1366,
+                    "bottom": 1000,
+                    "left": 1324
+                  },
+                  "expanded": false,
+                  "display": "flex",
+                  "visibility": "visible",
+                  "position": "static",
+                  "order": "1002",
+                  "opacity": "1"
+                },
+                {
+                  "id": "panel-sidebar-box",
+                  "rect": {
+                    "x": 924,
+                    "y": 36,
+                    "width": 400,
+                    "height": 964,
+                    "top": 36,
+                    "right": 1324,
+                    "bottom": 1000,
+                    "left": 924
+                  },
+                  "expanded": false,
+                  "display": "flex",
+                  "visibility": "visible",
+                  "position": "static",
+                  "order": "1001",
+                  "opacity": "1"
+                },
+                {
+                  "id": "tabbrowser-tabbox",
+                  "rect": {
+                    "x": 56,
+                    "y": 36,
+                    "width": 862,
+                    "height": 964,
+                    "top": 36,
+                    "right": 918,
+                    "bottom": 1000,
+                    "left": 56
+                  },
+                  "expanded": true,
+                  "display": "flex",
+                  "visibility": "visible",
+                  "position": "relative",
+                  "order": "8",
+                  "opacity": "1"
+                },
+                {
+                  "id": "tabbrowser-tabs",
+                  "rect": {
+                    "x": 0,
+                    "y": 36,
+                    "width": 252.3333282470703,
+                    "height": 913.3333129882812,
+                    "top": 36,
+                    "right": 252.3333282470703,
+                    "bottom": 949.3333129882812,
+                    "left": 0
+                  },
+                  "expanded": false,
+                  "display": "flex",
+                  "visibility": "visible",
+                  "position": "static",
+                  "order": "0",
+                  "opacity": "1"
+                }
+              ]
+            },
+            {
+              "direction": "ltr",
+              "rtlUI": false,
+              "hover": true,
+              "state": {
+                "command": "",
+                "panelOpen": false,
+                "bookmarksExpandedFolders": [],
+                "launcherWidth": 253,
+                "launcherExpanded": true,
+                "launcherVisible": true
+              },
+              "startWidth": "0px",
+              "endWidth": "448px",
+              "elements": [
+                {
+                  "id": "browser",
+                  "rect": {
+                    "x": 0,
+                    "y": 36,
+                    "width": 1366,
+                    "height": 964,
+                    "top": 36,
+                    "right": 1366,
+                    "bottom": 1000,
+                    "left": 0
+                  },
+                  "expanded": false,
+                  "display": "flex",
+                  "visibility": "visible",
+                  "position": "relative",
+                  "order": "0",
+                  "opacity": "1"
+                },
+                {
+                  "id": "sidebar-container",
+                  "rect": {
+                    "x": 0,
+                    "y": 36,
+                    "width": 253.3333282470703,
+                    "height": 964,
+                    "top": 36,
+                    "right": 253.3333282470703,
+                    "bottom": 1000,
+                    "left": 0
+                  },
+                  "expanded": true,
+                  "display": "flex",
+                  "visibility": "visible",
+                  "position": "absolute",
+                  "order": "1",
+                  "opacity": "1"
+                },
+                {
+                  "id": "panel-sidebar-select-box",
+                  "rect": {
+                    "x": 1324,
+                    "y": 36,
+                    "width": 42,
+                    "height": 964,
+                    "top": 36,
+                    "right": 1366,
+                    "bottom": 1000,
+                    "left": 1324
+                  },
+                  "expanded": false,
+                  "display": "flex",
+                  "visibility": "visible",
+                  "position": "static",
+                  "order": "1002",
+                  "opacity": "1"
+                },
+                {
+                  "id": "panel-sidebar-box",
+                  "rect": {
+                    "x": 924,
+                    "y": 36,
+                    "width": 400,
+                    "height": 964,
+                    "top": 36,
+                    "right": 1324,
+                    "bottom": 1000,
+                    "left": 924
+                  },
+                  "expanded": false,
+                  "display": "flex",
+                  "visibility": "visible",
+                  "position": "static",
+                  "order": "1001",
+                  "opacity": "1"
+                },
+                {
+                  "id": "tabbrowser-tabbox",
+                  "rect": {
+                    "x": 56,
+                    "y": 36,
+                    "width": 862,
+                    "height": 964,
+                    "top": 36,
+                    "right": 918,
+                    "bottom": 1000,
+                    "left": 56
+                  },
+                  "expanded": true,
+                  "display": "flex",
+                  "visibility": "visible",
+                  "position": "relative",
+                  "order": "8",
+                  "opacity": "1"
+                },
+                {
+                  "id": "tabbrowser-tabs",
+                  "rect": {
+                    "x": 0,
+                    "y": 36,
+                    "width": 252.3333282470703,
+                    "height": 913.3333129882812,
+                    "top": 36,
+                    "right": 252.3333282470703,
+                    "bottom": 949.3333129882812,
+                    "left": 0
+                  },
+                  "expanded": false,
+                  "display": "flex",
+                  "visibility": "visible",
+                  "position": "static",
+                  "order": "0",
+                  "opacity": "1"
+                }
+              ]
+            },
+            {
+              "direction": "ltr",
+              "rtlUI": false,
+              "hover": true,
+              "state": {
+                "command": "",
+                "panelOpen": false,
+                "bookmarksExpandedFolders": [],
+                "launcherWidth": 253,
+                "launcherExpanded": true,
+                "launcherVisible": true
+              },
+              "startWidth": "0px",
+              "endWidth": "448px",
+              "elements": [
+                {
+                  "id": "browser",
+                  "rect": {
+                    "x": 0,
+                    "y": 36,
+                    "width": 1366,
+                    "height": 964,
+                    "top": 36,
+                    "right": 1366,
+                    "bottom": 1000,
+                    "left": 0
+                  },
+                  "expanded": false,
+                  "display": "flex",
+                  "visibility": "visible",
+                  "position": "relative",
+                  "order": "0",
+                  "opacity": "1"
+                },
+                {
+                  "id": "sidebar-container",
+                  "rect": {
+                    "x": 0,
+                    "y": 36,
+                    "width": 253.3333282470703,
+                    "height": 964,
+                    "top": 36,
+                    "right": 253.3333282470703,
+                    "bottom": 1000,
+                    "left": 0
+                  },
+                  "expanded": true,
+                  "display": "flex",
+                  "visibility": "visible",
+                  "position": "absolute",
+                  "order": "1",
+                  "opacity": "1"
+                },
+                {
+                  "id": "panel-sidebar-select-box",
+                  "rect": {
+                    "x": 1324,
+                    "y": 36,
+                    "width": 42,
+                    "height": 964,
+                    "top": 36,
+                    "right": 1366,
+                    "bottom": 1000,
+                    "left": 1324
+                  },
+                  "expanded": false,
+                  "display": "flex",
+                  "visibility": "visible",
+                  "position": "static",
+                  "order": "1002",
+                  "opacity": "1"
+                },
+                {
+                  "id": "panel-sidebar-box",
+                  "rect": {
+                    "x": 924,
+                    "y": 36,
+                    "width": 400,
+                    "height": 964,
+                    "top": 36,
+                    "right": 1324,
+                    "bottom": 1000,
+                    "left": 924
+                  },
+                  "expanded": false,
+                  "display": "flex",
+                  "visibility": "visible",
+                  "position": "static",
+                  "order": "1001",
+                  "opacity": "1"
+                },
+                {
+                  "id": "tabbrowser-tabbox",
+                  "rect": {
+                    "x": 56,
+                    "y": 36,
+                    "width": 862,
+                    "height": 964,
+                    "top": 36,
+                    "right": 918,
+                    "bottom": 1000,
+                    "left": 56
+                  },
+                  "expanded": true,
+                  "display": "flex",
+                  "visibility": "visible",
+                  "position": "relative",
+                  "order": "8",
+                  "opacity": "1"
+                },
+                {
+                  "id": "tabbrowser-tabs",
+                  "rect": {
+                    "x": 0,
+                    "y": 36,
+                    "width": 252.3333282470703,
+                    "height": 913.3333129882812,
+                    "top": 36,
+                    "right": 252.3333282470703,
+                    "bottom": 949.3333129882812,
+                    "left": 0
+                  },
+                  "expanded": false,
+                  "display": "flex",
+                  "visibility": "visible",
+                  "position": "static",
+                  "order": "0",
+                  "opacity": "1"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "collapsed": {
+            "direction": "ltr",
+            "rtlUI": false,
+            "hover": true,
+            "state": {
+              "command": "",
+              "panelOpen": false,
+              "bookmarksExpandedFolders": [],
+              "launcherWidth": 58,
+              "launcherExpanded": false,
+              "launcherVisible": true
+            },
+            "startWidth": "0px",
+            "endWidth": "448px",
+            "elements": [
+              {
+                "id": "browser",
+                "rect": {
+                  "x": 0,
+                  "y": 36,
+                  "width": 1366,
+                  "height": 964,
+                  "top": 36,
+                  "right": 1366,
+                  "bottom": 1000,
+                  "left": 0
+                },
+                "expanded": false,
+                "display": "flex",
+                "visibility": "visible",
+                "position": "relative",
+                "order": "0",
+                "opacity": "1"
+              },
+              {
+                "id": "sidebar-container",
+                "rect": {
+                  "x": 0,
+                  "y": 36,
+                  "width": 58,
+                  "height": 964,
+                  "top": 36,
+                  "right": 58,
+                  "bottom": 1000,
+                  "left": 0
+                },
+                "expanded": false,
+                "display": "flex",
+                "visibility": "visible",
+                "position": "relative",
+                "order": "1",
+                "opacity": "1"
+              },
+              {
+                "id": "panel-sidebar-select-box",
+                "rect": {
+                  "x": 1324,
+                  "y": 36,
+                  "width": 42,
+                  "height": 964,
+                  "top": 36,
+                  "right": 1366,
+                  "bottom": 1000,
+                  "left": 1324
+                },
+                "expanded": false,
+                "display": "flex",
+                "visibility": "visible",
+                "position": "static",
+                "order": "1002",
+                "opacity": "1"
+              },
+              {
+                "id": "panel-sidebar-box",
+                "rect": {
+                  "x": 924,
+                  "y": 36,
+                  "width": 400,
+                  "height": 964,
+                  "top": 36,
+                  "right": 1324,
+                  "bottom": 1000,
+                  "left": 924
+                },
+                "expanded": false,
+                "display": "flex",
+                "visibility": "visible",
+                "position": "static",
+                "order": "1001",
+                "opacity": "1"
+              },
+              {
+                "id": "tabbrowser-tabbox",
+                "rect": {
+                  "x": 60,
+                  "y": 36,
+                  "width": 858,
+                  "height": 964,
+                  "top": 36,
+                  "right": 918,
+                  "bottom": 1000,
+                  "left": 60
+                },
+                "expanded": false,
+                "display": "flex",
+                "visibility": "visible",
+                "position": "relative",
+                "order": "8",
+                "opacity": "1"
+              },
+              {
+                "id": "tabbrowser-tabs",
+                "rect": {
+                  "x": 0,
+                  "y": 36,
+                  "width": 76,
+                  "height": 906,
+                  "top": 36,
+                  "right": 76,
+                  "bottom": 942,
+                  "left": 0
+                },
+                "expanded": false,
+                "display": "flex",
+                "visibility": "visible",
+                "position": "static",
+                "order": "0",
+                "opacity": "1"
+              }
+            ]
+          },
+          "hoverPoint": [
+            20,
+            216
+          ],
+          "samples": [
+            {
+              "direction": "ltr",
+              "rtlUI": false,
+              "hover": true,
+              "state": {
+                "command": "",
+                "panelOpen": false,
+                "bookmarksExpandedFolders": [],
+                "launcherWidth": 253,
+                "launcherExpanded": true,
+                "launcherVisible": true
+              },
+              "startWidth": "0px",
+              "endWidth": "448px",
+              "elements": [
+                {
+                  "id": "browser",
+                  "rect": {
+                    "x": 0,
+                    "y": 36,
+                    "width": 1366,
+                    "height": 964,
+                    "top": 36,
+                    "right": 1366,
+                    "bottom": 1000,
+                    "left": 0
+                  },
+                  "expanded": false,
+                  "display": "flex",
+                  "visibility": "visible",
+                  "position": "relative",
+                  "order": "0",
+                  "opacity": "1"
+                },
+                {
+                  "id": "sidebar-container",
+                  "rect": {
+                    "x": -175.23333740234375,
+                    "y": 36,
+                    "width": 253.33334350585938,
+                    "height": 964,
+                    "top": 36,
+                    "right": 78.10000610351562,
+                    "bottom": 1000,
+                    "left": -175.23333740234375
+                  },
+                  "expanded": true,
+                  "display": "flex",
+                  "visibility": "visible",
+                  "position": "absolute",
+                  "order": "1",
+                  "opacity": "1"
+                },
+                {
+                  "id": "panel-sidebar-select-box",
+                  "rect": {
+                    "x": 1324,
+                    "y": 36,
+                    "width": 42,
+                    "height": 964,
+                    "top": 36,
+                    "right": 1366,
+                    "bottom": 1000,
+                    "left": 1324
+                  },
+                  "expanded": false,
+                  "display": "flex",
+                  "visibility": "visible",
+                  "position": "static",
+                  "order": "1002",
+                  "opacity": "1"
+                },
+                {
+                  "id": "panel-sidebar-box",
+                  "rect": {
+                    "x": 924,
+                    "y": 36,
+                    "width": 400,
+                    "height": 964,
+                    "top": 36,
+                    "right": 1324,
+                    "bottom": 1000,
+                    "left": 924
+                  },
+                  "expanded": false,
+                  "display": "flex",
+                  "visibility": "visible",
+                  "position": "static",
+                  "order": "1001",
+                  "opacity": "1"
+                },
+                {
+                  "id": "tabbrowser-tabbox",
+                  "rect": {
+                    "x": 56,
+                    "y": 36,
+                    "width": 862,
+                    "height": 964,
+                    "top": 36,
+                    "right": 918,
+                    "bottom": 1000,
+                    "left": 56
+                  },
+                  "expanded": true,
+                  "display": "flex",
+                  "visibility": "visible",
+                  "position": "relative",
+                  "order": "8",
+                  "opacity": "1"
+                },
+                {
+                  "id": "tabbrowser-tabs",
+                  "rect": {
+                    "x": 0,
+                    "y": 36,
+                    "width": 252.3333282470703,
+                    "height": 913.3333129882812,
+                    "top": 36,
+                    "right": 252.3333282470703,
+                    "bottom": 949.3333129882812,
+                    "left": 0
+                  },
+                  "expanded": false,
+                  "display": "flex",
+                  "visibility": "visible",
+                  "position": "static",
+                  "order": "0",
+                  "opacity": "1"
+                }
+              ]
+            },
+            {
+              "direction": "ltr",
+              "rtlUI": false,
+              "hover": true,
+              "state": {
+                "command": "",
+                "panelOpen": false,
+                "bookmarksExpandedFolders": [],
+                "launcherWidth": 253,
+                "launcherExpanded": true,
+                "launcherVisible": true
+              },
+              "startWidth": "0px",
+              "endWidth": "448px",
+              "elements": [
+                {
+                  "id": "browser",
+                  "rect": {
+                    "x": 0,
+                    "y": 36,
+                    "width": 1366,
+                    "height": 964,
+                    "top": 36,
+                    "right": 1366,
+                    "bottom": 1000,
+                    "left": 0
+                  },
+                  "expanded": false,
+                  "display": "flex",
+                  "visibility": "visible",
+                  "position": "relative",
+                  "order": "0",
+                  "opacity": "1"
+                },
+                {
+                  "id": "sidebar-container",
+                  "rect": {
+                    "x": -0.25,
+                    "y": 36,
+                    "width": 253.3333282470703,
+                    "height": 964,
+                    "top": 36,
+                    "right": 253.0833282470703,
+                    "bottom": 1000,
+                    "left": -0.25
+                  },
+                  "expanded": true,
+                  "display": "flex",
+                  "visibility": "visible",
+                  "position": "absolute",
+                  "order": "1",
+                  "opacity": "1"
+                },
+                {
+                  "id": "panel-sidebar-select-box",
+                  "rect": {
+                    "x": 1324,
+                    "y": 36,
+                    "width": 42,
+                    "height": 964,
+                    "top": 36,
+                    "right": 1366,
+                    "bottom": 1000,
+                    "left": 1324
+                  },
+                  "expanded": false,
+                  "display": "flex",
+                  "visibility": "visible",
+                  "position": "static",
+                  "order": "1002",
+                  "opacity": "1"
+                },
+                {
+                  "id": "panel-sidebar-box",
+                  "rect": {
+                    "x": 924,
+                    "y": 36,
+                    "width": 400,
+                    "height": 964,
+                    "top": 36,
+                    "right": 1324,
+                    "bottom": 1000,
+                    "left": 924
+                  },
+                  "expanded": false,
+                  "display": "flex",
+                  "visibility": "visible",
+                  "position": "static",
+                  "order": "1001",
+                  "opacity": "1"
+                },
+                {
+                  "id": "tabbrowser-tabbox",
+                  "rect": {
+                    "x": 56,
+                    "y": 36,
+                    "width": 862,
+                    "height": 964,
+                    "top": 36,
+                    "right": 918,
+                    "bottom": 1000,
+                    "left": 56
+                  },
+                  "expanded": true,
+                  "display": "flex",
+                  "visibility": "visible",
+                  "position": "relative",
+                  "order": "8",
+                  "opacity": "1"
+                },
+                {
+                  "id": "tabbrowser-tabs",
+                  "rect": {
+                    "x": 0,
+                    "y": 36,
+                    "width": 252.3333282470703,
+                    "height": 913.3333129882812,
+                    "top": 36,
+                    "right": 252.3333282470703,
+                    "bottom": 949.3333129882812,
+                    "left": 0
+                  },
+                  "expanded": false,
+                  "display": "flex",
+                  "visibility": "visible",
+                  "position": "static",
+                  "order": "0",
+                  "opacity": "1"
+                }
+              ]
+            },
+            {
+              "direction": "ltr",
+              "rtlUI": false,
+              "hover": true,
+              "state": {
+                "command": "",
+                "panelOpen": false,
+                "bookmarksExpandedFolders": [],
+                "launcherWidth": 253,
+                "launcherExpanded": true,
+                "launcherVisible": true
+              },
+              "startWidth": "0px",
+              "endWidth": "448px",
+              "elements": [
+                {
+                  "id": "browser",
+                  "rect": {
+                    "x": 0,
+                    "y": 36,
+                    "width": 1366,
+                    "height": 964,
+                    "top": 36,
+                    "right": 1366,
+                    "bottom": 1000,
+                    "left": 0
+                  },
+                  "expanded": false,
+                  "display": "flex",
+                  "visibility": "visible",
+                  "position": "relative",
+                  "order": "0",
+                  "opacity": "1"
+                },
+                {
+                  "id": "sidebar-container",
+                  "rect": {
+                    "x": 0,
+                    "y": 36,
+                    "width": 253.3333282470703,
+                    "height": 964,
+                    "top": 36,
+                    "right": 253.3333282470703,
+                    "bottom": 1000,
+                    "left": 0
+                  },
+                  "expanded": true,
+                  "display": "flex",
+                  "visibility": "visible",
+                  "position": "absolute",
+                  "order": "1",
+                  "opacity": "1"
+                },
+                {
+                  "id": "panel-sidebar-select-box",
+                  "rect": {
+                    "x": 1324,
+                    "y": 36,
+                    "width": 42,
+                    "height": 964,
+                    "top": 36,
+                    "right": 1366,
+                    "bottom": 1000,
+                    "left": 1324
+                  },
+                  "expanded": false,
+                  "display": "flex",
+                  "visibility": "visible",
+                  "position": "static",
+                  "order": "1002",
+                  "opacity": "1"
+                },
+                {
+                  "id": "panel-sidebar-box",
+                  "rect": {
+                    "x": 924,
+                    "y": 36,
+                    "width": 400,
+                    "height": 964,
+                    "top": 36,
+                    "right": 1324,
+                    "bottom": 1000,
+                    "left": 924
+                  },
+                  "expanded": false,
+                  "display": "flex",
+                  "visibility": "visible",
+                  "position": "static",
+                  "order": "1001",
+                  "opacity": "1"
+                },
+                {
+                  "id": "tabbrowser-tabbox",
+                  "rect": {
+                    "x": 56,
+                    "y": 36,
+                    "width": 862,
+                    "height": 964,
+                    "top": 36,
+                    "right": 918,
+                    "bottom": 1000,
+                    "left": 56
+                  },
+                  "expanded": true,
+                  "display": "flex",
+                  "visibility": "visible",
+                  "position": "relative",
+                  "order": "8",
+                  "opacity": "1"
+                },
+                {
+                  "id": "tabbrowser-tabs",
+                  "rect": {
+                    "x": 0,
+                    "y": 36,
+                    "width": 252.3333282470703,
+                    "height": 913.3333129882812,
+                    "top": 36,
+                    "right": 252.3333282470703,
+                    "bottom": 949.3333129882812,
+                    "left": 0
+                  },
+                  "expanded": false,
+                  "display": "flex",
+                  "visibility": "visible",
+                  "position": "static",
+                  "order": "0",
+                  "opacity": "1"
+                }
+              ]
+            },
+            {
+              "direction": "ltr",
+              "rtlUI": false,
+              "hover": true,
+              "state": {
+                "command": "",
+                "panelOpen": false,
+                "bookmarksExpandedFolders": [],
+                "launcherWidth": 253,
+                "launcherExpanded": true,
+                "launcherVisible": true
+              },
+              "startWidth": "0px",
+              "endWidth": "448px",
+              "elements": [
+                {
+                  "id": "browser",
+                  "rect": {
+                    "x": 0,
+                    "y": 36,
+                    "width": 1366,
+                    "height": 964,
+                    "top": 36,
+                    "right": 1366,
+                    "bottom": 1000,
+                    "left": 0
+                  },
+                  "expanded": false,
+                  "display": "flex",
+                  "visibility": "visible",
+                  "position": "relative",
+                  "order": "0",
+                  "opacity": "1"
+                },
+                {
+                  "id": "sidebar-container",
+                  "rect": {
+                    "x": 0,
+                    "y": 36,
+                    "width": 253.3333282470703,
+                    "height": 964,
+                    "top": 36,
+                    "right": 253.3333282470703,
+                    "bottom": 1000,
+                    "left": 0
+                  },
+                  "expanded": true,
+                  "display": "flex",
+                  "visibility": "visible",
+                  "position": "absolute",
+                  "order": "1",
+                  "opacity": "1"
+                },
+                {
+                  "id": "panel-sidebar-select-box",
+                  "rect": {
+                    "x": 1324,
+                    "y": 36,
+                    "width": 42,
+                    "height": 964,
+                    "top": 36,
+                    "right": 1366,
+                    "bottom": 1000,
+                    "left": 1324
+                  },
+                  "expanded": false,
+                  "display": "flex",
+                  "visibility": "visible",
+                  "position": "static",
+                  "order": "1002",
+                  "opacity": "1"
+                },
+                {
+                  "id": "panel-sidebar-box",
+                  "rect": {
+                    "x": 924,
+                    "y": 36,
+                    "width": 400,
+                    "height": 964,
+                    "top": 36,
+                    "right": 1324,
+                    "bottom": 1000,
+                    "left": 924
+                  },
+                  "expanded": false,
+                  "display": "flex",
+                  "visibility": "visible",
+                  "position": "static",
+                  "order": "1001",
+                  "opacity": "1"
+                },
+                {
+                  "id": "tabbrowser-tabbox",
+                  "rect": {
+                    "x": 56,
+                    "y": 36,
+                    "width": 862,
+                    "height": 964,
+                    "top": 36,
+                    "right": 918,
+                    "bottom": 1000,
+                    "left": 56
+                  },
+                  "expanded": true,
+                  "display": "flex",
+                  "visibility": "visible",
+                  "position": "relative",
+                  "order": "8",
+                  "opacity": "1"
+                },
+                {
+                  "id": "tabbrowser-tabs",
+                  "rect": {
+                    "x": 0,
+                    "y": 36,
+                    "width": 252.3333282470703,
+                    "height": 913.3333129882812,
+                    "top": 36,
+                    "right": 252.3333282470703,
+                    "bottom": 949.3333129882812,
+                    "left": 0
+                  },
+                  "expanded": false,
+                  "display": "flex",
+                  "visibility": "visible",
+                  "position": "static",
+                  "order": "0",
+                  "opacity": "1"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "collapsed": {
+            "direction": "ltr",
+            "rtlUI": false,
+            "hover": true,
+            "state": {
+              "command": "",
+              "panelOpen": false,
+              "bookmarksExpandedFolders": [],
+              "launcherWidth": 58,
+              "launcherExpanded": false,
+              "launcherVisible": true
+            },
+            "startWidth": "0px",
+            "endWidth": "448px",
+            "elements": [
+              {
+                "id": "browser",
+                "rect": {
+                  "x": 0,
+                  "y": 36,
+                  "width": 1366,
+                  "height": 964,
+                  "top": 36,
+                  "right": 1366,
+                  "bottom": 1000,
+                  "left": 0
+                },
+                "expanded": false,
+                "display": "flex",
+                "visibility": "visible",
+                "position": "relative",
+                "order": "0",
+                "opacity": "1"
+              },
+              {
+                "id": "sidebar-container",
+                "rect": {
+                  "x": 0,
+                  "y": 36,
+                  "width": 58,
+                  "height": 964,
+                  "top": 36,
+                  "right": 58,
+                  "bottom": 1000,
+                  "left": 0
+                },
+                "expanded": false,
+                "display": "flex",
+                "visibility": "visible",
+                "position": "relative",
+                "order": "1",
+                "opacity": "1"
+              },
+              {
+                "id": "panel-sidebar-select-box",
+                "rect": {
+                  "x": 1324,
+                  "y": 36,
+                  "width": 42,
+                  "height": 964,
+                  "top": 36,
+                  "right": 1366,
+                  "bottom": 1000,
+                  "left": 1324
+                },
+                "expanded": false,
+                "display": "flex",
+                "visibility": "visible",
+                "position": "static",
+                "order": "1002",
+                "opacity": "1"
+              },
+              {
+                "id": "panel-sidebar-box",
+                "rect": {
+                  "x": 924,
+                  "y": 36,
+                  "width": 400,
+                  "height": 964,
+                  "top": 36,
+                  "right": 1324,
+                  "bottom": 1000,
+                  "left": 924
+                },
+                "expanded": false,
+                "display": "flex",
+                "visibility": "visible",
+                "position": "static",
+                "order": "1001",
+                "opacity": "1"
+              },
+              {
+                "id": "tabbrowser-tabbox",
+                "rect": {
+                  "x": 60,
+                  "y": 36,
+                  "width": 858,
+                  "height": 964,
+                  "top": 36,
+                  "right": 918,
+                  "bottom": 1000,
+                  "left": 60
+                },
+                "expanded": false,
+                "display": "flex",
+                "visibility": "visible",
+                "position": "relative",
+                "order": "8",
+                "opacity": "1"
+              },
+              {
+                "id": "tabbrowser-tabs",
+                "rect": {
+                  "x": 0,
+                  "y": 36,
+                  "width": 76,
+                  "height": 906,
+                  "top": 36,
+                  "right": 76,
+                  "bottom": 942,
+                  "left": 0
+                },
+                "expanded": false,
+                "display": "flex",
+                "visibility": "visible",
+                "position": "static",
+                "order": "0",
+                "opacity": "1"
+              }
+            ]
+          },
+          "hoverPoint": [
+            20,
+            216
+          ],
+          "samples": [
+            {
+              "direction": "ltr",
+              "rtlUI": false,
+              "hover": true,
+              "state": {
+                "command": "",
+                "panelOpen": false,
+                "bookmarksExpandedFolders": [],
+                "launcherWidth": 253,
+                "launcherExpanded": true,
+                "launcherVisible": true
+              },
+              "startWidth": "0px",
+              "endWidth": "448px",
+              "elements": [
+                {
+                  "id": "browser",
+                  "rect": {
+                    "x": 0,
+                    "y": 36,
+                    "width": 1366,
+                    "height": 964,
+                    "top": 36,
+                    "right": 1366,
+                    "bottom": 1000,
+                    "left": 0
+                  },
+                  "expanded": false,
+                  "display": "flex",
+                  "visibility": "visible",
+                  "position": "relative",
+                  "order": "0",
+                  "opacity": "1"
+                },
+                {
+                  "id": "sidebar-container",
+                  "rect": {
+                    "x": -182.64999389648438,
+                    "y": 36,
+                    "width": 253.3333282470703,
+                    "height": 964,
+                    "top": 36,
+                    "right": 70.68333435058594,
+                    "bottom": 1000,
+                    "left": -182.64999389648438
+                  },
+                  "expanded": true,
+                  "display": "flex",
+                  "visibility": "visible",
+                  "position": "absolute",
+                  "order": "1",
+                  "opacity": "1"
+                },
+                {
+                  "id": "panel-sidebar-select-box",
+                  "rect": {
+                    "x": 1324,
+                    "y": 36,
+                    "width": 42,
+                    "height": 964,
+                    "top": 36,
+                    "right": 1366,
+                    "bottom": 1000,
+                    "left": 1324
+                  },
+                  "expanded": false,
+                  "display": "flex",
+                  "visibility": "visible",
+                  "position": "static",
+                  "order": "1002",
+                  "opacity": "1"
+                },
+                {
+                  "id": "panel-sidebar-box",
+                  "rect": {
+                    "x": 924,
+                    "y": 36,
+                    "width": 400,
+                    "height": 964,
+                    "top": 36,
+                    "right": 1324,
+                    "bottom": 1000,
+                    "left": 924
+                  },
+                  "expanded": false,
+                  "display": "flex",
+                  "visibility": "visible",
+                  "position": "static",
+                  "order": "1001",
+                  "opacity": "1"
+                },
+                {
+                  "id": "tabbrowser-tabbox",
+                  "rect": {
+                    "x": 56,
+                    "y": 36,
+                    "width": 862,
+                    "height": 964,
+                    "top": 36,
+                    "right": 918,
+                    "bottom": 1000,
+                    "left": 56
+                  },
+                  "expanded": true,
+                  "display": "flex",
+                  "visibility": "visible",
+                  "position": "relative",
+                  "order": "8",
+                  "opacity": "1"
+                },
+                {
+                  "id": "tabbrowser-tabs",
+                  "rect": {
+                    "x": 0,
+                    "y": 36,
+                    "width": 252.3333282470703,
+                    "height": 913.3333129882812,
+                    "top": 36,
+                    "right": 252.3333282470703,
+                    "bottom": 949.3333129882812,
+                    "left": 0
+                  },
+                  "expanded": false,
+                  "display": "flex",
+                  "visibility": "visible",
+                  "position": "static",
+                  "order": "0",
+                  "opacity": "1"
+                }
+              ]
+            },
+            {
+              "direction": "ltr",
+              "rtlUI": false,
+              "hover": true,
+              "state": {
+                "command": "",
+                "panelOpen": false,
+                "bookmarksExpandedFolders": [],
+                "launcherWidth": 253,
+                "launcherExpanded": true,
+                "launcherVisible": true
+              },
+              "startWidth": "0px",
+              "endWidth": "448px",
+              "elements": [
+                {
+                  "id": "browser",
+                  "rect": {
+                    "x": 0,
+                    "y": 36,
+                    "width": 1366,
+                    "height": 964,
+                    "top": 36,
+                    "right": 1366,
+                    "bottom": 1000,
+                    "left": 0
+                  },
+                  "expanded": false,
+                  "display": "flex",
+                  "visibility": "visible",
+                  "position": "relative",
+                  "order": "0",
+                  "opacity": "1"
+                },
+                {
+                  "id": "sidebar-container",
+                  "rect": {
+                    "x": -0.366668701171875,
+                    "y": 36,
+                    "width": 253.3333282470703,
+                    "height": 964,
+                    "top": 36,
+                    "right": 252.96665954589844,
+                    "bottom": 1000,
+                    "left": -0.366668701171875
+                  },
+                  "expanded": true,
+                  "display": "flex",
+                  "visibility": "visible",
+                  "position": "absolute",
+                  "order": "1",
+                  "opacity": "1"
+                },
+                {
+                  "id": "panel-sidebar-select-box",
+                  "rect": {
+                    "x": 1324,
+                    "y": 36,
+                    "width": 42,
+                    "height": 964,
+                    "top": 36,
+                    "right": 1366,
+                    "bottom": 1000,
+                    "left": 1324
+                  },
+                  "expanded": false,
+                  "display": "flex",
+                  "visibility": "visible",
+                  "position": "static",
+                  "order": "1002",
+                  "opacity": "1"
+                },
+                {
+                  "id": "panel-sidebar-box",
+                  "rect": {
+                    "x": 924,
+                    "y": 36,
+                    "width": 400,
+                    "height": 964,
+                    "top": 36,
+                    "right": 1324,
+                    "bottom": 1000,
+                    "left": 924
+                  },
+                  "expanded": false,
+                  "display": "flex",
+                  "visibility": "visible",
+                  "position": "static",
+                  "order": "1001",
+                  "opacity": "1"
+                },
+                {
+                  "id": "tabbrowser-tabbox",
+                  "rect": {
+                    "x": 56,
+                    "y": 36,
+                    "width": 862,
+                    "height": 964,
+                    "top": 36,
+                    "right": 918,
+                    "bottom": 1000,
+                    "left": 56
+                  },
+                  "expanded": true,
+                  "display": "flex",
+                  "visibility": "visible",
+                  "position": "relative",
+                  "order": "8",
+                  "opacity": "1"
+                },
+                {
+                  "id": "tabbrowser-tabs",
+                  "rect": {
+                    "x": 0,
+                    "y": 36,
+                    "width": 252.3333282470703,
+                    "height": 913.3333129882812,
+                    "top": 36,
+                    "right": 252.3333282470703,
+                    "bottom": 949.3333129882812,
+                    "left": 0
+                  },
+                  "expanded": false,
+                  "display": "flex",
+                  "visibility": "visible",
+                  "position": "static",
+                  "order": "0",
+                  "opacity": "1"
+                }
+              ]
+            },
+            {
+              "direction": "ltr",
+              "rtlUI": false,
+              "hover": true,
+              "state": {
+                "command": "",
+                "panelOpen": false,
+                "bookmarksExpandedFolders": [],
+                "launcherWidth": 253,
+                "launcherExpanded": true,
+                "launcherVisible": true
+              },
+              "startWidth": "0px",
+              "endWidth": "448px",
+              "elements": [
+                {
+                  "id": "browser",
+                  "rect": {
+                    "x": 0,
+                    "y": 36,
+                    "width": 1366,
+                    "height": 964,
+                    "top": 36,
+                    "right": 1366,
+                    "bottom": 1000,
+                    "left": 0
+                  },
+                  "expanded": false,
+                  "display": "flex",
+                  "visibility": "visible",
+                  "position": "relative",
+                  "order": "0",
+                  "opacity": "1"
+                },
+                {
+                  "id": "sidebar-container",
+                  "rect": {
+                    "x": 0,
+                    "y": 36,
+                    "width": 253.3333282470703,
+                    "height": 964,
+                    "top": 36,
+                    "right": 253.3333282470703,
+                    "bottom": 1000,
+                    "left": 0
+                  },
+                  "expanded": true,
+                  "display": "flex",
+                  "visibility": "visible",
+                  "position": "absolute",
+                  "order": "1",
+                  "opacity": "1"
+                },
+                {
+                  "id": "panel-sidebar-select-box",
+                  "rect": {
+                    "x": 1324,
+                    "y": 36,
+                    "width": 42,
+                    "height": 964,
+                    "top": 36,
+                    "right": 1366,
+                    "bottom": 1000,
+                    "left": 1324
+                  },
+                  "expanded": false,
+                  "display": "flex",
+                  "visibility": "visible",
+                  "position": "static",
+                  "order": "1002",
+                  "opacity": "1"
+                },
+                {
+                  "id": "panel-sidebar-box",
+                  "rect": {
+                    "x": 924,
+                    "y": 36,
+                    "width": 400,
+                    "height": 964,
+                    "top": 36,
+                    "right": 1324,
+                    "bottom": 1000,
+                    "left": 924
+                  },
+                  "expanded": false,
+                  "display": "flex",
+                  "visibility": "visible",
+                  "position": "static",
+                  "order": "1001",
+                  "opacity": "1"
+                },
+                {
+                  "id": "tabbrowser-tabbox",
+                  "rect": {
+                    "x": 56,
+                    "y": 36,
+                    "width": 862,
+                    "height": 964,
+                    "top": 36,
+                    "right": 918,
+                    "bottom": 1000,
+                    "left": 56
+                  },
+                  "expanded": true,
+                  "display": "flex",
+                  "visibility": "visible",
+                  "position": "relative",
+                  "order": "8",
+                  "opacity": "1"
+                },
+                {
+                  "id": "tabbrowser-tabs",
+                  "rect": {
+                    "x": 0,
+                    "y": 36,
+                    "width": 252.3333282470703,
+                    "height": 913.3333129882812,
+                    "top": 36,
+                    "right": 252.3333282470703,
+                    "bottom": 949.3333129882812,
+                    "left": 0
+                  },
+                  "expanded": false,
+                  "display": "flex",
+                  "visibility": "visible",
+                  "position": "static",
+                  "order": "0",
+                  "opacity": "1"
+                }
+              ]
+            },
+            {
+              "direction": "ltr",
+              "rtlUI": false,
+              "hover": true,
+              "state": {
+                "command": "",
+                "panelOpen": false,
+                "bookmarksExpandedFolders": [],
+                "launcherWidth": 253,
+                "launcherExpanded": true,
+                "launcherVisible": true
+              },
+              "startWidth": "0px",
+              "endWidth": "448px",
+              "elements": [
+                {
+                  "id": "browser",
+                  "rect": {
+                    "x": 0,
+                    "y": 36,
+                    "width": 1366,
+                    "height": 964,
+                    "top": 36,
+                    "right": 1366,
+                    "bottom": 1000,
+                    "left": 0
+                  },
+                  "expanded": false,
+                  "display": "flex",
+                  "visibility": "visible",
+                  "position": "relative",
+                  "order": "0",
+                  "opacity": "1"
+                },
+                {
+                  "id": "sidebar-container",
+                  "rect": {
+                    "x": 0,
+                    "y": 36,
+                    "width": 253.3333282470703,
+                    "height": 964,
+                    "top": 36,
+                    "right": 253.3333282470703,
+                    "bottom": 1000,
+                    "left": 0
+                  },
+                  "expanded": true,
+                  "display": "flex",
+                  "visibility": "visible",
+                  "position": "absolute",
+                  "order": "1",
+                  "opacity": "1"
+                },
+                {
+                  "id": "panel-sidebar-select-box",
+                  "rect": {
+                    "x": 1324,
+                    "y": 36,
+                    "width": 42,
+                    "height": 964,
+                    "top": 36,
+                    "right": 1366,
+                    "bottom": 1000,
+                    "left": 1324
+                  },
+                  "expanded": false,
+                  "display": "flex",
+                  "visibility": "visible",
+                  "position": "static",
+                  "order": "1002",
+                  "opacity": "1"
+                },
+                {
+                  "id": "panel-sidebar-box",
+                  "rect": {
+                    "x": 924,
+                    "y": 36,
+                    "width": 400,
+                    "height": 964,
+                    "top": 36,
+                    "right": 1324,
+                    "bottom": 1000,
+                    "left": 924
+                  },
+                  "expanded": false,
+                  "display": "flex",
+                  "visibility": "visible",
+                  "position": "static",
+                  "order": "1001",
+                  "opacity": "1"
+                },
+                {
+                  "id": "tabbrowser-tabbox",
+                  "rect": {
+                    "x": 56,
+                    "y": 36,
+                    "width": 862,
+                    "height": 964,
+                    "top": 36,
+                    "right": 918,
+                    "bottom": 1000,
+                    "left": 56
+                  },
+                  "expanded": true,
+                  "display": "flex",
+                  "visibility": "visible",
+                  "position": "relative",
+                  "order": "8",
+                  "opacity": "1"
+                },
+                {
+                  "id": "tabbrowser-tabs",
+                  "rect": {
+                    "x": 0,
+                    "y": 36,
+                    "width": 252.3333282470703,
+                    "height": 913.3333129882812,
+                    "top": 36,
+                    "right": 252.3333282470703,
+                    "bottom": 949.3333129882812,
+                    "left": 0
+                  },
+                  "expanded": false,
+                  "display": "flex",
+                  "visibility": "visible",
+                  "position": "static",
+                  "order": "0",
+                  "opacity": "1"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "screenshot": "KAN-29/wayland-29601-1-1-0.png"
+    }
+  ],
+  "product": {
+    "name": "Floorp",
+    "version": "159.0.1",
+    "build": "20261103153232",
+    "os": "Linux"
+  },
+  "graphics": {
+    "windowProtocol": "wayland",
+    "compositing": "WebRender (Software)"
+  },
+  "initialDirection": {
+    "direction": "ltr",
+    "rtlUI": false,
+    "uidirection": "ltr"
+  },
+  "error": "RuntimeError('UI target missing #sidebar-button')",
+  "traceback": "Traceback (most recent call last):\n  File \"/workspace/qa-linux-22/browser-ui/kan29-wayland.py\", line 33, in <module>\n    if hover==pinned:click('#sidebar-button')\n                     ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/workspace/qa-linux-22/browser-ui/kan29-wayland.py\", line 13, in click\n    if not r or r['width']<=0 or r['height']<=0:raise RuntimeError('UI target missing '+sel)\n                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: UI target missing #sidebar-button\n"
+}

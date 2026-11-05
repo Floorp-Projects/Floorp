@@ -1,0 +1,30 @@
+[
+  {
+    "port": 29652,
+    "error": "OSError('No data received over socket')",
+    "traceback": "Traceback (most recent call last):\n  File \"/workspace/qa-linux-22/browser-ui/qaLinuxKAN87/probe.py\", line 40, in <module>\n    click('#panel-sidebar-close');pointer(dims['width']-2,80);time.sleep(.3);click('#default-panel-bookmarks');pointer(dims['width']-2,2);time.sleep(.35)\n                                                                                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/workspace/qa-linux-22/browser-ui/qaLinuxKAN87/probe.py\", line 16, in pointer\n    m._send_message('WebDriver:PerformActions',{'actions':[{'type':'pointer','id':'qa-zen-pointer','parameters':{'pointerType':'mouse'},'actions':seq}]})\n  File \"/workspace/qa-linux-22/browser-ui/python/marionette_driver/decorators.py\", line 34, in _\n    m._handle_socket_failure()\n  File \"/workspace/qa-linux-22/browser-ui/python/marionette_driver/marionette.py\", line 824, in _handle_socket_failure\n    raise exc.with_traceback(tb)\n  File \"/workspace/qa-linux-22/browser-ui/python/marionette_driver/decorators.py\", line 24, in _\n    return func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File \"/workspace/qa-linux-22/browser-ui/python/marionette_driver/marionette.py\", line 773, in _send_message\n    msg = self.client.request(name, params)\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/workspace/qa-linux-22/browser-ui/python/marionette_driver/transport.py\", line 368, in request\n    return self.receive()\n           ^^^^^^^^^^^^^^\n  File \"/workspace/qa-linux-22/browser-ui/python/marionette_driver/transport.py\", line 223, in receive\n    raise OSError(\"No data received over socket\")\nOSError: No data received over socket\n",
+    "paintConditionsCaptured": 2,
+    "completedPaintConditions": null
+  },
+  {
+    "port": 29653,
+    "error": null,
+    "traceback": null,
+    "paintConditionsCaptured": 6,
+    "completedPaintConditions": null
+  },
+  {
+    "port": 29654,
+    "error": "NoSuchWindowException('Browsing context has been discarded')",
+    "traceback": "Traceback (most recent call last):\n  File \"/workspace/qa-linux-22/browser-ui/qaLinuxKAN87/probe.py\", line 43, in <module>\n    click('#panel-sidebar-close');pointer(dims['width']-2,90);time.sleep(.35);click('#default-panel-bookmarks');pointer(dims['width']-2,2);time.sleep(.35)\n                                                                                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/workspace/qa-linux-22/browser-ui/qaLinuxKAN87/probe.py\", line 16, in pointer\n    m._send_message('WebDriver:PerformActions',{'actions':[{'type':'pointer','id':'qa-zen-pointer','parameters':{'pointerType':'mouse'},'actions':seq}]})\n  File \"/workspace/qa-linux-22/browser-ui/python/marionette_driver/decorators.py\", line 24, in _\n    return func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File \"/workspace/qa-linux-22/browser-ui/python/marionette_driver/marionette.py\", line 780, in _send_message\n    self._handle_error(err)\n  File \"/workspace/qa-linux-22/browser-ui/python/marionette_driver/marionette.py\", line 792, in _handle_error\n    raise errors.lookup(error)(message, stacktrace=stacktrace)\nmarionette_driver.errors.NoSuchWindowException: Browsing context has been discarded\nstacktrace:\n\tRemoteError@chrome://remote/content/shared/RemoteError.sys.mjs:14:8\n\tWebDriverError@chrome://remote/content/shared/webdriver/Errors.sys.mjs:169:5\n\tNoSuchWindowError@chrome://remote/content/shared/webdriver/Errors.sys.mjs:781:5\n\tassert.that/<@chrome://remote/content/shared/webdriver/Assert.sys.mjs:581:13\n\tassert.open@chrome://remote/content/shared/webdriver/Assert.sys.mjs:169:4\n\tperformActions@chrome://remote/content/marionette/driver.sys.mjs:2896:41\n\tdispatch@chrome://remote/content/marionette/server.sys.mjs:317:49\n\texecute@chrome://remote/content/marionette/server.sys.mjs:289:16\n\tonPacket/<@chrome://remote/content/marionette/server.sys.mjs:262:20\n\tonPacket@chrome://remote/content/marionette/server.sys.mjs:263:9\n\t_onJSONObjectReady/<@chrome://remote/content/marionette/transport.sys.mjs:493:20\n\n",
+    "paintConditionsCaptured": 6,
+    "completedPaintConditions": null
+  },
+  {
+    "port": 29655,
+    "error": null,
+    "traceback": null,
+    "paintConditionsCaptured": 6,
+    "completedPaintConditions": 6
+  }
+]

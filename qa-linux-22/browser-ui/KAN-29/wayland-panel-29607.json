@@ -1,0 +1,26 @@
+{
+  "scenario": "KAN29 panel-open repeat hover/native-pin",
+  "input": "W3C synthetic UI mouse; not physical",
+  "requestedDirection": "rtl",
+  "fixtures": [
+    "Startup prefs select vertical tabs/expand-on-hover and design; live prefs and SidebarController.setPosition select side. Panel open and launcher pin use actual UI clicks. RTL fallback, if needed, is explicitly recorded.",
+    "Root dir attribute fallback: synthetic direction layout, not a localized RTL session.",
+    "CustomizableUI.addWidgetToArea places the standard Sidebar widget in nav-bar; pin/unpin then uses W3C UI click."
+  ],
+  "observations": [],
+  "product": {
+    "name": "Floorp",
+    "version": "159.0.1",
+    "build": "20261103153232",
+    "os": "Linux"
+  },
+  "graphics": {
+    "windowProtocol": "wayland",
+    "compositing": "WebRender (Software)"
+  },
+  "initialDirection": {
+    "direction": "ltr",
+    "rtlUI": false,
+    "uidirection": 1
+  }
+}

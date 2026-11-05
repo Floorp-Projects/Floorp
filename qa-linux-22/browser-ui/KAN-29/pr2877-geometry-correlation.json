@@ -1,0 +1,168 @@
+{
+  "pr": "https://github.com/Floorp-Projects/Floorp/pull/2877",
+  "prHead": "f43b22d34c0728e0ed800b8016d81b3212190954",
+  "baselineSource": "984509d2053be7bae9027133bda7259cd706b208",
+  "note": "Read-only calculation using observed rectangles and the PR algorithm. Candidate implementation/paint was NOT applied or executed. RTL is root-dir fixture with RTL_UI=false.",
+  "samples": [
+    {
+      "direction": "rtl",
+      "actualLogicalStart": "1366px",
+      "actualLogicalEnd": "0px",
+      "pr2877ReadOnlyCalculationPx": 448,
+      "onPhysicalRight": true,
+      "used": [
+        "panel-sidebar-select-box",
+        "panel-sidebar-box",
+        "panel-sidebar-splitter"
+      ],
+      "native": {
+        "x": 860,
+        "y": 36,
+        "width": 58,
+        "height": 964,
+        "top": 36,
+        "right": 918,
+        "bottom": 1000,
+        "left": 860
+      },
+      "panel": {
+        "x": 924,
+        "y": 36,
+        "width": 400,
+        "height": 964,
+        "top": 36,
+        "right": 1324,
+        "bottom": 1000,
+        "left": 924
+      }
+    },
+    {
+      "direction": "rtl",
+      "actualLogicalStart": "1366px",
+      "actualLogicalEnd": "0px",
+      "pr2877ReadOnlyCalculationPx": 448,
+      "onPhysicalRight": true,
+      "used": [
+        "panel-sidebar-select-box",
+        "panel-sidebar-box",
+        "panel-sidebar-splitter"
+      ],
+      "native": {
+        "x": 603.38330078125,
+        "y": 36,
+        "width": 253.3333282470703,
+        "height": 964,
+        "top": 36,
+        "right": 856.7166290283203,
+        "bottom": 1000,
+        "left": 603.38330078125
+      },
+      "panel": {
+        "x": 924,
+        "y": 36,
+        "width": 400,
+        "height": 964,
+        "top": 36,
+        "right": 1324,
+        "bottom": 1000,
+        "left": 924
+      }
+    },
+    {
+      "direction": "rtl",
+      "actualLogicalStart": "1366px",
+      "actualLogicalEnd": "0px",
+      "pr2877ReadOnlyCalculationPx": 448,
+      "onPhysicalRight": true,
+      "used": [
+        "panel-sidebar-select-box",
+        "panel-sidebar-box",
+        "panel-sidebar-splitter"
+      ],
+      "native": {
+        "x": -251.88333129882812,
+        "y": 36,
+        "width": 253.3333282470703,
+        "height": 964,
+        "top": 36,
+        "right": 1.4499969482421875,
+        "bottom": 1000,
+        "left": -251.88333129882812
+      },
+      "panel": {
+        "x": 924,
+        "y": 36,
+        "width": 400,
+        "height": 964,
+        "top": 36,
+        "right": 1324,
+        "bottom": 1000,
+        "left": 924
+      }
+    },
+    {
+      "direction": "rtl",
+      "actualLogicalStart": "1366px",
+      "actualLogicalEnd": "0px",
+      "pr2877ReadOnlyCalculationPx": 448,
+      "onPhysicalRight": true,
+      "used": [
+        "panel-sidebar-select-box",
+        "panel-sidebar-box",
+        "panel-sidebar-splitter"
+      ],
+      "native": {
+        "x": -522.0999755859375,
+        "y": 36,
+        "width": 253.33334350585938,
+        "height": 964,
+        "top": 36,
+        "right": -268.7666320800781,
+        "bottom": 1000,
+        "left": -522.0999755859375
+      },
+      "panel": {
+        "x": 924,
+        "y": 36,
+        "width": 400,
+        "height": 964,
+        "top": 36,
+        "right": 1324,
+        "bottom": 1000,
+        "left": 924
+      }
+    },
+    {
+      "direction": "rtl",
+      "actualLogicalStart": "1366px",
+      "actualLogicalEnd": "0px",
+      "pr2877ReadOnlyCalculationPx": 448,
+      "onPhysicalRight": true,
+      "used": [
+        "panel-sidebar-select-box",
+        "panel-sidebar-box",
+        "panel-sidebar-splitter"
+      ],
+      "native": {
+        "x": 860,
+        "y": 36,
+        "width": 58,
+        "height": 964,
+        "top": 36,
+        "right": 918,
+        "bottom": 1000,
+        "left": 860
+      },
+      "panel": {
+        "x": 924,
+        "y": 36,
+        "width": 400,
+        "height": 964,
+        "top": 36,
+        "right": 1324,
+        "bottom": 1000,
+        "left": 924
+      }
+    }
+  ]
+}

@@ -1,0 +1,3 @@
+Accepting client connections on sockets: QList("qa-kde-adoption")
+kwin_core: Configured compositor not supported by Platform. Falling back to defaults
+QThreadStorage: Thread 0x55f3ef7504c0 exited after QThreadStorage 7 destroyed

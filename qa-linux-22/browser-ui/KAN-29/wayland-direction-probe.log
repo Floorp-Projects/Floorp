@@ -1,0 +1,2 @@
+RUN floorp panel
+{"error": null, "graphics": {"windowProtocol": "wayland", "compositing": "WebRender (Software)"}, "initialDirection": {"direction": "ltr", "rtlUI": false, "uidirection": 1}, "observations": 0}

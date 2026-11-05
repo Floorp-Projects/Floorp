@@ -1,0 +1,23 @@
+{
+  "scenario": "regression",
+  "observations": [
+    {
+      "passed": true
+    }
+  ],
+  "product": {
+    "name": "Floorp",
+    "version": "159.0.1",
+    "build": "20261103153232",
+    "os": "Linux"
+  },
+  "graphics": {
+    "windowProtocol": "wayland",
+    "compositing": "WebRender (Software)"
+  },
+  "fixture": {
+    "bundle": "wayland-new.js",
+    "cssOverride": true,
+    "adoption": "gBrowser API, not menu or physical drag"
+  }
+}

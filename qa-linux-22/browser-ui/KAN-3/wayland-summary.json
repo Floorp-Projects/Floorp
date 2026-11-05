@@ -1,0 +1,37 @@
+{
+  "sourceSha": "e7dda31f660bb865c2ea8a505ece44875796970f",
+  "baselineCssSha": "984509d2053be7bae9027133bda7259cd706b208",
+  "testRef": "1a75d15d2925c9d5bf58964505937d07a35df54c",
+  "productVersion": "Floorp12.21.1 / Gecko159.0.1 / build20261103153232",
+  "environment": "Debian13.6, dedicated nested KWin Wayland on Xvfb host; Wayland client protocol verified; software WebRender",
+  "fixture": "source CSS replacement; gBrowser replaceGroupWithWindow/adoptTabGroup API, not menu/physical drag",
+  "remainingConditions": [
+    "physical drag and menu input",
+    "original Fedora full desktop",
+    "candidate product build artifact rather than CSS fixture"
+  ],
+  "tests": [
+    {
+      "port": 29631,
+      "fixture": "wayland-old.js",
+      "result": {
+        "passed": false,
+        "error": "Error: splitViewAdoption.test.ts failures: split group preserves loaded panes across a window round trip: moving a split group must preserve both loaded documents (expected: QA moved 0\nQA moved 1, actual: QA moved 0\n)",
+        "stack": "runTests@qa-linux-22/browser-ui/KAN-3/wayland-probe.py:107:13\n"
+      },
+      "protocol": "wayland",
+      "evidence": "regression-29631.json",
+      "sha256": "496fc843936f3704e38bda8190280aff52bf3efab340be58f4677f30e996477c"
+    },
+    {
+      "port": 29632,
+      "fixture": "wayland-new.js",
+      "result": {
+        "passed": true
+      },
+      "protocol": "wayland",
+      "evidence": "regression-29632.json",
+      "sha256": "443b6838667dd131da432cb9ac7dc8fdc754d4b6aaa2440a21a653c464c1b46f"
+    }
+  ]
+}

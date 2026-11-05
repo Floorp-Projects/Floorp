@@ -1,0 +1,4 @@
+RUN floorp panel
+{"error": "RuntimeError('UI target missing #sidebar-button')", "graphics": {"windowProtocol": "wayland", "compositing": "WebRender (Software)"}, "initialDirection": {"direction": "ltr", "rtlUI": false, "uidirection": "ltr"}, "observations": 1}
+RUN floorp panel
+{"error": "RuntimeError('UI target missing #sidebar-button')", "graphics": {"windowProtocol": "wayland", "compositing": "WebRender (Software)"}, "initialDirection": {"direction": "ltr", "rtlUI": false, "uidirection": "rtl"}, "observations": 1}

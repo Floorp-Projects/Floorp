@@ -1,0 +1,25 @@
+{
+  "manifest_version": 2,
+  "name": "QA Zen image Theme",
+  "version": "1.0",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "qa-zen-image@floorp.test"
+    }
+  },
+  "theme": {
+    "colors": {
+      "frame": "rgba(174,200,240,0.35)",
+      "tab_background_text": "#142134",
+      "toolbar": "#edf1f7",
+      "toolbar_text": "#142134",
+      "tab_selected": "#edf1f7",
+      "tab_text": "#142134",
+      "sidebar": "#edf1f7",
+      "sidebar_text": "#142134"
+    },
+    "images": {
+      "theme_frame": "frame.png"
+    }
+  }
+}

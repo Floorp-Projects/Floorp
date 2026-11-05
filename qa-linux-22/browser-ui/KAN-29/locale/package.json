@@ -1,0 +1,5 @@
+{
+  "url": "https://archive.mozilla.org/pub/firefox/releases/159.0.1/linux-x86_64/xpi/ar.xpi",
+  "sha256": "3b5d819d581c56a422c8525f207cb00e622e10ea2fca0c97a58dfeae071c26c8",
+  "result": "signature valid and active; requested ar, postrestart appLocale en-US/RTL_UI false; localized RTL not established"
+}

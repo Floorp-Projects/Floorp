@@ -1,3 +1,5 @@
+最新follow-up: panel本体open・反復hover・native pin差をWaylandで実施。[wayland-followup.md](wayland-followup.md)を参照。LTR限定未再現、RTLはroot-dir fixtureで関連offset異常（localized RTLではない）。
+
 # KAN-29 / GitHub #2876
 
 分類: **限定条件で未再現**

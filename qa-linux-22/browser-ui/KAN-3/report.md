@@ -70,3 +70,19 @@ QA_SOURCE_CSS=/path/to/fix-checkout/browser-features/chrome/common/split-view/st
 Jira最終comment ID: `10294`。
 
 最終追加head e7dda31fも標準CI run42049710743で282モジュール/0失敗+Firefox16tasks、拡張adoption test成功。artifact13427865928のSHA256 6790f71b731c25c9633491ca20930b72cbe83a09a6381a975da737cdd1f987d6 と内容を確認済み。
+
+
+## Native Wayland adoption比較（実装変更なし）
+
+専用nested KWin socket `qa-kde-adoption`、runtime `runtime/wayland-adoption`。Debian13.6上のXvfb host内nested compositorで、**Floorp clientは両試験ともTroubleshoot.windowProtocol=wayland**、software WebRender。完全なPlasma/原Fedora desktopとは区別。
+
+同一adoption-only source test ref `1a75d15d`を用い、元CSS `984509d`と候補CSS `e7dda31f`を公式Floorp12.21.1のstyleへ上書きして比較。`replaceGroupWithWindow`→`adoptTabGroup`の内部API試験で、UIメニュー/物理dragではない。source実装/PRは変更していない。
+
+- 元CSS `regression-29631.json`: **実再現**。新windowの第2titleが空になりoutbound assertion失敗。
+- 候補CSS `regression-29632.json`: **成功**。別window移動と帰還で両document title/URL保持。
+- 保護を無効化せず製品起動。原Fedora full desktop/物理入力/候補製品build artifactの残条件を本試験で除去しない。
+
+再現script: `nested-adoption.sh`, `wayland-probe.py`, `../run-kan3-wayland.py`, `build-test.cjs`。
+事前buildは `QA_TEST_REF=1a75d15d`でadoption-only testを固定し、`QA_CSS_OLD=1`の有無でそれぞれ`wayland-old.js`/`wayland-new.js`へbundle。その後 `bash KAN-3/nested-adoption.sh`。既存script同様、必要資材はsysroot KWin、Xvfb :92、公式Floorp、Marionette python packageとesbuild。
+
+小証拠: `wayland-summary.json`, `../regression-29631.json`, `../regression-29632.json`, `wayland-adoption.log`, `../environment/kwin-adoption.log`。

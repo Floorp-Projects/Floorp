@@ -1,0 +1,246 @@
+{
+  "key": "KAN-87",
+  "result": "not-reproduced-in-tested-nested-wayland-conditions",
+  "sourceSha": "984509d2053be7bae9027133bda7259cd706b208",
+  "product": {
+    "version": "159.0.1",
+    "build": "20261103153232",
+    "name": "Floorp",
+    "os": "Linux"
+  },
+  "wayland": {
+    "windowProtocol": "wayland",
+    "compositor": "WebRender (Software)",
+    "adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+    "application": {
+      "name": "Floorp",
+      "osVersion": "Linux 6.18.57 #1 SMP Tue Oct 20 21:56:04 UTC 2026",
+      "version": "12.21.1@159.0.1",
+      "buildID": "20261103153232",
+      "distributionID": "",
+      "userAgent": "Mozilla/5.0 (X11; Linux x86_64; rv:159.0) Gecko/20100101 Firefox/159.0",
+      "safeMode": false,
+      "memorySizeBytes": 18882662400,
+      "diskAvailableBytes": 20192542720,
+      "updateChannel": "release",
+      "supportURL": "https://support.mozilla.org/1/firefox/159.0.1/Linux/en-US/",
+      "osTheme": "Adwaita / Adwaita",
+      "pointingDevices": [],
+      "numTotalWindows": 1,
+      "numFissionWindows": 1,
+      "numRemoteWindows": 1,
+      "fissionAutoStart": true,
+      "fissionDecisionStatus": "enabledByDefault",
+      "remoteAutoStart": true,
+      "policiesStatus": 0,
+      "keyLocationServiceGoogleFound": false,
+      "keySafebrowsingGoogleFound": false,
+      "keyMozillaFound": false
+    }
+  },
+  "conditions": 6,
+  "ui": "W3C pointer panel button and Tools menu Zen item, then top-right corner hover",
+  "themeInstalls": [
+    {
+      "id": "qa-zen-color@floorp.test",
+      "type": "theme",
+      "isActive": true,
+      "temporarilyInstalled": true,
+      "signedState": 0
+    },
+    {
+      "id": "qa-zen-image@floorp.test",
+      "type": "theme",
+      "isActive": true,
+      "temporarilyInstalled": true,
+      "signedState": 0
+    }
+  ],
+  "pixelSummary": {
+    "default": {
+      "tabbar_frame": {
+        "pixels": 17500,
+        "changedPixels": 0,
+        "maxChannelDelta": 0
+      },
+      "overlap_above_right_panel": {
+        "pixels": 2750,
+        "changedPixels": 0,
+        "maxChannelDelta": 0
+      },
+      "toolbar": {
+        "pixels": 16800,
+        "changedPixels": 0,
+        "maxChannelDelta": 0
+      },
+      "panel_body": {
+        "pixels": 116000,
+        "changedPixels": 0,
+        "maxChannelDelta": 0
+      },
+      "page_backdrop": {
+        "pixels": 250000,
+        "changedPixels": 250000,
+        "maxChannelDelta": 255
+      }
+    },
+    "color": {
+      "tabbar_frame": {
+        "pixels": 17500,
+        "changedPixels": 0,
+        "maxChannelDelta": 0
+      },
+      "overlap_above_right_panel": {
+        "pixels": 2750,
+        "changedPixels": 0,
+        "maxChannelDelta": 0
+      },
+      "toolbar": {
+        "pixels": 16800,
+        "changedPixels": 0,
+        "maxChannelDelta": 0
+      },
+      "panel_body": {
+        "pixels": 116000,
+        "changedPixels": 0,
+        "maxChannelDelta": 0
+      },
+      "page_backdrop": {
+        "pixels": 250000,
+        "changedPixels": 250000,
+        "maxChannelDelta": 255
+      }
+    },
+    "image": {
+      "tabbar_frame": {
+        "pixels": 17500,
+        "changedPixels": 0,
+        "maxChannelDelta": 0
+      },
+      "overlap_above_right_panel": {
+        "pixels": 2750,
+        "changedPixels": 0,
+        "maxChannelDelta": 0
+      },
+      "toolbar": {
+        "pixels": 16800,
+        "changedPixels": 0,
+        "maxChannelDelta": 0
+      },
+      "panel_body": {
+        "pixels": 116000,
+        "changedPixels": 0,
+        "maxChannelDelta": 0
+      },
+      "page_backdrop": {
+        "pixels": 250000,
+        "changedPixels": 250000,
+        "maxChannelDelta": 255
+      }
+    }
+  },
+  "imageArtworkPixelCheck": [
+    {
+      "point": [
+        300,
+        15
+      ],
+      "fixturePixel": [
+        174,
+        200,
+        240
+      ],
+      "screenshotPixel": [
+        174,
+        200,
+        240
+      ],
+      "equal": true
+    },
+    {
+      "point": [
+        500,
+        15
+      ],
+      "fixturePixel": [
+        150,
+        220,
+        200
+      ],
+      "screenshotPixel": [
+        150,
+        220,
+        200
+      ],
+      "equal": true
+    },
+    {
+      "point": [
+        800,
+        15
+      ],
+      "fixturePixel": [
+        220,
+        175,
+        230
+      ],
+      "screenshotPixel": [
+        220,
+        175,
+        230
+      ],
+      "equal": true
+    },
+    {
+      "point": [
+        1000,
+        15
+      ],
+      "fixturePixel": [
+        240,
+        200,
+        150
+      ],
+      "screenshotPixel": [
+        240,
+        200,
+        150
+      ],
+      "equal": true
+    },
+    {
+      "point": [
+        1100,
+        15
+      ],
+      "fixturePixel": [
+        220,
+        175,
+        230
+      ],
+      "screenshotPixel": [
+        220,
+        175,
+        230
+      ],
+      "equal": true
+    }
+  ],
+  "remainingConditions": [
+    "CachyOS/Niri/Hyprland/MangoWM original compositor setups",
+    "physical input and physical GPU/monitor paint",
+    "ordinary signed/AMO themes not directly exercised"
+  ],
+  "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/2767",
+  "securityPreferenceUserValues": {
+    "xpinstall.signatures.required": [],
+    "extensions.langpacks.signatures.required": [],
+    "security.sandbox.content.level": [],
+    "security.sandbox.gpu.level": []
+  },
+  "themeFixtureHashes": {
+    "image-manifest.json": "81a211a3003b66713e54a7ef0440c9c69158de79df1dd6f2cdb888677321f752",
+    "color-manifest.json": "ac7e74f51fa5af34f9f1f30796f1495fddee3c32d8c22888f3e8ee4698dbe1ac",
+    "frame.png": "3e7510af686517addc2b615e546571e00065a0489c10ee53ff1b7fda6735d8c5"
+  }
+}

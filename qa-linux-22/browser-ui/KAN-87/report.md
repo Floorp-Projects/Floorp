@@ -1,3 +1,5 @@
+最新follow-up: UIで右panel本体とZen同時reveal、画像有無を含む6条件の実paint比較を完走。[専用レポート](../qaLinuxKAN87/report.md)。原compositorは未検証。
+
 # KAN-87 / GitHub #2691
 
 分類: **限定条件で未再現・既存修正と整合**

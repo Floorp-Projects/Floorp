@@ -50,7 +50,14 @@
     "artifactDigestMatched": true,
     "recognizerModuleExplicitSuccess": true,
     "latestHead": "b21a81120d2354d90ea433410173cac208aabbf8",
-    "latestStatus": "not_rechecked_in_scoped_combination_followup",
-    "combinationFocusedCase": "actual browser: baseline wrong down-up; patched up-down pass"
+    "latestStatus": "success",
+    "combinationFocusedCase": "actual browser: baseline wrong down-up; patched up-down pass",
+    "latestRunId": 42054158041,
+    "latestArtifactId": 13428697590,
+    "latestArtifactSha256": "a66eb0ffe73a7e1aad8b0800fdfb07c774ac35a56ffe8df38adf2c6fcb127fc2",
+    "latestArtifactDigestMatched": true,
+    "latestBrowserModulesPassed": 281,
+    "latestBrowserModulesFailed": 0,
+    "latestDownloadedFirefoxTasksPassed": 16
   }
 }

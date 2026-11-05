@@ -1,0 +1,14 @@
+{
+  "languagePackUrl": "https://archive.mozilla.org/pub/firefox/releases/159.0.1/linux-x86_64/xpi/ar.xpi",
+  "fixture": "Normal signed-language-pack install via AddonManager API and restart; no signature/security prefs changed.",
+  "install": {
+    "id": "langpack-ar@firefox.mozilla.org",
+    "type": "locale",
+    "isActive": true,
+    "signedState": 2,
+    "requested": [
+      "ar"
+    ],
+    "signaturePrefUser": false
+  }
+}
