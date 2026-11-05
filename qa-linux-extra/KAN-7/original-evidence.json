@@ -1,0 +1,68 @@
+{
+  "issue": {
+    "url": "https://github.com/Floorp-Projects/Floorp/issues/2943",
+    "title": "[Bug]: Floorp won't open using Wayland",
+    "body": "### Pre-Submission Checklist\n\n- [x] I have checked the existing/closed issues to ensure this issue has not already been reported.\n- [x] I am using the latest supported version of the browser.\n- [x] I have tried disabling all browser extensions/add-ons to rule out interference from these.\n- [x] I have tried clearing the browser cache and cookies.\n- [x] I have checked with a new profile and the issue still occurs.\n- [x] I have provided detailed step-by-step instructions on how to reproduce the issue.\n- [x] I have included relevant screenshots or console outputs.\n- [x] I have checked that this problem is not occurring in the latest version of Firefox.\n- [x] This issue is specific to this browser and does not occur in other browsers.\n\n### Bug Summary\n\nFloorp stalls on startup when using Wayland. No window pops up, but the task remains in my system monitor. I don't think this started happening until today. When opening Floorp with XWayland using MOZ_ENABLE_WAYLAND=0, it opens perfectly fine.\n\n### Reproduction Steps\n\n1. Open Floorp on Linux using Wayland\n\n### Expected Behavior\n\nFloorp opens\n\n### Actual Behavior\n\nFloorp never opens\n\n### Screenshots\n\nScreenshots unnecessary\n\n### Browser Version\n\nVersion 12.20.2@158.0.1 (64-bit)\n\n### Operating System\n\nFedora 44 Linux with KDE 6.7.5\n\n### Additional Context\n\n_No response_",
+    "created_at": "2026-10-19T00:24:42Z",
+    "updated_at": "2026-10-19T05:03:30Z"
+  },
+  "comments": [
+    {
+      "url": "https://github.com/Floorp-Projects/Floorp/issues/2943#issuecomment-6257063732",
+      "id": 6257063732,
+      "body": "Thanks for the detailed report. The difference between native Wayland and `MOZ_ENABLE_WAYLAND=0` is useful, but the cause is not established yet. Could you provide the following?\n\n- How Floorp was installed (Flatpak, RPM/repository, downloaded archive, or another source), and whether Floorp or system/graphics packages updated immediately before this began. If known, the last working Floorp version would help.\n- Terminal output from launching Floorp normally under Wayland, up to the point where it stalls. Please remove personal paths or other private information before posting.\n- GPU model and graphics driver version. Since the XWayland launch works, the Graphics section of `about:support` from that session would help; please share just that section and the Window Protocol value.\n- The Firefox version used for comparison, and confirmation that it opens using native Wayland on the same session.\n\nThe fresh-profile check is already noted; no need to repeat it. These details will help distinguish a browser runtime issue from a packaging or compositor interaction before proposing a fix.\n\n<!-- openbot-floorp-automation:v1 -->"
+    },
+    {
+      "url": "https://github.com/Floorp-Projects/Floorp/issues/2943#issuecomment-6257197615",
+      "id": 6257197615,
+      "body": "Floorp was downloaded and installed using the tar.gz archive from the official website, however I tried Flatpak and it still didn't work. I'm not sure what updated before this began, but Floorp has been working fine for me up until today.\n\nLaunching Floorp under Wayland does not provide any output in the terminal. It just hangs indefinitely.\n\nIntel UHD Integrated Graphics and NVIDIA GeForce RTX 3070 Laptop Discrete GPU\nGPU #1\nActive\tYes\nDescription\tMesa Intel(R) UHD Graphics (TGL GT1)\nVendor ID\t0x8086\nDevice ID\t0x9a60\nDriver Vendor\tmesa/iris\nDriver Version\t26.2.4.0\nRAM\t0\n\nWindow Protocol\txwayland\n\nFirefox 158.0 is what I'm using alongside Floorp. I can confirm it opens using native Wayland."
+    },
+    {
+      "url": "https://github.com/Floorp-Projects/Floorp/issues/2943#issuecomment-6260068250",
+      "id": 6260068250,
+      "body": "I'll check it later"
+    }
+  ],
+  "relatedPrSearch": {
+    "query": "2943 OR Wayland",
+    "results": [
+      {
+        "number": 3033,
+        "url": "https://github.com/Floorp-Projects/Floorp/pull/3033",
+        "title": "fix(split-view): preserve loaded panes when moving stacks between windows"
+      },
+      {
+        "number": 3032,
+        "url": "https://github.com/Floorp-Projects/Floorp/pull/3032",
+        "title": "fix(pwa): preserve each Linux window launcher class"
+      },
+      {
+        "number": 3031,
+        "url": "https://github.com/Floorp-Projects/Floorp/pull/3031",
+        "title": "fix(gestures): preserve activation for returning mouse gestures"
+      },
+      {
+        "number": 3034,
+        "url": "https://github.com/Floorp-Projects/Floorp/pull/3034",
+        "title": "fix(gestures): retain initial direction in sparse mouse trails"
+      },
+      {
+        "number": 2852,
+        "url": "https://github.com/Floorp-Projects/Floorp/pull/2852",
+        "title": "fix(pwa): keep Linux launchers and container startup consistent"
+      },
+      {
+        "number": 2648,
+        "url": "https://github.com/Floorp-Projects/Floorp/pull/2648",
+        "title": "test(notes): require owned isolated browser lifecycle"
+      },
+      {
+        "number": 2090,
+        "url": "https://github.com/Floorp-Projects/Floorp/pull/2090",
+        "title": "Fix transparent customization container causing visual glitches"
+      }
+    ],
+    "exact2943SearchResults": 0,
+    "assessment": "3032/3033 contain nested KWin startup observations for separate issues; no exact KAN7 fix identified."
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "os": "Debian GNU/Linux 13 (trixie)",
+  "kernel": "6.18.57",
+  "machine": "x86_64",
+  "uid": 1000,
+  "devicePaths": {
+    "/dev/dri": {
+      "exists": false
+    },
+    "/sys/class/drm": {
+      "exists": false
+    },
+    "/dev/nvidia0": {
+      "exists": false
+    },
+    "/dev/nvidiactl": {
+      "exists": false
+    },
+    "/dev/dxg": {
+      "exists": false
+    }
+  },
+  "displaySockets": [
+    {
+      "path": "/tmp/.X11-unix/X121",
+      "connect": {
+        "errno": 111,
+        "message": "[Errno 111] Connection refused"
+      }
+    }
+  ],
+  "eglDevices": [
+    {
+      "extensions": "EGL_MESA_device_software EGL_EXT_device_drm_render_node",
+      "softwareDevice": true,
+      "renderNode": ""
+    }
+  ],
+  "renderNodes": [],
+  "sessionEnvironmentPresence": {
+    "DISPLAY": false,
+    "WAYLAND_DISPLAY": false,
+    "XDG_RUNTIME_DIR": false,
+    "DBUS_SESSION_BUS_ADDRESS": false
+  },
+  "systemBusSocketExists": false,
+  "eglLibrary": "libEGL.so.1",
+  "eglQueryDevicesAvailable": true,
+  "eglQueryDevicesSuccess": true,
+  "eglDeviceCount": 1,
+  "packageVersions": [
+    "libdrm2 2.4.124-2",
+    "libegl-mesa0 25.0.7-2+deb13u1",
+    "libgl1-mesa-dri 25.0.7-2+deb13u1",
+    "libwayland-client0 1.23.1-3"
+  ],
+  "conclusion": "Hardware Intel/NVIDIA rendering cannot be exercised without exposed DRM/NVIDIA device access; installed iris library alone is not a GPU."
+}

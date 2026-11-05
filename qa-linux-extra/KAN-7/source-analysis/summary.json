@@ -1,0 +1,62 @@
+{
+  "key": "KAN-7",
+  "github": "https://github.com/Floorp-Projects/Floorp/issues/2943",
+  "sourceSha": "29a3eb23145da90706d8a94441373278521cc737",
+  "analysisOnly": true,
+  "newProductTrials": 0,
+  "reportedVersion": "12.20.2@158.0.1",
+  "releasePublishedAt": "2026-10-17T02:43:43Z",
+  "releaseFloorpSha": "576bc4bbca058e4c24dc5bd2c7526d64cedc94cc",
+  "oldRuntimeSha": "7dd619742b25567e479eeda97ae071d10542ad0b",
+  "currentRuntimeSha": "8965ffc346d426ccdf919bd18585e4d4a0c21654",
+  "runtimeArtifacts": {
+    "old": {
+      "platform": "linux",
+      "architecture": "x86_64",
+      "format": "tar.xz",
+      "extractionPolicy": "tar-xz-floorp",
+      "asset": {
+        "id": 641142009,
+        "name": "floorp-linux-x86_64-moz-artifact.tar.xz",
+        "size": 87108212,
+        "sha256": "f19260ede6fa81ec004d89ccb81438bb9c6bd16d2a6b5dfe386828f62fec65c6"
+      },
+      "applicationIniAsset": {
+        "id": 641142005,
+        "name": "linux-x86_64-application-ini.zip",
+        "size": 536,
+        "sha256": "f17f77a79b497830a26804b57a0784bea159aea5cb379f3bd658da1f2ca57f70"
+      },
+      "version": "158.0.1",
+      "buildId": "20261014104253"
+    },
+    "current": {
+      "platform": "linux",
+      "architecture": "x86_64",
+      "format": "tar.xz",
+      "extractionPolicy": "tar-xz-floorp",
+      "asset": {
+        "id": 707330202,
+        "name": "floorp-linux-x86_64-moz-artifact.tar.xz",
+        "size": 86774264,
+        "sha256": "cb9b01283d5ce3167f4ba046ee7b39ae9d98a692e1beba73bd9f85f460157772"
+      },
+      "applicationIniAsset": {
+        "id": 707330199,
+        "name": "linux-x86_64-application-ini.zip",
+        "size": 535,
+        "sha256": "742bd72ce869d127abefdcbfdd0a0e785786dbd7afd133c6a930833e54d6b956"
+      },
+      "version": "159.0.1",
+      "buildId": "20261103153232"
+    }
+  },
+  "result": "source-candidates-only; original hang location undetermined",
+  "limitations": [
+    "No original stack, Wayland protocol trace or terminal output supplied",
+    "Firefox158.0 versus Floorp Gecko158.0.1 is not an exact engine-version control",
+    "Runtime and Floorp compare API file lists each capped at300; not exhaustive",
+    "KDE/physical Intel-NVIDIA hardware unavailable per parent capability measurements",
+    "PR3032/3033 address separate nested-Wayland issues and are not established KAN7 fixes"
+  ]
+}

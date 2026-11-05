@@ -1,0 +1,11 @@
+{
+  "purpose": "Bounded primary-source differential diagnosis; none is established as KAN7's cause or duplicate.",
+  "candidates": [
+    {"url":"https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1144505","reportedSignature":"KWin6.7.3+ wl_fixes v2 client disconnect; registry/global protocol error while making surfaces visible","scopeDifference":"Debian reported6.7.4-1 and fixed6.7.4-2; KAN7 Fedora KDE6.7.5 package/backports unknown, silent process survival rather than logged disconnect","assessment":"Conditional compositor hypothesis only; require matching protocol error/backport evidence, not version substring."},
+    {"url":"https://bugzilla.mozilla.org/show_bug.cgi?id=2076558","reportedSignature":"Linux wrong-monitor placement regression; official158.0.1 release notes mention placement fix","scopeDifference":"A mapped misplaced window is distinct from a proven startup wait; KAN7 has no surface/mapping trace","assessment":"Check actual mapping/monitor coordinates before classifying no visible window as deadlock; not a known KAN7 fix."},
+    {"url":"https://docs.mesa3d.org/relnotes/26.2.6.html","reportedSignature":"Intel Meteor Lake graphics hangs in two benchmark workloads on26.2.0–26.2.4","scopeDifference":"KAN7 Intel TGL GT1, different GPU/workload","assessment":"Insufficient match; do not attribute KAN7 to this Mesa fix or require a driver upgrade as a diagnosis."},
+    {"url":"https://bugzilla.mozilla.org/show_bug.cgi?id=2076178","reportedSignature":"NVIDIA dmabuf import protocol crash with Vulkan video decoding and HDR","scopeDifference":"KAN7 startup/no window, Intel active in XWayland, no video/HDR evidence, NVIDIA driver unknown","assessment":"Insufficient match; not the original silent hang and not a confirmed external dependency."}
+  ],
+  "releaseNotes": {"url":"https://www.mozilla.org/en-US/firefox/158.0.1/releasenotes/","relevantDocumentedChange":"Linux multi-monitor placement, bug2076558","noExactStartupHangFixIdentified":true},
+  "search": {"queries":["site.bugzilla.mozilla.org 158 Wayland hang Intel","site.gitlab.freedesktop.org mesa 26.2.4 wayland firefox hang","site.bugs.kde.org Firefox Wayland hang 6.7"],"bounded":true,"notExhaustive":true}
+}

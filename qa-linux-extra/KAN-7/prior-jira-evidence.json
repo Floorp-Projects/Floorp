@@ -1,0 +1,26 @@
+{
+  "total": 5,
+  "isLast": true,
+  "comments": [
+    {
+      "id": "10258",
+      "body": "2026-11-05 additional native Wayland backend check, not a Fedora/KDE reproduction: Ubuntu 24.04.2 WSL2 / WSLg, official archive Floorp 12.21.1 / Gecko 159.0.1 build `20261103153232` (the Gecko appBuildID as reported by the running browser), source tag/main `984509d2053be7bae9027133bda7259cd706b208`. An AF_UNIX connection to the WSLg wayland-0 socket succeeded. With fresh isolated HOME/XDG/profile and `MOZ_ENABLE_WAYLAND=1`, the running product's nsIGfxInfo `windowProtocol` explicitly returned `wayland`; adapter was software `llvmpipe (LLVM 20.1.2, 256 bits)`, mesa/llvmpipe 25.2.8.0. WAYLAND_DEBUG logged compositor surface/toplevel/configure events. A Marionette chrome query returned the backend/profile and the owned browser was alive afterwards; eAttemptQuit completed exit 0. This extends the earlier WSLg surface-only observation with the product's reported backend and an automation response. Evidence `/tmp/kan7-wayland-followup-wxa59kib/result.json` and `wayland.log`; script `work/kan7_wsl_wayland_probe.py`. Actual window visibility/manual interaction, Fedora 44 KDE, Intel/NVIDIA drivers and Firefox comparison remain unverified; this does not prove issue #2943 fixed."
+    },
+    {
+      "id": "10253",
+      "body": "2026-11-05 additional isolated comparison: official Floorp 12.21.1 / Gecko 159.0.1 (archive previously SHA-256 verified; executable SHA-256 `4f05c1330b38e50040440be6a3b6e0e7a5b52bc79edb5c5478d978c81f5a603d`, source tag/main `984509d2053be7bae9027133bda7259cd706b208`) on Ubuntu 24.04.2 WSL2 kernel 5.15.167.4 with WSLg XWayland. Fresh HOME/XDG/profile, unique remoting name and `MOZ_ENABLE_WAYLAND=0`: X server reported the test PID's window 1280×1040 with Map State IsViewable; browser remained alive while a separate isolated remote command ran. The created test process group was then terminated. Evidence `/tmp/kan7-90-followup-wzsb4f4i/result.json`; test script `work/kan7_90_wsl_x11_remote.py`. This strengthens the previously untested XWayland comparison on WSLg, but is not a visual or interaction check and does not reproduce or rule out Fedora 44/KDE native Wayland with Intel/NVIDIA. Firefox comparison and report hardware remain missing; no claim of fix."
+    },
+    {
+      "id": "10044",
+      "body": "## 追加の環境確認（2026-11-05）\n\n**分類：報告された Fedora/KDE/Wayland では引き続き未検証。** 既存コメントの WSLg 試験を確認し、同じ試験は重複実行していない。  \n追加で利用可能な Debian 13.7 機を確認したところ、既存デスクトップは X11（lightdm-xsession）だった。Fedora 44/KDE の Wayland セッションと Intel/NVIDIA 構成ではないため、原報告の画面表示・応答・Firefox比較は実施していない。OS 上に Flatpak は導入されていなかったが、隔離ディレクトリ内の Flatpak 1.16.6 と検証用 HOME に Flathub Floorp 12.21.1 / Gecko 159.0.1 を用意できた。アプリ commit `ab3c23d5f3a32863918263c197b483e37d9ed78a6bb9d00a1657e31dc5e04621`、Floorp v12.21.1 ソースタグ `984509d2053be7bae9027133bda7259cd706b208`。この環境で Wayland 起動の追加試験は行っておらず、既修正や未再現とは判断しない。次は Fedora/KDE の実セッションでアーカイブ・Flatpak、Wayland/XWayland、表示と応答、GPUおよびFirefoxを比較する。修正PRなし。"
+    },
+    {
+      "id": "10009",
+      "body": "補足：個人情報と環境依存識別子を省いた実行記録を実行端末の `outputs/KAN-7-WSLg-smoke.txt`、実行スクリプトを `outputs/KAN-7-WSLg-smoke.py` に保存。前コメント記載の wl_surface 作成、xdg_toplevel タイトル指定、configure 受信と 25 秒生存が確認できた事実です。ファイルは Jira に添付されておらず、表示や応答性は未検証です。"
+    },
+    {
+      "id": "10008",
+      "body": "## 再現性調査（2026-11-05）\n\n**分類：環境不足で未検証（代替環境の起動経路は一部確認）。** Fedora 44 / KDE での原報告は試しておらず、再現しない・既修正とは判定できない。\n\n* 対象：公式 Floorp 12.21.1 / Firefox Runtime 159.0.1、タグ v12.21.1 のソースコミット `984509d2053be7bae9027133bda7259cd706b208`。Linux x86_64 アーカイブ SHA-256 `7dcedcbfef747819153b0b9c541a9c1f4f4965b0720f16d5d237d39b0c30d613` は公式 hashes.txt と一致。\n* 今回の環境：Windows 11 上 WSL2 Ubuntu 24.04.2 / WSLg Wayland。Fedora、KDE、報告者の Intel/NVIDIA 構成ではない。Firefox の比較試験は未実施。\n* 手順：分離した HOME / XDG と新規 profile、`MOZ_ENABLE_WAYLAND=1`、WSLg ソケットを指定し `-no-remote -profile <isolated> about:blank` で起動。25 秒後に自身が起動したプロセス群を終了。\n* 結果：Wayland ログで `wl_compositor.create_surface`、`xdg_toplevel.set_title(\"Ablaze Floorp\")`、`xdg_surface.configure` を確認し、25 秒後プロセスは稼働。目視のウィンドウ表示・操作応答は未確認。初回は既定 XDG_RUNTIME_DIR のソケット不在で X11 fallback となり無効試験、2 回目は WSLg の正しいソケットで Wayland 通信を確認。\n* ログ：実行ホスト `/tmp/floorp-kan7-xqr9a1d8/wayland.log`。自動スモーク用スクリプトは作成・実行したが恒久的な回帰テスト/CI には未統合。原報告・追加情報は [#2943](https://github.com/Floorp-Projects/Floorp/issues/2943)。\n* 次：Fedora 44/KDE と Intel/NVIDIA 構成で公式アーカイブおよび Flatpak、新規/既存の隔離プロファイルを用い Wayland と XWayland を比較し、表示・操作・起動ログ・GPU 情報を採取。\n\n"
+    }
+  ]
+}

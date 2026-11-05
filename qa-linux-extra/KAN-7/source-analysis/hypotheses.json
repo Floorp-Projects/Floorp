@@ -1,0 +1,20 @@
+[
+  {
+    "candidate": "Wayland registry/async synchronization during display initialization",
+    "source": "old-widget_gtk_nsWaylandDisplay.cpp:1328-1341,979-986",
+    "basis": "Init performs wl_display_roundtrip then waits until async callback list is empty via wl_display_dispatch. This is a real synchronous callpath; no evidence original process stopped here. Identical old/current path.",
+    "falsifiedBy": "Main-thread stack and Wayland trace show initialization completed and blocked elsewhere; or no native Wayland display initialized."
+  },
+  {
+    "candidate": "Graphics buffer/device initialization after registry negotiation",
+    "source": "old-widget_gtk_nsWaylandDisplay.cpp:1335-1341",
+    "basis": "DMABufFormats constructed and EnsureDMABufFormats called. Reported multi-GPU environment supplies a condition to measure, not proof of GPU cause.",
+    "falsifiedBy": "Captured hang stacks and device-open trace exclude graphics initialization; or same hang occurs before this path."
+  },
+  {
+    "candidate": "Floorp startup/custom integration or Gecko patch/build differences",
+    "source": "old/current locks and Floorp/runtime comparisons",
+    "basis": "Both Floorp packages share symptom; reported Firefox uses158.0 while Floorp pins158.0.1 and has custom patches. Package-independent custom startup remains possible.",
+    "falsifiedBy": "Matched-engine Firefox control reproduces same blocked stack, or proven compositor/device failure accounts for all symptoms."
+  }
+]

@@ -1,0 +1,92 @@
+[
+  {
+    "path": "report.md",
+    "bytes": 8290,
+    "sha256": "64c836f3203847132d20711d97d6c56ad2b6bc74a5991ea5ebb7823b9ff5998a"
+  },
+  {
+    "path": "matrix.json",
+    "bytes": 1806,
+    "sha256": "19cdd5a9fc56c148a7991df9b6752709a16814e560e3f7080f736a8bbc261a55"
+  },
+  {
+    "path": "capabilities.json",
+    "bytes": 1380,
+    "sha256": "6aaa57b7cdba7b6520ba8ae7eafe2761b33f085a66512aeb40ef214d56907213"
+  },
+  {
+    "path": "probe-capabilities.py",
+    "bytes": 2582,
+    "sha256": "f5204b5cfdad1c5437bf78f717e15e06107ccd854b92be29a124383a538698d6"
+  },
+  {
+    "path": "capture-startup.py",
+    "bytes": 3239,
+    "sha256": "ee36a76a115e0b3e3cbd3753b2474bc0775d3d568d0bca5503dbe4b404410759"
+  },
+  {
+    "path": "original-evidence.json",
+    "bytes": 5551,
+    "sha256": "ad4419f7e7d5e7d0225a973d2870d44548d9253005823b32820894b260723a11"
+  },
+  {
+    "path": "prior-jira-evidence.json",
+    "bytes": 5867,
+    "sha256": "0aa44d0a82a115c8e56d9058c7f653461a8e5c02f9cff213ef61c01a8afdc2f6"
+  },
+  {
+    "path": "source-excerpts.json",
+    "bytes": 9416,
+    "sha256": "96c2b8b165f4ffeb083da15405b8536cc30cbee65b2e1ffe8dff3cd88251b46c"
+  },
+  {
+    "path": "upstream-screening.json",
+    "bytes": 2203,
+    "sha256": "4e9eca32d8ff813b0ce91ae69b08eb723ea52ebec8dfa85ad58652860c45b65a"
+  },
+  {
+    "path": "source-analysis/report.md",
+    "bytes": 4489,
+    "sha256": "b96de6d641678d055207a60a4c2061d9421ec5e5328b167309feb11cf28b487c"
+  },
+  {
+    "path": "source-analysis/summary.json",
+    "bytes": 2347,
+    "sha256": "590a95f03e245336bc6672f75d7bda21a3fb71cbfaacf0d2a9d51637c37b2dd2"
+  },
+  {
+    "path": "source-analysis/hypotheses.json",
+    "bytes": 1496,
+    "sha256": "49acdbd5bc75c7a2f84ed0b5c4bfbbf18845dc3efad16702bc418c75f2ddf9a4"
+  },
+  {
+    "path": "source-analysis/retrieval-manifest.json",
+    "bytes": 3376,
+    "sha256": "024d0f8f39dc8824659407cad9e4904bb99e9788f98572b62016974c9aaee45d"
+  },
+  {
+    "path": "source-analysis/runtime-source-retrieval.json",
+    "bytes": 4216,
+    "sha256": "ff3621ea47a20e17fe957da95853a951b9260c6cff34d4776ba671ff7da7c162"
+  },
+  {
+    "path": "source-analysis/runtime-source-extra-retrieval.json",
+    "bytes": 1968,
+    "sha256": "65eaae930c72496cba78b868c94e4871c631169e99b9989a20b3d0c7ac3f254e"
+  },
+  {
+    "path": "source-analysis/wl-fixes-excerpts.txt",
+    "bytes": 4442,
+    "sha256": "b8d21898a735d6c23ad4e9d54c1614f68c5c8bde7d50fbe7b5a1acb59f9e0e0e"
+  },
+  {
+    "path": "source-analysis/widget_gtk_nsWaylandDisplay.cpp.diff",
+    "bytes": 927,
+    "sha256": "ac3c6566d60fb48e1ff99b96961f7e1137bc808b507743476077c0c410eed716"
+  },
+  {
+    "path": "source-analysis/StaticPrefList.diff",
+    "bytes": 19511,
+    "sha256": "874049c7c4eb01412feb7a3d3b8dce3969962150f4be9ff641aff4d570fe9226"
+  }
+]

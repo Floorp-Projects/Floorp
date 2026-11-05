@@ -1,0 +1,79 @@
+[
+  {
+    "file": "hashes.txt",
+    "url": "https://github.com/Floorp-Projects/Floorp/releases/download/v12.20.2/hashes.txt",
+    "bytes": 1370,
+    "sha256": "91222d121401138e4d04abac87337466e8bfd8e9a69cbed1a561a134e72284d3",
+    "declaredDigest": "sha256:91222d121401138e4d04abac87337466e8bfd8e9a69cbed1a561a134e72284d3"
+  },
+  {
+    "file": "linux-meta.json",
+    "url": "https://github.com/Floorp-Projects/Floorp/releases/download/v12.20.2/linux-meta.json",
+    "bytes": 1408,
+    "sha256": "3ccfd9d8e559819cb675a411d8ccfe241cb245601dffb1b02c65522fd99d59e0",
+    "declaredDigest": "sha256:3ccfd9d8e559819cb675a411d8ccfe241cb245601dffb1b02c65522fd99d59e0"
+  },
+  {
+    "file": "release-manifest-set-v2.json",
+    "url": "https://github.com/Floorp-Projects/Floorp/releases/download/v12.20.2/release-manifest-set-v2.json",
+    "bytes": 9629,
+    "sha256": "045058622fdfd88d3525574789197d1c3f8d0c534318b7d2ca175f854e655d77",
+    "declaredDigest": "sha256:045058622fdfd88d3525574789197d1c3f8d0c534318b7d2ca175f854e655d77"
+  },
+  {
+    "file": "old-floorp-runtime.lock.json",
+    "url": "https://raw.githubusercontent.com/Floorp-Projects/Floorp/v12.20.2/floorp-runtime.lock.json",
+    "bytes": 30031,
+    "sha256": "99e51a4b7b02cabcdba120d1c7dbb8ec9fe8c33740e066b1e1fc022fdcb23e39",
+    "declaredDigest": null
+  },
+  {
+    "file": "old-override.ini",
+    "url": "https://raw.githubusercontent.com/Floorp-Projects/Floorp/v12.20.2/static/gecko/pref/override.ini",
+    "bytes": 4345,
+    "sha256": "afafb8ecd04fa6f1ce4a34c9a754d0bd80cb9c03e31eff43b2c3d0f8516d4c5e",
+    "declaredDigest": null
+  },
+  {
+    "file": "old-package.yml",
+    "url": "https://raw.githubusercontent.com/Floorp-Projects/Floorp/v12.20.2/.github/workflows/package.yml",
+    "bytes": 121845,
+    "sha256": "7686cdb5d4088fbc8aeb304fd851f091ead59063b9755b2550dbb3c6bc20874f",
+    "declaredDigest": null
+  },
+  {
+    "file": "old-AGENTS.md",
+    "url": "https://raw.githubusercontent.com/Floorp-Projects/Floorp/v12.20.2/AGENTS.md",
+    "bytes": 9526,
+    "sha256": "da462d20ddabf103579706c25910fe775bfacd00e342b876f65f2a573836d83a",
+    "declaredDigest": null
+  },
+  {
+    "file": "current-floorp-runtime.lock.json",
+    "url": "https://raw.githubusercontent.com/Floorp-Projects/Floorp/29a3eb23145da90706d8a94441373278521cc737/floorp-runtime.lock.json",
+    "bytes": 30031,
+    "sha256": "5838f685f4b375ca69dfaf10f1054f6b7fe1e90290cfb97c9f53514022937fe5",
+    "declaredDigest": null
+  },
+  {
+    "file": "current-override.ini",
+    "url": "https://raw.githubusercontent.com/Floorp-Projects/Floorp/29a3eb23145da90706d8a94441373278521cc737/static/gecko/pref/override.ini",
+    "bytes": 4729,
+    "sha256": "e383e0a1e3be5e6d6b1c269f1f72ff0a8f76bd176ac07f733b45c776094d8a49",
+    "declaredDigest": null
+  },
+  {
+    "file": "current-package.yml",
+    "url": "https://raw.githubusercontent.com/Floorp-Projects/Floorp/29a3eb23145da90706d8a94441373278521cc737/.github/workflows/package.yml",
+    "bytes": 121845,
+    "sha256": "7686cdb5d4088fbc8aeb304fd851f091ead59063b9755b2550dbb3c6bc20874f",
+    "declaredDigest": null
+  },
+  {
+    "file": "current-AGENTS.md",
+    "url": "https://raw.githubusercontent.com/Floorp-Projects/Floorp/29a3eb23145da90706d8a94441373278521cc737/AGENTS.md",
+    "bytes": 9526,
+    "sha256": "da462d20ddabf103579706c25910fe775bfacd00e342b876f65f2a573836d83a",
+    "declaredDigest": null
+  }
+]

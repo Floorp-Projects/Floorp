@@ -1,0 +1,44 @@
+[
+  {
+    "key": "KAN-7",
+    "github": "https://github.com/Floorp-Projects/Floorp/issues/2943",
+    "sourceSha": "29a3eb23145da90706d8a94441373278521cc737",
+    "reportedSourceSha": "576bc4bbca058e4c24dc5bd2c7526d64cedc94cc",
+    "productVersion": {
+      "reportedFloorp": "12.20.2@158.0.1",
+      "reportedFirefoxControl": "158.0",
+      "currentFloorp": "12.21.1 / Gecko159.0.1; not relaunched"
+    },
+    "environment": "Debian13 Cloud kernel6.18.57; EGL software device only; no DRM/NVIDIA/dxg device; original Fedora44/KDE6.7.5/TGL iris26.2.4 unavailable",
+    "testCommand": "python probe-capabilities.py; pinned-source analysis; no software product startup repeat",
+    "result": "original-condition env-blocked, stopping location and Floorp-specific/external attribution unresolved; no new product trials",
+    "newProductTrials": 0,
+    "capabilityMeasurements": [
+      "device inventory",
+      "EGLQueryDevicesEXT",
+      "existing display socket connection",
+      "session/DBus presence without values"
+    ],
+    "remainingConditions": [
+      "native Fedora44 KDE6.7.5/TGL9a60 iris26.2.4/hybrid routing and exact NVIDIA driver",
+      "startup stack and last Wayland protocol/mapping events",
+      "matched-engine Firefox158.0.1 and package/build comparison"
+    ],
+    "existingPr": null,
+    "newPr": null,
+    "jiraCommentId": null,
+    "evidence": [
+      "report.md",
+      "capabilities.json",
+      "original-evidence.json",
+      "prior-jira-evidence.json",
+      "source-excerpts.json",
+      "source-analysis/report.md",
+      "source-analysis/summary.json",
+      "source-analysis/hypotheses.json",
+      "upstream-screening.json"
+    ],
+    "separateFromOriginal22": true,
+    "originalCMatrixSha256": "4ac5d5f17f97d70e82f7b9f17d6abcc1aa17a92e3708eeadaba6ac7c8415e3cd"
+  }
+]

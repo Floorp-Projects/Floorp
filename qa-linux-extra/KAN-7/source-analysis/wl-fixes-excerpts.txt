@@ -1,0 +1,119 @@
+old:531: 
+void nsWaylandDisplay::SetFixes(wl_fixes* aFixes) { mFixes = aFixes; }
+
+// BT2020/PQ is the minimum to enable HDR.
+bool nsWaylandDisplay::IsHDREnabled() const {
+
+old:909:     display->AddMonitorConfig(id, output);
+  } else if (iface.EqualsLiteral("wl_fixes")) {
+    // wl_fixes_interface was introduced in libwayland-client 1.24, but
+    // Ubuntu 22.04 still ships 1.20.
+    static auto* sWlFixesInterface =
+
+old:910:   } else if (iface.EqualsLiteral("wl_fixes")) {
+    // wl_fixes_interface was introduced in libwayland-client 1.24, but
+    // Ubuntu 22.04 still ships 1.20.
+    static auto* sWlFixesInterface =
+        (wl_interface*)dlsym(RTLD_DEFAULT, "wl_fixes_interface");
+
+old:913:     static auto* sWlFixesInterface =
+        (wl_interface*)dlsym(RTLD_DEFAULT, "wl_fixes_interface");
+    if (sWlFixesInterface) {
+      // Note that we cannot simply do MIN(version, 2) because the dynamically
+      // loaded wl_fixes_interface can be v1, which can then lead to out of
+
+old:916:       // Note that we cannot simply do MIN(version, 2) because the dynamically
+      // loaded wl_fixes_interface can be v1, which can then lead to out of
+      // bounds reads when sending v2 requests.
+      const uint32_t libraryVersion = MIN(sWlFixesInterface->version, 2);
+      auto* fixes = WaylandRegistryBind<wl_fixes>(
+
+old:919:       const uint32_t libraryVersion = MIN(sWlFixesInterface->version, 2);
+      auto* fixes = WaylandRegistryBind<wl_fixes>(
+          registry, id, sWlFixesInterface, MIN(version, libraryVersion));
+      display->SetFixes(fixes);
+    } else {
+
+old:923:     } else {
+      LOG("wl_fixes_interface is missing!");
+    }
+  }
+}
+
+old:939: 
+  if (wl_fixes* fixes = display->GetFixes()) {
+    if (wl_fixes_get_version(fixes) >=
+        WL_FIXES_ACK_GLOBAL_REMOVE_SINCE_VERSION) {
+      wl_fixes_ack_global_remove(fixes, registry, id);
+
+old:940:   if (wl_fixes* fixes = display->GetFixes()) {
+    if (wl_fixes_get_version(fixes) >=
+        WL_FIXES_ACK_GLOBAL_REMOVE_SINCE_VERSION) {
+      wl_fixes_ack_global_remove(fixes, registry, id);
+    }
+
+old:942:         WL_FIXES_ACK_GLOBAL_REMOVE_SINCE_VERSION) {
+      wl_fixes_ack_global_remove(fixes, registry, id);
+    }
+  }
+}
+
+current:554: 
+void nsWaylandDisplay::SetFixes(wl_fixes* aFixes) { mFixes = aFixes; }
+
+// BT2020/PQ is the minimum to enable HDR.
+bool nsWaylandDisplay::IsHDREnabled() const {
+
+current:932:     display->AddMonitorConfig(id, output);
+  } else if (iface.EqualsLiteral("wl_fixes")) {
+    // wl_fixes_interface was introduced in libwayland-client 1.24, but
+    // Ubuntu 22.04 still ships 1.20.
+    static auto* sWlFixesInterface =
+
+current:933:   } else if (iface.EqualsLiteral("wl_fixes")) {
+    // wl_fixes_interface was introduced in libwayland-client 1.24, but
+    // Ubuntu 22.04 still ships 1.20.
+    static auto* sWlFixesInterface =
+        (wl_interface*)dlsym(RTLD_DEFAULT, "wl_fixes_interface");
+
+current:936:     static auto* sWlFixesInterface =
+        (wl_interface*)dlsym(RTLD_DEFAULT, "wl_fixes_interface");
+    if (sWlFixesInterface) {
+      // Note that we cannot simply do MIN(version, 2) because the dynamically
+      // loaded wl_fixes_interface can be v1, which can then lead to out of
+
+current:939:       // Note that we cannot simply do MIN(version, 2) because the dynamically
+      // loaded wl_fixes_interface can be v1, which can then lead to out of
+      // bounds reads when sending v2 requests.
+      const uint32_t libraryVersion = MIN(sWlFixesInterface->version, 2);
+      auto* fixes = WaylandRegistryBind<wl_fixes>(
+
+current:942:       const uint32_t libraryVersion = MIN(sWlFixesInterface->version, 2);
+      auto* fixes = WaylandRegistryBind<wl_fixes>(
+          registry, id, sWlFixesInterface, MIN(version, libraryVersion));
+      display->SetFixes(fixes);
+    } else {
+
+current:946:     } else {
+      LOG("wl_fixes_interface is missing!");
+    }
+  }
+}
+
+current:962: 
+  if (wl_fixes* fixes = display->GetFixes()) {
+    if (wl_fixes_get_version(fixes) >=
+        WL_FIXES_ACK_GLOBAL_REMOVE_SINCE_VERSION) {
+      wl_fixes_ack_global_remove(fixes, registry, id);
+
+current:963:   if (wl_fixes* fixes = display->GetFixes()) {
+    if (wl_fixes_get_version(fixes) >=
+        WL_FIXES_ACK_GLOBAL_REMOVE_SINCE_VERSION) {
+      wl_fixes_ack_global_remove(fixes, registry, id);
+    }
+
+current:965:         WL_FIXES_ACK_GLOBAL_REMOVE_SINCE_VERSION) {
+      wl_fixes_ack_global_remove(fixes, registry, id);
+    }
+  }
+}
