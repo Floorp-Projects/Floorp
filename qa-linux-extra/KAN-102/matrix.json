@@ -65,7 +65,7 @@
     "existingPr": null,
     "newPr": null,
     "upstreamIssue": "https://github.com/Drive4ik/simple-tab-groups/issues/1325 (unconfirmed user report, no fix)",
-    "jiraCommentId": "10410",
+    "jiraCommentId": "10431",
     "priorJiraCommentIds": [
       "10150",
       "10169",
@@ -96,10 +96,11 @@
       "needs-import-fixture",
       "needs-original-environment",
       "needs-repro",
+      "needs-visibility-owner-contract",
       "p2",
-      "triage-reviewed",
       "repro-workspace-stg-conflict",
-      "needs-visibility-owner-contract"
+      "triage-reviewed",
+      "needs-workspace-stg-ux-decision"
     ],
     "repairBoundary": {
       "sourceInspectionSha": "29a3eb23145da90706d8a94441373278521cc737",
@@ -109,9 +110,16 @@
       "normalFinalProfileExits": 6,
       "result": "explicit UX/visibility contract decision required",
       "evidenceDirectory": "repair-boundary",
-      "jiraCommentId": null,
+      "jiraCommentId": "10431",
       "newPr": null,
       "completeProductBuildStarted": false
-    }
+    },
+    "jiraCommentIds": [
+      "10150",
+      "10169",
+      "10360",
+      "10410",
+      "10431"
+    ]
   }
 ]

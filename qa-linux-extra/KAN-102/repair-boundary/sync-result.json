@@ -1,0 +1,30 @@
+{
+  "key": "KAN-102",
+  "jiraCommentId": "10431",
+  "jiraUrl": "https://floorp-projects.atlassian.net/browse/KAN-102?focusedCommentId=10431",
+  "labels": [
+    "area-tabs",
+    "floorp-github-import-2026-11",
+    "needs-import-fixture",
+    "needs-original-environment",
+    "needs-repro",
+    "needs-visibility-owner-contract",
+    "p2",
+    "repro-workspace-stg-conflict",
+    "triage-reviewed",
+    "needs-workspace-stg-ux-decision"
+  ],
+  "evidenceCommit": "5e43d208bd99c29f38695a742a9021d5713e9063",
+  "sourceInspectionSha": "29a3eb23145da90706d8a94441373278521cc737",
+  "baseReleaseSha": "984509d2053be7bae9027133bda7259cd706b208",
+  "diagnosticCandidates": 2,
+  "safeCandidateEstablished": false,
+  "normalRestartsObserved": 6,
+  "normalFinalProfileExits": 6,
+  "newPr": null,
+  "completeProductBuildStarted": false,
+  "decisionRequired": "Workspace/STG simultaneous-use selection and visibility UX",
+  "mergePerformed": false,
+  "releasePerformed": false,
+  "doneTransitionPerformed": false
+}

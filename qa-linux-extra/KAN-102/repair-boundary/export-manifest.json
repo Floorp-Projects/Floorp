@@ -1,13 +1,13 @@
 [
   {
     "path": "report.md",
-    "bytes": 13558,
-    "sha256": "c30891c93bbd28c95bc92cbe452697d15e8254fe0f3a2ebb7a3c452cb35580d2"
+    "bytes": 13810,
+    "sha256": "314eba66b0d82596e1a8c66139aa9619ae478f35226256eb51f1cf1a610a0dc8"
   },
   {
     "path": "matrix.json",
-    "bytes": 12565,
-    "sha256": "d80e39f6319a8ad999a968205a5c2a23cd34c8f8ccd8bdeecf295815eea77413"
+    "bytes": 12895,
+    "sha256": "9c033d97323a6cc7f57cdb94bdb8e5404097c618b99de55b8b87a582203c2bdd"
   },
   {
     "path": "verification.json",
@@ -263,5 +263,10 @@
     "path": "native-event-excerpt.json",
     "bytes": 16388,
     "sha256": "1468d7fc44ec57d2ab2f31c556ad4f795c95d8fe95a604b7d3b1df80dbafee1c"
+  },
+  {
+    "path": "sync-result.json",
+    "bytes": 1001,
+    "sha256": "f2cdfae4ac7e14868664dc016620b957f1e1202875df88d284ecb243ce5c647c"
   }
 ]

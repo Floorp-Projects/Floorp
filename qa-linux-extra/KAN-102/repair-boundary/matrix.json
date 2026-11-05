@@ -249,7 +249,7 @@
     "existingPr": null,
     "newPr": null,
     "completeProductBuildStarted": false,
-    "jiraCommentId": null,
+    "jiraCommentId": "10431",
     "priorJiraCommentId": "10410",
     "evidence": [
       "report.md",
@@ -263,6 +263,18 @@
       "css-layer-v2-bundle.diff"
     ],
     "separateFromOriginal22": true,
-    "originalCMatrixSha256": "4ac5d5f17f97d70e82f7b9f17d6abcc1aa17a92e3708eeadaba6ac7c8415e3cd"
+    "originalCMatrixSha256": "4ac5d5f17f97d70e82f7b9f17d6abcc1aa17a92e3708eeadaba6ac7c8415e3cd",
+    "jiraLabels": [
+      "area-tabs",
+      "floorp-github-import-2026-11",
+      "needs-import-fixture",
+      "needs-original-environment",
+      "needs-repro",
+      "needs-visibility-owner-contract",
+      "p2",
+      "repro-workspace-stg-conflict",
+      "triage-reviewed",
+      "needs-workspace-stg-ux-decision"
+    ]
   }
 ]

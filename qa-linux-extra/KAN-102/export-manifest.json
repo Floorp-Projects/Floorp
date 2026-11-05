@@ -6,8 +6,8 @@
   },
   {
     "path": "matrix.json",
-    "bytes": 5462,
-    "sha256": "7da3ec3f1772947f973bdff2f13f212f80707f9b900b35066fdadd3b2d4ae48a"
+    "bytes": 5611,
+    "sha256": "ac94e14821921c16eb10ebd5cbe2a1e73c6f77470cad6c6798ada7e0662fec81"
   },
   {
     "path": "verification.json",
@@ -351,7 +351,7 @@
   },
   {
     "path": "repair-boundary/export-manifest.json",
-    "bytes": 7924,
-    "sha256": "a0ff0fcae152a3d7a42e5d1564ccce0bb5b316c471c2044b96578380490d5246"
+    "bytes": 8065,
+    "sha256": "44404fc1de9dd0a7acb3612129e7f869ab6e4eaa78702e9ef6702820cc935fab"
   }
 ]
