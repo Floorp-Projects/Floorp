@@ -1,0 +1,4 @@
+{
+  "id": "close-other-window",
+  "script": "window.__kan77C.close();return true;"
+}

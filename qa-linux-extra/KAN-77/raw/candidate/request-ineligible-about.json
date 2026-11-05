@@ -1,0 +1,4 @@
+{
+  "id": "ineligible-about",
+  "script": "gBrowser.selectedBrowser.loadURI(Services.io.newURI(\"about:blank\"),{triggeringPrincipal:Services.scriptSecurityManager.getSystemPrincipal()});return true;"
+}

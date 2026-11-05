@@ -1,0 +1,622 @@
+[
+  {
+    "timeUnix": 1793914059.402667,
+    "path": "/page/A",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914059.8998222,
+    "path": "/manifest/A.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914059.9342875,
+    "path": "/manifest/A.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914059.940832,
+    "path": "/icon/A.svg",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914059.9516568,
+    "path": "/favicon.ico",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914059.9617105,
+    "path": "/manifest/A.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914059.9627988,
+    "path": "/manifest/A.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914059.9738824,
+    "path": "/icon/A.svg",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914059.9749353,
+    "path": "/icon/A.svg",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914060.0425067,
+    "path": "/manifest/A.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914060.0738478,
+    "path": "/manifest/A.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914060.1019914,
+    "path": "/icon/A.svg",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914092.3107007,
+    "path": "/page/B",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914092.3426435,
+    "path": "/manifest/A.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914092.3916035,
+    "path": "/icon/A.svg",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914092.4054456,
+    "path": "/manifest/A.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914092.4302468,
+    "path": "/manifest/A.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914092.4408975,
+    "path": "/manifest/A.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914092.4529042,
+    "path": "/icon/A.svg",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914092.462052,
+    "path": "/icon/A.svg",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914092.4779863,
+    "path": "/manifest/A.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914092.5061264,
+    "path": "/manifest/A.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914092.517727,
+    "path": "/icon/A.svg",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914095.9903371,
+    "path": "/frame/0",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914095.994758,
+    "path": "/frame/1",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914095.9996557,
+    "path": "/frame/3",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914096.0005846,
+    "path": "/frame/2",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914096.0328145,
+    "path": "/manifest/A.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914096.0363216,
+    "path": "/manifest/A.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914096.0379248,
+    "path": "/manifest/A.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914096.0435185,
+    "path": "/manifest/A.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914096.0467002,
+    "path": "/manifest/A.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914096.0483096,
+    "path": "/manifest/A.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914096.0538378,
+    "path": "/manifest/A.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914096.054365,
+    "path": "/manifest/A.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914096.0631998,
+    "path": "/icon/A.svg",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914096.0651853,
+    "path": "/icon/A.svg",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914096.0664184,
+    "path": "/icon/A.svg",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914096.117534,
+    "path": "/icon/A.svg",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914096.125469,
+    "path": "/manifest/A.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914096.129943,
+    "path": "/manifest/A.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914096.2117763,
+    "path": "/manifest/A.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914096.2141852,
+    "path": "/manifest/A.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914096.2171438,
+    "path": "/manifest/A.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914096.2180274,
+    "path": "/icon/A.svg",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914096.2196634,
+    "path": "/icon/A.svg",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914096.2242448,
+    "path": "/icon/A.svg",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914096.2250836,
+    "path": "/icon/A.svg",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914096.230633,
+    "path": "/icon/A.svg",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914096.232952,
+    "path": "/manifest/A.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914096.2347376,
+    "path": "/manifest/A.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914096.2379515,
+    "path": "/manifest/A.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914096.2391562,
+    "path": "/manifest/A.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914096.2516923,
+    "path": "/manifest/A.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914096.2591107,
+    "path": "/icon/A.svg",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914122.91148,
+    "path": "/page/C",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914122.9678762,
+    "path": "/manifest/C.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914122.9699352,
+    "path": "/manifest/A.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914122.9728515,
+    "path": "/manifest/C.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914122.9790869,
+    "path": "/icon/C.svg",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914122.9804404,
+    "path": "/manifest/A.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914122.9849753,
+    "path": "/manifest/C.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914122.988397,
+    "path": "/favicon.ico",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914122.992099,
+    "path": "/manifest/C.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914122.9931564,
+    "path": "/icon/C.svg",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914122.9944842,
+    "path": "/icon/A.svg",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914123.0014906,
+    "path": "/icon/C.svg",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914123.0121028,
+    "path": "/manifest/C.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914123.0128932,
+    "path": "/manifest/A.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914123.0183468,
+    "path": "/manifest/C.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914123.0202694,
+    "path": "/manifest/A.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914123.024453,
+    "path": "/icon/C.svg",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914123.0255065,
+    "path": "/icon/A.svg",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914126.0954022,
+    "path": "/page/B",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914126.1210153,
+    "path": "/manifest/A.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914126.1258507,
+    "path": "/icon/A.svg",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914126.1316772,
+    "path": "/manifest/A.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914126.1435254,
+    "path": "/manifest/C.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914126.1452713,
+    "path": "/icon/A.svg",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914126.1465285,
+    "path": "/manifest/A.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914126.1545956,
+    "path": "/manifest/C.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914126.1563408,
+    "path": "/manifest/C.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914126.1571472,
+    "path": "/manifest/A.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914126.1630542,
+    "path": "/manifest/A.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914126.164782,
+    "path": "/icon/C.svg",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914126.1655989,
+    "path": "/manifest/C.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914126.1744995,
+    "path": "/icon/A.svg",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914126.175892,
+    "path": "/icon/C.svg",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914129.4560888,
+    "path": "/manifest/B.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914129.4610865,
+    "path": "/manifest/B.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914129.4654906,
+    "path": "/icon/B.svg",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914132.8173466,
+    "path": "/page/B",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914132.8530087,
+    "path": "/manifest/C.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914132.86286,
+    "path": "/manifest/B.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914132.866181,
+    "path": "/manifest/B.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914132.8703365,
+    "path": "/manifest/C.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914132.8789246,
+    "path": "/manifest/B.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914132.8839655,
+    "path": "/icon/C.svg",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914132.8884997,
+    "path": "/icon/B.svg",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914132.895738,
+    "path": "/icon/B.svg",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914132.9004495,
+    "path": "/manifest/B.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914132.9138255,
+    "path": "/icon/B.svg",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914132.9237158,
+    "path": "/manifest/C.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914132.9297254,
+    "path": "/manifest/B.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914132.9324954,
+    "path": "/manifest/C.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914132.947956,
+    "path": "/manifest/B.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914132.955821,
+    "path": "/icon/C.svg",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914132.967469,
+    "path": "/icon/B.svg",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914136.125996,
+    "path": "/page/none",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914136.1735392,
+    "path": "/manifest/C.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914136.1864462,
+    "path": "/manifest/C.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914136.1925416,
+    "path": "/manifest/C.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914136.2025015,
+    "path": "/icon/C.svg",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914139.459681,
+    "path": "/page/iframeonly",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914139.492506,
+    "path": "/page/F",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914139.510831,
+    "path": "/manifest/C.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914139.5157633,
+    "path": "/manifest/C.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914139.5166922,
+    "path": "/manifest/C.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914139.5217333,
+    "path": "/manifest/C.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914139.5265403,
+    "path": "/manifest/C.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914139.5351245,
+    "path": "/icon/C.svg",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914146.2139943,
+    "path": "/manifest/A.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914146.2220583,
+    "path": "/manifest/A.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793914146.234306,
+    "path": "/icon/A.svg",
+    "method": "GET"
+  }
+]

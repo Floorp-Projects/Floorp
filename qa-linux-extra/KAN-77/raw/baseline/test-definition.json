@@ -1,0 +1,9 @@
+{
+  "fixture": "none",
+  "fixturePrefs": {},
+  "uri": "http://127.0.0.1:19190/page/A",
+  "profileReused": false,
+  "product": "/workspace/qa-linux-22/C-extra/KAN-77/products/baseline",
+  "noSecurityPreferenceOverrides": true,
+  "network": "inherited proxy + configured CA; no insecure TLS flag"
+}

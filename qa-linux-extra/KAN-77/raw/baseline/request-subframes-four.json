@@ -1,0 +1,6 @@
+{
+  "id": "subframes-four",
+  "target": "/page/A",
+  "context": "content",
+  "script": "for(let i=0;i<4;i++){let f=document.createElement('iframe');f.src='/frame/'+i;document.body.appendChild(f)}return document.querySelectorAll('iframe').length;"
+}

@@ -1,0 +1,74 @@
+{
+  "artifacts": [
+    {
+      "id": 13456585160,
+      "name": "noraneko-Linux-x64-artifact-test-build-output",
+      "digest": "sha256:54bc06d78172cefc44e00e42818545c4a75952e200d4d4759c3593e84a8a83dd",
+      "size_in_bytes": 418230629,
+      "expired": false,
+      "workflow_run": {
+        "id": 42112677415,
+        "repository_id": 437505831,
+        "head_repository_id": 437505831,
+        "head_branch": "codex/stability-kan77-request-scope",
+        "head_sha": "f04ff611c3634515064776e2d58e76648f87269b"
+      }
+    },
+    {
+      "id": 13456325562,
+      "name": "floorp-linux-x86_64-mar-full-unsigned",
+      "digest": "sha256:85b8c52c203a270a20bf83afae14c2504061cd8f3b4927a38ea82b41357f5676",
+      "size_in_bytes": 108494703,
+      "expired": false,
+      "workflow_run": {
+        "id": 42112677415,
+        "repository_id": 437505831,
+        "head_repository_id": 437505831,
+        "head_branch": "codex/stability-kan77-request-scope",
+        "head_sha": "f04ff611c3634515064776e2d58e76648f87269b"
+      }
+    },
+    {
+      "id": 13455726525,
+      "name": "floorp-Linux-x64-deb-unsigned",
+      "digest": "sha256:1b36b9d8bcb40a72cb620367daea17a8ddf4ed17db8c5fc1068c7d0107db4e1f",
+      "size_in_bytes": 230302145,
+      "expired": false,
+      "workflow_run": {
+        "id": 42112677415,
+        "repository_id": 437505831,
+        "head_repository_id": 437505831,
+        "head_branch": "codex/stability-kan77-request-scope",
+        "head_sha": "f04ff611c3634515064776e2d58e76648f87269b"
+      }
+    },
+    {
+      "id": 13455518201,
+      "name": "noraneko-linux-x86_64-installer-unsigned",
+      "digest": "sha256:cbc7b3e62a4704e8ed6463b0c2e3ae774d687f74958ae9b0dd496e585bd97e3f",
+      "size_in_bytes": 108210887,
+      "expired": false,
+      "workflow_run": {
+        "id": 42112677415,
+        "repository_id": 437505831,
+        "head_repository_id": 437505831,
+        "head_branch": "codex/stability-kan77-request-scope",
+        "head_sha": "f04ff611c3634515064776e2d58e76648f87269b"
+      }
+    },
+    {
+      "id": 13453773323,
+      "name": "noraneko-Linux-x64-runtime-source-provenance",
+      "digest": "sha256:2b69a1e0031844358499b0dded97e4f5c64143dff795e58b3be01baee931191f",
+      "size_in_bytes": 1282,
+      "expired": false,
+      "workflow_run": {
+        "id": 42112677415,
+        "repository_id": 437505831,
+        "head_repository_id": 437505831,
+        "head_branch": "codex/stability-kan77-request-scope",
+        "head_sha": "f04ff611c3634515064776e2d58e76648f87269b"
+      }
+    }
+  ]
+}

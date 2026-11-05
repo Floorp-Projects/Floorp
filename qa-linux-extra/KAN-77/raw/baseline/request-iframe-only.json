@@ -1,0 +1,4 @@
+{
+  "id": "iframe-only",
+  "script": "gBrowser.selectedBrowser.loadURI(Services.io.newURI(\"http://127.0.0.1:19190/page/iframeonly\"),{triggeringPrincipal:Services.scriptSecurityManager.getSystemPrincipal()});return true;"
+}

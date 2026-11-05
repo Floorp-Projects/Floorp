@@ -1,0 +1,5 @@
+{
+  "id": "panel",
+  "script": "return {selected:gBrowser.selectedBrowser.currentURI.spec,panelState:document.getElementById(\"ssb-panel\")?.state,title:document.getElementById(\"ssb-content-label\")?.textContent,description:document.getElementById(\"ssb-content-description\")?.textContent,installButton:document.getElementById(\"ssb-app-install-button\")?.textContent};",
+  "screenshot": "panel.png"
+}

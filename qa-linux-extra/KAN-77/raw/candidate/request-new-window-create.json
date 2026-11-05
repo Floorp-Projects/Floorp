@@ -1,0 +1,4 @@
+{
+  "id": "new-window-create",
+  "script": "window.__kan77C=OpenBrowserWindow();return true;"
+}

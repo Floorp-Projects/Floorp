@@ -1,0 +1,4 @@
+{
+  "id": "other-window-C",
+  "script": "const w=window.__kan77C;if(!w?.gBrowser)throw Error(\"new window not ready\");w.gBrowser.selectedBrowser.loadURI(Services.io.newURI(\"http://127.0.0.1:19190/page/C\"),{triggeringPrincipal:Services.scriptSecurityManager.getSystemPrincipal()});return true;"
+}

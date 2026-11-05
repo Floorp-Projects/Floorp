@@ -1,0 +1,92 @@
+[
+  {
+    "timeUnix": 1793915395.003577,
+    "path": "/page/A",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793915395.3833866,
+    "path": "/manifest/A.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793915395.4506938,
+    "path": "/manifest/A.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793915395.467098,
+    "path": "/favicon.ico",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793915395.4713182,
+    "path": "/icon/A.svg",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793915395.475932,
+    "path": "/manifest/A.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793915395.5227165,
+    "path": "/manifest/A.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793915395.529523,
+    "path": "/icon/A.svg",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793915395.5398235,
+    "path": "/icon/A.svg",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793915395.611038,
+    "path": "/manifest/A.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793915395.6344843,
+    "path": "/manifest/A.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793915395.6449714,
+    "path": "/icon/A.svg",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793915399.555827,
+    "path": "/manifest/A.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793915399.5569532,
+    "path": "/manifest/A.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793915399.5802312,
+    "path": "/icon/A.svg",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793915399.581559,
+    "path": "/icon/A.svg",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793915399.5862613,
+    "path": "/manifest/A.json",
+    "method": "GET"
+  },
+  {
+    "timeUnix": 1793915399.5916903,
+    "path": "/icon/A.svg",
+    "method": "GET"
+  }
+]

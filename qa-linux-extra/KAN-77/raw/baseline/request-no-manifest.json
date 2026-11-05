@@ -1,0 +1,4 @@
+{
+  "id": "no-manifest",
+  "script": "gBrowser.selectedBrowser.loadURI(Services.io.newURI(\"http://127.0.0.1:19190/page/none\"),{triggeringPrincipal:Services.scriptSecurityManager.getSystemPrincipal()});return true;"
+}

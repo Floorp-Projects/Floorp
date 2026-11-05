@@ -1,0 +1,4 @@
+{
+  "id": "select-B",
+  "script": "gBrowser.selectedTab=window.__kan77B;return true;"
+}

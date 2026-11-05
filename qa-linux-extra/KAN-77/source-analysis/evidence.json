@@ -1,0 +1,54 @@
+{
+  "key": "KAN-77",
+  "pr": "https://github.com/Floorp-Projects/Floorp/pull/3049",
+  "sourceSha": "f04ff611c3634515064776e2d58e76648f87269b",
+  "result": "read-only source review; no new product execution",
+  "files": [
+    {
+      "path": "browser-features/modules/actors/NRProgressiveWebAppParent.sys.mts",
+      "sha256": "e71ec2cbae54e407c3007bba746b12d1eb9ed00a6d33ae3c2943c288eaf1558b",
+      "url": "https://github.com/Floorp-Projects/Floorp/blob/f04ff611c3634515064776e2d58e76648f87269b/browser-features/modules/actors/NRProgressiveWebAppParent.sys.mts"
+    },
+    {
+      "path": "browser-features/modules/actors/NRProgressiveWebAppChild.sys.mts",
+      "sha256": "30b98dc54f39cbbddb85791944ff92436078ecdd87c1f316d58a6e625afe4953",
+      "url": "https://github.com/Floorp-Projects/Floorp/blob/f04ff611c3634515064776e2d58e76648f87269b/browser-features/modules/actors/NRProgressiveWebAppChild.sys.mts"
+    },
+    {
+      "path": "browser-features/chrome/common/pwa/SsbPageAction.tsx",
+      "sha256": "14ca1a135ff761a63e3216212c494671fa9b75d700b226687fcece7d2dc3eb17",
+      "url": "https://github.com/Floorp-Projects/Floorp/blob/f04ff611c3634515064776e2d58e76648f87269b/browser-features/chrome/common/pwa/SsbPageAction.tsx"
+    },
+    {
+      "path": "browser-features/chrome/common/pwa/ssbManager.ts",
+      "sha256": "a036dcd84e38ae93b1518fe3bb892e0843a2ba2a54f7f05480e436a0024afc70",
+      "url": "https://github.com/Floorp-Projects/Floorp/blob/f04ff611c3634515064776e2d58e76648f87269b/browser-features/chrome/common/pwa/ssbManager.ts"
+    },
+    {
+      "path": "browser-features/chrome/common/pwa/manifestProcesser.ts",
+      "sha256": "e291c029e130fdc0f0f916a129fc5b67deb930b499f2dbcf94d035ebc8226fa5",
+      "url": "https://github.com/Floorp-Projects/Floorp/blob/f04ff611c3634515064776e2d58e76648f87269b/browser-features/chrome/common/pwa/manifestProcesser.ts"
+    },
+    {
+      "path": "browser-features/modules/actors/test/NRProgressiveWebAppParent.test.mts",
+      "sha256": "4c3e5833de52e8fbcb79d15dd3b6498b87e85dca63e8ededcc8bc4ceeb0ed0e2",
+      "url": "https://github.com/Floorp-Projects/Floorp/blob/f04ff611c3634515064776e2d58e76648f87269b/browser-features/modules/actors/test/NRProgressiveWebAppParent.test.mts"
+    },
+    {
+      "path": "browser-features/chrome/common/pwa/test/pageActionLifecycle.test.ts",
+      "sha256": "75a66565b11af04da6dae311f17bc221af3fe0f8352ef18e855807e00ded2f4f",
+      "url": "https://github.com/Floorp-Projects/Floorp/blob/f04ff611c3634515064776e2d58e76648f87269b/browser-features/chrome/common/pwa/test/pageActionLifecycle.test.ts"
+    },
+    {
+      "path": "browser-features/chrome/common/pwa/test/ssbManager.test.ts",
+      "sha256": "1462ae4b23a83c7d0d364a33a4d5fe2025b05528930fcf09810ba8428e3c681b",
+      "url": "https://github.com/Floorp-Projects/Floorp/blob/f04ff611c3634515064776e2d58e76648f87269b/browser-features/chrome/common/pwa/test/ssbManager.test.ts"
+    }
+  ],
+  "remainingConditions": [
+    "natural selected/background tab and window loads",
+    "no-manifest/ineligible state clearing",
+    "iframe-only manifest cannot promote top page",
+    "real delayed request races and teardown"
+  ]
+}

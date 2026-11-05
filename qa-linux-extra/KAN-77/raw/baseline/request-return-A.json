@@ -1,0 +1,5 @@
+{
+  "id": "return-A",
+  "script": "gBrowser.selectedTab=Array.from(gBrowser.tabs).find(t=>t.linkedBrowser.currentURI.spec.endsWith(\"/page/A\"));return true;",
+  "screenshot": "return-A.png"
+}

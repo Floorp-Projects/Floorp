@@ -1,0 +1,20 @@
+{
+  "os": {
+    "PRETTY_NAME": "Debian GNU/Linux 13 (trixie)",
+    "VERSION_ID": "13",
+    "ID": "debian"
+  },
+  "kernel": "6.18.57",
+  "machine": "x86_64",
+  "uid": 1000,
+  "display": "dedicated Xvfb/Openbox X11 + private DBus",
+  "physicalInputTested": false,
+  "originalCachyOSTested": false,
+  "gpuDevices": {
+    "/dev/dri": false,
+    "/dev/nvidia0": false,
+    "/dev/dxg": false
+  },
+  "securityPrefOverrides": false,
+  "dedicatedProfilesOnly": true
+}

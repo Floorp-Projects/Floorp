@@ -1,0 +1,65 @@
+{
+  "sourceSha": "f04ff611c3634515064776e2d58e76648f87269b",
+  "artifactDigest": "sha256:cbc7b3e62a4704e8ed6463b0c2e3ae774d687f74958ae9b0dd496e585bd97e3f",
+  "tarMember": "floorp-linux-x86_64.tar.xz",
+  "tarSha256": "e7ff715c12ba56550fea37d0fdbd3c515d3cb3a69fccb62bc79bba16ad058a9b",
+  "productRoot": "/workspace/qa-linux-22/C-extra/KAN-77/complete-package-final/extracted/floorp",
+  "changedResources": false,
+  "fileEntries": 46,
+  "sourceMapMatches": [
+    {
+      "path": "browser-features/chrome/common/pwa/SsbPageAction.tsx",
+      "sourceMap": "chrome/noraneko/nora-content/assets/js/index19.js.map",
+      "matchesExactHead": true,
+      "sha256": "14ca1a135ff761a63e3216212c494671fa9b75d700b226687fcece7d2dc3eb17"
+    },
+    {
+      "path": "browser-features/chrome/common/pwa/ssbManager.ts",
+      "sourceMap": "chrome/noraneko/nora-content/assets/js/index19.js.map",
+      "matchesExactHead": true,
+      "sha256": "a036dcd84e38ae93b1518fe3bb892e0843a2ba2a54f7f05480e436a0024afc70"
+    }
+  ],
+  "guardExcerpts": [
+    {
+      "resource": "chrome/noraneko/nora-content/assets/js/index19.js",
+      "offset": 21381,
+      "snippet": " });\n        };\n        const onManifestNotification = (subject)=>{\n            // The observer service is process-wide. A background tab or another\n            // window loading a page must not refetch this window's selected manifest.\n            if (subject === globalThis.gBrowser.selectedBrowser) onManifestCheck();\n        };\n        onCleanup(()=>{\n            this.disposed = true;\n            this.manifestCheckGeneration++;\n            if (manifestObserverRegistered) {\n                manifestObserverRegistered = false;\n                Services.obs.removeObserver(onManifestNotification, \"nora-pwa-check-page-has-manifest\");\n            }\n            tabContainer.removeEventListener(\"TabSelect\", onManifestCheck);\n            if (this.popupHideFrame !== null) {\n                globalThis.cancelAnimationFrame(this.popupHideFrame);\n                this.popupHideFrame = null;\n            }\n        });\n        _render(()=>this.Render(), ssbPageAction, {\n            marker: starButtonBox\n        });\n        _render(()=>this.Style(), document?.head);\n        Services.obs.addObserver(onManifestNotification, \"nora-pwa-check-page-has-manifest\");\n        manifestObserverRegistered = true;\n        tabContainer.addEventLis"
+    },
+    {
+      "resource": "chrome/noraneko/nora-content/assets/js/index19.js",
+      "offset": 21902,
+      "snippet": " = false;\n                Services.obs.removeObserver(onManifestNotification, \"nora-pwa-check-page-has-manifest\");\n            }\n            tabContainer.removeEventListener(\"TabSelect\", onManifestCheck);\n            if (this.popupHideFrame !== null) {\n                globalThis.cancelAnimationFrame(this.popupHideFrame);\n                this.popupHideFrame = null;\n            }\n        });\n        _render(()=>this.Render(), ssbPageAction, {\n            marker: starButtonBox\n        });\n        _render(()=>this.Style(), document?.head);\n        Services.obs.addObserver(onManifestNotification, \"nora-pwa-check-page-has-manifest\");\n        manifestObserverRegistered = true;\n        tabContainer.addEventListener(\"TabSelect\", onManifestCheck);\n        addI18nObserver(()=>{\n            this.translations[1]({\n                title: instance.t(\"ssb.page-action.title\"),\n                install: instance.t(\"ssb.page-action.install\"),\n                open: instance.t(\"ssb.page-action.open\"),\n                cancel: instance.t(\"ssb.page-action.cancel\"),\n                siteIcon: instance.t(\"ssb.page-action.site-icon\")\n            });\n        });\n        onManifestCheck();\n    }\n    async onCheckPageHasManifest() {\n        if "
+    },
+    {
+      "resource": "chrome/noraneko/nora-content/assets/js/index19.js",
+      "offset": 84070,
+      "snippet": " pngBase64 = await new Promise((resolve)=>{\n                    reader.onloadend = ()=>resolve(reader.result);\n                    reader.readAsDataURL(blobPng);\n                });\n                return pngBase64;\n            } catch (scaleErr) {\n                console.warn(\"Icon scaling failed, falling back to original icon:\", scaleErr);\n                return old_base64;\n            }\n        } catch (e) {\n            console.error(\"Failed to fetch icon:\", e);\n            return \"\";\n        }\n    }\n    async getIconDirectlyFromPage(browser) {\n        const actor = browser.browsingContext.currentWindowGlobal.getActor(\"NRProgressiveWebApp\");\n        if (!actor) {\n            return \"\";\n        }\n        let iconCandidates = [];\n        try {\n            iconCandidates = await actor.sendQuery(\"GetPageIcons\");\n        } catch (e) {\n            console.error(\"Failed to collect icon candidates\", e);\n            return \"\";\n        }\n        for (const href of iconCandidates){\n            try {\n                const dataUri = await actor.sendQuery(\"LoadIcon\", href);\n                if (typeof dataUri === \"string\" && dataUri.startsWith(\"data:\")) {\n                    return dataUri;\n                }\n   "
+    },
+    {
+      "resource": "chrome/noraneko/nora-content/assets/js/index19.js",
+      "offset": 86971,
+      "snippet": "t from scope.\n        if (!manifest || !this.scopeIncludes(Services.io.newURI(manifest.scope), browser.currentURI)) {\n            manifest = this.generateManifestForURI(browser.currentURI);\n        }\n        if (!manifest) {\n            return null;\n        }\n        // Cache all the icons as data URIs since we can need access to them when\n        // the website is not loaded.\n        manifest.icons = (await Promise.all(manifest.icons.map(async (icon)=>{\n            if (icon.src.startsWith(\"data:\")) {\n                return icon;\n            }\n            const actor = browser.browsingContext.currentWindowGlobal.getActor(\"NRProgressiveWebApp\");\n            try {\n                icon.src = await actor.sendQuery(\"LoadIcon\", icon.src);\n            } catch  {\n                // If the actor fails, try to fetch the icon directly in the parent process\n                // This handles cases where the actor is destroyed (race condition)\n                try {\n                    icon.src = await this.fetchIconAsDataURI(icon.src);\n                } catch  {\n                    // Bad icon, drop it from the list.\n                    return null;\n                }\n            }\n            return icon;\n        })"
+    },
+    {
+      "resource": "chrome/noraneko/nora-content/assets/js/index19.js",
+      "offset": 107201,
+      "snippet": "Observer, \"nora-ssb-uninstall\");\n        ownerWindow.addEventListener(\"unload\", ()=>{\n            Services.obs.removeObserver(renameObserver, \"nora-ssb-rename\");\n            Services.obs.removeObserver(uninstallObserver, \"nora-ssb-uninstall\");\n            tabBrowser.removeTabsProgressListener(this.listener);\n            if (SiteSpecificBrowserManager.instance === this) {\n                SiteSpecificBrowserManager.instance = null;\n            }\n        }, {\n            once: true\n        });\n    }\n    listener = {\n        onLocationChange: (browser, webProgress)=>{\n            if (!webProgress.isTopLevel || browser !== globalThis.gBrowser.selectedBrowser) {\n                return;\n            }\n            void this.onCurrentTabChangedOrLoaded(browser).catch((error)=>{\n                console.error(\"[SiteSpecificBrowserManager] Page check failed:\", error);\n            });\n        }\n    };\n    onCommand() {\n        this.installOrRunCurrentPageAsSsb(globalThis.gBrowser.selectedBrowser, true);\n    }\n    closePopup() {\n        const panel = document?.getElementById(\"ssb-panel\");\n        if (panel) {\n            panel.hidePopup();\n        }\n    }\n    async getIcon(browser) {\n        const currentT"
+    },
+    {
+      "resource": "chrome/noraneko/nora-content/assets/js/index19.js",
+      "offset": 116345,
+      "snippet": "URI);\n        if (!currentPageCanBeInstalled) return;\n        const currentPageHasSsbManifest = await this.manifestProcesser.getManifestFromBrowser(browser, true);\n        const currentPageIsInstalled = await this.checkCurrentPageIsInstalled(browser);\n        if (browser !== globalThis.gBrowser.selectedBrowser || !browserStillShowsUrl(browser, requestedUrl)) return;\n        if (!currentPageHasSsbManifest && !currentPageIsInstalled) {\n            return;\n        }\n        // Update UI elements\n        this.updateUIElements(currentPageIsInstalled);\n        Services.obs.notifyObservers(browser, \"nora-pwa-check-page-has-manifest\");\n    }\n    updateUIElements(isInstalled) {\n        const installButton = document?.getElementById(\"ssbPageAction\");\n        const image = document?.getElementById(\"ssbPageAction-image\");\n        if (installButton && image) {\n            if (isInstalled) {\n                image.setAttribute(\"open-ssb\", \"true\");\n            } else {\n                image.removeAttribute(\"open-ssb\");\n            }\n        }\n    }\n    async getInstalledApps() {\n        return await this.dataManager.getCurrentSsbData();\n    }\n    async renameSsb(id, newName) {\n        return await withLinuxMutation(()=>this.rena"
+    },
+    {
+      "resource": "chrome/noraneko/nora-resource/actors/NRProgressiveWebAppParent.sys.mjs",
+      "offset": 457,
+      "snippet": "//#region ../../browser-features/modules/actors/NRProgressiveWebAppParent.sys.mts\nvar NRProgressiveWebAppParent = class extends JSWindowActorParent {\n\tasync receiveMessage(message) {\n\t\tswitch (message.name) {\n\t\t\tcase \"ProgressiveWebApp:CheckPageHasManifest\": return this.sendNotifyToPageAction();\n\t\t}\n\t\treturn null;\n\t}\n\tsendNotifyToPageAction() {\n\t\tconst context = this.browsingContext;\n\t\tif (!context || context !== context.top || this.manager !== context.currentWindowGlobal) return;\n\t\tconst browser = context.embedderElement;\n\t\tif (browser) Services.obs.notifyObservers(browser, \"nora-pwa-check-page-has-manifest\");\n\t}\n};\n//#endregion\nexport { NRProgressiveWebAppParent };\n"
+    },
+    {
+      "resource": "chrome/noraneko/nora-resource/actors/NRProgressiveWebAppParent.sys.mjs",
+      "offset": 583,
+      "snippet": "//#region ../../browser-features/modules/actors/NRProgressiveWebAppParent.sys.mts\nvar NRProgressiveWebAppParent = class extends JSWindowActorParent {\n\tasync receiveMessage(message) {\n\t\tswitch (message.name) {\n\t\t\tcase \"ProgressiveWebApp:CheckPageHasManifest\": return this.sendNotifyToPageAction();\n\t\t}\n\t\treturn null;\n\t}\n\tsendNotifyToPageAction() {\n\t\tconst context = this.browsingContext;\n\t\tif (!context || context !== context.top || this.manager !== context.currentWindowGlobal) return;\n\t\tconst browser = context.embedderElement;\n\t\tif (browser) Services.obs.notifyObservers(browser, \"nora-pwa-check-page-has-manifest\");\n\t}\n};\n//#endregion\nexport { NRProgressiveWebAppParent };\n"
+    }
+  ]
+}

@@ -1,0 +1,191 @@
+{
+  "allUnchanged": true,
+  "entries": 46,
+  "afterBothCandidateSessions": true,
+  "files": [
+    {
+      "path": "application.ini",
+      "unchanged": true
+    },
+    {
+      "path": "browser/buildid2",
+      "unchanged": true
+    },
+    {
+      "path": "browser/chrome/icons/default/default128.png",
+      "unchanged": true
+    },
+    {
+      "path": "browser/chrome/icons/default/default16.png",
+      "unchanged": true
+    },
+    {
+      "path": "browser/chrome/icons/default/default32.png",
+      "unchanged": true
+    },
+    {
+      "path": "browser/chrome/icons/default/default48.png",
+      "unchanged": true
+    },
+    {
+      "path": "browser/chrome/icons/default/default64.png",
+      "unchanged": true
+    },
+    {
+      "path": "browser/omni.ja",
+      "unchanged": true
+    },
+    {
+      "path": "defaults/pref/channel-prefs.js",
+      "unchanged": true
+    },
+    {
+      "path": "dependentlibs.list",
+      "unchanged": true
+    },
+    {
+      "path": "floorp",
+      "unchanged": true
+    },
+    {
+      "path": "floorp-bin",
+      "unchanged": true
+    },
+    {
+      "path": "fonts/TwemojiMozilla.ttf",
+      "unchanged": true
+    },
+    {
+      "path": "gfxtest",
+      "unchanged": true
+    },
+    {
+      "path": "gmp-clearkey/0.1/libclearkey.so",
+      "unchanged": true
+    },
+    {
+      "path": "gmp-clearkey/0.1/manifest.json",
+      "unchanged": true
+    },
+    {
+      "path": "icons/updater.png",
+      "unchanged": true
+    },
+    {
+      "path": "jogfile.json",
+      "unchanged": true
+    },
+    {
+      "path": "libfreeblpriv3.so",
+      "unchanged": true
+    },
+    {
+      "path": "libgkcodecs.so",
+      "unchanged": true
+    },
+    {
+      "path": "liblgpllibs.so",
+      "unchanged": true
+    },
+    {
+      "path": "libmozavcodec.so",
+      "unchanged": true
+    },
+    {
+      "path": "libmozavutil.so",
+      "unchanged": true
+    },
+    {
+      "path": "libmozgtk.so",
+      "unchanged": true
+    },
+    {
+      "path": "libmozinference.so",
+      "unchanged": true
+    },
+    {
+      "path": "libmozsandbox.so",
+      "unchanged": true
+    },
+    {
+      "path": "libmozsqlite3.so",
+      "unchanged": true
+    },
+    {
+      "path": "libmozwayland.so",
+      "unchanged": true
+    },
+    {
+      "path": "libnspr4.so",
+      "unchanged": true
+    },
+    {
+      "path": "libnss3.so",
+      "unchanged": true
+    },
+    {
+      "path": "libnssutil3.so",
+      "unchanged": true
+    },
+    {
+      "path": "libonnxruntime.so",
+      "unchanged": true
+    },
+    {
+      "path": "libplc4.so",
+      "unchanged": true
+    },
+    {
+      "path": "libplds4.so",
+      "unchanged": true
+    },
+    {
+      "path": "libsmime3.so",
+      "unchanged": true
+    },
+    {
+      "path": "libsoftokn3.so",
+      "unchanged": true
+    },
+    {
+      "path": "libssl3.so",
+      "unchanged": true
+    },
+    {
+      "path": "libxul.so",
+      "unchanged": true
+    },
+    {
+      "path": "omni.ja",
+      "unchanged": true
+    },
+    {
+      "path": "pingsender",
+      "unchanged": true
+    },
+    {
+      "path": "platform.ini",
+      "unchanged": true
+    },
+    {
+      "path": "precomplete",
+      "unchanged": true
+    },
+    {
+      "path": "removed-files",
+      "unchanged": true
+    },
+    {
+      "path": "update-settings.ini",
+      "unchanged": true
+    },
+    {
+      "path": "updater",
+      "unchanged": true
+    },
+    {
+      "path": "updater.ini",
+      "unchanged": true
+    }
+  ]
+}

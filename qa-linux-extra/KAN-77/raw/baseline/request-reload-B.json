@@ -1,0 +1,4 @@
+{
+  "id": "reload-B",
+  "script": "gBrowser.selectedBrowser.reload();return true;"
+}

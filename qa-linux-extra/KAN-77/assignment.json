@@ -1,0 +1,23 @@
+{
+  "key": "KAN-77",
+  "github": "https://github.com/Floorp-Projects/Floorp/issues/2263",
+  "reportedVersion": "12.10.1@146.0.2",
+  "reportedOS": "CachyOS Arch Linux",
+  "previousJiraComment": "10440",
+  "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/3049",
+  "sourceHead": "f04ff611c3634515064776e2d58e76648f87269b",
+  "base": "29a3eb23145da90706d8a94441373278521cc737",
+  "sourceOwnedByCoordinator": true,
+  "localWorktreeReadOnly": true,
+  "windowsPackageRunNotDuplicated": 42111951173,
+  "standardCi": {
+    "run": 42111775032,
+    "conclusion": "success"
+  },
+  "linuxPackageOnlyRun": 42112677415,
+  "dispatches": 1,
+  "sameDocumentDuplicatesOutOfScope": true,
+  "original429CausalityUnestablished": true,
+  "thirdPartyLoadTesting": false,
+  "original22MatrixUntouched": true
+}

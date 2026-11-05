@@ -1,0 +1,4 @@
+{
+  "id": "resume-window-references",
+  "script": "window.__kan77B=Array.from(gBrowser.tabs).find(t=>t.linkedBrowser.currentURI.spec.includes(\"/page/B\"));window.__kan77C=Array.from(Services.wm.getEnumerator(\"navigator:browser\")).find(w=>w!==window);return {hasB:!!window.__kan77B,hasC:!!window.__kan77C};"
+}

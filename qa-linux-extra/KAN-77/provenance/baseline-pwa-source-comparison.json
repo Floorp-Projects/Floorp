@@ -1,0 +1,20 @@
+[
+  {
+    "path": "browser-features/chrome/common/pwa/SsbPageAction.tsx",
+    "officialCurrentSha256": "e597d789a1e53b677bdb621a5220ebb3dfe0a8affa7fe4fa742b7d2ced9051b8",
+    "prBaseSha256": "e597d789a1e53b677bdb621a5220ebb3dfe0a8affa7fe4fa742b7d2ced9051b8",
+    "identical": true
+  },
+  {
+    "path": "browser-features/chrome/common/pwa/ssbManager.ts",
+    "officialCurrentSha256": "92740a98945735eeab1c25c7f61f49f7b05507124de81c176c09d673f4809b66",
+    "prBaseSha256": "92740a98945735eeab1c25c7f61f49f7b05507124de81c176c09d673f4809b66",
+    "identical": true
+  },
+  {
+    "path": "browser-features/modules/actors/NRProgressiveWebAppParent.sys.mts",
+    "officialCurrentSha256": "8ef43e13f7f4cc99d230b27dd8f34f8eefd24d8d591d44f1742b55a69f0f4b98",
+    "prBaseSha256": "8ef43e13f7f4cc99d230b27dd8f34f8eefd24d8d591d44f1742b55a69f0f4b98",
+    "identical": true
+  }
+]

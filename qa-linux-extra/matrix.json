@@ -427,6 +427,190 @@
         "needs-windows11-gpu-driver",
         "needs-windows-update-path"
       ]
+    },
+    {
+      "key": "KAN-77",
+      "github": "https://github.com/Floorp-Projects/Floorp/issues/2263",
+      "sourceSha": "f04ff611c3634515064776e2d58e76648f87269b",
+      "baseSha": "29a3eb23145da90706d8a94441373278521cc737",
+      "baselineSourceSha": "984509d2053be7bae9027133bda7259cd706b208",
+      "productVersion": "Floorp12.21.1@159.0.1 actual nativeBuildID20261103153232",
+      "environment": {
+        "os": {
+          "PRETTY_NAME": "Debian GNU/Linux 13 (trixie)",
+          "VERSION_ID": "13",
+          "ID": "debian"
+        },
+        "kernel": "6.18.57",
+        "machine": "x86_64",
+        "uid": 1000,
+        "display": "dedicated Xvfb/Openbox X11 + private DBus",
+        "physicalInputTested": false,
+        "originalCachyOSTested": false,
+        "gpuDevices": {
+          "/dev/dri": false,
+          "/dev/nvidia0": false,
+          "/dev/dxg": false
+        },
+        "securityPrefOverrides": false,
+        "dedicatedProfilesOnly": true
+      },
+      "testCommand": "scripts/README.md; browser-session.py; run-phases.py; compare.py; verify-evidence.py",
+      "result": "Scoped complete Linux product acceptance passed; unnecessary cross-owner manifest requests reproduced in official baseline and suppressed in candidate; original site429 unresolved",
+      "qualifiedProductSessions": 4,
+      "candidateNaturalPhaseMeasurements": 16,
+      "baselineNaturalPhaseMeasurements": 13,
+      "comparison": {
+        "sourceHead": "f04ff611c3634515064776e2d58e76648f87269b",
+        "initialCounts": {
+          "baseline": {
+            "/page/A": 1,
+            "/manifest/A.json": 6,
+            "/icon/A.svg": 4,
+            "/favicon.ico": 1
+          },
+          "candidate": {
+            "/page/A": 1,
+            "/manifest/A.json": 6,
+            "/icon/A.svg": 4,
+            "/favicon.ico": 1
+          }
+        },
+        "rows": [
+          {
+            "phase": "background-B",
+            "countedPaths": [
+              "/manifest/A.json"
+            ],
+            "baseline": 6,
+            "candidate": 0,
+            "candidatePwaUI": {
+              "enabled": true,
+              "actionPresent": true,
+              "actionHidden": false,
+              "panelState": "closed"
+            }
+          },
+          {
+            "phase": "subframes-four",
+            "countedPaths": [
+              "/manifest/A.json"
+            ],
+            "baseline": 18,
+            "candidate": 0,
+            "candidatePwaUI": {
+              "enabled": true,
+              "actionPresent": true,
+              "actionHidden": false,
+              "panelState": "closed"
+            }
+          },
+          {
+            "phase": "other-window-C",
+            "countedPaths": [
+              "/manifest/A.json"
+            ],
+            "baseline": 4,
+            "candidate": 0,
+            "candidatePwaUI": {
+              "enabled": true,
+              "actionPresent": true,
+              "actionHidden": false,
+              "panelState": "closed"
+            }
+          },
+          {
+            "phase": "two-window-background",
+            "countedPaths": [
+              "/manifest/A.json",
+              "/manifest/C.json"
+            ],
+            "baseline": 9,
+            "candidate": 0,
+            "candidatePwaUI": {
+              "enabled": true,
+              "actionPresent": true,
+              "actionHidden": false,
+              "panelState": "closed"
+            }
+          },
+          {
+            "phase": "select-B",
+            "countedPaths": [
+              "/manifest/B.json"
+            ],
+            "baseline": 2,
+            "candidate": 2,
+            "candidatePwaUI": {
+              "enabled": true,
+              "actionPresent": true,
+              "actionHidden": false,
+              "panelState": "closed"
+            }
+          },
+          {
+            "phase": "reload-B",
+            "countedPaths": [
+              "/manifest/B.json"
+            ],
+            "baseline": 6,
+            "candidate": 6,
+            "candidatePwaUI": {
+              "enabled": true,
+              "actionPresent": true,
+              "actionHidden": false,
+              "panelState": "closed"
+            }
+          }
+        ],
+        "candidatePanel": {
+          "selected": "http://127.0.0.1:19190/page/A",
+          "panelState": "open",
+          "title": "KAN77 A",
+          "description": "127.0.0.1",
+          "installButton": "",
+          "installLabel": "Install Application"
+        },
+        "noInjectedObserverNotifications": true,
+        "negativeUIAbsentBoth": [
+          "no-manifest",
+          "iframe-only",
+          "ineligible-about"
+        ]
+      },
+      "packageRun": 42112677415,
+      "packageDispatches": 1,
+      "installerArtifact": 13455518201,
+      "installerZipSha256": "cbc7b3e62a4704e8ed6463b0c2e3ae774d687f74958ae9b0dd496e585bd97e3f",
+      "runtimeSha": "8965ffc346d426ccdf919bd18585e4d4a0c21654",
+      "runtimeRun": 41664957250,
+      "runtimeArtifact": 13272530069,
+      "runtimeArtifactDigest": "sha256:ed5a4f97ee7bf42c817f3146d5a843e095710dcc3be25fae0af0bf47274b739a",
+      "existingPr": "https://github.com/Floorp-Projects/Floorp/pull/3049",
+      "newPr": null,
+      "jiraCommentId": null,
+      "prEvidenceComment": null,
+      "remainingConditions": [
+        "OriginalCachyOS and reported12.10.1 conditions unmatched",
+        "Original Archidekt/Allegro429 causality and networkinitiators unproven",
+        "Physical GUI/input untested",
+        "Same-document duplicatefetch and sameURL document-generation/out-of-order races outsidePRscope",
+        "Both products log2pendingquery actor-destroyed AbortErrors; no observed settled UI failure, precise timing untraced"
+      ],
+      "evidence": [
+        "report.md",
+        "comparison.json",
+        "raw/*/http-requests.json",
+        "raw/*/measurements.json",
+        "raw/*/ready.json",
+        "raw/*/shutdown.json",
+        "raw/*/panel.png",
+        "provenance/package-verification.json",
+        "provenance/product-hash-after.json",
+        "provenance/runtime-build-manifest-v2.json"
+      ],
+      "separateFromOriginal22": true,
+      "originalCMatrixSha256": "4ac5d5f17f97d70e82f7b9f17d6abcc1aa17a92e3708eeadaba6ac7c8415e3cd"
     }
   ]
 }

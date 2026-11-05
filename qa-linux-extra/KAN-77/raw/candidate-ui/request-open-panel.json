@@ -1,0 +1,5 @@
+{
+  "id": "open-panel",
+  "click": "#ssbPageAction",
+  "script": "return true;"
+}

@@ -1,0 +1,4 @@
+{
+  "id": "background-B",
+  "script": "window.__kan77B=gBrowser.addTab(\"http://127.0.0.1:19190\"+'/page/B',{triggeringPrincipal:Services.scriptSecurityManager.getSystemPrincipal()});return true;"
+}

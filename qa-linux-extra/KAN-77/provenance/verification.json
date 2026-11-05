@@ -1,0 +1,17 @@
+{
+  "schema2": true,
+  "manifestZipSha256": "2b6a1b20190dc7016957ca25f72f8e83f267de51458b515153fd209bb90d9138",
+  "apiRuntimeRunSuccess": true,
+  "apiRuntimeRunSha": "8965ffc346d426ccdf919bd18585e4d4a0c21654",
+  "apiArtifactIdDigestMatches": true,
+  "dispatchSourceSha": "f04ff611c3634515064776e2d58e76648f87269b",
+  "artifact": {
+    "platform": "Linux",
+    "arch": "x86_64",
+    "artifact_name": "floorp-linux-x86_64-moz-artifact",
+    "artifact_id": 13272530069,
+    "artifact_digest": "sha256:ed5a4f97ee7bf42c817f3146d5a843e095710dcc3be25fae0af0bf47274b739a",
+    "expected_build_id": "20261103153232"
+  },
+  "verifiedExistingManifestZip": true
+}

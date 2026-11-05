@@ -1,0 +1,11 @@
+{
+  "elapsedMs": 146.20624499730184,
+  "rpcMs": 31.231521999870893,
+  "value": {
+    "selected": "http://127.0.0.1:19191/page/A",
+    "panelState": "open",
+    "title": "KAN77 A",
+    "description": "127.0.0.1",
+    "installButton": ""
+  }
+}

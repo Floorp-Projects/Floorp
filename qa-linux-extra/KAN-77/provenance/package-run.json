@@ -1,0 +1,13 @@
+{
+  "id": 42112677415,
+  "html_url": "https://github.com/Floorp-Projects/Floorp/actions/runs/42112677415",
+  "head_sha": "f04ff611c3634515064776e2d58e76648f87269b",
+  "head_branch": "codex/stability-kan77-request-scope",
+  "path": ".github/workflows/package.yml",
+  "status": "completed",
+  "conclusion": "success",
+  "created_at": "2026-11-05T21:26:34Z",
+  "updated_at": "2026-11-05T21:44:46Z",
+  "run_attempt": 1,
+  "display_title": "\ud83d\udce6\ufe0f Package Linux-x64 (Unsigned)"
+}

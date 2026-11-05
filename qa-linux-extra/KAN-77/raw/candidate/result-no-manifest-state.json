@@ -1,0 +1,72 @@
+{
+  "elapsedMs": 6.946624998818152,
+  "rpcMs": 4.837635999138001,
+  "value": {
+    "pid": 82100,
+    "version": "159.0.1",
+    "buildID": "20261103153232",
+    "startup": {
+      "isFirstRun": true,
+      "isUpdated": false
+    },
+    "prefs": {
+      "mstone": {
+        "value": "ignore",
+        "user": false
+      },
+      "oldVersion": {
+        "value": "12.21.1@159.0.1",
+        "user": true
+      },
+      "audience": {
+        "value": "new",
+        "user": true
+      },
+      "confirmed": {
+        "value": false,
+        "user": false
+      },
+      "promptShown": {
+        "value": false,
+        "user": false
+      },
+      "mode": {
+        "value": "blocking",
+        "user": false
+      },
+      "welcomeShown": {
+        "value": false,
+        "user": false
+      }
+    },
+    "protections": {
+      "sandbox": 6,
+      "sandboxUser": false,
+      "signatureRequired": false,
+      "signatureUser": false
+    },
+    "tabs": [
+      {
+        "url": "http://127.0.0.1:19190/page/A",
+        "title": "KAN77 A",
+        "selected": false,
+        "hidden": false,
+        "loading": false
+      },
+      {
+        "url": "http://127.0.0.1:19190/page/none",
+        "title": "KAN77 none",
+        "selected": true,
+        "hidden": false,
+        "loading": false
+      }
+    ],
+    "pwa": {
+      "enabled": true,
+      "actionPresent": false,
+      "actionHidden": null,
+      "panelState": null
+    },
+    "dialogs": []
+  }
+}
