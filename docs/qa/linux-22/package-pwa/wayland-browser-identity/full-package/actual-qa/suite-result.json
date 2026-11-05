@@ -1,0 +1,115 @@
+{
+  "kind": "authenticated full application package; no resource substitutions",
+  "sourceSha": "2deb165d75290ffd4f602ad078512dc42fc3a332",
+  "runId": 42077174018,
+  "artifactId": 13439144608,
+  "artifactDigest": "sha256:febce14e382da315a7579464f1052768a0e51854a752de8a926ee898db6ce996",
+  "groups": [
+    {
+      "name": "orders",
+      "command": [
+        "dbus-run-session",
+        "--",
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "/workspace/qa-linux-22/package-pwa/wayland-browser-identity/probe_orders.py",
+        "--intake",
+        "/workspace/qa-linux-22/package-pwa/wayland-browser-identity/full-package/product-intake.json",
+        "--out",
+        "/workspace/qa-linux-22/package-pwa/wayland-browser-identity/full-package/actual-qa/orders",
+        "--display",
+        ":96",
+        "--port",
+        "2894",
+        "--fixture-port",
+        "8810"
+      ],
+      "executionReturncode": 1,
+      "completed": false,
+      "error": null,
+      "productUnchanged": false,
+      "remainingOwnedProcesses": [],
+      "cases": [
+        {
+          "case": "browser-pwa",
+          "matches": true,
+          "quit": {
+            "cause": "shutdown",
+            "forced": false,
+            "in_app": true
+          }
+        },
+        {
+          "case": "pwa-browser",
+          "matches": true,
+          "quit": {
+            "cause": "shutdown",
+            "forced": false,
+            "in_app": true
+          }
+        },
+        {
+          "case": "multiple-pwa",
+          "matches": true,
+          "quit": {
+            "cause": "shutdown",
+            "forced": false,
+            "in_app": true
+          }
+        },
+        {
+          "case": "existing-profile-migration",
+          "matches": true,
+          "quit": {
+            "cause": "shutdown",
+            "forced": false,
+            "in_app": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "custom-control",
+      "command": [
+        "dbus-run-session",
+        "--",
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "/workspace/qa-linux-22/package-pwa/wayland-browser-identity/probe_orders.py",
+        "--intake",
+        "/workspace/qa-linux-22/package-pwa/wayland-browser-identity/full-package/product-intake.json",
+        "--out",
+        "/workspace/qa-linux-22/package-pwa/wayland-browser-identity/full-package/actual-qa/custom-control",
+        "--display",
+        ":96",
+        "--port",
+        "2896",
+        "--fixture-port",
+        "8812",
+        "--custom-control-only"
+      ],
+      "executionReturncode": 1
+    },
+    {
+      "name": "private-control",
+      "command": [
+        "dbus-run-session",
+        "--",
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "/workspace/qa-linux-22/package-pwa/wayland-browser-identity/probe_orders.py",
+        "--intake",
+        "/workspace/qa-linux-22/package-pwa/wayland-browser-identity/full-package/product-intake.json",
+        "--out",
+        "/workspace/qa-linux-22/package-pwa/wayland-browser-identity/full-package/actual-qa/private-control",
+        "--display",
+        ":96",
+        "--port",
+        "2898",
+        "--fixture-port",
+        "8814",
+        "--private-control-only"
+      ],
+      "executionReturncode": 1
+    }
+  ],
+  "qualified": false,
+  "caseCount": 4
+}

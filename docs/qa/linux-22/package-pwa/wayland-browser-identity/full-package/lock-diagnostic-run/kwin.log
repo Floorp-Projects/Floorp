@@ -1,0 +1,7 @@
+Accepting client connections on sockets: QList("wbid-129868")
+"applications.menu"  not found in  QList("/workspace/qa-linux-22/package-pwa/sysroot/etc/xdg/menus")
+kwin_core: Configured compositor not supported by Platform. Falling back to defaults
+[W][18:12:36.817354] pw.conf      | [          conf.c: 1182 try_load_conf()] can't load config client.conf: No such file or directory
+[E][18:12:36.817390] pw.conf      | [          conf.c: 1215 pw_conf_load_conf_for_context()] can't load config client.conf: No such file or directory
+kwin_screencast: Failed to create PipeWire context
+QThreadStorage: Thread 0x5603843234c0 exited after QThreadStorage 7 destroyed

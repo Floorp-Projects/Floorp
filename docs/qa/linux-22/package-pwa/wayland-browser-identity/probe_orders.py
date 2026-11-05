@@ -92,6 +92,8 @@ def main():
     parser.add_argument('--fixture-port', type=int, default=8790)
     parser.add_argument('--custom-control-only', action='store_true')
     parser.add_argument('--private-control-only', action='store_true')
+    parser.add_argument('--diagnostic-ui-only', action='store_true')
+    parser.add_argument('--trace-product-fileops', action='store_true')
     args = parser.parse_args()
     assert not (args.custom_control_only and args.private_control_only)
     meta = json.loads(args.intake.read_text()); run, artifact = meta['run'], meta['artifact']
@@ -142,6 +144,7 @@ def main():
     set_automation_port(migration_profile, args.port + 1)
     result = {'origin': origin, 'runtimeDir': str(runtime), 'customControlOnly': args.custom_control_only,
         'privateControlOnly': args.private_control_only,
+        'diagnosticOnly': args.diagnostic_ui_only or args.trace_product_fileops,
         'scope': 'actual native Wayland protocol/KWin/desktop identities; no mock assignments',
         'input': 'synthetic UI installation and generated-launcher CLI startup; no physical-input claim',
         'migrationFixture': {'sourceProfile': str(args.migration_profile), 'sourceHome': str(args.migration_home),
@@ -160,6 +163,13 @@ def main():
     xvfb = kwin = browser = client = None
     def launch(command, label, launch_env):
         log = (args.out / (label + '.log')).open('wb'); logs.append(log)
+        if args.trace_product_fileops and label == 'ui-browser':
+            # Main process only: do not attach to Gecko sandboxed content
+            # children. Diagnostic trace is never qualification evidence.
+            command = ['strace', '-k', '-ttt', '-s', '256', '-e',
+                'trace=openat,openat2,symlink,symlinkat,unlink,unlinkat,chdir,fchdir',
+                '-P', str(product / '.parentlock'), '-P', str(product / 'lock'),
+                '-o', str(args.out / 'profile-lock.strace'), '--', *command]
         process = subprocess.Popen(command, env=launch_env, stdout=log, stderr=subprocess.STDOUT)
         owned.append(process); return process
     def observe(row, step, selected_profile, selected_port):
@@ -257,6 +267,8 @@ return tags;
         if args.private_control_only:
             cases = [('private-browser-control', ['alpha', 'private-browser'],
                 migration_profile, migration_home, args.port + 1, migrated_entries)]
+        if args.diagnostic_ui_only:
+            cases = []
         for label, order, case_profile, case_home, port, entries in cases:
             row = {'case': label, 'order': order, 'profile': str(case_profile), 'commands': []}
             result['orders'].append(row)

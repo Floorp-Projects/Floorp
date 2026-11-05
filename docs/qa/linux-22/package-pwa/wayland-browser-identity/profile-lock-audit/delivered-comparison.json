@@ -1,0 +1,449 @@
+{
+  "scope": "read-only delivered native/XPT/archive inventory comparison; no product execution, profile locks, source edits or gates changed",
+  "nativeFiles": [
+    {
+      "path": "dependentlibs.list",
+      "3032": {
+        "sha256": "621f575eaaf819dd0b18976c6a8a94d1caae95a9c748f4c9058a052395a4d173",
+        "size": 189,
+        "elf": false
+      },
+      "3040": {
+        "sha256": "621f575eaaf819dd0b18976c6a8a94d1caae95a9c748f4c9058a052395a4d173",
+        "size": 189,
+        "elf": false
+      },
+      "identical": true
+    },
+    {
+      "path": "floorp",
+      "3032": {
+        "sha256": "4f05c1330b38e50040440be6a3b6e0e7a5b52bc79edb5c5478d978c81f5a603d",
+        "size": 601304,
+        "elf": true
+      },
+      "3040": {
+        "sha256": "4f05c1330b38e50040440be6a3b6e0e7a5b52bc79edb5c5478d978c81f5a603d",
+        "size": 601304,
+        "elf": true
+      },
+      "identical": true
+    },
+    {
+      "path": "floorp-bin",
+      "3032": {
+        "sha256": "4f05c1330b38e50040440be6a3b6e0e7a5b52bc79edb5c5478d978c81f5a603d",
+        "size": 601304,
+        "elf": true
+      },
+      "3040": {
+        "sha256": "4f05c1330b38e50040440be6a3b6e0e7a5b52bc79edb5c5478d978c81f5a603d",
+        "size": 601304,
+        "elf": true
+      },
+      "identical": true
+    },
+    {
+      "path": "gfxtest",
+      "3032": {
+        "sha256": "becfb0b9cee1d9b35fe23dc504f7bbb9345b364c413c0e80656ddb3c9729bdfd",
+        "size": 37928,
+        "elf": true
+      },
+      "3040": {
+        "sha256": "becfb0b9cee1d9b35fe23dc504f7bbb9345b364c413c0e80656ddb3c9729bdfd",
+        "size": 37928,
+        "elf": true
+      },
+      "identical": true
+    },
+    {
+      "path": "gmp-clearkey/0.1/libclearkey.so",
+      "3032": {
+        "sha256": "97ffd72483c64964ad9a2b86ca227d93c921ff5c14dd430f25c3eec2f7aa5c02",
+        "size": 65256,
+        "elf": true
+      },
+      "3040": {
+        "sha256": "97ffd72483c64964ad9a2b86ca227d93c921ff5c14dd430f25c3eec2f7aa5c02",
+        "size": 65256,
+        "elf": true
+      },
+      "identical": true
+    },
+    {
+      "path": "libfreeblpriv3.so",
+      "3032": {
+        "sha256": "0e5167b714fc4e7952d8471f5fb8d90a302df98e3cba156769ac733f0fd025b0",
+        "size": 1366504,
+        "elf": true
+      },
+      "3040": {
+        "sha256": "0e5167b714fc4e7952d8471f5fb8d90a302df98e3cba156769ac733f0fd025b0",
+        "size": 1366504,
+        "elf": true
+      },
+      "identical": true
+    },
+    {
+      "path": "libgkcodecs.so",
+      "3032": {
+        "sha256": "7804828879bc2967d23bc241c6ecb15fa7e5ca5e06e28049cf8378753b75cbe8",
+        "size": 9025544,
+        "elf": true
+      },
+      "3040": {
+        "sha256": "7804828879bc2967d23bc241c6ecb15fa7e5ca5e06e28049cf8378753b75cbe8",
+        "size": 9025544,
+        "elf": true
+      },
+      "identical": true
+    },
+    {
+      "path": "liblgpllibs.so",
+      "3032": {
+        "sha256": "c29aff12589cb5342e73488619b628b50afda839a063a0e0f3f77831ffd8ff82",
+        "size": 145024,
+        "elf": true
+      },
+      "3040": {
+        "sha256": "c29aff12589cb5342e73488619b628b50afda839a063a0e0f3f77831ffd8ff82",
+        "size": 145024,
+        "elf": true
+      },
+      "identical": true
+    },
+    {
+      "path": "libmozavcodec.so",
+      "3032": {
+        "sha256": "0687a26be53f8ece0623d6c5ed8b7815b2c05839760ba012baa2ea5b5975b2ea",
+        "size": 4104816,
+        "elf": true
+      },
+      "3040": {
+        "sha256": "0687a26be53f8ece0623d6c5ed8b7815b2c05839760ba012baa2ea5b5975b2ea",
+        "size": 4104816,
+        "elf": true
+      },
+      "identical": true
+    },
+    {
+      "path": "libmozavutil.so",
+      "3032": {
+        "sha256": "d957abe02b48afe84f2eb0038252f1f12c627f2db7100fbfda80fc473c2d14d7",
+        "size": 686624,
+        "elf": true
+      },
+      "3040": {
+        "sha256": "d957abe02b48afe84f2eb0038252f1f12c627f2db7100fbfda80fc473c2d14d7",
+        "size": 686624,
+        "elf": true
+      },
+      "identical": true
+    },
+    {
+      "path": "libmozgtk.so",
+      "3032": {
+        "sha256": "a2f42c25563411b7e3378629d2e1ab7f947e9c4b546560b25b436e6fbe94476f",
+        "size": 4576,
+        "elf": true
+      },
+      "3040": {
+        "sha256": "a2f42c25563411b7e3378629d2e1ab7f947e9c4b546560b25b436e6fbe94476f",
+        "size": 4576,
+        "elf": true
+      },
+      "identical": true
+    },
+    {
+      "path": "libmozinference.so",
+      "3032": {
+        "sha256": "acd4dba98fa405662a725fceebe023e0c78cb67de9ec5174f545f6604299c570",
+        "size": 2534288,
+        "elf": true
+      },
+      "3040": {
+        "sha256": "acd4dba98fa405662a725fceebe023e0c78cb67de9ec5174f545f6604299c570",
+        "size": 2534288,
+        "elf": true
+      },
+      "identical": true
+    },
+    {
+      "path": "libmozsandbox.so",
+      "3032": {
+        "sha256": "88c01a993afad42907d569d1f11d890afd0accc7120fd946168ca799065e86fd",
+        "size": 235280,
+        "elf": true
+      },
+      "3040": {
+        "sha256": "88c01a993afad42907d569d1f11d890afd0accc7120fd946168ca799065e86fd",
+        "size": 235280,
+        "elf": true
+      },
+      "identical": true
+    },
+    {
+      "path": "libmozsqlite3.so",
+      "3032": {
+        "sha256": "d740b271fce254778272866e02b9bd8bca7888475179f76904e9c14a8c96aba0",
+        "size": 1559248,
+        "elf": true
+      },
+      "3040": {
+        "sha256": "d740b271fce254778272866e02b9bd8bca7888475179f76904e9c14a8c96aba0",
+        "size": 1559248,
+        "elf": true
+      },
+      "identical": true
+    },
+    {
+      "path": "libmozwayland.so",
+      "3032": {
+        "sha256": "3164170986fe9bbe1e673b6bd2524f0f05dcc3da26a5fcee1d304c8fe385e457",
+        "size": 13392,
+        "elf": true
+      },
+      "3040": {
+        "sha256": "3164170986fe9bbe1e673b6bd2524f0f05dcc3da26a5fcee1d304c8fe385e457",
+        "size": 13392,
+        "elf": true
+      },
+      "identical": true
+    },
+    {
+      "path": "libnspr4.so",
+      "3032": {
+        "sha256": "73d59534248a183357f39e547f9d6f5089f084430aba181c9f4b6c9da5988c5d",
+        "size": 212712,
+        "elf": true
+      },
+      "3040": {
+        "sha256": "73d59534248a183357f39e547f9d6f5089f084430aba181c9f4b6c9da5988c5d",
+        "size": 212712,
+        "elf": true
+      },
+      "identical": true
+    },
+    {
+      "path": "libnss3.so",
+      "3032": {
+        "sha256": "6f11158b23027e962bec955f328119efa351db61b3e1f507a451fb1dfada646a",
+        "size": 753792,
+        "elf": true
+      },
+      "3040": {
+        "sha256": "6f11158b23027e962bec955f328119efa351db61b3e1f507a451fb1dfada646a",
+        "size": 753792,
+        "elf": true
+      },
+      "identical": true
+    },
+    {
+      "path": "libnssutil3.so",
+      "3032": {
+        "sha256": "efc899f507b9bcdc313303321ed177bc4768c47c3eaaa8e35609488e6d0e53e8",
+        "size": 188696,
+        "elf": true
+      },
+      "3040": {
+        "sha256": "efc899f507b9bcdc313303321ed177bc4768c47c3eaaa8e35609488e6d0e53e8",
+        "size": 188696,
+        "elf": true
+      },
+      "identical": true
+    },
+    {
+      "path": "libonnxruntime.so",
+      "3032": {
+        "sha256": "077ac0e3e090dd3d070a497f354f62fa718de4a19be287da5d9a188c950bc71c",
+        "size": 14458896,
+        "elf": true
+      },
+      "3040": {
+        "sha256": "077ac0e3e090dd3d070a497f354f62fa718de4a19be287da5d9a188c950bc71c",
+        "size": 14458896,
+        "elf": true
+      },
+      "identical": true
+    },
+    {
+      "path": "libplc4.so",
+      "3032": {
+        "sha256": "6fa863eff22c1fdf6e75f22fe9433bb50b0f8ba43960046a3816da6532d11fbf",
+        "size": 16504,
+        "elf": true
+      },
+      "3040": {
+        "sha256": "6fa863eff22c1fdf6e75f22fe9433bb50b0f8ba43960046a3816da6532d11fbf",
+        "size": 16504,
+        "elf": true
+      },
+      "identical": true
+    },
+    {
+      "path": "libplds4.so",
+      "3032": {
+        "sha256": "7f3fb5134ecd4201e532d7160dda31479a02743d6eff7199003e3b4be2dd963b",
+        "size": 12520,
+        "elf": true
+      },
+      "3040": {
+        "sha256": "7f3fb5134ecd4201e532d7160dda31479a02743d6eff7199003e3b4be2dd963b",
+        "size": 12520,
+        "elf": true
+      },
+      "identical": true
+    },
+    {
+      "path": "libsmime3.so",
+      "3032": {
+        "sha256": "6f3e94a9538ec3a52ee30e80af86fccc5ffd31a06712e61f434dda427b561c99",
+        "size": 173800,
+        "elf": true
+      },
+      "3040": {
+        "sha256": "6f3e94a9538ec3a52ee30e80af86fccc5ffd31a06712e61f434dda427b561c99",
+        "size": 173800,
+        "elf": true
+      },
+      "identical": true
+    },
+    {
+      "path": "libsoftokn3.so",
+      "3032": {
+        "sha256": "bb6a9283048767500190da54a439cf12196448e352db191db50e23e1566ad649",
+        "size": 376544,
+        "elf": true
+      },
+      "3040": {
+        "sha256": "bb6a9283048767500190da54a439cf12196448e352db191db50e23e1566ad649",
+        "size": 376544,
+        "elf": true
+      },
+      "identical": true
+    },
+    {
+      "path": "libssl3.so",
+      "3032": {
+        "sha256": "7a2f6ffcecdbb27c98279657f3db63f56922cb568dc217553d6d5f217bfa378b",
+        "size": 427024,
+        "elf": true
+      },
+      "3040": {
+        "sha256": "7a2f6ffcecdbb27c98279657f3db63f56922cb568dc217553d6d5f217bfa378b",
+        "size": 427024,
+        "elf": true
+      },
+      "identical": true
+    },
+    {
+      "path": "libxul.so",
+      "3032": {
+        "sha256": "760ff8a689f52c9b1f3c89a45ea8813e59f187990caed747e4a7680020c8dbc7",
+        "size": 183738368,
+        "elf": true
+      },
+      "3040": {
+        "sha256": "760ff8a689f52c9b1f3c89a45ea8813e59f187990caed747e4a7680020c8dbc7",
+        "size": 183738368,
+        "elf": true
+      },
+      "identical": true
+    },
+    {
+      "path": "pingsender",
+      "3032": {
+        "sha256": "157ed38af98d795812dfc532739252f9e6c51472d13b9105c496b8b2cf1dbbfd",
+        "size": 644592,
+        "elf": true
+      },
+      "3040": {
+        "sha256": "157ed38af98d795812dfc532739252f9e6c51472d13b9105c496b8b2cf1dbbfd",
+        "size": 644592,
+        "elf": true
+      },
+      "identical": true
+    },
+    {
+      "path": "updater",
+      "3032": {
+        "sha256": "54fae6b05eb4434bb8650e631085ca0eef3d22b932bf9f525000a93115d93010",
+        "size": 331440,
+        "elf": true
+      },
+      "3040": {
+        "sha256": "54fae6b05eb4434bb8650e631085ca0eef3d22b932bf9f525000a93115d93010",
+        "size": 331440,
+        "elf": true
+      },
+      "identical": true
+    }
+  ],
+  "allSelectedNativeIdentical": true,
+  "jarXptManifestsAndProfileActors": {
+    "omni.ja": [
+      {
+        "path": "components/components.manifest",
+        "3032Sha256": "38f6f01bac9f76ada1c9d0f2ce1903ceb9e50bb5fd00c2fa7a4eb0455292f189",
+        "3040Sha256": "38f6f01bac9f76ada1c9d0f2ce1903ceb9e50bb5fd00c2fa7a4eb0455292f189",
+        "identical": true
+      },
+      {
+        "path": "chrome/noraneko/nora-resource/actors/NRProfileManagerParent.sys.mjs",
+        "3032Sha256": "97571959f07130feb5196e5344a1959e07dbf95dd279e9c9785b89da5c5a70e4",
+        "3040Sha256": "97571959f07130feb5196e5344a1959e07dbf95dd279e9c9785b89da5c5a70e4",
+        "identical": true
+      },
+      {
+        "path": "chrome/noraneko/nora-resource/actors/NRProfileManagerChild.sys.mjs",
+        "3032Sha256": "b6905e81fbf34464c41e587cb967f7c9d63b926dcb16c50c67cae29e0a5b60cd",
+        "3040Sha256": "b6905e81fbf34464c41e587cb967f7c9d63b926dcb16c50c67cae29e0a5b60cd",
+        "identical": true
+      }
+    ],
+    "browser/omni.ja": [
+      {
+        "path": "components/components.manifest",
+        "3032Sha256": "55c5f5340554d2c2f1912fc8ea670fcc7d59e7e79a39794fc3940dab0be667e7",
+        "3040Sha256": "55c5f5340554d2c2f1912fc8ea670fcc7d59e7e79a39794fc3940dab0be667e7",
+        "identical": true
+      }
+    ]
+  },
+  "archiveRootLocks": {
+    "3032": {
+      "rootLockMembers": [],
+      "anyLockLikeMembers": [],
+      "entryCount": 57,
+      "packageSha256": "cf5e657f87c14a50dc6cfadd63d8e27d475f61d62b0c6b2a657f57db337b7146"
+    },
+    "3040": {
+      "rootLockMembers": [],
+      "anyLockLikeMembers": [],
+      "entryCount": 57,
+      "packageSha256": "bafdaf44e310aa22b41a9cb740dff47b07c51ada37978008c47d6952c6564976"
+    }
+  },
+  "actualRootNewFiles": {
+    "3032": {},
+    "3040": {
+      "lock": {
+        "symlink": "172.26.91.232:+127417"
+      },
+      ".parentlock": {
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size": 0,
+        "elf": false
+      }
+    }
+  },
+  "allProductContentDifferences": [
+    ".parentlock",
+    "application.ini",
+    "browser/buildid2",
+    "lock",
+    "omni.ja",
+    "platform.ini"
+  ]
+}

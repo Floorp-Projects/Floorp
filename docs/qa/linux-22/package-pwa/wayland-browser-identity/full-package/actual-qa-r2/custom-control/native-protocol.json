@@ -1,0 +1,42 @@
+[
+  {
+    "log": "custom-browser-remote-pwa-0.log",
+    "event": "[2337102.503] {Default Queue}  -> xdg_toplevel#72.set_title(\"Ablaze Floorp\")"
+  },
+  {
+    "log": "custom-browser-remote-pwa-0.log",
+    "event": "[2337102.508] {Default Queue}  -> xdg_toplevel#72.set_app_id(\"qa-floorp-custom\")"
+  },
+  {
+    "log": "custom-browser-remote-pwa-0.log",
+    "event": "[2346186.565] {Default Queue}  -> xdg_toplevel#72.set_title(\"QA_TEST_BROWSER_132935_b447618aed584e3aa4d5d974a4d4960e\")"
+  },
+  {
+    "log": "custom-browser-remote-pwa-0.log",
+    "event": "[2350181.825] {Default Queue}  -> xdg_toplevel#60.set_title(\"Ablaze Floorp\")"
+  },
+  {
+    "log": "custom-browser-remote-pwa-0.log",
+    "event": "[2350181.929] {Default Queue}  -> xdg_toplevel#60.set_app_id(\"qa-floorp-custom\")"
+  },
+  {
+    "log": "custom-browser-remote-pwa-0.log",
+    "event": "[2350182.415] {Default Queue}  -> xdg_toplevel#60.set_app_id(\"floorp-9c81f296-e163-468d-bded-591d97ede773\")"
+  },
+  {
+    "log": "custom-browser-remote-pwa-0.log",
+    "event": "[2351329.119] {Default Queue}  -> xdg_toplevel#60.set_title(\"QA PWA Alpha \u2014 Ablaze Floorp\")"
+  },
+  {
+    "log": "custom-browser-remote-pwa-0.log",
+    "event": "[2354072.534] {Default Queue}  -> xdg_toplevel#96.set_title(\"Ablaze Floorp\")"
+  },
+  {
+    "log": "custom-browser-remote-pwa-0.log",
+    "event": "[2354072.540] {Default Queue}  -> xdg_toplevel#96.set_app_id(\"qa-floorp-custom\")"
+  },
+  {
+    "log": "custom-browser-remote-pwa-0.log",
+    "event": "[2355546.341] {Default Queue}  -> xdg_toplevel#96.set_title(\"QA_TEST_BROWSER_132935_6e372a80fbcf4a7ea2514f09442caba8\")"
+  }
+]

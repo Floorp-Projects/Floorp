@@ -5,7 +5,7 @@ from pathlib import Path
 src=Path(__file__).resolve().parent
 dst=Path('/workspace/qa-linux-package-pwa/docs/qa/linux-22/package-pwa/wayland-browser-identity')
 skip={'original-issue.json','original-issue-comments.json','qa-commit.log','qa-push.log'}
-allowed={'.json','.md','.py','.log','.txt','.png','.js','.cjs','.mjs','.mts'}
+allowed={'.json','.md','.py','.log','.txt','.png','.js','.cjs','.mjs','.mts','.strace'}
 files=[]
 for directory,dirs,names in os.walk(src):
  dirs[:]=sorted(d for d in dirs if d not in {'home','profile','runtime','desktop-home','__pycache__','node_modules','products'} and not d.endswith(('-home','-profile')) and not d.startswith('candidate-product'))

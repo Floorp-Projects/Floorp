@@ -1,0 +1,145 @@
+{
+  "kind": "authenticated full application package; no resource substitutions",
+  "sourceSha": "2deb165d75290ffd4f602ad078512dc42fc3a332",
+  "runId": 42077174018,
+  "artifactId": 13439144608,
+  "artifactDigest": "sha256:febce14e382da315a7579464f1052768a0e51854a752de8a926ee898db6ce996",
+  "groups": [
+    {
+      "name": "orders",
+      "command": [
+        "dbus-run-session",
+        "--",
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "/workspace/qa-linux-22/package-pwa/wayland-browser-identity/probe_orders.py",
+        "--intake",
+        "/workspace/qa-linux-22/package-pwa/wayland-browser-identity/full-package/intake-r2/product-intake.json",
+        "--out",
+        "/workspace/qa-linux-22/package-pwa/wayland-browser-identity/full-package/actual-qa-r2/orders",
+        "--display",
+        ":96",
+        "--port",
+        "2902",
+        "--fixture-port",
+        "8810"
+      ],
+      "executionReturncode": 0,
+      "completed": true,
+      "error": null,
+      "productUnchanged": true,
+      "remainingOwnedProcesses": [],
+      "cases": [
+        {
+          "case": "browser-pwa",
+          "matches": true,
+          "quit": {
+            "cause": "shutdown",
+            "forced": false,
+            "in_app": true
+          }
+        },
+        {
+          "case": "pwa-browser",
+          "matches": true,
+          "quit": {
+            "cause": "shutdown",
+            "forced": false,
+            "in_app": true
+          }
+        },
+        {
+          "case": "multiple-pwa",
+          "matches": true,
+          "quit": {
+            "cause": "shutdown",
+            "forced": false,
+            "in_app": true
+          }
+        },
+        {
+          "case": "existing-profile-migration",
+          "matches": true,
+          "quit": {
+            "cause": "shutdown",
+            "forced": false,
+            "in_app": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "custom-control",
+      "command": [
+        "dbus-run-session",
+        "--",
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "/workspace/qa-linux-22/package-pwa/wayland-browser-identity/probe_orders.py",
+        "--intake",
+        "/workspace/qa-linux-22/package-pwa/wayland-browser-identity/full-package/intake-r2/product-intake.json",
+        "--out",
+        "/workspace/qa-linux-22/package-pwa/wayland-browser-identity/full-package/actual-qa-r2/custom-control",
+        "--display",
+        ":96",
+        "--port",
+        "2904",
+        "--fixture-port",
+        "8812",
+        "--custom-control-only"
+      ],
+      "executionReturncode": 0,
+      "completed": true,
+      "error": null,
+      "productUnchanged": true,
+      "remainingOwnedProcesses": [],
+      "cases": [
+        {
+          "case": "custom-browser-remote-pwa",
+          "matches": true,
+          "quit": {
+            "cause": "shutdown",
+            "forced": false,
+            "in_app": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "private-control",
+      "command": [
+        "dbus-run-session",
+        "--",
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "/workspace/qa-linux-22/package-pwa/wayland-browser-identity/probe_orders.py",
+        "--intake",
+        "/workspace/qa-linux-22/package-pwa/wayland-browser-identity/full-package/intake-r2/product-intake.json",
+        "--out",
+        "/workspace/qa-linux-22/package-pwa/wayland-browser-identity/full-package/actual-qa-r2/private-control",
+        "--display",
+        ":96",
+        "--port",
+        "2906",
+        "--fixture-port",
+        "8814",
+        "--private-control-only"
+      ],
+      "executionReturncode": 0,
+      "completed": true,
+      "error": null,
+      "productUnchanged": true,
+      "remainingOwnedProcesses": [],
+      "cases": [
+        {
+          "case": "private-browser-control",
+          "matches": true,
+          "quit": {
+            "cause": "shutdown",
+            "forced": false,
+            "in_app": true
+          }
+        }
+      ]
+    }
+  ],
+  "qualified": true,
+  "caseCount": 6
+}

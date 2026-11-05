@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "/workspace/qa-linux-22/package-pwa/wayland-browser-identity/probe_orders.py", line 321, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "/workspace/qa-linux-22/package-pwa/wayland-browser-identity/probe_orders.py", line 104, in main
+    assert base_inventory == json.loads((args.intake.parent / meta['productInventoryFile']).read_text())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError

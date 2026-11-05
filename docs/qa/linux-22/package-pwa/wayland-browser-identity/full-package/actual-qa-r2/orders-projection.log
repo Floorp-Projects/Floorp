@@ -1,0 +1,1 @@
+{"completed": true, "cases": [{"case": "browser-pwa", "matches": true}, {"case": "pwa-browser", "matches": true}, {"case": "multiple-pwa", "matches": true}, {"case": "existing-profile-migration", "matches": true}]}

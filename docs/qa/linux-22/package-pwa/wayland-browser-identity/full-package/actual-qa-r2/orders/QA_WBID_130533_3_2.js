@@ -1,0 +1,1 @@
+print("QA_WBID_130533_3_2="+JSON.stringify(workspace.windowList().map(w=>({caption:w.caption,resourceClass:w.resourceClass,desktopFileName:w.desktopFileName,resourceName:w.resourceName,pid:w.pid}))));

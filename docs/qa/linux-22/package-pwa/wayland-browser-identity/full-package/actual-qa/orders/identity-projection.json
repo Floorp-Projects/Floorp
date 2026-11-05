@@ -1,0 +1,438 @@
+{
+  "origin": {
+    "kind": "authenticated-full-package",
+    "baseSourceSha": "2deb165d75290ffd4f602ad078512dc42fc3a332",
+    "baseRunId": 42077174018,
+    "baseArtifactId": 13439144608,
+    "baseArtifactDigest": "sha256:febce14e382da315a7579464f1052768a0e51854a752de8a926ee898db6ce996",
+    "productRoot": "/workspace/qa-linux-full-build/products/3040/floorp"
+  },
+  "completed": false,
+  "cases": [
+    {
+      "case": "browser-pwa",
+      "order": [
+        "browser",
+        "alpha"
+      ],
+      "completed": true,
+      "stages": [
+        {
+          "afterStep": 0,
+          "checks": [
+            {
+              "role": "ordinary-browser",
+              "expectedClass": "floorp",
+              "expectedCount": 1,
+              "observedClasses": [
+                "floorp"
+              ],
+              "observedDesktopFiles": [
+                "floorp"
+              ],
+              "matches": true
+            }
+          ],
+          "allMatch": true,
+          "sandbox": 6,
+          "experiment": false
+        },
+        {
+          "afterStep": 1,
+          "checks": [
+            {
+              "role": "ordinary-browser",
+              "expectedClass": "floorp",
+              "expectedCount": 1,
+              "observedClasses": [
+                "floorp"
+              ],
+              "observedDesktopFiles": [
+                "floorp"
+              ],
+              "matches": true
+            },
+            {
+              "role": "alpha",
+              "expectedClass": "floorp-c8873246-7b40-456d-9056-1a8611fb7f50",
+              "observedClasses": [
+                "floorp-c8873246-7b40-456d-9056-1a8611fb7f50"
+              ],
+              "observedDesktopFiles": [
+                "floorp-c8873246-7b40-456d-9056-1a8611fb7f50"
+              ],
+              "matches": true
+            }
+          ],
+          "allMatch": true,
+          "sandbox": 6,
+          "experiment": false
+        }
+      ],
+      "finalAllMatch": true,
+      "protocolFinalWindows": [
+        {
+          "toplevel": "73",
+          "set_title": "QA_TEST_BROWSER_127926_41b301364e7e4d00bda4dc0d6ffa9f25",
+          "set_app_id": "floorp"
+        },
+        {
+          "toplevel": "88",
+          "set_title": "QA PWA Alpha — Ablaze Floorp",
+          "set_app_id": "floorp-c8873246-7b40-456d-9056-1a8611fb7f50"
+        }
+      ],
+      "quit": {
+        "cause": "shutdown",
+        "forced": false,
+        "in_app": true
+      }
+    },
+    {
+      "case": "pwa-browser",
+      "order": [
+        "alpha",
+        "browser"
+      ],
+      "completed": true,
+      "stages": [
+        {
+          "afterStep": 0,
+          "checks": [
+            {
+              "role": "alpha",
+              "expectedClass": "floorp-c8873246-7b40-456d-9056-1a8611fb7f50",
+              "observedClasses": [
+                "floorp-c8873246-7b40-456d-9056-1a8611fb7f50"
+              ],
+              "observedDesktopFiles": [
+                "floorp-c8873246-7b40-456d-9056-1a8611fb7f50"
+              ],
+              "matches": true
+            }
+          ],
+          "allMatch": true,
+          "sandbox": 6,
+          "experiment": false
+        },
+        {
+          "afterStep": 1,
+          "checks": [
+            {
+              "role": "ordinary-browser",
+              "expectedClass": "floorp",
+              "expectedCount": 1,
+              "observedClasses": [
+                "floorp"
+              ],
+              "observedDesktopFiles": [
+                "floorp"
+              ],
+              "matches": true
+            },
+            {
+              "role": "alpha",
+              "expectedClass": "floorp-c8873246-7b40-456d-9056-1a8611fb7f50",
+              "observedClasses": [
+                "floorp-c8873246-7b40-456d-9056-1a8611fb7f50"
+              ],
+              "observedDesktopFiles": [
+                "floorp-c8873246-7b40-456d-9056-1a8611fb7f50"
+              ],
+              "matches": true
+            }
+          ],
+          "allMatch": true,
+          "sandbox": 6,
+          "experiment": false
+        }
+      ],
+      "finalAllMatch": true,
+      "protocolFinalWindows": [
+        {
+          "toplevel": "72",
+          "set_title": "QA PWA Alpha — Ablaze Floorp",
+          "set_app_id": "floorp-c8873246-7b40-456d-9056-1a8611fb7f50"
+        },
+        {
+          "toplevel": "63",
+          "set_title": "QA_TEST_BROWSER_128372_b134bb883ae64477b0f470e6d0e77311",
+          "set_app_id": "floorp"
+        }
+      ],
+      "quit": {
+        "cause": "shutdown",
+        "forced": false,
+        "in_app": true
+      }
+    },
+    {
+      "case": "multiple-pwa",
+      "order": [
+        "alpha",
+        "beta",
+        "browser"
+      ],
+      "completed": true,
+      "stages": [
+        {
+          "afterStep": 0,
+          "checks": [
+            {
+              "role": "alpha",
+              "expectedClass": "floorp-c8873246-7b40-456d-9056-1a8611fb7f50",
+              "observedClasses": [
+                "floorp-c8873246-7b40-456d-9056-1a8611fb7f50"
+              ],
+              "observedDesktopFiles": [
+                "floorp-c8873246-7b40-456d-9056-1a8611fb7f50"
+              ],
+              "matches": true
+            }
+          ],
+          "allMatch": true,
+          "sandbox": 6,
+          "experiment": false
+        },
+        {
+          "afterStep": 1,
+          "checks": [
+            {
+              "role": "alpha",
+              "expectedClass": "floorp-c8873246-7b40-456d-9056-1a8611fb7f50",
+              "observedClasses": [
+                "floorp-c8873246-7b40-456d-9056-1a8611fb7f50"
+              ],
+              "observedDesktopFiles": [
+                "floorp-c8873246-7b40-456d-9056-1a8611fb7f50"
+              ],
+              "matches": true
+            },
+            {
+              "role": "beta",
+              "expectedClass": "floorp-78c56ad8-2c1f-4053-b3b3-16a949973af0",
+              "observedClasses": [
+                "floorp-78c56ad8-2c1f-4053-b3b3-16a949973af0"
+              ],
+              "observedDesktopFiles": [
+                "floorp-78c56ad8-2c1f-4053-b3b3-16a949973af0"
+              ],
+              "matches": true
+            }
+          ],
+          "allMatch": true,
+          "sandbox": 6,
+          "experiment": false
+        },
+        {
+          "afterStep": 2,
+          "checks": [
+            {
+              "role": "ordinary-browser",
+              "expectedClass": "floorp",
+              "expectedCount": 1,
+              "observedClasses": [
+                "floorp"
+              ],
+              "observedDesktopFiles": [
+                "floorp"
+              ],
+              "matches": true
+            },
+            {
+              "role": "alpha",
+              "expectedClass": "floorp-c8873246-7b40-456d-9056-1a8611fb7f50",
+              "observedClasses": [
+                "floorp-c8873246-7b40-456d-9056-1a8611fb7f50"
+              ],
+              "observedDesktopFiles": [
+                "floorp-c8873246-7b40-456d-9056-1a8611fb7f50"
+              ],
+              "matches": true
+            },
+            {
+              "role": "beta",
+              "expectedClass": "floorp-78c56ad8-2c1f-4053-b3b3-16a949973af0",
+              "observedClasses": [
+                "floorp-78c56ad8-2c1f-4053-b3b3-16a949973af0"
+              ],
+              "observedDesktopFiles": [
+                "floorp-78c56ad8-2c1f-4053-b3b3-16a949973af0"
+              ],
+              "matches": true
+            }
+          ],
+          "allMatch": true,
+          "sandbox": 6,
+          "experiment": false
+        }
+      ],
+      "finalAllMatch": true,
+      "protocolFinalWindows": [
+        {
+          "toplevel": "71",
+          "set_title": "QA PWA Alpha — Ablaze Floorp",
+          "set_app_id": "floorp-c8873246-7b40-456d-9056-1a8611fb7f50"
+        },
+        {
+          "toplevel": "78",
+          "set_title": "QA PWA Beta — Ablaze Floorp",
+          "set_app_id": "floorp-78c56ad8-2c1f-4053-b3b3-16a949973af0"
+        },
+        {
+          "toplevel": "62",
+          "set_title": "QA_TEST_BROWSER_128767_fa3269100c7e4e95a60217957a723dd1",
+          "set_app_id": "floorp"
+        }
+      ],
+      "quit": {
+        "cause": "shutdown",
+        "forced": false,
+        "in_app": true
+      }
+    },
+    {
+      "case": "existing-profile-migration",
+      "order": [
+        "alpha",
+        "browser",
+        "beta"
+      ],
+      "completed": true,
+      "stages": [
+        {
+          "afterStep": 0,
+          "checks": [
+            {
+              "role": "alpha",
+              "expectedClass": "floorp-9c81f296-e163-468d-bded-591d97ede773",
+              "observedClasses": [
+                "floorp-9c81f296-e163-468d-bded-591d97ede773"
+              ],
+              "observedDesktopFiles": [
+                "floorp-9c81f296-e163-468d-bded-591d97ede773"
+              ],
+              "matches": true
+            }
+          ],
+          "allMatch": true,
+          "sandbox": 6,
+          "experiment": false
+        },
+        {
+          "afterStep": 1,
+          "checks": [
+            {
+              "role": "ordinary-browser",
+              "expectedClass": "floorp",
+              "expectedCount": 1,
+              "observedClasses": [
+                "floorp"
+              ],
+              "observedDesktopFiles": [
+                "floorp"
+              ],
+              "matches": true
+            },
+            {
+              "role": "alpha",
+              "expectedClass": "floorp-9c81f296-e163-468d-bded-591d97ede773",
+              "observedClasses": [
+                "floorp-9c81f296-e163-468d-bded-591d97ede773"
+              ],
+              "observedDesktopFiles": [
+                "floorp-9c81f296-e163-468d-bded-591d97ede773"
+              ],
+              "matches": true
+            }
+          ],
+          "allMatch": true,
+          "sandbox": 6,
+          "experiment": false
+        },
+        {
+          "afterStep": 2,
+          "checks": [
+            {
+              "role": "ordinary-browser",
+              "expectedClass": "floorp",
+              "expectedCount": 1,
+              "observedClasses": [
+                "floorp"
+              ],
+              "observedDesktopFiles": [
+                "floorp"
+              ],
+              "matches": true
+            },
+            {
+              "role": "alpha",
+              "expectedClass": "floorp-9c81f296-e163-468d-bded-591d97ede773",
+              "observedClasses": [
+                "floorp-9c81f296-e163-468d-bded-591d97ede773"
+              ],
+              "observedDesktopFiles": [
+                "floorp-9c81f296-e163-468d-bded-591d97ede773"
+              ],
+              "matches": true
+            },
+            {
+              "role": "beta",
+              "expectedClass": "floorp-6a449a02-b424-4586-b14a-799c18105ee3",
+              "observedClasses": [
+                "floorp-6a449a02-b424-4586-b14a-799c18105ee3"
+              ],
+              "observedDesktopFiles": [
+                "floorp-6a449a02-b424-4586-b14a-799c18105ee3"
+              ],
+              "matches": true
+            }
+          ],
+          "allMatch": true,
+          "sandbox": 6,
+          "experiment": false
+        }
+      ],
+      "finalAllMatch": true,
+      "protocolFinalWindows": [
+        {
+          "toplevel": "72",
+          "set_title": "QA PWA Alpha — Ablaze Floorp",
+          "set_app_id": "floorp-9c81f296-e163-468d-bded-591d97ede773"
+        },
+        {
+          "toplevel": "79",
+          "set_title": "QA_TEST_BROWSER_129236_270d11e91789464fba26bf060462a019",
+          "set_app_id": "floorp"
+        },
+        {
+          "toplevel": "93",
+          "set_title": "QA PWA Beta — Ablaze Floorp",
+          "set_app_id": "floorp-6a449a02-b424-4586-b14a-799c18105ee3"
+        }
+      ],
+      "quit": {
+        "cause": "shutdown",
+        "forced": false,
+        "in_app": true
+      }
+    }
+  ],
+  "productUnchanged": false,
+  "originalMigrationFixture": {
+    "sourceProfile": "/workspace/qa-linux-22/package-pwa/full-build/3032/wayland-product-qa/profile",
+    "sourceHome": "/workspace/qa-linux-22/package-pwa/full-build/3032/wayland-product-qa/home",
+    "sourceSsbStoreSha256": "2af3b3be5e0c080a8a4474e9b12c273698ff8376ef4373f8f5016a133f055089",
+    "excludedTransientLocks": [
+      "lock",
+      "parent.lock",
+      ".parentlock"
+    ],
+    "changesBeforeRun": "automation port only; no SSB/identity/desktop edits",
+    "originalProfileUnchanged": true,
+    "originalHomeUnchanged": true,
+    "originalStoreUnchanged": true
+  },
+  "remainingOwnedProcesses": [],
+  "runtimeRemoved": true
+}

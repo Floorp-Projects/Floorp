@@ -1,0 +1,90 @@
+{
+  "runId": 42077174018,
+  "sourceSha": "2deb165d75290ffd4f602ad078512dc42fc3a332",
+  "mainJobId": 127420377991,
+  "started_at": "2026-11-05T17:42:09Z",
+  "completed_at": "2026-11-05T17:58:20Z",
+  "steps": [
+    {
+      "name": "Build Noraneko",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 27,
+      "started_at": "2026-11-05T17:44:37Z",
+      "completed_at": "2026-11-05T17:45:08Z",
+      "elapsedSeconds": 31
+    },
+    {
+      "name": "Build",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 28,
+      "started_at": "2026-11-05T17:45:08Z",
+      "completed_at": "2026-11-05T17:46:08Z",
+      "elapsedSeconds": 60
+    },
+    {
+      "name": "Inject Noraneko",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 29,
+      "started_at": "2026-11-05T17:46:08Z",
+      "completed_at": "2026-11-05T17:46:10Z",
+      "elapsedSeconds": 2
+    },
+    {
+      "name": "Package noraneko",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 33,
+      "started_at": "2026-11-05T17:46:11Z",
+      "completed_at": "2026-11-05T17:48:31Z",
+      "elapsedSeconds": 140
+    },
+    {
+      "name": "Repackage Linux DEB",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 35,
+      "started_at": "2026-11-05T17:48:39Z",
+      "completed_at": "2026-11-05T17:54:55Z",
+      "elapsedSeconds": 376
+    },
+    {
+      "name": "Create MAR package",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 51,
+      "started_at": "2026-11-05T17:55:54Z",
+      "completed_at": "2026-11-05T17:58:08Z",
+      "elapsedSeconds": 134
+    },
+    {
+      "name": "Verify installer workspace",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 52,
+      "started_at": "2026-11-05T17:58:08Z",
+      "completed_at": "2026-11-05T17:58:08Z",
+      "elapsedSeconds": 0
+    },
+    {
+      "name": "Publish dist",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 53,
+      "started_at": "2026-11-05T17:58:08Z",
+      "completed_at": "2026-11-05T17:58:12Z",
+      "elapsedSeconds": 4
+    },
+    {
+      "name": "Publish MAR",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 54,
+      "started_at": "2026-11-05T17:58:12Z",
+      "completed_at": "2026-11-05T17:58:17Z",
+      "elapsedSeconds": 5
+    }
+  ]
+}

@@ -1,0 +1,57 @@
+{
+  "remainingOwnProfileProcesses": [],
+  "display96SocketExists": false,
+  "ownProfilePathCount": 15,
+  "runtimeDirectories": [
+    {
+      "path": "/tmp/wbid-runtime-z_ujrhc1",
+      "exists": false
+    },
+    {
+      "path": "/tmp/wbid-runtime-zbzb2p6z",
+      "exists": false
+    },
+    {
+      "path": "/tmp/wbid-runtime-1w5reeay",
+      "exists": false
+    },
+    {
+      "path": "/tmp/wbid-runtime-nlbryptk",
+      "exists": false
+    },
+    {
+      "path": "/tmp/wbid-runtime-0ti556z9",
+      "exists": false
+    },
+    {
+      "path": "/tmp/wbid-runtime-99ccqzpa",
+      "exists": false
+    },
+    {
+      "path": "/tmp/wbid-runtime-6th9682x",
+      "exists": false
+    },
+    {
+      "path": "/tmp/wbid-runtime-lnedu6_o",
+      "exists": false
+    },
+    {
+      "path": "/tmp/wbid-runtime-vvtu79uw",
+      "exists": false
+    },
+    {
+      "path": "/tmp/wbid-runtime-_d8gvzbo",
+      "exists": false
+    },
+    {
+      "path": "/tmp/wbid-runtime-i3wsn9ns",
+      "exists": false
+    },
+    {
+      "path": "/tmp/wbid-runtime-9hrpddke",
+      "exists": false
+    }
+  ],
+  "firstAnomalousLockPid127417StillExists": false,
+  "initialMutatedProductTreePreserved": true
+}

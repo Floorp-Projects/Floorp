@@ -1,0 +1,3 @@
+dbus-daemon[129867]: [session uid=1000 pid=129867 pidfd=5] Activating service name='org.a11y.Bus' requested by ':1.9' (uid=1000 pid=129895 comm="/workspace/qa-linux-full-build/products/3040-lock-" label="kernel")
+dbus-daemon[129867]: [session uid=1000 pid=129867 pidfd=5] Successfully activated service 'org.a11y.Bus'
+{"completed": true, "error": null, "origin": {"kind": "authenticated-full-package", "baseSourceSha": "2deb165d75290ffd4f602ad078512dc42fc3a332", "baseRunId": 42077174018, "baseArtifactId": 13439144608, "baseArtifactDigest": "sha256:febce14e382da315a7579464f1052768a0e51854a752de8a926ee898db6ce996", "productRoot": "/workspace/qa-linux-full-build/products/3040-lock-diagnostic/floorp"}, "productUnchanged": true, "remainingOwnedProcesses": []}

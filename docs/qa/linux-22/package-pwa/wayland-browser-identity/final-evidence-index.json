@@ -1,0 +1,19 @@
+{
+  "canonicalFinalIntake": "full-package/intake-r2/product-intake.json",
+  "finalReport": "full-package-comparison-report.md",
+  "finalMatrix": "final-comparison-matrix.json",
+  "cleanup": "final-process-cleanup.json",
+  "canonicalStrictSuite": "full-package/actual-qa-r2/suite-result.json",
+  "qualifiedFalseFirstSuitePreserved": "full-package/actual-qa/suite-result.json",
+  "firstMutationDetails": "full-package/product-mutation-observation.json",
+  "diagnosticOnly": "full-package/lock-diagnostic-run/result.json",
+  "copyReportKeptDistinct": "copy-comparison-report.md",
+  "excludeFromPublication": [
+    "product trees",
+    "candidate-product",
+    "all HOME/profile/migration-HOME/migration-profile trees",
+    "archives",
+    "raw browser caches"
+  ],
+  "initialAnomalyCause": "unresolved; no allowlist or protection change"
+}

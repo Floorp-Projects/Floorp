@@ -1,0 +1,9 @@
+{
+  "executionCwd": "/workspace",
+  "whitelistedProfileVariables": [
+    {
+      "name": "HOME",
+      "value": "/home/agent"
+    }
+  ]
+}

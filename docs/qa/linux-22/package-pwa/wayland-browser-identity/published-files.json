@@ -1,5 +1,9 @@
 [
   {
+    "path": "base-pr-state.json",
+    "bytes": 210
+  },
+  {
     "path": "build-report.md",
     "bytes": 5214
   },
@@ -60,6 +64,22 @@
     "bytes": 458
   },
   {
+    "path": "final-comparison-matrix.json",
+    "bytes": 28978
+  },
+  {
+    "path": "final-evidence-index.json",
+    "bytes": 836
+  },
+  {
+    "path": "final-pr-state.json",
+    "bytes": 272
+  },
+  {
+    "path": "final-process-cleanup.json",
+    "bytes": 1178
+  },
+  {
     "path": "fmt-applied.log",
     "bytes": 128
   },
@@ -74,6 +94,10 @@
   {
     "path": "frozen-deps.log",
     "bytes": 29119
+  },
+  {
+    "path": "full-package-comparison-report.md",
+    "bytes": 7174
   },
   {
     "path": "full-package-dispatch-response.json",
@@ -109,11 +133,11 @@
   },
   {
     "path": "pr-body.md",
-    "bytes": 1714
+    "bytes": 3349
   },
   {
     "path": "probe_orders.py",
-    "bytes": 20887
+    "bytes": 21692
   },
   {
     "path": "production-modules-build-final.log",
@@ -129,11 +153,15 @@
   },
   {
     "path": "publish_evidence.py",
-    "bytes": 1518
+    "bytes": 1528
   },
   {
     "path": "report.md",
-    "bytes": 6354
+    "bytes": 8838
+  },
+  {
+    "path": "run_full_package_suite.py",
+    "bytes": 3305
   },
   {
     "path": "source-analysis.md",
@@ -141,7 +169,7 @@
   },
   {
     "path": "subject.json",
-    "bytes": 994
+    "bytes": 1653
   },
   {
     "path": "typecheck-final.log",
@@ -656,6 +684,22 @@
     "bytes": 13741
   },
   {
+    "path": "full-package/actual-qa-r2.log",
+    "bytes": 115
+  },
+  {
+    "path": "full-package/actual-qa.log",
+    "bytes": 116
+  },
+  {
+    "path": "full-package/completed-step-timings.json",
+    "bytes": 2401
+  },
+  {
+    "path": "full-package/generated-resource-correspondence.json",
+    "bytes": 2340
+  },
+  {
     "path": "full-package/initial-progress.json",
     "bytes": 10036
   },
@@ -664,12 +708,480 @@
     "bytes": 3670
   },
   {
+    "path": "full-package/lock-diagnostic-run.log",
+    "bytes": 761
+  },
+  {
+    "path": "full-package/package-api-metadata.json",
+    "bytes": 1197
+  },
+  {
+    "path": "full-package/package-build-report.md",
+    "bytes": 4587
+  },
+  {
     "path": "full-package/package-progress.json",
     "bytes": 9965
   },
   {
+    "path": "full-package/product-intake.json",
+    "bytes": 3008
+  },
+  {
+    "path": "full-package/product-inventory-before.json",
+    "bytes": 6566
+  },
+  {
+    "path": "full-package/product-mutation-observation.json",
+    "bytes": 453
+  },
+  {
+    "path": "full-package/profile-variable-observation.json",
+    "bytes": 137
+  },
+  {
+    "path": "full-package/progress-mar.json",
+    "bytes": 10091
+  },
+  {
     "path": "full-package/source-subject.json",
     "bytes": 833
+  },
+  {
+    "path": "full-package/terminal-job-results.json",
+    "bytes": 10919
+  },
+  {
+    "path": "full-package/actual-qa/custom-control.log",
+    "bytes": 529
+  },
+  {
+    "path": "full-package/actual-qa/orders-projection.log",
+    "bytes": 216
+  },
+  {
+    "path": "full-package/actual-qa/orders.log",
+    "bytes": 747
+  },
+  {
+    "path": "full-package/actual-qa/private-control.log",
+    "bytes": 529
+  },
+  {
+    "path": "full-package/actual-qa/suite-result.json",
+    "bytes": 3402
+  },
+  {
+    "path": "full-package/actual-qa/orders/QA_WBID_127378_1_0.js",
+    "bytes": 201
+  },
+  {
+    "path": "full-package/actual-qa/orders/QA_WBID_127378_1_1.js",
+    "bytes": 201
+  },
+  {
+    "path": "full-package/actual-qa/orders/QA_WBID_127378_2_0.js",
+    "bytes": 201
+  },
+  {
+    "path": "full-package/actual-qa/orders/QA_WBID_127378_2_1.js",
+    "bytes": 201
+  },
+  {
+    "path": "full-package/actual-qa/orders/QA_WBID_127378_3_0.js",
+    "bytes": 201
+  },
+  {
+    "path": "full-package/actual-qa/orders/QA_WBID_127378_3_1.js",
+    "bytes": 201
+  },
+  {
+    "path": "full-package/actual-qa/orders/QA_WBID_127378_3_2.js",
+    "bytes": 201
+  },
+  {
+    "path": "full-package/actual-qa/orders/QA_WBID_127378_4_0.js",
+    "bytes": 201
+  },
+  {
+    "path": "full-package/actual-qa/orders/QA_WBID_127378_4_1.js",
+    "bytes": 201
+  },
+  {
+    "path": "full-package/actual-qa/orders/QA_WBID_127378_4_2.js",
+    "bytes": 201
+  },
+  {
+    "path": "full-package/actual-qa/orders/browser-pwa-0.log",
+    "bytes": 194628
+  },
+  {
+    "path": "full-package/actual-qa/orders/browser-pwa-1.log",
+    "bytes": 10023
+  },
+  {
+    "path": "full-package/actual-qa/orders/existing-profile-migration-0.log",
+    "bytes": 270830
+  },
+  {
+    "path": "full-package/actual-qa/orders/existing-profile-migration-1.log",
+    "bytes": 10027
+  },
+  {
+    "path": "full-package/actual-qa/orders/existing-profile-migration-2.log",
+    "bytes": 10027
+  },
+  {
+    "path": "full-package/actual-qa/orders/identity-projection.json",
+    "bytes": 12609
+  },
+  {
+    "path": "full-package/actual-qa/orders/kwin.log",
+    "bytes": 4459
+  },
+  {
+    "path": "full-package/actual-qa/orders/multiple-pwa-0.log",
+    "bytes": 255580
+  },
+  {
+    "path": "full-package/actual-qa/orders/multiple-pwa-1.log",
+    "bytes": 10027
+  },
+  {
+    "path": "full-package/actual-qa/orders/multiple-pwa-2.log",
+    "bytes": 10027
+  },
+  {
+    "path": "full-package/actual-qa/orders/native-protocol.json",
+    "bytes": 8141
+  },
+  {
+    "path": "full-package/actual-qa/orders/pwa-browser-0.log",
+    "bytes": 166555
+  },
+  {
+    "path": "full-package/actual-qa/orders/pwa-browser-1.log",
+    "bytes": 10023
+  },
+  {
+    "path": "full-package/actual-qa/orders/result.json",
+    "bytes": 46887
+  },
+  {
+    "path": "full-package/actual-qa/orders/ui-browser.log",
+    "bytes": 494226
+  },
+  {
+    "path": "full-package/actual-qa/orders/ui-probe.log",
+    "bytes": 145
+  },
+  {
+    "path": "full-package/actual-qa/orders/xvfb.log",
+    "bytes": 64
+  },
+  {
+    "path": "full-package/actual-qa/orders/ui-create/alpha-after.png",
+    "bytes": 38830
+  },
+  {
+    "path": "full-package/actual-qa/orders/ui-create/beta-after.png",
+    "bytes": 39538
+  },
+  {
+    "path": "full-package/actual-qa/orders/ui-create/result.json",
+    "bytes": 13871
+  },
+  {
+    "path": "full-package/actual-qa-r2/custom-control-projection.log",
+    "bytes": 87
+  },
+  {
+    "path": "full-package/actual-qa-r2/custom-control.log",
+    "bytes": 748
+  },
+  {
+    "path": "full-package/actual-qa-r2/orders-projection.log",
+    "bytes": 215
+  },
+  {
+    "path": "full-package/actual-qa-r2/orders.log",
+    "bytes": 749
+  },
+  {
+    "path": "full-package/actual-qa-r2/private-control-projection.log",
+    "bytes": 85
+  },
+  {
+    "path": "full-package/actual-qa-r2/private-control.log",
+    "bytes": 748
+  },
+  {
+    "path": "full-package/actual-qa-r2/suite-result.json",
+    "bytes": 4148
+  },
+  {
+    "path": "full-package/actual-qa-r2/custom-control/QA_WBID_132915_1_0.js",
+    "bytes": 201
+  },
+  {
+    "path": "full-package/actual-qa-r2/custom-control/QA_WBID_132915_1_1.js",
+    "bytes": 201
+  },
+  {
+    "path": "full-package/actual-qa-r2/custom-control/QA_WBID_132915_1_2.js",
+    "bytes": 201
+  },
+  {
+    "path": "full-package/actual-qa-r2/custom-control/custom-browser-remote-pwa-0.log",
+    "bytes": 260384
+  },
+  {
+    "path": "full-package/actual-qa-r2/custom-control/custom-browser-remote-pwa-1.log",
+    "bytes": 10019
+  },
+  {
+    "path": "full-package/actual-qa-r2/custom-control/custom-browser-remote-pwa-2.log",
+    "bytes": 10023
+  },
+  {
+    "path": "full-package/actual-qa-r2/custom-control/identity-projection.json",
+    "bytes": 4453
+  },
+  {
+    "path": "full-package/actual-qa-r2/custom-control/kwin.log",
+    "bytes": 1868
+  },
+  {
+    "path": "full-package/actual-qa-r2/custom-control/native-protocol.json",
+    "bytes": 1639
+  },
+  {
+    "path": "full-package/actual-qa-r2/custom-control/result.json",
+    "bytes": 12244
+  },
+  {
+    "path": "full-package/actual-qa-r2/custom-control/xvfb.log",
+    "bytes": 64
+  },
+  {
+    "path": "full-package/actual-qa-r2/orders/QA_WBID_130533_1_0.js",
+    "bytes": 201
+  },
+  {
+    "path": "full-package/actual-qa-r2/orders/QA_WBID_130533_1_1.js",
+    "bytes": 201
+  },
+  {
+    "path": "full-package/actual-qa-r2/orders/QA_WBID_130533_2_0.js",
+    "bytes": 201
+  },
+  {
+    "path": "full-package/actual-qa-r2/orders/QA_WBID_130533_2_1.js",
+    "bytes": 201
+  },
+  {
+    "path": "full-package/actual-qa-r2/orders/QA_WBID_130533_3_0.js",
+    "bytes": 201
+  },
+  {
+    "path": "full-package/actual-qa-r2/orders/QA_WBID_130533_3_1.js",
+    "bytes": 201
+  },
+  {
+    "path": "full-package/actual-qa-r2/orders/QA_WBID_130533_3_2.js",
+    "bytes": 201
+  },
+  {
+    "path": "full-package/actual-qa-r2/orders/QA_WBID_130533_4_0.js",
+    "bytes": 201
+  },
+  {
+    "path": "full-package/actual-qa-r2/orders/QA_WBID_130533_4_1.js",
+    "bytes": 201
+  },
+  {
+    "path": "full-package/actual-qa-r2/orders/QA_WBID_130533_4_2.js",
+    "bytes": 201
+  },
+  {
+    "path": "full-package/actual-qa-r2/orders/browser-pwa-0.log",
+    "bytes": 190683
+  },
+  {
+    "path": "full-package/actual-qa-r2/orders/browser-pwa-1.log",
+    "bytes": 10023
+  },
+  {
+    "path": "full-package/actual-qa-r2/orders/existing-profile-migration-0.log",
+    "bytes": 265502
+  },
+  {
+    "path": "full-package/actual-qa-r2/orders/existing-profile-migration-1.log",
+    "bytes": 10027
+  },
+  {
+    "path": "full-package/actual-qa-r2/orders/existing-profile-migration-2.log",
+    "bytes": 10027
+  },
+  {
+    "path": "full-package/actual-qa-r2/orders/identity-projection.json",
+    "bytes": 12611
+  },
+  {
+    "path": "full-package/actual-qa-r2/orders/kwin.log",
+    "bytes": 4459
+  },
+  {
+    "path": "full-package/actual-qa-r2/orders/multiple-pwa-0.log",
+    "bytes": 264804
+  },
+  {
+    "path": "full-package/actual-qa-r2/orders/multiple-pwa-1.log",
+    "bytes": 10027
+  },
+  {
+    "path": "full-package/actual-qa-r2/orders/multiple-pwa-2.log",
+    "bytes": 10027
+  },
+  {
+    "path": "full-package/actual-qa-r2/orders/native-protocol.json",
+    "bytes": 8149
+  },
+  {
+    "path": "full-package/actual-qa-r2/orders/pwa-browser-0.log",
+    "bytes": 185533
+  },
+  {
+    "path": "full-package/actual-qa-r2/orders/pwa-browser-1.log",
+    "bytes": 10023
+  },
+  {
+    "path": "full-package/actual-qa-r2/orders/result.json",
+    "bytes": 47073
+  },
+  {
+    "path": "full-package/actual-qa-r2/orders/ui-browser.log",
+    "bytes": 509963
+  },
+  {
+    "path": "full-package/actual-qa-r2/orders/ui-probe.log",
+    "bytes": 148
+  },
+  {
+    "path": "full-package/actual-qa-r2/orders/xvfb.log",
+    "bytes": 64
+  },
+  {
+    "path": "full-package/actual-qa-r2/orders/ui-create/alpha-after.png",
+    "bytes": 38846
+  },
+  {
+    "path": "full-package/actual-qa-r2/orders/ui-create/beta-after.png",
+    "bytes": 39541
+  },
+  {
+    "path": "full-package/actual-qa-r2/orders/ui-create/result.json",
+    "bytes": 13868
+  },
+  {
+    "path": "full-package/actual-qa-r2/private-control/QA_WBID_133478_1_0.js",
+    "bytes": 201
+  },
+  {
+    "path": "full-package/actual-qa-r2/private-control/QA_WBID_133478_1_1.js",
+    "bytes": 201
+  },
+  {
+    "path": "full-package/actual-qa-r2/private-control/identity-projection.json",
+    "bytes": 3394
+  },
+  {
+    "path": "full-package/actual-qa-r2/private-control/kwin.log",
+    "bytes": 1286
+  },
+  {
+    "path": "full-package/actual-qa-r2/private-control/native-protocol.json",
+    "bytes": 1491
+  },
+  {
+    "path": "full-package/actual-qa-r2/private-control/private-browser-control-0.log",
+    "bytes": 182812
+  },
+  {
+    "path": "full-package/actual-qa-r2/private-control/private-browser-control-1.log",
+    "bytes": 10019
+  },
+  {
+    "path": "full-package/actual-qa-r2/private-control/result.json",
+    "bytes": 8759
+  },
+  {
+    "path": "full-package/actual-qa-r2/private-control/xvfb.log",
+    "bytes": 64
+  },
+  {
+    "path": "full-package/intake-r2/product-intake.json",
+    "bytes": 2564
+  },
+  {
+    "path": "full-package/intake-r2/product-inventory-before.json",
+    "bytes": 6566
+  },
+  {
+    "path": "full-package/lock-diagnostic-intake/product-intake.json",
+    "bytes": 2577
+  },
+  {
+    "path": "full-package/lock-diagnostic-intake/product-inventory-before.json",
+    "bytes": 6566
+  },
+  {
+    "path": "full-package/lock-diagnostic-run/kwin.log",
+    "bytes": 661
+  },
+  {
+    "path": "full-package/lock-diagnostic-run/native-protocol.json",
+    "bytes": 1840
+  },
+  {
+    "path": "full-package/lock-diagnostic-run/profile-lock.strace",
+    "bytes": 8790
+  },
+  {
+    "path": "full-package/lock-diagnostic-run/result.json",
+    "bytes": 20938
+  },
+  {
+    "path": "full-package/lock-diagnostic-run/ui-browser.log",
+    "bytes": 656738
+  },
+  {
+    "path": "full-package/lock-diagnostic-run/ui-probe.log",
+    "bytes": 148
+  },
+  {
+    "path": "full-package/lock-diagnostic-run/xvfb.log",
+    "bytes": 64
+  },
+  {
+    "path": "full-package/lock-diagnostic-run/ui-create/alpha-after.png",
+    "bytes": 39491
+  },
+  {
+    "path": "full-package/lock-diagnostic-run/ui-create/beta-after.png",
+    "bytes": 39597
+  },
+  {
+    "path": "full-package/lock-diagnostic-run/ui-create/result.json",
+    "bytes": 13529
+  },
+  {
+    "path": "profile-lock-audit/delivered-comparison.json",
+    "bytes": 12550
+  },
+  {
+    "path": "profile-lock-audit/report.md",
+    "bytes": 3477
   },
   {
     "path": "standard-ci/authenticated-metadata.json",
