@@ -124,6 +124,7 @@ test("the paused Actions entry point exits silently before reading event payload
       ]
     ) {
       for (const configured of [false, true]) {
+        /** @type {import("node:child_process").SpawnSyncReturns<string>} */
         const result = spawnSync(process.execPath, ["--input-type=module"], {
           input: source,
           encoding: "utf8",
