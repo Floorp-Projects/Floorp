@@ -574,6 +574,77 @@ export async function runAllTests(): Promise<void> {
       },
     },
     {
+      name: "repair restores generated files even with an unchanged marker",
+      async fn() {
+        const root = PathUtils.join(
+          PathUtils.tempDir,
+          `floorp-mac-damaged-${crypto.randomUUID()}`,
+        );
+        const options: MacAppOptions = {
+          applicationsDir: PathUtils.join(root, "Applications"),
+          profileDir: PathUtils.join(root, "profile"),
+          executable: "/Applications/Floorp.app/Contents/MacOS/floorp",
+        };
+        const app = { ...ssb, name: "Damaged Launcher" };
+        const support = new TestMacOSSupport(options);
+        const bundle = await getMacAppBundle(app, options);
+        const contents = PathUtils.join(bundle.path, "Contents");
+        const launcher = PathUtils.join(contents, "MacOS", "launcher");
+        const plist = PathUtils.join(contents, "Info.plist");
+        const marker = PathUtils.join(contents, "floorp.json");
+        const store = {
+          async getCurrentSsbData() {
+            return { [app.start_url + ":0"]: app };
+          },
+          async saveSsbData() {},
+          async removeSsbData() {},
+        };
+        try {
+          await support.install(app);
+          const originalMarker = await IOUtils.readUTF8(marker);
+          await IOUtils.writeUTF8(launcher, "#!/bin/sh\nexit 1\n");
+          await support.repair(app, store);
+          assertEquals(
+            await IOUtils.readUTF8(launcher),
+            bundle.launcher,
+            "repair replaces damaged launcher content",
+          );
+          await IOUtils.writeUTF8(
+            plist,
+            '<plist version="1.0"><dict/></plist>',
+          );
+          await support.repair(app, store);
+          assertEquals(
+            await IOUtils.readUTF8(plist),
+            bundle.plist,
+            "repair restores generated Finder metadata",
+          );
+          assertEquals(
+            await IOUtils.readUTF8(marker),
+            originalMarker,
+            "the fixture never invalidated the metadata marker",
+          );
+          if (Services.appinfo.OS !== "WINNT") {
+            await IOUtils.setPermissions(launcher, 0o644);
+            await support.repair(app, store);
+            const file = Cc["@mozilla.org/file/local;1"].createInstance(
+              Ci.nsIFile,
+            );
+            file.initWithPath(launcher);
+            assert(file.isExecutable(), "repair restores launcher permission");
+          }
+          await support.install(app);
+          assertEquals(
+            support.iconWrites,
+            3,
+            "intact and permission-only repairs avoid rewriting resources",
+          );
+        } finally {
+          await IOUtils.remove(root, { recursive: true, ignoreAbsent: true });
+        }
+      },
+    },
+    {
       name: "install upgrades v1 launchers to Finder-safe bundles",
       async fn() {
         const root = PathUtils.join(
