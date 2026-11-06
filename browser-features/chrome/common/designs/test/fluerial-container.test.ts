@@ -13,6 +13,15 @@ import {
   runTests,
 } from "../../../test/utils/test_harness.ts";
 
+declare const SidebarController: {
+  promiseInitialized: Promise<void>;
+  sidebarMain: HTMLElement & {
+    expanded: boolean;
+    updateComplete: Promise<boolean>;
+  };
+  handleToolbarButtonClick(): void;
+};
+
 function styleOf(element: Element) {
   const style = getComputedStyle(element);
   assert(style, "native element has computed style");
@@ -23,7 +32,12 @@ async function nextFrame(): Promise<void> {
   await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
 }
 
-async function testContainerIndicators(vertical: boolean): Promise<void> {
+async function testContainerIndicators(
+  vertical: boolean,
+  collapsed = false,
+): Promise<void> {
+  await SidebarController.promiseInitialized;
+  const wasExpanded = SidebarController.sidebarMain.expanded;
   const originalTab = gBrowser.selectedTab;
   const designPref = "floorp.design.configs";
   const verticalPref = "sidebar.verticalTabs";
@@ -83,6 +97,34 @@ async function testContainerIndicators(vertical: boolean): Promise<void> {
     Services.prefs.setBoolPref(verticalPref, vertical);
     await nextFrame();
     await nextFrame();
+    if (vertical) {
+      if (SidebarController.sidebarMain.expanded === collapsed) {
+        SidebarController.handleToolbarButtonClick();
+      }
+      // The tabstrip attribute updates before the Lit sidebar host reflects
+      // its own expansion attribute. Measuring then can see the old wide host.
+      await SidebarController.sidebarMain.updateComplete;
+      for (let frame = 0; frame < 120; frame++) {
+        if (
+          document.getElementById("tabbrowser-tabs")?.hasAttribute(
+              "expanded",
+            ) ===
+            !collapsed &&
+          SidebarController.sidebarMain.hasAttribute("expanded") === !collapsed
+        ) break;
+        await nextFrame();
+      }
+      assertEquals(
+        document.getElementById("tabbrowser-tabs")?.hasAttribute("expanded"),
+        !collapsed,
+        "native sidebar expansion matches the case",
+      );
+      assertEquals(
+        SidebarController.sidebarMain.hasAttribute("expanded"),
+        !collapsed,
+        "sidebar host expansion has finished reflecting",
+      );
+    }
     // Match production origin: an author sheet cannot override the vendored
     // AGENT !important background positioning rule.
     sss.loadAndRegisterSheet(sheet, agentSheet);
@@ -113,12 +155,21 @@ async function testContainerIndicators(vertical: boolean): Promise<void> {
     const normalLine = line(normal);
     const normalBefore = styleOf(normalLine).backgroundColor;
     const identityColors = new Set<string>();
+    const assertInsideSidebar = (rect: DOMRect): void => {
+      const sidebar = SidebarController.sidebarMain.getBoundingClientRect();
+      assert(sidebar.width > 0, "vertical sidebar has a visible column");
+      assert(
+        rect.left >= sidebar.left - 0.5 && rect.right <= sidebar.right + 0.5,
+        "indicator remains inside the visible sidebar, not just the wider tab stack",
+      );
+    };
     for (const tab of tabs.slice(0, 2)) {
       gBrowser.selectedTab = tab;
       await nextFrame();
       const indicator = line(tab);
       const rect = indicator.getBoundingClientRect();
       assert(rect.width > 0 && rect.height > 0, "selected indicator has area");
+      if (vertical) assertInsideSidebar(rect);
       const colorProbe = document.createElement("span");
       colorProbe.style.color = styleOf(tab).getPropertyValue(
         "--identity-icon-color",
@@ -171,6 +222,7 @@ async function testContainerIndicators(vertical: boolean): Promise<void> {
           hover.width > 0 && hover.height > 0,
           "hover retains the vertical line area",
         );
+        assertInsideSidebar(hover);
         assert(
           hover.x >= bounds.x - 0.5 && hover.right <= bounds.right + 0.5 &&
             hover.y >= bounds.y - 0.5 && hover.bottom <= bounds.bottom + 0.5,
@@ -200,6 +252,11 @@ async function testContainerIndicators(vertical: boolean): Promise<void> {
       ContextualIdentityService.remove(identity.userContextId);
     }
     if (registered) sss.unregisterSheet(sheet, agentSheet);
+    if (vertical && SidebarController.sidebarMain.expanded !== wasExpanded) {
+      SidebarController.handleToolbarButtonClick();
+      await SidebarController.sidebarMain.updateComplete;
+      await nextFrame();
+    }
     if (hadVertical) Services.prefs.setBoolPref(verticalPref, savedVertical);
     else Services.prefs.clearUserPref(verticalPref);
     if (hadDesign) Services.prefs.setStringPref(designPref, savedDesign);
@@ -219,6 +276,11 @@ export async function runAllTests(): Promise<void> {
       name:
         "native vertical container indicators stay visible and inside tabs on hover",
       fn: () => testContainerIndicators(true),
+    },
+    {
+      name:
+        "native collapsed vertical container indicators stay inside the visible sidebar",
+      fn: () => testContainerIndicators(true, true),
     },
   ]);
 }

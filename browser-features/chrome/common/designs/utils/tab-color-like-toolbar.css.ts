@@ -40,6 +40,13 @@ export const FLUERIAL_TAB_CORNER_CSS = `
   height: auto !important;
   width: 2px !important;
 }
+/* A collapsed tab stack retains its expanded minimum width while the sidebar
+ * clips it to the icon column. Use the native collapsed background width,
+ * rather than the stack's inline end, to keep the line inside that column. */
+#tabbrowser-tabs[orient="vertical"]:not([expanded]) .tabbrowser-tab[usercontextid] > .tab-stack > .tab-background > .tab-context-line {
+  inset-inline-start: calc(var(--tab-margin-inline-inner) + var(--tab-collapsed-background-width) - 2px) !important;
+  inset-inline-end: auto !important;
+}
 
 
 /* The native group line lives inside .tab-background. Fluerial shrinks that
