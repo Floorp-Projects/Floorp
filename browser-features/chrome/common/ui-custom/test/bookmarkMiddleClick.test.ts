@@ -1,14 +1,21 @@
 // SPDX-License-Identifier: MPL-2.0
 // @colocated-env browser
 
-import { handleBookmarkMiddleClick } from "../layout/bookmark-middle-click.ts";
+import {
+  handleBookmarkMenuMiddleCommand,
+  handleBookmarkMiddleClick,
+} from "../layout/bookmark-middle-click.ts";
 import {
   assert,
   assertEquals,
   runTests,
 } from "../../../test/utils/test_harness.ts";
 
-async function checkDetachedBookmark(folder: boolean, background: boolean) {
+async function checkDetachedBookmark(
+  folder: boolean,
+  background: boolean,
+  popupChild = false,
+) {
   const { PlacesUtils } = ChromeUtils.importESModule(
     "resource://gre/modules/PlacesUtils.sys.mjs",
   );
@@ -30,7 +37,11 @@ async function checkDetachedBookmark(folder: boolean, background: boolean) {
       ? { type: PlacesUtils.bookmarks.TYPE_FOLDER }
       : { url: "https://example.invalid/kan100-bookmark" }),
   });
-  const handler = (event: Event) => handleBookmarkMiddleClick(event, bar);
+  let commandsHandled = 0;
+  const handler = (event: Event) => {
+    if (handleBookmarkMenuMiddleCommand(event, bar)) commandsHandled++;
+    else handleBookmarkMiddleClick(event, bar);
+  };
   try {
     if (folder) {
       for (let i = 0; i < 2; i++) {
@@ -63,7 +74,22 @@ async function checkDetachedBookmark(folder: boolean, background: boolean) {
     document.documentElement.appendChild(bar);
     document.addEventListener("click", handler, true);
     bar.addEventListener("click", handler, true);
+    document.addEventListener("command", handler, true);
+    bar.addEventListener("command", handler, true);
     await new Promise((resolve) => setTimeout(resolve, 50));
+    if (popupChild) {
+      const popup = button.querySelector("menupopup") as XULPopupElement | null;
+      assert(popup, "bookmark folder has a popup");
+      const shown = new Promise<void>((resolve) =>
+        popup.addEventListener("popupshown", () => resolve(), { once: true })
+      );
+      popup.openPopup(button, "after_start");
+      await shown;
+      button = Array.from(popup.querySelectorAll("menuitem")).find(
+        (item) => item.getAttribute("label") === "Child 0",
+      );
+      assert(button, "Places renders the popup child");
+    }
     const rect = button.getBoundingClientRect();
     assert(rect.width > 0 && rect.height > 0, "bookmark is visible");
     const x = rect.x + rect.width / 2;
@@ -86,8 +112,25 @@ async function checkDetachedBookmark(folder: boolean, background: boolean) {
     });
     await new Promise((resolve) => setTimeout(resolve, 250));
     const opened = gBrowser.tabs.filter((tab) => !previousTabs.has(tab));
-    assertEquals(opened.length, folder ? 2 : 1, "open each bookmark once");
-    if (!folder) {
+    assertEquals(
+      opened.length,
+      folder && !popupChild ? 2 : 1,
+      "open each bookmark once",
+    );
+    if (popupChild) {
+      assert(opened[0]?.linkedBrowser, "opened child has a browser");
+      assertEquals(
+        commandsHandled,
+        1,
+        "consume the native command once across both listeners",
+      );
+      assertEquals(
+        opened[0].linkedBrowser.currentURI.spec,
+        "https://example.invalid/kan100-folder-0",
+        "open the selected child",
+      );
+    }
+    if (!folder || popupChild) {
       assertEquals(
         gBrowser.selectedTab === previousSelected,
         background,
@@ -97,6 +140,11 @@ async function checkDetachedBookmark(folder: boolean, background: boolean) {
   } finally {
     document.removeEventListener("click", handler, true);
     bar.removeEventListener("click", handler, true);
+    document.removeEventListener("command", handler, true);
+    bar.removeEventListener("command", handler, true);
+    for (const popup of bar.querySelectorAll("menupopup")) {
+      (popup as XULPopupElement).hidePopup();
+    }
     parent.insertBefore(bar, sibling);
     if (oldCollapsed === null) bar.removeAttribute("collapsed");
     else bar.setAttribute("collapsed", oldCollapsed);
@@ -123,6 +171,14 @@ export async function runAllTests(): Promise<void> {
     {
       name: "detached folder middle-click opens each child once",
       fn: () => checkDetachedBookmark(true, true),
+    },
+    {
+      name: "detached popup middle command opens one background child",
+      fn: () => checkDetachedBookmark(true, true, true),
+    },
+    {
+      name: "detached popup middle command respects foreground preference",
+      fn: () => checkDetachedBookmark(true, false, true),
     },
   ]);
 }
