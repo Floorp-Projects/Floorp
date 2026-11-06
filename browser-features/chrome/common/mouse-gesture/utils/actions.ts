@@ -1,4 +1,5 @@
 import type { GestureActionRegistration } from "./gestures.ts";
+import { getScrollTargetContext } from "./scroll-target.ts";
 import { setShareModeEnabled } from "#features-chrome/common/browser-share-mode/browser-share-mode.tsx";
 import { toggleZenModeForWindow } from "#features-chrome/common/zen-mode/zen-mode.tsx";
 import {
@@ -56,7 +57,13 @@ const sendScrollCommand = (
   try {
     const browser = win.gBrowser?.selectedBrowser;
     if (!browser) return;
-    const actor = browser.browsingContext?.currentWindowGlobal?.getActor(
+    const selectedContext = browser.browsingContext;
+    if (!selectedContext) return;
+    const context = getScrollTargetContext(
+      selectedContext,
+      Services.focus.focusedContentBrowsingContext,
+    );
+    const actor = context.currentWindowGlobal?.getActor(
       "NRMouseGestureScroll",
     );
     if (!actor) return;
