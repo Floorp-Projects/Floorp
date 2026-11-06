@@ -79,6 +79,11 @@ on:
         required: false
         default: false
         description: "Allow a signed, package-only stable v2 validation run"
+      packaged_qa_modules:
+        type: string
+        required: false
+        default: ""
+        description: "QA only: JSON array of browser test modules; requires unsigned Linux stable-v2-validation"
 
   workflow_call:
     inputs:
@@ -237,6 +242,29 @@ jobs:
             format('sha256:{0}', steps.upload-deb.outputs.artifact-digest) || '' }}
       macos_stage_artifact_id: ${{ steps.upload-macos-finalizer-tools.outputs.artifact-id }}
     steps:
+      - name: Restrict packaged QA to unsigned validation artifacts
+        if: ${{ inputs.packaged_qa_modules != '' }}
+        uses: actions/github-script@v7
+        env:
+          QA_MODULES: ${{ inputs.packaged_qa_modules }}
+          QA_MODE: ${{ inputs.provenance_mode }}
+          QA_SKIP_SIGNING: ${{ inputs.skip_signing }}
+          QA_SIGNED_VALIDATION: ${{ inputs.signed_validation || false }}
+          QA_PLATFORM: ${{ inputs.platform }}
+        with:
+          script: |
+            if (context.eventName !== "workflow_dispatch" ||
+                process.env.QA_MODE !== "stable-v2-validation" ||
+                process.env.QA_SKIP_SIGNING !== "true" ||
+                process.env.QA_SIGNED_VALIDATION !== "false" ||
+                process.env.QA_PLATFORM !== "Linux-x64") {
+              throw new Error("Packaged QA requires a manual unsigned Linux validation run");
+            }
+            const modules = JSON.parse(process.env.QA_MODULES);
+            if (!Array.isArray(modules) || modules.length === 0 ||
+                modules.some(value => typeof value !== "string" || !value)) {
+              throw new Error("Packaged QA requires a nonempty JSON array of test paths");
+            }
       - name: Require Runtime artifact token
         if: ${{ inputs.provenance_mode != 'legacy' }}
         shell: bash
@@ -1302,6 +1330,9 @@ jobs:
           cd "$GITHUB_WORKSPACE"
 
       - name: Build Noraneko
+        env:
+          FLOORP_PACKAGED_QA: ${{ inputs.packaged_qa_modules != '' && '1' || '' }}
+          FLOORP_QA_TEST_MODULES: ${{ inputs.packaged_qa_modules }}
         run: |
           # Find the actual deno executable, resolving symlinks
           DENO_PATH=$(which deno)
