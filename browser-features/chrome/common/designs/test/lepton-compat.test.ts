@@ -25,7 +25,6 @@ import {
 } from "../utils/lepton-compat-152.css.ts";
 import {
   GECKO_152_RENAMED_VARS,
-  GECKO_152_SYNTHESIZED_VARS,
   GECKO_152_VAR_ALIASES_CSS,
 } from "../utils/gecko-152-var-aliases.css.ts";
 import { getCSSFromConfig } from "../utils/css.ts";
@@ -189,36 +188,26 @@ function testRenamedVarsTableIsCanonical(): void {
   );
 }
 
-/** `--toolbar-color` survived 152 unchanged; it must NOT appear as a rename
- *  source (the previous revision's phantom entry). */
+/** The compatibility layer must not redefine the legacy toolbar color. */
 function testToolbarColorIsNotARenameSource(): void {
   const asLegacy = GECKO_152_RENAMED_VARS.some(([legacy]) =>
     legacy === "--toolbar-color"
   );
   assert(
     !asLegacy,
-    "--toolbar-color is NOT renamed in Gecko 152 (still defined in " +
-      "global-shared.css) and must not be an alias source",
+    "--toolbar-color must not be an alias source",
   );
 }
 
 /**
- * `--toolbar-text-color` is referenced on 152 (tab.tokens.css:79) but defined
- * nowhere by Mozilla. It must be synthesized by Floorp, chained to the
- * LWT-provided text color with the surviving `--toolbar-color` as fallback.
+ * Gecko and themes own this token. A legacy fallback chain can invalidate
+ * its native value when both legacy tokens are absent (KAN-93).
  */
-function testToolbarTextColorIsSynthesized(): void {
-  const entry = GECKO_152_SYNTHESIZED_VARS.find(([n]) =>
-    n === "--toolbar-text-color"
-  );
-  assert(entry !== undefined, "--toolbar-text-color must be synthesized");
-  // The chain must prefer the LWT-provided --lwt-text-color, then fall back
-  // to the surviving --toolbar-color.
-  const chain = entry![1];
-  assert(
-    chain.includes("--lwt-text-color") && chain.includes("--toolbar-color"),
-    "--toolbar-text-color chain must prefer --lwt-text-color and fall back to " +
-      "--toolbar-color, got: " + chain,
+function testToolbarTextColorIsPreserved(): void {
+  assertEquals(
+    extractVarDecl(GECKO_152_VAR_ALIASES_CSS, "--toolbar-text-color"),
+    "",
+    "compatibility aliases must preserve the native toolbar text color",
   );
 }
 
@@ -254,18 +243,6 @@ function testRenamedAliasesAreEmittedCorrectly(): void {
       !cyclicRe.test(value),
       `${legacy} alias must not reference itself via var(${legacy}) (cyclic), ` +
         `got: ${value}`,
-    );
-  }
-}
-
-/** Each synthesized token must be emitted verbatim from the table. */
-function testSynthesizedAliasesAreEmittedCorrectly(): void {
-  for (const [name, chain] of GECKO_152_SYNTHESIZED_VARS) {
-    const value = extractVarDecl(GECKO_152_VAR_ALIASES_CSS, name);
-    assertEquals(
-      value,
-      chain,
-      `${name} must be emitted as the exact chain from the table`,
     );
   }
 }
@@ -705,17 +682,13 @@ export async function runAllTests(): Promise<void> {
       fn: testToolbarColorIsNotARenameSource,
     },
     {
-      name: "--toolbar-text-color is synthesized",
-      fn: testToolbarTextColorIsSynthesized,
+      name: "native --toolbar-text-color is preserved",
+      fn: testToolbarTextColorIsPreserved,
     },
     // alias emission
     {
       name: "renamed aliases are emitted correctly",
       fn: testRenamedAliasesAreEmittedCorrectly,
-    },
-    {
-      name: "synthesized aliases are emitted correctly",
-      fn: testSynthesizedAliasesAreEmittedCorrectly,
     },
     // injection scope
     {
