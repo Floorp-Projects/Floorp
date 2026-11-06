@@ -1113,12 +1113,21 @@ function testInitCallsAllSetupMethods(): void {
     applyToAllTabsCalled = true;
   };
 
-  subject.init();
+  const originalGBrowser = globalThis.gBrowser;
+  (globalThis as Record<string, unknown>).gBrowser = {
+    tabs: [],
+    addTabsProgressListener: () => {},
+  };
+  try {
+    subject.init();
 
-  assertEquals(loadSettingsCalled, true, "should call loadSettings");
-  assertEquals(setupPrefObserverCalled, true, "should call setupPrefObserver");
-  assertEquals(setupTabListenersCalled, true, "should call setupTabListeners");
-  assertEquals(applyToAllTabsCalled, true, "should call applyToAllTabs");
+    assertEquals(loadSettingsCalled, true, "should call loadSettings");
+    assertEquals(setupPrefObserverCalled, true, "should call setupPrefObserver");
+    assertEquals(setupTabListenersCalled, true, "should call setupTabListeners");
+    assertEquals(applyToAllTabsCalled, true, "should call applyToAllTabs");
+  } finally {
+    globalThis.gBrowser = originalGBrowser;
+  }
 }
 
 /**
