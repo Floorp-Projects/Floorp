@@ -11,9 +11,12 @@ import { useFormContext } from "react-hook-form";
 import { Sliders } from "lucide-react";
 import { RestartModal } from "@/components/common/restart-modal.tsx";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/common/button.tsx";
 
 export function UICustomization() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { getValues, setValue } = useFormContext();
 
   const currentTabbarStyle = getValues("style");
@@ -142,19 +145,15 @@ export function UICustomization() {
               {t("design.uiCustomization.newtab.title")}
             </h3>
             <div>
-              <div className="flex items-center justify-between gap-2">
-                <label htmlFor="disable-floorp-start">
-                  {t("design.uiCustomization.newtab.disableFloorpStart")}
-                </label>
-                <Switch
-                  id="disable-floorp-start"
-                  checked={!!getValues("disableFloorpStart")}
-                  onChange={(e) => {
-                    setValue("disableFloorpStart", e.target.checked);
-                    setShowRestartModal(true);
-                  }}
-                />
-              </div>
+              <Button
+                id="newtab-settings-link"
+                type="button"
+                variant="secondary"
+                onClick={() =>
+                  navigate("/features/newtab?setting=disable-floorp-start")}
+              >
+                {t("newtab.openSettings")}
+              </Button>
             </div>
           </div>
 

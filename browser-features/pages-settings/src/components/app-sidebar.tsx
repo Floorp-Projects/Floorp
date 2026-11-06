@@ -8,6 +8,7 @@ import {
   Cpu,
   Gauge,
   Grip,
+  Grid2X2,
   House,
   Menu,
   MousePointer,
@@ -72,6 +73,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       title: t("pages.tabAndAppearance"),
       url: "/features/design",
       icon: PencilRuler,
+    },
+    {
+      title: t("pages.newtab"),
+      url: "/features/newtab",
+      icon: Grid2X2,
     },
     {
       title: t("pages.browserSidebar"),

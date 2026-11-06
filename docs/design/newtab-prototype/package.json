@@ -1,0 +1,10 @@
+{
+  "name": "floorp-newtab-design-prototype",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0 --port 5187 --strictPort",
+    "build": "vite build && node build-preview.mjs",
+    "check": "tsc --noEmit -p tsconfig.json"
+  }
+}

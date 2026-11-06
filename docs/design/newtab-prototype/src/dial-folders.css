@@ -1,0 +1,130 @@
+.folder-open {
+  width: 100%;
+  text-align: left;
+  color: var(--floorp-ink);
+}
+.folder-icon {
+  color: var(--floorp-action);
+}
+.folder-icon > svg {
+  fill: color-mix(in srgb, var(--floorp-action) 12%, transparent);
+}
+.folder-item-count {
+  color: var(--floorp-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.site-tile[data-menu-open="true"] {
+  z-index: 30;
+}
+.draggable-tile {
+  min-width: 0;
+}
+.draggable-tile:has(.site-tile[data-menu-open="true"]) {
+  position: relative;
+  z-index: 30;
+}
+.draggable-tile[data-drop-target="true"] > .site-tile {
+  outline: 3px solid var(--floorp-focus);
+  outline-offset: 3px;
+}
+.dial-folder-navigation {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin: -8px 0 24px;
+  min-width: 0;
+}
+.dial-folder-navigation > .icon-button {
+  flex-shrink: 0;
+}
+.dial-breadcrumbs {
+  min-width: 0;
+  flex: 1;
+}
+.dial-breadcrumbs:focus-visible {
+  outline: 3px solid var(--floorp-focus);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+.dial-breadcrumbs ol {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 8px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+.dial-breadcrumbs li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  max-width: 100%;
+}
+.dial-breadcrumbs li > svg {
+  color: var(--floorp-muted);
+  flex-shrink: 0;
+}
+.dial-breadcrumbs :is(button, [aria-current="page"]) {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  max-width: 100%;
+  padding: 8px 4px;
+  font-size: 14px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  text-align: left;
+}
+.dial-breadcrumbs button {
+  color: var(--floorp-action);
+}
+.dial-breadcrumbs button:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.dial-breadcrumbs [aria-current="page"] {
+  font-weight: 600;
+  color: var(--floorp-ink);
+}
+.dial-empty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+}
+@media (max-width: 600px) {
+  .dial-folder-navigation {
+    gap: 8px;
+    margin-top: -4px;
+    margin-bottom: 20px;
+  }
+  .dial-breadcrumbs ol,
+  .dial-breadcrumbs li {
+    gap: 4px;
+  }
+  .dial-breadcrumbs :is(button, [aria-current="page"]) {
+    font-size: 13px;
+  }
+  .folder-item-count {
+    font-size: 11px;
+  }
+}
+@media (forced-colors: active) {
+  .folder-icon,
+  .folder-item-count,
+  .dial-breadcrumbs li > svg {
+    color: CanvasText;
+  }
+  .folder-icon > svg {
+    fill: none;
+  }
+  .dial-breadcrumbs button {
+    color: LinkText;
+  }
+  .draggable-tile[data-drop-target="true"] > .site-tile {
+    outline-color: Highlight;
+  }
+}

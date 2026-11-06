@@ -1,0 +1,542 @@
+{
+  "date": "2026-10-29",
+  "runtime": "159.0 / 20261026023026",
+  "final-comparison-result": [
+    {
+      "resetUnread": 3
+    },
+    {
+      "resetUnread": 3
+    },
+    {
+      "case": "dark-home",
+      "theme": "dark",
+      "width": 1382,
+      "height": 938,
+      "scrollWidth": 1382,
+      "surface": "color(srgb 0.0666667 0.0666667 0.0666667 / 0.9)",
+      "text": "rgb(250, 250, 250)",
+      "script": [
+        "chrome://noraneko-newtab/content/assets/index-D1LgCGSh.js"
+      ]
+    },
+    {
+      "case": "dark-dial",
+      "theme": "dark",
+      "width": 1382,
+      "height": 938,
+      "scrollWidth": 1382,
+      "surface": "color(srgb 0.0666667 0.0666667 0.0666667 / 0.9)",
+      "text": "rgb(250, 250, 250)",
+      "script": [
+        "chrome://noraneko-newtab/content/assets/index-D1LgCGSh.js"
+      ]
+    },
+    {
+      "case": "dark-reader",
+      "theme": "dark",
+      "width": 1382,
+      "height": 938,
+      "scrollWidth": 1382,
+      "surface": "rgb(17, 17, 17)",
+      "text": "rgb(250, 250, 250)",
+      "script": [
+        "chrome://noraneko-newtab/content/assets/index-D1LgCGSh.js"
+      ]
+    },
+    {
+      "case": "dark-hub",
+      "theme": "dark",
+      "width": 1382,
+      "height": 938,
+      "scrollWidth": 1382,
+      "surface": "rgba(0, 0, 0, 0)",
+      "text": "rgb(250, 250, 250)",
+      "script": [
+        "chrome://noraneko-settings/content/assets/index-Dxop3__z.js"
+      ]
+    },
+    {
+      "resetUnread": 3
+    },
+    {
+      "case": "light-home",
+      "theme": "light",
+      "width": 1382,
+      "height": 938,
+      "scrollWidth": 1382,
+      "surface": "color(srgb 1 1 1 / 0.9)",
+      "text": "rgb(9, 9, 11)",
+      "script": [
+        "chrome://noraneko-newtab/content/assets/index-D1LgCGSh.js"
+      ]
+    },
+    {
+      "case": "light-dial",
+      "theme": "light",
+      "width": 1382,
+      "height": 938,
+      "scrollWidth": 1382,
+      "surface": "color(srgb 1 1 1 / 0.9)",
+      "text": "rgb(9, 9, 11)",
+      "script": [
+        "chrome://noraneko-newtab/content/assets/index-D1LgCGSh.js"
+      ]
+    },
+    {
+      "case": "light-reader",
+      "theme": "light",
+      "width": 1382,
+      "height": 938,
+      "scrollWidth": 1382,
+      "surface": "rgb(255, 255, 255)",
+      "text": "rgb(9, 9, 11)",
+      "script": [
+        "chrome://noraneko-newtab/content/assets/index-D1LgCGSh.js"
+      ]
+    },
+    {
+      "case": "light-hub",
+      "theme": "light",
+      "width": 1382,
+      "height": 938,
+      "scrollWidth": 1382,
+      "surface": "rgba(0, 0, 0, 0)",
+      "text": "rgb(9, 9, 11)",
+      "script": [
+        "chrome://noraneko-settings/content/assets/index-Dxop3__z.js"
+      ]
+    }
+  ],
+  "final-matrix-result": [
+    true,
+    {
+      "case": "dark-white-glass",
+      "theme": "dark",
+      "background": "color(srgb 0.0666667 0.0666667 0.0666667 / 0.9)",
+      "ink": "rgb(250, 250, 250)",
+      "muted": "rgb(161, 161, 170)",
+      "blur": "blur(24px)",
+      "width": 1382,
+      "scrollWidth": 1382
+    },
+    true,
+    {
+      "case": "dark-white-opaque",
+      "theme": "dark",
+      "background": "rgb(17, 17, 17)",
+      "ink": "rgb(250, 250, 250)",
+      "muted": "rgb(161, 161, 170)",
+      "blur": "none",
+      "width": 1382,
+      "scrollWidth": 1382
+    },
+    true,
+    {
+      "case": "dark-black-glass",
+      "theme": "dark",
+      "background": "color(srgb 0.0666667 0.0666667 0.0666667 / 0.9)",
+      "ink": "rgb(250, 250, 250)",
+      "muted": "rgb(161, 161, 170)",
+      "blur": "blur(24px)",
+      "width": 1382,
+      "scrollWidth": 1382
+    },
+    true,
+    {
+      "case": "dark-black-opaque",
+      "theme": "dark",
+      "background": "rgb(17, 17, 17)",
+      "ink": "rgb(250, 250, 250)",
+      "muted": "rgb(161, 161, 170)",
+      "blur": "none",
+      "width": 1382,
+      "scrollWidth": 1382
+    },
+    true,
+    {
+      "case": "dark-none-glass",
+      "theme": "dark",
+      "background": "rgb(17, 17, 17)",
+      "ink": "rgb(250, 250, 250)",
+      "muted": "rgb(161, 161, 170)",
+      "blur": "none",
+      "width": 1382,
+      "scrollWidth": 1382
+    },
+    true,
+    {
+      "case": "dark-none-opaque",
+      "theme": "dark",
+      "background": "rgb(17, 17, 17)",
+      "ink": "rgb(250, 250, 250)",
+      "muted": "rgb(161, 161, 170)",
+      "blur": "none",
+      "width": 1382,
+      "scrollWidth": 1382
+    },
+    true,
+    {
+      "case": "light-white-glass",
+      "theme": "light",
+      "background": "color(srgb 1 1 1 / 0.9)",
+      "ink": "rgb(9, 9, 11)",
+      "muted": "rgb(82, 82, 91)",
+      "blur": "blur(24px)",
+      "width": 1382,
+      "scrollWidth": 1382
+    },
+    true,
+    {
+      "case": "light-white-opaque",
+      "theme": "light",
+      "background": "rgb(255, 255, 255)",
+      "ink": "rgb(9, 9, 11)",
+      "muted": "rgb(82, 82, 91)",
+      "blur": "none",
+      "width": 1382,
+      "scrollWidth": 1382
+    },
+    true,
+    {
+      "case": "light-black-glass",
+      "theme": "light",
+      "background": "color(srgb 1 1 1 / 0.9)",
+      "ink": "rgb(9, 9, 11)",
+      "muted": "rgb(82, 82, 91)",
+      "blur": "blur(24px)",
+      "width": 1382,
+      "scrollWidth": 1382
+    },
+    true,
+    {
+      "case": "light-black-opaque",
+      "theme": "light",
+      "background": "rgb(255, 255, 255)",
+      "ink": "rgb(9, 9, 11)",
+      "muted": "rgb(82, 82, 91)",
+      "blur": "none",
+      "width": 1382,
+      "scrollWidth": 1382
+    },
+    true,
+    {
+      "case": "light-none-glass",
+      "theme": "light",
+      "background": "rgb(255, 255, 255)",
+      "ink": "rgb(9, 9, 11)",
+      "muted": "rgb(82, 82, 91)",
+      "blur": "none",
+      "width": 1382,
+      "scrollWidth": 1382
+    },
+    true,
+    {
+      "case": "light-none-opaque",
+      "theme": "light",
+      "background": "rgb(255, 255, 255)",
+      "ink": "rgb(9, 9, 11)",
+      "muted": "rgb(82, 82, 91)",
+      "blur": "none",
+      "width": 1382,
+      "scrollWidth": 1382
+    }
+  ],
+  "modal-narrow-result": [
+    {
+      "case": "dark-home",
+      "theme": "dark",
+      "width": 321,
+      "height": 359,
+      "scrollWidth": 321,
+      "focus": "",
+      "toolbar": null
+    },
+    {
+      "case": "dark-dial",
+      "theme": "dark",
+      "width": 321,
+      "height": 359,
+      "scrollWidth": 321,
+      "focus": "",
+      "toolbar": null
+    },
+    {
+      "case": "dark-menu",
+      "ink": "rgb(250, 250, 250)",
+      "bg": "rgb(17, 17, 17)",
+      "focus": "削除",
+      "visible": true
+    },
+    {
+      "case": "dark-dialog",
+      "ink": "rgb(250, 250, 250)",
+      "bg": "rgb(17, 17, 17)",
+      "inside": true,
+      "focus": "INPUT"
+    },
+    {
+      "dialogClosed": true,
+      "focus": "フォルダーを作成"
+    },
+    {
+      "case": "dark-reader",
+      "theme": "dark",
+      "width": 321,
+      "height": 359,
+      "scrollWidth": 321,
+      "focus": "nt-reader-article-scroll",
+      "toolbar": {
+        "top": 112,
+        "bottom": 184
+      }
+    },
+    {
+      "case": "dark-hub",
+      "theme": "dark",
+      "width": 321,
+      "height": 359,
+      "scrollWidth": 321,
+      "focus": "",
+      "toolbar": null
+    },
+    {
+      "case": "light-home",
+      "theme": "light",
+      "width": 321,
+      "height": 359,
+      "scrollWidth": 321,
+      "focus": "",
+      "toolbar": null
+    },
+    {
+      "case": "light-dial",
+      "theme": "light",
+      "width": 321,
+      "height": 359,
+      "scrollWidth": 321,
+      "focus": "",
+      "toolbar": null
+    },
+    {
+      "case": "light-menu",
+      "ink": "rgb(9, 9, 11)",
+      "bg": "rgb(255, 255, 255)",
+      "focus": "削除",
+      "visible": true
+    },
+    {
+      "case": "light-dialog",
+      "ink": "rgb(9, 9, 11)",
+      "bg": "rgb(255, 255, 255)",
+      "inside": true,
+      "focus": "INPUT"
+    },
+    {
+      "dialogClosed": true,
+      "focus": "フォルダーを作成"
+    },
+    {
+      "case": "light-reader",
+      "theme": "light",
+      "width": 321,
+      "height": 359,
+      "scrollWidth": 321,
+      "focus": "nt-reader-article-scroll",
+      "toolbar": {
+        "top": 112,
+        "bottom": 184
+      }
+    },
+    {
+      "case": "light-hub",
+      "theme": "light",
+      "width": 321,
+      "height": 359,
+      "scrollWidth": 321,
+      "focus": "",
+      "toolbar": null
+    }
+  ],
+  "modal-repeat-result": [
+    {
+      "case": "escape-1",
+      "closed": true,
+      "focus": "フォルダーを作成"
+    },
+    {
+      "case": "escape-2",
+      "closed": true,
+      "focus": "フォルダーを作成"
+    },
+    {
+      "case": "escape-3",
+      "closed": true,
+      "focus": "フォルダーを作成"
+    },
+    {
+      "case": "escape-4",
+      "closed": true,
+      "focus": "フォルダーを作成"
+    },
+    {
+      "case": "escape-5",
+      "closed": true,
+      "focus": "フォルダーを作成"
+    },
+    {
+      "case": "escape-6",
+      "closed": true,
+      "focus": "フォルダーを作成"
+    },
+    {
+      "case": "escape-7",
+      "closed": true,
+      "focus": "フォルダーを作成"
+    },
+    {
+      "case": "escape-8",
+      "closed": true,
+      "focus": "フォルダーを作成"
+    }
+  ],
+  "final-actions-result": [
+    {
+      "nativeEscapeClosed": true,
+      "focus": "フォルダーを作成"
+    },
+    {
+      "savedSponsor": true,
+      "ordinaryBookmark": "bookmark",
+      "guid": "Z306Fhc-Lgub"
+    },
+    {
+      "dismissed": [
+        "cubesoft"
+      ]
+    },
+    {
+      "restored": true,
+      "temporaryBookmarkRemoved": true
+    },
+    {
+      "folderSaved": true,
+      "temporaryFolderRemoved": true
+    },
+    {
+      "saveClosed": true
+    }
+  ],
+  "final-loading-result": [
+    {
+      "cancelClosed": true
+    },
+    {
+      "loadingText": "読み込み中…",
+      "disabled": true
+    },
+    {
+      "subscribeCompleted": true
+    },
+    {
+      "resetUnread": 3
+    }
+  ],
+  "reader-actions-result": [
+    {
+      "deleted": true,
+      "remaining": [
+        "参考資料とリファレンス"
+      ]
+    },
+    {
+      "starred": true
+    },
+    "未読にする"
+  ],
+  "reader-state-result": [
+    {
+      "id": "5bde70f8b05176cbafb6f9e55ca5c7915be14f4489a6a45189207a8aad97fb3f",
+      "isRead": false,
+      "starred": true
+    },
+    {
+      "placeholder": true,
+      "remoteImages": []
+    },
+    {
+      "loaded": true,
+      "naturalWidth": 1
+    },
+    {
+      "empty": "一致する記事はありません"
+    },
+    {
+      "dialog": "フィードを追加\nフィードまたはウェブサイトの URL\n\nフィードで配信された内容だけを表示します。元サイトから記事本文を追加取得することはありません。\n\nキャンセル\n追加",
+      "inputs": [
+        {
+          "type": "text",
+          "placeholder": "https://example.com/feed.xml"
+        }
+      ]
+    }
+  ],
+  "folder-move-result": [
+    {
+      "moved": {
+        "guid": "R-zdpKXpa0eK",
+        "parentGuid": "K7Zzxn6BiNIf",
+        "title": "QA 移動と改名",
+        "index": 1,
+        "type": "folder",
+        "childCount": 1
+      },
+      "children": [
+        {
+          "guid": "2izQ-XcsZ888",
+          "parentGuid": "R-zdpKXpa0eK",
+          "title": "QA 入れ子作成",
+          "index": 0,
+          "type": "folder",
+          "childCount": 0
+        }
+      ]
+    },
+    {
+      "text": "削除\n\nQA 移動と改名\n\nブックマーク 0 件と配下のフォルダー 1 件を削除します。\n\nキャンセル\n削除",
+      "buttons": [
+        {
+          "text": "",
+          "type": "button"
+        },
+        {
+          "text": "キャンセル",
+          "type": "button"
+        },
+        {
+          "text": "削除",
+          "type": "button"
+        }
+      ]
+    }
+  ],
+  "final-runtime-result": [
+    {
+      "width": 742,
+      "scrollWidth": 742,
+      "csp": "default-src chrome:; script-src chrome:; img-src chrome: moz-icon: blob: data:; font-src chrome: data:; style-src chrome: data: 'unsafe-inline'; connect-src 'none'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'",
+      "script": [
+        "chrome://noraneko-newtab/content/assets/index-D1LgCGSh.js"
+      ]
+    }
+  ],
+  "profile-restoration": {
+    "qaArchive": "E:\\floorp-dev\\Floorp-pr3003\\_dist\\profile\\visual-qa-20261029",
+    "restored": "E:\\floorp-dev\\Floorp-pr3003\\_dist\\profile\\test",
+    "hashMatchedFiles": [
+      "favicons.sqlite",
+      "prefs.js",
+      "places.sqlite"
+    ]
+  }
+}

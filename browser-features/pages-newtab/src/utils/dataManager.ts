@@ -1,57 +1,22 @@
-import { rpc } from "@/lib/rpc/rpc.ts";
-import { callNRWithRetry } from "@/utils/nrRetry.ts";
-
-declare global {
-  interface Window {
-    NRGetFolderPathFromDialog: (callback: (data: string) => void) => void;
-    NRGetRandomImageFromFolder: (
-      folderPath: string,
-      callback: (data: string) => void,
-    ) => void;
-  }
-}
-
-export interface PinnedSite {
-  url: string;
-  title: string;
-}
-
-export interface NewTabSettings {
-  components: {
-    topSites: boolean;
-    clock: boolean;
-    searchBar?: boolean;
-    firefoxLayout?: boolean;
-  };
-  background: {
-    type: "none" | "random" | "custom" | "folderPath" | "floorp";
-    customImage: string | null;
-    fileName: string | null;
-    folderPath?: string | null;
-    selectedFloorp?: string | null;
-    slideshowEnabled?: boolean;
-    slideshowInterval?: number;
-  };
-  searchBar: {
-    searchEngine: string;
-  };
-  topSites: {
-    pinned: PinnedSite[];
-    blocked: string[];
-  };
-}
-
+// SPDX-License-Identifier: MPL-2.0
+// Compatibility adapter for existing new-tab components. The parent service is
+// the only owner of settings; no page writes the raw preference anymore.
+import { newTabClient } from "../../../../libs/newtab/client.ts";
+import type {
+  NewTabSettings,
+  NewTabSettingsPatch,
+  PinnedSite,
+} from "../../../../libs/newtab/types.ts";
+export type { NewTabSettings, PinnedSite };
 export interface FolderPathResult {
   path: string | null;
   success: boolean;
 }
-
 export interface RandomImageResult {
   image: string | null;
   fileName: string | null;
   success: boolean;
 }
-
 export const DEFAULT_SUGGESTED_SITES: PinnedSite[] = [
   { url: "https://youtube.com", title: "YouTube" },
   { url: "https://x.com", title: "X" },
@@ -59,155 +24,83 @@ export const DEFAULT_SUGGESTED_SITES: PinnedSite[] = [
   { url: "https://wikipedia.org/", title: "Wikipedia" },
   { url: "https://instagram.com", title: "Instagram" },
 ];
-
-const DEFAULT_SETTINGS: NewTabSettings = {
-  components: {
-    topSites: true,
-    clock: true,
-    searchBar: true,
-    firefoxLayout: true,
-  },
-  background: {
-    type: "random",
-    customImage: null,
-    fileName: null,
-    folderPath: null,
-    selectedFloorp: null,
-    slideshowEnabled: false,
-    slideshowInterval: 30,
-  },
-  searchBar: {
-    searchEngine: "default",
-  },
-  topSites: {
-    pinned: [
-      { url: "https://www.cube-soft.jp/", title: "Cubesoft (Sponsor)" },
-      {
-        url: "https://docs.floorp.app/docs/features/",
-        title: "Floorp Support",
-      },
-    ],
-    blocked: [],
-  },
-};
-
-let savePromise: Promise<void> | null = null;
-
-export async function saveNewTabSettings(
+export async function getNewTabSettings(): Promise<NewTabSettings> {
+  return (await newTabClient.call("snapshot", {})).settings;
+}
+function defined<T extends object, K extends keyof T>(
+  source: T,
+  keys: readonly K[],
+): Partial<Pick<T, K>> {
+  return Object.fromEntries(
+    keys
+      .filter((key) => source[key] !== undefined)
+      .map((key) => [key, source[key]]),
+  ) as Partial<Pick<T, K>>;
+}
+let saveQueue = Promise.resolve();
+export function saveNewTabSettings(
   settings: Partial<NewTabSettings>,
 ): Promise<void> {
-  try {
-    if (savePromise) {
-      await savePromise;
-    }
-
-    savePromise = (async () => {
+  const changes: NewTabSettingsPatch = {};
+  if (settings.components)
+    changes.components = defined(settings.components, [
+      "clock",
+      "searchBar",
+      "firefoxLayout",
+      "topSites",
+    ]);
+  if (settings.background)
+    changes.background = defined(settings.background, [
+      "type",
+      "customImage",
+      "fileName",
+      "folderPath",
+      "selectedFloorp",
+      "slideshowEnabled",
+      "slideshowInterval",
+    ]);
+  if (settings.searchBar)
+    changes.searchBar = defined(settings.searchBar, ["searchEngine"]);
+  if (settings.topSites)
+    changes.topSites = defined(settings.topSites, ["blocked"]);
+  if (settings.home)
+    changes.home = defined(settings.home, [
+      "layout",
+      "showHistory",
+      "showFeed",
+      "translucentPanels",
+    ]);
+  if (settings.speedDial)
+    changes.speedDial = defined(settings.speedDial, [
+      "show",
+      "columns",
+      "tileSize",
+      "workspaceGroups",
+    ]);
+  if (settings.rss) changes.rss = defined(settings.rss, ["refreshMinutes"]);
+  if (settings.sponsors)
+    changes.sponsors = defined(settings.sponsors, ["enabled"]);
+  const operation = saveQueue
+    .catch(() => {})
+    .then(async () => {
       const current = await getNewTabSettings();
-
-      const newSettings = {
-        ...current,
-        ...settings,
-        components: {
-          ...current.components,
-          ...(settings.components as object),
-        },
-        background: {
-          ...current.background,
-          ...(settings.background as object),
-        },
-        searchBar: { ...current.searchBar, ...(settings.searchBar as object) },
-        topSites: { ...current.topSites, ...(settings.topSites as object) },
-      };
-
-      await rpc.setStringPref(
-        "floorp.newtab.configs",
-        JSON.stringify(newSettings),
-      );
-    })();
-
-    await savePromise;
-  } catch (e) {
-    console.error("Failed to save newtab settings:", e);
-    throw e;
-  } finally {
-    savePromise = null;
-  }
+      await newTabClient.call("patchSettings", {
+        expectedRevision: current.revision,
+        changes,
+      });
+    });
+  saveQueue = operation;
+  return operation;
 }
-
-export async function getNewTabSettings(): Promise<NewTabSettings> {
-  try {
-    const result = await rpc.getStringPref("floorp.newtab.configs");
-    if (!result) {
-      return DEFAULT_SETTINGS;
-    }
-
-    const settings = JSON.parse(result);
-    const mergedSettings = {
-      ...DEFAULT_SETTINGS,
-      ...settings,
-      components: {
-        ...DEFAULT_SETTINGS.components,
-        ...(settings.components as object),
-      },
-      background: {
-        ...DEFAULT_SETTINGS.background,
-        ...(settings.background as object),
-      },
-      searchBar: {
-        ...DEFAULT_SETTINGS.searchBar,
-        ...(settings.searchBar as object),
-      },
-      topSites: {
-        ...DEFAULT_SETTINGS.topSites,
-        ...(settings.topSites as object),
-      },
-    };
-
-    return mergedSettings;
-  } catch (e) {
-    console.error("Failed to load newtab settings:", e);
-    return DEFAULT_SETTINGS;
-  }
-}
-
 export async function getFolderPathFromDialog(): Promise<FolderPathResult> {
-  try {
-    return await callNRWithRetry<FolderPathResult>(
-      (cb) => (globalThis as unknown as Window).NRGetFolderPathFromDialog(cb),
-      (data) => JSON.parse(data),
-      {
-        retries: 3,
-        timeoutMs: 5000,
-        delayMs: 400,
-        shouldRetry: (v) => !v || v.success === false,
-      },
-    );
-  } catch (e) {
-    console.error("Failed to get folder path from dialog:", e);
-    return { path: null, success: false };
-  }
+  const result = await newTabClient.call("pickFolder", {});
+  return { path: result.path, success: Boolean(result.path) };
 }
-
 export async function getRandomImageFromFolder(
-  folderPath: string,
+  _folderPath: string,
 ): Promise<RandomImageResult> {
-  try {
-    return await callNRWithRetry<RandomImageResult>(
-      (cb) =>
-        (globalThis as unknown as Window).NRGetRandomImageFromFolder(
-          folderPath,
-          cb,
-        ),
-      (data) => JSON.parse(data),
-      {
-        retries: 3,
-        timeoutMs: 5000,
-        delayMs: 400,
-        shouldRetry: (v) => !v || v.success === false,
-      },
-    );
-  } catch (e) {
-    console.error("Failed to get random image from folder:", e);
-    return { image: null, fileName: null, success: false };
-  }
+  // The parent uses its saved, user-selected path. Pages cannot select an
+  // arbitrary filesystem path by passing it to this legacy signature.
+  const result = await newTabClient.call("folderImage", {});
+  return { ...result, success: Boolean(result.image) };
 }

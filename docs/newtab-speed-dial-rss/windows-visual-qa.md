@@ -1,0 +1,226 @@
+# Windows 実機での表示・操作改善と QA
+
+検証日: 2026-10-29（日本時間）
+
+対象: [PR #3003](https://github.com/Floorp-Projects/Floorp/pull/3003)、`codex/newtab-speed-dial-rss`
+
+改善前: `b8951372881cbf6c2ed847fca1bc344564beac6c`
+
+状態: 本体の修正、関連テスト、本番Windowsでの両テーマ・背景条件・操作確認、元プロファイル復帰を完了。
+
+既存の[製品仕様](../newtab-speed-dial-rss-spec.md)と[設計](design.md)を維持した本体 UI の改善記録。先行する [Linux QA](qa-report.md) の結果と区別し、この記録では今回 Windows で実行した範囲だけを扱う。
+
+## 環境とデータ保護
+
+- Windows ネイティブ PowerShell、作業ディレクトリ `E:\floorp-dev\Floorp-pr3003`。
+- `floorp-runtime.lock.json` に対応する Floorp / Firefox **159.0**、build **20261026023026**。Gecko 全体の再ビルドは行わず、`deno task feles-build stage --marionette` で本番 assets と CSP を使う。
+- 開始時の `git status --short` は空。ローカル HEAD と PR の head は上記改善前コミットで一致し、PR は open・未マージだった。
+- 既存の `_dist/profile/test` は `_dist/profile/pre-visual-20261029` へ退避し、その複製を `test` として使用した。検証後、QAブラウザーを正常終了し、QA側を `_dist/profile/visual-qa-20261029` に保存して元のデータを `test` に復帰した。`prefs.js`・`places.sqlite`・`favicons.sqlite`のSHA-256が退避元と一致。普段使いのプロファイルは使用・初期化していない。
+- Browser plugin はこのセッションにない。実際の Windows 版 Floorp で確認する依頼に従い、リポジトリの Marionette client と Windows Computer Use（`@oai/sky`）を使用した。Chromium やプロトタイプの画面を本体 QA の代替にしていない。
+- 日本語の長い記事名・配信本文・画像・空応答・エラー応答は、`127.0.0.1` の一時 QA fixture を使用。ブックマークや記事の確認用データは検証プロファイルだけに置き、本番コードへデモ記事・広告・ワークスペースを追加していない。
+- 作業用ログ・スクリプト・未選別画像は `_dist/visual-qa/`。採用した画像だけを `qa/` へ保存する。
+
+## 改善前の課題と変更理由
+
+現在の Floorp Hub の書体・紫の操作色・共通部品・余白を基準にした。[Web-v5 のデザインシステム](https://github.com/Floorp-Projects/web-v5/blob/master/docs/design-system/README.md)も参照し、ホーム中央の検索、右上の時計、Speed Dial と RSS の既存構成を保った。
+
+| 対象 | 改善前に確認した課題 | 本体の変更 |
+| --- | --- | --- |
+| 背景と半透明パネル | 写真の模様が本文領域へ強く透ける。暗いテーマの操作色と明るいパネルが混在し、操作部品の見分けが弱い | 壁紙があるときの白固定の上書きを除去し、ホーム・Speed Dial・Reader・Hub をブラウザーの明暗テーマへ揃える。`data-theme` も共通トークンへ伝え、パネル90%・ホームRSS96%・タイル76%の面と境界を使用。時計にもテーマに合った下地を設ける。Geckoで重複した prefixed 宣言が標準宣言を打ち消していたぼかしを修正 |
+| Speed Dial | タイルが大きく、長い名前が一行で切れる。フォルダーとサイトの区別、長いグループ名の扱いが弱い | タイル高と余白を抑え、名前は二行まで表示。完全な名前を title に保持。フォルダーへ淡い紫の面と境界を付け、狭幅でも項目数を残す。グループ名の幅を制限し、アイコンが潰れないようにする |
+| パンくず・メニュー・編集 | パンくずが周囲の背景に埋もれやすく、画面下端や拡大時にメニュー末尾へ届きにくい。ダイアログ内余白のクリックでも閉じる | パンくずへ区切られた面を追加し、親へ戻る操作の参照先を修正。メニューは実際の高さで上・下を選び、内部スクロールで閉じないようにする。移動先・ボタンを折り返し、ダイアログは外側のクリックだけで閉じる |
+| RSS 一覧と本文 | 配信元・日付の文字が小さく、長文タイトルや本文の読み進め方、狭幅で一覧に戻る位置が分かりにくい | 補助文字を 13px に揃え、一覧の行間・折り返し・フォーカスを調整。本文の最大幅を 76ch に制限。記事を閉じても一覧の選択を保ち、元の項目へフォーカスを戻す |
+| RSS の状態表示 | 取得失敗と空の一覧が重なって見える。記事切り替え中に前の記事が残り、画像取得中の操作も分かりにくい | 空・エラーを分け、一覧・本文に再試行を用意。記事読み込み時の旧本文を解除し、画像取得中と購読処理中のラベル・busy 状態を示す |
+| Hub | カテゴリと最初の項目の間の余白が大きい。設定と説明の関係、透明化を選べない理由、狭い本文領域での入力幅が分かりにくい | カテゴリと保存状態をまとめ、共通部品の重複余白を整理。背景の方式・画像・スライドショーに続けて透明化を配置し、背景なしの場合の理由を日英で明記。ホームのフィード表示を明確にし、狭いコンテナでは選択欄を縦配置する |
+
+機能仕様の変更はない。背景の各方式・既存画像・スライドショー・時計・履歴候補・既存の配置設定、実 Places の階層とウィンドウ別ワークスペース連動、RSS の既読・スター、スポンサー最大2枠の別管理を維持する。RSS は引き続き配信された本文だけを表示し、画像は明示操作で取得する。元記事の追加全文取得は行わない。
+
+## 画面比較
+
+比較はすべて本体の Windows 画面。ウィンドウは1440×1020、ページ領域は **1382×938 CSS px、100%ズーム**。ホームと Speed Dial は内蔵背景 `1100-1600.png`・透明化あり。Reader と Hub は読みやすさを優先した通常の面で表示する。
+
+改善前は暗いブラウザーテーマでも壁紙上の面が白固定だった。改善後の暗いテーマ列はこの不整合の解消を含む比較であり、明るいテーマ列でも同じ画面を記録した。最終比較の撮影前に fixture の3記事を未読・スターなしへ戻し、Readerでは先頭記事を開いた。時計と更新時刻の違いはデザイン変更ではない。
+
+| 画面 | 改善前 | 改善後・暗いテーマ | 改善後・明るいテーマ |
+| --- | --- | --- | --- |
+| ホーム | [before](qa/windows-before-home.png) | [dark](qa/windows-after-home.png) | [light](qa/windows-light-home.png) |
+| Speed Dial | [before](qa/windows-before-dial.png) | [dark](qa/windows-after-dial.png) | [light](qa/windows-light-dial.png) |
+| RSS リーダー | [before](qa/windows-before-reader.png) | [dark](qa/windows-after-reader.png) | [light](qa/windows-light-reader.png) |
+| Hub | [before](qa/windows-before-hub.png) | [dark](qa/windows-after-hub.png) | [light](qa/windows-light-hub.png) |
+
+最終の8画面は `_dist/visual-qa/final-comparison-result.json` で URL、テーマ、ページ幅、`scrollWidth`、本番 script URI を照合。いずれもページ幅と `scrollWidth` は1382pxで一致した。[測定・操作結果の抜粋](qa/windows-checks.json)も保存した。
+
+200%の実画面: [ホーム](qa/windows-dark-home-200.png)・[Reader](qa/windows-dark-reader-200.png)・[メニュー末尾のフォーカス](qa/windows-light-menu-200.png)・[Hub](qa/windows-light-hub-200.png)・[暗いダイアログ](qa/windows-dark-dialog-200.png)・[明るいダイアログ](qa/windows-light-dialog-200.png)。いずれもページ領域321×359 CSS px。
+
+背景条件の例: [暗いテーマ＋白背景＋透明化](qa/windows-dark-white-glass.png)・[明るいテーマ＋白背景＋透明化](qa/windows-light-white-glass.png)・[暗いテーマ＋背景なし](qa/windows-dark-none-opaque.png)・[明るいテーマ＋背景なし](qa/windows-light-none-opaque.png)。[購読処理中の状態](qa/windows-feed-loading.png)も記録した。
+
+## 実行したテストとビルド
+
+| 検証 | 結果 | 証拠・範囲 |
+| --- | --- | --- |
+| `deno task test --near browser-features/pages-newtab` | **10 モジュール成功、失敗0** | 実 Firefox 内。本文の安全な描画・画像の明示取得、Reader 2ケース、Modal 1ケース（標準取消とフォーカス復帰を3回）、背景タイマー、フォルダー復帰、既存 utility。最終再実行は `_dist/visual-qa/modal-newtab-tests.log` |
+| `deno task test --near browser-features/pages-settings/test/app/newtab-settings.test.ts` | **1 モジュール・4ケース成功、失敗0** | 実 Firefox 内の Hub 新しいタブ設定テスト。`_dist/visual-qa/hub-tests.log` |
+| `deno task test --near browser-features/pages-settings/test/integration/settings.test.ts` | **1 モジュール・51ケース成功、失敗0** | 既存 Hub integration。`_dist/visual-qa/hub-integration.log` |
+| `deno task test:smoke` | **6 工程成功** | runner unit **41 ケース成功・失敗0**、chrome / ESM / pages のテスト発見、CI 対象ソースの型検査、**1,282 ファイル**の lint。`_dist/visual-qa/modal-smoke.log` |
+| 改善後の `deno task feles-build stage --marionette` | **ビルド・起動成功** | 最終のModal修正を含む本番 bundle・locked Runtime・CSP を使う実機確認。`_dist/visual-qa/modal-stage.log`。テスト用 HTTP ページの成功とは分ける |
+| 最終テーマ/CSS の newtab production build | **成功** | `_dist/visual-qa/final-theme-build.log`。最終8画面で更新後の `chrome://noraneko-newtab/content/assets/` を確認 |
+
+モジュール数をケース数として数えない。ページのビルド成功を署名済み配布物全体の QA 成功として扱わない。
+
+## Windows 本体の受け入れ確認
+
+以下は実際の操作と保存状態の確認結果。テーマ・ぼかしの最終調整前に行った背景と狭幅の結果は、その後の最終組み合わせ確認と分けて記載する。
+
+| 確認項目 | 手順・確認点 | 結果 |
+| --- | --- | --- |
+| 本番ページの成立 | `about:newtab` と `about:hub#/features/newtab` の URL・内容・本番 script URI・CSP | 本番の chrome URI と CSP を確認。最終両テーマ8画面も本番 asset を読み込み、空画面・framework overlay なし |
+| 明暗の背景・透明化 | 白・黒の QA 画像、透明化あり/なし、背景なしの両テーマ | 最終12通りが成功。両テーマで画像あり・透明化onは `blur(24px)`、off/背景なしは `none`。面色と文字色もテーマへ追従し、横 overflow なし（`final-matrix-result.json`） |
+| 両テーマ・広幅 | ホーム・Speed Dial・Reader・Hub を暗いテーマ/明るいテーマで表示 | 最終8画面でテーマに沿う面と文字色を確認、1382×938 CSS pxで横 overflow なし |
+| 狭幅・200%ズーム | 742 CSS px/100%、321×359 CSS px/200%。ホーム・Speed Dial・Reader・Hub・編集ダイアログ | 先行確認で横 overflow なし。本文領域と操作バー、幅287pxのダイアログが画面内。Hubの4カテゴリを保持。Readerの操作バーを見失うレイアウトも修正して再確認 |
+| キーボード | Enter、End、Escape、Shift+Tab、フォーカス表示と復帰 | メニュー最終項目へEndで到達、Escapeで元のメニューボタンへ復帰。ReaderをEnterで開くと本文へ移動し、戻ると元記事を再選択。Shift+Tabで元サイト操作へ到達。Modal修正後にEscapeを10回とWindows実キーで確認し、毎回閉じて作成ボタンへ復帰 |
+| フォルダー整理 | 入れ子の作成・移動・改名・削除確認、実 Places への保存と画面更新 | 入れ子を作成し、親フォルダーを移動・改名。GUIDと子階層を保持。削除確認に子フォルダー1件を表示し、削除後に実データから消えた。パンくずで共通グループへ戻った |
+| RSS 閲覧 | 記事選択、既読/未読、スター、一覧へ戻る位置とフォーカス | 選択により本文と既読状態が更新。スターと未読への変更を保存値で確認。狭幅で戻ると同じ記事ボタンへフォーカスし、選択表示も保持 |
+| RSS の状態 | 空、読み込み中、通信失敗、再操作 | 空の検索結果、HTTP503の理由と再操作可能なフォーム、5秒の遅延中のbusy状態と完了を確認。取得中の購読ボタンを「読み込み中」に修正 |
+| RSS 本文・画像 | 長文・長い連続文字、明示画像、元記事への通信 | 初期表示は画像placeholderで外部imgなし。明示操作後に1px画像を読み込み。fixtureログの `/image.png` は1要求、`/article/` 要求なし |
+| Hub の反映 | 時計・背景・透明化の設定と開いた新しいタブの表示 | 時計offを新しいタブで確認後、onが開いたページへ即時反映。背景・透明化の設定値と画面を先行マトリクスで照合 |
+| スポンサー | メニューから保存・非表示、Hubから復元 | 実Placesへ通常ブックマークとして保存。非表示後の保存設定、Hubの復元後に既存1枠が再表示されることを確認。確認用ブックマークは削除 |
+| コンソール | stageログと本体画面 | Windows JumpListsのテストURL用favicon警告、既存CustomizableUI・ロケール警告を記録。これらをページの成功判定へ混ぜない。別記の native crash は除外せず制約として残す |
+| 最終の背景・幅の組み合わせ | テーマ・ぼかし修正後に明暗背景、透明化、狭幅/200%を再確認 | 背景12通りと両テーマのホーム・Speed Dial・Reader・Hub各200%で成功。全ページの `scrollWidth` は321px。メニュー末尾が画面内、ダイアログも画面内。Reader操作バーは上端112px・下端184pxで本文と独立して表示 |
+| 元プロファイルの復帰 | QA ブラウザーを終了し、元の確認データを `test` へ戻す | 正常終了とcloneプロセス消滅を確認後に復帰。主要3ファイルのSHA-256一致、QA側データも別ディレクトリで保持 |
+
+操作の記録は `_dist/visual-qa/` の `folder-move-result.json`、`reader-actions-result.json`、`reader-state-result.json`、`feed-errors-result.json`、`narrow-result.json`、`final-layout-result.json` を参照。初回のフォルダースクリプトは画面遷移後の古いセレクターで停止したが、画面を再取得して継続し、移動・改名・削除を保存状態まで確認した。途中停止したログを全体成功として数えていない。
+
+## QAで見つけたダイアログ終了時のクラッシュ
+
+10:30:55と10:42:54に、700×800・200%のダイアログをEscapeで閉じる際に親プロセスが終了した。初回のWER Event 1000/1001 は `xul.dll 159.0.0.3`、`c0000005`、offset `0x1c4bb78`、report ID `4f220b50-e613-432b-ad14-06ce28bb8f1d`。dumpがないためネイティブ内部の根因は特定できていない。DOM clickで開く再確認では成功したが、起点へフォーカスしてEnterで開く手順で再現した。
+
+従来の`onCancel`は標準取消を止めてReact stateを閉じ、native cancelイベント中にアンマウント・`dialog.close()`・フォーカス復帰を行っていた。標準取消を許可し、非同期の`close`イベントでReact stateを同期する形へ変更した。native終了中にダイアログを削除しない回帰テストを実Firefox内に追加した。
+
+修正後の本番stageで、両テーマの200%確認2回、追加反復8回（うち3回は開いた後に100%→200%・ウィンドウ縮小）、Windows実キー1回が成功した。すべて閉じて起点へフォーカス復帰。通常の取消、Enterでの作成・保存、購読完了による終了も成功した。証拠は`modal-narrow-result.json`、`modal-repeat-result.json`、`final-actions-result.json`、`final-loading-result.json`。再現したUI経路への修正と確認であり、Gecko内部の障害原因まで解明したとは扱わない。
+
+## 残る制約
+
+- ダイアログ終了経路の修正後に再現手順は成功したが、native dumpがなくGecko内部の根因は未特定。長時間・全環境での再発がないことまでは保証していない。
+- 署名済みインストーラー、macOS、実 Firefox Sync の複数端末往復、大量ブックマーク・購読の長時間性能、低性能端末での blur 負荷は、この視覚改善の検証で合格にしていない。
+- ローカル HTTP fixture は表示・操作の再現用であり、実在するすべての配信元への互換性を保証するものではない。
+- 機能仕様の変更を必要とする提案は今回の修正へ含めていない。
+
+## 全画面レビュー後の配置調整
+
+同日、`7e1e622`の実画面について「上に偏っている」「よく使うサイトが無機質」という追加レビューを受け、2560×1440の全画面で調整した。以下は先行QAとは別の追加検証。
+
+- 中央配置では、検索・Speed Dial/RSS・履歴候補を一つの領域として、余った高さを上下へ分配する。時計はその外の右上に保つ。高さを固定しないため、狭幅や内容が多い場合は上から通常どおりスクロールできる。「サイトを先に表示」は既存の順序と上寄せを維持する。
+- よく使うサイトは、常時表示の長方形の枠を減らし、56pxの柔らかいアイコン背景・2行の名前・ドメイン表示へ変更。保存・非表示の操作領域は各44×44px。既存ライブラリのYouTube・Reddit・Firefoxロゴを使い、アイコン取得のための通信や新たな初期サイトは加えていない。
+- 「読む中心」＋RSSのみ表示でも1列になるよう、単独パネルのCSS優先順位を修正。表示設定の意味や保存形式は変えていない。
+
+| 確認 | 結果 |
+| --- | --- |
+| 全画面2560×1440、時計off | 検索上端120px→282.6px。ヘッダー下80pxから検索まで202.6px、履歴候補下端1237.4pxから画面下まで202.6px。上下の空きが一致 |
+| 暗いテーマ、時計on | 時計上端120pxの右上配置を保持。本文と操作部品も暗いテーマへ追従 |
+| RSSのみ・読む中心 | 幅1360pxの1列。空の2列目なし |
+| 検索off / サイト優先 | 非表示にした検索の余白を残さず配置。サイト優先ではコンテンツ→履歴→検索の順序を維持 |
+| 200%、321×359 CSS px | ページの横overflowなし。検索上端140pxで上側の欠けなし。履歴の保存・非表示へTabで移動し、両ボタン44×44pxを確認 |
+| ビルド・ソース検査 | 本番newtab Vite build、Home/UIの`deno check`・`deno lint`、`git diff --check`成功。表示中心の追加変更に新しい単体テストは設けず、実画面の配置・操作を検証 |
+
+比較: [変更前の全画面](qa/windows-layout-before-fullscreen.png) / [変更後の全画面](qa/windows-layout-after-fullscreen.png)。追加画面: [暗いテーマと時計](qa/windows-layout-clock-dark.png)、[200%の履歴候補とフォーカス](qa/windows-layout-history-200.png)、[RSSのみ](qa/windows-layout-feed-only.png)、[サイト優先](qa/windows-layout-sites-first.png)。[測定結果](qa/windows-layout-checks.json)。
+
+検証には保存済みの専用QAプロファイルを使用し、レビュー時の設定（時計off・中央配置・ライトテーマなど）へ復帰した。新しいタブを全画面で起動したままレビューへ引き渡す。元の`_dist/profile/test`は引き続き使用していない。
+
+
+## 再レビュー: RSS の情報階層とフォーカス（2026-10-29）
+
+開始時 HEAD / PR head は `1fe937777ddabfe9f9e0679023657e8cef6620b0`、PR は open・未マージ、作業ツリーに未コミット変更なし。既存の Windows 改善を土台とした追加修正で、画面構成と機能仕様は変更していない。
+
+### 実画面からの追加修正
+
+- 購読先の長い名前がサイドバーを縦に占有していたため、名前だけを2行で省略する。更新失敗・更新中・購読解除済みの状態は省略対象から外し、13pxで表示する。完全な名前はDOMの文字列・読み上げ名・titleに保持する。
+- 記事一覧の配信元は1行の補助情報として扱い、長い記事名へ先に視線が向くようにする。完全な配信元名はtitleとDOMに残す。
+- スターを日付の横へ揃え、記事名と操作アイコンの競合を減らす。スター済みは塗りと共通の紫色で示し、44pxの操作領域を維持する。
+- 選択中の記事は14%の紫を混ぜた面と左境界、未選択記事のホバーは既存の9%の面、キーボードフォーカスは輪郭で区別する。スクロールするグループ選択のフォーカスを内側へ収め、枠の欠けを防ぐ。
+
+比較: [今回の開始時の一覧](qa/windows-reader-followup-before.png) / [修正後の選択・本文表示](qa/windows-reader-followup-after.png)。前者は記事未選択、後者は選択済みの状態。選択済み同士の比較元は[先行Windows QAのReader](qa/windows-light-reader.png)。いずれも本体の画面で、プロトタイプではない。
+
+### 今回再実行した検証
+
+Browser plugin は利用できないため、指定された Windows の実 Floorp とリポジトリの Marionette client を使用。途中からユーザーの指定に従い Computer Use を終了し、`deno task dev-tool` と Marionette に統一した。
+
+| 確認 | 結果 |
+| --- | --- |
+| 本番stage | `deno install`、`deno task feles-build stage --marionette`でlocked Runtime 159.0 / build 20261026023026を起動。新しいタブの本番Vite build成功 |
+| 両テーマ・背景 | 白 / 黒のQA画像 / 背景なし × 半透明on/off × 明暗、計12条件を642 CSS px幅で再確認。横overflowなし。背景とタイル・文字・blurの測定を保存 |
+| 広幅 | 1382×938 CSS pxでHome / Speed Dial / Reader / Hub、両テーマとも横overflowなし |
+| 200% | 700×800のネイティブ窓で321×359 CSS px。Home / Speed Dial / Reader / Hub、両テーマで横overflowなし。メニューのEndで末尾の操作へ到達し、ダイアログ取消後のフォーカス復帰も成功 |
+| Places | UIから入れ子フォルダー作成、移動・改名、削除を実行し、保存先と配下をサービス経由の実Placesで照合。削除確認も再表示 |
+| RSS | 記事選択・既読化、スター、未読への変更と保存状態を確認。専用リーダーの本文表示・一覧選択・フォーカス表示を再確認 |
+| Hub | 開いているHomeへ背景方式・透明化・時計の設定が反映。専用設定テストと既存integrationも再実行 |
+| コンソール | `dev-tool console --level error`には復元された外部ページとブラウザーchromeの既存メッセージあり。新しいタブ / ReaderのTypeError・ReferenceError等を対象にした抽出は0件 |
+| 既存ブラウザーテスト | 新しいタブ10モジュール、Hub新タブ設定1モジュール、既存Hub integration 1モジュール、いずれも失敗0 |
+| ソース検査 | Readerの`deno check`成功。`test:smoke`全6工程成功（runner41ケース、型検査、1282ファイルlint）。`git diff --check`成功 |
+
+[今回の画面・操作測定](qa/windows-reader-followup-checks.json)。観測結果の項目数はテストケース総数として加算しない。既存QAスクリプトの初回実行は、開始ルート・時計の表示設定の前提とフォーカス後のスクロール待ちが不足して停止した。開始状態と待機を明示した再実行を採用した。scope付きブラウザーテストも起動済みstageでは拒否されるため、QAブラウザーを正常終了してから実行した。
+
+作業ログは `_dist/visual-qa/followup-*`。本番コードへ固定デモや初期購読を追加していない。普段使いのプロファイルは使用していない。署名済み配布物、macOS、複数端末Sync、長時間・大量データ性能、先行QAに記録したネイティブクラッシュの根因未特定という制約は継続する。機能仕様を変更する提案は追加していない。
+
+
+最終stageも成功し、`dev-tool eval -c content`で `chrome://noraneko-newtab/content/assets/` のscriptと本番CSP（`connect-src 'none'`等）を再確認した。RSSの未読・スターの保存、明示操作前の画像0件、操作後だけのPNG data URL表示、空フィードも再確認した。`dev-tool navigate` / `screenshot` は `-c content` を指定して実行する。
+
+終了時、QA版Floorpを正常終了し、このcloneのFloorpプロセスが残っていないことを確認。元の`_dist/profile/test`は開始時に`pre-followup-20261029`へ退避し、既存QAデータの複製を使用していた。今回のQA側を`_dist/profile/followup-qa-20261029`へ保存し、元の`test`を復帰した。`prefs.js`・`places.sqlite`・`favicons.sqlite`のSHA-256が退避元と一致。既存の`visual-qa-20261029`と普段使いのプロファイルは変更していない。
+
+
+## Vivaldi を参考にしたホーム・Speed Dial の調整（2026-10-29）
+
+ユーザーの追加指定により、RSSの外観を保持し、ホームとSpeed Dialを調整した。比較元は `62c2f3e8925c423721767ffae599a8977f850872`。開始時の作業ツリーはクリーン。Windows実Floorpの操作は`dev-tool` / Marionetteのみを使用し、Computer Useは使用していない。
+
+参考は[Vivaldi公式のスタートページ解説](https://vivaldi.com/blog/powering-up-the-start-page/)と[スタートページのヘルプ](https://help.vivaldi.com/desktop/navigation/start-page/)。Vivaldiのブックマークを視覚的に並べる考え方を参考に、既存のFloorp Hubの書体・紫色・共通部品へ合わせた。
+
+- 大きなパネルでタイル全体を囲う構造から、背景上にタイルを並べる構造へ変更。操作欄とパンくずには読める半透明の面を保持し、白・黒の背景でも文字が直接重ならない。
+- タイルを横長の視覚領域とその下の名前に分ける。名前は2行、ドメイン・項目数は補助情報として示す。列数4/5/6の保存値を維持し、各タイルの幅は208pxを上限として中央へ揃える。小さめ設定では視覚領域の比率・アイコンサイズを抑える。
+- フォルダーは紫の面と重なりの線でサイトと区別。メニューは従来どおり各項目から操作できる。
+- ホームのグループ選択・すべて見る・追加を一つの操作欄にまとめ、Speed Dial側は説明・Hubへのリンクをパンくずの行へまとめる。狭幅では折り返す。
+- 検索の中央配置、右上の時計、既存のサイト優先配置、3種類のホーム配置、RSSの本文と一覧、履歴候補、スポンサーの区別を保持する。新しいネットワーク取得や初期データは追加しない。
+
+比較画像: [ホーム変更前](qa/windows-vivaldi-before-home.png) / [ホーム変更後](qa/windows-vivaldi-after-home.png)、[Speed Dial変更前](qa/windows-vivaldi-before-dial.png) / [Speed Dial変更後](qa/windows-vivaldi-after-dial.png)。同じQAプロファイル・表示設定・ウィンドウ寸法で撮影。データ内のQA名は本番初期データではない。
+
+| 再確認 | 結果 |
+| --- | --- |
+| 実機の画面 | 両テーマでHome / Speed Dial / Reader / Hubを1382×938 CSS pxで表示。空白・開発エラーoverlay・横overflowなし |
+| 背景と半透明 | 白 / 黒 / 背景なし × 半透明on/off × 両テーマの12条件が成功 |
+| 200% | 321×359 CSS pxで両テーマ、Home / Speed Dial / Reader / Hubに横overflowなし。メニューEndで末尾到達、Escape、編集ダイアログと取消後のフォーカス復帰が成功 |
+| 操作 | UIから実Placesの入れ子作成・移動・改名・削除と保存状態を照合。RSS記事選択・スター操作も成功 |
+| ソース・テスト | Home/Bookmarksの型検査、`git diff --check`、本番newtab Vite buildが成功。新タブ既存10モジュールが失敗0。`test:smoke`全6工程（runner41ケース・1282ファイルlint等）が成功 |
+
+[測定と操作結果](qa/windows-vivaldi-checks.json)。作業ログは `_dist/visual-qa/vivaldi-*`。先行するQAと同様、署名済み配布物・macOS・複数端末Sync・大量データ性能は今回の合格範囲に含めない。
+
+機能仕様を要する別案: Vivaldiのような実ページのサムネイル取得・カスタムサムネイル・フォルダー内サイトのプレビューは未実装。取得のタイミング、通信、保存と削除、既存画像との扱いを別途設計する必要がある。今回は既存のアイコンとCSSによる視覚改善に限定した。
+
+
+最終stageで列数4/5/6 × 標準/小さめ、ホームbalanced/links/reading × 中央配置/サイト優先を切り替え、すべて横overflowなし。4/5列時のタイル幅208px、6列時194.33pxを確認。[内蔵写真背景でのホーム](qa/windows-vivaldi-photo-home.png)も再確認し、本番chrome assets・CSPを照合。`dev-tool console --level error -f newtab`は該当メッセージなし。
+
+最終の全体stage初回は、変更していないAboutダイアログのビルドで処理が長時間継続したため、その作業プロセスを終了した。対象の単独ビルドと全体stageの再実行は成功し、コード・依存関係の修正は行っていない。初回の処理停滞の原因は未特定。
+
+検証は既存QAプロファイルの複製で実施。元の`test`を`pre-vivaldi-20261029`へ退避して保護し、終了後に復帰した。`prefs.js`・`places.sqlite`・`favicons.sqlite`のSHA-256は退避元と一致。今回のQAデータは`_dist/profile/vivaldi-qa-20261029`に保持。普段使いのプロファイルは変更していない。
+
+
+## 既存の履歴APIをSpeed Dialへ統合（2026-10-29）
+
+追加指定により「よく使うサイト」の独立領域を廃止し、既存`history` API（AboutNewTab/Activity Streamと既存fallback）をSpeed Dialへ引き継いだ。通常ブックマークとは区別した「サイトの候補」で、保存操作までPlacesへ追加しない。候補は入口のみ、専用画面最大8件、ホームは登録済み項目を先に最大6項目。スポンサーはこれと別の最大2枠を維持する。
+
+現在グループ直下の登録URL・表示スポンサー・非表示URL・候補同士を重複除外。既存の`home.showHistory`と`topSites.blocked`を保持し、Hubの表示・復元をSpeed Dialカテゴリへ移設した。旧ピン留めの既存移行処理は変更していない。保存済み項目を履歴から消えたことを理由に削除せず、候補を保存した後は同じURLの候補を表示しない。別グループや入れ子内に保存した同URLをグローバルに隠す仕組みは追加していない。
+
+実Windows locked Runtimeのstage、本番assets/CSP、`dev-tool` / Marionetteで次を確認した。
+
+- 既存の履歴APIから候補6件を取得。候補の保存で実Placesに1件が作成され、同じURLの候補が消えることを照合。
+- メニューの非表示でURL設定へ保存。Hub検索の旧ID `newtab-history` から新カテゴリを開き、表示offでも保存済みブックマークは残る。onと復元で候補が戻る。
+- ホームの独立History領域なし、同じグリッドに登録済み項目と候補を表示。入れ子フォルダーには候補0件。
+- 321×359 CSS px / 200% / 暗いテーマで横overflowなし。候補メニューのEndで「非表示」へ到達し、Escapeで閉じる。
+- 新しいタブに関するコンソールエラーの抽出は0件。本番CSPを照合。
+
+[統合後のホーム](qa/windows-history-home.png) / [統合後のSpeed Dial](qa/windows-history-dial.png) / [200%の候補メニュー](qa/windows-history-menu-200.png)。画面内のQA名とlocalhost履歴は専用QAプロファイルのデータで、本番初期値には追加していない。今回の変更は先行する視覚改善とは異なり、上記の追加指定を反映した製品仕様の更新として扱う。作業ログは`_dist/visual-qa/history-*`。
+
+
+新しいタブは既存10モジュール＋候補の重複/順序/URL安全性3ケースを持つ新モジュールの計11モジュールが失敗0。Hub新タブ設定1モジュールも失敗0。smoke全6工程、1284ファイルlint、変更したHome/Bookmarks/Hubの型検査が成功。追加テストの初回は独自ハーネスの`assertEquals`が配列を参照比較するため失敗した。値としての比較に修正して全11モジュールを再実行し成功した。本文やサービスの動作修正は不要だった。
+
+
+最終stageも成功し、最終ラベル「サイトの候補」を1382px幅と321px幅 / 200%で確認。狭幅でも候補のラベルが消えないことと横overflowなしを照合した。[今回の操作・測定結果](qa/windows-history-checks.json)。従来APIの既存候補fallbackも含むため、必ずしも閲覧済みサイトだけでないことが伝わるラベルにした。
+
+既存のtestプロファイルは`pre-history-20261029`へ退避して保護し、既存QAプロファイルの複製で検証した。終了後に元のtestを復帰し、prefs/Places/faviconのSHA-256が退避元と一致。今回のQAデータは`_dist/profile/history-qa-20261029`に保持。普段使いのプロファイルは変更していない。

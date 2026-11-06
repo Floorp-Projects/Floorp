@@ -85,22 +85,32 @@ export function saveChromeExtras(
   settings: Partial<ChromeExtrasSettings>,
 ): Promise<void> {
   return queueDesignConfigWrite(async () => {
-    const config = await readDesignConfigs();
-    if (!config) {
-      throw new Error("[ChromeExtras] Design configs are unavailable");
-    }
-    const newData = {
-      ...config,
-      uiCustomization: {
-        ...config.uiCustomization,
-        chromeExtras: {
-          ...CHROME_EXTRAS_DEFAULTS,
-          ...config.uiCustomization?.chromeExtras,
-          ...settings,
+    for (let attempt = 0; attempt < 4; attempt++) {
+      const raw = await rpc.getStringPref(DESIGN_CONFIGS_PREF);
+      if (!raw) throw new Error("[ChromeExtras] Design configs are unavailable");
+      const parsed: unknown = JSON.parse(raw);
+      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+        throw new Error("[ChromeExtras] Invalid design configs");
+      }
+      const config = parsed as StoredConfig;
+      const newData = {
+        ...config,
+        uiCustomization: {
+          ...config.uiCustomization,
+          chromeExtras: {
+            ...CHROME_EXTRAS_DEFAULTS,
+            ...config.uiCustomization?.chromeExtras,
+            ...settings,
+          },
         },
-      },
-    };
-    await rpc.setStringPref(DESIGN_CONFIGS_PREF, JSON.stringify(newData));
+      };
+      const result = await rpc.compareAndSetStringPref(
+        DESIGN_CONFIGS_PREF, raw, JSON.stringify(newData),
+      );
+      if (result.updated) return;
+      if (result.typeMismatch) throw new Error("[ChromeExtras] Design config type changed");
+    }
+    throw new Error("[ChromeExtras] Design config changed concurrently");
   });
 }
 
@@ -120,6 +130,7 @@ export function saveDesignSettings(
 async function saveDesignSettingsUnqueued(
   settings: DesignFormData,
   options: SaveDesignSettingsOptions = {},
+  attempt = 0,
 ): Promise<null | void> {
   if (Object.keys(settings).length === 0) {
     return;
@@ -193,11 +204,19 @@ async function saveDesignSettingsUnqueued(
         ...oldData.uiCustomization.qrCode,
         disableButton: settings.disableQRCodeButton,
       },
-      disableFloorpStart: settings.disableFloorpStart,
+      // Floorp Start is edited by New Tab settings; preserve its latest value.
     },
   };
   delete newData.tab.tabDubleClickToClose;
-  await rpc.setStringPref(DESIGN_CONFIGS_PREF, JSON.stringify(newData));
+  const committed = await rpc.compareAndSetStringPref(
+    DESIGN_CONFIGS_PREF, result, JSON.stringify(newData),
+  );
+  if (!committed.updated) {
+    if (committed.typeMismatch || attempt >= 3) {
+      throw new Error("[Settings:design] Configuration changed concurrently");
+    }
+    return saveDesignSettingsUnqueued(settings, options, attempt + 1);
+  }
   await rpc.setBoolPref(
     SPLIT_VIEW_DND_CREATE_PREF,
     settings.tabDragToSplitCreate,

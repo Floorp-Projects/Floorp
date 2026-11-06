@@ -1,0 +1,487 @@
+{
+  "date": "2026-10-29",
+  "baseline": "1fe937777ddabfe9f9e0679023657e8cef6620b0",
+  "environment": "Windows native PowerShell; locked Floorp 159.0; production stage assets; Marionette/dev-tool",
+  "runs": {
+    "matrix": {
+      "ok": true,
+      "observations": [
+        {
+          "case": "dark-white-glass",
+          "theme": "dark",
+          "background": "color(srgb 0.0666667 0.0666667 0.0666667 / 0.9)",
+          "ink": "rgb(250, 250, 250)",
+          "muted": "rgb(161, 161, 170)",
+          "blur": "blur(16px)",
+          "width": 642,
+          "scrollWidth": 642
+        },
+        {
+          "case": "dark-white-opaque",
+          "theme": "dark",
+          "background": "rgb(17, 17, 17)",
+          "ink": "rgb(250, 250, 250)",
+          "muted": "rgb(161, 161, 170)",
+          "blur": "none",
+          "width": 642,
+          "scrollWidth": 642
+        },
+        {
+          "case": "dark-black-glass",
+          "theme": "dark",
+          "background": "color(srgb 0.0666667 0.0666667 0.0666667 / 0.9)",
+          "ink": "rgb(250, 250, 250)",
+          "muted": "rgb(161, 161, 170)",
+          "blur": "blur(16px)",
+          "width": 642,
+          "scrollWidth": 642
+        },
+        {
+          "case": "dark-black-opaque",
+          "theme": "dark",
+          "background": "rgb(17, 17, 17)",
+          "ink": "rgb(250, 250, 250)",
+          "muted": "rgb(161, 161, 170)",
+          "blur": "none",
+          "width": 642,
+          "scrollWidth": 642
+        },
+        {
+          "case": "dark-none-glass",
+          "theme": "dark",
+          "background": "rgb(17, 17, 17)",
+          "ink": "rgb(250, 250, 250)",
+          "muted": "rgb(161, 161, 170)",
+          "blur": "none",
+          "width": 642,
+          "scrollWidth": 642
+        },
+        {
+          "case": "dark-none-opaque",
+          "theme": "dark",
+          "background": "rgb(17, 17, 17)",
+          "ink": "rgb(250, 250, 250)",
+          "muted": "rgb(161, 161, 170)",
+          "blur": "none",
+          "width": 642,
+          "scrollWidth": 642
+        },
+        {
+          "case": "light-white-glass",
+          "theme": "light",
+          "background": "color(srgb 1 1 1 / 0.9)",
+          "ink": "rgb(9, 9, 11)",
+          "muted": "rgb(82, 82, 91)",
+          "blur": "blur(16px)",
+          "width": 642,
+          "scrollWidth": 642
+        },
+        {
+          "case": "light-white-opaque",
+          "theme": "light",
+          "background": "rgb(255, 255, 255)",
+          "ink": "rgb(9, 9, 11)",
+          "muted": "rgb(82, 82, 91)",
+          "blur": "none",
+          "width": 642,
+          "scrollWidth": 642
+        },
+        {
+          "case": "light-black-glass",
+          "theme": "light",
+          "background": "color(srgb 1 1 1 / 0.9)",
+          "ink": "rgb(9, 9, 11)",
+          "muted": "rgb(82, 82, 91)",
+          "blur": "blur(16px)",
+          "width": 642,
+          "scrollWidth": 642
+        },
+        {
+          "case": "light-black-opaque",
+          "theme": "light",
+          "background": "rgb(255, 255, 255)",
+          "ink": "rgb(9, 9, 11)",
+          "muted": "rgb(82, 82, 91)",
+          "blur": "none",
+          "width": 642,
+          "scrollWidth": 642
+        },
+        {
+          "case": "light-none-glass",
+          "theme": "light",
+          "background": "rgb(255, 255, 255)",
+          "ink": "rgb(9, 9, 11)",
+          "muted": "rgb(82, 82, 91)",
+          "blur": "none",
+          "width": 642,
+          "scrollWidth": 642
+        },
+        {
+          "case": "light-none-opaque",
+          "theme": "light",
+          "background": "rgb(255, 255, 255)",
+          "ink": "rgb(9, 9, 11)",
+          "muted": "rgb(82, 82, 91)",
+          "blur": "none",
+          "width": 642,
+          "scrollWidth": 642
+        }
+      ]
+    },
+    "narrow": {
+      "ok": true,
+      "observations": [
+        {
+          "case": "dark-home",
+          "theme": "dark",
+          "width": 321,
+          "height": 359,
+          "scrollWidth": 321,
+          "focus": "",
+          "toolbar": null
+        },
+        {
+          "case": "dark-dial",
+          "theme": "dark",
+          "width": 321,
+          "height": 359,
+          "scrollWidth": 321,
+          "focus": "",
+          "toolbar": null
+        },
+        {
+          "case": "dark-menu",
+          "ink": "rgb(250, 250, 250)",
+          "bg": "rgb(17, 17, 17)",
+          "focus": "削除",
+          "visible": true
+        },
+        {
+          "case": "dark-dialog",
+          "ink": "rgb(250, 250, 250)",
+          "bg": "rgb(17, 17, 17)",
+          "inside": true,
+          "focus": "INPUT"
+        },
+        {
+          "dialogClosed": true,
+          "focus": "フォルダーを作成"
+        },
+        {
+          "case": "dark-reader",
+          "theme": "dark",
+          "width": 321,
+          "height": 359,
+          "scrollWidth": 321,
+          "focus": "nt-reader-article-scroll",
+          "toolbar": {
+            "top": 112,
+            "bottom": 184
+          }
+        },
+        {
+          "case": "dark-hub",
+          "theme": "dark",
+          "width": 321,
+          "height": 359,
+          "scrollWidth": 321,
+          "focus": "",
+          "toolbar": null
+        },
+        {
+          "case": "light-home",
+          "theme": "light",
+          "width": 321,
+          "height": 359,
+          "scrollWidth": 321,
+          "focus": "",
+          "toolbar": null
+        },
+        {
+          "case": "light-dial",
+          "theme": "light",
+          "width": 321,
+          "height": 359,
+          "scrollWidth": 321,
+          "focus": "",
+          "toolbar": null
+        },
+        {
+          "case": "light-menu",
+          "ink": "rgb(9, 9, 11)",
+          "bg": "rgb(255, 255, 255)",
+          "focus": "削除",
+          "visible": true
+        },
+        {
+          "case": "light-dialog",
+          "ink": "rgb(9, 9, 11)",
+          "bg": "rgb(255, 255, 255)",
+          "inside": true,
+          "focus": "INPUT"
+        },
+        {
+          "dialogClosed": true,
+          "focus": "フォルダーを作成"
+        },
+        {
+          "case": "light-reader",
+          "theme": "light",
+          "width": 321,
+          "height": 359,
+          "scrollWidth": 321,
+          "focus": "nt-reader-article-scroll",
+          "toolbar": {
+            "top": 112,
+            "bottom": 184
+          }
+        },
+        {
+          "case": "light-hub",
+          "theme": "light",
+          "width": 321,
+          "height": 359,
+          "scrollWidth": 321,
+          "focus": "",
+          "toolbar": null
+        }
+      ]
+    },
+    "actions": {
+      "ok": true,
+      "observations": [
+        {
+          "inputs": [
+            {
+              "id": "",
+              "type": "text"
+            }
+          ],
+          "buttons": [
+            {
+              "text": "",
+              "label": "閉じる",
+              "type": "button"
+            },
+            {
+              "text": "共通",
+              "label": null,
+              "type": "button"
+            },
+            {
+              "text": "",
+              "label": "一つ上のフォルダーへ",
+              "type": "button"
+            },
+            {
+              "text": "QA デザイン資料と毎日の読みものを整理する長いフォルダー名",
+              "label": null,
+              "type": "button"
+            },
+            {
+              "text": "キャンセル",
+              "label": null,
+              "type": "button"
+            },
+            {
+              "text": "追加",
+              "label": null,
+              "type": "submit"
+            }
+          ],
+          "title": "フォルダーを作成"
+        },
+        {
+          "nestedCreated": true
+        },
+        {
+          "moved": {
+            "guid": "wL4kkL85JPhn",
+            "parentGuid": "K7Zzxn6BiNIf",
+            "title": "QA 移動と改名",
+            "index": 1,
+            "type": "folder",
+            "childCount": 1
+          },
+          "children": [
+            {
+              "guid": "ltGtBLymTW52",
+              "parentGuid": "wL4kkL85JPhn",
+              "title": "QA 入れ子作成",
+              "index": 0,
+              "type": "folder",
+              "childCount": 0
+            }
+          ]
+        },
+        {
+          "text": "削除\n\nQA 移動と改名\n\nブックマーク 0 件と配下のフォルダー 1 件を削除します。\n\nキャンセル\n削除",
+          "buttons": [
+            {
+              "text": "",
+              "type": "button"
+            },
+            {
+              "text": "キャンセル",
+              "type": "button"
+            },
+            {
+              "text": "削除",
+              "type": "button"
+            }
+          ]
+        },
+        {
+          "deleted": true,
+          "remaining": [
+            "参考資料とリファレンス"
+          ]
+        },
+        {
+          "starred": true
+        }
+      ]
+    },
+    "comparison": {
+      "ok": true,
+      "observations": [
+        {
+          "resetUnread": 3
+        },
+        {
+          "resetUnread": 3
+        },
+        {
+          "case": "dark-home",
+          "theme": "dark",
+          "width": 1382,
+          "height": 938,
+          "scrollWidth": 1382,
+          "surface": "color(srgb 0.0666667 0.0666667 0.0666667 / 0.9)",
+          "text": "rgb(250, 250, 250)",
+          "script": [
+            "chrome://noraneko-newtab/content/assets/index-l98HbE6f.js"
+          ]
+        },
+        {
+          "case": "dark-dial",
+          "theme": "dark",
+          "width": 1382,
+          "height": 938,
+          "scrollWidth": 1382,
+          "surface": "color(srgb 0.0666667 0.0666667 0.0666667 / 0.9)",
+          "text": "rgb(250, 250, 250)",
+          "script": [
+            "chrome://noraneko-newtab/content/assets/index-l98HbE6f.js"
+          ]
+        },
+        {
+          "case": "dark-reader",
+          "theme": "dark",
+          "width": 1382,
+          "height": 938,
+          "scrollWidth": 1382,
+          "surface": "rgb(17, 17, 17)",
+          "text": "rgb(250, 250, 250)",
+          "script": [
+            "chrome://noraneko-newtab/content/assets/index-l98HbE6f.js"
+          ]
+        },
+        {
+          "case": "dark-hub",
+          "theme": "dark",
+          "width": 1382,
+          "height": 938,
+          "scrollWidth": 1382,
+          "surface": "rgba(0, 0, 0, 0)",
+          "text": "rgb(250, 250, 250)",
+          "script": [
+            "chrome://noraneko-settings/content/assets/index-Dxop3__z.js"
+          ]
+        },
+        {
+          "resetUnread": 3
+        },
+        {
+          "case": "light-home",
+          "theme": "light",
+          "width": 1382,
+          "height": 938,
+          "scrollWidth": 1382,
+          "surface": "color(srgb 1 1 1 / 0.9)",
+          "text": "rgb(9, 9, 11)",
+          "script": [
+            "chrome://noraneko-newtab/content/assets/index-l98HbE6f.js"
+          ]
+        },
+        {
+          "case": "light-dial",
+          "theme": "light",
+          "width": 1382,
+          "height": 938,
+          "scrollWidth": 1382,
+          "surface": "color(srgb 1 1 1 / 0.9)",
+          "text": "rgb(9, 9, 11)",
+          "script": [
+            "chrome://noraneko-newtab/content/assets/index-l98HbE6f.js"
+          ]
+        },
+        {
+          "case": "light-reader",
+          "theme": "light",
+          "width": 1382,
+          "height": 938,
+          "scrollWidth": 1382,
+          "surface": "rgb(255, 255, 255)",
+          "text": "rgb(9, 9, 11)",
+          "script": [
+            "chrome://noraneko-newtab/content/assets/index-l98HbE6f.js"
+          ]
+        },
+        {
+          "case": "light-hub",
+          "theme": "light",
+          "width": 1382,
+          "height": 938,
+          "scrollWidth": 1382,
+          "surface": "rgba(0, 0, 0, 0)",
+          "text": "rgb(9, 9, 11)",
+          "script": [
+            "chrome://noraneko-settings/content/assets/index-Dxop3__z.js"
+          ]
+        }
+      ]
+    },
+    "rssImageState": {
+      "ok": true,
+      "observations": [
+        {
+          "id": "5bde70f8b05176cbafb6f9e55ca5c7915be14f4489a6a45189207a8aad97fb3f",
+          "isRead": false,
+          "starred": true
+        },
+        {
+          "placeholder": true,
+          "remoteImages": []
+        },
+        {
+          "loaded": true,
+          "naturalWidth": 1
+        },
+        {
+          "empty": "一致する記事はありません"
+        }
+      ]
+    }
+  },
+  "tests": {
+    "newtabModules": 10,
+    "hubNewtabModules": 1,
+    "hubIntegrationModules": 1,
+    "failures": 0,
+    "smokeSteps": 6,
+    "readerTypecheck": true,
+    "productionStage": true
+  },
+  "profileRestoredSha256Match": true
+}

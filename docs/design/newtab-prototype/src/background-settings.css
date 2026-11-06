@@ -1,0 +1,210 @@
+.background-settings {
+  min-width: 0;
+}
+.background-mode-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 16px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+.background-mode-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  min-height: 64px;
+  padding: 9px 0;
+  cursor: pointer;
+}
+.background-mode-option > input {
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--floorp-action);
+}
+.background-mode-option > span {
+  min-width: 0;
+}
+.background-mode-option strong,
+.background-mode-option > span > span {
+  display: block;
+}
+.background-mode-option strong {
+  color: var(--floorp-ink);
+  font-size: 14px;
+  font-weight: 550;
+  line-height: 1.6;
+}
+.background-mode-option > span > span {
+  margin-top: 3px;
+  color: var(--floorp-muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+.background-mode-option:focus-within,
+.background-floorp-option:focus-within {
+  outline: 3px solid var(--floorp-focus);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+.background-mode-detail {
+  margin-top: 20px;
+  min-width: 0;
+}
+.background-translucency-setting {
+  margin-top: 16px;
+  border-top: 1px solid var(--floorp-line);
+}
+.background-mode-detail p {
+  color: var(--floorp-muted);
+  font-size: 12px;
+  line-height: 1.7;
+}
+.background-random-preview {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.background-random-preview > img {
+  width: 100%;
+  height: 88px;
+  object-fit: cover;
+  border-radius: 5px;
+}
+.background-hidden-input {
+  display: none;
+}
+.background-file-button {
+  gap: 8px;
+  min-height: 44px;
+}
+.background-file-name {
+  overflow-wrap: anywhere;
+  margin-bottom: 12px !important;
+}
+.background-custom-detail {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.background-current-preview {
+  flex: 0 0 144px;
+  width: 144px;
+  height: 88px;
+  object-fit: cover;
+  border-radius: 5px;
+  border: 1px solid var(--floorp-line);
+}
+.background-custom-detail > div {
+  min-width: 0;
+}
+.background-floorp-gallery {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  min-width: 0;
+  margin: 24px 0 0;
+  padding: 0;
+  border: 0;
+}
+.background-floorp-option {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+  cursor: pointer;
+  border: 1px solid var(--floorp-control-border);
+  border-radius: 5px;
+  background: var(--floorp-surface);
+}
+.background-floorp-option > input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+}
+.background-floorp-option > img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+}
+.background-floorp-option > span:not(.background-selected-mark) {
+  padding: 8px;
+  font-size: 12px;
+  text-align: center;
+}
+.background-floorp-option[data-selected="true"] {
+  border-color: var(--floorp-action);
+  box-shadow: 0 0 0 1px var(--floorp-action);
+}
+.background-selected-mark {
+  position: absolute;
+  right: 6px;
+  top: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  color: #fff;
+  background: var(--floorp-action);
+}
+.background-slideshow {
+  margin-top: 18px;
+}
+.background-interval-control {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--floorp-muted);
+  font-size: 14px;
+}
+.background-interval-input {
+  width: 88px;
+  min-height: 44px;
+  color: var(--floorp-ink);
+}
+.background-loading,
+.background-error {
+  margin-top: 16px;
+  font-size: 13px;
+  line-height: 1.7;
+}
+.background-loading {
+  color: var(--floorp-muted);
+}
+.background-error {
+  color: var(--chakra-colors-fg-error, #b91c1c);
+}
+@media (max-width: 600px) {
+  .background-mode-options {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+  .background-mode-option {
+    min-height: 62px;
+  }
+  .background-floorp-gallery {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+  .background-random-preview {
+    gap: 8px;
+  }
+  .background-random-preview > img {
+    height: 68px;
+  }
+  .background-current-preview {
+    flex-basis: 112px;
+    width: 112px;
+    height: 76px;
+  }
+}

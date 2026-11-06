@@ -76,7 +76,6 @@ const designToggles = [
   ],
   ["delete-browser-border", "uiCustomization.display.deleteBrowserBorder"],
   ["disable-qr-code-button", "uiCustomization.qrCode.disableButton"],
-  ["disable-floorp-start", "uiCustomization.disableFloorpStart"],
   [
     "optimize-for-tree-style-tab",
     "uiCustomization.special.optimizeForTreeStyleTab",
@@ -289,6 +288,29 @@ export async function runPageTests() {
         !writes.some((write) => write.method === DESIGN),
         "Opening design rewrote preferences",
       );
+    },
+  });
+  tests.push({
+    name: "Appearance edits preserve Floorp Start controlled by New Tab settings",
+    fn: async () => {
+      await route("features/design", "#favicon-color");
+      const original = String(prefs.get(DESIGN));
+      try {
+        const latest = JSON.parse(original);
+        latest.uiCustomization.disableFloorpStart = !latest.uiCustomization.disableFloorpStart;
+        const expected = latest.uiCustomization.disableFloorpStart;
+        prefs.set(DESIGN, JSON.stringify(latest));
+        await toggle("#favicon-color", DESIGN, "globalConfigs.faviconColor");
+        assertEquals(
+          valueAt(DESIGN, "uiCustomization.disableFloorpStart"),
+          expected,
+          "Saving the old appearance form preserves the new control's value",
+        );
+        assert(document.getElementById("newtab-settings-link"), "Appearance links to New Tab settings");
+        assert(!document.getElementById("disable-floorp-start"), "The moved control is not duplicated");
+      } finally {
+        prefs.set(DESIGN, original);
+      }
     },
   });
   for (const [id, path] of designToggles) {

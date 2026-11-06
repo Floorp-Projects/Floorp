@@ -1,0 +1,221 @@
+{
+  "date": "2026-10-29",
+  "baseline": "7e1e622f7203406b133d02f78bb84cf8a284ee95",
+  "layout-fullscreen-before-result": [
+    {
+      "width": 2560,
+      "height": 1440,
+      "search": {
+        "x": 600,
+        "y": 120,
+        "width": 1360,
+        "height": 56,
+        "top": 120,
+        "right": 1960,
+        "bottom": 176,
+        "left": 600
+      },
+      "history": {
+        "x": 600,
+        "y": 739.7999877929688,
+        "width": 1360,
+        "height": 252,
+        "top": 739.7999877929688,
+        "right": 1960,
+        "bottom": 991.7999877929688,
+        "left": 600
+      }
+    }
+  ],
+  "layout-fullscreen-after-result": [
+    {
+      "width": 2560,
+      "height": 1440,
+      "scrollWidth": 2560,
+      "main": {
+        "x": 0,
+        "y": 80,
+        "width": 2560,
+        "height": 1360,
+        "top": 80,
+        "right": 2560,
+        "bottom": 1440,
+        "left": 0
+      },
+      "body": {
+        "x": 0,
+        "y": 120,
+        "width": 2560,
+        "height": 1280,
+        "top": 120,
+        "right": 2560,
+        "bottom": 1400,
+        "left": 0
+      },
+      "search": {
+        "x": 600,
+        "y": 282.6000061035156,
+        "width": 1360,
+        "height": 56,
+        "top": 282.6000061035156,
+        "right": 1960,
+        "bottom": 338.6000061035156,
+        "left": 600
+      },
+      "history": {
+        "x": 600,
+        "y": 926.4000244140625,
+        "width": 1360,
+        "height": 311,
+        "top": 926.4000244140625,
+        "right": 1960,
+        "bottom": 1237.4000244140625,
+        "left": 600
+      },
+      "cards": 6
+    }
+  ],
+  "layout-matrix-result": [
+    {
+      "width": 2560,
+      "height": 1440,
+      "scrollWidth": 2560,
+      "searchTop": 282.6000061035156,
+      "searchBottom": 338.6000061035156,
+      "historyTop": 926.4000244140625,
+      "historyBottom": 1237.4000244140625,
+      "clockTop": null,
+      "contentTop": 394.6000061035156,
+      "contentWidth": 1360,
+      "grid": "911.867px 424.133px",
+      "mainTop": 80,
+      "mainBottom": 1440
+    },
+    {
+      "width": 2560,
+      "height": 1440,
+      "scrollWidth": 2560,
+      "searchTop": 322.3999938964844,
+      "searchBottom": 378.3999938964844,
+      "historyTop": 966.2000122070312,
+      "historyBottom": 1277.2000122070312,
+      "clockTop": 120,
+      "contentTop": 434.3999938964844,
+      "contentWidth": 1360,
+      "grid": "911.867px 424.133px",
+      "mainTop": 80,
+      "mainBottom": 1440
+    },
+    {
+      "width": 2560,
+      "height": 1440,
+      "scrollWidth": 2560,
+      "searchTop": 392.45001220703125,
+      "searchBottom": 448.45001220703125,
+      "historyTop": 896.1500244140625,
+      "historyBottom": 1207.1500244140625,
+      "clockTop": 120,
+      "contentTop": 504.45001220703125,
+      "contentWidth": 1360,
+      "grid": "1360px",
+      "mainTop": 80,
+      "mainBottom": 1440
+    },
+    {
+      "width": 2560,
+      "height": 1440,
+      "scrollWidth": 2560,
+      "searchTop": null,
+      "searchBottom": null,
+      "historyTop": 870.4000244140625,
+      "historyBottom": 1181.4000244140625,
+      "clockTop": null,
+      "contentTop": 338.6000061035156,
+      "contentWidth": 1360,
+      "grid": "911.867px 424.133px",
+      "mainTop": 80,
+      "mainBottom": 1440
+    },
+    {
+      "width": 2560,
+      "height": 1440,
+      "scrollWidth": 2560,
+      "searchTop": 1002.7999877929688,
+      "searchBottom": 1058.7999877929688,
+      "historyTop": 651.7999877929688,
+      "historyBottom": 962.7999877929688,
+      "clockTop": null,
+      "contentTop": 120,
+      "contentWidth": 1360,
+      "grid": "911.867px 424.133px",
+      "mainTop": 80,
+      "mainBottom": 1440
+    },
+    {
+      "width": 321,
+      "height": 359,
+      "scrollWidth": 321,
+      "searchTop": 140,
+      "searchBottom": 196,
+      "historyTop": 1465.5,
+      "historyBottom": 2206.5,
+      "clockTop": null,
+      "contentTop": 228,
+      "contentWidth": 281,
+      "grid": "281px",
+      "mainTop": 112,
+      "mainBottom": 2234.5
+    },
+    {
+      "label": "Settings UI regression testsをスピードダイアルに保存",
+      "button": {
+        "x": 50.75,
+        "y": 157.5,
+        "width": 44,
+        "height": 44,
+        "top": 157.5,
+        "right": 94.75,
+        "bottom": 201.5,
+        "left": 50.75
+      },
+      "width": 321,
+      "scrollWidth": 321
+    },
+    {
+      "focus": "Settings UI regression testsを非表示にする",
+      "button": {
+        "x": 94.75,
+        "y": 157.5,
+        "width": 44,
+        "height": 44,
+        "top": 157.5,
+        "right": 138.75,
+        "bottom": 201.5,
+        "left": 94.75
+      }
+    }
+  ],
+  "layout-restore-result": [
+    {
+      "theme": "dark",
+      "button": "rgb(216, 180, 254)",
+      "clock": {
+        "x": 600,
+        "y": 120,
+        "width": 1360,
+        "height": 55.600006103515625,
+        "top": 120,
+        "right": 1960,
+        "bottom": 175.60000610351562,
+        "left": 600
+      }
+    },
+    {
+      "theme": "light",
+      "button": "rgb(100, 27, 163)",
+      "width": 2560,
+      "height": 1440,
+      "clock": false
+    }
+  ]
+}

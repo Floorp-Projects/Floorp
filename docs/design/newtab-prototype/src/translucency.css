@@ -1,0 +1,174 @@
+/* New-tab personalization. Shared Hub controls keep their geometry and type.
+   Opaque surfaces are the baseline; transparency requires filter support. */
+.prototype-app.wallpaper-glass {
+  --glass-panel: rgb(255 255 255 / 0.82);
+  --glass-reading: rgb(255 255 255 / 0.88);
+  --glass-border: rgb(255 255 255 / 0.65);
+  --glass-shadow:
+    0 16px 48px rgb(18 12 32 / 0.14), inset 0 1px 0 rgb(255 255 255 / 0.55);
+}
+.prototype-app.wallpaper-glass
+  :is(.app-header, .web-search, .home-content, .dial-page) {
+  --floorp-ink: #18181b;
+  --floorp-muted: #52525b;
+  --floorp-action: #7e22ce;
+  --floorp-brand: #7e22ce;
+  --floorp-focus: #7e22ce;
+  --floorp-surface: #fff;
+  --floorp-subtle: #f4f4f5;
+  --floorp-line: rgb(39 32 53 / 0.16);
+  color: var(--floorp-ink);
+}
+.prototype-app.wallpaper-glass :is(.home-dials, .home-feed, .dial-page) {
+  border-radius: 16px;
+}
+.prototype-app.wallpaper-glass .site-tile {
+  border-radius: 10px;
+}
+.prototype-app.wallpaper-glass .web-search input {
+  border-radius: 12px;
+}
+.prototype-app.wallpaper-glass .home-clock {
+  gap: 12px;
+}
+.prototype-app.wallpaper-glass .site-tile:hover {
+  border-color: #7e22ce;
+  background: #fff;
+}
+.prototype-app.wallpaper-glass .home-dials:has(.site-menu) {
+  position: relative;
+  z-index: 2;
+}
+
+/* Menus and dialogs are reading surfaces, so they always remain solid. */
+.prototype-app.wallpaper-glass .site-menu {
+  background: #fff;
+  color: #18181b;
+  border-color: #d4d4d8;
+}
+
+@supports (
+  (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))
+) {
+  .prototype-app.wallpaper-glass .wallpaper-shade {
+    background: linear-gradient(
+      180deg,
+      rgb(12 8 24 / 0.68) 0,
+      rgb(12 8 24 / 0.62) 280px,
+      rgb(12 8 24 / 0.18) 570px,
+      rgb(12 8 24 / 0.08) 100%
+    );
+  }
+  .prototype-app.wallpaper-glass :is(.home-dials, .home-feed, .dial-page) {
+    border-color: var(--glass-border);
+    background: var(--glass-panel);
+    -webkit-backdrop-filter: blur(24px) saturate(1.15);
+    backdrop-filter: blur(24px) saturate(1.15);
+    box-shadow: var(--glass-shadow);
+  }
+  .prototype-app.wallpaper-glass .home-feed {
+    background: var(--glass-reading);
+  }
+  .prototype-app.wallpaper-glass .app-header {
+    background: rgb(255 255 255 / 0.88);
+    border-bottom-color: rgb(255 255 255 / 0.45);
+    -webkit-backdrop-filter: blur(20px) saturate(1.1);
+    backdrop-filter: blur(20px) saturate(1.1);
+  }
+  .prototype-app.wallpaper-glass .web-search {
+    border-radius: 12px;
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
+    box-shadow: 0 8px 32px rgb(18 12 32 / 0.1);
+  }
+  .prototype-app.wallpaper-glass .web-search input {
+    background: rgb(255 255 255 / 0.88);
+    border-color: rgb(255 255 255 / 0.7);
+  }
+  .prototype-app.wallpaper-glass .site-tile {
+    background: rgb(255 255 255 / 0.52);
+    border-color: rgb(255 255 255 / 0.6);
+  }
+  .prototype-app.wallpaper-glass .site-tile:hover {
+    border-color: #7e22ce;
+    background: rgb(255 255 255 / 0.92);
+  }
+  .prototype-app.wallpaper-glass .group-select,
+  .prototype-app.wallpaper-glass .workspace-select {
+    background: rgb(255 255 255 / 0.45);
+  }
+  @media (max-width: 800px) {
+    .prototype-app.wallpaper-glass .header-actions {
+      --floorp-muted: #e4ddef;
+      --floorp-action: #fff;
+      --floorp-focus: #ffd45c;
+      color: #fff;
+    }
+    .prototype-app.wallpaper-glass .workspace-select {
+      background: transparent;
+    }
+    .prototype-app.wallpaper-glass :is(.home-dials, .home-feed, .dial-page) {
+      -webkit-backdrop-filter: blur(16px);
+      backdrop-filter: blur(16px);
+    }
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .prototype-app.wallpaper-glass .wallpaper-shade {
+    background: rgb(0 0 0 / 0.6);
+  }
+  .prototype-app.wallpaper-glass
+    :is(
+      .app-header,
+      .home-dials,
+      .home-feed,
+      .dial-page,
+      .web-search input,
+      .site-tile,
+      .group-select
+    ) {
+    background: #fff;
+    border-color: #d4d4d8;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    box-shadow: none;
+  }
+  .prototype-app.wallpaper-glass .web-search {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    box-shadow: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .prototype-app .newtab-background {
+    display: none;
+  }
+  .prototype-app[data-wallpaper="true"]
+    :is(.home-intro, .home-clock, .clock-time) {
+    color: CanvasText;
+  }
+  .prototype-app.wallpaper-glass
+    :is(
+      .app-header,
+      .home-dials,
+      .home-feed,
+      .dial-page,
+      .web-search,
+      .web-search input,
+      .site-tile,
+      .group-select
+    ) {
+    background: Canvas;
+    color: CanvasText;
+    border: 1px solid CanvasText;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    box-shadow: none;
+  }
+  .prototype-app.wallpaper-glass
+    :is(.text-action, .group-assignment-note button) {
+    color: LinkText;
+  }
+}

@@ -1,7 +1,7 @@
 ---
 title: "Architecture Overview"
 sidebar_label: "Architecture"
-floorp_commit: "unknown"
+floorp_commit: "90a0cba41b0deab141d3d89adf930513cc923ed1"
 generated: true
 ---
 # Architecture Overview
@@ -30,7 +30,7 @@ The loader development server is configured by `bridge/loader-features/vite.conf
 
 ## Privileged Modules And Window Actors
 
-Window Actors are registered from `browser-features/modules/modules/BrowserGlue.sys.mts:561`. The current inventory lists 24 actors:
+Window Actors are registered from `browser-features/modules/modules/BrowserGlue.sys.mts:578`. The current inventory lists 25 actors:
 
 - `NRAboutPreferences`
 - `NRAppConstants`
@@ -41,6 +41,7 @@ Window Actors are registered from `browser-features/modules/modules/BrowserGlue.
 - `NRI18n`
 - `NRKeyboardShortcutFocus`
 - `NRMouseGestureScroll`
+- `NRNewTab`
 - `NROSAutomotor`
 - `NRPanelSidebar`
 - `NRPluginStore`
@@ -106,7 +107,7 @@ Static chrome features are discovered from `browser-features/chrome/static/mod.t
 
 ## Settings Pages
 
-The settings app is represented by `browser-features/pages-settings/src/App.tsx` and currently exposes 18 collected routes. Use the generated settings catalog for route-to-component ownership.
+The settings app is represented by `browser-features/pages-settings/src/App.tsx` and currently exposes 19 collected routes. Use the generated settings catalog for route-to-component ownership.
 
 ## Floorp OS API
 
