@@ -52,7 +52,7 @@ export default defineConfig({
   base: "chrome://noraneko/content/qa/",
   publicDir: false,
   build: {
-    outDir: "_dist/packaged-test",
+    outDir: "_dist/qa",
     emptyOutDir: true,
     target: "firefox133",
     minify: false,
