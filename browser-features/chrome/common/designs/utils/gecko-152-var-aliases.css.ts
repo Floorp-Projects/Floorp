@@ -50,9 +50,10 @@
  *
  * ## What is NOT a rename (deliberately absent from the table)
  *
- *   - `--toolbar-color` — still defined in 152 (global-shared.css). It is NOT
- *     `--toolbar-text-color`. Floorp/Lepton components that read
- *     `--toolbar-color` keep working unaided.
+ *   - `--toolbar-text-color` — owned by Gecko's design-system tokens and
+ *     themes. Do not replace it with a chain of legacy tokens: both
+ *     `--lwt-text-color` and `--toolbar-color` can be absent, invalidating
+ *     the native color and making toolbar/tab text inherit the frame color.
  *   - `--panel-text-color` — NEW in 152 (popup.css: `--panel-text-color:
  *     MenuText`). It is not the rename of any 151 token; it is the 152 form
  *     that the legacy `--arrowpanel-color` now aliases to.
@@ -91,7 +92,10 @@ export const GECKO_152_RENAMED_VARS: ReadonlyArray<
 
   // Toolbar buttons
   // toolbarbuttons.css:768-769 -> 775-776
-  ["--toolbarbutton-hover-background", "--toolbarbutton-background-color-hover"],
+  [
+    "--toolbarbutton-hover-background",
+    "--toolbarbutton-background-color-hover",
+  ],
   [
     "--toolbarbutton-active-background",
     "--toolbarbutton-background-color-active",
@@ -113,34 +117,11 @@ export const GECKO_152_RENAMED_VARS: ReadonlyArray<
   ["--panel-background", "--panel-background-color"],
 ];
 
-/**
- * Tokens that are referenced on 152 but NOT defined by it, so they must be
- * synthesized by Floorp. Each entry is `[name, chain]` and the alias is
- * emitted as `name: chain` without !important.
- *
- * `--toolbar-text-color` is the important one: `tab.tokens.css` on 152 reads
- * `--tab-selected-textcolor: var(--toolbar-text-color)`, but Mozilla defines
- * `--toolbar-text-color` nowhere — it is expected to come from the active
- * theme / LWT / Lepton. On a plain build it is therefore empty and selected
- * tab text goes unstyled. Alias it to `--toolbar-color` (the 152-surviving
- * token that actually carries the toolbar text color), letting LWTs that set
- * `--lwt-text-color` win first.
- */
-export const GECKO_152_SYNTHESIZED_VARS: ReadonlyArray<
-  readonly [string, string]
-> = [
-  // Prefer an LWT-provided text color, then the surviving toolbar token.
-  ["--toolbar-text-color", "var(--lwt-text-color, var(--toolbar-color))"],
-];
-
 function buildAliasDeclarations(): string {
   const renamed = GECKO_152_RENAMED_VARS.map(([legacy, renamed]) =>
     `  ${legacy}: var(${renamed});`
   );
-  const synthesized = GECKO_152_SYNTHESIZED_VARS.map(([name, chain]) =>
-    `  ${name}: ${chain};`
-  );
-  return [...renamed, ...synthesized].join("\n");
+  return renamed.join("\n");
 }
 
 /**
