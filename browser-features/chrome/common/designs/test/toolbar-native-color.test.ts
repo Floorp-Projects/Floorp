@@ -51,8 +51,10 @@ function preservesToolbarColor(
     toolbar.appendChild(tab);
     shadow.appendChild(toolbar);
     for (const element of [toolbar, tab]) {
+      const computed = win.getComputedStyle(element);
+      assert(computed, `${element.id} must have computed styles`);
       assertEquals(
-        win.getComputedStyle(element).color,
+        computed.color,
         nativeColor,
         `${element.id} must retain the native/theme toolbar text color`,
       );
