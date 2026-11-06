@@ -58,13 +58,18 @@ export class SsbPageAction {
         }
       });
     };
+    const onManifestNotification = (subject: nsISupports | null) => {
+      // The observer service is process-wide. A background tab or another
+      // window loading a page must not refetch this window's selected manifest.
+      if (subject === globalThis.gBrowser.selectedBrowser) onManifestCheck();
+    };
     onCleanup(() => {
       this.disposed = true;
       this.manifestCheckGeneration++;
       if (manifestObserverRegistered) {
         manifestObserverRegistered = false;
         Services.obs.removeObserver(
-          onManifestCheck,
+          onManifestNotification,
           "nora-pwa-check-page-has-manifest",
         );
       }
@@ -82,7 +87,7 @@ export class SsbPageAction {
     render(() => this.Style(), document?.head);
 
     Services.obs.addObserver(
-      onManifestCheck,
+      onManifestNotification,
       "nora-pwa-check-page-has-manifest",
     );
     manifestObserverRegistered = true;

@@ -134,6 +134,18 @@ export class SsbRunnerUtils {
       Ci.nsIWritablePropertyBag2,
     );
     extraOptions.setPropertyAsAString("ssbid", ssb.id);
+    if (AppConstants.platform === "linux") {
+      const { LinuxSupport } = ChromeUtils.importESModule(
+        "resource://noraneko/modules/pwa/supports/Linux.sys.mjs",
+      );
+      // --name only affects process startup. A window opened in an existing
+      // process still needs its own generated launcher identity. Set Gecko's
+      // window attribute during creation; leave native taskbar rollout gated.
+      extraOptions.setPropertyAsAString(
+        "taskbartabclass",
+        LinuxSupport.getWindowClass(ssb),
+      );
+    }
     // Set taskbartab attribute to leverage SessionStore's existing handling
     // This excludes PWA windows from session restore and treats them like TaskBarTabs
     extraOptions.setPropertyAsAString("taskbartab", ssb.id);
@@ -252,6 +264,15 @@ export class SSBCommandLineHandler {
   handle(cmdLine: nsICommandLine) {
     const id = cmdLine.handleFlagWithParam("start-ssb", false);
     if (id) {
+      if (
+        AppConstants.platform === "linux" &&
+        cmdLine.state === Ci.nsICommandLine.STATE_INITIAL_LAUNCH
+      ) {
+        const { LinuxSupport } = ChromeUtils.importESModule(
+          "resource://noraneko/modules/pwa/supports/Linux.sys.mjs",
+        );
+        LinuxSupport.registerBrowserWindowIdentity();
+      }
       // Prevent default browser window from opening - PWA should launch standalone
       cmdLine.preventDefault = true;
 
