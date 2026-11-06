@@ -22,6 +22,7 @@ import {
   GECKO_152_COLOR_FIX_CSS,
   LEPTON_COMPAT_152_CSS,
   LEPTON_COMPAT_CSS,
+  LEPTON_CONTAINER_GEOMETRY_CSS,
   LEPTON_CONTAINER_INDICATOR_CSS,
 } from "../utils/lepton-compat-152.css.ts";
 import {
@@ -686,8 +687,8 @@ function testBundledCompatIsColorPlusLepton(): void {
   assertEquals(
     LEPTON_COMPAT_CSS,
     GECKO_152_COLOR_FIX_CSS + "\n" + LEPTON_COMPAT_152_CSS + "\n" +
-      LEPTON_CONTAINER_INDICATOR_CSS,
-    "LEPTON_COMPAT_CSS must bundle the color fix + Lepton compat",
+      LEPTON_CONTAINER_INDICATOR_CSS + "\n" + LEPTON_CONTAINER_GEOMETRY_CSS,
+    "LEPTON_COMPAT_CSS must retain color, Lepton, Photon and non-Photon fixes",
   );
 }
 
