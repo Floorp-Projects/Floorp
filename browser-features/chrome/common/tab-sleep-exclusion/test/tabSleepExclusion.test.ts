@@ -1026,6 +1026,12 @@ function testConstructionPreservesExclusionsAcrossNavigation(): void {
     addTabsProgressListener: (listener: { onLocationChange: () => void }) => {
       progressListeners.push(listener);
     },
+    removeTabsProgressListener: (
+      listener: { onLocationChange: () => void },
+    ) => {
+      const index = progressListeners.indexOf(listener);
+      if (index !== -1) progressListeners.splice(index, 1);
+    },
   };
   globalThis.addEventListener =
     (() => {}) as typeof globalThis.addEventListener;
@@ -1049,6 +1055,11 @@ function testConstructionPreservesExclusionsAcrossNavigation(): void {
     // The observer handle must also survive construction so cleanup can remove
     // it. A later preference change must not reach the disposed instance.
     subject.cleanup();
+    assertEquals(
+      progressListeners.length,
+      0,
+      "cleanup removes its progress listener",
+    );
     Services.prefs.setStringPref(
       TAB_SLEEP_EXCLUSION_PREF,
       JSON.stringify({ enabled: false, patterns: [] }),
@@ -1060,14 +1071,17 @@ function testConstructionPreservesExclusionsAcrossNavigation(): void {
       "cleanup unregisters the observer installed during construction",
     );
   } finally {
-    subject?.cleanup();
-    lifecycle.dispatchEvent(new Event("unload"));
-    globalThis.addEventListener = originalAddEventListener;
-    (globalThis as Record<string, unknown>).gBrowser = originalGBrowser;
-    if (hadUserValue) {
-      Services.prefs.setStringPref(TAB_SLEEP_EXCLUSION_PREF, original);
-    } else {
-      Services.prefs.clearUserPref(TAB_SLEEP_EXCLUSION_PREF);
+    try {
+      subject?.cleanup();
+      lifecycle.dispatchEvent(new Event("unload"));
+    } finally {
+      globalThis.addEventListener = originalAddEventListener;
+      (globalThis as Record<string, unknown>).gBrowser = originalGBrowser;
+      if (hadUserValue) {
+        Services.prefs.setStringPref(TAB_SLEEP_EXCLUSION_PREF, original);
+      } else {
+        Services.prefs.clearUserPref(TAB_SLEEP_EXCLUSION_PREF);
+      }
     }
   }
 }
@@ -1099,12 +1113,29 @@ function testInitCallsAllSetupMethods(): void {
     applyToAllTabsCalled = true;
   };
 
-  subject.init();
+  const originalGBrowser = globalThis.gBrowser;
+  (globalThis as Record<string, unknown>).gBrowser = {
+    tabs: [],
+    addTabsProgressListener: () => {},
+  };
+  try {
+    subject.init();
 
-  assertEquals(loadSettingsCalled, true, "should call loadSettings");
-  assertEquals(setupPrefObserverCalled, true, "should call setupPrefObserver");
-  assertEquals(setupTabListenersCalled, true, "should call setupTabListeners");
-  assertEquals(applyToAllTabsCalled, true, "should call applyToAllTabs");
+    assertEquals(loadSettingsCalled, true, "should call loadSettings");
+    assertEquals(
+      setupPrefObserverCalled,
+      true,
+      "should call setupPrefObserver",
+    );
+    assertEquals(
+      setupTabListenersCalled,
+      true,
+      "should call setupTabListeners",
+    );
+    assertEquals(applyToAllTabsCalled, true, "should call applyToAllTabs");
+  } finally {
+    globalThis.gBrowser = originalGBrowser;
+  }
 }
 
 /**
