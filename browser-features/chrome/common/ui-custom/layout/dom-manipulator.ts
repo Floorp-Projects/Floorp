@@ -6,6 +6,10 @@
 import { createEffect } from "solid-js";
 import { config } from "#features-chrome/common/designs/configs.ts";
 import Workspaces from "#features-chrome/common/workspaces/index.ts";
+import {
+  handleBookmarkMenuMiddleCommand,
+  handleBookmarkMiddleClick,
+} from "./bookmark-middle-click.ts";
 
 const DOM_LAYOUT_MANAGER_DEBUG_PREFIX = "[DOMLayoutManager]";
 
@@ -300,6 +304,14 @@ function updateForwardingTarget(target: EventTarget | null): void {
 
   const handler = (event: Event) => {
     const target = event.target as Element | null;
+    const mirror = event.currentTarget as Element | null;
+    if (
+      mirror?.id === "PersonalToolbar" &&
+      (handleBookmarkMiddleClick(event, mirror) ||
+        handleBookmarkMenuMiddleCommand(event, mirror))
+    ) {
+      return;
+    }
 
     // Special handling for star-button (bookmark button) - check before forwarding
     if (event.type === "click") {
@@ -1826,6 +1838,13 @@ export class DOMLayoutManager {
           !bookmarkBar.contains(target) &&
           currentTarget !== bookmarkBar &&
           (!currentTarget || !bookmarkBar.contains(currentTarget)))
+      ) {
+        return;
+      }
+
+      if (
+        handleBookmarkMiddleClick(event, bookmarkBar) ||
+        handleBookmarkMenuMiddleCommand(event, bookmarkBar)
       ) {
         return;
       }
