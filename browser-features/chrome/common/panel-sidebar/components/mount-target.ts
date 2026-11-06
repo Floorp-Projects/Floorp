@@ -5,10 +5,12 @@ export async function getPanelMountTargets(
   doc: Document,
   sidebarReady: Promise<void>,
   win: Window,
+  signal?: AbortSignal,
 ): Promise<{ parent: HTMLElement; before: HTMLElement } | null> {
-  if (win.closed) return null;
+  if (win.closed || signal?.aborted) return null;
   let onDocumentReady: (() => void) | undefined;
   let onUnload: (() => void) | undefined;
+  let onAbort: (() => void) | undefined;
   const documentReady = doc.readyState === "loading"
     ? new Promise<void>((resolve) => {
       onDocumentReady = resolve;
@@ -19,6 +21,10 @@ export async function getPanelMountTargets(
     onUnload = () => resolve(false);
     win.addEventListener("unload", onUnload, { once: true });
   });
+  const aborted = new Promise<false>((resolve) => {
+    onAbort = () => resolve(false);
+    signal?.addEventListener("abort", onAbort, { once: true });
+  });
   let ready: boolean;
   try {
     // Attach a rejection handler to sidebarReady immediately, even while DOM
@@ -26,14 +32,16 @@ export async function getPanelMountTargets(
     ready = await Promise.race([
       Promise.all([documentReady, sidebarReady]).then(() => true),
       unloaded,
+      aborted,
     ]);
   } finally {
     if (onDocumentReady) {
       doc.removeEventListener("DOMContentLoaded", onDocumentReady);
     }
     if (onUnload) win.removeEventListener("unload", onUnload);
+    if (onAbort) signal?.removeEventListener("abort", onAbort);
   }
-  if (!ready || win.closed) return null;
+  if (!ready || win.closed || signal?.aborted) return null;
   const parent = doc.getElementById("browser");
   const before = doc.getElementById("tabbrowser-tabbox");
   if (!parent || !before || before.parentNode !== parent) {

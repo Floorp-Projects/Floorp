@@ -13,6 +13,7 @@ import {
   createRoot,
   getOwner,
   on,
+  onCleanup,
   runWithOwner,
   Show,
 } from "solid-js";
@@ -44,6 +45,13 @@ export class PanelSidebarElem {
     // Wait for the sidebar controller to be initialized
     // This is a workaround to avoid Extension Sidebar Panels not being loaded
     const owner = getOwner();
+    const startup = new AbortController();
+    if (owner) {
+      onCleanup(() => {
+        startup.abort();
+        this.sidebarMounted = false;
+      });
+    }
     const SidebarController = (globalThis as unknown as {
       SidebarController: { promiseInitialized: Promise<void> };
     }).SidebarController;
@@ -51,8 +59,11 @@ export class PanelSidebarElem {
       document,
       SidebarController.promiseInitialized,
       window,
+      startup.signal,
     ).then((targets) => {
-      if (!targets || window.closed) return;
+      // Disposal can also happen after readiness resolves but before this
+      // continuation runs. Never render into an owner that has been disposed.
+      if (!targets || window.closed || startup.signal.aborted) return;
       const { parent, before } = targets;
       const exec = () => {
         render(() => this.sidebar(), parent, {
@@ -63,7 +74,7 @@ export class PanelSidebarElem {
       if (owner) runWithOwner(owner, exec);
       else createRoot(exec);
     }).catch((error: unknown) => {
-      if (!window.closed) {
+      if (!window.closed && !startup.signal.aborted) {
         console.error("[PanelSidebar] Failed to mount:", error);
       }
     });

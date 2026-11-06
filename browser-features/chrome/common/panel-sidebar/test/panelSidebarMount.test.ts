@@ -114,6 +114,86 @@ async function testClosedAndRejectedStartup() {
   );
 }
 
+async function testDisposedPendingStartup() {
+  const events = new EventTarget();
+  let lookups = 0;
+  const doc = {
+    readyState: "loading",
+    addEventListener: events.addEventListener.bind(events),
+    removeEventListener: events.removeEventListener.bind(events),
+    getElementById() {
+      lookups++;
+      return null;
+    },
+  } as unknown as Document;
+  const win = fakeWindow();
+  const startup = new AbortController();
+  let rejectSidebar = (_error: Error) => {};
+  const sidebarReady = new Promise<void>((_resolve, reject) => {
+    rejectSidebar = reject;
+  });
+  let settled = false;
+  const pending = getPanelMountTargets(doc, sidebarReady, win, startup.signal)
+    .then((targets) => {
+      settled = true;
+      return targets;
+    });
+  startup.abort();
+  // Allow cancellation to settle, then unload only to clean up a broken
+  // implementation too. The assertion must distinguish these two causes.
+  await new Promise<void>((resolve) => setTimeout(resolve, 0));
+  const stoppedBeforeUnload = settled;
+  win.dispatchEvent(new Event("unload"));
+  assertEquals(await pending, null, "cancelled startup must have no targets");
+  assert(!win.closed, "owner disposal does not require closing the window");
+  rejectSidebar(new Error("sidebar rejected after owner disposal"));
+  events.dispatchEvent(new Event("DOMContentLoaded"));
+  await Promise.resolve();
+  assertEquals(lookups, 0, "disposed startup must not look up mount targets");
+  assert(
+    stoppedBeforeUnload,
+    "owner disposal must stop waiting without unload",
+  );
+}
+
+async function testDisposedReadyStartup() {
+  const parent = document.createElement("div");
+  const before = document.createElement("div");
+  parent.appendChild(before);
+  let lookups = 0;
+  const doc = {
+    readyState: "complete",
+    getElementById(id: string) {
+      lookups++;
+      return id === "browser" ? parent : before;
+    },
+  } as unknown as Document;
+  const startup = new AbortController();
+  const pending = getPanelMountTargets(
+    doc,
+    Promise.resolve(),
+    fakeWindow(),
+    startup.signal,
+  );
+  startup.abort();
+  assertEquals(await pending, null, "disposal wins over queued readiness");
+  assertEquals(
+    lookups,
+    0,
+    "queued readiness must not look up disposed targets",
+  );
+  assertEquals(
+    await getPanelMountTargets(
+      doc,
+      Promise.resolve(),
+      fakeWindow(),
+      startup.signal,
+    ),
+    null,
+    "an already disposed owner must not start waiting",
+  );
+}
+
 export async function runAllTests(): Promise<void> {
   await runTests("panelSidebarMount.test.ts", [
     { name: "late document and sidebar mount", fn: testLateWindowTargets },
@@ -125,5 +205,10 @@ export async function runAllTests(): Promise<void> {
       name: "closed window and early sidebar rejection",
       fn: testClosedAndRejectedStartup,
     },
+    {
+      name: "owner disposed during pending startup",
+      fn: testDisposedPendingStartup,
+    },
+    { name: "owner disposed with ready startup", fn: testDisposedReadyStartup },
   ]);
 }
