@@ -44,6 +44,7 @@ export function addVerticalTabsObserver(
   };
 
   Services.prefs.addObserver(VERTICAL_TABS_PREF, onPrefChange);
+  onPrefChange();
 
   return () => {
     try {
