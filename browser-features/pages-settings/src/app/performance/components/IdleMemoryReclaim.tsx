@@ -9,6 +9,7 @@ import {
   forwardRef,
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -60,24 +61,33 @@ function NumberField({
   disabled,
   onCommit,
 }: NumberFieldProps) {
-  const [text, setText] = useState(String(value));
+  const { i18n } = useTranslation();
+  const locale = i18n.language || "en-US";
+  const formatOptions = useMemo<Intl.NumberFormatOptions>(() => ({
+    useGrouping: false,
+    maximumFractionDigits: 20,
+  }), []);
+  const formatter = useMemo(
+    () => new Intl.NumberFormat(locale, formatOptions),
+    [locale, formatOptions],
+  );
+  const [text, setText] = useState(() => formatter.format(value));
   const [compositionValue, setCompositionValue] = useState<string | null>(null);
   const composing = useRef(false);
 
   useEffect(() => {
-    setText(String(value));
-  }, [value]);
+    setText(formatter.format(value));
+  }, [value, formatter]);
 
-  const commit = (rawValue: string) => {
+  const commit = (parsed: number) => {
     if (composing.current) return;
-    const parsed = Number(rawValue);
     if (!Number.isFinite(parsed)) {
-      setText(String(value));
+      setText(formatter.format(value));
       return;
     }
 
     const next = Math.max(min, Math.round(parsed));
-    setText(String(next));
+    setText(formatter.format(next));
     if (next !== value) {
       onCommit(next);
     }
@@ -91,6 +101,11 @@ function NumberField({
       <NumberInput.Root
         ids={{ input: id }}
         min={min}
+        locale={locale}
+        // Use the same locale parser for validation and numeric conversion.
+        // Without formatOptions, Ark accepts localized digits but then parses
+        // them with parseFloat, which can erase or truncate the draft.
+        formatOptions={formatOptions}
         // Ark also formats and writes the input when its controlled value changes.
         // Keep that value stable while the IME owns the native composition range.
         value={compositionValue ?? text}
@@ -99,7 +114,8 @@ function NumberField({
         onValueChange={({ value }) => {
           if (!composing.current) setText(value);
         }}
-        onValueCommit={({ value }) => commit(value)}
+        onValueCommit={({ valueAsNumber }) =>
+          commit(text.trim() === "" ? 0 : valueAsNumber)}
       >
         <NumberInput.Input asChild>
           <ControlledNumberInput
