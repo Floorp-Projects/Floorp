@@ -7,6 +7,7 @@ import type {
 } from "../../../../modules/common/defines.ts";
 import type { ContextMenuCatalogSnapshot } from "#features-chrome/common/context-menu/types.ts";
 import { createBirpc } from "birpc";
+import { devPortString } from "../../../../../libs/shared/dev-ports/defines.ts";
 import { usesSettingsActor } from "../../../../../libs/ui/settings-rpc-origin.ts";
 import type { AppLifecycleSettings } from "#libs/pwa/appLifecycleTypes.ts";
 
@@ -114,7 +115,10 @@ function waitForSettingsBridge(): Promise<Window> {
 }
 
 // about:hub is privileged even when its scripts are served by Vite.
-const isLocalhost5183 = usesSettingsActor(globalThis.location.href, "5183");
+const isLocalhost5183 = usesSettingsActor(
+  globalThis.location.href,
+  devPortString("settings"),
+);
 
 export function createSettingsBridgeTransport(
   resolveBridge: () => Promise<Window> = waitForSettingsBridge,

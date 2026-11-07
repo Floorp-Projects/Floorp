@@ -1,3 +1,4 @@
+import { moduleUrlServedFromDevPort } from "../../../../../libs/shared/dev-ports/defines.ts";
 import type { NRSettingsParentFunctions } from "../../../../modules/common/defines.ts";
 import { createBirpc } from "birpc";
 
@@ -12,7 +13,10 @@ declare global {
   }
 }
 
-const isLocalhost5188 = import.meta.url?.includes("localhost:5188");
+const isLocalhost5188 = moduleUrlServedFromDevPort(
+  import.meta.url,
+  "notes",
+);
 
 const directServicesFunctions: NRSettingsParentFunctions = {
   getBoolPref: (prefName) => {

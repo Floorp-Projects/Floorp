@@ -3,6 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import { isTrustedDevPort } from "#libs/shared/dev-ports/defines.ts";
+
 // Open a URL in a new tab from the browser window. A plain <a target="_blank">
 // click inside a system-principal about page (about:welcome) opens about:blank,
 // so the page routes external links here instead. See Floorp issue #2787.
@@ -59,7 +61,8 @@ export class NRWelcomePageParent extends JSWindowActorParent {
         const isWelcomePage = !!uri && (
           uri.spec.split(/[?#]/)[0] === "about:welcome" ||
           (uri.schemeIs("chrome") && uri.host === "noraneko-welcome") ||
-          (uri.schemeIs("http") && uri.port === 5187 &&
+          (uri.schemeIs("http") &&
+            isTrustedDevPort(uri.port, ["welcome"]) &&
             (uri.host === "localhost" || uri.host === "127.0.0.1"))
         );
         if (
@@ -75,7 +78,8 @@ export class NRWelcomePageParent extends JSWindowActorParent {
         const uri = this.manager.documentURI;
         const isWelcomePage = uri.spec.split(/[?#]/)[0] === "about:welcome" ||
           (uri.schemeIs("chrome") && uri.host === "noraneko-welcome") ||
-          (uri.schemeIs("http") && uri.port === 5187 &&
+          (uri.schemeIs("http") &&
+            isTrustedDevPort(uri.port, ["welcome"]) &&
             (uri.host === "localhost" || uri.host === "127.0.0.1"));
         // Only the current top-level welcome document may dismiss its own tab.
         if (

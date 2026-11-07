@@ -1,4 +1,6 @@
 /* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
+
+import { isTrustedDevPort } from "#libs/shared/dev-ports/defines.ts";
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -7,7 +9,7 @@ export class NRPanelSidebarChild extends JSWindowActorChild {
   actorCreated() {
     const window = this.contentWindow;
     if (
-      window?.location.port === "5183" ||
+      isTrustedDevPort(window?.location.port, ["settings"]) ||
       window?.location.href.startsWith("chrome://noraneko-settings") ||
       window?.location.href.startsWith("about:")
     ) {

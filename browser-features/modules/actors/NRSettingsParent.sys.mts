@@ -44,7 +44,15 @@ function openExternalLinkInBrowser(
 
 //TODO: make reject when the name is invalid
 import type { ContextMenuCatalogSnapshot } from "#features-chrome/common/context-menu/types.ts";
-import type { NotesPreferenceSnapshot, NotesStorageService, NotesSyncContext } from "../common/notes-storage-types.ts";
+import type {
+  NotesPreferenceSnapshot,
+  NotesStorageService,
+  NotesSyncContext,
+} from "../common/notes-storage-types.ts";
+import {
+  HUB_DEV_PAGES,
+  isTrustedDevPort,
+} from "#libs/shared/dev-ports/defines.ts";
 
 interface ContextMenuCatalogServiceModule {
   ContextMenuCatalogService: {
@@ -74,10 +82,18 @@ export class NRSettingsParent extends JSWindowActorParent {
       case "getNotesSnapshot":
         return FloorpNotesStorage.getSnapshot();
       case "readNotesSyncState":
-        return FloorpNotesStorage.readSyncState(data?.snapshot as NotesPreferenceSnapshot);
+        return FloorpNotesStorage.readSyncState(
+          data?.snapshot as NotesPreferenceSnapshot,
+        );
       case "writeNotesPref":
-        if (typeof data?.value !== "string") throw new TypeError("Invalid Notes value");
-        return FloorpNotesStorage.writeLocal(data.value, data.context as NotesSyncContext | undefined, data.baseValue as string | null | undefined);
+        if (typeof data?.value !== "string") {
+          throw new TypeError("Invalid Notes value");
+        }
+        return FloorpNotesStorage.writeLocal(
+          data.value,
+          data.context as NotesSyncContext | undefined,
+          data.baseValue as string | null | undefined,
+        );
       case "getContextMenuCatalog":
         return ContextMenuCatalogService.getSnapshot();
       case "getContextMenuCatalogRevision":
@@ -92,7 +108,7 @@ export class NRSettingsParent extends JSWindowActorParent {
           uri.spec.split(/[?#]/)[0] === "about:hub" ||
           (uri.schemeIs("http") &&
             (uri.host === "localhost" || uri.host === "127.0.0.1") &&
-            [5183, 5186, 5187, 5188].includes(uri.port))
+            isTrustedDevPort(uri.port, HUB_DEV_PAGES))
         );
         if (
           url && isSettingsPage && context && !context.parent &&
@@ -131,7 +147,9 @@ export class NRSettingsParent extends JSWindowActorParent {
       case "getStringPref": {
         const name = data && typeof data.name === "string" ? data.name : null;
         if (!name) return null;
-        if (name === "floorp.browser.note.memos") return FloorpNotesStorage.getSnapshot().value;
+        if (name === "floorp.browser.note.memos") {
+          return FloorpNotesStorage.getSnapshot().value;
+        }
         if (Services.prefs.getPrefType(name) != Services.prefs.PREF_STRING) {
           return null;
         }
@@ -190,8 +208,9 @@ export class NRSettingsParent extends JSWindowActorParent {
             ? data.prefValue
             : null;
           if (!name || val === null) return null;
-          if (name === "floorp.browser.note.memos") FloorpNotesStorage.writeLocal(val);
-          else Services.prefs.setStringPref(name, val);
+          if (name === "floorp.browser.note.memos") {
+            FloorpNotesStorage.writeLocal(val);
+          } else Services.prefs.setStringPref(name, val);
         }
         break;
       }
