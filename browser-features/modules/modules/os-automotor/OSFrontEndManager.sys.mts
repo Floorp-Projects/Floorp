@@ -8,7 +8,7 @@
  * Progress state is stored here and queried by the progress window via Actor.
  */
 
-import { launchDevPorts } from "../common/dev-port-offset.ts";
+import { launchDevPorts } from "../../common/dev-port-offset.ts";
 
 /** Launch-local dev port resolver (FDH Gate 2 task 2-B): resolves the
  * table names to the ports this launch actually uses (offset-aware). */
