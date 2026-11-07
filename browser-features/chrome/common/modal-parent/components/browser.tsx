@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { modalSize } from "../data/data";
-import { launchDevPorts } from "../../../../modules/common/dev-port-offset.ts";
+import { launchDevPorts } from "#modules/common/dev-port-offset.ts";
 
 /** Launch-local dev port resolver (FDH Gate 2 task 2-B). */
 const launchDevPort = launchDevPorts();

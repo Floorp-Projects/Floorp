@@ -86,7 +86,7 @@ import tabbarOneLinerCSS from "./chrome-extras-css/tabbar-one-liner.css?inline";
 import urlViewAlwaysShowPageActionsCSS from "./chrome-extras-css/url-view-always-show-page-actions.css?inline";
 import urlViewGoButtonWhenTypingCSS from "./chrome-extras-css/url-view-go-button-when-typing.css?inline";
 import urlViewMoveIconToLeftCSS from "./chrome-extras-css/url-view-move-icon-to-left.css?inline";
-import { launchDevPorts } from "../../../modules/common/dev-port-offset.ts";
+import { launchDevPorts } from "#modules/common/dev-port-offset.ts";
 
 /** Launch-local dev port resolver (FDH Gate 2 task 2-B). */
 const launchDevPort = launchDevPorts();

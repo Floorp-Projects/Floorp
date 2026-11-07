@@ -1,4 +1,4 @@
-import { launchDevPorts } from "../../modules/common/dev-port-offset.ts";
+import { launchDevPorts } from "#modules/common/dev-port-offset.ts";
 
 /** Launch-local dev port resolver (FDH Gate 2 task 2-B). */
 const launchDevPort = launchDevPorts();
