@@ -1,0 +1,349 @@
+{
+  "schemaVersion": 1,
+  "sourceFormat": "final-package-qa",
+  "envelope": {
+    "epoch": 1,
+    "principal": {
+      "id": "fdh-evidence-converter",
+      "kind": "agent",
+      "grantedBy": "authenticated-dsh-host"
+    },
+    "entities": [
+      {
+        "kind": "task",
+        "id": "scheduler:task:final-package-qa-windows-984509d2053b",
+        "issuer": "scheduler",
+        "owner": "UNVERIFIED",
+        "ownerRole": "task-owner",
+        "label": "final-package QA for windows"
+      },
+      {
+        "kind": "job",
+        "id": "scheduler:job:final-package-qa-windows-41736555270",
+        "issuer": "scheduler",
+        "owner": "UNVERIFIED",
+        "ownerRole": "job-owner",
+        "label": "workflow run 41736555270"
+      },
+      {
+        "kind": "run",
+        "id": "executor:run:41736555270",
+        "issuer": "executor",
+        "owner": "UNVERIFIED",
+        "ownerRole": "run-owner"
+      },
+      {
+        "kind": "attempt",
+        "id": "executor:attempt:41736555270:1",
+        "issuer": "executor",
+        "owner": "UNVERIFIED",
+        "ownerRole": "run-owner"
+      },
+      {
+        "kind": "session",
+        "id": "host:session:final-package-qa-41736555270",
+        "issuer": "host",
+        "owner": "UNVERIFIED",
+        "ownerRole": "session-owner",
+        "context": "final-package QA session"
+      },
+      {
+        "kind": "workspace",
+        "id": "host:workspace:final-package-windows",
+        "issuer": "host",
+        "owner": "UNVERIFIED",
+        "ownerRole": "workspace-owner",
+        "path": "final-package QA host for windows"
+      },
+      {
+        "kind": "approval",
+        "id": "host-authorization:approval:publication-41736555270",
+        "issuer": "host-authorization",
+        "owner": "UNVERIFIED",
+        "ownerRole": "approver",
+        "label": "no approval is requested by this record",
+        "decision": "not-required"
+      }
+    ],
+    "relationships": [
+      {
+        "from": "scheduler:task:final-package-qa-windows-984509d2053b",
+        "type": "task-has-job",
+        "to": "scheduler:job:final-package-qa-windows-41736555270"
+      },
+      {
+        "from": "scheduler:job:final-package-qa-windows-41736555270",
+        "type": "job-has-run",
+        "to": "executor:run:41736555270"
+      },
+      {
+        "from": "executor:run:41736555270",
+        "type": "run-has-attempt",
+        "to": "executor:attempt:41736555270:1"
+      },
+      {
+        "from": "executor:run:41736555270",
+        "type": "run-uses-session",
+        "to": "host:session:final-package-qa-41736555270"
+      },
+      {
+        "from": "executor:run:41736555270",
+        "type": "run-in-workspace",
+        "to": "host:workspace:final-package-windows"
+      },
+      {
+        "from": "host-authorization:approval:publication-41736555270",
+        "type": "approval-for-job",
+        "to": "scheduler:job:final-package-qa-windows-41736555270"
+      }
+    ],
+    "taskStatus": {
+      "state": "succeeded",
+      "cancelRequested": false
+    },
+    "cancelRequested": false,
+    "stateTransition": {
+      "from": "running",
+      "to": "succeeded",
+      "at": null,
+      "reason": "status=passed"
+    }
+  },
+  "runtime": {
+    "os": {
+      "name": "windows",
+      "version": "unknown",
+      "arch": "x86_64"
+    },
+    "build": {
+      "commit": "984509d2053be7bae9027133bda7259cd706b208",
+      "id": "20261103153232",
+      "repository": "Floorp-Projects/Floorp",
+      "workflowRun": 41736555270
+    },
+    "packageDigest": {
+      "algorithm": "sha256",
+      "value": "303fe630a53e2153273ab10f0731ea9c59944c1907bd90d692d2c0cd0fffd06c",
+      "artifact": "noraneko-windows-x86_64-installer"
+    },
+    "toolchain": {
+      "dsh": {
+        "version": "UNVERIFIED",
+        "pin": "UNVERIFIED"
+      },
+      "floorp": {
+        "commit": "984509d2053be7bae9027133bda7259cd706b208",
+        "pin": "floorp@984509d2053be7bae9027133bda7259cd706b208"
+      },
+      "runtime": {
+        "commit": "8965ffc346d426ccdf919bd18585e4d4a0c21654",
+        "pin": "floorp-runtime@8965ffc346d426ccdf919bd18585e4d4a0c21654"
+      }
+    }
+  },
+  "attempts": [
+    {
+      "run": "executor:run:41736555270",
+      "attempt": 1,
+      "startedAt": null,
+      "endedAt": null,
+      "result": "passed",
+      "exitCode": null,
+      "logRef": "report.json",
+      "notes": "The report records no wall-clock attempt window; hostExitCode belongs to the browser host process and is reported under cleanup."
+    }
+  ],
+  "operations": [
+    {
+      "input": "bundled UI and HTTP checks over Marionette",
+      "target": "D:\\a\\_temp\\browser\\core\\floorp.exe profile a13080a7",
+      "order": 1,
+      "observation": "method=bundled UI and HTTP; 16 checks recorded"
+    },
+    {
+      "input": "HTTP User-Agent observations per panel state",
+      "target": "web panel UA switching",
+      "order": 2,
+      "observation": "normal=5 mobile=2 other=0 requests"
+    },
+    {
+      "input": "host process identity and cleanup signal",
+      "target": "owned host pid 5576",
+      "order": 3,
+      "observation": "verified=True; cleanupRequestedSignal=15 (Windows); hostExitCode=1"
+    }
+  ],
+  "assertions": [
+    {
+      "name": "report-status",
+      "expected": "passed",
+      "actual": "passed",
+      "passed": true
+    },
+    {
+      "name": "native-record-verification",
+      "expected": "verified",
+      "actual": "verified",
+      "passed": true
+    },
+    {
+      "name": "host-process-identity-verified",
+      "expected": "true",
+      "actual": "true",
+      "passed": true
+    },
+    {
+      "name": "app-build-id-binds-to-runtime-expected-build-id",
+      "expected": "20261103153232",
+      "actual": "20261103153232",
+      "passed": true
+    },
+    {
+      "name": "package-digest-format",
+      "expected": "sha256:<64 hex characters>",
+      "actual": "sha256:303fe630a53e2153273ab10f0731ea9c59944c1907bd90d692d2c0cd0fffd06c",
+      "passed": true
+    },
+    {
+      "name": "check:normal-while-mobile-on:browser-id-agreement",
+      "expected": "18",
+      "actual": "18",
+      "passed": true
+    },
+    {
+      "name": "check:mobile:browser-id-agreement",
+      "expected": "19",
+      "actual": "19",
+      "passed": true
+    },
+    {
+      "name": "check:mobile-reload:browser-identity",
+      "expected": "browser identity recorded",
+      "actual": "browserId=19",
+      "passed": true
+    },
+    {
+      "name": "check:mobile-navigation:browser-id-agreement",
+      "expected": "19",
+      "actual": "19",
+      "passed": true
+    },
+    {
+      "name": "check:other-panel:browser-id-agreement",
+      "expected": "20",
+      "actual": "20",
+      "passed": true
+    },
+    {
+      "name": "check:hidden-mobile:browser-id-agreement",
+      "expected": "19",
+      "actual": "19",
+      "passed": true
+    },
+    {
+      "name": "check:menu-command:trusted-event",
+      "expected": "trusted browser event",
+      "actual": "trusted=true",
+      "passed": true
+    },
+    {
+      "name": "check:normal-while-mobile-off:browser-id-agreement",
+      "expected": "18",
+      "actual": "18",
+      "passed": true
+    },
+    {
+      "name": "check:disabled:browser-id-agreement",
+      "expected": "21",
+      "actual": "21",
+      "passed": true
+    },
+    {
+      "name": "check:disabled-reload:browser-identity",
+      "expected": "browser identity recorded",
+      "actual": "browserId=21",
+      "passed": true
+    },
+    {
+      "name": "check:menu-command:trusted-event",
+      "expected": "trusted browser event",
+      "actual": "trusted=true",
+      "passed": true
+    },
+    {
+      "name": "check:normal-after-mobile-reenabled:browser-id-agreement",
+      "expected": "18",
+      "actual": "18",
+      "passed": true
+    },
+    {
+      "name": "check:reenabled:browser-id-agreement",
+      "expected": "22",
+      "actual": "22",
+      "passed": true
+    },
+    {
+      "name": "check:menu-command:trusted-event",
+      "expected": "trusted browser event",
+      "actual": "trusted=true",
+      "passed": true
+    },
+    {
+      "name": "check:normal-after-panel-removal:browser-id-agreement",
+      "expected": "18",
+      "actual": "18",
+      "passed": true
+    },
+    {
+      "name": "check:other-after-removal:browser-id-agreement",
+      "expected": "20",
+      "actual": "20",
+      "passed": true
+    }
+  ],
+  "environmentFidelity": {
+    "host": "windows x86_64 host running the packaged Floorp 159.0.1 under Marionette",
+    "network": "not-used",
+    "matchesTarget": true,
+    "deviations": [
+      "only local Marionette and loopback HTTP requests are recorded by the report"
+    ],
+    "notes": "The packaged product runs on its target OS/architecture with the recorded profile preferences; no update or installer path is exercised here."
+  },
+  "inputFidelity": {
+    "inputs": [
+      {
+        "path": "floorp-package:noraneko-windows-x86_64-installer",
+        "sha256": "303fe630a53e2153273ab10f0731ea9c59944c1907bd90d692d2c0cd0fffd06c"
+      },
+      {
+        "path": "runtime-artifact:Floorp-Projects/Floorp-Runtime",
+        "sha256": "9eb4b08f2da5cdd535232edeb37ddd3866d47492e17f5921e115eb4a4f7180c6"
+      }
+    ],
+    "unchangedDuringRun": true,
+    "deviations": [],
+    "notes": "The browser binary, profile preferences and native record are pinned by the artifact digests and build ids above."
+  },
+  "visualJudge": null,
+  "cleanup": {
+    "result": "completed",
+    "details": [
+      "cleanup signal 15 requested on Windows for owned host pid 5576",
+      "browser host exited with hostExitCode=1"
+    ],
+    "notes": "Cleanup completed from the report's point of view: the owned host process exited after the requested signal."
+  },
+  "limitations": [
+    "Cleanup evidence shows the owned host process exited after the requested signal; absence of residual processes is not asserted.",
+    "DSH toolchain pin is UNVERIFIED for this record; only the Floorp and Floorp-Runtime commits are pinned.",
+    "No wall-clock attempt timestamps are recorded, so attempts carry null startedAt/endedAt.",
+    "No visual (look-and-feel) judgment was performed; checks are HTTP/WebDriver identity assertions and visualJudge is null.",
+    "Task/Job ownership is UNVERIFIED: the record names no owner, so owners are marked UNVERIFIED.",
+    "No defect reproduction target: the report asserts identity/UA behaviour only."
+  ],
+  "reproduction": {
+    "result": "inconclusive",
+    "notes": "No defect reproduction target: the report records identity/UA assertions for a passing run."
+  }
+}

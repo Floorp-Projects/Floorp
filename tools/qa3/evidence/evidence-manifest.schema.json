@@ -1,0 +1,512 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://floorp-projects.atlassian.net/schemas/fdh/evidence-manifest-v0.schema.json",
+  "title": "FDH EvidenceManifest v0 (B-01)",
+  "description": "Versioned Envelope plus EvidenceManifest required by frozen ADR 8061068 sections 1.1-1.5. Unknown schemaVersion, invalid state transitions and missing required evidence are rejected by the validators in this directory.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "envelope",
+    "runtime",
+    "attempts",
+    "operations",
+    "assertions",
+    "environmentFidelity",
+    "inputFidelity",
+    "visualJudge",
+    "cleanup",
+    "limitations",
+    "reproduction"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "type": "integer",
+      "const": 1,
+      "description": "Version of the Envelope/manifest document. Any other value is rejected as an unknown schemaVersion."
+    },
+    "sourceFormat": {
+      "enum": ["qa3-receipt", "final-package-qa", "work-record"],
+      "description": "Optional provenance of the converted source format (ADR 1.4)."
+    },
+    "envelope": {"$ref": "#/definitions/envelope"},
+    "runtime": {"$ref": "#/definitions/runtime"},
+    "attempts": {"$ref": "#/definitions/attempts"},
+    "operations": {"$ref": "#/definitions/operations"},
+    "assertions": {"$ref": "#/definitions/assertions"},
+    "environmentFidelity": {"$ref": "#/definitions/environmentFidelity"},
+    "inputFidelity": {"$ref": "#/definitions/inputFidelity"},
+    "visualJudge": {"$ref": "#/definitions/visualJudge"},
+    "cleanup": {"$ref": "#/definitions/cleanup"},
+    "limitations": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1},
+      "description": "What this evidence does NOT prove (ADR 1.3 limitations). At least one entry is required."
+    },
+    "reproduction": {"$ref": "#/definitions/reproduction"}
+  },
+  "definitions": {
+    "state": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "scheduled",
+        "awaiting-approval",
+        "running",
+        "cancel_requested",
+        "succeeded",
+        "failed",
+        "cancelled"
+      ],
+      "description": "States of the Envelope state-transition table (ADR 1.2)."
+    },
+    "isoDateTime": {
+      "type": ["string", "null"],
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?(Z|[+-]\\d{2}:\\d{2})$",
+      "description": "ISO 8601 timestamp with offset, or null when the source record does not carry a wall-clock time."
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "gitCommit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{7,40}$"
+    },
+    "gitCommitOrNull": {
+      "type": ["string", "null"],
+      "pattern": "^[0-9a-f]{7,40}$",
+      "description": "Commit identity, or null when the source record carries none. A null requires a limitation entry mentioning the commit."
+    },
+    "entity": {
+      "description": "Task/Job/Run/Attempt/Session/Workspace/Approval. The ID namespace must equal the ID issuer namespace (ADR 1.1).",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "id", "issuer", "owner", "ownerRole"],
+          "properties": {
+            "kind": {"const": "task"},
+            "id": {"type": "string", "minLength": 3},
+            "issuer": {"const": "scheduler"},
+            "owner": {"type": "string", "minLength": 1},
+            "ownerRole": {"enum": ["task-owner"]},
+            "label": {"type": "string"}
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "id", "issuer", "owner", "ownerRole"],
+          "properties": {
+            "kind": {"const": "job"},
+            "id": {"type": "string", "minLength": 3},
+            "issuer": {"const": "scheduler"},
+            "owner": {"type": "string", "minLength": 1},
+            "ownerRole": {"enum": ["job-owner", "executor"]},
+            "label": {"type": "string"}
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "id", "issuer", "owner", "ownerRole"],
+          "properties": {
+            "kind": {"const": "run"},
+            "id": {"type": "string", "minLength": 3},
+            "issuer": {"const": "executor"},
+            "owner": {"type": "string", "minLength": 1},
+            "ownerRole": {"enum": ["run-owner"]},
+            "label": {"type": "string"}
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "id", "issuer", "owner", "ownerRole"],
+          "properties": {
+            "kind": {"const": "attempt"},
+            "id": {"type": "string", "minLength": 3},
+            "issuer": {"const": "executor"},
+            "owner": {"type": "string", "minLength": 1},
+            "ownerRole": {"enum": ["run-owner"]},
+            "label": {"type": "string"}
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "id", "issuer", "owner", "ownerRole"],
+          "properties": {
+            "kind": {"const": "session"},
+            "id": {"type": "string", "minLength": 3},
+            "issuer": {"const": "host"},
+            "owner": {"type": "string", "minLength": 1},
+            "ownerRole": {"enum": ["session-owner"]},
+            "label": {"type": "string"},
+            "context": {"type": "string"}
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "id", "issuer", "owner", "ownerRole"],
+          "properties": {
+            "kind": {"const": "workspace"},
+            "id": {"type": "string", "minLength": 3},
+            "issuer": {"const": "host"},
+            "owner": {"type": "string", "minLength": 1},
+            "ownerRole": {"enum": ["workspace-owner"]},
+            "label": {"type": "string"},
+            "path": {"type": "string"}
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "id", "issuer", "owner", "ownerRole", "decision"],
+          "properties": {
+            "kind": {"const": "approval"},
+            "id": {"type": "string", "minLength": 3},
+            "issuer": {"const": "host-authorization"},
+            "owner": {"type": "string", "minLength": 1},
+            "ownerRole": {"enum": ["approver"]},
+            "decision": {"enum": ["approved", "denied", "pending", "not-required"]},
+            "label": {"type": "string"}
+          }
+        }
+      ]
+    },
+    "relationship": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["from", "type", "to"],
+      "properties": {
+        "from": {"type": "string", "minLength": 1},
+        "type": {
+          "enum": [
+            "task-has-job",
+            "job-has-run",
+            "run-has-attempt",
+            "run-uses-session",
+            "run-in-workspace",
+            "approval-for-job"
+          ]
+        },
+        "to": {"type": "string", "minLength": 1}
+      }
+    },
+    "envelope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "epoch",
+        "principal",
+        "entities",
+        "relationships",
+        "taskStatus",
+        "cancelRequested",
+        "stateTransition"
+      ],
+      "properties": {
+        "epoch": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Central epoch of the reporting context. Reports from an older epoch are rejected by the Scheduler."
+        },
+        "principal": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["id", "kind", "grantedBy"],
+          "properties": {
+            "id": {"type": "string", "minLength": 1},
+            "kind": {"enum": ["human", "agent"]},
+            "grantedBy": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Authenticated Host that granted the principal. Model self-declarations are not trusted (ADR 1.1)."
+            }
+          }
+        },
+        "entities": {
+          "type": "array",
+          "items": {"$ref": "#/definitions/entity"},
+          "description": "One entity per kind: task, job, run, attempt, session, workspace, approval. The seven kinds are enforced by the validators (missing-entity)."
+        },
+        "relationships": {
+          "type": "array",
+          "items": {"$ref": "#/definitions/relationship"},
+          "description": "The five core relationships plus optional approval links are enforced by the validators (missing-relationship)."
+        },
+        "taskStatus": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["state", "cancelRequested"],
+          "properties": {
+            "state": {"$ref": "#/definitions/state"},
+            "cancelRequested": {
+              "type": "boolean",
+              "description": "TaskStatus body side of cancel_requested (ADR 1.1)."
+            }
+          }
+        },
+        "cancelRequested": {
+          "type": "boolean",
+          "description": "Envelope side of cancel_requested. Must equal taskStatus.cancelRequested."
+        },
+        "stateTransition": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["from", "to"],
+          "properties": {
+            "from": {"$ref": "#/definitions/state"},
+            "to": {"$ref": "#/definitions/state"},
+            "at": {"$ref": "#/definitions/isoDateTime"},
+            "reason": {"type": "string"}
+          },
+          "description": "Last observed transition. It must follow the state-transition table and to must equal taskStatus.state."
+        }
+      }
+    },
+    "runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["os", "build", "packageDigest", "toolchain"],
+      "properties": {
+        "os": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["name", "arch"],
+          "properties": {
+            "name": {"type": "string", "minLength": 1},
+            "version": {"type": "string"},
+            "arch": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Architecture, or the literal UNVERIFIED when the source record does not carry it."
+            },
+            "kernel": {"type": "string"}
+          }
+        },
+        "build": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["commit"],
+          "properties": {
+            "commit": {
+              "type": ["string", "null"],
+              "pattern": "^[0-9a-f]{7,40}$",
+              "description": "Source/product commit, or null when the record has no commit identity."
+            },
+            "id": {"type": "string"},
+            "repository": {"type": "string"},
+            "workflowRun": {"type": ["string", "integer"]}
+          }
+        },
+        "packageDigest": {
+          "type": ["object", "null"],
+          "additionalProperties": false,
+          "required": ["algorithm", "value"],
+          "properties": {
+            "algorithm": {"enum": ["sha256", "sha512"]},
+            "value": {"type": "string", "pattern": "^[0-9a-f]{64,128}$"},
+            "artifact": {"type": "string"}
+          },
+          "description": "Digest of the shipped package, or null when no package is in scope for this record."
+        },
+        "toolchain": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["dsh", "floorp"],
+          "properties": {
+            "dsh": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["version", "pin"],
+              "properties": {
+                "version": {"type": "string", "minLength": 1},
+                "pin": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "DSH toolchain pin, or the literal UNVERIFIED when the record does not pin DSH."
+                }
+              }
+            },
+            "floorp": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["commit", "pin"],
+              "properties": {
+                "commit": {"$ref": "#/definitions/gitCommitOrNull"},
+                "pin": {"type": "string", "minLength": 1},
+                "version": {"type": "string"}
+              }
+            },
+            "runtime": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["commit", "pin"],
+              "properties": {
+                "commit": {"$ref": "#/definitions/gitCommit"},
+                "pin": {"type": "string", "minLength": 1}
+              }
+            },
+            "python": {"$ref": "#/definitions/toolVersion"},
+            "deno": {"$ref": "#/definitions/toolVersion"},
+            "node": {"$ref": "#/definitions/toolVersion"}
+          }
+        }
+      }
+    },
+    "toolVersion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version"],
+      "properties": {
+        "version": {"type": "string", "minLength": 1},
+        "pin": {"type": "string", "minLength": 1}
+      }
+    },
+    "attempt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["run", "attempt", "startedAt", "endedAt", "result"],
+      "properties": {
+        "run": {
+          "type": "string",
+          "minLength": 1,
+          "description": "id of the run entity this attempt belongs to."
+        },
+        "attempt": {"type": "integer", "minimum": 1},
+        "startedAt": {"$ref": "#/definitions/isoDateTime"},
+        "endedAt": {"$ref": "#/definitions/isoDateTime"},
+        "result": {
+          "enum": ["passed", "failed", "error", "timed-out", "cancelled", "inconclusive"]
+        },
+        "exitCode": {"type": ["integer", "null"]},
+        "logRef": {"type": "string"},
+        "notes": {"type": "string"}
+      }
+    },
+    "attempts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/definitions/attempt"},
+      "description": "Individual attempts (ADR 1.3): Run/Attempt identity, start/end time and result."
+    },
+    "operation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["input", "target", "order", "observation"],
+      "properties": {
+        "input": {"type": "string", "minLength": 1},
+        "target": {"type": "string", "minLength": 1},
+        "order": {"type": "integer", "minimum": 1},
+        "observation": {"type": "string", "minLength": 1}
+      },
+      "description": "One entry of the operation sequence: input, target, order, observation (ADR 1.3)."
+    },
+    "operations": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/definitions/operation"}
+    },
+    "assertion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "expected", "actual", "passed"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "expected": {"type": "string"},
+        "actual": {"type": "string"},
+        "passed": {"type": "boolean"}
+      },
+      "description": "Assertion with expected value, actual value and pass/fail (ADR 1.3)."
+    },
+    "assertions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/definitions/assertion"}
+    },
+    "environmentFidelity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["host", "network", "matchesTarget", "deviations", "notes"],
+      "properties": {
+        "host": {"type": "string", "minLength": 1},
+        "network": {"enum": ["disabled", "enabled", "not-used", "unknown"]},
+        "matchesTarget": {
+          "type": "boolean",
+          "description": "True when the observing environment matches the qualification target environment."
+        },
+        "deviations": {"type": "array", "items": {"type": "string"}},
+        "notes": {"type": "string", "minLength": 1}
+      }
+    },
+    "inputFidelity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["inputs", "unchangedDuringRun", "deviations", "notes"],
+      "properties": {
+        "inputs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["path", "sha256"],
+            "properties": {
+              "path": {"type": "string", "minLength": 1},
+              "sha256": {"$ref": "#/definitions/sha256"},
+              "bytes": {"type": "integer", "minimum": 0}
+            }
+          }
+        },
+        "unchangedDuringRun": {
+          "enum": [true, false, "unknown"],
+          "description": "Whether the pinned inputs stayed byte-identical during the run; unknown when the record does not say."
+        },
+        "deviations": {"type": "array", "items": {"type": "string"}},
+        "notes": {"type": "string", "minLength": 1}
+      }
+    },
+    "visualJudge": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["source", "scope", "notes"],
+      "properties": {
+        "source": {
+          "enum": ["human", "agent"],
+          "description": "Visual judge of record (ADR 1.3 見た目判定者)."
+        },
+        "scope": {"type": "string", "minLength": 1},
+        "notes": {"type": "string", "minLength": 1},
+        "artifactRef": {"type": "string"}
+      },
+      "description": "Visual (look-and-feel) judge, or null when this record performed no visual judgment. A null must be mirrored in limitations."
+    },
+    "cleanup": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["result", "notes"],
+      "properties": {
+        "result": {"enum": ["completed", "partial", "failed", "not-required", "unknown"]},
+        "notes": {"type": "string", "minLength": 1},
+        "details": {"type": "array", "items": {"type": "string"}}
+      },
+      "description": "Cleanup / teardown outcome (ADR 1.3 後片付けの結果)."
+    },
+    "reproduction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["result", "notes"],
+      "properties": {
+        "result": {"enum": ["reproduced", "not-reproduced", "inconclusive"]},
+        "defectRef": {"type": "string"},
+        "notes": {"type": "string", "minLength": 1}
+      },
+      "description": "Defect reproduction axis (ADR 1.3/2.1), reported separately from job completion and assertion outcomes."
+    }
+  }
+}
