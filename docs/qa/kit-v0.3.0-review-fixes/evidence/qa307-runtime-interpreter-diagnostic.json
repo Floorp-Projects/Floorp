@@ -1,0 +1,13 @@
+{
+  "outerExecutable": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+  "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3": {
+    "exit": 0,
+    "stdout": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]\nfixture complete\n",
+    "stderr": ""
+  },
+  "/usr/bin/python3": {
+    "exit": 0,
+    "stdout": "3.13.5 (main, Jul 15 2026, 20:25:40) [GCC 14.2.0]\nfixture complete\n",
+    "stderr": ""
+  }
+}

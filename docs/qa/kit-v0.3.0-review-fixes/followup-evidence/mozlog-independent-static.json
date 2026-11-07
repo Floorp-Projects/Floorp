@@ -1,0 +1,55 @@
+{
+  "baseHead": "460106115bc76b026c8bf8dad24df7fcb07f97c2",
+  "files": {
+    ".github/workflows/scripts/qa3_mozlog.py": {
+      "sha256": "670a7ea7cf69db66801ec98d1932136ae8dbe6f1b2ae0bed34063a437eb078ff",
+      "bytes": 7839,
+      "matchesFrozen": true
+    },
+    ".github/workflows/scripts/test_qa3_mozlog.py": {
+      "sha256": "5625812d4eab52274efa040100155fa376dfe21672bedfc67dc033d3f4e0e063",
+      "bytes": 14148,
+      "matchesFrozen": true
+    }
+  },
+  "originalTestCount": 14,
+  "finalTestCount": 21,
+  "originalMethodsAstUnchanged": {
+    "test_exact_complete_required_execution": true,
+    "test_canonical_package_id_and_browser_chrome_uri": true,
+    "test_empty_incomplete_assertion_free_and_missing_case": true,
+    "test_required_skip_and_recovered_first_failure": true,
+    "test_first_failed_process_cannot_be_hidden_by_pass_log": true,
+    "test_duplicate_execution_and_internal_retry": true,
+    "test_extra_suite_foreign_source_and_duplicate_id": true,
+    "test_crash_leak_and_unknown_event": true,
+    "test_child_process_exit_requires_typed_zero": true,
+    "test_exact_expected_assertion_canary": true,
+    "test_unexecuted_setup_failure_is_not_expected_canary": true,
+    "test_canary_cannot_accept_zero_exit_crash_or_two_expected_failures": true,
+    "test_canary_rejects_expected_fail_skip_retry_exit_and_untyped_assertions": true,
+    "test_error_after_suite_and_truncated_raw_are_rejected": true
+  },
+  "formalUpstreamReads": [
+    {
+      "path": "testing/mozbase/mozlog/mozlog/structuredlog.py",
+      "exit": 0,
+      "sha256": "69be708d0b333c720b70ea89c1f95e72c6ccc7b45360b29759ae2827fa171d30",
+      "matchesSavedFormal": true,
+      "stderr": ""
+    },
+    {
+      "path": "testing/mozbase/mozlog/mozlog/logtypes.py",
+      "exit": 0,
+      "sha256": "6802f736c53758279f0c7bc1684c557d83aac2ba124fd8bf993f11030928d12b",
+      "matchesSavedFormal": true,
+      "stderr": ""
+    }
+  ],
+  "setupFreezeUntouched": {
+    ".github/workflows/scripts/qa3_build_profile.py": true,
+    ".github/workflows/scripts/setup-floorp.sh": true,
+    ".github/workflows/scripts/test_qa3_build_profile.py": true
+  },
+  "sourceModified": false
+}

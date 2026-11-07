@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-10-09T12:55:51.639057+00:00",
+  "head": "460106115bc76b026c8bf8dad24df7fcb07f97c2",
+  "parent": "120f443af5c257cbdd4712f23b28f9c6fa8c4396",
+  "branch": "codex/qa3-native-proof-contracts",
+  "status": "",
+  "committedPaths": [
+    ".github/workflows/scripts/qa3_mozlog.py",
+    ".github/workflows/scripts/test_qa3_mozlog.py"
+  ],
+  "inputs": {
+    ".github/workflows/scripts/qa3_mozlog.py": {
+      "bytes": 7436,
+      "sha256": "bea848caac52c0d1025b2ef586c145a2fb89ede65b77767764eac724eddb4e1c",
+      "sameAsReviewedSnapshot": true,
+      "sameAsCommitBlob": true
+    },
+    ".github/workflows/scripts/test_qa3_mozlog.py": {
+      "bytes": 8811,
+      "sha256": "1ed4356fa3734058825499d49f537ad6ed25fa4f0f53d0b10ee01a79765d0ec8",
+      "sameAsReviewedSnapshot": true,
+      "sameAsCommitBlob": true
+    }
+  },
+  "reviewerPerformedCommitOrPush": false,
+  "nativeQualification": "UNVERIFIED",
+  "publicationAuthorized": false
+}

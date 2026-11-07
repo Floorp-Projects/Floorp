@@ -1,0 +1,44 @@
+
+from /workspace/qa-review-v030/repos/Floorp/tools/qa3/README.md:
+ 15 | -tests and the implementation kit's 114 tests. The executor uses a
+ 15 | +tests and the implementation kit's 114 tests. The executor uses a fixed command
+ 16 | -fixed command registry and never calls `deno task test`, `test:integration`,
+ 16 | +registry and never calls `deno task test`, `test:integration`, browser startup,
+ 17 | -browser startup, signing or publication. Deno has no run/network/environment
+ 17 | +signing or publication. Deno has no run/network/environment permission. It uses
+ 18 | -permission. It uses `--no-config`, `--no-npm`, `--node-modules-dir=none` and a
+ 18 | +`--no-config`, `--no-npm`, `--node-modules-dir=none` and a fixed
+ 19 | -fixed `DENO_NO_PACKAGE_JSON=1` environment with a host-only import map and
+ 19 | +`DENO_NO_PACKAGE_JSON=1` environment with a host-only import map and frozen JSR
+ 20 | -frozen JSR lock. Preflight requires that the four standard-library aliases and
+ 20 | +lock. Preflight requires that the four standard-library aliases and all JSR
+ 21 | -all JSR specifiers/integrity records exactly match the root configuration/lock;
+ 21 | +specifiers/integrity records exactly match the root configuration/lock; those
+ 22 | -those root files are unchanged. The separate inputs avoid initializing unrelated
+ 22 | +root files are unchanged. The separate inputs avoid initializing unrelated
+    | ...
+ 37 | -failure summary is printed to CI logs as well as retained in artifacts.
+ 37 | +failure summary is printed to CI logs as well as retained in artifacts. JUnit
+ 38 | -JUnit inputs must be UTF-8 (an optional UTF-8 BOM is accepted). DTD/entity
+ 38 | +inputs must be UTF-8 (an optional UTF-8 BOM is accepted). DTD/entity
+    | ...
+ 65 | -Linux source host, not the future cross-platform GUI/Agent supervisor.
+ 65 | +Linux source host, not the future cross-platform GUI/Agent supervisor. An
+ 66 | -An isolated Python supervisor owns the command's descendant tree as a Linux
+ 66 | +isolated Python supervisor owns the command's descendant tree as a Linux
+    | ...
+ 72 | -pidfd support, available on the Ubuntu 24.04 source worker.
+ 72 | +pidfd support, available on the Ubuntu 24.04 source worker. Cleanup syscall
+ 73 | -Cleanup syscall errors are retained separately from the initial failure, and
+ 73 | +errors are retained separately from the initial failure, and later
+ 74 | -later TERM/KILL/reap phases continue. A recorded cleanup error or supervisor
+ 74 | +TERM/KILL/reap phases continue. A recorded cleanup error or supervisor
+    | ...
+ 94 | -stages. The initial Library materialization was blocked by HTTP 403. The kit
+ 94 | +stages. The initial Library materialization was blocked by HTTP 403. The kit was
+ 95 | -was subsequently reviewed from the user's immutable GitHub input, with its
+ 95 | +subsequently reviewed from the user's immutable GitHub input, with its original
+ 96 | -original 114 and separately repaired 130 host tests recorded in
+ 96 | +114 and separately repaired 130 host tests recorded in
+
+error: Found 1 not formatted file in 1 file

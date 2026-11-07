@@ -1,0 +1,2 @@
+{"observation": {"synthetic": true}, "allowedTargets": ["chrome.new-tab", "chrome.reload", "fixture.increment", "fixture.reset"], "protocol": "one validated action JSON per line"}
+{"schemaVersion": 1, "subjectId": "synthetic-review", "status": "finding-or-environment-error", "releaseEvidence": false, "error": "Action input too large", "completedSteps": 0, "fakeDriverClosed": true, "stdinBlockingBefore": true, "stdinBlockingAfter": true, "campaignSeconds": 0.001}

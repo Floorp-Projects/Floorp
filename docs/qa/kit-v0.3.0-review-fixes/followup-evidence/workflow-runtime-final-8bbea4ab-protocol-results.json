@@ -1,0 +1,876 @@
+{
+  "sourceSha256": "8bbea4abfc5d8cf1a3b70a275287c7fe6725b96fa17afb4c74ef51814b7d142e",
+  "commit": "c9027879e053c9031c7f3e27495f6d415d36c10f",
+  "priorBaseCommit": "cc83e6fea6499d6ec89c76ae9837c280556e9d53",
+  "nativeExecution": false,
+  "network": false,
+  "credentials": false,
+  "resourceLimits": {
+    "addressBytes": 268435456,
+    "cpuSeconds": 12,
+    "fileBytes": 16777216
+  },
+  "cases": [
+    {
+      "name": "valid bounded result",
+      "expected": "accept",
+      "previous25": true,
+      "previousAcceptedMismatch": false,
+      "returnedNormally": true,
+      "returnedResult": {
+        "name": "fake-only",
+        "argv": [
+          "fixture-only"
+        ],
+        "exit": 0,
+        "stop": null,
+        "durationSeconds": 0.001,
+        "stdoutSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "stderrSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "ownedCleanupComplete": true,
+        "stdoutIsData": false
+      },
+      "budgetUsedAfter": 4,
+      "matchedExpectation": true
+    },
+    {
+      "name": "empty wire",
+      "expected": "reject",
+      "previous25": true,
+      "previousAcceptedMismatch": false,
+      "returnedNormally": false,
+      "raised": "BuildContextError",
+      "error": "REST response is not valid JSON",
+      "budgetUsedAfter": 2,
+      "matchedExpectation": true
+    },
+    {
+      "name": "truncated JSON",
+      "expected": "reject",
+      "previous25": true,
+      "previousAcceptedMismatch": false,
+      "returnedNormally": false,
+      "raised": "BuildContextError",
+      "error": "REST response is not valid JSON",
+      "budgetUsedAfter": 2,
+      "matchedExpectation": true
+    },
+    {
+      "name": "nonobject",
+      "expected": "reject",
+      "previous25": true,
+      "previousAcceptedMismatch": false,
+      "returnedNormally": false,
+      "raised": "BuildContextError",
+      "error": "REST response must be a JSON object",
+      "budgetUsedAfter": 2,
+      "matchedExpectation": true
+    },
+    {
+      "name": "duplicate budget key",
+      "expected": "reject",
+      "previous25": true,
+      "previousAcceptedMismatch": false,
+      "returnedNormally": false,
+      "raised": "BuildContextError",
+      "error": "REST response contains duplicate JSON key 'budgetUsed'",
+      "budgetUsedAfter": 2,
+      "matchedExpectation": true
+    },
+    {
+      "name": "missing result",
+      "expected": "reject",
+      "previous25": true,
+      "previousAcceptedMismatch": false,
+      "returnedNormally": false,
+      "raised": "ValueError",
+      "error": "invalid owned supervisor envelope",
+      "budgetUsedAfter": 2,
+      "matchedExpectation": true
+    },
+    {
+      "name": "missing error",
+      "expected": "reject",
+      "previous25": true,
+      "previousAcceptedMismatch": false,
+      "returnedNormally": false,
+      "raised": "ValueError",
+      "error": "invalid owned supervisor envelope",
+      "budgetUsedAfter": 2,
+      "matchedExpectation": true
+    },
+    {
+      "name": "missing budget",
+      "expected": "reject",
+      "previous25": true,
+      "previousAcceptedMismatch": false,
+      "returnedNormally": false,
+      "raised": "ValueError",
+      "error": "invalid owned supervisor envelope",
+      "budgetUsedAfter": 2,
+      "matchedExpectation": true
+    },
+    {
+      "name": "boolean budget",
+      "expected": "reject",
+      "previous25": true,
+      "previousAcceptedMismatch": false,
+      "returnedNormally": false,
+      "raised": "ValueError",
+      "error": "owned supervisor changed the staging budget",
+      "budgetUsedAfter": 2,
+      "matchedExpectation": true
+    },
+    {
+      "name": "regressed budget",
+      "expected": "reject",
+      "previous25": true,
+      "previousAcceptedMismatch": false,
+      "returnedNormally": false,
+      "raised": "ValueError",
+      "error": "owned supervisor changed the staging budget",
+      "budgetUsedAfter": 2,
+      "matchedExpectation": true
+    },
+    {
+      "name": "oversized budget",
+      "expected": "reject",
+      "previous25": true,
+      "previousAcceptedMismatch": false,
+      "returnedNormally": false,
+      "raised": "ValueError",
+      "error": "owned supervisor changed the staging budget",
+      "budgetUsedAfter": 2,
+      "matchedExpectation": true
+    },
+    {
+      "name": "null budget",
+      "expected": "reject",
+      "previous25": true,
+      "previousAcceptedMismatch": false,
+      "returnedNormally": false,
+      "raised": "ValueError",
+      "error": "owned supervisor changed the staging budget",
+      "budgetUsedAfter": 2,
+      "matchedExpectation": true
+    },
+    {
+      "name": "string budget",
+      "expected": "reject",
+      "previous25": true,
+      "previousAcceptedMismatch": false,
+      "returnedNormally": false,
+      "raised": "ValueError",
+      "error": "owned supervisor changed the staging budget",
+      "budgetUsedAfter": 2,
+      "matchedExpectation": true
+    },
+    {
+      "name": "empty error object",
+      "expected": "reject",
+      "previous25": true,
+      "previousAcceptedMismatch": true,
+      "returnedNormally": false,
+      "raised": "ValueError",
+      "error": "invalid owned supervisor error",
+      "budgetUsedAfter": 2,
+      "matchedExpectation": true
+    },
+    {
+      "name": "boolean false error",
+      "expected": "reject",
+      "previous25": true,
+      "previousAcceptedMismatch": true,
+      "returnedNormally": false,
+      "raised": "ValueError",
+      "error": "invalid owned supervisor error",
+      "budgetUsedAfter": 2,
+      "matchedExpectation": true
+    },
+    {
+      "name": "numeric zero error",
+      "expected": "reject",
+      "previous25": true,
+      "previousAcceptedMismatch": true,
+      "returnedNormally": false,
+      "raised": "ValueError",
+      "error": "invalid owned supervisor error",
+      "budgetUsedAfter": 2,
+      "matchedExpectation": true
+    },
+    {
+      "name": "empty string error",
+      "expected": "reject",
+      "previous25": true,
+      "previousAcceptedMismatch": true,
+      "returnedNormally": false,
+      "raised": "ValueError",
+      "error": "invalid owned supervisor error",
+      "budgetUsedAfter": 2,
+      "matchedExpectation": true
+    },
+    {
+      "name": "extra envelope key",
+      "expected": "reject",
+      "previous25": true,
+      "previousAcceptedMismatch": true,
+      "returnedNormally": false,
+      "raised": "ValueError",
+      "error": "invalid owned supervisor envelope",
+      "budgetUsedAfter": 2,
+      "matchedExpectation": true
+    },
+    {
+      "name": "null success result",
+      "expected": "reject",
+      "previous25": true,
+      "previousAcceptedMismatch": true,
+      "returnedNormally": false,
+      "raised": "ValueError",
+      "error": "invalid owned supervisor result",
+      "budgetUsedAfter": 2,
+      "matchedExpectation": true
+    },
+    {
+      "name": "scalar success result",
+      "expected": "reject",
+      "previous25": true,
+      "previousAcceptedMismatch": true,
+      "returnedNormally": false,
+      "raised": "ValueError",
+      "error": "invalid owned supervisor result",
+      "budgetUsedAfter": 2,
+      "matchedExpectation": true
+    },
+    {
+      "name": "incomplete result",
+      "expected": "reject",
+      "previous25": true,
+      "previousAcceptedMismatch": true,
+      "returnedNormally": false,
+      "raised": "ValueError",
+      "error": "owned supervisor did not prove successful cleanup",
+      "budgetUsedAfter": 2,
+      "matchedExpectation": true
+    },
+    {
+      "name": "untyped result exit",
+      "expected": "reject",
+      "previous25": true,
+      "previousAcceptedMismatch": true,
+      "returnedNormally": false,
+      "raised": "ValueError",
+      "error": "owned supervisor did not prove successful cleanup",
+      "budgetUsedAfter": 2,
+      "matchedExpectation": true
+    },
+    {
+      "name": "initial OSError",
+      "expected": "reject",
+      "previous25": true,
+      "previousAcceptedMismatch": false,
+      "returnedNormally": false,
+      "raised": "OSError",
+      "error": "[Errno 122] fixture quota",
+      "errno": 122,
+      "filename": null,
+      "budgetUsedAfter": 4,
+      "matchedExpectation": true
+    },
+    {
+      "name": "unknown error class",
+      "expected": "reject",
+      "previous25": true,
+      "previousAcceptedMismatch": false,
+      "returnedNormally": false,
+      "raised": "ValueError",
+      "error": "unsafe owned supervisor exception type",
+      "budgetUsedAfter": 2,
+      "matchedExpectation": true
+    },
+    {
+      "name": "SystemExit zero error",
+      "expected": "reject",
+      "previous25": true,
+      "previousAcceptedMismatch": false,
+      "returnedNormally": false,
+      "raised": "ValueError",
+      "error": "unsafe owned supervisor exception type",
+      "budgetUsedAfter": 2,
+      "matchedExpectation": true
+    },
+    {
+      "name": "integer nonzero default reject",
+      "expected": "reject",
+      "previous25": false,
+      "previousAcceptedMismatch": false,
+      "returnedNormally": false,
+      "raised": "ValueError",
+      "error": "owned supervisor did not prove successful cleanup",
+      "budgetUsedAfter": 2,
+      "matchedExpectation": true
+    },
+    {
+      "name": "integer nonzero explicit accept",
+      "expected": "accept",
+      "previous25": false,
+      "previousAcceptedMismatch": false,
+      "returnedNormally": true,
+      "returnedResult": {
+        "name": "fake-only",
+        "argv": [
+          "fixture-only"
+        ],
+        "exit": 1,
+        "stop": null,
+        "durationSeconds": 0.001,
+        "stdoutSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "stderrSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "ownedCleanupComplete": true,
+        "stdoutIsData": false
+      },
+      "budgetUsedAfter": 4,
+      "matchedExpectation": true
+    },
+    {
+      "name": "negative signal exit explicit accept",
+      "expected": "accept",
+      "previous25": false,
+      "previousAcceptedMismatch": false,
+      "returnedNormally": true,
+      "returnedResult": {
+        "name": "fake-only",
+        "argv": [
+          "fixture-only"
+        ],
+        "exit": -9,
+        "stop": null,
+        "durationSeconds": 0.001,
+        "stdoutSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "stderrSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "ownedCleanupComplete": true,
+        "stdoutIsData": false
+      },
+      "budgetUsedAfter": 4,
+      "matchedExpectation": true
+    },
+    {
+      "name": "boolean exit even with explicit allow",
+      "expected": "reject",
+      "previous25": false,
+      "previousAcceptedMismatch": false,
+      "returnedNormally": false,
+      "raised": "ValueError",
+      "error": "owned supervisor did not prove successful cleanup",
+      "budgetUsedAfter": 2,
+      "matchedExpectation": true
+    },
+    {
+      "name": "float exit even with explicit allow",
+      "expected": "reject",
+      "previous25": false,
+      "previousAcceptedMismatch": false,
+      "returnedNormally": false,
+      "raised": "ValueError",
+      "error": "owned supervisor did not prove successful cleanup",
+      "budgetUsedAfter": 2,
+      "matchedExpectation": true
+    },
+    {
+      "name": "string exit even with explicit allow",
+      "expected": "reject",
+      "previous25": false,
+      "previousAcceptedMismatch": false,
+      "returnedNormally": false,
+      "raised": "ValueError",
+      "error": "owned supervisor did not prove successful cleanup",
+      "budgetUsedAfter": 2,
+      "matchedExpectation": true
+    },
+    {
+      "name": "null exit even with explicit allow",
+      "expected": "reject",
+      "previous25": false,
+      "previousAcceptedMismatch": false,
+      "returnedNormally": false,
+      "raised": "ValueError",
+      "error": "owned supervisor did not prove successful cleanup",
+      "budgetUsedAfter": 2,
+      "matchedExpectation": true
+    },
+    {
+      "name": "string allow_nonzero rejects before fork",
+      "expected": "reject",
+      "previous25": false,
+      "previousAcceptedMismatch": false,
+      "returnedNormally": false,
+      "raised": "ValueError",
+      "error": "allow_nonzero must be an explicit boolean",
+      "budgetUsedAfter": 2,
+      "matchedExpectation": true
+    },
+    {
+      "name": "integer allow_nonzero rejects before fork",
+      "expected": "reject",
+      "previous25": false,
+      "previousAcceptedMismatch": false,
+      "returnedNormally": false,
+      "raised": "ValueError",
+      "error": "allow_nonzero must be an explicit boolean",
+      "budgetUsedAfter": 2,
+      "matchedExpectation": true
+    },
+    {
+      "name": "numeric cleanup flag",
+      "expected": "reject",
+      "previous25": false,
+      "previousAcceptedMismatch": false,
+      "returnedNormally": false,
+      "raised": "ValueError",
+      "error": "owned supervisor did not prove successful cleanup",
+      "budgetUsedAfter": 2,
+      "matchedExpectation": true
+    },
+    {
+      "name": "non-null stop with nonzero allowed",
+      "expected": "reject",
+      "previous25": false,
+      "previousAcceptedMismatch": false,
+      "returnedNormally": false,
+      "raised": "ValueError",
+      "error": "owned supervisor did not prove successful cleanup",
+      "budgetUsedAfter": 2,
+      "matchedExpectation": true
+    },
+    {
+      "name": "false stop still non-null",
+      "expected": "reject",
+      "previous25": false,
+      "previousAcceptedMismatch": false,
+      "returnedNormally": false,
+      "raised": "ValueError",
+      "error": "owned supervisor did not prove successful cleanup",
+      "budgetUsedAfter": 2,
+      "matchedExpectation": true
+    },
+    {
+      "name": "negative duration",
+      "expected": "reject",
+      "previous25": false,
+      "previousAcceptedMismatch": false,
+      "returnedNormally": false,
+      "raised": "ValueError",
+      "error": "owned supervisor did not prove successful cleanup",
+      "budgetUsedAfter": 2,
+      "matchedExpectation": true
+    },
+    {
+      "name": "boolean duration",
+      "expected": "reject",
+      "previous25": false,
+      "previousAcceptedMismatch": false,
+      "returnedNormally": false,
+      "raised": "ValueError",
+      "error": "owned supervisor did not prove successful cleanup",
+      "budgetUsedAfter": 2,
+      "matchedExpectation": true
+    },
+    {
+      "name": "string duration",
+      "expected": "reject",
+      "previous25": false,
+      "previousAcceptedMismatch": false,
+      "returnedNormally": false,
+      "raised": "ValueError",
+      "error": "owned supervisor did not prove successful cleanup",
+      "budgetUsedAfter": 2,
+      "matchedExpectation": true
+    },
+    {
+      "name": "nonfinite JSON duration",
+      "expected": "reject",
+      "previous25": false,
+      "previousAcceptedMismatch": false,
+      "returnedNormally": false,
+      "raised": "BuildContextError",
+      "error": "REST response contains invalid JSON value NaN",
+      "budgetUsedAfter": 2,
+      "matchedExpectation": true
+    },
+    {
+      "name": "changed command name",
+      "expected": "reject",
+      "previous25": false,
+      "previousAcceptedMismatch": false,
+      "returnedNormally": false,
+      "raised": "ValueError",
+      "error": "owned supervisor result changed its command",
+      "budgetUsedAfter": 2,
+      "matchedExpectation": true
+    },
+    {
+      "name": "changed command argv",
+      "expected": "reject",
+      "previous25": false,
+      "previousAcceptedMismatch": false,
+      "returnedNormally": false,
+      "raised": "ValueError",
+      "error": "owned supervisor result changed its command",
+      "budgetUsedAfter": 2,
+      "matchedExpectation": true
+    },
+    {
+      "name": "empty argv",
+      "expected": "reject",
+      "previous25": false,
+      "previousAcceptedMismatch": false,
+      "returnedNormally": false,
+      "raised": "ValueError",
+      "error": "owned supervisor did not prove successful cleanup",
+      "budgetUsedAfter": 2,
+      "matchedExpectation": true
+    },
+    {
+      "name": "nonstring argv item",
+      "expected": "reject",
+      "previous25": false,
+      "previousAcceptedMismatch": false,
+      "returnedNormally": false,
+      "raised": "ValueError",
+      "error": "owned supervisor did not prove successful cleanup",
+      "budgetUsedAfter": 2,
+      "matchedExpectation": true
+    },
+    {
+      "name": "changed stdout data role",
+      "expected": "reject",
+      "previous25": false,
+      "previousAcceptedMismatch": false,
+      "returnedNormally": false,
+      "raised": "ValueError",
+      "error": "owned supervisor result changed its command",
+      "budgetUsedAfter": 2,
+      "matchedExpectation": true
+    },
+    {
+      "name": "numeric stdout data role",
+      "expected": "reject",
+      "previous25": false,
+      "previousAcceptedMismatch": false,
+      "returnedNormally": false,
+      "raised": "ValueError",
+      "error": "owned supervisor did not prove successful cleanup",
+      "budgetUsedAfter": 2,
+      "matchedExpectation": true
+    },
+    {
+      "name": "uppercase stream hash",
+      "expected": "reject",
+      "previous25": false,
+      "previousAcceptedMismatch": false,
+      "returnedNormally": false,
+      "raised": "ValueError",
+      "error": "invalid owned supervisor stream hash",
+      "budgetUsedAfter": 2,
+      "matchedExpectation": true
+    },
+    {
+      "name": "short stream hash",
+      "expected": "reject",
+      "previous25": false,
+      "previousAcceptedMismatch": false,
+      "returnedNormally": false,
+      "raised": "ValueError",
+      "error": "invalid owned supervisor stream hash",
+      "budgetUsedAfter": 2,
+      "matchedExpectation": true
+    },
+    {
+      "name": "nonhex stream hash",
+      "expected": "reject",
+      "previous25": false,
+      "previousAcceptedMismatch": false,
+      "returnedNormally": false,
+      "raised": "ValueError",
+      "error": "invalid owned supervisor stream hash",
+      "budgetUsedAfter": 2,
+      "matchedExpectation": true
+    },
+    {
+      "name": "numeric stream hash",
+      "expected": "reject",
+      "previous25": false,
+      "previousAcceptedMismatch": false,
+      "returnedNormally": false,
+      "raised": "ValueError",
+      "error": "invalid owned supervisor stream hash",
+      "budgetUsedAfter": 2,
+      "matchedExpectation": true
+    },
+    {
+      "name": "unexpected success result key",
+      "expected": "reject",
+      "previous25": false,
+      "previousAcceptedMismatch": false,
+      "returnedNormally": false,
+      "raised": "ValueError",
+      "error": "invalid owned supervisor result",
+      "budgetUsedAfter": 2,
+      "matchedExpectation": true
+    },
+    {
+      "name": "missing success result key",
+      "expected": "reject",
+      "previous25": false,
+      "previousAcceptedMismatch": false,
+      "returnedNormally": false,
+      "raised": "ValueError",
+      "error": "invalid owned supervisor result",
+      "budgetUsedAfter": 2,
+      "matchedExpectation": true
+    },
+    {
+      "name": "success result combined with valid error",
+      "expected": "reject",
+      "previous25": false,
+      "previousAcceptedMismatch": false,
+      "returnedNormally": false,
+      "raised": "ValueError",
+      "error": "invalid owned supervisor error",
+      "budgetUsedAfter": 2,
+      "matchedExpectation": true
+    },
+    {
+      "name": "missing error message",
+      "expected": "reject",
+      "previous25": false,
+      "previousAcceptedMismatch": false,
+      "returnedNormally": false,
+      "raised": "ValueError",
+      "error": "invalid owned supervisor error",
+      "budgetUsedAfter": 2,
+      "matchedExpectation": true
+    },
+    {
+      "name": "extra error key",
+      "expected": "reject",
+      "previous25": false,
+      "previousAcceptedMismatch": false,
+      "returnedNormally": false,
+      "raised": "ValueError",
+      "error": "invalid owned supervisor error",
+      "budgetUsedAfter": 2,
+      "matchedExpectation": true
+    },
+    {
+      "name": "nonstring error message",
+      "expected": "reject",
+      "previous25": false,
+      "previousAcceptedMismatch": false,
+      "returnedNormally": false,
+      "raised": "ValueError",
+      "error": "invalid owned supervisor error",
+      "budgetUsedAfter": 2,
+      "matchedExpectation": true
+    },
+    {
+      "name": "nonlist error args",
+      "expected": "reject",
+      "previous25": false,
+      "previousAcceptedMismatch": false,
+      "returnedNormally": false,
+      "raised": "ValueError",
+      "error": "invalid owned supervisor error",
+      "budgetUsedAfter": 2,
+      "matchedExpectation": true
+    },
+    {
+      "name": "boolean error errno",
+      "expected": "reject",
+      "previous25": false,
+      "previousAcceptedMismatch": false,
+      "returnedNormally": false,
+      "raised": "ValueError",
+      "error": "invalid owned supervisor error",
+      "budgetUsedAfter": 2,
+      "matchedExpectation": true
+    },
+    {
+      "name": "nonstring error filename",
+      "expected": "reject",
+      "previous25": false,
+      "previousAcceptedMismatch": false,
+      "returnedNormally": false,
+      "raised": "ValueError",
+      "error": "invalid owned supervisor error",
+      "budgetUsedAfter": 2,
+      "matchedExpectation": true
+    },
+    {
+      "name": "BaseException error cannot cause clean exit",
+      "expected": "reject",
+      "previous25": false,
+      "previousAcceptedMismatch": false,
+      "returnedNormally": false,
+      "raised": "ValueError",
+      "error": "unsafe owned supervisor exception type",
+      "budgetUsedAfter": 2,
+      "matchedExpectation": true
+    },
+    {
+      "name": "KeyboardInterrupt error cannot escape as control signal",
+      "expected": "reject",
+      "previous25": false,
+      "previousAcceptedMismatch": false,
+      "returnedNormally": false,
+      "raised": "ValueError",
+      "error": "unsafe owned supervisor exception type",
+      "budgetUsedAfter": 2,
+      "matchedExpectation": true
+    },
+    {
+      "name": "OSError filename and errno retained",
+      "expected": "reject",
+      "previous25": false,
+      "previousAcceptedMismatch": false,
+      "returnedNormally": false,
+      "raised": "OSError",
+      "error": "[Errno 122] fixture quota: '/fixture-only'",
+      "errno": 122,
+      "filename": "/fixture-only",
+      "budgetUsedAfter": 4,
+      "matchedExpectation": true
+    },
+    {
+      "name": "float budget",
+      "expected": "reject",
+      "previous25": false,
+      "previousAcceptedMismatch": false,
+      "returnedNormally": false,
+      "raised": "ValueError",
+      "error": "owned supervisor changed the staging budget",
+      "budgetUsedAfter": 2,
+      "matchedExpectation": true
+    },
+    {
+      "name": "budget maximum inclusive",
+      "expected": "accept",
+      "previous25": false,
+      "previousAcceptedMismatch": false,
+      "returnedNormally": true,
+      "returnedResult": {
+        "name": "fake-only",
+        "argv": [
+          "fixture-only"
+        ],
+        "exit": 0,
+        "stop": null,
+        "durationSeconds": 0.001,
+        "stdoutSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "stderrSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "ownedCleanupComplete": true,
+        "stdoutIsData": false
+      },
+      "budgetUsedAfter": 10,
+      "matchedExpectation": true
+    },
+    {
+      "name": "budget previous usage inclusive",
+      "expected": "accept",
+      "previous25": false,
+      "previousAcceptedMismatch": false,
+      "returnedNormally": true,
+      "returnedResult": {
+        "name": "fake-only",
+        "argv": [
+          "fixture-only"
+        ],
+        "exit": 0,
+        "stop": null,
+        "durationSeconds": 0.001,
+        "stdoutSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "stderrSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "ownedCleanupComplete": true,
+        "stdoutIsData": false
+      },
+      "budgetUsedAfter": 2,
+      "matchedExpectation": true
+    },
+    {
+      "name": "no budget accepts only null",
+      "expected": "accept",
+      "previous25": false,
+      "previousAcceptedMismatch": false,
+      "returnedNormally": true,
+      "returnedResult": {
+        "name": "fake-only",
+        "argv": [
+          "fixture-only"
+        ],
+        "exit": 0,
+        "stop": null,
+        "durationSeconds": 0.001,
+        "stdoutSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "stderrSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "ownedCleanupComplete": true,
+        "stdoutIsData": false
+      },
+      "budgetUsedAfter": null,
+      "matchedExpectation": true
+    },
+    {
+      "name": "no budget numeric value rejected",
+      "expected": "reject",
+      "previous25": false,
+      "previousAcceptedMismatch": false,
+      "returnedNormally": false,
+      "raised": "ValueError",
+      "error": "unexpected owned supervisor staging budget",
+      "budgetUsedAfter": null,
+      "matchedExpectation": true
+    },
+    {
+      "name": "error cannot bypass invalid budget",
+      "expected": "reject",
+      "previous25": false,
+      "previousAcceptedMismatch": false,
+      "returnedNormally": false,
+      "raised": "ValueError",
+      "error": "owned supervisor changed the staging budget",
+      "budgetUsedAfter": 2,
+      "matchedExpectation": true
+    },
+    {
+      "name": "reply oversized",
+      "expected": "reject",
+      "previous25": false,
+      "previousAcceptedMismatch": false,
+      "returnedNormally": false,
+      "raised": "RuntimeError",
+      "error": "owned supervisor failed to retain its result",
+      "budgetUsedAfter": 2,
+      "matchedExpectation": true
+    },
+    {
+      "name": "public run_owned forwards exact command/data/nonzero policy",
+      "matchedExpectation": true,
+      "capturedKwargs": {
+        "expected": {
+          "name": "fake-only",
+          "argv": [
+            "fixture-only"
+          ],
+          "stdoutIsData": false
+        },
+        "allow_nonzero": true
+      },
+      "invokedTarget": false
+    }
+  ],
+  "total": 71,
+  "previous25Pass": true,
+  "previousNineNowRejected": true,
+  "typedGuardMismatches": [],
+  "allPass": true,
+  "limitation": "Reply mutation is injected only into trusted private producer serialization. Fake hashes prove strict shape/hex validation, not actual log contents. The unchanged caller binds pinned tool version output SHA-256 separately. No untrusted native access to control pipe or qualification/publication bypass is established. Parent initialization, real owned-process cleanup and external job-scope prerequisites are separately reviewed."
+}

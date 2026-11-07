@@ -1,0 +1,848 @@
+{
+  "schemaVersion": 1,
+  "base": "81c92fc4bbbc13b4fd4c2a2adaf6a137e342bd53",
+  "fixtures": [
+    {
+      "fixture": "baseline-full-config-byte-equivalence",
+      "label": "canonical-debug",
+      "args": [
+        "linux",
+        "x86_64",
+        true,
+        false,
+        "",
+        ""
+      ],
+      "actualExit": 0,
+      "baseExit": 0,
+      "actualConfig": "# SPDX-License-Identifier: MPL-2.0\n\nac_add_options --with-app-name=floorp\nac_add_options --with-app-basename=Floorp\n# ac_add_options --disable-updater\n# this implies disable geckodriver, and puppeteer seems using the geckodriver impl.\n# so you should not disable test\n## We should not disable tests if we attempt pgo.\n## https://searchfox.org/firefox-release/search?q=intl_compare_against_brokered_complex_line_breaks&path=&case=true&regexp=false\n# ac_add_options --disable-tests\nac_add_options --disable-crashreporter\nac_add_options --enable-bootstrap\nac_add_options --enable-rust-simd\n#? https://bugzilla.mozilla.org/show_bug.cgi?id=1617793\n#? https://phabricator.services.mozilla.com/D170170\nac_add_options --target=x86_64-pc-linux-gnu\n#sccache\n#mk_add_options 'export RUSTC_WRAPPER=sccache'\n#mk_add_options 'export CCACHE_CPP2=yes'\n#ac_add_options --with-ccache\n#mk_add_options 'export SCCACHE_GHA_ENABLED=on'\nmk_add_options AUTOCLOBBER=1\n#Telemetry\n#https://searchfox.org/mozilla-central/rev/893f350260faac2ee6bf2b14c627d55eb2babfb0/toolkit/components/telemetry/docs/internals/preferences.rst\n# Disable telemetry\nac_add_options MOZ_TELEMETRY_REPORTING=\n# Package js shell.\nexport MOZ_PACKAGE_JSSHELL=1\n\n# Disable verified updates\nac_add_options --enable-unverified-updates\nac_add_options --with-branding=browser/branding/floorp-daylight\nac_add_options --enable-chrome-format=flat\nmk_add_options 'export RUSTC_WRAPPER=/fixture/sccache'\nmk_add_options 'export CCACHE_CPP2=yes'\nac_add_options --with-ccache=/fixture/sccache\nmk_add_options 'export SCCACHE_GHA_ENABLED=on'\nac_add_options --enable-debug\nac_add_options --enable-tests\n",
+      "configSha256": "138524f150ddb5ea7f9ef307006e5be7dc82c5fc475b5298a06441c974bac62a",
+      "actualEffects": "/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpb7ll1isx/bin/git apply --verbose --ignore-space-change --ignore-whitespace .github/patches/debug/fixture.patch\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpb7ll1isx/bin/sudo apt update -y\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpb7ll1isx/bin/sudo apt install msitools -y\n./mach --no-interactive bootstrap --application-choice browser\n",
+      "baseEffects": "/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpfgyxafr8/bin/git apply --verbose --ignore-space-change --ignore-whitespace .github/patches/debug/fixture.patch\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpfgyxafr8/bin/sudo apt update -y\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpfgyxafr8/bin/sudo apt install msitools -y\n./mach --no-interactive bootstrap --application-choice browser\n",
+      "actualStderr": "",
+      "role": "canonical-debug",
+      "qualificationEligible": true,
+      "equal": true
+    },
+    {
+      "fixture": "baseline-full-config-byte-equivalence",
+      "label": "production-opt",
+      "args": [
+        "linux",
+        "x86_64",
+        false,
+        false,
+        "",
+        ""
+      ],
+      "actualExit": 0,
+      "baseExit": 0,
+      "actualConfig": "# SPDX-License-Identifier: MPL-2.0\n\nac_add_options --with-app-name=floorp\nac_add_options --with-app-basename=Floorp\n# ac_add_options --disable-updater\n# this implies disable geckodriver, and puppeteer seems using the geckodriver impl.\n# so you should not disable test\n## We should not disable tests if we attempt pgo.\n## https://searchfox.org/firefox-release/search?q=intl_compare_against_brokered_complex_line_breaks&path=&case=true&regexp=false\n# ac_add_options --disable-tests\nac_add_options --disable-crashreporter\nac_add_options --enable-bootstrap\nac_add_options --enable-rust-simd\n#? https://bugzilla.mozilla.org/show_bug.cgi?id=1617793\n#? https://phabricator.services.mozilla.com/D170170\nac_add_options --target=x86_64-pc-linux-gnu\n#sccache\n#mk_add_options 'export RUSTC_WRAPPER=sccache'\n#mk_add_options 'export CCACHE_CPP2=yes'\n#ac_add_options --with-ccache\n#mk_add_options 'export SCCACHE_GHA_ENABLED=on'\nmk_add_options AUTOCLOBBER=1\n#Telemetry\n#https://searchfox.org/mozilla-central/rev/893f350260faac2ee6bf2b14c627d55eb2babfb0/toolkit/components/telemetry/docs/internals/preferences.rst\n# Disable telemetry\nac_add_options MOZ_TELEMETRY_REPORTING=\n# Package js shell.\nexport MOZ_PACKAGE_JSSHELL=1\n\n# Disable verified updates\nac_add_options --enable-unverified-updates\nac_add_options --with-branding=browser/branding/floorp-official\nac_add_options --enable-chrome-format=flat\nmk_add_options 'export RUSTC_WRAPPER=/fixture/sccache'\nmk_add_options 'export CCACHE_CPP2=yes'\nac_add_options --with-ccache=/fixture/sccache\nmk_add_options 'export SCCACHE_GHA_ENABLED=on'\n",
+      "configSha256": "99a0d46f297532d7ff3e70f87ca5d81c912c86d557e68fb7313d2fab3d249f50",
+      "actualEffects": "/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpwtc8t_yn/bin/sudo apt update -y\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpwtc8t_yn/bin/sudo apt install msitools -y\n./mach --no-interactive bootstrap --application-choice browser\n",
+      "baseEffects": "/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmp_v9pqrqf/bin/sudo apt update -y\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmp_v9pqrqf/bin/sudo apt install msitools -y\n./mach --no-interactive bootstrap --application-choice browser\n",
+      "actualStderr": "",
+      "role": "production-opt",
+      "qualificationEligible": false,
+      "equal": true
+    },
+    {
+      "fixture": "baseline-full-config-byte-equivalence",
+      "label": "production-pgo",
+      "args": [
+        "linux",
+        "x86_64",
+        false,
+        true,
+        "generate",
+        ""
+      ],
+      "actualExit": 0,
+      "baseExit": 0,
+      "actualConfig": "# SPDX-License-Identifier: MPL-2.0\n\nac_add_options --with-app-name=floorp\nac_add_options --with-app-basename=Floorp\n# ac_add_options --disable-updater\n# this implies disable geckodriver, and puppeteer seems using the geckodriver impl.\n# so you should not disable test\n## We should not disable tests if we attempt pgo.\n## https://searchfox.org/firefox-release/search?q=intl_compare_against_brokered_complex_line_breaks&path=&case=true&regexp=false\n# ac_add_options --disable-tests\nac_add_options --disable-crashreporter\nac_add_options --enable-bootstrap\nac_add_options --enable-rust-simd\n#? https://bugzilla.mozilla.org/show_bug.cgi?id=1617793\n#? https://phabricator.services.mozilla.com/D170170\nac_add_options --target=x86_64-pc-linux-gnu\n#sccache\n#mk_add_options 'export RUSTC_WRAPPER=sccache'\n#mk_add_options 'export CCACHE_CPP2=yes'\n#ac_add_options --with-ccache\n#mk_add_options 'export SCCACHE_GHA_ENABLED=on'\nmk_add_options AUTOCLOBBER=1\n#Telemetry\n#https://searchfox.org/mozilla-central/rev/893f350260faac2ee6bf2b14c627d55eb2babfb0/toolkit/components/telemetry/docs/internals/preferences.rst\n# Disable telemetry\nac_add_options MOZ_TELEMETRY_REPORTING=\n# Package js shell.\nexport MOZ_PACKAGE_JSSHELL=1\n\n# Disable verified updates\nac_add_options --enable-unverified-updates\nac_add_options --with-branding=browser/branding/floorp-official\nmk_add_options 'export RUSTC_WRAPPER=/fixture/sccache'\nmk_add_options 'export CCACHE_CPP2=yes'\nac_add_options --with-ccache=/fixture/sccache\nmk_add_options 'export SCCACHE_GHA_ENABLED=on'\nac_add_options --enable-profile-generate=cross\n",
+      "configSha256": "32b8c9b725631d0b5a37dc6e16f3ac89ae68e9981ec62f4ad5ce9d61ce240ff1",
+      "actualEffects": "/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmp_fv3xywp/bin/sudo apt update -y\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmp_fv3xywp/bin/sudo apt install msitools -y\n./mach --no-interactive bootstrap --application-choice browser\n",
+      "baseEffects": "/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpmpp7c859/bin/sudo apt update -y\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpmpp7c859/bin/sudo apt install msitools -y\n./mach --no-interactive bootstrap --application-choice browser\n",
+      "actualStderr": "",
+      "role": "profile-generate",
+      "qualificationEligible": false,
+      "equal": true
+    },
+    {
+      "fixture": "baseline-full-config-byte-equivalence",
+      "label": "legacy-debug-pgo",
+      "args": [
+        "linux",
+        "x86_64",
+        true,
+        true,
+        "generate",
+        ""
+      ],
+      "actualExit": 0,
+      "baseExit": 0,
+      "actualConfig": "# SPDX-License-Identifier: MPL-2.0\n\nac_add_options --with-app-name=floorp\nac_add_options --with-app-basename=Floorp\n# ac_add_options --disable-updater\n# this implies disable geckodriver, and puppeteer seems using the geckodriver impl.\n# so you should not disable test\n## We should not disable tests if we attempt pgo.\n## https://searchfox.org/firefox-release/search?q=intl_compare_against_brokered_complex_line_breaks&path=&case=true&regexp=false\n# ac_add_options --disable-tests\nac_add_options --disable-crashreporter\nac_add_options --enable-bootstrap\nac_add_options --enable-rust-simd\n#? https://bugzilla.mozilla.org/show_bug.cgi?id=1617793\n#? https://phabricator.services.mozilla.com/D170170\nac_add_options --target=x86_64-pc-linux-gnu\n#sccache\n#mk_add_options 'export RUSTC_WRAPPER=sccache'\n#mk_add_options 'export CCACHE_CPP2=yes'\n#ac_add_options --with-ccache\n#mk_add_options 'export SCCACHE_GHA_ENABLED=on'\nmk_add_options AUTOCLOBBER=1\n#Telemetry\n#https://searchfox.org/mozilla-central/rev/893f350260faac2ee6bf2b14c627d55eb2babfb0/toolkit/components/telemetry/docs/internals/preferences.rst\n# Disable telemetry\nac_add_options MOZ_TELEMETRY_REPORTING=\n# Package js shell.\nexport MOZ_PACKAGE_JSSHELL=1\n\n# Disable verified updates\nac_add_options --enable-unverified-updates\nac_add_options --with-branding=browser/branding/floorp-daylight\nmk_add_options 'export RUSTC_WRAPPER=/fixture/sccache'\nmk_add_options 'export CCACHE_CPP2=yes'\nac_add_options --with-ccache=/fixture/sccache\nmk_add_options 'export SCCACHE_GHA_ENABLED=on'\nac_add_options --enable-debug\nac_add_options --enable-profile-generate=cross\n",
+      "configSha256": "aa1d07bdadddd8387444a8881884062496804c3c00557db78b8b31efffbecbbd",
+      "actualEffects": "/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpk8c3jxa0/bin/git apply --verbose --ignore-space-change --ignore-whitespace .github/patches/debug/fixture.patch\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpk8c3jxa0/bin/sudo apt update -y\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpk8c3jxa0/bin/sudo apt install msitools -y\n./mach --no-interactive bootstrap --application-choice browser\n",
+      "baseEffects": "/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmp0tsb_7eo/bin/git apply --verbose --ignore-space-change --ignore-whitespace .github/patches/debug/fixture.patch\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmp0tsb_7eo/bin/sudo apt update -y\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmp0tsb_7eo/bin/sudo apt install msitools -y\n./mach --no-interactive bootstrap --application-choice browser\n",
+      "actualStderr": "Legacy Debug+PGO is noncanonical and ineligible for qualification\n",
+      "role": "legacy-debug-profile-generate",
+      "qualificationEligible": false,
+      "equal": true
+    },
+    {
+      "fixture": "baseline-full-config-byte-equivalence",
+      "label": "production-pgo",
+      "args": [
+        "linux",
+        "x86_64",
+        false,
+        true,
+        "use",
+        "fixture-profile"
+      ],
+      "actualExit": 0,
+      "baseExit": 0,
+      "actualConfig": "# SPDX-License-Identifier: MPL-2.0\n\nac_add_options --with-app-name=floorp\nac_add_options --with-app-basename=Floorp\n# ac_add_options --disable-updater\n# this implies disable geckodriver, and puppeteer seems using the geckodriver impl.\n# so you should not disable test\n## We should not disable tests if we attempt pgo.\n## https://searchfox.org/firefox-release/search?q=intl_compare_against_brokered_complex_line_breaks&path=&case=true&regexp=false\n# ac_add_options --disable-tests\nac_add_options --disable-crashreporter\nac_add_options --enable-bootstrap\nac_add_options --enable-rust-simd\n#? https://bugzilla.mozilla.org/show_bug.cgi?id=1617793\n#? https://phabricator.services.mozilla.com/D170170\nac_add_options --target=x86_64-pc-linux-gnu\n#sccache\n#mk_add_options 'export RUSTC_WRAPPER=sccache'\n#mk_add_options 'export CCACHE_CPP2=yes'\n#ac_add_options --with-ccache\n#mk_add_options 'export SCCACHE_GHA_ENABLED=on'\nmk_add_options AUTOCLOBBER=1\n#Telemetry\n#https://searchfox.org/mozilla-central/rev/893f350260faac2ee6bf2b14c627d55eb2babfb0/toolkit/components/telemetry/docs/internals/preferences.rst\n# Disable telemetry\nac_add_options MOZ_TELEMETRY_REPORTING=\n# Package js shell.\nexport MOZ_PACKAGE_JSSHELL=1\n\n# Disable verified updates\nac_add_options --enable-unverified-updates\nac_add_options --with-branding=browser/branding/floorp-official\nac_add_options --enable-chrome-format=flat\nmk_add_options 'export RUSTC_WRAPPER=/fixture/sccache'\nmk_add_options 'export CCACHE_CPP2=yes'\nac_add_options --with-ccache=/fixture/sccache\nmk_add_options 'export SCCACHE_GHA_ENABLED=on'\nexport MOZ_LTO=cross\nac_add_options --enable-profile-use=cross\nac_add_options --with-pgo-profile-path=$(echo ~)/artifacts/merged.profdata\nac_add_options --with-pgo-jarlog=$(echo ~)/artifacts/en-US.log\n",
+      "configSha256": "b90c9d65c24bec0b9a28bcd82c7e0c1aaf21b952263fa41ee8aad28dc1c56709",
+      "actualEffects": "/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpm2vj0odt/bin/sudo apt update -y\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpm2vj0odt/bin/sudo apt install msitools -y\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpm2vj0odt/bin/rustup target add x86_64-unknown-linux-gnu\n./mach --no-interactive bootstrap --application-choice browser\n",
+      "baseEffects": "/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpssqp1n2d/bin/sudo apt update -y\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpssqp1n2d/bin/sudo apt install msitools -y\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpssqp1n2d/bin/rustup target add x86_64-unknown-linux-gnu\n./mach --no-interactive bootstrap --application-choice browser\n",
+      "actualStderr": "",
+      "role": "profile-use",
+      "qualificationEligible": false,
+      "equal": true
+    },
+    {
+      "fixture": "baseline-full-config-byte-equivalence",
+      "label": "legacy-debug-pgo",
+      "args": [
+        "linux",
+        "x86_64",
+        true,
+        true,
+        "use",
+        "fixture-profile"
+      ],
+      "actualExit": 0,
+      "baseExit": 0,
+      "actualConfig": "# SPDX-License-Identifier: MPL-2.0\n\nac_add_options --with-app-name=floorp\nac_add_options --with-app-basename=Floorp\n# ac_add_options --disable-updater\n# this implies disable geckodriver, and puppeteer seems using the geckodriver impl.\n# so you should not disable test\n## We should not disable tests if we attempt pgo.\n## https://searchfox.org/firefox-release/search?q=intl_compare_against_brokered_complex_line_breaks&path=&case=true&regexp=false\n# ac_add_options --disable-tests\nac_add_options --disable-crashreporter\nac_add_options --enable-bootstrap\nac_add_options --enable-rust-simd\n#? https://bugzilla.mozilla.org/show_bug.cgi?id=1617793\n#? https://phabricator.services.mozilla.com/D170170\nac_add_options --target=x86_64-pc-linux-gnu\n#sccache\n#mk_add_options 'export RUSTC_WRAPPER=sccache'\n#mk_add_options 'export CCACHE_CPP2=yes'\n#ac_add_options --with-ccache\n#mk_add_options 'export SCCACHE_GHA_ENABLED=on'\nmk_add_options AUTOCLOBBER=1\n#Telemetry\n#https://searchfox.org/mozilla-central/rev/893f350260faac2ee6bf2b14c627d55eb2babfb0/toolkit/components/telemetry/docs/internals/preferences.rst\n# Disable telemetry\nac_add_options MOZ_TELEMETRY_REPORTING=\n# Package js shell.\nexport MOZ_PACKAGE_JSSHELL=1\n\n# Disable verified updates\nac_add_options --enable-unverified-updates\nac_add_options --with-branding=browser/branding/floorp-daylight\nac_add_options --enable-chrome-format=flat\nmk_add_options 'export RUSTC_WRAPPER=/fixture/sccache'\nmk_add_options 'export CCACHE_CPP2=yes'\nac_add_options --with-ccache=/fixture/sccache\nmk_add_options 'export SCCACHE_GHA_ENABLED=on'\nac_add_options --enable-debug\nexport MOZ_LTO=cross\nac_add_options --enable-profile-use=cross\nac_add_options --with-pgo-profile-path=$(echo ~)/artifacts/merged.profdata\nac_add_options --with-pgo-jarlog=$(echo ~)/artifacts/en-US.log\n",
+      "configSha256": "c05c2b61697307e8a436c2d7614e72419b1c4aac6f3bd2901b51435ee219235f",
+      "actualEffects": "/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmp7oiixn9_/bin/git apply --verbose --ignore-space-change --ignore-whitespace .github/patches/debug/fixture.patch\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmp7oiixn9_/bin/sudo apt update -y\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmp7oiixn9_/bin/sudo apt install msitools -y\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmp7oiixn9_/bin/rustup target add x86_64-unknown-linux-gnu\n./mach --no-interactive bootstrap --application-choice browser\n",
+      "baseEffects": "/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpmz886php/bin/git apply --verbose --ignore-space-change --ignore-whitespace .github/patches/debug/fixture.patch\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpmz886php/bin/sudo apt update -y\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpmz886php/bin/sudo apt install msitools -y\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpmz886php/bin/rustup target add x86_64-unknown-linux-gnu\n./mach --no-interactive bootstrap --application-choice browser\n",
+      "actualStderr": "Legacy Debug+PGO is noncanonical and ineligible for qualification\n",
+      "role": "legacy-debug-profile-use",
+      "qualificationEligible": false,
+      "equal": true
+    },
+    {
+      "fixture": "baseline-full-config-byte-equivalence",
+      "label": "canonical-debug",
+      "args": [
+        "linux",
+        "aarch64",
+        true,
+        false,
+        "",
+        ""
+      ],
+      "actualExit": 0,
+      "baseExit": 0,
+      "actualConfig": "# SPDX-License-Identifier: MPL-2.0\n\nac_add_options --with-app-name=floorp\nac_add_options --with-app-basename=Floorp\n# ac_add_options --disable-updater\n# this implies disable geckodriver, and puppeteer seems using the geckodriver impl.\n# so you should not disable test\n## We should not disable tests if we attempt pgo.\n## https://searchfox.org/firefox-release/search?q=intl_compare_against_brokered_complex_line_breaks&path=&case=true&regexp=false\n# ac_add_options --disable-tests\nac_add_options --disable-crashreporter\nac_add_options --enable-bootstrap\nac_add_options --enable-rust-simd\n#? https://bugzilla.mozilla.org/show_bug.cgi?id=1617793\n#? https://phabricator.services.mozilla.com/D170170\nac_add_options --target=aarch64-unknown-linux-gnu\n#sccache\n#mk_add_options 'export RUSTC_WRAPPER=sccache'\n#mk_add_options 'export CCACHE_CPP2=yes'\n#ac_add_options --with-ccache\n#mk_add_options 'export SCCACHE_GHA_ENABLED=on'\nmk_add_options AUTOCLOBBER=1\n#Telemetry\n#https://searchfox.org/mozilla-central/rev/893f350260faac2ee6bf2b14c627d55eb2babfb0/toolkit/components/telemetry/docs/internals/preferences.rst\n# Disable telemetry\nac_add_options MOZ_TELEMETRY_REPORTING=\n# Package js shell.\nexport MOZ_PACKAGE_JSSHELL=1\n\n# Disable verified updates\nac_add_options --enable-unverified-updates\nac_add_options --with-branding=browser/branding/floorp-daylight\nac_add_options --enable-chrome-format=flat\nmk_add_options 'export RUSTC_WRAPPER=/fixture/sccache'\nmk_add_options 'export CCACHE_CPP2=yes'\nac_add_options --with-ccache=/fixture/sccache\nmk_add_options 'export SCCACHE_GHA_ENABLED=on'\nac_add_options --enable-debug\nac_add_options --enable-tests\n",
+      "configSha256": "bf7acc9da0d2ca389d492f999468fec7020f68d53119babb0e5a063eba3f6517",
+      "actualEffects": "/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpjh9oxzh5/bin/git apply --verbose --ignore-space-change --ignore-whitespace .github/patches/debug/fixture.patch\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpjh9oxzh5/bin/sudo apt update -y\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpjh9oxzh5/bin/sudo apt install msitools -y\n./mach --no-interactive bootstrap --application-choice browser\n",
+      "baseEffects": "/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmp1d3zhhnn/bin/git apply --verbose --ignore-space-change --ignore-whitespace .github/patches/debug/fixture.patch\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmp1d3zhhnn/bin/sudo apt update -y\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmp1d3zhhnn/bin/sudo apt install msitools -y\n./mach --no-interactive bootstrap --application-choice browser\n",
+      "actualStderr": "",
+      "role": "canonical-debug",
+      "qualificationEligible": true,
+      "equal": true
+    },
+    {
+      "fixture": "baseline-full-config-byte-equivalence",
+      "label": "production-opt",
+      "args": [
+        "linux",
+        "aarch64",
+        false,
+        false,
+        "",
+        ""
+      ],
+      "actualExit": 0,
+      "baseExit": 0,
+      "actualConfig": "# SPDX-License-Identifier: MPL-2.0\n\nac_add_options --with-app-name=floorp\nac_add_options --with-app-basename=Floorp\n# ac_add_options --disable-updater\n# this implies disable geckodriver, and puppeteer seems using the geckodriver impl.\n# so you should not disable test\n## We should not disable tests if we attempt pgo.\n## https://searchfox.org/firefox-release/search?q=intl_compare_against_brokered_complex_line_breaks&path=&case=true&regexp=false\n# ac_add_options --disable-tests\nac_add_options --disable-crashreporter\nac_add_options --enable-bootstrap\nac_add_options --enable-rust-simd\n#? https://bugzilla.mozilla.org/show_bug.cgi?id=1617793\n#? https://phabricator.services.mozilla.com/D170170\nac_add_options --target=aarch64-unknown-linux-gnu\n#sccache\n#mk_add_options 'export RUSTC_WRAPPER=sccache'\n#mk_add_options 'export CCACHE_CPP2=yes'\n#ac_add_options --with-ccache\n#mk_add_options 'export SCCACHE_GHA_ENABLED=on'\nmk_add_options AUTOCLOBBER=1\n#Telemetry\n#https://searchfox.org/mozilla-central/rev/893f350260faac2ee6bf2b14c627d55eb2babfb0/toolkit/components/telemetry/docs/internals/preferences.rst\n# Disable telemetry\nac_add_options MOZ_TELEMETRY_REPORTING=\n# Package js shell.\nexport MOZ_PACKAGE_JSSHELL=1\n\n# Disable verified updates\nac_add_options --enable-unverified-updates\nac_add_options --with-branding=browser/branding/floorp-official\nac_add_options --enable-chrome-format=flat\nmk_add_options 'export RUSTC_WRAPPER=/fixture/sccache'\nmk_add_options 'export CCACHE_CPP2=yes'\nac_add_options --with-ccache=/fixture/sccache\nmk_add_options 'export SCCACHE_GHA_ENABLED=on'\n",
+      "configSha256": "8a62cd84dc7108b8f43020b26259a176fa0d2c89855bfb50bdced29db305ad3d",
+      "actualEffects": "/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpxyd99px6/bin/sudo apt update -y\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpxyd99px6/bin/sudo apt install msitools -y\n./mach --no-interactive bootstrap --application-choice browser\n",
+      "baseEffects": "/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmp6dlhomwg/bin/sudo apt update -y\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmp6dlhomwg/bin/sudo apt install msitools -y\n./mach --no-interactive bootstrap --application-choice browser\n",
+      "actualStderr": "",
+      "role": "production-opt",
+      "qualificationEligible": false,
+      "equal": true
+    },
+    {
+      "fixture": "baseline-full-config-byte-equivalence",
+      "label": "canonical-debug",
+      "args": [
+        "windows",
+        "x86_64",
+        true,
+        false,
+        "",
+        ""
+      ],
+      "actualExit": 0,
+      "baseExit": 0,
+      "actualConfig": "# SPDX-License-Identifier: MPL-2.0\n\nac_add_options --with-app-name=floorp\nac_add_options --with-app-basename=Floorp\nac_add_options --disable-maintenance-service\nac_add_options --disable-desktop-launcher\n# ac_add_options --disable-updater\n## this implies disable geckodriver, and puppeteer seems using the geckodriver impl.\n## so you should not disable test\n\n## We should not disable tests if we attempt pgo.\n## https://searchfox.org/firefox-release/search?q=intl_compare_against_brokered_complex_line_breaks&path=&case=true&regexp=false\n# ac_add_options --disable-tests\nac_add_options --disable-crashreporter\nac_add_options --enable-bootstrap\nac_add_options --enable-rust-simd\n#? https://bugzilla.mozilla.org/show_bug.cgi?id=1617793\n#? https://phabricator.services.mozilla.com/D170170\nac_add_options --target=x86_64-pc-windows-msvc\n#sccache\n#mk_add_options 'export RUSTC_WRAPPER=sccache'\n#mk_add_options 'export CCACHE_CPP2=yes'\n#ac_add_options --with-ccache\n#mk_add_options 'export SCCACHE_GHA_ENABLED=on'\nmk_add_options AUTOCLOBBER=1\n#Telemetry\n#https://searchfox.org/mozilla-central/rev/893f350260faac2ee6bf2b14c627d55eb2babfb0/toolkit/components/telemetry/docs/internals/preferences.rst\n# Disable telemetry\nac_add_options MOZ_TELEMETRY_REPORTING=\n# Set branding\nac_add_options --with-branding=browser/branding/noraneko-unofficial\n# Package js shell.\nexport MOZ_PACKAGE_JSSHELL=1\nac_add_options --enable-unverified-updates\nac_add_options --enable-update-channel=release\nac_add_options --with-branding=browser/branding/floorp-daylight\nac_add_options --enable-chrome-format=flat\nmk_add_options 'export RUSTC_WRAPPER=/fixture/sccache'\nmk_add_options 'export CCACHE_CPP2=yes'\nac_add_options --with-ccache=/fixture/sccache\nmk_add_options 'export SCCACHE_GHA_ENABLED=on'\nac_add_options --enable-debug\nac_add_options --enable-tests\n",
+      "configSha256": "268a5b5cb016983ecb7c96e9e532105b204b48bbc6c55c5f643669505fae885a",
+      "actualEffects": "/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmppet1i32w/bin/git apply --verbose --ignore-space-change --ignore-whitespace .github/patches/debug/fixture.patch\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmppet1i32w/bin/sudo apt update -y\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmppet1i32w/bin/sudo apt install msitools -y\n./mach --no-interactive bootstrap --application-choice browser\n",
+      "baseEffects": "/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpug8b56jt/bin/git apply --verbose --ignore-space-change --ignore-whitespace .github/patches/debug/fixture.patch\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpug8b56jt/bin/sudo apt update -y\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpug8b56jt/bin/sudo apt install msitools -y\n./mach --no-interactive bootstrap --application-choice browser\n",
+      "actualStderr": "",
+      "role": "canonical-debug",
+      "qualificationEligible": true,
+      "equal": true
+    },
+    {
+      "fixture": "baseline-full-config-byte-equivalence",
+      "label": "production-opt",
+      "args": [
+        "windows",
+        "x86_64",
+        false,
+        false,
+        "",
+        ""
+      ],
+      "actualExit": 0,
+      "baseExit": 0,
+      "actualConfig": "# SPDX-License-Identifier: MPL-2.0\n\nac_add_options --with-app-name=floorp\nac_add_options --with-app-basename=Floorp\nac_add_options --disable-maintenance-service\nac_add_options --disable-desktop-launcher\n# ac_add_options --disable-updater\n## this implies disable geckodriver, and puppeteer seems using the geckodriver impl.\n## so you should not disable test\n\n## We should not disable tests if we attempt pgo.\n## https://searchfox.org/firefox-release/search?q=intl_compare_against_brokered_complex_line_breaks&path=&case=true&regexp=false\n# ac_add_options --disable-tests\nac_add_options --disable-crashreporter\nac_add_options --enable-bootstrap\nac_add_options --enable-rust-simd\n#? https://bugzilla.mozilla.org/show_bug.cgi?id=1617793\n#? https://phabricator.services.mozilla.com/D170170\nac_add_options --target=x86_64-pc-windows-msvc\n#sccache\n#mk_add_options 'export RUSTC_WRAPPER=sccache'\n#mk_add_options 'export CCACHE_CPP2=yes'\n#ac_add_options --with-ccache\n#mk_add_options 'export SCCACHE_GHA_ENABLED=on'\nmk_add_options AUTOCLOBBER=1\n#Telemetry\n#https://searchfox.org/mozilla-central/rev/893f350260faac2ee6bf2b14c627d55eb2babfb0/toolkit/components/telemetry/docs/internals/preferences.rst\n# Disable telemetry\nac_add_options MOZ_TELEMETRY_REPORTING=\n# Set branding\nac_add_options --with-branding=browser/branding/noraneko-unofficial\n# Package js shell.\nexport MOZ_PACKAGE_JSSHELL=1\nac_add_options --enable-unverified-updates\nac_add_options --enable-update-channel=release\nac_add_options --with-branding=browser/branding/floorp-official\nac_add_options --enable-chrome-format=flat\nmk_add_options 'export RUSTC_WRAPPER=/fixture/sccache'\nmk_add_options 'export CCACHE_CPP2=yes'\nac_add_options --with-ccache=/fixture/sccache\nmk_add_options 'export SCCACHE_GHA_ENABLED=on'\n",
+      "configSha256": "cc9daa9228ad7849e2f7df69106c6597c63f643954de8c26e5a0097bcd6dbfe8",
+      "actualEffects": "/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmprllcb1_t/bin/sudo apt update -y\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmprllcb1_t/bin/sudo apt install msitools -y\n./mach --no-interactive bootstrap --application-choice browser\n",
+      "baseEffects": "/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmp4fliq_y3/bin/sudo apt update -y\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmp4fliq_y3/bin/sudo apt install msitools -y\n./mach --no-interactive bootstrap --application-choice browser\n",
+      "actualStderr": "",
+      "role": "production-opt",
+      "qualificationEligible": false,
+      "equal": true
+    },
+    {
+      "fixture": "baseline-full-config-byte-equivalence",
+      "label": "production-pgo",
+      "args": [
+        "windows",
+        "x86_64",
+        false,
+        true,
+        "generate",
+        ""
+      ],
+      "actualExit": 0,
+      "baseExit": 0,
+      "actualConfig": "# SPDX-License-Identifier: MPL-2.0\n\nac_add_options --with-app-name=floorp\nac_add_options --with-app-basename=Floorp\nac_add_options --disable-maintenance-service\nac_add_options --disable-desktop-launcher\n# ac_add_options --disable-updater\n## this implies disable geckodriver, and puppeteer seems using the geckodriver impl.\n## so you should not disable test\n\n## We should not disable tests if we attempt pgo.\n## https://searchfox.org/firefox-release/search?q=intl_compare_against_brokered_complex_line_breaks&path=&case=true&regexp=false\n# ac_add_options --disable-tests\nac_add_options --disable-crashreporter\nac_add_options --enable-bootstrap\nac_add_options --enable-rust-simd\n#? https://bugzilla.mozilla.org/show_bug.cgi?id=1617793\n#? https://phabricator.services.mozilla.com/D170170\nac_add_options --target=x86_64-pc-windows-msvc\n#sccache\n#mk_add_options 'export RUSTC_WRAPPER=sccache'\n#mk_add_options 'export CCACHE_CPP2=yes'\n#ac_add_options --with-ccache\n#mk_add_options 'export SCCACHE_GHA_ENABLED=on'\nmk_add_options AUTOCLOBBER=1\n#Telemetry\n#https://searchfox.org/mozilla-central/rev/893f350260faac2ee6bf2b14c627d55eb2babfb0/toolkit/components/telemetry/docs/internals/preferences.rst\n# Disable telemetry\nac_add_options MOZ_TELEMETRY_REPORTING=\n# Set branding\nac_add_options --with-branding=browser/branding/noraneko-unofficial\n# Package js shell.\nexport MOZ_PACKAGE_JSSHELL=1\nac_add_options --enable-unverified-updates\nac_add_options --enable-update-channel=release\nac_add_options --with-branding=browser/branding/floorp-official\nmk_add_options 'export RUSTC_WRAPPER=/fixture/sccache'\nmk_add_options 'export CCACHE_CPP2=yes'\nac_add_options --with-ccache=/fixture/sccache\nmk_add_options 'export SCCACHE_GHA_ENABLED=on'\nac_add_options --enable-profile-generate=cross\n",
+      "configSha256": "3ef5fe1de1208bcff2f900622bf1f917bc574c6e8a737b5aee99347472ebb5be",
+      "actualEffects": "/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpbmzhb4qs/bin/sudo apt update -y\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpbmzhb4qs/bin/sudo apt install msitools -y\n./mach --no-interactive bootstrap --application-choice browser\n",
+      "baseEffects": "/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpem0ri66o/bin/sudo apt update -y\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpem0ri66o/bin/sudo apt install msitools -y\n./mach --no-interactive bootstrap --application-choice browser\n",
+      "actualStderr": "",
+      "role": "profile-generate",
+      "qualificationEligible": false,
+      "equal": true
+    },
+    {
+      "fixture": "baseline-full-config-byte-equivalence",
+      "label": "legacy-debug-pgo",
+      "args": [
+        "windows",
+        "x86_64",
+        true,
+        true,
+        "generate",
+        ""
+      ],
+      "actualExit": 0,
+      "baseExit": 0,
+      "actualConfig": "# SPDX-License-Identifier: MPL-2.0\n\nac_add_options --with-app-name=floorp\nac_add_options --with-app-basename=Floorp\nac_add_options --disable-maintenance-service\nac_add_options --disable-desktop-launcher\n# ac_add_options --disable-updater\n## this implies disable geckodriver, and puppeteer seems using the geckodriver impl.\n## so you should not disable test\n\n## We should not disable tests if we attempt pgo.\n## https://searchfox.org/firefox-release/search?q=intl_compare_against_brokered_complex_line_breaks&path=&case=true&regexp=false\n# ac_add_options --disable-tests\nac_add_options --disable-crashreporter\nac_add_options --enable-bootstrap\nac_add_options --enable-rust-simd\n#? https://bugzilla.mozilla.org/show_bug.cgi?id=1617793\n#? https://phabricator.services.mozilla.com/D170170\nac_add_options --target=x86_64-pc-windows-msvc\n#sccache\n#mk_add_options 'export RUSTC_WRAPPER=sccache'\n#mk_add_options 'export CCACHE_CPP2=yes'\n#ac_add_options --with-ccache\n#mk_add_options 'export SCCACHE_GHA_ENABLED=on'\nmk_add_options AUTOCLOBBER=1\n#Telemetry\n#https://searchfox.org/mozilla-central/rev/893f350260faac2ee6bf2b14c627d55eb2babfb0/toolkit/components/telemetry/docs/internals/preferences.rst\n# Disable telemetry\nac_add_options MOZ_TELEMETRY_REPORTING=\n# Set branding\nac_add_options --with-branding=browser/branding/noraneko-unofficial\n# Package js shell.\nexport MOZ_PACKAGE_JSSHELL=1\nac_add_options --enable-unverified-updates\nac_add_options --enable-update-channel=release\nac_add_options --with-branding=browser/branding/floorp-daylight\nmk_add_options 'export RUSTC_WRAPPER=/fixture/sccache'\nmk_add_options 'export CCACHE_CPP2=yes'\nac_add_options --with-ccache=/fixture/sccache\nmk_add_options 'export SCCACHE_GHA_ENABLED=on'\nac_add_options --enable-debug\nac_add_options --enable-profile-generate=cross\n",
+      "configSha256": "bde0f3fdb4a79ddeb9d209cfa4033554e63edf80fbcd702fc61c88c0ae4aa9e3",
+      "actualEffects": "/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmp43i5qzzb/bin/git apply --verbose --ignore-space-change --ignore-whitespace .github/patches/debug/fixture.patch\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmp43i5qzzb/bin/sudo apt update -y\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmp43i5qzzb/bin/sudo apt install msitools -y\n./mach --no-interactive bootstrap --application-choice browser\n",
+      "baseEffects": "/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpm48r3257/bin/git apply --verbose --ignore-space-change --ignore-whitespace .github/patches/debug/fixture.patch\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpm48r3257/bin/sudo apt update -y\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpm48r3257/bin/sudo apt install msitools -y\n./mach --no-interactive bootstrap --application-choice browser\n",
+      "actualStderr": "Legacy Debug+PGO is noncanonical and ineligible for qualification\n",
+      "role": "legacy-debug-profile-generate",
+      "qualificationEligible": false,
+      "equal": true
+    },
+    {
+      "fixture": "baseline-full-config-byte-equivalence",
+      "label": "production-pgo",
+      "args": [
+        "windows",
+        "x86_64",
+        false,
+        true,
+        "use",
+        "fixture-profile"
+      ],
+      "actualExit": 0,
+      "baseExit": 0,
+      "actualConfig": "# SPDX-License-Identifier: MPL-2.0\n\nac_add_options --with-app-name=floorp\nac_add_options --with-app-basename=Floorp\nac_add_options --disable-maintenance-service\nac_add_options --disable-desktop-launcher\n# ac_add_options --disable-updater\n## this implies disable geckodriver, and puppeteer seems using the geckodriver impl.\n## so you should not disable test\n\n## We should not disable tests if we attempt pgo.\n## https://searchfox.org/firefox-release/search?q=intl_compare_against_brokered_complex_line_breaks&path=&case=true&regexp=false\n# ac_add_options --disable-tests\nac_add_options --disable-crashreporter\nac_add_options --enable-bootstrap\nac_add_options --enable-rust-simd\n#? https://bugzilla.mozilla.org/show_bug.cgi?id=1617793\n#? https://phabricator.services.mozilla.com/D170170\nac_add_options --target=x86_64-pc-windows-msvc\n#sccache\n#mk_add_options 'export RUSTC_WRAPPER=sccache'\n#mk_add_options 'export CCACHE_CPP2=yes'\n#ac_add_options --with-ccache\n#mk_add_options 'export SCCACHE_GHA_ENABLED=on'\nmk_add_options AUTOCLOBBER=1\n#Telemetry\n#https://searchfox.org/mozilla-central/rev/893f350260faac2ee6bf2b14c627d55eb2babfb0/toolkit/components/telemetry/docs/internals/preferences.rst\n# Disable telemetry\nac_add_options MOZ_TELEMETRY_REPORTING=\n# Set branding\nac_add_options --with-branding=browser/branding/noraneko-unofficial\n# Package js shell.\nexport MOZ_PACKAGE_JSSHELL=1\nac_add_options --enable-unverified-updates\nac_add_options --enable-update-channel=release\nac_add_options --with-branding=browser/branding/floorp-official\nac_add_options --enable-chrome-format=flat\nmk_add_options 'export RUSTC_WRAPPER=/fixture/sccache'\nmk_add_options 'export CCACHE_CPP2=yes'\nac_add_options --with-ccache=/fixture/sccache\nmk_add_options 'export SCCACHE_GHA_ENABLED=on'\nexport MOZ_LTO=cross\nac_add_options --enable-profile-use=cross\nac_add_options --with-pgo-profile-path=$(echo ~)/artifacts/merged.profdata\nac_add_options --with-pgo-jarlog=$(echo ~)/artifacts/en-US.log\n",
+      "configSha256": "5e671e8cba55481ff58e2c6406840184bfa912e63f06f26f140b83f5672237b2",
+      "actualEffects": "/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmph8xh6jid/bin/sudo apt update -y\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmph8xh6jid/bin/sudo apt install msitools -y\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmph8xh6jid/bin/rustup target add x86_64-pc-windows-msvc\n./mach --no-interactive bootstrap --application-choice browser\n",
+      "baseEffects": "/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmp810ctbhk/bin/sudo apt update -y\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmp810ctbhk/bin/sudo apt install msitools -y\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmp810ctbhk/bin/rustup target add x86_64-pc-windows-msvc\n./mach --no-interactive bootstrap --application-choice browser\n",
+      "actualStderr": "",
+      "role": "profile-use",
+      "qualificationEligible": false,
+      "equal": true
+    },
+    {
+      "fixture": "baseline-full-config-byte-equivalence",
+      "label": "legacy-debug-pgo",
+      "args": [
+        "windows",
+        "x86_64",
+        true,
+        true,
+        "use",
+        "fixture-profile"
+      ],
+      "actualExit": 0,
+      "baseExit": 0,
+      "actualConfig": "# SPDX-License-Identifier: MPL-2.0\n\nac_add_options --with-app-name=floorp\nac_add_options --with-app-basename=Floorp\nac_add_options --disable-maintenance-service\nac_add_options --disable-desktop-launcher\n# ac_add_options --disable-updater\n## this implies disable geckodriver, and puppeteer seems using the geckodriver impl.\n## so you should not disable test\n\n## We should not disable tests if we attempt pgo.\n## https://searchfox.org/firefox-release/search?q=intl_compare_against_brokered_complex_line_breaks&path=&case=true&regexp=false\n# ac_add_options --disable-tests\nac_add_options --disable-crashreporter\nac_add_options --enable-bootstrap\nac_add_options --enable-rust-simd\n#? https://bugzilla.mozilla.org/show_bug.cgi?id=1617793\n#? https://phabricator.services.mozilla.com/D170170\nac_add_options --target=x86_64-pc-windows-msvc\n#sccache\n#mk_add_options 'export RUSTC_WRAPPER=sccache'\n#mk_add_options 'export CCACHE_CPP2=yes'\n#ac_add_options --with-ccache\n#mk_add_options 'export SCCACHE_GHA_ENABLED=on'\nmk_add_options AUTOCLOBBER=1\n#Telemetry\n#https://searchfox.org/mozilla-central/rev/893f350260faac2ee6bf2b14c627d55eb2babfb0/toolkit/components/telemetry/docs/internals/preferences.rst\n# Disable telemetry\nac_add_options MOZ_TELEMETRY_REPORTING=\n# Set branding\nac_add_options --with-branding=browser/branding/noraneko-unofficial\n# Package js shell.\nexport MOZ_PACKAGE_JSSHELL=1\nac_add_options --enable-unverified-updates\nac_add_options --enable-update-channel=release\nac_add_options --with-branding=browser/branding/floorp-daylight\nac_add_options --enable-chrome-format=flat\nmk_add_options 'export RUSTC_WRAPPER=/fixture/sccache'\nmk_add_options 'export CCACHE_CPP2=yes'\nac_add_options --with-ccache=/fixture/sccache\nmk_add_options 'export SCCACHE_GHA_ENABLED=on'\nac_add_options --enable-debug\nexport MOZ_LTO=cross\nac_add_options --enable-profile-use=cross\nac_add_options --with-pgo-profile-path=$(echo ~)/artifacts/merged.profdata\nac_add_options --with-pgo-jarlog=$(echo ~)/artifacts/en-US.log\n",
+      "configSha256": "f173929e510c1db81741ebae790a665435b617b8d361ce5b66ef409bd5abf858",
+      "actualEffects": "/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpbyagkxu9/bin/git apply --verbose --ignore-space-change --ignore-whitespace .github/patches/debug/fixture.patch\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpbyagkxu9/bin/sudo apt update -y\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpbyagkxu9/bin/sudo apt install msitools -y\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpbyagkxu9/bin/rustup target add x86_64-pc-windows-msvc\n./mach --no-interactive bootstrap --application-choice browser\n",
+      "baseEffects": "/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmp_s5nc1cu/bin/git apply --verbose --ignore-space-change --ignore-whitespace .github/patches/debug/fixture.patch\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmp_s5nc1cu/bin/sudo apt update -y\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmp_s5nc1cu/bin/sudo apt install msitools -y\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmp_s5nc1cu/bin/rustup target add x86_64-pc-windows-msvc\n./mach --no-interactive bootstrap --application-choice browser\n",
+      "actualStderr": "Legacy Debug+PGO is noncanonical and ineligible for qualification\n",
+      "role": "legacy-debug-profile-use",
+      "qualificationEligible": false,
+      "equal": true
+    },
+    {
+      "fixture": "baseline-full-config-byte-equivalence",
+      "label": "canonical-debug",
+      "args": [
+        "mac",
+        "x86_64",
+        true,
+        false,
+        "",
+        ""
+      ],
+      "actualExit": 0,
+      "baseExit": 0,
+      "actualConfig": "ac_add_options --with-app-name=floorp\nac_add_options --with-app-basename=Floorp\nac_add_options --with-distribution-id=app.floorp\n# ac_add_options --disable-updater\n# this implies disable geckodriver, and puppeteer seems using the geckodriver impl.\n# so you should not disable test\nac_add_options --disable-crashreporter\nac_add_options --enable-bootstrap\nac_add_options --enable-rust-simd\n#? https://bugzilla.mozilla.org/show_bug.cgi?id=1617793\n#? https://phabricator.services.mozilla.com/D170170\nac_add_options --target=x86_64-apple-darwin\n#sccache\n#mk_add_options 'export RUSTC_WRAPPER=sccache'\n#mk_add_options 'export CCACHE_CPP2=yes'\n#ac_add_options --with-ccache\n#mk_add_options 'export SCCACHE_GHA_ENABLED=on'\n\n# Disable verified updates\nac_add_options --enable-unverified-updates\n\n# Disable telemetry reporting\nMOZ_TELEMETRY_REPORTING=\nac_add_options --with-macos-sdk=/home/agent/macos-sdk\nac_add_options --with-branding=browser/branding/floorp-daylight\nac_add_options --enable-chrome-format=flat\nac_add_options --enable-linker=lld\nmk_add_options 'export RUSTC_WRAPPER=/fixture/sccache'\nmk_add_options 'export CCACHE_CPP2=yes'\nac_add_options --with-ccache=/fixture/sccache\nmk_add_options 'export SCCACHE_GHA_ENABLED=on'\nac_add_options --enable-debug\nmk_add_options 'export MOZ_DISABLE_CONTENT_SANDBOX=1'\nac_add_options --enable-tests\n",
+      "configSha256": "fcd7b398dbea799042265ec764949c6f9eaec96ee3431f9ab4e0f32ba014f86e",
+      "actualEffects": "/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmp290c_53q/bin/git apply --verbose --ignore-space-change --ignore-whitespace .github/patches/debug/fixture.patch\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmp290c_53q/bin/sudo apt update -y\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmp290c_53q/bin/sudo apt install msitools -y\n./mach --no-interactive bootstrap --application-choice browser\n",
+      "baseEffects": "/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpexf3q26h/bin/git apply --verbose --ignore-space-change --ignore-whitespace .github/patches/debug/fixture.patch\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpexf3q26h/bin/sudo apt update -y\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpexf3q26h/bin/sudo apt install msitools -y\n./mach --no-interactive bootstrap --application-choice browser\n",
+      "actualStderr": "",
+      "role": "canonical-debug",
+      "qualificationEligible": true,
+      "equal": true
+    },
+    {
+      "fixture": "baseline-full-config-byte-equivalence",
+      "label": "production-opt",
+      "args": [
+        "mac",
+        "x86_64",
+        false,
+        false,
+        "",
+        ""
+      ],
+      "actualExit": 0,
+      "baseExit": 0,
+      "actualConfig": "ac_add_options --with-app-name=floorp\nac_add_options --with-app-basename=Floorp\nac_add_options --with-distribution-id=app.floorp\n# ac_add_options --disable-updater\n# this implies disable geckodriver, and puppeteer seems using the geckodriver impl.\n# so you should not disable test\nac_add_options --disable-tests\nac_add_options --disable-crashreporter\nac_add_options --enable-bootstrap\nac_add_options --enable-rust-simd\n#? https://bugzilla.mozilla.org/show_bug.cgi?id=1617793\n#? https://phabricator.services.mozilla.com/D170170\nac_add_options --target=x86_64-apple-darwin\n#sccache\n#mk_add_options 'export RUSTC_WRAPPER=sccache'\n#mk_add_options 'export CCACHE_CPP2=yes'\n#ac_add_options --with-ccache\n#mk_add_options 'export SCCACHE_GHA_ENABLED=on'\n\n# Disable verified updates\nac_add_options --enable-unverified-updates\n\n# Disable telemetry reporting\nMOZ_TELEMETRY_REPORTING=\nac_add_options --with-macos-sdk=/home/agent/macos-sdk\nac_add_options --with-branding=browser/branding/floorp-official\nac_add_options --enable-chrome-format=flat\nac_add_options --enable-linker=lld\nmk_add_options 'export RUSTC_WRAPPER=/fixture/sccache'\nmk_add_options 'export CCACHE_CPP2=yes'\nac_add_options --with-ccache=/fixture/sccache\nmk_add_options 'export SCCACHE_GHA_ENABLED=on'\n",
+      "configSha256": "f1b8f37b32ae164aec0195884b4c230077784584d6be0c78a4cbe9ab6c5f4808",
+      "actualEffects": "/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpzognsbv3/bin/sudo apt update -y\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpzognsbv3/bin/sudo apt install msitools -y\n./mach --no-interactive bootstrap --application-choice browser\n",
+      "baseEffects": "/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmp7g2tmrft/bin/sudo apt update -y\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmp7g2tmrft/bin/sudo apt install msitools -y\n./mach --no-interactive bootstrap --application-choice browser\n",
+      "actualStderr": "",
+      "role": "production-opt",
+      "qualificationEligible": false,
+      "equal": true
+    },
+    {
+      "fixture": "baseline-full-config-byte-equivalence",
+      "label": "production-pgo",
+      "args": [
+        "mac",
+        "x86_64",
+        false,
+        true,
+        "generate",
+        ""
+      ],
+      "actualExit": 0,
+      "baseExit": 0,
+      "actualConfig": "ac_add_options --with-app-name=floorp\nac_add_options --with-app-basename=Floorp\nac_add_options --with-distribution-id=app.floorp\n# ac_add_options --disable-updater\n# this implies disable geckodriver, and puppeteer seems using the geckodriver impl.\n# so you should not disable test\nac_add_options --disable-tests\nac_add_options --disable-crashreporter\nac_add_options --enable-bootstrap\nac_add_options --enable-rust-simd\n#? https://bugzilla.mozilla.org/show_bug.cgi?id=1617793\n#? https://phabricator.services.mozilla.com/D170170\nac_add_options --target=x86_64-apple-darwin\n#sccache\n#mk_add_options 'export RUSTC_WRAPPER=sccache'\n#mk_add_options 'export CCACHE_CPP2=yes'\n#ac_add_options --with-ccache\n#mk_add_options 'export SCCACHE_GHA_ENABLED=on'\n\n# Disable verified updates\nac_add_options --enable-unverified-updates\n\n# Disable telemetry reporting\nMOZ_TELEMETRY_REPORTING=\nac_add_options --with-macos-sdk=/home/agent/macos-sdk\nac_add_options --with-branding=browser/branding/floorp-official\nac_add_options --enable-linker=lld\nmk_add_options 'export RUSTC_WRAPPER=/fixture/sccache'\nmk_add_options 'export CCACHE_CPP2=yes'\nac_add_options --with-ccache=/fixture/sccache\nmk_add_options 'export SCCACHE_GHA_ENABLED=on'\nac_add_options --enable-profile-generate=cross\n",
+      "configSha256": "fa6767f31dc5c7b3dbb058593da13c7a5bfa1c1486c5de1aa8acf6b51245f627",
+      "actualEffects": "/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpiayvt2j4/bin/sudo apt update -y\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpiayvt2j4/bin/sudo apt install msitools -y\n./mach --no-interactive bootstrap --application-choice browser\n",
+      "baseEffects": "/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpsloqsn2q/bin/sudo apt update -y\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpsloqsn2q/bin/sudo apt install msitools -y\n./mach --no-interactive bootstrap --application-choice browser\n",
+      "actualStderr": "",
+      "role": "profile-generate",
+      "qualificationEligible": false,
+      "equal": true
+    },
+    {
+      "fixture": "baseline-full-config-byte-equivalence",
+      "label": "legacy-debug-pgo",
+      "args": [
+        "mac",
+        "x86_64",
+        true,
+        true,
+        "generate",
+        ""
+      ],
+      "actualExit": 0,
+      "baseExit": 0,
+      "actualConfig": "ac_add_options --with-app-name=floorp\nac_add_options --with-app-basename=Floorp\nac_add_options --with-distribution-id=app.floorp\n# ac_add_options --disable-updater\n# this implies disable geckodriver, and puppeteer seems using the geckodriver impl.\n# so you should not disable test\nac_add_options --disable-tests\nac_add_options --disable-crashreporter\nac_add_options --enable-bootstrap\nac_add_options --enable-rust-simd\n#? https://bugzilla.mozilla.org/show_bug.cgi?id=1617793\n#? https://phabricator.services.mozilla.com/D170170\nac_add_options --target=x86_64-apple-darwin\n#sccache\n#mk_add_options 'export RUSTC_WRAPPER=sccache'\n#mk_add_options 'export CCACHE_CPP2=yes'\n#ac_add_options --with-ccache\n#mk_add_options 'export SCCACHE_GHA_ENABLED=on'\n\n# Disable verified updates\nac_add_options --enable-unverified-updates\n\n# Disable telemetry reporting\nMOZ_TELEMETRY_REPORTING=\nac_add_options --with-macos-sdk=/home/agent/macos-sdk\nac_add_options --with-branding=browser/branding/floorp-daylight\nac_add_options --enable-linker=lld\nmk_add_options 'export RUSTC_WRAPPER=/fixture/sccache'\nmk_add_options 'export CCACHE_CPP2=yes'\nac_add_options --with-ccache=/fixture/sccache\nmk_add_options 'export SCCACHE_GHA_ENABLED=on'\nac_add_options --enable-debug\nmk_add_options 'export MOZ_DISABLE_CONTENT_SANDBOX=1'\nac_add_options --enable-profile-generate=cross\n",
+      "configSha256": "5b5e7be22de7a7bc474102d67da5a3de3f93edaacca0246d9a6984ede4bd1180",
+      "actualEffects": "/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpyg16ro8r/bin/git apply --verbose --ignore-space-change --ignore-whitespace .github/patches/debug/fixture.patch\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpyg16ro8r/bin/sudo apt update -y\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpyg16ro8r/bin/sudo apt install msitools -y\n./mach --no-interactive bootstrap --application-choice browser\n",
+      "baseEffects": "/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpzluouzc2/bin/git apply --verbose --ignore-space-change --ignore-whitespace .github/patches/debug/fixture.patch\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpzluouzc2/bin/sudo apt update -y\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpzluouzc2/bin/sudo apt install msitools -y\n./mach --no-interactive bootstrap --application-choice browser\n",
+      "actualStderr": "Legacy Debug+PGO is noncanonical and ineligible for qualification\n",
+      "role": "legacy-debug-profile-generate",
+      "qualificationEligible": false,
+      "equal": true
+    },
+    {
+      "fixture": "baseline-full-config-byte-equivalence",
+      "label": "production-pgo",
+      "args": [
+        "mac",
+        "x86_64",
+        false,
+        true,
+        "use",
+        "fixture-profile"
+      ],
+      "actualExit": 0,
+      "baseExit": 0,
+      "actualConfig": "ac_add_options --with-app-name=floorp\nac_add_options --with-app-basename=Floorp\nac_add_options --with-distribution-id=app.floorp\n# ac_add_options --disable-updater\n# this implies disable geckodriver, and puppeteer seems using the geckodriver impl.\n# so you should not disable test\nac_add_options --disable-tests\nac_add_options --disable-crashreporter\nac_add_options --enable-bootstrap\nac_add_options --enable-rust-simd\n#? https://bugzilla.mozilla.org/show_bug.cgi?id=1617793\n#? https://phabricator.services.mozilla.com/D170170\nac_add_options --target=x86_64-apple-darwin\n#sccache\n#mk_add_options 'export RUSTC_WRAPPER=sccache'\n#mk_add_options 'export CCACHE_CPP2=yes'\n#ac_add_options --with-ccache\n#mk_add_options 'export SCCACHE_GHA_ENABLED=on'\n\n# Disable verified updates\nac_add_options --enable-unverified-updates\n\n# Disable telemetry reporting\nMOZ_TELEMETRY_REPORTING=\nac_add_options --with-macos-sdk=/home/agent/macos-sdk\nac_add_options --with-branding=browser/branding/floorp-official\nac_add_options --enable-chrome-format=flat\nac_add_options --enable-linker=lld\nmk_add_options 'export RUSTC_WRAPPER=/fixture/sccache'\nmk_add_options 'export CCACHE_CPP2=yes'\nac_add_options --with-ccache=/fixture/sccache\nmk_add_options 'export SCCACHE_GHA_ENABLED=on'\nexport MOZ_LTO=cross\nac_add_options --enable-profile-use=cross\nac_add_options --with-pgo-profile-path=$(echo ~)/artifacts/merged.profdata\nac_add_options --with-pgo-jarlog=$(echo ~)/artifacts/en-US.log\n",
+      "configSha256": "e819ddf748f3c93bea24e52336913221f1a7cf93ee73288c20fd434ff2d44ff4",
+      "actualEffects": "/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpsyj2pmah/bin/sudo apt update -y\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpsyj2pmah/bin/sudo apt install msitools -y\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpsyj2pmah/bin/rustup target add x86_64-apple-darwin\n./mach --no-interactive bootstrap --application-choice browser\n",
+      "baseEffects": "/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpdtc5tqaj/bin/sudo apt update -y\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpdtc5tqaj/bin/sudo apt install msitools -y\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpdtc5tqaj/bin/rustup target add x86_64-apple-darwin\n./mach --no-interactive bootstrap --application-choice browser\n",
+      "actualStderr": "",
+      "role": "profile-use",
+      "qualificationEligible": false,
+      "equal": true
+    },
+    {
+      "fixture": "baseline-full-config-byte-equivalence",
+      "label": "legacy-debug-pgo",
+      "args": [
+        "mac",
+        "x86_64",
+        true,
+        true,
+        "use",
+        "fixture-profile"
+      ],
+      "actualExit": 0,
+      "baseExit": 0,
+      "actualConfig": "ac_add_options --with-app-name=floorp\nac_add_options --with-app-basename=Floorp\nac_add_options --with-distribution-id=app.floorp\n# ac_add_options --disable-updater\n# this implies disable geckodriver, and puppeteer seems using the geckodriver impl.\n# so you should not disable test\nac_add_options --disable-tests\nac_add_options --disable-crashreporter\nac_add_options --enable-bootstrap\nac_add_options --enable-rust-simd\n#? https://bugzilla.mozilla.org/show_bug.cgi?id=1617793\n#? https://phabricator.services.mozilla.com/D170170\nac_add_options --target=x86_64-apple-darwin\n#sccache\n#mk_add_options 'export RUSTC_WRAPPER=sccache'\n#mk_add_options 'export CCACHE_CPP2=yes'\n#ac_add_options --with-ccache\n#mk_add_options 'export SCCACHE_GHA_ENABLED=on'\n\n# Disable verified updates\nac_add_options --enable-unverified-updates\n\n# Disable telemetry reporting\nMOZ_TELEMETRY_REPORTING=\nac_add_options --with-macos-sdk=/home/agent/macos-sdk\nac_add_options --with-branding=browser/branding/floorp-daylight\nac_add_options --enable-chrome-format=flat\nac_add_options --enable-linker=lld\nmk_add_options 'export RUSTC_WRAPPER=/fixture/sccache'\nmk_add_options 'export CCACHE_CPP2=yes'\nac_add_options --with-ccache=/fixture/sccache\nmk_add_options 'export SCCACHE_GHA_ENABLED=on'\nac_add_options --enable-debug\nmk_add_options 'export MOZ_DISABLE_CONTENT_SANDBOX=1'\nexport MOZ_LTO=cross\nac_add_options --enable-profile-use=cross\nac_add_options --with-pgo-profile-path=$(echo ~)/artifacts/merged.profdata\nac_add_options --with-pgo-jarlog=$(echo ~)/artifacts/en-US.log\n",
+      "configSha256": "19e60d102f5c34c5dba7487b4b961a3cece790a420d1013905f933f13859d1f2",
+      "actualEffects": "/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpdrusri57/bin/git apply --verbose --ignore-space-change --ignore-whitespace .github/patches/debug/fixture.patch\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpdrusri57/bin/sudo apt update -y\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpdrusri57/bin/sudo apt install msitools -y\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpdrusri57/bin/rustup target add x86_64-apple-darwin\n./mach --no-interactive bootstrap --application-choice browser\n",
+      "baseEffects": "/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmp6xqdhepf/bin/git apply --verbose --ignore-space-change --ignore-whitespace .github/patches/debug/fixture.patch\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmp6xqdhepf/bin/sudo apt update -y\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmp6xqdhepf/bin/sudo apt install msitools -y\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmp6xqdhepf/bin/rustup target add x86_64-apple-darwin\n./mach --no-interactive bootstrap --application-choice browser\n",
+      "actualStderr": "Legacy Debug+PGO is noncanonical and ineligible for qualification\n",
+      "role": "legacy-debug-profile-use",
+      "qualificationEligible": false,
+      "equal": true
+    },
+    {
+      "fixture": "baseline-full-config-byte-equivalence",
+      "label": "canonical-debug",
+      "args": [
+        "mac",
+        "aarch64",
+        true,
+        false,
+        "",
+        ""
+      ],
+      "actualExit": 0,
+      "baseExit": 0,
+      "actualConfig": "ac_add_options --with-app-name=floorp\nac_add_options --with-app-basename=Floorp\nac_add_options --with-distribution-id=app.floorp\n# ac_add_options --disable-updater\n# this implies disable geckodriver, and puppeteer seems using the geckodriver impl.\n# so you should not disable test\nac_add_options --disable-crashreporter\nac_add_options --enable-bootstrap\nac_add_options --enable-rust-simd\n#? https://bugzilla.mozilla.org/show_bug.cgi?id=1617793\n#? https://phabricator.services.mozilla.com/D170170\nac_add_options --target=aarch64-apple-darwin\n#sccache\n#mk_add_options 'export RUSTC_WRAPPER=sccache'\n#mk_add_options 'export CCACHE_CPP2=yes'\n#ac_add_options --with-ccache\n#mk_add_options 'export SCCACHE_GHA_ENABLED=on'\n# Disable verified updates\nac_add_options --enable-unverified-updates\n\n# Disable telemetry reporting\nMOZ_TELEMETRY_REPORTING=\nac_add_options --with-macos-sdk=/home/agent/macos-sdk\nac_add_options --with-branding=browser/branding/floorp-daylight\nac_add_options --enable-chrome-format=flat\nac_add_options --enable-linker=lld\nmk_add_options 'export RUSTC_WRAPPER=/fixture/sccache'\nmk_add_options 'export CCACHE_CPP2=yes'\nac_add_options --with-ccache=/fixture/sccache\nmk_add_options 'export SCCACHE_GHA_ENABLED=on'\nac_add_options --enable-debug\nmk_add_options 'export MOZ_DISABLE_CONTENT_SANDBOX=1'\nac_add_options --enable-tests\n",
+      "configSha256": "3d4383253fa5e8d2617eb91d19d40191172338cbc2709fd89bbcb5e7c4db0114",
+      "actualEffects": "/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpjy6flnb8/bin/git apply --verbose --ignore-space-change --ignore-whitespace .github/patches/debug/fixture.patch\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpjy6flnb8/bin/sudo apt update -y\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpjy6flnb8/bin/sudo apt install msitools -y\n./mach --no-interactive bootstrap --application-choice browser\n",
+      "baseEffects": "/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpznsx9olm/bin/git apply --verbose --ignore-space-change --ignore-whitespace .github/patches/debug/fixture.patch\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpznsx9olm/bin/sudo apt update -y\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpznsx9olm/bin/sudo apt install msitools -y\n./mach --no-interactive bootstrap --application-choice browser\n",
+      "actualStderr": "",
+      "role": "canonical-debug",
+      "qualificationEligible": true,
+      "equal": true
+    },
+    {
+      "fixture": "baseline-full-config-byte-equivalence",
+      "label": "production-opt",
+      "args": [
+        "mac",
+        "aarch64",
+        false,
+        false,
+        "",
+        ""
+      ],
+      "actualExit": 0,
+      "baseExit": 0,
+      "actualConfig": "ac_add_options --with-app-name=floorp\nac_add_options --with-app-basename=Floorp\nac_add_options --with-distribution-id=app.floorp\n# ac_add_options --disable-updater\n# this implies disable geckodriver, and puppeteer seems using the geckodriver impl.\n# so you should not disable test\nac_add_options --disable-tests\nac_add_options --disable-crashreporter\nac_add_options --enable-bootstrap\nac_add_options --enable-rust-simd\n#? https://bugzilla.mozilla.org/show_bug.cgi?id=1617793\n#? https://phabricator.services.mozilla.com/D170170\nac_add_options --target=aarch64-apple-darwin\n#sccache\n#mk_add_options 'export RUSTC_WRAPPER=sccache'\n#mk_add_options 'export CCACHE_CPP2=yes'\n#ac_add_options --with-ccache\n#mk_add_options 'export SCCACHE_GHA_ENABLED=on'\n# Disable verified updates\nac_add_options --enable-unverified-updates\n\n# Disable telemetry reporting\nMOZ_TELEMETRY_REPORTING=\nac_add_options --with-macos-sdk=/home/agent/macos-sdk\nac_add_options --with-branding=browser/branding/floorp-official\nac_add_options --enable-chrome-format=flat\nac_add_options --enable-linker=lld\nmk_add_options 'export RUSTC_WRAPPER=/fixture/sccache'\nmk_add_options 'export CCACHE_CPP2=yes'\nac_add_options --with-ccache=/fixture/sccache\nmk_add_options 'export SCCACHE_GHA_ENABLED=on'\n",
+      "configSha256": "8e0ab33c577210de56acf1b08ed22b0752d857ee7d956b35780e34004db5f4b0",
+      "actualEffects": "/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpk_p8pn_8/bin/sudo apt update -y\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpk_p8pn_8/bin/sudo apt install msitools -y\n./mach --no-interactive bootstrap --application-choice browser\n",
+      "baseEffects": "/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpxin4v9xb/bin/sudo apt update -y\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpxin4v9xb/bin/sudo apt install msitools -y\n./mach --no-interactive bootstrap --application-choice browser\n",
+      "actualStderr": "",
+      "role": "production-opt",
+      "qualificationEligible": false,
+      "equal": true
+    },
+    {
+      "fixture": "baseline-full-config-byte-equivalence",
+      "label": "production-pgo",
+      "args": [
+        "mac",
+        "aarch64",
+        false,
+        true,
+        "generate",
+        ""
+      ],
+      "actualExit": 0,
+      "baseExit": 0,
+      "actualConfig": "ac_add_options --with-app-name=floorp\nac_add_options --with-app-basename=Floorp\nac_add_options --with-distribution-id=app.floorp\n# ac_add_options --disable-updater\n# this implies disable geckodriver, and puppeteer seems using the geckodriver impl.\n# so you should not disable test\nac_add_options --disable-tests\nac_add_options --disable-crashreporter\nac_add_options --enable-bootstrap\nac_add_options --enable-rust-simd\n#? https://bugzilla.mozilla.org/show_bug.cgi?id=1617793\n#? https://phabricator.services.mozilla.com/D170170\nac_add_options --target=aarch64-apple-darwin\n#sccache\n#mk_add_options 'export RUSTC_WRAPPER=sccache'\n#mk_add_options 'export CCACHE_CPP2=yes'\n#ac_add_options --with-ccache\n#mk_add_options 'export SCCACHE_GHA_ENABLED=on'\n# Disable verified updates\nac_add_options --enable-unverified-updates\n\n# Disable telemetry reporting\nMOZ_TELEMETRY_REPORTING=\nac_add_options --with-macos-sdk=/home/agent/macos-sdk\nac_add_options --with-branding=browser/branding/floorp-official\nac_add_options --enable-linker=lld\nmk_add_options 'export RUSTC_WRAPPER=/fixture/sccache'\nmk_add_options 'export CCACHE_CPP2=yes'\nac_add_options --with-ccache=/fixture/sccache\nmk_add_options 'export SCCACHE_GHA_ENABLED=on'\nac_add_options --enable-profile-generate=cross\n",
+      "configSha256": "22946a31cafe500b6715b169eab373f6f98125e7072463e676b71986529668b6",
+      "actualEffects": "/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpqweeos6v/bin/sudo apt update -y\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpqweeos6v/bin/sudo apt install msitools -y\n./mach --no-interactive bootstrap --application-choice browser\n",
+      "baseEffects": "/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpik4gk7d1/bin/sudo apt update -y\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpik4gk7d1/bin/sudo apt install msitools -y\n./mach --no-interactive bootstrap --application-choice browser\n",
+      "actualStderr": "",
+      "role": "profile-generate",
+      "qualificationEligible": false,
+      "equal": true
+    },
+    {
+      "fixture": "baseline-full-config-byte-equivalence",
+      "label": "legacy-debug-pgo",
+      "args": [
+        "mac",
+        "aarch64",
+        true,
+        true,
+        "generate",
+        ""
+      ],
+      "actualExit": 0,
+      "baseExit": 0,
+      "actualConfig": "ac_add_options --with-app-name=floorp\nac_add_options --with-app-basename=Floorp\nac_add_options --with-distribution-id=app.floorp\n# ac_add_options --disable-updater\n# this implies disable geckodriver, and puppeteer seems using the geckodriver impl.\n# so you should not disable test\nac_add_options --disable-tests\nac_add_options --disable-crashreporter\nac_add_options --enable-bootstrap\nac_add_options --enable-rust-simd\n#? https://bugzilla.mozilla.org/show_bug.cgi?id=1617793\n#? https://phabricator.services.mozilla.com/D170170\nac_add_options --target=aarch64-apple-darwin\n#sccache\n#mk_add_options 'export RUSTC_WRAPPER=sccache'\n#mk_add_options 'export CCACHE_CPP2=yes'\n#ac_add_options --with-ccache\n#mk_add_options 'export SCCACHE_GHA_ENABLED=on'\n# Disable verified updates\nac_add_options --enable-unverified-updates\n\n# Disable telemetry reporting\nMOZ_TELEMETRY_REPORTING=\nac_add_options --with-macos-sdk=/home/agent/macos-sdk\nac_add_options --with-branding=browser/branding/floorp-daylight\nac_add_options --enable-linker=lld\nmk_add_options 'export RUSTC_WRAPPER=/fixture/sccache'\nmk_add_options 'export CCACHE_CPP2=yes'\nac_add_options --with-ccache=/fixture/sccache\nmk_add_options 'export SCCACHE_GHA_ENABLED=on'\nac_add_options --enable-debug\nmk_add_options 'export MOZ_DISABLE_CONTENT_SANDBOX=1'\nac_add_options --enable-profile-generate=cross\n",
+      "configSha256": "499433e55934582345a9fb33e5faaa3d6677b4ef8f40b8892342164dac06b4c9",
+      "actualEffects": "/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmp9buzutem/bin/git apply --verbose --ignore-space-change --ignore-whitespace .github/patches/debug/fixture.patch\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmp9buzutem/bin/sudo apt update -y\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmp9buzutem/bin/sudo apt install msitools -y\n./mach --no-interactive bootstrap --application-choice browser\n",
+      "baseEffects": "/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpx19v0t08/bin/git apply --verbose --ignore-space-change --ignore-whitespace .github/patches/debug/fixture.patch\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpx19v0t08/bin/sudo apt update -y\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpx19v0t08/bin/sudo apt install msitools -y\n./mach --no-interactive bootstrap --application-choice browser\n",
+      "actualStderr": "Legacy Debug+PGO is noncanonical and ineligible for qualification\n",
+      "role": "legacy-debug-profile-generate",
+      "qualificationEligible": false,
+      "equal": true
+    },
+    {
+      "fixture": "baseline-full-config-byte-equivalence",
+      "label": "production-pgo",
+      "args": [
+        "mac",
+        "aarch64",
+        false,
+        true,
+        "use",
+        "fixture-profile"
+      ],
+      "actualExit": 0,
+      "baseExit": 0,
+      "actualConfig": "ac_add_options --with-app-name=floorp\nac_add_options --with-app-basename=Floorp\nac_add_options --with-distribution-id=app.floorp\n# ac_add_options --disable-updater\n# this implies disable geckodriver, and puppeteer seems using the geckodriver impl.\n# so you should not disable test\nac_add_options --disable-tests\nac_add_options --disable-crashreporter\nac_add_options --enable-bootstrap\nac_add_options --enable-rust-simd\n#? https://bugzilla.mozilla.org/show_bug.cgi?id=1617793\n#? https://phabricator.services.mozilla.com/D170170\nac_add_options --target=aarch64-apple-darwin\n#sccache\n#mk_add_options 'export RUSTC_WRAPPER=sccache'\n#mk_add_options 'export CCACHE_CPP2=yes'\n#ac_add_options --with-ccache\n#mk_add_options 'export SCCACHE_GHA_ENABLED=on'\n# Disable verified updates\nac_add_options --enable-unverified-updates\n\n# Disable telemetry reporting\nMOZ_TELEMETRY_REPORTING=\nac_add_options --with-macos-sdk=/home/agent/macos-sdk\nac_add_options --with-branding=browser/branding/floorp-official\nac_add_options --enable-chrome-format=flat\nac_add_options --enable-linker=lld\nmk_add_options 'export RUSTC_WRAPPER=/fixture/sccache'\nmk_add_options 'export CCACHE_CPP2=yes'\nac_add_options --with-ccache=/fixture/sccache\nmk_add_options 'export SCCACHE_GHA_ENABLED=on'\nexport MOZ_LTO=cross\nac_add_options --enable-profile-use=cross\nac_add_options --with-pgo-profile-path=$(echo ~)/artifacts/merged.profdata\nac_add_options --with-pgo-jarlog=$(echo ~)/artifacts/en-US.log\n",
+      "configSha256": "daf678bf7e1a1a5aec17afc7c6e7b8edf8a74c886d0e381d651332ee46fbe7a2",
+      "actualEffects": "/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpev7rsv5e/bin/sudo apt update -y\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpev7rsv5e/bin/sudo apt install msitools -y\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpev7rsv5e/bin/rustup target add aarch64-apple-darwin\n./mach --no-interactive bootstrap --application-choice browser\n",
+      "baseEffects": "/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpt76q_a2_/bin/sudo apt update -y\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpt76q_a2_/bin/sudo apt install msitools -y\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpt76q_a2_/bin/rustup target add aarch64-apple-darwin\n./mach --no-interactive bootstrap --application-choice browser\n",
+      "actualStderr": "",
+      "role": "profile-use",
+      "qualificationEligible": false,
+      "equal": true
+    },
+    {
+      "fixture": "baseline-full-config-byte-equivalence",
+      "label": "legacy-debug-pgo",
+      "args": [
+        "mac",
+        "aarch64",
+        true,
+        true,
+        "use",
+        "fixture-profile"
+      ],
+      "actualExit": 0,
+      "baseExit": 0,
+      "actualConfig": "ac_add_options --with-app-name=floorp\nac_add_options --with-app-basename=Floorp\nac_add_options --with-distribution-id=app.floorp\n# ac_add_options --disable-updater\n# this implies disable geckodriver, and puppeteer seems using the geckodriver impl.\n# so you should not disable test\nac_add_options --disable-tests\nac_add_options --disable-crashreporter\nac_add_options --enable-bootstrap\nac_add_options --enable-rust-simd\n#? https://bugzilla.mozilla.org/show_bug.cgi?id=1617793\n#? https://phabricator.services.mozilla.com/D170170\nac_add_options --target=aarch64-apple-darwin\n#sccache\n#mk_add_options 'export RUSTC_WRAPPER=sccache'\n#mk_add_options 'export CCACHE_CPP2=yes'\n#ac_add_options --with-ccache\n#mk_add_options 'export SCCACHE_GHA_ENABLED=on'\n# Disable verified updates\nac_add_options --enable-unverified-updates\n\n# Disable telemetry reporting\nMOZ_TELEMETRY_REPORTING=\nac_add_options --with-macos-sdk=/home/agent/macos-sdk\nac_add_options --with-branding=browser/branding/floorp-daylight\nac_add_options --enable-chrome-format=flat\nac_add_options --enable-linker=lld\nmk_add_options 'export RUSTC_WRAPPER=/fixture/sccache'\nmk_add_options 'export CCACHE_CPP2=yes'\nac_add_options --with-ccache=/fixture/sccache\nmk_add_options 'export SCCACHE_GHA_ENABLED=on'\nac_add_options --enable-debug\nmk_add_options 'export MOZ_DISABLE_CONTENT_SANDBOX=1'\nexport MOZ_LTO=cross\nac_add_options --enable-profile-use=cross\nac_add_options --with-pgo-profile-path=$(echo ~)/artifacts/merged.profdata\nac_add_options --with-pgo-jarlog=$(echo ~)/artifacts/en-US.log\n",
+      "configSha256": "d33649be2d7cfacf667a7cf1f28405cb5040eea4f3c0104b6599ddc926daefbc",
+      "actualEffects": "/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmp_lcpc1xe/bin/git apply --verbose --ignore-space-change --ignore-whitespace .github/patches/debug/fixture.patch\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmp_lcpc1xe/bin/sudo apt update -y\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmp_lcpc1xe/bin/sudo apt install msitools -y\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmp_lcpc1xe/bin/rustup target add aarch64-apple-darwin\n./mach --no-interactive bootstrap --application-choice browser\n",
+      "baseEffects": "/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpf9gcoh17/bin/git apply --verbose --ignore-space-change --ignore-whitespace .github/patches/debug/fixture.patch\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpf9gcoh17/bin/sudo apt update -y\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpf9gcoh17/bin/sudo apt install msitools -y\n/workspace/qa-review-v030/fix-qa309/tmp-mozlog/tmpf9gcoh17/bin/rustup target add aarch64-apple-darwin\n./mach --no-interactive bootstrap --application-choice browser\n",
+      "actualStderr": "Legacy Debug+PGO is noncanonical and ineligible for qualification\n",
+      "role": "legacy-debug-profile-use",
+      "qualificationEligible": false,
+      "equal": true
+    },
+    {
+      "fixture": "real-setup-early-reject",
+      "args": [
+        "linux",
+        "aarch64",
+        false,
+        true,
+        "use",
+        "profile"
+      ],
+      "arguments": [
+        "linux",
+        "aarch64",
+        "false",
+        "true",
+        "use",
+        "profile",
+        "20261009000000"
+      ],
+      "exit": 2,
+      "stdout": "",
+      "stderr": "usage: qa3_build_profile.py [-h] (--validate-inputs | --config CONFIG)\n                            --platform PLATFORM --arch ARCH --debug DEBUG\n                            --pgo PGO [--mode MODE] [--artifact ARTIFACT]\n                            [--allow-legacy-debug-pgo]\nqa3_build_profile.py: error: unsupported PGO mode or target\n",
+      "effects": "",
+      "config": null,
+      "updateUnchanged": true,
+      "brandingCopied": false
+    },
+    {
+      "fixture": "real-setup-early-reject",
+      "args": [
+        "linux",
+        "aarch64",
+        true,
+        true,
+        "generate",
+        ""
+      ],
+      "arguments": [
+        "linux",
+        "aarch64",
+        "true",
+        "true",
+        "generate",
+        "",
+        "20261009000000"
+      ],
+      "exit": 2,
+      "stdout": "",
+      "stderr": "usage: qa3_build_profile.py [-h] (--validate-inputs | --config CONFIG)\n                            --platform PLATFORM --arch ARCH --debug DEBUG\n                            --pgo PGO [--mode MODE] [--artifact ARTIFACT]\n                            [--allow-legacy-debug-pgo]\nqa3_build_profile.py: error: unsupported PGO mode or target\n",
+      "effects": "",
+      "config": null,
+      "updateUnchanged": true,
+      "brandingCopied": false
+    },
+    {
+      "fixture": "real-setup-early-reject",
+      "args": [
+        "windows",
+        "aarch64",
+        false,
+        true,
+        "use",
+        "profile"
+      ],
+      "arguments": [
+        "windows",
+        "aarch64",
+        "false",
+        "true",
+        "use",
+        "profile",
+        "20261009000000"
+      ],
+      "exit": 2,
+      "stdout": "",
+      "stderr": "usage: qa3_build_profile.py [-h] (--validate-inputs | --config CONFIG)\n                            --platform PLATFORM --arch ARCH --debug DEBUG\n                            --pgo PGO [--mode MODE] [--artifact ARTIFACT]\n                            [--allow-legacy-debug-pgo]\nqa3_build_profile.py: error: unsupported target or non-boolean build mode\n",
+      "effects": "",
+      "config": null,
+      "updateUnchanged": true,
+      "brandingCopied": false
+    },
+    {
+      "fixture": "real-setup-early-reject",
+      "args": [
+        "mac",
+        "arm64",
+        false,
+        false,
+        "",
+        ""
+      ],
+      "arguments": [
+        "mac",
+        "arm64",
+        "false",
+        "false",
+        "",
+        "",
+        "20261009000000"
+      ],
+      "exit": 2,
+      "stdout": "",
+      "stderr": "usage: qa3_build_profile.py [-h] (--validate-inputs | --config CONFIG)\n                            --platform PLATFORM --arch ARCH --debug DEBUG\n                            --pgo PGO [--mode MODE] [--artifact ARTIFACT]\n                            [--allow-legacy-debug-pgo]\nqa3_build_profile.py: error: unsupported target or non-boolean build mode\n",
+      "effects": "",
+      "config": null,
+      "updateUnchanged": true,
+      "brandingCopied": false
+    },
+    {
+      "fixture": "real-setup-early-reject",
+      "args": [
+        "linux",
+        "x86_64",
+        "TRUE",
+        false,
+        "",
+        ""
+      ],
+      "arguments": [
+        "linux",
+        "x86_64",
+        "TRUE",
+        "false",
+        "",
+        "",
+        "20261009000000"
+      ],
+      "exit": 2,
+      "stdout": "",
+      "stderr": "usage: qa3_build_profile.py [-h] (--validate-inputs | --config CONFIG)\n                            --platform PLATFORM --arch ARCH --debug DEBUG\n                            --pgo PGO [--mode MODE] [--artifact ARTIFACT]\n                            [--allow-legacy-debug-pgo]\nqa3_build_profile.py: error: argument --debug: invalid boolean value: 'TRUE'\n",
+      "effects": "",
+      "config": null,
+      "updateUnchanged": true,
+      "brandingCopied": false
+    },
+    {
+      "fixture": "real-setup-early-reject",
+      "args": [
+        "linux",
+        "x86_64",
+        false,
+        "0",
+        "",
+        ""
+      ],
+      "arguments": [
+        "linux",
+        "x86_64",
+        "false",
+        "0",
+        "",
+        "",
+        "20261009000000"
+      ],
+      "exit": 2,
+      "stdout": "",
+      "stderr": "usage: qa3_build_profile.py [-h] (--validate-inputs | --config CONFIG)\n                            --platform PLATFORM --arch ARCH --debug DEBUG\n                            --pgo PGO [--mode MODE] [--artifact ARTIFACT]\n                            [--allow-legacy-debug-pgo]\nqa3_build_profile.py: error: argument --pgo: invalid boolean value: '0'\n",
+      "effects": "",
+      "config": null,
+      "updateUnchanged": true,
+      "brandingCopied": false
+    },
+    {
+      "fixture": "real-setup-early-reject",
+      "args": [
+        "linux",
+        "x86_64",
+        false,
+        false,
+        "",
+        "profile"
+      ],
+      "arguments": [
+        "linux",
+        "x86_64",
+        "false",
+        "false",
+        "",
+        "profile",
+        "20261009000000"
+      ],
+      "exit": 2,
+      "stdout": "",
+      "stderr": "usage: qa3_build_profile.py [-h] (--validate-inputs | --config CONFIG)\n                            --platform PLATFORM --arch ARCH --debug DEBUG\n                            --pgo PGO [--mode MODE] [--artifact ARTIFACT]\n                            [--allow-legacy-debug-pgo]\nqa3_build_profile.py: error: non-PGO builds cannot consume a profile\n",
+      "effects": "",
+      "config": null,
+      "updateUnchanged": true,
+      "brandingCopied": false
+    },
+    {
+      "fixture": "real-setup-early-reject",
+      "args": [
+        "linux",
+        "x86_64",
+        false,
+        true,
+        "use",
+        ""
+      ],
+      "arguments": [
+        "linux",
+        "x86_64",
+        "false",
+        "true",
+        "use",
+        "",
+        "20261009000000"
+      ],
+      "exit": 2,
+      "stdout": "",
+      "stderr": "usage: qa3_build_profile.py [-h] (--validate-inputs | --config CONFIG)\n                            --platform PLATFORM --arch ARCH --debug DEBUG\n                            --pgo PGO [--mode MODE] [--artifact ARTIFACT]\n                            [--allow-legacy-debug-pgo]\nqa3_build_profile.py: error: only profile-use requires a profile artifact\n",
+      "effects": "",
+      "config": null,
+      "updateUnchanged": true,
+      "brandingCopied": false
+    },
+    {
+      "fixture": "typed-profile-contract",
+      "kwargs": {
+        "debug": "false"
+      },
+      "reject": "unsupported target or non-boolean build mode"
+    },
+    {
+      "fixture": "typed-profile-contract",
+      "kwargs": {
+        "debug": 0
+      },
+      "reject": "unsupported target or non-boolean build mode"
+    },
+    {
+      "fixture": "typed-profile-contract",
+      "kwargs": {
+        "pgo": 1
+      },
+      "reject": "unsupported target or non-boolean build mode"
+    },
+    {
+      "fixture": "typed-profile-contract",
+      "kwargs": {
+        "pgo": null
+      },
+      "reject": "unsupported target or non-boolean build mode"
+    },
+    {
+      "fixture": "typed-profile-contract",
+      "kwargs": {
+        "allow_legacy_debug_pgo": "false"
+      },
+      "reject": "unsupported target or non-boolean build mode"
+    },
+    {
+      "fixture": "typed-profile-contract",
+      "kwargs": {
+        "mode": null
+      },
+      "reject": "PGO mode and profile artifact must be strings"
+    },
+    {
+      "fixture": "typed-profile-contract",
+      "kwargs": {
+        "artifact": []
+      },
+      "reject": "PGO mode and profile artifact must be strings"
+    }
+  ],
+  "fixtureCount": 41,
+  "equivalenceCount": 26,
+  "network": false,
+  "native": false,
+  "readOnly": true
+}

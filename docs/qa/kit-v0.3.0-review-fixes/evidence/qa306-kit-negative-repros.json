@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 1,
+  "sourceZipSha256": "a4af60380399050f82465864734391227ab34024d26bdf16c31559e2824a8d50",
+  "realBrowserStarted": false,
+  "nativeBuildExecuted": false,
+  "networkCalled": false,
+  "repoFilesMutated": false,
+  "resourceCaps": {
+    "addressSpaceMiB": 256,
+    "cpuSeconds": 8,
+    "fileMiB": 8
+  },
+  "cases": {
+    "zero-assertions": {
+      "status": "PASS",
+      "issues": [],
+      "planned": 1,
+      "started": 1,
+      "ended": 1,
+      "events": 4,
+      "evidence": [
+        {
+          "path": "mozlog.jsonl",
+          "digest": "sha256:63944f5d79b22e2d59871cba9f22aa3098bdec52cbab6d10d62aa6815accb5a1"
+        }
+      ],
+      "retainedRawPath": "qa306-mozlog-zero-assertions.jsonl"
+    },
+    "retry-warning": {
+      "status": "PASS",
+      "issues": [],
+      "planned": 1,
+      "started": 1,
+      "ended": 1,
+      "events": 6,
+      "evidence": [
+        {
+          "path": "mozlog.jsonl",
+          "digest": "sha256:9583c962c8eb42a86aa0f76abc5ccafa9e90168c67afcb2ecfc5cc51052178d1"
+        }
+      ],
+      "retainedRawPath": "qa306-mozlog-retry-warning.jsonl"
+    },
+    "failed-child-process": {
+      "status": "PASS",
+      "issues": [],
+      "planned": 1,
+      "started": 1,
+      "ended": 1,
+      "events": 6,
+      "evidence": [
+        {
+          "path": "mozlog.jsonl",
+          "digest": "sha256:ee1e012e55ec8e21797caea9f514c9cd972dd9679f778e0642970eee049d8bf2"
+        }
+      ],
+      "retainedRawPath": "qa306-mozlog-failed-child-process.jsonl"
+    },
+    "unknown-action": {
+      "status": "PASS",
+      "issues": [],
+      "planned": 1,
+      "started": 1,
+      "ended": 1,
+      "events": 6,
+      "evidence": [
+        {
+          "path": "mozlog.jsonl",
+          "digest": "sha256:345e04edc70ac554681f817a6a5d799eebc49c69ef92723aac34dd17f01fe03d"
+        }
+      ],
+      "retainedRawPath": "qa306-mozlog-unknown-action.jsonl"
+    },
+    "huge-attempt": {
+      "exitCode": 0,
+      "stdout": "{\"kind\": \"resource-exception\", \"type\": \"MemoryError\"}\n",
+      "stderr": ""
+    },
+    "agent-partial-stdin": {
+      "campaignBudgetSeconds": 1,
+      "outerTimeoutSeconds": 3,
+      "exceededCampaignBudget": true,
+      "wallSeconds": 3.003,
+      "exitCodeAfterOuterCleanup": -9,
+      "fakeDriver": true,
+      "processGroupCleanup": "owned child only",
+      "logSha256": "daa95670b616e96219b6a96e6d1eeac7654f2c58070e27b00c71f28c821aed41"
+    }
+  }
+}

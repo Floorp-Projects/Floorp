@@ -1,0 +1,20 @@
+{
+  "sourceHead": "cc83e6fea6499d6ec89c76ae9837c280556e9d53",
+  "log": "runtime-all-integrated-commit-01.log",
+  "logSha256": "826c4d4fbc782873e275273b14451b6f0a1835c43f5191031214dd62e239e568",
+  "rawSummary": "Ran 190 tests in 41.468s / OK",
+  "correctCount": 190,
+  "earlierCommentaryCount": 191,
+  "correction": "Use the executed raw unittest count. No prior result was overwritten.",
+  "baseline": "460106115bc76b026c8bf8dad24df7fcb07f97c2",
+  "methodCounts": {
+    "test_qa3_build_profile.py": {"baseline": 7, "integrated": 12, "netAdded": 5},
+    "test_qa3_mozlog.py": {"baseline": 14, "integrated": 21, "netAdded": 7},
+    "test_qa3_native_io.py": {"baseline": 18, "integrated": 34, "netAdded": 16}
+  },
+  "netAddedToPrior162": 28,
+  "buildProfileRemovedMethods": [],
+  "buildProfileExistingMethodUpdated": "test_legacy_debug_pgo_is_not_canonical_qualification",
+  "nativeParentInitAcceptance": "BLOCKED at this candidate; independent P1 fixtures failed after the broad suite passed",
+  "notQualification": true
+}

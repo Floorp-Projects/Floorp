@@ -1,0 +1,13 @@
+{
+  "logSha256": "399d27444aa1f77dc458aa4117b0105b7ab1fe6f8dfaf7c9b970452bf4b53886",
+  "suiteSummary": [
+    "contracts\tCheck generated profiles and source/profdata negative contracts\t2026-10-09T15:10:44.2778622Z Ran 26 tests in 2.532s",
+    "contracts\tCheck generated profiles and source/profdata negative contracts\t2026-10-09T15:10:44.2778752Z OK"
+  ],
+  "checkoutShaLines": [
+    "contracts\tRun actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5\t2026-10-09T15:10:41.4847725Z HEAD is now at 0caeb02c Merge 91e94b73617730d54ffee3d4ea42ff3a91463c7d into c74fe1a545d275cdd710ab44701c1ee0dd6b0eae",
+    "contracts\tRun actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5\t2026-10-09T15:10:41.4989774Z 0caeb02c0b1fe94f85d1d8271188064bd00256f6",
+    "contracts\tRecord policy preflight without issuing native qualification\t2026-10-09T15:10:44.2870965Z   QA3_RUNTIME_HEAD: 0caeb02c0b1fe94f85d1d8271188064bd00256f6"
+  ],
+  "nativeQualificationLines": []
+}

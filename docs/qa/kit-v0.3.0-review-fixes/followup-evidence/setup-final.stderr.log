@@ -1,0 +1,17 @@
+test_debug_test_override_is_idempotent_and_rejects_ambiguous_flags (test_qa3_build_profile.BuildProfileTests.test_debug_test_override_is_idempotent_and_rejects_ambiguous_flags) ... ok
+test_invalid_targets_modes_and_profile_inputs_are_rejected (test_qa3_build_profile.BuildProfileTests.test_invalid_targets_modes_and_profile_inputs_are_rejected) ... ok
+test_legacy_debug_pgo_is_not_canonical_qualification (test_qa3_build_profile.BuildProfileTests.test_legacy_debug_pgo_is_not_canonical_qualification) ... ok
+test_legacy_debug_pgo_requires_explicit_noncanonical_policy (test_qa3_build_profile.BuildProfileTests.test_legacy_debug_pgo_requires_explicit_noncanonical_policy) ... ok
+test_production_opt_and_pgo_preserve_tests_and_profile_flags (test_qa3_build_profile.BuildProfileTests.test_production_opt_and_pgo_preserve_tests_and_profile_flags) ... ok
+test_profile_use_requires_lto_profdata_and_jarlog (test_qa3_build_profile.BuildProfileTests.test_profile_use_requires_lto_profdata_and_jarlog) ... ok
+test_real_setup_argument_count_and_optional_defaults (test_qa3_build_profile.BuildProfileTests.test_real_setup_argument_count_and_optional_defaults) ... ok
+test_real_setup_generates_canonical_debug_on_all_five_targets (test_qa3_build_profile.BuildProfileTests.test_real_setup_generates_canonical_debug_on_all_five_targets) ... ok
+test_real_setup_rejects_invalid_booleans_and_incomplete_modes (test_qa3_build_profile.BuildProfileTests.test_real_setup_rejects_invalid_booleans_and_incomplete_modes) ... ok
+test_real_setup_rejects_invalid_inputs_before_side_effects (test_qa3_build_profile.BuildProfileTests.test_real_setup_rejects_invalid_inputs_before_side_effects) ... ok
+test_real_setup_rejects_wrong_generated_config_before_bootstrap (test_qa3_build_profile.BuildProfileTests.test_real_setup_rejects_wrong_generated_config_before_bootstrap) ... ok
+test_wrong_target_debug_tests_and_profiling_are_rejected (test_qa3_build_profile.BuildProfileTests.test_wrong_target_debug_tests_and_profiling_are_rejected) ... ok
+
+----------------------------------------------------------------------
+Ran 12 tests in 2.768s
+
+OK

@@ -1,0 +1,15 @@
+{
+  "command": [
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+    "/workspace/qa-review-v030/fix-qa309/evidence/mozlog-independent-fixture.py"
+  ],
+  "exit": 0,
+  "limits": {
+    "addressSpaceMiB": 256,
+    "cpuSeconds": 20,
+    "fileSizeMiB": 8,
+    "wallSeconds": 40
+  },
+  "credentialsInherited": false,
+  "nativeExecuted": false
+}

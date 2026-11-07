@@ -1,0 +1,348 @@
+test_debug_test_override_is_idempotent_and_rejects_ambiguous_flags (test_qa3_build_profile.BuildProfileTests.test_debug_test_override_is_idempotent_and_rejects_ambiguous_flags) ... ok
+test_invalid_targets_modes_and_profile_inputs_are_rejected (test_qa3_build_profile.BuildProfileTests.test_invalid_targets_modes_and_profile_inputs_are_rejected) ... ok
+test_legacy_debug_pgo_is_not_canonical_qualification (test_qa3_build_profile.BuildProfileTests.test_legacy_debug_pgo_is_not_canonical_qualification) ... ok
+test_legacy_debug_pgo_requires_explicit_noncanonical_policy (test_qa3_build_profile.BuildProfileTests.test_legacy_debug_pgo_requires_explicit_noncanonical_policy) ... ok
+test_production_opt_and_pgo_preserve_tests_and_profile_flags (test_qa3_build_profile.BuildProfileTests.test_production_opt_and_pgo_preserve_tests_and_profile_flags) ... ok
+test_profile_use_requires_lto_profdata_and_jarlog (test_qa3_build_profile.BuildProfileTests.test_profile_use_requires_lto_profdata_and_jarlog) ... ok
+test_real_setup_argument_count_and_optional_defaults (test_qa3_build_profile.BuildProfileTests.test_real_setup_argument_count_and_optional_defaults) ... ok
+test_real_setup_generates_canonical_debug_on_all_five_targets (test_qa3_build_profile.BuildProfileTests.test_real_setup_generates_canonical_debug_on_all_five_targets) ... ok
+test_real_setup_rejects_invalid_booleans_and_incomplete_modes (test_qa3_build_profile.BuildProfileTests.test_real_setup_rejects_invalid_booleans_and_incomplete_modes) ... ok
+test_real_setup_rejects_invalid_inputs_before_side_effects (test_qa3_build_profile.BuildProfileTests.test_real_setup_rejects_invalid_inputs_before_side_effects) ... ok
+test_real_setup_rejects_wrong_generated_config_before_bootstrap (test_qa3_build_profile.BuildProfileTests.test_real_setup_rejects_wrong_generated_config_before_bootstrap) ... ok
+test_wrong_target_debug_tests_and_profiling_are_rejected (test_qa3_build_profile.BuildProfileTests.test_wrong_target_debug_tests_and_profiling_are_rejected) ... ok
+test_canary_cannot_accept_zero_exit_crash_or_two_expected_failures (test_qa3_mozlog.MozlogContracts.test_canary_cannot_accept_zero_exit_crash_or_two_expected_failures) ... ok
+test_canary_rejects_expected_fail_skip_retry_exit_and_untyped_assertions (test_qa3_mozlog.MozlogContracts.test_canary_rejects_expected_fail_skip_retry_exit_and_untyped_assertions) ... ok
+test_canonical_package_id_and_browser_chrome_uri (test_qa3_mozlog.MozlogContracts.test_canonical_package_id_and_browser_chrome_uri) ... ok
+test_child_process_exit_requires_typed_zero (test_qa3_mozlog.MozlogContracts.test_child_process_exit_requires_typed_zero) ... ok
+test_crash_leak_and_unknown_event (test_qa3_mozlog.MozlogContracts.test_crash_leak_and_unknown_event) ... ok
+test_crlf_and_multiple_complete_events_are_preserved (test_qa3_mozlog.MozlogContracts.test_crlf_and_multiple_complete_events_are_preserved) ... ok
+test_duplicate_execution_and_internal_retry (test_qa3_mozlog.MozlogContracts.test_duplicate_execution_and_internal_retry) ... ok
+test_empty_incomplete_assertion_free_and_missing_case (test_qa3_mozlog.MozlogContracts.test_empty_incomplete_assertion_free_and_missing_case) ... ok
+test_error_after_suite_and_truncated_raw_are_rejected (test_qa3_mozlog.MozlogContracts.test_error_after_suite_and_truncated_raw_are_rejected) ... ok
+test_event_byte_limit_includes_terminator_at_boundary (test_qa3_mozlog.MozlogContracts.test_event_byte_limit_includes_terminator_at_boundary) ... ok
+test_exact_complete_required_execution (test_qa3_mozlog.MozlogContracts.test_exact_complete_required_execution) ... ok
+test_exact_expected_assertion_canary (test_qa3_mozlog.MozlogContracts.test_exact_expected_assertion_canary) ... ok
+test_extra_suite_foreign_source_and_duplicate_id (test_qa3_mozlog.MozlogContracts.test_extra_suite_foreign_source_and_duplicate_id) ... ok
+test_first_failed_process_cannot_be_hidden_by_pass_log (test_qa3_mozlog.MozlogContracts.test_first_failed_process_cannot_be_hidden_by_pass_log) ... ok
+test_formal_nullable_and_string_subtests_are_preserved (test_qa3_mozlog.MozlogContracts.test_formal_nullable_and_string_subtests_are_preserved) ... ok
+test_multibyte_byte_bound_and_truncation_fail_closed (test_qa3_mozlog.MozlogContracts.test_multibyte_byte_bound_and_truncation_fail_closed) ... ok
+test_readline_is_bounded_before_oversized_event_is_loaded (test_qa3_mozlog.MozlogContracts.test_readline_is_bounded_before_oversized_event_is_loaded) ... ok
+test_required_skip_and_recovered_first_failure (test_qa3_mozlog.MozlogContracts.test_required_skip_and_recovered_first_failure) ... ok
+test_subtest_field_and_raw_type_are_required (test_qa3_mozlog.MozlogContracts.test_subtest_field_and_raw_type_are_required) ... ok
+test_unexecuted_setup_failure_is_not_expected_canary (test_qa3_mozlog.MozlogContracts.test_unexecuted_setup_failure_is_not_expected_canary) ... ok
+test_unterminated_complete_and_partial_events_are_rejected (test_qa3_mozlog.MozlogContracts.test_unterminated_complete_and_partial_events_are_rejected) ... ok
+test_direct_harness_uses_explicit_primary_helpers_and_fixed_case (test_qa3_native_contracts.NativeContracts.test_direct_harness_uses_explicit_primary_helpers_and_fixed_case) ... ok
+test_effective_config_must_enable_tests_debug_and_exact_compiler (test_qa3_native_contracts.NativeContracts.test_effective_config_must_enable_tests_debug_and_exact_compiler) ... ok
+test_merge_accepts_identical_duplicate_only_and_counts_peak (test_qa3_native_contracts.NativeContracts.test_merge_accepts_identical_duplicate_only_and_counts_peak) ... ok
+test_offline_python_inputs_require_exact_wheels_and_hashes (test_qa3_native_contracts.NativeContracts.test_offline_python_inputs_require_exact_wheels_and_hashes) ... ok
+test_offline_python_rejects_source_only_excluded_inputs (test_qa3_native_contracts.NativeContracts.test_offline_python_rejects_source_only_excluded_inputs) ... ok
+test_offline_python_rejects_unpinned_url_sdist_option_and_wrong_hash (test_qa3_native_contracts.NativeContracts.test_offline_python_rejects_unpinned_url_sdist_option_and_wrong_hash) ... ok
+test_parse_only_probe_accepts_hidden_cli_flags_without_native_execution (test_qa3_native_contracts.NativeContracts.test_parse_only_probe_accepts_hidden_cli_flags_without_native_execution) ... ok
+test_primary_and_support_inventory_rejects_excluded_input_changes (test_qa3_native_contracts.NativeContracts.test_primary_and_support_inventory_rejects_excluded_input_changes) ... ok
+test_producer_bundle_consumer_binding_fixture_and_corruption (test_qa3_native_contracts.NativeContracts.test_producer_bundle_consumer_binding_fixture_and_corruption) ... ok
+test_readonly_recipe_must_match_runtime_raw_blobs_and_modes (test_qa3_native_contracts.NativeContracts.test_readonly_recipe_must_match_runtime_raw_blobs_and_modes) ... ok
+test_recipe_scope_cannot_hide_vcs_or_mozconfig_additions (test_qa3_native_contracts.NativeContracts.test_recipe_scope_cannot_hide_vcs_or_mozconfig_additions) ... ok
+test_source_receipt_roundtrip_rejects_cross_recipe_or_undeclared_delta (test_qa3_native_contracts.NativeContracts.test_source_receipt_roundtrip_rejects_cross_recipe_or_undeclared_delta) ... ok
+test_xpcshell_api_adapter_disables_retry_and_preserves_native_exit_mapping (test_qa3_native_contracts.NativeContracts.test_xpcshell_api_adapter_disables_retry_and_preserves_native_exit_mapping) ... ok
+test_distinct_same_attempt_primary_support_and_failure_evidence (test_qa3_native_contracts.PrivateWorkflowContracts.test_distinct_same_attempt_primary_support_and_failure_evidence) ... ok
+test_full_builder_source_and_cold_consumer_no_persisted_credentials (test_qa3_native_contracts.PrivateWorkflowContracts.test_full_builder_source_and_cold_consumer_no_persisted_credentials) ... ok
+test_only_private_reusable_entry_and_no_publication_gate_change (test_qa3_native_contracts.PrivateWorkflowContracts.test_only_private_reusable_entry_and_no_publication_gate_change) ... ok
+test_archive_expansion_cumulative_across_inputs (test_qa3_native_io.NativeIOTests.test_archive_expansion_cumulative_across_inputs) ... ok
+test_archive_member_and_expanded_limits (test_qa3_native_io.NativeIOTests.test_archive_member_and_expanded_limits) ... ok
+test_archive_roundtrip_and_native_elf_identity (test_qa3_native_io.NativeIOTests.test_archive_roundtrip_and_native_elf_identity) ... ok
+test_archive_special_hardlink_and_external_symlink (test_qa3_native_io.NativeIOTests.test_archive_special_hardlink_and_external_symlink) ... ok
+test_archive_traversal_and_duplicate_names (test_qa3_native_io.NativeIOTests.test_archive_traversal_and_duplicate_names) ... ok
+test_burst_log_hard_cap_and_cumulative_budget (test_qa3_native_io.NativeIOTests.test_burst_log_hard_cap_and_cumulative_budget) ... ok
+test_closed_pipes_do_not_stop_timeout_or_disk_monitoring (test_qa3_native_io.NativeIOTests.test_closed_pipes_do_not_stop_timeout_or_disk_monitoring) ... ok
+test_copy_pack_and_extract_keep_free_reserve (test_qa3_native_io.NativeIOTests.test_copy_pack_and_extract_keep_free_reserve) ... ok
+test_daemon_cleanup_does_not_kill_unowned_process (test_qa3_native_io.NativeIOTests.test_daemon_cleanup_does_not_kill_unowned_process) ... ok
+test_data_budget_accounting_crosses_supervisor_boundary (test_qa3_native_io.NativeIOTests.test_data_budget_accounting_crosses_supervisor_boundary) ... ok
+test_data_stdout_has_distinct_budget (test_qa3_native_io.NativeIOTests.test_data_stdout_has_distinct_budget) ... ok
+test_environment_has_no_controller_or_agent_tokens (test_qa3_native_io.NativeIOTests.test_environment_has_no_controller_or_agent_tokens) ... ok
+test_group_memory_pids_and_oom_preconditions (test_qa3_native_io.NativeIOTests.test_group_memory_pids_and_oom_preconditions) ... ok
+test_json_duplicate_keys_and_overwrite (test_qa3_native_io.NativeIOTests.test_json_duplicate_keys_and_overwrite) ... ok
+test_pid_birth_snapshot_handles_exit_between_reads (test_qa3_native_io.NativeIOTests.test_pid_birth_snapshot_handles_exit_between_reads) ... ok
+test_process_preserves_complete_streams (test_qa3_native_io.NativeIOTests.test_process_preserves_complete_streams) ... ok
+test_stage_merge_peak_is_not_just_final_size (test_qa3_native_io.NativeIOTests.test_stage_merge_peak_is_not_just_final_size) ... ok
+test_wrong_architecture_and_missing_elf_identity (test_qa3_native_io.NativeIOTests.test_wrong_architecture_and_missing_elf_identity) ... ok
+test_zip_symlink_and_traversal (test_qa3_native_io.NativeIOTests.test_zip_symlink_and_traversal) ... ok
+test_caller_subreaper_zero_is_not_enabled (test_qa3_native_io.ProcessFailureTests.test_caller_subreaper_zero_is_not_enabled) ... ok
+test_cleanup_only_sink_failure_cannot_abort_kill_and_reap (test_qa3_native_io.ProcessFailureTests.test_cleanup_only_sink_failure_cannot_abort_kill_and_reap) ... ok
+test_cleanup_signal_error_cannot_abort_later_kill_and_reap (test_qa3_native_io.ProcessFailureTests.test_cleanup_signal_error_cannot_abort_later_kill_and_reap) ... ok
+test_expired_term_grace_still_kills_and_reaps (test_qa3_native_io.ProcessFailureTests.test_expired_term_grace_still_kills_and_reaps) ... ok
+test_initial_snapshot_failure_preserves_error_and_reaps (test_qa3_native_io.ProcessFailureTests.test_initial_snapshot_failure_preserves_error_and_reaps) ... ok
+test_pipe_close_failure_still_reaps_and_saves_first_error (test_qa3_native_io.ProcessFailureTests.test_pipe_close_failure_still_reaps_and_saves_first_error) ... ok
+test_pipe_read_failure_preserves_error_and_reaps (test_qa3_native_io.ProcessFailureTests.test_pipe_read_failure_preserves_error_and_reaps) ... ok
+test_pipe_setup_failure_preserves_error_and_reaps (test_qa3_native_io.ProcessFailureTests.test_pipe_setup_failure_preserves_error_and_reaps) ... ok
+test_selector_close_error_does_not_replace_first_sink_failure (test_qa3_native_io.ProcessFailureTests.test_selector_close_error_does_not_replace_first_sink_failure) ... ok
+test_selector_read_failure_preserves_error_and_reaps (test_qa3_native_io.ProcessFailureTests.test_selector_read_failure_preserves_error_and_reaps) ... ok
+test_selector_registration_failure_preserves_error_and_reaps (test_qa3_native_io.ProcessFailureTests.test_selector_registration_failure_preserves_error_and_reaps) ... ok
+test_sink_errors_preserve_initial_failure_and_reap (test_qa3_native_io.ProcessFailureTests.test_sink_errors_preserve_initial_failure_and_reap) ... ok
+test_sink_failure_reaps_detached_and_late_fork_children (test_qa3_native_io.ProcessFailureTests.test_sink_failure_reaps_detached_and_late_fork_children) ... ok
+test_unrelated_late_adoption_and_caller_subreaper_are_preserved (test_qa3_native_io.ProcessFailureTests.test_unrelated_late_adoption_and_caller_subreaper_are_preserved) ... ok
+test_worker_sigterm_after_leader_exit_is_not_pass (test_qa3_native_io.ProcessFailureTests.test_worker_sigterm_after_leader_exit_is_not_pass) ... ok
+test_fork_failure_closes_both_fds_even_if_first_close_fails (test_qa3_native_io.SupervisorBoundaryTests.test_fork_failure_closes_both_fds_even_if_first_close_fails) ... ok
+test_parent_no_pidfd_uses_held_child_cleanup (test_qa3_native_io.SupervisorBoundaryTests.test_parent_no_pidfd_uses_held_child_cleanup) ... ok
+test_parent_pidfd_open_error_uses_held_child_cleanup (test_qa3_native_io.SupervisorBoundaryTests.test_parent_pidfd_open_error_uses_held_child_cleanup) ... ok
+test_parent_pidfd_signal_error_keeps_first_error_and_reaps (test_qa3_native_io.SupervisorBoundaryTests.test_parent_pidfd_signal_error_keeps_first_error_and_reaps) ... ok
+test_parent_reader_error_with_missing_snapshot_reaps (test_qa3_native_io.SupervisorBoundaryTests.test_parent_reader_error_with_missing_snapshot_reaps) ... ok
+test_parent_snapshot_error_closes_control_and_reaps (test_qa3_native_io.SupervisorBoundaryTests.test_parent_snapshot_error_closes_control_and_reaps) ... ok
+test_parent_writer_close_error_is_retried_and_reaps (test_qa3_native_io.SupervisorBoundaryTests.test_parent_writer_close_error_is_retried_and_reaps) ... ok
+test_private_envelope_explicit_nonzero_and_expected_command (test_qa3_native_io.SupervisorBoundaryTests.test_private_envelope_explicit_nonzero_and_expected_command) ... ok
+test_private_envelope_never_reconstructs_system_exit_zero (test_qa3_native_io.SupervisorBoundaryTests.test_private_envelope_never_reconstructs_system_exit_zero) ... ok
+test_private_envelope_rejects_false_errors_extra_keys_and_bad_results (test_qa3_native_io.SupervisorBoundaryTests.test_private_envelope_rejects_false_errors_extra_keys_and_bad_results) ... ok
+test_private_envelope_staging_budget_is_typed_and_monotone (test_qa3_native_io.SupervisorBoundaryTests.test_private_envelope_staging_budget_is_typed_and_monotone) ... ok
+test_private_envelope_valid_result_and_oserror_survive (test_qa3_native_io.SupervisorBoundaryTests.test_private_envelope_valid_result_and_oserror_survive) ... ok
+test_single_owner_guard_runs_before_fork (test_qa3_native_io.SupervisorBoundaryTests.test_single_owner_guard_runs_before_fork) ... ok
+test_artifact_wrong_id_name_attempt_digest_expired_run_head_and_size (test_qa3_native_transport.TransportContracts.test_artifact_wrong_id_name_attempt_digest_expired_run_head_and_size) ... ok
+test_context_binds_actual_private_run_w_r_attempt_created_time (test_qa3_native_transport.TransportContracts.test_context_binds_actual_private_run_w_r_attempt_created_time) ... ok
+test_cross_attempt_and_controller_recipe_mismatch (test_qa3_native_transport.TransportContracts.test_cross_attempt_and_controller_recipe_mismatch) ... ok
+test_invalid_context_schema_time_uid_or_authority (test_qa3_native_transport.TransportContracts.test_invalid_context_schema_time_uid_or_authority) ... ok
+test_native_rejects_same_uid_root_wrong_service_user_tokens_and_changed_receipt (test_qa3_native_transport.TransportContracts.test_native_rejects_same_uid_root_wrong_service_user_tokens_and_changed_receipt) ... ok
+test_signed_storage_redirect_strips_authentication (test_qa3_native_transport.TransportContracts.test_signed_storage_redirect_strips_authentication) ... ok
+test_storage_redirect_rejects_foreign_host_plaintext_and_userinfo (test_qa3_native_transport.TransportContracts.test_storage_redirect_rejects_foreign_host_plaintext_and_userinfo) ... ok
+test_transfer_rejects_truncation_excess_and_hash_difference (test_qa3_native_transport.TransportContracts.test_transfer_rejects_truncation_excess_and_hash_difference) ... ok
+test_actual_git_ingestion_and_runtime_head_are_verified (test_qa3_source_cohort.SourceCohortTests.test_actual_git_ingestion_and_runtime_head_are_verified) ... ok
+test_baseline_is_required_and_inventory_cannot_be_forged (test_qa3_source_cohort.SourceCohortTests.test_baseline_is_required_and_inventory_cannot_be_forged) ... ok
+test_cohort_rejects_upstream_runtime_patch_order_transform_and_tree_changes (test_qa3_source_cohort.SourceCohortTests.test_cohort_rejects_upstream_runtime_patch_order_transform_and_tree_changes) ... ok
+test_empty_diagnostic_delta_cannot_accept_a_different_final_baseline (test_qa3_source_cohort.SourceCohortTests.test_empty_diagnostic_delta_cannot_accept_a_different_final_baseline) ... ok
+test_exact_subject_rejects_wrong_config_target_attempt_and_final_bytes (test_qa3_source_cohort.SourceCohortTests.test_exact_subject_rejects_wrong_config_target_attempt_and_final_bytes) ... ok
+test_external_dangling_and_excluded_source_symlinks_are_rejected (test_qa3_source_cohort.SourceCohortTests.test_external_dangling_and_excluded_source_symlinks_are_rejected) ... ok
+test_linux_arm_and_legacy_debug_pgo_are_not_invented_canonical_profiles (test_qa3_source_cohort.SourceCohortTests.test_linux_arm_and_legacy_debug_pgo_are_not_invented_canonical_profiles) ... ok
+test_only_exact_applied_diagnostic_delta_is_accepted (test_qa3_source_cohort.SourceCohortTests.test_only_exact_applied_diagnostic_delta_is_accepted) ... ok
+test_patch_inventory_rejects_missing_extra_changed_and_duplicate_material (test_qa3_source_cohort.SourceCohortTests.test_patch_inventory_rejects_missing_extra_changed_and_duplicate_material) ... ok
+test_pgo_profile_binds_actual_bytes_workload_binary_run_and_attempt (test_qa3_source_cohort.SourceCohortTests.test_pgo_profile_binds_actual_bytes_workload_binary_run_and_attempt) ... ok
+test_pgo_profile_rejects_other_cohort_target_toolchain_and_missing_fields (test_qa3_source_cohort.SourceCohortTests.test_pgo_profile_rejects_other_cohort_target_toolchain_and_missing_fields) ... ok
+test_preflight_rejects_untracked_and_ignored_runtime_recipe_inputs (test_qa3_source_cohort.SourceCohortTests.test_preflight_rejects_untracked_and_ignored_runtime_recipe_inputs) ... ok
+test_symlink_target_changes_are_detected (test_qa3_source_cohort.SourceCohortTests.test_symlink_target_changes_are_detected) ... ok
+test_untracked_ignored_files_and_modes_are_not_silently_excluded (test_qa3_source_cohort.SourceCohortTests.test_untracked_ignored_files_and_modes_are_not_silently_excluded) ... ok
+test_actual_git_p_c_b_d_f_and_generated_config (test_qa3_source_prepare.SourcePreparationTests.test_actual_git_p_c_b_d_f_and_generated_config) ... ok
+test_ambiguous_update_url (test_qa3_source_prepare.SourcePreparationTests.test_ambiguous_update_url) ... ok
+test_clean_filter_cannot_hide_raw_changed_bytes (test_qa3_source_prepare.SourcePreparationTests.test_clean_filter_cannot_hide_raw_changed_bytes) ... ok
+test_double_common_patch (test_qa3_source_prepare.SourcePreparationTests.test_double_common_patch) ... ok
+test_external_state_and_preexisting_mozconfig (test_qa3_source_prepare.SourcePreparationTests.test_external_state_and_preexisting_mozconfig) ... ok
+test_local_filemode_false_cannot_hide_executable_change (test_qa3_source_prepare.SourcePreparationTests.test_local_filemode_false_cannot_hide_executable_change) ... ok
+test_reduced_diagnostic_policy (test_qa3_source_prepare.SourcePreparationTests.test_reduced_diagnostic_policy) ... ok
+test_reordered_or_reduced_common_policy (test_qa3_source_prepare.SourcePreparationTests.test_reordered_or_reduced_common_policy) ... ok
+test_selected_source_digest_change (test_qa3_source_prepare.SourcePreparationTests.test_selected_source_digest_change) ... ok
+test_shallow_checkout (test_qa3_source_prepare.SourcePreparationTests.test_shallow_checkout) ... ok
+test_skip_worktree_and_assume_unchanged (test_qa3_source_prepare.SourcePreparationTests.test_skip_worktree_and_assume_unchanged) ... ok
+test_sparse_checkout (test_qa3_source_prepare.SourcePreparationTests.test_sparse_checkout) ... ok
+test_untracked_and_ignored_source (test_qa3_source_prepare.SourcePreparationTests.test_untracked_and_ignored_source) ... ok
+test_url_write_extra_bytes_not_adopted_as_expected (test_qa3_source_prepare.SourcePreparationTests.test_url_write_extra_bytes_not_adopted_as_expected) ... ok
+test_walk_error_cannot_produce_partial_pass (test_qa3_source_prepare.SourcePreparationTests.test_walk_error_cannot_produce_partial_pass) ... ok
+test_wrong_runtime_or_missing_upstream (test_qa3_source_prepare.SourcePreparationTests.test_wrong_runtime_or_missing_upstream) ... ok
+test_flat_package_becomes_real_omnijar_without_changing_code_or_resources (test_repack_mac_debug_runtime.MacRepackTest.test_flat_package_becomes_real_omnijar_without_changing_code_or_resources) ... /workspace/qa-review-v030/repos/Floorp-Runtime/python/mozbuild/mozpack/packager/unpack.py:161: ResourceWarning: unclosed file <_io.BufferedReader name='/tmp/tmp5fn046so/Floorp Debug.app/Contents/Resources/application.ini'>
+  header = file.open().read(8)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/workspace/qa-review-v030/repos/Floorp-Runtime/python/mozbuild/mozpack/packager/unpack.py:161: ResourceWarning: unclosed file <_io.BufferedReader name='/tmp/tmp5fn046so/Floorp Debug.app/Contents/Resources/chrome.manifest'>
+  header = file.open().read(8)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/workspace/qa-review-v030/repos/Floorp-Runtime/python/mozbuild/mozpack/packager/unpack.py:78: ResourceWarning: unclosed file <_io.BufferedReader name='/tmp/tmp5fn046so/Floorp Debug.app/Contents/Resources/chrome.manifest'>
+  for e in parse_manifest(
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/workspace/qa-review-v030/repos/Floorp-Runtime/python/mozbuild/mozpack/packager/unpack.py:161: ResourceWarning: unclosed file <_io.BufferedReader name='/tmp/tmp5fn046so/Floorp Debug.app/Contents/Resources/modules/Fixture.sys.mjs'>
+  header = file.open().read(8)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/workspace/qa-review-v030/repos/Floorp-Runtime/python/mozbuild/mozpack/packager/unpack.py:161: ResourceWarning: unclosed file <_io.BufferedReader name='/tmp/tmp5fn046so/Floorp Debug.app/Contents/Resources/platform.ini'>
+  header = file.open().read(8)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/workspace/qa-review-v030/repos/Floorp-Runtime/python/mozbuild/mozpack/files.py:212: ResourceWarning: unclosed file <_io.BufferedReader name='/tmp/tmp5fn046so/Floorp Debug.app/Contents/Resources/modules/Fixture.sys.mjs'>
+  shutil.copyfileobj(self.open(), dest)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/workspace/qa-review-v030/repos/Floorp-Runtime/python/mozbuild/mozpack/packager/unpack.py:161: ResourceWarning: unclosed file <_io.BufferedReader name='/tmp/tmp5fn046so/runtime-omni-tdck2mgu/Resources/application.ini'>
+  header = file.open().read(8)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/workspace/qa-review-v030/repos/Floorp-Runtime/python/mozbuild/mozpack/packager/unpack.py:161: ResourceWarning: unclosed file <_io.BufferedReader name='/tmp/tmp5fn046so/runtime-omni-tdck2mgu/Resources/omni.ja'>
+  header = file.open().read(8)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/workspace/qa-review-v030/repos/Floorp-Runtime/python/mozbuild/mozpack/packager/unpack.py:146: ResourceWarning: unclosed file <_io.BufferedReader name='/tmp/tmp5fn046so/runtime-omni-tdck2mgu/Resources/omni.ja'>
+  jar = JarReader(fileobj=file.open())
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/workspace/qa-review-v030/repos/Floorp-Runtime/python/mozbuild/mozpack/packager/unpack.py:161: ResourceWarning: unclosed file <_io.BufferedReader name='/tmp/tmp5fn046so/runtime-omni-tdck2mgu/Resources/platform.ini'>
+  header = file.open().read(8)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/workspace/qa-review-v030/repos/Floorp-Runtime/python/mozbuild/mozpack/packager/unpack.py:161: ResourceWarning: unclosed file <_io.BufferedReader name='/tmp/tmp5fn046so/Floorp Debug.app/Contents/Resources/omni.ja'>
+  header = file.open().read(8)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/workspace/qa-review-v030/repos/Floorp-Runtime/python/mozbuild/mozpack/packager/unpack.py:146: ResourceWarning: unclosed file <_io.BufferedReader name='/tmp/tmp5fn046so/Floorp Debug.app/Contents/Resources/omni.ja'>
+  jar = JarReader(fileobj=file.open())
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/workspace/qa-review-v030/repos/Floorp-Runtime/python/mozbuild/mozpack/packager/unpack.py:161: ResourceWarning: unclosed file <_io.BufferedReader name='/tmp/tmp5fn046so/runtime-omni-j2_nt5zp/Resources/application.ini'>
+  header = file.open().read(8)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/workspace/qa-review-v030/repos/Floorp-Runtime/python/mozbuild/mozpack/packager/unpack.py:161: ResourceWarning: unclosed file <_io.BufferedReader name='/tmp/tmp5fn046so/runtime-omni-j2_nt5zp/Resources/omni.ja'>
+  header = file.open().read(8)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/workspace/qa-review-v030/repos/Floorp-Runtime/python/mozbuild/mozpack/packager/unpack.py:146: ResourceWarning: unclosed file <_io.BufferedReader name='/tmp/tmp5fn046so/runtime-omni-j2_nt5zp/Resources/omni.ja'>
+  jar = JarReader(fileobj=file.open())
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/workspace/qa-review-v030/repos/Floorp-Runtime/python/mozbuild/mozpack/packager/unpack.py:161: ResourceWarning: unclosed file <_io.BufferedReader name='/tmp/tmp5fn046so/runtime-omni-j2_nt5zp/Resources/platform.ini'>
+  header = file.open().read(8)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+ok
+test_release_and_pgo_packages_preserve_their_identity_and_native_code (test_repack_mac_debug_runtime.MacRepackTest.test_release_and_pgo_packages_preserve_their_identity_and_native_code) ... /workspace/qa-review-v030/repos/Floorp-Runtime/python/mozbuild/mozpack/packager/unpack.py:161: ResourceWarning: unclosed file <_io.BufferedReader name='/tmp/tmpb3gcu_jz/Release/Floorp.app/Contents/Resources/application.ini'>
+  header = file.open().read(8)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/workspace/qa-review-v030/repos/Floorp-Runtime/python/mozbuild/mozpack/packager/unpack.py:161: ResourceWarning: unclosed file <_io.BufferedReader name='/tmp/tmpb3gcu_jz/Release/Floorp.app/Contents/Resources/chrome.manifest'>
+  header = file.open().read(8)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/workspace/qa-review-v030/repos/Floorp-Runtime/python/mozbuild/mozpack/packager/unpack.py:78: ResourceWarning: unclosed file <_io.BufferedReader name='/tmp/tmpb3gcu_jz/Release/Floorp.app/Contents/Resources/chrome.manifest'>
+  for e in parse_manifest(
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/workspace/qa-review-v030/repos/Floorp-Runtime/python/mozbuild/mozpack/packager/unpack.py:161: ResourceWarning: unclosed file <_io.BufferedReader name='/tmp/tmpb3gcu_jz/Release/Floorp.app/Contents/Resources/modules/Fixture.sys.mjs'>
+  header = file.open().read(8)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/workspace/qa-review-v030/repos/Floorp-Runtime/python/mozbuild/mozpack/packager/unpack.py:161: ResourceWarning: unclosed file <_io.BufferedReader name='/tmp/tmpb3gcu_jz/Release/Floorp.app/Contents/Resources/platform.ini'>
+  header = file.open().read(8)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/workspace/qa-review-v030/repos/Floorp-Runtime/python/mozbuild/mozpack/files.py:212: ResourceWarning: unclosed file <_io.BufferedReader name='/tmp/tmpb3gcu_jz/Release/Floorp.app/Contents/Resources/modules/Fixture.sys.mjs'>
+  shutil.copyfileobj(self.open(), dest)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/workspace/qa-review-v030/repos/Floorp-Runtime/python/mozbuild/mozpack/packager/unpack.py:161: ResourceWarning: unclosed file <_io.BufferedReader name='/tmp/tmpb3gcu_jz/Release/runtime-omni-s41gyabi/Resources/application.ini'>
+  header = file.open().read(8)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/workspace/qa-review-v030/repos/Floorp-Runtime/python/mozbuild/mozpack/packager/unpack.py:161: ResourceWarning: unclosed file <_io.BufferedReader name='/tmp/tmpb3gcu_jz/Release/runtime-omni-s41gyabi/Resources/omni.ja'>
+  header = file.open().read(8)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/workspace/qa-review-v030/repos/Floorp-Runtime/python/mozbuild/mozpack/packager/unpack.py:146: ResourceWarning: unclosed file <_io.BufferedReader name='/tmp/tmpb3gcu_jz/Release/runtime-omni-s41gyabi/Resources/omni.ja'>
+  jar = JarReader(fileobj=file.open())
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/workspace/qa-review-v030/repos/Floorp-Runtime/python/mozbuild/mozpack/packager/unpack.py:161: ResourceWarning: unclosed file <_io.BufferedReader name='/tmp/tmpb3gcu_jz/Release/runtime-omni-s41gyabi/Resources/platform.ini'>
+  header = file.open().read(8)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/workspace/qa-review-v030/repos/Floorp-Runtime/python/mozbuild/mozpack/packager/unpack.py:161: ResourceWarning: unclosed file <_io.BufferedReader name='/tmp/tmpb3gcu_jz/PGO/Floorp.app/Contents/Resources/application.ini'>
+  header = file.open().read(8)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/workspace/qa-review-v030/repos/Floorp-Runtime/python/mozbuild/mozpack/packager/unpack.py:161: ResourceWarning: unclosed file <_io.BufferedReader name='/tmp/tmpb3gcu_jz/PGO/Floorp.app/Contents/Resources/chrome.manifest'>
+  header = file.open().read(8)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/workspace/qa-review-v030/repos/Floorp-Runtime/python/mozbuild/mozpack/packager/unpack.py:78: ResourceWarning: unclosed file <_io.BufferedReader name='/tmp/tmpb3gcu_jz/PGO/Floorp.app/Contents/Resources/chrome.manifest'>
+  for e in parse_manifest(
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/workspace/qa-review-v030/repos/Floorp-Runtime/python/mozbuild/mozpack/packager/unpack.py:161: ResourceWarning: unclosed file <_io.BufferedReader name='/tmp/tmpb3gcu_jz/PGO/Floorp.app/Contents/Resources/modules/Fixture.sys.mjs'>
+  header = file.open().read(8)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/workspace/qa-review-v030/repos/Floorp-Runtime/python/mozbuild/mozpack/packager/unpack.py:161: ResourceWarning: unclosed file <_io.BufferedReader name='/tmp/tmpb3gcu_jz/PGO/Floorp.app/Contents/Resources/platform.ini'>
+  header = file.open().read(8)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/workspace/qa-review-v030/repos/Floorp-Runtime/python/mozbuild/mozpack/files.py:212: ResourceWarning: unclosed file <_io.BufferedReader name='/tmp/tmpb3gcu_jz/PGO/Floorp.app/Contents/Resources/modules/Fixture.sys.mjs'>
+  shutil.copyfileobj(self.open(), dest)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/workspace/qa-review-v030/repos/Floorp-Runtime/python/mozbuild/mozpack/packager/unpack.py:161: ResourceWarning: unclosed file <_io.BufferedReader name='/tmp/tmpb3gcu_jz/PGO/runtime-omni-ezem4f2x/Resources/application.ini'>
+  header = file.open().read(8)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/workspace/qa-review-v030/repos/Floorp-Runtime/python/mozbuild/mozpack/packager/unpack.py:161: ResourceWarning: unclosed file <_io.BufferedReader name='/tmp/tmpb3gcu_jz/PGO/runtime-omni-ezem4f2x/Resources/omni.ja'>
+  header = file.open().read(8)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/workspace/qa-review-v030/repos/Floorp-Runtime/python/mozbuild/mozpack/packager/unpack.py:146: ResourceWarning: unclosed file <_io.BufferedReader name='/tmp/tmpb3gcu_jz/PGO/runtime-omni-ezem4f2x/Resources/omni.ja'>
+  jar = JarReader(fileobj=file.open())
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/workspace/qa-review-v030/repos/Floorp-Runtime/python/mozbuild/mozpack/packager/unpack.py:161: ResourceWarning: unclosed file <_io.BufferedReader name='/tmp/tmpb3gcu_jz/PGO/runtime-omni-ezem4f2x/Resources/platform.ini'>
+  header = file.open().read(8)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+ok
+test_wrong_build_id_leaves_the_original_package_unchanged (test_repack_mac_debug_runtime.MacRepackTest.test_wrong_build_id_leaves_the_original_package_unchanged) ... ok
+test_failed_repack_prevents_dmg_creation (test_repack_mac_debug_runtime.UniversalPackagingWorkflowTest.test_failed_repack_prevents_dmg_creation) ... ok
+test_normal_and_debug_workflow_repack_before_creating_the_dmg (test_repack_mac_debug_runtime.UniversalPackagingWorkflowTest.test_normal_and_debug_workflow_repack_before_creating_the_dmg) ... ok
+test_cli_failure_does_not_write_outputs (test_runtime_build_context.CliTests.test_cli_failure_does_not_write_outputs) ... error: resolved_moz_build_date must be exactly 14 ASCII digits
+ok
+test_trusted_cli_writes_exact_github_outputs_without_token (test_runtime_build_context.CliTests.test_trusted_cli_writes_exact_github_outputs_without_token) ... ok
+test_conflicting_trusted_and_requested_values_fail_before_rest (test_runtime_build_context.ResolutionTests.test_conflicting_trusted_and_requested_values_fail_before_rest) ... ok
+test_daily_manifest_uses_aggregate_attempt_on_rerun (test_runtime_build_context.ResolutionTests.test_daily_manifest_uses_aggregate_attempt_on_rerun) ... ok
+test_daily_runtime_verifier_matrix_and_publish_gates (test_runtime_build_context.ResolutionTests.test_daily_runtime_verifier_matrix_and_publish_gates) ... ok
+test_daily_validation_only_runs_manifest_without_publish_side_effects (test_runtime_build_context.ResolutionTests.test_daily_validation_only_runs_manifest_without_publish_side_effects) ... ok
+test_linux_stage2_uses_retained_profile_generation_artifact (test_runtime_build_context.ResolutionTests.test_linux_stage2_uses_retained_profile_generation_artifact) ... ok
+test_missing_resolved_value_uses_rest (test_runtime_build_context.ResolutionTests.test_missing_resolved_value_uses_rest) ... ok
+test_requested_value_is_only_an_assertion (test_runtime_build_context.ResolutionTests.test_requested_value_is_only_an_assertion) ... ok
+test_require_metadata_forces_rest_and_checks_resolved_assertion (test_runtime_build_context.ResolutionTests.test_require_metadata_forces_rest_and_checks_resolved_assertion) ... ok
+test_rest_payload_must_match_all_trusted_context_fields (test_runtime_build_context.ResolutionTests.test_rest_payload_must_match_all_trusted_context_fields) ... ok
+test_rest_payload_rejects_missing_and_wrong_field_types (test_runtime_build_context.ResolutionTests.test_rest_payload_rejects_missing_and_wrong_field_types) ... ok
+test_run_attempt_is_observed_but_does_not_change_identity (test_runtime_build_context.ResolutionTests.test_run_attempt_is_observed_but_does_not_change_identity) ... ok
+test_trusted_path_still_validates_github_context (test_runtime_build_context.ResolutionTests.test_trusted_path_still_validates_github_context) ... ok
+test_trusted_resolved_value_avoids_rest (test_runtime_build_context.ResolutionTests.test_trusted_resolved_value_avoids_rest) ... ok
+test_fetch_fails_closed_without_token_or_on_http_error (test_runtime_build_context.RestClientTests.test_fetch_fails_closed_without_token_or_on_http_error) ... ok
+test_fetch_uses_authenticated_versioned_get_and_parses_json (test_runtime_build_context.RestClientTests.test_fetch_uses_authenticated_versioned_get_and_parses_json) ... ok
+test_json_parser_rejects_duplicates_constants_and_non_objects (test_runtime_build_context.RestClientTests.test_json_parser_rejects_duplicates_constants_and_non_objects) ... ok
+test_run_url_supports_github_enterprise_api_base (test_runtime_build_context.RestClientTests.test_run_url_supports_github_enterprise_api_base) ... ok
+test_boolean_is_not_truthy_coerced (test_runtime_build_context.ValidationTests.test_boolean_is_not_truthy_coerced) ... ok
+test_build_id_accepts_valid_leap_day (test_runtime_build_context.ValidationTests.test_build_id_accepts_valid_leap_day) ... ok
+test_build_id_rejects_noncanonical_or_invalid_values (test_runtime_build_context.ValidationTests.test_build_id_rejects_noncanonical_or_invalid_values) ... ok
+test_context_identifiers_are_strict (test_runtime_build_context.ValidationTests.test_context_identifiers_are_strict) ... ok
+test_created_at_is_strict_utc_and_derives_build_id (test_runtime_build_context.ValidationTests.test_created_at_is_strict_utc_and_derives_build_id) ... ok
+test_accepts_exact_adjacent_application_and_platform_ids (test_verify_full_version.FullVersionParserTests.test_accepts_exact_adjacent_application_and_platform_ids) ... ok
+test_accepts_line_break_as_adjacency (test_verify_full_version.FullVersionParserTests.test_accepts_line_break_as_adjacency) ... ok
+test_cli_reads_utf8_file_and_fails_closed (test_verify_full_version.FullVersionParserTests.test_cli_reads_utf8_file_and_fails_closed) ... error: --full-version output must contain exactly two 14-digit build IDs; found 1
+ok
+test_does_not_parse_ids_embedded_in_longer_numbers (test_verify_full_version.FullVersionParserTests.test_does_not_parse_ids_embedded_in_longer_numbers) ... ok
+test_expected_build_id_is_strict_and_calendar_valid (test_verify_full_version.FullVersionParserTests.test_expected_build_id_is_strict_and_calendar_valid) ... ok
+test_rejects_application_or_platform_mismatch (test_verify_full_version.FullVersionParserTests.test_rejects_application_or_platform_mismatch) ... ok
+test_rejects_empty_or_missing_ids (test_verify_full_version.FullVersionParserTests.test_rejects_empty_or_missing_ids) ... ok
+test_rejects_extra_build_id (test_verify_full_version.FullVersionParserTests.test_rejects_extra_build_id) ... ok
+test_rejects_nonadjacent_ids (test_verify_full_version.FullVersionParserTests.test_rejects_nonadjacent_ids) ... ok
+test_workflow_uses_immutable_download_and_static_app_data (test_verify_full_version.FullVersionParserTests.test_workflow_uses_immutable_download_and_static_app_data) ... ok
+test_cli_rejects_mnt_backed_work_path_and_records_fatal_result (test_verify_linux_profile_paths.LinuxProfilePathVerifierTests.test_cli_rejects_mnt_backed_work_path_and_records_fatal_result) ... error: work directory must be on a native Linux filesystem, not under /mnt: /mnt/c/floorp-2601-verifier-test
+ok
+test_cli_rejects_relative_work_path (test_verify_linux_profile_paths.LinuxProfilePathVerifierTests.test_cli_rejects_relative_work_path) ... error: work directory path must be absolute
+ok
+test_cli_success_writes_machine_readable_summary (test_verify_linux_profile_paths.LinuxProfilePathVerifierTests.test_cli_success_writes_machine_readable_summary) ... ok
+test_complete_matrix_passes_and_preserves_evidence (test_verify_linux_profile_paths.LinuxProfilePathVerifierTests.test_complete_matrix_passes_and_preserves_evidence) ... ok
+test_escaping_profile_descriptor_is_rejected (test_verify_linux_profile_paths.LinuxProfilePathVerifierTests.test_escaping_profile_descriptor_is_rejected) ... ok
+test_missing_matching_cache_child_fails_only_target_case (test_verify_linux_profile_paths.LinuxProfilePathVerifierTests.test_missing_matching_cache_child_fails_only_target_case) ... ok
+test_timeout_terminates_the_browser_process_group (test_verify_linux_profile_paths.LinuxProfilePathVerifierTests.test_timeout_terminates_the_browser_process_group) ... ok
+test_unexpected_capital_floorp_creation_is_rejected (test_verify_linux_profile_paths.LinuxProfilePathVerifierTests.test_unexpected_capital_floorp_creation_is_rejected) ... ok
+test_unexpected_capitalized_xdg_sibling_is_rejected (test_verify_linux_profile_paths.LinuxProfilePathVerifierTests.test_unexpected_capitalized_xdg_sibling_is_rejected) ... ok
+test_unexpected_legacy_marker_creation_is_rejected (test_verify_linux_profile_paths.LinuxProfilePathVerifierTests.test_unexpected_legacy_marker_creation_is_rejected) ... ok
+test_zero_exit_with_create_profile_error_is_rejected (test_verify_linux_profile_paths.LinuxProfilePathVerifierTests.test_zero_exit_with_create_profile_error_is_rejected) ... ok
+test_accepts_arm64_runner_and_thin_slice (test_verify_mac_pgo_stage1.Stage1VerifierTests.test_accepts_arm64_runner_and_thin_slice) ... ok
+test_accepts_x86_64_bundle_with_space_in_path (test_verify_mac_pgo_stage1.Stage1VerifierTests.test_accepts_x86_64_bundle_with_space_in_path) ... ok
+test_ignores_nested_app (test_verify_mac_pgo_stage1.Stage1VerifierTests.test_ignores_nested_app) ... ok
+test_rejects_duplicate_section_or_option (test_verify_mac_pgo_stage1.Stage1VerifierTests.test_rejects_duplicate_section_or_option) ... ok
+test_rejects_invalid_expected_build_id (test_verify_mac_pgo_stage1.Stage1VerifierTests.test_rejects_invalid_expected_build_id) ... ok
+test_rejects_lipo_failure_wrong_slice_and_multiple_slices (test_verify_mac_pgo_stage1.Stage1VerifierTests.test_rejects_lipo_failure_wrong_slice_and_multiple_slices) ... ok
+test_rejects_missing_lipo_program (test_verify_mac_pgo_stage1.Stage1VerifierTests.test_rejects_missing_lipo_program) ... ok
+test_rejects_missing_or_malformed_ini (test_verify_mac_pgo_stage1.Stage1VerifierTests.test_rejects_missing_or_malformed_ini) ... ok
+test_rejects_missing_or_mismatched_ini_build_id (test_verify_mac_pgo_stage1.Stage1VerifierTests.test_rejects_missing_or_mismatched_ini_build_id) ... ok
+test_rejects_missing_or_multiple_direct_child_apps (test_verify_mac_pgo_stage1.Stage1VerifierTests.test_rejects_missing_or_multiple_direct_child_apps) ... ok
+test_rejects_non_executable_binary (test_verify_mac_pgo_stage1.Stage1VerifierTests.test_rejects_non_executable_binary) ... ok
+test_rejects_non_regular_resource_file (test_verify_mac_pgo_stage1.Stage1VerifierTests.test_rejects_non_regular_resource_file) ... ok
+test_rejects_path_outside_root (test_verify_mac_pgo_stage1.Stage1VerifierTests.test_rejects_path_outside_root) ... ok
+test_rejects_symlink_escape_when_supported (test_verify_mac_pgo_stage1.Stage1VerifierTests.test_rejects_symlink_escape_when_supported) ... ok
+test_rejects_symlinked_resource_file_when_supported (test_verify_mac_pgo_stage1.Stage1VerifierTests.test_rejects_symlinked_resource_file_when_supported) ... ok
+test_rejects_symlinked_search_root_when_supported (test_verify_mac_pgo_stage1.Stage1VerifierTests.test_rejects_symlinked_search_root_when_supported) ... ok
+test_rejects_wrong_or_unsupported_runner_arch (test_verify_mac_pgo_stage1.Stage1VerifierTests.test_rejects_wrong_or_unsupported_runner_arch) ... ok
+test_workflow_preserves_proof_chain (test_verify_mac_pgo_stage1.Stage1VerifierTests.test_workflow_preserves_proof_chain) ... ok
+test_writes_exact_output_and_rejects_line_breaks (test_verify_mac_pgo_stage1.Stage1VerifierTests.test_writes_exact_output_and_rejects_line_breaks) ... ok
+
+----------------------------------------------------------------------
+Ran 203 tests in 56.217s
+
+OK
+Repacked macOS Runtime with unchanged native binaries: {"version": "157.0.1", "build_id": "20261006190514", "compiled_source_commit": "fixture-source", "original_resource_format": "flat", "resource_format": "omni", "resource_files_preserved": 3, "native_binaries_unchanged": true, "native_binaries_sha256": {"Contents/MacOS/floorp": "018411b5b4bb422755d1418f082b4901821423b418aa33430c950970bcffbdfc"}, "gre_omnijar_bytes": 285}
+Repacked macOS Runtime with unchanged native binaries: {"version": "157.0.1", "build_id": "20261006190514", "compiled_source_commit": "fixture-source", "original_resource_format": "omni", "resource_format": "omni", "resource_files_preserved": 3, "native_binaries_unchanged": true, "native_binaries_sha256": {"Contents/MacOS/floorp": "018411b5b4bb422755d1418f082b4901821423b418aa33430c950970bcffbdfc"}, "gre_omnijar_bytes": 285}
+Repacked macOS Runtime with unchanged native binaries: {"version": "157.0.1", "build_id": "20261006154310", "compiled_source_commit": "Release-source", "original_resource_format": "flat", "resource_format": "omni", "resource_files_preserved": 3, "native_binaries_unchanged": true, "native_binaries_sha256": {"Contents/MacOS/floorp": "018411b5b4bb422755d1418f082b4901821423b418aa33430c950970bcffbdfc"}, "gre_omnijar_bytes": 292}
+Repacked macOS Runtime with unchanged native binaries: {"version": "157.0.1", "build_id": "20261006185710", "compiled_source_commit": "PGO-source", "original_resource_format": "flat", "resource_format": "omni", "resource_files_preserved": 3, "native_binaries_unchanged": true, "native_binaries_sha256": {"Contents/MacOS/floorp": "018411b5b4bb422755d1418f082b4901821423b418aa33430c950970bcffbdfc"}, "gre_omnijar_bytes": 288}
+Resolved build context for Floorp-Projects/Floorp-Runtime run 123456789 attempt 2: 20260723010203
+Verified native --full-version identity: application=20260723010203 platform=20260723010203
+Floorp Linux profile path verification: 8/8 passed; results=/tmp/floorp-2601-verifier-test-a8hnpbrn/cli-results.json
+Stage 1 app binary: /tmp/tmptwsqgbyu/stage 1 root/Floorp.app/Contents/MacOS/floorp
+Stage 1 runner architecture: arm64
+Stage 1 binary architecture: arm64
+Stage 1 application.ini: /tmp/tmptwsqgbyu/stage 1 root/Floorp.app/Contents/Resources/application.ini
+Stage 1 application BuildID: 20260724044918
+Stage 1 platform.ini: /tmp/tmptwsqgbyu/stage 1 root/Floorp.app/Contents/Resources/platform.ini
+Stage 1 platform BuildID: 20260724044918
+Stage 1 app binary: /tmp/tmpsg02oq_r/stage 1 root/Floorp.app/Contents/MacOS/floorp
+Stage 1 runner architecture: x86_64
+Stage 1 binary architecture: x86_64
+Stage 1 application.ini: /tmp/tmpsg02oq_r/stage 1 root/Floorp.app/Contents/Resources/application.ini
+Stage 1 application BuildID: 20260724044918
+Stage 1 platform.ini: /tmp/tmpsg02oq_r/stage 1 root/Floorp.app/Contents/Resources/platform.ini
+Stage 1 platform BuildID: 20260724044918
+Stage 1 app binary: /tmp/tmp3b64tpxs/stage 1 root/Floorp.app/Contents/MacOS/floorp
+Stage 1 runner architecture: x86_64
+Stage 1 binary architecture: x86_64
+Stage 1 application.ini: /tmp/tmp3b64tpxs/stage 1 root/Floorp.app/Contents/Resources/application.ini
+Stage 1 application BuildID: 20260724044918
+Stage 1 platform.ini: /tmp/tmp3b64tpxs/stage 1 root/Floorp.app/Contents/Resources/platform.ini
+Stage 1 platform BuildID: 20260724044918

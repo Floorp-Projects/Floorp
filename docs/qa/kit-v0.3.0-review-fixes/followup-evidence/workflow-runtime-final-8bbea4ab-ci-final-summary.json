@@ -1,0 +1,85 @@
+{
+  "observedAt": "2026-10-09T15:54:56.444068+00:00",
+  "run": 37954821322,
+  "attempt": 1,
+  "jobId": 113902544655,
+  "head": "c9027879e053c9031c7f3e27495f6d415d36c10f",
+  "pr": 84,
+  "baseHead": "91e94b73617730d54ffee3d4ea42ff3a91463c7d",
+  "workflowPath": ".github/workflows/qa3-shadow.yml",
+  "htmlUrl": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/37954821322",
+  "status": "completed",
+  "conclusion": "success",
+  "checks": {
+    "exactFinalHead": true,
+    "pullRequest84": true,
+    "exactWorkflow": true,
+    "runIdAttempt": true,
+    "completedSuccess": true,
+    "exactOneExpectedJob": true,
+    "ordinaryHostedRunner": true,
+    "requiredStepsSuccess": true,
+    "rawOK": true,
+    "noRawFailureSummary": true,
+    "rawUnittestSummary134": true
+  },
+  "allPass": true,
+  "requiredSteps": [
+    {
+      "name": "Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Check generated profiles and source/profdata negative contracts",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Record policy preflight without issuing native qualification",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Preserve shadow preflight",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ],
+  "rawSuiteCounts": [
+    134
+  ],
+  "rawSummaryLines": [
+    "2026-10-09T15:52:22.1619144Z Ran 134 tests in 49.212s",
+    "2026-10-09T15:52:22.1619417Z OK"
+  ],
+  "checkoutBindingLines": [
+    "2026-10-09T15:51:28.5317311Z Commit: c3d12f3313a95f25162a1503be624f3b0617f8c0",
+    "2026-10-09T15:51:32.5671875Z HEAD is now at 7e4b7ce8 Merge c9027879e053c9031c7f3e27495f6d415d36c10f into 91e94b73617730d54ffee3d4ea42ff3a91463c7d",
+    "2026-10-09T15:51:32.5752406Z 7e4b7ce818aadc5cfd41f58a79b82ed3487d4b6f",
+    "2026-10-09T15:52:22.1742056Z   QA3_RUNTIME_HEAD: 7e4b7ce818aadc5cfd41f58a79b82ed3487d4b6f"
+  ],
+  "logSha256": "9bff23cd43eb073f2b67a711c71d724ac7ba5ce093c5c7655afca3e07ae4de45",
+  "logBytes": 40955,
+  "earlierIntegratedSuiteCount": 190,
+  "notProof": "Public hosted contracts and policy preflight; native/product qualification remains UNVERIFIED, publicationAuthorized false. Job-level continue-on-error is not used as the test-PASS basis.",
+  "ciActions": "Harmless GitHub connector GET/read logs only; no dispatch/cancel/rerun.",
+  "observedAtFinal": "2026-10-09T15:56:18.062060+00:00",
+  "metadataCorrection": "Initial observer incorrectly expected the whole local suite count 203 for the CI test_qa3_*.py subset. The retained raw log actually reports 134/49.212s/OK; no GitHub test failure occurred. This corrected final record separately binds the exact CI subset count and never infers count from job status.",
+  "wholeLocalCountReportedByRoot": 203,
+  "wholeLocalCountIndependentlyRerunByThisReviewer": false,
+  "earlierIntegratedWholeLocalCount": 190,
+  "testPatternFromRaw": [
+    "2026-10-09T15:51:32.7773865Z \u001b[36;1m-p 'test_qa3_*.py' -v > \"$RUNNER_TEMP/qa3-runtime/contracts.log\" 2>&1\u001b[0m"
+  ],
+  "artifactLogLines": [
+    "2026-10-09T15:52:23.7651078Z Artifact qa3-runtime-37954821322-1.zip successfully finalized. Artifact ID 11627881327",
+    "2026-10-09T15:52:23.7651746Z Artifact qa3-runtime-37954821322-1 has been successfully uploaded! Final size is 6197 bytes. Artifact ID is 11627881327",
+    "2026-10-09T15:52:23.7655961Z Artifact download URL: https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/37954821322/artifacts/11627881327"
+  ],
+  "mergeCheckoutSha": "7e4b7ce818aadc5cfd41f58a79b82ed3487d4b6f",
+  "parentInitReviewSeparate": {
+    "report": "runtime-independent-review-02.md",
+    "basis": "Portability reviewer message: 47-test actual native-I/O suite exit0; original two parent-init and three supplemental actual-owned cases green before recovery; scoped source Go, private boundary remains UNVERIFIED. Not independently rerun by this reviewer."
+  }
+}

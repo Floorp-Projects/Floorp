@@ -1,0 +1,26 @@
+test_canary_cannot_accept_zero_exit_crash_or_two_expected_failures (test_qa3_mozlog.MozlogContracts.test_canary_cannot_accept_zero_exit_crash_or_two_expected_failures) ... ok
+test_canary_rejects_expected_fail_skip_retry_exit_and_untyped_assertions (test_qa3_mozlog.MozlogContracts.test_canary_rejects_expected_fail_skip_retry_exit_and_untyped_assertions) ... ok
+test_canonical_package_id_and_browser_chrome_uri (test_qa3_mozlog.MozlogContracts.test_canonical_package_id_and_browser_chrome_uri) ... ok
+test_child_process_exit_requires_typed_zero (test_qa3_mozlog.MozlogContracts.test_child_process_exit_requires_typed_zero) ... ok
+test_crash_leak_and_unknown_event (test_qa3_mozlog.MozlogContracts.test_crash_leak_and_unknown_event) ... ok
+test_crlf_and_multiple_complete_events_are_preserved (test_qa3_mozlog.MozlogContracts.test_crlf_and_multiple_complete_events_are_preserved) ... ok
+test_duplicate_execution_and_internal_retry (test_qa3_mozlog.MozlogContracts.test_duplicate_execution_and_internal_retry) ... ok
+test_empty_incomplete_assertion_free_and_missing_case (test_qa3_mozlog.MozlogContracts.test_empty_incomplete_assertion_free_and_missing_case) ... ok
+test_error_after_suite_and_truncated_raw_are_rejected (test_qa3_mozlog.MozlogContracts.test_error_after_suite_and_truncated_raw_are_rejected) ... ok
+test_event_byte_limit_includes_terminator_at_boundary (test_qa3_mozlog.MozlogContracts.test_event_byte_limit_includes_terminator_at_boundary) ... ok
+test_exact_complete_required_execution (test_qa3_mozlog.MozlogContracts.test_exact_complete_required_execution) ... ok
+test_exact_expected_assertion_canary (test_qa3_mozlog.MozlogContracts.test_exact_expected_assertion_canary) ... ok
+test_extra_suite_foreign_source_and_duplicate_id (test_qa3_mozlog.MozlogContracts.test_extra_suite_foreign_source_and_duplicate_id) ... ok
+test_first_failed_process_cannot_be_hidden_by_pass_log (test_qa3_mozlog.MozlogContracts.test_first_failed_process_cannot_be_hidden_by_pass_log) ... ok
+test_formal_nullable_and_string_subtests_are_preserved (test_qa3_mozlog.MozlogContracts.test_formal_nullable_and_string_subtests_are_preserved) ... ok
+test_multibyte_byte_bound_and_truncation_fail_closed (test_qa3_mozlog.MozlogContracts.test_multibyte_byte_bound_and_truncation_fail_closed) ... ok
+test_readline_is_bounded_before_oversized_event_is_loaded (test_qa3_mozlog.MozlogContracts.test_readline_is_bounded_before_oversized_event_is_loaded) ... ok
+test_required_skip_and_recovered_first_failure (test_qa3_mozlog.MozlogContracts.test_required_skip_and_recovered_first_failure) ... ok
+test_subtest_field_and_raw_type_are_required (test_qa3_mozlog.MozlogContracts.test_subtest_field_and_raw_type_are_required) ... ok
+test_unexecuted_setup_failure_is_not_expected_canary (test_qa3_mozlog.MozlogContracts.test_unexecuted_setup_failure_is_not_expected_canary) ... ok
+test_unterminated_complete_and_partial_events_are_rejected (test_qa3_mozlog.MozlogContracts.test_unterminated_complete_and_partial_events_are_rejected) ... ok
+
+----------------------------------------------------------------------
+Ran 21 tests in 0.039s
+
+OK
