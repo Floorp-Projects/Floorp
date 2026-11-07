@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://floorp-projects.atlassian.net/schemas/fdh/evidence-state-transitions-v0.json",
+  "title": "FDH Envelope state-transition table v0",
+  "description": "Single source of truth for the Envelope state machine (frozen ADR 8061068 section 1.2). Loaded by tools/qa3/evidence/validate.py and tools/qa3/evidence/validate.ts; the same table feeds the Scheduler and Runner fixture checks.",
+  "schemaVersion": 1,
+  "states": [
+    "pending",
+    "scheduled",
+    "awaiting-approval",
+    "running",
+    "cancel_requested",
+    "succeeded",
+    "failed",
+    "cancelled"
+  ],
+  "initialStates": ["pending"],
+  "terminalStates": ["succeeded", "failed", "cancelled"],
+  "transitions": {
+    "pending": ["scheduled", "awaiting-approval", "failed", "cancelled"],
+    "scheduled": ["running", "awaiting-approval", "cancel_requested", "cancelled"],
+    "awaiting-approval": ["running", "cancel_requested", "failed", "cancelled"],
+    "running": ["succeeded", "failed", "cancel_requested", "awaiting-approval"],
+    "cancel_requested": ["cancelled", "succeeded", "failed", "awaiting-approval"],
+    "succeeded": [],
+    "failed": [],
+    "cancelled": []
+  },
+  "cancelRequestedState": "cancel_requested",
+  "notes": [
+    "cancel_requested is the same meaning in the TaskStatus body and in the Envelope; a mismatch is rejected.",
+    "A report from an older epoch is rejected centrally (Scheduler), while an old Runner keeps its own external writes; external side effects are re-checked for ownership and approval by the Connector.",
+    "Terminal states have no outgoing transitions; re-opening a terminal Job requires a new Job, not a transition."
+  ]
+}

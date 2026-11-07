@@ -1,0 +1,32 @@
+{
+  "schema_version": 2,
+  "target_key": "windows",
+  "native_arch": "x86_64",
+  "firefox_version": "159.0.1",
+  "app_build_id": "20261103153232",
+  "platform_build_id": "20261103153232",
+  "build_id2": "01a1a3ad-f9d7-76d9-9386-f7f2e5e2494e",
+  "runtime": {
+    "repository": "Floorp-Projects/Floorp-Runtime",
+    "head_sha": "8965ffc346d426ccdf919bd18585e4d4a0c21654",
+    "workflow_run_id": 41664957250,
+    "artifact_id": 13270584849,
+    "artifact_digest": "sha256:9eb4b08f2da5cdd535232edeb37ddd3866d47492e17f5921e115eb4a4f7180c6",
+    "expected_build_id": "20261103153232"
+  },
+  "floorp": {
+    "repository": "Floorp-Projects/Floorp",
+    "head_sha": "984509d2053be7bae9027133bda7259cd706b208",
+    "workflow_run_id": 41736555270
+  },
+  "floorp_package": {
+    "artifact_name": "noraneko-windows-x86_64-installer",
+    "artifact_id": 13287352281,
+    "artifact_digest": "sha256:303fe630a53e2153273ab10f0731ea9c59944c1907bd90d692d2c0cd0fffd06c",
+    "unsigned": false
+  },
+  "verification": {
+    "status": "verified",
+    "method": "full-version"
+  }
+}
