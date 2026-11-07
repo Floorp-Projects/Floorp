@@ -1,0 +1,231 @@
+{
+  "schemaVersion": 1,
+  "envelope": {
+    "epoch": 1,
+    "principal": {
+      "id": "human-reviewer-01",
+      "kind": "human",
+      "grantedBy": "fdh-host-authorization"
+    },
+    "entities": [
+      {
+        "kind": "task",
+        "id": "scheduler:task:visual-panel-review-012",
+        "issuer": "scheduler",
+        "owner": "floorp-qa",
+        "ownerRole": "task-owner",
+        "label": "human visual review of web-panel states"
+      },
+      {
+        "kind": "job",
+        "id": "scheduler:job:visual-panel-review-012",
+        "issuer": "scheduler",
+        "owner": "floorp-qa",
+        "ownerRole": "job-owner",
+        "label": "job visual-panel-review-012"
+      },
+      {
+        "kind": "run",
+        "id": "executor:run:visual-panel-review-012:run1",
+        "issuer": "executor",
+        "owner": "floorp-qa",
+        "ownerRole": "run-owner"
+      },
+      {
+        "kind": "attempt",
+        "id": "executor:attempt:visual-panel-review-012:run1:1",
+        "issuer": "executor",
+        "owner": "floorp-qa",
+        "ownerRole": "run-owner"
+      },
+      {
+        "kind": "session",
+        "id": "host:session:visual-panel-review-012",
+        "issuer": "host",
+        "owner": "floorp-qa",
+        "ownerRole": "session-owner",
+        "context": "interactive human review session"
+      },
+      {
+        "kind": "workspace",
+        "id": "host:workspace:floorp-visual-012",
+        "issuer": "host",
+        "owner": "floorp-qa",
+        "ownerRole": "workspace-owner",
+        "path": "/work/floorp-visual-panel-012"
+      },
+      {
+        "kind": "approval",
+        "id": "host-authorization:approval:visual-panel-review-012:publication",
+        "issuer": "host-authorization",
+        "owner": "floorp-qa",
+        "ownerRole": "approver",
+        "decision": "pending",
+        "label": "publication approval withheld while cancellation is pending"
+      }
+    ],
+    "relationships": [
+      {
+        "from": "scheduler:task:visual-panel-review-012",
+        "type": "task-has-job",
+        "to": "scheduler:job:visual-panel-review-012"
+      },
+      {
+        "from": "scheduler:job:visual-panel-review-012",
+        "type": "job-has-run",
+        "to": "executor:run:visual-panel-review-012:run1"
+      },
+      {
+        "from": "executor:run:visual-panel-review-012:run1",
+        "type": "run-has-attempt",
+        "to": "executor:attempt:visual-panel-review-012:run1:1"
+      },
+      {
+        "from": "executor:run:visual-panel-review-012:run1",
+        "type": "run-uses-session",
+        "to": "host:session:visual-panel-review-012"
+      },
+      {
+        "from": "executor:run:visual-panel-review-012:run1",
+        "type": "run-in-workspace",
+        "to": "host:workspace:floorp-visual-012"
+      },
+      {
+        "from": "host-authorization:approval:visual-panel-review-012:publication",
+        "type": "approval-for-job",
+        "to": "scheduler:job:visual-panel-review-012"
+      }
+    ],
+    "taskStatus": {
+      "state": "cancel_requested",
+      "cancelRequested": true
+    },
+    "cancelRequested": true,
+    "stateTransition": {
+      "from": "scheduled",
+      "to": "cancel_requested",
+      "at": "2026-11-07T21:07:30+09:00",
+      "reason": "human cancelled the review after the baseline moved"
+    }
+  },
+  "runtime": {
+    "os": {
+      "name": "windows",
+      "version": "10.0",
+      "arch": "x86_64"
+    },
+    "build": {
+      "commit": "9f8d8753be7d6cf16392af9eb9d165827e209828",
+      "id": "20261103153232",
+      "repository": "Floorp-Projects/Floorp",
+      "workflowRun": 41736555270
+    },
+    "packageDigest": {
+      "algorithm": "sha256",
+      "value": "303fe630a53e2153273ab10f0731ea9c59944c1907bd90d692d2c0cd0fffd06c",
+      "artifact": "noraneko-windows-x86_64-installer"
+    },
+    "toolchain": {
+      "dsh": {
+        "version": "0.1.0",
+        "pin": "dsh@0.1.0"
+      },
+      "floorp": {
+        "commit": "9f8d8753be7d6cf16392af9eb9d165827e209828",
+        "pin": "floorp@9f8d8753be7d6cf16392af9eb9d165827e209828"
+      },
+      "python": {
+        "version": "3.12.3"
+      }
+    }
+  },
+  "attempts": [
+    {
+      "run": "executor:run:visual-panel-review-012:run1",
+      "attempt": 1,
+      "startedAt": "2026-11-07T21:05:11+09:00",
+      "endedAt": "2026-11-07T21:15:04+09:00",
+      "result": "cancelled",
+      "exitCode": null,
+      "logRef": "visual-panel-review-012.log",
+      "notes": "human review session with side-by-side screenshots"
+    }
+  ],
+  "operations": [
+    {
+      "input": "launch packaged Floorp 159.0.1 with the pinned profile",
+      "target": "noraneko-windows-x86_64-installer",
+      "order": 1,
+      "observation": "browser reached about:blank under Marionette"
+    },
+    {
+      "input": "capture screenshots for six web-panel states at 100% zoom",
+      "target": "web panel states (normal, mobile, other, hidden, disabled, reenabled)",
+      "order": 2,
+      "observation": "six PNG artefacts stored under evidence/visual-panel-012/"
+    },
+    {
+      "input": "human side-by-side comparison against the approved baseline",
+      "target": "web panel rendering",
+      "order": 3,
+      "observation": "one state (mobile-reload) renders a stale UA badge"
+    }
+  ],
+  "assertions": [
+    {
+      "name": "browser-identity",
+      "expected": "floorp 159.0.1",
+      "actual": "floorp 159.0.1",
+      "passed": true
+    },
+    {
+      "name": "panel-states-rendered",
+      "expected": "6",
+      "actual": "6",
+      "passed": true
+    },
+    {
+      "name": "mobile-reload-ua-badge-fresh",
+      "expected": "fresh UA badge",
+      "actual": "stale UA badge",
+      "passed": false
+    }
+  ],
+  "environmentFidelity": {
+    "host": "Windows 10 x86_64 workstation with the shipped installer",
+    "network": "not-used",
+    "matchesTarget": true,
+    "deviations": [
+      "single viewport at 100% zoom; HiDPI scaling not exercised"
+    ],
+    "notes": "Visual review runs the packaged product on its target OS/architecture."
+  },
+  "inputFidelity": {
+    "inputs": [
+      {
+        "path": "noraneko-windows-x86_64-installer",
+        "sha256": "303fe630a53e2153273ab10f0731ea9c59944c1907bd90d692d2c0cd0fffd06c"
+      }
+    ],
+    "unchangedDuringRun": true,
+    "deviations": [],
+    "notes": "The installer digest is pinned for the whole review session."
+  },
+  "visualJudge": null,
+  "cleanup": {
+    "result": "partial",
+    "details": [
+      "browser closed by cancellation"
+    ],
+    "notes": "Cancellation tore down the browser; screenshots stay unreviewed."
+  },
+  "limitations": [
+    "No visual (look-and-feel) judgment was performed because the review was cancelled; visualJudge is null.",
+    "Cancellation stops the Job; it does not prove anything about the product.",
+    "Only the scheduled->cancel_requested step is recorded here."
+  ],
+  "reproduction": {
+    "result": "inconclusive",
+    "notes": "Cancelled before any defect could be reproduced."
+  }
+}
