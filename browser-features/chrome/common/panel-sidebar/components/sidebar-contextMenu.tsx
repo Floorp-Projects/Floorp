@@ -5,6 +5,8 @@
 
 import type { CPanelSidebar } from "./panel-sidebar.tsx";
 import { createSignal, Show } from "solid-js";
+import { panelSidebarData, setPanelSidebarData } from "../data/data.ts";
+import { supportsUnreadBadge } from "../utils/unread-badge.ts";
 import type { Panel } from "../utils/type.ts";
 import { ContextMenuUtils } from "#features-chrome/utils/context-menu.tsx";
 import { createRoot, getOwner, type Owner, runWithOwner } from "solid-js";
@@ -12,6 +14,8 @@ import i18next from "i18next";
 import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
 
 const translationKeys = {
+  loadAtStartup: "panelSidebar.contextMenu.loadAtStartupForBadges",
+  clearBadge: "panelSidebar.contextMenu.clearBadge",
   unload: "panelSidebar.contextMenu.unload",
   mute: "panelSidebar.contextMenu.mute",
   changeZoom: "panelSidebar.contextMenu.changeZoom",
@@ -23,6 +27,8 @@ const translationKeys = {
 };
 
 const getTranslations = () => ({
+  loadAtStartup: i18next.t(translationKeys.loadAtStartup),
+  clearBadge: i18next.t(translationKeys.clearBadge),
   unload: i18next.t(translationKeys.unload),
   mute: i18next.t(translationKeys.mute),
   changeZoom: i18next.t(translationKeys.changeZoom),
@@ -184,6 +190,46 @@ export class SidebarContextMenuElem {
             accesskey="U"
             onCommand={() => this.handleUnloadCommand()}
           />
+          <Show
+            when={contextPanel()?.type === "web" &&
+              supportsUnreadBadge(contextPanel()?.url ?? "")}
+          >
+            <xul:menuitem
+              type="checkbox"
+              autocheck="false"
+              data-floorp-context-menu-key="floorp.webpanel.load-at-startup-for-badges"
+              label={texts().loadAtStartup}
+              checked={panelSidebarData().find((panel) =>
+                  panel.id === contextPanel()?.id
+                )
+                  ?.loadAtStartupForBadges
+                ? true
+                : undefined}
+              onCommand={() =>
+                this.safeExecuteCommand(() => {
+                  const id = contextPanel()?.id;
+                  setPanelSidebarData((panels) =>
+                    panels.map((panel) =>
+                      panel.id === id
+                        ? {
+                          ...panel,
+                          loadAtStartupForBadges: !panel.loadAtStartupForBadges,
+                        }
+                        : panel
+                    )
+                  );
+                })}
+            />
+          </Show>
+          <Show when={this.ctx.clearUnreadBadges.get(contextPanel()?.id ?? "")}>
+            {(clearBadge) => (
+              <xul:menuitem
+                data-floorp-context-menu-key="floorp.webpanel.clear-badge"
+                label={texts().clearBadge}
+                onCommand={() => this.safeExecuteCommand(clearBadge())}
+              />
+            )}
+          </Show>
           <Show when={contextPanel()?.type === "web"}>
             <xul:menuseparator
               data-floorp-context-menu-key="floorp.webpanel.separator-media"

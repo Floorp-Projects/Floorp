@@ -57,6 +57,10 @@ export class PanelSidebarElem {
       else createRoot(exec);
     });
 
+    void this.sidebarReady.then(() => {
+      if (isPanelSidebarEnabled()) this.ctx.preloadBadgePanels();
+    });
+
     render(() => this.style(), document?.head);
 
     const execEffect = () =>

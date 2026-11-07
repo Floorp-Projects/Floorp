@@ -254,10 +254,11 @@ export class WebsitePanelWindowChild {
 
     const browser = this.getContentBrowser();
 
-    globalThis.requestAnimationFrame(() => {
+    // Startup panels are hidden and may never receive an animation frame.
+    globalThis.setTimeout(() => {
       loadUriInWebPanelBrowser(browser, loadURL);
       this.setZoomLevel(browser);
-    });
+    }, 0);
 
     Services.prefs.addObserver(PANEL_SIDEBAR_DATA_PREF_NAME, () => {
       this.setZoomLevel(browser);

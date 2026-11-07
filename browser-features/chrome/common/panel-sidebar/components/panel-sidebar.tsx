@@ -22,9 +22,12 @@ import {
 import type { Panel } from "../utils/type.ts";
 import { createEffect } from "solid-js";
 import { getExtensionSidebarAction } from "../extension-panels.ts";
+import { removeSavedUnreadBadge } from "../utils/saved-unread-badge.ts";
+import { supportsUnreadBadge } from "../utils/unread-badge.ts";
 import { WebsitePanel } from "../website-panel-window-parent.ts";
 
 export class CPanelSidebar {
+  public readonly clearUnreadBadges = new Map<string, () => void>();
   private panelDisposers: Map<string, () => void> = new Map();
   private get parentElement() {
     return document?.getElementById("panel-sidebar-browser-box") as unknown as
@@ -198,7 +201,10 @@ export class CPanelSidebar {
     setIsPanelSidebarHoverPreview(false);
     setIsPanelSidebarHoverOpen(false);
     setSelectedPanelId(null);
-    if (panelId && panelSidebarConfig().autoUnload) {
+    if (
+      panelId && panelSidebarConfig().autoUnload &&
+      !this.getPanelData(panelId)?.loadAtStartupForBadges
+    ) {
       this.unloadPanel(panelId);
     }
   }
@@ -218,10 +224,34 @@ export class CPanelSidebar {
   public showPanel(panel: Panel): void {
     const browser = this.getBrowserElement(panel.id);
     if (browser) {
+      browser.removeAttribute("hidden");
       browser.setAttribute("flex", "1");
       return;
     }
     this.renderBrowserComponent(panel);
+  }
+
+  public preloadBadgePanels(): void {
+    const { PrivateBrowsingUtils } = ChromeUtils.importESModule(
+      "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
+    );
+    if (!this.parentElement || PrivateBrowsingUtils.isWindowPrivate(window)) {
+      return;
+    }
+
+    for (const panel of panelSidebarData()) {
+      if (
+        panel.type !== "web" || !panel.loadAtStartupForBadges ||
+        !panel.url || !supportsUnreadBadge(panel.url) ||
+        this.getBrowserElement(panel.id)
+      ) {
+        continue;
+      }
+      this.renderBrowserComponent(panel);
+      const browser = this.getBrowserElement(panel.id);
+      browser?.setAttribute("hidden", "true");
+      browser?.removeAttribute("flex");
+    }
   }
 
   public saveCurrentSidebarWidth() {
@@ -266,6 +296,7 @@ export class CPanelSidebar {
 
   public deletePanel(panelId: string) {
     this.unloadPanel(panelId);
+    removeSavedUnreadBadge(panelId);
     setPanelSidebarData((prev) => prev.filter((p) => p.id !== panelId));
   }
 

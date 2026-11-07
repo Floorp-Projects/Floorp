@@ -104,6 +104,7 @@
 
 /* Panel Sidebar Panel */
 .panel-sidebar-panel {
+  position: relative;
   scale: 1;
   min-width: var(--panel-sidebar-panel-size);
   min-height: var(--panel-sidebar-panel-size);
@@ -112,6 +113,25 @@
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.panel-sidebar-unread-badge {
+  position: absolute;
+  inset-block-start: 1px;
+  inset-inline-end: 1px;
+  min-inline-size: 12px;
+  padding-inline: 2px;
+  border: 1px solid Canvas;
+  border-radius: 8px;
+  background: #b11932;
+  color: white;
+  font: bold 9px/12px sans-serif;
+  text-align: center;
+  pointer-events: none;
+}
+
+.panel-sidebar-unread-badge[data-restored="true"] {
+  background: #5d536b;
 }
 
 .panel-sidebar-panel.dragging {

@@ -337,6 +337,8 @@
     "resize": "Firefox のサイドバーのサイズを変更"
   },
   "panelSidebar": {
+    "savedUnreadBadge": "{{panel}}、最後に確認した未読: {{count}}",
+    "unreadBadge": "{{panel}}、未読: {{count}}",
     "resize": "パネルサイドバーのサイズを変更",
     "modal": {
       "type": "パネルの種類",
@@ -358,6 +360,8 @@
       "cancel": "キャンセル"
     },
     "contextMenu": {
+      "loadAtStartupForBadges": "起動時に読み込んでバッジを表示",
+      "clearBadge": "バッジを消去",
       "unload": "このウェブパネルを解放",
       "mute": "このウェブパネルをミュート/ミュート解除",
       "changeZoom": "拡大率を変更",

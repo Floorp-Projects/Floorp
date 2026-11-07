@@ -3,7 +3,24 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createResource, Suspense } from "solid-js";
+import {
+  createEffect,
+  createResource,
+  createSignal,
+  onCleanup,
+  Show,
+  Suspense,
+  untrack,
+} from "solid-js";
+import i18next from "i18next";
+import { savedUnreadBadgeForPanel } from "../utils/saved-unread-badge.ts";
+import { getWebPanelChromeWindow } from "../utils/web-panel-browser.ts";
+import {
+  createUnreadBadgeState,
+  getUnreadBadge,
+  getUnreadFavicon,
+  supportsUnreadBadge,
+} from "../utils/unread-badge.ts";
 import { getFaviconURLForPanel } from "../utils/favicon-getter";
 import type { CPanelSidebar } from "./panel-sidebar";
 import {
@@ -26,6 +43,100 @@ export function PanelSidebarButton(props: {
     () => props.panel,
     async () => await getFaviconURLForPanel(props.panel),
   );
+
+  const [unreadBadge, setUnreadBadge] = createSignal("");
+  const [restored, setRestored] = createSignal(false);
+  const [liveFavicon, setLiveFavicon] = createSignal<string>();
+  const panelLabel = () =>
+    props.panel.url || props.panel.extensionId || props.panel.id;
+
+  createEffect(() => {
+    const { id, type, url, userContextId } = props.panel;
+    setUnreadBadge("");
+    setRestored(false);
+    setLiveFavicon(undefined);
+    if (type !== "web" || !url || !supportsUnreadBadge(url)) return;
+
+    const badgeState = createUnreadBadgeState();
+    const saved = savedUnreadBadgeForPanel(props.panel);
+    let savedCount = saved?.count ?? "";
+    let awaitingLiveCount = !!savedCount;
+    let sawEligiblePage = false;
+    const saveCount = (count: string) => {
+      if (!saved || savedCount === count) return;
+      saved.write(count);
+      savedCount = count;
+    };
+    gPanelSidebar.clearUnreadBadges.set(id, () => {
+      badgeState.clear();
+      awaitingLiveCount = false;
+      saveCount("");
+      setRestored(false);
+      setUnreadBadge("");
+    });
+
+    let observedBrowser: XULBrowserElement | undefined;
+    const onPageTitleChanged = (event: Event) => {
+      if (event.isTrusted && event.target === observedBrowser) updateBadge();
+    };
+
+    const updateBadge = () => {
+      // Read the URL and title from the same committed top-level document.
+      // The inner browser belongs to this panel and its configured container.
+      const browser = getWebPanelChromeWindow(id)?.floorpWebPanelContentBrowser;
+      if (browser !== observedBrowser) {
+        observedBrowser?.removeEventListener(
+          "pagetitlechanged",
+          onPageTitleChanged,
+        );
+        observedBrowser = browser;
+        browser?.addEventListener("pagetitlechanged", onPageTitleChanged);
+      }
+      const page = browser?.browsingContext?.currentWindowGlobal;
+      const uri = page?.documentURI;
+      const principal = page?.documentPrincipal;
+      const eligible = page && uri && !page.isClosed &&
+        principal?.isContentPrincipal &&
+        principal.userContextId === (userContextId ?? 0) &&
+        principal.isSameOrigin(uri);
+      const signal = eligible
+        ? getUnreadBadge(url, uri.spec, page.documentTitle)
+        : "";
+      const liveCount = badgeState.update(signal);
+      const viewing = selectedPanelId() === id && isPanelSidebarVisible();
+      if (eligible) {
+        sawEligiblePage = true;
+        if (signal !== undefined || viewing) {
+          awaitingLiveCount = false;
+          saveCount(signal === undefined ? "" : liveCount);
+        }
+      } else if (sawEligiblePage && uri && uri.spec !== "about:blank") {
+        awaitingLiveCount = false;
+        saveCount("");
+      }
+      const showSaved = !!eligible && signal === undefined && awaitingLiveCount;
+      setRestored(showSaved);
+      setUnreadBadge(showSaved ? savedCount : liveCount);
+      setLiveFavicon(
+        eligible
+          ? getUnreadFavicon(url, uri.spec, browser?.mIconURL)
+          : undefined,
+      );
+    };
+
+    untrack(updateBadge);
+    // Also handles lazy creation, hidden panels and unload/recreation without
+    // subscribing to notifications or installing a content-side listener.
+    const timer = window.setInterval(updateBadge, 1000);
+    onCleanup(() => {
+      window.clearInterval(timer);
+      observedBrowser?.removeEventListener(
+        "pagetitlechanged",
+        onPageTitleChanged,
+      );
+      gPanelSidebar.clearUnreadBadges.delete(id);
+    });
+  });
 
   const handleDragStart = (e: DragEvent) => {
     e.dataTransfer?.setData("text/floorp-panel-id", props.panel.id);
@@ -107,8 +218,17 @@ export function PanelSidebarButton(props: {
         data-panel-id={props.panel.id}
         role="button"
         tabindex={0}
-        aria-label={props.panel.url || props.panel.extensionId ||
-          props.panel.id}
+        aria-label={unreadBadge()
+          ? i18next.t(
+            restored()
+              ? "panelSidebar.savedUnreadBadge"
+              : "panelSidebar.unreadBadge",
+            {
+              panel: panelLabel(),
+              count: unreadBadge(),
+            },
+          )
+          : panelLabel()}
         aria-expanded={selectedPanelId() === props.panel.id &&
           isPanelSidebarVisible()}
         onKeyDown={(event: KeyboardEvent) => {
@@ -129,8 +249,21 @@ export function PanelSidebarButton(props: {
         }}
       >
         <Suspense fallback={<div>I</div>}>
-          <img src={faviconURL()} width="16" height="16" />
+          <img
+            src={liveFavicon() ?? faviconURL()}
+            width={liveFavicon() ? 20 : 16}
+            height={liveFavicon() ? 20 : 16}
+          />
         </Suspense>
+        <Show when={unreadBadge()}>
+          <span
+            class="panel-sidebar-unread-badge"
+            data-restored={restored()}
+            aria-hidden="true"
+          >
+            {unreadBadge()}
+          </span>
+        </Show>
       </div>
     </div>
   );
