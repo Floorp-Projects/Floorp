@@ -5,10 +5,11 @@
  *
  * Every dev/test Vite server, tooling port and dev-origin trust decision in
  * tools/, bridge/ and browser-features/ must reference this table instead of a
- * hardcoded `5173-5192` literal. Production builds never load any code from
- * these ports: their page origins are `chrome://...` documents, and no http
- * origin is trusted in a production build (see
+ * hardcoded `5173-5192` literal. Production builds trust no http origin: their
+ * page origins are `chrome://...` documents (see
  * `PRODUCTION_TRUSTED_HTTP_ORIGINS` and `isProductionTrustedHttpOrigin`).
+ * A few dev-only call sites still construct localhost URLs unconditionally,
+ * but those URLs are not trusted in production.
  *
  * The numeric values are frozen: changing them changes runtime port behavior.
  */
@@ -24,7 +25,10 @@ export const DEV_PORTS = {
   designs: 5174,
   /** Profile manager page dev server. */
   profileManager: 5179,
-  /** Default port for dev/test browser launches (tools browser launcher). */
+  /**
+   * Marionette automation port used for dev/test browser launches (tools
+   * browser launcher); not a page origin.
+   */
   browserRemote: 5180,
   /** Loader dev server: bridge startup imports features from here in dev/test. */
   loader: 5181,
@@ -95,6 +99,9 @@ export function devHttpOrigin(name: DevPortName, pathname = ""): string {
 /**
  * True when a module/document URL is being served by the named dev server.
  * Mirrors the `includes("localhost:<port>")` dev-mode checks used by pages.
+ * This is a substring dev-mode detector, not a security predicate: it also
+ * matches lookalike hosts such as `localhost:5181.evil.example`. Use
+ * `isTrustedDevPort` for trust decisions.
  */
 export function moduleUrlServedFromDevPort(
   moduleUrl: string | null | undefined,

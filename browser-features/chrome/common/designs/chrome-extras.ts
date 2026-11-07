@@ -86,7 +86,7 @@ import tabbarOneLinerCSS from "./chrome-extras-css/tabbar-one-liner.css?inline";
 import urlViewAlwaysShowPageActionsCSS from "./chrome-extras-css/url-view-always-show-page-actions.css?inline";
 import urlViewGoButtonWhenTypingCSS from "./chrome-extras-css/url-view-go-button-when-typing.css?inline";
 import urlViewMoveIconToLeftCSS from "./chrome-extras-css/url-view-move-icon-to-left.css?inline";
-import { devHttpOrigin } from "#libs/shared/dev-ports/defines.ts";
+import { devHttpOrigin } from "../../../../libs/shared/dev-ports/defines.ts";
 
 /**
  * Every chrome-extras toggle, in the order the sheets are concatenated.

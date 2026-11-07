@@ -15,7 +15,7 @@ import protonfixUserJs from "@nora/skin/lepton/userjs/protonfix.js?raw";
 import leptonChromeStylesRaw from "@nora/skin/lepton/css/leptonChrome.css?raw";
 import leptonContentStylesRaw from "@nora/skin/lepton/css/leptonContent.css?raw";
 import fluerialStylesRaw from "@nora/skin/fluerial/css/fluerial.css?raw";
-import { devHttpOrigin } from "#libs/shared/dev-ports/defines.ts";
+import { devHttpOrigin } from "../../../../../libs/shared/dev-ports/defines.ts";
 import {
   FLUERIAL_TAB_CORNER_CSS,
   TAB_COLOR_LIKE_TOOLBAR_CSS,
