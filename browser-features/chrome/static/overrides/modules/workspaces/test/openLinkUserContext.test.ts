@@ -167,24 +167,26 @@ function testNonCurrentTargetBrowserUserContextIdTakesPrecedence(): void {
   );
 }
 
-function testNonCurrentUndefinedUserContextIdRetainsFallback(): void {
+function testNonCurrentUndefinedUserContextIdUsesWorkspace(): void {
   const input = { userContextId: undefined };
   const resolution = resolveWorkspaceOpenLinkUserContext(input, "tab", 7);
 
   assertEquals(
     resolution.options.userContextId,
-    0,
-    "an own undefined userContextId should retain the existing fallback",
+    7,
+    "undefined userContextId should inherit workspace container",
   );
+
   assertEquals(
     resolution.shouldApplyWorkspaceContainer,
-    false,
-    "an own undefined userContextId should block workspace injection",
+    true,
+    "undefined userContextId should allow workspace injection",
   );
+
   assertEquals(
     input.userContextId,
     undefined,
-    "resolving should not mutate the undefined input value",
+    "resolving should not mutate the input",
   );
 }
 
@@ -271,8 +273,8 @@ export async function runAllTests(): Promise<void> {
       fn: testNonCurrentTargetBrowserUserContextIdTakesPrecedence,
     },
     {
-      name: "non-current undefined userContextId fallback",
-      fn: testNonCurrentUndefinedUserContextIdRetainsFallback,
+      name: "non-current undefined userContextId inherits workspace",
+      fn: testNonCurrentUndefinedUserContextIdUsesWorkspace,
     },
     {
       name: "workspace ID 0 fallback",

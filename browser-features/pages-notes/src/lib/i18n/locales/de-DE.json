@@ -7,6 +7,7 @@
         "welcomeContent": "Willkommen bei {{productName}} Notes! So funktioniert es.\n\n{{productName}} Notes ist eine Notizfunktion, die geräteübergreifend synchronisiert werden kann. Um die Synchronisierung zu aktivieren, melde dich mit einem Mozilla-Konto bei {{productName}} an.\n{{productName}} Notes werden in {{productName}} gespeichert und über Firefox Sync geräteübergreifend synchronisiert. Firefox Sync verschlüsselt die synchronisierten Inhalte mit dem Passwort deines Mozilla-Kontos, sodass niemand auf die Inhalte zugreifen kann.",
         "new": "Neue Notiz",
         "reorder": "Neu anordnen",
+        "export": "Export as Markdown",
         "done": "Fertig",
         "emptyTitle": "Ohne Titel",
         "emptyContent": "Kein Inhalt",
@@ -64,6 +65,7 @@
     "error": {
         "loadFailed": "Notizen konnten nicht geladen werden",
         "saveFailed": "Notizen konnten nicht gespeichert werden",
+        "exportFailed": "Failed to export note",
         "indexOutOfRange": "Index {{index}} liegt außerhalb des gültigen Bereichs"
     }
 }

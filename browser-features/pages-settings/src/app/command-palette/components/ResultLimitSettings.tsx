@@ -49,12 +49,7 @@ export function ResultLimitSettings() {
           showValue
           showMinMax
           disabled={isDisabled}
-          onChange={(e) =>
-            setValue(
-              "maxResultsPerCategory",
-              Number(e.target.value),
-            )
-          }
+          onValueChange={(value) => setValue("maxResultsPerCategory", value)}
         />
       </CardContent>
     </Card>

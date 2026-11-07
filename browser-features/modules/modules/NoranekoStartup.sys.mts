@@ -11,6 +11,14 @@ import {
   shouldShowReleaseNotesChoice,
 } from "../common/release-notes.ts";
 
+// Floorp's mode-aware startup opens the versioned release notes. Firefox's
+// separate milestone-update page ignores that choice and can open a second tab.
+// Set the default before command-line startup; preserve explicit user overrides.
+Services.prefs.getDefaultBranch("").setStringPref(
+  "startup.homepage_override_url",
+  "",
+);
+
 // Keep the existing browser UI during the Firefox 157 transition. Locking the
 // preferences masks a profile's prior Nova opt-in without deleting it.
 for (
@@ -450,13 +458,22 @@ class CustomAboutPage {
 
 async function registerCustomAboutPages(): Promise<void> {
   const customAboutPages = await getCustomAboutPages();
+  // Newtab's resource mapping and Activity Stream share the native readiness signal.
+  const newTabRedirector = customAboutPages.newtab
+    ? Cc["@mozilla.org/network/protocol/about;1?what=newtab"]
+      .getService(Ci.nsIAboutModule).wrappedJSObject
+    : undefined;
 
   for (const aboutKey in customAboutPages) {
     const AboutModuleFactory: nsIFactory = {
       createInstance<T extends nsIID>(iid: T): nsQIResult<T> {
-        return new CustomAboutPage(customAboutPages[aboutKey]).QueryInterface(
-          iid,
-        );
+        const page = new CustomAboutPage(customAboutPages[aboutKey]);
+        if (aboutKey === "newtab") {
+          Object.defineProperty(page, "wrappedJSObject", {
+            value: newTabRedirector,
+          });
+        }
+        return page.QueryInterface(iid);
       },
     };
 

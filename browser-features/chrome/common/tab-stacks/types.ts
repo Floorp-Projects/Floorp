@@ -1,5 +1,28 @@
 // SPDX-License-Identifier: MPL-2.0
-import type { StackTab } from "./stack-bar.tsx";
+import type { StackTab, TabBrowser } from "./stack-bar.tsx";
+
+export type TabStacksChrome = {
+  gb: TabBrowser;
+  head: Element;
+  toolbox: Element;
+  navBar: Element;
+};
+
+export type TabStacksStartupWindow = EventTarget & {
+  closed: boolean;
+  delayedStartupPromise?: Promise<unknown>;
+  gBrowserInit?: {
+    delayedStartupPromise?: Promise<unknown>;
+    delayedStartupFinished?: boolean;
+  };
+};
+
+export type TabStacksStartupOptions = {
+  window: TabStacksStartupWindow;
+  getChrome(): TabStacksChrome | null;
+  initialize(chrome: TabStacksChrome): void;
+  logger: Pick<ConsoleInstance, "warn" | "error" | "info">;
+};
 
 export type StackSplitView = XULElement & {
   tabs: StackTab[];

@@ -472,6 +472,95 @@ void TestNativeView() {
   CFRelease(second);
 }
 
+void TestIMESelectionCache() {
+  FPAShimView* view = [[FPAShimView alloc] initWithFrame:NSMakeRect(0, 0, 360, 240) windowID:1
+      sink:^(MessageType, NSDictionary*) {}];
+  auto state = [](uint32_t revision, NSString* text, NSRange selection) {
+    return [@{@"revision": @(revision), @"text": text, @"textOffset": @40000,
+        @"selectionStart": @(selection.location), @"selectionLength": @(selection.length),
+        @"caretX": @20, @"caretY": @30, @"caretWidth": @1, @"caretHeight": @18,
+        @"editable": @YES} mutableCopy];
+  };
+  Expect([view setEditorState:state(1, @"日本語", NSMakeRange(40003, 0))], "initialize conversion fixture");
+  [view setMarkedText:@"かんじ" selectedRange:NSMakeRange(3, 0) replacementRange:NSMakeRange(NSNotFound, 0)];
+  [view setMarkedText:@"漢字" selectedRange:NSMakeRange(0, 2) replacementRange:NSMakeRange(NSNotFound, 0)];
+  NSMutableDictionary* ack = state(2, @"日本語漢字", NSMakeRange(40003, 0));
+  ack[@"markedStart"] = @40003;
+  ack[@"markedLength"] = @2;
+  Expect([view setEditorState:ack], "accept Gecko's collapsed conversion caret");
+  Expect(NSEqualRanges(view.selectedRange, NSMakeRange(40003, 2)),
+      "Gecko acknowledgement must preserve the IME's selected conversion clause");
+  NSRange actual;
+  [view firstRectForCharacterRange:view.selectedRange actualRange:&actual];
+  Expect(NSEqualRanges(actual, view.selectedRange), "candidate geometry reports the same IME selection range");
+  [view setMarkedText:@"感じ" selectedRange:NSMakeRange(0, 2) replacementRange:NSMakeRange(NSNotFound, 0)];
+  ack[@"revision"] = @3;
+  ack[@"text"] = @"日本語感じ";
+  Expect([view setEditorState:ack] && NSEqualRanges(view.selectedRange, NSMakeRange(40003, 2)),
+      "repeated candidate conversion survives subsequent caret updates");
+  [view insertText:@"感じ" replacementRange:NSMakeRange(NSNotFound, 0)];
+  Expect(!view.hasMarkedText && NSEqualRanges(view.selectedRange, NSMakeRange(40003, 0)),
+      "composition commit releases the IME selection override");
+  Expect([view setEditorState:state(4, @"日本語感じ", NSMakeRange(40005, 0))], "committed editor selection resumes");
+  [view setMarkedText:@"字" selectedRange:NSMakeRange(0, 1) replacementRange:NSMakeRange(NSNotFound, 0)];
+  [view unmarkText];
+  ack = state(5, @"日本語感じ字", NSMakeRange(40006, 0));
+  Expect([view setEditorState:ack] && NSEqualRanges(view.selectedRange, NSMakeRange(40006, 0)),
+      "unmarking releases the IME selection override");
+  [view setMarkedText:@"字" selectedRange:NSMakeRange(0, 1) replacementRange:NSMakeRange(NSNotFound, 0)];
+  ack = state(6, @"日本語感じ字", NSMakeRange(40006, 0));
+  ack[@"discardMarkedText"] = @YES;
+  Expect([view setEditorState:ack] && !view.hasMarkedText &&
+      NSEqualRanges(view.selectedRange, NSMakeRange(40006, 0)), "host cancellation releases the IME selection override");
+  [view setMarkedText:@"字" selectedRange:NSMakeRange(0, 1) replacementRange:NSMakeRange(NSNotFound, 0)];
+  [view setMarkedText:@"" selectedRange:NSMakeRange(0, 0) replacementRange:NSMakeRange(NSNotFound, 0)];
+  Expect(!view.hasMarkedText && NSEqualRanges(view.selectedRange, NSMakeRange(40006, 0)),
+      "empty marked text releases the conversion selection");
+  [view setMarkedText:@"字" selectedRange:NSMakeRange(0, 1) replacementRange:NSMakeRange(NSNotFound, 0)];
+  ack = state(7, @"日本語感じ字", NSMakeRange(40006, 0));
+  ack[@"editable"] = @NO;
+  Expect([view setEditorState:ack] && NSEqualRanges(view.selectedRange, NSMakeRange(40006, 0)),
+      "leaving an editable element releases the IME selection override");
+  ack[@"revision"] = @8;
+  ack[@"editable"] = @YES;
+  Expect([view setEditorState:ack], "restore editable fixture");
+  [view setMarkedText:@"字" selectedRange:NSMakeRange(0, 1) replacementRange:NSMakeRange(NSNotFound, 0)];
+  [view disconnect];
+  Expect(!view.hasMarkedText && NSEqualRanges(view.selectedRange, NSMakeRange(40006, 0)),
+      "disconnect releases the IME selection override");
+}
+
+void TestEmptyMarkedText() {
+  NSMutableArray<NSDictionary*>* events = [NSMutableArray array];
+  FPAShimView* view = [[FPAShimView alloc] initWithFrame:NSMakeRect(0, 0, 360, 240) windowID:1
+      sink:^(MessageType type, NSDictionary* payload) {
+        if (type == MessageType::Input) [events addObject:payload];
+      }];
+  Expect([view setEditorState:@{@"revision": @1, @"text": @"既存", @"selectionStart": @2,
+      @"selectionLength": @0, @"caretX": @20, @"caretY": @30, @"caretWidth": @1,
+      @"caretHeight": @18, @"editable": @YES}], "initialize empty marked text fixture");
+  NSRange unspecified = NSMakeRange(NSNotFound, 0);
+  [view setMarkedText:@"" selectedRange:NSMakeRange(0, 0) replacementRange:unspecified];
+  Expect(events.count == 0, "empty marked text without a composition is a no-op");
+  [view setMarkedText:@"かな" selectedRange:NSMakeRange(0, 2) replacementRange:unspecified];
+  [view setMarkedText:@"" selectedRange:NSMakeRange(0, 0) replacementRange:unspecified];
+  NSDictionary* cancellation = events.lastObject;
+  Expect(events.count == 2 && [cancellation[@"kind"] isEqual:@"insertText"] &&
+      [cancellation[@"text"] isEqual:@""] && [cancellation[@"editorRevision"] isEqual:@1] &&
+      [cancellation[@"replacement"][@"location"] integerValue] == -1,
+      "empty marked text ends Gecko's composition with an empty commit");
+  Expect(!view.hasMarkedText && view.markedRange.location == NSNotFound &&
+      NSEqualRanges(view.selectedRange, NSMakeRange(2, 0)),
+      "cancellation clears both marked text and the IME selection");
+  [view setMarkedText:@"" selectedRange:NSMakeRange(0, 0) replacementRange:unspecified];
+  Expect(events.count == 2, "repeated empty callbacks do not send another commit");
+  [view setMarkedText:@"次" selectedRange:NSMakeRange(1, 0) replacementRange:unspecified];
+  Expect(view.hasMarkedText && [events.lastObject[@"kind"] isEqual:@"setMarkedText"] &&
+      NSEqualRanges(view.markedRange, NSMakeRange(2, 1)),
+      "typing after cancellation starts a fresh marked range");
+  [view disconnect];
+}
+
 void TestReceivePortQueueLimit() {
   Port receiving = Port::Receive();
   Expect(bool(receiving), "receive port allocates");
@@ -520,6 +609,14 @@ void TestAsyncSender() {
   }
   Expect(sender.Enqueue(MessageType::WindowChanged, fullReplacementMessages, @{}) == EnqueueStatus::Backpressure,
       "async sender reports a replayed sequence as backpressure");
+  // Production receive ports use the largest kernel queue. Lower this peer's
+  // capacity before filling it so the attachment stays pending until Stop.
+  mach_port_limits_t stalledLimits = {};
+  stalledLimits.mpl_qlimit = MACH_PORT_QLIMIT_BASIC;
+  Expect(mach_port_set_attributes(mach_task_self(), receiving.get(), MACH_PORT_LIMITS_INFO,
+               reinterpret_cast<mach_port_info_t>(&stalledLimits),
+               MACH_PORT_LIMITS_INFO_COUNT) == KERN_SUCCESS,
+      "stall the receiving peer for cancellation and bounded sending");
   IOSurfaceRef cancelledSurface = MakeSurface(0xff00abcd);
   Port cancelledPort(IOSurfaceCreateMachPort(cancelledSurface));
   CFRelease(cancelledSurface);
@@ -535,15 +632,6 @@ void TestAsyncSender() {
   sender.Stop();
   Expect(mach_port_get_refs(mach_task_self(), cancelledPort.get(), MACH_PORT_RIGHT_SEND, &referencesAfter) == KERN_SUCCESS &&
       referencesAfter == referencesBefore, "Stop releases pending attachment while another send waits");
-  // Production receive ports ask for the largest kernel queue. Put this peer
-  // back to the default limit so it stops accepting messages again, which is
-  // the stalled receiver the bounded sender has to survive.
-  mach_port_limits_t stalledLimits = {};
-  stalledLimits.mpl_qlimit = MACH_PORT_QLIMIT_BASIC;
-  Expect(mach_port_set_attributes(mach_task_self(), receiving.get(), MACH_PORT_LIMITS_INFO,
-               reinterpret_cast<mach_port_info_t>(&stalledLimits),
-               MACH_PORT_LIMITS_INFO_COUNT) == KERN_SUCCESS,
-      "stall the receiving peer for the bounded sender");
   MessageSender bounded(receiving.get(), [&] { failed = true; });
   uint32_t admitted = 0;
   EnqueueStatus refusal = EnqueueStatus::Accepted;
@@ -690,6 +778,8 @@ int main(int argc, char* argv[]) {
     TestSignedPeer();
     TestColdBootstrap(argv[0]);
     TestNativeView();
+    TestIMESelectionCache();
+    TestEmptyMarkedText();
     TestReceivePortQueueLimit();
     TestAsyncSender();
     TestRelatedWindows();

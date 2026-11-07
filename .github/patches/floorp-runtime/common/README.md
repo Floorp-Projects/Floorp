@@ -14,17 +14,47 @@ freshly compiled Runtime artifacts.
 creating a browser for external URL opens, including cold launch and new windows.
 It changes only the existing BrowserContentHandler and BrowserDOMWindow JavaScript
 modules; native rebuilding is not required. The matching `tools/patches` patch
-maps BrowserContentHandler to the unpacked artifact's `browser/modules` path.
+maps BrowserContentHandler to the unpacked artifact's
+`moz-src/browser/components` path on Firefox 159; BrowserDOMWindow remains in
+`browser/modules`. Both paths import the helper through its native
+`moz-src:///browser/components/BrowserContentHandler.sys.mjs` module URI.
 Host policy/patch-parity tests and real HTTP hot/cold isolation runners are described
 in `browser-features/chrome/common/workspaces/test/external-container-regression.md`.
+Container-capable builds set `floorp.workspaces.containerSync.enabled`; while the
+workspace default is unresolved, external requests remain on owned `about:blank`
+placeholders until `floorp-workspace-container-ready`. The target URL and request
+parameters remain local to the window. Explicit Firefox container guesses,
+including 0, and current-tab navigation bypass this implicit-default guard.
+Navigation/typing in a placeholder cancels replay without closing the user's tab.
+An exception after a replay starts never automatically resubmits a POST body.
+
+`workspace-container-lifecycle.patch` lets the workspace engine persist removal
+protection before settings deletion, extension deletion, or container disabling
+can destroy tabs. `prepareRemoval` and `finishRemoval` await observer-provided
+blockers; the synchronous `remove` path exposes a guard for mapped identities.
+The preference observer owns disabling so direct preference changes are covered.
+Ordinary close-all operations do not enter this lifecycle. The patch changes four
+existing JavaScript resources and needs no native rebuild. The corresponding
+`tools/patches` patch targets their extracted Firefox 159 resource paths.
+`tools/src/workspace_container_lifecycle_patch.test.ts` executes the lifecycle and
+caller bodies from the shipping patch and verifies development/packaging parity;
+actual browser/Sync isolation remains a separate acceptance requirement.
 
 `tab-state-and-split-view.patch` preserves Floorp workspace/private-container
-session state and N-way split layouts on Firefox 157. The tabbrowser and
+session state and N-way split layouts on Firefox 159. The tabbrowser and
 sessionstore implementations now live in `moz-src` modules; SessionStore is a
 class with private methods. Matching `tools/patches` files cover local builds.
 Packaging checks for an exact reverse-applicable patch before applying it, so
 JavaScript already included by the source build is not patched twice. Missing
 or partially applied patches still fail the build.
+
+`contextual-search-initialization.patch` lazily loads the selector configuration
+for contextual engine lookups. Floorp's fixed default engine list can initialize
+SearchService without loading that configuration. If it is unavailable, the
+optional lookup returns no match so OpenSearch and other address-bar actions
+can continue. The matching `tools/patches` patch covers extracted local builds;
+the host parity test and browser `contextualSearch.test.ts` cover both paths.
+This changes JavaScript only and does not require native recompilation.
 
 `macos-artifact-app-shim.patch` carries the Runtime's native App Shim executable
 from the macOS Runtime DMG into the artifact build. The package manifest already
@@ -48,6 +78,14 @@ covered by `./mach gtest MacWebAppPanGesture.*`. The isolated
 zoom, option commands, and APZ overscroll against a source-built Runtime.
 `tools/app-shim/test-context-menu.py` checks repeated trusted right-click menu
 delivery and content-process survival through the PWA input adapter.
+The Shim retains the IME's selected conversion clause while Gecko acknowledges
+a collapsed caret; repeated Space presses continue Japanese conversion. The
+selection override ends on commit, unmark, cancellation, empty marked text,
+leaving an editable element, or disconnection. Candidate geometry uses that same
+selection. `tools/app-shim/test-ime.py` covers real native Japanese input in both
+textarea and contenteditable fixtures, using an isolated browser profile.
+Empty marked text from Escape or Backspace cancels through an empty commit;
+the test requires `compositionend` and a fresh visible composition on retyping.
 
 This patch requires a freshly compiled native Runtime, including XUL and
 `floorp-app-shim`. Applying it while packaging older prebuilt native artifacts

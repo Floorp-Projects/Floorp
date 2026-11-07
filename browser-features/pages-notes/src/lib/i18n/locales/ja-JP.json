@@ -7,6 +7,7 @@
         "welcomeContent": "{{productName}} Notes へようこそ！使い方はこちら。\n\n{{productName}} Notes はデバイス間で同期できるメモ機能です。同期を有効にするには、Mozilla アカウントで {{productName}} にサインインする必要があります。\n{{productName}} Notes は {{productName}} に保存され、Firefox Sync を使用してデバイス間で同期されます。Firefox Sync は同期の内容を Mozilla アカウントのパスワードで暗号化するため、誰にもその内容を知られることはありません。",
         "new": "新しいメモ",
         "reorder": "並べ替え",
+        "export": "Markdown 形式でエクスポート",
         "done": "完了",
         "emptyTitle": "無題",
         "emptyContent": "内容なし",
@@ -15,7 +16,6 @@
         "titlePlaceholder": "タイトル",
         "loading": "メモを読み込み中...",
         "delete": "削除",
-        "export": "Markdown としてエクスポート",
         "empty": "まだメモがありません。[新しいメモ] をクリックして作成しましょう。",
         "deleteConfirmTitle": "メモを削除",
         "deleteConfirmMessage": "本当にこのメモを削除しますか？この操作は元に戻せません。",
@@ -65,7 +65,7 @@
     "error": {
         "loadFailed": "メモのデータの読み込みに失敗しました",
         "saveFailed": "メモのデータの保存に失敗しました",
-        "exportFailed": "メモのエクスポートに失敗しました",
+        "exportFailed": "ノートのエクスポートに失敗しました",
         "indexOutOfRange": "インデックス {{index}} は範囲外です"
     }
 }

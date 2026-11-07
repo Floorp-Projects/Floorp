@@ -731,7 +731,18 @@ export class MacNativeAppRuntime {
         const window = [...session.windows.values()].find((w) =>
           w.document.hasFocus()
         ) ?? session.windows.values().next().value;
-        if (command && window) window.goDoCommand?.(command);
+        if (typeof command === "string" && window) {
+          const controller = window.document.commandDispatcher
+            ?.getControllerForCommand(command);
+          if (
+            controller &&
+            // Remote controllers check current command state in their child.
+            (controller instanceof Ci.nsIBrowserController ||
+              controller.isCommandEnabled(command))
+          ) {
+            controller.doCommand(command);
+          }
+        }
       }
     } catch (error) {
       console.error("[NativeAppRuntime] Shim event failed:", error);

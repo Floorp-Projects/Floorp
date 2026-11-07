@@ -39,7 +39,7 @@ export default function Page() {
           <CardHeader>
             <CardTitle>{t("about.versionInfo")}</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="mb-4">
             <div className="flex items-center gap-4">
               <img
                 src="chrome://branding/content/about-logo@2x.png"
@@ -75,7 +75,7 @@ export default function Page() {
           <CardHeader>
             <CardTitle>{t("about.license")}</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="mb-4">
             <div className="space-y-2">
               <p className="text-sm text-base-content/90">
                 {t("about.copyright")}

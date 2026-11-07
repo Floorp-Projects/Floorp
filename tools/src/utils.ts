@@ -221,13 +221,14 @@ export const ProcessUtils = {
   async runCommandWithLogging(
     cmd: string[],
     cb: (stream: "stdout" | "stderr", line: string) => void,
+    environment: Record<string, string> = Deno.env.toObject(),
   ): Promise<number> {
     const child = new Deno.Command(cmd[0], {
       args: cmd.slice(1),
       stdin: "null",
       stdout: "piped",
       stderr: "piped",
-      env: Deno.env.toObject(), // Pass current environment variables to subprocess
+      env: environment,
     }).spawn();
 
     const readStream = async (
