@@ -10,8 +10,6 @@ export class NRWelcomePageChild extends JSWindowActorChild {
     console.debug("NRWelcomePageChild created!");
     const window = this.contentWindow;
     if (
-      // `devPortString` comparison keeps the optional-chain discriminant:
-      // `window?.location.port === "5187"` also narrowed `window` for the body.
       window?.location.port === devPortString("welcome") ||
       window?.location.href.startsWith("chrome://") ||
       window?.location.href.startsWith("about:")
