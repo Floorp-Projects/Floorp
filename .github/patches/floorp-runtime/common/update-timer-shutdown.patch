@@ -1,0 +1,145 @@
+diff --git a/toolkit/components/timermanager/UpdateTimerManager.sys.mjs b/toolkit/components/timermanager/UpdateTimerManager.sys.mjs
+index 53d44b04e57..d4ce5371b6b 100644
+--- a/toolkit/components/timermanager/UpdateTimerManager.sys.mjs
++++ b/toolkit/components/timermanager/UpdateTimerManager.sys.mjs
+@@ -218,6 +218,9 @@ TimerManager.prototype = {
+         timerID,
+         function () {
+           ChromeUtils.idleDispatch(() => {
++            if (Services.startup.shuttingDown) {
++              return;
++            }
+             try {
+               let startTime = ChromeUtils.now();
+               if (method == "getService") {
+@@ -266,6 +269,9 @@ TimerManager.prototype = {
+         function () {
+           if (timerData.callback && timerData.callback.notify) {
+             ChromeUtils.idleDispatch(() => {
++              if (Services.startup.shuttingDown) {
++                return;
++              }
+               try {
+                 let startTime = ChromeUtils.now();
+                 timerData.callback.notify(timer);
+diff --git a/toolkit/components/timermanager/tests/unit/test_shutdown.js b/toolkit/components/timermanager/tests/unit/test_shutdown.js
+new file mode 100644
+index 00000000000..378a6a32ce1
+--- /dev/null
++++ b/toolkit/components/timermanager/tests/unit/test_shutdown.js
+@@ -0,0 +1,104 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this
++ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
++
++add_task(function test_queued_notifications_during_shutdown() {
++  const { TimerManager } = ChromeUtils.importESModule(
++    "resource://gre/modules/UpdateTimerManager.sys.mjs"
++  );
++  const scope = Cu.getGlobalForObject(TimerManager);
++  const servicesDescriptor = Object.getOwnPropertyDescriptor(scope, "Services");
++  const idleDescriptor = Object.getOwnPropertyDescriptor(
++    scope.ChromeUtils,
++    "idleDispatch"
++  );
++  const nativeServices = scope.Services;
++  const registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
++
++  for (const method of ["getService", "createInstance", "registered"]) {
++    for (const phase of ["running", "before-notify", "after-queue"]) {
++      const id = `test-shutdown-${method}-${phase}`;
++      const contractID = `@mozilla.org/updates/${id};1`;
++      const classID = nativeServices.uuid.generateUUID();
++      const startup = { shuttingDown: phase == "before-notify" };
++      const queue = [];
++      let creations = 0;
++      let notifications = 0;
++      let manager;
++      const timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
++      let registeredFactory = false;
++      const callback = {
++        notify() {
++          notifications++;
++        },
++        QueryInterface: ChromeUtils.generateQI(["nsITimerCallback"]),
++      };
++      const factory = {
++        createInstance(iid) {
++          creations++;
++          return callback.QueryInterface(iid);
++        },
++      };
++      const services = Object.create(nativeServices);
++      Object.defineProperties(services, {
++        startup: { value: startup },
++        catMan: {
++          value: {
++            enumerateCategory() {
++              return method == "registered"
++                ? []
++                : [{ value: `${contractID},${method},${id},test.interval,1` }];
++            },
++          },
++        },
++      });
++
++      try {
++        // Drain only after setting the shutdown state, without racing the idle loop.
++        Object.defineProperty(scope, "Services", {
++          value: services,
++          configurable: true,
++        });
++        scope.ChromeUtils.idleDispatch = task => queue.push(task);
++        manager = new TimerManager();
++        manager._timers = {};
++        if (method == "registered") {
++          manager.registerTimer(id, callback, 1, false);
++        } else {
++          registrar.registerFactory(classID, id, contractID, factory);
++          registeredFactory = true;
++        }
++
++        timer.initWithCallback(() => {}, 60000, Ci.nsITimer.TYPE_ONE_SHOT);
++        manager.notify(timer);
++        Assert.equal(queue.length, 1, `${id}: one notification is queued`);
++        Assert.equal(creations, 0, `${id}: component creation is deferred`);
++        Assert.equal(notifications, 0, `${id}: notification is deferred`);
++        if (phase == "after-queue") {
++          startup.shuttingDown = true;
++        }
++        for (const task of queue) {
++          task();
++        }
++        const expected = phase == "running" ? 1 : 0;
++        Assert.equal(notifications, expected, `${id}: notification count`);
++        Assert.equal(
++          creations,
++          method == "registered" ? 0 : expected,
++          `${id}: component creation count`
++        );
++      } finally {
++        timer.cancel();
++        if (manager) {
++          manager.observe(null, "profile-before-change");
++        }
++        Object.defineProperty(scope, "Services", servicesDescriptor);
++        Object.defineProperty(scope.ChromeUtils, "idleDispatch", idleDescriptor);
++        if (registeredFactory) {
++          registrar.unregisterFactory(classID, factory);
++        }
++        nativeServices.prefs.clearUserPref(`app.update.lastUpdateTime.${id}`);
++      }
++    }
++  }
++});
+diff --git a/toolkit/components/timermanager/tests/unit/xpcshell.toml b/toolkit/components/timermanager/tests/unit/xpcshell.toml
+index 87b78223270..2dadcedf776 100644
+--- a/toolkit/components/timermanager/tests/unit/xpcshell.toml
++++ b/toolkit/components/timermanager/tests/unit/xpcshell.toml
+@@ -3,4 +3,6 @@ head = ""
+ 
+ ["consumerNotifications.js"]
+ 
++["test_shutdown.js"]
++
+ ["test_skipFirst.js"]
