@@ -126,7 +126,9 @@ export function assertStringArrayEqual(
   for (let i = 0; i < expected.length; i++) {
     if (actual[i] !== expected[i]) {
       throw new Error(
-        `${message}: index ${i} mismatch (expected ${expected[i]}, got ${actual[i]})`,
+        `${message}: index ${i} mismatch (expected ${expected[i]}, got ${
+          actual[i]
+        })`,
       );
     }
   }
@@ -148,6 +150,16 @@ export async function runTests(
   tests: TestCase[],
 ): Promise<void> {
   const failures: string[] = [];
+  const reportWorkspaceCase = (error?: string): void => {
+    if (moduleName === "nativeLastTabWorkspacesEnabled.test.ts") {
+      console.log(`[nora@workspace-case] ${
+        encodeURIComponent(JSON.stringify({
+          ...globalThis.__NORA_TEST_PROGRESS__,
+          error,
+        }))
+      }`);
+    }
+  };
 
   for (const [index, test] of tests.entries()) {
     globalThis.__NORA_TEST_PROGRESS__ = {
@@ -158,6 +170,7 @@ export async function runTests(
       total: tests.length,
       startedAtMs: Date.now(),
     };
+    reportWorkspaceCase();
 
     try {
       await test.fn();
@@ -171,6 +184,7 @@ export async function runTests(
         total: tests.length,
         startedAtMs,
       };
+      reportWorkspaceCase();
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       failures.push(`${test.name}: ${message}`);
@@ -184,6 +198,7 @@ export async function runTests(
         total: tests.length,
         startedAtMs,
       };
+      reportWorkspaceCase(message);
     }
   }
 
