@@ -453,6 +453,45 @@ export class LinuxSupport {
     console.debug(`[LinuxSupport] Successfully installed SSB: ${ssb.name}`);
   }
 
+  private static async removeRenamedLaunchers(ssb: Manifest) {
+    const current = this.getPathInfo(ssb);
+    const legacy = this.getPathInfo(
+      ssb,
+      resolveLinuxDataHome(this.homeDir, ""),
+    );
+    const commands = [
+      this.buildExecCommand(ssb),
+      this.buildExecCommand(ssb, true),
+    ];
+    // Users may rename a launcher to match an older Gecko window class. Its
+    // filename is no longer predictable, but the app ID and exact command still
+    // identify this installation and profile. Never recurse or follow links.
+    for (const directory of new Set([current.desktopDir, legacy.desktopDir])) {
+      for (
+        const path of await IOUtils.getChildren(directory, {
+          ignoreAbsent: true,
+        })
+      ) {
+        if (!path.endsWith(".desktop")) continue;
+        let owned = false;
+        try {
+          const file = new this.nsIFile(path);
+          if (file.isSymlink() || !file.isFile()) continue;
+          owned = isOwnedLinuxDesktopEntry(
+            await IOUtils.readUTF8(path),
+            ssb.id,
+            commands,
+          );
+        } catch (error) {
+          console.warn("[LinuxSupport] Cannot inspect launcher", path, error);
+        }
+        // A deletion failure must reach the caller before icons/store are
+        // removed, so a remaining owned launcher is still usable for retry.
+        if (owned) await IOUtils.remove(path, { ignoreAbsent: true });
+      }
+    }
+  }
+
   async uninstall(ssb: Manifest) {
     console.debug(
       `[LinuxSupport] Uninstalling SSB: ${ssb.name} (id: ${ssb.id})`,
@@ -482,6 +521,8 @@ export class LinuxSupport {
       // Preserve icons while the corresponding launcher still exists.
       throw e;
     }
+
+    await LinuxSupport.removeRenamedLaunchers(ssb);
 
     console.debug(`[LinuxSupport] Removing icon: ${paths.iconPath}`);
     try {
