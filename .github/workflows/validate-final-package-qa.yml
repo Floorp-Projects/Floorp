@@ -33,10 +33,18 @@ jobs:
     name: Final package QA / ${{ matrix.platform }}/${{ matrix.arch }}
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 30
+    # Windows starts in shadow mode: its result and evidence are recorded, but
+    # it does not fail this workflow until the probes are proven stable there.
+    continue-on-error: ${{ matrix.platform == 'windows' }}
     strategy:
       fail-fast: false
       matrix:
         include:
+          - platform: windows
+            arch: x86_64
+            runner: windows-2025
+            package: noraneko-windows-x86_64-installer
+            file: floorp-windows-x86_64.installer.exe
           - platform: linux
             arch: x86_64
             runner: ubuntu-24.04
@@ -61,6 +69,19 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+
+      - name: Expose python3 for the shared bash steps on Windows
+        if: matrix.platform == 'windows'
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! command -v python3 >/dev/null 2>&1; then
+            shim="$RUNNER_TEMP/python3-shim"
+            mkdir -p "$shim"
+            printf '#!/usr/bin/env bash\nexec python "$@"\n' > "$shim/python3"
+            chmod +x "$shim/python3"
+            echo "$shim" >> "$GITHUB_PATH"
+          fi
 
       - name: Authenticate the normal package run and exact artifacts
         uses: actions/github-script@v7
@@ -208,6 +229,27 @@ jobs:
                   raise ValueError('Unexpected final package ZIP contents')
               archive.extract(os.environ['PACKAGE_FILE'], root / 'package')
           PY
+
+      - name: Extract the exact Windows package
+        if: matrix.platform == 'windows'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          # Same SFX extraction as verify-release-artifact.yml's native gate.
+          $package = Join-Path $env:RUNNER_TEMP 'package/floorp-windows-x86_64.installer.exe'
+          $extractDirectory = Join-Path $env:RUNNER_TEMP 'browser'
+          New-Item -ItemType Directory -Path $extractDirectory -Force | Out-Null
+          & 7z x -y "-o$extractDirectory" $package
+          if ($LASTEXITCODE -ne 0) {
+            throw "7z failed to extract the final Floorp SFX package"
+          }
+          $binaries = @(
+            Get-ChildItem -LiteralPath $extractDirectory -Recurse -File -Filter 'floorp.exe'
+          )
+          if ($binaries.Count -ne 1) {
+            throw "Expected exactly one final floorp.exe; found $($binaries.Count)"
+          }
+          "QA_BROWSER=$($binaries[0].FullName)" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
 
       - name: Set up the Linux display and extract the package
         if: matrix.platform == 'linux'
