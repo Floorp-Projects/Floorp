@@ -1,7 +1,7 @@
 ---
 title: "Command Reference"
 sidebar_label: "Commands"
-floorp_commit: "d32a162e0707bacb67cf73281961903c3c1e84d8"
+floorp_commit: "c8522028d84c104b54e3e89b83918b9833354f30"
 generated: true
 ---
 # Command Reference
@@ -338,15 +338,15 @@ Source: `deno.json:84`
 feles-build build --phase <before-mach|after-mach>
 ```
 
-Source: `tools/feles-build.ts:315`
+Source: `tools/feles-build.ts:373`
 
 ### `dev`
 
 ```bash
-feles-build dev
+feles-build dev [--port-offset <n|auto>]
 ```
 
-Source: `tools/feles-build.ts:287`
+Source: `tools/feles-build.ts:333`
 
 ### `misc`
 
@@ -354,20 +354,20 @@ Source: `tools/feles-build.ts:287`
 feles-build misc patch --action <apply|create|init>
 ```
 
-Source: `tools/feles-build.ts:327`
+Source: `tools/feles-build.ts:385`
 
 ### `stage`
 
 ```bash
-feles-build stage [--marionette]
+feles-build stage [--marionette] [--port-offset <n|auto>]
 ```
 
-Source: `tools/feles-build.ts:307`
+Source: `tools/feles-build.ts:360`
 
 ### `test`
 
 ```bash
-feles-build test [--own-native-session]
+feles-build test [--own-native-session] [--port-offset <n|auto>]
 ```
 
-Source: `tools/feles-build.ts:296`
+Source: `tools/feles-build.ts:344`

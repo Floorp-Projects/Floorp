@@ -1,7 +1,7 @@
 ---
 title: "Architecture Overview"
 sidebar_label: "Architecture"
-floorp_commit: "d32a162e0707bacb67cf73281961903c3c1e84d8"
+floorp_commit: "c8522028d84c104b54e3e89b83918b9833354f30"
 generated: true
 ---
 # Architecture Overview
@@ -20,7 +20,7 @@ Floorp layers Firefox/Gecko configuration, privileged Firefox ESM modules, the s
 
 ## Startup And Loader Flow
 
-The startup bridge is owned by `bridge/startup/src/chrome_root.ts:52-53`. It selects these loader entry points from the inventory:
+The startup bridge is owned by `bridge/startup/src/chrome_root.ts:56-57`. It selects these loader entry points from the inventory:
 
 - Development: `http://localhost:5181/loader/index.ts`
 - Test: `http://localhost:5181/loader/test/index.ts`
