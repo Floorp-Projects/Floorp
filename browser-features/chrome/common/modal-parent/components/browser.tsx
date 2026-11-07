@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { modalSize } from "../data/data";
-import { devHttpOrigin } from "../../../../../libs/shared/dev-ports/defines.ts";
+import { devHttpOrigin } from "#libs/shared/dev-ports/defines.ts";
 
 export function ModalBrowser() {
   return (

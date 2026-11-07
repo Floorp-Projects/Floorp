@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { devHttpOrigin } from "../../../../../libs/shared/dev-ports/defines.ts";
+import { devHttpOrigin } from "#libs/shared/dev-ports/defines.ts";
 function svgToDataUrl(svgContent: string): string {
   const svgBytes = new TextEncoder().encode(svgContent);
   let binString = "";

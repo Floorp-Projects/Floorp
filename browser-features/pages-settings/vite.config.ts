@@ -18,6 +18,12 @@ export default defineConfig(({ command }) => {
     },
     resolve: {
       dedupe: ["react", "react-dom"],
+      alias: [
+        {
+          find: "#libs",
+          replacement: fileURLToPath(new URL("../../libs", import.meta.url)),
+        },
+      ],
     },
     plugins: [
       tailwindcss(),
