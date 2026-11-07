@@ -29,7 +29,7 @@ GROUPS = {
         "tools/test_validate_runtime_packaging_provenance.py",
     ),
 }
-CASE_COUNTS = {"deno-host": 60, "node-intake": 28, "python-provenance": 18}
+CASE_COUNTS = {"deno-host": 60, "node-intake": 28, "python-provenance": 21}
 DENO_IMPORTS = ("@std/assert", "@std/cli", "@std/fs", "@std/path")
 TARGETS = [
     "windows-x86_64",

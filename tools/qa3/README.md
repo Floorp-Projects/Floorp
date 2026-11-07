@@ -9,8 +9,8 @@ the calling workflow continues. Do not make packages depend on this job yet.
 
 ## Fixed plan and execution
 
-`source-plan.json` pins 106 existing cases: 60 Deno runner/utils/smoke host
-cases, 28 Node final-package intake cases, and 18 Python source/packaging
+`source-plan.json` pins 109 existing cases: 60 Deno runner/utils/smoke host
+cases, 28 Node final-package intake cases, and 21 Python source/packaging
 provenance cases. These are Floorp host tool tests, separate from Mozilla native
 tests and the implementation kit's 114 tests. The executor uses a fixed command
 registry and never calls `deno task test`, `test:integration`, browser startup,

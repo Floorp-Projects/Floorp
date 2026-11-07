@@ -26,7 +26,7 @@ class SourceContractTests(unittest.TestCase):
 
     def test_fixed_plan_has_all_106_unique_host_cases(self):
         source.validate_plan(self.plan)
-        self.assertEqual(sum(len(g["cases"]) for g in self.plan["groups"]), 106)
+        self.assertEqual(sum(len(g["cases"]) for g in self.plan["groups"]), 109)
         source.audit_deno_subset(source.ROOT)
 
     def test_host_deno_inputs_match_root_aliases_and_frozen_jsr_hashes(self):
