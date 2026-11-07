@@ -556,6 +556,82 @@ export async function runPageTests() {
     },
   });
   tests.push({
+    name: "Memory seconds retain composition drafts until commit or cancel",
+    fn: async () => {
+      prefs.set(
+        MEMORY,
+        JSON.stringify({
+          enabled: true,
+          idleThresholdSec: 123,
+          pollIntervalSec: 60,
+          minIntervalSec: 300,
+          minResidentMB: 400,
+          reclaimOnGhostWindows: true,
+        }),
+      );
+      const selector = "#idle-memory-reclaim-idle-threshold";
+      await route("features/performance", selector);
+      const target = element<HTMLInputElement>(selector);
+      await until(() => target.value === "123" && !target.disabled, "Ready");
+      const setNativeValue = Object.getOwnPropertyDescriptor(
+        HTMLInputElement.prototype,
+        "value",
+      )?.set;
+      assert(setNativeValue, "Native value setter missing");
+      const compose = (type: string, data: string) => {
+        target.dispatchEvent(
+          new CompositionEvent(type, { bubbles: true, data }),
+        );
+      };
+      const draft = async (value: string, caret: number, data: string) => {
+        setNativeValue.call(target, value);
+        target.setSelectionRange(caret, caret);
+        target.dispatchEvent(
+          new InputEvent("input", {
+            bubbles: true,
+            data,
+            inputType: "insertCompositionText",
+            isComposing: true,
+          }),
+        );
+        // Allow Ark's controlled-value watcher and deferred DOM write to run.
+        await pause(80);
+        assertEquals(target.value, value, "Composition text was formatted");
+        assertEquals(target.selectionStart, caret, "Composition caret moved");
+        assertEquals(valueAt(MEMORY, "idleThresholdSec"), 123, "Draft saved");
+      };
+      target.focus();
+      target.setSelectionRange(1, 1);
+      try {
+        compose("compositionstart", "");
+        await draft("1４23", 2, "４");
+        await draft("1４５23", 3, "４５");
+        await draft("14523", 3, "45");
+        compose("compositionend", "45");
+        await pause(80);
+        assertEquals(target.value, "14523", "Converted text lost");
+        assertEquals(target.selectionStart, 3, "Commit caret moved");
+        compose("compositionstart", "");
+        await draft("145６23", 4, "６");
+        await draft("14523", 3, "");
+        compose("compositionend", "");
+        await pause(80);
+        assertEquals(target.value, "14523", "Cancelled text retained");
+        assertEquals(target.selectionStart, 3, "Cancel caret moved");
+        target.blur();
+        await until(
+          () => valueAt(MEMORY, "idleThresholdSec") === 14523,
+          "Completed value not saved",
+        );
+      } finally {
+        // A failed assertion must not leave a composition active for the next case.
+        compose("compositionend", "");
+        target.blur();
+        await pause(80);
+      }
+    },
+  });
+  tests.push({
     name: "Memory seconds preserve caret during consecutive insertion",
     fn: async () => {
       prefs.set(
