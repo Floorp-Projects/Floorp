@@ -4,6 +4,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { noraComponent, NoraComponentBase } from "#features-chrome/utils/base";
+import { onCleanup } from "solid-js";
+import { startWhenBrowserReady } from "./window-ready.ts";
+import { createDeferredTabUpdater } from "./deferred-update.ts";
 import {
   DEFAULT_SETTINGS,
   TAB_SLEEP_EXCLUSION_PREF,
@@ -28,14 +31,22 @@ export default class TabSleepExclusion extends NoraComponentBase {
   // Keep the loaded settings and observer instead of resetting them afterward.
   declare private settings: TabSleepExclusionSettings;
   declare private prefObserver: nsIObserver | null;
+  declare private removeTabListeners: (() => void) | null;
 
   init(): void {
     this.settings = DEFAULT_SETTINGS;
     this.prefObserver = null;
-    this.loadSettings();
-    this.setupPrefObserver();
-    this.setupTabListeners();
-    this.applyToAllTabs();
+    this.removeTabListeners = null;
+    const cancel = startWhenBrowserReady(window, Services.obs, () => {
+      this.loadSettings();
+      this.setupPrefObserver();
+      this.setupTabListeners();
+      this.applyToAllTabs();
+    });
+    onCleanup(() => {
+      cancel();
+      this.cleanup();
+    });
   }
 
   /**
@@ -89,12 +100,17 @@ export default class TabSleepExclusion extends NoraComponentBase {
   private setupTabListeners(): void {
     const gBrowser = globalThis.gBrowser as ExtendedGBrowser;
 
+    const deferredUpdates = createDeferredTabUpdater((tab: BrowserTab) =>
+      this.updateTabDiscardability(tab)
+    );
+
     // Listen for new tabs
-    globalThis.addEventListener("TabOpen", (event: Event) => {
+    const onTabOpen = (event: Event) => {
       const tab = (event as CustomEvent).target as BrowserTab;
       // Delay to allow tab to load
-      setTimeout(() => this.updateTabDiscardability(tab), 100);
-    });
+      deferredUpdates.schedule(tab);
+    };
+    globalThis.addEventListener("TabOpen", onTabOpen);
 
     // Listen for tab URL changes
     const listener = {
@@ -106,6 +122,11 @@ export default class TabSleepExclusion extends NoraComponentBase {
     };
 
     gBrowser.addTabsProgressListener(listener);
+    this.removeTabListeners = () => {
+      deferredUpdates.dispose();
+      globalThis.removeEventListener("TabOpen", onTabOpen);
+      gBrowser.removeTabsProgressListener(listener);
+    };
   }
 
   /**
@@ -199,6 +220,8 @@ export default class TabSleepExclusion extends NoraComponentBase {
    * Cleanup when component is destroyed.
    */
   cleanup(): void {
+    this.removeTabListeners?.();
+    this.removeTabListeners = null;
     if (this.prefObserver) {
       Services.prefs.removeObserver(
         TAB_SLEEP_EXCLUSION_PREF,
