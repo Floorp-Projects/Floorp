@@ -7,6 +7,7 @@
         "welcomeContent": "歡迎使用 {{productName}} 筆記！以下是使用方法。\n\n{{productName}} 筆記是一項可跨裝置同步的記事功能。若要啟用同步功能，您需要使用 Mozilla 帳戶登入 {{productName}} 。\n{{productName}} 筆記儲存於 {{productName}} ，並使用 Firefox Sync 跨裝置同步處理。Firefox Sync 會以你的 Mozilla 帳號密碼加密同步處理的內容，因此任何人都無法知道其內容。",
         "new": "新增筆記",
         "reorder": "重新排序",
+        "export": "Export as Markdown",
         "done": "完成",
         "emptyTitle": "未命名",
         "emptyContent": "無內容",
@@ -64,6 +65,7 @@
     "error": {
         "loadFailed": "載入筆記資料失敗",
         "saveFailed": "儲存筆記資料失敗",
+        "exportFailed": "Failed to export note",
         "indexOutOfRange": "索引 {{index}} 超出範圍"
     }
 }

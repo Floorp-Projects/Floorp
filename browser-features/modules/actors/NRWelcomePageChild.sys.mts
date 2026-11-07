@@ -34,10 +34,22 @@ export class NRWelcomePageChild extends JSWindowActorChild {
       Cu.exportFunction(this.dismissWelcomePage.bind(this), window, {
         defineAs: "NRDismissWelcomePage",
       });
-      Cu.exportFunction(this.openExternalLink.bind(this), window, {
-        defineAs: "NROpenExternalLink",
-      });
+      // This actor also matches about:hub, whose own actor (NRSettings) exports
+      // NROpenExternalLink and skips it when the name is already defined. Only
+      // the welcome page may claim the name, otherwise the click is sent to the
+      // welcome parent, which rejects it. See Floorp issue #2787.
+      if (this.isWelcomePage(window)) {
+        Cu.exportFunction(this.openExternalLink.bind(this), window, {
+          defineAs: "NROpenExternalLink",
+        });
+      }
     }
+  }
+
+  private isWelcomePage(window: Window): boolean {
+    return window.location.port === "5187" ||
+      window.location.href.startsWith("chrome://noraneko-welcome/") ||
+      window.location.href.split(/[?#]/)[0] === "about:welcome";
   }
 
   openExternalLink(url: string) {

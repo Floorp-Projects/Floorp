@@ -70,7 +70,7 @@ export function AppearanceSettings() {
             step={20}
             valueSuffix="px"
             value={getValues("width")}
-            onChange={(e) => setValue("width", Number(e.target.value))}
+            onValueChange={(value) => setValue("width", value)}
             disabled={isDisabled}
           />
 
@@ -82,7 +82,7 @@ export function AppearanceSettings() {
             step={20}
             valueSuffix="px"
             value={getValues("maxHeight")}
-            onChange={(e) => setValue("maxHeight", Number(e.target.value))}
+            onValueChange={(value) => setValue("maxHeight", value)}
             disabled={isDisabled}
           />
 
@@ -94,7 +94,7 @@ export function AppearanceSettings() {
             step={5}
             valueSuffix="vh"
             value={getValues("offsetTop")}
-            onChange={(e) => setValue("offsetTop", Number(e.target.value))}
+            onValueChange={(value) => setValue("offsetTop", value)}
             disabled={isDisabled}
           />
 
@@ -106,7 +106,7 @@ export function AppearanceSettings() {
             step={1}
             valueSuffix="px"
             value={getValues("fontSize")}
-            onChange={(e) => setValue("fontSize", Number(e.target.value))}
+            onValueChange={(value) => setValue("fontSize", value)}
             disabled={isDisabled}
           />
 

@@ -26,7 +26,7 @@ function createSubject(): TabSleepExclusion {
   const subject = Object.create(
     TabSleepExclusion.prototype,
   ) as TabSleepExclusion;
-  // Initialize settings to match the class field initializer
+  // Initialize settings to match the defaults init() starts from
   (
     subject as unknown as { settings: { enabled: boolean; patterns: string[] } }
   ).settings = {
@@ -1005,6 +1005,73 @@ function testSetupTabListenersAddsTabsProgressListener(): void {
 /**
  * INITIALIZATION FLOW TESTS
  */
+function testConstructionPreservesExclusionsAcrossNavigation(): void {
+  const hadUserValue = Services.prefs.prefHasUserValue(
+    TAB_SLEEP_EXCLUSION_PREF,
+  );
+  const original = Services.prefs.getStringPref(TAB_SLEEP_EXCLUSION_PREF, "");
+  // Let the window's existing component react against its real tabs first.
+  Services.prefs.setStringPref(
+    TAB_SLEEP_EXCLUSION_PREF,
+    JSON.stringify({ enabled: true, patterns: ["*.example.com"] }),
+  );
+
+  const originalAddEventListener = globalThis.addEventListener;
+  const originalGBrowser = (globalThis as Record<string, unknown>).gBrowser;
+  const lifecycle = new EventTarget();
+  const tab = createFakeTab("https://www.example.com/");
+  const progressListeners: { onLocationChange: () => void }[] = [];
+  (globalThis as Record<string, unknown>).gBrowser = {
+    tabs: [tab],
+    addTabsProgressListener: (listener: { onLocationChange: () => void }) => {
+      progressListeners.push(listener);
+    },
+  };
+  globalThis.addEventListener =
+    (() => {}) as typeof globalThis.addEventListener;
+
+  let subject: TabSleepExclusion | undefined;
+  try {
+    // Exercise the real base/subclass constructor order, rather than the
+    // Object.create fixture used by method-level tests.
+    subject = new TabSleepExclusion(lifecycle);
+    assertEquals(tab.undiscardable, true, "startup protects the saved pattern");
+    assertEquals(progressListeners.length, 1, "startup installs its listener");
+
+    tab.linkedBrowser!.currentURI!.spec = "https://docs.example.com/next";
+    progressListeners[0].onLocationChange();
+    assertEquals(
+      tab.undiscardable,
+      true,
+      "navigation preserves the saved exclusion after construction completes",
+    );
+
+    // The observer handle must also survive construction so cleanup can remove
+    // it. A later preference change must not reach the disposed instance.
+    subject.cleanup();
+    Services.prefs.setStringPref(
+      TAB_SLEEP_EXCLUSION_PREF,
+      JSON.stringify({ enabled: false, patterns: [] }),
+    );
+    const state = subject as unknown as { settings: { enabled: boolean } };
+    assertEquals(
+      state.settings.enabled,
+      true,
+      "cleanup unregisters the observer installed during construction",
+    );
+  } finally {
+    subject?.cleanup();
+    lifecycle.dispatchEvent(new Event("unload"));
+    globalThis.addEventListener = originalAddEventListener;
+    (globalThis as Record<string, unknown>).gBrowser = originalGBrowser;
+    if (hadUserValue) {
+      Services.prefs.setStringPref(TAB_SLEEP_EXCLUSION_PREF, original);
+    } else {
+      Services.prefs.clearUserPref(TAB_SLEEP_EXCLUSION_PREF);
+    }
+  }
+}
+
 function testInitCallsAllSetupMethods(): void {
   const subject = createSubject() as unknown as {
     loadSettings: () => void;
@@ -1704,6 +1771,10 @@ export async function runAllTests(): Promise<void> {
       fn: testSetupTabListenersAddsTabsProgressListener,
     },
     // INITIALIZATION FLOW TESTS
+    {
+      name: "construction preserves saved exclusions and its cleanup handle",
+      fn: testConstructionPreservesExclusionsAcrossNavigation,
+    },
     {
       name: "init calls all setup methods",
       fn: testInitCallsAllSetupMethods,

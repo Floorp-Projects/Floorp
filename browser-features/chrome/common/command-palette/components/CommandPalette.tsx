@@ -8,13 +8,17 @@ import { SearchInput } from "./SearchInput.tsx";
 import { CommandList } from "./CommandList.tsx";
 import { StepIndicator } from "./StepIndicator.tsx";
 import { StepChoices } from "./StepChoices.tsx";
-import type { PaletteCommand, CommandStepChoice } from "../types.ts";
+import type {
+  CommandPaletteContentProps,
+  CommandStepChoice,
+  PaletteCommand,
+} from "../types.ts";
 import {
-  getWidth,
+  getFontSize,
+  getHorizontalAlign,
   getMaxHeight,
   getOffsetTop,
-  getHorizontalAlign,
-  getFontSize,
+  getWidth,
 } from "../config.ts";
 
 function getController() {
@@ -22,9 +26,14 @@ function getController() {
 }
 
 export function CommandPaletteUI() {
-  const controller = getController();
-  if (!controller) return;
+  return (
+    <Show when={getController()} keyed>
+      {(controller) => <CommandPaletteContent controller={controller} />}
+    </Show>
+  );
+}
 
+function CommandPaletteContent({ controller }: CommandPaletteContentProps) {
   const state = controller.state;
 
   const handleBackdropClick = (e: MouseEvent) => {

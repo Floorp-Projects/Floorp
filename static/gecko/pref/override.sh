@@ -86,19 +86,22 @@ while IFS= read -r line || [[ -n "$line" ]]; do
             formatted_value='""'
         else
             # String value -> wrap in single pair of double quotes
-            # Escape any existing double quotes inside the string
-            safe_value=$(printf '%s' "$stripped_value" | sed 's/"/\\"/g')
+            # Keep quotes already escaped in override.ini from being escaped twice.
+            safe_value=$(printf '%s' "$stripped_value" | sed -E 's/\\?"/\\"/g')
             formatted_value="\"$safe_value\""
         fi
 
         # Search for existing preference
         escaped_pref_name=$(printf '%s\n' "$pref_name" | sed 's/[[\.*^$()+?{|]/\\&/g')
 
+        # sed replacement syntax has its own escaping, separate from JS strings.
+        sed_value=$(printf '%s' "$formatted_value" | sed 's/[\\&|]/\\&/g')
+
         # Check for existing pref or lockPref
         if grep -q "pref(\"$escaped_pref_name\"" "$TEMP_FILE"; then
-            sed -i.bak "s|pref(\"$escaped_pref_name\"[^)]*);|$func_name(\"$pref_name\", $formatted_value);|" "$TEMP_FILE"
+            sed -i.bak "s|pref(\"$escaped_pref_name\"[^)]*);|$func_name(\"$pref_name\", $sed_value);|" "$TEMP_FILE"
         elif grep -q "lockPref(\"$escaped_pref_name\"" "$TEMP_FILE"; then
-            sed -i.bak "s|lockPref(\"$escaped_pref_name\"[^)]*);|$func_name(\"$pref_name\", $formatted_value);|" "$TEMP_FILE"
+            sed -i.bak "s|lockPref(\"$escaped_pref_name\"[^)]*);|$func_name(\"$pref_name\", $sed_value);|" "$TEMP_FILE"
         else
             # Add as new preference
             NEW_PREFS+=("$func_name(\"$pref_name\", $formatted_value);")

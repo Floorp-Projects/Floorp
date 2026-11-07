@@ -24,12 +24,14 @@ type ExtendedGBrowser = typeof globalThis.gBrowser & {
 
 @noraComponent(import.meta.hot)
 export default class TabSleepExclusion extends NoraComponentBase {
-  private settings: TabSleepExclusionSettings = DEFAULT_SETTINGS;
-  // Using 'any' for observer since the nsIObserver type doesn't include QueryInterface
-  // deno-lint-ignore no-explicit-any
-  private prefObserver: any = null;
+  // The base constructor calls init() before subclass field initializers run.
+  // Keep the loaded settings and observer instead of resetting them afterward.
+  declare private settings: TabSleepExclusionSettings;
+  declare private prefObserver: nsIObserver | null;
 
   init(): void {
+    this.settings = DEFAULT_SETTINGS;
+    this.prefObserver = null;
     this.loadSettings();
     this.setupPrefObserver();
     this.setupTabListeners();
@@ -64,7 +66,7 @@ export default class TabSleepExclusion extends NoraComponentBase {
    * Setup observer for preference changes.
    */
   private setupPrefObserver(): void {
-    this.prefObserver = {
+    const observer = {
       observe: (_subject: unknown, topic: string, data: string) => {
         if (topic === "nsPref:changed" && data === TAB_SLEEP_EXCLUSION_PREF) {
           this.loadSettings();
@@ -77,7 +79,8 @@ export default class TabSleepExclusion extends NoraComponentBase {
       ]),
     };
 
-    Services.prefs.addObserver(TAB_SLEEP_EXCLUSION_PREF, this.prefObserver);
+    this.prefObserver = observer;
+    Services.prefs.addObserver(TAB_SLEEP_EXCLUSION_PREF, observer);
   }
 
   /**
@@ -165,7 +168,7 @@ export default class TabSleepExclusion extends NoraComponentBase {
     }
 
     return this.settings.patterns.some((pattern) =>
-      this.matchPattern(url, pattern),
+      this.matchPattern(url, pattern)
     );
   }
 

@@ -4,10 +4,21 @@
 import { NotificationCustomizer } from "../notification-customizer.ts";
 import type { ChromeWebStoreInstallInfo } from "../types.ts";
 import {
-  type TestCase,
   assert,
   assertEquals,
+  type TestCase,
 } from "../../../test/utils/test_harness.ts";
+
+import { createAddonWindow } from "./fixtures.ts";
+
+const fixture = createAddonWindow("notification customizer tests");
+const document = fixture.win.document;
+const liveCustomizers: NotificationCustomizer[] = [];
+function createCustomizer(): NotificationCustomizer {
+  const customizer = new NotificationCustomizer(fixture.win);
+  liveCustomizers.push(customizer);
+  return customizer;
+}
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -111,13 +122,13 @@ function cleanupDOM(): void {
 // ---------------------------------------------------------------------------
 
 function testConstructorDoesNotThrow(): void {
-  const customizer = new NotificationCustomizer();
+  const customizer = createCustomizer();
   assert(customizer instanceof NotificationCustomizer, "should be an instance");
 }
 
 function testConstructorCreatesFreshInstance(): void {
-  const a = new NotificationCustomizer();
-  const b = new NotificationCustomizer();
+  const a = createCustomizer();
+  const b = createCustomizer();
   assert(a !== b, "each call should produce a new instance");
 }
 
@@ -127,7 +138,7 @@ function testConstructorCreatesFreshInstance(): void {
 
 function testCustomizeNotificationContentNoDOM(): void {
   cleanupDOM();
-  const customizer = new NotificationCustomizer();
+  const customizer = createCustomizer();
   // Should not throw when notification is absent
   customizer.customizeNotificationContent(SAMPLE_CWS_INFO);
 }
@@ -135,7 +146,7 @@ function testCustomizeNotificationContentNoDOM(): void {
 function testCustomizeNotificationContentCreatesMessageElement(): void {
   cleanupDOM();
   createMockInstallConfirmationDOM();
-  const customizer = new NotificationCustomizer();
+  const customizer = createCustomizer();
 
   customizer.customizeNotificationContent(SAMPLE_CWS_INFO);
 
@@ -160,7 +171,7 @@ function testCustomizeNotificationContentCreatesMessageElement(): void {
 function testCustomizeNotificationContentDoesNotSetDataAttribute(): void {
   cleanupDOM();
   createMockInstallConfirmationDOM();
-  const customizer = new NotificationCustomizer();
+  const customizer = createCustomizer();
 
   customizer.customizeNotificationContent(SAMPLE_CWS_INFO);
 
@@ -181,7 +192,7 @@ function testCustomizeNotificationContentDoesNotSetDataAttribute(): void {
 function testCustomizeNotificationContentBadgeAdded(): void {
   cleanupDOM();
   createMockInstallConfirmationDOM();
-  const customizer = new NotificationCustomizer();
+  const customizer = createCustomizer();
 
   customizer.customizeNotificationContent(SAMPLE_CWS_INFO);
 
@@ -199,7 +210,7 @@ function testCustomizeNotificationContentBadgeAdded(): void {
 function testCustomizeNotificationContentCompatibilityWarningAdded(): void {
   cleanupDOM();
   createMockInstallConfirmationDOM();
-  const customizer = new NotificationCustomizer();
+  const customizer = createCustomizer();
 
   customizer.customizeNotificationContent(SAMPLE_CWS_INFO);
 
@@ -216,7 +227,7 @@ function testCustomizeNotificationContentCompatibilityWarningAdded(): void {
 function testCustomizeNotificationContentIdempotent(): void {
   cleanupDOM();
   createMockInstallConfirmationDOM();
-  const customizer = new NotificationCustomizer();
+  const customizer = createCustomizer();
 
   // Call twice — should not duplicate elements
   customizer.customizeNotificationContent(SAMPLE_CWS_INFO);
@@ -237,7 +248,7 @@ function testCustomizeNotificationContentIdempotent(): void {
 
 function testCustomizeWebExtPermissionPromptNoDOM(): void {
   cleanupDOM();
-  const customizer = new NotificationCustomizer();
+  const customizer = createCustomizer();
   // Should not throw when notification is absent
   customizer.customizeWebExtPermissionPrompt(SAMPLE_CWS_INFO);
 }
@@ -245,7 +256,7 @@ function testCustomizeWebExtPermissionPromptNoDOM(): void {
 function testCustomizeWebExtPermissionPromptCreatesMessage(): void {
   cleanupDOM();
   createMockWebExtPermissionDOM();
-  const customizer = new NotificationCustomizer();
+  const customizer = createCustomizer();
 
   customizer.customizeWebExtPermissionPrompt(SAMPLE_CWS_INFO);
 
@@ -270,7 +281,7 @@ function testCustomizeWebExtPermissionPromptCreatesMessage(): void {
 function testCustomizeWebExtPermissionPromptHidesIntro(): void {
   cleanupDOM();
   createMockWebExtPermissionDOM();
-  const customizer = new NotificationCustomizer();
+  const customizer = createCustomizer();
 
   customizer.customizeWebExtPermissionPrompt(SAMPLE_CWS_INFO);
 
@@ -286,7 +297,7 @@ function testCustomizeWebExtPermissionPromptHidesIntro(): void {
 function testCustomizeWebExtPermissionPromptAddsDataAttribute(): void {
   cleanupDOM();
   createMockWebExtPermissionDOM();
-  const customizer = new NotificationCustomizer();
+  const customizer = createCustomizer();
 
   customizer.customizeWebExtPermissionPrompt(SAMPLE_CWS_INFO);
 
@@ -305,7 +316,7 @@ function testCustomizeWebExtPermissionPromptAddsDataAttribute(): void {
 function testCustomizeWebExtPermissionPromptCompatibilityWarning(): void {
   cleanupDOM();
   createMockWebExtPermissionDOM();
-  const customizer = new NotificationCustomizer();
+  const customizer = createCustomizer();
 
   customizer.customizeWebExtPermissionPrompt(SAMPLE_CWS_INFO);
 
@@ -326,7 +337,7 @@ function testCustomizeWebExtPermissionPromptCompatibilityWarning(): void {
 
 function testRestoreOriginalContentNoDOM(): void {
   cleanupDOM();
-  const customizer = new NotificationCustomizer();
+  const customizer = createCustomizer();
   // Should not throw when no notification exists
   customizer.restoreOriginalContent();
 }
@@ -334,7 +345,7 @@ function testRestoreOriginalContentNoDOM(): void {
 function testRestoreOriginalContentWithoutCustomization(): void {
   cleanupDOM();
   createMockWebExtPermissionDOM();
-  const customizer = new NotificationCustomizer();
+  const customizer = createCustomizer();
 
   // Restore without prior customization — no data-cws-customized attribute
   customizer.restoreOriginalContent();
@@ -353,7 +364,7 @@ function testRestoreOriginalContentWithoutCustomization(): void {
 function testRestoreOriginalContentAfterCustomization(): void {
   cleanupDOM();
   createMockWebExtPermissionDOM();
-  const customizer = new NotificationCustomizer();
+  const customizer = createCustomizer();
 
   // Customize first
   customizer.customizeWebExtPermissionPrompt(SAMPLE_CWS_INFO);
@@ -385,7 +396,7 @@ function testRestoreOriginalContentAfterCustomization(): void {
 function testRestoreOriginalContentRestoresIntro(): void {
   cleanupDOM();
   createMockWebExtPermissionDOM();
-  const customizer = new NotificationCustomizer();
+  const customizer = createCustomizer();
 
   // Customize hides intro
   customizer.customizeWebExtPermissionPrompt(SAMPLE_CWS_INFO);
@@ -408,7 +419,7 @@ function testRestoreOriginalContentRestoresIntro(): void {
 function testRoundTripCustomizeRestoreCustomize(): void {
   cleanupDOM();
   createMockWebExtPermissionDOM();
-  const customizer = new NotificationCustomizer();
+  const customizer = createCustomizer();
   const notification = document!.getElementById(
     "addon-webext-permissions-notification",
   );
@@ -439,7 +450,7 @@ function testRoundTripCustomizeRestoreCustomize(): void {
 function testMultipleCustomizeCallsPreserveOriginalChildren(): void {
   cleanupDOM();
   createMockWebExtPermissionDOM();
-  const customizer = new NotificationCustomizer();
+  const customizer = createCustomizer();
   const descContainer = document!.querySelector(
     "#addon-webext-permissions-notification .popup-notification-description",
   );
@@ -469,7 +480,7 @@ function testMultipleCustomizeCallsPreserveOriginalChildren(): void {
 function testCustomizeNotificationContentWithNullName(): void {
   cleanupDOM();
   createMockInstallConfirmationDOM();
-  const customizer = new NotificationCustomizer();
+  const customizer = createCustomizer();
 
   // CWS info with null name
   const cwsInfoWithNullName: ChromeWebStoreInstallInfo = {
@@ -495,7 +506,7 @@ function testCustomizeNotificationContentWithNullName(): void {
 function testCustomizeNotificationContentWithUndefinedName(): void {
   cleanupDOM();
   createMockInstallConfirmationDOM();
-  const customizer = new NotificationCustomizer();
+  const customizer = createCustomizer();
 
   // CWS info with undefined name
   const cwsInfoWithUndefinedName: ChromeWebStoreInstallInfo = {
@@ -516,7 +527,7 @@ function testCustomizeNotificationContentWithUndefinedName(): void {
 
 function testCustomizeNotificationContentMissingPopupContent(): void {
   cleanupDOM();
-  const customizer = new NotificationCustomizer();
+  const customizer = createCustomizer();
 
   // Create notification without popupnotificationcontent
   const notification = document!.createXULElement("vbox") as XULElement & {
@@ -533,7 +544,7 @@ function testCustomizeNotificationContentMissingPopupContent(): void {
 
 function testCustomizeNotificationContentMissingDescriptionContainer(): void {
   cleanupDOM();
-  const customizer = new NotificationCustomizer();
+  const customizer = createCustomizer();
 
   // Create notification without description container
   const notification = document!.createXULElement("vbox") as XULElement & {
@@ -555,7 +566,7 @@ function testCustomizeNotificationContentMissingDescriptionContainer(): void {
 function testCustomizeNotificationContentReusesExistingMessage(): void {
   cleanupDOM();
   createMockInstallConfirmationDOM();
-  const customizer = new NotificationCustomizer();
+  const customizer = createCustomizer();
 
   // First customization
   customizer.customizeNotificationContent(SAMPLE_CWS_INFO);
@@ -583,7 +594,7 @@ function testCustomizeNotificationContentReusesExistingMessage(): void {
 function testCustomizeWebExtPermissionPromptWithNullName(): void {
   cleanupDOM();
   createMockWebExtPermissionDOM();
-  const customizer = new NotificationCustomizer();
+  const customizer = createCustomizer();
 
   const cwsInfoWithNullName: ChromeWebStoreInstallInfo = {
     name: null as unknown as string,
@@ -608,7 +619,7 @@ function testCustomizeWebExtPermissionPromptWithNullName(): void {
 function testCustomizeWebExtPermissionPromptWithUndefinedName(): void {
   cleanupDOM();
   createMockWebExtPermissionDOM();
-  const customizer = new NotificationCustomizer();
+  const customizer = createCustomizer();
 
   const cwsInfoWithUndefinedName: ChromeWebStoreInstallInfo = {
     name: undefined as unknown as string,
@@ -628,7 +639,7 @@ function testCustomizeWebExtPermissionPromptWithUndefinedName(): void {
 
 function testCustomizeWebExtPermissionPromptMissingPopupContent(): void {
   cleanupDOM();
-  const customizer = new NotificationCustomizer();
+  const customizer = createCustomizer();
 
   // Create notification without popupnotificationcontent
   const notification = document!.createXULElement("vbox") as XULElement & {
@@ -652,7 +663,7 @@ function testCustomizeWebExtPermissionPromptMissingPopupContent(): void {
 
 function testCustomizeWebExtPermissionPromptMissingDescriptionContainer(): void {
   cleanupDOM();
-  const customizer = new NotificationCustomizer();
+  const customizer = createCustomizer();
 
   // Create notification without description container
   const notification = document!.createXULElement("vbox") as XULElement & {
@@ -673,7 +684,7 @@ function testCustomizeWebExtPermissionPromptMissingDescriptionContainer(): void 
 
 function testCustomizeWebExtPermissionPromptMissingIntro(): void {
   cleanupDOM();
-  const customizer = new NotificationCustomizer();
+  const customizer = createCustomizer();
 
   // Create notification without intro element
   const notification = document!.createXULElement("vbox") as XULElement & {
@@ -701,7 +712,7 @@ function testCustomizeWebExtPermissionPromptMissingIntro(): void {
 function testCustomizeWebExtPermissionPromptReusesExistingMessage(): void {
   cleanupDOM();
   createMockWebExtPermissionDOM();
-  const customizer = new NotificationCustomizer();
+  const customizer = createCustomizer();
 
   // First customization
   customizer.customizeWebExtPermissionPrompt(SAMPLE_CWS_INFO);
@@ -728,7 +739,7 @@ function testCustomizeWebExtPermissionPromptReusesExistingMessage(): void {
 
 function testRestoreOriginalContentMissingNotification(): void {
   cleanupDOM();
-  const customizer = new NotificationCustomizer();
+  const customizer = createCustomizer();
 
   // Should not throw when notification doesn't exist
   customizer.restoreOriginalContent();
@@ -736,7 +747,7 @@ function testRestoreOriginalContentMissingNotification(): void {
 
 function testRestoreOriginalContentMissingDescriptionContainer(): void {
   cleanupDOM();
-  const customizer = new NotificationCustomizer();
+  const customizer = createCustomizer();
 
   // Create notification without description container
   const notification = document!.createXULElement("vbox") as XULElement & {
@@ -754,7 +765,7 @@ function testRestoreOriginalContentMissingDescriptionContainer(): void {
 
 function testRestoreOriginalContentMissingIntro(): void {
   cleanupDOM();
-  const customizer = new NotificationCustomizer();
+  const customizer = createCustomizer();
 
   // Create notification without intro element
   const notification = document!.createXULElement("vbox") as XULElement & {
@@ -783,7 +794,7 @@ function testRestoreOriginalContentMissingIntro(): void {
 function testRestoreOriginalContentIdempotent(): void {
   cleanupDOM();
   createMockWebExtPermissionDOM();
-  const customizer = new NotificationCustomizer();
+  const customizer = createCustomizer();
 
   // Customize
   customizer.customizeWebExtPermissionPrompt(SAMPLE_CWS_INFO);
@@ -845,7 +856,7 @@ function testAddChromeExtensionBadgeMultipleNameElements(): void {
   notification.appendChild(content);
   document!.body!.appendChild(notification as unknown as Node);
 
-  const customizer = new NotificationCustomizer();
+  const customizer = createCustomizer();
   customizer.customizeNotificationContent(SAMPLE_CWS_INFO);
 
   // Should add badge to all name elements
@@ -866,7 +877,7 @@ function testAddChromeExtensionBadgeMultipleNameElements(): void {
 function testAddCompatibilityWarningIdempotent(): void {
   cleanupDOM();
   createMockInstallConfirmationDOM();
-  const customizer = new NotificationCustomizer();
+  const customizer = createCustomizer();
 
   // First call adds warning
   customizer.customizeNotificationContent(SAMPLE_CWS_INFO);
@@ -1061,11 +1072,13 @@ export async function runAllTests(): Promise<void> {
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       failures.push(`${test.name}: ${message}`);
+    } finally {
+      cleanupDOM();
+      for (const customizer of liveCustomizers.splice(0)) customizer.destroy();
     }
   }
 
-  // Clean up any leftover DOM
-  cleanupDOM();
+  fixture.close();
 
   if (failures.length > 0) {
     throw new Error(

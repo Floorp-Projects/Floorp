@@ -72,6 +72,7 @@ export namespace JSX {
     label?: string;
     accesskey?: string;
     type?: "checkbox";
+    autocheck?: "true" | "false";
     checked?: boolean;
     disabled?: boolean;
     command?: string;

@@ -258,7 +258,7 @@ deno task test:integration
 
 Implementation: `deno task test && deno task test:os-api --quick`
 
-Source: `deno.json:89`
+Source: `deno.json:90`
 
 ### `deno task test:os-api`
 
@@ -268,7 +268,7 @@ deno task test:os-api
 
 Implementation: `deno run -A tools/os-test/verify_os_server_full.ts`
 
-Source: `deno.json:84`
+Source: `deno.json:85`
 
 ### `deno task test:os-api:effects`
 
@@ -278,7 +278,7 @@ deno task test:os-api:effects
 
 Implementation: `deno run -A tools/os-test/test-enhanced-effects.ts`
 
-Source: `deno.json:88`
+Source: `deno.json:89`
 
 ### `deno task test:os-api:local-page`
 
@@ -288,7 +288,7 @@ deno task test:os-api:local-page
 
 Implementation: `deno run -A tools/os-test/test-with-local-page.ts`
 
-Source: `deno.json:87`
+Source: `deno.json:88`
 
 ### `deno task test:os-api:network-idle`
 
@@ -298,7 +298,7 @@ deno task test:os-api:network-idle
 
 Implementation: `deno run -A tools/os-test/verify_network_idle_rigorous.ts`
 
-Source: `deno.json:86`
+Source: `deno.json:87`
 
 ### `deno task test:os-api:wrapper`
 
@@ -308,7 +308,7 @@ deno task test:os-api:wrapper
 
 Implementation: `deno run -A tools/os-test/run_verify_os_server_full_wrapper.ts`
 
-Source: `deno.json:85`
+Source: `deno.json:86`
 
 ### `deno task test:smoke`
 
@@ -319,6 +319,16 @@ deno task test:smoke
 Implementation: `deno run -A tools/src/smoke_runner.ts`
 
 Source: `deno.json:83`
+
+### `deno task test:tab-stacks-session`
+
+```bash
+deno task test:tab-stacks-session
+```
+
+Implementation: `deno run -A tools/tab-stacks-session-regression.ts`
+
+Source: `deno.json:84`
 
 ## feles-build Commands
 

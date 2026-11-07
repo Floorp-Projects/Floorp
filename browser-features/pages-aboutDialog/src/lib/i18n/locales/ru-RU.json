@@ -7,40 +7,40 @@
       "esr": "ESR"
     },
     "update": {
-      "idle": "Check for updates",
-      "checking": "Checking for updates…",
-      "checkFailed": "Couldn't check for updates. Try again later.",
-      "upToDate": "You're up to date.",
-      "downloading": "Downloading update… {{progress}}",
-      "applying": "Installing update…",
-      "readyToRestart": "Update ready — restart to apply.",
-      "restarting": "Restarting…",
-      "policyDisabled": "Updates are managed by your organisation.",
-      "downloadFailed": "Download failed. Please try again.",
-      "noUpdater": "Updates are managed externally.",
-      "available": "Download update {{version}}",
-      "tryAgain": "Try again",
-      "restartToApply": "Restart to apply update"
+      "idle": "Проверить обновления",
+      "checking": "Проверка обновлений…",
+      "checkFailed": "Не удалось проверить обновления. Попробуйте позже.",
+      "upToDate": "У вас установлена актуальная версия.",
+      "downloading": "Загрузка обновления… {{progress}}",
+      "applying": "Установка обновления…",
+      "readyToRestart": "Обновление готово — перезапустите браузер, чтобы применить его.",
+      "restarting": "Перезапуск…",
+      "policyDisabled": "Обновлениями управляет ваша организация.",
+      "downloadFailed": "Не удалось загрузить. Попробуйте ещё раз.",
+      "noUpdater": "Обновлениями управляет внешняя система.",
+      "available": "Загрузить обновление {{version}}",
+      "tryAgain": "Повторить",
+      "restartToApply": "Перезапустить, чтобы применить обновление"
     },
     "community": {
-      "title": "Join the Community"
+      "title": "Присоединиться к сообществу"
     },
     "help": {
-      "title": "Help & Support",
+      "title": "Справка и поддержка",
       "support": "Поддержка"
     },
     "sponsor": {
-      "title": "Support the Project",
-      "button": "Become a Sponsor"
+      "title": "Поддержать проект",
+      "button": "Стать спонсором"
     },
     "links": {
-      "releaseNotes": "Release Notes",
-      "help": "Floorp Help",
-      "feedback": "Submit Feedback",
+      "releaseNotes": "Заметки о выпуске",
+      "help": "Справка Floorp",
+      "feedback": "Отправить отзыв",
       "licensing": "Лицензия",
-      "terms": "Terms of Service",
-      "privacy": "Privacy Policy"
+      "terms": "Условия использования",
+      "privacy": "Политика конфиденциальности"
     },
-    "trademark": "The name Floorp is a trademark in Japan."
+    "trademark": "Название Floorp является товарным знаком в Японии."
   }
 }

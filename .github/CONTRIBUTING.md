@@ -26,6 +26,14 @@ e.g.
 
 Please add MPL 2.0 headers to new files you submit, where appropriate. For example, a PNG or JPEG would not require an individual notice. A sample of some headers is available at: https://www.mozilla.org/en-US/MPL/headers/.
 
+## Localization
+
+To translate Floorp into a language other than English (US), join the [Floorp Crowdin project](https://crowdin.com/project/floorp-browser), choose your language, and contribute translations there. These browser translations are synchronized through f18n-central; direct edits to generated locale files in this repository can be replaced by later synchronization.
+
+For English (US) wording improvements, see the [f18n-central English localization guide](https://github.com/Floorp-Projects/f18n-central#improving-the-english-us-localization). For new source strings or keys, check the [translation target manifest](../i18n/translation-targets.json) and coordinate changes to the corresponding Floorp source files so they remain consistent with source synchronization.
+
+For browser and documentation translation guidance, see [Contribute to Floorp](https://docs.floorp.app/docs/contributing/floorp#improve-translations).
+
 Thank you for reading. Have a nice day!
 
 *Updated from the original Noraneko Contribution Guidelines.*

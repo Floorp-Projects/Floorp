@@ -14,16 +14,15 @@ import {
   panelSidebarConfig,
   panelSidebarData,
   selectedPanelId,
-  setPanelSidebarData,
   setIsPanelSidebarHoverOpen,
   setIsPanelSidebarHoverPreview,
+  setPanelSidebarData,
   setSelectedPanelId,
 } from "../data/data.ts";
 import type { Panel } from "../utils/type.ts";
 import { createEffect } from "solid-js";
 import { getExtensionSidebarAction } from "../extension-panels.ts";
 import { WebsitePanel } from "../website-panel-window-parent.ts";
-import "../utils/webRequest.ts";
 
 export class CPanelSidebar {
   private panelDisposers: Map<string, () => void> = new Map();
@@ -205,7 +204,6 @@ export class CPanelSidebar {
   }
 
   public openPanel(panelId: string): void {
-
     const panel = this.getPanelData(panelId);
     if (!panel) {
       throw new Error(`Panel not found: ${panelId}`);

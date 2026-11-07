@@ -4,10 +4,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import i18next from "i18next";
-import { createSignal, type Accessor } from "solid-js";
+import { type Accessor, createSignal } from "solid-js";
 import { createRootHMR } from "@nora/solid-xul";
 import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
-import type { ChromeWebStoreInstallInfo } from "./types";
+import type { ChromeWebStoreInstallInfo, ChromeWebStoreWindow } from "./types";
 
 /**
  * Type definitions for i18n text values
@@ -77,33 +77,44 @@ export class NotificationCustomizer {
   private originalDescriptionChildren: Node[] | null = null;
   private originalIntroDisplay: string | null = null;
   private texts: Accessor<I18nTextValues>;
+  private disposeRoot: (() => void) | null = null;
 
-  constructor() {
+  constructor(private readonly targetWindow: ChromeWebStoreWindow = window) {
     // Initialize with default texts
     let textsAccessor: Accessor<I18nTextValues> = () => getTranslatedTexts();
 
-    createRootHMR(
-      () => {
-        const [texts, setTexts] =
-          createSignal<I18nTextValues>(getTranslatedTexts());
+    this.disposeRoot = createRootHMR(
+      (dispose) => {
+        const [texts, setTexts] = createSignal<I18nTextValues>(
+          getTranslatedTexts(),
+        );
         textsAccessor = texts;
 
         // Set up locale change observer for reactive updates
         addI18nObserver(() => {
           setTexts(getTranslatedTexts());
         });
+        return dispose;
       },
       import.meta.hot,
+      targetWindow,
     );
 
     this.texts = textsAccessor;
+  }
+
+  destroy(): void {
+    this.disposeRoot?.();
+    this.disposeRoot = null;
+    this.originalDescriptionChildren = null;
+    this.originalIntroDisplay = null;
   }
 
   /**
    * Customize the notification content for Chrome extensions
    */
   customizeNotificationContent(cwsInfo: ChromeWebStoreInstallInfo): void {
-    const notification = document!.getElementById(
+    const notification = this.targetWindow.document.getElementById(
       "addon-install-confirmation-notification",
     );
     if (!notification) {
@@ -128,7 +139,7 @@ export class NotificationCustomizer {
         ".chrome-web-store-message",
       ) as HTMLElement | null;
       if (!messageElement) {
-        messageElement = document!.createElement("span");
+        messageElement = this.targetWindow.document.createElement("span");
         messageElement.className = "chrome-web-store-message";
         descriptionContainer.textContent = "";
         descriptionContainer.appendChild(messageElement);
@@ -144,7 +155,7 @@ export class NotificationCustomizer {
    * Customize the webextension permission prompt for Chrome extensions
    */
   customizeWebExtPermissionPrompt(cwsInfo: ChromeWebStoreInstallInfo): void {
-    const notification = document!.getElementById(
+    const notification = this.targetWindow.document.getElementById(
       "addon-webext-permissions-notification",
     );
 
@@ -178,7 +189,7 @@ export class NotificationCustomizer {
         ".chrome-web-store-message",
       ) as HTMLElement | null;
       if (!messageElement) {
-        messageElement = document!.createElement("span");
+        messageElement = this.targetWindow.document.createElement("span");
         messageElement.className = "chrome-web-store-message";
         descriptionContainer.textContent = "";
         descriptionContainer.appendChild(messageElement);
@@ -206,7 +217,7 @@ export class NotificationCustomizer {
    * Restore the original content of the permission prompt
    */
   restoreOriginalContent(): void {
-    const notification = document!.getElementById(
+    const notification = this.targetWindow.document.getElementById(
       "addon-webext-permissions-notification",
     );
     if (!notification) {
@@ -252,7 +263,7 @@ export class NotificationCustomizer {
       return;
     }
 
-    const addonList = document!.getElementById(
+    const addonList = this.targetWindow.document.getElementById(
       "addon-install-confirmation-content",
     );
     if (!addonList) {
@@ -264,7 +275,9 @@ export class NotificationCustomizer {
       ".addon-install-confirmation-name",
     );
     for (const nameElement of nameElements) {
-      const badge = document!.createXULElement("label") as XULElement;
+      const badge = this.targetWindow.document.createXULElement(
+        "label",
+      ) as XULElement;
       badge.setAttribute("value", texts.chromeBadge);
       badge.setAttribute("class", "chrome-extension-badge");
       (badge as XULElement & { style: CSSStyleDeclaration }).style.cssText =
@@ -282,7 +295,9 @@ export class NotificationCustomizer {
     }
 
     const texts = this.texts();
-    const warning = document!.createXULElement("description") as XULElement;
+    const warning = this.targetWindow.document.createXULElement(
+      "description",
+    ) as XULElement;
     warning.setAttribute("class", "chrome-extension-warning");
     (warning as XULElement & { style: CSSStyleDeclaration }).style.cssText =
       "color: #f9ab00; font-size: 1.0em; margin-top: 8px; padding: 4px 8px; background: rgba(249, 171, 0, 0.1); border-radius: 4px;";
