@@ -90,7 +90,10 @@ async function runDev(): Promise<void> {
       // Launch browser; when it exits (or fails to launch), take the dev
       // servers down with it — otherwise they keep listening on their
       // ports and the next run dies with "port already in use".
-      BrowserLauncher.run({ initialUrl: "http://localhost:5183/" }).then(() => {
+      BrowserLauncher.run({
+        initialUrl: "http://localhost:5183/",
+        recordProcess: true,
+      }).then(() => {
         logger.info("Browser closed — shutting down dev servers.");
         DevServer.shutdown();
         Deno.exit(0);
