@@ -4,7 +4,19 @@
 import * as path from "@std/path";
 import { parseArgs } from "@std/cli/parse-args";
 import { withBrowser } from "./src/browser_connector.ts";
-import { PLATFORM, PROJECT_ROOT } from "./src/defines.ts";
+import { PATHS, PLATFORM, PROJECT_ROOT } from "./src/defines.ts";
+import {
+  matchesDevIdentity,
+  selectDevProcesses,
+} from "./src/dev_process_selection.ts";
+import {
+  DEV_PROCESSES_FILE,
+  listDevProcesses,
+  readDevProcesses,
+  recordDevProcess,
+  reportDevPortConflict,
+  terminateDevProcesses,
+} from "./src/dev_processes.ts";
 // Lazy imports for rebuild — avoids type-checking injector.ts at dev-tool level
 async function loadBuildModules() {
   const Builder = await import("./src/builder.ts");
@@ -20,7 +32,8 @@ Usage: deno run -A tools/dev-tool.ts <command> [options]
 
 Process management:
   start                     Start feles-build dev (background)
-  stop                      Stop all dev processes cleanly
+  stop                      Stop dev processes for this checkout
+  stop --all                Stop dev processes across ALL checkouts (recovery)
   restart                   Restart dev processes
   rebuild                   Rebuild assets without restarting browser
   smoke [options]           Run smoke test suite
@@ -71,7 +84,7 @@ const args = parseArgs(Deno.args, {
     l: "limit",
     f: "filter",
   },
-  boolean: ["help", "skip-start"],
+  boolean: ["help", "skip-start", "all"],
   default: { context: "chrome" },
 });
 
@@ -98,7 +111,7 @@ async function main() {
       await cmdStart();
       break;
     case "stop":
-      await cmdStop();
+      await cmdStop(args.all);
       break;
     case "restart":
       await cmdStop();
@@ -157,31 +170,27 @@ function parsePidFromOutput(output: string): string {
 }
 
 async function cmdStart() {
-  // Check if already running
+  // A stale PID file must not mistake a reused PID for this dev server.
   try {
-    const existingPid = Deno.readTextFileSync(PID_FILE).trim();
-    // Verify process is actually alive
-    const check = new Deno.Command(
-      PLATFORM === "windows" ? "tasklist" : "ps",
-      PLATFORM === "windows"
-        ? {
-            args: ["/FI", `PID eq ${existingPid}`, "/NH"],
-            stdout: "piped",
-            stderr: "null",
-          }
-        : { args: ["-p", existingPid], stdout: "piped", stderr: "null" },
-    );
-    const out = await check.output();
-    const text = new TextDecoder().decode(out.stdout);
-    if (text.includes(existingPid)) {
-      console.log(`Dev server already running (PID ${existingPid}).`);
+    const pid = Number(Deno.readTextFileSync(PID_FILE).trim());
+    const processes = await listDevProcesses();
+    if (
+      selectDevProcesses(processes, {
+        platform: PLATFORM,
+        projectRoot: PROJECT_ROOT,
+        profilePath: PATHS.profile_test,
+        serverPid: pid,
+        recordedProcesses: readDevProcesses(),
+      }).includes(pid)
+    ) {
+      console.log(`Dev server already running (PID ${pid}).`);
       console.log(
         "Use 'dev-tool stop' to stop it first, or 'dev-tool restart'.",
       );
       return;
     }
-  } catch {
-    // No PID file or process not found — proceed
+  } catch (error) {
+    if (!(error instanceof Deno.errors.NotFound)) throw error;
   }
 
   console.log("Starting feles-build dev...");
@@ -201,6 +210,8 @@ async function cmdStart() {
       /* ignore */
     }
   }
+
+  Deno.mkdirSync(path.dirname(PID_FILE), { recursive: true });
 
   // Spawn a fully detached process that survives parent exit
   const denoPath = Deno.execPath();
@@ -250,6 +261,7 @@ async function cmdStart() {
     Deno.exit(1);
   }
   Deno.writeTextFileSync(PID_FILE, pid);
+  await recordDevProcess(Number(pid));
   console.log(`Started (PID ${pid}). Waiting for Marionette...`);
 
   // Poll for marionette-port.txt
@@ -266,188 +278,82 @@ async function cmdStart() {
     } catch {
       // not yet
     }
+    const log = await Deno.readTextFile(logFile).catch(() => "");
+    if (await reportDevPortConflict(log)) Deno.exit(1);
+    if (i % 5 === 4 && !(await listDevProcesses(Number(pid))).length) {
+      console.error(
+        `[dev-tool] Dev server exited before Marionette was ready. Check ${logFile}.`,
+      );
+      Deno.exit(1);
+    }
   }
 
   console.error(`Timed out after ${maxWait}s. Check ${logFile} for errors.`);
   Deno.exit(1);
 }
 
-async function cmdStop() {
-  let pid: string | null = null;
+async function cmdStop(all = false) {
+  let serverPid: number | undefined;
   try {
-    pid = Deno.readTextFileSync(PID_FILE).trim();
-  } catch {
-    // no PID file
+    const value = Number(Deno.readTextFileSync(PID_FILE).trim());
+    if (Number.isSafeInteger(value) && value > 0) serverPid = value;
+  } catch (error) {
+    if (!(error instanceof Deno.errors.NotFound)) throw error;
   }
 
-  console.log("Stopping dev processes...");
-
-  if (PLATFORM === "windows") {
-    // 1. Kill saved PID tree
-    if (pid) {
-      await runSilent("taskkill", ["/PID", pid, "/T", "/F"]);
-    }
-
-    // 2. Kill all feles-build related deno processes
-    //    (bash & spawns outside the process tree, so /T may miss children)
-    const findCmd = new Deno.Command("powershell", {
-      args: [
-        "-NoProfile",
-        "-Command",
-        `Get-WmiObject Win32_Process | Where-Object { $_.Name -eq 'deno.exe' -and $_.CommandLine -like '*feles-build*' } | ForEach-Object { $_.ProcessId }`,
-      ],
-      stdout: "piped",
-      stderr: "null",
-    });
-    const findOut = await findCmd.output();
-    const pids = new TextDecoder()
-      .decode(findOut.stdout)
-      .trim()
-      .split(/\r?\n/)
-      .filter(Boolean);
-    for (const p of pids) {
-      await runSilent("taskkill", ["/PID", p, "/T", "/F"]);
-    }
-
-    // 3. Kill only dev floorp.exe (uses test profile, not the user's regular browser)
-    const findBrowser = new Deno.Command("powershell", {
-      args: [
-        "-NoProfile",
-        "-Command",
-        `Get-WmiObject Win32_Process | Where-Object { $_.Name -eq 'floorp.exe' -and $_.CommandLine -like '*_dist*profile*test*' } | ForEach-Object { $_.ProcessId }`,
-      ],
-      stdout: "piped",
-      stderr: "null",
-    });
-    const browserOut = await findBrowser.output();
-    const browserPids = new TextDecoder()
-      .decode(browserOut.stdout)
-      .trim()
-      .split(/\r?\n/)
-      .filter(Boolean);
-    for (const p of browserPids) {
-      await runSilent("taskkill", ["/PID", p, "/F"]);
-    }
-    if (browserPids.length === 0 && pid) {
-      // Fallback: find floorp by parent PID (never kill by image name alone)
-      const findChild = new Deno.Command("powershell", {
-        args: [
-          "-NoProfile",
-          "-Command",
-          `Get-WmiObject Win32_Process | Where-Object { $_.Name -eq 'floorp.exe' -and $_.ParentProcessId -eq ${pid} } | ForEach-Object { $_.ProcessId }`,
-        ],
-        stdout: "piped",
-        stderr: "null",
-      });
-      const childOut = await findChild.output();
-      const childPids = new TextDecoder()
-        .decode(childOut.stdout)
-        .trim()
-        .split(/\r?\n/)
-        .filter(Boolean);
-      for (const p of childPids) {
-        await runSilent("taskkill", ["/PID", p, "/F"]);
-      }
-    }
-
-    // 4. Wait for cleanup
-    await new Promise((r) => setTimeout(r, 1000));
-  } else {
-    if (pid) {
-      // Collect all descendant PIDs via BFS (pgrep -P only finds direct children)
-      const allDescendants: string[] = [];
-      const queue = [pid];
-      while (queue.length > 0) {
-        const current = queue.shift()!;
-        const pgrep = new Deno.Command("pgrep", {
-          args: ["-P", current],
-          stdout: "piped",
-          stderr: "null",
-        });
-        const pgrepOut = await pgrep.output();
-        const children = new TextDecoder()
-          .decode(pgrepOut.stdout)
-          .trim()
-          .split(/\n/)
-          .filter(Boolean);
-        for (const child of children) {
-          if (!allDescendants.includes(child)) {
-            allDescendants.push(child);
-            queue.push(child);
-          }
-        }
-      }
-
-      // SIGTERM: descendants first (deepest first), then parent
-      for (const p of [...allDescendants.reverse(), pid]) {
-        await runSilent("kill", ["-TERM", p]);
-      }
-      await new Promise((r) => setTimeout(r, 1500));
-
-      // SIGKILL: anything still alive
-      for (const p of [...allDescendants, pid]) {
-        await runSilent("kill", ["-9", p]);
-      }
-    }
-
-    // Kill floorp browser processes using the test profile
-    const findFloorp = new Deno.Command("pgrep", {
-      args: ["-f", "_dist/profile/test"],
-      stdout: "piped",
-      stderr: "null",
-    });
-    const floorpOut = await findFloorp.output();
-    const floorpPids = new TextDecoder()
-      .decode(floorpOut.stdout)
-      .trim()
-      .split(/\n/)
-      .filter(Boolean);
-    for (const p of floorpPids) {
-      await runSilent("kill", ["-9", p]);
-    }
-
-    // Fallback: kill any orphaned deno processes running feles-build or vite dev servers
-    const findOrphans = new Deno.Command("pgrep", {
-      args: ["-f", "feles-build"],
-      stdout: "piped",
-      stderr: "null",
-    });
-    const orphanOut = await findOrphans.output();
-    const orphanPids = new TextDecoder()
-      .decode(orphanOut.stdout)
-      .trim()
-      .split(/\n/)
-      .filter(Boolean);
-    for (const p of orphanPids) {
-      await runSilent("kill", ["-9", p]);
-    }
+  console.log(
+    all
+      ? "Stopping dev processes across ALL checkouts..."
+      : "Stopping dev processes for this checkout...",
+  );
+  const processes = await listDevProcesses();
+  // Never stop this command or the shell/task invoking it, including with --all.
+  const excludePids: number[] = [];
+  let ancestor: number | undefined = Deno.pid;
+  while (ancestor && !excludePids.includes(ancestor)) {
+    excludePids.push(ancestor);
+    ancestor = processes.find((process) => process.pid === ancestor)?.ppid;
+  }
+  const pids = selectDevProcesses(processes, {
+    platform: PLATFORM,
+    projectRoot: PROJECT_ROOT,
+    profilePath: PATHS.profile_test,
+    serverPid,
+    recordedProcesses: readDevProcesses(),
+    all,
+    excludePids,
+  });
+  const byPid = new Map(processes.map((process) => [process.pid, process]));
+  const targets = pids.flatMap((pid) => {
+    const process = byPid.get(pid);
+    return process ? [process] : [];
+  });
+  await terminateDevProcesses(targets);
+  const remaining = (await listDevProcesses()).filter((process) =>
+    targets.some((target) => matchesDevIdentity(process, target))
+  );
+  if (remaining.length > 0) {
+    throw new Error(
+      `Failed to stop PIDs: ${
+        remaining.map((process) => process.pid).join(", ")
+      }. State files retained; retry stop.`,
+    );
   }
 
-  // Clean up state files
-  for (const f of [
-    PID_FILE,
-    path.join(PROJECT_ROOT, "_dist", "marionette-port.txt"),
-  ]) {
+  for (
+    const file of [
+      PID_FILE,
+      DEV_PROCESSES_FILE,
+      path.join(PROJECT_ROOT, "_dist", "marionette-port.txt"),
+    ]
+  ) {
     try {
-      Deno.removeSync(f);
-    } catch {
-      /* ignore */
+      Deno.removeSync(file);
+    } catch (error) {
+      if (!(error instanceof Deno.errors.NotFound)) throw error;
     }
   }
-
-  console.log("Stopped.");
-}
-
-async function runSilent(cmd: string, args: string[]): Promise<void> {
-  try {
-    await new Deno.Command(cmd, {
-      args,
-      stdout: "null",
-      stderr: "null",
-    }).output();
-  } catch {
-    /* ignore */
-  }
+  console.log(`Stopped (${targets.length} processes).`);
 }
 
 async function cmdRebuild() {
@@ -654,8 +560,8 @@ async function cmdTitle() {
 }
 
 async function cmdScreenshot() {
-  const outputPath =
-    args.output ?? path.join(PROJECT_ROOT, "_dist", "screenshot.png");
+  const outputPath = args.output ??
+    path.join(PROJECT_ROOT, "_dist", "screenshot.png");
 
   await withBrowser(async (client) => {
     await client.setContext(context);
@@ -754,7 +660,7 @@ async function cmdDom() {
 
 main()
   .then(() => Deno.exit(0))
-  .catch((err) => {
-    console.error(`Error: ${err.message}`);
+  .catch((error: unknown) => {
+    console.error("[dev-tool]", error instanceof Error ? error.message : error);
     Deno.exit(1);
   });
