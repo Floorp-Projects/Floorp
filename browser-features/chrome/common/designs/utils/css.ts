@@ -15,7 +15,7 @@ import protonfixUserJs from "@nora/skin/lepton/userjs/protonfix.js?raw";
 import leptonChromeStylesRaw from "@nora/skin/lepton/css/leptonChrome.css?raw";
 import leptonContentStylesRaw from "@nora/skin/lepton/css/leptonContent.css?raw";
 import fluerialStylesRaw from "@nora/skin/fluerial/css/fluerial.css?raw";
-import { launchDevPorts } from "../../../modules/common/dev-port-offset.ts";
+import { launchDevPorts } from "../../../../modules/common/dev-port-offset.ts";
 
 /** Launch-local dev port resolver (FDH Gate 2 task 2-B). */
 const launchDevPort = launchDevPorts();
