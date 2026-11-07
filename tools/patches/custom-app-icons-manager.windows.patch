@@ -2,13 +2,7 @@ diff --git a/moz-src/browser/components/shell/CustomIconManager.sys.mjs b/moz-sr
 index 9a89d2b669a..f38cdc13cf9 100644
 --- a/moz-src/browser/components/shell/CustomIconManager.sys.mjs
 +++ b/moz-src/browser/components/shell/CustomIconManager.sys.mjs
-@@ -8,93 +8,55 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
- const PREF_ICON_ID = "browser.shell.customIcon.id";
- const PREF_ENABLED = "browser.shell.customIcon.enabled";
- // True once we have ever created the shortcut.
- const PREF_PER_USER_START_MENU_SHORTCUT_CREATED =
-   "browser.shell.customIcon.perUserStartMenuShortcutCreated";
-
+@@ -14,87 +14,49 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
  /**
 - * Inlined catalog of selectable icons. Each entry has:
 + * Floorp's selectable browser icons.
@@ -197,7 +191,7 @@ index 9a89d2b669a..f38cdc13cf9 100644
   *
   * @returns {string}
   */
-@@ -171,19 +141,16 @@ function browserExePath() {
+@@ -171,17 +141,14 @@ function browserExePath() {
  }
 
  /**
@@ -218,8 +212,6 @@ index 9a89d2b669a..f38cdc13cf9 100644
 -async function applyIconToWindowsShortcuts(iconPath, iconResourceId) {
 +async function applyIconToWindowsShortcuts(iconPath) {
    let aumid = lazy.WinTaskbar.defaultGroupId;
-   let shortcuts = [];
-   try {
 @@ -210,7 +177,7 @@ async function applyIconToWindowsShortcuts(iconPath, iconResourceId) {
      await lazy.ShellService.setShortcutsIcon(
        shortcuts,

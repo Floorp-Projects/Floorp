@@ -53,6 +53,9 @@ export class StatusBarManager {
       setShow: this.setShowStatusBar,
     };
     onCleanup(() => {
+      // CustomizableUI releases this window's toolbar itself on native close.
+      // The area and placements belong to the process and surviving windows.
+      if (window.closed) return;
       globalThis.CustomizableUI.unregisterArea("nora-statusbar", true);
     });
   }
@@ -152,6 +155,7 @@ export class StatusBarManager {
           statusText?.removeAttribute("hidden");
         }
       });
+      onCleanup(() => observer.disconnect());
       if (this.showStatusBar()) {
         if (statusText) {
           statusText.appendChild(statuspanelLabel);

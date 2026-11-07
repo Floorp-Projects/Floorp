@@ -2,6 +2,9 @@
 
 import * as path from "@std/path";
 import { Inflate } from "fflate";
+import { Logger } from "./utils.ts";
+
+const logger = new Logger("runtime-archive");
 
 const MAX_ARCHIVE_ENTRIES = 250_000;
 const MAX_ZIP_INPUT_BYTES = 512 * 1024 * 1024;
@@ -972,11 +975,25 @@ export async function findSingleTopLevelAppDirectory(
     }
     candidates.push(entry.name);
   }
-  if (candidates.length !== 1 || candidates[0] !== expectedAppName) {
+  if (candidates.length !== 1) {
     throw new Error(
       `Expected exactly one top-level ${expectedAppName} directory in DMG; found ${
         JSON.stringify(candidates)
       }.`,
+    );
+  }
+  if (!candidates[0].startsWith("Floorp")) {
+    throw new Error(
+      `Expected a Floorp-branded app directory in DMG; found ${
+        JSON.stringify(candidates[0])
+      }.`,
+    );
+  }
+  if (candidates[0] !== expectedAppName) {
+    logger.warn(
+      `App directory name differs from expected: found "${
+        candidates[0]
+      }", expected "${expectedAppName}". Accepting it.`,
     );
   }
   return path.join(mountRoot, candidates[0]);

@@ -102,7 +102,7 @@ const _classNamesByHotCtx = new Map<ViteHotContext, Set<string>>();
 
 export abstract class NoraComponentBase {
   logger: ConsoleInstance;
-  constructor() {
+  constructor(lifecycleTarget?: EventTarget | null) {
     const name = this.constructor.name;
 
     // Register this instance so the HMR dispose handler can find it later.
@@ -121,18 +121,28 @@ export abstract class NoraComponentBase {
     });
     this.logger = _console;
 
-    // Run init with solid-js HMR support
-    createRootHMR(() => {
-      this.init();
-      onCleanup(() => {
-        nora_component_base_console.debug(`onCleanup ${name}`);
-        const instances = _noraInstancesByName.get(name);
-        instances?.delete(this);
-        if (instances?.size === 0) {
-          _noraInstancesByName.delete(name);
-        }
-      });
-    }, hot);
+    const unregisterInstance = () => {
+      nora_component_base_console.debug(`onCleanup ${name}`);
+      const instances = _noraInstancesByName.get(name);
+      instances?.delete(this);
+      if (instances?.size === 0) {
+        _noraInstancesByName.delete(name);
+      }
+    };
+
+    try {
+      createRootHMR(
+        () => {
+          onCleanup(unregisterInstance);
+          this.init();
+        },
+        hot,
+        lifecycleTarget,
+      );
+    } catch (error) {
+      unregisterInstance();
+      throw error;
+    }
   }
   abstract init(): void;
 }

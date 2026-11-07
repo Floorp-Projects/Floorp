@@ -574,15 +574,39 @@ export async function runAdvancedTests() {
   tests.push({
     name: "Account sync and profile manager links call browser actions",
     fn: async () => {
-      await route("features/accounts", "main a");
-      for (
-        const [text, target] of [[
-          "Manage Firefox Feature Sync",
-          "about:preferences#sync",
-        ], ["Open Profile Manager", "about:profiles"]]
-      ) {
-        const link = [...document.querySelectorAll<HTMLAnchorElement>("main a")]
+      const actions = [[
+        "Manage Firefox Feature Sync",
+        "about:preferences#sync",
+      ], ["Open Profile Manager", "about:profiles"]] as const;
+      const folderText = "Open Profile Save Location";
+      const findLink = (text: string) =>
+        [...document.querySelectorAll<HTMLAnchorElement>("main a")]
           .find((link) => link.textContent?.trim() === text);
+      try {
+        await route(
+          "features/accounts",
+          'main a[href="https://accounts.firefox.com/signin"]',
+        );
+        await until(
+          () =>
+            actions.every(([text]) => findLink(text)) && findLink(folderText),
+          "Account action links did not render",
+        );
+      } catch (error) {
+        throw new Error(`${String(error)}; account route: ${
+          JSON.stringify({
+            pathname: location.pathname,
+            hash: location.hash,
+            lang: document.documentElement.lang,
+            links: [...document.querySelectorAll("main a")].map((link) =>
+              link.textContent?.trim()
+            ),
+            main: document.querySelector("main")?.outerHTML.slice(0, 4000),
+          })
+        }`);
+      }
+      for (const [text, target] of actions) {
+        const link = findLink(text);
         assert(link, `Missing ${text}`);
         link.click();
         await pause();
@@ -593,10 +617,7 @@ export async function runAdvancedTests() {
           `${target} not opened`,
         );
       }
-      const folder = [...document.querySelectorAll<HTMLAnchorElement>("main a")]
-        .find((link) =>
-          link.textContent?.trim() === "Open Profile Save Location"
-        );
+      const folder = findLink(folderText);
       assert(folder, "Profile folder link missing");
       folder.click();
       await pause();

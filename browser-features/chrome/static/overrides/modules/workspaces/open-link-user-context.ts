@@ -15,6 +15,27 @@ export type WorkspaceOpenLinkUserContextResolution = {
   shouldApplyWorkspaceContainer: boolean;
 };
 
+export function workspaceDefaultIsPending(
+  enabled: boolean,
+  privateWindow: boolean,
+  canOpen: boolean | undefined,
+): boolean {
+  return enabled && !privateWindow && canOpen !== true;
+}
+
+export function shouldBlockWorkspaceOpenLink(
+  input: OpenLinkUserContextInput | undefined,
+  where: string,
+  defaultPending: boolean,
+): boolean {
+  if (
+    !defaultPending || where === "current" || input?.userContextId !== undefined
+  ) return false;
+  const target = input?.targetBrowser;
+  return !(typeof target === "object" && target !== null &&
+    typeof (target as { userContextId?: unknown }).userContextId === "number");
+}
+
 export function resolveWorkspaceOpenLinkUserContext(
   input: OpenLinkUserContextInput | undefined,
   where: string,
@@ -50,7 +71,7 @@ export function resolveWorkspaceOpenLinkUserContext(
       ? (potentialTargetBrowser as { userContextId: number }).userContextId
       : undefined;
 
-  const hasUserContextId = "userContextId" in baseInput;
+  const hasUserContextId = baseInput.userContextId !== undefined;
   const shouldApplyWorkspaceContainer = workspaceUserContextId > 0 &&
     !hasUserContextId &&
     targetBrowserUserContextId === undefined;

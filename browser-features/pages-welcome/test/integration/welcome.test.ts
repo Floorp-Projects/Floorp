@@ -30,6 +30,22 @@ async function step(path: string, selector: string) {
   );
   await pause();
 }
+async function finishStep() {
+  await step("/finish", "#welcome-content h2");
+  // Support also has an h2. Wait for the lazy Finish route's own actions,
+  // rather than accepting the previous page during its asynchronous load.
+  await until(
+    () => {
+      const actions = [...document.querySelectorAll<HTMLButtonElement>(
+        "#welcome-content button",
+      )];
+      return ["Set as Default Browser", "Start using Floorp"].every((label) =>
+        actions.some((action) => action.textContent?.trim() === label)
+      );
+    },
+    "Welcome finish actions did not render",
+  );
+}
 export async function runPageTests() {
   await until(
     () => document.querySelector("nav select"),
@@ -259,7 +275,7 @@ export async function runPageTests() {
   tests.push({
     name: "Welcome default browser reports failure and success",
     fn: async () => {
-      await step("/finish", "#welcome-content h2");
+      await finishStep();
       state.fail = "default";
       try {
         await button("Set as Default Browser");
@@ -281,6 +297,7 @@ export async function runPageTests() {
     name:
       "Welcome completion failure keeps page open; retry confirms preference",
     fn: async () => {
+      await finishStep();
       faults.write = MODE;
       try {
         await button("Start using Floorp");

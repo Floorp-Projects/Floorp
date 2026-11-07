@@ -1,13 +1,17 @@
 import { rpc } from "./rpc/rpc.ts";
 import type { NoteSnapshot } from "./merge.ts";
 import type { Note } from "../types/note.ts";
+import type {
+  NotesPreferenceSnapshot,
+  NotesSyncContext,
+} from "../../../modules/common/notes-storage-types.ts";
 
 export {
   canonicalData,
   mergeNotesThreeWay,
-  precedes,
   type MergeResult,
   type NoteSnapshot,
+  precedes,
 } from "./merge.ts";
 
 export const NOTES_PREF_NAME = "floorp.browser.note.memos";
@@ -31,9 +35,14 @@ function getDefaultNotes(t: (key: string) => string): NotesData {
   };
 }
 
-export async function getNotes(t: (key: string) => string): Promise<NotesData> {
+export async function getNotes(
+  t: (key: string) => string,
+  value?: string | null,
+): Promise<NotesData> {
   try {
-    const notesStr = await rpc.getStringPref(NOTES_PREF_NAME);
+    const notesStr = value === undefined
+      ? await rpc.getStringPref(NOTES_PREF_NAME)
+      : value;
     if (!notesStr) {
       return getDefaultNotes(t);
     }
@@ -59,9 +68,13 @@ export async function getNotes(t: (key: string) => string): Promise<NotesData> {
   }
 }
 
-export async function saveNotes(data: NotesData): Promise<void> {
+export async function saveNotes(
+  data: NotesData,
+  context?: NotesSyncContext,
+  baseValue?: string | null,
+) {
   try {
-    await rpc.setStringPref(NOTES_PREF_NAME, JSON.stringify(data));
+    return await rpc.writeNotesPref(JSON.stringify(data), context, baseValue);
   } catch (e) {
     console.error("Failed to save note data:", e);
     throw e;
@@ -71,8 +84,6 @@ export async function saveNotes(data: NotesData): Promise<void> {
 // ──────────────────────────────────────────────────────────
 // Three-Way Merge for Sync
 // ──────────────────────────────────────────────────────────
-
-const SYNC_STATE_PREF = "floorp.browser.note.syncState";
 
 /** Persistent sync state used as the "base" for three-way merge. */
 export interface SyncState {
@@ -102,10 +113,13 @@ export function syncStateFromNotes(notes: Note[]): SyncState {
 }
 
 /** Loads the last sync state from preferences. */
-export async function loadSyncState(): Promise<SyncState> {
+export async function loadSyncState(
+  snapshot: NotesPreferenceSnapshot,
+): Promise<{ state: SyncState; context: NotesSyncContext }> {
+  const read = await rpc.readNotesSyncState(snapshot);
   try {
-    const raw = await rpc.getStringPref(SYNC_STATE_PREF);
-    if (!raw) return emptySyncState();
+    const raw = read.value;
+    if (!raw) return { state: emptySyncState(), context: read.context };
     const parsed = JSON.parse(raw) as unknown;
     // Validate shape before trusting it
     if (
@@ -113,27 +127,15 @@ export async function loadSyncState(): Promise<SyncState> {
       "lastSyncedSnapshots" in parsed && "lastSyncTime" in parsed &&
       typeof parsed.lastSyncTime === "number"
     ) {
-      return parsed as SyncState;
+      return { state: parsed as SyncState, context: read.context };
     }
     console.warn(
       "[Floorp Notes] Sync state pref has unexpected shape, resetting to empty.",
     );
-    return emptySyncState();
+    return { state: emptySyncState(), context: read.context };
   } catch (e) {
     console.warn("[Floorp Notes] Failed to parse sync state, resetting:", e);
-    return emptySyncState();
-  }
-}
-
-/** Persists the sync state after a successful sync. */
-export async function saveSyncState(state: SyncState): Promise<void> {
-  try {
-    await rpc.setStringPref(SYNC_STATE_PREF, JSON.stringify(state));
-    console.debug(
-      `[Floorp Notes] Saved sync state with ${Object.keys(state.lastSyncedSnapshots).length} snapshots`,
-    );
-  } catch (e) {
-    console.error("[Floorp Notes] Failed to save sync state:", e);
+    return { state: emptySyncState(), context: read.context };
   }
 }
 

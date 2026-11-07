@@ -9,11 +9,13 @@ import type {
   PrefSetParams,
 } from "../common/defines.ts";
 import type { ContextMenuCatalogSnapshot } from "#features-chrome/common/context-menu/types.ts";
+import type { NotesStorageFunctions } from "../common/notes-storage-types.ts";
 
 type SettingsPageParentFunctions =
   & NRSettingsParentFunctions
   & NRSettingsAtomicPreferenceFunctions
-  & NRContextMenuSettingsFunctions;
+  & NRContextMenuSettingsFunctions
+  & NotesStorageFunctions;
 
 export class NRSettingsChild extends JSWindowActorChild {
   private static readonly MAX_INSTALL_ATTEMPTS = 200;
@@ -119,6 +121,9 @@ export class NRSettingsChild extends JSWindowActorChild {
       SettingsPageParentFunctions
     >(
       {
+        getNotesSnapshot: () => this.sendQuery("getNotesSnapshot"),
+        readNotesSyncState: (snapshot) => this.sendQuery("readNotesSyncState", { snapshot }),
+        writeNotesPref: (value, context, baseValue) => this.sendQuery("writeNotesPref", { value, context, baseValue }),
         getContextMenuCatalog: (): Promise<ContextMenuCatalogSnapshot> => {
           return this.NRSGetContextMenuCatalog();
         },

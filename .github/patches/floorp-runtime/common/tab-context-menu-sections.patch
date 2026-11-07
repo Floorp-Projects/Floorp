@@ -1,0 +1,33 @@
+diff --git a/browser/components/tabbrowser/content/tab-context-menu.js b/browser/components/tabbrowser/content/tab-context-menu.js
+--- a/browser/components/tabbrowser/content/tab-context-menu.js
++++ b/browser/components/tabbrowser/content/tab-context-menu.js
+@@ -84,9 +84,12 @@
+           items: [
+             ["#context_bookmarkSelectedTabs", "#context_bookmarkTab"],
+             ["#context_addNote", "#context_editNote"],
++            { selector: "#context_openInExternalBrowser", optional: true },
++            { selector: "#context_MoveTabToOtherWorkspace", optional: true },
+             "#context_moveTabOptions",
+             { selector: ".share-tab-url-item", optional: true },
+             "#context_reopenInContainer",
++            { selector: "#context_toggleToPrivateContainer", optional: true },
+             "#context_selectAllTabs",
+             "#context_tabToolsSeparator",
+           ],
+@@ -213,6 +216,8 @@
+              * moveTabOptionsMenu layout below). The top-level group items stay
+              * listed here for coverage but are hidden by per-show logic.
+              */
++            { selector: "#context_openInExternalBrowser", optional: true },
++            { selector: "#context_MoveTabToOtherWorkspace", optional: true },
+             "#context_moveTabOptions",
+             [
+               "#context_moveTabToNewGroup",
+@@ -222,6 +227,7 @@
+               "#context_ungroupSplitView",
+             ],
+             "#context_reopenInContainer",
++            { selector: "#context_toggleToPrivateContainer", optional: true },
+             /*
+              * The AI submenu separator is unused in this layout (the AI feature is
+              * the flat "Summarize Page" item in remembering-items), so reuse it
