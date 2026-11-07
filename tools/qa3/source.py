@@ -574,7 +574,13 @@ def _win32_kernel():
         ),
         (
             "QueryInformationJobObject",
-            [ctypes.c_void_p, ctypes.c_int, ctypes.c_void_p, ctypes.c_uint32],
+            [
+                ctypes.c_void_p,
+                ctypes.c_int,
+                ctypes.c_void_p,
+                ctypes.c_uint32,
+                ctypes.POINTER(ctypes.c_uint32),
+            ],
             ctypes.c_int,
         ),
         (
