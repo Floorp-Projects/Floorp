@@ -40,6 +40,8 @@ export interface BrowserLaunchOptions {
   port?: number;
   marionette?: boolean;
   profilePath?: string;
+  /** Linux development QA can own the native process session independently. */
+  ownLinuxSession?: boolean;
   /** Explicit initial page, avoiding a profile's default about: page in dev. */
   initialUrl?: string;
 }
@@ -568,11 +570,17 @@ export async function run(
   if (marionette) {
     environment.MOZ_REMOTE_ALLOW_SYSTEM_ACCESS = "1";
   }
+  if (options.ownLinuxSession && Deno.build.os !== "linux") {
+    throw new Error("Independent native session is supported only on Linux");
+  }
+  const launchCmd = options.ownLinuxSession
+    ? ["setsid", "--wait", ...cmd]
+    : cmd;
 
   console.log("[launcher] Launching browser with command: " + cmd.join(" "));
 
-  await ProcessUtils.runCommandWithLogging(
-    cmd,
+  const nativeExitCode = await ProcessUtils.runCommandWithLogging(
+    launchCmd,
     (_stream: "stdout" | "stderr", line: string) => {
       const m = line.match(/Marionette\tINFO\tListening on port (\d+)/);
       if (m) {
@@ -587,6 +595,15 @@ export async function run(
     environment,
     options.recordProcess ? (child) => recordDevProcess(child.pid) : undefined,
   );
+
+  console.log(`[launcher@native-exit] ${
+    encodeURIComponent(JSON.stringify({
+      command: cmd,
+      launchCommand: launchCmd,
+      ownLinuxSession: options.ownLinuxSession ?? false,
+      exitCode: nativeExitCode,
+    }))
+  }`);
 
   try {
     Deno.removeSync(MARIONETTE_STATE_FILE);
