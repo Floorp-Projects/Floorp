@@ -28,6 +28,12 @@ run-name: >-
   ${{ inputs.validation_only && ' (validation only)' || '' }}
 
 jobs:
+  source-qa-shadow:
+    name: Source QA (shadow)
+    uses: ./.github/workflows/qa3-source-shadow.yml
+    permissions:
+      contents: read
+
   check-version:
     name: Check release version
     runs-on: ubuntu-latest
