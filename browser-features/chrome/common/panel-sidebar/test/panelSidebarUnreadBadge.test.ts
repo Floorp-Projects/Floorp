@@ -110,6 +110,16 @@ export async function runAllTests(): Promise<void> {
       },
     },
     {
+      name: "dismissing a restored count suppresses an identical live count",
+      fn: () => {
+        const state = createUnreadBadgeState();
+        state.clear("3");
+        assertEquals(state.update(undefined), "", "no live signal yet");
+        assertEquals(state.update("3"), "", "same count stays dismissed");
+        assertEquals(state.update("4"), "4", "new count displays");
+      },
+    },
+    {
       name: "recognizes Messenger counts capped by Facebook",
       fn: () => {
         const facebook = "https://www.facebook.com/messages/t/";
@@ -205,23 +215,31 @@ export async function runAllTests(): Promise<void> {
       },
     },
     {
-      name: "clears zero, missing, ambiguous and oversized title signals",
+      name: "distinguishes zero from missing, ambiguous and oversized titles",
       fn: () => {
         for (
           const title of [
             "",
             "WhatsApp",
-            "(0) WhatsApp",
             "(1) Shopping list",
             "(2) WhatsApp <img>",
             "(-3) WhatsApp",
             "(1.5) WhatsApp",
             "(1+) WhatsApp",
-            "(1) WhatsApp" + " ".repeat(130),
+            "(1)" + " ".repeat(130) + "WhatsApp",
           ]
         ) {
-          assertEquals(getUnreadBadge(whatsapp, whatsapp, title), "", title);
+          assertEquals(
+            readBadgeSignal(whatsapp, whatsapp, title),
+            undefined,
+            title,
+          );
         }
+        assertEquals(
+          readBadgeSignal(whatsapp, whatsapp, "(0) WhatsApp"),
+          "",
+          "explicit zero",
+        );
         assertEquals(
           getUnreadBadge(whatsapp, whatsapp, "(99) WhatsApp"),
           "99",

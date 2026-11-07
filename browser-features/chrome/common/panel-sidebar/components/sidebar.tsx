@@ -103,6 +103,7 @@ export class PanelSidebarElem {
       requestAnimationFrame(() => resolve())
     );
     if (!isPanelSidebarEnabled()) return;
+    this.ctx.preloadBadgePanels();
     const panel = this.ctx.getPanelData(selectedPanelId() ?? "");
     if (!panel) return;
     this.ctx.setSidebarWidth(panel);

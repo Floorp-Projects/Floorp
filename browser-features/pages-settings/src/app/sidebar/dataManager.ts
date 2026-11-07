@@ -63,26 +63,47 @@ export async function getPanelSidebarSettings(): Promise<
   };
 }
 
-export async function getPanelsList(): Promise<Panels | null> {
-  const result = await rpc.getStringPref("floorp.panelSidebar.data");
-  if (!result) {
-    return null;
-  }
+const PANELS_PREF = "floorp.panelSidebar.data";
 
+function parsePanelsList(value: string | null): Panels | null {
+  if (!value) return null;
   try {
-    const data = JSON.parse(result);
-    return data.data || [];
-  } catch (e) {
-    console.error("Failed to parse panel sidebar data:", e);
+    return JSON.parse(value).data || [];
+  } catch (error) {
+    console.error("Failed to parse panel sidebar data:", error);
     return null;
   }
 }
 
+export async function getPanelsList(): Promise<Panels | null> {
+  return parsePanelsList(await rpc.getStringPref(PANELS_PREF));
+}
+
 export async function savePanelsList(panels: Panels): Promise<void> {
-  await rpc.setStringPref(
-    "floorp.panelSidebar.data",
-    JSON.stringify({ data: panels }),
-  );
+  // The Hub edits a snapshot and does not control the startup opt-in. Keep
+  // the latest choice from the Panel Sidebar menu on edits and reorders.
+  let previous = await rpc.getStringPref(PANELS_PREF);
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const currentById = new Map(
+      parsePanelsList(previous)?.map((panel) => [panel.id, panel]),
+    );
+    const data = panels.map((panel) => {
+      const current = currentById.get(panel.id);
+      return current
+        ? { ...panel, loadAtStartupForBadges: current.loadAtStartupForBadges }
+        : panel;
+    });
+    const value = JSON.stringify({ data });
+    const result = await rpc.compareAndSetStringPref(
+      PANELS_PREF,
+      previous,
+      value,
+    );
+    if (result.updated || result.currentValue === value) return;
+    if (result.typeMismatch) break;
+    previous = result.currentValue;
+  }
+  throw new Error("Panel Sidebar settings changed while saving");
 }
 
 export async function addPanel(panel: Panel): Promise<void> {

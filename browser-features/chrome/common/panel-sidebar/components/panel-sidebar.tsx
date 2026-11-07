@@ -26,6 +26,18 @@ import { removeSavedUnreadBadge } from "../utils/saved-unread-badge.ts";
 import { supportsUnreadBadge } from "../utils/unread-badge.ts";
 import { WebsitePanel } from "../website-panel-window-parent.ts";
 
+function shouldLoadPanelForBadges(panel: Panel | undefined): boolean {
+  if (
+    panel?.type !== "web" || !panel.loadAtStartupForBadges ||
+    !supportsUnreadBadge(panel.url ?? "")
+  ) return false;
+
+  const { PrivateBrowsingUtils } = ChromeUtils.importESModule(
+    "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
+  );
+  return !PrivateBrowsingUtils.isWindowPrivate(window);
+}
+
 export class CPanelSidebar {
   public readonly clearUnreadBadges = new Map<string, () => void>();
   private panelDisposers: Map<string, () => void> = new Map();
@@ -203,7 +215,7 @@ export class CPanelSidebar {
     setSelectedPanelId(null);
     if (
       panelId && panelSidebarConfig().autoUnload &&
-      !this.getPanelData(panelId)?.loadAtStartupForBadges
+      !shouldLoadPanelForBadges(this.getPanelData(panelId))
     ) {
       this.unloadPanel(panelId);
     }
@@ -232,18 +244,11 @@ export class CPanelSidebar {
   }
 
   public preloadBadgePanels(): void {
-    const { PrivateBrowsingUtils } = ChromeUtils.importESModule(
-      "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
-    );
-    if (!this.parentElement || PrivateBrowsingUtils.isWindowPrivate(window)) {
-      return;
-    }
+    if (!this.parentElement) return;
 
     for (const panel of panelSidebarData()) {
       if (
-        panel.type !== "web" || !panel.loadAtStartupForBadges ||
-        !panel.url || !supportsUnreadBadge(panel.url) ||
-        this.getBrowserElement(panel.id)
+        !shouldLoadPanelForBadges(panel) || this.getBrowserElement(panel.id)
       ) {
         continue;
       }

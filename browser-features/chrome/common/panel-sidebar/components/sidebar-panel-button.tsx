@@ -13,6 +13,7 @@ import {
   untrack,
 } from "solid-js";
 import i18next from "i18next";
+import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
 import { savedUnreadBadgeForPanel } from "../utils/saved-unread-badge.ts";
 import { getWebPanelChromeWindow } from "../utils/web-panel-browser.ts";
 import {
@@ -34,6 +35,13 @@ import { isExtensionExist } from "../extension-panels";
 import { getUserContextColor } from "../utils/userContextColor-getter";
 import { setContextPanel } from "./sidebar-contextMenu";
 
+// Keep dismissal with the loaded browser across button remounts (for example
+// when resizing replaces the panel object). A recreated browser starts fresh.
+const browserBadgeStates = new WeakMap<XULBrowserElement, {
+  identity: string;
+  state: ReturnType<typeof createUnreadBadgeState>;
+}>();
+
 export function PanelSidebarButton(props: {
   panel: Panel;
   ctx: CPanelSidebar;
@@ -44,6 +52,8 @@ export function PanelSidebarButton(props: {
     async () => await getFaviconURLForPanel(props.panel),
   );
 
+  const [locale, setLocale] = createSignal(i18next.language);
+  addI18nObserver(setLocale);
   const [unreadBadge, setUnreadBadge] = createSignal("");
   const [restored, setRestored] = createSignal(false);
   const [liveFavicon, setLiveFavicon] = createSignal<string>();
@@ -57,7 +67,8 @@ export function PanelSidebarButton(props: {
     setLiveFavicon(undefined);
     if (type !== "web" || !url || !supportsUnreadBadge(url)) return;
 
-    const badgeState = createUnreadBadgeState();
+    let badgeState = createUnreadBadgeState();
+    const badgeIdentity = JSON.stringify([id, url, userContextId ?? 0]);
     const saved = savedUnreadBadgeForPanel(props.panel);
     let savedCount = saved?.count ?? "";
     let awaitingLiveCount = !!savedCount;
@@ -68,7 +79,7 @@ export function PanelSidebarButton(props: {
       savedCount = count;
     };
     gPanelSidebar.clearUnreadBadges.set(id, () => {
-      badgeState.clear();
+      badgeState.clear(awaitingLiveCount ? savedCount : undefined);
       awaitingLiveCount = false;
       saveCount("");
       setRestored(false);
@@ -90,6 +101,16 @@ export function PanelSidebarButton(props: {
           onPageTitleChanged,
         );
         observedBrowser = browser;
+        const existing = browser && browserBadgeStates.get(browser);
+        badgeState = existing?.identity === badgeIdentity
+          ? existing.state
+          : createUnreadBadgeState();
+        if (browser && existing?.identity !== badgeIdentity) {
+          browserBadgeStates.set(browser, {
+            identity: badgeIdentity,
+            state: badgeState,
+          });
+        }
         browser?.addEventListener("pagetitlechanged", onPageTitleChanged);
       }
       const page = browser?.browsingContext?.currentWindowGlobal;
@@ -226,6 +247,7 @@ export function PanelSidebarButton(props: {
             {
               panel: panelLabel(),
               count: unreadBadge(),
+              lng: locale(),
             },
           )
           : panelLabel()}

@@ -113,8 +113,9 @@ export function createUnreadBadgeState() {
       }
       return lastCount === dismissedCount ? "" : lastCount;
     },
-    clear(): void {
-      dismissedCount = lastCount;
+    clear(count = lastCount): void {
+      lastCount = count;
+      dismissedCount = count;
     },
   };
 }
