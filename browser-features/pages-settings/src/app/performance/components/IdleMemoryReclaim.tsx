@@ -9,6 +9,7 @@ import {
   forwardRef,
   useCallback,
   useEffect,
+  useRef,
   useState,
 } from "react";
 import { useTranslation } from "react-i18next";
@@ -60,12 +61,15 @@ function NumberField({
   onCommit,
 }: NumberFieldProps) {
   const [text, setText] = useState(String(value));
+  const [compositionValue, setCompositionValue] = useState<string | null>(null);
+  const composing = useRef(false);
 
   useEffect(() => {
     setText(String(value));
   }, [value]);
 
   const commit = (rawValue: string) => {
+    if (composing.current) return;
     const parsed = Number(rawValue);
     if (!Number.isFinite(parsed)) {
       setText(String(value));
@@ -87,16 +91,29 @@ function NumberField({
       <NumberInput.Root
         ids={{ input: id }}
         min={min}
-        value={text}
+        // Ark also formats and writes the input when its controlled value changes.
+        // Keep that value stable while the IME owns the native composition range.
+        value={compositionValue ?? text}
         disabled={disabled}
         colorPalette="purple"
-        onValueChange={({ value }) => setText(value)}
+        onValueChange={({ value }) => {
+          if (!composing.current) setText(value);
+        }}
         onValueCommit={({ value }) => commit(value)}
       >
         <NumberInput.Input asChild>
           <ControlledNumberInput
             value={text}
             onChange={(event) => setText(event.currentTarget.value)}
+            onCompositionStart={(event) => {
+              composing.current = true;
+              setCompositionValue(event.currentTarget.value);
+            }}
+            onCompositionEnd={(event) => {
+              composing.current = false;
+              setText(event.currentTarget.value);
+              setCompositionValue(null);
+            }}
           />
         </NumberInput.Input>
         <NumberInput.Control />
