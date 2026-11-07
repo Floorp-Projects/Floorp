@@ -15,6 +15,7 @@ import protonfixUserJs from "@nora/skin/lepton/userjs/protonfix.js?raw";
 import leptonChromeStylesRaw from "@nora/skin/lepton/css/leptonChrome.css?raw";
 import leptonContentStylesRaw from "@nora/skin/lepton/css/leptonContent.css?raw";
 import fluerialStylesRaw from "@nora/skin/fluerial/css/fluerial.css?raw";
+import { devHttpOrigin } from "#libs/shared/dev-ports/defines.ts";
 import {
   FLUERIAL_TAB_CORNER_CSS,
   TAB_COLOR_LIKE_TOOLBAR_CSS,
@@ -178,7 +179,7 @@ export function getCSSFromConfig(
             // once the built-in-theme signals go unreliable on 152.
             GECKO_152_COLOR_FIX_CSS,
           ],
-          iconBasePath: "http://localhost:5174/fluerial/icons",
+          iconBasePath: devHttpOrigin("designs", "/fluerial/icons"),
           userjs: null,
           useTabColorAsToolbarColor: true,
         };
@@ -205,7 +206,7 @@ export function getCSSFromConfig(
             LEPTON_COMPAT_CSS,
             navBarBackgroundColorCSS,
           ],
-          iconBasePath: "http://localhost:5174/lepton/icons",
+          iconBasePath: devHttpOrigin("designs", "/lepton/icons"),
           userjs: leptonUserJs,
         };
       }
@@ -228,7 +229,7 @@ export function getCSSFromConfig(
             navBarBackgroundColorCSS,
           ],
           stylesRaw: [leptonContentStylesRaw],
-          iconBasePath: "http://localhost:5174/lepton/icons",
+          iconBasePath: devHttpOrigin("designs", "/lepton/icons"),
           userjs: photonUserJs,
         };
       }
@@ -252,7 +253,7 @@ export function getCSSFromConfig(
             navBarBackgroundColorCSS,
           ],
           stylesRaw: [leptonContentStylesRaw],
-          iconBasePath: "http://localhost:5174/lepton/icons",
+          iconBasePath: devHttpOrigin("designs", "/lepton/icons"),
           userjs: protonfixUserJs,
         };
       }
