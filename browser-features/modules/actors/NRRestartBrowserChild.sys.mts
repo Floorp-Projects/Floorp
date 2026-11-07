@@ -1,13 +1,20 @@
+import {
+  devPortString,
+  isTrustedDevPort,
+} from "#libs/shared/dev-ports/defines.ts";
+
 export class NRRestartBrowserChild extends JSWindowActorChild {
   actorCreated() {
     console.debug("NRRestartBrowserChild created!");
     const window = this.contentWindow;
     if (
-      window?.location.port === "5183" ||
+      isTrustedDevPort(window?.location.port, ["settings"]) ||
       window?.location.href.startsWith("chrome://") ||
       window?.location.href.startsWith("about:")
     ) {
-      console.debug("NRRestartBrowser 5183 ! or Chrome Page!");
+      console.debug(
+        `NRRestartBrowser ${devPortString("settings")} ! or Chrome Page!`,
+      );
       Cu.exportFunction(this.NRRestartBrowser.bind(this), window, {
         defineAs: "NRRestartBrowser",
       });

@@ -3,16 +3,23 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import {
+  devPortString,
+  isTrustedDevPort,
+} from "#libs/shared/dev-ports/defines.ts";
+
 export class NRPwaManagerChild extends JSWindowActorChild {
   actorCreated() {
     console.debug("NRPwaManagerChild created!");
     const window = this.contentWindow;
     if (
-      window?.location.port === "5183" ||
+      isTrustedDevPort(window?.location.port, ["settings"]) ||
       window?.location.href.startsWith("chrome://") ||
       window?.location.href.startsWith("about:")
     ) {
-      console.debug("NRPwaManager 5183 ! or Chrome Page!");
+      console.debug(
+        `NRPwaManager ${devPortString("settings")} ! or Chrome Page!`,
+      );
       Cu.exportFunction(this.NRGetInstalledApps.bind(this), window, {
         defineAs: "NRGetInstalledApps",
       });

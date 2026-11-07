@@ -1,3 +1,4 @@
+import { moduleUrlServedFromDevPort } from "../../../../../libs/shared/dev-ports/defines.ts";
 import type { NotesPrefFunctions, NotesStorageModule } from "./types.ts";
 import type { NotesPreferenceSnapshot } from "../../../../modules/common/notes-storage-types.ts";
 import { createBirpc } from "birpc";
@@ -16,7 +17,10 @@ declare global {
   }
 }
 
-const isLocalhost5188 = import.meta.url?.includes("localhost:5188");
+const isLocalhost5188 = moduleUrlServedFromDevPort(
+  import.meta.url,
+  "notes",
+);
 const notesStorage = isLocalhost5188 ? null : (ChromeUtils.importESModule(
   "resource://noraneko/modules/notes/FloorpNotesStorage.sys.mjs",
 ) as NotesStorageModule).FloorpNotesStorage;

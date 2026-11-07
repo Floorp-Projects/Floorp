@@ -3,16 +3,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import {
+  devPortString,
+  isTrustedDevPort,
+} from "#libs/shared/dev-ports/defines.ts";
+
 export class NRStartPageChild extends JSWindowActorChild {
   actorCreated() {
     console.debug("NRStartPageChild created!");
     const window = this.contentWindow;
     if (
-      window?.location.port === "5186" ||
+      isTrustedDevPort(window?.location.port, ["newtab"]) ||
       window?.location.href.startsWith("chrome://") ||
       window?.location.href.startsWith("about:")
     ) {
-      console.debug("NRStartPage 5186 ! or Chrome Page!");
+      console.debug(`NRStartPage ${devPortString("newtab")} ! or Chrome Page!`);
       Cu.exportFunction(this.GetCurrentTopSites.bind(this), window, {
         defineAs: "NRGetCurrentTopSites",
       });

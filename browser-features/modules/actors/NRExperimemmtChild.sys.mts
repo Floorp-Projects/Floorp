@@ -1,5 +1,10 @@
 import { createBirpc } from "birpc";
 import type { NRExperimemmtParentFunctions } from "../common/defines.ts";
+import {
+  devPortString,
+  HUB_DEV_PAGES,
+  isTrustedDevPort,
+} from "#libs/shared/dev-ports/defines.ts";
 
 export class NRExperimemmtChild extends JSWindowActorChild {
   rpc: ReturnType<typeof createBirpc> | null = null;
@@ -12,14 +17,13 @@ export class NRExperimemmtChild extends JSWindowActorChild {
     console.debug("NRExperimemmtChild created!");
     const window = this.contentWindow;
     if (
-      window?.location.port === "5183" ||
-      window?.location.port === "5186" ||
-      window?.location.port === "5187" ||
-      window?.location.port === "5188" ||
+      isTrustedDevPort(window?.location.port, HUB_DEV_PAGES) ||
       window?.location.href.startsWith("chrome://") ||
       window?.location.href.startsWith("about:")
     ) {
-      console.debug("NRExperimemmtChild 5183 ! or Chrome Page!");
+      console.debug(
+        `NRExperimemmtChild ${devPortString("settings")} ! or Chrome Page!`,
+      );
       Cu.exportFunction(this.NRExperimemmtPing.bind(this), window, {
         defineAs: "NRExperimemmtPing",
       });

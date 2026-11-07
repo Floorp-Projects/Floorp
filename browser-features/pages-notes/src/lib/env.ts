@@ -9,4 +9,9 @@
  * only need to know the environment should not have to import the RPC
  * transport, whose module body opens a birpc channel in dev.
  */
-export const isDevMode = import.meta.url?.includes("localhost:5188") ?? false;
+export const isDevMode = moduleUrlServedFromDevPort(
+  import.meta.url,
+  "notes",
+) ?? false;
+
+import { moduleUrlServedFromDevPort } from "../../../../libs/shared/dev-ports/defines.ts";

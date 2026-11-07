@@ -3,17 +3,23 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import {
+  devPortString,
+  isTrustedDevPort,
+} from "#libs/shared/dev-ports/defines.ts";
+
 export class NRSearchEngineChild extends JSWindowActorChild {
   actorCreated() {
     console.debug("NRSearchEngineChild created!");
     const window = this.contentWindow;
     if (
-      window?.location.port === "5187" ||
-      window?.location.port === "5186" ||
+      isTrustedDevPort(window?.location.port, ["newtab", "welcome"]) ||
       window?.location.href.startsWith("chrome://") ||
       window?.location.href.startsWith("about:")
     ) {
-      console.debug("NRSearchEngine 5187 ! or Chrome Page!");
+      console.debug(
+        `NRSearchEngine ${devPortString("welcome")} ! or Chrome Page!`,
+      );
 
       Cu.exportFunction(this.getSearchEngines.bind(this), window, {
         defineAs: "NRGetSearchEngines",
