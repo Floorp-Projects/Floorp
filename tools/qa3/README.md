@@ -61,21 +61,37 @@ controller before required promotion.
 Child processes receive a small environment without credentials or runner option
 injection. Each group has a 180-second timeout and a 16-MiB limit for regular
 file writes (including cache entries and logs) applied before exec by prlimit,
-runs in an owned process group, and is reaped/terminated on exit. This is a
-Linux source host, not the future cross-platform GUI/Agent supervisor. An
-isolated Python supervisor owns the command's descendant tree as a Linux
-subreaper. It checks process birth identities and uses pidfds before signaling,
-so detached descendants and forks during termination are included in bounded
-TERM/KILL/reap cleanup. The calling process's subreaper state and unrelated
-children are untouched. A bounded private control pipe reports completion;
-missing results and incomplete cleanup fail the source run. This requires Linux
-pidfd support, available on the Ubuntu 24.04 source worker. Cleanup syscall
-errors are retained separately from the initial failure, and later
-TERM/KILL/reap phases continue. A recorded cleanup error or supervisor
-interruption prevents PASS, even if subsequent cleanup succeeds. Loss of the
-supervisor through SIGKILL or a kernel stall requires external worker/job
-teardown; an absent control result always fails the source run. Logical process
-ownership is not a replacement for an external resource/teardown boundary.
+runs in an owned process group, and is reaped/terminated on exit. The plan
+itself is still a Linux x86_64 source host (the target is validated as
+`linux-x86_64-host`), not the future cross-platform GUI/Agent supervisor. The
+owned-process supervisor is behind a platform abstraction. On Linux an isolated
+Python supervisor owns the command's descendant tree as a subreaper. It checks
+process birth identities and uses pidfds before signaling, so detached
+descendants and forks during termination are included in bounded TERM/KILL/reap
+cleanup. The calling process's subreaper state and unrelated children are
+untouched. A bounded private control pipe reports completion; missing results
+and incomplete cleanup fail the source run. This requires Linux pidfd support,
+available on the Ubuntu 24.04 source worker. Cleanup syscall errors are retained
+separately from the initial failure, and later TERM/KILL/reap phases continue. A
+recorded cleanup error or supervisor interruption prevents PASS, even if
+subsequent cleanup succeeds. Loss of the supervisor through SIGKILL or a kernel
+stall requires external worker/job teardown; an absent control result always
+fails the source run. Logical process ownership is not a replacement for an
+external resource/teardown boundary.
+
+On Windows the same three promises are implemented with a Job Object: the
+supervisor creates a job with `JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE`, joins it
+before spawning the command so descendants inherit membership without a race,
+and stops only processes that pass a job-membership check plus a process
+creation-time identity check. A survivor that cleanup cannot stop is recorded
+and fails the verdict rather than passing. The job handle stays open until the
+supervisor exits, so kill-on-close remains the final teardown net.
+`test_source_windows.py` holds the contract tests: an in-memory Job Object API
+runs the ownership/verdict logic on any host, and the real Win32 tests run in
+the `windows-supervisor` job on `windows-latest`. The prlimit write limit, the
+Linux pidfd dependency, `prlimit` and the source plan receipt remain Linux-only;
+the Windows port covers the Gate 2 task 2-E supervisor contract, not a Windows
+source host.
 
 ## Coverage and remaining gates
 
