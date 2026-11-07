@@ -4,7 +4,10 @@ import {
   assertEquals,
   runTests,
 } from "../../../chrome/test/utils/test_harness.ts";
-import { usesSettingsActor } from "../../../../libs/ui/settings-rpc-origin.ts";
+import {
+  isDevHttpPage,
+  usesSettingsActor,
+} from "../../../../libs/ui/settings-rpc-origin.ts";
 
 export async function runAllTests() {
   await runTests(
@@ -28,4 +31,25 @@ export async function runAllTests() {
         ),
     })),
   );
+  await runTests(
+    "settings-dev-http-page",
+    [
+      ["http://localhost:5183/", true],
+      ["http://localhost:5283/", true],
+      ["http://127.0.0.1:5283/", true],
+      ["about:hub#/features/design", false],
+      ["chrome://noraneko-settings/content/index.html", false],
+      ["https://localhost:5283/", false],
+      ["not a url", false],
+    ].map(([url, expected]) => ({
+      name: `Dev http page ${url}`,
+      fn: () =>
+        assertEquals(
+          isDevHttpPage(String(url)),
+          expected,
+          "Any localhost http document is a dev launch page",
+        ),
+    })),
+  );
+
 }

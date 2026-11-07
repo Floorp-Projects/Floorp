@@ -100,6 +100,18 @@ const args = parseArgs(Deno.args, {
   default: { context: "chrome" },
 });
 
+/** Read the literal `--port-offset` value from argv so a bare flag or a
+ * negative value is rejected before spawning (parseArgs collapses both to ""). */
+function rawPortOffsetArgument(argv: string[]): string | undefined {
+  const idx = argv.indexOf("--port-offset");
+  if (idx < 0) return undefined;
+  const value = argv[idx + 1];
+  if (value === undefined || value.startsWith("--")) {
+    throw new Error("--port-offset requires a value: <n|auto>");
+  }
+  return value;
+}
+
 const command = args._[0] as string | undefined;
 
 if (!command || args.help) {
@@ -210,8 +222,9 @@ async function cmdStart() {
   // Resolve the optional --port-offset before spawning so the log shows the
   // actual topology and the detached feles-build inherits a concrete number.
   let spawnCommandArgs = "";
-  if (args["port-offset"] !== undefined) {
-    const spec = parsePortOffsetSpec(args["port-offset"]);
+  const rawOffsetArg = rawPortOffsetArgument(Deno.args);
+  if (rawOffsetArg !== undefined) {
+    const spec = parsePortOffsetSpec(rawOffsetArg);
     const offset = spec === "auto" ? await resolveAutoDevPortOffset() : spec;
     console.log(`[dev-tool] Using ${describeLaunchPorts(offset)}`);
     spawnCommandArgs = ` --port-offset ${offset}`;

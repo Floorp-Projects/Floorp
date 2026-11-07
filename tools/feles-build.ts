@@ -33,7 +33,11 @@ async function argvPortOffset(argv: string[]): Promise<number> {
   if (idx < 0) {
     return 0;
   }
-  const spec = parsePortOffsetSpec(argv[idx + 1]);
+  const raw = argv[idx + 1];
+  if (raw === undefined || raw.startsWith("--")) {
+    throw new Error("--port-offset requires a value: <n|auto>");
+  }
+  const spec = parsePortOffsetSpec(raw);
   const offset = spec === "auto" ? await resolveAutoDevPortOffset() : spec;
   logger.info(`Dev/test port offset: ${describeLaunchPorts(offset)}`);
   return offset;

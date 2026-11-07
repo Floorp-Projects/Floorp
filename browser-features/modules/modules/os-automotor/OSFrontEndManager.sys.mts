@@ -24,7 +24,7 @@ const { setTimeout, setInterval, clearInterval } = ChromeUtils.importESModule(
 /** Workflow progress window URL of this launch (FDH Gate 2 task 2-B):
  * resolves the table name to the port the launch actually serves. */
 const PROGRESS_WINDOW_URL = () =>
-  launchDevPort().httpOrigin("workflowProgress", "/");
+  launchDevPort.httpOrigin("workflowProgress", "/");
 
 interface WorkflowProgressStep {
   id: string;
