@@ -2,7 +2,11 @@
 
 import { runTestBootstrapWithFailureReporting } from "./test_bootstrap_failure.ts";
 import { claimTestRunOwnership } from "./test_run_owner.ts";
-import { devHttpOrigin } from "#libs/shared/dev-ports/defines.ts";
+import { launchDevPorts } from "./dev_port_offset.ts";
+
+/** Launch-local dev port resolver (FDH Gate 2 task 2-B): the loader URL
+ * of this launch resolves to the port actually served. */
+const launchDevPort = launchDevPorts();
 
 const HTTP_LOADER_PREF = "nora.dev.allow_http_loader";
 
@@ -63,7 +67,7 @@ if (import.meta.env.MODE === "dev") {
     //! Do not write `core/index.ts` as `core`
     //! This causes HMR error
     const loaderModule = await importWithRetry(
-      devHttpOrigin("loader", "/loader/index.ts"),
+      launchDevPort.httpOrigin("loader", "/loader/index.ts"),
     );
     await loaderModule.default();
     setStartupMarker("nora.startup.loader", "loaded");
@@ -77,7 +81,7 @@ if (import.meta.env.MODE === "dev") {
     // the host control request, run tests, or overwrite the owner's diagnostics.
     assertHttpLoaderAllowed();
     const loaderModule = await importWithRetry(
-      devHttpOrigin("loader", "/loader/index.ts"),
+      launchDevPort.httpOrigin("loader", "/loader/index.ts"),
     );
     await loaderModule.default();
   } else {
@@ -96,13 +100,13 @@ if (import.meta.env.MODE === "dev") {
         assertHttpLoaderAllowed();
 
         const loaderModule = await importWithRetry(
-          devHttpOrigin("loader", "/loader/index.ts"),
+          launchDevPort.httpOrigin("loader", "/loader/index.ts"),
         );
         await loaderModule.default();
         setStartupMarker("nora.startup.loader", "loaded");
 
         const testModule = await importWithRetry(
-          devHttpOrigin("loader", "/loader/test/index.ts"),
+          launchDevPort.httpOrigin("loader", "/loader/test/index.ts"),
         );
         await testModule.default();
         setStartupMarker("nora.startup.test", "loaded");

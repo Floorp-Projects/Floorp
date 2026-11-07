@@ -10,7 +10,11 @@ import {
   releaseNotesAudience,
   shouldShowReleaseNotesChoice,
 } from "../common/release-notes.ts";
-import { devHttpOrigin } from "#libs/shared/dev-ports/defines.ts";
+import { launchDevPorts } from "../common/dev-port-offset.ts";
+
+/** Launch-local dev port resolver (FDH Gate 2 task 2-B): dev/test URLs of
+ * this launch resolve to the ports actually in use, not the base table. */
+const launchDevPort = launchDevPorts();
 
 // Floorp's mode-aware startup opens the versioned release notes. Firefox's
 // separate milestone-update page ignores that choice and can open a second tab.
@@ -353,7 +357,7 @@ async function setupNoranekoNewTab(): Promise<void> {
     )) === false
   ) {
     // Fallback for dev build about:newtab if file doesn't exist
-    AboutNewTab.newTabURL = devHttpOrigin("newtab", "/");
+    AboutNewTab.newTabURL = launchDevPort.httpOrigin("newtab", "/");
   }
 }
 
@@ -399,10 +403,10 @@ const getCustomAboutPages = async (): Promise<Record<string, string>> => {
 
   // Check and fallback for Dev Mode
   if (!(await isResourceAvailable(customAboutPages.hub))) {
-    customAboutPages.hub = devHttpOrigin("settings", "/");
+    customAboutPages.hub = launchDevPort.httpOrigin("settings", "/");
   }
   if (!(await isResourceAvailable(customAboutPages.welcome))) {
-    customAboutPages.welcome = devHttpOrigin("welcome", "/");
+    customAboutPages.welcome = launchDevPort.httpOrigin("welcome", "/");
   }
 
   if (await checkNewtabUserPreference()) {
@@ -410,7 +414,7 @@ const getCustomAboutPages = async (): Promise<Record<string, string>> => {
     customAboutPages["home"] = "chrome://noraneko-newtab/content/index.html";
     // Fallback for newtab in about pages map (though AboutNewTab handles the actual newtab url)
     if (!(await isResourceAvailable(customAboutPages["newtab"]))) {
-      const localhostNewTab = devHttpOrigin("newtab", "/");
+      const localhostNewTab = launchDevPort.httpOrigin("newtab", "/");
       customAboutPages["newtab"] = localhostNewTab;
       customAboutPages["home"] = localhostNewTab;
     }

@@ -3,22 +3,25 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import {
-  devPortString,
-  isTrustedDevPort,
-} from "#libs/shared/dev-ports/defines.ts";
+import { launchDevPorts } from "../common/dev-port-offset.ts";
+
+/** Launch-local dev port resolver (FDH Gate 2 task 2-B): resolves the
+ * table names to the ports this launch actually uses (offset-aware). */
+const launchDevPort = launchDevPorts();
 
 export class NRPwaManagerChild extends JSWindowActorChild {
   actorCreated() {
     console.debug("NRPwaManagerChild created!");
     const window = this.contentWindow;
     if (
-      isTrustedDevPort(window?.location.port, ["settings"]) ||
+      launchDevPort.isTrustedPort(window?.location.port, ["settings"]) ||
       window?.location.href.startsWith("chrome://") ||
       window?.location.href.startsWith("about:")
     ) {
       console.debug(
-        `NRPwaManager ${devPortString("settings")} ! or Chrome Page!`,
+        `NRPwaManager ${
+          launchDevPort.portString("settings")
+        } ! or Chrome Page!`,
       );
       Cu.exportFunction(this.NRGetInstalledApps.bind(this), window, {
         defineAs: "NRGetInstalledApps",

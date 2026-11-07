@@ -7,7 +7,7 @@ import type {
 } from "../../../../modules/common/defines.ts";
 import type { ContextMenuCatalogSnapshot } from "#features-chrome/common/context-menu/types.ts";
 import { createBirpc } from "birpc";
-import { devPortString } from "../../../../../libs/shared/dev-ports/defines.ts";
+import { launchDevPorts } from "../../../../modules/common/dev-port-offset.ts";
 import { usesSettingsActor } from "../../../../../libs/ui/settings-rpc-origin.ts";
 import type { AppLifecycleSettings } from "#libs/pwa/appLifecycleTypes.ts";
 
@@ -115,9 +115,10 @@ function waitForSettingsBridge(): Promise<Window> {
 }
 
 // about:hub is privileged even when its scripts are served by Vite.
-const isLocalhost5183 = usesSettingsActor(
+const settingsLaunchPorts = launchDevPorts();
+const isSettingsLocalhost = usesSettingsActor(
   globalThis.location.href,
-  devPortString("settings"),
+  settingsLaunchPorts.portString("settings"),
 );
 
 export function createSettingsBridgeTransport(
@@ -262,7 +263,7 @@ const directServicesFunctions: SettingsPageParentFunctions = {
     ),
 };
 
-export const rpc = isLocalhost5183
+export const rpc = isSettingsLocalhost
   ? createBirpc<SettingsPageParentFunctions, Record<string, never>>(
     {},
     {

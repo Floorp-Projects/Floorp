@@ -4,7 +4,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { modalSize } from "../data/data";
-import { devHttpOrigin } from "#libs/shared/dev-ports/defines.ts";
+import { launchDevPorts } from "../../../modules/common/dev-port-offset.ts";
+
+/** Launch-local dev port resolver (FDH Gate 2 task 2-B). */
+const launchDevPort = launchDevPorts();
 
 export function ModalBrowser() {
   return (
@@ -15,7 +18,7 @@ export function ModalBrowser() {
       maychangeremoteness="true"
       messagemanagergroup="browsers"
       src={import.meta.env.DEV
-        ? devHttpOrigin("modalChild", "/")
+        ? launchDevPort.httpOrigin("modalChild", "/")
         : "chrome://noraneko-modal-child/content/index.html"}
       flex="1"
       style={{

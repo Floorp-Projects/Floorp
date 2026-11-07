@@ -12,10 +12,32 @@ import * as Injector from "./src/injector.ts";
 import * as BrowserLauncher from "./src/browser_launcher.ts";
 import * as DevEnvManager from "./src/dev_env_manager.ts";
 import { DEV_SERVER } from "./src/defines.ts";
+import {
+  describeLaunchPorts,
+  parsePortOffsetSpec,
+  resolveAutoDevPortOffset,
+} from "./src/port_offset.ts";
 import { devHttpOrigin } from "#libs/shared/dev-ports/defines.ts";
 import { Logger } from "./src/utils.ts";
 
 const logger = new Logger("feles-build");
+
+/**
+ * Parse the optional `--port-offset <n|auto>` argument from feles-build argv
+ * (FDH Gate 2 task 2-B). `auto` probes the smallest free admissible offset.
+ * Without the flag the offset is 0 and every port/pref write stays
+ * byte-identical to the pre-offset behavior.
+ */
+async function argvPortOffset(argv: string[]): Promise<number> {
+  const idx = argv.indexOf("--port-offset");
+  if (idx < 0) {
+    return 0;
+  }
+  const spec = parsePortOffsetSpec(argv[idx + 1]);
+  const offset = spec === "auto" ? await resolveAutoDevPortOffset() : spec;
+  logger.info(`Dev/test port offset: ${describeLaunchPorts(offset)}`);
+  return offset;
+}
 
 type ReadyPipe = {
   on(event: "data", cb: (chunk: string) => void): void;
@@ -51,8 +73,13 @@ function isDevServerReady(chunk: string): boolean {
   return s === DEV_SERVER.ready_string || s.includes("nora-");
 }
 
-async function runDev(): Promise<void> {
+async function runDev(portOffset = 0): Promise<void> {
   logger.info("Starting development environment...");
+  if (portOffset !== 0) {
+    logger.info(
+      `Dev server ports shifted by +${portOffset} (see --port-offset).`,
+    );
+  }
 
   // Initial setup
   // Prefer the Debug FTP channel. Allow the locked Release runtime when the
@@ -73,8 +100,12 @@ async function runDev(): Promise<void> {
   await Injector.injectXhtmlFromTs({
     devPages: true,
     allowBrowserHttpLoader: true,
+    portOffset,
   });
-  DevEnvManager.setup({ allowBrowserHttpLoader: true });
+  // Writes the offset into the launch profile (only when > 0): the pref
+  // `nora.dev.port_offset` for the browser-side resolver and `marionette.port`
+  // so Marionette does not overlap between concurrent worktrees.
+  DevEnvManager.setup({ allowBrowserHttpLoader: true, portOffset });
 
   // Graceful shutdown
   Deno.addSignalListener("SIGINT", () => {
@@ -92,7 +123,7 @@ async function runDev(): Promise<void> {
       // servers down with it — otherwise they keep listening on their
       // ports and the next run dies with "port already in use".
       BrowserLauncher.run({
-        initialUrl: devHttpOrigin("settings", "/"),
+        initialUrl: devHttpOrigin("settings", "/", portOffset),
         recordProcess: true,
       }).then(() => {
         logger.info("Browser closed — shutting down dev servers.");
@@ -110,14 +141,17 @@ async function runDev(): Promise<void> {
   // Start dev server (it will write to the writer and end it)
   // DevServer.run expects a writable-like object.
   // deno-lint-ignore no-explicit-any
-  DevServer.run(pipe as any).catch((e: any) => {
+  DevServer.run(pipe as any, { portOffset }).catch((e: any) => {
     logger.error(`Dev server failed: ${e?.message ?? e}`);
     Deno.exit(1);
   });
 }
 
-async function runStage(options: { marionette?: boolean } = {}): Promise<void> {
+async function runStage(
+  options: { marionette?: boolean; portOffset?: number } = {},
+): Promise<void> {
   const marionette = options.marionette ?? false;
+  const portOffset = options.portOffset ?? 0;
   logger.info(
     "Starting staged production build (production assets) with browser in dev mode...",
   );
@@ -143,8 +177,9 @@ async function runStage(options: { marionette?: boolean } = {}): Promise<void> {
   await Injector.injectXhtmlFromTs({
     devPages: true,
     allowBrowserHttpLoader: false,
+    portOffset,
   });
-  DevEnvManager.setup({ allowBrowserHttpLoader: false });
+  DevEnvManager.setup({ allowBrowserHttpLoader: false, portOffset });
 
   // Graceful shutdown
   Deno.addSignalListener("SIGINT", () => {
@@ -178,13 +213,16 @@ async function runStage(options: { marionette?: boolean } = {}): Promise<void> {
   // Start dev server (it will write to the writer and end it)
   // DevServer.run expects a writable-like object.
   // deno-lint-ignore no-explicit-any
-  DevServer.run(pipe as any).catch((e: any) => {
+  DevServer.run(pipe as any, { portOffset }).catch((e: any) => {
     logger.error(`Dev server failed: ${e?.message ?? e}`);
     Deno.exit(1);
   });
 }
 
-async function runTest(ownNativeSession = false): Promise<void> {
+async function runTest(
+  ownNativeSession = false,
+  portOffset = 0,
+): Promise<void> {
   logger.info("Starting test environment...");
 
   // Initial setup
@@ -200,8 +238,9 @@ async function runTest(ownNativeSession = false): Promise<void> {
   await Injector.injectXhtmlFromTs({
     devPages: true,
     allowBrowserHttpLoader: true,
+    portOffset,
   });
-  DevEnvManager.setup({ allowBrowserHttpLoader: true });
+  DevEnvManager.setup({ allowBrowserHttpLoader: true, portOffset });
 
   // Graceful shutdown
   Deno.addSignalListener("SIGINT", () => {
@@ -229,7 +268,7 @@ async function runTest(ownNativeSession = false): Promise<void> {
   });
 
   // deno-lint-ignore no-explicit-any
-  DevServer.run(pipe as any).catch((e: any) => {
+  DevServer.run(pipe as any, { portOffset }).catch((e: any) => {
     logger.error(`Dev server failed: ${e?.message ?? e}`);
     Deno.exit(1);
   });
@@ -276,6 +315,13 @@ function printHelp(): void {
   console.log("  build      Run the production build workflow (--phase)");
   console.log("  misc       Misc commands (e.g. 'misc patch')");
   console.log("");
+  console.log(
+    "dev/test/stage accept --port-offset <n|auto> to shift every dev/test",
+  );
+  console.log(
+    'server port (and Marionette) by n; "auto" picks a free offset.',
+  );
+  console.log("");
   console.log("Run 'feles-build <command> --help' for command-specific help.");
 }
 
@@ -287,29 +333,41 @@ async function main(): Promise<void> {
     case "dev": {
       // simple help support
       if (argv.includes("--help") || argv.includes("-h")) {
-        console.log("Usage: feles-build dev");
+        console.log(
+          "Usage: feles-build dev [--port-offset <n|auto>]",
+        );
         return;
       }
-      await runDev();
+      await runDev(await argvPortOffset(argv));
       break;
     }
     case "test": {
       if (argv.includes("--help") || argv.includes("-h")) {
-        console.log("Usage: feles-build test [--own-native-session]");
+        console.log(
+          "Usage: feles-build test [--own-native-session] [--port-offset <n|auto>]",
+        );
         console.log(
           "  Build with MODE=test, start dev servers, and launch browser.",
         );
         return;
       }
-      await runTest(argv.includes("--own-native-session"));
+      await runTest(
+        argv.includes("--own-native-session"),
+        await argvPortOffset(argv),
+      );
       break;
     }
     case "stage": {
       if (argv.includes("--help") || argv.includes("-h")) {
-        console.log("Usage: feles-build stage [--marionette]");
+        console.log(
+          "Usage: feles-build stage [--marionette] [--port-offset <n|auto>]",
+        );
         return;
       }
-      await runStage({ marionette: argv.includes("--marionette") });
+      await runStage({
+        marionette: argv.includes("--marionette"),
+        portOffset: await argvPortOffset(argv),
+      });
       break;
     }
     case "build": {

@@ -7,7 +7,10 @@
 const { NoranekoConstants } = ChromeUtils.importESModule(
   "resource://noraneko/modules/NoranekoConstants.sys.mjs",
 );
-import { devHttpOrigin } from "#libs/shared/dev-ports/defines.ts";
+import { launchDevPorts } from "../common/dev-port-offset.ts";
+
+/** Launch-local dev port resolver (FDH Gate 2 task 2-B). */
+const launchDevPort = launchDevPorts();
 
 const PREF_OLD_VERSION2 = "floorp.startup.oldVersion2";
 // Legacy preference from older Floorp versions (pre-version2 system)
@@ -125,7 +128,7 @@ function getUpdateType(oldVersion: string, newVersion: string): UpdateType {
  */
 function getUpdateXmlUrl(): string {
   // DEV ENVIRONMENT OVERRIDE
-  const url = devHttpOrigin("updateDevServer", "/update.xml");
+  const url = launchDevPort.httpOrigin("updateDevServer", "/update.xml");
   console.log(`[NoranekoUpdateChecker] Using DEV URL: ${url}`);
   return url;
 }

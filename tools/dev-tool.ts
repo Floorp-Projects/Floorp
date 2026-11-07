@@ -10,6 +10,11 @@ import {
   selectDevProcesses,
 } from "./src/dev_process_selection.ts";
 import {
+  describeLaunchPorts,
+  parsePortOffsetSpec,
+  resolveAutoDevPortOffset,
+} from "./src/port_offset.ts";
+import {
   DEV_PROCESSES_FILE,
   listDevProcesses,
   readDevProcesses,
@@ -32,6 +37,12 @@ Usage: deno run -A tools/dev-tool.ts <command> [options]
 
 Process management:
   start                     Start feles-build dev (background)
+  start --port-offset <n|auto>
+                            Start with every dev/test server port (and
+                            Marionette) shifted by n ports; "auto" probes the
+                            smallest free non-overlapping offset. n must be 0
+                            or at least the non-overlap span so concurrent
+                            worktrees cannot share ports.
   stop                      Stop dev processes for this checkout
   stop --all                Stop dev processes across ALL checkouts (recovery)
   restart                   Restart dev processes
@@ -75,6 +86,7 @@ const args = parseArgs(Deno.args, {
     "base-url",
     "timeout",
     "interval",
+    "port-offset",
   ],
   alias: {
     c: "context",
@@ -195,6 +207,16 @@ async function cmdStart() {
 
   console.log("Starting feles-build dev...");
 
+  // Resolve the optional --port-offset before spawning so the log shows the
+  // actual topology and the detached feles-build inherits a concrete number.
+  let spawnCommandArgs = "";
+  if (args["port-offset"] !== undefined) {
+    const spec = parsePortOffsetSpec(args["port-offset"]);
+    const offset = spec === "auto" ? await resolveAutoDevPortOffset() : spec;
+    console.log(`[dev-tool] Using ${describeLaunchPorts(offset)}`);
+    spawnCommandArgs = ` --port-offset ${offset}`;
+  }
+
   const logFile = path.join(PROJECT_ROOT, "_dist", "dev-server.log");
   const marionetteFile = path.join(
     PROJECT_ROOT,
@@ -226,7 +248,7 @@ async function cmdStart() {
     const psScript = [
       `$deno = '${denoPathPs}'`,
       `$log = '${logFilePs}'`,
-      `$arg = '/d /s /c ""' + $deno + '" task feles-build dev > "' + $log + '" 2>&1"'`,
+      `$arg = '/d /s /c ""' + $deno + '" task feles-build dev${spawnCommandArgs} > "' + $log + '" 2>&1"'`,
       `$proc = Start-Process -FilePath 'cmd.exe' -ArgumentList $arg -WorkingDirectory '${projectRootPs}' -WindowStyle Hidden -PassThru`,
       "Write-Output $proc.Id",
     ].join("; ");
@@ -241,7 +263,7 @@ async function cmdStart() {
     const cmd = new Deno.Command("bash", {
       args: [
         "-c",
-        `nohup "${denoPath}" task feles-build dev > "${logFile}" 2>&1 & echo $!`,
+        `nohup "${denoPath}" task feles-build dev${spawnCommandArgs} > "${logFile}" 2>&1 & echo $!`,
       ],
       cwd: PROJECT_ROOT,
       stdout: "piped",

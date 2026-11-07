@@ -1,6 +1,6 @@
 import type { NRSettingsParentFunctions } from "../../../../modules/common/defines.ts";
 import { createBirpc } from "birpc";
-import { devPortString } from "../../../../../libs/shared/dev-ports/defines.ts";
+import { launchDevPorts } from "../../../../modules/common/dev-port-offset.ts";
 import { usesSettingsActor } from "../../../../../libs/ui/settings-rpc-origin.ts";
 
 // deno-lint-ignore no-explicit-any
@@ -14,9 +14,10 @@ declare global {
   }
 }
 
-const isLocalhost5187 = usesSettingsActor(
+const welcomeDevPort = launchDevPorts();
+const isWelcomeLocalhost = usesSettingsActor(
   globalThis.location.href,
-  devPortString("welcome"),
+  welcomeDevPort.portString("welcome"),
 );
 
 const directServicesFunctions: NRSettingsParentFunctions = {
@@ -52,7 +53,7 @@ const directServicesFunctions: NRSettingsParentFunctions = {
   },
 };
 
-export const rpc = isLocalhost5187
+export const rpc = isWelcomeLocalhost
   ? createBirpc<NRSettingsParentFunctions, Record<string, never>>(
     {},
     {
