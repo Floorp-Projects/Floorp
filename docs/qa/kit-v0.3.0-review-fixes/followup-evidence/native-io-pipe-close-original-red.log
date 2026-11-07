@@ -1,0 +1,20 @@
+test_pipe_close_failure_still_reaps_and_saves_first_error (test_qa3_native_io.ProcessFailureTests.test_pipe_close_failure_still_reaps_and_saves_first_error) ... ERROR
+
+======================================================================
+ERROR: test_pipe_close_failure_still_reaps_and_saves_first_error (test_qa3_native_io.ProcessFailureTests.test_pipe_close_failure_still_reaps_and_saves_first_error)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/repos/Floorp-Runtime/.github/workflows/scripts/test_qa3_native_io.py", line 609, in test_pipe_close_failure_still_reaps_and_saves_first_error
+    receipt = self.check_failure(
+              ^^^^^^^^^^^^^^^^^^^
+  File "/workspace/qa-review-v030/repos/Floorp-Runtime/.github/workflows/scripts/test_qa3_native_io.py", line 473, in check_failure
+    receipt = read_json(self.root / "logs" / (name + ".process.json"))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/qa-review-v030/fix-qa309/evidence/native-io-original.py", line 28, in read_json
+    raise ValueError("unsafe or oversized JSON")
+ValueError: unsafe or oversized JSON
+
+----------------------------------------------------------------------
+Ran 1 test in 2.115s
+
+FAILED (errors=1)

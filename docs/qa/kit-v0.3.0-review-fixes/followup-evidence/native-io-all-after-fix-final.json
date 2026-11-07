@@ -1,0 +1,25 @@
+{
+  "selection": "test_qa3_native_io",
+  "exitCode": 1,
+  "outerTimeout": false,
+  "durationSeconds": 33.058,
+  "limits": {
+    "softASMiB": 512,
+    "hardASGiB": 32,
+    "cpuSeconds": 40,
+    "softFileMiB": 32,
+    "hardFileGiB": 64,
+    "wallSeconds": 90
+  },
+  "outerRecoveryKilledOwnBirthCheckedPids": [],
+  "leftovers": [],
+  "sourceSha256": "424efa3cbd7c1e6b8b781a48980575743054a52a1b06e0ee3159ce078c8261f8",
+  "testedVariant": "working-fix",
+  "testedSourceSha256": "424efa3cbd7c1e6b8b781a48980575743054a52a1b06e0ee3159ce078c8261f8",
+  "testSha256": "df1fd7b0d6029803ba4adf0edd06dbdced2df2e16b739a796f8c212f6bb66fc7",
+  "sourceUnchangedDuringRun": true,
+  "testsUnchangedDuringRun": true,
+  "logSha256": "b80760d7b9e1a81943333c9b933c0c3252dd1a91bf238b01a27d73970aaf661d",
+  "credentialsPassed": false,
+  "nativeBrowserNetworkBuildExecuted": false
+}

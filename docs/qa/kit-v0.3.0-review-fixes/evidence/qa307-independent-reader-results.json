@@ -1,0 +1,124 @@
+{
+  "kind": "independent reviewed FakeDriver fixture execution",
+  "nativeOrBrowserExecuted": false,
+  "networkOrModelCalled": false,
+  "credentialEnvironmentPassed": false,
+  "resourceLimits": {
+    "addressSpaceMiB": 256,
+    "cpuSeconds": 8,
+    "fileMiB": 8,
+    "outerSeconds": 3
+  },
+  "cases": [
+    {
+      "case": "partial-held-open",
+      "passed": true,
+      "outerTimeout": false,
+      "exitCode": 0,
+      "receipt": {
+        "schemaVersion": 1,
+        "subjectId": "synthetic-review",
+        "status": "budget-exhausted",
+        "releaseEvidence": false,
+        "completedSteps": 0,
+        "fakeDriverClosed": true,
+        "stdinBlockingBefore": true,
+        "stdinBlockingAfter": true,
+        "campaignSeconds": 1.002
+      },
+      "rawLog": "/workspace/qa-review-v030/evidence/qa307-independent-reader-partial-held-open.log"
+    },
+    {
+      "case": "empty-eof",
+      "passed": true,
+      "outerTimeout": false,
+      "exitCode": 0,
+      "receipt": {
+        "schemaVersion": 1,
+        "subjectId": "synthetic-review",
+        "status": "input-ended",
+        "releaseEvidence": false,
+        "completedSteps": 0,
+        "fakeDriverClosed": true,
+        "stdinBlockingBefore": true,
+        "stdinBlockingAfter": true,
+        "campaignSeconds": 0.001
+      },
+      "rawLog": "/workspace/qa-review-v030/evidence/qa307-independent-reader-empty-eof.log"
+    },
+    {
+      "case": "partial-eof",
+      "passed": true,
+      "outerTimeout": false,
+      "exitCode": 0,
+      "receipt": {
+        "schemaVersion": 1,
+        "subjectId": "synthetic-review",
+        "status": "finding-or-environment-error",
+        "releaseEvidence": false,
+        "error": "Unterminated action frame at EOF",
+        "completedSteps": 0,
+        "fakeDriverClosed": true,
+        "stdinBlockingBefore": true,
+        "stdinBlockingAfter": true,
+        "campaignSeconds": 0.001
+      },
+      "rawLog": "/workspace/qa-review-v030/evidence/qa307-independent-reader-partial-eof.log"
+    },
+    {
+      "case": "pipelined-frames",
+      "passed": true,
+      "outerTimeout": false,
+      "exitCode": 0,
+      "receipt": {
+        "schemaVersion": 1,
+        "subjectId": "synthetic-review",
+        "status": "budget-exhausted",
+        "releaseEvidence": false,
+        "completedSteps": 2,
+        "fakeDriverClosed": true,
+        "stdinBlockingBefore": true,
+        "stdinBlockingAfter": true,
+        "campaignSeconds": 0.001
+      },
+      "rawLog": "/workspace/qa-review-v030/evidence/qa307-independent-reader-pipelined-frames.log"
+    },
+    {
+      "case": "already-nonblocking",
+      "passed": true,
+      "outerTimeout": false,
+      "exitCode": 0,
+      "receipt": {
+        "schemaVersion": 1,
+        "subjectId": "synthetic-review",
+        "status": "budget-exhausted",
+        "releaseEvidence": false,
+        "completedSteps": 2,
+        "fakeDriverClosed": true,
+        "stdinBlockingBefore": false,
+        "stdinBlockingAfter": false,
+        "campaignSeconds": 0.001
+      },
+      "rawLog": "/workspace/qa-review-v030/evidence/qa307-independent-reader-already-nonblocking.log"
+    },
+    {
+      "case": "oversize-frame",
+      "passed": true,
+      "outerTimeout": false,
+      "exitCode": 0,
+      "receipt": {
+        "schemaVersion": 1,
+        "subjectId": "synthetic-review",
+        "status": "finding-or-environment-error",
+        "releaseEvidence": false,
+        "error": "Action input too large",
+        "completedSteps": 0,
+        "fakeDriverClosed": true,
+        "stdinBlockingBefore": true,
+        "stdinBlockingAfter": true,
+        "campaignSeconds": 0.001
+      },
+      "rawLog": "/workspace/qa-review-v030/evidence/qa307-independent-reader-oversize-frame.log"
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+test_fork_failure_closes_both_fds_even_if_first_close_fails (test_qa3_native_io.SupervisorBoundaryTests.test_fork_failure_closes_both_fds_even_if_first_close_fails) ... FAIL
+
+======================================================================
+FAIL: test_fork_failure_closes_both_fds_even_if_first_close_fails (test_qa3_native_io.SupervisorBoundaryTests.test_fork_failure_closes_both_fds_even_if_first_close_fails)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/repos/Floorp-Runtime/.github/workflows/scripts/test_qa3_native_io.py", line 1130, in test_fork_failure_closes_both_fds_even_if_first_close_fails
+    self.assertEqual(caught.exception.args, initial.args)
+AssertionError: Tuples differ: (5, 'secondary fork cleanup failed') != (11, 'initial fork failed')
+
+First differing element 0:
+5
+11
+
+- (5, 'secondary fork cleanup failed')
++ (11, 'initial fork failed')
+
+----------------------------------------------------------------------
+Ran 1 test in 0.014s
+
+FAILED (failures=1)

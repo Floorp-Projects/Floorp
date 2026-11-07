@@ -1,0 +1,291 @@
+{
+  "sourceSha256": "5cb0803d54c47197e0597cd93de436c60cb2f667340f5bcff55e6f0326b30d32",
+  "nativeExecution": false,
+  "network": false,
+  "credentials": false,
+  "cases": [
+    {
+      "name": "SIGTERM during cleanup cannot report success",
+      "passed": true,
+      "details": {
+        "exitCode": 0,
+        "error": "source supervisor interrupted",
+        "cleanupErrors": [],
+        "ownedCleanupComplete": true
+      }
+    },
+    {
+      "name": "private protocol empty",
+      "passed": true,
+      "details": {
+        "raised": "ValueError",
+        "error": "source supervisor did not complete"
+      }
+    },
+    {
+      "name": "private protocol truncated JSON",
+      "passed": true,
+      "details": {
+        "raised": "JSONDecodeError",
+        "error": "Expecting property name enclosed in double quotes: line 1 column 15 (char 14)"
+      }
+    },
+    {
+      "name": "private protocol non-object",
+      "passed": true,
+      "details": {
+        "raised": "ValueError",
+        "error": "invalid source supervisor result"
+      }
+    },
+    {
+      "name": "private protocol empty object",
+      "passed": true,
+      "details": {
+        "raised": "ValueError",
+        "error": "invalid source supervisor result"
+      }
+    },
+    {
+      "name": "private protocol oversized",
+      "passed": true,
+      "details": {
+        "raised": "ValueError",
+        "error": "source supervisor did not complete"
+      }
+    },
+    {
+      "name": "private protocol missing exitCode",
+      "passed": true,
+      "details": {
+        "raised": "ValueError",
+        "error": "invalid source supervisor result"
+      }
+    },
+    {
+      "name": "private protocol missing error",
+      "passed": true,
+      "details": {
+        "raised": "ValueError",
+        "error": "invalid source supervisor result"
+      }
+    },
+    {
+      "name": "private protocol missing cleanupErrors",
+      "passed": true,
+      "details": {
+        "raised": "ValueError",
+        "error": "invalid source supervisor result"
+      }
+    },
+    {
+      "name": "private protocol missing ownedCleanupComplete",
+      "passed": true,
+      "details": {
+        "raised": "ValueError",
+        "error": "invalid source supervisor result"
+      }
+    },
+    {
+      "name": "private protocol extra field",
+      "passed": true,
+      "details": {
+        "raised": "ValueError",
+        "error": "invalid source supervisor result"
+      }
+    },
+    {
+      "name": "private protocol boolean exit code",
+      "passed": true,
+      "details": {
+        "raised": "ValueError",
+        "error": "source supervisor lacks a command result"
+      }
+    },
+    {
+      "name": "private protocol null exit code",
+      "passed": true,
+      "details": {
+        "raised": "ValueError",
+        "error": "source supervisor lacks a command result"
+      }
+    },
+    {
+      "name": "private protocol string exit code",
+      "passed": true,
+      "details": {
+        "raised": "ValueError",
+        "error": "source supervisor lacks a command result"
+      }
+    },
+    {
+      "name": "private protocol float exit code",
+      "passed": true,
+      "details": {
+        "raised": "ValueError",
+        "error": "source supervisor lacks a command result"
+      }
+    },
+    {
+      "name": "private protocol numeric error",
+      "passed": true,
+      "details": {
+        "raised": "ValueError",
+        "error": "untyped source supervisor result"
+      }
+    },
+    {
+      "name": "private protocol boolean error",
+      "passed": true,
+      "details": {
+        "raised": "ValueError",
+        "error": "untyped source supervisor result"
+      }
+    },
+    {
+      "name": "private protocol initial error after complete cleanup",
+      "passed": true,
+      "details": {
+        "raised": "ValueError",
+        "error": "initial failure"
+      }
+    },
+    {
+      "name": "private protocol cleanup error after complete recovery",
+      "passed": true,
+      "details": {
+        "raised": "ValueError",
+        "error": "source cleanup failed; cleanup: ['transient failure']"
+      }
+    },
+    {
+      "name": "private protocol cleanup error numeric item",
+      "passed": true,
+      "details": {
+        "raised": "ValueError",
+        "error": "untyped source supervisor result"
+      }
+    },
+    {
+      "name": "private protocol cleanup error non-list",
+      "passed": true,
+      "details": {
+        "raised": "ValueError",
+        "error": "untyped source supervisor result"
+      }
+    },
+    {
+      "name": "private protocol cleanup errors null",
+      "passed": true,
+      "details": {
+        "raised": "ValueError",
+        "error": "untyped source supervisor result"
+      }
+    },
+    {
+      "name": "private protocol too many cleanup errors",
+      "passed": true,
+      "details": {
+        "raised": "ValueError",
+        "error": "untyped source supervisor result"
+      }
+    },
+    {
+      "name": "private protocol incomplete cleanup",
+      "passed": true,
+      "details": {
+        "raised": "ValueError",
+        "error": "source cleanup failed; cleanup: []"
+      }
+    },
+    {
+      "name": "private protocol numeric cleanup complete one",
+      "passed": true,
+      "details": {
+        "raised": "ValueError",
+        "error": "untyped source supervisor result"
+      }
+    },
+    {
+      "name": "private protocol numeric cleanup complete zero",
+      "passed": true,
+      "details": {
+        "raised": "ValueError",
+        "error": "untyped source supervisor result"
+      }
+    },
+    {
+      "name": "private protocol null cleanup complete",
+      "passed": true,
+      "details": {
+        "raised": "ValueError",
+        "error": "untyped source supervisor result"
+      }
+    },
+    {
+      "name": "private protocol string cleanup complete",
+      "passed": true,
+      "details": {
+        "raised": "ValueError",
+        "error": "untyped source supervisor result"
+      }
+    },
+    {
+      "name": "private protocol valid exit 0",
+      "passed": true,
+      "details": {
+        "exitCode": 0
+      }
+    },
+    {
+      "name": "private protocol valid exit 124",
+      "passed": true,
+      "details": {
+        "exitCode": 124
+      }
+    },
+    {
+      "name": "private protocol valid exit -9",
+      "passed": true,
+      "details": {
+        "exitCode": -9
+      }
+    },
+    {
+      "name": "target cannot inherit the private control pipe",
+      "passed": true,
+      "details": {
+        "privatePipe": "pipe:[335916]",
+        "childFdTargets": [
+          "/dev/null",
+          "/tmp/workflow-review-final-ssan_s0j/live-fd.log",
+          "/tmp/workflow-review-final-ssan_s0j/live-fd.log"
+        ]
+      }
+    },
+    {
+      "name": "target cannot inherit fake credentials or runtime options",
+      "passed": true,
+      "details": {
+        "envKeys": [
+          "DENO_NO_PACKAGE_JSON",
+          "HOME",
+          "LC_ALL",
+          "PATH",
+          "PYTHONDONTWRITEBYTECODE"
+        ]
+      }
+    },
+    {
+      "name": "cleanup error strings and complete result fit the bounded pipe",
+      "passed": true,
+      "details": {
+        "messageUtf8Bytes": 254,
+        "controlUtf8Bytes": 1573
+      }
+    }
+  ],
+  "passed": 34,
+  "total": 34,
+  "allPassed": true
+}

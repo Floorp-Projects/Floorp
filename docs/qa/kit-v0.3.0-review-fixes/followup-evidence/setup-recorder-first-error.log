@@ -1,0 +1,5 @@
+First standalone Ruff/check-format and second mozlint invocations completed, but their recording wrapper failed before saving captured output. Source files were unchanged between this recording failure and the retry.
+
+Traceback (most recent call last):
+  File <stdin>, line 17, in <module>
+TypeError: unsupported operand type(s) for +: 'PosixPath' and 'str'

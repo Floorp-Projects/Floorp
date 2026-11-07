@@ -1,0 +1,19 @@
+unformatted: File would be reformatted
+   --> .github/workflows/scripts/test_qa3_mozlog.py:64:70
+    |
+63  |             events[2].update(fields)
+    -             with self.subTest(fields=fields), self.assertRaisesRegex(ValueError, "subtest"):
+64  +             with self.subTest(fields=fields), self.assertRaisesRegex(
+65  +                 ValueError, "subtest"
+66  +             ):
+67  |                 self.verify(events)
+--------------------------------------------------------------------------------
+118 |                 if size <= limit:
+    -                     result = verify_mozlog(self.path, self.case, self.root, self.process)
+119 +                     result = verify_mozlog(
+120 +                         self.path, self.case, self.root, self.process
+121 +                     )
+122 |                     self.assertEqual(result["verdict"], "PASS")
+    |
+
+1 file would be reformatted, 1 file already formatted

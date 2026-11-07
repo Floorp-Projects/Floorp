@@ -1,0 +1,171 @@
+{
+  "capturedAt": "2026-10-09T14:53:51.207240+00:00",
+  "baselineHead": "718e688fbd7ad88a776534e7778ad8e4a7f67364",
+  "authorPatchSha256": "30fa4bf57c9c557c6dced39abcfd7854a35b22eb79b9a4c4881da746690edcd4",
+  "liveDiffMatchesSavedCandidate": true,
+  "files": [
+    {
+      "sourcePath": "tools/qa3/source.py",
+      "snapshot": "/workspace/qa-review-v030/fix-qa309/evidence/workflow-review-final-floorp-candidate-03-source.py",
+      "sha256": "5cb0803d54c47197e0597cd93de436c60cb2f667340f5bcff55e6f0326b30d32"
+    },
+    {
+      "sourcePath": "tools/qa3/test_source.py",
+      "snapshot": "/workspace/qa-review-v030/fix-qa309/evidence/workflow-review-final-floorp-candidate-03-test_source.py",
+      "sha256": "a8e50bc710b7a2fce37269df43326d2683d4997d9a40772f5f286f6a7a9dde51"
+    },
+    {
+      "sourcePath": "tools/qa3/README.md",
+      "snapshot": "/workspace/qa-review-v030/fix-qa309/evidence/workflow-review-final-floorp-candidate-03-README.md",
+      "sha256": "c602857927aa6e401b9c647428506f9b568e0ca0e5d747f56fafe5b8bee73ec0"
+    }
+  ],
+  "workflowBaselineCommit": "718e688fbd7ad88a776534e7778ad8e4a7f67364",
+  "workflowByteComparisons": [
+    {
+      "path": ".github/workflows/assemble-release-bundle.yml",
+      "baselineSha256": "9ba94a9fd57037685d9d1271a21c9a84f8b2533849c16552639a7efee5be7483",
+      "candidateSha256": "9ba94a9fd57037685d9d1271a21c9a84f8b2533849c16552639a7efee5be7483",
+      "sameBytes": true
+    },
+    {
+      "path": ".github/workflows/build_installers.yml",
+      "baselineSha256": "45219a6bd4c1e7945c81fc7bd22484f6794375f663f3a400fa73b5052854abf9",
+      "candidateSha256": "45219a6bd4c1e7945c81fc7bd22484f6794375f663f3a400fa73b5052854abf9",
+      "sameBytes": true
+    },
+    {
+      "path": ".github/workflows/collect_firefox_tests.yml",
+      "baselineSha256": "92b39dfed19c064ecc02081c39af0076c544ea9653938f5ae420985e629ad08e",
+      "candidateSha256": "92b39dfed19c064ecc02081c39af0076c544ea9653938f5ae420985e629ad08e",
+      "sameBytes": true
+    },
+    {
+      "path": ".github/workflows/colocated_runner_test.yml",
+      "baselineSha256": "b296e0f3e90fb16fa9252c48cc50a829025f1356d19fa63ded43ef4573c60a47",
+      "candidateSha256": "b296e0f3e90fb16fa9252c48cc50a829025f1356d19fa63ded43ef4573c60a47",
+      "sameBytes": true
+    },
+    {
+      "path": ".github/workflows/docs_pipeline.yml",
+      "baselineSha256": "b624b28b010e3ba356327fe7f3ee94730834b0b3d54150655a8cfdc56e721c67",
+      "candidateSha256": "b624b28b010e3ba356327fe7f3ee94730834b0b3d54150655a8cfdc56e721c67",
+      "sameBytes": true
+    },
+    {
+      "path": ".github/workflows/firefox_runtime_candidate.yml",
+      "baselineSha256": "63a69d0bedff05aba395ee0e633bd5eb95377e6b514de2a514a42d32edc0d8a7",
+      "candidateSha256": "63a69d0bedff05aba395ee0e633bd5eb95377e6b514de2a514a42d32edc0d8a7",
+      "sameBytes": true
+    },
+    {
+      "path": ".github/workflows/moderation.yml",
+      "baselineSha256": "5c8876efb6850c78f227618d685fc7c5bfb7d34d0d53a02fc27b7a41539acadf",
+      "candidateSha256": "5c8876efb6850c78f227618d685fc7c5bfb7d34d0d53a02fc27b7a41539acadf",
+      "sameBytes": true
+    },
+    {
+      "path": ".github/workflows/organize_issue.yml",
+      "baselineSha256": "349e484def1175c8db91ae567c82bbcfe405e257a897420f68762a1acafab406",
+      "candidateSha256": "349e484def1175c8db91ae567c82bbcfe405e257a897420f68762a1acafab406",
+      "sameBytes": true
+    },
+    {
+      "path": ".github/workflows/package.yml",
+      "baselineSha256": "7686cdb5d4088fbc8aeb304fd851f091ead59063b9755b2550dbb3c6bc20874f",
+      "candidateSha256": "7686cdb5d4088fbc8aeb304fd851f091ead59063b9755b2550dbb3c6bc20874f",
+      "sameBytes": true
+    },
+    {
+      "path": ".github/workflows/package_and_publish_alpha.yml",
+      "baselineSha256": "f5346fdccff46eec1fe6125f13b5a0df5d809727ff6c9f883e61d9b38986597d",
+      "candidateSha256": "f5346fdccff46eec1fe6125f13b5a0df5d809727ff6c9f883e61d9b38986597d",
+      "sameBytes": true
+    },
+    {
+      "path": ".github/workflows/package_and_publish_release.yml",
+      "baselineSha256": "c7ae81f3c524e28814c025668be1455092b3c42286ee588e18b92eb45f3ae63b",
+      "candidateSha256": "c7ae81f3c524e28814c025668be1455092b3c42286ee588e18b92eb45f3ae63b",
+      "sameBytes": true
+    },
+    {
+      "path": ".github/workflows/ppa_index_check.yml",
+      "baselineSha256": "6fbe7db5d1c8e1860ab73d48cae679d897c98a5e1094898a164490cf4c99dd08",
+      "candidateSha256": "6fbe7db5d1c8e1860ab73d48cae679d897c98a5e1094898a164490cf4c99dd08",
+      "sameBytes": true
+    },
+    {
+      "path": ".github/workflows/publish_alpha.yml",
+      "baselineSha256": "064ca255ff823111f4effee34d4d088c737213011d5510d934479d206d54029e",
+      "candidateSha256": "064ca255ff823111f4effee34d4d088c737213011d5510d934479d206d54029e",
+      "sameBytes": true
+    },
+    {
+      "path": ".github/workflows/publish_ppa.yml",
+      "baselineSha256": "e7707ec74392bbe3523703b3cc7a556901223bd51c572a98d65985636b6f43d4",
+      "candidateSha256": "e7707ec74392bbe3523703b3cc7a556901223bd51c572a98d65985636b6f43d4",
+      "sameBytes": true
+    },
+    {
+      "path": ".github/workflows/publish_release.yml",
+      "baselineSha256": "33db2861ef807d2c77c49cac4a485c651f46fd74d3c9ace8c449613b23598fe5",
+      "candidateSha256": "33db2861ef807d2c77c49cac4a485c651f46fd74d3c9ace8c449613b23598fe5",
+      "sameBytes": true
+    },
+    {
+      "path": ".github/workflows/purge_ppa_cache.yml",
+      "baselineSha256": "d75226d60bd6144c653215ccd1f0b48f10f71758ff1ea18f04b52389ea20b5ae",
+      "candidateSha256": "d75226d60bd6144c653215ccd1f0b48f10f71758ff1ea18f04b52389ea20b5ae",
+      "sameBytes": true
+    },
+    {
+      "path": ".github/workflows/qa3-source-shadow.yml",
+      "baselineSha256": "2c11653c0062ed75ee74f2abd58c129eb78e77734a4752024bff651325aebbf9",
+      "candidateSha256": "2c11653c0062ed75ee74f2abd58c129eb78e77734a4752024bff651325aebbf9",
+      "sameBytes": true
+    },
+    {
+      "path": ".github/workflows/update_lepton.yml",
+      "baselineSha256": "61d30c6b9d072bec60c3aed505b546ddcec6402682b485484cc2d381b8d6e249",
+      "candidateSha256": "61d30c6b9d072bec60c3aed505b546ddcec6402682b485484cc2d381b8d6e249",
+      "sameBytes": true
+    },
+    {
+      "path": ".github/workflows/validate-final-package-qa.yml",
+      "baselineSha256": "40f7041d2e1db6979aa2b8737487b681bf0daa5d013999390edb88c743e336b6",
+      "candidateSha256": "40f7041d2e1db6979aa2b8737487b681bf0daa5d013999390edb88c743e336b6",
+      "sameBytes": true
+    },
+    {
+      "path": ".github/workflows/validate-runtime-provenance.yml",
+      "baselineSha256": "b375dc48ed3dba65963c3b97edde5bcd4794facac7d9bed9cf74b197b3305ce3",
+      "candidateSha256": "b375dc48ed3dba65963c3b97edde5bcd4794facac7d9bed9cf74b197b3305ce3",
+      "sameBytes": true
+    },
+    {
+      "path": ".github/workflows/verify-release-artifact.yml",
+      "baselineSha256": "06ed8513c5fa4900025d73159efe460a2ea3389d44dfade35f1411777f2f8d16",
+      "candidateSha256": "06ed8513c5fa4900025d73159efe460a2ea3389d44dfade35f1411777f2f8d16",
+      "sameBytes": true
+    }
+  ],
+  "fixedRegistryEqual": true,
+  "unchangedFunctions": {
+    "digest": true,
+    "read_json": true,
+    "validate_plan": true,
+    "validate_coverage": true,
+    "validate_cases": true,
+    "validate_deno_inputs": true,
+    "audit_deno_subset": true,
+    "python_tests": true,
+    "child_environment": true,
+    "run_source": true,
+    "main": true
+  },
+  "changedPaths": [
+    "tools/qa3/README.md",
+    "tools/qa3/source.py",
+    "tools/qa3/test_source.py"
+  ]
+}

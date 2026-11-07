@@ -1,0 +1,39 @@
+{
+  "capturedAt": "2026-10-09T15:50:02.019439+00:00",
+  "reviewedHead": "c9027879e053c9031c7f3e27495f6d415d36c10f",
+  "priorIntegratedBase": "cc83e6fea6499d6ec89c76ae9837c280556e9d53",
+  "sourceSha256": "8bbea4abfc5d8cf1a3b70a275287c7fe6725b96fa17afb4c74ef51814b7d142e",
+  "testSha256": "0dae5c088abd51a84338a62c977a7a43e5765dfb1fd8a0647090b10fcab625a6",
+  "patchSha256": "6dfb2aa6a44833b46145f39c302ef81dca3d08f0a923f07f255669446e146f11",
+  "initialSnapshotSha256": "24afa5efee9a99455d2a5f47f87dab426f2a01d0d2d226e332e82d7ee09de3c2",
+  "metadataCorrection": "Initial snapshot captured the author local commit c902 concurrently. Only the expectedBaseHead cc83 assertion was stale; initial code/test hashes and preservation comparisons remain exact. This separate final record binds committed c902 and retains cc83 provenance.",
+  "checks": {
+    "codeMatches8bbeFreeze": true,
+    "testMatches0daeFreeze": true,
+    "cleanImmutableHead": true,
+    "previousBaseAncestor": true,
+    "head83Ancestor": true,
+    "allWorkflowBytesPreserved": true,
+    "allTenCallersTransportGatesPreserved": true,
+    "setupProfileTests83To84SameBytes": true,
+    "allEightMozconfigsPreserved": true,
+    "otherFiveIntegratedFixFilesPreserved": true,
+    "sixteenNonProcessFunctionsPreserved": true,
+    "originalPublicRunOwnedSignaturePreserved": true,
+    "_run_ownedASTPreservedFromcc83": true,
+    "_wait_supervisorASTPreservedFromcc83": true,
+    "IOBudgetASTPreservedFromcc83": true,
+    "ExpansionBudgetASTPreservedFromcc83": true
+  },
+  "allPreservationChecksPass": true,
+  "workflowCounts": {
+    "Runtime83": 22,
+    "Runtime84": 23,
+    "Floorp2889": 21
+  },
+  "nativeMethodsAST": 47,
+  "committedDiffPaths": [
+    ".github/workflows/scripts/qa3_native_io.py",
+    ".github/workflows/scripts/test_qa3_native_io.py"
+  ]
+}

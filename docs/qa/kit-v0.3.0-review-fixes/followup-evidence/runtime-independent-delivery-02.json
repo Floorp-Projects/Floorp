@@ -1,0 +1,8 @@
+{
+  "report": "runtime-independent-review-02.md",
+  "reportSHA256": "13ad6ddb87eafb3cd8c68f32e90f567a4e781e306f12227f76b830a16140346e",
+  "HEAD": "c9027879e053c9031c7f3e27495f6d415d36c10f",
+  "checkedEvidenceLinks": true,
+  "artifactHashesMatchEndPin": true,
+  "scope": "GO source repairs/ordinary public CI; native qualification and publication unverified"
+}

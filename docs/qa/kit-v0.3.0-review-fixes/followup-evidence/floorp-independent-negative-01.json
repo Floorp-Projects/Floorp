@@ -1,0 +1,233 @@
+{
+  "sourceSHA256": "99698eec43bc357db800a3400969595224f09ed3ffc77f80ec139f8f4a6c2115",
+  "nativeOrBrowserExecuted": false,
+  "checks": [],
+  "xml": [
+    {
+      "encoding": "utf-16",
+      "kind": "ordinary",
+      "rejected": true,
+      "parserCalls": 0,
+      "error": "missing, oversized, or unsafe JUnit report"
+    },
+    {
+      "encoding": "utf-16",
+      "kind": "DTD",
+      "rejected": true,
+      "parserCalls": 0,
+      "error": "missing, oversized, or unsafe JUnit report"
+    },
+    {
+      "encoding": "utf-16-le",
+      "kind": "ordinary",
+      "rejected": true,
+      "parserCalls": 0,
+      "error": "missing, oversized, or unsafe JUnit report"
+    },
+    {
+      "encoding": "utf-16-le",
+      "kind": "DTD",
+      "rejected": true,
+      "parserCalls": 0,
+      "error": "missing, oversized, or unsafe JUnit report"
+    },
+    {
+      "encoding": "utf-16-be",
+      "kind": "ordinary",
+      "rejected": true,
+      "parserCalls": 0,
+      "error": "missing, oversized, or unsafe JUnit report"
+    },
+    {
+      "encoding": "utf-16-be",
+      "kind": "DTD",
+      "rejected": true,
+      "parserCalls": 0,
+      "error": "missing, oversized, or unsafe JUnit report"
+    },
+    {
+      "encoding": "utf-32",
+      "kind": "ordinary",
+      "rejected": true,
+      "parserCalls": 0,
+      "error": "missing, oversized, or unsafe JUnit report"
+    },
+    {
+      "encoding": "utf-32",
+      "kind": "DTD",
+      "rejected": true,
+      "parserCalls": 0,
+      "error": "missing, oversized, or unsafe JUnit report"
+    },
+    {
+      "encoding": "utf-32-le",
+      "kind": "ordinary",
+      "rejected": true,
+      "parserCalls": 0,
+      "error": "missing, oversized, or unsafe JUnit report"
+    },
+    {
+      "encoding": "utf-32-le",
+      "kind": "DTD",
+      "rejected": true,
+      "parserCalls": 0,
+      "error": "missing, oversized, or unsafe JUnit report"
+    },
+    {
+      "encoding": "utf-32-be",
+      "kind": "ordinary",
+      "rejected": true,
+      "parserCalls": 0,
+      "error": "missing, oversized, or unsafe JUnit report"
+    },
+    {
+      "encoding": "utf-32-be",
+      "kind": "DTD",
+      "rejected": true,
+      "parserCalls": 0,
+      "error": "missing, oversized, or unsafe JUnit report"
+    },
+    {
+      "encoding": "UTF-16",
+      "kind": "UTF-8 bytes with different declaration",
+      "rejected": true,
+      "parserCalls": 0
+    },
+    {
+      "encoding": "UTF-32",
+      "kind": "UTF-8 bytes with different declaration",
+      "rejected": true,
+      "parserCalls": 0
+    },
+    {
+      "encoding": "ISO-8859-1",
+      "kind": "UTF-8 bytes with different declaration",
+      "rejected": true,
+      "parserCalls": 0
+    },
+    {
+      "encoding": "utf-8",
+      "kind": "valid",
+      "accepted": true
+    },
+    {
+      "encoding": "utf-8",
+      "kind": "DTD",
+      "rejected": true,
+      "parserCalls": 0
+    },
+    {
+      "encoding": "utf-8-sig",
+      "kind": "valid",
+      "accepted": true
+    },
+    {
+      "encoding": "utf-8-sig",
+      "kind": "DTD",
+      "rejected": true,
+      "parserCalls": 0
+    }
+  ],
+  "controlFDAndEnvironment": {
+    "fds": {
+      "0": "/dev/null",
+      "1": "/workspace/qa-review-v030/fix-qa309/evidence/floorp-independent-fixtures-01/fd-env.log",
+      "2": "/workspace/qa-review-v030/fix-qa309/evidence/floorp-independent-fixtures-01/fd-env.log"
+    },
+    "fixtureTokensAbsent": true,
+    "parentSubreaperUnchanged": true
+  },
+  "protocol": [
+    {
+      "case": "valid",
+      "acceptedAsZero": true,
+      "outcome": 0,
+      "fixtureOnly": true
+    },
+    {
+      "case": "bool",
+      "acceptedAsZero": false,
+      "outcome": "ValueError",
+      "fixtureOnly": true
+    },
+    {
+      "case": "float",
+      "acceptedAsZero": false,
+      "outcome": "ValueError",
+      "fixtureOnly": true
+    },
+    {
+      "case": "string",
+      "acceptedAsZero": false,
+      "outcome": "ValueError",
+      "fixtureOnly": true
+    },
+    {
+      "case": "missing-exit",
+      "acceptedAsZero": false,
+      "outcome": "KeyError",
+      "fixtureOnly": true
+    },
+    {
+      "case": "missing-error",
+      "acceptedAsZero": false,
+      "outcome": "KeyError",
+      "fixtureOnly": true
+    },
+    {
+      "case": "null",
+      "acceptedAsZero": false,
+      "outcome": "TypeError",
+      "fixtureOnly": true
+    },
+    {
+      "case": "malformed",
+      "acceptedAsZero": false,
+      "outcome": "JSONDecodeError",
+      "fixtureOnly": true
+    },
+    {
+      "case": "reported-error",
+      "acceptedAsZero": false,
+      "outcome": "ValueError",
+      "fixtureOnly": true
+    }
+  ],
+  "pidfdRaceModels": [
+    {
+      "case": "reused-before-recheck",
+      "signalCalls": 0,
+      "fixtureOnly": true,
+      "wrongBirthSignalled": false
+    },
+    {
+      "case": "exited-before-open",
+      "signalCalls": 0,
+      "fixtureOnly": true,
+      "wrongBirthSignalled": false
+    },
+    {
+      "case": "exited-before-signal",
+      "signalCalls": 1,
+      "fixtureOnly": true,
+      "wrongBirthSignalled": false
+    }
+  ],
+  "transientCleanupFault": {
+    "case": "transient-pidfd-error-in-cleanup",
+    "faults": 1,
+    "status": {
+      "exitCode": null,
+      "error": "source command timed out"
+    },
+    "childAliveAfterHelperReturned": true,
+    "fixtureCleanup": [
+      {
+        "pid": 49689,
+        "reaped": true
+      }
+    ],
+    "faultInjection": "one EMFILE at real pidfd_open call; subsequent calls would succeed",
+    "subreaperRestored": true
+  }
+}

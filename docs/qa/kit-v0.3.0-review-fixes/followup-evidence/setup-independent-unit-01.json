@@ -1,0 +1,50 @@
+{
+  "command": [
+    "/usr/bin/prlimit",
+    "--as=536870912",
+    "--cpu=20",
+    "--fsize=8388608",
+    "--",
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+    "-B",
+    "-m",
+    "unittest",
+    "discover",
+    "-s",
+    ".github/workflows/scripts",
+    "-p",
+    "test_qa3_build_profile.py",
+    "-v"
+  ],
+  "cwd": "/workspace/qa-review-v030/worktrees/Runtime-shadow-fixes",
+  "exit": 0,
+  "timeout": false,
+  "seconds": 3.466,
+  "limits": {
+    "AS": 536870912,
+    "CPU": 20,
+    "FSIZE": 8388608,
+    "wall": 45
+  },
+  "envKeys": [
+    "GIT_CONFIG_GLOBAL",
+    "GIT_CONFIG_NOSYSTEM",
+    "GIT_OPTIONAL_LOCKS",
+    "LANG",
+    "PATH",
+    "PYTHONDONTWRITEBYTECODE",
+    "TMPDIR"
+  ],
+  "log": "/workspace/qa-review-v030/fix-qa309/evidence/setup-independent-unit-01.log",
+  "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stderr": "/workspace/qa-review-v030/fix-qa309/evidence/setup-independent-unit-01.stderr",
+  "stderrSha256": "f06e701b34a40aa48a6e44f75b63cccb5c3e871bb5a4039a6aac05fb437a7c11",
+  "sourceUnchanged": {
+    "/workspace/qa-review-v030/worktrees/Runtime-shadow-fixes/.github/workflows/scripts/qa3_build_profile.py": true,
+    "/workspace/qa-review-v030/worktrees/Runtime-shadow-fixes/.github/workflows/scripts/setup-floorp.sh": true,
+    "/workspace/qa-review-v030/worktrees/Runtime-shadow-fixes/.github/workflows/scripts/test_qa3_build_profile.py": true
+  },
+  "sourceMutation": false,
+  "native": false,
+  "network": false
+}

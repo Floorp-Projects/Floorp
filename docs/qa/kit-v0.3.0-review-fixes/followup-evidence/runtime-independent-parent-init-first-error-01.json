@@ -1,0 +1,9 @@
+{
+  "attempt": 1,
+  "exitCode": 1,
+  "fixtureError": "AssertionError: fixture command did not initialize",
+  "rawLog": "runtime-independent-parent-init-raise-01.log",
+  "targetStderr": "prlimit: failed to set the FSIZE resource limit: Operation not permitted",
+  "classification": "Review fixture's outer 8-MiB hard fsize conflicted with helper's 50-GiB fsize request; command exited before the ownership observation. Not a source defect or evidence of a surviving command.",
+  "nextAttempt": "Lower only the in-memory helper regular-file limit to the same 8-MiB fixture hard cap; retain initial files."
+}

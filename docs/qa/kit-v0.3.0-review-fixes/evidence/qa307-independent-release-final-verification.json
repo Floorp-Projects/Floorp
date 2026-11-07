@@ -1,0 +1,19 @@
+{
+  "codeStillMatchesChecks": true,
+  "checks": {
+    "/workspace/qa-review-v030/fixes/kit-v030/Floorp_QA_Implementation_Kit_v0.3.0/tools/qa/core.py": true,
+    "/workspace/qa-review-v030/fixes/kit-v030/Floorp_QA_Implementation_Kit_v0.3.0/tools/qa/agent.py": true,
+    "/workspace/qa-review-v030/fixes/kit-v030/Floorp_QA_Implementation_Kit_v0.3.0/tools/qa/tests/test_core.py": true,
+    "/workspace/qa-review-v030/fixes/kit-v030/Floorp_QA_Implementation_Kit_v0.3.0/tools/qa/tests/test_review_regressions.py": true,
+    "/workspace/qa-review-v030/fixes/kit-v030/Floorp_QA_Implementation_Kit_v0.3.0/qa/schemas/result.schema.json": true,
+    "/workspace/qa-review-v030/repos/Floorp-Runtime/.github/workflows/scripts/qa3_mozlog.py": true,
+    "/workspace/qa-review-v030/repos/Floorp-Runtime/.github/workflows/scripts/test_qa3_mozlog.py": true,
+    "/workspace/qa-review-v030/evidence/qa307_independent_release_tests.py": true
+  },
+  "report": "/workspace/qa-review-v030/evidence/qa307-independent-release-review.md",
+  "reportSha256": "943b5434f458dd7ac49f7fb57b4504f0aeb1e751156ff557c0718bcaeeadd98a",
+  "firstFailureLogs": {
+    "qa307-kit-regressions-first-failure.log": "c73f54275a68a43a9094ff057987fe95a8842594da58c372ab3f6eaf212a1995",
+    "qa307-runtime-regressions-first-failure.log": "3bfa04461cbad89f11bf4e9c0db1571fd34bdb8980fb3acc87d345d9e2543e6f"
+  }
+}
