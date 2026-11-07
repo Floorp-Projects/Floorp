@@ -56,6 +56,36 @@ user_pref("nora.dev.port_offset", ${portOffset});
   }${allowBrowserHttpLoader ? `${CHROME_BASELINE_CSP_PREF}\n` : ""}`;
 }
 
+/**
+ * Remove the launch-ownership prefs left in `prefs.js` by a previous run of
+ * this same profile. `user.js` overrides them on startup, but an offset-0
+ * launch has no offset pref in `user.js`, so a reused profile would otherwise
+ * keep resolving the previous offset (KAN-120, 2-B).
+ */
+function clearStaleLaunchPrefs(profileDir: string): void {
+  const prefsPath = path.join(profileDir, "prefs.js");
+  let content: string;
+  try {
+    content = Deno.readTextFileSync(prefsPath);
+  } catch (e) {
+    if (e instanceof Deno.errors.NotFound) return;
+    logger.warn(`Failed to read prefs.js: ${(e as Error).message}`);
+    return;
+  }
+  const kept = content.split("\n").filter((line) => {
+    const trimmed = line.trim();
+    return !trimmed.startsWith('user_pref("nora.dev.port_offset"') &&
+      !trimmed.startsWith('user_pref("marionette.port"');
+  });
+  if (kept.length === content.split("\n").length) return;
+  try {
+    Deno.writeTextFileSync(prefsPath, kept.join("\n"));
+    logger.success(`Cleared stale launch prefs from ${prefsPath}`);
+  } catch (e) {
+    logger.warn(`Failed to clear prefs.js: ${(e as Error).message}`);
+  }
+}
+
 export function savePrefs(
   profileDir: string,
   options: DevEnvProfileOptions = {},
@@ -65,6 +95,7 @@ export function savePrefs(
     const p = path.join(profileDir, "user.js");
     Deno.writeTextFileSync(p, buildUserJs(options));
     logger.success(`user.js written to ${p}`);
+    clearStaleLaunchPrefs(profileDir);
     // deno-lint-ignore no-explicit-any
   } catch (e: any) {
     logger.error(`Failed to write user.js: ${e?.message ?? e}`);

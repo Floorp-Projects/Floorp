@@ -73,6 +73,43 @@ Deno.test(
 );
 
 Deno.test(
+  "savePrefs clears stale launch prefs from a reused prefs.js at offset 0",
+  async () => {
+    const root = await Deno.makeTempDir();
+    try {
+      const profileDir = path.join(root, "profile");
+      Deno.mkdirSync(profileDir, { recursive: true });
+      const prefsPath = path.join(profileDir, "prefs.js");
+      Deno.writeTextFileSync(
+        prefsPath,
+        [
+          'user_pref("browser.startup.homepage", "https://example.com");',
+          'user_pref("marionette.port", 5280);',
+          'user_pref("nora.dev.port_offset", 100);',
+        ].join("\n"),
+      );
+
+      savePrefs(profileDir, { allowBrowserHttpLoader: true, portOffset: 0 });
+      const prefs = Deno.readTextFileSync(prefsPath);
+      assertEquals(/marionette\.port/.test(prefs), false);
+      assertEquals(/nora\.dev\.port_offset/.test(prefs), false);
+      assertStringIncludes(
+        prefs,
+        'user_pref("browser.startup.homepage", "https://example.com");',
+      );
+      assertEquals(
+        /nora\.dev\.port_offset/.test(
+          Deno.readTextFileSync(path.join(profileDir, "user.js")),
+        ),
+        false,
+      );
+    } finally {
+      await Deno.remove(root, { recursive: true });
+    }
+  },
+);
+
+Deno.test(
   "savePrefs writes the offset pref and a disjoint Marionette port",
   async () => {
     const userJs = await generateUserJs(true, 100);

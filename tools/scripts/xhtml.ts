@@ -3,7 +3,10 @@
 import { DOMParser } from "linkedom";
 import * as fs from "node:fs/promises";
 import {
+  DEV_PORT_NON_OVERLAP_SPAN,
+  DEV_PORT_OFFSET_MAX,
   devHttpOrigin,
+  devPort,
   requireDevPortOffset,
 } from "#libs/shared/dev-ports/defines.ts";
 
@@ -284,9 +287,20 @@ function setExistingCaseInsensitiveAttribute(
   element.setAttribute(matches[0].name, value);
 }
 
-function isLoaderOrigin(token: string, portOffset?: number): boolean {
-  return token.toLowerCase() ===
-    browserHttpLoaderOrigin(portOffset).toLowerCase();
+/**
+ * True for any loader origin a dev launch may have injected: the base loader
+ * port or an admissible `--port-offset` shift. Filtering every topology
+ * origin (not just this run's) keeps a reused browser.xhtml from retaining a
+ * previous offset's loader CSP entry (KAN-120, 2-B).
+ */
+function isLoaderTopologyOrigin(token: string): boolean {
+  const match = token.toLowerCase().match(/^http:\/\/localhost:(\d+)$/);
+  if (!match) return false;
+  const port = Number(match[1]);
+  if (!Number.isInteger(port) || port <= 0) return false;
+  const offset = port - devPort("loader", 0);
+  return offset === 0 ||
+    (offset >= DEV_PORT_NON_OVERLAP_SPAN && offset <= DEV_PORT_OFFSET_MAX);
 }
 
 function rewriteScriptSrcDirective(
@@ -311,7 +325,7 @@ function rewriteScriptSrcDirective(
     const sources = tokens.slice(1);
 
     if (normalizedName !== "script-src") {
-      if (sources.some((source) => isLoaderOrigin(source, portOffset))) {
+      if (sources.some((source) => isLoaderTopologyOrigin(source))) {
         fail(
           `${loaderOrigin} appears in non-script directive ${directiveName}`,
         );
@@ -322,7 +336,7 @@ function rewriteScriptSrcDirective(
     scriptSrcCount++;
     if (sources.length === 0) fail("script-src has no source expressions");
     const retainedSources = sources.filter(
-      (source) => !isLoaderOrigin(source, portOffset),
+      (source) => !isLoaderTopologyOrigin(source),
     );
     if (retainedSources.length === 0) {
       fail("script-src would have no source expressions after loader removal");

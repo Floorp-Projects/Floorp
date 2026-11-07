@@ -112,6 +112,21 @@ Deno.test("browser XHTML dev-to-dev is byte-stable and deduplicates loader origi
   assertEquals(first.includes("HTTP://LOCALHOST:5181"), false);
 });
 
+Deno.test("browser XHTML removes a previous offset loader origin when switching offsets", () => {
+  const at100 = transformBrowserXhtml(fixture(), {
+    allowBrowserHttpLoader: true,
+    portOffset: 100,
+  });
+  assertStringIncludes(at100, "http://localhost:5281");
+
+  const backTo0 = transformBrowserXhtml(at100, {
+    allowBrowserHttpLoader: true,
+    portOffset: 0,
+  });
+  assertStringIncludes(backTo0, BROWSER_HTTP_LOADER_ORIGIN);
+  assertEquals(backTo0.includes("http://localhost:5281"), false);
+});
+
 Deno.test("browser XHTML preserves case-variant CSP content attributes", () => {
   for (const contentAttributeName of ["CONTENT", "Content"]) {
     const output = transformBrowserXhtml(
