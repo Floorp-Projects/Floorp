@@ -4,6 +4,7 @@ import * as path from "@std/path";
 import { BIN_PATH_EXE, PATHS, PROJECT_ROOT } from "./defines.ts";
 import { recordDevProcess } from "./dev_processes.ts";
 import { ProcessUtils } from "./utils.ts";
+import { devPort } from "#libs/shared/dev-ports/defines.ts";
 
 export const MARIONETTE_STATE_FILE = path.join(
   PROJECT_ROOT,
@@ -558,12 +559,12 @@ export async function startIsolatedBrowserPair(
 }
 
 export async function run(
-  portOrOptions: number | BrowserLaunchOptions = 5180,
+  portOrOptions: number | BrowserLaunchOptions = devPort("browserRemote"),
 ): Promise<void> {
   const options: BrowserLaunchOptions = typeof portOrOptions === "number"
     ? { port: portOrOptions, marionette: true }
     : portOrOptions;
-  const port = options.port ?? 5180;
+  const port = options.port ?? devPort("browserRemote");
   const marionette = options.marionette ?? true;
   const cmd = browserCommand({ ...options, port, marionette });
   const environment = Deno.env.toObject();

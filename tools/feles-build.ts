@@ -12,6 +12,7 @@ import * as Injector from "./src/injector.ts";
 import * as BrowserLauncher from "./src/browser_launcher.ts";
 import * as DevEnvManager from "./src/dev_env_manager.ts";
 import { DEV_SERVER } from "./src/defines.ts";
+import { devHttpOrigin } from "#libs/shared/dev-ports/defines.ts";
 import { Logger } from "./src/utils.ts";
 
 const logger = new Logger("feles-build");
@@ -91,7 +92,7 @@ async function runDev(): Promise<void> {
       // servers down with it — otherwise they keep listening on their
       // ports and the next run dies with "port already in use".
       BrowserLauncher.run({
-        initialUrl: "http://localhost:5183/",
+        initialUrl: devHttpOrigin("settings", "/"),
         recordProcess: true,
       }).then(() => {
         logger.info("Browser closed — shutting down dev servers.");

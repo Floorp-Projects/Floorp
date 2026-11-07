@@ -1,3 +1,4 @@
+import { devHttpOrigin } from "#libs/shared/dev-ports/defines.ts";
 /* -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -15,7 +16,7 @@ export function MenuPopup() {
           <xul:browser
             id="profile-switcher-browser"
             src={import.meta.env.DEV
-              ? "http://localhost:5179"
+              ? devHttpOrigin("profileManager")
               : "chrome://noraneko-profile-manager/content/index.html"}
             style="width:100%; height:100%;"
             disablehistory="true"

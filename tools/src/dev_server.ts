@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import * as path from "@std/path";
+import {
+  DEV_PORTS,
+  devPort,
+  type DevPortName,
+} from "#libs/shared/dev-ports/defines.ts";
 import { DEV_SERVER, PROJECT_ROOT } from "./defines.ts";
 import { Logger } from "./utils.ts";
 import { recordDevProcess, reportDevPortConflict } from "./dev_processes.ts";
@@ -203,27 +208,24 @@ export function shutdown(): void {
   logger.success("Vite dev servers shut down.");
 }
 
+/** Dev-server names that map directly onto the shared port table. */
+const SERVER_NAME_TO_PORT_NAME: Record<string, DevPortName> = {
+  "main": "loader",
+  "designs": "designs",
+  "modal-child": "modalChild",
+  "newtab": "newtab",
+  "notes": "notes",
+  "settings": "settings",
+  "welcome": "welcome",
+  "profile-manager": "profileManager",
+  "workflow-progress": "workflowProgress",
+};
+
 export function getPortFor(serverName: string): number {
-  switch (serverName) {
-    case "main":
-      return 5181;
-    case "designs":
-      return 5174;
-    case "modal-child":
-      return 5185;
-    case "newtab":
-      return 5186;
-    case "notes":
-      return 5188;
-    case "settings":
-      return 5183;
-    case "welcome":
-      return 5187;
-    case "profile-manager":
-      return 5179;
-    case "workflow-progress":
-      return 5192;
-    default:
-      return DEV_SERVER.default_port;
-  }
+  const portName = SERVER_NAME_TO_PORT_NAME[serverName];
+  if (portName) return devPort(portName);
+  return DEV_SERVER.default_port;
 }
+
+/** Exposed for tests/tools that need the whole name-keyed port table. */
+export { DEV_PORTS };

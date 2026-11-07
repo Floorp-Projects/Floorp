@@ -8,6 +8,8 @@
  * Progress state is stored here and queried by the progress window via Actor.
  */
 
+import { devHttpOrigin } from "#libs/shared/dev-ports/defines.ts";
+
 const { BrowserWindowTracker } = ChromeUtils.importESModule(
   "resource:///modules/BrowserWindowTracker.sys.mjs",
 );
@@ -15,7 +17,7 @@ const { BrowserWindowTracker } = ChromeUtils.importESModule(
 const { setTimeout, setInterval, clearInterval } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs",
 );
-const PROGRESS_WINDOW_URL = "http://localhost:5192/";
+const PROGRESS_WINDOW_URL = devHttpOrigin("workflowProgress", "/");
 
 interface WorkflowProgressStep {
   id: string;
@@ -94,16 +96,19 @@ class OSFrontEndManager {
 
     try {
       // Get screen dimensions for positioning
-      const recentWindow = Services.wm.getMostRecentWindow("navigator:browser") as Window | null;
+      const recentWindow = Services.wm.getMostRecentWindow(
+        "navigator:browser",
+      ) as Window | null;
       const screenWidth = recentWindow?.screen?.availWidth || 1920;
       const width = 360;
       const height = 480;
       const left = screenWidth - (width + 20); // 20px margin from right
 
       // Create extraOptions to exclude from session restore (like PWA/TaskBarTabs)
-      const extraOptions = Cc["@mozilla.org/hash-property-bag;1"].createInstance(
-        Ci.nsIWritablePropertyBag2,
-      );
+      const extraOptions = Cc["@mozilla.org/hash-property-bag;1"]
+        .createInstance(
+          Ci.nsIWritablePropertyBag2,
+        );
       extraOptions.setPropertyAsAString("taskbartab", "workflow-progress");
 
       // Create URL argument
@@ -113,7 +118,9 @@ class OSFrontEndManager {
       url.data = PROGRESS_WINDOW_URL;
 
       // Build args array
-      const args = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
+      const args = Cc["@mozilla.org/array;1"].createInstance(
+        Ci.nsIMutableArray,
+      );
       args.appendElement(url);
       args.appendElement(extraOptions);
 
@@ -136,9 +143,11 @@ class OSFrontEndManager {
         `left=${left}`,
         `top=80`,
       ].join(",");
-      
-      console.log("[OSFrontEndManager] Opening window via BrowserWindowTracker...");
-      
+
+      console.log(
+        "[OSFrontEndManager] Opening window via BrowserWindowTracker...",
+      );
+
       const win = await BrowserWindowTracker.promiseOpenWindow({
         args,
         features: windowFeatures,
@@ -152,36 +161,37 @@ class OSFrontEndManager {
       // Recalculate position based on the actual window's screen
       const realWidth = 360;
       const realHeight = targetScreen.availHeight;
-      
+
       // Note: win.screenX/Y in main process might be different from content process, but win.screen gives the screen object.
       // availLeft/Top are crucial for multi-monitor setups.
-      console.log(`[OSFrontEndManager] Screen info: availLeft=${targetScreen.availLeft}, availTop=${targetScreen.availTop}, availWidth=${targetScreen.availWidth}, availHeight=${targetScreen.availHeight}`);
-      
+      console.log(
+        `[OSFrontEndManager] Screen info: availLeft=${targetScreen.availLeft}, availTop=${targetScreen.availTop}, availWidth=${targetScreen.availWidth}, availHeight=${targetScreen.availHeight}`,
+      );
+
       // Place at top-right corner without margin
-      const targetLeft = targetScreen.availLeft + targetScreen.availWidth - realWidth; 
+      const targetLeft = targetScreen.availLeft + targetScreen.availWidth -
+        realWidth;
       const targetTop = targetScreen.availTop;
 
       // Force position logic
       const forcePosition = () => {
-         try {
-            win.moveTo(targetLeft, targetTop);
-            if (win.outerWidth !== realWidth || win.outerHeight !== realHeight) {
-                win.resizeTo(realWidth, realHeight);
-            }
-         } catch(e) {
-            console.error("[OSFrontEndManager] Position error:", e);
-         }
+        try {
+          win.moveTo(targetLeft, targetTop);
+          if (win.outerWidth !== realWidth || win.outerHeight !== realHeight) {
+            win.resizeTo(realWidth, realHeight);
+          }
+        } catch (e) {
+          console.error("[OSFrontEndManager] Position error:", e);
+        }
       };
 
       // Force position repeatedly
       const intervalId = setInterval(forcePosition, 100);
       setTimeout(() => clearInterval(intervalId), 1000);
-
     } catch (error) {
       console.error("[OSFrontEndManager] Failed to open window:", error);
     }
   }
-
 
   /**
    * Close the progress window

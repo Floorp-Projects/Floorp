@@ -2,8 +2,9 @@
 
 import { DOMParser } from "linkedom";
 import * as fs from "node:fs/promises";
+import { devHttpOrigin } from "#libs/shared/dev-ports/defines.ts";
 
-export const BROWSER_HTTP_LOADER_ORIGIN = "http://localhost:5181";
+export const BROWSER_HTTP_LOADER_ORIGIN = devHttpOrigin("loader");
 
 const CSP_HEADER = "content-security-policy";
 const STARTUP_SCRIPT_SRC = "chrome://noraneko-startup/content/chrome_root.js";

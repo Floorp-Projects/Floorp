@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { modalSize } from "../data/data";
+import { devHttpOrigin } from "#libs/shared/dev-ports/defines.ts";
 
 export function ModalBrowser() {
   return (
@@ -14,7 +15,7 @@ export function ModalBrowser() {
       maychangeremoteness="true"
       messagemanagergroup="browsers"
       src={import.meta.env.DEV
-        ? "http://localhost:5185/"
+        ? devHttpOrigin("modalChild", "/")
         : "chrome://noraneko-modal-child/content/index.html"}
       flex="1"
       style={{
