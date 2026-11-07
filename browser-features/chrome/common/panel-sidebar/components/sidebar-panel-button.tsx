@@ -68,6 +68,7 @@ export function PanelSidebarButton(props: {
     if (type !== "web" || !url || !supportsUnreadBadge(url)) return;
 
     let badgeState = createUnreadBadgeState();
+    let pendingDismissal: string | undefined;
     const badgeIdentity = JSON.stringify([id, url, userContextId ?? 0]);
     const saved = savedUnreadBadgeForPanel(props.panel);
     let savedCount = saved?.count ?? "";
@@ -79,7 +80,9 @@ export function PanelSidebarButton(props: {
       savedCount = count;
     };
     gPanelSidebar.clearUnreadBadges.set(id, () => {
-      badgeState.clear(awaitingLiveCount ? savedCount : undefined);
+      const dismissed = awaitingLiveCount ? savedCount : undefined;
+      if (!observedBrowser && dismissed) pendingDismissal = dismissed;
+      badgeState.clear(dismissed);
       awaitingLiveCount = false;
       saveCount("");
       setRestored(false);
@@ -123,6 +126,10 @@ export function PanelSidebarButton(props: {
       const signal = eligible
         ? getUnreadBadge(url, uri.spec, page.documentTitle)
         : "";
+      if (eligible && signal !== undefined && pendingDismissal) {
+        badgeState.clear(pendingDismissal);
+        pendingDismissal = undefined;
+      }
       const liveCount = badgeState.update(signal);
       const viewing = selectedPanelId() === id && isPanelSidebarVisible();
       if (eligible) {

@@ -2,7 +2,7 @@ import styles from "@/components/common/settings-sections.module.css";
 import { ConfirmModal } from "@/components/common/ConfirmModal.tsx";
 import { Button } from "../../../../../../libs/ui/button.tsx";
 import type React from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   closestCenter,
@@ -90,7 +90,11 @@ const SortablePanel = ({
         <div className="min-w-0">
           <div className="font-medium flex items-center gap-2">
             {panel.icon && (
-              <img src={panel.icon} alt="" className="w-5 h-5 shrink-0 rounded-full" />
+              <img
+                src={panel.icon}
+                alt=""
+                className="w-5 h-5 shrink-0 rounded-full"
+              />
             )}
             <span className="max-w-md truncate">
               {displayName}
@@ -222,7 +226,6 @@ export const PanelList: React.FC = () => {
   };
 
   const handleSavePanel = async (panel: Panel) => {
-
     const isNew = !panels.some((p) => p.id === panel.id);
 
     if (isNew) {
@@ -265,18 +268,31 @@ export const PanelList: React.FC = () => {
     setActiveId(event.active.id as string);
   };
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const savingOrder = useRef(false);
+
+  const handleDragEnd = async (event: DragEndEvent) => {
     setActiveId(null);
     const { active, over } = event;
+    if (!over || active.id === over.id || savingOrder.current) return;
 
-    if (over && active.id !== over.id) {
-      setPanels((items) => {
-        const oldIndex = items.findIndex((item) => item.id === active.id);
-        const newIndex = items.findIndex((item) => item.id === over.id);
-        const newItems = arrayMove(items, oldIndex, newIndex);
-        savePanelsList(newItems);
-        return newItems;
-      });
+    const oldIndex = panels.findIndex((panel) => panel.id === active.id);
+    const newIndex = panels.findIndex((panel) => panel.id === over.id);
+    if (oldIndex < 0 || newIndex < 0) return;
+
+    const reordered = arrayMove(panels, oldIndex, newIndex);
+    savingOrder.current = true;
+    try {
+      await savePanelsList(reordered);
+      setPanels(reordered);
+    } catch (error) {
+      console.error("[PanelSidebar] Failed to save panel order", error);
+      const saved = await getPanelsList().catch(() => null);
+      if (saved) setPanels(saved);
+      window.alert(t("panelSidebar.reorderSaveFailed", {
+        defaultValue: "Could not save the panel order. Please try again.",
+      }));
+    } finally {
+      savingOrder.current = false;
     }
   };
 
