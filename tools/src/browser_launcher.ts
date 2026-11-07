@@ -2,6 +2,7 @@
 
 import * as path from "@std/path";
 import { BIN_PATH_EXE, PATHS, PROJECT_ROOT } from "./defines.ts";
+import { recordDevProcess } from "./dev_processes.ts";
 import { ProcessUtils } from "./utils.ts";
 
 export const MARIONETTE_STATE_FILE = path.join(
@@ -32,6 +33,8 @@ function printFirefoxLog(line: string) {
 }
 
 export interface BrowserLaunchOptions {
+  /** Record the child for checkout-scoped dev-tool stop. */
+  recordProcess?: boolean;
   binaryPath?: string;
   noRemote?: boolean;
   port?: number;
@@ -582,6 +585,7 @@ export async function run(
       printFirefoxLog(line.trim());
     },
     environment,
+    options.recordProcess ? (child) => recordDevProcess(child.pid) : undefined,
   );
 
   try {
