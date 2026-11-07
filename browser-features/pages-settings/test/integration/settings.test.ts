@@ -19,6 +19,7 @@ import {
   valueAt,
   writes,
 } from "../../../../libs/ui/test/page-fixture.ts";
+import i18n from "../../src/lib/i18n/i18n.ts";
 
 const DESIGN = "floorp.design.configs";
 const WORKSPACES = "floorp.workspaces.v4.config";
@@ -555,6 +556,66 @@ export async function runPageTests() {
       );
     },
   });
+  for (
+    const [locale, draft, expected] of [
+      ["ja-JP", "１２３", 123],
+      ["ja-JP", "１２３.５", 124],
+      ["ar", "١٢٣", 123],
+      ["ar", "١٢٣٫٥", 124],
+      ["de", "123,5", 124],
+      ["en-US", "123.4999", 123],
+    ] as const
+  ) {
+    tests.push({
+      name:
+        `Memory seconds parse ${locale} draft ${draft} without losing its value`,
+      fn: async () => {
+        prefs.set(
+          MEMORY,
+          JSON.stringify({
+            enabled: true,
+            idleThresholdSec: 300,
+            pollIntervalSec: 60,
+            minIntervalSec: 300,
+            minResidentMB: 400,
+          }),
+        );
+        const selector = "#idle-memory-reclaim-idle-threshold";
+        await route("features/performance", selector);
+        const originalLocale = i18n.language;
+        try {
+          await i18n.changeLanguage(locale);
+          await pause(80);
+          const target = element<HTMLInputElement>(selector);
+          await until(() => !target.disabled, "Localized field ready");
+          await input(selector, draft);
+          await pause(80);
+          assert(target.value !== "", "Accepted digits were erased");
+          assertEquals(
+            valueAt(MEMORY, "idleThresholdSec"),
+            300,
+            "Draft saved early",
+          );
+          target.blur();
+          await until(
+            () => valueAt(MEMORY, "idleThresholdSec") === expected,
+            "Localized value was not committed correctly",
+          );
+          assertEquals(
+            target.value,
+            new Intl.NumberFormat(locale, {
+              useGrouping: false,
+            }).format(expected),
+            "Committed value is formatted for the UI locale",
+          );
+        } finally {
+          element<HTMLInputElement>(selector).blur();
+          await i18n.changeLanguage(originalLocale);
+          await pause(80);
+        }
+      },
+    });
+  }
   tests.push({
     name: "Memory seconds retain composition drafts until commit or cancel",
     fn: async () => {
