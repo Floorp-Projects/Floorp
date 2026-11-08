@@ -5,18 +5,21 @@ import type { Panel } from "./type.ts";
 const SAVED_UNREAD_PREFIX = "floorp.panelSidebar.savedUnread.";
 
 /** Name the local saved-count preference for a panel. */
-function prefName(id: string): string {
+function prefName(id: string): string | undefined {
+  if (!id.isWellFormed()) return undefined;
   return `${SAVED_UNREAD_PREFIX}${encodeURIComponent(id)}`;
 }
 
 /** Remove the panel’s saved count from the profile. */
 export function removeSavedUnreadBadge(id: string): void {
-  Services.prefs.clearUserPref(prefName(id));
+  const name = prefName(id);
+  if (name) Services.prefs.clearUserPref(name);
 }
 
 /** Remove saved counts with no matching panel, including on startup. */
 export function pruneSavedUnreadBadges(panels: readonly Panel[]): void {
   const livePrefs = new Set(panels.map((panel) => prefName(panel.id)));
+  if (livePrefs.has(undefined)) return;
   for (const name of Services.prefs.getChildList(SAVED_UNREAD_PREFIX)) {
     if (!livePrefs.has(name)) Services.prefs.clearUserPref(name);
   }
@@ -37,6 +40,7 @@ export function savedUnreadBadgeForPanel(panel: Panel) {
   }
 
   const name = prefName(panel.id);
+  if (!name) return;
   const identity = JSON.stringify([panel.url, panel.userContextId ?? 0]);
   const prefix = `${identity}:`;
   const stored = Services.prefs.getStringPref(name, "");

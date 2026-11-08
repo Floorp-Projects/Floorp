@@ -33,6 +33,9 @@ function defaultPanelSidebarData(): Panels {
   return isRight(result) ? result.right.data : [];
 }
 
+const fallbackPanelLists = new WeakSet<Panels>();
+
+/** Parse stored panels, marking fallback lists as unsuitable for persistence. */
 export function parsePanelSidebarData(stringData: string): Panels {
   try {
     const result = zPanelSidebarData.decode(
@@ -50,7 +53,9 @@ export function parsePanelSidebarData(stringData: string): Panels {
       error,
     );
   }
-  return defaultPanelSidebarData();
+  const fallback = defaultPanelSidebarData();
+  fallbackPanelLists.add(fallback);
+  return fallback;
 }
 
 /** Synchronize panel preferences and remove saved counts for deleted panels. */
@@ -86,11 +91,12 @@ function createPanelSidebarData(): [Accessor<Panels>, Setter<Panels>] {
 
   createEffect(() => {
     const panels = panelSidebarData();
-    pruneSavedUnreadBadges(panels);
+    if (fallbackPanelLists.has(panels)) return;
     Services.prefs.setStringPref(
       PanelSidebarStaticNames.panelSidebarDataPrefName,
       JSON.stringify({ data: panels }),
     );
+    pruneSavedUnreadBadges(panels);
   });
   return [panelSidebarData, setPanelSidebarData];
 }
