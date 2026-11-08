@@ -122,12 +122,21 @@ function isBrowserEval(operation: FdhTaskState["operations"][number]): boolean {
   return line.includes("tools/dev-tool.ts eval");
 }
 
+/**
+ * Final state from the LATEST assertion per name, so a deliberately broken
+ * build/test that is fixed later (Gate 3 T-01 error-then-fix loop) ends as a
+ * pass while the failed intermediate assertion stays visible in assertions[].
+ */
 function manifestStateOf(state: FdhTaskState): State {
   if (state.status === "cancelled") return "cancelled";
   if (state.status === "failed") return "failed";
-  if (state.assertions.some((assertion) => !assertion.passed)) return "failed";
+  const latest = new Map<string, boolean>();
+  for (const assertion of state.assertions) {
+    latest.set(assertion.name, assertion.passed);
+  }
+  if ([...latest.values()].some((passed) => !passed)) return "failed";
   if (state.status === "succeeded") return "succeeded";
-  if (state.assertions.length > 0) return "succeeded";
+  if (latest.size > 0) return "succeeded";
   return "running";
 }
 

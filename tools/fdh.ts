@@ -57,8 +57,10 @@ Commands:
                             Run "deno task feles-build build --phase after-mach"
   verify test --task-id <id>
                             Run "deno task test:host"
-  verify browser --task-id <id> [--eval <js>]
-                            Check dev-tool browser status (and eval verbatim)
+  verify browser --task-id <id> [--eval <js>] [--expect <text>]
+                            Check dev-tool browser status; --eval output is
+                            recorded verbatim, and --expect turns it into an
+                            honest contains-check assertion
   evidence --task-id <id> --out <path>
                             Build + validate the EvidenceManifest v0
                             (--out must stay under <worktree>/_dist/fdh)
@@ -363,11 +365,19 @@ function firstLine(text: string, max = 500): string {
 
 async function cmdVerifyBrowser(parsed: ParsedArgs): Promise<void> {
   assertNoPositional(parsed, 2);
-  assertAllowedOptions(parsed, ["task-id", "eval"]);
+  assertAllowedOptions(parsed, ["task-id", "eval", "expect"]);
   const taskId = validateTaskId(requireOption(parsed, "task-id"));
   const evalScript = hasOption(parsed, "eval")
     ? requireOption(parsed, "eval")
     : undefined;
+  const expectText = hasOption(parsed, "expect")
+    ? requireOption(parsed, "expect")
+    : undefined;
+  if (expectText !== undefined && evalScript === undefined) {
+    throw new Error(
+      "--expect requires --eval (the expected text is compared to eval output)",
+    );
+  }
   const state = await loadStateForCwd(taskId);
 
   const statusDisplay = "deno run -A tools/dev-tool.ts status";
@@ -421,18 +431,34 @@ async function cmdVerifyBrowser(parsed: ParsedArgs): Promise<void> {
     },
     runStreamingCommand,
   );
-  // The eval output is recorded verbatim; without an expected-text comparison
-  // it must never be turned into a passing assertion.
+  // The eval output is always recorded verbatim. Without --expect it is never
+  // turned into a passing assertion; with --expect, the recorded assertion is
+  // an honest contains-check of the actual output.
   appendEvent(state, {
     timestamp: nowIso(),
     command: "browser eval output (verbatim)",
     note: evaluated.output,
     exitCode: evaluated.code,
   });
+  if (expectText !== undefined) {
+    const passed = evaluated.code === 0 &&
+      evaluated.output.includes(expectText);
+    recordAssertion(state, {
+      name: "browser-eval-contains",
+      expected: `eval output contains ${JSON.stringify(expectText)}`,
+      actual: firstLine(evaluated.output),
+      passed,
+    });
+  }
   writeTaskState(state);
 
   if (evaluated.code !== 0) {
     throw new Error(`browser eval failed with exit ${evaluated.code}`);
+  }
+  if (expectText !== undefined && !evaluated.output.includes(expectText)) {
+    throw new Error(
+      `browser eval output did not contain ${JSON.stringify(expectText)}`,
+    );
   }
 }
 

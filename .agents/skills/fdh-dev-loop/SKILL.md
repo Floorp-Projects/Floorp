@@ -13,8 +13,8 @@ LLM, push a branch, open a PR, or contact GitHub. An already-running agent
 
 Use this skill when:
 
-- you are in a Floorp git worktree and need the Gate 3 local loop:
-  request → edit → build → test → browser confirmation → evidence;
+- you are in a Floorp git worktree and need the Gate 3 local loop: request →
+  edit → build → test → browser confirmation → evidence;
 - you need an `EvidenceManifest v0` that passes
   `tools/qa3/evidence/evidence-manifest.schema.json` and
   `validateManifest(value, { role: "runner" })`;
@@ -27,8 +27,8 @@ operation that needs GitHub or another shared service.
 ## Prerequisites
 
 - Deno is available (the repo's `deno.json` tasks apply).
-- The worktree is a real git work tree; run the commands from inside it (or
-  pass `--worktree` to `task start` / `task resume`).
+- The worktree is a real git work tree; run the commands from inside it (or pass
+  `--worktree` to `task start` / `task resume`).
 - `_dist/` is already git-ignored; fdh writes only under
   `<worktree>/_dist/fdh/`.
 - Run from the worktree root so `dev`/`verify`/`evidence` can find the state
@@ -65,10 +65,11 @@ deno run -A tools/fdh.ts verify build --task-id <task-id>
 deno run -A tools/fdh.ts verify test --task-id <task-id>
 
 # 7. Confirm the browser. Status must report a connected browser. --eval is
-#    optional; its output is recorded verbatim and is NOT turned into a pass
-#    without expected text.
+#    optional and its output is recorded verbatim; add --expect <text> to turn
+#    that output into an honest contains-check assertion (use it for the
+#    change-confirmation text, e.g. the edited label).
 deno run -A tools/fdh.ts verify browser --task-id <task-id> \
-  --eval 'document.title'
+  --eval 'document.title' --expect 'Floorp'
 
 # 8. Build + validate EvidenceManifest v0. --out must stay under
 #    <worktree>/_dist/fdh/.
@@ -90,18 +91,22 @@ deno run -A tools/fdh.ts dev down --task-id <task-id>
   `operations[]`, `assertions[]`, `cleanup` and `reproduction`.
 - `task start` and `task resume` print compact JSON. `evidence` prints a JSON
   summary. `dev`/`verify` stream child output and exit 1 when the child fails.
-- The CLI records every build/test/browser command as an operation, an event
-  and (for build/test/status) an assertion. Failed commands exit 1; assertions
-  keep the actual output/exit code.
+- The CLI records every build/test/browser command as an operation, an event and
+  (for build/test/status) an assertion. Failed commands exit 1; assertions keep
+  the actual output/exit code.
 - `verify browser` succeeds only when `dev-tool status` prints
   `Connected to browser.` Without that line, do not claim browser verification.
-- `--eval` output is recorded verbatim; because the CLI has no expected-text
-  argument, it never marks an eval as passed. State that in your report.
+- `--eval` output is always recorded verbatim. Without `--expect` it is never a
+  pass; with `--expect <text>` the CLI records a `browser-eval-contains`
+  assertion from the actual output and exits 1 when the text is absent.
 - Evidence IDs are stable per task and use the required issuer namespaces
   (`scheduler:`, `executor:`, `host:`, `host-authorization:`). All seven
   entities and the five core relationships are always present.
 - `taskStatus.state` maps the recorded outcome (`running` / `succeeded` /
-  `failed`), and the listed `stateTransition.to` always equals it.
+  `failed`) from the LATEST assertion per name, and the listed
+  `stateTransition.to` always equals it. A deliberately broken build/test fixed
+  later therefore ends as `succeeded` while the failed intermediate assertion
+  stays visible in `assertions[]`.
 - `visualJudge` is always `null` and `limitations[]` is always non-empty. The
   DSH toolchain pin is `UNVERIFIED`; the matching limitation is included.
 - The CLI is thin: no conversation loop, no LLM calls, no image/screenshot
@@ -115,16 +120,19 @@ Evidence is accepted only when it passes **both**:
 2. `validateManifest(value, { role: "runner" })` from
    `tools/qa3/evidence/validate.ts`.
 
-`fdh evidence` validates before writing and exits 1 with `evidence-invalid
-<code> <path>: <message>` lines when the manifest would be rejected. Do not
-hand-edit the manifest to make it pass; fix the recorded state or the command.
+`fdh evidence` validates before writing and exits 1 with
+`evidence-invalid
+<code> <path>: <message>` lines when the manifest would be
+rejected. Do not hand-edit the manifest to make it pass; fix the recorded state
+or the command.
 
 ## Browser unavailable fallback
 
-If the browser is unavailable (no Marionette connection, `dev up` fails, headless
-limitation, etc.):
+If the browser is unavailable (no Marionette connection, `dev up` fails,
+headless limitation, etc.):
 
-1. Leave the failed `browser-connected` assertion in the state; do not delete it.
+1. Leave the failed `browser-connected` assertion in the state; do not delete
+   it.
 2. Do not claim a pass. Run `fdh evidence` anyway: the manifest records the
    failure and the limitations state that browser behavior is UNVERIFIED.
 3. Report the limitation explicitly in your final answer, including the exact

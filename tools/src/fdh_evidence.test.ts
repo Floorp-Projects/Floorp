@@ -210,6 +210,42 @@ Deno.test("a failed assertion maps to a failed state and valid transition", asyn
   });
 });
 
+Deno.test("a broken-then-fixed build ends succeeded while the failed attempt stays visible", async () => {
+  await withTempDir(async (dir) => {
+    const state = makeState(dir);
+    addCheck(
+      state,
+      "build-exit-code",
+      "deno task feles-build build --phase after-mach",
+      false,
+    );
+    addCheck(
+      state,
+      "build-exit-code",
+      "deno task feles-build build --phase after-mach",
+    );
+    addCheck(
+      state,
+      "browser-eval-contains",
+      "deno run -A tools/dev-tool.ts eval document.title",
+    );
+    writeTaskState(state);
+
+    const manifest = await buildEvidenceManifest(state, {
+      os: { name: "testos", arch: "x86_64" },
+    });
+
+    assertEquals(manifest.envelope.taskStatus.state, "succeeded");
+    assertEquals(manifest.envelope.stateTransition.to, "succeeded");
+    assertEquals(manifest.attempts[0].result, "passed");
+    assertEquals(manifest.assertions.length, 3);
+    assertEquals(manifest.assertions[0].passed, false);
+    assertEquals(manifest.assertions[1].passed, true);
+    assertEquals(manifest.assertions[2].passed, true);
+    assertEquals(validateEvidenceManifest(manifest), []);
+  });
+});
+
 Deno.test("writeEvidenceManifest writes JSON that re-validates", async () => {
   await withTempDir(async (dir) => {
     const state = makeState(dir);
