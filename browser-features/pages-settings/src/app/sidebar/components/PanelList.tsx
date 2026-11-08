@@ -282,7 +282,7 @@ export const PanelList: React.FC = () => {
       console.error("[PanelSidebar] Failed to save panel order", error);
       const saved = await getPanelsList().catch(() => null);
       if (saved) setPanels(saved);
-      window.alert(t("panelSidebar.reorderSaveFailed", {
+      globalThis.alert(t("panelSidebar.reorderSaveFailed", {
         defaultValue: "Could not save the panel order. Please try again.",
       }));
     } finally {

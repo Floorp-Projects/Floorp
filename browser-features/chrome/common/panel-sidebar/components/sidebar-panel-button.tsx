@@ -155,9 +155,9 @@ export function PanelSidebarButton(props: {
     untrack(updateBadge);
     // Also handles lazy creation, hidden panels and unload/recreation without
     // subscribing to notifications or installing a content-side listener.
-    const timer = window.setInterval(updateBadge, 1000);
+    const timer = globalThis.setInterval(updateBadge, 1000);
     onCleanup(() => {
-      window.clearInterval(timer);
+      globalThis.clearInterval(timer);
       observedBrowser?.removeEventListener(
         "pagetitlechanged",
         onPageTitleChanged,
