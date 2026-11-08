@@ -420,17 +420,16 @@ Deno.test("relative mount links resolve from the link parent in the same root", 
   });
   try {
     const binRootDir = path.join(root, "_dist", "bin");
+    const target = path.join(root, "bridge", "loader-features", "_dist");
     Deno.mkdirSync(binRootDir, { recursive: true });
+    Deno.mkdirSync(target, { recursive: true });
     runInjector("dev", "noraneko-devdir", {
       binRootDir,
-      projectRoot: PROJECT_ROOT,
+      projectRoot: root,
     });
 
     const link = path.join(binRootDir, "noraneko-devdir", "content");
-    assertEquals(
-      Deno.realPathSync(link),
-      path.join(PROJECT_ROOT, "bridge", "loader-features", "_dist"),
-    );
+    assertEquals(Deno.realPathSync(link), target);
   } finally {
     Deno.removeSync(root, { recursive: true });
   }
