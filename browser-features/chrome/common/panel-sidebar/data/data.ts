@@ -81,6 +81,17 @@ function createPanelSidebarData(): [Accessor<Panels>, Setter<Panels>] {
 
   createEffect(() => {
     const panels = panelSidebarData();
+    const serialized = JSON.stringify({ data: panels });
+    const restoreStoredPanels = () => {
+      const stored = read();
+      if (JSON.stringify({ data: stored }) !== serialized) {
+        setPanelSidebarData(stored);
+      }
+    };
+    if (Services.prefs.prefIsLocked(prefName)) {
+      restoreStoredPanels();
+      return;
+    }
     const fallback = invalidFallback;
     if (fallback) {
       if (panels === fallback) return;
@@ -95,11 +106,21 @@ function createPanelSidebarData(): [Accessor<Panels>, Setter<Panels>] {
         return;
       }
     }
-    Services.prefs.setStringPref(
-      prefName,
-      JSON.stringify({ data: panels }),
-    );
-    pruneSavedUnreadBadges(panels);
+    try {
+      Services.prefs.setStringPref(prefName, serialized);
+    } catch (error) {
+      console.error("[PanelSidebar] Failed to save panel settings", error);
+      restoreStoredPanels();
+      return;
+    }
+    if (
+      !Services.prefs.prefIsLocked(prefName) &&
+      Services.prefs.getStringPref(prefName, strDefaultData) === serialized
+    ) {
+      pruneSavedUnreadBadges(panels);
+    } else {
+      restoreStoredPanels();
+    }
   });
   return [panelSidebarData, setPanelSidebarData];
 }
