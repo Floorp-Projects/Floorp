@@ -40,7 +40,10 @@ function shouldLoadPanelForBadges(panel: Panel | undefined): boolean {
 }
 
 export class CPanelSidebar {
-  public readonly clearUnreadBadges = new Map<string, () => void>();
+  public readonly unreadBadgeControls = new Map<string, {
+    visible: () => boolean;
+    clear: () => void;
+  }>();
   private panelDisposers: Map<string, () => void> = new Map();
   private get parentElement() {
     return document?.getElementById("panel-sidebar-browser-box") as unknown as

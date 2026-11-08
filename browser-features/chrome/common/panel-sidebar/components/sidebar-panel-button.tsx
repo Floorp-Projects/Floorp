@@ -42,6 +42,7 @@ const browserBadgeStates = new WeakMap<XULBrowserElement, {
   state: ReturnType<typeof createUnreadBadgeState>;
 }>();
 
+/** Render a panel button and observe its loaded browser for badge updates. */
 export function PanelSidebarButton(props: {
   panel: Panel;
   ctx: CPanelSidebar;
@@ -68,7 +69,6 @@ export function PanelSidebarButton(props: {
     if (type !== "web" || !url || !supportsUnreadBadge(url)) return;
 
     let badgeState = createUnreadBadgeState();
-    let pendingDismissal: string | undefined;
     const badgeIdentity = JSON.stringify([id, url, userContextId ?? 0]);
     const saved = savedUnreadBadgeForPanel(props.panel);
     let savedCount = saved?.count ?? "";
@@ -79,14 +79,15 @@ export function PanelSidebarButton(props: {
       saved.write(count);
       savedCount = count;
     };
-    gPanelSidebar.clearUnreadBadges.set(id, () => {
-      const dismissed = awaitingLiveCount ? savedCount : undefined;
-      if (!observedBrowser && dismissed) pendingDismissal = dismissed;
-      badgeState.clear(dismissed);
-      awaitingLiveCount = false;
-      saveCount("");
-      setRestored(false);
-      setUnreadBadge("");
+    gPanelSidebar.unreadBadgeControls.set(id, {
+      visible: () => unreadBadge() !== "",
+      clear: () => {
+        badgeState.clear(restored() ? savedCount : undefined);
+        awaitingLiveCount = false;
+        saveCount("");
+        setRestored(false);
+        setUnreadBadge("");
+      },
     });
 
     let observedBrowser: XULBrowserElement | undefined;
@@ -126,10 +127,6 @@ export function PanelSidebarButton(props: {
       const signal = eligible
         ? getUnreadBadge(url, uri.spec, page.documentTitle)
         : "";
-      if (eligible && pendingDismissal) {
-        if (signal !== undefined) badgeState.clear(pendingDismissal);
-        pendingDismissal = undefined;
-      }
       const liveCount = badgeState.update(signal);
       const viewing = selectedPanelId() === id && isPanelSidebarVisible();
       if (eligible) {
@@ -162,7 +159,7 @@ export function PanelSidebarButton(props: {
         "pagetitlechanged",
         onPageTitleChanged,
       );
-      gPanelSidebar.clearUnreadBadges.delete(id);
+      gPanelSidebar.unreadBadgeControls.delete(id);
     });
   });
 

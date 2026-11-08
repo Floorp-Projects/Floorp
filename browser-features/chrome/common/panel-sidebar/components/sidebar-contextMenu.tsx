@@ -221,13 +221,17 @@ export class SidebarContextMenuElem {
                 })}
             />
           </Show>
-          <Show when={this.ctx.clearUnreadBadges.get(contextPanel()?.id ?? "")}>
-            {(clearBadge) => (
-              <xul:menuitem
-                data-floorp-context-menu-key="floorp.webpanel.clear-badge"
-                label={texts().clearBadge}
-                onCommand={() => this.safeExecuteCommand(clearBadge())}
-              />
+          <Show
+            when={this.ctx.unreadBadgeControls.get(contextPanel()?.id ?? "")}
+          >
+            {(controls) => (
+              <Show when={controls().visible()}>
+                <xul:menuitem
+                  data-floorp-context-menu-key="floorp.webpanel.clear-badge"
+                  label={texts().clearBadge}
+                  onCommand={() => this.safeExecuteCommand(controls().clear)}
+                />
+              </Show>
             )}
           </Show>
           <Show when={contextPanel()?.type === "web"}>
