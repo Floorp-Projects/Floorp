@@ -28,13 +28,15 @@ export const PENDING_EXTERNAL_OPS = [
 ] as const;
 export type PendingExternalOp = (typeof PENDING_EXTERNAL_OPS)[number];
 
-export type QuotaEventKind =
-  | "claim"
-  | "release"
-  | "stop"
-  | "resume"
-  | "pending"
-  | "approve";
+export const QUOTA_EVENT_KINDS = [
+  "claim",
+  "release",
+  "stop",
+  "resume",
+  "pending",
+  "approve",
+] as const;
+export type QuotaEventKind = (typeof QUOTA_EVENT_KINDS)[number];
 
 export interface QuotaEvent {
   at: string;
@@ -100,10 +102,16 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function assertString(value: unknown, name: string): void {
-  if (typeof value !== "string" || value === "") {
+function assertString(
+  value: unknown,
+  name: string,
+  allowEmpty = false,
+): void {
+  if (typeof value !== "string" || (!allowEmpty && value === "")) {
     throw new Error(
-      `invalid fdh quota ledger: ${name} must be a non-empty string`,
+      `invalid fdh quota ledger: ${name} must be a ${
+        allowEmpty ? "" : "non-empty "
+      }string`,
     );
   }
 }
@@ -146,9 +154,47 @@ export function parseQuotaLedger(value: unknown): FdhQuotaLedger {
         "invalid fdh quota ledger: approvalPending entries must be objects",
       );
     }
-    assertString(pending.op, "approvalPending.op");
-    assertString(pending.note, "approvalPending.note");
+    if (!PENDING_EXTERNAL_OPS.includes(pending.op as PendingExternalOp)) {
+      throw new Error(
+        "invalid fdh quota ledger: approvalPending.op is not admissible",
+      );
+    }
+    // `quota pending --note` is optional, so an empty note is admissible.
+    assertString(pending.note, "approvalPending.note", true);
     assertString(pending.at, "approvalPending.at");
+  }
+  for (const event of value.events) {
+    if (!isRecord(event)) {
+      throw new Error(
+        "invalid fdh quota ledger: events entries must be objects",
+      );
+    }
+    if (!QUOTA_EVENT_KINDS.includes(event.kind as QuotaEventKind)) {
+      throw new Error(
+        "invalid fdh quota ledger: events.kind is not admissible",
+      );
+    }
+    assertString(event.at, "events.at");
+    if (event.agent !== undefined) assertString(event.agent, "events.agent");
+    if (
+      event.reason !== undefined &&
+      !QUOTA_STOP_REASONS.includes(event.reason as QuotaStopReason)
+    ) {
+      throw new Error(
+        "invalid fdh quota ledger: events.reason is not admissible",
+      );
+    }
+    if (
+      event.op !== undefined &&
+      !PENDING_EXTERNAL_OPS.includes(event.op as PendingExternalOp)
+    ) {
+      throw new Error(
+        "invalid fdh quota ledger: events.op is not admissible",
+      );
+    }
+    if (event.note !== undefined) {
+      assertString(event.note, "events.note", true);
+    }
   }
   return value as unknown as FdhQuotaLedger;
 }

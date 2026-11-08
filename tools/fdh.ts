@@ -50,7 +50,11 @@ import {
   summarizeQuota,
   writeQuotaLedger,
 } from "./src/fdh_quota.ts";
-import type { PendingExternalOp, QuotaStopReason } from "./src/fdh_quota.ts";
+import type {
+  PendingApproval,
+  PendingExternalOp,
+  QuotaStopReason,
+} from "./src/fdh_quota.ts";
 import type { FdhTaskState } from "./src/fdh_task.ts";
 import type { ValidationError } from "./qa3/evidence/types.ts";
 
@@ -98,10 +102,6 @@ State: <worktree>/_dist/fdh/tasks/<id>.json (git-ignored via _dist/).
 Quota ledger: <worktree>/_dist/fdh/quota/<id>.json (local-only).
 Errors go to stderr and exit 1. The CLI never pushes, opens a PR, or calls a
 shared service; pending push/PR/release ops wait for 'quota approve'.
-
-State: <worktree>/_dist/fdh/tasks/<id>.json (git-ignored via _dist/).
-Errors go to stderr and exit 1. The CLI never pushes, opens a PR, or calls a
-shared service.
 `.trim();
 
 interface ParsedArgs {
@@ -263,16 +263,21 @@ async function cmdTaskResume(parsed: ParsedArgs): Promise<void> {
     ? requireOption(parsed, "worktree")
     : undefined;
 
-  const { state, report } = await resumeTaskState({
+  // Validate the quota ledger before the resume event is recorded, so a broken
+  // ledger cannot leave a successful resume in the task state.
+  let approvalPending: PendingApproval[] = [];
+  const { report } = await resumeTaskState({
     taskId,
     worktree,
     probePort: isTcpPortInUse,
+    validate: (resumedState) => {
+      approvalPending = quotaLedgerExists(resumedState.worktree, taskId)
+        ? readQuotaLedger(resumedState.worktree, taskId).approvalPending
+        : [];
+    },
   });
   // Resume never reruns push/PR/release; it reports the pending approvals so the
   // agent waits for an explicit 'fdh quota approve'.
-  const approvalPending = quotaLedgerExists(state.worktree, taskId)
-    ? readQuotaLedger(state.worktree, taskId).approvalPending
-    : [];
   console.log(JSON.stringify({ ...report, approvalPending }));
 }
 

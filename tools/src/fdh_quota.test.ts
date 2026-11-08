@@ -163,3 +163,61 @@ Deno.test("fdh quota: stop reasons and pending ops are constrained enums", () =>
     3,
   );
 });
+
+Deno.test("fdh quota: a pending entry with the optional empty note round-trips", async () => {
+  const root = await Deno.makeTempDir({ prefix: "fdh-quota-pending-" });
+  try {
+    const state = createQuotaLedger({
+      taskId: "gate4-d",
+      worktree: root,
+      now: () => NOW,
+    });
+    claimQuota(state, "agent-a", NOW);
+    pendingQuota(state, "push", "", NOW);
+    writeQuotaLedger(state);
+    const readBack = readQuotaLedger(root, "gate4-d");
+    assertEquals(readBack.approvalPending.length, 1);
+    assertEquals(readBack.approvalPending[0].op, "push");
+    assertEquals(readBack.approvalPending[0].note, "");
+    assertEquals(readBack.events.at(-1)?.kind, "pending");
+    // a resume over this ledger must still be readable (4-C approval-pending path)
+    assertEquals(readBack.approvalPending[0].at, NOW);
+  } finally {
+    await Deno.remove(root, { recursive: true });
+  }
+});
+
+Deno.test("fdh quota: parse constrains approvalPending ops and event shapes", () => {
+  const state = ledger();
+  claimQuota(state, "agent-a", NOW);
+  pendingQuota(state, "push", "", NOW);
+  assertThrows(
+    () =>
+      parseQuotaLedger({
+        ...state,
+        approvalPending: [{ op: "force-push", note: "", at: NOW }],
+      }),
+    Error,
+    "approvalPending.op is not admissible",
+  );
+  assertThrows(
+    () =>
+      parseQuotaLedger({
+        ...state,
+        events: [{ at: NOW, kind: "bogus" }],
+      }),
+    Error,
+    "events.kind is not admissible",
+  );
+  assertThrows(
+    () =>
+      parseQuotaLedger({
+        ...state,
+        events: [{ at: NOW, kind: "pending", op: "force-push" }],
+      }),
+    Error,
+    "events.op is not admissible",
+  );
+  // a valid pending ledger parses
+  assertEquals(parseQuotaLedger(state).approvalPending[0].note, "");
+});
