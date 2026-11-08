@@ -360,7 +360,7 @@
       "cancel": "Cancel"
     },
     "contextMenu": {
-      "loadAtStartupForBadges": "Load at startup for badges",
+      "loadAtStartupForBadges": "Load at startup for badges (non-private windows)",
       "clearBadge": "Clear badge",
       "unload": "Unload this webpanel",
       "mute": "Mute/Unmute this webpanel",

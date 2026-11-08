@@ -269,6 +269,7 @@ export const PanelList: React.FC = () => {
 
   const savingOrder = useRef(false);
 
+  /** Save the requested reorder and reload the saved list on failure. */
   const handleDragEnd = async (event: DragEndEvent) => {
     setActiveId(null);
     const { active, over } = event;

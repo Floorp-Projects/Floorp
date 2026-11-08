@@ -317,6 +317,7 @@ export class CPanelSidebar {
     setPanelSidebarData((prev) => prev.filter((p) => p.id !== panelId));
   }
 
+  /** Dispose the requested browser and clear selection only if it was selected. */
   public unloadPanel(panelId: string) {
     // Cleanup Solid root for this panel if present
     const dispose = this.panelDisposers.get(panelId);
@@ -334,7 +335,7 @@ export class CPanelSidebar {
       browser.remove();
     }
 
-    setSelectedPanelId(null);
+    if (selectedPanelId() === panelId) setSelectedPanelId(null);
   }
 
   public mutePanel(panelId: string) {

@@ -19,6 +19,7 @@ function getUnreadBadge(
   return readBadgeSignal(configuredURL, documentURL, title) ?? "";
 }
 
+/** Run the parser, origin validation, and dismissal regressions. */
 export async function runAllTests(): Promise<void> {
   await runTests("panelSidebarUnreadBadge.test.ts", [
     {

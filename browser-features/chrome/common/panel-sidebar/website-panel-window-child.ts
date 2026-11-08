@@ -233,6 +233,7 @@ export class WebsitePanelWindowChild {
     applySavedZoomLevel(browser, panelId);
   }
 
+  /** Initialize the embedded browser and start navigation even when hidden. */
   createWebpanelWindow() {
     const panelId = this.webpanelId;
     const loadURL = this.loadURL;

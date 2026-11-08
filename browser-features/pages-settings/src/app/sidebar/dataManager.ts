@@ -65,6 +65,7 @@ export async function getPanelSidebarSettings(): Promise<
 
 const PANELS_PREF = "floorp.panelSidebar.data";
 
+/** Decode the panel list from the current serialized preference. */
 function parsePanelsList(value: string | null): Panels | null {
   if (!value) return null;
   try {
@@ -75,6 +76,7 @@ function parsePanelsList(value: string | null): Panels | null {
   }
 }
 
+/** Read the latest saved sidebar panels. */
 export async function getPanelsList(): Promise<Panels | null> {
   return parsePanelsList(await rpc.getStringPref(PANELS_PREF));
 }

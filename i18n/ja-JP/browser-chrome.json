@@ -360,7 +360,7 @@
       "cancel": "キャンセル"
     },
     "contextMenu": {
-      "loadAtStartupForBadges": "起動時に読み込んでバッジを表示",
+      "loadAtStartupForBadges": "起動時に読み込んでバッジを表示（通常ウィンドウのみ）",
       "clearBadge": "バッジを消去",
       "unload": "このウェブパネルを解放",
       "mute": "このウェブパネルをミュート/ミュート解除",
