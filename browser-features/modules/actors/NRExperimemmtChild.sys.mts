@@ -1,10 +1,11 @@
 import { createBirpc } from "birpc";
 import type { NRExperimemmtParentFunctions } from "../common/defines.ts";
-import {
-  devPortString,
-  HUB_DEV_PAGES,
-  isTrustedDevPort,
-} from "#libs/shared/dev-ports/defines.ts";
+import { HUB_DEV_PAGES } from "#libs/shared/dev-ports/defines.ts";
+import { launchDevPorts } from "../common/dev-port-offset.ts";
+
+/** Launch-local dev port resolver (FDH Gate 2 task 2-B): resolves the
+ * table names to the ports this launch actually uses (offset-aware). */
+const launchDevPort = launchDevPorts();
 
 export class NRExperimemmtChild extends JSWindowActorChild {
   rpc: ReturnType<typeof createBirpc> | null = null;
@@ -17,12 +18,14 @@ export class NRExperimemmtChild extends JSWindowActorChild {
     console.debug("NRExperimemmtChild created!");
     const window = this.contentWindow;
     if (
-      isTrustedDevPort(window?.location.port, HUB_DEV_PAGES) ||
+      launchDevPort.isTrustedPort(window?.location.port, HUB_DEV_PAGES) ||
       window?.location.href.startsWith("chrome://") ||
       window?.location.href.startsWith("about:")
     ) {
       console.debug(
-        `NRExperimemmtChild ${devPortString("settings")} ! or Chrome Page!`,
+        `NRExperimemmtChild ${
+          launchDevPort.portString("settings")
+        } ! or Chrome Page!`,
       );
       Cu.exportFunction(this.NRExperimemmtPing.bind(this), window, {
         defineAs: "NRExperimemmtPing",

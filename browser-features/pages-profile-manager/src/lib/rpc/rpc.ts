@@ -1,4 +1,4 @@
-import { moduleUrlServedFromDevPort } from "../../../../../libs/shared/dev-ports/defines.ts";
+import { moduleUrlServedByDevHttpServer } from "../../../../../libs/shared/dev-ports/defines.ts";
 import type { NRSettingsParentFunctions } from "../../../../modules/common/defines.ts";
 import { createBirpc } from "birpc";
 
@@ -13,10 +13,10 @@ declare global {
   }
 }
 
-const isLocalhost5188 = moduleUrlServedFromDevPort(
-  import.meta.url,
-  "notes",
-);
+// Dev-mode detection is offset-agnostic (FDH Gate 2 task 2-B). (The historic
+// const name pointed at the notes server port by accident; the decision is
+// the same "served by a localhost dev server" check.)
+const isProfileManagerDev = moduleUrlServedByDevHttpServer(import.meta.url);
 
 const directServicesFunctions: NRSettingsParentFunctions = {
   getBoolPref: (prefName) => {
@@ -51,7 +51,7 @@ const directServicesFunctions: NRSettingsParentFunctions = {
   },
 };
 
-export const rpc = isLocalhost5188
+export const rpc = isProfileManagerDev
   ? createBirpc<NRSettingsParentFunctions, Record<string, never>>(
     {},
     {

@@ -49,10 +49,12 @@ import type {
   NotesStorageService,
   NotesSyncContext,
 } from "../common/notes-storage-types.ts";
-import {
-  HUB_DEV_PAGES,
-  isTrustedDevPort,
-} from "#libs/shared/dev-ports/defines.ts";
+import { HUB_DEV_PAGES } from "#libs/shared/dev-ports/defines.ts";
+import { launchDevPorts } from "../common/dev-port-offset.ts";
+
+/** Launch-local dev port resolver (FDH Gate 2 task 2-B): resolves the
+ * table names to the ports this launch actually uses (offset-aware). */
+const launchDevPort = launchDevPorts();
 
 interface ContextMenuCatalogServiceModule {
   ContextMenuCatalogService: {
@@ -108,7 +110,7 @@ export class NRSettingsParent extends JSWindowActorParent {
           uri.spec.split(/[?#]/)[0] === "about:hub" ||
           (uri.schemeIs("http") &&
             (uri.host === "localhost" || uri.host === "127.0.0.1") &&
-            isTrustedDevPort(uri.port, HUB_DEV_PAGES))
+            launchDevPort.isTrustedPort(uri.port, HUB_DEV_PAGES))
         );
         if (
           url && isSettingsPage && context && !context.parent &&

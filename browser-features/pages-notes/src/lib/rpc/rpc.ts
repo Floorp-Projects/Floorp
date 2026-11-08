@@ -1,4 +1,4 @@
-import { moduleUrlServedFromDevPort } from "../../../../../libs/shared/dev-ports/defines.ts";
+import { moduleUrlServedByDevHttpServer } from "../../../../../libs/shared/dev-ports/defines.ts";
 import type { NotesPrefFunctions, NotesStorageModule } from "./types.ts";
 import type { NotesPreferenceSnapshot } from "../../../../modules/common/notes-storage-types.ts";
 import { createBirpc } from "birpc";
@@ -17,11 +17,11 @@ declare global {
   }
 }
 
-const isLocalhost5188 = moduleUrlServedFromDevPort(
-  import.meta.url,
-  "notes",
-);
-const notesStorage = isLocalhost5188 ? null : (ChromeUtils.importESModule(
+// Dev-mode detection is offset-agnostic (FDH Gate 2 task 2-B): the page
+// module is served either by the chrome:// build or by a localhost http dev
+// server, whichever port the launch actually bound.
+const isNotesDev = moduleUrlServedByDevHttpServer(import.meta.url);
+const notesStorage = isNotesDev ? null : (ChromeUtils.importESModule(
   "resource://noraneko/modules/notes/FloorpNotesStorage.sys.mjs",
 ) as NotesStorageModule).FloorpNotesStorage;
 
@@ -150,7 +150,7 @@ const directServicesFunctions: NotesPrefFunctions = {
   },
 };
 
-export const rpc = isLocalhost5188
+export const rpc = isNotesDev
   ? createBirpc<NotesPrefFunctions, Record<string, never>>(
     {},
     {
@@ -189,7 +189,7 @@ export function addPrefObserver(
   prefName: string,
   callback: PrefChangeCallback,
 ): PrefObserverHandle | null {
-  if (isLocalhost5188) {
+  if (isNotesDev) {
     // Dev mode: poll every 2 seconds as a fallback
     let lastSnapshot: NotesPreferenceSnapshot | null = null;
     let reading = false;
@@ -230,7 +230,7 @@ export function addPrefObserver(
  * Remove a previously registered pref observer.
  */
 export function removePrefObserver(callback: PrefChangeCallback): void {
-  if (isLocalhost5188) {
+  if (isNotesDev) {
     const pollId = devModePollers.get(callback);
     if (pollId !== undefined) {
       clearInterval(pollId);

@@ -1,4 +1,8 @@
-import { devHttpOrigin } from "#libs/shared/dev-ports/defines.ts";
+import { launchDevPorts } from "./dev_port_offset.ts";
+
+/** Launch-local dev port resolver (FDH Gate 2 task 2-B): dev URLs of this
+ * launch resolve to the ports actually served. */
+const launchDevPort = launchDevPorts();
 
 interface FirefoxWindow extends Window {
   gBrowser: {
@@ -222,10 +226,11 @@ function openFloorpHub(): void {
   if (import.meta.env.MODE === "dev") {
     logFloorpHub("Opening Floorp Hub in development mode.");
     // Use globalThis in environments where `window` may not be defined.
-    (globalThis as unknown as Window).location.href = devHttpOrigin(
-      "settings",
-      "/",
-    );
+    (globalThis as unknown as Window).location.href = launchDevPort
+      .httpOrigin(
+        "settings",
+        "/",
+      );
     return;
   }
 
@@ -792,10 +797,11 @@ function createFloorpStartWarning(): void {
   button.setAttribute("label", defaultStartWarningTexts.buttonLabel);
   button.addEventListener("click", () => {
     if (import.meta.env.MODE === "dev") {
-      (globalThis as unknown as Window).location.href = devHttpOrigin(
-        "settings",
-        "/#/features/design",
-      );
+      (globalThis as unknown as Window).location.href = launchDevPort
+        .httpOrigin(
+          "settings",
+          "/#/features/design",
+        );
       return;
     }
     const win = Services.wm.getMostRecentWindow(

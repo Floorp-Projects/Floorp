@@ -3,7 +3,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { isTrustedDevPort } from "#libs/shared/dev-ports/defines.ts";
+import { launchDevPorts } from "../common/dev-port-offset.ts";
+
+/** Launch-local dev port resolver (FDH Gate 2 task 2-B): resolves the
+ * table names to the ports this launch actually uses (offset-aware). */
+const launchDevPort = launchDevPorts();
 
 // Open a URL in a new tab from the browser window. A plain <a target="_blank">
 // click inside a system-principal about page (about:welcome) opens about:blank,
@@ -62,7 +66,7 @@ export class NRWelcomePageParent extends JSWindowActorParent {
           uri.spec.split(/[?#]/)[0] === "about:welcome" ||
           (uri.schemeIs("chrome") && uri.host === "noraneko-welcome") ||
           (uri.schemeIs("http") &&
-            isTrustedDevPort(uri.port, ["welcome"]) &&
+            launchDevPort.isTrustedPort(uri.port, ["welcome"]) &&
             (uri.host === "localhost" || uri.host === "127.0.0.1"))
         );
         if (
@@ -79,7 +83,7 @@ export class NRWelcomePageParent extends JSWindowActorParent {
         const isWelcomePage = uri.spec.split(/[?#]/)[0] === "about:welcome" ||
           (uri.schemeIs("chrome") && uri.host === "noraneko-welcome") ||
           (uri.schemeIs("http") &&
-            isTrustedDevPort(uri.port, ["welcome"]) &&
+            launchDevPort.isTrustedPort(uri.port, ["welcome"]) &&
             (uri.host === "localhost" || uri.host === "127.0.0.1"));
         // Only the current top-level welcome document may dismiss its own tab.
         if (

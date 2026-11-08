@@ -5,6 +5,7 @@ import {
   DEV_PORTS,
   devPort,
   type DevPortName,
+  requireDevPortOffset,
 } from "#libs/shared/dev-ports/defines.ts";
 import { DEV_SERVER, PROJECT_ROOT } from "./defines.ts";
 import { Logger } from "./utils.ts";
@@ -31,9 +32,18 @@ async function detectEarlyExit(
   ]);
 }
 
-// deno-lint-ignore no-explicit-any
-export async function run(writer: any): Promise<void> {
+export async function run(
+  // deno-lint-ignore no-explicit-any
+  writer: any,
+  options: { portOffset?: number } = {},
+): Promise<void> {
+  const portOffset = requireDevPortOffset(options.portOffset ?? 0);
   logger.info("Starting Vite dev servers...");
+  if (portOffset > 0) {
+    logger.info(
+      `Dev server ports shifted by --port-offset +${portOffset}.`,
+    );
+  }
   await recordDevProcess(Deno.pid);
 
   const servers = [
@@ -79,7 +89,7 @@ export async function run(writer: any): Promise<void> {
   }
 
   for (const server of servers) {
-    const port = getPortFor(server.name);
+    const port = getPortFor(server.name, portOffset);
     // Run Vite via Deno's npm compatibility (Deno-only)
     const cmd = "deno";
     const args = ["run", "-A", "npm:vite", "--port", String(port)];
@@ -221,9 +231,10 @@ const SERVER_NAME_TO_PORT_NAME: Record<string, DevPortName> = {
   "workflow-progress": "workflowProgress",
 };
 
-export function getPortFor(serverName: string): number {
+export function getPortFor(serverName: string, portOffset = 0): number {
+  const offset = requireDevPortOffset(portOffset);
   const portName = SERVER_NAME_TO_PORT_NAME[serverName];
-  if (portName) return devPort(portName);
+  if (portName) return devPort(portName, offset);
   return DEV_SERVER.default_port;
 }
 

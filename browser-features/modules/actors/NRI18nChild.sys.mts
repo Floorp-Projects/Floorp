@@ -6,8 +6,12 @@
 import {
   HUB_DEV_PAGES,
   HUB_DEV_PAGES_PLUS_PROFILE,
-  isTrustedDevPort,
 } from "#libs/shared/dev-ports/defines.ts";
+import { launchDevPorts } from "../common/dev-port-offset.ts";
+
+/** Launch-local dev port resolver (FDH Gate 2 task 2-B): resolves the
+ * table names to the ports this launch actually uses (offset-aware). */
+const launchDevPort = launchDevPorts();
 
 export class NRI18nChild extends JSWindowActorChild {
   actorCreated() {
@@ -17,7 +21,10 @@ export class NRI18nChild extends JSWindowActorChild {
 
       // Allow dev server and chrome/about privileged pages
       if (
-        isTrustedDevPort(window.location.port, HUB_DEV_PAGES_PLUS_PROFILE) ||
+        launchDevPort.isTrustedPort(
+          window.location.port,
+          HUB_DEV_PAGES_PLUS_PROFILE,
+        ) ||
         window.location.href.startsWith("chrome://") ||
         window.location.href.startsWith("about:")
       ) {

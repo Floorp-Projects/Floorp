@@ -16,6 +16,8 @@ export interface XhtmlInjectionOptions {
   devPages?: boolean;
   isCI?: boolean;
   allowBrowserHttpLoader?: boolean;
+  /** Dev test launch port offset (FDH Gate 2 task 2-B). */
+  portOffset?: number;
 }
 
 export function buildXhtmlInjectionArgs(
@@ -27,6 +29,9 @@ export function buildXhtmlInjectionArgs(
   if (options.devPages) args.push("--dev");
   if (options.allowBrowserHttpLoader) {
     args.push("--allow-browser-http-loader");
+  }
+  if (options.portOffset && options.portOffset > 0) {
+    args.push("--port-offset", String(options.portOffset));
   }
   return args;
 }

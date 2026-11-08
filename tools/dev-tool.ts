@@ -10,6 +10,11 @@ import {
   selectDevProcesses,
 } from "./src/dev_process_selection.ts";
 import {
+  describeLaunchPorts,
+  parsePortOffsetSpec,
+  resolveAutoDevPortOffset,
+} from "./src/port_offset.ts";
+import {
   DEV_PROCESSES_FILE,
   listDevProcesses,
   readDevProcesses,
@@ -32,6 +37,12 @@ Usage: deno run -A tools/dev-tool.ts <command> [options]
 
 Process management:
   start                     Start feles-build dev (background)
+  start --port-offset <n|auto>
+                            Start with every dev/test server port (and
+                            Marionette) shifted by n ports; "auto" probes the
+                            smallest free non-overlapping offset. n must be 0
+                            or at least the non-overlap span so concurrent
+                            worktrees cannot share ports.
   stop                      Stop dev processes for this checkout
   stop --all                Stop dev processes across ALL checkouts (recovery)
   restart                   Restart dev processes
@@ -75,6 +86,7 @@ const args = parseArgs(Deno.args, {
     "base-url",
     "timeout",
     "interval",
+    "port-offset",
   ],
   alias: {
     c: "context",
@@ -87,6 +99,18 @@ const args = parseArgs(Deno.args, {
   boolean: ["help", "skip-start", "all"],
   default: { context: "chrome" },
 });
+
+/** Read the literal `--port-offset` value from argv so a bare flag or a
+ * negative value is rejected before spawning (parseArgs collapses both to ""). */
+function rawPortOffsetArgument(argv: string[]): string | undefined {
+  const idx = argv.indexOf("--port-offset");
+  if (idx < 0) return undefined;
+  const value = argv[idx + 1];
+  if (value === undefined || value.startsWith("--")) {
+    throw new Error("--port-offset requires a value: <n|auto>");
+  }
+  return value;
+}
 
 const command = args._[0] as string | undefined;
 
@@ -195,6 +219,17 @@ async function cmdStart() {
 
   console.log("Starting feles-build dev...");
 
+  // Resolve the optional --port-offset before spawning so the log shows the
+  // actual topology and the detached feles-build inherits a concrete number.
+  let spawnCommandArgs = "";
+  const rawOffsetArg = rawPortOffsetArgument(Deno.args);
+  if (rawOffsetArg !== undefined) {
+    const spec = parsePortOffsetSpec(rawOffsetArg);
+    const offset = spec === "auto" ? await resolveAutoDevPortOffset() : spec;
+    console.log(`[dev-tool] Using ${describeLaunchPorts(offset)}`);
+    spawnCommandArgs = ` --port-offset ${offset}`;
+  }
+
   const logFile = path.join(PROJECT_ROOT, "_dist", "dev-server.log");
   const marionetteFile = path.join(
     PROJECT_ROOT,
@@ -226,7 +261,7 @@ async function cmdStart() {
     const psScript = [
       `$deno = '${denoPathPs}'`,
       `$log = '${logFilePs}'`,
-      `$arg = '/d /s /c ""' + $deno + '" task feles-build dev > "' + $log + '" 2>&1"'`,
+      `$arg = '/d /s /c ""' + $deno + '" task feles-build dev${spawnCommandArgs} > "' + $log + '" 2>&1"'`,
       `$proc = Start-Process -FilePath 'cmd.exe' -ArgumentList $arg -WorkingDirectory '${projectRootPs}' -WindowStyle Hidden -PassThru`,
       "Write-Output $proc.Id",
     ].join("; ");
@@ -241,7 +276,7 @@ async function cmdStart() {
     const cmd = new Deno.Command("bash", {
       args: [
         "-c",
-        `nohup "${denoPath}" task feles-build dev > "${logFile}" 2>&1 & echo $!`,
+        `nohup "${denoPath}" task feles-build dev${spawnCommandArgs} > "${logFile}" 2>&1 & echo $!`,
       ],
       cwd: PROJECT_ROOT,
       stdout: "piped",
