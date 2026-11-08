@@ -1,0 +1,74 @@
+# SPDX-License-Identifier: MPL-2.0
+
+# D-14 review gate: a PR merges only when at least two independent LLM
+# reviewers posted machine-readable receipts at the PR head commit. The job
+# name `review-gate` is the required status check name. One job, no
+# continue-on-error: any receipt, test, or build failure fails the check.
+
+name: "(CI) FDH Review Gate"
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: read
+  issues: read
+
+jobs:
+  review-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - uses: denoland/setup-deno@667a34cdef165d8d2b2e98dde39547c9daac7282
+        with:
+          deno-version: v2.x
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
+        with:
+          path: ~/.cache/deno
+          key: deno-fdh-review-${{ hashFiles('deno.lock') }}
+          restore-keys: deno-fdh-review-
+      - run: deno install
+      - name: Validate review receipts
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          COMMENTS_FILE: ${{ runner.temp }}/fdh-review-comments.jsonl
+        run: |
+          set -euo pipefail
+          gh api --paginate --jq '.[] | {body: .body}' \
+            "repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/comments" \
+            > "$COMMENTS_FILE"
+          deno run --allow-read --allow-env - <<'DENO'
+          import {
+            parseReceiptComments,
+            validateReceiptSet,
+          } from "./tools/src/fdh_review.ts";
+
+          const commentsFile = Deno.env.get("COMMENTS_FILE");
+          const headSha = Deno.env.get("HEAD_SHA");
+          if (!commentsFile || !headSha) {
+            throw new Error("COMMENTS_FILE and HEAD_SHA must be set");
+          }
+          const comments = Deno.readTextFileSync(commentsFile)
+            .split("\n")
+            .filter((line) => line.trim() !== "")
+            .map((line) => JSON.parse(line) as { body?: string | null });
+          const receipts = parseReceiptComments(comments);
+          const summary = validateReceiptSet(receipts, headSha);
+          console.log(
+            `FDH review gate passed at ${summary.headSha}: reviewers ${
+              summary.reviewers.join(", ")
+            } (models ${summary.models.join(", ")})`,
+          );
+          DENO
+      - name: Run host tool tests
+        run: deno task test:host
+      - name: Build (before-mach)
+        run: deno task feles-build build --phase before-mach

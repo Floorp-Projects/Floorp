@@ -37,6 +37,15 @@ const RUNTIME_INDEX_URL = `${RUNTIME_BASE_URL}.ftp-deploy-sync-state.json`;
 export const LOCKED_RUNTIME_GITHUB_TOKEN_ENV = "FLOORP_RUNTIME_GITHUB_TOKEN";
 export const LOCKED_RUNTIME_MARKER = ".floorp-runtime-lock.json";
 
+/**
+ * Runtime VERSION marker for a *target* platform. The host's `VERSION` cannot
+ * be used when installing a locked artifact for another platform: the marker
+ * file describes the target layout, not the machine running the install.
+ */
+export function runtimeVersionFor(platform: RuntimePlatform): string {
+  return platform === "macos" ? "000" : "002";
+}
+
 export type LockedRuntimeFetch = (
   input: string | URL | Request,
   init?: RequestInit,
@@ -1583,9 +1592,11 @@ export async function installLockedRuntime(
       { createNew: true },
     );
     const layout = runtimeLayoutFor(stageRoot, artifact);
-    await Deno.writeTextFile(layout.legacyVersionFile, VERSION, {
-      createNew: true,
-    });
+    await Deno.writeTextFile(
+      layout.legacyVersionFile,
+      runtimeVersionFor(artifact.platform),
+      { createNew: true },
+    );
     await prepareLockedMacInfoPlist(stageRoot, binRootDir, artifact);
     await assertSafeFilesystemTree(stageRoot);
 

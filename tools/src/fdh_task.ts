@@ -16,6 +16,7 @@
  */
 
 import * as path from "@std/path";
+import { encodeHex } from "@std/encoding/hex";
 import {
   type DevPortProbe,
   isTcpPortInUse,
@@ -30,6 +31,10 @@ export const TASK_ID_PATTERN = /^[a-z0-9][a-z0-9-]*$/;
 /** Relative location of the fdh state tree inside a worktree. */
 export const FDH_DIR = path.join("_dist", "fdh");
 export const FDH_TASKS_DIR = path.join(FDH_DIR, "tasks");
+export const FDH_OBSERVATIONS_DIR = path.join(FDH_DIR, "observations");
+
+/** Upper bound of an external observation file kept in the task state (256 KiB). */
+export const MAX_OBSERVATION_BYTES = 256 * 1024;
 
 export type FdhTaskStatus =
   | "running"
@@ -46,6 +51,31 @@ export interface FdhEvent {
   exitCode: number | null;
 }
 
+/** External verification kinds that may produce an assertion (IMP-2 A案). */
+export type ExternalVerification = "build" | "host-test" | "browser" | "other";
+
+/**
+ * Attestation block for a command that was run outside fdh.
+ *
+ * fdh did not execute the command; the operator supplies the observation file
+ * and the exit code. `logSha256` pins the observation content at record time
+ * and is re-checked when the EvidenceManifest is built.
+ */
+export interface FdhExternalRecord {
+  /** Self-declared operator that ran the command and wrote the observation. */
+  operator: string;
+  /** Observation path relative to the worktree (`_dist/fdh/observations/...`). */
+  logRef: string;
+  /** SHA-256 (hex) of the observation bytes at record time. */
+  logSha256: string;
+  /** Byte length of the observation file at record time. */
+  bytes: number;
+  /** ISO 8601 attestation time; not the command's start/end time. */
+  attestedAt: string;
+  /** When set, `recordExternalOperation` also records an exit-code assertion. */
+  verification?: ExternalVerification;
+}
+
 export interface FdhOperation {
   command: string;
   args: string[];
@@ -57,6 +87,8 @@ export interface FdhOperation {
   exitCode: number;
   /** Captured stdout+stderr, possibly tail-limited for state-file size. */
   output: string;
+  /** Set only for commands recorded from outside the fdh CLI. */
+  external?: FdhExternalRecord;
 }
 
 export interface FdhAssertion {
@@ -79,6 +111,23 @@ export interface FdhReproduction {
   defectRef?: string;
 }
 
+/**
+ * Setup facts recorded by `fdh task prepare` (IMP-5). Optional so old task
+ * states written before the setup step stay readable.
+ */
+export interface FdhSetup {
+  /** Environment variables passed to dev up (e.g. FLOORP_SKIP_PATCHER). */
+  guardEnv: Record<string, string>;
+  /** Where the runtime `_dist/bin` was copied/unpacked from. */
+  runtimeSource: string;
+  /** Profile path prepared for this task. */
+  profilePath: string;
+  /** ISO 8601 time when node_modules/.vite was cleared, or null. */
+  viteClearedAt: string | null;
+  /** Commands the prepare step ran (for an idempotent replay record). */
+  commands: string[];
+}
+
 export interface FdhTaskState {
   taskId: string;
   /** Absolute, canonical path of the worktree. */
@@ -93,6 +142,8 @@ export interface FdhTaskState {
   assertions: FdhAssertion[];
   cleanup: FdhCleanup;
   reproduction: FdhReproduction;
+  /** IMP-5 setup facts; absent on states written before `fdh task prepare`. */
+  setup?: FdhSetup;
 }
 
 export interface CreateTaskStateInput {
@@ -176,6 +227,86 @@ function assertArray(value: unknown, name: string): void {
   }
 }
 
+const EXTERNAL_VERIFICATIONS: ExternalVerification[] = [
+  "build",
+  "host-test",
+  "browser",
+  "other",
+];
+
+function assertString(value: unknown, name: string): string {
+  if (typeof value !== "string" || value === "") {
+    throw new Error(
+      `invalid fdh task state: ${name} must be a non-empty string`,
+    );
+  }
+  return value;
+}
+
+function assertExternal(value: unknown, index: number): void {
+  const pointer = `operations[${index}].external`;
+  if (!isRecord(value)) {
+    throw new Error(`invalid fdh task state: ${pointer} must be an object`);
+  }
+  assertString(value.operator, `${pointer}.operator`);
+  assertString(value.logRef, `${pointer}.logRef`);
+  const sha = assertString(value.logSha256, `${pointer}.logSha256`);
+  if (!/^[0-9a-f]{64}$/.test(sha)) {
+    throw new Error(
+      `invalid fdh task state: ${pointer}.logSha256 must be 64 hex`,
+    );
+  }
+  if (!Number.isSafeInteger(value.bytes) || (value.bytes as number) < 0) {
+    throw new Error(
+      `invalid fdh task state: ${pointer}.bytes must be a non-negative integer`,
+    );
+  }
+  assertString(value.attestedAt, `${pointer}.attestedAt`);
+  if (
+    value.verification !== undefined &&
+    !EXTERNAL_VERIFICATIONS.includes(value.verification as ExternalVerification)
+  ) {
+    throw new Error(
+      `invalid fdh task state: ${pointer}.verification must be one of ${
+        EXTERNAL_VERIFICATIONS.join("|")
+      }`,
+    );
+  }
+}
+
+function assertSetup(value: unknown): void {
+  if (!isRecord(value)) {
+    throw new Error("invalid fdh task state: setup must be an object");
+  }
+  if (!isRecord(value.guardEnv)) {
+    throw new Error("invalid fdh task state: setup.guardEnv must be an object");
+  }
+  for (const [key, env] of Object.entries(value.guardEnv)) {
+    if (typeof env !== "string") {
+      throw new Error(
+        `invalid fdh task state: setup.guardEnv.${key} must be a string`,
+      );
+    }
+  }
+  assertString(value.runtimeSource, "setup.runtimeSource");
+  assertString(value.profilePath, "setup.profilePath");
+  if (value.viteClearedAt !== null && typeof value.viteClearedAt !== "string") {
+    throw new Error(
+      "invalid fdh task state: setup.viteClearedAt must be a string or null",
+    );
+  }
+  if (!Array.isArray(value.commands)) {
+    throw new Error("invalid fdh task state: setup.commands must be an array");
+  }
+  for (const command of value.commands) {
+    if (typeof command !== "string" || command === "") {
+      throw new Error(
+        "invalid fdh task state: setup.commands entries must be non-empty strings",
+      );
+    }
+  }
+}
+
 /** Runtime shape check for state read back from disk. */
 export function parseTaskState(value: unknown): FdhTaskState {
   if (!isRecord(value)) {
@@ -203,6 +334,14 @@ export function parseTaskState(value: unknown): FdhTaskState {
   }
   for (const key of ["events", "operations", "assertions"] as const) {
     assertArray(value[key], key);
+  }
+  for (const [index, operation] of (value.operations as unknown[]).entries()) {
+    if (isRecord(operation) && operation.external !== undefined) {
+      assertExternal(operation.external, index);
+    }
+  }
+  if (value.setup !== undefined) {
+    assertSetup(value.setup);
   }
   if (!isRecord(value.cleanup) || !isRecord(value.reproduction)) {
     throw new Error(
@@ -523,6 +662,162 @@ export async function runRecordedCommand(
   }
   writeTaskState(state);
   return { ...result, operation };
+}
+
+export interface ExternalOperationInput {
+  /** Command line as the operator ran it, e.g. `deno task test:host`. */
+  command: string;
+  args?: string[];
+  /** Absolute cwd; its real path must be inside `state.worktree`. */
+  cwd: string;
+  exitCode: number;
+  /** Observation file path (absolute or relative to the worktree). */
+  observationFile: string;
+  operator: string;
+  verification?: ExternalVerification;
+  /** Attestation time; defaults to now. */
+  attestedAt?: string;
+  /** Max characters of the observation kept in the state operation (default 4000). */
+  maxOutputChars?: number;
+  now?: () => string;
+}
+
+export interface ExternalOperationResult {
+  operation: FdhOperation;
+  /** Recorded only when `verification` is set. */
+  assertion?: FdhAssertion;
+}
+
+/** Absolute path of an observation file, constrained to `<worktree>/_dist/fdh/observations`. */
+export function resolveObservationPath(
+  state: FdhTaskState,
+  raw: string,
+): string {
+  const root = path.resolve(fdhDir(state.worktree), "observations");
+  const resolved = path.isAbsolute(raw)
+    ? path.resolve(raw)
+    : path.resolve(state.worktree, raw);
+  const relative = path.relative(root, resolved);
+  if (
+    relative === "" || relative.startsWith("..") || path.isAbsolute(relative)
+  ) {
+    throw new Error(
+      `observation file must stay under ${root}, got ${resolved}`,
+    );
+  }
+  return resolved;
+}
+
+async function sha256Hex(bytes: Uint8Array): Promise<string> {
+  const input = new Uint8Array(bytes.length);
+  input.set(bytes);
+  const digest = await crypto.subtle.digest("SHA-256", input);
+  return encodeHex(new Uint8Array(digest));
+}
+
+/**
+ * Record a command that was run outside the fdh CLI (IMP-2 A案).
+ *
+ * The exit code and observation file are operator-attested; fdh pins the
+ * observation bytes with SHA-256 and appends the operation/event to the task
+ * state. When `verification` is set, an `external-<kind>-exit-code` assertion
+ * is also recorded so the EvidenceManifest state reflects a failure.
+ */
+export async function recordExternalOperation(
+  state: FdhTaskState,
+  input: ExternalOperationInput,
+): Promise<ExternalOperationResult> {
+  if (!Number.isSafeInteger(input.exitCode)) {
+    throw new Error(
+      `--exit-code must be an integer, got ${JSON.stringify(input.exitCode)}`,
+    );
+  }
+  const operator = input.operator.trim();
+  if (operator === "") {
+    throw new Error("--operator must not be empty");
+  }
+  if (
+    input.verification !== undefined &&
+    !EXTERNAL_VERIFICATIONS.includes(input.verification)
+  ) {
+    throw new Error(
+      `--verification must be one of ${EXTERNAL_VERIFICATIONS.join("|")}, got ${
+        JSON.stringify(input.verification)
+      }`,
+    );
+  }
+  if (!path.isAbsolute(input.cwd)) {
+    throw new Error(`--cwd must be an absolute path, got ${input.cwd}`);
+  }
+  const worktree = Deno.realPathSync(state.worktree);
+  const cwd = Deno.realPathSync(input.cwd);
+  const cwdRelative = path.relative(worktree, cwd);
+  if (cwdRelative.startsWith("..") || path.isAbsolute(cwdRelative)) {
+    throw new Error(
+      `--cwd must be inside the task worktree ${worktree}, got ${cwd}`,
+    );
+  }
+
+  const observationPath = resolveObservationPath(state, input.observationFile);
+  const stat = Deno.statSync(observationPath);
+  if (!stat.isFile) {
+    throw new Error(
+      `observation file is not a regular file: ${observationPath}`,
+    );
+  }
+  const bytes = Deno.readFileSync(observationPath);
+  if (bytes.length > MAX_OBSERVATION_BYTES) {
+    throw new Error(
+      `observation file is ${bytes.length} bytes; the limit is ${MAX_OBSERVATION_BYTES}`,
+    );
+  }
+
+  const attestedAt = input.attestedAt ?? (input.now ?? nowIso)();
+  if (attestedAt.trim() === "") {
+    throw new Error("--attested-at must not be empty");
+  }
+  const text = new TextDecoder().decode(bytes);
+  const operation: FdhOperation = {
+    command: input.command,
+    args: input.args ?? [],
+    displayCommand: input.command,
+    cwd,
+    startedAt: attestedAt,
+    endedAt: attestedAt,
+    exitCode: input.exitCode,
+    output: tail(text, input.maxOutputChars ?? 4000),
+    external: {
+      operator,
+      logRef: path.relative(worktree, observationPath),
+      logSha256: await sha256Hex(bytes),
+      bytes: bytes.length,
+      attestedAt,
+      ...(input.verification !== undefined
+        ? { verification: input.verification }
+        : {}),
+    },
+  };
+  recordOperation(state, operation);
+  appendEvent(state, {
+    timestamp: attestedAt,
+    command: `external ${input.command}`,
+    note: `external record by ${operator}; exit ${input.exitCode}${
+      text.trim() === "" ? "" : `: ${tail(text.trim(), 800)}`
+    }`,
+    exitCode: input.exitCode,
+  });
+  let assertion: FdhAssertion | undefined;
+  if (input.verification !== undefined) {
+    assertion = recordAssertion(state, {
+      name: `external-${input.verification}-exit-code`,
+      expected: "exit code 0",
+      actual: `exit code ${input.exitCode}`,
+      passed: input.exitCode === 0,
+      at: attestedAt,
+    });
+  }
+  writeTaskState(state);
+  return { operation, assertion };
 }
 
 // ---------------------------------------------------------------------------
