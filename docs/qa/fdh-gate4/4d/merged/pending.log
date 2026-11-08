@@ -1,1 +1,0 @@
-{"taskId":"gate4-c-merged","activeAgent":"agent-a","stopped":false,"stopReason":null,"approvalPending":[{"op":"push","note":"remote state unknown; do not retry until approved","at":"2026-11-08T06:13:59.358Z"}],"events":2,"updatedAt":"2026-11-08T06:13:59.358Z"}

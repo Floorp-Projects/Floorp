@@ -45,6 +45,8 @@ Method: checkout merge commit; reverse only the PR source patch (`git apply -R`)
 tests unchanged → expect failure; restore fix → same tests pass. Test files never edited.
 Behavioral failures: 2991 (13 passed/3 failed), 2984 (16/4), 2990 (0/1), 2982 (20/3). Type-check
 failures before assertions: 3057, 2981 (reverted tree removes modules/types the fixed tests import).
+The infra-failure baseline (`425 passed / 1 failed / 1 ignored`, `initializer.test.ts:757`) is
+committed as `4b/regression-baseline-host.log`.
 Four cases: (1) known/fixed pair PASS (#2991); (2) explore→repro PASS (#2982); (3) not reproduced
 PASS, excluded with reason (#2981); (4) infra failure PASS (local `initializer.test.ts:757`).
 No `inconclusive`-only pass.
@@ -59,10 +61,11 @@ push/PR/release.
 
 ## 4-D details
 
-`4d/` pre-merge CLI smoke (claim/stop/pending/resume/approve/status); `4d/merged/report.md` on
-merged main: `gate4-d-merged` claim 0, second claim 1, non-holder stop 1, holder stop quota 0,
+`4d/` pre-merge CLI smoke (claim/stop/pending/resume/approve/status); `4d/merged/report.md` (re-captured) on
+merged main: `gate4-d-merged2` claim 0, second claim 1, non-holder stop 1, holder stop quota 0,
 stopped claim 1, pending push 0, resume prints approvalPending, approve clears, resume agent-b 0,
-release 0, status 0; ledger schemaVersion 1, events claim/stop/pending/approve/resume/release.
+release 0, status 0; ledger schemaVersion 1, events claim/stop/pending/approve/resume/release
+(committed `4d/merged/gate4-d-merged2-ledger.json` + task state).
 
 ## Judgement axes (plan §4)
 

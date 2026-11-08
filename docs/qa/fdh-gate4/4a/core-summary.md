@@ -56,3 +56,7 @@ implemented/verified.
   CSP; prefs written per worktree), smoke-tested once before the parallel run.
 - 2-D manifests for 4-A have no build assertion because `feles-build build --phase before-mach`
   was run outside the fdh CLI; build exit 0 is recorded in logs/reports.
+
+**Safety update:** the GUI desktop lease, secret-reference denial and other-agent browser
+non-destruction listed above as not yet closed were implemented in PR #3075 and verified in
+`/tmp/fdh-gate4/acceptance/4a-safety/` (see that report). This core summary predates the safety run.
