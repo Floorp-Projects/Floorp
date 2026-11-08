@@ -175,10 +175,15 @@ function buildLimitations(state: FdhTaskState, manifestState: State): string[] {
     "No GitHub or other shared-service behavior is exercised; the local loop does not need shared services.",
   );
 
-  const hasBrowser = state.assertions.some((assertion) =>
-    assertion.name === "browser-connected" && assertion.passed
-  );
-  if (!hasBrowser) {
+  // Use the latest browser-connected assertion, matching manifestStateOf's
+  // latest-per-name outcome rule (a pass followed by a fail is a failure).
+  let latestBrowserConnected: boolean | undefined;
+  for (const assertion of state.assertions) {
+    if (assertion.name === "browser-connected") {
+      latestBrowserConnected = assertion.passed;
+    }
+  }
+  if (latestBrowserConnected !== true) {
     add(
       "Browser confirmation was not verified; browser behavior remains UNVERIFIED.",
     );
@@ -199,7 +204,7 @@ function buildLimitations(state: FdhTaskState, manifestState: State): string[] {
   }
   if (state.operations.some(isBrowserEval)) {
     add(
-      "Browser eval output was recorded verbatim without an expected-text comparison; it is not a pass claim.",
+      "Browser eval output is recorded verbatim; only --expect turns it into a contains-check assertion, which does not prove behavior beyond the checked text.",
     );
   }
   if (
@@ -215,6 +220,12 @@ function buildLimitations(state: FdhTaskState, manifestState: State): string[] {
       "At least one recorded assertion failed; see assertions[] for the exact expected/actual values.",
     );
   }
+  add(
+    "No approval was requested or recorded; the approval entity is marked not-required.",
+  );
+  add(
+    "The build/toolchain commit is the task's start base; an uncommitted working-tree diff is not hashed in this manifest.",
+  );
   add(
     "No defect was reproduced; reproduction is inconclusive by design rather than being inferred from command output.",
   );
@@ -281,8 +292,8 @@ function buildEntities(
       issuer: "host-authorization",
       owner,
       ownerRole: "approver",
-      decision: "approved",
-      label: "invoking host approved local fdh commands",
+      decision: "not-required",
+      label: "no approval is requested by the fdh local loop",
     },
   ];
 }
@@ -417,7 +428,11 @@ export async function buildEvidenceManifest(
       },
       cancelRequested: false,
       stateTransition: {
-        from: manifestState === "running" ? "scheduled" : "running",
+        from: manifestState === "running"
+          ? "scheduled"
+          : manifestState === "cancelled"
+          ? "cancel_requested"
+          : "running",
         to: manifestState,
         at: lastTimestamp(state),
         reason: "fdh local loop recorded the commands in operations[]",

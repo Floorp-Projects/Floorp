@@ -293,7 +293,9 @@ async function runBuild(phase?: string): Promise<void> {
   } else if (optionsPhase === "after-mach") {
     // await Injector.createManifest("production", "_dist/noraneko");
     await Injector.injectXhtmlFromTs({
-      isCI: true,
+      // Local after-mach injection must use the local BIN_DIR; only real CI
+      // (GitHub Actions sets CI=true) uses the obj-artifact-build-output path.
+      isCI: Deno.env.get("CI") === "true",
       allowBrowserHttpLoader: false,
     });
   } else {
