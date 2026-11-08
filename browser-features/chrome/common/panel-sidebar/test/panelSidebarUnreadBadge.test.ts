@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: MPL-2.0
 // @colocated-env browser
 
+import { createRoot } from "solid-js";
+import { createPanelSidebarData } from "../data/data.ts";
+import { PanelSidebarStaticNames } from "../utils/panel-sidebar-static-names.ts";
 import {
   createUnreadBadgeState,
   getUnreadBadge as readBadgeSignal,
@@ -19,9 +22,75 @@ function getUnreadBadge(
   return readBadgeSignal(configuredURL, documentURL, title) ?? "";
 }
 
-/** Run the parser, origin validation, and dismissal regressions. */
+function testBadgeSurvivesFailedPanelRemoval(): void {
+  const url = "https://messages.google.com/web/conversations";
+  const dataPref = PanelSidebarStaticNames.panelSidebarDataPrefName;
+  const badgePref = "floorp.panelSidebar.savedUnread.messages";
+  const storedPanels = JSON.stringify({
+    data: [{
+      id: "messages",
+      type: "web",
+      width: 300,
+      url,
+      loadAtStartupForBadges: true,
+    }],
+  });
+  const storedBadge = `${JSON.stringify([url, 0])}:3`;
+  const values = new Map([[dataPref, storedPanels], [badgePref, storedBadge]]);
+  let rejectWrite = false;
+  let rejectedWrites = 0;
+  const prefs = {
+    getStringPref: (name: string, fallback = "") =>
+      values.get(name) ?? fallback,
+    setStringPref: (name: string, value: string) => {
+      if (rejectWrite && name === dataPref && value === '{"data":[]}') {
+        rejectedWrites++;
+        throw new Error("Simulated panel preference write failure");
+      }
+      values.set(name, value);
+    },
+    prefIsLocked: () => false,
+    addObserver: () => undefined,
+    removeObserver: () => undefined,
+    getChildList: (prefix: string) =>
+      [...values.keys()].filter((name) => name.startsWith(prefix)),
+    clearUserPref: (name: string) => {
+      values.delete(name);
+    },
+  };
+  const { panels, setPanels, dispose } = createRoot((dispose) => {
+    const [panels, setPanels] = createPanelSidebarData(prefs);
+    return { panels, setPanels, dispose };
+  });
+
+  try {
+    rejectWrite = true;
+    setPanels([]);
+    assertEquals(rejectedWrites, 1, "the removal write was attempted");
+    assertEquals(values.get(dataPref), storedPanels, "stored panel remains");
+    assertEquals(values.get(badgePref), storedBadge, "saved badge remains");
+    assertEquals(panels()[0]?.id, "messages", "displayed panel is restored");
+
+    rejectWrite = false;
+    setPanels([]);
+    assertEquals(
+      values.get(dataPref),
+      '{"data":[]}',
+      "retry removes the panel",
+    );
+    assertEquals(values.has(badgePref), false, "retry prunes the saved badge");
+  } finally {
+    dispose();
+  }
+}
+
+/** Run the sidebar unread badge regressions. */
 export async function runAllTests(): Promise<void> {
   await runTests("panelSidebarUnreadBadge.test.ts", [
+    {
+      name: "preserves the saved badge when deleting a panel fails to save",
+      fn: testBadgeSurvivesFailedPanelRemoval,
+    },
     {
       name:
         "mirrors raster tab icons only for the supported Google messaging routes",

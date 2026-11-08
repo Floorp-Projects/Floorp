@@ -53,11 +53,22 @@ export function parsePanelSidebarData(stringData: string): Panels {
 }
 
 /** Synchronize panel preferences and remove saved counts for deleted panels. */
-function createPanelSidebarData(): [Accessor<Panels>, Setter<Panels>] {
+export function createPanelSidebarData(
+  prefs: Pick<
+    typeof Services.prefs,
+    | "getStringPref"
+    | "setStringPref"
+    | "prefIsLocked"
+    | "addObserver"
+    | "removeObserver"
+    | "getChildList"
+    | "clearUserPref"
+  > = Services.prefs,
+): [Accessor<Panels>, Setter<Panels>] {
   const prefName = PanelSidebarStaticNames.panelSidebarDataPrefName;
   let invalidFallback: Panels | undefined;
   const read = () => {
-    const raw = Services.prefs.getStringPref(prefName, strDefaultData);
+    const raw = prefs.getStringPref(prefName, strDefaultData);
     const panels = decodePanelSidebarData(raw);
     if (panels) {
       invalidFallback = undefined;
@@ -68,16 +79,8 @@ function createPanelSidebarData(): [Accessor<Panels>, Setter<Panels>] {
   };
   const [panelSidebarData, setPanelSidebarData] = createSignal<Panels>(read());
   const observer = () => setPanelSidebarData(read());
-  Services.prefs.addObserver(
-    PanelSidebarStaticNames.panelSidebarDataPrefName,
-    observer,
-  );
-  onCleanup(() => {
-    Services.prefs.removeObserver(
-      PanelSidebarStaticNames.panelSidebarDataPrefName,
-      observer,
-    );
-  });
+  prefs.addObserver(prefName, observer);
+  onCleanup(() => prefs.removeObserver(prefName, observer));
 
   createEffect(() => {
     const panels = panelSidebarData();
@@ -88,7 +91,7 @@ function createPanelSidebarData(): [Accessor<Panels>, Setter<Panels>] {
         setPanelSidebarData(stored);
       }
     };
-    if (Services.prefs.prefIsLocked(prefName)) {
+    if (prefs.prefIsLocked(prefName)) {
       restoreStoredPanels();
       return;
     }
@@ -107,17 +110,17 @@ function createPanelSidebarData(): [Accessor<Panels>, Setter<Panels>] {
       }
     }
     try {
-      Services.prefs.setStringPref(prefName, serialized);
+      prefs.setStringPref(prefName, serialized);
     } catch (error) {
       console.error("[PanelSidebar] Failed to save panel settings", error);
       restoreStoredPanels();
       return;
     }
     if (
-      !Services.prefs.prefIsLocked(prefName) &&
-      Services.prefs.getStringPref(prefName, strDefaultData) === serialized
+      !prefs.prefIsLocked(prefName) &&
+      prefs.getStringPref(prefName, strDefaultData) === serialized
     ) {
-      pruneSavedUnreadBadges(panels);
+      pruneSavedUnreadBadges(panels, prefs);
     } else {
       restoreStoredPanels();
     }
@@ -127,7 +130,7 @@ function createPanelSidebarData(): [Accessor<Panels>, Setter<Panels>] {
 
 /** PanelSidebar data */
 export const [panelSidebarData, setPanelSidebarData] = createRootHMR(
-  createPanelSidebarData,
+  () => createPanelSidebarData(),
   import.meta.hot,
 );
 
