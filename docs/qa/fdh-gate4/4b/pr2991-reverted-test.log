@@ -1,0 +1,153 @@
+Check tools/src/notes_storage.test.ts
+running 16 tests from ./tools/src/notes_storage.test.ts
+Notes consumers see current unauthenticated create, title and body snapshots before storage notification ... FAILED (16ms)
+Notes consumers retain external provenance and one revision per native change ... FAILED (1ms)
+Notes early consumers retain incoming source and acknowledge each delivery once ...
+------- output -------
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+----- output end -----
+Notes early consumers retain incoming source and acknowledge each delivery once ... FAILED (2ms)
+Notes closed-page merge retains offline edits, conflicts and deletions ...
+------- output -------
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 0 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 2 notes, hadConflicts=true
+[Floorp Notes] Three-way merge result: 2 notes, hadConflicts=false
+----- output end -----
+Notes closed-page merge retains offline edits, conflicts and deletions ... ok (3ms)
+Notes remote-only changes converge and valid empty records delete ...
+------- output -------
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 0 notes, hadConflicts=false
+----- output end -----
+Notes remote-only changes converge and valid empty records delete ... ok (943µs)
+Notes actual identical delivery acknowledges base without a pref-change event ...
+------- output -------
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 0 notes, hadConflicts=false
+----- output end -----
+Notes actual identical delivery acknowledges base without a pref-change event ... ok (936µs)
+Notes local compare-and-merge preserves another window and never acknowledges cloud delivery ...
+------- output -------
+[Floorp Notes] Three-way merge result: 2 notes, hadConflicts=true
+----- output end -----
+Notes local compare-and-merge preserves another window and never acknowledges cloud delivery ... ok (807µs)
+Notes repeated local flushes preserve unseen CAS additions and deliberate visible deletions ...
+------- output -------
+[Floorp Notes] Three-way merge result: 2 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 2 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+----- output end -----
+Notes repeated local flushes preserve unseen CAS additions and deliberate visible deletions ... ok (724µs)
+Notes failed native setters and account changes cannot acknowledge incoming state ...
+------- output -------
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+----- output end -----
+Notes failed native setters and account changes cannot acknowledge incoming state ... ok (2ms)
+Notes start-over during account lookup fences old incoming before writes ... ok (1ms)
+Notes cold account mismatch fences old base and unavailable FxA permits local saves ...
+------- output -------
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Account unavailable; retaining local notes. Error: FxA unavailable
+    at Object.getSignedInUser (file:///private/tmp/fdh-gate4/regression/tools/src/notes_storage.test.ts:126:44)
+    at file:///private/tmp/fdh-gate4/regression/browser-features/modules/modules/notes/FloorpNotesStorage.sys.mts?profile=1:95:51
+    at readAccount (file:///private/tmp/fdh-gate4/regression/browser-features/modules/modules/notes/FloorpNotesStorage.sys.mts?profile=1:104:6)
+    at Object.readSyncState (file:///private/tmp/fdh-gate4/regression/browser-features/modules/modules/notes/FloorpNotesStorage.sys.mts?profile=1:235:19)
+    at file:///private/tmp/fdh-gate4/regression/tools/src/notes_storage.test.ts:472:32
+    at async innerWrapped (ext:cli/40_test.js:300:5)
+    at async exitSanitizer (ext:cli/40_test.js:201:27)
+    at async outerWrapped (ext:cli/40_test.js:239:22)
+----- output end -----
+Notes cold account mismatch fences old base and unavailable FxA permits local saves ... ok (1ms)
+Notes profile shutdown removes its preference and account observers ... ok (720µs)
+Notes successful outgoing payload acknowledgement prevents later delete resurrection ...
+------- output -------
+[Floorp Notes] Three-way merge result: 0 notes, hadConflicts=false
+----- output end -----
+Notes successful outgoing payload acknowledgement prevents later delete resurrection ... ok (864µs)
+Notes outgoing acknowledgement records exact accepted bytes while later edits remain local ...
+------- output -------
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+----- output end -----
+Notes outgoing acknowledgement records exact accepted bytes while later edits remain local ... ok (904µs)
+Notes outgoing base write failure remains visible to native retry handling ... ok (731µs)
+Notes outgoing acknowledgement cannot cross an account epoch during lookup ... ok (694µs)
+
+ ERRORS 
+
+Notes consumers see current unauthenticated create, title and body snapshots before storage notification => ./tools/src/notes_storage.test.ts:173:6
+error: AssertionError: Values are not equal: never echo the preceding save
+
+
+    [Diff] Actual / Expected
+
+
+-   {"ids":["note-a"],"titles":["A"],"contents":["base"],"createdAts":[1],"updatedAts":[1]}
++   {"ids":["note-a","note-new"],"titles":["A","New Note"],"contents":["base",""],"createdAts":[1,1],"updatedAts":[1,2]}
+
+
+  throw new AssertionError(message);
+        ^
+    at assertEquals (https://jsr.io/@std/assert/1.0.19/equals.ts:67:9)
+    at file:///private/tmp/fdh-gate4/regression/tools/src/notes_storage.test.ts:197:9
+
+Notes consumers retain external provenance and one revision per native change => ./tools/src/notes_storage.test.ts:223:6
+error: AssertionError: Values are not equal.
+
+
+    [Diff] Actual / Expected
+
+
+    {
+-     baseNotesValue: undefined,
+      epoch: 0,
+-     origin: "local",
+-     revision: 1,
+-     value: '{"ids":["note-a"],"titles":["A"],"contents":["local"],"createdAts":[1],"updatedAts":[2]}',
++     origin: "external",
++     revision: 2,
++     value: '{"ids":["note-a"],"titles":["A"],"contents":["other window"],"createdAts":[1],"updatedAts":[3]}',
+    }
+
+  throw new AssertionError(message);
+        ^
+    at assertEquals (https://jsr.io/@std/assert/1.0.19/equals.ts:67:9)
+    at file:///private/tmp/fdh-gate4/regression/tools/src/notes_storage.test.ts:246:39
+
+Notes early consumers retain incoming source and acknowledge each delivery once => ./tools/src/notes_storage.test.ts:252:6
+error: AssertionError: Values are not equal.
+
+
+    [Diff] Actual / Expected
+
+
+    [
+      {
++       accountUid: "account-a",
++       baseValue: '{"accountUid":"account-a","lastSyncedSnapshots":{"note-a":{"id":"note-a","title":"A","content":"base","updatedAt":1}},"lastSyncTime":1}',
+        epoch: 0,
++       incomingValue: '{"ids":["note-a"],"titles":["A"],"contents":["remote"],"createdAts":[1],"updatedAts":[2]}',
++       origin: "sync",
++       revision: 1,
++       value: '{"ids":["note-a"],"titles":["A"],"contents":["remote"],"createdAts":[1],"updatedAts":[2]}',
+-       origin: "local",
+-       revision: 0,
+-       value: '{"ids":["note-a"],"titles":["A"],"contents":["base"],"createdAts":[1],"updatedAts":[1]}',
+      },
+    ]
+
+  throw new AssertionError(message);
+        ^
+    at assertEquals (https://jsr.io/@std/assert/1.0.19/equals.ts:67:9)
+    at file:///private/tmp/fdh-gate4/regression/tools/src/notes_storage.test.ts:280:39
+
+ FAILURES 
+
+Notes consumers see current unauthenticated create, title and body snapshots before storage notification => ./tools/src/notes_storage.test.ts:173:6
+Notes consumers retain external provenance and one revision per native change => ./tools/src/notes_storage.test.ts:223:6
+Notes early consumers retain incoming source and acknowledge each delivery once => ./tools/src/notes_storage.test.ts:252:6
+
+FAILED | 13 passed | 3 failed (39ms)
+
+error: Test failed

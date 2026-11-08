@@ -1,0 +1,397 @@
+Check tools/src/runtime_compatibility.test.ts
+Check tools/src/runtime_lock.test.ts
+Check tools/src/workspace_external_containers_patch.test.ts
+running 2 tests from ./tools/src/runtime_compatibility.test.ts
+Firefox 159 session and split patches match in production and local builds ... ok (1ms)
+Workspace Sync engine registration matches in production and local builds ... ok (157µs)
+running 13 tests from ./tools/src/runtime_lock.test.ts
+Runtime browser lock rejects non-browser harness tests ... ok (2ms)
+canonical Runtime lock pins the complete reviewed source closure ... FAILED (9ms)
+canonical Runtime lock pins each platform's own binary identity ... FAILED (566µs)
+loadRuntimeLock validates an explicit local file without network ... ok (2ms)
+loadRuntimeLock reports malformed JSON as a lock validation error ... ok (418µs)
+parseRuntimeLock rejects unknown keys at every level ... ok (1ms)
+parseRuntimeLock rejects unsafe and root-escaping material paths ... ok (952µs)
+parseRuntimeLock rejects malformed source and material identities ... ok (2ms)
+parseRuntimeLock rejects material totals, duplicates, and drift ... ok (1ms)
+parseRuntimeLock rejects task, manifest, and support closure drift ... ok (2ms)
+parseRuntimeLock rejects incomplete or unexpected platform tuples ... ok (1ms)
+parseRuntimeLock rejects malformed or duplicate release assets ... ok (3ms)
+parseRuntimeLock preserves canonical two- and three-component versions ... ok (607µs)
+running 8 tests from ./tools/src/workspace_external_containers_patch.test.ts
+external workspace Runtime patches agree for development and packaging ... FAILED (12ms)
+Firefox's valid default-container guess stays distinct from no host guess ... ok (386µs)
+external opens before Workspace initialization use the persisted default workspace ... ok (382µs)
+the target window's selected workspace overrides the profile default ... ok (97µs)
+external workspace fallback respects disabled workspaces, disabled containers and forced default ... ok (237µs)
+external workspace fallback never introduces a container into private browsing ... ok (92µs)
+external workspace fallback rejects missing, deleted and malformed identities ... ok (130µs)
+external workspace fallback tolerates unavailable or malformed persisted state ... ok (204µs)
+
+ ERRORS 
+
+canonical Runtime lock pins the complete reviewed source closure => ./tools/src/runtime_lock.test.ts:91:6
+error: AssertionError: Values are not equal.
+
+
+    [Diff] Actual / Expected
+
+
+    {
+-     commit: "ed90421b65b231df84dbaaa9bacb8788bfce5dd3",
++     commit: "0ac255739cdd64e100cd6913329247421b0ec2ea",
+      expectedTasks: {
+        "browser/base/content/test/browser-caps/browser_principalSerialization_version1.js": 2,
+        "browser/base/content/test/browser-general/browser_bug537474.js": 1,
+        "browser/base/content/test/browser-general/browser_bug565575.js": 1,
+        "browser/base/content/test/browser-general/browser_bug596687.js": 1,
+        "browser/base/content/test/browser-performance/browser_hiddenwindow_existence.js": 1,
+        "browser/components/customizableui/test/browser_996364_registerArea_different_properties.js": 7,
+        "browser/components/tabbrowser/test/browser/tabs/browser_pinned_and_hidden_tabs.js": 1,
+        "browser/components/urlbar/tests/browser-UrlbarInput/browser_a11y.js": 2,
+      },
+-     materialBytes: 227195,
++     materialBytes: 220075,
+      materialsCount: 53,
+-     ref: "daily-1172",
++     ref: "daily-1177",
+      release: {
+-       id: 420632924,
++       id: 424056383,
+        immutable: false,
+      },
+      repository: "Floorp-Projects/Floorp-Runtime",
+      roleCounts: {
+        "head-support": 5,
+        manifest: 6,
+        support: 34,
+        test: 8,
+      },
+      supportDependencyEdges: 93,
+      testsCount: 8,
+      totalTasks: 16,
+      trackingRef: "nora-0.2.0",
+-     tree: "f5572aa5f8731dddc3ab32c2204899d58447bb63",
++     tree: "77fe023f67fc8a25b6889f34025bf75df3fa5c75",
+    }
+
+  throw new AssertionError(message);
+        ^
+    at assertEquals (https://jsr.io/@std/assert/1.0.19/equals.ts:67:9)
+    at file:///private/tmp/fdh-gate4/regression/tools/src/runtime_lock.test.ts:96:3
+
+canonical Runtime lock pins each platform's own binary identity => ./tools/src/runtime_lock.test.ts:157:6
+error: AssertionError: Values are not equal.
+
+
+    [Diff] Actual / Expected
+
+
+    [
+      {
+-       assetId: 665637767,
+-       assetSha: "7c9ed24b609c37cd8000e374dc072a0ab3286e50ee2c740f30d8245890b9e995",
+-       assetSize: 78616968,
+-       buildId: "20261022044056",
+-       iniId: 665637782,
+-       iniSha: "9c09c5d6f919769e83e7cf413362647f152312777a1db7e76ba123d2e6d1be0b",
+-       iniSize: 537,
++       assetId: 677666998,
++       assetSha: "1e3db75a3527393fadbb4d6e453deb65431e92b0e864c8643a42536cbc1d1a33",
++       assetSize: 78305348,
++       buildId: "20261026023026",
++       iniId: 677667001,
++       iniSha: "cc99a36bfb6e4198d86561cfc8901b78557bacf3ce0fdaa4f362d75dd7e3a6c4",
++       iniSize: 534,
+        tuple: "linux/aarch64",
+      },
+      {
+-       assetId: 665637768,
+-       assetSha: "e2d46ffc5c2cfa4c8bfe87dad06ce113bf6569ab6fe55c1862321f8d39dcb8b7",
+-       assetSize: 87227872,
+-       buildId: "20261022044056",
+-       iniId: 665637780,
+-       iniSha: "f6004cd314a986f6a75c326fb0548f27eb653e31c756872dd294fe55dc7b7a77",
+-       iniSize: 537,
++       assetId: 677666992,
++       assetSha: "8b130d9f8c0e1c032064f9e1163db1d6000f955c29ac16036ac19138f0c445f5",
++       assetSize: 86798268,
++       buildId: "20261026023026",
++       iniId: 677666989,
++       iniSha: "94bddfe22d9c27cc35c66a6774d27820ae012a7d598a487327b9c75636c42dcf",
++       iniSize: 534,
+        tuple: "linux/x86_64",
+      },
+      {
+-       assetId: 665637766,
+-       assetSha: "17a3fe52658f5116e10ea2ec989bf3a7405668d7a71948cc6303a6243be74a29",
+-       assetSize: 197413366,
+-       buildId: "20261022044056",
+-       iniId: 665637772,
+-       iniSha: "670811664c2c99ec2e7b67deecc97f3285ac8e578c786eff47ca322fe1fe885f",
+-       iniSize: 537,
++       assetId: 677666994,
++       assetSha: "eba3e99f24fde6529cfe47dd9a73aad5486f16f8d0a37a58cbcdc350d9d5e63b",
++       assetSize: 197442349,
++       buildId: "20261026023026",
++       iniId: 677666990,
++       iniSha: "5ac8a99b5d503eaf8d647ed488c1f6af4ae849fd6be94b0d7a25e7b9a88acab3",
++       iniSize: 534,
+        tuple: "macos/universal",
+      },
+      {
+-       assetId: 665637771,
+-       assetSha: "2c203861175d42ab6310f52c11feaeba417079244adfe12b55e6bd9a0bf57746",
+-       assetSize: 141012291,
+-       buildId: "20261022044056",
+-       iniId: 665637779,
+-       iniSha: "7d037454b9f6ffda6b8f0cd73dc8a5011e7df68664c72d8d07924f2d75c43d27",
+-       iniSize: 537,
++       assetId: 677666999,
++       assetSha: "3843ff41659fde3e764d78443bc0c454ec98ee056ff368088d1bcc24b5ace209",
++       assetSize: 140916582,
++       buildId: "20261026023026",
++       iniId: 677666991,
++       iniSha: "baeef91785f3ae05fdc6924abda19d7125a789b1213772dab9403b99fb9c6632",
++       iniSize: 534,
+        tuple: "windows/x86_64",
+      },
+    ]
+
+  throw new AssertionError(message);
+        ^
+    at assertEquals (https://jsr.io/@std/assert/1.0.19/equals.ts:67:9)
+    at file:///private/tmp/fdh-gate4/regression/tools/src/runtime_lock.test.ts:209:3
+
+external workspace Runtime patches agree for development and packaging => ./tools/src/workspace_external_containers_patch.test.ts:66:6
+error: AssertionError: Values are not equal.
+
+
+    [Diff] Actual / Expected
+
+
+-   diff --git a/browser/modules/BrowserContentHandler.sys.mjs b/browser/modules/BrowserContentHandler.sys.mjs\n
++   diff --git a/moz-src/browser/components/BrowserContentHandler.sys.mjs b/moz-src/browser/components/BrowserContentHandler.sys.mjs\n
+    index f4a0e1e..e81c6d9 100644\n
+-   --- a/browser/modules/BrowserContentHandler.sys.mjs\n
+-   +++ b/browser/modules/BrowserContentHandler.sys.mjs\n
++   --- a/moz-src/browser/components/BrowserContentHandler.sys.mjs\n
++   +++ b/moz-src/browser/components/BrowserContentHandler.sys.mjs\n
+    @@ -15,6 +15,8 @@ ChromeUtils.defineESModuleGetters(lazy, {\n
+       AsyncShutdown: "resource://gre/modules/AsyncShutdown.sys.mjs",\n
+       BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.sys.mjs",\n
+       BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",\n
+    +  ContextualIdentityService:\n
+    +    "moz-src:///toolkit/components/contextualidentity/ContextualIdentityService.sys.mjs",\n
+       FirstStartup: "resource://gre/modules/FirstStartup.sys.mjs",\n
+       HeadlessShell: "moz-src:///browser/components/shell/HeadlessShell.sys.mjs",\n
+       HomePage: "resource:///modules/HomePage.sys.mjs",\n
+    @@ -80,6 +82,75 @@ const ONCE_PREF = "browser.startup.homepage_override.once";\n
+     // Must line up with the one in nsNativeAppSupportWin.h.\n
+     const PRIVATE_BROWSING_ICON_INDEX = 5;\n
+    \n
+    +/**\n
+    + * Floorp's fallback for an external open with no Firefox container guess.\n
+    + * Resolve it before creating the browser: changing a tab's attribute at\n
+    + * TabOpen is too late to change its browsing context or cookie/storage jar.\n
+    + * A new or not-yet-initialized window uses the persisted default workspace.\n
+    + *\n
+    + * @param {ChromeWindow|null} [win=null] The final target window, if available.\n
+    + * @param {boolean} [forcePrivate=false]\n
+    + * @returns {number}\n
+    + */\n
+    +export function getWorkspaceUserContextIdForExternalOpen(\n
+    +  win = null,\n
+    +  forcePrivate = false\n
+    +) {\n
+    +  try {\n
+    +    if (\n
+    +      forcePrivate ||\n
+    +      lazy.PrivateBrowsingUtils.permanentPrivateBrowsing ||\n
+    +      (win && lazy.PrivateBrowsingUtils.isWindowPrivate(win)) ||\n
+    +      !Services.prefs.getBoolPref("floorp.workspaces.enabled", true) ||\n
+    +      !Services.prefs.getBoolPref("privacy.userContext.enabled", false) ||\n
+    +      Services.prefs.getBoolPref(\n
+    +        "browser.link.force_default_user_context_id_for_external_opens",\n
+    +        false\n
+    +      )\n
+    +    ) {\n
+    +      return 0;\n
+    +    }\n
+    +\n
+    +    let userContextId;\n
+    +    if (\n
+    +      typeof win?.workspacesFuncs?.getCurrentWorkspaceUserContextId ==\n
+    +      "function"\n
+    +    ) {\n
+    +      userContextId = win.workspacesFuncs.getCurrentWorkspaceUserContextId();\n
+    +    } else {\n
+    +      const store = JSON.parse(\n
+    +        Services.prefs.getStringPref("floorp.workspaces.v4.store", "{}")\n
+    +      );\n
+    +      // data.ts persists its Map as [workspace UUID, workspace] pairs.\n
+    +      if (\n
+    +        typeof store?.defaultID != "string" ||\n
+    +        !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(\n
+    +          store.defaultID\n
+    +        ) ||\n
+    +        !Array.isArray(store.data) ||\n
+    +        !store.data.every(entry => Array.isArray(entry) && entry.length == 2)\n
+    +      ) {\n
+    +        return 0;\n
+    +      }\n
+    +      userContextId = new Map(store.data).get(store.defaultID)?.userContextId;\n
+    +    }\n
+    +\n
+    +    // A deleted, malformed, or internal identity must never choose a jar.\n
+    +    if (\n
+    +      !Number.isInteger(userContextId) ||\n
+    +      userContextId <= 0 ||\n
+    +      userContextId > 0xffffffff ||\n
+    +      !lazy.ContextualIdentityService.getPublicIdentityFromId(userContextId)\n
+    +    ) {\n
+    +      return 0;\n
+    +    }\n
+    +    return userContextId;\n
+    +  } catch {\n
+    +    // Preference migration and window startup must not prevent external opens.\n
+    +    return 0;\n
+    +  }\n
+    +}\n
+    +\n
+     function shouldLoadURI(aURI) {\n
+       if (aURI && !aURI.schemeIs("chrome")) {\n
+         return true;\n
+    @@ -302,6 +373,9 @@ function openBrowserWindow(\n
+       const isStartup =\n
+         cmdLine && cmdLine.state == Ci.nsICommandLine.STATE_INITIAL_LAUNCH;\n
+       const openAsSmart = canOpenAsSmartWindow(forcePrivate);\n
+    +  const userContextId = urlOrUrlList\n
+    +    ? getWorkspaceUserContextIdForExternalOpen(null, forcePrivate)\n
+    +    : 0;\n
+    \n
+       let args;\n
+       if (!urlOrUrlList) {\n
+    @@ -333,7 +407,9 @@ function openBrowserWindow(\n
+           sstring.data = uri;\n
+           uriArray.appendElement(sstring);\n
+         });\n
+    -    args = [uriArray];\n
+    +    args = userContextId\n
+    +      ? [uriArray, null, null, null, null, userContextId]\n
+    +      : [uriArray];\n
+       } else {\n
+         let extraOptions = Cc["@mozilla.org/hash-property-bag;1"].createInstance(\n
+           Ci.nsIWritablePropertyBag2\n
+    @@ -353,7 +429,7 @@ function openBrowserWindow(\n
+           postData,\n
+           undefined, // allowThirdPartyFixup; this would be `false` but that\n
+           // needs a conversion. Hopefully bug 1485961 will fix.\n
+    -      undefined, // user context id\n
+    +      userContextId || undefined, // user context id\n
+           null, // origin principal\n
+           null, // origin storage principal\n
+           triggeringPrincipal,\n
+    @@ -387,13 +463,20 @@ function openBrowserWindow(\n
+         }\n
+       } else {\n
+         // Otherwise, pass an nsIArray.\n
+    -    if (args.length > 1) {\n
+    +    if (typeof args[0] == "string") {\n
+           let string = Cc["@mozilla.org/supports-string;1"].createInstance(\n
+             Ci.nsISupportsString\n
+           );\n
+           string.data = args[0];\n
+           args[0] = string;\n
+         }\n
+    +    if (userContextId) {\n
+    +      let context = Cc["@mozilla.org/supports-PRUint32;1"].createInstance(\n
+    +        Ci.nsISupportsPRUint32\n
+    +      );\n
+    +      context.data = userContextId;\n
+    +      args[5] = context;\n
+    +    }\n
+         let array = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);\n
+         args.forEach(a => {\n
+           array.appendElement(a);\n
+    diff --git a/browser/modules/BrowserDOMWindow.sys.mjs b/browser/modules/BrowserDOMWindow.sys.mjs\n
+    index 21bd771..b742f84 100644\n
+    --- a/browser/modules/BrowserDOMWindow.sys.mjs\n
+    +++ b/browser/modules/BrowserDOMWindow.sys.mjs\n
+    @@ -10,6 +10,8 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";\n
+     let lazy = {};\n
+    \n
+     ChromeUtils.defineESModuleGetters(lazy, {\n
+    +  getWorkspaceUserContextIdForExternalOpen:\n
+    +    "resource:///modules/BrowserContentHandler.sys.mjs",\n
+       NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",\n
+       TaskbarTabsUtils: "resource:///modules/taskbartabs/TaskbarTabsUtils.sys.mjs",\n
+       URILoadingHelper: "resource:///modules/URILoadingHelper.sys.mjs",\n
+    @@ -73,7 +75,7 @@ export class BrowserDOMWindow {\n
+        * @param {boolean} aIsPrivate\n
+        * @param {boolean} aIsExternal\n
+        * @param {boolean} [aForceNotRemote=false]\n
+    -   * @param {number} [aUserContextId=0]\n
+    +   * @param {number|null} [aUserContextId=0] null means no external container guess.\n
+        * @param {nsIOpenWindowInfo} [aOpenWindowInfo=null]\n
+        * @param {Element} [aOpenerBrowser=null]\n
+        * @param {nsIPrincipal} [aTriggeringPrincipal=null]\n
+    @@ -125,6 +127,13 @@ export class BrowserDOMWindow {\n
+           return win.gBrowser.selectedBrowser;\n
+         }\n
+    \n
+    +    if (aIsExternal && aUserContextId === null) {\n
+    +      aUserContextId = lazy.getWorkspaceUserContextIdForExternalOpen(\n
+    +        win,\n
+    +        aIsPrivate\n
+    +      );\n
+    +    }\n
+    +\n
+         // OPEN_NEWTAB_BACKGROUND and OPEN_NEWTAB_FOREGROUND are used by\n
+         // `window.open` with modifiers.\n
+         // The last case is OPEN_NEWTAB, which is used by:\n
+    @@ -253,10 +262,11 @@ export class BrowserDOMWindow {\n
+             "browser.link.force_default_user_context_id_for_external_opens",\n
+             false\n
+           );\n
+    -    var openingUserContextId =\n
+    -      (guessUserContextIdEnabled &&\n
+    -        lazy.URILoadingHelper.guessUserContextId(aURI)) ||\n
+    -      Ci.nsIScriptSecurityManager.DEFAULT_USER_CONTEXT_ID;\n
+    +    // Keep a real guess of 0 distinct from no guess (null). Only the latter\n
+    +    // falls back to Floorp's workspace container in the final target window.\n
+    +    var openingUserContextId = guessUserContextIdEnabled\n
+    +      ? lazy.URILoadingHelper.guessUserContextId(aURI)\n
+    +      : Ci.nsIScriptSecurityManager.DEFAULT_USER_CONTEXT_ID;\n
+    \n
+         if (aOpenWindowInfo && isExternal) {\n
+           console.error(\n
+    @@ -347,7 +357,10 @@ export class BrowserDOMWindow {\n
+                 null,\n
+                 null,\n
+                 null,\n
+    -            null,\n
+    +            isExternal && !isPrivate\n
+    +              ? openingUserContextId ??\n
+    +                lazy.getWorkspaceUserContextIdForExternalOpen(null)\n
+    +              : null,\n
+                 null,\n
+                 null,\n
+                 aTriggeringPrincipal,\n
+    
+
+
+  throw new AssertionError(message);
+        ^
+    at assertEquals (https://jsr.io/@std/assert/1.0.19/equals.ts:67:9)
+    at file:///private/tmp/fdh-gate4/regression/tools/src/workspace_external_containers_patch.test.ts:71:3
+
+ FAILURES 
+
+canonical Runtime lock pins the complete reviewed source closure => ./tools/src/runtime_lock.test.ts:91:6
+canonical Runtime lock pins each platform's own binary identity => ./tools/src/runtime_lock.test.ts:157:6
+external workspace Runtime patches agree for development and packaging => ./tools/src/workspace_external_containers_patch.test.ts:66:6
+
+FAILED | 20 passed | 3 failed (107ms)
+
+error: Test failed

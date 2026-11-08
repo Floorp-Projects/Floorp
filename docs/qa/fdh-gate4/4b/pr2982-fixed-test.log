@@ -1,0 +1,32 @@
+Check tools/src/runtime_compatibility.test.ts
+Check tools/src/runtime_lock.test.ts
+Check tools/src/workspace_external_containers_patch.test.ts
+running 2 tests from ./tools/src/runtime_compatibility.test.ts
+Firefox 159 session and split patches match in production and local builds ... ok (765µs)
+Workspace Sync engine registration matches in production and local builds ... ok (122µs)
+running 13 tests from ./tools/src/runtime_lock.test.ts
+Runtime browser lock rejects non-browser harness tests ... ok (1ms)
+canonical Runtime lock pins the complete reviewed source closure ... ok (289µs)
+canonical Runtime lock pins each platform's own binary identity ... ok (104µs)
+loadRuntimeLock validates an explicit local file without network ... ok (2ms)
+loadRuntimeLock reports malformed JSON as a lock validation error ... ok (435µs)
+parseRuntimeLock rejects unknown keys at every level ... ok (889µs)
+parseRuntimeLock rejects unsafe and root-escaping material paths ... ok (758µs)
+parseRuntimeLock rejects malformed source and material identities ... ok (1ms)
+parseRuntimeLock rejects material totals, duplicates, and drift ... ok (1ms)
+parseRuntimeLock rejects task, manifest, and support closure drift ... ok (2ms)
+parseRuntimeLock rejects incomplete or unexpected platform tuples ... ok (1ms)
+parseRuntimeLock rejects malformed or duplicate release assets ... ok (3ms)
+parseRuntimeLock preserves canonical two- and three-component versions ... ok (565µs)
+running 8 tests from ./tools/src/workspace_external_containers_patch.test.ts
+external workspace Runtime patches agree for development and packaging ... ok (760µs)
+Firefox's valid default-container guess stays distinct from no host guess ... ok (246µs)
+external opens before Workspace initialization use the persisted default workspace ... ok (350µs)
+the target window's selected workspace overrides the profile default ... ok (99µs)
+external workspace fallback respects disabled workspaces, disabled containers and forced default ... ok (258µs)
+external workspace fallback never introduces a container into private browsing ... ok (79µs)
+external workspace fallback rejects missing, deleted and malformed identities ... ok (157µs)
+external workspace fallback tolerates unavailable or malformed persisted state ... ok (211µs)
+
+ok | 23 passed | 0 failed (78ms)
+

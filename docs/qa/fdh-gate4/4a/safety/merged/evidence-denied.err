@@ -1,0 +1,1 @@
+[fdh] secrets reference denied: task gate4-a-merged references 2 secret marker(s) ($.events[3].note -> .secrets; $.events[3].note -> SIGNPATH_API_TOKEN)

@@ -1,0 +1,40 @@
+Check tools/src/browser_launcher.test.ts
+running 20 tests from ./tools/src/browser_launcher.test.ts
+isolated browser launch owns a fresh private profile and Marionette port ... ok (1ms)
+isolated launcher rejects invalid Marionette ports ... ok (420µs)
+isolated launcher cleanup is idempotent and removes its profile ... ok (528µs)
+isolated browser pair rejects shared ports and owns distinct profiles ... ok (642µs)
+isolated browser process clears inherited secrets and cleans its profile ... ok (630µs)
+isolated Windows browser normalizes safe environment names and delegates owned-tree termination ... ok (389µs)
+isolated browser retains its profile when the owned process cannot be confirmed stopped ... ok (437µs)
+isolated browser retries a failed verified stop ... ok (575µs)
+isolated browser retains its profile when ownership capture fails after spawn ... ok (427µs)
+isolated browser cleans its profile when capture abort is verified ... ok (367µs)
+isolated browser prevents external profile cleanup after spawn ... ok (336µs)
+isolated browser pair removes the first profile if the second spawn fails ... ok (654µs)
+isolated browser pair attempts both stops and retains only an unverified profile ... ok (680µs)
+isolated browser pair retries after one verified stop fails ... ok (567µs)
+isolated browser pair retains a profile whose ownership capture fails ... ok (774µs)
+isolated browser refuses to spawn without an ownership controller ... ok (414µs)
+browser command retains the ordinary single-profile default ... ok (27µs)
+ordinary browser default Marionette launch scopes system access to its child ...
+------- output -------
+[launcher] Launching browser with command: /mock/floorp --profile /mock/profile --marionette --remote-allow-system-access
+[launcher] Browser Closed
+----- output end -----
+ordinary browser default Marionette launch scopes system access to its child ... ok (2ms)
+ordinary browser enabled Marionette launch scopes system access to its child ...
+------- output -------
+[launcher] Launching browser with command: /mock/floorp --profile /mock/profile --marionette --remote-allow-system-access
+[launcher] Browser Closed
+----- output end -----
+ordinary browser enabled Marionette launch scopes system access to its child ... ok (76µs)
+ordinary browser disabled Marionette launch scopes system access to its child ...
+------- output -------
+[launcher] Launching browser with command: /mock/floorp --profile /mock/profile
+[launcher] Browser Closed
+----- output end -----
+ordinary browser disabled Marionette launch scopes system access to its child ... ok (66µs)
+
+ok | 20 passed | 0 failed (14ms)
+

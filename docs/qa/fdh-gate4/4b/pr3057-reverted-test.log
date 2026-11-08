@@ -1,0 +1,17 @@
+Check tools/src/dev_process_selection.test.ts
+Check tools/src/dev_processes.test.ts
+TS2307 [ERROR]: Cannot find module 'file:///private/tmp/fdh-gate4/regression/tools/src/dev_process_selection.ts'.
+    at file:///private/tmp/fdh-gate4/regression/tools/src/dev_process_selection.test.ts:11:8
+
+TS2307 [ERROR]: Cannot find module 'file:///private/tmp/fdh-gate4/regression/tools/src/dev_process_types.ts'.
+    at file:///private/tmp/fdh-gate4/regression/tools/src/dev_process_selection.test.ts:12:51
+
+TS2307 [ERROR]: Cannot find module 'file:///private/tmp/fdh-gate4/regression/tools/src/dev_processes.ts'.
+    at file:///private/tmp/fdh-gate4/regression/tools/src/dev_processes.test.ts:10:8
+
+Found 3 errors.
+
+error: Type checking failed.
+
+  [33minfo:[39m The program failed type-checking, but it still might work correctly.
+  [36mhint:[39m Re-run with [4m--no-check[24m to skip type-checking.
