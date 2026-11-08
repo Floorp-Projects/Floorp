@@ -475,6 +475,13 @@ function resolveEvidenceOut(state: FdhTaskState, raw: string): string {
       `--out must be inside ${root} (the fdh evidence root), got ${resolved}`,
     );
   }
+  if (relative.startsWith(path.join("tasks"))) {
+    throw new Error(
+      `--out must not overwrite the task state under ${
+        path.join(root, "tasks")
+      }, got ${resolved}`,
+    );
+  }
   return resolved;
 }
 

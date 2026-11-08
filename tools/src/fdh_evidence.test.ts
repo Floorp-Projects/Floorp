@@ -246,6 +246,63 @@ Deno.test("a broken-then-fixed build ends succeeded while the failed attempt sta
   });
 });
 
+Deno.test("a browser pass followed by a fail keeps the browser-UNVERIFIED limitation", async () => {
+  await withTempDir(async (dir) => {
+    const state = makeState(dir);
+    addCheck(
+      state,
+      "browser-connected",
+      "deno run -A tools/dev-tool.ts status",
+    );
+    addCheck(
+      state,
+      "browser-connected",
+      "deno run -A tools/dev-tool.ts status",
+      false,
+    );
+    writeTaskState(state);
+
+    const manifest = await buildEvidenceManifest(state, {
+      os: { name: "testos", arch: "x86_64" },
+    });
+
+    assertEquals(manifest.envelope.taskStatus.state, "failed");
+    assert(
+      manifest.limitations.some((item) =>
+        item.includes("Browser confirmation was not verified")
+      ),
+    );
+    assertEquals(validateEvidenceManifest(manifest), []);
+  });
+});
+
+Deno.test("a cancelled state uses the cancel_requested transition and not-required approval", async () => {
+  await withTempDir(async (dir) => {
+    const state = makeState(dir);
+    state.status = "cancelled";
+    writeTaskState(state);
+
+    const manifest = await buildEvidenceManifest(state, {
+      os: { name: "testos", arch: "x86_64" },
+    });
+
+    assertEquals(manifest.envelope.taskStatus.state, "cancelled");
+    assertEquals(manifest.envelope.stateTransition.from, "cancel_requested");
+    assertEquals(manifest.envelope.stateTransition.to, "cancelled");
+    const approval = manifest.envelope.entities.find((entity) =>
+      entity.kind === "approval"
+    );
+    assertEquals(
+      (approval as { decision?: string } | undefined)?.decision,
+      "not-required",
+    );
+    assert(
+      manifest.limitations.some((item) => item.includes("No approval")),
+    );
+    assertEquals(validateEvidenceManifest(manifest), []);
+  });
+});
+
 Deno.test("writeEvidenceManifest writes JSON that re-validates", async () => {
   await withTempDir(async (dir) => {
     const state = makeState(dir);
