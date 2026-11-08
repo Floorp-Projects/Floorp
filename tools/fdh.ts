@@ -38,6 +38,19 @@ import {
   validateEvidenceManifest,
   writeEvidenceManifest,
 } from "./src/fdh_evidence.ts";
+import {
+  approveQuota,
+  claimQuota,
+  pendingQuota,
+  quotaLedgerExists,
+  readQuotaLedger,
+  releaseQuota,
+  resumeQuota,
+  stopQuota,
+  summarizeQuota,
+  writeQuotaLedger,
+} from "./src/fdh_quota.ts";
+import type { PendingExternalOp, QuotaStopReason } from "./src/fdh_quota.ts";
 import type { FdhTaskState } from "./src/fdh_task.ts";
 import type { ValidationError } from "./qa3/evidence/types.ts";
 
@@ -64,7 +77,27 @@ Commands:
   evidence --task-id <id> --out <path>
                             Build + validate the EvidenceManifest v0
                             (--out must stay under <worktree>/_dist/fdh)
+  quota claim --task-id <id> --agent <name>
+                            Assign the task to an agent; a second active holder
+                            is rejected (no double assignment)
+  quota stop --task-id <id> --agent <name> --reason <quota|infra|manual> [--note <text>]
+                            Stop a task for a quota/infra/manual reason
+  quota resume --task-id <id> --agent <name> [--note <text>]
+                            Resume a stopped task and re-assign it
+  quota pending --task-id <id> --op <push|pr|release|external> [--note <text>]
+                            Record a non-idempotent external op awaiting approval
+  quota approve --task-id <id> [--note <text>]
+                            Approve and clear pending external operations
+  quota release --task-id <id> --agent <name>
+                            Release the active holder without stopping
+  quota status --task-id <id>
+                            Print the local quota/assignment ledger
   help, --help              Show this help
+
+State: <worktree>/_dist/fdh/tasks/<id>.json (git-ignored via _dist/).
+Quota ledger: <worktree>/_dist/fdh/quota/<id>.json (local-only).
+Errors go to stderr and exit 1. The CLI never pushes, opens a PR, or calls a
+shared service; pending push/PR/release ops wait for 'quota approve'.
 
 State: <worktree>/_dist/fdh/tasks/<id>.json (git-ignored via _dist/).
 Errors go to stderr and exit 1. The CLI never pushes, opens a PR, or calls a
@@ -230,12 +263,77 @@ async function cmdTaskResume(parsed: ParsedArgs): Promise<void> {
     ? requireOption(parsed, "worktree")
     : undefined;
 
-  const { report } = await resumeTaskState({
+  const { state, report } = await resumeTaskState({
     taskId,
     worktree,
     probePort: isTcpPortInUse,
   });
-  console.log(JSON.stringify(report));
+  // Resume never reruns push/PR/release; it reports the pending approvals so the
+  // agent waits for an explicit 'fdh quota approve'.
+  const approvalPending = quotaLedgerExists(state.worktree, taskId)
+    ? readQuotaLedger(state.worktree, taskId).approvalPending
+    : [];
+  console.log(JSON.stringify({ ...report, approvalPending }));
+}
+
+async function cmdQuota(
+  parsed: ParsedArgs,
+  sub:
+    | "claim"
+    | "stop"
+    | "resume"
+    | "pending"
+    | "approve"
+    | "release"
+    | "status",
+): Promise<void> {
+  assertNoPositional(parsed, 2);
+  assertAllowedOptions(parsed, ["task-id", "agent", "reason", "op", "note"]);
+  const taskId = validateTaskId(requireOption(parsed, "task-id"));
+  const state = await loadStateForCwd(taskId);
+  const ledger = readQuotaLedger(state.worktree, taskId, true);
+  const note = hasOption(parsed, "note") ? requireOption(parsed, "note") : "";
+
+  switch (sub) {
+    case "claim":
+      claimQuota(ledger, requireOption(parsed, "agent"));
+      break;
+    case "stop": {
+      const reason = requireOption(parsed, "reason") as QuotaStopReason;
+      stopQuota(ledger, requireOption(parsed, "agent"), reason, note);
+      break;
+    }
+    case "resume":
+      resumeQuota(ledger, requireOption(parsed, "agent"), note);
+      break;
+    case "pending":
+      pendingQuota(
+        ledger,
+        requireOption(parsed, "op") as PendingExternalOp,
+        note,
+      );
+      break;
+    case "approve":
+      approveQuota(ledger, note);
+      break;
+    case "release":
+      releaseQuota(ledger, requireOption(parsed, "agent"));
+      break;
+    case "status":
+      console.log(JSON.stringify(summarizeQuota(ledger)));
+      return;
+  }
+
+  writeQuotaLedger(ledger);
+  const summary = summarizeQuota(ledger);
+  appendEvent(state, {
+    timestamp: nowIso(),
+    command: `quota ${sub}`,
+    note: JSON.stringify(summary),
+    exitCode: 0,
+  });
+  writeTaskState(state);
+  console.log(JSON.stringify(summary));
 }
 
 async function loadStateForCwd(taskId: string): Promise<FdhTaskState> {
@@ -556,6 +654,15 @@ async function main(argv: string[]): Promise<void> {
     case "evidence":
       assertNoPositional(parsed, 1);
       return await cmdEvidence(parsed);
+    case "quota":
+      if (
+        sub === "claim" || sub === "stop" || sub === "resume" ||
+        sub === "pending" || sub === "approve" || sub === "release" ||
+        sub === "status"
+      ) {
+        return await cmdQuota(parsed, sub);
+      }
+      throw new Error(`unknown quota command ${JSON.stringify(sub ?? "")}`);
     default:
       throw new Error(`unknown command ${JSON.stringify(group)}`);
   }
