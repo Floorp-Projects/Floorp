@@ -55,6 +55,19 @@ import type {
   PendingExternalOp,
   QuotaStopReason,
 } from "./src/fdh_quota.ts";
+import {
+  claimGuiLease,
+  endGuiLease,
+  guiLeasePathForWorktree,
+  readGuiLease,
+  summarizeGuiLease,
+  writeGuiLease,
+} from "./src/fdh_gui.ts";
+import type { GuiLeaseEndReason } from "./src/fdh_gui.ts";
+import {
+  assertNoSecretReferences,
+  checkTaskSecrets,
+} from "./src/fdh_secrets.ts";
 import type { FdhTaskState } from "./src/fdh_task.ts";
 import type { ValidationError } from "./qa3/evidence/types.ts";
 
@@ -96,6 +109,16 @@ Commands:
                             Release the active holder without stopping
   quota status --task-id <id>
                             Print the local quota/assignment ledger
+  gui claim --task-id <id> --agent <name>
+                            Acquire the shared GUI-desktop lease (one holder)
+  gui end --task-id <id> --agent <name> --reason <ended|cancelled> [--note <text>]
+                            End or cancel the lease; only the holder may release it
+  gui status --task-id <id>
+                            Print the shared GUI-desktop lease
+  secrets check --task-id <id>
+                            Deny evidence records that reference repository secrets
+  secrets status
+                            Print the secret-reference denial policy
   help, --help              Show this help
 
 State: <worktree>/_dist/fdh/tasks/<id>.json (git-ignored via _dist/).
@@ -279,6 +302,79 @@ async function cmdTaskResume(parsed: ParsedArgs): Promise<void> {
   // Resume never reruns push/PR/release; it reports the pending approvals so the
   // agent waits for an explicit 'fdh quota approve'.
   console.log(JSON.stringify({ ...report, approvalPending }));
+}
+
+async function cmdGui(
+  parsed: ParsedArgs,
+  sub: "claim" | "end" | "status",
+): Promise<void> {
+  assertNoPositional(parsed, 2);
+  assertAllowedOptions(parsed, ["task-id", "agent", "reason", "note"]);
+
+  const taskId = validateTaskId(requireOption(parsed, "task-id"));
+  const state = await loadStateForCwd(taskId);
+  const file = await guiLeasePathForWorktree(state.worktree);
+  const lease = readGuiLease(file);
+
+  if (sub === "status") {
+    console.log(
+      JSON.stringify({ ...summarizeGuiLease(lease), leasePath: file }),
+    );
+    return;
+  }
+
+  const agent = requireOption(parsed, "agent");
+  const note = hasOption(parsed, "note") ? requireOption(parsed, "note") : "";
+  if (sub === "claim") {
+    claimGuiLease(lease, agent, taskId, state.worktree);
+    writeGuiLease(file, lease);
+    appendEvent(state, {
+      timestamp: nowIso(),
+      command: "gui claim",
+      note: `GUI desktop lease claimed by ${agent}`,
+      exitCode: 0,
+    });
+  } else {
+    const reason = requireOption(parsed, "reason") as GuiLeaseEndReason;
+    endGuiLease(lease, agent, reason, note);
+    writeGuiLease(file, lease);
+    appendEvent(state, {
+      timestamp: nowIso(),
+      command: "gui end",
+      note: `GUI desktop lease ${reason} by ${agent}`,
+      exitCode: 0,
+    });
+  }
+  writeTaskState(state);
+  console.log(JSON.stringify({ ...summarizeGuiLease(lease), leasePath: file }));
+}
+
+async function cmdSecrets(
+  parsed: ParsedArgs,
+  sub: "check" | "status",
+): Promise<void> {
+  if (sub === "status") {
+    assertNoPositional(parsed, 2);
+    assertAllowedOptions(parsed, []);
+    console.log(JSON.stringify({
+      policy: "evidence/task records must not reference repository secrets",
+      secretsFile: ".secrets",
+      secretsFileRead: false,
+      enforcedBy: "fdh evidence + fdh secrets check",
+    }));
+    return;
+  }
+  assertNoPositional(parsed, 2);
+  assertAllowedOptions(parsed, ["task-id"]);
+  const taskId = validateTaskId(requireOption(parsed, "task-id"));
+  const state = await loadStateForCwd(taskId);
+  const result = checkTaskSecrets(state.worktree, taskId);
+  console.log(JSON.stringify(result));
+  if (result.denied) {
+    throw new Error(
+      `secrets reference denied: task ${taskId} references ${result.references.length} secret marker(s)`,
+    );
+  }
 }
 
 async function cmdQuota(
@@ -595,6 +691,8 @@ async function cmdEvidence(parsed: ParsedArgs): Promise<void> {
   const state = await loadStateForCwd(taskId);
   const outPath = resolveEvidenceOut(state, requireOption(parsed, "out"));
 
+  assertNoSecretReferences(state);
+
   appendEvent(state, {
     timestamp: nowIso(),
     command: "evidence",
@@ -668,6 +766,16 @@ async function main(argv: string[]): Promise<void> {
         return await cmdQuota(parsed, sub);
       }
       throw new Error(`unknown quota command ${JSON.stringify(sub ?? "")}`);
+    case "gui":
+      if (sub === "claim" || sub === "end" || sub === "status") {
+        return await cmdGui(parsed, sub);
+      }
+      throw new Error(`unknown gui command ${JSON.stringify(sub ?? "")}`);
+    case "secrets":
+      if (sub === "check" || sub === "status") {
+        return await cmdSecrets(parsed, sub);
+      }
+      throw new Error(`unknown secrets command ${JSON.stringify(sub ?? "")}`);
     default:
       throw new Error(`unknown command ${JSON.stringify(group)}`);
   }

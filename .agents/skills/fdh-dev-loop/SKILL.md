@@ -116,10 +116,39 @@ deno run -A tools/fdh.ts quota status --task-id <task-id>
 push/PR/release; the agent must wait for `quota approve`. Stop reasons are
 `quota|infra|manual`; pending ops are `push|pr|release|external`.
 
+## GUI desktop lease and secret-reference denial (Gate 4 4-A)
+
+The shared desktop GUI is one resource. The lease is stored beside the git
+common directory (`<git-common-dir>/fdh/gui-desktop-lease.json`), so all
+worktrees of the same repository see the same holder, and it is never in the
+tracked tree.
+
+```sh
+# Acquire the desktop lease. A second holder is rejected.
+deno run -A tools/fdh.ts gui claim --task-id <task-id> --agent <name>
+
+# End (normal completion) or cancel; only the current holder may release it.
+deno run -A tools/fdh.ts gui end --task-id <task-id> --agent <name> \
+  --reason ended --note "browser confirmation complete"
+
+# Inspect the shared lease.
+deno run -A tools/fdh.ts gui status --task-id <task-id>
+```
+
+Evidence records must not reference repository secrets. `fdh evidence` refuses
+a task state that mentions `.secrets` or its token names, and the same check is
+available directly. fdh scans only the task records; it never reads `.secrets`.
+
+```sh
+deno run -A tools/fdh.ts secrets check --task-id <task-id>
+deno run -A tools/fdh.ts secrets status
+```
+
 ## Contract
 
 - Commands: `task start|resume`, `dev up|down`, `verify build|test|browser`,
-  `evidence`, `quota claim|stop|resume|pending|approve|release|status`, `help`.
+  `evidence`, `quota claim|stop|resume|pending|approve|release|status`,
+  `gui claim|end|status`, `secrets check|status`, `help`.
 - State path: `<worktree>/_dist/fdh/tasks/<task-id>.json`. It holds `taskId`,
   `worktree`, `baseCommit`, `portOffset`, `createdAt`, `status`, `events[]`,
   `operations[]`, `assertions[]`, `cleanup` and `reproduction`.
