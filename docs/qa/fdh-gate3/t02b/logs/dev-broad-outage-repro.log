@@ -1,0 +1,8 @@
+Task feles-build deno run -A tools/feles-build.ts 'dev' '--port-offset' '0'
+[34m[feles-build] INFO: Dev/test port offset: port-offset=0 marionette=5180 pref=nora.dev.port_offset[0m
+[34m[feles-build] INFO: Starting development environment...[0m
+[33m[initializer] WARN: Runtime index fetch failed (attempt 1/5): fetch failed. Retrying in 1000ms...[0m
+[33m[initializer] WARN: Runtime index fetch failed (attempt 2/5): fetch failed. Retrying in 2000ms...[0m
+[33m[initializer] WARN: Runtime index fetch failed (attempt 3/5): fetch failed. Retrying in 3000ms...[0m
+[33m[initializer] WARN: Runtime index fetch failed (attempt 4/5): fetch failed. Retrying in 4000ms...[0m
+[31m[feles-build] ERROR: Unhandled error: fetch failed[0m

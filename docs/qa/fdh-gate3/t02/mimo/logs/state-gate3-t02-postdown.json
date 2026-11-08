@@ -1,0 +1,191 @@
+{
+  "taskId": "gate3-t02",
+  "worktree": "/private/tmp/fdh-gate2/pr2b100",
+  "baseCommit": "4bbfe29fb0b8e48d52fcae5a45aa8268d73c1741",
+  "portOffset": 100,
+  "createdAt": "2026-11-08T02:13:31.859Z",
+  "status": "running",
+  "events": [
+    {
+      "timestamp": "2026-11-08T02:13:31.859Z",
+      "command": "task start",
+      "note": "created task state for gate3-t02",
+      "exitCode": 0
+    },
+    {
+      "timestamp": "2026-11-08T02:14:57.598Z",
+      "command": "deno run -A tools/dev-tool.ts start --port-offset 100",
+      "note": "exit 0: Starting feles-build dev...\n[dev-tool] Using port-offset=100 marionette=5280 pref=nora.dev.port_offset\nStarted (PID 6505). Waiting for Marionette...\nBrowser ready! Marionette on port 5280.\nLog: /private/tmp/fdh-gate2/pr2b100/_dist/dev-server.log",
+      "exitCode": 0
+    },
+    {
+      "timestamp": "2026-11-08T02:14:57.599Z",
+      "command": "cleanup",
+      "note": "cleanup up: partial",
+      "exitCode": 0
+    },
+    {
+      "timestamp": "2026-11-08T02:15:25.421Z",
+      "command": "deno run -A tools/dev-tool.ts status",
+      "note": "exit 0: Connected to browser.\n  Title: Floorp Hub\n  URL: chrome://browser/content/browser.xhtml\n  Tabs: 2\n  Active tab: Floorp Hub\n[marionette] Connecting to port 5280\n[marionette] Connected (protocol v3)\n[marionette] Session: 705bea6e-dfdb-4268-9192-6c3e1391595e",
+      "exitCode": 0
+    },
+    {
+      "timestamp": "2026-11-08T02:15:25.510Z",
+      "command": "deno run -A tools/dev-tool.ts eval (async () => {\n  const mod = ChromeUtils.importESModule(\"chrome://remote/content/marionette/actors/MarionetteCommandsParent.sys.mjs\");\n  const bc = gBrowser.selectedBrowser.browsingContext;\n  const actor = mod.getMarionetteCommandsActorProxy(() => bc);\n  const raw = await actor.executeScript(\"return JSON.stringify({url: location.href, hit: document.body.innerText.includes(\\\"QA3-T02-MARKER\\\")})\", [], {});\n  const parsed = JSON.parse(raw);\n  return parsed.hit ? \"QA3-T02-MARKER @ \" + parsed.url : \"ABSENT @ \" + parsed.url;\n})()",
+      "note": "exit 0: QA3-T02-MARKER @ http://localhost:5283/#/overview/home\n[marionette] Connecting to port 5280\n[marionette] Connected (protocol v3)\n[marionette] Session: 87ece8ab-9c68-484e-ba33-672444f64d61",
+      "exitCode": 0
+    },
+    {
+      "timestamp": "2026-11-08T02:15:25.511Z",
+      "command": "browser eval output (verbatim)",
+      "note": "QA3-T02-MARKER @ http://localhost:5283/#/overview/home\n[marionette] Connecting to port 5280\n[marionette] Connected (protocol v3)\n[marionette] Session: 87ece8ab-9c68-484e-ba33-672444f64d61\n",
+      "exitCode": 0
+    },
+    {
+      "timestamp": "2026-11-08T02:15:36.954Z",
+      "command": "deno task feles-build build --phase after-mach",
+      "note": "exit 0: \u001b[32m[injector] SUCCESS: XHTML injection complete.\u001b[0m\nTask feles-build deno run -A tools/feles-build.ts 'build' '--phase' 'after-mach'",
+      "exitCode": 0
+    },
+    {
+      "timestamp": "2026-11-08T02:16:07.106Z",
+      "command": "evidence",
+      "note": "building manifest at /private/tmp/fdh-gate2/pr2b100/_dist/fdh/evidence/gate3-t02.json",
+      "exitCode": 0
+    },
+    {
+      "timestamp": "2026-11-08T02:16:35.734Z",
+      "command": "deno run -A tools/dev-tool.ts stop",
+      "note": "exit 0: Stopping dev processes for this checkout...\nStopped (33 processes).",
+      "exitCode": 0
+    },
+    {
+      "timestamp": "2026-11-08T02:16:35.735Z",
+      "command": "cleanup",
+      "note": "cleanup down: completed",
+      "exitCode": 0
+    },
+    {
+      "timestamp": "2026-11-08T02:16:54.460Z",
+      "command": "evidence",
+      "note": "building manifest at /private/tmp/fdh-gate2/pr2b100/_dist/fdh/evidence/gate3-t02.json",
+      "exitCode": 0
+    }
+  ],
+  "operations": [
+    {
+      "command": "/Users/user/.deno/bin/deno",
+      "args": [
+        "run",
+        "-A",
+        "tools/dev-tool.ts",
+        "start",
+        "--port-offset",
+        "100"
+      ],
+      "displayCommand": "deno run -A tools/dev-tool.ts start --port-offset 100",
+      "cwd": "/private/tmp/fdh-gate2/pr2b100",
+      "startedAt": "2026-11-08T02:14:27.687Z",
+      "endedAt": "2026-11-08T02:14:57.598Z",
+      "exitCode": 0,
+      "output": "Starting feles-build dev...\n[dev-tool] Using port-offset=100 marionette=5280 pref=nora.dev.port_offset\nStarted (PID 6505). Waiting for Marionette...\nBrowser ready! Marionette on port 5280.\nLog: /private/tmp/fdh-gate2/pr2b100/_dist/dev-server.log\n"
+    },
+    {
+      "command": "/Users/user/.deno/bin/deno",
+      "args": [
+        "run",
+        "-A",
+        "tools/dev-tool.ts",
+        "status"
+      ],
+      "displayCommand": "deno run -A tools/dev-tool.ts status",
+      "cwd": "/private/tmp/fdh-gate2/pr2b100",
+      "startedAt": "2026-11-08T02:15:25.330Z",
+      "endedAt": "2026-11-08T02:15:25.421Z",
+      "exitCode": 0,
+      "output": "Connected to browser.\n  Title: Floorp Hub\n  URL: chrome://browser/content/browser.xhtml\n  Tabs: 2\n  Active tab: Floorp Hub\n[marionette] Connecting to port 5280\n[marionette] Connected (protocol v3)\n[marionette] Session: 705bea6e-dfdb-4268-9192-6c3e1391595e\n"
+    },
+    {
+      "command": "/Users/user/.deno/bin/deno",
+      "args": [
+        "run",
+        "-A",
+        "tools/dev-tool.ts",
+        "eval",
+        "(async () => {\n  const mod = ChromeUtils.importESModule(\"chrome://remote/content/marionette/actors/MarionetteCommandsParent.sys.mjs\");\n  const bc = gBrowser.selectedBrowser.browsingContext;\n  const actor = mod.getMarionetteCommandsActorProxy(() => bc);\n  const raw = await actor.executeScript(\"return JSON.stringify({url: location.href, hit: document.body.innerText.includes(\\\"QA3-T02-MARKER\\\")})\", [], {});\n  const parsed = JSON.parse(raw);\n  return parsed.hit ? \"QA3-T02-MARKER @ \" + parsed.url : \"ABSENT @ \" + parsed.url;\n})()"
+      ],
+      "displayCommand": "deno run -A tools/dev-tool.ts eval (async () => {\n  const mod = ChromeUtils.importESModule(\"chrome://remote/content/marionette/actors/MarionetteCommandsParent.sys.mjs\");\n  const bc = gBrowser.selectedBrowser.browsingContext;\n  const actor = mod.getMarionetteCommandsActorProxy(() => bc);\n  const raw = await actor.executeScript(\"return JSON.stringify({url: location.href, hit: document.body.innerText.includes(\\\"QA3-T02-MARKER\\\")})\", [], {});\n  const parsed = JSON.parse(raw);\n  return parsed.hit ? \"QA3-T02-MARKER @ \" + parsed.url : \"ABSENT @ \" + parsed.url;\n})()",
+      "cwd": "/private/tmp/fdh-gate2/pr2b100",
+      "startedAt": "2026-11-08T02:15:25.422Z",
+      "endedAt": "2026-11-08T02:15:25.510Z",
+      "exitCode": 0,
+      "output": "QA3-T02-MARKER @ http://localhost:5283/#/overview/home\n[marionette] Connecting to port 5280\n[marionette] Connected (protocol v3)\n[marionette] Session: 87ece8ab-9c68-484e-ba33-672444f64d61\n"
+    },
+    {
+      "command": "/Users/user/.deno/bin/deno",
+      "args": [
+        "task",
+        "feles-build",
+        "build",
+        "--phase",
+        "after-mach"
+      ],
+      "displayCommand": "deno task feles-build build --phase after-mach",
+      "cwd": "/private/tmp/fdh-gate2/pr2b100",
+      "startedAt": "2026-11-08T02:15:36.651Z",
+      "endedAt": "2026-11-08T02:15:36.954Z",
+      "exitCode": 0,
+      "output": "\u001b[32m[injector] SUCCESS: XHTML injection complete.\u001b[0m\nTask feles-build deno run -A tools/feles-build.ts 'build' '--phase' 'after-mach'\n"
+    },
+    {
+      "command": "/Users/user/.deno/bin/deno",
+      "args": [
+        "run",
+        "-A",
+        "tools/dev-tool.ts",
+        "stop"
+      ],
+      "displayCommand": "deno run -A tools/dev-tool.ts stop",
+      "cwd": "/private/tmp/fdh-gate2/pr2b100",
+      "startedAt": "2026-11-08T02:16:33.895Z",
+      "endedAt": "2026-11-08T02:16:35.734Z",
+      "exitCode": 0,
+      "output": "Stopping dev processes for this checkout...\nStopped (33 processes).\n"
+    }
+  ],
+  "assertions": [
+    {
+      "name": "browser-connected",
+      "expected": "Connected to browser.",
+      "actual": "Connected to browser.",
+      "passed": true,
+      "at": "2026-11-08T02:15:25.422Z"
+    },
+    {
+      "name": "browser-eval-contains",
+      "expected": "eval output contains \"QA3-T02-MARKER\"",
+      "actual": "QA3-T02-MARKER @ http://localhost:5283/#/overview/home",
+      "passed": true,
+      "at": "2026-11-08T02:15:25.511Z"
+    },
+    {
+      "name": "build-exit-code",
+      "expected": "exit code 0",
+      "actual": "exit code 0",
+      "passed": true,
+      "at": "2026-11-08T02:15:36.954Z"
+    }
+  ],
+  "cleanup": {
+    "result": "completed",
+    "notes": "Dev server stopped by 'fdh dev down'.",
+    "details": [
+      "dev-tool stop"
+    ]
+  },
+  "reproduction": {
+    "result": "inconclusive",
+    "notes": "The fdh local loop records verification; it does not reproduce a defect."
+  }
+}

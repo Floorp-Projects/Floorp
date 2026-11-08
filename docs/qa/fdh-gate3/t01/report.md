@@ -138,7 +138,8 @@ Final manifest: `evidence-gate3-t01-final.json`, state: `state-gate3-t01-final.j
   `omni.ja`, dev CSP and `noraneko-devdir` hand-prepared.
 - macOS local only; `matchesTarget: false`; no host test verification; no visual judge;
   DSH pin UNVERIFIED; uncommitted diff not hashed.
-- The T-01 rerun is one task; T-02/T-02b still pending for Gate 3 exit.
+- The T-01 rerun is one task; T-02/T-02b were executed after it and Gate 3 exit passed 2026-11-08
+  (this report was written before those runs; the Gate 3 exit record is in `../README.md`).
 
 ## 8. Conclusion
 

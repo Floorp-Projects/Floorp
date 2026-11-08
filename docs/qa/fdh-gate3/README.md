@@ -14,9 +14,9 @@ Gate 3 出口条件「T-01・T-02・T-02bが通り、証拠が残る」を満た
 | 項目 | 結果 | 証拠 |
 |---|---|---|
 | T-01（AC-01） | **PASS** — 実コード変更→build→起動→ブラウザー確認、意図的エラーをログから発見して修正、未commit差分保全 | [`t01/report.md`](t01/report.md)、`t01/evidence-gate3-t01-final.json`、`t01/state-gate3-t01-final.json`、`t01/logs/` |
-| T-02（AC-02、D-06c） GLM 5.3 Flash | **PASS** — offset 0 / settings 5183、`QA3-T02-MARKER`、state `succeeded`、assertions 3、validation `[]` | [`t02/glm/report.md`](t02/glm/report.md)、`t02/glm/evidence-gate3-t02-postdown.json`、`t02/glm/logs/` |
-| T-02（AC-02、D-06c） MiMo 2.6 Flash | **PASS** — offset 100 / settings 5283、同一 `QA3-T02-MARKER`、state `succeeded`、assertions 3、validation `[]` | [`t02/mimo/report.md`](t02/mimo/report.md)、`t02/mimo/evidence-gate3-t02-postdown.json`、`t02/mimo/logs/` |
-| T-02b（共有サービス停止） | **PASS（限定）** — GitHub 到達不能（`gh` exit 1、`curl` exit 7）のまま T-01 相当ループ完走、state `succeeded`、assertions 3、validation `[]` | [`t02b/report.md`](t02b/report.md)、`t02b/evidence-gate3-t02b-postdown.json`、`t02b/logs/` |
+| T-02（AC-02、D-06c） GLM 5.3 Flash | **PASS** — offset 0 / settings 5183、`QA3-T02-MARKER`、manifest state `succeeded`、assertions 3、validation `[]` | [`t02/glm/report.md`](t02/glm/report.md)、`t02/glm/evidence-gate3-t02-postdown.json`、`t02/glm/logs/` |
+| T-02（AC-02、D-06c） MiMo 2.6 Flash | **PASS** — offset 100 / settings 5283、同一 `QA3-T02-MARKER`、manifest state `succeeded`、assertions 3、validation `[]` | [`t02/mimo/report.md`](t02/mimo/report.md)、`t02/mimo/evidence-gate3-t02-postdown.json`、`t02/mimo/logs/` |
+| T-02b（共有サービス停止） | **PASS（限定）** — GitHub 到達不能（`gh` exit 1、`curl` exit 7）のまま T-01 相当ループ完走、manifest state `succeeded`、assertions 3、validation `[]` | [`t02b/report.md`](t02b/report.md)、`t02b/evidence-gate3-t02b.json`、`t02b/evidence-gate3-t02b-postdown.json`、`t02b/logs/` |
 
 ## T-01 の要点
 
@@ -27,7 +27,11 @@ Gate 3 出口条件「T-01・T-02・T-02bが通り、証拠が残る」を満た
   expected`）→ 除去 → build exit 0。`fdh verify build` は PR #3071 修正後の merged code で exit 0
   （`[injector] SUCCESS`）。修正前は `isCI: true` 固定で local `BIN_DIR` を見ず ENOENT だった。
 - 未commit差分（marker + ローカル patcher guard）は実行前後で保全。manifest `state: succeeded`、
-  7 assertions、11 limitations、`validateManifest(role:"runner")` `[]`。
+  7 assertions、11 limitations、`validateManifest(role:"runner")` `[]`。7 assertions には
+  browser re-verify の一時的 `NewSession timed out`（browser-connected false）を含み、dev 再起動後の
+  最終 pass で succeeded になっている（report §2/§6）。
+- committed task-state JSON は `status: "running"` のまま（fdh CLI は final status を state ファイルへ
+  遷移させない）。PASS の「succeeded」は **evidence manifest の `envelope.taskStatus.state`** を指す。
 
 ## T-02 の要点（DSH 同一ハーネス2モデル）
 
@@ -48,7 +52,12 @@ Gate 3 出口条件「T-01・T-02・T-02bが通り、証拠が残る」を満た
   には依存する。
 - 完走は `NO_PROXY="dev-assets.floorp.app"` で runtime-asset host のみ免除し、GitHub は proxy 経由で
   到達不能のまま実施。`QA3-T02B-MARKER @ http://localhost:5183/#/overview/home`、build assert exit 0、
-  `state: succeeded`、assertions 3、limitations 11、validation `[]`。failed dev up も operations に記録。
+  manifest state `succeeded`、assertions 3、limitations 11、validation `[]`。failed dev up も operations に記録。
+- 注意: 2-D manifest の boilerplate limitation「No GitHub or other shared-service behavior is
+  exercised; the local loop does not need shared services」は `fdh evidence` が全タスクに付ける定型文で、
+  T-02b の runtime-asset host 依存には正確ではない。一次記録は report §1/§6 と本 README の上の発見。
+- 全外部HTTP停止時の `dev-up` 失敗の WARN 行は、失敗時の `_dist/dev-server.log` が retry で上書きされた
+  ため、`t02b/logs/dev-broad-outage-repro.log`（同条件の再現、exit 1）に保存している。
 
 ## 環境注記（全項目共通）
 
