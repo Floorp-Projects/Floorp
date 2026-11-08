@@ -22,7 +22,6 @@ import {
 import type { Panel } from "../utils/type.ts";
 import { createEffect, createSignal } from "solid-js";
 import { getExtensionSidebarAction } from "../extension-panels.ts";
-import { removeSavedUnreadBadge } from "../utils/saved-unread-badge.ts";
 import { supportsUnreadBadge } from "../utils/unread-badge.ts";
 import { WebsitePanel } from "../website-panel-window-parent.ts";
 
@@ -310,10 +309,9 @@ export class CPanelSidebar {
     });
   }
 
-  /** Unload the panel and remove its settings and saved badge. */
+  /** Unload the panel and remove its settings. */
   public deletePanel(panelId: string) {
     this.unloadPanel(panelId);
-    removeSavedUnreadBadge(panelId);
     setPanelSidebarData((prev) => prev.filter((p) => p.id !== panelId));
   }
 

@@ -23,6 +23,7 @@ import {
   zPanelSidebarData,
 } from "../utils/type.js";
 import { createRootHMR } from "@nora/solid-xul";
+import { removeSavedUnreadBadge } from "../utils/saved-unread-badge.ts";
 import { isRight } from "fp-ts/Either";
 
 function defaultPanelSidebarData(): Panels {
@@ -52,6 +53,7 @@ export function parsePanelSidebarData(stringData: string): Panels {
   return defaultPanelSidebarData();
 }
 
+/** Synchronize panel preferences and remove saved counts for deleted panels. */
 function createPanelSidebarData(): [Accessor<Panels>, Setter<Panels>] {
   const [panelSidebarData, setPanelSidebarData] = createSignal<Panels>(
     parsePanelSidebarData(
@@ -82,12 +84,18 @@ function createPanelSidebarData(): [Accessor<Panels>, Setter<Panels>] {
     );
   });
 
-  createEffect(() => {
+  createEffect((previous: Panels) => {
+    const panels = panelSidebarData();
+    const remainingIds = new Set(panels.map((panel) => panel.id));
+    for (const panel of previous) {
+      if (!remainingIds.has(panel.id)) removeSavedUnreadBadge(panel.id);
+    }
     Services.prefs.setStringPref(
       PanelSidebarStaticNames.panelSidebarDataPrefName,
-      JSON.stringify({ data: panelSidebarData() }),
+      JSON.stringify({ data: panels }),
     );
-  });
+    return panels;
+  }, []);
   return [panelSidebarData, setPanelSidebarData];
 }
 
