@@ -1,0 +1,6 @@
+Check tools/src/tab_context_menu_sections_patch.test.ts
+running 1 test from ./tools/src/tab_context_menu_sections_patch.test.ts
+tab context menu sections match in production and extracted Runtime patches ... ok (517µs)
+
+ok | 1 passed | 0 failed (2ms)
+

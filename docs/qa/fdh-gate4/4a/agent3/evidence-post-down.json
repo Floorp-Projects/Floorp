@@ -1,0 +1,265 @@
+{
+  "schemaVersion": 1,
+  "sourceFormat": "work-record",
+  "envelope": {
+    "epoch": 1,
+    "principal": {
+      "id": "fdh-cli",
+      "kind": "agent",
+      "grantedBy": "host:fdh-cli-host"
+    },
+    "entities": [
+      {
+        "kind": "task",
+        "id": "scheduler:task:gate4-a200",
+        "issuer": "scheduler",
+        "owner": "fdh-local-runner",
+        "ownerRole": "task-owner",
+        "label": "fdh local loop task gate4-a200"
+      },
+      {
+        "kind": "job",
+        "id": "scheduler:job:gate4-a200",
+        "issuer": "scheduler",
+        "owner": "fdh-local-runner",
+        "ownerRole": "job-owner",
+        "label": "local gate loop job for gate4-a200"
+      },
+      {
+        "kind": "run",
+        "id": "executor:run:gate4-a200:1",
+        "issuer": "executor",
+        "owner": "fdh-local-runner",
+        "ownerRole": "run-owner",
+        "label": "fdh command run for gate4-a200"
+      },
+      {
+        "kind": "attempt",
+        "id": "executor:attempt:gate4-a200:1:1",
+        "issuer": "executor",
+        "owner": "fdh-local-runner",
+        "ownerRole": "run-owner",
+        "label": "first attempt for gate4-a200"
+      },
+      {
+        "kind": "session",
+        "id": "host:session:gate4-a200",
+        "issuer": "host",
+        "owner": "fdh-local-runner",
+        "ownerRole": "session-owner",
+        "context": "existing agent session driving the fdh CLI"
+      },
+      {
+        "kind": "workspace",
+        "id": "host:workspace:gate4-a200",
+        "issuer": "host",
+        "owner": "fdh-local-runner",
+        "ownerRole": "workspace-owner",
+        "path": "/private/tmp/fdh-gate4/pr2b200"
+      },
+      {
+        "kind": "approval",
+        "id": "host-authorization:approval:gate4-a200:local",
+        "issuer": "host-authorization",
+        "owner": "fdh-local-runner",
+        "ownerRole": "approver",
+        "decision": "not-required",
+        "label": "no approval is requested by the fdh local loop"
+      }
+    ],
+    "relationships": [
+      {
+        "from": "scheduler:task:gate4-a200",
+        "type": "task-has-job",
+        "to": "scheduler:job:gate4-a200"
+      },
+      {
+        "from": "scheduler:job:gate4-a200",
+        "type": "job-has-run",
+        "to": "executor:run:gate4-a200:1"
+      },
+      {
+        "from": "executor:run:gate4-a200:1",
+        "type": "run-has-attempt",
+        "to": "executor:attempt:gate4-a200:1:1"
+      },
+      {
+        "from": "executor:run:gate4-a200:1",
+        "type": "run-uses-session",
+        "to": "host:session:gate4-a200"
+      },
+      {
+        "from": "executor:run:gate4-a200:1",
+        "type": "run-in-workspace",
+        "to": "host:workspace:gate4-a200"
+      },
+      {
+        "from": "host-authorization:approval:gate4-a200:local",
+        "type": "approval-for-job",
+        "to": "scheduler:job:gate4-a200"
+      }
+    ],
+    "taskStatus": {
+      "state": "succeeded",
+      "cancelRequested": false
+    },
+    "cancelRequested": false,
+    "stateTransition": {
+      "from": "running",
+      "to": "succeeded",
+      "at": "2026-11-08T04:35:53.864Z",
+      "reason": "fdh local loop recorded the commands in operations[]"
+    }
+  },
+  "runtime": {
+    "os": {
+      "name": "darwin",
+      "version": "25.6.0",
+      "arch": "aarch64"
+    },
+    "build": {
+      "commit": "bec27040382280c17a9e4a573359f017dca89036",
+      "id": "gate4-a200",
+      "repository": "Floorp-Projects/Floorp"
+    },
+    "packageDigest": null,
+    "toolchain": {
+      "dsh": {
+        "version": "UNVERIFIED",
+        "pin": "UNVERIFIED"
+      },
+      "floorp": {
+        "commit": "bec27040382280c17a9e4a573359f017dca89036",
+        "pin": "floorp@bec27040382280c17a9e4a573359f017dca89036"
+      },
+      "deno": {
+        "version": "2.9.4"
+      }
+    }
+  },
+  "attempts": [
+    {
+      "run": "executor:run:gate4-a200:1",
+      "attempt": 1,
+      "startedAt": "2026-11-08T04:15:42.369Z",
+      "endedAt": "2026-11-08T04:35:53.864Z",
+      "result": "passed",
+      "exitCode": null,
+      "notes": "fdh local loop; 6 command(s), 4 assertion(s)"
+    }
+  ],
+  "operations": [
+    {
+      "input": "deno run -A tools/dev-tool.ts start --port-offset 200",
+      "target": "/private/tmp/fdh-gate4/pr2b200",
+      "order": 1,
+      "observation": "exit 0; Starting feles-build dev...\n[dev-tool] Using port-offset=200 marionette=5380 pref=nora.dev.port_offset\nStarted (PID 22075). Waiting for Marionette...\nBrowser ready! Marionette on port 5380.\nLog: /private/tmp/fdh-gate4/pr2b200/_dist/dev-server.log"
+    },
+    {
+      "input": "deno run -A tools/dev-tool.ts status",
+      "target": "/private/tmp/fdh-gate4/pr2b200",
+      "order": 2,
+      "observation": "exit 0; Connected to browser.\n  Title: Floorp Hub\n  URL: chrome://browser/content/browser.xhtml\n  Tabs: 1\n  Active tab: Floorp Hub\n[marionette] Connecting to port 5380\n[marionette] Connected (protocol v3)\n[marionette] Session: 04e7cf31-dd43-4ece-a129-02816f48f336"
+    },
+    {
+      "input": "deno run -A tools/dev-tool.ts eval (async () => {\n     const mod = ChromeUtils.importESModule(\"chrome://remote/content/marionette/actors/MarionetteCommandsParent.sys.mjs\");\n     const bc = gBrowser.selectedBrowser.browsingContext;\n     const actor = mod.getMarionetteCommandsActorProxy(() => bc);\n     const raw = await actor.executeScript(\"return JSON.stringify({url: location.href, hit: document.body.innerText.includes(\\\"QA4-A-AGENT3\\\")})\", [], {});\n     const parsed = JSON.parse(raw);\n     return parsed.hit ? \"QA4-A-AGENT3 @ \" + parsed.url : \"ABSENT @ \" + parsed.url;\n   })()",
+      "target": "/private/tmp/fdh-gate4/pr2b200",
+      "order": 3,
+      "observation": "exit 0; QA4-A-AGENT3 @ http://localhost:5383/#/overview/home\n[marionette] Connecting to port 5380\n[marionette] Connected (protocol v3)\n[marionette] Session: 80501412-a3ca-4763-8e4c-7444325a5dd9"
+    },
+    {
+      "input": "deno run -A tools/dev-tool.ts status",
+      "target": "/private/tmp/fdh-gate4/pr2b200",
+      "order": 4,
+      "observation": "exit 0; Connected to browser.\n  Title: Floorp Hub\n  URL: chrome://browser/content/browser.xhtml\n  Tabs: 1\n  Active tab: Floorp Hub\n[marionette] Connecting to port 5380\n[marionette] Connected (protocol v3)\n[marionette] Session: fb49422b-c7bf-4f31-a852-451de1a03f26"
+    },
+    {
+      "input": "deno run -A tools/dev-tool.ts eval (async () => {\n     const mod = ChromeUtils.importESModule(\"chrome://remote/content/marionette/actors/MarionetteCommandsParent.sys.mjs\");\n     const bc = gBrowser.selectedBrowser.browsingContext;\n     const actor = mod.getMarionetteCommandsActorProxy(() => bc);\n     const raw = await actor.executeScript(\"return JSON.stringify({url: location.href, hit: document.body.innerText.includes(\\\"QA4-A-AGENT3\\\")})\", [], {});\n     const parsed = JSON.parse(raw);\n     return parsed.hit ? \"QA4-A-AGENT3 @ \" + parsed.url : \"ABSENT @ \" + parsed.url;\n   })()",
+      "target": "/private/tmp/fdh-gate4/pr2b200",
+      "order": 5,
+      "observation": "exit 0; QA4-A-AGENT3 @ http://localhost:5383/#/overview/home\n[marionette] Connecting to port 5380\n[marionette] Connected (protocol v3)\n[marionette] Session: 1798b970-0c8e-408e-9a8f-8ece80d3ba9b"
+    },
+    {
+      "input": "deno run -A tools/dev-tool.ts stop",
+      "target": "/private/tmp/fdh-gate4/pr2b200",
+      "order": 6,
+      "observation": "exit 0; Stopping dev processes for this checkout...\nStopped (32 processes)."
+    }
+  ],
+  "assertions": [
+    {
+      "name": "browser-connected",
+      "expected": "Connected to browser.",
+      "actual": "Connected to browser.",
+      "passed": true
+    },
+    {
+      "name": "browser-eval-contains",
+      "expected": "eval output contains \"QA4-A-AGENT3\"",
+      "actual": "QA4-A-AGENT3 @ http://localhost:5383/#/overview/home",
+      "passed": true
+    },
+    {
+      "name": "browser-connected",
+      "expected": "Connected to browser.",
+      "actual": "Connected to browser.",
+      "passed": true
+    },
+    {
+      "name": "browser-eval-contains",
+      "expected": "eval output contains \"QA4-A-AGENT3\"",
+      "actual": "QA4-A-AGENT3 @ http://localhost:5383/#/overview/home",
+      "passed": true
+    }
+  ],
+  "environmentFidelity": {
+    "host": "darwin 25.6.0 (aarch64)",
+    "network": "enabled",
+    "matchesTarget": false,
+    "deviations": [
+      "local development worktree rather than a packaged qualification environment",
+      "no external network services are used; only the local dev server may be running"
+    ],
+    "notes": "Local fdh loop on the recorded worktree; this is not a release-environment run."
+  },
+  "inputFidelity": {
+    "inputs": [
+      {
+        "path": "/private/tmp/fdh-gate4/pr2b200/_dist/fdh/tasks/gate4-a200.json",
+        "sha256": "579ca2181accadd67bb7359b97f88e3d636941861a18797d9241d1a42a1a499a",
+        "bytes": 12539
+      }
+    ],
+    "unchangedDuringRun": "unknown",
+    "deviations": [
+      "the task-state file is the evidence source and can change after this manifest is written"
+    ],
+    "notes": "Pinned input is the fdh task-state snapshot read while building this manifest."
+  },
+  "visualJudge": null,
+  "cleanup": {
+    "result": "completed",
+    "notes": "Dev server stopped by 'fdh dev down'.",
+    "details": [
+      "dev-tool stop"
+    ]
+  },
+  "limitations": [
+    "This evidence covers only the local fdh loop for task 'gate4-a200'; it is not a Gate 3 qualification or release approval.",
+    "No visual judgment was performed (visualJudge is null); visual/look-and-feel behavior is not covered.",
+    "The DSH toolchain identity is not available to fdh and is recorded as UNVERIFIED.",
+    "Assertions reflect the recorded command exit codes and verbatim outputs only; they do not establish behavior beyond those commands.",
+    "The local development worktree is not the qualification target environment (matchesTarget is false).",
+    "No GitHub or other shared-service behavior is exercised; the local loop does not need shared services.",
+    "No build verification was recorded; the build state is UNVERIFIED.",
+    "No host test verification was recorded; the host test state is UNVERIFIED.",
+    "Browser eval output is recorded verbatim; only --expect turns it into a contains-check assertion, which does not prove behavior beyond the checked text.",
+    "No approval was requested or recorded; the approval entity is marked not-required.",
+    "The build/toolchain commit is the task's start base; an uncommitted working-tree diff is not hashed in this manifest.",
+    "No defect was reproduced; reproduction is inconclusive by design rather than being inferred from command output."
+  ],
+  "reproduction": {
+    "result": "inconclusive",
+    "notes": "The fdh local loop records verification; it does not reproduce a defect."
+  }
+}

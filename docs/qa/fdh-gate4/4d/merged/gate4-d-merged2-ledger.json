@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "taskId": "gate4-d-merged2",
+  "worktree": "/private/tmp/fdh-gate4/evidence",
+  "createdAt": "2026-11-08T06:45:49.028Z",
+  "updatedAt": "2026-11-08T06:45:49.716Z",
+  "activeAgent": null,
+  "stopped": false,
+  "stopReason": null,
+  "approvalPending": [],
+  "events": [
+    {
+      "at": "2026-11-08T06:45:49.029Z",
+      "kind": "claim",
+      "agent": "agent-a"
+    },
+    {
+      "at": "2026-11-08T06:45:49.252Z",
+      "kind": "stop",
+      "agent": "agent-a",
+      "reason": "quota",
+      "note": "LLM quota exhausted"
+    },
+    {
+      "at": "2026-11-08T06:45:49.402Z",
+      "kind": "pending",
+      "op": "push",
+      "note": ""
+    },
+    {
+      "at": "2026-11-08T06:45:49.566Z",
+      "kind": "approve",
+      "note": "human approved push"
+    },
+    {
+      "at": "2026-11-08T06:45:49.639Z",
+      "kind": "resume",
+      "agent": "agent-b",
+      "note": ""
+    },
+    {
+      "at": "2026-11-08T06:45:49.716Z",
+      "kind": "release",
+      "agent": "agent-b"
+    }
+  ]
+}

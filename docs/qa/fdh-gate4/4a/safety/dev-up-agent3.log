@@ -1,0 +1,6 @@
+[fdh] deno run -A tools/dev-tool.ts start --port-offset 200
+Starting feles-build dev...
+[dev-tool] Using port-offset=200 marionette=5380 pref=nora.dev.port_offset
+Started (PID 37378). Waiting for Marionette...
+Browser ready! Marionette on port 5380.
+Log: /private/tmp/fdh-gate4/pr2b200/_dist/dev-server.log

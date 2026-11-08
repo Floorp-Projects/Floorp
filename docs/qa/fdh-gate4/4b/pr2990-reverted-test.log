@@ -1,0 +1,20 @@
+Check tools/src/tab_context_menu_sections_patch.test.ts
+running 1 test from ./tools/src/tab_context_menu_sections_patch.test.ts
+tab context menu sections match in production and extracted Runtime patches ... FAILED (1ms)
+
+ ERRORS 
+
+tab context menu sections match in production and extracted Runtime patches => ./tools/src/tab_context_menu_sections_patch.test.ts:5:6
+error: NotFound: No such file or directory (os error 2): readfile '.github/patches/floorp-runtime/common/tab-context-menu-sections.patch'
+  const production = await Deno.readTextFile(
+                                ^
+    at Object.readTextFile (ext:deno_fs/30_fs.js:1:10087)
+    at file:///private/tmp/fdh-gate4/regression/tools/src/tab_context_menu_sections_patch.test.ts:8:33
+
+ FAILURES 
+
+tab context menu sections match in production and extracted Runtime patches => ./tools/src/tab_context_menu_sections_patch.test.ts:5:6
+
+FAILED | 0 passed | 1 failed (3ms)
+
+error: Test failed

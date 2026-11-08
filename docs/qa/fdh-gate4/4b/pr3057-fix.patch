@@ -1,0 +1,664 @@
+diff --git a/tools/src/browser_launcher.ts b/tools/src/browser_launcher.ts
+index 5d01e4a31a20..b106c6719806 100644
+--- a/tools/src/browser_launcher.ts
++++ b/tools/src/browser_launcher.ts
+@@ -2,6 +2,7 @@
+ 
+ import * as path from "@std/path";
+ import { BIN_PATH_EXE, PATHS, PROJECT_ROOT } from "./defines.ts";
++import { recordDevProcess } from "./dev_processes.ts";
+ import { ProcessUtils } from "./utils.ts";
+ 
+ export const MARIONETTE_STATE_FILE = path.join(
+@@ -32,6 +33,8 @@ function printFirefoxLog(line: string) {
+ }
+ 
+ export interface BrowserLaunchOptions {
++  /** Record the child for checkout-scoped dev-tool stop. */
++  recordProcess?: boolean;
+   binaryPath?: string;
+   noRemote?: boolean;
+   port?: number;
+@@ -582,6 +585,7 @@ export async function run(
+       printFirefoxLog(line.trim());
+     },
+     environment,
++    options.recordProcess ? (child) => recordDevProcess(child.pid) : undefined,
+   );
+ 
+   try {
+diff --git a/tools/src/dev_process_selection.ts b/tools/src/dev_process_selection.ts
+new file mode 100644
+index 000000000000..72e6ee21c2ea
+--- /dev/null
++++ b/tools/src/dev_process_selection.ts
+@@ -0,0 +1,215 @@
++// SPDX-License-Identifier: MPL-2.0
++
++import * as posix from "@std/path/posix";
++import * as windows from "@std/path/windows";
++import type {
++  DevProcessIdentity,
++  DevProcessInfo,
++  DevStopScope,
++} from "./dev_process_types.ts";
++
++export function normalizeDevPath(value: string, platform: string): string {
++  const paths = platform === "windows" ? windows : posix;
++  const normalized = paths.normalize(value).replace(/[\\/]+$/, "");
++  return platform === "windows" ? normalized.toLowerCase() : normalized;
++}
++
++export function matchesDevIdentity(
++  process: DevProcessInfo,
++  identity: DevProcessIdentity,
++): boolean {
++  // A command line alone can be identical after a restart and PID reuse.
++  return process.pid === identity.pid && identity.startTime !== "" &&
++    process.startTime === identity.startTime &&
++    process.commandLine === identity.commandLine;
++}
++
++/** Windows CRT quoting; Unix quoting when present in a supplied command line. */
++export function splitDevCommandLine(
++  command: string,
++  platform: string,
++): string[] {
++  const result: string[] = [];
++  let value = "";
++  let quote = "";
++  let started = false;
++  for (let i = 0; i < command.length; i++) {
++    const char = command[i];
++    if (platform === "windows" && char === "\\") {
++      let end = i;
++      while (command[end] === "\\") end++;
++      const count = end - i;
++      if (command[end] === '"') {
++        value += "\\".repeat(Math.floor(count / 2));
++        if (count % 2) value += '"';
++        else quote = quote ? "" : '"';
++        i = end;
++      } else {
++        value += "\\".repeat(count);
++        i = end - 1;
++      }
++      started = true;
++    } else if (char === '"' || (platform !== "windows" && char === "'")) {
++      if (!quote) quote = char;
++      else if (quote === char) quote = "";
++      else value += char;
++      started = true;
++    } else if (/\s/.test(char) && !quote) {
++      if (started) result.push(value);
++      value = "";
++      started = false;
++    } else {
++      value += char;
++      started = true;
++    }
++  }
++  if (started) result.push(value);
++  return result;
++}
++
++function hasCheckoutProfile(
++  process: DevProcessInfo,
++  scope: DevStopScope,
++): boolean {
++  const paths = scope.platform === "windows" ? windows : posix;
++  // ps prints argv without quoting on macOS. Match the entire known argument,
++  // including spaces, and require an argument boundary after it.
++  const profile = normalizeDevPath(scope.profilePath, scope.platform);
++  if (!paths.isAbsolute(profile)) return false;
++  const argv = process.argv ??
++    splitDevCommandLine(process.commandLine, scope.platform);
++  if (
++    argv.some((arg, index) => {
++      const value = arg === "--profile"
++        ? argv[index + 1]
++        : arg.startsWith("--profile=")
++        ? arg.slice(10)
++        : undefined;
++      return value !== undefined && paths.isAbsolute(value) &&
++        normalizeDevPath(value, scope.platform) === profile;
++    })
++  ) return true;
++  if (process.argv) return false;
++  if (scope.platform !== "windows" && profile.includes(" ")) {
++    const escaped = profile.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
++    // An unquoted ps argument followed by another option (or end of line).
++    return new RegExp(`(?:^|\\s)--profile(?:=|\\s+)${escaped}(?=\\s+--|$)`)
++      .test(process.commandLine);
++  }
++  return false;
++}
++
++/** Pure selection, shared by all platforms. Returns children before parents. */
++export function selectDevProcesses(
++  processes: readonly DevProcessInfo[],
++  scope: DevStopScope,
++): number[] {
++  const byPid = new Map(processes.map((process) => [process.pid, process]));
++  const roots = new Set<number>();
++  const recorded = new Map(
++    scope.recordedProcesses.map((entry) => [entry.pid, entry]),
++  );
++  if (scope.serverPid !== undefined) {
++    const server = byPid.get(scope.serverPid);
++    const identity = recorded.get(scope.serverPid);
++    // Legacy PID files lack identity. Only trust them when the command itself
++    // contains this checkout's absolute path (e.g. the Windows log redirect).
++    const legacyRoot = normalizeDevPath(scope.projectRoot, scope.platform);
++    const commandLine = scope.platform === "windows"
++      ? server?.commandLine.replaceAll("/", "\\").toLowerCase()
++      : server?.commandLine;
++    if (
++      server &&
++      (identity
++        ? matchesDevIdentity(server, identity)
++        : server.commandLine.includes("feles-build") &&
++          commandLine?.includes(
++            legacyRoot +
++              (scope.platform === "windows" ? "\\" : "/"),
++          ))
++    ) {
++      roots.add(server.pid);
++    }
++  }
++  for (const process of processes) {
++    const identity = recorded.get(process.pid);
++    const name = (scope.platform === "windows" ? windows : posix)
++      .basename(process.name).toLowerCase();
++    const floorp = /^(floorp|floorp-bin|floorp\.exe)$/.test(name);
++    if (identity && matchesDevIdentity(process, identity)) {
++      roots.add(process.pid);
++    }
++    if (floorp && hasCheckoutProfile(process, scope)) roots.add(process.pid);
++    if (scope.all) {
++      const legacyMatch = scope.platform === "windows"
++        ? (name === "deno.exe" &&
++          process.commandLine.includes("feles-build")) ||
++          (floorp && /_dist.*profile.*test/i.test(process.commandLine))
++        : process.commandLine.includes("feles-build") ||
++          process.commandLine.includes("_dist/profile/test");
++      if (legacyMatch) roots.add(process.pid);
++    }
++  }
++  const excluded = new Set(scope.excludePids);
++  const visited = new Set<number>();
++  const result: number[] = [];
++  const visit = (pid: number): void => {
++    if (visited.has(pid) || excluded.has(pid) || pid <= 0) return;
++    visited.add(pid);
++    const parent = byPid.get(pid);
++    for (const child of processes) {
++      if (child.ppid !== pid) continue;
++      // Windows can retain a dead parent's PID after it has been reused.
++      if (
++        parent && Date.parse(child.startTime) < Date.parse(parent.startTime)
++      ) continue;
++      visit(child.pid);
++    }
++    result.push(pid);
++  };
++  for (const pid of roots) visit(pid);
++  return result;
++}
++
++export function parseDevProcessRegistry(value: unknown): DevProcessIdentity[] {
++  if (
++    typeof value !== "object" || value === null ||
++    !("version" in value) || value.version !== 1 ||
++    !("processes" in value) || !Array.isArray(value.processes)
++  ) {
++    throw new Error("Invalid dev process registry");
++  }
++  return value.processes.map((entry: unknown) => {
++    if (
++      typeof entry !== "object" || entry === null ||
++      !("pid" in entry) || typeof entry.pid !== "number" ||
++      !Number.isSafeInteger(entry.pid) || entry.pid <= 0 ||
++      !("startTime" in entry) || typeof entry.startTime !== "string" ||
++      !entry.startTime ||
++      !("commandLine" in entry) || typeof entry.commandLine !== "string"
++    ) {
++      throw new Error("Invalid dev process identity");
++    }
++    return {
++      pid: entry.pid,
++      startTime: entry.startTime,
++      commandLine: entry.commandLine,
++    };
++  });
++}
++
++export function parseUnixDevProcesses(output: string): DevProcessInfo[] {
++  return output.split(/\r?\n/).flatMap((line) => {
++    const match = line.match(
++      /^\s*(\d+)\s+(\d+)\s+(\S+\s+\S+\s+\d+\s+\d+:\d+:\d+\s+\d+)\s+(.*)$/,
++    );
++    if (!match) return [];
++    return [{
++      pid: Number(match[1]),
++      ppid: Number(match[2]),
++      startTime: match[3],
++      commandLine: match[4],
++      name: "", // filled from a separate comm column
++    }];
++  });
++}
+diff --git a/tools/src/dev_process_types.ts b/tools/src/dev_process_types.ts
+new file mode 100644
+index 000000000000..4a1d5a2c4d84
+--- /dev/null
++++ b/tools/src/dev_process_types.ts
+@@ -0,0 +1,27 @@
++// SPDX-License-Identifier: MPL-2.0
++
++export interface DevProcessIdentity {
++  pid: number;
++  startTime: string;
++  commandLine: string;
++}
++
++export interface DevProcessInfo {
++  pid: number;
++  ppid: number;
++  name: string;
++  commandLine: string;
++  startTime: string;
++  /** Available on Linux, where ps does not preserve argument boundaries. */
++  argv?: string[];
++}
++
++export interface DevStopScope {
++  platform: "windows" | "darwin" | "linux";
++  projectRoot: string;
++  profilePath: string;
++  serverPid?: number;
++  recordedProcesses: readonly DevProcessIdentity[];
++  all?: boolean;
++  excludePids?: readonly number[];
++}
+diff --git a/tools/src/dev_processes.ts b/tools/src/dev_processes.ts
+new file mode 100644
+index 000000000000..9e753b703c45
+--- /dev/null
++++ b/tools/src/dev_processes.ts
+@@ -0,0 +1,256 @@
++// SPDX-License-Identifier: MPL-2.0
++
++import * as path from "@std/path";
++import { basename as posixBasename } from "@std/path/posix";
++import { PLATFORM, PROJECT_ROOT } from "./defines.ts";
++import {
++  matchesDevIdentity,
++  parseDevProcessRegistry,
++  parseUnixDevProcesses,
++} from "./dev_process_selection.ts";
++import type {
++  DevProcessIdentity,
++  DevProcessInfo,
++} from "./dev_process_types.ts";
++
++export const DEV_PROCESSES_FILE = path.join(
++  PROJECT_ROOT,
++  "_dist",
++  "dev-processes.json",
++);
++
++async function commandOutput(
++  cmd: string,
++  args: string[],
++  input?: string,
++): Promise<string> {
++  const command = new Deno.Command(cmd, {
++    args,
++    stdin: input === undefined ? "null" : "piped",
++    stdout: "piped",
++    stderr: "piped",
++    env: { LC_ALL: "C" },
++  });
++  let output: Deno.CommandOutput;
++  if (input === undefined) {
++    output = await command.output();
++  } else {
++    const child = command.spawn();
++    const writer = child.stdin.getWriter();
++    await writer.write(new TextEncoder().encode(input));
++    await writer.close();
++    output = await child.output();
++  }
++  if (!output.success) {
++    throw new Error(
++      `${cmd}: ${new TextDecoder().decode(output.stderr).trim()}`,
++    );
++  }
++  return new TextDecoder().decode(output.stdout);
++}
++
++export async function listDevProcesses(
++  pid?: number,
++): Promise<DevProcessInfo[]> {
++  if (PLATFORM === "windows") {
++    const filter = pid === undefined ? "" : ` -Filter 'ProcessId = ${pid}'`;
++    const output = await commandOutput("powershell", [
++      "-NoProfile",
++      "-NonInteractive",
++      "-Command",
++      "$ErrorActionPreference = 'Stop'; [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new(); " +
++      `ConvertTo-Json -InputObject @(Get-CimInstance Win32_Process${filter} | ForEach-Object { ` +
++      "@{ pid = [int]$_.ProcessId; ppid = [int]$_.ParentProcessId; name = $_.Name; " +
++      "commandLine = [string]$_.CommandLine; startTime = $(if ($_.CreationDate) { $_.CreationDate.ToUniversalTime().ToString('o') } else { '' }) } " +
++      "}) -Compress",
++    ]);
++    if (!output.trim()) return [];
++    const parsed: unknown = JSON.parse(output.replace(/^\uFEFF/, ""));
++    if (!Array.isArray(parsed)) throw new Error("Invalid Windows process list");
++    return parsed.map((entry: unknown) => {
++      if (
++        typeof entry !== "object" || entry === null ||
++        !("pid" in entry) || typeof entry.pid !== "number" ||
++        !("ppid" in entry) || typeof entry.ppid !== "number" ||
++        !("name" in entry) || typeof entry.name !== "string" ||
++        !("commandLine" in entry) || typeof entry.commandLine !== "string" ||
++        !("startTime" in entry) || typeof entry.startTime !== "string"
++      ) {
++        throw new Error("Invalid Windows process entry");
++      }
++      return {
++        pid: entry.pid,
++        ppid: entry.ppid,
++        name: entry.name,
++        commandLine: entry.commandLine,
++        startTime: entry.startTime,
++      };
++    });
++  }
++  // An all-process snapshot also handles a requested PID that exited before ps.
++  const selector = ["-axww"];
++  const output = await commandOutput("ps", [
++    ...selector,
++    "-o",
++    "pid=,ppid=,lstart=,args=",
++  ]);
++  const names = await commandOutput("ps", [...selector, "-o", "pid=,comm="]);
++  const byPid = new Map(
++    names.split("\n").flatMap((line) => {
++      const match = line.match(/^\s*(\d+)\s+(.*)$/);
++      return match
++        ? [[Number(match[1]), posixBasename(match[2])] as const]
++        : [];
++    }),
++  );
++  const processes = parseUnixDevProcesses(output).filter((process) =>
++    pid === undefined || process.pid === pid
++  );
++  for (const process of processes) {
++    process.name = byPid.get(process.pid) ?? "";
++    if (PLATFORM === "linux") {
++      try {
++        process.argv = (await Deno.readTextFile(`/proc/${process.pid}/cmdline`))
++          .split("\0").filter(Boolean);
++        // Include boot ID and kernel start ticks for sub-second PID identity.
++        const stat = await Deno.readTextFile(`/proc/${process.pid}/stat`);
++        const ticks = stat.slice(stat.lastIndexOf(")") + 2).split(" ")[19];
++        const boot =
++          (await Deno.readTextFile("/proc/sys/kernel/random/boot_id")).trim();
++        process.startTime = `${boot}:${ticks}`;
++      } catch {
++        // ps identity remains available for inaccessible/exited processes.
++      }
++    }
++  }
++  return processes;
++}
++
++export function readDevProcesses(
++  file = DEV_PROCESSES_FILE,
++): DevProcessIdentity[] {
++  try {
++    return parseDevProcessRegistry(JSON.parse(Deno.readTextFileSync(file)));
++  } catch (error) {
++    if (!(error instanceof Deno.errors.NotFound)) {
++      console.error("[dev-tool] Cannot read process registry:", error);
++    }
++    return [];
++  }
++}
++
++/** Merge after capture without an intervening await; keep orphan records. */
++export async function recordDevProcess(
++  pid: number,
++  file = DEV_PROCESSES_FILE,
++): Promise<void> {
++  try {
++    const process = (await listDevProcesses(pid)).find((entry) =>
++      entry.pid === pid
++    );
++    if (!process?.startTime) {
++      throw new Error(`Cannot capture identity for PID ${pid}`);
++    }
++    const entries = readDevProcesses(file).filter((entry) => entry.pid !== pid);
++    entries.push({
++      pid,
++      startTime: process.startTime,
++      commandLine: process.commandLine,
++    });
++    Deno.mkdirSync(path.dirname(file), { recursive: true });
++    const temporary = `${file}.${Deno.pid}.tmp`;
++    Deno.writeTextFileSync(
++      temporary,
++      JSON.stringify({ version: 1, processes: entries }, null, 2) + "\n",
++    );
++    Deno.renameSync(temporary, file);
++  } catch (error) {
++    console.error("[dev-tool] Cannot record dev process:", error);
++  }
++}
++
++export async function terminateDevProcesses(
++  processes: readonly DevProcessInfo[],
++): Promise<void> {
++  if (processes.length === 0) return;
++  if (PLATFORM === "windows") {
++    // Recheck identity in the terminating process, and never use taskkill /T:
++    // only the descendants selected from our snapshot may be terminated.
++    await commandOutput("powershell", [
++      "-NoProfile",
++      "-NonInteractive",
++      "-Command",
++      "$ErrorActionPreference = 'Stop'; " +
++      "[Console]::InputEncoding = [System.Text.UTF8Encoding]::new(); " +
++      "$targets = ConvertFrom-Json ([Console]::In.ReadToEnd()); foreach ($target in $targets) { " +
++      "$current = Get-CimInstance Win32_Process -Filter ('ProcessId = ' + $target.pid); " +
++      "if ($current -and $current.CreationDate -and " +
++      "$current.CreationDate.ToUniversalTime().ToString('o') -ceq $target.startTime -and " +
++      "[string]$current.CommandLine -ceq $target.commandLine) { Stop-Process -Id $current.ProcessId -Force -ErrorAction SilentlyContinue } }",
++    ], JSON.stringify(processes));
++    return;
++  }
++  const signalMatching = async (signal: Deno.Signal): Promise<void> => {
++    const current = new Map(
++      (await listDevProcesses()).map((entry) => [entry.pid, entry]),
++    );
++    for (const process of processes) {
++      const live = current.get(process.pid);
++      if (!live || !matchesDevIdentity(live, process)) continue;
++      try {
++        Deno.kill(process.pid, signal);
++      } catch (error) {
++        if (!(error instanceof Deno.errors.NotFound)) throw error;
++      }
++    }
++  };
++  await signalMatching("SIGTERM");
++  await new Promise((resolve) => setTimeout(resolve, 1500));
++  await signalMatching("SIGKILL");
++}
++
++/** Called only after a startup log reports a port conflict. No ports change. */
++export async function reportDevPortConflict(log: string): Promise<boolean> {
++  const lines = log.split(/\r?\n/).filter((line) =>
++    /port[^\n]*already in use|EADDRINUSE/i.test(line)
++  );
++  if (lines.length === 0) return false;
++  const ports = new Set(
++    lines.flatMap((line) =>
++      [...line.matchAll(/(?:port\s+|:)(\d{2,5})\b/ig)].map((match) =>
++        Number(match[1])
++      )
++    ),
++  );
++  console.error(
++    "[dev-tool] A port is already in use. Listening ports and owner PIDs:",
++  );
++  try {
++    if (PLATFORM === "windows") {
++      const filter = ports.size
++        ? `-LocalPort ${[...ports].join(",")}`
++        : "-State Listen";
++      console.error(
++        await commandOutput("powershell", [
++          "-NoProfile",
++          "-NonInteractive",
++          "-Command",
++          `Get-NetTCPConnection ${filter} -ErrorAction Stop | ` +
++          "Select-Object -Property LocalPort,OwningProcess -Unique | ForEach-Object { " +
++          "'[dev-tool] Port ' + $_.LocalPort + ': PID ' + $_.OwningProcess }",
++        ]),
++      );
++    } else {
++      const filter = ports.size ? `-iTCP:${[...ports].join(",")}` : "-iTCP";
++      console.error(
++        await commandOutput("lsof", ["-nP", filter, "-sTCP:LISTEN"]),
++      );
++    }
++  } catch (error) {
++    console.error("[dev-tool] Could not query port owners:", error);
++  }
++  console.error(
++    "[dev-tool] Use 'dev-tool stop' in the owning checkout, or 'dev-tool stop --all' for machine-wide recovery (stops other checkouts too).",
++  );
++  return true;
++}
+diff --git a/tools/src/dev_server.ts b/tools/src/dev_server.ts
+index c7a3f8a4d495..c9c1e5ba63a2 100644
+--- a/tools/src/dev_server.ts
++++ b/tools/src/dev_server.ts
+@@ -1,8 +1,9 @@
+ // SPDX-License-Identifier: MPL-2.0
+ 
+ import * as path from "@std/path";
+-import { PROJECT_ROOT, DEV_SERVER } from "./defines.ts";
++import { DEV_SERVER, PROJECT_ROOT } from "./defines.ts";
+ import { Logger } from "./utils.ts";
++import { recordDevProcess, reportDevPortConflict } from "./dev_processes.ts";
+ import { sleep } from "./async_utils.ts";
+ 
+ const logger = new Logger("dev-server");
+@@ -28,6 +29,7 @@ async function detectEarlyExit(
+ // deno-lint-ignore no-explicit-any
+ export async function run(writer: any): Promise<void> {
+   logger.info("Starting Vite dev servers...");
++  await recordDevProcess(Deno.pid);
+ 
+   const servers = [
+     { name: "designs", path: path.join(PROJECT_ROOT, "browser-features/skin") },
+@@ -66,7 +68,7 @@ export async function run(writer: any): Promise<void> {
+   const logsDir = path.join(PROJECT_ROOT, "logs");
+   try {
+     Deno.mkdirSync(logsDir, { recursive: true });
+-  // deno-lint-ignore no-explicit-any
++    // deno-lint-ignore no-explicit-any
+   } catch (e: any) {
+     logger.warn(`Failed to create logs dir ${logsDir}: ${e?.message ?? e}`);
+   }
+@@ -93,7 +95,7 @@ export async function run(writer: any): Promise<void> {
+         create: true,
+         truncate: true,
+       });
+-    // deno-lint-ignore no-explicit-any
++      // deno-lint-ignore no-explicit-any
+     } catch (e: any) {
+       logger.warn(`Failed to open log file ${logFilePath}: ${e?.message ?? e}`);
+     }
+@@ -112,7 +114,7 @@ export async function run(writer: any): Promise<void> {
+             await file.write(value);
+           }
+         }
+-      // deno-lint-ignore no-explicit-any
++        // deno-lint-ignore no-explicit-any
+       } catch (e: any) {
+         logger.warn(`Error piping to file ${logFilePath}: ${e?.message ?? e}`);
+       }
+@@ -123,6 +125,7 @@ export async function run(writer: any): Promise<void> {
+     pipeToFile(child.stderr, fh);
+ 
+     viteProcesses.push({ name: server.name, port, child });
++    await recordDevProcess(child.pid);
+ 
+     logger.info(
+       `Started Vite dev server for ${server.name} with PID: ${child.pid}, logging to ${logFilePath}`,
+@@ -135,6 +138,10 @@ export async function run(writer: any): Promise<void> {
+   for (const proc of viteProcesses) {
+     const status = await detectEarlyExit(proc, 2_000);
+     if (status && status.code !== 0) {
++      const log = await Deno.readTextFile(
++        path.join(logsDir, `vite-${proc.name}.log`),
++      ).catch(() => "");
++      await reportDevPortConflict(log);
+       startupFailures.push(
+         `${proc.name} (port ${proc.port}) exited early with code ${status.code}`,
+       );
+@@ -144,7 +151,9 @@ export async function run(writer: any): Promise<void> {
+   if (startupFailures.length > 0) {
+     shutdown();
+     throw new Error(
+-      `One or more Vite dev servers failed to start:\n${startupFailures.join("\n")}`,
++      `One or more Vite dev servers failed to start:\n${
++        startupFailures.join("\n")
++      }`,
+     );
+   }
+ 
+@@ -166,7 +175,7 @@ export async function run(writer: any): Promise<void> {
+     if (typeof writer?.end === "function") {
+       writer.end();
+     }
+-  // deno-lint-ignore no-explicit-any
++    // deno-lint-ignore no-explicit-any
+   } catch (e: any) {
+     logger.warn(`Failed to write ready string to writer: ${e?.message ?? e}`);
+   }
+@@ -183,7 +192,7 @@ export function shutdown(): void {
+           // ignore
+         }
+       }
+-    // deno-lint-ignore no-explicit-any
++      // deno-lint-ignore no-explicit-any
+     } catch (e: any) {
+       logger.warn(
+         `Failed to stop process ${proc.child?.pid}: ${e?.message ?? e}`,
+diff --git a/tools/src/utils.ts b/tools/src/utils.ts
+index 55455f06645e..1de56c73c359 100644
+--- a/tools/src/utils.ts
++++ b/tools/src/utils.ts
+@@ -222,6 +222,7 @@ export const ProcessUtils = {
+     cmd: string[],
+     cb: (stream: "stdout" | "stderr", line: string) => void,
+     environment: Record<string, string> = Deno.env.toObject(),
++    onSpawn?: (child: Deno.ChildProcess) => Promise<void>,
+   ): Promise<number> {
+     const child = new Deno.Command(cmd[0], {
+       args: cmd.slice(1),
+@@ -231,6 +232,8 @@ export const ProcessUtils = {
+       env: environment,
+     }).spawn();
+ 
++    await onSpawn?.(child);
++
+     const readStream = async (
+       stream: ReadableStream<Uint8Array> | null,
+       name: "stdout" | "stderr",
