@@ -23,7 +23,7 @@ import {
   zPanelSidebarData,
 } from "../utils/type.js";
 import { createRootHMR } from "@nora/solid-xul";
-import { removeSavedUnreadBadge } from "../utils/saved-unread-badge.ts";
+import { pruneSavedUnreadBadges } from "../utils/saved-unread-badge.ts";
 import { isRight } from "fp-ts/Either";
 
 function defaultPanelSidebarData(): Panels {
@@ -84,18 +84,14 @@ function createPanelSidebarData(): [Accessor<Panels>, Setter<Panels>] {
     );
   });
 
-  createEffect((previous: Panels) => {
+  createEffect(() => {
     const panels = panelSidebarData();
-    const remainingIds = new Set(panels.map((panel) => panel.id));
-    for (const panel of previous) {
-      if (!remainingIds.has(panel.id)) removeSavedUnreadBadge(panel.id);
-    }
+    pruneSavedUnreadBadges(panels);
     Services.prefs.setStringPref(
       PanelSidebarStaticNames.panelSidebarDataPrefName,
       JSON.stringify({ data: panels }),
     );
-    return panels;
-  }, []);
+  });
   return [panelSidebarData, setPanelSidebarData];
 }
 

@@ -2,14 +2,24 @@
 
 import type { Panel } from "./type.ts";
 
+const SAVED_UNREAD_PREFIX = "floorp.panelSidebar.savedUnread.";
+
 /** Name the local saved-count preference for a panel. */
 function prefName(id: string): string {
-  return `floorp.panelSidebar.savedUnread.${encodeURIComponent(id)}`;
+  return `${SAVED_UNREAD_PREFIX}${encodeURIComponent(id)}`;
 }
 
 /** Remove the panel’s saved count from the profile. */
 export function removeSavedUnreadBadge(id: string): void {
   Services.prefs.clearUserPref(prefName(id));
+}
+
+/** Remove saved counts with no matching panel, including on startup. */
+export function pruneSavedUnreadBadges(panels: readonly Panel[]): void {
+  const livePrefs = new Set(panels.map((panel) => prefName(panel.id)));
+  for (const name of Services.prefs.getChildList(SAVED_UNREAD_PREFIX)) {
+    if (!livePrefs.has(name)) Services.prefs.clearUserPref(name);
+  }
 }
 
 /** Access the saved count for an opted-in Google Messages panel. */
