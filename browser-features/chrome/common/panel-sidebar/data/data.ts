@@ -33,29 +33,22 @@ function defaultPanelSidebarData(): Panels {
   return isRight(result) ? result.right.data : [];
 }
 
-const fallbackPanelLists = new WeakSet<Panels>();
-
-/** Parse stored panels, marking fallback lists as unsuitable for persistence. */
-export function parsePanelSidebarData(stringData: string): Panels {
+/** Decode a panel preference without substituting fallback values. */
+function decodePanelSidebarData(value: string): Panels | null {
   try {
-    const result = zPanelSidebarData.decode(
-      JSON.parse(stringData) as unknown,
-    );
-    if (isRight(result)) {
-      return result.right.data;
-    }
-    console.warn(
-      "[PanelSidebar] Invalid panel data; restoring defaults.",
-    );
-  } catch (error) {
-    console.warn(
-      "[PanelSidebar] Failed to parse panel data; restoring defaults.",
-      error,
-    );
+    const result = zPanelSidebarData.decode(JSON.parse(value) as unknown);
+    return isRight(result) ? result.right.data : null;
+  } catch {
+    return null;
   }
-  const fallback = defaultPanelSidebarData();
-  fallbackPanelLists.add(fallback);
-  return fallback;
+}
+
+/** Parse stored panels for display, using defaults when the preference is invalid. */
+export function parsePanelSidebarData(stringData: string): Panels {
+  const panels = decodePanelSidebarData(stringData);
+  if (panels) return panels;
+  console.warn("[PanelSidebar] Invalid panel data; displaying defaults.");
+  return defaultPanelSidebarData();
 }
 
 /** Synchronize panel preferences and remove saved counts for deleted panels. */
@@ -91,9 +84,17 @@ function createPanelSidebarData(): [Accessor<Panels>, Setter<Panels>] {
 
   createEffect(() => {
     const panels = panelSidebarData();
-    if (fallbackPanelLists.has(panels)) return;
+    const prefName = PanelSidebarStaticNames.panelSidebarDataPrefName;
+    // Edits to the displayed fallback must not replace unreadable settings.
+    if (
+      !decodePanelSidebarData(
+        Services.prefs.getStringPref(prefName, strDefaultData),
+      )
+    ) {
+      return;
+    }
     Services.prefs.setStringPref(
-      PanelSidebarStaticNames.panelSidebarDataPrefName,
+      prefName,
       JSON.stringify({ data: panels }),
     );
     pruneSavedUnreadBadges(panels);

@@ -16,12 +16,24 @@ export function removeSavedUnreadBadge(id: string): void {
   if (name) Services.prefs.clearUserPref(name);
 }
 
-/** Remove saved counts with no matching panel, including on startup. */
+/** Identify the URL and container associated with a saved count. */
+function badgeIdentityPrefix(panel: Panel): string {
+  return `${JSON.stringify([panel.url, panel.userContextId ?? 0])}:`;
+}
+
+/** Remove saved counts whose panel or matching URL and container no longer exist. */
 export function pruneSavedUnreadBadges(panels: readonly Panel[]): void {
-  const livePrefs = new Set(panels.map((panel) => prefName(panel.id)));
-  if (livePrefs.has(undefined)) return;
+  const livePrefs = new Map(panels.map((panel) => [prefName(panel.id), panel]));
   for (const name of Services.prefs.getChildList(SAVED_UNREAD_PREFIX)) {
-    if (!livePrefs.has(name)) Services.prefs.clearUserPref(name);
+    const panel = livePrefs.get(name);
+    if (
+      panel?.type !== "web" || !panel.loadAtStartupForBadges ||
+      !Services.prefs.getStringPref(name, "").startsWith(
+        badgeIdentityPrefix(panel),
+      )
+    ) {
+      Services.prefs.clearUserPref(name);
+    }
   }
 }
 
@@ -41,8 +53,7 @@ export function savedUnreadBadgeForPanel(panel: Panel) {
 
   const name = prefName(panel.id);
   if (!name) return;
-  const identity = JSON.stringify([panel.url, panel.userContextId ?? 0]);
-  const prefix = `${identity}:`;
+  const prefix = badgeIdentityPrefix(panel);
   const stored = Services.prefs.getStringPref(name, "");
   const count = stored.startsWith(prefix) ? stored.slice(prefix.length) : "";
   return {
