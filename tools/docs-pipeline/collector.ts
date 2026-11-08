@@ -185,22 +185,30 @@ export function extractSettingsRoutes(
 
 const DEV_LOADER_ORIGIN_REF =
   /devHttpOrigin\(\s*"loader"(?:\s*,\s*"([^"`]+)")?\s*\)/;
+const LAUNCH_LOADER_ORIGIN_REF =
+  /launchDevPort\.httpOrigin\(\s*"loader"(?:\s*,\s*"([^"`]+)")?\s*\)/;
 const LOADER_CONFIG_PORT_REF = /port:\s+DEV_PORTS\.loader\b/;
 
 export function extractBridgeLoader(
   chromeRootText: string,
   pathFromRoot = "bridge/startup/src/chrome_root.ts",
 ): ArchitectureInventory["bridgeLoader"] {
+  // FDH Gate 2 task 2-B: chrome_root.ts resolves the loader URL through the
+  // launch port resolver, so the literal-table reference lives in
+  // `launchDevPort.httpOrigin(...)`; accept both spellings and document the
+  // frozen base topology.
   const devLoaderUrl = chromeRootText.match(
     /https?:\/\/[^"'`]+\/loader\/index\.ts/,
   )?.[0] ??
-    (DEV_LOADER_ORIGIN_REF.test(chromeRootText)
+    (DEV_LOADER_ORIGIN_REF.test(chromeRootText) ||
+        LAUNCH_LOADER_ORIGIN_REF.test(chromeRootText)
       ? devHttpOrigin("loader", "/loader/index.ts")
       : "unknown");
   const testLoaderUrl = chromeRootText.match(
     /https?:\/\/[^"'`]+\/loader\/test\/index\.ts/,
   )?.[0] ??
-    (DEV_LOADER_ORIGIN_REF.test(chromeRootText)
+    (DEV_LOADER_ORIGIN_REF.test(chromeRootText) ||
+        LAUNCH_LOADER_ORIGIN_REF.test(chromeRootText)
       ? devHttpOrigin("loader", "/loader/test/index.ts")
       : "unknown");
   const productionLoader = chromeRootText.match(

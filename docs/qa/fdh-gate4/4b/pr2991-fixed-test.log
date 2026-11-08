@@ -1,0 +1,79 @@
+Check tools/src/notes_storage.test.ts
+running 16 tests from ./tools/src/notes_storage.test.ts
+Notes consumers see current unauthenticated create, title and body snapshots before storage notification ... ok (4ms)
+Notes consumers retain external provenance and one revision per native change ... ok (877µs)
+Notes early consumers retain incoming source and acknowledge each delivery once ...
+------- output -------
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+----- output end -----
+Notes early consumers retain incoming source and acknowledge each delivery once ... ok (1ms)
+Notes closed-page merge retains offline edits, conflicts and deletions ...
+------- output -------
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 0 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 2 notes, hadConflicts=true
+[Floorp Notes] Three-way merge result: 2 notes, hadConflicts=false
+----- output end -----
+Notes closed-page merge retains offline edits, conflicts and deletions ... ok (3ms)
+Notes remote-only changes converge and valid empty records delete ...
+------- output -------
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 0 notes, hadConflicts=false
+----- output end -----
+Notes remote-only changes converge and valid empty records delete ... ok (2ms)
+Notes actual identical delivery acknowledges base without a pref-change event ...
+------- output -------
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 0 notes, hadConflicts=false
+----- output end -----
+Notes actual identical delivery acknowledges base without a pref-change event ... ok (2ms)
+Notes local compare-and-merge preserves another window and never acknowledges cloud delivery ...
+------- output -------
+[Floorp Notes] Three-way merge result: 2 notes, hadConflicts=true
+----- output end -----
+Notes local compare-and-merge preserves another window and never acknowledges cloud delivery ... ok (1ms)
+Notes repeated local flushes preserve unseen CAS additions and deliberate visible deletions ...
+------- output -------
+[Floorp Notes] Three-way merge result: 2 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 2 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+----- output end -----
+Notes repeated local flushes preserve unseen CAS additions and deliberate visible deletions ... ok (948µs)
+Notes failed native setters and account changes cannot acknowledge incoming state ...
+------- output -------
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+----- output end -----
+Notes failed native setters and account changes cannot acknowledge incoming state ... ok (1ms)
+Notes start-over during account lookup fences old incoming before writes ... ok (800µs)
+Notes cold account mismatch fences old base and unavailable FxA permits local saves ...
+------- output -------
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Account unavailable; retaining local notes. Error: FxA unavailable
+    at Object.getSignedInUser (file:///private/tmp/fdh-gate4/regression/tools/src/notes_storage.test.ts:126:44)
+    at file:///private/tmp/fdh-gate4/regression/browser-features/modules/modules/notes/FloorpNotesStorage.sys.mts?profile=1:95:51
+    at readAccount (file:///private/tmp/fdh-gate4/regression/browser-features/modules/modules/notes/FloorpNotesStorage.sys.mts?profile=1:104:6)
+    at Object.readSyncState (file:///private/tmp/fdh-gate4/regression/browser-features/modules/modules/notes/FloorpNotesStorage.sys.mts?profile=1:244:19)
+    at file:///private/tmp/fdh-gate4/regression/tools/src/notes_storage.test.ts:472:32
+    at async innerWrapped (ext:cli/40_test.js:300:5)
+    at async exitSanitizer (ext:cli/40_test.js:201:27)
+    at async outerWrapped (ext:cli/40_test.js:239:22)
+----- output end -----
+Notes cold account mismatch fences old base and unavailable FxA permits local saves ... ok (1ms)
+Notes profile shutdown removes its preference and account observers ... ok (632µs)
+Notes successful outgoing payload acknowledgement prevents later delete resurrection ...
+------- output -------
+[Floorp Notes] Three-way merge result: 0 notes, hadConflicts=false
+----- output end -----
+Notes successful outgoing payload acknowledgement prevents later delete resurrection ... ok (786µs)
+Notes outgoing acknowledgement records exact accepted bytes while later edits remain local ...
+------- output -------
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+----- output end -----
+Notes outgoing acknowledgement records exact accepted bytes while later edits remain local ... ok (883µs)
+Notes outgoing base write failure remains visible to native retry handling ... ok (925µs)
+Notes outgoing acknowledgement cannot cross an account epoch during lookup ... ok (700µs)
+
+ok | 16 passed | 0 failed (26ms)
+

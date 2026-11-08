@@ -3,22 +3,25 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import {
-  devPortString,
-  isTrustedDevPort,
-} from "#libs/shared/dev-ports/defines.ts";
+import { launchDevPorts } from "../common/dev-port-offset.ts";
+
+/** Launch-local dev port resolver (FDH Gate 2 task 2-B): resolves the
+ * table names to the ports this launch actually uses (offset-aware). */
+const launchDevPort = launchDevPorts();
 
 export class NRAppConstantsChild extends JSWindowActorChild {
   actorCreated() {
     console.debug("NRAppConstantsChild created!");
     const window = this.contentWindow;
     if (
-      isTrustedDevPort(window?.location.port, ["settings"]) ||
+      launchDevPort.isTrustedPort(window?.location.port, ["settings"]) ||
       window?.location.href.startsWith("chrome://") ||
       window?.location.href.startsWith("about:")
     ) {
       console.debug(
-        `NRAppConstants ${devPortString("settings")} ! or Chrome Page!`,
+        `NRAppConstants ${
+          launchDevPort.portString("settings")
+        } ! or Chrome Page!`,
       );
       Cu.exportFunction(this.NRGetConstants.bind(this), window, {
         defineAs: "NRGetConstants",

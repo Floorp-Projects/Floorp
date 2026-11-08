@@ -1,0 +1,3 @@
+top keys: schemaVersion, sourceFormat, envelope, runtime, attempts, operations, assertions, environmentFidelity, inputFidelity, visualJudge, cleanup, limitations, reproduction
+stateTransition: null
+state: null

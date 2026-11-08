@@ -1,0 +1,16 @@
+Task feles-build deno run -A tools/feles-build.ts 'build' '--phase' 'before-mach'
+[32m[symlinker] SUCCESS: Symlinks created successfully.[0m
+01a1b8ee-b7e6-72fb-b27f-f89d1a5d639a
+[34m[builder] INFO: Building features with mode=production[0m
+[update] Build ID written to /private/tmp/fdh-gate2/pr2b2/_dist/buildid2
+[34m[builder] INFO: Running `/Users/user/.deno/bin/deno task build --env.MODE=production` in `/private/tmp/fdh-gate2/pr2b2/bridge/startup`[0m
+[34m[builder] INFO: Running `/Users/user/.deno/bin/deno run -A vite build --base chrome://noraneko/content` in `/private/tmp/fdh-gate2/pr2b2/bridge/loader-features`[0m
+[34m[builder] INFO: Running `/Users/user/.deno/bin/deno run -A vite build --config vite.config.ts --base chrome://noraneko-newtab/content` in `/private/tmp/fdh-gate2/pr2b2/browser-features/pages-newtab`[0m
+[34m[builder] INFO: Running `/Users/user/.deno/bin/deno run -A vite build --config vite.config.ts --base chrome://noraneko-settings/content` in `/private/tmp/fdh-gate2/pr2b2/browser-features/pages-settings`[0m
+[34m[builder] INFO: Running `/Users/user/.deno/bin/deno run -A vite build --config vite.config.ts --base chrome://noraneko-welcome/content` in `/private/tmp/fdh-gate2/pr2b2/browser-features/pages-welcome`[0m
+[34m[builder] INFO: Running `/Users/user/.deno/bin/deno run -A vite build --config vite.config.ts --base chrome://noraneko-notes/content` in `/private/tmp/fdh-gate2/pr2b2/browser-features/pages-notes`[0m
+[34m[builder] INFO: Running `/Users/user/.deno/bin/deno run -A vite build --config vite.config.ts --base chrome://noraneko-modal-child/content` in `/private/tmp/fdh-gate2/pr2b2/browser-features/pages-modal-child`[0m
+[34m[builder] INFO: Running `/Users/user/.deno/bin/deno run -A vite build --config vite.config.ts --base chrome://noraneko-profile-manager/content` in `/private/tmp/fdh-gate2/pr2b2/browser-features/pages-profile-manager`[0m
+[34m[builder] INFO: Running `/Users/user/.deno/bin/deno run -A vite build --config vite.config.ts --base chrome://noraneko-pages-aboutdialog/content` in `/private/tmp/fdh-gate2/pr2b2/browser-features/pages-aboutDialog`[0m
+[34m[builder] INFO: Running `/Users/user/.deno/bin/deno task build --env.__BUILDID2__=01a1b8ee-b7e6-72fb-b27f-f89d1a5d639a --env.__VERSION2__=12.21.1` in `/private/tmp/fdh-gate2/pr2b2/bridge/loader-modules`[0m
+[32m[builder] SUCCESS: Build complete.[0m

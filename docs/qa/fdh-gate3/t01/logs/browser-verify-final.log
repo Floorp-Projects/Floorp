@@ -1,0 +1,10 @@
+[marionette] Connecting to port 2828
+[marionette] Connected (protocol v3)
+[marionette] Attempt 1 failed: NewSession timed out — browser may be busy or BiDi conflict. Retrying in 2000ms...
+[marionette] Connecting to port 2828
+[marionette] Connected (protocol v3)
+[marionette] Attempt 2 failed: NewSession timed out — browser may be busy or BiDi conflict. Retrying in 2000ms...
+[marionette] Connecting to port 2828
+[marionette] Connected (protocol v3)
+[dev-tool] Failed to connect to Marionette after 3 attempts: NewSession timed out — browser may be busy or BiDi conflict
+[fdh] browser is not connected; record UNVERIFIED in the evidence limitations and retry after 'fdh dev up' succeeds

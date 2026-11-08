@@ -1,0 +1,12 @@
+=== gh auth status (dead proxy) ===
+github.com
+  X Failed to log in to github.com account Ryosuke-Asano (keyring)
+  - Active account: true
+  - The token in keyring is invalid.
+  - To re-authenticate, run: gh auth refresh -h github.com
+  - To forget about this account, run: gh auth logout -h github.com -u Ryosuke-Asano
+GH_EXIT:1
+
+=== curl https://github.com/ (dead proxy, -m 5) ===
+curl: (7) Failed to connect to 127.0.0.1 port 9 after 0 ms: Couldn't connect to server
+CURL_EXIT:7

@@ -8,7 +8,11 @@
  * Progress state is stored here and queried by the progress window via Actor.
  */
 
-import { devHttpOrigin } from "#libs/shared/dev-ports/defines.ts";
+import { launchDevPorts } from "../../common/dev-port-offset.ts";
+
+/** Launch-local dev port resolver (FDH Gate 2 task 2-B): resolves the
+ * table names to the ports this launch actually uses (offset-aware). */
+const launchDevPort = launchDevPorts();
 
 const { BrowserWindowTracker } = ChromeUtils.importESModule(
   "resource:///modules/BrowserWindowTracker.sys.mjs",
@@ -17,7 +21,10 @@ const { BrowserWindowTracker } = ChromeUtils.importESModule(
 const { setTimeout, setInterval, clearInterval } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs",
 );
-const PROGRESS_WINDOW_URL = devHttpOrigin("workflowProgress", "/");
+/** Workflow progress window URL of this launch (FDH Gate 2 task 2-B):
+ * resolves the table name to the port the launch actually serves. */
+const PROGRESS_WINDOW_URL = () =>
+  launchDevPort.httpOrigin("workflowProgress", "/");
 
 interface WorkflowProgressStep {
   id: string;
@@ -115,7 +122,7 @@ class OSFrontEndManager {
       const url = Cc["@mozilla.org/supports-string;1"].createInstance(
         Ci.nsISupportsString,
       );
-      url.data = PROGRESS_WINDOW_URL;
+      url.data = PROGRESS_WINDOW_URL();
 
       // Build args array
       const args = Cc["@mozilla.org/array;1"].createInstance(

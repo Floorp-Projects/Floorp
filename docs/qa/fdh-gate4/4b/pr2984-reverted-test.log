@@ -1,0 +1,120 @@
+Check tools/src/browser_launcher.test.ts
+running 20 tests from ./tools/src/browser_launcher.test.ts
+isolated browser launch owns a fresh private profile and Marionette port ... ok (976µs)
+isolated launcher rejects invalid Marionette ports ... ok (296µs)
+isolated launcher cleanup is idempotent and removes its profile ... ok (479µs)
+isolated browser pair rejects shared ports and owns distinct profiles ... ok (722µs)
+isolated browser process clears inherited secrets and cleans its profile ... FAILED (1ms)
+isolated Windows browser normalizes safe environment names and delegates owned-tree termination ... FAILED (516µs)
+isolated browser retains its profile when the owned process cannot be confirmed stopped ... ok (585µs)
+isolated browser retries a failed verified stop ... ok (429µs)
+isolated browser retains its profile when ownership capture fails after spawn ... ok (398µs)
+isolated browser cleans its profile when capture abort is verified ... ok (400µs)
+isolated browser prevents external profile cleanup after spawn ... ok (332µs)
+isolated browser pair removes the first profile if the second spawn fails ... ok (1ms)
+isolated browser pair attempts both stops and retains only an unverified profile ... ok (765µs)
+isolated browser pair retries after one verified stop fails ... ok (775µs)
+isolated browser pair retains a profile whose ownership capture fails ... ok (821µs)
+isolated browser refuses to spawn without an ownership controller ... ok (320µs)
+browser command retains the ordinary single-profile default ... ok (22µs)
+ordinary browser default Marionette launch scopes system access to its child ...
+------- output -------
+[launcher] Launching browser with command: /mock/floorp --profile /mock/profile --marionette --remote-allow-system-access
+[launcher] Browser Closed
+----- output end -----
+ordinary browser default Marionette launch scopes system access to its child ... FAILED (3ms)
+ordinary browser enabled Marionette launch scopes system access to its child ...
+------- output -------
+[launcher] Launching browser with command: /mock/floorp --profile /mock/profile --marionette --remote-allow-system-access
+[launcher] Browser Closed
+----- output end -----
+ordinary browser enabled Marionette launch scopes system access to its child ... FAILED (267µs)
+ordinary browser disabled Marionette launch scopes system access to its child ...
+------- output -------
+[launcher] Launching browser with command: /mock/floorp --profile /mock/profile
+[launcher] Browser Closed
+----- output end -----
+ordinary browser disabled Marionette launch scopes system access to its child ... ok (101µs)
+
+ ERRORS 
+
+isolated browser process clears inherited secrets and cleans its profile => ./tools/src/browser_launcher.test.ts:167:6
+error: AssertionError: Values are not equal.
+
+
+    [Diff] Actual / Expected
+
+
+-   undefined
++   "1"
+
+  throw new AssertionError(message);
+        ^
+    at assertEquals (https://jsr.io/@std/assert/1.0.19/equals.ts:67:9)
+    at file:///private/tmp/fdh-gate4/regression/tools/src/browser_launcher.test.ts:214:5
+
+isolated Windows browser normalizes safe environment names and delegates owned-tree termination => ./tools/src/browser_launcher.test.ts:228:6
+error: AssertionError: Values are not equal.
+
+
+    [Diff] Actual / Expected
+
+
+    {
+      COMSPEC: "C:\\Windows\\System32\\cmd.exe",
+      DISPLAY: ":99",
++     MOZ_REMOTE_ALLOW_SYSTEM_ACCESS: "1",
+      PATH: "C:\\Windows\\System32",
+      SYSTEMROOT: "C:\\Windows",
+      WAYLAND_DISPLAY: "wayland-0",
+      XAUTHORITY: "/tmp/floorp-xauthority",
+      XDG_RUNTIME_DIR: "/tmp/floorp-runtime",
+    }
+
+  throw new AssertionError(message);
+        ^
+    at assertEquals (https://jsr.io/@std/assert/1.0.19/equals.ts:67:9)
+    at file:///private/tmp/fdh-gate4/regression/tools/src/browser_launcher.test.ts:272:5
+
+ordinary browser default Marionette launch scopes system access to its child => ./tools/src/browser_launcher.test.ts:710:8
+error: AssertionError: Values are not equal.
+
+
+    [Diff] Actual / Expected
+
+
+-   0
++   1
+
+
+  throw new AssertionError(message);
+        ^
+    at assertEquals (https://jsr.io/@std/assert/1.0.19/equals.ts:67:9)
+    at file:///private/tmp/fdh-gate4/regression/tools/src/browser_launcher.test.ts:770:7
+
+ordinary browser enabled Marionette launch scopes system access to its child => ./tools/src/browser_launcher.test.ts:710:8
+error: AssertionError: Values are not equal.
+
+
+    [Diff] Actual / Expected
+
+
+-   0
++   1
+
+
+  throw new AssertionError(message);
+        ^
+    at assertEquals (https://jsr.io/@std/assert/1.0.19/equals.ts:67:9)
+    at file:///private/tmp/fdh-gate4/regression/tools/src/browser_launcher.test.ts:770:7
+
+ FAILURES 
+
+isolated browser process clears inherited secrets and cleans its profile => ./tools/src/browser_launcher.test.ts:167:6
+isolated Windows browser normalizes safe environment names and delegates owned-tree termination => ./tools/src/browser_launcher.test.ts:228:6
+ordinary browser default Marionette launch scopes system access to its child => ./tools/src/browser_launcher.test.ts:710:8
+ordinary browser enabled Marionette launch scopes system access to its child => ./tools/src/browser_launcher.test.ts:710:8
+
+FAILED | 16 passed | 4 failed (17ms)
+
+error: Test failed

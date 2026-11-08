@@ -13,11 +13,12 @@ function countOccurrences(text: string, needle: string): number {
 
 async function generateUserJs(
   allowBrowserHttpLoader: boolean,
+  portOffset?: number,
 ): Promise<string> {
   const root = await Deno.makeTempDir();
   try {
     const profileDir = path.join(root, "profile");
-    savePrefs(profileDir, { allowBrowserHttpLoader });
+    savePrefs(profileDir, { allowBrowserHttpLoader, portOffset });
     return await Deno.readTextFile(path.join(profileDir, "user.js"));
   } finally {
     await Deno.remove(root, { recursive: true });
@@ -49,5 +50,73 @@ Deno.test(
     );
     assertEquals(countOccurrences(userJs, BASELINE_CSP_PREF), 0);
     assertEquals(/network\.lna\./.test(userJs), false);
+  },
+);
+
+Deno.test(
+  "savePrefs keeps the user.js byte-identical without a port offset",
+  async () => {
+    assertEquals(
+      await generateUserJs(true),
+      await generateUserJs(true, 0),
+    );
+    assertEquals(
+      await generateUserJs(false),
+      await generateUserJs(false, 0),
+    );
+    assertEquals(/marionette\.port/.test(await generateUserJs(true)), false);
+    assertEquals(
+      /nora\.dev\.port_offset/.test(await generateUserJs(true)),
+      false,
+    );
+  },
+);
+
+Deno.test(
+  "savePrefs clears stale launch prefs from a reused prefs.js at offset 0",
+  async () => {
+    const root = await Deno.makeTempDir();
+    try {
+      const profileDir = path.join(root, "profile");
+      Deno.mkdirSync(profileDir, { recursive: true });
+      const prefsPath = path.join(profileDir, "prefs.js");
+      Deno.writeTextFileSync(
+        prefsPath,
+        [
+          'user_pref("browser.startup.homepage", "https://example.com");',
+          'user_pref("marionette.port", 5280);',
+          'user_pref("nora.dev.port_offset", 100);',
+        ].join("\n"),
+      );
+
+      savePrefs(profileDir, { allowBrowserHttpLoader: true, portOffset: 0 });
+      const prefs = Deno.readTextFileSync(prefsPath);
+      assertEquals(/marionette\.port/.test(prefs), false);
+      assertEquals(/nora\.dev\.port_offset/.test(prefs), false);
+      assertStringIncludes(
+        prefs,
+        'user_pref("browser.startup.homepage", "https://example.com");',
+      );
+      assertEquals(
+        /nora\.dev\.port_offset/.test(
+          Deno.readTextFileSync(path.join(profileDir, "user.js")),
+        ),
+        false,
+      );
+    } finally {
+      await Deno.remove(root, { recursive: true });
+    }
+  },
+);
+
+Deno.test(
+  "savePrefs writes the offset pref and a disjoint Marionette port",
+  async () => {
+    const userJs = await generateUserJs(true, 100);
+
+    assertStringIncludes(userJs, 'user_pref("nora.dev.port_offset", 100);');
+    // browserRemote (5180) + offset 100: Marionette cannot overlap the
+    // concurrent offset-0 worktree or this launch's Vite servers.
+    assertStringIncludes(userJs, 'user_pref("marionette.port", 5280);');
   },
 );

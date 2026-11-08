@@ -3,17 +3,24 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { isTrustedDevPort } from "#libs/shared/dev-ports/defines.ts";
-
 const { setTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs",
 );
+
+import { launchDevPorts } from "../common/dev-port-offset.ts";
+
+/** Launch-local dev port resolver (FDH Gate 2 task 2-B): resolves the
+ * table names to the ports this launch actually uses (offset-aware). */
+const launchDevPort = launchDevPorts();
 
 export class NRProfileManagerChild extends JSWindowActorChild {
   actorCreated() {
     const window = this.contentWindow;
     if (
-      isTrustedDevPort(window?.location.port, ["profileManager", "settings"]) ||
+      launchDevPort.isTrustedPort(window?.location.port, [
+        "profileManager",
+        "settings",
+      ]) ||
       window?.location.href.startsWith("chrome://") ||
       window?.location.href.startsWith("about:")
     ) {

@@ -1,0 +1,13 @@
+diff --git a/browser-features/pages-settings/src/components/app-sidebar.tsx b/browser-features/pages-settings/src/components/app-sidebar.tsx
+index fae6222c57ff..da0358db18c6 100644
+--- a/browser-features/pages-settings/src/components/app-sidebar.tsx
++++ b/browser-features/pages-settings/src/components/app-sidebar.tsx
+@@ -130,7 +130,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+ 
+   const about: Feature[] = [
+     {
+-      title: t("sidebar.firefoxSettings"),
++      title: t("sidebar.firefoxSettings") + " QA3-T02-MARKER",
+       url: "",
+       icon: Settings,
+       isExternal: true,
