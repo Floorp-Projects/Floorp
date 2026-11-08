@@ -85,7 +85,10 @@ Deno.test("feles-build and dev-tool use the explicit CSP option matrix", async (
     afterMachStart,
     felesBuild.indexOf("\n  } else {", afterMachStart),
   );
-  assertStringIncludes(afterMachBody, "isCI: true");
+  assertStringIncludes(
+    afterMachBody,
+    'isCI: Deno.env.get("CI") === "true"',
+  );
   assertStringIncludes(afterMachBody, "allowBrowserHttpLoader: false");
 
   const rebuildStart = devTool.indexOf("async function cmdRebuild");
