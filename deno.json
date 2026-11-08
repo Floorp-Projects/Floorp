@@ -57,6 +57,7 @@
   ],
   "tasks": {
     "feles-build": "deno run -A tools/feles-build.ts",
+    "fdh": "deno run -A tools/fdh.ts",
     "app-shim:build": "deno run --allow-read --allow-write --allow-run --allow-env tools/app-shim/build.ts",
     "app-shim:test": "deno test --allow-read --allow-write --allow-run=git libs/pwa/appRegistry.test.ts libs/pwa/bundleRecovery.test.ts",
     "act": "deno run -A tools/act/run-package-workflow.ts",
