@@ -94,7 +94,9 @@ async function runDev(portOffset = 0): Promise<void> {
       : "debug",
   });
   CustomAppIcons.run();
-  Patcher.run("apply");
+  // A packaged Debug Runtime has no moz-src; `fdh task prepare` records
+  // FLOORP_SKIP_PATCHER=1 so the local loop can start without aborting.
+  if (Deno.env.get("FLOORP_SKIP_PATCHER") !== "1") Patcher.run("apply");
   Pref.run();
   Symlinker.run();
 
@@ -168,7 +170,9 @@ async function runStage(
   // Initial setup
   await Initializer.run();
   CustomAppIcons.run();
-  Patcher.run("apply");
+  // A packaged Debug Runtime has no moz-src; `fdh task prepare` records
+  // FLOORP_SKIP_PATCHER=1 so the local loop can start without aborting.
+  if (Deno.env.get("FLOORP_SKIP_PATCHER") !== "1") Patcher.run("apply");
   Pref.run();
   Symlinker.run();
 
@@ -232,7 +236,9 @@ async function runTest(
   // Initial setup
   await Initializer.run();
   CustomAppIcons.run();
-  Patcher.run("apply");
+  // A packaged Debug Runtime has no moz-src; `fdh task prepare` records
+  // FLOORP_SKIP_PATCHER=1 so the local loop can start without aborting.
+  if (Deno.env.get("FLOORP_SKIP_PATCHER") !== "1") Patcher.run("apply");
   Pref.run();
   Symlinker.run();
 

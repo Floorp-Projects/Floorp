@@ -19,6 +19,7 @@ import type {
   Cleanup,
   Entity,
   EvidenceManifest,
+  InputFidelityInput,
   Operation,
   Relationship,
   Reproduction,
@@ -108,9 +109,24 @@ function lastTimestamp(state: FdhTaskState): string {
   return last?.timestamp ?? state.createdAt;
 }
 
+function externalObservation(
+  operation: FdhTaskState["operations"][number],
+): string {
+  const external = operation.external!;
+  const head =
+    `external (not run by fdh); exit ${operation.exitCode}; cwd=${operation.cwd}; log=${external.logRef} sha256=${external.logSha256} bytes=${external.bytes}; operator=${external.operator}; attestedAt=${external.attestedAt}; verification=${
+      external.verification ?? "none"
+    }`;
+  const output = operation.output.trim();
+  return output === ""
+    ? `${head}; no output`
+    : `${head}; ${tail(output, 2000)}`;
+}
+
 function operationObservation(
   operation: FdhTaskState["operations"][number],
 ): string {
+  if (operation.external !== undefined) return externalObservation(operation);
   const output = operation.output.trim();
   return output === ""
     ? `exit ${operation.exitCode}; no output`
@@ -175,6 +191,18 @@ function buildLimitations(state: FdhTaskState, manifestState: State): string[] {
     "No GitHub or other shared-service behavior is exercised; the local loop does not need shared services.",
   );
 
+  const externalOperations = state.operations.filter((operation) =>
+    operation.external !== undefined
+  );
+  if (externalOperations.length > 0) {
+    add(
+      "At least one operation was run outside fdh and is operator-attested: the exit code is a CLI declaration, the observation file is operator-provided, and the operator identity is self-declared; fdh only re-checks the observation file SHA-256 when the manifest is built.",
+    );
+    add(
+      "External operation timestamps are attestation times, not the command's start/end times; fdh did not observe the command execution or its cwd.",
+    );
+  }
+
   // Use the latest browser-connected assertion, matching manifestStateOf's
   // latest-per-name outcome rule (a pass followed by a fail is a failure).
   let latestBrowserConnected: boolean | undefined;
@@ -188,14 +216,27 @@ function buildLimitations(state: FdhTaskState, manifestState: State): string[] {
       "Browser confirmation was not verified; browser behavior remains UNVERIFIED.",
     );
   }
-  const hasBuild = state.assertions.some((assertion) =>
-    assertion.name === "build-exit-code"
+  const hasSourceBuild = state.assertions.some((assertion) =>
+    assertion.name === "build-exit-code" ||
+    assertion.name === "external-build-exit-code"
   );
-  if (!hasBuild) {
+  const hasInjectBuild = state.assertions.some((assertion) =>
+    assertion.name === "build-inject-exit-code"
+  );
+  if (!hasSourceBuild && !hasInjectBuild) {
     add("No build verification was recorded; the build state is UNVERIFIED.");
+  } else if (!hasSourceBuild) {
+    add(
+      "Source compilation was not verified; the recorded build assertion is after-mach XHTML injection only.",
+    );
+  } else if (!hasInjectBuild) {
+    add(
+      "XHTML injection was not verified; the recorded build assertion is before-mach source compilation only.",
+    );
   }
   const hasTest = state.assertions.some((assertion) =>
-    assertion.name === "host-test-exit-code"
+    assertion.name === "host-test-exit-code" ||
+    assertion.name === "external-host-test-exit-code"
   );
   if (!hasTest) {
     add(
@@ -395,6 +436,48 @@ async function sha256Hex(bytes: Uint8Array): Promise<string> {
 }
 
 /**
+ * Re-hash each recorded external observation file and pin it as an input.
+ * A mismatch means the observation changed after attestation: the manifest
+ * must not silently carry the original SHA-256 claim.
+ */
+async function externalObservationInputs(
+  state: FdhTaskState,
+): Promise<InputFidelityInput[]> {
+  const inputs: InputFidelityInput[] = [];
+  const seen = new Set<string>();
+  for (const operation of state.operations) {
+    const external = operation.external;
+    if (external === undefined || seen.has(external.logRef)) continue;
+    seen.add(external.logRef);
+    const file = path.resolve(state.worktree, external.logRef);
+    let bytes: Uint8Array;
+    try {
+      bytes = Deno.readFileSync(file);
+    } catch (error) {
+      throw new EvidenceValidationError([{
+        code: "schema-violation",
+        path: `/inputFidelity/inputs/${inputs.length + 1}`,
+        message:
+          `external observation file '${external.logRef}' is not readable: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+      }]);
+    }
+    const sha256 = await sha256Hex(bytes);
+    if (sha256 !== external.logSha256) {
+      throw new EvidenceValidationError([{
+        code: "schema-violation",
+        path: `/inputFidelity/inputs/${inputs.length + 1}`,
+        message:
+          `external observation file '${external.logRef}' changed since attestation: sha256 ${sha256} != recorded ${external.logSha256}`,
+      }]);
+    }
+    inputs.push({ path: file, sha256, bytes: bytes.length });
+  }
+  return inputs;
+}
+
+/**
  * Build an EvidenceManifest v0 for `state`, validate it with the shared
  * Runner rules, and return it. Throws `EvidenceValidationError` when the
  * built document would be rejected.
@@ -408,6 +491,7 @@ export async function buildEvidenceManifest(
   const os = options.os ?? await detectOs();
   const statePath = taskStatePath(state.worktree, state.taskId);
   const stateBytes = Deno.readFileSync(statePath);
+  const externalInputs = await externalObservationInputs(state);
   const manifestState = manifestStateOf(state);
 
   const manifest: EvidenceManifest = {
@@ -454,17 +538,26 @@ export async function buildEvidenceManifest(
         "Local fdh loop on the recorded worktree; this is not a release-environment run.",
     },
     inputFidelity: {
-      inputs: [{
-        path: statePath,
-        sha256: await sha256Hex(stateBytes),
-        bytes: stateBytes.length,
-      }],
+      inputs: [
+        {
+          path: statePath,
+          sha256: await sha256Hex(stateBytes),
+          bytes: stateBytes.length,
+        },
+        ...externalInputs,
+      ],
       unchangedDuringRun: "unknown",
       deviations: [
         "the task-state file is the evidence source and can change after this manifest is written",
+        ...(externalInputs.length > 0
+          ? [
+            "external observation files were supplied by the operator and are re-hashed when this manifest is built",
+          ]
+          : []),
       ],
-      notes:
-        "Pinned input is the fdh task-state snapshot read while building this manifest.",
+      notes: externalInputs.length > 0
+        ? `Pinned inputs are the fdh task-state snapshot and ${externalInputs.length} external observation file(s) re-hashed while building this manifest.`
+        : "Pinned input is the fdh task-state snapshot read while building this manifest.",
     },
     visualJudge: null,
     cleanup: {

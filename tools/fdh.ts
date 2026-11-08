@@ -20,6 +20,7 @@ import {
   nowIso,
   readTaskState,
   recordAssertion,
+  recordExternalOperation,
   requireWorktree,
   resolveBaseCommit,
   resolveCurrentWorktree,
@@ -38,6 +39,21 @@ import {
   validateEvidenceManifest,
   writeEvidenceManifest,
 } from "./src/fdh_evidence.ts";
+import { buildVerifyCommands, parseBuildPhase } from "./src/fdh_verify.ts";
+import {
+  FDH_REVIEW_RECEIPT_MARKER,
+  FDH_REVIEW_RECEIPT_SCHEMA_VERSION,
+  REVIEW_TIERS,
+  REVIEW_VERDICTS,
+  validateReceipt,
+} from "./src/fdh_review.ts";
+import type {
+  ReviewReceipt,
+  ReviewTier,
+  ReviewVerdict,
+} from "./src/fdh_review.ts";
+import { prepareSetup } from "./src/setup.ts";
+import type { SetupRecord } from "./src/setup.ts";
 import {
   approveQuota,
   claimQuota,
@@ -68,7 +84,7 @@ import {
   assertNoSecretReferences,
   checkTaskSecrets,
 } from "./src/fdh_secrets.ts";
-import type { FdhTaskState } from "./src/fdh_task.ts";
+import type { ExternalVerification, FdhTaskState } from "./src/fdh_task.ts";
 import type { ValidationError } from "./qa3/evidence/types.ts";
 
 const HELP = `
@@ -81,10 +97,20 @@ Commands:
   task resume --task-id <id> [--worktree <abs-dir>]
                             Re-open the state and verify worktree, base
                             commit, port offset and recorded ports (local only)
+  task prepare --task-id <id> [--runtime-source <abs-dir>]
+                            Idempotent setup: deno install if fflate is missing,
+                            copy the Debug runtime into _dist/bin (optional
+                            registry source), relink relative devdir symlinks,
+                            wipe the copied sessionstore and node_modules/.vite,
+                            then record setup.guardEnv for 'dev up'
   dev up --task-id <id>     Start dev-tool for the recorded worktree/offset
+                            (setup.guardEnv is passed to the child process)
   dev down --task-id <id>   Stop dev-tool for the recorded worktree
-  verify build --task-id <id>
-                            Run "deno task feles-build build --phase after-mach"
+  verify build --task-id <id> [--phase <all|before-mach|after-mach>]
+                            Run the source compile (before-mach) then the XHTML
+                            inject (after-mach); default all. --phase after-mach
+                            keeps the legacy inject-only fast path, and --phase
+                            before-mach skips the Runtime-dependent inject.
   verify test --task-id <id>
                             Run "deno task test:host"
   verify browser --task-id <id> [--eval <js>] [--expect <text>]
@@ -94,6 +120,13 @@ Commands:
   evidence --task-id <id> --out <path>
                             Build + validate the EvidenceManifest v0
                             (--out must stay under <worktree>/_dist/fdh)
+  record --task-id <id> --command <text> --exit-code <n>
+         --observation-file <path> --operator <name>
+         [--cwd <abs-dir>] [--verification <build|host-test|browser|other>]
+         [--attested-at <iso>]
+                            Record a command run outside fdh: pin the observation
+                            file's sha256/bytes and, with --verification, add an
+                            external-<kind>-exit-code assertion
   quota claim --task-id <id> --agent <name>
                             Assign the task to an agent; a second active holder
                             is rejected (no double assignment)
@@ -119,6 +152,13 @@ Commands:
                             Deny evidence records that reference repository secrets
   secrets status
                             Print the secret-reference denial policy
+  review record --task-id <id> --reviewer <id> --model <id> --commit <sha>
+                --verdict <approve|approve_with_notes|request_changes>
+                --scope <text> --tier <full_read|evidence_only|contract_spot>
+                [--blocking <true|false>]
+                            Write a review receipt under
+                            <worktree>/_dist/fdh/reviews/ and print the PR
+                            comment marker; post it with 'gh pr comment'.
   help, --help              Show this help
 
 State: <worktree>/_dist/fdh/tasks/<id>.json (git-ignored via _dist/).
@@ -304,6 +344,72 @@ async function cmdTaskResume(parsed: ParsedArgs): Promise<void> {
   console.log(JSON.stringify({ ...report, approvalPending }));
 }
 
+/**
+ * Idempotent setup preparation for one worktree (IMP-5).
+ *
+ * Runs deps/runtime/profile/vite steps in order, maps the SetupRecord onto the
+ * task-state `setup` block, and records the event. The record keeps the
+ * previous registry source and vite-clear time when a later replay is a no-op,
+ * so a resume does not lose how the runtime was prepared.
+ */
+async function cmdTaskPrepare(parsed: ParsedArgs): Promise<void> {
+  assertNoPositional(parsed, 2);
+  assertAllowedOptions(parsed, ["task-id", "runtime-source"]);
+  const taskId = validateTaskId(requireOption(parsed, "task-id"));
+  const state = await loadStateForCwd(taskId);
+
+  const runtimeSource = hasOption(parsed, "runtime-source")
+    ? requireOption(parsed, "runtime-source")
+    : undefined;
+  if (runtimeSource !== undefined && !path.isAbsolute(runtimeSource)) {
+    throw new Error(
+      `--runtime-source must be an absolute path, got ${runtimeSource}`,
+    );
+  }
+
+  const record: SetupRecord = await prepareSetup({
+    projectRoot: state.worktree,
+    runtime: { sourcePath: runtimeSource },
+  });
+
+  const previous = state.setup;
+  state.setup = {
+    guardEnv: record.guardEnv,
+    runtimeSource: record.runtime.sourcePath ??
+      previous?.runtimeSource ??
+      record.runtime.binRootDir,
+    profilePath: record.profile.profileDir,
+    viteClearedAt: record.vite.removed
+      ? record.preparedAt
+      : previous?.viteClearedAt ?? null,
+    commands: [
+      `deps:${record.deps.status}`,
+      `runtime:${record.runtime.status}`,
+      `profile:${record.profile.status}`,
+      `vite:${record.vite.status}`,
+    ],
+  };
+  appendEvent(state, {
+    timestamp: nowIso(),
+    command: "task prepare",
+    note: JSON.stringify({
+      deps: record.deps.status,
+      runtime: record.runtime.status,
+      profile: record.profile.status,
+      vite: record.vite.status,
+      runtimeSource: state.setup.runtimeSource,
+    }),
+    exitCode: 0,
+  });
+  writeTaskState(state);
+
+  console.log(JSON.stringify({
+    taskId: state.taskId,
+    setup: state.setup,
+    steps: record,
+  }));
+}
+
 async function cmdGui(
   parsed: ParsedArgs,
   sub: "claim" | "end" | "status",
@@ -457,6 +563,14 @@ async function runDevCommand(
     throw new Error("recorded port offset must be an integer, not 'auto'");
   }
 
+  // `fdh task prepare` records the local Patcher guard. Set it on this CLI
+  // process so the spawned dev-tool inherits it; no manual export is needed.
+  if (action === "up" && state.setup?.guardEnv !== undefined) {
+    for (const [name, value] of Object.entries(state.setup.guardEnv)) {
+      Deno.env.set(name, value);
+    }
+  }
+
   const displayCommand = action === "up"
     ? `deno run -A tools/dev-tool.ts start --port-offset ${offset}`
     : "deno run -A tools/dev-tool.ts stop";
@@ -519,41 +633,48 @@ async function runVerify(
   kind: "build" | "test",
 ): Promise<void> {
   assertNoPositional(parsed, 2);
-  assertAllowedOptions(parsed, ["task-id"]);
+  assertAllowedOptions(
+    parsed,
+    kind === "build" ? ["task-id", "phase"] : ["task-id"],
+  );
   const taskId = validateTaskId(requireOption(parsed, "task-id"));
   const state = await loadStateForCwd(taskId);
 
-  const spec = kind === "build"
-    ? {
-      displayCommand: "deno task feles-build build --phase after-mach",
-      args: ["task", "feles-build", "build", "--phase", "after-mach"],
-      assertionName: "build-exit-code",
-      expected: "exit code 0",
-    }
-    : {
+  const specs = kind === "build"
+    ? buildVerifyCommands(
+      parseBuildPhase(
+        hasOption(parsed, "phase") ? requireOption(parsed, "phase") : undefined,
+      ),
+    )
+    : [{
       displayCommand: "deno task test:host",
       args: ["task", "test:host"],
       assertionName: "host-test-exit-code",
       expected: "exit code 0",
-    };
+    }];
 
-  console.log(`[fdh] ${spec.displayCommand}`);
-  const result = await runRecordedCommand(
-    state,
-    {
-      command: Deno.execPath(),
-      args: spec.args,
-      cwd: state.worktree,
-      displayCommand: spec.displayCommand,
-      assertionName: spec.assertionName,
-      expected: spec.expected,
-      stream: streamToConsole(),
-    },
-    runStreamingCommand,
-  );
+  // Run the phases in order and stop at the first failure: a failed source
+  // compile must leave the injector unrun, and the failing assertion is
+  // already persisted by runRecordedCommand before the throw.
+  for (const spec of specs) {
+    console.log(`[fdh] ${spec.displayCommand}`);
+    const result = await runRecordedCommand(
+      state,
+      {
+        command: Deno.execPath(),
+        args: spec.args,
+        cwd: state.worktree,
+        displayCommand: spec.displayCommand,
+        assertionName: spec.assertionName,
+        expected: spec.expected,
+        stream: streamToConsole(),
+      },
+      runStreamingCommand,
+    );
 
-  if (result.code !== 0) {
-    throw new Error(`${spec.displayCommand} failed with exit ${result.code}`);
+    if (result.code !== 0) {
+      throw new Error(`${spec.displayCommand} failed with exit ${result.code}`);
+    }
   }
 }
 
@@ -661,6 +782,152 @@ async function cmdVerifyBrowser(parsed: ParsedArgs): Promise<void> {
   }
 }
 
+/**
+ * Record a build/test run that happened outside the fdh CLI (IMP-2).
+ *
+ * The operator supplies the observation file and exit code; fdh pins the file
+ * bytes by SHA-256, stores them under `_dist/fdh/observations/`, and adds an
+ * `external-<kind>-exit-code` assertion when `--verification` is set. The
+ * evidence manifest re-hashes the file and discloses the attestation limits.
+ */
+async function cmdRecord(parsed: ParsedArgs): Promise<void> {
+  assertNoPositional(parsed, 1);
+  assertAllowedOptions(parsed, [
+    "task-id",
+    "command",
+    "exit-code",
+    "observation-file",
+    "cwd",
+    "operator",
+    "verification",
+    "attested-at",
+  ]);
+  const taskId = validateTaskId(requireOption(parsed, "task-id"));
+  const state = await loadStateForCwd(taskId);
+
+  const exitCodeRaw = requireOption(parsed, "exit-code");
+  const exitCode = Number(exitCodeRaw);
+  if (!Number.isSafeInteger(exitCode)) {
+    throw new Error(`--exit-code must be an integer, got ${exitCodeRaw}`);
+  }
+
+  const cwd = hasOption(parsed, "cwd")
+    ? requireOption(parsed, "cwd")
+    : state.worktree;
+  if (!path.isAbsolute(cwd)) {
+    throw new Error(`--cwd must be an absolute path, got ${cwd}`);
+  }
+
+  const verification = hasOption(parsed, "verification")
+    ? requireOption(parsed, "verification") as ExternalVerification
+    : undefined;
+
+  const result = await recordExternalOperation(state, {
+    command: requireOption(parsed, "command"),
+    cwd,
+    exitCode,
+    observationFile: requireOption(parsed, "observation-file"),
+    operator: requireOption(parsed, "operator"),
+    verification,
+    attestedAt: hasOption(parsed, "attested-at")
+      ? requireOption(parsed, "attested-at")
+      : undefined,
+  });
+
+  console.log(JSON.stringify({
+    taskId: state.taskId,
+    operation: result.operation,
+    assertion: result.assertion ?? null,
+  }));
+}
+
+/**
+ * Record one independent-review receipt for the current PR head commit.
+ *
+ * The CLI is still local-only: it writes the receipt JSON under
+ * `<worktree>/_dist/fdh/reviews/` and prints the exact comment body. The agent
+ * (or human) posts that body to the PR; the `fdh-review-gate` workflow parses
+ * the marker and checks distinct reviewers at the PR head.
+ */
+async function cmdReviewRecord(parsed: ParsedArgs): Promise<void> {
+  assertNoPositional(parsed, 2);
+  assertAllowedOptions(parsed, [
+    "task-id",
+    "reviewer",
+    "model",
+    "commit",
+    "verdict",
+    "scope",
+    "tier",
+    "blocking",
+  ]);
+  const taskId = validateTaskId(requireOption(parsed, "task-id"));
+  const state = await loadStateForCwd(taskId);
+
+  const verdict = requireOption(parsed, "verdict") as ReviewVerdict;
+  if (!(REVIEW_VERDICTS as readonly string[]).includes(verdict)) {
+    throw new Error(
+      `--verdict must be one of ${REVIEW_VERDICTS.join("|")}, got ${
+        JSON.stringify(verdict)
+      }`,
+    );
+  }
+  const tier = requireOption(parsed, "tier") as ReviewTier;
+  if (!(REVIEW_TIERS as readonly string[]).includes(tier)) {
+    throw new Error(
+      `--tier must be one of ${REVIEW_TIERS.join("|")}, got ${
+        JSON.stringify(tier)
+      }`,
+    );
+  }
+
+  let blocking = false;
+  if (hasOption(parsed, "blocking")) {
+    const raw = requireOption(parsed, "blocking");
+    if (raw !== "true" && raw !== "false") {
+      throw new Error(`--blocking must be true or false, got ${raw}`);
+    }
+    blocking = raw === "true";
+  }
+
+  const receipt: ReviewReceipt = {
+    schemaVersion: FDH_REVIEW_RECEIPT_SCHEMA_VERSION,
+    reviewer: requireOption(parsed, "reviewer"),
+    model: requireOption(parsed, "model"),
+    commit: requireOption(parsed, "commit").toLowerCase(),
+    verdict,
+    blocking,
+    scope: requireOption(parsed, "scope"),
+    tier,
+  };
+  // Validate against the same commit the receipt claims: the workflow later
+  // checks it against the actual PR head SHA.
+  const validated = validateReceipt(receipt, receipt.commit, {
+    requireMergeable: false,
+  });
+
+  const reviewsDir = path.join(fdhDir(state.worktree), "reviews");
+  await Deno.mkdir(reviewsDir, { recursive: true });
+  const receiptPath = path.join(
+    reviewsDir,
+    `${taskId}-${validated.commit.slice(0, 12)}.json`,
+  );
+  await Deno.writeTextFile(
+    receiptPath,
+    `${JSON.stringify(validated, null, 2)}\n`,
+  );
+
+  const commentBody = `<!-- ${FDH_REVIEW_RECEIPT_MARKER} ${
+    JSON.stringify(validated)
+  } -->`;
+  console.log(JSON.stringify({
+    taskId: state.taskId,
+    receiptPath,
+    receipt: validated,
+    commentBody,
+  }));
+}
+
 function resolveEvidenceOut(state: FdhTaskState, raw: string): string {
   const root = path.resolve(fdhDir(state.worktree));
   const resolved = path.isAbsolute(raw)
@@ -744,6 +1011,7 @@ async function main(argv: string[]): Promise<void> {
     case "task":
       if (sub === "start") return await cmdTaskStart(parsed);
       if (sub === "resume") return await cmdTaskResume(parsed);
+      if (sub === "prepare") return await cmdTaskPrepare(parsed);
       throw new Error(`unknown task command ${JSON.stringify(sub ?? "")}`);
     case "dev":
       if (sub === "up") return await runDevCommand(parsed, "up");
@@ -757,6 +1025,8 @@ async function main(argv: string[]): Promise<void> {
     case "evidence":
       assertNoPositional(parsed, 1);
       return await cmdEvidence(parsed);
+    case "record":
+      return await cmdRecord(parsed);
     case "quota":
       if (
         sub === "claim" || sub === "stop" || sub === "resume" ||
@@ -776,6 +1046,9 @@ async function main(argv: string[]): Promise<void> {
         return await cmdSecrets(parsed, sub);
       }
       throw new Error(`unknown secrets command ${JSON.stringify(sub ?? "")}`);
+    case "review":
+      if (sub === "record") return await cmdReviewRecord(parsed);
+      throw new Error(`unknown review command ${JSON.stringify(sub ?? "")}`);
     default:
       throw new Error(`unknown command ${JSON.stringify(group)}`);
   }
