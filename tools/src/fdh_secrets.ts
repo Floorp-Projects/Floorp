@@ -33,6 +33,7 @@ export interface SecretReference {
 
 const SECRET_REFERENCE_RE = new RegExp(
   `(?:\\.secrets\\b|\\b(?:${SECRET_TOKEN_NAMES.join("|")})\\b)`,
+  "g",
 );
 
 function scanStrings(
@@ -41,8 +42,9 @@ function scanStrings(
   found: SecretReference[],
 ): void {
   if (typeof value === "string") {
-    const match = value.match(SECRET_REFERENCE_RE);
-    if (match) found.push({ where, marker: match[0] });
+    for (const match of value.matchAll(SECRET_REFERENCE_RE)) {
+      found.push({ where, marker: match[0] });
+    }
     return;
   }
   if (Array.isArray(value)) {
