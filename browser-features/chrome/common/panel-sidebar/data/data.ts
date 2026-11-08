@@ -24,6 +24,7 @@ import {
 } from "../utils/type.js";
 import { createRootHMR } from "@nora/solid-xul";
 import { pruneSavedUnreadBadges } from "../utils/saved-unread-badge.ts";
+import i18next from "i18next";
 import { isRight } from "fp-ts/Either";
 
 function defaultPanelSidebarData(): Panels {
@@ -53,24 +54,20 @@ export function parsePanelSidebarData(stringData: string): Panels {
 
 /** Synchronize panel preferences and remove saved counts for deleted panels. */
 function createPanelSidebarData(): [Accessor<Panels>, Setter<Panels>] {
-  const [panelSidebarData, setPanelSidebarData] = createSignal<Panels>(
-    parsePanelSidebarData(
-      Services.prefs.getStringPref(
-        PanelSidebarStaticNames.panelSidebarDataPrefName,
-        strDefaultData,
-      ),
-    ),
-  );
-  const observer = () => {
-    setPanelSidebarData(
-      parsePanelSidebarData(
-        Services.prefs.getStringPref(
-          PanelSidebarStaticNames.panelSidebarDataPrefName,
-          strDefaultData,
-        ),
-      ),
-    );
+  const prefName = PanelSidebarStaticNames.panelSidebarDataPrefName;
+  let invalidFallback: Panels | undefined;
+  const read = () => {
+    const raw = Services.prefs.getStringPref(prefName, strDefaultData);
+    const panels = decodePanelSidebarData(raw);
+    if (panels) {
+      invalidFallback = undefined;
+      return panels;
+    }
+    invalidFallback = defaultPanelSidebarData();
+    return invalidFallback;
   };
+  const [panelSidebarData, setPanelSidebarData] = createSignal<Panels>(read());
+  const observer = () => setPanelSidebarData(read());
   Services.prefs.addObserver(
     PanelSidebarStaticNames.panelSidebarDataPrefName,
     observer,
@@ -84,14 +81,19 @@ function createPanelSidebarData(): [Accessor<Panels>, Setter<Panels>] {
 
   createEffect(() => {
     const panels = panelSidebarData();
-    const prefName = PanelSidebarStaticNames.panelSidebarDataPrefName;
-    // Edits to the displayed fallback must not replace unreadable settings.
-    if (
-      !decodePanelSidebarData(
-        Services.prefs.getStringPref(prefName, strDefaultData),
-      )
-    ) {
-      return;
+    const fallback = invalidFallback;
+    if (fallback) {
+      if (panels === fallback) return;
+      const confirmed = Services.prompt.confirm(
+        window as unknown as mozIDOMWindowProxy,
+        i18next.t("panelSidebar.resetInvalidTitle"),
+        i18next.t("panelSidebar.resetInvalidMessage"),
+      );
+      if (invalidFallback !== fallback) return;
+      if (!confirmed) {
+        setPanelSidebarData(fallback);
+        return;
+      }
     }
     Services.prefs.setStringPref(
       prefName,

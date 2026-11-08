@@ -23,17 +23,14 @@ function badgeIdentityPrefix(panel: Panel): string {
 
 /** Remove saved counts whose panel or matching URL and container no longer exist. */
 export function pruneSavedUnreadBadges(panels: readonly Panel[]): void {
-  const livePrefs = new Map(panels.map((panel) => [prefName(panel.id), panel]));
   for (const name of Services.prefs.getChildList(SAVED_UNREAD_PREFIX)) {
-    const panel = livePrefs.get(name);
-    if (
-      panel?.type !== "web" || !panel.loadAtStartupForBadges ||
-      !Services.prefs.getStringPref(name, "").startsWith(
-        badgeIdentityPrefix(panel),
-      )
-    ) {
-      Services.prefs.clearUserPref(name);
-    }
+    const saved = Services.prefs.getStringPref(name, "");
+    const matches = panels.some((panel) =>
+      panel.type === "web" && panel.loadAtStartupForBadges &&
+      prefName(panel.id) === name &&
+      saved.startsWith(badgeIdentityPrefix(panel))
+    );
+    if (!matches) Services.prefs.clearUserPref(name);
   }
 }
 
