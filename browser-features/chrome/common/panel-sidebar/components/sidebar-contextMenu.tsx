@@ -168,6 +168,7 @@ export class SidebarContextMenuElem {
     }
   }
 
+  /** Build the panel menu from the current panel and its current badge controls. */
   private sidebarContextMenu() {
     const [texts, setTexts] = createSignal(getTranslations());
 
@@ -222,7 +223,7 @@ export class SidebarContextMenuElem {
             />
           </Show>
           <Show
-            when={this.ctx.unreadBadgeControls.get(contextPanel()?.id ?? "")}
+            when={this.ctx.unreadBadgeControls().get(contextPanel()?.id ?? "")}
           >
             {(controls) => (
               <Show when={controls().visible()}>

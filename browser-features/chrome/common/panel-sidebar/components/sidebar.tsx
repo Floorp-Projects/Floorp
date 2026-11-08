@@ -97,6 +97,7 @@ export class PanelSidebarElem {
     });
   }
 
+  /** Restore opted-in browsers and the selected panel after enabling the sidebar. */
   private async restoreSelectedPanel() {
     await this.sidebarReady;
     await new Promise<void>((resolve) =>

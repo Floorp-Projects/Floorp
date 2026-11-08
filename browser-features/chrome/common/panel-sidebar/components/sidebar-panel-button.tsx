@@ -79,7 +79,7 @@ export function PanelSidebarButton(props: {
       saved.write(count);
       savedCount = count;
     };
-    gPanelSidebar.unreadBadgeControls.set(id, {
+    const controls = {
       visible: () => unreadBadge() !== "",
       clear: () => {
         badgeState.clear(restored() ? savedCount : undefined);
@@ -88,7 +88,10 @@ export function PanelSidebarButton(props: {
         setRestored(false);
         setUnreadBadge("");
       },
-    });
+    };
+    gPanelSidebar.setUnreadBadgeControls((previous) =>
+      new Map(previous).set(id, controls)
+    );
 
     let observedBrowser: XULBrowserElement | undefined;
     const onPageTitleChanged = (event: Event) => {
@@ -159,7 +162,12 @@ export function PanelSidebarButton(props: {
         "pagetitlechanged",
         onPageTitleChanged,
       );
-      gPanelSidebar.unreadBadgeControls.delete(id);
+      gPanelSidebar.setUnreadBadgeControls((previous) => {
+        if (previous.get(id) !== controls) return previous;
+        const next = new Map(previous);
+        next.delete(id);
+        return next;
+      });
     });
   });
 

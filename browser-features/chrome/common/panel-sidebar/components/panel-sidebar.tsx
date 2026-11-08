@@ -20,7 +20,7 @@ import {
   setSelectedPanelId,
 } from "../data/data.ts";
 import type { Panel } from "../utils/type.ts";
-import { createEffect } from "solid-js";
+import { createEffect, createSignal } from "solid-js";
 import { getExtensionSidebarAction } from "../extension-panels.ts";
 import { removeSavedUnreadBadge } from "../utils/saved-unread-badge.ts";
 import { supportsUnreadBadge } from "../utils/unread-badge.ts";
@@ -40,10 +40,14 @@ function shouldLoadPanelForBadges(panel: Panel | undefined): boolean {
 }
 
 export class CPanelSidebar {
-  public readonly unreadBadgeControls = new Map<string, {
-    visible: () => boolean;
-    clear: () => void;
-  }>();
+  private readonly badgeControlsSignal = createSignal(
+    new Map<string, {
+      visible: () => boolean;
+      clear: () => void;
+    }>(),
+  );
+  public readonly unreadBadgeControls = this.badgeControlsSignal[0];
+  public readonly setUnreadBadgeControls = this.badgeControlsSignal[1];
   private panelDisposers: Map<string, () => void> = new Map();
   private get parentElement() {
     return document?.getElementById("panel-sidebar-browser-box") as unknown as
@@ -212,6 +216,7 @@ export class CPanelSidebar {
     this.openPanel(panelId);
   }
 
+  /** Hide the selected panel, unloading it when required. */
   public closePanel(): void {
     const panelId = selectedPanelId();
     setIsPanelSidebarHoverPreview(false);
@@ -237,6 +242,7 @@ export class CPanelSidebar {
     this.showPanel(panel);
   }
 
+  /** Reveal the existing browser or create one for the selected panel. */
   public showPanel(panel: Panel): void {
     const browser = this.getBrowserElement(panel.id);
     if (browser) {
@@ -247,6 +253,7 @@ export class CPanelSidebar {
     this.renderBrowserComponent(panel);
   }
 
+  /** Start opted-in messaging panels without opening them. */
   public preloadBadgePanels(): void {
     if (!this.parentElement) return;
 
@@ -303,6 +310,7 @@ export class CPanelSidebar {
     });
   }
 
+  /** Unload the panel and remove its settings and saved badge. */
   public deletePanel(panelId: string) {
     this.unloadPanel(panelId);
     removeSavedUnreadBadge(panelId);
