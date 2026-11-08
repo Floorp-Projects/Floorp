@@ -549,6 +549,12 @@ export interface ResumeOptions {
   git?: GitRunner;
   probePort?: DevPortProbe;
   now?: () => string;
+  /**
+   * Called with the reopened state just before the resume event is appended.
+   * Throwing here aborts the resume without recording a successful event
+   * (used to validate the quota ledger before the state write).
+   */
+  validate?: (state: FdhTaskState) => void;
 }
 
 /**
@@ -610,6 +616,8 @@ export async function resumeTaskState(
       "another dev server may still be running; run 'fdh dev down' before 'fdh dev up'",
     );
   }
+
+  options.validate?.(state);
 
   appendEvent(state, {
     timestamp: (options.now ?? nowIso)(),

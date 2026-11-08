@@ -82,10 +82,44 @@ deno run -A tools/fdh.ts dev down --task-id <task-id>
 
 `deno task fdh <command>` is equivalent to `deno run -A tools/fdh.ts <command>`.
 
+## Quota and approval ledger (Gate 4 4-D / 4-C)
+
+Use the local ledger (`<worktree>/_dist/fdh/quota/<task-id>.json`) when work can
+stop for quota, infrastructure, or manual reasons, and when an unknown
+non-idempotent external operation must wait for approval.
+
+```sh
+# Assign the task to one agent. A second active holder is rejected, so the same
+# work is never assigned twice while an agent holds it.
+deno run -A tools/fdh.ts quota claim --task-id <task-id> --agent <name>
+
+# Stop for a reason; only the active holder may stop.
+deno run -A tools/fdh.ts quota stop --task-id <task-id> --agent <name> \
+  --reason quota --note "LLM quota exhausted"
+
+# Resume the stopped task and re-assign it.
+deno run -A tools/fdh.ts quota resume --task-id <task-id> --agent <name>
+
+# Record an unknown non-idempotent external op awaiting approval.
+deno run -A tools/fdh.ts quota pending --task-id <task-id> --op push \
+  --note "remote state unknown; do not retry until approved"
+
+# Approve and clear pending external ops before retrying them.
+deno run -A tools/fdh.ts quota approve --task-id <task-id> --note "human approved"
+
+# Release the holder without stopping; print the ledger.
+deno run -A tools/fdh.ts quota release --task-id <task-id> --agent <name>
+deno run -A tools/fdh.ts quota status --task-id <task-id>
+```
+
+`task resume` reports `approvalPending` from this ledger and still never reruns
+push/PR/release; the agent must wait for `quota approve`. Stop reasons are
+`quota|infra|manual`; pending ops are `push|pr|release|external`.
+
 ## Contract
 
 - Commands: `task start|resume`, `dev up|down`, `verify build|test|browser`,
-  `evidence`, `help`.
+  `evidence`, `quota claim|stop|resume|pending|approve|release|status`, `help`.
 - State path: `<worktree>/_dist/fdh/tasks/<task-id>.json`. It holds `taskId`,
   `worktree`, `baseCommit`, `portOffset`, `createdAt`, `status`, `events[]`,
   `operations[]`, `assertions[]`, `cleanup` and `reproduction`.
