@@ -170,3 +170,13 @@ Deno.test("fdh review: an invalid receipt anywhere fails the set gate", () => {
     "at least 2 distinct reviewers",
   );
 });
+
+Deno.test("fdh review: non-mergeable receipts validate locally", () => {
+  const entry = receipt({
+    verdict: "request_changes",
+    blocking: true,
+  });
+  const validated = validateReceipt(entry, HEAD, { requireMergeable: false });
+  assertEquals(validated.verdict, "request_changes");
+  assertEquals(validated.blocking, true);
+});

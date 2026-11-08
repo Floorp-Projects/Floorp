@@ -10,6 +10,12 @@ name: "(CI) FDH Review Gate"
 on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
+  # A receipt is posted as an issue comment, so the gate also runs when a
+  # comment is created. On the default branch this makes posting receipts
+  # sufficient; a PR that introduces this workflow still needs one manual
+  # rerun of the failed check after the receipts are posted.
+  issue_comment:
+    types: [created]
 
 permissions:
   contents: read
@@ -18,6 +24,7 @@ permissions:
 
 jobs:
   review-gate:
+    if: github.event_name == 'pull_request' || github.event.issue.pull_request != null
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
@@ -37,11 +44,15 @@ jobs:
       - name: Validate review receipts
         env:
           GH_TOKEN: ${{ github.token }}
-          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || '' }}
+          PR_NUMBER: ${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.event.issue.number }}
           COMMENTS_FILE: ${{ runner.temp }}/fdh-review-comments.jsonl
         run: |
           set -euo pipefail
+          if [ -z "${HEAD_SHA:-}" ]; then
+            HEAD_SHA=$(gh api "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}" --jq .head.sha)
+            export HEAD_SHA
+          fi
           gh api --paginate --jq '.[] | {body: .body}' \
             "repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/comments" \
             > "$COMMENTS_FILE"

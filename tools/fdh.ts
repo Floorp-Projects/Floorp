@@ -902,7 +902,9 @@ async function cmdReviewRecord(parsed: ParsedArgs): Promise<void> {
   };
   // Validate against the same commit the receipt claims: the workflow later
   // checks it against the actual PR head SHA.
-  const validated = validateReceipt(receipt, receipt.commit);
+  const validated = validateReceipt(receipt, receipt.commit, {
+    requireMergeable: false,
+  });
 
   const reviewsDir = path.join(fdhDir(state.worktree), "reviews");
   await Deno.mkdir(reviewsDir, { recursive: true });

@@ -212,7 +212,9 @@ export function run(
     const targetPath = path.resolve(projectRoot, target);
     const linkTarget = Deno.build.os === "windows"
       ? targetPath
-      : path.relative(linkPath, targetPath);
+      // A symlink target resolves relative to the link's parent directory,
+      // not to the full link path (which includes the link name).
+      : path.relative(path.dirname(linkPath), targetPath);
     try {
       if (exists(linkPath)) {
         safeRemove(linkPath);

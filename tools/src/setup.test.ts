@@ -410,3 +410,28 @@ Deno.test("prepareSetup composes all steps and records the guard env", () =>
     assertEquals(record.guardEnv.FLOORP_SKIP_PATCHER, "1");
     assertEquals(relinks, 1);
   }));
+
+Deno.test("relative mount links resolve from the link parent in the same root", () => {
+  // The temp bin root must sit under the project root, otherwise the extra
+  // `..` from a path.relative(linkPath, target) bug clamps at `/` and passes.
+  const root = Deno.makeTempDirSync({
+    dir: PROJECT_ROOT,
+    prefix: "fdh-link-",
+  });
+  try {
+    const binRootDir = path.join(root, "_dist", "bin");
+    Deno.mkdirSync(binRootDir, { recursive: true });
+    runInjector("dev", "noraneko-devdir", {
+      binRootDir,
+      projectRoot: PROJECT_ROOT,
+    });
+
+    const link = path.join(binRootDir, "noraneko-devdir", "content");
+    assertEquals(
+      Deno.realPathSync(link),
+      path.join(PROJECT_ROOT, "bridge", "loader-features", "_dist"),
+    );
+  } finally {
+    Deno.removeSync(root, { recursive: true });
+  }
+});

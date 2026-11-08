@@ -705,6 +705,25 @@ export function resolveObservationPath(
       `observation file must stay under ${root}, got ${resolved}`,
     );
   }
+  // Reject a symlink under the observations root that resolves elsewhere.
+  let realRoot: string;
+  try {
+    realRoot = Deno.realPathSync(root);
+  } catch {
+    realRoot = root;
+  }
+  let realResolved: string;
+  try {
+    realResolved = Deno.realPathSync(resolved);
+  } catch {
+    return resolved;
+  }
+  const realRelative = path.relative(realRoot, realResolved);
+  if (realRelative.startsWith("..") || path.isAbsolute(realRelative)) {
+    throw new Error(
+      `observation file must resolve under ${root}, got ${realResolved}`,
+    );
+  }
   return resolved;
 }
 

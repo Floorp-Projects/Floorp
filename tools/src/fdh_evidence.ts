@@ -229,6 +229,10 @@ function buildLimitations(state: FdhTaskState, manifestState: State): string[] {
     add(
       "Source compilation was not verified; the recorded build assertion is after-mach XHTML injection only.",
     );
+  } else if (!hasInjectBuild) {
+    add(
+      "XHTML injection was not verified; the recorded build assertion is before-mach source compilation only.",
+    );
   }
   const hasTest = state.assertions.some((assertion) =>
     assertion.name === "host-test-exit-code" ||

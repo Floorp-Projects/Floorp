@@ -297,10 +297,18 @@ export async function prepareRuntime(
 
   const existing = readRuntimeMarker(binRootDir);
   if (existing) {
+    let markerValid = true;
     try {
       assertRuntimeMarker(existing);
+    } catch {
+      // Wrong platform/architecture marker: replace the tree.
+      markerValid = false;
+    }
+    if (markerValid) {
       // Re-run the relink even when the tree is already present: a copied
       // runtime can carry stale absolute devdir links from another worktree.
+      // A relink failure must not be mistaken for a wrong marker and delete
+      // an otherwise valid runtime.
       const relink = options.relink ?? defaultRelink;
       relink(binRootDir, projectRoot);
       return {
@@ -309,10 +317,8 @@ export async function prepareRuntime(
         marker: existing,
         relinked: true,
       };
-    } catch {
-      // Wrong platform/architecture marker: replace the tree.
-      safeRemove(binRootDir);
     }
+    safeRemove(binRootDir);
   }
 
   const sourcePath = options.sourcePath;

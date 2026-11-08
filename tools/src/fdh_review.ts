@@ -116,10 +116,17 @@ export function parseReceiptComments(
  * Validate one receipt against the PR head commit. Enforces the receipt
  * schema, `commit === headSha`, a mergeable verdict, and `blocking === false`.
  */
+export interface ValidateReceiptOptions {
+  /** When false, accept request_changes/blocking=true (a local record only). */
+  requireMergeable?: boolean;
+}
+
 export function validateReceipt(
   receipt: unknown,
   headSha: string,
+  options: ValidateReceiptOptions = {},
 ): ReviewReceipt {
+  const requireMergeable = options.requireMergeable ?? true;
   if (typeof receipt !== "object" || receipt === null) {
     throw new Error("review receipt must be a JSON object");
   }
@@ -147,15 +154,18 @@ export function validateReceipt(
       }`,
     );
   }
-  if (!(MERGEABLE_REVIEW_VERDICTS as readonly string[]).includes(verdict)) {
+  if (typeof value.blocking !== "boolean") {
+    throw new Error("review receipt field blocking must be a boolean");
+  }
+  if (
+    requireMergeable &&
+    !(MERGEABLE_REVIEW_VERDICTS as readonly string[]).includes(verdict)
+  ) {
     throw new Error(
       `review receipt verdict ${verdict} is not mergeable; use approve or approve_with_notes`,
     );
   }
-  if (typeof value.blocking !== "boolean") {
-    throw new Error("review receipt field blocking must be a boolean");
-  }
-  if (value.blocking) {
+  if (requireMergeable && value.blocking) {
     throw new Error(
       "review receipt has blocking=true; a blocking review cannot merge",
     );
@@ -174,7 +184,7 @@ export function validateReceipt(
     model,
     commit,
     verdict: verdict as ReviewVerdict,
-    blocking: false,
+    blocking: value.blocking,
     scope,
     tier: tier as ReviewTier,
   };

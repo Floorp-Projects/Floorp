@@ -445,4 +445,21 @@ Deno.test("after-mach injection alone adds the source-compilation limitation; so
     );
     assertEquals(validateEvidenceManifest(full), []);
   });
+
+  await withTempDir(async (dir) => {
+    const state = makeState(dir);
+    addCheck(
+      state,
+      "build-exit-code",
+      "deno task feles-build build --phase before-mach",
+    );
+    writeTaskState(state);
+    const beforeOnly = await buildEvidenceManifest(state, { os: OS });
+    assert(
+      beforeOnly.limitations.some((item) =>
+        item.includes("XHTML injection was not verified")
+      ),
+    );
+    assertEquals(validateEvidenceManifest(beforeOnly), []);
+  });
 });

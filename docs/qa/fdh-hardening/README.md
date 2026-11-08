@@ -55,6 +55,9 @@ Checks exercised during this run:
    `setup.guardEnv.FLOORP_SKIP_PATCHER=1`, and a second run was an
    `already`/relink no-op. The relink fix matters: the copied tree originally
    kept absolute `/.../fdh-eval-b` links, which would break fonts and modules.
+   After the off-by-one fix, `realPathSync` on a mount link resolves inside the
+   worktree; a same-root test catches a regression that the shallow temp-root
+   test missed.
 4. `fdh record` refused out-of-worktree cwd/observation files and exit-code
    mismatch in unit tests; changing the observation file after attestation made
    `fdh evidence` fail with `schema-violation /inputFidelity/inputs/1`.
@@ -63,12 +66,17 @@ Checks exercised during this run:
 6. `deno task test:host`: **480 passed, 0 failed, 1 ignored** (15 s). The
    previously failing `locked Runtime install ... retains recovery state` test
    now expects `002` for the windows target and passes.
-7. `fdh task prepare` then `fdh dev up` started a browser in **53.7 s** with
+7. `fdh task prepare` then `fdh dev up` started a browser in **53.7 s** (28.9 s
+   on the re-run after the symlink fix) with
    `Browser ready! Marionette on port 5280` (no manual `deno install`, `cp`,
-   `rm`, or `FLOORP_SKIP_PATCHER` export). `fdh verify browser` recorded a
-   connection and an eval contains-check of the recorded offset 100;
-   `fdh dev
-   down` stopped 32 processes.
+   `rm`, or `FLOORP_SKIP_PATCHER` export). The gate workflow now also listens to
+   `issue_comment`; for this PR (which introduces the workflow), post the two
+   receipts and rerun the failed `review-gate` check once. `fdh verify browser`
+   recorded a connection and an eval contains-check of the recorded offset 100;
+   `fdh dev down` stopped 32 processes. After the symlink fix, the settings
+   content page loaded at `http://localhost:5283/#/overview/home` with 394
+   characters of body text; the browser console was busy with BiDe sessions, so
+   the font/404 console check was not recorded.
 8. The Patcher guard was missing from `main`: `fdh task prepare` recorded
    `FLOORP_SKIP_PATCHER=1` but `tools/feles-build.ts` ignored it, so dev aborted
    on a packaged Debug Runtime. Added the guard at the three
