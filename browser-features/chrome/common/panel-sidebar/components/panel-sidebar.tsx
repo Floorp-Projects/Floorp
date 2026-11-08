@@ -26,6 +26,7 @@ import { removeSavedUnreadBadge } from "../utils/saved-unread-badge.ts";
 import { supportsUnreadBadge } from "../utils/unread-badge.ts";
 import { WebsitePanel } from "../website-panel-window-parent.ts";
 
+/** Check whether the panel can remain loaded for badge updates. */
 function shouldLoadPanelForBadges(panel: Panel | undefined): boolean {
   if (
     panel?.type !== "web" || !panel.loadAtStartupForBadges ||

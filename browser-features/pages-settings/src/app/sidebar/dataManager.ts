@@ -79,63 +79,68 @@ export async function getPanelsList(): Promise<Panels | null> {
   return parsePanelsList(await rpc.getStringPref(PANELS_PREF));
 }
 
-export async function savePanelsList(panels: Panels): Promise<void> {
-  // The Hub edits a snapshot and does not control the startup opt-in. Keep
-  // the latest choice from the Panel Sidebar menu on edits and reorders.
+/** Reapply the operation to the latest list if another writer saves first. */
+async function changePanelsList(
+  update: (panels: Panels) => Panels,
+): Promise<Panels> {
   let previous = await rpc.getStringPref(PANELS_PREF);
   for (let attempt = 0; attempt < 5; attempt++) {
-    const currentById = new Map(
-      parsePanelsList(previous)?.map((panel) => [panel.id, panel]),
-    );
-    const data = panels.map((panel) => {
-      const current = currentById.get(panel.id);
-      return current
-        ? { ...panel, loadAtStartupForBadges: current.loadAtStartupForBadges }
-        : panel;
-    });
+    const current = parsePanelsList(previous);
+    if (!current) throw new Error("Could not read Panel Sidebar settings");
+    const data = update(current);
     const value = JSON.stringify({ data });
     const result = await rpc.compareAndSetStringPref(
       PANELS_PREF,
       previous,
       value,
     );
-    if (result.updated || result.currentValue === value) return;
+    if (result.updated || result.currentValue === value) return data;
     if (result.typeMismatch) break;
     previous = result.currentValue;
   }
   throw new Error("Panel Sidebar settings changed while saving");
 }
 
+/** Move a panel in the latest saved list, preserving concurrent edits and deletions. */
+export function reorderPanel(
+  panelId: string,
+  targetId: string,
+): Promise<Panels> {
+  return changePanelsList((panels) => {
+    const from = panels.findIndex((panel) => panel.id === panelId);
+    const to = panels.findIndex((panel) => panel.id === targetId);
+    if (from < 0 || to < 0 || from === to) return panels;
+    const reordered = [...panels];
+    const [panel] = reordered.splice(from, 1);
+    reordered.splice(to, 0, panel);
+    return reordered;
+  });
+}
+
+/** Append a new panel to the saved list. */
 export async function addPanel(panel: Panel): Promise<void> {
-  const panels = await getPanelsList();
-  if (!panels) {
-    return;
-  }
-
-  await savePanelsList([...panels, panel]);
+  await changePanelsList((panels) => [...panels, panel]);
 }
 
+/** Save the Hub edit while keeping the latest startup opt-in from browser chrome. */
 export async function updatePanel(updatedPanel: Panel): Promise<void> {
-  const panels = await getPanelsList();
-  if (!panels) {
-    return;
-  }
-
-  const updatedPanels = panels.map((panel) =>
-    panel.id === updatedPanel.id ? updatedPanel : panel
+  await changePanelsList((panels) =>
+    panels.map((panel) =>
+      panel.id === updatedPanel.id
+        ? {
+          ...updatedPanel,
+          loadAtStartupForBadges: panel.loadAtStartupForBadges,
+        }
+        : panel
+    )
   );
-
-  await savePanelsList(updatedPanels);
 }
 
+/** Remove only the requested panel from the latest saved list. */
 export async function deletePanel(panelId: string): Promise<void> {
-  const panels = await getPanelsList();
-  if (!panels) {
-    return;
-  }
-
-  const filteredPanels = panels.filter((panel) => panel.id !== panelId);
-  await savePanelsList(filteredPanels);
+  await changePanelsList((panels) =>
+    panels.filter((panel) => panel.id !== panelId)
+  );
 }
 
 const containersCache: Container[] = [];

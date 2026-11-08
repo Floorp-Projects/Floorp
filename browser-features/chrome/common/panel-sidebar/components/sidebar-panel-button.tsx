@@ -126,8 +126,8 @@ export function PanelSidebarButton(props: {
       const signal = eligible
         ? getUnreadBadge(url, uri.spec, page.documentTitle)
         : "";
-      if (eligible && signal !== undefined && pendingDismissal) {
-        badgeState.clear(pendingDismissal);
+      if (eligible && pendingDismissal) {
+        if (signal !== undefined) badgeState.clear(pendingDismissal);
         pendingDismissal = undefined;
       }
       const liveCount = badgeState.update(signal);

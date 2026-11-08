@@ -2,14 +2,17 @@
 
 import type { Panel } from "./type.ts";
 
+/** Name the local saved-count preference for a panel. */
 function prefName(id: string): string {
   return `floorp.panelSidebar.savedUnread.${encodeURIComponent(id)}`;
 }
 
+/** Remove the panel’s saved count from the profile. */
 export function removeSavedUnreadBadge(id: string): void {
   Services.prefs.clearUserPref(prefName(id));
 }
 
+/** Access the saved count for an opted-in Google Messages panel. */
 export function savedUnreadBadgeForPanel(panel: Panel) {
   if (URL.parse(panel.url ?? "")?.origin !== "https://messages.google.com") {
     return;

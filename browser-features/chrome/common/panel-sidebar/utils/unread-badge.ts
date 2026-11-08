@@ -22,6 +22,7 @@ const services = [
   ["https://voice.google.com", /^\//, /^(?:Google )?Voice$/i],
 ] as const;
 
+/** Match an approved HTTPS origin and messaging route. */
 function getService(spec: string) {
   const url = URL.parse(spec);
   if (!url || url.protocol !== "https:" || url.username || url.password) {
@@ -32,6 +33,7 @@ function getService(spec: string) {
   );
 }
 
+/** Check whether a configured web panel can supply badge signals. */
 export function supportsUnreadBadge(configuredURL: string): boolean {
   return getService(configuredURL) !== undefined;
 }
@@ -39,6 +41,7 @@ export function supportsUnreadBadge(configuredURL: string): boolean {
 // Gecko has already loaded and validated this icon for the inner tab.
 // Only mirror in-memory raster data. In particular, never load a page-supplied
 // remote URL or an SVG into browser chrome.
+/** Return a bounded, already-loaded raster icon for eligible Google panels. */
 export function getUnreadFavicon(
   configuredURL: string,
   documentURL: string,
@@ -60,6 +63,7 @@ export function getUnreadFavicon(
     : undefined;
 }
 
+/** Read a bounded title count, explicit clear, or missing signal. */
 export function getUnreadBadge(
   configuredURL: string,
   documentURL: string,
@@ -102,6 +106,7 @@ export function getUnreadBadge(
 
 // undefined means the eligible page currently exposes no count. An empty
 // string is an explicit zero or a loss of the eligible browsing context.
+/** Retain the last count and suppress a count the user dismissed. */
 export function createUnreadBadgeState() {
   let lastCount = "";
   let dismissedCount: string | undefined;

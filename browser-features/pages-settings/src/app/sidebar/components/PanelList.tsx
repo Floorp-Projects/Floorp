@@ -18,7 +18,6 @@ import {
   useSensors,
 } from "@dnd-kit/core";
 import {
-  arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
   useSortable,
@@ -31,7 +30,7 @@ import {
   deletePanel,
   getPanelsList,
   getStaticPanelDisplayName,
-  savePanelsList,
+  reorderPanel,
   updatePanel,
 } from "../dataManager.ts";
 import type {
@@ -275,15 +274,9 @@ export const PanelList: React.FC = () => {
     const { active, over } = event;
     if (!over || active.id === over.id || savingOrder.current) return;
 
-    const oldIndex = panels.findIndex((panel) => panel.id === active.id);
-    const newIndex = panels.findIndex((panel) => panel.id === over.id);
-    if (oldIndex < 0 || newIndex < 0) return;
-
-    const reordered = arrayMove(panels, oldIndex, newIndex);
     savingOrder.current = true;
     try {
-      await savePanelsList(reordered);
-      setPanels(reordered);
+      setPanels(await reorderPanel(String(active.id), String(over.id)));
     } catch (error) {
       console.error("[PanelSidebar] Failed to save panel order", error);
       const saved = await getPanelsList().catch(() => null);
