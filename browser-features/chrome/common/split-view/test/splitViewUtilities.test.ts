@@ -14,6 +14,7 @@ import { hasLiveSplitPanelsState } from "../utils/live-split-ui.ts";
 import { orderSplitGroupTabsForRestore } from "../utils/order-split-group-tabs.ts";
 import { reorderSplitTabsForDesiredOrderImpl } from "../utils/reorder-strip-impl.ts";
 import { resetSplitPanelPresentationState } from "../utils/reset-split-panel-presentation.ts";
+import { syncSplitDeckSelectedClasses } from "../utils/sync-split-deck-selected.ts";
 import { runTests } from "../../../test/utils/test_harness.ts";
 
 function assertEquals(
@@ -315,6 +316,10 @@ class FakeClassList {
     return this.names.has(name);
   }
 
+  add(name: string): void {
+    this.names.add(name);
+  }
+
   remove(...names: string[]): void {
     for (const name of names) {
       this.names.delete(name);
@@ -327,7 +332,11 @@ class FakePanel {
   readonly attrs: Set<string>;
   readonly classList: FakeClassList;
 
-  constructor(classNames: string[], attrs: string[]) {
+  constructor(
+    classNames: string[],
+    attrs: string[],
+    readonly id = "",
+  ) {
     this.classNames = new Set(classNames);
     this.attrs = new Set(attrs);
     this.classList = new FakeClassList(this.classNames);
@@ -396,6 +405,63 @@ function testResetSplitPanelPresentationState(): void {
   );
 }
 
+function testSyncSplitDeckSelectedClasses(): void {
+  // DOM order seen after a split view is created before a normal tab:
+  // pane0, pane1, normal. Selecting pane0 while it is still loading leaves
+  // the async switcher showing `normal`, which still has deck-selected.
+  const pane0 = new FakePanel(
+    ["split-view-panel", "split-view-panel-active", "deck-selected"],
+    [],
+    "pane0",
+  );
+  const pane1 = new FakePanel(
+    ["split-view-panel", "split-view-panel-active"],
+    [],
+    "pane1",
+  );
+  const normal = new FakePanel(["deck-selected"], [], "normal");
+  const other = new FakePanel([], [], "other");
+  const notYetSplit = new FakePanel([], [], "pane2");
+
+  const cleared = syncSplitDeckSelectedClasses(
+    [pane0, pane1, normal, other, notYetSplit],
+    ["pane0", "pane1", "pane2"],
+  );
+
+  assertEquals(
+    pane0.classList.contains("deck-selected"),
+    true,
+    "selected split pane keeps deck-selected",
+  );
+  assertEquals(
+    pane1.classList.contains("deck-selected"),
+    true,
+    "other split pane gets deck-selected",
+  );
+  assertEquals(
+    normal.classList.contains("deck-selected"),
+    false,
+    "previously shown normal tab panel loses stale deck-selected",
+  );
+  assertEquals(
+    other.classList.contains("deck-selected"),
+    false,
+    "unrelated panel stays without deck-selected",
+  );
+  assertEquals(
+    notYetSplit.classList.contains("deck-selected"),
+    false,
+    "panel without split-view-panel class is not marked",
+  );
+  assertDeepEquals(cleared, ["normal"], "only the stale panel is reported");
+
+  const again = syncSplitDeckSelectedClasses(
+    [pane0, pane1, normal, other, notYetSplit],
+    ["pane0", "pane1", "pane2"],
+  );
+  assertDeepEquals(again, [], "second sync is a no-op");
+}
+
 export async function runAllTests(): Promise<void> {
   await runTests("splitViewUtilities.test.ts", [
     { name: "layout resolution", fn: testLayoutResolution },
@@ -416,6 +482,10 @@ export async function runAllTests(): Promise<void> {
     {
       name: "reset split panel presentation state",
       fn: testResetSplitPanelPresentationState,
+    },
+    {
+      name: "sync split deck-selected classes",
+      fn: testSyncSplitDeckSelectedClasses,
     },
   ]);
 }
