@@ -632,6 +632,84 @@ function testLwtCustomizationSurfaceInRealBrowser(): void {
   }
 }
 
+/** Extract the overlapping-F11 LWT toolbox rule (Issue #2759) from the emitted
+ * compat CSS, together with the text that precedes it, so the tests below
+ * check the production stylesheet rather than a copy of the selector. */
+function extractLwtFullscreenToolboxRule(): {
+  selector: string;
+  preceding: string;
+} {
+  const match = LEPTON_COMPAT_152_CSS.match(
+    /([^{}]+)\{\s*background:\s*inherit;\s*background-attachment:\s*fixed;\s*\}/,
+  );
+  const selector = match?.[1]?.trim() ?? "";
+  assert(
+    selector.includes("#navigator-toolbox"),
+    "compat layer should repaint the overlapping F11 toolbox under an LWT",
+  );
+  return {
+    selector,
+    preceding: LEPTON_COMPAT_152_CSS.slice(0, match?.index ?? 0),
+  };
+}
+
+/** The repaint must only exist while Lepton actually overlaps the toolbox on
+ *  the content: both prefs that gate Lepton's own overlap rules wrap it. */
+function testLwtFullscreenToolboxFollowsLeptonOverlapPrefs(): void {
+  const { preceding } = extractLwtFullscreenToolboxRule();
+  const tail = preceding.slice(
+    preceding.lastIndexOf('-moz-pref("userChrome.fullscreen.overlap")'),
+  );
+  assert(
+    tail.startsWith('-moz-pref("userChrome.fullscreen.overlap")') &&
+      tail.includes('@media -moz-pref("browser.fullscreen.autohide")'),
+    "the F11 toolbox repaint should be gated by the same prefs as Lepton's " +
+      "overlap rules",
+  );
+}
+
+/** Selector semantics, evaluated in a detached document so the live browser
+ *  window is not put into a fake fullscreen state. */
+function testLwtFullscreenToolboxSelectorScope(): void {
+  const { selector } = extractLwtFullscreenToolboxRule();
+  const doc = document.implementation.createHTMLDocument("");
+  const toolbox = doc.createElement("div");
+  toolbox.id = "navigator-toolbox";
+  doc.body.appendChild(toolbox);
+  const root = doc.documentElement;
+  const matchesWith = (attrs: Record<string, string>): boolean => {
+    for (const name of ["lwtheme", "sizemode", "inDOMFullscreen"]) {
+      root.removeAttribute(name);
+    }
+    for (const [name, value] of Object.entries(attrs)) {
+      root.setAttribute(name, value);
+    }
+    return toolbox.matches(selector);
+  };
+
+  assert(
+    matchesWith({ lwtheme: "true", sizemode: "fullscreen" }),
+    "an LWT in F11 fullscreen should get the opaque toolbox repaint",
+  );
+  assert(
+    !matchesWith({ sizemode: "fullscreen" }),
+    "the no-theme case keeps Lepton's own toolbox fill",
+  );
+  assert(
+    !matchesWith({ lwtheme: "true", sizemode: "maximized" }),
+    "outside fullscreen the LWT toolbox must stay transparent so the body " +
+      "artwork shows through",
+  );
+  assert(
+    !matchesWith({
+      lwtheme: "true",
+      sizemode: "fullscreen",
+      inDOMFullscreen: "true",
+    }),
+    "DOM (video) fullscreen hides the toolbox and must be excluded",
+  );
+}
+
 /** Gecko 152 uses [sidebar-positionend] as a boolean presence attribute. The
  *  compat selector must therefore match every present value, not only
  *  [sidebar-positionend="true"]. */
@@ -773,6 +851,14 @@ export async function runAllTests(): Promise<void> {
     {
       name: "compat fixes panel background (transparent panel symptom)",
       fn: testCompatFixesPanelBackground,
+    },
+    {
+      name: "LWT F11 toolbox repaint follows Lepton overlap prefs",
+      fn: testLwtFullscreenToolboxFollowsLeptonOverlapPrefs,
+    },
+    {
+      name: "LWT F11 toolbox repaint is scoped to overlapping fullscreen",
+      fn: testLwtFullscreenToolboxSelectorScope,
     },
     {
       name: "right-sidebar compat uses attribute presence",
