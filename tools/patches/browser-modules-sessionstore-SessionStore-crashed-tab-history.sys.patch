@@ -1,7 +1,7 @@
 diff --git a/moz-src/browser/components/sessionstore/SessionStore.sys.mjs b/moz-src/browser/components/sessionstore/SessionStore.sys.mjs
 --- a/moz-src/browser/components/sessionstore/SessionStore.sys.mjs
 +++ b/moz-src/browser/components/sessionstore/SessionStore.sys.mjs
-@@ -3588,12 +3588,40 @@ class _SessionStore {
+@@ -3588,12 +3588,50 @@ class _SessionStore {
     *        The <xul:browser> that is now in the crashed state.
     */
    #onBrowserCrashed(aBrowser) {
@@ -23,7 +23,17 @@ diff --git a/moz-src/browser/components/sessionstore/SessionStore.sys.mjs b/moz-
 +   */
 +  #collectSessionHistoryOnCrash(browser) {
 +    let browsingContext = browser.browsingContext;
-+    if (!browsingContext?.sessionHistory || browsingContext.isDiscarded) {
++    let sessionHistory = browsingContext?.sessionHistory;
++    if (!sessionHistory || browsingContext.isDiscarded) {
++      return;
++    }
++
++    // Like #createSHistoryListener, don't overwrite the cached history with
++    // a synthetic about:blank entry when nothing has been committed yet.
++    if (
++      browsingContext.currentURI?.spec === "about:blank" &&
++      sessionHistory.count === 0
++    ) {
 +      return;
 +    }
 +
