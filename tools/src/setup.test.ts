@@ -7,6 +7,7 @@
  */
 
 import {
+  assert,
   assertEquals,
   assertFalse,
   assertRejects,
@@ -174,7 +175,10 @@ Deno.test("prepareRuntime falls back to symlink-preserving copy", () =>
     const source = path.join(root, "registry", "bin");
     writeRuntimeTree(source);
     Deno.writeTextFileSync(path.join(source, "target.txt"), "target");
-    Deno.symlinkSync("target.txt", path.join(source, "link.txt"));
+    // Windows cannot infer the type of a relative target from the cwd.
+    Deno.symlinkSync("target.txt", path.join(source, "link.txt"), {
+      type: "file",
+    });
     const binRootDir = path.join(root, "target", "_dist", "bin");
 
     const mode = await copyRuntimeTree(source, binRootDir);
@@ -283,7 +287,29 @@ Deno.test("prepareVite refuses while a dev server owns the cache", () =>
     assertEquals(exists(cacheDir), true);
   }));
 
-Deno.test("noraneko-devdir mount links are relative and stable", () =>
+/**
+ * The injector stores relative mount links on POSIX (a copied `_dist/bin`
+ * resolves inside its own worktree) and absolute targets on Windows (its
+ * junction fallback can only store an absolute path; see injector.ts).
+ */
+const RELATIVE_MOUNT_LINKS = Deno.build.os !== "windows";
+
+/** Strip the Win32 extended-length prefix a junction target may carry. */
+function stripExtendedPrefix(target: string): string {
+  return target.startsWith("\\\\?\\") ? target.slice(4) : target;
+}
+
+async function assertMountLinkForm(link: string, label: string) {
+  const stored = stripExtendedPrefix(await Deno.readLink(link));
+  if (RELATIVE_MOUNT_LINKS) {
+    assertFalse(path.isAbsolute(stored), `${label} link must be relative`);
+  } else {
+    assert(path.isAbsolute(stored), `${label} link must be absolute`);
+  }
+  return stored;
+}
+
+Deno.test("noraneko-devdir mount links use the per-OS form and are stable", () =>
   withTempDir(async (root) => {
     const binRootDir = path.join(root, "_dist", "bin");
     Deno.mkdirSync(binRootDir, { recursive: true });
@@ -291,24 +317,23 @@ Deno.test("noraneko-devdir mount links are relative and stable", () =>
     runInjector("dev", "noraneko-devdir", options);
 
     const link = path.join(binRootDir, "noraneko-devdir", "content");
-    const stored = await Deno.readLink(link);
-    assertFalse(path.isAbsolute(stored), "content link must be relative");
+    const stored = await assertMountLinkForm(link, "content");
     assertEquals(
-      path.resolve(path.dirname(link), stored),
-      path.join(PROJECT_ROOT, "bridge", "loader-features", "_dist"),
+      path.resolve(path.dirname(link), stored).toLowerCase(),
+      path.join(PROJECT_ROOT, "bridge", "loader-features", "_dist")
+        .toLowerCase(),
     );
 
     for (const mount of ["startup", "skin", "resource", "pages-settings"]) {
-      const mountLink = path.join(binRootDir, "noraneko-devdir", mount);
-      assertFalse(
-        path.isAbsolute(await Deno.readLink(mountLink)),
-        `${mount} link must be relative`,
+      await assertMountLinkForm(
+        path.join(binRootDir, "noraneko-devdir", mount),
+        mount,
       );
     }
 
-    // Re-running keeps the links relative (and the manifest entry once).
+    // Re-running keeps the same link form (and the manifest entry once).
     runInjector("dev", "noraneko-devdir", options);
-    assertFalse(path.isAbsolute(await Deno.readLink(link)));
+    await assertMountLinkForm(link, "content (re-run)");
     const manifest = Deno.readTextFileSync(
       path.join(binRootDir, "chrome.manifest"),
     );

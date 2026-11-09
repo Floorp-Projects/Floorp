@@ -114,11 +114,22 @@ export async function resolveAutoDevPortOffset(
   throw new Error("No free --port-offset auto candidate found");
 }
 
+/**
+ * Marionette's own default port. Offset 0 writes no `marionette.port` pref
+ * (dev_env_manager.ts), so the browser keeps this default.
+ */
+export const MARIONETTE_DEFAULT_PORT = 2828;
+
+/** The Marionette port a launch with `offset` actually listens on. */
+export function launchMarionettePort(offset: number): number {
+  return offset > 0 ? marionettePortForOffset(offset) : MARIONETTE_DEFAULT_PORT;
+}
+
 /** Human-readable start-log description of the resolved launch topology. */
 export function describeLaunchPorts(offset: number): string {
   return [
     `port-offset=${offset}`,
-    `marionette=${marionettePortForOffset(offset)}`,
+    `marionette=${launchMarionettePort(offset)}`,
     `pref=${DEV_PORT_OFFSET_PREF}`,
   ].join(" ");
 }

@@ -40,6 +40,7 @@ import {
   writeEvidenceManifest,
 } from "./src/fdh_evidence.ts";
 import { buildVerifyCommands, parseBuildPhase } from "./src/fdh_verify.ts";
+import { assertSourceBuildAllowed } from "./src/fdh_dev_guard.ts";
 import {
   FDH_REVIEW_RECEIPT_MARKER,
   FDH_REVIEW_RECEIPT_SCHEMA_VERSION,
@@ -52,7 +53,9 @@ import type {
   ReviewTier,
   ReviewVerdict,
 } from "./src/fdh_review.ts";
-import { prepareSetup } from "./src/setup.ts";
+// setup.ts reaches npm:fflate, so it is loaded lazily in `task prepare` after
+// prepareDeps; a static import would break every command in a fresh worktree.
+import { prepareDeps } from "./src/setup_deps.ts";
 import type { SetupRecord } from "./src/setup.ts";
 import {
   approveQuota,
@@ -111,6 +114,8 @@ Commands:
                             inject (after-mach); default all. --phase after-mach
                             keeps the legacy inject-only fast path, and --phase
                             before-mach skips the Runtime-dependent inject.
+                            all/before-mach are refused while this worktree's
+                            dev server runs: 'dev down', build, then 'dev up'.
   verify test --task-id <id>
                             Run "deno task test:host"
   verify browser --task-id <id> [--eval <js>] [--expect <text>]
@@ -367,8 +372,12 @@ async function cmdTaskPrepare(parsed: ParsedArgs): Promise<void> {
     );
   }
 
+  // Install npm deps before loading setup.ts: its import graph needs fflate.
+  const deps = prepareDeps({ projectRoot: state.worktree });
+  const { prepareSetup } = await import("./src/setup.ts");
   const record: SetupRecord = await prepareSetup({
     projectRoot: state.worktree,
+    depsResult: deps,
     runtime: { sourcePath: runtimeSource },
   });
 
@@ -640,18 +649,35 @@ async function runVerify(
   const taskId = validateTaskId(requireOption(parsed, "task-id"));
   const state = await loadStateForCwd(taskId);
 
-  const specs = kind === "build"
-    ? buildVerifyCommands(
-      parseBuildPhase(
-        hasOption(parsed, "phase") ? requireOption(parsed, "phase") : undefined,
-      ),
+  const phase = kind === "build"
+    ? parseBuildPhase(
+      hasOption(parsed, "phase") ? requireOption(parsed, "phase") : undefined,
     )
-    : [{
-      displayCommand: "deno task test:host",
-      args: ["task", "test:host"],
-      assertionName: "host-test-exit-code",
-      expected: "exit code 0",
-    }];
+    : undefined;
+
+  // W-04: a source build under this worktree's running dev browser wedges
+  // Marionette sessions. Refuse before spawning, and keep the refusal visible.
+  if (phase !== undefined) {
+    try {
+      await assertSourceBuildAllowed(state.worktree, phase);
+    } catch (error) {
+      appendEvent(state, {
+        timestamp: nowIso(),
+        command: `verify build --phase ${phase} (refused)`,
+        note: error instanceof Error ? error.message : String(error),
+        exitCode: 1,
+      });
+      writeTaskState(state);
+      throw error;
+    }
+  }
+
+  const specs = phase !== undefined ? buildVerifyCommands(phase) : [{
+    displayCommand: "deno task test:host",
+    args: ["task", "test:host"],
+    assertionName: "host-test-exit-code",
+    expected: "exit code 0",
+  }];
 
   // Run the phases in order and stop at the first failure: a failed source
   // compile must leave the injector unrun, and the failing assertion is

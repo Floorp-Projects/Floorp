@@ -62,17 +62,22 @@ deno run -A tools/fdh.ts task prepare --task-id <task-id> \
 #    reruns push/PR or other non-idempotent external operations.
 deno run -A tools/fdh.ts task resume --task-id <task-id>
 
-# 5. Start the dev environment with the recorded offset (never re-resolves
-#    "auto"). setup.guardEnv (FLOORP_SKIP_PATCHER=1) is passed to the child,
-#    so no manual export is needed after task prepare.
-deno run -A tools/fdh.ts dev up --task-id <task-id>
-
-# 6. Record the build assertion. The default phase `all` compiles the source
-#    first (before-mach) and then rewrites the Runtime XHTML (after-mach), so a
-#    broken TypeScript source fails here. --phase after-mach is the legacy
-#    inject-only fast path; --phase before-mach skips the Runtime-dependent
-#    inject (useful in a fresh worktree before the Runtime is installed).
+# 5. Record the build assertion BEFORE starting the dev environment. The
+#    default phase `all` compiles the source first (before-mach) and then
+#    rewrites the Runtime XHTML (after-mach), so a broken TypeScript source
+#    fails here. --phase after-mach is the legacy inject-only fast path;
+#    --phase before-mach skips the Runtime-dependent inject (useful in a fresh
+#    worktree before the Runtime is installed). all/before-mach are refused
+#    while this worktree's dev server runs: a source build under a live dev
+#    browser leaves Marionette unable to start new sessions until restart. To
+#    rebuild after a later edit: `dev down`, `verify build`, `dev up`.
 deno run -A tools/fdh.ts verify build --task-id <task-id> [--phase <all|before-mach|after-mach>]
+
+# 6. Start the dev environment with the recorded offset (never re-resolves
+#    "auto"). setup.guardEnv (FLOORP_SKIP_PATCHER=1) is passed to the child,
+#    so no manual export is needed after task prepare. Edits made while it runs
+#    reach the browser through Vite HMR without a rebuild.
+deno run -A tools/fdh.ts dev up --task-id <task-id>
 
 # 7. Record the host test assertion (deno task test:host).
 deno run -A tools/fdh.ts verify test --task-id <task-id>
@@ -228,6 +233,10 @@ deno run -A tools/fdh.ts secrets status
   assertion, and the evidence manifest then adds a limitation that source
   compilation was not verified. `--phase before-mach` records only the source
   assertion.
+- `verify build --phase all|before-mach` exits 1 without spawning anything when
+  this worktree's recorded dev processes (`_dist/dev-processes.json`, matched by
+  PID + start time + command line) are still running, and records a
+  `verify build ... (refused)` event. `--phase after-mach` is always allowed.
 - `verify browser` succeeds only when `dev-tool status` prints
   `Connected to browser.` Without that line, do not claim browser verification.
 - `--eval` output is always recorded verbatim. Without `--expect` it is never a

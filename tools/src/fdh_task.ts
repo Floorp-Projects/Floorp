@@ -807,7 +807,11 @@ export async function recordExternalOperation(
     output: tail(text, input.maxOutputChars ?? 4000),
     external: {
       operator,
-      logRef: path.relative(worktree, observationPath),
+      // Always '/'-separated so the recorded evidence reads the same on every
+      // OS; path.resolve accepts it on Windows too (W-01).
+      logRef: path.relative(worktree, observationPath)
+        .split(path.SEPARATOR)
+        .join("/"),
       logSha256: await sha256Hex(bytes),
       bytes: bytes.length,
       attestedAt,
