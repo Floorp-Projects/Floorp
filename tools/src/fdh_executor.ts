@@ -595,6 +595,11 @@ export function cancelJob(
   if (isTerminal(job.state)) {
     throw new Error(`job ${job.jobId} is already ${job.state}`);
   }
+  if (job.state === "cancel_requested") {
+    // Already requested: the holder stops at its next heartbeat, or a
+    // reconcile closes the job once the holder is gone. Not a force.
+    return job.state;
+  }
   const note = reason === ""
     ? "cancel requested"
     : `cancel requested: ${reason}`;
@@ -1554,32 +1559,37 @@ export async function runExecutor(
     });
 
     try {
+      // The identity lookup (PowerShell on Windows, can take seconds) runs
+      // alongside the heartbeats, so a short TTL does not expire meanwhile;
+      // it is recorded at the first tick after it resolves. Identity is
+      // best-effort: without it, a controller cannot stop a lost step tree.
+      const found: { identity: ProcessIdentity | null; recorded: boolean } = {
+        identity: null,
+        recorded: false,
+      };
       const lookup = running.identity ??
         (running.pid !== undefined && options.identify !== undefined
           ? options.identify(running.pid)
           : undefined);
-      if (lookup !== undefined) {
-        let identity: ProcessIdentity | null = null;
-        try {
-          identity = await lookup;
-        } catch {
-          // Identity is best-effort: without it, a lost attempt's step cannot
-          // be stopped by a controller, which the journal notes record.
-        }
-        if (identity !== null) {
-          await updateJob(
-            worktree,
-            taskId,
-            jobId,
-            (job) => recordStepProcess(job, epoch, holder, identity!),
-          );
-        }
-      }
+      lookup?.then((identity) => {
+        found.identity = identity;
+      }).catch(() => {});
       while (done.code === null) {
         const tick = sleepFor(heartbeatMs);
         await Promise.race([status, tick.promise]);
         tick.cancel();
         if (done.code !== null) break;
+        if (found.identity !== null && !found.recorded) {
+          // Recorded even while stalled: it belongs to starting the step.
+          const identity = found.identity;
+          await updateJob(
+            worktree,
+            taskId,
+            jobId,
+            (job) => recordStepProcess(job, epoch, holder, identity),
+          );
+          found.recorded = true;
+        }
         if (Date.parse(now()) < stallUntil) continue;
         let beat: HeartbeatResult;
         try {

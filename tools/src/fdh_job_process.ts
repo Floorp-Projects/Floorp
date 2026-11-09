@@ -27,12 +27,22 @@ export function resolveProgram(program: string): string {
   return program === "deno" ? Deno.execPath() : program;
 }
 
-/** Times compare as instants when both parse, else as strings. */
-function startedNoEarlier(child: string, parent: string): boolean {
+/**
+ * Did `child` start at or after `parent`? Windows and macOS give ISO or
+ * ps `lstart` times; Linux gives `<boot-id>:<start-ticks>`, compared
+ * numerically within one boot. Anything else is not comparable: false.
+ */
+export function startedNoEarlier(child: string, parent: string): boolean {
+  const ticks = /^(.+):(\d+)$/;
+  const c = ticks.exec(child);
+  const p = ticks.exec(parent);
+  if (c && p && !/^\d{4}-/.test(child)) {
+    return c[1] === p[1] && Number(c[2]) >= Number(p[2]);
+  }
   const a = Date.parse(child);
   const b = Date.parse(parent);
   if (Number.isFinite(a) && Number.isFinite(b)) return a >= b;
-  return child >= parent;
+  return false;
 }
 
 /**
@@ -51,10 +61,14 @@ export function selectProcessTree(
     byParent.set(process.ppid, list);
   }
   const selected: DevProcessInfo[] = [];
-  const live = snapshot.find((p) =>
-    p.pid === root.pid && p.startTime === root.startTime &&
-    p.commandLine === root.commandLine
-  );
+  const holder = snapshot.find((p) => p.pid === root.pid);
+  const live = holder !== undefined && holder.startTime === root.startTime &&
+      holder.commandLine === root.commandLine
+    ? holder
+    : undefined;
+  // The root's pid now belongs to another process: children with that
+  // parent pid may be that process's, not ours. Select nothing.
+  if (holder !== undefined && live === undefined) return [];
   if (live !== undefined) selected.push(live);
   const queue: Array<{ pid: number; startTime: string }> = [{
     pid: root.pid,
@@ -94,15 +108,20 @@ export async function identifyProcess(
 export async function stopProcessTree(
   root: ProcessIdentity,
 ): Promise<DevProcessInfo[]> {
-  if (Deno.build.os !== "windows") {
+  const snapshot = await listDevProcesses();
+  const tree = selectProcessTree(snapshot, root);
+  const rootIsLive = tree.some((p) =>
+    p.pid === root.pid && p.startTime === root.startTime
+  );
+  if (Deno.build.os !== "windows" && rootIsLive) {
     try {
-      // The step command leads its own process group (detached spawn).
+      // The step command leads its own process group (detached spawn); only
+      // signal the group while its leader is identity-matched.
       Deno.kill(-root.pid, "SIGTERM");
     } catch {
-      // The group is gone or was never created; the snapshot below decides.
+      // The group is gone; the per-process stop below still runs.
     }
   }
-  const tree = selectProcessTree(await listDevProcesses(), root);
   if (tree.length > 0) await terminateDevProcesses(tree);
   return tree;
 }

@@ -246,7 +246,11 @@ export async function runExecutorProcess(
   note(`${holder} starting epoch ${epoch}`);
   try {
     const job = readJob(worktree, taskId, jobId);
-    const fault = parseExecutorFault(Deno.env.get("FDH_JOB_FAULT"));
+    // Fault injection needs an explicit second switch, so a stray
+    // FDH_JOB_FAULT in an agent's shell never reaches a real executor.
+    const fault = Deno.env.get("FDH_JOB_FAULT_ENABLE") === "1"
+      ? parseExecutorFault(Deno.env.get("FDH_JOB_FAULT"))
+      : null;
     if (fault !== null) note(`fault injection: ${JSON.stringify(fault)}`);
     const outcome = await runExecutor({
       worktree,
@@ -283,9 +287,24 @@ export async function settleJob(
   taskId: string,
   jobId: string,
 ): Promise<boolean> {
-  const job = readJob(worktree, taskId, jobId);
-  if (!isTerminal(job.state) || job.recordedToTask) return false;
-  const marker = `job result ${jobId}`;
+  // The whole copy runs under the journal lock with `recordedToTask` as the
+  // guard, so two settlers (the executor after its ACK and a controller) do
+  // not both record. Lock order: journal, then task state.
+  const { value } = await updateJob(worktree, taskId, jobId, (job) => {
+    if (!isTerminal(job.state) || job.recordedToTask) return false;
+    copyResultToTask(worktree, taskId, job);
+    markRecordedToTask(job);
+    return true;
+  });
+  return value;
+}
+
+function copyResultToTask(
+  worktree: string,
+  taskId: string,
+  job: JobJournal,
+): void {
+  const marker = `job result ${job.jobId}`;
   const state = readTaskState(worktree, taskId);
   if (!state.events.some((e) => e.command === marker)) {
     for (const result of job.commandResults) {
@@ -331,10 +350,6 @@ export async function settleJob(
     });
     writeTaskState(state);
   }
-  await updateJob(worktree, taskId, jobId, (j) => {
-    if (isTerminal(j.state) && !j.recordedToTask) markRecordedToTask(j);
-  });
-  return true;
 }
 
 /** Note text that links a quota pending entry to its job. */
@@ -414,23 +429,29 @@ export async function reconcileTaskJobs(
       epoch: job.epoch,
       action: value.action,
     };
+    // Stop what a lost (or, after a pending cancel, abandoned) attempt left
+    // running: before the next epoch runs the same step, and also when the
+    // job closes, so an orphaned build does not keep writing to the worktree.
+    // On respawn the lost attempt is the one before the new; otherwise it is
+    // the last one.
+    const lostAttempt = value.action === "respawn"
+      ? job.attempts[job.attempts.length - 2]
+      : value.action === "input-changed" || value.action === "gave-up" ||
+          value.action === "cancelled"
+      ? job.attempts[job.attempts.length - 1]
+      : undefined;
+    if (lostAttempt?.process != null) {
+      const root = lostAttempt.process;
+      const stopped = await (options.stopTree ?? stopProcessTree)(root);
+      report.stopped = stopped.length;
+      await updateJob(
+        state.worktree,
+        state.taskId,
+        jobId,
+        (j) => noteLostStepStopped(j, lostAttempt.epoch, root, stopped.length),
+      );
+    }
     if (value.action === "respawn") {
-      // Stop what the lost attempt left running before the next epoch runs
-      // the same step (identity-checked; a reused pid is not touched).
-      const lost = job.attempts[job.attempts.length - 2];
-      if (lost?.process != null) {
-        const stopped = await (options.stopTree ?? stopProcessTree)(
-          lost.process,
-        );
-        report.stopped = stopped.length;
-        await updateJob(
-          state.worktree,
-          state.taskId,
-          jobId,
-          (j) =>
-            noteLostStepStopped(j, lost.epoch, lost.process!, stopped.length),
-        );
-      }
       report.executorPid = (options.spawn ?? spawnExecutorProcess)(
         state.worktree,
         state.taskId,
@@ -614,5 +635,7 @@ export function summarizeJob(job: JobJournal) {
     intent: job.intent,
     recordedToTask: job.recordedToTask,
     events: job.events.length,
+    /** Journal, outbox, step logs and executor logs live here. */
+    jobsDir: jobsDir(job.worktree, job.taskId),
   };
 }

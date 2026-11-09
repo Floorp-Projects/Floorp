@@ -51,7 +51,7 @@ async function fdh(
   const output = await new Deno.Command(Deno.execPath(), {
     args: ["run", "-A", FDH, ...args],
     cwd: ROOT,
-    env: { FDH_JOB_FAULT: "", ...env },
+    env: { FDH_JOB_FAULT: "", FDH_JOB_FAULT_ENABLE: "", ...env },
     stdout: "piped",
     stderr: "piped",
   }).output();
@@ -282,6 +282,7 @@ const CASES: Record<string, (c: Case) => Promise<void>> = {
     const taskId = await newTask(c.id);
     const jobId = await startTest(taskId, [], {
       FDH_JOB_FAULT: "exit-after-outbox",
+      FDH_JOB_FAULT_ENABLE: "1",
     });
     await until("the executor to exit after its outbox", () => {
       const log = path.join(
@@ -325,6 +326,7 @@ const CASES: Record<string, (c: Case) => Promise<void>> = {
     const taskId = await newTask("e4");
     const jobId = await startTest(taskId, [], {
       FDH_JOB_FAULT: `stall:${4 * TTL}`,
+      FDH_JOB_FAULT_ENABLE: "1",
     });
     const done = await wait(taskId, jobId);
     // The stalled epoch-1 executor reports after its stall; wait for it.
