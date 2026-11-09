@@ -441,9 +441,21 @@ export function readTaskStateFor(
 // an OS lock on `<state>.lock`, re-reads the file, and merges:
 //   - events / operations / assertions are append-only: the entries this
 //     process appended since it loaded the state go after the file's entries;
-//   - every other field is a three-way merge: a field this process changed
-//     since loading wins, an unchanged one keeps the file's current value.
+//   - `taskId` and `worktree` always keep this process's value (the worktree
+//     is the canonical path `readTaskStateFor` resolved; the file may hold
+//     another spelling of the same directory);
+//   - every other top-level field is a three-way merge: a field whose JSON
+//     differs from what this process loaded wins, an unchanged one (or one
+//     set back to the loaded value) keeps the file's current value.
+// Limits: the merge is per top-level field, so two writers changing different
+// parts of `cleanup` or `setup` keep only the later one; editing an existing
+// array entry in place is not persisted (fdh only appends); a state object
+// that was never read or written (createTaskState, or a copy made with
+// spread/structuredClone) has no snapshot and overwrites the file.
 // ---------------------------------------------------------------------------
+
+/** Fields that identify the task and are never taken from the file. */
+const IDENTITY_KEYS = new Set(["taskId", "worktree"]);
 
 const APPEND_ONLY_KEYS = ["events", "operations", "assertions"] as const;
 type AppendOnlyKey = typeof APPEND_ONLY_KEYS[number];
@@ -487,7 +499,8 @@ function mergeTaskState(
   for (const key of keys) {
     if (isAppendOnlyKey(key)) continue;
     const mineValue = (mine as unknown as Record<string, unknown>)[key];
-    const changedHere = JSON.stringify(mineValue) !== loaded.fields.get(key);
+    const changedHere = IDENTITY_KEYS.has(key) ||
+      JSON.stringify(mineValue) !== loaded.fields.get(key);
     const value = changedHere
       ? mineValue
       : (current as unknown as Record<string, unknown>)[key];

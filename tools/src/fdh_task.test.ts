@@ -431,3 +431,20 @@ Deno.test("writeTaskState writes a new task's state as is", async () => {
     );
   });
 });
+
+Deno.test("writeTaskState keeps the canonical worktree from readTaskStateFor", async () => {
+  await withTempDir((dir) => {
+    const here = path.join(dir, "repo");
+    Deno.mkdirSync(here);
+    // The file records another spelling of the same directory.
+    writeStateUnder(here, {
+      ...makeState(here),
+      worktree: `${here}${path.SEPARATOR}`,
+    });
+    const state = readTaskStateFor(here, "task-one");
+    appendEvent(state, ev("verify build"));
+    writeTaskState(state);
+    assertEquals(state.worktree, here);
+    assertEquals(readTaskState(here, "task-one").worktree, here);
+  });
+});

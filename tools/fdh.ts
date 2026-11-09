@@ -511,7 +511,7 @@ async function cmdGui(
     writeGuiLease(file, current);
     return current;
   });
-  await appendTaskEventLocked(state.worktree, taskId, {
+  appendTaskEvent(state.worktree, taskId, {
     timestamp: nowIso(),
     command: reason === undefined ? "gui claim" : "gui end",
     note: reason === undefined
@@ -538,15 +538,14 @@ function samePath(a: string, b: string): boolean {
  * be wrapped in another lock on the same file: a second handle in the same
  * process would wait for itself.)
  */
-function appendTaskEventLocked(
+function appendTaskEvent(
   worktree: string,
   taskId: string,
   event: Parameters<typeof appendEvent>[1],
-): Promise<void> {
+): void {
   const fresh = readTaskState(worktree, taskId);
   appendEvent(fresh, event);
   writeTaskState(fresh);
-  return Promise.resolve();
 }
 
 async function cmdSecrets(
@@ -644,7 +643,7 @@ async function cmdQuota(
     return current;
   });
   const summary = summarizeQuota(ledger);
-  await appendTaskEventLocked(state.worktree, taskId, {
+  appendTaskEvent(state.worktree, taskId, {
     timestamp: nowIso(),
     command: `quota ${sub}`,
     note: JSON.stringify(summary),
