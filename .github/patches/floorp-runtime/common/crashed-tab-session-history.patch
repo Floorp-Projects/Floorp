@@ -1,0 +1,44 @@
+diff --git a/browser/components/sessionstore/SessionStore.sys.mjs b/browser/components/sessionstore/SessionStore.sys.mjs
+--- a/browser/components/sessionstore/SessionStore.sys.mjs
++++ b/browser/components/sessionstore/SessionStore.sys.mjs
+@@ -3588,12 +3588,40 @@ class _SessionStore {
+    *        The <xul:browser> that is now in the crashed state.
+    */
+   #onBrowserCrashed(aBrowser) {
++    this.#collectSessionHistoryOnCrash(aBrowser);
+     this.#enterCrashedState(aBrowser);
+     // The browser crashed so we might never receive flush responses.
+     // Resolve all pending flush requests for the crashed browser.
+     lazy.TabStateFlusher.resolveAll(aBrowser);
+   }
+ 
++  /**
++   * The crashed content process can no longer send its pending session
++   * history update, but session history is kept in the parent. Collect it
++   * before the browser enters the crashed state, so that a navigation made
++   * shortly before the crash is restored when the tab is revived.
++   *
++   * @param {MozBrowser} browser
++   *        The <xul:browser> that just crashed.
++   */
++  #collectSessionHistoryOnCrash(browser) {
++    let browsingContext = browser.browsingContext;
++    if (!browsingContext?.sessionHistory || browsingContext.isDiscarded) {
++      return;
++    }
++
++    try {
++      this.#getOrCreateSHistoryListener(
++        browser.permanentKey,
++        browsingContext
++      )?.collect(browser.permanentKey, browsingContext, {
++        writeToCache: true,
++      });
++    } catch (e) {
++      console.error("Failed to collect session history of a crashed tab", e);
++    }
++  }
++
+   /**
+    * Called when a browser is showing or is about to show the tab
+    * crashed page. This method causes SessionStore to ignore the
