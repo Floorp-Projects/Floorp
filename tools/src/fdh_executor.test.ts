@@ -12,6 +12,7 @@ import {
   beginAttempt,
   confirmIntent,
   createJob,
+  type CreateJobInput,
   DEFAULT_LEASE_TTL_MS,
   executionDigest,
   heartbeat,
@@ -19,9 +20,11 @@ import {
   type JobJournal,
   listJobIds,
   newJobId,
+  parseJobJournal,
   readJob,
   readOutbox,
   reconcileJob,
+  reconcileJobFile,
   resolveJob,
   runExecutor,
   type RunningStep,
@@ -42,8 +45,12 @@ const STEP: StepSpec = {
 };
 const INPUTS: JobInputs = { baseCommit: "abc", head: "def", guardEnv: {} };
 
-function stepJob(worktree = "/wt"): JobJournal {
+function stepJob(
+  worktree = "/wt",
+  extra: Partial<CreateJobInput> = {},
+): JobJournal {
   return createJob({
+    ...extra,
     jobId: "test-1",
     taskId: "t1",
     worktree,
@@ -52,6 +59,7 @@ function stepJob(worktree = "/wt"): JobJournal {
     inputs: INPUTS,
     executionDigest: "d1",
     at: at(0),
+    ...extra,
   });
 }
 
@@ -105,16 +113,19 @@ Deno.test("fdh executor E-1: a live executor is reconnected to, not restarted", 
   assertEquals(job.state, "running");
   assertEquals(heartbeat(job, 1, "x1", at(TTL)), "renewed");
   // A new controller after the old one stopped: the lease is still fresh.
-  assertEquals(reconcileJob(job, { at: at(TTL + TTL / 2) }), {
-    action: "alive",
-    epoch: 1,
-  });
+  assertEquals(
+    reconcileJob(job, { currentDigest: "d1", at: at(TTL + TTL / 2) }),
+    {
+      action: "alive",
+      epoch: 1,
+    },
+  );
   assertEquals(applyReport(job, report(1, 0, TTL + 1000), at(TTL + 1000)), {
     applied: true,
     state: "succeeded",
   });
   assertEquals(job.attempts.length, 1);
-  assertEquals(reconcileJob(job, { at: at(10 * TTL) }), {
+  assertEquals(reconcileJob(job, { currentDigest: "d1", at: at(10 * TTL) }), {
     action: "none",
     state: "succeeded",
   });
@@ -123,7 +134,7 @@ Deno.test("fdh executor E-1: a live executor is reconnected to, not restarted", 
 Deno.test("fdh executor E-2: a lost executor is replaced at epoch 2 and the job completes", () => {
   const job = stepJob();
   beginAttempt(job, 1, "x1", at(0));
-  assertEquals(reconcileJob(job, { at: at(TTL) }), {
+  assertEquals(reconcileJob(job, { currentDigest: "d1", at: at(TTL) }), {
     action: "alive",
     epoch: 1,
   });
@@ -168,7 +179,11 @@ Deno.test("fdh executor E-3: a failing outbox result is applied as failed, not r
   const job = stepJob();
   beginAttempt(job, 1, "x1", at(0));
   assertEquals(
-    reconcileJob(job, { at: at(3 * TTL), outbox: report(1, 2, 500) }),
+    reconcileJob(job, {
+      currentDigest: "d1",
+      at: at(3 * TTL),
+      outbox: report(1, 2, 500),
+    }),
     {
       action: "applied-outbox",
       state: "failed",
@@ -180,7 +195,10 @@ Deno.test("fdh executor E-3: a failing outbox result is applied as failed, not r
 Deno.test("fdh executor E-4/E-5: a stalled executor is fenced and its late report is rejected", () => {
   const job = stepJob();
   beginAttempt(job, 1, "x1", at(0));
-  assertEquals(reconcileJob(job, { at: at(TTL + 1) }).action, "respawn");
+  assertEquals(
+    reconcileJob(job, { currentDigest: "d1", at: at(TTL + 1) }).action,
+    "respawn",
+  );
   beginAttempt(job, 2, "x2", at(TTL + 2));
   // The old executor comes back: its heartbeat is fenced ...
   assertEquals(heartbeat(job, 1, "x1", at(TTL + 3)), "fenced");
@@ -191,7 +209,8 @@ Deno.test("fdh executor E-4/E-5: a stalled executor is fenced and its late repor
     applied: false,
     reason: "stale-epoch",
   });
-  assertEquals(job.attempts[0].result, "stale-rejected");
+  assertEquals(job.attempts[0].result, "lost");
+  assert(job.attempts[0].notes.includes("late report by x1 (exit 0)"));
   assertEquals(job.state, "running");
   assert(job.events.some((e) => e.kind === "stale-epoch" && e.epoch === 1));
   // The job's result is the newer attempt's.
@@ -214,17 +233,34 @@ Deno.test("fdh executor E-6: an unknown non-idempotent intent awaits approval an
   });
   assertEquals(job.state, "running");
   assertEquals(job.lease?.holder, "agent-a");
-  assertEquals(reconcileJob(job, { at: at(60_000) }).action, "alive");
-  assertEquals(reconcileJob(job, { at: at(60_000), holderGone: true }), {
-    action: "awaiting-approval",
-    epoch: 1,
-  });
+  assertEquals(
+    reconcileJob(job, { currentDigest: "d1", at: at(60_000) }).action,
+    "alive",
+  );
+  assertEquals(
+    reconcileJob(job, {
+      currentDigest: "d1",
+      at: at(60_000),
+      holderGone: true,
+    }),
+    {
+      action: "awaiting-approval",
+      epoch: 1,
+    },
+  );
   assertEquals(job.state, "awaiting-approval");
   assertEquals(job.attempts.length, 1);
-  assertEquals(reconcileJob(job, { at: at(10 * 60_000), holderGone: true }), {
-    action: "none",
-    state: "awaiting-approval",
-  });
+  assertEquals(
+    reconcileJob(job, {
+      currentDigest: "d1",
+      at: at(10 * 60_000),
+      holderGone: true,
+    }),
+    {
+      action: "none",
+      state: "awaiting-approval",
+    },
+  );
   // A late confirm from the lost holder does not decide the outcome.
   assertEquals(
     confirmIntent(job, 1, "agent-a", "succeeded", at(70_000)).applied,
@@ -258,7 +294,7 @@ Deno.test("fdh executor E-6: an approver can confirm or fail an unknown intent",
       at: at(0),
     });
   const done = make();
-  reconcileJob(done, { at: at(1_001) });
+  reconcileJob(done, { currentDigest: "d1", at: at(1_001) });
   resolveJob(done, "succeeded", "PR exists", undefined, at(2_000));
   assertEquals(done.state, "succeeded");
   assertEquals(done.transitions.slice(-2).map((t) => t.to), [
@@ -266,7 +302,7 @@ Deno.test("fdh executor E-6: an approver can confirm or fail an unknown intent",
     "succeeded",
   ]);
   const failed = make();
-  reconcileJob(failed, { at: at(1_001) });
+  reconcileJob(failed, { currentDigest: "d1", at: at(1_001) });
   resolveJob(failed, "failed", "", undefined, at(2_000));
   assertEquals(failed.state, "failed");
   assertThrows(
@@ -289,11 +325,11 @@ Deno.test("fdh executor E-7: changed inputs fail the job instead of rerunning it
 
 Deno.test("fdh executor: an executor that never starts is replaced after one TTL", () => {
   const job = stepJob();
-  assertEquals(reconcileJob(job, { at: at(TTL) }), {
+  assertEquals(reconcileJob(job, { currentDigest: "d1", at: at(TTL) }), {
     action: "alive",
     epoch: 1,
   });
-  assertEquals(reconcileJob(job, { at: at(TTL + 1) }), {
+  assertEquals(reconcileJob(job, { currentDigest: "d1", at: at(TTL + 1) }), {
     action: "respawn",
     epoch: 2,
   });
@@ -386,13 +422,18 @@ interface Harness {
     afterMs: number,
   ) => (s: StepSpec, log: string) => RunningStep;
   killed: { value: boolean };
+  /** Every sleep the executor asked for (milliseconds). */
+  sleeps: number[];
   /** Hold the fake clock at `ms` until `release()` is called. */
   gate: { at: number; release: () => void; reached: Promise<void> };
 }
 
-async function harness(): Promise<Harness> {
+async function harness(
+  extra: Partial<CreateJobInput> = {},
+): Promise<Harness> {
   const dir = await Deno.makeTempDir();
-  await writeNewJob(stepJob(dir));
+  await writeNewJob(stepJob(dir, extra));
+  const sleeps: number[] = [];
   const clock = { t: 0 };
   const killed = { value: false };
   const now = () => at(clock.t);
@@ -406,6 +447,7 @@ async function harness(): Promise<Harness> {
     reached,
   };
   const sleep = async (ms: number) => {
+    sleeps.push(ms);
     if (clock.t + ms >= gate.at) {
       reachedResolve();
       await open;
@@ -431,7 +473,7 @@ async function harness(): Promise<Harness> {
       },
     };
   };
-  return { dir, clock, now, sleep, step, killed, gate };
+  return { dir, clock, now, sleep, step, killed, gate, sleeps };
 }
 
 Deno.test("fdh executor run: a step runs with heartbeats, writes the outbox, then applies it", async () => {
@@ -480,7 +522,12 @@ Deno.test("fdh executor run: a fenced executor stops its step and writes no resu
       h.dir,
       "t1",
       "test-1",
-      (job) => reconcileJob(job, { holderGone: true, at: h.now() }),
+      (job) =>
+        reconcileJob(job, {
+          currentDigest: "d1",
+          holderGone: true,
+          at: h.now(),
+        }),
     );
     assertEquals(await run, { outcome: "fenced" });
     assert(h.killed.value);
@@ -523,6 +570,7 @@ Deno.test("fdh executor run: exit after the outbox (E-3) is recovered by reconci
       "test-1",
       (job) =>
         reconcileJob(job, {
+          currentDigest: "d1",
           at: at(5 * TTL),
           outbox: readOutbox(h.dir, "t1", "test-1", job.epoch),
         }),
@@ -557,13 +605,14 @@ Deno.test("fdh executor run: a stalled executor's report arrives at an old epoch
       h.dir,
       "t1",
       "test-1",
-      (job) => reconcileJob(job, { at: at(TTL + 1_000) }),
+      (job) => reconcileJob(job, { currentDigest: "d1", at: at(TTL + 1_000) }),
     );
     assertEquals(value, { action: "respawn", epoch: 2 });
     h.gate.release();
     assertEquals(await run, { outcome: "stale-rejected" });
     const job = readJob(h.dir, "t1", "test-1");
-    assertEquals(job.attempts[0].result, "stale-rejected");
+    assertEquals(job.attempts[0].result, "lost");
+    assert(job.attempts[0].notes.includes("late report by x1 (exit 0)"));
     assertEquals(job.attempts[1].result, "scheduled");
     assertEquals(job.state, "running");
   } finally {
@@ -577,14 +626,14 @@ Deno.test("fdh executor: a safe step that keeps losing its executor fails after 
   for (let epoch = 1; epoch <= 2; epoch++) {
     beginAttempt(job, epoch, `x${epoch}`, at(t));
     t += TTL + 1;
-    assertEquals(reconcileJob(job, { at: at(t) }), {
+    assertEquals(reconcileJob(job, { currentDigest: "d1", at: at(t) }), {
       action: "respawn",
       epoch: epoch + 1,
     });
   }
   beginAttempt(job, 3, "x3", at(t));
   t += TTL + 1;
-  assertEquals(reconcileJob(job, { at: at(t) }), {
+  assertEquals(reconcileJob(job, { currentDigest: "d1", at: at(t) }), {
     action: "gave-up",
     state: "failed",
   });
@@ -604,7 +653,7 @@ Deno.test("fdh executor: a report after its holder was declared lost is recorded
     holder: "agent-a",
     at: at(0),
   });
-  reconcileJob(job, { at: at(1), holderGone: true });
+  reconcileJob(job, { currentDigest: "d1", at: at(1), holderGone: true });
   assertEquals(confirmIntent(job, 1, "agent-a", "succeeded", at(2)), {
     applied: false,
     reason: "holder-lost",
@@ -633,6 +682,231 @@ Deno.test("fdh executor run: a step that cannot start is reported as a failed at
     assertEquals(job.attempts[0].exitCode, 127);
     const log = Deno.readTextFileSync(`${h.dir}/${job.attempts[0].logRef}`);
     assert(log.includes("spawn failed"));
+  } finally {
+    await Deno.remove(h.dir, { recursive: true });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// review findings (PR #3091)
+// ---------------------------------------------------------------------------
+
+Deno.test("fdh executor: a job whose executor never starts is closed through running, not stuck", () => {
+  // Default maxAttempts (3): two respawns, then gave-up.
+  const job = stepJob();
+  let t = 0;
+  for (const epoch of [2, 3]) {
+    t += TTL + 1;
+    assertEquals(reconcileJob(job, { currentDigest: "d1", at: at(t) }), {
+      action: "respawn",
+      epoch,
+    });
+    assertEquals(job.state, "scheduled");
+  }
+  t += TTL + 1;
+  assertEquals(reconcileJob(job, { currentDigest: "d1", at: at(t) }), {
+    action: "gave-up",
+    state: "failed",
+  });
+  assertEquals(
+    job.transitions.slice(-2).map((x) => `${x.from}>${x.to}`),
+    ["scheduled>running", "running>failed"],
+  );
+  // Later reconciles are no-ops, not errors.
+  assertEquals(reconcileJob(job, { currentDigest: "d1", at: at(t + 1) }), {
+    action: "none",
+    state: "failed",
+  });
+
+  const changed = stepJob();
+  assertEquals(
+    reconcileJob(changed, { currentDigest: "d2", at: at(TTL + 1) }),
+    { action: "input-changed", state: "failed" },
+  );
+  const single = stepJob("/wt", { maxAttempts: 1 });
+  assertEquals(
+    reconcileJob(single, { currentDigest: "d1", at: at(TTL + 1) }),
+    { action: "gave-up", state: "failed" },
+  );
+});
+
+Deno.test("fdh executor: an unparsable reconcile time throws instead of bumping the epoch", () => {
+  const job = stepJob();
+  for (const bad of ["", "garbage"]) {
+    assertThrows(
+      () => reconcileJob(job, { currentDigest: "d1", at: bad }),
+      Error,
+      "not a valid ISO time",
+    );
+  }
+  assertEquals(job.epoch, 1);
+  assertEquals(job.attempts.length, 1);
+});
+
+Deno.test("fdh executor: reconciling a step job requires the current digest", () => {
+  const job = stepJob();
+  assertThrows(
+    () => reconcileJob(job, { at: at(TTL + 1) }),
+    Error,
+    "needs the current execution digest",
+  );
+  assertEquals(job.epoch, 1);
+});
+
+Deno.test("fdh executor: a report from another holder at the current epoch is not applied", () => {
+  const job = stepJob();
+  beginAttempt(job, 1, "x1", at(0));
+  assertEquals(applyReport(job, report(1, 0, 10, "mallory"), at(10)), {
+    applied: false,
+    reason: "wrong-holder",
+  });
+  assertEquals(job.state, "running");
+  assert(job.events.some((e) => e.kind === "wrong-holder"));
+});
+
+Deno.test("fdh executor: a late report after a retry keeps the lost attempt and is recorded once", () => {
+  const job = createJob({
+    jobId: "test-1",
+    taskId: "t1",
+    worktree: "/wt",
+    kind: "intent",
+    intent: { op: "push", target: "x" },
+    inputs: INPUTS,
+    executionDigest: "d",
+    holder: "x1",
+    at: at(0),
+  });
+  reconcileJob(job, { at: at(1), holderGone: true });
+  resolveJob(job, "retry", "", "x2", at(2));
+  for (let i = 0; i < 5; i++) {
+    assertEquals(applyReport(job, report(1, 0, 3), at(3 + i)), {
+      applied: false,
+      reason: "stale-epoch",
+    });
+  }
+  assertEquals(job.attempts[0].result, "lost");
+  assert(job.attempts[0].notes.includes("late report by x1 (exit 0)"));
+  assertEquals(job.events.filter((e) => e.kind === "stale-epoch").length, 1);
+});
+
+Deno.test("fdh executor: retrying an intent without a holder throws before changing the job", () => {
+  const job = createJob({
+    jobId: "intent-1",
+    taskId: "t1",
+    worktree: "/wt",
+    kind: "intent",
+    intent: { op: "pr", target: "x" },
+    inputs: INPUTS,
+    executionDigest: "d",
+    holder: "a",
+    at: at(0),
+  });
+  reconcileJob(job, { at: at(1), holderGone: true });
+  const before = JSON.stringify(job);
+  assertThrows(
+    () => resolveJob(job, "retry", "", " "),
+    Error,
+    "needs the agent",
+  );
+  assertEquals(JSON.stringify(job), before);
+});
+
+Deno.test("fdh executor: journals with broken invariants are rejected when read", () => {
+  const good = JSON.parse(JSON.stringify(stepJob()));
+  assertEquals(
+    parseJobJournal(JSON.parse(JSON.stringify(good))).jobId,
+    "test-1",
+  );
+  const broken: Array<[string, (j: Record<string, unknown>) => void]> = [
+    ["the last attempt must belong", (j) => (j.attempts = [])],
+    ["the last attempt must belong", (j) => (j.epoch = 2)],
+    ["step", (j) => (j.step = null)],
+    ["lease", (j) => (j.lease = { holder: 1 })],
+    ["attempts entry", (j) => (j.attempts = [{ attempt: 1 }])],
+  ];
+  for (const [message, mutate] of broken) {
+    const copy = JSON.parse(JSON.stringify(good));
+    mutate(copy);
+    assertThrows(() => parseJobJournal(copy), Error, message);
+  }
+});
+
+Deno.test("fdh executor: invalid outboxes give a clear error; reconcileJobFile reads the outbox under the lock", async () => {
+  const dir = await Deno.makeTempDir();
+  try {
+    await writeNewJob(stepJob(dir));
+    await updateJob(
+      dir,
+      "t1",
+      "test-1",
+      (j) => beginAttempt(j, 1, "x1", at(0)),
+    );
+    const file = `${dir}/_dist/fdh/jobs/t1/test-1.outbox-1.json`;
+    for (const text of ["null", "{ broken", '{"jobId":"test-1","epoch":1}']) {
+      Deno.writeTextFileSync(file, text);
+      assertThrows(
+        () => readOutbox(dir, "t1", "test-1", 1),
+        Error,
+        "invalid fdh job outbox",
+      );
+    }
+    writeOutbox(dir, "t1", report(1, 0, 5));
+    const { value } = await reconcileJobFile(dir, "t1", "test-1", {
+      at: at(5 * TTL),
+      currentDigest: "d1",
+    });
+    assertEquals(value, { action: "applied-outbox", state: "succeeded" });
+  } finally {
+    await Deno.remove(dir, { recursive: true });
+  }
+});
+
+Deno.test("fdh executor run: a heartbeat that cannot be written stops the step", async () => {
+  const h = await harness();
+  try {
+    const run = runExecutor({
+      worktree: h.dir,
+      taskId: "t1",
+      jobId: "test-1",
+      epoch: 1,
+      holder: "x1",
+      runStep: h.step(0, 60_000),
+      heartbeatMs: 2_000,
+      now: h.now,
+      sleep: h.sleep,
+    });
+    while (readJob(h.dir, "t1", "test-1").state !== "running") {
+      await new Promise((r) => setTimeout(r, 0));
+    }
+    Deno.writeTextFileSync(
+      `${h.dir}/_dist/fdh/jobs/t1/test-1.json`,
+      "{ corrupted",
+    );
+    await assertRejects(() => run);
+    assert(h.killed.value);
+  } finally {
+    await Deno.remove(h.dir, { recursive: true });
+  }
+});
+
+Deno.test("fdh executor run: heartbeats stay inside a short TTL and log refs use '/'", async () => {
+  const h = await harness({ leaseTtlMs: 1_000 });
+  try {
+    const outcome = await runExecutor({
+      worktree: h.dir,
+      taskId: "t1",
+      jobId: "test-1",
+      epoch: 1,
+      holder: "x1",
+      runStep: h.step(0, 3_000),
+      heartbeatMs: 2_000,
+      now: h.now,
+      sleep: h.sleep,
+    });
+    assertEquals(outcome, { outcome: "applied", state: "succeeded" });
+    assert(h.sleeps.length > 0 && Math.max(...h.sleeps) <= 333, `${h.sleeps}`);
+    const job = readJob(h.dir, "t1", "test-1");
+    assertEquals(job.attempts[0].logRef, "_dist/fdh/jobs/t1/test-1-1.log");
   } finally {
     await Deno.remove(h.dir, { recursive: true });
   }

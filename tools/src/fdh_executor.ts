@@ -26,12 +26,13 @@
  *
  * This module is pure apart from the small journal/outbox I/O helpers: the
  * clock, the executor process and the step command are injected, so every
- * B-02 test case (E-1..E-7) is exercised without real processes. It does not
+ * B-02 test case (E-1..E-9) is exercised without real processes. It does not
  * claim exactly-once execution: a safe step may run again after its executor
  * is lost, and an old executor's local writes cannot be undone.
  */
 
 import * as path from "@std/path";
+import { join as posixJoin } from "@std/path/posix";
 import { encodeHex } from "@std/encoding/hex";
 import { lockPathFor, withFileLock } from "./fdh_lock.ts";
 import { FDH_DIR, nowIso, validateTaskId } from "./fdh_task.ts";
@@ -62,7 +63,6 @@ export type AttemptResult =
   | "succeeded"
   | "failed"
   | "lost"
-  | "stale-rejected"
   | "cancelled";
 
 export interface JobAttempt {
@@ -121,6 +121,7 @@ export type JobEventKind =
   | "input-changed"
   | "resolved"
   | "late-report"
+  | "wrong-holder"
   | "gave-up";
 
 export interface JobEvent {
@@ -172,6 +173,17 @@ export interface JobReport {
 
 const TABLE = loadTransitions();
 const TERMINAL = new Set<State>(TABLE.terminalStates);
+
+/** Parse an ISO time; an unparsable value is a caller error, not "expired". */
+function requireTime(value: string, name: string): number {
+  const ms = Date.parse(value);
+  if (!Number.isFinite(ms)) {
+    throw new Error(
+      `${name} is not a valid ISO time: ${JSON.stringify(value)}`,
+    );
+  }
+  return ms;
+}
 
 export function isTerminal(state: State): boolean {
   return TERMINAL.has(state);
@@ -425,7 +437,12 @@ export type ApplyResult =
   | { applied: true; state: State }
   | {
     applied: false;
-    reason: "stale-epoch" | "holder-lost" | "already-applied" | "terminal";
+    reason:
+      | "stale-epoch"
+      | "holder-lost"
+      | "wrong-holder"
+      | "already-applied"
+      | "terminal";
   };
 
 /**
@@ -443,20 +460,25 @@ export function applyReport(
   }
   const attempt = attemptAt(job, report.epoch);
   if (report.epoch !== job.epoch) {
-    if (attempt !== undefined && attempt.result !== "stale-rejected") {
-      attempt.result = "stale-rejected";
-      attempt.endedAt = report.endedAt;
-      attempt.exitCode = report.exitCode;
-      attempt.notes =
-        `report from epoch ${report.epoch} arrived after epoch ${job.epoch} took over; rejected`;
+    const note =
+      `report by ${report.holder} (exit ${report.exitCode}) rejected; current epoch ${job.epoch}`;
+    // An older epoch was closed as `lost` when the newer one was scheduled.
+    // It stays `lost` (the job never used its outcome); the late report and
+    // its exit code are kept in the attempt notes and in one event.
+    if (attempt !== undefined && !attempt.notes.includes(note)) {
+      attempt.notes = attempt.notes === ""
+        ? `late ${note}`
+        : `${attempt.notes}; late ${note}`;
     }
-    event(
-      job,
-      "stale-epoch",
-      at,
-      report.epoch,
-      `report by ${report.holder} (exit ${report.exitCode}) rejected; current epoch ${job.epoch}`,
-    );
+    // One event per distinct late report, so a looping old executor cannot
+    // grow the journal without bound.
+    if (
+      !job.events.some((e) =>
+        e.kind === "stale-epoch" && e.epoch === report.epoch && e.note === note
+      )
+    ) {
+      event(job, "stale-epoch", at, report.epoch, note);
+    }
     return { applied: false, reason: "stale-epoch" };
   }
   if (attempt === undefined) {
@@ -480,6 +502,18 @@ export function applyReport(
     return { applied: false, reason: "already-applied" };
   }
   if (isTerminal(job.state)) return { applied: false, reason: "terminal" };
+  if (attempt.holder !== report.holder) {
+    event(
+      job,
+      "wrong-holder",
+      at,
+      report.epoch,
+      `report by ${report.holder} for an attempt held by ${
+        attempt.holder ?? "nobody"
+      }; not applied`,
+    );
+    return { applied: false, reason: "wrong-holder" };
+  }
   attempt.result = report.exitCode === 0 ? "succeeded" : "failed";
   attempt.endedAt = report.endedAt;
   attempt.exitCode = report.exitCode;
@@ -496,14 +530,17 @@ export function applyReport(
 
 export function leaseExpired(job: JobJournal, at: string): boolean {
   if (job.lease === null) return true;
-  const age = Date.parse(at) - Date.parse(job.lease.heartbeatAt);
+  // A corrupted heartbeat time counts as expired (take over, fail-safe).
+  const age = requireTime(at, "reconcile time") -
+    Date.parse(job.lease.heartbeatAt);
   return !(age <= job.lease.ttlMs);
 }
 
 /** Has a scheduled attempt waited longer than one TTL for its executor? */
 function startOverdue(job: JobJournal, at: string): boolean {
   const attempt = currentAttempt(job);
-  const age = Date.parse(at) - Date.parse(attempt.scheduledAt);
+  const age = requireTime(at, "reconcile time") -
+    Date.parse(attempt.scheduledAt);
   return !(age <= job.leaseTtlMs);
 }
 
@@ -525,9 +562,14 @@ export type ReconcileDecision =
 
 export interface ReconcileContext {
   at?: string;
-  /** Outbox report of the current epoch, if the executor wrote one. */
+  /**
+   * Outbox report of the current epoch, if the executor wrote one. It must be
+   * read under the same journal lock as the reconcile (`reconcileJobFile`
+   * does this); an outbox read before the lock can miss a result written in
+   * between, and the step would then be rerun although its result was durable.
+   */
   outbox?: JobReport | null;
-  /** Digest of the inputs as they are now (safe steps only). */
+  /** Digest of the inputs as they are now. Required for step jobs. */
   currentDigest?: string;
   /**
    * The previous holder is known to be gone (e.g. `task resume` of an intent's
@@ -547,8 +589,14 @@ export function reconcileJob(
   context: ReconcileContext = {},
 ): ReconcileDecision {
   const at = context.at ?? nowIso();
+  requireTime(at, "reconcile time");
   if (isTerminal(job.state) || job.state === "awaiting-approval") {
     return { action: "none", state: job.state };
+  }
+  if (job.kind !== "intent" && context.currentDigest === undefined) {
+    throw new Error(
+      `reconciling step job ${job.jobId} needs the current execution digest`,
+    );
   }
   const attempt = currentAttempt(job);
 
@@ -602,12 +650,9 @@ export function reconcileJob(
     return { action: "awaiting-approval", epoch: job.epoch };
   }
 
-  if (
-    context.currentDigest !== undefined &&
-    context.currentDigest !== job.executionDigest
-  ) {
+  if (context.currentDigest !== job.executionDigest) {
     event(job, "input-changed", at, job.epoch, "digest differs; not rerun");
-    transition(job, "failed", at, "inputs changed since the job was recorded");
+    closeAsFailed(job, at, "inputs changed since the job was recorded");
     return { action: "input-changed", state: job.state };
   }
 
@@ -619,11 +664,24 @@ export function reconcileJob(
       job.epoch,
       `${job.attempts.length} attempt(s) lost; not rerun again`,
     );
-    transition(job, "failed", at, `${job.attempts.length} attempt(s) lost`);
+    closeAsFailed(job, at, `${job.attempts.length} attempt(s) lost`);
     return { action: "gave-up", state: job.state };
   }
   scheduleNextAttempt(job, at, `attempt ${attempt.attempt} lost`);
   return { action: "respawn", epoch: job.epoch };
+}
+
+/**
+ * Fail a job from `running` or from `scheduled` (an executor that never
+ * started). The frozen table has no `scheduled -> failed` edge, so a job
+ * whose executor never began is closed through `running`, the same way an
+ * approver's confirmation goes `awaiting-approval -> running -> succeeded`.
+ */
+function closeAsFailed(job: JobJournal, at: string, reason: string): void {
+  if (job.state === "scheduled") {
+    transition(job, "running", at, "no attempt started; closing the job");
+  }
+  transition(job, "failed", at, reason);
 }
 
 function scheduleNextAttempt(job: JobJournal, at: string, notes: string): void {
@@ -686,6 +744,13 @@ export function resolveJob(
       `job ${job.jobId} is ${job.state}; only a job awaiting approval can be resolved`,
     );
   }
+  if (
+    resolution === "retry" && job.kind === "intent" &&
+    (holder ?? "").trim() === ""
+  ) {
+    throw new Error("retrying an intent needs the agent that performs it");
+  }
+  requireTime(at, "resolve time");
   const reason = `resolved ${resolution} by approver${note ? `: ${note}` : ""}`;
   event(job, "resolved", at, job.epoch, reason);
   if (resolution === "failed") {
@@ -700,9 +765,6 @@ export function resolveJob(
   }
   scheduleNextAttempt(job, at, "retry approved");
   if (job.kind === "intent") {
-    if ((holder ?? "").trim() === "") {
-      throw new Error("retrying an intent needs the agent that performs it");
-    }
     startAttempt(job, job.epoch, holder!.trim(), at);
   }
   return job;
@@ -737,11 +799,53 @@ export function outboxPath(
   );
 }
 
+/**
+ * Rename, retrying briefly on Windows sharing violations: the rename fails
+ * with EACCES/EPERM while another process (a `job status` reader, an
+ * antivirus scan) has the target open without FILE_SHARE_DELETE.
+ */
+function renameWithRetry(from: string, to: string): void {
+  for (let retry = 0;; retry++) {
+    try {
+      Deno.renameSync(from, to);
+      return;
+    } catch (error) {
+      if (!(error instanceof Deno.errors.PermissionDenied) || retry >= 5) {
+        try {
+          Deno.removeSync(from);
+        } catch {
+          // best-effort: do not leave the tmp file behind
+        }
+        throw error;
+      }
+      Atomics.wait(
+        new Int32Array(new SharedArrayBuffer(4)),
+        0,
+        0,
+        10 * 2 ** retry,
+      );
+    }
+  }
+}
+
 function writeJsonAtomic(file: string, value: unknown): void {
   Deno.mkdirSync(path.dirname(file), { recursive: true });
   const tmp = `${file}.tmp-${Deno.pid}`;
   Deno.writeTextFileSync(tmp, `${JSON.stringify(value, null, 2)}\n`);
-  Deno.renameSync(tmp, file);
+  renameWithRetry(tmp, file);
+}
+
+const ATTEMPT_RESULTS: readonly AttemptResult[] = [
+  "scheduled",
+  "running",
+  "succeeded",
+  "failed",
+  "lost",
+  "cancelled",
+];
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 export function parseJobJournal(value: unknown): JobJournal {
@@ -781,6 +885,44 @@ export function parseJobJournal(value: unknown): JobJournal {
   }
   if (typeof job.executionDigest !== "string") {
     throw new Error("invalid fdh job journal: executionDigest");
+  }
+  for (const attempt of job.attempts as unknown[]) {
+    if (
+      !isRecord(attempt) || !Number.isInteger(attempt.attempt) ||
+      !Number.isInteger(attempt.epoch) ||
+      !ATTEMPT_RESULTS.includes(attempt.result as AttemptResult) ||
+      typeof attempt.notes !== "string"
+    ) {
+      throw new Error("invalid fdh job journal: attempts entry");
+    }
+  }
+  const last = job.attempts[job.attempts.length - 1];
+  if (last === undefined || last.epoch !== job.epoch) {
+    throw new Error(
+      "invalid fdh job journal: the last attempt must belong to the current epoch",
+    );
+  }
+  if (job.kind === "intent") {
+    if (
+      !isRecord(job.intent) || !INTENT_OPS.includes(job.intent.op as IntentOp)
+    ) {
+      throw new Error("invalid fdh job journal: intent");
+    }
+  } else if (
+    !isRecord(job.step) || !Array.isArray(job.step.argv) ||
+    !job.step.argv.every((arg) => typeof arg === "string") ||
+    job.step.argv.length === 0 || typeof job.step.cwd !== "string"
+  ) {
+    throw new Error("invalid fdh job journal: step");
+  }
+  const lease = job.lease as unknown;
+  if (
+    lease !== null &&
+    (!isRecord(lease) || typeof lease.holder !== "string" ||
+      !Number.isInteger(lease.epoch) || typeof lease.heartbeatAt !== "string" ||
+      !Number.isInteger(lease.ttlMs))
+  ) {
+    throw new Error("invalid fdh job journal: lease");
   }
   return job as JobJournal;
 }
@@ -862,27 +1004,59 @@ export function writeOutbox(
   return file;
 }
 
+/** Read the outbox of `epoch`; null when there is none, an error when invalid. */
 export function readOutbox(
   worktree: string,
   taskId: string,
   jobId: string,
   epoch: number,
 ): JobReport | null {
+  const file = outboxPath(worktree, taskId, jobId, epoch);
+  let text: string;
   try {
-    const value = JSON.parse(
-      Deno.readTextFileSync(outboxPath(worktree, taskId, jobId, epoch)),
-    ) as JobReport;
-    if (
-      value.jobId !== jobId || value.epoch !== epoch ||
-      !Number.isInteger(value.exitCode)
-    ) {
-      throw new Error(`invalid outbox for ${jobId} epoch ${epoch}`);
-    }
-    return value;
+    text = Deno.readTextFileSync(file);
   } catch (error) {
     if (error instanceof Deno.errors.NotFound) return null;
     throw error;
   }
+  let value: unknown;
+  try {
+    value = JSON.parse(text);
+  } catch (error) {
+    throw new Error(
+      `invalid fdh job outbox at ${file}: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
+    );
+  }
+  if (
+    !isRecord(value) || value.jobId !== jobId || value.epoch !== epoch ||
+    !Number.isInteger(value.exitCode) || typeof value.holder !== "string" ||
+    typeof value.endedAt !== "string" ||
+    (value.logRef !== null && typeof value.logRef !== "string")
+  ) {
+    throw new Error(
+      `invalid fdh job outbox at ${file}: expected the report of ${jobId} epoch ${epoch}`,
+    );
+  }
+  return value as unknown as JobReport;
+}
+
+/**
+ * Reconcile one journal under its lock, reading the current epoch's outbox
+ * inside the same lock (see `ReconcileContext.outbox`).
+ */
+export async function reconcileJobFile(
+  worktree: string,
+  taskId: string,
+  jobId: string,
+  context: Omit<ReconcileContext, "outbox"> = {},
+): Promise<{ job: JobJournal; value: ReconcileDecision }> {
+  return await updateJob(worktree, taskId, jobId, (job) =>
+    reconcileJob(job, {
+      ...context,
+      outbox: readOutbox(worktree, taskId, jobId, job.epoch),
+    }));
 }
 
 // ---------------------------------------------------------------------------
@@ -932,41 +1106,67 @@ export async function runExecutor(
   options: ExecutorOptions,
 ): Promise<ExecutorOutcome> {
   const now = options.now ?? nowIso;
-  const sleep = options.sleep ??
-    ((ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms)));
-  const heartbeatMs = options.heartbeatMs ?? DEFAULT_HEARTBEAT_MS;
+  // An injected sleep (tests) cannot be cancelled; the default one is, so a
+  // finished executor does not linger on a pending heartbeat timer.
+  const sleepFor = (ms: number): { promise: Promise<void>; cancel(): void } => {
+    if (options.sleep !== undefined) {
+      return { promise: options.sleep(ms), cancel: () => {} };
+    }
+    let id: ReturnType<typeof setTimeout> | undefined;
+    const promise = new Promise<void>((resolve) => {
+      id = setTimeout(resolve, ms);
+    });
+    return { promise, cancel: () => clearTimeout(id) };
+  };
   const { worktree, taskId, jobId, epoch, holder } = options;
 
   const begun = await updateJob(
     worktree,
     taskId,
     jobId,
-    (job) => ({
-      result: beginAttempt(job, epoch, holder, now()),
-      step: job.step,
-    }),
+    (job) => {
+      if (job.step === null) {
+        return { ok: false as const, reason: "intent jobs have no executor" };
+      }
+      const result = beginAttempt(job, epoch, holder, now());
+      return result.ok
+        ? { ok: true as const, step: job.step, ttlMs: job.leaseTtlMs }
+        : { ok: false as const, reason: result.reason as string };
+    },
   );
-  if (!begun.value.result.ok) {
-    return { outcome: "refused", reason: begun.value.result.reason };
+  if (!begun.value.ok) {
+    return { outcome: "refused", reason: begun.value.reason };
   }
   const step = begun.value.step;
-  if (step === null) {
-    return { outcome: "refused", reason: "intent jobs have no executor" };
-  }
+  // Beat well inside the job's TTL, whatever the caller asked for.
+  const heartbeatMs = Math.max(
+    1,
+    Math.min(
+      options.heartbeatMs ?? DEFAULT_HEARTBEAT_MS,
+      Math.floor(begun.value.ttlMs / 3),
+    ),
+  );
 
-  const logRef = path.join(FDH_JOBS_DIR, taskId, `${jobId}-${epoch}.log`);
+  // Refs use "/" on every OS so evidence from different machines compares.
+  const logRef = posixJoin(
+    "_dist",
+    "fdh",
+    "jobs",
+    taskId,
+    `${jobId}-${epoch}.log`,
+  );
+  const logPath = path.join(worktree, ...logRef.split("/"));
   let running: RunningStep;
   try {
-    running = options.runStep(step, path.join(worktree, logRef));
+    running = options.runStep(step, logPath);
   } catch (error) {
     // The step could not be started: report it as a failed attempt (127).
     try {
       Deno.writeTextFileSync(
-        path.join(worktree, logRef),
+        logPath,
         `fdh executor: could not start the step: ${
           error instanceof Error ? error.message : String(error)
-        }
-`,
+        }\n`,
       );
     } catch {
       // The log is best-effort; the report below still records the failure.
@@ -982,23 +1182,38 @@ export async function runExecutor(
   const stallUntil = options.fault?.kind === "stall"
     ? Date.parse(now()) + options.fault.ms
     : 0;
-  while (done.code === null) {
-    await Promise.race([status, sleep(heartbeatMs)]);
-    if (done.code !== null) break;
-    if (Date.parse(now()) < stallUntil) continue;
-    const beat = await updateJob(
-      worktree,
-      taskId,
-      jobId,
-      (job) => heartbeat(job, epoch, holder, now()),
-    );
-    if (beat.value === "fenced") {
-      running.kill();
-      return { outcome: "fenced" };
+  try {
+    while (done.code === null) {
+      const tick = sleepFor(heartbeatMs);
+      await Promise.race([status, tick.promise]);
+      tick.cancel();
+      if (done.code !== null) break;
+      if (Date.parse(now()) < stallUntil) continue;
+      const beat = await updateJob(
+        worktree,
+        taskId,
+        jobId,
+        (job) => heartbeat(job, epoch, holder, now()),
+      );
+      if (beat.value === "fenced") {
+        running.kill();
+        const wait = sleepFor(5_000);
+        await Promise.race([status, wait.promise]);
+        wait.cancel();
+        return { outcome: "fenced" };
+      }
     }
+  } catch (error) {
+    // A heartbeat that cannot be written must not leave the step running
+    // unowned: the lease will expire and a new epoch would run it again.
+    if (done.code === null) running.kill();
+    throw error;
   }
   while (Date.parse(now()) < stallUntil) {
-    await sleep(Math.min(heartbeatMs, stallUntil - Date.parse(now())));
+    const wait = sleepFor(
+      Math.min(heartbeatMs, stallUntil - Date.parse(now())),
+    );
+    await wait.promise;
   }
 
   const report: JobReport = {
