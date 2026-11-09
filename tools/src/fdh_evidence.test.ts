@@ -16,6 +16,7 @@ import {
   writeEvidenceManifest,
 } from "./fdh_evidence.ts";
 import { CORE_RELATIONSHIPS } from "../qa3/evidence/validate.ts";
+import { refusedBuildEventCommand } from "./fdh_verify.ts";
 
 const BASE = "b".repeat(40);
 const CREATED_AT = "2026-11-08T00:00:00.000Z";
@@ -337,6 +338,53 @@ Deno.test("builder surfaces schema violations as EvidenceValidationError", async
           os: { name: "testos", arch: "x86_64" },
         }),
       EvidenceValidationError,
+    );
+  });
+});
+
+Deno.test("a source build refused after the last source build is a limitation", async () => {
+  await withTempDir(async (dir) => {
+    const refusedLimitation = "latest source edits were not compiled";
+    const state = makeState(dir);
+    // build (00:02) passes, then a refused source build (00:05), then an
+    // after-mach inject passes: the latest edits were never compiled.
+    addCheck(
+      state,
+      "build-exit-code",
+      "deno task feles-build build --phase before-mach",
+    );
+    state.events.push({
+      timestamp: "2026-11-08T00:05:00.000Z",
+      command: refusedBuildEventCommand("all"),
+      note: "verify build --phase all refused: 12 dev process(es)",
+      exitCode: 1,
+    });
+    addCheck(
+      state,
+      "build-inject-exit-code",
+      "deno task feles-build build --phase after-mach",
+    );
+    writeTaskState(state);
+
+    const os = { name: "testos", arch: "x86_64" };
+    const manifest = await buildEvidenceManifest(state, { os });
+    assert(
+      manifest.limitations.some((item) => item.includes(refusedLimitation)),
+    );
+    assertEquals(validateEvidenceManifest(manifest), []);
+
+    // A source build after the refusal clears the limitation.
+    state.assertions.push({
+      name: "build-exit-code",
+      expected: "exit code 0",
+      actual: "exit code 0",
+      passed: true,
+      at: "2026-11-08T00:09:00.000Z",
+    });
+    const rebuilt = await buildEvidenceManifest(state, { os });
+    assertEquals(
+      rebuilt.limitations.some((item) => item.includes(refusedLimitation)),
+      false,
     );
   });
 });

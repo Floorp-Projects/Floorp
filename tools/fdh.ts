@@ -39,7 +39,15 @@ import {
   validateEvidenceManifest,
   writeEvidenceManifest,
 } from "./src/fdh_evidence.ts";
-import { buildVerifyCommands, parseBuildPhase } from "./src/fdh_verify.ts";
+import {
+  buildVerifyCommands,
+  parseBuildPhase,
+  refusedBuildEventCommand,
+} from "./src/fdh_verify.ts";
+import {
+  assertSourceBuildAllowed,
+  DevGuardRefusalError,
+} from "./src/fdh_dev_guard.ts";
 import {
   FDH_REVIEW_RECEIPT_MARKER,
   FDH_REVIEW_RECEIPT_SCHEMA_VERSION,
@@ -52,7 +60,9 @@ import type {
   ReviewTier,
   ReviewVerdict,
 } from "./src/fdh_review.ts";
-import { prepareSetup } from "./src/setup.ts";
+// setup.ts reaches npm:fflate, so it is loaded lazily in `task prepare` after
+// prepareDeps; a static import would break every command in a fresh worktree.
+import { prepareDeps } from "./src/setup_deps.ts";
 import type { SetupRecord } from "./src/setup.ts";
 import {
   approveQuota,
@@ -100,7 +110,7 @@ Commands:
   task prepare --task-id <id> [--runtime-source <abs-dir>]
                             Idempotent setup: deno install if fflate is missing,
                             copy the Debug runtime into _dist/bin (optional
-                            registry source), relink relative devdir symlinks,
+                            registry source), relink the devdir mounts,
                             wipe the copied sessionstore and node_modules/.vite,
                             then record setup.guardEnv for 'dev up'
   dev up --task-id <id>     Start dev-tool for the recorded worktree/offset
@@ -111,6 +121,8 @@ Commands:
                             inject (after-mach); default all. --phase after-mach
                             keeps the legacy inject-only fast path, and --phase
                             before-mach skips the Runtime-dependent inject.
+                            all/before-mach are refused while this worktree's
+                            dev server runs: 'dev down', build, then 'dev up'.
   verify test --task-id <id>
                             Run "deno task test:host"
   verify browser --task-id <id> [--eval <js>] [--expect <text>]
@@ -344,6 +356,9 @@ async function cmdTaskResume(parsed: ParsedArgs): Promise<void> {
   console.log(JSON.stringify({ ...report, approvalPending }));
 }
 
+/** Set on the child `task prepare` that runs after the parent's deno install. */
+const DEPS_INSTALLED_ENV = "FDH_PREPARE_DEPS_INSTALLED";
+
 /**
  * Idempotent setup preparation for one worktree (IMP-5).
  *
@@ -367,8 +382,53 @@ async function cmdTaskPrepare(parsed: ParsedArgs): Promise<void> {
     );
   }
 
+  // Install npm deps before loading setup.ts: its import graph needs fflate.
+  // Deno fixes the npm resolution of a process at startup, so a process that
+  // has just run `deno install` still cannot load setup.ts. In that case the
+  // rest of the prepare runs in a fresh child with the same arguments (W-05).
+  // Read and clear the marker so nothing this process spawns inherits it.
+  const parentInstalled = Deno.env.get(DEPS_INSTALLED_ENV) === "1";
+  Deno.env.delete(DEPS_INSTALLED_ENV);
+  let deps = prepareDeps({ projectRoot: state.worktree });
+  if (deps.installed && parentInstalled) {
+    // The parent's install did not make fflate visible to this child either;
+    // never re-exec again.
+    throw new Error(
+      "task prepare: deno install ran again in the child process; refusing to re-exec",
+    );
+  }
+  if (deps.installed) {
+    appendEvent(state, {
+      timestamp: nowIso(),
+      command: "task prepare (deps)",
+      note: "deno install ran; continuing in a new process",
+      exitCode: 0,
+    });
+    writeTaskState(state);
+    const child = new Deno.Command(Deno.execPath(), {
+      args: ["run", "-A", path.fromFileUrl(import.meta.url), ...Deno.args],
+      env: { [DEPS_INSTALLED_ENV]: "1" },
+      stdin: "inherit",
+      stdout: "inherit",
+      stderr: "inherit",
+    });
+    const status = await child.spawn().status;
+    if (!status.success) {
+      throw new Error(
+        `task prepare after deno install failed with exit ${status.code}`,
+      );
+    }
+    return;
+  }
+  if (parentInstalled && deps.status === "already") {
+    // The parent installed the deps for this run; keep that fact. Only an
+    // "already" result is upgraded, never a CI skip.
+    deps = { ...deps, status: "prepared", installed: true };
+  }
+  const { prepareSetup } = await import("./src/setup.ts");
   const record: SetupRecord = await prepareSetup({
     projectRoot: state.worktree,
+    depsResult: deps,
     runtime: { sourcePath: runtimeSource },
   });
 
@@ -640,18 +700,39 @@ async function runVerify(
   const taskId = validateTaskId(requireOption(parsed, "task-id"));
   const state = await loadStateForCwd(taskId);
 
-  const specs = kind === "build"
-    ? buildVerifyCommands(
-      parseBuildPhase(
-        hasOption(parsed, "phase") ? requireOption(parsed, "phase") : undefined,
-      ),
+  const phase = kind === "build"
+    ? parseBuildPhase(
+      hasOption(parsed, "phase") ? requireOption(parsed, "phase") : undefined,
     )
-    : [{
-      displayCommand: "deno task test:host",
-      args: ["task", "test:host"],
-      assertionName: "host-test-exit-code",
-      expected: "exit code 0",
-    }];
+    : undefined;
+
+  // W-04: a source build under this worktree's running dev browser wedges
+  // Marionette sessions. Refuse before spawning, and keep the refusal visible.
+  // A guard that cannot determine liveness also stops (fail closed), but is
+  // labelled as a guard failure, not as a refusal.
+  if (phase !== undefined) {
+    try {
+      await assertSourceBuildAllowed(state.worktree, phase);
+    } catch (error) {
+      appendEvent(state, {
+        timestamp: nowIso(),
+        command: error instanceof DevGuardRefusalError
+          ? refusedBuildEventCommand(phase)
+          : `verify build --phase ${phase} (dev guard failed)`,
+        note: error instanceof Error ? error.message : String(error),
+        exitCode: 1,
+      });
+      writeTaskState(state);
+      throw error;
+    }
+  }
+
+  const specs = phase !== undefined ? buildVerifyCommands(phase) : [{
+    displayCommand: "deno task test:host",
+    args: ["task", "test:host"],
+    assertionName: "host-test-exit-code",
+    expected: "exit code 0",
+  }];
 
   // Run the phases in order and stop at the first failure: a failed source
   // compile must leave the injector unrun, and the failing assertion is

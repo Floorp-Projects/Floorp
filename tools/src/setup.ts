@@ -19,7 +19,23 @@ import * as path from "@std/path";
 import { BRANDING, PATHS } from "./defines.ts";
 import { run as runInjector } from "./injector.ts";
 import { copyDirectoryTreeSafely } from "./runtime_archive.ts";
-import { exists, runCommandChecked, safeRemove } from "./utils.ts";
+import { exists, safeRemove } from "./utils.ts";
+import {
+  prepareDeps,
+  type PrepareDepsOptions,
+  type PrepareDepsResult,
+  type PrepareStatus,
+} from "./setup_deps.ts";
+
+// The npm dependency step lives in setup_deps.ts, which has no npm imports and
+// therefore loads before `deno install` (W-05). Re-exported for existing users.
+export {
+  fflatePresent,
+  prepareDeps,
+  type PrepareDepsOptions,
+  type PrepareDepsResult,
+  type PrepareStatus,
+} from "./setup_deps.ts";
 
 export const DEBUG_RUNTIME_MARKER_FILE = ".floorp-runtime-debug.json";
 export const GUARD_ENV_NAME = "FLOORP_SKIP_PATCHER";
@@ -40,77 +56,6 @@ export interface RuntimeMarker {
 export interface RuntimeTarget {
   platform: RuntimeMarker["platform"];
   architecture: RuntimeMarker["architecture"];
-}
-
-export type PrepareStatus =
-  | "already"
-  | "prepared"
-  | "removed"
-  | "missing"
-  | "ci-skip";
-
-// ---------------------------------------------------------------------------
-// 1. npm dependencies (`deno.json` nodeModulesDir = manual)
-// ---------------------------------------------------------------------------
-
-export interface PrepareDepsOptions {
-  projectRoot?: string;
-  nodeModulesDir?: string;
-  /** Caller-recorded CI flag; falls back to a permission-safe `Deno.env` read. */
-  isCI?: boolean;
-  /** DI: returns the `deno install` exit code (tests pass a fake). */
-  runInstall?: () => number;
-}
-
-export interface PrepareDepsResult {
-  status: PrepareStatus;
-  nodeModulesDir: string;
-  /** Whether this call actually ran `deno install`. */
-  installed: boolean;
-  isCI: boolean;
-}
-
-function envFlag(name: string): boolean {
-  try {
-    return Deno.env.get(name) === "true";
-  } catch {
-    // Tests run without --allow-env; treat an unreadable flag as not-CI.
-    return false;
-  }
-}
-
-/** The npm package the host tests and runtime archive import (`fflate`). */
-export function fflatePresent(nodeModulesDir: string): boolean {
-  return exists(path.join(nodeModulesDir, "fflate", "package.json"));
-}
-
-export function prepareDeps(
-  options: PrepareDepsOptions = {},
-): PrepareDepsResult {
-  const projectRoot = options.projectRoot ?? PATHS.root;
-  const nodeModulesDir = options.nodeModulesDir ??
-    path.join(projectRoot, "node_modules");
-  const isCI = options.isCI ?? envFlag("CI");
-  if (isCI) {
-    return { status: "ci-skip", nodeModulesDir, installed: false, isCI };
-  }
-  if (fflatePresent(nodeModulesDir)) {
-    return { status: "already", nodeModulesDir, installed: false, isCI };
-  }
-  const runInstall = options.runInstall ??
-    (() => runCommandChecked(Deno.execPath(), ["install"], projectRoot).code);
-  const code = runInstall();
-  if (code !== 0) {
-    throw new Error(`deno install failed with exit ${code}.`);
-  }
-  if (!fflatePresent(nodeModulesDir)) {
-    throw new Error(
-      `deno install completed but ${
-        path.join(nodeModulesDir, "fflate")
-      } is missing.`,
-    );
-  }
-  return { status: "prepared", nodeModulesDir, installed: true, isCI };
 }
 
 // ---------------------------------------------------------------------------
@@ -239,6 +184,44 @@ export function assertRuntimeMarker(
   return marker;
 }
 
+/**
+ * Link type for re-creating `source` (a symlink or junction) elsewhere. The
+ * stat follows the link from its own directory; a dangling link defaults to
+ * "dir" because the runtime tree only links directories (devdir mounts).
+ */
+async function symlinkTypeFor(source: string): Promise<"file" | "dir"> {
+  try {
+    return (await Deno.stat(source)).isDirectory ? "dir" : "file";
+  } catch {
+    return "dir";
+  }
+}
+
+/**
+ * Re-create a copied link. Windows refuses symlinks without Developer Mode or
+ * elevation (os error 1314); a directory link then becomes a junction, like
+ * the injector's own fallback. A junction stores an absolute target, so a
+ * relative link text is resolved against the new link's directory.
+ */
+export function recreateLink(
+  linkText: string,
+  destination: string,
+  type: "file" | "dir",
+  symlink: typeof Deno.symlinkSync = Deno.symlinkSync,
+  os: typeof Deno.build.os = Deno.build.os,
+): "symlink" | "junction" {
+  try {
+    symlink(linkText, destination, { type });
+    return "symlink";
+  } catch (error) {
+    if (os !== "windows" || type !== "dir") throw error;
+    symlink(path.resolve(path.dirname(destination), linkText), destination, {
+      type: "junction",
+    });
+    return "junction";
+  }
+}
+
 async function copyTreeWithSymlinks(
   sourceRoot: string,
   destinationRoot: string,
@@ -250,7 +233,13 @@ async function copyTreeWithSymlinks(
     const info = await Deno.lstat(source);
     if (info.isSymlink) {
       // Preserve the link text; a later Injector.run relinks devdir mounts.
-      Deno.symlinkSync(await Deno.readLink(source), destination);
+      // Windows needs the link type when the target does not resolve from the
+      // current directory (relative or missing targets); POSIX ignores it (W-02).
+      recreateLink(
+        await Deno.readLink(source),
+        destination,
+        await symlinkTypeFor(source),
+      );
     } else if (info.isDirectory) {
       await copyTreeWithSymlinks(source, destination);
     } else if (info.isFile) {
@@ -452,6 +441,11 @@ export interface SetupRecord {
 export interface PrepareSetupOptions {
   projectRoot?: string;
   deps?: PrepareDepsOptions;
+  /**
+   * Result of a `prepareDeps` call the caller already ran (fdh runs it before
+   * loading this module). When set, the deps step is not run again.
+   */
+  depsResult?: PrepareDepsResult;
   runtime?: PrepareRuntimeOptions;
   profile?: PrepareProfileOptions;
   vite?: PrepareViteOptions;
@@ -514,7 +508,8 @@ export async function prepareSetup(
   options: PrepareSetupOptions = {},
 ): Promise<SetupRecord> {
   const projectRoot = options.projectRoot ?? PATHS.root;
-  const deps = prepareDeps({ projectRoot, ...options.deps });
+  const deps = options.depsResult ??
+    prepareDeps({ projectRoot, ...options.deps });
   // Defaults are scoped to projectRoot so tests and callers can prepare a
   // worktree-shaped temp tree without touching the repository's `_dist`.
   const runtime = await prepareRuntime({

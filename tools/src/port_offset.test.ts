@@ -4,8 +4,11 @@ import { assertEquals, assertThrows } from "@std/assert";
 
 import {
   autoPortOffsetCandidates,
+  describeLaunchPorts,
   type DevPortProbe,
+  launchMarionettePort,
   launchPortsForOffset,
+  MARIONETTE_DEFAULT_PORT,
   parsePortOffsetSpec,
   resolveAutoDevPortOffset,
 } from "./port_offset.ts";
@@ -102,4 +105,20 @@ Deno.test("auto candidates are 0 plus the non-overlap ladder", () => {
       );
     }
   }
+});
+
+Deno.test("start log reports the Marionette port the launch listens on", () => {
+  // Offset 0 writes no marionette.port pref, so the default 2828 applies.
+  assertEquals(launchMarionettePort(0), MARIONETTE_DEFAULT_PORT);
+  assertEquals(MARIONETTE_DEFAULT_PORT, 2828);
+  assertEquals(
+    describeLaunchPorts(0),
+    "port-offset=0 marionette=2828 pref=nora.dev.port_offset",
+  );
+  // Non-zero offsets shift the 5180 base (Gate 2: offset 100 -> 5280).
+  assertEquals(launchMarionettePort(100), 5280);
+  assertEquals(
+    describeLaunchPorts(100),
+    "port-offset=100 marionette=5280 pref=nora.dev.port_offset",
+  );
 });
