@@ -69,12 +69,15 @@ import { prepareDeps } from "./src/setup_deps.ts";
 import type { SetupRecord } from "./src/setup.ts";
 import {
   approveQuota,
+  assertPendingExternalOp,
+  assertQuotaStopReason,
   claimQuota,
   pendingQuota,
   quotaLedgerExists,
   quotaLedgerPath,
   readQuotaLedger,
   releaseQuota,
+  requireAgent,
   resumeQuota,
   stopQuota,
   summarizeQuota,
@@ -152,7 +155,9 @@ Commands:
   quota resume --task-id <id> --agent <name> [--note <text>]
                             Resume a stopped task and re-assign it
   quota pending --task-id <id> --op <push|pr|release|external> [--note <text>]
-                            Record a non-idempotent external op awaiting approval
+                            Record a non-idempotent external op awaiting approval;
+                            the same op and note already pending is not queued
+                            again (the output then has "alreadyPending": true)
   quota approve --task-id <id> [--note <text>]
                             Approve and clear pending external operations
   quota release --task-id <id> --agent <name>
@@ -599,9 +604,30 @@ async function cmdQuota(
     return;
   }
 
+  // Validate every option before the lock: a bad --op/--reason/--agent must
+  // not create the quota directory, lock file or ledger.
+  const agent = sub === "approve" || sub === "pending"
+    ? ""
+    : requireAgent(requireOption(parsed, "agent"));
+  let reason: QuotaStopReason | undefined;
+  if (sub === "stop") {
+    const value = requireOption(parsed, "reason");
+    assertQuotaStopReason(value);
+    reason = value;
+  }
+  let op: PendingExternalOp | undefined;
+  if (sub === "pending") {
+    const value = requireOption(parsed, "op");
+    assertPendingExternalOp(value);
+    op = value;
+  }
+
   // Read, change and write the ledger under one lock so two agents cannot
   // both claim the task, or lose each other's stop/approve.
   const ledgerFile = quotaLedgerPath(state.worktree, taskId);
+  // A retried `quota pending` for an operation that is already pending leaves
+  // the ledger unchanged (see pendingQuota); the task event is still recorded.
+  let alreadyPending = false;
   const ledger = await withFileLock(lockPathFor(ledgerFile), () => {
     const current = readQuotaLedger(state.worktree, taskId, true);
     // writeQuotaLedger writes to the path recorded in the ledger itself; it
@@ -615,20 +641,18 @@ async function cmdQuota(
     }
     switch (sub) {
       case "claim":
-        claimQuota(current, requireOption(parsed, "agent"));
+        claimQuota(current, agent);
         break;
-      case "stop": {
-        const reason = requireOption(parsed, "reason") as QuotaStopReason;
-        stopQuota(current, requireOption(parsed, "agent"), reason, note);
+      case "stop":
+        stopQuota(current, agent, reason as QuotaStopReason, note);
         break;
-      }
       case "resume":
-        resumeQuota(current, requireOption(parsed, "agent"), note);
+        resumeQuota(current, agent, note);
         break;
       case "pending":
-        pendingQuota(
+        alreadyPending = !pendingQuota(
           current,
-          requireOption(parsed, "op") as PendingExternalOp,
+          op as PendingExternalOp,
           note,
         );
         break;
@@ -636,13 +660,15 @@ async function cmdQuota(
         approveQuota(current, note);
         break;
       case "release":
-        releaseQuota(current, requireOption(parsed, "agent"));
+        releaseQuota(current, agent);
         break;
     }
-    writeQuotaLedger(current);
+    if (!alreadyPending) writeQuotaLedger(current);
     return current;
   });
-  const summary = summarizeQuota(ledger);
+  const summary = alreadyPending
+    ? { ...summarizeQuota(ledger), alreadyPending: true }
+    : summarizeQuota(ledger);
   appendTaskEvent(state.worktree, taskId, {
     timestamp: nowIso(),
     command: `quota ${sub}`,
