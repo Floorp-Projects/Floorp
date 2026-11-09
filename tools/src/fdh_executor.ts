@@ -185,10 +185,12 @@ function requireTime(value: string, name: string): number {
   return ms;
 }
 
+/** Is `state` terminal in the frozen table (succeeded/failed/cancelled)? */
 export function isTerminal(state: State): boolean {
   return TERMINAL.has(state);
 }
 
+/** Move the job to `to`; throws when the frozen table has no such edge. */
 function transition(
   job: JobJournal,
   to: State,
@@ -206,6 +208,7 @@ function transition(
   job.updatedAt = at;
 }
 
+/** Append one journal event (rejections, fencing, recoveries). */
 function event(
   job: JobJournal,
   kind: JobEventKind,
@@ -221,6 +224,7 @@ function event(
 // identity and digest
 // ---------------------------------------------------------------------------
 
+/** Job ids share the task-id alphabet and are at most 80 characters. */
 export function validateJobId(jobId: string): string {
   if (!/^[a-z0-9][a-z0-9-]*$/.test(jobId) || jobId.length > 80) {
     throw new Error(`invalid job id ${JSON.stringify(jobId)}`);
@@ -235,6 +239,7 @@ export function newJobId(kind: JobKind, at = nowIso()): string {
   return validateJobId(`${kind}-${stamp}-${random}`);
 }
 
+/** Key-sorted JSON so equal values always hash to the same digest. */
 function canonical(value: unknown): string {
   if (Array.isArray(value)) return `[${value.map(canonical).join(",")}]`;
   if (value !== null && typeof value === "object") {
@@ -248,6 +253,7 @@ function canonical(value: unknown): string {
   return JSON.stringify(value);
 }
 
+/** SHA-256 (hex) of the canonical {kind, spec, inputs} of a job. */
 export async function executionDigest(
   kind: JobKind,
   spec: StepSpec | IntentSpec,
@@ -297,6 +303,11 @@ export function createJob(input: CreateJobInput): JobJournal {
   if (!isIntent && input.step === undefined) {
     throw new Error(`a ${input.kind} job needs a step spec`);
   }
+  if (!isIntent && !isValidStep(input.step)) {
+    throw new Error(
+      "a step spec needs a non-empty string argv and a string cwd",
+    );
+  }
   if (isIntent && !INTENT_OPS.includes(input.intent!.op)) {
     throw new Error(`intent op must be one of ${INTENT_OPS.join("|")}`);
   }
@@ -313,15 +324,20 @@ export function createJob(input: CreateJobInput): JobJournal {
     throw new Error("max attempts must be a positive integer");
   }
   const at = input.at ?? nowIso();
+  requireTime(at, "creation time");
   const job: JobJournal = {
     schemaVersion: 1,
     jobId: input.jobId,
     taskId: input.taskId,
     worktree: input.worktree,
     kind: input.kind,
-    step: input.step ?? null,
-    intent: input.intent ?? null,
-    inputs: input.inputs,
+    // Copies: a caller that reuses its spec objects cannot change a recorded
+    // job behind its digest.
+    step: input.step === undefined
+      ? null
+      : { ...input.step, argv: [...input.step.argv] },
+    intent: input.intent === undefined ? null : { ...input.intent },
+    inputs: { ...input.inputs, guardEnv: { ...input.inputs.guardEnv } },
     executionDigest: input.executionDigest,
     state: "pending",
     epoch: 1,
@@ -353,6 +369,7 @@ export function createJob(input: CreateJobInput): JobJournal {
   return job;
 }
 
+/** The attempt of the current epoch (the journal invariant: the last one). */
 function currentAttempt(job: JobJournal): JobAttempt {
   const attempt = job.attempts[job.attempts.length - 1];
   if (attempt === undefined || attempt.epoch !== job.epoch) {
@@ -361,6 +378,7 @@ function currentAttempt(job: JobJournal): JobAttempt {
   return attempt;
 }
 
+/** The attempt that ran at `epoch`, if any. */
 function attemptAt(job: JobJournal, epoch: number): JobAttempt | undefined {
   return job.attempts.find((attempt) => attempt.epoch === epoch);
 }
@@ -380,6 +398,7 @@ export function beginAttempt(
   holder: string,
   at = nowIso(),
 ): BeginResult {
+  requireTime(at, "begin time");
   if (isTerminal(job.state)) return { ok: false, reason: "terminal" };
   if (epoch !== job.epoch) {
     event(job, "stale-epoch", at, epoch, `begin by ${holder} refused`);
@@ -393,6 +412,7 @@ export function beginAttempt(
   return { ok: true };
 }
 
+/** Mark the current attempt running, held by `holder`, with a fresh lease. */
 function startAttempt(
   job: JobJournal,
   epoch: number,
@@ -419,6 +439,7 @@ export function heartbeat(
   holder: string,
   at = nowIso(),
 ): HeartbeatResult {
+  requireTime(at, "heartbeat time");
   if (
     epoch !== job.epoch || job.lease === null || job.lease.epoch !== epoch ||
     job.lease.holder !== holder
@@ -502,16 +523,17 @@ export function applyReport(
     return { applied: false, reason: "already-applied" };
   }
   if (isTerminal(job.state)) return { applied: false, reason: "terminal" };
-  if (attempt.holder !== report.holder) {
-    event(
-      job,
-      "wrong-holder",
-      at,
-      report.epoch,
-      `report by ${report.holder} for an attempt held by ${
-        attempt.holder ?? "nobody"
-      }; not applied`,
-    );
+  if (attempt.holder !== report.holder.trim()) {
+    const note = `report by ${report.holder} for an attempt held by ${
+      attempt.holder ?? "nobody"
+    }; not applied`;
+    if (
+      !job.events.some((e) =>
+        e.kind === "wrong-holder" && e.epoch === report.epoch && e.note === note
+      )
+    ) {
+      event(job, "wrong-holder", at, report.epoch, note);
+    }
     return { applied: false, reason: "wrong-holder" };
   }
   attempt.result = report.exitCode === 0 ? "succeeded" : "failed";
@@ -528,6 +550,7 @@ export function applyReport(
   return { applied: true, state: job.state };
 }
 
+/** Has the holder's lease expired at `at` (no lease counts as expired)? */
 export function leaseExpired(job: JobJournal, at: string): boolean {
   if (job.lease === null) return true;
   // A corrupted heartbeat time counts as expired (take over, fail-safe).
@@ -774,11 +797,13 @@ export function resolveJob(
 // journal and outbox I/O
 // ---------------------------------------------------------------------------
 
+/** `<worktree>/_dist/fdh/jobs/<task-id>`. */
 export function jobsDir(worktree: string, taskId: string): string {
   validateTaskId(taskId);
   return path.join(worktree, FDH_JOBS_DIR, taskId);
 }
 
+/** Path of one job journal. */
 export function jobJournalPath(
   worktree: string,
   taskId: string,
@@ -787,6 +812,7 @@ export function jobJournalPath(
   return path.join(jobsDir(worktree, taskId), `${validateJobId(jobId)}.json`);
 }
 
+/** Path of the outbox an executor of `epoch` writes before its ACK. */
 export function outboxPath(
   worktree: string,
   taskId: string,
@@ -810,7 +836,10 @@ function renameWithRetry(from: string, to: string): void {
       Deno.renameSync(from, to);
       return;
     } catch (error) {
-      if (!(error instanceof Deno.errors.PermissionDenied) || retry >= 5) {
+      const retryable = error instanceof Deno.errors.PermissionDenied ||
+        error instanceof Deno.errors.Busy ||
+        (error instanceof Error && /os error 32\b/.test(error.message));
+      if (!retryable || retry >= 5) {
         try {
           Deno.removeSync(from);
         } catch {
@@ -846,6 +875,13 @@ const ATTEMPT_RESULTS: readonly AttemptResult[] = [
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+/** A step runs a non-empty argv of strings in a string cwd. */
+function isValidStep(step: unknown): step is StepSpec {
+  return isRecord(step) && Array.isArray(step.argv) &&
+    step.argv.length > 0 && step.argv.every((arg) => typeof arg === "string") &&
+    typeof step.cwd === "string";
 }
 
 export function parseJobJournal(value: unknown): JobJournal {
@@ -896,6 +932,13 @@ export function parseJobJournal(value: unknown): JobJournal {
       throw new Error("invalid fdh job journal: attempts entry");
     }
   }
+  for (let i = 1; i < job.attempts.length; i++) {
+    if (job.attempts[i].epoch <= job.attempts[i - 1].epoch) {
+      throw new Error(
+        "invalid fdh job journal: attempt epochs must strictly increase",
+      );
+    }
+  }
   const last = job.attempts[job.attempts.length - 1];
   if (last === undefined || last.epoch !== job.epoch) {
     throw new Error(
@@ -908,11 +951,7 @@ export function parseJobJournal(value: unknown): JobJournal {
     ) {
       throw new Error("invalid fdh job journal: intent");
     }
-  } else if (
-    !isRecord(job.step) || !Array.isArray(job.step.argv) ||
-    !job.step.argv.every((arg) => typeof arg === "string") ||
-    job.step.argv.length === 0 || typeof job.step.cwd !== "string"
-  ) {
+  } else if (!isValidStep(job.step)) {
     throw new Error("invalid fdh job journal: step");
   }
   const lease = job.lease as unknown;
@@ -927,6 +966,7 @@ export function parseJobJournal(value: unknown): JobJournal {
   return job as JobJournal;
 }
 
+/** Read and validate one journal (no lock; use `updateJob` to change it). */
 export function readJob(
   worktree: string,
   taskId: string,
@@ -961,24 +1001,26 @@ export async function writeNewJob(job: JobJournal): Promise<string> {
 }
 
 /**
- * Read, change and write one journal under its lock. `fn` may return a value;
- * the journal is written only when `fn` did not throw.
+ * Read, change and write one journal under its lock. `fn` may return a value
+ * or a promise; the journal is written only after `fn` settled without
+ * throwing, still under the lock.
  */
 export async function updateJob<T>(
   worktree: string,
   taskId: string,
   jobId: string,
-  fn: (job: JobJournal) => T,
+  fn: (job: JobJournal) => T | Promise<T>,
 ): Promise<{ job: JobJournal; value: T }> {
   const file = jobJournalPath(worktree, taskId, jobId);
-  return await withFileLock(lockPathFor(file), () => {
+  return await withFileLock(lockPathFor(file), async () => {
     const job = readJob(worktree, taskId, jobId);
-    const value = fn(job);
+    const value = await fn(job);
     writeJsonAtomic(file, job);
     return { job, value };
   });
 }
 
+/** Job ids of a task, sorted; outbox, lock and tmp files are not jobs. */
 export function listJobIds(worktree: string, taskId: string): string[] {
   const dir = jobsDir(worktree, taskId);
   const ids: string[] = [];
@@ -994,6 +1036,7 @@ export function listJobIds(worktree: string, taskId: string): string[] {
   return ids.sort();
 }
 
+/** Write an executor's report to its outbox (before the ACK). */
 export function writeOutbox(
   worktree: string,
   taskId: string,
@@ -1149,9 +1192,7 @@ export async function runExecutor(
 
   // Refs use "/" on every OS so evidence from different machines compares.
   const logRef = posixJoin(
-    "_dist",
-    "fdh",
-    "jobs",
+    ...FDH_JOBS_DIR.split(/[\\/]/),
     taskId,
     `${jobId}-${epoch}.log`,
   );

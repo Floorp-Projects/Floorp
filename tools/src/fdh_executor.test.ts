@@ -50,7 +50,6 @@ function stepJob(
   extra: Partial<CreateJobInput> = {},
 ): JobJournal {
   return createJob({
-    ...extra,
     jobId: "test-1",
     taskId: "t1",
     worktree,
@@ -909,5 +908,93 @@ Deno.test("fdh executor run: heartbeats stay inside a short TTL and log refs use
     assertEquals(job.attempts[0].logRef, "_dist/fdh/jobs/t1/test-1-1.log");
   } finally {
     await Deno.remove(h.dir, { recursive: true });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// second review round (PR #3091, head 8541a43c)
+// ---------------------------------------------------------------------------
+
+Deno.test("fdh executor: a recorded job does not change when the caller reuses its spec", () => {
+  const step = { ...STEP, argv: [...STEP.argv] };
+  const inputs = { ...INPUTS, guardEnv: { A: "1" } };
+  const job = createJob({
+    jobId: "test-1",
+    taskId: "t1",
+    worktree: "/wt",
+    kind: "test",
+    step,
+    inputs,
+    executionDigest: "d1",
+    at: at(0),
+  });
+  step.argv.push("--extra");
+  inputs.guardEnv.A = "2";
+  assertEquals(job.step?.argv, STEP.argv);
+  assertEquals(job.inputs.guardEnv, { A: "1" });
+});
+
+Deno.test("fdh executor: an empty argv and bad times are refused when the job is created or touched", () => {
+  assertThrows(
+    () => stepJob("/wt", { step: { ...STEP, argv: [] } }),
+    Error,
+    "non-empty string argv",
+  );
+  assertThrows(() => stepJob("/wt", { at: "garbage" }), Error, "creation time");
+  const job = stepJob();
+  assertThrows(
+    () => beginAttempt(job, 1, "x1", "garbage"),
+    Error,
+    "begin time",
+  );
+  beginAttempt(job, 1, "x1", at(0));
+  assertThrows(() => heartbeat(job, 1, "x1", ""), Error, "heartbeat time");
+  assertEquals(job.lease?.heartbeatAt, at(0));
+});
+
+Deno.test("fdh executor: attempt epochs must strictly increase in a journal", () => {
+  const job = stepJob();
+  beginAttempt(job, 1, "x1", at(0));
+  reconcileJob(job, { currentDigest: "d1", at: at(TTL + 1) });
+  const copy = JSON.parse(JSON.stringify(job));
+  copy.attempts[0].epoch = 2;
+  assertThrows(() => parseJobJournal(copy), Error, "strictly increase");
+});
+
+Deno.test("fdh executor: wrong-holder reports are recorded once; a padded holder still matches", () => {
+  const job = stepJob();
+  beginAttempt(job, 1, "x1", at(0));
+  for (let i = 0; i < 4; i++) {
+    applyReport(job, report(1, 0, 5, "mallory"), at(5 + i));
+  }
+  assertEquals(job.events.filter((e) => e.kind === "wrong-holder").length, 1);
+  assertEquals(applyReport(job, report(1, 0, 20, " x1 "), at(20)), {
+    applied: true,
+    state: "succeeded",
+  });
+});
+
+Deno.test("fdh executor: updateJob writes only after an async change settled", async () => {
+  const dir = await Deno.makeTempDir();
+  try {
+    await writeNewJob(stepJob(dir));
+    await updateJob(dir, "t1", "test-1", async (job) => {
+      await new Promise((r) => setTimeout(r, 10));
+      beginAttempt(job, 1, "x1", at(0));
+    });
+    assertEquals(readJob(dir, "t1", "test-1").state, "running");
+    await assertRejects(
+      () =>
+        updateJob(dir, "t1", "test-1", async (job) => {
+          heartbeat(job, 1, "x1", at(1));
+          await Promise.resolve();
+          throw new Error("boom");
+        }),
+      Error,
+      "boom",
+    );
+    assertEquals(readJob(dir, "t1", "test-1").lease?.heartbeatAt, at(0));
+  } finally {
+    await Deno.remove(dir, { recursive: true });
   }
 });
