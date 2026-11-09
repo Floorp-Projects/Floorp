@@ -5,6 +5,7 @@ import {
   parseReceiptComments,
   receiptFileName,
   REVIEW_TIERS,
+  selectTrustedReceiptComments,
   validateReceipt,
   validateReceiptSet,
 } from "./fdh_review.ts";
@@ -155,7 +156,8 @@ Deno.test("fdh review: one reviewer posting twice is not two reviews", () => {
   );
 });
 
-Deno.test("fdh review: an invalid receipt anywhere fails the set gate", () => {
+Deno.test("fdh review: receipts for other commits are ignored, not counted", () => {
+  // A stale receipt from an earlier head cannot make up the second reviewer.
   assertThrows(
     () =>
       validateReceiptSet(
@@ -163,12 +165,108 @@ Deno.test("fdh review: an invalid receipt anywhere fails the set gate", () => {
         HEAD,
       ),
     Error,
-    "does not match PR head",
+    "1 receipt(s) for other commits ignored",
+  );
+  // Nor can it block a head that has two valid receipts.
+  const summary = validateReceiptSet(
+    [
+      receipt({ commit: "c".repeat(40), verdict: "request_changes" }),
+      receipt({ commit: "d".repeat(40), schemaVersion: 99 }),
+      { not: "a receipt" },
+      receipt(),
+      receipt({ reviewer: "agent-b" }),
+    ],
+    HEAD,
+  );
+  assertEquals(summary.reviewers, ["agent-a", "agent-b"]);
+  assertEquals(summary.staleReceipts, 3);
+  // Upper-case head SHAs in receipts still count as the head.
+  assertEquals(
+    validateReceiptSet(
+      [receipt(), receipt({ reviewer: "agent-b", commit: HEAD.toUpperCase() })],
+      HEAD,
+    ).staleReceipts,
+    0,
   );
   assertThrows(
     () => validateReceiptSet([], HEAD),
     Error,
     "at least 2 distinct reviewers",
+  );
+});
+
+Deno.test("fdh review: an invalid receipt at the head still fails the set gate", () => {
+  assertThrows(
+    () =>
+      validateReceiptSet(
+        [receipt(), receipt({ reviewer: "agent-b", blocking: true })],
+        HEAD,
+      ),
+    Error,
+    "blocking",
+  );
+  assertThrows(
+    () =>
+      validateReceiptSet(
+        [
+          receipt(),
+          receipt({ reviewer: "agent-b", verdict: "request_changes" }),
+        ],
+        HEAD,
+      ),
+    Error,
+    "not mergeable",
+  );
+});
+
+Deno.test("fdh review: only receipts from trusted comment authors count", () => {
+  const marker = (r: Record<string, unknown>) =>
+    `<!-- fdh-review-receipt:v1 ${JSON.stringify(r)} -->`;
+  const comments = [
+    {
+      body: marker(receipt()),
+      author: "maintainer",
+      authorAssociation: "MEMBER",
+    },
+    {
+      body: marker(receipt({ reviewer: "agent-b" })),
+      author: "outsider",
+      authorAssociation: "NONE",
+    },
+    // A broken marker from an outsider must not fail the gate either.
+    {
+      body: "<!-- fdh-review-receipt:v1 {not json -->",
+      author: "spammer",
+      authorAssociation: "FIRST_TIME_CONTRIBUTOR",
+    },
+    { body: "plain discussion", author: "outsider", authorAssociation: "NONE" },
+    {
+      body: marker(receipt({ reviewer: "agent-c" })),
+      author: "collab",
+      authorAssociation: "collaborator",
+    },
+    { body: marker(receipt({ reviewer: "agent-d" })), author: "anon" },
+  ];
+  const { trusted, ignored } = selectTrustedReceiptComments(comments);
+  assertEquals(trusted.map((c) => c.author), ["maintainer", "collab"]);
+  assertEquals(ignored, [
+    { author: "outsider", authorAssociation: "NONE" },
+    { author: "spammer", authorAssociation: "FIRST_TIME_CONTRIBUTOR" },
+    { author: "anon", authorAssociation: "(missing)" },
+  ]);
+  const summary = validateReceiptSet(parseReceiptComments(trusted), HEAD);
+  assertEquals(summary.reviewers, ["agent-a", "agent-c"]);
+  // The outsider's receipt alone would not make a second reviewer.
+  assertThrows(
+    () =>
+      validateReceiptSet(
+        parseReceiptComments(
+          selectTrustedReceiptComments(comments.slice(0, 2)).trusted,
+        ),
+        HEAD,
+      ),
+    Error,
+    "distinct reviewers",
   );
 });
 

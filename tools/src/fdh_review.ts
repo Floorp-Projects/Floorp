@@ -62,9 +62,58 @@ export interface ReviewReceipt {
   tier: ReviewTier;
 }
 
-/** A PR comment body, as returned by the GitHub comments API. */
+/** A PR comment, as returned by the GitHub issue comments API. */
 export interface ReviewCommentInput {
   body?: string | null;
+  /** `user.login` of the comment author. */
+  author?: string | null;
+  /** GitHub `author_association` of the comment author. */
+  authorAssociation?: string | null;
+}
+
+/**
+ * Comment authors whose receipts the gate counts (X-01). Anyone can comment
+ * on a public PR, so receipts from other associations (CONTRIBUTOR, NONE,
+ * FIRST_TIME_CONTRIBUTOR, ...) are ignored rather than trusted or allowed to
+ * fail the gate with a malformed marker.
+ */
+export const TRUSTED_RECEIPT_AUTHOR_ASSOCIATIONS = [
+  "OWNER",
+  "MEMBER",
+  "COLLABORATOR",
+] as const;
+
+/** Result of splitting PR comments by whether their author is trusted. */
+export interface TrustedReceiptComments {
+  trusted: ReviewCommentInput[];
+  /** Receipt-bearing comments that were not counted, for the gate log. */
+  ignored: { author: string; authorAssociation: string }[];
+}
+
+/**
+ * Keep the comments whose author association is trusted. Comments without a
+ * receipt marker are dropped either way; untrusted receipt comments are
+ * reported in `ignored` so the gate can log them.
+ */
+export function selectTrustedReceiptComments(
+  comments: readonly ReviewCommentInput[],
+  trustedAssociations: readonly string[] = TRUSTED_RECEIPT_AUTHOR_ASSOCIATIONS,
+): TrustedReceiptComments {
+  const trusted: ReviewCommentInput[] = [];
+  const ignored: TrustedReceiptComments["ignored"] = [];
+  for (const comment of comments) {
+    if (!(comment.body ?? "").includes(FDH_REVIEW_RECEIPT_MARKER)) continue;
+    const association = (comment.authorAssociation ?? "").toUpperCase();
+    if (trustedAssociations.includes(association)) {
+      trusted.push(comment);
+    } else {
+      ignored.push({
+        author: comment.author ?? "(unknown)",
+        authorAssociation: association || "(missing)",
+      });
+    }
+  }
+  return { trusted, ignored };
 }
 
 /** Distinct-reviewer summary produced by `validateReceiptSet`. */
@@ -75,6 +124,8 @@ export interface ReviewReceiptSummary {
   reviewers: string[];
   /** Distinct model ids among the receipts (sorted). */
   models: string[];
+  /** Receipts for other commits that were ignored. */
+  staleReceipts: number;
 }
 
 const RECEIPT_MARKER_RE = /<!--\s*fdh-review-receipt:v1\s+([\s\S]*?)-->/g;
@@ -190,10 +241,23 @@ export function validateReceipt(
   };
 }
 
+/** The `commit` a receipt claims, lower-cased, or null when it has none. */
+function receiptCommit(receipt: unknown): string | null {
+  if (typeof receipt !== "object" || receipt === null) return null;
+  const commit = (receipt as { commit?: unknown }).commit;
+  return typeof commit === "string" ? commit.trim().toLowerCase() : null;
+}
+
 /**
- * Validate every receipt against the head commit and require at least
+ * Validate the receipts for the head commit and require at least
  * `minDistinctReviewers` distinct reviewer identities. The count is by
  * reviewer, not by receipt, so one reviewer posting twice cannot pass.
+ *
+ * Receipts for other commits (an earlier head before a re-review) are stale:
+ * they are ignored and counted in `staleReceipts`, never validated, so they
+ * can neither pass nor block the gate. Every receipt that claims the head is
+ * validated strictly; one with a bad verdict, `blocking: true` or a broken
+ * schema fails the gate.
  */
 export function validateReceiptSet(
   receipts: readonly unknown[],
@@ -201,9 +265,11 @@ export function validateReceiptSet(
   minDistinctReviewers = 2,
 ): ReviewReceiptSummary {
   const expectedHead = requireString(headSha, "head SHA").toLowerCase();
-  const valid = receipts.map((receipt) =>
-    validateReceipt(receipt, expectedHead)
+  const atHead = receipts.filter((receipt) =>
+    receiptCommit(receipt) === expectedHead
   );
+  const staleReceipts = receipts.length - atHead.length;
+  const valid = atHead.map((receipt) => validateReceipt(receipt, expectedHead));
   const reviewers = [...new Set(valid.map((r) => r.reviewer.toLowerCase()))]
     .sort();
   const models = [...new Set(valid.map((r) => r.model))].sort();
@@ -211,7 +277,7 @@ export function validateReceiptSet(
     throw new Error(
       `review gate requires at least ${minDistinctReviewers} distinct reviewers at head ${expectedHead}; found ${reviewers.length} (${
         reviewers.join(", ") || "none"
-      })`,
+      }; ${staleReceipts} receipt(s) for other commits ignored)`,
     );
   }
   return {
@@ -219,6 +285,7 @@ export function validateReceiptSet(
     receipts: valid,
     reviewers,
     models,
+    staleReceipts,
   };
 }
 
