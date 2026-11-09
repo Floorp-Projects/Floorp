@@ -18,7 +18,6 @@ interface TestTab {
 }
 
 interface TestGBrowser {
-  selectedTab: TestTab;
   addTab(
     uri: string,
     options: { triggeringPrincipal: nsIPrincipal },
@@ -50,24 +49,32 @@ async function testClosedTabEntriesAreDropped(): Promise<void> {
   const tab = testGBrowser.addTab("about:blank", {
     triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
   });
-  const bcid = tab.linkedBrowser.browsingContext?.id;
-  assert(bcid !== undefined, "the new tab should have a browsing context");
+  let tabRemoved = false;
+  let bcid: number | undefined;
+  let retained = false;
+  try {
+    bcid = tab.linkedBrowser.browsingContext?.id;
+    assert(bcid !== undefined, "the new tab should have a browsing context");
 
-  // Stand in for a request the tab left behind (e.g. one that never reported
-  // http-on-stop-request) so the test does not depend on network access.
-  tracker.activeRequests.set(
-    bcid,
-    new Set([{ name: "kan13-test" } as unknown as nsIRequest]),
-  );
+    // Stand in for a request the tab left behind (e.g. one still pending when
+    // the tab closed) so the test does not depend on network access.
+    tracker.activeRequests.set(
+      bcid,
+      new Set([{ name: "kan13-test" } as unknown as nsIRequest]),
+    );
 
-  testGBrowser.removeTab(tab, { animate: false });
+    testGBrowser.removeTab(tab, { animate: false });
+    tabRemoved = true;
 
-  const deadline = Date.now() + 10_000;
-  while (tracker.activeRequests.has(bcid) && Date.now() < deadline) {
-    await sleep(50);
+    const deadline = Date.now() + 10_000;
+    while (tracker.activeRequests.has(bcid) && Date.now() < deadline) {
+      await sleep(50);
+    }
+    retained = tracker.activeRequests.has(bcid);
+  } finally {
+    if (bcid !== undefined) tracker.activeRequests.delete(bcid);
+    if (!tabRemoved) testGBrowser.removeTab(tab, { animate: false });
   }
-  const retained = tracker.activeRequests.has(bcid);
-  tracker.activeRequests.delete(bcid);
 
   assert(
     !retained,
