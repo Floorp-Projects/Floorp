@@ -8,26 +8,33 @@ import {
   assertThrows,
 } from "@std/assert";
 import {
+  advanceCheckpoint,
   applyReport,
   beginAttempt,
+  cancelJob,
   confirmIntent,
   createJob,
   type CreateJobInput,
   DEFAULT_LEASE_TTL_MS,
   executionDigest,
+  finishCancel,
   heartbeat,
   type JobInputs,
   type JobJournal,
   listJobIds,
+  markRecordedToTask,
   newJobId,
+  parseExecutorFault,
   parseJobJournal,
   readJob,
   readOutbox,
   reconcileJob,
   reconcileJobFile,
+  recordStepProcess,
   resolveJob,
   runExecutor,
   type RunningStep,
+  type StepCommand,
   type StepSpec,
   updateJob,
   writeNewJob,
@@ -39,10 +46,18 @@ const at = (ms: number) => new Date(T0 + ms).toISOString();
 const TTL = DEFAULT_LEASE_TTL_MS;
 
 const STEP: StepSpec = {
-  argv: ["deno", "task", "test:host"],
   cwd: "/wt",
   displayCommand: "deno task test:host",
+  commands: [{
+    argv: ["deno", "task", "test:host"],
+    displayCommand: "deno task test:host",
+  }],
 };
+
+/** A step with one command whose argv is `argv`. */
+function stepWithArgv(argv: string[]): StepSpec {
+  return { ...STEP, commands: [{ argv, displayCommand: "x" }] };
+}
 const INPUTS: JobInputs = { baseCommit: "abc", head: "def", guardEnv: {} };
 
 function stepJob(
@@ -75,6 +90,7 @@ function report(
     exitCode,
     endedAt: at(ms),
     logRef: null,
+    results: [],
   };
 }
 
@@ -94,9 +110,9 @@ Deno.test("fdh executor: a step job records attempt 1 at epoch 1 before it start
 Deno.test("fdh executor: the execution digest is canonical and binds the inputs", async () => {
   const a = await executionDigest("test", STEP, INPUTS);
   const b = await executionDigest("test", {
+    commands: STEP.commands,
     displayCommand: STEP.displayCommand,
     cwd: STEP.cwd,
-    argv: STEP.argv,
   }, { guardEnv: {}, head: "def", baseCommit: "abc" });
   assertEquals(a, b);
   assertNotEquals(
@@ -419,7 +435,7 @@ interface Harness {
   step: (
     code: number,
     afterMs: number,
-  ) => (s: StepSpec, log: string) => RunningStep;
+  ) => (c: StepCommand, cwd: string, log: string) => RunningStep;
   killed: { value: boolean };
   /** Every sleep the executor asked for (milliseconds). */
   sleeps: number[];
@@ -905,7 +921,7 @@ Deno.test("fdh executor run: heartbeats stay inside a short TTL and log refs use
     assertEquals(outcome, { outcome: "applied", state: "succeeded" });
     assert(h.sleeps.length > 0 && Math.max(...h.sleeps) <= 333, `${h.sleeps}`);
     const job = readJob(h.dir, "t1", "test-1");
-    assertEquals(job.attempts[0].logRef, "_dist/fdh/jobs/t1/test-1-1.log");
+    assertEquals(job.attempts[0].logRef, "_dist/fdh/jobs/t1/test-1-1-0.log");
   } finally {
     await Deno.remove(h.dir, { recursive: true });
   }
@@ -916,7 +932,7 @@ Deno.test("fdh executor run: heartbeats stay inside a short TTL and log refs use
 // ---------------------------------------------------------------------------
 
 Deno.test("fdh executor: a recorded job does not change when the caller reuses its spec", () => {
-  const step = { ...STEP, argv: [...STEP.argv] };
+  const step = stepWithArgv(["deno", "task", "test:host"]);
   const inputs = { ...INPUTS, guardEnv: { A: "1" } };
   const job = createJob({
     jobId: "test-1",
@@ -928,15 +944,15 @@ Deno.test("fdh executor: a recorded job does not change when the caller reuses i
     executionDigest: "d1",
     at: at(0),
   });
-  step.argv.push("--extra");
+  step.commands[0].argv.push("--extra");
   inputs.guardEnv.A = "2";
-  assertEquals(job.step?.argv, STEP.argv);
+  assertEquals(job.step?.commands[0].argv, ["deno", "task", "test:host"]);
   assertEquals(job.inputs.guardEnv, { A: "1" });
 });
 
 Deno.test("fdh executor: an empty argv and bad times are refused when the job is created or touched", () => {
   assertThrows(
-    () => stepJob("/wt", { step: { ...STEP, argv: [] } }),
+    () => stepJob("/wt", { step: stepWithArgv([]) }),
     Error,
     "non-empty string argv",
   );
@@ -1043,7 +1059,7 @@ Deno.test("fdh executor: an intent with a step, and a step with an empty program
     "an intent job needs an intent spec",
   );
   assertThrows(
-    () => stepJob("/wt", { step: { ...STEP, argv: [""] } }),
+    () => stepJob("/wt", { step: stepWithArgv([""]) }),
     Error,
     "non-empty string argv",
   );
@@ -1091,7 +1107,7 @@ Deno.test("fdh executor: journals mixing intent and step, and sparse argv, are r
   const sparse: string[] = ["deno"];
   sparse[2] = "x";
   assertThrows(
-    () => stepJob("/wt", { step: { ...STEP, argv: sparse } }),
+    () => stepJob("/wt", { step: stepWithArgv(sparse) }),
     Error,
     "non-empty string argv",
   );
@@ -1146,6 +1162,320 @@ Deno.test("fdh executor: a blank outbox holder is invalid, and a settled job ign
       currentDigest: "d1",
     });
     assertEquals(value, { action: "none", state: "succeeded" });
+  } finally {
+    await Deno.remove(dir, { recursive: true });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// commands, checkpoints, cancel, process identity (fdh job CLI)
+// ---------------------------------------------------------------------------
+
+const TWO: StepSpec = {
+  cwd: "/wt",
+  displayCommand: "build",
+  commands: [
+    { argv: ["deno", "a"], displayCommand: "a", assertionName: "a-exit" },
+    { argv: ["deno", "b"], displayCommand: "b", assertionName: "b-exit" },
+  ],
+};
+
+function cmdResult(index: number, epoch: number, exitCode = 0) {
+  return {
+    index,
+    epoch,
+    exitCode,
+    startedAt: at(0),
+    endedAt: at(1),
+    logRef: `l${index}`,
+  };
+}
+
+function stepJobRunning(): JobJournal {
+  const job = stepJob("/wt", { step: TWO, kind: "build" });
+  beginAttempt(job, 1, "x1", at(0));
+  return job;
+}
+
+Deno.test("fdh executor: a takeover resumes at the checkpoint, not at the first command", () => {
+  const job = stepJob("/wt", { step: TWO, kind: "build" });
+  beginAttempt(job, 1, "x1", at(0));
+  assertEquals(
+    advanceCheckpoint(job, 1, "x1", cmdResult(0, 1), at(5)),
+    "advanced",
+  );
+  assertEquals(job.checkpoint, 1);
+  assertEquals(job.lease?.heartbeatAt, at(5));
+  assertEquals(
+    reconcileJob(job, { currentDigest: "d1", at: at(5 + TTL + 1) }).action,
+    "respawn",
+  );
+  // The checkpoint survives the takeover; epoch 2 runs command 1 only.
+  assertEquals(job.checkpoint, 1);
+  beginAttempt(job, 2, "x2", at(TTL + 10));
+  // The old epoch can no longer checkpoint.
+  assertEquals(
+    advanceCheckpoint(job, 1, "x1", cmdResult(1, 1), at(TTL + 11)),
+    "fenced",
+  );
+  applyReport(
+    job,
+    { ...report(2, 0, TTL + 20), results: [cmdResult(1, 2)] },
+    at(TTL + 20),
+  );
+  assertEquals(job.state, "succeeded");
+  assertEquals(job.checkpoint, 2);
+  assertEquals(job.commandResults.map((r) => [r.index, r.epoch]), [[0, 1], [
+    1,
+    2,
+  ]]);
+  assertThrows(
+    () => advanceCheckpoint(stepJobRunning(), 1, "x1", cmdResult(3, 1), at(1)),
+    Error,
+    "cannot take command 3",
+  );
+});
+
+Deno.test("fdh executor: cancel closes an unstarted job at once and a running one through its holder", () => {
+  const scheduled = stepJob();
+  assertEquals(cancelJob(scheduled, "not needed", at(1)), "cancelled");
+  assertEquals(scheduled.attempts[0].result, "cancelled");
+
+  const running = stepJobRunning();
+  assertEquals(cancelJob(running, "", at(1)), "cancel_requested");
+  assertEquals(heartbeat(running, 1, "x1", at(2)), "cancel");
+  assertEquals(finishCancel(running, 1, "x2", at(3)), false);
+  assertEquals(finishCancel(running, 1, "x1", at(3)), true);
+  assertEquals(running.state, "cancelled");
+  assertEquals(running.lease, null);
+  assertThrows(() => cancelJob(running, "", at(4)), Error, "already cancelled");
+
+  // A holder that is gone while a cancel is pending: reconcile closes it.
+  const orphan = stepJobRunning();
+  cancelJob(orphan, "", at(1));
+  assertEquals(
+    reconcileJob(orphan, { currentDigest: "d1", at: at(TTL + 1) }),
+    { action: "cancelled", state: "cancelled" },
+  );
+  // A report that still arrives in cancel_requested is applied (the table
+  // allows cancel_requested -> succeeded/failed).
+  const late = stepJobRunning();
+  cancelJob(late, "", at(1));
+  assertEquals(applyReport(late, report(1, 0, 2, "x1"), at(2)).applied, true);
+  assertEquals(late.state, "succeeded");
+});
+
+Deno.test("fdh executor: an intent and a job awaiting approval are cancelled at once", () => {
+  const intent = createJob({
+    jobId: "intent-c",
+    taskId: "t1",
+    worktree: "/wt",
+    kind: "intent",
+    intent: { op: "push", target: "x" },
+    inputs: INPUTS,
+    executionDigest: "d",
+    holder: "a",
+    at: at(0),
+  });
+  assertEquals(cancelJob(intent, "will not push", at(1)), "cancelled");
+  assertEquals(
+    intent.transitions.slice(-2).map((t) => t.to),
+    ["cancel_requested", "cancelled"],
+  );
+  const waiting = createJob({
+    jobId: "intent-d",
+    taskId: "t1",
+    worktree: "/wt",
+    kind: "intent",
+    intent: { op: "pr", target: "x" },
+    inputs: INPUTS,
+    executionDigest: "d",
+    holder: "a",
+    at: at(0),
+  });
+  reconcileJob(waiting, { at: at(1), holderGone: true });
+  assertEquals(cancelJob(waiting, "", at(2)), "cancelled");
+});
+
+Deno.test("fdh executor: the step process is recorded only by the lease holder; terminal jobs are marked recorded", () => {
+  const job = stepJobRunning();
+  const identity = { pid: 42, startTime: "t", commandLine: "deno a" };
+  assertEquals(recordStepProcess(job, 1, "x9", identity), false);
+  assertEquals(recordStepProcess(job, 1, " x1 ", identity), true);
+  assertEquals(job.attempts[0].process, identity);
+  assertThrows(() => markRecordedToTask(job), Error, "not terminal");
+  applyReport(job, report(1, 0, 3, "x1"), at(3));
+  markRecordedToTask(job);
+  assertEquals(job.recordedToTask, true);
+  const parsed = parseJobJournal(JSON.parse(JSON.stringify(job)));
+  assertEquals(parsed.attempts[0].process?.pid, 42);
+  const broken = JSON.parse(JSON.stringify(job));
+  broken.checkpoint = 9;
+  assertThrows(() => parseJobJournal(broken), Error, "checkpoint");
+});
+
+Deno.test("fdh executor: FDH_JOB_FAULT values are parsed strictly", () => {
+  assertEquals(parseExecutorFault(undefined), null);
+  assertEquals(parseExecutorFault(""), null);
+  assertEquals(parseExecutorFault("exit-after-outbox"), {
+    kind: "exit-after-outbox",
+  });
+  assertEquals(parseExecutorFault("stall:2500"), { kind: "stall", ms: 2500 });
+  assertThrows(() => parseExecutorFault("stall"), Error, "FDH_JOB_FAULT");
+});
+
+Deno.test("fdh executor run: two commands checkpoint the first, and a takeover runs only the second", async () => {
+  const h = await harness({ step: TWO, kind: "build" });
+  try {
+    const ran: string[] = [];
+    const runStep = (command: StepCommand): RunningStep => {
+      ran.push(command.displayCommand);
+      return h.step(0, 1_000)(command, "/wt", "");
+    };
+    const first = await runExecutor({
+      worktree: h.dir,
+      taskId: "t1",
+      jobId: "test-1",
+      epoch: 1,
+      holder: "x1",
+      runStep,
+      now: h.now,
+      sleep: h.sleep,
+      fault: { kind: "exit-after-outbox" },
+      exit: (code) => {
+        throw new Error(`exit ${code}`);
+      },
+    }).catch((error) => error.message);
+    assertEquals(first, "exit 70");
+    assertEquals(ran, ["a", "b"]);
+    const job = readJob(h.dir, "t1", "test-1");
+    assertEquals(job.checkpoint, 1);
+    // Lose the outbox too: the takeover must start at command "b".
+    Deno.removeSync(`${h.dir}/_dist/fdh/jobs/t1/test-1.outbox-1.json`);
+    await updateJob(
+      h.dir,
+      "t1",
+      "test-1",
+      (j) =>
+        reconcileJob(j, { currentDigest: "d1", at: at(h.clock.t + 10 * TTL) }),
+    );
+    h.clock.t += 10 * TTL;
+    ran.length = 0;
+    const second = await runExecutor({
+      worktree: h.dir,
+      taskId: "t1",
+      jobId: "test-1",
+      epoch: 2,
+      holder: "x2",
+      runStep,
+      now: h.now,
+      sleep: h.sleep,
+    });
+    assertEquals(second, { outcome: "applied", state: "succeeded" });
+    assertEquals(ran, ["b"]);
+    const done = readJob(h.dir, "t1", "test-1");
+    assertEquals(done.commandResults.map((r) => [r.index, r.epoch]), [[0, 1], [
+      1,
+      2,
+    ]]);
+  } finally {
+    await Deno.remove(h.dir, { recursive: true });
+  }
+});
+
+Deno.test("fdh executor run: a cancel stops the running command", async () => {
+  const h = await harness();
+  try {
+    const run = runExecutor({
+      worktree: h.dir,
+      taskId: "t1",
+      jobId: "test-1",
+      epoch: 1,
+      holder: "x1",
+      runStep: h.step(0, 60_000),
+      now: h.now,
+      sleep: h.sleep,
+    });
+    while (readJob(h.dir, "t1", "test-1").state !== "running") {
+      await new Promise((r) => setTimeout(r, 0));
+    }
+    await updateJob(h.dir, "t1", "test-1", (j) => cancelJob(j, "", h.now()));
+    assertEquals(await run, { outcome: "cancelled" });
+    assert(h.killed.value);
+    assertEquals(readJob(h.dir, "t1", "test-1").state, "cancelled");
+  } finally {
+    await Deno.remove(h.dir, { recursive: true });
+  }
+});
+
+Deno.test("fdh executor run: the started command's process identity is recorded", async () => {
+  const h = await harness();
+  try {
+    const outcome = await runExecutor({
+      worktree: h.dir,
+      taskId: "t1",
+      jobId: "test-1",
+      epoch: 1,
+      holder: "x1",
+      runStep: (c, cwd, log) => ({
+        ...h.step(0, 3_000)(c, cwd, log),
+        pid: 4242,
+      }),
+      identify: (pid) =>
+        Promise.resolve({ pid, startTime: "s", commandLine: "c" }),
+      now: h.now,
+      sleep: h.sleep,
+    });
+    assertEquals(outcome, { outcome: "applied", state: "succeeded" });
+    assertEquals(readJob(h.dir, "t1", "test-1").attempts[0].process?.pid, 4242);
+  } finally {
+    await Deno.remove(h.dir, { recursive: true });
+  }
+});
+
+Deno.test("fdh executor run: a short heartbeat write failure is tolerated inside the TTL", async () => {
+  const h = await harness();
+  try {
+    const file = `${h.dir}/_dist/fdh/jobs/t1/test-1.json`;
+    const run = runExecutor({
+      worktree: h.dir,
+      taskId: "t1",
+      jobId: "test-1",
+      epoch: 1,
+      holder: "x1",
+      runStep: h.step(0, 8_000),
+      heartbeatMs: 2_000,
+      now: h.now,
+      sleep: h.sleep,
+    });
+    while (readJob(h.dir, "t1", "test-1").state !== "running") {
+      await new Promise((r) => setTimeout(r, 0));
+    }
+    const good = Deno.readTextFileSync(file);
+    Deno.writeTextFileSync(file, "{ broken");
+    // Restore before the lease (10 s) could have expired.
+    while (h.clock.t < 4_000) await new Promise((r) => setTimeout(r, 0));
+    Deno.writeTextFileSync(file, good);
+    assertEquals(await run, { outcome: "applied", state: "succeeded" });
+    assertEquals(h.killed.value, false);
+  } finally {
+    await Deno.remove(h.dir, { recursive: true });
+  }
+});
+
+Deno.test("fdh executor: an outbox with an unparsable endedAt is invalid", async () => {
+  const dir = await Deno.makeTempDir();
+  try {
+    await writeNewJob(stepJob(dir));
+    Deno.writeTextFileSync(
+      `${dir}/_dist/fdh/jobs/t1/test-1.outbox-1.json`,
+      JSON.stringify({ ...report(1, 0, 1), endedAt: "nope" }),
+    );
+    assertThrows(
+      () => readOutbox(dir, "t1", "test-1", 1),
+      Error,
+      "invalid fdh job outbox",
+    );
   } finally {
     await Deno.remove(dir, { recursive: true });
   }

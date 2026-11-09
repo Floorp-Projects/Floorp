@@ -2,6 +2,7 @@
 
 import { assertEquals, assertThrows } from "@std/assert";
 import {
+  approvePendingEntry,
   approveQuota,
   assertPendingExternalOp,
   assertQuotaStopReason,
@@ -288,4 +289,18 @@ Deno.test("fdh quota: parse constrains approvalPending ops and event shapes", ()
   );
   // a valid pending ledger parses
   assertEquals(parseQuotaLedger(state).approvalPending[0].note, "");
+});
+
+Deno.test("fdh quota: approvePendingEntry approves one matching entry only", () => {
+  const state = ledger();
+  pendingQuota(state, "push", "job a", NOW);
+  pendingQuota(state, "push", "job b", NOW);
+  assertEquals(
+    approvePendingEntry(state, "push", "job a", "resolved", NOW),
+    true,
+  );
+  assertEquals(state.approvalPending.map((p) => p.note), ["job b"]);
+  assertEquals(approvePendingEntry(state, "push", "job a", "", NOW), false);
+  assertEquals(state.events.at(-1)?.kind, "approve");
+  assertEquals(parseQuotaLedger(state).approvalPending.length, 1);
 });

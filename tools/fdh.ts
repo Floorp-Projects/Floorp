@@ -103,6 +103,25 @@ import {
   checkTaskSecrets,
 } from "./src/fdh_secrets.ts";
 import type { ExternalVerification, FdhTaskState } from "./src/fdh_task.ts";
+import {
+  cancelAndSettle,
+  confirmJob,
+  reconcileTaskJobs,
+  resolveAndApprove,
+  runExecutorProcess,
+  startIntent,
+  startStepJob,
+  summarizeJob,
+  waitForJob,
+} from "./src/fdh_job.ts";
+import {
+  INTENT_OPS,
+  type IntentOp,
+  listJobIds,
+  readJob,
+  type Resolution,
+  validateJobId,
+} from "./src/fdh_executor.ts";
 import type { ValidationError } from "./qa3/evidence/types.ts";
 
 const HELP = `
@@ -133,6 +152,32 @@ Commands:
                             dev server runs: 'dev down', build, then 'dev up'.
   verify test --task-id <id>
                             Run "deno task test:host"
+  job start --task-id <id> --step <build|test> [--phase <all|before-mach|after-mach>]
+            [--lease-ttl-ms <n>] [--max-attempts <n>]
+                            Record a durable job (run/attempt/epoch and an
+                            execution digest) and start a detached executor
+                            that runs the same commands as 'verify build|test';
+                            returns at once (B-02 ADR, D-23)
+  job wait --task-id <id> --job-id <id> [--timeout-ms <n>]
+                            Reconcile until the job is terminal or awaits
+                            approval; exits 1 unless it succeeded
+  job status --task-id <id> [--job-id <id>]
+  job reconcile --task-id <id>
+                            Reconcile jobs: reconnect to a live executor, apply
+                            a result left in the outbox, stop a lost step's
+                            process tree and start the next epoch, or fail it
+                            when its inputs changed or attempts ran out
+  job intent --task-id <id> --op <push|pr|release|external> --target <text> --agent <name>
+                            Record a non-idempotent operation before the agent
+                            performs it outside fdh; prints the job id/epoch
+  job confirm --task-id <id> --job-id <id> --epoch <n> --agent <name> --outcome <succeeded|failed>
+                            Record the intent's outcome (fenced by epoch)
+  job resolve --task-id <id> --job-id <id> --resolution <succeeded|failed|retry>
+              [--agent <name>] [--note <text>]
+                            Approver's decision on a job awaiting approval;
+                            also approves its quota pending entry
+  job cancel --task-id <id> --job-id <id> [--reason <text>]
+                            Cancel; a running step stops at its next heartbeat
   verify browser --task-id <id> [--eval <js>] [--expect <text>]
                             Check dev-tool browser status; --eval output is
                             recorded verbatim, and --expect turns it into an
@@ -185,6 +230,7 @@ Commands:
 
 State: <worktree>/_dist/fdh/tasks/<id>.json (git-ignored via _dist/).
 Quota ledger: <worktree>/_dist/fdh/quota/<id>.json (local-only).
+Jobs: <worktree>/_dist/fdh/jobs/<id>/<job-id>.json (journal, outbox, logs).
 Errors go to stderr and exit 1. The CLI never pushes, opens a PR, or calls a
 shared service; pending push/PR/release ops wait for 'quota approve'.
 `.trim();
@@ -361,9 +407,20 @@ async function cmdTaskResume(parsed: ParsedArgs): Promise<void> {
         : [];
     },
   });
+  // Reconcile the task's jobs. Resume means the previous agent session is
+  // gone (4-C), so an intent it left unconfirmed now awaits approval; a step
+  // job is only taken over when its executor's lease really expired.
+  const resumed = readTaskStateFor(report.worktree, taskId);
+  const jobs = await reconcileTaskJobs({
+    state: resumed,
+    intentHoldersGone: true,
+  });
+  if (quotaLedgerExists(report.worktree, taskId)) {
+    approvalPending = readQuotaLedger(report.worktree, taskId).approvalPending;
+  }
   // Resume never reruns push/PR/release; it reports the pending approvals so the
-  // agent waits for an explicit 'fdh quota approve'.
-  console.log(JSON.stringify({ ...report, approvalPending }));
+  // agent waits for an explicit 'fdh quota approve' or 'fdh job resolve'.
+  console.log(JSON.stringify({ ...report, approvalPending, jobs }));
 }
 
 /** Set on the child `task prepare` that runs after the parent's deno install. */
@@ -1154,6 +1211,235 @@ async function cmdEvidence(parsed: ParsedArgs): Promise<void> {
   }));
 }
 
+function requireInteger(
+  parsed: ParsedArgs,
+  name: string,
+  min: number,
+): number {
+  const raw = requireOption(parsed, name);
+  const value = Number(raw);
+  if (!/^\d+$/.test(raw) || !Number.isSafeInteger(value) || value < min) {
+    throw new Error(`--${name} must be an integer >= ${min}, got ${raw}`);
+  }
+  return value;
+}
+
+function optionalInteger(
+  parsed: ParsedArgs,
+  name: string,
+  min: number,
+): number | undefined {
+  return hasOption(parsed, name)
+    ? requireInteger(parsed, name, min)
+    : undefined;
+}
+
+const JOB_SUBCOMMANDS = [
+  "start",
+  "exec",
+  "status",
+  "wait",
+  "reconcile",
+  "intent",
+  "confirm",
+  "resolve",
+  "cancel",
+] as const;
+type JobSubcommand = (typeof JOB_SUBCOMMANDS)[number];
+
+async function cmdJob(parsed: ParsedArgs, sub: JobSubcommand): Promise<void> {
+  assertNoPositional(parsed, 2);
+  const allowed: Record<JobSubcommand, string[]> = {
+    start: ["task-id", "step", "phase", "lease-ttl-ms", "max-attempts"],
+    exec: ["task-id", "job-id", "epoch"],
+    status: ["task-id", "job-id"],
+    wait: ["task-id", "job-id", "timeout-ms"],
+    reconcile: ["task-id"],
+    intent: ["task-id", "op", "target", "agent", "lease-ttl-ms"],
+    confirm: ["task-id", "job-id", "epoch", "agent", "outcome"],
+    resolve: ["task-id", "job-id", "resolution", "agent", "note"],
+    cancel: ["task-id", "job-id", "reason"],
+  };
+  assertAllowedOptions(parsed, allowed[sub]);
+  const taskId = validateTaskId(requireOption(parsed, "task-id"));
+  // Validate every option before anything is read or written.
+  const jobId = hasOption(parsed, "job-id")
+    ? validateJobId(requireOption(parsed, "job-id"))
+    : undefined;
+  const needJob = sub !== "start" && sub !== "status" &&
+    sub !== "reconcile" && sub !== "intent";
+  if (needJob && jobId === undefined) {
+    throw new Error(`job ${sub} requires --job-id`);
+  }
+  const state = await loadStateForCwd(taskId);
+
+  switch (sub) {
+    case "start": {
+      const step = requireOption(parsed, "step");
+      if (step !== "build" && step !== "test") {
+        throw new Error(
+          `--step must be build or test, got ${JSON.stringify(step)}`,
+        );
+      }
+      const phase = step === "build"
+        ? parseBuildPhase(
+          hasOption(parsed, "phase")
+            ? requireOption(parsed, "phase")
+            : undefined,
+        )
+        : undefined;
+      if (step === "test" && hasOption(parsed, "phase")) {
+        throw new Error("--phase applies to --step build only");
+      }
+      const leaseTtlMs = optionalInteger(parsed, "lease-ttl-ms", 1_000);
+      const maxAttempts = optionalInteger(parsed, "max-attempts", 1);
+      // Same W-04 guard as 'verify build': no source build under this
+      // worktree's running dev browser.
+      if (phase !== undefined) {
+        try {
+          await assertSourceBuildAllowed(state.worktree, phase);
+        } catch (error) {
+          appendEvent(state, {
+            timestamp: nowIso(),
+            command: error instanceof DevGuardRefusalError
+              ? refusedBuildEventCommand(phase)
+              : guardFailedBuildEventCommand(phase),
+            note: error instanceof Error ? error.message : String(error),
+            exitCode: 1,
+          });
+          writeTaskState(state);
+          throw error;
+        }
+      }
+      const job = await startStepJob({
+        state,
+        kind: step,
+        phase,
+        leaseTtlMs,
+        maxAttempts,
+      });
+      console.log(JSON.stringify(summarizeJob(job)));
+      return;
+    }
+    case "exec": {
+      const epoch = requireInteger(parsed, "epoch", 1);
+      const outcome = await runExecutorProcess(
+        state.worktree,
+        taskId,
+        jobId!,
+        epoch,
+      );
+      console.log(JSON.stringify({ jobId, epoch, outcome }));
+      return;
+    }
+    case "status":
+    case "reconcile": {
+      const ids = jobId !== undefined
+        ? [jobId]
+        : listJobIds(state.worktree, taskId);
+      const reports = await reconcileTaskJobs({ state, jobIds: ids });
+      console.log(JSON.stringify({
+        reconciled: reports,
+        jobs: ids.map((id) =>
+          summarizeJob(readJob(state.worktree, taskId, id))
+        ),
+      }));
+      return;
+    }
+    case "wait": {
+      const timeoutMs = optionalInteger(parsed, "timeout-ms", 0) ?? 3_600_000;
+      const job = await waitForJob({ state, jobId: jobId!, timeoutMs });
+      console.log(JSON.stringify(summarizeJob(job)));
+      if (job.state !== "succeeded") {
+        throw new Error(`job ${jobId} is ${job.state}`);
+      }
+      return;
+    }
+    case "intent": {
+      const op = requireOption(parsed, "op");
+      if (!INTENT_OPS.includes(op as IntentOp)) {
+        throw new Error(
+          `--op must be one of ${INTENT_OPS.join("|")}, got ${
+            JSON.stringify(op)
+          }`,
+        );
+      }
+      const target = requireOption(parsed, "target");
+      const agent = requireOption(parsed, "agent");
+      const leaseTtlMs = optionalInteger(parsed, "lease-ttl-ms", 1_000);
+      const job = await startIntent(
+        state,
+        op as IntentOp,
+        target,
+        agent,
+        leaseTtlMs,
+      );
+      console.log(JSON.stringify(summarizeJob(job)));
+      return;
+    }
+    case "confirm": {
+      const epoch = requireInteger(parsed, "epoch", 1);
+      const agent = requireOption(parsed, "agent");
+      const outcome = requireOption(parsed, "outcome");
+      if (outcome !== "succeeded" && outcome !== "failed") {
+        throw new Error(
+          `--outcome must be succeeded or failed, got ${
+            JSON.stringify(outcome)
+          }`,
+        );
+      }
+      const { job, value } = await confirmJob(
+        state,
+        jobId!,
+        epoch,
+        agent,
+        outcome,
+      );
+      console.log(JSON.stringify({ ...summarizeJob(job), confirm: value }));
+      if (!value.applied) {
+        throw new Error(`confirm not applied: ${value.reason}`);
+      }
+      return;
+    }
+    case "resolve": {
+      const resolution = requireOption(parsed, "resolution");
+      if (
+        resolution !== "succeeded" && resolution !== "failed" &&
+        resolution !== "retry"
+      ) {
+        throw new Error(
+          `--resolution must be succeeded, failed or retry, got ${
+            JSON.stringify(resolution)
+          }`,
+        );
+      }
+      const note = hasOption(parsed, "note")
+        ? requireOption(parsed, "note")
+        : "";
+      const agent = hasOption(parsed, "agent")
+        ? requireOption(parsed, "agent")
+        : undefined;
+      const job = await resolveAndApprove(
+        state,
+        jobId!,
+        resolution as Resolution,
+        note,
+        agent,
+      );
+      console.log(JSON.stringify(summarizeJob(job)));
+      return;
+    }
+    case "cancel": {
+      const reason = hasOption(parsed, "reason")
+        ? requireOption(parsed, "reason")
+        : "";
+      const job = await cancelAndSettle(state, jobId!, reason);
+      console.log(JSON.stringify(summarizeJob(job)));
+      return;
+    }
+  }
+}
+
 async function main(argv: string[]): Promise<void> {
   const parsed = parseArgv(argv);
   if (
@@ -1204,6 +1490,11 @@ async function main(argv: string[]): Promise<void> {
         return await cmdSecrets(parsed, sub);
       }
       throw new Error(`unknown secrets command ${JSON.stringify(sub ?? "")}`);
+    case "job":
+      if (JOB_SUBCOMMANDS.includes(sub as JobSubcommand)) {
+        return await cmdJob(parsed, sub as JobSubcommand);
+      }
+      throw new Error(`unknown job command ${JSON.stringify(sub ?? "")}`);
     case "review":
       if (sub === "record") return await cmdReviewRecord(parsed);
       throw new Error(`unknown review command ${JSON.stringify(sub ?? "")}`);
