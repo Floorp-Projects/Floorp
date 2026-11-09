@@ -8,6 +8,7 @@ import {
   type FdhTaskState,
   type GitRunner,
   readTaskState,
+  readTaskStateFor,
   recordAssertion,
   requireWorktree,
   resumeTaskState,
@@ -237,6 +238,61 @@ Deno.test("resume fails when the recorded base commit is gone", async () => {
       Error,
       "base commit",
     );
+  });
+});
+
+/** Write `state` under `dir` as if the file had been copied there. */
+function writeStateUnder(dir: string, state: FdhTaskState): void {
+  const file = taskStatePath(dir, state.taskId);
+  Deno.mkdirSync(path.dirname(file), { recursive: true });
+  Deno.writeTextFileSync(file, JSON.stringify(state));
+}
+
+function exists(p: string): boolean {
+  try {
+    Deno.statSync(p);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+Deno.test("readTaskStateFor accepts a state recorded for this worktree", async () => {
+  await withTempDir((dir) => {
+    writeTaskState(makeState(dir));
+    assertEquals(readTaskStateFor(dir, "task-one").worktree, dir);
+  });
+});
+
+Deno.test("readTaskStateFor refuses a state that records another worktree", async () => {
+  await withTempDir((dir) => {
+    const here = path.join(dir, "a");
+    const other = path.join(dir, "b");
+    Deno.mkdirSync(here);
+    Deno.mkdirSync(other);
+    // A copied state file: it sits under `here` but records `other`, so every
+    // derived path (ledger, locks, the state file) would point at `other`.
+    writeStateUnder(here, makeState(other));
+    assertThrows(
+      () => readTaskStateFor(here, "task-one"),
+      Error,
+      `belongs to ${other}, not ${here}`,
+    );
+  });
+});
+
+Deno.test("readTaskStateFor refuses a state whose recorded worktree is gone", async () => {
+  await withTempDir((dir) => {
+    const here = path.join(dir, "a");
+    const moved = path.join(dir, "moved-away");
+    Deno.mkdirSync(here);
+    writeStateUnder(here, makeState(moved));
+    assertThrows(
+      () => readTaskStateFor(here, "task-one"),
+      Error,
+      "recorded worktree no longer exists",
+    );
+    assertEquals(exists(moved), false);
   });
 });
 

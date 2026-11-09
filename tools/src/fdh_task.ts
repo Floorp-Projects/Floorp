@@ -384,6 +384,43 @@ export function readTaskState(
   }
 }
 
+/**
+ * Refuse a task state that records a different worktree than the one it was
+ * read from (a moved or copied worktree, or a hand-edited file). Every later
+ * path (ledger, locks, the state file itself) is derived from
+ * `state.worktree`, so a mismatch would write outside the current checkout.
+ * `worktree` must already be a real path (resolveCurrentWorktree /
+ * requireWorktree return one).
+ */
+export function assertStateWorktree(
+  state: FdhTaskState,
+  worktree: string,
+): void {
+  let recordedWorktree: string;
+  try {
+    recordedWorktree = Deno.realPathSync(state.worktree);
+  } catch {
+    throw new Error(
+      `recorded worktree no longer exists: ${state.worktree}`,
+    );
+  }
+  if (recordedWorktree !== worktree) {
+    throw new Error(
+      `task ${state.taskId} belongs to ${recordedWorktree}, not ${worktree}`,
+    );
+  }
+}
+
+/** Read the state of `taskId` in `worktree` and check it belongs there. */
+export function readTaskStateFor(
+  worktree: string,
+  taskId: string,
+): FdhTaskState {
+  const state = readTaskState(worktree, taskId);
+  assertStateWorktree(state, worktree);
+  return state;
+}
+
 /** Write the state atomically (tmp file + rename) so a crash cannot truncate it. */
 export function writeTaskState(state: FdhTaskState): string {
   const file = taskStatePath(state.worktree, state.taskId);
@@ -914,21 +951,7 @@ export async function resumeTaskState(
     ? await requireWorktree(options.worktree, git)
     : await resolveCurrentWorktree(git);
 
-  const state = readTaskState(worktree, options.taskId);
-
-  let recordedWorktree: string;
-  try {
-    recordedWorktree = Deno.realPathSync(state.worktree);
-  } catch {
-    throw new Error(
-      `recorded worktree no longer exists: ${state.worktree}`,
-    );
-  }
-  if (recordedWorktree !== worktree) {
-    throw new Error(
-      `task ${state.taskId} belongs to ${recordedWorktree}, not ${worktree}`,
-    );
-  }
+  const state = readTaskStateFor(worktree, options.taskId);
 
   try {
     await git(worktree, ["cat-file", "-e", `${state.baseCommit}^{commit}`]);
