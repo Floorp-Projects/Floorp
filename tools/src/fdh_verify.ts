@@ -65,6 +65,20 @@ export function parseBuildPhase(raw?: string): BuildPhase {
   return raw;
 }
 
+/**
+ * Event command recorded when `verify build` refuses a source build because
+ * this worktree's dev server runs (W-04). The evidence builder matches it to
+ * flag source edits that were never compiled.
+ */
+export function refusedBuildEventCommand(phase: BuildPhase): string {
+  return `verify build --phase ${phase} (refused)`;
+}
+
+/** True when `command` is an event recorded by refusedBuildEventCommand. */
+export function isRefusedBuildEvent(command: string): boolean {
+  return /^verify build --phase \S+ \(refused\)$/.test(command);
+}
+
 /** True when `raw` is one of the documented phases (exact match). */
 export function isBuildPhase(raw: string): raw is BuildPhase {
   return BUILD_PHASES.includes(raw as BuildPhase);

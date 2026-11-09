@@ -6,6 +6,7 @@ import { assertEquals, assertRejects } from "@std/assert";
 import * as path from "@std/path";
 import {
   assertSourceBuildAllowed,
+  DevGuardRefusalError,
   devProcessesFileFor,
   liveDevProcesses,
   phaseCompilesSource,
@@ -83,10 +84,20 @@ Deno.test("source build is refused while the dev server runs", async () => {
           phase,
           deps([SERVER], [running(SERVER)], calls),
         ),
-      Error,
+      DevGuardRefusalError,
       "fdh dev down",
     );
   }
+});
+
+Deno.test("a failed process listing is not reported as a refusal", async () => {
+  const error = await assertRejects(() =>
+    assertSourceBuildAllowed(WORKTREE, "all", {
+      readRegistry: () => [SERVER],
+      listProcesses: () => Promise.reject(new Error("powershell: failed")),
+    })
+  );
+  assertEquals(error instanceof DevGuardRefusalError, false);
 });
 
 Deno.test("after-mach is allowed while the dev server runs", async () => {

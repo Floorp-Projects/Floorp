@@ -197,6 +197,31 @@ async function symlinkTypeFor(source: string): Promise<"file" | "dir"> {
   }
 }
 
+/**
+ * Re-create a copied link. Windows refuses symlinks without Developer Mode or
+ * elevation (os error 1314); a directory link then becomes a junction, like
+ * the injector's own fallback. A junction stores an absolute target, so a
+ * relative link text is resolved against the new link's directory.
+ */
+export function recreateLink(
+  linkText: string,
+  destination: string,
+  type: "file" | "dir",
+  symlink: typeof Deno.symlinkSync = Deno.symlinkSync,
+  os: typeof Deno.build.os = Deno.build.os,
+): "symlink" | "junction" {
+  try {
+    symlink(linkText, destination, { type });
+    return "symlink";
+  } catch (error) {
+    if (os !== "windows" || type !== "dir") throw error;
+    symlink(path.resolve(path.dirname(destination), linkText), destination, {
+      type: "junction",
+    });
+    return "junction";
+  }
+}
+
 async function copyTreeWithSymlinks(
   sourceRoot: string,
   destinationRoot: string,
@@ -210,9 +235,11 @@ async function copyTreeWithSymlinks(
       // Preserve the link text; a later Injector.run relinks devdir mounts.
       // Windows needs the link type when the target does not resolve from the
       // current directory (relative or missing targets); POSIX ignores it (W-02).
-      Deno.symlinkSync(await Deno.readLink(source), destination, {
-        type: await symlinkTypeFor(source),
-      });
+      recreateLink(
+        await Deno.readLink(source),
+        destination,
+        await symlinkTypeFor(source),
+      );
     } else if (info.isDirectory) {
       await copyTreeWithSymlinks(source, destination);
     } else if (info.isFile) {

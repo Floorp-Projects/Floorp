@@ -33,6 +33,7 @@ import {
   prepareVite,
   readRuntimeMarker,
   recordSetup,
+  recreateLink,
   type RuntimeMarker,
   type SetupRecord,
 } from "./setup.ts";
@@ -193,6 +194,122 @@ Deno.test("prepareRuntime falls back to symlink-preserving copy", () =>
     );
   }));
 
+Deno.test("runtime copy keeps directory and dangling links as dir links", () =>
+  withTempDir(async (root) => {
+    const source = path.join(root, "registry", "bin");
+    writeRuntimeTree(source);
+    Deno.mkdirSync(path.join(source, "realdir"));
+    Deno.writeTextFileSync(path.join(source, "realdir", "f.txt"), "f");
+    Deno.symlinkSync("realdir", path.join(source, "dirlink"), { type: "dir" });
+    Deno.symlinkSync("missing-dir", path.join(source, "dangling"), {
+      type: "dir",
+    });
+    const binRootDir = path.join(root, "target", "_dist", "bin");
+
+    assertEquals(await copyRuntimeTree(source, binRootDir), "symlink-fallback");
+    // The copied directory link resolves inside the new tree.
+    assertEquals(
+      Deno.readTextFileSync(path.join(binRootDir, "dirlink", "f.txt")),
+      "f",
+    );
+    // A dangling link is copied as a link, not dropped or followed.
+    assert(Deno.lstatSync(path.join(binRootDir, "dangling")).isSymlink);
+  }));
+
+Deno.test("recreateLink falls back to a junction for dir links on Windows only", () => {
+  const calls: Array<{ target: string; type: string | undefined }> = [];
+  const failSymlink: typeof Deno.symlinkSync = (target, _link, options) => {
+    calls.push({ target: String(target), type: options?.type });
+    if (options?.type !== "junction") {
+      throw new Error("A required privilege is not held (os error 1314)");
+    }
+  };
+  const destination = path.join("C:\\", "rt", "bin", "mount");
+
+  assertEquals(
+    recreateLink("..\\src", destination, "dir", failSymlink, "windows"),
+    "junction",
+  );
+  // The junction gets an absolute target resolved from the new link's parent.
+  assertEquals(calls[1].type, "junction");
+  assert(path.isAbsolute(calls[1].target));
+
+  // File links and non-Windows hosts keep the original error.
+  assertThrows(
+    () => recreateLink("a.txt", destination, "file", failSymlink, "windows"),
+    Error,
+    "1314",
+  );
+  assertThrows(
+    () => recreateLink("../src", destination, "dir", failSymlink, "linux"),
+    Error,
+    "1314",
+  );
+});
+
+Deno.test("prepareSetup uses a precomputed deps result without re-running deps", () =>
+  withTempDir(async (root) => {
+    let installs = 0;
+    const depsResult = {
+      status: "prepared" as const,
+      nodeModulesDir: path.join(root, "node_modules"),
+      installed: true,
+      isCI: false,
+    };
+    const record = await prepareSetup({
+      projectRoot: root,
+      depsResult,
+      deps: {
+        runInstall: () => {
+          installs += 1;
+          return 0;
+        },
+      },
+      vite: { devRunning: false },
+      now: () => "2026-11-09T00:00:00.000Z",
+    });
+    assertEquals(installs, 0);
+    assertEquals(record.deps, depsResult);
+  }));
+
+Deno.test("setup_deps.ts never reaches an npm package (W-05)", async () => {
+  // fdh.ts imports setup_deps.ts statically; an npm import anywhere in its
+  // local graph would break every fdh command before `deno install`.
+  const config = JSON.parse(
+    Deno.readTextFileSync(path.join(PROJECT_ROOT, "deno.json")),
+  ) as { imports?: Record<string, string> };
+  const imports = config.imports ?? {};
+  const seen = new Set<string>();
+  const visit = async (file: string): Promise<void> => {
+    if (seen.has(file)) return;
+    seen.add(file);
+    const text = await Deno.readTextFile(file);
+    // `import|export ... from "x"` (may span lines) or a bare `import "x"`.
+    const importPattern =
+      /^\s*(?:import|export)\b[^;]*?\bfrom\s*["']([^"']+)["']|^\s*import\s*["']([^"']+)["']/gm;
+    for (const match of text.matchAll(importPattern)) {
+      const specifier = match[1] ?? match[2];
+      if (specifier.startsWith(".")) {
+        await visit(path.resolve(path.dirname(file), specifier));
+        continue;
+      }
+      assertFalse(
+        specifier.startsWith("npm:"),
+        `${file} imports ${specifier}`,
+      );
+      const mapped = Object.entries(imports).find(([key]) =>
+        specifier === key || (key.endsWith("/") && specifier.startsWith(key))
+      );
+      assertFalse(
+        mapped?.[1].startsWith("npm:") ?? false,
+        `${file} imports ${specifier} -> ${mapped?.[1]}`,
+      );
+    }
+  };
+  await visit(path.join(PROJECT_ROOT, "tools", "src", "setup_deps.ts"));
+  assert(seen.size >= 3, "setup_deps.ts graph was not traversed");
+});
+
 Deno.test("prepareRuntime reports a missing registry source", () =>
   withTempDir(async (root) => {
     const binRootDir = path.join(root, "target", "_dist", "bin");
@@ -318,10 +435,12 @@ Deno.test("noraneko-devdir mount links use the per-OS form and are stable", () =
 
     const link = path.join(binRootDir, "noraneko-devdir", "content");
     const stored = await assertMountLinkForm(link, "content");
+    // Windows paths are case-insensitive; POSIX comparisons stay exact.
+    const comparable = (value: string) =>
+      Deno.build.os === "windows" ? value.toLowerCase() : value;
     assertEquals(
-      path.resolve(path.dirname(link), stored).toLowerCase(),
-      path.join(PROJECT_ROOT, "bridge", "loader-features", "_dist")
-        .toLowerCase(),
+      comparable(path.resolve(path.dirname(link), stored)),
+      comparable(path.join(PROJECT_ROOT, "bridge", "loader-features", "_dist")),
     );
 
     for (const mount of ["startup", "skin", "resource", "pages-settings"]) {
@@ -436,7 +555,7 @@ Deno.test("prepareSetup composes all steps and records the guard env", () =>
     assertEquals(relinks, 1);
   }));
 
-Deno.test("relative mount links resolve from the link parent in the same root", () => {
+Deno.test("mount links resolve to the target inside the same root", () => {
   // The temp bin root must sit under the project root, otherwise the extra
   // `..` from a path.relative(linkPath, target) bug clamps at `/` and passes.
   const root = Deno.makeTempDirSync({

@@ -31,6 +31,17 @@ export interface DevGuardDeps {
   listProcesses?: () => Promise<DevProcessInfo[]>;
 }
 
+/**
+ * The guard decided to refuse. Any other error from the guard (for example a
+ * failed process listing) means liveness could not be determined.
+ */
+export class DevGuardRefusalError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "DevGuardRefusalError";
+  }
+}
+
 /** True when the phase runs the before-mach source build. */
 export function phaseCompilesSource(phase: BuildPhase): boolean {
   return phase !== "after-mach";
@@ -69,13 +80,14 @@ export async function assertSourceBuildAllowed(
   if (!phaseCompilesSource(phase)) return;
   const live = await liveDevProcesses(worktree, deps);
   if (live.length === 0) return;
-  throw new Error(
+  throw new DevGuardRefusalError(
     `verify build --phase ${phase} refused: ${live.length} dev process(es) of ` +
       `this worktree are running (PIDs ${
         live.map((entry) => entry.pid).join(", ")
       }). The before-mach source build under a live dev browser leaves ` +
       `Marionette unable to start new sessions until the dev environment ` +
-      `restarts. Run 'fdh dev down' first, build, then 'fdh dev up'; or use ` +
-      `--phase after-mach to only re-inject the XHTML.`,
+      `restarts. Run 'fdh dev down' first, build, then 'fdh dev up'. ` +
+      `(--phase after-mach only re-injects the XHTML and does not compile ` +
+      `the source.)`,
   );
 }

@@ -1,6 +1,6 @@
 ---
 name: fdh-dev-loop
-description: Run the FDH Gate 3 local dev loop in an existing Floorp worktree with the fdh CLI (task start, edit, dev up, build/test/browser verification, EvidenceManifest v0, dev down). Use when an agent must verify a local change and produce schema-valid 2-D evidence without a conversation loop or shared services.
+description: Run the FDH Gate 3 local dev loop in an existing Floorp worktree with the fdh CLI (task start, prepare, edit, build verification, dev up, test/browser verification, EvidenceManifest v0, dev down). Use when an agent must verify a local change and produce schema-valid 2-D evidence without a conversation loop or shared services.
 ---
 
 # FDH local dev loop (`fdh`)
@@ -50,8 +50,11 @@ deno run -A tools/fdh.ts task start \
 # 2. Prepare the worktree in one idempotent command: deno install when fflate
 #    is missing, copy the Debug runtime into _dist/bin (--runtime-source is a
 #    registry tree such as /private/tmp/fdh-gate2/pr2b100/_dist/bin), relink
-#    relative devdir symlinks, wipe the copied sessionstore and node_modules/
-#    .vite, and record setup.guardEnv. Re-running it is a near no-op.
+#    the devdir mounts to this worktree (relative symlinks on POSIX, absolute
+#    symlinks or junctions on Windows), wipe the copied sessionstore and
+#    node_modules/.vite, and record setup.guardEnv. Re-running it is a near
+#    no-op. In a fresh worktree it runs `deno install` first and finishes in a
+#    new process.
 deno run -A tools/fdh.ts task prepare --task-id <task-id> \
   [--runtime-source <abs-registry-bin-dir>]
 

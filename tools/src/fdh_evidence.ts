@@ -29,6 +29,7 @@ import type {
 } from "../qa3/evidence/types.ts";
 import { UNVERIFIED, validateManifest } from "../qa3/evidence/validate.ts";
 import { type FdhTaskState, taskStatePath } from "./fdh_task.ts";
+import { isRefusedBuildEvent } from "./fdh_verify.ts";
 
 export const FDH_OWNER = "fdh-local-runner";
 export const FDH_PRINCIPAL_ID = "fdh-cli";
@@ -232,6 +233,27 @@ function buildLimitations(state: FdhTaskState, manifestState: State): string[] {
   } else if (!hasInjectBuild) {
     add(
       "XHTML injection was not verified; the recorded build assertion is before-mach source compilation only.",
+    );
+  }
+  // A source build refused after the last recorded source compilation means
+  // the latest source edits were never compiled, even if an earlier build or
+  // a later after-mach inject passed (W-04 review note).
+  const lastSourceBuildAt = Math.max(
+    -Infinity,
+    ...state.assertions
+      .filter((assertion) =>
+        assertion.name === "build-exit-code" ||
+        assertion.name === "external-build-exit-code"
+      )
+      .map((assertion) => Date.parse(assertion.at)),
+  );
+  const refusedAfterLastSource = state.events.some((event) =>
+    isRefusedBuildEvent(event.command) &&
+    Date.parse(event.timestamp) > lastSourceBuildAt
+  );
+  if (refusedAfterLastSource) {
+    add(
+      "A source build was refused after the last recorded source compilation (the dev server was running); the latest source edits were not compiled.",
     );
   }
   const hasTest = state.assertions.some((assertion) =>
