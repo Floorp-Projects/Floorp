@@ -998,3 +998,53 @@ Deno.test("fdh executor: updateJob writes only after an async change settled", a
     await Deno.remove(dir, { recursive: true });
   }
 });
+
+Deno.test("fdh executor: a padded executor holder is the same holder at begin, heartbeat and report", async () => {
+  const job = stepJob();
+  assertEquals(beginAttempt(job, 1, " x1 ", at(0)), { ok: true });
+  assertEquals(job.lease?.holder, "x1");
+  assertEquals(heartbeat(job, 1, " x1 ", at(1)), "renewed");
+  assertEquals(applyReport(job, report(1, 0, 2, " x1 "), at(2)).applied, true);
+  assertThrows(() => beginAttempt(stepJob(), 1, "  ", at(0)), Error, "holder");
+
+  const h = await harness();
+  try {
+    const outcome = await runExecutor({
+      worktree: h.dir,
+      taskId: "t1",
+      jobId: "test-1",
+      epoch: 1,
+      holder: " x1 ",
+      runStep: h.step(0, 3_000),
+      now: h.now,
+      sleep: h.sleep,
+    });
+    assertEquals(outcome, { outcome: "applied", state: "succeeded" });
+  } finally {
+    await Deno.remove(h.dir, { recursive: true });
+  }
+});
+
+Deno.test("fdh executor: an intent with a step, and a step with an empty program, are refused", () => {
+  assertThrows(
+    () =>
+      createJob({
+        jobId: "intent-9",
+        taskId: "t1",
+        worktree: "/wt",
+        kind: "intent",
+        intent: { op: "push", target: "x" },
+        step: STEP,
+        inputs: INPUTS,
+        executionDigest: "d",
+        holder: "a",
+      }),
+    Error,
+    "an intent job needs an intent spec",
+  );
+  assertThrows(
+    () => stepJob("/wt", { step: { ...STEP, argv: [""] } }),
+    Error,
+    "non-empty string argv",
+  );
+});

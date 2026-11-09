@@ -175,6 +175,17 @@ const TABLE = loadTransitions();
 const TERMINAL = new Set<State>(TABLE.terminalStates);
 
 /** Parse an ISO time; an unparsable value is a caller error, not "expired". */
+/**
+ * Holders are compared after trimming, at every entry point, so a padded id
+ * from a command line names the same holder everywhere. An empty one is an
+ * error.
+ */
+function normalizeHolder(holder: string): string {
+  const trimmed = typeof holder === "string" ? holder.trim() : "";
+  if (trimmed === "") throw new Error("holder must be a non-empty string");
+  return trimmed;
+}
+
 function requireTime(value: string, name: string): number {
   const ms = Date.parse(value);
   if (!Number.isFinite(ms)) {
@@ -295,7 +306,10 @@ export function createJob(input: CreateJobInput): JobJournal {
     throw new Error(`job kind must be one of ${JOB_KINDS.join("|")}`);
   }
   const isIntent = input.kind === "intent";
-  if (isIntent !== (input.intent !== undefined)) {
+  if (
+    isIntent !== (input.intent !== undefined) ||
+    (isIntent && input.step !== undefined)
+  ) {
     throw new Error(
       "an intent job needs an intent spec, a step job needs none",
     );
@@ -395,10 +409,11 @@ export type BeginResult =
 export function beginAttempt(
   job: JobJournal,
   epoch: number,
-  holder: string,
+  rawHolder: string,
   at = nowIso(),
 ): BeginResult {
   requireTime(at, "begin time");
+  const holder = normalizeHolder(rawHolder);
   if (isTerminal(job.state)) return { ok: false, reason: "terminal" };
   if (epoch !== job.epoch) {
     event(job, "stale-epoch", at, epoch, `begin by ${holder} refused`);
@@ -436,10 +451,11 @@ export type HeartbeatResult = "renewed" | "fenced";
 export function heartbeat(
   job: JobJournal,
   epoch: number,
-  holder: string,
+  rawHolder: string,
   at = nowIso(),
 ): HeartbeatResult {
   requireTime(at, "heartbeat time");
+  const holder = normalizeHolder(rawHolder);
   if (
     epoch !== job.epoch || job.lease === null || job.lease.epoch !== epoch ||
     job.lease.holder !== holder
@@ -523,7 +539,7 @@ export function applyReport(
     return { applied: false, reason: "already-applied" };
   }
   if (isTerminal(job.state)) return { applied: false, reason: "terminal" };
-  if (attempt.holder !== report.holder.trim()) {
+  if (attempt.holder !== normalizeHolder(report.holder)) {
     const note = `report by ${report.holder} for an attempt held by ${
       attempt.holder ?? "nobody"
     }; not applied`;
@@ -881,7 +897,8 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 function isValidStep(step: unknown): step is StepSpec {
   return isRecord(step) && Array.isArray(step.argv) &&
     step.argv.length > 0 && step.argv.every((arg) => typeof arg === "string") &&
-    typeof step.cwd === "string";
+    step.argv[0] !== "" && typeof step.cwd === "string" &&
+    typeof step.displayCommand === "string";
 }
 
 export function parseJobJournal(value: unknown): JobJournal {
