@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import type { TFormOption } from "#features-chrome/common/modal-parent/utils/type.ts";
+import { resolveContainerLabel } from "#modules/common/container-label.ts";
 import type { TWorkspaceContainerIdentity } from "./type.ts";
 
 export type WorkspaceContainerOptionTexts = {
@@ -31,7 +32,7 @@ export function createWorkspaceContainerOptions(
     const id = container.userContextId;
     options.push({
       value: String(id),
-      label: getUserContextLabel(id) || container.name ||
+      label: resolveContainerLabel(container, getUserContextLabel) ||
         texts.unavailableContainer(id),
       icon: "",
     });
