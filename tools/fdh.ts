@@ -510,23 +510,43 @@ async function cmdGui(
     writeGuiLease(file, current);
     return current;
   });
-  if (reason === undefined) {
-    appendEvent(state, {
-      timestamp: nowIso(),
-      command: "gui claim",
-      note: `GUI desktop lease claimed by ${agent}`,
-      exitCode: 0,
-    });
-  } else {
-    appendEvent(state, {
-      timestamp: nowIso(),
-      command: "gui end",
-      note: `GUI desktop lease ${reason} by ${agent}`,
-      exitCode: 0,
-    });
-  }
-  writeTaskState(state);
+  await appendTaskEventLocked(state.worktree, taskId, {
+    timestamp: nowIso(),
+    command: reason === undefined ? "gui claim" : "gui end",
+    note: reason === undefined
+      ? `GUI desktop lease claimed by ${agent}`
+      : `GUI desktop lease ${reason} by ${agent}`,
+    exitCode: 0,
+  });
   console.log(JSON.stringify({ ...summarizeGuiLease(lease), leasePath: file }));
+}
+
+/** Same file path after resolving; case-insensitive on Windows. */
+function samePath(a: string, b: string): boolean {
+  const norm = (p: string) => {
+    const resolved = path.resolve(p);
+    return Deno.build.os === "windows" ? resolved.toLowerCase() : resolved;
+  };
+  return norm(a) === norm(b);
+}
+
+/**
+ * Append one event to the task state under the task-state lock, re-reading
+ * the state inside the lock. Concurrent `quota`/`gui` commands on one task
+ * otherwise each write back the snapshot they loaded at start, and all but
+ * one event is lost from the audit trail. Other fdh commands still write the
+ * task state without this lock.
+ */
+async function appendTaskEventLocked(
+  worktree: string,
+  taskId: string,
+  event: Parameters<typeof appendEvent>[1],
+): Promise<void> {
+  await withFileLock(lockPathFor(taskStatePath(worktree, taskId)), () => {
+    const fresh = readTaskState(worktree, taskId);
+    appendEvent(fresh, event);
+    writeTaskState(fresh);
+  });
 }
 
 async function cmdSecrets(
@@ -585,6 +605,15 @@ async function cmdQuota(
   const ledgerFile = quotaLedgerPath(state.worktree, taskId);
   const ledger = await withFileLock(lockPathFor(ledgerFile), () => {
     const current = readQuotaLedger(state.worktree, taskId, true);
+    // writeQuotaLedger writes to the path recorded in the ledger itself; it
+    // must be the locked file, or the lock would not protect the update.
+    if (
+      !samePath(quotaLedgerPath(current.worktree, current.taskId), ledgerFile)
+    ) {
+      throw new Error(
+        `quota ledger ${ledgerFile} records another task or worktree (${current.taskId} in ${current.worktree}); refusing to update it`,
+      );
+    }
     switch (sub) {
       case "claim":
         claimQuota(current, requireOption(parsed, "agent"));
@@ -615,13 +644,12 @@ async function cmdQuota(
     return current;
   });
   const summary = summarizeQuota(ledger);
-  appendEvent(state, {
+  await appendTaskEventLocked(state.worktree, taskId, {
     timestamp: nowIso(),
     command: `quota ${sub}`,
     note: JSON.stringify(summary),
     exitCode: 0,
   });
-  writeTaskState(state);
   console.log(JSON.stringify(summary));
 }
 
