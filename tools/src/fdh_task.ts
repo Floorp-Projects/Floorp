@@ -17,6 +17,7 @@
 
 import * as path from "@std/path";
 import { encodeHex } from "@std/encoding/hex";
+import { lockPathFor } from "./fdh_lock.ts";
 import {
   type DevPortProbe,
   isTcpPortInUse,
@@ -374,7 +375,7 @@ export function readTaskState(
   const file = taskStatePath(worktree, taskId);
   const text = Deno.readTextFileSync(file);
   try {
-    return parseTaskState(JSON.parse(text));
+    return rememberLoaded(parseTaskState(JSON.parse(text)));
   } catch (error) {
     throw new Error(
       `invalid fdh task state at ${file}: ${
@@ -427,16 +428,125 @@ export function readTaskStateFor(
 ): FdhTaskState {
   const state = readTaskState(worktree, taskId);
   assertStateWorktree(state, worktree);
-  return { ...state, worktree };
+  return rememberLoaded({ ...state, worktree });
 }
 
-/** Write the state atomically (tmp file + rename) so a crash cannot truncate it. */
+// ---------------------------------------------------------------------------
+// Merge-on-write (KAN-129)
+//
+// fdh commands load the task state at start, run for seconds to minutes
+// (builds, tests) and write it back. Two commands on one task (a build plus a
+// `quota pending`, two agents' `gui claim`) would otherwise each write their
+// own snapshot and drop the other's events. `writeTaskState` therefore takes
+// an OS lock on `<state>.lock`, re-reads the file, and merges:
+//   - events / operations / assertions are append-only: the entries this
+//     process appended since it loaded the state go after the file's entries;
+//   - every other field is a three-way merge: a field this process changed
+//     since loading wins, an unchanged one keeps the file's current value.
+// ---------------------------------------------------------------------------
+
+const APPEND_ONLY_KEYS = ["events", "operations", "assertions"] as const;
+type AppendOnlyKey = typeof APPEND_ONLY_KEYS[number];
+
+interface LoadedSnapshot {
+  lengths: Record<AppendOnlyKey, number>;
+  /** JSON of every other top-level field as loaded (undefined = absent). */
+  fields: Map<string, string | undefined>;
+}
+
+const loadedSnapshots = new WeakMap<FdhTaskState, LoadedSnapshot>();
+
+function isAppendOnlyKey(key: string): key is AppendOnlyKey {
+  return (APPEND_ONLY_KEYS as readonly string[]).includes(key);
+}
+
+/** Remember what `state` looked like when it was read from (or written to) disk. */
+function rememberLoaded(state: FdhTaskState): FdhTaskState {
+  const fields = new Map<string, string | undefined>();
+  for (const [key, value] of Object.entries(state)) {
+    if (!isAppendOnlyKey(key)) fields.set(key, JSON.stringify(value));
+  }
+  loadedSnapshots.set(state, {
+    lengths: {
+      events: state.events.length,
+      operations: state.operations.length,
+      assertions: state.assertions.length,
+    },
+    fields,
+  });
+  return state;
+}
+
+function mergeTaskState(
+  current: FdhTaskState,
+  mine: FdhTaskState,
+  loaded: LoadedSnapshot,
+): FdhTaskState {
+  const merged: Record<string, unknown> = {};
+  const keys = new Set([...Object.keys(current), ...Object.keys(mine)]);
+  for (const key of keys) {
+    if (isAppendOnlyKey(key)) continue;
+    const mineValue = (mine as unknown as Record<string, unknown>)[key];
+    const changedHere = JSON.stringify(mineValue) !== loaded.fields.get(key);
+    const value = changedHere
+      ? mineValue
+      : (current as unknown as Record<string, unknown>)[key];
+    if (value !== undefined) merged[key] = value;
+  }
+  for (const key of APPEND_ONLY_KEYS) {
+    merged[key] = [
+      ...current[key],
+      ...mine[key].slice(loaded.lengths[key]),
+    ];
+  }
+  return merged as unknown as FdhTaskState;
+}
+
+/**
+ * Write the state atomically (tmp file + rename) so a crash cannot truncate
+ * it, merging with whatever other fdh processes wrote since `state` was read
+ * (see the merge-on-write note above). Afterwards `state` holds the merged
+ * content, so a later write from the same object appends only newer entries.
+ * A state that was never read (a new task) is written as is.
+ */
 export function writeTaskState(state: FdhTaskState): string {
   const file = taskStatePath(state.worktree, state.taskId);
   Deno.mkdirSync(path.dirname(file), { recursive: true });
-  const tmp = `${file}.tmp-${Deno.pid}`;
-  Deno.writeTextFileSync(tmp, `${JSON.stringify(state, null, 2)}\n`);
-  Deno.renameSync(tmp, file);
+  const lock = Deno.openSync(lockPathFor(file), { create: true, write: true });
+  try {
+    lock.lockSync(true);
+    try {
+      const loaded = loadedSnapshots.get(state);
+      let next = state;
+      if (loaded !== undefined) {
+        let current: FdhTaskState | undefined;
+        try {
+          current = readTaskState(state.worktree, state.taskId);
+        } catch (error) {
+          if (!(error instanceof Deno.errors.NotFound)) throw error;
+        }
+        if (current !== undefined) {
+          next = mergeTaskState(current, state, loaded);
+        }
+      }
+      const tmp = `${file}.tmp-${Deno.pid}`;
+      Deno.writeTextFileSync(tmp, `${JSON.stringify(next, null, 2)}\n`);
+      Deno.renameSync(tmp, file);
+      if (next !== state) {
+        for (const key of Object.keys(state)) {
+          if (!(key in next)) {
+            delete (state as unknown as Record<string, unknown>)[key];
+          }
+        }
+        Object.assign(state, next);
+      }
+      rememberLoaded(state);
+    } finally {
+      lock.unlockSync();
+    }
+  } finally {
+    lock.close();
+  }
   return file;
 }
 

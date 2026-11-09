@@ -532,22 +532,21 @@ function samePath(a: string, b: string): boolean {
 }
 
 /**
- * Append one event to the task state under the task-state lock, re-reading
- * the state inside the lock. Concurrent `quota`/`gui` commands on one task
- * otherwise each write back the snapshot they loaded at start, and all but
- * one event is lost from the audit trail. Other fdh commands still write the
- * task state without this lock.
+ * Append one event to the task state. `writeTaskState` takes the task-state
+ * lock and merges with the file's current content, so concurrent `quota` /
+ * `gui` / build commands on one task keep each other's events. (It must not
+ * be wrapped in another lock on the same file: a second handle in the same
+ * process would wait for itself.)
  */
-async function appendTaskEventLocked(
+function appendTaskEventLocked(
   worktree: string,
   taskId: string,
   event: Parameters<typeof appendEvent>[1],
 ): Promise<void> {
-  await withFileLock(lockPathFor(taskStatePath(worktree, taskId)), () => {
-    const fresh = readTaskState(worktree, taskId);
-    appendEvent(fresh, event);
-    writeTaskState(fresh);
-  });
+  const fresh = readTaskState(worktree, taskId);
+  appendEvent(fresh, event);
+  writeTaskState(fresh);
+  return Promise.resolve();
 }
 
 async function cmdSecrets(

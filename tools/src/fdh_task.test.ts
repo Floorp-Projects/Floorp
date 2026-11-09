@@ -346,3 +346,88 @@ Deno.test("createTaskState rejects invalid input", () => {
     "base commit",
   );
 });
+
+// --- merge-on-write (KAN-129) ----------------------------------------------
+
+const ev = (command: string) => ({
+  timestamp: CREATED_AT,
+  command,
+  note: "",
+  exitCode: 0,
+});
+
+Deno.test("writeTaskState keeps events appended by another writer since this state was read", async () => {
+  await withTempDir((dir) => {
+    writeTaskState(makeState(dir));
+    // Two commands load the same snapshot (e.g. a build and `quota pending`).
+    const build = readTaskState(dir, "task-one");
+    const quota = readTaskState(dir, "task-one");
+    appendEvent(quota, ev("quota pending"));
+    writeTaskState(quota);
+    appendEvent(build, ev("verify build"));
+    recordAssertion(build, {
+      name: "build-exit-code",
+      expected: "exit code 0",
+      actual: "exit code 0",
+      passed: true,
+      at: CREATED_AT,
+    });
+    writeTaskState(build);
+
+    const onDisk = readTaskState(dir, "task-one");
+    assertEquals(onDisk.events.slice(1).map((e) => e.command), [
+      "quota pending",
+      "verify build",
+    ]);
+    assertEquals(onDisk.assertions.length, 1);
+    // The writer's object now mirrors the file.
+    assertEquals(build.events.length, 3);
+  });
+});
+
+Deno.test("writeTaskState: a field this writer changed wins, an unchanged field keeps the file's value", async () => {
+  await withTempDir((dir) => {
+    writeTaskState(makeState(dir));
+    const prepare = readTaskState(dir, "task-one");
+    const dev = readTaskState(dir, "task-one");
+    dev.cleanup = { result: "completed", notes: "dev down" };
+    writeTaskState(dev);
+    prepare.status = "failed";
+    writeTaskState(prepare);
+
+    const onDisk = readTaskState(dir, "task-one");
+    assertEquals(onDisk.status, "failed");
+    assertEquals(onDisk.cleanup, { result: "completed", notes: "dev down" });
+  });
+});
+
+Deno.test("writeTaskState twice from one object appends each entry once", async () => {
+  await withTempDir((dir) => {
+    writeTaskState(makeState(dir));
+    const state = readTaskState(dir, "task-one");
+    appendEvent(state, ev("first"));
+    writeTaskState(state);
+    const other = readTaskState(dir, "task-one");
+    appendEvent(other, ev("other"));
+    writeTaskState(other);
+    appendEvent(state, ev("second"));
+    writeTaskState(state);
+
+    assertEquals(
+      readTaskState(dir, "task-one").events.slice(1).map((e) => e.command),
+      ["first", "other", "second"],
+    );
+  });
+});
+
+Deno.test("writeTaskState writes a new task's state as is", async () => {
+  await withTempDir((dir) => {
+    const state = makeState(dir);
+    appendEvent(state, ev("extra"));
+    writeTaskState(state);
+    assertEquals(
+      readTaskState(dir, "task-one").events.slice(1).map((e) => e.command),
+      ["extra"],
+    );
+  });
+});
