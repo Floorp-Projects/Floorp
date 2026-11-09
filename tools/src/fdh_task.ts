@@ -384,6 +384,52 @@ export function readTaskState(
   }
 }
 
+/**
+ * Refuse a task state that records a different worktree than the one it was
+ * read from (a moved or copied worktree, or a hand-edited file). Every later
+ * path (ledger, locks, the state file itself) is derived from
+ * `state.worktree`, so a mismatch would write outside the current checkout.
+ * `worktree` must already be a real path (resolveCurrentWorktree /
+ * requireWorktree return one). Both sides are compared after
+ * `Deno.realPathSync`, so case, separators, junctions and 8.3 names that
+ * resolve to the same directory are accepted.
+ */
+function assertStateWorktree(
+  state: FdhTaskState,
+  worktree: string,
+): void {
+  const recovery =
+    `; this task cannot be resumed here: start a new --task-id in ${worktree}`;
+  let recordedWorktree: string;
+  try {
+    recordedWorktree = Deno.realPathSync(state.worktree);
+  } catch (error) {
+    if (!(error instanceof Deno.errors.NotFound)) throw error;
+    throw new Error(
+      `recorded worktree no longer exists: ${state.worktree}${recovery}`,
+    );
+  }
+  if (recordedWorktree !== worktree) {
+    throw new Error(
+      `task ${state.taskId} belongs to ${recordedWorktree}, not ${worktree}${recovery}`,
+    );
+  }
+}
+
+/**
+ * Read the state of `taskId` in `worktree` and check it belongs there. The
+ * returned state carries the canonical `worktree`, so every path derived
+ * from it (ledger, locks, the state file) uses one spelling.
+ */
+export function readTaskStateFor(
+  worktree: string,
+  taskId: string,
+): FdhTaskState {
+  const state = readTaskState(worktree, taskId);
+  assertStateWorktree(state, worktree);
+  return { ...state, worktree };
+}
+
 /** Write the state atomically (tmp file + rename) so a crash cannot truncate it. */
 export function writeTaskState(state: FdhTaskState): string {
   const file = taskStatePath(state.worktree, state.taskId);
@@ -914,21 +960,7 @@ export async function resumeTaskState(
     ? await requireWorktree(options.worktree, git)
     : await resolveCurrentWorktree(git);
 
-  const state = readTaskState(worktree, options.taskId);
-
-  let recordedWorktree: string;
-  try {
-    recordedWorktree = Deno.realPathSync(state.worktree);
-  } catch {
-    throw new Error(
-      `recorded worktree no longer exists: ${state.worktree}`,
-    );
-  }
-  if (recordedWorktree !== worktree) {
-    throw new Error(
-      `task ${state.taskId} belongs to ${recordedWorktree}, not ${worktree}`,
-    );
-  }
+  const state = readTaskStateFor(worktree, options.taskId);
 
   try {
     await git(worktree, ["cat-file", "-e", `${state.baseCommit}^{commit}`]);

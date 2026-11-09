@@ -19,6 +19,7 @@ import {
   fdhDir,
   nowIso,
   readTaskState,
+  readTaskStateFor,
   recordAssertion,
   recordExternalOperation,
   requireWorktree,
@@ -655,7 +656,7 @@ async function cmdQuota(
 
 async function loadStateForCwd(taskId: string): Promise<FdhTaskState> {
   const worktree = await resolveCurrentWorktree();
-  return readTaskState(worktree, taskId);
+  return readTaskStateFor(worktree, taskId);
 }
 
 async function runDevCommand(
