@@ -107,8 +107,9 @@ jobs:
       contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)
     runs-on: ubuntu-latest
     timeout-minutes: 60
-    # Receipts posted back to back queue here; each waits for the run the
-    # previous one started, so the last receipt always gets a fresh run.
+    # One job runs per PR at a time and GitHub keeps one pending job; a newer
+    # receipt replaces an older pending one. The job that runs last still sees
+    # every receipt, because the rerun fetches comments when it starts.
     concurrency:
       group: fdh-review-gate-rerun-${{ github.event.issue.number }}
       cancel-in-progress: false
@@ -122,31 +123,61 @@ jobs:
           PR_NUMBER: ${{ github.event.issue.number }}
         run: |
           set -euo pipefail
-          head_sha=$(gh api "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}" --jq .head.sha)
+          # Identify this PR's head exactly: the same SHA can be the head of
+          # another PR (a fork or another base), whose gate run must not be
+          # rerun in place of this one. Git ref names cannot contain tabs.
+          IFS=$'\t' read -r head_sha head_ref head_repo < <(
+            gh api "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}" \
+              --jq '[.head.sha, .head.ref, .head.repo.full_name] | @tsv'
+          )
+          if [ -z "${head_sha:-}" ] || [ -z "${head_ref:-}" ] || [ -z "${head_repo:-}" ]; then
+            echo "Could not read the head of PR #${PR_NUMBER}." >&2
+            exit 1
+          fi
+          # Newest pull_request gate run for this exact head (SHA, branch and
+          # repository), as "id status conclusion"; empty when there is none.
           latest_run() {
-            gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/fdh-review-gate.yml/runs?event=pull_request&head_sha=${head_sha}&per_page=1" \
-              --jq '.workflow_runs[0] | if . == null then "" else "\(.id) \(.status) \(.conclusion)" end'
+            gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/fdh-review-gate.yml/runs?event=pull_request&head_sha=${head_sha}&per_page=30" \
+              --jq '.workflow_runs[] | [.id, .status, (.conclusion // "none"), .head_branch, .head_repository.full_name] | @tsv' |
+              awk -F'\t' -v ref="$head_ref" -v repo="$head_repo" \
+                '$4 == ref && $5 == repo { print $1 " " $2 " " $3; exit }'
           }
-          run=$(latest_run)
+          if ! run=$(latest_run); then
+            echo "Listing gate runs failed." >&2
+            exit 1
+          fi
           if [ -z "$run" ]; then
-            echo "No pull_request gate run for ${head_sha} yet; the next push or reopen runs it."
+            echo "No pull_request gate run for ${head_repo}:${head_ref}@${head_sha} yet; the next push or reopen runs it."
             exit 0
           fi
           read -r run_id status conclusion <<< "$run"
           # Wait for an in-progress gate run (it may have read the comments
           # before this receipt existed) so it can be rerun afterwards.
           for _ in $(seq 1 100); do
-            [ "$status" = "completed" ] && break
+            case "$status" in
+              completed) break ;;
+              waiting | action_required)
+                echo "Gate run ${run_id} is waiting for approval; a maintainer has to approve it."
+                exit 0 ;;
+            esac
             sleep 30
-            read -r run_id status conclusion <<< "$(latest_run)"
+            if ! run=$(latest_run) || [ -z "$run" ]; then
+              echo "Lost track of gate run ${run_id} while waiting." >&2
+              exit 1
+            fi
+            read -r run_id status conclusion <<< "$run"
           done
           if [ "$status" != "completed" ]; then
             echo "Gate run ${run_id} is still ${status}; not rerunning." >&2
             exit 1
           fi
-          if [ "$conclusion" = "success" ]; then
-            echo "Gate run ${run_id} for ${head_sha} already passed."
-            exit 0
-          fi
-          echo "Rerunning gate run ${run_id} (${conclusion}) for ${head_sha}."
+          case "$conclusion" in
+            success)
+              echo "Gate run ${run_id} for ${head_sha} already passed."
+              exit 0 ;;
+            action_required)
+              echo "Gate run ${run_id} needs a maintainer's approval; not rerunning."
+              exit 0 ;;
+          esac
+          echo "Rerunning gate run ${run_id} (${conclusion}) for ${head_repo}:${head_ref}@${head_sha}."
           gh run rerun "$run_id" --repo "${GITHUB_REPOSITORY}"
