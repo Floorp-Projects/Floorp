@@ -3,6 +3,7 @@
 import { assertEquals, assertThrows } from "@std/assert";
 import {
   parseReceiptComments,
+  receiptFileName,
   REVIEW_TIERS,
   validateReceipt,
   validateReceiptSet,
@@ -179,4 +180,21 @@ Deno.test("fdh review: non-mergeable receipts validate locally", () => {
   const validated = validateReceipt(entry, HEAD, { requireMergeable: false });
   assertEquals(validated.verdict, "request_changes");
   assertEquals(validated.blocking, true);
+});
+
+Deno.test("fdh review: receipts of two reviewers at one head get distinct files", () => {
+  const head = "66a1ed79ba18c067921f9a450646aea5100df683";
+  const a = receiptFileName("win-t01", head, "reviewer-a-fable");
+  const b = receiptFileName("win-t01", head, "reviewer-b-opus");
+  assertEquals(a, "win-t01-66a1ed79ba18-reviewer-a-fable.json");
+  assertEquals(b, "win-t01-66a1ed79ba18-reviewer-b-opus.json");
+  // Path separators and dot prefixes cannot escape the reviews directory.
+  assertEquals(
+    receiptFileName("t", head, "../..\evil/name"),
+    "t-66a1ed79ba18-evil_name.json",
+  );
+  assertEquals(
+    receiptFileName("t", head, "..."),
+    "t-66a1ed79ba18-reviewer.json",
+  );
 });

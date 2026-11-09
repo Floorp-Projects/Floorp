@@ -221,3 +221,19 @@ export function validateReceiptSet(
     models,
   };
 }
+
+/**
+ * Local receipt file name: `<task>-<commit12>-<reviewer>.json`. The reviewer
+ * is reduced to `[A-Za-z0-9._-]` so it cannot leave the reviews directory;
+ * distinct reviewers at the same head get distinct files.
+ */
+export function receiptFileName(
+  taskId: string,
+  commit: string,
+  reviewer: string,
+): string {
+  const safeReviewer = reviewer.replace(/[^A-Za-z0-9._-]+/g, "_")
+    .replace(/^[._]+/, "")
+    .slice(0, 64) || "reviewer";
+  return `${taskId}-${commit.slice(0, 12)}-${safeReviewer}.json`;
+}

@@ -16,7 +16,10 @@ import {
   writeEvidenceManifest,
 } from "./fdh_evidence.ts";
 import { CORE_RELATIONSHIPS } from "../qa3/evidence/validate.ts";
-import { refusedBuildEventCommand } from "./fdh_verify.ts";
+import {
+  guardFailedBuildEventCommand,
+  refusedBuildEventCommand,
+} from "./fdh_verify.ts";
 
 const BASE = "b".repeat(40);
 const CREATED_AT = "2026-11-08T00:00:00.000Z";
@@ -385,6 +388,67 @@ Deno.test("a source build refused after the last source build is a limitation", 
     assertEquals(
       rebuilt.limitations.some((item) => item.includes(refusedLimitation)),
       false,
+    );
+  });
+});
+
+Deno.test("a blocked build or a bad timestamp keeps the not-compiled limitation", async () => {
+  await withTempDir(async (dir) => {
+    const notCompiled = "latest source edits were not compiled";
+    const os = { name: "testos", arch: "x86_64" };
+    const blockedEvent = (timestamp: string, command: string) => ({
+      timestamp,
+      command,
+      note: "blocked",
+      exitCode: 1,
+    });
+
+    // A guard failure after the last source build counts like a refusal.
+    const failed = makeState(dir);
+    addCheck(
+      failed,
+      "build-exit-code",
+      "deno task feles-build build --phase before-mach",
+    );
+    failed.events.push(
+      blockedEvent(
+        "2026-11-08T00:05:00.000Z",
+        guardFailedBuildEventCommand("all"),
+      ),
+    );
+    writeTaskState(failed);
+    const failedManifest = await buildEvidenceManifest(failed, { os });
+    assert(
+      failedManifest.limitations.some((item) => item.includes(notCompiled)),
+    );
+    assertEquals(validateEvidenceManifest(failedManifest), []);
+
+    // A later source build with an unparseable time does not clear it.
+    failed.assertions.push({
+      name: "external-build-exit-code",
+      expected: "exit code 0",
+      actual: "exit code 0",
+      passed: true,
+      at: "not-a-time",
+    });
+    const badAt = await buildEvidenceManifest(failed, { os });
+    assert(badAt.limitations.some((item) => item.includes(notCompiled)));
+
+    // A blocked event with an unparseable timestamp cannot slip through: the
+    // event times feed the manifest, which then fails validation.
+    const badEvent = makeState(dir);
+    addCheck(
+      badEvent,
+      "build-exit-code",
+      "deno task feles-build build --phase before-mach",
+    );
+    badEvent.events.push(
+      blockedEvent("garbage", refusedBuildEventCommand("before-mach")),
+    );
+    writeTaskState(badEvent);
+    await assertRejects(
+      () => buildEvidenceManifest(badEvent, { os }),
+      EvidenceValidationError,
     );
   });
 });

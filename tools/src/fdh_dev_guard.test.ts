@@ -2,7 +2,7 @@
 
 /** Host tests for the W-04 `verify build` guard (no real processes). */
 
-import { assertEquals, assertRejects } from "@std/assert";
+import { assertEquals, assertRejects, assertThrows } from "@std/assert";
 import * as path from "@std/path";
 import {
   assertSourceBuildAllowed,
@@ -10,6 +10,7 @@ import {
   devProcessesFileFor,
   liveDevProcesses,
   phaseCompilesSource,
+  readDevRegistryStrict,
 } from "./fdh_dev_guard.ts";
 import type {
   DevProcessIdentity,
@@ -115,4 +116,34 @@ Deno.test("source build is allowed when the dev server is stopped", async () => 
   const calls = { list: 0, files: [] as string[] };
   await assertSourceBuildAllowed(WORKTREE, "all", deps([SERVER], [], calls));
   assertEquals(calls.list, 1);
+});
+
+Deno.test("strict registry read: missing is empty, corrupt fails closed", async () => {
+  const dir = await Deno.makeTempDir({ prefix: "fdh-guard-registry-" });
+  try {
+    const file = devProcessesFileFor(dir);
+    assertEquals(readDevRegistryStrict(file), []);
+
+    Deno.mkdirSync(path.dirname(file), { recursive: true });
+    Deno.writeTextFileSync(
+      file,
+      JSON.stringify({ version: 1, processes: [SERVER] }),
+    );
+    assertEquals(readDevRegistryStrict(file), [SERVER]);
+
+    Deno.writeTextFileSync(file, "{ not json");
+    assertThrows(() => readDevRegistryStrict(file));
+    // The guard surfaces it as a guard failure, not as a refusal or a pass.
+    const error = await assertRejects(() =>
+      assertSourceBuildAllowed(dir, "all", {
+        listProcesses: () => Promise.resolve([]),
+      })
+    );
+    assertEquals(error instanceof DevGuardRefusalError, false);
+
+    Deno.writeTextFileSync(file, JSON.stringify({ version: 2, processes: [] }));
+    assertThrows(() => readDevRegistryStrict(file), Error, "Invalid");
+  } finally {
+    await Deno.remove(dir, { recursive: true });
+  }
 });

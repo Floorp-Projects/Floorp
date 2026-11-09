@@ -215,7 +215,10 @@ export function recreateLink(
     return "symlink";
   } catch (error) {
     if (os !== "windows" || type !== "dir") throw error;
-    symlink(path.resolve(path.dirname(destination), linkText), destination, {
+    // A `\\?\` extended-length prefix would be mangled by path.resolve and
+    // yield a broken junction (os error 123), so drop it first.
+    const plain = linkText.startsWith("\\\\?\\") ? linkText.slice(4) : linkText;
+    symlink(path.resolve(path.dirname(destination), plain), destination, {
       type: "junction",
     });
     return "junction";

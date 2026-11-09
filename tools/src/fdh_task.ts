@@ -36,6 +36,13 @@ export const FDH_OBSERVATIONS_DIR = path.join(FDH_DIR, "observations");
 /** Upper bound of an external observation file kept in the task state (256 KiB). */
 export const MAX_OBSERVATION_BYTES = 256 * 1024;
 
+/** `--attested-at` shape: date, time and an explicit zone (Z or ±hh:mm). */
+const ISO_INSTANT_RE =
+  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,9})?)?(?:Z|[+-]\d{2}:\d{2})$/;
+
+/** Clock skew tolerated between the operator and this host (5 minutes). */
+export const MAX_ATTESTED_FUTURE_SKEW_MS = 5 * 60 * 1000;
+
 export type FdhTaskStatus =
   | "running"
   | "succeeded"
@@ -791,9 +798,25 @@ export async function recordExternalOperation(
     );
   }
 
-  const attestedAt = input.attestedAt ?? (input.now ?? nowIso)();
+  const now = (input.now ?? nowIso)();
+  const attestedAt = input.attestedAt ?? now;
   if (attestedAt.trim() === "") {
     throw new Error("--attested-at must not be empty");
+  }
+  // Attested time orders external records against other evidence, so it must
+  // be a real ISO 8601 instant and not in the future.
+  const attestedMs = Date.parse(attestedAt);
+  if (!ISO_INSTANT_RE.test(attestedAt) || !Number.isFinite(attestedMs)) {
+    throw new Error(
+      `--attested-at must be an ISO 8601 date-time with a zone, got ${
+        JSON.stringify(attestedAt)
+      }`,
+    );
+  }
+  if (attestedMs > Date.parse(now) + MAX_ATTESTED_FUTURE_SKEW_MS) {
+    throw new Error(
+      `--attested-at must not be in the future, got ${attestedAt} (now ${now})`,
+    );
   }
   const text = new TextDecoder().decode(bytes);
   const operation: FdhOperation = {

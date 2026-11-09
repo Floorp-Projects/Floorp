@@ -13,12 +13,16 @@
  *
  * Liveness reuses dev-tool's process registry and identity rule
  * (PID + start time + command line), so a stale registry entry or a reused PID
- * never blocks the build.
+ * never blocks the build. A registry that exists but cannot be read or parsed
+ * is a guard failure (fail closed), not "no dev processes".
  */
 
 import * as path from "@std/path";
-import { listDevProcesses, readDevProcesses } from "./dev_processes.ts";
-import { matchesDevIdentity } from "./dev_process_selection.ts";
+import { listDevProcesses } from "./dev_processes.ts";
+import {
+  matchesDevIdentity,
+  parseDevProcessRegistry,
+} from "./dev_process_selection.ts";
 import type {
   DevProcessIdentity,
   DevProcessInfo,
@@ -52,12 +56,29 @@ export function devProcessesFileFor(worktree: string): string {
   return path.join(worktree, "_dist", "dev-processes.json");
 }
 
+/**
+ * Strict registry read for the guard. dev-tool's `readDevProcesses` logs and
+ * returns `[]` for a corrupt or unreadable file, which would let a source
+ * build run under a live dev browser. Here only a missing file means "no dev
+ * processes"; anything else throws, so the guard fails closed.
+ */
+export function readDevRegistryStrict(file: string): DevProcessIdentity[] {
+  let text: string;
+  try {
+    text = Deno.readTextFileSync(file);
+  } catch (error) {
+    if (error instanceof Deno.errors.NotFound) return [];
+    throw error;
+  }
+  return parseDevProcessRegistry(JSON.parse(text));
+}
+
 /** Registry entries of `worktree` whose process is still the same process. */
 export async function liveDevProcesses(
   worktree: string,
   deps: DevGuardDeps = {},
 ): Promise<DevProcessIdentity[]> {
-  const recorded = (deps.readRegistry ?? readDevProcesses)(
+  const recorded = (deps.readRegistry ?? readDevRegistryStrict)(
     devProcessesFileFor(worktree),
   );
   // An empty registry needs no process snapshot (and no PowerShell/ps call).

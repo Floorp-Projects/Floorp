@@ -110,7 +110,8 @@ test was run outside the CLI (for example a raw `--phase before-mach` run, or a
 failed host test in another shell), record it with the observation file so the
 evidence manifest sees the failure. The exit code and operator are
 operator-attested; fdh pins the observation bytes by SHA-256 and re-hashes them
-when building evidence.
+when building evidence. `--attested-at` must be an ISO 8601 date-time with a
+zone and must not be in the future (5 minutes of clock skew are tolerated).
 
 ```sh
 # Move the raw log under _dist/fdh/observations/ first (the file must stay
@@ -239,7 +240,11 @@ deno run -A tools/fdh.ts secrets status
 - `verify build --phase all|before-mach` exits 1 without spawning anything when
   this worktree's recorded dev processes (`_dist/dev-processes.json`, matched by
   PID + start time + command line) are still running, and records a
-  `verify build ... (refused)` event. `--phase after-mach` is always allowed.
+  `verify build ... (refused)` event. When liveness cannot be determined (an
+  unreadable or corrupt registry, a failed process listing) it also exits 1 and
+  records `verify build ... (dev guard failed)`. `--phase after-mach` is always
+  allowed. Either event newer than the last source build adds the evidence
+  limitation that the latest source edits were not compiled.
 - `verify browser` succeeds only when `dev-tool status` prints
   `Connected to browser.` Without that line, do not claim browser verification.
 - `--eval` output is always recorded verbatim. Without `--expect` it is never a

@@ -29,7 +29,7 @@ import type {
 } from "../qa3/evidence/types.ts";
 import { UNVERIFIED, validateManifest } from "../qa3/evidence/validate.ts";
 import { type FdhTaskState, taskStatePath } from "./fdh_task.ts";
-import { isRefusedBuildEvent } from "./fdh_verify.ts";
+import { isBlockedBuildEvent } from "./fdh_verify.ts";
 
 export const FDH_OWNER = "fdh-local-runner";
 export const FDH_PRINCIPAL_ID = "fdh-cli";
@@ -235,9 +235,11 @@ function buildLimitations(state: FdhTaskState, manifestState: State): string[] {
       "XHTML injection was not verified; the recorded build assertion is before-mach source compilation only.",
     );
   }
-  // A source build refused after the last recorded source compilation means
-  // the latest source edits were never compiled, even if an earlier build or
-  // a later after-mach inject passed (W-04 review note).
+  // A source build refused (or stopped by a failing guard) after the last
+  // recorded source compilation means the latest source edits were never
+  // compiled, even if an earlier build or a later after-mach inject passed.
+  // Unparseable timestamps never clear the limitation: a source build with a
+  // bad `at` does not count, and a blocked event with a bad timestamp counts.
   const lastSourceBuildAt = Math.max(
     -Infinity,
     ...state.assertions
@@ -245,15 +247,17 @@ function buildLimitations(state: FdhTaskState, manifestState: State): string[] {
         assertion.name === "build-exit-code" ||
         assertion.name === "external-build-exit-code"
       )
-      .map((assertion) => Date.parse(assertion.at)),
+      .map((assertion) => Date.parse(assertion.at))
+      .filter((at) => Number.isFinite(at)),
   );
-  const refusedAfterLastSource = state.events.some((event) =>
-    isRefusedBuildEvent(event.command) &&
-    Date.parse(event.timestamp) > lastSourceBuildAt
-  );
-  if (refusedAfterLastSource) {
+  const blockedAfterLastSource = state.events.some((event) => {
+    if (!isBlockedBuildEvent(event.command)) return false;
+    const at = Date.parse(event.timestamp);
+    return !Number.isFinite(at) || at > lastSourceBuildAt;
+  });
+  if (blockedAfterLastSource) {
     add(
-      "A source build was refused after the last recorded source compilation (the dev server was running); the latest source edits were not compiled.",
+      "A source build was refused or blocked after the last recorded source compilation (dev server running or dev guard failure); the latest source edits were not compiled.",
     );
   }
   const hasTest = state.assertions.some((assertion) =>
