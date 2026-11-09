@@ -430,6 +430,9 @@ async function testOnPopupShowingDoesNotHideSeparatorBeforeVisibleItem(): Promis
   cleanupDOM();
   const menu = createMockContentAreaContextMenu();
 
+  const leadingItem = document!.createElement("div");
+  menu.appendChild(leadingItem);
+
   const sep = document!.createElement("menuseparator");
   sep.id = "context-sep-visible-test";
   sep.hidden = false;
@@ -447,6 +450,128 @@ async function testOnPopupShowingDoesNotHideSeparatorBeforeVisibleItem(): Promis
     "separator before visible item should not be hidden",
   );
   cleanupDOM();
+}
+
+// KAN-32 / #2469: a separator followed by hidden rows and then a visible row
+// is a group boundary (e.g. context-sep-sendlinktodevice -> hidden media rows
+// -> "Search ..."). Firefox shows it, so the native repair must keep it.
+async function testOnPopupShowingKeepsSeparatorBeforeHiddenThenVisibleRow(): Promise<
+  void
+> {
+  const { ContextMenuUtils } = await import(
+    "#features-chrome/utils/context-menu.tsx"
+  );
+  cleanupDOM();
+  const menu = createMockContentAreaContextMenu();
+
+  const sendLink = document!.createElement("menuitem");
+  menu.appendChild(sendLink);
+  const sep = document!.createElement("menuseparator");
+  sep.id = "context-sep-sendlinktodevice";
+  menu.appendChild(sep);
+  const mediaPlay = document!.createElement("menuitem");
+  mediaPlay.hidden = true;
+  menu.appendChild(mediaPlay);
+  const search = document!.createElement("menuitem");
+  menu.appendChild(search);
+
+  try {
+    ContextMenuUtils.onPopupShowing();
+    assertEquals(
+      sep.hidden,
+      false,
+      "separator before hidden rows and a visible row should stay visible",
+    );
+    assertEquals(
+      sep.hasAttribute("data-floorp-legacy-separator-hidden"),
+      false,
+      "kept separator should not carry the legacy marker",
+    );
+  } finally {
+    cleanupDOM();
+  }
+}
+
+// KAN-32 / #2469: a submenu's popupshowing bubbles through the parent popup.
+// It must not re-run the parent repair, which hid separators that were
+// visible when the submenu (flyout) was opened.
+async function testOnPopupShowingIgnoresBubbledSubmenuEvent(): Promise<void> {
+  const { ContextMenuUtils } = await import(
+    "#features-chrome/utils/context-menu.tsx"
+  );
+  cleanupDOM();
+  const menu = createMockContentAreaContextMenu();
+
+  const item = document!.createElement("menuitem");
+  menu.appendChild(item);
+  const submenu = document!.createElement("menu");
+  const submenuPopup = document!.createElement("menupopup");
+  submenu.appendChild(submenuPopup);
+  menu.appendChild(submenu);
+  // Trailing separator: the parent's own popupshowing would hide it.
+  const sep = document!.createElement("menuseparator");
+  sep.id = "context-sep-trailing-test";
+  menu.appendChild(sep);
+
+  menu.addEventListener("popupshowing", ContextMenuUtils.onPopupShowing);
+  try {
+    submenuPopup.dispatchEvent(new Event("popupshowing", { bubbles: true }));
+    assertEquals(
+      sep.hidden,
+      false,
+      "bubbled submenu popupshowing should leave parent separators alone",
+    );
+
+    menu.dispatchEvent(new Event("popupshowing", { bubbles: true }));
+    assertEquals(
+      sep.hidden,
+      true,
+      "the parent's own popupshowing still hides a trailing separator",
+    );
+  } finally {
+    menu.removeEventListener("popupshowing", ContextMenuUtils.onPopupShowing);
+    cleanupDOM();
+  }
+}
+
+// Floorp rows toggled by popupshowing listeners that run after the native
+// repair (or by MutationObserver mirrors) must still be taken into account.
+async function testOnPopupShowingRenormalizesAfterLaterListeners(): Promise<
+  void
+> {
+  const { ContextMenuUtils } = await import(
+    "#features-chrome/utils/context-menu.tsx"
+  );
+  cleanupDOM();
+  const menu = createMockContentAreaContextMenu();
+
+  // Stale from a previous opening: visible during the repair's own pass.
+  const floorpRow = document!.createElement("menuitem");
+  menu.appendChild(floorpRow);
+  const sep = document!.createElement("menuseparator");
+  sep.id = "context-sep-open";
+  menu.appendChild(sep);
+  const item = document!.createElement("menuitem");
+  menu.appendChild(item);
+
+  const laterListener = () => {
+    floorpRow.hidden = true;
+  };
+  menu.addEventListener("popupshowing", ContextMenuUtils.onPopupShowing);
+  menu.addEventListener("popupshowing", laterListener);
+  try {
+    menu.dispatchEvent(new Event("popupshowing", { bubbles: true }));
+    await Promise.resolve();
+    assertEquals(
+      sep.hidden,
+      true,
+      "separator left leading by a later listener should be hidden",
+    );
+  } finally {
+    menu.removeEventListener("popupshowing", ContextMenuUtils.onPopupShowing);
+    menu.removeEventListener("popupshowing", laterListener);
+    cleanupDOM();
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -650,6 +775,9 @@ async function testOnPopupShowingHidesMultipleConsecutiveSeparators(): Promise<
   cleanupDOM();
   const menu = createMockContentAreaContextMenu();
 
+  const leadingItem = document!.createElement("menuitem");
+  menu.appendChild(leadingItem);
+
   const sep1 = document!.createElement("menuseparator");
   sep1.id = "sep1";
   menu.appendChild(sep1);
@@ -676,20 +804,22 @@ async function testOnPopupShowingHidesMultipleConsecutiveSeparators(): Promise<
 
   ContextMenuUtils.onPopupShowing();
 
+  // Same rule as nsContextMenu.showHideSeparators: one separator remains
+  // between the two visible rows and the duplicates after it are hidden.
   assertEquals(
     sep1.hidden,
-    true,
-    "First separator before hidden item should be hidden",
+    false,
+    "First separator of a run between visible rows should stay visible",
   );
   assertEquals(
     sep2.hidden,
     true,
-    "Second separator before hidden item should be hidden",
+    "Duplicate separator after hidden rows should be hidden",
   );
   assertEquals(
     sep3.hidden,
-    false,
-    "Separator before visible item should not be hidden",
+    true,
+    "Second duplicate separator should be hidden",
   );
   cleanupDOM();
 }
@@ -740,13 +870,11 @@ async function testOnPopupShowingHandlesMenuWithOnlySeparators(): Promise<
 
   ContextMenuUtils.onPopupShowing();
 
-  // When nextSibling is null (last element) or another separator (hidden is false/undefined),
-  // the condition nextSibling?.hidden is falsy, so these separators are NOT hidden.
-  // Only separators whose next sibling is explicitly hidden get hidden.
+  // With no visible rows every separator is leading or trailing.
   assertEquals(
     sep1.hidden,
-    false,
-    "Separator with non-hidden next sibling should not be hidden",
+    true,
+    "Leading separator in a menu without rows should be hidden",
   );
   assertEquals(
     sep2.hidden,
@@ -755,8 +883,8 @@ async function testOnPopupShowingHandlesMenuWithOnlySeparators(): Promise<
   );
   assertEquals(
     sep3.hidden,
-    false,
-    "Separator at end (no next sibling with hidden=true) should not be hidden",
+    true,
+    "Trailing separator in a menu without rows should be hidden",
   );
   cleanupDOM();
 }
@@ -1283,6 +1411,18 @@ export async function runAllTests(): Promise<void> {
     {
       name: "onPopupShowing does not hide separator before visible item",
       fn: testOnPopupShowingDoesNotHideSeparatorBeforeVisibleItem,
+    },
+    {
+      name: "onPopupShowing keeps separator before hidden then visible row",
+      fn: testOnPopupShowingKeepsSeparatorBeforeHiddenThenVisibleRow,
+    },
+    {
+      name: "onPopupShowing ignores bubbled submenu popupshowing",
+      fn: testOnPopupShowingIgnoresBubbledSubmenuEvent,
+    },
+    {
+      name: "onPopupShowing re-normalizes after later popupshowing listeners",
+      fn: testOnPopupShowingRenormalizesAfterLaterListeners,
     },
 
     // ContextMenuUtils — addContextBox
