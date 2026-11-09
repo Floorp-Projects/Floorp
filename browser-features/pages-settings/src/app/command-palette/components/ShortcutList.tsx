@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Plus, X } from "lucide-react";
+import { Button } from "../../../../../../libs/ui/button.tsx";
 import {
   Card,
   CardContent,
@@ -283,14 +284,15 @@ export function ShortcutList() {
                   </select>
                 </div>
                 <div className="flex items-end">
-                  <button
+                  <Button
                     type="button"
                     onClick={handleAdd}
-                    className="h-10 px-4 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-colors whitespace-nowrap"
+                    variant="primary"
+                    className="gap-2 whitespace-nowrap"
                   >
                     <Plus className="size-4" />
                     {t("commandPalette.shortcuts.add")}
-                  </button>
+                  </Button>
                 </div>
               </div>
               {error && <p className="text-sm text-destructive">{error}</p>}
