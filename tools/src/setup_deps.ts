@@ -6,7 +6,9 @@
  * Kept apart from `setup.ts` on purpose: `setup.ts` reaches `npm:fflate`
  * through `runtime_archive.ts`, so importing it in a fresh worktree fails at
  * module load, before `deno install` could run. `fdh task prepare` runs this
- * step first and only then loads `setup.ts` (W-05).
+ * step first and only then loads `setup.ts`; when this step had to install,
+ * the prepare continues in a new process, because Deno fixes a process's npm
+ * resolution at startup (W-05).
  *
  * This module must not import anything that resolves an npm package.
  */

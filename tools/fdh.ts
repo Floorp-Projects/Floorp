@@ -357,6 +357,9 @@ async function cmdTaskResume(parsed: ParsedArgs): Promise<void> {
  * previous registry source and vite-clear time when a later replay is a no-op,
  * so a resume does not lose how the runtime was prepared.
  */
+/** Set on the child `task prepare` that runs after the parent's deno install. */
+const DEPS_INSTALLED_ENV = "FDH_PREPARE_DEPS_INSTALLED";
+
 async function cmdTaskPrepare(parsed: ParsedArgs): Promise<void> {
   assertNoPositional(parsed, 2);
   assertAllowedOptions(parsed, ["task-id", "runtime-source"]);
@@ -373,7 +376,37 @@ async function cmdTaskPrepare(parsed: ParsedArgs): Promise<void> {
   }
 
   // Install npm deps before loading setup.ts: its import graph needs fflate.
-  const deps = prepareDeps({ projectRoot: state.worktree });
+  // Deno fixes the npm resolution of a process at startup, so a process that
+  // has just run `deno install` still cannot load setup.ts. In that case the
+  // rest of the prepare runs in a fresh child with the same arguments (W-05).
+  let deps = prepareDeps({ projectRoot: state.worktree });
+  if (deps.installed) {
+    appendEvent(state, {
+      timestamp: nowIso(),
+      command: "task prepare (deps)",
+      note: "deno install ran; continuing in a new process",
+      exitCode: 0,
+    });
+    writeTaskState(state);
+    const child = new Deno.Command(Deno.execPath(), {
+      args: ["run", "-A", path.fromFileUrl(import.meta.url), ...Deno.args],
+      env: { [DEPS_INSTALLED_ENV]: "1" },
+      stdin: "inherit",
+      stdout: "inherit",
+      stderr: "inherit",
+    });
+    const status = await child.spawn().status;
+    if (!status.success) {
+      throw new Error(
+        `task prepare after deno install failed with exit ${status.code}`,
+      );
+    }
+    return;
+  }
+  if (Deno.env.get(DEPS_INSTALLED_ENV) === "1") {
+    // The parent installed the deps for this run; keep that fact.
+    deps = { ...deps, status: "prepared", installed: true };
+  }
   const { prepareSetup } = await import("./src/setup.ts");
   const record: SetupRecord = await prepareSetup({
     projectRoot: state.worktree,
