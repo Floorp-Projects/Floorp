@@ -246,11 +246,38 @@ function appendQuotaEvent(ledger: FdhQuotaLedger, event: QuotaEvent): void {
   ledger.updatedAt = event.at;
 }
 
-function requireAgent(agent: string): string {
+/** Validate `--agent`; returns it trimmed. */
+export function requireAgent(agent: string): string {
   if (typeof agent !== "string" || agent.trim() === "") {
     throw new Error("--agent must be a non-empty string");
   }
   return agent.trim();
+}
+
+/** Validate `--reason` for `quota stop`. */
+export function assertQuotaStopReason(
+  reason: string,
+): asserts reason is QuotaStopReason {
+  if (!QUOTA_STOP_REASONS.includes(reason as QuotaStopReason)) {
+    throw new Error(
+      `--reason must be one of ${QUOTA_STOP_REASONS.join("|")}, got ${
+        JSON.stringify(reason)
+      }`,
+    );
+  }
+}
+
+/** Validate `--op` for `quota pending`. */
+export function assertPendingExternalOp(
+  op: string,
+): asserts op is PendingExternalOp {
+  if (!PENDING_EXTERNAL_OPS.includes(op as PendingExternalOp)) {
+    throw new Error(
+      `--op must be one of ${PENDING_EXTERNAL_OPS.join("|")}, got ${
+        JSON.stringify(op)
+      }`,
+    );
+  }
 }
 
 /**
@@ -288,13 +315,7 @@ export function stopQuota(
   at = nowIso(),
 ): FdhQuotaLedger {
   const holder = requireAgent(agent);
-  if (!QUOTA_STOP_REASONS.includes(reason)) {
-    throw new Error(
-      `--reason must be one of ${QUOTA_STOP_REASONS.join("|")}, got ${
-        JSON.stringify(reason)
-      }`,
-    );
-  }
+  assertQuotaStopReason(reason);
   if (ledger.activeAgent !== holder) {
     throw new Error(
       `agent ${holder} does not hold task ${ledger.taskId}` +
@@ -328,23 +349,33 @@ export function resumeQuota(
   return ledger;
 }
 
-/** Record an unknown non-idempotent external operation awaiting approval. */
+/**
+ * Record an unknown non-idempotent external operation awaiting approval.
+ *
+ * Idempotent per (op, note): when the same operation is already pending, the
+ * ledger is left unchanged and `false` is returned. `fdh quota pending`
+ * writes the ledger and then the task-state event in two steps, so a retry
+ * after the second step failed would otherwise queue the operation twice.
+ * `approveQuota` clears every entry at once, so a second identical entry
+ * would carry no information. Returns `true` when an entry was added.
+ */
 export function pendingQuota(
   ledger: FdhQuotaLedger,
   op: PendingExternalOp,
   note = "",
   at = nowIso(),
-): FdhQuotaLedger {
-  if (!PENDING_EXTERNAL_OPS.includes(op)) {
-    throw new Error(
-      `--op must be one of ${PENDING_EXTERNAL_OPS.join("|")}, got ${
-        JSON.stringify(op)
-      }`,
-    );
+): boolean {
+  assertPendingExternalOp(op);
+  if (
+    ledger.approvalPending.some((entry) =>
+      entry.op === op && entry.note === note
+    )
+  ) {
+    return false;
   }
   ledger.approvalPending.push({ op, note, at });
   appendQuotaEvent(ledger, { at, kind: "pending", op, note });
-  return ledger;
+  return true;
 }
 
 /** Approve all pending external operations; they may be retried afterwards. */
