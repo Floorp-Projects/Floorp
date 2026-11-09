@@ -150,9 +150,17 @@ deno run -A tools/fdh.ts review record --task-id <task-id> \
 ```
 
 Then post the printed `commentBody` (marker
-`<!-- fdh-review-receipt:v1 {...} -->`) to the PR. A receipt with `commit`
-different from the current head, a `request_changes` verdict, or `blocking=true`
-cannot pass the gate.
+`<!-- fdh-review-receipt:v1 {...} -->`) to the PR. The gate counts receipts only
+from comment authors whose GitHub association is OWNER, MEMBER or COLLABORATOR;
+other authors' receipts are logged and ignored. A receipt for another commit is
+stale and ignored (it neither counts nor blocks). A head receipt with a
+`request_changes` verdict or `blocking=true` fails the gate.
+
+Posting a trusted receipt does not run the gate itself: the `rerun-on-receipt`
+job waits for the PR head's latest `review-gate` run and reruns it when it did
+not pass, so the required check updates on the PR head. The reviewer identities
+are still declared by the poster; the gate cannot tell whether two receipts from
+one trusted account came from two independent reviews.
 
 ## Quota and approval ledger (Gate 4 4-D / 4-C)
 
