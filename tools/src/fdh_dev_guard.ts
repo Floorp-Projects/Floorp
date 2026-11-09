@@ -72,6 +72,7 @@ export function readDevRegistryStrict(file: string): DevProcessIdentity[] {
       `cannot read the dev process registry ${file}: ${reason}. ` +
         `Run 'fdh dev down' (dev-tool stop removes the registry once this ` +
         `worktree's dev processes are gone), then retry the build.`,
+      { cause: error },
     );
   }
 }

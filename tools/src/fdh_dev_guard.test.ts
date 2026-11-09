@@ -2,7 +2,13 @@
 
 /** Host tests for the W-04 `verify build` guard (no real processes). */
 
-import { assertEquals, assertRejects, assertThrows } from "@std/assert";
+import {
+  assert,
+  assertEquals,
+  assertRejects,
+  assertStringIncludes,
+  assertThrows,
+} from "@std/assert";
 import * as path from "@std/path";
 import {
   assertSourceBuildAllowed,
@@ -142,7 +148,15 @@ Deno.test("strict registry read: missing is empty, corrupt fails closed", async 
     assertEquals(error instanceof DevGuardRefusalError, false);
 
     Deno.writeTextFileSync(file, JSON.stringify({ version: 2, processes: [] }));
-    assertThrows(() => readDevRegistryStrict(file), Error, "Invalid");
+    const wrapped = assertThrows(
+      () => readDevRegistryStrict(file),
+      Error,
+      "Invalid",
+    );
+    // The message names the file and the fix; the original error is kept.
+    assertStringIncludes(wrapped.message, file);
+    assertStringIncludes(wrapped.message, "fdh dev down");
+    assert(wrapped.cause instanceof Error);
   } finally {
     await Deno.remove(dir, { recursive: true });
   }
