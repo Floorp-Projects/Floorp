@@ -27,9 +27,9 @@ export namespace ContextMenuUtils {
       "#contentAreaContextMenu",
     ) as XULElement | null;
   }
-  function pdfjsContextMenuSeparator(): XULElement | null {
+  function screenshotsSeparator(): XULElement | null {
     return document?.querySelector(
-      "#context-sep-pdfjs-selectall",
+      "#context-sep-screenshots",
     ) as XULElement | null;
   }
   function contextMenuSeparators(): NodeListOf<XULElement> {
@@ -72,8 +72,14 @@ export namespace ContextMenuUtils {
   }
 
   function contextMenuObserverFunc() {
+    // One broken row (e.g. its native anchor is missing) must not stop the
+    // others, nor the separator pass that runs after this in onPopupShowing.
     for (const checkItem of checkItems) {
-      checkItem();
+      try {
+        checkItem();
+      } catch (error) {
+        console.error("[ContextMenu]", "Failed to update a menu item", error);
+      }
     }
   }
 
@@ -96,13 +102,13 @@ export namespace ContextMenuUtils {
   export function onPopupShowing(event?: Event) {
     if (event && event.target !== event.currentTarget) return;
 
-    if (!screenShotContextMenuItems()?.hidden) {
-      const sep = pdfjsContextMenuSeparator();
+    // Keep the screenshots separator with a visible screenshot item. Target it
+    // by id: the item's next sibling is now #context-use-mini-window, which
+    // Firefox hides per browser.mini-window.enabled and must stay hidden.
+    const screenshotItem = screenShotContextMenuItems();
+    if (screenshotItem && !screenshotItem.hidden) {
+      const sep = screenshotsSeparator();
       if (sep) sep.hidden = false;
-
-      const nextSibling = screenShotContextMenuItems()
-        ?.nextSibling as XULElement;
-      if (nextSibling) nextSibling.hidden = false;
     }
 
     const popup = contentAreaContextMenu();
@@ -146,12 +152,7 @@ export namespace ContextMenuUtils {
     // `context-sep-sendlinktodevice` before the hidden media rows and
     // "Search ...") is a real group boundary and stays visible.
     for (const separator of findSeparatorsToHide(popup)) {
-      if (
-        separator.id === "context-sep-navigation" ||
-        separator.id === "context-sep-pdfjs-selectall"
-      ) {
-        continue;
-      }
+      if (separator.id === "context-sep-navigation") continue;
       separator.setAttribute(FLOORP_LEGACY_SEPARATOR_HIDDEN_ATTRIBUTE, "true");
       (separator as XULElement).hidden = true;
     }

@@ -10,10 +10,12 @@ import { getLiveTabIndex } from "#features-chrome/utils/tab-identity.ts";
 
 export class FloorpPrivateContainer {
   private get privateContainerMenuItem() {
-    return document?.querySelector("#open_in_private_container") as XULElement;
+    return document?.querySelector(
+      "#open_in_private_container",
+    ) as XULElement | null;
   }
   private get openLinkMenuItem() {
-    return document?.querySelector("#context-openlink") as XULElement;
+    return document?.querySelector("#context-openlink") as XULElement | null;
   }
 
   constructor() {
@@ -64,7 +66,10 @@ export class FloorpPrivateContainer {
         },
         "context-openlink",
         () => {
-          this.privateContainerMenuItem.hidden = this.openLinkMenuItem.hidden;
+          const item = this.privateContainerMenuItem;
+          const openLink = this.openLinkMenuItem;
+          if (!item || !openLink) return;
+          item.hidden = openLink.hidden;
         },
         "floorp.private-container.open-link",
       );
