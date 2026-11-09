@@ -174,7 +174,6 @@ export interface JobReport {
 const TABLE = loadTransitions();
 const TERMINAL = new Set<State>(TABLE.terminalStates);
 
-/** Parse an ISO time; an unparsable value is a caller error, not "expired". */
 /**
  * Holders are compared after trimming, at every entry point, so a padded id
  * from a command line names the same holder everywhere. An empty one is an
@@ -186,6 +185,7 @@ function normalizeHolder(holder: string): string {
   return trimmed;
 }
 
+/** Parse an ISO time; an unparsable value is a caller error, not "expired". */
 function requireTime(value: string, name: string): number {
   const ms = Date.parse(value);
   if (!Number.isFinite(ms)) {
@@ -492,6 +492,8 @@ export function applyReport(
   report: JobReport,
   at = nowIso(),
 ): ApplyResult {
+  requireTime(at, "apply time");
+  requireTime(report.endedAt, "report endedAt");
   if (report.jobId !== job.jobId) {
     throw new Error(`report for ${report.jobId} applied to ${job.jobId}`);
   }
@@ -657,10 +659,13 @@ export function reconcileJob(
     }
   }
 
+  // Only a lease of the current attempt is evidence that its holder lives.
+  const leaseIsCurrent = job.lease !== null &&
+    job.lease.epoch === job.epoch && job.lease.holder === attempt.holder;
   const expired = context.holderGone === true ||
     (attempt.result === "scheduled"
       ? startOverdue(job, at)
-      : leaseExpired(job, at));
+      : !leaseIsCurrent || leaseExpired(job, at));
   if (!expired) return { action: "alive", epoch: job.epoch };
 
   event(
@@ -896,7 +901,10 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 /** A step runs a non-empty argv of strings in a string cwd. */
 function isValidStep(step: unknown): step is StepSpec {
   return isRecord(step) && Array.isArray(step.argv) &&
-    step.argv.length > 0 && step.argv.every((arg) => typeof arg === "string") &&
+    step.argv.length > 0 &&
+    Array.from(step.argv as unknown[]).every((arg) =>
+      typeof arg === "string"
+    ) &&
     step.argv[0] !== "" && typeof step.cwd === "string" &&
     typeof step.displayCommand === "string";
 }
@@ -964,11 +972,12 @@ export function parseJobJournal(value: unknown): JobJournal {
   }
   if (job.kind === "intent") {
     if (
-      !isRecord(job.intent) || !INTENT_OPS.includes(job.intent.op as IntentOp)
+      !isRecord(job.intent) ||
+      !INTENT_OPS.includes(job.intent.op as IntentOp) || job.step != null
     ) {
       throw new Error("invalid fdh job journal: intent");
     }
-  } else if (!isValidStep(job.step)) {
+  } else if (!isValidStep(job.step) || job.intent != null) {
     throw new Error("invalid fdh job journal: step");
   }
   const lease = job.lease as unknown;
@@ -1092,6 +1101,7 @@ export function readOutbox(
   if (
     !isRecord(value) || value.jobId !== jobId || value.epoch !== epoch ||
     !Number.isInteger(value.exitCode) || typeof value.holder !== "string" ||
+    value.holder.trim() === "" ||
     typeof value.endedAt !== "string" ||
     (value.logRef !== null && typeof value.logRef !== "string")
   ) {
@@ -1115,7 +1125,11 @@ export async function reconcileJobFile(
   return await updateJob(worktree, taskId, jobId, (job) =>
     reconcileJob(job, {
       ...context,
-      outbox: readOutbox(worktree, taskId, jobId, job.epoch),
+      // A settled job never uses its outbox; do not let a damaged one stop a
+      // sweep over the task's jobs.
+      outbox: isTerminal(job.state) || job.state === "awaiting-approval"
+        ? null
+        : readOutbox(worktree, taskId, jobId, job.epoch),
     }));
 }
 
@@ -1282,16 +1296,17 @@ export async function runExecutor(
     endedAt: now(),
     logRef,
   };
-  writeOutbox(worktree, taskId, report);
-  if (options.fault?.kind === "exit-after-outbox") {
-    (options.exit ?? Deno.exit)(70);
-  }
-  const applied = await updateJob(
-    worktree,
-    taskId,
-    jobId,
-    (job) => applyReport(job, report, now()),
-  );
+  // The outbox is written under the journal lock, so a reconcile cannot read
+  // "no outbox" and then declare this attempt lost while the result lands in
+  // between. A crash after the outbox and before the ACK (the same lock hold)
+  // leaves the outbox for the next reconcile (E-3).
+  const applied = await updateJob(worktree, taskId, jobId, (job) => {
+    writeOutbox(worktree, taskId, report);
+    if (options.fault?.kind === "exit-after-outbox") {
+      (options.exit ?? Deno.exit)(70);
+    }
+    return applyReport(job, report, now());
+  });
   if (applied.value.applied) {
     return { outcome: "applied", state: applied.value.state };
   }

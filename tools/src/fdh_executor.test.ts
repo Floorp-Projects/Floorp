@@ -1048,3 +1048,105 @@ Deno.test("fdh executor: an intent with a step, and a step with an empty program
     "non-empty string argv",
   );
 });
+
+// ---------------------------------------------------------------------------
+// CodeRabbit round on head a8789c1d (PR #3091)
+// ---------------------------------------------------------------------------
+
+Deno.test("fdh executor: a fresh lease from another epoch or holder is not evidence of life", () => {
+  const job = stepJob();
+  beginAttempt(job, 1, "x1", at(0));
+  job.lease = { holder: "x1", epoch: 0, heartbeatAt: at(0), ttlMs: TTL };
+  assertEquals(
+    reconcileJob(job, { currentDigest: "d1", at: at(1) }).action,
+    "respawn",
+  );
+  const other = stepJob();
+  beginAttempt(other, 1, "x1", at(0));
+  other.lease = { holder: "x9", epoch: 1, heartbeatAt: at(0), ttlMs: TTL };
+  assertEquals(
+    reconcileJob(other, { currentDigest: "d1", at: at(1) }).action,
+    "respawn",
+  );
+});
+
+Deno.test("fdh executor: journals mixing intent and step, and sparse argv, are rejected", () => {
+  const intent = createJob({
+    jobId: "intent-1",
+    taskId: "t1",
+    worktree: "/wt",
+    kind: "intent",
+    intent: { op: "push", target: "x" },
+    inputs: INPUTS,
+    executionDigest: "d",
+    holder: "a",
+    at: at(0),
+  });
+  const withStep = JSON.parse(JSON.stringify(intent));
+  withStep.step = STEP;
+  assertThrows(() => parseJobJournal(withStep), Error, "intent");
+  const step = JSON.parse(JSON.stringify(stepJob()));
+  step.intent = { op: "push", target: "x" };
+  assertThrows(() => parseJobJournal(step), Error, "step");
+  const sparse: string[] = ["deno"];
+  sparse[2] = "x";
+  assertThrows(
+    () => stepJob("/wt", { step: { ...STEP, argv: sparse } }),
+    Error,
+    "non-empty string argv",
+  );
+});
+
+Deno.test("fdh executor: a malformed report time is refused before the journal changes", () => {
+  const job = stepJob();
+  beginAttempt(job, 1, "x1", at(0));
+  const before = JSON.stringify(job);
+  assertThrows(
+    () => applyReport(job, { ...report(1, 0, 1), endedAt: "nope" }, at(1)),
+    Error,
+    "report endedAt",
+  );
+  assertThrows(
+    () => applyReport(job, report(1, 0, 1), "nope"),
+    Error,
+    "apply time",
+  );
+  assertEquals(JSON.stringify(job), before);
+});
+
+Deno.test("fdh executor: a blank outbox holder is invalid, and a settled job ignores a damaged outbox", async () => {
+  const dir = await Deno.makeTempDir();
+  try {
+    await writeNewJob(stepJob(dir));
+    await updateJob(
+      dir,
+      "t1",
+      "test-1",
+      (j) => beginAttempt(j, 1, "x1", at(0)),
+    );
+    const file = `${dir}/_dist/fdh/jobs/t1/test-1.outbox-1.json`;
+    Deno.writeTextFileSync(
+      file,
+      JSON.stringify({ ...report(1, 0, 1), holder: "  " }),
+    );
+    assertThrows(
+      () => readOutbox(dir, "t1", "test-1", 1),
+      Error,
+      "invalid fdh job outbox",
+    );
+    await updateJob(
+      dir,
+      "t1",
+      "test-1",
+      (j) => applyReport(j, report(1, 0, 2), at(2)),
+    );
+    Deno.writeTextFileSync(file, "{ broken");
+    const { value } = await reconcileJobFile(dir, "t1", "test-1", {
+      at: at(3),
+      currentDigest: "d1",
+    });
+    assertEquals(value, { action: "none", state: "succeeded" });
+  } finally {
+    await Deno.remove(dir, { recursive: true });
+  }
+});
