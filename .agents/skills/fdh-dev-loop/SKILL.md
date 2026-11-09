@@ -162,6 +162,21 @@ not pass, so the required check updates on the PR head. The reviewer identities
 are still declared by the poster; the gate cannot tell whether two receipts from
 one trusted account came from two independent reviews.
 
+Limits to know:
+
+- `MEMBER` means any member of the organisation, not write access to this
+  repository. An org member with private membership may appear as `CONTRIBUTOR`;
+  their receipts are then ignored (make the membership public or use a
+  collaborator account).
+- Only newly created comments trigger the rerun; after editing a receipt, rerun
+  the PR's `review-gate` run by hand.
+- A PR that changes `fdh-review-gate.yml` still needs one manual rerun after its
+  receipts are posted, because `issue_comment` workflows are read from the
+  default branch.
+- The gate code runs from the PR's own checkout, so a PR can change what the
+  gate checks; review edits to `.github/workflows/fdh-review-gate.yml` and
+  `tools/src/fdh_review.ts` before merging.
+
 ## Quota and approval ledger (Gate 4 4-D / 4-C)
 
 Use the local ledger (`<worktree>/_dist/fdh/quota/<task-id>.json`) when work can
