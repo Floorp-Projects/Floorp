@@ -124,23 +124,28 @@ jobs:
         run: |
           set -euo pipefail
           # Identify this PR's head exactly: the same SHA can be the head of
-          # another PR (a fork or another base), whose gate run must not be
-          # rerun in place of this one. Git ref names cannot contain tabs.
-          IFS=$'\t' read -r head_sha head_ref head_repo < <(
-            gh api "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}" \
-              --jq '[.head.sha, .head.ref, .head.repo.full_name] | @tsv'
-          )
-          if [ -z "${head_sha:-}" ] || [ -z "${head_ref:-}" ] || [ -z "${head_repo:-}" ]; then
+          # another PR (a fork, or another PR from the same branch to another
+          # base), whose gate run must not be rerun in place of this one.
+          # Git ref names cannot contain tabs.
+          if ! pr_head=$(gh api "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}" \
+            --jq '[.head.sha, .head.ref, (.head.repo.full_name // "")] | @tsv'); then
             echo "Could not read the head of PR #${PR_NUMBER}." >&2
             exit 1
           fi
-          # Newest pull_request gate run for this exact head (SHA, branch and
-          # repository), as "id status conclusion"; empty when there is none.
+          IFS=$'\t' read -r head_sha head_ref head_repo <<< "$pr_head"
+          if [ -z "${head_sha:-}" ] || [ -z "${head_ref:-}" ] || [ -z "${head_repo:-}" ]; then
+            echo "Could not read the head of PR #${PR_NUMBER} (deleted head repository?)." >&2
+            exit 1
+          fi
+          export HEAD_REF="$head_ref" HEAD_REPO="$head_repo"
+          # Newest pull_request gate run for this exact head, as
+          # "id status conclusion"; empty when there is none. The run must
+          # match the SHA, head branch and head repository (exact string
+          # comparison in jq), and, when GitHub lists the run's PRs (same-repo
+          # heads), this PR's number. Fork runs list no PRs.
           latest_run() {
             gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/fdh-review-gate.yml/runs?event=pull_request&head_sha=${head_sha}&per_page=30" \
-              --jq '.workflow_runs[] | [.id, .status, (.conclusion // "none"), .head_branch, .head_repository.full_name] | @tsv' |
-              awk -F'\t' -v ref="$head_ref" -v repo="$head_repo" \
-                '$4 == ref && $5 == repo { print $1 " " $2 " " $3; exit }'
+              --jq '[.workflow_runs[] | select(.head_branch == env.HEAD_REF and .head_repository.full_name == env.HEAD_REPO and ((.pull_requests | length) == 0 or any(.pull_requests[]; .number == (env.PR_NUMBER | tonumber))))][0] | if . == null then "" else "\(.id) \(.status) \(.conclusion // "none")" end'
           }
           if ! run=$(latest_run); then
             echo "Listing gate runs failed." >&2
