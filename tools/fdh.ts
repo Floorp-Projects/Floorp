@@ -71,6 +71,7 @@ import {
   claimQuota,
   pendingQuota,
   quotaLedgerExists,
+  quotaLedgerPath,
   readQuotaLedger,
   releaseQuota,
   resumeQuota,
@@ -92,6 +93,7 @@ import {
   writeGuiLease,
 } from "./src/fdh_gui.ts";
 import type { GuiLeaseEndReason } from "./src/fdh_gui.ts";
+import { lockPathFor, withFileLock } from "./src/fdh_lock.ts";
 import {
   assertNoSecretReferences,
   checkTaskSecrets,
@@ -482,9 +484,9 @@ async function cmdGui(
   const taskId = validateTaskId(requireOption(parsed, "task-id"));
   const state = await loadStateForCwd(taskId);
   const file = await guiLeasePathForWorktree(state.worktree);
-  const lease = readGuiLease(file);
 
   if (sub === "status") {
+    const lease = readGuiLease(file);
     console.log(
       JSON.stringify({ ...summarizeGuiLease(lease), leasePath: file }),
     );
@@ -493,9 +495,22 @@ async function cmdGui(
 
   const agent = requireOption(parsed, "agent");
   const note = hasOption(parsed, "note") ? requireOption(parsed, "note") : "";
-  if (sub === "claim") {
-    claimGuiLease(lease, agent, taskId, state.worktree);
-    writeGuiLease(file, lease);
+  const reason = sub === "end"
+    ? requireOption(parsed, "reason") as GuiLeaseEndReason
+    : undefined;
+  // The lease is shared by every worktree of the repository: read, change and
+  // write it under one lock so two concurrent claims cannot both succeed.
+  const lease = await withFileLock(lockPathFor(file), () => {
+    const current = readGuiLease(file);
+    if (reason === undefined) {
+      claimGuiLease(current, agent, taskId, state.worktree);
+    } else {
+      endGuiLease(current, agent, reason, note);
+    }
+    writeGuiLease(file, current);
+    return current;
+  });
+  if (reason === undefined) {
     appendEvent(state, {
       timestamp: nowIso(),
       command: "gui claim",
@@ -503,9 +518,6 @@ async function cmdGui(
       exitCode: 0,
     });
   } else {
-    const reason = requireOption(parsed, "reason") as GuiLeaseEndReason;
-    endGuiLease(lease, agent, reason, note);
-    writeGuiLease(file, lease);
     appendEvent(state, {
       timestamp: nowIso(),
       command: "gui end",
@@ -560,40 +572,48 @@ async function cmdQuota(
   assertAllowedOptions(parsed, ["task-id", "agent", "reason", "op", "note"]);
   const taskId = validateTaskId(requireOption(parsed, "task-id"));
   const state = await loadStateForCwd(taskId);
-  const ledger = readQuotaLedger(state.worktree, taskId, true);
   const note = hasOption(parsed, "note") ? requireOption(parsed, "note") : "";
 
-  switch (sub) {
-    case "claim":
-      claimQuota(ledger, requireOption(parsed, "agent"));
-      break;
-    case "stop": {
-      const reason = requireOption(parsed, "reason") as QuotaStopReason;
-      stopQuota(ledger, requireOption(parsed, "agent"), reason, note);
-      break;
-    }
-    case "resume":
-      resumeQuota(ledger, requireOption(parsed, "agent"), note);
-      break;
-    case "pending":
-      pendingQuota(
-        ledger,
-        requireOption(parsed, "op") as PendingExternalOp,
-        note,
-      );
-      break;
-    case "approve":
-      approveQuota(ledger, note);
-      break;
-    case "release":
-      releaseQuota(ledger, requireOption(parsed, "agent"));
-      break;
-    case "status":
-      console.log(JSON.stringify(summarizeQuota(ledger)));
-      return;
+  if (sub === "status") {
+    const ledger = readQuotaLedger(state.worktree, taskId, true);
+    console.log(JSON.stringify(summarizeQuota(ledger)));
+    return;
   }
 
-  writeQuotaLedger(ledger);
+  // Read, change and write the ledger under one lock so two agents cannot
+  // both claim the task, or lose each other's stop/approve.
+  const ledgerFile = quotaLedgerPath(state.worktree, taskId);
+  const ledger = await withFileLock(lockPathFor(ledgerFile), () => {
+    const current = readQuotaLedger(state.worktree, taskId, true);
+    switch (sub) {
+      case "claim":
+        claimQuota(current, requireOption(parsed, "agent"));
+        break;
+      case "stop": {
+        const reason = requireOption(parsed, "reason") as QuotaStopReason;
+        stopQuota(current, requireOption(parsed, "agent"), reason, note);
+        break;
+      }
+      case "resume":
+        resumeQuota(current, requireOption(parsed, "agent"), note);
+        break;
+      case "pending":
+        pendingQuota(
+          current,
+          requireOption(parsed, "op") as PendingExternalOp,
+          note,
+        );
+        break;
+      case "approve":
+        approveQuota(current, note);
+        break;
+      case "release":
+        releaseQuota(current, requireOption(parsed, "agent"));
+        break;
+    }
+    writeQuotaLedger(current);
+    return current;
+  });
   const summary = summarizeQuota(ledger);
   appendEvent(state, {
     timestamp: nowIso(),
