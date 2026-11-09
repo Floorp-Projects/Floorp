@@ -206,7 +206,29 @@ Deno.test("an external build pass records a passing assertion and no build-UNVER
         item.includes("Source compilation was not verified")
       ),
     );
+    // With only an external record, the compilation is operator-attested.
+    assert(
+      manifest.limitations.some((item) =>
+        item.includes("Source compilation is operator-attested only")
+      ),
+    );
     assertEquals(validateEvidenceManifest(manifest), []);
+
+    // Once fdh itself ran a source build, the attested-only note goes away.
+    state.assertions.push({
+      name: "build-exit-code",
+      expected: "exit code 0",
+      actual: "exit code 0",
+      passed: true,
+      at: "2026-11-08T02:00:00.000Z",
+    });
+    const withFdhBuild = await buildEvidenceManifest(state, { os: OS });
+    assertEquals(
+      withFdhBuild.limitations.some((item) =>
+        item.includes("Source compilation is operator-attested only")
+      ),
+      false,
+    );
   });
 });
 

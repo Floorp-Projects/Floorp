@@ -217,10 +217,20 @@ function buildLimitations(state: FdhTaskState, manifestState: State): string[] {
       "Browser confirmation was not verified; browser behavior remains UNVERIFIED.",
     );
   }
-  const hasSourceBuild = state.assertions.some((assertion) =>
-    assertion.name === "build-exit-code" ||
-    assertion.name === "external-build-exit-code"
+  const hasFdhSourceBuild = state.assertions.some((assertion) =>
+    assertion.name === "build-exit-code"
   );
+  const hasSourceBuild = hasFdhSourceBuild ||
+    state.assertions.some((assertion) =>
+      assertion.name === "external-build-exit-code"
+    );
+  if (hasSourceBuild && !hasFdhSourceBuild) {
+    // An external build record names a command fdh never checked; it may not
+    // have compiled the source at all (for example an after-mach-only run).
+    add(
+      "Source compilation is operator-attested only: no source build was run by fdh, and the recorded external build command was not checked to be a source build.",
+    );
+  }
   const hasInjectBuild = state.assertions.some((assertion) =>
     assertion.name === "build-inject-exit-code"
   );
@@ -257,7 +267,7 @@ function buildLimitations(state: FdhTaskState, manifestState: State): string[] {
   });
   if (blockedAfterLastSource) {
     add(
-      "A source build was refused or blocked after the last recorded source compilation (dev server running or dev guard failure); the latest source edits were not compiled.",
+      "A source build was refused or blocked after the last source build fdh ran (dev server running or dev guard failure); the latest source edits were not compiled.",
     );
   }
   const hasTest = state.assertions.some((assertion) =>
