@@ -215,7 +215,16 @@ export function recreateLink(
     return "symlink";
   } catch (error) {
     if (os !== "windows" || type !== "dir") throw error;
-    symlink(path.resolve(path.dirname(destination), linkText), destination, {
+    // A `\\?\` extended-length prefix would be mangled by path.resolve and
+    // yield a broken junction (os error 123), so drop it for the drive-letter
+    // form. Junctions cannot target UNC or volume-GUID paths at all; rethrow
+    // the original error instead of creating a dangling junction.
+    let plain = linkText;
+    if (linkText.startsWith("\\\\?\\")) {
+      plain = linkText.slice(4);
+      if (!/^[A-Za-z]:[\\/]/.test(plain)) throw error;
+    }
+    symlink(path.resolve(path.dirname(destination), plain), destination, {
       type: "junction",
     });
     return "junction";

@@ -221,3 +221,31 @@ export function validateReceiptSet(
     models,
   };
 }
+
+/** A full git object id: SHA-1 (40 hex) or SHA-256 (64 hex), lower case. */
+const FULL_COMMIT_RE = /^[0-9a-f]{40}(?:[0-9a-f]{24})?$/;
+
+/**
+ * Local receipt file name: `<task>-<commit12>-<reviewer>.json`. The commit
+ * must be a full hex SHA and the reviewer is reduced to `[A-Za-z0-9._-]`, so
+ * the name cannot leave the reviews directory (the task id is validated by
+ * the CLI). Reviewers that differ only in characters outside that set, or
+ * after 64 characters, share a file.
+ */
+export function receiptFileName(
+  taskId: string,
+  commit: string,
+  reviewer: string,
+): string {
+  if (!FULL_COMMIT_RE.test(commit)) {
+    throw new Error(
+      `--commit must be a full lower-case hex commit SHA (40 or 64 characters), got ${
+        JSON.stringify(commit)
+      }`,
+    );
+  }
+  const safeReviewer = reviewer.replace(/[^A-Za-z0-9._-]+/g, "_")
+    .replace(/^[._]+/, "")
+    .slice(0, 64) || "reviewer";
+  return `${taskId}-${commit.slice(0, 12)}-${safeReviewer}.json`;
+}

@@ -41,6 +41,7 @@ import {
 } from "./src/fdh_evidence.ts";
 import {
   buildVerifyCommands,
+  guardFailedBuildEventCommand,
   parseBuildPhase,
   refusedBuildEventCommand,
 } from "./src/fdh_verify.ts";
@@ -51,6 +52,7 @@ import {
 import {
   FDH_REVIEW_RECEIPT_MARKER,
   FDH_REVIEW_RECEIPT_SCHEMA_VERSION,
+  receiptFileName,
   REVIEW_TIERS,
   REVIEW_VERDICTS,
   validateReceipt,
@@ -718,7 +720,7 @@ async function runVerify(
         timestamp: nowIso(),
         command: error instanceof DevGuardRefusalError
           ? refusedBuildEventCommand(phase)
-          : `verify build --phase ${phase} (dev guard failed)`,
+          : guardFailedBuildEventCommand(phase),
         note: error instanceof Error ? error.message : String(error),
         exitCode: 1,
       });
@@ -989,9 +991,11 @@ async function cmdReviewRecord(parsed: ParsedArgs): Promise<void> {
 
   const reviewsDir = path.join(fdhDir(state.worktree), "reviews");
   await Deno.mkdir(reviewsDir, { recursive: true });
+  // One file per reviewer and head: the gate needs two distinct reviewers at
+  // the same commit, so their local receipts must not overwrite each other.
   const receiptPath = path.join(
     reviewsDir,
-    `${taskId}-${validated.commit.slice(0, 12)}.json`,
+    receiptFileName(taskId, validated.commit, validated.reviewer),
   );
   await Deno.writeTextFile(
     receiptPath,

@@ -74,9 +74,23 @@ export function refusedBuildEventCommand(phase: BuildPhase): string {
   return `verify build --phase ${phase} (refused)`;
 }
 
+/** Event command recorded when the W-04 guard could not determine liveness. */
+export function guardFailedBuildEventCommand(phase: BuildPhase): string {
+  return `verify build --phase ${phase} (dev guard failed)`;
+}
+
 /** True when `command` is an event recorded by refusedBuildEventCommand. */
 export function isRefusedBuildEvent(command: string): boolean {
   return /^verify build --phase \S+ \(refused\)$/.test(command);
+}
+
+/**
+ * True when a requested `verify build` never ran: refused by the guard, or
+ * stopped because the guard itself failed.
+ */
+export function isBlockedBuildEvent(command: string): boolean {
+  return isRefusedBuildEvent(command) ||
+    /^verify build --phase \S+ \(dev guard failed\)$/.test(command);
 }
 
 /** True when `raw` is one of the documented phases (exact match). */

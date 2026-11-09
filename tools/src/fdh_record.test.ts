@@ -463,3 +463,51 @@ Deno.test("after-mach injection alone adds the source-compilation limitation; so
     assertEquals(validateEvidenceManifest(beforeOnly), []);
   });
 });
+
+Deno.test("rejects a non-ISO or future --attested-at", async () => {
+  await withTempDir(async (dir) => {
+    const state = makeState(dir);
+    writeTaskState(state);
+    const obs = await writeObservation(dir, "attested.log", "ok\n");
+    const base = {
+      command: "deno task feles-build build",
+      cwd: dir,
+      exitCode: 0,
+      observationFile: obs,
+      operator: "agent-7",
+      verification: "build" as const,
+      now: () => "2026-11-09T06:00:00.000Z",
+    };
+
+    for (
+      const attestedAt of ["yesterday", "2026-11-09", "2026-11-09T05:00:00"]
+    ) {
+      await assertRejects(
+        () => recordExternalOperation(state, { ...base, attestedAt }),
+        Error,
+        "ISO 8601",
+      );
+    }
+    await assertRejects(
+      () =>
+        recordExternalOperation(state, {
+          ...base,
+          attestedAt: "2099-01-01T00:00:00Z",
+        }),
+      Error,
+      "must not be in the future",
+    );
+    assertEquals(state.operations.length, 0);
+
+    // Within the tolerated skew, and in the past, both record normally.
+    await recordExternalOperation(state, {
+      ...base,
+      attestedAt: "2026-11-09T06:04:00.000Z",
+    });
+    await recordExternalOperation(state, {
+      ...base,
+      attestedAt: "2026-11-09T05:00:00+09:00",
+    });
+    assertEquals(state.operations.length, 2);
+  });
+});
