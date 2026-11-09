@@ -245,6 +245,21 @@ Deno.test("recreateLink falls back to a junction for dir links on Windows only",
   );
   assertFalse(calls[1].target.includes("?"), calls[1].target);
   assertStringIncludes(calls[1].target, "real");
+  if (Deno.build.os === "windows") {
+    // An absolute drive-letter target is used as is.
+    assertEquals(calls[1].target, "D:\\real\\dir");
+  }
+
+  // UNC and volume-GUID targets cannot be junctions: no dangling junction.
+  for (const linkText of ["\\\\?\\UNC\\srv\\share\\d", "\\\\?\\Volume{0}\\d"]) {
+    calls.length = 0;
+    assertThrows(
+      () => recreateLink(linkText, destination, "dir", failSymlink, "windows"),
+      Error,
+      "1314",
+    );
+    assertEquals(calls.length, 1);
+  }
 
   // File links and non-Windows hosts keep the original error.
   assertThrows(

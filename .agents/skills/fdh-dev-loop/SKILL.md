@@ -243,8 +243,10 @@ deno run -A tools/fdh.ts secrets status
   `verify build ... (refused)` event. When liveness cannot be determined (an
   unreadable or corrupt registry, a failed process listing) it also exits 1 and
   records `verify build ... (dev guard failed)`. `--phase after-mach` is always
-  allowed. Either event newer than the last source build adds the evidence
-  limitation that the latest source edits were not compiled.
+  allowed. Either event newer than the last source build fdh ran itself adds the
+  evidence limitation that the latest source edits were not compiled; an
+  external `record` does not clear it. A corrupt registry is cleared by
+  `fdh dev down`.
 - `verify browser` succeeds only when `dev-tool status` prints
   `Connected to browser.` Without that line, do not claim browser verification.
 - `--eval` output is always recorded verbatim. Without `--expect` it is never a

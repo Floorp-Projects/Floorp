@@ -63,14 +63,17 @@ export function devProcessesFileFor(worktree: string): string {
  * processes"; anything else throws, so the guard fails closed.
  */
 export function readDevRegistryStrict(file: string): DevProcessIdentity[] {
-  let text: string;
   try {
-    text = Deno.readTextFileSync(file);
+    return parseDevProcessRegistry(JSON.parse(Deno.readTextFileSync(file)));
   } catch (error) {
     if (error instanceof Deno.errors.NotFound) return [];
-    throw error;
+    const reason = error instanceof Error ? error.message : String(error);
+    throw new Error(
+      `cannot read the dev process registry ${file}: ${reason}. ` +
+        `Run 'fdh dev down' (dev-tool stop removes the registry once this ` +
+        `worktree's dev processes are gone), then retry the build.`,
+    );
   }
-  return parseDevProcessRegistry(JSON.parse(text));
 }
 
 /** Registry entries of `worktree` whose process is still the same process. */

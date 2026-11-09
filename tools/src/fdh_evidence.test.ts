@@ -452,3 +452,35 @@ Deno.test("a blocked build or a bad timestamp keeps the not-compiled limitation"
     );
   });
 });
+
+Deno.test("an external build record cannot clear the not-compiled limitation", async () => {
+  await withTempDir(async (dir) => {
+    const notCompiled = "latest source edits were not compiled";
+    const state = makeState(dir);
+    addCheck(
+      state,
+      "build-exit-code",
+      "deno task feles-build build --phase before-mach",
+    );
+    state.events.push({
+      timestamp: "2026-11-08T00:05:00.000Z",
+      command: refusedBuildEventCommand("all"),
+      note: "refused",
+      exitCode: 1,
+    });
+    // Attested later than the refusal, but operator-attested: not counted.
+    state.assertions.push({
+      name: "external-build-exit-code",
+      expected: "exit code 0",
+      actual: "exit code 0",
+      passed: true,
+      at: "2026-11-08T00:09:00.000Z",
+    });
+    writeTaskState(state);
+    const manifest = await buildEvidenceManifest(state, {
+      os: { name: "testos", arch: "x86_64" },
+    });
+    assert(manifest.limitations.some((item) => item.includes(notCompiled)));
+    assertEquals(validateEvidenceManifest(manifest), []);
+  });
+});

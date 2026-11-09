@@ -808,7 +808,7 @@ export async function recordExternalOperation(
   const attestedMs = Date.parse(attestedAt);
   if (!ISO_INSTANT_RE.test(attestedAt) || !Number.isFinite(attestedMs)) {
     throw new Error(
-      `--attested-at must be an ISO 8601 date-time with a zone, got ${
+      `--attested-at must be an ISO 8601 date-time with a zone, for example 2026-11-09T05:00:00Z or 2026-11-09T14:00:00+09:00; got ${
         JSON.stringify(attestedAt)
       }`,
     );

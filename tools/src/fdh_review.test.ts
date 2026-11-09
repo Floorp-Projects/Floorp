@@ -190,8 +190,16 @@ Deno.test("fdh review: receipts of two reviewers at one head get distinct files"
   assertEquals(b, "win-t01-66a1ed79ba18-reviewer-b-opus.json");
   // Path separators and dot prefixes cannot escape the reviews directory.
   assertEquals(
-    receiptFileName("t", head, "../..\evil/name"),
+    receiptFileName("t", head, "../..\\evil/name"),
     "t-66a1ed79ba18-evil_name.json",
+  );
+  // The commit segment must be a full hex SHA, so it cannot carry a path.
+  for (const commit of ["/../../../..", "HEAD", "66a1ed79", ""]) {
+    assertThrows(() => receiptFileName("t", commit, "r"), Error, "SHA");
+  }
+  assertEquals(
+    receiptFileName("t", "a".repeat(64), "r"),
+    "t-aaaaaaaaaaaa-r.json",
   );
   assertEquals(
     receiptFileName("t", head, "..."),

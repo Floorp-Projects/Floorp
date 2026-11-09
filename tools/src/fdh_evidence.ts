@@ -238,15 +238,15 @@ function buildLimitations(state: FdhTaskState, manifestState: State): string[] {
   // A source build refused (or stopped by a failing guard) after the last
   // recorded source compilation means the latest source edits were never
   // compiled, even if an earlier build or a later after-mach inject passed.
-  // Unparseable timestamps never clear the limitation: a source build with a
-  // bad `at` does not count, and a blocked event with a bad timestamp counts.
+  // Only a source build fdh ran itself clears it: an external record's time is
+  // an operator attestation, not the build time, and its command is not
+  // checked to be a source build. Unparseable timestamps never clear it: a
+  // source build with a bad `at` does not count, and a blocked event with a
+  // bad timestamp counts.
   const lastSourceBuildAt = Math.max(
     -Infinity,
     ...state.assertions
-      .filter((assertion) =>
-        assertion.name === "build-exit-code" ||
-        assertion.name === "external-build-exit-code"
-      )
+      .filter((assertion) => assertion.name === "build-exit-code")
       .map((assertion) => Date.parse(assertion.at))
       .filter((at) => Number.isFinite(at)),
   );
