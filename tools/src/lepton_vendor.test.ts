@@ -915,6 +915,16 @@ Deno.test("apply and verifyAssets refuse malformed release metadata", async () =
   }
 });
 
+Deno.test("verifyAssets reports a draft before checking its metadata", async () => {
+  // GitHub returns published_at null for a draft release.
+  const draft = {
+    ...releaseJson("v1.0.0"),
+    draft: true,
+    published_at: null as unknown as string,
+  };
+  await assertRejects(() => verifyAssets(draft, "."), Error, "is a draft");
+});
+
 Deno.test("error messages that need a maintainer name update_lepton.yml", async () => {
   const tmp = await Deno.makeTempDir({ prefix: "lepton-hints-" });
   try {
@@ -975,22 +985,73 @@ Deno.test("error messages that need a maintainer name update_lepton.yml", async 
 
 const workflowText = () => Deno.readTextFile(resolveFromRoot(WORKFLOW_FILE));
 
-/** Every `deno ...` command in the workflow, keyed by lepton_vendor command. */
-async function workflowDenoRuns(): Promise<Map<string, string[]>> {
-  const joined = (await workflowText()).replace(/\\\r?\n\s*/g, " ");
+/**
+ * Every `deno` command in `text` (line continuations joined), wherever it
+ * starts: at a line start, after `&&`, `||`, `;`, `|`, `(` or `$(`, keyed by
+ * lepton_vendor command. Each command ends at the next shell separator.
+ * Anything other than `deno run ... tools/src/lepton_vendor.ts <command>`
+ * fails, so a new Deno call cannot slip past the permission checks.
+ */
+function denoRuns(text: string): Map<string, string[]> {
+  const joined = text.replace(/\\\r?\n\s*/g, " ");
   const runs = new Map<string, string[]>();
-  for (const line of joined.split(/\r?\n/)) {
-    if (!/^\s*deno\s/.test(line)) continue;
-    const words = line.trim().split(/\s+/);
-    assertEquals(words[1], "run", `only deno run is expected: ${line}`);
+  for (const match of joined.matchAll(/(?:^|[\s;&|(])(deno\s[^;&|)\r\n]*)/gm)) {
+    const invocation = match[1];
+    const words = invocation.trim().split(/\s+/);
+    assertEquals(words[1], "run", `only deno run is expected: ${invocation}`);
     const script = words.indexOf("tools/src/lepton_vendor.ts");
-    assert(script > 0, `unexpected deno command in the workflow: ${line}`);
+    assert(script > 0, `unexpected deno command: ${invocation}`);
     const command = words[script + 1];
     assert(!runs.has(command), `${command} runs twice`);
     runs.set(command, words);
   }
   return runs;
 }
+
+async function workflowDenoRuns(): Promise<Map<string, string[]>> {
+  return denoRuns(await workflowText());
+}
+
+Deno.test("denoRuns finds deno run anywhere on a line", () => {
+  const runs = denoRuns(
+    [
+      "deno run --allow-read=a tools/src/lepton_vendor.ts verify",
+      "cd x && deno run -A tools/src/lepton_vendor.ts apply \\",
+      '  --summary "$W/s.md"; deno run --allow-net \\',
+      "    tools/src/lepton_vendor.ts verify-assets || true",
+      'out="$(deno run --allow-env tools/src/lepton_vendor.ts other)"',
+      "# denoland/setup-deno and deno-version: are not commands",
+    ].join("\n"),
+  );
+  assertEquals([...runs.keys()], ["verify", "apply", "verify-assets", "other"]);
+  assertEquals(runs.get("apply")?.slice(0, 3), ["deno", "run", "-A"]);
+  assertEquals(runs.get("verify-assets")?.[2], "--allow-net");
+  assertThrows(
+    () => denoRuns("true; deno eval 'Deno.exit(0)'"),
+    Error,
+    "only deno run",
+  );
+  assertThrows(
+    () => denoRuns("x && deno run -A tools/other.ts"),
+    Error,
+    "unexpected deno command",
+  );
+});
+
+Deno.test("update_lepton.yml never pipes into grep -q", async () => {
+  // Under pipefail, `producer | grep -q` reads as "no match" when grep
+  // quits early and the producer dies of SIGPIPE, so a check fails open.
+  const joined = (await workflowText()).replace(/\\\r?\n\s*/g, " ");
+  const offending = joined.split(/\r?\n/).filter((line) =>
+    !line.trim().startsWith("#") &&
+    /\|\s*grep\s+(?:-\S*\s+)*-[A-Za-z]*q/.test(line)
+  );
+  assertEquals(offending, [], "grep a saved file instead of a pipe");
+  assert(
+    joined.includes("uniq -dz"),
+    "the commit step refuses staged paths that differ only in case",
+  );
+});
 
 /** Values of `--allow-<kind>=a,b` (quotes stripped); null when absent. */
 function allowList(words: string[], kind: string): string[] | null {

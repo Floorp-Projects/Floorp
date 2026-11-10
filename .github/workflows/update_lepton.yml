@@ -11,7 +11,8 @@
 #   release assets. They are still untrusted (upstream publishes the
 #   digests): every entry name must match [A-Za-z0-9_+-][A-Za-z0-9._+-]* per
 #   segment (no .git, dotfiles, control characters) and must not be a Windows
-#   device name (CON, nul.svg, ...) or end in a dot; symlinks, special files
+#   device name (CON, nul.svg, ...), end in a dot or differ from another
+#   path only in case; symlinks, special files
 #   and unknown top-level entries fail the run, and after `git add` the index
 #   may hold only regular files at the vendored paths. Deno gets read and
 #   write access only to the paths each command needs. The token is not on
@@ -130,12 +131,27 @@ jobs:
           # (assertSafeName) and also refuses names differing only in case.
           seg='[A-Za-z0-9_+-][A-Za-z0-9._+-]*'
           winbad='(^|/)(con|prn|aux|nul|com[0-9]|lpt[0-9])(\.|/|$)|\.(/|$)'
+          # grep reads a saved listing, never a pipe: with `unzip | grep -q`
+          # under pipefail, grep quits at the first match, unzip dies of
+          # SIGPIPE and the pipeline reads as "no match", so a bad entry
+          # would pass. found() treats a grep error (status > 1) as fatal.
+          found() {
+            local rc=0
+            grep "$@" > /dev/null || rc=$?
+            if [ "$rc" -gt 1 ]; then
+              echo "::error::grep failed with status $rc"
+              exit 1
+            fi
+            return "$rc"
+          }
           for zip in Lepton Lepton-Photon-Style Lepton-Proton-Style; do
-            if unzip -Z1 "$WORK/zips/$zip.zip" | grep -Evq "^$seg(/$seg)*/?\$"; then
+            list="$WORK/$zip.entries"
+            unzip -Z1 "$WORK/zips/$zip.zip" > "$list"
+            if found -Ev "^$seg(/$seg)*/?\$" "$list"; then
               echo "::error::$zip.zip has unsafe entry names"
               exit 1
             fi
-            if unzip -Z1 "$WORK/zips/$zip.zip" | grep -Eiq "$winbad"; then
+            if found -Ei "$winbad" "$list"; then
               echo "::error::$zip.zip has entry names Windows cannot check out"
               exit 1
             fi
@@ -222,6 +238,16 @@ jobs:
               bad=1
             fi
           done < <(g ls-files -s -z -- browser-features/skin)
+          # Paths that differ only in case break Windows and macOS checkouts
+          # (lepton_vendor.ts refuses them in the release too).
+          dups="$(g ls-files -z -- browser-features/skin |
+            LC_ALL=C tr '[:upper:]' '[:lower:]' | LC_ALL=C sort -z |
+            uniq -dz | tr '\0' '\n')"
+          if [ -n "$dups" ]; then
+            echo "::error::staged paths differ only in case:"
+            printf '%s\n' "$dups"
+            bad=1
+          fi
           [ "$bad" = 0 ]
 
           g -c user.name="github-actions[bot]" \

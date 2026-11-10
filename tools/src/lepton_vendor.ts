@@ -251,8 +251,10 @@ export function assertSafeName(name: string, where: string): void {
     ? `allowed: ${SAFE_NAME.source}`
     : WINDOWS_RESERVED_NAME.test(name)
     ? "Windows device name"
-    : /[. ]$/.test(name)
-    ? "ends in a dot or space, which Windows drops"
+    // Windows drops a trailing dot or space; SAFE_NAME already refuses
+    // spaces, so only the dot is left to check.
+    : name.endsWith(".")
+    ? "ends in a dot, which Windows drops"
     : null;
   if (reason !== null) {
     throw new Error(
@@ -429,10 +431,14 @@ export async function verifyAssets(
   release: ReleaseJson,
   zipsDir: string,
 ): Promise<Record<ReleaseAsset, string>> {
-  validateRelease(release);
+  // Before validateRelease: a draft has published_at null, and "draft" is
+  // the useful message for it.
   if (release.draft || release.prerelease) {
-    throw new Error(`${release.tag_name} is a draft or prerelease`);
+    throw new Error(
+      `${JSON.stringify(release.tag_name)} is a draft or prerelease`,
+    );
   }
+  validateRelease(release);
   const hashes = {} as Record<ReleaseAsset, string>;
   for (const name of RELEASE_ASSETS) {
     const asset = release.assets.find((a) => a.name === name);
