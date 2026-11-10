@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "jobId": "intent-20261110t025238z-02d92e",
+  "taskId": "e2e-e-6-mwa3hfdy",
+  "worktree": "E:\\floorp-browser-dev\\fdh-followup",
+  "kind": "intent",
+  "step": null,
+  "intent": {
+    "op": "push",
+    "target": "origin e2e-branch"
+  },
+  "inputs": {
+    "baseCommit": "03adaa8dc1a67f4b6e2115625bc3d7a4632dea3c",
+    "head": "",
+    "guardEnv": {}
+  },
+  "executionDigest": "bb1cd28b9fdb3719ca15edebb3ca8b43cdbf0aca2c9fba2747d77fd022cd7947",
+  "state": "succeeded",
+  "epoch": 1,
+  "lease": null,
+  "leaseTtlMs": 1800000,
+  "maxAttempts": 3,
+  "attempts": [
+    {
+      "attempt": 1,
+      "epoch": 1,
+      "holder": "agent-a",
+      "scheduledAt": "2026-11-10T02:52:38.958Z",
+      "startedAt": "2026-11-10T02:52:38.958Z",
+      "endedAt": "2026-11-10T02:53:01.211Z",
+      "result": "lost",
+      "exitCode": null,
+      "logRef": null,
+      "process": null,
+      "notes": "holder lost; outcome unknown",
+      "lastSeenAt": "2026-11-10T02:52:38.958Z"
+    }
+  ],
+  "checkpoint": 0,
+  "commandResults": [],
+  "recordedToTask": true,
+  "transitions": [
+    {
+      "from": null,
+      "to": "pending",
+      "at": "2026-11-10T02:52:38.958Z",
+      "reason": "created"
+    },
+    {
+      "from": "pending",
+      "to": "scheduled",
+      "at": "2026-11-10T02:52:38.958Z",
+      "reason": "attempt 1 recorded before start"
+    },
+    {
+      "from": "scheduled",
+      "to": "running",
+      "at": "2026-11-10T02:52:38.958Z",
+      "reason": "attempt 1 started"
+    },
+    {
+      "from": "running",
+      "to": "awaiting-approval",
+      "at": "2026-11-10T02:53:01.211Z",
+      "reason": "unknown outcome of non-idempotent push operation"
+    },
+    {
+      "from": "awaiting-approval",
+      "to": "running",
+      "at": "2026-11-10T02:53:23.628Z",
+      "reason": "resolved succeeded by approver: branch exists on origin"
+    },
+    {
+      "from": "running",
+      "to": "succeeded",
+      "at": "2026-11-10T02:53:23.628Z",
+      "reason": "outcome confirmed by approver"
+    }
+  ],
+  "events": [
+    {
+      "at": "2026-11-10T02:53:01.211Z",
+      "kind": "lease-expired",
+      "epoch": 1,
+      "note": "holder agent-a lost"
+    },
+    {
+      "at": "2026-11-10T02:53:23.628Z",
+      "kind": "resolved",
+      "epoch": 1,
+      "note": "resolved succeeded by approver: branch exists on origin"
+    }
+  ],
+  "createdAt": "2026-11-10T02:52:38.958Z",
+  "updatedAt": "2026-11-10T02:53:23.628Z"
+}

@@ -2,7 +2,10 @@
 
 import { assertEquals, assertThrows } from "@std/assert";
 import {
+  approvePendingEntry,
   approveQuota,
+  assertPendingExternalOp,
+  assertQuotaStopReason,
   claimQuota,
   createQuotaLedger,
   parseQuotaLedger,
@@ -11,6 +14,7 @@ import {
   quotaLedgerPath,
   readQuotaLedger,
   releaseQuota,
+  requireAgent,
   resumeQuota,
   stopQuota,
   summarizeQuota,
@@ -66,6 +70,71 @@ Deno.test("fdh quota: stop records a reason and resume reopens the assignment", 
     Error,
     "is not stopped",
   );
+});
+
+Deno.test("fdh quota: a retried pending for the same op and note is not queued twice", () => {
+  const state = ledger();
+  assertEquals(pendingQuota(state, "push", "unknown remote state", NOW), true);
+  const events = state.events.length;
+  const later = "2026-11-08T00:05:00.000Z";
+  assertEquals(
+    pendingQuota(state, "push", "unknown remote state", later),
+    false,
+  );
+  assertEquals(state.approvalPending, [
+    { op: "push", note: "unknown remote state", at: NOW },
+  ]);
+  assertEquals(state.events.length, events);
+  assertEquals(state.updatedAt, NOW);
+  // Empty notes compare equal too.
+  assertEquals(pendingQuota(state, "pr", "", NOW), true);
+  assertEquals(pendingQuota(state, "pr", "", later), false);
+  assertEquals(state.approvalPending.length, 2);
+});
+
+Deno.test("fdh quota: pending entries differing in op or note are both kept", () => {
+  const state = ledger();
+  assertEquals(pendingQuota(state, "push", "a", NOW), true);
+  assertEquals(pendingQuota(state, "push", "b", NOW), true);
+  assertEquals(pendingQuota(state, "pr", "a", NOW), true);
+  assertEquals(
+    state.approvalPending.map((entry) => `${entry.op}:${entry.note}`),
+    ["push:a", "push:b", "pr:a"],
+  );
+});
+
+Deno.test("fdh quota: the same op can be pending again after approval", () => {
+  const state = ledger();
+  pendingQuota(state, "push", "retry", NOW);
+  approveQuota(state, "", NOW);
+  assertEquals(pendingQuota(state, "push", "retry", NOW), true);
+  assertEquals(state.approvalPending.length, 1);
+});
+
+Deno.test("fdh quota: option validators reject bad values before any ledger change", () => {
+  assertPendingExternalOp("push");
+  assertThrows(
+    () => assertPendingExternalOp("force-push"),
+    Error,
+    "--op must be one of push|pr|release|external",
+  );
+  assertQuotaStopReason("quota");
+  assertThrows(
+    () => assertQuotaStopReason("bogus"),
+    Error,
+    "--reason must be one of quota|infra|manual",
+  );
+  assertEquals(requireAgent("  agent-a "), "agent-a");
+  assertThrows(() => requireAgent("  "), Error, "--agent must be");
+  // stopQuota still validates on its own.
+  const state = ledger();
+  claimQuota(state, "agent-a", NOW);
+  assertThrows(
+    () => stopQuota(state, "agent-a", "bogus" as never, "", NOW),
+    Error,
+    "--reason must be one of",
+  );
+  assertEquals(state.stopped, false);
 });
 
 Deno.test("fdh quota: pending external ops await approval and are cleared by approve", () => {
@@ -220,4 +289,18 @@ Deno.test("fdh quota: parse constrains approvalPending ops and event shapes", ()
   );
   // a valid pending ledger parses
   assertEquals(parseQuotaLedger(state).approvalPending[0].note, "");
+});
+
+Deno.test("fdh quota: approvePendingEntry approves one matching entry only", () => {
+  const state = ledger();
+  pendingQuota(state, "push", "job a", NOW);
+  pendingQuota(state, "push", "job b", NOW);
+  assertEquals(
+    approvePendingEntry(state, "push", "job a", "resolved", NOW),
+    true,
+  );
+  assertEquals(state.approvalPending.map((p) => p.note), ["job b"]);
+  assertEquals(approvePendingEntry(state, "push", "job a", "", NOW), false);
+  assertEquals(state.events.at(-1)?.kind, "approve");
+  assertEquals(parseQuotaLedger(state).approvalPending.length, 1);
 });

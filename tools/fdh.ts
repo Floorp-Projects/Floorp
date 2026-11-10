@@ -16,6 +16,7 @@ import { isTcpPortInUse, parsePortOffsetSpec } from "./src/port_offset.ts";
 import {
   appendEvent,
   createTaskState,
+  defaultGitRunner,
   fdhDir,
   nowIso,
   readTaskState,
@@ -69,12 +70,15 @@ import { prepareDeps } from "./src/setup_deps.ts";
 import type { SetupRecord } from "./src/setup.ts";
 import {
   approveQuota,
+  assertPendingExternalOp,
+  assertQuotaStopReason,
   claimQuota,
   pendingQuota,
   quotaLedgerExists,
   quotaLedgerPath,
   readQuotaLedger,
   releaseQuota,
+  requireAgent,
   resumeQuota,
   stopQuota,
   summarizeQuota,
@@ -100,6 +104,42 @@ import {
   checkTaskSecrets,
 } from "./src/fdh_secrets.ts";
 import type { ExternalVerification, FdhTaskState } from "./src/fdh_task.ts";
+import {
+  cancelAndSettle,
+  confirmJob,
+  reconcileTaskJobs,
+  resolveAndApprove,
+  runExecutorProcess,
+  startIntent,
+  startStepJob,
+  summarizeJob,
+  waitForJob,
+} from "./src/fdh_job.ts";
+import {
+  INTENT_OPS,
+  type IntentOp,
+  listJobIds,
+  readJob,
+  type Resolution,
+  validateJobId,
+} from "./src/fdh_executor.ts";
+import {
+  FIELD_RULES,
+  finishExtOp,
+  ingestObservation,
+  parseRef,
+  planExt,
+  resolveField,
+  startExtOp,
+  upsertLink,
+  validateObservation,
+  withExtLedger,
+} from "./src/fdh_ext.ts";
+import {
+  pollAndIngest,
+  repoSlugFromRemote,
+  validateRepoSlug,
+} from "./src/fdh_ext_poll.ts";
 import type { ValidationError } from "./qa3/evidence/types.ts";
 
 const HELP = `
@@ -130,6 +170,59 @@ Commands:
                             dev server runs: 'dev down', build, then 'dev up'.
   verify test --task-id <id>
                             Run "deno task test:host"
+  job start --task-id <id> --step <build|test> [--phase <all|before-mach|after-mach>]
+            [--lease-ttl-ms <n>] [--max-attempts <n>]
+                            Record a durable job (run/attempt/epoch and an
+                            execution digest) and start a detached executor
+                            that runs the same commands as 'verify build|test';
+                            returns at once (B-02 ADR, D-23)
+  job wait --task-id <id> --job-id <id> [--timeout-ms <n>]
+                            Reconcile until the job is terminal or awaits
+                            approval; exits 1 unless it succeeded
+  job status --task-id <id> [--job-id <id>]
+  job reconcile --task-id <id>
+                            Reconcile jobs: reconnect to a live executor, apply
+                            a result left in the outbox, stop a lost step's
+                            process tree and start the next epoch, or fail it
+                            when its inputs changed or attempts ran out
+  job intent --task-id <id> --op <push|pr|release|external> --target <text> --agent <name>
+                            Record a non-idempotent operation before the agent
+                            performs it outside fdh; prints the job id/epoch
+  job confirm --task-id <id> --job-id <id> --epoch <n> --agent <name> --outcome <succeeded|failed>
+                            Record the intent's outcome (fenced by epoch)
+  job resolve --task-id <id> --job-id <id> --resolution <succeeded|failed|retry>
+              [--agent <name>] [--note <text>]
+                            Approver's decision on a job awaiting approval;
+                            also approves its quota pending entry
+  job cancel --task-id <id> --job-id <id> [--reason <text>]
+                            Cancel; a running step stops at its next heartbeat
+  ext link --task-id <id> --jira <KEY-n> [--pr <n>] [--branch <name>]
+                            Link a Jira issue to its GitHub PR (D-19, KAN-131)
+  ext observe --task-id <id> --ref <github:pr/<n>|jira:<KEY-n>> --field <f>
+              --value <v> --version <iso> [--event-id <id>] [--deleted true]
+                            Feed one polled value: applied, duplicate, stale
+                            (older version), conflict or deleted
+  ext poll --task-id <id> [--repo <owner/name>]
+                            Read each linked PR with 'gh api' (state, URL, the
+                            head's check runs) and take them as observations;
+                            Jira is observed by the agent ('ext observe')
+  ext plan --task-id <id>   Sync actions to perform, holds (concurrent edit,
+                            deletion, in flight, awaiting a poll, mirror not
+                            polled yet), kept edits and the I-04 field table;
+                            first brings operations up to date with their jobs
+  ext start --task-id <id> --key <k> --agent <name> [--op <push|pr|release|external>]
+            [--target <text>]
+                            Start a keyed external operation (an intent):
+                            already-done if the key succeeded, refused while
+                            one is in flight; a planned action's key also
+                            stores what it writes
+  ext done --task-id <id> --key <k> --epoch <n> --agent <name>
+           --outcome <succeeded|failed>
+                            Record its outcome; a succeeded planned action
+                            becomes the field's baseline
+  ext resolve --task-id <id> --link <KEY-n> --field <f> --keep <mirror|owner>
+                            Settle a concurrent edit: keep the mirror's value,
+                            or write the owner's value again
   verify browser --task-id <id> [--eval <js>] [--expect <text>]
                             Check dev-tool browser status; --eval output is
                             recorded verbatim, and --expect turns it into an
@@ -152,7 +245,9 @@ Commands:
   quota resume --task-id <id> --agent <name> [--note <text>]
                             Resume a stopped task and re-assign it
   quota pending --task-id <id> --op <push|pr|release|external> [--note <text>]
-                            Record a non-idempotent external op awaiting approval
+                            Record a non-idempotent external op awaiting approval;
+                            the same op and note already pending is not queued
+                            again (the output then has "alreadyPending": true)
   quota approve --task-id <id> [--note <text>]
                             Approve and clear pending external operations
   quota release --task-id <id> --agent <name>
@@ -180,6 +275,7 @@ Commands:
 
 State: <worktree>/_dist/fdh/tasks/<id>.json (git-ignored via _dist/).
 Quota ledger: <worktree>/_dist/fdh/quota/<id>.json (local-only).
+Jobs: <worktree>/_dist/fdh/jobs/<id>/<job-id>.json (journal, outbox, logs).
 Errors go to stderr and exit 1. The CLI never pushes, opens a PR, or calls a
 shared service; pending push/PR/release ops wait for 'quota approve'.
 `.trim();
@@ -356,9 +452,20 @@ async function cmdTaskResume(parsed: ParsedArgs): Promise<void> {
         : [];
     },
   });
+  // Reconcile the task's jobs. Resume means the previous agent session is
+  // gone (4-C), so an intent it left unconfirmed now awaits approval; a step
+  // job is only taken over when its executor's lease really expired.
+  const resumed = readTaskStateFor(report.worktree, taskId);
+  const jobs = await reconcileTaskJobs({
+    state: resumed,
+    intentHoldersGone: true,
+  });
+  if (quotaLedgerExists(report.worktree, taskId)) {
+    approvalPending = readQuotaLedger(report.worktree, taskId).approvalPending;
+  }
   // Resume never reruns push/PR/release; it reports the pending approvals so the
-  // agent waits for an explicit 'fdh quota approve'.
-  console.log(JSON.stringify({ ...report, approvalPending }));
+  // agent waits for an explicit 'fdh quota approve' or 'fdh job resolve'.
+  console.log(JSON.stringify({ ...report, approvalPending, jobs }));
 }
 
 /** Set on the child `task prepare` that runs after the parent's deno install. */
@@ -599,9 +706,30 @@ async function cmdQuota(
     return;
   }
 
+  // Validate every option before the lock: a bad --op/--reason/--agent must
+  // not create the quota directory, lock file or ledger.
+  const agent = sub === "approve" || sub === "pending"
+    ? ""
+    : requireAgent(requireOption(parsed, "agent"));
+  let reason: QuotaStopReason | undefined;
+  if (sub === "stop") {
+    const value = requireOption(parsed, "reason");
+    assertQuotaStopReason(value);
+    reason = value;
+  }
+  let op: PendingExternalOp | undefined;
+  if (sub === "pending") {
+    const value = requireOption(parsed, "op");
+    assertPendingExternalOp(value);
+    op = value;
+  }
+
   // Read, change and write the ledger under one lock so two agents cannot
   // both claim the task, or lose each other's stop/approve.
   const ledgerFile = quotaLedgerPath(state.worktree, taskId);
+  // A retried `quota pending` for an operation that is already pending leaves
+  // the ledger unchanged (see pendingQuota); the task event is still recorded.
+  let alreadyPending = false;
   const ledger = await withFileLock(lockPathFor(ledgerFile), () => {
     const current = readQuotaLedger(state.worktree, taskId, true);
     // writeQuotaLedger writes to the path recorded in the ledger itself; it
@@ -615,20 +743,18 @@ async function cmdQuota(
     }
     switch (sub) {
       case "claim":
-        claimQuota(current, requireOption(parsed, "agent"));
+        claimQuota(current, agent);
         break;
-      case "stop": {
-        const reason = requireOption(parsed, "reason") as QuotaStopReason;
-        stopQuota(current, requireOption(parsed, "agent"), reason, note);
+      case "stop":
+        stopQuota(current, agent, reason as QuotaStopReason, note);
         break;
-      }
       case "resume":
-        resumeQuota(current, requireOption(parsed, "agent"), note);
+        resumeQuota(current, agent, note);
         break;
       case "pending":
-        pendingQuota(
+        alreadyPending = !pendingQuota(
           current,
-          requireOption(parsed, "op") as PendingExternalOp,
+          op as PendingExternalOp,
           note,
         );
         break;
@@ -636,13 +762,15 @@ async function cmdQuota(
         approveQuota(current, note);
         break;
       case "release":
-        releaseQuota(current, requireOption(parsed, "agent"));
+        releaseQuota(current, agent);
         break;
     }
-    writeQuotaLedger(current);
+    if (!alreadyPending) writeQuotaLedger(current);
     return current;
   });
-  const summary = summarizeQuota(ledger);
+  const summary = alreadyPending
+    ? { ...summarizeQuota(ledger), alreadyPending: true }
+    : summarizeQuota(ledger);
   appendTaskEvent(state.worktree, taskId, {
     timestamp: nowIso(),
     command: `quota ${sub}`,
@@ -1128,6 +1256,439 @@ async function cmdEvidence(parsed: ParsedArgs): Promise<void> {
   }));
 }
 
+function requireInteger(
+  parsed: ParsedArgs,
+  name: string,
+  min: number,
+): number {
+  const raw = requireOption(parsed, name);
+  const value = Number(raw);
+  if (!/^\d+$/.test(raw) || !Number.isSafeInteger(value) || value < min) {
+    throw new Error(`--${name} must be an integer >= ${min}, got ${raw}`);
+  }
+  return value;
+}
+
+function optionalInteger(
+  parsed: ParsedArgs,
+  name: string,
+  min: number,
+): number | undefined {
+  return hasOption(parsed, name)
+    ? requireInteger(parsed, name, min)
+    : undefined;
+}
+
+const JOB_SUBCOMMANDS = [
+  "start",
+  "exec",
+  "status",
+  "wait",
+  "reconcile",
+  "intent",
+  "confirm",
+  "resolve",
+  "cancel",
+] as const;
+type JobSubcommand = (typeof JOB_SUBCOMMANDS)[number];
+
+type ExtSubcommand =
+  | "link"
+  | "observe"
+  | "plan"
+  | "start"
+  | "done"
+  | "resolve"
+  | "poll";
+
+async function cmdExt(parsed: ParsedArgs, sub: ExtSubcommand): Promise<void> {
+  assertNoPositional(parsed, 2);
+  const allowed: Record<ExtSubcommand, string[]> = {
+    link: ["task-id", "jira", "pr", "branch"],
+    observe: [
+      "task-id",
+      "ref",
+      "field",
+      "value",
+      "version",
+      "event-id",
+      "deleted",
+    ],
+    plan: ["task-id"],
+    start: ["task-id", "key", "agent", "op", "target"],
+    done: ["task-id", "key", "epoch", "agent", "outcome"],
+    resolve: ["task-id", "link", "field", "keep"],
+    poll: ["task-id", "repo"],
+  };
+  assertAllowedOptions(parsed, allowed[sub]);
+  const taskId = validateTaskId(requireOption(parsed, "task-id"));
+  // Validate every option before anything is read or written.
+  const optional = (name: string) =>
+    hasOption(parsed, name) ? requireOption(parsed, name) : undefined;
+  switch (sub) {
+    case "link": {
+      const jira = requireOption(parsed, "jira");
+      parseRef(`jira:${jira}`);
+      const pr = optionalInteger(parsed, "pr", 1);
+      const branch = optional("branch");
+      const state = await loadStateForCwd(taskId);
+      const link = await withExtLedger(
+        state.worktree,
+        taskId,
+        (ledger) => upsertLink(ledger, jira, pr, branch),
+      );
+      console.log(JSON.stringify({ link }));
+      return;
+    }
+    case "observe": {
+      const deletedRaw = optional("deleted");
+      if (deletedRaw !== undefined && deletedRaw !== "true") {
+        throw new Error("--deleted takes only the value true");
+      }
+      const deleted = deletedRaw === "true";
+      if (deleted && hasOption(parsed, "value")) {
+        throw new Error("--deleted true takes no --value");
+      }
+      if (!deleted && !hasOption(parsed, "value")) {
+        throw new Error("--value is required unless --deleted true");
+      }
+      const input = {
+        ref: requireOption(parsed, "ref"),
+        field: requireOption(parsed, "field"),
+        value: deleted ? null : requireOption(parsed, "value"),
+        version: requireOption(parsed, "version"),
+        eventId: optional("event-id"),
+        deleted,
+      };
+      validateObservation(input);
+      const state = await loadStateForCwd(taskId);
+      const result = await withExtLedger(
+        state.worktree,
+        taskId,
+        (ledger) => ingestObservation(ledger, input),
+      );
+      console.log(
+        JSON.stringify({ ref: input.ref, field: input.field, result }),
+      );
+      return;
+    }
+    case "plan": {
+      const state = await loadStateForCwd(taskId);
+      console.log(JSON.stringify({
+        plan: await planExt(state.worktree, taskId),
+        fields: FIELD_RULES.map((r) => ({
+          field: r.field,
+          owner: r.owner,
+          mirror: r.mirror,
+          order: r.order,
+          retry: r.retry,
+          note: r.note,
+        })),
+      }));
+      return;
+    }
+    case "start": {
+      const key = requireOption(parsed, "key");
+      const agent = requireOption(parsed, "agent");
+      const op = optional("op") ?? "external";
+      if (!INTENT_OPS.includes(op as IntentOp)) {
+        throw new Error(`--op must be one of ${INTENT_OPS.join("|")}`);
+      }
+      const target = optional("target");
+      const state = await loadStateForCwd(taskId);
+      const result = await startExtOp(
+        state,
+        key,
+        agent,
+        op as IntentOp,
+        target,
+      );
+      console.log(JSON.stringify(result));
+      return;
+    }
+    case "done": {
+      const key = requireOption(parsed, "key");
+      const epoch = requireInteger(parsed, "epoch", 1);
+      const agent = requireOption(parsed, "agent");
+      const outcome = requireOption(parsed, "outcome");
+      if (outcome !== "succeeded" && outcome !== "failed") {
+        throw new Error("--outcome must be succeeded or failed");
+      }
+      const state = await loadStateForCwd(taskId);
+      const op = await finishExtOp(state, { key, epoch, agent, outcome });
+      console.log(JSON.stringify({ op }));
+      return;
+    }
+    case "poll": {
+      const repo = optional("repo");
+      if (repo !== undefined) validateRepoSlug(repo);
+      const state = await loadStateForCwd(taskId);
+      const slug = repo ??
+        repoSlugFromRemote(
+          await defaultGitRunner(state.worktree, [
+            "remote",
+            "get-url",
+            "origin",
+          ]),
+        );
+      const { observed, errors } = await pollAndIngest(
+        state.worktree,
+        taskId,
+        slug,
+      );
+      console.log(JSON.stringify({ repo: slug, observed, errors }));
+      if (errors.length > 0) {
+        throw new Error(
+          `${errors.length} linked PR(s) could not be polled: ${
+            errors.map((e) => `${e.ref}: ${e.error}`).join("; ")
+          }`,
+        );
+      }
+      return;
+    }
+    case "resolve": {
+      const link = requireOption(parsed, "link");
+      const field = requireOption(parsed, "field");
+      const keep = requireOption(parsed, "keep");
+      if (keep !== "mirror" && keep !== "owner") {
+        throw new Error("--keep must be mirror or owner");
+      }
+      const state = await loadStateForCwd(taskId);
+      await withExtLedger(
+        state.worktree,
+        taskId,
+        (ledger) => resolveField(ledger, link, field, keep),
+      );
+      console.log(JSON.stringify({ link, field, kept: keep }));
+      return;
+    }
+  }
+}
+
+async function cmdJob(parsed: ParsedArgs, sub: JobSubcommand): Promise<void> {
+  assertNoPositional(parsed, 2);
+  const allowed: Record<JobSubcommand, string[]> = {
+    start: ["task-id", "step", "phase", "lease-ttl-ms", "max-attempts"],
+    exec: ["task-id", "job-id", "epoch"],
+    status: ["task-id", "job-id"],
+    wait: ["task-id", "job-id", "timeout-ms"],
+    reconcile: ["task-id"],
+    intent: ["task-id", "op", "target", "agent", "lease-ttl-ms"],
+    confirm: ["task-id", "job-id", "epoch", "agent", "outcome"],
+    resolve: ["task-id", "job-id", "resolution", "agent", "note"],
+    cancel: ["task-id", "job-id", "reason"],
+  };
+  assertAllowedOptions(parsed, allowed[sub]);
+  const taskId = validateTaskId(requireOption(parsed, "task-id"));
+  // Validate every option before anything is read or written.
+  const jobId = hasOption(parsed, "job-id")
+    ? validateJobId(requireOption(parsed, "job-id"))
+    : undefined;
+  const needJob = sub !== "start" && sub !== "status" &&
+    sub !== "reconcile" && sub !== "intent";
+  if (needJob && jobId === undefined) {
+    throw new Error(`job ${sub} requires --job-id`);
+  }
+  const state = await loadStateForCwd(taskId);
+
+  switch (sub) {
+    case "start": {
+      const step = requireOption(parsed, "step");
+      if (step !== "build" && step !== "test") {
+        throw new Error(
+          `--step must be build or test, got ${JSON.stringify(step)}`,
+        );
+      }
+      const phase = step === "build"
+        ? parseBuildPhase(
+          hasOption(parsed, "phase")
+            ? requireOption(parsed, "phase")
+            : undefined,
+        )
+        : undefined;
+      if (step === "test" && hasOption(parsed, "phase")) {
+        throw new Error("--phase applies to --step build only");
+      }
+      // 3 s at least: a respawn's stop and executor start take ~1-2 s.
+      const leaseTtlMs = optionalInteger(parsed, "lease-ttl-ms", 3_000);
+      const maxAttempts = optionalInteger(parsed, "max-attempts", 1);
+      // Same W-04 guard as 'verify build': no source build under this
+      // worktree's running dev browser.
+      if (phase !== undefined) {
+        try {
+          await assertSourceBuildAllowed(state.worktree, phase);
+        } catch (error) {
+          appendEvent(state, {
+            timestamp: nowIso(),
+            command: error instanceof DevGuardRefusalError
+              ? refusedBuildEventCommand(phase)
+              : guardFailedBuildEventCommand(phase),
+            note: error instanceof Error ? error.message : String(error),
+            exitCode: 1,
+          });
+          writeTaskState(state);
+          throw error;
+        }
+      }
+      const job = await startStepJob({
+        state,
+        kind: step,
+        phase,
+        leaseTtlMs,
+        maxAttempts,
+      });
+      console.log(JSON.stringify(summarizeJob(job)));
+      return;
+    }
+    case "exec": {
+      const epoch = requireInteger(parsed, "epoch", 1);
+      const outcome = await runExecutorProcess(
+        state.worktree,
+        taskId,
+        jobId!,
+        epoch,
+      );
+      console.log(JSON.stringify({ jobId, epoch, outcome }));
+      return;
+    }
+    case "status":
+    case "reconcile": {
+      const ids = jobId !== undefined
+        ? [jobId]
+        : listJobIds(state.worktree, taskId);
+      const reports = await reconcileTaskJobs({ state, jobIds: ids });
+      console.log(JSON.stringify({
+        reconciled: reports,
+        jobs: ids.map((id) => {
+          try {
+            return summarizeJob(readJob(state.worktree, taskId, id));
+          } catch (error) {
+            return {
+              jobId: id,
+              error: error instanceof Error ? error.message : String(error),
+            };
+          }
+        }),
+      }));
+      const failed = reports.filter((r) => r.error !== undefined);
+      if (failed.length > 0) {
+        throw new Error(
+          `${failed.length} job(s) could not be reconciled: ${
+            failed.map((r) => `${r.jobId}: ${r.error}`).join("; ")
+          }`,
+        );
+      }
+      return;
+    }
+    case "wait": {
+      const timeoutMs = optionalInteger(parsed, "timeout-ms", 0) ?? 3_600_000;
+      const job = await waitForJob({
+        state,
+        jobId: jobId!,
+        timeoutMs,
+        onError: (message) => console.error(`[fdh] reconcile: ${message}`),
+      });
+      console.log(JSON.stringify(summarizeJob(job)));
+      if (job.state !== "succeeded") {
+        throw new Error(`job ${jobId} is ${job.state}`);
+      }
+      return;
+    }
+    case "intent": {
+      const op = requireOption(parsed, "op");
+      if (!INTENT_OPS.includes(op as IntentOp)) {
+        throw new Error(
+          `--op must be one of ${INTENT_OPS.join("|")}, got ${
+            JSON.stringify(op)
+          }`,
+        );
+      }
+      const target = requireOption(parsed, "target");
+      const agent = requireOption(parsed, "agent");
+      const leaseTtlMs = optionalInteger(parsed, "lease-ttl-ms", 1_000);
+      const job = await startIntent(
+        state,
+        op as IntentOp,
+        target,
+        agent,
+        leaseTtlMs,
+      );
+      console.log(JSON.stringify(summarizeJob(job)));
+      return;
+    }
+    case "confirm": {
+      const epoch = requireInteger(parsed, "epoch", 1);
+      const agent = requireOption(parsed, "agent");
+      const outcome = requireOption(parsed, "outcome");
+      if (outcome !== "succeeded" && outcome !== "failed") {
+        throw new Error(
+          `--outcome must be succeeded or failed, got ${
+            JSON.stringify(outcome)
+          }`,
+        );
+      }
+      const { job, value } = await confirmJob(
+        state,
+        jobId!,
+        epoch,
+        agent,
+        outcome,
+      );
+      console.log(JSON.stringify({ ...summarizeJob(job), confirm: value }));
+      if (!value.applied) {
+        throw new Error(`confirm not applied: ${value.reason}`);
+      }
+      return;
+    }
+    case "resolve": {
+      const resolution = requireOption(parsed, "resolution");
+      if (
+        resolution !== "succeeded" && resolution !== "failed" &&
+        resolution !== "retry"
+      ) {
+        throw new Error(
+          `--resolution must be succeeded, failed or retry, got ${
+            JSON.stringify(resolution)
+          }`,
+        );
+      }
+      const note = hasOption(parsed, "note")
+        ? requireOption(parsed, "note")
+        : "";
+      const agent = hasOption(parsed, "agent")
+        ? requireOption(parsed, "agent")
+        : undefined;
+      const job = await resolveAndApprove(
+        state,
+        jobId!,
+        resolution as Resolution,
+        note,
+        agent,
+      );
+      console.log(JSON.stringify(summarizeJob(job)));
+      return;
+    }
+    case "cancel": {
+      const reason = hasOption(parsed, "reason")
+        ? requireOption(parsed, "reason")
+        : "";
+      const { job, reports } = await cancelAndSettle(state, jobId!, reason);
+      console.log(
+        JSON.stringify({ ...summarizeJob(job), reconciled: reports }),
+      );
+      const failed = reports.filter((r) => r.error !== undefined);
+      if (failed.length > 0) {
+        throw new Error(
+          `job ${jobId} is ${job.state}, but reconciling it failed: ${
+            failed.map((r) => r.error).join("; ")
+          }`,
+        );
+      }
+      return;
+    }
+  }
+}
+
 async function main(argv: string[]): Promise<void> {
   const parsed = parseArgv(argv);
   if (
@@ -1178,6 +1739,20 @@ async function main(argv: string[]): Promise<void> {
         return await cmdSecrets(parsed, sub);
       }
       throw new Error(`unknown secrets command ${JSON.stringify(sub ?? "")}`);
+    case "job":
+      if (JOB_SUBCOMMANDS.includes(sub as JobSubcommand)) {
+        return await cmdJob(parsed, sub as JobSubcommand);
+      }
+      throw new Error(`unknown job command ${JSON.stringify(sub ?? "")}`);
+    case "ext":
+      if (
+        sub === "link" || sub === "observe" || sub === "plan" ||
+        sub === "start" || sub === "done" || sub === "resolve" ||
+        sub === "poll"
+      ) {
+        return await cmdExt(parsed, sub);
+      }
+      throw new Error(`unknown ext command ${JSON.stringify(sub ?? "")}`);
     case "review":
       if (sub === "record") return await cmdReviewRecord(parsed);
       throw new Error(`unknown review command ${JSON.stringify(sub ?? "")}`);
