@@ -332,16 +332,51 @@ function testCompatAvoidsBrittleSelectors(): void {
 }
 
 function testCompatUsesRobustLwtSignals(): void {
+  // Gecko 159 has no :-moz-lwtheme, and :not() is not forgiving, so
+  // `:root:not([lwtheme]):not(:-moz-lwtheme)` would drop the whole rule. The
+  // no-theme rules must branch on the [lwtheme] root attribute alone.
+  for (
+    const [label, css] of [
+      ["LEPTON_COMPAT_152_CSS", LEPTON_COMPAT_152_CSS],
+      ["GECKO_152_COLOR_FIX_CSS", GECKO_152_COLOR_FIX_CSS],
+    ] as const
+  ) {
+    const rules = css.replace(/\/\*[\s\S]*?\*\//g, "");
+    assert(
+      !/:not\(\s*:-moz-lwtheme\s*\)/.test(rules),
+      `${label} must not negate :-moz-lwtheme (the rule would be dropped)`,
+    );
+  }
   assert(
-    LEPTON_COMPAT_152_CSS.includes(":-moz-lwtheme"),
-    "compat layer should target LWT state via the stable :-moz-lwtheme " +
-      "pseudo-class",
+    /:root:not\(\[lwtheme\]\)\s*\{/.test(
+      GECKO_152_COLOR_FIX_CSS.replace(/\/\*[\s\S]*?\*\//g, ""),
+    ),
+    "color-fix layer should scope its no-theme rules as :root:not([lwtheme])",
   );
   assert(
-    LEPTON_COMPAT_152_CSS.includes("prefers-color-scheme"),
-    "compat layer should branch light/dark via prefers-color-scheme rather " +
-      "than brittle attributes",
+    GECKO_152_COLOR_FIX_CSS.includes("prefers-color-scheme"),
+    "color-fix layer should branch light/dark via prefers-color-scheme " +
+      "rather than brittle attributes",
   );
+}
+
+/**
+ * The Lepton compat layer must not override the legacy toolbar palette
+ * tokens for the no-theme case. Gecko 159 paints the selected tab, #browser
+ * and (protonfix) #nav-bar from --toolbar-background-color, which follows the
+ * GTK theme on Linux; setting only --toolbar-bgcolor / --lwt-accent-color
+ * splits the bars (seen as color-consistency failures on Linux CI).
+ */
+function testCompatDoesNotOverrideNoThemePalette(): void {
+  const rules = LEPTON_COMPAT_152_CSS.replace(/\/\*[\s\S]*?\*\//g, "");
+  const noThemeRule = /:root:not\(\[lwtheme\]\)[^{]*\{([^}]*)\}/g;
+  for (const m of rules.matchAll(noThemeRule)) {
+    assert(
+      !/--(?:toolbar-bgcolor|lwt-accent-color)\s*:/.test(m[1]),
+      "LEPTON_COMPAT_152_CSS must not set --toolbar-bgcolor / " +
+        "--lwt-accent-color for the no-theme case (splits the bars on 159)",
+    );
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -381,7 +416,7 @@ function testNoColorOverrideUsesImportant(): void {
 /**
  * Every rule that sets a theme/LWT-owned token (`--lwt-accent-color`,
  * `--toolbar-bgcolor`, `--arrowpanel-*`, `--in-content-page-background`) must
- * be scoped to the no-theme case (`:root:not([lwtheme]):not(:-moz-lwtheme)`)
+ * be scoped to the no-theme case (`:root:not([lwtheme])`)
  * — OR be a guarded `var(name, fallback)` alias. This is what lets a
  * third-party LWT keep its own palette. */
 function testLwtOwnedTokensAreGuardedOrNoThemeScoped(): void {
@@ -406,8 +441,7 @@ function testLwtOwnedTokensAreGuardedOrNoThemeScoped(): void {
     let m: RegExpExecArray | null;
     while ((m = declRe.exec(combined)) !== null) {
       const selectorChunk = (m[1] ?? "").trim();
-      const isNoThemeScoped = selectorChunk.includes(":not([lwtheme])") ||
-        selectorChunk.includes(":not(:-moz-lwtheme)");
+      const isNoThemeScoped = selectorChunk.includes(":not([lwtheme])");
       const declValue = m[0].slice(m[0].indexOf(token));
       const isGuardedAlias = /var\(\s*--lwt-accent-color/.test(declValue) ||
         /var\(\s*--toolbar-background-color/.test(declValue) ||
@@ -932,6 +966,10 @@ export async function runAllTests(): Promise<void> {
     {
       name: "compat uses robust lwt signals",
       fn: testCompatUsesRobustLwtSignals,
+    },
+    {
+      name: "compat does not override the no-theme toolbar palette",
+      fn: testCompatDoesNotOverrideNoThemePalette,
     },
     // non-destructive LWT contract
     {
