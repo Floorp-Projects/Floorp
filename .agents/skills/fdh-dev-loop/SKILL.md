@@ -211,6 +211,131 @@ deno run -A tools/fdh.ts quota status --task-id <task-id>
 push/PR/release; the agent must wait for `quota approve`. Stop reasons are
 `quota|infra|manual`; pending ops are `push|pr|release|external`.
 
+## Durable jobs and external intents (B-02, D-23)
+
+Use `fdh job` instead of `verify build|test` when the step is long and must
+survive this agent session, its controller, or the executor being killed. The
+contract is the frozen B-02 ADR (Confluence 8716289): run/attempt/epoch and an
+execution digest are recorded before anything runs, a detached executor holds a
+heartbeat lease, an older epoch's writes are rejected, and the result is written
+to an outbox and applied under one journal lock.
+
+```sh
+# Start a durable step (same commands as verify build|test); returns at once.
+deno run -A tools/fdh.ts job start --task-id <task-id> --step test
+deno run -A tools/fdh.ts job start --task-id <task-id> --step build [--phase all]
+
+# Wait (reconciles every second). Exits 1 unless the job succeeded. Safe to
+# rerun from a new session: it reconnects to a live executor.
+deno run -A tools/fdh.ts job wait --task-id <task-id> --job-id <job-id>
+
+# Inspect or reconcile without waiting.
+deno run -A tools/fdh.ts job status --task-id <task-id> [--job-id <job-id>]
+deno run -A tools/fdh.ts job cancel --task-id <task-id> --job-id <job-id>
+```
+
+Reconcile (`job wait|status|reconcile`, `task resume`) does exactly one of:
+reconnect to a live executor; apply a result left in the outbox (no rerun); stop
+the lost attempt's step process tree (identity-checked; on Linux/macOS also the
+members of its process group, so children that outlived the root are found)
+and start the next epoch from the checkpoint (build commands already completed
+are not rerun); fail the
+job when its inputs (HEAD, tracked diff, untracked file contents, guard env)
+changed or `--max-attempts` (default 3) attempts were lost. Each terminal result
+is copied into the task state once (operations, assertions, a `job result <id>`
+event). A build that still has to compile source is held, not respawned, while
+this worktree's dev server runs (the W-04 guard; reconcile reports `held`, and
+no attempt is used up): run `dev down`, then `job wait`.
+
+Non-idempotent operations (push, PR, release, other external writes) are never
+run by fdh. Record the intent before you perform it, and the outcome after:
+
+```sh
+deno run -A tools/fdh.ts job intent --task-id <task-id> --op push \
+  --target "origin <branch>" --agent <name>          # prints jobId, epoch 1
+# ... perform the operation yourself ...
+deno run -A tools/fdh.ts job confirm --task-id <task-id> --job-id <job-id> \
+  --epoch 1 --agent <name> --outcome succeeded
+```
+
+If the session ends between the two, `task resume` puts the intent into
+`awaiting-approval` and the quota ledger's pending list. Do not retry it: a
+human checks the external state and runs
+`job resolve --resolution succeeded|failed|retry [--agent <name>]`, which also
+approves the pending entry. If the ledger update fails, run the same
+`job resolve` again: it only repeats the ledger step. Reconcile puts a missing
+pending entry back while the job still awaits approval, unless the ledger
+records an approval for it (or a `quota approve`) since then. A confirm that
+arrives after the holder was declared lost is refused and recorded
+(`late-report`).
+
+## External GitHub / Jira operations (D-19, KAN-131)
+
+Agents change GitHub (`gh`) and Jira (Atlassian MCP) themselves; fdh calls
+neither API. fdh keeps a link table, the observations an agent polled, and
+keyed operations, under `<worktree>/_dist/fdh/ext/<task-id>.json`. There is
+no webhook: run `ext observe` for each value you poll, then `ext plan`.
+
+```sh
+fdh ext link --task-id <id> --jira KAN-131 --pr 3200 --branch fdh/external-ops
+# GitHub: read every linked PR (state, URL, the head's check runs) with gh.
+# A PR that cannot be read is an error (exit 1), never a deletion.
+fdh ext poll --task-id <id> [--repo <owner/name>]
+# Jira (Atlassian MCP), or any value you read yourself, with the object's
+# API update time as --version:
+fdh ext observe --task-id <id> --ref jira:KAN-131 --field status \
+  --value 進行中 --version <jira updated>
+fdh ext plan --task-id <id>      # actions, holds, inSync, keptEdits, fields
+# For each action: start its key, perform the write, then record the outcome.
+fdh ext start --task-id <id> --key '<action.key>' --agent <name>
+fdh ext done --task-id <id> --key '<action.key>' --epoch <n> --agent <name> \
+  --outcome succeeded
+# Then poll the mirror again (ext observe) before the next plan.
+```
+
+The field table (I-04; the code is `FIELD_RULES` in
+`tools/src/fdh_ext.ts`):
+
+| Field (owner) | Mirror | Rule |
+| --- | --- | --- |
+| `pr.url` (GitHub) | Jira `pr-link-comment` | one fdh comment with the PR's URL, once per URL (Atlassian MCP cannot create remote links) |
+| `pr.state` (GitHub) | Jira `status` | draft/open/merged → 進行中/レビュー中/完了, closed → nothing; never moves the status back |
+| `ci.result` (GitHub), `<sha>:<success\|failure>` | Jira `ci-comment` | one fdh comment per head and result; pending is not posted |
+| `pr.review-receipts` (GitHub) | none | the D-14 gate reads them on the PR |
+| `jira.sprint`, `jira.assignee`, `jira.priority`, `jira.qa-state` (Jira) | none | not copied to GitHub |
+| titles, descriptions, comments | none | no full-text copying |
+
+Which version to pass:
+
+- **PR fields:** the PR's `updated_at`.
+- **`ci.result`:** the check run's `completed_at` (`started_at` while pending). A PR's `updated_at` does not move when checks finish.
+- **Jira fields:** the issue's `updated`.
+- **A deletion** (a 404): the poll time.
+
+How observations behave:
+
+- **Duplicates.** A repeated event id for the same field, or the same value at the same version, is a `duplicate`. It refreshes the poll time.
+- **Stale values.** An older version than the stored one is `stale`; this is how an ordering inversion is caught.
+- **Conflicts.** The same version with another value is a `conflict` and is not taken.
+- **Deletions.** Observe the field `object` with `--deleted true` when an object is gone. Nothing more is written to it or because of it, and a later observation does not bring it back. A deletion older than the newest observation of the object is `stale`.
+
+How the plan treats writes:
+
+- **Concurrent edits.** fdh never overwrites a mirror that changed since fdh last wrote it (no compare-and-set is assumed).
+  - If the owner changed too, the field is held (`concurrent-edit`). An approver settles it with `fdh ext resolve --link <KEY-n> --field <f> --keep <mirror|owner>`.
+  - If only the mirror changed, the person's edit is kept (`keptEdits`).
+- **After a write.** The field waits (`awaiting-poll`) for a poll made after `ext done`.
+- **Before the first write.** A status is not written before Jira's current status has been polled (`mirror-unobserved`).
+
+Keyed operations:
+
+- **Key forms.** An action's key is `<KEY-n>:<field>:<value>#<generation>`; the generation moves each time a baseline is recorded or resolved. A comment's key is `<KEY-n>:ci.result:<sha>:<result>`. `ext start` refuses a field key that is not an action of the current plan; run `ext plan` again and use the key it gives.
+- **An unreadable job journal** keeps its operation in flight, so its field stays held. Repair the journal under `_dist/fdh/jobs/<task-id>/`; if you know the operation never ran, remove the journal and the operation ends as failed.
+- **What `ext start` records.** It stores what a planned action writes. When the operation succeeds, that becomes the field's baseline. This holds both after `ext done` and after an approver's `job resolve`, which `ext plan` picks up.
+- **A key that succeeded** is `already-done`. Use one key per PR you create (`github:pr-create:<branch>`), so no second PR is made.
+- **A key with no outcome yet** is refused.
+- **A key that failed** may be started again. Report `failed` only when you know the write did not happen. If you do not know, do not confirm: once your lease runs out, `task resume` moves the operation to `awaiting-approval`. An approver then checks GitHub or Jira and resolves it.
+
 ## GUI desktop lease and secret-reference denial (Gate 4 4-A)
 
 The shared desktop GUI is one resource. The lease is stored beside the git
@@ -244,7 +369,9 @@ deno run -A tools/fdh.ts secrets status
 - Commands: `task start|resume|prepare`, `dev up|down`,
   `verify build|test|browser`, `evidence`, `record`, `review record`,
   `quota claim|stop|resume|pending|approve|release|status`,
-  `gui claim|end|status`, `secrets check|status`, `help`.
+  `job start|wait|status|reconcile|intent|confirm|resolve|cancel` (`job exec` is
+  the detached executor and is not called directly), `gui claim|end|status`,
+  `secrets check|status`, `help`.
 - State path: `<worktree>/_dist/fdh/tasks/<task-id>.json`. It holds `taskId`,
   `worktree`, `baseCommit`, `portOffset`, `createdAt`, `status`, `events[]`,
   `operations[]` (optional `external` attestation block), `assertions[]`,
@@ -326,6 +453,10 @@ a pass by editing state.
   if a human review needs them.
 - Shared services (GitHub, PRs, CI dispatch) are not required and are never
   called by the CLI.
+- `fdh job` is one-machine fault tolerance only (no central scheduler, no
+  cross-machine lease). It does not claim exactly-once: a safe step can run
+  again after its executor is lost, and an old executor's local writes are not
+  undone. Intents and confirms are self-reported by the agent.
 - Cleanup is reported honestly: `dev up` leaves cleanup `partial` until
   `dev down` succeeds.
 - `reproduction` is `inconclusive` unless a defect was actually reproduced; the

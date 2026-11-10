@@ -17,15 +17,18 @@ const GlobalHTTPTracker = {
     try {
       Services.obs.addObserver(this, "http-on-opening-request");
       Services.obs.addObserver(this, "http-on-stop-request");
-      Services.obs.addObserver(this, "browsing-context-detached");
+      Services.obs.addObserver(this, "browsing-context-discarded");
     } catch (e) {
       console.error("GlobalHTTPTracker: init failed:", e);
     }
   },
 
   observe(subject: nsISupports, topic: string, _data: string | null) {
-    // Auto-cleanup when a browsing context is destroyed (tab closed, process crash)
-    if (topic === "browsing-context-detached") {
+    // Auto-cleanup when a browsing context is discarded (tab closed, process
+    // crash). Gecko notifies "browsing-context-discarded"; there is no
+    // "browsing-context-detached" topic, so listening for that one never
+    // cleared anything and channels of closed tabs were retained forever.
+    if (topic === "browsing-context-discarded") {
       try {
         // BrowsingContext is a WebIDL object, not XPCOM — no QueryInterface needed
         const bc = subject as { id?: number };

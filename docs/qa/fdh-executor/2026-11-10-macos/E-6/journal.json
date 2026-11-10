@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "jobId": "intent-20261110t085251z-2038e1",
+  "taskId": "e2e-e-6-mwagco5t",
+  "worktree": "/Users/user/fdh-posix-e2e",
+  "kind": "intent",
+  "step": null,
+  "intent": {
+    "op": "push",
+    "target": "origin e2e-branch"
+  },
+  "inputs": {
+    "baseCommit": "5b7829d81d55c2006680eb09351412cb794819cb",
+    "head": "",
+    "guardEnv": {}
+  },
+  "executionDigest": "ad152529066166efefaea8582ff00bda5e397b7cd64339253ee0cd6f61ae3176",
+  "state": "succeeded",
+  "epoch": 1,
+  "lease": null,
+  "leaseTtlMs": 1800000,
+  "maxAttempts": 3,
+  "attempts": [
+    {
+      "attempt": 1,
+      "epoch": 1,
+      "holder": "agent-a",
+      "scheduledAt": "2026-11-10T08:52:51.843Z",
+      "startedAt": "2026-11-10T08:52:51.843Z",
+      "endedAt": "2026-11-10T08:52:51.932Z",
+      "result": "lost",
+      "exitCode": null,
+      "logRef": null,
+      "process": null,
+      "notes": "holder lost; outcome unknown",
+      "lastSeenAt": "2026-11-10T08:52:51.843Z"
+    }
+  ],
+  "checkpoint": 0,
+  "commandResults": [],
+  "recordedToTask": true,
+  "transitions": [
+    {
+      "from": null,
+      "to": "pending",
+      "at": "2026-11-10T08:52:51.843Z",
+      "reason": "created"
+    },
+    {
+      "from": "pending",
+      "to": "scheduled",
+      "at": "2026-11-10T08:52:51.843Z",
+      "reason": "attempt 1 recorded before start"
+    },
+    {
+      "from": "scheduled",
+      "to": "running",
+      "at": "2026-11-10T08:52:51.843Z",
+      "reason": "attempt 1 started"
+    },
+    {
+      "from": "running",
+      "to": "awaiting-approval",
+      "at": "2026-11-10T08:52:51.932Z",
+      "reason": "unknown outcome of non-idempotent push operation"
+    },
+    {
+      "from": "awaiting-approval",
+      "to": "running",
+      "at": "2026-11-10T08:52:52.097Z",
+      "reason": "resolved succeeded by approver: branch exists on origin"
+    },
+    {
+      "from": "running",
+      "to": "succeeded",
+      "at": "2026-11-10T08:52:52.097Z",
+      "reason": "outcome confirmed by approver"
+    }
+  ],
+  "events": [
+    {
+      "at": "2026-11-10T08:52:51.932Z",
+      "kind": "lease-expired",
+      "epoch": 1,
+      "note": "holder agent-a lost"
+    },
+    {
+      "at": "2026-11-10T08:52:52.097Z",
+      "kind": "resolved",
+      "epoch": 1,
+      "note": "resolved succeeded by approver: branch exists on origin"
+    }
+  ],
+  "createdAt": "2026-11-10T08:52:51.843Z",
+  "updatedAt": "2026-11-10T08:52:52.097Z"
+}
