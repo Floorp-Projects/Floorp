@@ -370,6 +370,23 @@ Deno.test("fdh ext poll: ssh remotes keep git@ and drop any other user or passwo
     repoSlugFromRemote("ssh://alice:SECRET@example.com/o/r.git")
   );
   assert(pw instanceof Error && !pw.message.includes("SECRET"), String(pw));
+  // A raw @ in a password, an upper-case GIT user, the scp form.
+  assertEquals(
+    repoSlugFromRemote("ssh://git:p@ss@github.com/o/r.git"),
+    "o/r",
+  );
+  assertEquals(repoSlugFromRemote("ssh://GIT@github.com/o/r.git"), "o/r");
+  const at = assertThrows(() =>
+    repoSlugFromRemote("https://u:p@SECRET@example.com/o/r")
+  );
+  assert(at instanceof Error && !at.message.includes("SECRET"), String(at));
+  const scp = assertThrows(() =>
+    repoSlugFromRemote("ghp_TOKEN@example.com:o/r.git")
+  );
+  assert(
+    scp instanceof Error && !scp.message.includes("ghp_TOKEN"),
+    String(scp),
+  );
 });
 
 Deno.test({
@@ -388,6 +405,7 @@ Deno.test({
   await assertRejects(
     () => hang(["eval", "await new Promise((r) => setTimeout(r, 30000))"]),
     Error,
+    "took longer than 300 ms",
   );
   assert(Date.now() - started < 20_000, "the hanging command was not stopped");
 });

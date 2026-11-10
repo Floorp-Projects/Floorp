@@ -53,6 +53,7 @@ export function makeGhRunner(
 ): GhRunner {
   return async (args) => {
     const what = `${command} ${args.slice(0, 2).join(" ")}`;
+    const signal = AbortSignal.timeout(timeoutMs);
     let output: Deno.CommandOutput;
     try {
       output = await new Deno.Command(command, {
@@ -60,7 +61,7 @@ export function makeGhRunner(
         stdin: "null",
         stdout: "piped",
         stderr: "piped",
-        signal: AbortSignal.timeout(timeoutMs),
+        signal,
       }).output();
     } catch (error) {
       if (error instanceof Deno.errors.NotFound) {
@@ -71,10 +72,9 @@ export function makeGhRunner(
       }
       throw error;
     }
-    if (output.signal !== null) {
-      throw new Error(
-        `${what} was stopped (${output.signal}); the limit is ${timeoutMs} ms`,
-      );
+    // Windows reports no signal for a killed process: the abort tells.
+    if (signal.aborted || output.signal !== null) {
+      throw new Error(`${what} took longer than ${timeoutMs} ms`);
     }
     const stdout = new TextDecoder().decode(output.stdout);
     if (output.success) return stdout;
@@ -91,14 +91,23 @@ export function repoSlugFromRemote(url: string): string {
   // Credentials in the URL are never echoed: any userinfo of an http(s) or
   // other URL, and a user:password of an ssh URL (its plain user, git@,
   // stays).
+  // The userinfo runs up to the last @ before the path (a password may
+  // contain a raw @).
   const trimmed = url.trim();
+  const keepGit = (user: string) => user.toLowerCase() === "git";
   const clean = /^ssh:\/\//i.test(trimmed)
     ? trimmed.replace(
-      /^(ssh:\/\/)([^@/:]*)(?::[^@/]*)?@/i,
-      (_m, scheme: string, user: string) =>
-        user === "git" ? `${scheme}git@` : scheme,
+      /^(ssh:\/\/)([^/]*)@/i,
+      (_m, scheme: string, info: string) =>
+        keepGit(info.split(":")[0]) ? `${scheme}git@` : scheme,
     )
-    : trimmed.replace(/^([a-z][a-z0-9+.-]*:\/\/)[^@/]*@/i, "$1");
+    : /^[a-z][a-z0-9+.-]*:\/\//i.test(trimmed)
+    ? trimmed.replace(/^([a-z][a-z0-9+.-]*:\/\/)[^/]*@/i, "$1")
+    // scp form (user@host:path): keep git@, drop any other user.
+    : trimmed.replace(
+      /^([^@/:]*)@/,
+      (_m, user: string) => keepGit(user) ? "git@" : "",
+    );
   const match =
     /^(?:https:\/\/github\.com\/|git@github\.com:|ssh:\/\/git@github\.com\/)([A-Za-z0-9_.-]+)\/([A-Za-z0-9_.-]+?)(?:\.git)?\/?$/
       .exec(clean);
