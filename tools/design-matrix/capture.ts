@@ -881,12 +881,15 @@ const run: {
   profile: string | null;
   tmpRoot: string | null;
   proxy: Deno.HttpServer | null;
+  /** Set once the run writes its manifest there. */
+  outDir: string | null;
 } = {
   interrupted: false,
   child: null,
   profile: null,
   tmpRoot: null,
   proxy: null,
+  outDir: null,
 };
 
 function onInterrupt(): void {
@@ -894,7 +897,7 @@ function onInterrupt(): void {
   run.interrupted = true;
   console.error("[design-matrix] interrupted; stopping the browser it started");
   (async () => {
-    const { child, profile, tmpRoot, proxy } = run;
+    const { child, profile, tmpRoot, proxy, outDir } = run;
     if (child) {
       await killTree(child, (msg) => console.error(msg));
       await waitExit(child, 10_000);
@@ -902,6 +905,9 @@ function onInterrupt(): void {
     if (profile) await removeWithRetry(profile).catch(() => {});
     if (tmpRoot) await removeWithRetry(tmpRoot).catch(() => {});
     await proxy?.shutdown().catch(() => {});
+    // A manifest write cut short by the exit below would leave this behind;
+    // manifest.json itself is either the previous version or the new one.
+    if (outDir) await Deno.remove(manifestTmpPath(outDir)).catch(() => {});
     Deno.exit(130);
   })();
 }
@@ -934,14 +940,27 @@ export async function writeManifest(
   manifest: RunManifest,
 ): Promise<void> {
   const file = path.join(outDir, "manifest.json");
-  const tmp = `${file}.${Deno.pid}.tmp`;
+  const tmp = manifestTmpPath(outDir);
   await Deno.writeTextFile(tmp, JSON.stringify(manifest, null, 2) + "\n");
-  try {
-    await Deno.rename(tmp, file);
-  } catch (e) {
-    await Deno.remove(tmp).catch(() => {});
-    throw e;
+  // On Windows the rename fails with a sharing violation while another
+  // process (a virus scanner, an editor) has manifest.json open; retry briefly.
+  for (let attempt = 0;; attempt++) {
+    try {
+      await Deno.rename(tmp, file);
+      return;
+    } catch (e) {
+      if (e instanceof Deno.errors.PermissionDenied && attempt < 2) {
+        await sleep(200);
+        continue;
+      }
+      await Deno.remove(tmp).catch(() => {});
+      throw e;
+    }
   }
+}
+
+function manifestTmpPath(outDir: string): string {
+  return path.join(outDir, `manifest.json.${Deno.pid}.tmp`);
 }
 
 /** The capture was interrupted (Ctrl+C); its manifest is marked incomplete. */
@@ -950,7 +969,6 @@ export class CaptureInterrupted extends Error {}
 export async function captureMatrix(
   opts: CaptureOptions,
 ): Promise<RunManifest> {
-  await Deno.mkdir(opts.outDir, { recursive: true });
   const startedAt = new Date().toISOString();
   const combos: ComboRecord[] = [];
   let info: BuildInfo | null = null;
@@ -969,17 +987,13 @@ export async function captureMatrix(
     windowSize: { width: opts.width, height: opts.height },
     combos: [...combos],
   });
-  // Replace any earlier manifest in this directory right away: from here
-  // until the last combination is done, the directory holds an incomplete
-  // run, whatever stops the tool (Ctrl+C, a crash, a killed process).
-  await writeManifest(opts.outDir, manifestFor(false));
-
   const tmpRoot = await Deno.makeTempDir({
     dir: opts.tmpRoot,
     prefix: "floorp-design-matrix-",
   });
   run.interrupted = false;
   run.tmpRoot = tmpRoot;
+  run.outDir = null;
   Deno.addSignalListener("SIGINT", onInterrupt);
   try {
     try {
@@ -991,6 +1005,14 @@ export async function captureMatrix(
         }`,
       );
     }
+    // Every preflight check has passed (arguments, build path and baseline
+    // in mod.ts, the proxy port here), so a run that fails before capturing
+    // leaves an earlier run in --out untouched. From here until the last
+    // combination is done, the directory holds an incomplete run, whatever
+    // stops the tool (Ctrl+C, a crash, a killed process).
+    await Deno.mkdir(opts.outDir, { recursive: true });
+    run.outDir = opts.outDir;
+    await writeManifest(opts.outDir, manifestFor(false));
     for (const design of opts.designs) {
       for (const theme of opts.themes) {
         if (run.interrupted) break;
@@ -1011,6 +1033,7 @@ export async function captureMatrix(
     run.proxy = null;
     await removeWithRetry(tmpRoot);
     run.tmpRoot = null;
+    run.outDir = null;
   }
   if (run.interrupted) {
     // The combinations not yet started are absent, which a compare would

@@ -78,6 +78,11 @@ function parseList<T extends string>(
   return items as T[];
 }
 
+/** Plain decimal digits only: no sign, exponent, prefix or whitespace. */
+const INT_RE = /^\d+$/;
+/** Plain decimal, optionally with a fraction: "1", "0.002". */
+const DECIMAL_RE = /^\d+(?:\.\d+)?$/;
+
 /** A whole number in [min, max]; only plain decimal digits are accepted. */
 export function intArg(
   raw: string | undefined,
@@ -87,7 +92,7 @@ export function intArg(
   max: number,
 ): number {
   if (raw === undefined) return fallback;
-  const n = /^\d+$/.test(raw.trim()) ? Number(raw.trim()) : NaN;
+  const n = INT_RE.test(raw) ? Number(raw) : NaN;
   if (!Number.isSafeInteger(n) || n < min || n > max) {
     throw new UsageError(
       `Invalid --${label} "${raw}": expected a whole number from ${min} to ${max}`,
@@ -96,15 +101,15 @@ export function intArg(
   return n;
 }
 
-/** A ratio in [0, 1], such as 0.002. */
+/** A ratio in [0, 1] written as a plain decimal, such as 0.002. */
 export function ratioArg(
   raw: string | undefined,
   fallback: number,
   label: string,
 ): number {
   if (raw === undefined) return fallback;
-  // Number("") and Number(" ") are 0, so empty values are rejected first.
-  const n = raw.trim() === "" ? NaN : Number(raw);
+  // The regex comes first: Number() also accepts "", " 0.5", "0x1", "1e-3".
+  const n = DECIMAL_RE.test(raw) ? Number(raw) : NaN;
   if (!Number.isFinite(n) || n < 0 || n > 1) {
     throw new UsageError(
       `Invalid --${label} "${raw}": expected a ratio from 0 to 1 (e.g. 0.002)`,

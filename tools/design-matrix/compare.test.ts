@@ -376,22 +376,36 @@ Deno.test("compareRuns: an incomplete run is refused, an old manifest without th
         ]),
         EXIT_ERROR,
       );
-      // `run --baseline` checks the baseline before starting any browser.
-      assertEquals(
-        await main([
-          "run",
-          "--exe",
-          Deno.execPath(),
-          "--out",
-          path.join(tmp, "out"),
-          "--baseline",
-          path.join(tmp, "partial"),
-        ]),
-        EXIT_ERROR,
-      );
     } finally {
       quiet();
     }
+    // `run --baseline` refuses the baseline before starting any browser: the
+    // output directory is never created and the refusal names the reason.
+    const errors: string[] = [];
+    const restore = silence(errors);
+    let code: number;
+    try {
+      code = await main([
+        "run",
+        "--exe",
+        Deno.execPath(),
+        "--out",
+        path.join(tmp, "out"),
+        "--baseline",
+        path.join(tmp, "partial"),
+      ]);
+    } finally {
+      restore();
+    }
+    assertEquals(code, EXIT_ERROR);
+    assert(
+      errors.some((e) => e.includes("is an incomplete run")),
+      errors.join("\n"),
+    );
+    await assertRejects(
+      () => Deno.stat(path.join(tmp, "out")),
+      Deno.errors.NotFound,
+    );
   });
 });
 
@@ -421,7 +435,22 @@ Deno.test("intArg / ratioArg: reject non-integers, negatives, NaN and out-of-ran
   assertEquals(intArg(undefined, 2828, "port", 1, 65534), 2828);
   assertEquals(intArg("2860", 2828, "port", 1, 65534), 2860);
   for (
-    const bad of ["", " ", "abc", "1.5", "-1", "NaN", "Infinity", "1e3", "0x10"]
+    const bad of [
+      "",
+      " ",
+      "abc",
+      "1.5",
+      "-1",
+      "+5",
+      "NaN",
+      "Infinity",
+      "1e3",
+      "0x10",
+      "0b1",
+      " 5",
+      "5 ",
+      "5\n",
+    ]
   ) {
     assertThrows(
       () => intArg(bad, 2828, "port", 1, 65534),
@@ -432,8 +461,30 @@ Deno.test("intArg / ratioArg: reject non-integers, negatives, NaN and out-of-ran
   assertThrows(() => intArg("65535", 2828, "port", 1, 65534), Error, "65534");
   assertThrows(() => intArg("0", 2828, "port", 1, 65534), Error, "from 1");
   assertEquals(ratioArg("0.002", 0.1, "threshold"), 0.002);
+  assertEquals(ratioArg("0", 0.1, "threshold"), 0);
   assertEquals(ratioArg("1", 0.1, "threshold"), 1);
-  for (const bad of ["", " ", "abc", "-0.1", "1.5", "NaN", "Infinity"]) {
+  assertEquals(ratioArg("1.0", 0.1, "threshold"), 1);
+  for (
+    const bad of [
+      "",
+      " ",
+      "abc",
+      "-0.1",
+      "+0.1",
+      "1.5",
+      "NaN",
+      "Infinity",
+      "0x1",
+      "0b1",
+      "0o1",
+      "1e-3",
+      "2E-3",
+      ".5",
+      "0.",
+      " 0.5",
+      "0.5 ",
+    ]
+  ) {
     assertThrows(() => ratioArg(bad, 0.1, "threshold"), Error, "ratio");
   }
 });
@@ -454,7 +505,11 @@ Deno.test("main: bad numeric flags exit 2 before anything starts", async () => {
           "--height=1e3",
           "--tolerance=256",
           "--max-pixels=1.5",
+          "--port= 2860",
           "--threshold=",
+          "--threshold=0x1",
+          "--threshold=1e-3",
+          "--threshold= 0.5",
           "--max-mask=2",
         ]
       ) {
@@ -477,7 +532,8 @@ const netGranted =
     "granted";
 
 Deno.test({
-  name: "main: a busy proxy port exits 2 and leaves no temp root",
+  name:
+    "main: a busy proxy port exits 2, leaves no temp root and keeps an earlier run",
   ignore: !netGranted,
   fn: async () => {
     await withTmp(async (tmp) => {
@@ -485,6 +541,13 @@ Deno.test({
       const busy = (blocker.addr as Deno.NetAddr).port;
       const tmpRoot = path.join(tmp, "profiles");
       await Deno.mkdir(tmpRoot);
+      const out = path.join(tmp, "out");
+      await writeRun(out, {
+        img: solid(4, 4, WHITE),
+        navBarColor: "x",
+        complete: true,
+      });
+      const before = await Deno.readTextFile(path.join(out, "manifest.json"));
       const quiet = silence();
       try {
         const code = await main([
@@ -492,7 +555,7 @@ Deno.test({
           "--exe",
           Deno.execPath(), // never started: the proxy fails first
           "--out",
-          path.join(tmp, "out"),
+          out,
           "--port",
           String(busy - 1),
           "--tmp-dir",
@@ -500,6 +563,12 @@ Deno.test({
         ]);
         assertEquals(code, EXIT_ERROR);
         assertEquals([...Deno.readDirSync(tmpRoot)], []);
+        // The failed preflight did not replace the earlier, complete run.
+        assertEquals(
+          await Deno.readTextFile(path.join(out, "manifest.json")),
+          before,
+        );
+        assertEquals((await readManifest(out)).complete, true);
       } finally {
         quiet();
         blocker.close();
@@ -508,11 +577,16 @@ Deno.test({
   },
 });
 
-/** Silences console output from main(); returns a restore function. */
-function silence(): () => void {
+/**
+ * Silences console output from main(); returns a restore function. Error
+ * lines are appended to `errors` when given.
+ */
+function silence(errors?: string[]): () => void {
   const { log, error } = console;
   console.log = () => {};
-  console.error = () => {};
+  console.error = (...args: unknown[]) => {
+    errors?.push(args.map(String).join(" "));
+  };
   return () => {
     console.log = log;
     console.error = error;

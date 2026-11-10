@@ -114,13 +114,16 @@ Exit codes:
 - `0` no failing image, no style difference, no capture problem;
 - `1` regressions found (failing images, or style differences unless
   `--ignore-styles`);
-- `2` any error: bad arguments (including a numeric option that is not a whole
-  number in range, such as `--port 28.5`, or a ratio outside 0–1), a missing,
-  invalid or incomplete run directory, a busy port, or a capture problem in
-  either run (a combination failed to start, the design or theme was not
-  applied, a state was not reached, the context menu did not open, a screenshot
-  never settled). Capture problems are listed in the report.
-- `130` `run` was interrupted with Ctrl+C.
+- `2` any error: bad arguments (numeric options take plain decimals only: whole
+  numbers in range such as `--port 2860`, ratios from 0 to 1 such as
+  `--threshold 0.002`; `28.5`, `-1`, `0x1`, `1e-3` or a value with spaces is
+  rejected), a missing, invalid or incomplete run directory, a busy port, or a
+  capture problem in either run (a combination failed to start, the design or
+  theme was not applied, a state was not reached, the context menu did not open,
+  a screenshot never settled). Capture problems are listed in the report.
+- `130` `run` was interrupted with Ctrl+C. Only `run` handles Ctrl+C; `compare`
+  has no handler and is simply terminated (its report may be partial, so run it
+  again).
 
 Only processes the tool started are stopped: first `Marionette:Quit`; if the
 browser hangs, on Windows `taskkill /T` of its own launcher PID (kept alive with
@@ -131,12 +134,16 @@ Ctrl+C stops the current browser the same way, deletes its profile and the
 temporary root, and starts nothing new.
 
 `manifest.json` is replaced atomically (written to a temporary file, then
-renamed) and carries `"complete": false` from the moment `run` starts until the
-last combination is done. A run stopped by Ctrl+C, a crash or a killed process
-therefore keeps `"complete": false`, and `compare` (and `run --baseline`)
-refuses it with exit 2 instead of treating the missing combinations as a
-deliberate `--designs`/`--themes` subset. Capture such a run again. Manifests
-from before this field was added have no `complete` and are read as complete.
+renamed). Once every preflight check has passed (arguments, build path,
+baseline, proxy port), right before the first combination, `run` replaces any
+earlier manifest in `--out` with one that says `"complete": false`, and keeps it
+so until the last combination is done; a run that fails a preflight check leaves
+an earlier run in `--out` untouched. A run stopped by Ctrl+C, a crash or a
+killed process therefore keeps `"complete": false`, and `compare` (and
+`run --baseline`) refuses it with exit 2 instead of treating the missing
+combinations as a deliberate `--designs`/`--themes` subset. Capture such a run
+again. Manifests from before this field was added have no `complete` and are
+read as complete.
 
 ## Reading the report
 
