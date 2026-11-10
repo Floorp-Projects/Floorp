@@ -20,3 +20,29 @@
  * use @import: in the dev chrome <style> this file is concatenated after
  * Lepton's sheets. See ../README.md.
  */
+
+/** Activity Stream - Pocket order to last (Gecko 159) ************************/
+/* Lepton's userContent.newTab.pocket_to_last turns .body-wrapper.on into a
+ * wrapping flex row and gives `order: 2` to
+ * `.body-wrapper.on > .collapsible-section[data-section-id="topstories"]`.
+ * On Gecko 159 the stories section is no longer a direct child of
+ * .body-wrapper: DiscoveryStreamBase wraps it in .layout-content-column (and
+ * Recent activity in .layout-highlights-column), both `display: contents`.
+ * So Lepton's order rule never matches, and the wrapped children become flex
+ * items without Lepton's `flex-basis: 100%`, which shrinks Recent activity to
+ * its content width. Their children are the real flex items of
+ * .body-wrapper.on, so give them the full row and move the stories column
+ * (stories plus its privacy link) behind top sites, widgets and Recent
+ * activity. The selectors need .body-wrapper.on, so Floorp Start (which also
+ * loads at about:newtab) and the Nova layout (.content-full-width) are not
+ * touched. */
+@-moz-document url("about:home"), url("about:newtab") {
+  @media -moz-pref("userContent.newTab.pocket_to_last") {
+    .body-wrapper.on > :is(.layout-content-column, .layout-highlights-column) > * {
+      flex-basis: 100%;
+    }
+    .body-wrapper.on > .layout-content-column > * {
+      order: 2;
+    }
+  }
+}
