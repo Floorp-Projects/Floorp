@@ -18,16 +18,14 @@ import type {
 import i18next from "i18next";
 import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
 import { DEFAULT_PANEL_WIDTH, parsePanelWidth } from "../utils/panel-width.ts";
+import {
+  type ContainerLabelIdentity,
+  resolveContainerLabel,
+} from "#modules/common/container-label.ts";
 
 const { ContextualIdentityService } = ChromeUtils.importESModule(
   "moz-src:///toolkit/components/contextualidentity/ContextualIdentityService.sys.mjs",
 );
-
-type Container = {
-  name: string;
-  userContextId: number;
-  l10nId?: string;
-};
 
 type I18nTextValues = {
   type: string;
@@ -126,17 +124,15 @@ export class PanelSidebarAddModal {
     );
   }
 
-  private get containers(): Container[] {
+  private get containers(): ContainerLabelIdentity[] {
     return ContextualIdentityService.getPublicIdentities();
   }
 
-  private getContainerName(container: Container) {
-    if (container.l10nId) {
-      return ContextualIdentityService.getUserContextLabel(
-        container.userContextId,
-      );
-    }
-    return container.name;
+  private getContainerName(container: ContainerLabelIdentity) {
+    return resolveContainerLabel(
+      container,
+      (id) => ContextualIdentityService.getUserContextLabel(id),
+    );
   }
 
   private createFormConfig(type: Panel["type"] = "web"): TForm {
