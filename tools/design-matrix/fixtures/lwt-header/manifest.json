@@ -1,0 +1,20 @@
+{
+  "manifest_version": 2,
+  "name": "Design matrix header image theme",
+  "version": "1.0",
+  "description": "Local test theme: frame color plus a theme_frame header image, like most AMO themes.",
+  "browser_specific_settings": {
+    "gecko": { "id": "design-matrix-header@floorp.test" }
+  },
+  "theme": {
+    "images": { "theme_frame": "header.svg" },
+    "colors": {
+      "frame": "#3b2e5a",
+      "tab_background_text": "#ffffff",
+      "toolbar": "rgba(40, 30, 70, 0.6)",
+      "toolbar_text": "#ffffff",
+      "toolbar_field": "#ffffff",
+      "toolbar_field_text": "#1b1b1f"
+    }
+  }
+}
