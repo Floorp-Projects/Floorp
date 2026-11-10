@@ -1,0 +1,275 @@
+{
+  "ranAt": "2026-11-10T14:32:02.946Z",
+  "head": "f2a82803d3a51b9e9cce0bd0767f848588be8fef",
+  "os": "windows x86_64",
+  "osRelease": "10.0.26300",
+  "deno": "2.9.4",
+  "leaseTtlMs": 3000,
+  "cases": [
+    {
+      "id": "E-1",
+      "passed": true,
+      "checks": [
+        {
+          "name": "the executor process is still running after its controller was killed",
+          "passed": true,
+          "detail": "{\"state\":\"running\",\"epoch\":1,\"executor\":38048}"
+        },
+        {
+          "name": "a new controller reconnects and the job succeeds",
+          "passed": true,
+          "detail": "succeeded"
+        },
+        {
+          "name": "one attempt at epoch 1",
+          "passed": true,
+          "detail": "[\"succeeded\"]"
+        }
+      ],
+      "notes": [
+        "task e2e-e-1-mwascjns, job test-20261110t142841z-504a79"
+      ]
+    },
+    {
+      "id": "E-2",
+      "passed": true,
+      "checks": [
+        {
+          "name": "the job succeeds after the executor was killed",
+          "passed": true,
+          "detail": "succeeded"
+        },
+        {
+          "name": "attempt 1 is lost and attempt 2 (epoch 2) succeeded",
+          "passed": true,
+          "detail": "[\"1:lost\",\"2:succeeded\"]"
+        },
+        {
+          "name": "the lost attempt's step process is not running any more",
+          "passed": true,
+          "detail": "pid 56264"
+        }
+      ],
+      "notes": [
+        "killed executor executor-81656-1d1431; step root pid 56264",
+        "task e2e-e-2-mwasctwr, job test-20261110t142854z-e6bd18"
+      ]
+    },
+    {
+      "id": "E-2b",
+      "passed": true,
+      "checks": [
+        {
+          "name": "the job still succeeds",
+          "passed": true,
+          "detail": "succeeded"
+        },
+        {
+          "name": "the epoch-1 step tree was stopped (by either controller)",
+          "passed": true,
+          "detail": "[\"lease-expired@1\",\"lost-step-stopped@1\",\"lease-expired@2\",\"stale-epoch@1\"]"
+        },
+        {
+          "name": "the epoch-1 step process is not running",
+          "passed": true,
+          "detail": "740"
+        }
+      ],
+      "notes": [
+        "controller killed at epoch 2",
+        "task e2e-e2b-mwasd8ud, job test-20261110t142914z-b83da1"
+      ]
+    },
+    {
+      "id": "E-2c",
+      "passed": true,
+      "checks": [
+        {
+          "name": "the takeover stopped the orphans",
+          "passed": true,
+          "detail": "{\"code\":0,\"left\":[]}"
+        },
+        {
+          "name": "the stop of the epoch-1 tree counted the orphans",
+          "passed": true,
+          "detail": "stopped 0 process(es) of the step tree rooted at pid 35300"
+        },
+        {
+          "name": "the job succeeds at epoch 2",
+          "passed": true,
+          "detail": "{\"state\":\"succeeded\",\"epoch\":2}"
+        }
+      ],
+      "notes": [
+        "killed executor executor-65112-5ff8b7 and step root 35300; children 84176,81348 now have parent pid(s) ,",
+        "orphans alive after the root was killed: 0",
+        "reconcile: [{\"jobId\":\"test-20261110t142934z-206e09\",\"kind\":\"test\",\"state\":\"running\",\"epoch\":2,\"action\":\"respawn\",\"stopped\":0,\"executorPid\":75028}]",
+        "task e2e-e2c-mwasdo9w, job test-20261110t142934z-206e09"
+      ]
+    },
+    {
+      "id": "E-3",
+      "passed": true,
+      "checks": [
+        {
+          "name": "the journal was not updated by the ACK",
+          "passed": true,
+          "detail": "running"
+        },
+        {
+          "name": "reconcile applies the outbox and the job succeeds",
+          "passed": true,
+          "detail": "succeeded"
+        },
+        {
+          "name": "not rerun: one attempt",
+          "passed": true,
+          "detail": "1"
+        },
+        {
+          "name": "the recovery is recorded",
+          "passed": true,
+          "detail": "[\"outbox-applied\"]"
+        }
+      ],
+      "notes": [
+        "task e2e-e-3-mwase22r, job test-20261110t142952z-015b7b"
+      ]
+    },
+    {
+      "id": "E-4/E-5",
+      "passed": true,
+      "checks": [
+        {
+          "name": "E-4: epoch 2 took over and the job succeeded",
+          "passed": true,
+          "detail": "{\"state\":\"succeeded\",\"epoch\":2}"
+        },
+        {
+          "name": "E-5: the epoch-1 report was rejected as stale and recorded",
+          "passed": true,
+          "detail": "[{\"at\":\"2026-11-10T14:30:16.648Z\",\"kind\":\"stale-epoch\",\"epoch\":1,\"note\":\"report by executor-70260-c14a05 (exit -1) rejected; current epoch 2\"}]"
+        },
+        {
+          "name": "E-5: attempt 1 stays lost, with the late report in its notes",
+          "passed": true,
+          "detail": "holder lost; outcome unknown; late report by executor-70260-c14a05 (exit -1) rejected; current epoch 2"
+        },
+        {
+          "name": "the job's result is epoch 2's",
+          "passed": true,
+          "detail": "succeeded"
+        }
+      ],
+      "notes": [
+        "task e2e-e4-mwasebhb, job test-20261110t143004z-5b7949"
+      ]
+    },
+    {
+      "id": "E-6",
+      "passed": true,
+      "checks": [
+        {
+          "name": "task resume puts the unconfirmed intent into awaiting-approval",
+          "passed": true,
+          "detail": "awaiting-approval"
+        },
+        {
+          "name": "the quota ledger lists it as pending",
+          "passed": true,
+          "detail": "[{\"op\":\"push\",\"note\":\"job intent-20261110t143020z-29c2b3: origin e2e-branch\",\"at\":\"2026-11-10T14:30:43.240Z\"}]"
+        },
+        {
+          "name": "a second resume does not rerun or re-queue it",
+          "passed": true,
+          "detail": "1"
+        },
+        {
+          "name": "the approver's resolution closes it",
+          "passed": true,
+          "detail": "succeeded"
+        },
+        {
+          "name": "and approves its pending entry",
+          "passed": true,
+          "detail": "{\"taskId\":\"e2e-e-6-mwaseoci\",\"activeAgent\":null,\"stopped\":false,\"stopReason\":null,\"approvalPending\":[],\"events\":2,\"updatedAt\":\"2026-11-10T14:31:05.658Z\"}"
+        }
+      ],
+      "notes": [
+        "task e2e-e-6-mwaseoci, job intent-20261110t143020z-29c2b3"
+      ]
+    },
+    {
+      "id": "E-7",
+      "passed": true,
+      "checks": [
+        {
+          "name": "the job fails instead of rerunning",
+          "passed": true,
+          "detail": "failed"
+        },
+        {
+          "name": "no second attempt",
+          "passed": true,
+          "detail": "1"
+        },
+        {
+          "name": "the reason is recorded",
+          "passed": true,
+          "detail": "[\"lease-expired\",\"input-changed\",\"lost-step-stopped\"]"
+        }
+      ],
+      "notes": [
+        "task e2e-e-7-mwasfn8x, job test-20261110t143107z-e67c55"
+      ]
+    },
+    {
+      "id": "E-8",
+      "passed": true,
+      "checks": [
+        {
+          "name": "the job fails after maxAttempts lost attempts",
+          "passed": true,
+          "detail": "failed"
+        },
+        {
+          "name": "exactly two attempts, both lost",
+          "passed": true,
+          "detail": "[\"lost\",\"lost\"]"
+        },
+        {
+          "name": "gave-up is recorded",
+          "passed": true,
+          "detail": "[\"lease-expired\",\"lost-step-stopped\",\"lease-expired\",\"gave-up\",\"lost-step-stopped\"]"
+        }
+      ],
+      "notes": [
+        "task e2e-e-8-mwasg09v, job test-20261110t143125z-2ae3aa"
+      ]
+    },
+    {
+      "id": "E-9",
+      "passed": true,
+      "checks": [
+        {
+          "name": "the late confirm is refused",
+          "passed": true,
+          "detail": "[fdh] confirm not applied: holder-lost"
+        },
+        {
+          "name": "the intent still awaits approval",
+          "passed": true,
+          "detail": "awaiting-approval"
+        },
+        {
+          "name": "the late report is recorded",
+          "passed": true,
+          "detail": "[\"lease-expired\",\"late-report\"]"
+        }
+      ],
+      "notes": [
+        "task e2e-e-9-mwasgdjc, job intent-20261110t143140z-339d3f"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,127 @@
+{
+  "schemaVersion": 1,
+  "jobId": "test-20261110t142854z-e6bd18",
+  "taskId": "e2e-e-2-mwasctwr",
+  "worktree": "E:\\floorp-browser-dev\\fdh-followup",
+  "kind": "test",
+  "step": {
+    "cwd": "E:\\floorp-browser-dev\\fdh-followup",
+    "displayCommand": "deno task test:host",
+    "commands": [
+      {
+        "argv": [
+          "deno",
+          "task",
+          "test:host"
+        ],
+        "displayCommand": "deno task test:host",
+        "assertionName": "host-test-exit-code",
+        "expected": "exit code 0"
+      }
+    ]
+  },
+  "intent": null,
+  "inputs": {
+    "baseCommit": "f2a82803d3a51b9e9cce0bd0767f848588be8fef",
+    "head": "f2a82803d3a51b9e9cce0bd0767f848588be8fef",
+    "guardEnv": {},
+    "worktreeState": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+  },
+  "executionDigest": "4d0f082c7739fc8c90315208a0c326d5972ff6ea3197a92e4430e61e02c9c03e",
+  "state": "succeeded",
+  "epoch": 2,
+  "lease": null,
+  "leaseTtlMs": 3000,
+  "maxAttempts": 3,
+  "attempts": [
+    {
+      "attempt": 1,
+      "epoch": 1,
+      "holder": "executor-81656-1d1431",
+      "scheduledAt": "2026-11-10T14:28:54.926Z",
+      "startedAt": "2026-11-10T14:28:55.204Z",
+      "endedAt": "2026-11-10T14:29:00.874Z",
+      "result": "lost",
+      "exitCode": null,
+      "logRef": null,
+      "process": {
+        "pid": 56264,
+        "startTime": "2026-11-10T14:28:55.2077130Z",
+        "commandLine": "C:\\Users\\user\\.deno\\bin\\deno.exe task test:host"
+      },
+      "notes": "holder lost; outcome unknown",
+      "lastSeenAt": "2026-11-10T14:28:57.233Z"
+    },
+    {
+      "attempt": 2,
+      "epoch": 2,
+      "holder": "executor-84636-44c0e3",
+      "scheduledAt": "2026-11-10T14:29:01.558Z",
+      "startedAt": "2026-11-10T14:29:01.848Z",
+      "endedAt": "2026-11-10T14:29:12.975Z",
+      "result": "succeeded",
+      "exitCode": 0,
+      "logRef": "_dist/fdh/jobs/e2e-e-2-mwasctwr/test-20261110t142854z-e6bd18-2-0.log",
+      "process": {
+        "pid": 73304,
+        "startTime": "2026-11-10T14:29:01.8518230Z",
+        "commandLine": "C:\\Users\\user\\.deno\\bin\\deno.exe task test:host"
+      },
+      "notes": "attempt 1 lost"
+    }
+  ],
+  "checkpoint": 1,
+  "commandResults": [
+    {
+      "index": 0,
+      "epoch": 2,
+      "exitCode": 0,
+      "startedAt": "2026-11-10T14:29:01.849Z",
+      "endedAt": "2026-11-10T14:29:12.975Z",
+      "logRef": "_dist/fdh/jobs/e2e-e-2-mwasctwr/test-20261110t142854z-e6bd18-2-0.log"
+    }
+  ],
+  "recordedToTask": true,
+  "transitions": [
+    {
+      "from": null,
+      "to": "pending",
+      "at": "2026-11-10T14:28:54.926Z",
+      "reason": "created"
+    },
+    {
+      "from": "pending",
+      "to": "scheduled",
+      "at": "2026-11-10T14:28:54.926Z",
+      "reason": "attempt 1 recorded before start"
+    },
+    {
+      "from": "scheduled",
+      "to": "running",
+      "at": "2026-11-10T14:28:55.204Z",
+      "reason": "attempt 1 started"
+    },
+    {
+      "from": "running",
+      "to": "succeeded",
+      "at": "2026-11-10T14:29:12.976Z",
+      "reason": "attempt 2 exited 0"
+    }
+  ],
+  "events": [
+    {
+      "at": "2026-11-10T14:29:00.874Z",
+      "kind": "lease-expired",
+      "epoch": 1,
+      "note": "holder executor-81656-1d1431 lost"
+    },
+    {
+      "at": "2026-11-10T14:29:01.557Z",
+      "kind": "lost-step-stopped",
+      "epoch": 1,
+      "note": "stopped 0 process(es) of the step tree rooted at pid 56264"
+    }
+  ],
+  "createdAt": "2026-11-10T14:28:54.926Z",
+  "updatedAt": "2026-11-10T14:29:12.976Z"
+}
