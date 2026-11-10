@@ -237,29 +237,6 @@ export const LEPTON_COMPAT_152_CSS = `
   --in-content-primary-button-background-active: var(--blue-40, #4595ff);
 }
 
-/*= Content-area surface follows Lepton's toolbar color (Issue #2531) ========
- * Gecko 152 paints #browser — the strip behind the native sidebar launcher
- * and the gaps around rounded page corners — with the renamed
- * --toolbar-background-color. Lepton's palette still overrides only the
- * legacy --toolbar-bgcolor (Windows dark: #171717), and that legacy token is
- * what the nav-bar, the Floorp panel sidebar and the status bar paint with.
- * So the native sidebar strip kept the stock rgb(43, 42, 51) next to the
- * darker Floorp surfaces.
- *
- * Paint #browser with the legacy token, like the other surfaces. When
- * Lepton does not override it, --toolbar-bgcolor is the Gecko 152 alias of
- * --toolbar-background-color (or, with an LWT, set to it above), so the
- * result is unchanged there. We do not retarget --toolbar-background-color
- * itself: where Lepton leaves the legacy name to the alias, that would form
- * a custom-property cycle and invalidate both tokens.
- *
- * Mirrors Firefox's own rule, which only applies without vertical tabs. */
-@media not -moz-pref("sidebar.verticalTabs") {
-  :root #browser {
-    background-color: var(--toolbar-bgcolor);
-  }
-}
-
 /*= Right-positioned native sidebar (Issue #2556) ============================
  * Gecko 152 exposes the native sidebar's end position on #sidebar-box as the
  * presence-only [sidebar-positionend] attribute. Vendored Lepton still keys

@@ -21,11 +21,12 @@
  *    fix restored: all chrome bars must share the SAME background color. It
  *    does NOT require them to match the selected tab — that is a per-design
  *    choice. `#browser` is the strip behind the native sidebar launcher and
- *    around rounded page corners; on Gecko 152 Firefox paints it with
- *    `--toolbar-background-color`, which Lepton's palette does not override,
- *    so with Lepton-family designs it used to stay lighter than the Floorp
- *    surfaces (Issue #2531). It is transparent with vertical tabs and is
- *    then skipped like any other absent surface.
+ *    around rounded page corners; since Gecko 152 Firefox paints it with
+ *    `--toolbar-background-color`. Lepton before v8.7.6 overrode only the
+ *    legacy `--toolbar-bgcolor`, so with Lepton-family designs `#browser`
+ *    stayed lighter than the Floorp surfaces (Issue #2531). It is
+ *    transparent with vertical tabs and is then skipped like any other
+ *    absent surface.
  *
  * 2. "Tab tracks toolbar" (SECONDARY — `color_like_toolbar` designs only):
  *    For `lepton`, `photon`, `fluerial` the selected tab is aligned to the
