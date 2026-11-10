@@ -3,6 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import { resolveContainerLabel } from "../common/container-label.ts";
+
 type Sidebar = {
   title: string;
   extensionId: string;
@@ -21,8 +23,7 @@ type Container = {
   public: boolean;
   icon: string;
   color: number;
-  name: string;
-  l10nId: string;
+  name?: string;
 };
 
 type MapSidebars = [string, Sidebar][];
@@ -60,12 +61,10 @@ export class NRPanelSidebarParent extends JSWindowActorParent {
     );
 
     function getContainerName(container: Container) {
-      if (container.l10nId) {
-        return ContextualIdentityService.getUserContextLabel(
-          container.userContextId,
-        );
-      }
-      return container.name;
+      return resolveContainerLabel(
+        container,
+        (id) => ContextualIdentityService.getUserContextLabel(id),
+      );
     }
 
     const containers = ContextualIdentityService.getPublicIdentities();
