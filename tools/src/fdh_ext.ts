@@ -87,10 +87,10 @@ export const FIELD_RULES: readonly FieldRule[] = [
   {
     field: "pr.url",
     owner: "github",
-    mirror: { system: "jira", field: "remote-link" },
-    retry: "idempotent",
+    mirror: { system: "jira", field: "pr-link-comment" },
+    retry: "keyed-once",
     note:
-      "A Jira remote link to the PR (keyed by URL, so a retry updates the same link).",
+      "One fdh comment on the Jira issue with the PR's URL, once per URL. (Not a remote link: Atlassian MCP, which agents use under D-19, cannot create one.)",
   },
   {
     field: "pr.state",

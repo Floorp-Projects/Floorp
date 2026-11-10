@@ -298,7 +298,7 @@ The field table (I-04; the code is `FIELD_RULES` in
 
 | Field (owner) | Mirror | Rule |
 | --- | --- | --- |
-| `pr.url` (GitHub) | Jira `remote-link` | keyed by URL, a retry updates the same link |
+| `pr.url` (GitHub) | Jira `pr-link-comment` | one fdh comment with the PR's URL, once per URL (Atlassian MCP cannot create remote links) |
 | `pr.state` (GitHub) | Jira `status` | draft/open/merged → 進行中/レビュー中/完了, closed → nothing; never moves the status back |
 | `ci.result` (GitHub), `<sha>:<success\|failure>` | Jira `ci-comment` | one fdh comment per head and result; pending is not posted |
 | `pr.review-receipts` (GitHub) | none | the D-14 gate reads them on the PR |
