@@ -29,10 +29,10 @@ const run = (
   conclusion: string | null,
   started: string | null,
   completed: string | null,
-  suite = 1,
+  app = "github-actions",
 ): CheckRun => ({
   id,
-  suite,
+  app,
   name,
   status,
   conclusion,
@@ -62,7 +62,7 @@ Deno.test("fdh ext poll: GitHub remotes give owner/name; dot segments and creden
   assertThrows(() => repoSlugFromRemote("https://github.com/../.."), Error);
 });
 
-Deno.test("fdh ext poll: checks use the latest run per check suite and name", () => {
+Deno.test("fdh ext poll: checks use the latest run per app and name, as branch protection does", () => {
   assertEquals(aggregateChecks([]), null);
   // A failed run re-run to success (same suite, higher id) is success.
   assertEquals(
@@ -81,11 +81,21 @@ Deno.test("fdh ext poll: checks use the latest run per check suite and name", ()
     ])?.result,
     "pending",
   );
-  // Two workflows with a job of the same name do not hide each other.
+  // A gate run for an earlier event (opened, then ready_for_review) that
+  // failed does not count once a later run of the same check passed.
   assertEquals(
     aggregateChecks([
-      run(1, "build", "completed", "failure", t(0), t(10), 1),
-      run(2, "build", "completed", "success", t(1), t(11), 2),
+      run(1, "review-gate", "completed", "failure", t(0), t(10)),
+      run(2, "review-gate", "completed", "failure", t(20), t(30)),
+      run(3, "review-gate", "completed", "success", t(40), t(50)),
+    ])?.result,
+    "success",
+  );
+  // Another app's check of the same name is a separate check.
+  assertEquals(
+    aggregateChecks([
+      run(1, "build", "completed", "failure", t(0), t(10), "other-ci"),
+      run(2, "build", "completed", "success", t(1), t(11)),
     ])?.result,
     "failure",
   );
@@ -307,6 +317,35 @@ Deno.test("fdh ext poll: a linked PR number that is not a positive integer is re
       Error,
       "invalid fdh ext ledger",
     );
+  } finally {
+    await Deno.remove(dir, { recursive: true });
+  }
+});
+
+Deno.test("fdh ext poll: a missing head's check runs is reported as such, and http credentials are hidden too", async () => {
+  const dir = await Deno.makeTempDir();
+  try {
+    taskIn(dir);
+    await withExtLedger(dir, "t1", (l) => upsertLink(l, "KAN-1", 7));
+    const gh: GhRunner = (args) =>
+      args[1] === "repos/o/r/pulls/7"
+        ? Promise.resolve(JSON.stringify(PR))
+        : Promise.reject(new GhNotFound("HTTP 404"));
+    const result = await pollAndIngest(dir, "t1", "o/r", gh);
+    assertEquals(result.errors.length, 1);
+    assert(
+      result.errors[0].error.includes("check runs"),
+      result.errors[0].error,
+    );
+    const err = assertThrows(() =>
+      repoSlugFromRemote("http://user:SECRET@example.com/o/r")
+    );
+    assert(err instanceof Error && !err.message.includes("SECRET"));
+    // A malformed PR response is an error, not an "open" PR.
+    const odd: GhRunner = () =>
+      Promise.resolve(JSON.stringify({ ...PR, draft: "no" }));
+    const bad = await pollAndIngest(dir, "t1", "o/r", odd);
+    assert(bad.errors[0].error.includes("unexpected PR response"));
   } finally {
     await Deno.remove(dir, { recursive: true });
   }

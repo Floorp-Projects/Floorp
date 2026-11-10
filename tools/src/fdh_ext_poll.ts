@@ -11,7 +11,8 @@
  * - `pr.url` at the PR's creation time (it never changes);
  * - `pr.state` (draft | open | closed | merged) at the PR's `updated_at`;
  * - `ci.result` `<head sha>:<pending|success|failure>` from the head's check
- *   runs (the latest run of each check per check suite).
+ *   runs (the latest run of each check name per app, as branch protection
+ *   counts them).
  *
  * The CI version is never older than the PR's `updated_at` (a push moves
  * it, so a new head is never stale against the old head's result), and a
@@ -54,8 +55,13 @@ export const defaultGhRunner: GhRunner = async (args) => {
 
 /** `owner/name` from a GitHub remote URL (https or ssh). */
 export function repoSlugFromRemote(url: string): string {
-  // Credentials in the URL are never echoed.
-  const clean = url.trim().replace(/^(https:\/\/)[^@/]*@/, "$1");
+  // Credentials in the URL are never echoed: any userinfo of an http(s) or
+  // other URL, and a user:password of an ssh URL (its plain user, git@,
+  // stays).
+  const trimmed = url.trim();
+  const clean = /^ssh:\/\//i.test(trimmed)
+    ? trimmed.replace(/^(ssh:\/\/)[^@/:]*:[^@/]*@/i, "$1")
+    : trimmed.replace(/^([a-z][a-z0-9+.-]*:\/\/)[^@/]*@/i, "$1");
   const match =
     /^(?:https:\/\/github\.com\/|git@github\.com:|ssh:\/\/git@github\.com\/)([A-Za-z0-9_.-]+)\/([A-Za-z0-9_.-]+?)(?:\.git)?\/?$/
       .exec(clean);
@@ -89,8 +95,8 @@ interface PullRequest {
 export interface CheckRun {
   /** Check run id (increases with each run, also for a queued re-run). */
   id?: number;
-  /** Check suite id: one per workflow run (a re-run stays in its suite). */
-  suite?: number | null;
+  /** The app that reports the check (e.g. github-actions). */
+  app?: string | null;
   name: string;
   status: string;
   conclusion: string | null;
@@ -106,9 +112,11 @@ const WAITING = new Set(["action_required"]);
  * One result for a head: pending while any check's latest run is not
  * completed (or waits for an approval), failure if any latest run did not
  * pass, else success. The latest run of a check is the one with the highest
- * id within its check suite (so a queued re-run counts, and two workflows
- * with a job of the same name do not hide each other). Null when the head
- * has no check runs. `floor` (the PR's `updated_at`) is the lowest version.
+ * id for its app and name, as branch protection counts a required check: a
+ * queued re-run counts, and an older workflow run of the same check (e.g.
+ * the gate run for `opened` before `ready_for_review`) does not. Null when
+ * the head has no check runs. `floor` (the PR's `updated_at`) is the
+ * lowest version.
  */
 export function aggregateChecks(
   runs: readonly CheckRun[],
@@ -117,7 +125,7 @@ export function aggregateChecks(
   const latest = new Map<string, CheckRun>();
   const order = (r: CheckRun) => r.id ?? (Date.parse(r.started_at ?? "") || 0);
   for (const run of runs) {
-    const key = `${run.suite ?? ""}\0${run.name}`;
+    const key = `${run.app ?? ""}\0${run.name}`;
     const seen = latest.get(key);
     if (seen === undefined || order(run) >= order(seen)) latest.set(key, run);
   }
@@ -205,7 +213,9 @@ async function pollPr(
     ) as PullRequest;
     if (
       typeof pr?.html_url !== "string" || typeof pr.updated_at !== "string" ||
-      typeof pr.created_at !== "string" || typeof pr.head?.sha !== "string"
+      typeof pr.created_at !== "string" || typeof pr.head?.sha !== "string" ||
+      typeof pr.state !== "string" || typeof pr.draft !== "boolean" ||
+      (pr.merged_at !== null && typeof pr.merged_at !== "string")
     ) {
       throw new Error(`unexpected PR response for #${number}`);
     }
@@ -230,8 +240,15 @@ async function pollPr(
       "--paginate",
       `repos/${slug}/commits/${sha}/check-runs?per_page=100`,
       "--jq",
-      ".check_runs[] | {id, suite: .check_suite.id, name, status, conclusion, started_at, completed_at}",
-    ]);
+      ".check_runs[] | {id, app: .app.slug, name, status, conclusion, started_at, completed_at}",
+    ]).catch((error) => {
+      if (error instanceof GhNotFound) {
+        throw new Error(
+          `the check runs of PR #${number}'s head ${sha} were not found in ${slug}`,
+        );
+      }
+      throw error;
+    });
     const runs = lines.split("\n").filter((l) => l.trim() !== "").map((l) =>
       JSON.parse(l) as CheckRun
     );
