@@ -5,12 +5,15 @@
 // reason. The test fails only on names that are not listed here, and warns
 // about entries that are no longer needed; delete an entry when it is fixed.
 //
-// Reasons starting with "SUSPECT" were checked against the Gecko 159 chrome
-// files and look like real breakage (mostly a Gecko 152 rename that Lepton or
-// Floorp did not follow). They are listed, not fixed, here.
+// Entries starting with "Lepton bug" are real breakage in vendored Lepton
+// that Floorp does not fix (no Gecko 152 rename to alias, the rule is opt-in
+// or the fix would change Lepton's look); they are for upstream. Gecko 152
+// renames that Lepton still reads are aliased in
+// utils/gecko-152-var-aliases.css.ts instead of being listed here.
 
 // Shared reasons (used by several entries).
-const RENAMED = "SUSPECT: Gecko 152+ renamed this token";
+const PRE_151_RENAME =
+  "Lepton bug: renamed by Gecko before 151, Lepton never followed";
 const GONE_GECKO =
   "Gecko token Lepton overrides; Gecko 159 no longer reads it (removed)";
 const GONE_PAGE =
@@ -25,24 +28,16 @@ const PWA_IDENTITY =
 /** Read with var() by Floorp/Lepton CSS, defined by nothing. */
 export const ALLOWED_UNDEFINED_READS: Record<string, string> = {
   // --- Lepton (vendored) -------------------------------------------------
-  "--toolbar-field-focus-border-color":
-    `${RENAMED} to --toolbar-field-border-color-focus; Lepton's urlbar focus border is empty`,
   "--urlbar-box-hover-text-color":
-    `${RENAMED} to --urlbar-box-text-color-hover`,
-  "--tab-inline-padding":
-    `${RENAMED} to --tab-padding-inline; Lepton's tab-line calc() is invalid`,
-  "--tab-inner-inline-margin":
-    `${RENAMED} to --tab-margin-inline-inner; Lepton's tab-line calc() is invalid`,
-  "--toolbar-start-end-padding":
-    `${RENAMED} to --toolbar-padding-inline; 6 of 10 reads have no fallback`,
-  "--tab-loading-fill":
-    `${RENAMED} (likely --tab-icon-fill-loading); Lepton's loading separator color is empty`,
+    `${PRE_151_RENAME} (--urlbar-box-text-color-hover); opt-in combined.urlbar.reload_button only`,
   "--urlbarView-item-inline-padding":
-    `${RENAMED} (likely --urlbarview-row-padding-inline); urlbar view padding calc() is invalid`,
+    "Lepton bug: urlbar view padding calc() is invalid; opt-in urlView.as_commandbar / full_width_padding only",
   "--urlbar-min-height":
-    "SUSPECT: removed from Gecko; Lepton's urlbar min-height calc() is invalid",
+    "Gecko 152 renamed it to --urlbar-height; no visible effect: #urlbar stays 32px tall either way (measured)",
   "--urlbar-width":
-    "SUSPECT: Gecko no longer sets --urlbar-width; Lepton's width rule is invalid",
+    "Lepton bug: Gecko no longer sets --urlbar-width; opt-in urlView_expanding / as_commandbar only",
+  "--arrowpanel-menuitemblank-padding-block":
+    "Lepton bug: typo for --arrowpanel-menuitemblank-padding; off by default (needs icon.panel_full and panel_photon off). Floorp's icon-disabled.css copy is removed (guarded in css-variables.test.ts)",
   "--urlbar-container-padding":
     "removed from Gecko; 2 of 4 Lepton reads fall back to 0px",
   "--tab-shadow-max-size":
@@ -58,17 +53,15 @@ export const ALLOWED_UNDEFINED_READS: Record<string, string> = {
   "--color-marketing-gray-10":
     "old about: page palette color; no Gecko 159 page defines it",
   "--in-content-primary-button-border-color":
-    "SUSPECT: no longer defined by Gecko; Lepton's in-content primary button border is empty",
+    "no longer defined by Gecko; no visible effect: Lepton's about:support #reset-box-button rule does not apply on 159 (measured)",
   "--in-content-primary-button-border-hover":
-    "SUSPECT: no longer defined by Gecko; Lepton's in-content primary button border is empty",
+    "no longer defined by Gecko; same about:support rule as --in-content-primary-button-border-color",
   "--in-content-primary-button-border-active":
-    "SUSPECT: no longer defined by Gecko; Lepton's in-content primary button border is empty",
+    "no longer defined by Gecko; same about:support rule as --in-content-primary-button-border-color",
   "--in-content-primary-button-text-color-active":
     "no longer defined by Gecko; Lepton's active primary button text color is empty",
 
   // --- Floorp chrome-extras (extracted from Lepton) ------------------------
-  "--arrowpanel-menuitemblank-padding-block":
-    "SUSPECT: typo in icon-disabled.css; Lepton defines --arrowpanel-menuitemblank-padding (no -block)",
   "--toolbarbutton-icon-fill-opacity":
     "removed from Gecko; without a fallback fill-opacity falls back to its initial 1 (harmless)",
   "--zoom-controls-bgcolor": "removed from Gecko; every read has a fallback",
@@ -104,17 +97,17 @@ export const ALLOWED_UNDEFINED_READS: Record<string, string> = {
 export const ALLOWED_UNREAD_DEFS: Record<string, string> = {
   // --- Lepton overrides of renamed Gecko tokens (the #3093 class) ----------
   "--urlbar-box-focus-bgcolor":
-    `${RENAMED} to --urlbar-box-background-color-focus; Lepton's override is lost`,
+    `${PRE_151_RENAME} (--urlbar-box-background-color-focus); only the focus state of urlbar boxes`,
   "--urlbar-box-active-bgcolor":
-    `${RENAMED} to --urlbar-box-background-color-active; Lepton's override is lost`,
+    `${PRE_151_RENAME} (--urlbar-box-background-color-active); only the pressed state of urlbar boxes`,
   "--tab-selected-color":
-    `${RENAMED} to --tab-text-color-selected; Lepton's override is lost`,
+    "Lepton bug: not a Gecko token (151 has none); Lepton puts a background color in it (protonfix, Windows)",
   "--panel-color":
-    `${RENAMED} to --panel-text-color; Lepton's override is lost`,
+    "Gecko 152 renamed it to --panel-text-color; no visible effect: menus use MenuText rgb(251,251,254) / rgb(21,20,26) instead of Lepton's #fff / #000 (measured)",
   "--arrowpanel-menuitem-padding":
-    `${RENAMED} to --panel-menuitem-padding; Lepton's override is lost`,
+    `${PRE_151_RENAME} (--panel-menuitem-padding); padding.panel's 5px menu items are 8px`,
   "--arrowpanel-padding":
-    `${RENAMED} to --panel-padding; Lepton's override is lost`,
+    `${PRE_151_RENAME} (--panel-padding, now a two-value shorthand set per panel)`,
 
   // --- Lepton overrides of Gecko tokens that are gone ----------------------
   "--lwt-tabs-border-color": GONE_GECKO,

@@ -299,18 +299,18 @@
   list-style-image: var(--uc-new-tab-icon) !important;
 }
 
-/* leptonChrome.css:27731-27747 — extra conditions dropped: userChrome.icon.panel */
-#appMenu-new-tab-button2,
-#appMenu-passwords-button,
-#appMenu-extensions-themes-button,
-#appMenu-save-file-button2,
-#appMenu-find-button2,
-#appMenu-more-button2,
-#appMenu-help-button2,
-#appMenu-quit-button2 {
-  padding-top: var(--arrowpanel-menuitemblank-padding-block) !important;
-  padding-bottom: var(--arrowpanel-menuitemblank-padding-block) !important;
-}
+/* leptonChrome.css:27731-27747 — extra conditions dropped: userChrome.icon.panel,
+ * not userChrome.icon.panel_photon, not userChrome.icon.panel_full.
+ *
+ * Floorp: Lepton's block sets the block padding of #appMenu-new-tab-button2,
+ * #appMenu-passwords-button, #appMenu-extensions-themes-button,
+ * #appMenu-save-file-button2, #appMenu-find-button2, #appMenu-more-button2,
+ * #appMenu-help-button2 and #appMenu-quit-button2 to
+ * var(--arrowpanel-menuitemblank-padding-block) !important. Nothing defines
+ * that name (a Lepton typo for --arrowpanel-menuitemblank-padding), so the
+ * declarations were invalid and those rows lost all block padding (24px tall
+ * instead of 32px). The rule is not ported: on Gecko 159 these rows are as
+ * tall as their neighbours with Gecko's own padding. */
 #appMenu-zoom-controls2,
 #appMenu-zoom-controls {
   padding-inline-start: var(--arrowpanel-menuimageblank-padding-horizontal) !important;

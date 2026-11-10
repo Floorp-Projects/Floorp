@@ -33,6 +33,7 @@ import {
   ALLOWED_UNDEFINED_READS,
   ALLOWED_UNREAD_DEFS,
 } from "./css-variables-allowlist.ts";
+import { findKey, normalizeKey, RAW_CSS, RAW_TS } from "./css-sources.ts";
 import {
   emptyUses,
   findVarProblems,
@@ -166,12 +167,54 @@ async function testNoNewUnreadDefinitions(): Promise<void> {
   );
 }
 
+/**
+ * Undefined names that stay in ALLOWED_UNDEFINED_READS only because vendored
+ * Lepton still reads them (upstream typos). Floorp's own copies were fixed,
+ * so a read from a Floorp-owned file is a regression even though the
+ * allowlist hides the name from the other tests.
+ */
+const LEPTON_ONLY_UNDEFINED_READS = [
+  // Removed from chrome-extras-css/icon-disabled.css: it zeroed the block
+  // padding of eight app menu rows.
+  "--arrowpanel-menuitemblank-padding-block",
+];
+const VENDORED_LEPTON = "browser-features/skin/lepton/";
+
+function testFloorpDoesNotReadLeptonTypos(): void {
+  // The file the typo was copied into must be part of the scan.
+  findKey(RAW_CSS, "chrome-extras-css/icon-disabled.css");
+  const owned = emptyUses();
+  for (const [key, text] of Object.entries(RAW_CSS)) {
+    const file = normalizeKey(key);
+    if (!file.startsWith(VENDORED_LEPTON)) scanCss(text, file, owned);
+  }
+  for (const [key, src] of Object.entries(RAW_TS)) {
+    if (src.includes("--")) scanTs(src, normalizeKey(key), owned);
+  }
+  for (const name of LEPTON_ONLY_UNDEFINED_READS) {
+    assert(
+      name in ALLOWED_UNDEFINED_READS,
+      `${name} is no longer allowlisted; drop it from this list too`,
+    );
+    const where = owned.reads.get(name) ?? owned.mentions.get(name);
+    assert(
+      where === undefined,
+      `${where} uses ${name}, which only vendored Lepton reads (a typo ` +
+        "nothing defines)",
+    );
+  }
+}
+
 export async function runAllTests(): Promise<void> {
   const tests: TestCase[] = [
     { name: "scanner self-check", fn: testScannerSelfCheck },
     { name: "Gecko chrome files are scanned", fn: testPlatformScan },
     { name: "no new undefined var() reads", fn: testNoNewUndefinedReads },
     { name: "no new unread definitions", fn: testNoNewUnreadDefinitions },
+    {
+      name: "Floorp-owned CSS does not read Lepton-only typos",
+      fn: testFloorpDoesNotReadLeptonTypos,
+    },
   ];
   await runTests("css-variables.test.ts", tests);
 }
