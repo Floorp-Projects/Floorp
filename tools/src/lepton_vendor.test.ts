@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { assert, assertEquals, assertRejects } from "@std/assert";
+import { assert, assertEquals, assertRejects, assertThrows } from "@std/assert";
 import * as path from "@std/path";
 import {
   applyRelease,
+  assertSafeName,
+  formatSummary,
   hashFiles,
   JAR_MANIFEST,
   LEPTON_DIR,
@@ -473,6 +475,195 @@ Deno.test("verify refuses symlinks among the vendored files", async () => {
       () => verifyVendoredFiles(lepton),
       Error,
       "symlink?",
+    );
+  } finally {
+    await Deno.remove(tmp, { recursive: true });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Untrusted names: git metadata, dotfiles, newlines, markup
+// ---------------------------------------------------------------------------
+
+Deno.test("assertSafeName allows Lepton names and refuses unsafe ones", () => {
+  for (
+    const ok of [
+      "leptonChrome.css",
+      "tab-bottom-corner-left-chromeLegacy-clipped.svg",
+      "c++.svg",
+      "LEPTON",
+      "user.js",
+    ]
+  ) {
+    assertSafeName(ok, "test");
+  }
+  for (
+    const bad of [
+      ".git",
+      ".gitattributes",
+      ".hidden.svg",
+      "..",
+      "a\nb.svg",
+      "a\rb.svg",
+      "a\u0000b",
+      "a`b.svg",
+      "@here.svg",
+      "a\b.svg",
+      "a b.svg",
+      "<x>.svg",
+      "",
+    ]
+  ) {
+    assertThrows(
+      () => assertSafeName(bad, "test"),
+      Error,
+      "unsafe file name",
+      JSON.stringify(bad),
+    );
+  }
+});
+
+const NEWLINE_OK = Deno.build.os !== "windows"; // NTFS has no "\n" in names
+
+Deno.test("apply refuses planted git metadata, dotfiles and odd names", async () => {
+  const tmp = await Deno.makeTempDir({ prefix: "lepton-names-" });
+  try {
+    const cases: [string, string, string][] = [
+      [".git in icons", "Lepton/chrome/icons/x/.git/HEAD", "unsafe file name"],
+      [
+        ".git config",
+        "Lepton/chrome/icons/x/.git/config",
+        "unsafe file name",
+      ],
+      ["dotfile", "Lepton-Photon-Style/chrome/css/.hidden", "unsafe file name"],
+      ["backtick", "Lepton/chrome/icons/a`b.svg", "unsafe file name"],
+      ["nested icons dir", "Lepton/chrome/icons/x/y.svg", "unexpected entries"],
+      ["unknown top level", "Lepton/evil.sh", "unexpected entries"],
+      ["unknown chrome entry", "Lepton/chrome/extra.css", "unexpected entries"],
+      ["unknown asset dir", "Other/chrome/LEPTON", "unexpected entries"],
+    ];
+    if (NEWLINE_OK) {
+      cases.push([
+        "newline",
+        "Lepton/chrome/icons/a\nb.svg",
+        "unsafe file name",
+      ]);
+    }
+    for (const [i, [name, planted, message]] of cases.entries()) {
+      const lepton = path.join(tmp, `lepton-${i}`);
+      const release = path.join(tmp, `release-${i}`);
+      await fakeRelease(release, "v1.0.0", { "leptonChrome.css": "a{}" }, {
+        "i.svg": "<svg/>",
+      });
+      await write(path.join(release, ...planted.split("/")), "[core]\n");
+      await assertRejects(
+        () =>
+          applyRelease({
+            leptonDir: lepton,
+            extractedDir: release,
+            release: releaseJson("v1.0.0"),
+            commit: FAKE_COMMIT,
+            assetHashes: FAKE_ASSETS,
+          }),
+        Error,
+        message,
+        name,
+      );
+      assertEquals(
+        await listVendoredFiles(lepton),
+        [],
+        `${name}: nothing may be written`,
+      );
+    }
+  } finally {
+    await Deno.remove(tmp, { recursive: true });
+  }
+});
+
+Deno.test("verify refuses unsafe names among the vendored files", async () => {
+  const tmp = await Deno.makeTempDir({ prefix: "lepton-vnames-" });
+  try {
+    const lepton = path.join(tmp, "lepton");
+    const release = path.join(tmp, "release");
+    await fakeRelease(release, "v1.0.0", { "leptonChrome.css": "a{}" }, {
+      "i.svg": "<svg/>",
+    });
+    await applyRelease({
+      leptonDir: lepton,
+      extractedDir: release,
+      release: releaseJson("v1.0.0"),
+      commit: FAKE_COMMIT,
+      assetHashes: FAKE_ASSETS,
+    });
+    await write(path.join(lepton, "icons", "x", ".git", "config"), "[core]");
+    await assertRejects(
+      () => verifyVendoredFiles(lepton),
+      Error,
+      "unsafe file name",
+    );
+  } finally {
+    await Deno.remove(tmp, { recursive: true });
+  }
+});
+
+Deno.test("jar.mn is not written when a packaged name is unsafe", async () => {
+  const tmp = await Deno.makeTempDir({ prefix: "lepton-jarname-" });
+  try {
+    const bad = [
+      "a b.css",
+      ...(NEWLINE_OK ? ["a\n  nora-skin/x (y).css"] : []),
+    ];
+    for (const name of bad) {
+      const lepton = path.join(tmp, "lepton");
+      await Deno.remove(lepton, { recursive: true }).catch(() => {});
+      await write(path.join(lepton, "css", "leptonChrome.css"), "a{}");
+      await write(path.join(lepton, "overlay", name), "/* x */");
+      const jar = path.join(tmp, "jar.mn");
+      const before =
+        "noraneko.jar:\n  nora-skin/lepton/css/old.css (lepton/css/old.css)\n";
+      await Deno.writeTextFile(jar, before);
+      await assertRejects(
+        () => updateJarManifest(jar, lepton),
+        Error,
+        "unsafe file name",
+        JSON.stringify(name),
+      );
+      assertEquals(await Deno.readTextFile(jar), before, "jar.mn unchanged");
+    }
+  } finally {
+    await Deno.remove(tmp, { recursive: true });
+  }
+});
+
+Deno.test("the PR summary lists file names literally in a code block", async () => {
+  const tmp = await Deno.makeTempDir({ prefix: "lepton-summary-" });
+  try {
+    const lepton = path.join(tmp, "lepton");
+    const release = path.join(tmp, "release");
+    await fakeRelease(release, "v1.0.0", { "leptonChrome.css": "a{}" }, {
+      "new.svg": "<svg/>",
+    });
+    const result = await applyRelease({
+      leptonDir: lepton,
+      extractedDir: release,
+      release: {
+        ...releaseJson("v1.0.0"),
+        html_url: "https://example.invalid/@everyone",
+      },
+      commit: FAKE_COMMIT,
+      assetHashes: FAKE_ASSETS,
+    });
+    const summary = formatSummary(result);
+    assert(
+      summary.includes(
+        "```text\nLEPTON\ncss/leptonChrome.css\nicons/new.svg\n",
+      ),
+      summary,
+    );
+    assert(!summary.includes("example.invalid"), "release URL is rebuilt");
+    assertEquals(
+      result.record.upstream.release_url,
+      `https://github.com/${UPSTREAM_REPOSITORY}/releases/tag/v1.0.0`,
     );
   } finally {
     await Deno.remove(tmp, { recursive: true });

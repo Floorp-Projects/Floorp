@@ -9,10 +9,11 @@ zips) and the SHA-256 of every vendored file.
 edit them, not even to fix a typo or a Gecko incompatibility. Floorp changes go
 to `overlay/` (below). `tools/src/lepton_vendor.test.ts` (`deno task test:host`)
 fails when a vendored file differs from `UPSTREAM.json`, is missing, is a
-symlink, or a new file is added next to them. The only other entries allowed
-directly in this directory are the Floorp-owned `README.md`, `UPSTREAM.json` and
-`overlay/`. `.gitattributes` marks the vendored paths `-text`, so git keeps
-upstream's bytes (including upstream's line endings) on every platform.
+symlink or has an unsafe name, or a new file is added next to them. The only
+other entries allowed directly in this directory are the Floorp-owned
+`README.md`, `UPSTREAM.json` and `overlay/`. `.gitattributes` marks the vendored
+paths `-text`, so git keeps upstream's bytes (including upstream's line endings)
+on every platform.
 
 | Vendored path         | Source in the release             |
 | --------------------- | --------------------------------- |
@@ -32,13 +33,15 @@ designs, so an update stops if the three zips ship different `chrome/css/` or
 `.github/workflows/update_lepton.yml` runs daily (and on demand with an optional
 `tag` input; empty means the latest release). It downloads the three release
 zips, checks them against the SHA-256 digests GitHub publishes for the release
-assets, refuses zips with unsafe paths, symlinks or special files, replaces the
-vendored files, rewrites `UPSTREAM.json` and the lepton entries of `../jar.mn`,
-and opens or updates a pull request from `bot/update-lepton`. It never pushes to
-`main`. It does nothing when the vendored files already match the release, does
-not push when `bot/update-lepton` already holds the same vendored files, and on
-scheduled runs skips a release whose bot PR was closed without merging. To
-propose such a release again, run the workflow manually with that `tag`.
+assets, refuses zips with unsafe names (each path segment must match
+`[A-Za-z0-9_+-][A-Za-z0-9._+-]*`, so no `.git`, dotfiles or control characters),
+symlinks, special files or unknown top-level entries, replaces the vendored
+files, rewrites `UPSTREAM.json` and the lepton entries of `../jar.mn`, and opens
+or updates a pull request from `bot/update-lepton`. It never pushes to `main`.
+It does nothing when the vendored files already match the release, does not push
+when `bot/update-lepton` already holds the same vendored files, and on scheduled
+runs skips a release whose bot PR was closed without merging. To propose such a
+release again, run the workflow manually with that `tag`.
 
 CI on the bot PR: pushes and PRs made with `GITHUB_TOKEN` do not trigger
 workflows, so the bot dispatches `colocated_runner_test.yml` on

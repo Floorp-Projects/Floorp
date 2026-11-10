@@ -8,10 +8,15 @@
 #   empty (scheduled runs). The tag, its commit and the zip hashes are
 #   recorded in browser-features/skin/lepton/UPSTREAM.json.
 # - The zips are checked against the SHA-256 digests GitHub publishes for the
-#   release assets. They are still untrusted: extraction refuses unsafe paths,
-#   symlinks and special files, and the token is not on disk or in the
-#   environment while they are processed (checkout keeps no credentials; only
-#   the download and pull-request steps get GH_TOKEN).
+#   release assets. They are still untrusted (upstream publishes the
+#   digests): every entry name must match [A-Za-z0-9_+-][A-Za-z0-9._+-]* per
+#   segment (no .git, dotfiles, control characters), symlinks, special files
+#   and unknown top-level entries fail the run, and after `git add` the index
+#   may hold only regular files at the vendored paths. The token is not on
+#   disk or in the environment while release files are handled: checkout
+#   keeps no credentials, only the download and pull-request steps get
+#   GH_TOKEN, gh runs outside the checkout, and the one token-holding git
+#   command (push) disables fsmonitor and hooks.
 # - Nothing is pushed when the vendored files already match the release, when
 #   bot/update-lepton already holds the same vendored files, or (scheduled
 #   runs) when a bot PR for the same tag was closed without merging. To
@@ -57,6 +62,7 @@ jobs:
       BOT_BRANCH: bot/update-lepton
       BASE_BRANCH: main
       TAG_INPUT: ${{ inputs.tag }}
+      GIT_CONFIG_NOSYSTEM: "1"
     steps:
       - name: Checkout Floorp
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
@@ -103,6 +109,7 @@ jobs:
             --pattern Lepton-Photon-Style.zip \
             --pattern Lepton-Proton-Style.zip
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "TAG=$tag" >> "$GITHUB_ENV"
           echo "commit=$commit" >> "$GITHUB_OUTPUT"
           echo "Lepton $tag = $UPSTREAM_REPOSITORY@$commit"
 
@@ -112,10 +119,13 @@ jobs:
           set -euo pipefail
           deno run --allow-read tools/src/lepton_vendor.ts verify-assets \
             --release-json "$WORK/release.json" --zips-dir "$WORK/zips"
+          # One path segment: ASCII letters, digits, . _ + -, no leading dot
+          # (no .git, dotfiles, "..", control characters, spaces, backticks).
+          # lepton_vendor.ts applies the same rule (SAFE_NAME).
+          seg='[A-Za-z0-9_+-][A-Za-z0-9._+-]*'
           for zip in Lepton Lepton-Photon-Style Lepton-Proton-Style; do
-            # Refuse absolute paths and parent-directory entries.
-            if unzip -Z1 "$WORK/zips/$zip.zip" | grep -Eq '(^/|(^|/)\.\.(/|$))'; then
-              echo "::error::$zip.zip has unsafe paths"
+            if unzip -Z1 "$WORK/zips/$zip.zip" | grep -Evq "^$seg(/$seg)*/?\$"; then
+              echo "::error::$zip.zip has unsafe entry names"
               exit 1
             fi
             unzip -q "$WORK/zips/$zip.zip" -d "$WORK/extracted/$zip"
@@ -128,6 +138,17 @@ jobs:
             echo "$unsafe"
             exit 1
           fi
+          # Names as extracted (a newline in a zip entry name splits the
+          # listing above, so check the real paths too).
+          bad=0
+          while IFS= read -r -d '' file; do
+            rel="${file#"$WORK/extracted/"}"
+            if ! [[ "$rel" =~ ^$seg(/$seg)*$ ]]; then
+              printf '::error::unsafe name in the release: %q\n' "$rel"
+              bad=1
+            fi
+          done < <(find "$WORK/extracted" -mindepth 1 -print0)
+          [ "$bad" = 0 ]
 
       - name: Update the vendored files
         shell: bash
@@ -143,18 +164,78 @@ jobs:
             --summary "$WORK/pr-body.md"
           deno run --allow-read tools/src/lepton_vendor.ts verify
 
+      - name: Commit the update
+        id: commit
+        shell: bash
+        # No token in this step: it runs git in a tree that holds files from
+        # the release (already checked by name, type and hash).
+        run: |
+          set -euo pipefail
+          g() { git -c core.fsmonitor= -c core.hooksPath=/dev/null "$@"; }
+          paths=(browser-features/skin/lepton browser-features/skin/jar.mn)
+          if [ -z "$(g status --porcelain -- "${paths[@]}")" ]; then
+            echo "Vendored Lepton already matches $TAG; nothing to propose."
+            echo "changed=0" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          g switch -q -c "$BOT_BRANCH"
+          g add -A -- "${paths[@]}"
+
+          # The index may hold only regular files at the expected paths: no
+          # gitlink (160000), symlink (120000) or anything outside the
+          # vendored files, UPSTREAM.json and jar.mn.
+          seg='[A-Za-z0-9_+-][A-Za-z0-9._+-]*'
+          allowed="^browser-features/skin/(jar\.mn|lepton/(LEPTON|UPSTREAM\.json|userjs/(lepton|photon|protonfix)\.js|(css|icons)/$seg))\$"
+          bad=0
+          while IFS= read -r -d '' staged; do
+            if ! [[ "$staged" =~ $allowed ]]; then
+              printf '::error::unexpected staged path: %q\n' "$staged"
+              bad=1
+            fi
+          done < <(g diff --cached --name-only --no-renames -z)
+          while IFS= read -r -d '' entry; do
+            mode="${entry%% *}"
+            if [ "$mode" != 100644 ] && [ "$mode" != 100755 ]; then
+              printf '::error::staged entry is not a regular file: %q\n' "$entry"
+              bad=1
+            fi
+          done < <(g ls-files -s -z -- browser-features/skin)
+          [ "$bad" = 0 ]
+
+          g -c user.name="github-actions[bot]" \
+            -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit -q -m "chore(lepton): update vendored Lepton to $TAG" \
+            -m "Updated by .github/workflows/update_lepton.yml."
+
+          # The repository is public, so the fetch needs no credentials.
+          remote_sha=""
+          if g fetch -q --depth=1 origin "refs/heads/$BOT_BRANCH" 2> /dev/null; then
+            remote_sha="$(g rev-parse FETCH_HEAD)"
+          fi
+          push=1
+          if [ -n "$remote_sha" ] && g diff --quiet "$remote_sha" HEAD -- "${paths[@]}"; then
+            echo "$BOT_BRANCH already holds this update; not pushing."
+            push=0
+          fi
+          {
+            echo "changed=1"
+            echo "push=$push"
+            echo "remote_sha=$remote_sha"
+          } >> "$GITHUB_OUTPUT"
+
       - name: Open or update the pull request
+        if: steps.commit.outputs.changed == '1'
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ steps.release.outputs.tag }}
+          PUSH: ${{ steps.commit.outputs.push }}
+          REMOTE_SHA: ${{ steps.commit.outputs.remote_sha }}
         run: |
           set -euo pipefail
-          paths=(browser-features/skin/lepton browser-features/skin/jar.mn)
-          if [ -z "$(git status --porcelain -- "${paths[@]}")" ]; then
-            echo "Vendored Lepton already matches $TAG; nothing to propose."
-            exit 0
-          fi
+          # Nothing here runs git status or reads repository-controlled git
+          # config with the token: gh runs outside the checkout with explicit
+          # --repo/--head, and the push disables fsmonitor and hooks.
+          cd "$RUNNER_TEMP"
           title="chore(lepton): update vendored Lepton to $TAG"
 
           # Bot PRs from this repository only (a fork can use the same
@@ -176,28 +257,17 @@ jobs:
             fi
           fi
 
-          git switch -c "$BOT_BRANCH"
-          git add -A -- "${paths[@]}"
-          git -c user.name="github-actions[bot]" \
-            -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
-            commit -q -m "$title" -m "Updated by .github/workflows/update_lepton.yml."
-
-          # The repository is public, so the fetch needs no credentials.
-          remote_sha=""
           dispatch_ci=""
-          if git fetch -q --depth=1 origin "refs/heads/$BOT_BRANCH" 2> /dev/null; then
-            remote_sha="$(git rev-parse FETCH_HEAD)"
-          fi
-          if [ -n "$remote_sha" ] &&
-            git diff --quiet "$remote_sha" HEAD -- "${paths[@]}"; then
-            echo "$BOT_BRANCH already holds this update; not pushing."
-          else
+          if [ "$PUSH" = 1 ]; then
             # The token is used for this one command only and never written
             # to .git/config.
             auth="$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)"
             echo "::add-mask::$auth"
-            git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $auth" \
-              push -q --force-with-lease="refs/heads/$BOT_BRANCH:$remote_sha" \
+            git -C "$GITHUB_WORKSPACE" \
+              -c core.fsmonitor= -c core.hooksPath=/dev/null \
+              -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $auth" \
+              push -q --no-verify \
+              --force-with-lease="refs/heads/$BOT_BRANCH:$REMOTE_SHA" \
               origin "HEAD:refs/heads/$BOT_BRANCH"
             dispatch_ci=1
           fi

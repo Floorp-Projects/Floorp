@@ -11,8 +11,8 @@
  * every load of leptonContent.css, at the same level. Production: a chrome
  * document sheet for lepton, photon and protonfix, plus an AGENT_SHEET
  * (nsIStyleSheetService, applies to every document including web pages) for
- * photon and protonfix. Dev builds: a chrome document sheet for lepton, an
- * AGENT_SHEET only for photon and protonfix. Rules here therefore reach web
+ * photon and protonfix. Dev builds: a chrome document sheet for lepton, and
+ * an AGENT_SHEET only for photon and protonfix. Rules here therefore reach web
  * content; scope them with @-moz-document like leptonContent.css does.
  *
  * Repeat Lepton's @namespace lines (xul / html prefixes, same URLs) at the

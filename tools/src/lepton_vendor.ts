@@ -56,6 +56,30 @@ const ASSET_BRANCH: Record<ReleaseAsset, string> = {
   "Lepton-Proton-Style.zip": "proton-style",
 };
 
+export const TAG_PATTERN = /^v\d+\.\d+\.\d+$/;
+
+/**
+ * Entries each release zip may contain at its top level and in `chrome/`
+ * (Lepton v8.7.5 and v8.7.6). Anything else fails the update so a human
+ * looks at it. Only chrome/css/, chrome/icons/, chrome/LEPTON and user.js
+ * are copied; css/ and icons/ must be flat.
+ */
+const ASSET_TOP_LEVEL = [
+  "CREDITS",
+  "LICENSE",
+  "chrome",
+  "install.ps1",
+  "install.sh",
+  "user.js",
+];
+const CHROME_TOP_LEVEL = [
+  "LEPTON",
+  "css",
+  "icons",
+  "userChrome.css",
+  "userContent.css",
+];
+
 /** Directories under the lepton dir that are vendored as a whole. */
 export const VENDORED_DIRS = ["css", "icons", "userjs"] as const;
 
@@ -158,9 +182,29 @@ function isPlainDirectory(info: Deno.FileInfo): boolean {
 }
 
 /**
+ * Allowed file and directory names in a release and in the vendored and
+ * overlay dirs: ASCII letters, digits, `.`, `_`, `+`, `-`, not starting with
+ * a dot. This rejects `.git`, `.gitattributes`, `..`, dotfiles, control
+ * characters and newlines, backslashes, spaces, backticks and `@`, so a
+ * release cannot plant git metadata or inject markup into jar.mn or the PR
+ * body. Every current Lepton file name matches.
+ */
+export const SAFE_NAME = /^[A-Za-z0-9_+-][A-Za-z0-9._+-]*$/;
+
+export function assertSafeName(name: string, where: string): void {
+  if (!SAFE_NAME.test(name)) {
+    throw new Error(
+      `unsafe file name ${JSON.stringify(name)} in ${where} ` +
+        `(allowed: ${SAFE_NAME.source})`,
+    );
+  }
+}
+
+/**
  * Every file under `dir`, as `/`-separated paths relative to `dir`. Throws on
- * a symlink or any other entry that is not a regular file or directory,
- * including `dir` itself. A missing `dir` lists as empty.
+ * a symlink or any other entry that is not a regular file or directory
+ * (including `dir` itself), and on a name that does not match SAFE_NAME. A
+ * missing `dir` lists as empty.
  */
 async function listFiles(dir: string, prefix = ""): Promise<string[]> {
   const out: string[] = [];
@@ -170,6 +214,7 @@ async function listFiles(dir: string, prefix = ""): Promise<string[]> {
     throw new Error(`not a plain directory (symlink?): ${dir}`);
   }
   for await (const entry of Deno.readDir(dir)) {
+    assertSafeName(entry.name, dir);
     const rel = prefix ? `${prefix}/${entry.name}` : entry.name;
     const child = path.join(dir, entry.name);
     const childInfo = await Deno.lstat(child);
@@ -333,9 +378,33 @@ export async function planRelease(
   extractedDir: string,
   tag: string,
 ): Promise<Map<string, string>> {
-  // Reject symlinks and special files anywhere in the extracted release
-  // before reading any of it (listFiles throws on them).
-  await listFiles(extractedDir);
+  if (!TAG_PATTERN.test(tag)) throw new Error(`unexpected tag: ${tag}`);
+  // Reject symlinks, special files and unsafe names anywhere in the
+  // extracted release before reading any of it (listFiles throws on them),
+  // and any top-level entry Floorp does not know.
+  const all = await listFiles(extractedDir);
+  const unexpected = all.filter((rel) => {
+    const [asset, top, inner, ...rest] = rel.split("/");
+    if (!RELEASE_ASSETS.some((a) => assetDir("", a) === asset)) return true;
+    if (!ASSET_TOP_LEVEL.includes(top)) return true;
+    if (top !== "chrome") return inner !== undefined;
+    if (!CHROME_TOP_LEVEL.includes(inner ?? "")) return true;
+    return (inner === "css" || inner === "icons")
+      ? rest.length !== 1
+      : rest.length > 0;
+  });
+  if (unexpected.length > 0) {
+    throw new Error(
+      `unexpected entries in the release (update ASSET_TOP_LEVEL / ` +
+        `CHROME_TOP_LEVEL in lepton_vendor.ts after reviewing them): ` +
+        unexpected.slice(0, 20).join(", "),
+    );
+  }
+  for (const asset of RELEASE_ASSETS) {
+    if (!all.some((rel) => rel.startsWith(`${assetDir("", asset)}/`))) {
+      throw new Error(`release has no ${asset} contents`);
+    }
+  }
   const plan = new Map<string, string>();
   for (const asset of RELEASE_ASSETS) {
     const info = await Deno.readTextFile(
@@ -470,7 +539,9 @@ export async function applyRelease(options: {
       tag: release.tag_name,
       commit,
       published_at: release.published_at,
-      release_url: release.html_url,
+      // Built from validated parts, not taken from the API response.
+      release_url:
+        `https://github.com/${UPSTREAM_REPOSITORY}/releases/tag/${release.tag_name}`,
     },
     assets: Object.fromEntries(
       RELEASE_ASSETS.map((name) => [name, assetHashes[name]]),
@@ -520,11 +591,15 @@ export async function applyRelease(options: {
 /** Markdown body for the bot PR. */
 export function formatSummary(result: ApplyResult): string {
   const { record } = result;
+  // File names already match SAFE_NAME (no backtick, `@`, `<`, newline);
+  // a fenced block keeps them literal anyway (no mentions, no markup).
   const list = (title: string, items: string[]) =>
     items.length === 0 ? [] : [
       `<details><summary>${title} (${items.length})</summary>`,
       "",
-      ...items.map((rel) => `- \`${rel}\``),
+      "```text",
+      ...items,
+      "```",
       "",
       "</details>",
       "",
