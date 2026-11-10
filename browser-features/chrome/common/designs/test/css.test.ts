@@ -123,6 +123,23 @@ function testLeptonHasExpectedStyleEntries(): void {
   );
 }
 
+function testLeptonHasContentStyles(): void {
+  const result = getCSSFromConfig(makeConfig("lepton"));
+  const contentStyles = [...(result.styles ?? []), ...(result.stylesRaw ?? [])];
+  assert(
+    contentStyles.length > 0,
+    "lepton should register Lepton's content sheet for content documents",
+  );
+  if (result.styles) {
+    assert(
+      result.styles.includes(
+        "chrome://noraneko-skin/content/lepton/css/leptonContent.css",
+      ),
+      "lepton production content styles should include leptonContent.css",
+    );
+  }
+}
+
 function getChromeInlineCss(
   ui: TFloorpDesignConfigs["globalConfigs"]["userInterface"],
 ): string {
@@ -412,6 +429,7 @@ export async function runAllTests(): Promise<void> {
       name: "lepton has expected style entries",
       fn: testLeptonHasExpectedStyleEntries,
     },
+    { name: "lepton has content styles", fn: testLeptonHasContentStyles },
     {
       name: "lepton/photon/protonfix navBar CSS includes PersonalToolbar",
       fn: testLeptonPhotonProtonfixNavBarCssIncludesPersonalToolbar,
