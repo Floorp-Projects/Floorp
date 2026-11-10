@@ -1431,8 +1431,19 @@ async function cmdExt(parsed: ParsedArgs, sub: ExtSubcommand): Promise<void> {
             "origin",
           ]),
         );
-      const observed = await pollAndIngest(state.worktree, taskId, slug);
-      console.log(JSON.stringify({ repo: slug, observed }));
+      const { observed, errors } = await pollAndIngest(
+        state.worktree,
+        taskId,
+        slug,
+      );
+      console.log(JSON.stringify({ repo: slug, observed, errors }));
+      if (errors.length > 0) {
+        throw new Error(
+          `${errors.length} linked PR(s) could not be polled: ${
+            errors.map((e) => `${e.ref}: ${e.error}`).join("; ")
+          }`,
+        );
+      }
       return;
     }
     case "resolve": {

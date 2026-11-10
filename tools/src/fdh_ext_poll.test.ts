@@ -1,7 +1,13 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { assertEquals, assertRejects, assertThrows } from "@std/assert";
-import { readExtLedger, upsertLink, withExtLedger } from "./fdh_ext.ts";
+import { assert, assertEquals, assertThrows } from "@std/assert";
+import {
+  emptyLedger,
+  extLedgerPath,
+  readExtLedger,
+  upsertLink,
+  withExtLedger,
+} from "./fdh_ext.ts";
 import {
   aggregateChecks,
   type CheckRun,
@@ -9,64 +15,118 @@ import {
   type GhRunner,
   pollAndIngest,
   repoSlugFromRemote,
+  validateRepoSlug,
 } from "./fdh_ext_poll.ts";
 import { createTaskState, writeTaskState } from "./fdh_task.ts";
 
 const SHA = "025ec7679c2b0d8b15956c44a92fafe122f15334";
+const SHA2 = "1111111111111111111111111111111111111111";
+const t = (s: number) => new Date(Date.UTC(2026, 0, 11, 9, 0, s)).toISOString();
 const run = (
+  id: number,
   name: string,
   status: string,
   conclusion: string | null,
-  started: string,
+  started: string | null,
   completed: string | null,
+  suite = 1,
 ): CheckRun => ({
+  id,
+  suite,
   name,
   status,
   conclusion,
   started_at: started,
   completed_at: completed,
 });
+const plus1 = (iso: string) => new Date(Date.parse(iso) + 1).toISOString();
 
-Deno.test("fdh ext poll: GitHub remotes give owner/name", () => {
+Deno.test("fdh ext poll: GitHub remotes give owner/name; dot segments and credentials are refused or hidden", () => {
   assertEquals(
     repoSlugFromRemote("https://github.com/Floorp-Projects/Floorp"),
     "Floorp-Projects/Floorp",
   );
   assertEquals(repoSlugFromRemote("git@github.com:o/r.git"), "o/r");
   assertEquals(repoSlugFromRemote("ssh://git@github.com/o/r.git\n"), "o/r");
-  assertThrows(
-    () => repoSlugFromRemote("https://gitlab.com/o/r"),
-    Error,
-    "not a GitHub remote",
+  assertEquals(
+    repoSlugFromRemote("https://x-access-token:DUMMY@github.com/o/r.git"),
+    "o/r",
+  );
+  const err = assertThrows(() =>
+    repoSlugFromRemote("https://x-access-token:DUMMY@gitlab.com/o/r")
+  );
+  assert(err instanceof Error && !err.message.includes("DUMMY"), String(err));
+  for (const bad of ["../..", "o/..", "./x", "o/r/x", "o"]) {
+    assertThrows(() => validateRepoSlug(bad), Error, "owner/name");
+  }
+  assertThrows(() => repoSlugFromRemote("https://github.com/../.."), Error);
+});
+
+Deno.test("fdh ext poll: checks use the latest run per check suite and name", () => {
+  assertEquals(aggregateChecks([]), null);
+  // A failed run re-run to success (same suite, higher id) is success.
+  assertEquals(
+    aggregateChecks([
+      run(1, "ci", "completed", "failure", t(0), t(10)),
+      run(2, "ci", "completed", "success", t(20), t(30)),
+      run(3, "lint", "completed", "skipped", t(1), t(2)),
+    ]),
+    { result: "success", version: plus1(t(30)) },
+  );
+  // A queued re-run (no start time yet) counts: pending, not the old failure.
+  assertEquals(
+    aggregateChecks([
+      run(1, "ci", "completed", "failure", t(0), t(10)),
+      run(2, "ci", "queued", null, null, null),
+    ])?.result,
+    "pending",
+  );
+  // Two workflows with a job of the same name do not hide each other.
+  assertEquals(
+    aggregateChecks([
+      run(1, "build", "completed", "failure", t(0), t(10), 1),
+      run(2, "build", "completed", "success", t(1), t(11), 2),
+    ])?.result,
+    "failure",
+  );
+  // Waiting for an approval is not a result yet.
+  assertEquals(
+    aggregateChecks([
+      run(1, "deploy", "completed", "action_required", t(0), t(5)),
+    ])?.result,
+    "pending",
+  );
+  assertEquals(
+    aggregateChecks([
+      run(1, "ci", "completed", "success", t(0), t(10)),
+      run(2, "e2e", "completed", "cancelled", t(5), t(12)),
+    ]),
+    { result: "failure", version: plus1(t(12)) },
   );
 });
 
-Deno.test("fdh ext poll: checks aggregate over the latest run of each check", () => {
-  const t = (s: number) =>
-    new Date(Date.UTC(2026, 10, 11, 9, 0, s)).toISOString();
-  assertEquals(aggregateChecks([]), null);
-  // A failed run re-run to success counts as success.
+Deno.test("fdh ext poll: a result orders after a pending reading of the same second, and never before the PR's update", () => {
+  const pending = aggregateChecks([
+    run(1, "ci", "in_progress", null, t(9), null),
+  ]);
+  const done = aggregateChecks([
+    run(1, "ci", "completed", "failure", t(9), t(9)),
+  ]);
+  assert(Date.parse(done!.version) > Date.parse(pending!.version));
+  // A head whose checks ran long ago (a force-push back): the PR's
+  // updated_at, which the push moved, is the floor.
   assertEquals(
-    aggregateChecks([
-      run("ci", "completed", "failure", t(0), t(10)),
-      run("ci", "completed", "success", t(20), t(30)),
-      run("lint", "completed", "skipped", t(1), t(2)),
-    ]),
-    { result: "success", version: t(30) },
+    aggregateChecks(
+      [run(1, "ci", "completed", "success", t(0), t(5))],
+      t(50),
+    ),
+    { result: "success", version: plus1(t(50)) },
   );
+  // Only null times: the floor, not 1970.
   assertEquals(
-    aggregateChecks([
-      run("ci", "completed", "success", t(0), t(10)),
-      run("e2e", "in_progress", null, t(15), null),
-    ]),
-    { result: "pending", version: t(15) },
-  );
-  assertEquals(
-    aggregateChecks([
-      run("ci", "completed", "success", t(0), t(10)),
-      run("e2e", "completed", "cancelled", t(5), t(12)),
-    ]),
-    { result: "failure", version: t(12) },
+    aggregateChecks([run(1, "ci", "queued", null, null, null)], t(50))
+      ?.version,
+    t(50),
   );
 });
 
@@ -79,24 +139,32 @@ function taskIn(dir: string): void {
   }));
 }
 
+type Fake = GhRunner & { calls: string[][] };
+
 function fakeGh(
-  pr: Record<string, unknown> | "404",
-  runs: CheckRun[],
-): GhRunner & { calls: string[][] } {
+  prs: Record<string, Record<string, unknown> | "404">,
+  runs: Record<string, CheckRun[]>,
+): Fake {
   const calls: string[][] = [];
   const gh = ((args: string[]) => {
     calls.push(args);
-    if (args[1] === "repos/o/r/pulls/7") {
-      if (pr === "404") return Promise.reject(new GhNotFound("HTTP 404"));
-      return Promise.resolve(JSON.stringify(pr));
+    const pr = /^repos\/o\/r\/pulls\/(\d+)$/.exec(args[1] ?? "");
+    if (pr) {
+      const value = prs[pr[1]];
+      if (value === undefined || value === "404") {
+        return Promise.reject(new GhNotFound("HTTP 404"));
+      }
+      return Promise.resolve(JSON.stringify(value));
     }
-    if (args.includes(`repos/o/r/commits/${SHA}/check-runs?per_page=100`)) {
+    const checks = args.find((a) => a.includes("/check-runs?per_page=100"));
+    const sha = checks ? /commits\/([0-9a-f]+)\//.exec(checks)?.[1] : undefined;
+    if (sha !== undefined) {
       return Promise.resolve(
-        runs.map((r) => JSON.stringify(r)).join("\n") + "\n",
+        (runs[sha] ?? []).map((r) => JSON.stringify(r)).join("\n") + "\n",
       );
     }
     return Promise.reject(new Error(`unexpected gh ${args.join(" ")}`));
-  }) as GhRunner & { calls: string[][] };
+  }) as Fake;
   gh.calls = calls;
   return gh;
 }
@@ -111,7 +179,7 @@ const PR = {
   head: { sha: SHA },
 };
 
-Deno.test("fdh ext poll: a linked PR's URL, state and CI result become observations; a repeat is a duplicate", async () => {
+Deno.test("fdh ext poll: a linked PR's URL, state and CI become observations; a repeat is a duplicate", async () => {
   const dir = await Deno.makeTempDir();
   try {
     taskIn(dir);
@@ -119,87 +187,125 @@ Deno.test("fdh ext poll: a linked PR's URL, state and CI result become observati
       upsertLink(l, "KAN-1", 7);
       upsertLink(l, "KAN-2"); // no PR yet: not polled
     });
-    const gh = fakeGh(PR, [
-      run(
-        "ci",
-        "completed",
-        "success",
-        "2026-11-11T09:00:00Z",
-        "2026-11-11T09:05:00Z",
-      ),
-    ]);
+    const gh = fakeGh({ "7": PR }, {
+      [SHA]: [
+        run(
+          1,
+          "ci",
+          "completed",
+          "success",
+          "2026-01-11T09:00:00Z",
+          "2026-01-11T09:05:00Z",
+        ),
+      ],
+    });
     const first = await pollAndIngest(dir, "t1", "o/r", gh);
-    assertEquals(first.map((o) => [o.field, o.value, o.result]), [
+    assertEquals(first.errors, []);
+    assertEquals(first.observed.map((o) => [o.field, o.value, o.result]), [
       ["pr.url", "https://github.com/o/r/pull/7", "applied"],
       ["pr.state", "open", "applied"],
       ["ci.result", `${SHA}:success`, "applied"],
     ]);
     const again = await pollAndIngest(dir, "t1", "o/r", gh);
-    assertEquals(again.map((o) => o.result), [
+    assertEquals(again.observed.map((o) => o.result), [
       "duplicate",
       "duplicate",
       "duplicate",
     ]);
     assertEquals(gh.calls.length, 4);
+    // A force-push to another head whose checks finished before: not stale.
+    const pushed = fakeGh(
+      {
+        "7": { ...PR, updated_at: "2026-01-11T10:00:00Z", head: { sha: SHA2 } },
+      },
+      {
+        [SHA2]: [
+          run(
+            5,
+            "ci",
+            "completed",
+            "failure",
+            "2026-01-11T08:30:00Z",
+            "2026-01-11T08:40:00Z",
+          ),
+        ],
+      },
+    );
+    const later = await pollAndIngest(dir, "t1", "o/r", pushed);
+    assertEquals(later.observed.map((o) => [o.field, o.value, o.result]), [
+      ["pr.url", "https://github.com/o/r/pull/7", "duplicate"],
+      ["pr.state", "open", "applied"],
+      ["ci.result", `${SHA2}:failure`, "applied"],
+    ]);
     const merged = fakeGh(
       {
-        ...PR,
-        state: "closed",
-        merged_at: "2026-11-11T10:00:00Z",
-        updated_at: "2026-11-11T10:00:01Z",
+        "7": {
+          ...PR,
+          state: "closed",
+          merged_at: "2026-01-11T11:00:00Z",
+          updated_at: "2026-01-11T11:00:01Z",
+        },
       },
-      [],
+      {},
     );
-    const later = await pollAndIngest(dir, "t1", "o/r", merged);
-    assertEquals(later.map((o) => [o.field, o.value, o.result]), [
-      ["pr.url", "https://github.com/o/r/pull/7", "duplicate"],
-      ["pr.state", "merged", "applied"],
-    ]);
-  } finally {
-    await Deno.remove(dir, { recursive: true });
-  }
-});
-
-Deno.test("fdh ext poll: a draft is draft, and a PR that is gone is recorded as deleted", async () => {
-  const dir = await Deno.makeTempDir();
-  try {
-    taskIn(dir);
-    await withExtLedger(dir, "t1", (l) => upsertLink(l, "KAN-1", 7));
-    const draft = await pollAndIngest(
-      dir,
-      "t1",
-      "o/r",
-      fakeGh({ ...PR, draft: true }, []),
-    );
-    assertEquals(draft.find((o) => o.field === "pr.state")?.value, "draft");
-    const gone = await pollAndIngest(dir, "t1", "o/r", fakeGh("404", []));
-    assertEquals(gone.map((o) => [o.field, o.result]), [["object", "deleted"]]);
     assertEquals(
-      readExtLedger(dir, "t1").observations["github:pr/7"].object.deleted,
-      true,
+      (await pollAndIngest(dir, "t1", "o/r", merged)).observed.find((o) =>
+        o.field === "pr.state"
+      )?.value,
+      "merged",
     );
   } finally {
     await Deno.remove(dir, { recursive: true });
   }
 });
 
-Deno.test("fdh ext poll: a gh failure other than 404 stops the poll and writes nothing", async () => {
+Deno.test("fdh ext poll: a 404 is an error, never a deletion, and the other links are still polled", async () => {
   const dir = await Deno.makeTempDir();
   try {
     taskIn(dir);
-    await withExtLedger(dir, "t1", (l) => upsertLink(l, "KAN-1", 7));
+    await withExtLedger(dir, "t1", (l) => {
+      upsertLink(l, "KAN-1", 7);
+      upsertLink(l, "KAN-2", 8);
+    });
+    const gh = fakeGh({
+      "7": "404",
+      "8": { ...PR, draft: true, html_url: "https://github.com/o/r/pull/8" },
+    }, {});
+    const result = await pollAndIngest(dir, "t1", "o/r", gh);
+    assertEquals(result.errors.map((e) => e.ref), ["github:pr/7"]);
+    assert(result.errors[0].error.includes("not recorded as a deletion"));
+    assertEquals(
+      result.observed.find((o) => o.field === "pr.state")?.value,
+      "draft",
+    );
+    assertEquals(
+      readExtLedger(dir, "t1").observations["github:pr/7"],
+      undefined,
+    );
+    // A gh failure other than 404 is an error for that link too.
     const broken: GhRunner = () =>
       Promise.reject(new Error("gh api: HTTP 502"));
-    await assertRejects(
-      () => pollAndIngest(dir, "t1", "o/r", broken),
+    const down = await pollAndIngest(dir, "t1", "o/r", broken);
+    assertEquals(down.observed, []);
+    assertEquals(down.errors.map((e) => e.error.includes("502")), [true, true]);
+  } finally {
+    await Deno.remove(dir, { recursive: true });
+  }
+});
+
+Deno.test("fdh ext poll: a linked PR number that is not a positive integer is refused when the ledger is read", async () => {
+  const dir = await Deno.makeTempDir();
+  try {
+    taskIn(dir);
+    const ledger = emptyLedger("t1");
+    upsertLink(ledger, "KAN-1", 7);
+    (ledger.links["KAN-1"] as unknown as { pr: string }).pr = "7/../../user";
+    Deno.mkdirSync(`${dir}/_dist/fdh/ext`, { recursive: true });
+    Deno.writeTextFileSync(extLedgerPath(dir, "t1"), JSON.stringify(ledger));
+    assertThrows(
+      () => readExtLedger(dir, "t1"),
       Error,
-      "502",
-    );
-    assertEquals(readExtLedger(dir, "t1").observations, {});
-    await assertRejects(
-      () => pollAndIngest(dir, "t1", "o/../r", broken),
-      Error,
-      "owner/name",
+      "invalid fdh ext ledger",
     );
   } finally {
     await Deno.remove(dir, { recursive: true });

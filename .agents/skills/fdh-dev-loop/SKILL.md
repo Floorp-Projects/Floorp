@@ -279,6 +279,7 @@ no webhook: run `ext observe` for each value you poll, then `ext plan`.
 ```sh
 fdh ext link --task-id <id> --jira KAN-131 --pr 3200 --branch fdh/external-ops
 # GitHub: read every linked PR (state, URL, the head's check runs) with gh.
+# A PR that cannot be read is an error (exit 1), never a deletion.
 fdh ext poll --task-id <id> [--repo <owner/name>]
 # Jira (Atlassian MCP), or any value you read yourself, with the object's
 # API update time as --version:
@@ -330,7 +331,6 @@ Keyed operations:
 
 - **Key forms.** An action's key is `<KEY-n>:<field>:<value>#<generation>`; the generation moves each time a baseline is recorded or resolved. A comment's key is `<KEY-n>:ci.result:<sha>:<result>`. `ext start` refuses a field key that is not an action of the current plan; run `ext plan` again and use the key it gives.
 - **An unreadable job journal** keeps its operation in flight, so its field stays held. Repair the journal under `_dist/fdh/jobs/<task-id>/`; if you know the operation never ran, remove the journal and the operation ends as failed.
-
 - **What `ext start` records.** It stores what a planned action writes. When the operation succeeds, that becomes the field's baseline. This holds both after `ext done` and after an approver's `job resolve`, which `ext plan` picks up.
 - **A key that succeeded** is `already-done`. Use one key per PR you create (`github:pr-create:<branch>`), so no second PR is made.
 - **A key with no outcome yet** is refused.

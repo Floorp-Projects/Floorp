@@ -708,7 +708,8 @@ export function readExtLedger(worktree: string, taskId: string): ExtLedger {
   const ok = isRecordOf(value) && value.version === 1 &&
     value.taskId === taskId && isRecordOf(value.links) &&
     Object.values(value.links).every((l) =>
-      isRecordOf(l) && typeof l.jira === "string" && isRecordOf(l.synced)
+      isRecordOf(l) && typeof l.jira === "string" && isRecordOf(l.synced) &&
+      (l.pr === null || (Number.isSafeInteger(l.pr) && (l.pr as number) > 0))
     ) &&
     isRecordOf(value.observations) &&
     Object.values(value.observations).every(isRecordOf) &&

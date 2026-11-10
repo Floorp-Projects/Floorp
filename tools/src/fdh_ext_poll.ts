@@ -11,9 +11,16 @@
  * - `pr.url` at the PR's creation time (it never changes);
  * - `pr.state` (draft | open | closed | merged) at the PR's `updated_at`;
  * - `ci.result` `<head sha>:<pending|success|failure>` from the head's check
- *   runs (the latest run of each check name), at the newest completion time
- *   (start time while any run is pending);
- * - a PR that is gone (HTTP 404) as a deletion of `object`, at the poll time.
+ *   runs (the latest run of each check per check suite).
+ *
+ * The CI version is never older than the PR's `updated_at` (a push moves
+ * it, so a new head is never stale against the old head's result), and a
+ * finished result is 1 ms after its runs' newest completion, so it always
+ * orders after a pending reading of the same runs.
+ *
+ * A 404 is an error, never a deletion: on this endpoint it far more often
+ * means a wrong repository, a fork `origin`, a token without access or an
+ * issue number. Record a real deletion with `fdh ext observe --deleted`.
  */
 
 import {
@@ -47,17 +54,23 @@ export const defaultGhRunner: GhRunner = async (args) => {
 
 /** `owner/name` from a GitHub remote URL (https or ssh). */
 export function repoSlugFromRemote(url: string): string {
+  // Credentials in the URL are never echoed.
+  const clean = url.trim().replace(/^(https:\/\/)[^@/]*@/, "$1");
   const match =
     /^(?:https:\/\/github\.com\/|git@github\.com:|ssh:\/\/git@github\.com\/)([A-Za-z0-9_.-]+)\/([A-Za-z0-9_.-]+?)(?:\.git)?\/?$/
-      .exec(url.trim());
+      .exec(clean);
   if (match === null) {
-    throw new Error(`not a GitHub remote: ${JSON.stringify(url)}`);
+    throw new Error(`not a GitHub remote: ${JSON.stringify(clean)}`);
   }
-  return `${match[1]}/${match[2]}`;
+  return validateRepoSlug(`${match[1]}/${match[2]}`);
 }
 
 export function validateRepoSlug(slug: string): string {
-  if (!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(slug)) {
+  const parts = slug.split("/");
+  if (
+    parts.length !== 2 ||
+    parts.some((p) => !/^[A-Za-z0-9_.-]+$/.test(p) || p === "." || p === "..")
+  ) {
     throw new Error(`--repo must be owner/name, got ${JSON.stringify(slug)}`);
   }
   return slug;
@@ -74,6 +87,10 @@ interface PullRequest {
 }
 
 export interface CheckRun {
+  /** Check run id (increases with each run, also for a queued re-run). */
+  id?: number;
+  /** Check suite id: one per workflow run (a re-run stays in its suite). */
+  suite?: number | null;
   name: string;
   status: string;
   conclusion: string | null;
@@ -82,39 +99,52 @@ export interface CheckRun {
 }
 
 const PASSING = new Set(["success", "neutral", "skipped"]);
+/** Waiting for someone (e.g. a workflow approval): not a result yet. */
+const WAITING = new Set(["action_required"]);
 
 /**
  * One result for a head: pending while any check's latest run is not
- * completed, failure if any latest run did not pass, else success. Null when
- * the head has no check runs.
+ * completed (or waits for an approval), failure if any latest run did not
+ * pass, else success. The latest run of a check is the one with the highest
+ * id within its check suite (so a queued re-run counts, and two workflows
+ * with a job of the same name do not hide each other). Null when the head
+ * has no check runs. `floor` (the PR's `updated_at`) is the lowest version.
  */
 export function aggregateChecks(
   runs: readonly CheckRun[],
+  floor?: string,
 ): { result: "pending" | "success" | "failure"; version: string } | null {
   const latest = new Map<string, CheckRun>();
-  const startOf = (r: CheckRun) => Date.parse(r.started_at ?? "") || 0;
+  const order = (r: CheckRun) => r.id ?? (Date.parse(r.started_at ?? "") || 0);
   for (const run of runs) {
-    const seen = latest.get(run.name);
-    if (seen === undefined || startOf(run) >= startOf(seen)) {
-      latest.set(run.name, run);
-    }
+    const key = `${run.suite ?? ""}\0${run.name}`;
+    const seen = latest.get(key);
+    if (seen === undefined || order(run) >= order(seen)) latest.set(key, run);
   }
   if (latest.size === 0) return null;
   const all = [...latest.values()];
-  const newest = (times: Array<string | null>) =>
-    new Date(Math.max(...times.map((t) => Date.parse(t ?? "") || 0)))
+  const newest = (times: Array<string | null | undefined>, plus = 0) => {
+    const values = times.map((t) => Date.parse(t ?? "")).filter(
+      Number.isFinite,
+    );
+    const top = values.length === 0 ? 0 : Math.max(...values) + plus;
+    const low = Date.parse(floor ?? "");
+    return new Date(Number.isFinite(low) ? Math.max(top, low + plus) : top)
       .toISOString();
-  const pending = all.filter((r) => r.status !== "completed");
+  };
+  const pending = all.filter((r) =>
+    r.status !== "completed" || WAITING.has(r.conclusion ?? "")
+  );
   if (pending.length > 0) {
     return {
       result: "pending",
-      version: newest(pending.map((r) => r.started_at)),
+      version: newest(all.flatMap((r) => [r.started_at, r.completed_at])),
     };
   }
   const failed = all.some((r) => !PASSING.has(r.conclusion ?? ""));
   return {
     result: failed ? "failure" : "success",
-    version: newest(all.map((r) => r.completed_at)),
+    version: newest(all.flatMap((r) => [r.started_at, r.completed_at]), 1),
   };
 }
 
@@ -124,34 +154,60 @@ function prState(pr: PullRequest): string {
   return pr.draft ? "draft" : "open";
 }
 
-/** Observations for every linked PR of the ledger (reads GitHub only). */
+export interface PollError {
+  ref: string;
+  error: string;
+}
+
+/**
+ * Observations for every linked PR of the ledger (reads GitHub only). A link
+ * whose PR cannot be read is reported in `errors`; the others still count.
+ */
 export async function pollGithub(
   ledger: ExtLedger,
   slug: string,
   gh: GhRunner = defaultGhRunner,
   at = nowIso(),
-): Promise<ObservationInput[]> {
+): Promise<{ observations: ObservationInput[]; errors: PollError[] }> {
   validateRepoSlug(slug);
-  const out: ObservationInput[] = [];
+  const observations: ObservationInput[] = [];
+  const errors: PollError[] = [];
   for (const link of Object.values(ledger.links)) {
     if (link.pr === null) continue;
     const ref = `github:pr/${link.pr}`;
-    let pr: PullRequest;
     try {
-      pr = JSON.parse(
-        await gh(["api", `repos/${slug}/pulls/${link.pr}`]),
-      ) as PullRequest;
+      observations.push(...await pollPr(slug, link.pr, ref, gh, at));
     } catch (error) {
-      if (!(error instanceof GhNotFound)) throw error;
-      out.push({
+      errors.push({
         ref,
-        field: "object",
-        value: null,
-        version: at,
-        deleted: true,
-        at,
+        error: error instanceof GhNotFound
+          ? `PR #${link.pr} not found in ${slug} (wrong --repo, a fork origin, no access, or an issue number); not recorded as a deletion`
+          : error instanceof Error
+          ? error.message
+          : String(error),
       });
-      continue;
+    }
+  }
+  return { observations, errors };
+}
+
+async function pollPr(
+  slug: string,
+  number: number,
+  ref: string,
+  gh: GhRunner,
+  at: string,
+): Promise<ObservationInput[]> {
+  const out: ObservationInput[] = [];
+  {
+    const pr = JSON.parse(
+      await gh(["api", `repos/${slug}/pulls/${number}`]),
+    ) as PullRequest;
+    if (
+      typeof pr?.html_url !== "string" || typeof pr.updated_at !== "string" ||
+      typeof pr.created_at !== "string" || typeof pr.head?.sha !== "string"
+    ) {
+      throw new Error(`unexpected PR response for #${number}`);
     }
     out.push({
       ref,
@@ -168,18 +224,18 @@ export async function pollGithub(
       at,
     });
     const sha = pr.head.sha;
-    if (!/^[0-9a-f]{40}$/.test(sha)) continue;
+    if (!/^[0-9a-f]{40}$/.test(sha)) return out;
     const lines = await gh([
       "api",
       "--paginate",
       `repos/${slug}/commits/${sha}/check-runs?per_page=100`,
       "--jq",
-      ".check_runs[] | {name, status, conclusion, started_at, completed_at}",
+      ".check_runs[] | {id, suite: .check_suite.id, name, status, conclusion, started_at, completed_at}",
     ]);
     const runs = lines.split("\n").filter((l) => l.trim() !== "").map((l) =>
       JSON.parse(l) as CheckRun
     );
-    const ci = aggregateChecks(runs);
+    const ci = aggregateChecks(runs, pr.updated_at);
     if (ci !== null) {
       out.push({
         ref,
@@ -200,6 +256,11 @@ export interface PollReport {
   result: IngestResult;
 }
 
+export interface PollResult {
+  observed: PollReport[];
+  errors: PollError[];
+}
+
 /**
  * Poll GitHub for the task's linked PRs and take the observations into the
  * ledger. GitHub is read before the ledger lock is taken (the lock is held
@@ -210,13 +271,13 @@ export async function pollAndIngest(
   taskId: string,
   slug: string,
   gh: GhRunner = defaultGhRunner,
-): Promise<PollReport[]> {
-  const observations = await pollGithub(
+): Promise<PollResult> {
+  const { observations, errors } = await pollGithub(
     readExtLedger(worktree, taskId),
     slug,
     gh,
   );
-  return await withExtLedger(
+  const observed = await withExtLedger(
     worktree,
     taskId,
     (ledger) =>
@@ -227,4 +288,5 @@ export async function pollAndIngest(
         result: ingestObservation(ledger, o),
       })),
   );
+  return { observed, errors };
 }
