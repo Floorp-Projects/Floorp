@@ -1,0 +1,3 @@
+2026-11-10T08:52:18.541Z executor-5115-879da4 starting epoch 1
+2026-11-10T08:52:18.542Z fault injection: {"kind":"stall","ms":15000}
+2026-11-10T08:52:33.547Z executor-5115-879da4 finished: {"outcome":"stale-rejected"}
