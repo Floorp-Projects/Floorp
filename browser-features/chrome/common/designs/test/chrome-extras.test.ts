@@ -36,6 +36,7 @@ import {
   LEGACY_CHROME_EXTRAS_PREFS,
   syncLegacyChromeExtrasPrefs,
 } from "../utils/old-config-migrator.ts";
+import { GECKO_152_RENAMED_VARS } from "../utils/gecko-152-var-aliases.css.ts";
 import { StyleManager } from "#features-chrome/common/ui-custom/styles/style-manager.ts";
 import {
   assert,
@@ -486,7 +487,7 @@ function testExternalFirefoxTokensAreNotDefinedLocally(): void {
     "--sidebar-background-color",
     "--sidebar-text-color",
   ];
-  // `--toolbarbutton-inner-padding` excluded: see the assertion below.
+  // `--toolbarbutton-padding-inner` excluded: see the assertion below.
   const declared = new Set<string>();
   for (
     const css of [
@@ -500,7 +501,7 @@ function testExternalFirefoxTokensAreNotDefinedLocally(): void {
     }
   }
   for (const token of external) {
-    // `--toolbarbutton-inner-padding` is the one deliberate exception: Lepton's
+    // `--toolbarbutton-padding-inner` is the one deliberate exception: Lepton's
     // one-liner nav bar overrides it (6px vs Gecko's 8px) and that override is
     // ported as-is. Everything else must never be shadowed.
     assert(
@@ -510,9 +511,19 @@ function testExternalFirefoxTokensAreNotDefinedLocally(): void {
     );
   }
   assert(
-    CHROME_EXTRAS_CSS.tabbarOneLiner.includes("--toolbarbutton-inner-padding:"),
-    "the one-liner override of --toolbarbutton-inner-padding is intentional",
+    CHROME_EXTRAS_CSS.tabbarOneLiner.includes("--toolbarbutton-padding-inner:"),
+    "the one-liner override of --toolbarbutton-padding-inner is intentional",
   );
+  // The legacy names are aliases computed once on `:root`
+  // (gecko-152-var-aliases.css.ts). Declaring one on any other element changes
+  // nothing Gecko reads, e.g. the one-liner's 6px button padding never applied
+  // while it set `--toolbarbutton-inner-padding` on `#nav-bar`.
+  for (const [legacy, renamed] of GECKO_152_RENAMED_VARS) {
+    assert(
+      !declared.has(legacy),
+      `${legacy} is a :root alias of ${renamed}; declare ${renamed} instead`,
+    );
+  }
   // and the one that actually matters must still resolve to something
   const scaffoldDefinesHideSize = /--uc-toolbarbutton-hide-size:/
     .test(CHROME_EXTRAS_SCAFFOLD_CSS);

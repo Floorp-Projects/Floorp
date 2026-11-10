@@ -18,6 +18,11 @@
  * default branch is what ships here. `--uc-tabbar-height` and
  * `--uc-tabbar-hide-height` come from scaffold.css; every other `--uc-*` token
  * is inlined as a literal below.
+ *
+ * Toolbar button padding uses the Gecko 152+ name `--toolbarbutton-padding-inner`,
+ * as Lepton v8.7.6 does. The legacy `--toolbarbutton-inner-padding` is only an
+ * alias resolved on `:root` (utils/gecko-152-var-aliases.css.ts), so setting it
+ * on `#nav-bar` never reached the buttons and they kept Gecko's 8px.
  */
 
 :root {
@@ -60,7 +65,7 @@
 }
 
 #nav-bar {
-  --toolbarbutton-inner-padding: 6px; /* Original: 8px */
+  --toolbarbutton-padding-inner: 6px; /* Original: 8px */
   border-radius: var(--uc-rounding-toolbar, var(--tab-border-radius, 4px));
 }
 
@@ -76,12 +81,12 @@
 
 #urlbar-container {
   min-width: calc(
-    var(--uc-oneliner-urlbar-base-width, 50px) + 24px + 2 * var(--toolbarbutton-inner-padding)
+    var(--uc-oneliner-urlbar-base-width, 50px) + 24px + 2 * var(--toolbarbutton-padding-inner)
   ) !important;
 }
 
 #urlbar[breakout][breakout-extend] {
-  min-width: calc(310px + 2 * (24px + 2 * var(--toolbarbutton-inner-padding))) !important;
+  min-width: calc(310px + 2 * (24px + 2 * var(--toolbarbutton-padding-inner))) !important;
 }
 
 #PersonalToolbar {
