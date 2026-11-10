@@ -9,6 +9,7 @@ import {
   runTests,
 } from "../../../test/utils/test_harness.ts";
 import type { TFloorpDesignConfigs } from "../type.ts";
+import leptonContentStylesRaw from "@nora/skin/lepton/css/leptonContent.css?raw";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -136,6 +137,12 @@ function testLeptonHasContentStyles(): void {
         "chrome://noraneko-skin/content/lepton/css/leptonContent.css",
       ),
       "lepton production content styles should include leptonContent.css",
+    );
+  }
+  if (result.stylesRaw) {
+    assert(
+      result.stylesRaw.includes(leptonContentStylesRaw),
+      "lepton dev content styles should include the raw leptonContent.css",
     );
   }
 }
