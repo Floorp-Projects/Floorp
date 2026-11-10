@@ -92,9 +92,12 @@ export function selectProcessTree(
   }
   const selected: DevProcessInfo[] = [];
   // A zombie root (exited, not yet reaped by a stalled executor) still holds
-  // its pid, so nothing reused it: treat it as gone, not as a reuser.
+  // its pid, so nothing reused it: treat it as gone, not as a reuser. Only
+  // when its start time is the root's (a zombie keeps it: /proc ticks on
+  // Linux, lstart on macOS, where ps shows the zombie as "<defunct>").
   const holder = snapshot.find((p) =>
-    p.pid === root.pid && !/<defunct>\s*$/.test(p.commandLine)
+    p.pid === root.pid &&
+    !(/<defunct>\s*$/.test(p.commandLine) && p.startTime === root.startTime)
   );
   const live = holder !== undefined && holder.startTime === root.startTime &&
       holder.commandLine === root.commandLine

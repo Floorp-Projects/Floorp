@@ -1413,6 +1413,12 @@ Deno.test("fdh job: a zombie root counts as gone, so its group's orphans are sti
       .map((x) => x.pid),
     [801],
   );
+  // A zombie with another start time is a pid reuser's: nothing is selected.
+  const reuser = [{ ...snapshot[0], startTime: t(5) }, snapshot[1]];
+  assertEquals(
+    selectProcessTree(reuser, root, t(10), { groups: groupsOf(reuser) }),
+    [],
+  );
   // groupsOf skips entries without a group id (Windows).
   assertEquals(groupsOf([{ ...snapshot[1], pgid: undefined }]).size, 0);
 });

@@ -69,3 +69,12 @@ The branch adds a second way to find it, through the process group:
 - **On Windows, an orphan that keeps the dead parent's pid.** That case is the
   existing path, already covered by the unit tests. It could not be produced
   live here, because `deno task`'s children end with it.
+- **A group id reused before the bound.** If the whole group exits, its pid is
+  reused by a new group leader that exits too, and a member of that new group
+  started before the bound, that member is selected (theoretical: it needs a
+  long TTL and fast pid wrap-around). The parent-pid path has the same kind of
+  risk.
+- **Start-time precision.** `lstart` (macOS) and btime (Linux) have whole-second
+  precision, so a start up to 1 s after the bound is accepted. During the
+  repeated hour at the end of daylight saving time, macOS `lstart` (local time)
+  can be off by up to an hour.
