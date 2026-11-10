@@ -141,8 +141,8 @@ function testLeptonPhotonProtonfixNavBarCssIncludesPersonalToolbar(): void {
       `${theme} navBar CSS should style #PersonalToolbar`,
     );
     assert(
-      css.includes("--tab-selected-bgcolor"),
-      `${theme} navBar CSS should follow selected tab color in the no-theme case`,
+      css.includes("--floorp-chrome-surface-color"),
+      `${theme} navBar CSS should paint the shared chrome surface color`,
     );
   }
 }
@@ -251,8 +251,12 @@ function testNavBarCssIsLwtAware(): void {
     `LWT navBar branch must prefer --toolbar-bgcolor over --toolbar-background-color`,
   );
 
-  // The no-theme branch SHOULD read --tab-selected-bgcolor (Lepton aligns the
-  // tab to the toolbar in this case, so the tab color IS the toolbar color).
+  // The no-theme branch must NOT read --tab-selected-bgcolor either. Floorp
+  // aliases it to --tab-background-color-selected, and only Lepton's
+  // color_like_toolbar (or its Windows/macOS system-color block) unsets it.
+  // protonfix keeps color_like_toolbar off, so on Linux with the built-in
+  // Light/Dark themes the bars took the selected-tab color (#fff /
+  // rgba(106,106,120,0.7)) while #browser kept the toolbar color.
   const noThemeBlockMatch = css.match(
     /:root:not\(\[lwtheme\]\)\s+#nav-bar,[\s\S]*?\}/,
   );
@@ -262,8 +266,8 @@ function testNavBarCssIsLwtAware(): void {
     `navBar CSS must have a :not([lwtheme]) selector group for #nav-bar`,
   );
   assert(
-    noThemeBlock.includes("--tab-selected-bgcolor"),
-    `no-theme navBar branch must read --tab-selected-bgcolor (Lepton makes the tab track the toolbar)`,
+    !noThemeBlock.includes("--tab-selected-bgcolor"),
+    `no-theme navBar branch must NOT read --tab-selected-bgcolor (protonfix keeps a distinct selected-tab color)`,
   );
   // Same divergence-avoidance ordering as the LWT branch: --toolbar-bgcolor
   // must come BEFORE --toolbar-background-color so the bar matches the

@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "jobId": "intent-20261110t185501z-eace45",
+  "taskId": "ac06-kan138",
+  "worktree": "E:\\floorp-browser-dev\\fdh-followup",
+  "kind": "intent",
+  "step": null,
+  "intent": {
+    "op": "external",
+    "target": "squash-merge PR 3119 at 1d687fb1 [key github:pr-merge:3119]"
+  },
+  "inputs": {
+    "baseCommit": "e84a10f7f08861bb9aa3abc4770277be6100f63a",
+    "head": "",
+    "guardEnv": {}
+  },
+  "executionDigest": "d1ca9e4ef951d2566c6efedab7fceb735e60600b9f855ae85cf239e9c8bc0c6f",
+  "state": "succeeded",
+  "epoch": 1,
+  "lease": null,
+  "leaseTtlMs": 1800000,
+  "maxAttempts": 3,
+  "attempts": [
+    {
+      "attempt": 1,
+      "epoch": 1,
+      "holder": "claude-main",
+      "scheduledAt": "2026-11-10T18:55:01.598Z",
+      "startedAt": "2026-11-10T18:55:01.598Z",
+      "endedAt": "2026-11-10T18:55:18.578Z",
+      "result": "succeeded",
+      "exitCode": 0,
+      "logRef": null,
+      "process": null,
+      "notes": ""
+    }
+  ],
+  "checkpoint": 0,
+  "commandResults": [],
+  "recordedToTask": true,
+  "transitions": [
+    {
+      "from": null,
+      "to": "pending",
+      "at": "2026-11-10T18:55:01.598Z",
+      "reason": "created"
+    },
+    {
+      "from": "pending",
+      "to": "scheduled",
+      "at": "2026-11-10T18:55:01.598Z",
+      "reason": "attempt 1 recorded before start"
+    },
+    {
+      "from": "scheduled",
+      "to": "running",
+      "at": "2026-11-10T18:55:01.598Z",
+      "reason": "attempt 1 started"
+    },
+    {
+      "from": "running",
+      "to": "succeeded",
+      "at": "2026-11-10T18:55:18.578Z",
+      "reason": "attempt 1 exited 0"
+    }
+  ],
+  "events": [],
+  "createdAt": "2026-11-10T18:55:01.598Z",
+  "updatedAt": "2026-11-10T18:55:18.578Z"
+}

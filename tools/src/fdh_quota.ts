@@ -378,6 +378,32 @@ export function pendingQuota(
   return true;
 }
 
+/**
+ * Approve one pending entry (same op and note), e.g. the one an fdh job put
+ * there when its intent's outcome became unknown and an approver resolved
+ * it. Returns false when no such entry is pending.
+ */
+export function approvePendingEntry(
+  ledger: FdhQuotaLedger,
+  op: PendingExternalOp,
+  note: string,
+  approval = "",
+  at = nowIso(),
+): boolean {
+  const index = ledger.approvalPending.findIndex((entry) =>
+    entry.op === op && entry.note === note
+  );
+  if (index < 0) return false;
+  ledger.approvalPending.splice(index, 1);
+  appendQuotaEvent(ledger, {
+    at,
+    kind: "approve",
+    op,
+    note: `${approval} ${note}`.trim(),
+  });
+  return true;
+}
+
 /** Approve all pending external operations; they may be retried afterwards. */
 export function approveQuota(
   ledger: FdhQuotaLedger,
