@@ -12,7 +12,7 @@
 
 import { parseArgs } from "@std/cli/parse-args";
 import * as path from "@std/path";
-import { captureMatrix } from "./capture.ts";
+import { CaptureInterrupted, captureMatrix } from "./capture.ts";
 import {
   collectProblems,
   compareRuns,
@@ -32,6 +32,8 @@ import {
 export const EXIT_PASS = 0;
 export const EXIT_REGRESSION = 1;
 export const EXIT_ERROR = 2;
+/** Ctrl+C during `run` (128 + SIGINT); the manifest is marked incomplete. */
+export const EXIT_INTERRUPTED = 130;
 
 const D = DEFAULT_COMPARE_OPTIONS;
 const USAGE = `Usage:
@@ -55,7 +57,7 @@ Compare options:
   --no-diff-images   do not write highlighted diff PNGs
 
 Exit codes: 0 no regression, 1 regressions found, 2 usage error, capture
-problem or any other error.`;
+problem, incomplete run or any other error, 130 interrupted (Ctrl+C).`;
 
 class UsageError extends Error {}
 
@@ -76,11 +78,37 @@ function parseList<T extends string>(
   return items as T[];
 }
 
-function num(raw: string | undefined, fallback: number, label: string): number {
+/** A whole number in [min, max]; only plain decimal digits are accepted. */
+export function intArg(
+  raw: string | undefined,
+  fallback: number,
+  label: string,
+  min: number,
+  max: number,
+): number {
   if (raw === undefined) return fallback;
-  const n = Number(raw);
-  if (!Number.isFinite(n) || n < 0) {
-    throw new UsageError(`Invalid --${label}: ${raw}`);
+  const n = /^\d+$/.test(raw.trim()) ? Number(raw.trim()) : NaN;
+  if (!Number.isSafeInteger(n) || n < min || n > max) {
+    throw new UsageError(
+      `Invalid --${label} "${raw}": expected a whole number from ${min} to ${max}`,
+    );
+  }
+  return n;
+}
+
+/** A ratio in [0, 1], such as 0.002. */
+export function ratioArg(
+  raw: string | undefined,
+  fallback: number,
+  label: string,
+): number {
+  if (raw === undefined) return fallback;
+  // Number("") and Number(" ") are 0, so empty values are rejected first.
+  const n = raw.trim() === "" ? NaN : Number(raw);
+  if (!Number.isFinite(n) || n < 0 || n > 1) {
+    throw new UsageError(
+      `Invalid --${label} "${raw}": expected a ratio from 0 to 1 (e.g. 0.002)`,
+    );
   }
   return n;
 }
@@ -145,10 +173,16 @@ async function run(argv: string[]): Promise<number> {
   }
 
   const options: CompareOptions = {
-    tolerance: num(args.tolerance, D.tolerance, "tolerance"),
-    threshold: num(args.threshold, D.threshold, "threshold"),
-    maxPixels: num(args["max-pixels"], D.maxPixels, "max-pixels"),
-    maxMaskRatio: num(args["max-mask"], D.maxMaskRatio, "max-mask"),
+    tolerance: intArg(args.tolerance, D.tolerance, "tolerance", 0, 255),
+    threshold: ratioArg(args.threshold, D.threshold, "threshold"),
+    maxPixels: intArg(
+      args["max-pixels"],
+      D.maxPixels,
+      "max-pixels",
+      0,
+      Number.MAX_SAFE_INTEGER,
+    ),
+    maxMaskRatio: ratioArg(args["max-mask"], D.maxMaskRatio, "max-mask"),
     failOnStyleDiff: !args["ignore-styles"],
     writeDiffImages: !args["no-diff-images"],
   };
@@ -169,17 +203,18 @@ async function run(argv: string[]): Promise<number> {
   if (!args.exe || !args.out) {
     throw new UsageError("run needs --exe and --out");
   }
+  const designs = parseList<Design>(args.designs, DESIGNS, "design");
+  const themes = parseList<ThemeKey>(args.themes, THEMES, "theme");
+  // The fixture proxy listens on port + 1, so the port stops at 65534.
+  const port = intArg(args.port, 2828, "port", 1, 65534);
+  const width = intArg(args.width, 1280, "width", 100, 16384);
+  const height = intArg(args.height, 800, "height", 100, 16384);
   const exe = path.resolve(args.exe);
   try {
     await Deno.stat(exe);
   } catch {
     throw new UsageError(`Build not found: ${exe}`);
   }
-  const designs = parseList<Design>(args.designs, DESIGNS, "design");
-  const themes = parseList<ThemeKey>(args.themes, THEMES, "theme");
-  const port = num(args.port, 2828, "port");
-  const width = num(args.width, 1280, "width");
-  const height = num(args.height, 800, "height");
   // Check the baseline before spending minutes on the capture.
   const baselineDir = args.baseline ? path.resolve(args.baseline) : null;
   if (baselineDir) await readManifest(baselineDir);
@@ -217,13 +252,17 @@ async function run(argv: string[]): Promise<number> {
   return problems.length > 0 ? EXIT_ERROR : EXIT_PASS;
 }
 
-/** Runs the CLI; every error, expected or not, exits 2 (never 1). */
+/**
+ * Runs the CLI; every error, expected or not, exits 2 (never 1). Ctrl+C
+ * exits 130, as the signal handler in capture.ts does.
+ */
 export async function main(argv: string[]): Promise<number> {
   try {
     return await run(argv);
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     console.error(`[design-matrix] error: ${msg}`);
+    if (e instanceof CaptureInterrupted) return EXIT_INTERRUPTED;
     if (e instanceof UsageError) console.error("\n" + USAGE);
     return EXIT_ERROR;
   }

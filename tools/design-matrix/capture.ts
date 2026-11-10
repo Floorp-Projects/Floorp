@@ -230,22 +230,33 @@ async function removeWithRetry(dir: string): Promise<void> {
   throw new Error(`Could not delete temporary profile ${dir}`);
 }
 
-/** PIDs of all descendants of `pid` (POSIX, via `pgrep -P`), deepest first. */
+/** `pgrep` could not be started (not installed or not on PATH). */
+class PgrepUnavailable extends Error {}
+
+/**
+ * PIDs of all descendants of `pid` (POSIX, via `pgrep -P`), deepest first.
+ * Throws `PgrepUnavailable` when `pgrep` cannot be run, so the caller can say
+ * that only the direct child will be stopped.
+ */
 async function descendants(pid: number): Promise<number[]> {
-  const out: number[] = [];
+  let res: Deno.CommandOutput;
   try {
-    const res = await new Deno.Command("pgrep", {
+    res = await new Deno.Command("pgrep", {
       args: ["-P", String(pid)],
       stdout: "piped",
       stderr: "null",
     }).output();
-    const kids = new TextDecoder().decode(res.stdout).split(/\s+/)
-      .map((s) => parseInt(s, 10)).filter((n) => !isNaN(n));
-    for (const kid of kids) {
-      out.push(...await descendants(kid), kid);
+  } catch (e) {
+    if (e instanceof Deno.errors.NotFound) {
+      throw new PgrepUnavailable("pgrep not found");
     }
-  } catch {
-    // pgrep missing or the process is gone
+    return []; // e.g. the process is gone
+  }
+  const out: number[] = [];
+  const kids = new TextDecoder().decode(res.stdout).split(/\s+/)
+    .map((s) => parseInt(s, 10)).filter((n) => !isNaN(n));
+  for (const kid of kids) {
+    out.push(...await descendants(kid), kid);
   }
   return out;
 }
@@ -254,9 +265,13 @@ async function descendants(pid: number): Promise<number[]> {
  * Kills the process we started and every process below it, and nothing else.
  * Windows: `taskkill /T` on our launcher PID (kept alive by
  * `-wait-for-browser`). Linux/macOS: the descendants of our PID are collected
- * with `pgrep -P` before anything is killed, then each gets SIGKILL.
+ * with `pgrep -P` before anything is killed, then each gets SIGKILL. Without
+ * `pgrep` only our PID is killed, and `log` says so.
  */
-async function killTree(child: Deno.ChildProcess): Promise<void> {
+async function killTree(
+  child: Deno.ChildProcess,
+  log: (msg: string) => void,
+): Promise<void> {
   try {
     if (Deno.build.os === "windows") {
       await new Deno.Command("taskkill", {
@@ -266,7 +281,15 @@ async function killTree(child: Deno.ChildProcess): Promise<void> {
       }).output();
       return;
     }
-    const pids = await descendants(child.pid);
+    let pids: number[] = [];
+    try {
+      pids = await descendants(child.pid);
+    } catch (e) {
+      if (!(e instanceof PgrepUnavailable)) throw e;
+      log(
+        `[design-matrix] warning: pgrep not found; killing only pid ${child.pid}, its child processes may keep running`,
+      );
+    }
     try {
       child.kill("SIGKILL");
     } catch {
@@ -837,7 +860,7 @@ async function captureCombo(
     }
     if (!(await waitExit(child, 20_000))) {
       opts.log(`  browser pid ${child.pid} did not exit; killing its tree`);
-      await killTree(child);
+      await killTree(child, opts.log);
       await waitExit(child, 10_000);
     }
     await removeWithRetry(profile);
@@ -873,7 +896,7 @@ function onInterrupt(): void {
   (async () => {
     const { child, profile, tmpRoot, proxy } = run;
     if (child) {
-      await killTree(child);
+      await killTree(child, (msg) => console.error(msg));
       await waitExit(child, 10_000);
     }
     if (profile) await removeWithRetry(profile).catch(() => {});
@@ -901,19 +924,62 @@ async function readIniVersion(exe: string): Promise<string | null> {
   return null;
 }
 
+/**
+ * Writes `manifest.json` atomically (a temporary file in the same directory,
+ * then a rename), so a process killed mid-write never leaves a truncated or
+ * half-old manifest behind.
+ */
+export async function writeManifest(
+  outDir: string,
+  manifest: RunManifest,
+): Promise<void> {
+  const file = path.join(outDir, "manifest.json");
+  const tmp = `${file}.${Deno.pid}.tmp`;
+  await Deno.writeTextFile(tmp, JSON.stringify(manifest, null, 2) + "\n");
+  try {
+    await Deno.rename(tmp, file);
+  } catch (e) {
+    await Deno.remove(tmp).catch(() => {});
+    throw e;
+  }
+}
+
+/** The capture was interrupted (Ctrl+C); its manifest is marked incomplete. */
+export class CaptureInterrupted extends Error {}
+
 export async function captureMatrix(
   opts: CaptureOptions,
 ): Promise<RunManifest> {
   await Deno.mkdir(opts.outDir, { recursive: true });
+  const startedAt = new Date().toISOString();
+  const combos: ComboRecord[] = [];
+  let info: BuildInfo | null = null;
+  const iniVersion = await readIniVersion(opts.exe);
+  const manifestFor = (complete: boolean): RunManifest => ({
+    tool: "design-matrix",
+    formatVersion: 1,
+    complete,
+    startedAt,
+    finishedAt: complete ? new Date().toISOString() : "",
+    exe: opts.exe,
+    appVersion: iniVersion ?? info?.appVersion ?? "unknown",
+    platformVersion: info?.platformVersion ?? "unknown",
+    buildID: info?.buildID ?? "unknown",
+    headless: opts.headless,
+    windowSize: { width: opts.width, height: opts.height },
+    combos: [...combos],
+  });
+  // Replace any earlier manifest in this directory right away: from here
+  // until the last combination is done, the directory holds an incomplete
+  // run, whatever stops the tool (Ctrl+C, a crash, a killed process).
+  await writeManifest(opts.outDir, manifestFor(false));
+
   const tmpRoot = await Deno.makeTempDir({
     dir: opts.tmpRoot,
     prefix: "floorp-design-matrix-",
   });
   run.interrupted = false;
   run.tmpRoot = tmpRoot;
-  const startedAt = new Date().toISOString();
-  const combos: ComboRecord[] = [];
-  let info: BuildInfo | null = null;
   Deno.addSignalListener("SIGINT", onInterrupt);
   try {
     try {
@@ -935,6 +1001,8 @@ export async function captureMatrix(
         combos.push(res.record);
         for (const err of res.record.errors) opts.log(`  error: ${err}`);
         opts.log(`  done in ${((Date.now() - started) / 1000).toFixed(1)}s`);
+        // Progress so far, still marked incomplete.
+        await writeManifest(opts.outDir, manifestFor(false));
       }
     }
   } finally {
@@ -944,23 +1012,18 @@ export async function captureMatrix(
     await removeWithRetry(tmpRoot);
     run.tmpRoot = null;
   }
-  const manifest: RunManifest = {
-    tool: "design-matrix",
-    formatVersion: 1,
-    startedAt,
-    finishedAt: new Date().toISOString(),
-    exe: opts.exe,
-    appVersion: (await readIniVersion(opts.exe)) ?? info?.appVersion ??
-      "unknown",
-    platformVersion: info?.platformVersion ?? "unknown",
-    buildID: info?.buildID ?? "unknown",
-    headless: opts.headless,
-    windowSize: { width: opts.width, height: opts.height },
-    combos,
-  };
-  await Deno.writeTextFile(
-    path.join(opts.outDir, "manifest.json"),
-    JSON.stringify(manifest, null, 2) + "\n",
-  );
+  if (run.interrupted) {
+    // The combinations not yet started are absent, which a compare would
+    // otherwise read as a deliberate --designs/--themes subset.
+    throw new CaptureInterrupted(
+      `interrupted with ${combos.length} of ${
+        opts.designs.length * opts.themes.length
+      } combinations started; ${
+        path.join(opts.outDir, "manifest.json")
+      } is marked incomplete`,
+    );
+  }
+  const manifest = manifestFor(true);
+  await writeManifest(opts.outDir, manifest);
   return manifest;
 }

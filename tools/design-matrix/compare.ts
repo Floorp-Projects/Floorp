@@ -240,9 +240,20 @@ export async function readManifest(dir: string): Promise<RunManifest> {
   } catch {
     throw new Error(`${dir} has no manifest.json (not a design-matrix run)`);
   }
-  const manifest = JSON.parse(text) as RunManifest;
-  if (manifest.tool !== "design-matrix") {
+  let manifest: RunManifest;
+  try {
+    manifest = JSON.parse(text) as RunManifest;
+  } catch {
+    throw new Error(`${dir}/manifest.json is not valid JSON`);
+  }
+  if (manifest?.tool !== "design-matrix") {
     throw new Error(`${dir} is not a design-matrix run directory`);
+  }
+  // Absent in manifests written before the field existed: those are complete.
+  if (manifest.complete === false) {
+    throw new Error(
+      `${dir} is an incomplete run (interrupted or still capturing); capture it again`,
+    );
   }
   return manifest;
 }

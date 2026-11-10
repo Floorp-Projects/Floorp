@@ -81,6 +81,14 @@ export interface ComboRecord {
 export interface RunManifest {
   tool: "design-matrix";
   formatVersion: 1;
+  /**
+   * False while the run is in progress and after an interruption (Ctrl+C, a
+   * killed process): the combinations it lacks were not captured, so the
+   * compare step refuses it. True once every requested combination was
+   * attempted. (Manifests written before this field existed lack it and are
+   * treated as complete.)
+   */
+  complete?: boolean;
   startedAt: string;
   finishedAt: string;
   exe: string;

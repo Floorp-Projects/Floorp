@@ -1,16 +1,18 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { assert, assertEquals } from "@std/assert";
+import { assert, assertEquals, assertRejects, assertThrows } from "@std/assert";
 import * as path from "@std/path";
+import { writeManifest } from "./capture.ts";
 import {
   compareRuns,
   DEFAULT_COMPARE_OPTIONS,
   diffPixels,
   diffValues,
+  readManifest,
   renderMarkdown,
   SHOT_STATES,
 } from "./compare.ts";
-import { EXIT_ERROR, main } from "./mod.ts";
+import { EXIT_ERROR, intArg, main, ratioArg } from "./mod.ts";
 import { decodePng, encodePng } from "./png.ts";
 import {
   type ComboRecord,
@@ -90,6 +92,8 @@ interface FakeRun {
   /** States to leave out of the manifest. */
   skip?: StateKey[];
   problems?: string[];
+  /** Written as the manifest's `complete` field; omitted when undefined. */
+  complete?: boolean;
 }
 
 /** Writes a one-combination run (lepton/none) with every state recorded. */
@@ -125,6 +129,7 @@ async function writeRun(dir: string, run: FakeRun): Promise<void> {
     windowSize: { width: run.img.width, height: run.img.height },
     combos: [{ design: "lepton", theme: "none", errors: [], states }],
   };
+  if (run.complete !== undefined) manifest.complete = run.complete;
   await Deno.writeTextFile(
     path.join(dir, "manifest.json"),
     JSON.stringify(manifest),
@@ -331,6 +336,139 @@ Deno.test("main: errors exit 2, never 1", async () => {
     } finally {
       quiet();
     }
+  });
+});
+
+Deno.test("compareRuns: an incomplete run is refused, an old manifest without the flag is not", async () => {
+  await withTmp(async (tmp) => {
+    const img = solid(10, 10, WHITE);
+    await writeRun(path.join(tmp, "old"), { img, navBarColor: "x" });
+    await writeRun(path.join(tmp, "done"), {
+      img,
+      navBarColor: "x",
+      complete: true,
+    });
+    await writeRun(path.join(tmp, "partial"), {
+      img,
+      navBarColor: "x",
+      complete: false,
+    });
+    assertEquals((await compare(tmp, "old", "done")).status, "pass");
+    await assertRejects(
+      () => compare(tmp, "partial", "done"),
+      Error,
+      "incomplete run",
+    );
+    await assertRejects(
+      () => compare(tmp, "done", "partial"),
+      Error,
+      "incomplete run",
+    );
+    const quiet = silence();
+    try {
+      assertEquals(
+        await main([
+          "compare",
+          "--baseline",
+          path.join(tmp, "done"),
+          "--current",
+          path.join(tmp, "partial"),
+        ]),
+        EXIT_ERROR,
+      );
+      // `run --baseline` checks the baseline before starting any browser.
+      assertEquals(
+        await main([
+          "run",
+          "--exe",
+          Deno.execPath(),
+          "--out",
+          path.join(tmp, "out"),
+          "--baseline",
+          path.join(tmp, "partial"),
+        ]),
+        EXIT_ERROR,
+      );
+    } finally {
+      quiet();
+    }
+  });
+});
+
+Deno.test("writeManifest: replaces the manifest and leaves no temporary file", async () => {
+  await withTmp(async (tmp) => {
+    await writeRun(tmp, { img: solid(4, 4, WHITE), navBarColor: "x" });
+    const manifest = await readManifest(tmp);
+    await writeManifest(tmp, { ...manifest, complete: false });
+    assertEquals(
+      [...Deno.readDirSync(tmp)].filter((e) => e.name.endsWith(".tmp")),
+      [],
+    );
+    await assertRejects(() => readManifest(tmp), Error, "incomplete run");
+    await writeManifest(tmp, { ...manifest, complete: true });
+    assertEquals((await readManifest(tmp)).complete, true);
+  });
+});
+
+Deno.test("readManifest: a truncated manifest is a clear error", async () => {
+  await withTmp(async (tmp) => {
+    await Deno.writeTextFile(path.join(tmp, "manifest.json"), '{"tool": "de');
+    await assertRejects(() => readManifest(tmp), Error, "not valid JSON");
+  });
+});
+
+Deno.test("intArg / ratioArg: reject non-integers, negatives, NaN and out-of-range values", () => {
+  assertEquals(intArg(undefined, 2828, "port", 1, 65534), 2828);
+  assertEquals(intArg("2860", 2828, "port", 1, 65534), 2860);
+  for (
+    const bad of ["", " ", "abc", "1.5", "-1", "NaN", "Infinity", "1e3", "0x10"]
+  ) {
+    assertThrows(
+      () => intArg(bad, 2828, "port", 1, 65534),
+      Error,
+      "whole number",
+    );
+  }
+  assertThrows(() => intArg("65535", 2828, "port", 1, 65534), Error, "65534");
+  assertThrows(() => intArg("0", 2828, "port", 1, 65534), Error, "from 1");
+  assertEquals(ratioArg("0.002", 0.1, "threshold"), 0.002);
+  assertEquals(ratioArg("1", 0.1, "threshold"), 1);
+  for (const bad of ["", " ", "abc", "-0.1", "1.5", "NaN", "Infinity"]) {
+    assertThrows(() => ratioArg(bad, 0.1, "threshold"), Error, "ratio");
+  }
+});
+
+Deno.test("main: bad numeric flags exit 2 before anything starts", async () => {
+  await withTmp(async (tmp) => {
+    const out = path.join(tmp, "out");
+    const quiet = silence();
+    try {
+      for (
+        const flag of [
+          "--port=abc",
+          "--port=28.5",
+          "--port=-1",
+          "--port=NaN",
+          "--port=65535",
+          "--width=0",
+          "--height=1e3",
+          "--tolerance=256",
+          "--max-pixels=1.5",
+          "--threshold=",
+          "--max-mask=2",
+        ]
+      ) {
+        assertEquals(
+          await main(["run", "--exe", Deno.execPath(), "--out", out, flag]),
+          EXIT_ERROR,
+          flag,
+        );
+      }
+    } finally {
+      quiet();
+    }
+    // Nothing was captured: the output directory was never created.
+    await assertRejects(() => Deno.stat(out), Deno.errors.NotFound);
   });
 });
 

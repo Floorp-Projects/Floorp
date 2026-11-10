@@ -83,6 +83,17 @@ deno task design-matrix compare --baseline /tmp/dm-before --current /tmp/dm-afte
 
 Record the baseline and the candidate on the same machine and screen settings.
 
+Keep the baseline clean. A capture problem in the baseline (see exit code 2
+below) makes every later comparison against it exit 2 as well, for as long as
+the affected combinations are compared. Check the baseline run's own output (it
+lists its capture problems and exits 2 if there are any) and capture it again
+before relying on it.
+
+Runs recorded before the colour scheme pin (`ui.systemUsesDarkTheme=0`) and the
+narrowed Clear History masks were added (commit `47a975e`) are not comparable
+with newer runs: on a dark-mode machine `none` was rendered dark, and the older
+masks differ. Capture such baselines again.
+
 Useful options: `--designs lepton,photon`, `--themes none,lwt-header`,
 `--port 29850` (Marionette; the proxy uses the next port), `--headed`,
 `--width 1280 --height 800`, `--tolerance 8`, `--max-pixels 16`,
@@ -103,17 +114,29 @@ Exit codes:
 - `0` no failing image, no style difference, no capture problem;
 - `1` regressions found (failing images, or style differences unless
   `--ignore-styles`);
-- `2` any error: bad arguments, a missing or invalid baseline directory, a busy
-  port, or a capture problem in either run (a combination failed to start, the
-  design or theme was not applied, a state was not reached, the context menu did
-  not open, a screenshot never settled). Capture problems are listed in the
-  report.
+- `2` any error: bad arguments (including a numeric option that is not a whole
+  number in range, such as `--port 28.5`, or a ratio outside 0–1), a missing,
+  invalid or incomplete run directory, a busy port, or a capture problem in
+  either run (a combination failed to start, the design or theme was not
+  applied, a state was not reached, the context menu did not open, a screenshot
+  never settled). Capture problems are listed in the report.
+- `130` `run` was interrupted with Ctrl+C.
 
 Only processes the tool started are stopped: first `Marionette:Quit`; if the
 browser hangs, on Windows `taskkill /T` of its own launcher PID (kept alive with
 `-wait-for-browser`), on Linux/macOS SIGKILL to that PID and every descendant
-found with `pgrep -P`. Ctrl+C stops the current browser the same way, deletes
-its profile and the temporary root, and starts nothing new.
+found with `pgrep -P`. Without `pgrep` on Linux/macOS only that PID is killed,
+and the tool prints a warning, since its child processes may keep running.
+Ctrl+C stops the current browser the same way, deletes its profile and the
+temporary root, and starts nothing new.
+
+`manifest.json` is replaced atomically (written to a temporary file, then
+renamed) and carries `"complete": false` from the moment `run` starts until the
+last combination is done. A run stopped by Ctrl+C, a crash or a killed process
+therefore keeps `"complete": false`, and `compare` (and `run --baseline`)
+refuses it with exit 2 instead of treating the missing combinations as a
+deliberate `--designs`/`--themes` subset. Capture such a run again. Manifests
+from before this field was added have no `complete` and are read as complete.
 
 ## Reading the report
 
@@ -124,7 +147,10 @@ its profile and the temporary root, and starts nothing new.
 - **Masked** — how many images had masked regions and how many pixels were
   excluded. Masks may cover at most `--max-mask` of an image (default 2%); if a
   layout change makes a masked region grow beyond that, the image is compared
-  without masks and the report says so, so masking cannot hide a regression.
+  without masks and the report says so, so a growing mask cannot hide changes
+  elsewhere in the image. Changes inside a mask that stays under the cap are not
+  seen: today only the Clear History size labels (about 1% of the image) are
+  masked, and a regression confined to them would not be reported.
 - **Capture problems** — errors and per-state problems from either run, and
   states recorded in neither run.
 - **Failing images** — `design/theme/state`, changed pixels and ratio, the
