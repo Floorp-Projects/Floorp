@@ -10,6 +10,7 @@ import {
 } from "../../../test/utils/test_harness.ts";
 import type { TFloorpDesignConfigs } from "../type.ts";
 import leptonContentStylesRaw from "@nora/skin/lepton/css/leptonContent.css?raw";
+import leptonContentOverlayRaw from "@nora/skin/lepton/overlay/leptonContentOverlay.css?raw";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -141,11 +142,21 @@ function testLeptonHasContentStyles(): void {
       ),
       "lepton production content styles should include leptonContent.css",
     );
+    assert(
+      result.styles.includes(
+        "chrome://noraneko-skin/content/lepton/overlay/leptonContentOverlay.css",
+      ),
+      "lepton production content styles should include the Floorp overlay",
+    );
   }
   if (result.stylesRaw) {
     assert(
       result.stylesRaw.includes(leptonContentStylesRaw),
       "lepton dev content styles should include the raw leptonContent.css",
+    );
+    assert(
+      result.stylesRaw.includes(leptonContentOverlayRaw),
+      "lepton dev content styles should include the raw Floorp overlay",
     );
   }
 }

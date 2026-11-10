@@ -251,7 +251,7 @@ export function getCSSFromConfig(
           // (about:newtab, about:home, about:preferences, ...), the same as
           // photon and protonfix. A chrome-document <link> alone never
           // matches those pages, so the userContent.* prefs had no effect.
-          stylesRaw: [leptonContentStylesRaw],
+          stylesRaw: [...LEPTON_CONTENT_STYLES_RAW],
           iconBasePath: launchDevPort.httpOrigin("designs", "/lepton/icons"),
           userjs: leptonUserJs,
         };
@@ -259,7 +259,7 @@ export function getCSSFromConfig(
       return {
         chromeStyles: [...LEPTON_CHROME_STYLES, ...LEPTON_CONTENT_STYLES],
         chromeStylesRaw: [LEPTON_COMPAT_CSS, navBarBackgroundColorCSS],
-        styles: [getStylePath("lepton/css/leptonContent.css")],
+        styles: [...LEPTON_CONTENT_STYLES],
         userjs: leptonUserJs,
       };
     }
