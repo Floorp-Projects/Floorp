@@ -333,9 +333,9 @@ function testCompatAvoidsBrittleSelectors(): void {
 
 function testCompatUsesRobustLwtSignals(): void {
   assert(
-    LEPTON_COMPAT_152_CSS.includes(":-moz-lwtheme"),
-    "compat layer should target LWT state via the stable :-moz-lwtheme " +
-      "pseudo-class",
+    LEPTON_COMPAT_152_CSS.includes("[lwtheme]"),
+    "compat layer should target LWT state via the [lwtheme] root attribute " +
+      "(Gecko 159 removed the :-moz-lwtheme pseudo-class)",
   );
   assert(
     LEPTON_COMPAT_152_CSS.includes("prefers-color-scheme"),
@@ -381,7 +381,7 @@ function testNoColorOverrideUsesImportant(): void {
 /**
  * Every rule that sets a theme/LWT-owned token (`--lwt-accent-color`,
  * `--toolbar-bgcolor`, `--arrowpanel-*`, `--in-content-page-background`) must
- * be scoped to the no-theme case (`:root:not([lwtheme]):not(:-moz-lwtheme)`)
+ * be scoped to the no-theme case (`:root:not([lwtheme])`)
  * — OR be a guarded `var(name, fallback)` alias. This is what lets a
  * third-party LWT keep its own palette. */
 function testLwtOwnedTokensAreGuardedOrNoThemeScoped(): void {
@@ -406,8 +406,7 @@ function testLwtOwnedTokensAreGuardedOrNoThemeScoped(): void {
     let m: RegExpExecArray | null;
     while ((m = declRe.exec(combined)) !== null) {
       const selectorChunk = (m[1] ?? "").trim();
-      const isNoThemeScoped = selectorChunk.includes(":not([lwtheme])") ||
-        selectorChunk.includes(":not(:-moz-lwtheme)");
+      const isNoThemeScoped = selectorChunk.includes(":not([lwtheme])");
       const declValue = m[0].slice(m[0].indexOf(token));
       const isGuardedAlias = /var\(\s*--lwt-accent-color/.test(declValue) ||
         /var\(\s*--toolbar-background-color/.test(declValue) ||

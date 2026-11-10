@@ -102,10 +102,6 @@ browser[type="content"] > html {
   filter: brightness(50%);
 }
 
-#statusBar:-moz-lwtheme {
-  background-color: var(--lwt-accent-color-inactive, var(--toolbar-background-color, var(--toolbar-bgcolor)));
-}
-
 #statusBar {
   background-color: var(--toolbar-background-color, var(--toolbar-bgcolor));
   > #status-text {

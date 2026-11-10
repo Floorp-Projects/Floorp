@@ -74,14 +74,14 @@ export const GECKO_152_COLOR_FIX_CSS = `
  * Anchor in-content surfaces to a stable per-scheme value. Only the no-theme
  * case is pinned; a loaded LWT may still override via its own accent. */
 @media (prefers-color-scheme: light) {
-  :root:not([lwtheme]):not(:-moz-lwtheme),
-  :root:not([lwtheme]):not(:-moz-lwtheme) dialog {
+  :root:not([lwtheme]),
+  :root:not([lwtheme]) dialog {
     --in-content-page-background: rgb(255, 255, 255);
   }
 }
 @media (prefers-color-scheme: dark) {
-  :root:not([lwtheme]):not(:-moz-lwtheme),
-  :root:not([lwtheme]):not(:-moz-lwtheme) dialog {
+  :root:not([lwtheme]),
+  :root:not([lwtheme]) dialog {
     --in-content-page-background: rgb(31, 30, 38);
   }
 }
@@ -112,7 +112,7 @@ export const GECKO_152_COLOR_FIX_CSS = `
  * Only fill in a default for the no-theme case. A loaded LWT or a custom
  * theme that sets --arrowpanel-background / --panel-background-color must
  * keep its value (the alias in gecko-152-var-aliases already chains them). */
-:root:not([lwtheme]):not(:-moz-lwtheme) {
+:root:not([lwtheme]) {
   --arrowpanel-background: var(--panel-background-color, -moz-dialog);
   --arrowpanel-color: var(--panel-text-color, -moz-dialogtext);
   --arrowpanel-border-color: var(--panel-border-color, rgba(0, 0, 0, 0.1));
@@ -144,8 +144,8 @@ export const GECKO_152_COLOR_FIX_CSS = `
  * equal-specificity rules here win by source order. This keeps the upstream
  * sync path clean and lets us adapt to Gecko 153+ by editing only this file.
  *
- * The selectors below deliberately rely on the stable `:-moz-lwtheme` /
- * `[lwtheme]` / `prefers-color-scheme` signals rather than hardcoded RGB
+ * The selectors below deliberately rely on the stable `[lwtheme]` /
+ * `prefers-color-scheme` signals rather than hardcoded RGB
  * triples or attributes that Mozilla renames between versions. And, unlike
  * the previous revision, they do NOT clobber values a loaded LWT provides.
  */
@@ -171,14 +171,16 @@ export const LEPTON_COMPAT_152_CSS = `
 }
 
 /* Built-in theme, no LWT loaded: restore Lepton's light palette.
- * Chain both negations on :root (AND) so the rule only applies when NO theme
- * signal is present. */
-:root:not([lwtheme]):not(:-moz-lwtheme) {
+ * Gecko 159 sets [lwtheme] only for third-party LWTs, so :not([lwtheme])
+ * covers the default and built-in Light/Dark themes. Do not add
+ * :not(:-moz-lwtheme): Gecko removed that pseudo-class and :not() is not
+ * forgiving, so the whole rule would be dropped. */
+:root:not([lwtheme]) {
   --lwt-accent-color: var(--lepton-compat-accent-light);
   --toolbar-bgcolor: var(--lepton-compat-toolbar-light);
 }
 @media (prefers-color-scheme: dark) {
-  :root:not([lwtheme]):not(:-moz-lwtheme) {
+  :root:not([lwtheme]) {
     --lwt-accent-color: var(--lepton-compat-accent-dark);
     --toolbar-bgcolor: var(--lepton-compat-toolbar-dark);
   }
@@ -223,19 +225,12 @@ export const LEPTON_COMPAT_152_CSS = `
   background-image: none !important;
 }
 
-/*= Primary button accent (Lepton blue) =====================================
- * Lepton declares these inside the built-in-theme block that no longer
- * matches on 152. Re-declare them for the no-theme case so primary buttons
- * keep their blue rather than inheriting a broken accent. An LWT that sets
- * its own button tokens wins by the alias layer + source order. */
-:root:not([lwtheme]):not(:-moz-lwtheme),
-:root:not([lwtheme]):not(:-moz-lwtheme):host,
-:root:not([lwtheme]):not(:-moz-lwtheme) dialog {
-  --in-content-primary-button-text-color: var(--in-content-page-color);
-  --in-content-primary-button-background: var(--blue-60, #0060df);
-  --in-content-primary-button-background-hover: var(--blue-50, #0a84ff);
-  --in-content-primary-button-background-active: var(--blue-40, #4595ff);
-}
+/* No primary-button override here. Lepton's own
+ * userChrome.theme.proton_color block already sets the
+ * --in-content-primary-button-* tokens per color scheme on Gecko 159. An
+ * earlier no-theme override forced light-mode blue in dark mode and dark text
+ * on blue in light mode; its selector was invalid on 159, so it never
+ * applied, and it was removed rather than revived. */
 
 /*= Right-positioned native sidebar (Issue #2556) ============================
  * Gecko 152 exposes the native sidebar's end position on #sidebar-box as the
