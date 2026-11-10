@@ -1,0 +1,17 @@
+/* SPDX-License-Identifier: MPL-2.0 */
+
+/* Floorp overlay for ../css/leptonContent.css.
+ *
+ * ../css/, ../icons/, ../userjs/ and ../LEPTON are vendored upstream Lepton
+ * and must stay byte-identical to the release recorded in ../UPSTREAM.json
+ * (checked by tools/src/lepton_vendor.test.ts). Put Floorp changes to
+ * Lepton's content styling here instead.
+ *
+ * Loaded by browser-features/chrome/common/designs/utils/css.ts right after
+ * every load of leptonContent.css, at the same level: as a chrome document
+ * sheet for lepton, photon and protonfix, and also as an AGENT_SHEET
+ * (nsIStyleSheetService, applies to every document including web pages) for
+ * photon and protonfix. Rules here therefore reach web content for those
+ * designs; scope them with @-moz-document like leptonContent.css does.
+ * See ../README.md.
+ */

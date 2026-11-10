@@ -1,45 +1,166 @@
+# SPDX-License-Identifier: MPL-2.0
+#
+# Update the vendored upstream Lepton (browser-features/skin/lepton/) from a
+# black7375/Firefox-UI-Fix release and propose it as a pull request from
+# bot/update-lepton. This workflow never pushes to main.
+#
+# - The release is the input tag, or the latest release when the input is
+#   empty (scheduled runs). The tag, its commit and the zip hashes are
+#   recorded in browser-features/skin/lepton/UPSTREAM.json.
+# - The zips are checked against the SHA-256 digests GitHub publishes for the
+#   release assets before anything is extracted.
+# - Nothing is pushed when the vendored files already match the release, or
+#   when bot/update-lepton already holds the same tree.
+#
+# Requires the repository setting "Allow GitHub Actions to create and approve
+# pull requests". Pull requests opened with GITHUB_TOKEN do not trigger other
+# workflows; push a commit or close and reopen the PR to run CI on it.
+
 name: "12 🧰 (u) Update Lepton"
 
 on:
   schedule:
     - cron: "0 0 * * *"
   workflow_dispatch:
+    inputs:
+      tag:
+        description: "Upstream release tag, e.g. v8.7.6 (empty: latest release)"
+        required: false
+        default: ""
+        type: string
+
+permissions: {}
+
+concurrency:
+  group: update-lepton
+  cancel-in-progress: false
 
 jobs:
   update-lepton:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      pull-requests: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      UPSTREAM_REPOSITORY: black7375/Firefox-UI-Fix
+      BOT_BRANCH: bot/update-lepton
+      BASE_BRANCH: main
+      TAG_INPUT: ${{ inputs.tag }}
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Floorp
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
         with:
           ref: main
+          fetch-depth: 1
 
-      - name: Update Lepton Photon
-        run: |
-          curl -s https://github.com/black7375/Firefox-UI-Fix/releases/latest/download/Lepton-Photon-Style.zip -L -o Lepton-Photon-Style.zip
-          mkdir ~/Lepton-Photon-Style
-          unzip -o Lepton-Photon-Style.zip -d ~/Lepton-Photon-Style
-          cp -r ~/Lepton-Photon-Style/user.js ./browser-features/skin/lepton/userjs/photon.js
+      - uses: denoland/setup-deno@667a34cdef165d8d2b2e98dde39547c9daac7282
+        with:
+          deno-version: v2.x
 
-      - name: Update Lepton Proton
+      - name: Resolve the upstream release
+        id: release
+        shell: bash
         run: |
-          curl -s https://github.com/black7375/Firefox-UI-Fix/releases/latest/download/Lepton-Proton-Style.zip  -L -o Lepton-Proton-Style.zip
-          mkdir ~/Lepton-Proton-Style
-          unzip -o Lepton-Proton-Style.zip -d ~/Lepton-Proton-Style
-          cp -r ~/Lepton-Proton-Style/user.js ./browser-features/skin/lepton/userjs/protonfix.js
+          set -euo pipefail
+          WORK="$RUNNER_TEMP/lepton"
+          echo "WORK=$WORK" >> "$GITHUB_ENV"
+          mkdir -p "$WORK/zips" "$WORK/extracted"
+          tag="${TAG_INPUT:-}"
+          if [ -z "$tag" ]; then
+            tag="$(gh api "repos/$UPSTREAM_REPOSITORY/releases/latest" --jq .tag_name)"
+          fi
+          if ! [[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::unexpected Lepton tag: $tag"
+            exit 1
+          fi
+          gh api "repos/$UPSTREAM_REPOSITORY/releases/tags/$tag" > "$WORK/release.json"
+          ref="$(gh api "repos/$UPSTREAM_REPOSITORY/git/ref/tags/$tag")"
+          commit="$(jq -r .object.sha <<< "$ref")"
+          if [ "$(jq -r .object.type <<< "$ref")" = "tag" ]; then
+            commit="$(gh api "repos/$UPSTREAM_REPOSITORY/git/tags/$commit" --jq .object.sha)"
+          fi
+          if ! [[ "$commit" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::could not resolve the commit of $tag: $commit"
+            exit 1
+          fi
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "commit=$commit" >> "$GITHUB_OUTPUT"
+          echo "Lepton $tag = $UPSTREAM_REPOSITORY@$commit"
 
-      - name: Update Lepton Original
+      - name: Download and verify the release zips
+        shell: bash
+        env:
+          TAG: ${{ steps.release.outputs.tag }}
         run: |
-          curl -s https://github.com/black7375/Firefox-UI-Fix/releases/latest/download/Lepton.zip -L -o Lepton.zip
-          mkdir ~/Lepton
-          unzip -o Lepton.zip -d ~/Lepton
-          cp -r ~/Lepton/chrome/css/* ./browser-features/skin/lepton/css/
-          cp -r ~/Lepton/chrome/icons/* ./browser-features/skin/lepton/icons/
-          cp -r ~/Lepton/user.js ./browser-features/skin/lepton/userjs/lepton.js
+          set -euo pipefail
+          gh release download "$TAG" --repo "$UPSTREAM_REPOSITORY" \
+            --dir "$WORK/zips" \
+            --pattern Lepton.zip \
+            --pattern Lepton-Photon-Style.zip \
+            --pattern Lepton-Proton-Style.zip
+          deno run --allow-read tools/src/lepton_vendor.ts verify-assets \
+            --release-json "$WORK/release.json" --zips-dir "$WORK/zips"
+          for zip in Lepton Lepton-Photon-Style Lepton-Proton-Style; do
+            # Refuse absolute paths and parent-directory entries.
+            if unzip -Z1 "$WORK/zips/$zip.zip" | grep -Eq '(^/|(^|/)\.\.(/|$))'; then
+              echo "::error::$zip.zip has unsafe paths"
+              exit 1
+            fi
+            unzip -q "$WORK/zips/$zip.zip" -d "$WORK/extracted/$zip"
+          done
 
-      - name: commit changes
+      - name: Update the vendored files
+        shell: bash
+        env:
+          COMMIT: ${{ steps.release.outputs.commit }}
         run: |
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git config --global user.name "github-actions[bot]"
-          git add .
-          git commit -m "🧰 (u) Update Lepton Themes" || echo "no change to commit"
-          git push
+          set -euo pipefail
+          deno run --allow-read --allow-write tools/src/lepton_vendor.ts apply \
+            --release-json "$WORK/release.json" \
+            --commit "$COMMIT" \
+            --zips-dir "$WORK/zips" \
+            --extracted-dir "$WORK/extracted" \
+            --summary "$WORK/pr-body.md"
+          deno run --allow-read tools/src/lepton_vendor.ts verify
+
+      - name: Open or update the pull request
+        shell: bash
+        env:
+          TAG: ${{ steps.release.outputs.tag }}
+        run: |
+          set -euo pipefail
+          paths=(browser-features/skin/lepton browser-features/skin/jar.mn)
+          if [ -z "$(git status --porcelain -- "${paths[@]}")" ]; then
+            echo "Vendored Lepton already matches $TAG; nothing to propose."
+            exit 0
+          fi
+          title="chore(lepton): update vendored Lepton to $TAG"
+          git switch -c "$BOT_BRANCH"
+          git add -A -- "${paths[@]}"
+          git -c user.name="github-actions[bot]" \
+            -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit -q -m "$title" -m "Updated by .github/workflows/update_lepton.yml."
+
+          remote_sha=""
+          if git fetch -q --depth=1 origin "refs/heads/$BOT_BRANCH" 2> /dev/null; then
+            remote_sha="$(git rev-parse FETCH_HEAD)"
+          fi
+          if [ -n "$remote_sha" ] &&
+            [ "$(git rev-parse "$remote_sha^{tree}")" = "$(git rev-parse "HEAD^{tree}")" ]; then
+            echo "$BOT_BRANCH already holds this update; not pushing."
+          else
+            git push -q --force-with-lease="refs/heads/$BOT_BRANCH:$remote_sha" \
+              origin "HEAD:refs/heads/$BOT_BRANCH"
+          fi
+
+          pr="$(gh pr list --repo "$GITHUB_REPOSITORY" --head "$BOT_BRANCH" \
+            --base "$BASE_BRANCH" --state open --json number --jq '.[0].number // empty')"
+          if [ -n "$pr" ]; then
+            gh pr edit "$pr" --repo "$GITHUB_REPOSITORY" \
+              --title "$title" --body-file "$WORK/pr-body.md"
+          else
+            gh pr create --repo "$GITHUB_REPOSITORY" --base "$BASE_BRANCH" \
+              --head "$BOT_BRANCH" --title "$title" --body-file "$WORK/pr-body.md"
+          fi

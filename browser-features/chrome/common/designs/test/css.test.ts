@@ -107,8 +107,11 @@ function testLeptonNoUseTabColorAsToolbarColor(): void {
 
 function testLeptonHasExpectedStyleEntries(): void {
   const result = getCSSFromConfig(makeConfig("lepton"));
-  // Production: chromeStyles = [leptonChrome, leptonContent] (2).
-  // Dev:        chromeStylesRaw = [leptonChrome, LEPTON_COMPAT, navBar] (3).
+  // Production: chromeStyles = [leptonChrome, overlay, leptonContent,
+  //             overlay] (4).
+  // Dev:        chromeStylesRaw = [leptonChrome, overlay, leptonContent,
+  //             overlay, LEPTON_COMPAT, navBar] (6).
+  // Order against the overlays is checked in lepton-overlay.test.ts.
   // Both branches must carry Lepton's chrome + content sheets; the Gecko 152
   // compat layer and the nav-bar color override are layered on as raw CSS.
   const chromeCount = result.chromeStyles?.length ??
