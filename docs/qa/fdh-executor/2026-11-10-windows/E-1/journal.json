@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "jobId": "test-20261110t025110z-9dc9f6",
+  "taskId": "e2e-e-1-mwa3fine",
+  "worktree": "E:\\floorp-browser-dev\\fdh-followup",
+  "kind": "test",
+  "step": {
+    "cwd": "E:\\floorp-browser-dev\\fdh-followup",
+    "displayCommand": "deno task test:host",
+    "commands": [
+      {
+        "argv": [
+          "deno",
+          "task",
+          "test:host"
+        ],
+        "displayCommand": "deno task test:host",
+        "assertionName": "host-test-exit-code",
+        "expected": "exit code 0"
+      }
+    ]
+  },
+  "intent": null,
+  "inputs": {
+    "baseCommit": "03adaa8dc1a67f4b6e2115625bc3d7a4632dea3c",
+    "head": "03adaa8dc1a67f4b6e2115625bc3d7a4632dea3c",
+    "guardEnv": {},
+    "worktreeState": "ff0ebe2e5842c220572f1d2ae09fa64a8ceff15e179a21c73af3f29fb4ff57a1"
+  },
+  "executionDigest": "cb191f448073e9087e864c7d4dd3eac0ad1f770cc84e57d29a72bc881f7f6ac3",
+  "state": "succeeded",
+  "epoch": 1,
+  "lease": null,
+  "leaseTtlMs": 3000,
+  "maxAttempts": 3,
+  "attempts": [
+    {
+      "attempt": 1,
+      "epoch": 1,
+      "holder": "executor-28920-63615f",
+      "scheduledAt": "2026-11-10T02:51:10.021Z",
+      "startedAt": "2026-11-10T02:51:10.399Z",
+      "endedAt": "2026-11-10T02:51:20.868Z",
+      "result": "succeeded",
+      "exitCode": 0,
+      "logRef": "_dist/fdh/jobs/e2e-e-1-mwa3fine/test-20261110t025110z-9dc9f6-1-0.log",
+      "process": {
+        "pid": 10756,
+        "startTime": "2026-11-10T02:51:10.4038920Z",
+        "commandLine": "C:\\Users\\user\\.deno\\bin\\deno.exe task test:host"
+      },
+      "notes": ""
+    }
+  ],
+  "checkpoint": 1,
+  "commandResults": [
+    {
+      "index": 0,
+      "epoch": 1,
+      "exitCode": 0,
+      "startedAt": "2026-11-10T02:51:10.400Z",
+      "endedAt": "2026-11-10T02:51:20.868Z",
+      "logRef": "_dist/fdh/jobs/e2e-e-1-mwa3fine/test-20261110t025110z-9dc9f6-1-0.log"
+    }
+  ],
+  "recordedToTask": true,
+  "transitions": [
+    {
+      "from": null,
+      "to": "pending",
+      "at": "2026-11-10T02:51:10.021Z",
+      "reason": "created"
+    },
+    {
+      "from": "pending",
+      "to": "scheduled",
+      "at": "2026-11-10T02:51:10.021Z",
+      "reason": "attempt 1 recorded before start"
+    },
+    {
+      "from": "scheduled",
+      "to": "running",
+      "at": "2026-11-10T02:51:10.399Z",
+      "reason": "attempt 1 started"
+    },
+    {
+      "from": "running",
+      "to": "succeeded",
+      "at": "2026-11-10T02:51:20.869Z",
+      "reason": "attempt 1 exited 0"
+    }
+  ],
+  "events": [],
+  "createdAt": "2026-11-10T02:51:10.021Z",
+  "updatedAt": "2026-11-10T02:51:20.869Z"
+}
