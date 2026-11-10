@@ -45,6 +45,7 @@ import {
   isTerminal,
   type JobInputs,
   type JobJournal,
+  type JobReport,
   jobsDir,
   listJobIds,
   markRecordedToTask,
@@ -52,7 +53,9 @@ import {
   noteLostStepStopped,
   parseExecutorFault,
   readJob,
+  readOutbox,
   type ReconcileDecision,
+  reconcileJob,
   reconcileJobFile,
   type Resolution,
   resolveJob,
@@ -125,7 +128,7 @@ export async function currentInputs(
   // job was lost also stops a silent rerun (E-7).
   const untrackedState = await hashUntracked(
     state.worktree,
-    untracked.split(/\0|\n/).filter((name) => name !== ""),
+    untracked.split("\0").filter((name) => name !== ""),
   );
   const bytes = new TextEncoder().encode(`${diff}\0${untrackedState}`);
   const worktreeState = encodeHex(
@@ -155,25 +158,42 @@ export async function hashUntracked(
   for (const name of [...names].sort()) {
     const file = path.join(worktree, ...name.split("/"));
     let entry: string;
+    let info: Deno.FileInfo | null = null;
     try {
-      const info = Deno.statSync(file);
+      info = Deno.statSync(file);
+      const stamp = `${info.size}:${info.mtime?.toISOString() ?? ""}`;
       if (!info.isFile) {
+        // An untracked directory (git reports "sub/") counts by size only.
         entry = `other:${info.size}`;
       } else if (info.size > MAX_HASHED_UNTRACKED_BYTES) {
-        entry = `large:${info.size}:${info.mtime?.toISOString() ?? ""}`;
+        entry = `large:${stamp}`;
       } else {
-        entry = encodeHex(
+        // `job wait` reconciles every second: hash a file again only when
+        // its size or mtime changed.
+        const key = `${file}\0${stamp}`;
+        entry = untrackedHashCache.get(key) ?? encodeHex(
           await crypto.subtle.digest("SHA-256", Deno.readFileSync(file)),
         );
+        untrackedHashCache.set(key, entry);
       }
     } catch (error) {
-      if (!(error instanceof Deno.errors.NotFound)) throw error;
-      entry = "missing";
+      if (error instanceof Deno.errors.NotFound) {
+        entry = "missing";
+      } else {
+        // Locked by another process (Windows sharing violation) or not
+        // permitted: do not stop reconciling; count it by size and mtime.
+        entry = info === null
+          ? "unreadable"
+          : `unreadable:${info.size}:${info.mtime?.toISOString() ?? ""}`;
+      }
     }
     lines.push(`${name}\0${entry}`);
   }
   return lines.join("\n");
 }
+
+/** SHA-256 of untracked files by path, size and mtime (this process only). */
+const untrackedHashCache = new Map<string, string>();
 
 /** Detached executor process for `epoch` of a job; returns its pid. */
 export function spawnExecutorProcess(
@@ -460,7 +480,8 @@ export interface ReconcileReport {
   kind: string;
   state: string;
   epoch: number;
-  action: ReconcileDecision["action"] | "error";
+  /** "held": a source-build respawn waits for the W-04 dev guard. */
+  action: ReconcileDecision["action"] | "error" | "held";
   /** Why this job could not be reconciled (the sweep continues). */
   error?: string;
   /** Processes of a lost attempt that were stopped before the respawn. */
@@ -528,16 +549,50 @@ async function reconcileOne(
       const inputs = inputsCache.value;
       currentDigest = await executionDigest(before.kind, before.step!, inputs);
     }
+    const context = {
+      currentDigest: before.kind === "intent" ? undefined : currentDigest ??
+        before.executionDigest,
+      holderGone: before.kind === "intent" &&
+        options.intentHoldersGone === true,
+    };
+    if (respawnCompilesSource(before) && !isTerminal(before.state)) {
+      // Same W-04 guard as 'verify build' / 'job start': a respawn must not
+      // start a source build under this worktree's running dev browser.
+      // Decide on a copy first, so a refused respawn leaves the journal
+      // untouched (no epoch bump, no attempt used up): the job is held until
+      // a reconcile after 'fdh dev down'.
+      let outbox: JobReport | null = null;
+      try {
+        outbox = readOutbox(state.worktree, state.taskId, jobId, before.epoch);
+      } catch {
+        // The real reconcile below reports an invalid outbox.
+      }
+      const dry = reconcileJob(structuredClone(before), { ...context, outbox });
+      if (dry.action === "respawn") {
+        try {
+          await (options.sourceBuildGuard ??
+            ((worktree) => assertSourceBuildAllowed(worktree, "before-mach")))(
+              state.worktree,
+            );
+        } catch (error) {
+          return {
+            jobId,
+            kind: before.kind,
+            state: before.state,
+            epoch: before.epoch,
+            action: "held",
+            error: `held, not respawned: ${
+              error instanceof Error ? error.message : String(error)
+            }`,
+          };
+        }
+      }
+    }
     const { job, value } = await reconcileJobFile(
       state.worktree,
       state.taskId,
       jobId,
-      {
-        currentDigest: before.kind === "intent" ? undefined : currentDigest ??
-          before.executionDigest,
-        holderGone: before.kind === "intent" &&
-          options.intentHoldersGone === true,
-      },
+      context,
     );
     const report: ReconcileReport = {
       jobId,
@@ -586,22 +641,6 @@ async function reconcileOne(
       }
       return report;
     }
-    if (value.action === "respawn" && respawnCompilesSource(job)) {
-      // Same W-04 guard as 'verify build' / 'job start': do not start a source
-      // build under this worktree's running dev browser. The new attempt is
-      // left unstarted; a later reconcile after 'fdh dev down' takes it over.
-      try {
-        await (options.sourceBuildGuard ??
-          ((worktree) => assertSourceBuildAllowed(worktree, "before-mach")))(
-            state.worktree,
-          );
-      } catch (error) {
-        report.error = `not respawned: ${
-          error instanceof Error ? error.message : String(error)
-        }`;
-        return report;
-      }
-    }
     if (value.action === "respawn") {
       // The stop can take seconds (PowerShell on Windows): start the new
       // attempt's start deadline now, not at the epoch bump.
@@ -626,14 +665,32 @@ async function reconcileOne(
         t.to === "awaiting-approval"
       )?.at ?? job.updatedAt;
       await withLedger(state.worktree, state.taskId, (ledger) => {
-        // An approve-all (quota approve, no op) or this entry's own approval.
+        // Re-read the journal under the ledger lock: a 'job resolve' that ran
+        // since must not get a stale entry back.
+        if (
+          readJob(state.worktree, state.taskId, jobId).state !==
+            "awaiting-approval"
+        ) {
+          return;
+        }
         const note = quotaNoteFor(job);
-        const approvedSince = ledger.events.some((e) =>
-          e.kind === "approve" && Date.parse(e.at) >= Date.parse(since) &&
-          (e.op === undefined || (e.note ?? "").includes(note))
+        const after = (e: { at: string }, t: string) =>
+          Date.parse(e.at) >= Date.parse(t);
+        // Approved: this entry's own approval, or an approve-all ('quota
+        // approve') after this entry was put on the list.
+        const ownApproval = ledger.events.some((e) =>
+          e.kind === "approve" && after(e, since) &&
+          (e.note ?? "").includes(note)
         );
-        if (!approvedSince) {
-          pendingQuota(ledger, job.intent!.op as IntentOp, quotaNoteFor(job));
+        const listedAt = [...ledger.events].reverse().find((e) =>
+          e.kind === "pending" && e.note === note && after(e, since)
+        )?.at;
+        const approvedAll = listedAt !== undefined &&
+          ledger.events.some((e) =>
+            e.kind === "approve" && e.op === undefined && after(e, listedAt)
+          );
+        if (!ownApproval && !approvedAll) {
+          pendingQuota(ledger, job.intent!.op as IntentOp, note);
         }
       });
     }
@@ -824,7 +881,9 @@ export function alreadyResolvedAs(
   job: JobJournal,
   resolution: Resolution,
 ): boolean {
-  if (job.state === "awaiting-approval") return false;
+  // Only a closing resolution is repeatable: the job's state is its result.
+  // A repeated 'retry' would silently ignore a different --agent.
+  if (resolution === "retry" || job.state !== resolution) return false;
   const last = [...job.events].reverse().find((e) => e.kind === "resolved");
   return last !== undefined &&
     last.note.startsWith(`resolved ${resolution} by approver`);

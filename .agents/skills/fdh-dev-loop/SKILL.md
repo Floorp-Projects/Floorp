@@ -241,8 +241,9 @@ from the checkpoint (build commands already completed are not rerun); fail the
 job when its inputs (HEAD, tracked diff, untracked file contents, guard env)
 changed or `--max-attempts` (default 3) attempts were lost. Each terminal result
 is copied into the task state once (operations, assertions, a `job result <id>`
-event). A build that still has to compile source is not respawned while this
-worktree's dev server runs (the W-04 guard): run `dev down`, then `job wait`.
+event). A build that still has to compile source is held, not respawned, while
+this worktree's dev server runs (the W-04 guard; reconcile reports `held`, and
+no attempt is used up): run `dev down`, then `job wait`.
 
 Non-idempotent operations (push, PR, release, other external writes) are never
 run by fdh. Record the intent before you perform it, and the outcome after:

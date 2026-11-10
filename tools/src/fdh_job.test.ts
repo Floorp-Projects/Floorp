@@ -760,13 +760,25 @@ Deno.test("fdh job: editing an untracked file changes the execution inputs", asy
     Deno.writeTextFileSync(`${dir}/notes.ts`, "export const a = 1;\n");
     const git = fakeGit({ head: "h", diff: "", untracked: "notes.ts\0" });
     const a = await currentInputs(state, git);
-    Deno.writeTextFileSync(`${dir}/notes.ts`, "export const a = 2;\n");
+    // A different size: the per-process cache (keyed by size and mtime)
+    // cannot hide the change.
+    Deno.writeTextFileSync(`${dir}/notes.ts`, "export const a = 22;\n");
     const b = await currentInputs(state, git);
     assertNotEquals(a.worktreeState, b.worktreeState);
+    // Same content and mtime as at first: the same digest again.
     Deno.writeTextFileSync(`${dir}/notes.ts`, "export const a = 1;\n");
-    assertEquals(
+    const t = new Date("2026-11-10T00:00:00.000Z");
+    Deno.utimeSync(`${dir}/notes.ts`, t, t);
+    const c = await currentInputs(state, git);
+    Deno.writeTextFileSync(`${dir}/notes.ts`, "export const a = 3;\n");
+    Deno.utimeSync(
+      `${dir}/notes.ts`,
+      new Date(t.getTime() + 5_000),
+      new Date(t.getTime() + 5_000),
+    );
+    assertNotEquals(
       (await currentInputs(state, git)).worktreeState,
-      a.worktreeState,
+      c.worktreeState,
     );
     const lines = await hashUntracked(dir, ["gone.ts", "notes.ts"]);
     assert(lines.startsWith("gone.ts\0missing\nnotes.ts\0"));
@@ -796,15 +808,31 @@ Deno.test("fdh job: a source-build respawn is held while the dev guard refuses",
     assert(respawnCompilesSource(readJob(dir, "t1", job.jobId)));
     const old = new Date(Date.now() - 60_000).toISOString();
     await updateJob(dir, "t1", job.jobId, (j) => beginAttempt(j, 1, "x1", old));
-    const [report] = await reconcileTaskJobs({
+    // Held: the journal is untouched, so no attempt is used up however
+    // long the dev server runs.
+    for (let i = 0; i < 4; i++) {
+      const [report] = await reconcileTaskJobs({
+        state,
+        git,
+        spawn,
+        sourceBuildGuard: () => Promise.reject(new Error("dev server running")),
+      });
+      assertEquals(report.action, "held");
+      assert(report.error?.includes("dev server running"));
+    }
+    const held = readJob(dir, "t1", job.jobId);
+    assertEquals(held.epoch, 1);
+    assertEquals(held.attempts.length, 1);
+    assertEquals(spawned, [1]);
+    // Once the guard passes ('fdh dev down'), the job is taken over.
+    const [after] = await reconcileTaskJobs({
       state,
       git,
       spawn,
-      sourceBuildGuard: () => Promise.reject(new Error("dev server running")),
+      sourceBuildGuard: () => Promise.resolve(),
     });
-    assertEquals(report.action, "respawn");
-    assert(report.error?.includes("dev server running"));
-    assertEquals(spawned, [1]);
+    assertEquals(after.action, "respawn");
+    assertEquals(spawned, [1, 2]);
     // After the source command is checkpointed, an after-mach-only respawn is
     // not guarded.
     await updateJob(dir, "t1", job.jobId, (j) => {
@@ -932,6 +960,81 @@ Deno.test("fdh job: another entry's approval does not stop the repair", async ()
     Deno.writeTextFileSync(file, JSON.stringify(ledger));
     await reconcileTaskJobs({ state });
     assertEquals(readQuotaLedger(dir, "t1").approvalPending.length, 1);
+  } finally {
+    await Deno.remove(dir, { recursive: true });
+  }
+});
+
+Deno.test("fdh job: an approve-all before an entry was listed does not stop its repair", async () => {
+  const dir = await Deno.makeTempDir();
+  try {
+    const state = taskIn(dir);
+    await startIntent(state, "push", "origin a", "agent-a");
+    const b = await startIntent(state, "pr", "draft", "agent-a");
+    await reconcileTaskJobs({ state, intentHoldersGone: true });
+    const file = `${dir}/_dist/fdh/quota/t1.json`;
+    const ledger = JSON.parse(Deno.readTextFileSync(file));
+    // A's entry was never written; it was not in the list that approve-all
+    // cleared, so it must come back. B's entry was listed and approved.
+    ledger.approvalPending = [];
+    ledger.events = ledger.events.filter((e: { kind: string; note?: string }) =>
+      !(e.kind === "pending" && e.note?.includes("origin a"))
+    );
+    ledger.events.push({
+      at: new Date(Date.now() + 1_000).toISOString(),
+      kind: "approve",
+      note: "pr",
+    });
+    Deno.writeTextFileSync(file, JSON.stringify(ledger));
+    await reconcileTaskJobs({ state });
+    const pending = readQuotaLedger(dir, "t1").approvalPending.map((p) => p.op);
+    assertEquals(pending, ["push"]);
+    assertEquals(readJob(dir, "t1", b.jobId).state, "awaiting-approval");
+  } finally {
+    await Deno.remove(dir, { recursive: true });
+  }
+});
+
+Deno.test("fdh job: a repeated retry resolution is refused", async () => {
+  const dir = await Deno.makeTempDir();
+  try {
+    const state = taskIn(dir);
+    const job = await startIntent(state, "push", "origin b", "agent-a");
+    await reconcileTaskJobs({ state, intentHoldersGone: true });
+    await resolveAndApprove(state, job.jobId, "retry", "", "agent-b");
+    await assertRejects(
+      () => resolveAndApprove(state, job.jobId, "retry", "", "agent-c"),
+      Error,
+      "only a job awaiting approval",
+    );
+  } finally {
+    await Deno.remove(dir, { recursive: true });
+  }
+});
+
+Deno.test("fdh job: an unreadable untracked file is counted, not fatal", async () => {
+  const dir = await Deno.makeTempDir();
+  try {
+    Deno.mkdirSync(`${dir}/sub`);
+    Deno.writeTextFileSync(`${dir}/held.txt`, "held\n");
+    const holder = Deno.openSync(`${dir}/held.txt`, {
+      read: true,
+      write: true,
+    });
+    try {
+      // Windows locks are mandatory, so the read fails there (os error 33);
+      // POSIX locks are advisory and the file is hashed as usual.
+      holder.lockSync(true);
+      const lines = await hashUntracked(dir, ["held.txt", "sub/"]);
+      if (Deno.build.os === "windows") {
+        assert(lines.startsWith("held.txt\0unreadable:5:"), lines);
+      } else {
+        assert(!lines.includes("unreadable"), lines);
+      }
+      assert(lines.includes("sub/\0other:"), lines);
+    } finally {
+      holder.close();
+    }
   } finally {
     await Deno.remove(dir, { recursive: true });
   }
