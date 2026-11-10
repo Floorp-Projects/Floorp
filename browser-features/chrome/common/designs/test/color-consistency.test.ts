@@ -23,10 +23,11 @@
  *    choice. `#browser` is the strip behind the native sidebar launcher and
  *    around rounded page corners; since Gecko 152 Firefox paints it with
  *    `--toolbar-background-color`. Lepton before v8.7.6 overrode only the
- *    legacy `--toolbar-bgcolor`, so with Lepton-family designs `#browser`
- *    stayed lighter than the Floorp surfaces (Issue #2531). It is
- *    transparent with vertical tabs and is then skipped like any other
- *    absent surface.
+ *    legacy `--toolbar-bgcolor`, so with Lepton-family designs on Windows
+ *    `#browser` stayed lighter than the Floorp surfaces (Issue #2531). The
+ *    palettes that diverge are Windows/macOS-only, so on Linux this check
+ *    passes either way. It is transparent with vertical tabs and is then
+ *    skipped like any other absent surface.
  *
  * 2. "Tab tracks toolbar" (SECONDARY — `color_like_toolbar` designs only):
  *    For `lepton`, `photon`, `fluerial` the selected tab is aligned to the
@@ -442,7 +443,7 @@ function readAllSurfaces(): SurfaceReadings {
 /**
  * PRIMARY invariant: every present chrome surface reads the SAME color.
  * This is what the Gecko 152 fix restored — nav-bar, PersonalToolbar,
- * panel-sidebar and status bar must all share one background. Missing
+ * panel-sidebar, status bar and #browser must all share one background. Missing
  * elements are skipped; if too few surfaces are present to compare, the
  * case is skipped rather than failed.
  */
