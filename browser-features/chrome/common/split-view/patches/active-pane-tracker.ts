@@ -11,6 +11,7 @@ import {
 } from "../data/types.js";
 import { ensureSplitPaneTabBrowsersAreWarmed } from "./activate-split-pane-browsers.js";
 import { hasLiveSplitPanelsState } from "../utils/live-split-ui.js";
+import { syncSplitDeckSelectedClasses } from "../utils/sync-split-deck-selected.js";
 
 const log = console.createInstance({
   prefix: "nora@split-view:active-pane",
@@ -77,8 +78,9 @@ function isMultiPaneSplitUiActive(gBrowser: SplitViewGBrowser): boolean {
  * In N-pane split, Gecko still uses single-pane deck rules: only one child tends
  * to keep `.deck-selected`, which can dim/hide other panes' subtrees. Put
  * `.deck-selected` on **every** `splitViewPanels` row so none are treated as
- * deck-discarded; strip it only from stale `.split-view-panel` nodes not in the
- * current split list.
+ * deck-discarded, and strip it from every other panel, including the normal
+ * tab that was shown before the split was selected (see
+ * `syncSplitDeckSelectedClasses` for why that one can otherwise stay stale).
  */
 export function syncSplitViewDeckSelectedClass(
   gBrowser: SplitViewGBrowser,
@@ -103,31 +105,16 @@ export function syncSplitViewDeckSelectedClass(
   if (!selectedInSplit) {
     return;
   }
-  const idSet = new Set(ids);
+  let cleared: string[] = [];
   suppressDeckClassObserver = true;
   try {
-    for (const id of ids) {
-      const el = root.querySelector(`#${CSS.escape(id)}`);
-      if (!el?.classList.contains("split-view-panel")) {
-        continue;
-      }
-      if (!el.classList.contains("deck-selected")) {
-        el.classList.add("deck-selected");
-      }
-    }
-    for (const child of root.children) {
-      if (!child.classList.contains("split-view-panel")) {
-        continue;
-      }
-      if (!idSet.has(child.id) && child.classList.contains("deck-selected")) {
-        child.classList.remove("deck-selected");
-      }
-    }
+    cleared = syncSplitDeckSelectedClasses(root.children, ids);
   } finally {
     suppressDeckClassObserver = false;
   }
   log.debug(
-    `[syncDeckSelected] allPanels=${ids.length} selectedTab="${selectedId}"`,
+    `[syncDeckSelected] allPanels=${ids.length} selectedTab="${selectedId}" ` +
+      `clearedNonSplit=[${cleared.join(", ")}]`,
   );
 }
 

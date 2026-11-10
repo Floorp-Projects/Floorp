@@ -632,6 +632,203 @@ function testLwtCustomizationSurfaceInRealBrowser(): void {
   }
 }
 
+interface CssRule {
+  selector: string;
+  declarations: string;
+  index: number;
+}
+
+/** Extract the two overlapping-F11 LWT toolbox rules (Issue #2759) from the
+ * emitted compat CSS, so the tests below check the production stylesheet
+ * rather than a copy of the selectors. `bodyPaint` repaints <body>'s
+ * background on the toolbox; `toolboxImages` redraws the toolbox's own images
+ * for [theme-image-in-toolbox] themes on a ::before. */
+function extractLwtFullscreenToolboxRules(): {
+  bodyPaint: CssRule;
+  toolboxImages: CssRule;
+} {
+  const rules: CssRule[] = [];
+  for (const m of LEPTON_COMPAT_152_CSS.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+    const selector = (m[1] ?? "").replace(/\/\*[\s\S]*?\*\//g, "").trim();
+    if (
+      selector.includes("#navigator-toolbox") &&
+      selector.includes('[sizemode="fullscreen"]')
+    ) {
+      rules.push({ selector, declarations: m[2] ?? "", index: m.index ?? 0 });
+    }
+  }
+  assertEquals(
+    rules.length,
+    2,
+    "compat layer should have an F11 toolbox repaint rule and a rule that " +
+      "redraws toolbox-painted theme images",
+  );
+  const bodyPaint = rules.find((r) =>
+    r.selector.endsWith("#navigator-toolbox")
+  );
+  const toolboxImages = rules.find((r) =>
+    r.selector.endsWith("#navigator-toolbox::before")
+  );
+  if (!bodyPaint || !toolboxImages) {
+    throw new Error(
+      "F11 toolbox rules should target #navigator-toolbox and its ::before",
+    );
+  }
+  return { bodyPaint, toolboxImages };
+}
+
+/** Return the [start, end) range of the block opened by `opener`. */
+function findBlock(css: string, opener: string): [number, number] {
+  const start = css.indexOf(opener);
+  assert(start >= 0, `compat layer should contain ${opener}`);
+  let depth = 0;
+  for (let i = css.indexOf("{", start); i < css.length; i++) {
+    if (css[i] === "{") depth++;
+    if (css[i] === "}" && --depth === 0) return [start, i + 1];
+  }
+  throw new Error(`unterminated block: ${opener}`);
+}
+
+/** The repaint must only exist while Lepton actually overlaps the toolbox on
+ *  the content: both prefs that gate Lepton's own overlap rules wrap it. */
+function testLwtFullscreenToolboxFollowsLeptonOverlapPrefs(): void {
+  const css = LEPTON_COMPAT_152_CSS;
+  const [outerStart, outerEnd] = findBlock(
+    css,
+    '@media -moz-pref("userChrome.fullscreen.overlap")',
+  );
+  const outer = css.slice(outerStart, outerEnd);
+  const [innerStart, innerEnd] = findBlock(
+    outer,
+    '@media -moz-pref("browser.fullscreen.autohide")',
+  );
+  const { bodyPaint, toolboxImages } = extractLwtFullscreenToolboxRules();
+  for (const rule of [bodyPaint, toolboxImages]) {
+    const offset = rule.index - outerStart;
+    assert(
+      offset > innerStart && offset < innerEnd,
+      "the F11 toolbox repaint should be gated by the same prefs as Lepton's " +
+        `overlap rules: ${rule.selector}`,
+    );
+  }
+}
+
+/** Selector semantics, evaluated in a detached document so the live browser
+ *  window is not put into a fake fullscreen state. Element.matches() does not
+ *  accept pseudo-elements, so the ::before rule is checked on its element. */
+function testLwtFullscreenToolboxSelectorScope(): void {
+  const { bodyPaint, toolboxImages } = extractLwtFullscreenToolboxRules();
+  const imagesElementSelector = toolboxImages.selector.replace(/::before$/, "");
+  const doc = document.implementation.createHTMLDocument("");
+  const toolbox = doc.createElement("div");
+  toolbox.id = "navigator-toolbox";
+  doc.body.appendChild(toolbox);
+  const root = doc.documentElement;
+  const matching = (attrs: Record<string, string>): string => {
+    for (
+      const name of [
+        "lwtheme",
+        "sizemode",
+        "inDOMFullscreen",
+        "theme-image-in-toolbox",
+      ]
+    ) {
+      root.removeAttribute(name);
+    }
+    for (const [name, value] of Object.entries(attrs)) {
+      root.setAttribute(name, value);
+    }
+    return [
+      toolbox.matches(bodyPaint.selector) ? "body" : "",
+      toolbox.matches(imagesElementSelector) ? "images" : "",
+    ].filter(Boolean).join("+");
+  };
+
+  assertEquals(
+    matching({ lwtheme: "true", sizemode: "fullscreen" }),
+    "body",
+    "an LWT painted on <body> should get the body repaint in F11",
+  );
+  assertEquals(
+    matching({
+      lwtheme: "true",
+      sizemode: "fullscreen",
+      "theme-image-in-toolbox": "",
+    }),
+    "body+images",
+    "an LWT painted on the toolbox should get the body repaint and keep its " +
+      "own toolbox images in F11",
+  );
+  const themeVariants: Record<string, string>[] = [
+    {},
+    { "theme-image-in-toolbox": "" },
+  ];
+  for (const theme of themeVariants) {
+    assertEquals(
+      matching({ sizemode: "fullscreen", ...theme }),
+      "",
+      "the no-theme case keeps Lepton's own toolbox fill",
+    );
+    assertEquals(
+      matching({ lwtheme: "true", sizemode: "maximized", ...theme }),
+      "",
+      "outside fullscreen the LWT toolbox keeps Gecko's own painting",
+    );
+    assertEquals(
+      matching({
+        lwtheme: "true",
+        sizemode: "fullscreen",
+        inDOMFullscreen: "true",
+        ...theme,
+      }),
+      "",
+      "DOM (video) fullscreen hides the toolbox and must be excluded",
+    );
+  }
+}
+
+/** <body>'s background is copied against the window; the toolbox's own images
+ *  are redrawn from Gecko's --toolbox-background-* variables on a ::before
+ *  that covers the toolbox, so they stay positioned against the toolbox and
+ *  sit below the toolbars. */
+function testLwtFullscreenToolboxBackgroundRecipes(): void {
+  const { bodyPaint, toolboxImages } = extractLwtFullscreenToolboxRules();
+  assert(
+    /background:\s*inherit;/.test(bodyPaint.declarations) &&
+      /background-attachment:\s*fixed;/.test(bodyPaint.declarations),
+    "the F11 toolbox should repaint <body>'s background with a fixed " +
+      "attachment",
+  );
+
+  const decl = (name: string): string =>
+    toolboxImages.declarations.match(
+      new RegExp("(?:^|[;\\s])" + name + "\\s*:\\s*([^;]+);"),
+    )?.[1]?.trim() ?? "";
+  const expected: Record<string, string> = {
+    "content": '""',
+    "position": "absolute",
+    "inset": "0",
+    "z-index": "-1",
+    "pointer-events": "none",
+    "background-image": "var(--toolbox-background-image)",
+    "background-repeat": "var(--toolbox-background-repeat)",
+    "background-position": "var(--toolbox-background-position)",
+    "background-size": "var(--toolbox-background-size)",
+  };
+  for (const [name, value] of Object.entries(expected)) {
+    assertEquals(
+      decl(name),
+      value,
+      `toolbox-painted LWT images should be redrawn with ${name}: ${value}`,
+    );
+  }
+  assert(
+    !/inherit|fixed/.test(toolboxImages.declarations),
+    "toolbox-painted LWT images are positioned against the toolbox and must " +
+      "not be attached to the window",
+  );
+}
+
 /** Gecko 152 uses [sidebar-positionend] as a boolean presence attribute. The
  *  compat selector must therefore match every present value, not only
  *  [sidebar-positionend="true"]. */
@@ -773,6 +970,18 @@ export async function runAllTests(): Promise<void> {
     {
       name: "compat fixes panel background (transparent panel symptom)",
       fn: testCompatFixesPanelBackground,
+    },
+    {
+      name: "LWT F11 toolbox repaint follows Lepton overlap prefs",
+      fn: testLwtFullscreenToolboxFollowsLeptonOverlapPrefs,
+    },
+    {
+      name: "LWT F11 toolbox repaint is scoped to overlapping fullscreen",
+      fn: testLwtFullscreenToolboxSelectorScope,
+    },
+    {
+      name: "LWT F11 toolbox repaint keeps toolbox-painted theme images",
+      fn: testLwtFullscreenToolboxBackgroundRecipes,
     },
     {
       name: "right-sidebar compat uses attribute presence",
