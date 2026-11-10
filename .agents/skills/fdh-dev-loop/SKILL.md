@@ -236,8 +236,10 @@ deno run -A tools/fdh.ts job cancel --task-id <task-id> --job-id <job-id>
 
 Reconcile (`job wait|status|reconcile`, `task resume`) does exactly one of:
 reconnect to a live executor; apply a result left in the outbox (no rerun); stop
-the lost attempt's step process tree (identity-checked) and start the next epoch
-from the checkpoint (build commands already completed are not rerun); fail the
+the lost attempt's step process tree (identity-checked; on Linux/macOS also the
+members of its process group, so children that outlived the root are found)
+and start the next epoch from the checkpoint (build commands already completed
+are not rerun); fail the
 job when its inputs (HEAD, tracked diff, untracked file contents, guard env)
 changed or `--max-attempts` (default 3) attempts were lost. Each terminal result
 is copied into the task state once (operations, assertions, a `job result <id>`
