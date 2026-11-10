@@ -346,16 +346,37 @@ function testCompatUsesRobustLwtSignals(): void {
       !/:not\(\s*:-moz-lwtheme\s*\)/.test(rules),
       `${label} must not negate :-moz-lwtheme (the rule would be dropped)`,
     );
-    assert(
-      /:root:not\(\[lwtheme\]\)\s*\{/.test(rules),
-      `${label} should scope its no-theme rule as :root:not([lwtheme])`,
-    );
   }
   assert(
-    LEPTON_COMPAT_152_CSS.includes("prefers-color-scheme"),
-    "compat layer should branch light/dark via prefers-color-scheme rather " +
-      "than brittle attributes",
+    /:root:not\(\[lwtheme\]\)\s*\{/.test(
+      GECKO_152_COLOR_FIX_CSS.replace(/\/\*[\s\S]*?\*\//g, ""),
+    ),
+    "color-fix layer should scope its no-theme rules as :root:not([lwtheme])",
   );
+  assert(
+    GECKO_152_COLOR_FIX_CSS.includes("prefers-color-scheme"),
+    "color-fix layer should branch light/dark via prefers-color-scheme " +
+      "rather than brittle attributes",
+  );
+}
+
+/**
+ * The Lepton compat layer must not override the legacy toolbar palette
+ * tokens for the no-theme case. Gecko 159 paints the selected tab, #browser
+ * and (protonfix) #nav-bar from --toolbar-background-color, which follows the
+ * GTK theme on Linux; setting only --toolbar-bgcolor / --lwt-accent-color
+ * splits the bars (seen as color-consistency failures on Linux CI).
+ */
+function testCompatDoesNotOverrideNoThemePalette(): void {
+  const rules = LEPTON_COMPAT_152_CSS.replace(/\/\*[\s\S]*?\*\//g, "");
+  const noThemeRule = /:root:not\(\[lwtheme\]\)[^{]*\{([^}]*)\}/g;
+  for (const m of rules.matchAll(noThemeRule)) {
+    assert(
+      !/--(?:toolbar-bgcolor|lwt-accent-color)\s*:/.test(m[1]),
+      "LEPTON_COMPAT_152_CSS must not set --toolbar-bgcolor / " +
+        "--lwt-accent-color for the no-theme case (splits the bars on 159)",
+    );
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -748,6 +769,10 @@ export async function runAllTests(): Promise<void> {
     {
       name: "compat uses robust lwt signals",
       fn: testCompatUsesRobustLwtSignals,
+    },
+    {
+      name: "compat does not override the no-theme toolbar palette",
+      fn: testCompatDoesNotOverrideNoThemePalette,
     },
     // non-destructive LWT contract
     {

@@ -17,8 +17,8 @@
  *      symptoms — they hit any chrome component that reads `--lwt-accent-color`
  *      / `--in-content-page-background` / `--arrowpanel-background` once the
  *      built-in-theme block stops matching.
- *   2. `LEPTON_COMPAT_152_CSS` — Lepton-only tab/toolbox variable aliases,
- *      palette restoration, and native-sidebar positioning compatibility.
+ *   2. `LEPTON_COMPAT_152_CSS` — Lepton-only LWT handling and
+ *      native-sidebar positioning compatibility.
  *      Applied only to the `lepton` / `photon` / `protonfix` designs.
  *
  * The Floorp-only icon rules that used to live here as `FLOORP_ICON_PATCHES`
@@ -144,8 +144,8 @@ export const GECKO_152_COLOR_FIX_CSS = `
  * equal-specificity rules here win by source order. This keeps the upstream
  * sync path clean and lets us adapt to Gecko 153+ by editing only this file.
  *
- * The selectors below deliberately rely on the stable `[lwtheme]` /
- * `prefers-color-scheme` signals rather than hardcoded RGB
+ * The selectors below deliberately rely on the stable `[lwtheme]`
+ * signal rather than hardcoded RGB
  * triples or attributes that Mozilla renames between versions. And, unlike
  * the previous revision, they do NOT clobber values a loaded LWT provides.
  */
@@ -155,36 +155,15 @@ export const LEPTON_COMPAT_152_CSS = `
  * Loaded AFTER leptonChrome.css; equal specificity wins by source order.
  * ======================================================================= */
 
-/*= Built-in light/dark theme palette restoration ==========================
- * Lepton keys off the built-in-theme attribute and inline-style exact-RGB
- * substring matchers on :root. On Gecko 152 those signals are unreliable,
- * so Lepton's !important overrides never apply and the chrome falls back to
- * raw defaults. Re-establish Lepton's intended palette using the stable
- * prefers-color-scheme signal instead — but ONLY for the no-theme case, so a
- * loaded LWT is never overridden. */
-:root {
-  /* Lepton "Original" intended accent colors (mirrors leptonChrome.css) */
-  --lepton-compat-accent-light: rgb(229, 229, 235);
-  --lepton-compat-toolbar-light: rgba(255, 255, 255, 1);
-  --lepton-compat-accent-dark: rgb(28, 27, 34);
-  --lepton-compat-toolbar-dark: rgba(43, 42, 51, 1);
-}
-
-/* Built-in theme, no LWT loaded: restore Lepton's light palette.
- * Gecko 159 sets [lwtheme] only for third-party LWTs, so :not([lwtheme])
- * covers the default and built-in Light/Dark themes. Do not add
- * :not(:-moz-lwtheme): Gecko removed that pseudo-class and :not() is not
- * forgiving, so the whole rule would be dropped. */
-:root:not([lwtheme]) {
-  --lwt-accent-color: var(--lepton-compat-accent-light);
-  --toolbar-bgcolor: var(--lepton-compat-toolbar-light);
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([lwtheme]) {
-    --lwt-accent-color: var(--lepton-compat-accent-dark);
-    --toolbar-bgcolor: var(--lepton-compat-toolbar-dark);
-  }
-}
+/* No built-in light/dark palette override here. An earlier no-theme rule
+ * set only the legacy --lwt-accent-color / --toolbar-bgcolor tokens. Gecko
+ * 159 paints the selected tab, #browser and (for protonfix) #nav-bar from
+ * --toolbar-background-color, which follows the GTK theme on Linux, so
+ * overriding only the legacy token split the bars (e.g. protonfix dark:
+ * nav-bar rgb(68,67,75) vs panel sidebar rgb(43,42,51)). On Windows,
+ * Lepton's own !important system colors win anyway. The rule's
+ * selector was invalid on 159, so it never applied; it was removed rather
+ * than revived. */
 
 /*= Third-party LWT support (Issue #2489 — "Windows XP modern" etc.) ========
  * Lepton writes fixed-color !important overrides keyed to built-in-theme
