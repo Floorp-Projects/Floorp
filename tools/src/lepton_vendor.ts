@@ -21,14 +21,21 @@
 // particular) aborts before a byte is read or written, so a planted link
 // cannot copy a runner file (token, .git/config) into the repository.
 //
-// CLI (paths are relative to the current directory):
-//   deno run --allow-read --allow-write tools/src/lepton_vendor.ts verify
-//   deno run --allow-read tools/src/lepton_vendor.ts verify-assets \
+// CLI (paths are relative to the current directory, which is the repository
+// root; $W is a work directory outside it). No command needs network, env,
+// run or any other permission:
+//   deno run --allow-read=browser-features/skin/lepton \
+//     tools/src/lepton_vendor.ts verify
+//   deno run --allow-read="$W" tools/src/lepton_vendor.ts verify-assets \
 //     --release-json <gh api releases/tags/TAG output> --zips-dir <dir>
-//   deno run --allow-read --allow-write tools/src/lepton_vendor.ts apply \
+//   deno run --allow-read="$W,browser-features/skin" \
+//     --allow-write="browser-features/skin/lepton,browser-features/skin/jar.mn,$W/pr-body.md" \
+//     tools/src/lepton_vendor.ts apply \
 //     --release-json <file> --commit <sha> --zips-dir <dir> \
 //     --extracted-dir <dir with one unzipped folder per asset> \
 //     [--summary <markdown out>]
+// update_lepton.yml uses exactly these permissions (lepton_vendor.test.ts
+// pins them).
 
 import * as path from "@std/path";
 
@@ -37,6 +44,8 @@ export const SKIN_DIR = "browser-features/skin";
 export const LEPTON_DIR = `${SKIN_DIR}/lepton`;
 export const RECORD_FILE = "UPSTREAM.json";
 export const JAR_MANIFEST = `${SKIN_DIR}/jar.mn`;
+/** The workflow that updates the vendored files (named in error messages). */
+export const WORKFLOW_FILE = ".github/workflows/update_lepton.yml";
 
 /** Floorp-owned sheets loaded right after the Lepton sheets (not vendored). */
 export const OVERLAY_DIR = "overlay";
@@ -139,6 +148,42 @@ export type ReleaseJson = {
   assets: { name: string; digest?: string | null }[];
 };
 
+/** `published_at` as GitHub returns it: UTC, whole seconds. */
+export const UTC_TIMESTAMP = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
+
+/** True when `value` is a UTC_TIMESTAMP naming a real date and time. */
+export function isUtcTimestamp(value: unknown): value is string {
+  if (typeof value !== "string" || !UTC_TIMESTAMP.test(value)) return false;
+  const date = new Date(value);
+  // Date rolls 2026-02-30 over to March; the round trip catches that.
+  return !Number.isNaN(date.getTime()) &&
+    date.toISOString() === value.replace(/Z$/, ".000Z");
+}
+
+/**
+ * Check the release fields that end up in UPSTREAM.json, the PR body or the
+ * log. The release JSON comes from the API of an untrusted repository.
+ */
+export function validateRelease(release: ReleaseJson): void {
+  if (
+    typeof release.tag_name !== "string" || !TAG_PATTERN.test(release.tag_name)
+  ) {
+    throw new Error(
+      `release tag_name must match ${TAG_PATTERN.source}: ` +
+        JSON.stringify(release.tag_name),
+    );
+  }
+  if (!isUtcTimestamp(release.published_at)) {
+    throw new Error(
+      `release published_at must be an ISO-8601 UTC timestamp ` +
+        `(YYYY-MM-DDTHH:MM:SSZ): ${JSON.stringify(release.published_at)}`,
+    );
+  }
+  if (!Array.isArray(release.assets)) {
+    throw new Error("release has no assets array");
+  }
+}
+
 export async function sha256Hex(bytes: Uint8Array): Promise<string> {
   const digest = await crypto.subtle.digest(
     "SHA-256",
@@ -187,24 +232,60 @@ function isPlainDirectory(info: Deno.FileInfo): boolean {
  * a dot. This rejects `.git`, `.gitattributes`, `..`, dotfiles, control
  * characters and newlines, backslashes, spaces, backticks and `@`, so a
  * release cannot plant git metadata or inject markup into jar.mn or the PR
- * body. Every current Lepton file name matches.
+ * body. assertSafeName additionally refuses names Windows cannot check out.
+ * Every current Lepton file name passes.
  */
 export const SAFE_NAME = /^[A-Za-z0-9_+-][A-Za-z0-9._+-]*$/;
 
+/**
+ * Windows device names, with or without an extension and in any case
+ * (`CON`, `nul.svg`, `Com1.css`). Windows cannot check out a file with such
+ * a name, so SAFE_NAME alone is not enough. COM0/LPT0 are included because
+ * recent Windows versions reserve them too.
+ */
+export const WINDOWS_RESERVED_NAME =
+  /^(?:con|prn|aux|nul|com\d|lpt\d)(?:\.|$)/i;
+
 export function assertSafeName(name: string, where: string): void {
-  if (!SAFE_NAME.test(name)) {
+  const reason = !SAFE_NAME.test(name)
+    ? `allowed: ${SAFE_NAME.source}`
+    : WINDOWS_RESERVED_NAME.test(name)
+    ? "Windows device name"
+    : /[. ]$/.test(name)
+    ? "ends in a dot or space, which Windows drops"
+    : null;
+  if (reason !== null) {
     throw new Error(
-      `unsafe file name ${JSON.stringify(name)} in ${where} ` +
-        `(allowed: ${SAFE_NAME.source})`,
+      `unsafe file name ${JSON.stringify(name)} in ${where} (${reason})`,
     );
+  }
+}
+
+/**
+ * Throw when two names in one directory differ only in case: a
+ * case-insensitive checkout (Windows, macOS) keeps only one of them.
+ */
+function assertNoCaseCollision(names: string[], where: string): void {
+  const seen = new Map<string, string>();
+  for (const name of names) {
+    const key = name.toLowerCase();
+    const other = seen.get(key);
+    if (other !== undefined) {
+      throw new Error(
+        `file names differ only in case in ${where}: ` +
+          `${JSON.stringify(other)} and ${JSON.stringify(name)}`,
+      );
+    }
+    seen.set(key, name);
   }
 }
 
 /**
  * Every file under `dir`, as `/`-separated paths relative to `dir`. Throws on
  * a symlink or any other entry that is not a regular file or directory
- * (including `dir` itself), and on a name that does not match SAFE_NAME. A
- * missing `dir` lists as empty.
+ * (including `dir` itself), on a name assertSafeName refuses, and on two
+ * names in one directory that differ only in case. A missing `dir` lists as
+ * empty.
  */
 async function listFiles(dir: string, prefix = ""): Promise<string[]> {
   const out: string[] = [];
@@ -213,10 +294,15 @@ async function listFiles(dir: string, prefix = ""): Promise<string[]> {
   if (!isPlainDirectory(info)) {
     throw new Error(`not a plain directory (symlink?): ${dir}`);
   }
+  const names: string[] = [];
   for await (const entry of Deno.readDir(dir)) {
     assertSafeName(entry.name, dir);
-    const rel = prefix ? `${prefix}/${entry.name}` : entry.name;
-    const child = path.join(dir, entry.name);
+    names.push(entry.name);
+  }
+  assertNoCaseCollision(names.sort(compareCodePoints), dir);
+  for (const name of names) {
+    const rel = prefix ? `${prefix}/${name}` : name;
+    const child = path.join(dir, name);
     const childInfo = await Deno.lstat(child);
     if (isPlainDirectory(childInfo)) {
       out.push(...await listFiles(child, rel));
@@ -308,7 +394,8 @@ export async function verifyVendoredFiles(
   for (const rel of onDisk) {
     if (!(rel in record.files)) {
       problems.push(
-        `not in ${RECORD_FILE}: ${rel} (Floorp files go to ${OVERLAY_DIR}/)`,
+        `not in ${RECORD_FILE}: ${rel} (Floorp files go to ${OVERLAY_DIR}/; ` +
+          `vendored files change only through ${WORKFLOW_FILE})`,
       );
     }
   }
@@ -342,6 +429,7 @@ export async function verifyAssets(
   release: ReleaseJson,
   zipsDir: string,
 ): Promise<Record<ReleaseAsset, string>> {
+  validateRelease(release);
   if (release.draft || release.prerelease) {
     throw new Error(`${release.tag_name} is a draft or prerelease`);
   }
@@ -352,7 +440,8 @@ export async function verifyAssets(
     const expected = asset.digest?.match(/^sha256:([0-9a-f]{64})$/)?.[1];
     if (!expected) {
       throw new Error(
-        `${release.tag_name} asset ${name} has no sha256 digest: ${asset.digest}`,
+        `${release.tag_name} asset ${name} has no sha256 digest: ` +
+          JSON.stringify(asset.digest),
       );
     }
     const actual = await sha256File(path.join(zipsDir, name));
@@ -395,9 +484,13 @@ export async function planRelease(
   });
   if (unexpected.length > 0) {
     throw new Error(
-      `unexpected entries in the release (update ASSET_TOP_LEVEL / ` +
-        `CHROME_TOP_LEVEL in lepton_vendor.ts after reviewing them): ` +
-        unexpected.slice(0, 20).join(", "),
+      `unexpected entries in the release: ${
+        unexpected.slice(0, 20).join(", ")
+      }. Review them, then add them to ASSET_TOP_LEVEL / CHROME_TOP_LEVEL ` +
+        `in tools/src/lepton_vendor.ts; a new vendored path (for example a ` +
+        `subfolder of css/ or icons/) also needs SINGLE_FILES / SHARED_DIRS ` +
+        `there and the \`allowed\` staged-path pattern in ${WORKFLOW_FILE}. ` +
+        `Until then every scheduled run of ${WORKFLOW_FILE} fails.`,
     );
   }
   for (const asset of RELEASE_ASSETS) {
@@ -413,11 +506,13 @@ export async function planRelease(
     const ver = info.match(/^Ver=(.*)$/m)?.[1]?.trim();
     const branch = info.match(/^Branch=(.*)$/m)?.[1]?.trim();
     if (ver !== tag) {
-      throw new Error(`${asset}: chrome/LEPTON says Ver=${ver}, not ${tag}`);
+      throw new Error(
+        `${asset}: chrome/LEPTON says Ver=${JSON.stringify(ver)}, not ${tag}`,
+      );
     }
     if (branch !== ASSET_BRANCH[asset]) {
       throw new Error(
-        `${asset}: chrome/LEPTON says Branch=${branch}, not ${
+        `${asset}: chrome/LEPTON says Branch=${JSON.stringify(branch)}, not ${
           ASSET_BRANCH[asset]
         }`,
       );
@@ -443,7 +538,8 @@ export async function planRelease(
       if (JSON.stringify(otherHashes) !== JSON.stringify(reference)) {
         throw new Error(
           `${other} ${src}/ differs from Lepton.zip; Floorp loads one copy ` +
-            "for lepton, photon and protonfix, so this release needs a manual update",
+            "for lepton, photon and protonfix, so this release needs a manual " +
+            `update (${WORKFLOW_FILE} cannot apply it)`,
         );
       }
     }
@@ -519,8 +615,14 @@ export async function applyRelease(options: {
   assetHashes: Record<ReleaseAsset, string>;
 }): Promise<ApplyResult> {
   const { leptonDir, extractedDir, release, commit, assetHashes } = options;
+  validateRelease(release);
   if (!/^[0-9a-f]{40}$/.test(commit)) {
-    throw new Error(`commit must be a full SHA-1: ${commit}`);
+    throw new Error(`commit must be a full SHA-1: ${JSON.stringify(commit)}`);
+  }
+  for (const name of RELEASE_ASSETS) {
+    if (!/^[0-9a-f]{64}$/.test(assetHashes[name] ?? "")) {
+      throw new Error(`asset hash of ${name} must be a SHA-256 hex digest`);
+    }
   }
   const plan = await planRelease(extractedDir, release.tag_name);
   const files: Record<string, string> = {};
