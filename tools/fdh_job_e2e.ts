@@ -16,6 +16,7 @@
  */
 
 import * as path from "@std/path";
+import { listDevProcesses } from "./src/dev_processes.ts";
 
 const FDH = path.fromFileUrl(new URL("./fdh.ts", import.meta.url));
 const ROOT = path.dirname(path.dirname(FDH));
@@ -337,6 +338,102 @@ const CASES: Record<string, (c: Case) => Promise<void>> = {
     save(c, taskId, jobId);
   },
 
+  async "E-2c"(c) {
+    // The executor and the step's root process both die. On POSIX the
+    // root's children outlive it as orphans (re-parented to init or a
+    // subreaper), and the takeover must still find and stop them before
+    // epoch 2 runs the step again. On Windows deno task's children end with
+    // it, so the orphan checks are skipped there (recorded in the notes).
+    const taskId = await newTask("e2c");
+    const jobId = await startTest(taskId);
+    await until("the step to run", runningWithProcess(taskId, jobId));
+    const first = journal(taskId, jobId).attempts[0];
+    const root = first.process.pid as number;
+    let children: number[] = [];
+    const deadline = Date.now() + 30_000;
+    while (children.length === 0 && Date.now() < deadline) {
+      children = (await listDevProcesses())
+        .filter((p) => p.ppid === root).map((p) => p.pid);
+      if (children.length === 0) await sleep(200);
+    }
+    if (children.length === 0) throw new Error("the step root has no child");
+    kill(executorPid(first.holder));
+    kill(root);
+    await sleep(500);
+    const orphans: number[] = [];
+    for (const pid of children) if (await alive(pid)) orphans.push(pid);
+    const after = new Map(
+      (await listDevProcesses()).map((p) => [p.pid, p.ppid]),
+    );
+    c.notes.push(
+      `killed executor ${first.holder} and step root ${root}; children ${
+        children.join(",")
+      } now have parent pid(s) ${children.map((p) => after.get(p)).join(",")}`,
+    );
+    if (Deno.build.os === "windows") {
+      // deno task's children end with it here: nothing is left to orphan,
+      // and the checks below only show that nothing of epoch 1 runs on.
+      c.notes.push(
+        `orphans alive after the root was killed: ${orphans.length}`,
+      );
+    } else {
+      c.expect(
+        "the root's children outlive it (orphans)",
+        orphans.length > 0,
+        { children, orphans },
+      );
+    }
+    // Take over once (one reconcile after the lease runs out), then look at
+    // the orphans before the new attempt can finish.
+    await until(
+      "the lease to run out",
+      () => {
+        const j = journal(taskId, jobId);
+        return Date.parse(j.lease?.heartbeatAt ?? "") + TTL < Date.now();
+      },
+      30_000,
+    );
+    const takeover = await fdh(["job", "reconcile", "--task-id", taskId]);
+    const report = lastJson(takeover.stdout);
+    c.notes.push(`reconcile: ${JSON.stringify(report.reconciled)}`);
+    const left: number[] = [];
+    for (const pid of children) if (await alive(pid)) left.push(pid);
+    c.expect(
+      Deno.build.os === "windows"
+        ? "the takeover succeeded and no child of the killed root runs"
+        : "the takeover stopped the orphans",
+      takeover.code === 0 && left.length === 0,
+      { code: takeover.code, left },
+    );
+    const done = await wait(taskId, jobId);
+    const j = journal(taskId, jobId);
+    const stoppedEvent = j.events.find((e: Journal) =>
+      e.kind === "lost-step-stopped" && e.epoch === 1
+    );
+    if (Deno.build.os === "windows") {
+      c.notes.push(
+        `skipped on Windows (no orphan to count): ${
+          stoppedEvent?.note ?? "no lost-step-stopped event"
+        }`,
+      );
+    } else {
+      const count = Number(
+        /stopped (\d+)/.exec(stoppedEvent?.note ?? "")?.[1],
+      );
+      c.expect(
+        "the stop of the epoch-1 tree counted the orphans",
+        count >= orphans.length,
+        stoppedEvent?.note ?? "no lost-step-stopped event",
+      );
+    }
+    c.expect(
+      "the job succeeds at epoch 2",
+      done.code === 0 && j.state === "succeeded" && j.epoch === 2,
+      { state: j.state, epoch: j.epoch },
+    );
+    save(c, taskId, jobId);
+  },
+
   async "E-3"(c) {
     const taskId = await newTask(c.id);
     const jobId = await startTest(taskId, [], {
@@ -628,9 +725,8 @@ function save(c: Case, taskId: string, jobId: string): void {
 
 const args = parseArgs(Deno.args);
 outDir = args.out;
-Deno.mkdirSync(outDir, { recursive: true });
 if (args.only !== null) {
-  const unknown = [...args.only].filter((id) => !(id in CASES));
+  const unknown = [...args.only].filter((id) => !Object.hasOwn(CASES, id));
   if (unknown.length > 0) {
     throw new Error(
       `unknown case id(s) ${unknown.join(", ")}; known: ${
@@ -639,6 +735,7 @@ if (args.only !== null) {
     );
   }
 }
+Deno.mkdirSync(outDir, { recursive: true });
 const results: Case[] = [];
 for (const [id, run] of Object.entries(CASES)) {
   if (args.only !== null && !args.only.has(id)) continue;
@@ -668,9 +765,22 @@ for (const [id, run] of Object.entries(CASES)) {
   }
   results.push(c);
 }
+/** The commit under test, so the evidence names the code it ran. */
+async function gitHead(): Promise<string> {
+  const out = await new Deno.Command("git", {
+    args: ["rev-parse", "HEAD"],
+    cwd: ROOT,
+    stdout: "piped",
+    stderr: "null",
+  }).output();
+  return out.success ? new TextDecoder().decode(out.stdout).trim() : "unknown";
+}
+
 const summary = {
   ranAt: new Date().toISOString(),
+  head: await gitHead(),
   os: `${Deno.build.os} ${Deno.build.arch}`,
+  osRelease: Deno.osRelease(),
   deno: Deno.version.deno,
   leaseTtlMs: TTL,
   cases: results.map((c) => ({
