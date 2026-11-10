@@ -67,7 +67,8 @@ export interface FieldRule {
   order?: readonly string[];
   /**
    * `idempotent`: writing the same value again is harmless, and each owner
-   * change is a new operation (its key carries the owner's version).
+   * change is a new operation (its key carries the field's generation,
+   * `#<n>`, which moves each time a baseline is recorded or resolved).
    * `keyed-once`: the write must happen once per value (a comment); its key
    * is the value, and a succeeded key is never planned again.
    */
@@ -86,10 +87,10 @@ export const FIELD_RULES: readonly FieldRule[] = [
   {
     field: "pr.url",
     owner: "github",
-    mirror: { system: "jira", field: "remote-link" },
-    retry: "idempotent",
+    mirror: { system: "jira", field: "pr-link-comment" },
+    retry: "keyed-once",
     note:
-      "A Jira remote link to the PR (keyed by URL, so a retry updates the same link).",
+      "One fdh comment on the Jira issue with the PR's URL, once per URL. (Not a remote link: Atlassian MCP, which agents use under D-19, cannot create one.)",
   },
   {
     field: "pr.state",
@@ -707,7 +708,8 @@ export function readExtLedger(worktree: string, taskId: string): ExtLedger {
   const ok = isRecordOf(value) && value.version === 1 &&
     value.taskId === taskId && isRecordOf(value.links) &&
     Object.values(value.links).every((l) =>
-      isRecordOf(l) && typeof l.jira === "string" && isRecordOf(l.synced)
+      isRecordOf(l) && typeof l.jira === "string" && isRecordOf(l.synced) &&
+      (l.pr === null || (Number.isSafeInteger(l.pr) && (l.pr as number) > 0))
     ) &&
     isRecordOf(value.observations) &&
     Object.values(value.observations).every(isRecordOf) &&
@@ -796,6 +798,14 @@ export function refreshOps(
       // nothing was handed to an agent, so it ends as failed.
       op.outcome = "failed";
       changed.push(op.key);
+      note(ledger, {
+        at,
+        kind: "op-healed",
+        ref: op.sync === null ? "" : `jira:${op.sync.link}`,
+        field: op.sync?.field ?? "",
+        note:
+          `operation ${op.key} ended failed (job ${op.jobId} was never written)`,
+      });
       continue;
     }
     try {

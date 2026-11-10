@@ -1,0 +1,21 @@
+/* SPDX-License-Identifier: MPL-2.0 */
+
+/* Floorp overlay for ../css/leptonChrome.css (chrome sheet).
+ *
+ * ../css/, ../icons/, ../userjs/ and ../LEPTON are vendored upstream Lepton
+ * and must stay byte-identical to the release recorded in ../UPSTREAM.json
+ * (checked by tools/src/lepton_vendor.test.ts). Put Floorp changes to
+ * Lepton's chrome styling here instead.
+ *
+ * Loaded by browser-features/chrome/common/designs/utils/css.ts right after
+ * leptonChrome.css, at the same level (a chrome document sheet), for the
+ * lepton, photon and protonfix designs, so a rule here wins over a Lepton
+ * rule of equal specificity by source order. Icon URLs use ../icons/ like
+ * the vendored sheet.
+ *
+ * Production loads this file on its own; dev builds concatenate it after
+ * leptonChrome.css in one <style>. So: repeat Lepton's @namespace lines
+ * (xul / html prefixes, same URLs) at the top when you use those prefixes,
+ * declare no default namespace, and do not use @import (dropped in dev).
+ * See ../README.md.
+ */

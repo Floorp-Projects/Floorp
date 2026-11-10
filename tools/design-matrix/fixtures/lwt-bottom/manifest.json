@@ -1,0 +1,22 @@
+{
+  "manifest_version": 2,
+  "name": "Design matrix bottom background theme",
+  "version": "1.0",
+  "description": "Local test theme: additional_backgrounds aligned to the bottom of the toolbox.",
+  "browser_specific_settings": {
+    "gecko": { "id": "design-matrix-bottom@floorp.test" }
+  },
+  "theme": {
+    "images": { "additional_backgrounds": ["bottom.svg"] },
+    "properties": {
+      "additional_backgrounds_alignment": ["bottom"],
+      "additional_backgrounds_tiling": ["repeat-x"]
+    },
+    "colors": {
+      "frame": "#12324a",
+      "tab_background_text": "#e8f4ff",
+      "toolbar": "rgba(18, 50, 74, 0.4)",
+      "toolbar_text": "#e8f4ff"
+    }
+  }
+}

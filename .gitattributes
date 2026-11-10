@@ -3,3 +3,10 @@
 # Generated docs and the shared Notes contract must retain canonical bytes.
 docs/**/*.mdx text eol=lf
 browser-features/pages-notes/test/fixtures/floorp-notes-merge-v1.json text eol=lf
+# Vendored upstream Lepton (browser-features/skin/lepton/UPSTREAM.json): keep
+# the release bytes exactly, without line-ending conversion, so the recorded
+# SHA-256 hashes match on every platform.
+browser-features/skin/lepton/LEPTON -text
+browser-features/skin/lepton/css/** -text
+browser-features/skin/lepton/icons/** -text
+browser-features/skin/lepton/userjs/** -text
