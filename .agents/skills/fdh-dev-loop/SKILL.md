@@ -269,6 +269,69 @@ records an approval for it (or a `quota approve`) since then. A confirm that
 arrives after the holder was declared lost is refused and recorded
 (`late-report`).
 
+## External GitHub / Jira operations (D-19, KAN-131)
+
+Agents change GitHub (`gh`) and Jira (Atlassian MCP) themselves; fdh calls
+neither API. fdh keeps a link table, the observations an agent polled, and
+keyed operations, under `<worktree>/_dist/fdh/ext/<task-id>.json`. There is
+no webhook: run `ext observe` for each value you poll, then `ext plan`.
+
+```sh
+fdh ext link --task-id <id> --jira KAN-131 --pr 3200 --branch fdh/external-ops
+# For each polled value, with the object's API update time as --version:
+fdh ext observe --task-id <id> --ref github:pr/3200 --field pr.state \
+  --value open --version 2026-11-11T09:00:10Z [--event-id <id>]
+fdh ext observe --task-id <id> --ref jira:KAN-131 --field status \
+  --value 進行中 --version <jira updated>
+fdh ext plan --task-id <id>      # actions, holds, inSync, keptEdits, fields
+# For each action: start its key, perform the write, then record the outcome.
+fdh ext start --task-id <id> --key '<action.key>' --agent <name>
+fdh ext done --task-id <id> --key '<action.key>' --epoch <n> --agent <name> \
+  --outcome succeeded
+# Then poll the mirror again (ext observe) before the next plan.
+```
+
+The field table (I-04; the code is `FIELD_RULES` in
+`tools/src/fdh_ext.ts`):
+
+| Field (owner) | Mirror | Rule |
+| --- | --- | --- |
+| `pr.url` (GitHub) | Jira `remote-link` | keyed by URL, a retry updates the same link |
+| `pr.state` (GitHub) | Jira `status` | draft/open/merged → 進行中/レビュー中/完了, closed → nothing; never moves the status back |
+| `ci.result` (GitHub), `<sha>:<success\|failure>` | Jira `ci-comment` | one fdh comment per head and result; pending is not posted |
+| `pr.review-receipts` (GitHub) | none | the D-14 gate reads them on the PR |
+| `jira.sprint`, `jira.assignee`, `jira.priority`, `jira.qa-state` (Jira) | none | not copied to GitHub |
+| titles, descriptions, comments | none | no full-text copying |
+
+Which version to pass:
+
+- **PR fields:** the PR's `updated_at`.
+- **`ci.result`:** the check run's `completed_at` (`started_at` while pending). A PR's `updated_at` does not move when checks finish.
+- **Jira fields:** the issue's `updated`.
+- **A deletion** (a 404): the poll time.
+
+How observations behave:
+
+- **Duplicates.** A repeated event id for the same field, or the same value at the same version, is a `duplicate`. It refreshes the poll time.
+- **Stale values.** An older version than the stored one is `stale`; this is how an ordering inversion is caught.
+- **Conflicts.** The same version with another value is a `conflict` and is not taken.
+- **Deletions.** Observe the field `object` with `--deleted true` when an object is gone. Nothing more is written to it or because of it, and a later observation does not bring it back. A deletion older than the newest observation of the object is `stale`.
+
+How the plan treats writes:
+
+- **Concurrent edits.** fdh never overwrites a mirror that changed since fdh last wrote it (no compare-and-set is assumed).
+  - If the owner changed too, the field is held (`concurrent-edit`). An approver settles it with `fdh ext resolve --link <KEY-n> --field <f> --keep <mirror|owner>`.
+  - If only the mirror changed, the person's edit is kept (`keptEdits`).
+- **After a write.** The field waits (`awaiting-poll`) for a poll made after `ext done`.
+- **Before the first write.** A status is not written before Jira's current status has been polled (`mirror-unobserved`).
+
+Keyed operations:
+
+- **What `ext start` records.** It stores what a planned action writes. When the operation succeeds, that becomes the field's baseline. This holds both after `ext done` and after an approver's `job resolve`, which `ext plan` picks up.
+- **A key that succeeded** is `already-done`. Use one key per PR you create (`github:pr-create:<branch>`), so no second PR is made.
+- **A key with no outcome yet** is refused.
+- **A key that failed** may be started again. Report `failed` only when you know the write did not happen. If you do not know, do not confirm: once your lease runs out, `task resume` moves the operation to `awaiting-approval`. An approver then checks GitHub or Jira and resolves it.
+
 ## GUI desktop lease and secret-reference denial (Gate 4 4-A)
 
 The shared desktop GUI is one resource. The lease is stored beside the git
