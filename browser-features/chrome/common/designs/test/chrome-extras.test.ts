@@ -472,14 +472,12 @@ function testEveryUsedUcTokenIsDefinedOrHasFallback(): void {
 
 /**
  * The Gecko tokens the ported rules depend on, which chrome-extras must NOT try
- * to define. `--toolbarbutton-*-padding` is the important one: it is supplied by
- * the Gecko 152 alias sheet, and before that alias existed the autohide
- * back/forward rules silently did nothing.
+ * to define. The legacy pre-152 alias names are checked separately below.
  */
 function testExternalFirefoxTokensAreNotDefinedLocally(): void {
   const external = [
     "--animation-easing-function",
-    "--toolbarbutton-outer-padding",
+    "--toolbarbutton-padding-outer",
     "--urlbar-icon-padding",
     "--tab-min-height",
     "--tab-border-radius",

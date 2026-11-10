@@ -20,7 +20,7 @@
  * is inlined as a literal below.
  *
  * Toolbar button padding uses the Gecko 152+ name `--toolbarbutton-padding-inner`,
- * as Lepton v8.7.6 does. The legacy `--toolbarbutton-inner-padding` is only an
+ * as upstream Lepton v8.7.6 (vendored by #3107) does. The legacy `--toolbarbutton-inner-padding` is only an
  * alias resolved on `:root` (utils/gecko-152-var-aliases.css.ts), so setting it
  * on `#nav-bar` never reached the buttons and they kept Gecko's 8px.
  */
