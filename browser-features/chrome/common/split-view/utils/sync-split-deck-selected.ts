@@ -48,3 +48,28 @@ export function syncSplitDeckSelectedClasses(
   }
   return cleared;
 }
+
+/**
+ * After leaving split view, make sure the panel the deck considers selected
+ * is displayed.
+ *
+ * `syncSplitDeckSelectedClasses` takes `.deck-selected` off the normal tab
+ * that was shown before a split pane was selected. If the user returns to that
+ * tab before Gecko's async tab switcher has shown the pane, the switcher still
+ * treats the normal tab as visible (`visibleTab === showTab`) and never calls
+ * `updateSelectedIndex()`, so nothing would put the class back and no panel
+ * would be shown. The leaving-split cleanup strips the class from the former
+ * split panes, so restoring it on the selected panel leaves exactly one
+ * displayed panel, which is what the later `updateSelectedIndex()` expects.
+ *
+ * Returns true when the class had to be added.
+ */
+export function ensureSelectedPanelDeckSelected(
+  selectedPanel: DeckPanelLike | null | undefined,
+): boolean {
+  if (!selectedPanel || selectedPanel.classList.contains("deck-selected")) {
+    return false;
+  }
+  selectedPanel.classList.add("deck-selected");
+  return true;
+}
