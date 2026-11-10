@@ -60,7 +60,7 @@ export interface LinuxClock {
 }
 
 export interface TreeSelection {
-  /** POSIX: process group id by pid, from the same moment as the snapshot. */
+  /** POSIX: process group id by pid, read with each snapshot entry. */
   groups?: ReadonlyMap<number, number>;
   /** Linux: to compare tick start times with `notAfter`. */
   clock?: LinuxClock;
@@ -91,7 +91,11 @@ export function selectProcessTree(
     byParent.set(process.ppid, list);
   }
   const selected: DevProcessInfo[] = [];
-  const holder = snapshot.find((p) => p.pid === root.pid);
+  // A zombie root (exited, not yet reaped by a stalled executor) still holds
+  // its pid, so nothing reused it: treat it as gone, not as a reuser.
+  const holder = snapshot.find((p) =>
+    p.pid === root.pid && !/<defunct>\s*$/.test(p.commandLine)
+  );
   const live = holder !== undefined && holder.startTime === root.startTime &&
       holder.commandLine === root.commandLine
     ? holder
@@ -110,7 +114,8 @@ export function selectProcessTree(
     // exited, its children are re-parented and only the group still ties
     // them to the step. The group id is the root's pid and is not reused
     // while the group has members; the time bounds guard against a group
-    // that a later process with the reused pid started.
+    // that a later process with the reused pid started after the bound (not
+    // one started, and left leaderless, before it).
     for (const member of snapshot) {
       if (seen.has(member.pid)) continue;
       if (selection.groups.get(member.pid) !== root.pid) continue;
@@ -163,10 +168,11 @@ export function startedNoLater(
   const ticks = /^(.+):(\d+)$/.exec(child);
   if (ticks && !/^\d{4}-/.test(child)) {
     if (clock === undefined || ticks[1] !== clock.bootId) return false;
+    // btime and the ticks are both rounded down, so this is at or before
+    // the real start (by under a second): no slack is needed.
     const at = clock.bootTimeMs +
       Number(ticks[2]) * 1000 / clock.ticksPerSecond;
-    // Boot time has whole-second precision: allow one second.
-    return at <= b + 1000;
+    return at <= b;
   }
   const a = Date.parse(child);
   return Number.isFinite(a) && a <= b;
@@ -188,23 +194,29 @@ async function output(cmd: string, args: string[]): Promise<string> {
   return new TextDecoder().decode(result.stdout);
 }
 
-/** POSIX: process group id of every process. Empty on Windows. */
-export async function listProcessGroups(): Promise<Map<number, number>> {
-  const groups = new Map<number, number>();
-  if (Deno.build.os === "windows") return groups;
-  for (
-    const line of (await output("ps", ["-axww", "-o", "pid=,pgid="])).split(
-      "\n",
-    )
-  ) {
-    const match = /^\s*(\d+)\s+(\d+)\s*$/.exec(line);
-    if (match) groups.set(Number(match[1]), Number(match[2]));
-  }
-  return groups;
+/** Process group id by pid, from the snapshot entries (POSIX). */
+export function groupsOf(
+  snapshot: readonly DevProcessInfo[],
+): Map<number, number> {
+  return new Map(
+    snapshot.flatMap((p) =>
+      p.pgid === undefined ? [] : [[p.pid, p.pgid] as [number, number]]
+    ),
+  );
 }
 
-/** Linux: the clock for tick start times; undefined elsewhere or unreadable. */
-export async function linuxClock(): Promise<LinuxClock | undefined> {
+let clockOnce: Promise<LinuxClock | undefined> | undefined;
+
+/**
+ * Linux: the clock for tick start times; undefined elsewhere or unreadable.
+ * Read once per process (boot id and boot time do not change).
+ */
+export function linuxClock(): Promise<LinuxClock | undefined> {
+  clockOnce ??= readLinuxClock();
+  return clockOnce;
+}
+
+async function readLinuxClock(): Promise<LinuxClock | undefined> {
   if (Deno.build.os !== "linux") return undefined;
   try {
     const bootId = (await Deno.readTextFile("/proc/sys/kernel/random/boot_id"))
@@ -230,11 +242,8 @@ async function snapshotWithGroups(): Promise<{
   snapshot: DevProcessInfo[];
   groups: Map<number, number>;
 }> {
-  const [snapshot, groups] = await Promise.all([
-    listDevProcesses(),
-    listProcessGroups(),
-  ]);
-  return { snapshot, groups };
+  const snapshot = await listDevProcesses();
+  return { snapshot, groups: groupsOf(snapshot) };
 }
 
 /** Identity of a running process, or null when it is gone. */

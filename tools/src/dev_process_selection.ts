@@ -198,18 +198,32 @@ export function parseDevProcessRegistry(value: unknown): DevProcessIdentity[] {
   });
 }
 
-export function parseUnixDevProcesses(output: string): DevProcessInfo[] {
+/**
+ * Parse `ps -o pid=,ppid=,lstart=,args=` output, or, with `withPgid`,
+ * `ps -o pid=,ppid=,pgid=,lstart=,args=`.
+ */
+export function parseUnixDevProcesses(
+  output: string,
+  withPgid = false,
+): DevProcessInfo[] {
+  const lstart = String.raw`(\S+\s+\S+\s+\d+\s+\d+:\d+:\d+\s+\d+)`;
+  const pattern = new RegExp(
+    String.raw`^\s*(\d+)\s+(\d+)\s+${
+      withPgid ? String.raw`(\d+)\s+` : ""
+    }${lstart}\s+(.*)$`,
+  );
   return output.split(/\r?\n/).flatMap((line) => {
-    const match = line.match(
-      /^\s*(\d+)\s+(\d+)\s+(\S+\s+\S+\s+\d+\s+\d+:\d+:\d+\s+\d+)\s+(.*)$/,
-    );
+    const match = line.match(pattern);
     if (!match) return [];
-    return [{
+    const at = withPgid ? 4 : 3;
+    const process: DevProcessInfo = {
       pid: Number(match[1]),
       ppid: Number(match[2]),
-      startTime: match[3],
-      commandLine: match[4],
+      startTime: match[at],
+      commandLine: match[at + 1],
       name: "", // filled from a separate comm column
-    }];
+    };
+    if (withPgid) process.pgid = Number(match[3]);
+    return [process];
   });
 }

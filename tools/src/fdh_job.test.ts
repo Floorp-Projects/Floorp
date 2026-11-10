@@ -22,6 +22,7 @@ import {
   waitForJob,
 } from "./fdh_job.ts";
 import {
+  groupsOf,
   selectProcessTree,
   startedNoEarlier,
   startedNoLater,
@@ -1351,7 +1352,7 @@ Deno.test("fdh job: Linux tick start times are compared with the bound through t
   const bound = new Date(Date.UTC(2026, 10, 10, 0, 1, 0)).toISOString();
   assert(startedNoLater("boot:5000", bound, clock)); // 50 s after boot
   assert(!startedNoLater("boot:7000", bound, clock)); // 70 s after boot
-  assert(startedNoLater("boot:6050", bound, clock)); // within the 1 s slack
+  assert(!startedNoLater("boot:6050", bound, clock)); // 60.5 s: no slack
   assert(!startedNoLater("other:5000", bound, clock));
   assert(!startedNoLater("boot:5000", bound)); // no clock: not comparable
   const root = { pid: 700, startTime: "boot:1000", commandLine: "deno task" };
@@ -1378,4 +1379,40 @@ Deno.test("fdh job: Linux tick start times are compared with the bound through t
     ),
     [701],
   );
+});
+
+Deno.test("fdh job: a zombie root counts as gone, so its group's orphans are still found", () => {
+  const t = (s: number) =>
+    new Date(Date.UTC(2026, 10, 10, 10, 0, s)).toISOString();
+  const root = {
+    pid: 800,
+    startTime: t(0),
+    commandLine: "deno task test:host",
+  };
+  const snapshot = [
+    // Exited but not reaped (its executor is stalled): ps shows <defunct>.
+    {
+      pid: 800,
+      ppid: 790,
+      name: "deno",
+      commandLine: "[deno] <defunct>",
+      startTime: t(0),
+      pgid: 800,
+    },
+    {
+      pid: 801,
+      ppid: 1,
+      name: "deno",
+      commandLine: "deno test",
+      startTime: t(1),
+      pgid: 800,
+    },
+  ];
+  assertEquals(
+    selectProcessTree(snapshot, root, t(10), { groups: groupsOf(snapshot) })
+      .map((x) => x.pid),
+    [801],
+  );
+  // groupsOf skips entries without a group id (Windows).
+  assertEquals(groupsOf([{ ...snapshot[1], pgid: undefined }]).size, 0);
 });

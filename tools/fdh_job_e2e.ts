@@ -339,10 +339,11 @@ const CASES: Record<string, (c: Case) => Promise<void>> = {
   },
 
   async "E-2c"(c) {
-    // The executor and the step's root process both die, so the root's
-    // children are orphans (on POSIX re-parented to init or a subreaper; on
-    // Windows they keep the dead parent pid). The takeover must still find
-    // and stop them before epoch 2 runs the step again.
+    // The executor and the step's root process both die. On POSIX the
+    // root's children outlive it as orphans (re-parented to init or a
+    // subreaper), and the takeover must still find and stop them before
+    // epoch 2 runs the step again. On Windows deno task's children end with
+    // it, so the orphan checks are skipped there (recorded in the notes).
     const taskId = await newTask("e2c");
     const jobId = await startTest(taskId);
     await until("the step to run", runningWithProcess(taskId, jobId));
@@ -396,9 +397,11 @@ const CASES: Record<string, (c: Case) => Promise<void>> = {
     const report = lastJson(takeover.stdout);
     c.notes.push(`reconcile: ${JSON.stringify(report.reconciled)}`);
     const left: number[] = [];
-    for (const pid of orphans) if (await alive(pid)) left.push(pid);
+    for (const pid of children) if (await alive(pid)) left.push(pid);
     c.expect(
-      "the takeover stopped the orphans",
+      Deno.build.os === "windows"
+        ? "the takeover succeeded and no child of the killed root runs"
+        : "the takeover stopped the orphans",
       takeover.code === 0 && left.length === 0,
       { code: takeover.code, left },
     );
@@ -407,12 +410,22 @@ const CASES: Record<string, (c: Case) => Promise<void>> = {
     const stoppedEvent = j.events.find((e: Journal) =>
       e.kind === "lost-step-stopped" && e.epoch === 1
     );
-    const count = Number(/stopped (\d+)/.exec(stoppedEvent?.note ?? "")?.[1]);
-    c.expect(
-      "the stop of the epoch-1 tree counted the orphans",
-      count >= orphans.length,
-      stoppedEvent?.note ?? "no lost-step-stopped event",
-    );
+    if (Deno.build.os === "windows") {
+      c.notes.push(
+        `skipped on Windows (no orphan to count): ${
+          stoppedEvent?.note ?? "no lost-step-stopped event"
+        }`,
+      );
+    } else {
+      const count = Number(
+        /stopped (\d+)/.exec(stoppedEvent?.note ?? "")?.[1],
+      );
+      c.expect(
+        "the stop of the epoch-1 tree counted the orphans",
+        count >= orphans.length,
+        stoppedEvent?.note ?? "no lost-step-stopped event",
+      );
+    }
     c.expect(
       "the job succeeds at epoch 2",
       done.code === 0 && j.state === "succeeded" && j.epoch === 2,
