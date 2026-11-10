@@ -92,7 +92,7 @@ export async function listDevProcesses(
   const output = await commandOutput("ps", [
     ...selector,
     "-o",
-    "pid=,ppid=,lstart=,args=",
+    "pid=,ppid=,pgid=,lstart=,args=",
   ]);
   const names = await commandOutput("ps", [...selector, "-o", "pid=,comm="]);
   const byPid = new Map(
@@ -103,7 +103,7 @@ export async function listDevProcesses(
         : [];
     }),
   );
-  const processes = parseUnixDevProcesses(output).filter((process) =>
+  const processes = parseUnixDevProcesses(output, true).filter((process) =>
     pid === undefined || process.pid === pid
   );
   for (const process of processes) {
@@ -114,7 +114,10 @@ export async function listDevProcesses(
           .split("\0").filter(Boolean);
         // Include boot ID and kernel start ticks for sub-second PID identity.
         const stat = await Deno.readTextFile(`/proc/${process.pid}/stat`);
-        const ticks = stat.slice(stat.lastIndexOf(")") + 2).split(" ")[19];
+        const fields = stat.slice(stat.lastIndexOf(")") + 2).split(" ");
+        const ticks = fields[19];
+        // The group id from the same read as the start time.
+        process.pgid = Number(fields[2]);
         const boot =
           (await Deno.readTextFile("/proc/sys/kernel/random/boot_id")).trim();
         process.startTime = `${boot}:${ticks}`;
