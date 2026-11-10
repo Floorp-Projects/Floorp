@@ -191,6 +191,8 @@ export interface SyncedField {
   mirrorValue: string;
   /** Local time the write was recorded; a later poll can show it. */
   at: string;
+  /** When the operation that wrote it started (an older one never wins). */
+  opStartedAt?: string;
 }
 
 export interface ExtLink {
@@ -199,6 +201,12 @@ export interface ExtLink {
   pr: number | null;
   branch: string | null;
   synced: Record<string, SyncedField>;
+  /**
+   * Per field, how many baselines were recorded (writes or resolutions). It
+   * is part of an idempotent operation's key, so the next change of the same
+   * field is a new operation while a re-poll of the PR is not.
+   */
+  generation?: Record<string, number>;
 }
 
 /** What a planned operation writes (stored at `ext start`). */
@@ -480,15 +488,37 @@ function refFor(link: ExtLink, system: ExtSystem): string | null {
 }
 
 /** The key of an operation that writes `to` for `rule` on `link`. */
-export function opKey(
-  rule: FieldRule,
-  link: string,
-  to: string,
-  ownerVersion: string,
-): string {
+export function opKey(rule: FieldRule, link: ExtLink, to: string): string {
   return rule.retry === "keyed-once"
-    ? `${link}:${rule.field}:${to}`
-    : `${link}:${rule.field}:${to}@${ownerVersion}`;
+    ? `${link.jira}:${rule.field}:${to}`
+    : `${link.jira}:${rule.field}:${to}#${link.generation?.[rule.field] ?? 0}`;
+}
+
+/** The field a planned operation's key belongs to, if it is one. */
+function fieldOfKey(
+  ledger: ExtLedger,
+  key: string,
+): { link: string; field: string } | null {
+  for (const link of Object.values(ledger.links)) {
+    for (const rule of FIELD_RULES) {
+      if (rule.mirror === null) continue;
+      if (key.startsWith(`${link.jira}:${rule.field}:`)) {
+        return { link: link.jira, field: rule.field };
+      }
+    }
+  }
+  return null;
+}
+
+/** An operation on this field that has no outcome yet. */
+function opInFlight(
+  ledger: ExtLedger,
+  link: string,
+  field: string,
+): ExtOp | undefined {
+  return Object.values(ledger.ops).find((op) =>
+    op.outcome === null && op.sync?.link === link && op.sync.field === field
+  );
 }
 
 /**
@@ -516,12 +546,14 @@ export function planSync(ledger: ExtLedger): SyncPlan {
         });
       // A deleted object (field "object") or a deleted field: nothing more is
       // written to it or because of it.
+      // (A deleted fdh comment does not stop later comments.)
       const gone = (ref: string, field: string) =>
         ledger.observations[ref]?.object?.deleted === true ||
         ledger.observations[ref]?.[field]?.deleted === true;
-      const deletedSide = gone(ownerRef, rule.field)
-        ? ownerRef
-        : gone(mirrorRef, rule.mirror.field)
+      const deletedSide = gone(ownerRef, rule.field) ? ownerRef : gone(
+          mirrorRef,
+          rule.retry === "keyed-once" ? "object" : rule.mirror.field,
+        )
         ? mirrorRef
         : null;
       if (deletedSide !== null) {
@@ -531,12 +563,13 @@ export function planSync(ledger: ExtLedger): SyncPlan {
       if (owner.value === null) continue;
       const desired = rule.derive ? rule.derive(owner.value) : owner.value;
       if (desired === null) continue;
-      const key = opKey(rule, link.jira, desired, owner.version);
+      const key = opKey(rule, link, desired);
       const op = ledger.ops[key];
-      if (op !== undefined && op.outcome === null) {
+      const flying = opInFlight(ledger, link.jira, rule.field);
+      if (flying !== undefined) {
         hold(
           "op-in-flight",
-          `operation ${key} (job ${op.jobId}) has no outcome yet`,
+          `operation ${flying.key} (job ${flying.jobId}) has no outcome yet`,
         );
         continue;
       }
@@ -713,16 +746,31 @@ function writeLedger(file: string, ledger: ExtLedger): void {
 // keyed operations
 // ---------------------------------------------------------------------------
 
+function bumpGeneration(link: ExtLink, field: string): void {
+  link.generation ??= {};
+  link.generation[field] = (link.generation[field] ?? 0) + 1;
+}
+
 function recordSucceeded(ledger: ExtLedger, op: ExtOp, at: string): void {
   op.outcome = "succeeded";
   if (op.sync === null) return;
   const link = ledger.links[op.sync.link];
   if (link === undefined) return;
+  const current = link.synced[op.sync.field];
+  // A late resolution of an older operation never replaces a newer baseline.
+  if (
+    current?.opStartedAt !== undefined &&
+    Date.parse(current.opStartedAt) > Date.parse(op.startedAt)
+  ) {
+    return;
+  }
   link.synced[op.sync.field] = {
     ownerValue: op.sync.ownerValue,
     mirrorValue: op.sync.mirrorValue,
     at,
+    opStartedAt: op.startedAt,
   };
+  bumpGeneration(link, op.sync.field);
 }
 
 /**
@@ -742,12 +790,20 @@ export function refreshOps(
     let state: string;
     try {
       Deno.statSync(jobJournalPath(worktree, ledger.taskId, op.jobId));
-      state = readJob(worktree, ledger.taskId, op.jobId).state;
     } catch (error) {
       if (!(error instanceof Deno.errors.NotFound)) throw error;
       // Recorded, but its intent was never written (crash in between):
       // nothing was handed to an agent, so it ends as failed.
-      state = "failed";
+      op.outcome = "failed";
+      changed.push(op.key);
+      continue;
+    }
+    try {
+      state = readJob(worktree, ledger.taskId, op.jobId).state;
+    } catch {
+      // An unreadable journal leaves this operation (and its field) in
+      // flight; it does not block the other operations of the task.
+      continue;
     }
     if (state === "succeeded") recordSucceeded(ledger, op, at);
     else if (isTerminal(state as Parameters<typeof isTerminal>[0])) {
@@ -812,7 +868,20 @@ export async function startExtOp(
         `operation ${key} is in flight (job ${existing.jobId}); confirm it with 'fdh ext done', or resolve it with 'fdh job resolve'`,
       );
     }
-    const action = planSync(ledger).actions.find((a) => a.key === key);
+    const plan = planSync(ledger);
+    const action = plan.actions.find((a) => a.key === key);
+    const field = fieldOfKey(ledger, key);
+    if (field !== null && action === undefined) {
+      writeLedger(file, ledger);
+      const held = plan.holds.find((h) =>
+        h.link === field.link && h.field === field.field
+      );
+      throw new Error(
+        `${key} is not an action of the current plan${
+          held === undefined ? "" : ` (${held.reason}: ${held.note})`
+        }; run 'fdh ext plan' again`,
+      );
+    }
     const jobId = newJobId("intent");
     ledger.ops[key] = {
       key,
@@ -869,9 +938,12 @@ export async function finishExtOp(
       throw new Error(`no operation with key ${input.key}; start it first`);
     }
     if (op.outcome !== null) {
-      if (op.outcome === input.outcome) return op;
+      // Ended already (a repeat, or an approver resolved it): the same
+      // outcome from the job's current epoch is accepted, nothing else.
+      const job = readJob(state.worktree, state.taskId, op.jobId);
+      if (op.outcome === input.outcome && input.epoch === job.epoch) return op;
       throw new Error(
-        `operation ${input.key} already ended ${op.outcome}`,
+        `operation ${input.key} already ended ${op.outcome} (job ${job.jobId} epoch ${job.epoch})`,
       );
     }
     const { job, value } = await confirmJob(
@@ -915,6 +987,7 @@ export function resolveField(
   }
   if (keep === "owner") {
     delete link.synced[field];
+    bumpGeneration(link, field);
   } else {
     const ownerRef = refFor(link, rule.owner);
     const mirrorRef = refFor(link, rule.mirror.system);
@@ -935,6 +1008,7 @@ export function resolveField(
       mirrorValue: mirror.value,
       at: new Date(Date.parse(mirror.observedAt) - 1).toISOString(),
     };
+    bumpGeneration(link, field);
   }
   note(ledger, {
     at,

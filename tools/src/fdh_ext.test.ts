@@ -526,3 +526,144 @@ Deno.test("fdh ext: two writers do not lose each other's observations", async ()
     await Deno.remove(dir, { recursive: true });
   }
 });
+
+Deno.test("fdh ext: a PR re-poll between plan and start keeps the key, and a key outside the plan is refused", async () => {
+  const dir = await Deno.makeTempDir();
+  try {
+    const state = taskIn(dir);
+    await withExtLedger(dir, "t1", (l) => upsertLink(l, "KAN-131", 3200));
+    await observe(dir, PR, "pr.state", "open", v(10));
+    await observe(dir, ISSUE, "status", "進行中", v(5));
+    const [planned] = (await planExt(dir, "t1")).actions;
+    // A PR comment bumps updated_at; the value is the same.
+    await observe(dir, PR, "pr.state", "open", v(15));
+    const op = await startExtOp(state, planned.key, "agent-a");
+    assertEquals(op.status, "started");
+    assertEquals(
+      readExtLedger(dir, "t1").ops[planned.key].sync?.mirrorValue,
+      "レビュー中",
+    );
+    // While it is in flight the field is held, whatever the PR does.
+    await observe(dir, PR, "pr.state", "merged", v(20));
+    const held = await planExt(dir, "t1");
+    assertEquals([held.actions, held.holds.map((h) => h.reason)], [[], [
+      "op-in-flight",
+    ]]);
+    await assertRejects(
+      () => startExtOp(state, "KAN-131:pr.state:完了#0", "agent-b"),
+      Error,
+      "not an action of the current plan (op-in-flight",
+    );
+    await assertRejects(
+      () =>
+        startExtOp(
+          state,
+          "KAN-131:pr.state:完了@2026-01-01T00:00:00Z",
+          "agent-b",
+        ),
+      Error,
+      "not an action of the current plan",
+    );
+  } finally {
+    await Deno.remove(dir, { recursive: true });
+  }
+});
+
+Deno.test("fdh ext: the same value again after a change is a new operation, and resolve starts a new one", async () => {
+  const dir = await Deno.makeTempDir();
+  try {
+    const state = taskIn(dir);
+    await withExtLedger(dir, "t1", (l) => upsertLink(l, "KAN-131", 3200));
+    await observe(dir, PR, "pr.state", "draft", v(10));
+    await observe(dir, ISSUE, "status", "未着手", v(5));
+    const a = await perform(state, "pr.state"); // 進行中
+    await tick();
+    await observe(dir, ISSUE, "status", "進行中", v(11));
+    // A person moves it back while the PR stays a draft: kept.
+    await observe(dir, ISSUE, "status", "未着手", v(20));
+    assertEquals((await planExt(dir, "t1")).keptEdits.map((k) => k.value), [
+      "未着手",
+    ]);
+    // The approver wants the PR's side after all: a new key, startable.
+    await withExtLedger(
+      dir,
+      "t1",
+      (l) => resolveField(l, "KAN-131", "pr.state", "owner"),
+    );
+    const b = await perform(state, "pr.state");
+    assertEquals(b.to, "進行中");
+    assert(b.key !== a.key);
+  } finally {
+    await Deno.remove(dir, { recursive: true });
+  }
+});
+
+Deno.test("fdh ext: a late done is fenced by the job's epoch, and a deleted fdh comment does not stop CI comments", async () => {
+  const dir = await Deno.makeTempDir();
+  try {
+    const state = taskIn(dir);
+    await withExtLedger(dir, "t1", (l) => upsertLink(l, "KAN-131", 3200));
+    await observe(dir, PR, "ci.result", "abc1234:failure", v(10));
+    const [action] = (await planExt(dir, "t1")).actions;
+    const op = await startExtOp(state, action.key, "agent-a");
+    if (op.status !== "started") throw new Error("unreachable");
+    await finishExtOp(state, {
+      key: action.key,
+      epoch: op.epoch,
+      agent: "agent-a",
+      outcome: "succeeded",
+    });
+    await assertRejects(
+      () =>
+        finishExtOp(state, {
+          key: action.key,
+          epoch: 99,
+          agent: "agent-x",
+          outcome: "succeeded",
+        }),
+      Error,
+      "already ended succeeded",
+    );
+    await observe(dir, ISSUE, "ci-comment", null, v(20), { deleted: true });
+    await observe(dir, PR, "ci.result", "def5678:success", v(30));
+    assertEquals((await planExt(dir, "t1")).actions.map((a) => a.to), [
+      "def5678:success",
+    ]);
+  } finally {
+    await Deno.remove(dir, { recursive: true });
+  }
+});
+
+Deno.test("fdh ext: an older operation resolved late does not replace a newer baseline", async () => {
+  const dir = await Deno.makeTempDir();
+  try {
+    const state = taskIn(dir);
+    await withExtLedger(dir, "t1", (l) => upsertLink(l, "KAN-131", 3200));
+    await observe(dir, PR, "pr.state", "open", v(10));
+    await observe(dir, ISSUE, "status", "進行中", v(5));
+    const [action] = (await planExt(dir, "t1")).actions;
+    const op = await startExtOp(state, action.key, "agent-a");
+    if (op.status !== "started") throw new Error("unreachable");
+    // A newer write recorded meanwhile (by an operation started later).
+    const later = new Date(Date.now() + 60_000).toISOString();
+    await withExtLedger(dir, "t1", (l) => {
+      l.links["KAN-131"].synced["pr.state"] = {
+        ownerValue: "merged",
+        mirrorValue: "完了",
+        at: later,
+        opStartedAt: later,
+      };
+    });
+    // The old operation is confirmed only now.
+    await confirmJob(state, op.jobId, op.epoch, "agent-a", "succeeded");
+    await withExtLedger(dir, "t1", (l) => refreshOps(l, dir));
+    const ledger = readExtLedger(dir, "t1");
+    assertEquals(ledger.ops[action.key].outcome, "succeeded");
+    assertEquals(
+      ledger.links["KAN-131"].synced["pr.state"].mirrorValue,
+      "完了",
+    );
+  } finally {
+    await Deno.remove(dir, { recursive: true });
+  }
+});
