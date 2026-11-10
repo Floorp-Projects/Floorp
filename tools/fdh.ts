@@ -16,6 +16,7 @@ import { isTcpPortInUse, parsePortOffsetSpec } from "./src/port_offset.ts";
 import {
   appendEvent,
   createTaskState,
+  defaultGitRunner,
   fdhDir,
   nowIso,
   readTaskState,
@@ -134,6 +135,11 @@ import {
   validateObservation,
   withExtLedger,
 } from "./src/fdh_ext.ts";
+import {
+  pollAndIngest,
+  repoSlugFromRemote,
+  validateRepoSlug,
+} from "./src/fdh_ext_poll.ts";
 import type { ValidationError } from "./qa3/evidence/types.ts";
 
 const HELP = `
@@ -196,6 +202,10 @@ Commands:
               --value <v> --version <iso> [--event-id <id>] [--deleted true]
                             Feed one polled value: applied, duplicate, stale
                             (older version), conflict or deleted
+  ext poll --task-id <id> [--repo <owner/name>]
+                            Read each linked PR with 'gh api' (state, URL, the
+                            head's check runs) and take them as observations;
+                            Jira is observed by the agent ('ext observe')
   ext plan --task-id <id>   Sync actions to perform, holds (concurrent edit,
                             deletion, in flight, awaiting a poll, mirror not
                             polled yet), kept edits and the I-04 field table;
@@ -1288,7 +1298,8 @@ type ExtSubcommand =
   | "plan"
   | "start"
   | "done"
-  | "resolve";
+  | "resolve"
+  | "poll";
 
 async function cmdExt(parsed: ParsedArgs, sub: ExtSubcommand): Promise<void> {
   assertNoPositional(parsed, 2);
@@ -1307,6 +1318,7 @@ async function cmdExt(parsed: ParsedArgs, sub: ExtSubcommand): Promise<void> {
     start: ["task-id", "key", "agent", "op", "target"],
     done: ["task-id", "key", "epoch", "agent", "outcome"],
     resolve: ["task-id", "link", "field", "keep"],
+    poll: ["task-id", "repo"],
   };
   assertAllowedOptions(parsed, allowed[sub]);
   const taskId = validateTaskId(requireOption(parsed, "task-id"));
@@ -1405,6 +1417,33 @@ async function cmdExt(parsed: ParsedArgs, sub: ExtSubcommand): Promise<void> {
       const state = await loadStateForCwd(taskId);
       const op = await finishExtOp(state, { key, epoch, agent, outcome });
       console.log(JSON.stringify({ op }));
+      return;
+    }
+    case "poll": {
+      const repo = optional("repo");
+      if (repo !== undefined) validateRepoSlug(repo);
+      const state = await loadStateForCwd(taskId);
+      const slug = repo ??
+        repoSlugFromRemote(
+          await defaultGitRunner(state.worktree, [
+            "remote",
+            "get-url",
+            "origin",
+          ]),
+        );
+      const { observed, errors } = await pollAndIngest(
+        state.worktree,
+        taskId,
+        slug,
+      );
+      console.log(JSON.stringify({ repo: slug, observed, errors }));
+      if (errors.length > 0) {
+        throw new Error(
+          `${errors.length} linked PR(s) could not be polled: ${
+            errors.map((e) => `${e.ref}: ${e.error}`).join("; ")
+          }`,
+        );
+      }
       return;
     }
     case "resolve": {
@@ -1708,7 +1747,8 @@ async function main(argv: string[]): Promise<void> {
     case "ext":
       if (
         sub === "link" || sub === "observe" || sub === "plan" ||
-        sub === "start" || sub === "done" || sub === "resolve"
+        sub === "start" || sub === "done" || sub === "resolve" ||
+        sub === "poll"
       ) {
         return await cmdExt(parsed, sub);
       }
