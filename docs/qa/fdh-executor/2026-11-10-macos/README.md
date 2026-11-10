@@ -6,12 +6,20 @@ decision D-23) on macOS (KAN-137). The Windows and Linux runs are in
 [`../2026-11-10-windows/`](../2026-11-10-windows/README.md) and
 [`../2026-11-10-linux/`](../2026-11-10-linux/README.md).
 
-- Host: macOS 27.0 on Apple M5 Ultra (arm64, 30 cores). This is the Mac Studio
-  QA host, reached over Tailscale SSH.
-- Why not the macOS QA VM: the VM on that host has no git (Command Line Tools
-  are missing, and installing them needs 11.8 GB free, against 8.7 GB) and no
-  route to the internet (`--net-host`). The run therefore used the host itself.
-  The VM was started again with its original settings afterwards.
+- Host: macOS 27.0 (`sw_vers -productVersion`) on Apple M5 Ultra (arm64, 30
+  cores). This is the Mac Studio QA host, reached over Tailscale SSH. The
+  `osRelease` in `summary.json` (27.0.0) is the Darwin kernel release, not the
+  macOS version.
+- Why not the macOS QA VM: the VM has no git, because the Command Line Tools are
+  missing.
+  - The VM normally runs with `--net-host` and cannot reach the internet. It was
+    started again with NAT for the attempt, so the network could be worked
+    around.
+  - The Command Line Tools still could not be installed. They need 11.8 GB free,
+    against 8.7 GB. Growing the disk would mean deleting the VM's Recovery
+    partition, which was not done.
+  - The run therefore used the host itself, and the VM was started again with
+    its original `--net-host` settings.
 - Deno 2.9.4: the official `deno-aarch64-apple-darwin.zip`, checked against the
   release's sha256, in a user directory. No system setting was changed.
 - Code: a fresh clone at `main` 5b7829d8 (PR #3102), run as the normal user in
@@ -48,7 +56,12 @@ scenario) and E-2b, 31 checks.
 - **E-2b, read from the timestamps.** This is inferred; the events do not name
   the controller that wrote them.
   - The lease expired at 22.0. The epoch-1 step then ended with exit 143
-    (SIGTERM) at 22.032.
+    (SIGTERM) at 22.032. Source: `E-2b/outbox-epoch1.json`, the stalled
+    executor's report. It is `results[0]` with `endedAt` 22.032 and `exitCode`
+    143. The executor applied it at 33.5, after the journal was saved, and it
+    was rejected as stale (`E-2b/executor-epoch1.log`). The journal alone does
+    not show it. Both files were copied from the host's jobs directory after the
+    run.
   - The 0-process stop event was written at 22.306.
   - This fits the interrupted path. The first controller sent the stop, which
     ended the step, and was killed before it recorded the stop. The next
@@ -64,9 +77,12 @@ scenario) and E-2b, 31 checks.
 
 - One macOS machine (macOS 27.0, arm64). It is the host, not the QA VM (see
   above).
-- In every case where processes were stopped, the step root was still alive. The
-  root-gone POSIX paths (orphans reparented to launchd, leaderless process
-  groups) are not exercised and remain in KAN-137.
+- In every case where processes were stopped, the step root was still alive.
+  - In E-2b the second controller went through the root-gone selection, but
+    nothing had survived for it to find.
+  - The root-gone POSIX paths with surviving processes (orphans reparented to
+    launchd, leaderless process groups) are not exercised. They remain in
+    KAN-137.
 - `--step build` is covered by unit tests only.
 - The Deno binary and the clone stay on the host in user directories, to repeat
   the run: `~/.local/fdh-tools/deno` and `~/fdh-posix-e2e`.
