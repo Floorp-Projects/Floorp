@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "jobId": "test-20261110t143104z-40f89d",
-  "taskId": "e2e-e-7-mwasfma5",
+  "jobId": "test-20261110t145458z-cb70d3",
+  "taskId": "e2e-e-7-mwatac9v",
   "worktree": "/Users/user/fdh-posix-e2e",
   "kind": "test",
   "step": {
@@ -22,12 +22,12 @@
   },
   "intent": null,
   "inputs": {
-    "baseCommit": "f2a82803d3a51b9e9cce0bd0767f848588be8fef",
-    "head": "f2a82803d3a51b9e9cce0bd0767f848588be8fef",
+    "baseCommit": "c9110a990d97ca43c7cc69b960d897a1819554d8",
+    "head": "c9110a990d97ca43c7cc69b960d897a1819554d8",
     "guardEnv": {},
     "worktreeState": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
   },
-  "executionDigest": "afe0b7c30143fe40d5711f0d9237d90f70152e5b99bf57dc8eb25d6c93d2a056",
+  "executionDigest": "dc73e7b5342d695964fe1c00108c7376c7b17afda13df3622426f9f10deb42e4",
   "state": "failed",
   "epoch": 1,
   "lease": null,
@@ -37,20 +37,20 @@
     {
       "attempt": 1,
       "epoch": 1,
-      "holder": "executor-6501-d3438f",
-      "scheduledAt": "2026-11-10T14:31:04.750Z",
-      "startedAt": "2026-11-10T14:31:04.812Z",
-      "endedAt": "2026-11-10T14:31:09.345Z",
+      "holder": "executor-7628-677ec6",
+      "scheduledAt": "2026-11-10T14:54:58.115Z",
+      "startedAt": "2026-11-10T14:54:58.177Z",
+      "endedAt": "2026-11-10T14:55:02.696Z",
       "result": "lost",
       "exitCode": null,
       "logRef": null,
       "process": {
-        "pid": 6503,
-        "startTime": "Tue Nov 10 23:31:04 2026",
+        "pid": 7630,
+        "startTime": "Tue Nov 10 23:54:58 2026",
         "commandLine": "/Users/user/.local/fdh-tools/deno task test:host"
       },
       "notes": "holder lost; outcome unknown",
-      "lastSeenAt": "2026-11-10T14:31:05.824Z"
+      "lastSeenAt": "2026-11-10T14:54:59.189Z"
     }
   ],
   "checkpoint": 0,
@@ -60,48 +60,48 @@
     {
       "from": null,
       "to": "pending",
-      "at": "2026-11-10T14:31:04.750Z",
+      "at": "2026-11-10T14:54:58.115Z",
       "reason": "created"
     },
     {
       "from": "pending",
       "to": "scheduled",
-      "at": "2026-11-10T14:31:04.750Z",
+      "at": "2026-11-10T14:54:58.115Z",
       "reason": "attempt 1 recorded before start"
     },
     {
       "from": "scheduled",
       "to": "running",
-      "at": "2026-11-10T14:31:04.812Z",
+      "at": "2026-11-10T14:54:58.177Z",
       "reason": "attempt 1 started"
     },
     {
       "from": "running",
       "to": "failed",
-      "at": "2026-11-10T14:31:09.345Z",
+      "at": "2026-11-10T14:55:02.696Z",
       "reason": "inputs changed since the job was recorded"
     }
   ],
   "events": [
     {
-      "at": "2026-11-10T14:31:09.345Z",
+      "at": "2026-11-10T14:55:02.696Z",
       "kind": "lease-expired",
       "epoch": 1,
-      "note": "holder executor-6501-d3438f lost"
+      "note": "holder executor-7628-677ec6 lost"
     },
     {
-      "at": "2026-11-10T14:31:09.345Z",
+      "at": "2026-11-10T14:55:02.696Z",
       "kind": "input-changed",
       "epoch": 1,
       "note": "digest differs; not rerun"
     },
     {
-      "at": "2026-11-10T14:31:11.003Z",
+      "at": "2026-11-10T14:55:04.353Z",
       "kind": "lost-step-stopped",
       "epoch": 1,
-      "note": "stopped 2 process(es) of the step tree rooted at pid 6503"
+      "note": "stopped 2 process(es) of the step tree rooted at pid 7630"
     }
   ],
-  "createdAt": "2026-11-10T14:31:04.750Z",
-  "updatedAt": "2026-11-10T14:31:11.003Z"
+  "createdAt": "2026-11-10T14:54:58.115Z",
+  "updatedAt": "2026-11-10T14:55:04.353Z"
 }

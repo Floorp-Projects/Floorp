@@ -14,7 +14,7 @@
   ok   the epoch-1 step tree was stopped (by either controller)
   ok   the epoch-1 step process is not running
 [e2e] E-2c ...
-[e2e] E-2c PASS (12.6 s)
+[e2e] E-2c PASS (12.7 s)
   ok   the root's children outlive it (orphans)
   ok   the takeover stopped the orphans
   ok   the stop of the epoch-1 tree counted the orphans

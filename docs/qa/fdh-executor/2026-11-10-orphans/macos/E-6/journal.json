@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "jobId": "intent-20261110t143104z-c9778d",
-  "taskId": "e2e-e-6-mwasfly6",
+  "jobId": "intent-20261110t145457z-2bc642",
+  "taskId": "e2e-e-6-mwataby2",
   "worktree": "/Users/user/fdh-posix-e2e",
   "kind": "intent",
   "step": null,
@@ -10,11 +10,11 @@
     "target": "origin e2e-branch"
   },
   "inputs": {
-    "baseCommit": "f2a82803d3a51b9e9cce0bd0767f848588be8fef",
+    "baseCommit": "c9110a990d97ca43c7cc69b960d897a1819554d8",
     "head": "",
     "guardEnv": {}
   },
-  "executionDigest": "8cf0af586e9bef929f8f3a47ab422f52558d1dd921a8aebee3c3b5587f7eb3b4",
+  "executionDigest": "f71c2013f518101a98c7f8d0765f75a4ffc468a2e62e247281fabbd0c52af703",
   "state": "succeeded",
   "epoch": 1,
   "lease": null,
@@ -25,15 +25,15 @@
       "attempt": 1,
       "epoch": 1,
       "holder": "agent-a",
-      "scheduledAt": "2026-11-10T14:31:04.327Z",
-      "startedAt": "2026-11-10T14:31:04.327Z",
-      "endedAt": "2026-11-10T14:31:04.401Z",
+      "scheduledAt": "2026-11-10T14:54:57.702Z",
+      "startedAt": "2026-11-10T14:54:57.702Z",
+      "endedAt": "2026-11-10T14:54:57.771Z",
       "result": "lost",
       "exitCode": null,
       "logRef": null,
       "process": null,
       "notes": "holder lost; outcome unknown",
-      "lastSeenAt": "2026-11-10T14:31:04.327Z"
+      "lastSeenAt": "2026-11-10T14:54:57.702Z"
     }
   ],
   "checkpoint": 0,
@@ -43,54 +43,54 @@
     {
       "from": null,
       "to": "pending",
-      "at": "2026-11-10T14:31:04.327Z",
+      "at": "2026-11-10T14:54:57.702Z",
       "reason": "created"
     },
     {
       "from": "pending",
       "to": "scheduled",
-      "at": "2026-11-10T14:31:04.327Z",
+      "at": "2026-11-10T14:54:57.702Z",
       "reason": "attempt 1 recorded before start"
     },
     {
       "from": "scheduled",
       "to": "running",
-      "at": "2026-11-10T14:31:04.327Z",
+      "at": "2026-11-10T14:54:57.702Z",
       "reason": "attempt 1 started"
     },
     {
       "from": "running",
       "to": "awaiting-approval",
-      "at": "2026-11-10T14:31:04.401Z",
+      "at": "2026-11-10T14:54:57.771Z",
       "reason": "unknown outcome of non-idempotent push operation"
     },
     {
       "from": "awaiting-approval",
       "to": "running",
-      "at": "2026-11-10T14:31:04.529Z",
+      "at": "2026-11-10T14:54:57.897Z",
       "reason": "resolved succeeded by approver: branch exists on origin"
     },
     {
       "from": "running",
       "to": "succeeded",
-      "at": "2026-11-10T14:31:04.529Z",
+      "at": "2026-11-10T14:54:57.897Z",
       "reason": "outcome confirmed by approver"
     }
   ],
   "events": [
     {
-      "at": "2026-11-10T14:31:04.401Z",
+      "at": "2026-11-10T14:54:57.771Z",
       "kind": "lease-expired",
       "epoch": 1,
       "note": "holder agent-a lost"
     },
     {
-      "at": "2026-11-10T14:31:04.529Z",
+      "at": "2026-11-10T14:54:57.897Z",
       "kind": "resolved",
       "epoch": 1,
       "note": "resolved succeeded by approver: branch exists on origin"
     }
   ],
-  "createdAt": "2026-11-10T14:31:04.327Z",
-  "updatedAt": "2026-11-10T14:31:04.529Z"
+  "createdAt": "2026-11-10T14:54:57.702Z",
+  "updatedAt": "2026-11-10T14:54:57.897Z"
 }

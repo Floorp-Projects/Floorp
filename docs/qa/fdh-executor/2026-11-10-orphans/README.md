@@ -15,12 +15,12 @@ The takeover must stop that orphan before epoch 2 runs the step again.
 
 ## Runs
 
-| Directory     | Host                                                     | Deno  | Code                                                                                                                                             |
-| ------------- | -------------------------------------------------------- | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `linux/`      | Debian 13, kernel 6.12.111, x86_64 (QA desktop over SSH) | 2.8.3 | branch `fdh/posix-orphans` f2a82803, all cases                                                                                                   |
-| `macos/`      | macOS 27.0 (Mac Studio host, Darwin 27.0.0), arm64       | 2.9.4 | branch f2a82803, all cases                                                                                                                       |
-| `windows/`    | Windows 11 Pro 10.0.26300, x86_64                        | 2.9.4 | branch f2a82803, all cases                                                                                                                       |
-| `*/baseline/` | the same Linux and macOS hosts                           | —     | f2a82803 with `tools/src/fdh_job_process.ts` and `tools/src/fdh_job.test.ts` taken from `main` e011353d (the code before this change), E-2c only |
+| Directory     | Host                                                     | Deno  | Code                                                                                                                                                                              |
+| ------------- | -------------------------------------------------------- | ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `linux/`      | Debian 13, kernel 6.12.111, x86_64 (QA desktop over SSH) | 2.8.3 | branch `fdh/posix-orphans` c9110a99, all cases                                                                                                                                    |
+| `macos/`      | macOS 27.0 (Mac Studio host, Darwin 27.0.0), arm64       | 2.9.4 | branch c9110a99, all cases                                                                                                                                                        |
+| `windows/`    | Windows 11 Pro 10.0.26300, x86_64                        | 2.9.4 | branch c9110a99, all cases                                                                                                                                                        |
+| `*/baseline/` | the same Linux and macOS hosts                           | —     | f2a82803 (an earlier head of this branch) with `tools/src/fdh_job_process.ts` and `tools/src/fdh_job.test.ts` taken from `main` e011353d (the code before this change), E-2c only |
 
 How the runs were made:
 
@@ -36,13 +36,13 @@ How the runs were made:
 
 ## Results
 
-| Run               | E-2c                                                                                                                                                                       | Other cases                        |
-| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- |
-| `linux/`          | PASS. The orphan (pid 913199, parent pid now 1) was stopped by the takeover reconcile: `stopped 1 process(es) of the step tree rooted at pid 913191`. Epoch 2 `succeeded`. | E-1..E-9 and E-2b PASS (35 checks) |
-| `macos/`          | PASS. The orphan (pid 6356, parent pid now 1) was stopped by the takeover: `stopped 1 process(es) …`. Epoch 2 `succeeded`.                                                 | E-1..E-9 and E-2b PASS (35 checks) |
-| `windows/`        | PASS. No orphan was left: both children of `deno task` were gone 0.5 s after the root was killed. The takeover stopped 0 processes, and epoch 2 `succeeded`.               | E-1..E-9 and E-2b PASS (34 checks) |
-| `linux/baseline/` | **FAIL as expected.** The orphan (pid 915969, parent pid 1) was still running after the takeover. The stop counted 0 processes, so epoch 2 ran the step beside it.         | not run                            |
-| `macos/baseline/` | **FAIL as expected.** The orphan (pid 6690, parent pid 1) was still running after the takeover. The stop counted 0 processes.                                              | not run                            |
+| Run               | E-2c                                                                                                                                                                                                                               | Other cases                                  |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
+| `linux/`          | PASS. The orphan (pid 925945, parent pid now 1) was stopped by the takeover reconcile: `stopped 1 process(es) of the step tree rooted at pid 925937`. Epoch 2 `succeeded`.                                                         | E-1..E-9 and E-2b PASS (35 checks with E-2c) |
+| `macos/`          | PASS. The orphan (pid 7484, parent pid now 1) was stopped by the takeover: `stopped 1 process(es) …`. Epoch 2 `succeeded`.                                                                                                         | E-1..E-9 and E-2b PASS (35 checks with E-2c) |
+| `windows/`        | PASS. No orphan was left: both children of `deno task` were gone 0.5 s after the root was killed. The orphan count check is skipped (recorded in the notes); no child of the root ran after the takeover, and epoch 2 `succeeded`. | E-1..E-9 and E-2b PASS (33 checks with E-2c) |
+| `linux/baseline/` | **FAIL as expected.** The orphan (pid 915969, parent pid 1) was still running after the takeover. The stop counted 0 processes, so epoch 2 ran the step beside it.                                                                 | not run                                      |
+| `macos/baseline/` | **FAIL as expected.** The orphan (pid 6690, parent pid 1) was still running after the takeover. The stop counted 0 processes.                                                                                                      | not run                                      |
 
 The baselines show the gap this change closes. Once the root was gone, the code
 on `main` looked for the lost tree only by parent pid. A re-parented child has
@@ -54,12 +54,15 @@ The branch adds a second way to find it, through the process group:
 - The orphan stays in that group.
 - A group id is not reused while the group has members.
 - The member must also have started between the root and the bound.
+- The group id is read with the start time (the same `ps` line on macOS, the
+  same `/proc/<pid>/stat` read on Linux).
 
 ## Not covered
 
 - **A group member that started after the bound.** The bound is the last
   heartbeat plus one TTL, or the time the loss was declared. Such a member is
-  not trusted and so not stopped. The unit tests cover this.
+  not selected for the per-process stop, and the unit tests cover this. While a
+  selected member is still in the group, the group SIGTERM reaches it as well.
 - **Members that left the group or started their own session** (`setsid`). These
   are found only through their parent pid. A daemon that double-forks out of the
   group is not found once its parent has exited.

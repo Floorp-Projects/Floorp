@@ -1,6 +1,6 @@
 {
-  "ranAt": "2026-11-10T14:32:02.946Z",
-  "head": "f2a82803d3a51b9e9cce0bd0767f848588be8fef",
+  "ranAt": "2026-11-10T14:57:00.985Z",
+  "head": "c9110a990d97ca43c7cc69b960d897a1819554d8",
   "os": "windows x86_64",
   "osRelease": "10.0.26300",
   "deno": "2.9.4",
@@ -13,7 +13,7 @@
         {
           "name": "the executor process is still running after its controller was killed",
           "passed": true,
-          "detail": "{\"state\":\"running\",\"epoch\":1,\"executor\":38048}"
+          "detail": "{\"state\":\"running\",\"epoch\":1,\"executor\":55936}"
         },
         {
           "name": "a new controller reconnects and the job succeeds",
@@ -27,7 +27,7 @@
         }
       ],
       "notes": [
-        "task e2e-e-1-mwascjns, job test-20261110t142841z-504a79"
+        "task e2e-e-1-mwat8ste, job test-20261110t145347z-493066"
       ]
     },
     {
@@ -47,12 +47,12 @@
         {
           "name": "the lost attempt's step process is not running any more",
           "passed": true,
-          "detail": "pid 56264"
+          "detail": "pid 81532"
         }
       ],
       "notes": [
-        "killed executor executor-81656-1d1431; step root pid 56264",
-        "task e2e-e-2-mwasctwr, job test-20261110t142854z-e6bd18"
+        "killed executor executor-432-5ef874; step root pid 81532",
+        "task e2e-e-2-mwat95oa, job test-20261110t145403z-d0936c"
       ]
     },
     {
@@ -72,12 +72,12 @@
         {
           "name": "the epoch-1 step process is not running",
           "passed": true,
-          "detail": "740"
+          "detail": "9332"
         }
       ],
       "notes": [
         "controller killed at epoch 2",
-        "task e2e-e2b-mwasd8ud, job test-20261110t142914z-b83da1"
+        "task e2e-e2b-mwat9ln8, job test-20261110t145423z-c56f7d"
       ]
     },
     {
@@ -85,14 +85,9 @@
       "passed": true,
       "checks": [
         {
-          "name": "the takeover stopped the orphans",
+          "name": "the takeover succeeded and no child of the killed root runs",
           "passed": true,
           "detail": "{\"code\":0,\"left\":[]}"
-        },
-        {
-          "name": "the stop of the epoch-1 tree counted the orphans",
-          "passed": true,
-          "detail": "stopped 0 process(es) of the step tree rooted at pid 35300"
         },
         {
           "name": "the job succeeds at epoch 2",
@@ -101,10 +96,11 @@
         }
       ],
       "notes": [
-        "killed executor executor-65112-5ff8b7 and step root 35300; children 84176,81348 now have parent pid(s) ,",
+        "killed executor executor-44952-2d02d6 and step root 72944; children 64932,5880 now have parent pid(s) ,",
         "orphans alive after the root was killed: 0",
-        "reconcile: [{\"jobId\":\"test-20261110t142934z-206e09\",\"kind\":\"test\",\"state\":\"running\",\"epoch\":2,\"action\":\"respawn\",\"stopped\":0,\"executorPid\":75028}]",
-        "task e2e-e2c-mwasdo9w, job test-20261110t142934z-206e09"
+        "reconcile: [{\"jobId\":\"test-20261110t145444z-ef9a88\",\"kind\":\"test\",\"state\":\"running\",\"epoch\":2,\"action\":\"respawn\",\"stopped\":0,\"executorPid\":22496}]",
+        "skipped on Windows (no orphan to count): stopped 0 process(es) of the step tree rooted at pid 72944",
+        "task e2e-e2c-mwata1jv, job test-20261110t145444z-ef9a88"
       ]
     },
     {
@@ -133,7 +129,7 @@
         }
       ],
       "notes": [
-        "task e2e-e-3-mwase22r, job test-20261110t142952z-015b7b"
+        "task e2e-e-3-mwatagxh, job test-20261110t145504z-da53b2"
       ]
     },
     {
@@ -148,12 +144,12 @@
         {
           "name": "E-5: the epoch-1 report was rejected as stale and recorded",
           "passed": true,
-          "detail": "[{\"at\":\"2026-11-10T14:30:16.648Z\",\"kind\":\"stale-epoch\",\"epoch\":1,\"note\":\"report by executor-70260-c14a05 (exit -1) rejected; current epoch 2\"}]"
+          "detail": "[{\"at\":\"2026-11-10T14:55:29.139Z\",\"kind\":\"stale-epoch\",\"epoch\":1,\"note\":\"report by executor-47964-81203d (exit -1) rejected; current epoch 2\"}]"
         },
         {
           "name": "E-5: attempt 1 stays lost, with the late report in its notes",
           "passed": true,
-          "detail": "holder lost; outcome unknown; late report by executor-70260-c14a05 (exit -1) rejected; current epoch 2"
+          "detail": "holder lost; outcome unknown; late report by executor-47964-81203d (exit -1) rejected; current epoch 2"
         },
         {
           "name": "the job's result is epoch 2's",
@@ -162,7 +158,7 @@
         }
       ],
       "notes": [
-        "task e2e-e4-mwasebhb, job test-20261110t143004z-5b7949"
+        "task e2e-e4-mwataqfn, job test-20261110t145516z-26e405"
       ]
     },
     {
@@ -177,7 +173,7 @@
         {
           "name": "the quota ledger lists it as pending",
           "passed": true,
-          "detail": "[{\"op\":\"push\",\"note\":\"job intent-20261110t143020z-29c2b3: origin e2e-branch\",\"at\":\"2026-11-10T14:30:43.240Z\"}]"
+          "detail": "[{\"op\":\"push\",\"note\":\"job intent-20261110t145535z-9d5a15: origin e2e-branch\",\"at\":\"2026-11-10T14:55:57.458Z\"}]"
         },
         {
           "name": "a second resume does not rerun or re-queue it",
@@ -192,11 +188,11 @@
         {
           "name": "and approves its pending entry",
           "passed": true,
-          "detail": "{\"taskId\":\"e2e-e-6-mwaseoci\",\"activeAgent\":null,\"stopped\":false,\"stopReason\":null,\"approvalPending\":[],\"events\":2,\"updatedAt\":\"2026-11-10T14:31:05.658Z\"}"
+          "detail": "{\"taskId\":\"e2e-e-6-mwatb4qm\",\"activeAgent\":null,\"stopped\":false,\"stopReason\":null,\"approvalPending\":[],\"events\":2,\"updatedAt\":\"2026-11-10T14:56:19.848Z\"}"
         }
       ],
       "notes": [
-        "task e2e-e-6-mwaseoci, job intent-20261110t143020z-29c2b3"
+        "task e2e-e-6-mwatb4qm, job intent-20261110t145535z-9d5a15"
       ]
     },
     {
@@ -220,7 +216,7 @@
         }
       ],
       "notes": [
-        "task e2e-e-7-mwasfn8x, job test-20261110t143107z-e67c55"
+        "task e2e-e-7-mwatc3ls, job test-20261110t145620z-ed6689"
       ]
     },
     {
@@ -244,7 +240,7 @@
         }
       ],
       "notes": [
-        "task e2e-e-8-mwasg09v, job test-20261110t143125z-2ae3aa"
+        "task e2e-e-8-mwatc896, job test-20261110t145626z-9bba5c"
       ]
     },
     {
@@ -268,7 +264,7 @@
         }
       ],
       "notes": [
-        "task e2e-e-9-mwasgdjc, job intent-20261110t143140z-339d3f"
+        "task e2e-e-9-mwatchiy, job intent-20261110t145638z-116b70"
       ]
     }
   ]

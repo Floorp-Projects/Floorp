@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "jobId": "test-20261110t142841z-504a79",
-  "taskId": "e2e-e-1-mwascjns",
+  "jobId": "test-20261110t145347z-493066",
+  "taskId": "e2e-e-1-mwat8ste",
   "worktree": "E:\\floorp-browser-dev\\fdh-followup",
   "kind": "test",
   "step": {
@@ -22,12 +22,12 @@
   },
   "intent": null,
   "inputs": {
-    "baseCommit": "f2a82803d3a51b9e9cce0bd0767f848588be8fef",
-    "head": "f2a82803d3a51b9e9cce0bd0767f848588be8fef",
+    "baseCommit": "c9110a990d97ca43c7cc69b960d897a1819554d8",
+    "head": "c9110a990d97ca43c7cc69b960d897a1819554d8",
     "guardEnv": {},
-    "worktreeState": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+    "worktreeState": "5b8173c51723b21589c0deff1175c6dab3137fc3367da5de25d1d50ca0d567f4"
   },
-  "executionDigest": "4d0f082c7739fc8c90315208a0c326d5972ff6ea3197a92e4430e61e02c9c03e",
+  "executionDigest": "1ee37617490e1c5bc7f106a89cb8caf5c7928865a0a89a50906045ffc3a9b5f5",
   "state": "succeeded",
   "epoch": 1,
   "lease": null,
@@ -37,16 +37,16 @@
     {
       "attempt": 1,
       "epoch": 1,
-      "holder": "executor-38048-a44a6b",
-      "scheduledAt": "2026-11-10T14:28:41.728Z",
-      "startedAt": "2026-11-10T14:28:42.070Z",
-      "endedAt": "2026-11-10T14:28:53.551Z",
+      "holder": "executor-55936-eae2f0",
+      "scheduledAt": "2026-11-10T14:53:47.109Z",
+      "startedAt": "2026-11-10T14:53:47.790Z",
+      "endedAt": "2026-11-10T14:54:02.318Z",
       "result": "succeeded",
       "exitCode": 0,
-      "logRef": "_dist/fdh/jobs/e2e-e-1-mwascjns/test-20261110t142841z-504a79-1-0.log",
+      "logRef": "_dist/fdh/jobs/e2e-e-1-mwat8ste/test-20261110t145347z-493066-1-0.log",
       "process": {
-        "pid": 75864,
-        "startTime": "2026-11-10T14:28:42.0748140Z",
+        "pid": 67284,
+        "startTime": "2026-11-10T14:53:47.7983660Z",
         "commandLine": "C:\\Users\\user\\.deno\\bin\\deno.exe task test:host"
       },
       "notes": ""
@@ -58,9 +58,9 @@
       "index": 0,
       "epoch": 1,
       "exitCode": 0,
-      "startedAt": "2026-11-10T14:28:42.072Z",
-      "endedAt": "2026-11-10T14:28:53.551Z",
-      "logRef": "_dist/fdh/jobs/e2e-e-1-mwascjns/test-20261110t142841z-504a79-1-0.log"
+      "startedAt": "2026-11-10T14:53:47.794Z",
+      "endedAt": "2026-11-10T14:54:02.318Z",
+      "logRef": "_dist/fdh/jobs/e2e-e-1-mwat8ste/test-20261110t145347z-493066-1-0.log"
     }
   ],
   "recordedToTask": true,
@@ -68,29 +68,29 @@
     {
       "from": null,
       "to": "pending",
-      "at": "2026-11-10T14:28:41.728Z",
+      "at": "2026-11-10T14:53:47.109Z",
       "reason": "created"
     },
     {
       "from": "pending",
       "to": "scheduled",
-      "at": "2026-11-10T14:28:41.728Z",
+      "at": "2026-11-10T14:53:47.109Z",
       "reason": "attempt 1 recorded before start"
     },
     {
       "from": "scheduled",
       "to": "running",
-      "at": "2026-11-10T14:28:42.070Z",
+      "at": "2026-11-10T14:53:47.790Z",
       "reason": "attempt 1 started"
     },
     {
       "from": "running",
       "to": "succeeded",
-      "at": "2026-11-10T14:28:53.552Z",
+      "at": "2026-11-10T14:54:02.318Z",
       "reason": "attempt 1 exited 0"
     }
   ],
   "events": [],
-  "createdAt": "2026-11-10T14:28:41.728Z",
-  "updatedAt": "2026-11-10T14:28:53.552Z"
+  "createdAt": "2026-11-10T14:53:47.109Z",
+  "updatedAt": "2026-11-10T14:54:02.318Z"
 }
