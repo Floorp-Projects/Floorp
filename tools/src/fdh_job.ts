@@ -575,7 +575,7 @@ async function reconcileOne(
               state.worktree,
             );
         } catch (error) {
-          return {
+          const held: ReconcileReport = {
             jobId,
             kind: before.kind,
             state: before.state,
@@ -585,6 +585,10 @@ async function reconcileOne(
               error instanceof Error ? error.message : String(error)
             }`,
           };
+          // The lost attempt's step tree (often still alive on POSIX) must
+          // not keep building under the dev server while the job is held.
+          held.stopped = await stopHeldAttemptTree(options, before);
+          return held;
         }
       }
     }
@@ -701,6 +705,41 @@ async function reconcileOne(
   }
 }
 
+/**
+ * Stop the step tree of a job's current attempt whose holder looks lost
+ * while its respawn is held, once per epoch (recorded as lost-step-stopped,
+ * so the later takeover does not stop it again). Returns the number stopped.
+ */
+async function stopHeldAttemptTree(
+  options: ReconcileTaskOptions,
+  before: JobJournal,
+): Promise<number | undefined> {
+  const attempt = before.attempts[before.attempts.length - 1];
+  if (attempt?.process == null || attempt.result !== "running") {
+    return undefined;
+  }
+  if (
+    before.events.some((e) =>
+      e.kind === "lost-step-stopped" && e.epoch === attempt.epoch
+    )
+  ) {
+    return undefined;
+  }
+  const root = attempt.process;
+  const bound = lostTreeBound({
+    lastSeenAt: before.lease?.heartbeatAt ?? attempt.startedAt ?? undefined,
+    endedAt: nowIso(),
+  }, before.leaseTtlMs);
+  const stopped = await (options.stopTree ?? stopProcessTree)(root, bound);
+  await updateJob(
+    options.state.worktree,
+    options.state.taskId,
+    before.jobId,
+    (j) => noteLostStepStopped(j, attempt.epoch, root, stopped.length),
+  );
+  return stopped.length;
+}
+
 export interface WaitOptions extends ReconcileTaskOptions {
   jobId: string;
   timeoutMs: number;
@@ -729,6 +768,11 @@ export async function waitForJob(options: WaitOptions): Promise<JobJournal> {
       errors += 1;
       options.onError?.(report.error);
       if (errors >= (options.maxErrors ?? 3)) {
+        if (report.action === "held") {
+          throw new Error(
+            `job ${options.jobId} is held: its source build waits for this worktree's dev server to stop. Run 'fdh dev down', then 'fdh job wait' again (the job keeps its attempts). ${report.error}`,
+          );
+        }
         throw new Error(
           `job ${options.jobId} could not be reconciled ${errors} times in a row: ${report.error}`,
         );

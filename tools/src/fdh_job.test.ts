@@ -1039,3 +1039,80 @@ Deno.test("fdh job: an unreadable untracked file is counted, not fatal", async (
     await Deno.remove(dir, { recursive: true });
   }
 });
+
+Deno.test("fdh job: a held job's lost step tree is stopped once, and job wait says to run dev down", async () => {
+  const dir = await Deno.makeTempDir();
+  try {
+    const state = taskIn(dir);
+    const git = fakeGit({ head: "h", diff: "", untracked: "" });
+    const spawned: number[] = [];
+    const spawn = (_w: string, _t: string, _j: string, epoch: number) => {
+      spawned.push(epoch);
+      return 1;
+    };
+    const job = await startStepJob({
+      state,
+      kind: "build",
+      phase: "all",
+      leaseTtlMs: 1_000,
+      git,
+      spawn,
+    });
+    const old = new Date(Date.now() - 60_000).toISOString();
+    const root = {
+      pid: 71,
+      startTime: "s",
+      commandLine: "deno task feles-build",
+    };
+    await updateJob(dir, "t1", job.jobId, (j) => {
+      beginAttempt(j, 1, "x1", old);
+      recordStepProcess(j, 1, "x1", root);
+    });
+    const stopped: number[] = [];
+    const stopTree = (r: { pid: number }) => {
+      stopped.push(r.pid);
+      return Promise.resolve([{ ...root, ppid: 1, name: "deno" }]);
+    };
+    const refuse = () => Promise.reject(new Error("dev server running"));
+    for (let i = 0; i < 3; i++) {
+      const [report] = await reconcileTaskJobs({
+        state,
+        git,
+        spawn,
+        stopTree,
+        sourceBuildGuard: refuse,
+      });
+      assertEquals(report.action, "held");
+    }
+    // Stopped on the first held reconcile only.
+    assertEquals(stopped, [71]);
+    await assertRejects(
+      () =>
+        waitForJob({
+          state,
+          jobId: job.jobId,
+          timeoutMs: 60_000,
+          git,
+          spawn,
+          stopTree,
+          sourceBuildGuard: refuse,
+          sleep: () => Promise.resolve(),
+        }),
+      Error,
+      "Run 'fdh dev down'",
+    );
+    // The takeover after dev down does not stop the same tree again.
+    const [after] = await reconcileTaskJobs({
+      state,
+      git,
+      spawn,
+      stopTree,
+      sourceBuildGuard: () => Promise.resolve(),
+    });
+    assertEquals(after.action, "respawn");
+    assertEquals(stopped, [71]);
+    assertEquals(spawned, [1, 2]);
+  } finally {
+    await Deno.remove(dir, { recursive: true });
+  }
+});
