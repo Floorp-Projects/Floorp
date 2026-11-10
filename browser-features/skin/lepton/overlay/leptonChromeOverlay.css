@@ -11,5 +11,11 @@
  * leptonChrome.css, at the same level (a chrome document sheet), for the
  * lepton, photon and protonfix designs, so a rule here wins over a Lepton
  * rule of equal specificity by source order. Icon URLs use ../icons/ like
- * the vendored sheet. See ../README.md.
+ * the vendored sheet.
+ *
+ * Production loads this file on its own; dev builds concatenate it after
+ * leptonChrome.css in one <style>. So: repeat Lepton's @namespace lines
+ * (xul / html prefixes, same URLs) at the top when you use those prefixes,
+ * declare no default namespace, and do not use @import (dropped in dev).
+ * See ../README.md.
  */

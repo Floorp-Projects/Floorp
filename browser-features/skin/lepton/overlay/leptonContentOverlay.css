@@ -8,10 +8,15 @@
  * Lepton's content styling here instead.
  *
  * Loaded by browser-features/chrome/common/designs/utils/css.ts right after
- * every load of leptonContent.css, at the same level: as a chrome document
- * sheet for lepton, photon and protonfix, and also as an AGENT_SHEET
+ * every load of leptonContent.css, at the same level. Production: a chrome
+ * document sheet for lepton, photon and protonfix, plus an AGENT_SHEET
  * (nsIStyleSheetService, applies to every document including web pages) for
- * photon and protonfix. Rules here therefore reach web content for those
- * designs; scope them with @-moz-document like leptonContent.css does.
- * See ../README.md.
+ * photon and protonfix. Dev builds: a chrome document sheet for lepton, an
+ * AGENT_SHEET only for photon and protonfix. Rules here therefore reach web
+ * content; scope them with @-moz-document like leptonContent.css does.
+ *
+ * Repeat Lepton's @namespace lines (xul / html prefixes, same URLs) at the
+ * top when you use those prefixes, declare no default namespace, and do not
+ * use @import: in the dev chrome <style> this file is concatenated after
+ * Lepton's sheets. See ../README.md.
  */

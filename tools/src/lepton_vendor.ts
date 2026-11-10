@@ -16,6 +16,11 @@
 //   `apply` replaces the vendored files and rewrites UPSTREAM.json and the
 //   lepton entries of browser-features/skin/jar.mn.
 //
+// Release zips are untrusted input. Every path is checked with lstat and
+// anything that is not a regular file or a plain directory (a symlink in
+// particular) aborts before a byte is read or written, so a planted link
+// cannot copy a runner file (token, .git/config) into the repository.
+//
 // CLI (paths are relative to the current directory):
 //   deno run --allow-read --allow-write tools/src/lepton_vendor.ts verify
 //   deno run --allow-read tools/src/lepton_vendor.ts verify-assets \
@@ -129,24 +134,51 @@ function compareCodePoints(a: string, b: string): number {
   return a < b ? -1 : a > b ? 1 : 0;
 }
 
-/** Every file under `dir`, as `/`-separated paths relative to `dir`. */
-async function listFiles(dir: string, prefix = ""): Promise<string[]> {
-  const out: string[] = [];
-  let entries: Deno.DirEntry[];
+/**
+ * `lstat` that does not follow a symlink. Returns null when `file` does not
+ * exist. Release zips are untrusted: unzip restores symlinks, and following
+ * one (e.g. `user.js -> /proc/self/environ` or `-> .git/config`) would copy
+ * that file's content into the repository.
+ */
+async function lstatOrNull(file: string): Promise<Deno.FileInfo | null> {
   try {
-    entries = await Array.fromAsync(Deno.readDir(dir));
+    return await Deno.lstat(file);
   } catch (error) {
-    if (error instanceof Deno.errors.NotFound) return out;
+    if (error instanceof Deno.errors.NotFound) return null;
     throw error;
   }
-  for (const entry of entries) {
+}
+
+function isRegularFile(info: Deno.FileInfo): boolean {
+  return info.isFile && !info.isSymlink;
+}
+
+function isPlainDirectory(info: Deno.FileInfo): boolean {
+  return info.isDirectory && !info.isSymlink;
+}
+
+/**
+ * Every file under `dir`, as `/`-separated paths relative to `dir`. Throws on
+ * a symlink or any other entry that is not a regular file or directory,
+ * including `dir` itself. A missing `dir` lists as empty.
+ */
+async function listFiles(dir: string, prefix = ""): Promise<string[]> {
+  const out: string[] = [];
+  const info = await lstatOrNull(dir);
+  if (info === null) return out;
+  if (!isPlainDirectory(info)) {
+    throw new Error(`not a plain directory (symlink?): ${dir}`);
+  }
+  for await (const entry of Deno.readDir(dir)) {
     const rel = prefix ? `${prefix}/${entry.name}` : entry.name;
-    if (entry.isDirectory) {
-      out.push(...await listFiles(path.join(dir, entry.name), rel));
-    } else if (entry.isFile) {
+    const child = path.join(dir, entry.name);
+    const childInfo = await Deno.lstat(child);
+    if (isPlainDirectory(childInfo)) {
+      out.push(...await listFiles(child, rel));
+    } else if (isRegularFile(childInfo)) {
       out.push(rel);
     } else {
-      throw new Error(`unexpected non-file entry in vendored Lepton: ${rel}`);
+      throw new Error(`not a regular file (symlink?): ${child}`);
     }
   }
   return out.sort(compareCodePoints);
@@ -162,16 +194,28 @@ export async function listVendoredFiles(leptonDir: string): Promise<string[]> {
   }
   for (const single of Object.keys(SINGLE_FILES)) {
     if (single.includes("/")) continue; // inside a vendored dir
-    try {
-      if ((await Deno.stat(path.join(leptonDir, single))).isFile) {
-        files.push(single);
-      }
-    } catch (error) {
-      if (!(error instanceof Deno.errors.NotFound)) throw error;
+    const file = path.join(leptonDir, single);
+    const info = await lstatOrNull(file);
+    if (info === null) continue;
+    if (!isRegularFile(info)) {
+      throw new Error(`not a regular file (symlink?): ${file}`);
     }
+    files.push(single);
   }
   return files.sort(compareCodePoints);
 }
+
+/**
+ * Entries allowed directly in the lepton dir: the vendored ones plus the
+ * Floorp-owned README.md, UPSTREAM.json and overlay/.
+ */
+export const LEPTON_DIR_ENTRIES = [
+  ...Object.keys(SINGLE_FILES).filter((single) => !single.includes("/")),
+  ...VENDORED_DIRS,
+  OVERLAY_DIR,
+  RECORD_FILE,
+  "README.md",
+];
 
 export async function hashFiles(
   root: string,
@@ -202,6 +246,15 @@ export async function verifyVendoredFiles(
 ): Promise<string[]> {
   const record = await readRecord(leptonDir);
   const problems: string[] = [];
+  for await (const entry of Deno.readDir(leptonDir)) {
+    if (!LEPTON_DIR_ENTRIES.includes(entry.name)) {
+      problems.push(
+        `unexpected entry: ${entry.name} (allowed: ${
+          LEPTON_DIR_ENTRIES.join(", ")
+        }; Floorp files go to ${OVERLAY_DIR}/)`,
+      );
+    }
+  }
   const onDisk = await listVendoredFiles(leptonDir);
   const recorded = Object.keys(record.files);
   for (const rel of recorded) {
@@ -280,6 +333,9 @@ export async function planRelease(
   extractedDir: string,
   tag: string,
 ): Promise<Map<string, string>> {
+  // Reject symlinks and special files anywhere in the extracted release
+  // before reading any of it (listFiles throws on them).
+  await listFiles(extractedDir);
   const plan = new Map<string, string>();
   for (const asset of RELEASE_ASSETS) {
     const info = await Deno.readTextFile(
@@ -331,7 +387,10 @@ export async function planRelease(
   }
   for (const [dest, [asset, src]] of Object.entries(SINGLE_FILES)) {
     const file = path.join(assetDir(extractedDir, asset), ...src.split("/"));
-    if (!(await Deno.stat(file)).isFile) throw new Error(`${asset}: no ${src}`);
+    const info = await lstatOrNull(file);
+    if (info === null || !isRegularFile(info)) {
+      throw new Error(`${asset}: no regular file ${src}`);
+    }
     plan.set(dest, file);
   }
   return new Map([...plan].sort(([a], [b]) => compareCodePoints(a, b)));
@@ -437,7 +496,11 @@ export async function applyRelease(options: {
     for (const rel of [...added, ...modified]) {
       const dest = path.join(leptonDir, ...rel.split("/"));
       await Deno.mkdir(path.dirname(dest), { recursive: true });
+      // Replace, never write through, whatever is at dest; copy only the
+      // bytes (no exec bit from the zip).
+      if (await lstatOrNull(dest) !== null) await Deno.remove(dest);
       await Deno.copyFile(plan.get(rel) as string, dest);
+      if (Deno.build.os !== "windows") await Deno.chmod(dest, 0o644);
     }
     await Deno.writeTextFile(
       path.join(leptonDir, RECORD_FILE),

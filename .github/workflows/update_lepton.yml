@@ -8,13 +8,22 @@
 #   empty (scheduled runs). The tag, its commit and the zip hashes are
 #   recorded in browser-features/skin/lepton/UPSTREAM.json.
 # - The zips are checked against the SHA-256 digests GitHub publishes for the
-#   release assets before anything is extracted.
-# - Nothing is pushed when the vendored files already match the release, or
-#   when bot/update-lepton already holds the same tree.
+#   release assets. They are still untrusted: extraction refuses unsafe paths,
+#   symlinks and special files, and the token is not on disk or in the
+#   environment while they are processed (checkout keeps no credentials; only
+#   the download and pull-request steps get GH_TOKEN).
+# - Nothing is pushed when the vendored files already match the release, when
+#   bot/update-lepton already holds the same vendored files, or (scheduled
+#   runs) when a bot PR for the same tag was closed without merging. To
+#   propose a closed release again, run this workflow with that tag.
 #
 # Requires the repository setting "Allow GitHub Actions to create and approve
-# pull requests". Pull requests opened with GITHUB_TOKEN do not trigger other
-# workflows; push a commit or close and reopen the PR to run CI on it.
+# pull requests". Pushes and PRs made with GITHUB_TOKEN do not trigger other
+# workflows, so after a push this workflow dispatches colocated_runner_test.yml
+# on the bot branch (the smoke and Native Runtime required checks). The
+# review-gate check runs only on pull_request events: a maintainer closes and
+# reopens the PR to start it, then reviewers post receipts as usual. Never push
+# to bot/update-lepton; it is force-pushed on the next update.
 
 name: "12 🧰 (u) Update Lepton"
 
@@ -40,10 +49,10 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     permissions:
+      actions: write
       contents: write
       pull-requests: write
     env:
-      GH_TOKEN: ${{ github.token }}
       UPSTREAM_REPOSITORY: black7375/Firefox-UI-Fix
       BOT_BRANCH: bot/update-lepton
       BASE_BRANCH: main
@@ -54,14 +63,17 @@ jobs:
         with:
           ref: main
           fetch-depth: 1
+          persist-credentials: false
 
       - uses: denoland/setup-deno@667a34cdef165d8d2b2e98dde39547c9daac7282
         with:
           deno-version: v2.x
 
-      - name: Resolve the upstream release
+      - name: Resolve and download the upstream release
         id: release
         shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           WORK="$RUNNER_TEMP/lepton"
@@ -85,21 +97,19 @@ jobs:
             echo "::error::could not resolve the commit of $tag: $commit"
             exit 1
           fi
-          echo "tag=$tag" >> "$GITHUB_OUTPUT"
-          echo "commit=$commit" >> "$GITHUB_OUTPUT"
-          echo "Lepton $tag = $UPSTREAM_REPOSITORY@$commit"
-
-      - name: Download and verify the release zips
-        shell: bash
-        env:
-          TAG: ${{ steps.release.outputs.tag }}
-        run: |
-          set -euo pipefail
-          gh release download "$TAG" --repo "$UPSTREAM_REPOSITORY" \
+          gh release download "$tag" --repo "$UPSTREAM_REPOSITORY" \
             --dir "$WORK/zips" \
             --pattern Lepton.zip \
             --pattern Lepton-Photon-Style.zip \
             --pattern Lepton-Proton-Style.zip
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "commit=$commit" >> "$GITHUB_OUTPUT"
+          echo "Lepton $tag = $UPSTREAM_REPOSITORY@$commit"
+
+      - name: Verify and extract the release zips
+        shell: bash
+        run: |
+          set -euo pipefail
           deno run --allow-read tools/src/lepton_vendor.ts verify-assets \
             --release-json "$WORK/release.json" --zips-dir "$WORK/zips"
           for zip in Lepton Lepton-Photon-Style Lepton-Proton-Style; do
@@ -110,6 +120,14 @@ jobs:
             fi
             unzip -q "$WORK/zips/$zip.zip" -d "$WORK/extracted/$zip"
           done
+          # unzip restores symlinks; following one could copy a runner file
+          # into the repository. lepton_vendor.ts refuses them too.
+          unsafe="$(find "$WORK/extracted" ! -type f ! -type d)"
+          if [ -n "$unsafe" ]; then
+            echo "::error::release zips contain symlinks or special files:"
+            echo "$unsafe"
+            exit 1
+          fi
 
       - name: Update the vendored files
         shell: bash
@@ -128,6 +146,7 @@ jobs:
       - name: Open or update the pull request
         shell: bash
         env:
+          GH_TOKEN: ${{ github.token }}
           TAG: ${{ steps.release.outputs.tag }}
         run: |
           set -euo pipefail
@@ -137,30 +156,64 @@ jobs:
             exit 0
           fi
           title="chore(lepton): update vendored Lepton to $TAG"
+
+          # Bot PRs from this repository only (a fork can use the same
+          # branch name).
+          own_prs() {
+            gh pr list --repo "$GITHUB_REPOSITORY" --head "$BOT_BRANCH" \
+              --base "$BASE_BRANCH" --state "$1" --limit 100 \
+              --json number,title,isCrossRepository,mergedAt \
+              --jq '[.[] | select(.isCrossRepository | not)]'
+          }
+          pr="$(own_prs open | jq -r '.[0].number // empty')"
+          if [ -z "$pr" ] && [ -z "${TAG_INPUT:-}" ]; then
+            closed="$(own_prs closed | jq -r --arg title "$title" \
+              '[.[] | select(.mergedAt == null and .title == $title)][0].number // empty')"
+            if [ -n "$closed" ]; then
+              echo "Bot PR #$closed for $TAG was closed without merging; skipping."
+              echo "Run this workflow with tag=$TAG to propose it again."
+              exit 0
+            fi
+          fi
+
           git switch -c "$BOT_BRANCH"
           git add -A -- "${paths[@]}"
           git -c user.name="github-actions[bot]" \
             -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
             commit -q -m "$title" -m "Updated by .github/workflows/update_lepton.yml."
 
+          # The repository is public, so the fetch needs no credentials.
           remote_sha=""
+          dispatch_ci=""
           if git fetch -q --depth=1 origin "refs/heads/$BOT_BRANCH" 2> /dev/null; then
             remote_sha="$(git rev-parse FETCH_HEAD)"
           fi
           if [ -n "$remote_sha" ] &&
-            [ "$(git rev-parse "$remote_sha^{tree}")" = "$(git rev-parse "HEAD^{tree}")" ]; then
+            git diff --quiet "$remote_sha" HEAD -- "${paths[@]}"; then
             echo "$BOT_BRANCH already holds this update; not pushing."
           else
-            git push -q --force-with-lease="refs/heads/$BOT_BRANCH:$remote_sha" \
+            # The token is used for this one command only and never written
+            # to .git/config.
+            auth="$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)"
+            echo "::add-mask::$auth"
+            git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $auth" \
+              push -q --force-with-lease="refs/heads/$BOT_BRANCH:$remote_sha" \
               origin "HEAD:refs/heads/$BOT_BRANCH"
+            dispatch_ci=1
           fi
 
-          pr="$(gh pr list --repo "$GITHUB_REPOSITORY" --head "$BOT_BRANCH" \
-            --base "$BASE_BRANCH" --state open --json number --jq '.[0].number // empty')"
           if [ -n "$pr" ]; then
             gh pr edit "$pr" --repo "$GITHUB_REPOSITORY" \
               --title "$title" --body-file "$WORK/pr-body.md"
           else
             gh pr create --repo "$GITHUB_REPOSITORY" --base "$BASE_BRANCH" \
               --head "$BOT_BRANCH" --title "$title" --body-file "$WORK/pr-body.md"
+            dispatch_ci=1
+          fi
+
+          # GITHUB_TOKEN pushes and PRs do not trigger workflows; dispatch the
+          # smoke / Native Runtime checks on the bot branch head.
+          if [ -n "$dispatch_ci" ]; then
+            gh workflow run colocated_runner_test.yml --repo "$GITHUB_REPOSITORY" \
+              --ref "$BOT_BRANCH"
           fi

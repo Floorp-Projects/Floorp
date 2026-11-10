@@ -261,6 +261,18 @@ Deno.test("verify reports edits, extra files and converted line endings", async 
     assert(
       (await verifyVendoredFiles(lepton)).includes("missing: icons/i.svg"),
     );
+    // Only README.md, UPSTREAM.json and overlay/ may sit next to the
+    // vendored entries.
+    await write(path.join(lepton, "overlay", "ok.css"), "/* floorp */");
+    await write(path.join(lepton, "README.md"), "# ok");
+    await write(path.join(lepton, "floorp.css"), "d{}");
+    const root = await verifyVendoredFiles(lepton);
+    assertEquals(
+      root.filter((p) => p.startsWith("unexpected entry")).length,
+      1,
+      root.join(" | "),
+    );
+    assert(root.some((p) => p.startsWith("unexpected entry: floorp.css")));
   } finally {
     await Deno.remove(tmp, { recursive: true });
   }
@@ -342,6 +354,125 @@ Deno.test("verifyAssets checks the release digests", async () => {
       () => verifyAssets({ ...release, prerelease: true }, tmp),
       Error,
       "prerelease",
+    );
+  } finally {
+    await Deno.remove(tmp, { recursive: true });
+  }
+});
+
+/**
+ * Create a symlink, or return false where this OS/user may not (Windows
+ * without Developer Mode). CI runs on Linux, where this always works.
+ */
+async function trySymlink(
+  target: string,
+  link: string,
+  type: "file" | "dir",
+): Promise<boolean> {
+  await Deno.mkdir(path.dirname(link), { recursive: true });
+  try {
+    await Deno.symlink(target, link, { type });
+    return true;
+  } catch (error) {
+    if (Deno.build.os === "windows") {
+      console.warn(`symlink not permitted here, skipping: ${error}`);
+      return false;
+    }
+    throw error;
+  }
+}
+
+Deno.test("apply refuses symlinks in the extracted release", async () => {
+  const tmp = await Deno.makeTempDir({ prefix: "lepton-symlink-" });
+  try {
+    const secret = path.join(tmp, "secret.txt");
+    await write(secret, "GH_TOKEN=do-not-copy");
+    const cases: [string, (release: string) => Promise<boolean>][] = [
+      ["user.js -> secret", async (release) => {
+        const userJs = path.join(release, "Lepton", "user.js");
+        await Deno.remove(userJs);
+        return await trySymlink(secret, userJs, "file");
+      }],
+      ["LEPTON -> secret", async (release) => {
+        const info = path.join(
+          release,
+          "Lepton-Proton-Style",
+          "chrome",
+          "LEPTON",
+        );
+        await Deno.remove(info);
+        return await trySymlink(secret, info, "file");
+      }],
+      ["icon -> secret", async (release) => {
+        return await trySymlink(
+          secret,
+          path.join(release, "Lepton", "chrome", "icons", "x.svg"),
+          "file",
+        );
+      }],
+      ["chrome/css -> dir", async (release) => {
+        const css = path.join(release, "Lepton", "chrome", "css");
+        await Deno.remove(css, { recursive: true });
+        const elsewhere = path.join(tmp, "elsewhere");
+        await write(path.join(elsewhere, "leptonChrome.css"), "a{}");
+        return await trySymlink(elsewhere, css, "dir");
+      }],
+    ];
+    for (const [i, [name, plant]] of cases.entries()) {
+      const lepton = path.join(tmp, `lepton-${i}`);
+      const release = path.join(tmp, "release");
+      await Deno.remove(release, { recursive: true }).catch(() => {});
+      await fakeRelease(release, "v1.0.0", { "leptonChrome.css": "a{}" }, {
+        "i.svg": "<svg/>",
+      });
+      if (!(await plant(release))) return;
+      await assertRejects(
+        () =>
+          applyRelease({
+            leptonDir: lepton,
+            extractedDir: release,
+            release: releaseJson("v1.0.0"),
+            commit: FAKE_COMMIT,
+            assetHashes: FAKE_ASSETS,
+          }),
+        Error,
+        "symlink?",
+        name,
+      );
+      assertEquals(
+        await listVendoredFiles(lepton),
+        [],
+        `${name}: nothing may be written`,
+      );
+    }
+  } finally {
+    await Deno.remove(tmp, { recursive: true });
+  }
+});
+
+Deno.test("verify refuses symlinks among the vendored files", async () => {
+  const tmp = await Deno.makeTempDir({ prefix: "lepton-vsymlink-" });
+  try {
+    const lepton = path.join(tmp, "lepton");
+    const release = path.join(tmp, "release");
+    await fakeRelease(release, "v1.0.0", { "leptonChrome.css": "a{}" }, {
+      "i.svg": "<svg/>",
+    });
+    await applyRelease({
+      leptonDir: lepton,
+      extractedDir: release,
+      release: releaseJson("v1.0.0"),
+      commit: FAKE_COMMIT,
+      assetHashes: FAKE_ASSETS,
+    });
+    const icon = path.join(lepton, "icons", "i.svg");
+    const copy = path.join(tmp, "i.svg");
+    await Deno.rename(icon, copy);
+    if (!(await trySymlink(copy, icon, "file"))) return;
+    await assertRejects(
+      () => verifyVendoredFiles(lepton),
+      Error,
+      "symlink?",
     );
   } finally {
     await Deno.remove(tmp, { recursive: true });
