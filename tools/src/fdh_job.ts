@@ -812,6 +812,8 @@ export async function startIntent(
   target: string,
   agent: string,
   leaseTtlMs?: number,
+  /** A job id chosen in advance (`newJobId("intent")`), e.g. recorded first. */
+  jobId?: string,
 ): Promise<JobJournal> {
   const intent = { op, target };
   const inputs: JobInputs = {
@@ -820,7 +822,7 @@ export async function startIntent(
     guardEnv: {},
   };
   const job = createJob({
-    jobId: newJobId("intent"),
+    jobId: jobId ?? newJobId("intent"),
     taskId: state.taskId,
     worktree: state.worktree,
     kind: "intent",

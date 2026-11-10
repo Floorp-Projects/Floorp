@@ -206,7 +206,52 @@ export const LEPTON_COMPAT_152_CSS = `
  * transparent so that artwork shows through (see browser-shared.css). Giving
  * #navigator-toolbox an opaque accent fill hides the entire theme background,
  * which is the bug we are fixing. The toolbox itself stays transparent; the
- * token alias above is enough for any Lepton rule that reads the accent. */
+ * token alias above is enough for any Lepton rule that reads the accent.
+ * The one exception is the overlapping F11 toolbox below. */
+
+/*= LWT toolbox in overlapping F11 fullscreen (Issue #2759 / #2419) =========
+ * Lepton's userChrome.fullscreen.overlap (on by default in the Lepton,
+ * Photon and ProtonFix user.js) makes the F11 toolbox position: fixed above
+ * the web content. Under an LWT the toolbox is transparent and most of the
+ * theme is painted on <body> behind it, so once the toolbox is lifted over
+ * the content the page shows through the tab strip and nav bar. Lepton only
+ * gives the toolbox an opaque fill for the no-theme case. DOM (video)
+ * fullscreen hides the toolbox and is excluded, the same way Lepton excludes
+ * it from the overlap rules.
+ *
+ * Outside fullscreen the toolbox area shows two layers, and both are
+ * restored here:
+ *
+ *   1. <body>'s background: the frame color and, under Lepton's !important
+ *      body overrides, the header image (background-size: contain on wide
+ *      windows). Repaint it on the toolbox with background: inherit. Fixed
+ *      attachment keeps it positioned and sized against the window, the same
+ *      box <body> uses.
+ *   2. The toolbox's own images, for themes where LightweightThemeConsumer
+ *      sets [theme-image-in-toolbox] (backgrounds_area: top_toolbars, or a
+ *      center/bottom additional_backgrounds_alignment). Gecko positions
+ *      those against the toolbox (browser-shared.css), and layer 1 replaces
+ *      the toolbox background, so draw them again on a ::before that covers
+ *      the toolbox, below its toolbars. They stay attached to the toolbox. */
+@media -moz-pref("userChrome.fullscreen.overlap") {
+  @media -moz-pref("browser.fullscreen.autohide") {
+    :root:is(:-moz-lwtheme, [lwtheme])[sizemode="fullscreen"]:not([inDOMFullscreen="true"]) > body > #navigator-toolbox {
+      background: inherit;
+      background-attachment: fixed;
+    }
+    :root:is(:-moz-lwtheme, [lwtheme])[theme-image-in-toolbox][sizemode="fullscreen"]:not([inDOMFullscreen="true"]) > body > #navigator-toolbox::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      background-image: var(--toolbox-background-image);
+      background-repeat: var(--toolbox-background-repeat);
+      background-position: var(--toolbox-background-position);
+      background-size: var(--toolbox-background-size);
+    }
+  }
+}
 
 /* Customize Floorp is a content surface, not the theme frame. Gecko paints
  * LWT header images on the chrome document body, while Lepton leaves the
