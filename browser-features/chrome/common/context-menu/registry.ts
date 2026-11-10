@@ -142,35 +142,159 @@ function looksLikeExtensionItem(element: Element): boolean {
     (id.includes("-menuitem-") && id.length > "-menuitem-".length);
 }
 
+/**
+ * Widget classes Firefox paints onto many rows. They do not identify one
+ * command, so they must not become a saved key.
+ */
+const GENERIC_ITEM_CLASSES = new Set([
+  "indent",
+  "menu-iconic",
+  "menu-iconic-auto",
+  "menuitem-iconic",
+  "menuitem-iconic-auto",
+  "subviewbutton",
+  "subviewbutton-iconic",
+  "subviewbutton-nav",
+]);
+
+/**
+ * A feature class such as `share-tab-url-item` stays on the node across
+ * Firefox releases even when the node has no id. One such class is a stable
+ * customization key. Several feature classes are joined so the key still
+ * does not depend on sibling order.
+ */
+function semanticClassKey(element: Element): string | null {
+  const names = Array.from(element.classList).filter((name) =>
+    !GENERIC_ITEM_CLASSES.has(name) &&
+    !name.startsWith("chromeclass-") &&
+    /^[a-z][a-z0-9-]*[a-z0-9]$/i.test(name) &&
+    name.includes("-")
+  ).sort();
+  if (names.length === 0) return null;
+  return names.join("+");
+}
+
+/** Stable across runs. Covers the whole string so a shortened label cannot collide. */
+function fnv1a32(text: string): string {
+  let hash = 0x811c9dc5;
+  for (let index = 0; index < text.length; index++) {
+    hash ^= text.charCodeAt(index);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  return (hash >>> 0).toString(16).padStart(8, "0");
+}
+
+/**
+ * Keep letters from every script. A hash of the original text distinguishes
+ * labels that would otherwise share a shortened or punctuated form.
+ */
+function encodeKeyToken(value: string): string {
+  const normalized = value.trim().normalize("NFC");
+  const readable = normalized
+    .replace(/[^\p{L}\p{N}._-]+/gu, "_")
+    .replace(/^_+|_+$/g, "");
+  const body = (readable || "item").slice(0, 48);
+  return `${body}.${fnv1a32(normalized)}`;
+}
+
+function firstAttributeKey(
+  element: Element,
+  candidates: ReadonlyArray<readonly [string, string | null]>,
+): string | null {
+  for (const [prefix, value] of candidates) {
+    if (!value?.trim()) continue;
+    return `${prefix}.${encodeKeyToken(value)}`;
+  }
+  return null;
+}
+
+/**
+ * The row's own identity. Container color and icon classes are decoration
+ * and must not outrank these attributes.
+ */
+function entityKey(element: Element): string | null {
+  return firstAttributeKey(element, [
+    ["tab-group", element.getAttribute("tab-group-id")],
+    ["profile", element.getAttribute("profileid")],
+    ["container", element.getAttribute("data-usercontextid")],
+  ]);
+}
+
+/** A command description used only when the row has no entity id or feature class. */
+function descriptiveKey(element: Element): string | null {
+  return firstAttributeKey(element, [
+    [
+      "l10n",
+      element.getAttribute("data-l10n-id") ??
+        element.getAttribute("data-lazy-l10n-id"),
+    ],
+    ["command", element.getAttribute("command")],
+    [
+      "label",
+      element.getAttribute("label") ?? element.getAttribute("aria-label"),
+    ],
+  ]);
+}
+
+function siblingLayoutToken(element: Element): string {
+  if (element.id) return `#${element.id}`;
+  const entity = entityKey(element);
+  if (entity) return entity;
+  const classKey = semanticClassKey(element);
+  if (classKey) return `.${classKey}`;
+  const description = descriptiveKey(element);
+  if (description) return description;
+  return `anon:${element.localName}`;
+}
+
+/**
+ * Hash of the menu as Firefox built it. Identification runs after the
+ * previous overlay is rolled back, so this is the native row sequence, not
+ * the user's order. A saved index key stops matching when that sequence
+ * changes, instead of landing on a newly inserted row.
+ */
+function nativeLayoutFingerprint(element: Element): string {
+  const parent = element.parentElement;
+  const layout = parent
+    ? Array.from(parent.children).map(siblingLayoutToken).join("|")
+    : "";
+  return fnv1a32(layout);
+}
+
 function fallbackKey(adapter: ContextMenuAdapter, element: Element): string {
-  if (element.id) return `firefox.${element.id}`;
+  if (element.id) {
+    const owner = looksLikeExtensionItem(element) ? "extension" : "firefox";
+    return `${owner}.${element.id}`;
+  }
+  const entity = entityKey(element);
+  if (entity) return `${adapter.key}.${entity}`;
+  const classKey = semanticClassKey(element);
+  if (classKey) return `${adapter.key}.class.${classKey}`;
+  const description = descriptiveKey(element);
+  if (description) return `${adapter.key}.${description}`;
   const index = Array.from(element.parentElement?.children ?? []).indexOf(
     element,
   );
-  return `${adapter.key}.unmanaged.${element.localName}.${Math.max(index, 0)}`;
+  return `${adapter.key}.unmanaged.${element.localName}.${
+    Math.max(index, 0)
+  }.${nativeLayoutFingerprint(element)}`;
 }
 
 function itemCapabilities(
   kind: ContextMenuItemKind,
-  readonlyItem: boolean,
-  stableKey: boolean,
+  persistent: boolean,
 ): Pick<
   ContextMenuItemIdentity,
   "customizable" | "movable" | "hideable" | "orderAnchor"
 > {
-  const movable = stableKey && !readonlyItem;
-  const hideable = movable && kind !== "separator";
   return {
-    // Preserve the schema-v1 meaning for older Hub code. In particular, a
-    // separator must not gain a visibility switch merely because it is now
-    // movable.
-    customizable: movable && hideable,
-    movable,
-    hideable,
-    // Protected Firefox/extension nodes retain their exact native slots. Only
-    // user-movable nodes become persisted anchors; anonymous index-derived
-    // keys are also excluded because their meaning may change after updates.
-    orderAnchor: movable,
+    // Preserve the schema-v1 meaning for older Hub code. A separator keeps
+    // `customizable` false so a client that only reads that flag does not
+    // treat it as an ordinary command. New Hub code uses `hideable`.
+    customizable: persistent && kind !== "separator",
+    movable: persistent,
+    hideable: persistent,
+    orderAnchor: persistent,
   };
 }
 
@@ -275,7 +399,7 @@ export class ContextMenuRegistry {
         key: floorpKey,
         kind,
         source: "floorp",
-        ...itemCapabilities(kind, false, true),
+        ...itemCapabilities(kind, true),
         ...(childKey ? { childContainerKey: childKey } : {}),
       };
     }
@@ -289,27 +413,20 @@ export class ContextMenuRegistry {
         key: alias.key,
         kind,
         source: extensionItem ? "extension" : alias.source ?? "firefox",
-        // An explicit adapter alias is our strongest ownership contract.
-        // Firefox uses attributes such as data-usercontextid on several of
-        // its own standard commands, so broad fallback selectors must not
-        // accidentally turn a known command into a protected item. Extension
-        // detection still wins because add-on-owned nodes are never safe
-        // persistent targets.
-        ...itemCapabilities(kind, extensionItem, true),
+        // Extension and container rows stay editable. Their alias or id is
+        // the saved key, so a later rebuild still finds the same command.
+        ...itemCapabilities(kind, true),
         ...(childKey ? { childContainerKey: childKey } : {}),
       };
     }
 
-    const readonlyItem = extensionItem ||
-      matchesAny(element, adapter.readonlySelectors);
     const key = fallbackKey(adapter, element);
     const childKey = childContainerKey(kind, key, element);
-    const stableKey = Boolean(element.id);
     return {
       key,
       kind,
-      source: extensionItem ? "extension" : element.id ? "firefox" : "unknown",
-      ...itemCapabilities(kind, readonlyItem, stableKey),
+      source: extensionItem ? "extension" : "firefox",
+      ...itemCapabilities(kind, true),
       ...(childKey ? { childContainerKey: childKey } : {}),
     };
   }
