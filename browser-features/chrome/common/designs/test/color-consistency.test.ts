@@ -25,9 +25,10 @@
  *    `--toolbar-background-color`. Lepton before v8.7.6 overrode only the
  *    legacy `--toolbar-bgcolor`, so with Lepton-family designs on Windows
  *    `#browser` stayed lighter than the Floorp surfaces (Issue #2531). The
- *    palettes that diverge are Windows/macOS-only, so on Linux this check
- *    passes either way. It is transparent with vertical tabs and is then
- *    skipped like any other absent surface.
+ *    diverging palettes are gated on `-moz-platform: windows` (and a macOS
+ *    palette behind `layout.css.osx-font-smoothing.enabled`, unverified),
+ *    so on Linux this check passes either way. It is transparent with
+ *    vertical tabs and is then skipped like any other absent surface.
  *
  * 2. "Tab tracks toolbar" (SECONDARY — `color_like_toolbar` designs only):
  *    For `lepton`, `photon`, `fluerial` the selected tab is aligned to the
