@@ -32,6 +32,7 @@ import {
   reconcileJobFile,
   recordStepProcess,
   resolveJob,
+  restartStartClock,
   runExecutor,
   type RunningStep,
   type StepCommand,
@@ -1482,4 +1483,36 @@ Deno.test("fdh executor: an outbox with an unparsable endedAt is invalid", async
   } finally {
     await Deno.remove(dir, { recursive: true });
   }
+});
+
+Deno.test("fdh executor: a cancel during a pending respawn closes the job and refuses the new executor", () => {
+  const job = stepJobRunning();
+  reconcileJob(job, { currentDigest: "d1", at: at(TTL + 1) });
+  assertEquals(job.attempts[1].result, "scheduled");
+  assertEquals(cancelJob(job, "", at(TTL + 2)), "cancelled");
+  assertEquals(job.attempts[1].result, "cancelled");
+  assertEquals(beginAttempt(job, 2, "x2", at(TTL + 3)), {
+    ok: false,
+    reason: "terminal",
+  });
+  const pending = stepJobRunning();
+  cancelJob(pending, "", at(1));
+  assertEquals(pending.state, "cancel_requested");
+  // No executor may begin a step once a cancel was requested.
+  assertEquals(beginAttempt(pending, 1, "x1", at(2)), {
+    ok: false,
+    reason: "cancel-requested",
+  });
+});
+
+Deno.test("fdh executor: restartStartClock moves the start deadline of a scheduled attempt only", () => {
+  const job = stepJobRunning();
+  reconcileJob(job, { currentDigest: "d1", at: at(TTL + 1) });
+  assertEquals(restartStartClock(job, 2, at(TTL + 500)), true);
+  assertEquals(job.attempts[1].scheduledAt, at(TTL + 500));
+  assertEquals(restartStartClock(job, 1, at(TTL + 600)), false);
+  assertEquals(
+    reconcileJob(job, { currentDigest: "d1", at: at(2 * TTL + 1) }).action,
+    "alive",
+  );
 });

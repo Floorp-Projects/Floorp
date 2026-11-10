@@ -53,6 +53,13 @@ export function startedNoEarlier(child: string, parent: string): boolean {
 export function selectProcessTree(
   snapshot: readonly DevProcessInfo[],
   root: ProcessIdentity,
+  /**
+   * When the root has exited, its direct children are only trusted if they
+   * started no later than this (the time the attempt was declared lost): a
+   * process that reused the root's pid and exited since cannot have
+   * children that started before the loss.
+   */
+  notAfter?: string,
 ): DevProcessInfo[] {
   const byParent = new Map<number, DevProcessInfo[]>();
   for (const process of snapshot) {
@@ -80,12 +87,27 @@ export function selectProcessTree(
     for (const child of byParent.get(parent.pid) ?? []) {
       if (seen.has(child.pid)) continue;
       if (!startedNoEarlier(child.startTime, parent.startTime)) continue;
+      if (
+        live === undefined && parent.pid === root.pid &&
+        !(notAfter !== undefined && startedNoLater(child.startTime, notAfter))
+      ) {
+        // Root gone: without a bound we cannot tell its children from those
+        // of a later process that reused its pid. Select nothing for it.
+        continue;
+      }
       seen.add(child.pid);
       selected.push(child);
       queue.push({ pid: child.pid, startTime: child.startTime });
     }
   }
   return selected;
+}
+
+/** Did `child` start no later than the ISO time `bound`? Else false. */
+export function startedNoLater(child: string, bound: string): boolean {
+  const a = Date.parse(child);
+  const b = Date.parse(bound);
+  return Number.isFinite(a) && Number.isFinite(b) && a <= b;
 }
 
 /** Identity of a running process, or null when it is gone. */
@@ -107,9 +129,10 @@ export async function identifyProcess(
  */
 export async function stopProcessTree(
   root: ProcessIdentity,
+  notAfter?: string,
 ): Promise<DevProcessInfo[]> {
   const snapshot = await listDevProcesses();
-  const tree = selectProcessTree(snapshot, root);
+  const tree = selectProcessTree(snapshot, root, notAfter);
   const rootIsLive = tree.some((p) =>
     p.pid === root.pid && p.startTime === root.startTime
   );

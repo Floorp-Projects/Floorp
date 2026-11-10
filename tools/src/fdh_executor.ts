@@ -456,7 +456,10 @@ function attemptAt(job: JobJournal, epoch: number): JobAttempt | undefined {
 
 export type BeginResult =
   | { ok: true }
-  | { ok: false; reason: "stale-epoch" | "not-scheduled" | "terminal" };
+  | {
+    ok: false;
+    reason: "stale-epoch" | "not-scheduled" | "terminal" | "cancel-requested";
+  };
 
 /**
  * The executor of `epoch` takes its attempt: only when that epoch is the
@@ -472,6 +475,9 @@ export function beginAttempt(
   requireTime(at, "begin time");
   const holder = normalizeHolder(rawHolder);
   if (isTerminal(job.state)) return { ok: false, reason: "terminal" };
+  if (job.state === "cancel_requested") {
+    return { ok: false, reason: "cancel-requested" };
+  }
   if (epoch !== job.epoch) {
     event(job, "stale-epoch", at, epoch, `begin by ${holder} refused`);
     return { ok: false, reason: "stale-epoch" };
@@ -605,7 +611,11 @@ export function cancelJob(
     : `cancel requested: ${reason}`;
   event(job, "cancel-requested", at, job.epoch, note);
   const attempt = currentAttempt(job);
-  if (job.state === "running" && job.kind !== "intent") {
+  if (
+    job.state === "running" && job.kind !== "intent" &&
+    attempt.result === "running"
+  ) {
+    // A holder runs the step: it stops at its next heartbeat.
     transition(job, "cancel_requested", at, note);
     return job.state;
   }
@@ -659,6 +669,24 @@ export function noteLostStepStopped(
     epoch,
     `stopped ${stopped} process(es) of the step tree rooted at pid ${root.pid}`,
   );
+}
+
+/**
+ * Restart the start deadline of the current scheduled attempt (a controller
+ * spent time stopping a lost tree before it spawns the executor).
+ */
+export function restartStartClock(
+  job: JobJournal,
+  epoch: number,
+  at = nowIso(),
+): boolean {
+  requireTime(at, "schedule time");
+  if (job.epoch !== epoch) return false;
+  const attempt = currentAttempt(job);
+  if (attempt.result !== "scheduled") return false;
+  attempt.scheduledAt = at;
+  job.updatedAt = at;
+  return true;
 }
 
 /** The terminal result was copied into the task state. */
@@ -1261,7 +1289,15 @@ export function readJob(
     }
     throw error;
   }
-  return parseJobJournal(JSON.parse(text));
+  try {
+    return parseJobJournal(JSON.parse(text));
+  } catch (error) {
+    throw new Error(
+      `invalid fdh job journal at ${file}: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
+    );
+  }
 }
 
 /** Write a new journal; refuses to overwrite an existing job. */

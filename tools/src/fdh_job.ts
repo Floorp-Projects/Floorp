@@ -55,6 +55,7 @@ import {
   reconcileJobFile,
   type Resolution,
   resolveJob,
+  restartStartClock,
   runExecutor,
   type StepSpec,
   updateJob,
@@ -376,7 +377,9 @@ export interface ReconcileReport {
   kind: string;
   state: string;
   epoch: number;
-  action: ReconcileDecision["action"];
+  action: ReconcileDecision["action"] | "error";
+  /** Why this job could not be reconciled (the sweep continues). */
+  error?: string;
   /** Processes of a lost attempt that were stopped before the respawn. */
   stopped?: number;
   /** Executor pid started for a new epoch. */
@@ -403,12 +406,41 @@ export async function reconcileTaskJobs(
   const { state } = options;
   const ids = options.jobIds ?? listJobIds(state.worktree, state.taskId);
   const reports: ReconcileReport[] = [];
-  let inputs: JobInputs | null = null;
+  // The inputs are computed once per sweep (three git calls), outside any lock.
+  const inputsCache: { value: JobInputs | null } = { value: null };
   for (const jobId of ids) {
+    try {
+      reports.push(
+        await reconcileOne(options, jobId, inputsCache),
+      );
+    } catch (error) {
+      // One damaged journal must not stop the sweep over the task's jobs
+      // (task resume still moves the other intents to awaiting-approval).
+      reports.push({
+        jobId,
+        kind: "unknown",
+        state: "unknown",
+        epoch: 0,
+        action: "error",
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
+  return reports;
+}
+
+async function reconcileOne(
+  options: ReconcileTaskOptions,
+  jobId: string,
+  inputsCache: { value: JobInputs | null },
+): Promise<ReconcileReport> {
+  const { state } = options;
+  {
     const before = readJob(state.worktree, state.taskId, jobId);
     let currentDigest: string | undefined;
     if (before.kind !== "intent" && !isTerminal(before.state)) {
-      inputs ??= await currentInputs(state, options.git);
+      inputsCache.value ??= await currentInputs(state, options.git);
+      const inputs = inputsCache.value;
       currentDigest = await executionDigest(before.kind, before.step!, inputs);
     }
     const { job, value } = await reconcileJobFile(
@@ -429,29 +461,50 @@ export async function reconcileTaskJobs(
       epoch: job.epoch,
       action: value.action,
     };
-    // Stop what a lost (or, after a pending cancel, abandoned) attempt left
-    // running: before the next epoch runs the same step, and also when the
-    // job closes, so an orphaned build does not keep writing to the worktree.
-    // On respawn the lost attempt is the one before the new; otherwise it is
-    // the last one.
-    const lostAttempt = value.action === "respawn"
-      ? job.attempts[job.attempts.length - 2]
-      : value.action === "input-changed" || value.action === "gave-up" ||
-          value.action === "cancelled"
-      ? job.attempts[job.attempts.length - 1]
-      : undefined;
-    if (lostAttempt?.process != null) {
-      const root = lostAttempt.process;
-      const stopped = await (options.stopTree ?? stopProcessTree)(root);
-      report.stopped = stopped.length;
+    // Stop what any lost (or, after a cancel, abandoned) attempt left
+    // running and has not been stopped yet: before the next epoch runs the
+    // same step, when the job closes, and on any later reconcile, so a
+    // respawn that was interrupted (controller killed after the epoch bump)
+    // does not leave an older step tree running for good.
+    const pending = job.attempts.filter((a) =>
+      (a.result === "lost" || a.result === "cancelled") && a.process != null &&
+      !job.events.some((e) =>
+        e.kind === "lost-step-stopped" && e.epoch === a.epoch
+      )
+    );
+    try {
+      for (const lost of pending) {
+        const root = lost.process!;
+        const stopped = await (options.stopTree ?? stopProcessTree)(
+          root,
+          lost.endedAt ?? undefined,
+        );
+        report.stopped = (report.stopped ?? 0) + stopped.length;
+        await updateJob(
+          state.worktree,
+          state.taskId,
+          jobId,
+          (j) => noteLostStepStopped(j, lost.epoch, root, stopped.length),
+        );
+      }
+    } catch (error) {
+      // Without the stop the next epoch could run beside the old tree: do not
+      // spawn now. A later reconcile retries the stop (the new attempt is
+      // then overdue and counted as lost).
+      report.error = `could not stop a lost step tree: ${
+        error instanceof Error ? error.message : String(error)
+      }`;
+      return report;
+    }
+    if (value.action === "respawn") {
+      // The stop can take seconds (PowerShell on Windows): start the new
+      // attempt's start deadline now, not at the epoch bump.
       await updateJob(
         state.worktree,
         state.taskId,
         jobId,
-        (j) => noteLostStepStopped(j, lostAttempt.epoch, root, stopped.length),
+        (j) => restartStartClock(j, value.epoch),
       );
-    }
-    if (value.action === "respawn") {
       report.executorPid = (options.spawn ?? spawnExecutorProcess)(
         state.worktree,
         state.taskId,
@@ -470,9 +523,8 @@ export async function reconcileTaskJobs(
     if (isTerminal(job.state)) {
       await settleJob(state.worktree, state.taskId, jobId);
     }
-    reports.push(report);
+    return report;
   }
-  return reports;
 }
 
 export interface WaitOptions extends ReconcileTaskOptions {

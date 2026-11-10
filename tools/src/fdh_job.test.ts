@@ -16,6 +16,7 @@ import {
   applyReport,
   beginAttempt,
   readJob,
+  reconcileJob,
   recordStepProcess,
   updateJob,
 } from "./fdh_executor.ts";
@@ -281,11 +282,12 @@ Deno.test("fdh job: the process tree follows parent pids, also after the root ex
     11,
     12,
   ]);
-  // Root gone: its children are still found by parent pid and start time.
+  // Root gone: its children are found by parent pid and start time, but
+  // only those that started before the attempt was declared lost.
+  const gone = snapshot.filter((x) => x.pid !== 10);
+  assertEquals(selectProcessTree(gone, root), []);
   assertEquals(
-    selectProcessTree(snapshot.filter((x) => x.pid !== 10), root).map((x) =>
-      x.pid
-    ),
+    selectProcessTree(gone, root, "2026-11-09T10:00:05.000Z").map((x) => x.pid),
     [11, 12],
   );
   // A different process now holds pid 10: it is not selected as the root.
@@ -416,4 +418,150 @@ Deno.test("fdh job: Linux start ticks compare numerically within one boot", () =
     startedNoEarlier("2026-11-09T10:00:01.000Z", "2026-11-09T10:00:00.000Z"),
   );
   assert(!startedNoEarlier("garbage", "2026-11-09T10:00:00.000Z"));
+});
+
+// ---------------------------------------------------------------------------
+// review round 2 on PR #3097 (reviewer B)
+// ---------------------------------------------------------------------------
+
+Deno.test("fdh job: an interrupted respawn still gets the older lost tree stopped", async () => {
+  const dir = await Deno.makeTempDir();
+  try {
+    const state = taskIn(dir);
+    const git = fakeGit({ head: "h", diff: "", untracked: "" });
+    const spawned: number[] = [];
+    const spawn = (_w: string, _t: string, _j: string, epoch: number) => {
+      spawned.push(epoch);
+      return 1;
+    };
+    const job = await startStepJob({
+      state,
+      kind: "test",
+      leaseTtlMs: 1_000,
+      git,
+      spawn,
+    });
+    const old = new Date(Date.now() - 120_000).toISOString();
+    const older = new Date(Date.now() - 60_000).toISOString();
+    const root = {
+      pid: 91,
+      startTime: "s",
+      commandLine: "deno task test:host",
+    };
+    // Epoch 1 ran and was lost; a controller bumped to epoch 2 and died
+    // before it stopped epoch 1's tree or spawned epoch 2.
+    await updateJob(dir, "t1", job.jobId, (j) => {
+      beginAttempt(j, 1, "x1", old);
+      recordStepProcess(j, 1, "x1", root);
+      reconcileJob(j, { currentDigest: j.executionDigest, at: older });
+    });
+    assertEquals(readJob(dir, "t1", job.jobId).epoch, 2);
+    const stopped: number[] = [];
+    const [report] = await reconcileTaskJobs({
+      state,
+      git,
+      spawn,
+      stopTree: (r) => {
+        stopped.push(r.pid);
+        return Promise.resolve([]);
+      },
+    });
+    assertEquals(report.action, "respawn");
+    assertEquals(report.epoch, 3);
+    assertEquals(stopped, [91]);
+    assertEquals(spawned, [1, 3]);
+    // A later reconcile does not stop it again.
+    await reconcileTaskJobs({
+      state,
+      git,
+      spawn,
+      stopTree: (r) => {
+        stopped.push(r.pid);
+        return Promise.resolve([]);
+      },
+    });
+    assertEquals(stopped, [91]);
+  } finally {
+    await Deno.remove(dir, { recursive: true });
+  }
+});
+
+Deno.test("fdh job: when the stop fails, the next epoch is not spawned", async () => {
+  const dir = await Deno.makeTempDir();
+  try {
+    const state = taskIn(dir);
+    const git = fakeGit({ head: "h", diff: "", untracked: "" });
+    const spawned: number[] = [];
+    const spawn = (_w: string, _t: string, _j: string, epoch: number) => {
+      spawned.push(epoch);
+      return 1;
+    };
+    const job = await startStepJob({
+      state,
+      kind: "test",
+      leaseTtlMs: 1_000,
+      git,
+      spawn,
+    });
+    const old = new Date(Date.now() - 60_000).toISOString();
+    await updateJob(dir, "t1", job.jobId, (j) => {
+      beginAttempt(j, 1, "x1", old);
+      recordStepProcess(j, 1, "x1", {
+        pid: 5,
+        startTime: "s",
+        commandLine: "c",
+      });
+    });
+    const [report] = await reconcileTaskJobs({
+      state,
+      git,
+      spawn,
+      stopTree: () => Promise.reject(new Error("access denied")),
+    });
+    assert(report.error?.includes("access denied"));
+    assertEquals(spawned, [1]);
+  } finally {
+    await Deno.remove(dir, { recursive: true });
+  }
+});
+
+Deno.test("fdh job: one corrupt journal does not stop the sweep, and its error names the file", async () => {
+  const dir = await Deno.makeTempDir();
+  try {
+    const state = taskIn(dir);
+    const intent = await startIntent(state, "push", "x", "agent-a");
+    Deno.writeTextFileSync(`${dir}/_dist/fdh/jobs/t1/aaa-bad.json`, "{ trunc");
+    const reports = await reconcileTaskJobs({ state, intentHoldersGone: true });
+    const bad = reports.find((r) => r.jobId === "aaa-bad");
+    assertEquals(bad?.action, "error");
+    assert(bad?.error?.includes("aaa-bad.json"));
+    assertEquals(
+      reports.find((r) => r.jobId === intent.jobId)?.action,
+      "awaiting-approval",
+    );
+  } finally {
+    await Deno.remove(dir, { recursive: true });
+  }
+});
+
+Deno.test("fdh job: children of an exited pid reuser are not selected", () => {
+  const root = {
+    pid: 10,
+    startTime: "2026-11-09T10:00:00.000Z",
+    commandLine: "deno task test:host",
+  };
+  // Root gone, pid 10 free again; its "children" started after the loss.
+  const snapshot: DevProcessInfo[] = [
+    {
+      pid: 20,
+      ppid: 10,
+      name: "code.exe",
+      commandLine: "code",
+      startTime: "2026-11-09T12:00:00.000Z",
+    },
+  ];
+  assertEquals(
+    selectProcessTree(snapshot, root, "2026-11-09T10:05:00.000Z"),
+    [],
+  );
 });

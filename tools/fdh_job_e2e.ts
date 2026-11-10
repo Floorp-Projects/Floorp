@@ -227,11 +227,13 @@ const CASES: Record<string, (c: Case) => Promise<void>> = {
     await until("the step to run", runningWithProcess(taskId, jobId));
     controller.kill("SIGKILL");
     await controller.status;
+    await sleep(1_000);
     const mid = journal(taskId, jobId);
+    const executor = executorPid(mid.attempts[0].holder);
     c.expect(
-      "the executor keeps running after its controller was killed",
-      mid.state === "running" && mid.epoch === 1,
-      { state: mid.state, epoch: mid.epoch },
+      "the executor process is still running after its controller was killed",
+      mid.state === "running" && mid.epoch === 1 && (await alive(executor)),
+      { state: mid.state, epoch: mid.epoch, executor },
     );
     const done = await wait(taskId, jobId);
     const j = journal(taskId, jobId);
@@ -274,6 +276,63 @@ const CASES: Record<string, (c: Case) => Promise<void>> = {
       "the lost attempt's step process is not running any more",
       !(await alive(first.process.pid)),
       `pid ${first.process.pid}`,
+    );
+    save(c, taskId, jobId);
+  },
+
+  async "E-2b"(c) {
+    // A controller dies in the middle of a respawn (after the epoch bump,
+    // around the stop of the lost tree and the spawn). The next controller
+    // must still stop the epoch-1 tree and finish the job.
+    const taskId = await newTask("e2b");
+    const jobId = await startTest(taskId, [], {
+      FDH_JOB_FAULT: `stall:${5 * TTL}`,
+      FDH_JOB_FAULT_ENABLE: "1",
+    });
+    await until("the step to run", runningWithProcess(taskId, jobId));
+    const controller = new Deno.Command(Deno.execPath(), {
+      args: [
+        "run",
+        "-A",
+        FDH,
+        "job",
+        "wait",
+        "--task-id",
+        taskId,
+        "--job-id",
+        jobId,
+      ],
+      cwd: ROOT,
+      env: { FDH_JOB_FAULT: "", FDH_JOB_FAULT_ENABLE: "" },
+      stdout: "null",
+      stderr: "null",
+    }).spawn();
+    await until(
+      "the epoch bump",
+      () => journal(taskId, jobId).epoch >= 2,
+      60_000,
+    );
+    controller.kill("SIGKILL");
+    await controller.status;
+    c.notes.push(`controller killed at epoch ${journal(taskId, jobId).epoch}`);
+    const done = await wait(taskId, jobId);
+    const j = journal(taskId, jobId);
+    c.expect(
+      "the job still succeeds",
+      done.code === 0 && j.state === "succeeded",
+      j.state,
+    );
+    c.expect(
+      "the epoch-1 step tree was stopped (by either controller)",
+      j.events.some((e: Journal) =>
+        e.kind === "lost-step-stopped" && e.epoch === 1
+      ),
+      j.events.map((e: Journal) => `${e.kind}@${e.epoch}`),
+    );
+    c.expect(
+      "the epoch-1 step process is not running",
+      !(await alive(j.attempts[0].process.pid)),
+      j.attempts[0].process.pid,
     );
     save(c, taskId, jobId);
   },

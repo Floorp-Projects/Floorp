@@ -1291,7 +1291,8 @@ async function cmdJob(parsed: ParsedArgs, sub: JobSubcommand): Promise<void> {
       if (step === "test" && hasOption(parsed, "phase")) {
         throw new Error("--phase applies to --step build only");
       }
-      const leaseTtlMs = optionalInteger(parsed, "lease-ttl-ms", 1_000);
+      // 3 s at least: a respawn's stop and executor start take ~1-2 s.
+      const leaseTtlMs = optionalInteger(parsed, "lease-ttl-ms", 3_000);
       const maxAttempts = optionalInteger(parsed, "max-attempts", 1);
       // Same W-04 guard as 'verify build': no source build under this
       // worktree's running dev browser.
