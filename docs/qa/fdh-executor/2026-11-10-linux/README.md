@@ -42,8 +42,14 @@ scenario) and E-2b, 31 checks.
   (detached spawn). So the POSIX stop path did the work in every loss case: E-2,
   E-2b, E-4/E-5, E-7 and E-8 each record `lost-step-stopped` with 2 processes.
   This is the path that was untested before.
-- After the run, no processes from the run's directory were left
-  (`pgrep -u user -f fdh-posix-e2e`).
+- No processes were left after the run.
+  - Right after the run, `pgrep -u user -f fdh-posix-e2e` found nothing. That
+    pattern matches only executors and controllers, because their command lines
+    contain the directory; the step's command line does not.
+  - About 30 minutes later, both
+    `pgrep -u user -f /home/user/.local/fdh-tools/deno` (every process of this
+    Deno) and `pgrep -u user -f test:host` (the step) found nothing. The machine
+    had not rebooted since 2026-10-17.
 - E-6 and E-9 take about one second here, against about 45 s on Windows. Probing
   the recorded ports in `task resume` is fast on Linux.
 
