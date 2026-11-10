@@ -122,6 +122,16 @@ import {
   type Resolution,
   validateJobId,
 } from "./src/fdh_executor.ts";
+import {
+  FIELD_RULES,
+  finishExtOp,
+  ingestObservation,
+  planSync,
+  readExtLedger,
+  startExtOp,
+  upsertLink,
+  withExtLedger,
+} from "./src/fdh_ext.ts";
 import type { ValidationError } from "./qa3/evidence/types.ts";
 
 const HELP = `
@@ -178,6 +188,24 @@ Commands:
                             also approves its quota pending entry
   job cancel --task-id <id> --job-id <id> [--reason <text>]
                             Cancel; a running step stops at its next heartbeat
+  ext link --task-id <id> --jira <KEY-n> [--pr <n>] [--branch <name>]
+                            Link a Jira issue to its GitHub PR (D-19, KAN-131)
+  ext observe --task-id <id> --ref <github:pr/<n>|jira:<KEY-n>> --field <f>
+              --value <v> --version <iso> [--event-id <id>] [--deleted true]
+                            Feed one polled value: applied, duplicate, stale
+                            (older version), conflict or deleted
+  ext plan --task-id <id>   Sync actions to perform, holds (concurrent edit,
+                            deletion, in flight, awaiting a poll) and the
+                            I-04 field table; reads only
+  ext start --task-id <id> --key <k> --agent <name> [--op <push|pr|release|external>]
+            [--target <text>]
+                            Start a keyed external operation (an intent):
+                            already-done if the key succeeded, refused while
+                            one is in flight
+  ext done --task-id <id> --key <k> --epoch <n> --agent <name>
+           --outcome <succeeded|failed> [--link <KEY-n> --field <f>
+           --owner-value <v> --mirror-value <v>]
+                            Record its outcome; with --link, what fdh wrote
   verify browser --task-id <id> [--eval <js>] [--expect <text>]
                             Check dev-tool browser status; --eval output is
                             recorded verbatim, and --expect turns it into an
@@ -1247,6 +1275,146 @@ const JOB_SUBCOMMANDS = [
 ] as const;
 type JobSubcommand = (typeof JOB_SUBCOMMANDS)[number];
 
+type ExtSubcommand = "link" | "observe" | "plan" | "start" | "done";
+
+async function cmdExt(parsed: ParsedArgs, sub: ExtSubcommand): Promise<void> {
+  assertNoPositional(parsed, 2);
+  const allowed: Record<ExtSubcommand, string[]> = {
+    link: ["task-id", "jira", "pr", "branch"],
+    observe: [
+      "task-id",
+      "ref",
+      "field",
+      "value",
+      "version",
+      "event-id",
+      "deleted",
+    ],
+    plan: ["task-id"],
+    start: ["task-id", "key", "agent", "op", "target"],
+    done: [
+      "task-id",
+      "key",
+      "epoch",
+      "agent",
+      "outcome",
+      "link",
+      "field",
+      "owner-value",
+      "mirror-value",
+    ],
+  };
+  assertAllowedOptions(parsed, allowed[sub]);
+  const taskId = validateTaskId(requireOption(parsed, "task-id"));
+  // Validate every option before anything is read or written.
+  const optional = (name: string) =>
+    hasOption(parsed, name) ? requireOption(parsed, name) : undefined;
+  switch (sub) {
+    case "link": {
+      const jira = requireOption(parsed, "jira");
+      const pr = optionalInteger(parsed, "pr", 1);
+      const branch = optional("branch");
+      const state = await loadStateForCwd(taskId);
+      const link = await withExtLedger(
+        state.worktree,
+        taskId,
+        (ledger) => upsertLink(ledger, jira, pr, branch),
+      );
+      console.log(JSON.stringify({ link }));
+      return;
+    }
+    case "observe": {
+      const deletedRaw = optional("deleted");
+      if (deletedRaw !== undefined && deletedRaw !== "true") {
+        throw new Error("--deleted takes only the value true");
+      }
+      const deleted = deletedRaw === "true";
+      if (!deleted && !hasOption(parsed, "value")) {
+        throw new Error("--value is required unless --deleted true");
+      }
+      const input = {
+        ref: requireOption(parsed, "ref"),
+        field: requireOption(parsed, "field"),
+        value: deleted ? null : requireOption(parsed, "value"),
+        version: requireOption(parsed, "version"),
+        eventId: optional("event-id"),
+        deleted,
+      };
+      const state = await loadStateForCwd(taskId);
+      const result = await withExtLedger(
+        state.worktree,
+        taskId,
+        (ledger) => ingestObservation(ledger, input),
+      );
+      console.log(
+        JSON.stringify({ ref: input.ref, field: input.field, result }),
+      );
+      return;
+    }
+    case "plan": {
+      const state = await loadStateForCwd(taskId);
+      const ledger = readExtLedger(state.worktree, taskId);
+      console.log(JSON.stringify({
+        plan: planSync(ledger),
+        fields: FIELD_RULES.map((r) => ({
+          field: r.field,
+          owner: r.owner,
+          mirror: r.mirror,
+          order: r.order,
+          retry: r.retry,
+          note: r.note,
+        })),
+      }));
+      return;
+    }
+    case "start": {
+      const key = requireOption(parsed, "key");
+      const agent = requireOption(parsed, "agent");
+      const op = optional("op") ?? "external";
+      if (!INTENT_OPS.includes(op as IntentOp)) {
+        throw new Error(`--op must be one of ${INTENT_OPS.join("|")}`);
+      }
+      const target = optional("target");
+      const state = await loadStateForCwd(taskId);
+      const result = await startExtOp(
+        state,
+        key,
+        agent,
+        op as IntentOp,
+        target,
+      );
+      console.log(JSON.stringify(result));
+      return;
+    }
+    case "done": {
+      const key = requireOption(parsed, "key");
+      const epoch = requireInteger(parsed, "epoch", 1);
+      const agent = requireOption(parsed, "agent");
+      const outcome = requireOption(parsed, "outcome");
+      if (outcome !== "succeeded" && outcome !== "failed") {
+        throw new Error("--outcome must be succeeded or failed");
+      }
+      const syncNames = ["link", "field", "owner-value", "mirror-value"];
+      const given = syncNames.filter((n) => hasOption(parsed, n));
+      if (given.length !== 0 && given.length !== syncNames.length) {
+        throw new Error(
+          `--link, --field, --owner-value and --mirror-value go together`,
+        );
+      }
+      const sync = given.length === 0 ? undefined : {
+        link: requireOption(parsed, "link"),
+        field: requireOption(parsed, "field"),
+        ownerValue: requireOption(parsed, "owner-value"),
+        mirrorValue: requireOption(parsed, "mirror-value"),
+      };
+      const state = await loadStateForCwd(taskId);
+      const op = await finishExtOp(state, { key, epoch, agent, outcome, sync });
+      console.log(JSON.stringify({ op }));
+      return;
+    }
+  }
+}
+
 async function cmdJob(parsed: ParsedArgs, sub: JobSubcommand): Promise<void> {
   assertNoPositional(parsed, 2);
   const allowed: Record<JobSubcommand, string[]> = {
@@ -1526,6 +1694,14 @@ async function main(argv: string[]): Promise<void> {
         return await cmdJob(parsed, sub as JobSubcommand);
       }
       throw new Error(`unknown job command ${JSON.stringify(sub ?? "")}`);
+    case "ext":
+      if (
+        sub === "link" || sub === "observe" || sub === "plan" ||
+        sub === "start" || sub === "done"
+      ) {
+        return await cmdExt(parsed, sub);
+      }
+      throw new Error(`unknown ext command ${JSON.stringify(sub ?? "")}`);
     case "review":
       if (sub === "record") return await cmdReviewRecord(parsed);
       throw new Error(`unknown review command ${JSON.stringify(sub ?? "")}`);

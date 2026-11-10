@@ -269,6 +269,66 @@ records an approval for it (or a `quota approve`) since then. A confirm that
 arrives after the holder was declared lost is refused and recorded
 (`late-report`).
 
+## External GitHub / Jira operations (D-19, KAN-131)
+
+Agents change GitHub (`gh`) and Jira (Atlassian MCP) themselves; fdh calls
+neither API. fdh keeps a link table, the observations an agent polled, and
+keyed operations, under `<worktree>/_dist/fdh/ext/<task-id>.json`. There is
+no webhook: run `ext observe` for each value you poll, then `ext plan`.
+
+```sh
+fdh ext link --task-id <id> --jira KAN-131 --pr 3200 --branch fdh/external-ops
+# For each polled value, with the object's API update time as --version:
+fdh ext observe --task-id <id> --ref github:pr/3200 --field pr.state \
+  --value open --version 2026-11-11T09:00:10Z [--event-id <id>]
+fdh ext observe --task-id <id> --ref jira:KAN-131 --field status \
+  --value 進行中 --version <jira updated>
+fdh ext plan --task-id <id>      # actions, holds, inSync, keptEdits, fields
+# For each action: start its key, perform it, then record what you wrote.
+fdh ext start --task-id <id> --key '<action.key>' --agent <name>
+fdh ext done --task-id <id> --key '<action.key>' --epoch <n> --agent <name> \
+  --outcome succeeded --link KAN-131 --field pr.state \
+  --owner-value open --mirror-value レビュー中
+```
+
+The field table (I-04; the code is `FIELD_RULES` in
+`tools/src/fdh_ext.ts`):
+
+| Field (owner) | Mirror | Rule |
+| --- | --- | --- |
+| `pr.url` (GitHub) | Jira `remote-link` | keyed by URL, a retry updates the same link |
+| `pr.state` (GitHub) | Jira `status` | draft/open/merged → 進行中/レビュー中/完了, closed → nothing; never moves the status back |
+| `ci.result` (GitHub), `<sha>:<success\|failure>` | Jira `ci-comment` | one fdh comment per head and result; pending is not posted |
+| `pr.review-receipts` (GitHub) | none | the D-14 gate reads them on the PR |
+| `jira.sprint`, `jira.assignee`, `jira.priority`, `jira.qa-state` (Jira) | none | not copied to GitHub |
+| titles, descriptions, comments | none | no full-text copying |
+
+How observations and the plan behave:
+
+- **Observations.** A repeated event id, or the same value at the same version,
+  is a `duplicate`. An older version than the stored one is `stale`: this is
+  how an ordering inversion is caught. The same version with another value is a
+  `conflict` and is not taken.
+- **Deletion.** Observe the field `object` with `--deleted true` when an
+  object is deleted. Nothing more is written to it or because of it, and a later
+  observation does not bring it back.
+- **Concurrent edits.** fdh never overwrites a mirror that changed since fdh
+  last wrote it (no compare-and-set is assumed):
+  - If the owner changed too, the field is held (`concurrent-edit`); an
+    approver decides.
+  - If only the mirror changed, the person's edit is kept (`keptEdits`).
+  - Right after a write, the field waits for a poll that shows it
+    (`awaiting-poll`).
+- **Keyed operations.** Each key runs once.
+  - A key that succeeded is `already-done`: use one key for each PR you
+    create, such as `github:pr-create:<branch>`, so no second PR is created.
+  - A key whose operation has no outcome is refused.
+  - A key that failed may be started again.
+  - If the agent is lost, `task resume` puts the operation into
+    `awaiting-approval`. An approver checks GitHub or Jira and runs
+    `fdh job resolve`; a `succeeded` resolution makes the key
+    `already-done`.
+
 ## GUI desktop lease and secret-reference denial (Gate 4 4-A)
 
 The shared desktop GUI is one resource. The lease is stored beside the git
