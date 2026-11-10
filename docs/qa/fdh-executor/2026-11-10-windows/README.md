@@ -1,4 +1,4 @@
-# fdh job: B-02 test cases E-1..E-9 on Windows (2026-11-09)
+# fdh job: B-02 test cases E-1..E-9 on Windows (2026-11-10)
 
 Live run of the frozen B-02 ADR test cases
 ([Confluence 8716289](https://floorp-projects.atlassian.net/wiki/spaces/FI/pages/8716289),
@@ -9,7 +9,7 @@ decision D-23) against real processes, for AC-04 on one machine.
   `fdh job
   start --step test` with `--lease-ttl-ms 3000`.
 - Command:
-  `deno run -A tools/fdh_job_e2e.ts --out docs/qa/fdh-executor/2026-11-09-windows`
+  `deno run -A tools/fdh_job_e2e.ts --out docs/qa/fdh-executor/2026-11-10-windows`
 - Output: `run.log` (console), `summary.json` (every check), and per case the
   job journal (`journal.json`) and the task-state events (`task-events.json`).
 
@@ -40,15 +40,23 @@ holding everything.
 
 ## Notes
 
-- Stopping a lost step tree: before starting the next epoch, the controller
-  stops the lost attempt's step process tree, selected by pid, parent pid and
-  start time and identity-checked before anything is stopped. The journals
-  record it as `lost-step-stopped`.
+- Stopping a lost step tree: the controller stops the lost attempt's step
+  process tree before it starts the next epoch. It also does this when the job
+  closes without a next epoch (input changed, attempts ran out, cancel).
+  - The tree is selected by pid, parent pid and start time. Each process is
+    identity-checked before it is stopped. If the root's pid now belongs to
+    another process, nothing is selected.
+  - The journals record each stop as `lost-step-stopped`.
   - In E-4/E-5 the stalled executor was alive. Three processes of its step tree
     were stopped before epoch 2 ran.
-  - In E-2 and E-8 the step tree had already exited by the time the controller
-    looked, and 0 processes were stopped. Killing the executor closes the step's
-    output pipes. E-2 checks that the lost step's root process is not running.
+  - In E-2, E-7 and E-8 (both epochs) the step tree had already exited by the
+    time the controller looked, and 0 processes were stopped. Killing the
+    executor closes the step's output pipes. E-2 checks that the lost step's
+    root process is not running.
+- Fault injection needs both `FDH_JOB_FAULT` and `FDH_JOB_FAULT_ENABLE=1` on the
+  executor, so a stray variable in an agent's shell has no effect.
+- This run replaces the 2026-11-09 run of the first PR head. The code changed
+  after review (PR #3097).
 - The lease TTL is 3 s here to keep the run short. The default is 10 s.
 - E-6 takes about 45 s, mostly in the two `task resume` calls, which probe the
   recorded ports.

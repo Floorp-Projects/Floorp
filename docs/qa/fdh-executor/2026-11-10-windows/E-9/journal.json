@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "jobId": "intent-20261109t144101z-9dba2d",
-  "taskId": "e2e-e-9-mw9dcjl1",
+  "jobId": "intent-20261110t020927z-f6b1f5",
+  "taskId": "e2e-e-9-mwa1xw53",
   "worktree": "E:\\floorp-browser-dev\\fdh-followup",
   "kind": "intent",
   "step": null,
@@ -10,11 +10,11 @@
     "target": "draft PR"
   },
   "inputs": {
-    "baseCommit": "b4cec3b5d0ce96291686d61be56be08c1896e12f",
+    "baseCommit": "b4f3df2dccdee1c661f91eaee12ef0cb8e03a202",
     "head": "",
     "guardEnv": {}
   },
-  "executionDigest": "28f253bd60326dfeafcd9f56ccc81baf1a1d924f3a531701d7cfd6b853860f0d",
+  "executionDigest": "73f0278ca42ab98e04a50fb6ec2c127efa6516cec91962dc37e8a2aab4901782",
   "state": "failed",
   "epoch": 1,
   "lease": null,
@@ -25,9 +25,9 @@
       "attempt": 1,
       "epoch": 1,
       "holder": "agent-a",
-      "scheduledAt": "2026-11-09T14:41:01.707Z",
-      "startedAt": "2026-11-09T14:41:01.707Z",
-      "endedAt": "2026-11-09T14:41:24.295Z",
+      "scheduledAt": "2026-11-10T02:09:27.931Z",
+      "startedAt": "2026-11-10T02:09:27.931Z",
+      "endedAt": "2026-11-10T02:09:50.164Z",
       "result": "lost",
       "exitCode": null,
       "logRef": null,
@@ -42,54 +42,54 @@
     {
       "from": null,
       "to": "pending",
-      "at": "2026-11-09T14:41:01.707Z",
+      "at": "2026-11-10T02:09:27.931Z",
       "reason": "created"
     },
     {
       "from": "pending",
       "to": "scheduled",
-      "at": "2026-11-09T14:41:01.707Z",
+      "at": "2026-11-10T02:09:27.931Z",
       "reason": "attempt 1 recorded before start"
     },
     {
       "from": "scheduled",
       "to": "running",
-      "at": "2026-11-09T14:41:01.707Z",
+      "at": "2026-11-10T02:09:27.931Z",
       "reason": "attempt 1 started"
     },
     {
       "from": "running",
       "to": "awaiting-approval",
-      "at": "2026-11-09T14:41:24.295Z",
+      "at": "2026-11-10T02:09:50.164Z",
       "reason": "unknown outcome of non-idempotent pr operation"
     },
     {
       "from": "awaiting-approval",
       "to": "failed",
-      "at": "2026-11-09T14:41:24.605Z",
+      "at": "2026-11-10T02:09:50.527Z",
       "reason": "resolved failed by approver: e2e cleanup"
     }
   ],
   "events": [
     {
-      "at": "2026-11-09T14:41:24.295Z",
+      "at": "2026-11-10T02:09:50.164Z",
       "kind": "lease-expired",
       "epoch": 1,
       "note": "holder agent-a lost"
     },
     {
-      "at": "2026-11-09T14:41:24.451Z",
+      "at": "2026-11-10T02:09:50.352Z",
       "kind": "late-report",
       "epoch": 1,
       "note": "report by agent-a (exit 0) after the holder was declared lost; not applied"
     },
     {
-      "at": "2026-11-09T14:41:24.605Z",
+      "at": "2026-11-10T02:09:50.527Z",
       "kind": "resolved",
       "epoch": 1,
       "note": "resolved failed by approver: e2e cleanup"
     }
   ],
-  "createdAt": "2026-11-09T14:41:01.707Z",
-  "updatedAt": "2026-11-09T14:41:24.605Z"
+  "createdAt": "2026-11-10T02:09:27.931Z",
+  "updatedAt": "2026-11-10T02:09:50.527Z"
 }

@@ -11,7 +11,7 @@ import {
   startStepJob,
   stepSpecFor,
 } from "./fdh_job.ts";
-import { selectProcessTree } from "./fdh_job_process.ts";
+import { selectProcessTree, startedNoEarlier } from "./fdh_job_process.ts";
 import {
   applyReport,
   beginAttempt,
@@ -291,4 +291,129 @@ Deno.test("fdh job: the process tree follows parent pids, also after the root ex
   // A different process now holds pid 10: it is not selected as the root.
   const reused = [p(10, 1, "2026-11-09T11:00:00.000Z")];
   assertEquals(selectProcessTree(reused, root), []);
+});
+
+// ---------------------------------------------------------------------------
+// review round 1 on PR #3097 (reviewer A)
+// ---------------------------------------------------------------------------
+
+Deno.test("fdh job: a lost step tree is also stopped when the job closes without a respawn", async () => {
+  const dir = await Deno.makeTempDir();
+  try {
+    const state = taskIn(dir);
+    const repo = { head: "h", diff: "", untracked: "" };
+    const job = await startStepJob({
+      state,
+      kind: "test",
+      leaseTtlMs: 1_000,
+      git: fakeGit(repo),
+      spawn: () => 1,
+    });
+    const old = new Date(Date.now() - 60_000).toISOString();
+    const root = {
+      pid: 88,
+      startTime: "s",
+      commandLine: "deno task test:host",
+    };
+    await updateJob(dir, "t1", job.jobId, (j) => {
+      beginAttempt(j, 1, "x1", old);
+      recordStepProcess(j, 1, "x1", root);
+    });
+    repo.diff = "edited";
+    const stopped: number[] = [];
+    const [report] = await reconcileTaskJobs({
+      state,
+      git: fakeGit(repo),
+      spawn: () => 1,
+      stopTree: (r) => {
+        stopped.push(r.pid);
+        return Promise.resolve([]);
+      },
+    });
+    assertEquals(report.action, "input-changed");
+    assertEquals(stopped, [88]);
+    assert(
+      readJob(dir, "t1", job.jobId).events.some((e) =>
+        e.kind === "lost-step-stopped"
+      ),
+    );
+  } finally {
+    await Deno.remove(dir, { recursive: true });
+  }
+});
+
+Deno.test("fdh job: concurrent settles record a result once", async () => {
+  const dir = await Deno.makeTempDir();
+  try {
+    const state = taskIn(dir);
+    const job = await startStepJob({
+      state,
+      kind: "test",
+      git: fakeGit({ head: "h", diff: "", untracked: "" }),
+      spawn: () => 1,
+    });
+    const now = new Date().toISOString();
+    await updateJob(dir, "t1", job.jobId, (j) => {
+      beginAttempt(j, 1, "x1", now);
+      applyReport(j, {
+        jobId: job.jobId,
+        epoch: 1,
+        holder: "x1",
+        exitCode: 0,
+        endedAt: now,
+        logRef: null,
+        results: [{
+          index: 0,
+          epoch: 1,
+          exitCode: 0,
+          startedAt: now,
+          endedAt: now,
+          logRef: null,
+        }],
+      }, now);
+    });
+    const results = await Promise.all(
+      Array.from({ length: 6 }, () => settleJob(dir, "t1", job.jobId)),
+    );
+    assertEquals(results.filter(Boolean).length, 1);
+    const task = readTaskState(dir, "t1");
+    assertEquals(task.operations.length, 1);
+    assertEquals(
+      task.events.filter((e) => e.command === `job result ${job.jobId}`).length,
+      1,
+    );
+  } finally {
+    await Deno.remove(dir, { recursive: true });
+  }
+});
+
+Deno.test("fdh job: children of a process that reused the root pid are never selected", () => {
+  const p = (pid: number, ppid: number, startTime: string): DevProcessInfo => ({
+    pid,
+    ppid,
+    name: "x",
+    commandLine: `cmd ${pid}`,
+    startTime,
+  });
+  const root = {
+    pid: 10,
+    startTime: "2026-11-09T10:00:00.000Z",
+    commandLine: "cmd 10",
+  };
+  // pid 10 now belongs to another process, whose child started later.
+  const snapshot = [
+    { ...p(10, 1, "2026-11-09T11:00:00.000Z"), commandLine: "other" },
+    p(20, 10, "2026-11-09T11:00:01.000Z"),
+  ];
+  assertEquals(selectProcessTree(snapshot, root), []);
+});
+
+Deno.test("fdh job: Linux start ticks compare numerically within one boot", () => {
+  assert(startedNoEarlier("boot:100000", "boot:99999"));
+  assert(!startedNoEarlier("boot:99999", "boot:100000"));
+  assert(!startedNoEarlier("other:100000", "boot:99999"));
+  assert(
+    startedNoEarlier("2026-11-09T10:00:01.000Z", "2026-11-09T10:00:00.000Z"),
+  );
+  assert(!startedNoEarlier("garbage", "2026-11-09T10:00:00.000Z"));
 });

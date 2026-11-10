@@ -1,0 +1,20 @@
+[
+  {
+    "timestamp": "2026-11-10T02:08:02.314Z",
+    "command": "task start",
+    "note": "created task state for e2e-e4-mwa1w28i",
+    "exitCode": 0
+  },
+  {
+    "timestamp": "2026-11-10T02:08:02.622Z",
+    "command": "job start test-20261110t020802z-bd1c0d",
+    "note": "test: deno task test:host (digest 624ec8469679)",
+    "exitCode": null
+  },
+  {
+    "timestamp": "2026-11-10T02:08:19.917Z",
+    "command": "job result test-20261110t020802z-bd1c0d",
+    "note": "test succeeded after 2 attempt(s), 1 lost, epoch 2",
+    "exitCode": 0
+  }
+]

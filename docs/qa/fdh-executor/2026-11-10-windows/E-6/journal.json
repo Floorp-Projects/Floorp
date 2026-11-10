@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "jobId": "intent-20261109t144001z-195dbe",
-  "taskId": "e2e-e-6-mw9db9we",
+  "jobId": "intent-20261110t020820z-566206",
+  "taskId": "e2e-e-6-mwa1wg0o",
   "worktree": "E:\\floorp-browser-dev\\fdh-followup",
   "kind": "intent",
   "step": null,
@@ -10,11 +10,11 @@
     "target": "origin e2e-branch"
   },
   "inputs": {
-    "baseCommit": "b4cec3b5d0ce96291686d61be56be08c1896e12f",
+    "baseCommit": "b4f3df2dccdee1c661f91eaee12ef0cb8e03a202",
     "head": "",
     "guardEnv": {}
   },
-  "executionDigest": "923895048bebae5c693757dda808ae6194a77cc35a8e395f37568452c0faed5e",
+  "executionDigest": "e28f0ff799da38d091012ccdf20a74d453bfe2268c4e13bc83f4c333975c62a1",
   "state": "succeeded",
   "epoch": 1,
   "lease": null,
@@ -25,9 +25,9 @@
       "attempt": 1,
       "epoch": 1,
       "holder": "agent-a",
-      "scheduledAt": "2026-11-09T14:40:01.902Z",
-      "startedAt": "2026-11-09T14:40:01.902Z",
-      "endedAt": "2026-11-09T14:40:24.153Z",
+      "scheduledAt": "2026-11-10T02:08:20.375Z",
+      "startedAt": "2026-11-10T02:08:20.375Z",
+      "endedAt": "2026-11-10T02:08:42.595Z",
       "result": "lost",
       "exitCode": null,
       "logRef": null,
@@ -42,54 +42,54 @@
     {
       "from": null,
       "to": "pending",
-      "at": "2026-11-09T14:40:01.902Z",
+      "at": "2026-11-10T02:08:20.375Z",
       "reason": "created"
     },
     {
       "from": "pending",
       "to": "scheduled",
-      "at": "2026-11-09T14:40:01.902Z",
+      "at": "2026-11-10T02:08:20.375Z",
       "reason": "attempt 1 recorded before start"
     },
     {
       "from": "scheduled",
       "to": "running",
-      "at": "2026-11-09T14:40:01.902Z",
+      "at": "2026-11-10T02:08:20.375Z",
       "reason": "attempt 1 started"
     },
     {
       "from": "running",
       "to": "awaiting-approval",
-      "at": "2026-11-09T14:40:24.153Z",
+      "at": "2026-11-10T02:08:42.595Z",
       "reason": "unknown outcome of non-idempotent push operation"
     },
     {
       "from": "awaiting-approval",
       "to": "running",
-      "at": "2026-11-09T14:40:46.555Z",
+      "at": "2026-11-10T02:09:05.099Z",
       "reason": "resolved succeeded by approver: branch exists on origin"
     },
     {
       "from": "running",
       "to": "succeeded",
-      "at": "2026-11-09T14:40:46.555Z",
+      "at": "2026-11-10T02:09:05.099Z",
       "reason": "outcome confirmed by approver"
     }
   ],
   "events": [
     {
-      "at": "2026-11-09T14:40:24.153Z",
+      "at": "2026-11-10T02:08:42.595Z",
       "kind": "lease-expired",
       "epoch": 1,
       "note": "holder agent-a lost"
     },
     {
-      "at": "2026-11-09T14:40:46.555Z",
+      "at": "2026-11-10T02:09:05.099Z",
       "kind": "resolved",
       "epoch": 1,
       "note": "resolved succeeded by approver: branch exists on origin"
     }
   ],
-  "createdAt": "2026-11-09T14:40:01.902Z",
-  "updatedAt": "2026-11-09T14:40:46.555Z"
+  "createdAt": "2026-11-10T02:08:20.375Z",
+  "updatedAt": "2026-11-10T02:09:05.099Z"
 }

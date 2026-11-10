@@ -1243,6 +1243,9 @@ Deno.test("fdh executor: cancel closes an unstarted job at once and a running on
 
   const running = stepJobRunning();
   assertEquals(cancelJob(running, "", at(1)), "cancel_requested");
+  // A second cancel is not a force: the holder still stops the step.
+  assertEquals(cancelJob(running, "again", at(1)), "cancel_requested");
+  assertEquals(running.lease?.holder, "x1");
   assertEquals(heartbeat(running, 1, "x1", at(2)), "cancel");
   assertEquals(finishCancel(running, 1, "x2", at(3)), false);
   assertEquals(finishCancel(running, 1, "x1", at(3)), true);

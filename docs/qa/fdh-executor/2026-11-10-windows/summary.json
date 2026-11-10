@@ -1,5 +1,5 @@
 {
-  "ranAt": "2026-11-09T14:41:24.615Z",
+  "ranAt": "2026-11-10T02:09:50.538Z",
   "os": "windows x86_64",
   "deno": "2.9.4",
   "leaseTtlMs": 3000,
@@ -25,7 +25,7 @@
         }
       ],
       "notes": [
-        "task e2e-e-1-mw9d9yxo, job test-20261109t143901z-27bce5"
+        "task e2e-e-1-mwa1v196, job test-20261110t020715z-2c0256"
       ]
     },
     {
@@ -45,12 +45,12 @@
         {
           "name": "the lost attempt's step process is not running any more",
           "passed": true,
-          "detail": "pid 89372"
+          "detail": "pid 88140"
         }
       ],
       "notes": [
-        "killed executor executor-83876-c39ec7; step root pid 89372",
-        "task e2e-e-2-mw9da8le, job test-20261109t143913z-082583"
+        "killed executor executor-58428-27f202; step root pid 88140",
+        "task e2e-e-2-mwa1vc1i, job test-20261110t020728z-700e05"
       ]
     },
     {
@@ -79,7 +79,7 @@
         }
       ],
       "notes": [
-        "task e2e-e-3-mw9dambs, job test-20261109t143931z-a355a8"
+        "task e2e-e-3-mwa1vsq0, job test-20261110t020750z-c859de"
       ]
     },
     {
@@ -94,12 +94,12 @@
         {
           "name": "E-5: the epoch-1 report was rejected as stale and recorded",
           "passed": true,
-          "detail": "[{\"at\":\"2026-11-09T14:39:55.892Z\",\"kind\":\"stale-epoch\",\"epoch\":1,\"note\":\"report by executor-71540-ec7c54 (exit -1) rejected; current epoch 2\"}]"
+          "detail": "[{\"at\":\"2026-11-10T02:08:14.966Z\",\"kind\":\"stale-epoch\",\"epoch\":1,\"note\":\"report by executor-84920-f1216b (exit -1) rejected; current epoch 2\"}]"
         },
         {
           "name": "E-5: attempt 1 stays lost, with the late report in its notes",
           "passed": true,
-          "detail": "holder lost; outcome unknown; late report by executor-71540-ec7c54 (exit -1) rejected; current epoch 2"
+          "detail": "holder lost; outcome unknown; late report by executor-84920-f1216b (exit -1) rejected; current epoch 2"
         },
         {
           "name": "the job's result is epoch 2's",
@@ -108,7 +108,7 @@
         }
       ],
       "notes": [
-        "task e2e-e4-mw9davp5, job test-20261109t143943z-10a72a"
+        "task e2e-e4-mwa1w28i, job test-20261110t020802z-bd1c0d"
       ]
     },
     {
@@ -123,7 +123,7 @@
         {
           "name": "the quota ledger lists it as pending",
           "passed": true,
-          "detail": "[{\"op\":\"push\",\"note\":\"job intent-20261109t144001z-195dbe: origin e2e-branch\",\"at\":\"2026-11-09T14:40:24.154Z\"}]"
+          "detail": "[{\"op\":\"push\",\"note\":\"job intent-20261110t020820z-566206: origin e2e-branch\",\"at\":\"2026-11-10T02:08:42.596Z\"}]"
         },
         {
           "name": "a second resume does not rerun or re-queue it",
@@ -138,11 +138,11 @@
         {
           "name": "and approves its pending entry",
           "passed": true,
-          "detail": "{\"taskId\":\"e2e-e-6-mw9db9we\",\"activeAgent\":null,\"stopped\":false,\"stopReason\":null,\"approvalPending\":[],\"events\":2,\"updatedAt\":\"2026-11-09T14:40:46.557Z\"}"
+          "detail": "{\"taskId\":\"e2e-e-6-mwa1wg0o\",\"activeAgent\":null,\"stopped\":false,\"stopReason\":null,\"approvalPending\":[],\"events\":2,\"updatedAt\":\"2026-11-10T02:09:05.101Z\"}"
         }
       ],
       "notes": [
-        "task e2e-e-6-mw9db9we, job intent-20261109t144001z-195dbe"
+        "task e2e-e-6-mwa1wg0o, job intent-20261110t020820z-566206"
       ]
     },
     {
@@ -162,11 +162,11 @@
         {
           "name": "the reason is recorded",
           "passed": true,
-          "detail": "[\"lease-expired\",\"input-changed\"]"
+          "detail": "[\"lease-expired\",\"input-changed\",\"lost-step-stopped\"]"
         }
       ],
       "notes": [
-        "task e2e-e-7-mw9dc8sb, job test-20261109t144047z-563cb8"
+        "task e2e-e-7-mwa1xf0w, job test-20261110t020905z-91ef2a"
       ]
     },
     {
@@ -186,11 +186,11 @@
         {
           "name": "gave-up is recorded",
           "passed": true,
-          "detail": "[\"lease-expired\",\"lost-step-stopped\",\"lease-expired\",\"gave-up\"]"
+          "detail": "[\"lease-expired\",\"lost-step-stopped\",\"lease-expired\",\"gave-up\",\"lost-step-stopped\"]"
         }
       ],
       "notes": [
-        "task e2e-e-8-mw9dcc38, job test-20261109t144051z-00bc0b"
+        "task e2e-e-8-mwa1xl17, job test-20261110t020913z-0aeafb"
       ]
     },
     {
@@ -214,7 +214,7 @@
         }
       ],
       "notes": [
-        "task e2e-e-9-mw9dcjl1, job intent-20261109t144101z-9dba2d"
+        "task e2e-e-9-mwa1xw53, job intent-20261110t020927z-f6b1f5"
       ]
     }
   ]

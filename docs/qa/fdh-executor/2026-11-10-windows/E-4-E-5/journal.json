@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "jobId": "test-20261109t143943z-10a72a",
-  "taskId": "e2e-e4-mw9davp5",
+  "jobId": "test-20261110t020802z-bd1c0d",
+  "taskId": "e2e-e4-mwa1w28i",
   "worktree": "E:\\floorp-browser-dev\\fdh-followup",
   "kind": "test",
   "step": {
@@ -22,12 +22,12 @@
   },
   "intent": null,
   "inputs": {
-    "baseCommit": "b4cec3b5d0ce96291686d61be56be08c1896e12f",
-    "head": "b4cec3b5d0ce96291686d61be56be08c1896e12f",
+    "baseCommit": "b4f3df2dccdee1c661f91eaee12ef0cb8e03a202",
+    "head": "b4f3df2dccdee1c661f91eaee12ef0cb8e03a202",
     "guardEnv": {},
-    "worktreeState": "b647ddbfbae6eb0fffeea768a594e47d475184fed2d233caa22238d3bfc564c9"
+    "worktreeState": "9a5d106c503d4f54c24d240357dd751ac778eb2503c4e6a022c3e9d602db2a5f"
   },
-  "executionDigest": "d5ea1dada084f9006ab0aee5348238089af3cd5fa3ec4103803a49c198356106",
+  "executionDigest": "624ec8469679ed5173dcf434689312759b74dd9a357bfb5d599e06b104159c64",
   "state": "succeeded",
   "epoch": 2,
   "lease": null,
@@ -37,33 +37,33 @@
     {
       "attempt": 1,
       "epoch": 1,
-      "holder": "executor-71540-ec7c54",
-      "scheduledAt": "2026-11-09T14:39:43.538Z",
-      "startedAt": "2026-11-09T14:39:43.888Z",
-      "endedAt": "2026-11-09T14:39:47.108Z",
+      "holder": "executor-84920-f1216b",
+      "scheduledAt": "2026-11-10T02:08:02.620Z",
+      "startedAt": "2026-11-10T02:08:02.962Z",
+      "endedAt": "2026-11-10T02:08:06.232Z",
       "result": "lost",
       "exitCode": null,
       "logRef": null,
       "process": {
-        "pid": 69268,
-        "startTime": "2026-11-09T14:39:43.8936510Z",
+        "pid": 6684,
+        "startTime": "2026-11-10T02:08:02.9670680Z",
         "commandLine": "C:\\Users\\user\\.deno\\bin\\deno.exe task test:host"
       },
-      "notes": "holder lost; outcome unknown; late report by executor-71540-ec7c54 (exit -1) rejected; current epoch 2"
+      "notes": "holder lost; outcome unknown; late report by executor-84920-f1216b (exit -1) rejected; current epoch 2"
     },
     {
       "attempt": 2,
       "epoch": 2,
-      "holder": "executor-87320-57ecdd",
-      "scheduledAt": "2026-11-09T14:39:47.108Z",
-      "startedAt": "2026-11-09T14:39:49.910Z",
-      "endedAt": "2026-11-09T14:40:00.491Z",
+      "holder": "executor-70048-c9534f",
+      "scheduledAt": "2026-11-10T02:08:06.232Z",
+      "startedAt": "2026-11-10T02:08:08.890Z",
+      "endedAt": "2026-11-10T02:08:19.914Z",
       "result": "succeeded",
       "exitCode": 0,
-      "logRef": "_dist/fdh/jobs/e2e-e4-mw9davp5/test-20261109t143943z-10a72a-2-0.log",
+      "logRef": "_dist/fdh/jobs/e2e-e4-mwa1w28i/test-20261110t020802z-bd1c0d-2-0.log",
       "process": {
-        "pid": 90932,
-        "startTime": "2026-11-09T14:39:49.9147110Z",
+        "pid": 85584,
+        "startTime": "2026-11-10T02:08:08.8942870Z",
         "commandLine": "C:\\Users\\user\\.deno\\bin\\deno.exe task test:host"
       },
       "notes": "attempt 1 lost"
@@ -75,9 +75,9 @@
       "index": 0,
       "epoch": 2,
       "exitCode": 0,
-      "startedAt": "2026-11-09T14:39:49.911Z",
-      "endedAt": "2026-11-09T14:40:00.491Z",
-      "logRef": "_dist/fdh/jobs/e2e-e4-mw9davp5/test-20261109t143943z-10a72a-2-0.log"
+      "startedAt": "2026-11-10T02:08:08.891Z",
+      "endedAt": "2026-11-10T02:08:19.914Z",
+      "logRef": "_dist/fdh/jobs/e2e-e4-mwa1w28i/test-20261110t020802z-bd1c0d-2-0.log"
     }
   ],
   "recordedToTask": true,
@@ -85,48 +85,48 @@
     {
       "from": null,
       "to": "pending",
-      "at": "2026-11-09T14:39:43.538Z",
+      "at": "2026-11-10T02:08:02.620Z",
       "reason": "created"
     },
     {
       "from": "pending",
       "to": "scheduled",
-      "at": "2026-11-09T14:39:43.538Z",
+      "at": "2026-11-10T02:08:02.620Z",
       "reason": "attempt 1 recorded before start"
     },
     {
       "from": "scheduled",
       "to": "running",
-      "at": "2026-11-09T14:39:43.888Z",
+      "at": "2026-11-10T02:08:02.962Z",
       "reason": "attempt 1 started"
     },
     {
       "from": "running",
       "to": "succeeded",
-      "at": "2026-11-09T14:40:00.492Z",
+      "at": "2026-11-10T02:08:19.915Z",
       "reason": "attempt 2 exited 0"
     }
   ],
   "events": [
     {
-      "at": "2026-11-09T14:39:47.108Z",
+      "at": "2026-11-10T02:08:06.232Z",
       "kind": "lease-expired",
       "epoch": 1,
-      "note": "holder executor-71540-ec7c54 lost"
+      "note": "holder executor-84920-f1216b lost"
     },
     {
-      "at": "2026-11-09T14:39:49.576Z",
+      "at": "2026-11-10T02:08:08.584Z",
       "kind": "lost-step-stopped",
       "epoch": 1,
-      "note": "stopped 3 process(es) of the step tree rooted at pid 69268"
+      "note": "stopped 3 process(es) of the step tree rooted at pid 6684"
     },
     {
-      "at": "2026-11-09T14:39:55.892Z",
+      "at": "2026-11-10T02:08:14.966Z",
       "kind": "stale-epoch",
       "epoch": 1,
-      "note": "report by executor-71540-ec7c54 (exit -1) rejected; current epoch 2"
+      "note": "report by executor-84920-f1216b (exit -1) rejected; current epoch 2"
     }
   ],
-  "createdAt": "2026-11-09T14:39:43.538Z",
-  "updatedAt": "2026-11-09T14:40:00.492Z"
+  "createdAt": "2026-11-10T02:08:02.620Z",
+  "updatedAt": "2026-11-10T02:08:19.915Z"
 }
