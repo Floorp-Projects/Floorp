@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "jobId": "intent-20261110t022524z-879951",
-  "taskId": "e2e-e-9-mwa2ie05",
+  "jobId": "intent-20261110t023336z-c937a5",
+  "taskId": "e2e-e-9-mwa2sy3i",
   "worktree": "E:\\floorp-browser-dev\\fdh-followup",
   "kind": "intent",
   "step": null,
@@ -10,11 +10,11 @@
     "target": "draft PR"
   },
   "inputs": {
-    "baseCommit": "2c8aff225d9830820dd0910b6489fbc0a8a95f4f",
+    "baseCommit": "ebb430084e18b91062c45f9e7c739af38c572db2",
     "head": "",
     "guardEnv": {}
   },
-  "executionDigest": "fda49ed44249a2d4ba50dc954106a54cc0329725cbe22ace66f12a0f0075e41b",
+  "executionDigest": "bf457491aba8851674724d6b12f38c4dc676aa32b8783d7045a3e97d904ab1e9",
   "state": "failed",
   "epoch": 1,
   "lease": null,
@@ -25,14 +25,15 @@
       "attempt": 1,
       "epoch": 1,
       "holder": "agent-a",
-      "scheduledAt": "2026-11-10T02:25:24.241Z",
-      "startedAt": "2026-11-10T02:25:24.241Z",
-      "endedAt": "2026-11-10T02:25:46.493Z",
+      "scheduledAt": "2026-11-10T02:33:36.780Z",
+      "startedAt": "2026-11-10T02:33:36.780Z",
+      "endedAt": "2026-11-10T02:33:58.993Z",
       "result": "lost",
       "exitCode": null,
       "logRef": null,
       "process": null,
-      "notes": "holder lost; outcome unknown"
+      "notes": "holder lost; outcome unknown",
+      "lastSeenAt": "2026-11-10T02:33:36.780Z"
     }
   ],
   "checkpoint": 0,
@@ -42,54 +43,54 @@
     {
       "from": null,
       "to": "pending",
-      "at": "2026-11-10T02:25:24.241Z",
+      "at": "2026-11-10T02:33:36.780Z",
       "reason": "created"
     },
     {
       "from": "pending",
       "to": "scheduled",
-      "at": "2026-11-10T02:25:24.241Z",
+      "at": "2026-11-10T02:33:36.780Z",
       "reason": "attempt 1 recorded before start"
     },
     {
       "from": "scheduled",
       "to": "running",
-      "at": "2026-11-10T02:25:24.241Z",
+      "at": "2026-11-10T02:33:36.780Z",
       "reason": "attempt 1 started"
     },
     {
       "from": "running",
       "to": "awaiting-approval",
-      "at": "2026-11-10T02:25:46.493Z",
+      "at": "2026-11-10T02:33:58.993Z",
       "reason": "unknown outcome of non-idempotent pr operation"
     },
     {
       "from": "awaiting-approval",
       "to": "failed",
-      "at": "2026-11-10T02:25:46.832Z",
+      "at": "2026-11-10T02:33:59.312Z",
       "reason": "resolved failed by approver: e2e cleanup"
     }
   ],
   "events": [
     {
-      "at": "2026-11-10T02:25:46.493Z",
+      "at": "2026-11-10T02:33:58.993Z",
       "kind": "lease-expired",
       "epoch": 1,
       "note": "holder agent-a lost"
     },
     {
-      "at": "2026-11-10T02:25:46.659Z",
+      "at": "2026-11-10T02:33:59.156Z",
       "kind": "late-report",
       "epoch": 1,
       "note": "report by agent-a (exit 0) after the holder was declared lost; not applied"
     },
     {
-      "at": "2026-11-10T02:25:46.832Z",
+      "at": "2026-11-10T02:33:59.312Z",
       "kind": "resolved",
       "epoch": 1,
       "note": "resolved failed by approver: e2e cleanup"
     }
   ],
-  "createdAt": "2026-11-10T02:25:24.241Z",
-  "updatedAt": "2026-11-10T02:25:46.832Z"
+  "createdAt": "2026-11-10T02:33:36.780Z",
+  "updatedAt": "2026-11-10T02:33:59.312Z"
 }

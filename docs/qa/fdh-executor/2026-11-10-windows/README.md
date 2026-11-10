@@ -54,9 +54,13 @@ holding everything.
   - In E-2b the first controller was killed after the epoch bump and before the
     stop. The next controller stopped every lost attempt whose tree had not been
     stopped yet: epoch 1 (3 processes). Epoch 2 had never started.
+  - The E-2b check accepts a stop by either controller. The journal timeline
+    (epoch 2 declared never started, then epoch 3) shows that the interrupted
+    path was the one taken in this run.
   - When the root has exited, its children are selected only if they started no
-    later than the moment the attempt was declared lost. The children of a later
-    process that reused the pid are therefore not selected.
+    later than the holder's last heartbeat plus one TTL, which may be well
+    before the loss was noticed. The children of a later process that reused the
+    pid are therefore not selected.
   - In E-2, E-7 and E-8 (both epochs) the step tree had already exited by the
     time the controller looked, and 0 processes were stopped. Killing the
     executor closes the step's output pipes. E-2 checks that the lost step's
@@ -64,7 +68,7 @@ holding everything.
 - Fault injection needs both `FDH_JOB_FAULT` and `FDH_JOB_FAULT_ENABLE=1` on the
   executor, so a stray variable in an agent's shell has no effect.
 - This run replaces the 2026-11-09 run of the first PR head. The code changed
-  after two review rounds (PR #3097).
+  after the review rounds on PR #3097. This run is at the final code of the PR.
 - On the CLI, `--lease-ttl-ms` must be at least 3000. Stopping a lost tree and
   starting the next executor take one to two seconds on this machine.
 - The lease TTL is 3 s here to keep the run short. The default is 10 s.

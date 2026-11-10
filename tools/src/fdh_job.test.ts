@@ -7,7 +7,9 @@ import {
   assertRejects,
 } from "@std/assert";
 import {
+  cancelAndSettle,
   currentInputs,
+  lostTreeBound,
   quotaNoteFor,
   reconcileTaskJobs,
   resolveAndApprove,
@@ -610,6 +612,66 @@ Deno.test("fdh job: job wait gives up after consecutive reconcile errors instead
       "could not be reconciled 3 times in a row",
     );
     assertEquals(seen.length, 3);
+  } finally {
+    await Deno.remove(dir, { recursive: true });
+  }
+});
+
+Deno.test("fdh job: the child bound of a lost root is its last heartbeat plus one TTL", () => {
+  assertEquals(
+    lostTreeBound({
+      lastSeenAt: "2026-11-09T10:00:00.000Z",
+      endedAt: "2026-11-10T08:00:00.000Z",
+    }, 10_000),
+    "2026-11-09T10:00:10.000Z",
+  );
+  assertEquals(
+    lostTreeBound({
+      lastSeenAt: "2026-11-09T10:00:00.000Z",
+      endedAt: "2026-11-09T10:00:03.000Z",
+    }, 10_000),
+    "2026-11-09T10:00:03.000Z",
+  );
+  assertEquals(
+    lostTreeBound({ endedAt: "2026-11-09T10:00:03.000Z" }, 10_000),
+    "2026-11-09T10:00:03.000Z",
+  );
+});
+
+Deno.test("fdh job: job cancel also stops a lost tree left by an interrupted respawn", async () => {
+  const dir = await Deno.makeTempDir();
+  try {
+    const state = taskIn(dir);
+    const git = fakeGit({ head: "h", diff: "", untracked: "" });
+    const job = await startStepJob({
+      state,
+      kind: "test",
+      leaseTtlMs: 1_000,
+      git,
+      spawn: () => 1,
+    });
+    const old = new Date(Date.now() - 120_000).toISOString();
+    await updateJob(dir, "t1", job.jobId, (j) => {
+      beginAttempt(j, 1, "x1", old);
+      recordStepProcess(j, 1, "x1", {
+        pid: 61,
+        startTime: "s",
+        commandLine: "c",
+      });
+      reconcileJob(j, { currentDigest: j.executionDigest, at: old });
+    });
+    const stopped: number[] = [];
+    const after = await cancelAndSettle(state, job.jobId, "not needed", {
+      git,
+      spawn: () => 1,
+      stopTree: (r) => {
+        stopped.push(r.pid);
+        return Promise.resolve([]);
+      },
+    });
+    assertEquals(after.state, "cancelled");
+    assertEquals(stopped, [61]);
+    assertEquals(after.recordedToTask, true);
   } finally {
     await Deno.remove(dir, { recursive: true });
   }

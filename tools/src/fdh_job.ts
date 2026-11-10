@@ -477,7 +477,7 @@ async function reconcileOne(
         const root = lost.process!;
         const stopped = await (options.stopTree ?? stopProcessTree)(
           root,
-          lost.endedAt ?? undefined,
+          lostTreeBound(lost, job.leaseTtlMs),
         );
         report.stopped = (report.stopped ?? 0) + stopped.length;
         await updateJob(
@@ -494,6 +494,11 @@ async function reconcileOne(
       report.error = `could not stop a lost step tree: ${
         error instanceof Error ? error.message : String(error)
       }`;
+      // A closed job still gets its result recorded; the stop is retried by
+      // the next reconcile.
+      if (isTerminal(job.state)) {
+        await settleJob(state.worktree, state.taskId, jobId);
+      }
       return report;
     }
     if (value.action === "respawn") {
@@ -676,17 +681,38 @@ export async function cancelAndSettle(
   state: FdhTaskState,
   jobId: string,
   reason: string,
+  options: Omit<ReconcileTaskOptions, "state" | "jobIds"> = {},
 ): Promise<JobJournal> {
-  const { job } = await updateJob(
+  await updateJob(
     state.worktree,
     state.taskId,
     jobId,
     (j) => cancelJob(j, reason),
   );
-  if (isTerminal(job.state)) {
-    await settleJob(state.worktree, state.taskId, jobId);
+  // Reconcile at once: it stops any lost tree left from an earlier epoch
+  // (e.g. an interrupted respawn) and records a closed job's result.
+  await reconcileTaskJobs({ ...options, state, jobIds: [jobId] });
+  return readJob(state.worktree, state.taskId, jobId);
+}
+
+/**
+ * Latest start time a child of a lost root may have: the holder's last sign
+ * of life plus one TTL (the loss may be noticed long after it happened).
+ */
+export function lostTreeBound(
+  attempt: { lastSeenAt?: string; endedAt: string | null },
+  leaseTtlMs: number,
+): string | undefined {
+  const seen = attempt.lastSeenAt !== undefined
+    ? Date.parse(attempt.lastSeenAt)
+    : NaN;
+  if (Number.isFinite(seen)) {
+    const bound = seen + leaseTtlMs;
+    const ended = attempt.endedAt === null ? NaN : Date.parse(attempt.endedAt);
+    return new Date(Number.isFinite(ended) ? Math.min(bound, ended) : bound)
+      .toISOString();
   }
-  return job;
+  return attempt.endedAt ?? undefined;
 }
 
 /** Compact JSON view of a job for the CLI. */

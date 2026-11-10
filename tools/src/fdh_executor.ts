@@ -82,6 +82,8 @@ export interface JobAttempt {
    * controller can stop an orphaned step before it runs the job again.
    */
   process: ProcessIdentity | null;
+  /** Last time the holder was known alive (set when it is declared lost). */
+  lastSeenAt?: string;
   notes: string;
 }
 
@@ -924,6 +926,10 @@ export function reconcileJob(
       ? `executor for attempt ${attempt.attempt} never started`
       : `holder ${attempt.holder ?? "?"} lost`,
   );
+  // When the holder was last known alive (its last heartbeat, or the start):
+  // the loss can be noticed much later than it happened.
+  attempt.lastSeenAt = job.lease?.heartbeatAt ?? attempt.startedAt ??
+    attempt.scheduledAt;
   attempt.result = "lost";
   attempt.endedAt = at;
   attempt.notes = "holder lost; outcome unknown";
