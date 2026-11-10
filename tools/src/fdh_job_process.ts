@@ -11,10 +11,14 @@
  * On Windows a child keeps the parent pid of a dead parent, so the tree of a
  * lost step is still found; children are matched only when they started at
  * or after their parent. On POSIX the step command is started in its own
- * process group (detached), and the group is signalled as well.
+ * process group (detached), and the group is signalled as well. When a POSIX
+ * root has exited, its children are re-parented (to init or a subreaper), so
+ * they are found by that process group instead (a group id is not reused
+ * while the group has members).
  */
 
 import { listDevProcesses, terminateDevProcesses } from "./dev_processes.ts";
+import { matchesDevIdentity } from "./dev_process_selection.ts";
 import type { DevProcessInfo } from "./dev_process_types.ts";
 import type {
   ProcessIdentity,
@@ -46,20 +50,39 @@ export function startedNoEarlier(child: string, parent: string): boolean {
 }
 
 /**
+ * Linux start times are `<boot-id>:<start-ticks>`; this turns them into wall
+ * time (boot time from /proc/stat, which has whole-second precision).
+ */
+export interface LinuxClock {
+  bootId: string;
+  bootTimeMs: number;
+  ticksPerSecond: number;
+}
+
+export interface TreeSelection {
+  /** POSIX: process group id by pid, from the same moment as the snapshot. */
+  groups?: ReadonlyMap<number, number>;
+  /** Linux: to compare tick start times with `notAfter`. */
+  clock?: LinuxClock;
+}
+
+/**
  * The process with `root`'s identity (if it still runs) and all of its
  * descendants in `snapshot`. When the root has exited, its children are
- * still selected by parent pid if they started at or after the root.
+ * still selected by parent pid if they started at or after the root, and
+ * (POSIX, with `groups`) the members of the root's process group too.
  */
 export function selectProcessTree(
   snapshot: readonly DevProcessInfo[],
   root: ProcessIdentity,
   /**
-   * When the root has exited, its direct children are only trusted if they
-   * started no later than this (the time the attempt was declared lost): a
-   * process that reused the root's pid and exited since cannot have
-   * children that started before the loss.
+   * When the root has exited, its direct children and its group members are
+   * only trusted if they started no later than this (the time the attempt
+   * was declared lost): a process that reused the root's pid and exited
+   * since cannot have children that started before the loss.
    */
   notAfter?: string,
+  selection: TreeSelection = {},
 ): DevProcessInfo[] {
   const byParent = new Map<number, DevProcessInfo[]>();
   for (const process of snapshot) {
@@ -82,6 +105,28 @@ export function selectProcessTree(
     startTime: root.startTime,
   }];
   const seen = new Set<number>([root.pid]);
+  if (selection.groups !== undefined) {
+    // POSIX: the step command leads its own process group. After the root
+    // exited, its children are re-parented and only the group still ties
+    // them to the step. The group id is the root's pid and is not reused
+    // while the group has members; the time bounds guard against a group
+    // that a later process with the reused pid started.
+    for (const member of snapshot) {
+      if (seen.has(member.pid)) continue;
+      if (selection.groups.get(member.pid) !== root.pid) continue;
+      if (!startedNoEarlier(member.startTime, root.startTime)) continue;
+      if (
+        live === undefined &&
+        !(notAfter !== undefined &&
+          startedNoLater(member.startTime, notAfter, selection.clock))
+      ) {
+        continue;
+      }
+      seen.add(member.pid);
+      selected.push(member);
+      queue.push({ pid: member.pid, startTime: member.startTime });
+    }
+  }
   while (queue.length > 0) {
     const parent = queue.shift()!;
     for (const child of byParent.get(parent.pid) ?? []) {
@@ -89,7 +134,8 @@ export function selectProcessTree(
       if (!startedNoEarlier(child.startTime, parent.startTime)) continue;
       if (
         live === undefined && parent.pid === root.pid &&
-        !(notAfter !== undefined && startedNoLater(child.startTime, notAfter))
+        !(notAfter !== undefined &&
+          startedNoLater(child.startTime, notAfter, selection.clock))
       ) {
         // Root gone: without a bound we cannot tell its children from those
         // of a later process that reused its pid. Select nothing for it.
@@ -103,11 +149,92 @@ export function selectProcessTree(
   return selected;
 }
 
-/** Did `child` start no later than the ISO time `bound`? Else false. */
-export function startedNoLater(child: string, bound: string): boolean {
-  const a = Date.parse(child);
+/**
+ * Did `child` start no later than the ISO time `bound`? A Linux tick start
+ * time is compared through `clock` (same boot only). Else false.
+ */
+export function startedNoLater(
+  child: string,
+  bound: string,
+  clock?: LinuxClock,
+): boolean {
   const b = Date.parse(bound);
-  return Number.isFinite(a) && Number.isFinite(b) && a <= b;
+  if (!Number.isFinite(b)) return false;
+  const ticks = /^(.+):(\d+)$/.exec(child);
+  if (ticks && !/^\d{4}-/.test(child)) {
+    if (clock === undefined || ticks[1] !== clock.bootId) return false;
+    const at = clock.bootTimeMs +
+      Number(ticks[2]) * 1000 / clock.ticksPerSecond;
+    // Boot time has whole-second precision: allow one second.
+    return at <= b + 1000;
+  }
+  const a = Date.parse(child);
+  return Number.isFinite(a) && a <= b;
+}
+
+async function output(cmd: string, args: string[]): Promise<string> {
+  const result = await new Deno.Command(cmd, {
+    args,
+    stdin: "null",
+    stdout: "piped",
+    stderr: "piped",
+    env: { LC_ALL: "C" },
+  }).output();
+  if (!result.success) {
+    throw new Error(
+      `${cmd}: ${new TextDecoder().decode(result.stderr).trim()}`,
+    );
+  }
+  return new TextDecoder().decode(result.stdout);
+}
+
+/** POSIX: process group id of every process. Empty on Windows. */
+export async function listProcessGroups(): Promise<Map<number, number>> {
+  const groups = new Map<number, number>();
+  if (Deno.build.os === "windows") return groups;
+  for (
+    const line of (await output("ps", ["-axww", "-o", "pid=,pgid="])).split(
+      "\n",
+    )
+  ) {
+    const match = /^\s*(\d+)\s+(\d+)\s*$/.exec(line);
+    if (match) groups.set(Number(match[1]), Number(match[2]));
+  }
+  return groups;
+}
+
+/** Linux: the clock for tick start times; undefined elsewhere or unreadable. */
+export async function linuxClock(): Promise<LinuxClock | undefined> {
+  if (Deno.build.os !== "linux") return undefined;
+  try {
+    const bootId = (await Deno.readTextFile("/proc/sys/kernel/random/boot_id"))
+      .trim();
+    const btime = /^btime\s+(\d+)$/m.exec(
+      await Deno.readTextFile("/proc/stat"),
+    );
+    if (btime === null) return undefined;
+    let ticksPerSecond = 100; // USER_HZ on every Linux architecture in use
+    try {
+      const value = Number((await output("getconf", ["CLK_TCK"])).trim());
+      if (Number.isInteger(value) && value > 0) ticksPerSecond = value;
+    } catch {
+      // keep the default
+    }
+    return { bootId, bootTimeMs: Number(btime[1]) * 1000, ticksPerSecond };
+  } catch {
+    return undefined;
+  }
+}
+
+async function snapshotWithGroups(): Promise<{
+  snapshot: DevProcessInfo[];
+  groups: Map<number, number>;
+}> {
+  const [snapshot, groups] = await Promise.all([
+    listDevProcesses(),
+    listProcessGroups(),
+  ]);
+  return { snapshot, groups };
 }
 
 /** Identity of a running process, or null when it is gone. */
@@ -131,22 +258,50 @@ export async function stopProcessTree(
   root: ProcessIdentity,
   notAfter?: string,
 ): Promise<DevProcessInfo[]> {
-  const snapshot = await listDevProcesses();
-  const tree = selectProcessTree(snapshot, root, notAfter);
+  const { snapshot, groups } = await snapshotWithGroups();
+  const tree = selectProcessTree(snapshot, root, notAfter, {
+    groups,
+    clock: await linuxClock(),
+  });
   const rootIsLive = tree.some((p) =>
     p.pid === root.pid && p.startTime === root.startTime
   );
-  if (Deno.build.os !== "windows" && rootIsLive) {
-    try {
-      // The step command leads its own process group (detached spawn); only
-      // signal the group while its leader is identity-matched.
-      Deno.kill(-root.pid, "SIGTERM");
-    } catch {
-      // The group is gone; the per-process stop below still runs.
+  if (Deno.build.os !== "windows" && tree.length > 0) {
+    // The step command leads its own process group (detached spawn). Signal
+    // the group (this also reaches processes started after the snapshot)
+    // only while one of its selected members is identity-matched in it: its
+    // leader, or, once the leader exited, another member (the group id is
+    // not reused while that member is in the group).
+    const members = rootIsLive
+      ? tree.filter((p) => p.pid === root.pid)
+      : tree.filter((p) => groups.get(p.pid) === root.pid);
+    if (
+      members.length > 0 &&
+      (rootIsLive || await stillInGroup(members, root.pid))
+    ) {
+      try {
+        Deno.kill(-root.pid, "SIGTERM");
+      } catch {
+        // The group is gone; the per-process stop below still runs.
+      }
     }
   }
   if (tree.length > 0) await terminateDevProcesses(tree);
   return tree;
+}
+
+/** Is one of `members` (identity-checked) still in process group `pgid`? */
+async function stillInGroup(
+  members: readonly DevProcessInfo[],
+  pgid: number,
+): Promise<boolean> {
+  const { snapshot, groups } = await snapshotWithGroups();
+  const byPid = new Map(snapshot.map((p) => [p.pid, p]));
+  return members.some((member) => {
+    const now = byPid.get(member.pid);
+    return now !== undefined && matchesDevIdentity(now, member) &&
+      groups.get(member.pid) === pgid;
+  });
 }
 
 /**

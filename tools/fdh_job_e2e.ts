@@ -16,6 +16,7 @@
  */
 
 import * as path from "@std/path";
+import { listDevProcesses } from "./src/dev_processes.ts";
 
 const FDH = path.fromFileUrl(new URL("./fdh.ts", import.meta.url));
 const ROOT = path.dirname(path.dirname(FDH));
@@ -333,6 +334,89 @@ const CASES: Record<string, (c: Case) => Promise<void>> = {
       "the epoch-1 step process is not running",
       !(await alive(j.attempts[0].process.pid)),
       j.attempts[0].process.pid,
+    );
+    save(c, taskId, jobId);
+  },
+
+  async "E-2c"(c) {
+    // The executor and the step's root process both die, so the root's
+    // children are orphans (on POSIX re-parented to init or a subreaper; on
+    // Windows they keep the dead parent pid). The takeover must still find
+    // and stop them before epoch 2 runs the step again.
+    const taskId = await newTask("e2c");
+    const jobId = await startTest(taskId);
+    await until("the step to run", runningWithProcess(taskId, jobId));
+    const first = journal(taskId, jobId).attempts[0];
+    const root = first.process.pid as number;
+    let children: number[] = [];
+    const deadline = Date.now() + 30_000;
+    while (children.length === 0 && Date.now() < deadline) {
+      children = (await listDevProcesses())
+        .filter((p) => p.ppid === root).map((p) => p.pid);
+      if (children.length === 0) await sleep(200);
+    }
+    if (children.length === 0) throw new Error("the step root has no child");
+    kill(executorPid(first.holder));
+    kill(root);
+    await sleep(500);
+    const orphans: number[] = [];
+    for (const pid of children) if (await alive(pid)) orphans.push(pid);
+    const after = new Map(
+      (await listDevProcesses()).map((p) => [p.pid, p.ppid]),
+    );
+    c.notes.push(
+      `killed executor ${first.holder} and step root ${root}; children ${
+        children.join(",")
+      } now have parent pid(s) ${children.map((p) => after.get(p)).join(",")}`,
+    );
+    if (Deno.build.os === "windows") {
+      // deno task's children end with it here: nothing is left to orphan,
+      // and the checks below only show that nothing of epoch 1 runs on.
+      c.notes.push(
+        `orphans alive after the root was killed: ${orphans.length}`,
+      );
+    } else {
+      c.expect(
+        "the root's children outlive it (orphans)",
+        orphans.length > 0,
+        { children, orphans },
+      );
+    }
+    // Take over once (one reconcile after the lease runs out), then look at
+    // the orphans before the new attempt can finish.
+    await until(
+      "the lease to run out",
+      () => {
+        const j = journal(taskId, jobId);
+        return Date.parse(j.lease?.heartbeatAt ?? "") + TTL < Date.now();
+      },
+      30_000,
+    );
+    const takeover = await fdh(["job", "reconcile", "--task-id", taskId]);
+    const report = lastJson(takeover.stdout);
+    c.notes.push(`reconcile: ${JSON.stringify(report.reconciled)}`);
+    const left: number[] = [];
+    for (const pid of orphans) if (await alive(pid)) left.push(pid);
+    c.expect(
+      "the takeover stopped the orphans",
+      takeover.code === 0 && left.length === 0,
+      { code: takeover.code, left },
+    );
+    const done = await wait(taskId, jobId);
+    const j = journal(taskId, jobId);
+    const stoppedEvent = j.events.find((e: Journal) =>
+      e.kind === "lost-step-stopped" && e.epoch === 1
+    );
+    const count = Number(/stopped (\d+)/.exec(stoppedEvent?.note ?? "")?.[1]);
+    c.expect(
+      "the stop of the epoch-1 tree counted the orphans",
+      count >= orphans.length,
+      stoppedEvent?.note ?? "no lost-step-stopped event",
+    );
+    c.expect(
+      "the job succeeds at epoch 2",
+      done.code === 0 && j.state === "succeeded" && j.epoch === 2,
+      { state: j.state, epoch: j.epoch },
     );
     save(c, taskId, jobId);
   },

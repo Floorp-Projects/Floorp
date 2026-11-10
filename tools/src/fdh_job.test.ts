@@ -21,7 +21,11 @@ import {
   stepSpecFor,
   waitForJob,
 } from "./fdh_job.ts";
-import { selectProcessTree, startedNoEarlier } from "./fdh_job_process.ts";
+import {
+  selectProcessTree,
+  startedNoEarlier,
+  startedNoLater,
+} from "./fdh_job_process.ts";
 import {
   applyReport,
   beginAttempt,
@@ -1258,4 +1262,120 @@ Deno.test("fdh job: a held job's stalled executor is fenced, so its killed step 
   } finally {
     await Deno.remove(dir, { recursive: true });
   }
+});
+
+Deno.test("fdh job: POSIX orphans of a gone root are found by its process group, within the time bounds", () => {
+  const t = (s: number) =>
+    new Date(Date.UTC(2026, 10, 10, 10, 0, s)).toISOString();
+  const root = {
+    pid: 500,
+    startTime: t(0),
+    commandLine: "deno task test:host",
+  };
+  const p = (pid: number, ppid: number, start: string, name = "deno") => ({
+    pid,
+    ppid,
+    name,
+    commandLine: name + " " + pid,
+    startTime: start,
+  });
+  // The root (500) exited; its children were re-parented to init (1).
+  const snapshot = [
+    p(1, 0, t(0), "init"),
+    p(501, 1, t(1)), // orphaned child, still in group 500
+    p(502, 501, t(2)), // its child (ppid kept)
+    p(503, 501, t(3)), // grandchild that made its own group
+    p(504, 1, t(30)), // in group 500 but started after the bound
+    p(505, 1, t(0)), // other group, re-parented too
+    p(506, 1, new Date(Date.UTC(2026, 10, 10, 9, 59, 59)).toISOString()), // group 500, before the root
+  ];
+  const groups = new Map([
+    [1, 1],
+    [501, 500],
+    [502, 500],
+    [503, 503],
+    [504, 500],
+    [505, 505],
+    [506, 500],
+  ]);
+  const picked = selectProcessTree(snapshot, root, t(10), { groups })
+    .map((x) => x.pid).sort();
+  assertEquals(picked, [501, 502, 503]);
+  // Without a bound a gone root's group is not trusted.
+  assertEquals(selectProcessTree(snapshot, root, undefined, { groups }), []);
+  // Without group ids (Windows) nothing changes: re-parented orphans are
+  // not found by parent pid.
+  assertEquals(selectProcessTree(snapshot, root, t(10)), []);
+  // The root's pid now belongs to another process: nothing.
+  const reused = [...snapshot, p(500, 1, t(20), "other")];
+  assertEquals(selectProcessTree(reused, root, t(10), { groups }), []);
+});
+
+Deno.test("fdh job: a live root also takes its re-parented group members", () => {
+  const t = (s: number) =>
+    new Date(Date.UTC(2026, 10, 10, 10, 0, s)).toISOString();
+  const root = {
+    pid: 600,
+    startTime: t(0),
+    commandLine: "deno task test:host",
+  };
+  const snapshot = [
+    {
+      pid: 600,
+      ppid: 9,
+      name: "deno",
+      commandLine: root.commandLine,
+      startTime: t(0),
+    },
+    {
+      pid: 601,
+      ppid: 1,
+      name: "sh",
+      commandLine: "sh daemon",
+      startTime: t(5),
+    },
+  ];
+  const groups = new Map([[600, 600], [601, 600]]);
+  assertEquals(
+    selectProcessTree(snapshot, root, undefined, { groups }).map((x) => x.pid),
+    [600, 601],
+  );
+});
+
+Deno.test("fdh job: Linux tick start times are compared with the bound through the boot clock", () => {
+  const clock = {
+    bootId: "boot",
+    bootTimeMs: Date.UTC(2026, 10, 10, 0, 0, 0),
+    ticksPerSecond: 100,
+  };
+  const bound = new Date(Date.UTC(2026, 10, 10, 0, 1, 0)).toISOString();
+  assert(startedNoLater("boot:5000", bound, clock)); // 50 s after boot
+  assert(!startedNoLater("boot:7000", bound, clock)); // 70 s after boot
+  assert(startedNoLater("boot:6050", bound, clock)); // within the 1 s slack
+  assert(!startedNoLater("other:5000", bound, clock));
+  assert(!startedNoLater("boot:5000", bound)); // no clock: not comparable
+  const root = { pid: 700, startTime: "boot:1000", commandLine: "deno task" };
+  const snapshot = [
+    {
+      pid: 701,
+      ppid: 1,
+      name: "deno",
+      commandLine: "deno test",
+      startTime: "boot:1200",
+    },
+    {
+      pid: 702,
+      ppid: 1,
+      name: "deno",
+      commandLine: "deno test",
+      startTime: "boot:9000",
+    },
+  ];
+  const groups = new Map([[701, 700], [702, 700]]);
+  assertEquals(
+    selectProcessTree(snapshot, root, bound, { groups, clock }).map((x) =>
+      x.pid
+    ),
+    [701],
+  );
 });
