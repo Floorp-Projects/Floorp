@@ -75,9 +75,23 @@ export interface JobAttempt {
   endedAt: string | null;
   result: AttemptResult;
   exitCode: number | null;
-  /** Worktree-relative log of the step command, when there is one. */
+  /** Worktree-relative log of the last step command it ran, if any. */
   logRef: string | null;
+  /**
+   * The step command process this attempt started (root of its tree), so a
+   * controller can stop an orphaned step before it runs the job again.
+   */
+  process: ProcessIdentity | null;
+  /** Last time the holder was known alive (set when it is declared lost). */
+  lastSeenAt?: string;
   notes: string;
+}
+
+/** Identity of a process: pid plus start time and command line (pid reuse). */
+export interface ProcessIdentity {
+  pid: number;
+  startTime: string;
+  commandLine: string;
 }
 
 export interface JobLease {
@@ -87,11 +101,34 @@ export interface JobLease {
   ttlMs: number;
 }
 
-/** What a safe step runs; recorded in full so a takeover runs the same thing. */
-export interface StepSpec {
+/** One command of a safe step. */
+export interface StepCommand {
   argv: string[];
+  displayCommand: string;
+  /** Task-state assertion recorded for this command's exit code. */
+  assertionName?: string;
+  expected?: string;
+}
+
+/**
+ * What a safe step runs, in order; recorded in full so a takeover runs the
+ * same thing. A takeover resumes at the job's checkpoint (the first command
+ * that has not completed successfully).
+ */
+export interface StepSpec {
   cwd: string;
   displayCommand: string;
+  commands: StepCommand[];
+}
+
+/** Outcome of one step command, recorded on the job once it is known. */
+export interface CommandResult {
+  index: number;
+  epoch: number;
+  exitCode: number;
+  startedAt: string;
+  endedAt: string;
+  logRef: string | null;
 }
 
 export interface IntentSpec {
@@ -104,6 +141,8 @@ export interface JobInputs {
   baseCommit: string;
   head: string;
   guardEnv: Record<string, string>;
+  /** Hash of the uncommitted state (tracked diff and untracked names). */
+  worktreeState?: string;
 }
 
 export interface JobTransition {
@@ -122,7 +161,11 @@ export type JobEventKind =
   | "resolved"
   | "late-report"
   | "wrong-holder"
-  | "gave-up";
+  | "gave-up"
+  | "cancel-requested"
+  | "cancelled"
+  | "heartbeat-failed"
+  | "lost-step-stopped";
 
 export interface JobEvent {
   at: string;
@@ -151,6 +194,12 @@ export interface JobJournal {
   /** Attempts a safe step may lose before the job fails instead of rerunning. */
   maxAttempts: number;
   attempts: JobAttempt[];
+  /** Index of the first step command that has not completed successfully. */
+  checkpoint: number;
+  /** Results of the step commands, in order (successes, then the failure). */
+  commandResults: CommandResult[];
+  /** The terminal result has been copied into the task state. */
+  recordedToTask: boolean;
   transitions: JobTransition[];
   events: JobEvent[];
   createdAt: string;
@@ -165,6 +214,8 @@ export interface JobReport {
   exitCode: number;
   endedAt: string;
   logRef: string | null;
+  /** Command results of this attempt that were not checkpointed. */
+  results: CommandResult[];
 }
 
 // ---------------------------------------------------------------------------
@@ -319,7 +370,7 @@ export function createJob(input: CreateJobInput): JobJournal {
   }
   if (!isIntent && !isValidStep(input.step)) {
     throw new Error(
-      "a step spec needs a non-empty string argv and a string cwd",
+      "a step spec needs a string cwd and displayCommand and at least one command with a non-empty string argv",
     );
   }
   if (isIntent && !INTENT_OPS.includes(input.intent!.op)) {
@@ -347,9 +398,13 @@ export function createJob(input: CreateJobInput): JobJournal {
     kind: input.kind,
     // Copies: a caller that reuses its spec objects cannot change a recorded
     // job behind its digest.
-    step: input.step === undefined
-      ? null
-      : { ...input.step, argv: [...input.step.argv] },
+    step: input.step === undefined ? null : {
+      ...input.step,
+      commands: input.step.commands.map((command) => ({
+        ...command,
+        argv: [...command.argv],
+      })),
+    },
     intent: input.intent === undefined ? null : { ...input.intent },
     inputs: { ...input.inputs, guardEnv: { ...input.inputs.guardEnv } },
     executionDigest: input.executionDigest,
@@ -359,6 +414,9 @@ export function createJob(input: CreateJobInput): JobJournal {
     leaseTtlMs: ttl,
     maxAttempts,
     attempts: [],
+    checkpoint: 0,
+    commandResults: [],
+    recordedToTask: false,
     transitions: [{ from: null, to: "pending", at, reason: "created" }],
     events: [],
     createdAt: at,
@@ -375,6 +433,7 @@ export function createJob(input: CreateJobInput): JobJournal {
     result: "scheduled",
     exitCode: null,
     logRef: null,
+    process: null,
     notes: "",
   });
   if (isIntent) {
@@ -399,7 +458,10 @@ function attemptAt(job: JobJournal, epoch: number): JobAttempt | undefined {
 
 export type BeginResult =
   | { ok: true }
-  | { ok: false; reason: "stale-epoch" | "not-scheduled" | "terminal" };
+  | {
+    ok: false;
+    reason: "stale-epoch" | "not-scheduled" | "terminal" | "cancel-requested";
+  };
 
 /**
  * The executor of `epoch` takes its attempt: only when that epoch is the
@@ -415,6 +477,9 @@ export function beginAttempt(
   requireTime(at, "begin time");
   const holder = normalizeHolder(rawHolder);
   if (isTerminal(job.state)) return { ok: false, reason: "terminal" };
+  if (job.state === "cancel_requested") {
+    return { ok: false, reason: "cancel-requested" };
+  }
   if (epoch !== job.epoch) {
     event(job, "stale-epoch", at, epoch, `begin by ${holder} refused`);
     return { ok: false, reason: "stale-epoch" };
@@ -445,9 +510,12 @@ function startAttempt(
   job.updatedAt = at;
 }
 
-export type HeartbeatResult = "renewed" | "fenced";
+export type HeartbeatResult = "renewed" | "fenced" | "cancel";
 
-/** Renew the lease. `fenced` means a newer epoch took over: stop the step. */
+/**
+ * Renew the lease. `fenced` means a newer epoch took over: stop the step.
+ * `cancel` means a cancel was requested: stop the step and `finishCancel`.
+ */
 export function heartbeat(
   job: JobJournal,
   epoch: number,
@@ -467,7 +535,168 @@ export function heartbeat(
   }
   job.lease.heartbeatAt = at;
   job.updatedAt = at;
-  return "renewed";
+  return job.state === "cancel_requested" ? "cancel" : "renewed";
+}
+
+/** Is `holder` of `epoch` the current lease holder (not fenced)? */
+function holdsLease(job: JobJournal, epoch: number, holder: string): boolean {
+  return epoch === job.epoch && job.lease !== null &&
+    job.lease.epoch === epoch && job.lease.holder === holder;
+}
+
+/** Record the root process of the step command this attempt started. */
+export function recordStepProcess(
+  job: JobJournal,
+  epoch: number,
+  rawHolder: string,
+  identity: ProcessIdentity,
+): boolean {
+  const holder = normalizeHolder(rawHolder);
+  if (!holdsLease(job, epoch, holder)) return false;
+  currentAttempt(job).process = { ...identity };
+  return true;
+}
+
+export type CheckpointResult = "advanced" | "fenced" | "cancel";
+
+/**
+ * A step command completed successfully: record it and move the checkpoint,
+ * so a takeover does not run it again. Fenced like a heartbeat, and renews
+ * the lease.
+ */
+export function advanceCheckpoint(
+  job: JobJournal,
+  epoch: number,
+  rawHolder: string,
+  result: CommandResult,
+  at = nowIso(),
+): CheckpointResult {
+  requireTime(at, "checkpoint time");
+  const holder = normalizeHolder(rawHolder);
+  if (!holdsLease(job, epoch, holder)) {
+    heartbeat(job, epoch, holder, at); // records the fencing event once
+    return "fenced";
+  }
+  if (result.index !== job.checkpoint || result.exitCode !== 0) {
+    throw new Error(
+      `job ${job.jobId}: checkpoint ${job.checkpoint} cannot take command ${result.index} (exit ${result.exitCode})`,
+    );
+  }
+  job.commandResults.push({ ...result, epoch });
+  job.checkpoint += 1;
+  return heartbeat(job, epoch, holder, at) === "cancel" ? "cancel" : "advanced";
+}
+
+/**
+ * Request a cancel. A job that has not started, or that awaits approval, is
+ * cancelled at once; a running job goes to `cancel_requested` and its holder
+ * stops at its next heartbeat (or a reconcile closes it once the holder is
+ * gone). An intent is cancelled at once: its agent says it will not perform
+ * the operation.
+ */
+export function cancelJob(
+  job: JobJournal,
+  reason: string,
+  at = nowIso(),
+): State {
+  requireTime(at, "cancel time");
+  if (isTerminal(job.state)) {
+    throw new Error(`job ${job.jobId} is already ${job.state}`);
+  }
+  if (job.state === "cancel_requested") {
+    // Already requested: the holder stops at its next heartbeat, or a
+    // reconcile closes the job once the holder is gone. Not a force.
+    return job.state;
+  }
+  const note = reason === ""
+    ? "cancel requested"
+    : `cancel requested: ${reason}`;
+  event(job, "cancel-requested", at, job.epoch, note);
+  const attempt = currentAttempt(job);
+  if (
+    job.state === "running" && job.kind !== "intent" &&
+    attempt.result === "running"
+  ) {
+    // A holder runs the step: it stops at its next heartbeat.
+    transition(job, "cancel_requested", at, note);
+    return job.state;
+  }
+  if (job.state === "running") transition(job, "cancel_requested", at, note);
+  if (attempt.result === "scheduled" || attempt.result === "running") {
+    attempt.result = "cancelled";
+    attempt.endedAt = at;
+  }
+  job.lease = null;
+  transition(job, "cancelled", at, note);
+  event(job, "cancelled", at, job.epoch, note);
+  return job.state;
+}
+
+/** The holder stopped its step after a cancel request: close the job. */
+export function finishCancel(
+  job: JobJournal,
+  epoch: number,
+  rawHolder: string,
+  at = nowIso(),
+): boolean {
+  requireTime(at, "cancel time");
+  const holder = normalizeHolder(rawHolder);
+  if (job.state !== "cancel_requested" || !holdsLease(job, epoch, holder)) {
+    return false;
+  }
+  const attempt = currentAttempt(job);
+  attempt.result = "cancelled";
+  attempt.endedAt = at;
+  job.lease = null;
+  transition(job, "cancelled", at, `step stopped by ${holder}`);
+  event(job, "cancelled", at, epoch, `step stopped by ${holder}`);
+  return true;
+}
+
+/**
+ * A controller stopped what a lost attempt left running (its step process
+ * tree) before the next epoch runs the step again.
+ */
+export function noteLostStepStopped(
+  job: JobJournal,
+  epoch: number,
+  root: ProcessIdentity,
+  stopped: number,
+  at = nowIso(),
+): void {
+  event(
+    job,
+    "lost-step-stopped",
+    at,
+    epoch,
+    `stopped ${stopped} process(es) of the step tree rooted at pid ${root.pid}`,
+  );
+}
+
+/**
+ * Restart the start deadline of the current scheduled attempt (a controller
+ * spent time stopping a lost tree before it spawns the executor).
+ */
+export function restartStartClock(
+  job: JobJournal,
+  epoch: number,
+  at = nowIso(),
+): boolean {
+  requireTime(at, "schedule time");
+  if (job.epoch !== epoch) return false;
+  const attempt = currentAttempt(job);
+  if (attempt.result !== "scheduled") return false;
+  attempt.scheduledAt = at;
+  job.updatedAt = at;
+  return true;
+}
+
+/** The terminal result was copied into the task state. */
+export function markRecordedToTask(job: JobJournal): void {
+  if (!isTerminal(job.state)) {
+    throw new Error(`job ${job.jobId} is ${job.state}, not terminal`);
+  }
+  job.recordedToTask = true;
 }
 
 export type ApplyResult =
@@ -558,6 +787,14 @@ export function applyReport(
   attempt.endedAt = report.endedAt;
   attempt.exitCode = report.exitCode;
   attempt.logRef = report.logRef;
+  for (const result of report.results ?? []) {
+    if (!job.commandResults.some((r) => r.index === result.index)) {
+      job.commandResults.push({ ...result, epoch: report.epoch });
+    }
+  }
+  if (report.exitCode === 0 && job.step !== null) {
+    job.checkpoint = job.step.commands.length;
+  }
   job.lease = null;
   transition(
     job,
@@ -599,7 +836,9 @@ export type ReconcileDecision =
   /** The inputs changed since the digest; the job failed, not rerun. */
   | { action: "input-changed"; state: State }
   /** Too many attempts were lost; the job failed instead of rerunning. */
-  | { action: "gave-up"; state: State };
+  | { action: "gave-up"; state: State }
+  /** A cancel was pending and its holder is gone; the job is cancelled. */
+  | { action: "cancelled"; state: State };
 
 export interface ReconcileContext {
   at?: string;
@@ -668,19 +907,20 @@ export function reconcileJob(
       : !leaseIsCurrent || leaseExpired(job, at));
   if (!expired) return { action: "alive", epoch: job.epoch };
 
-  event(
-    job,
-    "lease-expired",
-    at,
-    job.epoch,
-    attempt.result === "scheduled"
-      ? `executor for attempt ${attempt.attempt} never started`
-      : `holder ${attempt.holder ?? "?"} lost`,
-  );
-  attempt.result = "lost";
-  attempt.endedAt = at;
-  attempt.notes = "holder lost; outcome unknown";
-  job.lease = null;
+  if (job.state === "cancel_requested") {
+    // The holder is gone while a cancel was pending: nothing will run again.
+    attempt.lastSeenAt ??= job.lease?.heartbeatAt ?? attempt.startedAt ??
+      attempt.scheduledAt;
+    attempt.result = "cancelled";
+    attempt.endedAt = at;
+    job.lease = null;
+    transition(job, "cancelled", at, "cancel requested; holder gone");
+    event(job, "cancelled", at, job.epoch, "holder gone after cancel request");
+    return { action: "cancelled", state: job.state };
+  }
+
+  // A held respawn already declared this holder lost (holdRespawn).
+  if (attempt.result !== "lost") declareHolderLost(job, attempt, at, "");
 
   if (job.kind === "intent") {
     transition(
@@ -716,6 +956,62 @@ export function reconcileJob(
 }
 
 /**
+ * Record that the current attempt's holder is lost: from now on its
+ * heartbeats and checkpoints are fenced (no lease) and its late report is not
+ * applied (the attempt is `lost`).
+ */
+function declareHolderLost(
+  job: JobJournal,
+  attempt: JobAttempt,
+  at: string,
+  extra: string,
+): void {
+  event(
+    job,
+    "lease-expired",
+    at,
+    job.epoch,
+    (attempt.result === "scheduled"
+      ? `executor for attempt ${attempt.attempt} never started`
+      : `holder ${attempt.holder ?? "?"} lost`) + extra,
+  );
+  // When the holder was last known alive (its last heartbeat, or the start):
+  // the loss can be noticed much later than it happened.
+  attempt.lastSeenAt = job.lease?.heartbeatAt ?? attempt.startedAt ??
+    attempt.scheduledAt;
+  attempt.result = "lost";
+  attempt.endedAt = at;
+  attempt.notes = `holder lost; outcome unknown${extra}`;
+  job.lease = null;
+  job.updatedAt = at;
+}
+
+/**
+ * A reconcile decided to respawn, but the respawn is held (the W-04 dev
+ * guard refused a source build): declare the current holder lost now, so it
+ * is fenced before a controller stops its step tree, without scheduling the
+ * next attempt (no epoch bump, no attempt used up). A later reconcile
+ * schedules it once the respawn is allowed. Returns false if the holder was
+ * already declared lost.
+ */
+export function holdRespawn(
+  job: JobJournal,
+  reason: string,
+  at = nowIso(),
+): boolean {
+  requireTime(at, "hold time");
+  const attempt = currentAttempt(job);
+  if (attempt.result === "lost") return false;
+  if (attempt.result !== "running" && attempt.result !== "scheduled") {
+    throw new Error(
+      `job ${job.jobId}: cannot hold attempt ${attempt.attempt} (${attempt.result})`,
+    );
+  }
+  declareHolderLost(job, attempt, at, `; respawn held: ${reason}`);
+  return true;
+}
+
+/**
  * Fail a job from `running` or from `scheduled` (an executor that never
  * started). The frozen table has no `scheduled -> failed` edge, so a job
  * whose executor never began is closed through `running`, the same way an
@@ -740,6 +1036,7 @@ function scheduleNextAttempt(job: JobJournal, at: string, notes: string): void {
     result: "scheduled",
     exitCode: null,
     logRef: null,
+    process: null,
     notes,
   });
   job.updatedAt = at;
@@ -765,6 +1062,7 @@ export function confirmIntent(
     exitCode: outcome === "succeeded" ? 0 : 1,
     endedAt: at,
     logRef: null,
+    results: [],
   }, at);
 }
 
@@ -898,15 +1196,36 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-/** A step runs a non-empty argv of strings in a string cwd. */
-function isValidStep(step: unknown): step is StepSpec {
-  return isRecord(step) && Array.isArray(step.argv) &&
-    step.argv.length > 0 &&
-    Array.from(step.argv as unknown[]).every((arg) =>
+/** A command runs a non-empty argv of strings (no holes, no empty program). */
+function isValidCommand(command: unknown): command is StepCommand {
+  return isRecord(command) && Array.isArray(command.argv) &&
+    command.argv.length > 0 &&
+    Array.from(command.argv as unknown[]).every((arg) =>
       typeof arg === "string"
     ) &&
-    step.argv[0] !== "" && typeof step.cwd === "string" &&
-    typeof step.displayCommand === "string";
+    command.argv[0] !== "" && typeof command.displayCommand === "string" &&
+    (command.assertionName === undefined ||
+      typeof command.assertionName === "string") &&
+    (command.expected === undefined || typeof command.expected === "string");
+}
+
+/** A command result with integer fields, ISO times and a string-or-null log. */
+function isCommandResult(value: unknown): value is CommandResult {
+  return isRecord(value) && Number.isInteger(value.index) &&
+    (value.index as number) >= 0 && Number.isInteger(value.epoch) &&
+    Number.isInteger(value.exitCode) && typeof value.startedAt === "string" &&
+    Number.isFinite(Date.parse(value.startedAt)) &&
+    typeof value.endedAt === "string" &&
+    Number.isFinite(Date.parse(value.endedAt)) &&
+    (value.logRef === null || typeof value.logRef === "string");
+}
+
+/** A step runs one or more valid commands in a string cwd. */
+function isValidStep(step: unknown): step is StepSpec {
+  return isRecord(step) && typeof step.cwd === "string" &&
+    typeof step.displayCommand === "string" && Array.isArray(step.commands) &&
+    step.commands.length > 0 &&
+    Array.from(step.commands as unknown[]).every(isValidCommand);
 }
 
 export function parseJobJournal(value: unknown): JobJournal {
@@ -955,6 +1274,25 @@ export function parseJobJournal(value: unknown): JobJournal {
       typeof attempt.notes !== "string"
     ) {
       throw new Error("invalid fdh job journal: attempts entry");
+    }
+  }
+  const commandCount = job.kind === "intent" || !isRecord(job.step) ||
+      !Array.isArray(job.step.commands)
+    ? 0
+    : job.step.commands.length;
+  if (
+    !Number.isInteger(job.checkpoint) || (job.checkpoint as number) < 0 ||
+    (job.checkpoint as number) > commandCount ||
+    !Array.isArray(job.commandResults) ||
+    typeof job.recordedToTask !== "boolean"
+  ) {
+    throw new Error(
+      "invalid fdh job journal: checkpoint/commandResults/recordedToTask",
+    );
+  }
+  for (const result of job.commandResults as unknown[]) {
+    if (!isCommandResult(result)) {
+      throw new Error("invalid fdh job journal: commandResults entry");
     }
   }
   for (let i = 1; i < job.attempts.length; i++) {
@@ -1008,7 +1346,15 @@ export function readJob(
     }
     throw error;
   }
-  return parseJobJournal(JSON.parse(text));
+  try {
+    return parseJobJournal(JSON.parse(text));
+  } catch (error) {
+    throw new Error(
+      `invalid fdh job journal at ${file}: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
+    );
+  }
 }
 
 /** Write a new journal; refuses to overwrite an existing job. */
@@ -1103,6 +1449,9 @@ export function readOutbox(
     !Number.isInteger(value.exitCode) || typeof value.holder !== "string" ||
     value.holder.trim() === "" ||
     typeof value.endedAt !== "string" ||
+    !Number.isFinite(Date.parse(value.endedAt)) ||
+    !Array.isArray(value.results) ||
+    !(value.results as unknown[]).every(isCommandResult) ||
     (value.logRef !== null && typeof value.logRef !== "string")
   ) {
     throw new Error(
@@ -1138,9 +1487,14 @@ export async function reconcileJobFile(
 // ---------------------------------------------------------------------------
 
 export interface RunningStep {
-  /** Resolves with the step's exit code. */
+  /** Resolves with the command's exit code. */
   status: Promise<number>;
-  kill(): void;
+  /** Stop the command (and, for real processes, its process tree). */
+  kill(): void | Promise<void>;
+  /** Pid of the command's root process, when it is a real process. */
+  pid?: number;
+  /** Identity of the root process, when the runner already looks it up. */
+  identity?: Promise<ProcessIdentity | null>;
 }
 
 /** Fault points for the B-02 live tests (never set in normal runs). */
@@ -1150,13 +1504,30 @@ export type ExecutorFault =
   /** Stop touching the journal for `ms` after the step starts (E-4/E-5). */
   | { kind: "stall"; ms: number };
 
+/** Parse `FDH_JOB_FAULT` (`exit-after-outbox` or `stall:<ms>`); null if unset. */
+export function parseExecutorFault(
+  raw: string | undefined,
+): ExecutorFault | null {
+  if (raw === undefined || raw === "") return null;
+  if (raw === "exit-after-outbox") return { kind: "exit-after-outbox" };
+  const stall = /^stall:(\d+)$/.exec(raw);
+  if (stall) return { kind: "stall", ms: Number(stall[1]) };
+  throw new Error(
+    `FDH_JOB_FAULT must be exit-after-outbox or stall:<ms>, got ${
+      JSON.stringify(raw)
+    }`,
+  );
+}
+
 export interface ExecutorOptions {
   worktree: string;
   taskId: string;
   jobId: string;
   epoch: number;
   holder: string;
-  runStep: (step: StepSpec, logPath: string) => RunningStep;
+  runStep: (command: StepCommand, cwd: string, logPath: string) => RunningStep;
+  /** Identify a started command's root process (recorded on the attempt). */
+  identify?: (pid: number) => Promise<ProcessIdentity | null>;
   heartbeatMs?: number;
   now?: () => string;
   sleep?: (ms: number) => Promise<void>;
@@ -1169,12 +1540,15 @@ export type ExecutorOutcome =
   | { outcome: "applied"; state: State }
   | { outcome: "refused"; reason: string }
   | { outcome: "fenced" }
+  | { outcome: "cancelled" }
   | { outcome: "stale-rejected" };
 
 /**
- * Run one attempt as its executor: take the attempt, run the step with
- * heartbeats, write the outbox, then apply it. Stops the step when a newer
- * epoch fences this executor.
+ * Run one attempt as its executor: take the attempt, run the step's commands
+ * from the job's checkpoint with heartbeats (checkpointing each success but
+ * the last), then write the outbox and apply it under one journal lock.
+ * Stops the running command when a newer epoch fences this executor or a
+ * cancel is requested.
  */
 export async function runExecutor(
   options: ExecutorOptions,
@@ -1192,7 +1566,8 @@ export async function runExecutor(
     });
     return { promise, cancel: () => clearTimeout(id) };
   };
-  const { worktree, taskId, jobId, epoch, holder } = options;
+  const { worktree, taskId, jobId, epoch } = options;
+  const holder = normalizeHolder(options.holder);
 
   const begun = await updateJob(
     worktree,
@@ -1204,82 +1579,186 @@ export async function runExecutor(
       }
       const result = beginAttempt(job, epoch, holder, now());
       return result.ok
-        ? { ok: true as const, step: job.step, ttlMs: job.leaseTtlMs }
+        ? {
+          ok: true as const,
+          step: job.step,
+          ttlMs: job.leaseTtlMs,
+          checkpoint: job.checkpoint,
+        }
         : { ok: false as const, reason: result.reason as string };
     },
   );
   if (!begun.value.ok) {
     return { outcome: "refused", reason: begun.value.reason };
   }
-  const step = begun.value.step;
+  const { step, ttlMs, checkpoint } = begun.value;
   // Beat well inside the job's TTL, whatever the caller asked for.
   const heartbeatMs = Math.max(
     1,
     Math.min(
       options.heartbeatMs ?? DEFAULT_HEARTBEAT_MS,
-      Math.floor(begun.value.ttlMs / 3),
+      Math.floor(ttlMs / 3),
     ),
   );
-
-  // Refs use "/" on every OS so evidence from different machines compares.
-  const logRef = posixJoin(
-    ...FDH_JOBS_DIR.split(/[\\/]/),
-    taskId,
-    `${jobId}-${epoch}.log`,
-  );
-  const logPath = path.join(worktree, ...logRef.split("/"));
-  let running: RunningStep;
-  try {
-    running = options.runStep(step, logPath);
-  } catch (error) {
-    // The step could not be started: report it as a failed attempt (127).
-    try {
-      Deno.writeTextFileSync(
-        logPath,
-        `fdh executor: could not start the step: ${
-          error instanceof Error ? error.message : String(error)
-        }\n`,
-      );
-    } catch {
-      // The log is best-effort; the report below still records the failure.
-    }
-    running = { status: Promise.resolve(127), kill: () => {} };
-  }
-  const status = running.status.catch(() => 127);
-  const done: { code: number | null } = { code: null };
-  status.then((code) => {
-    done.code = code;
-  });
-
   const stallUntil = options.fault?.kind === "stall"
     ? Date.parse(now()) + options.fault.ms
     : 0;
-  try {
-    while (done.code === null) {
-      const tick = sleepFor(heartbeatMs);
-      await Promise.race([status, tick.promise]);
-      tick.cancel();
-      if (done.code !== null) break;
-      if (Date.parse(now()) < stallUntil) continue;
-      const beat = await updateJob(
+  let lastGoodBeat = Date.parse(now());
+
+  const stopAndWait = async (
+    running: RunningStep,
+    status: Promise<number>,
+  ): Promise<void> => {
+    await running.kill();
+    const wait = sleepFor(5_000);
+    await Promise.race([status, wait.promise]);
+    wait.cancel();
+  };
+
+  const results: CommandResult[] = [];
+  let exitCode = 0;
+  let lastLogRef: string | null = null;
+  for (let index = checkpoint; index < step.commands.length; index++) {
+    const command = step.commands[index];
+    // Refs use "/" on every OS so evidence from different machines compares.
+    const logRef = posixJoin(
+      ...FDH_JOBS_DIR.split(/[\\/]/),
+      taskId,
+      `${jobId}-${epoch}-${index}.log`,
+    );
+    lastLogRef = logRef;
+    const logPath = path.join(worktree, ...logRef.split("/"));
+    const startedAt = now();
+    let running: RunningStep;
+    try {
+      running = options.runStep(command, step.cwd, logPath);
+    } catch (error) {
+      // The command could not be started: a failed attempt (exit 127).
+      try {
+        Deno.writeTextFileSync(
+          logPath,
+          `fdh executor: could not start ${command.displayCommand}: ${
+            error instanceof Error ? error.message : String(error)
+          }\n`,
+        );
+      } catch {
+        // The log is best-effort; the report below still records the failure.
+      }
+      running = { status: Promise.resolve(127), kill: () => {} };
+    }
+    const status = running.status.catch(() => 127);
+    const done: { code: number | null } = { code: null };
+    status.then((code) => {
+      done.code = code;
+    });
+
+    try {
+      // The identity lookup (PowerShell on Windows, can take seconds) runs
+      // alongside the heartbeats, so a short TTL does not expire meanwhile;
+      // it is recorded at the first tick after it resolves. Identity is
+      // best-effort: without it, a controller cannot stop a lost step tree.
+      const found: { identity: ProcessIdentity | null; recorded: boolean } = {
+        identity: null,
+        recorded: false,
+      };
+      const lookup = running.identity ??
+        (running.pid !== undefined && options.identify !== undefined
+          ? options.identify(running.pid)
+          : undefined);
+      lookup?.then((identity) => {
+        found.identity = identity;
+      }).catch(() => {});
+      while (done.code === null) {
+        const tick = sleepFor(heartbeatMs);
+        await Promise.race([status, tick.promise]);
+        tick.cancel();
+        if (done.code !== null) break;
+        if (found.identity !== null && !found.recorded) {
+          // Recorded even while stalled: it belongs to starting the step.
+          const identity = found.identity;
+          await updateJob(
+            worktree,
+            taskId,
+            jobId,
+            (job) => recordStepProcess(job, epoch, holder, identity),
+          );
+          found.recorded = true;
+        }
+        if (Date.parse(now()) < stallUntil) continue;
+        let beat: HeartbeatResult;
+        try {
+          beat = (await updateJob(
+            worktree,
+            taskId,
+            jobId,
+            (job) => heartbeat(job, epoch, holder, now()),
+          )).value;
+          lastGoodBeat = Date.parse(now());
+        } catch (error) {
+          // A short failure (a Windows sharing violation that outlasts the
+          // rename retries) is tolerated while the lease cannot have expired.
+          if (Date.parse(now()) - lastGoodBeat + heartbeatMs < ttlMs) continue;
+          throw error;
+        }
+        if (beat === "fenced") {
+          await stopAndWait(running, status);
+          return { outcome: "fenced" };
+        }
+        if (beat === "cancel") {
+          await stopAndWait(running, status);
+          await updateJob(
+            worktree,
+            taskId,
+            jobId,
+            (job) => finishCancel(job, epoch, holder, now()),
+          );
+          return { outcome: "cancelled" };
+        }
+      }
+    } catch (error) {
+      // A heartbeat that cannot be written must not leave the step running
+      // unowned: the lease will expire and a new epoch would run it again.
+      if (done.code === null) await running.kill();
+      throw error;
+    }
+
+    const result: CommandResult = {
+      index,
+      epoch,
+      exitCode: done.code,
+      startedAt,
+      endedAt: now(),
+      logRef,
+    };
+    if (done.code !== 0 || index === step.commands.length - 1) {
+      // The last command's result (or the failure) goes into the report, so
+      // it lands atomically with the job's outcome.
+      exitCode = done.code;
+      results.push(result);
+      break;
+    }
+    if (Date.parse(now()) < stallUntil) {
+      // A stalled executor does not touch the journal; keep the result for
+      // the report instead of a checkpoint.
+      results.push(result);
+      continue;
+    }
+    const advanced = (await updateJob(
+      worktree,
+      taskId,
+      jobId,
+      (job) => advanceCheckpoint(job, epoch, holder, result, now()),
+    )).value;
+    if (advanced === "fenced") return { outcome: "fenced" };
+    if (advanced === "cancel") {
+      await updateJob(
         worktree,
         taskId,
         jobId,
-        (job) => heartbeat(job, epoch, holder, now()),
+        (job) => finishCancel(job, epoch, holder, now()),
       );
-      if (beat.value === "fenced") {
-        running.kill();
-        const wait = sleepFor(5_000);
-        await Promise.race([status, wait.promise]);
-        wait.cancel();
-        return { outcome: "fenced" };
-      }
+      return { outcome: "cancelled" };
     }
-  } catch (error) {
-    // A heartbeat that cannot be written must not leave the step running
-    // unowned: the lease will expire and a new epoch would run it again.
-    if (done.code === null) running.kill();
-    throw error;
   }
   while (Date.parse(now()) < stallUntil) {
     const wait = sleepFor(
@@ -1292,21 +1771,34 @@ export async function runExecutor(
     jobId,
     epoch,
     holder,
-    exitCode: done.code,
+    exitCode,
     endedAt: now(),
-    logRef,
+    logRef: lastLogRef,
+    results,
   };
   // The outbox is written under the journal lock, so a reconcile cannot read
   // "no outbox" and then declare this attempt lost while the result lands in
   // between. A crash after the outbox and before the ACK (the same lock hold)
   // leaves the outbox for the next reconcile (E-3).
-  const applied = await updateJob(worktree, taskId, jobId, (job) => {
-    writeOutbox(worktree, taskId, report);
-    if (options.fault?.kind === "exit-after-outbox") {
-      (options.exit ?? Deno.exit)(70);
+  let applied: { job: JobJournal; value: ApplyResult };
+  try {
+    applied = await updateJob(worktree, taskId, jobId, (job) => {
+      writeOutbox(worktree, taskId, report);
+      if (options.fault?.kind === "exit-after-outbox") {
+        (options.exit ?? Deno.exit)(70);
+      }
+      return applyReport(job, report, now());
+    });
+  } catch (error) {
+    // The journal could not be read or written: keep the result durable so
+    // a reconcile can still recover it (best-effort).
+    try {
+      writeOutbox(worktree, taskId, report);
+    } catch {
+      // nothing more to do; the error below is the report
     }
-    return applyReport(job, report, now());
-  });
+    throw error;
+  }
   if (applied.value.applied) {
     return { outcome: "applied", state: applied.value.state };
   }

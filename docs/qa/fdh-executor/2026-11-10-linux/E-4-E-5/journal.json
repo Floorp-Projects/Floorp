@@ -1,0 +1,133 @@
+{
+  "schemaVersion": 1,
+  "jobId": "test-20261110t071500z-19e2c3",
+  "taskId": "e2e-e4-mwacutz3",
+  "worktree": "/home/user/fdh-posix-e2e",
+  "kind": "test",
+  "step": {
+    "cwd": "/home/user/fdh-posix-e2e",
+    "displayCommand": "deno task test:host",
+    "commands": [
+      {
+        "argv": [
+          "deno",
+          "task",
+          "test:host"
+        ],
+        "displayCommand": "deno task test:host",
+        "assertionName": "host-test-exit-code",
+        "expected": "exit code 0"
+      }
+    ]
+  },
+  "intent": null,
+  "inputs": {
+    "baseCommit": "2726e719bf743d6344e88600dbecb1b0c01d35c2",
+    "head": "2726e719bf743d6344e88600dbecb1b0c01d35c2",
+    "guardEnv": {},
+    "worktreeState": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+  },
+  "executionDigest": "e80039f872c8709a14a5dd32df67924e3d9ec42e75467b30f196f1457dfdf1a1",
+  "state": "succeeded",
+  "epoch": 2,
+  "lease": null,
+  "leaseTtlMs": 3000,
+  "maxAttempts": 3,
+  "attempts": [
+    {
+      "attempt": 1,
+      "epoch": 1,
+      "holder": "executor-897222-420abe",
+      "scheduledAt": "2026-11-10T07:15:00.815Z",
+      "startedAt": "2026-11-10T07:15:00.997Z",
+      "endedAt": "2026-11-10T07:15:04.193Z",
+      "result": "lost",
+      "exitCode": null,
+      "logRef": null,
+      "process": {
+        "pid": 897240,
+        "startTime": "67a3d599-bac6-4479-9989-9ebff7890832:205302061",
+        "commandLine": "/home/user/.local/fdh-tools/deno task test:host"
+      },
+      "notes": "holder lost; outcome unknown; late report by executor-897222-420abe (exit 143) rejected; current epoch 2",
+      "lastSeenAt": "2026-11-10T07:15:00.997Z"
+    },
+    {
+      "attempt": 2,
+      "epoch": 2,
+      "holder": "executor-897313-647678",
+      "scheduledAt": "2026-11-10T07:15:05.930Z",
+      "startedAt": "2026-11-10T07:15:06.058Z",
+      "endedAt": "2026-11-10T07:15:24.531Z",
+      "result": "succeeded",
+      "exitCode": 0,
+      "logRef": "_dist/fdh/jobs/e2e-e4-mwacutz3/test-20261110t071500z-19e2c3-2-0.log",
+      "process": {
+        "pid": 897322,
+        "startTime": "67a3d599-bac6-4479-9989-9ebff7890832:205302567",
+        "commandLine": "/home/user/.local/fdh-tools/deno task test:host"
+      },
+      "notes": "attempt 1 lost"
+    }
+  ],
+  "checkpoint": 1,
+  "commandResults": [
+    {
+      "index": 0,
+      "epoch": 2,
+      "exitCode": 0,
+      "startedAt": "2026-11-10T07:15:06.059Z",
+      "endedAt": "2026-11-10T07:15:24.531Z",
+      "logRef": "_dist/fdh/jobs/e2e-e4-mwacutz3/test-20261110t071500z-19e2c3-2-0.log"
+    }
+  ],
+  "recordedToTask": true,
+  "transitions": [
+    {
+      "from": null,
+      "to": "pending",
+      "at": "2026-11-10T07:15:00.815Z",
+      "reason": "created"
+    },
+    {
+      "from": "pending",
+      "to": "scheduled",
+      "at": "2026-11-10T07:15:00.815Z",
+      "reason": "attempt 1 recorded before start"
+    },
+    {
+      "from": "scheduled",
+      "to": "running",
+      "at": "2026-11-10T07:15:00.997Z",
+      "reason": "attempt 1 started"
+    },
+    {
+      "from": "running",
+      "to": "succeeded",
+      "at": "2026-11-10T07:15:24.532Z",
+      "reason": "attempt 2 exited 0"
+    }
+  ],
+  "events": [
+    {
+      "at": "2026-11-10T07:15:04.193Z",
+      "kind": "lease-expired",
+      "epoch": 1,
+      "note": "holder executor-897222-420abe lost"
+    },
+    {
+      "at": "2026-11-10T07:15:05.929Z",
+      "kind": "lost-step-stopped",
+      "epoch": 1,
+      "note": "stopped 2 process(es) of the step tree rooted at pid 897240"
+    },
+    {
+      "at": "2026-11-10T07:15:12.999Z",
+      "kind": "stale-epoch",
+      "epoch": 1,
+      "note": "report by executor-897222-420abe (exit 143) rejected; current epoch 2"
+    }
+  ],
+  "createdAt": "2026-11-10T07:15:00.815Z",
+  "updatedAt": "2026-11-10T07:15:24.532Z"
+}

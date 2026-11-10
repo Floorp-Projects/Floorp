@@ -61,3 +61,27 @@ Deno.test("Workspace Sync engine registration matches in production and local bu
     ),
   );
 });
+
+Deno.test("Crashed tab session history patch matches in production and local builds", async () => {
+  const source = await Deno.readTextFile(
+    ".github/patches/floorp-runtime/common/crashed-tab-session-history.patch",
+  );
+  const packed = await Deno.readTextFile(
+    "tools/patches/browser-modules-sessionstore-SessionStore-crashed-tab-history.sys.patch",
+  );
+  assertEquals(
+    packed.replaceAll("\r\n", "\n"),
+    source.replaceAll("\r\n", "\n").replaceAll(
+      "browser/components/sessionstore/SessionStore.sys.mjs",
+      "moz-src/browser/components/sessionstore/SessionStore.sys.mjs",
+    ),
+  );
+  // The parent-side history must be collected before the browser enters the
+  // crashed state, because SessionStore ignores updates for crashed browsers.
+  const lines = source.replaceAll("\r\n", "\n").split("\n");
+  const call = lines.indexOf(
+    "+    this.#collectSessionHistoryOnCrash(aBrowser);",
+  );
+  assertEquals(call >= 0, true);
+  assertEquals(lines[call + 1], "     this.#enterCrashedState(aBrowser);");
+});
