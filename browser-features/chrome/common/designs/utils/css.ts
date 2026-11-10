@@ -47,9 +47,19 @@ import {
  *
  *   - Default / built-in themes (default-theme, compact-light, compact-dark):
  *     Firefox does NOT set `[lwtheme]` for these, so they fall through to the
- *     "no theme" branch and are painted with the selected tab color. Lepton's
- *     own `userChrome.tab.color_like_toolbar` aligns the tab to the toolbar
- *     here, so this reads as the intended Lepton "one surface" look.
+ *     "no theme" branch and are painted with the toolbar color. Lepton's
+ *     own `userChrome.tab.color_like_toolbar` (lepton / photon) aligns the
+ *     selected tab to that same color, which gives the Lepton "one surface"
+ *     look.
+ *   - The bars never read `--tab-selected-bgcolor`. Floorp aliases it to
+ *     Gecko's `--tab-background-color-selected` on :root
+ *     (gecko-152-var-aliases.css.ts), and only `color_like_toolbar` (or
+ *     Lepton's Windows / macOS system-color block) unsets it. ProtonFix keeps
+ *     `color_like_toolbar` off, so on Linux the alias stays set, and with the
+ *     built-in Light / Dark themes (whose selected tab is `#fff` /
+ *     `rgba(106, 106, 120, 0.7)`, unlike the toolbar) the nav-bar and
+ *     bookmark bar took the tab color while #browser, the panel sidebar and
+ *     the status bar kept the toolbar color.
  *   - Third-party LWTs (community colorways, add-on themes): these DO set the
  *     `[lwtheme]` attribute. We respect the theme's own toolbar color instead
  *     of the tab color, so the bar stays anchored to the toolbar the author
@@ -88,10 +98,12 @@ import {
  */
 export const navBarBackgroundColorCSS = `
 /* No theme loaded (default-theme, built-in Light/Dark, etc.): paint nav-bar /
- * PersonalToolbar with the selected tab color. Lepton's color_like_toolbar
- * unsets --tab-selected-bgcolor, so this resolves to --toolbar-bgcolor -- the
- * exact token that paints the selected .tab-background -- keeping the bars
- * flush with the active tab.
+ * PersonalToolbar with the toolbar color, the same token #browser and the
+ * other chrome surfaces use. Lepton's color_like_toolbar makes the selected
+ * .tab-background use it too, keeping the bars flush with the active tab.
+ * Do not read --tab-selected-bgcolor here: with color_like_toolbar off
+ * (protonfix) it stays the selected-tab color on Linux, which split the bars
+ * from the rest of the chrome under the built-in Light / Dark themes.
  *
  * NOTE: this opaque fill is deliberately scoped to :root:not([lwtheme]).
  * A loaded LWT draws its background artwork on <body> and relies on the
@@ -99,8 +111,8 @@ export const navBarBackgroundColorCSS = `
 :root:not([lwtheme]) #nav-bar,
 :root:not([lwtheme]) #PersonalToolbar {
   --floorp-chrome-surface-color: var(
-    --tab-selected-bgcolor,
-    var(--toolbar-bgcolor, var(--toolbar-background-color))
+    --toolbar-bgcolor,
+    var(--toolbar-background-color)
   );
   background-color: var(--floorp-chrome-surface-color) !important;
   color: var(--toolbar-text-color);
