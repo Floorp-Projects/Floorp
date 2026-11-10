@@ -126,10 +126,12 @@ import {
   FIELD_RULES,
   finishExtOp,
   ingestObservation,
-  planSync,
-  readExtLedger,
+  parseRef,
+  planExt,
+  resolveField,
   startExtOp,
   upsertLink,
+  validateObservation,
   withExtLedger,
 } from "./src/fdh_ext.ts";
 import type { ValidationError } from "./qa3/evidence/types.ts";
@@ -195,17 +197,22 @@ Commands:
                             Feed one polled value: applied, duplicate, stale
                             (older version), conflict or deleted
   ext plan --task-id <id>   Sync actions to perform, holds (concurrent edit,
-                            deletion, in flight, awaiting a poll) and the
-                            I-04 field table; reads only
+                            deletion, in flight, awaiting a poll, mirror not
+                            polled yet), kept edits and the I-04 field table;
+                            first brings operations up to date with their jobs
   ext start --task-id <id> --key <k> --agent <name> [--op <push|pr|release|external>]
             [--target <text>]
                             Start a keyed external operation (an intent):
                             already-done if the key succeeded, refused while
-                            one is in flight
+                            one is in flight; a planned action's key also
+                            stores what it writes
   ext done --task-id <id> --key <k> --epoch <n> --agent <name>
-           --outcome <succeeded|failed> [--link <KEY-n> --field <f>
-           --owner-value <v> --mirror-value <v>]
-                            Record its outcome; with --link, what fdh wrote
+           --outcome <succeeded|failed>
+                            Record its outcome; a succeeded planned action
+                            becomes the field's baseline
+  ext resolve --task-id <id> --link <KEY-n> --field <f> --keep <mirror|owner>
+                            Settle a concurrent edit: keep the mirror's value,
+                            or write the owner's value again
   verify browser --task-id <id> [--eval <js>] [--expect <text>]
                             Check dev-tool browser status; --eval output is
                             recorded verbatim, and --expect turns it into an
@@ -1275,7 +1282,13 @@ const JOB_SUBCOMMANDS = [
 ] as const;
 type JobSubcommand = (typeof JOB_SUBCOMMANDS)[number];
 
-type ExtSubcommand = "link" | "observe" | "plan" | "start" | "done";
+type ExtSubcommand =
+  | "link"
+  | "observe"
+  | "plan"
+  | "start"
+  | "done"
+  | "resolve";
 
 async function cmdExt(parsed: ParsedArgs, sub: ExtSubcommand): Promise<void> {
   assertNoPositional(parsed, 2);
@@ -1292,17 +1305,8 @@ async function cmdExt(parsed: ParsedArgs, sub: ExtSubcommand): Promise<void> {
     ],
     plan: ["task-id"],
     start: ["task-id", "key", "agent", "op", "target"],
-    done: [
-      "task-id",
-      "key",
-      "epoch",
-      "agent",
-      "outcome",
-      "link",
-      "field",
-      "owner-value",
-      "mirror-value",
-    ],
+    done: ["task-id", "key", "epoch", "agent", "outcome"],
+    resolve: ["task-id", "link", "field", "keep"],
   };
   assertAllowedOptions(parsed, allowed[sub]);
   const taskId = validateTaskId(requireOption(parsed, "task-id"));
@@ -1312,6 +1316,7 @@ async function cmdExt(parsed: ParsedArgs, sub: ExtSubcommand): Promise<void> {
   switch (sub) {
     case "link": {
       const jira = requireOption(parsed, "jira");
+      parseRef(`jira:${jira}`);
       const pr = optionalInteger(parsed, "pr", 1);
       const branch = optional("branch");
       const state = await loadStateForCwd(taskId);
@@ -1329,6 +1334,9 @@ async function cmdExt(parsed: ParsedArgs, sub: ExtSubcommand): Promise<void> {
         throw new Error("--deleted takes only the value true");
       }
       const deleted = deletedRaw === "true";
+      if (deleted && hasOption(parsed, "value")) {
+        throw new Error("--deleted true takes no --value");
+      }
       if (!deleted && !hasOption(parsed, "value")) {
         throw new Error("--value is required unless --deleted true");
       }
@@ -1340,6 +1348,7 @@ async function cmdExt(parsed: ParsedArgs, sub: ExtSubcommand): Promise<void> {
         eventId: optional("event-id"),
         deleted,
       };
+      validateObservation(input);
       const state = await loadStateForCwd(taskId);
       const result = await withExtLedger(
         state.worktree,
@@ -1353,9 +1362,8 @@ async function cmdExt(parsed: ParsedArgs, sub: ExtSubcommand): Promise<void> {
     }
     case "plan": {
       const state = await loadStateForCwd(taskId);
-      const ledger = readExtLedger(state.worktree, taskId);
       console.log(JSON.stringify({
-        plan: planSync(ledger),
+        plan: await planExt(state.worktree, taskId),
         fields: FIELD_RULES.map((r) => ({
           field: r.field,
           owner: r.owner,
@@ -1394,22 +1402,25 @@ async function cmdExt(parsed: ParsedArgs, sub: ExtSubcommand): Promise<void> {
       if (outcome !== "succeeded" && outcome !== "failed") {
         throw new Error("--outcome must be succeeded or failed");
       }
-      const syncNames = ["link", "field", "owner-value", "mirror-value"];
-      const given = syncNames.filter((n) => hasOption(parsed, n));
-      if (given.length !== 0 && given.length !== syncNames.length) {
-        throw new Error(
-          `--link, --field, --owner-value and --mirror-value go together`,
-        );
-      }
-      const sync = given.length === 0 ? undefined : {
-        link: requireOption(parsed, "link"),
-        field: requireOption(parsed, "field"),
-        ownerValue: requireOption(parsed, "owner-value"),
-        mirrorValue: requireOption(parsed, "mirror-value"),
-      };
       const state = await loadStateForCwd(taskId);
-      const op = await finishExtOp(state, { key, epoch, agent, outcome, sync });
+      const op = await finishExtOp(state, { key, epoch, agent, outcome });
       console.log(JSON.stringify({ op }));
+      return;
+    }
+    case "resolve": {
+      const link = requireOption(parsed, "link");
+      const field = requireOption(parsed, "field");
+      const keep = requireOption(parsed, "keep");
+      if (keep !== "mirror" && keep !== "owner") {
+        throw new Error("--keep must be mirror or owner");
+      }
+      const state = await loadStateForCwd(taskId);
+      await withExtLedger(
+        state.worktree,
+        taskId,
+        (ledger) => resolveField(ledger, link, field, keep),
+      );
+      console.log(JSON.stringify({ link, field, kept: keep }));
       return;
     }
   }
@@ -1697,7 +1708,7 @@ async function main(argv: string[]): Promise<void> {
     case "ext":
       if (
         sub === "link" || sub === "observe" || sub === "plan" ||
-        sub === "start" || sub === "done"
+        sub === "start" || sub === "done" || sub === "resolve"
       ) {
         return await cmdExt(parsed, sub);
       }

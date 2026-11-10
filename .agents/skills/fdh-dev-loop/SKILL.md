@@ -284,11 +284,11 @@ fdh ext observe --task-id <id> --ref github:pr/3200 --field pr.state \
 fdh ext observe --task-id <id> --ref jira:KAN-131 --field status \
   --value 進行中 --version <jira updated>
 fdh ext plan --task-id <id>      # actions, holds, inSync, keptEdits, fields
-# For each action: start its key, perform it, then record what you wrote.
+# For each action: start its key, perform the write, then record the outcome.
 fdh ext start --task-id <id> --key '<action.key>' --agent <name>
 fdh ext done --task-id <id> --key '<action.key>' --epoch <n> --agent <name> \
-  --outcome succeeded --link KAN-131 --field pr.state \
-  --owner-value open --mirror-value レビュー中
+  --outcome succeeded
+# Then poll the mirror again (ext observe) before the next plan.
 ```
 
 The field table (I-04; the code is `FIELD_RULES` in
@@ -303,31 +303,34 @@ The field table (I-04; the code is `FIELD_RULES` in
 | `jira.sprint`, `jira.assignee`, `jira.priority`, `jira.qa-state` (Jira) | none | not copied to GitHub |
 | titles, descriptions, comments | none | no full-text copying |
 
-How observations and the plan behave:
+Which version to pass:
 
-- **Observations.** A repeated event id, or the same value at the same version,
-  is a `duplicate`. An older version than the stored one is `stale`: this is
-  how an ordering inversion is caught. The same version with another value is a
-  `conflict` and is not taken.
-- **Deletion.** Observe the field `object` with `--deleted true` when an
-  object is deleted. Nothing more is written to it or because of it, and a later
-  observation does not bring it back.
-- **Concurrent edits.** fdh never overwrites a mirror that changed since fdh
-  last wrote it (no compare-and-set is assumed):
-  - If the owner changed too, the field is held (`concurrent-edit`); an
-    approver decides.
+- **PR fields:** the PR's `updated_at`.
+- **`ci.result`:** the check run's `completed_at` (`started_at` while pending). A PR's `updated_at` does not move when checks finish.
+- **Jira fields:** the issue's `updated`.
+- **A deletion** (a 404): the poll time.
+
+How observations behave:
+
+- **Duplicates.** A repeated event id for the same field, or the same value at the same version, is a `duplicate`. It refreshes the poll time.
+- **Stale values.** An older version than the stored one is `stale`; this is how an ordering inversion is caught.
+- **Conflicts.** The same version with another value is a `conflict` and is not taken.
+- **Deletions.** Observe the field `object` with `--deleted true` when an object is gone. Nothing more is written to it or because of it, and a later observation does not bring it back. A deletion older than the newest observation of the object is `stale`.
+
+How the plan treats writes:
+
+- **Concurrent edits.** fdh never overwrites a mirror that changed since fdh last wrote it (no compare-and-set is assumed).
+  - If the owner changed too, the field is held (`concurrent-edit`). An approver settles it with `fdh ext resolve --link <KEY-n> --field <f> --keep <mirror|owner>`.
   - If only the mirror changed, the person's edit is kept (`keptEdits`).
-  - Right after a write, the field waits for a poll that shows it
-    (`awaiting-poll`).
-- **Keyed operations.** Each key runs once.
-  - A key that succeeded is `already-done`: use one key for each PR you
-    create, such as `github:pr-create:<branch>`, so no second PR is created.
-  - A key whose operation has no outcome is refused.
-  - A key that failed may be started again.
-  - If the agent is lost, `task resume` puts the operation into
-    `awaiting-approval`. An approver checks GitHub or Jira and runs
-    `fdh job resolve`; a `succeeded` resolution makes the key
-    `already-done`.
+- **After a write.** The field waits (`awaiting-poll`) for a poll made after `ext done`.
+- **Before the first write.** A status is not written before Jira's current status has been polled (`mirror-unobserved`).
+
+Keyed operations:
+
+- **What `ext start` records.** It stores what a planned action writes. When the operation succeeds, that becomes the field's baseline. This holds both after `ext done` and after an approver's `job resolve`, which `ext plan` picks up.
+- **A key that succeeded** is `already-done`. Use one key per PR you create (`github:pr-create:<branch>`), so no second PR is made.
+- **A key with no outcome yet** is refused.
+- **A key that failed** may be started again. Report `failed` only when you know the write did not happen. If you do not know, do not confirm: once your lease runs out, `task resume` moves the operation to `awaiting-approval`. An approver then checks GitHub or Jira and resolves it.
 
 ## GUI desktop lease and secret-reference denial (Gate 4 4-A)
 
