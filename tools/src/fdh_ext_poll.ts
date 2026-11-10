@@ -39,19 +39,52 @@ export type GhRunner = (args: string[]) => Promise<string>;
 
 export class GhNotFound extends Error {}
 
-export const defaultGhRunner: GhRunner = async (args) => {
-  const output = await new Deno.Command("gh", {
-    args,
-    stdin: "null",
-    stdout: "piped",
-    stderr: "piped",
-  }).output();
-  const stdout = new TextDecoder().decode(output.stdout);
-  if (output.success) return stdout;
-  const stderr = new TextDecoder().decode(output.stderr).trim();
-  if (/HTTP 404/.test(stderr)) throw new GhNotFound(stderr);
-  throw new Error(`gh ${args.slice(0, 2).join(" ")}: ${stderr}`);
-};
+/** Longest one `gh` call may take before the poll gives up on it. */
+export const GH_TIMEOUT_MS = 60_000;
+
+/**
+ * A runner for `command` (`gh`, or a stand-in in tests): stdout on
+ * success, `GhNotFound` on an HTTP 404, and a clear error when the command
+ * is missing or runs longer than `timeoutMs` (it is then killed).
+ */
+export function makeGhRunner(
+  command = "gh",
+  timeoutMs = GH_TIMEOUT_MS,
+): GhRunner {
+  return async (args) => {
+    const what = `${command} ${args.slice(0, 2).join(" ")}`;
+    let output: Deno.CommandOutput;
+    try {
+      output = await new Deno.Command(command, {
+        args,
+        stdin: "null",
+        stdout: "piped",
+        stderr: "piped",
+        signal: AbortSignal.timeout(timeoutMs),
+      }).output();
+    } catch (error) {
+      if (error instanceof Deno.errors.NotFound) {
+        throw new Error(`${command} is not installed or not on PATH`);
+      }
+      if (error instanceof DOMException && error.name === "TimeoutError") {
+        throw new Error(`${what} took longer than ${timeoutMs} ms`);
+      }
+      throw error;
+    }
+    if (output.signal !== null) {
+      throw new Error(
+        `${what} was stopped (${output.signal}); the limit is ${timeoutMs} ms`,
+      );
+    }
+    const stdout = new TextDecoder().decode(output.stdout);
+    if (output.success) return stdout;
+    const stderr = new TextDecoder().decode(output.stderr).trim();
+    if (/HTTP 404/.test(stderr)) throw new GhNotFound(stderr);
+    throw new Error(`${what}: ${stderr}`);
+  };
+}
+
+export const defaultGhRunner: GhRunner = makeGhRunner();
 
 /** `owner/name` from a GitHub remote URL (https or ssh). */
 export function repoSlugFromRemote(url: string): string {
@@ -60,7 +93,11 @@ export function repoSlugFromRemote(url: string): string {
   // stays).
   const trimmed = url.trim();
   const clean = /^ssh:\/\//i.test(trimmed)
-    ? trimmed.replace(/^(ssh:\/\/)[^@/:]*:[^@/]*@/i, "$1")
+    ? trimmed.replace(
+      /^(ssh:\/\/)([^@/:]*)(?::[^@/]*)?@/i,
+      (_m, scheme: string, user: string) =>
+        user === "git" ? `${scheme}git@` : scheme,
+    )
     : trimmed.replace(/^([a-z][a-z0-9+.-]*:\/\/)[^@/]*@/i, "$1");
   const match =
     /^(?:https:\/\/github\.com\/|git@github\.com:|ssh:\/\/git@github\.com\/)([A-Za-z0-9_.-]+)\/([A-Za-z0-9_.-]+?)(?:\.git)?\/?$/

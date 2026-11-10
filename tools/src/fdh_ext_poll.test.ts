@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { assert, assertEquals, assertThrows } from "@std/assert";
+import { assert, assertEquals, assertRejects, assertThrows } from "@std/assert";
 import {
   emptyLedger,
   extLedgerPath,
+  ingestObservation,
+  planSync,
   readExtLedger,
   upsertLink,
   withExtLedger,
@@ -13,6 +15,7 @@ import {
   type CheckRun,
   GhNotFound,
   type GhRunner,
+  makeGhRunner,
   pollAndIngest,
   repoSlugFromRemote,
   validateRepoSlug,
@@ -349,4 +352,62 @@ Deno.test("fdh ext poll: a missing head's check runs is reported as such, and ht
   } finally {
     await Deno.remove(dir, { recursive: true });
   }
+});
+
+Deno.test("fdh ext poll: ssh remotes keep git@ and drop any other user or password", () => {
+  assertEquals(
+    repoSlugFromRemote("ssh://git:SECRET@github.com/o/r.git"),
+    "o/r",
+  );
+  const err = assertThrows(() =>
+    repoSlugFromRemote("ssh://ghp_TOKEN@example.com/o/r.git")
+  );
+  assert(
+    err instanceof Error && !err.message.includes("ghp_TOKEN"),
+    String(err),
+  );
+  const pw = assertThrows(() =>
+    repoSlugFromRemote("ssh://alice:SECRET@example.com/o/r.git")
+  );
+  assert(pw instanceof Error && !pw.message.includes("SECRET"), String(pw));
+});
+
+Deno.test({
+  name: "fdh ext poll: a missing gh and a gh that hangs give clear errors",
+  // test:host runs without --allow-run; run with -A to include this one.
+  ignore: Deno.permissions.querySync({ name: "run" }).state !== "granted",
+}, async () => {
+  await assertRejects(
+    () => makeGhRunner("fdh-no-such-gh-binary")(["api", "x"]),
+    Error,
+    "is not installed or not on PATH",
+  );
+  // A stand-in that hangs: this Deno, sleeping for 30 s.
+  const hang = makeGhRunner(Deno.execPath(), 300);
+  const started = Date.now();
+  await assertRejects(
+    () => hang(["eval", "await new Promise((r) => setTimeout(r, 30000))"]),
+    Error,
+  );
+  assert(Date.now() - started < 20_000, "the hanging command was not stopped");
+});
+
+Deno.test("fdh ext poll: the PR URL is mirrored as one fdh comment per URL", () => {
+  const ledger = emptyLedger("t1");
+  upsertLink(ledger, "KAN-1", 7);
+  ingestObservation(ledger, {
+    ref: "github:pr/7",
+    field: "pr.url",
+    value: "https://github.com/o/r/pull/7",
+    version: t(0),
+  });
+  const [action] = planSync(ledger).actions;
+  assertEquals(
+    [action.mirrorField, action.retry, action.key],
+    [
+      "pr-link-comment",
+      "keyed-once",
+      "KAN-1:pr.url:https://github.com/o/r/pull/7",
+    ],
+  );
 });
