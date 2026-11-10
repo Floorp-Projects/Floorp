@@ -211,6 +211,55 @@ deno run -A tools/fdh.ts quota status --task-id <task-id>
 push/PR/release; the agent must wait for `quota approve`. Stop reasons are
 `quota|infra|manual`; pending ops are `push|pr|release|external`.
 
+## Durable jobs and external intents (B-02, D-23)
+
+Use `fdh job` instead of `verify build|test` when the step is long and must
+survive this agent session, its controller, or the executor being killed. The
+contract is the frozen B-02 ADR (Confluence 8716289): run/attempt/epoch and an
+execution digest are recorded before anything runs, a detached executor holds a
+heartbeat lease, an older epoch's writes are rejected, and the result is written
+to an outbox and applied under one journal lock.
+
+```sh
+# Start a durable step (same commands as verify build|test); returns at once.
+deno run -A tools/fdh.ts job start --task-id <task-id> --step test
+deno run -A tools/fdh.ts job start --task-id <task-id> --step build [--phase all]
+
+# Wait (reconciles every second). Exits 1 unless the job succeeded. Safe to
+# rerun from a new session: it reconnects to a live executor.
+deno run -A tools/fdh.ts job wait --task-id <task-id> --job-id <job-id>
+
+# Inspect or reconcile without waiting.
+deno run -A tools/fdh.ts job status --task-id <task-id> [--job-id <job-id>]
+deno run -A tools/fdh.ts job cancel --task-id <task-id> --job-id <job-id>
+```
+
+Reconcile (`job wait|status|reconcile`, `task resume`) does exactly one of:
+reconnect to a live executor; apply a result left in the outbox (no rerun); stop
+the lost attempt's step process tree (identity-checked) and start the next epoch
+from the checkpoint (build commands already completed are not rerun); fail the
+job when its inputs (HEAD, uncommitted state, guard env) changed or
+`--max-attempts` (default 3) attempts were lost. Each terminal result is copied
+into the task state once (operations, assertions, a `job result <id>` event).
+
+Non-idempotent operations (push, PR, release, other external writes) are never
+run by fdh. Record the intent before you perform it, and the outcome after:
+
+```sh
+deno run -A tools/fdh.ts job intent --task-id <task-id> --op push \
+  --target "origin <branch>" --agent <name>          # prints jobId, epoch 1
+# ... perform the operation yourself ...
+deno run -A tools/fdh.ts job confirm --task-id <task-id> --job-id <job-id> \
+  --epoch 1 --agent <name> --outcome succeeded
+```
+
+If the session ends between the two, `task resume` puts the intent into
+`awaiting-approval` and the quota ledger's pending list. Do not retry it: a
+human checks the external state and runs
+`job resolve --resolution succeeded|failed|retry [--agent <name>]`, which also
+approves the pending entry. A confirm that arrives after the holder was declared
+lost is refused and recorded (`late-report`).
+
 ## GUI desktop lease and secret-reference denial (Gate 4 4-A)
 
 The shared desktop GUI is one resource. The lease is stored beside the git
@@ -244,7 +293,9 @@ deno run -A tools/fdh.ts secrets status
 - Commands: `task start|resume|prepare`, `dev up|down`,
   `verify build|test|browser`, `evidence`, `record`, `review record`,
   `quota claim|stop|resume|pending|approve|release|status`,
-  `gui claim|end|status`, `secrets check|status`, `help`.
+  `job start|wait|status|reconcile|intent|confirm|resolve|cancel` (`job exec` is
+  the detached executor and is not called directly), `gui claim|end|status`,
+  `secrets check|status`, `help`.
 - State path: `<worktree>/_dist/fdh/tasks/<task-id>.json`. It holds `taskId`,
   `worktree`, `baseCommit`, `portOffset`, `createdAt`, `status`, `events[]`,
   `operations[]` (optional `external` attestation block), `assertions[]`,
@@ -326,6 +377,10 @@ a pass by editing state.
   if a human review needs them.
 - Shared services (GitHub, PRs, CI dispatch) are not required and are never
   called by the CLI.
+- `fdh job` is one-machine fault tolerance only (no central scheduler, no
+  cross-machine lease). It does not claim exactly-once: a safe step can run
+  again after its executor is lost, and an old executor's local writes are not
+  undone. Intents and confirms are self-reported by the agent.
 - Cleanup is reported honestly: `dev up` leaves cleanup `partial` until
   `dev down` succeeds.
 - `reproduction` is `inconclusive` unless a defect was actually reproduced; the
