@@ -1,0 +1,247 @@
+{
+  "version": 1,
+  "taskId": "ac06-kan138",
+  "links": {
+    "KAN-138": {
+      "jira": "KAN-138",
+      "pr": 3119,
+      "branch": "fdh/kan-138",
+      "synced": {
+        "pr.url": {
+          "ownerValue": "https://github.com/Floorp-Projects/Floorp/pull/3119",
+          "mirrorValue": "https://github.com/Floorp-Projects/Floorp/pull/3119",
+          "at": "2026-11-10T18:39:10.384Z",
+          "opStartedAt": "2026-11-10T18:39:02.409Z"
+        },
+        "pr.state": {
+          "ownerValue": "merged",
+          "mirrorValue": "完了",
+          "at": "2026-11-10T18:55:37.097Z",
+          "opStartedAt": "2026-11-10T18:55:26.559Z"
+        },
+        "ci.result": {
+          "ownerValue": "1d687fb15a6dfb9b1aba11386d9e8396852d1e41:success",
+          "mirrorValue": "1d687fb15a6dfb9b1aba11386d9e8396852d1e41:success",
+          "at": "2026-11-10T18:55:01.388Z",
+          "opStartedAt": "2026-11-10T18:54:48.975Z"
+        }
+      },
+      "generation": {
+        "pr.url": 1,
+        "pr.state": 4,
+        "ci.result": 1
+      }
+    }
+  },
+  "observations": {
+    "jira:KAN-138": {
+      "status": {
+        "value": "完了",
+        "version": "2026-11-11T03:55:27.622+09:00",
+        "observedAt": "2026-11-10T18:55:37.361Z",
+        "deleted": false
+      },
+      "pr-link-comment": {
+        "value": "https://github.com/Floorp-Projects/Floorp/pull/3119",
+        "version": "2026-11-11T03:39:03.725+09:00",
+        "observedAt": "2026-11-10T18:39:29.959Z",
+        "deleted": false
+      },
+      "ci-comment": {
+        "value": "1d687fb15a6dfb9b1aba11386d9e8396852d1e41:success",
+        "version": "2026-11-11T03:54:51.277+09:00",
+        "observedAt": "2026-11-10T18:55:37.606Z",
+        "deleted": false
+      }
+    },
+    "github:pr/3119": {
+      "pr.url": {
+        "value": "https://github.com/Floorp-Projects/Floorp/pull/3119",
+        "version": "2026-11-10T18:38:25Z",
+        "observedAt": "2026-11-10T18:55:37.870Z",
+        "deleted": false
+      },
+      "pr.state": {
+        "value": "merged",
+        "version": "2026-11-10T18:55:04Z",
+        "observedAt": "2026-11-10T18:55:37.870Z",
+        "deleted": false
+      },
+      "ci.result": {
+        "value": "1d687fb15a6dfb9b1aba11386d9e8396852d1e41:success",
+        "version": "2026-11-10T18:55:04.001Z",
+        "observedAt": "2026-11-10T18:55:37.870Z",
+        "deleted": false
+      }
+    }
+  },
+  "seenEvents": {
+    "jira:KAN-138": [
+      "status\u0000jira-KAN-138-03:39:11.063"
+    ],
+    "github:pr/3119": []
+  },
+  "ops": {
+    "github:pr-create:fdh/kan-138": {
+      "key": "github:pr-create:fdh/kan-138",
+      "jobId": "intent-20261110t183823z-5ee290",
+      "epoch": 1,
+      "startedAt": "2026-11-10T18:38:23.074Z",
+      "outcome": "succeeded",
+      "sync": null
+    },
+    "KAN-138:pr.url:https://github.com/Floorp-Projects/Floorp/pull/3119": {
+      "key": "KAN-138:pr.url:https://github.com/Floorp-Projects/Floorp/pull/3119",
+      "jobId": "intent-20261110t183902z-c99d2c",
+      "epoch": 1,
+      "startedAt": "2026-11-10T18:39:02.409Z",
+      "outcome": "succeeded",
+      "sync": {
+        "link": "KAN-138",
+        "field": "pr.url",
+        "ownerValue": "https://github.com/Floorp-Projects/Floorp/pull/3119",
+        "mirrorValue": "https://github.com/Floorp-Projects/Floorp/pull/3119"
+      }
+    },
+    "KAN-138:pr.state:進行中#0": {
+      "key": "KAN-138:pr.state:進行中#0",
+      "jobId": "intent-20261110t183910z-9e4f64",
+      "epoch": 1,
+      "startedAt": "2026-11-10T18:39:10.693Z",
+      "outcome": "succeeded",
+      "sync": {
+        "link": "KAN-138",
+        "field": "pr.state",
+        "ownerValue": "draft",
+        "mirrorValue": "進行中"
+      }
+    },
+    "github:pr-ready:3119": {
+      "key": "github:pr-ready:3119",
+      "jobId": "intent-20261110t184436z-b1f429",
+      "epoch": 1,
+      "startedAt": "2026-11-10T18:44:36.841Z",
+      "outcome": "succeeded",
+      "sync": null
+    },
+    "KAN-138:pr.state:レビュー中#2": {
+      "key": "KAN-138:pr.state:レビュー中#2",
+      "jobId": "intent-20261110t184454z-6cf300",
+      "epoch": 1,
+      "startedAt": "2026-11-10T18:44:54.156Z",
+      "outcome": "succeeded",
+      "sync": {
+        "link": "KAN-138",
+        "field": "pr.state",
+        "ownerValue": "open",
+        "mirrorValue": "レビュー中"
+      }
+    },
+    "KAN-138:ci.result:1d687fb15a6dfb9b1aba11386d9e8396852d1e41:success": {
+      "key": "KAN-138:ci.result:1d687fb15a6dfb9b1aba11386d9e8396852d1e41:success",
+      "jobId": "intent-20261110t185448z-f29379",
+      "epoch": 1,
+      "startedAt": "2026-11-10T18:54:48.975Z",
+      "outcome": "succeeded",
+      "sync": {
+        "link": "KAN-138",
+        "field": "ci.result",
+        "ownerValue": "1d687fb15a6dfb9b1aba11386d9e8396852d1e41:success",
+        "mirrorValue": "1d687fb15a6dfb9b1aba11386d9e8396852d1e41:success"
+      }
+    },
+    "github:pr-merge:3119": {
+      "key": "github:pr-merge:3119",
+      "jobId": "intent-20261110t185501z-eace45",
+      "epoch": 1,
+      "startedAt": "2026-11-10T18:55:01.597Z",
+      "outcome": "succeeded",
+      "sync": null
+    },
+    "KAN-138:pr.state:完了#3": {
+      "key": "KAN-138:pr.state:完了#3",
+      "jobId": "intent-20261110t185526z-7e1ae2",
+      "epoch": 1,
+      "startedAt": "2026-11-10T18:55:26.559Z",
+      "outcome": "succeeded",
+      "sync": {
+        "link": "KAN-138",
+        "field": "pr.state",
+        "ownerValue": "merged",
+        "mirrorValue": "完了"
+      }
+    }
+  },
+  "events": [
+    {
+      "at": "2026-11-10T18:39:30.319Z",
+      "kind": "duplicate",
+      "ref": "jira:KAN-138",
+      "field": "status",
+      "note": "event jira-KAN-138-03:39:11.063 seen before"
+    },
+    {
+      "at": "2026-11-10T18:39:30.657Z",
+      "kind": "stale",
+      "ref": "jira:KAN-138",
+      "field": "status",
+      "note": "version 2026-11-11T03:36:14.858+09:00 is older than 2026-11-11T03:39:11.063+09:00"
+    },
+    {
+      "at": "2026-11-10T18:43:41.132Z",
+      "kind": "duplicate",
+      "ref": "github:pr/3119",
+      "field": "pr.url",
+      "note": "same value at 2026-11-10T18:38:25Z"
+    },
+    {
+      "at": "2026-11-10T18:44:44.300Z",
+      "kind": "duplicate",
+      "ref": "github:pr/3119",
+      "field": "pr.url",
+      "note": "same value at 2026-11-10T18:38:25Z"
+    },
+    {
+      "at": "2026-11-10T18:44:53.487Z",
+      "kind": "resolved",
+      "ref": "jira:KAN-138",
+      "field": "pr.state",
+      "note": "kept the owner side"
+    },
+    {
+      "at": "2026-11-10T18:54:39.244Z",
+      "kind": "duplicate",
+      "ref": "github:pr/3119",
+      "field": "pr.url",
+      "note": "same value at 2026-11-10T18:38:25Z"
+    },
+    {
+      "at": "2026-11-10T18:55:18.850Z",
+      "kind": "duplicate",
+      "ref": "github:pr/3119",
+      "field": "pr.url",
+      "note": "same value at 2026-11-10T18:38:25Z"
+    },
+    {
+      "at": "2026-11-10T18:55:37.870Z",
+      "kind": "duplicate",
+      "ref": "github:pr/3119",
+      "field": "pr.url",
+      "note": "same value at 2026-11-10T18:38:25Z"
+    },
+    {
+      "at": "2026-11-10T18:55:37.870Z",
+      "kind": "duplicate",
+      "ref": "github:pr/3119",
+      "field": "pr.state",
+      "note": "same value at 2026-11-10T18:55:04Z"
+    },
+    {
+      "at": "2026-11-10T18:55:37.870Z",
+      "kind": "duplicate",
+      "ref": "github:pr/3119",
+      "field": "ci.result",
+      "note": "same value at 2026-11-10T18:55:04.001Z"
+    }
+  ]
+}

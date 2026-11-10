@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "jobId": "intent-20261110t183902z-c99d2c",
+  "taskId": "ac06-kan138",
+  "worktree": "E:\\floorp-browser-dev\\fdh-followup",
+  "kind": "intent",
+  "step": null,
+  "intent": {
+    "op": "external",
+    "target": "Jira comment with the PR URL (retry after 502) [key KAN-138:pr.url:https://github.com/Floorp-Projects/Floorp/pull/3119]"
+  },
+  "inputs": {
+    "baseCommit": "e84a10f7f08861bb9aa3abc4770277be6100f63a",
+    "head": "",
+    "guardEnv": {}
+  },
+  "executionDigest": "015083a9f57b698d673009c23f29a57d47927bd19ea7d4f6eef8afb0b558fbda",
+  "state": "succeeded",
+  "epoch": 1,
+  "lease": null,
+  "leaseTtlMs": 1800000,
+  "maxAttempts": 3,
+  "attempts": [
+    {
+      "attempt": 1,
+      "epoch": 1,
+      "holder": "claude-main",
+      "scheduledAt": "2026-11-10T18:39:02.410Z",
+      "startedAt": "2026-11-10T18:39:02.410Z",
+      "endedAt": "2026-11-10T18:39:10.380Z",
+      "result": "succeeded",
+      "exitCode": 0,
+      "logRef": null,
+      "process": null,
+      "notes": ""
+    }
+  ],
+  "checkpoint": 0,
+  "commandResults": [],
+  "recordedToTask": true,
+  "transitions": [
+    {
+      "from": null,
+      "to": "pending",
+      "at": "2026-11-10T18:39:02.410Z",
+      "reason": "created"
+    },
+    {
+      "from": "pending",
+      "to": "scheduled",
+      "at": "2026-11-10T18:39:02.410Z",
+      "reason": "attempt 1 recorded before start"
+    },
+    {
+      "from": "scheduled",
+      "to": "running",
+      "at": "2026-11-10T18:39:02.410Z",
+      "reason": "attempt 1 started"
+    },
+    {
+      "from": "running",
+      "to": "succeeded",
+      "at": "2026-11-10T18:39:10.380Z",
+      "reason": "attempt 1 exited 0"
+    }
+  ],
+  "events": [],
+  "createdAt": "2026-11-10T18:39:02.410Z",
+  "updatedAt": "2026-11-10T18:39:10.380Z"
+}
