@@ -287,9 +287,12 @@ export async function stopProcessTree(
     const members = rootIsLive
       ? tree.filter((p) => p.pid === root.pid)
       : tree.filter((p) => groups.get(p.pid) === root.pid);
+    // A failed re-check only skips the group signal: the per-process stop
+    // below (identity-checked on its own snapshot) still runs.
     if (
       members.length > 0 &&
-      (rootIsLive || await stillInGroup(members, root.pid))
+      (rootIsLive ||
+        await stillInGroup(members, root.pid).catch(() => false))
     ) {
       try {
         Deno.kill(-root.pid, "SIGTERM");
