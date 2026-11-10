@@ -67,7 +67,8 @@ export interface FieldRule {
   order?: readonly string[];
   /**
    * `idempotent`: writing the same value again is harmless, and each owner
-   * change is a new operation (its key carries the owner's version).
+   * change is a new operation (its key carries the field's generation,
+   * `#<n>`, which moves each time a baseline is recorded or resolved).
    * `keyed-once`: the write must happen once per value (a comment); its key
    * is the value, and a succeeded key is never planned again.
    */
@@ -796,6 +797,14 @@ export function refreshOps(
       // nothing was handed to an agent, so it ends as failed.
       op.outcome = "failed";
       changed.push(op.key);
+      note(ledger, {
+        at,
+        kind: "op-healed",
+        ref: op.sync === null ? "" : `jira:${op.sync.link}`,
+        field: op.sync?.field ?? "",
+        note:
+          `operation ${op.key} ended failed (job ${op.jobId} was never written)`,
+      });
       continue;
     }
     try {
