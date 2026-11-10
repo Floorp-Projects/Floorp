@@ -60,7 +60,7 @@ All times are UTC.
 | Duplicate and inversion     | Replaying the same event id gave `duplicate`, and the earlier 未着手 delivered late gave `stale`. Neither was taken.                                                                                                                                                                                                                                                                                                                                                                |
 | Concurrent edit             | Acting as a person, the agent moved KAN-138 back to 未着手 while the PR stayed a draft: the plan kept the edit (`keptEdits`) and wrote nothing. The PR was then marked ready (`github:pr-ready:3119`), so both sides had changed since fdh's write: the plan held `pr.state` as `concurrent-edit`. Playing the approver, the agent chose the PR side (`ext resolve --keep owner`). The new key `KAN-138:pr.state:レビュー中#2` was performed and polled, and the field was in sync. |
 | Review by separate agents   | Two reviewer agents, separate from the agent that did the work, approved 1d687fb1: reviewer A on claude-fable-5-2 and reviewer B on claude-opus-5-5. Their D-14 receipts were posted on #3119; the receipt for reviewer A wrongly named claude-fable-5-1, and a correction was posted on the PR.                                                                                                                                                                                    |
-| CI                          | The aggregated check-run result was success (`gh pr checks` also showed every check passing). The poll gave `<sha>:success`, and the plan gave one keyed-once CI comment (10757), which was posted.                                                                                                                                                                                                                                                                                 |
+| CI                          | The aggregated check-run result was success. The poll gave `<sha>:success`, and the plan gave one keyed-once CI comment (10757), which was posted.                                                                                                                                                                                                                                                                                                                                  |
 | Merge and Jira update       | `github:pr-merge:3119` was recorded and the squash merge landed (6fe7bc6d). The poll gave `merged`, and the plan gave `完了#3`, which was performed. The final plan has no actions and no holds; `pr.url`, `pr.state` and `ci.result` are in sync.                                                                                                                                                                                                                                  |
 
 The 9 intents are in `jobs/`: 8 `succeeded` and 1 `failed`, the comment attempt
@@ -100,7 +100,8 @@ KAN-138 was created for this run, so no one else edited it.
 ## Final read-only check
 
 A read-only Atlassian MCP `getJiraIssue` read was made after the run, at about
-19:05Z, before this file was committed. It showed:
+18:58Z, after the first commit of this file (18:56Z) and before this revision.
+It showed:
 
 - KAN-138's status is 完了, `updated` 2026-11-11T03:55:27.622+09:00.
 - KAN-138 has exactly two comments, both by fdh:
