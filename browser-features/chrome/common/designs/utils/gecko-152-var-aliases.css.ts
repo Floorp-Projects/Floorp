@@ -46,6 +46,8 @@
  *   - browser/themes/shared/tabbrowser/tab.tokens.css  (tab-* tokens)
  *   - browser/themes/{windows,osx,linux}/browser.css   (toolbar-bgcolor)
  *   - browser/themes/shared/toolbarbuttons.css  (toolbarbutton-*)
+ *   - browser/themes/shared/browser-shared.css  (toolbar-start-end-padding)
+ *   - browser/themes/shared/urlbar-searchbar.css (toolbar-field-focus-*)
  *   - toolkit/themes/shared/popup.css           (panel-* / arrowpanel-*)
  *
  * ## What is NOT a rename (deliberately absent from the table)
@@ -88,6 +90,23 @@ export const GECKO_152_RENAMED_VARS: ReadonlyArray<
   ["--tab-selected-bgcolor", "--tab-background-color-selected"],
   // tab.tokens.css:18->14
   ["--tab-hover-background-color", "--tab-background-color-hover"],
+  // tab.tokens.css:21,22,24 -> 83,79,74 (same values on :root). Vendored
+  // Lepton still reads the legacy names: without these its container-tab
+  // underline (`.tab-content::before`, userChrome.tab.container, on by
+  // default) has an invalid width on the selected tab and is not drawn.
+  ["--tab-inline-padding", "--tab-padding-inline"],
+  ["--tab-inner-inline-margin", "--tab-margin-inline-inner"],
+  ["--tab-loading-fill", "--tab-icon-fill-loading"],
+
+  // Toolbar / toolbar field tokens that vendored Lepton still reads.
+  // browser-shared.css:418 and toolbarbuttons.css:258 (start/end padding of
+  // the toolbars) now read --toolbar-padding-inline; urlbar-searchbar.css:234
+  // (focused field outline) now reads --toolbar-field-border-color-focus.
+  ["--toolbar-start-end-padding", "--toolbar-padding-inline"],
+  [
+    "--toolbar-field-focus-border-color",
+    "--toolbar-field-border-color-focus",
+  ],
 
   // Toolbar buttons
   // toolbarbuttons.css:768-769 -> 775-776

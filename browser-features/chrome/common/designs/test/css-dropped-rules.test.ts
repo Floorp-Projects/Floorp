@@ -81,13 +81,13 @@ const KNOWN_DROPPED_RULES: Record<string, KnownDrop> = {
     {
       count: 2,
       reason:
-        "SUSPECT: Lepton typo for ::before; the tab label transition never applies",
+        "Lepton bug: typo for ::before; the tab counter's transition never applies (opt-in userChrome.counter.tab)",
     },
   "browser-features/skin/lepton/css/leptonContent.css @-moz-document unobservable-document()":
     {
       count: 2,
       reason:
-        "SUSPECT: Gecko removed unobservable-document(); Lepton's opt-in PDF dark mode (userContent.page.dark_mode.pdf) is dead",
+        "Lepton bug: Gecko removed unobservable-document(); Lepton's opt-in PDF dark mode (userContent.page.dark_mode.pdf) is dead",
     },
   "browser-features/skin/lepton/css/leptonContent.css ::-moz-focus-inner": {
     count: 2,

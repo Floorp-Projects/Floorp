@@ -148,6 +148,14 @@ function testRenamedVarsTableIsCanonical(): void {
     ["--toolbox-textcolor-inactive", "--toolbox-text-color-inactive"],
     ["--tab-selected-bgcolor", "--tab-background-color-selected"],
     ["--tab-hover-background-color", "--tab-background-color-hover"],
+    ["--tab-inline-padding", "--tab-padding-inline"],
+    ["--tab-inner-inline-margin", "--tab-margin-inline-inner"],
+    ["--tab-loading-fill", "--tab-icon-fill-loading"],
+    ["--toolbar-start-end-padding", "--toolbar-padding-inline"],
+    [
+      "--toolbar-field-focus-border-color",
+      "--toolbar-field-border-color-focus",
+    ],
     [
       "--toolbarbutton-hover-background",
       "--toolbarbutton-background-color-hover",
