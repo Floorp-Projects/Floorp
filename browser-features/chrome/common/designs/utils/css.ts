@@ -14,6 +14,12 @@ import protonfixUserJs from "@nora/skin/lepton/userjs/protonfix.js?raw";
 // CSS raw imports for development
 import leptonChromeStylesRaw from "@nora/skin/lepton/css/leptonChrome.css?raw";
 import leptonContentStylesRaw from "@nora/skin/lepton/css/leptonContent.css?raw";
+// Floorp-owned overlays for the vendored Lepton sheets. css/ is a
+// byte-identical copy of upstream (skin/lepton/UPSTREAM.json); Floorp changes
+// to Lepton CSS go to these files, each loaded right after its Lepton sheet
+// at the same level (see skin/lepton/README.md).
+import leptonChromeOverlayRaw from "@nora/skin/lepton/overlay/leptonChromeOverlay.css?raw";
+import leptonContentOverlayRaw from "@nora/skin/lepton/overlay/leptonContentOverlay.css?raw";
 import fluerialStylesRaw from "@nora/skin/fluerial/css/fluerial.css?raw";
 import { launchDevPorts } from "#modules/common/dev-port-offset.ts";
 
@@ -172,13 +178,33 @@ const getIconBasePath = (skin: string): string => {
   return `${getStylePath(`${skin}/icons`)}`;
 };
 
+/** Lepton sheets with their Floorp overlays, in load order. */
+const LEPTON_CHROME_STYLES_RAW = [
+  leptonChromeStylesRaw,
+  leptonChromeOverlayRaw,
+];
+const LEPTON_CONTENT_STYLES_RAW = [
+  leptonContentStylesRaw,
+  leptonContentOverlayRaw,
+];
+const LEPTON_CHROME_STYLES = [
+  getStylePath("lepton/css/leptonChrome.css"),
+  getStylePath("lepton/overlay/leptonChromeOverlay.css"),
+];
+const LEPTON_CONTENT_STYLES = [
+  getStylePath("lepton/css/leptonContent.css"),
+  getStylePath("lepton/overlay/leptonContentOverlay.css"),
+];
+
 /**
- * Get CSS configuration based on the selected UI theme
+ * Get CSS configuration based on the selected UI theme. `isDev` selects the
+ * dev (raw CSS) or production (chrome:// URL) branch; tests pass it to cover
+ * both.
  */
 export function getCSSFromConfig(
   pref: t.TypeOf<typeof zFloorpDesignConfigs>,
+  isDev: boolean = import.meta.env.DEV,
 ): FCSS {
-  const isDev = import.meta.env.DEV;
   const uiTheme = pref.globalConfigs.userInterface;
 
   switch (uiTheme) {
@@ -216,8 +242,8 @@ export function getCSSFromConfig(
       if (isDev) {
         return {
           chromeStylesRaw: [
-            leptonChromeStylesRaw,
-            leptonContentStylesRaw,
+            ...LEPTON_CHROME_STYLES_RAW,
+            ...LEPTON_CONTENT_STYLES_RAW,
             LEPTON_COMPAT_CSS,
             navBarBackgroundColorCSS,
           ],
@@ -226,10 +252,7 @@ export function getCSSFromConfig(
         };
       }
       return {
-        chromeStyles: [
-          getStylePath("lepton/css/leptonChrome.css"),
-          getStylePath("lepton/css/leptonContent.css"),
-        ],
+        chromeStyles: [...LEPTON_CHROME_STYLES, ...LEPTON_CONTENT_STYLES],
         chromeStylesRaw: [LEPTON_COMPAT_CSS, navBarBackgroundColorCSS],
         userjs: leptonUserJs,
       };
@@ -239,22 +262,19 @@ export function getCSSFromConfig(
       if (isDev) {
         return {
           chromeStylesRaw: [
-            leptonChromeStylesRaw,
+            ...LEPTON_CHROME_STYLES_RAW,
             LEPTON_COMPAT_CSS,
             navBarBackgroundColorCSS,
           ],
-          stylesRaw: [leptonContentStylesRaw],
+          stylesRaw: [...LEPTON_CONTENT_STYLES_RAW],
           iconBasePath: launchDevPort.httpOrigin("designs", "/lepton/icons"),
           userjs: photonUserJs,
         };
       }
       return {
-        chromeStyles: [
-          getStylePath("lepton/css/leptonChrome.css"),
-          getStylePath("lepton/css/leptonContent.css"),
-        ],
+        chromeStyles: [...LEPTON_CHROME_STYLES, ...LEPTON_CONTENT_STYLES],
         chromeStylesRaw: [LEPTON_COMPAT_CSS, navBarBackgroundColorCSS],
-        styles: [getStylePath("lepton/css/leptonContent.css")],
+        styles: [...LEPTON_CONTENT_STYLES],
         userjs: photonUserJs,
       };
     }
@@ -263,22 +283,19 @@ export function getCSSFromConfig(
       if (isDev) {
         return {
           chromeStylesRaw: [
-            leptonChromeStylesRaw,
+            ...LEPTON_CHROME_STYLES_RAW,
             LEPTON_COMPAT_CSS,
             navBarBackgroundColorCSS,
           ],
-          stylesRaw: [leptonContentStylesRaw],
+          stylesRaw: [...LEPTON_CONTENT_STYLES_RAW],
           iconBasePath: launchDevPort.httpOrigin("designs", "/lepton/icons"),
           userjs: protonfixUserJs,
         };
       }
       return {
-        chromeStyles: [
-          getStylePath("lepton/css/leptonChrome.css"),
-          getStylePath("lepton/css/leptonContent.css"),
-        ],
+        chromeStyles: [...LEPTON_CHROME_STYLES, ...LEPTON_CONTENT_STYLES],
         chromeStylesRaw: [LEPTON_COMPAT_CSS, navBarBackgroundColorCSS],
-        styles: [getStylePath("lepton/css/leptonContent.css")],
+        styles: [...LEPTON_CONTENT_STYLES],
         userjs: protonfixUserJs,
       };
     }
