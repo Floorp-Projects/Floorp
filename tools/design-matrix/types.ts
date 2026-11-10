@@ -60,7 +60,15 @@ export interface ShotRecord {
 export interface StateRecord {
   shot: ShotRecord | null;
   styles: StateStyles;
+  /** Informational notes (e.g. pref values seen). */
   notes: string[];
+  /**
+   * Things that went wrong in this state (it was not reached, the context
+   * menu did not open, the window kept changing). Any problem makes a
+   * compare exit 2. (Manifests written before this field existed lack it;
+   * the compare step treats it as empty.)
+   */
+  problems: string[];
 }
 
 export interface ComboRecord {
@@ -87,10 +95,22 @@ export interface RunManifest {
 export interface ImageDiff {
   key: string;
   file: string;
-  status: "same" | "changed" | "size-mismatch" | "missing" | "added";
+  status:
+    | "same"
+    | "changed"
+    | "size-mismatch"
+    | "missing"
+    | "added"
+    | "missing-both";
   changedPixels: number;
   comparedPixels: number;
+  /** Pixels excluded by masks (0 when masks were ignored). */
+  maskedPixels: number;
+  /** Masks covered more than `maxMaskRatio` and were not applied. */
+  masksIgnored: boolean;
   ratio: number;
+  /** Whether this image counts as a regression. */
+  failing: boolean;
   /** Bounding box of changed pixels, if any. */
   bbox: Rect | null;
   baselineSize?: { width: number; height: number };
@@ -109,6 +129,17 @@ export interface CompareOptions {
   tolerance: number;
   /** Changed-pixel ratio above which an image counts as a regression. */
   threshold: number;
+  /**
+   * Changed-pixel count above which an image counts as a regression,
+   * whatever the ratio (catches icon and 1px border changes).
+   */
+  maxPixels: number;
+  /**
+   * Largest share of an image masks may cover. Above it the masks are not
+   * applied (and the report says so), so a layout change that grows a masked
+   * region cannot hide other changes.
+   */
+  maxMaskRatio: number;
   /** Fail when computed style values differ. */
   failOnStyleDiff: boolean;
   /** Write highlighted diff PNGs for changed images. */
@@ -123,7 +154,19 @@ export interface CompareReport {
   options: CompareOptions;
   images: ImageDiff[];
   values: ValueDiff[];
+  /** Capture errors and state problems from either run. */
+  problems: CaptureProblem[];
+  /** Baseline design/theme combinations absent from the current run. */
+  skippedCombos: string[];
   maxRatio: number;
   failingImages: number;
+  /** "error": capture problems (exit 2); "fail": regressions (exit 1). */
+  status: "pass" | "fail" | "error";
   failed: boolean;
+}
+
+export interface CaptureProblem {
+  run: "baseline" | "current" | "both";
+  key: string;
+  message: string;
 }

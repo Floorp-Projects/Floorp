@@ -139,6 +139,10 @@ function userPrefs(
     "browser.newtabpage.activity-stream.asrouter.userprefs.cfr.addons": false,
     "browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features": false,
     // Determinism.
+    // Pin the OS colour scheme to light: otherwise theme "none" (the default
+    // theme follows the system) renders like "dark" on a dark-mode machine and
+    // results depend on the machine. Built-in Dark and LWTs set their own.
+    "ui.systemUsesDarkTheme": 0,
     "ui.caretBlinkTime": 0,
     "ui.prefersReducedMotion": 1,
     "toolkit.cosmeticAnimations.enabled": false,
@@ -226,7 +230,32 @@ async function removeWithRetry(dir: string): Promise<void> {
   throw new Error(`Could not delete temporary profile ${dir}`);
 }
 
-/** Kills the process we started and its children, and nothing else. */
+/** PIDs of all descendants of `pid` (POSIX, via `pgrep -P`), deepest first. */
+async function descendants(pid: number): Promise<number[]> {
+  const out: number[] = [];
+  try {
+    const res = await new Deno.Command("pgrep", {
+      args: ["-P", String(pid)],
+      stdout: "piped",
+      stderr: "null",
+    }).output();
+    const kids = new TextDecoder().decode(res.stdout).split(/\s+/)
+      .map((s) => parseInt(s, 10)).filter((n) => !isNaN(n));
+    for (const kid of kids) {
+      out.push(...await descendants(kid), kid);
+    }
+  } catch {
+    // pgrep missing or the process is gone
+  }
+  return out;
+}
+
+/**
+ * Kills the process we started and every process below it, and nothing else.
+ * Windows: `taskkill /T` on our launcher PID (kept alive by
+ * `-wait-for-browser`). Linux/macOS: the descendants of our PID are collected
+ * with `pgrep -P` before anything is killed, then each gets SIGKILL.
+ */
 async function killTree(child: Deno.ChildProcess): Promise<void> {
   try {
     if (Deno.build.os === "windows") {
@@ -235,8 +264,20 @@ async function killTree(child: Deno.ChildProcess): Promise<void> {
         stdout: "null",
         stderr: "null",
       }).output();
-    } else {
+      return;
+    }
+    const pids = await descendants(child.pid);
+    try {
       child.kill("SIGKILL");
+    } catch {
+      // already gone
+    }
+    for (const pid of pids) {
+      try {
+        Deno.kill(pid, "SIGKILL");
+      } catch {
+        // already gone
+      }
     }
   } catch {
     // already gone
@@ -310,6 +351,20 @@ const SCRIPT_ENABLE_THEME = asyncScript(`
     lwtheme: document.documentElement.hasAttribute("lwtheme"),
   };
 `);
+
+/** What the browser actually applied: design, theme and colour scheme. */
+const SCRIPT_APPLIED = `
+let userInterface = null;
+try {
+  userInterface = JSON.parse(Services.prefs.getStringPref("floorp.design.configs", "{}"))
+    ?.globalConfigs?.userInterface ?? null;
+} catch (_) {}
+return {
+  userInterface,
+  themeID: Services.prefs.getStringPref("extensions.activeThemeID", ""),
+  lwtheme: document.documentElement.hasAttribute("lwtheme"),
+  systemDark: window.matchMedia("(-moz-system-dark-theme)").matches,
+};`;
 
 const SCRIPT_FOCUS_CONTENT = asyncScript(`
   gURLBar.blur();
@@ -405,8 +460,8 @@ const SCRIPT_OPEN_CLEAR_HISTORY = asyncScript(`
       rect: Math.round(r.x) + "," + Math.round(r.y) + " " + Math.round(r.width) + "x" + Math.round(r.height) };
   };
   // The cache and site-data sizes in these labels vary run to run (and can
-  // change after this point): mask from the end of the checkbox square to the
-  // right edge of the dialog.
+  // change after this point): mask the label from the end of the checkbox
+  // square, plus 80px for a longer size text, but not past the dialog.
   const dpr = window.devicePixelRatio;
   const fr = frame?.getBoundingClientRect();
   const masks = [];
@@ -416,7 +471,8 @@ const SCRIPT_OPEN_CLEAR_HISTORY = asyncScript(`
       if (!fr || r.width === 0 || r.height === 0) continue;
       const x = fr.x + r.x + 24;
       masks.push({ x: Math.floor(x * dpr), y: Math.floor((fr.y + r.y) * dpr),
-        width: Math.ceil((fr.right - x) * dpr), height: Math.ceil(r.height * dpr) });
+        width: Math.ceil((Math.min(fr.right, fr.x + r.right + 80) - x) * dpr),
+        height: Math.ceil(r.height * dpr) });
     }
   }
   return {
@@ -465,7 +521,7 @@ async function shot(
     png = next;
   }
   if (!settled) {
-    rec.notes.push("window kept changing; screenshot may be noisy");
+    rec.problems.push("window kept changing; screenshot may be noisy");
   }
   const file = `${s.prefix}__${state}.png`;
   await Deno.writeFile(path.join(s.outDir, file), png);
@@ -533,20 +589,60 @@ async function applyTheme(s: Session, theme: ThemeKey): Promise<string> {
   return id;
 }
 
+/**
+ * Checks that the browser applied the requested design and theme, so a
+ * capture is never stored under the wrong label.
+ */
+async function verifyApplied(
+  s: Session,
+  design: Design,
+  theme: ThemeKey,
+  themeID: string,
+): Promise<void> {
+  await s.client.setContext("chrome");
+  const a = (await s.client.executeScript(SCRIPT_APPLIED)) as Record<
+    string,
+    unknown
+  >;
+  if (a.userInterface !== design) {
+    throw new Error(
+      `design not applied: requested ${design}, browser has ${a.userInterface}`,
+    );
+  }
+  if (a.themeID !== themeID) {
+    throw new Error(
+      `theme not applied: requested ${themeID}, browser has ${a.themeID}`,
+    );
+  }
+  const isLwt = theme === "lwt-header" || theme === "lwt-bottom";
+  if (isLwt && !a.lwtheme) {
+    throw new Error(`theme ${theme} is active but [lwtheme] is not set`);
+  }
+  if (a.systemDark) {
+    throw new Error(
+      "system colour scheme is dark despite ui.systemUsesDarkTheme=0",
+    );
+  }
+}
+
 async function runStates(s: Session): Promise<void> {
   const states = s.record.states;
   const run = async (
     key: StateKey,
     fn: (rec: StateRecord) => Promise<void>,
   ) => {
-    const rec: StateRecord = { shot: null, styles: {}, notes: [] };
+    const rec: StateRecord = {
+      shot: null,
+      styles: {},
+      notes: [],
+      problems: [],
+    };
     states[key] = rec;
     try {
       await fn(rec);
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
-      rec.notes.push(`error: ${msg}`);
-      s.record.errors.push(`${key}: ${msg}`);
+      rec.problems.push(`error: ${msg}`);
     }
   };
 
@@ -576,13 +672,13 @@ async function runStates(s: Session): Promise<void> {
     const res = await asyncChrome(s, SCRIPT_WAIT_CONTEXT_MENU, [MENU_PROPS]);
     await s.client.setContext("content");
     await s.client.send("WebDriver:ReleaseActions", {});
-    if (!res.shown) rec.notes.push("context menu did not open");
+    if (!res.shown) rec.problems.push("context menu did not open");
     rec.styles = res.styles as StateStyles;
   });
 
   await run("fullscreen", async (rec) => {
     const res = await asyncChrome(s, SCRIPT_ENTER_FULLSCREEN);
-    if (!res.entered) rec.notes.push("window did not enter fullscreen");
+    if (!res.entered) rec.problems.push("window did not enter fullscreen");
     rec.notes.push(
       `userChrome.fullscreen.overlap=${res.overlap} browser.fullscreen.autohide=${res.autohide}`,
     );
@@ -596,7 +692,7 @@ async function runStates(s: Session): Promise<void> {
 
   await run("clear-history", async (rec) => {
     const res = await asyncChrome(s, SCRIPT_OPEN_CLEAR_HISTORY);
-    if (!res.loaded) rec.notes.push("Clear History dialog did not load");
+    if (!res.loaded) rec.problems.push("Clear History dialog did not load");
     try {
       rec.styles = res.styles as StateStyles;
       rec.shot = await shot(
@@ -642,6 +738,10 @@ async function captureCombo(
   theme: ThemeKey,
 ): Promise<{ record: ComboRecord; info: BuildInfo | null }> {
   const record: ComboRecord = { design, theme, states: {}, errors: [] };
+  if (run.interrupted) {
+    record.errors.push("interrupted before start");
+    return { record, info: null };
+  }
   const profile = await Deno.makeTempDir({
     dir: tmpRoot,
     prefix: `${design}-${theme}-`,
@@ -663,6 +763,13 @@ async function captureCombo(
   // Keep the Windows launcher process alive until the browser exits, so the
   // PID we hold always owns the browser process tree.
   if (Deno.build.os === "windows") args.push("-wait-for-browser");
+  // Checked again right before spawning: Ctrl+C may have arrived while the
+  // profile was being written.
+  if (run.interrupted) {
+    await removeWithRetry(profile);
+    record.errors.push("interrupted before start");
+    return { record, info: null };
+  }
   const child = new Deno.Command(opts.exe, {
     args,
     env,
@@ -670,7 +777,8 @@ async function captureCombo(
     stdout: "null",
     stderr: "null",
   }).spawn();
-  active = { child, profile };
+  run.child = child;
+  run.profile = profile;
 
   let client: MarionetteClient | null = null;
   let info: BuildInfo | null = null;
@@ -709,7 +817,8 @@ async function captureCombo(
       record,
     };
     await asyncChrome(s, SCRIPT_RESET_TABS);
-    await applyTheme(s, theme);
+    const themeID = await applyTheme(s, theme);
+    await verifyApplied(s, design, theme, themeID);
     await runStates(s);
   } catch (e) {
     record.errors.push(e instanceof Error ? e.message : String(e));
@@ -732,24 +841,44 @@ async function captureCombo(
       await waitExit(child, 10_000);
     }
     await removeWithRetry(profile);
-    active = null;
+    run.child = null;
+    run.profile = null;
   }
   return { record, info };
 }
 
-/** The browser currently running, so Ctrl+C can stop it and clean up. */
-let active: { child: Deno.ChildProcess; profile: string } | null = null;
+/**
+ * State of the current capture, so Ctrl+C can stop the browser we started,
+ * delete its profile and the temporary root, and keep the loop from
+ * starting another browser meanwhile.
+ */
+const run: {
+  interrupted: boolean;
+  child: Deno.ChildProcess | null;
+  profile: string | null;
+  tmpRoot: string | null;
+  proxy: Deno.HttpServer | null;
+} = {
+  interrupted: false,
+  child: null,
+  profile: null,
+  tmpRoot: null,
+  proxy: null,
+};
 
 function onInterrupt(): void {
-  const current = active;
+  if (run.interrupted) return;
+  run.interrupted = true;
+  console.error("[design-matrix] interrupted; stopping the browser it started");
   (async () => {
-    if (current) {
-      await killTree(current.child);
-      await waitExit(current.child, 10_000);
-      await removeWithRetry(current.profile).catch(() => {});
-      // The per-run temporary root, if it is now empty.
-      await Deno.remove(path.dirname(current.profile)).catch(() => {});
+    const { child, profile, tmpRoot, proxy } = run;
+    if (child) {
+      await killTree(child);
+      await waitExit(child, 10_000);
     }
+    if (profile) await removeWithRetry(profile).catch(() => {});
+    if (tmpRoot) await removeWithRetry(tmpRoot).catch(() => {});
+    await proxy?.shutdown().catch(() => {});
     Deno.exit(130);
   })();
 }
@@ -780,14 +909,25 @@ export async function captureMatrix(
     dir: opts.tmpRoot,
     prefix: "floorp-design-matrix-",
   });
+  run.interrupted = false;
+  run.tmpRoot = tmpRoot;
   const startedAt = new Date().toISOString();
   const combos: ComboRecord[] = [];
   let info: BuildInfo | null = null;
-  const proxy = startFixtureProxy(opts.port + 1);
   Deno.addSignalListener("SIGINT", onInterrupt);
   try {
+    try {
+      run.proxy = startFixtureProxy(opts.port + 1);
+    } catch (e) {
+      throw new Error(
+        `cannot listen on proxy port ${opts.port + 1}: ${
+          e instanceof Error ? e.message : String(e)
+        }`,
+      );
+    }
     for (const design of opts.designs) {
       for (const theme of opts.themes) {
+        if (run.interrupted) break;
         opts.log(`[design-matrix] ${design} × ${theme}`);
         const started = Date.now();
         const res = await captureCombo(opts, tmpRoot, design, theme);
@@ -799,8 +939,10 @@ export async function captureMatrix(
     }
   } finally {
     Deno.removeSignalListener("SIGINT", onInterrupt);
-    await proxy.shutdown();
+    await run.proxy?.shutdown();
+    run.proxy = null;
     await removeWithRetry(tmpRoot);
+    run.tmpRoot = null;
   }
   const manifest: RunManifest = {
     tool: "design-matrix",

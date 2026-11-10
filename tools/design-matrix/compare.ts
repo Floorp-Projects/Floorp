@@ -7,20 +7,33 @@
 
 import * as path from "@std/path";
 import { decodePng, encodePng } from "./png.ts";
-import type {
-  CompareOptions,
-  CompareReport,
-  ImageDiff,
-  Rect,
-  RgbaImage,
-  RunManifest,
-  StateRecord,
-  ValueDiff,
+import {
+  type CaptureProblem,
+  type CompareOptions,
+  type CompareReport,
+  type ImageDiff,
+  type Rect,
+  type RgbaImage,
+  type RunManifest,
+  type StateKey,
+  type StateRecord,
+  STATES,
+  type ValueDiff,
 } from "./types.ts";
+
+/** States that produce a screenshot (the context menu records styles only). */
+export const SHOT_STATES: readonly StateKey[] = [
+  "main",
+  "fullscreen",
+  "clear-history",
+  "newtab",
+];
 
 export const DEFAULT_COMPARE_OPTIONS: CompareOptions = {
   tolerance: 8,
   threshold: 0.002,
+  maxPixels: 16,
+  maxMaskRatio: 0.02,
   failOnStyleDiff: true,
   writeDiffImages: true,
 };
@@ -163,6 +176,10 @@ interface ShotEntry {
   masks: Rect[];
 }
 
+function comboKeys(manifest: RunManifest): string[] {
+  return manifest.combos.map((c) => `${c.design}/${c.theme}`);
+}
+
 function collectShots(manifest: RunManifest): Map<string, ShotEntry> {
   const out = new Map<string, ShotEntry>();
   for (const combo of manifest.combos) {
@@ -179,13 +196,82 @@ function collectShots(manifest: RunManifest): Map<string, ShotEntry> {
   return out;
 }
 
+/**
+ * Capture errors, per-state problems, states that were never recorded and
+ * screenshot states without a screenshot, for one run.
+ */
+export function collectProblems(
+  manifest: RunManifest,
+  run: "baseline" | "current",
+): CaptureProblem[] {
+  const out: CaptureProblem[] = [];
+  for (const combo of manifest.combos) {
+    const prefix = `${combo.design}/${combo.theme}`;
+    for (const message of combo.errors) {
+      out.push({ run, key: prefix, message });
+    }
+    for (const state of STATES) {
+      const rec = combo.states[state];
+      const key = `${prefix}/${state}`;
+      if (!rec) {
+        out.push({ run, key, message: "state not recorded" });
+        continue;
+      }
+      for (const message of rec.problems ?? []) {
+        out.push({ run, key, message });
+      }
+      if (SHOT_STATES.includes(state) && !rec.shot) {
+        out.push({ run, key, message: "no screenshot" });
+      }
+      if (
+        !SHOT_STATES.includes(state) && Object.keys(rec.styles).length === 0
+      ) {
+        out.push({ run, key, message: "no computed styles" });
+      }
+    }
+  }
+  return out;
+}
+
 export async function readManifest(dir: string): Promise<RunManifest> {
-  const text = await Deno.readTextFile(path.join(dir, "manifest.json"));
+  let text: string;
+  try {
+    text = await Deno.readTextFile(path.join(dir, "manifest.json"));
+  } catch {
+    throw new Error(`${dir} has no manifest.json (not a design-matrix run)`);
+  }
   const manifest = JSON.parse(text) as RunManifest;
   if (manifest.tool !== "design-matrix") {
     throw new Error(`${dir} is not a design-matrix run directory`);
   }
   return manifest;
+}
+
+function emptyDiff(
+  key: string,
+  file: string,
+  status: ImageDiff["status"],
+): ImageDiff {
+  return {
+    key,
+    file,
+    status,
+    changedPixels: 0,
+    comparedPixels: 0,
+    maskedPixels: 0,
+    masksIgnored: false,
+    ratio: 1,
+    failing: true,
+    bbox: null,
+  };
+}
+
+export function isFailing(
+  changedPixels: number,
+  ratio: number,
+  options: CompareOptions,
+): boolean {
+  return changedPixels > options.maxPixels || ratio > options.threshold;
 }
 
 export async function compareRuns(
@@ -194,27 +280,42 @@ export async function compareRuns(
   reportDir: string,
   options: CompareOptions,
 ): Promise<CompareReport> {
-  const baseline = await readManifest(baselineDir);
+  const fullBaseline = await readManifest(baselineDir);
   const current = await readManifest(currentDir);
+  // A run of a subset (--designs/--themes) is compared with the same subset
+  // of the baseline. Combinations the current run attempted but failed are
+  // still in its manifest (with errors), so they are not skipped.
+  const currentCombos = new Set(comboKeys(current));
+  const skippedCombos = comboKeys(fullBaseline)
+    .filter((k) => !currentCombos.has(k));
+  const baseline: RunManifest = {
+    ...fullBaseline,
+    combos: fullBaseline.combos.filter((c) =>
+      currentCombos.has(`${c.design}/${c.theme}`)
+    ),
+  };
   const baseShots = collectShots(baseline);
   const curShots = collectShots(current);
   const images: ImageDiff[] = [];
   const diffDir = path.join(reportDir, "diff");
 
-  const keys = [...new Set([...baseShots.keys(), ...curShots.keys()])].sort();
-  for (const key of keys) {
+  // Every screenshot state of every combination in either run, so a state
+  // missing from both runs is reported instead of silently skipped.
+  const combos = new Set([...comboKeys(baseline), ...comboKeys(current)]);
+  const keys = new Set([...baseShots.keys(), ...curShots.keys()]);
+  for (const combo of combos) {
+    for (const state of SHOT_STATES) keys.add(`${combo}/${state}`);
+  }
+
+  for (const key of [...keys].sort()) {
     const a = baseShots.get(key);
     const b = curShots.get(key);
+    if (!a && !b) {
+      images.push(emptyDiff(key, "", "missing-both"));
+      continue;
+    }
     if (!a || !b) {
-      images.push({
-        key,
-        file: (a ?? b)!.file,
-        status: a ? "missing" : "added",
-        changedPixels: 0,
-        comparedPixels: 0,
-        ratio: 1,
-        bbox: null,
-      });
+      images.push(emptyDiff(key, (a ?? b)!.file, a ? "missing" : "added"));
       continue;
     }
     const imgA = await decodePng(
@@ -225,41 +326,53 @@ export async function compareRuns(
     );
     if (imgA.width !== imgB.width || imgA.height !== imgB.height) {
       images.push({
-        key,
-        file: b.file,
-        status: "size-mismatch",
+        ...emptyDiff(key, b.file, "size-mismatch"),
         changedPixels: imgB.width * imgB.height,
         comparedPixels: imgB.width * imgB.height,
-        ratio: 1,
-        bbox: null,
         baselineSize: { width: imgA.width, height: imgA.height },
         currentSize: { width: imgB.width, height: imgB.height },
       });
       continue;
     }
-    const masks = [...a.masks, ...b.masks];
-    const result = diffPixels(
+    const total = imgB.width * imgB.height;
+    let masks = [...a.masks, ...b.masks];
+    let result = diffPixels(
       imgA,
       imgB,
       options.tolerance,
       masks,
       options.writeDiffImages,
     );
+    let masksIgnored = false;
+    if ((total - result.comparedPixels) / total > options.maxMaskRatio) {
+      // Masks grew beyond the cap: compare the whole image instead.
+      masks = [];
+      masksIgnored = true;
+      result = diffPixels(
+        imgA,
+        imgB,
+        options.tolerance,
+        [],
+        options.writeDiffImages,
+      );
+    }
     const ratio = result.comparedPixels > 0
       ? result.changedPixels / result.comparedPixels
       : 0;
+    const failing = isFailing(result.changedPixels, ratio, options);
     const entry: ImageDiff = {
       key,
       file: b.file,
       status: result.changedPixels > 0 ? "changed" : "same",
       changedPixels: result.changedPixels,
       comparedPixels: result.comparedPixels,
+      maskedPixels: total - result.comparedPixels,
+      masksIgnored,
       ratio,
+      failing,
       bbox: result.bbox,
     };
-    if (
-      options.writeDiffImages && result.mask && ratio > options.threshold
-    ) {
+    if (options.writeDiffImages && result.mask && failing) {
       await Deno.mkdir(diffDir, { recursive: true });
       const name = key.replaceAll("/", "__") + ".diff.png";
       await Deno.writeFile(
@@ -272,9 +385,15 @@ export async function compareRuns(
   }
 
   const values = diffValues(flattenStyles(baseline), flattenStyles(current));
-  const failingImages = images.filter((i) => i.ratio > options.threshold)
-    .length;
+  const problems = [
+    ...collectProblems(baseline, "baseline"),
+    ...collectProblems(current, "current"),
+  ];
+  const failingImages = images.filter((i) => i.failing).length;
   const maxRatio = images.reduce((m, i) => Math.max(m, i.ratio), 0);
+  const regressions = failingImages > 0 ||
+    (options.failOnStyleDiff && values.length > 0);
+  const status = problems.length > 0 ? "error" : regressions ? "fail" : "pass";
   const pick = (m: RunManifest) => ({
     appVersion: m.appVersion,
     platformVersion: m.platformVersion,
@@ -288,10 +407,12 @@ export async function compareRuns(
     options,
     images,
     values,
+    problems,
+    skippedCombos,
     maxRatio,
     failingImages,
-    failed: failingImages > 0 ||
-      (options.failOnStyleDiff && values.length > 0),
+    status,
+    failed: status !== "pass",
   };
 }
 
@@ -303,35 +424,63 @@ function cell(v: string | null): string {
   return v === null ? "_(none)_" : "`" + v.replaceAll("|", "\\|") + "`";
 }
 
+function esc(v: string): string {
+  return v.replaceAll("|", "\\|").replaceAll("\n", " ");
+}
+
 export function renderMarkdown(report: CompareReport): string {
   const o = report.options;
   const lines: string[] = [];
+  const masked = report.images.filter((i) => i.maskedPixels > 0);
+  const ignored = report.images.filter((i) => i.masksIgnored);
   lines.push("# Design matrix diff report", "");
   lines.push(
-    `- Result: **${report.failed ? "FAIL" : "PASS"}**`,
+    `- Result: **${
+      { pass: "PASS", fail: "FAIL", error: "ERROR (capture problems)" }[
+        report.status
+      ]
+    }**`,
     `- Baseline: ${report.baseline.appVersion} (Gecko ${report.baseline.platformVersion}, build ${report.baseline.buildID}) — \`${report.baselineDir}\``,
     `- Current: ${report.current.appVersion} (Gecko ${report.current.platformVersion}, build ${report.current.buildID}) — \`${report.currentDir}\``,
-    `- Pixel tolerance: ${o.tolerance}/255 per channel; image threshold: ${
+    `- Pixel tolerance: ${o.tolerance}/255 per channel; an image fails above ${o.maxPixels} changed pixels or ${
       pct(o.threshold)
-    } changed pixels; style differences ${
-      o.failOnStyleDiff ? "fail" : "are informational"
-    }`,
-    `- Images over threshold: ${report.failingImages} of ${report.images.length}; largest ratio ${
+    }; style differences ${o.failOnStyleDiff ? "fail" : "are informational"}`,
+    `- Failing images: ${report.failingImages} of ${report.images.length}; largest ratio ${
       pct(report.maxRatio)
     }`,
     `- Computed-style values that differ: ${report.values.length}`,
+    `- Capture problems: ${report.problems.length}`,
+    `- Baseline combinations not in the current run (not compared): ${
+      report.skippedCombos.length > 0 ? report.skippedCombos.join(", ") : "none"
+    }`,
+    `- Masked: ${masked.length} images, ${
+      masked.reduce((n, i) => n + i.maskedPixels, 0)
+    } pixels in total (cap ${
+      pct(o.maxMaskRatio)
+    } per image; ${ignored.length} images over the cap compared unmasked)`,
     "",
   );
 
-  const over = report.images.filter((i) => i.ratio > o.threshold)
-    .sort((a, b) => b.ratio - a.ratio);
-  lines.push("## Images over threshold", "");
+  lines.push("## Capture problems", "");
+  if (report.problems.length === 0) {
+    lines.push("None.", "");
+  } else {
+    lines.push("| run | design/theme/state | problem |", "| --- | --- | --- |");
+    for (const p of report.problems) {
+      lines.push(`| ${p.run} | ${p.key} | ${esc(p.message)} |`);
+    }
+    lines.push("");
+  }
+
+  const over = report.images.filter((i) => i.failing)
+    .sort((a, b) => b.changedPixels - a.changedPixels);
+  lines.push("## Failing images", "");
   if (over.length === 0) {
     lines.push("None.", "");
   } else {
     lines.push(
-      "| design/theme/state | status | changed | bbox (x,y w×h) | diff |",
-      "| --- | --- | ---: | --- | --- |",
+      "| design/theme/state | status | changed px | ratio | bbox (x,y w×h) | diff |",
+      "| --- | --- | ---: | ---: | --- | --- |",
     );
     for (const i of over) {
       const bbox = i.bbox
@@ -343,7 +492,9 @@ export function renderMarkdown(report: CompareReport): string {
         ? `[png](${i.diffImage.replaceAll("\\", "/")})`
         : "";
       lines.push(
-        `| ${i.key} | ${i.status} | ${pct(i.ratio)} | ${bbox} | ${diff} |`,
+        `| ${i.key} | ${i.status} | ${i.changedPixels} | ${
+          pct(i.ratio)
+        } | ${bbox} | ${diff} |`,
       );
     }
     lines.push("");
@@ -364,11 +515,18 @@ export function renderMarkdown(report: CompareReport): string {
   }
 
   lines.push("## All images", "");
-  lines.push("| design/theme/state | status | changed pixels | ratio |");
-  lines.push("| --- | --- | ---: | ---: |");
+  lines.push(
+    "| design/theme/state | status | changed px | ratio | masked px |",
+  );
+  lines.push("| --- | --- | ---: | ---: | ---: |");
   for (const i of report.images) {
+    const maskCell = i.masksIgnored
+      ? "over cap, ignored"
+      : String(i.maskedPixels);
     lines.push(
-      `| ${i.key} | ${i.status} | ${i.changedPixels} | ${pct(i.ratio)} |`,
+      `| ${i.key} | ${i.status} | ${i.changedPixels} | ${
+        pct(i.ratio)
+      } | ${maskCell} |`,
     );
   }
   lines.push("");

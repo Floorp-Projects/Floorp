@@ -8,9 +8,19 @@ import {
   diffPixels,
   diffValues,
   renderMarkdown,
+  SHOT_STATES,
 } from "./compare.ts";
+import { EXIT_ERROR, main } from "./mod.ts";
 import { decodePng, encodePng } from "./png.ts";
-import type { RgbaImage, RunManifest } from "./types.ts";
+import {
+  type ComboRecord,
+  type Rect,
+  type RgbaImage,
+  type RunManifest,
+  type StateKey,
+  type StateRecord,
+  STATES,
+} from "./types.ts";
 
 function solid(
   width: number,
@@ -73,16 +83,35 @@ Deno.test("diffValues: lists changed, added and removed keys", () => {
   ]);
 });
 
-async function writeRun(
-  dir: string,
-  img: RgbaImage,
-  navBarColor: string,
-): Promise<void> {
+interface FakeRun {
+  img: RgbaImage;
+  navBarColor: string;
+  masks?: Rect[];
+  /** States to leave out of the manifest. */
+  skip?: StateKey[];
+  problems?: string[];
+}
+
+/** Writes a one-combination run (lepton/none) with every state recorded. */
+async function writeRun(dir: string, run: FakeRun): Promise<void> {
   await Deno.mkdir(dir, { recursive: true });
-  await Deno.writeFile(
-    path.join(dir, "lepton__none__main.png"),
-    await encodePng(img),
-  );
+  const png = await encodePng(run.img);
+  const states: ComboRecord["states"] = {};
+  for (const state of STATES) {
+    if (run.skip?.includes(state)) continue;
+    const rec: StateRecord = {
+      shot: null,
+      styles: { "nav-bar": { "background-color": run.navBarColor } },
+      notes: [],
+      problems: state === "main" ? (run.problems ?? []) : [],
+    };
+    if (SHOT_STATES.includes(state)) {
+      const file = `lepton__none__${state}.png`;
+      await Deno.writeFile(path.join(dir, file), png);
+      rec.shot = { file, masks: run.masks ?? [] };
+    }
+    states[state] = rec;
+  }
   const manifest: RunManifest = {
     tool: "design-matrix",
     formatVersion: 1,
@@ -93,19 +122,8 @@ async function writeRun(
     platformVersion: "159.0",
     buildID: "0",
     headless: true,
-    windowSize: { width: img.width, height: img.height },
-    combos: [{
-      design: "lepton",
-      theme: "none",
-      errors: [],
-      states: {
-        main: {
-          shot: { file: "lepton__none__main.png", masks: [] },
-          styles: { "nav-bar": { "background-color": navBarColor } },
-          notes: [],
-        },
-      },
-    }],
+    windowSize: { width: run.img.width, height: run.img.height },
+    combos: [{ design: "lepton", theme: "none", errors: [], states }],
   };
   await Deno.writeTextFile(
     path.join(dir, "manifest.json"),
@@ -113,40 +131,252 @@ async function writeRun(
   );
 }
 
-Deno.test("compareRuns: identical runs pass, a changed toolbar fails", async () => {
+async function withTmp(fn: (tmp: string) => Promise<void>): Promise<void> {
   const tmp = await Deno.makeTempDir({ prefix: "design-matrix-test-" });
   try {
-    const base = solid(20, 20, [255, 255, 255, 255]);
-    await writeRun(path.join(tmp, "a"), base, "rgb(1, 2, 3)");
-    await writeRun(path.join(tmp, "b"), base, "rgb(1, 2, 3)");
-    const same = await compareRuns(
-      path.join(tmp, "a"),
-      path.join(tmp, "b"),
-      path.join(tmp, "report-same"),
-      DEFAULT_COMPARE_OPTIONS,
-    );
-    assertEquals(same.failed, false);
-    assertEquals(same.maxRatio, 0);
+    await fn(tmp);
+  } finally {
+    await Deno.remove(tmp, { recursive: true });
+  }
+}
 
-    const changed = solid(20, 20, [255, 255, 255, 255]);
+function compare(tmp: string, a: string, b: string) {
+  return compareRuns(
+    path.join(tmp, a),
+    path.join(tmp, b),
+    path.join(tmp, `report-${a}-${b}`),
+    DEFAULT_COMPARE_OPTIONS,
+  );
+}
+
+const WHITE: [number, number, number, number] = [255, 255, 255, 255];
+
+Deno.test("compareRuns: identical runs pass, a changed toolbar fails", async () => {
+  await withTmp(async (tmp) => {
+    const base = solid(20, 20, WHITE);
+    await writeRun(path.join(tmp, "a"), {
+      img: base,
+      navBarColor: "rgb(1, 2, 3)",
+    });
+    await writeRun(path.join(tmp, "b"), {
+      img: base,
+      navBarColor: "rgb(1, 2, 3)",
+    });
+    const same = await compare(tmp, "a", "b");
+    assertEquals(same.status, "pass");
+    assertEquals(same.maxRatio, 0);
+    assertEquals(same.problems, []);
+
+    const changed = solid(20, 20, WHITE);
     for (let x = 0; x < 20; x++) paint(changed, x, 0, [0, 0, 0, 255]);
-    await writeRun(path.join(tmp, "c"), changed, "rgb(9, 9, 9)");
-    const diff = await compareRuns(
-      path.join(tmp, "a"),
-      path.join(tmp, "c"),
-      path.join(tmp, "report-diff"),
-      DEFAULT_COMPARE_OPTIONS,
-    );
-    assert(diff.failed);
-    assertEquals(diff.failingImages, 1);
+    await writeRun(path.join(tmp, "c"), {
+      img: changed,
+      navBarColor: "rgb(9, 9, 9)",
+    });
+    const diff = await compare(tmp, "a", "c");
+    assertEquals(diff.status, "fail");
+    assertEquals(diff.failingImages, SHOT_STATES.length);
     assertEquals(diff.images[0].changedPixels, 20);
-    assertEquals(diff.values.length, 1);
+    assertEquals(diff.values.length, STATES.length);
     assert(diff.images[0].diffImage);
     const md = renderMarkdown(diff);
     assert(md.includes("**FAIL**"));
     assert(md.includes("lepton/none/main"));
     assert(md.includes("rgb(9, 9, 9)"));
-  } finally {
-    await Deno.remove(tmp, { recursive: true });
-  }
+  });
 });
+
+Deno.test("compareRuns: a few changed pixels fail even below the ratio threshold", async () => {
+  await withTmp(async (tmp) => {
+    const base = solid(100, 100, WHITE);
+    const at = (n: number) => {
+      const img = solid(100, 100, WHITE);
+      for (let i = 0; i < n; i++) paint(img, i, 50, [0, 0, 0, 255]);
+      return img;
+    };
+    await writeRun(path.join(tmp, "a"), { img: base, navBarColor: "x" });
+    await writeRun(path.join(tmp, "ok"), { img: at(16), navBarColor: "x" });
+    await writeRun(path.join(tmp, "bad"), { img: at(17), navBarColor: "x" });
+    const ok = await compare(tmp, "a", "ok");
+    assertEquals(ok.status, "pass");
+    const bad = await compare(tmp, "a", "bad");
+    // 17 / 10000 = 0.17% is under the 0.2% ratio, but over 16 pixels.
+    assert(bad.images[0].ratio < DEFAULT_COMPARE_OPTIONS.threshold);
+    assertEquals(bad.status, "fail");
+  });
+});
+
+Deno.test("compareRuns: small masks hide noise and are counted", async () => {
+  await withTmp(async (tmp) => {
+    const base = solid(100, 100, WHITE);
+    const noisy = solid(100, 100, WHITE);
+    for (let i = 0; i < 40; i++) {
+      paint(noisy, i % 10, Math.floor(i / 10), [0, 0, 0, 255]);
+    }
+    const mask = [{ x: 0, y: 0, width: 10, height: 10 }]; // 1% of the image
+    await writeRun(path.join(tmp, "a"), {
+      img: base,
+      navBarColor: "x",
+      masks: mask,
+    });
+    await writeRun(path.join(tmp, "b"), {
+      img: noisy,
+      navBarColor: "x",
+      masks: mask,
+    });
+    const r = await compare(tmp, "a", "b");
+    assertEquals(r.status, "pass");
+    assertEquals(r.images[0].maskedPixels, 100);
+    assertEquals(r.images[0].masksIgnored, false);
+    assert(renderMarkdown(r).includes("Masked: 4 images, 400 pixels"));
+  });
+});
+
+Deno.test("compareRuns: masks over the cap are ignored", async () => {
+  await withTmp(async (tmp) => {
+    const base = solid(100, 100, WHITE);
+    const changed = solid(100, 100, WHITE);
+    for (let x = 0; x < 50; x++) paint(changed, x, 5, [0, 0, 0, 255]);
+    // A mask that grew to 10% of the image would hide the change.
+    const mask = [{ x: 0, y: 0, width: 100, height: 10 }];
+    await writeRun(path.join(tmp, "a"), { img: base, navBarColor: "x" });
+    await writeRun(path.join(tmp, "b"), {
+      img: changed,
+      navBarColor: "x",
+      masks: mask,
+    });
+    const r = await compare(tmp, "a", "b");
+    assertEquals(r.images[0].masksIgnored, true);
+    assertEquals(r.images[0].maskedPixels, 0);
+    assertEquals(r.images[0].changedPixels, 50);
+    assertEquals(r.status, "fail");
+  });
+});
+
+Deno.test("compareRuns: capture problems and states missing in both runs are errors", async () => {
+  await withTmp(async (tmp) => {
+    const img = solid(10, 10, WHITE);
+    await writeRun(path.join(tmp, "a"), {
+      img,
+      navBarColor: "x",
+      skip: ["newtab"],
+    });
+    await writeRun(path.join(tmp, "b"), {
+      img,
+      navBarColor: "x",
+      skip: ["newtab"],
+    });
+    const missing = await compare(tmp, "a", "b");
+    assertEquals(missing.status, "error");
+    const both = missing.images.find((i) => i.key === "lepton/none/newtab");
+    assertEquals(both?.status, "missing-both");
+    assert(missing.problems.some((p) => p.message === "state not recorded"));
+
+    await writeRun(path.join(tmp, "c"), {
+      img,
+      navBarColor: "x",
+      problems: ["context menu did not open"],
+    });
+    await writeRun(path.join(tmp, "d"), { img, navBarColor: "x" });
+    const prob = await compare(tmp, "d", "c");
+    assertEquals(prob.status, "error");
+    assertEquals(prob.problems, [{
+      run: "current",
+      key: "lepton/none/main",
+      message: "context menu did not open",
+    }]);
+    assert(renderMarkdown(prob).includes("context menu did not open"));
+  });
+});
+
+Deno.test("main: errors exit 2, never 1", async () => {
+  await withTmp(async (tmp) => {
+    const quiet = silence();
+    try {
+      assertEquals(
+        await main([
+          "compare",
+          "--baseline",
+          path.join(tmp, "nope"),
+          "--current",
+          tmp,
+        ]),
+        EXIT_ERROR,
+      );
+      assertEquals(
+        await main([
+          "run",
+          "--exe",
+          Deno.execPath(),
+          "--out",
+          tmp,
+          "--designs",
+          "foo",
+        ]),
+        EXIT_ERROR,
+      );
+      assertEquals(
+        await main([
+          "run",
+          "--exe",
+          Deno.execPath(),
+          "--out",
+          tmp,
+          "--baseline",
+          path.join(tmp, "nope"),
+        ]),
+        EXIT_ERROR,
+      );
+      assertEquals(await main(["frobnicate"]), EXIT_ERROR);
+    } finally {
+      quiet();
+    }
+  });
+});
+
+const netGranted =
+  (await Deno.permissions.query({ name: "net", host: "127.0.0.1" })).state ===
+    "granted";
+
+Deno.test({
+  name: "main: a busy proxy port exits 2 and leaves no temp root",
+  ignore: !netGranted,
+  fn: async () => {
+    await withTmp(async (tmp) => {
+      const blocker = Deno.listen({ hostname: "127.0.0.1", port: 0 });
+      const busy = (blocker.addr as Deno.NetAddr).port;
+      const tmpRoot = path.join(tmp, "profiles");
+      await Deno.mkdir(tmpRoot);
+      const quiet = silence();
+      try {
+        const code = await main([
+          "run",
+          "--exe",
+          Deno.execPath(), // never started: the proxy fails first
+          "--out",
+          path.join(tmp, "out"),
+          "--port",
+          String(busy - 1),
+          "--tmp-dir",
+          tmpRoot,
+        ]);
+        assertEquals(code, EXIT_ERROR);
+        assertEquals([...Deno.readDirSync(tmpRoot)], []);
+      } finally {
+        quiet();
+        blocker.close();
+      }
+    });
+  },
+});
+
+/** Silences console output from main(); returns a restore function. */
+function silence(): () => void {
+  const { log, error } = console;
+  console.log = () => {};
+  console.error = () => {};
+  return () => {
+    console.log = log;
+    console.error = error;
+  };
+}

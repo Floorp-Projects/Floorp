@@ -14,8 +14,10 @@ import { parseArgs } from "@std/cli/parse-args";
 import * as path from "@std/path";
 import { captureMatrix } from "./capture.ts";
 import {
+  collectProblems,
   compareRuns,
   DEFAULT_COMPARE_OPTIONS,
+  readManifest,
   renderMarkdown,
 } from "./compare.ts";
 import {
@@ -26,6 +28,12 @@ import {
   THEMES,
 } from "./types.ts";
 
+/** Exit codes, as documented in README.md. */
+export const EXIT_PASS = 0;
+export const EXIT_REGRESSION = 1;
+export const EXIT_ERROR = 2;
+
+const D = DEFAULT_COMPARE_OPTIONS;
 const USAGE = `Usage:
   deno task design-matrix run --exe <path/to/floorp(.exe)> --out <dir> [--baseline <dir>] [options]
   deno task design-matrix compare --baseline <dir> --current <dir> [--report <dir>] [options]
@@ -33,18 +41,23 @@ const USAGE = `Usage:
 Capture options:
   --designs a,b      subset of ${DESIGNS.join(",")} (default: all)
   --themes a,b       subset of ${THEMES.join(",")} (default: all)
-  --port N           Marionette port (default 2828)
+  --port N           Marionette port (default 2828); the fixture proxy uses N+1
   --headed           show the window instead of -headless
   --width/--height   window size in CSS px (default 1280x800)
   --tmp-dir <dir>    parent for temporary profiles (default: OS temp)
 
 Compare options:
-  --tolerance N      per-channel difference ignored, 0-255 (default ${DEFAULT_COMPARE_OPTIONS.tolerance})
-  --threshold R      changed-pixel ratio that fails an image (default ${DEFAULT_COMPARE_OPTIONS.threshold})
+  --tolerance N      per-channel difference ignored, 0-255 (default ${D.tolerance})
+  --max-pixels N     changed pixels that fail an image (default ${D.maxPixels})
+  --threshold R      changed-pixel ratio that fails an image (default ${D.threshold})
+  --max-mask R       largest image share masks may cover (default ${D.maxMaskRatio})
   --ignore-styles    report computed-style differences without failing
   --no-diff-images   do not write highlighted diff PNGs
 
-Exit codes: 0 no regression, 1 differences above threshold, 2 usage or capture error.`;
+Exit codes: 0 no regression, 1 regressions found, 2 usage error, capture
+problem or any other error.`;
+
+class UsageError extends Error {}
 
 function parseList<T extends string>(
   raw: string | undefined,
@@ -55,7 +68,7 @@ function parseList<T extends string>(
   const items = raw.split(",").map((s) => s.trim()).filter(Boolean);
   for (const item of items) {
     if (!allowed.includes(item as T)) {
-      throw new Error(
+      throw new UsageError(
         `Unknown ${label} "${item}" (allowed: ${allowed.join(", ")})`,
       );
     }
@@ -67,7 +80,7 @@ function num(raw: string | undefined, fallback: number, label: string): number {
   if (raw === undefined) return fallback;
   const n = Number(raw);
   if (!Number.isFinite(n) || n < 0) {
-    throw new Error(`Invalid --${label}: ${raw}`);
+    throw new UsageError(`Invalid --${label}: ${raw}`);
   }
   return n;
 }
@@ -89,19 +102,19 @@ async function runCompare(
     renderMarkdown(report),
   );
   console.log(
-    `[design-matrix] ${
-      report.failed ? "FAIL" : "PASS"
-    }: ${report.failingImages}/${report.images.length} images over ${
-      (options.threshold * 100).toFixed(3)
-    }% (max ${
+    `[design-matrix] ${report.status.toUpperCase()}: ${report.failingImages}/${report.images.length} images failing (max ${
       (report.maxRatio * 100).toFixed(3)
-    }%), ${report.values.length} style values differ`,
+    }%), ${report.values.length} style values differ, ${report.problems.length} capture problems`,
   );
   console.log(`[design-matrix] report: ${path.join(reportDir, "report.md")}`);
-  return report.failed ? 1 : 0;
+  return report.status === "error"
+    ? EXIT_ERROR
+    : report.status === "fail"
+    ? EXIT_REGRESSION
+    : EXIT_PASS;
 }
 
-export async function main(argv: string[]): Promise<number> {
+async function run(argv: string[]): Promise<number> {
   const args = parseArgs(argv, {
     string: [
       "exe",
@@ -117,34 +130,32 @@ export async function main(argv: string[]): Promise<number> {
       "tmp-dir",
       "tolerance",
       "threshold",
+      "max-pixels",
+      "max-mask",
     ],
     boolean: ["headed", "ignore-styles", "no-diff-images", "help"],
   });
   const command = String(args._[0] ?? "");
-  if (args.help || !["run", "compare"].includes(command)) {
+  if (args.help) {
     console.log(USAGE);
-    return args.help ? 0 : 2;
+    return EXIT_PASS;
+  }
+  if (!["run", "compare"].includes(command)) {
+    throw new UsageError(`Unknown command "${command}"`);
   }
 
   const options: CompareOptions = {
-    tolerance: num(
-      args.tolerance,
-      DEFAULT_COMPARE_OPTIONS.tolerance,
-      "tolerance",
-    ),
-    threshold: num(
-      args.threshold,
-      DEFAULT_COMPARE_OPTIONS.threshold,
-      "threshold",
-    ),
+    tolerance: num(args.tolerance, D.tolerance, "tolerance"),
+    threshold: num(args.threshold, D.threshold, "threshold"),
+    maxPixels: num(args["max-pixels"], D.maxPixels, "max-pixels"),
+    maxMaskRatio: num(args["max-mask"], D.maxMaskRatio, "max-mask"),
     failOnStyleDiff: !args["ignore-styles"],
     writeDiffImages: !args["no-diff-images"],
   };
 
   if (command === "compare") {
     if (!args.baseline || !args.current) {
-      console.error("compare needs --baseline and --current\n\n" + USAGE);
-      return 2;
+      throw new UsageError("compare needs --baseline and --current");
     }
     const current = path.resolve(args.current);
     return await runCompare(
@@ -156,49 +167,66 @@ export async function main(argv: string[]): Promise<number> {
   }
 
   if (!args.exe || !args.out) {
-    console.error("run needs --exe and --out\n\n" + USAGE);
-    return 2;
+    throw new UsageError("run needs --exe and --out");
   }
   const exe = path.resolve(args.exe);
   try {
     await Deno.stat(exe);
   } catch {
-    console.error(`Build not found: ${exe}`);
-    return 2;
+    throw new UsageError(`Build not found: ${exe}`);
   }
+  const designs = parseList<Design>(args.designs, DESIGNS, "design");
+  const themes = parseList<ThemeKey>(args.themes, THEMES, "theme");
+  const port = num(args.port, 2828, "port");
+  const width = num(args.width, 1280, "width");
+  const height = num(args.height, 800, "height");
+  // Check the baseline before spending minutes on the capture.
+  const baselineDir = args.baseline ? path.resolve(args.baseline) : null;
+  if (baselineDir) await readManifest(baselineDir);
+
   const outDir = path.resolve(args.out);
   const manifest = await captureMatrix({
     exe,
     outDir,
-    designs: parseList<Design>(args.designs, DESIGNS, "design"),
-    themes: parseList<ThemeKey>(args.themes, THEMES, "theme"),
-    port: num(args.port, 2828, "port"),
+    designs,
+    themes,
+    port,
     headless: !args.headed,
-    width: num(args.width, 1280, "width"),
-    height: num(args.height, 800, "height"),
+    width,
+    height,
     tmpRoot: args["tmp-dir"] ? path.resolve(args["tmp-dir"]) : undefined,
     log: (msg) => console.error(msg),
   });
-  const errors = manifest.combos.flatMap((c) =>
-    c.errors.map((e) => `${c.design}/${c.theme}: ${e}`)
-  );
+  const problems = collectProblems(manifest, "current");
   console.log(
     `[design-matrix] captured ${manifest.combos.length} combinations of ${manifest.appVersion} (Gecko ${manifest.platformVersion}) into ${outDir}`,
   );
-  if (errors.length > 0) {
-    console.error(`[design-matrix] ${errors.length} capture errors:`);
-    for (const e of errors) console.error(`  ${e}`);
+  if (problems.length > 0) {
+    console.error(`[design-matrix] ${problems.length} capture problems:`);
+    for (const p of problems) console.error(`  ${p.key}: ${p.message}`);
   }
-  if (args.baseline) {
-    const code = await runCompare(
-      path.resolve(args.baseline),
+  if (baselineDir) {
+    // The report lists the capture problems too, and exits 2 if there are any.
+    return await runCompare(
+      baselineDir,
       outDir,
       path.resolve(args.report ?? path.join(outDir, "report")),
       options,
     );
-    return errors.length > 0 ? 2 : code;
   }
-  return errors.length > 0 ? 2 : 0;
+  return problems.length > 0 ? EXIT_ERROR : EXIT_PASS;
+}
+
+/** Runs the CLI; every error, expected or not, exits 2 (never 1). */
+export async function main(argv: string[]): Promise<number> {
+  try {
+    return await run(argv);
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    console.error(`[design-matrix] error: ${msg}`);
+    if (e instanceof UsageError) console.error("\n" + USAGE);
+    return EXIT_ERROR;
+  }
 }
 
 if (import.meta.main) {
