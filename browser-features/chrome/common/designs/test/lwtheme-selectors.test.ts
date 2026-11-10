@@ -11,19 +11,12 @@
 // `:root:not([lwtheme]):not(:-moz-lwtheme)` drops the entire rule, and so does
 // a bare `#nav-bar:-moz-lwtheme`. Several no-theme rules were silently dead on
 // Floorp 12.21.1 for this reason.
+//
+// The sources are discovered with import.meta.glob (all chrome CSS/TS outside
+// test directories, plus the vendored skins) so new files and a re-synced
+// leptonChrome.css are covered without editing this list.
 
-import {
-  GECKO_152_COLOR_FIX_CSS,
-  LEPTON_COMPAT_152_CSS,
-} from "../utils/lepton-compat-152.css.ts";
-import { navBarBackgroundColorCSS } from "../utils/css.ts";
-import {
-  FLUERIAL_TAB_CORNER_CSS,
-  TAB_COLOR_LIKE_TOOLBAR_CSS,
-} from "../utils/tab-color-like-toolbar.css.ts";
-import browserCSS from "../browser.css?inline";
-import panelSidebarCSS from "../../panel-sidebar/components/style.css?inline";
-import deleteBorderCSS from "../../ui-custom/styles/css/options/delete-border.css?inline";
+import { GECKO_152_COLOR_FIX_CSS } from "../utils/lepton-compat-152.css.ts";
 import {
   assert,
   assertEquals,
@@ -31,99 +24,201 @@ import {
   type TestCase,
 } from "../../../test/utils/test_harness.ts";
 
-const SOURCES: ReadonlyArray<readonly [string, string]> = [
-  ["GECKO_152_COLOR_FIX_CSS", GECKO_152_COLOR_FIX_CSS],
-  ["LEPTON_COMPAT_152_CSS", LEPTON_COMPAT_152_CSS],
-  ["navBarBackgroundColorCSS", navBarBackgroundColorCSS],
-  ["TAB_COLOR_LIKE_TOOLBAR_CSS", TAB_COLOR_LIKE_TOOLBAR_CSS],
-  ["FLUERIAL_TAB_CORNER_CSS", FLUERIAL_TAB_CORNER_CSS],
-  ["designs/browser.css", browserCSS],
-  ["panel-sidebar/components/style.css", panelSidebarCSS],
-  ["ui-custom delete-border.css", deleteBorderCSS],
-];
+const RAW_CSS: Record<string, string> = import.meta.glob<string>(
+  [
+    "../../../**/*.css",
+    "@nora/skin/**/*.css",
+    "!**/test/**",
+    "!**/node_modules/**",
+  ],
+  { query: "?raw", import: "default", eager: true },
+);
+const RAW_TS: Record<string, string> = import.meta.glob<string>(
+  [
+    "../../../**/*.{ts,tsx,mts}",
+    "!**/test/**",
+    "!**/*.test.ts",
+    "!**/node_modules/**",
+  ],
+  { query: "?raw", import: "default", eager: true },
+);
 
-const BLOCK_AT_RULES = ["@media", "@supports", "@layer", "@container"];
+type Found = { ancestors: string[]; selector: string };
 
-function stripComments(css: string): string {
-  return css.replace(/\/\*[\s\S]*?\*\//g, "");
+function stripCssComments(text: string): string {
+  return text.replace(/\/\*[\s\S]*?\*\//g, "");
 }
 
-/** Index of the `}` matching the `{` at `open`. */
+/** Strip block comments and `//` line comments (but not `chrome://` URLs). */
+function stripTsComments(text: string): string {
+  return stripCssComments(text).replace(/(^|[^:"'`\\])\/\/[^\n]*/g, "$1");
+}
+
+/** Backtick template literals of a TS source, `${…}` replaced by `0`. */
+function templateLiterals(ts: string): string[] {
+  const out: string[] = [];
+  for (const m of ts.matchAll(/`((?:\\[\s\S]|\$\{[^}]*\}|[^`\\])*)`/g)) {
+    out.push(m[1].replace(/\$\{[^}]*\}/g, "0"));
+  }
+  return out;
+}
+
+/** Index of the `}` matching the `{` at `open` (quote aware). */
 function findBlockEnd(css: string, open: number): number {
   let depth = 0;
+  let quote = "";
   for (let i = open; i < css.length; i++) {
-    if (css[i] === "{") depth++;
-    else if (css[i] === "}" && --depth === 0) return i;
+    const c = css[i];
+    if (quote) {
+      if (c === "\\") i++;
+      else if (c === quote) quote = "";
+    } else if (c === '"' || c === "'") {
+      quote = c;
+    } else if (c === "{") {
+      depth++;
+    } else if (c === "}" && --depth === 0) {
+      return i;
+    }
   }
   return css.length;
 }
 
 /**
- * Style-rule selectors (top level and inside conditional/layer at-rules) that
- * mention the lightweight-theme state.
+ * Every style-rule selector that mentions the lightweight-theme state,
+ * including rules nested in at-rules (@media, @supports, @layer,
+ * @-moz-document, …) and nested style rules. `ancestors` holds the enclosing
+ * style-rule selectors needed to re-parse a nested rule.
  */
-function lwthemeSelectors(css: string): string[] {
-  const out: string[] = [];
-  const walk = (text: string): void => {
-    let i = 0;
-    while (i < text.length) {
-      const open = text.indexOf("{", i);
-      if (open === -1) return;
-      const prelude = text.slice(i, open).replace(/^[\s;}]+/, "").trim();
-      const close = findBlockEnd(text, open);
-      if (prelude.startsWith("@")) {
-        if (BLOCK_AT_RULES.some((name) => prelude.startsWith(name))) {
-          walk(text.slice(open + 1, close));
-        }
-      } else if (prelude.includes("lwtheme")) {
-        out.push(prelude.replace(/\s+/g, " "));
+function lwthemeSelectors(css: string): Found[] {
+  const out: Found[] = [];
+  const walk = (text: string, ancestors: string[]): void => {
+    let segStart = 0;
+    let parens = 0;
+    let quote = "";
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+      if (quote) {
+        if (c === "\\") i++;
+        else if (c === quote) quote = "";
+        continue;
       }
-      i = close + 1;
+      if (c === '"' || c === "'") quote = c;
+      else if (c === "(" || c === "[") parens++;
+      else if (c === ")" || c === "]") parens--;
+      else if (parens === 0 && c === ";") segStart = i + 1;
+      else if (parens === 0 && c === "{") {
+        const prelude = text.slice(segStart, i).replace(/\s+/g, " ").trim();
+        const close = findBlockEnd(text, i);
+        const body = text.slice(i + 1, close);
+        if (prelude.startsWith("@")) {
+          walk(body, ancestors);
+        } else {
+          if (prelude.includes("lwtheme")) {
+            out.push({ ancestors, selector: prelude });
+          }
+          walk(body, [...ancestors, prelude]);
+        }
+        i = close;
+        segStart = close + 1;
+      }
     }
   };
-  walk(stripComments(css));
+  walk(stripCssComments(css), []);
   return out;
 }
 
 /**
  * Every `:-moz-lwtheme` occurrence that is NOT inside a forgiving `:is()` /
- * `:where()` list, with a little surrounding context.
+ * `:where()` list, with a little surrounding context. Single pass, so it is
+ * cheap enough for the vendored leptonChrome.css.
  */
-function unforgivingMozLwthemeUses(css: string): string[] {
-  const text = stripComments(css);
+function unforgivingMozLwthemeUses(text: string): string[] {
   const offenders: string[] = [];
-  for (const match of text.matchAll(/:-moz-lwtheme(?![-\w])/g)) {
-    const stack: string[] = [];
-    for (let i = 0; i < (match.index ?? 0); i++) {
-      if (text[i] === "(") {
-        const name = /:([\w-]+)$/.exec(text.slice(Math.max(0, i - 32), i));
-        stack.push(name ? name[1] : "(");
-      } else if (text[i] === ")") {
-        stack.pop();
-      } else if (text[i] === "{" || text[i] === "}") {
-        stack.length = 0;
+  const stack: string[] = [];
+  const re = /:([\w-]+)\(|[(){}]|:-moz-lwtheme(?![-\w(])/g;
+  for (const m of text.matchAll(re)) {
+    const token = m[0];
+    if (token.startsWith(":-moz-lwtheme")) {
+      if (!stack.some((name) => name === "is" || name === "where")) {
+        const at = m.index ?? 0;
+        offenders.push(
+          text.slice(Math.max(0, at - 50), at + 20).replace(/\s+/g, " "),
+        );
       }
-    }
-    if (!stack.some((name) => name === "is" || name === "where")) {
-      const at = match.index ?? 0;
-      offenders.push(
-        text.slice(Math.max(0, at - 50), at + 20).replace(/\s+/g, " "),
-      );
+    } else if (m[1] !== undefined) {
+      stack.push(m[1]);
+    } else if (token === "(") {
+      stack.push("(");
+    } else if (token === ")") {
+      stack.pop();
+    } else {
+      stack.length = 0;
     }
   }
   return offenders;
 }
 
-/** Whether Gecko keeps a rule with this selector (an invalid one is dropped). */
-function selectorParses(selector: string): boolean {
+/**
+ * Parse every found selector (re-nested under its ancestors) in a
+ * system-principal <style> and return the ones Gecko drops.
+ */
+function droppedSelectors(found: Found[]): Found[] {
+  if (found.length === 0) return [];
   const style = document.createElement("style");
-  style.textContent = `${selector} {}`;
+  style.textContent = found
+    .map(({ ancestors, selector }, i) =>
+      ancestors.map((a) => `${a} {`).join("") +
+      `${selector} { --lwprobe-${i}: 1; }` +
+      "}".repeat(ancestors.length)
+    )
+    .join("\n");
   document.head.appendChild(style);
   try {
-    return style.sheet?.cssRules.length === 1;
+    const alive = new Set<number>();
+    const walk = (rules: CSSRuleList): void => {
+      for (const rule of Array.from(rules)) {
+        if (rule instanceof CSSStyleRule) {
+          for (const prop of Array.from(rule.style)) {
+            if (prop.startsWith("--lwprobe-")) {
+              alive.add(Number(prop.slice(10)));
+            }
+          }
+        }
+        const nested = (rule as CSSRule & { cssRules?: CSSRuleList }).cssRules;
+        if (nested) walk(nested);
+      }
+    };
+    const sheet = style.sheet;
+    assert(sheet, "probe stylesheet must exist");
+    walk(sheet.cssRules);
+    return found.filter((_, i) => !alive.has(i));
   } finally {
     style.remove();
   }
+}
+
+/**
+ * Glob keys come back either relative to this file (`../utils/x.ts`) or
+ * root-absolute (`/link-features-chrome/common/…`, `@nora/skin` files).
+ * Normalize them to a path under browser-features/chrome (or skin) so they
+ * can be matched by suffix.
+ */
+function normalizeKey(key: string): string {
+  if (!key.startsWith(".")) return key;
+  const parts = ["common", "designs", "test"];
+  for (const segment of key.split("/")) {
+    if (segment === "..") parts.pop();
+    else if (segment !== ".") parts.push(segment);
+  }
+  return `/${parts.join("/")}`;
+}
+
+function findKey(record: Record<string, string>, suffix: string): string {
+  const key = Object.keys(record).find((k) =>
+    normalizeKey(k).endsWith(`/${suffix}`)
+  );
+  assert(key, `glob must include ${suffix}`);
+  return key;
 }
 
 // ---------------------------------------------------------------------------
@@ -147,38 +242,85 @@ function testScannerSelfCheck(): void {
     0,
     "scanner must accept :-moz-lwtheme inside forgiving :is()/:where()",
   );
-  assert(
-    !selectorParses(":root:not([lwtheme]):not(:-moz-lwtheme)"),
-    "Gecko 159 must reject :-moz-lwtheme inside :not() (the bug this guards)",
+  const nested = lwthemeSelectors(
+    "@media (x) { @-moz-document url-prefix(chrome:) { " +
+      ":root[lwtheme] #a { color: red; } } }\n" +
+      "#b { color: red; &:is([lwtheme]) .c { color: blue; } }",
+  );
+  assertEquals(
+    nested.map((f) => f.selector).join(" ; "),
+    ":root[lwtheme] #a ; &:is([lwtheme]) .c",
+    "selector walker must descend into at-rules and nested style rules",
+  );
+  assertEquals(
+    droppedSelectors([
+      { ancestors: [], selector: ":root:not([lwtheme]):not(:-moz-lwtheme)" },
+      { ancestors: [], selector: ":root:not([lwtheme])" },
+      { ancestors: ["#b"], selector: "&:is([lwtheme]) .c" },
+    ]).map((f) => f.selector).join(" ; "),
+    ":root:not([lwtheme]):not(:-moz-lwtheme)",
+    "Gecko 159 must reject only :-moz-lwtheme inside :not()",
   );
 }
 
+function testSourcesAreDiscovered(): void {
+  findKey(RAW_CSS, "skin/lepton/css/leptonChrome.css");
+  findKey(RAW_CSS, "common/designs/browser.css");
+  findKey(RAW_CSS, "ui-custom/styles/css/options/delete-border.css");
+  findKey(RAW_TS, "common/browser-tab-color/index.ts");
+  findKey(RAW_TS, "common/designs/utils/lepton-compat-152.css.ts");
+  findKey(RAW_TS, "common/designs/utils/tab-color-like-toolbar.css.ts");
+}
+
 function testNoUnforgivingMozLwtheme(): void {
-  for (const [label, css] of SOURCES) {
-    const offenders = unforgivingMozLwthemeUses(css);
-    assertEquals(
-      offenders.length,
-      0,
-      `${label} must not use :-moz-lwtheme outside :is()/:where() — the ` +
-        `pseudo-class no longer exists and the whole rule is dropped; ` +
-        `found: ${offenders.join(" | ")}`,
-    );
+  const offenders: string[] = [];
+  for (const [path, css] of Object.entries(RAW_CSS)) {
+    for (const o of unforgivingMozLwthemeUses(stripCssComments(css))) {
+      offenders.push(`${path}: ${o}`);
+    }
   }
+  for (const [path, ts] of Object.entries(RAW_TS)) {
+    if (!ts.includes(":-moz-lwtheme")) continue;
+    for (const o of unforgivingMozLwthemeUses(stripTsComments(ts))) {
+      offenders.push(`${path}: ${o}`);
+    }
+  }
+  assertEquals(
+    offenders.length,
+    0,
+    `:-moz-lwtheme must only appear inside :is()/:where() — the ` +
+      `pseudo-class no longer exists and the whole rule is dropped; found: ` +
+      offenders.join(" | "),
+  );
 }
 
 function testLwthemeSelectorsParse(): void {
   let checked = 0;
-  for (const [label, css] of SOURCES) {
-    for (const selector of lwthemeSelectors(css)) {
-      checked++;
-      assert(
-        selectorParses(selector),
-        `${label}: Gecko drops the rule with selector "${selector}"`,
-      );
+  const failures: string[] = [];
+  const check = (label: string, css: string): void => {
+    const found = lwthemeSelectors(css);
+    checked += found.length;
+    for (const f of droppedSelectors(found)) {
+      failures.push(`${label}: "${f.selector}"`);
+    }
+  };
+  for (const [path, css] of Object.entries(RAW_CSS)) {
+    if (css.includes("lwtheme")) check(path, css);
+  }
+  for (const [path, ts] of Object.entries(RAW_TS)) {
+    if (!ts.includes("lwtheme")) continue;
+    for (const literal of templateLiterals(stripTsComments(ts))) {
+      if (literal.includes("lwtheme")) check(path, literal);
     }
   }
+  assertEquals(
+    failures.length,
+    0,
+    `Gecko drops these theme-state rules: ${failures.join(" | ")}`,
+  );
+  // leptonChrome.css alone has ~160 theme-state rules.
   assert(
-    checked >= 10,
+    checked >= 150,
     `expected to check the theme-state rules; got ${checked}`,
   );
 }
@@ -219,6 +361,7 @@ function testNoThemeDialogPinApplies(): void {
 export async function runAllTests(): Promise<void> {
   const tests: TestCase[] = [
     { name: "scanner self-check", fn: testScannerSelfCheck },
+    { name: "sources are discovered by glob", fn: testSourcesAreDiscovered },
     {
       name: "no :-moz-lwtheme outside forgiving :is()/:where()",
       fn: testNoUnforgivingMozLwtheme,

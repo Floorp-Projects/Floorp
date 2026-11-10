@@ -332,11 +332,25 @@ function testCompatAvoidsBrittleSelectors(): void {
 }
 
 function testCompatUsesRobustLwtSignals(): void {
-  assert(
-    LEPTON_COMPAT_152_CSS.includes("[lwtheme]"),
-    "compat layer should target LWT state via the [lwtheme] root attribute " +
-      "(Gecko 159 removed the :-moz-lwtheme pseudo-class)",
-  );
+  // Gecko 159 has no :-moz-lwtheme, and :not() is not forgiving, so
+  // `:root:not([lwtheme]):not(:-moz-lwtheme)` would drop the whole rule. The
+  // no-theme rules must branch on the [lwtheme] root attribute alone.
+  for (
+    const [label, css] of [
+      ["LEPTON_COMPAT_152_CSS", LEPTON_COMPAT_152_CSS],
+      ["GECKO_152_COLOR_FIX_CSS", GECKO_152_COLOR_FIX_CSS],
+    ] as const
+  ) {
+    const rules = css.replace(/\/\*[\s\S]*?\*\//g, "");
+    assert(
+      !/:not\(\s*:-moz-lwtheme\s*\)/.test(rules),
+      `${label} must not negate :-moz-lwtheme (the rule would be dropped)`,
+    );
+    assert(
+      /:root:not\(\[lwtheme\]\)\s*\{/.test(rules),
+      `${label} should scope its no-theme rule as :root:not([lwtheme])`,
+    );
+  }
   assert(
     LEPTON_COMPAT_152_CSS.includes("prefers-color-scheme"),
     "compat layer should branch light/dark via prefers-color-scheme rather " +
