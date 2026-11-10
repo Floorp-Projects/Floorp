@@ -1516,3 +1516,18 @@ Deno.test("fdh executor: restartStartClock moves the start deadline of a schedul
     "alive",
   );
 });
+
+Deno.test("fdh executor: an attempt closed by a cancel after its holder was lost records when it was last seen", () => {
+  const job = stepJobRunning();
+  heartbeat(job, 1, "x1", at(500));
+  cancelJob(job, "", at(600));
+  assertEquals(
+    reconcileJob(job, { currentDigest: "d1", at: at(5 * TTL) }).action,
+    "cancelled",
+  );
+  assertEquals(job.attempts[0].lastSeenAt, at(500));
+  const lost = stepJobRunning();
+  heartbeat(lost, 1, "x1", at(700));
+  reconcileJob(lost, { currentDigest: "d1", at: at(5 * TTL) });
+  assertEquals(lost.attempts[0].lastSeenAt, at(700));
+});

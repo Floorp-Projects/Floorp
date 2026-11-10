@@ -909,6 +909,8 @@ export function reconcileJob(
 
   if (job.state === "cancel_requested") {
     // The holder is gone while a cancel was pending: nothing will run again.
+    attempt.lastSeenAt = job.lease?.heartbeatAt ?? attempt.startedAt ??
+      attempt.scheduledAt;
     attempt.result = "cancelled";
     attempt.endedAt = at;
     job.lease = null;
