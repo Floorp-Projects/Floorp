@@ -11,7 +11,8 @@
 //
 // Sources (css-sources.ts): all chrome CSS files, the vendored Lepton and
 // fluerial skins, the string exports of `*.css.ts` modules and the CSS
-// template literals of other TS/TSX files.
+// template literals of other TS/TSX files (chrome features and
+// browser-features/modules).
 //
 // Parse mode: a constructed CSSStyleSheet of the chrome window. Its URL is
 // chrome://, so chrome-only syntax (@-moz-document, chrome-only
@@ -21,8 +22,13 @@
 // that level (UA-only syntax is valid there); a rule counts as kept when
 // either level keeps it.
 //
+// Malformed CSS (unclosed `{` / `(` / `[`, unterminated string, stray `}` or
+// top-level text) fails on its own, with file:line, because Gecko's error
+// recovery can swallow everything after it. CSS-looking TS templates that
+// cannot be checked are listed, not dropped silently.
+//
 // Rules that are already dead on the pinned Gecko are listed in
-// KNOWN_DROPPED_RULES with a reason; only new ones fail.
+// KNOWN_DROPPED_RULES with a reason and a count; only new ones fail.
 //
 // Not covered: `@media` / `@supports` conditions that parse but are always
 // false (Lepton keeps `(-moz-bool-pref: …)` twins for older Firefox on
@@ -32,7 +38,8 @@
 import { collectCssSources, type CssSource } from "./css-sources.ts";
 import {
   closeAgentParser,
-  type DropReport,
+  describeShape,
+  type DroppedRule,
   findDroppedRules,
   isStylesheet,
   type ParseMode,
@@ -47,27 +54,54 @@ import {
 } from "../../../test/utils/test_harness.ts";
 
 /**
- * Sources that Floorp registers as AGENT sheets through nsIStyleSheetService
- * (designs/browser-design-element.tsx, registerContentStyleSheets).
+ * Sources that Floorp registers as AGENT sheets through nsIStyleSheetService:
+ * designs/browser-design-element.tsx (registerContentStyleSheets),
+ * tabbar/multirow-tabbar (agentSheetUri: styles.css via multirow-tabbar-css.ts
+ * plus the fragments in multirow-tabbar.tsx) and the IP Protection guard sheet.
  */
 const AGENT_SHEET_SOURCES = new Set([
   "browser-features/skin/lepton/css/leptonContent.css",
   "browser-features/chrome/common/designs/utils/tab-color-like-toolbar.css.ts#TAB_COLOR_LIKE_TOOLBAR_CSS",
+  "browser-features/chrome/common/tabbar/multirow-tabbar/styles.css",
+  "browser-features/chrome/common/tabbar/multirow-tabbar/multirow-tabbar.tsx",
+  "browser-features/modules/modules/ipprotection/FloorpIPProtectionUI.sys.mts",
 ]);
 
+type KnownDrop = { count: number; reason: string };
+
 /**
- * Baseline of rules Gecko 159 already drops, keyed by `label selector`.
- * Vendored Lepton is not edited here (update_lepton.yml re-syncs it); fix
- * upstream or in a follow-up and delete the entry.
+ * Baseline of rules Gecko 159 already drops, keyed by `label selector`, with
+ * the number of occurrences allowed in that source (so a new rule with the
+ * same selector still fails). Vendored Lepton is not edited here
+ * (update_lepton.yml re-syncs it); fix upstream or in a follow-up and delete
+ * the entry.
  */
-const KNOWN_DROPPED_RULES: Record<string, string> = {
+const KNOWN_DROPPED_RULES: Record<string, KnownDrop> = {
   "browser-features/skin/lepton/css/leptonChrome.css .tab-label-container::beforee":
-    "SUSPECT: Lepton typo for ::before; the tab label transition never applies",
+    {
+      count: 2,
+      reason:
+        "SUSPECT: Lepton typo for ::before; the tab label transition never applies",
+    },
   "browser-features/skin/lepton/css/leptonContent.css @-moz-document unobservable-document()":
-    "SUSPECT: Gecko removed unobservable-document(); Lepton's opt-in PDF dark mode (userContent.page.dark_mode.pdf) is dead",
-  "browser-features/skin/lepton/css/leptonContent.css ::-moz-focus-inner":
-    "Gecko removed ::-moz-focus-inner along with the inner focus border it styled",
+    {
+      count: 2,
+      reason:
+        "SUSPECT: Gecko removed unobservable-document(); Lepton's opt-in PDF dark mode (userContent.page.dark_mode.pdf) is dead",
+    },
+  "browser-features/skin/lepton/css/leptonContent.css ::-moz-focus-inner": {
+    count: 2,
+    reason:
+      "Gecko removed ::-moz-focus-inner along with the inner focus border it styled",
+  },
 };
+
+/**
+ * CSS-looking TS template literals that are knowingly not checked, keyed by
+ * file, with the number allowed and a reason. Empty on purpose: every
+ * current template is either a stylesheet or a run of `css +=` fragments.
+ */
+const KNOWN_SKIPPED_TEMPLATES: Record<string, KnownDrop> = {};
 
 function modesFor(source: CssSource): ParseMode[] {
   return AGENT_SHEET_SOURCES.has(source.label)
@@ -75,23 +109,44 @@ function modesFor(source: CssSource): ParseMode[] {
     : ["chrome"];
 }
 
-function describeDrops(source: CssSource, report: DropReport): string[] {
-  return report.dropped.filter((d) =>
-    !(`${source.label} ${d.prelude}` in KNOWN_DROPPED_RULES)
-  ).map((d) => {
-    const where = `${source.label}:${d.line + source.lineOffset}`;
-    const what = d.kind === "style"
-      ? `style rule "${d.prelude}"`
-      : `@${d.prelude.replace(/^@/, "")}`;
-    const offenders = d.offenders.length
-      ? `; offending selector(s): ${
-        d.offenders.map((o) => `"${o}"`).join(", ")
-      }`
-      : "";
-    return `${where}: dropped ${what}${offenders}${
-      d.detail ? ` (${d.detail})` : ""
-    }`;
-  });
+function describeDrop(source: CssSource, d: DroppedRule): string {
+  const where = `${source.label}:${d.line + source.lineOffset}`;
+  const what = d.kind === "style"
+    ? `style rule "${d.prelude}"`
+    : `@${d.prelude.replace(/^@/, "")}`;
+  const offenders = d.offenders.length
+    ? `; offending selector(s): ${d.offenders.map((o) => `"${o}"`).join(", ")}`
+    : "";
+  return `${where}: dropped ${what}${offenders}${
+    d.detail ? ` (${d.detail})` : ""
+  }`;
+}
+
+/**
+ * Compare occurrences with a count baseline: every occurrence of a key that
+ * is over its allowed count is a failure; keys under their count are stale.
+ */
+function overBaseline<T>(
+  found: Map<string, T[]>,
+  baseline: Record<string, KnownDrop>,
+): { over: T[]; stale: string[] } {
+  const over: T[] = [];
+  for (const [key, items] of found) {
+    const allowed = baseline[key]?.count ?? 0;
+    if (items.length > allowed) over.push(...items);
+  }
+  const stale = Object.entries(baseline)
+    .filter(([key, known]) => (found.get(key)?.length ?? 0) < known.count)
+    .map(([key, known]) =>
+      `${key} (baseline ${known.count}, found ${found.get(key)?.length ?? 0})`
+    );
+  return { over, stale };
+}
+
+function push<T>(map: Map<string, T[]>, key: string, item: T): void {
+  const list = map.get(key);
+  if (list) list.push(item);
+  else map.set(key, [item]);
 }
 
 function testWalkerSelfCheck(): void {
@@ -111,7 +166,30 @@ function testWalkerSelfCheck(): void {
     "walker must find nested at-rules, nested style rules and their lines",
   );
   assertEquals(walked.statements.length, 1, "walker must see @namespace");
-  assert(walked.balanced && walked.stray === "", "walker must balance");
+  assert(walked.balanced, "walker must balance");
+  const messages = (css: string) =>
+    walkCss(css).problems.map((p) => `${p.line}:${p.message}`).join(" | ");
+  assert(
+    messages('#a { color: red }\n#b { content: "x; }\n#d { color: red }')
+      .includes('2:unterminated string "'),
+    "walker must report an unterminated string",
+  );
+  assertEquals(
+    messages("#c { width: calc(1px + 2px; }\n#d { color: red }"),
+    '1:unclosed { after "#c" | 1:unclosed (',
+    "walker must report an unclosed paren and the block it swallows",
+  );
+  assertEquals(
+    walkCss("#a { color: red }\n#b { color: blue").problems[0]?.message,
+    'unclosed { after "#b"',
+    "walker must report an unclosed block",
+  );
+  assertEquals(
+    walkCss("#a { color: red } }\n#b").problems.map((p) => p.message)
+      .join(" | "),
+    'unexpected } | stray text "#b"',
+    "walker must report a stray } and stray top-level text",
+  );
   assert(isStylesheet("#a { color: red }"), "a rule is a stylesheet");
   assert(!isStylesheet("New Stack {n}"), "text is not a stylesheet");
   assert(!isStylesheet("#a { color: red;"), "a fragment is not a stylesheet");
@@ -185,8 +263,12 @@ function testAgentModeSelfCheck(): void {
   );
 }
 
+function cssSources() {
+  return collectCssSources(isStylesheet, describeShape);
+}
+
 function testSourcesAreDiscovered(): void {
-  const sources = collectCssSources(isStylesheet);
+  const { sources } = cssSources();
   const labels = new Set(sources.map((s) => s.label));
   const files = new Set(sources.map((s) => s.file));
   for (
@@ -206,32 +288,82 @@ function testSourcesAreDiscovered(): void {
     const file of [
       "browser-features/chrome/common/context-menu/style.ts",
       "browser-features/chrome/common/browser-tab-color/index.ts",
-      "browser-features/chrome/common/tabbar/multirow-tabbar/multirow-tabbar.tsx",
+      "browser-features/chrome/common/flex-order/flex-order.tsx",
+      "browser-features/modules/modules/ipprotection/FloorpIPProtectionUI.sys.mts",
     ]
   ) {
     assert(files.has(file), `CSS template literal must be found in ${file}`);
   }
+  // multirow-tabbar.tsx builds one sheet from three `css +=` fragments
+  // (line 136 onwards) next to a complete one (scrollboxStyle).
+  const multirow = sources.filter((s) =>
+    s.file.endsWith("multirow-tabbar/multirow-tabbar.tsx")
+  );
+  assert(
+    multirow.some((s) => s.text.includes("#tabbrowser-tabs > arrowscrollbox")),
+    "the joined `css +=` fragments of multirow-tabbar.tsx must be checked",
+  );
+  for (const label of AGENT_SHEET_SOURCES) {
+    assert(labels.has(label), `AGENT sheet source must exist: ${label}`);
+  }
+}
+
+function testNoTemplateIsSkipped(): void {
+  const found = new Map<string, string[]>();
+  for (const s of cssSources().skipped) {
+    push(found, s.file, `${s.file}:${s.line}: ${s.reason}`);
+  }
+  const { over, stale } = overBaseline(found, KNOWN_SKIPPED_TEMPLATES);
+  if (stale.length) {
+    console.warn(
+      `[css-dropped-rules] KNOWN_SKIPPED_TEMPLATES entries no longer needed: ${
+        stale.join(" | ")
+      }`,
+    );
+  }
+  assertEquals(
+    over.length,
+    0,
+    "these TS template literals look like CSS but cannot be checked (make " +
+      "them a complete stylesheet, or add them to KNOWN_SKIPPED_TEMPLATES " +
+      `with a reason):\n  ${over.join("\n  ")}\n`,
+  );
 }
 
 function testNoRuleIsDropped(): void {
-  const failures: string[] = [];
-  const seen = new Set<string>();
+  const malformed: string[] = [];
+  const drops = new Map<string, string[]>();
   let styleRules = 0;
   let lwthemeRules = 0;
-  for (const source of collectCssSources(isStylesheet)) {
+  for (const source of cssSources().sources) {
     const report = findDroppedRules(source.text, modesFor(source));
     styleRules += report.styleRules;
     lwthemeRules += report.selectors.filter((s) => s.includes("lwtheme"))
       .length;
-    failures.push(...describeDrops(source, report));
-    for (const d of report.dropped) seen.add(`${source.label} ${d.prelude}`);
+    for (const p of report.problems) {
+      malformed.push(
+        `${source.label}:${p.line + source.lineOffset}: ${p.message}`,
+      );
+    }
+    for (const d of report.dropped) {
+      push(drops, `${source.label} ${d.prelude}`, describeDrop(source, d));
+    }
   }
+  const { over, stale } = overBaseline(drops, KNOWN_DROPPED_RULES);
+  const sections = [
+    malformed.length
+      ? "malformed CSS (Gecko's error recovery may swallow what follows):" +
+        `\n  ${malformed.join("\n  ")}`
+      : "",
+    over.length
+      ? `Gecko's CSS parser drops these rules:\n  ${over.join("\n  ")}`
+      : "",
+  ].filter(Boolean);
   assertEquals(
-    failures.length,
+    malformed.length + over.length,
     0,
-    `Gecko's CSS parser drops these rules:\n  ${failures.join("\n  ")}\n`,
+    `${sections.join("\n")}\n`,
   );
-  const stale = Object.keys(KNOWN_DROPPED_RULES).filter((k) => !seen.has(k));
   if (stale.length) {
     console.warn(
       `[css-dropped-rules] KNOWN_DROPPED_RULES entries no longer needed: ${
@@ -257,6 +389,7 @@ export async function runAllTests(): Promise<void> {
     { name: "probe self-check", fn: testProbeSelfCheck },
     { name: "AGENT-level parse self-check", fn: testAgentModeSelfCheck },
     { name: "sources are discovered", fn: testSourcesAreDiscovered },
+    { name: "no CSS template is skipped", fn: testNoTemplateIsSkipped },
     { name: "no rule is dropped by Gecko", fn: testNoRuleIsDropped },
   ];
   try {

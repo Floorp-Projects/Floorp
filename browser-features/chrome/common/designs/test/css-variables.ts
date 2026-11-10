@@ -2,7 +2,7 @@
 //
 // Custom-property bookkeeping for css-variables.test.ts: who defines and who
 // reads each `--name`, on Floorp's side (sources) and on Gecko's side (the
-// running Runtime's own chrome/toolkit files plus the live chrome window).
+// running Runtime's own chrome/toolkit files).
 
 import {
   blankCssComments,
@@ -29,7 +29,8 @@ function note(map: Map<string, string>, name: string, where: string): void {
   if (!map.has(name)) map.set(name, where);
 }
 
-const DEF_RE = /(?<![\w-])(--[A-Za-z_][\w-]*)\s*:(?!:)/g;
+// `!` is excluded so HTML comments such as `<!--fp:…-->` do not count.
+const DEF_RE = /(?<![\w!-])(--[A-Za-z_][\w-]*)\s*:(?!:)/g;
 const PROPERTY_RE = /@property\s+(--[A-Za-z_][\w-]*)/g;
 const READ_RE = /var\(\s*(--[A-Za-z_][\w-]*)/g;
 const NAME_RE = /^--[A-Za-z_][\w-]*$/;
@@ -144,6 +145,14 @@ const UNPACKED_DIRS = [
   "contentaccessible",
 ];
 
+/**
+ * Gecko JS/HTML is not parsed: every `--name` token in it counts as a
+ * mention, i.e. as both a definition and a read. That covers
+ * ThemeVariableMap, setProperty() and inline styles, but it also counts
+ * comments, unrelated strings and command-line flags, so a name that only
+ * survives in such a mention is not reported. Devtools CSS is scanned like
+ * any other Gecko CSS, so a name only devtools defines also counts.
+ */
 function scanPlatformFile(path: string, text: string, uses: VarUses): void {
   if (path.endsWith(".css")) {
     scanCss(text, path, uses);
@@ -172,9 +181,11 @@ function scanOmni(omni: nsIFile, uses: VarUses): number {
         continue;
       }
       const stream = zip.getInputStream(name);
-      const text = NetUtil.readInputStreamToString(stream, stream.available(), {
-        charset: "UTF-8",
-      });
+      const size = stream.available();
+      // readInputStreamToString throws on a 0-byte count.
+      const text = size > 0
+        ? NetUtil.readInputStreamToString(stream, size, { charset: "UTF-8" })
+        : "";
       stream.close();
       scanPlatformFile(`${omni.parent?.leafName}/omni.ja!/${name}`, text, uses);
       files++;
@@ -246,18 +257,6 @@ export async function scanPlatform(): Promise<PlatformScan> {
   return { uses, files, layout: layouts.join(", ") };
 }
 
-/** Custom properties that are set on the chrome window's root right now. */
-export function liveRootProperties(): Set<string> {
-  const out = new Set<string>();
-  const computed = globalThis.getComputedStyle(document.documentElement);
-  if (!computed) return out;
-  for (let i = 0; i < computed.length; i++) {
-    const name = computed[i];
-    if (name.startsWith("--")) out.add(name);
-  }
-  return out;
-}
-
 export type VarFindings = {
   /** Read by Floorp with var(), defined nowhere. name -> first read. */
   undefinedReads: Map<string, string>;
@@ -268,11 +267,10 @@ export type VarFindings = {
 export function findVarProblems(
   floorp: VarUses,
   platform: VarUses,
-  live: Set<string>,
 ): VarFindings {
   const defined = (name: string): boolean =>
     floorp.defs.has(name) || floorp.mentions.has(name) ||
-    platform.defs.has(name) || platform.mentions.has(name) || live.has(name);
+    platform.defs.has(name) || platform.mentions.has(name);
   const read = (name: string): boolean =>
     floorp.reads.has(name) || floorp.mentions.has(name) ||
     platform.reads.has(name) || platform.mentions.has(name);

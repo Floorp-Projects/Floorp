@@ -29,6 +29,7 @@ export const RAW_CSS: Record<string, string> = import.meta.glob<string>(
 export const RAW_TS: Record<string, string> = import.meta.glob<string>(
   [
     "../../../**/*.{ts,tsx,mts}",
+    "#modules/**/*.{ts,mts}",
     "!**/test/**",
     "!**/*.test.ts",
     "!**/*.d.ts",
@@ -267,17 +268,27 @@ export function resolveTemplate(
   template: TsTemplate,
   constants: Map<string, string>,
 ): string {
-  let n = 0;
-  return template.text.replaceAll(PLACEHOLDER, () => {
-    const expr = template.exprs[n++] ?? "";
+  const chunks = template.text.split(PLACEHOLDER);
+  let out = chunks[0];
+  for (let n = 1; n < chunks.length; n++) {
+    const expr = template.exprs[n - 1] ?? "";
     const newlines = "\n".repeat((expr.match(/\n/g) ?? []).length);
     const id = expr.trim();
     const value = /^[A-Za-z_$][\w$]*$/.test(id) ? constants.get(id) : undefined;
+    // `${chunk}` alone on its line splices in a whole stylesheet chunk
+    // (e.g. an imported CSS file, which is checked on its own).
+    const ownLine = /(^|\n)[ \t]*$/.test(out) &&
+      /^[ \t\r]*(\n|$)/.test(chunks[n]);
     if (value !== undefined && !value.includes(PLACEHOLDER)) {
-      return value.replace(/\s+/g, " ") + newlines;
+      out += value.replace(/\s+/g, " ") + newlines;
+    } else if (ownLine) {
+      out += newlines;
+    } else {
+      out += `nora-tpl${newlines}`;
     }
-    return `nora-tpl${newlines}`;
-  });
+    out += chunks[n];
+  }
+  return out;
 }
 
 // ---------------------------------------------------------------------------
@@ -287,19 +298,65 @@ export function resolveTemplate(
 /** A template is CSS when it is a whole, balanced stylesheet. */
 export type CssShapeCheck = (text: string) => boolean;
 
-let cached: CssSource[] | null = null;
+export type SkippedTemplate = { file: string; line: number; reason: string };
+
+export type CssSourceSet = {
+  sources: CssSource[];
+  /**
+   * TS template literals that look like CSS (a `{` and a `prop: value;`
+   * declaration outside comments, no JS syntax) but are neither a complete stylesheet nor a run of
+   * consecutive fragments that add up to one. Reported, never silently
+   * dropped.
+   */
+  skipped: SkippedTemplate[];
+};
+
+let cached: CssSourceSet | null = null;
+
+const DECLARATION_RE = /[\w-]+\s*:\s*[^;{}\n]+;/;
+/** JS source embedded in a template (polyfills, scripts), not CSS. */
+const JS_RE = /\bfunction\b|=>|\b(?:const|let|return|var)\s/;
+
+/** A `{` and a `prop: value;` outside comments, and no JS syntax. */
+function looksLikeCss(text: string): boolean {
+  const css = blankCssComments(text);
+  return css.includes("{") && DECLARATION_RE.test(css) && !JS_RE.test(css);
+}
+
+function braceDepth(text: string): number {
+  let depth = 0;
+  for (const c of text) {
+    if (c === "{") depth++;
+    else if (c === "}") depth--;
+  }
+  return depth;
+}
 
 /**
  * All CSS sources. `isStylesheet` decides whether a TS template literal is a
- * complete stylesheet (see css-rules.ts); it is injected to keep this module
- * free of parsing logic.
+ * complete stylesheet and `describe` explains why one is not (see
+ * css-rules.ts); they are injected to keep this module free of parsing
+ * logic.
+ *
+ * - `.css` files and `*.css.ts` string exports that contain a `{` are
+ *   always returned, so a structural error in them fails the dropped-rule
+ *   test instead of hiding the rest of the file.
+ * - Other TS template literals are returned when they are a complete
+ *   stylesheet, or when up to four consecutive literals of the same file
+ *   add up to one (CSS built with `css += \`…\``); the joined text keeps
+ *   file line numbers. CSS-looking literals that are neither are listed in
+ *   `skipped`.
  */
-export function collectCssSources(isStylesheet: CssShapeCheck): CssSource[] {
+export function collectCssSources(
+  isStylesheet: CssShapeCheck,
+  describe: (text: string) => string,
+): CssSourceSet {
   if (cached) return cached;
-  const out: CssSource[] = [];
+  const sources: CssSource[] = [];
+  const skipped: SkippedTemplate[] = [];
   for (const [key, text] of Object.entries(RAW_CSS)) {
     const file = normalizeKey(key);
-    out.push({ kind: "css", file, label: file, text, lineOffset: 0 });
+    sources.push({ kind: "css", file, label: file, text, lineOffset: 0 });
   }
   const cssTsFiles = new Set<string>();
   const rawTs = new Map(
@@ -311,7 +368,7 @@ export function collectCssSources(isStylesheet: CssShapeCheck): CssSource[] {
     const src = rawTs.get(file) ?? "";
     const literals = lexTs(src).templates.filter((t) => t.exprs.length === 0);
     for (const [name, value] of Object.entries(mod)) {
-      if (typeof value === "string" && isStylesheet(value)) {
+      if (typeof value === "string" && value.includes("{")) {
         // A plain template literal export maps back to file lines; for a
         // generated one (tables, interpolation, concatenation) the line is
         // counted inside the exported string.
@@ -319,7 +376,7 @@ export function collectCssSources(isStylesheet: CssShapeCheck): CssSource[] {
         const literal = literals.find((t) =>
           t.text.replace(/\r\n?/g, "\n") === value
         );
-        out.push({
+        sources.push({
           kind: "css-ts",
           file,
           label: `${file}#${name}`,
@@ -333,19 +390,48 @@ export function collectCssSources(isStylesheet: CssShapeCheck): CssSource[] {
     const file = normalizeKey(key);
     if (cssTsFiles.has(file) || !src.includes("`")) continue;
     const lexed = lexTs(src);
-    for (const template of lexed.templates) {
-      if (!template.text.includes("{")) continue;
-      const text = resolveTemplate(template, lexed.constants);
-      if (!isStylesheet(text)) continue;
-      out.push({
-        kind: "ts-template",
-        file,
-        label: file,
-        text,
-        lineOffset: lineAt(src, template.start) - 1,
-      });
+    const templates = [...lexed.templates].sort((a, b) => a.start - b.start);
+    const texts = templates.map((t) => resolveTemplate(t, lexed.constants));
+    const lines = templates.map((t) => lineAt(src, t.start));
+    const consumed = new Set<number>();
+    for (let i = 0; i < templates.length; i++) {
+      if (consumed.has(i)) continue;
+      const text = texts[i];
+      if (!text.includes("{")) continue;
+      const push = (css: string) =>
+        sources.push({
+          kind: "ts-template",
+          file,
+          label: file,
+          text: css,
+          lineOffset: lines[i] - 1,
+        });
+      if (isStylesheet(text)) {
+        push(text);
+        continue;
+      }
+      if (!looksLikeCss(text)) continue;
+      let joined = text;
+      let joinedOk = false;
+      if (braceDepth(text) > 0) {
+        for (let k = i + 1; k < templates.length && k <= i + 4; k++) {
+          const endLine = lines[i] + (joined.match(/\n/g) ?? []).length;
+          joined += "\n".repeat(Math.max(0, lines[k] - endLine)) + " " +
+            texts[k];
+          if (isStylesheet(joined)) {
+            for (let c = i + 1; c <= k; c++) consumed.add(c);
+            push(joined);
+            joinedOk = true;
+            break;
+          }
+          if (braceDepth(joined) <= 0) break;
+        }
+      }
+      if (!joinedOk) {
+        skipped.push({ file, line: lines[i], reason: describe(text) });
+      }
     }
   }
-  cached = out;
-  return out;
+  cached = { sources, skipped };
+  return cached;
 }

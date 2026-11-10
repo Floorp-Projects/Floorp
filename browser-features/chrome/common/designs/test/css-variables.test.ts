@@ -11,14 +11,15 @@
 //
 // 1. variables Floorp/Lepton read with `var()` that nothing defines: not
 //    Floorp/Lepton, not Gecko's own chrome/toolkit CSS, not a `"--name"`
-//    string in Gecko or Floorp JS (ThemeVariableMap, setProperty), and not
-//    the live chrome root's computed style; and
+//    string in Gecko or Floorp JS (ThemeVariableMap, setProperty); and
 // 2. variables Floorp/Lepton define that nothing reads: no `var()` in Gecko
 //    or Floorp CSS and no `"--name"` string in Gecko or Floorp JS.
 //
 // Gecko's side is read from the Runtime the test browser runs (omni.ja when
 // packaged, the unpacked chrome directories in a developer Runtime), so the
-// result follows the pinned Runtime and needs no network.
+// result follows the pinned Runtime and needs no network. The live chrome
+// window is deliberately not consulted: its variables depend on whichever
+// design and theme the browser happens to have when the test runs.
 //
 // Both lists start from a reviewed baseline (css-variables-allowlist.ts);
 // only names that are not in the baseline fail. Stale baseline entries are
@@ -35,7 +36,6 @@ import {
 import {
   emptyUses,
   findVarProblems,
-  liveRootProperties,
   type PlatformScan,
   scanCss,
   scanFloorpSources,
@@ -85,8 +85,12 @@ function testScannerSelfCheck(): void {
   assertEquals(floorp.defs.get("--a"), "a.css:2", "definitions carry a line");
   assertEquals(floorp.reads.get("--h"), "b.ts:2", "TS templates carry a line");
   const gecko = emptyUses();
-  scanCss(":root { --gecko-def: 1 } #z { color: var(--b) }", "g.css", gecko);
-  const found = findVarProblems(floorp, gecko, new Set(["--d"]));
+  scanCss(
+    ":root { --gecko-def: 1; --d: 2 } #z { color: var(--b) }",
+    "g.css",
+    gecko,
+  );
+  const found = findVarProblems(floorp, gecko);
   assertEquals(
     [...found.undefinedReads.keys()].sort().join(" "),
     "--c --h --i",
@@ -112,7 +116,6 @@ async function testPlatformScan(): Promise<void> {
     uses.mentions.has("--lwt-accent-color"),
     "ThemeVariableMap's --lwt-* names must be seen as JS mentions",
   );
-  assert(liveRootProperties().size > 200, "chrome root must expose variables");
 }
 
 function compare(
@@ -143,7 +146,6 @@ async function testNoNewUndefinedReads(): Promise<void> {
   const found = findVarProblems(
     scanFloorpSources(),
     (await platform()).uses,
-    liveRootProperties(),
   );
   compare(
     found.undefinedReads,
@@ -156,7 +158,6 @@ async function testNoNewUnreadDefinitions(): Promise<void> {
   const found = findVarProblems(
     scanFloorpSources(),
     (await platform()).uses,
-    liveRootProperties(),
   );
   compare(
     found.unreadDefs,

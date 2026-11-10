@@ -44,15 +44,21 @@ export type CssBlock = {
 
 export type CssStatement = { atName: string; text: string; line: number };
 
+export type CssProblem = { line: number; message: string };
+
 export type CssWalk = {
   /** Comment-blanked text the offsets refer to. */
   text: string;
   blocks: CssBlock[];
   statements: CssStatement[];
-  /** False when braces do not balance. */
+  /**
+   * Structural problems (unclosed `{` / `(` / `[`, unterminated string,
+   * stray `}` or top-level text). Gecko's error recovery can swallow the
+   * rest of the sheet after one of these, so they are failures on their own.
+   */
+  problems: CssProblem[];
+  /** True when there are no problems. */
   balanced: boolean;
-  /** Top-level text that is neither a rule nor an at-statement. */
-  stray: string;
 };
 
 function lineStarts(text: string): number[] {
@@ -86,9 +92,9 @@ function findBlockEnd(css: string, open: number): number {
       else if (c === quote || c === "\n") quote = "";
     } else if (c === '"' || c === "'") {
       quote = c;
-    } else if (c === "(") {
+    } else if (c === "(" || c === "[") {
       parens++;
-    } else if (c === ")") {
+    } else if (c === ")" || c === "]") {
       parens = Math.max(0, parens - 1);
     } else if (parens === 0 && c === "{") {
       depth++;
@@ -109,46 +115,71 @@ export function walkCss(source: string): CssWalk {
   const starts = lineStarts(text);
   const blocks: CssBlock[] = [];
   const statements: CssStatement[] = [];
-  let balanced = true;
-  let stray = "";
+  const problems: CssProblem[] = [];
+  const problem = (index: number, message: string): void => {
+    problems.push({ line: lineOf(starts, index), message });
+  };
+  const firstNonSpace = (from: number): number => {
+    const lead = text.slice(from).search(/\S/);
+    return lead < 0 ? from : from + lead;
+  };
 
   const walk = (from: number, to: number, parent: CssBlock | null): void => {
     let segStart = from;
-    let parens = 0;
+    const open: number[] = [];
     let quote = "";
+    let quoteAt = 0;
     for (let i = from; i < to; i++) {
       const c = text[i];
       if (quote) {
         if (c === "\\") i++;
-        else if (c === quote || c === "\n") quote = "";
+        else if (c === quote) quote = "";
+        else if (c === "\n") {
+          problem(quoteAt, `unterminated string ${quote}…`);
+          quote = "";
+        }
         continue;
       }
-      if (c === '"' || c === "'") quote = c;
-      else if (c === "(" || c === "[") parens++;
-      else if (c === ")" || c === "]") parens = Math.max(0, parens - 1);
-      else if (parens === 0 && c === ";") {
+      if (c === '"' || c === "'") {
+        quote = c;
+        quoteAt = i;
+      } else if (c === "(" || c === "[") open.push(i);
+      else if (c === ")" || c === "]") {
+        if (open.length) open.pop();
+        else problem(i, `unexpected ${c}`);
+      } else if (open.length === 0 && c === ";") {
         const seg = text.slice(segStart, i).trim();
         if (seg.startsWith("@")) {
           statements.push({
             atName: (/^@([-\w]+)/.exec(seg)?.[1] ?? "").toLowerCase(),
             text: seg,
-            line: lineOf(starts, segStart + text.slice(segStart).search(/\S/)),
+            line: lineOf(starts, firstNonSpace(segStart)),
           });
         } else if (parent === null && seg) {
-          stray += `${seg};`;
+          problem(firstNonSpace(segStart), `stray text "${seg.slice(0, 40)}"`);
         }
         segStart = i + 1;
-      } else if (parens === 0 && c === "}") {
-        // A `}` with no open block in this range.
-        balanced = false;
+      } else if (open.length === 0 && c === "}") {
+        problem(i, "unexpected }");
         segStart = i + 1;
-      } else if (parens === 0 && c === "{") {
+      } else if (open.length === 0 && c === "{") {
         const raw = text.slice(segStart, i);
         const lead = raw.search(/\S/);
         const prelude = raw.replace(/\s+/g, " ").trim();
         const close = findBlockEnd(text, i);
         if (close < 0 || close >= to) {
-          balanced = false;
+          problem(i, `unclosed { after "${prelude.slice(0, 60)}"`);
+          // Walk the swallowed rest anyway to name the cause inside it.
+          walk(i + 1, to, {
+            id: -1,
+            kind: "style",
+            atName: "",
+            prelude,
+            line: 0,
+            open: i,
+            close: to,
+            parent,
+          });
           return;
         }
         const atName = prelude.startsWith("@")
@@ -175,11 +206,22 @@ export function walkCss(source: string): CssWalk {
         segStart = close + 1;
       }
     }
-    if (parent === null) stray += text.slice(segStart, to).trim();
+    if (quote) problem(quoteAt, `unterminated string ${quote}…`);
+    if (open.length) problem(open[0], `unclosed ${text[open[0]]}`);
+    const tail = text.slice(segStart, to).trim();
+    if (parent === null && tail) {
+      problem(firstNonSpace(segStart), `stray text "${tail.slice(0, 40)}"`);
+    }
   };
 
   walk(0, text.length, null);
-  return { text, blocks, statements, balanced, stray: stray.trim() };
+  return {
+    text,
+    blocks,
+    statements,
+    problems,
+    balanced: problems.length === 0,
+  };
 }
 
 /**
@@ -191,7 +233,7 @@ export function walkCss(source: string): CssWalk {
 export function isStylesheet(text: string): boolean {
   if (!text.includes("{")) return false;
   const walked = walkCss(text);
-  if (!walked.balanced || walked.stray !== "") return false;
+  if (!walked.balanced) return false;
   const top = walked.blocks.filter((b) => b.parent === null);
   return top.some((b) => b.kind === "style" && /\S/.test(b.prelude)) &&
     top.every((b) => {
@@ -344,7 +386,11 @@ function probeAlive(text: string, id: string, modes: ParseMode[]): boolean {
   );
 }
 
-/** First rule at nesting depth `depth` (0 = top level) or null. */
+/**
+ * The rule at nesting depth `depth` (0 = top level), following the last rule
+ * at each level: the probe sheet puts @namespace statements first and the
+ * rule under test last. Null when a level is empty.
+ */
 function ruleAtDepth(rules: CSSRuleList, depth: number): CSSRule | null {
   let list: CSSRuleList | undefined = rules;
   let rule: CSSRule | null = null;
@@ -371,6 +417,8 @@ export type DropReport = {
   /** Preludes of every style rule that was checked. */
   selectors: string[];
   dropped: DroppedRule[];
+  /** Structural problems of the source (see CssWalk.problems). */
+  problems: CssProblem[];
 };
 
 /**
@@ -473,5 +521,14 @@ ${wrapInAncestors(block, own)}`,
     styleRules: blocks.filter((b) => b.kind === "style").length,
     selectors: blocks.filter((b) => b.kind === "style").map((b) => b.prelude),
     dropped,
+    problems: walked.problems,
   };
+}
+
+/** Why `text` is not a complete stylesheet (for skipped-template reports). */
+export function describeShape(text: string): string {
+  const walked = walkCss(text);
+  const first = walked.problems[0];
+  if (first) return `line ${first.line} of the literal: ${first.message}`;
+  return "no top-level style rule with declarations";
 }
