@@ -82,20 +82,29 @@ const TAB_TRACKS_TOOLBAR_DESIGNS: readonly DesignName[] = [
 ] as const;
 
 /**
- * Tolerance for the PRIMARY "one surface" invariant. The Gecko 152 fix makes
- * all bar surfaces resolve to the exact same token, so this can be tight.
- * A small slack absorbs sub-pixel/rounding in computed colors.
+ * Per-channel tolerance for the PRIMARY "one surface" invariant (also the
+ * "stopped changing" threshold in `waitForColorStable`). All bar surfaces
+ * resolve to the same token, so they match exactly once settled: measured
+ * max channel gap 0 in every design × scheme case (Windows 11, Gecko 159).
+ * Linux CI has never failed this check at tolerance 2 except on real token
+ * splits (e.g. protonfix/dark 43 vs 84). 2 leaves room for rounding when an
+ * alpha color is composited over white in `parseRgbColor`.
  */
 const SURFACE_TOLERANCE = 2;
 
 /**
- * Tolerance for the SECONDARY "tab tracks toolbar" invariant. Lepton aligns
- * the tab to the toolbar but via alpha compositing / lwt-accent blending, so
- * a tint gap is normal (measured: around 20 in current light Lepton-family
- * builds). The primary one-surface invariant above remains the strict
- * regression check for the Gecko 152 toolbar token split.
+ * Per-channel tolerance for the SECONDARY "tab tracks toolbar" invariant.
+ * Once transitions have finished, the selected tab of lepton / photon /
+ * fluerial matches `#nav-bar` exactly: measured max channel gap 0 in all six
+ * cases (Windows 11, Gecko 159), and the same designs read identical tab and
+ * nav-bar colors in a Linux run of Floorp 12.21.1 (no theme / Light / Dark /
+ * LWT / Alpenglow). The old value 22 covered reads taken mid-transition
+ * (gaps of 18-20), which `waitForTransitionsToFinish` now prevents. 3 keeps
+ * rounding headroom while still catching a real split such as the
+ * photon/light nav-bar 255 vs tab 232 (gap 23) seen on Linux CI when a
+ * no-theme rule overrode only the legacy `--toolbar-bgcolor` token.
  */
-const TAB_TRACKS_TOLERANCE = 22;
+const TAB_TRACKS_TOLERANCE = 3;
 
 /** Elements whose background should share one color (the "one surface"
  * invariant). `[selector, humanLabel]`. */
@@ -542,9 +551,9 @@ function assertOneSurface(label: string, reading: SurfaceReadings): void {
 
 /**
  * SECONDARY invariant: for designs with `color_like_toolbar = true`, the
- * selected tab must be CLOSE to the bar surface color (Lepton aligns the tab
- * to the toolbar, but via blending so a small tint gap is normal). Skipped
- * when no selected-tab color is readable.
+ * selected tab must match the bar surface color within
+ * `TAB_TRACKS_TOLERANCE` (Lepton aligns the tab to the toolbar; settled
+ * colors are identical). Skipped when no selected-tab color is readable.
  */
 function assertTabTracksToolbar(label: string, reading: SurfaceReadings): void {
   if (reading.selectedTab === null) return;
