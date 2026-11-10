@@ -46,8 +46,9 @@ scenario) and E-2b, 31 checks.
     reached the step root.
   - The journals record how many processes were selected, not which mechanism
     ended each one (the group signal or the per-process stop).
-  - In each respawn case the stop event comes before the next attempt is
-    scheduled.
+  - In each respawn case the stop event comes before the next attempt started.
+    The next attempt is recorded at the epoch bump, before the stop; its start
+    deadline is restarted after the stop.
 - No processes were left after the run.
   - Right after the run, `pgrep -u user -f fdh-posix-e2e` found nothing. That
     pattern matches only executors and controllers, because their command lines
