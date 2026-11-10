@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "jobId": "test-20261110t023324z-3ace60",
-  "taskId": "e2e-e-8-mwa2sody",
+  "jobId": "test-20261110t025331z-222828",
+  "taskId": "e2e-e-8-mwa3ijyq",
   "worktree": "E:\\floorp-browser-dev\\fdh-followup",
   "kind": "test",
   "step": {
@@ -22,12 +22,12 @@
   },
   "intent": null,
   "inputs": {
-    "baseCommit": "ebb430084e18b91062c45f9e7c739af38c572db2",
-    "head": "ebb430084e18b91062c45f9e7c739af38c572db2",
+    "baseCommit": "03adaa8dc1a67f4b6e2115625bc3d7a4632dea3c",
+    "head": "03adaa8dc1a67f4b6e2115625bc3d7a4632dea3c",
     "guardEnv": {},
-    "worktreeState": "e86ec6221c0b74fd5554bb85f8136750f8dc80473e1684201a4efa713b0b8e5a"
+    "worktreeState": "9a5c203a1763875b9f66938287ba9551ae1142d94748e63e466b16bf48e7abf4"
   },
-  "executionDigest": "a937e1ac150ec7ee748d107d4000734c35f23b85cb13c6b182b6721d78e86928",
+  "executionDigest": "3109967e45d09eb26f6bd64126600c98a0f140c8136185afad8001bbd4c69849",
   "state": "failed",
   "epoch": 2,
   "lease": null,
@@ -37,38 +37,38 @@
     {
       "attempt": 1,
       "epoch": 1,
-      "holder": "executor-44016-b2ae92",
-      "scheduledAt": "2026-11-10T02:33:24.313Z",
-      "startedAt": "2026-11-10T02:33:24.623Z",
-      "endedAt": "2026-11-10T02:33:29.385Z",
+      "holder": "executor-50040-fd31f8",
+      "scheduledAt": "2026-11-10T02:53:31.623Z",
+      "startedAt": "2026-11-10T02:53:31.967Z",
+      "endedAt": "2026-11-10T02:53:37.700Z",
       "result": "lost",
       "exitCode": null,
       "logRef": null,
       "process": {
-        "pid": 64732,
-        "startTime": "2026-11-10T02:33:24.6277620Z",
+        "pid": 82316,
+        "startTime": "2026-11-10T02:53:31.9719070Z",
         "commandLine": "C:\\Users\\user\\.deno\\bin\\deno.exe task test:host"
       },
       "notes": "holder lost; outcome unknown",
-      "lastSeenAt": "2026-11-10T02:33:25.653Z"
+      "lastSeenAt": "2026-11-10T02:53:34.003Z"
     },
     {
       "attempt": 2,
       "epoch": 2,
-      "holder": "executor-58428-ce0961",
-      "scheduledAt": "2026-11-10T02:33:30.026Z",
-      "startedAt": "2026-11-10T02:33:30.318Z",
-      "endedAt": "2026-11-10T02:33:35.733Z",
+      "holder": "executor-84044-3f9413",
+      "scheduledAt": "2026-11-10T02:53:38.443Z",
+      "startedAt": "2026-11-10T02:53:38.837Z",
+      "endedAt": "2026-11-10T02:53:44.115Z",
       "result": "lost",
       "exitCode": null,
       "logRef": null,
       "process": {
-        "pid": 90096,
-        "startTime": "2026-11-10T02:33:30.3225510Z",
+        "pid": 89164,
+        "startTime": "2026-11-10T02:53:38.8423680Z",
         "commandLine": "C:\\Users\\user\\.deno\\bin\\deno.exe task test:host"
       },
       "notes": "holder lost; outcome unknown",
-      "lastSeenAt": "2026-11-10T02:33:32.356Z"
+      "lastSeenAt": "2026-11-10T02:53:40.871Z"
     }
   ],
   "checkpoint": 0,
@@ -78,60 +78,60 @@
     {
       "from": null,
       "to": "pending",
-      "at": "2026-11-10T02:33:24.313Z",
+      "at": "2026-11-10T02:53:31.623Z",
       "reason": "created"
     },
     {
       "from": "pending",
       "to": "scheduled",
-      "at": "2026-11-10T02:33:24.313Z",
+      "at": "2026-11-10T02:53:31.623Z",
       "reason": "attempt 1 recorded before start"
     },
     {
       "from": "scheduled",
       "to": "running",
-      "at": "2026-11-10T02:33:24.623Z",
+      "at": "2026-11-10T02:53:31.967Z",
       "reason": "attempt 1 started"
     },
     {
       "from": "running",
       "to": "failed",
-      "at": "2026-11-10T02:33:35.733Z",
+      "at": "2026-11-10T02:53:44.115Z",
       "reason": "2 attempt(s) lost"
     }
   ],
   "events": [
     {
-      "at": "2026-11-10T02:33:29.385Z",
+      "at": "2026-11-10T02:53:37.700Z",
       "kind": "lease-expired",
       "epoch": 1,
-      "note": "holder executor-44016-b2ae92 lost"
+      "note": "holder executor-50040-fd31f8 lost"
     },
     {
-      "at": "2026-11-10T02:33:30.025Z",
+      "at": "2026-11-10T02:53:38.442Z",
       "kind": "lost-step-stopped",
       "epoch": 1,
-      "note": "stopped 0 process(es) of the step tree rooted at pid 64732"
+      "note": "stopped 0 process(es) of the step tree rooted at pid 82316"
     },
     {
-      "at": "2026-11-10T02:33:35.733Z",
+      "at": "2026-11-10T02:53:44.115Z",
       "kind": "lease-expired",
       "epoch": 2,
-      "note": "holder executor-58428-ce0961 lost"
+      "note": "holder executor-84044-3f9413 lost"
     },
     {
-      "at": "2026-11-10T02:33:35.733Z",
+      "at": "2026-11-10T02:53:44.115Z",
       "kind": "gave-up",
       "epoch": 2,
       "note": "2 attempt(s) lost; not rerun again"
     },
     {
-      "at": "2026-11-10T02:33:36.404Z",
+      "at": "2026-11-10T02:53:44.888Z",
       "kind": "lost-step-stopped",
       "epoch": 2,
-      "note": "stopped 0 process(es) of the step tree rooted at pid 90096"
+      "note": "stopped 0 process(es) of the step tree rooted at pid 89164"
     }
   ],
-  "createdAt": "2026-11-10T02:33:24.313Z",
-  "updatedAt": "2026-11-10T02:33:36.404Z"
+  "createdAt": "2026-11-10T02:53:31.623Z",
+  "updatedAt": "2026-11-10T02:53:44.888Z"
 }

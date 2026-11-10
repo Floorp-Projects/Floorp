@@ -61,10 +61,11 @@ holding everything.
     later than the holder's last heartbeat plus one TTL, which may be well
     before the loss was noticed. The children of a later process that reused the
     pid are therefore not selected.
-  - In E-2, E-7 and E-8 (both epochs) the step tree had already exited by the
-    time the controller looked, and 0 processes were stopped. Killing the
-    executor closes the step's output pipes. E-2 checks that the lost step's
-    root process is not running.
+  - In E-2, E-7 and E-8 (both epochs) the controller selected no processes of
+    the lost tree (0 stopped). The likely reason is that killing the executor
+    closes the step's output pipes and the step exits. The run checks only the
+    root: E-2 checks that the lost step's root process is not running. E-7 and
+    E-8 do not check the descendants.
 - Fault injection needs both `FDH_JOB_FAULT` and `FDH_JOB_FAULT_ENABLE=1` on the
   executor, so a stray variable in an agent's shell has no effect.
 - This run replaces the 2026-11-09 run of the first PR head. The code changed

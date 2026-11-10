@@ -300,6 +300,12 @@ export async function settleJob(
   return value;
 }
 
+/**
+ * Copy one terminal job into the task state: an operation and an assertion
+ * per command result, a failed assertion for each command that never
+ * produced a result (so evidence cannot fall back to an older pass), and one
+ * `job result <id>` event that marks the copy as done.
+ */
 function copyResultToTask(
   worktree: string,
   taskId: string,
@@ -341,6 +347,20 @@ function copyResultToTask(
         });
       }
     }
+    // Commands without a result (the job failed, was given up or cancelled
+    // before they ran or finished) are recorded as not verified.
+    for (const [index, command] of (job.step?.commands ?? []).entries()) {
+      if (command.assertionName === undefined) continue;
+      if (job.commandResults.some((r) => r.index === index)) continue;
+      recordAssertion(state, {
+        name: command.assertionName,
+        expected: command.expected ?? "exit code 0",
+        actual:
+          `no result: job ${job.jobId} ended ${job.state} before this command completed`,
+        passed: false,
+        at: job.updatedAt,
+      });
+    }
     const lost = job.attempts.filter((a) => a.result === "lost").length;
     appendEvent(state, {
       timestamp: nowIso(),
@@ -358,6 +378,15 @@ export function quotaNoteFor(job: JobJournal): string {
   return `job ${job.jobId}: ${job.intent?.target ?? ""}`.trim();
 }
 
+/** Same file path after resolving; case-insensitive on Windows only. */
+function samePath(a: string, b: string): boolean {
+  const norm = (p: string) => {
+    const resolved = path.resolve(p);
+    return Deno.build.os === "windows" ? resolved.toLowerCase() : resolved;
+  };
+  return norm(a) === norm(b);
+}
+
 async function withLedger<T>(
   worktree: string,
   taskId: string,
@@ -366,6 +395,16 @@ async function withLedger<T>(
   const file = quotaLedgerPath(worktree, taskId);
   return await withFileLock(lockPathFor(file), () => {
     const ledger = readQuotaLedger(worktree, taskId, true);
+    // writeQuotaLedger writes to the path the ledger itself records: it must
+    // be the locked file (same guard as 'fdh quota').
+    if (
+      ledger.taskId !== taskId ||
+      !samePath(quotaLedgerPath(ledger.worktree, ledger.taskId), file)
+    ) {
+      throw new Error(
+        `quota ledger ${file} records another task or worktree (${ledger.taskId} in ${ledger.worktree}); refusing to update it`,
+      );
+    }
     const value = fn(ledger);
     writeQuotaLedger(ledger);
     return value;

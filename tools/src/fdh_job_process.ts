@@ -168,17 +168,24 @@ export function spawnStepCommand(
   const header = new TextEncoder().encode(
     `[fdh job] ${command.displayCommand}\n`,
   );
-  log.writeSync(header);
-  const child = new Deno.Command(resolveProgram(program), {
-    args,
-    cwd,
-    env,
-    stdin: "null",
-    stdout: "piped",
-    stderr: "piped",
-    // POSIX: its own process group, so the tree can be signalled as one.
-    detached: Deno.build.os !== "windows",
-  }).spawn();
+  let child: Deno.ChildProcess;
+  try {
+    log.writeSync(header);
+    child = new Deno.Command(resolveProgram(program), {
+      args,
+      cwd,
+      env,
+      stdin: "null",
+      stdout: "piped",
+      stderr: "piped",
+      // POSIX: its own process group, so the tree can be signalled as one.
+      detached: Deno.build.os !== "windows",
+    }).spawn();
+  } catch (error) {
+    // Do not keep the log open (on Windows that blocks its deletion).
+    log.close();
+    throw error;
+  }
   const copy = async (stream: ReadableStream<Uint8Array>) => {
     for await (const chunk of stream) {
       try {

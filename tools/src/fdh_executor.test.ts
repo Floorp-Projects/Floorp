@@ -1531,3 +1531,24 @@ Deno.test("fdh executor: an attempt closed by a cancel after its holder was lost
   reconcileJob(lost, { currentDigest: "d1", at: at(5 * TTL) });
   assertEquals(lost.attempts[0].lastSeenAt, at(700));
 });
+
+Deno.test("fdh executor: outbox and journal command results must be complete", async () => {
+  const dir = await Deno.makeTempDir();
+  try {
+    await writeNewJob(stepJob(dir));
+    Deno.writeTextFileSync(
+      `${dir}/_dist/fdh/jobs/t1/test-1.outbox-1.json`,
+      JSON.stringify({ ...report(1, 0, 1), results: [{}] }),
+    );
+    assertThrows(
+      () => readOutbox(dir, "t1", "test-1", 1),
+      Error,
+      "invalid fdh job outbox",
+    );
+    const broken = JSON.parse(JSON.stringify(stepJob()));
+    broken.commandResults = [{ index: 0, epoch: 1, exitCode: 0 }];
+    assertThrows(() => parseJobJournal(broken), Error, "commandResults entry");
+  } finally {
+    await Deno.remove(dir, { recursive: true });
+  }
+});

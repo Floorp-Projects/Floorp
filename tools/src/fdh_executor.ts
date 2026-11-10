@@ -1168,6 +1168,17 @@ function isValidCommand(command: unknown): command is StepCommand {
     (command.expected === undefined || typeof command.expected === "string");
 }
 
+/** A command result with integer fields, ISO times and a string-or-null log. */
+function isCommandResult(value: unknown): value is CommandResult {
+  return isRecord(value) && Number.isInteger(value.index) &&
+    (value.index as number) >= 0 && Number.isInteger(value.epoch) &&
+    Number.isInteger(value.exitCode) && typeof value.startedAt === "string" &&
+    Number.isFinite(Date.parse(value.startedAt)) &&
+    typeof value.endedAt === "string" &&
+    Number.isFinite(Date.parse(value.endedAt)) &&
+    (value.logRef === null || typeof value.logRef === "string");
+}
+
 /** A step runs one or more valid commands in a string cwd. */
 function isValidStep(step: unknown): step is StepSpec {
   return isRecord(step) && typeof step.cwd === "string" &&
@@ -1239,10 +1250,7 @@ export function parseJobJournal(value: unknown): JobJournal {
     );
   }
   for (const result of job.commandResults as unknown[]) {
-    if (
-      !isRecord(result) || !Number.isInteger(result.index) ||
-      !Number.isInteger(result.epoch) || !Number.isInteger(result.exitCode)
-    ) {
+    if (!isCommandResult(result)) {
       throw new Error("invalid fdh job journal: commandResults entry");
     }
   }
@@ -1402,6 +1410,7 @@ export function readOutbox(
     typeof value.endedAt !== "string" ||
     !Number.isFinite(Date.parse(value.endedAt)) ||
     !Array.isArray(value.results) ||
+    !(value.results as unknown[]).every(isCommandResult) ||
     (value.logRef !== null && typeof value.logRef !== "string")
   ) {
     throw new Error(

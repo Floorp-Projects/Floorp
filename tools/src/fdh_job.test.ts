@@ -676,3 +676,68 @@ Deno.test("fdh job: job cancel also stops a lost tree left by an interrupted res
     await Deno.remove(dir, { recursive: true });
   }
 });
+
+// ---------------------------------------------------------------------------
+// CodeRabbit on PR #3097 head 03adaa8d
+// ---------------------------------------------------------------------------
+
+Deno.test("fdh job: a job that ends without a command result records a failed assertion", async () => {
+  const dir = await Deno.makeTempDir();
+  try {
+    const state = taskIn(dir);
+    const repo = { head: "h", diff: "", untracked: "" };
+    const job = await startStepJob({
+      state,
+      kind: "test",
+      leaseTtlMs: 1_000,
+      git: fakeGit(repo),
+      spawn: () => 1,
+    });
+    const old = new Date(Date.now() - 60_000).toISOString();
+    await updateJob(dir, "t1", job.jobId, (j) => beginAttempt(j, 1, "x1", old));
+    repo.diff = "edited";
+    await reconcileTaskJobs({ state, git: fakeGit(repo), spawn: () => 1 });
+    const assertions = readTaskState(dir, "t1").assertions;
+    assertEquals(assertions.map((a) => [a.name, a.passed]), [[
+      "host-test-exit-code",
+      false,
+    ]]);
+    assert(assertions[0].actual.includes("ended failed"));
+  } finally {
+    await Deno.remove(dir, { recursive: true });
+  }
+});
+
+Deno.test("fdh job: a quota ledger that names another task is not written", async () => {
+  const dir = await Deno.makeTempDir();
+  try {
+    const state = taskIn(dir);
+    const job = await startIntent(state, "push", "x", "agent-a");
+    Deno.mkdirSync(`${dir}/_dist/fdh/quota`, { recursive: true });
+    Deno.writeTextFileSync(
+      `${dir}/_dist/fdh/quota/t1.json`,
+      JSON.stringify({
+        schemaVersion: 1,
+        taskId: "other",
+        worktree: dir,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        activeAgent: null,
+        stopped: false,
+        stopReason: null,
+        approvalPending: [],
+        events: [],
+      }),
+    );
+    const [report] = await reconcileTaskJobs({
+      state,
+      intentHoldersGone: true,
+    });
+    assertEquals(report.action, "error");
+    assert(report.error?.includes("records another task or worktree"));
+    // The journal already moved to awaiting-approval; the ledger was untouched.
+    assertEquals(readJob(dir, "t1", job.jobId).state, "awaiting-approval");
+  } finally {
+    await Deno.remove(dir, { recursive: true });
+  }
+});
