@@ -628,9 +628,8 @@ function save(c: Case, taskId: string, jobId: string): void {
 
 const args = parseArgs(Deno.args);
 outDir = args.out;
-Deno.mkdirSync(outDir, { recursive: true });
 if (args.only !== null) {
-  const unknown = [...args.only].filter((id) => !(id in CASES));
+  const unknown = [...args.only].filter((id) => !Object.hasOwn(CASES, id));
   if (unknown.length > 0) {
     throw new Error(
       `unknown case id(s) ${unknown.join(", ")}; known: ${
@@ -639,6 +638,7 @@ if (args.only !== null) {
     );
   }
 }
+Deno.mkdirSync(outDir, { recursive: true });
 const results: Case[] = [];
 for (const [id, run] of Object.entries(CASES)) {
   if (args.only !== null && !args.only.has(id)) continue;
