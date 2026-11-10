@@ -94,6 +94,7 @@ export const GECKO_152_RENAMED_VARS: ReadonlyArray<
   // Lepton still reads the legacy names: without these its container-tab
   // underline (`.tab-content::before`, userChrome.tab.container, on by
   // default) has an invalid width on the selected tab and is not drawn.
+  // The first two are also set per element; see GECKO_152_TAB_SCOPED_VARS.
   ["--tab-inline-padding", "--tab-padding-inline"],
   ["--tab-inner-inline-margin", "--tab-margin-inline-inner"],
   ["--tab-loading-fill", "--tab-icon-fill-loading"],
@@ -152,6 +153,35 @@ export const GECKO_152_SYNTHESIZED_VARS: ReadonlyArray<
   ["--toolbar-text-color", "var(--lwt-text-color, var(--toolbar-color))"],
 ];
 
+/**
+ * Legacy names from `GECKO_152_RENAMED_VARS` that are re-declared on
+ * `.tabbrowser-tab` as well as on `:root`.
+ *
+ * A custom property that references another one is resolved on the element
+ * that declares it, so the `:root` alias carries the root value of the new
+ * name into every tab. Gecko sets these two per element: tabs.css (159)
+ * `#tabbrowser-tabs[orient="vertical"]` (2878) and
+ * `#pinned-tabs-container[orient="vertical"]` (2782) set
+ * `--tab-padding-inline`, and the compact `tab-split-view-wrapper` (1551) sets
+ * `--tab-margin-inline-inner: 13px` (151 set `--tab-inline-padding` on the
+ * same vertical-tab elements, tabs.css 2303 / 2220). Declaring the alias on
+ * the tab resolves it against the value the tab inherits there. Gecko sets
+ * `--tab-icon-fill-loading` only on `:root` (tab.tokens.css,
+ * ThemeVariableMap), so `--tab-loading-fill` stays root-only.
+ */
+export const GECKO_152_TAB_SCOPED_VARS: ReadonlyArray<string> = [
+  "--tab-inline-padding",
+  "--tab-inner-inline-margin",
+];
+
+function buildTabScopedDeclarations(): string {
+  return GECKO_152_TAB_SCOPED_VARS.map((legacy) => {
+    const entry = GECKO_152_RENAMED_VARS.find(([name]) => name === legacy);
+    if (!entry) throw new Error(`${legacy} is not in GECKO_152_RENAMED_VARS`);
+    return `  ${legacy}: var(${entry[1]});`;
+  }).join("\n");
+}
+
 function buildAliasDeclarations(): string {
   const renamed = GECKO_152_RENAMED_VARS.map(([legacy, renamed]) =>
     `  ${legacy}: var(${renamed});`
@@ -175,5 +205,8 @@ export const GECKO_152_VAR_ALIASES_CSS = `
  * ======================================================================= */
 :root {
 ${buildAliasDeclarations()}
+}
+.tabbrowser-tab {
+${buildTabScopedDeclarations()}
 }
 `;

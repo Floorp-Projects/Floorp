@@ -37,7 +37,7 @@ export const ALLOWED_UNDEFINED_READS: Record<string, string> = {
   "--urlbar-width":
     "Lepton bug: Gecko no longer sets --urlbar-width; opt-in urlView_expanding / as_commandbar only",
   "--arrowpanel-menuitemblank-padding-block":
-    "Lepton bug: typo for --arrowpanel-menuitemblank-padding; off by default (needs icon.panel_full and panel_photon off). Floorp's icon-disabled.css copy is removed",
+    "Lepton bug: typo for --arrowpanel-menuitemblank-padding; off by default (needs icon.panel_full and panel_photon off). Floorp's icon-disabled.css copy is removed (guarded in css-variables.test.ts)",
   "--urlbar-container-padding":
     "removed from Gecko; 2 of 4 Lepton reads fall back to 0px",
   "--tab-shadow-max-size":

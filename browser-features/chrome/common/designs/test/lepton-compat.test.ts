@@ -133,11 +133,41 @@ function makeSidebarBox(
 // ---------------------------------------------------------------------------
 
 /**
- * The renamed-variable table must contain exactly the renames proven by the
- * Floorp-Runtime PR #45 diff. A typo or a phantom entry (the previous
- * revision listed `--toolbar-color` as a rename of `--toolbar-text-color`,
- * which is false) silently breaks components or synthesizes nonsense. Pin
- * the canonical mapping here.
+ * `legacy: var(new);` aliases per rule block of the emitted alias sheet,
+ * keyed by selector. Synthesized chains (`var(a, var(b))`) are not plain
+ * aliases and are left out.
+ */
+function emittedAliasBlocks(): Map<string, Array<[string, string]>> {
+  const css = GECKO_152_VAR_ALIASES_CSS.replace(/\/\*[\s\S]*?\*\//g, "");
+  const blocks = new Map<string, Array<[string, string]>>();
+  for (const block of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+    const pairs: Array<[string, string]> = [];
+    for (
+      const decl of block[2].matchAll(
+        /(--[\w-]+)\s*:\s*var\(\s*(--[\w-]+)\s*\)\s*;/g,
+      )
+    ) {
+      pairs.push([decl[1], decl[2]]);
+    }
+    blocks.set(block[1].trim(), pairs);
+  }
+  return blocks;
+}
+
+/** Sorted serialization: the harness's assertEquals compares with ===. */
+function pairsJson(pairs: ReadonlyArray<readonly [string, string]>): string {
+  return JSON.stringify(
+    [...pairs].sort((a, b) => a[0].localeCompare(b[0])),
+  );
+}
+
+/**
+ * The emitted `:root` aliases must be exactly the renames proven by the
+ * Floorp-Runtime PR #45 diff (151 -> 152 sources). A typo or a phantom entry
+ * (the previous revision listed `--toolbar-color` as a rename of
+ * `--toolbar-text-color`, which is false) silently breaks components or
+ * synthesizes nonsense. Pin the canonical mapping here and check it against
+ * the generated CSS, not against the table it is generated from.
  */
 function testRenamedVarsTableIsCanonical(): void {
   const expected: Array<[string, string]> = [
@@ -177,23 +207,40 @@ function testRenamedVarsTableIsCanonical(): void {
     ["--arrowpanel-border-color", "--panel-border-color"],
     ["--panel-background", "--panel-background-color"],
   ];
-  // NOTE: the colocated test harness's assertEquals uses reference equality
-  // (===), which can never succeed for two independently-built arrays. Compare
-  // the canonical (sorted) serializations instead.
-  const sortKey = (
-    a: readonly [string, string],
-    b: readonly [string, string],
-  ) => a[0].localeCompare(b[0]);
-  const actualJson = JSON.stringify(
-    [...GECKO_152_RENAMED_VARS].sort(sortKey),
-  );
-  const expectedJson = JSON.stringify(
-    expected.sort(sortKey),
-  );
+  const blocks = emittedAliasBlocks();
+  const actualJson = pairsJson(blocks.get(":root") ?? []);
+  const expectedJson = pairsJson(expected);
   assert(
     actualJson === expectedJson,
-    "GECKO_152_RENAMED_VARS must match the 151->152 evidence table exactly " +
-      `(expected: ${expectedJson}, actual: ${actualJson})`,
+    "the :root aliases in GECKO_152_VAR_ALIASES_CSS must match the 151->152 " +
+      `evidence table exactly (expected: ${expectedJson}, actual: ${actualJson})`,
+  );
+  assertEquals(
+    [...blocks.keys()].join(" | "),
+    ":root | .tabbrowser-tab",
+    "the alias sheet must have exactly a :root block and a .tabbrowser-tab block",
+  );
+}
+
+/**
+ * Gecko 159 sets `--tab-padding-inline` on the vertical tab strips and
+ * `--tab-margin-inline-inner` on the compact split-view wrapper. A `:root`
+ * alias would carry the root value into those tabs, so the two legacy names
+ * Lepton reads inside tabs must also be aliased on `.tabbrowser-tab`.
+ */
+function testTabScopedAliasesAreEmitted(): void {
+  const expected: Array<[string, string]> = [
+    ["--tab-inline-padding", "--tab-padding-inline"],
+    ["--tab-inner-inline-margin", "--tab-margin-inline-inner"],
+  ];
+  const actualJson = pairsJson(
+    emittedAliasBlocks().get(".tabbrowser-tab") ?? [],
+  );
+  const expectedJson = pairsJson(expected);
+  assert(
+    actualJson === expectedJson,
+    "GECKO_152_VAR_ALIASES_CSS must alias the per-tab tokens on " +
+      `.tabbrowser-tab (expected: ${expectedJson}, actual: ${actualJson})`,
   );
 }
 
@@ -741,6 +788,10 @@ export async function runAllTests(): Promise<void> {
     {
       name: "renamed vars table is canonical",
       fn: testRenamedVarsTableIsCanonical,
+    },
+    {
+      name: "per-tab tokens are aliased on .tabbrowser-tab",
+      fn: testTabScopedAliasesAreEmitted,
     },
     {
       name: "--toolbar-color is not a rename source",
