@@ -1454,8 +1454,18 @@ async function cmdJob(parsed: ParsedArgs, sub: JobSubcommand): Promise<void> {
       const reason = hasOption(parsed, "reason")
         ? requireOption(parsed, "reason")
         : "";
-      const job = await cancelAndSettle(state, jobId!, reason);
-      console.log(JSON.stringify(summarizeJob(job)));
+      const { job, reports } = await cancelAndSettle(state, jobId!, reason);
+      console.log(
+        JSON.stringify({ ...summarizeJob(job), reconciled: reports }),
+      );
+      const failed = reports.filter((r) => r.error !== undefined);
+      if (failed.length > 0) {
+        throw new Error(
+          `job ${jobId} is ${job.state}, but reconciling it failed: ${
+            failed.map((r) => r.error).join("; ")
+          }`,
+        );
+      }
       return;
     }
   }

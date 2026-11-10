@@ -238,9 +238,11 @@ Reconcile (`job wait|status|reconcile`, `task resume`) does exactly one of:
 reconnect to a live executor; apply a result left in the outbox (no rerun); stop
 the lost attempt's step process tree (identity-checked) and start the next epoch
 from the checkpoint (build commands already completed are not rerun); fail the
-job when its inputs (HEAD, uncommitted state, guard env) changed or
-`--max-attempts` (default 3) attempts were lost. Each terminal result is copied
-into the task state once (operations, assertions, a `job result <id>` event).
+job when its inputs (HEAD, tracked diff, untracked file contents, guard env)
+changed or `--max-attempts` (default 3) attempts were lost. Each terminal result
+is copied into the task state once (operations, assertions, a `job result <id>`
+event). A build that still has to compile source is not respawned while this
+worktree's dev server runs (the W-04 guard): run `dev down`, then `job wait`.
 
 Non-idempotent operations (push, PR, release, other external writes) are never
 run by fdh. Record the intent before you perform it, and the outcome after:
@@ -257,8 +259,12 @@ If the session ends between the two, `task resume` puts the intent into
 `awaiting-approval` and the quota ledger's pending list. Do not retry it: a
 human checks the external state and runs
 `job resolve --resolution succeeded|failed|retry [--agent <name>]`, which also
-approves the pending entry. A confirm that arrives after the holder was declared
-lost is refused and recorded (`late-report`).
+approves the pending entry. If the ledger update fails, run the same
+`job resolve` again: it only repeats the ledger step. Reconcile puts a missing
+pending entry back while the job still awaits approval, unless the ledger
+records an approval for it (or a `quota approve`) since then. A confirm that
+arrives after the holder was declared lost is refused and recorded
+(`late-report`).
 
 ## GUI desktop lease and secret-reference denial (Gate 4 4-A)
 

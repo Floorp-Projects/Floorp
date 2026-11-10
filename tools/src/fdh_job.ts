@@ -35,6 +35,7 @@ import {
   writeTaskState,
 } from "./fdh_task.ts";
 import { type BuildPhase, buildVerifyCommands } from "./fdh_verify.ts";
+import { assertSourceBuildAllowed } from "./fdh_dev_guard.ts";
 import {
   cancelJob,
   confirmIntent,
@@ -118,8 +119,15 @@ export async function currentInputs(
     "ls-files",
     "--others",
     "--exclude-standard",
+    "-z",
   ]);
-  const bytes = new TextEncoder().encode(`${diff}\0${untracked}`);
+  // Untracked files count by content, so editing an untracked source while a
+  // job was lost also stops a silent rerun (E-7).
+  const untrackedState = await hashUntracked(
+    state.worktree,
+    untracked.split(/\0|\n/).filter((name) => name !== ""),
+  );
+  const bytes = new TextEncoder().encode(`${diff}\0${untrackedState}`);
   const worktreeState = encodeHex(
     await crypto.subtle.digest("SHA-256", bytes),
   );
@@ -129,6 +137,42 @@ export async function currentInputs(
     guardEnv: { ...(state.setup?.guardEnv ?? {}) },
     worktreeState,
   };
+}
+
+/** Untracked files larger than this count by size and mtime, not content. */
+export const MAX_HASHED_UNTRACKED_BYTES = 16 * 1024 * 1024;
+
+/**
+ * One line per untracked file: its name and the SHA-256 of its content (or
+ * its size and mtime when it is larger than MAX_HASHED_UNTRACKED_BYTES, or
+ * "missing" when it vanished meanwhile), sorted by name.
+ */
+export async function hashUntracked(
+  worktree: string,
+  names: string[],
+): Promise<string> {
+  const lines: string[] = [];
+  for (const name of [...names].sort()) {
+    const file = path.join(worktree, ...name.split("/"));
+    let entry: string;
+    try {
+      const info = Deno.statSync(file);
+      if (!info.isFile) {
+        entry = `other:${info.size}`;
+      } else if (info.size > MAX_HASHED_UNTRACKED_BYTES) {
+        entry = `large:${info.size}:${info.mtime?.toISOString() ?? ""}`;
+      } else {
+        entry = encodeHex(
+          await crypto.subtle.digest("SHA-256", Deno.readFileSync(file)),
+        );
+      }
+    } catch (error) {
+      if (!(error instanceof Deno.errors.NotFound)) throw error;
+      entry = "missing";
+    }
+    lines.push(`${name}\0${entry}`);
+  }
+  return lines.join("\n");
 }
 
 /** Detached executor process for `epoch` of a job; returns its pid. */
@@ -433,6 +477,8 @@ export interface ReconcileTaskOptions {
   git?: GitRunner;
   spawn?: typeof spawnExecutorProcess;
   stopTree?: typeof stopProcessTree;
+  /** W-04 guard checked before a respawn that compiles source. */
+  sourceBuildGuard?: (worktree: string) => Promise<void>;
 }
 
 /**
@@ -540,6 +586,22 @@ async function reconcileOne(
       }
       return report;
     }
+    if (value.action === "respawn" && respawnCompilesSource(job)) {
+      // Same W-04 guard as 'verify build' / 'job start': do not start a source
+      // build under this worktree's running dev browser. The new attempt is
+      // left unstarted; a later reconcile after 'fdh dev down' takes it over.
+      try {
+        await (options.sourceBuildGuard ??
+          ((worktree) => assertSourceBuildAllowed(worktree, "before-mach")))(
+            state.worktree,
+          );
+      } catch (error) {
+        report.error = `not respawned: ${
+          error instanceof Error ? error.message : String(error)
+        }`;
+        return report;
+      }
+    }
     if (value.action === "respawn") {
       // The stop can take seconds (PowerShell on Windows): start the new
       // attempt's start deadline now, not at the epoch bump.
@@ -556,13 +618,24 @@ async function reconcileOne(
         value.epoch,
       );
     }
-    if (value.action === "awaiting-approval" && job.intent !== null) {
-      await withLedger(
-        state.worktree,
-        state.taskId,
-        (ledger) =>
-          pendingQuota(ledger, job.intent!.op as IntentOp, quotaNoteFor(job)),
-      );
+    if (job.state === "awaiting-approval" && job.intent !== null) {
+      // Put (or put back) the approval entry. A controller may have died
+      // between the journal transition and the ledger write. An approval
+      // recorded in the ledger since the job began waiting is not undone.
+      const since = [...job.transitions].reverse().find((t) =>
+        t.to === "awaiting-approval"
+      )?.at ?? job.updatedAt;
+      await withLedger(state.worktree, state.taskId, (ledger) => {
+        // An approve-all (quota approve, no op) or this entry's own approval.
+        const note = quotaNoteFor(job);
+        const approvedSince = ledger.events.some((e) =>
+          e.kind === "approve" && Date.parse(e.at) >= Date.parse(since) &&
+          (e.op === undefined || (e.note ?? "").includes(note))
+        );
+        if (!approvedSince) {
+          pendingQuota(ledger, job.intent!.op as IntentOp, quotaNoteFor(job));
+        }
+      });
     }
     if (isTerminal(job.state)) {
       await settleJob(state.worktree, state.taskId, jobId);
@@ -694,7 +767,12 @@ export async function resolveAndApprove(
     state.worktree,
     state.taskId,
     jobId,
-    (j) => resolveJob(j, resolution, note, agent),
+    (j) => {
+      // A retry after the ledger update below failed: the journal is already
+      // resolved the same way, so only the ledger step is repeated.
+      if (alreadyResolvedAs(j, resolution)) return;
+      resolveJob(j, resolution, note, agent);
+    },
   );
   if (job.intent !== null) {
     await withLedger(
@@ -721,7 +799,7 @@ export async function cancelAndSettle(
   jobId: string,
   reason: string,
   options: Omit<ReconcileTaskOptions, "state" | "jobIds"> = {},
-): Promise<JobJournal> {
+): Promise<{ job: JobJournal; reports: ReconcileReport[] }> {
   await updateJob(
     state.worktree,
     state.taskId,
@@ -730,8 +808,34 @@ export async function cancelAndSettle(
   );
   // Reconcile at once: it stops any lost tree left from an earlier epoch
   // (e.g. an interrupted respawn) and records a closed job's result.
-  await reconcileTaskJobs({ ...options, state, jobIds: [jobId] });
-  return readJob(state.worktree, state.taskId, jobId);
+  const reports = await reconcileTaskJobs({
+    ...options,
+    state,
+    jobIds: [jobId],
+  });
+  return { job: readJob(state.worktree, state.taskId, jobId), reports };
+}
+
+/**
+ * Was `job` already resolved with `resolution` by an approver? (The last
+ * "resolved" event says so and the job is past awaiting-approval.)
+ */
+export function alreadyResolvedAs(
+  job: JobJournal,
+  resolution: Resolution,
+): boolean {
+  if (job.state === "awaiting-approval") return false;
+  const last = [...job.events].reverse().find((e) => e.kind === "resolved");
+  return last !== undefined &&
+    last.note.startsWith(`resolved ${resolution} by approver`);
+}
+
+/** Would a respawn of `job` start at a command that compiles source? */
+export function respawnCompilesSource(job: JobJournal): boolean {
+  if (job.kind !== "build" || job.step === null) return false;
+  return job.step.commands.slice(job.checkpoint).some((command) =>
+    command.argv.includes("before-mach")
+  );
 }
 
 /**
