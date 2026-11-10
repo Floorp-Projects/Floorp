@@ -20,6 +20,7 @@
       "name-placeholder": "Enter a name for this workspace",
       "container": "Container",
       "no-container": "No Container",
+      "unavailable-container": "Unavailable container (ID {{id}})",
       "icon": "Icon",
       "edit-title": "Edit Workspace",
       "save": "Save Changes",
