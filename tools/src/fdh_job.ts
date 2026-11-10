@@ -532,6 +532,10 @@ export interface WaitOptions extends ReconcileTaskOptions {
   timeoutMs: number;
   pollMs?: number;
   sleep?: (ms: number) => Promise<void>;
+  /** Consecutive reconcile errors before the wait gives up (default 3). */
+  maxErrors?: number;
+  /** Called with each reconcile error (the CLI prints it to stderr). */
+  onError?: (message: string) => void;
 }
 
 /** Reconcile one job until it is terminal or awaits approval. */
@@ -539,8 +543,25 @@ export async function waitForJob(options: WaitOptions): Promise<JobJournal> {
   const sleep = options.sleep ??
     ((ms: number) => new Promise<void>((r) => setTimeout(r, ms)));
   const deadline = Date.now() + options.timeoutMs;
+  let errors = 0;
   for (;;) {
-    await reconcileTaskJobs({ ...options, jobIds: [options.jobId] });
+    const [report] = await reconcileTaskJobs({
+      ...options,
+      jobIds: [options.jobId],
+    });
+    if (report?.error !== undefined) {
+      // A reconcile that keeps failing (git unusable, a tree that cannot be
+      // stopped) would otherwise leave a lost job untouched until timeout.
+      errors += 1;
+      options.onError?.(report.error);
+      if (errors >= (options.maxErrors ?? 3)) {
+        throw new Error(
+          `job ${options.jobId} could not be reconciled ${errors} times in a row: ${report.error}`,
+        );
+      }
+    } else {
+      errors = 0;
+    }
     const job = readJob(
       options.state.worktree,
       options.state.taskId,

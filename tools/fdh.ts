@@ -1341,15 +1341,35 @@ async function cmdJob(parsed: ParsedArgs, sub: JobSubcommand): Promise<void> {
       const reports = await reconcileTaskJobs({ state, jobIds: ids });
       console.log(JSON.stringify({
         reconciled: reports,
-        jobs: ids.map((id) =>
-          summarizeJob(readJob(state.worktree, taskId, id))
-        ),
+        jobs: ids.map((id) => {
+          try {
+            return summarizeJob(readJob(state.worktree, taskId, id));
+          } catch (error) {
+            return {
+              jobId: id,
+              error: error instanceof Error ? error.message : String(error),
+            };
+          }
+        }),
       }));
+      const failed = reports.filter((r) => r.error !== undefined);
+      if (failed.length > 0) {
+        throw new Error(
+          `${failed.length} job(s) could not be reconciled: ${
+            failed.map((r) => `${r.jobId}: ${r.error}`).join("; ")
+          }`,
+        );
+      }
       return;
     }
     case "wait": {
       const timeoutMs = optionalInteger(parsed, "timeout-ms", 0) ?? 3_600_000;
-      const job = await waitForJob({ state, jobId: jobId!, timeoutMs });
+      const job = await waitForJob({
+        state,
+        jobId: jobId!,
+        timeoutMs,
+        onError: (message) => console.error(`[fdh] reconcile: ${message}`),
+      });
       console.log(JSON.stringify(summarizeJob(job)));
       if (job.state !== "succeeded") {
         throw new Error(`job ${jobId} is ${job.state}`);

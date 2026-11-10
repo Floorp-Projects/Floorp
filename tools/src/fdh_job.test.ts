@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { assert, assertEquals, assertNotEquals } from "@std/assert";
+import {
+  assert,
+  assertEquals,
+  assertNotEquals,
+  assertRejects,
+} from "@std/assert";
 import {
   currentInputs,
   quotaNoteFor,
@@ -10,6 +15,7 @@ import {
   startIntent,
   startStepJob,
   stepSpecFor,
+  waitForJob,
 } from "./fdh_job.ts";
 import { selectProcessTree, startedNoEarlier } from "./fdh_job_process.ts";
 import {
@@ -564,4 +570,47 @@ Deno.test("fdh job: children of an exited pid reuser are not selected", () => {
     selectProcessTree(snapshot, root, "2026-11-09T10:05:00.000Z"),
     [],
   );
+});
+
+Deno.test("fdh job: job wait gives up after consecutive reconcile errors instead of polling silently", async () => {
+  const dir = await Deno.makeTempDir();
+  try {
+    const state = taskIn(dir);
+    const git = fakeGit({ head: "h", diff: "", untracked: "" });
+    const job = await startStepJob({
+      state,
+      kind: "test",
+      leaseTtlMs: 1_000,
+      git,
+      spawn: () => 1,
+    });
+    const old = new Date(Date.now() - 60_000).toISOString();
+    await updateJob(dir, "t1", job.jobId, (j) => {
+      beginAttempt(j, 1, "x1", old);
+      recordStepProcess(j, 1, "x1", {
+        pid: 5,
+        startTime: "s",
+        commandLine: "c",
+      });
+    });
+    const seen: string[] = [];
+    await assertRejects(
+      () =>
+        waitForJob({
+          state,
+          jobId: job.jobId,
+          timeoutMs: 60_000,
+          git,
+          spawn: () => 1,
+          stopTree: () => Promise.reject(new Error("denied")),
+          sleep: () => Promise.resolve(),
+          onError: (m) => seen.push(m),
+        }),
+      Error,
+      "could not be reconciled 3 times in a row",
+    );
+    assertEquals(seen.length, 3);
+  } finally {
+    await Deno.remove(dir, { recursive: true });
+  }
 });
