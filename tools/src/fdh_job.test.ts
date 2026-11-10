@@ -9,10 +9,12 @@ import {
 import {
   cancelAndSettle,
   currentInputs,
+  hashUntracked,
   lostTreeBound,
   quotaNoteFor,
   reconcileTaskJobs,
   resolveAndApprove,
+  respawnCompilesSource,
   settleJob,
   startIntent,
   startStepJob,
@@ -23,12 +25,15 @@ import { selectProcessTree, startedNoEarlier } from "./fdh_job_process.ts";
 import {
   applyReport,
   beginAttempt,
+  heartbeat,
+  jobJournalPath,
   readJob,
   reconcileJob,
   recordStepProcess,
   updateJob,
 } from "./fdh_executor.ts";
 import { readQuotaLedger } from "./fdh_quota.ts";
+import { lockPathFor, withFileLock } from "./fdh_lock.ts";
 import {
   createTaskState,
   type GitRunner,
@@ -661,14 +666,19 @@ Deno.test("fdh job: job cancel also stops a lost tree left by an interrupted res
       reconcileJob(j, { currentDigest: j.executionDigest, at: old });
     });
     const stopped: number[] = [];
-    const after = await cancelAndSettle(state, job.jobId, "not needed", {
-      git,
-      spawn: () => 1,
-      stopTree: (r) => {
-        stopped.push(r.pid);
-        return Promise.resolve([]);
+    const { job: after } = await cancelAndSettle(
+      state,
+      job.jobId,
+      "not needed",
+      {
+        git,
+        spawn: () => 1,
+        stopTree: (r) => {
+          stopped.push(r.pid);
+          return Promise.resolve([]);
+        },
       },
-    });
+    );
     assertEquals(after.state, "cancelled");
     assertEquals(stopped, [61]);
     assertEquals(after.recordedToTask, true);
@@ -737,6 +747,514 @@ Deno.test("fdh job: a quota ledger that names another task is not written", asyn
     assert(report.error?.includes("records another task or worktree"));
     // The journal already moved to awaiting-approval; the ledger was untouched.
     assertEquals(readJob(dir, "t1", job.jobId).state, "awaiting-approval");
+  } finally {
+    await Deno.remove(dir, { recursive: true });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// KAN-137 hardening
+// ---------------------------------------------------------------------------
+
+Deno.test("fdh job: editing an untracked file changes the execution inputs", async () => {
+  const dir = await Deno.makeTempDir();
+  try {
+    const state = taskIn(dir);
+    Deno.writeTextFileSync(`${dir}/notes.ts`, "export const a = 1;\n");
+    const git = fakeGit({ head: "h", diff: "", untracked: "notes.ts\0" });
+    const a = await currentInputs(state, git);
+    // A different size: the per-process cache (keyed by size and mtime)
+    // cannot hide the change.
+    Deno.writeTextFileSync(`${dir}/notes.ts`, "export const a = 22;\n");
+    const b = await currentInputs(state, git);
+    assertNotEquals(a.worktreeState, b.worktreeState);
+    // Same content and mtime as at first: the same digest again.
+    Deno.writeTextFileSync(`${dir}/notes.ts`, "export const a = 1;\n");
+    const t = new Date("2026-11-10T00:00:00.000Z");
+    Deno.utimeSync(`${dir}/notes.ts`, t, t);
+    const c = await currentInputs(state, git);
+    Deno.writeTextFileSync(`${dir}/notes.ts`, "export const a = 3;\n");
+    Deno.utimeSync(
+      `${dir}/notes.ts`,
+      new Date(t.getTime() + 5_000),
+      new Date(t.getTime() + 5_000),
+    );
+    assertNotEquals(
+      (await currentInputs(state, git)).worktreeState,
+      c.worktreeState,
+    );
+    const lines = await hashUntracked(dir, ["gone.ts", "notes.ts"]);
+    assert(lines.startsWith("gone.ts\0missing\nnotes.ts\0"));
+  } finally {
+    await Deno.remove(dir, { recursive: true });
+  }
+});
+
+Deno.test("fdh job: a source-build respawn is held while the dev guard refuses", async () => {
+  const dir = await Deno.makeTempDir();
+  try {
+    const state = taskIn(dir);
+    const git = fakeGit({ head: "h", diff: "", untracked: "" });
+    const spawned: number[] = [];
+    const spawn = (_w: string, _t: string, _j: string, epoch: number) => {
+      spawned.push(epoch);
+      return 1;
+    };
+    const job = await startStepJob({
+      state,
+      kind: "build",
+      phase: "all",
+      leaseTtlMs: 1_000,
+      git,
+      spawn,
+    });
+    assert(respawnCompilesSource(readJob(dir, "t1", job.jobId)));
+    const old = new Date(Date.now() - 60_000).toISOString();
+    await updateJob(dir, "t1", job.jobId, (j) => beginAttempt(j, 1, "x1", old));
+    // Held: the journal is untouched, so no attempt is used up however
+    // long the dev server runs.
+    for (let i = 0; i < 4; i++) {
+      const [report] = await reconcileTaskJobs({
+        state,
+        git,
+        spawn,
+        sourceBuildGuard: () => Promise.reject(new Error("dev server running")),
+      });
+      assertEquals(report.action, "held");
+      assert(report.error?.includes("dev server running"));
+    }
+    const held = readJob(dir, "t1", job.jobId);
+    assertEquals(held.epoch, 1);
+    assertEquals(held.attempts.length, 1);
+    assertEquals(spawned, [1]);
+    // Once the guard passes ('fdh dev down'), the job is taken over.
+    const [after] = await reconcileTaskJobs({
+      state,
+      git,
+      spawn,
+      sourceBuildGuard: () => Promise.resolve(),
+    });
+    assertEquals(after.action, "respawn");
+    assertEquals(spawned, [1, 2]);
+    // After the source command is checkpointed, an after-mach-only respawn is
+    // not guarded.
+    await updateJob(dir, "t1", job.jobId, (j) => {
+      j.checkpoint = 1;
+    });
+    assertEquals(respawnCompilesSource(readJob(dir, "t1", job.jobId)), false);
+  } finally {
+    await Deno.remove(dir, { recursive: true });
+  }
+});
+
+Deno.test("fdh job: a missing approval entry is put back, but an approval is not undone", async () => {
+  const dir = await Deno.makeTempDir();
+  try {
+    const state = taskIn(dir);
+    const job = await startIntent(state, "push", "origin b", "agent-a");
+    await reconcileTaskJobs({ state, intentHoldersGone: true });
+    // The ledger entry is lost (e.g. the controller died before writing it).
+    const file = `${dir}/_dist/fdh/quota/t1.json`;
+    const ledger = JSON.parse(Deno.readTextFileSync(file));
+    ledger.approvalPending = [];
+    Deno.writeTextFileSync(file, JSON.stringify(ledger));
+    await reconcileTaskJobs({ state });
+    assertEquals(readQuotaLedger(dir, "t1").approvalPending.length, 1);
+    // A human approves through the quota ledger: reconcile leaves it approved.
+    const approved = readQuotaLedger(dir, "t1");
+    approved.approvalPending = [];
+    approved.events.push({
+      at: new Date(Date.now() + 1_000).toISOString(),
+      kind: "approve",
+      note: "human approved",
+    });
+    Deno.writeTextFileSync(file, JSON.stringify(approved));
+    await reconcileTaskJobs({ state });
+    assertEquals(readQuotaLedger(dir, "t1").approvalPending, []);
+    assertEquals(readJob(dir, "t1", job.jobId).state, "awaiting-approval");
+  } finally {
+    await Deno.remove(dir, { recursive: true });
+  }
+});
+
+Deno.test("fdh job: resolving again after a failed ledger write only repeats the ledger step", async () => {
+  const dir = await Deno.makeTempDir();
+  try {
+    const state = taskIn(dir);
+    const job = await startIntent(state, "push", "origin b", "agent-a");
+    await reconcileTaskJobs({ state, intentHoldersGone: true });
+    const file = `${dir}/_dist/fdh/quota/t1.json`;
+    const good = Deno.readTextFileSync(file);
+    // The first resolve updates the journal, then the ledger write fails.
+    Deno.writeTextFileSync(file, "{ broken");
+    await assertRejects(() =>
+      resolveAndApprove(state, job.jobId, "succeeded", "seen on origin")
+    );
+    assertEquals(readJob(dir, "t1", job.jobId).state, "succeeded");
+    Deno.writeTextFileSync(file, good);
+    const again = await resolveAndApprove(state, job.jobId, "succeeded", "");
+    assertEquals(again.state, "succeeded");
+    assertEquals(readQuotaLedger(dir, "t1").approvalPending, []);
+    // A different resolution is still refused.
+    await assertRejects(
+      () => resolveAndApprove(state, job.jobId, "failed", ""),
+      Error,
+      "only a job awaiting approval",
+    );
+  } finally {
+    await Deno.remove(dir, { recursive: true });
+  }
+});
+
+Deno.test("fdh job: job cancel returns the reconcile errors", async () => {
+  const dir = await Deno.makeTempDir();
+  try {
+    const state = taskIn(dir);
+    const git = fakeGit({ head: "h", diff: "", untracked: "" });
+    const job = await startStepJob({
+      state,
+      kind: "test",
+      leaseTtlMs: 1_000,
+      git,
+      spawn: () => 1,
+    });
+    const old = new Date(Date.now() - 120_000).toISOString();
+    await updateJob(dir, "t1", job.jobId, (j) => {
+      beginAttempt(j, 1, "x1", old);
+      recordStepProcess(j, 1, "x1", {
+        pid: 9,
+        startTime: "s",
+        commandLine: "c",
+      });
+      reconcileJob(j, { currentDigest: j.executionDigest, at: old });
+    });
+    const { job: after, reports } = await cancelAndSettle(
+      state,
+      job.jobId,
+      "",
+      {
+        git,
+        spawn: () => 1,
+        stopTree: () => Promise.reject(new Error("denied")),
+      },
+    );
+    assertEquals(after.state, "cancelled");
+    assert(reports[0].error?.includes("denied"));
+  } finally {
+    await Deno.remove(dir, { recursive: true });
+  }
+});
+
+Deno.test("fdh job: another entry's approval does not stop the repair", async () => {
+  const dir = await Deno.makeTempDir();
+  try {
+    const state = taskIn(dir);
+    await startIntent(state, "push", "origin b", "agent-a");
+    await reconcileTaskJobs({ state, intentHoldersGone: true });
+    const file = `${dir}/_dist/fdh/quota/t1.json`;
+    const ledger = JSON.parse(Deno.readTextFileSync(file));
+    ledger.approvalPending = [];
+    ledger.events.push({
+      at: new Date(Date.now() + 1_000).toISOString(),
+      kind: "approve",
+      op: "pr",
+      note: "resolved succeeded job intent-other: x",
+    });
+    Deno.writeTextFileSync(file, JSON.stringify(ledger));
+    await reconcileTaskJobs({ state });
+    assertEquals(readQuotaLedger(dir, "t1").approvalPending.length, 1);
+  } finally {
+    await Deno.remove(dir, { recursive: true });
+  }
+});
+
+Deno.test("fdh job: an approve-all before an entry was listed does not stop its repair", async () => {
+  const dir = await Deno.makeTempDir();
+  try {
+    const state = taskIn(dir);
+    await startIntent(state, "push", "origin a", "agent-a");
+    const b = await startIntent(state, "pr", "draft", "agent-a");
+    await reconcileTaskJobs({ state, intentHoldersGone: true });
+    const file = `${dir}/_dist/fdh/quota/t1.json`;
+    const ledger = JSON.parse(Deno.readTextFileSync(file));
+    // A's entry was never written; it was not in the list that approve-all
+    // cleared, so it must come back. B's entry was listed and approved.
+    ledger.approvalPending = [];
+    ledger.events = ledger.events.filter((e: { kind: string; note?: string }) =>
+      !(e.kind === "pending" && e.note?.includes("origin a"))
+    );
+    ledger.events.push({
+      at: new Date(Date.now() + 1_000).toISOString(),
+      kind: "approve",
+      note: "pr",
+    });
+    Deno.writeTextFileSync(file, JSON.stringify(ledger));
+    await reconcileTaskJobs({ state });
+    const pending = readQuotaLedger(dir, "t1").approvalPending.map((p) => p.op);
+    assertEquals(pending, ["push"]);
+    assertEquals(readJob(dir, "t1", b.jobId).state, "awaiting-approval");
+  } finally {
+    await Deno.remove(dir, { recursive: true });
+  }
+});
+
+Deno.test("fdh job: a repeated retry resolution is refused", async () => {
+  const dir = await Deno.makeTempDir();
+  try {
+    const state = taskIn(dir);
+    const job = await startIntent(state, "push", "origin b", "agent-a");
+    await reconcileTaskJobs({ state, intentHoldersGone: true });
+    await resolveAndApprove(state, job.jobId, "retry", "", "agent-b");
+    await assertRejects(
+      () => resolveAndApprove(state, job.jobId, "retry", "", "agent-c"),
+      Error,
+      "only a job awaiting approval",
+    );
+  } finally {
+    await Deno.remove(dir, { recursive: true });
+  }
+});
+
+Deno.test("fdh job: an unreadable untracked file is counted, not fatal", async () => {
+  const dir = await Deno.makeTempDir();
+  try {
+    Deno.mkdirSync(`${dir}/sub`);
+    Deno.writeTextFileSync(`${dir}/held.txt`, "held\n");
+    const holder = Deno.openSync(`${dir}/held.txt`, {
+      read: true,
+      write: true,
+    });
+    try {
+      // Windows locks are mandatory, so the read fails there (os error 33);
+      // POSIX locks are advisory and the file is hashed as usual.
+      holder.lockSync(true);
+      const lines = await hashUntracked(dir, ["held.txt", "sub/"]);
+      if (Deno.build.os === "windows") {
+        assert(lines.startsWith("held.txt\0unreadable:5:"), lines);
+      } else {
+        assert(!lines.includes("unreadable"), lines);
+      }
+      assert(lines.includes("sub/\0other:"), lines);
+    } finally {
+      holder.close();
+    }
+  } finally {
+    await Deno.remove(dir, { recursive: true });
+  }
+});
+
+Deno.test("fdh job: a held job's lost step tree is stopped once, and job wait says to run dev down", async () => {
+  const dir = await Deno.makeTempDir();
+  try {
+    const state = taskIn(dir);
+    const git = fakeGit({ head: "h", diff: "", untracked: "" });
+    const spawned: number[] = [];
+    const spawn = (_w: string, _t: string, _j: string, epoch: number) => {
+      spawned.push(epoch);
+      return 1;
+    };
+    const job = await startStepJob({
+      state,
+      kind: "build",
+      phase: "all",
+      leaseTtlMs: 1_000,
+      git,
+      spawn,
+    });
+    const old = new Date(Date.now() - 60_000).toISOString();
+    const root = {
+      pid: 71,
+      startTime: "s",
+      commandLine: "deno task feles-build",
+    };
+    await updateJob(dir, "t1", job.jobId, (j) => {
+      beginAttempt(j, 1, "x1", old);
+      recordStepProcess(j, 1, "x1", root);
+    });
+    const stopped: number[] = [];
+    const stopTree = (r: { pid: number }) => {
+      stopped.push(r.pid);
+      return Promise.resolve([{ ...root, ppid: 1, name: "deno" }]);
+    };
+    const refuse = () => Promise.reject(new Error("dev server running"));
+    for (let i = 0; i < 3; i++) {
+      const [report] = await reconcileTaskJobs({
+        state,
+        git,
+        spawn,
+        stopTree,
+        sourceBuildGuard: refuse,
+      });
+      assertEquals(report.action, "held");
+    }
+    // Stopped on the first held reconcile only.
+    assertEquals(stopped, [71]);
+    await assertRejects(
+      () =>
+        waitForJob({
+          state,
+          jobId: job.jobId,
+          timeoutMs: 60_000,
+          git,
+          spawn,
+          stopTree,
+          sourceBuildGuard: refuse,
+          sleep: () => Promise.resolve(),
+        }),
+      Error,
+      "Run 'fdh dev down'",
+    );
+    // The takeover after dev down does not stop the same tree again.
+    const [after] = await reconcileTaskJobs({
+      state,
+      git,
+      spawn,
+      stopTree,
+      sourceBuildGuard: () => Promise.resolve(),
+    });
+    assertEquals(after.action, "respawn");
+    assertEquals(stopped, [71]);
+    assertEquals(spawned, [1, 2]);
+  } finally {
+    await Deno.remove(dir, { recursive: true });
+  }
+});
+
+Deno.test("fdh job: a lease that runs out while the journal lock is busy still meets the dev guard", async () => {
+  const dir = await Deno.makeTempDir();
+  try {
+    const state = taskIn(dir);
+    const git = fakeGit({ head: "h", diff: "", untracked: "" });
+    const spawned: number[] = [];
+    const spawn = (_w: string, _t: string, _j: string, epoch: number) => {
+      spawned.push(epoch);
+      return 1;
+    };
+    const job = await startStepJob({
+      state,
+      kind: "build",
+      phase: "all",
+      leaseTtlMs: 1_000,
+      git,
+      spawn,
+    });
+    // The lease runs out about 300 ms from now.
+    await updateJob(dir, "t1", job.jobId, (j) => {
+      beginAttempt(j, 1, "x1", new Date(Date.now() - 700).toISOString());
+    });
+    let guardCalls = 0;
+    const refuse = () => {
+      guardCalls += 1;
+      return Promise.reject(new Error("dev server running"));
+    };
+    // Another writer holds the journal lock across the expiry.
+    let release!: () => void;
+    const taken = new Promise<void>((ok) => {
+      const lock = lockPathFor(jobJournalPath(dir, "t1", job.jobId));
+      void withFileLock(lock, () => {
+        ok();
+        return new Promise<void>((r) => {
+          release = r;
+          setTimeout(r, 800);
+        });
+      });
+    });
+    await taken;
+    const [report] = await reconcileTaskJobs({
+      state,
+      git,
+      spawn,
+      stopTree: () => Promise.resolve([]),
+      sourceBuildGuard: refuse,
+    });
+    release();
+    assertEquals(report.action, "held");
+    assertEquals(guardCalls, 1);
+    assertEquals(spawned, [1]);
+    assertEquals(readJob(dir, "t1", job.jobId).epoch, 1);
+  } finally {
+    await Deno.remove(dir, { recursive: true });
+  }
+});
+
+Deno.test("fdh job: a held job's stalled executor is fenced, so its killed step is not recorded as a failure", async () => {
+  const dir = await Deno.makeTempDir();
+  try {
+    const state = taskIn(dir);
+    const git = fakeGit({ head: "h", diff: "", untracked: "" });
+    const spawned: number[] = [];
+    const spawn = (_w: string, _t: string, _j: string, epoch: number) => {
+      spawned.push(epoch);
+      return 1;
+    };
+    const job = await startStepJob({
+      state,
+      kind: "build",
+      phase: "all",
+      leaseTtlMs: 1_000,
+      git,
+      spawn,
+    });
+    const old = new Date(Date.now() - 60_000).toISOString();
+    const root = {
+      pid: 72,
+      startTime: "s",
+      commandLine: "deno task feles-build",
+    };
+    await updateJob(dir, "t1", job.jobId, (j) => {
+      beginAttempt(j, 1, "x1", old);
+      recordStepProcess(j, 1, "x1", root);
+    });
+    const [held] = await reconcileTaskJobs({
+      state,
+      git,
+      spawn,
+      stopTree: () => Promise.resolve([{ ...root, ppid: 1, name: "deno" }]),
+      sourceBuildGuard: () => Promise.reject(new Error("dev server running")),
+    });
+    assertEquals(held.action, "held");
+    assertEquals(held.stopped, 1);
+    // The stalled executor wakes up: fenced, and its exit 143 is not applied.
+    const beat = await updateJob(
+      dir,
+      "t1",
+      job.jobId,
+      (j) => heartbeat(j, 1, "x1"),
+    );
+    assertEquals(beat.value, "fenced");
+    const late = await updateJob(dir, "t1", job.jobId, (j) =>
+      applyReport(j, {
+        jobId: job.jobId,
+        epoch: 1,
+        holder: "x1",
+        exitCode: 143,
+        endedAt: new Date().toISOString(),
+        logRef: null,
+        results: [],
+      }));
+    assertEquals(late.value.applied, false);
+    const after = readJob(dir, "t1", job.jobId);
+    assertEquals(after.state, "running");
+    assertEquals(after.epoch, 1);
+    assertEquals(after.attempts[0].result, "lost");
+    // After 'fdh dev down' the job is taken over at epoch 2.
+    const [taken] = await reconcileTaskJobs({
+      state,
+      git,
+      spawn,
+      stopTree: () => Promise.reject(new Error("must not stop again")),
+      sourceBuildGuard: () => Promise.resolve(),
+    });
+    assertEquals(taken.action, "respawn");
+    assertEquals(spawned, [1, 2]);
+    const final = readJob(dir, "t1", job.jobId);
+    assertEquals(final.attempts.length, 2);
+    // The held loss is recorded once, with the last heartbeat time kept.
+    assertEquals(
+      final.events.filter((e) => e.kind === "lease-expired").length,
+      1,
+    );
+    assertEquals(final.attempts[0].lastSeenAt, old);
   } finally {
     await Deno.remove(dir, { recursive: true });
   }
