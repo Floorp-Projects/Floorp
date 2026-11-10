@@ -41,11 +41,11 @@ import {
   confirmIntent,
   createJob,
   executionDigest,
+  holdRespawn,
   type IntentOp,
   isTerminal,
   type JobInputs,
   type JobJournal,
-  type JobReport,
   jobsDir,
   listJobIds,
   markRecordedToTask,
@@ -54,9 +54,9 @@ import {
   parseExecutorFault,
   readJob,
   readOutbox,
+  type ReconcileContext,
   type ReconcileDecision,
   reconcileJob,
-  reconcileJobFile,
   type Resolution,
   resolveJob,
   restartStartClock,
@@ -555,49 +555,36 @@ async function reconcileOne(
       holderGone: before.kind === "intent" &&
         options.intentHoldersGone === true,
     };
-    if (respawnCompilesSource(before) && !isTerminal(before.state)) {
-      // Same W-04 guard as 'verify build' / 'job start': a respawn must not
-      // start a source build under this worktree's running dev browser.
-      // Decide on a copy first, so a refused respawn leaves the journal
-      // untouched (no epoch bump, no attempt used up): the job is held until
-      // a reconcile after 'fdh dev down'.
-      let outbox: JobReport | null = null;
+    // Same W-04 guard as 'verify build' / 'job start': a respawn must not
+    // start a source build under this worktree's running dev browser. The
+    // decision is taken once, under the journal lock. The guard (it lists
+    // processes, so it is slow) runs outside the lock, only when that
+    // decision is a source-compiling respawn; the locked decision is then
+    // taken again with its answer.
+    let allowed: true | string | undefined;
+    let locked: { job: JobJournal; value: LockedDecision };
+    for (;;) {
       try {
-        outbox = readOutbox(state.worktree, state.taskId, jobId, before.epoch);
-      } catch {
-        // The real reconcile below reports an invalid outbox.
-      }
-      const dry = reconcileJob(structuredClone(before), { ...context, outbox });
-      if (dry.action === "respawn") {
+        locked = await lockedReconcile(state, jobId, context, allowed);
+        break;
+      } catch (error) {
+        if (!(error instanceof GuardNeeded) || allowed !== undefined) {
+          throw error;
+        }
         try {
           await (options.sourceBuildGuard ??
             ((worktree) => assertSourceBuildAllowed(worktree, "before-mach")))(
               state.worktree,
             );
-        } catch (error) {
-          const held: ReconcileReport = {
-            jobId,
-            kind: before.kind,
-            state: before.state,
-            epoch: before.epoch,
-            action: "held",
-            error: `held, not respawned: ${
-              error instanceof Error ? error.message : String(error)
-            }`,
-          };
-          // The lost attempt's step tree (often still alive on POSIX) must
-          // not keep building under the dev server while the job is held.
-          held.stopped = await stopHeldAttemptTree(options, before);
-          return held;
+          allowed = true;
+        } catch (refusal) {
+          allowed = refusal instanceof Error
+            ? refusal.message
+            : String(refusal);
         }
       }
     }
-    const { job, value } = await reconcileJobFile(
-      state.worktree,
-      state.taskId,
-      jobId,
-      context,
-    );
+    const { job, value } = locked;
     const report: ReconcileReport = {
       jobId,
       kind: job.kind,
@@ -605,6 +592,12 @@ async function reconcileOne(
       epoch: job.epoch,
       action: value.action,
     };
+    if (value.action === "held") {
+      // The holder is now fenced (declared lost, no epoch bump): its step
+      // tree is stopped below like any lost attempt's, so the old build does
+      // not keep running under the dev server while the job is held.
+      report.error = `held, not respawned: ${value.reason}`;
+    }
     // Stop what any lost (or, after a cancel, abandoned) attempt left
     // running and has not been stopped yet: before the next epoch runs the
     // same step, when the job closes, and on any later reconcile, so a
@@ -635,9 +628,12 @@ async function reconcileOne(
       // Without the stop the next epoch could run beside the old tree: do not
       // spawn now. A later reconcile retries the stop (the new attempt is
       // then overdue and counted as lost).
-      report.error = `could not stop a lost step tree: ${
+      const stopError = `could not stop a lost step tree: ${
         error instanceof Error ? error.message : String(error)
       }`;
+      report.error = report.error === undefined
+        ? stopError
+        : `${report.error}; ${stopError}`;
       // A closed job still gets its result recorded; the stop is retried by
       // the next reconcile.
       if (isTerminal(job.state)) {
@@ -705,39 +701,51 @@ async function reconcileOne(
   }
 }
 
+type LockedDecision = ReconcileDecision | { action: "held"; reason: string };
+
+/** The locked decision is a source-compiling respawn the guard must clear. */
+class GuardNeeded extends Error {
+  constructor() {
+    super("the respawn compiles source: the W-04 dev guard must clear it");
+  }
+}
+
 /**
- * Stop the step tree of a job's current attempt whose holder looks lost
- * while its respawn is held, once per epoch (recorded as lost-step-stopped,
- * so the later takeover does not stop it again). Returns the number stopped.
+ * Reconcile one journal under its lock (reading the current epoch's outbox
+ * inside it, as `reconcileJobFile` does). A respawn that would compile
+ * source is committed only if `allowed` is true; with no answer yet it
+ * throws `GuardNeeded` and nothing is written; refused (a message), the
+ * respawn is held instead (`holdRespawn`).
  */
-async function stopHeldAttemptTree(
-  options: ReconcileTaskOptions,
-  before: JobJournal,
-): Promise<number | undefined> {
-  const attempt = before.attempts[before.attempts.length - 1];
-  if (attempt?.process == null || attempt.result !== "running") {
-    return undefined;
-  }
-  if (
-    before.events.some((e) =>
-      e.kind === "lost-step-stopped" && e.epoch === attempt.epoch
-    )
-  ) {
-    return undefined;
-  }
-  const root = attempt.process;
-  const bound = lostTreeBound({
-    lastSeenAt: before.lease?.heartbeatAt ?? attempt.startedAt ?? undefined,
-    endedAt: nowIso(),
-  }, before.leaseTtlMs);
-  const stopped = await (options.stopTree ?? stopProcessTree)(root, bound);
-  await updateJob(
-    options.state.worktree,
-    options.state.taskId,
-    before.jobId,
-    (j) => noteLostStepStopped(j, attempt.epoch, root, stopped.length),
-  );
-  return stopped.length;
+async function lockedReconcile(
+  state: FdhTaskState,
+  jobId: string,
+  context: Omit<ReconcileContext, "outbox" | "at">,
+  allowed: true | string | undefined,
+): Promise<{ job: JobJournal; value: LockedDecision }> {
+  return await updateJob(state.worktree, state.taskId, jobId, (job) => {
+    const at = nowIso();
+    // A settled job never uses its outbox; do not let a damaged one stop a
+    // sweep over the task's jobs.
+    const outbox = isTerminal(job.state) || job.state === "awaiting-approval"
+      ? null
+      : readOutbox(state.worktree, state.taskId, jobId, job.epoch);
+    const compiles = respawnCompilesSource(job);
+    const trial = compiles ? structuredClone(job) : job;
+    const value: LockedDecision = reconcileJob(trial, {
+      ...context,
+      at,
+      outbox,
+    });
+    if (!compiles) return value;
+    if (value.action !== "respawn" || allowed === true) {
+      Object.assign(job, trial);
+      return value;
+    }
+    if (allowed === undefined) throw new GuardNeeded();
+    holdRespawn(job, allowed, at);
+    return { action: "held", reason: allowed };
+  });
 }
 
 export interface WaitOptions extends ReconcileTaskOptions {

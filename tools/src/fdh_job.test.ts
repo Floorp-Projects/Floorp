@@ -25,12 +25,15 @@ import { selectProcessTree, startedNoEarlier } from "./fdh_job_process.ts";
 import {
   applyReport,
   beginAttempt,
+  heartbeat,
+  jobJournalPath,
   readJob,
   reconcileJob,
   recordStepProcess,
   updateJob,
 } from "./fdh_executor.ts";
 import { readQuotaLedger } from "./fdh_quota.ts";
+import { lockPathFor, withFileLock } from "./fdh_lock.ts";
 import {
   createTaskState,
   type GitRunner,
@@ -1112,6 +1115,146 @@ Deno.test("fdh job: a held job's lost step tree is stopped once, and job wait sa
     assertEquals(after.action, "respawn");
     assertEquals(stopped, [71]);
     assertEquals(spawned, [1, 2]);
+  } finally {
+    await Deno.remove(dir, { recursive: true });
+  }
+});
+
+Deno.test("fdh job: a lease that runs out while the journal lock is busy still meets the dev guard", async () => {
+  const dir = await Deno.makeTempDir();
+  try {
+    const state = taskIn(dir);
+    const git = fakeGit({ head: "h", diff: "", untracked: "" });
+    const spawned: number[] = [];
+    const spawn = (_w: string, _t: string, _j: string, epoch: number) => {
+      spawned.push(epoch);
+      return 1;
+    };
+    const job = await startStepJob({
+      state,
+      kind: "build",
+      phase: "all",
+      leaseTtlMs: 1_000,
+      git,
+      spawn,
+    });
+    // The lease runs out about 300 ms from now.
+    await updateJob(dir, "t1", job.jobId, (j) => {
+      beginAttempt(j, 1, "x1", new Date(Date.now() - 700).toISOString());
+    });
+    let guardCalls = 0;
+    const refuse = () => {
+      guardCalls += 1;
+      return Promise.reject(new Error("dev server running"));
+    };
+    // Another writer holds the journal lock across the expiry.
+    let release!: () => void;
+    const taken = new Promise<void>((ok) => {
+      const lock = lockPathFor(jobJournalPath(dir, "t1", job.jobId));
+      void withFileLock(lock, () => {
+        ok();
+        return new Promise<void>((r) => {
+          release = r;
+          setTimeout(r, 800);
+        });
+      });
+    });
+    await taken;
+    const [report] = await reconcileTaskJobs({
+      state,
+      git,
+      spawn,
+      stopTree: () => Promise.resolve([]),
+      sourceBuildGuard: refuse,
+    });
+    release();
+    assertEquals(report.action, "held");
+    assertEquals(guardCalls, 1);
+    assertEquals(spawned, [1]);
+    assertEquals(readJob(dir, "t1", job.jobId).epoch, 1);
+  } finally {
+    await Deno.remove(dir, { recursive: true });
+  }
+});
+
+Deno.test("fdh job: a held job's stalled executor is fenced, so its killed step is not recorded as a failure", async () => {
+  const dir = await Deno.makeTempDir();
+  try {
+    const state = taskIn(dir);
+    const git = fakeGit({ head: "h", diff: "", untracked: "" });
+    const spawned: number[] = [];
+    const spawn = (_w: string, _t: string, _j: string, epoch: number) => {
+      spawned.push(epoch);
+      return 1;
+    };
+    const job = await startStepJob({
+      state,
+      kind: "build",
+      phase: "all",
+      leaseTtlMs: 1_000,
+      git,
+      spawn,
+    });
+    const old = new Date(Date.now() - 60_000).toISOString();
+    const root = {
+      pid: 72,
+      startTime: "s",
+      commandLine: "deno task feles-build",
+    };
+    await updateJob(dir, "t1", job.jobId, (j) => {
+      beginAttempt(j, 1, "x1", old);
+      recordStepProcess(j, 1, "x1", root);
+    });
+    const [held] = await reconcileTaskJobs({
+      state,
+      git,
+      spawn,
+      stopTree: () => Promise.resolve([{ ...root, ppid: 1, name: "deno" }]),
+      sourceBuildGuard: () => Promise.reject(new Error("dev server running")),
+    });
+    assertEquals(held.action, "held");
+    assertEquals(held.stopped, 1);
+    // The stalled executor wakes up: fenced, and its exit 143 is not applied.
+    const beat = await updateJob(
+      dir,
+      "t1",
+      job.jobId,
+      (j) => heartbeat(j, 1, "x1"),
+    );
+    assertEquals(beat.value, "fenced");
+    const late = await updateJob(dir, "t1", job.jobId, (j) =>
+      applyReport(j, {
+        jobId: job.jobId,
+        epoch: 1,
+        holder: "x1",
+        exitCode: 143,
+        endedAt: new Date().toISOString(),
+        logRef: null,
+        results: [],
+      }));
+    assertEquals(late.value.applied, false);
+    const after = readJob(dir, "t1", job.jobId);
+    assertEquals(after.state, "running");
+    assertEquals(after.epoch, 1);
+    assertEquals(after.attempts[0].result, "lost");
+    // After 'fdh dev down' the job is taken over at epoch 2.
+    const [taken] = await reconcileTaskJobs({
+      state,
+      git,
+      spawn,
+      stopTree: () => Promise.reject(new Error("must not stop again")),
+      sourceBuildGuard: () => Promise.resolve(),
+    });
+    assertEquals(taken.action, "respawn");
+    assertEquals(spawned, [1, 2]);
+    const final = readJob(dir, "t1", job.jobId);
+    assertEquals(final.attempts.length, 2);
+    // The held loss is recorded once, with the last heartbeat time kept.
+    assertEquals(
+      final.events.filter((e) => e.kind === "lease-expired").length,
+      1,
+    );
+    assertEquals(final.attempts[0].lastSeenAt, old);
   } finally {
     await Deno.remove(dir, { recursive: true });
   }
