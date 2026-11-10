@@ -100,9 +100,14 @@ const SURFACE_TOLERANCE = 2;
  * nav-bar colors in a Linux run of Floorp 12.21.1 (no theme / Light / Dark /
  * LWT / Alpenglow). The old value 22 covered reads taken mid-transition
  * (gaps of 18-20), which `waitForTransitionsToFinish` now prevents. 3 keeps
- * rounding headroom while still catching a real split such as the
- * photon/light nav-bar 255 vs tab 232 (gap 23) seen on Linux CI when a
- * no-theme rule overrode only the legacy `--toolbar-bgcolor` token.
+ * rounding headroom only.
+ *
+ * Linux CI once failed photon/light with nav-bar 255 vs tab 232 (gap 23),
+ * only on commits that revived a no-theme palette rule setting the legacy
+ * `--toolbar-bgcolor` to white. The cause is unconfirmed: it may be that
+ * rule splitting the tokens, or a mid-transition read, since tab
+ * rgb(232, 232, 233) is 89% of the way from the previous case's
+ * rgb(43, 42, 51) to white. The transition wait would catch the second case.
  */
 const TAB_TRACKS_TOLERANCE = 3;
 
