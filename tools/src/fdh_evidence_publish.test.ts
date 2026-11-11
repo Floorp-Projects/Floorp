@@ -20,7 +20,13 @@ const OLD = "c8e265fa8665d420d126ba87a87feaa7e8c1764a";
 
 async function manifestIn(
   dir: string,
-  options: { outputs?: number; passed?: boolean; name?: string } = {},
+  options: {
+    outputs?: number;
+    passed?: boolean;
+    name?: string;
+    fixed?: boolean;
+    status?: "failed" | "cancelled";
+  } = {},
 ): Promise<EvidenceManifest> {
   const state = createTaskState({
     taskId: "ev-1",
@@ -43,6 +49,17 @@ async function manifestIn(
     });
   }
   const passed = options.passed ?? true;
+  if (options.fixed) {
+    // The Gate 3 error-then-fix loop: an earlier failure of the same check.
+    state.assertions.push({
+      name: options.name ?? "host-test-exit-code",
+      expected: "exit code 0",
+      actual: "exit code 1",
+      passed: false,
+      at: "2026-11-11T00:01:30.000Z",
+    });
+  }
+  if (options.status) state.status = options.status;
   state.assertions.push({
     name: options.name ?? "host-test-exit-code",
     expected: "exit code 0",
@@ -248,6 +265,31 @@ Deno.test("fdh evidence trace: a merged PR leads to its evidence and receipts at
   }
 });
 
+Deno.test("fdh evidence trace: a failure fixed later counts, and the repository name is case-insensitive", async () => {
+  const dir = await Deno.makeTempDir();
+  try {
+    const fixed = await manifestIn(dir, { fixed: true });
+    const body = (await evidenceCommentBody(fixed, { ...input, repo: "O/R" }))
+      .body;
+    const report = await traceEvidence(
+      "o/r",
+      7,
+      fakeGh(MERGED, [trustedComment(body), ...reviews()]),
+    );
+    assertEquals(report.complete, true, report.problems.join("; "));
+    assertEquals(report.evidence[0].failedAssertions, 1);
+    assertEquals(report.evidence[0].state, "succeeded");
+    // No timestamps (a degraded runner): treated as edited.
+    const [bare] = await parseEvidenceComments([{
+      body,
+      authorAssociation: "MEMBER",
+    }]);
+    assertEquals(bare.edited, true);
+  } finally {
+    await Deno.remove(dir, { recursive: true });
+  }
+});
+
 Deno.test("fdh evidence trace: stray or pasted comments never break a PR that has counting evidence", async () => {
   const dir = await Deno.makeTempDir();
   try {
@@ -306,6 +348,24 @@ Deno.test("fdh evidence trace: evidence that does not count leaves the trace inc
       [
         "failed run",
         trustedComment((await evidenceCommentBody(failed, input)).body),
+      ],
+      [
+        "failed task",
+        trustedComment(
+          (await evidenceCommentBody(
+            await manifestIn(dir, { status: "failed" }),
+            input,
+          )).body,
+        ),
+      ],
+      [
+        "cancelled task",
+        trustedComment(
+          (await evidenceCommentBody(
+            await manifestIn(dir, { status: "cancelled" }),
+            input,
+          )).body,
+        ),
       ],
       [
         "other repo",

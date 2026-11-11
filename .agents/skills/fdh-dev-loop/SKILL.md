@@ -208,9 +208,12 @@ Evidence counts for `evidence trace` only if all of these hold:
 - **Not edited.** It has not been edited since it was posted.
 - **Intact.** It decodes and matches its size and SHA-256, the manifest schema
   accepts it, and the manifest is for the bound task.
-- **Binding.** It is bound to this repository, this PR and the PR's final head.
+- **Binding.** It is bound to this repository (names compared
+  case-insensitively), this PR and the PR's final head.
 - **Clean build.** It was built without uncommitted changes.
-- **Assertions.** It records at least one assertion and no failed one.
+- **Verdict.** The manifest records at least one assertion, and its own state
+  is `succeeded`. The state takes the latest assertion of each name, so a
+  failure fixed later still succeeds; a failed or cancelled task never does.
 
 The trace is complete when such evidence exists and the D-14 receipts are valid
 at that head. With `--require-merged true`, the PR must also be merged.

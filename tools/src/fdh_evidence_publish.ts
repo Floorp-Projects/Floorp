@@ -313,8 +313,9 @@ export async function parseEvidenceComments(
       authorAssociation: association || "(missing)",
       trusted: trustedAssociations.includes(association),
       url: comment.url ?? null,
-      edited: typeof comment.createdAt === "string" &&
-        typeof comment.updatedAt === "string" &&
+      // Missing timestamps count as edited (the API always gives them).
+      edited: typeof comment.createdAt !== "string" ||
+        typeof comment.updatedAt !== "string" ||
         comment.createdAt !== comment.updatedAt,
       ok: false,
       problems: [],
@@ -446,13 +447,21 @@ export interface TraceOptions {
   requireMerged?: boolean;
 }
 
+/** GitHub repository names are case-insensitive. */
+function sameRepo(a: string, b: string): boolean {
+  return a.toLowerCase() === b.toLowerCase();
+}
+
 /**
  * From a PR to its evidence and receipts (reads GitHub with `gh api`).
  * Evidence counts when it is by a trusted author, not edited, decodes and
  * matches, is bound to this repository, this PR and its final head, was
- * built without uncommitted changes, and records at least one assertion and
- * no failed one. Comments that do not count are reported, and never make a
- * PR with counting evidence incomplete.
+ * built without uncommitted changes, and the manifest's own verdict is
+ * `succeeded` with at least one assertion. That verdict takes the latest
+ * assertion of each name (a failure fixed later, the Gate 3 error-then-fix
+ * loop, still succeeds) and a failed or cancelled task never succeeds.
+ * Comments that do not count are reported, and never make a PR with counting
+ * evidence incomplete.
  */
 export async function traceEvidence(
   slug: string,
@@ -489,8 +498,8 @@ export async function traceEvidence(
       const b = e.binding;
       const atHead = b?.commit === headSha;
       const counts = e.ok && e.trusted && !e.edited && b !== null &&
-        b.repo === slug && b.pr === pr && atHead && !b.uncommitted &&
-        e.assertions > 0 && e.failedAssertions === 0;
+        sameRepo(b.repo, slug) && b.pr === pr && atHead && !b.uncommitted &&
+        e.state === "succeeded" && e.assertions > 0;
       return { ...e, atHead, counts };
     });
   const { trusted, ignored } = selectTrustedReceiptComments(comments);
@@ -521,15 +530,15 @@ export async function traceEvidence(
     const why = [
       ...e.problems,
       ...(e.edited ? ["edited after it was posted"] : []),
-      ...(b !== null && b.repo !== slug ? [`bound to ${b.repo}`] : []),
+      ...(b !== null && !sameRepo(b.repo, slug) ? [`bound to ${b.repo}`] : []),
       ...(b !== null && b.pr !== pr ? [`bound to PR #${b.pr}`] : []),
       ...(b !== null && !e.atHead
         ? [`bound to ${b.commit}, not the head`]
         : []),
       ...(b?.uncommitted ? ["built with uncommitted changes"] : []),
       ...(e.ok && e.assertions === 0 ? ["records no assertion"] : []),
-      ...(e.failedAssertions > 0
-        ? [`${e.failedAssertions} failed assertion(s)`]
+      ...(e.ok && e.state !== "succeeded"
+        ? [`the manifest's state is ${e.state}`]
         : []),
     ];
     notes.push(
