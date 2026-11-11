@@ -243,15 +243,22 @@ function realPathOrSelf(p: string): string {
 /**
  * Refuse to overwrite either half of an `evidence publish` output pair
  * (`<x>` and `<x>.manifest.json`), which `fdh evidence --out` would
- * otherwise do: the pair would no longer match.
+ * otherwise do: the pair would no longer match. An `--out` that is itself
+ * a link is refused (it could alias either half), and the names are
+ * compared the way Windows opens them (any case, no trailing dots or
+ * spaces), so another spelling of a pair's file is caught too.
  */
 export function assertNotPublishOutput(outPath: string): void {
+  if (pathExists(outPath) && Deno.lstatSync(outPath).isSymlink) {
+    throw new Error(`--out must not be a link, got ${outPath}`);
+  }
   const suffix = ".manifest.json";
-  const pairedWith = pathExists(`${outPath}${suffix}`)
-    ? `${outPath}${suffix}`
-    : outPath.endsWith(suffix) &&
-        pathExists(outPath.slice(0, -suffix.length))
-    ? outPath.slice(0, -suffix.length)
+  const plain = outPath.replace(/[. ]+$/, "");
+  const pairedWith = pathExists(`${plain}${suffix}`)
+    ? `${plain}${suffix}`
+    : plain.toLowerCase().endsWith(suffix) &&
+        pathExists(plain.slice(0, -suffix.length))
+    ? plain.slice(0, -suffix.length)
     : undefined;
   if (pairedWith !== undefined) {
     throw new Error(

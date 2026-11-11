@@ -602,6 +602,28 @@ Deno.test("fdh evidence --out never overwrites half of a publish pair", async ()
       "one half",
     );
     assertNotPublishOutput(path.join(dir, "evidence-7.json"));
+    // Other spellings of the same files.
+    assertThrows(
+      () => assertNotPublishOutput(`${out}.MANIFEST.JSON`),
+      Error,
+      "one half",
+    );
+    assertThrows(() => assertNotPublishOutput(`${out}. `), Error, "one half");
+    // A link at --out could alias either half.
+    let linked = true;
+    try {
+      await Deno.symlink(out, path.join(dir, "alias.md"), { type: "file" });
+    } catch (error) {
+      if (Deno.build.os !== "windows") throw error;
+      linked = false;
+    }
+    if (linked) {
+      assertThrows(
+        () => assertNotPublishOutput(path.join(dir, "alias.md")),
+        Error,
+        "must not be a link",
+      );
+    }
   } finally {
     await Deno.remove(dir, { recursive: true });
   }
