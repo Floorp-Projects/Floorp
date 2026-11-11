@@ -145,7 +145,7 @@ export const EVIDENCE_OUT_RESERVED: readonly string[] = [
  * Checked twice. Lexically, with each path segment compared the way Windows
  * opens it (case-insensitive, trailing dots and spaces dropped), and with
  * `~` (8.3 short names) and `:` (alternate data streams) refused. Then on
- * disk: the nearest existing ancestor of the path is resolved through
+ * disk: the path, or its nearest existing ancestor, is resolved through
  * symlinks, junctions and short names, and must still lie under `root` and
  * outside the reserved directories.
  */
@@ -184,7 +184,8 @@ export function resolveEvidenceOut(
   // differ from its real path only once it exists).
   if (!pathExists(base)) return resolved;
   const realBase = realPathOrSelf(base);
-  let ancestor = path.dirname(resolved);
+  // Start at the path itself: an existing file there may be a link too.
+  let ancestor = resolved;
   while (!pathExists(ancestor) && path.dirname(ancestor) !== ancestor) {
     ancestor = path.dirname(ancestor);
   }

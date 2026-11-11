@@ -526,19 +526,14 @@ Deno.test("fdh evidence publish: --out through a link into fdh's state is refuse
     await Deno.mkdir(path.join(root, "tasks"), { recursive: true });
     const outsideDir = await Deno.makeTempDir();
     try {
-      let linked = true;
-      try {
-        // A junction on Windows needs no privilege; a symlink elsewhere.
-        await Deno.symlink(path.join(root, "tasks"), path.join(root, "pr"), {
-          type: "junction",
-        });
-        await Deno.symlink(outsideDir, path.join(root, "away"), {
-          type: "junction",
-        });
-      } catch {
-        linked = false;
-      }
-      if (linked) {
+      // A junction on Windows needs no privilege; elsewhere a symlink.
+      await Deno.symlink(path.join(root, "tasks"), path.join(root, "pr"), {
+        type: "junction",
+      });
+      await Deno.symlink(outsideDir, path.join(root, "away"), {
+        type: "junction",
+      });
+      {
         assertThrows(
           () => resolveEvidenceOut(root, worktree, "_dist/fdh/pr/t.json"),
           Error,
@@ -548,6 +543,27 @@ Deno.test("fdh evidence publish: --out through a link into fdh's state is refuse
           () => resolveEvidenceOut(root, worktree, "_dist/fdh/away/new/x.md"),
           Error,
           "must be inside",
+        );
+      }
+      // A file link at the --out path itself (POSIX: file symlinks need no
+      // privilege; on Windows they may, so that case is skipped there).
+      await Deno.writeTextFile(path.join(root, "tasks", "t.json"), "{}");
+      let fileLinked = true;
+      try {
+        await Deno.symlink(
+          path.join(root, "tasks", "t.json"),
+          path.join(root, "planted.json"),
+          { type: "file" },
+        );
+      } catch (error) {
+        if (Deno.build.os !== "windows") throw error;
+        fileLinked = false;
+      }
+      if (fileLinked) {
+        assertThrows(
+          () => resolveEvidenceOut(root, worktree, "_dist/fdh/planted.json"),
+          Error,
+          "fdh's own state",
         );
       }
       // A directory that does not exist yet is checked through its ancestor.
