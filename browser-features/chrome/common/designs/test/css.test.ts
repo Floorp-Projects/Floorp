@@ -9,6 +9,8 @@ import {
   runTests,
 } from "../../../test/utils/test_harness.ts";
 import type { TFloorpDesignConfigs } from "../type.ts";
+import leptonContentStylesRaw from "@nora/skin/lepton/css/leptonContent.css?raw";
+import leptonContentOverlayRaw from "@nora/skin/lepton/overlay/leptonContentOverlay.css?raw";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -109,8 +111,9 @@ function testLeptonHasExpectedStyleEntries(): void {
   const result = getCSSFromConfig(makeConfig("lepton"));
   // Production: chromeStyles = [leptonChrome, overlay, leptonContent,
   //             overlay] (4).
-  // Dev:        chromeStylesRaw = [leptonChrome, overlay, leptonContent,
-  //             overlay, LEPTON_COMPAT, navBar] (6).
+  // Dev:        chromeStylesRaw = [leptonChrome, overlay, LEPTON_COMPAT,
+  //             navBar] (4); the content sheet and its overlay are in
+  //             stylesRaw (AGENT_SHEET), like photon and protonfix.
   // Order against the overlays is checked in lepton-overlay.test.ts.
   // Both branches must carry Lepton's chrome + content sheets; the Gecko 152
   // compat layer and the nav-bar color override are layered on as raw CSS.
@@ -124,6 +127,39 @@ function testLeptonHasExpectedStyleEntries(): void {
     (result.chromeStylesRaw?.length ?? 0) >= 1,
     "lepton should always carry inline raw chrome CSS (compat + navBar)",
   );
+}
+
+function testLeptonHasContentStyles(): void {
+  const result = getCSSFromConfig(makeConfig("lepton"));
+  const contentStyles = [...(result.styles ?? []), ...(result.stylesRaw ?? [])];
+  assert(
+    contentStyles.length > 0,
+    "lepton should register Lepton's content sheet for content documents",
+  );
+  if (result.styles) {
+    assert(
+      result.styles.includes(
+        "chrome://noraneko-skin/content/lepton/css/leptonContent.css",
+      ),
+      "lepton production content styles should include leptonContent.css",
+    );
+    assert(
+      result.styles.includes(
+        "chrome://noraneko-skin/content/lepton/overlay/leptonContentOverlay.css",
+      ),
+      "lepton production content styles should include the Floorp overlay",
+    );
+  }
+  if (result.stylesRaw) {
+    assert(
+      result.stylesRaw.includes(leptonContentStylesRaw),
+      "lepton dev content styles should include the raw leptonContent.css",
+    );
+    assert(
+      result.stylesRaw.includes(leptonContentOverlayRaw),
+      "lepton dev content styles should include the raw Floorp overlay",
+    );
+  }
 }
 
 function getChromeInlineCss(
@@ -419,6 +455,7 @@ export async function runAllTests(): Promise<void> {
       name: "lepton has expected style entries",
       fn: testLeptonHasExpectedStyleEntries,
     },
+    { name: "lepton has content styles", fn: testLeptonHasContentStyles },
     {
       name: "lepton/photon/protonfix navBar CSS includes PersonalToolbar",
       fn: testLeptonPhotonProtonfixNavBarCssIncludesPersonalToolbar,
