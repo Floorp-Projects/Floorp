@@ -8,20 +8,20 @@
   ],
   "upstream": {
     "repository": "black7375/Firefox-UI-Fix",
-    "tag": "v8.7.5",
-    "commit": "1f30fe71dd5afd80cb803753eedef50f71dee9a5",
-    "published_at": "2026-01-01T16:58:04Z",
-    "release_url": "https://github.com/black7375/Firefox-UI-Fix/releases/tag/v8.7.5"
+    "tag": "v8.7.6",
+    "commit": "b9b7f2772b3f2647c5fb61c3b46c007f6a67254e",
+    "published_at": "2026-09-06T14:33:05Z",
+    "release_url": "https://github.com/black7375/Firefox-UI-Fix/releases/tag/v8.7.6"
   },
   "assets": {
-    "Lepton.zip": "81dad3b9546251a31746dc824c15e64e837c7ffc3093157715c05f02413a9510",
-    "Lepton-Photon-Style.zip": "40cde7b32e16aa29cfc380a876b083e844c63c5472e1ed58eba87c6f79839cbc",
-    "Lepton-Proton-Style.zip": "c8cf5c2d9c4c0b25aff45bba71b80abed91439925466abb096f7a7237b486a5f"
+    "Lepton.zip": "c5c478877a4909999df2bea2988e582025ad65e20ab56930168dfe0ba8cff610",
+    "Lepton-Photon-Style.zip": "462a17f6a79ee88391255aa82b8ef92912866df356bd444f610e2a09d43564a4",
+    "Lepton-Proton-Style.zip": "0e6f4a7bfccb5f251cd191a285ff381beb49cf6cdd404c23ff2e274245e068fa"
   },
   "files": {
-    "LEPTON": "38eda3927e06d2933b0d74c72f32065554764fc2640ba20777ea3ebff7a67d92",
-    "css/leptonChrome.css": "ad62a10bcdfc1d7f54fca6e7f9b4f7aa219135b61b45b16b05ad924e4c303fc9",
-    "css/leptonContent.css": "d7275d323e6f428d54b34cb9d84dc382af7a7d878820cc9b305a4e1630e02541",
+    "LEPTON": "b3cf46e763222d4b326d342fe34529afe2a0d5d4ab84265dd33a4918bfd804f0",
+    "css/leptonChrome.css": "5593a3d10743faa1c7a8f052ac406d3c81a6d16b3847b110f692a2b373852578",
+    "css/leptonContent.css": "ba8f5f88d9c27801b4d47eef6ba8bfbabfccf2fddc102bffee224977df1b2856",
     "icons/add-device.svg": "300019459f4a9bef86825977e31ad5eb32802a686765d0fe4b27bf80717f935e",
     "icons/addons-logo.svg": "d705a9c548d931eb6e0e02aa7749ba2935061a221055c422d129e4dfe8d14bb8",
     "icons/align-distribute-top.svg": "c0e590dc4d0db8c8e403b5d07cea599a2ad24fbe2fc2d7c274acf54dfe34d667",
@@ -246,8 +246,8 @@
     "icons/window-dev-tools.svg": "0b2c8ee901c707814a0114b892719c3b240ec686de5b2cb26d1e22947002f60c",
     "icons/window.svg": "9b777be9a42f95176ae419a13ecd83add014d909d8d7c15eefbbd3365089f3c7",
     "icons/wrench-filled.svg": "898621089bc46d847159f0604f2becd64a01bafcc2faa1bf23ce505ba76b7754",
-    "userjs/lepton.js": "5daceb8b1abd94d25d7893c393ab8b25d296238b363ca39a9a91133c71aeb0d5",
-    "userjs/photon.js": "f3617f044ef3c26a6f23159e8d4d630bbecf58bbdd784366bd9ec84bdc93ffc9",
-    "userjs/protonfix.js": "b5c70b3c51d3113ef656e37b68db8242abbfc28abdddb19c6e0a8f64f693670d"
+    "userjs/lepton.js": "49bed27bbbfbe905a9202a30310158c7935b677a836e1b0ecf061d63fae326ec",
+    "userjs/photon.js": "582a0e36409c74faecb57ffb25be10c8d51e94417ac5f4379f57c2c1c1b26447",
+    "userjs/protonfix.js": "ac5b15c383cfc7fb3df752ccbb03ba56867773373996bbb738db02cc44a5dc21"
   }
 }
