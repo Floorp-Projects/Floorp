@@ -609,6 +609,23 @@ Deno.test("fdh evidence --out never overwrites half of a publish pair", async ()
       "one half",
     );
     assertThrows(() => assertNotPublishOutput(`${out}. `), Error, "one half");
+    // A publication to a name with a trailing dot (a distinct file on POSIX).
+    const dotted = path.join(dir, "report.md.");
+    let dottedOk = true;
+    try {
+      await writeEvidenceOutputs(dotted, "{}\n", "body");
+    } catch (error) {
+      if (Deno.build.os !== "windows") throw error;
+      dottedOk = false; // Windows already has report.md: no new pair.
+    }
+    if (dottedOk) {
+      assertThrows(() => assertNotPublishOutput(dotted), Error, "one half");
+      assertThrows(
+        () => assertNotPublishOutput(`${dotted}.manifest.json`),
+        Error,
+        "one half",
+      );
+    }
     // A link at --out could alias either half.
     let linked = true;
     try {

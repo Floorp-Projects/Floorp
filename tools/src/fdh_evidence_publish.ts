@@ -253,13 +253,15 @@ export function assertNotPublishOutput(outPath: string): void {
     throw new Error(`--out must not be a link, got ${outPath}`);
   }
   const suffix = ".manifest.json";
-  const plain = outPath.replace(/[. ]+$/, "");
-  const pairedWith = pathExists(`${plain}${suffix}`)
-    ? `${plain}${suffix}`
-    : plain.toLowerCase().endsWith(suffix) &&
-        pathExists(plain.slice(0, -suffix.length))
-    ? plain.slice(0, -suffix.length)
-    : undefined;
+  // The literal name (POSIX keeps trailing dots) and the Windows one.
+  const names = [...new Set([outPath, outPath.replace(/[. ]+$/, "")])];
+  const partners = names.flatMap((name) => [
+    `${name}${suffix}`,
+    ...(name.toLowerCase().endsWith(suffix)
+      ? [name.slice(0, -suffix.length)]
+      : []),
+  ]);
+  const pairedWith = partners.find((p) => pathExists(p));
   if (pairedWith !== undefined) {
     throw new Error(
       `--out ${outPath} is one half of an evidence publish output (with ${pairedWith}); use another path`,
