@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: MPL-2.0
+name: QA3 macOS supervisor
+
+"on":
+  pull_request:
+    paths:
+      - "tools/qa3/**"
+      - ".github/workflows/qa3-macos-supervisor.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  macos-supervisor:
+    name: macos-supervisor / ${{ matrix.runner }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        # Apple silicon and Intel, as in the final package QA matrix.
+        runner: [macos-14, macos-15-intel]
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          persist-credentials: false
+      - name: Report the macOS and Python runtimes
+        run: |
+          sw_vers
+          uname -m
+          python3 --version
+          /usr/bin/python3 --version
+      - name: Test the session supervisor contracts
+        run: |
+          python3 -B -m unittest discover -s tools/qa3 -p "test_source_macos.py" -v
+      - name: Test them again with the system Python (3.9 on macOS)
+        run: |
+          /usr/bin/python3 -B -m unittest discover -s tools/qa3 -p "test_source_macos.py" -v

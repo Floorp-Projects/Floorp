@@ -130,11 +130,10 @@ class WindowsSupervisorContractTests(unittest.TestCase):
         self.assertEqual(source.supervisor_kind("nt"), "windows")
         self.assertEqual(source.supervisor_kind("posix", "linux"), "linux")
         self.assertEqual(source.supervisor_kind("posix", "darwin"), "macos")
-        if sys.platform == "linux":
-            self.assertEqual(source.supervisor_kind(), "linux")
         if WINDOWS:
             self.assertEqual(source.supervisor_kind(), "windows")
         if sys.platform == "linux":
+            self.assertEqual(source.supervisor_kind(), "linux")
             self.assertIsInstance(
                 source.owned_supervisor(), source.PosixSubreaperSupervisor
             )

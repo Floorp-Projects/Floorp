@@ -1216,14 +1216,19 @@ class MacosSessionSupervisor:
         self.prepared = True
 
     def spawn(self, argv):
-        # One second of slack: start times and the wall clock round apart.
+        # The bound for session members is the leader's own start time, read
+        # from the same kernel clock as theirs. Only if the leader is gone
+        # before it can be read does the wall clock stand in, with a second of
+        # slack for rounding.
         now = self.api.now()
-        self.born_after = (now[0] - 1, now[1])
         self.process = self.api.spawn(argv)
         self.session = self.process.pid
         identity = self.api.identity(self.process.pid)
         if identity is not None:
             self.owned[self.process.pid] = identity
+            self.born_after = identity
+        else:
+            self.born_after = (now[0] - 1, now[1])
         return self.process
 
     def track(self):
@@ -1233,11 +1238,16 @@ class MacosSessionSupervisor:
     def _collect(self, table=None):
         table = self.api.process_table() if table is None else table
         self_pid = os.getpid()
+
+        def known(pid, identity):
+            # A dead owned pid that now names a new process is judged afresh.
+            return self.owned.get(pid) == identity
+
         changed = True
         while changed:
             changed = False
             for pid, (parent, _uid, _status, identity) in table.items():
-                if pid == self_pid or pid in self.owned:
+                if pid == self_pid or known(pid, identity):
                     continue
                 parent_info = table.get(parent)
                 if (
@@ -1248,13 +1258,26 @@ class MacosSessionSupervisor:
                     self.owned[pid] = identity
                     changed = True
         if self.session is not None:
-            for pid, (_parent, uid, _status, identity) in table.items():
-                if pid == self_pid or pid in self.owned:
+            members = 0
+            for pid, (_parent, uid, status, identity) in table.items():
+                if pid == self_pid or identity < self.born_after:
                     continue
-                if uid != self.uid or identity < self.born_after:
+                if self.api.session(pid) != self.session:
                     continue
-                if self.api.session(pid) == self.session:
+                # Any live member keeps the session open (even another
+                # user's, which may still fork); only this user's are owned.
+                if status != _MAC_SZOMB:
+                    members += 1
+                if uid == self.uid and not known(pid, identity):
                     self.owned[pid] = identity
+            # An empty session can never gain a member again, and once the
+            # leader is reaped its id may be reused: stop matching it.
+            if (
+                members == 0
+                and self.process is not None
+                and self.process.returncode is not None
+            ):
+                self.session = None
         self.owned.pop(self_pid, None)
         return self.owned
 

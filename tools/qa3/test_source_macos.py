@@ -234,13 +234,12 @@ class MacosSupervisorContractTests(unittest.TestCase):
             spawn_pid=200,
         )
         supervisor = self._supervisor(api)
-        with (
-            patch.object(source, "owned_supervisor", return_value=supervisor),
-            patch.object(source, "_install_stop_handlers", lambda stop: None),
-        ):
-            result = source.run_owned_supervisor(
-                5.0, [sys.executable, "-c", "pass"]
-            )
+        # Nested, not parenthesised: macOS ships Python 3.9.
+        with patch.object(source, "owned_supervisor", return_value=supervisor):
+            with patch.object(source, "_install_stop_handlers", lambda stop: None):
+                result = source.run_owned_supervisor(
+                    5.0, [sys.executable, "-c", "pass"]
+                )
         self.assertEqual(result["exitCode"], 0)
         self.assertFalse(result["ownedCleanupComplete"])
         self.assertIn(
@@ -258,6 +257,58 @@ class MacosSupervisorContractTests(unittest.TestCase):
         complete, errors = supervisor.cleanup()
         self.assertFalse(complete)
         self.assertTrue(errors)
+
+    def test_an_empty_session_is_not_matched_once_its_leader_is_reaped(self):
+        api = _FakeMacosApi(procs={}, spawn_pid=200)
+        supervisor = self._run(api)
+        supervisor.track()
+        self.assertIsNone(supervisor.session)
+        # pid 200 is reused by a new session leader of the same user.
+        api.procs[200] = (1, UID, 200, _later(9))
+        api.procs[201] = (200, UID, 200, _later(10))
+        complete, errors = supervisor.cleanup()
+        self.assertTrue(complete, errors)
+        self.assertEqual(api.signalled, [])
+        self.assertIn(201, api.procs)
+
+    def test_a_live_member_of_another_user_keeps_the_session_open(self):
+        api = _FakeMacosApi(
+            procs={301: (1, UID + 1, 200, _later())},
+            spawn_pid=200,
+        )
+        supervisor = self._run(api)
+        supervisor.track()
+        self.assertEqual(supervisor.session, 200)
+        self.assertNotIn(301, supervisor.owned)
+        # It forks a child of this user, which is owned.
+        api.procs[302] = (301, UID, 200, _later(2))
+        supervisor.track()
+        self.assertIn(302, supervisor.owned)
+
+    def test_the_leaders_start_time_bounds_session_members(self):
+        class LiveLeaderApi(_FakeMacosApi):
+            def spawn(self, argv):
+                self.procs[self.spawn_pid] = (os.getpid(), UID, 200, _later(3))
+                return _FakeProcess(self, self.spawn_pid)
+
+        # The wall clock is far behind the kernel start times.
+        api = LiveLeaderApi(procs={}, spawn_pid=200, now=(1, 0))
+        supervisor = self._run(api)
+        self.assertEqual(supervisor.born_after, _later(3))
+        api.procs[301] = (1, UID, 200, _later(4))
+        api.procs[302] = (1, UID, 200, _later(1))
+        supervisor.track()
+        self.assertIn(301, supervisor.owned)
+        self.assertNotIn(302, supervisor.owned)
+
+    def test_a_new_process_on_a_dead_owned_pid_is_judged_afresh(self):
+        api = _FakeMacosApi(procs={}, spawn_pid=200)
+        supervisor = self._run(api)
+        supervisor.owned[301] = _later()
+        supervisor.session = 200
+        api.procs[301] = (1, UID, 200, _later(9))
+        supervisor.track()
+        self.assertEqual(supervisor.owned[301], _later(9))
 
     def test_the_running_command_is_signalled_term_then_kill(self):
         class StubbornProcess(_FakeProcess):
@@ -463,6 +514,31 @@ class MacosSessionTests(unittest.TestCase):
             source.MacosProcessApi().is_alive(survivor),
             "the survivor was stopped although its signal failed",
         )
+
+    def test_real_session_rule_alone_collects_an_orphan_and_spares_a_later_process(self):
+        marker = self.root / "session-orphan-pid"
+        self._kill_later(marker)
+        supervisor = source.MacosSessionSupervisor(cleanup_interval=1.0)
+        supervisor.prepare()
+        process = supervisor.spawn(_orphan_command(marker))
+        # Born after the spawn, same user, another session: only the session
+        # check itself tells it apart from the orphan.
+        unrelated = subprocess.Popen(
+            [sys.executable, "-c", "import time; time.sleep(30)"]
+        )
+        self.addCleanup(unrelated.wait, 5)
+        self.addCleanup(unrelated.kill)
+        # No tracking while the command runs: the ancestry rule never sees
+        # the orphan, which is reparented to launchd once the command exits.
+        self.assertEqual(process.wait(timeout=20), 0)
+        self.assertEqual(set(supervisor.owned), {process.pid})
+        orphan = int(marker.read_text())
+        complete, errors = supervisor.cleanup()
+        self.assertTrue(complete, errors)
+        self.assertEqual(errors, [])
+        self.assertIn(orphan, supervisor.owned)
+        self.assertTrue(_wait_dead(orphan), "the session orphan survived")
+        self.assertIsNone(unrelated.poll(), "a later unrelated process was stopped")
 
     def test_source_plan_host_remains_linux_only(self):
         output = self.root / "linux-host"
