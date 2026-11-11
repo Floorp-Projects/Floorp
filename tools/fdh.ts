@@ -142,7 +142,10 @@ import {
 } from "./src/fdh_ext_poll.ts";
 import {
   evidenceCommentBody,
+  manifestText,
+  resolveEvidenceOut,
   traceEvidence,
+  writeEvidenceOutputs,
 } from "./src/fdh_evidence_publish.ts";
 import type { ValidationError } from "./qa3/evidence/types.ts";
 
@@ -234,8 +237,10 @@ Commands:
   evidence publish --task-id <id> --pr <n> --out <path> [--repo <owner/name>]
                             Build the manifest and render a PR comment that
                             carries it, bound to the repository, task, PR and
-                            HEAD commit with its SHA-256; read the file, then
-                            post it with 'gh pr comment <n> --body-file <path>'
+                            HEAD commit with its SHA-256. Neither <path> nor
+                            the plain copy <path>.manifest.json may exist yet.
+                            Read the plain copy, then post the comment with
+                            'gh pr comment <n> --body-file <path>'
   evidence trace --pr <n> [--repo <owner/name>] [--require-merged true]
                             From a (merged) PR to its evidence and receipts.
                             Exits 1 unless the final head has evidence that
@@ -1203,29 +1208,6 @@ async function cmdReviewRecord(parsed: ParsedArgs): Promise<void> {
   }));
 }
 
-function resolveEvidenceOut(state: FdhTaskState, raw: string): string {
-  const root = path.resolve(fdhDir(state.worktree));
-  const resolved = path.isAbsolute(raw)
-    ? path.resolve(raw)
-    : path.resolve(state.worktree, raw);
-  const relative = path.relative(root, resolved);
-  if (
-    relative === "" || relative.startsWith("..") || path.isAbsolute(relative)
-  ) {
-    throw new Error(
-      `--out must be inside ${root} (the fdh evidence root), got ${resolved}`,
-    );
-  }
-  if (relative.startsWith(path.join("tasks"))) {
-    throw new Error(
-      `--out must not overwrite the task state under ${
-        path.join(root, "tasks")
-      }, got ${resolved}`,
-    );
-  }
-  return resolved;
-}
-
 async function cmdEvidencePublish(parsed: ParsedArgs): Promise<void> {
   assertNoPositional(parsed, 2);
   assertAllowedOptions(parsed, ["task-id", "pr", "out", "repo"]);
@@ -1238,7 +1220,11 @@ async function cmdEvidencePublish(parsed: ParsedArgs): Promise<void> {
   const repo = repoOption ?? repoSlugFromRemote(
     await defaultGitRunner(state.worktree, ["remote", "get-url", "origin"]),
   );
-  const outPath = resolveEvidenceOut(state, requireOption(parsed, "out"));
+  const outPath = resolveEvidenceOut(
+    fdhDir(state.worktree),
+    state.worktree,
+    requireOption(parsed, "out"),
+  );
   assertNoSecretReferences(state);
   let manifest;
   try {
@@ -1269,12 +1255,13 @@ async function cmdEvidencePublish(parsed: ParsedArgs): Promise<void> {
     uncommitted,
     builtAt: nowIso(),
   });
-  await Deno.mkdir(path.dirname(outPath), { recursive: true });
-  await Deno.writeTextFile(outPath, body);
-  // The comment carries the manifest as base64: write it in plain JSON
-  // next to it, so the agent can read what would be published.
-  const reviewPath = `${outPath}.manifest.json`;
-  await writeEvidenceManifest(reviewPath, manifest);
+  // The comment carries the manifest as base64; the plain copy next to it
+  // is what the agent reads before posting.
+  const reviewPath = await writeEvidenceOutputs(
+    outPath,
+    manifestText(manifest),
+    body,
+  );
   appendEvent(state, {
     timestamp: nowIso(),
     command: "evidence publish",
@@ -1321,7 +1308,11 @@ async function cmdEvidence(parsed: ParsedArgs): Promise<void> {
   assertAllowedOptions(parsed, ["task-id", "out"]);
   const taskId = validateTaskId(requireOption(parsed, "task-id"));
   const state = await loadStateForCwd(taskId);
-  const outPath = resolveEvidenceOut(state, requireOption(parsed, "out"));
+  const outPath = resolveEvidenceOut(
+    fdhDir(state.worktree),
+    state.worktree,
+    requireOption(parsed, "out"),
+  );
 
   assertNoSecretReferences(state);
 

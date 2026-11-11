@@ -25,6 +25,7 @@
  * does not count.
  */
 
+import * as path from "@std/path";
 import { decodeBase64, encodeBase64 } from "@std/encoding/base64";
 import { encodeHex } from "@std/encoding/hex";
 import type { EvidenceManifest } from "../qa3/evidence/types.ts";
@@ -125,6 +126,98 @@ async function gunzipAtMost(
 /** The manifest text that is hashed and embedded. */
 export function manifestText(manifest: EvidenceManifest): string {
   return `${JSON.stringify(manifest, null, 2)}\n`;
+}
+
+/** Directories under the fdh root that hold fdh's own state. */
+export const EVIDENCE_OUT_RESERVED: readonly string[] = [
+  "tasks",
+  "ext",
+  "jobs",
+  "quota",
+  "reviews",
+  "observations",
+];
+
+/**
+ * Resolve `--out` (relative to `worktree` unless absolute): it must lie
+ * under `root` (the worktree's _dist/fdh) and outside fdh's own state.
+ */
+export function resolveEvidenceOut(
+  root: string,
+  worktree: string,
+  raw: string,
+): string {
+  const base = path.resolve(root);
+  const resolved = path.isAbsolute(raw)
+    ? path.resolve(raw)
+    : path.resolve(worktree, raw);
+  const relative = path.relative(base, resolved);
+  if (
+    relative === "" || relative === ".." ||
+    relative.startsWith(`..${path.SEPARATOR}`) || relative.startsWith("../") ||
+    path.isAbsolute(relative)
+  ) {
+    throw new Error(
+      `--out must be inside ${base} (the fdh evidence root), got ${resolved}`,
+    );
+  }
+  const top = relative.split(/[\\/]/)[0].toLowerCase();
+  if (EVIDENCE_OUT_RESERVED.includes(top)) {
+    throw new Error(
+      `--out must not write into fdh's own state under ${
+        path.join(base, top)
+      }, got ${resolved}`,
+    );
+  }
+  return resolved;
+}
+
+/**
+ * Write the plain review copy (`<outPath>.manifest.json`, exactly the bytes
+ * the binding's SHA-256 covers) and then the comment body. Both are created
+ * new: a second publication to the same `--out` fails rather than pairing
+ * one run's comment with another run's review copy. Returns the review path.
+ */
+export async function writeEvidenceOutputs(
+  outPath: string,
+  manifestJson: string,
+  body: string,
+): Promise<string> {
+  const reviewPath = `${outPath}.manifest.json`;
+  await Deno.mkdir(path.dirname(outPath), { recursive: true });
+  for (const p of [outPath, reviewPath]) {
+    if (await exists(p)) {
+      throw new Error(`${p} already exists; publish to a new --out`);
+    }
+  }
+  try {
+    await Deno.writeTextFile(reviewPath, manifestJson, { createNew: true });
+  } catch (error) {
+    if (error instanceof Deno.errors.AlreadyExists) {
+      throw new Error(`${reviewPath} already exists; publish to a new --out`);
+    }
+    throw error;
+  }
+  try {
+    await Deno.writeTextFile(outPath, body, { createNew: true });
+  } catch (error) {
+    await Deno.remove(reviewPath).catch(() => {});
+    if (error instanceof Deno.errors.AlreadyExists) {
+      throw new Error(`${outPath} already exists; publish to a new --out`);
+    }
+    throw error;
+  }
+  return reviewPath;
+}
+
+async function exists(p: string): Promise<boolean> {
+  try {
+    await Deno.lstat(p);
+    return true;
+  } catch (error) {
+    if (error instanceof Deno.errors.NotFound) return false;
+    throw error;
+  }
 }
 
 /** Inline code safe for any assertion name (no backticks, no newlines). */

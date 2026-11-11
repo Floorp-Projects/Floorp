@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { assert, assertEquals, assertRejects } from "@std/assert";
+import { assert, assertEquals, assertRejects, assertThrows } from "@std/assert";
+import * as path from "@std/path";
 import { encodeBase64 } from "@std/encoding/base64";
 import { createTaskState, writeTaskState } from "./fdh_task.ts";
 import { buildEvidenceManifest } from "./fdh_evidence.ts";
@@ -10,7 +11,9 @@ import {
   manifestText,
   MAX_EVIDENCE_COMMENT_CHARS,
   parseEvidenceComments,
+  resolveEvidenceOut,
   traceEvidence,
+  writeEvidenceOutputs,
 } from "./fdh_evidence_publish.ts";
 import { FDH_REVIEW_RECEIPT_MARKER } from "./fdh_review.ts";
 import type { GhRunner } from "./fdh_ext_poll.ts";
@@ -469,6 +472,69 @@ Deno.test("fdh evidence publish: a manifest with ANSI colours survives gh's cont
       trustedComment(ghRewrite(body)),
     ]);
     assertEquals(parsed.ok, true, parsed.problems.join("; "));
+  } finally {
+    await Deno.remove(dir, { recursive: true });
+  }
+});
+
+Deno.test("fdh evidence publish: --out stays under _dist/fdh and out of fdh's own state", () => {
+  const worktree = path.resolve("/w");
+  const root = path.join(worktree, "_dist", "fdh");
+  assertEquals(
+    resolveEvidenceOut(root, worktree, "_dist/fdh/evidence-7.md"),
+    path.join(root, "evidence-7.md"),
+  );
+  assertEquals(
+    resolveEvidenceOut(root, worktree, "_dist/fdh/pr/evidence-7.md"),
+    path.join(root, "pr", "evidence-7.md"),
+  );
+  // A name that only starts like a reserved directory is fine.
+  assertEquals(
+    resolveEvidenceOut(root, worktree, "_dist/fdh/tasks-evidence.md"),
+    path.join(root, "tasks-evidence.md"),
+  );
+  for (
+    const bad of [
+      "_dist/fdh",
+      "evidence.md",
+      "_dist/fdh/../x.md",
+      "_dist/fdh/tasks/t.json",
+      "_dist/fdh/ext/t.json",
+      "_dist/fdh/jobs/j.json",
+      "_dist/fdh/quota/q.json",
+      "_dist/fdh/reviews/r.json",
+      "_dist/fdh/observations/o.json",
+      "_dist/fdh/Tasks/t.json",
+    ]
+  ) {
+    assertThrows(() => resolveEvidenceOut(root, worktree, bad), Error, "--out");
+  }
+});
+
+Deno.test("fdh evidence publish: the review copy and the comment are created together, never overwritten", async () => {
+  const dir = await Deno.makeTempDir();
+  try {
+    const out = path.join(dir, "sub", "evidence-7.md");
+    const review = await writeEvidenceOutputs(out, "{\n}\n", "body A");
+    assertEquals(review, `${out}.manifest.json`);
+    assertEquals(await Deno.readTextFile(review), "{\n}\n");
+    assertEquals(await Deno.readTextFile(out), "body A");
+    await assertRejects(
+      () => writeEvidenceOutputs(out, "{}", "body B"),
+      Error,
+      "already exists",
+    );
+    assertEquals(await Deno.readTextFile(out), "body A");
+    // A stale review copy alone also blocks the path (no mixed pair).
+    const other = path.join(dir, "evidence-8.md");
+    await Deno.writeTextFile(`${other}.manifest.json`, "stale");
+    await assertRejects(
+      () => writeEvidenceOutputs(other, "{}", "body C"),
+      Error,
+      "already exists",
+    );
+    assertEquals(await Deno.readTextFile(`${other}.manifest.json`), "stale");
+    await assertRejects(() => Deno.stat(other));
   } finally {
     await Deno.remove(dir, { recursive: true });
   }
