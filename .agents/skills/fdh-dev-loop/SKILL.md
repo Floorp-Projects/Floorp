@@ -194,8 +194,10 @@ fdh evidence trace --pr <n> [--require-merged true]   # exit 1 if incomplete
 
 What the comment holds:
 
-- The whole manifest, as JSON, or as gzip+base64 when it is large. A manifest
-  that does not fit in one comment even compressed is refused.
+- The whole manifest, as JSON. It is gzip+base64 instead when it is large,
+  or when it contains JSON-escaped control characters (ANSI colours in command
+  output): `gh api` rewrites those when it prints a comment. A manifest that
+  does not fit in one comment even compressed is refused.
 - A marker that binds it to the repository, the task, the PR, the HEAD commit,
   and whether the worktree had uncommitted changes. Uncommitted changes are not
   hashed; the manifest's limitations say so.

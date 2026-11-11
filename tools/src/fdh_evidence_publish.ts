@@ -208,7 +208,12 @@ export async function evidenceCommentBody(
   let rendered: { body: string; binding: EvidenceBinding };
   const json: EvidenceBinding = { ...base, encoding: "json" };
   const plain = render(json, `\`\`\`json\n${text.trimEnd()}\n\`\`\``);
-  if (plain.length <= MAX_EVIDENCE_COMMENT_CHARS) {
+  // `gh api` rewrites JSON-escaped control characters (\u001b, from ANSI
+  // colours in command output) to caret notation (^[) when it prints a
+  // response, so such a manifest would not read back through gh: embed it
+  // as base64, which has no backslashes.
+  const hasControlEscapes = /\\u00[0-9a-fA-F]{2}/.test(text);
+  if (!hasControlEscapes && plain.length <= MAX_EVIDENCE_COMMENT_CHARS) {
     rendered = { body: plain, binding: json };
   } else {
     const packed: EvidenceBinding = { ...base, encoding: "gzip+base64" };

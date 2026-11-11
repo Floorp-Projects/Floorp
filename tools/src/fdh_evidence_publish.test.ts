@@ -414,3 +414,45 @@ Deno.test("fdh evidence trace: evidence that does not count leaves the trace inc
     await Deno.remove(dir, { recursive: true });
   }
 });
+
+Deno.test("fdh evidence publish: a manifest with ANSI colours survives gh's control-character rewriting", async () => {
+  const dir = await Deno.makeTempDir();
+  try {
+    const state = createTaskState({
+      taskId: "ev-1",
+      worktree: dir,
+      baseCommit: "b".repeat(40),
+      portOffset: 0,
+      now: () => "2026-11-11T00:00:00.000Z",
+    });
+    state.operations.push({
+      command: "/fake/deno",
+      args: ["task", "test:host"],
+      displayCommand: "deno task test:host",
+      cwd: dir,
+      startedAt: "2026-11-11T00:01:00.000Z",
+      endedAt: "2026-11-11T00:02:00.000Z",
+      exitCode: 0,
+      output: "\u001b[32mok\u001b[0m | 1 passed",
+    });
+    state.assertions.push({
+      name: "host-test-exit-code",
+      expected: "exit code 0",
+      actual: "exit code 0",
+      passed: true,
+      at: "2026-11-11T00:02:00.000Z",
+    });
+    writeTaskState(state);
+    const manifest = await buildEvidenceManifest(state, {
+      os: { name: "testos", version: "1", arch: "x86_64" },
+    });
+    const { body, binding } = await evidenceCommentBody(manifest, input);
+    assertEquals(binding.encoding, "gzip+base64");
+    // What `gh api` prints for such a body: \u001b becomes ^[.
+    const rewritten = body.replaceAll("\u001b", "^[");
+    const [parsed] = await parseEvidenceComments([trustedComment(rewritten)]);
+    assertEquals(parsed.ok, true, parsed.problems.join("; "));
+  } finally {
+    await Deno.remove(dir, { recursive: true });
+  }
+});
