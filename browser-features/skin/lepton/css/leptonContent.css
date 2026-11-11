@@ -86,7 +86,8 @@
   audio {
     --duration-color: #929292; /* Like Original */
     --media-background: rgba(26, 26, 26, 0.8); /* Like Original */
-    border-radius: 8px;
+    border-radius: 8px !important;
+    overflow: clip !important;
     --box-shadow1: rgba(14, 13, 26, 0.12);
     --box-shadow2: rgba(7, 48, 114, 0.12);
     --box-shadow3: rgba(34, 0, 51, 0.04);
@@ -3479,15 +3480,6 @@
           menu:not(.menu-iconic, .in-menulist, [checked="true"]) {
           padding-inline-end: var(--context-menu-background-padding) !important;
         }
-        menupopup:is(#placesContext, #placesColumnsContext, #downloadsContextMenu)
-          menuitem:not(.menuitem-iconic, .bookmark-item, .in-menulist, [checked="true"])
-          > .menu-text,
-        menupopup:is(#placesContext, #placesColumnsContext, #downloadsContextMenu)
-          menu:not(.menu-iconic, .in-menulist, [checked="true"])
-          > .menu-text {
-          /* text position */
-          padding-inline-start: var(--context-menu-mac-padding) !important;
-        }
         /* Checkbox menuitem, None iconic menu */
         menupopup:is(#placesContext, #placesColumnsContext, #downloadsContextMenu) menuitem[checked="true"],
         menupopup:is(#placesContext, #placesColumnsContext, #downloadsContextMenu) menu:not(.menu-iconic) {
@@ -3830,7 +3822,8 @@
   audio {
     --duration-color: #929292; /* Like Original */
     --media-background: rgba(26, 26, 26, 0.8); /* Like Original */
-    border-radius: 8px;
+    border-radius: 8px !important;
+    overflow: clip !important;
     --box-shadow1: rgba(14, 13, 26, 0.12);
     --box-shadow2: rgba(7, 48, 114, 0.12);
     --box-shadow3: rgba(34, 0, 51, 0.04);
@@ -7335,15 +7328,6 @@
       menupopup:is(#placesContext, #placesColumnsContext, #downloadsContextMenu)
         menu:not(.menu-iconic, .in-menulist, [checked="true"]) {
         padding-inline-end: var(--context-menu-background-padding) !important;
-      }
-      menupopup:is(#placesContext, #placesColumnsContext, #downloadsContextMenu)
-        menuitem:not(.menuitem-iconic, .bookmark-item, .in-menulist, [checked="true"])
-        > .menu-text,
-      menupopup:is(#placesContext, #placesColumnsContext, #downloadsContextMenu)
-        menu:not(.menu-iconic, .in-menulist, [checked="true"])
-        > .menu-text {
-        /* text position */
-        padding-inline-start: var(--context-menu-mac-padding) !important;
       }
       /* Checkbox menuitem, None iconic menu */
       menupopup:is(#placesContext, #placesColumnsContext, #downloadsContextMenu) menuitem[checked="true"],
