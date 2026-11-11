@@ -124,8 +124,8 @@ function testProductionOrder(): void {
     );
     assertEquals(
       agentLoads,
-      design === "lepton" ? 0 : 1,
-      `${design} AGENT_SHEET loads of leptonContent.css`,
+      1,
+      `${design} must load leptonContent.css once as an AGENT_SHEET`,
     );
     for (const raw of css.chromeStylesRaw ?? []) {
       assert(

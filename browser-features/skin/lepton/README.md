@@ -98,11 +98,10 @@ deno run --allow-read="$W,browser-features/skin" \
   as a chrome document sheet, for lepton, photon and protonfix.
 - `overlay/leptonContentOverlay.css`: loaded right after every load of
   `css/leptonContent.css`, at the same level. In production that is a chrome
-  document sheet for lepton, photon and protonfix, plus an `AGENT_SHEET` (every
-  document, web pages included) for photon and protonfix. In dev builds lepton
-  loads it as a chrome document sheet only, and photon and protonfix load it as
-  an `AGENT_SHEET` only (dev does not load `leptonContent.css` into the chrome
-  document for them).
+  document sheet plus an `AGENT_SHEET` (every document, web pages included) for
+  lepton, photon and protonfix. In dev builds all three load it as an
+  `AGENT_SHEET` only (dev does not load `leptonContent.css` into the chrome
+  document).
 
 Both are wired in `browser-features/chrome/common/designs/utils/css.ts` and
 pinned by `browser-features/chrome/common/designs/test/lepton-overlay.test.ts`.

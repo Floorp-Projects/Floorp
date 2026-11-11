@@ -111,8 +111,9 @@ function testLeptonHasExpectedStyleEntries(): void {
   const result = getCSSFromConfig(makeConfig("lepton"));
   // Production: chromeStyles = [leptonChrome, overlay, leptonContent,
   //             overlay] (4).
-  // Dev:        chromeStylesRaw = [leptonChrome, overlay, leptonContent,
-  //             overlay, LEPTON_COMPAT, navBar] (6).
+  // Dev:        chromeStylesRaw = [leptonChrome, overlay, LEPTON_COMPAT,
+  //             navBar] (4); the content sheet and its overlay are in
+  //             stylesRaw (AGENT_SHEET), like photon and protonfix.
   // Order against the overlays is checked in lepton-overlay.test.ts.
   // Both branches must carry Lepton's chrome + content sheets; the Gecko 152
   // compat layer and the nav-bar color override are layered on as raw CSS.
