@@ -35,11 +35,13 @@ import {
   writeTaskState,
 } from "./fdh_task.ts";
 import { type BuildPhase, buildVerifyCommands } from "./fdh_verify.ts";
+import { assertSourceBuildAllowed } from "./fdh_dev_guard.ts";
 import {
   cancelJob,
   confirmIntent,
   createJob,
   executionDigest,
+  holdRespawn,
   type IntentOp,
   isTerminal,
   type JobInputs,
@@ -51,8 +53,10 @@ import {
   noteLostStepStopped,
   parseExecutorFault,
   readJob,
+  readOutbox,
+  type ReconcileContext,
   type ReconcileDecision,
-  reconcileJobFile,
+  reconcileJob,
   type Resolution,
   resolveJob,
   restartStartClock,
@@ -118,8 +122,15 @@ export async function currentInputs(
     "ls-files",
     "--others",
     "--exclude-standard",
+    "-z",
   ]);
-  const bytes = new TextEncoder().encode(`${diff}\0${untracked}`);
+  // Untracked files count by content, so editing an untracked source while a
+  // job was lost also stops a silent rerun (E-7).
+  const untrackedState = await hashUntracked(
+    state.worktree,
+    untracked.split("\0").filter((name) => name !== ""),
+  );
+  const bytes = new TextEncoder().encode(`${diff}\0${untrackedState}`);
   const worktreeState = encodeHex(
     await crypto.subtle.digest("SHA-256", bytes),
   );
@@ -130,6 +141,59 @@ export async function currentInputs(
     worktreeState,
   };
 }
+
+/** Untracked files larger than this count by size and mtime, not content. */
+export const MAX_HASHED_UNTRACKED_BYTES = 16 * 1024 * 1024;
+
+/**
+ * One line per untracked file: its name and the SHA-256 of its content (or
+ * its size and mtime when it is larger than MAX_HASHED_UNTRACKED_BYTES, or
+ * "missing" when it vanished meanwhile), sorted by name.
+ */
+export async function hashUntracked(
+  worktree: string,
+  names: string[],
+): Promise<string> {
+  const lines: string[] = [];
+  for (const name of [...names].sort()) {
+    const file = path.join(worktree, ...name.split("/"));
+    let entry: string;
+    let info: Deno.FileInfo | null = null;
+    try {
+      info = Deno.statSync(file);
+      const stamp = `${info.size}:${info.mtime?.toISOString() ?? ""}`;
+      if (!info.isFile) {
+        // An untracked directory (git reports "sub/") counts by size only.
+        entry = `other:${info.size}`;
+      } else if (info.size > MAX_HASHED_UNTRACKED_BYTES) {
+        entry = `large:${stamp}`;
+      } else {
+        // `job wait` reconciles every second: hash a file again only when
+        // its size or mtime changed.
+        const key = `${file}\0${stamp}`;
+        entry = untrackedHashCache.get(key) ?? encodeHex(
+          await crypto.subtle.digest("SHA-256", Deno.readFileSync(file)),
+        );
+        untrackedHashCache.set(key, entry);
+      }
+    } catch (error) {
+      if (error instanceof Deno.errors.NotFound) {
+        entry = "missing";
+      } else {
+        // Locked by another process (Windows sharing violation) or not
+        // permitted: do not stop reconciling; count it by size and mtime.
+        entry = info === null
+          ? "unreadable"
+          : `unreadable:${info.size}:${info.mtime?.toISOString() ?? ""}`;
+      }
+    }
+    lines.push(`${name}\0${entry}`);
+  }
+  return lines.join("\n");
+}
+
+/** SHA-256 of untracked files by path, size and mtime (this process only). */
+const untrackedHashCache = new Map<string, string>();
 
 /** Detached executor process for `epoch` of a job; returns its pid. */
 export function spawnExecutorProcess(
@@ -416,7 +480,8 @@ export interface ReconcileReport {
   kind: string;
   state: string;
   epoch: number;
-  action: ReconcileDecision["action"] | "error";
+  /** "held": a source-build respawn waits for the W-04 dev guard. */
+  action: ReconcileDecision["action"] | "error" | "held";
   /** Why this job could not be reconciled (the sweep continues). */
   error?: string;
   /** Processes of a lost attempt that were stopped before the respawn. */
@@ -433,6 +498,8 @@ export interface ReconcileTaskOptions {
   git?: GitRunner;
   spawn?: typeof spawnExecutorProcess;
   stopTree?: typeof stopProcessTree;
+  /** W-04 guard checked before a respawn that compiles source. */
+  sourceBuildGuard?: (worktree: string) => Promise<void>;
 }
 
 /**
@@ -482,17 +549,42 @@ async function reconcileOne(
       const inputs = inputsCache.value;
       currentDigest = await executionDigest(before.kind, before.step!, inputs);
     }
-    const { job, value } = await reconcileJobFile(
-      state.worktree,
-      state.taskId,
-      jobId,
-      {
-        currentDigest: before.kind === "intent" ? undefined : currentDigest ??
-          before.executionDigest,
-        holderGone: before.kind === "intent" &&
-          options.intentHoldersGone === true,
-      },
-    );
+    const context = {
+      currentDigest: before.kind === "intent" ? undefined : currentDigest ??
+        before.executionDigest,
+      holderGone: before.kind === "intent" &&
+        options.intentHoldersGone === true,
+    };
+    // Same W-04 guard as 'verify build' / 'job start': a respawn must not
+    // start a source build under this worktree's running dev browser. The
+    // decision is taken once, under the journal lock. The guard (it lists
+    // processes, so it is slow) runs outside the lock, only when that
+    // decision is a source-compiling respawn; the locked decision is then
+    // taken again with its answer.
+    let allowed: true | string | undefined;
+    let locked: { job: JobJournal; value: LockedDecision };
+    for (;;) {
+      try {
+        locked = await lockedReconcile(state, jobId, context, allowed);
+        break;
+      } catch (error) {
+        if (!(error instanceof GuardNeeded) || allowed !== undefined) {
+          throw error;
+        }
+        try {
+          await (options.sourceBuildGuard ??
+            ((worktree) => assertSourceBuildAllowed(worktree, "before-mach")))(
+              state.worktree,
+            );
+          allowed = true;
+        } catch (refusal) {
+          allowed = refusal instanceof Error
+            ? refusal.message
+            : String(refusal);
+        }
+      }
+    }
+    const { job, value } = locked;
     const report: ReconcileReport = {
       jobId,
       kind: job.kind,
@@ -500,6 +592,12 @@ async function reconcileOne(
       epoch: job.epoch,
       action: value.action,
     };
+    if (value.action === "held") {
+      // The holder is now fenced (declared lost, no epoch bump): its step
+      // tree is stopped below like any lost attempt's, so the old build does
+      // not keep running under the dev server while the job is held.
+      report.error = `held, not respawned: ${value.reason}`;
+    }
     // Stop what any lost (or, after a cancel, abandoned) attempt left
     // running and has not been stopped yet: before the next epoch runs the
     // same step, when the job closes, and on any later reconcile, so a
@@ -530,9 +628,12 @@ async function reconcileOne(
       // Without the stop the next epoch could run beside the old tree: do not
       // spawn now. A later reconcile retries the stop (the new attempt is
       // then overdue and counted as lost).
-      report.error = `could not stop a lost step tree: ${
+      const stopError = `could not stop a lost step tree: ${
         error instanceof Error ? error.message : String(error)
       }`;
+      report.error = report.error === undefined
+        ? stopError
+        : `${report.error}; ${stopError}`;
       // A closed job still gets its result recorded; the stop is retried by
       // the next reconcile.
       if (isTerminal(job.state)) {
@@ -556,19 +657,95 @@ async function reconcileOne(
         value.epoch,
       );
     }
-    if (value.action === "awaiting-approval" && job.intent !== null) {
-      await withLedger(
-        state.worktree,
-        state.taskId,
-        (ledger) =>
-          pendingQuota(ledger, job.intent!.op as IntentOp, quotaNoteFor(job)),
-      );
+    if (job.state === "awaiting-approval" && job.intent !== null) {
+      // Put (or put back) the approval entry. A controller may have died
+      // between the journal transition and the ledger write. An approval
+      // recorded in the ledger since the job began waiting is not undone.
+      const since = [...job.transitions].reverse().find((t) =>
+        t.to === "awaiting-approval"
+      )?.at ?? job.updatedAt;
+      await withLedger(state.worktree, state.taskId, (ledger) => {
+        // Re-read the journal under the ledger lock: a 'job resolve' that ran
+        // since must not get a stale entry back.
+        if (
+          readJob(state.worktree, state.taskId, jobId).state !==
+            "awaiting-approval"
+        ) {
+          return;
+        }
+        const note = quotaNoteFor(job);
+        const after = (e: { at: string }, t: string) =>
+          Date.parse(e.at) >= Date.parse(t);
+        // Approved: this entry's own approval, or an approve-all ('quota
+        // approve') after this entry was put on the list.
+        const ownApproval = ledger.events.some((e) =>
+          e.kind === "approve" && after(e, since) &&
+          (e.note ?? "").includes(note)
+        );
+        const listedAt = [...ledger.events].reverse().find((e) =>
+          e.kind === "pending" && e.note === note && after(e, since)
+        )?.at;
+        const approvedAll = listedAt !== undefined &&
+          ledger.events.some((e) =>
+            e.kind === "approve" && e.op === undefined && after(e, listedAt)
+          );
+        if (!ownApproval && !approvedAll) {
+          pendingQuota(ledger, job.intent!.op as IntentOp, note);
+        }
+      });
     }
     if (isTerminal(job.state)) {
       await settleJob(state.worktree, state.taskId, jobId);
     }
     return report;
   }
+}
+
+type LockedDecision = ReconcileDecision | { action: "held"; reason: string };
+
+/** The locked decision is a source-compiling respawn the guard must clear. */
+class GuardNeeded extends Error {
+  constructor() {
+    super("the respawn compiles source: the W-04 dev guard must clear it");
+  }
+}
+
+/**
+ * Reconcile one journal under its lock (reading the current epoch's outbox
+ * inside it, as `reconcileJobFile` does). A respawn that would compile
+ * source is committed only if `allowed` is true; with no answer yet it
+ * throws `GuardNeeded` and nothing is written; refused (a message), the
+ * respawn is held instead (`holdRespawn`).
+ */
+async function lockedReconcile(
+  state: FdhTaskState,
+  jobId: string,
+  context: Omit<ReconcileContext, "outbox" | "at">,
+  allowed: true | string | undefined,
+): Promise<{ job: JobJournal; value: LockedDecision }> {
+  return await updateJob(state.worktree, state.taskId, jobId, (job) => {
+    const at = nowIso();
+    // A settled job never uses its outbox; do not let a damaged one stop a
+    // sweep over the task's jobs.
+    const outbox = isTerminal(job.state) || job.state === "awaiting-approval"
+      ? null
+      : readOutbox(state.worktree, state.taskId, jobId, job.epoch);
+    const compiles = respawnCompilesSource(job);
+    const trial = compiles ? structuredClone(job) : job;
+    const value: LockedDecision = reconcileJob(trial, {
+      ...context,
+      at,
+      outbox,
+    });
+    if (!compiles) return value;
+    if (value.action !== "respawn" || allowed === true) {
+      Object.assign(job, trial);
+      return value;
+    }
+    if (allowed === undefined) throw new GuardNeeded();
+    holdRespawn(job, allowed, at);
+    return { action: "held", reason: allowed };
+  });
 }
 
 export interface WaitOptions extends ReconcileTaskOptions {
@@ -599,6 +776,11 @@ export async function waitForJob(options: WaitOptions): Promise<JobJournal> {
       errors += 1;
       options.onError?.(report.error);
       if (errors >= (options.maxErrors ?? 3)) {
+        if (report.action === "held") {
+          throw new Error(
+            `job ${options.jobId} is held: its source build waits for this worktree's dev server to stop. Run 'fdh dev down', then 'fdh job wait' again (the job keeps its attempts). ${report.error}`,
+          );
+        }
         throw new Error(
           `job ${options.jobId} could not be reconciled ${errors} times in a row: ${report.error}`,
         );
@@ -630,6 +812,8 @@ export async function startIntent(
   target: string,
   agent: string,
   leaseTtlMs?: number,
+  /** A job id chosen in advance (`newJobId("intent")`), e.g. recorded first. */
+  jobId?: string,
 ): Promise<JobJournal> {
   const intent = { op, target };
   const inputs: JobInputs = {
@@ -638,7 +822,7 @@ export async function startIntent(
     guardEnv: {},
   };
   const job = createJob({
-    jobId: newJobId("intent"),
+    jobId: jobId ?? newJobId("intent"),
     taskId: state.taskId,
     worktree: state.worktree,
     kind: "intent",
@@ -694,7 +878,12 @@ export async function resolveAndApprove(
     state.worktree,
     state.taskId,
     jobId,
-    (j) => resolveJob(j, resolution, note, agent),
+    (j) => {
+      // A retry after the ledger update below failed: the journal is already
+      // resolved the same way, so only the ledger step is repeated.
+      if (alreadyResolvedAs(j, resolution)) return;
+      resolveJob(j, resolution, note, agent);
+    },
   );
   if (job.intent !== null) {
     await withLedger(
@@ -721,7 +910,7 @@ export async function cancelAndSettle(
   jobId: string,
   reason: string,
   options: Omit<ReconcileTaskOptions, "state" | "jobIds"> = {},
-): Promise<JobJournal> {
+): Promise<{ job: JobJournal; reports: ReconcileReport[] }> {
   await updateJob(
     state.worktree,
     state.taskId,
@@ -730,8 +919,36 @@ export async function cancelAndSettle(
   );
   // Reconcile at once: it stops any lost tree left from an earlier epoch
   // (e.g. an interrupted respawn) and records a closed job's result.
-  await reconcileTaskJobs({ ...options, state, jobIds: [jobId] });
-  return readJob(state.worktree, state.taskId, jobId);
+  const reports = await reconcileTaskJobs({
+    ...options,
+    state,
+    jobIds: [jobId],
+  });
+  return { job: readJob(state.worktree, state.taskId, jobId), reports };
+}
+
+/**
+ * Was `job` already resolved with `resolution` by an approver? (The last
+ * "resolved" event says so and the job is past awaiting-approval.)
+ */
+export function alreadyResolvedAs(
+  job: JobJournal,
+  resolution: Resolution,
+): boolean {
+  // Only a closing resolution is repeatable: the job's state is its result.
+  // A repeated 'retry' would silently ignore a different --agent.
+  if (resolution === "retry" || job.state !== resolution) return false;
+  const last = [...job.events].reverse().find((e) => e.kind === "resolved");
+  return last !== undefined &&
+    last.note.startsWith(`resolved ${resolution} by approver`);
+}
+
+/** Would a respawn of `job` start at a command that compiles source? */
+export function respawnCompilesSource(job: JobJournal): boolean {
+  if (job.kind !== "build" || job.step === null) return false;
+  return job.step.commands.slice(job.checkpoint).some((command) =>
+    command.argv.includes("before-mach")
+  );
 }
 
 /**

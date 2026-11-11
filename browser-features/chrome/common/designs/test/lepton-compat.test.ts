@@ -133,11 +133,41 @@ function makeSidebarBox(
 // ---------------------------------------------------------------------------
 
 /**
- * The renamed-variable table must contain exactly the renames proven by the
- * Floorp-Runtime PR #45 diff. A typo or a phantom entry (the previous
- * revision listed `--toolbar-color` as a rename of `--toolbar-text-color`,
- * which is false) silently breaks components or synthesizes nonsense. Pin
- * the canonical mapping here.
+ * `legacy: var(new);` aliases per rule block of the emitted alias sheet,
+ * keyed by selector. Synthesized chains (`var(a, var(b))`) are not plain
+ * aliases and are left out.
+ */
+function emittedAliasBlocks(): Map<string, Array<[string, string]>> {
+  const css = GECKO_152_VAR_ALIASES_CSS.replace(/\/\*[\s\S]*?\*\//g, "");
+  const blocks = new Map<string, Array<[string, string]>>();
+  for (const block of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+    const pairs: Array<[string, string]> = [];
+    for (
+      const decl of block[2].matchAll(
+        /(--[\w-]+)\s*:\s*var\(\s*(--[\w-]+)\s*\)\s*;/g,
+      )
+    ) {
+      pairs.push([decl[1], decl[2]]);
+    }
+    blocks.set(block[1].trim(), pairs);
+  }
+  return blocks;
+}
+
+/** Sorted serialization: the harness's assertEquals compares with ===. */
+function pairsJson(pairs: ReadonlyArray<readonly [string, string]>): string {
+  return JSON.stringify(
+    [...pairs].sort((a, b) => a[0].localeCompare(b[0])),
+  );
+}
+
+/**
+ * The emitted `:root` aliases must be exactly the renames proven by the
+ * Floorp-Runtime PR #45 diff (151 -> 152 sources). A typo or a phantom entry
+ * (the previous revision listed `--toolbar-color` as a rename of
+ * `--toolbar-text-color`, which is false) silently breaks components or
+ * synthesizes nonsense. Pin the canonical mapping here and check it against
+ * the generated CSS, not against the table it is generated from.
  */
 function testRenamedVarsTableIsCanonical(): void {
   const expected: Array<[string, string]> = [
@@ -148,6 +178,14 @@ function testRenamedVarsTableIsCanonical(): void {
     ["--toolbox-textcolor-inactive", "--toolbox-text-color-inactive"],
     ["--tab-selected-bgcolor", "--tab-background-color-selected"],
     ["--tab-hover-background-color", "--tab-background-color-hover"],
+    ["--tab-inline-padding", "--tab-padding-inline"],
+    ["--tab-inner-inline-margin", "--tab-margin-inline-inner"],
+    ["--tab-loading-fill", "--tab-icon-fill-loading"],
+    ["--toolbar-start-end-padding", "--toolbar-padding-inline"],
+    [
+      "--toolbar-field-focus-border-color",
+      "--toolbar-field-border-color-focus",
+    ],
     [
       "--toolbarbutton-hover-background",
       "--toolbarbutton-background-color-hover",
@@ -169,23 +207,40 @@ function testRenamedVarsTableIsCanonical(): void {
     ["--arrowpanel-border-color", "--panel-border-color"],
     ["--panel-background", "--panel-background-color"],
   ];
-  // NOTE: the colocated test harness's assertEquals uses reference equality
-  // (===), which can never succeed for two independently-built arrays. Compare
-  // the canonical (sorted) serializations instead.
-  const sortKey = (
-    a: readonly [string, string],
-    b: readonly [string, string],
-  ) => a[0].localeCompare(b[0]);
-  const actualJson = JSON.stringify(
-    [...GECKO_152_RENAMED_VARS].sort(sortKey),
-  );
-  const expectedJson = JSON.stringify(
-    expected.sort(sortKey),
-  );
+  const blocks = emittedAliasBlocks();
+  const actualJson = pairsJson(blocks.get(":root") ?? []);
+  const expectedJson = pairsJson(expected);
   assert(
     actualJson === expectedJson,
-    "GECKO_152_RENAMED_VARS must match the 151->152 evidence table exactly " +
-      `(expected: ${expectedJson}, actual: ${actualJson})`,
+    "the :root aliases in GECKO_152_VAR_ALIASES_CSS must match the 151->152 " +
+      `evidence table exactly (expected: ${expectedJson}, actual: ${actualJson})`,
+  );
+  assertEquals(
+    [...blocks.keys()].join(" | "),
+    ":root | .tabbrowser-tab",
+    "the alias sheet must have exactly a :root block and a .tabbrowser-tab block",
+  );
+}
+
+/**
+ * Gecko 159 sets `--tab-padding-inline` on the vertical tab strips and
+ * `--tab-margin-inline-inner` on the compact split-view wrapper. A `:root`
+ * alias would carry the root value into those tabs, so the two legacy names
+ * Lepton reads inside tabs must also be aliased on `.tabbrowser-tab`.
+ */
+function testTabScopedAliasesAreEmitted(): void {
+  const expected: Array<[string, string]> = [
+    ["--tab-inline-padding", "--tab-padding-inline"],
+    ["--tab-inner-inline-margin", "--tab-margin-inline-inner"],
+  ];
+  const actualJson = pairsJson(
+    emittedAliasBlocks().get(".tabbrowser-tab") ?? [],
+  );
+  const expectedJson = pairsJson(expected);
+  assert(
+    actualJson === expectedJson,
+    "GECKO_152_VAR_ALIASES_CSS must alias the per-tab tokens on " +
+      `.tabbrowser-tab (expected: ${expectedJson}, actual: ${actualJson})`,
   );
 }
 
@@ -332,16 +387,51 @@ function testCompatAvoidsBrittleSelectors(): void {
 }
 
 function testCompatUsesRobustLwtSignals(): void {
+  // Gecko 159 has no :-moz-lwtheme, and :not() is not forgiving, so
+  // `:root:not([lwtheme]):not(:-moz-lwtheme)` would drop the whole rule. The
+  // no-theme rules must branch on the [lwtheme] root attribute alone.
+  for (
+    const [label, css] of [
+      ["LEPTON_COMPAT_152_CSS", LEPTON_COMPAT_152_CSS],
+      ["GECKO_152_COLOR_FIX_CSS", GECKO_152_COLOR_FIX_CSS],
+    ] as const
+  ) {
+    const rules = css.replace(/\/\*[\s\S]*?\*\//g, "");
+    assert(
+      !/:not\(\s*:-moz-lwtheme\s*\)/.test(rules),
+      `${label} must not negate :-moz-lwtheme (the rule would be dropped)`,
+    );
+  }
   assert(
-    LEPTON_COMPAT_152_CSS.includes(":-moz-lwtheme"),
-    "compat layer should target LWT state via the stable :-moz-lwtheme " +
-      "pseudo-class",
+    /:root:not\(\[lwtheme\]\)\s*\{/.test(
+      GECKO_152_COLOR_FIX_CSS.replace(/\/\*[\s\S]*?\*\//g, ""),
+    ),
+    "color-fix layer should scope its no-theme rules as :root:not([lwtheme])",
   );
   assert(
-    LEPTON_COMPAT_152_CSS.includes("prefers-color-scheme"),
-    "compat layer should branch light/dark via prefers-color-scheme rather " +
-      "than brittle attributes",
+    GECKO_152_COLOR_FIX_CSS.includes("prefers-color-scheme"),
+    "color-fix layer should branch light/dark via prefers-color-scheme " +
+      "rather than brittle attributes",
   );
+}
+
+/**
+ * The Lepton compat layer must not override the legacy toolbar palette
+ * tokens for the no-theme case. Gecko 159 paints the selected tab, #browser
+ * and (protonfix) #nav-bar from --toolbar-background-color, which follows the
+ * GTK theme on Linux; setting only --toolbar-bgcolor / --lwt-accent-color
+ * splits the bars (seen as color-consistency failures on Linux CI).
+ */
+function testCompatDoesNotOverrideNoThemePalette(): void {
+  const rules = LEPTON_COMPAT_152_CSS.replace(/\/\*[\s\S]*?\*\//g, "");
+  const noThemeRule = /:root:not\(\[lwtheme\]\)[^{]*\{([^}]*)\}/g;
+  for (const m of rules.matchAll(noThemeRule)) {
+    assert(
+      !/--(?:toolbar-bgcolor|lwt-accent-color)\s*:/.test(m[1]),
+      "LEPTON_COMPAT_152_CSS must not set --toolbar-bgcolor / " +
+        "--lwt-accent-color for the no-theme case (splits the bars on 159)",
+    );
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -381,7 +471,7 @@ function testNoColorOverrideUsesImportant(): void {
 /**
  * Every rule that sets a theme/LWT-owned token (`--lwt-accent-color`,
  * `--toolbar-bgcolor`, `--arrowpanel-*`, `--in-content-page-background`) must
- * be scoped to the no-theme case (`:root:not([lwtheme]):not(:-moz-lwtheme)`)
+ * be scoped to the no-theme case (`:root:not([lwtheme])`)
  * — OR be a guarded `var(name, fallback)` alias. This is what lets a
  * third-party LWT keep its own palette. */
 function testLwtOwnedTokensAreGuardedOrNoThemeScoped(): void {
@@ -406,8 +496,7 @@ function testLwtOwnedTokensAreGuardedOrNoThemeScoped(): void {
     let m: RegExpExecArray | null;
     while ((m = declRe.exec(combined)) !== null) {
       const selectorChunk = (m[1] ?? "").trim();
-      const isNoThemeScoped = selectorChunk.includes(":not([lwtheme])") ||
-        selectorChunk.includes(":not(:-moz-lwtheme)");
+      const isNoThemeScoped = selectorChunk.includes(":not([lwtheme])");
       const declValue = m[0].slice(m[0].indexOf(token));
       const isGuardedAlias = /var\(\s*--lwt-accent-color/.test(declValue) ||
         /var\(\s*--toolbar-background-color/.test(declValue) ||
@@ -632,6 +721,203 @@ function testLwtCustomizationSurfaceInRealBrowser(): void {
   }
 }
 
+interface CssRule {
+  selector: string;
+  declarations: string;
+  index: number;
+}
+
+/** Extract the two overlapping-F11 LWT toolbox rules (Issue #2759) from the
+ * emitted compat CSS, so the tests below check the production stylesheet
+ * rather than a copy of the selectors. `bodyPaint` repaints <body>'s
+ * background on the toolbox; `toolboxImages` redraws the toolbox's own images
+ * for [theme-image-in-toolbox] themes on a ::before. */
+function extractLwtFullscreenToolboxRules(): {
+  bodyPaint: CssRule;
+  toolboxImages: CssRule;
+} {
+  const rules: CssRule[] = [];
+  for (const m of LEPTON_COMPAT_152_CSS.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+    const selector = (m[1] ?? "").replace(/\/\*[\s\S]*?\*\//g, "").trim();
+    if (
+      selector.includes("#navigator-toolbox") &&
+      selector.includes('[sizemode="fullscreen"]')
+    ) {
+      rules.push({ selector, declarations: m[2] ?? "", index: m.index ?? 0 });
+    }
+  }
+  assertEquals(
+    rules.length,
+    2,
+    "compat layer should have an F11 toolbox repaint rule and a rule that " +
+      "redraws toolbox-painted theme images",
+  );
+  const bodyPaint = rules.find((r) =>
+    r.selector.endsWith("#navigator-toolbox")
+  );
+  const toolboxImages = rules.find((r) =>
+    r.selector.endsWith("#navigator-toolbox::before")
+  );
+  if (!bodyPaint || !toolboxImages) {
+    throw new Error(
+      "F11 toolbox rules should target #navigator-toolbox and its ::before",
+    );
+  }
+  return { bodyPaint, toolboxImages };
+}
+
+/** Return the [start, end) range of the block opened by `opener`. */
+function findBlock(css: string, opener: string): [number, number] {
+  const start = css.indexOf(opener);
+  assert(start >= 0, `compat layer should contain ${opener}`);
+  let depth = 0;
+  for (let i = css.indexOf("{", start); i < css.length; i++) {
+    if (css[i] === "{") depth++;
+    if (css[i] === "}" && --depth === 0) return [start, i + 1];
+  }
+  throw new Error(`unterminated block: ${opener}`);
+}
+
+/** The repaint must only exist while Lepton actually overlaps the toolbox on
+ *  the content: both prefs that gate Lepton's own overlap rules wrap it. */
+function testLwtFullscreenToolboxFollowsLeptonOverlapPrefs(): void {
+  const css = LEPTON_COMPAT_152_CSS;
+  const [outerStart, outerEnd] = findBlock(
+    css,
+    '@media -moz-pref("userChrome.fullscreen.overlap")',
+  );
+  const outer = css.slice(outerStart, outerEnd);
+  const [innerStart, innerEnd] = findBlock(
+    outer,
+    '@media -moz-pref("browser.fullscreen.autohide")',
+  );
+  const { bodyPaint, toolboxImages } = extractLwtFullscreenToolboxRules();
+  for (const rule of [bodyPaint, toolboxImages]) {
+    const offset = rule.index - outerStart;
+    assert(
+      offset > innerStart && offset < innerEnd,
+      "the F11 toolbox repaint should be gated by the same prefs as Lepton's " +
+        `overlap rules: ${rule.selector}`,
+    );
+  }
+}
+
+/** Selector semantics, evaluated in a detached document so the live browser
+ *  window is not put into a fake fullscreen state. Element.matches() does not
+ *  accept pseudo-elements, so the ::before rule is checked on its element. */
+function testLwtFullscreenToolboxSelectorScope(): void {
+  const { bodyPaint, toolboxImages } = extractLwtFullscreenToolboxRules();
+  const imagesElementSelector = toolboxImages.selector.replace(/::before$/, "");
+  const doc = document.implementation.createHTMLDocument("");
+  const toolbox = doc.createElement("div");
+  toolbox.id = "navigator-toolbox";
+  doc.body.appendChild(toolbox);
+  const root = doc.documentElement;
+  const matching = (attrs: Record<string, string>): string => {
+    for (
+      const name of [
+        "lwtheme",
+        "sizemode",
+        "inDOMFullscreen",
+        "theme-image-in-toolbox",
+      ]
+    ) {
+      root.removeAttribute(name);
+    }
+    for (const [name, value] of Object.entries(attrs)) {
+      root.setAttribute(name, value);
+    }
+    return [
+      toolbox.matches(bodyPaint.selector) ? "body" : "",
+      toolbox.matches(imagesElementSelector) ? "images" : "",
+    ].filter(Boolean).join("+");
+  };
+
+  assertEquals(
+    matching({ lwtheme: "true", sizemode: "fullscreen" }),
+    "body",
+    "an LWT painted on <body> should get the body repaint in F11",
+  );
+  assertEquals(
+    matching({
+      lwtheme: "true",
+      sizemode: "fullscreen",
+      "theme-image-in-toolbox": "",
+    }),
+    "body+images",
+    "an LWT painted on the toolbox should get the body repaint and keep its " +
+      "own toolbox images in F11",
+  );
+  const themeVariants: Record<string, string>[] = [
+    {},
+    { "theme-image-in-toolbox": "" },
+  ];
+  for (const theme of themeVariants) {
+    assertEquals(
+      matching({ sizemode: "fullscreen", ...theme }),
+      "",
+      "the no-theme case keeps Lepton's own toolbox fill",
+    );
+    assertEquals(
+      matching({ lwtheme: "true", sizemode: "maximized", ...theme }),
+      "",
+      "outside fullscreen the LWT toolbox keeps Gecko's own painting",
+    );
+    assertEquals(
+      matching({
+        lwtheme: "true",
+        sizemode: "fullscreen",
+        inDOMFullscreen: "true",
+        ...theme,
+      }),
+      "",
+      "DOM (video) fullscreen hides the toolbox and must be excluded",
+    );
+  }
+}
+
+/** <body>'s background is copied against the window; the toolbox's own images
+ *  are redrawn from Gecko's --toolbox-background-* variables on a ::before
+ *  that covers the toolbox, so they stay positioned against the toolbox and
+ *  sit below the toolbars. */
+function testLwtFullscreenToolboxBackgroundRecipes(): void {
+  const { bodyPaint, toolboxImages } = extractLwtFullscreenToolboxRules();
+  assert(
+    /background:\s*inherit;/.test(bodyPaint.declarations) &&
+      /background-attachment:\s*fixed;/.test(bodyPaint.declarations),
+    "the F11 toolbox should repaint <body>'s background with a fixed " +
+      "attachment",
+  );
+
+  const decl = (name: string): string =>
+    toolboxImages.declarations.match(
+      new RegExp("(?:^|[;\\s])" + name + "\\s*:\\s*([^;]+);"),
+    )?.[1]?.trim() ?? "";
+  const expected: Record<string, string> = {
+    "content": '""',
+    "position": "absolute",
+    "inset": "0",
+    "z-index": "-1",
+    "pointer-events": "none",
+    "background-image": "var(--toolbox-background-image)",
+    "background-repeat": "var(--toolbox-background-repeat)",
+    "background-position": "var(--toolbox-background-position)",
+    "background-size": "var(--toolbox-background-size)",
+  };
+  for (const [name, value] of Object.entries(expected)) {
+    assertEquals(
+      decl(name),
+      value,
+      `toolbox-painted LWT images should be redrawn with ${name}: ${value}`,
+    );
+  }
+  assert(
+    !/inherit|fixed/.test(toolboxImages.declarations),
+    "toolbox-painted LWT images are positioned against the toolbox and must " +
+      "not be attached to the window",
+  );
+}
+
 /** Gecko 152 uses [sidebar-positionend] as a boolean presence attribute. The
  *  compat selector must therefore match every present value, not only
  *  [sidebar-positionend="true"]. */
@@ -701,6 +987,10 @@ export async function runAllTests(): Promise<void> {
       fn: testRenamedVarsTableIsCanonical,
     },
     {
+      name: "per-tab tokens are aliased on .tabbrowser-tab",
+      fn: testTabScopedAliasesAreEmitted,
+    },
+    {
       name: "--toolbar-color is not a rename source",
       fn: testToolbarColorIsNotARenameSource,
     },
@@ -735,6 +1025,10 @@ export async function runAllTests(): Promise<void> {
     {
       name: "compat uses robust lwt signals",
       fn: testCompatUsesRobustLwtSignals,
+    },
+    {
+      name: "compat does not override the no-theme toolbar palette",
+      fn: testCompatDoesNotOverrideNoThemePalette,
     },
     // non-destructive LWT contract
     {
@@ -773,6 +1067,18 @@ export async function runAllTests(): Promise<void> {
     {
       name: "compat fixes panel background (transparent panel symptom)",
       fn: testCompatFixesPanelBackground,
+    },
+    {
+      name: "LWT F11 toolbox repaint follows Lepton overlap prefs",
+      fn: testLwtFullscreenToolboxFollowsLeptonOverlapPrefs,
+    },
+    {
+      name: "LWT F11 toolbox repaint is scoped to overlapping fullscreen",
+      fn: testLwtFullscreenToolboxSelectorScope,
+    },
+    {
+      name: "LWT F11 toolbox repaint keeps toolbox-painted theme images",
+      fn: testLwtFullscreenToolboxBackgroundRecipes,
     },
     {
       name: "right-sidebar compat uses attribute presence",
