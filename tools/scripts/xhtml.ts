@@ -2,8 +2,25 @@
 
 import { DOMParser } from "linkedom";
 import * as fs from "node:fs/promises";
+import {
+  DEV_PORT_NON_OVERLAP_SPAN,
+  DEV_PORT_OFFSET_MAX,
+  devHttpOrigin,
+  devPort,
+  requireDevPortOffset,
+} from "#libs/shared/dev-ports/defines.ts";
 
-export const BROWSER_HTTP_LOADER_ORIGIN = "http://localhost:5181";
+/**
+ * Loader dev server origin of this inject run (FDH Gate 2 task 2-B). The CSP
+ * `script-src` entry must match the port the dev server actually binds, which
+ * is the `port-offset`-adjusted `loader` table port.
+ */
+export function browserHttpLoaderOrigin(portOffset?: number): string {
+  return devHttpOrigin("loader", "", requireDevPortOffset(portOffset ?? 0));
+}
+
+/** Kept for source-level identity of the base topology (offset 0). */
+export const BROWSER_HTTP_LOADER_ORIGIN = browserHttpLoaderOrigin(0);
 
 const CSP_HEADER = "content-security-policy";
 const STARTUP_SCRIPT_SRC = "chrome://noraneko-startup/content/chrome_root.js";
@@ -17,12 +34,15 @@ type ParsedElement = NonNullable<
 
 export interface BrowserXhtmlTransformOptions {
   allowBrowserHttpLoader?: boolean;
+  /** Dev test launch port offset (FDH Gate 2 task 2-B). */
+  portOffset?: number;
 }
 
 export interface XhtmlCliOptions {
   binPath: string;
   isDev: boolean;
   allowBrowserHttpLoader: boolean;
+  portOffset?: number;
 }
 
 function fail(message: string): never {
@@ -267,14 +287,28 @@ function setExistingCaseInsensitiveAttribute(
   element.setAttribute(matches[0].name, value);
 }
 
-function isLoaderOrigin(token: string): boolean {
-  return token.toLowerCase() === BROWSER_HTTP_LOADER_ORIGIN;
+/**
+ * True for any loader origin a dev launch may have injected: the base loader
+ * port or an admissible `--port-offset` shift. Filtering every topology
+ * origin (not just this run's) keeps a reused browser.xhtml from retaining a
+ * previous offset's loader CSP entry (KAN-120, 2-B).
+ */
+function isLoaderTopologyOrigin(token: string): boolean {
+  const match = token.toLowerCase().match(/^http:\/\/localhost:(\d+)$/);
+  if (!match) return false;
+  const port = Number(match[1]);
+  if (!Number.isInteger(port) || port <= 0) return false;
+  const offset = port - devPort("loader", 0);
+  return offset === 0 ||
+    (offset >= DEV_PORT_NON_OVERLAP_SPAN && offset <= DEV_PORT_OFFSET_MAX);
 }
 
 function rewriteScriptSrcDirective(
   content: string,
   allowBrowserHttpLoader: boolean,
+  portOffset?: number,
 ): string {
+  const loaderOrigin = browserHttpLoaderOrigin(portOffset);
   const directives = content.split(";");
   let scriptSrcCount = 0;
 
@@ -291,9 +325,9 @@ function rewriteScriptSrcDirective(
     const sources = tokens.slice(1);
 
     if (normalizedName !== "script-src") {
-      if (sources.some(isLoaderOrigin)) {
+      if (sources.some((source) => isLoaderTopologyOrigin(source))) {
         fail(
-          `${BROWSER_HTTP_LOADER_ORIGIN} appears in non-script directive ${directiveName}`,
+          `${loaderOrigin} appears in non-script directive ${directiveName}`,
         );
       }
       return rawDirective;
@@ -301,13 +335,15 @@ function rewriteScriptSrcDirective(
 
     scriptSrcCount++;
     if (sources.length === 0) fail("script-src has no source expressions");
-    const retainedSources = sources.filter((source) => !isLoaderOrigin(source));
+    const retainedSources = sources.filter(
+      (source) => !isLoaderTopologyOrigin(source),
+    );
     if (retainedSources.length === 0) {
       fail("script-src would have no source expressions after loader removal");
     }
 
     const desiredSources = allowBrowserHttpLoader
-      ? [...retainedSources, BROWSER_HTTP_LOADER_ORIGIN]
+      ? [...retainedSources, loaderOrigin]
       : retainedSources;
     const alreadyDesired = sources.length === desiredSources.length &&
       sources.every((source, sourceIndex) =>
@@ -351,13 +387,18 @@ function findCspMeta(document: ParsedXmlDocument): ParsedElement {
 function assertTransformedBrowserXhtml(
   output: string,
   allowBrowserHttpLoader: boolean,
+  portOffset?: number,
 ): void {
   assertWellFormedXml(output);
   const document = new DOMParser().parseFromString(output, "text/xml");
   const meta = findCspMeta(document);
   const content = getCaseInsensitiveAttribute(meta, "content");
   if (content === null) fail("CSP meta has no content attribute");
-  const verified = rewriteScriptSrcDirective(content, allowBrowserHttpLoader);
+  const verified = rewriteScriptSrcDirective(
+    content,
+    allowBrowserHttpLoader,
+    portOffset,
+  );
   if (verified !== content) {
     fail("CSP transformation did not reach a fixed point");
   }
@@ -382,6 +423,7 @@ export function transformBrowserXhtml(
   options: BrowserXhtmlTransformOptions = {},
 ): string {
   const allowBrowserHttpLoader = options.allowBrowserHttpLoader ?? false;
+  const portOffset = requireDevPortOffset(options.portOffset ?? 0);
   assertWellFormedXml(source);
   const document = new DOMParser().parseFromString(source, "text/xml");
   const meta = findCspMeta(document);
@@ -390,7 +432,7 @@ export function transformBrowserXhtml(
   setExistingCaseInsensitiveAttribute(
     meta,
     "content",
-    rewriteScriptSrcDirective(content, allowBrowserHttpLoader),
+    rewriteScriptSrcDirective(content, allowBrowserHttpLoader, portOffset),
   );
 
   for (const script of document.querySelectorAll("script")) {
@@ -412,7 +454,7 @@ export function transformBrowserXhtml(
   head.appendChild(script);
 
   const output = document.toString();
-  assertTransformedBrowserXhtml(output, allowBrowserHttpLoader);
+  assertTransformedBrowserXhtml(output, allowBrowserHttpLoader, portOffset);
   return output;
 }
 
@@ -461,16 +503,30 @@ export function parseXhtmlCliArgs(args: string[]): XhtmlCliOptions {
   if (!binPath || binPath.startsWith("--")) {
     throw new Error("binPath argument is required");
   }
-  const flags = new Set(args.slice(1));
-  for (const flag of flags) {
-    if (flag !== "--dev" && flag !== "--allow-browser-http-loader") {
-      throw new Error(`Unknown argument: ${flag}`);
+  const rest = args.slice(1);
+  const flags = new Set<string>();
+  let portOffset: number | undefined;
+  for (let i = 0; i < rest.length; i++) {
+    const arg = rest[i];
+    if (arg === "--port-offset") {
+      const raw = rest[i + 1];
+      if (raw === undefined || raw.startsWith("--")) {
+        throw new Error("--port-offset requires a value");
+      }
+      portOffset = requireDevPortOffset(Number(raw));
+      i++;
+      continue;
     }
+    if (arg !== "--dev" && arg !== "--allow-browser-http-loader") {
+      throw new Error(`Unknown argument: ${arg}`);
+    }
+    flags.add(arg);
   }
   return {
     binPath,
     isDev: flags.has("--dev"),
     allowBrowserHttpLoader: flags.has("--allow-browser-http-loader"),
+    ...(portOffset === undefined ? {} : { portOffset }),
   };
 }
 
@@ -478,6 +534,7 @@ if (import.meta.main) {
   const options = parseXhtmlCliArgs(Deno.args);
   await injectBrowserXhtml(options.binPath, {
     allowBrowserHttpLoader: options.allowBrowserHttpLoader,
+    portOffset: options.portOffset,
   });
   if (options.isDev) {
     await injectPreferencesXhtmlDev(options.binPath);

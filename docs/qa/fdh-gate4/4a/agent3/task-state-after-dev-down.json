@@ -1,0 +1,231 @@
+{
+  "taskId": "gate4-a200",
+  "worktree": "/private/tmp/fdh-gate4/pr2b200",
+  "baseCommit": "bec27040382280c17a9e4a573359f017dca89036",
+  "portOffset": 200,
+  "createdAt": "2026-11-08T04:15:42.369Z",
+  "status": "running",
+  "events": [
+    {
+      "timestamp": "2026-11-08T04:15:42.369Z",
+      "command": "task start",
+      "note": "created task state for gate4-a200",
+      "exitCode": 0
+    },
+    {
+      "timestamp": "2026-11-08T04:17:33.170Z",
+      "command": "deno run -A tools/dev-tool.ts start --port-offset 200",
+      "note": "exit 0: Starting feles-build dev...\n[dev-tool] Using port-offset=200 marionette=5380 pref=nora.dev.port_offset\nStarted (PID 22075). Waiting for Marionette...\nBrowser ready! Marionette on port 5380.\nLog: /private/tmp/fdh-gate4/pr2b200/_dist/dev-server.log",
+      "exitCode": 0
+    },
+    {
+      "timestamp": "2026-11-08T04:17:33.171Z",
+      "command": "cleanup",
+      "note": "cleanup up: partial",
+      "exitCode": 0
+    },
+    {
+      "timestamp": "2026-11-08T04:18:47.489Z",
+      "command": "deno run -A tools/dev-tool.ts status",
+      "note": "exit 0: Connected to browser.\n  Title: Floorp Hub\n  URL: chrome://browser/content/browser.xhtml\n  Tabs: 1\n  Active tab: Floorp Hub\n[marionette] Connecting to port 5380\n[marionette] Connected (protocol v3)\n[marionette] Session: 04e7cf31-dd43-4ece-a129-02816f48f336",
+      "exitCode": 0
+    },
+    {
+      "timestamp": "2026-11-08T04:18:47.577Z",
+      "command": "deno run -A tools/dev-tool.ts eval (async () => {\n     const mod = ChromeUtils.importESModule(\"chrome://remote/content/marionette/actors/MarionetteCommandsParent.sys.mjs\");\n     const bc = gBrowser.selectedBrowser.browsingContext;\n     const actor = mod.getMarionetteCommandsActorProxy(() => bc);\n     const raw = await actor.executeScript(\"return JSON.stringify({url: location.href, hit: document.body.innerText.includes(\\\"QA4-A-AGENT3\\\")})\", [], {});\n     const parsed = JSON.parse(raw);\n     return parsed.hit ? \"QA4-A-AGENT3 @ \" + parsed.url : \"ABSENT @ \" + parsed.url;\n   })()",
+      "note": "exit 0: QA4-A-AGENT3 @ http://localhost:5383/#/overview/home\n[marionette] Connecting to port 5380\n[marionette] Connected (protocol v3)\n[marionette] Session: 80501412-a3ca-4763-8e4c-7444325a5dd9",
+      "exitCode": 0
+    },
+    {
+      "timestamp": "2026-11-08T04:18:47.577Z",
+      "command": "browser eval output (verbatim)",
+      "note": "QA4-A-AGENT3 @ http://localhost:5383/#/overview/home\n[marionette] Connecting to port 5380\n[marionette] Connected (protocol v3)\n[marionette] Session: 80501412-a3ca-4763-8e4c-7444325a5dd9\n",
+      "exitCode": 0
+    },
+    {
+      "timestamp": "2026-11-08T04:19:58.785Z",
+      "command": "evidence",
+      "note": "building manifest at /private/tmp/fdh-gate4/pr2b200/_dist/fdh/evidence/gate4-a200.json",
+      "exitCode": 0
+    },
+    {
+      "timestamp": "2026-11-08T04:34:15.305Z",
+      "command": "deno run -A tools/dev-tool.ts status",
+      "note": "exit 0: Connected to browser.\n  Title: Floorp Hub\n  URL: chrome://browser/content/browser.xhtml\n  Tabs: 1\n  Active tab: Floorp Hub\n[marionette] Connecting to port 5380\n[marionette] Connected (protocol v3)\n[marionette] Session: fb49422b-c7bf-4f31-a852-451de1a03f26",
+      "exitCode": 0
+    },
+    {
+      "timestamp": "2026-11-08T04:34:15.475Z",
+      "command": "deno run -A tools/dev-tool.ts eval (async () => {\n     const mod = ChromeUtils.importESModule(\"chrome://remote/content/marionette/actors/MarionetteCommandsParent.sys.mjs\");\n     const bc = gBrowser.selectedBrowser.browsingContext;\n     const actor = mod.getMarionetteCommandsActorProxy(() => bc);\n     const raw = await actor.executeScript(\"return JSON.stringify({url: location.href, hit: document.body.innerText.includes(\\\"QA4-A-AGENT3\\\")})\", [], {});\n     const parsed = JSON.parse(raw);\n     return parsed.hit ? \"QA4-A-AGENT3 @ \" + parsed.url : \"ABSENT @ \" + parsed.url;\n   })()",
+      "note": "exit 0: QA4-A-AGENT3 @ http://localhost:5383/#/overview/home\n[marionette] Connecting to port 5380\n[marionette] Connected (protocol v3)\n[marionette] Session: 1798b970-0c8e-408e-9a8f-8ece80d3ba9b",
+      "exitCode": 0
+    },
+    {
+      "timestamp": "2026-11-08T04:34:15.476Z",
+      "command": "browser eval output (verbatim)",
+      "note": "QA4-A-AGENT3 @ http://localhost:5383/#/overview/home\n[marionette] Connecting to port 5380\n[marionette] Connected (protocol v3)\n[marionette] Session: 1798b970-0c8e-408e-9a8f-8ece80d3ba9b\n",
+      "exitCode": 0
+    },
+    {
+      "timestamp": "2026-11-08T04:34:28.695Z",
+      "command": "evidence",
+      "note": "building manifest at /private/tmp/fdh-gate4/pr2b200/_dist/fdh/evidence/gate4-a200.json",
+      "exitCode": 0
+    },
+    {
+      "timestamp": "2026-11-08T04:35:13.823Z",
+      "command": "deno run -A tools/dev-tool.ts stop",
+      "note": "exit 0: Stopping dev processes for this checkout...\nStopped (32 processes).",
+      "exitCode": 0
+    },
+    {
+      "timestamp": "2026-11-08T04:35:13.824Z",
+      "command": "cleanup",
+      "note": "cleanup down: completed",
+      "exitCode": 0
+    },
+    {
+      "timestamp": "2026-11-08T04:35:53.864Z",
+      "command": "evidence",
+      "note": "building manifest at /private/tmp/fdh-gate4/pr2b200/_dist/fdh/evidence/gate4-a200.json",
+      "exitCode": 0
+    }
+  ],
+  "operations": [
+    {
+      "command": "/Users/user/.deno/bin/deno",
+      "args": [
+        "run",
+        "-A",
+        "tools/dev-tool.ts",
+        "start",
+        "--port-offset",
+        "200"
+      ],
+      "displayCommand": "deno run -A tools/dev-tool.ts start --port-offset 200",
+      "cwd": "/private/tmp/fdh-gate4/pr2b200",
+      "startedAt": "2026-11-08T04:17:05.491Z",
+      "endedAt": "2026-11-08T04:17:33.170Z",
+      "exitCode": 0,
+      "output": "Starting feles-build dev...\n[dev-tool] Using port-offset=200 marionette=5380 pref=nora.dev.port_offset\nStarted (PID 22075). Waiting for Marionette...\nBrowser ready! Marionette on port 5380.\nLog: /private/tmp/fdh-gate4/pr2b200/_dist/dev-server.log\n"
+    },
+    {
+      "command": "/Users/user/.deno/bin/deno",
+      "args": [
+        "run",
+        "-A",
+        "tools/dev-tool.ts",
+        "status"
+      ],
+      "displayCommand": "deno run -A tools/dev-tool.ts status",
+      "cwd": "/private/tmp/fdh-gate4/pr2b200",
+      "startedAt": "2026-11-08T04:18:47.397Z",
+      "endedAt": "2026-11-08T04:18:47.489Z",
+      "exitCode": 0,
+      "output": "Connected to browser.\n  Title: Floorp Hub\n  URL: chrome://browser/content/browser.xhtml\n  Tabs: 1\n  Active tab: Floorp Hub\n[marionette] Connecting to port 5380\n[marionette] Connected (protocol v3)\n[marionette] Session: 04e7cf31-dd43-4ece-a129-02816f48f336\n"
+    },
+    {
+      "command": "/Users/user/.deno/bin/deno",
+      "args": [
+        "run",
+        "-A",
+        "tools/dev-tool.ts",
+        "eval",
+        "(async () => {\n     const mod = ChromeUtils.importESModule(\"chrome://remote/content/marionette/actors/MarionetteCommandsParent.sys.mjs\");\n     const bc = gBrowser.selectedBrowser.browsingContext;\n     const actor = mod.getMarionetteCommandsActorProxy(() => bc);\n     const raw = await actor.executeScript(\"return JSON.stringify({url: location.href, hit: document.body.innerText.includes(\\\"QA4-A-AGENT3\\\")})\", [], {});\n     const parsed = JSON.parse(raw);\n     return parsed.hit ? \"QA4-A-AGENT3 @ \" + parsed.url : \"ABSENT @ \" + parsed.url;\n   })()"
+      ],
+      "displayCommand": "deno run -A tools/dev-tool.ts eval (async () => {\n     const mod = ChromeUtils.importESModule(\"chrome://remote/content/marionette/actors/MarionetteCommandsParent.sys.mjs\");\n     const bc = gBrowser.selectedBrowser.browsingContext;\n     const actor = mod.getMarionetteCommandsActorProxy(() => bc);\n     const raw = await actor.executeScript(\"return JSON.stringify({url: location.href, hit: document.body.innerText.includes(\\\"QA4-A-AGENT3\\\")})\", [], {});\n     const parsed = JSON.parse(raw);\n     return parsed.hit ? \"QA4-A-AGENT3 @ \" + parsed.url : \"ABSENT @ \" + parsed.url;\n   })()",
+      "cwd": "/private/tmp/fdh-gate4/pr2b200",
+      "startedAt": "2026-11-08T04:18:47.490Z",
+      "endedAt": "2026-11-08T04:18:47.577Z",
+      "exitCode": 0,
+      "output": "QA4-A-AGENT3 @ http://localhost:5383/#/overview/home\n[marionette] Connecting to port 5380\n[marionette] Connected (protocol v3)\n[marionette] Session: 80501412-a3ca-4763-8e4c-7444325a5dd9\n"
+    },
+    {
+      "command": "/Users/user/.deno/bin/deno",
+      "args": [
+        "run",
+        "-A",
+        "tools/dev-tool.ts",
+        "status"
+      ],
+      "displayCommand": "deno run -A tools/dev-tool.ts status",
+      "cwd": "/private/tmp/fdh-gate4/pr2b200",
+      "startedAt": "2026-11-08T04:34:15.217Z",
+      "endedAt": "2026-11-08T04:34:15.305Z",
+      "exitCode": 0,
+      "output": "Connected to browser.\n  Title: Floorp Hub\n  URL: chrome://browser/content/browser.xhtml\n  Tabs: 1\n  Active tab: Floorp Hub\n[marionette] Connecting to port 5380\n[marionette] Connected (protocol v3)\n[marionette] Session: fb49422b-c7bf-4f31-a852-451de1a03f26\n"
+    },
+    {
+      "command": "/Users/user/.deno/bin/deno",
+      "args": [
+        "run",
+        "-A",
+        "tools/dev-tool.ts",
+        "eval",
+        "(async () => {\n     const mod = ChromeUtils.importESModule(\"chrome://remote/content/marionette/actors/MarionetteCommandsParent.sys.mjs\");\n     const bc = gBrowser.selectedBrowser.browsingContext;\n     const actor = mod.getMarionetteCommandsActorProxy(() => bc);\n     const raw = await actor.executeScript(\"return JSON.stringify({url: location.href, hit: document.body.innerText.includes(\\\"QA4-A-AGENT3\\\")})\", [], {});\n     const parsed = JSON.parse(raw);\n     return parsed.hit ? \"QA4-A-AGENT3 @ \" + parsed.url : \"ABSENT @ \" + parsed.url;\n   })()"
+      ],
+      "displayCommand": "deno run -A tools/dev-tool.ts eval (async () => {\n     const mod = ChromeUtils.importESModule(\"chrome://remote/content/marionette/actors/MarionetteCommandsParent.sys.mjs\");\n     const bc = gBrowser.selectedBrowser.browsingContext;\n     const actor = mod.getMarionetteCommandsActorProxy(() => bc);\n     const raw = await actor.executeScript(\"return JSON.stringify({url: location.href, hit: document.body.innerText.includes(\\\"QA4-A-AGENT3\\\")})\", [], {});\n     const parsed = JSON.parse(raw);\n     return parsed.hit ? \"QA4-A-AGENT3 @ \" + parsed.url : \"ABSENT @ \" + parsed.url;\n   })()",
+      "cwd": "/private/tmp/fdh-gate4/pr2b200",
+      "startedAt": "2026-11-08T04:34:15.305Z",
+      "endedAt": "2026-11-08T04:34:15.475Z",
+      "exitCode": 0,
+      "output": "QA4-A-AGENT3 @ http://localhost:5383/#/overview/home\n[marionette] Connecting to port 5380\n[marionette] Connected (protocol v3)\n[marionette] Session: 1798b970-0c8e-408e-9a8f-8ece80d3ba9b\n"
+    },
+    {
+      "command": "/Users/user/.deno/bin/deno",
+      "args": [
+        "run",
+        "-A",
+        "tools/dev-tool.ts",
+        "stop"
+      ],
+      "displayCommand": "deno run -A tools/dev-tool.ts stop",
+      "cwd": "/private/tmp/fdh-gate4/pr2b200",
+      "startedAt": "2026-11-08T04:35:11.966Z",
+      "endedAt": "2026-11-08T04:35:13.823Z",
+      "exitCode": 0,
+      "output": "Stopping dev processes for this checkout...\nStopped (32 processes).\n"
+    }
+  ],
+  "assertions": [
+    {
+      "name": "browser-connected",
+      "expected": "Connected to browser.",
+      "actual": "Connected to browser.",
+      "passed": true,
+      "at": "2026-11-08T04:18:47.490Z"
+    },
+    {
+      "name": "browser-eval-contains",
+      "expected": "eval output contains \"QA4-A-AGENT3\"",
+      "actual": "QA4-A-AGENT3 @ http://localhost:5383/#/overview/home",
+      "passed": true,
+      "at": "2026-11-08T04:18:47.577Z"
+    },
+    {
+      "name": "browser-connected",
+      "expected": "Connected to browser.",
+      "actual": "Connected to browser.",
+      "passed": true,
+      "at": "2026-11-08T04:34:15.305Z"
+    },
+    {
+      "name": "browser-eval-contains",
+      "expected": "eval output contains \"QA4-A-AGENT3\"",
+      "actual": "QA4-A-AGENT3 @ http://localhost:5383/#/overview/home",
+      "passed": true,
+      "at": "2026-11-08T04:34:15.476Z"
+    }
+  ],
+  "cleanup": {
+    "result": "completed",
+    "notes": "Dev server stopped by 'fdh dev down'.",
+    "details": [
+      "dev-tool stop"
+    ]
+  },
+  "reproduction": {
+    "result": "inconclusive",
+    "notes": "The fdh local loop records verification; it does not reproduce a defect."
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "command": [
+    "/usr/bin/prlimit",
+    "--as=536870912",
+    "--cpu=20",
+    "--fsize=8388608",
+    "--",
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+    "-B",
+    "/workspace/qa-review-v030/fix-qa309/evidence/setup-independent-fixtures.py"
+  ],
+  "cwd": "/workspace/qa-review-v030/worktrees/Runtime-shadow-fixes",
+  "exit": 1,
+  "timeout": false,
+  "seconds": 3.44,
+  "limits": {
+    "AS": 536870912,
+    "CPU": 20,
+    "FSIZE": 8388608,
+    "wall": 45
+  },
+  "envKeys": [
+    "GIT_CONFIG_GLOBAL",
+    "GIT_CONFIG_NOSYSTEM",
+    "GIT_OPTIONAL_LOCKS",
+    "LANG",
+    "PATH",
+    "PYTHONDONTWRITEBYTECODE",
+    "TMPDIR"
+  ],
+  "scriptSha256": "d1266e88b4a8d47f239da3256715ef29d30c1c6bced9ce536d1bf27e7f6778f4",
+  "gitReadLimits": {
+    "packedGitWindowSize": "1m",
+    "packedGitLimit": "64m",
+    "configurationMutated": false
+  },
+  "log": "/workspace/qa-review-v030/fix-qa309/evidence/setup-independent-fixtures-02.stdout",
+  "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stderr": "/workspace/qa-review-v030/fix-qa309/evidence/setup-independent-fixtures-02.stderr",
+  "stderrSha256": "38ff2c5dad391f60164591738a783d1b7f858e61569e9783ecd7f9ec5c0ce69f",
+  "sourceUnchanged": {
+    "/workspace/qa-review-v030/worktrees/Runtime-shadow-fixes/.github/workflows/scripts/qa3_build_profile.py": true,
+    "/workspace/qa-review-v030/worktrees/Runtime-shadow-fixes/.github/workflows/scripts/setup-floorp.sh": true,
+    "/workspace/qa-review-v030/worktrees/Runtime-shadow-fixes/.github/workflows/scripts/test_qa3_build_profile.py": true
+  },
+  "sourceMutation": false,
+  "native": false,
+  "network": false
+}

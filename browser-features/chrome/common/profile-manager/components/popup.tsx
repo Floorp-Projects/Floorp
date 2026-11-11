@@ -3,6 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import { launchDevPorts } from "#modules/common/dev-port-offset.ts";
+
+/** Launch-local dev port resolver (FDH Gate 2 task 2-B). */
+const launchDevPort = launchDevPorts();
 export function MenuPopup() {
   return (
     <xul:panelview
@@ -15,7 +19,7 @@ export function MenuPopup() {
           <xul:browser
             id="profile-switcher-browser"
             src={import.meta.env.DEV
-              ? "http://localhost:5179"
+              ? launchDevPort.httpOrigin("profileManager")
               : "chrome://noraneko-profile-manager/content/index.html"}
             style="width:100%; height:100%;"
             disablehistory="true"

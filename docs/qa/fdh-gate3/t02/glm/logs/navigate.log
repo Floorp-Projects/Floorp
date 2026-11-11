@@ -1,0 +1,5 @@
+[marionette] Connecting to port 2828
+[marionette] Connected (protocol v3)
+[marionette] Session: cd60bde1-ae35-4c08-a1fe-3691d8625e4a
+Navigated to http://localhost:5183/
+Title: Floorp Hub

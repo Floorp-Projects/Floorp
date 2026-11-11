@@ -6,10 +6,23 @@
 
 import {
   effectiveReleaseNotesMode,
-  releaseNotesAudience,
   RELEASE_NOTES_PREFS,
+  releaseNotesAudience,
   shouldShowReleaseNotesChoice,
 } from "../common/release-notes.ts";
+import { launchDevPorts } from "../common/dev-port-offset.ts";
+
+/** Launch-local dev port resolver (FDH Gate 2 task 2-B): dev/test URLs of
+ * this launch resolve to the ports actually in use, not the base table. */
+const launchDevPort = launchDevPorts();
+
+// Floorp's mode-aware startup opens the versioned release notes. Firefox's
+// separate milestone-update page ignores that choice and can open a second tab.
+// Set the default before command-line startup; preserve explicit user overrides.
+Services.prefs.getDefaultBranch("").setStringPref(
+  "startup.homepage_override_url",
+  "",
+);
 
 // Keep the existing browser UI during the Firefox 157 transition. Locking the
 // preferences masks a profile's prior Nova opt-in without deleting it.
@@ -69,7 +82,9 @@ function getComponentRegistrar(): nsIComponentRegistrar | null {
       return null;
     }
     // Components.manager has QueryInterface at runtime but TypeScript defs don't reflect it
-    const maybeQI = (cm as unknown as { QueryInterface?: (iid: nsIID) => unknown }).QueryInterface;
+    const maybeQI =
+      (cm as unknown as { QueryInterface?: (iid: nsIID) => unknown })
+        .QueryInterface;
     if (typeof maybeQI !== "function") {
       return null;
     }
@@ -81,7 +96,8 @@ function getComponentRegistrar(): nsIComponentRegistrar | null {
 }
 
 const executedFunctions = new Set<string>();
-const RELEASE_NOTES_URL = `https://blog.floorp.app/release/${NoranekoConstants.version2}`;
+const RELEASE_NOTES_URL =
+  `https://blog.floorp.app/release/${NoranekoConstants.version2}`;
 
 export function executeOnce(id: string, callback: () => void): boolean {
   if (executedFunctions.has(id)) {
@@ -160,9 +176,9 @@ async function openReleaseNotesInRecentWindow(): Promise<void> {
   if (
     !isUpdated ||
     effectiveReleaseNotesMode(
-      Services.prefs.getStringPref(RELEASE_NOTES_PREFS.mode, "blocking"),
-      Services.prefs.getBoolPref(RELEASE_NOTES_PREFS.confirmed, false),
-    ) ===
+        Services.prefs.getStringPref(RELEASE_NOTES_PREFS.mode, "blocking"),
+        Services.prefs.getBoolPref(RELEASE_NOTES_PREFS.confirmed, false),
+      ) ===
       "disabled"
   ) {
     return;
@@ -341,7 +357,7 @@ async function setupNoranekoNewTab(): Promise<void> {
     )) === false
   ) {
     // Fallback for dev build about:newtab if file doesn't exist
-    AboutNewTab.newTabURL = "http://localhost:5186/";
+    AboutNewTab.newTabURL = launchDevPort.httpOrigin("newtab", "/");
   }
 }
 
@@ -387,10 +403,10 @@ const getCustomAboutPages = async (): Promise<Record<string, string>> => {
 
   // Check and fallback for Dev Mode
   if (!(await isResourceAvailable(customAboutPages.hub))) {
-    customAboutPages.hub = "http://localhost:5183/";
+    customAboutPages.hub = launchDevPort.httpOrigin("settings", "/");
   }
   if (!(await isResourceAvailable(customAboutPages.welcome))) {
-    customAboutPages.welcome = "http://localhost:5187/";
+    customAboutPages.welcome = launchDevPort.httpOrigin("welcome", "/");
   }
 
   if (await checkNewtabUserPreference()) {
@@ -398,7 +414,7 @@ const getCustomAboutPages = async (): Promise<Record<string, string>> => {
     customAboutPages["home"] = "chrome://noraneko-newtab/content/index.html";
     // Fallback for newtab in about pages map (though AboutNewTab handles the actual newtab url)
     if (!(await isResourceAvailable(customAboutPages["newtab"]))) {
-      const localhostNewTab = "http://localhost:5186/";
+      const localhostNewTab = launchDevPort.httpOrigin("newtab", "/");
       customAboutPages["newtab"] = localhostNewTab;
       customAboutPages["home"] = localhostNewTab;
     }
@@ -450,13 +466,22 @@ class CustomAboutPage {
 
 async function registerCustomAboutPages(): Promise<void> {
   const customAboutPages = await getCustomAboutPages();
+  // Newtab's resource mapping and Activity Stream share the native readiness signal.
+  const newTabRedirector = customAboutPages.newtab
+    ? Cc["@mozilla.org/network/protocol/about;1?what=newtab"]
+      .getService(Ci.nsIAboutModule).wrappedJSObject
+    : undefined;
 
   for (const aboutKey in customAboutPages) {
     const AboutModuleFactory: nsIFactory = {
       createInstance<T extends nsIID>(iid: T): nsQIResult<T> {
-        return new CustomAboutPage(customAboutPages[aboutKey]).QueryInterface(
-          iid,
-        );
+        const page = new CustomAboutPage(customAboutPages[aboutKey]);
+        if (aboutKey === "newtab") {
+          Object.defineProperty(page, "wrappedJSObject", {
+            value: newTabRedirector,
+          });
+        }
+        return page.QueryInterface(iid);
       },
     };
 
@@ -494,7 +519,9 @@ function registerSsbCommandLineHandler(): void {
 
     const registrar = getComponentRegistrar();
     if (!registrar) {
-      console.error("[NoranekoStartup] Failed to get nsIComponentRegistrar for SSB handler");
+      console.error(
+        "[NoranekoStartup] Failed to get nsIComponentRegistrar for SSB handler",
+      );
       return;
     }
     registrar.registerFactory(

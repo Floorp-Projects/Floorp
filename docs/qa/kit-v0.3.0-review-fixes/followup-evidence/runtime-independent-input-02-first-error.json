@@ -1,0 +1,6 @@
+{
+  "phase": "input hash capture before any test ran",
+  "error": "FileNotFoundError: .github/workflows/setup-floorp.sh",
+  "correctPath": ".github/workflows/scripts/setup-floorp.sh",
+  "classification": "review fixture path typo; no candidate defect or process launched"
+}

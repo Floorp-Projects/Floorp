@@ -7,7 +7,8 @@ import type {
 } from "../../../../modules/common/defines.ts";
 import type { ContextMenuCatalogSnapshot } from "#features-chrome/common/context-menu/types.ts";
 import { createBirpc } from "birpc";
-import { usesSettingsActor } from "../../../../../libs/ui/settings-rpc-origin.ts";
+import { isDevLaunchPage } from "../../../../../libs/ui/settings-rpc-origin.ts";
+import { devPort } from "../../../../../libs/shared/dev-ports/defines.ts";
 import type { AppLifecycleSettings } from "#libs/pwa/appLifecycleTypes.ts";
 
 type SettingsPageParentFunctions =
@@ -113,8 +114,13 @@ function waitForSettingsBridge(): Promise<Window> {
   });
 }
 
-// about:hub is privileged even when its scripts are served by Vite.
-const isLocalhost5183 = usesSettingsActor(globalThis.location.href, "5183");
+// about:hub is privileged even when its scripts are served by Vite; the
+// direct-http dev entry is a content-principal document, so detect it by URL
+// shape (offset-agnostic) instead of reading a pref the page cannot access.
+const isSettingsLocalhost = isDevLaunchPage(
+  globalThis.location.href,
+  devPort("settings", 0),
+);
 
 export function createSettingsBridgeTransport(
   resolveBridge: () => Promise<Window> = waitForSettingsBridge,
@@ -258,7 +264,7 @@ const directServicesFunctions: SettingsPageParentFunctions = {
     ),
 };
 
-export const rpc = isLocalhost5183
+export const rpc = isSettingsLocalhost
   ? createBirpc<SettingsPageParentFunctions, Record<string, never>>(
     {},
     {

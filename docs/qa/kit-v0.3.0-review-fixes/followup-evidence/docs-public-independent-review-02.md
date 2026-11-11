@@ -1,0 +1,21 @@
+# QA309 documentation/public-evidence post-fix review — candidate 02
+
+**P2-DOC-01 is CLOSED. Scoped documentation/public-selection Go; no new P0/P1/P2 in this recheck.** This does not issue Native/code qualification, certify an uncreated archive, or complete pending final-head CI verification. The initial [candidate-01 finding](docs-public-independent-review-01.md), its static observation and diagnostic first failure remain byte-identical; their hashes are recorded in [close receipt](docs-public-independent-close-02.json).
+
+`FOLLOWUP_QA309.md` lines 139–143 now calls the QA3 sequence the **required future qualification order**, explicitly says it is not wired into the current publisher, and preserves the current requirement for an already manually public release. `README.md` lines 134–138 makes the same future/current distinction and retains `publicationAuthorized=false` and native/product `UNVERIFIED`. This addresses the precise wording defect without implying any publisher change or new release authorization.
+
+| Rechecked input | Bytes | SHA256 |
+| --- | --- | --- |
+| FOLLOWUP_QA309.md | 10015 | `b6aa92471ab2b8b2bcf3fe5d352976f2d66eed17ac48e5e934141df776221e51` |
+| README.md | 8669 | `5991067ab2f82763f2ed2043f3f724955e9eb4b19fae897083ad4d879b0ce1d6` |
+| package_public_evidence.py | 6269 | `9b41eee28cd37e8f351d0a12a578d580783e118b30f79d54b4b0e043ba988a32` |
+
+The packager changes are exactly removal of unused `import sys` and addition of its own source as an evidence member. Reversing those two text changes reconstructs the previous full-program SHA256 `672080da3d558f78735ee3c1837804e78dd04ae26a2f613c9d618614457c5b5c`. Selection, credential patterns, exclusive destination refusal, deterministic ZIP creation and archive checks otherwise remain unchanged. This comparison did not import or run the packager.
+
+The new [read-only static selection](docs-public-static-inspection-02.json) observed **322** regular UTF-8 files, **3140758** total bytes and **318142** maximum member bytes. No credential-query match, GitHub-token/private-key shape, symlink, cache member or private fixture descriptor was selected. Azure URLs remain only in the two separately query-redacted error logs. Including the packager's source introduces no live URL or credential. This selection count is a time-bound observation; later final reports/results change it. Final archive/index bytes and the author's final pattern scan still need verification after all inputs freeze.
+
+Historical preservation was repeated: original/repair ZIPs, patch, archive receipt and original index remain equal to `d9e03b8c4ccf84a52db8a7532fdd8e3fd1157f89`; all 74 old indexed files match; DESIGN and the 14 original kit documents remain byte-identical. The frozen QA308 report and its 427-member ZIP still match their stated hashes. No historical result or archive was rewritten.
+
+For accurate pending-count handling, I read and hashed the newly retained root suite log rather than accepting the expected count. `runtime-all-integrated-commit-02.log` records **203 tests / 56.217 seconds / OK**, no skipped test lines, at local head `c9027879e053c9031c7f3e27495f6d415d36c10f`; the wrapper receipt records exit 0, no timeout and 56.487 seconds. Raw-log SHA256 is `4df5b120197165d0e265050af7550584ae28aedbdeb2dd6b60fc9f954e88b622`. This is verification of a retained execution record, not my independent reexecution or final Native review. The earlier cc83 full count remains 190 with its reconciliation preserved. The final Runtime acceptance/head/count paragraph must follow the two ongoing independent Native reviews and be tied to that frozen code and raw evidence. Pending author completion is not a new document defect.
+
+No source/docs/CI mutation, packaging, network, Native/browser execution, workflow control, commit or push occurred. Only uniquely named review scripts/JSON/Markdown were written. The independent reader used the same bounded read environment as candidate 01. `docs-public-independent-close-02.json` records the repaired wording, original RED evidence hashes, updated selection and actual root-suite count. The remaining broad qualification/publication limits from candidate 01 are unchanged.

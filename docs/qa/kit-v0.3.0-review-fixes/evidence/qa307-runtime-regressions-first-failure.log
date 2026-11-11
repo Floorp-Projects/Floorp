@@ -1,0 +1,36 @@
+test_child_process_exit_requires_typed_zero (test_qa3_mozlog.MozlogContracts.test_child_process_exit_requires_typed_zero) ... 
+  test_child_process_exit_requires_typed_zero (test_qa3_mozlog.MozlogContracts.test_child_process_exit_requires_typed_zero) (event={'action': 'process_exit', 'process': 'fixture'}) ... FAIL
+  test_child_process_exit_requires_typed_zero (test_qa3_mozlog.MozlogContracts.test_child_process_exit_requires_typed_zero) (event={'action': 'process_exit', 'process': 'fixture', 'exitcode': False}) ... FAIL
+  test_child_process_exit_requires_typed_zero (test_qa3_mozlog.MozlogContracts.test_child_process_exit_requires_typed_zero) (event={'action': 'process_exit', 'process': 'fixture', 'exitcode': 0.0}) ... FAIL
+
+======================================================================
+FAIL: test_child_process_exit_requires_typed_zero (test_qa3_mozlog.MozlogContracts.test_child_process_exit_requires_typed_zero) (event={'action': 'process_exit', 'process': 'fixture'})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/repos/Floorp-Runtime/.github/workflows/scripts/test_qa3_mozlog.py", line 142, in test_child_process_exit_requires_typed_zero
+    with self.subTest(event=event), self.assertRaises(ValueError):
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_child_process_exit_requires_typed_zero (test_qa3_mozlog.MozlogContracts.test_child_process_exit_requires_typed_zero) (event={'action': 'process_exit', 'process': 'fixture', 'exitcode': False})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/repos/Floorp-Runtime/.github/workflows/scripts/test_qa3_mozlog.py", line 142, in test_child_process_exit_requires_typed_zero
+    with self.subTest(event=event), self.assertRaises(ValueError):
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_child_process_exit_requires_typed_zero (test_qa3_mozlog.MozlogContracts.test_child_process_exit_requires_typed_zero) (event={'action': 'process_exit', 'process': 'fixture', 'exitcode': 0.0})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/repos/Floorp-Runtime/.github/workflows/scripts/test_qa3_mozlog.py", line 142, in test_child_process_exit_requires_typed_zero
+    with self.subTest(event=event), self.assertRaises(ValueError):
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+----------------------------------------------------------------------
+Ran 1 test in 0.012s
+
+FAILED (failures=3)

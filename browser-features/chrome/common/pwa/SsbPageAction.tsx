@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createSignal } from "solid-js";
+import { createSignal, onCleanup } from "solid-js";
 import type { JSX } from "solid-js";
 import { render } from "@nora/solid-xul";
 import type { PwaService } from "./pwaService.ts";
@@ -22,6 +22,9 @@ import PWALAUNCH_SVG from "./icons/pwa-launch.svg?inline";
 import INSTALLING_GIF from "./icons/installing.gif?inline";
 
 export class SsbPageAction {
+  private disposed = false;
+  private manifestCheckGeneration = 0;
+  private popupHideFrame: number | null = null;
   private isInstalling = createSignal(false);
   private icon = createSignal("");
   private title = createSignal("");
@@ -41,9 +44,36 @@ export class SsbPageAction {
   });
 
   constructor(private pwaService: PwaService) {
+    if (window.closed) return;
     const starButtonBox = document?.getElementById("star-button-box");
     const ssbPageAction = document?.getElementById("page-action-buttons");
     if (!starButtonBox || !ssbPageAction) return;
+
+    const tabContainer = globalThis.gBrowser.tabContainer;
+    let manifestObserverRegistered = false;
+    const onManifestCheck = () => {
+      void this.onCheckPageHasManifest().catch((error) => {
+        if (!this.disposed && !window.closed) {
+          console.error("[SsbPageAction] Manifest check failed:", error);
+        }
+      });
+    };
+    onCleanup(() => {
+      this.disposed = true;
+      this.manifestCheckGeneration++;
+      if (manifestObserverRegistered) {
+        manifestObserverRegistered = false;
+        Services.obs.removeObserver(
+          onManifestCheck,
+          "nora-pwa-check-page-has-manifest",
+        );
+      }
+      tabContainer.removeEventListener("TabSelect", onManifestCheck);
+      if (this.popupHideFrame !== null) {
+        globalThis.cancelAnimationFrame(this.popupHideFrame);
+        this.popupHideFrame = null;
+      }
+    });
 
     render(() => this.Render(), ssbPageAction, {
       marker: starButtonBox,
@@ -52,13 +82,11 @@ export class SsbPageAction {
     render(() => this.Style(), document?.head);
 
     Services.obs.addObserver(
-      () => this.onCheckPageHasManifest(),
+      onManifestCheck,
       "nora-pwa-check-page-has-manifest",
     );
-    globalThis.gBrowser.tabContainer.addEventListener(
-      "TabSelect",
-      () => this.onCheckPageHasManifest(),
-    );
+    manifestObserverRegistered = true;
+    tabContainer.addEventListener("TabSelect", onManifestCheck);
 
     addI18nObserver(() => {
       this.translations[1]({
@@ -70,19 +98,29 @@ export class SsbPageAction {
       });
     });
 
-    this.onCheckPageHasManifest();
+    onManifestCheck();
   }
 
   private async onCheckPageHasManifest() {
+    if (this.disposed || window.closed) return;
+    const generation = ++this.manifestCheckGeneration;
     const browser = globalThis.gBrowser.selectedBrowser as Browser;
 
     const canBeInstallAsPwa = await this.pwaService
       .checkBrowserCanBeInstallAsPwa(browser);
+    if (
+      this.disposed || window.closed ||
+      generation !== this.manifestCheckGeneration
+    ) return;
     this.canBeInstallAsPwa[1](canBeInstallAsPwa);
 
     const isInstalled = await this.pwaService.checkCurrentPageIsInstalled(
       browser,
     );
+    if (
+      this.disposed || window.closed ||
+      generation !== this.manifestCheckGeneration
+    ) return;
     this.isInstalled[1](isInstalled);
     this.shouldShowPageAction[1](canBeInstallAsPwa || isInstalled);
     this.pwaService.updateUIElements(isInstalled);
@@ -92,20 +130,24 @@ export class SsbPageAction {
     browser: Browser,
     userContextId: number,
   ) {
+    if (this.disposed || window.closed) return;
     const installed = await this.pwaService.checkPageIsInstalledForContainer(
       browser,
       userContextId,
     );
+    if (this.disposed || window.closed) return;
     this.panelIsInstalled[1](installed);
   }
 
   private onContainerSelect = (userContextId: number) => {
+    if (this.disposed || window.closed) return;
     this.selectedContainerId[1](userContextId);
     const browser = globalThis.gBrowser.selectedBrowser as Browser;
     void this.updatePanelInstallState(browser, userContextId);
   };
 
   private onCommand = () => {
+    if (this.disposed || window.closed) return;
     const selectedContainerId = this.selectedContainerId[0]();
     console.debug("[PWA:install-launch] SsbPageAction onCommand", {
       selectedContainerId,
@@ -120,6 +162,7 @@ export class SsbPageAction {
   };
 
   private onPopupShowing = async () => {
+    if (this.disposed || window.closed) return;
     const selectedBrowser = globalThis.gBrowser.selectedBrowser as Browser;
 
     if (!this.containerSelectionInitialized) {
@@ -130,11 +173,13 @@ export class SsbPageAction {
     }
 
     const icon = await this.pwaService.getIcon(selectedBrowser as Browser);
+    if (this.disposed || window.closed) return;
     this.icon[1](icon);
 
     const manifest = await this.pwaService.getManifest(
       selectedBrowser as Browser,
     );
+    if (this.disposed || window.closed) return;
     this.title[1](
       manifest?.name ?? selectedBrowser.currentURI?.spec ?? "",
     );
@@ -142,12 +187,18 @@ export class SsbPageAction {
   };
 
   private onPopupHiding = (event: Event) => {
+    if (this.disposed || window.closed) return;
     const panel = event.currentTarget as XULElement;
     if (panel.id !== "ssb-panel") {
       return;
     }
 
-    globalThis.requestAnimationFrame(() => {
+    if (this.popupHideFrame !== null) {
+      globalThis.cancelAnimationFrame(this.popupHideFrame);
+    }
+    this.popupHideFrame = globalThis.requestAnimationFrame(() => {
+      this.popupHideFrame = null;
+      if (this.disposed || window.closed) return;
       const ssbPanel = document?.getElementById("ssb-panel") as
         | (XULElement & { state?: string })
         | null;
@@ -169,6 +220,7 @@ export class SsbPageAction {
   }
 
   private closePopup = () => {
+    if (this.disposed || window.closed) return;
     const panel = document?.getElementById("ssb-panel") as unknown as
       & XULElement
       & {

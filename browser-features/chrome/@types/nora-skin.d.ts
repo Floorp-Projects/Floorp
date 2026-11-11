@@ -33,6 +33,16 @@ declare module "@nora/skin/lepton/css/leptonContent.css?raw" {
   export default content;
 }
 
+declare module "@nora/skin/lepton/overlay/leptonChromeOverlay.css?raw" {
+  const content: string;
+  export default content;
+}
+
+declare module "@nora/skin/lepton/overlay/leptonContentOverlay.css?raw" {
+  const content: string;
+  export default content;
+}
+
 declare module "@nora/skin/fluerial/css/fluerial.css?raw" {
   const content: string;
   export default content;

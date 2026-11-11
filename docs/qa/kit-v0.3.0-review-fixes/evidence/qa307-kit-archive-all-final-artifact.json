@@ -1,0 +1,30 @@
+{
+  "check": "kit-archive-all",
+  "revision": "final-artifact",
+  "startedAt": "2026-10-09T12:50:18.774154+00:00",
+  "command": [
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+    "-B",
+    "-m",
+    "unittest",
+    "discover",
+    "-s",
+    "tools/qa/tests",
+    "-p",
+    "test_*.py",
+    "-v"
+  ],
+  "cwd": "/workspace/qa-review-v030/fixes/archive-verification/Floorp_QA_Implementation_Kit_v0.3.0",
+  "exitCode": 0,
+  "timedOut": false,
+  "seconds": 2.529,
+  "log": "qa307-kit-archive-all-final-artifact.log",
+  "logSha256": "49f0a37cb116c0be033a2cd12e799897d1bfecce5618ee64ad33980fc5c19332",
+  "networkRequired": false,
+  "browserRequired": false,
+  "outerSoftASBytes": 2147483648,
+  "outerHardASBytes": 34359738368,
+  "workerPhysicalMemoryMaxBytes": 17179869184,
+  "outerSoftFSIZEBytes": 33554432,
+  "outerHardFSIZEBytes": 68719476736
+}

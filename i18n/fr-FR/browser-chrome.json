@@ -64,12 +64,29 @@
     "service": {
       "new-workspace": "Nouvel espace de travail ({{count}})"
     },
+    "sync": {
+      "help": "Synchronisez cet espace de travail et ses onglets Web avec votre compte Mozilla.",
+      "error-title": "Synchronisation de l'espace de travail",
+      "incoming-failed": "Certaines données synchronisées n'ont pas pu être lues. Les onglets existants sont conservés jusqu'à ce que la synchronisation aboutisse.",
+      "invalid-workspace": "Cet espace de travail n'a pas pu être synchronisé. Choisissez un nom et une icône ne dépassant pas 256 caractères, puis réessayez. La synchronisation des autres espaces de travail continue.",
+      "deleted-workspace": "Cet espace de travail a été supprimé de Sync. Restaurez-le à partir d'une archive ou créez un nouvel espace de travail pour le synchroniser à nouveau.",
+      "indicator-selected": "{{name}} — Inclus dans la synchronisation de l'espace de travail",
+      "indicator-attention": "{{name}} — Erreur de synchronisation de l'espace de travail : {{error}}",
+      "status-selected": "Inclus dans la synchronisation",
+      "status-error": "Erreur de synchronisation",
+      "status-paused": "Synchronisation suspendue",
+      "indicator-paused": "{{name}} — Synchronisation de l'espace de travail en pause : {{error}}",
+      "engine-disabled": "La synchronisation des espaces de travail est désactivée. Sélectionnez « Reprendre la synchronisation des espaces de travail » dans le menu des espaces de travail pour synchroniser vos espaces de travail sélectionnés."
+    },
     "context-menu": {
       "move-up": "Déplacer cet espace de travail vers le haut",
       "move-down": "Déplacer cet espace de travail vers le bas",
       "delete": "Supprimer l’espace de travail",
       "manage": "Gérer l'espace de travail",
-      "archive": "Archiver l'espace de travail"
+      "archive": "Archiver l'espace de travail",
+      "sync": "Synchroniser cet espace de travail et ses onglets",
+      "sync-paused": "La synchronisation de l'espace de travail nécessite une attention particulière",
+      "sync-resume": "Reprendre la synchronisation de l'espace de travail"
     },
     "popup": {
       "create-new": "Créer un nouvel espace de travail...",
@@ -101,6 +118,36 @@
     },
     "error": {
       "invalidWorkspaceID": "ID invalide pour les espaces de travail (peut-être que l'ordre n'est pas mise à jour)"
+    },
+    "containers": {
+      "title": "Conteneurs d'espace de travail",
+      "setup": "Configurer les conteneurs d'espace de travail…",
+      "reopen": "Rouvrir un onglet dans son conteneur synchronisé…",
+      "status-pending": "Configuration du conteneur requise",
+      "indicator-pending": "{{name}} — Configuration du conteneur requise : {{error}}",
+      "definition-missing": "Les informations sur le conteneur ne sont pas encore arrivées. Les onglets s'ouvriront après qu'elles seront disponibles.",
+      "legacy-unresolved": "Certains anciens onglets synchronisés n'ont pas de conteneur assigné. Utilisez les conteneurs de l'espace de travail configuré pour choisir où ils devraient s'ouvrir.",
+      "confirmation": "Choisissez le conteneur à utiliser pour «{{name}}». Ses identifiants existants seront utilisés sur cet appareil.",
+      "deleted": "Le conteneur lié à «{{name}}» a été supprimé. Lier un autre conteneur, en créer un ou arrêter de synchroniser cet espace de travail.",
+      "creating": "Le conteneur de l'espace de travail est en cours de création. Ses onglets sont en attente.",
+      "disabled": "Les conteneurs sont désactivés sur cet appareil. Activez les conteneurs pour ouvrir ces onglets.",
+      "deleting": "Le conteneur associé est en cours de suppression. Ses onglets sont en attente.",
+      "creation-failed": "Le conteneur «{{name}}» n'a pas pu être créé ou enregistré. Choisissez un conteneur existant ou essayez de le créer à nouveau.",
+      "confirm": "Utiliser ce nom «{{name}}» de conteneur existant pour ce conteneur synchronisé ? Les onglets utiliseront ses identifiants sur cet appareil.",
+      "create": "Créer un nouveau conteneur «{{name}}» (connexion requise)",
+      "unsubscribe": "Arrêter la synchronisation de cet espace de travail",
+      "operation-failed": "L'opération sur le conteneur n'a pas pu être menée à bien. Vérifiez son statut dans le menu de l'espace de travail et réessayez.",
+      "reopen-needed": "Certains onglets existants doivent être rouverts dans leur conteneur synchronisé. Choisissez l'action de réouverture dans le menu de l'espace de travail.",
+      "reopen-select": "Choisissez un onglet à rouvrir dans son conteneur synchronisé.",
+      "reopen-confirm": "Rouvrir cet onglet dans son conteneur synchronisé ? L'onglet actuel sera remplacé après le chargement de la nouvelle page. Les données saisies dans le formulaire et l'état de la page qui n'ont pas été enregistrés risquent d'être perdus.",
+      "default-unavailable": "Conteneur — utilisez d'abord Configurer les conteneurs d'espace de travail dans le menu de l'espace de travail.",
+      "legacy-scope": "Quelles affectations de conteneur manquantes faut-il définir ? Les onglets signifient chaque onglet de cet espace de travail dont le conteneur est toujours inconnu.",
+      "legacy-scope-default": "Espace de travail par défaut uniquement",
+      "legacy-scope-tabs": "Tous les onglets avec des conteneurs inconnus",
+      "legacy-scope-all": "Espace de travail par défaut et tous les onglets avec des conteneurs inconnus",
+      "legacy-target": "Choisissez le conteneur pour les tâches sélectionnées. Les identifiants de connexion existants sur cet appareil seront utilisés.",
+      "legacy-none": "Aucun conteneur (navigation normale)",
+      "legacy-create": "Créer un conteneur en utilisant le nom de l'espace de travail (connexion requise)"
     }
   },
   "profile-manager-button": {
@@ -285,7 +332,12 @@
   },
   "qrcode-generate-page-action": "Générer un code QR pour cette page",
   "qrcode-generate-page-action-title": "Générateur de code QR",
+  "firefoxSidebar": {
+    "edgeToggle": "Ouvrir ou épingler la barre latérale de Firefox",
+    "resize": "Redimensionner la barre latérale de Firefox"
+  },
   "panelSidebar": {
+    "resize": "Redimensionner la barre latérale du panneau",
     "modal": {
       "type": "Type de panneau",
       "typeOptions": {
@@ -510,8 +562,8 @@
       "media": "Média",
       "open-tabs": "Onglets ouverts",
       "switcher": "Commuter",
-      "history-suggestions": "Historique",
-      "bookmark-suggestions": "Marque-pages"
+      "history-suggestions": "Historique (Recherche dynamique)",
+      "bookmark-suggestions": "Marque-pages (Recherche Dynamique)"
     },
     "noResults": "Aucune commande trouvée",
     "noResultsHint": "Essayez un autre terme de recherche",
@@ -596,7 +648,15 @@
     "bookmarkSwitcherWhereLabel": "Où ouvrir",
     "bookmarkSwitcherWhereNewTab": "Nouvel onglet",
     "bookmarkSwitcherWhereNewTabDesc": "Ouvrir dans un nouvel onglet au premier plan",
-    "bookmarkSwitcherWherePlaceholder": "Sélectionnez l'endroit où ouvrir..."
+    "bookmarkSwitcherWherePlaceholder": "Sélectionnez l'endroit où ouvrir...",
+    "shortcutLabel": "@{{prefix}}",
+    "shortcutWithArgsLabel": "@{{prefix}} {{args}}",
+    "searchShortcutDescription": "Recherche \"{{query}}\"",
+    "shortcuts": {
+      "reservedTabSearch": "Rechercher dans les onglets ouverts",
+      "reservedBookmarkSearch": "Recherche de marque-pages",
+      "reservedHistorySearch": "Rechercher dans l’historique"
+    }
   },
   "commandPaletteReadings": {}
 }

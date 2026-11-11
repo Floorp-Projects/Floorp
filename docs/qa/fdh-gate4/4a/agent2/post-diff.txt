@@ -1,0 +1,44 @@
+diff --git a/browser-features/pages-settings/src/components/app-sidebar.tsx b/browser-features/pages-settings/src/components/app-sidebar.tsx
+index fae6222c57ff..e590c661d80c 100644
+--- a/browser-features/pages-settings/src/components/app-sidebar.tsx
++++ b/browser-features/pages-settings/src/components/app-sidebar.tsx
+@@ -130,7 +130,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+ 
+   const about: Feature[] = [
+     {
+-      title: t("sidebar.firefoxSettings"),
++      title: t("sidebar.firefoxSettings") + " QA4-A-AGENT2",
+       url: "",
+       icon: Settings,
+       isExternal: true,
+diff --git a/tools/feles-build.ts b/tools/feles-build.ts
+index ed3a78b6db05..3c2e83c449a6 100644
+--- a/tools/feles-build.ts
++++ b/tools/feles-build.ts
+@@ -94,7 +94,7 @@ async function runDev(portOffset = 0): Promise<void> {
+       : "debug",
+   });
+   CustomAppIcons.run();
+-  Patcher.run("apply");
++  if (Deno.env.get("FLOORP_SKIP_PATCHER") !== "1") Patcher.run("apply");
+   Pref.run();
+   Symlinker.run();
+ 
+@@ -168,7 +168,7 @@ async function runStage(
+   // Initial setup
+   await Initializer.run();
+   CustomAppIcons.run();
+-  Patcher.run("apply");
++  if (Deno.env.get("FLOORP_SKIP_PATCHER") !== "1") Patcher.run("apply");
+   Pref.run();
+   Symlinker.run();
+ 
+@@ -232,7 +232,7 @@ async function runTest(
+   // Initial setup
+   await Initializer.run();
+   CustomAppIcons.run();
+-  Patcher.run("apply");
++  if (Deno.env.get("FLOORP_SKIP_PATCHER") !== "1") Patcher.run("apply");
+   Pref.run();
+   Symlinker.run();
+ 

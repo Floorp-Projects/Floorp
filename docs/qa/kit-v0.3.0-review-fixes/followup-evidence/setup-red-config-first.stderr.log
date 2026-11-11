@@ -1,0 +1,48 @@
+test_real_setup_rejects_wrong_generated_config_before_bootstrap (test_qa3_build_profile.BuildProfileTests.test_real_setup_rejects_wrong_generated_config_before_bootstrap) ... 
+  test_real_setup_rejects_wrong_generated_config_before_bootstrap (test_qa3_build_profile.BuildProfileTests.test_real_setup_rejects_wrong_generated_config_before_bootstrap) (debug=False, suffix='ac_add_options --target=aarch64-unknown-linux-gnu\n') ... FAIL
+  test_real_setup_rejects_wrong_generated_config_before_bootstrap (test_qa3_build_profile.BuildProfileTests.test_real_setup_rejects_wrong_generated_config_before_bootstrap) (debug=False, suffix='ac_add_options --enable-debug\n') ... FAIL
+  test_real_setup_rejects_wrong_generated_config_before_bootstrap (test_qa3_build_profile.BuildProfileTests.test_real_setup_rejects_wrong_generated_config_before_bootstrap) (debug=False, suffix='ac_add_options --enable-profile-generate=cross\n') ... FAIL
+  test_real_setup_rejects_wrong_generated_config_before_bootstrap (test_qa3_build_profile.BuildProfileTests.test_real_setup_rejects_wrong_generated_config_before_bootstrap) (debug=True, suffix='ac_add_options --disable-tests --other\n') ... FAIL
+
+======================================================================
+FAIL: test_real_setup_rejects_wrong_generated_config_before_bootstrap (test_qa3_build_profile.BuildProfileTests.test_real_setup_rejects_wrong_generated_config_before_bootstrap) (debug=False, suffix='ac_add_options --target=aarch64-unknown-linux-gnu\n')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/worktrees/Runtime-shadow-fixes/.github/workflows/scripts/test_qa3_build_profile.py", line 140, in test_real_setup_rejects_wrong_generated_config_before_bootstrap
+    self.assertNotEqual(
+AssertionError: 0 == 0 : stdout='Using official branding: floorp-official\n'
+stderr=''
+effects='/tmp/tmp1zvwqzmq/bin/sudo apt update -y\n/tmp/tmp1zvwqzmq/bin/sudo apt install msitools -y\n./mach --no-interactive bootstrap --application-choice browser\n'
+
+======================================================================
+FAIL: test_real_setup_rejects_wrong_generated_config_before_bootstrap (test_qa3_build_profile.BuildProfileTests.test_real_setup_rejects_wrong_generated_config_before_bootstrap) (debug=False, suffix='ac_add_options --enable-debug\n')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/worktrees/Runtime-shadow-fixes/.github/workflows/scripts/test_qa3_build_profile.py", line 140, in test_real_setup_rejects_wrong_generated_config_before_bootstrap
+    self.assertNotEqual(
+AssertionError: 0 == 0 : stdout='Using official branding: floorp-official\n'
+stderr=''
+effects='/tmp/tmp9yd1bpkk/bin/sudo apt update -y\n/tmp/tmp9yd1bpkk/bin/sudo apt install msitools -y\n./mach --no-interactive bootstrap --application-choice browser\n'
+
+======================================================================
+FAIL: test_real_setup_rejects_wrong_generated_config_before_bootstrap (test_qa3_build_profile.BuildProfileTests.test_real_setup_rejects_wrong_generated_config_before_bootstrap) (debug=False, suffix='ac_add_options --enable-profile-generate=cross\n')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/worktrees/Runtime-shadow-fixes/.github/workflows/scripts/test_qa3_build_profile.py", line 140, in test_real_setup_rejects_wrong_generated_config_before_bootstrap
+    self.assertNotEqual(
+AssertionError: 0 == 0 : stdout='Using official branding: floorp-official\n'
+stderr=''
+effects='/tmp/tmpu_ewfvap/bin/sudo apt update -y\n/tmp/tmpu_ewfvap/bin/sudo apt install msitools -y\n./mach --no-interactive bootstrap --application-choice browser\n'
+
+======================================================================
+FAIL: test_real_setup_rejects_wrong_generated_config_before_bootstrap (test_qa3_build_profile.BuildProfileTests.test_real_setup_rejects_wrong_generated_config_before_bootstrap) (debug=True, suffix='ac_add_options --disable-tests --other\n')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/worktrees/Runtime-shadow-fixes/.github/workflows/scripts/test_qa3_build_profile.py", line 146, in test_real_setup_rejects_wrong_generated_config_before_bootstrap
+    self.assertNotIn("sudo", result["effects"])
+AssertionError: 'sudo' unexpectedly found in '/tmp/tmp1lwj3eb_/bin/git apply --verbose --ignore-space-change --ignore-whitespace .github/patches/debug/fixture.patch\n/tmp/tmp1lwj3eb_/bin/sudo apt update -y\n/tmp/tmp1lwj3eb_/bin/sudo apt install msitools -y\n'
+
+----------------------------------------------------------------------
+Ran 1 test in 0.188s
+
+FAILED (failures=4)

@@ -11,7 +11,9 @@ function openExternalLinkInBrowser(
       return false;
     }
     const browser = actor.browsingContext?.top?.embedderElement;
-    const win = browser?.ownerGlobal as
+    // `ownerGlobal` is not defined on the <browser> element in this build, so
+    // walk to the chrome window through its document instead.
+    const win = browser?.ownerDocument?.defaultView as
       | (Window & {
         openTrustedLinkIn?: (
           url: string,
@@ -42,6 +44,17 @@ function openExternalLinkInBrowser(
 
 //TODO: make reject when the name is invalid
 import type { ContextMenuCatalogSnapshot } from "#features-chrome/common/context-menu/types.ts";
+import type {
+  NotesPreferenceSnapshot,
+  NotesStorageService,
+  NotesSyncContext,
+} from "../common/notes-storage-types.ts";
+import { HUB_DEV_PAGES } from "#libs/shared/dev-ports/defines.ts";
+import { launchDevPorts } from "../common/dev-port-offset.ts";
+
+/** Launch-local dev port resolver (FDH Gate 2 task 2-B): resolves the
+ * table names to the ports this launch actually uses (offset-aware). */
+const launchDevPort = launchDevPorts();
 
 interface ContextMenuCatalogServiceModule {
   ContextMenuCatalogService: {
@@ -54,6 +67,10 @@ const { ContextMenuCatalogService } = ChromeUtils.importESModule(
   "resource://noraneko/modules/context-menu/ContextMenuCatalogService.sys.mjs",
 ) as ContextMenuCatalogServiceModule;
 
+const { FloorpNotesStorage } = ChromeUtils.importESModule(
+  "resource://noraneko/modules/notes/FloorpNotesStorage.sys.mjs",
+) as { FloorpNotesStorage: NotesStorageService };
+
 export class NRSettingsParent extends JSWindowActorParent {
   constructor() {
     super();
@@ -64,6 +81,21 @@ export class NRSettingsParent extends JSWindowActorParent {
   ): Promise<unknown> {
     const data = message.data as Record<string, unknown> | undefined;
     switch (message.name) {
+      case "getNotesSnapshot":
+        return FloorpNotesStorage.getSnapshot();
+      case "readNotesSyncState":
+        return FloorpNotesStorage.readSyncState(
+          data?.snapshot as NotesPreferenceSnapshot,
+        );
+      case "writeNotesPref":
+        if (typeof data?.value !== "string") {
+          throw new TypeError("Invalid Notes value");
+        }
+        return FloorpNotesStorage.writeLocal(
+          data.value,
+          data.context as NotesSyncContext | undefined,
+          data.baseValue as string | null | undefined,
+        );
       case "getContextMenuCatalog":
         return ContextMenuCatalogService.getSnapshot();
       case "getContextMenuCatalogRevision":
@@ -78,7 +110,7 @@ export class NRSettingsParent extends JSWindowActorParent {
           uri.spec.split(/[?#]/)[0] === "about:hub" ||
           (uri.schemeIs("http") &&
             (uri.host === "localhost" || uri.host === "127.0.0.1") &&
-            [5183, 5186, 5187, 5188].includes(uri.port))
+            launchDevPort.isTrustedPort(uri.port, HUB_DEV_PAGES))
         );
         if (
           url && isSettingsPage && context && !context.parent &&
@@ -117,6 +149,9 @@ export class NRSettingsParent extends JSWindowActorParent {
       case "getStringPref": {
         const name = data && typeof data.name === "string" ? data.name : null;
         if (!name) return null;
+        if (name === "floorp.browser.note.memos") {
+          return FloorpNotesStorage.getSnapshot().value;
+        }
         if (Services.prefs.getPrefType(name) != Services.prefs.PREF_STRING) {
           return null;
         }
@@ -175,7 +210,9 @@ export class NRSettingsParent extends JSWindowActorParent {
             ? data.prefValue
             : null;
           if (!name || val === null) return null;
-          Services.prefs.setStringPref(name, val);
+          if (name === "floorp.browser.note.memos") {
+            FloorpNotesStorage.writeLocal(val);
+          } else Services.prefs.setStringPref(name, val);
         }
         break;
       }

@@ -143,6 +143,55 @@ const tests: TestCase[] = [
       "private modifier-click bookmarks keep context 0 and private origin attributes",
     fn: () => checkBookmarkContainer("ctrlKey", true, true),
   },
+  {
+    name: "pending workspace default blocks only new bookmark tabs",
+    fn: () => {
+      const ctx = Workspaces.getCtx(window);
+      assert(ctx, "workspace service is available");
+      const originalGuard = ctx.canOpenWorkspaceTab;
+      const previous = gBrowser.selectedTab;
+      const tab = gBrowser.addTab("about:blank", {
+        userContextId: 0,
+        triggeringPrincipal: Services.scriptSecurityManager
+          .getSystemPrincipal(),
+      });
+      try {
+        gBrowser.selectedTab = tab;
+        ctx.canOpenWorkspaceTab = () => false;
+        const count = gBrowser.tabs.length;
+        const event = new MouseEvent("click", {
+          ctrlKey: true,
+          cancelable: true,
+        });
+        assertEquals(
+          loadBookmarkURI(
+            "data:text/html,pending-workspace-bookmark",
+            event,
+          ),
+          false,
+          "the pending default does not create a browser in context 0",
+        );
+        assert(event.defaultPrevented, "blocked command cannot fall through");
+        assertEquals(
+          gBrowser.tabs.length,
+          count,
+          "A pending workspace default must not create a bookmark tab",
+        );
+        assertEquals(
+          loadBookmarkURI(
+            "data:text/html,current-workspace-bookmark",
+            new MouseEvent("click"),
+          ),
+          true,
+          "current navigation retains its already selected browsing context",
+        );
+      } finally {
+        ctx.canOpenWorkspaceTab = originalGuard;
+        gBrowser.removeTab(tab);
+        gBrowser.selectedTab = previous;
+      }
+    },
+  },
 ];
 
 export async function runAllTests(): Promise<void> {

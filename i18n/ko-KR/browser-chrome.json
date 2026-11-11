@@ -64,12 +64,29 @@
     "service": {
       "new-workspace": "새 워크스페이스 ({{count}})"
     },
+    "sync": {
+      "help": "이 워크스페이스와 내부 웹사이트 탭을 Mozilla 계정에 동기화합니다.",
+      "error-title": "워크스페이스 동기화",
+      "incoming-failed": "일부 동기화한 데이터를 읽을 수 없습니다. 동기화에 성공할 때까지 기존 탭을 유지합니다.",
+      "invalid-workspace": "이 워크스페이스는 동기화할 수 없습니다. 256자 이내의 이름 및 아이콘을 사용하고 다시 시도해 주세요. 다른 워크스페이스는 계속 동기화됩니다.",
+      "deleted-workspace": "이 워크스페이스는 Sync에서 삭제되었습니다. 다시 동기화하려면 아카이브에서 복원하거나 새 워크스페이스를 생성하세요.",
+      "indicator-selected": "{{name}} — 워크스페이스 동기화에 포함됨",
+      "indicator-attention": "{{name}} — 워크스페이스 동기화 오류: {{error}}",
+      "status-selected": "동기화에 포함됨",
+      "status-error": "동기화 오류",
+      "status-paused": "동기화 중지됨",
+      "indicator-paused": "{{name}} — 워크스페이스 동기화 중지됨: {{error}}",
+      "engine-disabled": "워크스페이스 동기화가 꺼져 있습니다. 선택한 워크스페이스를 동기화하려면 워크스페이스 메뉴에서 '워크스페이스 동기화 재개'를 누르세요."
+    },
     "context-menu": {
       "move-up": "이 워크스페이스를 위로 옮기기",
       "move-down": "이 워크스페이스를 아래로 옮기기",
       "delete": "워크스페이스 삭제",
       "manage": "워크스페이스 관리",
-      "archive": "보관된 워크스페이스"
+      "archive": "보관된 워크스페이스",
+      "sync": "이 워크스페이스 및 탭 동기화",
+      "sync-paused": "워크스페이스 동기화 확인 필요",
+      "sync-resume": "워크스페이스 동기화 재개"
     },
     "popup": {
       "create-new": "새로운 워크스페이스 만들기...",
@@ -101,6 +118,36 @@
     },
     "error": {
       "invalidWorkspaceID": "워크스페이스 ID가 유효하지 않습니다(주문이 업데이트되지 않았을 수 있음)"
+    },
+    "containers": {
+      "title": "워크스페이스 컨테이너",
+      "setup": "워크스페이스 컨테이너 설정…",
+      "reopen": "동기화된 컨테이너에서 탭 다시 열기…",
+      "status-pending": "컨테이너 설정 필요",
+      "indicator-pending": "{{name}} — 컨테이너 설정 필요: {{error}}",
+      "definition-missing": "컨테이너 정보가 아직 도착하지 않았습니다. 확인되는 대로 탭이 열립니다.",
+      "legacy-unresolved": "일부 오래된 동기화 탭에는 컨테이너가 지정되어 있지 않습니다. ‘워크스페이스 컨테이너 설정’을 이용해 해당 탭이 열릴 곳을 선택하세요.",
+      "confirmation": "“{{name}}”에 사용할 컨테이너를 선택하세요. 이 기기에서는 해당 컨테이너의 기존 로그인 정보를 사용합니다.",
+      "deleted": "“{{name}}”에 연결된 컨테이너가 삭제되었습니다. 다른 컨테이너를 연결하거나, 새 컨테이너를 생성하거나, 이 워크스페이스의 동기화를 중지하십시오.",
+      "creating": "워크스페이스 컨테이너가 생성되었습니다. 탭이 대기 중입니다.",
+      "disabled": "이 기기에서 컨테이너 기능이 꺼져 있습니다. 탭을 열려면 컨테이너 기능을 켜세요.",
+      "deleting": "연결된 컨테이너가 제거되고 있습니다. 탭이 대기 중입니다.",
+      "creation-failed": "“{{name}}” 컨테이너를 생성하거나 저장하지 못했습니다. 기존 컨테이너를 선택하거나 다시 생성해 보세오.",
+      "confirm": "이 동기화된 컨테이너에 “{{name}}” 기존 컨테이너를 사용할까요? 탭은 이 기기에서 해당 컨테이너의 로그인 정보를 사용합니다.",
+      "create": "새 “{{name}}” 컨테이너 생성 (로그인 필요)",
+      "unsubscribe": "이 워크스페이스 동기화 중지",
+      "operation-failed": "컨테이너 작업을 완료하지 못했습니다. 워크스페이스 메뉴에서 상태를 확인한 뒤 다시 시도해 주세요.",
+      "reopen-needed": "일부 기존 탭은 동기화된 컨테이너에서 다시 열어야 합니다. 워크스페이스 메뉴에서 다시 열기 작업을 선택해 주세요.",
+      "reopen-select": "동기화된 컨테이너에서 다시 열 탭을 선택합니다.",
+      "reopen-confirm": "이 탭을 동기화된 컨테이너에서 다시 열겠습니까? 새 페이지를 불러오면 현재 탭을 대체합니다. 저장하지 않은 양식 입력과 페이지 상태가 사라질 수 있습니다.",
+      "default-unavailable": "컨테이너 — 먼저 워크스페이스 메뉴에서 '워크스페이스 컨테이너 설정'을 진행하세요.",
+      "legacy-scope": "어떤 누락된 항목에 컨테이너 할당을 설정하시겠습니까? 여기서 탭은 워크스페이스 내에서 컨테이너를 알 수 없는 모든 탭을 가리킵니다.",
+      "legacy-scope-default": "워크스페이스 기본값만",
+      "legacy-scope-tabs": "컨테이너를 알 수 없는 모든 탭",
+      "legacy-scope-all": "워크스페이스 기본값 및 컨테이너를 알 수 없는 모든 탭",
+      "legacy-target": "할당할 컨테이너를 선택하세요. 이 기기에 저장된 로그인 정보를 사용합니다.",
+      "legacy-none": "컨테이너 없음 (일반 브라우징)",
+      "legacy-create": "워크스페이스 이름으로 컨테이너 생성 (로그인 필요)"
     }
   },
   "profile-manager-button": {
@@ -285,7 +332,12 @@
   },
   "qrcode-generate-page-action": "이 페이지의 QR 코드 생성",
   "qrcode-generate-page-action-title": "QR 코드 생성기",
+  "firefoxSidebar": {
+    "edgeToggle": "Firefox 사이드바 열거나 고정",
+    "resize": "Firefox 사이드바 크기 조정"
+  },
   "panelSidebar": {
+    "resize": "패널 사이드바 크기 조정",
     "modal": {
       "type": "패널 유형",
       "typeOptions": {
@@ -510,8 +562,8 @@
       "media": "미디어",
       "open-tabs": "탭 열기",
       "switcher": "전환기",
-      "history-suggestions": "방문 기록",
-      "bookmark-suggestions": "북마크"
+      "history-suggestions": "기록 (동적 검색)",
+      "bookmark-suggestions": "북마크 (동적 검색)"
     },
     "noResults": "명령을 찾을 수 없음",
     "noResultsHint": "다른 검색어를 사용해 보세요",
@@ -596,7 +648,15 @@
     "bookmarkSwitcherWhereLabel": "열 위치",
     "bookmarkSwitcherWhereNewTab": "새 탭",
     "bookmarkSwitcherWhereNewTabDesc": "새 포그라운드 탭에서 열기",
-    "bookmarkSwitcherWherePlaceholder": "열 위치 선택..."
+    "bookmarkSwitcherWherePlaceholder": "열 위치 선택...",
+    "shortcutLabel": "@{{prefix}}",
+    "shortcutWithArgsLabel": "@{{prefix}} {{args}}",
+    "searchShortcutDescription": "\"{{query}}\" 검색",
+    "shortcuts": {
+      "reservedTabSearch": "열린 탭 검색",
+      "reservedBookmarkSearch": "북마크 검색",
+      "reservedHistorySearch": "검색 기록"
+    }
   },
   "commandPaletteReadings": {}
 }

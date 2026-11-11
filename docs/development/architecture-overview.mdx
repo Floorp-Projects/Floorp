@@ -1,7 +1,7 @@
 ---
 title: "Architecture Overview"
 sidebar_label: "Architecture"
-floorp_commit: "unknown"
+floorp_commit: "47a975e524497b3457b9dbfabace1866ee2e2966"
 generated: true
 ---
 # Architecture Overview
@@ -20,13 +20,13 @@ Floorp layers Firefox/Gecko configuration, privileged Firefox ESM modules, the s
 
 ## Startup And Loader Flow
 
-The startup bridge is owned by `bridge/startup/src/chrome_root.ts:51-52`. It selects these loader entry points from the inventory:
+The startup bridge is owned by `bridge/startup/src/chrome_root.ts:56-57`. It selects these loader entry points from the inventory:
 
 - Development: `http://localhost:5181/loader/index.ts`
 - Test: `http://localhost:5181/loader/test/index.ts`
 - Production: `chrome://noraneko/content/core.js`
 
-The loader development server is configured by `bridge/loader-features/vite.config.ts:41` on port 5181.
+The loader development server is configured by `bridge/loader-features/vite.config.ts:42` on port 5181.
 
 ## Privileged Modules And Window Actors
 
@@ -126,7 +126,7 @@ The docs pipeline treats Floorp OS API as a special integration layer for local 
 
 ## Commands And CI
 
-Deno task inventory comes from `deno.json` and currently lists 31 tasks. The feles-build command inventory comes from `tools/feles-build.ts` and currently lists 5 commands.
+Deno task inventory comes from `deno.json` and currently lists 35 tasks. The feles-build command inventory comes from `tools/feles-build.ts` and currently lists 5 commands.
 
 CI workflows recorded in the docs inventory:
 
@@ -135,10 +135,11 @@ CI workflows recorded in the docs inventory:
 - `.github/workflows/collect_firefox_tests.yml` - triggers: `workflow_dispatch`
 - `.github/workflows/colocated_runner_test.yml` - triggers: `pull_request`, `push`, `workflow_dispatch`
 - `.github/workflows/docs_pipeline.yml` - triggers: `pull_request`, `push`, `schedule`, `workflow_dispatch`
+- `.github/workflows/fdh-review-gate.yml` - triggers: `issue_comment`, `pull_request`
 - `.github/workflows/firefox_runtime_candidate.yml` - triggers: `schedule`, `workflow_dispatch`
 - `.github/workflows/moderation.yml` - triggers: `issue_comment`, `issues`, `pull_request`
-- `.github/workflows/organize_issue.yml` - triggers: `issues`, `schedule`, `workflow_dispatch`
-- `.github/workflows/package_and_publish_alpha.yml` - triggers: `workflow_call`, `workflow_dispatch`
+- `.github/workflows/organize_issue.yml` - triggers: `schedule`, `workflow_dispatch`
+- `.github/workflows/package_and_publish_alpha.yml` - triggers: `workflow_dispatch`
 - `.github/workflows/package_and_publish_release.yml` - triggers: `workflow_dispatch`
 - `.github/workflows/package.yml` - triggers: `workflow_call`, `workflow_dispatch`
 - `.github/workflows/ppa_index_check.yml` - triggers: `pull_request`, `push`
@@ -146,6 +147,8 @@ CI workflows recorded in the docs inventory:
 - `.github/workflows/publish_ppa.yml` - triggers: `workflow_call`, `workflow_dispatch`
 - `.github/workflows/publish_release.yml` - triggers: `workflow_call`
 - `.github/workflows/purge_ppa_cache.yml` - triggers: `workflow_dispatch`
+- `.github/workflows/qa3-source-shadow.yml` - triggers: `pull_request`, `workflow_call`, `workflow_dispatch`
+- `.github/workflows/qa3-windows-supervisor.yml` - triggers: `pull_request`, `workflow_dispatch`
 - `.github/workflows/update_lepton.yml` - triggers: `schedule`, `workflow_dispatch`
 - `.github/workflows/validate-final-package-qa.yml` - triggers: `workflow_dispatch`
 - `.github/workflows/validate-runtime-provenance.yml` - triggers: `workflow_call`

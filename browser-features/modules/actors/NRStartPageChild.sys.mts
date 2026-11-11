@@ -3,16 +3,24 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import { launchDevPorts } from "../common/dev-port-offset.ts";
+
+/** Launch-local dev port resolver (FDH Gate 2 task 2-B): resolves the
+ * table names to the ports this launch actually uses (offset-aware). */
+const launchDevPort = launchDevPorts();
+
 export class NRStartPageChild extends JSWindowActorChild {
   actorCreated() {
     console.debug("NRStartPageChild created!");
     const window = this.contentWindow;
     if (
-      window?.location.port === "5186" ||
+      launchDevPort.isTrustedPort(window?.location.port, ["newtab"]) ||
       window?.location.href.startsWith("chrome://") ||
       window?.location.href.startsWith("about:")
     ) {
-      console.debug("NRStartPage 5186 ! or Chrome Page!");
+      console.debug(
+        `NRStartPage ${launchDevPort.portString("newtab")} ! or Chrome Page!`,
+      );
       Cu.exportFunction(this.GetCurrentTopSites.bind(this), window, {
         defineAs: "NRGetCurrentTopSites",
       });

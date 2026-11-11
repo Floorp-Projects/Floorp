@@ -1,0 +1,185 @@
+test_agent_eof_without_pending_frame (test_review_regressions.ReviewRegressions.test_agent_eof_without_pending_frame) ... ok
+test_agent_partial_eof_records_error_and_closes (test_review_regressions.ReviewRegressions.test_agent_partial_eof_records_error_and_closes) ... ok
+test_agent_partial_line_obeys_deadline_and_closes (test_review_regressions.ReviewRegressions.test_agent_partial_line_obeys_deadline_and_closes) ... FAIL
+test_agent_pipelined_complete_frames_preserved (test_review_regressions.ReviewRegressions.test_agent_pipelined_complete_frames_preserved) ... FAIL
+test_assertion_free_trace_cannot_pass (test_review_regressions.ReviewRegressions.test_assertion_free_trace_cannot_pass) ... FAIL
+test_attempt_cap_rejects_complete_overlarge_history (test_review_regressions.ReviewRegressions.test_attempt_cap_rejects_complete_overlarge_history) ... FAIL
+test_child_exit_requires_integer_field (test_review_regressions.ReviewRegressions.test_child_exit_requires_integer_field) ... 
+  test_child_exit_requires_integer_field (test_review_regressions.ReviewRegressions.test_child_exit_requires_integer_field) (patch={}) ... FAIL
+  test_child_exit_requires_integer_field (test_review_regressions.ReviewRegressions.test_child_exit_requires_integer_field) (patch={'exitcode': False}) ... FAIL
+  test_child_exit_requires_integer_field (test_review_regressions.ReviewRegressions.test_child_exit_requires_integer_field) (patch={'exitcode': 0.0}) ... FAIL
+  test_child_exit_requires_integer_field (test_review_regressions.ReviewRegressions.test_child_exit_requires_integer_field) (patch={'exitcode': None}) ... FAIL
+  test_child_exit_requires_integer_field (test_review_regressions.ReviewRegressions.test_child_exit_requires_integer_field) (patch={'exitcode': '0'}) ... FAIL
+test_failed_child_cannot_pass (test_review_regressions.ReviewRegressions.test_failed_child_cannot_pass) ... FAIL
+test_huge_attempt_returns_block_with_bounded_memory (test_review_regressions.ReviewRegressions.test_huge_attempt_returns_block_with_bounded_memory) ... FAIL
+test_missing_empty_duplicate_suite_selection_rejected (test_review_regressions.ReviewRegressions.test_missing_empty_duplicate_suite_selection_rejected) ... 
+  test_missing_empty_duplicate_suite_selection_rejected (test_review_regressions.ReviewRegressions.test_missing_empty_duplicate_suite_selection_rejected) (selection=None) ... FAIL
+  test_missing_empty_duplicate_suite_selection_rejected (test_review_regressions.ReviewRegressions.test_missing_empty_duplicate_suite_selection_rejected) (selection=[]) ... FAIL
+  test_missing_empty_duplicate_suite_selection_rejected (test_review_regressions.ReviewRegressions.test_missing_empty_duplicate_suite_selection_rejected) (selection=['browser_example.js', 'browser_example.js']) ... FAIL
+test_retry_warning_cannot_pass (test_review_regressions.ReviewRegressions.test_retry_warning_cannot_pass) ... FAIL
+test_typed_child_zero_and_positive_assertion_pass (test_review_regressions.ReviewRegressions.test_typed_child_zero_and_positive_assertion_pass) ... ok
+test_unknown_execution_event_cannot_pass (test_review_regressions.ReviewRegressions.test_unknown_execution_event_cannot_pass) ... FAIL
+
+======================================================================
+FAIL: test_agent_partial_line_obeys_deadline_and_closes (test_review_regressions.ReviewRegressions.test_agent_partial_line_obeys_deadline_and_closes)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/fixes/kit-v030/Floorp_QA_Implementation_Kit_v0.3.0/tools/qa/tests/test_review_regressions.py", line 106, in test_agent_partial_line_obeys_deadline_and_closes
+    value = self.run_child("fake-stdio", b"{")
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/qa-review-v030/fixes/kit-v030/Floorp_QA_Implementation_Kit_v0.3.0/tools/qa/tests/test_review_regressions.py", line 55, in run_child
+    self.assertEqual(code, 0, raw)
+AssertionError: -9 != 0 : {"observation": {"synthetic": true}, "allowedTargets": ["chrome.new-tab", "chrome.reload", "fixture.increment", "fixture.reset"], "protocol": "one validated action JSON per line"}
+
+
+======================================================================
+FAIL: test_agent_pipelined_complete_frames_preserved (test_review_regressions.ReviewRegressions.test_agent_pipelined_complete_frames_preserved)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/fixes/kit-v030/Floorp_QA_Implementation_Kit_v0.3.0/tools/qa/tests/test_review_regressions.py", line 113, in test_agent_pipelined_complete_frames_preserved
+    self.assertEqual(value["completedSteps"], 2)
+AssertionError: 1 != 2
+
+======================================================================
+FAIL: test_assertion_free_trace_cannot_pass (test_review_regressions.ReviewRegressions.test_assertion_free_trace_cannot_pass)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/fixes/kit-v030/Floorp_QA_Implementation_Kit_v0.3.0/tools/qa/tests/test_review_regressions.py", line 72, in test_assertion_free_trace_cannot_pass
+    self.assertNotEqual(f.log(good[:2] + good[3:])["status"], "PASS")
+AssertionError: 'PASS' == 'PASS'
+
+======================================================================
+FAIL: test_attempt_cap_rejects_complete_overlarge_history (test_review_regressions.ReviewRegressions.test_attempt_cap_rejects_complete_overlarge_history)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/fixes/kit-v030/Floorp_QA_Implementation_Kit_v0.3.0/tools/qa/tests/test_review_regressions.py", line 67, in test_attempt_cap_rejects_complete_overlarge_history
+    self.assertEqual(f.evaluate()["status"], "BLOCK")
+AssertionError: 'PASS' != 'BLOCK'
+- PASS
++ BLOCK
+
+
+======================================================================
+FAIL: test_child_exit_requires_integer_field (test_review_regressions.ReviewRegressions.test_child_exit_requires_integer_field) (patch={})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/fixes/kit-v030/Floorp_QA_Implementation_Kit_v0.3.0/tools/qa/tests/test_review_regressions.py", line 88, in test_child_exit_requires_integer_field
+    with self.subTest(patch=patch), self.assertRaises(QAError):
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: QAError not raised
+
+======================================================================
+FAIL: test_child_exit_requires_integer_field (test_review_regressions.ReviewRegressions.test_child_exit_requires_integer_field) (patch={'exitcode': False})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/fixes/kit-v030/Floorp_QA_Implementation_Kit_v0.3.0/tools/qa/tests/test_review_regressions.py", line 88, in test_child_exit_requires_integer_field
+    with self.subTest(patch=patch), self.assertRaises(QAError):
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: QAError not raised
+
+======================================================================
+FAIL: test_child_exit_requires_integer_field (test_review_regressions.ReviewRegressions.test_child_exit_requires_integer_field) (patch={'exitcode': 0.0})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/fixes/kit-v030/Floorp_QA_Implementation_Kit_v0.3.0/tools/qa/tests/test_review_regressions.py", line 88, in test_child_exit_requires_integer_field
+    with self.subTest(patch=patch), self.assertRaises(QAError):
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: QAError not raised
+
+======================================================================
+FAIL: test_child_exit_requires_integer_field (test_review_regressions.ReviewRegressions.test_child_exit_requires_integer_field) (patch={'exitcode': None})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/fixes/kit-v030/Floorp_QA_Implementation_Kit_v0.3.0/tools/qa/tests/test_review_regressions.py", line 88, in test_child_exit_requires_integer_field
+    with self.subTest(patch=patch), self.assertRaises(QAError):
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: QAError not raised
+
+======================================================================
+FAIL: test_child_exit_requires_integer_field (test_review_regressions.ReviewRegressions.test_child_exit_requires_integer_field) (patch={'exitcode': '0'})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/fixes/kit-v030/Floorp_QA_Implementation_Kit_v0.3.0/tools/qa/tests/test_review_regressions.py", line 88, in test_child_exit_requires_integer_field
+    with self.subTest(patch=patch), self.assertRaises(QAError):
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: QAError not raised
+
+======================================================================
+FAIL: test_failed_child_cannot_pass (test_review_regressions.ReviewRegressions.test_failed_child_cannot_pass)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/fixes/kit-v030/Floorp_QA_Implementation_Kit_v0.3.0/tools/qa/tests/test_review_regressions.py", line 79, in test_failed_child_cannot_pass
+    self.assertNotEqual(self.with_event({"action": "process_exit", "process": "fixture",
+AssertionError: 'PASS' == 'PASS'
+
+======================================================================
+FAIL: test_huge_attempt_returns_block_with_bounded_memory (test_review_regressions.ReviewRegressions.test_huge_attempt_returns_block_with_bounded_memory)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/fixes/kit-v030/Floorp_QA_Implementation_Kit_v0.3.0/tools/qa/tests/test_review_regressions.py", line 59, in test_huge_attempt_returns_block_with_bounded_memory
+    self.assertEqual(self.run_child("huge-attempt")["status"], "BLOCK")
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/qa-review-v030/fixes/kit-v030/Floorp_QA_Implementation_Kit_v0.3.0/tools/qa/tests/test_review_regressions.py", line 55, in run_child
+    self.assertEqual(code, 0, raw)
+AssertionError: 1 != 0 : Traceback (most recent call last):
+  File "/workspace/qa-review-v030/fixes/kit-v030/Floorp_QA_Implementation_Kit_v0.3.0/tools/qa/tests/test_review_regressions.py", line 182, in <module>
+    child(sys.argv[1])
+  File "/workspace/qa-review-v030/fixes/kit-v030/Floorp_QA_Implementation_Kit_v0.3.0/tools/qa/tests/test_review_regressions.py", line 151, in child
+    print(json.dumps(f.evaluate()))
+                     ^^^^^^^^^^^^
+  File "/workspace/qa-review-v030/fixes/kit-v030/Floorp_QA_Implementation_Kit_v0.3.0/tools/qa/tests/test_core.py", line 61, in evaluate
+    return evaluate(plan or self.plan, self.subject, self.policy, self.records if records is None else records, self.root)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/qa-review-v030/fixes/kit-v030/Floorp_QA_Implementation_Kit_v0.3.0/tools/qa/core.py", line 305, in evaluate
+    if numbers != list(range(1, max(numbers) + 1)):
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+MemoryError
+
+
+======================================================================
+FAIL: test_missing_empty_duplicate_suite_selection_rejected (test_review_regressions.ReviewRegressions.test_missing_empty_duplicate_suite_selection_rejected) (selection=None)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/fixes/kit-v030/Floorp_QA_Implementation_Kit_v0.3.0/tools/qa/tests/test_review_regressions.py", line 98, in test_missing_empty_duplicate_suite_selection_rejected
+    with self.subTest(selection=selection), self.assertRaises(QAError):
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: QAError not raised
+
+======================================================================
+FAIL: test_missing_empty_duplicate_suite_selection_rejected (test_review_regressions.ReviewRegressions.test_missing_empty_duplicate_suite_selection_rejected) (selection=[])
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/fixes/kit-v030/Floorp_QA_Implementation_Kit_v0.3.0/tools/qa/tests/test_review_regressions.py", line 98, in test_missing_empty_duplicate_suite_selection_rejected
+    with self.subTest(selection=selection), self.assertRaises(QAError):
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: QAError not raised
+
+======================================================================
+FAIL: test_missing_empty_duplicate_suite_selection_rejected (test_review_regressions.ReviewRegressions.test_missing_empty_duplicate_suite_selection_rejected) (selection=['browser_example.js', 'browser_example.js'])
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/fixes/kit-v030/Floorp_QA_Implementation_Kit_v0.3.0/tools/qa/tests/test_review_regressions.py", line 98, in test_missing_empty_duplicate_suite_selection_rejected
+    with self.subTest(selection=selection), self.assertRaises(QAError):
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: QAError not raised
+
+======================================================================
+FAIL: test_retry_warning_cannot_pass (test_review_regressions.ReviewRegressions.test_retry_warning_cannot_pass)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/fixes/kit-v030/Floorp_QA_Implementation_Kit_v0.3.0/tools/qa/tests/test_review_regressions.py", line 75, in test_retry_warning_cannot_pass
+    self.assertNotEqual(self.with_event({"action": "log", "level": "WARNING",
+AssertionError: 'PASS' == 'PASS'
+
+======================================================================
+FAIL: test_unknown_execution_event_cannot_pass (test_review_regressions.ReviewRegressions.test_unknown_execution_event_cannot_pass)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/fixes/kit-v030/Floorp_QA_Implementation_Kit_v0.3.0/tools/qa/tests/test_review_regressions.py", line 83, in test_unknown_execution_event_cannot_pass
+    self.assertNotEqual(self.with_event({"action": "unknown_required_diagnostic"})["status"], "PASS")
+AssertionError: 'PASS' == 'PASS'
+
+----------------------------------------------------------------------
+Ran 13 tests in 4.656s
+
+FAILED (failures=16)

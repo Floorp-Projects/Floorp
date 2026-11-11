@@ -1,0 +1,8 @@
+{
+  "parentHardFSIZEBytes": 33554432,
+  "ownedChildRequestedFSIZEBytes": 53687091200,
+  "exit": 1,
+  "stdout": "",
+  "stderr": "prlimit: failed to set the FSIZE resource limit: Operation not permitted\n",
+  "cause": "the same outer hard-limit conflict also affects RLIMIT_FSIZE"
+}

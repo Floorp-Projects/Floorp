@@ -49,14 +49,14 @@ Deno.test("Runtime browser lock rejects non-browser harness tests", () => {
   expectInvalid(
     (lock) => {
       lock.source.tests.entries[0].path =
-        "browser/base/content/test/caps/test_not_browser_chrome.js";
+        "browser/base/content/test/browser-caps/test_not_browser_chrome.js";
     },
     "browser-chrome test path",
   );
   expectInvalid(
     (lock) => {
       lock.source.tests.manifests[0].path =
-        "browser/base/content/test/caps/xpcshell.toml";
+        "browser/base/content/test/browser-caps/xpcshell.toml";
     },
     "browser-chrome manifest",
   );
@@ -92,49 +92,58 @@ Deno.test("canonical Runtime lock pins the complete reviewed source closure", ()
   assertEquals(RUNTIME_LOCK_PATH.protocol, "file:");
   assertEquals(canonicalLock.schemaVersion, 1);
   assertEquals(canonicalLock.source.repository, RUNTIME_REPOSITORY);
-  assertEquals(canonicalLock.source.trackingRef, "nora-0.2.0");
-  assertEquals(canonicalLock.source.ref, "daily-1142");
-  assertEquals(
-    canonicalLock.source.commit,
-    "c74fe1a545d275cdd710ab44701c1ee0dd6b0eae",
-  );
-  assertEquals(
-    canonicalLock.source.tree,
-    "b59e4839575ca4c357185a159212fe577a272d56",
-  );
-  assertEquals(canonicalLock.source.release, {
-    id: 406108663,
-    immutable: false,
-  });
-  assertEquals(canonicalLock.source.materials.count, 53);
-  assertEquals(canonicalLock.source.materials.totalBytes, 227664);
-  assertEquals(canonicalLock.source.tests.count, 8);
-  assertEquals(canonicalLock.source.tests.totalTasks, 16);
-  assertEquals(canonicalLock.source.tests.supportDependencyEdges, 93);
-
-  const roleCounts = Object.groupBy(
-    canonicalLock.source.materials.entries,
-    (entry) => entry.role,
-  );
-  assertEquals(roleCounts.test?.length, 8);
-  assertEquals(roleCounts.manifest?.length, 6);
-  assertEquals(roleCounts["head-support"]?.length, 5);
-  assertEquals(roleCounts.support?.length, 34);
-
-  assertEquals(
-    Object.fromEntries(
-      canonicalLock.source.tests.entries.map((entry) => [
-        entry.path,
-        entry.expectedTasks,
-      ]),
+  const source = canonicalLock.source;
+  assertEquals({
+    repository: source.repository,
+    trackingRef: source.trackingRef,
+    ref: source.ref,
+    commit: source.commit,
+    tree: source.tree,
+    release: source.release,
+    materialsCount: source.materials.count,
+    materialBytes: source.materials.totalBytes,
+    testsCount: source.tests.count,
+    totalTasks: source.tests.totalTasks,
+    supportDependencyEdges: source.tests.supportDependencyEdges,
+    roleCounts: Object.fromEntries(
+      ["manifest", "test", "head-support", "support"].map(
+        (role) => [
+          role,
+          source.materials.entries.filter((row) => row.role === role).length,
+        ],
+      ),
     ),
-    {
-      "browser/base/content/test/caps/browser_principalSerialization_version1.js":
+    expectedTasks: Object.fromEntries(
+      source.tests.entries.map((row) => [row.path, row.expectedTasks]),
+    ),
+  }, {
+    "repository": "Floorp-Projects/Floorp-Runtime",
+    "trackingRef": "nora-0.2.0",
+    "ref": "daily-1179",
+    "commit": "8965ffc346d426ccdf919bd18585e4d4a0c21654",
+    "tree": "53216e352ae9a27c402b707e1384bb5d62e9db7e",
+    "release": {
+      "id": 433288890,
+      "immutable": false,
+    },
+    "materialsCount": 53,
+    "materialBytes": 220075,
+    "testsCount": 8,
+    "totalTasks": 16,
+    "supportDependencyEdges": 93,
+    "roleCounts": {
+      "manifest": 6,
+      "test": 8,
+      "head-support": 5,
+      "support": 34,
+    },
+    "expectedTasks": {
+      "browser/base/content/test/browser-caps/browser_principalSerialization_version1.js":
         2,
-      "browser/base/content/test/general/browser_bug537474.js": 1,
-      "browser/base/content/test/general/browser_bug565575.js": 1,
-      "browser/base/content/test/general/browser_bug596687.js": 1,
-      "browser/base/content/test/performance/browser_hiddenwindow_existence.js":
+      "browser/base/content/test/browser-general/browser_bug537474.js": 1,
+      "browser/base/content/test/browser-general/browser_bug565575.js": 1,
+      "browser/base/content/test/browser-general/browser_bug596687.js": 1,
+      "browser/base/content/test/browser-performance/browser_hiddenwindow_existence.js":
         1,
       "browser/components/customizableui/test/browser_996364_registerArea_different_properties.js":
         7,
@@ -142,58 +151,58 @@ Deno.test("canonical Runtime lock pins the complete reviewed source closure", ()
         1,
       "browser/components/urlbar/tests/browser-UrlbarInput/browser_a11y.js": 2,
     },
-  );
+  });
 });
 
 Deno.test("canonical Runtime lock pins each platform's own binary identity", () => {
   const expected = [
     {
-      tuple: "linux/aarch64",
-      assetId: 619643698,
-      assetSize: 74588712,
-      assetSha:
-        "e7f3a6983e7c9ad6494a635e1e4b58c67574de787dd7d464d3753022d2921ce9",
-      iniId: 619643702,
-      iniSize: 536,
-      iniSha:
-        "a1bd19626dd989496a91a34bb327f088acf1b9f8c95bdaff142198cb7d8be3e3",
-      buildId: "20261007125927",
+      "tuple": "linux/aarch64",
+      "assetId": 707330206,
+      "assetSize": 78273412,
+      "assetSha":
+        "56d0188571bf1e61c2466cb4c3861cdb758679fd5597b88fe044e89dea81be18",
+      "iniId": 707330201,
+      "iniSize": 535,
+      "iniSha":
+        "4763c671d0e3ed447b91aaa1aecd3224e442de03d4c77f766f11d1cefbcc27ca",
+      "buildId": "20261103153232",
     },
     {
-      tuple: "linux/x86_64",
-      assetId: 619643710,
-      assetSize: 85429504,
-      assetSha:
-        "9df9045b44cf4abd609b7a2b70d0ca9ebdc20abcd76a126b4b784b46a775eb82",
-      iniId: 619643684,
-      iniSize: 536,
-      iniSha:
-        "c00635156431e2d95fb1786036914537bdcc6c1f40e3d3ad19ecf5a7501484e8",
-      buildId: "20261007125927",
+      "tuple": "linux/x86_64",
+      "assetId": 707330202,
+      "assetSize": 86774264,
+      "assetSha":
+        "cb9b01283d5ce3167f4ba046ee7b39ae9d98a692e1beba73bd9f85f460157772",
+      "iniId": 707330199,
+      "iniSize": 535,
+      "iniSha":
+        "742bd72ce869d127abefdcbfdd0a0e785786dbd7afd133c6a930833e54d6b956",
+      "buildId": "20261103153232",
     },
     {
-      tuple: "macos/universal",
-      assetId: 619643679,
-      assetSize: 190972720,
-      assetSha:
-        "1739fa04279ab6c0fb42047b5ae5821ffe44e5e530c3b96dac86e9344f67ad61",
-      iniId: 619643681,
-      iniSize: 536,
-      iniSha:
-        "c0813fd63c1f05c1309785d0eaceff0698835956268b13ac70d549063907c2bf",
-      buildId: "20261007125927",
+      "tuple": "macos/universal",
+      "assetId": 707330210,
+      "assetSize": 197496588,
+      "assetSha":
+        "6c24cc4562a51e542afe9b47eba9e92923b05d172bc5181818ddb07225d99b58",
+      "iniId": 707330200,
+      "iniSize": 535,
+      "iniSha":
+        "1bce59ef5427d41292d26a8eb141331af84ad18f5976abf087ad823f674f104d",
+      "buildId": "20261103153232",
     },
     {
-      tuple: "windows/x86_64",
-      assetId: 619643678,
-      assetSize: 138549742,
-      assetSha:
-        "a1a628d7d342b05156cc3a64bb58c917f84952dccbd1ad9c9e59856ee6c0b780",
-      iniId: 619643685,
-      iniSize: 536,
-      iniSha:
-        "e713120ab29151b9b25f838e52c70f413490a2b064b8448aca99e3cdd5377e18",
-      buildId: "20261007125927",
+      "tuple": "windows/x86_64",
+      "assetId": 707330207,
+      "assetSize": 140973940,
+      "assetSha":
+        "a657a3fd9a6376e6f9c894dc76f6c72a0504f2ad2bba1c03bfdf02c637bf74e8",
+      "iniId": 707330198,
+      "iniSize": 535,
+      "iniSha":
+        "6ef48a28dcb906edf2bf0cb5d1907d1ed1bf998ca1395db3c8051709fb6806b1",
+      "buildId": "20261103153232",
     },
   ];
 
@@ -212,7 +221,7 @@ Deno.test("canonical Runtime lock pins each platform's own binary identity", () 
   );
   assertEquals(
     canonicalLock.artifacts.map((entry) => entry.version),
-    ["157.0.1", "157.0.1", "157.0.1", "157.0.1"],
+    ["159.0.1", "159.0.1", "159.0.1", "159.0.1"],
   );
   assertEquals(
     artifact(canonicalLock, "windows", "x86_64").extractionPolicy,
@@ -307,19 +316,19 @@ Deno.test("parseRuntimeLock rejects malformed source and material identities", (
   expectInvalid((lock) => {
     material(
       lock,
-      "browser/base/content/test/caps/browser.toml",
+      "browser/base/content/test/browser-caps/browser.toml",
     ).gitBlob = "g".repeat(40);
   }, "lowercase hexadecimal");
   expectInvalid((lock) => {
     material(
       lock,
-      "browser/base/content/test/caps/browser.toml",
+      "browser/base/content/test/browser-caps/browser.toml",
     ).sha256 = "0".repeat(63);
   }, "lowercase hexadecimal");
   expectInvalid((lock) => {
     material(
       lock,
-      "browser/base/content/test/caps/browser.toml",
+      "browser/base/content/test/browser-caps/browser.toml",
     ).mode = "100755" as "100644";
   }, "100644");
 });
@@ -347,7 +356,7 @@ Deno.test("parseRuntimeLock rejects material totals, duplicates, and drift", () 
   expectInvalid((lock) => {
     material(
       lock,
-      "browser/base/content/test/caps/browser_principalSerialization_version1.js",
+      "browser/base/content/test/browser-caps/browser_principalSerialization_version1.js",
     ).role = "head-support";
   }, "head-support");
 });

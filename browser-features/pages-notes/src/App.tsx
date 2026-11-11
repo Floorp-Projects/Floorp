@@ -11,7 +11,6 @@ import {
   notesDataToNotes,
   notesToNotesData,
   saveNotes,
-  saveSyncState,
   syncStateFromNotes,
 } from "./lib/dataManager.ts";
 import { addPrefObserver, removePrefObserver, rpc } from "./lib/rpc/rpc.ts";
@@ -25,6 +24,10 @@ import { AlertCircle, Download } from "lucide-react";
 import { noteToMarkdown } from "./lib/exportMarkdown.ts";
 import { toExportFilename } from "./lib/exportFilename.ts";
 import { saveTextFile } from "./lib/fileSink.ts";
+import type {
+  NotesPreferenceSnapshot,
+  NotesSyncContext,
+} from "../../modules/common/notes-storage-types.ts";
 
 type SaveStatusType = "idle" | "saving" | "saved" | "error";
 
@@ -40,23 +43,65 @@ function App() {
   const [searchQuery, setSearchQuery] = useState("");
   const [exportError, setExportError] = useState(false);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const titleSyncTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
-    null,
-  );
   const notesRef = useRef<Note[]>([]);
-  const isSavingRef = useRef(false);
-  const pendingSaveRef = useRef<Note[] | null>(null);
+  const acknowledgedValueRef = useRef<string | null>(null);
+  const selectedNoteRef = useRef<Note | null>(null);
+  const hasLoadedRef = useRef(false);
+  const isMountedRef = useRef(true);
+  const persistenceQueueRef = useRef<Promise<void>>(Promise.resolve());
+  const ownWriteValuesRef = useRef(new Map<string, number>());
   const titleInputRef = useRef<HTMLInputElement>(null);
   const createButtonRef = useRef<HTMLButtonElement>(null);
-  /** Flag: when true, the current pref write originates from our sync merge — skip observer reaction. */
-  const isWritingFromSyncRef = useRef(false);
-  /** Flag: when true, the current pref write is a user-initiated save — observer should skip. */
-  const isWritingFromLocalRef = useRef(false);
 
-  // Keep notesRef in sync
   useEffect(() => {
-    notesRef.current = notes;
-  }, [notes]);
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  const updateNotes = useCallback((update: (current: Note[]) => Note[]) => {
+    const next = update(notesRef.current);
+    notesRef.current = next;
+    setNotes(next);
+  }, []);
+
+  const selectCurrentNote = useCallback((note: Note | null) => {
+    selectedNoteRef.current = note;
+    setSelectedNote(note);
+    setTitle(note?.title ?? "");
+  }, []);
+
+  const enqueuePersistence = useCallback((operation: () => Promise<void>) => {
+    const task = persistenceQueueRef.current.then(operation);
+    persistenceQueueRef.current = task.catch(() => {});
+    return task;
+  }, []);
+
+  const writeNotesPref = useCallback(
+    async (
+      notesToSave: Note[],
+      context?: NotesSyncContext,
+      baseValue = acknowledgedValueRef.current,
+    ) => {
+      const data = notesToNotesData(notesToSave);
+      const value = JSON.stringify(data);
+      const ownWrites = ownWriteValuesRef.current;
+      ownWrites.set(value, (ownWrites.get(value) ?? 0) + 1);
+      try {
+        await saveNotes(data, context, baseValue);
+        // CAS may persist changes from another window which notesRef has not
+        // observed yet. Only the submitted UI state can be our next ancestor;
+        // otherwise a later flush would treat those unseen notes as deletions.
+        acknowledgedValueRef.current = value;
+      } finally {
+        const remaining = (ownWrites.get(value) ?? 1) - 1;
+        if (remaining === 0) ownWrites.delete(value);
+        else ownWrites.set(value, remaining);
+      }
+    },
+    [],
+  );
 
   // Auto-reset "saved" status after 2 seconds
   useEffect(() => {
@@ -74,10 +119,14 @@ function App() {
   }, [exportError]);
 
   useEffect(() => {
+    let disposed = false;
     const loadNotes = async () => {
       try {
         setIsLoading(true);
-        const notesData = await getNotes(t);
+        const snapshot = await rpc.getNotesSnapshot();
+        const notesData = await getNotes(t, snapshot.value);
+        if (disposed) return;
+        acknowledgedValueRef.current = snapshot.value;
 
         const convertedNotes: Note[] = notesData.titles.map((
           noteTitle,
@@ -90,21 +139,25 @@ function App() {
           updatedAt: notesData.updatedAts?.[index] ?? Date.now(),
         }));
 
+        notesRef.current = convertedNotes;
         setNotes(convertedNotes);
+        hasLoadedRef.current = true;
 
         if (convertedNotes.length > 0) {
-          setSelectedNote(convertedNotes[0]);
-          setTitle(convertedNotes[0].title);
+          selectCurrentNote(convertedNotes[0]);
         }
       } catch (error) {
         console.error("Failed to load note data:", error);
       } finally {
-        setIsLoading(false);
+        if (!disposed) setIsLoading(false);
       }
     };
 
     loadNotes();
-  }, []);
+    return () => {
+      disposed = true;
+    };
+  }, [selectCurrentNote]);
 
   // ──────────────────────────────────────────────────────────
   // Sync observer: detect external pref changes (Firefox Sync)
@@ -112,59 +165,53 @@ function App() {
   // ──────────────────────────────────────────────────────────
   useEffect(() => {
     if (isLoading) return;
+    let disposed = false;
 
     const applyExternalPrefChange = async (
       prefName: string,
-      remoteStr: string | null,
+      snapshot: NotesPreferenceSnapshot,
     ) => {
       console.info(
         `[Floorp Notes] Detected external change to pref "${prefName}", running three-way merge…`,
       );
 
       try {
-        // 1. Read remote notes from the pref (what sync just wrote)
-        if (!remoteStr) return; // Empty or null — nothing to merge
+        // Read the externally observed preference snapshot.
+        if (!snapshot.value) return; // Empty or null — nothing to merge
         const remoteNotes = notesDataToNotes(
-          JSON.parse(remoteStr) as NotesData,
+          JSON.parse(snapshot.incomingValue ?? snapshot.value) as NotesData,
         );
 
-        // 2. Local notes = current React state
+        // Read the current local state after the asynchronous base lookup.
+        const { state: syncState, context } = await loadSyncState(snapshot);
+        if (disposed) return;
         const localNotes = notesRef.current;
 
-        // 3. Load base (last-synced snapshots)
-        const syncState = await loadSyncState();
-
-        // 4. Apply three-way merge
+        const base = snapshot.origin === "sync" &&
+            snapshot.incomingValue === acknowledgedValueRef.current
+          ? syncStateFromNotes(
+            notesDataToNotes(JSON.parse(snapshot.incomingValue) as NotesData),
+          ).lastSyncedSnapshots
+          : syncState.lastSyncedSnapshots;
         const result = mergeNotesThreeWay(
           localNotes,
           remoteNotes,
-          syncState.lastSyncedSnapshots,
+          base,
         );
 
-        // 5. Save merged result back to pref
-        isWritingFromSyncRef.current = true;
-        try {
-          await saveNotes(notesToNotesData(result.merged));
-        } finally {
-          isWritingFromSyncRef.current = false;
-        }
-
-        // 6. Advance the merge base only to data that Firefox Sync actually
-        // delivered from the server. `result.merged` may still be awaiting a
-        // later upload, so treating it as synced here can hide a real conflict.
-        await saveSyncState(syncStateFromNotes(remoteNotes));
-
-        // 7. Update React state with merged notes
+        // Publish before awaiting writes so later edits build on this merge.
         notesRef.current = result.merged;
         setNotes(result.merged);
 
-        // 8. Preserve selected note if it still exists, otherwise select first
+        // Preserve selected note if it still exists, otherwise select first.
         const currentSelectedId = selectedNoteRef.current?.id;
         const newSelected = currentSelectedId
           ? result.merged.find((n) => n.id === currentSelectedId)
           : result.merged[0];
-        setSelectedNote(newSelected ?? result.merged[0] ?? null);
-        setTitle(newSelected?.title ?? result.merged[0]?.title ?? "");
+        selectCurrentNote(newSelected ?? result.merged[0] ?? null);
+
+        await writeNotesPref(result.merged, context, snapshot.value);
+        if (disposed) return;
 
         if (result.hadConflicts) {
           console.warn(
@@ -178,22 +225,33 @@ function App() {
       }
     };
 
-    // Capture each server-delivered value as soon as its observer fires, then
-    // apply snapshots in notification order. Direct pref observers do not await
-    // async callbacks, so allowing merges to overlap could let an older callback
-    // overwrite a newer server-confirmed merge base.
+    // Capture each immutable observed snapshot before any async work.
     let syncMergeQueue: Promise<void> = Promise.resolve();
-    const onPrefChanged = (prefName: string) => {
-      // Skip if this change was triggered by our own save or merge
-      if (isWritingFromLocalRef.current || isWritingFromSyncRef.current) {
-        return;
-      }
+    let lastSnapshotKey = "";
+    const onPrefChanged = (
+      prefName: string,
+      snapshot: NotesPreferenceSnapshot,
+    ) => {
+      const key = `${snapshot.epoch}:${snapshot.revision}`;
+      if (key === lastSnapshotKey) return;
+      lastSnapshotKey = key;
+      const ownWriteValues = new Set(ownWriteValuesRef.current.keys());
 
       syncMergeQueue = Promise.all([
         syncMergeQueue,
-        rpc.getStringPref(NOTES_PREF_NAME),
+        Promise.resolve(snapshot),
       ])
-        .then(([, remoteStr]) => applyExternalPrefChange(prefName, remoteStr))
+        .then(([, captured]) => {
+          if (
+            disposed ||
+            (captured.value !== null && ownWriteValues.has(captured.value))
+          ) {
+            return;
+          }
+          return enqueuePersistence(() =>
+            applyExternalPrefChange(prefName, captured)
+          );
+        })
         .catch((err) => {
           console.error("[Floorp Notes] Failed to queue sync merge:", err);
         });
@@ -203,61 +261,38 @@ function App() {
     addPrefObserver(NOTES_PREF_NAME, onPrefChanged);
 
     return () => {
+      disposed = true;
       console.debug("[Floorp Notes] Removing sync pref observer.");
       removePrefObserver(onPrefChanged);
     };
-  }, [isLoading]);
+  }, [isLoading, enqueuePersistence, selectCurrentNote, writeNotesPref]);
 
-  const buildNotesData = useCallback((notesToSave: Note[]): NotesData => ({
-    ids: notesToSave.map((note) => note.id),
-    titles: notesToSave.map((note) => note.title),
-    contents: notesToSave.map((note) => note.content),
-    createdAts: notesToSave.map((note) => note.createdAt),
-    updatedAts: notesToSave.map((note) => note.updatedAt),
-  }), []);
-
-  const saveNotesToStorage = useCallback(async (notesToSave: Note[]) => {
-    if (isSavingRef.current) {
-      // Queue the latest save request; only the most recent matters
-      pendingSaveRef.current = notesToSave;
-      return;
-    }
-    isSavingRef.current = true;
-    isWritingFromLocalRef.current = true;
+  const saveNotesToStorage = useCallback(async () => {
     try {
-      setSaveStatus("saving");
-      await saveNotes(buildNotesData(notesToSave));
-      // A pref write is only a local save. The merge base must remain at the
-      // last server-delivered snapshot until Sync confirms newer remote data.
-      setSaveStatus("saved");
+      await enqueuePersistence(async () => {
+        if (!isMountedRef.current) return;
+        setSaveStatus("saving");
+        await writeNotesPref(notesRef.current);
+        if (isMountedRef.current) setSaveStatus("saved");
+      });
     } catch (error) {
       console.error("Failed to save note data:", error);
-      setSaveStatus("error");
-    } finally {
-      isSavingRef.current = false;
-      isWritingFromLocalRef.current = false;
-      // Flush any queued save
-      const pending = pendingSaveRef.current;
-      if (pending) {
-        pendingSaveRef.current = null;
-        saveNotesToStorage(pending);
-      }
+      if (isMountedRef.current) setSaveStatus("error");
     }
-  }, [buildNotesData]);
+  }, [enqueuePersistence, writeNotesPref]);
 
-  const debouncedSave = useCallback((notesToSave: Note[]) => {
+  const debouncedSave = useCallback(() => {
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
     }
     saveTimeoutRef.current = setTimeout(() => {
-      saveNotesToStorage(notesToSave);
+      saveNotesToStorage();
     }, 500);
   }, [saveNotesToStorage]);
 
-  // Auto-save: skip when update originates from sync merge to prevent re-entry
   useEffect(() => {
-    if (!isLoading && !isWritingFromSyncRef.current) {
-      debouncedSave(notes);
+    if (!isLoading && hasLoadedRef.current) {
+      debouncedSave();
     }
   }, [notes, isLoading, debouncedSave]);
 
@@ -267,11 +302,8 @@ function App() {
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current);
       }
-      if (titleSyncTimeoutRef.current) {
-        clearTimeout(titleSyncTimeoutRef.current);
-      }
-      if (notesRef.current.length > 0) {
-        saveNotes(buildNotesData(notesRef.current)).catch(() => {});
+      if (hasLoadedRef.current) {
+        writeNotesPref(notesRef.current).catch(() => {});
       }
     };
 
@@ -280,31 +312,7 @@ function App() {
       globalThis.removeEventListener("beforeunload", flushSave);
       flushSave();
     };
-  }, [buildNotesData]);
-
-  // Debounced title sync to notes state
-  useEffect(() => {
-    if (!selectedNote || title === selectedNote.title) return;
-
-    if (titleSyncTimeoutRef.current) {
-      clearTimeout(titleSyncTimeoutRef.current);
-    }
-    titleSyncTimeoutRef.current = setTimeout(() => {
-      setNotes((prevNotes) =>
-        prevNotes.map((note) =>
-          note.id === selectedNote.id
-            ? { ...note, title, updatedAt: Date.now() }
-            : note
-        )
-      );
-    }, 300);
-
-    return () => {
-      if (titleSyncTimeoutRef.current) {
-        clearTimeout(titleSyncTimeoutRef.current);
-      }
-    };
-  }, [title, selectedNote]);
+  }, [writeNotesPref]);
 
   const filteredNotes = useMemo(() => {
     if (!searchQuery.trim()) return notes;
@@ -325,29 +333,33 @@ function App() {
       createdAt: now,
       updatedAt: now,
     };
-    setNotes((prev) => [newNote, ...prev]);
-    setSelectedNote(newNote);
-    setTitle(newNote.title);
+    updateNotes((prev) => [newNote, ...prev]);
+    selectCurrentNote(newNote);
     requestAnimationFrame(() => {
       titleInputRef.current?.focus();
       titleInputRef.current?.select();
     });
-  }, [t]);
-
-  const selectedNoteRef = useRef<Note | null>(null);
-  useEffect(() => {
-    selectedNoteRef.current = selectedNote;
-  }, [selectedNote]);
+  }, [t, updateNotes, selectCurrentNote]);
 
   const updateCurrentNote = useCallback((content: string) => {
     const current = selectedNoteRef.current;
     if (!current) return;
     const updatedNote = { ...current, content, updatedAt: Date.now() };
-    setSelectedNote(updatedNote);
-    setNotes((prevNotes) =>
+    selectCurrentNote(updatedNote);
+    updateNotes((prevNotes) =>
       prevNotes.map((note) => note.id === current.id ? updatedNote : note)
     );
-  }, []);
+  }, [selectCurrentNote, updateNotes]);
+
+  const updateCurrentTitle = useCallback((nextTitle: string) => {
+    const current = selectedNoteRef.current;
+    if (!current || current.title === nextTitle) return;
+    const updatedNote = { ...current, title: nextTitle, updatedAt: Date.now() };
+    selectCurrentNote(updatedNote);
+    updateNotes((currentNotes) =>
+      currentNotes.map((note) => note.id === current.id ? updatedNote : note)
+    );
+  }, [selectCurrentNote, updateNotes]);
 
   const requestDeleteNote = useCallback((id: string) => {
     setDeleteTarget(id);
@@ -356,56 +368,34 @@ function App() {
   const confirmDeleteNote = useCallback(() => {
     if (!deleteTarget) return;
 
-    setNotes((prevNotes) => {
+    updateNotes((prevNotes) => {
       const currentIndex = prevNotes.findIndex((n) => n.id === deleteTarget);
       const remaining = prevNotes.filter((note) => note.id !== deleteTarget);
 
-      setSelectedNote((prevSelected) => {
-        if (prevSelected?.id !== deleteTarget) return prevSelected;
-
+      if (selectedNoteRef.current?.id === deleteTarget) {
         const nextIndex = Math.min(currentIndex, remaining.length - 1);
         const nextNote = remaining[nextIndex] ?? null;
-        setTitle(nextNote?.title ?? "");
+        selectCurrentNote(nextNote);
 
         if (!nextNote) {
           requestAnimationFrame(() => createButtonRef.current?.focus());
         }
-
-        return nextNote;
-      });
+      }
 
       return remaining;
     });
 
     setDeleteTarget(null);
-  }, [deleteTarget]);
+  }, [deleteTarget, updateNotes, selectCurrentNote]);
 
   const selectNote = useCallback((note: Note) => {
-    // Flush pending title change before switching
-    if (titleSyncTimeoutRef.current) {
-      clearTimeout(titleSyncTimeoutRef.current);
-      titleSyncTimeoutRef.current = null;
-    }
-    setSelectedNote((prev) => {
-      if (prev && title !== prev.title) {
-        setNotes((prevNotes) =>
-          prevNotes.map((n) =>
-            n.id === prev.id ? { ...n, title, updatedAt: Date.now() } : n
-          )
-        );
-      }
-      return note;
-    });
-    setTitle(note.title);
-  }, [title]);
+    selectCurrentNote(note);
+  }, [selectCurrentNote]);
 
   const handleExport = useCallback(async () => {
     if (!selectedNote) {
       return;
     }
-    // Prefer the live title input over the persisted value: the title is only
-    // written back to state on blur, and the header calls preventDefault on
-    // mousedown, so clicking this button never blurs the input.
     const note = { title, content: selectedNote.content };
     setExportError(false);
     try {
@@ -508,7 +498,7 @@ function App() {
                 onSelectNote={selectNote}
                 onDeleteNote={requestDeleteNote}
                 onReorderNotes={(reorderedSubset) => {
-                  setNotes((prevNotes) => {
+                  updateNotes((prevNotes) => {
                     // Build an id→index map from the reordered subset
                     const orderMap = new Map(
                       reorderedSubset.map((n, i) => [n.id, i]),
@@ -553,28 +543,7 @@ function App() {
                           placeholder={t("notes.titlePlaceholder")}
                           aria-label={t("notes.titlePlaceholder")}
                           value={title}
-                          onChange={(e) => setTitle(e.target.value)}
-                          onBlur={() => {
-                            if (selectedNote && title !== selectedNote.title) {
-                              if (titleSyncTimeoutRef.current) {
-                                clearTimeout(titleSyncTimeoutRef.current);
-                                titleSyncTimeoutRef.current = null;
-                              }
-                              const updatedNote = {
-                                ...selectedNote,
-                                title,
-                                updatedAt: Date.now(),
-                              };
-                              setNotes((prevNotes) =>
-                                prevNotes.map((note) =>
-                                  note.id === selectedNote.id
-                                    ? updatedNote
-                                    : note
-                                )
-                              );
-                              setSelectedNote(updatedNote);
-                            }
-                          }}
+                          onChange={(e) => updateCurrentTitle(e.target.value)}
                         />
                         <div className="flex-1 flex flex-col rounded-lg overflow-hidden">
                           <RichTextEditor

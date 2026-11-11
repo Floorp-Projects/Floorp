@@ -1,0 +1,123 @@
+{
+  "schemaVersion": 1,
+  "holder": null,
+  "taskId": null,
+  "worktree": null,
+  "acquiredAt": "2026-11-08T06:11:24.082Z",
+  "status": "ended",
+  "endedAt": "2026-11-08T06:12:08.853Z",
+  "events": [
+    {
+      "at": "2026-11-08T05:52:29.844Z",
+      "kind": "claim",
+      "agent": "agent-a",
+      "taskId": "gate4-a-safety"
+    },
+    {
+      "at": "2026-11-08T05:52:30.133Z",
+      "kind": "cancel",
+      "agent": "agent-a",
+      "taskId": "gate4-a-safety",
+      "reason": "cancelled",
+      "note": "reassigned"
+    },
+    {
+      "at": "2026-11-08T05:52:30.218Z",
+      "kind": "claim",
+      "agent": "agent-b",
+      "taskId": "quota-fix"
+    },
+    {
+      "at": "2026-11-08T05:52:37.761Z",
+      "kind": "end",
+      "agent": "agent-b",
+      "taskId": "quota-fix",
+      "reason": "ended",
+      "note": ""
+    },
+    {
+      "at": "2026-11-08T06:02:55.998Z",
+      "kind": "claim",
+      "agent": "agent1",
+      "taskId": "gate4-a0"
+    },
+    {
+      "at": "2026-11-08T06:03:29.321Z",
+      "kind": "end",
+      "agent": "agent1",
+      "taskId": "gate4-a0",
+      "reason": "ended",
+      "note": "browser confirmation complete"
+    },
+    {
+      "at": "2026-11-08T06:03:29.417Z",
+      "kind": "claim",
+      "agent": "agent2",
+      "taskId": "gate4-a100"
+    },
+    {
+      "at": "2026-11-08T06:03:29.596Z",
+      "kind": "cancel",
+      "agent": "agent2",
+      "taskId": "gate4-a100",
+      "reason": "cancelled",
+      "note": "desktop handed to agent3"
+    },
+    {
+      "at": "2026-11-08T06:03:29.679Z",
+      "kind": "claim",
+      "agent": "agent3",
+      "taskId": "gate4-a200"
+    },
+    {
+      "at": "2026-11-08T06:03:59.686Z",
+      "kind": "end",
+      "agent": "agent3",
+      "taskId": "gate4-a200",
+      "reason": "ended",
+      "note": "agent3 done"
+    },
+    {
+      "at": "2026-11-08T06:10:35.198Z",
+      "kind": "claim",
+      "agent": "agent1",
+      "taskId": "gate4-a0"
+    },
+    {
+      "at": "2026-11-08T06:10:35.502Z",
+      "kind": "end",
+      "agent": "agent1",
+      "taskId": "gate4-a0",
+      "reason": "ended",
+      "note": "lease ended while B/C browsers live"
+    },
+    {
+      "at": "2026-11-08T06:11:23.785Z",
+      "kind": "claim",
+      "agent": "agent2",
+      "taskId": "gate4-a100"
+    },
+    {
+      "at": "2026-11-08T06:11:23.984Z",
+      "kind": "cancel",
+      "agent": "agent2",
+      "taskId": "gate4-a100",
+      "reason": "cancelled",
+      "note": "handed to C"
+    },
+    {
+      "at": "2026-11-08T06:11:24.082Z",
+      "kind": "claim",
+      "agent": "agent3",
+      "taskId": "gate4-a200"
+    },
+    {
+      "at": "2026-11-08T06:12:08.853Z",
+      "kind": "end",
+      "agent": "agent3",
+      "taskId": "gate4-a200",
+      "reason": "ended",
+      "note": "agent3 complete"
+    }
+  ]
+}

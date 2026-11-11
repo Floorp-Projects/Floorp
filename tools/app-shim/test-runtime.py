@@ -21,6 +21,12 @@ import time
 import uuid
 
 
+# Windows has no POSIX signals for child processes: subprocess terminate() and
+# kill() both call TerminateProcess(handle, 1), and there is no /bin/ps.
+IS_WINDOWS = os.name == "nt"
+WINDOWS_TERMINATED_EXIT_CODE = 1
+
+
 class Marionette:
     def __init__(self, port, *, bidi=False):
         self.socket = socket.create_connection(("127.0.0.1", port), timeout=5)
@@ -110,15 +116,48 @@ class HostProcess:
             command = ["/usr/bin/open", "-n", "-W", "-a", str(browser),
                        "--stdout", str(output / "browser.stdout.log"),
                        "--stderr", str(output / "browser.stderr.log"),
-                       "--env", "MOZ_CRASHREPORTER_DISABLE=1", "--args",
+                       "--env", "MOZ_CRASHREPORTER_DISABLE=1",
+                       "--env", "MOZ_REMOTE_ALLOW_SYSTEM_ACCESS=1", "--args",
                        *self.command[1:]]
         self.process = subprocess.Popen(command, stdout=log, stderr=subprocess.STDOUT,
-            env={**os.environ, "MOZ_CRASHREPORTER_DISABLE": "1"})
+            env={**os.environ, "MOZ_CRASHREPORTER_DISABLE": "1",
+                 "MOZ_REMOTE_ALLOW_SYSTEM_ACCESS": "1"})
         if not launch_services:
             self.pid = self.process.pid
 
     @staticmethod
+    def _windows_process_entries(pid=None):
+        query = "Get-CimInstance Win32_Process"
+        if pid is not None:
+            query += f" -Filter 'ProcessId = {int(pid)}'"
+        script = ("$ErrorActionPreference = 'Stop'; "
+                  "[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new(); "
+                  "ConvertTo-Json -Compress -Depth 2 -InputObject @(" + query +
+                  " | ForEach-Object { @{ pid = [int]$_.ProcessId; ppid = [int]$_.ParentProcessId; "
+                  "start = $(if ($_.CreationDate) { $_.CreationDate.ToUniversalTime().ToString('o') } "
+                  "else { '' }); command = [string]$_.CommandLine } })")
+        result = subprocess.run(["powershell", "-NoProfile", "-NonInteractive", "-Command", script],
+            capture_output=True, text=True, encoding="utf-8", timeout=15)
+        if result.returncode != 0:
+            raise RuntimeError(f"Cannot verify test browser process: {result.stderr.strip()}")
+        entries = json.loads(result.stdout.lstrip("﻿") or "[]")
+        if not isinstance(entries, list):
+            raise RuntimeError("Unexpected Windows process listing")
+        return entries
+
+    @staticmethod
+    def _windows_parent_pid(pid):
+        entries = HostProcess._windows_process_entries(pid)
+        return next((entry["ppid"] for entry in entries if entry["pid"] == pid), None)
+
+    @staticmethod
     def _process_rows(pid=None):
+        if IS_WINDOWS:
+            # Creation time plus the complete command line identify a process
+            # across PID reuse, as lstart does on POSIX.
+            return [(entry["pid"], entry["start"], entry["command"])
+                    for entry in HostProcess._windows_process_entries(pid)
+                    if entry["start"]]
         command = ["/bin/ps", "-ww"]
         command += ["-p", str(pid)] if pid is not None else ["-ax"]
         result = subprocess.run(command + ["-o", "pid=,lstart=,command="],
@@ -132,8 +171,12 @@ class HostProcess:
                 rows.append((int(fields[0]), " ".join(fields[1:6]), fields[6]))
         return rows
 
+    def _expected_command_line(self):
+        # Popen quotes argv with list2cmdline on Windows; Gecko keeps that line.
+        return subprocess.list2cmdline(self.command) if IS_WINDOWS else " ".join(self.command)
+
     def _matching_identity(self, pid):
-        expected = " ".join(self.command)
+        expected = self._expected_command_line()
         return next((row for row in self._process_rows(pid)
                      if row[0] == pid and row[2] == expected), None)
 
@@ -144,7 +187,10 @@ class HostProcess:
         if type(pid) is not int or pid <= 0 or profile != str(self.profile):
             raise RuntimeError("Marionette did not identify the isolated test profile and browser PID")
         if not self.launch_services and pid != self.process.pid:
-            raise RuntimeError("Marionette browser PID differs from the launched child")
+            # The Windows launcher process stays alive and starts the browser as
+            # its direct child with the same command line.
+            if not (IS_WINDOWS and self._windows_parent_pid(pid) == self.process.pid):
+                raise RuntimeError("Marionette browser PID differs from the launched child")
         identity = self._matching_identity(pid)
         if not identity:
             raise RuntimeError("Browser PID does not have the exact executable and isolated profile command")
@@ -176,7 +222,7 @@ class HostProcess:
     def _discover_for_cleanup(self):
         # A launch may fail before Marionette is ready. Only the newly-created,
         # private profile's complete argv identifies a process we may clean up.
-        expected = " ".join(self.command)
+        expected = self._expected_command_line()
         matches = [row for row in self._process_rows() if row[2] == expected]
         if len(matches) > 1:
             raise RuntimeError("Multiple processes claim the isolated test profile; refusing cleanup")
@@ -226,10 +272,45 @@ class HostProcess:
             self.exited = True
 
     def terminate(self):
+        if IS_WINDOWS and not self.launch_services:
+            self.process.terminate()
+            self.requested_signal = signal.SIGTERM
+            return
         self._signal(signal.SIGTERM)
 
     def kill(self):
+        if IS_WINDOWS and not self.launch_services:
+            # Same TerminateProcess call as terminate(); there is no SIGKILL.
+            self.process.kill()
+            self.requested_signal = signal.SIGTERM
+            return
         self._signal(signal.SIGKILL)
+
+    def is_requested_exit(self, returncode):
+        """True when the browser exited cleanly or as this harness requested."""
+        if returncode == 0:
+            return True
+        if self.requested_signal is None or returncode is None:
+            return False
+        if IS_WINDOWS and not self.launch_services:
+            return returncode == WINDOWS_TERMINATED_EXIT_CODE
+        return returncode == -int(self.requested_signal)
+
+    def _ensure_windows_browser_gone(self):
+        """The adopted browser is the launcher's child; it must not outlive it."""
+        if (not IS_WINDOWS or self.launch_services or self.identity is None or
+                self.pid == self.process.pid):
+            return
+        for attempt in range(2):
+            deadline = time.monotonic() + (10 if attempt == 0 else 5)
+            while time.monotonic() < deadline:
+                if self._matching_identity(self.pid) != self.identity:
+                    return
+                time.sleep(0.2)
+            # Recheck the complete identity immediately before terminating it.
+            if attempt == 0 and self._matching_identity(self.pid) == self.identity:
+                os.kill(self.pid, signal.SIGTERM)  # TerminateProcess on Windows
+        raise RuntimeError("Windows browser outlived its launcher process")
 
     def wait(self, timeout):
         if not self.launch_services:
@@ -253,6 +334,7 @@ class HostProcess:
                 except subprocess.TimeoutExpired:
                     self.kill()
                     self.wait(timeout=5)
+            self._ensure_windows_browser_gone()
         finally:
             if self.launch_services:
                 # This only reaps the helper; browser cleanup happens above.

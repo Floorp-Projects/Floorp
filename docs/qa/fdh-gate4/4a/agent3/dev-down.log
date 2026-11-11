@@ -1,0 +1,3 @@
+[fdh] deno run -A tools/dev-tool.ts stop
+Stopping dev processes for this checkout...
+Stopped (32 processes).

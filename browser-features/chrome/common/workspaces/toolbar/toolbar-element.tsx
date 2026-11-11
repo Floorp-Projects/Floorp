@@ -19,6 +19,11 @@ import { configStore, enabled } from "../data/config.ts";
 import Workspaces from "../index.ts";
 import { selectedWorkspaceID, workspacesDataStore } from "../data/data.ts";
 import { getContainerColorName } from "../utils/container-color.ts";
+import {
+  applyWorkspaceSyncIndicator,
+  bindWorkspaceSyncFocusTooltip,
+  createWorkspaceSyncIndicator,
+} from "./workspace-sync-indicator.ts";
 
 const { CustomizableUI } = ChromeUtils.importESModule(
   "moz-src:///browser/components/customizableui/CustomizableUI.sys.mjs",
@@ -70,8 +75,39 @@ export class WorkspacesToolbarButton {
     );
 
     const setupInterval = () => {
-      const intervalId = setInterval(() => this.updateButtonIfNeeded(), 500);
-      onCleanup(() => clearInterval(intervalId));
+      const windowOwner = getOwner();
+      const boundNodes = new WeakSet<Element>();
+      let stopped = false;
+      const update = () => {
+        if (stopped) return;
+        const node = this.getButtonNode();
+        if (node && !boundNodes.has(node)) {
+          boundNodes.add(node);
+          // CustomizableUI shares onCreated across windows. Bind each window's
+          // node here so it retains that window's workspace state and lifetime.
+          runWithOwner(windowOwner, () => {
+            const syncIndicator = createWorkspaceSyncIndicator(
+              ctx,
+              () => selectedWorkspaceID() ?? undefined,
+              () => {
+                const id = selectedWorkspaceID();
+                return id ? ctx.getRawWorkspace(id)?.name ?? "" : "";
+              },
+            );
+            bindWorkspaceSyncFocusTooltip(node, syncIndicator);
+            createEffect(() =>
+              applyWorkspaceSyncIndicator(node, syncIndicator())
+            );
+          });
+        }
+        this.updateButtonIfNeeded();
+      };
+      const intervalId = setInterval(update, 500);
+      onCleanup(() => {
+        stopped = true;
+        clearInterval(intervalId);
+      });
+      update();
     };
     if (owner) runWithOwner(owner, setupInterval);
     else createRoot(setupInterval);

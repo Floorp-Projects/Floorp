@@ -236,6 +236,8 @@ noraneko.jar:
   nora-skin/lepton/icons/window-dev-tools.svg (lepton/icons/window-dev-tools.svg)
   nora-skin/lepton/icons/window.svg (lepton/icons/window.svg)
   nora-skin/lepton/icons/wrench-filled.svg (lepton/icons/wrench-filled.svg)
+  nora-skin/lepton/overlay/leptonChromeOverlay.css (lepton/overlay/leptonChromeOverlay.css)
+  nora-skin/lepton/overlay/leptonContentOverlay.css (lepton/overlay/leptonContentOverlay.css)
   nora-skin/lepton/userjs/lepton.js (lepton/userjs/lepton.js)
   nora-skin/lepton/userjs/photon.js (lepton/userjs/photon.js)
   nora-skin/lepton/userjs/protonfix.js (lepton/userjs/protonfix.js)

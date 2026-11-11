@@ -1,0 +1,30 @@
+test_all_publication_kinds_and_five_native_targets_remain_unverified (test_source.SourceContractTests.test_all_publication_kinds_and_five_native_targets_remain_unverified) ... ok
+test_bad_source_or_host_still_preserves_a_fail_receipt (test_source.SourceContractTests.test_bad_source_or_host_still_preserves_a_fail_receipt) ... ok
+test_browser_tasks_arbitrary_arguments_and_foreign_origin_are_rejected (test_source.SourceContractTests.test_browser_tasks_arbitrary_arguments_and_foreign_origin_are_rejected) ... ok
+test_children_do_not_inherit_credentials_or_runner_options (test_source.SourceContractTests.test_children_do_not_inherit_credentials_or_runner_options) ... ok
+test_cleanup_fault_and_interruption_are_recorded_without_leaking_children (test_source.SourceContractTests.test_cleanup_fault_and_interruption_are_recorded_without_leaking_children) ... ok
+test_execute_keeps_parent_subreaper_state_and_rejects_invalid_deadlines (test_source.SourceContractTests.test_execute_keeps_parent_subreaper_state_and_rejects_invalid_deadlines) ... ok
+test_exit_recovers_detached_descendant_and_preserves_unrelated_child (test_source.SourceContractTests.test_exit_recovers_detached_descendant_and_preserves_unrelated_child) ... ok
+test_fixed_plan_has_all_106_unique_host_cases (test_source.SourceContractTests.test_fixed_plan_has_all_106_unique_host_cases) ... ok
+test_host_deno_inputs_match_root_aliases_and_frozen_jsr_hashes (test_source.SourceContractTests.test_host_deno_inputs_match_root_aliases_and_frozen_jsr_hashes) ... ok
+test_junit_checks_case_identity_and_completion (test_source.SourceContractTests.test_junit_checks_case_identity_and_completion) ... ok
+test_junit_rejects_entities_skip_failure_and_aggregate_contradictions (test_source.SourceContractTests.test_junit_rejects_entities_skip_failure_and_aggregate_contradictions) ... ok
+test_junit_requires_utf8_and_rejects_encoded_dtd_entities (test_source.SourceContractTests.test_junit_requires_utf8_and_rejects_encoded_dtd_entities) ... ok
+test_missing_empty_reordered_and_duplicate_groups_are_rejected (test_source.SourceContractTests.test_missing_empty_reordered_and_duplicate_groups_are_rejected) ... ok
+test_node22_classname_is_bound_only_to_the_fixed_single_file_command (test_source.SourceContractTests.test_node22_classname_is_bound_only_to_the_fixed_single_file_command) ... ok
+test_per_test_retry_ignore_and_options_are_outside_the_fixed_host_plan (test_source.SourceContractTests.test_per_test_retry_ignore_and_options_are_outside_the_fixed_host_plan) ... ok
+test_policy_json_rejects_duplicate_fields_and_boolean_schema (test_source.SourceContractTests.test_policy_json_rejects_duplicate_fields_and_boolean_schema) ... ok
+test_reduced_or_duplicated_test_ids_are_rejected (test_source.SourceContractTests.test_reduced_or_duplicated_test_ids_are_rejected) ... ok
+test_reusing_an_output_log_cannot_erase_a_first_failure (test_source.SourceContractTests.test_reusing_an_output_log_cannot_erase_a_first_failure) ... ok
+test_spawn_failure_closes_control_pipe_without_overwriting_log (test_source.SourceContractTests.test_spawn_failure_closes_control_pipe_without_overwriting_log) ... ok
+test_timeout_kills_the_owned_process_group (test_source.SourceContractTests.test_timeout_kills_the_owned_process_group) ... ok
+test_timeout_recovers_detached_child_that_forks_during_term (test_source.SourceContractTests.test_timeout_recovers_detached_child_that_forks_during_term) ... ok
+test_unexecuted_duplicate_unknown_failed_and_skipped_cases_cannot_pass (test_source.SourceContractTests.test_unexecuted_duplicate_unknown_failed_and_skipped_cases_cannot_pass) ... ok
+
+----------------------------------------------------------------------
+Ran 22 tests in 8.698s
+
+OK
+{"sourceHead": null, "sourceVerdict": "FAIL", "executedCases": 0, "publicationAuthorized": false, "steps": [], "error": "expected source must be a full Git SHA"}
+{"sourceHead": "718e688fbd7ad88a776534e7778ad8e4a7f67364", "sourceVerdict": "FAIL", "executedCases": 0, "publicationAuthorized": false, "steps": [], "error": "source checkout mismatch"}
+{"sourceHead": null, "sourceVerdict": "FAIL", "executedCases": 0, "publicationAuthorized": false, "steps": [], "error": "this source host plan requires a disposable Linux x86_64 worker"}

@@ -1,0 +1,30 @@
+{
+  "status": "PASS",
+  "nativeSourceAndTestDocumentationHashMatch": true,
+  "ciRetainedObservation": {
+    "run": 37954821322,
+    "attempt": 1,
+    "head": "c9027879e053c9031c7f3e27495f6d415d36c10f",
+    "pr": 84,
+    "baseHead": "91e94b73617730d54ffee3d4ea42ff3a91463c7d",
+    "mergeCheckoutSha": "7e4b7ce818aadc5cfd41f58a79b82ed3487d4b6f",
+    "rawContractMethods": 134,
+    "rawSeconds": 49.212,
+    "logSha256": "9bff23cd43eb073f2b67a711c71d724ac7ba5ce093c5c7655afca3e07ae4de45",
+    "metadataAndRequiredSteps": {
+      "exactFinalHead": true,
+      "pullRequest84": true,
+      "exactWorkflow": true,
+      "runIdAttempt": true,
+      "completedSuccess": true,
+      "exactOneExpectedJob": true,
+      "ordinaryHostedRunner": true,
+      "requiredStepsSuccess": true,
+      "rawOK": true,
+      "noRawFailureSummary": true,
+      "rawUnittestSummary134": true
+    }
+  },
+  "qualificationAuthorized": false,
+  "ciFetchedOrControlled": false
+}

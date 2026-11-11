@@ -1,0 +1,252 @@
+{
+  "status": "passed",
+  "browser": "D:\\a\\_temp\\browser\\core\\floorp.exe",
+  "nativeRecord": {
+    "schema_version": 2,
+    "target_key": "windows",
+    "native_arch": "x86_64",
+    "firefox_version": "159.0.1",
+    "app_build_id": "20261103153232",
+    "platform_build_id": "20261103153232",
+    "build_id2": "01a1a3ad-f9d7-76d9-9386-f7f2e5e2494e",
+    "runtime": {
+      "repository": "Floorp-Projects/Floorp-Runtime",
+      "head_sha": "8965ffc346d426ccdf919bd18585e4d4a0c21654",
+      "workflow_run_id": 41664957250,
+      "artifact_id": 13270584849,
+      "artifact_digest": "sha256:9eb4b08f2da5cdd535232edeb37ddd3866d47492e17f5921e115eb4a4f7180c6",
+      "expected_build_id": "20261103153232"
+    },
+    "floorp": {
+      "repository": "Floorp-Projects/Floorp",
+      "head_sha": "984509d2053be7bae9027133bda7259cd706b208",
+      "workflow_run_id": 41736555270
+    },
+    "floorp_package": {
+      "artifact_name": "noraneko-windows-x86_64-installer",
+      "artifact_id": 13287352281,
+      "artifact_digest": "sha256:303fe630a53e2153273ab10f0731ea9c59944c1907bd90d692d2c0cd0fffd06c",
+      "unsigned": false
+    },
+    "verification": {
+      "status": "verified",
+      "method": "full-version"
+    }
+  },
+  "profilePreferences": {
+    "marionette.port": 59724,
+    "browser.shell.checkDefaultBrowser": false,
+    "browser.aboutwelcome.enabled": false,
+    "browser.startup.homepage_override.mstone": "ignore",
+    "browser.startup.page": 0,
+    "browser.startup.homepage": "about:blank",
+    "browser.sessionstore.resume_from_crash": false,
+    "app.update.enabled": false,
+    "datareporting.policy.dataSubmissionEnabled": false
+  },
+  "checks": [
+    {
+      "key": "normal-while-mobile-on",
+      "normalBrowserId": 18,
+      "httpBrowserId": 18
+    },
+    {
+      "key": "mobile",
+      "browserId": 19,
+      "httpBrowserId": 19
+    },
+    {
+      "key": "mobile-reload",
+      "browserId": 19
+    },
+    {
+      "key": "mobile-navigation",
+      "browserId": 19,
+      "httpBrowserId": 19
+    },
+    {
+      "key": "other-panel",
+      "browserId": 20,
+      "httpBrowserId": 20
+    },
+    {
+      "key": "hidden-mobile",
+      "browserId": 19,
+      "httpBrowserId": 19
+    },
+    {
+      "key": "menu-command",
+      "panel": "final-ua-mobile",
+      "command": "changeUAWebpanelMenu",
+      "method": "WebDriver pointer click",
+      "events": [
+        {
+          "id": "changeUAWebpanelMenu",
+          "trusted": true
+        }
+      ]
+    },
+    {
+      "key": "normal-while-mobile-off",
+      "normalBrowserId": 18,
+      "httpBrowserId": 18
+    },
+    {
+      "key": "disabled",
+      "browserId": 21,
+      "httpBrowserId": 21
+    },
+    {
+      "key": "disabled-reload",
+      "browserId": 21
+    },
+    {
+      "key": "menu-command",
+      "panel": "final-ua-mobile",
+      "command": "changeUAWebpanelMenu",
+      "method": "WebDriver pointer click",
+      "events": [
+        {
+          "id": "changeUAWebpanelMenu",
+          "trusted": true
+        }
+      ]
+    },
+    {
+      "key": "normal-after-mobile-reenabled",
+      "normalBrowserId": 18,
+      "httpBrowserId": 18
+    },
+    {
+      "key": "reenabled",
+      "browserId": 22,
+      "httpBrowserId": 22
+    },
+    {
+      "key": "menu-command",
+      "panel": "final-ua-mobile",
+      "command": "deleteWebpanelMenu",
+      "method": "WebDriver pointer click",
+      "events": [
+        {
+          "id": "deleteWebpanelMenu",
+          "trusted": true
+        }
+      ]
+    },
+    {
+      "key": "normal-after-panel-removal",
+      "normalBrowserId": 18,
+      "httpBrowserId": 18
+    },
+    {
+      "key": "other-after-removal",
+      "browserId": 20,
+      "httpBrowserId": 20
+    }
+  ],
+  "method": "bundled UI and HTTP",
+  "hostProcessIdentity": {
+    "pid": 5576,
+    "argv": [
+      "D:\\a\\_temp\\browser\\core\\floorp.exe",
+      "--no-remote",
+      "--profile",
+      "D:\\a\\_temp\\final-package-qa\\web-panel-ua\\run-lysuftz2\\profile",
+      "--marionette",
+      "--remote-allow-system-access",
+      "about:blank"
+    ],
+    "verified": true
+  },
+  "marionetteSession": {
+    "sessionId": "a13080a7-4233-43d0-a434-89a1ce6c0442",
+    "capabilities": {
+      "acceptInsecureCerts": false,
+      "browserName": "floorp",
+      "browserVersion": "159.0.1",
+      "platformName": "windows",
+      "setWindowRect": true,
+      "unhandledPromptBehavior": "dismiss and notify",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:159.0) Gecko/20100101 Firefox/159.0",
+      "moz:buildID": "20261103153232",
+      "moz:headless": false,
+      "moz:platformVersion": "10.0",
+      "moz:processID": 5576,
+      "moz:profile": "D:\\a\\_temp\\final-package-qa\\web-panel-ua\\run-lysuftz2\\profile",
+      "moz:shutdownTimeout": 73000,
+      "pageLoadStrategy": "normal",
+      "timeouts": {
+        "implicit": 0,
+        "pageLoad": 300000,
+        "script": 30000
+      },
+      "strictFileInteractability": false,
+      "moz:accessibilityChecks": false,
+      "moz:webdriverClick": true,
+      "moz:windowless": false,
+      "proxy": {}
+    }
+  },
+  "identity": {
+    "version": "159.0.1",
+    "appBuildID": "20261103153232",
+    "platformBuildID": "20261103153232",
+    "version2": "12.21.1",
+    "buildID2": "01a1a3ad-f9d7-76d9-9386-f7f2e5e2494e",
+    "startupMode": "production",
+    "httpLoaderAllowed": false,
+    "sandboxLevel": 9
+  },
+  "desktopUA": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:159.0) Gecko/20100101 Firefox/159.0",
+  "retiredBrowserIds": [
+    19,
+    21,
+    22
+  ],
+  "normalBrowserId": 18,
+  "httpRequests": {
+    "normal": [
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:159.0) Gecko/20100101 Firefox/159.0",
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:159.0) Gecko/20100101 Firefox/159.0",
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:159.0) Gecko/20100101 Firefox/159.0",
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:159.0) Gecko/20100101 Firefox/159.0",
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:159.0) Gecko/20100101 Firefox/159.0"
+    ],
+    "initial-mobile": [
+      "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Mobile Safari/537.36 Edg/114.0.1823.79",
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:159.0) Gecko/20100101 Firefox/159.0",
+      "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Mobile Safari/537.36 Edg/114.0.1823.79"
+    ],
+    "mobile": [
+      "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Mobile Safari/537.36 Edg/114.0.1823.79",
+      "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Mobile Safari/537.36 Edg/114.0.1823.79"
+    ],
+    "mobile-navigation": [
+      "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Mobile Safari/537.36 Edg/114.0.1823.79"
+    ],
+    "initial-other": [
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:159.0) Gecko/20100101 Firefox/159.0"
+    ],
+    "other-panel": [
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:159.0) Gecko/20100101 Firefox/159.0"
+    ],
+    "hidden-mobile": [
+      "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Mobile Safari/537.36 Edg/114.0.1823.79"
+    ],
+    "disabled": [
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:159.0) Gecko/20100101 Firefox/159.0",
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:159.0) Gecko/20100101 Firefox/159.0"
+    ],
+    "reenabled": [
+      "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Mobile Safari/537.36 Edg/114.0.1823.79"
+    ],
+    "other-after-removal": [
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:159.0) Gecko/20100101 Firefox/159.0"
+    ]
+  },
+  "hostExitCode": 1,
+  "cleanupRequestedSignal": 15,
+  "cleanupPlatform": "Windows",
+  "ownedHostPid": 5576
+}

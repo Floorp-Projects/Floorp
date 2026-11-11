@@ -18,6 +18,18 @@ export default defineConfig(({ command }) => {
     },
     resolve: {
       dedupe: ["react", "react-dom"],
+      alias: [
+        {
+          find: "#libs",
+          replacement: fileURLToPath(new URL("../../libs", import.meta.url)),
+        },
+        {
+          find: "#modules",
+          replacement: fileURLToPath(
+            new URL("../../browser-features/modules", import.meta.url),
+          ),
+        },
+      ],
     },
     plugins: [
       tailwindcss(),
@@ -36,6 +48,10 @@ export default defineConfig(({ command }) => {
       fs: {
         allow: [
           searchForWorkspaceRoot(process.cwd()),
+          // The settings bundle and its integration fixtures import chrome
+          // modules through the #features-chrome alias, which lives at the
+          // repository root (outside this package).
+          fileURLToPath(new URL("../..", import.meta.url)),
           fileURLToPath(new URL("../../libs/ui", import.meta.url)),
         ],
       },

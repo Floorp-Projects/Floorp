@@ -1,0 +1,24 @@
+{
+  "capturedAt": "2026-10-09T15:29:24.205452+00:00",
+  "head": "cc83e6fea6499d6ec89c76ae9837c280556e9d53",
+  "sourceSha256": "f8005ff48f51d857304b1001e2dfc3477f34edb753dcb3abd3a2ff0663438a55",
+  "scope": "fake private producer protocol validation; no native execution or qualification bypass established",
+  "files": [
+    {
+      "file": "/workspace/qa-review-v030/fix-qa309/evidence/workflow-runtime-final-protocol-red-f8005ff-results.json",
+      "sha256": "e5792571ec87b7d3f25245c51d98c034d2b9a4552b8a20a9f1e1673ad283384a"
+    },
+    {
+      "file": "/workspace/qa-review-v030/fix-qa309/evidence/workflow-runtime-final-protocol-red-f8005ff-fixture.py",
+      "sha256": "e3bd19972013bd3f2bebaa4056c5d3a3185f89399edcafdad71afe161b7724ef"
+    },
+    {
+      "file": "/workspace/qa-review-v030/fix-qa309/evidence/workflow-runtime-final-protocol-red-f8005ff-source.py",
+      "sha256": "f8005ff48f51d857304b1001e2dfc3477f34edb753dcb3abd3a2ff0663438a55"
+    },
+    {
+      "file": "/workspace/qa-review-v030/fix-qa309/evidence/workflow-runtime-final-protocol-red-f8005ff.log",
+      "sha256": "e5792571ec87b7d3f25245c51d98c034d2b9a4552b8a20a9f1e1673ad283384a"
+    }
+  ]
+}

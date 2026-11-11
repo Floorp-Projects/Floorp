@@ -1,6 +1,7 @@
 import type { NRSettingsParentFunctions } from "../../../../modules/common/defines.ts";
 import { createBirpc } from "birpc";
-import { usesSettingsActor } from "../../../../../libs/ui/settings-rpc-origin.ts";
+import { isDevLaunchPage } from "../../../../../libs/ui/settings-rpc-origin.ts";
+import { devPort } from "../../../../../libs/shared/dev-ports/defines.ts";
 
 // deno-lint-ignore no-explicit-any
 declare const Services: any;
@@ -13,7 +14,12 @@ declare global {
   }
 }
 
-const isLocalhost5187 = usesSettingsActor(globalThis.location.href, "5187");
+// Direct-http dev entry documents have a content principal (no Services), so
+// detect the dev transport by URL shape and keep it offset-agnostic.
+const isWelcomeLocalhost = isDevLaunchPage(
+  globalThis.location.href,
+  devPort("welcome", 0),
+);
 
 const directServicesFunctions: NRSettingsParentFunctions = {
   getBoolPref: (prefName) => {
@@ -48,7 +54,7 @@ const directServicesFunctions: NRSettingsParentFunctions = {
   },
 };
 
-export const rpc = isLocalhost5187
+export const rpc = isWelcomeLocalhost
   ? createBirpc<NRSettingsParentFunctions, Record<string, never>>(
     {},
     {

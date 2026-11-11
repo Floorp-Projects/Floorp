@@ -7,6 +7,7 @@ import solidPlugin from "vite-plugin-solid";
 import istanbulPlugin from "vite-plugin-istanbul";
 import swc from "unplugin-swc";
 import { genJarmnPlugin } from "../../libs/vite-plugin-gen-jarmn/plugin.ts";
+import { DEV_PORTS } from "../../libs/shared/dev-ports/defines.ts";
 
 const r = (dir: string) => {
   return path.resolve(import.meta.dirname, dir);
@@ -38,7 +39,7 @@ export default defineConfig({
   cacheDir: "../../node_modules/.vite/loader-features",
   publicDir: r("public"),
   server: {
-    port: 5181,
+    port: DEV_PORTS.loader,
     strictPort: true,
     cors: {
       origin: [
@@ -276,6 +277,10 @@ export default defineConfig({
       {
         find: "#features-chrome",
         replacement: r("./link-features-chrome"),
+      },
+      {
+        find: "#modules",
+        replacement: r("../../browser-features/modules"),
       },
       {
         find: "#features-modules",

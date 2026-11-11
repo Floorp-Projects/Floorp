@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="accepts finished signed packages awaiting protected publication approval" time="0.001203" classname="test"/>
+	<testcase name="default intake still requires the whole run to succeed" time="0.000449" classname="test"/>
+	<testcase name="draft invisibility never substitutes for a pending protected gate" time="0.000209" classname="test"/>
+	<testcase name="rejects foreign source" time="0.000129" classname="test"/>
+	<testcase name="rejects noncanonical workflow" time="0.000212" classname="test"/>
+	<testcase name="rejects foreign repository" time="0.000099" classname="test"/>
+	<testcase name="rejects non-dispatch source" time="0.000142" classname="test"/>
+	<testcase name="rejects unsigned package" time="0.000102" classname="test"/>
+	<testcase name="rejects non-main source" time="0.000349" classname="test"/>
+	<testcase name="rejects failed source" time="0.000339" classname="test"/>
+	<testcase name="rejects skipped native verification" time="0.000281" classname="test"/>
+	<testcase name="rejects missing native architecture" time="0.000143" classname="test"/>
+	<testcase name="rejects ambiguous native evidence" time="0.000092" classname="test"/>
+	<testcase name="rejects unfinished assembly" time="0.000903" classname="test"/>
+	<testcase name="rejects failed draft preparation" time="0.000094" classname="test"/>
+	<testcase name="rejects unprotected environment" time="0.000085" classname="test"/>
+	<testcase name="rejects wrong environment" time="0.000071" classname="test"/>
+	<testcase name="rejects multiple pending gates" time="0.000065" classname="test"/>
+	<testcase name="rejects executing publication" time="0.000145" classname="test"/>
+	<testcase name="rejects completed publication" time="0.000090" classname="test"/>
+	<testcase name="rejects executing PPA child" time="0.000085" classname="test"/>
+	<testcase name="rejects public release" time="0.000211" classname="test"/>
+	<testcase name="rejects unrelated draft" time="0.000107" classname="test"/>
+	<testcase name="rejects missing bundle" time="0.000079" classname="test"/>
+	<testcase name="rejects expired bundle" time="0.000081" classname="test"/>
+	<testcase name="rejects foreign bundle run" time="0.000080" classname="test"/>
+	<testcase name="rejects foreign bundle head" time="0.000075" classname="test"/>
+	<testcase name="rejects missing bundle digest" time="0.000077" classname="test"/>
+	<!-- tests 28 -->
+	<!-- suites 0 -->
+	<!-- pass 28 -->
+	<!-- fail 0 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 64.915854 -->
+</testsuites>

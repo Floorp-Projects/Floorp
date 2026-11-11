@@ -1,0 +1,15 @@
+{
+  "command": [
+    "git",
+    "-c",
+    "core.preloadIndex=false",
+    "diff",
+    "--check",
+    "--",
+    ".github/workflows/scripts/qa3_build_profile.py",
+    ".github/workflows/scripts/test_qa3_build_profile.py",
+    ".github/workflows/scripts/setup-floorp.sh"
+  ],
+  "exit": 0,
+  "repositoryConfigModified": false
+}

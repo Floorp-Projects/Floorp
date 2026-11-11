@@ -1,0 +1,17 @@
+test_parent_no_pidfd_uses_held_child_cleanup (test_qa3_native_io.SupervisorBoundaryTests.test_parent_no_pidfd_uses_held_child_cleanup) ... ok
+test_parent_pidfd_open_error_uses_held_child_cleanup (test_qa3_native_io.SupervisorBoundaryTests.test_parent_pidfd_open_error_uses_held_child_cleanup) ... ok
+test_parent_pidfd_signal_error_keeps_first_error_and_reaps (test_qa3_native_io.SupervisorBoundaryTests.test_parent_pidfd_signal_error_keeps_first_error_and_reaps) ... ok
+test_parent_reader_error_with_missing_snapshot_reaps (test_qa3_native_io.SupervisorBoundaryTests.test_parent_reader_error_with_missing_snapshot_reaps) ... ok
+test_parent_snapshot_error_closes_control_and_reaps (test_qa3_native_io.SupervisorBoundaryTests.test_parent_snapshot_error_closes_control_and_reaps) ... ok
+test_parent_writer_close_error_is_retried_and_reaps (test_qa3_native_io.SupervisorBoundaryTests.test_parent_writer_close_error_is_retried_and_reaps) ... ok
+test_private_envelope_explicit_nonzero_and_expected_command (test_qa3_native_io.SupervisorBoundaryTests.test_private_envelope_explicit_nonzero_and_expected_command) ... ok
+test_private_envelope_never_reconstructs_system_exit_zero (test_qa3_native_io.SupervisorBoundaryTests.test_private_envelope_never_reconstructs_system_exit_zero) ... ok
+test_private_envelope_rejects_false_errors_extra_keys_and_bad_results (test_qa3_native_io.SupervisorBoundaryTests.test_private_envelope_rejects_false_errors_extra_keys_and_bad_results) ... ok
+test_private_envelope_staging_budget_is_typed_and_monotone (test_qa3_native_io.SupervisorBoundaryTests.test_private_envelope_staging_budget_is_typed_and_monotone) ... ok
+test_private_envelope_valid_result_and_oserror_survive (test_qa3_native_io.SupervisorBoundaryTests.test_private_envelope_valid_result_and_oserror_survive) ... ok
+test_single_owner_guard_runs_before_fork (test_qa3_native_io.SupervisorBoundaryTests.test_single_owner_guard_runs_before_fork) ... ok
+
+----------------------------------------------------------------------
+Ran 12 tests in 13.287s
+
+OK

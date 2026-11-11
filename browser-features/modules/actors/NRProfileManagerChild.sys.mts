@@ -7,12 +7,20 @@ const { setTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs",
 );
 
+import { launchDevPorts } from "../common/dev-port-offset.ts";
+
+/** Launch-local dev port resolver (FDH Gate 2 task 2-B): resolves the
+ * table names to the ports this launch actually uses (offset-aware). */
+const launchDevPort = launchDevPorts();
+
 export class NRProfileManagerChild extends JSWindowActorChild {
   actorCreated() {
     const window = this.contentWindow;
     if (
-      window?.location.port === "5179" ||
-      window?.location.port === "5183" ||
+      launchDevPort.isTrustedPort(window?.location.port, [
+        "profileManager",
+        "settings",
+      ]) ||
       window?.location.href.startsWith("chrome://") ||
       window?.location.href.startsWith("about:")
     ) {
@@ -101,10 +109,9 @@ export class NRProfileManagerChild extends JSWindowActorChild {
           // wrapper). This avoids security wrapper issues when the value
           // crosses chrome/content boundary.
           const contentWin = this.contentWindow;
-          const out =
-            contentWin && typeof Cu?.cloneInto === "function"
-              ? Cu.cloneInto(res, contentWin)
-              : res;
+          const out = contentWin && typeof Cu?.cloneInto === "function"
+            ? Cu.cloneInto(res, contentWin)
+            : res;
           callback(out);
         } catch (e) {
           console.error(
@@ -125,10 +132,9 @@ export class NRProfileManagerChild extends JSWindowActorChild {
       .then((res) => {
         try {
           const contentWin = this.contentWindow;
-          const out =
-            contentWin && typeof Cu?.cloneInto === "function"
-              ? Cu.cloneInto(res, contentWin)
-              : res;
+          const out = contentWin && typeof Cu?.cloneInto === "function"
+            ? Cu.cloneInto(res, contentWin)
+            : res;
           callback(out);
         } catch (e) {
           console.error(
@@ -154,10 +160,9 @@ export class NRProfileManagerChild extends JSWindowActorChild {
       .then((res) => {
         try {
           const contentWin = this.contentWindow;
-          const out =
-            contentWin && typeof Cu?.cloneInto === "function"
-              ? Cu.cloneInto(res, contentWin)
-              : res;
+          const out = contentWin && typeof Cu?.cloneInto === "function"
+            ? Cu.cloneInto(res, contentWin)
+            : res;
 
           callback(Array.isArray(out) ? (out as unknown[]) : []);
         } catch (e) {
@@ -258,10 +263,9 @@ export class NRProfileManagerChild extends JSWindowActorChild {
             pending.reject(message.data.error);
           } else {
             // accept both JSON strings and structured objects
-            const result =
-              typeof message.data.result === "string"
-                ? safeParseJSON(message.data.result)
-                : message.data.result;
+            const result = typeof message.data.result === "string"
+              ? safeParseJSON(message.data.result)
+              : message.data.result;
             // If the result was stringified by the parent, safeParseJSON
             // returns a plain JS object which is safe to pass to content.
 

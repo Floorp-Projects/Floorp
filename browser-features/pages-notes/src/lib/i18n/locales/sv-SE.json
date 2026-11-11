@@ -7,6 +7,7 @@
         "welcomeContent": "Välkommen till {{productName}} Anteckningar! Så här använder du den.\n\n{{productName}} anteckningar är en anteckningsfunktion som kan synkroniseras mellan enheter. För att aktivera synkronisering måste du logga in på {{productName}} med ett Mozilla-konto.\n{{productName}} anteckningar lagras i {{productName}} och synkroniseras mellan enheter med hjälp av Firefox Sync. Firefox Sync krypterar innehållet i synkroniseringen med ditt lösenord för ditt Mozilla-konto, så att ingen kan veta dess innehåll.",
         "new": "Ny anteckning",
         "reorder": "Ändra ordning",
+        "export": "Exportera som Markdown",
         "done": "Klar",
         "emptyTitle": "Namnlös",
         "emptyContent": "Inget innehåll",
@@ -64,6 +65,7 @@
     "error": {
         "loadFailed": "Misslyckades med att ladda anteckningsdata",
         "saveFailed": "Misslyckades med att spara anteckningsdata",
+        "exportFailed": "Misslyckades att exportera anteckning",
         "indexOutOfRange": "Index {{index}} är utanför intervallet"
     }
 }

@@ -1,0 +1,385 @@
+Task feles-build deno run -A tools/feles-build.ts 'dev' '--port-offset' '0'
+[34m[feles-build] INFO: Dev/test port offset: port-offset=0 marionette=5180 pref=nora.dev.port_offset[0m
+[34m[feles-build] INFO: Starting development environment...[0m
+[34m[initializer] INFO: Debug Runtime mac-universal-artifacts.zip (10d7564ba8aacfe5b6745fdfea06248f0ff2a9e0af62497b93d3d22f85c60645) is already installed.[0m
+[34m[initializer] INFO: Wrote developer preferences to /private/tmp/fdh-gate2/pr2b2/_dist/profile/test/user.js[0m
+[32m[pref] SUCCESS: Preferences override applied successfully[0m
+[32m[symlinker] SUCCESS: Symlinks created successfully.[0m
+01a1b8f7-406f-70dc-8d2c-0045113e5f24
+[34m[builder] INFO: Building features with mode=dev[0m
+[update] Build ID written to /private/tmp/fdh-gate2/pr2b2/_dist/buildid2
+[34m[builder] INFO: Running `/Users/user/.deno/bin/deno task build --env.MODE=dev` in `/private/tmp/fdh-gate2/pr2b2/bridge/startup`[0m
+[34m[builder] INFO: Running `/Users/user/.deno/bin/deno task build --env.__BUILDID2__=01a1b8f7-406f-70dc-8d2c-0045113e5f24 --env.__VERSION2__=12.21.1` in `/private/tmp/fdh-gate2/pr2b2/bridge/loader-modules`[0m
+[34m[builder] INFO: Running `/Users/user/.deno/bin/deno run -A vite build --base chrome://noraneko/content` in `/private/tmp/fdh-gate2/pr2b2/bridge/loader-features`[0m
+[32m[builder] SUCCESS: Build complete.[0m
+[32m[injector] SUCCESS: Manifest injected successfully.[0m
+[32m[injector] SUCCESS: XHTML injection complete.[0m
+[32m[dev-env] SUCCESS: user.js written to /private/tmp/fdh-gate2/pr2b2/_dist/profile/test/user.js[0m
+[32m[dev-env] SUCCESS: Wrote dev version info.[0m
+[34m[dev-server] INFO: Starting Vite dev servers...[0m
+[34m[dev-server] INFO: Started Vite dev server for designs with PID: 9520, logging to /private/tmp/fdh-gate2/pr2b2/logs/vite-designs.log[0m
+[34m[dev-server] INFO: Started Vite dev server for main with PID: 9523, logging to /private/tmp/fdh-gate2/pr2b2/logs/vite-main.log[0m
+[34m[dev-server] INFO: Started Vite dev server for modal-child with PID: 9526, logging to /private/tmp/fdh-gate2/pr2b2/logs/vite-modal-child.log[0m
+[34m[dev-server] INFO: Started Vite dev server for newtab with PID: 9530, logging to /private/tmp/fdh-gate2/pr2b2/logs/vite-newtab.log[0m
+[34m[dev-server] INFO: Started Vite dev server for notes with PID: 9534, logging to /private/tmp/fdh-gate2/pr2b2/logs/vite-notes.log[0m
+[34m[dev-server] INFO: Started Vite dev server for settings with PID: 9538, logging to /private/tmp/fdh-gate2/pr2b2/logs/vite-settings.log[0m
+[34m[dev-server] INFO: Started Vite dev server for welcome with PID: 9542, logging to /private/tmp/fdh-gate2/pr2b2/logs/vite-welcome.log[0m
+[34m[dev-server] INFO: Started Vite dev server for profile-manager with PID: 9546, logging to /private/tmp/fdh-gate2/pr2b2/logs/vite-profile-manager.log[0m
+[34m[dev-server] INFO: Started Vite dev server for workflow-progress with PID: 9550, logging to /private/tmp/fdh-gate2/pr2b2/logs/vite-workflow-progress.log[0m
+[34m[dev-server] INFO: All Vite dev servers started. Verifying startup health...[0m
+[32m[feles-build] SUCCESS: Dev servers are ready.[0m
+[launcher] Launching browser with command: /private/tmp/fdh-gate2/pr2b2/_dist/bin/floorp/Floorp.app/Contents/MacOS/floorp --profile /private/tmp/fdh-gate2/pr2b2/_dist/profile/test --marionette --remote-allow-system-access --new-window http://localhost:5183/
+1794104599003	Marionette	INFO	Marionette enabled
+2026-11-08 02:23:19.181 Floorp Daylight GPU Helper[9584:990462] Failure on line 688 in function id scheduleApplicationNotification(LSNotificationCode, NSWorkspaceNotificationCenter *): noErr == _LSModifyNotification(notificationID, 1, &code, 0, NULL, NULL, NULL)
+GL_VENDOR: Apple
+mVendor: Unknown
+GL_RENDERER: Apple M3
+mRenderer: Unknown
+mIsMesa: 0
+2026-11-08 02:23:19.240 Floorp Daylight GPU Helper[9584:990477] Connection Invalid error for service com.apple.hiservices-xpcservice.
+2026-11-08 02:23:19.240 Floorp Daylight GPU Helper[9584:990462] Error received in message reply handler: Connection invalid
+[33m[WARN  rkv::backend::impl_safe::environment] `load_ratio()` is irrelevant for this storage backend.[0m
+[33m[Parent 9581, Main Thread] WARNING: '!manager || !manager->CanSend()', file gfx/layers/ipc/SharedSurfacesChild.cpp:185[0m
+[33m[Parent 9581, Main Thread] WARNING: '!manager || !manager->CanSend()', file gfx/layers/ipc/SharedSurfacesChild.cpp:185[0m
+[33m[Parent 9581, Main Thread] WARNING: Forced to copy ObserverTable due to nested notifications: file image/ProgressTracker.h:83[0m
+nora-{bbd11c51-3be9-4676-b912-ca4c0bdcab94}-webdriver
+[launcher] Marionette port saved to /private/tmp/fdh-gate2/pr2b2/_dist/marionette-port.txt
+1794104599640	Marionette	INFO	Listening on port 2828
+[36mconsole.debug: "[vite] connecting..."[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+console.log: "[noraneko] Initializing scripts..."
+console.log: "[noraneko] initScripts called"
+console.info: "\uD83C\uDF10 i18next is made possible by our own product, Locize \u2014 consider powering your project with managed localization (AI, CDN, integrations): https://locize.com \uD83D\uDC99"
+[36mconsole.debug: "[noraneko-buildid2]\nuuid: 01a1b85a-f860-708d-9907-298280d4e0bc\ndate: 2026-11-07T23:32:12.000Z"[0m
+[36mconsole.debug: "[vite] connected."[0m
+[36mconsole.debug: "[nora@base] noraComponent Addons"[0m
+[36mconsole.debug: "[nora@base] noraComponent ChromeCSS"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "[nora@base] noraComponent BrowserShareMode"[0m
+[36mconsole.debug: "[nora@base] noraComponent ExternalBrowser"[0m
+[36mconsole.debug: "[nora@base] noraComponent HubPanelMenuComponent"[0m
+[36mconsole.debug: "[nora@base] noraComponent IdleMemoryReclaim"[0m
+[36mconsole.debug: "[nora@base] noraComponent RebootPanelMenuComponent"[0m
+[36mconsole.debug: "[nora@base] noraComponent TabInlineEdit"[0m
+[36mconsole.debug: "[nora@base] noraComponent TabStripWheelGuard"[0m
+[36mconsole.debug: "[nora@base] noraComponent TabSleepExclusion"[0m
+[36mconsole.debug: "[nora@base] noraComponent WindowDrag"[0m
+[36mconsole.debug: "[nora@base] noraComponent StatusBar"[0m
+[36mconsole.debug: "[nora@base] noraComponent TabRefresh"[0m
+[36mconsole.debug: "[nora@base] noraComponent PrivateContainer"[0m
+[36mconsole.debug: "[nora@base] noraComponent UndoClosedTab"[0m
+[36mconsole.debug: "[nora@base] noraComponent TabStacks"[0m
+[36mconsole.debug: "[nora@base] noraComponent ZenMode"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "[nora@base] noraComponent FlexOrder"[0m
+[36mconsole.debug: "[nora@base] noraComponent ContextMenu"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "[nora@base] noraComponent KeyboardShortcut"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "[nora@base] noraComponent MouseGesture"[0m
+[36mconsole.debug: "[nora@base] noraComponent SplitView"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "[nora@base] noraComponent FirefoxSidebar"[0m
+[36mconsole.debug: "[nora@base] noraComponent BrowserTabColor"[0m
+[36mconsole.debug: "[nora@base] noraComponent QRCodeGenerator"[0m
+[36mconsole.debug: "[nora@base] noraComponent Tab"[0m
+[36mconsole.debug: "[nora@base] noraComponent TabBar"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "[nora@base] noraComponent Pwa"[0m
+[36mconsole.debug: "[nora@base] noraComponent ProfileManager"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "[nora@base] noraComponent ModalParent"[0m
+[36mconsole.debug: "[nora@base] noraComponent Designs"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "[nora@base] noraComponent Workspaces"[0m
+[36mconsole.debug: "[nora@base] noraComponent UICustomization"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[33mconsole.warn: "computations created outside a `createRoot` or `render` will never be disposed"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "[nora@base] noraComponent CommandPalette"[0m
+[36mconsole.debug: "[nora@base] noraComponent PanelSidebar"[0m
+[33m[Parent 9581, Main Thread] WARNING: '!anonymousDivElement', file dom/html/TextControlState.cpp:1626[0m
+[33m[Parent 9581, Main Thread] WARNING: NS_ENSURE_SUCCESS_VOID(PrepareEditor()) failed with result 0x80004005 (NS_ERROR_FAILURE): file dom/html/TextControlState.cpp:1863[0m
+UNSUPPORTED (log once): POSSIBLE ISSUE: unit 1 GLD_TEXTURE_INDEX_2D is unloadable and bound to sampler type (Float) - using zero texture because texture unloadable
+[33m[WARN  webrender::device::gl] Missing optimized shader source for ps_quad_gradient_DITHERING[0m
+[33m[Parent 9581, Main Thread] WARNING: Ignoring duplicate observer: ui.new-webcompat-reporter.screenshots.enabled: file modules/libpref/Preferences.cpp:3532[0m
+[33m[Parent 9581, Main Thread] WARNING: Ignoring duplicate observer: ui.new-webcompat-reporter.show-send-more-info-link: file modules/libpref/Preferences.cpp:3532[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+console.info: nora@browser-share-mode: "Initializing browser share mode menu injection"
+console.info: nora@browser-share-mode: "Browser share mode menu item rendered successfully."
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+console.info: nora@external-browser: "Initializing ExternalBrowser component"
+console.info: "[ExternalBrowser] Detecting installed browsers..."
+console.info: "[ExternalBrowser] Detecting installed browsers..."
+console.info: nora@external-browser: "ExternalBrowser component initialized"
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+console.info: nora@private-container: "Private container menu item rendered successfully."
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[31mconsole.error: CustomizableUI:[0m
+Could not localize property 'profile-manager-button.label'.
+[31mconsole.error: CustomizableUI:[0m
+Could not localize property 'profile-manager-button.tooltiptext'.
+[36mconsole.debug: "Updating Profile Manager button texts"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "Checking for startup SSB id..."[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: nora@split-view: "Initializing advanced split view feature"[0m
+[36mconsole.debug: nora@split-view: "Initializing SplitViewManager"[0m
+[36mconsole.debug: nora@split-view: "[styles] injected split-view CSS"[0m
+[36mconsole.debug: nora@split-view: "[patch] splitViewPanels setter/getter patched"[0m
+[36mconsole.debug: nora@split-view: "[patch] setSplitViewActive method patched"[0m
+[36mconsole.debug: nora@split-view: "[patch] removeTabsFromSplitview method patched"[0m
+[36mconsole.debug: nora@split-view: "[patch] showSplitViewPanels patched"[0m
+[36mconsole.debug: nora@split-view: "[patch] MozTabpanels patched successfully"[0m
+[36mconsole.debug: nora@split-view: "[patch] MozTabSplitViewWrapper.reverseTabs patched"[0m
+[36mconsole.debug: nora@split-view: "[patch] context menu listener attached"[0m
+[36mconsole.debug: nora@split-view-picker: "[init] layout picker attached to #split-view-menu"[0m
+[36mconsole.debug: nora@split-view: "[events] TabSplitViewActivate/Deactivate listeners attached"[0m
+[36mconsole.debug: nora@split-view: "[active-pane-tracker] listeners attached"[0m
+[36mconsole.debug: nora@split-view: "[session-restore] listeners attached (TabSplitView + sessionstore-windows-restored)"[0m
+[36mconsole.debug: nora@split-view: "[tab-drop] document drag listeners attached (dragend in bubble phase)"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: nora@split-view: "[effect] layout config changed: horizontal, maxPanes=4"[0m
+[36mconsole.debug: nora@split-view: "[applyLayout] no activeSplitView, skipping"[0m
+[33mconsole.warn: "[StatusBarManager] #appcontent not found; status bar will not be moved to bottom."[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+console.info: nora@tab-stacks: "Tab stacks disabled (floorp.tabstacks.enabled=false)."
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[31mconsole.error: CustomizableUI:[0m
+Could not localize property 'undo-closed-tab.label'.
+[31mconsole.error: CustomizableUI:[0m
+Could not localize property 'undo-closed-tab.tooltiptext'.
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: nora@window-drag: "WindowDrag attached (chord-drag window move)"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+console.info: nora@zen-mode: "Initializing Zen Mode"
+console.info: nora@zen-mode: "Zen Mode menu item rendered successfully."
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: nora@split-view: "[session-restore] using SessionStore.setCustomTabValue(key=\"floorp.splitViewGroupId\") \u2014 persistTabAttribute not available"[0m
+[36mconsole.debug: "Workspaces migration: start"[0m
+[36mconsole.debug: "Workspaces migration: Workspaces.json not found, skipping migration"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[36mconsole.debug: "register disposer to hotCtx in createRoot"[0m
+[31mconsole.error: CustomizableUI:[0m
+Could not localize property 'workspaces-toolbar-button.label'.
+[31mconsole.error: CustomizableUI:[0m
+Could not localize property 'workspaces-toolbar-button.tooltiptext'.
+[33m[Parent 9581, Main Thread] WARNING: IPC message 'PContent::Msg_UpdateMediaCodecsSupported' discarded: actor cannot send: file ipc/glue/ProtocolUtils.cpp:516[0m
+[36mconsole.debug: nora@split-view: "[session-restore] scheduleRestore (obs:sessionstore-windows-restored)"[0m
+[36mconsole.debug: nora@split-view: "[session-restore] scheduleRestore (promiseAllWindowsRestored)"[0m
+[36mconsole.debug: nora@split-view:active-pane: "[schedule] TabSelect+rAF0"[0m
+[36mconsole.debug: nora@split-view:active-pane: "[refreshIndicator] no split tabs (no wrapper and splitViewPanels<2) \u2192 clear"[0m
+[31mconsole.error: "[SsbPageAction] Manifest check failed:" (new AbortError("Actor 'ManifestMessages' destroyed before query 'DOM:ManifestObtainer:Obtain' was resolved", (void 0)))[0m
+[36mconsole.debug: "[ExternalBrowser] Found Google Chrome at /Applications/Google Chrome.app/Contents/MacOS/Google Chrome"[0m
+[36mconsole.debug: "[ExternalBrowser] Found Google Chrome at /Applications/Google Chrome.app/Contents/MacOS/Google Chrome"[0m
+[33m[Child 9594, Main Thread] WARNING: Failed to open external DTD: publicId "-//W3C//DTD SVG 1.1//EN" systemId "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd" base "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+CjwhRE9DVFlQRSBzdmcgUFVCTElDICItLy9XM0MvL0RURCBTVkcgMS4xLy9FTiIgImh0dHA6Ly93d3cudzMub3JnL0dyYXBoaWNzL1NWRy8xLjEvRFREL3N2ZzExLmR0ZCI+CjwhLS0gQ3JlYXRlZCB3aXRoIFZlY3Rvcm5hdG9yIChodHRwOi8vdmVjdG9ybmF0b3IuaW8vKSAtLT4KPHN2ZyBoZWlnaHQ9IjEwMCUiIHN0cm9rZS1taXRlcmxpbWl0PSIxMCIgc3R5bGU9ImZpbGwtcnVsZTpub256ZXJvO2NsaXAtcnVsZTpldmVub2RkO3N0cm9rZS1saW5lY2FwOnJvdW5kO3N0cm9rZS1saW5lam9pbjpyb3VuZDsiIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDEwMjQgMTAyNCIgd2lkdGg9IjEwMCUiIHhtbDpzcGFjZT0icHJlc2VydmUiIHhtbG5zPSJodHRwOi8v[0m
+[33m[Child 9591, Main Thread] WARNING: Failed to open external DTD: publicId "-//W3C//DTD SVG 1.1//EN" systemId "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd" base "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+CjwhRE9DVFlQRSBzdmcgUFVCTElDICItLy9XM0MvL0RURCBTVkcgMS4xLy9FTiIgImh0dHA6Ly93d3cudzMub3JnL0dyYXBoaWNzL1NWRy8xLjEvRFREL3N2ZzExLmR0ZCI+CjwhLS0gQ3JlYXRlZCB3aXRoIFZlY3Rvcm5hdG9yIChodHRwOi8vdmVjdG9ybmF0b3IuaW8vKSAtLT4KPHN2ZyBoZWlnaHQ9IjEwMCUiIHN0cm9rZS1taXRlcmxpbWl0PSIxMCIgc3R5bGU9ImZpbGwtcnVsZTpub256ZXJvO2NsaXAtcnVsZTpldmVub2RkO3N0cm9rZS1saW5lY2FwOnJvdW5kO3N0cm9rZS1saW5lam9pbjpyb3VuZDsiIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDEwMjQgMTAyNCIgd2lkdGg9IjEwMCUiIHhtbDpzcGFjZT0icHJlc2VydmUiIHhtbG5zPSJodHRwOi8v[0m
+[36mconsole.debug: nora@split-view: "[session-restore:restore] scanning 8 tab(s) for split group (attr=\"floorpSplitViewGroupId\" or session key=\"floorp.splitViewGroupId\")"[0m
+[36mconsole.debug: nora@split-view: "[session-restore:restore] restorableGroups=none"[0m
+[36mconsole.debug: nora@split-view: "[session-restore:restore] no group with 2+ eligible tabs; clearing stray group markers"[0m
+console.log: "Designs override loaded"
+console.info: "[OSAutomotor] API initialized on window.OSAutomotor"
+[36mconsole.debug: "NRTabManagerChild created!"[0m
+[36mconsole.debug: "NRTabManager 5183 ! or Chrome Page!"[0m
+[36mconsole.debug: "NRSyncManagerChild created!"[0m
+[36mconsole.debug: "NRSyncManager 5183 ! or Chrome Page!"[0m
+[36mconsole.debug: "NRPwaManagerChild created!"[0m
+[36mconsole.debug: "NRPwaManager 5183 ! or Chrome Page!"[0m
+[33m[Parent 9581, Main Thread] WARNING: NS_ENSURE_SUCCESS(rv, rv) failed with result 0x80040111 (NS_ERROR_NOT_AVAILABLE): file /home/runner/work/Floorp-Runtime/Floorp-Runtime/caps/BasePrincipal.cpp:1557[0m
+[36mconsole.debug: "NRAppConstantsChild created!"[0m
+[36mconsole.debug: "NRAppConstants 5183 ! or Chrome Page!"[0m
+console.info: "[OSAutomotor] API initialized on window.OSAutomotor"
+[36mconsole.debug: "NRRestartBrowserChild created!"[0m
+[36mconsole.debug: "NRRestartBrowser 5183 ! or Chrome Page!"[0m
+[36mconsole.debug: "NRTabManagerChild created!"[0m
+[36mconsole.debug: "NRTabManager 5183 ! or Chrome Page!"[0m
+[36mconsole.debug: "NRSyncManagerChild created!"[0m
+[36mconsole.debug: "NRSyncManager 5183 ! or Chrome Page!"[0m
+[36mconsole.debug: "NRPwaManagerChild created!"[0m
+[36mconsole.debug: "NRPwaManager 5183 ! or Chrome Page!"[0m
+[36mconsole.debug: "NRAppConstantsChild created!"[0m
+[36mconsole.debug: "NRAppConstants 5183 ! or Chrome Page!"[0m
+[36mconsole.debug: "NRRestartBrowserChild created!"[0m
+[36mconsole.debug: "NRRestartBrowser 5183 ! or Chrome Page!"[0m
+[36mconsole.debug: "NRExperimemmtChild created!"[0m
+[36mconsole.debug: "NRExperimemmtChild 5183 ! or Chrome Page!"[0m
+[36mconsole.debug: "NRExperimemmtChild created!"[0m
+[36mconsole.debug: "NRSettingsChild created!"[0m
+[36mconsole.debug: "NRExperimemmtChild 5183 ! or Chrome Page!"[0m
+[36mconsole.debug: "NRSettingsChild created!"[0m
+[31mJavaScript error: http://localhost:5181/link-features-chrome/common/pwa/manifestProcesser.ts line 654 > importedModule, line 2041: Error: Failed to obtain manifest from browser[0m
+console.info: "[OSAutomotor] API initialized on window.OSAutomotor"
+[36mconsole.debug: "NRTabManagerChild created!"[0m
+[36mconsole.debug: "NRTabManager 5183 ! or Chrome Page!"[0m
+[36mconsole.debug: "NRSyncManagerChild created!"[0m
+[36mconsole.debug: "NRSyncManager 5183 ! or Chrome Page!"[0m
+[36mconsole.debug: "NRAppConstantsChild created!"[0m
+[36mconsole.debug: "NRAppConstants 5183 ! or Chrome Page!"[0m
+[36mconsole.debug: "NRRestartBrowserChild created!"[0m
+[36mconsole.debug: "NRRestartBrowser 5183 ! or Chrome Page!"[0m
+[36mconsole.debug: "NRExperimemmtChild created!"[0m
+[36mconsole.debug: "NRExperimemmtChild 5183 ! or Chrome Page!"[0m
+console.log: "Workspaces override loaded"
+console.info: "[OSAutomotor] API initialized on window.OSAutomotor"
+[36mconsole.debug: "NRTabManagerChild created!"[0m
+[36mconsole.debug: "NRSyncManagerChild created!"[0m
+[36mconsole.debug: "NRPwaManagerChild created!"[0m
+[36mconsole.debug: "NRAppConstantsChild created!"[0m
+[36mconsole.debug: "NRRestartBrowserChild created!"[0m
+[36mconsole.debug: "NRExperimemmtChild created!"[0m
+[36mconsole.debug: "NRSettingsChild created!"[0m
+console.info: "[OSAutomotor] API initialized on window.OSAutomotor"
+[36mconsole.debug: "NRTabManagerChild created!"[0m
+[36mconsole.debug: "NRSyncManagerChild created!"[0m
+[36mconsole.debug: "NRPwaManagerChild created!"[0m
+[36mconsole.debug: "NRAppConstantsChild created!"[0m
+[36mconsole.debug: "NRRestartBrowserChild created!"[0m
+[36mconsole.debug: "NRExperimemmtChild created!"[0m
+[36mconsole.debug: "NRSettingsChild created!"[0m
+[36mconsole.debug: "NRStartPageChild created!"[0m
+[36mconsole.debug: "NRStartPage 5186 ! or Chrome Page!"[0m
+[31mJavaScript error: resource:///actors/LinkHandlerParent.sys.mjs, line 106: TypeError: can't access property "hasAttribute", tab is undefined[0m
+[36mconsole.debug: "NRSearchEngineChild created!"[0m
+[36mconsole.debug: "NRSearchEngine 5187 ! or Chrome Page!"[0m
+[36mconsole.debug: "[ExternalBrowser] Found Safari at /Applications/Safari.app/Contents/MacOS/Safari"[0m
+[31mJavaScript error: resource:///actors/LinkHandlerParent.sys.mjs, line 106: TypeError: can't access property "hasAttribute", tab is undefined[0m
+[36mconsole.debug: "NRWelcomePageChild created!"[0m
+[36mconsole.debug: "NRWelcomePage 5187 ! or Chrome Page!"[0m
+[36mconsole.debug: "[ExternalBrowser] Found Safari at /Applications/Safari.app/Contents/MacOS/Safari"[0m
+[33m[Parent 9581, Main Thread] WARNING: Failed to open external DTD: publicId "-//W3C//DTD SVG 1.1//EN" systemId "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd" base "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+CjwhRE9DVFlQRSBzdmcgUFVCTElDICItLy9XM0MvL0RURCBTVkcgMS4xLy9FTiIgImh0dHA6Ly93d3cudzMub3JnL0dyYXBoaWNzL1NWRy8xLjEvRFREL3N2ZzExLmR0ZCI+CjwhLS0gQ3JlYXRlZCB3aXRoIFZlY3Rvcm5hdG9yIChodHRwOi8vdmVjdG9ybmF0b3IuaW8vKSAtLT4KPHN2ZyBoZWlnaHQ9IjEwMCUiIHN0cm9rZS1taXRlcmxpbWl0PSIxMCIgc3R5bGU9ImZpbGwtcnVsZTpub256ZXJvO2NsaXAtcnVsZTpldmVub2RkO3N0cm9rZS1saW5lY2FwOnJvdW5kO3N0cm9rZS1saW5lam9pbjpyb3VuZDsiIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDEwMjQgMTAyNCIgd2lkdGg9IjEwMCUiIHhtbDpzcGFjZT0icHJlc2VydmUiIHhtbG5zPSJodHRwOi8[0m
+[33m[WARN  l10nregistry_ffi::env] L10nRegistry error: Missing resource in locale ja: browser/allTabsMenu.ftl[0m
+[33m[WARN  l10nregistry_ffi::env] L10nRegistry error: Missing resource in locale ja: browser/allTabsMenu.ftl[0m
+[31m[fluent] Missing message in locale ja: profile-manager-button[0m
+[31m[fluent] Missing message in locale en-US: profile-manager-button[0m
+[31m[fluent] Couldn't find a message: profile-manager-button[0m
+[31m[fluent] Missing message in locale ja: workspaces-toolbar-button[0m
+[31m[fluent] Missing message in locale en-US: workspaces-toolbar-button[0m
+[31m[fluent] Couldn't find a message: workspaces-toolbar-button[0m
+[31m[fluent] Missing message in locale ja: profile-manager-button[0m
+[31m[fluent] Missing message in locale en-US: profile-manager-button[0m
+[31m[fluent] Couldn't find a message: profile-manager-button[0m
+[31m[fluent] Missing message in locale ja: workspaces-toolbar-button[0m
+[31m[fluent] Missing message in locale en-US: workspaces-toolbar-button[0m
+[31m[fluent] Couldn't find a message: workspaces-toolbar-button[0m
+[36mconsole.debug: "NRStartPageChild created!"[0m
+[36mconsole.debug: "[NRPluginStoreChild] Actor created for:" "http://localhost:5185/"[0m
+[36mconsole.debug: "[NRPluginStoreChild] API injected successfully"[0m
+[36mconsole.debug: "NRSearchEngineChild created!"[0m
+[36mconsole.debug: "NRWelcomePageChild created!"[0m
+[36mconsole.debug: "NRStartPageChild created!"[0m
+[36mconsole.debug: "[NRPluginStoreChild] Actor created for:" "http://localhost:5179/"[0m
+[36mconsole.debug: "[NRPluginStoreChild] API injected successfully"[0m
+[36mconsole.debug: "NRSearchEngineChild created!"[0m
+[36mconsole.debug: "NRWelcomePageChild created!"[0m
+[36mconsole.debug: "NRStartPageChild created!"[0m
+[36mconsole.debug: "[NRPluginStoreChild] Actor created for:" "http://localhost:5183/#/overview/home"[0m
+[36mconsole.debug: "[NRPluginStoreChild] API injected successfully"[0m
+[36mconsole.debug: "NRSearchEngineChild created!"[0m
+[36mconsole.debug: "NRWelcomePageChild created!"[0m
+[31mJavaScript error: resource:///actors/LinkHandlerParent.sys.mjs, line 166: TypeError: can't access property "removeAttribute", tab is undefined[0m
+[33m[Child 9598, Main Thread] WARNING: 'NS_FAILED(rv)', file modules/libjar/nsJARChannel.cpp:388[0m
+console.info: "[ExternalBrowser] Detected 2 browsers"
+[31mconsole.error: [Exception... "Component returned failure code: 0x80040111 (NS_ERROR_NOT_AVAILABLE) [nsIContentSniffer.getMIMETypeFromContent]"  nsresult: "0x80040111 (NS_ERROR_NOT_AVAILABLE)"  location: "JS frame :: resource:///modules/FaviconLoader.sys.mjs :: onStopRequest :: line 356"  data: no][0m
+[31mJavaScript error: resource:///actors/LinkHandlerParent.sys.mjs, line 166: TypeError: can't access property "removeAttribute", tab is undefined[0m
+fcntl(F_SETLK) failed. errno = 35
+fcntl(F_SETLK) failed. errno = 35
+console.info: "[ExternalBrowser] Detected 2 browsers"
+console.info: "[OSAutomotor] API initialized on window.OSAutomotor"
+[36mconsole.debug: "NRTabManagerChild created!"[0m
+[36mconsole.debug: "NRTabManager 5183 ! or Chrome Page!"[0m
+[36mconsole.debug: "NRSyncManagerChild created!"[0m
+[36mconsole.debug: "NRSyncManager 5183 ! or Chrome Page!"[0m
+[36mconsole.debug: "NRPwaManagerChild created!"[0m
+[36mconsole.debug: "NRPwaManager 5183 ! or Chrome Page!"[0m
+[36mconsole.debug: "NRAppConstantsChild created!"[0m
+[36mconsole.debug: "NRAppConstants 5183 ! or Chrome Page!"[0m
+[36mconsole.debug: "NRRestartBrowserChild created!"[0m
+[36mconsole.debug: "NRRestartBrowser 5183 ! or Chrome Page!"[0m
+[36mconsole.debug: "NRExperimemmtChild created!"[0m
+[36mconsole.debug: "NRExperimemmtChild 5183 ! or Chrome Page!"[0m
+[36mconsole.debug: "NRSettingsChild created!"[0m
+[36mconsole.debug: "NRStartPageChild created!"[0m
+[36mconsole.debug: "NRSearchEngineChild created!"[0m
+[36mconsole.debug: "[NRPluginStoreChild] Actor created for:" "http://localhost:5183/"[0m
+[36mconsole.debug: "[NRPluginStoreChild] API injected successfully"[0m
+[36mconsole.debug: "NRWelcomePageChild created!"[0m
+[33m[Child 9588, Main Thread] WARNING: Failed to open external DTD: publicId "-//W3C//DTD SVG 1.1//EN" systemId "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd" base "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+CjwhRE9DVFlQRSBzdmcgUFVCTElDICItLy9XM0MvL0RURCBTVkcgMS4xLy9FTiIgImh0dHA6Ly93d3cudzMub3JnL0dyYXBoaWNzL1NWRy8xLjEvRFREL3N2ZzExLmR0ZCI+CjwhLS0gQ3JlYXRlZCB3aXRoIFZlY3Rvcm5hdG9yIChodHRwOi8vdmVjdG9ybmF0b3IuaW8vKSAtLT4KPHN2ZyBoZWlnaHQ9IjEwMCUiIHN0cm9rZS1taXRlcmxpbWl0PSIxMCIgc3R5bGU9ImZpbGwtcnVsZTpub256ZXJvO2NsaXAtcnVsZTpldmVub2RkO3N0cm9rZS1saW5lY2FwOnJvdW5kO3N0cm9rZS1saW5lam9pbjpyb3VuZDsiIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDEwMjQgMTAyNCIgd2lkdGg9IjEwMCUiIHhtbDpzcGFjZT0icHJlc2VydmUiIHhtbG5zPSJodHRwOi8v[0m
+[36mconsole.debug: "NRStartPageChild created!"[0m
+[36mconsole.debug: "[NRPluginStoreChild] Actor created for:" "http://localhost:5183/"[0m
+[36mconsole.debug: "[NRPluginStoreChild] API injected successfully"[0m
+[36mconsole.debug: "NRSearchEngineChild created!"[0m
+[36mconsole.debug: "NRWelcomePageChild created!"[0m
+[33m[Parent 9581, Main Thread] WARNING: 'mNativeMenu != aMenu', file layout/xul/nsXULPopupManager.cpp:988[0m

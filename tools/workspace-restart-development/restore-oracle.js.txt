@@ -1,0 +1,33 @@
+// SPDX-License-Identifier: MPL-2.0
+// This unchanged factory is injected into native QA and evaluated by host tests.
+(() => {
+  const check = (condition, message) => {
+    if (!condition) throw new Error(message);
+  };
+  const text = value => typeof value === 'string' && value.length > 0;
+  const configuration = (state, expectedState) => {
+    check(text(state?.configuredNewTabURL) && text(expectedState?.configuredNewTabURL), 'Native configured new-tab URI is available');
+    check(state.configuredNewTabURL === expectedState.configuredNewTabURL, 'Native configured new-tab URI is unchanged across restart');
+  };
+  const workspaceExit = (state, expected, homepage) => {
+    configuration(state, expected?.state);
+    check(Array.isArray(state.tabs) && state.tabs.every(tab => text(tab.url) && (tab.workspace === null || typeof tab.workspace === 'string') && typeof tab.hidden === 'boolean' && typeof tab.selected === 'boolean'), 'Restored tab observation is complete');
+    check(text(expected.retainedURL) && text(expected.closedURL) && text(expected.b), 'Original workspace preparation is complete');
+    const retained = state.tabs.filter(tab => tab.url === expected.retainedURL);
+    check(retained.length === 1 && retained[0].workspace === expected.b, 'Original hidden user URL and membership restored exactly once');
+    check(!state.tabs.some(tab => tab.url === expected.closedURL), 'Explicitly closed A tab is not restored');
+    const startupURLs = new Set(['about:blank', 'about:home', 'about:newtab', homepage, state.configuredNewTabURL].filter(text));
+    const startup = tab => startupURLs.has(tab.url);
+    check(state.tabs.filter(startup).length <= 1, 'No duplicate startup blank/home tabs');
+    check(state.tabs.every(tab => tab.url === expected.retainedURL || startup(tab)), 'No unexpected restored tabs');
+    check(state.pendingExit === false, 'Native workspace initialization consumed pending exit');
+  };
+  const selectedWorkspace = (after, before, expected, homepage) => {
+    workspaceExit(after, expected, homepage);
+    check(after.tabs.length === before.tabs.length, 'Selecting restored B creates no replacement tab');
+    const retained = after.tabs.find(tab => tab.url === expected.retainedURL);
+    check(retained.hidden === false, 'Restored user tab is visible in B');
+    check(retained.selected === true && after.tabs.filter(tab => tab.selected).length === 1, 'Restored B tab is selected');
+  };
+  return Object.freeze({configuration, workspaceExit, selectedWorkspace});
+})()

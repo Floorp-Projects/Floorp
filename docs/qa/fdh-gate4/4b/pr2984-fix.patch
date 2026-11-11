@@ -1,0 +1,51 @@
+diff --git a/tools/src/browser_launcher.ts b/tools/src/browser_launcher.ts
+index a04c6fe9b093..5d01e4a31a20 100644
+--- a/tools/src/browser_launcher.ts
++++ b/tools/src/browser_launcher.ts
+@@ -278,6 +278,7 @@ function isolatedBrowserEnvironment(
+       filtered[allowedName] = value;
+     }
+   }
++  filtered.MOZ_REMOTE_ALLOW_SYSTEM_ACCESS = "1";
+   return filtered;
+ }
+ 
+@@ -560,6 +561,10 @@ export async function run(
+   const port = options.port ?? 5180;
+   const marionette = options.marionette ?? true;
+   const cmd = browserCommand({ ...options, port, marionette });
++  const environment = Deno.env.toObject();
++  if (marionette) {
++    environment.MOZ_REMOTE_ALLOW_SYSTEM_ACCESS = "1";
++  }
+ 
+   console.log("[launcher] Launching browser with command: " + cmd.join(" "));
+ 
+@@ -576,6 +581,7 @@ export async function run(
+       }
+       printFirefoxLog(line.trim());
+     },
++    environment,
+   );
+ 
+   try {
+diff --git a/tools/src/utils.ts b/tools/src/utils.ts
+index 70fe73a4bcf7..55455f06645e 100644
+--- a/tools/src/utils.ts
++++ b/tools/src/utils.ts
+@@ -221,13 +221,14 @@ export const ProcessUtils = {
+   async runCommandWithLogging(
+     cmd: string[],
+     cb: (stream: "stdout" | "stderr", line: string) => void,
++    environment: Record<string, string> = Deno.env.toObject(),
+   ): Promise<number> {
+     const child = new Deno.Command(cmd[0], {
+       args: cmd.slice(1),
+       stdin: "null",
+       stdout: "piped",
+       stderr: "piped",
+-      env: Deno.env.toObject(), // Pass current environment variables to subprocess
++      env: environment,
+     }).spawn();
+ 
+     const readStream = async (

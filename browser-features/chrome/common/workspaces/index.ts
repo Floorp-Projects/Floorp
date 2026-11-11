@@ -20,6 +20,7 @@ import { migrateWorkspacesData } from "./data/migrate/migration.ts";
 import { createRoot, getOwner, onCleanup, runWithOwner } from "solid-js";
 import { WORKSPACES_INIT_OBSERVER_TOPIC } from "./utils/workspaces-static-names.ts";
 import { WorkspacesLinkContextMenu } from "./link-context-menu.tsx";
+import { WorkspacesSyncController } from "./workspacesSync.ts";
 
 @noraComponent(import.meta.hot)
 export default class Workspaces extends NoraComponentBase {
@@ -48,6 +49,7 @@ export default class Workspaces extends NoraComponentBase {
         const tabCtx = new WorkspacesTabManager(iconCtx, dataManagerCtx);
         const ctx = new WorkspacesService(tabCtx, iconCtx, dataManagerCtx);
         Workspaces.windowWorkspacesMap.set(window, ctx);
+        ctx.syncController = new WorkspacesSyncController(ctx);
 
         const observer = {
           observe: (_subject: unknown, topic: string) => {

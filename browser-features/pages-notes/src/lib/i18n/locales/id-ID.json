@@ -7,6 +7,7 @@
         "welcomeContent": "Selamat datang di Catatan {{productName}}! Berikut cara menggunakannya.\n\nCatatan {{productName}} adalah fitur catatan yang bisa disinkronisasikan lintas perangkat. Untuk menyalakan sinkronisasi, Anda perlu masuk ke {{productName}} menggunakan akun Mozilla.\nCatatan {{productName}} disimpan di {{productName}} dan disinkronkan antarperangkat via Firefox Sync. Firefox Sync mengenkripsi data sinkronisasi dengan kata sandi akun Mozilla Anda, sehingga orang lain tidak mengetahui isinya.",
         "new": "Catatan Baru",
         "reorder": "Susun ulang",
+        "export": "Export as Markdown",
         "done": "Selesai",
         "emptyTitle": "Nirjudul",
         "emptyContent": "Kosong",
@@ -64,6 +65,7 @@
     "error": {
         "loadFailed": "Gagal memuat data catatan",
         "saveFailed": "Gagal menyimpan data catatan",
+        "exportFailed": "Failed to export note",
         "indexOutOfRange": "Indeks {{index}} di luar rentang"
     }
 }

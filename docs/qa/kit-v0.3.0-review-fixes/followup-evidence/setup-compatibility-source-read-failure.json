@@ -1,0 +1,20 @@
+[
+  {
+    "path": ".github/workflows/scripts/setup-floorp.sh",
+    "exit": 0,
+    "stderr": "",
+    "sha256": "ca992937a9288922875493560e07c4be89be6075ba62c51c176a2801af825892"
+  },
+  {
+    "path": ".github/workflows/scripts/qa3_build_profile.py",
+    "exit": 0,
+    "stderr": "",
+    "sha256": "0cc8a69efe6fd5a46117a835527e040a58676b4b38112ab87809c330658fafaa"
+  },
+  {
+    "path": ".github/workflows/mozconfigs/linux-x86_64.mozconfig",
+    "exit": 128,
+    "stderr": "fatal: packfile /workspace/qa-review-v030/repos/Floorp-Runtime/.git/objects/pack/pack-df5a3a05811407d5bdd990eca4d1c973353de2a8.pack cannot be mapped, check sys.vm.max_map_count and/or RLIMIT_DATA: Cannot allocate memory\n",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+]

@@ -1,0 +1,558 @@
+{
+  "baseHead": "81c92fc4bbbc13b4fd4c2a2adaf6a137e342bd53",
+  "sourceReads": [
+    {
+      "path": ".github/workflows/scripts/setup-floorp.sh",
+      "exit": 0,
+      "stderr": "",
+      "sha256": "ca992937a9288922875493560e07c4be89be6075ba62c51c176a2801af825892"
+    },
+    {
+      "path": ".github/workflows/scripts/qa3_build_profile.py",
+      "exit": 0,
+      "stderr": "",
+      "sha256": "0cc8a69efe6fd5a46117a835527e040a58676b4b38112ab87809c330658fafaa"
+    },
+    {
+      "path": ".github/workflows/mozconfigs/linux-x86_64.mozconfig",
+      "exit": 0,
+      "stderr": "",
+      "sha256": "340ff7786df952869618855905a5da72a181a81380e33f34703c54e4cd5b31da"
+    },
+    {
+      "path": ".github/workflows/mozconfigs/linux-aarch64.mozconfig",
+      "exit": 0,
+      "stderr": "",
+      "sha256": "52bf234fbb62b610ed86a9222eb31bc5357da2b62f4663deeabe9213e1beea49"
+    },
+    {
+      "path": ".github/workflows/mozconfigs/windows-x86_64.mozconfig",
+      "exit": 0,
+      "stderr": "",
+      "sha256": "ff3af484bcba966be587303cebecc3f43ddf21b4fdb2b4f724d8d2e0f33a3064"
+    },
+    {
+      "path": ".github/workflows/mozconfigs/macosx64-x86_64.mozconfig",
+      "exit": 0,
+      "stderr": "",
+      "sha256": "8997298667a649ab55f413dfce16a19dbcd4d763536c1dea3ad7a4c49604ecb4"
+    },
+    {
+      "path": ".github/workflows/mozconfigs/macosx64-aarch64.mozconfig",
+      "exit": 0,
+      "stderr": "",
+      "sha256": "bd2c84f30569724bf0ddeba3201c6f4ad1336c0f453a3374aef4b32826600efa"
+    }
+  ],
+  "cases": [
+    {
+      "input": [
+        "linux",
+        "x86_64",
+        true,
+        false,
+        "",
+        ""
+      ],
+      "beforeExit": 0,
+      "afterExit": 0,
+      "beforeConfigSha256": "138524f150ddb5ea7f9ef307006e5be7dc82c5fc475b5298a06441c974bac62a",
+      "afterConfigSha256": "138524f150ddb5ea7f9ef307006e5be7dc82c5fc475b5298a06441c974bac62a",
+      "configBytesEqual": true,
+      "beforeStdout": "Applying debug patches...\nApplying debug patch: fixture.patch\nUsing debug branding: floorp-daylight\n",
+      "beforeStderr": "",
+      "afterStdout": "Applying debug patches...\nApplying debug patch: fixture.patch\nUsing debug branding: floorp-daylight\n",
+      "afterStderr": ""
+    },
+    {
+      "input": [
+        "linux",
+        "x86_64",
+        false,
+        false,
+        "",
+        ""
+      ],
+      "beforeExit": 0,
+      "afterExit": 0,
+      "beforeConfigSha256": "99a0d46f297532d7ff3e70f87ca5d81c912c86d557e68fb7313d2fab3d249f50",
+      "afterConfigSha256": "99a0d46f297532d7ff3e70f87ca5d81c912c86d557e68fb7313d2fab3d249f50",
+      "configBytesEqual": true,
+      "beforeStdout": "Using official branding: floorp-official\n",
+      "beforeStderr": "",
+      "afterStdout": "Using official branding: floorp-official\n",
+      "afterStderr": ""
+    },
+    {
+      "input": [
+        "linux",
+        "x86_64",
+        false,
+        true,
+        "generate",
+        ""
+      ],
+      "beforeExit": 0,
+      "afterExit": 0,
+      "beforeConfigSha256": "32b8c9b725631d0b5a37dc6e16f3ac89ae68e9981ec62f4ad5ce9d61ce240ff1",
+      "afterConfigSha256": "32b8c9b725631d0b5a37dc6e16f3ac89ae68e9981ec62f4ad5ce9d61ce240ff1",
+      "configBytesEqual": true,
+      "beforeStdout": "Using official branding: floorp-official\n",
+      "beforeStderr": "",
+      "afterStdout": "Using official branding: floorp-official\n",
+      "afterStderr": ""
+    },
+    {
+      "input": [
+        "linux",
+        "x86_64",
+        false,
+        true,
+        "use",
+        "fixture-profile"
+      ],
+      "beforeExit": 0,
+      "afterExit": 0,
+      "beforeConfigSha256": "b90c9d65c24bec0b9a28bcd82c7e0c1aaf21b952263fa41ee8aad28dc1c56709",
+      "afterConfigSha256": "b90c9d65c24bec0b9a28bcd82c7e0c1aaf21b952263fa41ee8aad28dc1c56709",
+      "configBytesEqual": true,
+      "beforeStdout": "Using official branding: floorp-official\nPGO use mode - re-adding Rust targets if needed...\n",
+      "beforeStderr": "",
+      "afterStdout": "Using official branding: floorp-official\nPGO use mode - re-adding Rust targets if needed...\n",
+      "afterStderr": ""
+    },
+    {
+      "input": [
+        "linux",
+        "x86_64",
+        true,
+        true,
+        "generate",
+        ""
+      ],
+      "beforeExit": 0,
+      "afterExit": 0,
+      "beforeConfigSha256": "aa1d07bdadddd8387444a8881884062496804c3c00557db78b8b31efffbecbbd",
+      "afterConfigSha256": "aa1d07bdadddd8387444a8881884062496804c3c00557db78b8b31efffbecbbd",
+      "configBytesEqual": true,
+      "beforeStdout": "Applying debug patches...\nApplying debug patch: fixture.patch\nUsing debug branding: floorp-daylight\n",
+      "beforeStderr": "",
+      "afterStdout": "Applying debug patches...\nApplying debug patch: fixture.patch\nUsing debug branding: floorp-daylight\n",
+      "afterStderr": "Legacy Debug+PGO is noncanonical and ineligible for qualification\n"
+    },
+    {
+      "input": [
+        "linux",
+        "x86_64",
+        true,
+        true,
+        "use",
+        "fixture-profile"
+      ],
+      "beforeExit": 0,
+      "afterExit": 0,
+      "beforeConfigSha256": "c05c2b61697307e8a436c2d7614e72419b1c4aac6f3bd2901b51435ee219235f",
+      "afterConfigSha256": "c05c2b61697307e8a436c2d7614e72419b1c4aac6f3bd2901b51435ee219235f",
+      "configBytesEqual": true,
+      "beforeStdout": "Applying debug patches...\nApplying debug patch: fixture.patch\nUsing debug branding: floorp-daylight\nPGO use mode - re-adding Rust targets if needed...\n",
+      "beforeStderr": "",
+      "afterStdout": "Applying debug patches...\nApplying debug patch: fixture.patch\nUsing debug branding: floorp-daylight\nPGO use mode - re-adding Rust targets if needed...\n",
+      "afterStderr": "Legacy Debug+PGO is noncanonical and ineligible for qualification\n"
+    },
+    {
+      "input": [
+        "linux",
+        "aarch64",
+        true,
+        false,
+        "",
+        ""
+      ],
+      "beforeExit": 0,
+      "afterExit": 0,
+      "beforeConfigSha256": "bf7acc9da0d2ca389d492f999468fec7020f68d53119babb0e5a063eba3f6517",
+      "afterConfigSha256": "bf7acc9da0d2ca389d492f999468fec7020f68d53119babb0e5a063eba3f6517",
+      "configBytesEqual": true,
+      "beforeStdout": "Applying debug patches...\nApplying debug patch: fixture.patch\nUsing debug branding: floorp-daylight\n",
+      "beforeStderr": "",
+      "afterStdout": "Applying debug patches...\nApplying debug patch: fixture.patch\nUsing debug branding: floorp-daylight\n",
+      "afterStderr": ""
+    },
+    {
+      "input": [
+        "linux",
+        "aarch64",
+        false,
+        false,
+        "",
+        ""
+      ],
+      "beforeExit": 0,
+      "afterExit": 0,
+      "beforeConfigSha256": "8a62cd84dc7108b8f43020b26259a176fa0d2c89855bfb50bdced29db305ad3d",
+      "afterConfigSha256": "8a62cd84dc7108b8f43020b26259a176fa0d2c89855bfb50bdced29db305ad3d",
+      "configBytesEqual": true,
+      "beforeStdout": "Using official branding: floorp-official\n",
+      "beforeStderr": "",
+      "afterStdout": "Using official branding: floorp-official\n",
+      "afterStderr": ""
+    },
+    {
+      "input": [
+        "windows",
+        "x86_64",
+        true,
+        false,
+        "",
+        ""
+      ],
+      "beforeExit": 0,
+      "afterExit": 0,
+      "beforeConfigSha256": "268a5b5cb016983ecb7c96e9e532105b204b48bbc6c55c5f643669505fae885a",
+      "afterConfigSha256": "268a5b5cb016983ecb7c96e9e532105b204b48bbc6c55c5f643669505fae885a",
+      "configBytesEqual": true,
+      "beforeStdout": "Applying debug patches...\nApplying debug patch: fixture.patch\nUsing debug branding: floorp-daylight\n",
+      "beforeStderr": "",
+      "afterStdout": "Applying debug patches...\nApplying debug patch: fixture.patch\nUsing debug branding: floorp-daylight\n",
+      "afterStderr": ""
+    },
+    {
+      "input": [
+        "windows",
+        "x86_64",
+        false,
+        false,
+        "",
+        ""
+      ],
+      "beforeExit": 0,
+      "afterExit": 0,
+      "beforeConfigSha256": "cc9daa9228ad7849e2f7df69106c6597c63f643954de8c26e5a0097bcd6dbfe8",
+      "afterConfigSha256": "cc9daa9228ad7849e2f7df69106c6597c63f643954de8c26e5a0097bcd6dbfe8",
+      "configBytesEqual": true,
+      "beforeStdout": "Using official branding: floorp-official\n",
+      "beforeStderr": "",
+      "afterStdout": "Using official branding: floorp-official\n",
+      "afterStderr": ""
+    },
+    {
+      "input": [
+        "windows",
+        "x86_64",
+        false,
+        true,
+        "generate",
+        ""
+      ],
+      "beforeExit": 0,
+      "afterExit": 0,
+      "beforeConfigSha256": "3ef5fe1de1208bcff2f900622bf1f917bc574c6e8a737b5aee99347472ebb5be",
+      "afterConfigSha256": "3ef5fe1de1208bcff2f900622bf1f917bc574c6e8a737b5aee99347472ebb5be",
+      "configBytesEqual": true,
+      "beforeStdout": "Using official branding: floorp-official\n",
+      "beforeStderr": "",
+      "afterStdout": "Using official branding: floorp-official\n",
+      "afterStderr": ""
+    },
+    {
+      "input": [
+        "windows",
+        "x86_64",
+        false,
+        true,
+        "use",
+        "fixture-profile"
+      ],
+      "beforeExit": 0,
+      "afterExit": 0,
+      "beforeConfigSha256": "5e671e8cba55481ff58e2c6406840184bfa912e63f06f26f140b83f5672237b2",
+      "afterConfigSha256": "5e671e8cba55481ff58e2c6406840184bfa912e63f06f26f140b83f5672237b2",
+      "configBytesEqual": true,
+      "beforeStdout": "Using official branding: floorp-official\nPGO use mode - re-adding Rust targets if needed...\n",
+      "beforeStderr": "",
+      "afterStdout": "Using official branding: floorp-official\nPGO use mode - re-adding Rust targets if needed...\n",
+      "afterStderr": ""
+    },
+    {
+      "input": [
+        "windows",
+        "x86_64",
+        true,
+        true,
+        "generate",
+        ""
+      ],
+      "beforeExit": 0,
+      "afterExit": 0,
+      "beforeConfigSha256": "bde0f3fdb4a79ddeb9d209cfa4033554e63edf80fbcd702fc61c88c0ae4aa9e3",
+      "afterConfigSha256": "bde0f3fdb4a79ddeb9d209cfa4033554e63edf80fbcd702fc61c88c0ae4aa9e3",
+      "configBytesEqual": true,
+      "beforeStdout": "Applying debug patches...\nApplying debug patch: fixture.patch\nUsing debug branding: floorp-daylight\n",
+      "beforeStderr": "",
+      "afterStdout": "Applying debug patches...\nApplying debug patch: fixture.patch\nUsing debug branding: floorp-daylight\n",
+      "afterStderr": "Legacy Debug+PGO is noncanonical and ineligible for qualification\n"
+    },
+    {
+      "input": [
+        "windows",
+        "x86_64",
+        true,
+        true,
+        "use",
+        "fixture-profile"
+      ],
+      "beforeExit": 0,
+      "afterExit": 0,
+      "beforeConfigSha256": "f173929e510c1db81741ebae790a665435b617b8d361ce5b66ef409bd5abf858",
+      "afterConfigSha256": "f173929e510c1db81741ebae790a665435b617b8d361ce5b66ef409bd5abf858",
+      "configBytesEqual": true,
+      "beforeStdout": "Applying debug patches...\nApplying debug patch: fixture.patch\nUsing debug branding: floorp-daylight\nPGO use mode - re-adding Rust targets if needed...\n",
+      "beforeStderr": "",
+      "afterStdout": "Applying debug patches...\nApplying debug patch: fixture.patch\nUsing debug branding: floorp-daylight\nPGO use mode - re-adding Rust targets if needed...\n",
+      "afterStderr": "Legacy Debug+PGO is noncanonical and ineligible for qualification\n"
+    },
+    {
+      "input": [
+        "mac",
+        "x86_64",
+        true,
+        false,
+        "",
+        ""
+      ],
+      "beforeExit": 0,
+      "afterExit": 0,
+      "beforeConfigSha256": "fcd7b398dbea799042265ec764949c6f9eaec96ee3431f9ab4e0f32ba014f86e",
+      "afterConfigSha256": "fcd7b398dbea799042265ec764949c6f9eaec96ee3431f9ab4e0f32ba014f86e",
+      "configBytesEqual": true,
+      "beforeStdout": "Applying debug patches...\nApplying debug patch: fixture.patch\nUsing debug branding: floorp-daylight\n",
+      "beforeStderr": "",
+      "afterStdout": "Applying debug patches...\nApplying debug patch: fixture.patch\nUsing debug branding: floorp-daylight\n",
+      "afterStderr": ""
+    },
+    {
+      "input": [
+        "mac",
+        "x86_64",
+        false,
+        false,
+        "",
+        ""
+      ],
+      "beforeExit": 0,
+      "afterExit": 0,
+      "beforeConfigSha256": "f1b8f37b32ae164aec0195884b4c230077784584d6be0c78a4cbe9ab6c5f4808",
+      "afterConfigSha256": "f1b8f37b32ae164aec0195884b4c230077784584d6be0c78a4cbe9ab6c5f4808",
+      "configBytesEqual": true,
+      "beforeStdout": "Using official branding: floorp-official\n",
+      "beforeStderr": "",
+      "afterStdout": "Using official branding: floorp-official\n",
+      "afterStderr": ""
+    },
+    {
+      "input": [
+        "mac",
+        "x86_64",
+        false,
+        true,
+        "generate",
+        ""
+      ],
+      "beforeExit": 0,
+      "afterExit": 0,
+      "beforeConfigSha256": "fa6767f31dc5c7b3dbb058593da13c7a5bfa1c1486c5de1aa8acf6b51245f627",
+      "afterConfigSha256": "fa6767f31dc5c7b3dbb058593da13c7a5bfa1c1486c5de1aa8acf6b51245f627",
+      "configBytesEqual": true,
+      "beforeStdout": "Using official branding: floorp-official\n",
+      "beforeStderr": "",
+      "afterStdout": "Using official branding: floorp-official\n",
+      "afterStderr": ""
+    },
+    {
+      "input": [
+        "mac",
+        "x86_64",
+        false,
+        true,
+        "use",
+        "fixture-profile"
+      ],
+      "beforeExit": 0,
+      "afterExit": 0,
+      "beforeConfigSha256": "e819ddf748f3c93bea24e52336913221f1a7cf93ee73288c20fd434ff2d44ff4",
+      "afterConfigSha256": "e819ddf748f3c93bea24e52336913221f1a7cf93ee73288c20fd434ff2d44ff4",
+      "configBytesEqual": true,
+      "beforeStdout": "Using official branding: floorp-official\nPGO use mode - re-adding Rust targets if needed...\n",
+      "beforeStderr": "",
+      "afterStdout": "Using official branding: floorp-official\nPGO use mode - re-adding Rust targets if needed...\n",
+      "afterStderr": ""
+    },
+    {
+      "input": [
+        "mac",
+        "x86_64",
+        true,
+        true,
+        "generate",
+        ""
+      ],
+      "beforeExit": 0,
+      "afterExit": 0,
+      "beforeConfigSha256": "5b5e7be22de7a7bc474102d67da5a3de3f93edaacca0246d9a6984ede4bd1180",
+      "afterConfigSha256": "5b5e7be22de7a7bc474102d67da5a3de3f93edaacca0246d9a6984ede4bd1180",
+      "configBytesEqual": true,
+      "beforeStdout": "Applying debug patches...\nApplying debug patch: fixture.patch\nUsing debug branding: floorp-daylight\n",
+      "beforeStderr": "",
+      "afterStdout": "Applying debug patches...\nApplying debug patch: fixture.patch\nUsing debug branding: floorp-daylight\n",
+      "afterStderr": "Legacy Debug+PGO is noncanonical and ineligible for qualification\n"
+    },
+    {
+      "input": [
+        "mac",
+        "x86_64",
+        true,
+        true,
+        "use",
+        "fixture-profile"
+      ],
+      "beforeExit": 0,
+      "afterExit": 0,
+      "beforeConfigSha256": "19e60d102f5c34c5dba7487b4b961a3cece790a420d1013905f933f13859d1f2",
+      "afterConfigSha256": "19e60d102f5c34c5dba7487b4b961a3cece790a420d1013905f933f13859d1f2",
+      "configBytesEqual": true,
+      "beforeStdout": "Applying debug patches...\nApplying debug patch: fixture.patch\nUsing debug branding: floorp-daylight\nPGO use mode - re-adding Rust targets if needed...\n",
+      "beforeStderr": "",
+      "afterStdout": "Applying debug patches...\nApplying debug patch: fixture.patch\nUsing debug branding: floorp-daylight\nPGO use mode - re-adding Rust targets if needed...\n",
+      "afterStderr": "Legacy Debug+PGO is noncanonical and ineligible for qualification\n"
+    },
+    {
+      "input": [
+        "mac",
+        "aarch64",
+        true,
+        false,
+        "",
+        ""
+      ],
+      "beforeExit": 0,
+      "afterExit": 0,
+      "beforeConfigSha256": "3d4383253fa5e8d2617eb91d19d40191172338cbc2709fd89bbcb5e7c4db0114",
+      "afterConfigSha256": "3d4383253fa5e8d2617eb91d19d40191172338cbc2709fd89bbcb5e7c4db0114",
+      "configBytesEqual": true,
+      "beforeStdout": "Applying debug patches...\nApplying debug patch: fixture.patch\nUsing debug branding: floorp-daylight\n",
+      "beforeStderr": "",
+      "afterStdout": "Applying debug patches...\nApplying debug patch: fixture.patch\nUsing debug branding: floorp-daylight\n",
+      "afterStderr": ""
+    },
+    {
+      "input": [
+        "mac",
+        "aarch64",
+        false,
+        false,
+        "",
+        ""
+      ],
+      "beforeExit": 0,
+      "afterExit": 0,
+      "beforeConfigSha256": "8e0ab33c577210de56acf1b08ed22b0752d857ee7d956b35780e34004db5f4b0",
+      "afterConfigSha256": "8e0ab33c577210de56acf1b08ed22b0752d857ee7d956b35780e34004db5f4b0",
+      "configBytesEqual": true,
+      "beforeStdout": "Using official branding: floorp-official\n",
+      "beforeStderr": "",
+      "afterStdout": "Using official branding: floorp-official\n",
+      "afterStderr": ""
+    },
+    {
+      "input": [
+        "mac",
+        "aarch64",
+        false,
+        true,
+        "generate",
+        ""
+      ],
+      "beforeExit": 0,
+      "afterExit": 0,
+      "beforeConfigSha256": "22946a31cafe500b6715b169eab373f6f98125e7072463e676b71986529668b6",
+      "afterConfigSha256": "22946a31cafe500b6715b169eab373f6f98125e7072463e676b71986529668b6",
+      "configBytesEqual": true,
+      "beforeStdout": "Using official branding: floorp-official\n",
+      "beforeStderr": "",
+      "afterStdout": "Using official branding: floorp-official\n",
+      "afterStderr": ""
+    },
+    {
+      "input": [
+        "mac",
+        "aarch64",
+        false,
+        true,
+        "use",
+        "fixture-profile"
+      ],
+      "beforeExit": 0,
+      "afterExit": 0,
+      "beforeConfigSha256": "daf678bf7e1a1a5aec17afc7c6e7b8edf8a74c886d0e381d651332ee46fbe7a2",
+      "afterConfigSha256": "daf678bf7e1a1a5aec17afc7c6e7b8edf8a74c886d0e381d651332ee46fbe7a2",
+      "configBytesEqual": true,
+      "beforeStdout": "Using official branding: floorp-official\nPGO use mode - re-adding Rust targets if needed...\n",
+      "beforeStderr": "",
+      "afterStdout": "Using official branding: floorp-official\nPGO use mode - re-adding Rust targets if needed...\n",
+      "afterStderr": ""
+    },
+    {
+      "input": [
+        "mac",
+        "aarch64",
+        true,
+        true,
+        "generate",
+        ""
+      ],
+      "beforeExit": 0,
+      "afterExit": 0,
+      "beforeConfigSha256": "499433e55934582345a9fb33e5faaa3d6677b4ef8f40b8892342164dac06b4c9",
+      "afterConfigSha256": "499433e55934582345a9fb33e5faaa3d6677b4ef8f40b8892342164dac06b4c9",
+      "configBytesEqual": true,
+      "beforeStdout": "Applying debug patches...\nApplying debug patch: fixture.patch\nUsing debug branding: floorp-daylight\n",
+      "beforeStderr": "",
+      "afterStdout": "Applying debug patches...\nApplying debug patch: fixture.patch\nUsing debug branding: floorp-daylight\n",
+      "afterStderr": "Legacy Debug+PGO is noncanonical and ineligible for qualification\n"
+    },
+    {
+      "input": [
+        "mac",
+        "aarch64",
+        true,
+        true,
+        "use",
+        "fixture-profile"
+      ],
+      "beforeExit": 0,
+      "afterExit": 0,
+      "beforeConfigSha256": "d33649be2d7cfacf667a7cf1f28405cb5040eea4f3c0104b6599ddc926daefbc",
+      "afterConfigSha256": "d33649be2d7cfacf667a7cf1f28405cb5040eea4f3c0104b6599ddc926daefbc",
+      "configBytesEqual": true,
+      "beforeStdout": "Applying debug patches...\nApplying debug patch: fixture.patch\nUsing debug branding: floorp-daylight\nPGO use mode - re-adding Rust targets if needed...\n",
+      "beforeStderr": "",
+      "afterStdout": "Applying debug patches...\nApplying debug patch: fixture.patch\nUsing debug branding: floorp-daylight\nPGO use mode - re-adding Rust targets if needed...\n",
+      "afterStderr": "Legacy Debug+PGO is noncanonical and ineligible for qualification\n"
+    }
+  ],
+  "caseCount": 26,
+  "equalSuccessfulConfigs": 26,
+  "nativeExecuted": false,
+  "credentialsInherited": false,
+  "gitSettings": [
+    "-c",
+    "core.preloadIndex=false",
+    "-c",
+    "core.packedGitWindowSize=8m",
+    "-c",
+    "core.packedGitLimit=32m",
+    "-c",
+    "core.deltaBaseCacheLimit=8m"
+  ],
+  "repositoryConfigModified": false
+}

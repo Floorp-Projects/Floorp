@@ -1,0 +1,122 @@
+{
+  "schemaVersion": 1,
+  "timestamp": "2026-10-09T12:48:38.900027+00:00",
+  "command": [
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+    "-B",
+    "/workspace/qa-review-v030/evidence/qa307_independent_release_tests.py"
+  ],
+  "exitCode": 0,
+  "timedOut": false,
+  "seconds": 2.394,
+  "outerLimits": {
+    "ASBytes": 2147483648,
+    "CPUSeconds": 20,
+    "fileBytes": 16777216,
+    "wallSeconds": 40
+  },
+  "envKeys": [
+    "GIT_CONFIG_GLOBAL",
+    "GIT_CONFIG_NOSYSTEM",
+    "LANG",
+    "PATH",
+    "PYTHONDONTWRITEBYTECODE",
+    "TMPDIR"
+  ],
+  "networkOrNativeExecution": false,
+  "inputsBefore": {
+    "/workspace/qa-review-v030/fixes/kit-v030/Floorp_QA_Implementation_Kit_v0.3.0/tools/qa/core.py": {
+      "bytes": 23827,
+      "sha256": "28767090836801f51e18cfef59434a9ae0cedc44c15cfc21f0da7160d43d3bdc"
+    },
+    "/workspace/qa-review-v030/fixes/kit-v030/Floorp_QA_Implementation_Kit_v0.3.0/tools/qa/agent.py": {
+      "bytes": 16297,
+      "sha256": "90fc2e506263ed2004496411caaf8c0bccc960a9a46004df8382d8af9c3b695b"
+    },
+    "/workspace/qa-review-v030/fixes/kit-v030/Floorp_QA_Implementation_Kit_v0.3.0/tools/qa/tests/test_core.py": {
+      "bytes": 19005,
+      "sha256": "5bb6a9a510108b1c13eb4588278c98bc9e9139a34fd7758e1ea4bcad8985f790"
+    },
+    "/workspace/qa-review-v030/fixes/kit-v030/Floorp_QA_Implementation_Kit_v0.3.0/tools/qa/tests/test_review_regressions.py": {
+      "bytes": 9500,
+      "sha256": "31a77bad47938f862f981ca5f530c382d5e3bd8682a78a697bd4c7a881842910"
+    },
+    "/workspace/qa-review-v030/fixes/kit-v030/Floorp_QA_Implementation_Kit_v0.3.0/qa/schemas/result.schema.json": {
+      "bytes": 1772,
+      "sha256": "c2df35c7f2eb93103328264468fdee7e669aa69b0b69d1ba387f92989571c4d4"
+    },
+    "/workspace/qa-review-v030/repos/Floorp-Runtime/.github/workflows/scripts/qa3_mozlog.py": {
+      "bytes": 7436,
+      "sha256": "bea848caac52c0d1025b2ef586c145a2fb89ede65b77767764eac724eddb4e1c"
+    },
+    "/workspace/qa-review-v030/repos/Floorp-Runtime/.github/workflows/scripts/test_qa3_mozlog.py": {
+      "bytes": 8811,
+      "sha256": "1ed4356fa3734058825499d49f537ad6ed25fa4f0f53d0b10ee01a79765d0ec8"
+    },
+    "/workspace/qa-review-v030/evidence/qa307_independent_release_tests.py": {
+      "bytes": 7872,
+      "sha256": "b6d00d0cc53afe012f7c4e1ce87509e1262659078e950d07714da49b98068995"
+    }
+  },
+  "inputsAfter": {
+    "/workspace/qa-review-v030/fixes/kit-v030/Floorp_QA_Implementation_Kit_v0.3.0/tools/qa/core.py": {
+      "bytes": 23827,
+      "sha256": "28767090836801f51e18cfef59434a9ae0cedc44c15cfc21f0da7160d43d3bdc"
+    },
+    "/workspace/qa-review-v030/fixes/kit-v030/Floorp_QA_Implementation_Kit_v0.3.0/tools/qa/agent.py": {
+      "bytes": 16297,
+      "sha256": "90fc2e506263ed2004496411caaf8c0bccc960a9a46004df8382d8af9c3b695b"
+    },
+    "/workspace/qa-review-v030/fixes/kit-v030/Floorp_QA_Implementation_Kit_v0.3.0/tools/qa/tests/test_core.py": {
+      "bytes": 19005,
+      "sha256": "5bb6a9a510108b1c13eb4588278c98bc9e9139a34fd7758e1ea4bcad8985f790"
+    },
+    "/workspace/qa-review-v030/fixes/kit-v030/Floorp_QA_Implementation_Kit_v0.3.0/tools/qa/tests/test_review_regressions.py": {
+      "bytes": 9500,
+      "sha256": "31a77bad47938f862f981ca5f530c382d5e3bd8682a78a697bd4c7a881842910"
+    },
+    "/workspace/qa-review-v030/fixes/kit-v030/Floorp_QA_Implementation_Kit_v0.3.0/qa/schemas/result.schema.json": {
+      "bytes": 1772,
+      "sha256": "c2df35c7f2eb93103328264468fdee7e669aa69b0b69d1ba387f92989571c4d4"
+    },
+    "/workspace/qa-review-v030/repos/Floorp-Runtime/.github/workflows/scripts/qa3_mozlog.py": {
+      "bytes": 7436,
+      "sha256": "bea848caac52c0d1025b2ef586c145a2fb89ede65b77767764eac724eddb4e1c"
+    },
+    "/workspace/qa-review-v030/repos/Floorp-Runtime/.github/workflows/scripts/test_qa3_mozlog.py": {
+      "bytes": 8811,
+      "sha256": "1ed4356fa3734058825499d49f537ad6ed25fa4f0f53d0b10ee01a79765d0ec8"
+    },
+    "/workspace/qa-review-v030/evidence/qa307_independent_release_tests.py": {
+      "bytes": 7872,
+      "sha256": "b6d00d0cc53afe012f7c4e1ce87509e1262659078e950d07714da49b98068995"
+    }
+  },
+  "codeUnchangedDuringChecks": true,
+  "originalTestMethods": {
+    "test_core.py": {
+      "originalCount": 61,
+      "repairedCount": 61,
+      "identical": true
+    },
+    "test_design.py": {
+      "originalCount": 39,
+      "repairedCount": 39,
+      "identical": true
+    },
+    "test_extensions.py": {
+      "originalCount": 14,
+      "repairedCount": 14,
+      "identical": true
+    }
+  },
+  "log": "/workspace/qa-review-v030/evidence/qa307-independent-boundaries.log",
+  "logSha256": "72e7e70f7ecda4e985e6e972fae001ed68f9df7705041efe9c9e9b62bca90e81",
+  "testSummary": {
+    "testsRun": 39,
+    "failures": 0,
+    "errors": 0,
+    "skips": 0,
+    "successful": true
+  }
+}

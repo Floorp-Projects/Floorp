@@ -7,6 +7,10 @@
 const { NoranekoConstants } = ChromeUtils.importESModule(
   "resource://noraneko/modules/NoranekoConstants.sys.mjs",
 );
+import { launchDevPorts } from "../common/dev-port-offset.ts";
+
+/** Launch-local dev port resolver (FDH Gate 2 task 2-B). */
+const launchDevPort = launchDevPorts();
 
 const PREF_OLD_VERSION2 = "floorp.startup.oldVersion2";
 // Legacy preference from older Floorp versions (pre-version2 system)
@@ -124,7 +128,7 @@ function getUpdateType(oldVersion: string, newVersion: string): UpdateType {
  */
 function getUpdateXmlUrl(): string {
   // DEV ENVIRONMENT OVERRIDE
-  const url = "http://localhost:5173/update.xml";
+  const url = launchDevPort.httpOrigin("updateDevServer", "/update.xml");
   console.log(`[NoranekoUpdateChecker] Using DEV URL: ${url}`);
   return url;
 }
@@ -132,7 +136,9 @@ function getUpdateXmlUrl(): string {
 /**
  * Fetch and parse update.xml from the server.
  */
-export async function fetchRemoteUpdateInfo(): Promise<RemoteUpdateInfo | null> {
+export async function fetchRemoteUpdateInfo(): Promise<
+  RemoteUpdateInfo | null
+> {
   try {
     const url = await getUpdateXmlUrl();
     const response = await fetch(url);
@@ -245,14 +251,14 @@ export async function checkForVersion2Updates(): Promise<Version2UpdateStatus> {
 
   // Only check buildID difference if both are provided
   // If remoteBuildID2 is empty, we can't reliably detect hotfixes
-  const isBuildIDDifferent =
-    !!remoteBuildID2 && localBuildID2 !== remoteBuildID2;
+  const isBuildIDDifferent = !!remoteBuildID2 &&
+    localBuildID2 !== remoteBuildID2;
 
   // hasUpdate is true only if:
   // 1. Remote version is higher than local, OR
   // 2. Versions are same but buildID is different (rebuild/hotfix)
-  const hasUpdate =
-    isVersionUpgrade || (versionComparison === 0 && isBuildIDDifferent);
+  const hasUpdate = isVersionUpgrade ||
+    (versionComparison === 0 && isBuildIDDifferent);
 
   // updateType classification:
   // - For version upgrades: returns "major", "minor", or "patch" based on semantic versioning

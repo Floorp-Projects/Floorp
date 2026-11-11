@@ -33,10 +33,18 @@ jobs:
     name: Final package QA / ${{ matrix.platform }}/${{ matrix.arch }}
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 30
+    # Windows starts in shadow mode: its result and evidence are recorded, but
+    # it does not fail this workflow until the probes are proven stable there.
+    continue-on-error: ${{ matrix.platform == 'windows' }}
     strategy:
       fail-fast: false
       matrix:
         include:
+          - platform: windows
+            arch: x86_64
+            runner: windows-2025
+            package: noraneko-windows-x86_64-installer
+            file: floorp-windows-x86_64.installer.exe
           - platform: linux
             arch: x86_64
             runner: ubuntu-24.04
@@ -61,6 +69,19 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+
+      - name: Expose python3 for the shared bash steps on Windows
+        if: matrix.platform == 'windows'
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! command -v python3 >/dev/null 2>&1; then
+            shim="$RUNNER_TEMP/python3-shim"
+            mkdir -p "$shim"
+            printf '#!/usr/bin/env bash\nexec python "$@"\n' > "$shim/python3"
+            chmod +x "$shim/python3"
+            echo "$shim" >> "$GITHUB_PATH"
+          fi
 
       - name: Authenticate the normal package run and exact artifacts
         uses: actions/github-script@v7
@@ -102,8 +123,24 @@ jobs:
               {...context.repo, run_id: runId, per_page: 100});
             const {data: sourcePackage} = await github.rest.repos.getContent({
               ...context.repo, path:'package.json', ref:run.head_sha});
+            const {data: sourceLock} = await github.rest.repos.getContent({
+              ...context.repo, path:'floorp-runtime.lock.json', ref:run.head_sha});
             const version = JSON.parse(Buffer.from(sourcePackage.content, 'base64').toString()).version;
-            if (version !== '12.20.1') throw new Error('This regression run requires Floorp12.20.1');
+            const lock = JSON.parse(Buffer.from(sourceLock.content, 'base64').toString());
+            if (!/^[0-9]+\.[0-9]+\.[0-9]+(?:[-+][0-9A-Za-z.-]+)?$/.test(version || '') ||
+                lock.schemaVersion !== 1 || !Array.isArray(lock.artifacts)) {
+              throw new Error('Invalid version metadata at the exact package source');
+            }
+            const runtimePlatform = process.env.TARGET_PLATFORM === 'mac' ? 'macos' : process.env.TARGET_PLATFORM;
+            const runtimeArch = process.env.TARGET_PLATFORM === 'mac' ? 'universal' : process.env.TARGET_ARCH;
+            const runtimes = lock.artifacts.filter(artifact =>
+              artifact.platform === runtimePlatform && artifact.architecture === runtimeArch);
+            if (runtimes.length !== 1 ||
+                !/^[0-9]+(?:\.[0-9]+){1,3}(?:[ab][0-9]+|esr)?$/.test(runtimes[0].version || '') ||
+                !/^[0-9]{14}$/.test(runtimes[0].buildId || '')) {
+              throw new Error('Missing unique pinned Runtime version and BuildID for this target');
+            }
+            const {version: firefoxVersion, buildId: runtimeBuildId} = runtimes[0];
             let prePublicationEvidence = {};
             if (process.env.PRE_PUBLICATION === 'true') {
               const {data: pendingDeployments} = await github.rest.actions.getPendingDeploymentsForRun(
@@ -144,6 +181,7 @@ jobs:
             fs.mkdirSync(path.join(process.env.RUNNER_TEMP, 'final-package-qa'));
             fs.writeFileSync(path.join(process.env.RUNNER_TEMP, 'final-package-qa/input.json'),
               JSON.stringify({runId, floorpHead:run.head_sha, floorpVersion:version,
+                firefoxVersion, runtimeBuildId,
                 sourceEligibility, probeHead:context.sha,
                 platform:process.env.TARGET_PLATFORM, arch:process.env.TARGET_ARCH,
                 unsigned:process.env.VALIDATION_ONLY === 'true', ...selected}, null, 2));
@@ -171,7 +209,10 @@ jobs:
               record['floorp']['workflow_run_id'] != expected['runId'] or
               record['floorp']['repository'] != 'Floorp-Projects/Floorp' or
               record['target_key'] != expected['platform'] or record['native_arch'] != expected['arch'] or
-              record['firefox_version'] != '157.0.1' or
+              record['firefox_version'] != expected['firefoxVersion'] or
+              record['runtime']['expected_build_id'] != expected['runtimeBuildId'] or
+              record['app_build_id'] != expected['runtimeBuildId'] or
+              record['platform_build_id'] != expected['runtimeBuildId'] or
               record['floorp_package'] != {
                   'artifact_id': expected['package']['id'],
                   'artifact_name': expected['package']['name'],
@@ -179,12 +220,36 @@ jobs:
                   'unsigned': expected['unsigned'],
               }):
               raise ValueError('Final native record does not bind this exact package/source')
+          with Path(os.environ['GITHUB_ENV']).open('a') as output:
+              output.write(f"QA_FLOORP_VERSION={expected['floorpVersion']}\n")
+              output.write(f"QA_FIREFOX_VERSION={expected['firefoxVersion']}\n")
           (root / 'final-package-qa/native-verification.json').write_text(json.dumps(record, indent=2) + '\n')
           with zipfile.ZipFile(root / 'package.zip') as archive:
               if archive.namelist() != [os.environ['PACKAGE_FILE']]:
                   raise ValueError('Unexpected final package ZIP contents')
               archive.extract(os.environ['PACKAGE_FILE'], root / 'package')
           PY
+
+      - name: Extract the exact Windows package
+        if: matrix.platform == 'windows'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          # Same SFX extraction as verify-release-artifact.yml's native gate.
+          $package = Join-Path $env:RUNNER_TEMP 'package/floorp-windows-x86_64.installer.exe'
+          $extractDirectory = Join-Path $env:RUNNER_TEMP 'browser'
+          New-Item -ItemType Directory -Path $extractDirectory -Force | Out-Null
+          & 7z x -y "-o$extractDirectory" $package
+          if ($LASTEXITCODE -ne 0) {
+            throw "7z failed to extract the final Floorp SFX package"
+          }
+          $binaries = @(
+            Get-ChildItem -LiteralPath $extractDirectory -Recurse -File -Filter 'floorp.exe'
+          )
+          if ($binaries.Count -ne 1) {
+            throw "Expected exactly one final floorp.exe; found $($binaries.Count)"
+          }
+          "QA_BROWSER=$($binaries[0].FullName)" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
 
       - name: Set up the Linux display and extract the package
         if: matrix.platform == 'linux'
@@ -289,7 +354,8 @@ jobs:
           set -euo pipefail
           python3 tools/test-final-web-panel-ua.py --browser "$QA_BROWSER" \
             --native-record "$RUNNER_TEMP/final-package-qa/native-verification.json" \
-            --expected-floorp-version 12.20.1 --output "$RUNNER_TEMP/final-package-qa/web-panel-ua"
+            --expected-floorp-version "$QA_FLOORP_VERSION" --expected-firefox-version "$QA_FIREFOX_VERSION" \
+            --output "$RUNNER_TEMP/final-package-qa/web-panel-ua"
 
       - name: Verify shipped Fluent lookup and Flasco context-menu availability
         if: inputs.validation_only == false
@@ -298,7 +364,8 @@ jobs:
           set -euo pipefail
           python3 tools/test-final-context-menu.py --browser "$QA_BROWSER" \
             --native-record "$RUNNER_TEMP/final-package-qa/native-verification.json" \
-            --expected-floorp-version 12.20.1 --output "$RUNNER_TEMP/final-package-qa/fluent-flasco"
+            --expected-floorp-version "$QA_FLOORP_VERSION" --expected-firefox-version "$QA_FIREFOX_VERSION" \
+            --output "$RUNNER_TEMP/final-package-qa/fluent-flasco"
 
       - name: Verify final macOS PWA context menus and native GUI input
         if: matrix.platform == 'mac'

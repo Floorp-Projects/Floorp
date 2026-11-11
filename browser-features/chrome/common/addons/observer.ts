@@ -4,76 +4,41 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import type {
+  AddonPermissionTarget,
+  AddonsContext,
+  AddonsLogger,
   ChromeWebStoreInstallInfo,
   ChromeWebStoreWindow,
   CWSObserver,
   InstallInfo,
-  XPInstallObserver,
-} from "./types";
-import { NotificationCustomizer } from "./notification-customizer";
+  InstallInfoState,
+} from "./types.ts";
+import type { NotificationCustomizer } from "./notification-customizer.ts";
+export type { InstallInfoState } from "./types.ts";
 
-export interface InstallInfoState {
-  pendingChromeWebStoreInstall: ChromeWebStoreInstallInfo | null;
+const CWS_TOPIC = "floorp-chrome-web-store-install-started";
+const PERMISSION_TOPIC = "webextension-permission-prompt";
+
+function getWindowContext(win: ChromeWebStoreWindow): AddonsContext {
+  return win.__floorpAddonsContext ??= {
+    state: { pendingChromeWebStoreInstall: null },
+    customizer: null,
+    logger: null,
+    observer: null,
+    savedDescriptionChildren: null,
+    animationFrames: new Set(),
+    disposed: false,
+  };
 }
 
-/**
- * Global context for the addons module
- */
-interface AddonsContext {
-  state: InstallInfoState;
-  customizer: NotificationCustomizer | null;
-  logger: { debug: (...args: unknown[]) => void } | null;
-  observer: CWSObserver | null;
-  /** Saved original description children for restoration */
-  savedDescriptionChildren: Node[] | null;
-}
-
-/**
- * Global object extension interface for storing context
- * We use the global object from Services to ensure it's shared across all windows
- */
-interface AddonsGlobal {
-  __floorpAddonsContext?: AddonsContext;
-}
-
-/**
- * Get the truly global scope (shared across all windows)
- */
-function getGlobalScope(): AddonsGlobal {
-  // Use Cu.getGlobalForObject to get the global scope from Services
-  // This is shared across all chrome windows
-  return Cu.getGlobalForObject(Services) as AddonsGlobal;
-}
-
-/**
- * Get or create the global context
- * This ensures all references persist across HMR reloads and across windows
- */
-function getGlobalContext(): AddonsContext {
-  const global = getGlobalScope();
-  if (!global.__floorpAddonsContext) {
-    global.__floorpAddonsContext = {
-      state: { pendingChromeWebStoreInstall: null },
-      customizer: null,
-      logger: null,
-      observer: null,
-      savedDescriptionChildren: null,
-    };
-  }
-  return global.__floorpAddonsContext;
-}
-
-/**
- * Update the global context with new references
- */
-function updateGlobalContext(
+function updateWindowContext(
+  win: ChromeWebStoreWindow,
   state: InstallInfoState,
   customizer: NotificationCustomizer,
-  logger: { debug: (...args: unknown[]) => void },
+  logger: AddonsLogger,
 ): AddonsContext {
-  const ctx = getGlobalContext();
-  // Merge state (preserve pending install info if exists)
-  if (ctx.state?.pendingChromeWebStoreInstall) {
+  const ctx = getWindowContext(win);
+  if (ctx.state.pendingChromeWebStoreInstall) {
     state.pendingChromeWebStoreInstall = ctx.state.pendingChromeWebStoreInstall;
   }
   ctx.state = state;
@@ -82,273 +47,233 @@ function updateGlobalContext(
   return ctx;
 }
 
-/**
- * Get the current Chrome Web Store install info
- */
-export function getChromeWebStoreInstallInfo(): ChromeWebStoreInstallInfo | null {
-  const ctx = getGlobalContext();
-  // Try global context state first
-  if (ctx.state?.pendingChromeWebStoreInstall) {
-    return ctx.state.pendingChromeWebStoreInstall;
-  }
-  // Finally check window install info
-  const win = window as ChromeWebStoreWindow;
-  return win.__chromeWebStoreInstallInfo ?? null;
+function isActive(win: ChromeWebStoreWindow, ctx: AddonsContext): boolean {
+  return !ctx.disposed && !win.closed && win.__floorpAddonsContext === ctx;
 }
 
-/**
- * Clear the Chrome Web Store install info
- */
-export function clearChromeWebStoreInstallInfo(): void {
-  const ctx = getGlobalContext();
-  // Clear context state
-  if (ctx.state) {
-    ctx.state.pendingChromeWebStoreInstall = null;
+function cancelFrames(win: ChromeWebStoreWindow, ctx: AddonsContext): void {
+  for (const id of ctx.animationFrames) win.cancelAnimationFrame(id);
+  ctx.animationFrames.clear();
+}
+
+function afterFrames(
+  win: ChromeWebStoreWindow,
+  ctx: AddonsContext,
+  callback: () => void,
+  remaining = 2,
+): void {
+  if (!isActive(win, ctx)) return;
+  const id = win.requestAnimationFrame(() => {
+    ctx.animationFrames.delete(id);
+    if (!isActive(win, ctx)) return;
+    if (remaining > 1) afterFrames(win, ctx, callback, remaining - 1);
+    else callback();
+  });
+  ctx.animationFrames.add(id);
+}
+
+/** Resolve the same owner window as ExtensionsUI.getTabBrowser(target). */
+function getPermissionWindow(target: unknown): ChromeWebStoreWindow | null {
+  if (!target || typeof target !== "object") return null;
+  let browser = target as AddonPermissionTarget;
+  const visited = new Set<AddonPermissionTarget>();
+  while (
+    browser.documentGlobal?.docShell?.itemType !== Ci.nsIDocShell.typeChrome
+  ) {
+    if (visited.has(browser)) return null;
+    visited.add(browser);
+    const parent = browser.documentGlobal?.docShell?.chromeEventHandler;
+    if (!parent) return null;
+    browser = parent;
   }
-  // Also clear window install info from all windows
-  const win = window as ChromeWebStoreWindow;
+  const owner = browser.documentGlobal;
+  if (browser.getAttribute?.("webextension-view-type") === "sidebar") {
+    return owner?.browsingContext?.topChromeWindow ?? null;
+  }
+  return owner as ChromeWebStoreWindow;
+}
+
+export function getChromeWebStoreInstallInfo(
+  win: ChromeWebStoreWindow = window,
+): ChromeWebStoreInstallInfo | null {
+  return win.__floorpAddonsContext?.state.pendingChromeWebStoreInstall ??
+    win.__chromeWebStoreInstallInfo ?? null;
+}
+
+export function clearChromeWebStoreInstallInfo(
+  win: ChromeWebStoreWindow = window,
+): void {
+  const ctx = win.__floorpAddonsContext;
+  if (ctx) ctx.state.pendingChromeWebStoreInstall = null;
   delete win.__chromeWebStoreInstallInfo;
-
-  // Also try to clear from the global scope
-  const global = getGlobalScope() as ChromeWebStoreWindow;
-  delete global.__chromeWebStoreInstallInfo;
 }
 
-/**
- * Save the original description children before CWS customization
- * This should be called before modifying the description container
- */
-export function saveOriginalDescriptionChildren(): void {
-  const ctx = getGlobalContext();
-  if (ctx.savedDescriptionChildren !== null) {
-    // Already saved
-    return;
-  }
-
-  const notification = document!.getElementById(
+export function saveOriginalDescriptionChildren(
+  win: ChromeWebStoreWindow = window,
+): void {
+  const ctx = getWindowContext(win);
+  if (ctx.savedDescriptionChildren !== null) return;
+  const container = win.document.getElementById(
     "addon-webext-permissions-notification",
-  );
-  if (!notification) {
-    return;
-  }
-
-  const descriptionContainer = notification.querySelector(
-    ".popup-notification-description",
-  );
-  if (descriptionContainer) {
-    ctx.savedDescriptionChildren = Array.from(
-      descriptionContainer.childNodes,
-    ).map((node) => node!.cloneNode(true));
+  )?.querySelector(".popup-notification-description");
+  if (container) {
+    ctx.savedDescriptionChildren = Array.from(container.childNodes).map(
+      (node) => node.cloneNode(true),
+    );
   }
 }
 
-/**
- * Clean up CWS customization from the DOM directly
- * This is used when a normal addon is being installed to ensure
- * no Chrome extension UI remnants are shown.
- * Uses saved original nodes for restoration instead of reconstructing DOM.
- */
-function cleanupCWSCustomization(): void {
-  const ctx = getGlobalContext();
-  const notification = document!.getElementById(
+function cleanupCWSCustomization(
+  win: ChromeWebStoreWindow,
+  ctx: AddonsContext,
+): void {
+  const notification = win.document.getElementById(
     "addon-webext-permissions-notification",
   );
-  if (!notification) {
-    return;
-  }
-
-  // Check if we need to restore the description
-  const descriptionContainer = notification.querySelector(
+  if (!notification) return;
+  const container = notification.querySelector(
     ".popup-notification-description",
   );
-  const cwsMessage = descriptionContainer?.querySelector(
-    ".chrome-web-store-message",
-  );
-
-  if (cwsMessage && descriptionContainer) {
-    // Remove all current children
-    descriptionContainer.textContent = "";
-
-    // Restore saved original children if available
-    if (ctx.savedDescriptionChildren !== null) {
-      for (const child of ctx.savedDescriptionChildren) {
-        descriptionContainer.appendChild(child.cloneNode(true));
-      }
-      ctx.savedDescriptionChildren = null;
+  if (container?.querySelector(".chrome-web-store-message")) {
+    container.textContent = "";
+    for (const child of ctx.savedDescriptionChildren ?? []) {
+      container.appendChild(child.cloneNode(true));
     }
   }
-
-  // Remove the compatibility warning if present
-  const warning = notification.querySelector(".chrome-extension-warning");
-  if (warning) {
-    warning.remove();
-  }
-
-  // Restore the intro element visibility
-  const introElement = notification.querySelector(
-    "#addon-webext-perm-intro",
-  ) as HTMLElement | null;
-  if (introElement) {
-    introElement.style.removeProperty("display");
-  }
-
-  // Remove the customized attribute
+  ctx.savedDescriptionChildren = null;
+  notification.querySelector(".chrome-extension-warning")?.remove();
+  const intro = notification.querySelector("#addon-webext-perm-intro") as
+    | HTMLElement
+    | null;
+  intro?.style.removeProperty("display");
   notification.removeAttribute("data-cws-customized");
 }
 
-/**
- * Create and register the Chrome Web Store install observer
- */
 export function createCWSObserver(
   state: InstallInfoState,
   customizer: NotificationCustomizer,
-  logger: { debug: (...args: unknown[]) => void },
+  logger: AddonsLogger,
+  win: ChromeWebStoreWindow = window,
 ): CWSObserver {
-  // First, update the global context with new references
-  // This ensures customizer is available before any observer callback fires
-  const ctx = updateGlobalContext(state, customizer, logger);
-
-  // If observer already exists, just update the context and return
-  // The observer callbacks will use getGlobalContext() to get fresh references
-  if (ctx.observer) {
-    return ctx.observer;
+  if (win.closed) {
+    throw new Error("Cannot observe addon installs for a closed window");
   }
-
+  const ctx = updateWindowContext(win, state, customizer, logger);
+  if (ctx.observer) return ctx.observer;
   const observer: CWSObserver = {
-    observe: (subject: unknown, topic: string) => {
-      // Always get fresh references from global context
-      const currentCtx = getGlobalContext();
-
-      if (topic === "floorp-chrome-web-store-install-started") {
-        const wrapped = subject as {
-          wrappedJSObject?: ChromeWebStoreInstallInfo;
-        };
-        if (wrapped.wrappedJSObject && currentCtx.state) {
-          currentCtx.state.pendingChromeWebStoreInstall =
-            wrapped.wrappedJSObject;
-        }
-      } else if (topic === "webextension-permission-prompt") {
-        const cwsInfo = getChromeWebStoreInstallInfo();
-
-        if (cwsInfo) {
-          // Create a new customizer for this window context if needed
-          const getOrCreateCustomizer = (): NotificationCustomizer => {
-            const ctx = getGlobalContext();
-            if (!ctx.customizer) {
-              ctx.customizer = new NotificationCustomizer();
-            }
-            return ctx.customizer;
+    observe(subject, topic) {
+      if (!isActive(win, ctx)) return;
+      if (topic === CWS_TOPIC) {
+        const info =
+          (subject as { wrappedJSObject?: ChromeWebStoreInstallInfo } | null)
+            ?.wrappedJSObject;
+        // The actor sets the target-window marker before its shared notification.
+        const local = win.__chromeWebStoreInstallInfo;
+        if (info && local && local.id === info.id && local.name === info.name) {
+          ctx.state.pendingChromeWebStoreInstall = {
+            name: info.name,
+            id: info.id,
           };
-
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              // Save original children before customization
-              saveOriginalDescriptionChildren();
-              const customizer = getOrCreateCustomizer();
-              customizer.customizeWebExtPermissionPrompt(cwsInfo);
-              clearChromeWebStoreInstallInfo();
-            });
-          });
-        } else {
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              // Clean up CWS-specific elements from DOM directly
-              // Firefox has already populated the dialog with the correct addon info
-              cleanupCWSCustomization();
-
-              // Also ensure install info is cleared
-              clearChromeWebStoreInstallInfo();
-            });
-          });
         }
+      } else if (topic === PERMISSION_TOPIC) {
+        const target =
+          (subject as { wrappedJSObject?: { target?: unknown } } | null)
+            ?.wrappedJSObject?.target;
+        if (getPermissionWindow(target) !== win) return;
+        const info = getChromeWebStoreInstallInfo(win);
+        afterFrames(win, ctx, () => {
+          if (info) {
+            saveOriginalDescriptionChildren(win);
+            ctx.customizer?.customizeWebExtPermissionPrompt(info);
+          } else cleanupCWSCustomization(win, ctx);
+          clearChromeWebStoreInstallInfo(win);
+        });
+      }
+    },
+    dispose() {
+      if (ctx.disposed) return;
+      ctx.disposed = true;
+      cancelFrames(win, ctx);
+      for (const topic of [CWS_TOPIC, PERMISSION_TOPIC]) {
+        try {
+          Services.obs.removeObserver(observer, topic);
+        } catch { /* already removed */ }
+      }
+      ctx.observer = null;
+      ctx.customizer = null;
+      ctx.logger = null;
+      ctx.savedDescriptionChildren = null;
+      ctx.state.pendingChromeWebStoreInstall = null;
+      if (win.__floorpAddonsContext === ctx) {
+        delete win.__chromeWebStoreInstallInfo;
+        delete win.__floorpAddonsContext;
       }
     },
   };
-
-  // Store observer in context
   ctx.observer = observer;
-
-  Services.obs.addObserver(observer, "floorp-chrome-web-store-install-started");
-  Services.obs.addObserver(observer, "webextension-permission-prompt");
-
+  try {
+    Services.obs.addObserver(observer, CWS_TOPIC);
+    Services.obs.addObserver(observer, PERMISSION_TOPIC);
+  } catch (error) {
+    observer.dispose?.();
+    throw error;
+  }
   return observer;
 }
 
-/**
- * Remove the Chrome Web Store install observer
- */
 export function removeCWSObserver(observer: CWSObserver | null): void {
-  if (!observer) {
+  if (!observer) return;
+  if (observer.dispose) {
+    observer.dispose();
     return;
   }
-
-  try {
-    Services.obs.removeObserver(
-      observer,
-      "floorp-chrome-web-store-install-started",
-    );
-    Services.obs.removeObserver(observer, "webextension-permission-prompt");
-  } catch {
-    // Observer might not be registered
+  for (const topic of [CWS_TOPIC, PERMISSION_TOPIC]) {
+    try {
+      Services.obs.removeObserver(observer, topic);
+    } catch { /* not registered */ }
   }
 }
 
-/**
- * Override the install confirmation dialog for Chrome extensions
- */
 export function overrideInstallConfirmation(
   state: InstallInfoState,
   customizer: NotificationCustomizer,
-  logger: {
-    warn: (...args: unknown[]) => void;
-    debug: (...args: unknown[]) => void;
-    info: (...args: unknown[]) => void;
-  },
+  logger: AddonsLogger,
+  win: ChromeWebStoreWindow = window,
 ): (() => void) | null {
-  // Update global context with new references
-  updateGlobalContext(
-    state,
-    customizer,
-    logger as { debug: (...args: unknown[]) => void },
-  );
-
-  const gXPInstallObserver = (
-    window as Window & { gXPInstallObserver?: XPInstallObserver }
-  ).gXPInstallObserver;
-
-  if (!gXPInstallObserver) {
-    logger.warn("gXPInstallObserver not found");
+  const ctx = updateWindowContext(win, state, customizer, logger);
+  const native = win.gXPInstallObserver;
+  if (!native) {
+    logger.warn?.("gXPInstallObserver not found");
     return null;
   }
-
-  const originalShowInstallConfirmation =
-    gXPInstallObserver.showInstallConfirmation.bind(gXPInstallObserver);
-
-  gXPInstallObserver.showInstallConfirmation = (
+  const original = native.showInstallConfirmation;
+  let active = true;
+  const showInstallConfirmation = (
     browser: unknown,
-    installInfo: InstallInfo,
+    info: InstallInfo,
     height?: number,
-  ): void => {
-    // Always get fresh references from global context
-    const cwsInfo = getChromeWebStoreInstallInfo();
-
-    originalShowInstallConfirmation(browser, installInfo, height);
-
-    if (!cwsInfo) {
-      return;
-    }
-
-    requestAnimationFrame(() => {
-      const freshCtx = getGlobalContext();
-      freshCtx.customizer?.customizeNotificationContent(cwsInfo);
-      clearChromeWebStoreInstallInfo();
-    });
+  ) => {
+    original.call(native, browser, info, height);
+    if (
+      !active || !isActive(win, ctx) || getPermissionWindow(browser) !== win
+    ) return;
+    const cwsInfo = getChromeWebStoreInstallInfo(win);
+    if (!cwsInfo) return;
+    afterFrames(win, ctx, () => {
+      if (
+        !active || native.showInstallConfirmation !== showInstallConfirmation
+      ) return;
+      ctx.customizer?.customizeNotificationContent(cwsInfo);
+      clearChromeWebStoreInstallInfo(win);
+    }, 1);
   };
-
-  // Return cleanup function
+  native.showInstallConfirmation = showInstallConfirmation;
   return () => {
-    gXPInstallObserver.showInstallConfirmation =
-      originalShowInstallConfirmation;
-    clearChromeWebStoreInstallInfo();
+    active = false;
+    cancelFrames(win, ctx);
+    if (native.showInstallConfirmation === showInstallConfirmation) {
+      native.showInstallConfirmation = original;
+      clearChromeWebStoreInstallInfo(win);
+    }
   };
 }

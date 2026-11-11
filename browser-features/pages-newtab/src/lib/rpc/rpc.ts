@@ -1,3 +1,4 @@
+import { moduleUrlServedByDevHttpServer } from "../../../../../libs/shared/dev-ports/defines.ts";
 import type { NRSettingsParentFunctions } from "../../../../modules/common/defines.ts";
 import { createBirpc } from "birpc";
 
@@ -12,7 +13,8 @@ declare global {
   }
 }
 
-const isLocalhost5186 = import.meta.url?.includes("localhost:5186");
+// Dev-mode detection is offset-agnostic (FDH Gate 2 task 2-B).
+const isNewtabDev = moduleUrlServedByDevHttpServer(import.meta.url);
 
 const directServicesFunctions: NRSettingsParentFunctions = {
   getBoolPref: (prefName) => {
@@ -47,7 +49,7 @@ const directServicesFunctions: NRSettingsParentFunctions = {
   },
 };
 
-export const rpc = isLocalhost5186
+export const rpc = isNewtabDev
   ? createBirpc<NRSettingsParentFunctions, Record<string, never>>(
     {},
     {

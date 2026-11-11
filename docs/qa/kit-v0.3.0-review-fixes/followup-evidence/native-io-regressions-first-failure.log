@@ -1,0 +1,116 @@
+test_cleanup_only_sink_failure_cannot_abort_kill_and_reap (test_qa3_native_io.ProcessFailureTests.test_cleanup_only_sink_failure_cannot_abort_kill_and_reap) ... FAIL
+test_initial_snapshot_failure_preserves_error_and_reaps (test_qa3_native_io.ProcessFailureTests.test_initial_snapshot_failure_preserves_error_and_reaps) ... FAIL
+test_pipe_read_failure_preserves_error_and_reaps (test_qa3_native_io.ProcessFailureTests.test_pipe_read_failure_preserves_error_and_reaps) ... FAIL
+test_pipe_setup_failure_preserves_error_and_reaps (test_qa3_native_io.ProcessFailureTests.test_pipe_setup_failure_preserves_error_and_reaps) ... FAIL
+test_selector_read_failure_preserves_error_and_reaps (test_qa3_native_io.ProcessFailureTests.test_selector_read_failure_preserves_error_and_reaps) ... FAIL
+test_selector_registration_failure_preserves_error_and_reaps (test_qa3_native_io.ProcessFailureTests.test_selector_registration_failure_preserves_error_and_reaps) ... 
+  test_selector_registration_failure_preserves_error_and_reaps (test_qa3_native_io.ProcessFailureTests.test_selector_registration_failure_preserves_error_and_reaps) (index=1) ... FAIL
+  test_selector_registration_failure_preserves_error_and_reaps (test_qa3_native_io.ProcessFailureTests.test_selector_registration_failure_preserves_error_and_reaps) (index=2) ... FAIL
+test_sink_errors_preserve_initial_failure_and_reap (test_qa3_native_io.ProcessFailureTests.test_sink_errors_preserve_initial_failure_and_reap) ... 
+  test_sink_errors_preserve_initial_failure_and_reap (test_qa3_native_io.ProcessFailureTests.test_sink_errors_preserve_initial_failure_and_reap) (code=28) ... FAIL
+  test_sink_errors_preserve_initial_failure_and_reap (test_qa3_native_io.ProcessFailureTests.test_sink_errors_preserve_initial_failure_and_reap) (code=122) ... FAIL
+test_sink_failure_reaps_detached_and_late_fork_children (test_qa3_native_io.ProcessFailureTests.test_sink_failure_reaps_detached_and_late_fork_children) ... FAIL
+
+======================================================================
+FAIL: test_cleanup_only_sink_failure_cannot_abort_kill_and_reap (test_qa3_native_io.ProcessFailureTests.test_cleanup_only_sink_failure_cannot_abort_kill_and_reap)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/repos/Floorp-Runtime/.github/workflows/scripts/test_qa3_native_io.py", line 581, in test_cleanup_only_sink_failure_cannot_abort_kill_and_reap
+    receipt = self.check_failure(
+              ^^^^^^^^^^^^^^^^^^^
+  File "/workspace/qa-review-v030/repos/Floorp-Runtime/.github/workflows/scripts/test_qa3_native_io.py", line 441, in check_failure
+    self.assertFalse(owned_alive({
+AssertionError: {47623: (47622, 'S', 4121207)} is not false
+
+======================================================================
+FAIL: test_initial_snapshot_failure_preserves_error_and_reaps (test_qa3_native_io.ProcessFailureTests.test_initial_snapshot_failure_preserves_error_and_reaps)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/repos/Floorp-Runtime/.github/workflows/scripts/test_qa3_native_io.py", line 501, in test_initial_snapshot_failure_preserves_error_and_reaps
+    self.check_failure(failure, self.command)
+  File "/workspace/qa-review-v030/repos/Floorp-Runtime/.github/workflows/scripts/test_qa3_native_io.py", line 441, in check_failure
+    self.assertFalse(owned_alive({
+AssertionError: {47624: (47622, 'S', 4121221)} is not false
+
+======================================================================
+FAIL: test_pipe_read_failure_preserves_error_and_reaps (test_qa3_native_io.ProcessFailureTests.test_pipe_read_failure_preserves_error_and_reaps)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/repos/Floorp-Runtime/.github/workflows/scripts/test_qa3_native_io.py", line 555, in test_pipe_read_failure_preserves_error_and_reaps
+    self.check_failure(failure, self.command)
+  File "/workspace/qa-review-v030/repos/Floorp-Runtime/.github/workflows/scripts/test_qa3_native_io.py", line 441, in check_failure
+    self.assertFalse(owned_alive({
+AssertionError: {47625: (47622, 'S', 4121227)} is not false
+
+======================================================================
+FAIL: test_pipe_setup_failure_preserves_error_and_reaps (test_qa3_native_io.ProcessFailureTests.test_pipe_setup_failure_preserves_error_and_reaps)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/repos/Floorp-Runtime/.github/workflows/scripts/test_qa3_native_io.py", line 506, in test_pipe_setup_failure_preserves_error_and_reaps
+    self.check_failure(failure, self.command)
+  File "/workspace/qa-review-v030/repos/Floorp-Runtime/.github/workflows/scripts/test_qa3_native_io.py", line 441, in check_failure
+    self.assertFalse(owned_alive({
+AssertionError: {47626: (47622, 'S', 4121234)} is not false
+
+======================================================================
+FAIL: test_selector_read_failure_preserves_error_and_reaps (test_qa3_native_io.ProcessFailureTests.test_selector_read_failure_preserves_error_and_reaps)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/repos/Floorp-Runtime/.github/workflows/scripts/test_qa3_native_io.py", line 540, in test_selector_read_failure_preserves_error_and_reaps
+    self.check_failure(failure, self.command)
+  File "/workspace/qa-review-v030/repos/Floorp-Runtime/.github/workflows/scripts/test_qa3_native_io.py", line 441, in check_failure
+    self.assertFalse(owned_alive({
+AssertionError: {47627: (47622, 'S', 4121240)} is not false
+
+======================================================================
+FAIL: test_selector_registration_failure_preserves_error_and_reaps (test_qa3_native_io.ProcessFailureTests.test_selector_registration_failure_preserves_error_and_reaps) (index=1)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/repos/Floorp-Runtime/.github/workflows/scripts/test_qa3_native_io.py", line 530, in test_selector_registration_failure_preserves_error_and_reaps
+    self.check_failure(
+  File "/workspace/qa-review-v030/repos/Floorp-Runtime/.github/workflows/scripts/test_qa3_native_io.py", line 441, in check_failure
+    self.assertFalse(owned_alive({
+AssertionError: {47628: (47622, 'S', 4121246)} is not false
+
+======================================================================
+FAIL: test_selector_registration_failure_preserves_error_and_reaps (test_qa3_native_io.ProcessFailureTests.test_selector_registration_failure_preserves_error_and_reaps) (index=2)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/repos/Floorp-Runtime/.github/workflows/scripts/test_qa3_native_io.py", line 530, in test_selector_registration_failure_preserves_error_and_reaps
+    self.check_failure(
+  File "/workspace/qa-review-v030/repos/Floorp-Runtime/.github/workflows/scripts/test_qa3_native_io.py", line 441, in check_failure
+    self.assertFalse(owned_alive({
+AssertionError: {47628: (47622, 'S', 4121246), 47629: (47622, 'S', 4121249)} is not false
+
+======================================================================
+FAIL: test_sink_errors_preserve_initial_failure_and_reap (test_qa3_native_io.ProcessFailureTests.test_sink_errors_preserve_initial_failure_and_reap) (code=28)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/repos/Floorp-Runtime/.github/workflows/scripts/test_qa3_native_io.py", line 566, in test_sink_errors_preserve_initial_failure_and_reap
+    self.check_failure(
+  File "/workspace/qa-review-v030/repos/Floorp-Runtime/.github/workflows/scripts/test_qa3_native_io.py", line 440, in check_failure
+    self.assertIs(caught.exception, failure)
+AssertionError: OSError(5, 'secondary cleanup sink failure') is not OSError(28, 'initial sink failure')
+
+======================================================================
+FAIL: test_sink_errors_preserve_initial_failure_and_reap (test_qa3_native_io.ProcessFailureTests.test_sink_errors_preserve_initial_failure_and_reap) (code=122)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/repos/Floorp-Runtime/.github/workflows/scripts/test_qa3_native_io.py", line 566, in test_sink_errors_preserve_initial_failure_and_reap
+    self.check_failure(
+  File "/workspace/qa-review-v030/repos/Floorp-Runtime/.github/workflows/scripts/test_qa3_native_io.py", line 440, in check_failure
+    self.assertIs(caught.exception, failure)
+AssertionError: OSError(5, 'secondary cleanup sink failure') is not OSError(122, 'initial sink failure')
+
+======================================================================
+FAIL: test_sink_failure_reaps_detached_and_late_fork_children (test_qa3_native_io.ProcessFailureTests.test_sink_failure_reaps_detached_and_late_fork_children)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/repos/Floorp-Runtime/.github/workflows/scripts/test_qa3_native_io.py", line 612, in test_sink_failure_reaps_detached_and_late_fork_children
+    self.assertIs(caught.exception, failure)
+AssertionError: OSError(5, 'secondary cleanup sink failure') is not OSError(122, 'initial sink failure')
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.696s
+
+FAILED (failures=10)
