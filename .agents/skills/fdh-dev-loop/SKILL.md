@@ -180,35 +180,52 @@ Limits to know:
 ## Evidence on the PR (D-20, KAN-132)
 
 A manifest lives only in this worktree's `_dist/fdh/`. To keep it with the
-change, post it on the PR as a comment. Post it after the last commit, so that
-it is bound to the PR's final head, then check the PR:
+change, post it on the PR as a comment.
+
+Post it after the last commit, from a clean worktree, so that it is bound to
+the PR's final head. Read the rendered file before posting: the comment is
+public and carries command output and local paths.
 
 ```sh
 fdh evidence publish --task-id <id> --pr <n> --out _dist/fdh/evidence-<n>.md
 gh pr comment <n> --body-file _dist/fdh/evidence-<n>.md
-fdh evidence trace --pr <n>      # exits 1 unless the final head has both
+fdh evidence trace --pr <n> [--require-merged true]   # exit 1 if incomplete
 ```
 
 What the comment holds:
 
 - The whole manifest, as JSON, or as gzip+base64 when it is large. A manifest
   that does not fit in one comment even compressed is refused.
-- A marker that binds it to the task, the PR, the HEAD commit, and whether the
-  worktree had uncommitted changes. Uncommitted changes are not hashed; the
-  manifest's limitations say so.
-- The SHA-256 of the manifest text.
+- A marker that binds it to the repository, the task, the PR, the HEAD commit,
+  and whether the worktree had uncommitted changes. Uncommitted changes are not
+  hashed; the manifest's limitations say so.
+- The SHA-256 and the size of the manifest text.
 
-What `evidence trace` checks, for a merged PR too:
+Evidence counts for `evidence trace` only if all of these hold:
 
-- That every evidence comment decodes, matches its SHA-256 and passes the
-  manifest schema.
-- That at least one is by a trusted author (OWNER, MEMBER or COLLABORATOR,
-  as for receipts), bound to this PR and to its final head.
-- That the D-14 receipts are valid at that head.
+- **Author.** It is by a trusted author: OWNER, MEMBER or COLLABORATOR, as for
+  receipts.
+- **Not edited.** It has not been edited since it was posted.
+- **Intact.** It decodes and matches its size and SHA-256, the manifest schema
+  accepts it, and the manifest is for the bound task.
+- **Binding.** It is bound to this repository, this PR and the PR's final head.
+- **Clean build.** It was built without uncommitted changes.
+- **Assertions.** It records at least one assertion and no failed one.
 
-A PR comment stays with the PR; CI artifacts expire, so they are not the
-record. A central append-only store waits for principal authentication
-(D-18).
+The trace is complete when such evidence exists and the D-14 receipts are valid
+at that head. With `--require-merged true`, the PR must also be merged.
+Comments that do not count are listed as notes; they never make a trace
+incomplete.
+
+How far this can be trusted:
+
+- The binding is what the trusted author's comment says.
+- The SHA-256 is not a signature. It catches a manifest that no longer matches
+  its marker, not an author who rewrites both. That is why an edited comment
+  does not count.
+- A PR comment stays with the PR. CI artifacts expire, so they are not the
+  record.
+- A central append-only store, with authenticated principals, waits for D-18.
 
 ## Quota and approval ledger (Gate 4 4-D / 4-C)
 

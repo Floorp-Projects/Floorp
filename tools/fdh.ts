@@ -231,16 +231,17 @@ Commands:
                             Check dev-tool browser status; --eval output is
                             recorded verbatim, and --expect turns it into an
                             honest contains-check assertion
-  evidence publish --task-id <id> --pr <n> --out <path>
+  evidence publish --task-id <id> --pr <n> --out <path> [--repo <owner/name>]
                             Build the manifest and render a PR comment that
-                            carries it, bound to the task, PR and HEAD commit
-                            with its SHA-256; post it with
-                            'gh pr comment <n> --body-file <path>' (D-20)
-  evidence trace --pr <n> [--repo <owner/name>]
-                            From a (merged) PR to its evidence and receipts:
-                            checks each manifest's SHA-256 and schema, counts
-                            trusted authors only, exits 1 unless the final
-                            head has valid evidence and receipts
+                            carries it, bound to the repository, task, PR and
+                            HEAD commit with its SHA-256; read the file, then
+                            post it with 'gh pr comment <n> --body-file <path>'
+  evidence trace --pr <n> [--repo <owner/name>] [--require-merged true]
+                            From a (merged) PR to its evidence and receipts.
+                            Exits 1 unless the final head has evidence that
+                            counts (trusted author, not edited, intact, this
+                            repo/PR/head, no uncommitted changes, assertions
+                            all passed) and a valid receipt set
   evidence --task-id <id> --out <path>
                             Build + validate the EvidenceManifest v0
                             (--out must stay under <worktree>/_dist/fdh)
@@ -1227,10 +1228,16 @@ function resolveEvidenceOut(state: FdhTaskState, raw: string): string {
 
 async function cmdEvidencePublish(parsed: ParsedArgs): Promise<void> {
   assertNoPositional(parsed, 2);
-  assertAllowedOptions(parsed, ["task-id", "pr", "out"]);
+  assertAllowedOptions(parsed, ["task-id", "pr", "out", "repo"]);
   const taskId = validateTaskId(requireOption(parsed, "task-id"));
   const pr = requireInteger(parsed, "pr", 1);
+  const repoOption = hasOption(parsed, "repo")
+    ? validateRepoSlug(requireOption(parsed, "repo"))
+    : undefined;
   const state = await loadStateForCwd(taskId);
+  const repo = repoOption ?? repoSlugFromRemote(
+    await defaultGitRunner(state.worktree, ["remote", "get-url", "origin"]),
+  );
   const outPath = resolveEvidenceOut(state, requireOption(parsed, "out"));
   assertNoSecretReferences(state);
   let manifest;
@@ -1255,6 +1262,7 @@ async function cmdEvidencePublish(parsed: ParsedArgs): Promise<void> {
     "--porcelain",
   ])).trim() !== "";
   const { body, binding } = await evidenceCommentBody(manifest, {
+    repo,
     taskId,
     pr,
     commit,
@@ -1280,14 +1288,22 @@ async function cmdEvidencePublish(parsed: ParsedArgs): Promise<void> {
 
 async function cmdEvidenceTrace(parsed: ParsedArgs): Promise<void> {
   assertNoPositional(parsed, 2);
-  assertAllowedOptions(parsed, ["pr", "repo"]);
+  assertAllowedOptions(parsed, ["pr", "repo", "require-merged"]);
   const pr = requireInteger(parsed, "pr", 1);
+  const requireMergedRaw = hasOption(parsed, "require-merged")
+    ? requireOption(parsed, "require-merged")
+    : undefined;
+  if (requireMergedRaw !== undefined && requireMergedRaw !== "true") {
+    throw new Error("--require-merged takes only the value true");
+  }
   const repo = hasOption(parsed, "repo")
     ? validateRepoSlug(requireOption(parsed, "repo"))
     : repoSlugFromRemote(
       await defaultGitRunner(Deno.cwd(), ["remote", "get-url", "origin"]),
     );
-  const report = await traceEvidence(repo, pr);
+  const report = await traceEvidence(repo, pr, undefined, {
+    requireMerged: requireMergedRaw === "true",
+  });
   console.log(JSON.stringify(report));
   if (!report.complete) {
     throw new Error(`PR #${pr}: ${report.problems.join("; ")}`);

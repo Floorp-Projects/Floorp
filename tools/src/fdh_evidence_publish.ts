@@ -5,26 +5,30 @@
  *
  * A manifest lives only in the worktree's `_dist/fdh/`. To keep it with the
  * change it describes, fdh renders a PR comment that carries the whole
- * manifest, bound to the task, the PR and the commit it was built at, with
- * the SHA-256 of the manifest text. The agent posts that comment itself
- * (`gh pr comment --body-file`), the same way as the D-14 review receipts. A
- * PR comment is kept with the PR for as long as the repository exists; a CI
- * artifact expires (90 days by default), so it is not used as the record.
+ * manifest, bound to the repository, the task, the PR and the commit it was
+ * built at, with the SHA-256 of the manifest text. The agent posts that
+ * comment itself (`gh pr comment --body-file`), the same way as the D-14
+ * review receipts. A PR comment is kept with the PR for as long as the
+ * repository exists; a CI artifact expires (90 days by default), so it is
+ * not used as the record.
  *
  * `traceEvidence` goes the other way: from a (merged) PR it reads the
- * evidence comments and the receipts, checks each manifest against its
- * SHA-256 and the schema, counts only trusted authors (as the review gate
- * does), and says whether the PR's final head has both valid evidence and a
- * valid receipt set.
+ * evidence comments and the receipts and says whether the PR's final head
+ * has evidence that counts and a valid receipt set.
  *
- * The central append-only store waits for principal authentication (D-18);
- * until then the comment author's GitHub association is the trust anchor.
+ * Trust model (until principal authentication, D-18, and a central
+ * append-only store): only comments by OWNER, MEMBER or COLLABORATOR count,
+ * as for receipts; the binding (repository, task, PR, commit) is what that
+ * author's comment says. The SHA-256 is not a signature: it catches a
+ * manifest that no longer matches its marker, not an author who rewrites
+ * both. An edited evidence comment (updated after it was posted) therefore
+ * does not count.
  */
 
 import { decodeBase64, encodeBase64 } from "@std/encoding/base64";
 import { encodeHex } from "@std/encoding/hex";
 import type { EvidenceManifest } from "../qa3/evidence/types.ts";
-import { validateEvidenceManifest } from "./fdh_evidence.ts";
+import { evidenceIds, validateEvidenceManifest } from "./fdh_evidence.ts";
 import {
   parseReceiptComments,
   type ReviewCommentInput,
@@ -41,17 +45,19 @@ import {
 export const FDH_EVIDENCE_MARKER = "fdh-evidence:v1";
 /** GitHub's comment limit is 65 536 characters; keep a margin. */
 export const MAX_EVIDENCE_COMMENT_CHARS = 60_000;
+/** Largest manifest a comment may claim (bounds gzip expansion). */
+export const MAX_EVIDENCE_MANIFEST_BYTES = 4 * 1024 * 1024;
 
+const DETAILS_HEAD = "<details><summary>EvidenceManifest</summary>";
 const GZIP_FENCE = "text fdh-evidence-gzip-base64";
-const MARKER_RE = /<!--\s*fdh-evidence:v1\s+(\{[\s\S]*?\})\s*-->/;
-const JSON_BLOCK_RE = /```json\n([\s\S]*?)\n```/;
-const GZIP_BLOCK_RE =
-  /```text fdh-evidence-gzip-base64\n([A-Za-z0-9+/=\n]*?)\n```/;
+const MARKER_OPEN = `<!-- ${FDH_EVIDENCE_MARKER} `;
 const FULL_COMMIT_RE = /^[0-9a-f]{40}(?:[0-9a-f]{24})?$/;
 
 /** What an evidence comment is bound to (the marker's JSON). */
 export interface EvidenceBinding {
   schemaVersion: 1;
+  /** `owner/name` of the repository the PR belongs to. */
+  repo: string;
   taskId: string;
   pr: number;
   /** Full commit SHA of the worktree HEAD when the manifest was built. */
@@ -66,6 +72,7 @@ export interface EvidenceBinding {
 }
 
 export interface EvidenceCommentInput {
+  repo: string;
   taskId: string;
   pr: number;
   commit: string;
@@ -73,28 +80,56 @@ export interface EvidenceCommentInput {
   builtAt: string;
 }
 
-async function sha256Hex(text: string): Promise<string> {
-  const bytes = new TextEncoder().encode(text);
+async function sha256Hex(bytes: Uint8Array): Promise<string> {
   return encodeHex(
-    new Uint8Array(await crypto.subtle.digest("SHA-256", bytes)),
+    new Uint8Array(
+      await crypto.subtle.digest("SHA-256", new Uint8Array(bytes)),
+    ),
   );
 }
 
-async function gzip(text: string): Promise<Uint8Array> {
-  const stream = new Blob([new TextEncoder().encode(text)]).stream()
+async function gzip(bytes: Uint8Array): Promise<Uint8Array> {
+  const stream = new Blob([new Uint8Array(bytes)]).stream()
     .pipeThrough(new CompressionStream("gzip"));
   return new Uint8Array(await new Response(stream).arrayBuffer());
 }
 
-async function gunzip(bytes: Uint8Array): Promise<string> {
-  const stream = new Blob([new Uint8Array(bytes)]).stream()
-    .pipeThrough(new DecompressionStream("gzip"));
-  return await new Response(stream).text();
+/** Decompress, giving up as soon as more than `limit` bytes come out. */
+async function gunzipAtMost(
+  bytes: Uint8Array,
+  limit: number,
+): Promise<Uint8Array | null> {
+  const reader = new Blob([new Uint8Array(bytes)]).stream()
+    .pipeThrough(new DecompressionStream("gzip")).getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    total += value.length;
+    if (total > limit) {
+      await reader.cancel();
+      return null;
+    }
+    chunks.push(value);
+  }
+  const out = new Uint8Array(total);
+  let at = 0;
+  for (const chunk of chunks) {
+    out.set(chunk, at);
+    at += chunk.length;
+  }
+  return out;
 }
 
 /** The manifest text that is hashed and embedded. */
 export function manifestText(manifest: EvidenceManifest): string {
   return `${JSON.stringify(manifest, null, 2)}\n`;
+}
+
+/** Inline code safe for any assertion name (no backticks, no newlines). */
+function inlineName(name: string): string {
+  return `\`${name.replace(/[`\r\n]/g, " ")}\``;
 }
 
 function summaryLines(
@@ -112,7 +147,7 @@ function summaryLines(
     } failed`,
   ];
   for (const a of manifest.assertions) {
-    lines.push(`  - ${a.passed ? "passed" : "FAILED"}: \`${a.name}\``);
+    lines.push(`  - ${a.passed ? "passed" : "FAILED"}: ${inlineName(a.name)}`);
   }
   lines.push(
     `- Limitations: ${manifest.limitations.length} (in the manifest below)`,
@@ -125,12 +160,14 @@ function summaryLines(
 /**
  * Render the PR comment for `manifest`. The manifest is embedded as JSON, or
  * gzip+base64 when the JSON would not fit in one comment; a manifest that
- * does not fit either way is refused.
+ * does not fit either way is refused. The rendered comment is read back
+ * before it is returned.
  */
 export async function evidenceCommentBody(
   manifest: EvidenceManifest,
   input: EvidenceCommentInput,
 ): Promise<{ body: string; binding: EvidenceBinding }> {
+  validateRepoSlug(input.repo);
   if (!FULL_COMMIT_RE.test(input.commit)) {
     throw new Error(
       `commit must be a full hex SHA, got ${JSON.stringify(input.commit)}`,
@@ -140,42 +177,63 @@ export async function evidenceCommentBody(
     throw new Error(`pr must be a positive integer, got ${input.pr}`);
   }
   const text = manifestText(manifest);
+  const bytes = new TextEncoder().encode(text);
+  if (bytes.length > MAX_EVIDENCE_MANIFEST_BYTES) {
+    throw new Error(
+      `the manifest (${bytes.length} bytes) is larger than ${MAX_EVIDENCE_MANIFEST_BYTES} bytes`,
+    );
+  }
   const base = {
     schemaVersion: 1 as const,
+    repo: input.repo,
     taskId: input.taskId,
     pr: input.pr,
     commit: input.commit,
-    sha256: await sha256Hex(text),
-    bytes: new TextEncoder().encode(text).length,
+    sha256: await sha256Hex(bytes),
+    bytes: bytes.length,
     uncommitted: input.uncommitted,
     builtAt: input.builtAt,
   };
   const render = (binding: EvidenceBinding, block: string) =>
     [
-      `<!-- ${FDH_EVIDENCE_MARKER} ${JSON.stringify(binding)} -->`,
+      `${MARKER_OPEN}${JSON.stringify(binding)} -->`,
       ...summaryLines(manifest, binding),
-      "<details><summary>EvidenceManifest</summary>",
+      DETAILS_HEAD,
       "",
       block,
       "",
       "</details>",
       "",
     ].join("\n");
+  let rendered: { body: string; binding: EvidenceBinding };
   const json: EvidenceBinding = { ...base, encoding: "json" };
   const plain = render(json, `\`\`\`json\n${text.trimEnd()}\n\`\`\``);
   if (plain.length <= MAX_EVIDENCE_COMMENT_CHARS) {
-    return { body: plain, binding: json };
+    rendered = { body: plain, binding: json };
+  } else {
+    const packed: EvidenceBinding = { ...base, encoding: "gzip+base64" };
+    const b64 = encodeBase64(await gzip(bytes)).replace(/(.{76})/g, "$1\n")
+      .trimEnd();
+    const compressed = render(packed, `\`\`\`${GZIP_FENCE}\n${b64}\n\`\`\``);
+    if (compressed.length > MAX_EVIDENCE_COMMENT_CHARS) {
+      throw new Error(
+        `the manifest (${base.bytes} bytes) does not fit in one PR comment, even compressed`,
+      );
+    }
+    rendered = { body: compressed, binding: packed };
   }
-  const packed: EvidenceBinding = { ...base, encoding: "gzip+base64" };
-  const b64 = encodeBase64(await gzip(text)).replace(/(.{76})/g, "$1\n")
-    .trimEnd();
-  const compressed = render(packed, `\`\`\`${GZIP_FENCE}\n${b64}\n\`\`\``);
-  if (compressed.length > MAX_EVIDENCE_COMMENT_CHARS) {
+  const [check] = await parseEvidenceComments([{
+    body: rendered.body,
+    authorAssociation: "OWNER",
+  }]);
+  if (!check?.ok) {
     throw new Error(
-      `the manifest (${base.bytes} bytes) does not fit in one PR comment, even compressed`,
+      `the rendered evidence comment does not read back: ${
+        check?.problems.join("; ") ?? "no marker"
+      }`,
     );
   }
-  return { body: compressed, binding: packed };
+  return rendered;
 }
 
 export interface ParsedEvidence {
@@ -184,28 +242,62 @@ export interface ParsedEvidence {
   authorAssociation: string;
   trusted: boolean;
   url: string | null;
-  /** The manifest decoded, its SHA-256 matched and the schema accepted it. */
+  /** The comment was changed after it was posted. */
+  edited: boolean;
+  /** The manifest decoded, matched its SHA-256 and size, the schema accepted it, and it names the bound task. */
   ok: boolean;
   problems: string[];
   state: string | null;
+  assertions: number;
+  failedAssertions: number;
 }
 
 export interface EvidenceCommentSource extends ReviewCommentInput {
   url?: string | null;
+  createdAt?: string | null;
+  updatedAt?: string | null;
 }
 
 function isBinding(value: unknown): value is EvidenceBinding {
   if (value === null || typeof value !== "object") return false;
   const v = value as Record<string, unknown>;
-  return v.schemaVersion === 1 && typeof v.taskId === "string" &&
-    Number.isSafeInteger(v.pr) && typeof v.commit === "string" &&
-    FULL_COMMIT_RE.test(v.commit) && typeof v.sha256 === "string" &&
-    /^[0-9a-f]{64}$/.test(v.sha256) && Number.isSafeInteger(v.bytes) &&
+  return v.schemaVersion === 1 && typeof v.repo === "string" &&
+    typeof v.taskId === "string" && Number.isSafeInteger(v.pr) &&
+    typeof v.commit === "string" && FULL_COMMIT_RE.test(v.commit) &&
+    typeof v.sha256 === "string" && /^[0-9a-f]{64}$/.test(v.sha256) &&
+    Number.isSafeInteger(v.bytes) && (v.bytes as number) > 0 &&
+    (v.bytes as number) <= MAX_EVIDENCE_MANIFEST_BYTES &&
     (v.encoding === "json" || v.encoding === "gzip+base64") &&
     typeof v.uncommitted === "boolean" && typeof v.builtAt === "string";
 }
 
-/** Read every evidence comment; a broken one is reported, not dropped. */
+function readMarker(body: string): unknown {
+  const at = body.indexOf(MARKER_OPEN);
+  if (at < 0) return null;
+  const end = body.indexOf("-->", at + MARKER_OPEN.length);
+  if (end < 0) return null;
+  try {
+    return JSON.parse(body.slice(at + MARKER_OPEN.length, end).trim());
+  } catch {
+    return null;
+  }
+}
+
+/** The fenced block right after the manifest's own details heading. */
+function manifestBlock(body: string, encoding: EvidenceBinding["encoding"]) {
+  const at = body.indexOf(DETAILS_HEAD);
+  if (at < 0) return null;
+  const rest = body.slice(at + DETAILS_HEAD.length);
+  const re = encoding === "json"
+    ? /^\n\n```json\n([\s\S]*?)\n```\n/
+    : /^\n\n```text fdh-evidence-gzip-base64\n([A-Za-z0-9+/=\n]*?)\n```\n/;
+  return re.exec(rest)?.[1] ?? null;
+}
+
+/**
+ * Read every evidence comment; a broken one is reported, not dropped. The
+ * manifest of a comment by an untrusted author is not decoded.
+ */
 export async function parseEvidenceComments(
   comments: readonly EvidenceCommentSource[],
   trustedAssociations: readonly string[] = TRUSTED_RECEIPT_AUTHOR_ASSOCIATIONS,
@@ -221,49 +313,68 @@ export async function parseEvidenceComments(
       authorAssociation: association || "(missing)",
       trusted: trustedAssociations.includes(association),
       url: comment.url ?? null,
+      edited: typeof comment.createdAt === "string" &&
+        typeof comment.updatedAt === "string" &&
+        comment.createdAt !== comment.updatedAt,
       ok: false,
       problems: [],
       state: null,
+      assertions: 0,
+      failedAssertions: 0,
     };
     out.push(entry);
-    const marker = MARKER_RE.exec(body);
-    let parsed: unknown;
-    try {
-      parsed = marker === null ? null : JSON.parse(marker[1]);
-    } catch {
-      parsed = null;
-    }
+    const parsed = readMarker(body);
     if (!isBinding(parsed)) {
       entry.problems.push("the evidence marker is missing or malformed");
       continue;
     }
     entry.binding = parsed;
-    let text: string | null = null;
-    if (parsed.encoding === "json") {
-      const block = JSON_BLOCK_RE.exec(body);
-      text = block === null ? null : `${block[1]}\n`;
-    } else {
-      const block = GZIP_BLOCK_RE.exec(body);
-      if (block !== null) {
-        try {
-          text = await gunzip(decodeBase64(block[1].replaceAll("\n", "")));
-        } catch {
-          entry.problems.push("the compressed manifest cannot be decoded");
-          continue;
-        }
-      }
+    if (!entry.trusted) {
+      entry.problems.push(
+        `not counted: ${entry.author} (${entry.authorAssociation}) is not OWNER, MEMBER or COLLABORATOR`,
+      );
+      continue;
     }
-    if (text === null) {
+    const block = manifestBlock(body, parsed.encoding);
+    if (block === null) {
       entry.problems.push("the manifest block is missing");
       continue;
     }
-    if ((await sha256Hex(text)) !== parsed.sha256) {
+    let bytes: Uint8Array | null;
+    if (parsed.encoding === "json") {
+      bytes = new TextEncoder().encode(`${block}\n`);
+    } else {
+      try {
+        bytes = await gunzipAtMost(
+          decodeBase64(block.replaceAll("\n", "")),
+          parsed.bytes,
+        );
+      } catch {
+        entry.problems.push("the compressed manifest cannot be decoded");
+        continue;
+      }
+      if (bytes === null) {
+        entry.problems.push(
+          `the compressed manifest is larger than the ${parsed.bytes} bytes its marker claims`,
+        );
+        continue;
+      }
+    }
+    if (bytes.length !== parsed.bytes) {
+      entry.problems.push(
+        `the manifest is ${bytes.length} bytes, its marker says ${parsed.bytes}`,
+      );
+      continue;
+    }
+    if ((await sha256Hex(bytes)) !== parsed.sha256) {
       entry.problems.push("the manifest does not match its SHA-256 (edited?)");
       continue;
     }
     let manifest: EvidenceManifest;
     try {
-      manifest = JSON.parse(text) as EvidenceManifest;
+      manifest = JSON.parse(
+        new TextDecoder().decode(bytes),
+      ) as EvidenceManifest;
     } catch {
       entry.problems.push("the manifest is not valid JSON");
       continue;
@@ -275,10 +386,26 @@ export async function parseEvidenceComments(
       );
       continue;
     }
-    entry.state = manifest.envelope?.taskStatus?.state ?? null;
+    const taskEntity = evidenceIds(parsed.taskId).task;
+    if (!manifest.envelope.entities.some((e) => e.id === taskEntity)) {
+      entry.problems.push(
+        `the manifest is not for task ${parsed.taskId} (no ${taskEntity})`,
+      );
+      continue;
+    }
+    entry.state = manifest.envelope.taskStatus.state;
+    entry.assertions = manifest.assertions.length;
+    entry.failedAssertions = manifest.assertions.filter((a) => !a.passed)
+      .length;
     entry.ok = true;
   }
   return out;
+}
+
+export interface TracedEvidence extends ParsedEvidence {
+  atHead: boolean;
+  /** Counts for `complete` (see `traceEvidence`). */
+  counts: boolean;
 }
 
 export interface TraceReport {
@@ -289,7 +416,7 @@ export interface TraceReport {
   mergeCommit: string | null;
   /** The PR's head when it was read (for a merged PR: the merged head). */
   headSha: string;
-  evidence: Array<ParsedEvidence & { atHead: boolean }>;
+  evidence: TracedEvidence[];
   receipts: {
     atHead: number;
     reviewers: string[];
@@ -298,9 +425,14 @@ export interface TraceReport {
     ignored: number;
     error: string | null;
   };
-  /** Trusted, valid evidence at the head, and a valid receipt set there. */
+  /**
+   * Evidence that counts at the final head and a valid receipt set there
+   * (and, with `requireMerged`, the PR is merged).
+   */
   complete: boolean;
   problems: string[];
+  /** Things worth a look that do not make the trace incomplete. */
+  notes: string[];
 }
 
 interface PullFacts {
@@ -310,11 +442,23 @@ interface PullFacts {
   head: { sha: string };
 }
 
-/** From a PR to its evidence and receipts (reads GitHub with `gh api`). */
+export interface TraceOptions {
+  requireMerged?: boolean;
+}
+
+/**
+ * From a PR to its evidence and receipts (reads GitHub with `gh api`).
+ * Evidence counts when it is by a trusted author, not edited, decodes and
+ * matches, is bound to this repository, this PR and its final head, was
+ * built without uncommitted changes, and records at least one assertion and
+ * no failed one. Comments that do not count are reported, and never make a
+ * PR with counting evidence incomplete.
+ */
 export async function traceEvidence(
   slug: string,
   pr: number,
   gh: GhRunner = defaultGhRunner,
+  options: TraceOptions = {},
 ): Promise<TraceReport> {
   validateRepoSlug(slug);
   if (!Number.isSafeInteger(pr) || pr <= 0) {
@@ -323,7 +467,10 @@ export async function traceEvidence(
   const facts = JSON.parse(
     await gh(["api", `repos/${slug}/pulls/${pr}`]),
   ) as PullFacts;
-  if (typeof facts?.head?.sha !== "string") {
+  if (
+    typeof facts?.head?.sha !== "string" || typeof facts.state !== "string" ||
+    (facts.merged_at !== null && typeof facts.merged_at !== "string")
+  ) {
     throw new Error(`unexpected PR response for #${pr}`);
   }
   const lines = await gh([
@@ -331,16 +478,21 @@ export async function traceEvidence(
     "--paginate",
     `repos/${slug}/issues/${pr}/comments?per_page=100`,
     "--jq",
-    ".[] | {body, author: .user.login, authorAssociation: .author_association, url: .html_url}",
+    ".[] | {body, author: .user.login, authorAssociation: .author_association, url: .html_url, createdAt: .created_at, updatedAt: .updated_at}",
   ]);
   const comments = lines.split("\n").filter((l) => l.trim() !== "").map((l) =>
     JSON.parse(l) as EvidenceCommentSource
   );
   const headSha = facts.head.sha.toLowerCase();
-  const evidence = (await parseEvidenceComments(comments)).map((e) => ({
-    ...e,
-    atHead: e.binding?.commit === headSha,
-  }));
+  const evidence: TracedEvidence[] = (await parseEvidenceComments(comments))
+    .map((e) => {
+      const b = e.binding;
+      const atHead = b?.commit === headSha;
+      const counts = e.ok && e.trusted && !e.edited && b !== null &&
+        b.repo === slug && b.pr === pr && atHead && !b.uncommitted &&
+        e.assertions > 0 && e.failedAssertions === 0;
+      return { ...e, atHead, counts };
+    });
   const { trusted, ignored } = selectTrustedReceiptComments(comments);
   const receipts: TraceReport["receipts"] = {
     atHead: 0,
@@ -360,30 +512,48 @@ export async function traceEvidence(
     receipts.error = error instanceof Error ? error.message : String(error);
   }
   const problems: string[] = [];
-  const good = evidence.filter((e) =>
-    e.ok && e.trusted && e.atHead && e.binding?.pr === pr
-  );
-  if (good.length === 0) {
-    problems.push(
-      `no valid evidence comment by a trusted author at head ${headSha}`,
+  const notes: string[] = [];
+  if (!evidence.some((e) => e.counts)) {
+    problems.push(`no evidence that counts at head ${headSha}`);
+  }
+  for (const e of evidence.filter((x) => !x.counts)) {
+    const b = e.binding;
+    const why = [
+      ...e.problems,
+      ...(e.edited ? ["edited after it was posted"] : []),
+      ...(b !== null && b.repo !== slug ? [`bound to ${b.repo}`] : []),
+      ...(b !== null && b.pr !== pr ? [`bound to PR #${b.pr}`] : []),
+      ...(b !== null && !e.atHead
+        ? [`bound to ${b.commit}, not the head`]
+        : []),
+      ...(b?.uncommitted ? ["built with uncommitted changes"] : []),
+      ...(e.ok && e.assertions === 0 ? ["records no assertion"] : []),
+      ...(e.failedAssertions > 0
+        ? [`${e.failedAssertions} failed assertion(s)`]
+        : []),
+    ];
+    notes.push(
+      `not counted (${e.author}${e.url ? `, ${e.url}` : ""}): ${
+        why.join("; ") || "unknown"
+      }`,
     );
   }
-  for (const e of evidence) {
-    if (e.ok && e.binding !== null && e.binding.pr !== pr) {
-      problems.push(`an evidence comment is bound to PR #${e.binding.pr}`);
-    }
-  }
   if (receipts.error !== null) problems.push(receipts.error);
+  const merged = facts.merged_at !== null;
+  if (options.requireMerged && !merged) {
+    problems.push(`PR #${pr} is not merged (${facts.state})`);
+  }
   return {
     repo: slug,
     pr,
     state: facts.state,
-    merged: facts.merged_at !== null,
+    merged,
     mergeCommit: facts.merge_commit_sha,
     headSha,
     evidence,
     receipts,
     complete: problems.length === 0,
     problems,
+    notes,
   };
 }

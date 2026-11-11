@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { assert, assertEquals, assertRejects } from "@std/assert";
+import { encodeBase64 } from "@std/encoding/base64";
 import { createTaskState, writeTaskState } from "./fdh_task.ts";
 import { buildEvidenceManifest } from "./fdh_evidence.ts";
 import {
@@ -17,7 +18,10 @@ import type { EvidenceManifest } from "../qa3/evidence/types.ts";
 const HEAD = "1d687fb15a6dfb9b1aba11386d9e8396852d1e41";
 const OLD = "c8e265fa8665d420d126ba87a87feaa7e8c1764a";
 
-async function manifestIn(dir: string, outputs = 1): Promise<EvidenceManifest> {
+async function manifestIn(
+  dir: string,
+  options: { outputs?: number; passed?: boolean; name?: string } = {},
+): Promise<EvidenceManifest> {
   const state = createTaskState({
     taskId: "ev-1",
     worktree: dir,
@@ -25,7 +29,7 @@ async function manifestIn(dir: string, outputs = 1): Promise<EvidenceManifest> {
     portOffset: 0,
     now: () => "2026-11-11T00:00:00.000Z",
   });
-  for (let i = 0; i < outputs; i++) {
+  for (let i = 0; i < (options.outputs ?? 1); i++) {
     state.operations.push({
       command: "/fake/deno",
       args: ["task", "test:host"],
@@ -38,11 +42,12 @@ async function manifestIn(dir: string, outputs = 1): Promise<EvidenceManifest> {
       output: i === 0 ? "ok" : crypto.randomUUID().repeat(40),
     });
   }
+  const passed = options.passed ?? true;
   state.assertions.push({
-    name: "host-test-exit-code",
+    name: options.name ?? "host-test-exit-code",
     expected: "exit code 0",
-    actual: "exit code 0",
-    passed: true,
+    actual: passed ? "exit code 0" : "exit code 1",
+    passed,
     at: "2026-11-11T00:02:00.000Z",
   });
   writeTaskState(state);
@@ -52,6 +57,7 @@ async function manifestIn(dir: string, outputs = 1): Promise<EvidenceManifest> {
 }
 
 const input = {
+  repo: "o/r",
   taskId: "ev-1",
   pr: 7,
   commit: HEAD,
@@ -63,6 +69,8 @@ const trustedComment = (body: string, extra = {}) => ({
   author: "dev",
   authorAssociation: "MEMBER",
   url: "https://example/c",
+  createdAt: "2026-11-11T00:04:00Z",
+  updatedAt: "2026-11-11T00:04:00Z",
   ...extra,
 });
 
@@ -72,7 +80,7 @@ Deno.test("fdh evidence publish: a comment carries the manifest and reads back i
     const manifest = await manifestIn(dir);
     const { body, binding } = await evidenceCommentBody(manifest, input);
     assert(body.startsWith(`<!-- ${FDH_EVIDENCE_MARKER} `));
-    assertEquals(binding.encoding, "json");
+    assertEquals([binding.encoding, binding.repo], ["json", "o/r"]);
     assert(body.includes("passed: `host-test-exit-code`"));
     const [parsed] = await parseEvidenceComments([trustedComment(body)]);
     assertEquals([parsed.ok, parsed.trusted, parsed.problems], [
@@ -80,49 +88,64 @@ Deno.test("fdh evidence publish: a comment carries the manifest and reads back i
       true,
       [],
     ]);
-    assertEquals(parsed.binding?.sha256, binding.sha256);
+    assertEquals([parsed.assertions, parsed.failedAssertions], [1, 0]);
     // GitHub may hand the body back with CRLF line ends.
     const [crlf] = await parseEvidenceComments([
       trustedComment(body.replaceAll("\n", "\r\n")),
     ]);
     assertEquals(crlf.ok, true);
+    // An assertion name with a code fence in it does not break the comment.
+    const odd = await manifestIn(dir, { name: "x`\n```json\n{}\n```" });
+    const [oddBack] = await parseEvidenceComments([
+      trustedComment((await evidenceCommentBody(odd, input)).body),
+    ]);
+    assertEquals(oddBack.ok, true);
   } finally {
     await Deno.remove(dir, { recursive: true });
   }
 });
 
-Deno.test("fdh evidence publish: an edited manifest, a broken marker and an untrusted author are caught", async () => {
+Deno.test("fdh evidence publish: a stale hash, a broken marker, another task and an untrusted author are caught", async () => {
   const dir = await Deno.makeTempDir();
   try {
     const { body } = await evidenceCommentBody(await manifestIn(dir), input);
-    const edited = body.replace('"passed": true', '"passed": false');
+    // Same length, so only the SHA-256 can tell.
+    const edited = body.replace('"exit code 0"', '"exit code 9"');
     assert(edited !== body);
     const [tampered] = await parseEvidenceComments([trustedComment(edited)]);
     assertEquals(tampered.ok, false);
-    assert(tampered.problems[0].includes("SHA-256"));
+    assert(tampered.problems.some((p) => p.includes("SHA-256")));
     const [broken] = await parseEvidenceComments([
       trustedComment(body.replace('"schemaVersion":1', '"schemaVersion":2')),
     ]);
     assert(broken.problems[0].includes("marker"));
+    const [otherTask] = await parseEvidenceComments([
+      trustedComment(body.replace('"taskId":"ev-1"', '"taskId":"ev-2"')),
+    ]);
+    assert(otherTask.problems[0].includes("not for task ev-2"));
     const [outsider] = await parseEvidenceComments([
       trustedComment(body, { authorAssociation: "CONTRIBUTOR" }),
     ]);
-    assertEquals([outsider.ok, outsider.trusted], [true, false]);
+    assertEquals([outsider.ok, outsider.trusted], [false, false]);
+    const [later] = await parseEvidenceComments([
+      trustedComment(body, { updatedAt: "2026-11-11T05:00:00Z" }),
+    ]);
+    assertEquals(later.edited, true);
   } finally {
     await Deno.remove(dir, { recursive: true });
   }
 });
 
-Deno.test("fdh evidence publish: a large manifest is compressed, a too large one is refused", async () => {
+Deno.test("fdh evidence publish: a large manifest is compressed, a too large one is refused, a gzip bomb is stopped", async () => {
   const dir = await Deno.makeTempDir();
   try {
-    const big = await manifestIn(dir, 60);
+    const big = await manifestIn(dir, { outputs: 60 });
     const { body, binding } = await evidenceCommentBody(big, input);
     assertEquals(binding.encoding, "gzip+base64");
     assert(body.length <= MAX_EVIDENCE_COMMENT_CHARS);
     const [parsed] = await parseEvidenceComments([trustedComment(body)]);
     assertEquals(parsed.ok, true);
-    const huge = await manifestIn(dir, 1200);
+    const huge = await manifestIn(dir, { outputs: 1200 });
     await assertRejects(
       () => evidenceCommentBody(huge, input),
       Error,
@@ -133,6 +156,20 @@ Deno.test("fdh evidence publish: a large manifest is compressed, a too large one
       Error,
       "full hex SHA",
     );
+    // A block that inflates far beyond the bytes its marker claims.
+    const zeros = new Uint8Array(8 * 1024 * 1024);
+    const bomb = new Uint8Array(
+      await new Response(
+        new Blob([zeros]).stream().pipeThrough(new CompressionStream("gzip")),
+      ).arrayBuffer(),
+    );
+    const marker = JSON.stringify({ ...binding, bytes: 1000 });
+    const bombBody = `<!-- ${FDH_EVIDENCE_MARKER} ${marker} -->\n` +
+      "<details><summary>EvidenceManifest</summary>\n\n" +
+      "```text fdh-evidence-gzip-base64\n" + encodeBase64(bomb) +
+      "\n```\n\n</details>\n";
+    const [stopped] = await parseEvidenceComments([trustedComment(bombBody)]);
+    assert(stopped.problems[0].includes("larger than the 1000 bytes"));
   } finally {
     await Deno.remove(dir, { recursive: true });
   }
@@ -176,6 +213,10 @@ const MERGED = {
   merge_commit_sha: "6fe7bc6d731f2ebaa96c22371e58a7ca217272d9",
   head: { sha: HEAD },
 };
+const reviews = () => [
+  trustedComment(receipt("reviewer-a", "m-a")),
+  trustedComment(receipt("reviewer-b", "m-b")),
+];
 
 Deno.test("fdh evidence trace: a merged PR leads to its evidence and receipts at the final head", async () => {
   const dir = await Deno.makeTempDir();
@@ -183,83 +224,132 @@ Deno.test("fdh evidence trace: a merged PR leads to its evidence and receipts at
     const manifest = await manifestIn(dir);
     const atHead = (await evidenceCommentBody(manifest, input)).body;
     const early =
-      (await evidenceCommentBody(manifest, { ...input, commit: OLD }))
-        .body;
+      (await evidenceCommentBody(manifest, { ...input, commit: OLD })).body;
     const report = await traceEvidence(
       "o/r",
       7,
       fakeGh(MERGED, [
         trustedComment(early),
         trustedComment(atHead),
-        trustedComment(receipt("reviewer-a", "m-a")),
-        trustedComment(receipt("reviewer-b", "m-b")),
+        ...reviews(),
         trustedComment(receipt("reviewer-c", "m-c"), {
           authorAssociation: "NONE",
         }),
       ]),
+      { requireMerged: true },
     );
     assertEquals(report.complete, true, report.problems.join("; "));
-    assertEquals(report.merged, true);
-    assertEquals(report.evidence.map((e) => e.atHead), [false, true]);
+    assertEquals(report.evidence.map((e) => e.counts), [false, true]);
     assertEquals(report.receipts.reviewers, ["reviewer-a", "reviewer-b"]);
     assertEquals(report.receipts.ignored, 1);
+    assertEquals(report.notes.length, 1);
   } finally {
     await Deno.remove(dir, { recursive: true });
   }
 });
 
-Deno.test("fdh evidence trace: evidence only at an older head, by an outsider, or with too few receipts is incomplete", async () => {
+Deno.test("fdh evidence trace: stray or pasted comments never break a PR that has counting evidence", async () => {
   const dir = await Deno.makeTempDir();
   try {
     const manifest = await manifestIn(dir);
-    const early =
-      (await evidenceCommentBody(manifest, { ...input, commit: OLD }))
-        .body;
     const atHead = (await evidenceCommentBody(manifest, input)).body;
-    const stale = await traceEvidence(
-      "o/r",
-      7,
-      fakeGh(MERGED, [
-        trustedComment(early),
-        trustedComment(receipt("reviewer-a", "m-a")),
-        trustedComment(receipt("reviewer-b", "m-b")),
-      ]),
-    );
-    assertEquals(stale.complete, false);
-    assert(stale.problems[0].includes("no valid evidence"));
-    const outsider = await traceEvidence(
-      "o/r",
-      7,
-      fakeGh(MERGED, [
-        trustedComment(atHead, { authorAssociation: "NONE" }),
-        trustedComment(receipt("reviewer-a", "m-a")),
-        trustedComment(receipt("reviewer-b", "m-b")),
-      ]),
-    );
-    assertEquals(outsider.complete, false);
-    const oneReview = await traceEvidence(
+    const otherPr = (await evidenceCommentBody(manifest, { ...input, pr: 8 }))
+      .body;
+    const report = await traceEvidence(
       "o/r",
       7,
       fakeGh(MERGED, [
         trustedComment(atHead),
-        trustedComment(receipt("reviewer-a", "m-a")),
+        trustedComment(otherPr, { authorAssociation: "NONE" }),
+        trustedComment(otherPr),
+        ...reviews(),
       ]),
     );
-    assertEquals(oneReview.complete, false);
-    assert(oneReview.receipts.error?.includes("distinct reviewers"));
-    // Evidence rendered for another PR does not count for this one.
-    const other =
-      (await evidenceCommentBody(manifest, { ...input, pr: 8 })).body;
-    const wrongPr = await traceEvidence(
+    assertEquals(report.complete, true, report.problems.join("; "));
+    assertEquals(report.notes.length, 2);
+  } finally {
+    await Deno.remove(dir, { recursive: true });
+  }
+});
+
+Deno.test("fdh evidence trace: evidence that does not count leaves the trace incomplete", async () => {
+  const dir = await Deno.makeTempDir();
+  try {
+    const good = await manifestIn(dir);
+    const failed = await manifestIn(dir, { passed: false });
+    const cases: Array<[string, Record<string, unknown>]> = [
+      [
+        "older head",
+        trustedComment(
+          (await evidenceCommentBody(good, { ...input, commit: OLD })).body,
+        ),
+      ],
+      [
+        "outsider",
+        trustedComment((await evidenceCommentBody(good, input)).body, {
+          authorAssociation: "NONE",
+        }),
+      ],
+      [
+        "edited",
+        trustedComment((await evidenceCommentBody(good, input)).body, {
+          updatedAt: "2026-11-11T09:00:00Z",
+        }),
+      ],
+      [
+        "uncommitted",
+        trustedComment(
+          (await evidenceCommentBody(good, { ...input, uncommitted: true }))
+            .body,
+        ),
+      ],
+      [
+        "failed run",
+        trustedComment((await evidenceCommentBody(failed, input)).body),
+      ],
+      [
+        "other repo",
+        trustedComment(
+          (await evidenceCommentBody(good, { ...input, repo: "fork/r" })).body,
+        ),
+      ],
+      [
+        "other PR",
+        trustedComment(
+          (await evidenceCommentBody(good, { ...input, pr: 8 })).body,
+        ),
+      ],
+    ];
+    for (const [label, comment] of cases) {
+      const report = await traceEvidence(
+        "o/r",
+        7,
+        fakeGh(MERGED, [comment, ...reviews()]),
+      );
+      assertEquals(report.complete, false, label);
+      assert(report.problems[0].includes("no evidence that counts"), label);
+    }
+    // Good evidence, but one receipt short; and not merged when required.
+    const atHead = trustedComment(
+      (await evidenceCommentBody(good, input)).body,
+    );
+    const oneReview = await traceEvidence(
       "o/r",
       7,
-      fakeGh(MERGED, [
-        trustedComment(other),
-        trustedComment(receipt("reviewer-a", "m-a")),
-        trustedComment(receipt("reviewer-b", "m-b")),
-      ]),
+      fakeGh(MERGED, [atHead, trustedComment(receipt("reviewer-a", "m-a"))]),
     );
-    assertEquals(wrongPr.complete, false);
+    assert(oneReview.receipts.error?.includes("distinct reviewers"));
+    const open = await traceEvidence(
+      "o/r",
+      7,
+      fakeGh({ ...MERGED, state: "open", merged_at: null }, [
+        atHead,
+        ...reviews(),
+      ]),
+      { requireMerged: true },
+    );
+    assertEquals(open.complete, false);
+    assert(open.problems[0].includes("not merged"));
   } finally {
     await Deno.remove(dir, { recursive: true });
   }
