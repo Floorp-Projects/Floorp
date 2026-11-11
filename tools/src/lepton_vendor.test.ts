@@ -7,6 +7,7 @@ import {
   assertSafeName,
   formatSummary,
   hashFiles,
+  isUtcTimestamp,
   JAR_MANIFEST,
   LEPTON_DIR,
   listVendoredFiles,
@@ -17,8 +18,10 @@ import {
   sha256Hex,
   updateJarManifest,
   UPSTREAM_REPOSITORY,
+  validateRelease,
   verifyAssets,
   verifyVendoredFiles,
+  WORKFLOW_FILE,
 } from "./lepton_vendor.ts";
 import { resolveFromRoot } from "./utils.ts";
 
@@ -30,7 +33,8 @@ Deno.test("vendored Lepton files are byte-identical to UPSTREAM.json", async () 
     problems,
     [],
     "browser-features/skin/lepton/{LEPTON,css,icons,userjs} must not be " +
-      "edited; put Floorp changes in overlay/ (see README.md)",
+      "edited; put Floorp changes in overlay/ (see README.md). Updates " +
+      `come only from ${WORKFLOW_FILE}`,
   );
 });
 
@@ -39,6 +43,10 @@ Deno.test("UPSTREAM.json names one upstream release", async () => {
   assertEquals(record.upstream.repository, UPSTREAM_REPOSITORY);
   assert(/^v\d+\.\d+\.\d+$/.test(record.upstream.tag), record.upstream.tag);
   assert(/^[0-9a-f]{40}$/.test(record.upstream.commit), "full commit SHA");
+  assert(
+    isUtcTimestamp(record.upstream.published_at),
+    `published_at: ${record.upstream.published_at}`,
+  );
   assertEquals(
     record.upstream.release_url,
     `https://github.com/${UPSTREAM_REPOSITORY}/releases/tag/${record.upstream.tag}`,
@@ -296,7 +304,7 @@ Deno.test("apply refuses a release that does not match", async () => {
         commit,
         assetHashes: FAKE_ASSETS,
       });
-    await assertRejects(() => apply("v9.9.9"), Error, "Ver=v1.0.0");
+    await assertRejects(() => apply("v9.9.9"), Error, 'Ver="v1.0.0"');
     await assertRejects(() => apply("v1.0.0", "abc"), Error, "full SHA-1");
     // Photon/Proton zips must ship the same css/ Floorp loads for all designs.
     await write(
@@ -667,5 +675,492 @@ Deno.test("the PR summary lists file names literally in a code block", async () 
     );
   } finally {
     await Deno.remove(tmp, { recursive: true });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Names Windows cannot check out
+// ---------------------------------------------------------------------------
+
+const WINDOWS_BAD_NAMES = [
+  "CON",
+  "con",
+  "Prn.css",
+  "aux.css",
+  "nul.svg",
+  "NUL.tar.gz",
+  "com1",
+  "COM9.svg",
+  "com0.svg",
+  "lpt1",
+  "Lpt9.css",
+  "icon.",
+  "icon.svg.",
+  "x..",
+];
+
+Deno.test("assertSafeName refuses Windows device names and trailing dots", () => {
+  for (const bad of WINDOWS_BAD_NAMES) {
+    assertThrows(
+      () => assertSafeName(bad, "test"),
+      Error,
+      "unsafe file name",
+      JSON.stringify(bad),
+    );
+  }
+  assertThrows(() => assertSafeName("nul.svg", "t"), Error, "device name");
+  assertThrows(() => assertSafeName("a.", "t"), Error, "ends in a dot");
+  // Names that only start like a device name are fine.
+  for (
+    const ok of [
+      "console.css",
+      "connect.svg",
+      "auxiliary.svg",
+      "null.svg",
+      "nul-x.svg",
+      "com10.svg",
+      "lpt.svg",
+      "prn_icon.svg",
+      "a.b.c",
+    ]
+  ) {
+    assertSafeName(ok, "test");
+  }
+});
+
+/** True when `dir` keeps `a` and `A` apart (Linux; not Windows or macOS). */
+async function isCaseSensitive(dir: string): Promise<boolean> {
+  const probe = path.join(dir, "case-probe");
+  await write(path.join(probe, "a"), "");
+  await write(path.join(probe, "A"), "");
+  let count = 0;
+  for await (const _ of Deno.readDir(probe)) count++;
+  await Deno.remove(probe, { recursive: true });
+  return count === 2;
+}
+
+Deno.test("apply refuses Windows device names, trailing dots and case-only duplicates", async () => {
+  const tmp = await Deno.makeTempDir({ prefix: "lepton-winnames-" });
+  try {
+    const cases: [string, string, string][] = [];
+    // NTFS cannot hold these names (or drops the trailing dot), so the
+    // planted files only exist on Linux and macOS; CI runs on Linux.
+    if (Deno.build.os !== "windows") {
+      cases.push(
+        ["device name", "Lepton/chrome/icons/nul.svg", "device name"],
+        ["device name dir", "Lepton/chrome/CON/x", "device name"],
+        ["upper device", "Lepton-Proton-Style/chrome/css/AUX.css", "device"],
+        ["trailing dot", "Lepton/chrome/icons/i.svg.", "ends in a dot"],
+      );
+    }
+    if (await isCaseSensitive(tmp)) {
+      cases.push(["case-only", "Lepton/chrome/icons/I.svg", "only in case"]);
+    }
+    if (cases.length === 0) {
+      console.warn("this file system cannot hold the planted names; skipping");
+    }
+    for (const [i, [name, planted, message]] of cases.entries()) {
+      const lepton = path.join(tmp, `lepton-${i}`);
+      const release = path.join(tmp, `release-${i}`);
+      await fakeRelease(release, "v1.0.0", { "leptonChrome.css": "a{}" }, {
+        "i.svg": "<svg/>",
+      });
+      await write(path.join(release, ...planted.split("/")), "x");
+      await assertRejects(
+        () =>
+          applyRelease({
+            leptonDir: lepton,
+            extractedDir: release,
+            release: releaseJson("v1.0.0"),
+            commit: FAKE_COMMIT,
+            assetHashes: FAKE_ASSETS,
+          }),
+        Error,
+        message,
+        name,
+      );
+      assertEquals(
+        await listVendoredFiles(lepton),
+        [],
+        `${name}: nothing may be written`,
+      );
+    }
+  } finally {
+    await Deno.remove(tmp, { recursive: true });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Release metadata written to UPSTREAM.json
+// ---------------------------------------------------------------------------
+
+Deno.test("isUtcTimestamp accepts only real ISO-8601 UTC times", () => {
+  for (
+    const ok of [
+      "2026-01-01T00:00:00Z",
+      "2025-08-31T23:59:59Z",
+      "2024-02-29T12:00:00Z",
+    ]
+  ) {
+    assert(isUtcTimestamp(ok), ok);
+  }
+  for (
+    const bad of [
+      "",
+      "2026-01-01",
+      "2026-01-01T00:00:00",
+      "2026-01-01T00:00:00.000Z",
+      "2026-01-01T00:00:00+09:00",
+      "2026-01-01 00:00:00Z",
+      "2026-13-01T00:00:00Z",
+      "2026-02-30T00:00:00Z",
+      "2025-02-29T00:00:00Z",
+      "2026-01-01T24:00:00Z",
+      "2026-01-01T00:60:00Z",
+      "2026-01-01T00:00:00Z\n::error::x",
+      " 2026-01-01T00:00:00Z",
+      "yesterday",
+      null,
+      1767225600,
+    ]
+  ) {
+    assert(!isUtcTimestamp(bad), JSON.stringify(bad));
+  }
+});
+
+Deno.test("apply and verifyAssets refuse malformed release metadata", async () => {
+  const tmp = await Deno.makeTempDir({ prefix: "lepton-meta-" });
+  try {
+    const lepton = path.join(tmp, "lepton");
+    const release = path.join(tmp, "release");
+    await fakeRelease(release, "v1.0.0", { "leptonChrome.css": "a{}" }, {
+      "i.svg": "<svg/>",
+    });
+    const missing = { ...releaseJson("v1.0.0") } as Partial<ReleaseJson>;
+    delete missing.published_at;
+    const bad: [string, ReleaseJson, string][] = [
+      [
+        "published_at not UTC",
+        { ...releaseJson("v1.0.0"), published_at: "2026-01-01T09:00:00+09:00" },
+        "published_at",
+      ],
+      [
+        "published_at with markup",
+        { ...releaseJson("v1.0.0"), published_at: "<b>soon</b>" },
+        "published_at",
+      ],
+      ["published_at missing", missing as ReleaseJson, "published_at"],
+      [
+        "tag_name",
+        { ...releaseJson("v1.0.0"), tag_name: "v1.0.0\n::error::x" },
+        "tag_name",
+      ],
+    ];
+    for (const [name, json, message] of bad) {
+      assertThrows(() => validateRelease(json), Error, message, name);
+      await assertRejects(
+        () => verifyAssets(json, tmp),
+        Error,
+        message,
+        `verifyAssets: ${name}`,
+      );
+      await assertRejects(
+        () =>
+          applyRelease({
+            leptonDir: lepton,
+            extractedDir: release,
+            release: json,
+            commit: FAKE_COMMIT,
+            assetHashes: FAKE_ASSETS,
+          }),
+        Error,
+        message,
+        `apply: ${name}`,
+      );
+    }
+    await assertRejects(
+      () =>
+        applyRelease({
+          leptonDir: lepton,
+          extractedDir: release,
+          release: releaseJson("v1.0.0"),
+          commit: FAKE_COMMIT,
+          assetHashes: { ...FAKE_ASSETS, "Lepton.zip": "not-a-hash" },
+        }),
+      Error,
+      "SHA-256",
+    );
+    assertEquals(await listVendoredFiles(lepton), [], "nothing written");
+    await assertRejects(
+      () => readRecord(lepton),
+      Deno.errors.NotFound,
+      undefined,
+      "no UPSTREAM.json written",
+    );
+
+    const ok = await applyRelease({
+      leptonDir: lepton,
+      extractedDir: release,
+      release: releaseJson("v1.0.0"),
+      commit: FAKE_COMMIT,
+      assetHashes: FAKE_ASSETS,
+    });
+    assertEquals(ok.record.upstream.published_at, "2026-01-01T00:00:00Z");
+    assertEquals(
+      (await readRecord(lepton)).upstream.published_at,
+      "2026-01-01T00:00:00Z",
+    );
+  } finally {
+    await Deno.remove(tmp, { recursive: true });
+  }
+});
+
+Deno.test("verifyAssets reports a draft before checking its metadata", async () => {
+  // GitHub returns published_at null for a draft release.
+  const draft = {
+    ...releaseJson("v1.0.0"),
+    draft: true,
+    published_at: null as unknown as string,
+  };
+  await assertRejects(() => verifyAssets(draft, "."), Error, "is a draft");
+});
+
+Deno.test("error messages that need a maintainer name update_lepton.yml", async () => {
+  const tmp = await Deno.makeTempDir({ prefix: "lepton-hints-" });
+  try {
+    const lepton = path.join(tmp, "lepton");
+    const release = path.join(tmp, "release");
+    const photonCss = path.join(
+      release,
+      "Lepton-Photon-Style",
+      "chrome",
+      "css",
+      "leptonChrome.css",
+    );
+    await fakeRelease(release, "v1.0.0", { "leptonChrome.css": "a{}" }, {
+      "i.svg": "<svg/>",
+    });
+    const sub = path.join(release, "Lepton", "chrome", "icons", "sub");
+    await write(path.join(sub, "x.svg"), "x");
+    const apply = () =>
+      applyRelease({
+        leptonDir: lepton,
+        extractedDir: release,
+        release: releaseJson("v1.0.0"),
+        commit: FAKE_COMMIT,
+        assetHashes: FAKE_ASSETS,
+      });
+    const nested = await assertRejects(apply, Error, "unexpected entries");
+    assert(nested.message.includes(WORKFLOW_FILE), nested.message);
+    assert(nested.message.includes("SHARED_DIRS"), nested.message);
+
+    await Deno.remove(sub, { recursive: true });
+    await write(photonCss, "a{color:red}");
+    const differs = await assertRejects(
+      apply,
+      Error,
+      "differs from Lepton.zip",
+    );
+    assert(differs.message.includes(WORKFLOW_FILE), differs.message);
+
+    await write(photonCss, "a{}");
+    await apply();
+    await write(path.join(lepton, "css", "floorp.css"), "c{}");
+    const problems = await verifyVendoredFiles(lepton);
+    assert(
+      problems.some((p) =>
+        p.startsWith("not in UPSTREAM.json: css/floorp.css") &&
+        p.includes(WORKFLOW_FILE)
+      ),
+      problems.join("\n"),
+    );
+  } finally {
+    await Deno.remove(tmp, { recursive: true });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// update_lepton.yml: Deno permissions and the shell name checks
+// ---------------------------------------------------------------------------
+
+const workflowText = () => Deno.readTextFile(resolveFromRoot(WORKFLOW_FILE));
+
+/**
+ * Every `deno` command in `text` (line continuations joined), wherever it
+ * starts: at a line start, after `&&`, `||`, `;`, `|`, `(` or `$(`, keyed by
+ * lepton_vendor command. Each command ends at the next shell separator.
+ * Anything other than `deno run ... tools/src/lepton_vendor.ts <command>`
+ * fails, so a new Deno call cannot slip past the permission checks.
+ */
+function denoRuns(text: string): Map<string, string[]> {
+  const joined = text.replace(/\\\r?\n\s*/g, " ");
+  const runs = new Map<string, string[]>();
+  for (const match of joined.matchAll(/(?:^|[\s;&|(])(deno\s[^;&|)\r\n]*)/gm)) {
+    const invocation = match[1];
+    const words = invocation.trim().split(/\s+/);
+    assertEquals(words[1], "run", `only deno run is expected: ${invocation}`);
+    const script = words.indexOf("tools/src/lepton_vendor.ts");
+    assert(script > 0, `unexpected deno command: ${invocation}`);
+    const command = words[script + 1];
+    assert(!runs.has(command), `${command} runs twice`);
+    runs.set(command, words);
+  }
+  return runs;
+}
+
+async function workflowDenoRuns(): Promise<Map<string, string[]>> {
+  return denoRuns(await workflowText());
+}
+
+Deno.test("denoRuns finds deno run anywhere on a line", () => {
+  const runs = denoRuns(
+    [
+      "deno run --allow-read=a tools/src/lepton_vendor.ts verify",
+      "cd x && deno run -A tools/src/lepton_vendor.ts apply \\",
+      '  --summary "$W/s.md"; deno run --allow-net \\',
+      "    tools/src/lepton_vendor.ts verify-assets || true",
+      'out="$(deno run --allow-env tools/src/lepton_vendor.ts other)"',
+      "# denoland/setup-deno and deno-version: are not commands",
+    ].join("\n"),
+  );
+  assertEquals([...runs.keys()], ["verify", "apply", "verify-assets", "other"]);
+  assertEquals(runs.get("apply")?.slice(0, 3), ["deno", "run", "-A"]);
+  assertEquals(runs.get("verify-assets")?.[2], "--allow-net");
+  assertThrows(
+    () => denoRuns("true; deno eval 'Deno.exit(0)'"),
+    Error,
+    "only deno run",
+  );
+  assertThrows(
+    () => denoRuns("x && deno run -A tools/other.ts"),
+    Error,
+    "unexpected deno command",
+  );
+});
+
+Deno.test("update_lepton.yml never pipes into grep -q", async () => {
+  // Under pipefail, `producer | grep -q` reads as "no match" when grep
+  // quits early and the producer dies of SIGPIPE, so a check fails open.
+  const joined = (await workflowText()).replace(/\\\r?\n\s*/g, " ");
+  const offending = joined.split(/\r?\n/).filter((line) =>
+    !line.trim().startsWith("#") &&
+    /\|\s*grep\s+(?:-\S*\s+)*-[A-Za-z]*q/.test(line)
+  );
+  assertEquals(offending, [], "grep a saved file instead of a pipe");
+  assert(
+    joined.includes("uniq -dz"),
+    "the commit step refuses staged paths that differ only in case",
+  );
+});
+
+/** Values of `--allow-<kind>=a,b` (quotes stripped); null when absent. */
+function allowList(words: string[], kind: string): string[] | null {
+  const flag = words.find((w) =>
+    w === `--allow-${kind}` || w.startsWith(`--allow-${kind}=`)
+  );
+  if (flag === undefined) return null;
+  assert(flag.includes("="), `${flag} must name the paths it allows`);
+  return flag.slice(flag.indexOf("=") + 1).replaceAll('"', "").split(",");
+}
+
+function covered(file: string, allowed: string[]): boolean {
+  return allowed.some((a) => file === a || file.startsWith(`${a}/`));
+}
+
+function runOf(runs: Map<string, string[]>, command: string): string[] {
+  const words = runs.get(command);
+  assert(words !== undefined, `update_lepton.yml runs ${command}`);
+  return words;
+}
+
+Deno.test("update_lepton.yml gives Deno only the paths each command needs", async () => {
+  const runs = await workflowDenoRuns();
+  assertEquals([...runs.keys()].sort(), ["apply", "verify", "verify-assets"]);
+  for (const [command, words] of runs) {
+    const script = words.indexOf("tools/src/lepton_vendor.ts");
+    for (const flag of words.slice(2, script)) {
+      assert(
+        /^--allow-(read|write)=\S+$/.test(flag),
+        `${command}: only scoped --allow-read/--allow-write are allowed ` +
+          `(no net, env, run, -A), got ${flag}`,
+      );
+    }
+  }
+  const verifyAssetsRun = runOf(runs, "verify-assets");
+  assertEquals(allowList(verifyAssetsRun, "read"), ["$WORK"]);
+  assertEquals(allowList(verifyAssetsRun, "write"), null);
+  const verifyRun = runOf(runs, "verify");
+  assertEquals(allowList(verifyRun, "read"), [LEPTON_DIR]);
+  assertEquals(allowList(verifyRun, "write"), null);
+
+  const apply = runOf(runs, "apply");
+  const read = allowList(apply, "read") ?? [];
+  const writable = allowList(apply, "write") ?? [];
+  assertEquals(read, ["$WORK", "browser-features/skin"]);
+  assertEquals(writable, [LEPTON_DIR, JAR_MANIFEST, "$WORK/pr-body.md"]);
+  // Every path argument of apply, and its default lepton dir and jar.mn,
+  // is readable; apply writes only the vendored files, jar.mn and the
+  // summary.
+  const arg = (name: string) => {
+    const i = apply.indexOf(`--${name}`);
+    assert(i > 0 && i + 1 < apply.length, `apply --${name}`);
+    return apply[i + 1].replaceAll('"', "");
+  };
+  for (const name of ["release-json", "zips-dir", "extracted-dir", "summary"]) {
+    assert(covered(arg(name), read), `--${name} ${arg(name)} is readable`);
+  }
+  assert(covered(arg("summary"), writable), "--summary is writable");
+  assert(!apply.includes("--lepton-dir") && !apply.includes("--jar-manifest"));
+  for (const file of [LEPTON_DIR, JAR_MANIFEST]) {
+    assert(covered(file, read) && covered(file, writable), file);
+  }
+});
+
+Deno.test("update_lepton.yml name checks match assertSafeName", async () => {
+  const text = await workflowText();
+  const segs = [...text.matchAll(/^\s*seg='([^']*)'\r?$/gm)].map((m) => m[1]);
+  const winbads = [...text.matchAll(/^\s*winbad='([^']*)'\r?$/gm)].map((m) =>
+    m[1]
+  );
+  assertEquals(segs.length, 2, "seg in the extract and commit steps");
+  assertEquals(winbads.length, 2, "winbad in the extract and commit steps");
+  assertEquals(new Set(segs).size, 1);
+  assertEquals(new Set(winbads).size, 1);
+  // Both are POSIX ERE that read the same as a JS RegExp here; the
+  // workflow matches winbad case-insensitively (grep -i, ${name,,}).
+  const seg = new RegExp(`^${segs[0]}$`);
+  const winbad = new RegExp(winbads[0], "i");
+  const shellRefuses = (name: string) => !seg.test(name) || winbad.test(name);
+  const toolRefuses = (name: string) => {
+    try {
+      assertSafeName(name, "test");
+      return false;
+    } catch {
+      return true;
+    }
+  };
+  for (
+    const name of [
+      ...WINDOWS_BAD_NAMES,
+      "leptonChrome.css",
+      "console.css",
+      "com10.svg",
+      "null.svg",
+      ".git",
+      "a b",
+      "c++.svg",
+      "LEPTON",
+    ]
+  ) {
+    assertEquals(shellRefuses(name), toolRefuses(name), JSON.stringify(name));
+  }
+  // Paths: a bad segment anywhere, and directory entries ending in "/".
+  for (
+    const bad of ["chrome/icons/nul.svg", "chrome/CON/x", "chrome/x./y", "a/b."]
+  ) {
+    assert(winbad.test(bad), bad);
+  }
+  for (const ok of ["chrome/icons/", "chrome/css/leptonChrome.css"]) {
+    assert(!winbad.test(ok), ok);
   }
 });

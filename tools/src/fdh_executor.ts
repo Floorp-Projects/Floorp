@@ -909,7 +909,7 @@ export function reconcileJob(
 
   if (job.state === "cancel_requested") {
     // The holder is gone while a cancel was pending: nothing will run again.
-    attempt.lastSeenAt = job.lease?.heartbeatAt ?? attempt.startedAt ??
+    attempt.lastSeenAt ??= job.lease?.heartbeatAt ?? attempt.startedAt ??
       attempt.scheduledAt;
     attempt.result = "cancelled";
     attempt.endedAt = at;
@@ -919,23 +919,8 @@ export function reconcileJob(
     return { action: "cancelled", state: job.state };
   }
 
-  event(
-    job,
-    "lease-expired",
-    at,
-    job.epoch,
-    attempt.result === "scheduled"
-      ? `executor for attempt ${attempt.attempt} never started`
-      : `holder ${attempt.holder ?? "?"} lost`,
-  );
-  // When the holder was last known alive (its last heartbeat, or the start):
-  // the loss can be noticed much later than it happened.
-  attempt.lastSeenAt = job.lease?.heartbeatAt ?? attempt.startedAt ??
-    attempt.scheduledAt;
-  attempt.result = "lost";
-  attempt.endedAt = at;
-  attempt.notes = "holder lost; outcome unknown";
-  job.lease = null;
+  // A held respawn already declared this holder lost (holdRespawn).
+  if (attempt.result !== "lost") declareHolderLost(job, attempt, at, "");
 
   if (job.kind === "intent") {
     transition(
@@ -968,6 +953,62 @@ export function reconcileJob(
   }
   scheduleNextAttempt(job, at, `attempt ${attempt.attempt} lost`);
   return { action: "respawn", epoch: job.epoch };
+}
+
+/**
+ * Record that the current attempt's holder is lost: from now on its
+ * heartbeats and checkpoints are fenced (no lease) and its late report is not
+ * applied (the attempt is `lost`).
+ */
+function declareHolderLost(
+  job: JobJournal,
+  attempt: JobAttempt,
+  at: string,
+  extra: string,
+): void {
+  event(
+    job,
+    "lease-expired",
+    at,
+    job.epoch,
+    (attempt.result === "scheduled"
+      ? `executor for attempt ${attempt.attempt} never started`
+      : `holder ${attempt.holder ?? "?"} lost`) + extra,
+  );
+  // When the holder was last known alive (its last heartbeat, or the start):
+  // the loss can be noticed much later than it happened.
+  attempt.lastSeenAt = job.lease?.heartbeatAt ?? attempt.startedAt ??
+    attempt.scheduledAt;
+  attempt.result = "lost";
+  attempt.endedAt = at;
+  attempt.notes = `holder lost; outcome unknown${extra}`;
+  job.lease = null;
+  job.updatedAt = at;
+}
+
+/**
+ * A reconcile decided to respawn, but the respawn is held (the W-04 dev
+ * guard refused a source build): declare the current holder lost now, so it
+ * is fenced before a controller stops its step tree, without scheduling the
+ * next attempt (no epoch bump, no attempt used up). A later reconcile
+ * schedules it once the respawn is allowed. Returns false if the holder was
+ * already declared lost.
+ */
+export function holdRespawn(
+  job: JobJournal,
+  reason: string,
+  at = nowIso(),
+): boolean {
+  requireTime(at, "hold time");
+  const attempt = currentAttempt(job);
+  if (attempt.result === "lost") return false;
+  if (attempt.result !== "running" && attempt.result !== "scheduled") {
+    throw new Error(
+      `job ${job.jobId}: cannot hold attempt ${attempt.attempt} (${attempt.result})`,
+    );
+  }
+  declareHolderLost(job, attempt, at, `; respawn held: ${reason}`);
+  return true;
 }
 
 /**
