@@ -122,7 +122,7 @@ jobs:
         inputs.platform_key == 'mac' &&
           inputs.native_arch == 'x86_64' && 'macos-15-intel' ||
         inputs.platform_key == 'mac' &&
-          inputs.native_arch == 'aarch64' && 'macos-14' ||
+          inputs.native_arch == 'aarch64' && 'macos-15' ||
         'ubuntu-24.04'
       }}
     timeout-minutes: 30
@@ -199,7 +199,7 @@ jobs:
                 runtimeArtifact: "floorp-mac-universal-moz-artifact",
               }],
               ["mac/aarch64", {
-                runner: "macos-14",
+                runner: "macos-15",
                 artifact: "noraneko-mac-universal-installer",
                 file: "floorp-macOS-universal.dmg",
                 record: "floorp-native-verification-mac-aarch64-v2",

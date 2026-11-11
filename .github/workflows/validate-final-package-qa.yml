@@ -57,7 +57,7 @@ jobs:
             file: floorp-macOS-universal.dmg
           - platform: mac
             arch: aarch64
-            runner: macos-14
+            runner: macos-15
             package: noraneko-mac-universal-installer
             file: floorp-macOS-universal.dmg
     steps:
