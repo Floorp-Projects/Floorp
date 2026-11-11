@@ -133,3 +133,139 @@ export async function saveIdleMemoryReclaimSettings(
     mergeIdleMemoryReclaimSettings(existing, settings),
   );
 }
+
+export const TAB_AUTO_UNLOAD_PREF = "floorp.tabs.autoUnload";
+export const LEGACY_TAB_SLEEP_EXCLUSION_PREF = "floorp.tabs.sleep.exclusion";
+
+export interface TabAutoUnloadSettings {
+  enabled: boolean;
+  memoryThresholdMB: number;
+  minInactiveMinutes: number;
+  excludePatterns: string[];
+}
+
+export const DEFAULT_TAB_AUTO_UNLOAD_SETTINGS: TabAutoUnloadSettings = {
+  enabled: false,
+  memoryThresholdMB: 2048,
+  minInactiveMinutes: 10,
+  excludePatterns: [],
+};
+
+export const MEMORY_THRESHOLD_MB_MIN = 0;
+export const MIN_INACTIVE_MINUTES_MIN = 1;
+
+function createDefaultTabAutoUnloadSettings(): TabAutoUnloadSettings {
+  return {
+    ...DEFAULT_TAB_AUTO_UNLOAD_SETTINGS,
+    excludePatterns: [],
+  };
+}
+
+function normalizeExcludePatterns(raw: unknown): string[] {
+  if (!Array.isArray(raw)) {
+    return [];
+  }
+
+  const seen = new Set<string>();
+  const patterns: string[] = [];
+  for (const value of raw) {
+    if (typeof value !== "string") {
+      continue;
+    }
+    const trimmed = value.trim();
+    if (!trimmed || seen.has(trimmed)) {
+      continue;
+    }
+    seen.add(trimmed);
+    patterns.push(trimmed);
+  }
+  return patterns;
+}
+
+/** Normalizes untrusted pref JSON into the values this page exposes. */
+export function normalizeTabAutoUnloadSettings(
+  raw: unknown,
+): TabAutoUnloadSettings {
+  if (typeof raw !== "object" || raw === null) {
+    return createDefaultTabAutoUnloadSettings();
+  }
+
+  const source = raw as Record<string, unknown>;
+  return {
+    enabled: readBoolean(
+      source.enabled,
+      DEFAULT_TAB_AUTO_UNLOAD_SETTINGS.enabled,
+    ),
+    memoryThresholdMB: readNumber(
+      source.memoryThresholdMB,
+      DEFAULT_TAB_AUTO_UNLOAD_SETTINGS.memoryThresholdMB,
+      MEMORY_THRESHOLD_MB_MIN,
+    ),
+    minInactiveMinutes: readNumber(
+      source.minInactiveMinutes,
+      DEFAULT_TAB_AUTO_UNLOAD_SETTINGS.minInactiveMinutes,
+      MIN_INACTIVE_MINUTES_MIN,
+    ),
+    excludePatterns: normalizeExcludePatterns(source.excludePatterns),
+  };
+}
+
+/**
+ * Merges the exposed settings into the pref JSON.
+ *
+ * Unknown keys in the stored object are kept so a hand-edited pref is not
+ * silently reset.
+ */
+export function mergeTabAutoUnloadSettings(
+  existing: string | null,
+  settings: TabAutoUnloadSettings,
+): string {
+  const normalized = normalizeTabAutoUnloadSettings(settings);
+  return JSON.stringify({
+    ...parseSettingsJson(existing),
+    enabled: normalized.enabled,
+    memoryThresholdMB: normalized.memoryThresholdMB,
+    minInactiveMinutes: normalized.minInactiveMinutes,
+    excludePatterns: normalized.excludePatterns,
+  });
+}
+
+export async function getTabAutoUnloadSettings(): Promise<
+  TabAutoUnloadSettings
+> {
+  try {
+    const raw = await rpc.getStringPref(TAB_AUTO_UNLOAD_PREF);
+    if (raw) {
+      return normalizeTabAutoUnloadSettings(parseSettingsJson(raw));
+    }
+
+    // Migrate the patterns from the old tab sleep exclusion pref without
+    // writing anything back. The rest of the settings keep their defaults.
+    const legacyRaw = await rpc.getStringPref(LEGACY_TAB_SLEEP_EXCLUSION_PREF);
+    if (!legacyRaw) {
+      return createDefaultTabAutoUnloadSettings();
+    }
+
+    const legacy = parseSettingsJson(legacyRaw);
+    return {
+      ...createDefaultTabAutoUnloadSettings(),
+      excludePatterns: normalizeExcludePatterns(legacy.patterns),
+    };
+  } catch (error) {
+    console.error(
+      "[Performance] Failed to load tab auto unload settings:",
+      error,
+    );
+    return createDefaultTabAutoUnloadSettings();
+  }
+}
+
+export async function saveTabAutoUnloadSettings(
+  settings: TabAutoUnloadSettings,
+): Promise<void> {
+  const existing = await rpc.getStringPref(TAB_AUTO_UNLOAD_PREF);
+  await rpc.setStringPref(
+    TAB_AUTO_UNLOAD_PREF,
+    mergeTabAutoUnloadSettings(existing, settings),
+  );
+}
