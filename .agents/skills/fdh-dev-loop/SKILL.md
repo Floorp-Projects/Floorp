@@ -177,6 +177,39 @@ Limits to know:
   gate checks; review edits to `.github/workflows/fdh-review-gate.yml` and
   `tools/src/fdh_review.ts` before merging.
 
+## Evidence on the PR (D-20, KAN-132)
+
+A manifest lives only in this worktree's `_dist/fdh/`. To keep it with the
+change, post it on the PR as a comment. Post it after the last commit, so that
+it is bound to the PR's final head, then check the PR:
+
+```sh
+fdh evidence publish --task-id <id> --pr <n> --out _dist/fdh/evidence-<n>.md
+gh pr comment <n> --body-file _dist/fdh/evidence-<n>.md
+fdh evidence trace --pr <n>      # exits 1 unless the final head has both
+```
+
+What the comment holds:
+
+- The whole manifest, as JSON, or as gzip+base64 when it is large. A manifest
+  that does not fit in one comment even compressed is refused.
+- A marker that binds it to the task, the PR, the HEAD commit, and whether the
+  worktree had uncommitted changes. Uncommitted changes are not hashed; the
+  manifest's limitations say so.
+- The SHA-256 of the manifest text.
+
+What `evidence trace` checks, for a merged PR too:
+
+- That every evidence comment decodes, matches its SHA-256 and passes the
+  manifest schema.
+- That at least one is by a trusted author (OWNER, MEMBER or COLLABORATOR,
+  as for receipts), bound to this PR and to its final head.
+- That the D-14 receipts are valid at that head.
+
+A PR comment stays with the PR; CI artifacts expire, so they are not the
+record. A central append-only store waits for principal authentication
+(D-18).
+
 ## Quota and approval ledger (Gate 4 4-D / 4-C)
 
 Use the local ledger (`<worktree>/_dist/fdh/quota/<task-id>.json`) when work can
