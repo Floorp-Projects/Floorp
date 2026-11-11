@@ -205,28 +205,21 @@ export async function evidenceCommentBody(
       "</details>",
       "",
     ].join("\n");
-  let rendered: { body: string; binding: EvidenceBinding };
-  const json: EvidenceBinding = { ...base, encoding: "json" };
-  const plain = render(json, `\`\`\`json\n${text.trimEnd()}\n\`\`\``);
-  // `gh api` rewrites JSON-escaped control characters (\u001b, from ANSI
-  // colours in command output) to caret notation (^[) when it prints a
-  // response, so such a manifest would not read back through gh: embed it
-  // as base64, which has no backslashes.
-  const hasControlEscapes = /\\u00[0-9a-fA-F]{2}/.test(text);
-  if (!hasControlEscapes && plain.length <= MAX_EVIDENCE_COMMENT_CHARS) {
-    rendered = { body: plain, binding: json };
-  } else {
-    const packed: EvidenceBinding = { ...base, encoding: "gzip+base64" };
-    const b64 = encodeBase64(await gzip(bytes)).replace(/(.{76})/g, "$1\n")
-      .trimEnd();
-    const compressed = render(packed, `\`\`\`${GZIP_FENCE}\n${b64}\n\`\`\``);
-    if (compressed.length > MAX_EVIDENCE_COMMENT_CHARS) {
-      throw new Error(
-        `the manifest (${base.bytes} bytes) does not fit in one PR comment, even compressed`,
-      );
-    }
-    rendered = { body: compressed, binding: packed };
+  // Always gzip+base64. `gh api` rewrites JSON-escaped control characters
+  // (\u001b from ANSI colours, and likely \b and \f) to caret notation when
+  // it prints a response, so a manifest embedded as JSON may not read back
+  // through gh; base64 has no backslashes for it to rewrite. The summary
+  // above the block stays readable. (The reader still accepts "json".)
+  const packed: EvidenceBinding = { ...base, encoding: "gzip+base64" };
+  const b64 = encodeBase64(await gzip(bytes)).replace(/(.{76})/g, "$1\n")
+    .trimEnd();
+  const compressed = render(packed, `\`\`\`${GZIP_FENCE}\n${b64}\n\`\`\``);
+  if (compressed.length > MAX_EVIDENCE_COMMENT_CHARS) {
+    throw new Error(
+      `the manifest (${base.bytes} bytes) does not fit in one PR comment, even compressed`,
+    );
   }
+  const rendered = { body: compressed, binding: packed };
   const [check] = await parseEvidenceComments([{
     body: rendered.body,
     authorAssociation: "OWNER",

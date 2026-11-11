@@ -7,6 +7,7 @@ import { buildEvidenceManifest } from "./fdh_evidence.ts";
 import {
   evidenceCommentBody,
   FDH_EVIDENCE_MARKER,
+  manifestText,
   MAX_EVIDENCE_COMMENT_CHARS,
   parseEvidenceComments,
   traceEvidence,
@@ -97,7 +98,7 @@ Deno.test("fdh evidence publish: a comment carries the manifest and reads back i
     const manifest = await manifestIn(dir);
     const { body, binding } = await evidenceCommentBody(manifest, input);
     assert(body.startsWith(`<!-- ${FDH_EVIDENCE_MARKER} `));
-    assertEquals([binding.encoding, binding.repo], ["json", "o/r"]);
+    assertEquals([binding.encoding, binding.repo], ["gzip+base64", "o/r"]);
     assert(body.includes("passed: `host-test-exit-code`"));
     const [parsed] = await parseEvidenceComments([trustedComment(body)]);
     assertEquals([parsed.ok, parsed.trusted, parsed.problems], [
@@ -125,10 +126,19 @@ Deno.test("fdh evidence publish: a comment carries the manifest and reads back i
 Deno.test("fdh evidence publish: a stale hash, a broken marker, another task and an untrusted author are caught", async () => {
   const dir = await Deno.makeTempDir();
   try {
-    const { body } = await evidenceCommentBody(await manifestIn(dir), input);
-    // Same length, so only the SHA-256 can tell.
-    const edited = body.replace('"exit code 0"', '"exit code 9"');
-    assert(edited !== body);
+    const manifest = await manifestIn(dir);
+    const { body, binding } = await evidenceCommentBody(manifest, input);
+    // A JSON-mode comment (the reader accepts it) edited in place; same
+    // length, so only the SHA-256 can tell.
+    const jsonBody = `<!-- ${FDH_EVIDENCE_MARKER} ${
+      JSON.stringify({ ...binding, encoding: "json" })
+    } -->\n<details><summary>EvidenceManifest</summary>\n\n\`\`\`json\n${
+      manifestText(manifest).trimEnd()
+    }\n\`\`\`\n\n</details>\n`;
+    const [asJson] = await parseEvidenceComments([trustedComment(jsonBody)]);
+    assertEquals(asJson.ok, true, asJson.problems.join("; "));
+    const edited = jsonBody.replace('"exit code 0"', '"exit code 9"');
+    assert(edited !== jsonBody);
     const [tampered] = await parseEvidenceComments([trustedComment(edited)]);
     assertEquals(tampered.ok, false);
     assert(tampered.problems.some((p) => p.includes("SHA-256")));
@@ -446,11 +456,18 @@ Deno.test("fdh evidence publish: a manifest with ANSI colours survives gh's cont
     const manifest = await buildEvidenceManifest(state, {
       os: { name: "testos", version: "1", arch: "x86_64" },
     });
+    // What `gh api` prints: the six characters \u001b become ^[.
+    const ghRewrite = (s: string) => s.replaceAll(String.raw`\u001b`, "^[");
+    // In JSON form the manifest text holds such escapes, and the rewrite
+    // would change it (so it would not match its SHA-256 any more).
+    const text = manifestText(manifest);
+    assert(text.includes(String.raw`\u001b`));
+    assert(ghRewrite(text) !== text);
     const { body, binding } = await evidenceCommentBody(manifest, input);
     assertEquals(binding.encoding, "gzip+base64");
-    // What `gh api` prints for such a body: \u001b becomes ^[.
-    const rewritten = body.replaceAll("\u001b", "^[");
-    const [parsed] = await parseEvidenceComments([trustedComment(rewritten)]);
+    const [parsed] = await parseEvidenceComments([
+      trustedComment(ghRewrite(body)),
+    ]);
     assertEquals(parsed.ok, true, parsed.problems.join("; "));
   } finally {
     await Deno.remove(dir, { recursive: true });
