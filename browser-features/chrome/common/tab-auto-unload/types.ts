@@ -34,9 +34,10 @@ export interface TabAutoUnloadSettings {
  * Shared state for the per-window feature instances.
  *
  * Every browser window instantiates the chrome component, so this lives in a
- * string pref. `lastRunAt` doubles as the cross-window lock: a window claims it
- * before doing any asynchronous work, and the other windows bail at their own
- * throttle check.
+ * string pref on the default branch: shared by all windows in the process, but
+ * never saved to the user's prefs. `lastRunAt` doubles as the cross-window
+ * lock: a window claims it before doing any asynchronous work, and the other
+ * windows bail at their own throttle check.
  */
 export interface TabAutoUnloadStats {
   /** When the last memory check started, in epoch milliseconds. */

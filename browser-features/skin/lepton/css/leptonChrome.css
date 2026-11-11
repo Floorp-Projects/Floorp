@@ -12979,6 +12979,11 @@
       #blockedPopupDontShowMessage {
         padding-inline-end: var(--context-menu-background-padding) !important;
       }
+      /* text position */
+      :not(menu, #ContentSelectDropdown, #context-navigation) > menupopup:not(.in-menulist) > menuitem > .menu-text,
+      :not(menu, #ContentSelectDropdown, #context-navigation) > menupopup:not(.in-menulist) > menu > .menu-text {
+        padding-inline-start: var(--context-menu-mac-padding) !important;
+      }
       /* Checkbox menuitem, None iconic menu */
       :not(menu, #ContentSelectDropdown, #context-navigation)
         > menupopup:not(.in-menulist)
@@ -29146,6 +29151,11 @@
     > menu:not(.menu-iconic, .in-menulist, [checked="true"]),
   #blockedPopupDontShowMessage {
     padding-inline-end: var(--context-menu-background-padding) !important;
+  }
+  /* text position */
+  :not(menu, #ContentSelectDropdown, #context-navigation) > menupopup:not(.in-menulist) > menuitem > .menu-text,
+  :not(menu, #ContentSelectDropdown, #context-navigation) > menupopup:not(.in-menulist) > menu > .menu-text {
+    padding-inline-start: var(--context-menu-mac-padding) !important;
   }
   /* Checkbox menuitem, None iconic menu */
   :not(menu, #ContentSelectDropdown, #context-navigation) > menupopup:not(.in-menulist) > menuitem[type="checkbox"] {

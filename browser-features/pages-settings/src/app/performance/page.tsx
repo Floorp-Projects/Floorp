@@ -8,6 +8,7 @@ import { useTranslation } from "react-i18next";
 import { IdleMemoryReclaim } from "@/app/performance/components/IdleMemoryReclaim.tsx";
 import { TabAutoUnload } from "@/app/performance/components/TabAutoUnload.tsx";
 
+/** Performance settings page with the unloading and reclaim cards. */
 export default function Page() {
   const { t } = useTranslation();
 

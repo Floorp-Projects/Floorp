@@ -27,12 +27,14 @@ import {
   type TestCase,
 } from "../../../test/utils/test_harness.ts";
 
+/** Builds settings for a test with the given overrides. */
 function makeSettings(
   overrides: Partial<TabAutoUnloadSettings> = {},
 ): TabAutoUnloadSettings {
   return { ...DEFAULT_SETTINGS, ...overrides, excludePatterns: [] };
 }
 
+/** Defaults stay opt-in and the pref names stay stable. */
 function testDefaultSettingsContract(): void {
   assertEquals(DEFAULT_SETTINGS.enabled, false, "default must be opt-in");
   assertEquals(
@@ -67,6 +69,7 @@ function testDefaultSettingsContract(): void {
   );
 }
 
+/** Non-object pref JSON falls back to the defaults. */
 function testSanitizeFallsBackForNonObjects(): void {
   const result = sanitizeSettings("nope");
   assertEquals(result.enabled, DEFAULT_SETTINGS.enabled, "enabled fallback");
@@ -83,6 +86,7 @@ function testSanitizeFallsBackForNonObjects(): void {
   assertEquals(result.excludePatterns.length, 0, "patterns fallback");
 }
 
+/** Wrong types fall back and numeric floors are clamped. */
 function testSanitizeRejectsWrongTypesAndClamps(): void {
   const result = sanitizeSettings({
     enabled: "yes",
@@ -109,6 +113,7 @@ function testSanitizeRejectsWrongTypesAndClamps(): void {
   );
 }
 
+/** Valid pref JSON round-trips unchanged. */
 function testSanitizeAcceptsValidValues(): void {
   const result = sanitizeSettings({
     enabled: true,
@@ -126,6 +131,7 @@ function testSanitizeAcceptsValidValues(): void {
   );
 }
 
+/** Stats keep valid numbers and fall back otherwise. */
 function testSanitizeStats(): void {
   const result = sanitizeStats({
     lastRunAt: 100,
@@ -141,6 +147,7 @@ function testSanitizeStats(): void {
   assertEquals(fallback.unloadCount, 0, "wrong types fall back");
 }
 
+/** Patterns are trimmed, deduplicated, and type-checked. */
 function testNormalizeExcludePatterns(): void {
   assertEquals(
     normalizeExcludePatterns([" a ", "a", "", "b"]).join(","),
@@ -154,6 +161,7 @@ function testNormalizeExcludePatterns(): void {
   );
 }
 
+/** Bare and wildcard domains match the domain and its subdomains. */
 function testMatchDomainAndSubdomain(): void {
   assert(
     matchPattern("https://example.com/path", "example.com"),
@@ -185,6 +193,7 @@ function testMatchDomainAndSubdomain(): void {
   );
 }
 
+/** Full URL patterns support prefixes, wildcards, and literal symbols. */
 function testMatchFullUrl(): void {
   assert(
     matchPattern("https://mail.example.com/inbox", "https://mail.example.com"),
@@ -207,6 +216,7 @@ function testMatchFullUrl(): void {
   );
 }
 
+/** An empty pattern matches nothing. */
 function testMatchEmptyPattern(): void {
   assert(
     !matchPattern("https://example.com/", "   "),
@@ -214,6 +224,7 @@ function testMatchEmptyPattern(): void {
   );
 }
 
+/** A URL is excluded when any pattern matches; an empty list excludes none. */
 function testShouldExcludeUrl(): void {
   assert(
     shouldExcludeUrl("https://docs.example.com/a", ["*.example.com"]),
@@ -229,6 +240,7 @@ function testShouldExcludeUrl(): void {
   );
 }
 
+/** Legacy exclusion prefs are parsed defensively. */
 function testLegacyPatterns(): void {
   assertEquals(
     legacyPatterns('{"enabled":true,"patterns":["a.com"," a.com ","b.com"]}')
@@ -245,6 +257,7 @@ function testLegacyPatterns(): void {
   );
 }
 
+/** The memory threshold and cross-window throttle gate checks. */
 function testShouldCheckMemory(): void {
   const settings = makeSettings({
     enabled: true,
@@ -286,6 +299,7 @@ function testShouldCheckMemory(): void {
   );
 }
 
+/** Runs every tab auto unload test. */
 export async function runAllTests(): Promise<void> {
   const tests: TestCase[] = [
     {

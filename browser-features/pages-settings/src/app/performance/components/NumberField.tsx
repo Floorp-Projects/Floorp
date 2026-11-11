@@ -8,6 +8,7 @@ import { type ComponentProps, forwardRef, useEffect, useState } from "react";
 import { NumberInput } from "@chakra-ui/react";
 import type { NumberFieldProps } from "../types.ts";
 
+/** Forwards the controlled value to the native input. */
 // Let React synchronize the native value in Gecko, including stepper changes.
 // Remove Ark's defaultValue when supplying a controlled value through asChild.
 const ControlledNumberInput = forwardRef<
@@ -38,6 +39,7 @@ export function NumberField({
     setText(String(value));
   }, [value]);
 
+  /** Writes the rounded, clamped value through `onCommit` when it changed. */
   const commit = (rawValue: string) => {
     const parsed = Number(rawValue);
     if (!Number.isFinite(parsed)) {

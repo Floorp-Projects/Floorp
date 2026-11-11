@@ -56,6 +56,8 @@ const chromeExtrasFields = [
   ["tabbar-one-liner", "tabbarOneLiner"],
   ["sidebar-overlap", "sidebarOverlap"],
 ] as const;
+
+/** Opens the UI customization section of the design settings. */
 async function chromeExtras() {
   await route("features/design", "#favicon-color");
   await button("Open UI extension settings");
@@ -68,9 +70,13 @@ async function chromeExtras() {
     "UI extension settings are still loading",
   );
 }
+
+/** Opens the gesture settings section. */
 async function gesture() {
   await route("features/gesture", '[data-setting="mouse-gesture-enabled"]');
 }
+
+/** Registers the advanced settings integration tests. */
 export async function runAdvancedTests() {
   await until(
     () => document.querySelector('a[href="/features/design"]'),
@@ -244,9 +250,8 @@ export async function runAdvancedTests() {
         "Pattern not reloaded",
       );
       await click('button[aria-label="Remove"]');
-      assertEquals(
-        (json(key).excludePatterns as string[]).length,
-        0,
+      await until(
+        () => (json(key).excludePatterns as string[]).length === 0,
         "Pattern removed",
       );
     },
@@ -626,6 +631,8 @@ export async function runAdvancedTests() {
   });
   await executeCases(tests);
 }
+
+/** Runs the advanced settings integration tests. */
 export async function runAllTests() {
   await runFixture(
     "http://localhost:5196/test/integration/index.html?suite=advanced",

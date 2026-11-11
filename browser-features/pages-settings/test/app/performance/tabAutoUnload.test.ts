@@ -34,6 +34,7 @@ declare const Services: {
   };
 };
 
+/** Builds settings for a test with the given overrides. */
 function makeSettings(
   overrides: Partial<TabAutoUnloadSettings> = {},
 ): TabAutoUnloadSettings {
@@ -44,6 +45,7 @@ function makeSettings(
   };
 }
 
+/** Clears a pref, ignoring one that is already unset. */
 function clearPref(name: string): void {
   try {
     Services.prefs.clearUserPref(name);
@@ -52,6 +54,7 @@ function clearPref(name: string): void {
   }
 }
 
+/** Defaults are opt-in and the floors match the feature. */
 function testDefaults(): void {
   assertEquals(
     DEFAULT_TAB_AUTO_UNLOAD_SETTINGS.enabled,
@@ -75,6 +78,7 @@ function testDefaults(): void {
   );
 }
 
+/** Non-object pref JSON falls back to the defaults. */
 function testNormalizeFallsBackForNonObjects(): void {
   const result = normalizeTabAutoUnloadSettings("nope");
   assertEquals(result.enabled, false, "enabled fallback");
@@ -83,6 +87,7 @@ function testNormalizeFallsBackForNonObjects(): void {
   assertEquals(result.excludePatterns.length, 0, "patterns fallback");
 }
 
+/** Wrong types fall back and numeric floors are clamped. */
 function testNormalizeRejectsWrongTypesAndClamps(): void {
   const result = normalizeTabAutoUnloadSettings({
     enabled: "yes",
@@ -105,6 +110,7 @@ function testNormalizeRejectsWrongTypesAndClamps(): void {
   );
 }
 
+/** Memory thresholds below the floor are clamped. */
 function testNormalizeClampsMemoryFloor(): void {
   const result = normalizeTabAutoUnloadSettings({ memoryThresholdMB: -10 });
   assertEquals(
@@ -114,6 +120,7 @@ function testNormalizeClampsMemoryFloor(): void {
   );
 }
 
+/** Merging keeps keys this page does not expose. */
 function testMergeKeepsUnknownKeys(): void {
   const existing = JSON.stringify({
     enabled: true,
@@ -140,6 +147,7 @@ function testMergeKeepsUnknownKeys(): void {
   );
 }
 
+/** Merging tolerates malformed stored JSON. */
 function testMergeFromBrokenJson(): void {
   const merged = JSON.parse(
     mergeTabAutoUnloadSettings("{ bad json", makeSettings()),
@@ -151,6 +159,7 @@ function testMergeFromBrokenJson(): void {
   );
 }
 
+/** The legacy exclusion pref supplies patterns without a write. */
 async function testLegacyFallback(): Promise<void> {
   const originalNew = Services.prefs.getStringPref(TAB_AUTO_UNLOAD_PREF, "");
   const originalLegacy = Services.prefs.getStringPref(
@@ -189,6 +198,7 @@ async function testLegacyFallback(): Promise<void> {
   }
 }
 
+/** Saved settings are read back unchanged. */
 async function testSaveRoundTrip(): Promise<void> {
   const original = Services.prefs.getStringPref(TAB_AUTO_UNLOAD_PREF, "");
 
@@ -229,6 +239,7 @@ async function testSaveRoundTrip(): Promise<void> {
   }
 }
 
+/** en-US and ja-JP expose the same non-empty keys. */
 function testTranslationsExist(): void {
   const enKeys = Object.keys(enUS.performance.tabAutoUnload).sort();
   const jaKeys = Object.keys(jaJP.performance.tabAutoUnload).sort();
@@ -256,6 +267,7 @@ function testTranslationsExist(): void {
   }
 }
 
+/** Runs every settings-side tab auto unload test. */
 export async function runAllTests(): Promise<void> {
   const tests: TestCase[] = [
     { name: "tab auto unload defaults", fn: testDefaults },

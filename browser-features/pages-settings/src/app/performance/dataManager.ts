@@ -31,10 +31,12 @@ export const IDLE_THRESHOLD_SEC_MIN = 60;
 export const MIN_INTERVAL_SEC_MIN = 60;
 export const MIN_RESIDENT_MB_MIN = 0;
 
+/** Returns the value when it is a boolean, otherwise the fallback. */
 function readBoolean(value: unknown, fallback: boolean): boolean {
   return typeof value === "boolean" ? value : fallback;
 }
 
+/** Returns a finite number clamped to `min`, otherwise the fallback. */
 function readNumber(value: unknown, fallback: number, min: number): number {
   if (typeof value !== "number" || !Number.isFinite(value)) {
     return fallback;
@@ -74,6 +76,7 @@ export function normalizeIdleMemoryReclaimSettings(
   };
 }
 
+/** Parses stored pref JSON, tolerating empty or malformed values. */
 function parseSettingsJson(raw: string | null): Record<string, unknown> {
   if (!raw) {
     return {};
@@ -154,6 +157,7 @@ export const DEFAULT_TAB_AUTO_UNLOAD_SETTINGS: TabAutoUnloadSettings = {
 export const MEMORY_THRESHOLD_MB_MIN = 0;
 export const MIN_INACTIVE_MINUTES_MIN = 1;
 
+/** Builds defaults with a fresh pattern array the caller can mutate. */
 function createDefaultTabAutoUnloadSettings(): TabAutoUnloadSettings {
   return {
     ...DEFAULT_TAB_AUTO_UNLOAD_SETTINGS,
@@ -161,6 +165,10 @@ function createDefaultTabAutoUnloadSettings(): TabAutoUnloadSettings {
   };
 }
 
+/**
+ * Trims, drops empty entries, and removes duplicate exclusion patterns
+ * while keeping the order the user entered.
+ */
 function normalizeExcludePatterns(raw: unknown): string[] {
   if (!Array.isArray(raw)) {
     return [];
@@ -230,6 +238,12 @@ export function mergeTabAutoUnloadSettings(
   });
 }
 
+/**
+ * Loads the settings, falling back to the legacy pref's patterns.
+ *
+ * Nothing is written back, so the old pref stays untouched until the user
+ * saves on this page.
+ */
 export async function getTabAutoUnloadSettings(): Promise<
   TabAutoUnloadSettings
 > {
@@ -260,6 +274,7 @@ export async function getTabAutoUnloadSettings(): Promise<
   }
 }
 
+/** Merges the page's settings into the stored pref JSON. */
 export async function saveTabAutoUnloadSettings(
   settings: TabAutoUnloadSettings,
 ): Promise<void> {

@@ -32,6 +32,7 @@ import {
   type TabAutoUnloadSettings,
 } from "@/app/performance/dataManager.ts";
 
+/** Performance card that edits the automatic tab unloading settings. */
 export function TabAutoUnload() {
   const { t } = useTranslation();
   const [settings, setSettings] = useState<TabAutoUnloadSettings>(
@@ -56,6 +57,7 @@ export function TabAutoUnload() {
     };
   }, []);
 
+  /** Persists a settings change and reverts the UI if the write fails. */
   const save = useCallback(
     async (next: TabAutoUnloadSettings) => {
       setSettings(next);
@@ -74,6 +76,7 @@ export function TabAutoUnload() {
     [],
   );
 
+  /** Adds the typed pattern, ignoring empty and duplicate entries. */
   const addPattern = useCallback(() => {
     const trimmed = newPattern.trim();
     if (!trimmed || settings.excludePatterns.includes(trimmed)) {
@@ -86,6 +89,7 @@ export function TabAutoUnload() {
     });
   }, [newPattern, save, settings]);
 
+  /** Saves the list without the removed pattern. */
   const removePattern = useCallback(
     (pattern: string) => {
       void save({
@@ -96,6 +100,7 @@ export function TabAutoUnload() {
     [save, settings],
   );
 
+  /** Adds the pattern on Enter instead of submitting a form. */
   const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Enter") {
       event.preventDefault();
@@ -103,6 +108,7 @@ export function TabAutoUnload() {
     }
   };
 
+  /** Tracks the pattern being typed before it is added. */
   const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
     setNewPattern(event.currentTarget.value);
   };

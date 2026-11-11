@@ -25,6 +25,7 @@ import {
   saveIdleMemoryReclaimSettings,
 } from "@/app/performance/dataManager.ts";
 
+/** Performance card that edits the idle memory reclaim settings. */
 export function IdleMemoryReclaim() {
   const { t } = useTranslation();
   const [settings, setSettings] = useState<IdleMemoryReclaimSettings>(
@@ -47,6 +48,7 @@ export function IdleMemoryReclaim() {
     };
   }, []);
 
+  /** Persists a settings change and reverts the UI if the write fails. */
   const save = useCallback(
     async (next: IdleMemoryReclaimSettings) => {
       setSettings(next);

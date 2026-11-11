@@ -32,6 +32,7 @@ type ExtendedGBrowser = typeof globalThis.gBrowser & {
   removeTabsProgressListener: (listener: object) => void;
   prepareDiscardBrowser: (tab: BrowserTab) => Promise<void>;
   discardBrowser: (tab: BrowserTab) => boolean;
+  getTabForBrowser: (browser: nsIBrowser) => BrowserTab | null;
 };
 
 /** One entry returned by TabUnloader.getSortedTabs(). */
@@ -51,10 +52,14 @@ const TAB_UNLOADER_URLS = [
   "moz-src:///browser/components/tabbrowser/TabUnloader.sys.mjs",
 ];
 
+/** Returns the value when it is a boolean, otherwise the fallback. */
 function readBoolean(value: unknown, fallback: boolean): boolean {
   return typeof value === "boolean" ? value : fallback;
 }
 
+/**
+ * Returns a finite number clamped to `min`, otherwise the fallback.
+ */
 function readNumber(value: unknown, fallback: number, min: number): number {
   if (typeof value !== "number" || !Number.isFinite(value)) {
     return fallback;
@@ -155,6 +160,7 @@ export function shouldCheckMemory(
   return residentBytes >= settings.memoryThresholdMB * BYTES_PER_MB;
 }
 
+/** Returns the lowercased hostname of a URL, or null for non-URLs. */
 function getHostname(url: string): string | null {
   try {
     return new URL(url).hostname.toLowerCase();
@@ -163,10 +169,11 @@ function getHostname(url: string): string | null {
   }
 }
 
+/** Builds a case-insensitive regexp from a pattern with `*` wildcards. */
 function wildcardToRegExp(pattern: string): RegExp {
   const escaped = pattern
     .replace(/[.+?^${}()|[\]\\]/g, "\\$&")
-    .replace(/\*/g, ".*");
+    .replace(/\*+/g, ".*");
   return new RegExp(`^${escaped}$`, "i");
 }
 
@@ -232,6 +239,7 @@ export function legacyPatterns(raw: string): string[] {
   }
 }
 
+/** Loads Firefox's TabUnloader from the first URL that resolves. */
 function loadTabUnloader(): TabUnloaderApi | null {
   for (const url of TAB_UNLOADER_URLS) {
     try {
@@ -262,6 +270,7 @@ export default class TabAutoUnload extends NoraComponentBase {
   declare private checking: boolean;
   declare private disposed: boolean;
 
+  /** Wires up prefs, tab listeners, and the memory check timer. */
   init(): void {
     this.settings = { ...DEFAULT_SETTINGS, excludePatterns: [] };
     this.prefObserver = null;
@@ -272,6 +281,7 @@ export default class TabAutoUnload extends NoraComponentBase {
     this.disposed = false;
 
     this.migrateLegacyPref();
+    this.clearStatsUserPref();
     this.settings = this.loadSettings();
     this.setupPrefObserver();
     this.setupTabListeners();
@@ -312,6 +322,7 @@ export default class TabAutoUnload extends NoraComponentBase {
     }
   }
 
+  /** Reads and sanitizes the settings pref. */
   private loadSettings(): TabAutoUnloadSettings {
     try {
       const raw = Services.prefs.getStringPref(TAB_AUTO_UNLOAD_PREF, "");
@@ -325,6 +336,7 @@ export default class TabAutoUnload extends NoraComponentBase {
     }
   }
 
+  /** Reads and sanitizes the shared throttle state. */
   private loadStats(): TabAutoUnloadStats {
     try {
       const raw = Services.prefs.getStringPref(
@@ -341,17 +353,41 @@ export default class TabAutoUnload extends NoraComponentBase {
     }
   }
 
+  /**
+   * Drops stats left in user prefs by earlier builds.
+   *
+   * The value is shared throttling state, not a setting, so it must not stay
+   * in the user's prefs or prefs.js.
+   */
+  private clearStatsUserPref(): void {
+    try {
+      if (Services.prefs.prefHasUserValue(TAB_AUTO_UNLOAD_STATS_PREF)) {
+        Services.prefs.clearUserPref(TAB_AUTO_UNLOAD_STATS_PREF);
+      }
+    } catch (error) {
+      console.error("[TabAutoUnload] Failed to clear stats user pref:", error);
+    }
+  }
+
+  /**
+   * Publishes the throttle state that every window shares.
+   *
+   * Writing to the default branch keeps the value in memory: the pref service
+   * backs all chrome windows in this process, so they all see the same
+   * `lastRunAt`, but nothing is persisted to prefs.js and `about:config` does
+   * not list the value as a user-set pref.
+   */
   private saveStats(stats: TabAutoUnloadStats): void {
     try {
-      Services.prefs.setStringPref(
-        TAB_AUTO_UNLOAD_STATS_PREF,
-        JSON.stringify(stats),
-      );
+      Services.prefs
+        .getDefaultBranch("")
+        .setStringPref(TAB_AUTO_UNLOAD_STATS_PREF, JSON.stringify(stats));
     } catch (error) {
       console.error("[TabAutoUnload] Failed to save stats:", error);
     }
   }
 
+  /** Re-applies exclusions and the timer when the settings pref changes. */
   private setupPrefObserver(): void {
     this.prefObserver = {
       observe: (_subject: nsISupports, topic: string, data: string) => {
@@ -367,6 +403,7 @@ export default class TabAutoUnload extends NoraComponentBase {
     Services.prefs.addObserver(TAB_AUTO_UNLOAD_PREF, this.prefObserver);
   }
 
+  /** Re-checks single tabs on open and after a navigation. */
   private setupTabListeners(): void {
     const gBrowser = globalThis.gBrowser as ExtendedGBrowser;
 
@@ -382,15 +419,24 @@ export default class TabAutoUnload extends NoraComponentBase {
     globalThis.addEventListener("TabOpen", this.tabOpenListener);
 
     this.progressListener = {
-      onLocationChange: () => {
-        if (!this.disposed) {
-          this.applyToAllTabs();
+      onLocationChange: (browser: nsIBrowser) => {
+        if (this.disposed) {
+          return;
+        }
+        // TabsProgressListener passes the browser whose location changed, so
+        // only that tab needs re-checking here.
+        const tab = (globalThis.gBrowser as ExtendedGBrowser).getTabForBrowser(
+          browser,
+        );
+        if (tab) {
+          this.updateTabDiscardability(tab);
         }
       },
     };
     gBrowser.addTabsProgressListener(this.progressListener);
   }
 
+  /** Starts the per-window check timer while the feature is enabled. */
   private setupCheckTimer(): void {
     this.clearCheckTimer();
     if (!this.settings.enabled) {
@@ -402,6 +448,7 @@ export default class TabAutoUnload extends NoraComponentBase {
     }, CHECK_INTERVAL_MS);
   }
 
+  /** Stops the check timer if it is running. */
   private clearCheckTimer(): void {
     if (this.checkTimerId !== null) {
       clearInterval(this.checkTimerId);
@@ -409,6 +456,7 @@ export default class TabAutoUnload extends NoraComponentBase {
     }
   }
 
+  /** Re-applies the exclusion state to every open tab. */
   private applyToAllTabs(): void {
     const tabs = globalThis.gBrowser.tabs as BrowserTab[];
     for (const tab of tabs) {
@@ -416,6 +464,9 @@ export default class TabAutoUnload extends NoraComponentBase {
     }
   }
 
+  /**
+   * Marks or unmarks one tab as undiscardable for the exclusions in effect.
+   */
   private updateTabDiscardability(tab: BrowserTab): void {
     const url = this.getTabUrl(tab);
     if (!url) {
@@ -439,6 +490,7 @@ export default class TabAutoUnload extends NoraComponentBase {
     }
   }
 
+  /** Current URL of a tab, or null while it has no usable URI. */
   private getTabUrl(tab: BrowserTab): string | null {
     try {
       return tab.linkedBrowser?.currentURI?.spec ?? null;
@@ -504,6 +556,7 @@ export default class TabAutoUnload extends NoraComponentBase {
     }
   }
 
+  /** Discards the least recently used tab that is safe to unload. */
   private async unloadOneTab(
     stats: TabAutoUnloadStats,
     now: number,
@@ -559,6 +612,7 @@ export default class TabAutoUnload extends NoraComponentBase {
     }
   }
 
+  /** Removes the timer, observers, and listeners when the window closes. */
   private teardown(): void {
     this.disposed = true;
     this.clearCheckTimer();
