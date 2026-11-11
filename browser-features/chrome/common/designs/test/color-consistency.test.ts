@@ -17,9 +17,18 @@
  *
  * 1. "One surface" (PRIMARY — every design, every theme):
  *    `#nav-bar` == `#PersonalToolbar` == `#panel-sidebar-box` ==
- *    `#nora-statusbar`. This is the invariant the Gecko 152 fix restored:
- *    all chrome bars must share the SAME background color. It does NOT
- *    require them to match the selected tab — that is a per-design choice.
+ *    `#nora-statusbar` == `#browser`. This is the invariant the Gecko 152
+ *    fix restored: all chrome bars must share the SAME background color. It
+ *    does NOT require them to match the selected tab — that is a per-design
+ *    choice. `#browser` is the strip behind the native sidebar launcher and
+ *    around rounded page corners; since Gecko 152 Firefox paints it with
+ *    `--toolbar-background-color`. Lepton before v8.7.6 overrode only the
+ *    legacy `--toolbar-bgcolor`, so with Lepton-family designs on Windows
+ *    `#browser` stayed lighter than the Floorp surfaces (Issue #2531). The
+ *    diverging palettes are gated on `-moz-platform: windows` (and a macOS
+ *    palette behind `layout.css.osx-font-smoothing.enabled`, unverified),
+ *    so on Linux this check passes either way. It is transparent with
+ *    vertical tabs and is then skipped like any other absent surface.
  *
  * 2. "Tab tracks toolbar" (SECONDARY — `color_like_toolbar` designs only):
  *    For `lepton`, `photon`, `fluerial` the selected tab is aligned to the
@@ -118,6 +127,7 @@ const SURFACE_ELEMENTS: readonly [string, string][] = [
   ["#PersonalToolbar", "PersonalToolbar"],
   ["#panel-sidebar-box", "panel-sidebar-box"],
   ["#nora-statusbar", "nora-statusbar"],
+  ["#browser", "browser"],
 ];
 
 /** Selectors that may yield the selected tab's background, tried in order. */
@@ -530,7 +540,7 @@ function readAllSurfaces(): SurfaceReadings {
 /**
  * PRIMARY invariant: every present chrome surface reads the SAME color.
  * This is what the Gecko 152 fix restored — nav-bar, PersonalToolbar,
- * panel-sidebar and status bar must all share one background. Missing
+ * panel-sidebar, status bar and #browser must all share one background. Missing
  * elements are skipped; if too few surfaces are present to compare, the
  * case is skipped rather than failed.
  */
