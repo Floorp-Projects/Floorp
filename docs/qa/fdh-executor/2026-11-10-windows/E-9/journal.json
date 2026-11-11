@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "jobId": "intent-20261110t025345z-f96ea9",
+  "taskId": "e2e-e-9-mwa3iukj",
+  "worktree": "E:\\floorp-browser-dev\\fdh-followup",
+  "kind": "intent",
+  "step": null,
+  "intent": {
+    "op": "pr",
+    "target": "draft PR"
+  },
+  "inputs": {
+    "baseCommit": "03adaa8dc1a67f4b6e2115625bc3d7a4632dea3c",
+    "head": "",
+    "guardEnv": {}
+  },
+  "executionDigest": "646bae134f2b99d43b0ae615ebcac3f0ce3168adf686c184c3e109f749674285",
+  "state": "failed",
+  "epoch": 1,
+  "lease": null,
+  "leaseTtlMs": 1800000,
+  "maxAttempts": 3,
+  "attempts": [
+    {
+      "attempt": 1,
+      "epoch": 1,
+      "holder": "agent-a",
+      "scheduledAt": "2026-11-10T02:53:45.267Z",
+      "startedAt": "2026-11-10T02:53:45.267Z",
+      "endedAt": "2026-11-10T02:54:07.501Z",
+      "result": "lost",
+      "exitCode": null,
+      "logRef": null,
+      "process": null,
+      "notes": "holder lost; outcome unknown",
+      "lastSeenAt": "2026-11-10T02:53:45.267Z"
+    }
+  ],
+  "checkpoint": 0,
+  "commandResults": [],
+  "recordedToTask": true,
+  "transitions": [
+    {
+      "from": null,
+      "to": "pending",
+      "at": "2026-11-10T02:53:45.267Z",
+      "reason": "created"
+    },
+    {
+      "from": "pending",
+      "to": "scheduled",
+      "at": "2026-11-10T02:53:45.267Z",
+      "reason": "attempt 1 recorded before start"
+    },
+    {
+      "from": "scheduled",
+      "to": "running",
+      "at": "2026-11-10T02:53:45.267Z",
+      "reason": "attempt 1 started"
+    },
+    {
+      "from": "running",
+      "to": "awaiting-approval",
+      "at": "2026-11-10T02:54:07.501Z",
+      "reason": "unknown outcome of non-idempotent pr operation"
+    },
+    {
+      "from": "awaiting-approval",
+      "to": "failed",
+      "at": "2026-11-10T02:54:07.862Z",
+      "reason": "resolved failed by approver: e2e cleanup"
+    }
+  ],
+  "events": [
+    {
+      "at": "2026-11-10T02:54:07.501Z",
+      "kind": "lease-expired",
+      "epoch": 1,
+      "note": "holder agent-a lost"
+    },
+    {
+      "at": "2026-11-10T02:54:07.696Z",
+      "kind": "late-report",
+      "epoch": 1,
+      "note": "report by agent-a (exit 0) after the holder was declared lost; not applied"
+    },
+    {
+      "at": "2026-11-10T02:54:07.862Z",
+      "kind": "resolved",
+      "epoch": 1,
+      "note": "resolved failed by approver: e2e cleanup"
+    }
+  ],
+  "createdAt": "2026-11-10T02:53:45.267Z",
+  "updatedAt": "2026-11-10T02:54:07.862Z"
+}

@@ -1,0 +1,74 @@
+/* SPDX-License-Identifier: MPL-2.0 */
+
+/* Floorp overlay for ../css/leptonContent.css.
+ *
+ * ../css/, ../icons/, ../userjs/ and ../LEPTON are vendored upstream Lepton
+ * and must stay byte-identical to the release recorded in ../UPSTREAM.json
+ * (checked by tools/src/lepton_vendor.test.ts). Put Floorp changes to
+ * Lepton's content styling here instead.
+ *
+ * Loaded by browser-features/chrome/common/designs/utils/css.ts right after
+ * every load of leptonContent.css, at the same level. Production: a chrome
+ * document sheet plus an AGENT_SHEET (nsIStyleSheetService, applies to every
+ * document including web pages) for lepton, photon and protonfix. Dev builds:
+ * an AGENT_SHEET only, for all three. Rules here therefore reach web content;
+ * scope them with @-moz-document like leptonContent.css does.
+ *
+ * Repeat Lepton's @namespace lines (xul / html prefixes, same URLs) at the
+ * top when you use those prefixes, declare no default namespace, and do not
+ * use @import: in the dev chrome <style> this file is concatenated after
+ * Lepton's sheets. See ../README.md.
+ */
+
+/* Firefox Home (about:home / about:newtab) fixes for Lepton's new tab options.
+ *
+ * Same scope as the rules they amend in leptonContent.css: the
+ * @-moz-document block for about:home / about:newtab, then the option's pref
+ * query. leptonContent.css carries each option twice, once with
+ * -moz-pref("...") and once with the legacy (-moz-bool-pref: "...") syntax;
+ * each media query list below lists both, and Gecko treats the one it cannot
+ * parse as "not all". Photon and Protonfix enable both options through their
+ * user.js and load this sheet as an AGENT_SHEET, so the declarations keep the
+ * !important of the originals where they have it (agent !important beats the
+ * page's own normal and !important rules). */
+@-moz-document url("about:home"), url("about:newtab") {
+  /* userContent.newTab.full_icon sizes .tile to 80px and .icon-wrapper to
+   * 100%, but Firefox Home now wraps the icon in .icon-stack. Left at its
+   * auto size, .icon-stack collapses to 0x0 together with the icon inside,
+   * so every shortcut tile is blank. This mirrors upstream Lepton commit
+   * 203da5b8 (black7375/Firefox-UI-Fix#1188), which is on master but not in
+   * any release up to v8.7.6; remove it once the vendored release has it. */
+  @media -moz-pref("userContent.newTab.full_icon"), (-moz-bool-pref:
+    "userContent.newTab.full_icon") {
+    .top-site-outer .icon-stack {
+      width: 100% !important;
+      height: 100% !important;
+    }
+  }
+
+  /* userContent.newTab.pocket_to_last turns .body-wrapper.on into a
+   * wrapping flex row, gives its direct .ds-layout children flex-basis: 100%
+   * and gives `order: 2` to
+   * `.body-wrapper.on > .collapsible-section[data-section-id="topstories"]`.
+   * On Gecko 159 the stories section is no longer a direct child of
+   * .body-wrapper: DiscoveryStreamBase wraps it in .layout-content-column
+   * (and Recent activity in .layout-highlights-column), both
+   * `display: contents`. So Lepton's order rule never matches, and the
+   * wrapped children become flex items without the full row, which shrinks
+   * Recent activity to its min-content width (cards about 30px wide). Their
+   * children are the real flex items of .body-wrapper.on, so give them the
+   * full row and move the stories column (stories plus its privacy link)
+   * behind top sites, widgets and Recent activity. The selectors need
+   * .body-wrapper.on, so Floorp Start (which also loads at about:newtab) and
+   * the Nova layout (.content-full-width) are not touched. Floorp's own
+   * rules; not in upstream Lepton up to v8.7.6. */
+  @media -moz-pref("userContent.newTab.pocket_to_last"), (-moz-bool-pref:
+    "userContent.newTab.pocket_to_last") {
+    .body-wrapper.on > :is(.layout-content-column, .layout-highlights-column) > * {
+      flex-basis: 100%;
+    }
+    .body-wrapper.on > .layout-content-column > * {
+      order: 2;
+    }
+  }
+}
