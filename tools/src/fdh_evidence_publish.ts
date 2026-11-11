@@ -158,10 +158,9 @@ function summaryLines(
 }
 
 /**
- * Render the PR comment for `manifest`. The manifest is embedded as JSON, or
- * gzip+base64 when the JSON would not fit in one comment; a manifest that
- * does not fit either way is refused. The rendered comment is read back
- * before it is returned.
+ * Render the PR comment for `manifest`. The manifest is embedded as
+ * gzip+base64 (see below); one that does not fit in a comment is refused.
+ * The rendered comment is read back before it is returned.
  */
 export async function evidenceCommentBody(
   manifest: EvidenceManifest,

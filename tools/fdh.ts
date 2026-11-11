@@ -1271,6 +1271,10 @@ async function cmdEvidencePublish(parsed: ParsedArgs): Promise<void> {
   });
   await Deno.mkdir(path.dirname(outPath), { recursive: true });
   await Deno.writeTextFile(outPath, body);
+  // The comment carries the manifest as base64: write it in plain JSON
+  // next to it, so the agent can read what would be published.
+  const reviewPath = `${outPath}.manifest.json`;
+  await writeEvidenceManifest(reviewPath, manifest);
   appendEvent(state, {
     timestamp: nowIso(),
     command: "evidence publish",
@@ -1281,8 +1285,10 @@ async function cmdEvidencePublish(parsed: ParsedArgs): Promise<void> {
   console.log(JSON.stringify({
     ...binding,
     out: outPath,
+    review: reviewPath,
     chars: body.length,
-    next: `gh pr comment ${pr} --body-file ${outPath}`,
+    next:
+      `read ${reviewPath}; if it holds nothing sensitive: gh pr comment ${pr} --body-file ${outPath}`,
   }));
 }
 

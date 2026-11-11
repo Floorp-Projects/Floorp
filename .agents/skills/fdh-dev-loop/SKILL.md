@@ -183,14 +183,20 @@ A manifest lives only in this worktree's `_dist/fdh/`. To keep it with the
 change, post it on the PR as a comment.
 
 Post it after the last commit, from a clean worktree, so that it is bound to
-the PR's final head. Read the rendered file before posting: the comment is
-public and carries command output and local paths.
+the PR's final head.
 
 ```sh
-fdh evidence publish --task-id <id> --pr <n> --out _dist/fdh/evidence-<n>.md
+deno task fdh evidence publish --task-id <id> --pr <n> --out _dist/fdh/evidence-<n>.md
+# Read _dist/fdh/evidence-<n>.md.manifest.json (the same manifest, in plain
+# JSON) before posting. Do not post it if it holds anything sensitive.
 gh pr comment <n> --body-file _dist/fdh/evidence-<n>.md
-fdh evidence trace --pr <n> [--require-merged true]   # exit 1 if incomplete
+deno task fdh evidence trace --pr <n> [--require-merged true]   # exit 1 if incomplete
 ```
+
+The comment is public. The manifest carries command output and local paths,
+and fdh's secret check only refuses known secret references; it does not find
+arbitrary credentials or personal data. That is why the plain copy has to be
+read first.
 
 What the comment holds:
 
@@ -332,18 +338,18 @@ keyed operations, under `<worktree>/_dist/fdh/ext/<task-id>.json`. There is
 no webhook: run `ext observe` for each value you poll, then `ext plan`.
 
 ```sh
-fdh ext link --task-id <id> --jira KAN-131 --pr 3200 --branch fdh/external-ops
+deno task fdh ext link --task-id <id> --jira KAN-131 --pr 3200 --branch fdh/external-ops
 # GitHub: read every linked PR (state, URL, the head's check runs) with gh.
 # A PR that cannot be read is an error (exit 1), never a deletion.
-fdh ext poll --task-id <id> [--repo <owner/name>]
+deno task fdh ext poll --task-id <id> [--repo <owner/name>]
 # Jira (Atlassian MCP), or any value you read yourself, with the object's
 # API update time as --version:
-fdh ext observe --task-id <id> --ref jira:KAN-131 --field status \
+deno task fdh ext observe --task-id <id> --ref jira:KAN-131 --field status \
   --value 進行中 --version <jira updated>
-fdh ext plan --task-id <id>      # actions, holds, inSync, keptEdits, fields
+deno task fdh ext plan --task-id <id>      # actions, holds, inSync, keptEdits, fields
 # For each action: start its key, perform the write, then record the outcome.
-fdh ext start --task-id <id> --key '<action.key>' --agent <name>
-fdh ext done --task-id <id> --key '<action.key>' --epoch <n> --agent <name> \
+deno task fdh ext start --task-id <id> --key '<action.key>' --agent <name>
+deno task fdh ext done --task-id <id> --key '<action.key>' --epoch <n> --agent <name> \
   --outcome succeeded
 # Then poll the mirror again (ext observe) before the next plan.
 ```
