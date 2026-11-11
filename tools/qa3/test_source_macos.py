@@ -307,7 +307,11 @@ def _orphan_command(marker, leave_session=False):
     parent = (
         "import pathlib,subprocess,sys,time\n"
         f"marker = pathlib.Path({str(marker)!r})\n"
-        f"subprocess.Popen([sys.executable,'-I','-c',{child!r}])\n"
+        # The orphan must not hold the worker's output pipe open, or the test
+        # would wait for it to exit on its own.
+        f"subprocess.Popen([sys.executable,'-I','-c',{child!r}],"
+        "stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,"
+        "stderr=subprocess.DEVNULL)\n"
         "deadline = time.monotonic() + 10\n"
         "while not marker.exists() and time.monotonic() < deadline:\n"
         "    time.sleep(0.01)\n"
