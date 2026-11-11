@@ -140,6 +140,10 @@ import {
   repoSlugFromRemote,
   validateRepoSlug,
 } from "./src/fdh_ext_poll.ts";
+import {
+  evidenceCommentBody,
+  traceEvidence,
+} from "./src/fdh_evidence_publish.ts";
 import type { ValidationError } from "./qa3/evidence/types.ts";
 
 const HELP = `
@@ -227,6 +231,17 @@ Commands:
                             Check dev-tool browser status; --eval output is
                             recorded verbatim, and --expect turns it into an
                             honest contains-check assertion
+  evidence publish --task-id <id> --pr <n> --out <path> [--repo <owner/name>]
+                            Build the manifest and render a PR comment that
+                            carries it, bound to the repository, task, PR and
+                            HEAD commit with its SHA-256; read the file, then
+                            post it with 'gh pr comment <n> --body-file <path>'
+  evidence trace --pr <n> [--repo <owner/name>] [--require-merged true]
+                            From a (merged) PR to its evidence and receipts.
+                            Exits 1 unless the final head has evidence that
+                            counts (trusted author, not edited, intact, this
+                            repo/PR/head, no uncommitted changes, assertions
+                            all passed) and a valid receipt set
   evidence --task-id <id> --out <path>
                             Build + validate the EvidenceManifest v0
                             (--out must stay under <worktree>/_dist/fdh)
@@ -1211,6 +1226,96 @@ function resolveEvidenceOut(state: FdhTaskState, raw: string): string {
   return resolved;
 }
 
+async function cmdEvidencePublish(parsed: ParsedArgs): Promise<void> {
+  assertNoPositional(parsed, 2);
+  assertAllowedOptions(parsed, ["task-id", "pr", "out", "repo"]);
+  const taskId = validateTaskId(requireOption(parsed, "task-id"));
+  const pr = requireInteger(parsed, "pr", 1);
+  const repoOption = hasOption(parsed, "repo")
+    ? validateRepoSlug(requireOption(parsed, "repo"))
+    : undefined;
+  const state = await loadStateForCwd(taskId);
+  const repo = repoOption ?? repoSlugFromRemote(
+    await defaultGitRunner(state.worktree, ["remote", "get-url", "origin"]),
+  );
+  const outPath = resolveEvidenceOut(state, requireOption(parsed, "out"));
+  assertNoSecretReferences(state);
+  let manifest;
+  try {
+    manifest = await buildEvidenceManifest(state);
+  } catch (error) {
+    if (error instanceof EvidenceValidationError) {
+      printValidationErrors(error.errors);
+      Deno.exit(1);
+    }
+    throw error;
+  }
+  const errors = validateEvidenceManifest(manifest);
+  if (errors.length > 0) {
+    printValidationErrors(errors);
+    Deno.exit(1);
+  }
+  const commit = (await defaultGitRunner(state.worktree, ["rev-parse", "HEAD"]))
+    .trim();
+  const uncommitted = (await defaultGitRunner(state.worktree, [
+    "status",
+    "--porcelain",
+  ])).trim() !== "";
+  const { body, binding } = await evidenceCommentBody(manifest, {
+    repo,
+    taskId,
+    pr,
+    commit,
+    uncommitted,
+    builtAt: nowIso(),
+  });
+  await Deno.mkdir(path.dirname(outPath), { recursive: true });
+  await Deno.writeTextFile(outPath, body);
+  // The comment carries the manifest as base64: write it in plain JSON
+  // next to it, so the agent can read what would be published.
+  const reviewPath = `${outPath}.manifest.json`;
+  await writeEvidenceManifest(reviewPath, manifest);
+  appendEvent(state, {
+    timestamp: nowIso(),
+    command: "evidence publish",
+    note: `PR #${pr} at ${commit}: ${outPath} (sha256 ${binding.sha256})`,
+    exitCode: 0,
+  });
+  writeTaskState(state);
+  console.log(JSON.stringify({
+    ...binding,
+    out: outPath,
+    review: reviewPath,
+    chars: body.length,
+    next:
+      `read ${reviewPath}; if it holds nothing sensitive: gh pr comment ${pr} --body-file ${outPath}`,
+  }));
+}
+
+async function cmdEvidenceTrace(parsed: ParsedArgs): Promise<void> {
+  assertNoPositional(parsed, 2);
+  assertAllowedOptions(parsed, ["pr", "repo", "require-merged"]);
+  const pr = requireInteger(parsed, "pr", 1);
+  const requireMergedRaw = hasOption(parsed, "require-merged")
+    ? requireOption(parsed, "require-merged")
+    : undefined;
+  if (requireMergedRaw !== undefined && requireMergedRaw !== "true") {
+    throw new Error("--require-merged takes only the value true");
+  }
+  const repo = hasOption(parsed, "repo")
+    ? validateRepoSlug(requireOption(parsed, "repo"))
+    : repoSlugFromRemote(
+      await defaultGitRunner(Deno.cwd(), ["remote", "get-url", "origin"]),
+    );
+  const report = await traceEvidence(repo, pr, undefined, {
+    requireMerged: requireMergedRaw === "true",
+  });
+  console.log(JSON.stringify(report));
+  if (!report.complete) {
+    throw new Error(`PR #${pr}: ${report.problems.join("; ")}`);
+  }
+}
+
 async function cmdEvidence(parsed: ParsedArgs): Promise<void> {
   assertNoPositional(parsed, 1);
   assertAllowedOptions(parsed, ["task-id", "out"]);
@@ -1716,6 +1821,8 @@ async function main(argv: string[]): Promise<void> {
       if (sub === "browser") return await cmdVerifyBrowser(parsed);
       throw new Error(`unknown verify command ${JSON.stringify(sub ?? "")}`);
     case "evidence":
+      if (sub === "publish") return await cmdEvidencePublish(parsed);
+      if (sub === "trace") return await cmdEvidenceTrace(parsed);
       assertNoPositional(parsed, 1);
       return await cmdEvidence(parsed);
     case "record":
