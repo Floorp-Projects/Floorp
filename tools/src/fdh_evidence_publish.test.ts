@@ -6,6 +6,7 @@ import { encodeBase64 } from "@std/encoding/base64";
 import { createTaskState, writeTaskState } from "./fdh_task.ts";
 import { buildEvidenceManifest } from "./fdh_evidence.ts";
 import {
+  assertNotPublishOutput,
   evidenceCommentBody,
   FDH_EVIDENCE_MARKER,
   manifestText,
@@ -505,9 +506,77 @@ Deno.test("fdh evidence publish: --out stays under _dist/fdh and out of fdh's ow
       "_dist/fdh/reviews/r.json",
       "_dist/fdh/observations/o.json",
       "_dist/fdh/Tasks/t.json",
+      // Names Windows opens as a reserved directory.
+      "_dist/fdh/tasks./t.json",
+      "_dist/fdh/tasks . /t.json",
+      "_dist/fdh/OBSERV~1/o.json",
+      "_dist/fdh/tasks:stream",
+      "_dist/fdh/x.md:stream",
+      path.join(path.parse(worktree).root, "elsewhere", "x.md"),
     ]
   ) {
     assertThrows(() => resolveEvidenceOut(root, worktree, bad), Error, "--out");
+  }
+});
+
+Deno.test("fdh evidence publish: --out through a link into fdh's state is refused", async () => {
+  const worktree = await Deno.makeTempDir();
+  try {
+    const root = path.join(worktree, "_dist", "fdh");
+    await Deno.mkdir(path.join(root, "tasks"), { recursive: true });
+    const outsideDir = await Deno.makeTempDir();
+    try {
+      let linked = true;
+      try {
+        // A junction on Windows needs no privilege; a symlink elsewhere.
+        await Deno.symlink(path.join(root, "tasks"), path.join(root, "pr"), {
+          type: "junction",
+        });
+        await Deno.symlink(outsideDir, path.join(root, "away"), {
+          type: "junction",
+        });
+      } catch {
+        linked = false;
+      }
+      if (linked) {
+        assertThrows(
+          () => resolveEvidenceOut(root, worktree, "_dist/fdh/pr/t.json"),
+          Error,
+          "fdh's own state",
+        );
+        assertThrows(
+          () => resolveEvidenceOut(root, worktree, "_dist/fdh/away/new/x.md"),
+          Error,
+          "must be inside",
+        );
+      }
+      // A directory that does not exist yet is checked through its ancestor.
+      assertEquals(
+        resolveEvidenceOut(root, worktree, "_dist/fdh/new/deeper/x.md"),
+        path.join(root, "new", "deeper", "x.md"),
+      );
+    } finally {
+      await Deno.remove(outsideDir, { recursive: true });
+    }
+  } finally {
+    await Deno.remove(worktree, { recursive: true });
+  }
+});
+
+Deno.test("fdh evidence --out never overwrites half of a publish pair", async () => {
+  const dir = await Deno.makeTempDir();
+  try {
+    const out = path.join(dir, "evidence-7.md");
+    await writeEvidenceOutputs(out, "{}\n", "body");
+    assertThrows(() => assertNotPublishOutput(out), Error, "one half");
+    assertThrows(
+      () => assertNotPublishOutput(`${out}.manifest.json`),
+      Error,
+      "one half",
+    );
+    assertNotPublishOutput(path.join(dir, "evidence-7.json"));
+  } finally {
+    await Deno.remove(dir, { recursive: true });
   }
 });
 

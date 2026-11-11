@@ -141,6 +141,13 @@ export const EVIDENCE_OUT_RESERVED: readonly string[] = [
 /**
  * Resolve `--out` (relative to `worktree` unless absolute): it must lie
  * under `root` (the worktree's _dist/fdh) and outside fdh's own state.
+ *
+ * Checked twice. Lexically, with each path segment compared the way Windows
+ * opens it (case-insensitive, trailing dots and spaces dropped), and with
+ * `~` (8.3 short names) and `:` (alternate data streams) refused. Then on
+ * disk: the nearest existing ancestor of the path is resolved through
+ * symlinks, junctions and short names, and must still lie under `root` and
+ * outside the reserved directories.
  */
 export function resolveEvidenceOut(
   root: string,
@@ -151,25 +158,92 @@ export function resolveEvidenceOut(
   const resolved = path.isAbsolute(raw)
     ? path.resolve(raw)
     : path.resolve(worktree, raw);
-  const relative = path.relative(base, resolved);
-  if (
-    relative === "" || relative === ".." ||
-    relative.startsWith(`..${path.SEPARATOR}`) || relative.startsWith("../") ||
-    path.isAbsolute(relative)
-  ) {
-    throw new Error(
+  const outside = () =>
+    new Error(
       `--out must be inside ${base} (the fdh evidence root), got ${resolved}`,
     );
-  }
-  const top = relative.split(/[\\/]/)[0].toLowerCase();
-  if (EVIDENCE_OUT_RESERVED.includes(top)) {
-    throw new Error(
+  const reserved = (top: string) =>
+    new Error(
       `--out must not write into fdh's own state under ${
         path.join(base, top)
       }, got ${resolved}`,
     );
+  const relative = path.relative(base, resolved);
+  if (escapes(relative)) throw outside();
+  const segments = relative.split(/[\\/]/);
+  if (segments.some((s) => s.includes("~") || s.includes(":"))) {
+    throw new Error(
+      `--out must not use short names (~) or streams (:), got ${resolved}`,
+    );
+  }
+  const top = windowsName(segments[0]);
+  if (EVIDENCE_OUT_RESERVED.includes(top)) throw reserved(top);
+
+  // On disk: follow symlinks, junctions and short names. Nothing under a
+  // root that does not exist yet can be a link (and the root's own path may
+  // differ from its real path only once it exists).
+  if (!pathExists(base)) return resolved;
+  const realBase = realPathOrSelf(base);
+  let ancestor = path.dirname(resolved);
+  while (!pathExists(ancestor) && path.dirname(ancestor) !== ancestor) {
+    ancestor = path.dirname(ancestor);
+  }
+  const realRelative = path.relative(realBase, realPathOrSelf(ancestor));
+  if (realRelative !== "") {
+    if (escapes(realRelative)) throw outside();
+    const realTop = windowsName(realRelative.split(/[\\/]/)[0]);
+    if (EVIDENCE_OUT_RESERVED.includes(realTop)) throw reserved(realTop);
   }
   return resolved;
+}
+
+/** A path segment as Windows matches it: case-insensitive, no trailing dots or spaces. */
+function windowsName(segment: string): string {
+  return segment.replace(/[. ]+$/, "").toLowerCase();
+}
+
+function escapes(relative: string): boolean {
+  return relative === "" || relative === ".." ||
+    relative.startsWith(`..${path.SEPARATOR}`) || relative.startsWith("../") ||
+    path.isAbsolute(relative);
+}
+
+function pathExists(p: string): boolean {
+  try {
+    Deno.lstatSync(p);
+    return true;
+  } catch (error) {
+    if (error instanceof Deno.errors.NotFound) return false;
+    throw error;
+  }
+}
+
+function realPathOrSelf(p: string): string {
+  try {
+    return Deno.realPathSync(p);
+  } catch {
+    return p;
+  }
+}
+
+/**
+ * Refuse to overwrite either half of an `evidence publish` output pair
+ * (`<x>` and `<x>.manifest.json`), which `fdh evidence --out` would
+ * otherwise do: the pair would no longer match.
+ */
+export function assertNotPublishOutput(outPath: string): void {
+  const suffix = ".manifest.json";
+  const pairedWith = pathExists(`${outPath}${suffix}`)
+    ? `${outPath}${suffix}`
+    : outPath.endsWith(suffix) &&
+        pathExists(outPath.slice(0, -suffix.length))
+    ? outPath.slice(0, -suffix.length)
+    : undefined;
+  if (pairedWith !== undefined) {
+    throw new Error(
+      `--out ${outPath} is one half of an evidence publish output (with ${pairedWith}); use another path`,
+    );
+  }
 }
 
 /**
@@ -186,7 +260,7 @@ export async function writeEvidenceOutputs(
   const reviewPath = `${outPath}.manifest.json`;
   await Deno.mkdir(path.dirname(outPath), { recursive: true });
   for (const p of [outPath, reviewPath]) {
-    if (await exists(p)) {
+    if (pathExists(p)) {
       throw new Error(`${p} already exists; publish to a new --out`);
     }
   }
@@ -208,16 +282,6 @@ export async function writeEvidenceOutputs(
     throw error;
   }
   return reviewPath;
-}
-
-async function exists(p: string): Promise<boolean> {
-  try {
-    await Deno.lstat(p);
-    return true;
-  } catch (error) {
-    if (error instanceof Deno.errors.NotFound) return false;
-    throw error;
-  }
 }
 
 /** Inline code safe for any assertion name (no backticks, no newlines). */

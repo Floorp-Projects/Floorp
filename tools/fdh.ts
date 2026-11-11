@@ -141,6 +141,7 @@ import {
   validateRepoSlug,
 } from "./src/fdh_ext_poll.ts";
 import {
+  assertNotPublishOutput,
   evidenceCommentBody,
   manifestText,
   resolveEvidenceOut,
@@ -1313,6 +1314,7 @@ async function cmdEvidence(parsed: ParsedArgs): Promise<void> {
     state.worktree,
     requireOption(parsed, "out"),
   );
+  assertNotPublishOutput(outPath);
 
   assertNoSecretReferences(state);
 
