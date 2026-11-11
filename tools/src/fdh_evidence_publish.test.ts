@@ -565,6 +565,17 @@ Deno.test("fdh evidence publish: --out through a link into fdh's state is refuse
           Error,
           "fdh's own state",
         );
+        // A broken link whose target would be created inside tasks/.
+        await Deno.symlink(
+          path.join(root, "tasks", "new.json"),
+          path.join(root, "dangling.json"),
+          { type: "file" },
+        );
+        assertThrows(
+          () => resolveEvidenceOut(root, worktree, "_dist/fdh/dangling.json"),
+          Error,
+          "broken link",
+        );
       }
       // A directory that does not exist yet is checked through its ancestor.
       assertEquals(

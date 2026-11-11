@@ -189,7 +189,20 @@ export function resolveEvidenceOut(
   while (!pathExists(ancestor) && path.dirname(ancestor) !== ancestor) {
     ancestor = path.dirname(ancestor);
   }
-  const realRelative = path.relative(realBase, realPathOrSelf(ancestor));
+  let realAncestor: string;
+  try {
+    realAncestor = Deno.realPathSync(ancestor);
+  } catch (error) {
+    // A link whose target does not exist yet: writing through it would
+    // create that target, wherever it is.
+    if (Deno.lstatSync(ancestor).isSymlink) {
+      throw new Error(
+        `--out must not go through a broken link, got ${ancestor}`,
+      );
+    }
+    throw error;
+  }
+  const realRelative = path.relative(realBase, realAncestor);
   if (realRelative !== "") {
     if (escapes(realRelative)) throw outside();
     const realTop = windowsName(realRelative.split(/[\\/]/)[0]);
