@@ -1,16 +1,20 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { assert, assertEquals, assertRejects } from "@std/assert";
+import { assert, assertEquals, assertRejects, assertThrows } from "@std/assert";
+import * as path from "@std/path";
 import { encodeBase64 } from "@std/encoding/base64";
 import { createTaskState, writeTaskState } from "./fdh_task.ts";
 import { buildEvidenceManifest } from "./fdh_evidence.ts";
 import {
+  assertNotPublishOutput,
   evidenceCommentBody,
   FDH_EVIDENCE_MARKER,
   manifestText,
   MAX_EVIDENCE_COMMENT_CHARS,
   parseEvidenceComments,
+  resolveEvidenceOut,
   traceEvidence,
+  writeEvidenceOutputs,
 } from "./fdh_evidence_publish.ts";
 import { FDH_REVIEW_RECEIPT_MARKER } from "./fdh_review.ts";
 import type { GhRunner } from "./fdh_ext_poll.ts";
@@ -469,6 +473,203 @@ Deno.test("fdh evidence publish: a manifest with ANSI colours survives gh's cont
       trustedComment(ghRewrite(body)),
     ]);
     assertEquals(parsed.ok, true, parsed.problems.join("; "));
+  } finally {
+    await Deno.remove(dir, { recursive: true });
+  }
+});
+
+Deno.test("fdh evidence publish: --out stays under _dist/fdh and out of fdh's own state", () => {
+  const worktree = path.resolve("/w");
+  const root = path.join(worktree, "_dist", "fdh");
+  assertEquals(
+    resolveEvidenceOut(root, worktree, "_dist/fdh/evidence-7.md"),
+    path.join(root, "evidence-7.md"),
+  );
+  assertEquals(
+    resolveEvidenceOut(root, worktree, "_dist/fdh/pr/evidence-7.md"),
+    path.join(root, "pr", "evidence-7.md"),
+  );
+  // A name that only starts like a reserved directory is fine.
+  assertEquals(
+    resolveEvidenceOut(root, worktree, "_dist/fdh/tasks-evidence.md"),
+    path.join(root, "tasks-evidence.md"),
+  );
+  for (
+    const bad of [
+      "_dist/fdh",
+      "evidence.md",
+      "_dist/fdh/../x.md",
+      "_dist/fdh/tasks/t.json",
+      "_dist/fdh/ext/t.json",
+      "_dist/fdh/jobs/j.json",
+      "_dist/fdh/quota/q.json",
+      "_dist/fdh/reviews/r.json",
+      "_dist/fdh/observations/o.json",
+      "_dist/fdh/Tasks/t.json",
+      // Names Windows opens as a reserved directory.
+      "_dist/fdh/tasks./t.json",
+      "_dist/fdh/tasks . /t.json",
+      "_dist/fdh/OBSERV~1/o.json",
+      "_dist/fdh/tasks:stream",
+      "_dist/fdh/x.md:stream",
+      path.join(path.parse(worktree).root, "elsewhere", "x.md"),
+    ]
+  ) {
+    assertThrows(() => resolveEvidenceOut(root, worktree, bad), Error, "--out");
+  }
+});
+
+Deno.test("fdh evidence publish: --out through a link into fdh's state is refused", async () => {
+  const worktree = await Deno.makeTempDir();
+  try {
+    const root = path.join(worktree, "_dist", "fdh");
+    await Deno.mkdir(path.join(root, "tasks"), { recursive: true });
+    const outsideDir = await Deno.makeTempDir();
+    try {
+      // A junction on Windows needs no privilege; elsewhere a symlink.
+      await Deno.symlink(path.join(root, "tasks"), path.join(root, "pr"), {
+        type: "junction",
+      });
+      await Deno.symlink(outsideDir, path.join(root, "away"), {
+        type: "junction",
+      });
+      {
+        assertThrows(
+          () => resolveEvidenceOut(root, worktree, "_dist/fdh/pr/t.json"),
+          Error,
+          "fdh's own state",
+        );
+        assertThrows(
+          () => resolveEvidenceOut(root, worktree, "_dist/fdh/away/new/x.md"),
+          Error,
+          "must be inside",
+        );
+      }
+      // A file link at the --out path itself (POSIX: file symlinks need no
+      // privilege; on Windows they may, so that case is skipped there).
+      await Deno.writeTextFile(path.join(root, "tasks", "t.json"), "{}");
+      let fileLinked = true;
+      try {
+        await Deno.symlink(
+          path.join(root, "tasks", "t.json"),
+          path.join(root, "planted.json"),
+          { type: "file" },
+        );
+      } catch (error) {
+        if (Deno.build.os !== "windows") throw error;
+        fileLinked = false;
+      }
+      if (fileLinked) {
+        assertThrows(
+          () => resolveEvidenceOut(root, worktree, "_dist/fdh/planted.json"),
+          Error,
+          "fdh's own state",
+        );
+        // A broken link whose target would be created inside tasks/.
+        await Deno.symlink(
+          path.join(root, "tasks", "new.json"),
+          path.join(root, "dangling.json"),
+          { type: "file" },
+        );
+        assertThrows(
+          () => resolveEvidenceOut(root, worktree, "_dist/fdh/dangling.json"),
+          Error,
+          "broken link",
+        );
+      }
+      // A directory that does not exist yet is checked through its ancestor.
+      assertEquals(
+        resolveEvidenceOut(root, worktree, "_dist/fdh/new/deeper/x.md"),
+        path.join(root, "new", "deeper", "x.md"),
+      );
+    } finally {
+      await Deno.remove(outsideDir, { recursive: true });
+    }
+  } finally {
+    await Deno.remove(worktree, { recursive: true });
+  }
+});
+
+Deno.test("fdh evidence --out never overwrites half of a publish pair", async () => {
+  const dir = await Deno.makeTempDir();
+  try {
+    const out = path.join(dir, "evidence-7.md");
+    await writeEvidenceOutputs(out, "{}\n", "body");
+    assertThrows(() => assertNotPublishOutput(out), Error, "one half");
+    assertThrows(
+      () => assertNotPublishOutput(`${out}.manifest.json`),
+      Error,
+      "one half",
+    );
+    assertNotPublishOutput(path.join(dir, "evidence-7.json"));
+    // Other spellings of the same files.
+    assertThrows(
+      () => assertNotPublishOutput(`${out}.MANIFEST.JSON`),
+      Error,
+      "one half",
+    );
+    assertThrows(() => assertNotPublishOutput(`${out}. `), Error, "one half");
+    // A publication to a name with a trailing dot (a distinct file on POSIX).
+    const dotted = path.join(dir, "report.md.");
+    let dottedOk = true;
+    try {
+      await writeEvidenceOutputs(dotted, "{}\n", "body");
+    } catch (error) {
+      if (Deno.build.os !== "windows") throw error;
+      dottedOk = false; // Windows already has report.md: no new pair.
+    }
+    if (dottedOk) {
+      assertThrows(() => assertNotPublishOutput(dotted), Error, "one half");
+      assertThrows(
+        () => assertNotPublishOutput(`${dotted}.manifest.json`),
+        Error,
+        "one half",
+      );
+    }
+    // A link at --out could alias either half.
+    let linked = true;
+    try {
+      await Deno.symlink(out, path.join(dir, "alias.md"), { type: "file" });
+    } catch (error) {
+      if (Deno.build.os !== "windows") throw error;
+      linked = false;
+    }
+    if (linked) {
+      assertThrows(
+        () => assertNotPublishOutput(path.join(dir, "alias.md")),
+        Error,
+        "must not be a link",
+      );
+    }
+  } finally {
+    await Deno.remove(dir, { recursive: true });
+  }
+});
+
+Deno.test("fdh evidence publish: the review copy and the comment are created together, never overwritten", async () => {
+  const dir = await Deno.makeTempDir();
+  try {
+    const out = path.join(dir, "sub", "evidence-7.md");
+    const review = await writeEvidenceOutputs(out, "{\n}\n", "body A");
+    assertEquals(review, `${out}.manifest.json`);
+    assertEquals(await Deno.readTextFile(review), "{\n}\n");
+    assertEquals(await Deno.readTextFile(out), "body A");
+    await assertRejects(
+      () => writeEvidenceOutputs(out, "{}", "body B"),
+      Error,
+      "already exists",
+    );
+    assertEquals(await Deno.readTextFile(out), "body A");
+    // A stale review copy alone also blocks the path (no mixed pair).
+    const other = path.join(dir, "evidence-8.md");
+    await Deno.writeTextFile(`${other}.manifest.json`, "stale");
+    await assertRejects(
+      () => writeEvidenceOutputs(other, "{}", "body C"),
+      Error,
+      "already exists",
+    );
+    assertEquals(await Deno.readTextFile(`${other}.manifest.json`), "stale");
+    await assertRejects(() => Deno.stat(other));
   } finally {
     await Deno.remove(dir, { recursive: true });
   }

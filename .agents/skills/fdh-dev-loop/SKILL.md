@@ -189,6 +189,7 @@ the PR's final head.
 deno task fdh evidence publish --task-id <id> --pr <n> --out _dist/fdh/evidence-<n>.md
 # Read _dist/fdh/evidence-<n>.md.manifest.json (the same manifest, in plain
 # JSON) before posting. Do not post it if it holds anything sensitive.
+# Neither file may exist yet: a new head needs a new --out name.
 gh pr comment <n> --body-file _dist/fdh/evidence-<n>.md
 deno task fdh evidence trace --pr <n> [--require-merged true]   # exit 1 if incomplete
 ```

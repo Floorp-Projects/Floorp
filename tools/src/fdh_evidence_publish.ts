@@ -25,6 +25,7 @@
  * does not count.
  */
 
+import * as path from "@std/path";
 import { decodeBase64, encodeBase64 } from "@std/encoding/base64";
 import { encodeHex } from "@std/encoding/hex";
 import type { EvidenceManifest } from "../qa3/evidence/types.ts";
@@ -125,6 +126,185 @@ async function gunzipAtMost(
 /** The manifest text that is hashed and embedded. */
 export function manifestText(manifest: EvidenceManifest): string {
   return `${JSON.stringify(manifest, null, 2)}\n`;
+}
+
+/** Directories under the fdh root that hold fdh's own state. */
+export const EVIDENCE_OUT_RESERVED: readonly string[] = [
+  "tasks",
+  "ext",
+  "jobs",
+  "quota",
+  "reviews",
+  "observations",
+];
+
+/**
+ * Resolve `--out` (relative to `worktree` unless absolute): it must lie
+ * under `root` (the worktree's _dist/fdh) and outside fdh's own state.
+ *
+ * Checked twice. Lexically, with each path segment compared the way Windows
+ * opens it (case-insensitive, trailing dots and spaces dropped), and with
+ * `~` (8.3 short names) and `:` (alternate data streams) refused. Then on
+ * disk: the path, or its nearest existing ancestor, is resolved through
+ * symlinks, junctions and short names, and must still lie under `root` and
+ * outside the reserved directories.
+ */
+export function resolveEvidenceOut(
+  root: string,
+  worktree: string,
+  raw: string,
+): string {
+  const base = path.resolve(root);
+  const resolved = path.isAbsolute(raw)
+    ? path.resolve(raw)
+    : path.resolve(worktree, raw);
+  const outside = () =>
+    new Error(
+      `--out must be inside ${base} (the fdh evidence root), got ${resolved}`,
+    );
+  const reserved = (top: string) =>
+    new Error(
+      `--out must not write into fdh's own state under ${
+        path.join(base, top)
+      }, got ${resolved}`,
+    );
+  const relative = path.relative(base, resolved);
+  if (escapes(relative)) throw outside();
+  const segments = relative.split(/[\\/]/);
+  if (segments.some((s) => s.includes("~") || s.includes(":"))) {
+    throw new Error(
+      `--out must not use short names (~) or streams (:), got ${resolved}`,
+    );
+  }
+  const top = windowsName(segments[0]);
+  if (EVIDENCE_OUT_RESERVED.includes(top)) throw reserved(top);
+
+  // On disk: follow symlinks, junctions and short names. Nothing under a
+  // root that does not exist yet can be a link (and the root's own path may
+  // differ from its real path only once it exists).
+  if (!pathExists(base)) return resolved;
+  const realBase = realPathOrSelf(base);
+  // Start at the path itself: an existing file there may be a link too.
+  let ancestor = resolved;
+  while (!pathExists(ancestor) && path.dirname(ancestor) !== ancestor) {
+    ancestor = path.dirname(ancestor);
+  }
+  let realAncestor: string;
+  try {
+    realAncestor = Deno.realPathSync(ancestor);
+  } catch (error) {
+    // A link whose target does not exist yet: writing through it would
+    // create that target, wherever it is.
+    if (Deno.lstatSync(ancestor).isSymlink) {
+      throw new Error(
+        `--out must not go through a broken link, got ${ancestor}`,
+      );
+    }
+    throw error;
+  }
+  const realRelative = path.relative(realBase, realAncestor);
+  if (realRelative !== "") {
+    if (escapes(realRelative)) throw outside();
+    const realTop = windowsName(realRelative.split(/[\\/]/)[0]);
+    if (EVIDENCE_OUT_RESERVED.includes(realTop)) throw reserved(realTop);
+  }
+  return resolved;
+}
+
+/** A path segment as Windows matches it: case-insensitive, no trailing dots or spaces. */
+function windowsName(segment: string): string {
+  return segment.replace(/[. ]+$/, "").toLowerCase();
+}
+
+function escapes(relative: string): boolean {
+  return relative === "" || relative === ".." ||
+    relative.startsWith(`..${path.SEPARATOR}`) || relative.startsWith("../") ||
+    path.isAbsolute(relative);
+}
+
+function pathExists(p: string): boolean {
+  try {
+    Deno.lstatSync(p);
+    return true;
+  } catch (error) {
+    if (error instanceof Deno.errors.NotFound) return false;
+    throw error;
+  }
+}
+
+function realPathOrSelf(p: string): string {
+  try {
+    return Deno.realPathSync(p);
+  } catch {
+    return p;
+  }
+}
+
+/**
+ * Refuse to overwrite either half of an `evidence publish` output pair
+ * (`<x>` and `<x>.manifest.json`), which `fdh evidence --out` would
+ * otherwise do: the pair would no longer match. An `--out` that is itself
+ * a link is refused (it could alias either half), and the names are
+ * compared the way Windows opens them (any case, no trailing dots or
+ * spaces), so another spelling of a pair's file is caught too.
+ */
+export function assertNotPublishOutput(outPath: string): void {
+  if (pathExists(outPath) && Deno.lstatSync(outPath).isSymlink) {
+    throw new Error(`--out must not be a link, got ${outPath}`);
+  }
+  const suffix = ".manifest.json";
+  // The literal name (POSIX keeps trailing dots) and the Windows one.
+  const names = [...new Set([outPath, outPath.replace(/[. ]+$/, "")])];
+  const partners = names.flatMap((name) => [
+    `${name}${suffix}`,
+    ...(name.toLowerCase().endsWith(suffix)
+      ? [name.slice(0, -suffix.length)]
+      : []),
+  ]);
+  const pairedWith = partners.find((p) => pathExists(p));
+  if (pairedWith !== undefined) {
+    throw new Error(
+      `--out ${outPath} is one half of an evidence publish output (with ${pairedWith}); use another path`,
+    );
+  }
+}
+
+/**
+ * Write the plain review copy (`<outPath>.manifest.json`, exactly the bytes
+ * the binding's SHA-256 covers) and then the comment body. Both are created
+ * new: a second publication to the same `--out` fails rather than pairing
+ * one run's comment with another run's review copy. Returns the review path.
+ */
+export async function writeEvidenceOutputs(
+  outPath: string,
+  manifestJson: string,
+  body: string,
+): Promise<string> {
+  const reviewPath = `${outPath}.manifest.json`;
+  await Deno.mkdir(path.dirname(outPath), { recursive: true });
+  for (const p of [outPath, reviewPath]) {
+    if (pathExists(p)) {
+      throw new Error(`${p} already exists; publish to a new --out`);
+    }
+  }
+  try {
+    await Deno.writeTextFile(reviewPath, manifestJson, { createNew: true });
+  } catch (error) {
+    if (error instanceof Deno.errors.AlreadyExists) {
+      throw new Error(`${reviewPath} already exists; publish to a new --out`);
+    }
+    throw error;
+  }
+  try {
+    await Deno.writeTextFile(outPath, body, { createNew: true });
+  } catch (error) {
+    await Deno.remove(reviewPath).catch(() => {});
+    if (error instanceof Deno.errors.AlreadyExists) {
+      throw new Error(`${outPath} already exists; publish to a new --out`);
+    }
+    throw error;
+  }
+  return reviewPath;
 }
 
 /** Inline code safe for any assertion name (no backticks, no newlines). */
