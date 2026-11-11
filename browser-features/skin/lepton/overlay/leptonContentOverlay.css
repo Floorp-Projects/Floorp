@@ -47,17 +47,29 @@
     }
   }
 
-  /* userContent.newTab.pocket_to_last makes .body-wrapper a wrapping flex
-   * row and gives its .ds-layout children flex-basis: 100%. The Recent
-   * activity (highlights) layout sits inside .layout-highlights-column (and
-   * stories inside .layout-content-column), which are display: contents, so
-   * that .ds-layout becomes a flex item the original selector does not reach
-   * and shrinks to its min-content width (cards about 30px wide). Floorp's
-   * own rule; not in upstream Lepton. */
+  /* userContent.newTab.pocket_to_last turns .body-wrapper.on into a
+   * wrapping flex row, gives its direct .ds-layout children flex-basis: 100%
+   * and gives `order: 2` to
+   * `.body-wrapper.on > .collapsible-section[data-section-id="topstories"]`.
+   * On Gecko 159 the stories section is no longer a direct child of
+   * .body-wrapper: DiscoveryStreamBase wraps it in .layout-content-column
+   * (and Recent activity in .layout-highlights-column), both
+   * `display: contents`. So Lepton's order rule never matches, and the
+   * wrapped children become flex items without the full row, which shrinks
+   * Recent activity to its min-content width (cards about 30px wide). Their
+   * children are the real flex items of .body-wrapper.on, so give them the
+   * full row and move the stories column (stories plus its privacy link)
+   * behind top sites, widgets and Recent activity. The selectors need
+   * .body-wrapper.on, so Floorp Start (which also loads at about:newtab) and
+   * the Nova layout (.content-full-width) are not touched. Floorp's own
+   * rules; not in upstream Lepton up to v8.7.6. */
   @media -moz-pref("userContent.newTab.pocket_to_last"), (-moz-bool-pref:
     "userContent.newTab.pocket_to_last") {
-    .body-wrapper.on > :is(.layout-content-column, .layout-highlights-column) > .discovery-stream.ds-layout {
+    .body-wrapper.on > :is(.layout-content-column, .layout-highlights-column) > * {
       flex-basis: 100%;
+    }
+    .body-wrapper.on > .layout-content-column > * {
+      order: 2;
     }
   }
 }
