@@ -170,11 +170,11 @@ function getHostname(url: string): string | null {
 }
 
 /** Builds a case-insensitive regexp from a pattern with `*` wildcards. */
-function wildcardToRegExp(pattern: string): RegExp {
+function wildcardToRegExp(pattern: string, prefix = ""): RegExp {
   const escaped = pattern
     .replace(/[.+?^${}()|[\]\\]/g, "\\$&")
     .replace(/\*+/g, ".*");
-  return new RegExp(`^${escaped}$`, "i");
+  return new RegExp(`^${prefix}${escaped}$`, "i");
 }
 
 /**
@@ -195,11 +195,16 @@ export function matchPattern(url: string, pattern: string): boolean {
   }
 
   const lowerPattern = trimmed.toLowerCase();
-  const isFullUrl = lowerPattern.includes("://");
+  const hasScheme = lowerPattern.includes("://");
+  const hasPath = lowerPattern.includes("/");
 
-  if (isFullUrl) {
+  if (hasScheme || hasPath) {
+    // Patterns without a scheme still describe a host and path, so match them
+    // against the full URL with an optional scheme.
+    const prefix = hasScheme ? "" : "(?:[a-z][a-z0-9+.-]*:)?//";
     const regex = wildcardToRegExp(
       lowerPattern.includes("*") ? lowerPattern : `${lowerPattern}*`,
+      prefix,
     );
     return regex.test(url);
   }
@@ -221,22 +226,36 @@ export function shouldExcludeUrl(url: string, patterns: string[]): boolean {
   return patterns.some((pattern) => matchPattern(url, pattern));
 }
 
-/** Reads the patterns from the old tab sleep exclusion pref JSON. */
-export function legacyPatterns(raw: string): string[] {
+export interface LegacyTabSleepExclusionSettings {
+  enabled: boolean;
+  patterns: string[];
+}
+
+/** Reads the old tab sleep exclusion pref JSON, including its enabled flag. */
+export function legacySettings(raw: string): LegacyTabSleepExclusionSettings {
   if (!raw) {
-    return [];
+    return { enabled: false, patterns: [] };
   }
   try {
     const parsed: unknown = JSON.parse(raw);
     if (typeof parsed !== "object" || parsed === null) {
-      return [];
+      return { enabled: false, patterns: [] };
     }
-    return normalizeExcludePatterns(
-      (parsed as Record<string, unknown>).patterns,
-    );
+    const source = parsed as Record<string, unknown>;
+    return {
+      // The old feature defaulted to enabled, so a missing flag keeps that
+      // behavior.
+      enabled: readBoolean(source.enabled, true),
+      patterns: normalizeExcludePatterns(source.patterns),
+    };
   } catch {
-    return [];
+    return { enabled: false, patterns: [] };
   }
+}
+
+/** Reads the patterns from the old tab sleep exclusion pref JSON. */
+export function legacyPatterns(raw: string): string[] {
+  return legacySettings(raw).patterns;
 }
 
 /** Loads Firefox's TabUnloader from the first URL that resolves. */
@@ -293,8 +312,12 @@ export default class TabAutoUnload extends NoraComponentBase {
   /**
    * Moves the old Design page patterns into the new pref once.
    *
-   * The old pref is cleared afterwards so a user who later empties the new
-   * exclusion list does not get the old patterns back.
+   * Only an enabled legacy setting is migrated. When it is disabled, the pref
+   * is left untouched so the saved patterns are not silently turned into
+   * active exclusions.
+   *
+   * The old pref is cleared after a successful migration so a user who later
+   * empties the new exclusion list does not get the old patterns back.
    */
   private migrateLegacyPref(): void {
     try {
@@ -311,10 +334,17 @@ export default class TabAutoUnload extends NoraComponentBase {
         return;
       }
 
-      const patterns = legacyPatterns(legacy);
+      const legacySettingsValue = legacySettings(legacy);
+      if (!legacySettingsValue.enabled) {
+        return;
+      }
+
       Services.prefs.setStringPref(
         TAB_AUTO_UNLOAD_PREF,
-        JSON.stringify({ ...DEFAULT_SETTINGS, excludePatterns: patterns }),
+        JSON.stringify({
+          ...DEFAULT_SETTINGS,
+          excludePatterns: legacySettingsValue.patterns,
+        }),
       );
       Services.prefs.clearUserPref(LEGACY_TAB_SLEEP_EXCLUSION_PREF);
     } catch (error) {

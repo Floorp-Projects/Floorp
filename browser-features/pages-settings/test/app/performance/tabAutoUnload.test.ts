@@ -198,6 +198,43 @@ async function testLegacyFallback(): Promise<void> {
   }
 }
 
+async function testDisabledLegacyFallback(): Promise<void> {
+  const originalNew = Services.prefs.getStringPref(TAB_AUTO_UNLOAD_PREF, "");
+  const originalLegacy = Services.prefs.getStringPref(
+    LEGACY_TAB_SLEEP_EXCLUSION_PREF,
+    "",
+  );
+
+  try {
+    clearPref(TAB_AUTO_UNLOAD_PREF);
+    Services.prefs.setStringPref(
+      LEGACY_TAB_SLEEP_EXCLUSION_PREF,
+      JSON.stringify({ enabled: false, patterns: ["legacy.example"] }),
+    );
+
+    const loaded = await getTabAutoUnloadSettings();
+    assertEquals(
+      loaded.excludePatterns.length,
+      0,
+      "disabled legacy patterns must not become active exclusions",
+    );
+  } finally {
+    if (originalNew) {
+      Services.prefs.setStringPref(TAB_AUTO_UNLOAD_PREF, originalNew);
+    } else {
+      clearPref(TAB_AUTO_UNLOAD_PREF);
+    }
+    if (originalLegacy) {
+      Services.prefs.setStringPref(
+        LEGACY_TAB_SLEEP_EXCLUSION_PREF,
+        originalLegacy,
+      );
+    } else {
+      clearPref(LEGACY_TAB_SLEEP_EXCLUSION_PREF);
+    }
+  }
+}
+
 /** Saved settings are read back unchanged. */
 async function testSaveRoundTrip(): Promise<void> {
   const original = Services.prefs.getStringPref(TAB_AUTO_UNLOAD_PREF, "");
@@ -294,6 +331,10 @@ export async function runAllTests(): Promise<void> {
     {
       name: "legacy pref supplies patterns",
       fn: testLegacyFallback,
+    },
+    {
+      name: "disabled legacy pref does not supply patterns",
+      fn: testDisabledLegacyFallback,
     },
     {
       name: "settings save and reload",

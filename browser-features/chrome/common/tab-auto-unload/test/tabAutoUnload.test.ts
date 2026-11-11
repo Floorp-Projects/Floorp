@@ -13,6 +13,7 @@ import {
 } from "../types.ts";
 import {
   legacyPatterns,
+  legacySettings,
   matchPattern,
   normalizeExcludePatterns,
   sanitizeSettings,
@@ -216,6 +217,25 @@ function testMatchFullUrl(): void {
   );
 }
 
+function testMatchSchemeLessPathPattern(): void {
+  assert(
+    matchPattern("https://example.com/path/deep", "example.com/path/*"),
+    "a scheme-less path pattern should match the full URL",
+  );
+  assert(
+    matchPattern("https://sub.example.com/path/deep", "*.example.com/path/*"),
+    "a wildcard domain path pattern should match subdomains",
+  );
+  assert(
+    !matchPattern("https://example.com/other", "example.com/path/*"),
+    "a path pattern should not match a different path",
+  );
+  assert(
+    matchPattern("https://example.com/path/deep", "example.com/path"),
+    "a scheme-less path without a wildcard should act as a prefix",
+  );
+}
+
 /** An empty pattern matches nothing. */
 function testMatchEmptyPattern(): void {
   assert(
@@ -255,6 +275,27 @@ function testLegacyPatterns(): void {
     0,
     "non-array legacy patterns",
   );
+}
+
+function testLegacySettingsPreserveEnabled(): void {
+  const enabled = legacySettings(
+    '{"enabled":true,"patterns":["a.com","b.com"]}',
+  );
+  assert(enabled.enabled, "enabled legacy settings should stay enabled");
+  assertEquals(enabled.patterns.join(","), "a.com,b.com", "enabled patterns");
+
+  const disabled = legacySettings(
+    '{"enabled":false,"patterns":["a.com","b.com"]}',
+  );
+  assert(!disabled.enabled, "disabled legacy settings should stay disabled");
+  assertEquals(
+    disabled.patterns.join(","),
+    "a.com,b.com",
+    "disabled patterns should remain readable",
+  );
+
+  const missing = legacySettings('{"patterns":["a.com"]}');
+  assert(missing.enabled, "missing enabled should keep the old default");
 }
 
 /** The memory threshold and cross-window throttle gate checks. */
@@ -335,6 +376,10 @@ export async function runAllTests(): Promise<void> {
       fn: testMatchFullUrl,
     },
     {
+      name: "scheme-less path patterns match full URLs",
+      fn: testMatchSchemeLessPathPattern,
+    },
+    {
       name: "empty patterns match nothing",
       fn: testMatchEmptyPattern,
     },
@@ -345,6 +390,10 @@ export async function runAllTests(): Promise<void> {
     {
       name: "legacy patterns are read safely",
       fn: testLegacyPatterns,
+    },
+    {
+      name: "legacy settings preserve the enabled flag",
+      fn: testLegacySettingsPreserveEnabled,
     },
     {
       name: "memory checks honor threshold and throttle",

@@ -261,6 +261,10 @@ export async function getTabAutoUnloadSettings(): Promise<
     }
 
     const legacy = parseSettingsJson(legacyRaw);
+    if (!readBoolean(legacy.enabled, true)) {
+      return createDefaultTabAutoUnloadSettings();
+    }
+
     return {
       ...createDefaultTabAutoUnloadSettings(),
       excludePatterns: normalizeExcludePatterns(legacy.patterns),
