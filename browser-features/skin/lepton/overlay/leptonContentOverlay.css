@@ -27,10 +27,10 @@
  * query. leptonContent.css carries each option twice, once with
  * -moz-pref("...") and once with the legacy (-moz-bool-pref: "...") syntax;
  * each media query list below lists both, and Gecko treats the one it cannot
- * parse as "not all". Photon and Protonfix enable both options through their
- * user.js and load this sheet as an AGENT_SHEET, so the declarations keep the
- * !important of the originals where they have it (agent !important beats the
- * page's own normal and !important rules). */
+ * parse as "not all". Lepton, Photon and Protonfix enable both options
+ * through their user.js and load this sheet as an AGENT_SHEET, so the
+ * declarations keep the !important of the originals where they have it
+ * (agent !important beats the page's own normal and !important rules). */
 @-moz-document url("about:home"), url("about:newtab") {
   /* userContent.newTab.full_icon sizes .tile to 80px and .icon-wrapper to
    * 100%, but Firefox Home now wraps the icon in .icon-stack. Left at its
