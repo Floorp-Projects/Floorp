@@ -1199,8 +1199,9 @@ function localRuntimeArtifactForTarget(
 /**
  * Sniffs the executable's binary header and rejects artifacts whose CPU
  * architecture cannot run on the target. Linux/Windows binaries must match
- * the target architecture exactly; macOS ("universal") accepts any Mach-O,
- * because thin x86_64/arm64 binaries still run under Rosetta on Apple silicon.
+ * the target architecture exactly; macOS ("universal") accepts Mach-O
+ * binaries with an x86_64 or arm64 slice, because thin x86_64 binaries still
+ * run under Rosetta on Apple silicon.
  */
 async function assertExecutableArchitecture(
   executable: string,
@@ -1266,23 +1267,35 @@ async function assertExecutableArchitecture(
       return;
     }
 
+    // Mach-O CPU types: 0x01000007 = x86_64, 0x0100000c = arm64
+    // (CPU_TYPE_X86_64 / CPU_TYPE_ARM64, including the CPU_ARCH_ABI64 mask).
+    const runnableMachOCpuType = (cpuType: number): boolean =>
+      cpuType === 0x01000007 || cpuType === 0x0100000c;
+
     const magic = u32le(0);
-    if (
-      magic === 0xfeedfacf || magic === 0xcffaedfe ||
-      magic === 0xfeedface || magic === 0xcefaedfe
-    ) {
-      return;
-    }
     if (magic === 0xcafebabe || magic === 0xbebafeca) {
+      // Universal (fat) header, always big-endian: nfat_arch then 20-byte
+      // entries starting with cputype.
       const architectures = u32be(4);
       if (architectures < 1 || 8 + architectures * 20 > filled) {
         throw reject("malformed Mach-O universal binary header");
       }
       for (let index = 0; index < architectures; index++) {
-        const cpuType = u32be(8 + index * 20);
-        if (cpuType === 7 || cpuType === 12) return; // x86_64 / arm64
+        if (runnableMachOCpuType(u32be(8 + index * 20))) return;
       }
-      throw reject("Mach-O universal binary has no Apple CPU type");
+      throw reject("Mach-O universal binary has no x86_64/arm64 slice");
+    }
+    if (magic === 0xfeedfacf || magic === 0xcffaedfe) {
+      // MH_MAGIC_64 files are little-endian; MH_CIGAM_64 big-endian.
+      // 32-bit Mach-O is not runnable on modern macOS and is rejected.
+      if (filled < 8) {
+        throw reject("truncated Mach-O header");
+      }
+      const cpuType = magic === 0xfeedfacf ? u32le(4) : u32be(4);
+      if (runnableMachOCpuType(cpuType)) return;
+      throw reject(
+        `Mach-O CPU type 0x${cpuType.toString(16)} is not runnable on macOS`,
+      );
     }
     throw reject("not a Mach-O binary");
   } finally {

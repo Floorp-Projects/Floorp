@@ -1937,6 +1937,41 @@ interface FakeLocalOperationOptions {
   forbiddenState?: "applied_patches" | "floorp-git";
   packagedTree?: boolean;
   wrongExecutableArchitecture?: boolean;
+  machOHeader?:
+    | "universal-x86_64"
+    | "universal-arm64"
+    | "truncated"
+    | "incompatible-cpu";
+}
+
+const MACHO_CPU_X86_64 = 0x01000007;
+const MACHO_CPU_ARM64 = 0x0100000c;
+
+/** Thin 64-bit Mach-O header (magic + cputype in the given byte order). */
+function machOThinBytes(
+  cpuType: number,
+  bigEndian = false,
+  truncated = false,
+): Uint8Array {
+  if (truncated) {
+    return bigEndian
+      ? Uint8Array.of(0xfe, 0xed, 0xfa, 0xcf)
+      : Uint8Array.of(0xcf, 0xfa, 0xed, 0xfe);
+  }
+  const bytes = new Uint8Array(32);
+  new DataView(bytes.buffer).setUint32(0, 0xfeedfacf, !bigEndian);
+  new DataView(bytes.buffer).setUint32(4, cpuType, !bigEndian);
+  return bytes;
+}
+
+/** Universal (fat) big-endian Mach-O header with a single slice. */
+function machOUniversalBytes(cpuType: number): Uint8Array {
+  const bytes = new Uint8Array(28);
+  const view = new DataView(bytes.buffer);
+  view.setUint32(0, 0xcafebabe, false); // fat magic
+  view.setUint32(4, 1, false); // nfat_arch
+  view.setUint32(8, cpuType, false); // cputype of the first slice
+  return bytes;
 }
 
 /** Minimal valid executable headers so the architecture sniff accepts them. */
@@ -1971,8 +2006,8 @@ function syntheticExecutableBytes(target: NativeRuntimeTarget): Uint8Array {
     );
     return bytes;
   }
-  // Thin 64-bit Mach-O magic (0xFEEDFACF little-endian).
-  return Uint8Array.of(0xcf, 0xfa, 0xed, 0xfe);
+  // Thin 64-bit Mach-O with an arm64 CPU type.
+  return machOThinBytes(MACHO_CPU_ARM64);
 }
 
 function fakeLocalOperations(
@@ -2004,7 +2039,18 @@ function fakeLocalOperations(
       await Deno.mkdir(path.dirname(layout.executable), {
         recursive: true,
       });
-      if (options.wrongExecutableArchitecture) {
+      if (options.machOHeader) {
+        await Deno.writeFile(
+          layout.executable,
+          options.machOHeader === "universal-x86_64"
+            ? machOUniversalBytes(MACHO_CPU_X86_64)
+            : options.machOHeader === "universal-arm64"
+            ? machOUniversalBytes(MACHO_CPU_ARM64)
+            : options.machOHeader === "truncated"
+            ? machOThinBytes(MACHO_CPU_ARM64, false, true)
+            : machOThinBytes(18), // 18 = CPU_TYPE_POWERPC: unsupported here
+        );
+      } else if (options.wrongExecutableArchitecture) {
         await Deno.writeFile(
           layout.executable,
           syntheticExecutableBytes(
@@ -2332,6 +2378,80 @@ Deno.test("local Runtime rejects executables with a mismatched architecture", as
     await assertRejects(() =>
       Deno.stat(path.join(root, ".runtime-local-staging-local-wrong-arch"))
     );
+  } finally {
+    await Deno.remove(root, { recursive: true });
+  }
+});
+
+Deno.test("local Runtime accepts universal Mach-O slices for x86_64 and arm64", async () => {
+  const root = await Deno.makeTempDir();
+  try {
+    const target: NativeRuntimeTarget = {
+      platform: "macos",
+      architecture: "universal",
+    };
+    const artifactPath = await writeLocalArtifact(root);
+
+    for (
+      const machOHeader of ["universal-x86_64", "universal-arm64"] as const
+    ) {
+      const binRoot = path.join(root, `bin-${machOHeader}`);
+      const result = await installLocalRuntime({
+        artifactPath,
+        target,
+        binRootDir: binRoot,
+        operations: fakeLocalOperations(target, {
+          nonce: `local-${machOHeader}`,
+          machOHeader,
+        }),
+      });
+      assertEquals(result.reused, false);
+    }
+  } finally {
+    await Deno.remove(root, { recursive: true });
+  }
+});
+
+Deno.test("local Runtime rejects truncated and unsupported thin Mach-O headers", async () => {
+  const root = await Deno.makeTempDir();
+  try {
+    const target: NativeRuntimeTarget = {
+      platform: "macos",
+      architecture: "universal",
+    };
+    const artifactPath = await writeLocalArtifact(root);
+
+    for (
+      const [machOHeader, message] of [
+        ["truncated", "truncated Mach-O header"],
+        ["incompatible-cpu", "is not runnable on macOS"],
+      ] as const
+    ) {
+      const binRoot = path.join(root, `bin-${machOHeader}`);
+      await Deno.mkdir(path.join(binRoot, "floorp"), { recursive: true });
+      await Deno.writeTextFile(
+        path.join(binRoot, "floorp", "old.txt"),
+        "old-runtime",
+      );
+      await assertRejects(
+        () =>
+          installLocalRuntime({
+            artifactPath,
+            target,
+            binRootDir: binRoot,
+            operations: fakeLocalOperations(target, {
+              nonce: `local-${machOHeader}`,
+              machOHeader,
+            }),
+          }),
+        Error,
+        message,
+      );
+      assertEquals(
+        await Deno.readTextFile(path.join(binRoot, "floorp", "old.txt")),
+        "old-runtime",
+      );
+    }
   } finally {
     await Deno.remove(root, { recursive: true });
   }
