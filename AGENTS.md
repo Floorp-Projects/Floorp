@@ -7,6 +7,7 @@ Floorp is a Firefox-based web browser ("Noraneko") built on top of the Gecko eng
 ```bash
 deno install                        # Install dependencies
 deno task feles-build dev           # Dev mode with HMR (ports 5173–5186)
+deno task feles-build --artifact /path/to/runtime-artifact dev  # Dev with a local Runtime artifact
 deno task feles-build build         # Production build (two-phase: --phase before-mach / --phase after-mach)
 deno task feles-build stage         # Staging build
 deno task feles-build test          # Launch browser with Marionette for automated testing
@@ -18,6 +19,13 @@ deno task test:host                 # Run tool tests (Deno native)
 deno task test:smoke                # Smoke tests
 deno task dev-tool                  # Development utility CLI
 ```
+
+The `--artifact <path>` global flag (dev only) installs a local Runtime
+artifact instead of downloading one. The artifact must be a platform-appropriate
+`.zip` / `.tar.xz` / `.dmg` (Debug FTP container zips ending in
+`-artifacts.zip` are also accepted); this skips the normal Runtime download and
+`floorp-runtime.lock.json` verification, and no signature or provenance
+verification is performed on local artifacts.
 
 ## Runtime changes
 
