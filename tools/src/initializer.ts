@@ -1553,6 +1553,23 @@ export async function installLocalRuntime(
 
     const stageArtifact = localRuntimeArtifactForTarget(target);
     const layout = runtimeLayoutFor(stageRoot, stageArtifact);
+    // `dev` injects into the unpacked browser tree; omnijar-packaged
+    // artifacts (for example packaged Release builds) do not ship one and
+    // must be rejected here instead of failing later inside the injector.
+    const unpackedXhtml = path.join(
+      path.dirname(layout.applicationIni),
+      "browser",
+      "chrome",
+      "browser",
+      "content",
+      "browser",
+      "browser.xhtml",
+    );
+    if (!(await pathExists(unpackedXhtml))) {
+      throw new Error(
+        `Local Runtime artifact is an omnijar-packaged build and cannot be used with 'dev': ${unpackedXhtml} is missing. Use an unpacked-tree Runtime artifact (for example the Debug FTP artifact).`,
+      );
+    }
     await Deno.mkdir(path.dirname(layout.legacyVersionFile), {
       recursive: true,
     });

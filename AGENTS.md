@@ -25,7 +25,10 @@ artifact instead of downloading one. The artifact must be a platform-appropriate
 `.zip` / `.tar.xz` / `.dmg` (Debug FTP container zips ending in
 `-artifacts.zip` are also accepted); this skips the normal Runtime download and
 `floorp-runtime.lock.json` verification, and no signature or provenance
-verification is performed on local artifacts.
+verification is performed on local artifacts. The artifact must contain an
+unpacked browser tree (omnijar-packaged builds such as packaged Release
+artifacts are rejected); the Debug FTP artifact or a debug-build artifact
+works.
 
 ## Runtime changes
 

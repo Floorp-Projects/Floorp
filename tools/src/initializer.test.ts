@@ -1935,6 +1935,7 @@ interface FakeLocalOperationOptions {
   preexistingVersion?: string;
   preexistingMarker?: string;
   forbiddenState?: "applied_patches" | "floorp-git";
+  packagedTree?: boolean;
 }
 
 function fakeLocalOperations(
@@ -1969,6 +1970,22 @@ function fakeLocalOperations(
       await Deno.writeFile(layout.executable, new Uint8Array([1]));
       if (target.platform !== "windows") {
         await Deno.chmod(layout.executable, 0o755);
+      }
+      if (!options.packagedTree) {
+        const unpackedXhtml = path.join(
+          path.dirname(layout.applicationIni),
+          "browser",
+          "chrome",
+          "browser",
+          "content",
+          "browser",
+          "browser.xhtml",
+        );
+        await Deno.mkdir(path.dirname(unpackedXhtml), { recursive: true });
+        await Deno.writeTextFile(
+          unpackedXhtml,
+          '<window id="main-window"/>',
+        );
       }
       if (options.preexistingVersion !== undefined) {
         await Deno.writeTextFile(
@@ -2180,6 +2197,48 @@ Deno.test("local Runtime install overwrites a pre-existing local marker", async 
     assertEquals(marker.artifactSha256, LOCAL_ARTIFACT_SHA256);
     assertEquals(marker.version, LOCAL_RUNTIME_VERSION);
     assertEquals(marker.buildId, LOCAL_RUNTIME_BUILD_ID);
+  } finally {
+    await Deno.remove(root, { recursive: true });
+  }
+});
+
+Deno.test("local Runtime rejects omnijar-packaged artifacts", async () => {
+  const root = await Deno.makeTempDir();
+  try {
+    const target: NativeRuntimeTarget = {
+      platform: "windows",
+      architecture: "x86_64",
+    };
+    const artifactPath = await writeLocalArtifact(root);
+    const binRoot = path.join(root, "bin");
+    await Deno.mkdir(path.join(binRoot, "floorp"), { recursive: true });
+    await Deno.writeTextFile(
+      path.join(binRoot, "floorp", "old.txt"),
+      "old-runtime",
+    );
+
+    await assertRejects(
+      () =>
+        installLocalRuntime({
+          artifactPath,
+          target,
+          binRootDir: binRoot,
+          operations: fakeLocalOperations(target, {
+            nonce: "local-packaged",
+            packagedTree: true,
+          }),
+        }),
+      Error,
+      "omnijar-packaged",
+    );
+
+    assertEquals(
+      await Deno.readTextFile(path.join(binRoot, "floorp", "old.txt")),
+      "old-runtime",
+    );
+    await assertRejects(() =>
+      Deno.stat(path.join(root, ".runtime-local-staging-local-packaged"))
+    );
   } finally {
     await Deno.remove(root, { recursive: true });
   }
