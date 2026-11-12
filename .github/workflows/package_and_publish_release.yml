@@ -422,7 +422,7 @@ jobs:
       floorp_head_sha: ${{ github.sha }}
       platform_key: mac
       native_arch: aarch64
-      runner: macos-14
+      runner: macos-15
       validation_only: ${{ inputs.validation_only }}
     secrets:
       runtime_artifact_token: ${{ secrets.PAT }}
