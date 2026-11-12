@@ -1197,6 +1197,100 @@ function localRuntimeArtifactForTarget(
 }
 
 /**
+ * Sniffs the executable's binary header and rejects artifacts whose CPU
+ * architecture cannot run on the target. Linux/Windows binaries must match
+ * the target architecture exactly; macOS ("universal") accepts any Mach-O,
+ * because thin x86_64/arm64 binaries still run under Rosetta on Apple silicon.
+ */
+async function assertExecutableArchitecture(
+  executable: string,
+  target: NativeRuntimeTarget,
+): Promise<void> {
+  const header = new Uint8Array(0x10000);
+  const file = await Deno.open(executable, { read: true });
+  try {
+    let filled = 0;
+    while (filled < header.length) {
+      const read = await file.read(header.subarray(filled));
+      if (read === null) break;
+      filled += read;
+    }
+    const reject = (reason: string): Error =>
+      new Error(
+        `Local Runtime executable architecture check failed for ${target.platform}/${target.architecture}: ${reason} (${executable})`,
+      );
+    const u16le = (offset: number): number =>
+      (header[offset] ?? 0) | ((header[offset + 1] ?? 0) << 8);
+    const u32le = (offset: number): number =>
+      (u16le(offset) | (u16le(offset + 2) << 16)) >>> 0;
+    const u32be = (offset: number): number =>
+      (((header[offset] ?? 0) << 24) | ((header[offset + 1] ?? 0) << 16) |
+        ((header[offset + 2] ?? 0) << 8) | (header[offset + 3] ?? 0)) >>> 0;
+
+    if (target.platform === "windows") {
+      if (filled < 0x46 || u16le(0) !== 0x5a4d) {
+        throw reject("not a PE binary (missing MZ header)");
+      }
+      const peOffset = u32le(0x3c);
+      if (
+        peOffset < 0x40 || peOffset + 6 > filled ||
+        u32le(peOffset) !== 0x00004550
+      ) {
+        throw reject("not a PE binary (missing PE signature)");
+      }
+      const machine = u16le(peOffset + 4);
+      if (machine !== 0x8664) {
+        throw reject(`PE machine 0x${machine.toString(16)} is not x86_64`);
+      }
+      return;
+    }
+
+    if (target.platform === "linux") {
+      const elfMagic = header[0] === 0x7f && header[1] === 0x45 &&
+        header[2] === 0x4c && header[3] === 0x46;
+      if (filled < 20 || !elfMagic) {
+        throw reject("not an ELF binary");
+      }
+      if (header[4] !== 2) {
+        throw reject("not a 64-bit ELF binary");
+      }
+      const machine = u16le(18);
+      const expected = target.architecture === "aarch64" ? 183 : 62;
+      if (machine !== expected) {
+        throw reject(
+          `ELF machine 0x${
+            machine.toString(16)
+          } does not match ${target.architecture}`,
+        );
+      }
+      return;
+    }
+
+    const magic = u32le(0);
+    if (
+      magic === 0xfeedfacf || magic === 0xcffaedfe ||
+      magic === 0xfeedface || magic === 0xcefaedfe
+    ) {
+      return;
+    }
+    if (magic === 0xcafebabe || magic === 0xbebafeca) {
+      const architectures = u32be(4);
+      if (architectures < 1 || 8 + architectures * 20 > filled) {
+        throw reject("malformed Mach-O universal binary header");
+      }
+      for (let index = 0; index < architectures; index++) {
+        const cpuType = u32be(8 + index * 20);
+        if (cpuType === 7 || cpuType === 12) return; // x86_64 / arm64
+      }
+      throw reject("Mach-O universal binary has no Apple CPU type");
+    }
+    throw reject("not a Mach-O binary");
+  } finally {
+    file.close();
+  }
+}
+
+/**
  * Target-aware replacement for `assertDebugRuntimeTree`: validates the
  * installed tree against the target platform's layout instead of the host's.
  */
@@ -1221,6 +1315,7 @@ async function assertLocalRuntimeTree(
       `Local Runtime executable is not executable: ${layout.executable}`,
     );
   }
+  await assertExecutableArchitecture(layout.executable, target);
 
   const parsed = parseApplicationIni(
     await Deno.readTextFile(layout.applicationIni),
@@ -1274,6 +1369,14 @@ async function matchingLocalRuntimeIdentity(
       if (marker[key] !== expected[key]) return undefined;
     }
     const identity = await assertLocalRuntimeTree(binRootDir, target);
+    if (
+      marker.version !== identity.version ||
+      marker.buildId !== identity.buildId
+    ) {
+      throw new Error(
+        `Installed local Runtime identity ${identity.version}/${identity.buildId} differs from the marker ${marker.version}/${marker.buildId}.`,
+      );
+    }
     await assertLocalRuntimeVersionFile(binRootDir, target);
     if (target.platform === "macos") {
       await prepareDebugMacInfoPlist(binRootDir, binRootDir);
@@ -1458,6 +1561,18 @@ export async function installLocalRuntime(
   const target = options.target ??
     resolveNativeRuntimeTarget(Deno.build.os, Deno.build.arch);
   const binRootDir = path.resolve(options.binRootDir ?? BIN_ROOT_DIR);
+  // An artifact inside the install directory would be renamed into the
+  // backup tree by the swap and deleted, destroying the artifact itself.
+  const artifactRelativeToBinRoot = path.relative(binRootDir, artifactPath);
+  if (
+    artifactRelativeToBinRoot === "" ||
+    (!artifactRelativeToBinRoot.startsWith("..") &&
+      !path.isAbsolute(artifactRelativeToBinRoot))
+  ) {
+    throw new Error(
+      `Local Runtime artifact must be outside the Runtime install directory: ${artifactPath} is inside ${binRootDir}.`,
+    );
+  }
   const operations: LocalRuntimeOperations = {
     ...defaultLocalRuntimeOperations(path.dirname(binRootDir)),
     ...options.operations,
