@@ -9,6 +9,8 @@ import {
   forwardRef,
   useCallback,
   useEffect,
+  useMemo,
+  useRef,
   useState,
 } from "react";
 import { useTranslation } from "react-i18next";
@@ -33,12 +35,15 @@ import {
 } from "@/app/performance/dataManager.ts";
 
 // Let React synchronize the native value in Gecko, including stepper changes.
-// Remove Ark's defaultValue when supplying a controlled value through asChild.
+// Ark's input handler also writes the value and restores a captured caret in a
+// later frame, which can race React's controlled onChange. Keep its validation,
+// keyboard and stepper handlers, but let React alone handle text input updates.
+// Drop Ark's defaultValue because this input receives a controlled value.
 const ControlledNumberInput = forwardRef<
   HTMLInputElement,
   ComponentProps<"input">
 >(function ControlledNumberInput(
-  { defaultValue: _defaultValue, ...props },
+  { defaultValue: _defaultValue, onInput: _onInput, ...props },
   ref,
 ) {
   return <input {...props} ref={ref} />;
@@ -56,21 +61,33 @@ function NumberField({
   disabled,
   onCommit,
 }: NumberFieldProps) {
-  const [text, setText] = useState(String(value));
+  const { i18n } = useTranslation();
+  const locale = i18n.language || "en-US";
+  const formatOptions = useMemo<Intl.NumberFormatOptions>(() => ({
+    useGrouping: false,
+    maximumFractionDigits: 20,
+  }), []);
+  const formatter = useMemo(
+    () => new Intl.NumberFormat(locale, formatOptions),
+    [locale, formatOptions],
+  );
+  const [text, setText] = useState(() => formatter.format(value));
+  const [compositionValue, setCompositionValue] = useState<string | null>(null);
+  const composing = useRef(false);
 
   useEffect(() => {
-    setText(String(value));
-  }, [value]);
+    setText(formatter.format(value));
+  }, [value, formatter]);
 
-  const commit = (rawValue: string) => {
-    const parsed = Number(rawValue);
+  const commit = (parsed: number) => {
+    if (composing.current) return;
     if (!Number.isFinite(parsed)) {
-      setText(String(value));
+      setText(formatter.format(value));
       return;
     }
 
     const next = Math.max(min, Math.round(parsed));
-    setText(String(next));
+    setText(formatter.format(next));
     if (next !== value) {
       onCommit(next);
     }
@@ -84,16 +101,35 @@ function NumberField({
       <NumberInput.Root
         ids={{ input: id }}
         min={min}
-        value={text}
+        locale={locale}
+        // Use the same locale parser for validation and numeric conversion.
+        // Without formatOptions, Ark accepts localized digits but then parses
+        // them with parseFloat, which can erase or truncate the draft.
+        formatOptions={formatOptions}
+        // Ark also formats and writes the input when its controlled value changes.
+        // Keep that value stable while the IME owns the native composition range.
+        value={compositionValue ?? text}
         disabled={disabled}
         colorPalette="purple"
-        onValueChange={({ value }) => setText(value)}
-        onValueCommit={({ value }) => commit(value)}
+        onValueChange={({ value }) => {
+          if (!composing.current) setText(value);
+        }}
+        onValueCommit={({ valueAsNumber }) =>
+          commit(text.trim() === "" ? 0 : valueAsNumber)}
       >
         <NumberInput.Input asChild>
           <ControlledNumberInput
             value={text}
             onChange={(event) => setText(event.currentTarget.value)}
+            onCompositionStart={(event) => {
+              composing.current = true;
+              setCompositionValue(event.currentTarget.value);
+            }}
+            onCompositionEnd={(event) => {
+              composing.current = false;
+              setText(event.currentTarget.value);
+              setCompositionValue(null);
+            }}
           />
         </NumberInput.Input>
         <NumberInput.Control />
