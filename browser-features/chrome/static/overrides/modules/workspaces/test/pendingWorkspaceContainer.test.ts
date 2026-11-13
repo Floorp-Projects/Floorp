@@ -144,7 +144,7 @@ export async function runAllTests(): Promise<void> {
         const beforeLink = gBrowser.tabs.length;
         BrowserCommands.openTab({ url: "https://example.invalid/" });
         openTrustedLinkIn("https://example.invalid/", "tab");
-        openUILinkIn("https://example.invalid/", "tab");
+        globalThis.openUILinkIn?.("https://example.invalid/", "tab");
         assertEquals(gBrowser.tabs.length, beforeLink);
         assertEquals(notifications.length, 1);
         openFromUser();
