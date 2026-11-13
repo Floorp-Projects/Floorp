@@ -362,7 +362,6 @@ export class FirefoxSidebarOverlayController {
         attributeFilter: [
           "hidden",
           "sidebar-launcher-expanded",
-          "sidebar-ongoing-animations",
         ],
       });
     }
