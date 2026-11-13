@@ -22,6 +22,7 @@ import {
   GECKO_152_COLOR_FIX_CSS,
   LEPTON_COMPAT_152_CSS,
   LEPTON_COMPAT_CSS,
+  LEPTON_CONTAINER_INDICATOR_CSS,
 } from "../utils/lepton-compat-152.css.ts";
 import {
   GECKO_152_RENAMED_VARS,
@@ -970,7 +971,8 @@ function testCompatPreservesLeftAndLegacySidebarSemantics(): void {
 function testBundledCompatIsColorPlusLepton(): void {
   assertEquals(
     LEPTON_COMPAT_CSS,
-    GECKO_152_COLOR_FIX_CSS + "\n" + LEPTON_COMPAT_152_CSS,
+    GECKO_152_COLOR_FIX_CSS + "\n" + LEPTON_COMPAT_152_CSS + "\n" +
+      LEPTON_CONTAINER_INDICATOR_CSS,
     "LEPTON_COMPAT_CSS must bundle the color fix + Lepton compat",
   );
 }
