@@ -11,8 +11,8 @@
       "immutable": false
     },
     "materials": {
-      "count": 53,
-      "totalBytes": 219183,
+      "count": 54,
+      "totalBytes": 220178,
       "entries": [
         {
           "path": "browser/base/content/test/browser-caps/browser.toml",
@@ -335,6 +335,14 @@
           "sha256": "0d4d0258c38928786e45227bbb9c603b108dc5ba2b7fea781f667c2b0a3045a7"
         },
         {
+          "path": "browser/components/tabbrowser/test/browser/tabs/browser_open_newtab_start_observer_notification.js",
+          "role": "test",
+          "bytes": 995,
+          "mode": "100644",
+          "gitBlob": "2bc26cf6674034621e7d6f03bebfee7a4d8fa152",
+          "sha256": "539003f63cc85748614dd180aa99d4a389fc5187c3db4bdef3f31fd9cf42dfa0"
+        },
+        {
           "path": "browser/components/tabbrowser/test/browser/tabs/browser_pinned_and_hidden_tabs.js",
           "role": "test",
           "bytes": 1428,
@@ -441,9 +449,9 @@
       ]
     },
     "tests": {
-      "count": 8,
-      "totalTasks": 16,
-      "supportDependencyEdges": 93,
+      "count": 9,
+      "totalTasks": 17,
+      "supportDependencyEdges": 100,
       "entries": [
         {
           "path": "browser/base/content/test/browser-caps/browser_principalSerialization_version1.js",
@@ -484,6 +492,13 @@
           "path": "browser/components/customizableui/test/browser_996364_registerArea_different_properties.js",
           "manifest": "browser/components/customizableui/test/browser.toml",
           "expectedTasks": 7,
+          "headPolicy": "harness-replaced",
+          "supportPolicy": "locked-not-loaded"
+        },
+        {
+          "path": "browser/components/tabbrowser/test/browser/tabs/browser_open_newtab_start_observer_notification.js",
+          "manifest": "browser/components/tabbrowser/test/browser/tabs/browser.toml",
+          "expectedTasks": 1,
           "headPolicy": "harness-replaced",
           "supportPolicy": "locked-not-loaded"
         },

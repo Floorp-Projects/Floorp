@@ -57,21 +57,26 @@ export function chooseNewTabContainer(
   bindings = getWorkspaceContainerBindings(),
   prompt = nativeWorkspaceContainerPrompt(),
 ): number | null {
-  const containers = Services.prefs.getBoolPref("privacy.userContext.enabled")
-    ? bindings.listLocalContainers()
-    : [];
+  const epoch = bindings.getEpoch();
+  const containers =
+    Services.prefs.getBoolPref("privacy.userContext.enabled", false)
+      ? bindings.listLocalContainers()
+      : [];
   const selected = prompt.select(
     i18next.t("workspaces.containers.title"),
     i18next.t("workspaces.containers.choose-new-tab"),
     [
       i18next.t("workspaces.containers.legacy-none"),
-      ...containers.map((container) => container.name),
+      ...containers.map((container) =>
+        `${container.name} (${container.color}, ${container.icon}, #${container.userContextId})`
+      ),
     ],
   );
-  if (selected === null) return null;
+  if (selected === null || epoch !== bindings.getEpoch()) return null;
   if (selected === 0) return 0;
   const chosen = containers[selected - 1];
-  return chosen && Services.prefs.getBoolPref("privacy.userContext.enabled") &&
+  return chosen &&
+      Services.prefs.getBoolPref("privacy.userContext.enabled", false) &&
       bindings.listLocalContainers().some((container) =>
         container.userContextId === chosen.userContextId &&
         container.name === chosen.name && container.color === chosen.color &&

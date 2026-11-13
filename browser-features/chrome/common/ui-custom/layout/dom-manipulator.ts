@@ -696,7 +696,8 @@ function getBookmarkWorkspaceUserContextId(win: Window): number | null {
     );
     if (
       PrivateBrowsingUtils.permanentPrivateBrowsing ||
-      PrivateBrowsingUtils.isWindowPrivate(win)
+      PrivateBrowsingUtils.isWindowPrivate(win) ||
+      !Services.prefs.getBoolPref("privacy.userContext.enabled", false)
     ) {
       return 0;
     }
@@ -710,9 +711,6 @@ function getBookmarkWorkspaceUserContextId(win: Window): number | null {
         false,
       )
     ) return null;
-    if (!Services.prefs.getBoolPref("privacy.userContext.enabled", false)) {
-      return 0;
-    }
     const userContextId = workspace?.getCurrentWorkspaceUserContextId() ?? 0;
     const { ContextualIdentityService } = ChromeUtils.importESModule(
       "moz-src:///toolkit/components/contextualidentity/ContextualIdentityService.sys.mjs",
@@ -784,6 +782,9 @@ export function loadBookmarkURI(
     if (openInNewTab && win.gBrowser.addTab) {
       const userContextId = getBookmarkWorkspaceUserContextId(win);
       if (userContextId === null) {
+        console.error(
+          "[Workspaces] Bookmark blocked: default container is pending",
+        );
         // A pending default is handled here: allowing the original bookmark
         // command to continue could open the site through another handler.
         mouseEvent.preventDefault?.();

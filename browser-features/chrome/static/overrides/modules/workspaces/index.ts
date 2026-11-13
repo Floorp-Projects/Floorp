@@ -22,6 +22,7 @@ function defaultContainerPending(canOpen: boolean | undefined): boolean {
     Services.prefs.getBoolPref(WORKSPACE_ENABLED_PREF_NAME, true),
     PrivateBrowsingUtils.isWindowPrivate(window),
     canOpen,
+    Services.prefs.getBoolPref("privacy.userContext.enabled", false),
   );
 }
 
@@ -101,9 +102,16 @@ export const overrides = [
           where,
           defaultContainerPending(gWorkspacesServices?.canOpenWorkspaceTab()),
         )
-      ) return;
+      ) {
+        console.error(
+          "[Workspaces] Trusted link blocked: default container is pending",
+        );
+        return;
+      }
       const workspaceUserContextId =
-        gWorkspacesServices?.getCurrentWorkspaceUserContextId() ?? 0;
+        Services.prefs.getBoolPref("privacy.userContext.enabled", false)
+          ? gWorkspacesServices?.getCurrentWorkspaceUserContextId() ?? 0
+          : 0;
 
       const {
         options: mergedOptions,
@@ -145,9 +153,16 @@ export const overrides = [
             where,
             defaultContainerPending(gWorkspacesServices?.canOpenWorkspaceTab()),
           )
-        ) return;
+        ) {
+          console.error(
+            "[Workspaces] UI link blocked: default container is pending",
+          );
+          return;
+        }
         const workspaceUserContextId =
-          gWorkspacesServices?.getCurrentWorkspaceUserContextId() ?? 0;
+          Services.prefs.getBoolPref("privacy.userContext.enabled", false)
+            ? gWorkspacesServices?.getCurrentWorkspaceUserContextId() ?? 0
+            : 0;
 
         const {
           options: mergedParams,
@@ -171,6 +186,7 @@ export const overrides = [
       };
     }
 
+    let choosingNewTabContainer = false;
     globalThis.BrowserCommands.openTab = ({
       event,
       url,
@@ -178,6 +194,10 @@ export const overrides = [
       event?: MouseEvent;
       url?: string;
     } = {}) => {
+      if (choosingNewTabContainer) {
+        console.error("[Workspaces] New tab blocked: container chooser is open");
+        return;
+      }
       const werePassedURL = !!url;
       url ??= globalThis.BROWSER_NEW_TAB_URL;
       const searchClipboard = globalThis.gMiddleClickNewTabUsesPasteboard &&
@@ -228,19 +248,33 @@ export const overrides = [
       const gWorkspacesServices = Workspaces.getCtx();
       let userContextId: number;
       if (defaultContainerPending(gWorkspacesServices?.canOpenWorkspaceTab())) {
-        if (werePassedURL) return;
+        if (
+          werePassedURL || searchClipboard ||
+          !window.windowUtils.isHandlingUserInput
+        ) {
+          console.error(
+            "[Workspaces] New tab blocked: default container is pending",
+          );
+          return;
+        }
         const workspaceId = gWorkspacesServices?.getSelectedWorkspaceID();
-        const selectedContainer = chooseNewTabContainer();
+        choosingNewTabContainer = true;
+        let selectedContainer: number | null;
+        try {
+          selectedContainer = chooseNewTabContainer();
+        } finally {
+          choosingNewTabContainer = false;
+        }
         if (
           selectedContainer === null || window.closed ||
-          (workspaceId !== undefined &&
-            workspaceId !== Workspaces.getCtx()?.getSelectedWorkspaceID())
+          workspaceId !== Workspaces.getCtx()?.getSelectedWorkspaceID()
         ) return;
         userContextId = selectedContainer;
       } else {
         userContextId =
-          gWorkspacesServices?.getCurrentWorkspaceUserContextId() ??
-            0;
+          Services.prefs.getBoolPref("privacy.userContext.enabled", false)
+            ? gWorkspacesServices?.getCurrentWorkspaceUserContextId() ?? 0
+            : 0;
       }
 
       console.log(
