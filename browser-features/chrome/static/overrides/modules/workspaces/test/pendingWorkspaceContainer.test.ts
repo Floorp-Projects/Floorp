@@ -30,7 +30,6 @@ export async function runAllTests(): Promise<void> {
       assertEquals(workspaceDefaultIsPending(true, true, undefined), false);
       assertEquals(workspaceDefaultIsPending(false, false, undefined), false);
       assertEquals(workspaceDefaultIsPending(true, false, true), false);
-      assertEquals(workspaceDefaultIsPending(true, false, false, false), false);
       assertEquals(
         shouldBlockWorkspaceOpenLink(undefined, "tab", noService),
         true,
@@ -129,7 +128,11 @@ export async function runAllTests(): Promise<void> {
         assertEquals(notifications.length, 0);
         assertEquals(gBrowser.tabs.length, previousTabs.size);
         accept = true;
-        openFromUser();
+        const newTabMenu = document.getElementById("menu_newNavigatorTab") as
+          | XULElement
+          | null;
+        assert(newTabMenu, "File menu has a New Tab item");
+        newTabMenu.doCommand();
         assertEquals(dialogs, 2);
         assertEquals(notifications.length, 1);
         assertEquals(await notifications[0], gBrowser.selectedBrowser);
@@ -138,6 +141,12 @@ export async function runAllTests(): Promise<void> {
           "0",
         );
         Services.prefs.setBoolPref(pref, false);
+        const beforeLink = gBrowser.tabs.length;
+        BrowserCommands.openTab({ url: "https://example.invalid/" });
+        openTrustedLinkIn("https://example.invalid/", "tab");
+        openUILinkIn("https://example.invalid/", "tab");
+        assertEquals(gBrowser.tabs.length, beforeLink);
+        assertEquals(notifications.length, 1);
         openFromUser();
         assertEquals(dialogs, 2);
         assertEquals(notifications.length, 2);

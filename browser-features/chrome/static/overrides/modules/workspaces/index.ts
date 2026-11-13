@@ -22,7 +22,6 @@ function defaultContainerPending(canOpen: boolean | undefined): boolean {
     Services.prefs.getBoolPref(WORKSPACE_ENABLED_PREF_NAME, true),
     PrivateBrowsingUtils.isWindowPrivate(window),
     canOpen,
-    Services.prefs.getBoolPref("privacy.userContext.enabled", false),
   );
 }
 
@@ -109,9 +108,7 @@ export const overrides = [
         return;
       }
       const workspaceUserContextId =
-        Services.prefs.getBoolPref("privacy.userContext.enabled", false)
-          ? gWorkspacesServices?.getCurrentWorkspaceUserContextId() ?? 0
-          : 0;
+        gWorkspacesServices?.getCurrentWorkspaceUserContextId() ?? 0;
 
       const {
         options: mergedOptions,
@@ -160,9 +157,7 @@ export const overrides = [
           return;
         }
         const workspaceUserContextId =
-          Services.prefs.getBoolPref("privacy.userContext.enabled", false)
-            ? gWorkspacesServices?.getCurrentWorkspaceUserContextId() ?? 0
-            : 0;
+          gWorkspacesServices?.getCurrentWorkspaceUserContextId() ?? 0;
 
         const {
           options: mergedParams,
@@ -195,7 +190,9 @@ export const overrides = [
       url?: string;
     } = {}) => {
       if (choosingNewTabContainer) {
-        console.error("[Workspaces] New tab blocked: container chooser is open");
+        console.error(
+          "[Workspaces] New tab blocked: container chooser is open",
+        );
         return;
       }
       const werePassedURL = !!url;
@@ -246,35 +243,47 @@ export const overrides = [
       //         the New Tab page.
 
       const gWorkspacesServices = Workspaces.getCtx();
+      const containersEnabled = Services.prefs.getBoolPref(
+        "privacy.userContext.enabled",
+        false,
+      );
+      const opensProvidedLocation = werePassedURL || searchClipboard;
       let userContextId: number;
       if (defaultContainerPending(gWorkspacesServices?.canOpenWorkspaceTab())) {
+        // The native macOS menu dispatches a trusted command outside the user-input scope.
+        const userRequested = window.windowUtils.isHandlingUserInput ||
+          (event?.isTrusted && event.type === "command");
         if (
-          werePassedURL || searchClipboard ||
-          !window.windowUtils.isHandlingUserInput
+          opensProvidedLocation ||
+          !userRequested
         ) {
           console.error(
             "[Workspaces] New tab blocked: default container is pending",
           );
           return;
         }
-        const workspaceId = gWorkspacesServices?.getSelectedWorkspaceID();
-        choosingNewTabContainer = true;
-        let selectedContainer: number | null;
-        try {
-          selectedContainer = chooseNewTabContainer();
-        } finally {
-          choosingNewTabContainer = false;
+        if (containersEnabled) {
+          const workspaceId = gWorkspacesServices?.getSelectedWorkspaceID();
+          choosingNewTabContainer = true;
+          let selectedContainer: number | null;
+          try {
+            selectedContainer = chooseNewTabContainer();
+          } finally {
+            choosingNewTabContainer = false;
+          }
+          if (
+            selectedContainer === null || window.closed ||
+            workspaceId !== Workspaces.getCtx()?.getSelectedWorkspaceID()
+          ) return;
+          userContextId = selectedContainer;
+        } else {
+          if (url !== "about:newtab") url = "about:blank";
+          userContextId = 0;
         }
-        if (
-          selectedContainer === null || window.closed ||
-          workspaceId !== Workspaces.getCtx()?.getSelectedWorkspaceID()
-        ) return;
-        userContextId = selectedContainer;
       } else {
-        userContextId =
-          Services.prefs.getBoolPref("privacy.userContext.enabled", false)
-            ? gWorkspacesServices?.getCurrentWorkspaceUserContextId() ?? 0
-            : 0;
+        userContextId = containersEnabled || opensProvidedLocation
+          ? gWorkspacesServices?.getCurrentWorkspaceUserContextId() ?? 0
+          : 0;
       }
 
       console.log(

@@ -696,8 +696,7 @@ function getBookmarkWorkspaceUserContextId(win: Window): number | null {
     );
     if (
       PrivateBrowsingUtils.permanentPrivateBrowsing ||
-      PrivateBrowsingUtils.isWindowPrivate(win) ||
-      !Services.prefs.getBoolPref("privacy.userContext.enabled", false)
+      PrivateBrowsingUtils.isWindowPrivate(win)
     ) {
       return 0;
     }
@@ -711,6 +710,9 @@ function getBookmarkWorkspaceUserContextId(win: Window): number | null {
         false,
       )
     ) return null;
+    if (!Services.prefs.getBoolPref("privacy.userContext.enabled", false)) {
+      return 0;
+    }
     const userContextId = workspace?.getCurrentWorkspaceUserContextId() ?? 0;
     const { ContextualIdentityService } = ChromeUtils.importESModule(
       "moz-src:///toolkit/components/contextualidentity/ContextualIdentityService.sys.mjs",

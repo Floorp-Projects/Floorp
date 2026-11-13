@@ -19,9 +19,8 @@ export function workspaceDefaultIsPending(
   enabled: boolean,
   privateWindow: boolean,
   canOpen: boolean | undefined,
-  containersEnabled = true,
 ): boolean {
-  return enabled && !privateWindow && containersEnabled && canOpen !== true;
+  return enabled && !privateWindow && canOpen !== true;
 }
 
 export function shouldBlockWorkspaceOpenLink(

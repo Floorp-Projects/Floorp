@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import i18next from "i18next";
+import { PrivateContainer } from "../private-container/PrivateContainer.ts";
 import type { WorkspaceContainerRef } from "#modules/common/workspace-container-types.ts";
 import type { WorkspaceContainerResolution } from "#modules/common/workspace-container-bindings.ts";
 import type {
@@ -58,9 +59,16 @@ export function chooseNewTabContainer(
   prompt = nativeWorkspaceContainerPrompt(),
 ): number | null {
   const epoch = bindings.getEpoch();
+  const listPublicContainers = () => {
+    const containers = bindings.listLocalContainers();
+    const privateId = PrivateContainer.getPrivateContainerUserContextId();
+    return containers.filter((container) =>
+      container.userContextId !== privateId
+    );
+  };
   const containers =
     Services.prefs.getBoolPref("privacy.userContext.enabled", false)
-      ? bindings.listLocalContainers()
+      ? listPublicContainers()
       : [];
   const selected = prompt.select(
     i18next.t("workspaces.containers.title"),
@@ -77,7 +85,7 @@ export function chooseNewTabContainer(
   const chosen = containers[selected - 1];
   return chosen &&
       Services.prefs.getBoolPref("privacy.userContext.enabled", false) &&
-      bindings.listLocalContainers().some((container) =>
+      listPublicContainers().some((container) =>
         container.userContextId === chosen.userContextId &&
         container.name === chosen.name && container.color === chosen.color &&
         container.icon === chosen.icon
