@@ -5,6 +5,7 @@
 
 import { readNewTabClipboard } from "./clipboard.ts";
 import Workspaces from "#features-chrome/common/workspaces";
+import { chooseNewTabContainer } from "#features-chrome/common/workspaces/workspace-container-ui.ts";
 import { WORKSPACE_ENABLED_PREF_NAME } from "#features-chrome/common/workspaces/utils/workspaces-static-names.ts";
 import {
   resolveWorkspaceOpenLinkUserContext,
@@ -225,9 +226,21 @@ export const overrides = [
       //         the New Tab page.
 
       const gWorkspacesServices = Workspaces.getCtx();
-
+      let userContextId: number;
       if (defaultContainerPending(gWorkspacesServices?.canOpenWorkspaceTab())) {
-        return;
+        if (werePassedURL) return;
+        const workspaceId = gWorkspacesServices?.getSelectedWorkspaceID();
+        const selectedContainer = chooseNewTabContainer();
+        if (
+          selectedContainer === null || window.closed ||
+          (workspaceId !== undefined &&
+            workspaceId !== Workspaces.getCtx()?.getSelectedWorkspaceID())
+        ) return;
+        userContextId = selectedContainer;
+      } else {
+        userContextId =
+          gWorkspacesServices?.getCurrentWorkspaceUserContextId() ??
+            0;
       }
 
       console.log(
@@ -241,8 +254,7 @@ export const overrides = [
             const options = {
               relatedToCurrent,
               resolveOnNewTabCreated: resolve,
-              userContextId:
-                gWorkspacesServices?.getCurrentWorkspaceUserContextId() ?? 0,
+              userContextId,
               allowThirdPartyFixup: undefined as boolean | undefined,
             } satisfies {
               relatedToCurrent: boolean;

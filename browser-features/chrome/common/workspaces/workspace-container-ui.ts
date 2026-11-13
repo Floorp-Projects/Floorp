@@ -53,6 +53,34 @@ export function nativeWorkspaceContainerPrompt(): WorkspaceContainerPrompt {
   };
 }
 
+export function chooseNewTabContainer(
+  bindings = getWorkspaceContainerBindings(),
+  prompt = nativeWorkspaceContainerPrompt(),
+): number | null {
+  const containers = Services.prefs.getBoolPref("privacy.userContext.enabled")
+    ? bindings.listLocalContainers()
+    : [];
+  const selected = prompt.select(
+    i18next.t("workspaces.containers.title"),
+    i18next.t("workspaces.containers.choose-new-tab"),
+    [
+      i18next.t("workspaces.containers.legacy-none"),
+      ...containers.map((container) => container.name),
+    ],
+  );
+  if (selected === null) return null;
+  if (selected === 0) return 0;
+  const chosen = containers[selected - 1];
+  return chosen && Services.prefs.getBoolPref("privacy.userContext.enabled") &&
+      bindings.listLocalContainers().some((container) =>
+        container.userContextId === chosen.userContextId &&
+        container.name === chosen.name && container.color === chosen.color &&
+        container.icon === chosen.icon
+      )
+    ? chosen.userContextId
+    : null;
+}
+
 /** Called only by an explicit menu command; incoming sync never opens a modal. */
 export async function setupWorkspaceContainers(
   refs: WorkspaceContainerRef[],
