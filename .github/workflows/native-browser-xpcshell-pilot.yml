@@ -1,17 +1,14 @@
 name: Native Mozilla browser + xpcshell pilot (NO Marionette)
 
-# Manual pilot only. No publishing, PR-target execution, personal Mac, or ruleset changes.
+# Temporary exact-PR pilot; no pull_request_target, fork execution or publication.
 on:
-  workflow_dispatch:
-    inputs:
-      floorp_sha:
-        description: Exact Floorp product source commit (40 lowercase hex)
-        required: true
-        type: string
-      runtime_sha:
-        description: Exact Runtime commit (40 lowercase hex)
-        required: true
-        type: string
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
+
+concurrency:
+  group: native-browser-xpcshell-pilot-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
 
 permissions:
   contents: read
@@ -19,39 +16,48 @@ permissions:
 
 jobs:
   execute:
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.repository == 'Floorp-Projects/Floorp' &&
+      github.event.pull_request.number == 3138 &&
+      github.event.pull_request.head.repo.full_name == 'Floorp-Projects/Floorp' &&
+      github.event.pull_request.head.repo.fork == false &&
+      github.event.pull_request.head.ref == 'qa/mozilla-native-product-pilot' &&
+      github.event.pull_request.base.repo.full_name == 'Floorp-Projects/Floorp' &&
+      github.event.pull_request.base.ref == 'main'
     name: Linux x64 browser + xpcshell pilot
     runs-on: ubuntu-24.04
     timeout-minutes: 360
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.pull_request.head.sha }}
           persist-credentials: false
       - name: Contract test dependency
         run: sudo apt-get update && sudo apt-get install -y python3-yaml
       - name: Validate contract implementation (not native test evidence)
         run: python3 -m unittest discover -s tools/qa/native-product-ci -v
-      - name: Validate immutable selectors
-        env:
-          FLOORP_SHA: ${{ inputs.floorp_sha }}
-          RUNTIME_SHA: ${{ inputs.runtime_sha }}
-        run: |
-          python3 - <<'PY'
-          import os, re
-          for name in ('FLOORP_SHA', 'RUNTIME_SHA'):
-              if not re.fullmatch('[0-9a-f]{40}', os.environ[name]):
-                  raise SystemExit('Expected exact SHA: ' + name)
-          PY
+      - name: Resolve exact PR head and lock-derived Runtime
+        id: pins
+        run: python3 tools/qa/native-product-ci/pr_inputs.py
       - uses: actions/checkout@v4
         with:
           repository: Floorp-Projects/Floorp-Runtime
-          ref: ${{ inputs.runtime_sha }}
+          ref: ${{ steps.pins.outputs.runtime_sha }}
           path: runtime
           submodules: recursive
           persist-credentials: false
+      - name: Verify locked Runtime source tree and version
+        env:
+          EXPECTED_TREE: ${{ steps.pins.outputs.runtime_tree }}
+          EXPECTED_VERSION: ${{ steps.pins.outputs.runtime_version }}
+        run: |
+          test "$(git -C runtime rev-parse 'HEAD^{tree}')" = "$EXPECTED_TREE"
+          test "$(tr -d '\r\n' < runtime/browser/config/version.txt)" = "$EXPECTED_VERSION"
       - uses: actions/checkout@v4
         with:
           repository: Floorp-Projects/Floorp
-          ref: ${{ inputs.floorp_sha }}
+          ref: ${{ steps.pins.outputs.floorp_sha }}
           path: runtime/noraneko
           persist-credentials: false
       - uses: actions/setup-node@v4
@@ -66,8 +72,8 @@ jobs:
           sudo apt-get install -y python3-yaml msitools jq patchelf xvfb mesa-utils rsync
       - name: Build and assemble finalized native product on this worker
         env:
-          FLOORP_SHA: ${{ inputs.floorp_sha }}
-          RUNTIME_SHA: ${{ inputs.runtime_sha }}
+          FLOORP_SHA: ${{ steps.pins.outputs.floorp_sha }}
+          RUNTIME_SHA: ${{ steps.pins.outputs.runtime_sha }}
         run: |
           python3 tools/qa/native-product-ci/build_worker.py \
             --runtime "$GITHUB_WORKSPACE/runtime" \
@@ -75,16 +81,16 @@ jobs:
             --floorp-sha "$FLOORP_SHA" --runtime-sha "$RUNTIME_SHA"
       - name: Resolve native browser and xpcshell schedules before test execution
         env:
-          FLOORP_SHA: ${{ inputs.floorp_sha }}
-          RUNTIME_SHA: ${{ inputs.runtime_sha }}
+          FLOORP_SHA: ${{ steps.pins.outputs.floorp_sha }}
+          RUNTIME_SHA: ${{ steps.pins.outputs.runtime_sha }}
         run: |
           python3 tools/qa/native-product-ci/resolve_native.py \
             --cohort "$RUNNER_TEMP/native-provisioned/cohort.json" \
             --output "$RUNNER_TEMP/native-provisioned"
       - name: Execute authenticated product cohort
         env:
-          FLOORP_SHA: ${{ inputs.floorp_sha }}
-          RUNTIME_SHA: ${{ inputs.runtime_sha }}
+          FLOORP_SHA: ${{ steps.pins.outputs.floorp_sha }}
+          RUNTIME_SHA: ${{ steps.pins.outputs.runtime_sha }}
         run: |
           # A reviewed build/provisioning step must create this on THIS worker.
           # Do not relocate an OBJDIR or use a Runtime-only product as a shortcut.
@@ -123,13 +129,22 @@ jobs:
 
   gate:
     name: Mozilla browser + xpcshell pilot / gate
-    if: always()
+    if: >-
+      always() && github.event_name == 'pull_request' &&
+      github.repository == 'Floorp-Projects/Floorp' &&
+      github.event.pull_request.number == 3138 &&
+      github.event.pull_request.head.repo.full_name == 'Floorp-Projects/Floorp' &&
+      github.event.pull_request.head.repo.fork == false &&
+      github.event.pull_request.head.ref == 'qa/mozilla-native-product-pilot' &&
+      github.event.pull_request.base.repo.full_name == 'Floorp-Projects/Floorp' &&
+      github.event.pull_request.base.ref == 'main'
     needs: [execute]
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.pull_request.head.sha }}
           persist-credentials: false
       - uses: actions/download-artifact@v4
         with:
