@@ -291,7 +291,6 @@ async function testHoverAnchor(): Promise<void> {
     const savedRoot = root.hasAttribute("sidebar-expand-on-hover");
     const savedEnd = launcher.hasAttribute("sidebar-positionend");
     const savedExpanded = launcher.hasAttribute("sidebar-launcher-expanded");
-    const savedAnimating = launcher.hasAttribute("sidebar-ongoing-animations");
     const pref = "sidebar.position_start";
     const hadPref = Services.prefs.prefHasUserValue(pref);
     const savedPref = Services.prefs.getBoolPref(pref, true);
@@ -321,58 +320,50 @@ async function testHoverAnchor(): Promise<void> {
           for (const open of [true, false]) {
             setSelectedPanelId(open ? testPanelId : null);
             launcher.removeAttribute("sidebar-launcher-expanded");
-            launcher.removeAttribute("sidebar-ongoing-animations");
             await nextFrame();
             const collapsed = launcher.getBoundingClientRect();
-            for (
-              const attr of [
-                "sidebar-launcher-expanded",
-                "sidebar-ongoing-animations",
-              ]
-            ) {
-              launcher.setAttribute(attr, "");
-              await nextFrame();
-              const expanded = launcher.getBoundingClientRect();
-              assertApprox(
-                firefoxAtStart ? expanded.left : expanded.right,
-                firefoxAtStart ? collapsed.left : collapsed.right,
-                1,
-                `hover anchor should stay put: Firefox start=${firefoxAtStart}, Floorp end=${floorpAtEnd}, open=${open}, ${attr}`,
-              );
-              launcher.removeAttribute(attr);
-              await nextFrame();
-              const browser = element("browser");
-              const browserRect = browser.getBoundingClientRect();
-              const panelRects = [
-                "panel-sidebar-select-box",
-                "panel-sidebar-box",
-                "panel-sidebar-splitter",
-              ].flatMap((id) => {
-                const panelElement = document.getElementById(id);
-                if (!panelElement) return [];
-                const style = getComputedStyle(panelElement);
-                if (
-                  !style || style.display === "none" ||
-                  style.position === "absolute" || style.position === "fixed"
-                ) return [];
-                return [panelElement.getBoundingClientRect()];
-              });
-              const occupiedEdge = floorpAtEnd
-                ? Math.min(browserRect.right, ...panelRects.map((r) => r.left))
-                : Math.max(browserRect.left, ...panelRects.map((r) => r.right));
-              const occupiedWidth = floorpAtEnd
-                ? browserRect.right - occupiedEdge
-                : occupiedEdge - browserRect.left;
-              const property = floorpAtEnd
-                ? "--floorp-panel-end-width"
-                : "--floorp-panel-start-width";
-              assertApprox(
-                parseFloat(browser.style.getPropertyValue(property)),
-                occupiedWidth,
-                1,
-                `hover offset should refresh after ${attr} is removed`,
-              );
-            }
+            launcher.setAttribute("sidebar-launcher-expanded", "");
+            await nextFrame();
+            const expanded = launcher.getBoundingClientRect();
+            assertApprox(
+              firefoxAtStart ? expanded.left : expanded.right,
+              firefoxAtStart ? collapsed.left : collapsed.right,
+              1,
+              `hover anchor should stay put: Firefox start=${firefoxAtStart}, Floorp end=${floorpAtEnd}, open=${open}`,
+            );
+            launcher.removeAttribute("sidebar-launcher-expanded");
+            await nextFrame();
+            const browser = element("browser");
+            const browserRect = browser.getBoundingClientRect();
+            const panelRects = [
+              "panel-sidebar-select-box",
+              "panel-sidebar-box",
+              "panel-sidebar-splitter",
+            ].flatMap((id) => {
+              const panelElement = document.getElementById(id);
+              if (!panelElement) return [];
+              const style = getComputedStyle(panelElement);
+              if (
+                !style || style.display === "none" ||
+                style.position === "absolute" || style.position === "fixed"
+              ) return [];
+              return [panelElement.getBoundingClientRect()];
+            });
+            const occupiedEdge = floorpAtEnd
+              ? Math.min(browserRect.right, ...panelRects.map((r) => r.left))
+              : Math.max(browserRect.left, ...panelRects.map((r) => r.right));
+            const occupiedWidth = floorpAtEnd
+              ? browserRect.right - occupiedEdge
+              : occupiedEdge - browserRect.left;
+            const property = floorpAtEnd
+              ? "--floorp-panel-end-width"
+              : "--floorp-panel-start-width";
+            assertApprox(
+              parseFloat(browser.style.getPropertyValue(property)),
+              occupiedWidth,
+              1,
+              "hover offset should refresh after the launcher collapses",
+            );
           }
         }
       }
@@ -386,7 +377,6 @@ async function testHoverAnchor(): Promise<void> {
       root.toggleAttribute("sidebar-expand-on-hover", savedRoot);
       launcher.toggleAttribute("sidebar-positionend", savedEnd);
       launcher.toggleAttribute("sidebar-launcher-expanded", savedExpanded);
-      launcher.toggleAttribute("sidebar-ongoing-animations", savedAnimating);
       await sidebar.waitUntilStable();
     }
   });

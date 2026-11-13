@@ -70,6 +70,12 @@ async function withRevampedSidebar(test: () => Promise<void>): Promise<void> {
     bookmarksPref,
     false,
   );
+  const visibilityPref = "sidebar.visibility";
+  const hadVisibilityPref = Services.prefs.prefHasUserValue(visibilityPref);
+  const previousVisibility = Services.prefs.getStringPref(
+    visibilityPref,
+    "always-show",
+  );
   const previousID = SidebarController.currentID;
   const wasOpen = SidebarController.isOpen;
   const previousHistoryURL = SidebarController.sidebars.get(
@@ -79,6 +85,7 @@ async function withRevampedSidebar(test: () => Promise<void>): Promise<void> {
     "viewBookmarksSidebar",
   )?.url;
   try {
+    Services.prefs.setStringPref(visibilityPref, "always-show");
     Services.prefs.setBoolPref(bookmarksPref, true);
     Services.prefs.setBoolPref(pref, true);
     await waitFor(
@@ -98,6 +105,9 @@ async function withRevampedSidebar(test: () => Promise<void>): Promise<void> {
       ?.hidePopup();
     SidebarController.hide();
     setConfig(before);
+    if (hadVisibilityPref) {
+      Services.prefs.setStringPref(visibilityPref, previousVisibility);
+    } else Services.prefs.clearUserPref(visibilityPref);
     if (hadUserPref) Services.prefs.setBoolPref(pref, previousPref);
     else Services.prefs.clearUserPref(pref);
     if (hadBookmarksPref) {
@@ -125,8 +135,8 @@ async function showPanel<T extends LitElement>(
   await waitFor(
     () =>
       !!SidebarController.browser.contentDocument.querySelector(selector)
-        ?.shadowRoot
-        ?.querySelector("sidebar-panel-header")?.shadowRoot,
+        ?.shadowRoot?.querySelector("moz-input-search") &&
+      !!sharedHeader()?.shadowRoot,
     `${id}: the real panel and header must finish rendering`,
   );
   const page = SidebarController.browser.contentDocument.querySelector<T>(
@@ -137,12 +147,17 @@ async function showPanel<T extends LitElement>(
   return page;
 }
 
-function heading(page: LitElement): Element {
-  const element = page.shadowRoot?.querySelector("sidebar-panel-header")
-    ?.shadowRoot
-    ?.querySelector(".sidebar-panel-heading");
-  assert(element, "the panel must contain the real header title row");
-  return element;
+function sharedHeader(): LitElement | null {
+  return document.querySelector<LitElement>("#sidebar-panel-header");
+}
+
+function heading(): Element {
+  const header = sharedHeader();
+  assert(
+    header?.shadowRoot?.querySelector(".sidebar-panel-heading"),
+    "the browser must render the shared panel heading",
+  );
+  return header;
 }
 
 async function search(page: LitElement, query: string): Promise<void> {
@@ -226,9 +241,10 @@ async function testHistorySearchAndOptions(): Promise<void> {
         "viewHistorySidebar",
         "sidebar-history",
       );
-      const title = heading(page);
+      const title = heading();
       await waitFor(
-        () => display(title) === "flex",
+        () =>
+          display(title) !== "none" && title.getBoundingClientRect().height > 0,
         "History title is initially visible",
       );
       await setHidden(true);
@@ -245,6 +261,7 @@ async function testHistorySearchAndOptions(): Promise<void> {
       await waitFor(
         () =>
           page.controller.searchQuery === `${token}-absent` &&
+          page.controller.searchResults?.length === 0 &&
           Array.from(page.lists).some((list) => !!list.emptyState),
         "History must render an empty search result",
       );
@@ -281,7 +298,8 @@ async function testHistorySearchAndOptions(): Promise<void> {
       menu.hidePopup();
       await setHidden(false);
       await waitFor(
-        () => display(title) === "flex",
+        () =>
+          display(title) !== "none" && title.getBoundingClientRect().height > 0,
         "History title must restore without reopening",
       );
       await setHidden(true);
@@ -291,7 +309,7 @@ async function testHistorySearchAndOptions(): Promise<void> {
         "sidebar-history",
       );
       await waitFor(
-        () => display(heading(reopened)) === "none",
+        () => display(heading()) === "none",
         "reopened History inherits the toggle",
       );
       await search(reopened, token);
@@ -323,9 +341,10 @@ async function testBookmarksSearchAndReopen(): Promise<void> {
         "viewBookmarksSidebar",
         "sidebar-bookmarks",
       );
-      const title = heading(page);
+      const title = heading();
       await waitFor(
-        () => display(title) === "flex",
+        () =>
+          display(title) !== "none" && title.getBoundingClientRect().height > 0,
         "Bookmarks title is initially visible",
       );
       await setHidden(true);
@@ -349,7 +368,8 @@ async function testBookmarksSearchAndReopen(): Promise<void> {
       );
       await setHidden(false);
       await waitFor(
-        () => display(title) === "flex",
+        () =>
+          display(title) !== "none" && title.getBoundingClientRect().height > 0,
         "Bookmarks title must restore",
       );
       assertEquals(
@@ -369,7 +389,7 @@ async function testBookmarksSearchAndReopen(): Promise<void> {
         "sidebar-bookmarks",
       );
       await waitFor(
-        () => display(heading(reopened)) === "none",
+        () => display(heading()) === "none",
         "reopened Bookmarks inherits the toggle",
       );
       await search(reopened, token);
@@ -382,6 +402,32 @@ async function testBookmarksSearchAndReopen(): Promise<void> {
   } finally {
     await PlacesUtils.bookmarks.remove(bookmark.guid);
   }
+}
+
+async function testHiddenLauncherRetainsPanelSwitcher(): Promise<void> {
+  await withRevampedSidebar(async () => {
+    const pref = "sidebar.verticalTabs";
+    const hadPref = Services.prefs.prefHasUserValue(pref);
+    const previous = Services.prefs.getBoolPref(pref, false);
+    try {
+      Services.prefs.setBoolPref(pref, false);
+      Services.prefs.setStringPref("sidebar.visibility", "hide-launcher");
+      await showPanel<HistoryPanel>("viewHistorySidebar", "sidebar-history");
+      await setHidden(true);
+      await waitFor(
+        () => {
+          const switcher = sharedHeader()?.shadowRoot?.querySelector(
+            "sidebar-panel-switcher",
+          );
+          return !!switcher && switcher.getBoundingClientRect().height > 0;
+        },
+        "the panel switcher must remain available when the launcher is hidden",
+      );
+    } finally {
+      if (hadPref) Services.prefs.setBoolPref(pref, previous);
+      else Services.prefs.clearUserPref(pref);
+    }
+  });
 }
 
 async function testRealExtensionPanelHeader(): Promise<void> {
@@ -429,17 +475,19 @@ async function testRealExtensionPanelHeader(): Promise<void> {
         await SidebarController.show(sidebarID);
         await waitFor(
           () =>
-            !!SidebarController.browser.contentDocument.getElementById(
-              "sidebar-panel-header",
-            )?.shadowRoot,
-          "the actual webext-panels document must render its header",
+            !!sharedHeader()?.shadowRoot &&
+            SidebarController.browser.contentDocument.documentURI.endsWith(
+              "webext-panels.xhtml",
+            ),
+          "the extension panel must load alongside its shared header",
         );
         const doc = SidebarController.browser.contentDocument;
         assert(
           doc.documentURI.endsWith("webext-panels.xhtml"),
           "test the real extension panel document",
         );
-        const header = doc.getElementById("sidebar-panel-header") as LitElement;
+        const header = sharedHeader();
+        assert(header, "extension panel must have a shared header");
         await header.updateComplete;
         const content = doc.getElementById("webext-panels-browser") as
           | ExtensionBrowser
@@ -457,7 +505,7 @@ async function testRealExtensionPanelHeader(): Promise<void> {
         await setHidden(true);
         await waitFor(
           () => display(header) === "none",
-          "the empty extension host must collapse",
+          "the shared extension header must collapse",
         );
         assertEquals(
           header.getBoundingClientRect().height,
@@ -487,14 +535,12 @@ async function testRealExtensionPanelHeader(): Promise<void> {
         SidebarController.hide();
         await SidebarController.show(sidebarID);
         await waitFor(() => {
-          const reloaded = SidebarController.browser.contentDocument
-            .getElementById("sidebar-panel-header");
+          const reloaded = sharedHeader();
           return !!reloaded?.shadowRoot && display(reloaded) === "none";
         }, "a reopened extension panel must inherit the enabled toggle");
         await setHidden(false);
         await waitFor(() => {
-          const reloaded = SidebarController.browser.contentDocument
-            .getElementById("sidebar-panel-header");
+          const reloaded = sharedHeader();
           return !!reloaded && reloaded.getBoundingClientRect().height > 0;
         }, "the reopened extension header must still respond to changes");
       } finally {
@@ -522,6 +568,10 @@ export async function runAllTests(): Promise<void> {
     {
       name: "hidden Bookmarks headers preserve search after reopening",
       fn: testBookmarksSearchAndReopen,
+    },
+    {
+      name: "the shared header keeps the panel switcher without a launcher",
+      fn: testHiddenLauncherRetainsPanelSwitcher,
     },
     {
       name: "real extension panel headers collapse and restore",
