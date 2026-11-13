@@ -21,6 +21,19 @@ def run(script, cwd, env, logfile):
     if result.returncode:raise subprocess.CalledProcessError(result.returncode,['bash',str(script)])
 
 
+def environment_after_phase(name, env, runtime):
+    result = env.copy()
+    # The official configure script uses MOZCONFIG as an unexported template
+    # selector. Exporting it beforehand would make mach read that template,
+    # not the amended root mozconfig. Only pin the root after configure passes.
+    if name == 'Mach configure':
+        config = runtime / 'mozconfig'
+        if not config.is_file():
+            raise ValueError('Mach configure did not produce root mozconfig')
+        result['MOZCONFIG'] = str(config)
+    return result
+
+
 def stage_product(objdir, output, injected_xhtml=None):
     # mach package stages its actual packaged resource tree here; never substitute
     # dist/bin or an unrelated previously released archive when packaging failed.
@@ -68,7 +81,6 @@ def build(args):
                INPUT_PLATFORM='Linux-x86_64',CANON_PLATFORM='Linux-x86_64',
                IS_BETA='false',CI='true',MOZ_BUILD_DATE=datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S'),
                DENO_EXECUTABLE_PATH=shutil.which('deno') or '',LIBGL_ALWAYS_SOFTWARE='1')
-    env['MOZCONFIG']=str(runtime/'mozconfig')
     subprocess.run(['node',str(Path(__file__).with_name('test-injection-target.mjs')),str(floorp)],env=env,check=True)
     (output/'tool-versions-before.json').write_text(json.dumps(tool_versions(env),indent=2))
     results=[]
@@ -79,6 +91,7 @@ def build(args):
             row=dict(step,status='running');results.append(row)
             (output/'build-results.json').write_text(json.dumps(results,indent=2))
             run(script,runtime,env,output/(step['script']+'.log'))
+            env=environment_after_phase(step['name'],env,runtime)
             if step['name']=='Inject Noraneko':
                 target=runtime/'obj-artifact-build-output/dist/bin'
                 log=(output/(step['script']+'.log')).read_text()

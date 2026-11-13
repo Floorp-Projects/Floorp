@@ -45,6 +45,33 @@ class RecipeTests(unittest.TestCase):
         for name,script in r.extract(self.workflow()):
             self.assertNotIn('gh release',script);self.assertNotIn('git push',script)
 
+class PhaseEnvironmentTests(unittest.TestCase):
+    def test_config_is_not_exported_until_configure_succeeds(self):
+        with tempfile.TemporaryDirectory() as d:
+            runtime=Path(d);env={'CI':'true'}
+            for name in ['Apply upstream patches','Native bootstrap','Setup Noraneko']:
+                env=w.environment_after_phase(name,env,runtime)
+                self.assertNotIn('MOZCONFIG',env)
+            (runtime/'mozconfig').write_text('ac_add_options --enable-tests')
+            configured=w.environment_after_phase('Mach configure',env,runtime)
+            self.assertNotIn('MOZCONFIG',env)
+            self.assertEqual(configured['MOZCONFIG'],str(runtime/'mozconfig'))
+            for name in ['Build Noraneko','Native compile and install tests','Inject Noraneko','Native final package']:
+                self.assertEqual(w.environment_after_phase(name,configured,runtime),configured)
+    def test_shell_template_assignment_stays_unexported_then_root_is_pinned(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d);script=root/'configure.sh';log=root/'log'
+            script.write_text('set -eu\nMOZCONFIG=template\nbash -c \'test "${MOZCONFIG+x}" != x\'\nprintf configured > mozconfig\n')
+            env={'PATH':'/usr/bin:/bin','CI':'true'}
+            w.run(script,root,env,log)
+            configured=w.environment_after_phase('Mach configure',env,root)
+            script.write_text('set -eu\ntest "$MOZCONFIG" = "$PWD/mozconfig"\ntest "$(cat "$MOZCONFIG")" = configured\n')
+            w.run(script,root,configured,log)
+    def test_missing_root_config_fails_closed(self):
+        with tempfile.TemporaryDirectory() as d:
+            with self.assertRaisesRegex(ValueError,'did not produce root mozconfig'):
+                w.environment_after_phase('Mach configure',{'CI':'true'},Path(d))
+
 class StageTests(unittest.TestCase):
     def test_requires_packaged_not_dist_bin(self):
         with tempfile.TemporaryDirectory() as d:

@@ -23,12 +23,21 @@ try {
   const project=path.join(root,'runtime/noraneko');
   const expected=path.join(root,'runtime/obj-artifact-build-output/dist/bin');
   for (const ci of ['true',undefined,'false','1']) {
+    /** @type {{command: string, args: string[]}[]} */
     const commands=[];
     const context=vm.createContext({path,PROJECT_ROOT:project,
       BIN_DIR:path.join(root,'wrong-local-product'),PROD_BIN_DIR:path.join(root,'wrong-prod-default'),
       Logger:class {info(){} success(){} warn(){}},
+      /** @param {string} command @param {string[]} args */
       runCommandChecked:(command,args)=>{commands.push({command,args});return {success:true};},
-      Deno:{env:{get:k=>({CI:ci,CANON_PLATFORM:'Linux-x86_64'})[k]}}});
+      Deno:{env:{
+        /** @param {string} key @returns {string | undefined} */
+        get:(key)=>{
+          /** @type {Record<string, string | undefined>} */
+          const environment={CI:ci,CANON_PLATFORM:'Linux-x86_64'};
+          return environment[key];
+        }
+      }}});
     vm.runInContext(runnable,context);
     context.Injector={injectXhtmlFromTs:context.injectXhtmlFromTs};
     await vm.runInContext('(async()=>{'+call+'})()',context);
