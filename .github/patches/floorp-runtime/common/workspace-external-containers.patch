@@ -1,9 +1,9 @@
 diff --git a/browser/components/BrowserContentHandler.sys.mjs b/browser/components/BrowserContentHandler.sys.mjs
-index f4a0e1e566c363d5eb1d77e0c021df250d96b3f3..31750d21e858cbcba41a8f485a11a6bcd3c2e037 100644
+index f20c90621a73fed5cee4410ec4af6762d07448ba..74d3c7d42fcda1eb4e049f0c9958715ea0161a25 100644
 --- a/browser/components/BrowserContentHandler.sys.mjs
 +++ b/browser/components/BrowserContentHandler.sys.mjs
 @@ -15,6 +15,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
-   AsyncShutdown: "resource://gre/modules/AsyncShutdown.sys.mjs",
+     "moz-src:///browser/components/aiwindow/models/AuthProvider.sys.mjs",
    BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.sys.mjs",
    BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",
 +  ContextualIdentityService:
@@ -365,7 +365,7 @@ index f4a0e1e566c363d5eb1d77e0c021df250d96b3f3..31750d21e858cbcba41a8f485a11a6bc
  
  function openPreferences(cmdLine) {
 diff --git a/browser/modules/BrowserDOMWindow.sys.mjs b/browser/modules/BrowserDOMWindow.sys.mjs
-index 2cbf419680e8b2943786aeeda290c70af16e6c4a..5a22682ef8bae12ea17034404c14bf6c9c00d304 100644
+index 62086f2eecd602db7e71ae88f1154feca93cb011..32b97763e363f1122ee63520f0c1dc380f57959e 100644
 --- a/browser/modules/BrowserDOMWindow.sys.mjs
 +++ b/browser/modules/BrowserDOMWindow.sys.mjs
 @@ -10,6 +10,10 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
@@ -388,7 +388,7 @@ index 2cbf419680e8b2943786aeeda290c70af16e6c4a..5a22682ef8bae12ea17034404c14bf6c
     * @param {nsIOpenWindowInfo} [aOpenWindowInfo=null]
     * @param {Element} [aOpenerBrowser=null]
     * @param {nsIPrincipal} [aTriggeringPrincipal=null]
-@@ -127,6 +131,27 @@ export class BrowserDOMWindow {
+@@ -131,6 +135,27 @@ export class BrowserDOMWindow {
        return win.gBrowser.selectedBrowser;
      }
  
@@ -416,7 +416,7 @@ index 2cbf419680e8b2943786aeeda290c70af16e6c4a..5a22682ef8bae12ea17034404c14bf6c
      // OPEN_NEWTAB_BACKGROUND and OPEN_NEWTAB_FOREGROUND are used by
      // `window.open` with modifiers.
      // The last case is OPEN_NEWTAB, which is used by:
-@@ -255,10 +280,11 @@ export class BrowserDOMWindow {
+@@ -259,10 +284,11 @@ export class BrowserDOMWindow {
          "browser.link.force_default_user_context_id_for_external_opens",
          false
        );
@@ -432,7 +432,7 @@ index 2cbf419680e8b2943786aeeda290c70af16e6c4a..5a22682ef8bae12ea17034404c14bf6c
  
      if (aOpenWindowInfo && isExternal) {
        console.error(
-@@ -339,17 +365,22 @@ export class BrowserDOMWindow {
+@@ -343,17 +369,22 @@ export class BrowserDOMWindow {
              extraOptions.setPropertyAsBool("forceAllowDataURI", true);
            }
  
@@ -458,7 +458,7 @@ index 2cbf419680e8b2943786aeeda290c70af16e6c4a..5a22682ef8bae12ea17034404c14bf6c
              null,
              null,
              aTriggeringPrincipal,
-@@ -357,6 +388,20 @@ export class BrowserDOMWindow {
+@@ -361,6 +392,20 @@ export class BrowserDOMWindow {
              aPolicyContainer,
              aOpenWindowInfo
            );
