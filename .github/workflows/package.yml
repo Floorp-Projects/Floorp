@@ -2312,12 +2312,12 @@ jobs:
             MAR="$OBJ_PATH/dist/host/bin/mar" \
             MOZ_PRODUCT_VERSION="$VERSION" \
             MAR_CHANNEL_ID="$CHANNEL_ID" \
-            ./tools/update-packaging/make_full_update.sh "$MAR_FILE" "$APP_FILE"
+            ./tools/update-packaging/make_full_update.sh "$MAR_FILE" "$APP_FILE" floorp
           else
             MAR="$OBJ_PATH/dist/host/bin/mar" \
             MOZ_PRODUCT_VERSION="$VERSION" \
             MAR_CHANNEL_ID="$CHANNEL_ID" \
-            ./tools/update-packaging/make_full_update.sh "$MAR_FILE" "$DIST_DIR"
+            ./tools/update-packaging/make_full_update.sh "$MAR_FILE" "$DIST_DIR" floorp
           fi
 
           shasum --algorithm 512 "$MAR_FILE" | cut -c 1-128 > "$MAR_DIR/mar_shasum.txt"
@@ -2642,7 +2642,7 @@ jobs:
           channel="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["channel"])' "$tools/meta.json")"
           mar="$out/floorp-mac-universal-full.mar"
           MAR="$tools/mar" MOZ_PRODUCT_VERSION="$version" MAR_CHANNEL_ID="$channel" \
-            bash "$tools/update-packaging/make_full_update.sh" "$mar" "$app"
+            bash "$tools/update-packaging/make_full_update.sh" "$mar" "$app" floorp
           test -s "$mar"
           python3 - "$tools/meta.json" "$mar" "$out/meta.json" <<'PY'
           import hashlib
