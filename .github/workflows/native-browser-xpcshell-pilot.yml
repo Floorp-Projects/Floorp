@@ -62,7 +62,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@v4
         with:
-          node-version: 'latest'
+          node-version: '24.22.1'
       - uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
