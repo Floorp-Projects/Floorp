@@ -56,6 +56,8 @@ const chromeExtrasFields = [
   ["tabbar-one-liner", "tabbarOneLiner"],
   ["sidebar-overlap", "sidebarOverlap"],
 ] as const;
+
+/** Opens the UI customization section of the design settings. */
 async function chromeExtras() {
   await route("features/design", "#favicon-color");
   await button("Open UI extension settings");
@@ -68,9 +70,13 @@ async function chromeExtras() {
     "UI extension settings are still loading",
   );
 }
+
+/** Opens the gesture settings section. */
 async function gesture() {
   await route("features/gesture", '[data-setting="mouse-gesture-enabled"]');
 }
+
+/** Registers the advanced settings integration tests. */
 export async function runAdvancedTests() {
   await until(
     () => document.querySelector('a[href="/features/design"]'),
@@ -205,30 +211,47 @@ export async function runAdvancedTests() {
     },
   });
   tests.push({
-    name: "Tab sleep exclusion toggles and adds/removes patterns",
+    name: "Tab auto unload toggles, edits numbers, and manages patterns",
     fn: async () => {
-      const key = "floorp.tabs.sleep.exclusion";
-      await route("features/design", "#tab-sleep-exclusion-enabled");
-      await toggle("#tab-sleep-exclusion-enabled", key, "enabled");
-      await toggle("#tab-sleep-exclusion-enabled", key, "enabled");
+      const key = "floorp.tabs.autoUnload";
+      await route("features/performance", "#tab-auto-unload-enabled");
+      await toggle("#tab-auto-unload-enabled", key, "enabled");
+
+      await input("#tab-auto-unload-memory-threshold", "4096");
+      element<HTMLInputElement>("#tab-auto-unload-memory-threshold").blur();
+      await until(
+        () => valueAt(key, "memoryThresholdMB") === 4096,
+        "Memory threshold not saved",
+      );
+
+      await input("#tab-auto-unload-min-inactive", "20");
+      element<HTMLInputElement>("#tab-auto-unload-min-inactive").blur();
+      await until(
+        () => valueAt(key, "minInactiveMinutes") === 20,
+        "Inactive time not saved",
+      );
+
+      await toggle("#tab-auto-unload-enabled", key, "enabled");
+      await toggle("#tab-auto-unload-enabled", key, "enabled");
+
       await input(
-        'input[aria-label="Exclusion Patterns"]',
+        'input[aria-label="URLs excluded from unloading"]',
         "  *.example.test  ",
       );
       await button("Add");
       await until(
-        () => (json(key).patterns as string[]).includes("*.example.test"),
+        () =>
+          (json(key).excludePatterns as string[]).includes("*.example.test"),
         "Pattern not saved",
       );
-      await route("features/design", "#tab-sleep-exclusion-enabled");
+      await route("features/performance", "#tab-auto-unload-enabled");
       assert(
         document.body.textContent!.includes("*.example.test"),
         "Pattern not reloaded",
       );
       await click('button[aria-label="Remove"]');
-      assertEquals(
-        (json(key).patterns as string[]).length,
-        0,
+      await until(
+        () => (json(key).excludePatterns as string[]).length === 0,
         "Pattern removed",
       );
     },
@@ -629,6 +652,8 @@ export async function runAdvancedTests() {
   });
   await executeCases(tests);
 }
+
+/** Runs the advanced settings integration tests. */
 export async function runAllTests() {
   await runFixture(
     "http://localhost:5196/test/integration/index.html?suite=advanced",

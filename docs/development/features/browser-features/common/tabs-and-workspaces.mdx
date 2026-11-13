@@ -1,12 +1,12 @@
 ---
 title: "Tabs & Workspaces"
 sidebar_label: "Tabs & Workspaces"
-floorp_commit: "52cc8ae65c93c44e4018287a3cb46df30df4672f"
+floorp_commit: "e157f8a04c9f9e631ebde0dfd3eea61ee51d9ce5"
 generated: true
 ---
 # Tabs & Workspaces
 
-Tab, tab strip, workspace, split-view, closed-tab, and tab-sleep related chrome features. This page is generated from the common chrome feature inventory rooted at `browser-features/chrome/common`.
+Tab, tab strip, workspace, split-view, closed-tab, and tab-unloading related chrome features. This page is generated from the common chrome feature inventory rooted at `browser-features/chrome/common`.
 
 ## Feature Entries
 
@@ -14,8 +14,8 @@ Tab, tab strip, workspace, split-view, closed-tab, and tab-sleep related chrome 
 |---|---|---|---|
 | split-view | `browser-features/chrome/common/split-view/index.ts` | `default class SplitView`, `init` | Owns the split view feature through the SplitView chrome component and wires `split-view-manager`. |
 | tab | `browser-features/chrome/common/tab/index.ts` | `default class Tab`, `init` | Owns the tab feature through the Tab chrome component and wires `scroll`, `openPosition`, `sizeSpecification`. |
+| tab-auto-unload | `browser-features/chrome/common/tab-auto-unload/index.ts` | `default class TabAutoUnload`, `init` | Owns the tab auto unload feature through the TabAutoUnload chrome component. |
 | tab-refresh | `browser-features/chrome/common/tab-refresh/index.ts` | `default class TabRefresh`, `init` | Owns the tab refresh feature through the TabRefresh chrome component and wires `controller`. |
-| tab-sleep-exclusion | `browser-features/chrome/common/tab-sleep-exclusion/index.ts` | `default class TabSleepExclusion`, `init` | Owns the tab sleep exclusion feature through the TabSleepExclusion chrome component. |
 | tabbar | `browser-features/chrome/common/tabbar/index.ts` | `default class TabBar`, `init` | Owns the tabbar feature through the TabBar chrome component and wires `multirow-tabbar/multirow-tabbar`, `tabbbar-style/tabbar-style`. |
 | undo-closed-tab | `browser-features/chrome/common/undo-closed-tab/index.ts` | `default class UndoClosedTab`, `init` | Owns the undo closed tab feature through the UndoClosedTab chrome component and wires `styleElem`. |
 | workspaces | `browser-features/chrome/common/workspaces/index.ts` | `default class Workspaces`, `init` | Owns the workspaces feature through the Workspaces chrome component and wires `workspacesTabManager`, `utils/workspace-icons`, `workspacesService`. |
