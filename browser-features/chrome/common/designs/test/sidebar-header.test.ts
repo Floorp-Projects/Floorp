@@ -153,10 +153,9 @@ function sharedHeader(): LitElement | null {
 
 function heading(): Element {
   const header = sharedHeader();
-  assert(
-    header?.shadowRoot?.querySelector(".sidebar-panel-heading"),
-    "the browser must render the shared panel heading",
-  );
+  if (!header || !header.shadowRoot?.querySelector(".sidebar-panel-heading")) {
+    throw new Error("the browser must render the shared panel heading");
+  }
   return header;
 }
 
