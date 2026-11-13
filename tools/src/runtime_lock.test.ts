@@ -126,14 +126,14 @@ Deno.test("canonical Runtime lock pins the complete reviewed source closure", ()
       "id": 443518288,
       "immutable": false,
     },
-    "materialsCount": 53,
-    "materialBytes": 219183,
-    "testsCount": 8,
-    "totalTasks": 16,
-    "supportDependencyEdges": 93,
+    "materialsCount": 54,
+    "materialBytes": 220178,
+    "testsCount": 9,
+    "totalTasks": 17,
+    "supportDependencyEdges": 100,
     "roleCounts": {
       "manifest": 6,
-      "test": 8,
+      "test": 9,
       "head-support": 5,
       "support": 34,
     },
@@ -147,6 +147,8 @@ Deno.test("canonical Runtime lock pins the complete reviewed source closure", ()
         1,
       "browser/components/customizableui/test/browser_996364_registerArea_different_properties.js":
         7,
+      "browser/components/tabbrowser/test/browser/tabs/browser_open_newtab_start_observer_notification.js":
+        1,
       "browser/components/tabbrowser/test/browser/tabs/browser_pinned_and_hidden_tabs.js":
         1,
       "browser/components/urlbar/tests/browser-UrlbarInput/browser_a11y.js": 2,

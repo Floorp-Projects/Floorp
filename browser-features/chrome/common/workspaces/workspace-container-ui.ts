@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import i18next from "i18next";
+import { PrivateContainer } from "../private-container/PrivateContainer.ts";
 import type { WorkspaceContainerRef } from "#modules/common/workspace-container-types.ts";
 import type { WorkspaceContainerResolution } from "#modules/common/workspace-container-bindings.ts";
 import type {
@@ -51,6 +52,46 @@ export function nativeWorkspaceContainerPrompt(): WorkspaceContainerPrompt {
     },
     alert: (title, message) => Services.prompt.alert(parent, title, message),
   };
+}
+
+export function chooseNewTabContainer(
+  bindings = getWorkspaceContainerBindings(),
+  prompt = nativeWorkspaceContainerPrompt(),
+): number | null {
+  const epoch = bindings.getEpoch();
+  const listPublicContainers = () => {
+    const containers = bindings.listLocalContainers();
+    const privateId = PrivateContainer.getPrivateContainerUserContextId();
+    return containers.filter((container) =>
+      container.userContextId !== privateId
+    );
+  };
+  const containers =
+    Services.prefs.getBoolPref("privacy.userContext.enabled", false)
+      ? listPublicContainers()
+      : [];
+  const selected = prompt.select(
+    i18next.t("workspaces.containers.title"),
+    i18next.t("workspaces.containers.choose-new-tab"),
+    [
+      i18next.t("workspaces.containers.legacy-none"),
+      ...containers.map((container) =>
+        `${container.name} (${container.color}, ${container.icon}, #${container.userContextId})`
+      ),
+    ],
+  );
+  if (selected === null || epoch !== bindings.getEpoch()) return null;
+  if (selected === 0) return 0;
+  const chosen = containers[selected - 1];
+  return chosen &&
+      Services.prefs.getBoolPref("privacy.userContext.enabled", false) &&
+      listPublicContainers().some((container) =>
+        container.userContextId === chosen.userContextId &&
+        container.name === chosen.name && container.color === chosen.color &&
+        container.icon === chosen.icon
+      )
+    ? chosen.userContextId
+    : null;
 }
 
 /** Called only by an explicit menu command; incoming sync never opens a modal. */
