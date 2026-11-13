@@ -6,21 +6,24 @@
 import * as t from "io-ts";
 
 /* io-ts codecs */
-export const zPanel = t.type({
-  id: t.string,
-  type: t.union([
-    t.literal("web"),
-    t.literal("static"),
-    t.literal("extension"),
-  ]),
-  width: t.number,
-  url: t.union([t.string, t.null, t.undefined]),
-  icon: t.union([t.string, t.null, t.undefined]),
-  userContextId: t.union([t.number, t.null, t.undefined]),
-  zoomLevel: t.union([t.number, t.null, t.undefined]),
-  userAgent: t.union([t.boolean, t.null, t.undefined]),
-  extensionId: t.union([t.string, t.null, t.undefined]),
-});
+export const zPanel = t.intersection([
+  t.type({
+    id: t.string,
+    type: t.union([
+      t.literal("web"),
+      t.literal("static"),
+      t.literal("extension"),
+    ]),
+    width: t.number,
+    url: t.union([t.string, t.null, t.undefined]),
+    icon: t.union([t.string, t.null, t.undefined]),
+    userContextId: t.union([t.number, t.null, t.undefined]),
+    zoomLevel: t.union([t.number, t.null, t.undefined]),
+    userAgent: t.union([t.boolean, t.null, t.undefined]),
+    extensionId: t.union([t.string, t.null, t.undefined]),
+  }),
+  t.partial({ loadAtStartupForBadges: t.boolean }),
+]);
 
 export const zPanels = t.array(zPanel);
 

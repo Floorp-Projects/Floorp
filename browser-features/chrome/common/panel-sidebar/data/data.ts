@@ -23,6 +23,8 @@ import {
   zPanelSidebarData,
 } from "../utils/type.js";
 import { createRootHMR } from "@nora/solid-xul";
+import { pruneSavedUnreadBadges } from "../utils/saved-unread-badge.ts";
+import i18next from "i18next";
 import { isRight } from "fp-ts/Either";
 
 function defaultPanelSidebarData(): Panels {
@@ -32,68 +34,103 @@ function defaultPanelSidebarData(): Panels {
   return isRight(result) ? result.right.data : [];
 }
 
-export function parsePanelSidebarData(stringData: string): Panels {
+/** Decode a panel preference without substituting fallback values. */
+function decodePanelSidebarData(value: string): Panels | null {
   try {
-    const result = zPanelSidebarData.decode(
-      JSON.parse(stringData) as unknown,
-    );
-    if (isRight(result)) {
-      return result.right.data;
-    }
-    console.warn(
-      "[PanelSidebar] Invalid panel data; restoring defaults.",
-    );
-  } catch (error) {
-    console.warn(
-      "[PanelSidebar] Failed to parse panel data; restoring defaults.",
-      error,
-    );
+    const result = zPanelSidebarData.decode(JSON.parse(value) as unknown);
+    return isRight(result) ? result.right.data : null;
+  } catch {
+    return null;
   }
+}
+
+/** Parse stored panels for display, using defaults when the preference is invalid. */
+export function parsePanelSidebarData(stringData: string): Panels {
+  const panels = decodePanelSidebarData(stringData);
+  if (panels) return panels;
+  console.warn("[PanelSidebar] Invalid panel data; displaying defaults.");
   return defaultPanelSidebarData();
 }
 
-function createPanelSidebarData(): [Accessor<Panels>, Setter<Panels>] {
-  const [panelSidebarData, setPanelSidebarData] = createSignal<Panels>(
-    parsePanelSidebarData(
-      Services.prefs.getStringPref(
-        PanelSidebarStaticNames.panelSidebarDataPrefName,
-        strDefaultData,
-      ),
-    ),
-  );
-  const observer = () => {
-    setPanelSidebarData(
-      parsePanelSidebarData(
-        Services.prefs.getStringPref(
-          PanelSidebarStaticNames.panelSidebarDataPrefName,
-          strDefaultData,
-        ),
-      ),
-    );
+/** Synchronize panel preferences and remove saved counts for deleted panels. */
+export function createPanelSidebarData(
+  prefs: Pick<
+    typeof Services.prefs,
+    | "getStringPref"
+    | "setStringPref"
+    | "prefIsLocked"
+    | "addObserver"
+    | "removeObserver"
+    | "getChildList"
+    | "clearUserPref"
+  > = Services.prefs,
+): [Accessor<Panels>, Setter<Panels>] {
+  const prefName = PanelSidebarStaticNames.panelSidebarDataPrefName;
+  let invalidFallback: Panels | undefined;
+  const read = () => {
+    const raw = prefs.getStringPref(prefName, strDefaultData);
+    const panels = decodePanelSidebarData(raw);
+    if (panels) {
+      invalidFallback = undefined;
+      return panels;
+    }
+    invalidFallback = defaultPanelSidebarData();
+    return invalidFallback;
   };
-  Services.prefs.addObserver(
-    PanelSidebarStaticNames.panelSidebarDataPrefName,
-    observer,
-  );
-  onCleanup(() => {
-    Services.prefs.removeObserver(
-      PanelSidebarStaticNames.panelSidebarDataPrefName,
-      observer,
-    );
-  });
+  const [panelSidebarData, setPanelSidebarData] = createSignal<Panels>(read());
+  const observer = () => setPanelSidebarData(read());
+  prefs.addObserver(prefName, observer);
+  onCleanup(() => prefs.removeObserver(prefName, observer));
 
   createEffect(() => {
-    Services.prefs.setStringPref(
-      PanelSidebarStaticNames.panelSidebarDataPrefName,
-      JSON.stringify({ data: panelSidebarData() }),
-    );
+    const panels = panelSidebarData();
+    const serialized = JSON.stringify({ data: panels });
+    const restoreStoredPanels = () => {
+      const stored = read();
+      if (JSON.stringify({ data: stored }) !== serialized) {
+        setPanelSidebarData(stored);
+      }
+    };
+    if (prefs.prefIsLocked(prefName)) {
+      restoreStoredPanels();
+      return;
+    }
+    const fallback = invalidFallback;
+    if (fallback) {
+      if (panels === fallback) return;
+      const confirmed = Services.prompt.confirm(
+        window as unknown as mozIDOMWindowProxy,
+        i18next.t("panelSidebar.resetInvalidTitle"),
+        i18next.t("panelSidebar.resetInvalidMessage"),
+      );
+      if (invalidFallback !== fallback) return;
+      if (!confirmed) {
+        setPanelSidebarData(fallback);
+        return;
+      }
+    }
+    try {
+      prefs.setStringPref(prefName, serialized);
+    } catch (error) {
+      console.error("[PanelSidebar] Failed to save panel settings", error);
+      restoreStoredPanels();
+      return;
+    }
+    if (
+      !prefs.prefIsLocked(prefName) &&
+      prefs.getStringPref(prefName, strDefaultData) === serialized
+    ) {
+      pruneSavedUnreadBadges(panels, prefs);
+    } else {
+      restoreStoredPanels();
+    }
   });
   return [panelSidebarData, setPanelSidebarData];
 }
 
 /** PanelSidebar data */
 export const [panelSidebarData, setPanelSidebarData] = createRootHMR(
-  createPanelSidebarData,
+  () => createPanelSidebarData(),
   import.meta.hot,
 );
 

@@ -20,11 +20,33 @@ import {
   setSelectedPanelId,
 } from "../data/data.ts";
 import type { Panel } from "../utils/type.ts";
-import { createEffect } from "solid-js";
+import { createEffect, createSignal } from "solid-js";
 import { getExtensionSidebarAction } from "../extension-panels.ts";
+import { supportsUnreadBadge } from "../utils/unread-badge.ts";
 import { WebsitePanel } from "../website-panel-window-parent.ts";
 
+/** Check whether the panel can remain loaded for badge updates. */
+function shouldLoadPanelForBadges(panel: Panel | undefined): boolean {
+  if (
+    panel?.type !== "web" || !panel.loadAtStartupForBadges ||
+    !supportsUnreadBadge(panel.url ?? "")
+  ) return false;
+
+  const { PrivateBrowsingUtils } = ChromeUtils.importESModule(
+    "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
+  );
+  return !PrivateBrowsingUtils.isWindowPrivate(window);
+}
+
 export class CPanelSidebar {
+  private readonly badgeControlsSignal = createSignal(
+    new Map<string, {
+      visible: () => boolean;
+      clear: () => void;
+    }>(),
+  );
+  public readonly unreadBadgeControls = this.badgeControlsSignal[0];
+  public readonly setUnreadBadgeControls = this.badgeControlsSignal[1];
   private panelDisposers: Map<string, () => void> = new Map();
   private get parentElement() {
     return document?.getElementById("panel-sidebar-browser-box") as unknown as
@@ -193,12 +215,16 @@ export class CPanelSidebar {
     this.openPanel(panelId);
   }
 
+  /** Hide the selected panel, unloading it when required. */
   public closePanel(): void {
     const panelId = selectedPanelId();
     setIsPanelSidebarHoverPreview(false);
     setIsPanelSidebarHoverOpen(false);
     setSelectedPanelId(null);
-    if (panelId && panelSidebarConfig().autoUnload) {
+    if (
+      panelId && panelSidebarConfig().autoUnload &&
+      !shouldLoadPanelForBadges(this.getPanelData(panelId))
+    ) {
       this.unloadPanel(panelId);
     }
   }
@@ -215,13 +241,32 @@ export class CPanelSidebar {
     this.showPanel(panel);
   }
 
+  /** Reveal the existing browser or create one for the selected panel. */
   public showPanel(panel: Panel): void {
     const browser = this.getBrowserElement(panel.id);
     if (browser) {
+      browser.removeAttribute("hidden");
       browser.setAttribute("flex", "1");
       return;
     }
     this.renderBrowserComponent(panel);
+  }
+
+  /** Start opted-in messaging panels without opening them. */
+  public preloadBadgePanels(): void {
+    if (!this.parentElement) return;
+
+    for (const panel of panelSidebarData()) {
+      if (
+        !shouldLoadPanelForBadges(panel) || this.getBrowserElement(panel.id)
+      ) {
+        continue;
+      }
+      this.renderBrowserComponent(panel);
+      const browser = this.getBrowserElement(panel.id);
+      browser?.setAttribute("hidden", "true");
+      browser?.removeAttribute("flex");
+    }
   }
 
   public saveCurrentSidebarWidth() {
@@ -264,11 +309,13 @@ export class CPanelSidebar {
     });
   }
 
+  /** Unload the panel and remove its settings. */
   public deletePanel(panelId: string) {
     this.unloadPanel(panelId);
     setPanelSidebarData((prev) => prev.filter((p) => p.id !== panelId));
   }
 
+  /** Dispose the requested browser and clear selection only if it was selected. */
   public unloadPanel(panelId: string) {
     // Cleanup Solid root for this panel if present
     const dispose = this.panelDisposers.get(panelId);
@@ -286,7 +333,7 @@ export class CPanelSidebar {
       browser.remove();
     }
 
-    setSelectedPanelId(null);
+    if (selectedPanelId() === panelId) setSelectedPanelId(null);
   }
 
   public mutePanel(panelId: string) {

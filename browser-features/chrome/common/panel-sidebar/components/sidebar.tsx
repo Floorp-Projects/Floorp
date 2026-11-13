@@ -57,6 +57,10 @@ export class PanelSidebarElem {
       else createRoot(exec);
     });
 
+    void this.sidebarReady.then(() => {
+      if (isPanelSidebarEnabled()) this.ctx.preloadBadgePanels();
+    });
+
     render(() => this.style(), document?.head);
 
     const execEffect = () =>
@@ -93,12 +97,14 @@ export class PanelSidebarElem {
     });
   }
 
+  /** Restore opted-in browsers and the selected panel after enabling the sidebar. */
   private async restoreSelectedPanel() {
     await this.sidebarReady;
     await new Promise<void>((resolve) =>
       requestAnimationFrame(() => resolve())
     );
     if (!isPanelSidebarEnabled()) return;
+    this.ctx.preloadBadgePanels();
     const panel = this.ctx.getPanelData(selectedPanelId() ?? "");
     if (!panel) return;
     this.ctx.setSidebarWidth(panel);
