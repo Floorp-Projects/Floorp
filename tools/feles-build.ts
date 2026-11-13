@@ -17,6 +17,10 @@ import {
   parsePortOffsetSpec,
   resolveAutoDevPortOffset,
 } from "./src/port_offset.ts";
+import {
+  type FelesBuildGlobalArgs,
+  parseFelesBuildGlobalArgs,
+} from "./src/feles_build_args.ts";
 import { devHttpOrigin } from "#libs/shared/dev-ports/defines.ts";
 import { Logger } from "./src/utils.ts";
 
@@ -77,7 +81,10 @@ function isDevServerReady(chunk: string): boolean {
   return s === DEV_SERVER.ready_string || s.includes("nora-");
 }
 
-async function runDev(portOffset = 0): Promise<void> {
+async function runDev(
+  portOffset = 0,
+  localArtifactPath?: string,
+): Promise<void> {
   logger.info("Starting development environment...");
   if (portOffset !== 0) {
     logger.info(
@@ -92,6 +99,7 @@ async function runDev(portOffset = 0): Promise<void> {
     distribution: Deno.env.get("FLOORP_DEV_RUNTIME_DISTRIBUTION") === "release"
       ? "release"
       : "debug",
+    localArtifactPath,
   });
   CustomAppIcons.run();
   // A packaged Debug Runtime has no moz-src; `fdh task prepare` records
@@ -315,7 +323,9 @@ function runPatch(action = "apply"): void {
 }
 
 function printHelp(): void {
-  console.log("Usage: deno task feles-build <command> [options]\n");
+  console.log(
+    "Usage: deno task feles-build [--artifact <path>] <command> [options]\n",
+  );
   console.log("Commands:");
   console.log("  dev        Run the development workflow");
   console.log(
@@ -327,6 +337,14 @@ function printHelp(): void {
   console.log("  build      Run the production build workflow (--phase)");
   console.log("  misc       Misc commands (e.g. 'misc patch')");
   console.log("");
+  console.log("Global options:");
+  console.log(
+    "  --artifact <path>  dev only: install a local Runtime artifact",
+  );
+  console.log(
+    "                     (.zip/.tar.xz/.dmg) instead of downloading it",
+  );
+  console.log("");
   console.log(
     "dev/test/stage accept --port-offset <n|auto> to shift every dev/test",
   );
@@ -337,9 +355,44 @@ function printHelp(): void {
   console.log("Run 'feles-build <command> --help' for command-specific help.");
 }
 
+function parseGlobalArgsOrExit(): FelesBuildGlobalArgs {
+  try {
+    return parseFelesBuildGlobalArgs(Deno.args);
+  } catch (error) {
+    if (Deno.args.includes("--help") || Deno.args.includes("-h")) {
+      printHelp();
+      Deno.exit(0);
+    }
+    logger.error(error instanceof Error ? error.message : String(error));
+    logger.error("Use 'feles-build --artifact <path> dev'.");
+    Deno.exit(1);
+  }
+}
+
 async function main(): Promise<void> {
-  const argv = Deno.args.slice();
+  const parsed = parseGlobalArgsOrExit();
+  const argv = parsed.argv.slice();
   const command = argv.shift();
+
+  if (
+    parsed.artifactPath !== undefined &&
+    command !== "dev" &&
+    command !== "--help" &&
+    command !== "-h" &&
+    command !== undefined
+  ) {
+    logger.error(
+      `--artifact is only supported by the dev command (received: ${command}).`,
+    );
+    logger.error("Use 'feles-build --artifact <path> dev'.");
+    Deno.exit(1);
+  }
+
+  if (parsed.artifactPath !== undefined && command === undefined) {
+    logger.error("--artifact requires a command (e.g. dev).");
+    logger.error("Use 'feles-build --artifact <path> dev'.");
+    Deno.exit(1);
+  }
 
   switch (command) {
     case "dev": {
@@ -348,9 +401,15 @@ async function main(): Promise<void> {
         console.log(
           "Usage: feles-build dev [--port-offset <n|auto>]",
         );
+        console.log(
+          "       feles-build --artifact <path> dev [--port-offset <n|auto>]",
+        );
+        console.log(
+          "  --artifact installs a local Runtime artifact instead of downloading it.",
+        );
         return;
       }
-      await runDev(await argvPortOffset(argv));
+      await runDev(await argvPortOffset(argv), parsed.artifactPath);
       break;
     }
     case "test": {

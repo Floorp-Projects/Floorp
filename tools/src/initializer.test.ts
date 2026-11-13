@@ -2,15 +2,23 @@
 
 import { assert, assertEquals, assertRejects, assertThrows } from "@std/assert";
 import * as path from "@std/path";
+import { strToU8, zipSync } from "fflate";
 import {
   copyDebugMacAppFromMountedDmg,
   debugRuntimeArchiveName,
   filterRuntimeEntries,
   type InitializerRunDependencies,
+  installLocalRuntime,
   installLockedRuntime,
+  LOCAL_RUNTIME_MARKER,
+  localRuntimeArtifactFormat,
+  type LocalRuntimeMarker,
+  type LocalRuntimeOperations,
   type LockedReleaseMetadata,
   lockedReleasePublicDownloadUrl,
   type LockedRuntimeOperations,
+  materializeLocalRuntimeArtifact,
+  type NativeRuntimeTarget,
   pickRuntimeEntry,
   prepareDebugMacInfoPlist,
   resolveNativeRuntimeTarget,
@@ -1879,6 +1887,1007 @@ Deno.test("locked Runtime rollback failure retains the recovery backup path", as
       await Deno.readTextFile(`${backupRoot}/floorp/old.txt`),
       "old-runtime",
     );
+  } finally {
+    await Deno.remove(root, { recursive: true });
+  }
+});
+
+const LOCAL_ARTIFACT_SHA256 = "c".repeat(64);
+const LOCAL_RUNTIME_VERSION = "152.0.7";
+const LOCAL_RUNTIME_BUILD_ID = "20260718112318";
+
+function localSyntheticArtifact(
+  target: NativeRuntimeTarget,
+): RuntimeArtifact {
+  const format = target.platform === "windows"
+    ? "zip" as const
+    : target.platform === "linux"
+    ? "tar.xz" as const
+    : "dmg" as const;
+  const extractionPolicy = target.platform === "windows"
+    ? "zip-direct-floorp" as const
+    : target.platform === "linux"
+    ? "tar-xz-floorp" as const
+    : "dmg-floorp-app" as const;
+  const asset = {
+    id: 0,
+    name: `local-runtime.${format}`,
+    size: 0,
+    sha256: "",
+  };
+  return {
+    platform: target.platform,
+    architecture: target.architecture,
+    format,
+    extractionPolicy,
+    asset,
+    applicationIniAsset: { ...asset },
+    version: "",
+    buildId: "",
+  };
+}
+
+interface FakeLocalOperationOptions {
+  nonce: string;
+  sha256?: string;
+  extractionFailure?: boolean;
+  extractCalls?: { count: number };
+  preexistingVersion?: string;
+  preexistingMarker?: string;
+  forbiddenState?: "applied_patches" | "floorp-git";
+  packagedTree?: boolean;
+  wrongExecutableArchitecture?: boolean;
+  machOHeader?:
+    | "universal-x86_64"
+    | "universal-arm64"
+    | "truncated"
+    | "incompatible-cpu";
+}
+
+const MACHO_CPU_X86_64 = 0x01000007;
+const MACHO_CPU_ARM64 = 0x0100000c;
+
+/** Thin 64-bit Mach-O header (magic + cputype in the given byte order). */
+function machOThinBytes(
+  cpuType: number,
+  bigEndian = false,
+  truncated = false,
+): Uint8Array {
+  if (truncated) {
+    return bigEndian
+      ? Uint8Array.of(0xfe, 0xed, 0xfa, 0xcf)
+      : Uint8Array.of(0xcf, 0xfa, 0xed, 0xfe);
+  }
+  const bytes = new Uint8Array(32);
+  new DataView(bytes.buffer).setUint32(0, 0xfeedfacf, !bigEndian);
+  new DataView(bytes.buffer).setUint32(4, cpuType, !bigEndian);
+  return bytes;
+}
+
+/** Universal (fat) big-endian Mach-O header with a single slice. */
+function machOUniversalBytes(cpuType: number): Uint8Array {
+  const bytes = new Uint8Array(28);
+  const view = new DataView(bytes.buffer);
+  view.setUint32(0, 0xcafebabe, false); // fat magic
+  view.setUint32(4, 1, false); // nfat_arch
+  view.setUint32(8, cpuType, false); // cputype of the first slice
+  return bytes;
+}
+
+/** Minimal valid executable headers so the architecture sniff accepts them. */
+function syntheticExecutableBytes(target: NativeRuntimeTarget): Uint8Array {
+  const view = (
+    bytes: Uint8Array,
+  ): DataView => new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  if (target.platform === "windows") {
+    // "MZ" + PE signature + machine 0x8664 (x86_64).
+    const bytes = new Uint8Array(0x46);
+    bytes[0] = 0x4d;
+    bytes[1] = 0x5a;
+    const peOffset = 0x40;
+    view(bytes).setUint32(0x3c, peOffset, true);
+    bytes[peOffset] = 0x50;
+    bytes[peOffset + 1] = 0x45;
+    view(bytes).setUint16(peOffset + 4, 0x8664, true);
+    return bytes;
+  }
+  if (target.platform === "linux") {
+    // ELF64 with the target machine (x86-64: 62, AArch64: 183).
+    const bytes = new Uint8Array(20);
+    bytes[0] = 0x7f;
+    bytes[1] = 0x45;
+    bytes[2] = 0x4c;
+    bytes[3] = 0x46;
+    bytes[4] = 2;
+    view(bytes).setUint16(
+      18,
+      target.architecture === "aarch64" ? 183 : 62,
+      true,
+    );
+    return bytes;
+  }
+  // Thin 64-bit Mach-O with an arm64 CPU type.
+  return machOThinBytes(MACHO_CPU_ARM64);
+}
+
+function fakeLocalOperations(
+  target: NativeRuntimeTarget,
+  options: FakeLocalOperationOptions,
+): Partial<LocalRuntimeOperations> {
+  const artifact = localSyntheticArtifact(target);
+  return {
+    sha256: () => Promise.resolve(options.sha256 ?? LOCAL_ARTIFACT_SHA256),
+    extract: async (_artifactPath, destinationRoot) => {
+      if (options.extractCalls) options.extractCalls.count += 1;
+      if (options.extractionFailure) {
+        throw new Error("injected local extraction failure");
+      }
+      const layout = runtimeLayoutFor(destinationRoot, artifact);
+      await Deno.mkdir(path.dirname(layout.applicationIni), {
+        recursive: true,
+      });
+      await Deno.writeTextFile(
+        layout.applicationIni,
+        [
+          "[App]",
+          "Name=Floorp",
+          `Version=${LOCAL_RUNTIME_VERSION}`,
+          `BuildID=${LOCAL_RUNTIME_BUILD_ID}`,
+          "",
+        ].join("\n"),
+      );
+      await Deno.mkdir(path.dirname(layout.executable), {
+        recursive: true,
+      });
+      if (options.machOHeader) {
+        await Deno.writeFile(
+          layout.executable,
+          options.machOHeader === "universal-x86_64"
+            ? machOUniversalBytes(MACHO_CPU_X86_64)
+            : options.machOHeader === "universal-arm64"
+            ? machOUniversalBytes(MACHO_CPU_ARM64)
+            : options.machOHeader === "truncated"
+            ? machOThinBytes(MACHO_CPU_ARM64, false, true)
+            : machOThinBytes(18), // 18 = CPU_TYPE_POWERPC: unsupported here
+        );
+      } else if (options.wrongExecutableArchitecture) {
+        await Deno.writeFile(
+          layout.executable,
+          syntheticExecutableBytes(
+            target.platform === "linux"
+              ? { platform: "linux", architecture: "x86_64" }
+              : { platform: "linux", architecture: "aarch64" },
+          ),
+        );
+      } else {
+        await Deno.writeFile(
+          layout.executable,
+          syntheticExecutableBytes(target),
+        );
+      }
+      if (target.platform !== "windows") {
+        await Deno.chmod(layout.executable, 0o755);
+      }
+      if (!options.packagedTree) {
+        const unpackedXhtml = path.join(
+          path.dirname(layout.applicationIni),
+          "browser",
+          "chrome",
+          "browser",
+          "content",
+          "browser",
+          "browser.xhtml",
+        );
+        await Deno.mkdir(path.dirname(unpackedXhtml), { recursive: true });
+        await Deno.writeTextFile(
+          unpackedXhtml,
+          '<window id="main-window"/>',
+        );
+      }
+      if (options.preexistingVersion !== undefined) {
+        await Deno.writeTextFile(
+          layout.legacyVersionFile,
+          options.preexistingVersion,
+        );
+      }
+      if (options.preexistingMarker !== undefined) {
+        await Deno.writeTextFile(
+          path.join(destinationRoot, LOCAL_RUNTIME_MARKER),
+          options.preexistingMarker,
+        );
+      }
+      if (options.forbiddenState === "applied_patches") {
+        await Deno.mkdir(path.join(destinationRoot, "applied_patches"));
+      } else if (options.forbiddenState === "floorp-git") {
+        await Deno.mkdir(path.join(destinationRoot, "floorp", ".git"));
+      }
+      if (target.platform === "macos") {
+        const contentsRoot = path.dirname(
+          path.dirname(layout.applicationIni),
+        );
+        const stagingDeveloperPath = path.join(destinationRoot, "floorp");
+        await Deno.writeTextFile(
+          path.join(contentsRoot, "Info.plist"),
+          [
+            '<?xml version="1.0" encoding="UTF-8"?>',
+            "<plist><dict>",
+            "<key>MozillaDeveloperRepoPath</key>",
+            `<string>${stagingDeveloperPath}</string>`,
+            "<key>MozillaDeveloperObjPath</key>",
+            `<string>${stagingDeveloperPath}</string>`,
+            "</dict></plist>",
+          ].join("\n"),
+        );
+      }
+    },
+    rename: (from, to) => Deno.rename(from, to),
+    nonce: () => options.nonce,
+  };
+}
+
+async function writeLocalArtifact(
+  root: string,
+  fileName = "floorp-runtime.zip",
+): Promise<string> {
+  const artifactPath = path.join(root, fileName);
+  await Deno.writeFile(artifactPath, new Uint8Array([1, 2, 3]));
+  return artifactPath;
+}
+
+Deno.test("local Runtime install writes its marker and version file", async () => {
+  const root = await Deno.makeTempDir();
+  try {
+    const target: NativeRuntimeTarget = {
+      platform: "windows",
+      architecture: "x86_64",
+    };
+    const artifactPath = await writeLocalArtifact(root);
+    const binRoot = path.join(root, "bin");
+    const extractCalls = { count: 0 };
+
+    const result = await installLocalRuntime({
+      artifactPath,
+      target,
+      binRootDir: binRoot,
+      operations: fakeLocalOperations(target, {
+        nonce: "local-install",
+        extractCalls,
+      }),
+    });
+
+    assertEquals(result.reused, false);
+    assertEquals(result.artifactPath, artifactPath);
+    assertEquals(result.marker.artifactPath, artifactPath);
+    assertEquals(result.marker.artifactSize, 3);
+    assertEquals(result.marker.artifactSha256, LOCAL_ARTIFACT_SHA256);
+    assertEquals(result.marker.version, LOCAL_RUNTIME_VERSION);
+    assertEquals(result.marker.buildId, LOCAL_RUNTIME_BUILD_ID);
+    assertEquals(extractCalls.count, 1);
+
+    const marker = JSON.parse(
+      await Deno.readTextFile(path.join(binRoot, LOCAL_RUNTIME_MARKER)),
+    ) as LocalRuntimeMarker;
+    assertEquals(marker.distribution, "local");
+    assertEquals(marker.platform, "windows");
+    assertEquals(marker.architecture, "x86_64");
+    assertEquals(marker.artifactPath, artifactPath);
+    assertEquals(marker.artifactSha256, LOCAL_ARTIFACT_SHA256);
+    assertEquals(marker.version, LOCAL_RUNTIME_VERSION);
+    assertEquals(marker.buildId, LOCAL_RUNTIME_BUILD_ID);
+
+    const layout = runtimeLayoutFor(binRoot, localSyntheticArtifact(target));
+    assertEquals(await Deno.readTextFile(layout.legacyVersionFile), "002");
+  } finally {
+    await Deno.remove(root, { recursive: true });
+  }
+});
+
+Deno.test("local Runtime install reuses a matching artifact without extracting again", async () => {
+  const root = await Deno.makeTempDir();
+  try {
+    const target: NativeRuntimeTarget = {
+      platform: "windows",
+      architecture: "x86_64",
+    };
+    const artifactPath = await writeLocalArtifact(root);
+    const binRoot = path.join(root, "bin");
+    const extractCalls = { count: 0 };
+
+    const first = await installLocalRuntime({
+      artifactPath,
+      target,
+      binRootDir: binRoot,
+      operations: fakeLocalOperations(target, {
+        nonce: "local-first",
+        extractCalls,
+      }),
+    });
+    assertEquals(first.reused, false);
+
+    const second = await installLocalRuntime({
+      artifactPath,
+      target,
+      binRootDir: binRoot,
+      operations: fakeLocalOperations(target, {
+        nonce: "local-second",
+        extractCalls,
+      }),
+    });
+    assertEquals(second.reused, true);
+    assertEquals(second.marker.version, LOCAL_RUNTIME_VERSION);
+    assertEquals(second.marker.buildId, LOCAL_RUNTIME_BUILD_ID);
+    assertEquals(extractCalls.count, 1);
+  } finally {
+    await Deno.remove(root, { recursive: true });
+  }
+});
+
+Deno.test("local Runtime install overwrites a pre-existing version marker", async () => {
+  const root = await Deno.makeTempDir();
+  try {
+    const target: NativeRuntimeTarget = {
+      platform: "windows",
+      architecture: "x86_64",
+    };
+    const artifactPath = await writeLocalArtifact(root);
+    const binRoot = path.join(root, "bin");
+
+    const result = await installLocalRuntime({
+      artifactPath,
+      target,
+      binRootDir: binRoot,
+      operations: fakeLocalOperations(target, {
+        nonce: "local-stale-version",
+        preexistingVersion: "stale",
+      }),
+    });
+
+    assertEquals(result.reused, false);
+    const layout = runtimeLayoutFor(binRoot, localSyntheticArtifact(target));
+    assertEquals(await Deno.readTextFile(layout.legacyVersionFile), "002");
+  } finally {
+    await Deno.remove(root, { recursive: true });
+  }
+});
+
+Deno.test("local Runtime install overwrites a pre-existing local marker", async () => {
+  const root = await Deno.makeTempDir();
+  try {
+    const target: NativeRuntimeTarget = {
+      platform: "windows",
+      architecture: "x86_64",
+    };
+    const artifactPath = await writeLocalArtifact(root);
+    const binRoot = path.join(root, "bin");
+
+    const result = await installLocalRuntime({
+      artifactPath,
+      target,
+      binRootDir: binRoot,
+      operations: fakeLocalOperations(target, {
+        nonce: "local-stale-marker",
+        preexistingMarker: `${
+          JSON.stringify(
+            {
+              schemaVersion: 1,
+              distribution: "local",
+              artifactPath: "/previous/artifact.zip",
+              artifactSize: 1,
+              artifactSha256: "a".repeat(64),
+              platform: "windows",
+              architecture: "x86_64",
+              version: "1.0.0",
+              buildId: "19990101000000",
+            },
+            null,
+            2,
+          )
+        }\n`,
+      }),
+    });
+
+    assertEquals(result.reused, false);
+    const marker = JSON.parse(
+      await Deno.readTextFile(path.join(binRoot, LOCAL_RUNTIME_MARKER)),
+    ) as LocalRuntimeMarker;
+    assertEquals(marker.artifactPath, artifactPath);
+    assertEquals(marker.artifactSha256, LOCAL_ARTIFACT_SHA256);
+    assertEquals(marker.version, LOCAL_RUNTIME_VERSION);
+    assertEquals(marker.buildId, LOCAL_RUNTIME_BUILD_ID);
+  } finally {
+    await Deno.remove(root, { recursive: true });
+  }
+});
+
+Deno.test("local Runtime rejects omnijar-packaged artifacts", async () => {
+  const root = await Deno.makeTempDir();
+  try {
+    const target: NativeRuntimeTarget = {
+      platform: "windows",
+      architecture: "x86_64",
+    };
+    const artifactPath = await writeLocalArtifact(root);
+    const binRoot = path.join(root, "bin");
+    await Deno.mkdir(path.join(binRoot, "floorp"), { recursive: true });
+    await Deno.writeTextFile(
+      path.join(binRoot, "floorp", "old.txt"),
+      "old-runtime",
+    );
+
+    await assertRejects(
+      () =>
+        installLocalRuntime({
+          artifactPath,
+          target,
+          binRootDir: binRoot,
+          operations: fakeLocalOperations(target, {
+            nonce: "local-packaged",
+            packagedTree: true,
+          }),
+        }),
+      Error,
+      "omnijar-packaged",
+    );
+
+    assertEquals(
+      await Deno.readTextFile(path.join(binRoot, "floorp", "old.txt")),
+      "old-runtime",
+    );
+    await assertRejects(() =>
+      Deno.stat(path.join(root, ".runtime-local-staging-local-packaged"))
+    );
+  } finally {
+    await Deno.remove(root, { recursive: true });
+  }
+});
+
+Deno.test("local Runtime rejects executables with a mismatched architecture", async () => {
+  const root = await Deno.makeTempDir();
+  try {
+    const target: NativeRuntimeTarget = {
+      platform: "linux",
+      architecture: "aarch64",
+    };
+    const artifactPath = await writeLocalArtifact(root);
+    const binRoot = path.join(root, "bin");
+    await Deno.mkdir(path.join(binRoot, "floorp"), { recursive: true });
+    await Deno.writeTextFile(
+      path.join(binRoot, "floorp", "old.txt"),
+      "old-runtime",
+    );
+
+    await assertRejects(
+      () =>
+        installLocalRuntime({
+          artifactPath,
+          target,
+          binRootDir: binRoot,
+          operations: fakeLocalOperations(target, {
+            nonce: "local-wrong-arch",
+            wrongExecutableArchitecture: true,
+          }),
+        }),
+      Error,
+      "does not match aarch64",
+    );
+
+    assertEquals(
+      await Deno.readTextFile(path.join(binRoot, "floorp", "old.txt")),
+      "old-runtime",
+    );
+    await assertRejects(() =>
+      Deno.stat(path.join(root, ".runtime-local-staging-local-wrong-arch"))
+    );
+  } finally {
+    await Deno.remove(root, { recursive: true });
+  }
+});
+
+Deno.test("local Runtime accepts universal Mach-O slices for x86_64 and arm64", async () => {
+  const root = await Deno.makeTempDir();
+  try {
+    const target: NativeRuntimeTarget = {
+      platform: "macos",
+      architecture: "universal",
+    };
+    const artifactPath = await writeLocalArtifact(root);
+
+    for (
+      const machOHeader of ["universal-x86_64", "universal-arm64"] as const
+    ) {
+      const binRoot = path.join(root, `bin-${machOHeader}`);
+      const result = await installLocalRuntime({
+        artifactPath,
+        target,
+        binRootDir: binRoot,
+        operations: fakeLocalOperations(target, {
+          nonce: `local-${machOHeader}`,
+          machOHeader,
+        }),
+      });
+      assertEquals(result.reused, false);
+    }
+  } finally {
+    await Deno.remove(root, { recursive: true });
+  }
+});
+
+Deno.test("local Runtime rejects truncated and unsupported thin Mach-O headers", async () => {
+  const root = await Deno.makeTempDir();
+  try {
+    const target: NativeRuntimeTarget = {
+      platform: "macos",
+      architecture: "universal",
+    };
+    const artifactPath = await writeLocalArtifact(root);
+
+    for (
+      const [machOHeader, message] of [
+        ["truncated", "truncated Mach-O header"],
+        ["incompatible-cpu", "is not runnable on macOS"],
+      ] as const
+    ) {
+      const binRoot = path.join(root, `bin-${machOHeader}`);
+      await Deno.mkdir(path.join(binRoot, "floorp"), { recursive: true });
+      await Deno.writeTextFile(
+        path.join(binRoot, "floorp", "old.txt"),
+        "old-runtime",
+      );
+      await assertRejects(
+        () =>
+          installLocalRuntime({
+            artifactPath,
+            target,
+            binRootDir: binRoot,
+            operations: fakeLocalOperations(target, {
+              nonce: `local-${machOHeader}`,
+              machOHeader,
+            }),
+          }),
+        Error,
+        message,
+      );
+      assertEquals(
+        await Deno.readTextFile(path.join(binRoot, "floorp", "old.txt")),
+        "old-runtime",
+      );
+    }
+  } finally {
+    await Deno.remove(root, { recursive: true });
+  }
+});
+
+Deno.test("local Runtime reinstalls when the installed identity differs from the marker", async () => {
+  const root = await Deno.makeTempDir();
+  try {
+    const target: NativeRuntimeTarget = {
+      platform: "windows",
+      architecture: "x86_64",
+    };
+    const artifactPath = await writeLocalArtifact(root);
+    const binRoot = path.join(root, "bin");
+    const extractCalls = { count: 0 };
+
+    await installLocalRuntime({
+      artifactPath,
+      target,
+      binRootDir: binRoot,
+      operations: fakeLocalOperations(target, {
+        nonce: "local-drift-install",
+        extractCalls,
+      }),
+    });
+
+    // Tamper only the recorded identity of the installed marker.
+    const markerPath = path.join(binRoot, LOCAL_RUNTIME_MARKER);
+    const installed = JSON.parse(
+      await Deno.readTextFile(markerPath),
+    ) as LocalRuntimeMarker;
+    await Deno.writeTextFile(
+      markerPath,
+      `${
+        JSON.stringify(
+          { ...installed, version: "9.9.9", buildId: "19990101000000" },
+          null,
+          2,
+        )
+      }\n`,
+    );
+
+    const result = await installLocalRuntime({
+      artifactPath,
+      target,
+      binRootDir: binRoot,
+      operations: fakeLocalOperations(target, {
+        nonce: "local-drift-reinstall",
+        extractCalls,
+      }),
+    });
+
+    assertEquals(result.reused, false);
+    assertEquals(extractCalls.count, 2);
+    const rewritten = JSON.parse(
+      await Deno.readTextFile(markerPath),
+    ) as LocalRuntimeMarker;
+    assertEquals(rewritten.version, LOCAL_RUNTIME_VERSION);
+    assertEquals(rewritten.buildId, LOCAL_RUNTIME_BUILD_ID);
+  } finally {
+    await Deno.remove(root, { recursive: true });
+  }
+});
+
+Deno.test("local Runtime rejects artifacts inside the Runtime install directory", async () => {
+  const root = await Deno.makeTempDir();
+  try {
+    const target: NativeRuntimeTarget = {
+      platform: "windows",
+      architecture: "x86_64",
+    };
+    const binRoot = path.join(root, "bin");
+    await Deno.mkdir(path.join(binRoot, "floorp"), { recursive: true });
+    await Deno.writeTextFile(
+      path.join(binRoot, "floorp", "old.txt"),
+      "old-runtime",
+    );
+    const artifactPath = await writeLocalArtifact(binRoot);
+
+    await assertRejects(
+      () =>
+        installLocalRuntime({
+          artifactPath,
+          target,
+          binRootDir: binRoot,
+          operations: fakeLocalOperations(target, { nonce: "local-inside" }),
+        }),
+      Error,
+      "outside the Runtime install directory",
+    );
+
+    assertEquals(
+      await Deno.readTextFile(path.join(binRoot, "floorp", "old.txt")),
+      "old-runtime",
+    );
+    await assertRejects(() =>
+      Deno.stat(path.join(root, ".runtime-local-staging-local-inside"))
+    );
+  } finally {
+    await Deno.remove(root, { recursive: true });
+  }
+});
+
+for (const forbiddenState of ["applied_patches", "floorp-git"] as const) {
+  Deno.test(
+    `local Runtime artifact control state (${forbiddenState}) is rejected`,
+    async () => {
+      const root = await Deno.makeTempDir();
+      try {
+        const target: NativeRuntimeTarget = {
+          platform: "windows",
+          architecture: "x86_64",
+        };
+        const artifactPath = await writeLocalArtifact(root);
+        const binRoot = path.join(root, "bin");
+        const nonce = `local-control-state-${forbiddenState}`;
+        await Deno.mkdir(path.join(binRoot, "floorp"), { recursive: true });
+        await Deno.writeTextFile(
+          path.join(binRoot, "floorp", "old.txt"),
+          "old-runtime",
+        );
+
+        await assertRejects(
+          () =>
+            installLocalRuntime({
+              artifactPath,
+              target,
+              binRootDir: binRoot,
+              operations: fakeLocalOperations(target, {
+                nonce,
+                forbiddenState,
+              }),
+            }),
+          Error,
+          "contains local control state",
+        );
+
+        assertEquals(
+          await Deno.readTextFile(path.join(binRoot, "floorp", "old.txt")),
+          "old-runtime",
+        );
+        await assertRejects(() =>
+          Deno.stat(path.join(root, `.runtime-local-staging-${nonce}`))
+        );
+      } finally {
+        await Deno.remove(root, { recursive: true });
+      }
+    },
+  );
+}
+
+Deno.test("local Runtime extraction failure leaves the existing install untouched", async () => {
+  const root = await Deno.makeTempDir();
+  try {
+    const target: NativeRuntimeTarget = {
+      platform: "windows",
+      architecture: "x86_64",
+    };
+    const artifactPath = await writeLocalArtifact(root);
+    const binRoot = path.join(root, "bin");
+    await Deno.mkdir(path.join(binRoot, "floorp"), { recursive: true });
+    await Deno.writeTextFile(
+      path.join(binRoot, "floorp", "old.txt"),
+      "old-runtime",
+    );
+
+    await assertRejects(
+      () =>
+        installLocalRuntime({
+          artifactPath,
+          target,
+          binRootDir: binRoot,
+          operations: fakeLocalOperations(target, {
+            nonce: "local-failure",
+            extractionFailure: true,
+          }),
+        }),
+      Error,
+      "injected local extraction failure",
+    );
+
+    assertEquals(
+      await Deno.readTextFile(path.join(binRoot, "floorp", "old.txt")),
+      "old-runtime",
+    );
+    await assertRejects(() =>
+      Deno.stat(path.join(root, ".runtime-local-staging-local-failure"))
+    );
+  } finally {
+    await Deno.remove(root, { recursive: true });
+  }
+});
+
+Deno.test("local Runtime macOS install commits the final app plist paths", async () => {
+  const root = await Deno.makeTempDir();
+  try {
+    const target: NativeRuntimeTarget = {
+      platform: "macos",
+      architecture: "universal",
+    };
+    const artifactPath = await writeLocalArtifact(root, "floorp-runtime.dmg");
+    const binRoot = path.join(root, "bin");
+
+    const result = await installLocalRuntime({
+      artifactPath,
+      target,
+      binRootDir: binRoot,
+      operations: fakeLocalOperations(target, { nonce: "local-macos" }),
+    });
+
+    assertEquals(result.reused, false);
+    assertEquals(result.artifactPath, artifactPath);
+
+    const layout = runtimeLayoutFor(binRoot, localSyntheticArtifact(target));
+    const version = await Deno.readTextFile(layout.legacyVersionFile);
+    assert(
+      version.includes("000"),
+      `expected macOS version marker "000", got ${version}`,
+    );
+
+    const infoPlistPath = path.join(
+      path.dirname(path.dirname(layout.applicationIni)),
+      "Info.plist",
+    );
+    const content = await Deno.readTextFile(infoPlistPath);
+    const finalDeveloperPath = path.join(binRoot, "floorp");
+    assertEquals(
+      content.split(`<string>${finalDeveloperPath}</string>`).length - 1,
+      2,
+    );
+    assertEquals(
+      content.includes(
+        path.join(root, ".runtime-local-staging-local-macos", "floorp"),
+      ),
+      false,
+    );
+
+    const marker = JSON.parse(
+      await Deno.readTextFile(path.join(binRoot, LOCAL_RUNTIME_MARKER)),
+    ) as LocalRuntimeMarker;
+    assertEquals(marker.platform, "macos");
+    assertEquals(marker.architecture, "universal");
+    assertEquals(marker.version, LOCAL_RUNTIME_VERSION);
+    assertEquals(marker.buildId, LOCAL_RUNTIME_BUILD_ID);
+  } finally {
+    await Deno.remove(root, { recursive: true });
+  }
+});
+
+Deno.test("local Runtime Linux install writes the target layout and marker", async () => {
+  const root = await Deno.makeTempDir();
+  try {
+    const target: NativeRuntimeTarget = {
+      platform: "linux",
+      architecture: "x86_64",
+    };
+    const artifactPath = await writeLocalArtifact(
+      root,
+      "floorp-runtime.tar.xz",
+    );
+    const binRoot = path.join(root, "bin");
+
+    const result = await installLocalRuntime({
+      artifactPath,
+      target,
+      binRootDir: binRoot,
+      operations: fakeLocalOperations(target, { nonce: "local-linux" }),
+    });
+
+    assertEquals(result.reused, false);
+
+    const layout = runtimeLayoutFor(binRoot, localSyntheticArtifact(target));
+    assertEquals(await Deno.readTextFile(layout.legacyVersionFile), "002");
+    const executableInfo = await Deno.stat(layout.executable);
+    assertEquals(executableInfo.isFile, true);
+
+    const marker = JSON.parse(
+      await Deno.readTextFile(path.join(binRoot, LOCAL_RUNTIME_MARKER)),
+    ) as LocalRuntimeMarker;
+    assertEquals(marker.platform, "linux");
+    assertEquals(marker.architecture, "x86_64");
+    assertEquals(marker.version, LOCAL_RUNTIME_VERSION);
+    assertEquals(marker.buildId, LOCAL_RUNTIME_BUILD_ID);
+  } finally {
+    await Deno.remove(root, { recursive: true });
+  }
+});
+
+Deno.test("local Runtime missing artifact path fails before creating the bin root", async () => {
+  const root = await Deno.makeTempDir();
+  try {
+    const target: NativeRuntimeTarget = {
+      platform: "windows",
+      architecture: "x86_64",
+    };
+    const binRoot = path.join(root, "bin");
+
+    await assertRejects(
+      () =>
+        installLocalRuntime({
+          artifactPath: path.join(root, "missing.zip"),
+          target,
+          binRootDir: binRoot,
+          operations: fakeLocalOperations(target, { nonce: "missing" }),
+        }),
+      Error,
+      "does not exist",
+    );
+
+    await assertRejects(() => Deno.stat(binRoot));
+  } finally {
+    await Deno.remove(root, { recursive: true });
+  }
+});
+
+Deno.test("run installs a local Runtime artifact without the lock or network installers", async () => {
+  const probe = runProbe();
+  const localPaths: string[] = [];
+  probe.dependencies.installLocal = (artifactPath) => {
+    localPaths.push(artifactPath);
+    return Promise.resolve();
+  };
+
+  await run({
+    ...probe.dependencies,
+    distribution: "debug",
+    localArtifactPath: "  /tmp/runtime.zip  ",
+  });
+
+  assertEquals(localPaths, ["/tmp/runtime.zip"]);
+  assertEquals(probe.calls, {
+    loadLock: 0,
+    installLock: 0,
+    installDebug: 0,
+    savePrefs: 1,
+  });
+});
+
+Deno.test("run rejects an explicitly empty local Runtime artifact path", async () => {
+  const probe = runProbe();
+  const localPaths: string[] = [];
+  probe.dependencies.installLocal = (artifactPath) => {
+    localPaths.push(artifactPath);
+    return Promise.resolve();
+  };
+
+  await assertRejects(
+    () => run({ ...probe.dependencies, localArtifactPath: "   " }),
+    Error,
+    "must not be empty",
+  );
+
+  assertEquals(localPaths, []);
+  assertEquals(probe.calls, {
+    loadLock: 0,
+    installLock: 0,
+    installDebug: 0,
+    savePrefs: 0,
+  });
+});
+
+Deno.test("local Runtime format detection matches platform artifact extensions", () => {
+  assertEquals(
+    localRuntimeArtifactFormat("floorp-runtime.zip", {
+      platform: "windows",
+      architecture: "x86_64",
+    }),
+    { format: "zip", extractionPolicy: "zip-direct-floorp" },
+  );
+  assertEquals(
+    localRuntimeArtifactFormat("floorp-runtime.tar.xz", {
+      platform: "linux",
+      architecture: "x86_64",
+    }),
+    { format: "tar.xz", extractionPolicy: "tar-xz-floorp" },
+  );
+  assertEquals(
+    localRuntimeArtifactFormat("floorp-runtime.dmg", {
+      platform: "macos",
+      architecture: "universal",
+    }),
+    { format: "dmg", extractionPolicy: "dmg-floorp-app" },
+  );
+  for (
+    const [artifactPath, target] of [
+      [
+        "floorp-runtime.zip",
+        { platform: "linux", architecture: "x86_64" },
+      ],
+      [
+        "floorp-runtime.tar.xz",
+        { platform: "windows", architecture: "x86_64" },
+      ],
+      [
+        "floorp-runtime.dmg",
+        { platform: "windows", architecture: "x86_64" },
+      ],
+      [
+        "floorp-runtime.zip",
+        { platform: "macos", architecture: "universal" },
+      ],
+    ] as const
+  ) {
+    assertThrows(
+      () => localRuntimeArtifactFormat(artifactPath, target),
+      Error,
+      "Unsupported local Runtime artifact",
+    );
+  }
+});
+
+Deno.test("materializeLocalRuntimeArtifact extracts the inner artifact from a container zip", async () => {
+  const root = await Deno.makeTempDir();
+  try {
+    const containerPath = path.join(root, "linux-artifacts.zip");
+    await Deno.writeFile(
+      containerPath,
+      zipSync({
+        "inner-runtime.tar.xz": strToU8("inner-runtime"),
+      }),
+    );
+
+    const materialized = await materializeLocalRuntimeArtifact(
+      containerPath,
+      { platform: "linux", architecture: "x86_64" },
+      root,
+    );
+
+    assertEquals(path.basename(materialized.path), "inner-runtime.tar.xz");
+    assertEquals(await Deno.readTextFile(materialized.path), "inner-runtime");
+    assert(materialized.cleanupRoot);
+    assertEquals(
+      path.dirname(path.dirname(materialized.path)),
+      materialized.cleanupRoot,
+    );
+    await Deno.remove(materialized.cleanupRoot, { recursive: true });
   } finally {
     await Deno.remove(root, { recursive: true });
   }
