@@ -1,0 +1,143 @@
+name: Native Mozilla browser + xpcshell pilot (NO Marionette)
+
+# Manual pilot only. No publishing, PR-target execution, personal Mac, or ruleset changes.
+on:
+  workflow_dispatch:
+    inputs:
+      floorp_sha:
+        description: Exact Floorp product source commit (40 lowercase hex)
+        required: true
+        type: string
+      runtime_sha:
+        description: Exact Runtime commit (40 lowercase hex)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  execute:
+    name: Linux x64 browser + xpcshell pilot
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Contract test dependency
+        run: sudo apt-get update && sudo apt-get install -y python3-yaml
+      - name: Validate contract implementation (not native test evidence)
+        run: python3 -m unittest discover -s tools/qa/native-product-ci -v
+      - name: Validate immutable selectors
+        env:
+          FLOORP_SHA: ${{ inputs.floorp_sha }}
+          RUNTIME_SHA: ${{ inputs.runtime_sha }}
+        run: |
+          python3 - <<'PY'
+          import os, re
+          for name in ('FLOORP_SHA', 'RUNTIME_SHA'):
+              if not re.fullmatch('[0-9a-f]{40}', os.environ[name]):
+                  raise SystemExit('Expected exact SHA: ' + name)
+          PY
+      - uses: actions/checkout@v4
+        with:
+          repository: Floorp-Projects/Floorp-Runtime
+          ref: ${{ inputs.runtime_sha }}
+          path: runtime
+          submodules: recursive
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: Floorp-Projects/Floorp
+          ref: ${{ inputs.floorp_sha }}
+          path: runtime/noraneko
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 'latest'
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Native Linux build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-yaml msitools jq patchelf xvfb mesa-utils rsync
+      - name: Build and assemble finalized native product on this worker
+        env:
+          FLOORP_SHA: ${{ inputs.floorp_sha }}
+          RUNTIME_SHA: ${{ inputs.runtime_sha }}
+        run: |
+          python3 tools/qa/native-product-ci/build_worker.py \
+            --runtime "$GITHUB_WORKSPACE/runtime" \
+            --output "$RUNNER_TEMP/native-provisioned" \
+            --floorp-sha "$FLOORP_SHA" --runtime-sha "$RUNTIME_SHA"
+      - name: Resolve native browser and xpcshell schedules before test execution
+        env:
+          FLOORP_SHA: ${{ inputs.floorp_sha }}
+          RUNTIME_SHA: ${{ inputs.runtime_sha }}
+        run: |
+          python3 tools/qa/native-product-ci/resolve_native.py \
+            --cohort "$RUNNER_TEMP/native-provisioned/cohort.json" \
+            --output "$RUNNER_TEMP/native-provisioned"
+      - name: Execute authenticated product cohort
+        env:
+          FLOORP_SHA: ${{ inputs.floorp_sha }}
+          RUNTIME_SHA: ${{ inputs.runtime_sha }}
+        run: |
+          # A reviewed build/provisioning step must create this on THIS worker.
+          # Do not relocate an OBJDIR or use a Runtime-only product as a shortcut.
+          provision="$RUNNER_TEMP/native-provisioned"
+          for item in cohort.json plan.json plan.sha256; do
+            if [ ! -f "$provision/$item" ]; then
+              echo "::error::BLOCKED: complete same-worker native build/provisioning is not integrated ($item missing). No tests ran."
+              exit 2
+            fi
+          done
+          python3 tools/qa/native-product-ci/ci-adapter.py --scope browser-xpcshell \
+            --evidence "$RUNNER_TEMP/native-evidence" \
+            --cohort "$provision/cohort.json" \
+            --plan "$provision/plan.json" \
+            --plan-sha256 "$(cat "$provision/plan.sha256")"
+      - name: Retain build receipts and logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-build-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/native-provisioned/*.json
+            ${{ runner.temp }}/native-provisioned/*.log
+            ${{ runner.temp }}/native-provisioned/recipe/
+            ${{ runner.temp }}/native-provisioned/resolver/
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain native evidence including failures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-evidence-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/native-evidence/
+          if-no-files-found: error
+          retention-days: 14
+
+  gate:
+    name: Mozilla browser + xpcshell pilot / gate
+    if: always()
+    needs: [execute]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          name: native-evidence-${{ github.run_id }}-${{ github.run_attempt }}
+          path: evidence
+      - name: Reject skipped, incomplete, or failed native execution
+        if: always()
+        env:
+          NEEDS_JSON: ${{ toJSON(needs) }}
+        run: |
+          python3 tools/qa/native-product-ci/gate.py --scope browser-xpcshell --needs "$NEEDS_JSON" --evidence evidence

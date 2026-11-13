@@ -1,0 +1,85 @@
+{
+  "schema": 1,
+  "browser_preferences": {
+    "floorp.newtab.configs": "{\"components\":{\"topSites\":false},\"background\":{\"type\":\"none\"},\"topSites\":{\"pinned\":[],\"blocked\":[]}}",
+    "floorp.panelSidebar.data": "{\"data\":[]}",
+    "extensions.getAddons.langpacks.url": "http://127.0.0.1:8888/floorp-no-langpacks.json",
+    "floorp.experiments.manifestUrl": "http://127.0.0.1:8888/floorp-test-no-remote-manifest.json",
+    "floorp.releaseNotes.mode": "disabled",
+    "floorp.releaseNotes.choiceConfirmed": "true"
+  },
+  "suites": [
+    {
+      "id": "p0-tabs",
+      "priority": "P0",
+      "kind": "browser",
+      "path": "browser/components/tabbrowser/test/browser/tabs/",
+      "manifests": [
+        "browser.toml"
+      ],
+      "registered_files": 203
+    },
+    {
+      "id": "p1-sessionstore-browser",
+      "priority": "P1",
+      "kind": "browser",
+      "path": "browser/components/sessionstore/test/browser.toml",
+      "manifests": [],
+      "registered_files": 132
+    },
+    {
+      "id": "p1-sessionstore-oldformat",
+      "priority": "P1",
+      "kind": "browser",
+      "path": "browser/components/sessionstore/test/browser_oldformat.toml",
+      "manifests": [],
+      "registered_files": 91
+    },
+    {
+      "id": "p1-sessionstore-startup-telemetry",
+      "priority": "P1",
+      "kind": "browser",
+      "path": "browser/components/sessionstore/test/browser_startup_telemetry.toml",
+      "manifests": [],
+      "registered_files": 1
+    },
+    {
+      "id": "p1-sessionstore-unit",
+      "priority": "P1",
+      "kind": "xpcshell",
+      "path": "browser/components/sessionstore/test/unit/",
+      "manifests": [
+        "xpcshell.toml"
+      ],
+      "registered_files": 12
+    },
+    {
+      "id": "p1-sessionstore-marionette",
+      "priority": "P1",
+      "kind": "marionette",
+      "path": "browser/components/sessionstore/test/marionette/manifest.toml",
+      "manifests": [],
+      "registered_files": 28
+    },
+    {
+      "id": "p2-contextualidentity-unit",
+      "priority": "P2",
+      "kind": "xpcshell",
+      "path": "toolkit/components/contextualidentity/tests/unit/",
+      "manifests": [
+        "xpcshell.toml"
+      ],
+      "registered_files": 6
+    },
+    {
+      "id": "p2-contextualidentity-browser",
+      "priority": "P2",
+      "kind": "browser",
+      "path": "toolkit/components/contextualidentity/tests/browser/",
+      "manifests": [
+        "browser.toml"
+      ],
+      "registered_files": 1
+    }
+  ]
+}
