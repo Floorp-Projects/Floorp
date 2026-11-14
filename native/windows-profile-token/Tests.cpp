@@ -63,7 +63,7 @@ void AssertPrivate(const fs::path& path) {
   if (security) LocalFree(security);
   Require(good && user && kernel, "protected DACL grants only owner and SYSTEM, no inherited ACE");
 }
-void PublicFixture(const fs::path& path) {
+void OwnedFixture(const fs::path& path, bool publicDacl = false) {
   // Elevated runners may default new objects to the Administrators group.
   // This fixture promises current-user ownership; do not relax production Owner().
   HANDLE processToken = nullptr;
@@ -78,8 +78,18 @@ void PublicFixture(const fs::path& path) {
   PSID priorOwner = nullptr;
   Require(GetNamedSecurityInfoW(const_cast<LPWSTR>(path.c_str()), SE_FILE_OBJECT, OWNER_SECURITY_INFORMATION,
       &priorOwner, nullptr, nullptr, nullptr, &priorSecurity) == ERROR_SUCCESS, "query fixture default owner");
-  std::cout << "Public fixture pre-owner matches process user: " << (priorOwner && EqualSid(priorOwner, user)) << "\n";
+  const bool sameOwner = priorOwner && EqualSid(priorOwner, user);
+  std::cout << "Synthetic fixture pre-owner matches process user: " << sameOwner << "\n";
   if (priorSecurity) LocalFree(priorSecurity);
+  if (!sameOwner && path.filename() == L"floorp-os-server") {
+    PrivateProfileToken foreignOwner;
+    Require(!foreignOwner.Prepare(path.parent_path().wstring()), "different-SID preexisting directory refuses adoption before fixture normalization");
+  }
+  if (!publicDacl) {
+    Require(SetNamedSecurityInfoW(const_cast<LPWSTR>(path.c_str()), SE_FILE_OBJECT,
+        OWNER_SECURITY_INFORMATION, user, nullptr, nullptr, nullptr) == ERROR_SUCCESS, "set explicit process-user fixture owner without changing its ACL");
+    return;
+  }
   PSECURITY_DESCRIPTOR descriptor = nullptr;
   Require(ConvertStringSecurityDescriptorToSecurityDescriptorW(L"D:P(A;;FA;;;WD)", SDDL_REVISION_1, &descriptor, nullptr) != FALSE, "synthetic public DACL");
   BOOL present = FALSE, inherited = FALSE;
@@ -165,8 +175,8 @@ void NativeContracts() {
   Put(Token(publicProfile), "SYNTHETIC-old-public-token");
   // Protect the existing leaf before changing its parent DACL: fixture setup
   // must not accidentally propagate an empty inherited ACL into the leaf.
-  PublicFixture(Token(publicProfile));
-  PublicFixture(publicProfile / L"floorp-os-server");
+  OwnedFixture(Token(publicProfile), true);
+  OwnedFixture(publicProfile / L"floorp-os-server", true);
   {
     PrivateProfileToken owner;
     Require(owner.Prepare(publicProfile.wstring()), "tighten existing owner fixture before write");
@@ -177,6 +187,7 @@ void NativeContracts() {
   currentCase = "native junction ancestors";
   const auto foreign = temp.Profile(L"foreign");
   Put(foreign / L"sentinel", "FOREIGN-UNCHANGED");
+  OwnedFixture(foreign / L"sentinel");
   const auto junctionProfile = temp.root / L"junction-profile";
   Junction(junctionProfile, foreign);
   {
@@ -193,6 +204,7 @@ void NativeContracts() {
   currentCase = "native file symlink refusal";
   const auto symlinkProfile = temp.Profile(L"file-symlink-leaf");
   fs::create_directory(symlinkProfile / L"floorp-os-server");
+  OwnedFixture(symlinkProfile / L"floorp-os-server");
   Require(CreateSymbolicLinkW(Token(symlinkProfile).c_str(), (foreign / L"sentinel").c_str(),
       SYMBOLIC_LINK_FLAG_ALLOW_UNPRIVILEGED_CREATE) != FALSE, "real file symlink fixture must be available");
   {
@@ -203,6 +215,7 @@ void NativeContracts() {
   currentCase = "native hardlink refusal";
   const auto hardProfile = temp.Profile(L"hardlink");
   fs::create_directory(hardProfile / L"floorp-os-server");
+  OwnedFixture(hardProfile / L"floorp-os-server");
   Require(CreateHardLinkW(Token(hardProfile).c_str(), (foreign / L"sentinel").c_str(), nullptr) != FALSE, "create real hardlink fixture");
   {
     PrivateProfileToken owner;
@@ -212,6 +225,7 @@ void NativeContracts() {
   currentCase = "foreign leaf identity swap";
   const auto siblingProfile = temp.Profile(L"foreign-sibling-acl");
   fs::create_directory(siblingProfile / L"floorp-os-server");
+  OwnedFixture(siblingProfile / L"floorp-os-server");
   Require(CreateHardLinkW((siblingProfile / L"floorp-os-server" / L"foreign-sibling").c_str(),
       (foreign / L"sentinel").c_str(), nullptr) != FALSE, "create unrelated linked sibling");
   {
@@ -226,6 +240,7 @@ void NativeContracts() {
     Require(owner.Prepare(swap.wstring()) && owner.Write("SYNTHETIC-owned"), "prepare identity fixture");
     Require(MoveFileExW(Token(swap).c_str(), (swap / L"captured-old").c_str(), 0) != FALSE, "controlled same-user leaf substitution");
     Put(Token(swap), "FOREIGN-REPLACEMENT");
+    OwnedFixture(Token(swap));
     Require(!owner.Write("must-not-overwrite") && !owner.Remove(), "identity mismatch refuses overwrite and foreign cleanup");
     Require(Read(Token(swap)) == "FOREIGN-REPLACEMENT", "foreign replacement preserved");
   }
