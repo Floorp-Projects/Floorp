@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "generatedAt": "2026-11-14T06:27:41.047Z",
+  "generatedAt": "2026-11-14T07:00:46.628Z",
   "baseCommit": "9e6b24e5fd561250ab04a011b70ee0b1280b1adc",
   "entries": [
     {
@@ -49,29 +49,29 @@
       "path": "browser-features/modules/modules/os-server/token-file.sys.mts",
       "status": "added",
       "group": "01-dev-os-isolation",
-      "bytes": 4351,
-      "sha256": "d60f9dce533094575435615672c95163635588ecfb1dcdc307d9ead914d8d10f"
+      "bytes": 4847,
+      "sha256": "b81490d0a91995375e7ea46e859843ac9ae9a22759bb77ab52f79ccb64f3594e"
     },
     {
       "path": "docs/development/architecture-overview.mdx",
       "status": "modified",
       "group": "06-docs-and-skills",
       "bytes": 7054,
-      "sha256": "6c38c75f690baf85811405b3d72b56f72056c84cdc424ff8a7fa0038db3380df"
+      "sha256": "b35fb7cfe9c5fcf4024aa605959f0683dffc1521076adaee121fd871ecc85121"
     },
     {
       "path": "docs/development/reference/source-inventory.mdx",
       "status": "modified",
       "group": "06-docs-and-skills",
       "bytes": 4919,
-      "sha256": "7465e6a6555b57e72b5c6c7740814699d5016c1fc1f837f59189f07226790b40"
+      "sha256": "1d88281c35ef3dab7804f8486f051ede42aff9d1324a5dd769401ec88690e8e6"
     },
     {
       "path": "docs/qa/fdh-coordinator-followup/CHECKPOINT.md",
       "status": "added",
       "group": "06-docs-and-skills",
-      "bytes": 35112,
-      "sha256": "29305bf6f66855b394006762c4e036e49e5f6f80607e3be781adfc20d648a8da"
+      "bytes": 38068,
+      "sha256": "93522aa6b9cb82986ef37581363995bcab1acf8f1a5e634d86b0d8097128cb65"
     },
     {
       "path": "docs/qa/fdh-coordinator-followup/LOCAL-COMMIT-PLAN.md",
@@ -186,11 +186,18 @@
       "sha256": "4cd8c5f6150e8a9bb701e88005fcbbd2b3c90a5fe9fc1a00dbc471b8e4c76ac1"
     },
     {
+      "path": "tools/integration/os-server-token-test-types.ts",
+      "status": "added",
+      "group": "01-dev-os-isolation",
+      "bytes": 354,
+      "sha256": "6dd766f4b9118132577b541ece836cb73d32c70efafd5e7a64c80bde624554ef"
+    },
+    {
       "path": "tools/integration/os-server-token.test.ts",
       "status": "added",
       "group": "01-dev-os-isolation",
-      "bytes": 6017,
-      "sha256": "222f14f6a9ccb31e3987e21f6ae69a5a542592c3813e5759df86e5f5880cc474"
+      "bytes": 13386,
+      "sha256": "c33e1373596246ecfa65855dbad4fa8c6b12d8d08db539b0f380f833751b8099"
     },
     {
       "path": "tools/integration/os-test-client.ts",
@@ -487,7 +494,7 @@
       "sha256": "82063f29337d5ef6c0d82bd8abdadbcbb59456e596801de6a2b141bccd0fff66"
     }
   ],
-  "sourceSetSha256": "089dac4bee1a2d851ccd9e3c59177f2af06a3fd0d92e557f2f768e02f20c9644",
+  "sourceSetSha256": "1a3743fb619ebb06a1cab62491db0f2655adbb5272c6bed3b7af88f7adb9bda1",
   "limitations": [
     "Raw local file bytes only; not a commit, signature, API-origin proof or release qualification.",
     "Inventory excludes its own output to avoid recursive hashes and all ignored/generated samples.",

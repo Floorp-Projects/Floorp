@@ -113,7 +113,19 @@ export async function publishTokenFile(token: string): Promise<void> {
   // Keep this function async and await the publication promise: a rejected
   // publish and a synchronous destination() refusal (unsupported opt-in on
   // Windows, before any dirsvc/IO) must both surface as promise rejections.
-  return await tokenFile.publish(destination(), token);
+  let target: TokenDestination | null;
+  try {
+    target = destination();
+  } catch (error) {
+    // A resolution refusal must also withdraw only our own captured
+    // advertisement and cancel queued/in-flight publications before it
+    // rejects. Otherwise a legacy Home token written before the opt-in
+    // switch survives the refusal. This runs only on resolution failure:
+    // lifecycle publish errors are already cleaned up by publish().
+    await tokenFile.cleanup();
+    throw error;
+  }
+  return await tokenFile.publish(target, token);
 }
 
 /** Reset must preserve the live MCP credential when OS alone is disabled. */
