@@ -1,34 +1,90 @@
 #!/usr/bin/env python3
-"""
-Start Floorp Debug (`deno task feles-build dev`), wait for the OS server health
-endpoint to come up, run `verify_os_server_full.py`, and tear everything down.
+# SPDX-License-Identifier: MPL-2.0
+
+"""Start Floorp Debug, wait for the OS-Server, run the full verifier, tear down.
+
+Python parity with tools/os-test/run_verify_os_server_full_wrapper.ts:
+- explicit --base-url / FLOORP_OS_BASE_URL precedence;
+- explicit --token-file / FLOORP_OS_TOKEN_FILE precedence;
+- literal-loopback target validation before any browser start when a token file
+  is configured, while the token file itself may be published only after the
+  browser starts;
+- a same-origin, proxy-bypassing, redirect-refusing reachability check that
+  accepts 200 or 401;
+- one reconciled base URL / token file passed to the verifier, never duplicate
+  conflicting flags from the verifier scope.
 """
 
 from __future__ import annotations
 
-import argparse
 import os
 import signal
 import subprocess
 import sys
 import time
-import urllib.error
-import urllib.request
 from pathlib import Path
+
+from os_test_client import (
+    DEFAULT_BASE_URL,
+    OsTestClientError,
+    OsTestConfigError,
+    RedactedArgumentParser,
+    create_os_test_client,
+    reconcile_os_test_client_args,
+    resolve_base_url,
+    resolve_token_file,
+    validate_authenticated_base_url,
+)
 
 ROOT_DIR = Path(__file__).resolve().parents[2]
 DEFAULT_CMD = ["deno", "task", "feles-build", "dev"]
 
 
-def wait_for_health(base_url: str, timeout: float, interval: float) -> bool:
-    url = f"{base_url.rstrip('/')}/health"
+def split_verifier_args(args: list[str]) -> tuple[list[str], list[str]]:
+    """Split wrapper arguments from verifier arguments at the first bare --."""
+    try:
+        separator = args.index("--")
+    except ValueError:
+        return list(args), []
+    return list(args[:separator]), list(args[separator + 1:])
+
+
+def wait_for_health(
+    base_url: str,
+    timeout: float,
+    interval: float,
+    token_file: str | None = None,
+) -> bool:
+    """Wait for a same-origin OS-Server reachability signal.
+
+    A bearer-protected /health may answer 401 before the explicit token file is
+    published; that still proves a live server. When the token file exists, the
+    shared client uses it with same-origin checks, ambient-proxy bypass and
+    manual redirect refusal. 200 or 401 is accepted; every other status or a
+    transport/redirect/origin failure retries until the deadline.
+    """
     deadline = time.time() + timeout
     while time.time() < deadline:
         try:
-            with urllib.request.urlopen(url, timeout=max(2.0, interval)) as response:
-                if response.status == 200:
-                    return True
-        except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError):
+            token_path = (
+                token_file
+                if token_file is not None and os.path.exists(token_file)
+                else None
+            )
+            client = create_os_test_client(base_url, token_path)
+            status, _body = client.request(
+                "/health",
+                timeout=max(2.0, interval),
+            )
+            if status == 200:
+                return True
+            if status == 401:
+                print(
+                    "OS server reachable (401 bearer-protected /health); "
+                    "authenticated checks run in verify_os_server_full.py."
+                )
+                return True
+        except OsTestClientError:
             pass
         time.sleep(interval)
     return False
@@ -101,7 +157,29 @@ def run_verifier(verifier_args: list[str] | None = None) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Run Floorp OS server verification end-to-end")
+    args_list = list(sys.argv[1:] if argv is None else argv)
+    try:
+        wrapper_part, verifier_part = split_verifier_args(args_list)
+        target_args = reconcile_os_test_client_args(wrapper_part, verifier_part)
+    except OsTestConfigError as error:
+        print(str(error), file=sys.stderr)
+        return 2
+
+    parser = RedactedArgumentParser(
+        description="Run Floorp OS server verification end-to-end"
+    )
+    parser.add_argument(
+        "--base-url",
+        default=None,
+        help="OS server base URL (default: FLOORP_OS_BASE_URL or "
+        + DEFAULT_BASE_URL
+        + ")",
+    )
+    parser.add_argument(
+        "--token-file",
+        default=None,
+        help="Explicit OS-Server bearer token file (default: FLOORP_OS_TOKEN_FILE)",
+    )
     parser.add_argument(
         "--cmd",
         nargs="+",
@@ -124,20 +202,40 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="Do not start Floorp Debug; assume it is already running",
     )
-    parser.add_argument(
-        "--base-url",
-        default=os.environ.get("FLOORP_OS_BASE_URL", "http://127.0.0.1:58261"),
-        help="OS server base URL used for health checks and verifier",
+    try:
+        args = parser.parse_args(target_args.wrapper_args)
+    except OsTestConfigError as error:
+        print(str(error), file=sys.stderr)
+        return 2
+
+    # Ambient env is read only after --help has exited, never at module import.
+    base_url = resolve_base_url(
+        target_args.base_url_flag,
+        os.environ.get("FLOORP_OS_BASE_URL"),
     )
+    try:
+        token_file = resolve_token_file(
+            target_args.token_file_flag,
+            os.environ.get("FLOORP_OS_TOKEN_FILE"),
+        )
+        # Reject an unsafe authenticated target before starting any browser. The
+        # token file itself may still be published only after browser startup.
+        if token_file is not None:
+            validate_authenticated_base_url(base_url)
+    except OsTestConfigError as error:
+        print(str(error), file=sys.stderr)
+        return 2
 
-    args, verifier_args = parser.parse_known_args(argv)
-    os.environ["FLOORP_OS_BASE_URL"] = args.base_url
-
-    cmd = args.cmd if args.cmd else DEFAULT_CMD
+    timeout = max(1.0, args.timeout)
+    interval = max(1.0, args.interval)
+    cmd = args.cmd if args.cmd else list(DEFAULT_CMD)
     proc: subprocess.Popen[str] | None = None
 
     if args.skip_start:
-        print("Skipping Floorp Debug start; assuming server is already running.")
+        print(
+            "Skipping Floorp Debug start; assuming server is already running at "
+            f"{base_url}."
+        )
     else:
         print(f"Starting Floorp Debug: {' '.join(cmd)} (cwd={ROOT_DIR})")
         proc = subprocess.Popen(
@@ -151,7 +249,7 @@ def main(argv: list[str] | None = None) -> int:
         )
 
         print("Waiting for OS server health endpoint...")
-        if not wait_for_health(args.base_url, args.timeout, args.interval):
+        if not wait_for_health(base_url, timeout, interval, token_file):
             print("OS server did not become healthy within timeout.", file=sys.stderr)
             stop_process(proc)
             return 1
@@ -159,12 +257,10 @@ def main(argv: list[str] | None = None) -> int:
         time.sleep(20)
         print("Proceeding with verification.")
 
-    has_base_url_arg = any(
-        arg == "--base-url" or arg.startswith("--base-url=")
-        for arg in verifier_args
-    )
-    if not has_base_url_arg:
-        verifier_args = ["--base-url", args.base_url, *verifier_args]
+    verifier_args = ["--base-url", base_url]
+    if token_file is not None:
+        verifier_args.extend(["--token-file", token_file])
+    verifier_args.extend(target_args.verifier_args)
 
     exit_code = 1
     try:

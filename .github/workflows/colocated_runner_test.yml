@@ -627,6 +627,7 @@ jobs:
         run: >-
           deno test --allow-read --allow-write
           tools/integration/os-server-token.test.ts
+          tools/integration/windows-profile-token.test.ts
           tools/src/os_server_token.test.ts
       - name: Run focused FDH observation contracts
         run: >-
@@ -644,4 +645,57 @@ jobs:
           tools/src/fdh_qa_gh_transport.test.ts
           tools/src/fdh_qa_cli.test.ts
           tools/src/fdh_token_integration_workflow.test.ts
+          tools/src/fdh_windows_profile_token_patch.test.ts
           tools/src/os_server_token.test.ts
+
+  # Real Windows kernel contract, not a Gecko API mock or a shipped Runtime.
+  # Native source changes still require a fresh Runtime compilation before use.
+  native-windows-profile-token:
+    name: Windows Native Token / ${{ matrix.configuration }}
+    runs-on: windows-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        configuration: [Debug, Release]
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Configure native Windows private token contract
+        run: cmake -S native/windows-profile-token -B _dist/fdh/windows-profile-native-ci -A x64
+      - name: Compile native Windows contract
+        run: cmake --build _dist/fdh/windows-profile-native-ci --config ${{ matrix.configuration }}
+      - name: Run real ACL, reparse, hardlink, and ownership contracts
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          ctest --test-dir _dist/fdh/windows-profile-native-ci -C ${{ matrix.configuration }} --output-on-failure -V 2>&1 | Tee-Object -FilePath _dist/fdh/windows-profile-native-ci.log
+          exit $LASTEXITCODE
+      - name: Upload native contract evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: windows-native-profile-token-${{ matrix.configuration }}
+          path: |
+            _dist/fdh/windows-profile-native-ci.log
+            _dist/fdh/windows-profile-native-ci/Testing/Temporary/LastTest.log
+
+  python-os-api-auth:
+    name: Python OS API Auth / ${{ matrix.runner }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-24.04, windows-latest, macos-latest]
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Run synthetic Python client and wrapper authentication contracts
+        run: python -B -m unittest discover -s tools/os-test -p test_os_test_client.py
