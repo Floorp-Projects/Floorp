@@ -5,6 +5,16 @@ const assert = require('node:assert/strict');
 const { readFileSync } = require('node:fs');
 const { spawn: realSpawn } = require('node:child_process');
 const { EventEmitter } = require('node:events');
+/** @typedef {import('./fdh-trusted-review-workflow-types.ts').CheckCreateInput} CheckCreateInput */
+/** @typedef {import('./fdh-trusted-review-workflow-types.ts').CheckUpdateInput} CheckUpdateInput */
+/** @typedef {import('./fdh-trusted-review-workflow-types.ts').CoreFixture} CoreFixture */
+/** @typedef {import('./fdh-trusted-review-workflow-types.ts').GitHubFixture} GitHubFixture */
+/** @typedef {import('./fdh-trusted-review-workflow-types.ts').MockChildProcess} MockChildProcess */
+/** @typedef {import('./fdh-trusted-review-workflow-types.ts').ReviewCommentFixture} ReviewCommentFixture */
+/** @typedef {import('./fdh-trusted-review-workflow-types.ts').ReviewReceiptChanges} ReviewReceiptChanges */
+/** @typedef {import('./fdh-trusted-review-workflow-types.ts').ScenarioConclusion} ScenarioConclusion */
+/** @typedef {import('./fdh-trusted-review-workflow-types.ts').ScenarioOperation} ScenarioOperation */
+/** @typedef {import('./fdh-trusted-review-workflow-types.ts').ScenarioOptions} ScenarioOptions */
 const yaml = readFileSync('.github/workflows/fdh-trusted-review-gate.yml', 'utf8');
 const lines = yaml.split(/\r?\n/);
 const start = lines.findIndex(line => line.trim() === 'script: |');
@@ -17,6 +27,11 @@ process.env.GITHUB_REPOSITORY = 'fixture/repo';
 process.env.PR_NUMBER = '42';
 process.env.GITHUB_TOKEN = 'FAKE_TEST_SENTINEL';
 process.env.GH_TOKEN = 'FAKE_TEST_SENTINEL';
+/**
+ * @param {string} who
+ * @param {ReviewReceiptChanges} [changes]
+ * @returns {ReviewCommentFixture}
+ */
 const receipt = (who, changes = {}) => ({
   body: '<!-- fdh-review-receipt:v1 ' + JSON.stringify({
     schemaVersion: 1, reviewer: who, model: 'fixture', commit: head,
@@ -24,19 +39,32 @@ const receipt = (who, changes = {}) => ({
   }) + ' -->',
   user: { login: 'trusted' }, author_association: 'MEMBER',
 });
+/** @type {ReviewCommentFixture[]} */
 const approvals = [receipt('one'), receipt('two')];
+/**
+ * Run one scenario against the real workflow script with fixture clients.
+ * @param {string} label
+ * @param {ReviewCommentFixture[]} comments
+ * @param {ScenarioConclusion} [expected]
+ * @param {ScenarioOptions} [options]
+ */
 async function run(label, comments, expected, options = {}) {
   process.env.EVENT_HEAD_SHA = options.eventHead ?? '';
-  let reads = 0, created = 0, updated, spawns = 0;
+  let reads = 0, created = 0, spawns = 0;
+  /** @type {CheckUpdateInput | undefined} */
+  let updated;
+  /** @type {ScenarioOperation[]} */
   const operations = [];
+  /** @type {string[]} */
   const failures = [];
+  /** @type {GitHubFixture} */
   const github = {
     rest: {
-      pulls: { get: async () => ({ data: { number: 42, head: {
+      pulls: { get: () => ({ data: { number: 42, head: {
         sha: ++reads === 2 && options.headRace ? other : head,
       } } }) },
       checks: {
-        create: async input => {
+        create: input => {
           assert.equal(input.head_sha, head);
           assert.equal(input.name, 'fdh-trusted-receipts');
           assert.equal(input.status, 'in_progress');
@@ -51,16 +79,23 @@ async function run(label, comments, expected, options = {}) {
       },
       issues: { listComments() {} },
     },
-    paginate: async () => {
+    paginate: () => {
       if (options.apiFailure) throw new Error('fixture comments API failure');
       return comments;
     },
   };
+  /** @type {CoreFixture} */
   const core = { setFailed(message) {
     assert.equal(updated?.conclusion, 'failure', 'must publish failure before core.setFailed');
     failures.push(message);
     operations.push('workflow-failed');
   } };
+  /**
+   * @param {string} file
+   * @param {string[]} args
+   * @param {import('node:child_process').SpawnOptions & { env: Record<string, string | undefined> }} childOptions
+   * @returns {import('node:child_process').ChildProcess | MockChildProcess}
+   */
   function spawn(file, args, childOptions) {
     spawns++;
     assert.equal(file, 'deno');
@@ -71,19 +106,29 @@ async function run(label, comments, expected, options = {}) {
     const allowed = ['DENO_NO_UPDATE_CHECK', 'PATH', 'SystemRoot', 'WINDIR'];
     assert.ok(Object.keys(childOptions.env).every(key => allowed.includes(key)));
     if (!options.childFailure && !options.invalidOutput) return realSpawn(file, args, childOptions);
-    const child = new EventEmitter();
-    child.stdout = new EventEmitter();
-    child.stderr = new EventEmitter();
-    child.stdin = { end() { queueMicrotask(() => {
-      if (options.invalidOutput) child.stdout.emit('data', Buffer.from('{invalid JSON'));
-      child.emit('close', options.invalidOutput ? 0 : 2);
-    }); } };
+    /** @type {MockChildProcess} */
+    const child = Object.assign(new EventEmitter(), {
+      stdout: new EventEmitter(),
+      stderr: new EventEmitter(),
+      stdin: { end() { queueMicrotask(() => {
+        if (options.invalidOutput) child.stdout.emit('data', Buffer.from('{invalid JSON'));
+        child.emit('close', options.invalidOutput ? 0 : 2);
+      }); } },
+    });
     return child;
+  }
+  /**
+   * Module loader shim replacing `require` inside the extracted script.
+   * @param {string} name
+   * @returns {unknown}
+   */
+  function loadModule(name) {
+    return name === 'node:child_process' ? { spawn } : require(name);
   }
   let thrown;
   try {
     await new AsyncFunction('require', 'github', 'context', 'core', source)(
-      name => name === 'node:child_process' ? { spawn } : require(name),
+      loadModule,
       github, { repo: { owner: 'fixture', repo: 'repo' } }, core,
     );
   } catch (error) { thrown = error; }
@@ -96,6 +141,7 @@ async function run(label, comments, expected, options = {}) {
   } else {
     assert.equal(thrown, undefined);
     assert.equal(created, 1);
+    assert.ok(updated, 'checks.update must publish the completed check');
     assert.equal(updated.check_run_id, 123);
     assert.equal(updated.status, 'completed');
     assert.equal(updated.conclusion, expected);

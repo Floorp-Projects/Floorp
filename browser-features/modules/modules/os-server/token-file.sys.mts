@@ -110,7 +110,10 @@ export const tokenFile = new TokenFileLifecycle({
 });
 
 export async function publishTokenFile(token: string): Promise<void> {
-  return tokenFile.publish(destination(), token);
+  // Keep this function async and await the publication promise: a rejected
+  // publish and a synchronous destination() refusal (unsupported opt-in on
+  // Windows, before any dirsvc/IO) must both surface as promise rejections.
+  return await tokenFile.publish(destination(), token);
 }
 
 /** Reset must preserve the live MCP credential when OS alone is disabled. */
