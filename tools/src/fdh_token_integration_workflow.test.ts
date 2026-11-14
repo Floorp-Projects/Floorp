@@ -96,6 +96,32 @@ Deno.test("existing required jobs remain declared unchanged", async () => {
   assertStringIncludes(jobBlock(wf, "native-runtime"), "needs: smoke");
 });
 
+Deno.test("focused offline contracts preserve the independent type-check graph", async () => {
+  const job = jobBlock(await readWorkflow(), "token-adapter-contract");
+  const start = job.indexOf("- name: Run focused FDH observation contracts");
+  assertEquals(start >= 0, true);
+  const focused = job.slice(start);
+  assertStringIncludes(
+    focused,
+    "deno test --allow-read --allow-write --deny-net --deny-env",
+  );
+  for (
+    const file of [
+      "fdh_workspace_oidc",
+      "fdh_qa_discovery",
+      "fdh_qa_discovery_cli",
+      "fdh_qa_gh_transport",
+      "fdh_qa_cli",
+      "fdh_token_integration_workflow",
+      "os_server_token",
+    ]
+  ) {
+    assertStringIncludes(focused, "tools/src/" + file + ".test.ts");
+  }
+  assertEquals(focused.includes("--allow-net"), false);
+  assertEquals(focused.includes("--allow-env"), false);
+});
+
 Deno.test("pull_request trigger keeps no path filter", async () => {
   const wf = await readWorkflow();
   // Unfiltered so adapter, shared, test, and type changes always reach the

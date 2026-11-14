@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: MPL-2.0
-import type { JWK, JWTVerifyGetKey } from "jose";
+import type { generateKeyPair, JWK, JWTVerifyGetKey } from "jose";
 
 /** Ephemeral synthetic signing material used only by the offline tests. */
 export interface WorkspaceOidcTestSigningKey {
   readonly kid: string;
-  readonly privateKey: CryptoKey;
+  readonly privateKey: Awaited<
+    ReturnType<typeof generateKeyPair>
+  >["privateKey"];
   readonly jwk: JWK;
 }
 

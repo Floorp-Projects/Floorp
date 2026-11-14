@@ -128,7 +128,7 @@ async function signClaims(
     typ: "JWT",
     kid: primary.kid,
   },
-  key: CryptoKey | Uint8Array = primary.privateKey,
+  key: TestSigningKey["privateKey"] | Uint8Array = primary.privateKey,
 ): Promise<string> {
   return await new SignJWT(workspaceClaims(overrides))
     .setProtectedHeader(header)

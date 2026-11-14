@@ -1,21 +1,21 @@
 {
   "schema": 1,
-  "generatedAt": "2026-11-14T09:12:38.044Z",
+  "generatedAt": "2026-11-14T09:28:37.520Z",
   "baseCommit": "9e6b24e5fd561250ab04a011b70ee0b1280b1adc",
   "entries": [
     {
       "path": ".agents/skills/fdh-dev-loop/SKILL.md",
       "status": "modified",
       "group": "06-docs-and-skills",
-      "bytes": 36785,
-      "sha256": "e0f56ad8dfc95b318126f0c28280ca397f0d9cb0cb581cd5a9198ef3277fbac7"
+      "bytes": 37030,
+      "sha256": "da3b433804f224ef40ab55743ae71863fcf9c513df6c5a7d30b72387596b9996"
     },
     {
       "path": ".github/workflows/colocated_runner_test.yml",
       "status": "modified",
       "group": "07-v1-preparation",
-      "bytes": 26701,
-      "sha256": "c8740d8408bb89b3b7f182046f9585786be37eb96e6ff5bad3e36a081f67b0a2"
+      "bytes": 27179,
+      "sha256": "f006d4702a24e837b48d53da2be20eaba89ae41593c5581407b35339d46b6194"
     },
     {
       "path": ".github/workflows/fdh-trusted-review-gate.yml",
@@ -78,21 +78,21 @@
       "status": "modified",
       "group": "06-docs-and-skills",
       "bytes": 7054,
-      "sha256": "8ba31be16e318661e1652645f77145d518d87bfcd6c55a382b53e4d6fa7b2dee"
+      "sha256": "b6b74bea15ca40078e2801c1d5b87f404f6f6b440692c41551623643adaca32f"
     },
     {
       "path": "docs/development/reference/source-inventory.mdx",
       "status": "modified",
       "group": "06-docs-and-skills",
       "bytes": 4919,
-      "sha256": "4e1eefdc26c0dec993e1e65991495fddf36cad1da69fec29f05bb5b166a24d76"
+      "sha256": "d2d7298a466936a2c6e447d3a5c199ff38de21d4586e0074635f882f80287ea5"
     },
     {
       "path": "docs/qa/fdh-coordinator-followup/CHECKPOINT.md",
       "status": "added",
       "group": "06-docs-and-skills",
-      "bytes": 43414,
-      "sha256": "500979741c2b41144ffd2d6983d607652c546649a1f0cd436f0b07515632a9a1"
+      "bytes": 44097,
+      "sha256": "4f5908ab59b8108b4eb0a23567b9bc97429ce518d102bd0d0c1fe52c3c927523"
     },
     {
       "path": "docs/qa/fdh-coordinator-followup/LOCAL-COMMIT-PLAN.md",
@@ -462,8 +462,8 @@
       "path": "tools/src/fdh_token_integration_workflow.test.ts",
       "status": "added",
       "group": "07-v1-preparation",
-      "bytes": 3764,
-      "sha256": "d05d2b245e6e23b77b722270b3aa68c4b498196db048cca655fca0fe07c3cd90"
+      "bytes": 4615,
+      "sha256": "51f3fdf3e38508e0a97a2400829f872d73d291517c49636236e826db34615e0f"
     },
     {
       "path": "tools/src/fdh_trusted_review.test.ts",
@@ -504,8 +504,8 @@
       "path": "tools/src/fdh_workspace_oidc.test.ts",
       "status": "added",
       "group": "07-v1-preparation",
-      "bytes": 31395,
-      "sha256": "acc42fa297bce3e4acca31dae74722ed5c5825c6edd469845a70f5bd83027b23"
+      "bytes": 31414,
+      "sha256": "91c5ae84bc6db64314c1e5289d0169b1837948c57d5f1817fe59f34ff18df223"
     },
     {
       "path": "tools/src/fdh_workspace_oidc.ts",
@@ -518,8 +518,8 @@
       "path": "tools/src/fdh_workspace_oidc_types.ts",
       "status": "added",
       "group": "07-v1-preparation",
-      "bytes": 3361,
-      "sha256": "cae0ce8495ed93e69dc7a805d6fe86b405c832b0900b1d199eeaa0c6fc76cd48"
+      "bytes": 3434,
+      "sha256": "9e34f0b675f1c751e0a6cc8e82747a6e0b71cffcdb6f1129303dbf3cb64db3b2"
     },
     {
       "path": "tools/src/os_server_token.test.ts",
@@ -585,7 +585,7 @@
       "sha256": "82063f29337d5ef6c0d82bd8abdadbcbb59456e596801de6a2b141bccd0fff66"
     }
   ],
-  "sourceSetSha256": "1f295a80a9cd7dc2b3ff67c068fd0723050022e638b048b11f6650e4ebd53570",
+  "sourceSetSha256": "a7e8fe0560147d503106cbaa86bb28f165564f5193a274c10fed16fcce996f7e",
   "limitations": [
     "Raw local file bytes only; not a commit, signature, API-origin proof or release qualification.",
     "Inventory excludes its own output to avoid recursive hashes and all ignored/generated samples.",

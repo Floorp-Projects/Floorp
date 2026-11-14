@@ -629,3 +629,13 @@ jobs:
           deno test --allow-read --allow-write
           tools/integration/os-server-token.test.ts
           tools/src/os_server_token.test.ts
+      - name: Run focused FDH observation contracts
+        run: >-
+          deno test --allow-read --allow-write --deny-net --deny-env
+          tools/src/fdh_workspace_oidc.test.ts
+          tools/src/fdh_qa_discovery.test.ts
+          tools/src/fdh_qa_discovery_cli.test.ts
+          tools/src/fdh_qa_gh_transport.test.ts
+          tools/src/fdh_qa_cli.test.ts
+          tools/src/fdh_token_integration_workflow.test.ts
+          tools/src/os_server_token.test.ts

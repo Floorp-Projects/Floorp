@@ -207,6 +207,10 @@ the full window re-listed; this is still a point-in-time observation, not an
 atomic GitHub transaction. Exit 0 and matches=true remain nonauthorizing.
 Production publisher wiring and real signed pending-positive proof are separate.
 
+Also run changed test groups directly with type checking enabled. A broad host
+graph can pass while a focused graph exposes Node/DOM WebCrypto type differences;
+fixture keys should use their cryptographic library returned types, not casts.
+
 ## Recording commands that ran outside fdh (IMP-2)
 
 `fdh verify build|test` only records what fdh itself spawned. When a build or
