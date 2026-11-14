@@ -120,23 +120,25 @@ export const bookmarkSwitcherCommand: PaletteCommand = {
     defaultValue: "Open a bookmarked page",
   }),
   category: "switcher",
-  keywords: [
-    "bookmark",
-    "switch bookmark",
-    "open bookmark",
-    "bookmarks",
-    "favorite",
-    "favourite",
-    ...getJapaneseReadings("floorp-bookmark-switcher"),
-    ...getEnglishStepCommandKeywords(
-      "commandPalette.bookmarkSwitcher",
-      "commandPalette.bookmarkSwitcherDescription",
-    ),
-    ...getSegmentedKeywordsFromI18nKeys(
-      "commandPalette.bookmarkSwitcher",
-      "commandPalette.bookmarkSwitcherDescription",
-    ),
-  ],
+  get keywords() {
+    return [
+      "bookmark",
+      "switch bookmark",
+      "open bookmark",
+      "bookmarks",
+      "favorite",
+      "favourite",
+      ...getJapaneseReadings("floorp-bookmark-switcher"),
+      ...getEnglishStepCommandKeywords(
+        "commandPalette.bookmarkSwitcher",
+        "commandPalette.bookmarkSwitcherDescription",
+      ),
+      ...getSegmentedKeywordsFromI18nKeys(
+        "commandPalette.bookmarkSwitcher",
+        "commandPalette.bookmarkSwitcherDescription",
+      ),
+    ];
+  },
   steps: [
     {
       id: "bookmark",
