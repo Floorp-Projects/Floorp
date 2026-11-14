@@ -66,7 +66,7 @@ export async function getMacAppBundle(ssb: Manifest, options: MacAppOptions) {
     CFBundleIdentifier: `one.ablaze.floorp.pwa.${token}`,
     CFBundleName: ssb.name,
     CFBundleDisplayName: ssb.name,
-    CFBundleExecutable: "launcher",
+    CFBundleExecutable: "applet",
     CFBundleIconFile: "app.icns",
     CFBundlePackageType: "APPL",
     CFBundleVersion: "1",
@@ -124,8 +124,152 @@ export function pngToIcns(png: Uint8Array): Uint8Array {
 export class MacOSSupport {
   private static operations = new Map<string, Promise<void>>();
   private static pending = new Map<string, Promise<void>>();
+  private static startupRepairs = new Map<string, Promise<void>>();
 
   constructor(private options?: MacAppOptions) {}
+
+  /** A damaged v4 bundle must be rebuilt and signed, never edited in place. */
+  private async isIntactBundle(
+    ssb: Manifest,
+    options: MacAppOptions,
+    bundle: Awaited<ReturnType<typeof getMacAppBundle>>,
+  ): Promise<boolean> {
+    const contents = PathUtils.join(bundle.path, "Contents");
+    const resources = PathUtils.join(contents, "Resources");
+    const executable = PathUtils.join(contents, "MacOS", "applet");
+    const launcher = PathUtils.join(resources, "launcher.sh");
+    const plist = PathUtils.join(contents, "Info.plist");
+    const marker = PathUtils.join(contents, "floorp.json");
+    try {
+      for (
+        const path of [
+          executable,
+          launcher,
+          PathUtils.join(resources, "Scripts", "main.scpt"),
+          PathUtils.join(resources, "app.icns"),
+          plist,
+          marker,
+        ]
+      ) {
+        if (!await IOUtils.exists(path)) return false;
+      }
+      if (
+        await IOUtils.readUTF8(marker) !==
+          JSON.stringify({ version: 4, ssb, ...options }) ||
+        await IOUtils.readUTF8(launcher) !== bundle.launcher ||
+        await IOUtils.readUTF8(plist) !== bundle.plist
+      ) return false;
+      // On Windows this function only runs in portable tests; executable mode
+      // is meaningful on the platforms that provide POSIX-style permissions.
+      if (Services.appinfo.OS !== "WINNT") {
+        for (const path of [executable, launcher]) {
+          const file = Cc["@mozilla.org/file/local;1"].createInstance(
+            Ci.nsIFile,
+          );
+          file.initWithPath(path);
+          if (!file.isExecutable()) return false;
+        }
+      }
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /** Upgrade owned legacy launchers after normal browser startup. A broken v3
+   * Finder launcher cannot itself enter the PWA code path that repairs it. */
+  async repairExistingLaunchers(store: MacAppStore): Promise<void> {
+    const options = this.getOptions();
+    const existing = MacOSSupport.startupRepairs.get(options.profileDir);
+    if (existing) return await existing;
+    const task = (async () => {
+      if (
+        !await IOUtils.exists(
+          PathUtils.join(options.profileDir, "ssb", "ssb.json"),
+        )
+      ) return;
+      const apps = await store.getCurrentSsbData();
+      for (const app of Object.values(apps)) {
+        try {
+          const bundle = await getMacAppBundle(app, options);
+          const marker = PathUtils.join(bundle.path, "Contents", "floorp.json");
+          const backup = `${bundle.path}.floorp-backup`;
+          if (!await IOUtils.exists(marker)) {
+            if (await IOUtils.exists(backup)) await this.repair(app, store);
+            continue;
+          }
+          const data = await IOUtils.readJSON(marker) as {
+            version?: number;
+            integration?: string;
+          };
+          if (data.integration === "app-shim") continue;
+          if (
+            data.version === 4 && !await IOUtils.exists(backup) &&
+            await this.isIntactBundle(app, options, bundle)
+          ) continue;
+          await this.repair(app, store);
+        } catch (error) {
+          console.warn(
+            "[MacOSSupport] Could not upgrade an installed launcher:",
+            error,
+          );
+        }
+      }
+    })();
+    MacOSSupport.startupRepairs.set(options.profileDir, task);
+    try {
+      await task;
+    } finally {
+      MacOSSupport.startupRepairs.delete(options.profileDir);
+    }
+  }
+
+  // Keep website-controlled strings out of AppleScript source. The applet
+  // executes the separately generated, shell-quoted launcher in its bundle.
+  protected async compileApplet(path: string): Promise<void> {
+    await this.runMacTool("/usr/bin/osacompile", [
+      "-o",
+      path,
+      "-e",
+      'on run\nset p to POSIX path of (path to me)\ndo shell script quoted form of (p & "Contents/Resources/launcher.sh")\nend run',
+    ]);
+  }
+
+  protected async signApplet(path: string, bundleId: string): Promise<void> {
+    await this.runMacTool("/usr/bin/codesign", [
+      "--force",
+      "--deep",
+      "--sign",
+      "-",
+      "--identifier",
+      bundleId,
+      "--timestamp=none",
+      path,
+    ]);
+  }
+
+  private async runMacTool(command: string, args: string[]): Promise<void> {
+    const { Subprocess } = ChromeUtils.importESModule(
+      "resource://gre/modules/Subprocess.sys.mjs",
+    );
+    const process = await Subprocess.call({
+      command,
+      arguments: args,
+      stderr: "stdout",
+    });
+    let output = "";
+    for (;;) {
+      const chunk = await process.stdout.readString();
+      if (!chunk) break;
+      output = (output + chunk).slice(-16384);
+    }
+    const { exitCode } = await process.wait();
+    if (exitCode !== 0) {
+      throw new Error(
+        `[MacOSSupport] ${command} failed (${exitCode}): ${output}`,
+      );
+    }
+  }
 
   private getOptions(): MacAppOptions {
     if (this.options) return this.options;
@@ -283,18 +427,29 @@ export class MacOSSupport {
       const marker = await IOUtils.readJSON(
         PathUtils.join(contents, "floorp.json"),
       ) as {
+        version?: number;
         profileDir?: string;
         ssb?: { id?: string; userContextId?: number };
       };
+      // Native migration must still accept the intact v3 shell bundle. Its
+      // launcher cannot start on newer macOS, so repair cannot be a prerequisite.
+      const legacyV3 = marker?.version === 3;
+      const expectedPlist = legacyV3
+        ? bundle.plist.replace(
+          "<key>CFBundleExecutable</key><string>applet</string>",
+          "<key>CFBundleExecutable</key><string>launcher</string>",
+        )
+        : bundle.plist;
+      const launcherPath = legacyV3
+        ? PathUtils.join(contents, "MacOS", "launcher")
+        : PathUtils.join(contents, "Resources", "launcher.sh");
       if (
         !marker || marker.profileDir !== options.profileDir ||
         marker.ssb?.id !== ssb.id ||
         (marker.ssb.userContextId ?? 0) !== (ssb.userContextId ?? 0) ||
         await IOUtils.readUTF8(PathUtils.join(contents, "Info.plist")) !==
-          bundle.plist ||
-        await IOUtils.readUTF8(
-            PathUtils.join(contents, "MacOS", "launcher"),
-          ) !== bundle.launcher
+          expectedPlist ||
+        await IOUtils.readUTF8(launcherPath) !== bundle.launcher
       ) {
         throw new Error(
           "[MacOSSupport] Cannot migrate an unowned or stale launcher",
@@ -326,6 +481,40 @@ export class MacOSSupport {
     const resources = PathUtils.join(contents, "Resources");
     const markerPath = PathUtils.join(contents, "floorp.json");
     const nativeMarker = PathUtils.join(resources, "floorp.json");
+    const backup = `${bundle.path}.floorp-backup`;
+    if (await IOUtils.exists(backup)) {
+      const backupMarker = PathUtils.join(backup, "Contents", "floorp.json");
+      const backupNativeMarker = PathUtils.join(
+        backup,
+        "Contents",
+        "Resources",
+        "floorp.json",
+      );
+      if (
+        !await IOUtils.exists(backupMarker) ||
+        await IOUtils.exists(backupNativeMarker)
+      ) {
+        throw new Error(
+          "[MacOSSupport] Refusing to recover an unowned launcher backup",
+        );
+      }
+      const previous = await IOUtils.readJSON(backupMarker) as {
+        profileDir?: string;
+        integration?: string;
+        ssb?: { id?: string };
+      };
+      if (
+        previous.profileDir !== options.profileDir ||
+        previous.ssb?.id !== ssb.id || previous.integration === "app-shim"
+      ) {
+        throw new Error(
+          "[MacOSSupport] Refusing to recover an unowned launcher backup",
+        );
+      }
+      if (!await IOUtils.exists(bundle.path)) {
+        await IOUtils.move(backup, bundle.path);
+      }
+    }
     if (await IOUtils.exists(nativeMarker)) {
       const existing = await IOUtils.readJSON(nativeMarker) as {
         integration?: string;
@@ -336,11 +525,28 @@ export class MacOSSupport {
         );
       }
     }
-    // Version 3 launches the browser bundle through LaunchServices and clears
-    // quarantine inherited from a downloaded Floorp. Bumping the marker forces
-    // repair of older bundles whose generated files otherwise look complete.
-    const marker = JSON.stringify({ version: 3, ssb, ...options });
-    const executable = PathUtils.join(macOS, "launcher");
+    if (await IOUtils.exists(bundle.path)) {
+      if (!await IOUtils.exists(markerPath)) {
+        throw new Error("[MacOSSupport] Refusing to replace an unowned bundle");
+      }
+      const owner = await IOUtils.readJSON(markerPath) as {
+        profileDir?: string;
+        integration?: string;
+        ssb?: { id?: string };
+      };
+      if (
+        owner.profileDir !== options.profileDir || owner.ssb?.id !== ssb.id ||
+        owner.integration === "app-shim"
+      ) {
+        throw new Error("[MacOSSupport] Refusing to replace an unowned bundle");
+      }
+    }
+    // Version 4 uses a native AppleScript applet: Launch Services cannot launch
+    // a shell script as CFBundleExecutable on current macOS.
+    const marker = JSON.stringify({ version: 4, ssb, ...options });
+    const executable = PathUtils.join(macOS, "applet");
+    const launcher = PathUtils.join(resources, "launcher.sh");
+    const compiledScript = PathUtils.join(resources, "Scripts", "main.scpt");
     const icon = PathUtils.join(resources, "app.icns");
     const plist = PathUtils.join(contents, "Info.plist");
     const bundlePaths = [
@@ -349,6 +555,8 @@ export class MacOSSupport {
       macOS,
       resources,
       executable,
+      launcher,
+      compiledScript,
       icon,
       plist,
       markerPath,
@@ -362,11 +570,12 @@ export class MacOSSupport {
           "[MacOSSupport] Refusing to overwrite a signed native bundle with a launcher",
         );
       }
-      if (
-        await IOUtils.readUTF8(markerPath) === marker &&
-        await IOUtils.exists(executable) && await IOUtils.exists(icon) &&
-        await IOUtils.exists(plist)
-      ) {
+      if (await this.isIntactBundle(ssb, options, bundle)) {
+        // A previous update may have completed the replacement before being
+        // interrupted while removing its verified owned backup.
+        if (await IOUtils.exists(backup)) {
+          await IOUtils.remove(backup, { recursive: true });
+        }
         // The browser itself can acquire quarantine after the launcher was
         // installed, so also repair a complete bundle without rewriting it.
         await this.clearQuarantine(bundlePaths);
@@ -374,21 +583,52 @@ export class MacOSSupport {
       }
     }
 
-    const iconBytes = await this.createIcon(ssb);
-    await IOUtils.makeDirectory(macOS, {
+    const stage = `${bundle.path}.floorp-stage-${crypto.randomUUID()}.app`;
+    // Never discard an unexpected backup: it may contain an interrupted update.
+    if (await IOUtils.exists(backup)) {
+      throw new Error("[MacOSSupport] Existing launcher backup needs recovery");
+    }
+    await IOUtils.makeDirectory(options.applicationsDir, {
       createAncestors: true,
       ignoreExisting: true,
     });
-    await IOUtils.makeDirectory(resources, {
-      ignoreExisting: true,
-    });
-    await IOUtils.write(icon, iconBytes);
-    await IOUtils.writeUTF8(executable, bundle.launcher);
-    await IOUtils.setPermissions(executable, 0o755);
-    await IOUtils.writeUTF8(plist, bundle.plist);
-    // Write last: interrupted installs are repaired on the next launch.
-    await IOUtils.writeUTF8(markerPath, marker);
-    await this.clearQuarantine(bundlePaths);
+    let backedUp = false;
+    try {
+      await this.compileApplet(stage);
+      const stagedContents = PathUtils.join(stage, "Contents");
+      const stagedResources = PathUtils.join(stagedContents, "Resources");
+      await IOUtils.write(
+        PathUtils.join(stagedResources, "app.icns"),
+        await this.createIcon(ssb),
+      );
+      const stagedLauncher = PathUtils.join(stagedResources, "launcher.sh");
+      await IOUtils.writeUTF8(stagedLauncher, bundle.launcher);
+      await IOUtils.setPermissions(stagedLauncher, 0o755);
+      await IOUtils.writeUTF8(
+        PathUtils.join(stagedContents, "Info.plist"),
+        bundle.plist,
+      );
+      await IOUtils.writeUTF8(
+        PathUtils.join(stagedContents, "floorp.json"),
+        marker,
+      );
+      await this.signApplet(stage, bundle.bundleId);
+      if (await IOUtils.exists(bundle.path)) {
+        await IOUtils.move(bundle.path, backup);
+        backedUp = true;
+      }
+      try {
+        await IOUtils.move(stage, bundle.path);
+      } catch (error) {
+        if (backedUp) await IOUtils.move(backup, bundle.path);
+        backedUp = false;
+        throw error;
+      }
+      if (backedUp) await IOUtils.remove(backup, { recursive: true });
+      await this.clearQuarantine(bundlePaths);
+    } finally {
+      await IOUtils.remove(stage, { recursive: true, ignoreAbsent: true });
+    }
   }
 
   private async clearQuarantine(paths: string[]): Promise<void> {

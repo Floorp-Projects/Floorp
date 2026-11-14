@@ -4,10 +4,10 @@
 import {
   getMacAppBundle,
   type MacAppOptions,
-  MacOSSupport,
   pngToIcns,
 } from "../MacOS.sys.mts";
 import type { Manifest } from "../../type.ts";
+import { MockMacOSSupport } from "./MockMacOSSupport.ts";
 import type { MacAppShimCapabilities } from "#libs/pwa/appRegistryTypes.ts";
 import { DataManager } from "../../../../../chrome/common/pwa/dataStore.ts";
 import {
@@ -23,7 +23,7 @@ const ssb: Manifest = {
   icon: "",
 };
 
-class TestMacOSSupport extends MacOSSupport {
+class TestMacOSSupport extends MockMacOSSupport {
   iconWrites = 0;
   protected override createIcon(): Promise<Uint8Array> {
     this.iconWrites++;
@@ -107,15 +107,16 @@ export async function runAllTests(): Promise<void> {
           executable: "/Applications/Floorp.app/Contents/MacOS/floorp",
         };
         const support = new TestMacOSSupport(options);
-        const bundle = await getMacAppBundle(ssb, options);
-        const renamed = { ...ssb, name: "Renamed Native App" };
+        const app = { ...ssb, name: "Native App" };
+        const bundle = await getMacAppBundle(app, options);
+        const renamed = { ...app, name: "Renamed Native App" };
         const renamedBundle = await getMacAppBundle(renamed, options);
         const store = new TestStore(
           PathUtils.join(root, "profile", "ssb", "ssb.json"),
         );
         try {
           Services.prefs.setBoolPref(pref, false);
-          await support.install(ssb, store);
+          await support.install(app, store);
           const markerPath = PathUtils.join(
             bundle.path,
             ...markerDirectory.split("/"),
@@ -130,7 +131,7 @@ export async function runAllTests(): Promise<void> {
             version: 4,
             integration: "app-shim",
             profileDir: options.profileDir,
-            ssb,
+            ssb: app,
           });
           const marker = await IOUtils.readUTF8(markerPath);
           const plistPath = PathUtils.join(
@@ -252,8 +253,8 @@ export async function runAllTests(): Promise<void> {
           const launcherFile = PathUtils.join(
             bundle.path,
             "Contents",
-            "MacOS",
-            "launcher",
+            "Resources",
+            "launcher.sh",
           );
           const originalLauncher = await IOUtils.readUTF8(launcherFile);
           const state = await support.prepareAppShimRegistration(
@@ -309,6 +310,43 @@ export async function runAllTests(): Promise<void> {
             1,
             "unchanged metadata does not rewrite",
           );
+
+          // Existing v3 launchers cannot reach their own repair on current
+          // macOS, but must remain eligible for explicit native migration.
+          const legacyMarker = PathUtils.join(
+            bundle.path,
+            "Contents",
+            "floorp.json",
+          );
+          const legacyPlist = PathUtils.join(
+            bundle.path,
+            "Contents",
+            "Info.plist",
+          );
+          const legacyLauncher = PathUtils.join(
+            bundle.path,
+            "Contents",
+            "MacOS",
+            "launcher",
+          );
+          const markerData = await IOUtils.readJSON(legacyMarker) as Record<
+            string,
+            unknown
+          >;
+          await IOUtils.writeJSON(legacyMarker, { ...markerData, version: 3 });
+          await IOUtils.writeUTF8(
+            legacyPlist,
+            bundle.plist.replace(
+              "<key>CFBundleExecutable</key><string>applet</string>",
+              "<key>CFBundleExecutable</key><string>launcher</string>",
+            ),
+          );
+          await IOUtils.writeUTF8(legacyLauncher, bundle.launcher);
+          assert(
+            await support.prepareAppShimRegistration(app, capabilities),
+            "intact v3 launcher can be enrolled",
+          );
+          await support.install(app);
 
           // A damaged optional registry must neither be silently reset nor
           // prevent the established install/repair path from continuing.
@@ -491,7 +529,7 @@ export async function runAllTests(): Promise<void> {
             "concurrent/repeated launch does not rewrite app",
           );
           const contents = PathUtils.join(path, "Contents");
-          const launcher = PathUtils.join(contents, "MacOS", "launcher");
+          const launcher = PathUtils.join(contents, "Resources", "launcher.sh");
           assert(
             (await IOUtils.readUTF8(launcher)).startsWith("#!/bin/sh\nexec "),
             "executable launcher",
@@ -574,6 +612,182 @@ export async function runAllTests(): Promise<void> {
       },
     },
     {
+      name:
+        "startup upgrades an owned v3 bundle without launching its broken executable",
+      async fn() {
+        const root = PathUtils.join(
+          PathUtils.tempDir,
+          `floorp-mac-startup-${crypto.randomUUID()}`,
+        );
+        const options: MacAppOptions = {
+          applicationsDir: PathUtils.join(root, "Applications"),
+          profileDir: PathUtils.join(root, "profile"),
+          executable: "/Applications/Floorp.app/Contents/MacOS/floorp",
+        };
+        const app = { ...ssb, name: "Legacy App" };
+        const bundle = await getMacAppBundle(app, options);
+        const support = new TestMacOSSupport(options);
+        const store = new TestStore(
+          PathUtils.join(options.profileDir, "ssb", "ssb.json"),
+        );
+        const contents = PathUtils.join(bundle.path, "Contents");
+        const marker = PathUtils.join(contents, "floorp.json");
+        try {
+          await support.install(app, store);
+          const data = await IOUtils.readJSON(marker) as Record<
+            string,
+            unknown
+          >;
+          await IOUtils.writeJSON(marker, { ...data, version: 3 });
+          await IOUtils.remove(PathUtils.join(contents, "MacOS", "applet"));
+          await IOUtils.remove(
+            PathUtils.join(contents, "Resources", "Scripts"),
+            { recursive: true },
+          );
+          await IOUtils.move(
+            PathUtils.join(contents, "Resources", "launcher.sh"),
+            PathUtils.join(contents, "MacOS", "launcher"),
+          );
+          await IOUtils.writeUTF8(
+            PathUtils.join(contents, "Info.plist"),
+            bundle.plist.replace(
+              "<key>CFBundleExecutable</key><string>applet</string>",
+              "<key>CFBundleExecutable</key><string>launcher</string>",
+            ),
+          );
+          await support.repairExistingLaunchers(store);
+          const updated = await IOUtils.readJSON(marker) as { version: number };
+          assertEquals(
+            updated.version,
+            4,
+            "normal startup upgrades the old bundle",
+          );
+          assert(
+            await IOUtils.exists(PathUtils.join(contents, "MacOS", "applet")),
+            "native executable installed",
+          );
+        } finally {
+          await IOUtils.remove(root, { recursive: true, ignoreAbsent: true });
+        }
+      },
+    },
+    {
+      name: "startup recovers an interrupted owned launcher replacement",
+      async fn() {
+        const root = PathUtils.join(
+          PathUtils.tempDir,
+          `floorp-mac-recovery-${crypto.randomUUID()}`,
+        );
+        const options: MacAppOptions = {
+          applicationsDir: PathUtils.join(root, "Applications"),
+          profileDir: PathUtils.join(root, "profile"),
+          executable: "/Applications/Floorp.app/Contents/MacOS/floorp",
+        };
+        const app = { ...ssb, name: "Recovery App" };
+        const { path } = await getMacAppBundle(app, options);
+        const support = new TestMacOSSupport(options);
+        const store = new TestStore(
+          PathUtils.join(options.profileDir, "ssb", "ssb.json"),
+        );
+        const backup = `${path}.floorp-backup`;
+        try {
+          await support.install(app, store);
+          await IOUtils.move(path, backup);
+          await support.repairExistingLaunchers(store);
+          assert(
+            await IOUtils.exists(path),
+            "owned bundle is restored at its original path",
+          );
+          assert(
+            !await IOUtils.exists(backup),
+            "restored backup is not left behind",
+          );
+        } finally {
+          await IOUtils.remove(root, { recursive: true, ignoreAbsent: true });
+        }
+      },
+    },
+    {
+      name: "install never replaces an unowned bundle at the target path",
+      async fn() {
+        const root = PathUtils.join(
+          PathUtils.tempDir,
+          `floorp-mac-unowned-${crypto.randomUUID()}`,
+        );
+        const options: MacAppOptions = {
+          applicationsDir: PathUtils.join(root, "Applications"),
+          profileDir: PathUtils.join(root, "profile"),
+          executable: "/Applications/Floorp.app/Contents/MacOS/floorp",
+        };
+        const app = { ...ssb, name: "Existing App" };
+        const { path } = await getMacAppBundle(app, options);
+        const sentinel = PathUtils.join(path, "sentinel");
+        try {
+          await IOUtils.makeDirectory(path, {
+            createAncestors: true,
+            ignoreExisting: true,
+          });
+          await IOUtils.writeUTF8(sentinel, "keep");
+          let failed = false;
+          try {
+            await new TestMacOSSupport(options).install(app);
+          } catch {
+            failed = true;
+          }
+          assert(failed, "unowned bundle is refused");
+          assertEquals(
+            await IOUtils.readUTF8(sentinel),
+            "keep",
+            "unowned contents survive",
+          );
+        } finally {
+          await IOUtils.remove(root, { recursive: true, ignoreAbsent: true });
+        }
+      },
+    },
+    {
+      name: "a failed applet upgrade preserves the existing owned bundle",
+      async fn() {
+        const root = PathUtils.join(
+          PathUtils.tempDir,
+          `floorp-mac-failure-${crypto.randomUUID()}`,
+        );
+        const options: MacAppOptions = {
+          applicationsDir: PathUtils.join(root, "Applications"),
+          profileDir: PathUtils.join(root, "profile"),
+          executable: "/Applications/Floorp.app/Contents/MacOS/floorp",
+        };
+        const app = { ...ssb, name: "Existing App" };
+        const bundle = await getMacAppBundle(app, options);
+        const marker = PathUtils.join(bundle.path, "Contents", "floorp.json");
+        class FailingSupport extends TestMacOSSupport {
+          protected override compileApplet(_path: string): Promise<void> {
+            return Promise.reject(new Error("compiler failed"));
+          }
+        }
+        try {
+          await new TestMacOSSupport(options).install(app);
+          const old = await IOUtils.readJSON(marker) as Record<string, unknown>;
+          await IOUtils.writeJSON(marker, { ...old, version: 3 });
+          const before = await IOUtils.readUTF8(marker);
+          let failed = false;
+          try {
+            await new FailingSupport(options).install(app);
+          } catch {
+            failed = true;
+          }
+          assert(failed, "compiler failure is surfaced");
+          assertEquals(
+            await IOUtils.readUTF8(marker),
+            before,
+            "prior bundle remains intact",
+          );
+        } finally {
+          await IOUtils.remove(root, { recursive: true, ignoreAbsent: true });
+        }
+      },
+    },
+    {
       name: "install upgrades v1 launchers to Finder-safe bundles",
       async fn() {
         const root = PathUtils.join(
@@ -590,7 +804,7 @@ export async function runAllTests(): Promise<void> {
         const { path } = await getMacAppBundle(app, options);
         const contents = PathUtils.join(path, "Contents");
         const marker = PathUtils.join(contents, "floorp.json");
-        const launcher = PathUtils.join(contents, "MacOS", "launcher");
+        const launcher = PathUtils.join(contents, "Resources", "launcher.sh");
         try {
           await support.install(app);
           const markerData = await IOUtils.readJSON(marker) as {
@@ -606,7 +820,7 @@ export async function runAllTests(): Promise<void> {
 
           assertEquals(
             (await IOUtils.readJSON(marker) as { version: number }).version,
-            3,
+            4,
             "bundle marker records the launcher contract upgrade",
           );
           assert(
