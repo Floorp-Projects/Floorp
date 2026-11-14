@@ -101,6 +101,33 @@ export class SsbRunnerUtils {
       return;
     }
 
+    if (AppConstants.platform === "linux") {
+      const { LinuxSupport } = ChromeUtils.importESModule(
+        "resource://noraneko/modules/pwa/supports/Linux.sys.mjs",
+      );
+      const linuxSupport = new LinuxSupport();
+      try {
+        // Also repairs launchers installed before the launcher carried the
+        // per-PWA app identity, so the taskbar entry is independent.
+        await linuxSupport.repair(ssb);
+      } catch (error) {
+        console.error(
+          "[SsbRunnerUtils] Failed to repair Linux launcher:",
+          error,
+        );
+      }
+      // The launcher repair above is a file-level fix and runs regardless of
+      // the rollout; only the native window integration is experimental.
+      if (!TaskbarExperiment.isEnabledForCurrentPlatform()) {
+        console.debug(
+          "[SsbRunnerUtils] PWA taskbar integration disabled by A/B test, skipping native integration",
+        );
+        return;
+      }
+      await linuxSupport.applyOSIntegration(ssb, win);
+      return;
+    }
+
     // Check A/B test before applying taskbar integration
     if (!TaskbarExperiment.isEnabledForCurrentPlatform()) {
       console.debug(
@@ -115,15 +142,6 @@ export class SsbRunnerUtils {
       );
       const windowsSupport = new WindowsSupport();
       await windowsSupport.applyOSIntegration(ssb, win);
-      return;
-    }
-
-    if (AppConstants.platform === "linux") {
-      const { LinuxSupport } = ChromeUtils.importESModule(
-        "resource://noraneko/modules/pwa/supports/Linux.sys.mjs",
-      );
-      const linuxSupport = new LinuxSupport();
-      await linuxSupport.applyOSIntegration(ssb, win);
       return;
     }
   }

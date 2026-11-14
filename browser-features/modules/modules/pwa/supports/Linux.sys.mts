@@ -208,7 +208,20 @@ export class LinuxSupport {
     console.debug("[LinuxSupport] Directories ensured");
   }
 
-  private static buildExecCommand(ssb: Manifest, legacy = false): string {
+  /**
+   * Build the launcher command for an SSB.
+   *
+   * Both `--name` and `--class` carry the per-PWA app identity. GTK parses
+   * them while the window is created, so the window is born with the identity
+   * that GNOME Shell and KDE compare against `StartupWMClass` (X11) or the
+   * desktop entry id (Wayland). Without them the window starts as the shared
+   * Floorp app and every PWA is grouped into the browser's taskbar entry.
+   */
+  private static buildExecCommand(
+    ssb: Manifest,
+    options: { legacyEncoding?: boolean; appIdentity?: boolean } = {},
+  ): string {
+    const { legacyEncoding = false, appIdentity = true } = options;
     const tokens: string[] = [];
 
     const isFlatpak = FileUtils.File("/.flatpak-info").exists();
@@ -228,11 +241,17 @@ export class LinuxSupport {
     const startupWMClass = `floorp-${slug}`;
 
     tokens.push("--name", startupWMClass);
+    if (appIdentity) {
+      // GDK derives the Wayland app_id from the program name/class, and the
+      // X11 WM_CLASS class from the program class, so set both to the same
+      // value to cover either backend.
+      tokens.push("--class", startupWMClass);
+    }
     tokens.push(
       "--profile",
       PathUtils.profileDir,
       "--start-ssb",
-      legacy ? sanitizeDesktopEntryValue(ssb.id) : ssb.id,
+      legacyEncoding ? sanitizeDesktopEntryValue(ssb.id) : ssb.id,
     );
     // Reproduce the old encoder only to identify files we may migrate. Never
     // write its result to a new launcher.
@@ -240,11 +259,30 @@ export class LinuxSupport {
       /^[\w@%+=:,./-]+$/.test(token)
         ? token
         : `"${token.replace(/(["\\$`])/g, "\\$1")}"`;
-    const execCommand = legacy
+    const execCommand = legacyEncoding
       ? tokens.map(encodeLegacyToken).join(" ")
       : buildDesktopExecCommand(tokens);
     console.debug(`[LinuxSupport] Built exec command: ${execCommand}`);
     return execCommand;
+  }
+
+  /**
+   * Exec values this profile may have written for the SSB.
+   *
+   * Older builds wrote launchers without `--class`, and the oldest encoder
+   * quoted arguments differently. Accept all of them so an upgrade can still
+   * recognise, repair, and remove its own launchers.
+   */
+  private static ownedExecCommands(ssb: Manifest): string[] {
+    const commands: string[] = [];
+    for (const legacyEncoding of [false, true]) {
+      for (const appIdentity of [true, false]) {
+        commands.push(
+          this.buildExecCommand(ssb, { legacyEncoding, appIdentity }),
+        );
+      }
+    }
+    return commands;
   }
 
   private static async removeLegacyLauncher(ssb: Manifest): Promise<void> {
@@ -257,10 +295,11 @@ export class LinuxSupport {
     if (!await IOUtils.exists(legacy.desktopPath)) return;
     const contents = await IOUtils.readUTF8(legacy.desktopPath);
     if (
-      !isOwnedLinuxDesktopEntry(contents, ssb.id, [
-        this.buildExecCommand(ssb),
-        this.buildExecCommand(ssb, true),
-      ])
+      !isOwnedLinuxDesktopEntry(
+        contents,
+        ssb.id,
+        this.ownedExecCommands(ssb),
+      )
     ) {
       // A matching filename alone is not enough: another profile may own it.
       return;
@@ -279,7 +318,7 @@ export class LinuxSupport {
       !isOwnedLinuxDesktopEntry(
         await IOUtils.readUTF8(paths.desktopPath),
         ssb.id,
-        [this.buildExecCommand(ssb), this.buildExecCommand(ssb, true)],
+        this.ownedExecCommands(ssb),
       )
     ) {
       throw new Error("Cannot verify ownership of existing PWA launcher");
@@ -324,6 +363,27 @@ export class LinuxSupport {
       );
     } catch (error) {
       console.error("Failed to set permissions for desktop entry", error);
+    }
+  }
+
+  /** Ask the desktop environment to re-index the launcher directory. */
+  private static refreshDesktopDatabase(paths: LinuxPathInfo) {
+    try {
+      const desktopDB = Cc["@mozilla.org/file/local;1"].createInstance(
+        Ci.nsIFile,
+      );
+      desktopDB.initWithPath("/usr/bin/update-desktop-database");
+      if (desktopDB.exists()) {
+        console.debug("[LinuxSupport] Updating desktop database");
+        const process = Cc["@mozilla.org/process/util;1"].createInstance(
+          Ci.nsIProcess,
+        );
+        process.init(desktopDB);
+        const args = [paths.desktopDir];
+        process.runw(true, args, args.length);
+      }
+    } catch (e) {
+      console.error("Failed to update desktop database", e);
     }
   }
 
@@ -400,25 +460,61 @@ export class LinuxSupport {
 
     await LinuxSupport.removeLegacyLauncher(ssb);
 
-    try {
-      const desktopDB = Cc["@mozilla.org/file/local;1"].createInstance(
-        Ci.nsIFile,
-      );
-      desktopDB.initWithPath("/usr/bin/update-desktop-database");
-      if (desktopDB.exists()) {
-        console.debug("[LinuxSupport] Updating desktop database");
-        const process = Cc["@mozilla.org/process/util;1"].createInstance(
-          Ci.nsIProcess,
-        );
-        process.init(desktopDB);
-        const args = [paths.desktopDir];
-        process.runw(true, args, args.length);
-      }
-    } catch (e) {
-      console.error("Failed to update desktop database", e);
-    }
+    LinuxSupport.refreshDesktopDatabase(paths);
 
     console.debug(`[LinuxSupport] Successfully installed SSB: ${ssb.name}`);
+  }
+
+  /**
+   * Bring an existing launcher up to date with the current identity rules.
+   *
+   * Launchers written before `--class` was part of Exec keep a `StartupWMClass`
+   * that the window never matches, so the desktop environment groups the PWA
+   * into the browser's taskbar entry. Rewriting the launcher on launch repairs
+   * those installs without asking the user to reinstall the app.
+   */
+  async repair(ssb: Manifest) {
+    const paths = LinuxSupport.getPathInfo(ssb);
+    if (!await IOUtils.exists(paths.desktopPath)) {
+      // Nothing to repair; a missing launcher is created by install().
+      return;
+    }
+
+    const contents = await IOUtils.readUTF8(paths.desktopPath);
+    if (
+      !isOwnedLinuxDesktopEntry(
+        contents,
+        ssb.id,
+        LinuxSupport.ownedExecCommands(ssb),
+      )
+    ) {
+      // Another profile or another tool owns this launcher.
+      return;
+    }
+
+    const iconPath = await IOUtils.exists(paths.iconPath)
+      ? paths.iconPath
+      : await IOUtils.exists(paths.svgIconPath)
+      ? paths.svgIconPath
+      : null;
+    const desktopEntry = LinuxSupport.buildDesktopEntry(
+      ssb,
+      LinuxSupport.buildExecCommand(ssb),
+      iconPath,
+      paths.startupWMClass,
+    );
+    if (desktopEntry === contents) {
+      return;
+    }
+
+    console.debug(
+      `[LinuxSupport] Repairing desktop entry: ${paths.desktopPath}`,
+    );
+    await IOUtils.write(paths.desktopPath, textEncoder.encode(desktopEntry), {
+      tmpPath: `${paths.desktopPath}.tmp`,
+    });
+    await LinuxSupport.ensureDesktopPermissions(paths.desktopPath);
+    LinuxSupport.refreshDesktopDatabase(paths);
   }
 
   async uninstall(ssb: Manifest) {
@@ -534,9 +630,15 @@ export class LinuxSupport {
         ) as nsIBaseWindow;
       }
 
+      // X11 window managers cache WM_CLASS when the window is mapped, so a
+      // class change only reaches the taskbar after an unmap/remap cycle.
+      // Wayland carries the app_id on the xdg_toplevel instead, which the
+      // compositor re-reads without remapping, so skip the dance there.
+      const needsRemap = !LinuxSupport.isWaylandSession();
+
       // Ensure window is visible before we start our unmap dance
       // This corresponds to the wait logic that was in remapWindowIfNeeded
-      if (baseWin) {
+      if (needsRemap && baseWin) {
         let attempts = 0;
         while (!baseWin.visibility && attempts < DOCUMENT_READY_RETRY_LIMIT) {
           await LinuxSupport.sleep(DOCUMENT_READY_RETRY_DELAY_MS);
@@ -550,7 +652,7 @@ export class LinuxSupport {
       }
 
       // 1. Unmap window if visible
-      if (baseWin && baseWin.visibility) {
+      if (needsRemap && baseWin && baseWin.visibility) {
         baseWin.visibility = false;
         // Wait for X11/WM to process the unmap
         await LinuxSupport.sleep(500);
@@ -564,7 +666,7 @@ export class LinuxSupport {
       await LinuxSupport.trySetWindowClass(taskbar, aWindow, paths, ssb);
 
       // 3. Remap window
-      if (baseWin) {
+      if (needsRemap && baseWin) {
         // Small delay to ensure the class change is registered by the X server
         await LinuxSupport.sleep(200);
         baseWin.visibility = true;
@@ -754,6 +856,23 @@ export class LinuxSupport {
 
   private static sleep(ms: number) {
     return new Promise<void>((resolve) => setTimeout(resolve, ms));
+  }
+
+  /**
+   * Detect the GTK backend the session will use.
+   *
+   * Gecko decides between X11 and Wayland from the same environment, so this
+   * matches the backend that owns the window we are about to relabel.
+   */
+  private static isWaylandSession(): boolean {
+    const sessionType = Services.env.get("XDG_SESSION_TYPE");
+    if (sessionType === "wayland") {
+      return true;
+    }
+    if (sessionType === "x11") {
+      return false;
+    }
+    return !!Services.env.get("WAYLAND_DISPLAY");
   }
 }
 

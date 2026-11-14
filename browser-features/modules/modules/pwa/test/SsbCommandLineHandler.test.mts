@@ -132,6 +132,63 @@ async function testFirstNavigationUsesCachedContainer(): Promise<void> {
   }
 }
 
+async function testLinuxLauncherRepairIgnoresRollout(): Promise<void> {
+  const { SsbRunnerUtils } = ChromeUtils.importESModule(
+    "resource://noraneko/modules/pwa/SsbCommandLineHandler.sys.mjs",
+  ) as typeof import("../SsbCommandLineHandler.sys.mts");
+  const { LinuxSupport } = ChromeUtils.importESModule(
+    "resource://noraneko/modules/pwa/supports/Linux.sys.mjs",
+  ) as typeof import("../supports/Linux.sys.mts");
+  const { TaskbarExperiment } = ChromeUtils.importESModule(
+    "resource://noraneko/modules/pwa/TaskbarExperiment.sys.mjs",
+  ) as typeof import("../TaskbarExperiment.sys.mts");
+
+  const originalRepair = LinuxSupport.prototype.repair;
+  const originalApply = LinuxSupport.prototype.applyOSIntegration;
+  const originalEnabled = TaskbarExperiment.isEnabledForCurrentPlatform;
+  const mutableExperiment = TaskbarExperiment as unknown as {
+    isEnabledForCurrentPlatform: () => boolean;
+  };
+  let repaired = 0;
+  let applied = 0;
+  try {
+    LinuxSupport.prototype.repair = () => {
+      repaired++;
+      return Promise.resolve();
+    };
+    LinuxSupport.prototype.applyOSIntegration = () => {
+      applied++;
+      return Promise.resolve();
+    };
+    mutableExperiment.isEnabledForCurrentPlatform = () => false;
+
+    await SsbRunnerUtils.applyOSIntegration(
+      {
+        id: "linux-launcher-repair-rollout",
+        name: "Linux Launcher Repair",
+        start_url: "https://example.com/",
+        icon: "https://example.com/icon.png",
+      },
+      {} as Window,
+    );
+
+    assertEquals(
+      repaired,
+      1,
+      "The launcher repair runs even when the rollout is disabled",
+    );
+    assertEquals(
+      applied,
+      0,
+      "Native window integration stays behind the rollout",
+    );
+  } finally {
+    LinuxSupport.prototype.repair = originalRepair;
+    LinuxSupport.prototype.applyOSIntegration = originalApply;
+    mutableExperiment.isEnabledForCurrentPlatform = originalEnabled;
+  }
+}
+
 export async function runAllTests(): Promise<void> {
   if (Services.appinfo.OS !== "Linux") {
     console.info(
@@ -139,9 +196,15 @@ export async function runAllTests(): Promise<void> {
     );
     return;
   }
-  await runTests("SsbCommandLineHandler.test.mts", [{
-    name:
-      "the first Linux PWA request uses its container before experiment initialization",
-    fn: testFirstNavigationUsesCachedContainer,
-  }]);
+  await runTests("SsbCommandLineHandler.test.mts", [
+    {
+      name:
+        "the first Linux PWA request uses its container before experiment initialization",
+      fn: testFirstNavigationUsesCachedContainer,
+    },
+    {
+      name: "Linux launcher repair is not gated by the taskbar rollout",
+      fn: testLinuxLauncherRepairIgnoresRollout,
+    },
+  ]);
 }

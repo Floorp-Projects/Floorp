@@ -72,6 +72,70 @@ export async function runAllTests(): Promise<void> {
 
   await runTests("Linux.test.mts", [
     {
+      name: "the launcher carries the per-PWA app identity on both backends",
+      fn: () =>
+        withSandbox(async (root, support) => {
+          const files = paths(root);
+          await support.install(manifest);
+          const entry = await IOUtils.readUTF8(files.desktop);
+          assert(
+            entry.includes("--name floorp-linux-launcher-regression"),
+            "Exec sets the GTK program name",
+          );
+          assert(
+            entry.includes("--class floorp-linux-launcher-regression"),
+            "Exec sets the GTK program class",
+          );
+          assert(
+            entry.includes(
+              "StartupWMClass=floorp-linux-launcher-regression",
+            ),
+            "StartupWMClass matches the window identity",
+          );
+        }),
+    },
+    {
+      name: "launch repairs a launcher written before --class existed",
+      fn: () =>
+        withSandbox(async (root, support) => {
+          const files = paths(root);
+          await support.install(manifest);
+          const current = await IOUtils.readUTF8(files.desktop);
+          const legacy = current.replace(
+            " --class floorp-linux-launcher-regression",
+            "",
+          );
+          assert(legacy !== current, "Fixture drops the --class argument");
+          await IOUtils.writeUTF8(files.desktop, legacy);
+
+          await support.repair(manifest);
+
+          const repaired = await IOUtils.readUTF8(files.desktop);
+          assertEquals(repaired, current, "Legacy launcher is rewritten");
+        }),
+    },
+    {
+      name: "repair leaves a launcher owned by another profile alone",
+      fn: () =>
+        withSandbox(async (root, support) => {
+          const files = paths(root);
+          await support.install(manifest);
+          const foreign = (await IOUtils.readUTF8(files.desktop)).replace(
+            "Exec=",
+            "Exec=another-profile ",
+          );
+          await IOUtils.writeUTF8(files.desktop, foreign);
+
+          await support.repair(manifest);
+
+          assertEquals(
+            await IOUtils.readUTF8(files.desktop),
+            foreign,
+            "Foreign launcher is preserved",
+          );
+        }),
+    },
+    {
       name:
         "SVG install, rejected store update, and uninstall preserve the launcher",
       fn: () =>
