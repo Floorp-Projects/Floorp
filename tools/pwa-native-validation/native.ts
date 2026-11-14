@@ -2,6 +2,7 @@
 // Real macOS fixture only: no app execution, OS registration or xattr mutation.
 import { bounded, ExposedSupport, ID, installAdapter, join, privateRoot, SIGN } from "./fixture.ts";
 import { relative, sep } from "node:path";
+import { textByte } from "./macho.ts";
 if (Deno.build.os !== "darwin") throw new Error("native fixture requires macOS");
 const root = await privateRoot(Deno.env.get("PWA_FIXTURE_ROOT") ?? "");
 const path = join(root, "fixture.app");
@@ -36,30 +37,30 @@ try {
   const details = await bounded(SIGN, ["--display", "--verbose=4", path]);
   if (details.code !== 0 || !details.output.includes("Identifier=" + ID) || !/Signature=adhoc|flags=.*adhoc/i.test(details.output)) throw new Error("signature identity/ad-hoc not proven: " + details.output);
   if (await support.verify(path) !== "valid") throw new Error("production classifier did not accept signed fixture");
-  const evidence: {item: string; directExit: number; directOutput: string; classifier: string; productionExit: number; productionOutput: string}[] = [];
+  const evidence: unknown[] = []; const failures: string[] = [];
   for (const [item, target] of [["applet", applet], ["main.scpt", script], ["icon", icon]] as const) {
     await check(target, "file");
     const bytes = await Deno.readFile(target);
     if (bytes.length === 0) throw new Error("empty target " + item);
-    const changed = bytes.slice(); changed[changed.length - 1] ^= 1;
-    await Deno.writeFile(target, changed);
+    let selected: number;
+    try { selected = item === "applet" ? textByte(bytes) : bytes.length - 1; }
+    catch (error) { const observation = {item, selectorError:String(error)}; evidence.push(observation); console.log(JSON.stringify(observation)); failures.push(item + ": no safe byte"); continue; }
+    const changed = bytes.slice(); changed[selected] ^= 1;
+    let direct: {code:number;output:string} | undefined; let directError: string | undefined;
+    let classifier: string | undefined; let classifierError: string | undefined;
+    lastVerification = undefined;
     try {
-      const direct = await verify();
-      if (direct.code === 0) throw new Error("direct verification accepted tampered " + item);
-      lastVerification = undefined;
-      let classifier: string;
-      try { classifier = await support.verify(path); } catch (error) {
-        console.error(JSON.stringify({item, directExit:direct.code, directOutput:direct.output, production:lastVerification, classifierError:String(error)}));
-        throw error;
-      }
-      if (!lastVerification) throw new Error("missing verifier output");
-      const observation = {item, directExit:direct.code, directOutput:direct.output, classifier, productionExit:lastVerification.code, productionOutput:lastVerification.output};
-      evidence.push(observation);
-      console.log(JSON.stringify(observation));
-      if (classifier !== "invalid") throw new Error("production classifier failed to reject tampered " + item);
+      await Deno.writeFile(target, changed);
+      try { direct = await verify(); } catch (error) { directError = String(error); }
+      try { classifier = await support.verify(path); } catch (error) { classifierError = String(error); }
+      const observation = {item, selectedOffset:selected, direct, directError, classifier, classifierError, production:lastVerification};
+      evidence.push(observation); console.log(JSON.stringify(observation));
+      if (!direct || direct.code === 0 || classifier !== "invalid" || !lastVerification) failures.push(item + ": invalidity or classification not established");
     } finally { await Deno.writeFile(target, bytes); }
+    // A failed restore or unknown verification ends the experiment immediately.
     if (await support.verify(path) !== "valid") throw new Error("restored fixture did not validate: " + item);
   }
+  if (failures.length) throw new Error("fixture observations failed: " + failures.join("; "));
   class OperationalErrorSupport extends ExposedSupport {
     protected override runVerificationCommand(_path: string): Promise<{exitCode:number;output:string}> { return Promise.resolve({exitCode:2,output:"simulated operational failure"}); }
   }

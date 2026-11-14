@@ -94,3 +94,46 @@ Deno.test("production verifier classifies simulated output and rejects unknown f
     await rejects(() => call({command:SIGN,arguments:["--verify","--deep","--strict",join(r,"..","fixture.app")],stderr:"stdout"}), "escapes");
   } finally { restore(); }
 });
+import { textByte } from "./macho.ts";
+function makeThin(le = true): Uint8Array {
+  const b = new Uint8Array(320), v = new DataView(b.buffer);
+  v.setUint32(0,0xfeedfacf,le); v.setUint32(4,0x01000007,le); v.setUint32(16,1,le); v.setUint32(20,152,le);
+  v.setUint32(32,0x19,le); v.setUint32(36,152,le);
+  const put = (at:number,s:string) => { for(let i=0;i<s.length;i++) b[at+i]=s.charCodeAt(i); };
+  put(40,"__TEXT"); v.setBigUint64(72,0n,le); v.setBigUint64(80,320n,le); v.setUint32(96,1,le);
+  put(104,"__text"); put(120,"__TEXT"); v.setBigUint64(144,16n,le); v.setUint32(152,256,le); v.setUint32(168,0x80000400,le); b[256]=0x90; return b;
+}
+function makeFat(wide:boolean): Uint8Array {
+  const thin=makeThin(), start=256, b=new Uint8Array(start+thin.length),v=new DataView(b.buffer);
+  v.setUint32(0,wide?0xcafebabf:0xcafebabe);v.setUint32(4,1);v.setUint32(8,0x01000007);
+  if(wide){v.setBigUint64(16,BigInt(start));v.setBigUint64(24,BigInt(thin.length));}
+  else {v.setUint32(16,start);v.setUint32(20,thin.length);} b.set(thin,start); return b;
+}
+Deno.test("Mach-O text selection handles thin and universal 32/64 headers", () => {
+  assert(textByte(makeThin())===256,"thin LE"); assert(textByte(makeThin(false))===256,"thin BE");
+  assert(textByte(makeFat(false))===512,"fat32"); assert(textByte(makeFat(true))===512,"fat64");
+});
+Deno.test("Mach-O selector fails closed on truncated, escaped, invalid structures", () => {
+  const cases: Uint8Array[] = [new Uint8Array(), makeThin().slice(0,100), makeFat(false).slice(0,300)];
+  const edit=(source:Uint8Array, fn:(v:DataView,b:Uint8Array)=>void) => {const b=source.slice();fn(new DataView(b.buffer),b);return b;};
+  cases.push(edit(makeThin(),v=>v.setUint32(152,319,true)));
+  cases.push(edit(makeThin(),v=>v.setBigUint64(144,0n,true)));
+  cases.push(edit(makeThin(),v=>v.setUint32(36,8,true)));
+  cases.push(edit(makeThin(),v=>v.setBigUint64(80,200n,true)));
+  cases.push(edit(makeThin(),v=>v.setUint32(168,0,true)));
+  cases.push(edit(makeThin(),(_v,b)=>{b[104]=0;}));
+  cases.push(edit(makeFat(false),v=>v.setUint32(16,8)));
+  cases.push(edit(makeFat(false),v=>v.setUint32(8,1)));
+  cases.push(edit(makeFat(true),v=>v.setBigUint64(16,0xffffffffffffffffn)));
+  for(const [index,b] of cases.entries()) { let failed=false; try{textByte(b);}catch{failed=true;} assert(failed,"malformed case accepted: "+index); }
+});
+Deno.test("universal multi-slice parsing rejects overlap and bad second slice", () => {
+  const first=makeThin(), second=makeThin(), b=new Uint8Array(128+first.length+second.length), v=new DataView(b.buffer);
+  v.setUint32(0,0xcafebabe); v.setUint32(4,2);
+  v.setUint32(8,0x01000007); v.setUint32(16,128); v.setUint32(20,first.length);
+  v.setUint32(28,0x01000007); v.setUint32(36,128+first.length); v.setUint32(40,second.length);
+  b.set(first,128); b.set(second,128+first.length); assert(textByte(b)===384,"first slice text offset");
+  const overlap=b.slice(); new DataView(overlap.buffer).setUint32(36,200);
+  const invalid=b.slice(); invalid[128+first.length]=0;
+  for (const [i,value] of [overlap,invalid].entries()) { let failed=false;try{textByte(value);}catch{failed=true;}assert(failed,"unsafe universal slice "+i); }
+});
