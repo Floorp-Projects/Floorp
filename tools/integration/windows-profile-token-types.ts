@@ -10,4 +10,5 @@ export type Options = {
   failWrite?: boolean;
   removeFailures?: number;
   permanentRemoveFailure?: boolean;
+  noGlobalTimer?: boolean;
 };
