@@ -43,14 +43,17 @@ export default function Page() {
 
   React.useEffect(() => {
     let active = true;
+    let fetching = false;
     mountedRef.current = true;
     const fetchDefaultValues = async () => {
+      if (fetching) return;
       // Preserve pending or failed edits when the window regains focus.
       if (
         pendingRef.current ||
         JSON.stringify(lastRequestedSettingsRef.current) !==
           JSON.stringify(lastSavedSettingsRef.current)
       ) return;
+      fetching = true;
       try {
         const values = await getDesignSettings();
         if (!active) return;
@@ -69,14 +72,23 @@ export default function Page() {
         if (!active) return;
         console.error("[Settings:design] Load failed", error);
         setLoadError(true);
+      } finally {
+        fetching = false;
       }
     };
     fetchDefaultValues();
     globalThis.addEventListener("focus", fetchDefaultValues);
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        fetchDefaultValues();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
     return () => {
       active = false;
       mountedRef.current = false;
       globalThis.removeEventListener("focus", fetchDefaultValues);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [cloneDesignSettings, reset]);
 
