@@ -93,6 +93,34 @@ Linux pidfd dependency, `prlimit` and the source plan receipt remain Linux-only;
 the Windows port covers the Gate 2 task 2-E supervisor contract, not a Windows
 source host.
 
+macOS has no subreaper, pidfd or job object, and an orphan is reparented to
+launchd. The macOS supervisor therefore starts the command as the leader of a
+new session, which every descendant inherits unless it calls `setsid` itself
+and which no unrelated process can join. It owns two kinds of process: a child
+of an owned process whose libproc start time (birth identity) still matches,
+seen while tracking, so a descendant that later calls `setsid` stays owned;
+and a member of the command's session that belongs to the same user and was
+born no earlier than the command, by the leader's own start time. Session-only
+adoption also requires a birth-identity anchor from the preceding snapshot; an
+unreaped zombie leader is a valid initial anchor. The normal executor scans
+before polling/reaping the leader. Callers must preserve that ordering: an
+unknown nonempty session after all anchors vanish is not adopted, and sticky
+uncertainty fails cleanup even if later scans are empty. Once the leader is
+reaped and the session has no live member, the session id is no longer matched,
+because the kernel may hand it out again. A process that
+takes a dead owned pid is judged again. Before each TERM/KILL it reads the
+target's identity again. Without pidfds a short window remains between that
+check and `kill(2)`, and macOS allocates pids sequentially, far from reuse. A
+descendant that becomes an orphan and calls `setsid` before the supervisor
+first sees it escapes both rules. As on Linux, logical ownership does not
+replace the runner's own teardown, and there is no kill-on-close net. A
+survivor or uncertain inspection is recorded and fails the verdict. Only
+`ESRCH` confirms disappearance; permission errors and malformed libproc results
+are not treated as exit. `test_source_macos.py` holds the
+contract tests: an in-memory process API on any host, and the real libproc
+tests in the `macos-supervisor` jobs (Apple silicon and Intel). It also
+covers the 2-E contract only, not a macOS source host.
+
 ## Coverage and remaining gates
 
 `coverage.json` keeps installer, MAR, DEB/PPA, Portable and stub proof plans and
