@@ -17,6 +17,8 @@ import type { BinArchive, Platform } from "./defines.ts";
 import {
   loadRuntimeLock,
   type RuntimeArtifact,
+  type RuntimeArtifactFormat,
+  type RuntimeExtractionPolicy,
   type RuntimeLock,
   type RuntimePlatform,
 } from "./runtime_lock.ts";
@@ -114,6 +116,7 @@ export interface InitializerRunDependencies {
   loadLock(): Promise<RuntimeLock>;
   installLock(lock: RuntimeLock): Promise<void>;
   installDebug?(): Promise<void>;
+  installLocal?(artifactPath: string): Promise<void>;
   savePrefs(): void;
 }
 
@@ -122,6 +125,7 @@ export type RuntimeDistribution = "release" | "debug";
 export interface InitializerRunOptions
   extends Partial<InitializerRunDependencies> {
   distribution?: RuntimeDistribution;
+  localArtifactPath?: string;
 }
 
 interface LockedRuntimeMarker {
@@ -160,6 +164,44 @@ interface DebugRuntimeMarker {
   artifactSha256: string;
   version: string;
   buildId: string;
+}
+
+export const LOCAL_RUNTIME_MARKER = ".floorp-runtime-local.json";
+
+export interface LocalRuntimeMarker {
+  schemaVersion: 1;
+  distribution: "local";
+  artifactPath: string;
+  artifactSize: number;
+  artifactSha256: string;
+  platform: RuntimePlatform;
+  architecture: RuntimeArtifact["architecture"];
+  version: string;
+  buildId: string;
+}
+
+export interface LocalRuntimeOperations {
+  sha256(filePath: string): Promise<string>;
+  extract(
+    artifactPath: string,
+    destinationRoot: string,
+    target: NativeRuntimeTarget,
+  ): Promise<void>;
+  rename(from: string, to: string): Promise<void>;
+  nonce(): string;
+}
+
+export interface LocalRuntimeInstallOptions {
+  artifactPath: string;
+  target?: NativeRuntimeTarget;
+  binRootDir?: string;
+  operations?: Partial<LocalRuntimeOperations>;
+}
+
+export interface LocalRuntimeInstallResult {
+  artifactPath: string;
+  marker: LocalRuntimeMarker;
+  reused: boolean;
 }
 
 export const isEnvironmentPermissionError = (error: unknown): boolean =>
@@ -1080,6 +1122,626 @@ async function assertDebugRuntimeTree(binRootDir: string): Promise<{
   return parsed;
 }
 
+/**
+ * Direct artifact formats accepted from `--artifact` / local installs. These
+ * mirror the locked Release formats for each target platform.
+ */
+export function localRuntimeArtifactFormat(
+  artifactPath: string,
+  target: NativeRuntimeTarget,
+): {
+  format: RuntimeArtifactFormat;
+  extractionPolicy: RuntimeExtractionPolicy;
+} {
+  const lowerPath = artifactPath.toLowerCase();
+  if (target.platform === "windows" && lowerPath.endsWith(".zip")) {
+    return { format: "zip", extractionPolicy: "zip-direct-floorp" };
+  }
+  if (target.platform === "linux" && lowerPath.endsWith(".tar.xz")) {
+    return { format: "tar.xz", extractionPolicy: "tar-xz-floorp" };
+  }
+  if (target.platform === "macos" && lowerPath.endsWith(".dmg")) {
+    return { format: "dmg", extractionPolicy: "dmg-floorp-app" };
+  }
+  throw new Error(
+    `Unsupported local Runtime artifact for ${target.platform}: ${artifactPath}`,
+  );
+}
+
+function localRuntimeArtifactForPath(
+  artifactPath: string,
+  target: NativeRuntimeTarget,
+): RuntimeArtifact {
+  const { format, extractionPolicy } = localRuntimeArtifactFormat(
+    artifactPath,
+    target,
+  );
+  const assetName = path.basename(artifactPath);
+  const synthesizedAsset: RuntimeArtifact["asset"] = {
+    id: 0,
+    name: assetName,
+    size: 0,
+    sha256: "",
+  };
+  return {
+    platform: target.platform,
+    architecture: target.architecture,
+    format,
+    extractionPolicy,
+    asset: synthesizedAsset,
+    applicationIniAsset: {
+      id: 0,
+      name: "application.ini",
+      size: 0,
+      sha256: "",
+    },
+    version: "",
+    buildId: "",
+  };
+}
+
+/**
+ * Synthetic artifact used when only the target platform is known (layout
+ * validation). The dummy filename is guaranteed to match the platform
+ * extension so format detection never fails here.
+ */
+function localRuntimeArtifactForTarget(
+  target: NativeRuntimeTarget,
+): RuntimeArtifact {
+  const filename = target.platform === "windows"
+    ? "local-runtime.zip"
+    : target.platform === "linux"
+    ? "local-runtime.tar.xz"
+    : "local-runtime.dmg";
+  return localRuntimeArtifactForPath(filename, target);
+}
+
+/**
+ * Sniffs the executable's binary header and rejects artifacts whose CPU
+ * architecture cannot run on the target. Linux/Windows binaries must match
+ * the target architecture exactly; macOS ("universal") accepts Mach-O
+ * binaries with an x86_64 or arm64 slice, because thin x86_64 binaries still
+ * run under Rosetta on Apple silicon.
+ */
+async function assertExecutableArchitecture(
+  executable: string,
+  target: NativeRuntimeTarget,
+): Promise<void> {
+  const header = new Uint8Array(0x10000);
+  const file = await Deno.open(executable, { read: true });
+  try {
+    let filled = 0;
+    while (filled < header.length) {
+      const read = await file.read(header.subarray(filled));
+      if (read === null) break;
+      filled += read;
+    }
+    const reject = (reason: string): Error =>
+      new Error(
+        `Local Runtime executable architecture check failed for ${target.platform}/${target.architecture}: ${reason} (${executable})`,
+      );
+    const u16le = (offset: number): number =>
+      (header[offset] ?? 0) | ((header[offset + 1] ?? 0) << 8);
+    const u32le = (offset: number): number =>
+      (u16le(offset) | (u16le(offset + 2) << 16)) >>> 0;
+    const u32be = (offset: number): number =>
+      (((header[offset] ?? 0) << 24) | ((header[offset + 1] ?? 0) << 16) |
+        ((header[offset + 2] ?? 0) << 8) | (header[offset + 3] ?? 0)) >>> 0;
+
+    if (target.platform === "windows") {
+      if (filled < 0x46 || u16le(0) !== 0x5a4d) {
+        throw reject("not a PE binary (missing MZ header)");
+      }
+      const peOffset = u32le(0x3c);
+      if (
+        peOffset < 0x40 || peOffset + 6 > filled ||
+        u32le(peOffset) !== 0x00004550
+      ) {
+        throw reject("not a PE binary (missing PE signature)");
+      }
+      const machine = u16le(peOffset + 4);
+      if (machine !== 0x8664) {
+        throw reject(`PE machine 0x${machine.toString(16)} is not x86_64`);
+      }
+      return;
+    }
+
+    if (target.platform === "linux") {
+      const elfMagic = header[0] === 0x7f && header[1] === 0x45 &&
+        header[2] === 0x4c && header[3] === 0x46;
+      if (filled < 20 || !elfMagic) {
+        throw reject("not an ELF binary");
+      }
+      if (header[4] !== 2) {
+        throw reject("not a 64-bit ELF binary");
+      }
+      const machine = u16le(18);
+      const expected = target.architecture === "aarch64" ? 183 : 62;
+      if (machine !== expected) {
+        throw reject(
+          `ELF machine 0x${
+            machine.toString(16)
+          } does not match ${target.architecture}`,
+        );
+      }
+      return;
+    }
+
+    // Mach-O CPU types: 0x01000007 = x86_64, 0x0100000c = arm64
+    // (CPU_TYPE_X86_64 / CPU_TYPE_ARM64, including the CPU_ARCH_ABI64 mask).
+    const runnableMachOCpuType = (cpuType: number): boolean =>
+      cpuType === 0x01000007 || cpuType === 0x0100000c;
+
+    const magic = u32le(0);
+    if (magic === 0xcafebabe || magic === 0xbebafeca) {
+      // Universal (fat) header, always big-endian: nfat_arch then 20-byte
+      // entries starting with cputype.
+      const architectures = u32be(4);
+      if (architectures < 1 || 8 + architectures * 20 > filled) {
+        throw reject("malformed Mach-O universal binary header");
+      }
+      for (let index = 0; index < architectures; index++) {
+        if (runnableMachOCpuType(u32be(8 + index * 20))) return;
+      }
+      throw reject("Mach-O universal binary has no x86_64/arm64 slice");
+    }
+    if (magic === 0xfeedfacf || magic === 0xcffaedfe) {
+      // MH_MAGIC_64 files are little-endian; MH_CIGAM_64 big-endian.
+      // 32-bit Mach-O is not runnable on modern macOS and is rejected.
+      if (filled < 8) {
+        throw reject("truncated Mach-O header");
+      }
+      const cpuType = magic === 0xfeedfacf ? u32le(4) : u32be(4);
+      if (runnableMachOCpuType(cpuType)) return;
+      throw reject(
+        `Mach-O CPU type 0x${cpuType.toString(16)} is not runnable on macOS`,
+      );
+    }
+    throw reject("not a Mach-O binary");
+  } finally {
+    file.close();
+  }
+}
+
+/**
+ * Target-aware replacement for `assertDebugRuntimeTree`: validates the
+ * installed tree against the target platform's layout instead of the host's.
+ */
+async function assertLocalRuntimeTree(
+  binRootDir: string,
+  target: NativeRuntimeTarget,
+): Promise<{ version: string; buildId: string }> {
+  const artifact = localRuntimeArtifactForTarget(target);
+  const layout = runtimeLayoutFor(binRootDir, artifact);
+  const executableInfo = await Deno.lstat(layout.executable);
+  if (!executableInfo.isFile || executableInfo.size <= 0) {
+    throw new Error(
+      `Local Runtime executable is missing or empty: ${layout.executable}`,
+    );
+  }
+  if (
+    target.platform !== "windows" &&
+    PLATFORM !== "windows" &&
+    ((executableInfo.mode ?? 0) & 0o111) === 0
+  ) {
+    throw new Error(
+      `Local Runtime executable is not executable: ${layout.executable}`,
+    );
+  }
+  await assertExecutableArchitecture(layout.executable, target);
+
+  const parsed = parseApplicationIni(
+    await Deno.readTextFile(layout.applicationIni),
+  );
+  if (parsed.name && parsed.name !== BRANDING.display_name) {
+    throw new Error(
+      `Local Runtime application name mismatch: ${parsed.name} !== ${BRANDING.display_name}.`,
+    );
+  }
+  return { version: parsed.version, buildId: parsed.buildId };
+}
+
+async function assertLocalRuntimeVersionFile(
+  binRootDir: string,
+  target: NativeRuntimeTarget,
+): Promise<void> {
+  const layout = runtimeLayoutFor(
+    binRootDir,
+    localRuntimeArtifactForTarget(target),
+  );
+  const version = (await Deno.readTextFile(layout.legacyVersionFile)).trim();
+  const expected = runtimeVersionFor(target.platform);
+  if (version !== expected) {
+    throw new Error(
+      `Local Runtime version marker mismatch at ${layout.legacyVersionFile}: ${version} !== ${expected}.`,
+    );
+  }
+}
+
+const LOCAL_RUNTIME_MARKER_IDENTITY_KEYS = [
+  "schemaVersion",
+  "distribution",
+  "artifactPath",
+  "artifactSize",
+  "artifactSha256",
+  "platform",
+  "architecture",
+] as const;
+
+async function matchingLocalRuntimeIdentity(
+  binRootDir: string,
+  expected: LocalRuntimeMarker,
+  target: NativeRuntimeTarget,
+): Promise<{ version: string; buildId: string } | undefined> {
+  try {
+    const marker = JSON.parse(
+      await Deno.readTextFile(path.join(binRootDir, LOCAL_RUNTIME_MARKER)),
+    ) as unknown;
+    if (!isRecord(marker)) return undefined;
+    for (const key of LOCAL_RUNTIME_MARKER_IDENTITY_KEYS) {
+      if (marker[key] !== expected[key]) return undefined;
+    }
+    const identity = await assertLocalRuntimeTree(binRootDir, target);
+    if (
+      marker.version !== identity.version ||
+      marker.buildId !== identity.buildId
+    ) {
+      throw new Error(
+        `Installed local Runtime identity ${identity.version}/${identity.buildId} differs from the marker ${marker.version}/${marker.buildId}.`,
+      );
+    }
+    await assertLocalRuntimeVersionFile(binRootDir, target);
+    if (target.platform === "macos") {
+      await prepareDebugMacInfoPlist(binRootDir, binRootDir);
+    }
+    return identity;
+  } catch (error) {
+    if (!(error instanceof Deno.errors.NotFound)) {
+      const message = error instanceof Error ? error.message : String(error);
+      logger.warn(`Existing local Runtime needs replacement: ${message}`);
+    }
+    return undefined;
+  }
+}
+
+async function findSingleLocalRuntimeArtifact(
+  root: string,
+  target: NativeRuntimeTarget,
+): Promise<string> {
+  const directExtension = target.platform === "windows"
+    ? ".zip"
+    : target.platform === "linux"
+    ? ".tar.xz"
+    : ".dmg";
+  const matches: string[] = [];
+  const pending = [root];
+  while (pending.length > 0) {
+    const directory = pending.pop();
+    if (!directory) break;
+    for await (const entry of Deno.readDir(directory)) {
+      const entryPath = path.join(directory, entry.name);
+      if (entry.isDirectory) {
+        if (entry.name === "__MACOSX") continue;
+        pending.push(entryPath);
+        continue;
+      }
+      if (!entry.isFile || entry.name.startsWith("._")) continue;
+      if (entry.name.toLowerCase().endsWith(directExtension)) {
+        matches.push(entryPath);
+      }
+    }
+  }
+  if (matches.length !== 1) {
+    throw new Error(
+      `Expected exactly one ${directExtension} Runtime artifact inside ${
+        path.basename(root)
+      }; found ${matches.length}.`,
+    );
+  }
+  return matches[0];
+}
+
+/**
+ * Resolve a user-supplied local Runtime path to a directly extractable
+ * artifact. Debug FTP container zips (`*-artifacts.zip`) are unpacked and the
+ * single inner `.zip` / `.tar.xz` / `.dmg` is returned.
+ */
+export async function materializeLocalRuntimeArtifact(
+  artifactPath: string,
+  target: NativeRuntimeTarget,
+  workRoot: string = path.dirname(BIN_ROOT_DIR),
+): Promise<{ path: string; cleanupRoot?: string }> {
+  const lowerPath = artifactPath.toLowerCase();
+  if (target.platform === "windows") {
+    if (lowerPath.endsWith(".zip") && !lowerPath.endsWith("-artifacts.zip")) {
+      return { path: artifactPath };
+    }
+  } else if (target.platform === "linux") {
+    if (lowerPath.endsWith(".tar.xz")) return { path: artifactPath };
+  } else if (target.platform === "macos") {
+    if (lowerPath.endsWith(".dmg")) return { path: artifactPath };
+  }
+
+  if (!lowerPath.endsWith(".zip")) {
+    throw new Error(
+      `Unsupported local Runtime artifact for ${target.platform}: ${artifactPath}`,
+    );
+  }
+
+  const tempRoot = await Deno.makeTempDir({
+    dir: workRoot,
+    prefix: "runtime-local-container-",
+  });
+  try {
+    const extractRoot = path.join(tempRoot, "extract");
+    await Deno.mkdir(extractRoot);
+    await extractZipSafely(artifactPath, extractRoot);
+    if (
+      target.platform === "windows" &&
+      await pathExists(path.join(extractRoot, BRANDING.base_name))
+    ) {
+      await removeIfPresent(tempRoot);
+      return { path: artifactPath };
+    }
+    const candidate = await findSingleLocalRuntimeArtifact(extractRoot, target);
+    return { path: candidate, cleanupRoot: tempRoot };
+  } catch (error) {
+    try {
+      await removeIfPresent(tempRoot);
+    } catch (cleanupError) {
+      const message = cleanupError instanceof Error
+        ? cleanupError.message
+        : String(cleanupError);
+      logger.warn(
+        `Could not clean local Runtime container ${tempRoot}: ${message}`,
+      );
+    }
+    throw error;
+  }
+}
+
+function defaultLocalRuntimeOperations(
+  workRoot: string,
+): LocalRuntimeOperations {
+  return {
+    sha256: sha256File,
+    extract: async (artifactPath, destinationRoot, target) => {
+      const materialized = await materializeLocalRuntimeArtifact(
+        artifactPath,
+        target,
+        workRoot,
+      );
+      try {
+        const artifact = localRuntimeArtifactForPath(
+          materialized.path,
+          target,
+        );
+        await extractLockedMainArchive(
+          artifact,
+          materialized.path,
+          destinationRoot,
+        );
+      } finally {
+        if (materialized.cleanupRoot) {
+          try {
+            await removeIfPresent(materialized.cleanupRoot);
+          } catch (error) {
+            const message = error instanceof Error
+              ? error.message
+              : String(error);
+            logger.warn(
+              `Could not clean local Runtime container ${materialized.cleanupRoot}: ${message}`,
+            );
+          }
+        }
+      }
+    },
+    rename: (from, to) => Deno.rename(from, to),
+    nonce: () => crypto.randomUUID(),
+  };
+}
+
+/**
+ * Install a user-supplied native Runtime artifact without contacting the FTP
+ * index or GitHub releases. The artifact is hashed, extracted into a staging
+ * tree, validated against the target layout, then swapped into `binRootDir`.
+ */
+export async function installLocalRuntime(
+  options: LocalRuntimeInstallOptions,
+): Promise<LocalRuntimeInstallResult> {
+  const artifactPath = path.resolve(options.artifactPath);
+  let artifactInfo: Deno.FileInfo;
+  try {
+    artifactInfo = await Deno.lstat(artifactPath);
+  } catch (error) {
+    if (error instanceof Deno.errors.NotFound) {
+      throw new Error(
+        `Local Runtime artifact does not exist: ${artifactPath}`,
+      );
+    }
+    throw error;
+  }
+  if (
+    !artifactInfo.isFile ||
+    artifactInfo.isSymlink ||
+    artifactInfo.size <= 0
+  ) {
+    throw new Error(
+      `Local Runtime artifact is not a non-empty regular file: ${artifactPath}`,
+    );
+  }
+
+  const target = options.target ??
+    resolveNativeRuntimeTarget(Deno.build.os, Deno.build.arch);
+  const binRootDir = path.resolve(options.binRootDir ?? BIN_ROOT_DIR);
+  // An artifact inside the install directory would be renamed into the
+  // backup tree by the swap and deleted, destroying the artifact itself.
+  const artifactRelativeToBinRoot = path.relative(binRootDir, artifactPath);
+  if (
+    artifactRelativeToBinRoot === "" ||
+    (!artifactRelativeToBinRoot.startsWith("..") &&
+      !path.isAbsolute(artifactRelativeToBinRoot))
+  ) {
+    throw new Error(
+      `Local Runtime artifact must be outside the Runtime install directory: ${artifactPath} is inside ${binRootDir}.`,
+    );
+  }
+  const operations: LocalRuntimeOperations = {
+    ...defaultLocalRuntimeOperations(path.dirname(binRootDir)),
+    ...options.operations,
+  };
+  const artifactSha256 = normalizeSha256(
+    await operations.sha256(artifactPath),
+  );
+  const expectedMarker: LocalRuntimeMarker = {
+    schemaVersion: 1,
+    distribution: "local",
+    artifactPath,
+    artifactSize: artifactInfo.size,
+    artifactSha256,
+    platform: target.platform,
+    architecture: target.architecture,
+    version: "",
+    buildId: "",
+  };
+
+  const reusableIdentity = await matchingLocalRuntimeIdentity(
+    binRootDir,
+    expectedMarker,
+    target,
+  );
+  if (reusableIdentity) {
+    logger.info(
+      `Local Runtime ${reusableIdentity.version}/${reusableIdentity.buildId} from ${artifactPath} is already installed.`,
+    );
+    return {
+      artifactPath,
+      marker: {
+        ...expectedMarker,
+        version: reusableIdentity.version,
+        buildId: reusableIdentity.buildId,
+      },
+      reused: true,
+    };
+  }
+
+  logger.warn(
+    `Installing local Runtime artifact without floorp-runtime.lock.json verification: ${artifactPath}`,
+  );
+
+  const nonce = operations.nonce();
+  const transactionRoot = path.dirname(binRootDir);
+  const stageRoot = path.join(
+    transactionRoot,
+    `.runtime-local-staging-${nonce}`,
+  );
+  const backupRoot = path.join(
+    transactionRoot,
+    `.runtime-local-backup-${nonce}`,
+  );
+  const failedRoot = path.join(
+    transactionRoot,
+    `.runtime-local-failed-${nonce}`,
+  );
+  let transactionStarted = false;
+
+  try {
+    for (const transactionPath of [stageRoot, backupRoot, failedRoot]) {
+      if (await pathExists(transactionPath)) {
+        throw new Error(
+          `Refusing to reuse an existing local Runtime transaction path: ${transactionPath}.`,
+        );
+      }
+    }
+    transactionStarted = true;
+    await Deno.mkdir(stageRoot, { recursive: true });
+    await operations.extract(artifactPath, stageRoot, target);
+    await assertSafeFilesystemTree(stageRoot);
+    const forbiddenStatePaths = [
+      path.join(stageRoot, "applied_patches"),
+      path.join(stageRoot, BRANDING.base_name, ".git"),
+    ];
+    const presentForbiddenState: string[] = [];
+    for (const forbiddenPath of forbiddenStatePaths) {
+      if (await pathExists(forbiddenPath)) {
+        presentForbiddenState.push(forbiddenPath);
+      }
+    }
+    if (presentForbiddenState.length > 0) {
+      throw new Error(
+        `Local Runtime artifact contains local control state: ${
+          presentForbiddenState.join(", ")
+        }.`,
+      );
+    }
+    const identity = await assertLocalRuntimeTree(stageRoot, target);
+    if (target.platform === "macos") {
+      await prepareDebugMacInfoPlist(stageRoot, binRootDir);
+    }
+
+    const stageArtifact = localRuntimeArtifactForTarget(target);
+    const layout = runtimeLayoutFor(stageRoot, stageArtifact);
+    // `dev` injects into the unpacked browser tree; omnijar-packaged
+    // artifacts (for example packaged Release builds) do not ship one and
+    // must be rejected here instead of failing later inside the injector.
+    const unpackedXhtml = path.join(
+      path.dirname(layout.applicationIni),
+      "browser",
+      "chrome",
+      "browser",
+      "content",
+      "browser",
+      "browser.xhtml",
+    );
+    if (!(await pathExists(unpackedXhtml))) {
+      throw new Error(
+        `Local Runtime artifact is an omnijar-packaged build and cannot be used with 'dev': ${unpackedXhtml} is missing. Use an unpacked-tree Runtime artifact (for example the Debug FTP artifact).`,
+      );
+    }
+    await Deno.mkdir(path.dirname(layout.legacyVersionFile), {
+      recursive: true,
+    });
+    await Deno.writeTextFile(
+      layout.legacyVersionFile,
+      runtimeVersionFor(target.platform),
+    );
+
+    const marker: LocalRuntimeMarker = {
+      ...expectedMarker,
+      version: identity.version,
+      buildId: identity.buildId,
+    };
+    await Deno.writeTextFile(
+      path.join(stageRoot, LOCAL_RUNTIME_MARKER),
+      `${JSON.stringify(marker, null, 2)}\n`,
+    );
+
+    const backupPath = await swapLockedRuntime(
+      stageRoot,
+      binRootDir,
+      backupRoot,
+      failedRoot,
+      operations.rename,
+    );
+    if (backupPath) await removeIfPresent(backupPath);
+    logger.success(
+      `Installed local Runtime ${identity.version}/${identity.buildId} from ${artifactPath}.`,
+    );
+    return { artifactPath, marker, reused: false };
+  } finally {
+    if (transactionStarted && await pathExists(stageRoot)) {
+      try {
+        await removeIfPresent(stageRoot);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        logger.warn(
+          `Could not clean local Runtime staging tree ${stageRoot}: ${message}`,
+        );
+      }
+    }
+  }
+}
+
 function debugRuntimeMarkerFields(
   marker: DebugRuntimeMarker,
 ): Record<string, unknown> {
@@ -1973,9 +2635,20 @@ export async function run(
         await installLockedRuntime({ lock });
       }),
     installDebug: overrides.installDebug ?? installDebugRuntime,
+    installLocal: overrides.installLocal ??
+      (async (artifactPath) => {
+        await installLocalRuntime({ artifactPath });
+      }),
     savePrefs: overrides.savePrefs ?? savePrefsForProfile,
   };
-  if ((overrides.distribution ?? "release") === "debug") {
+  const localArtifactPath = overrides.localArtifactPath;
+  if (localArtifactPath !== undefined) {
+    const trimmed = localArtifactPath.trim();
+    if (trimmed.length === 0) {
+      throw new Error("Local Runtime artifact path must not be empty.");
+    }
+    await dependencies.installLocal!(trimmed);
+  } else if ((overrides.distribution ?? "release") === "debug") {
     await dependencies.installDebug!();
   } else {
     await dependencies.installLock(await dependencies.loadLock());
