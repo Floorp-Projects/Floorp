@@ -48,10 +48,14 @@ Deno.test("token-adapter-contract job is read-only with no secrets", async () =>
 Deno.test("token-adapter-contract builds the adapter before the test runs", async () => {
   const wf = await readWorkflow();
   const job = jobBlock(wf, "token-adapter-contract");
-  const buildIndex = job.indexOf("deno task build");
+  const buildIndex = job.indexOf(
+    "deno task feles-build build --phase before-mach",
+  );
   const testIndex = job.indexOf("tools/integration/os-server-token.test.ts");
   assertEquals(buildIndex >= 0 && testIndex > buildIndex, true);
-  assertStringIncludes(job, "working-directory: bridge/loader-modules");
+  assertStringIncludes(job, "deno task feles-build build --phase before-mach");
+  assertEquals(job.includes("working-directory: bridge/loader-modules"), false);
+  assertEquals(job.includes("--phase after-mach"), false);
   assertStringIncludes(job, "deno install --frozen");
 });
 
@@ -67,7 +71,6 @@ Deno.test("token-adapter-contract runs both built-adapter and host token suites"
       "sign",
       "publish",
       "release",
-      "feles-build",
       "firefox",
     ]
   ) {

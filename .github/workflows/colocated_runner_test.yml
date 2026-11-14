@@ -621,9 +621,8 @@ jobs:
           deno-version: v2.9.6
       - name: Install workspace dependencies
         run: deno install --frozen
-      - name: Build bridge/loader-modules adapter
-        working-directory: bridge/loader-modules
-        run: deno task build
+      - name: Build sources and module links (before-mach)
+        run: deno task feles-build build --phase before-mach
       - name: Run built token adapter contract tests
         run: >-
           deno test --allow-read --allow-write
