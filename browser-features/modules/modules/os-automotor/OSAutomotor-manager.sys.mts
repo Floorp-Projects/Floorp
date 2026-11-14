@@ -9,6 +9,10 @@
  * It downloads the Sapphillon Controller binary from GitHub releases and manages its lifecycle.
  */
 
+const { cleanupTokenFile } = ChromeUtils.importESModule(
+  "resource://noraneko/modules/os-server/token-file.sys.mjs",
+);
+
 const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs",
 );
@@ -651,14 +655,8 @@ class OSAutomotorManager {
       console.error("[Floorp OS] Error during filesystem cleanup:", e);
     }
 
-    // Remove token file
-    try {
-      const homeDir = Services.dirsvc.get("Home", Ci.nsIFile).path;
-      const tokenFile = PathUtils.join(homeDir, ".floorp", "os-server-token");
-      await IOUtils.remove(tokenFile, { ignoreAbsent: true });
-    } catch (e) {
-      console.error("[Floorp OS] Failed to remove token file:", e);
-    }
+    // MCP may still own a live server: preserve its credential and advertisement.
+    const preserveMcpToken = Services.prefs.getBoolPref("floorp.mcp.enabled", false);
 
     // Clear preferences
     try {
@@ -701,7 +699,7 @@ class OSAutomotorManager {
       }
 
       try {
-        if (Services.prefs.prefHasUserValue("floorp.os.server.token")) {
+        if (!preserveMcpToken && Services.prefs.prefHasUserValue("floorp.os.server.token")) {
           Services.prefs.clearUserPref("floorp.os.server.token");
         }
       } catch (e) {
@@ -709,6 +707,13 @@ class OSAutomotorManager {
       }
     } catch (e) {
       console.error("[Floorp OS] Error clearing prefs during reset:", e);
+    }
+    if (!preserveMcpToken) {
+      try {
+        await cleanupTokenFile();
+      } catch {
+        console.error("[Floorp OS] Failed to clean up owned token file");
+      }
     }
     try {
       await this.clearRuntimeState();

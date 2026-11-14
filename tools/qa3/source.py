@@ -2,6 +2,7 @@
 
 import argparse
 import ctypes
+import errno
 import hashlib
 import json
 import math
@@ -472,7 +473,8 @@ def _bounded_error(error):
 # 2. unrelated processes are never signalled;
 # 3. incomplete cleanup is recorded and a recorded cleanup error fails the run.
 #
-# Linux implements them with a subreaper, birth identities and pidfds. Windows
+# Linux implements them with a subreaper, birth identities and pidfds. macOS
+# has none of those; it implements the contract with a session (below). Windows
 # implements the same contract with a Job Object: the supervisor joins the job
 # before it spawns the command, so membership is inherited without a race,
 # termination is gated on a job-membership check plus a process creation
@@ -1027,13 +1029,551 @@ class PosixSubreaperSupervisor:
         return _cleanup_owned(self.process, self.owned)
 
 
-def supervisor_kind(name=None):
-    return "windows" if (name or os.name) == "nt" else "linux"
+# --- macOS -------------------------------------------------------------------
+#
+# macOS has no subreaper, no pidfd and no job object, and an orphan is
+# reparented to launchd. The command is therefore started as the leader of a
+# new session: every descendant inherits that session unless it calls setsid
+# itself, and no unrelated process can join it. A process is owned when it is
+# either
+#
+# * a child of an owned process whose birth identity still matches (seen while
+#   tracking, so a descendant that later calls setsid stays owned), or
+# * a member of the command's session that belongs to this user and was born
+#   no earlier than the command was spawned.
+#
+# Identities are libproc start times. A signal is sent only after the target's
+# identity has been read again; without pidfds there is a short window between
+# that check and kill(2), which macOS's sequential pid allocation keeps far
+# from reuse. A descendant that becomes an orphan and calls setsid before the
+# supervisor first sees it escapes both rules: as on Linux, logical ownership
+# does not replace the runner's own teardown.
+#
+# Scans list only this user's processes (proc_listpids PROC_UID_ONLY), so
+# other users' and privileged processes are never listed, adopted or
+# signalled; a descendant that leaves this uid escapes enumeration, and if it
+# was already owned its failed re-inspection fails cleanup instead of being
+# dropped. A pid the kernel denies while listing (EPERM) is retained for the
+# same examination -- known-owned, same session, or provably foreign -- and
+# any part that cannot be proven fails the verdict. While the leader's own
+# Popen has not reaped it, the held PID also holds the session id, which
+# anchors membership even where libproc can no longer describe the unreaped
+# zombie. There is no process sandbox: these are logical ownership rules
+# with documented escapes, not isolation.
+
+_MAC_PROC_PIDTBSDINFO = 3
+# proc_listpids type that selects every process of one user id
+# (sys/proc_info.h: PROC_UID_ONLY, filtered in-kernel by effective uid).
+_MAC_PROC_UID_ONLY = 4
+_MAC_SZOMB = 5
+# Denied pids retained per scan for owned/session examination. A larger set
+# fails the scan with a preview instead of being truncated; the preview and
+# diagnostic messages stay bounded.
+_MAC_UNOBSERVABLE_LIMIT = 256
+_MAC_UNOBSERVABLE_PREVIEW = 8
+# TERM, then KILL (getattr keeps the module importable on Windows).
+_MAC_CLEANUP_SIGNALS = (signal.SIGTERM, getattr(signal, "SIGKILL", 9))
+
+
+class _MacProcBsdInfo(ctypes.Structure):
+    _fields_ = [
+        ("pbi_flags", ctypes.c_uint32),
+        ("pbi_status", ctypes.c_uint32),
+        ("pbi_xstatus", ctypes.c_uint32),
+        ("pbi_pid", ctypes.c_uint32),
+        ("pbi_ppid", ctypes.c_uint32),
+        ("pbi_uid", ctypes.c_uint32),
+        ("pbi_gid", ctypes.c_uint32),
+        ("pbi_ruid", ctypes.c_uint32),
+        ("pbi_rgid", ctypes.c_uint32),
+        ("pbi_svuid", ctypes.c_uint32),
+        ("pbi_svgid", ctypes.c_uint32),
+        ("rfu_1", ctypes.c_uint32),
+        ("pbi_comm", ctypes.c_char * 16),
+        ("pbi_name", ctypes.c_char * 32),
+        ("pbi_nfiles", ctypes.c_uint32),
+        ("pbi_pgid", ctypes.c_uint32),
+        ("pbi_pjobc", ctypes.c_uint32),
+        ("e_tdev", ctypes.c_uint32),
+        ("e_tpgid", ctypes.c_uint32),
+        ("pbi_nice", ctypes.c_int32),
+        ("pbi_start_tvsec", ctypes.c_uint64),
+        ("pbi_start_tvusec", ctypes.c_uint64),
+    ]
+
+
+_mac_libproc_handle = None
+
+
+def _mac_libproc():
+    global _mac_libproc_handle
+    if sys.platform != "darwin":
+        raise OSError("macOS session supervision requires macOS")
+    if ctypes.sizeof(_MacProcBsdInfo) != 136:
+        raise OSError("unexpected proc_bsdinfo layout")
+    if _mac_libproc_handle is None:
+        lib = ctypes.CDLL("/usr/lib/libproc.dylib", use_errno=True)
+        lib.proc_listpids.argtypes = [
+            ctypes.c_uint32,
+            ctypes.c_uint32,
+            ctypes.c_void_p,
+            ctypes.c_int,
+        ]
+        lib.proc_listpids.restype = ctypes.c_int
+        lib.proc_pidinfo.argtypes = [
+            ctypes.c_int,
+            ctypes.c_int,
+            ctypes.c_uint64,
+            ctypes.c_void_p,
+            ctypes.c_int,
+        ]
+        lib.proc_pidinfo.restype = ctypes.c_int
+        _mac_libproc_handle = lib
+    return _mac_libproc_handle
+
+
+def _mac_bsdinfo(pid):
+    """Return process info, None only for ESRCH; other uncertainty raises."""
+    info = _MacProcBsdInfo()
+    ctypes.set_errno(0)
+    size = _mac_libproc().proc_pidinfo(
+        pid,
+        _MAC_PROC_PIDTBSDINFO,
+        0,
+        ctypes.byref(info),
+        ctypes.sizeof(info),
+    )
+    if size == 0 and ctypes.get_errno() == errno.ESRCH:
+        return None
+    if size != ctypes.sizeof(info) or info.pbi_pid != pid:
+        # Missing permission or malformed ABI data is not evidence of exit.
+        raise OSError(ctypes.get_errno() or errno.EIO,
+                      f'proc_pidinfo could not verify process {pid}')
+    return (
+        info.pbi_ppid,
+        info.pbi_uid,
+        info.pbi_status,
+        (info.pbi_start_tvsec, info.pbi_start_tvusec),
+    )
+
+
+def _mac_uid_pids(uid):
+    """Every pid of one user id; failures raise and never fall back globally."""
+    lib = _mac_libproc()
+    ctypes.set_errno(0)
+    # The kernel reports the byte count of PID data (*retval = n * sizeof(int)),
+    # so capacities and results are converted from bytes to int slots.
+    hint = lib.proc_listpids(_MAC_PROC_UID_ONLY, uid, None, 0)
+    if hint <= 0:
+        raise OSError(ctypes.get_errno() or errno.EIO, "proc_listpids failed")
+    if hint % 4 != 0:
+        raise OSError(errno.EIO, "proc_listpids returned a partial PID slot")
+    for _ in range(4):
+        capacity = hint // 4 + 256
+        if capacity > 65536:
+            raise OSError(errno.ENOMEM, "the UID process list exceeded its allocation bound")
+        buffer = (ctypes.c_int * capacity)()
+        ctypes.set_errno(0)
+        size = lib.proc_listpids(
+            _MAC_PROC_UID_ONLY, uid, buffer, ctypes.sizeof(buffer)
+        )
+        if size <= 0:
+            raise OSError(ctypes.get_errno() or errno.EIO, "proc_listpids failed")
+        if size % 4 != 0:
+            # A partial int-sized slot is malformed data, never a truncated
+            # pid list to guess from.
+            raise OSError(errno.EIO, "proc_listpids returned a partial PID slot")
+        if size < ctypes.sizeof(buffer):
+            return [pid for pid in buffer[: size // 4] if pid > 0]
+        # Exactly full: the snapshot may already be stale, so retry with a
+        # larger buffer and ultimately fail rather than accept a partial list.
+        hint = size
+    raise OSError(errno.ENOMEM, "the UID process list kept growing")
+
+
+class MacosProcessApi:
+    """macOS primitives for the owned-process supervisor (libproc, getsid)."""
+
+    def __init__(self):
+        _mac_libproc()
+        # Replaced by every process_table() scan with a fresh list of
+        # (pid, errno.EPERM) tuples -- never appended to, never stale.
+        self.unobservable = []
+
+    def check(self):
+        if self.identity(os.getpid()) is None:
+            raise OSError("libproc cannot describe this process")
+
+    def now(self):
+        seconds = time.time()
+        return (int(seconds), int((seconds % 1) * 1_000_000))
+
+    def spawn(self, argv):
+        return subprocess.Popen(
+            argv,
+            env=child_environment(),
+            start_new_session=True,
+        )
+
+    def process_table(self):
+        table = {}
+        # Publish a fresh scan even if listing or inspection subsequently fails.
+        self.unobservable = []
+        denied = self.unobservable
+        uid = os.getuid() if hasattr(os, "getuid") else 0
+        for pid in _mac_uid_pids(uid):
+            try:
+                info = _mac_bsdinfo(pid)
+            except OSError as error:
+                if error.errno != errno.EPERM:
+                    raise
+                # Denied while enumerating: no identity is readable here, so
+                # retain it; _collect examines every retained pid against the
+                # owned set and the owned session before trusting its absence.
+                if len(denied) >= _MAC_UNOBSERVABLE_LIMIT:
+                    preview = ", ".join(
+                        str(item_pid) for item_pid, _ in denied[:_MAC_UNOBSERVABLE_PREVIEW]
+                    )
+                    raise OSError(
+                        errno.EPERM,
+                        f"unobservable process list exceeded {_MAC_UNOBSERVABLE_LIMIT}: {preview}",
+                    ) from error
+                denied.append((pid, error.errno))
+                continue
+            if info is not None:
+                table[pid] = info
+        return table
+
+    def identity(self, pid):
+        info = _mac_bsdinfo(pid)
+        return None if info is None else info[3]
+
+    def session(self, pid):
+        try:
+            return os.getsid(pid)
+        except ProcessLookupError:
+            return None
+
+    def is_alive(self, pid, identity=None):
+        info = _mac_bsdinfo(pid)
+        if info is None or info[2] == _MAC_SZOMB:
+            return False
+        return identity is None or info[3] == identity
+
+    def terminate(self, pid, identity, sig):
+        """Signal `pid` if it is still the process with `identity`."""
+        info = _mac_bsdinfo(pid)
+        if info is None or info[2] == _MAC_SZOMB or info[3] != identity:
+            return
+        try:
+            os.kill(pid, sig)
+        except ProcessLookupError:
+            pass
+
+
+class MacosSessionSupervisor:
+    """Supervise verified descendants; fail closed on uncertain session ownership."""
+
+    def __init__(self, api=None, cleanup_interval=2.0):
+        self.api = api if api is not None else MacosProcessApi()
+        self.cleanup_interval = cleanup_interval
+        self.process = None
+        self.owned = {}
+        self.session = None
+        self.born_after = None
+        self.session_members = {}
+        self.session_error = None
+        # First unprovable inspection wins; it stays for track and cleanup.
+        self.inspection_error = None
+        # The leader's real birth (spawn-time or a held-slot read), never a
+        # synthetic value.
+        self.leader_identity = None
+        self.leader_identity_conflict = False
+        self.uid = os.getuid() if hasattr(os, "getuid") else None
+        self.prepared = False
+
+    def prepare(self):
+        self.api.check()
+        self.prepared = True
+
+    def spawn(self, argv):
+        # Only a real kernel birth bounds members; a missing leader birth is
+        # not guessed from wall time. The unreaped Popen slot may still anchor
+        # the SID, and a later real held-slot read installs the exact bound.
+        self.process = self.api.spawn(argv)
+        self.session = self.process.pid
+        identity = self.api.identity(self.process.pid)
+        self.leader_identity = identity
+        if identity is not None:
+            self.owned[self.process.pid] = identity
+            self.session_members[self.process.pid] = identity
+            self.born_after = identity
+        else:
+            self.born_after = None
+        return self.process
+
+    def track(self):
+        self._collect()
+        if self.session_error is not None:
+            raise OSError(self.session_error)
+        if self.inspection_error is not None:
+            raise OSError(self.inspection_error)
+        return self.owned
+
+    def _uncertain(self, message):
+        """Keep the first unprovable inspection; uncertainty never expires."""
+        if self.inspection_error is None:
+            self.inspection_error = message
+
+    def _collect(self, table=None):
+        table = self.api.process_table() if table is None else table
+        self_pid = os.getpid()
+
+        def known(pid, identity):
+            # A dead owned pid that now names a new process is judged afresh.
+            return self.owned.get(pid) == identity
+
+        # A pid the enumeration could not describe carries no readable
+        # identity. Examine every retained entry: an owned pid or a member of
+        # the owned session that cannot be proven harmless is uncertainty,
+        # and uncertainty fails the verdict instead of disappearing. Only a
+        # provably different session id with no ownership claim is noise.
+        for pid, _denial in getattr(self.api, "unobservable", ()):
+            if pid in self.owned:
+                try:
+                    observed = self.api.identity(pid)
+                except OSError as error:
+                    self._uncertain(
+                        f"owned process {pid} cannot be verified: "
+                        f"{_bounded_error(error)}"
+                    )
+                    continue
+                if observed is None:
+                    # Gone, or the unreaped zombie the reservation covers.
+                    continue
+                if observed == self.owned[pid]:
+                    # The same occupant; the denial was transient.
+                    continue
+                # The owned process is gone and another process now answers
+                # for this pid. Drop the stale claim -- it was never signalled
+                # under it, because a mismatched birth fails is_alive -- and
+                # classify the occupant like any other candidate below.
+                self.owned.pop(pid, None)
+                if (
+                    self.process is not None
+                    and pid == self.process.pid
+                    and self.process.returncode is None
+                ):
+                    self.leader_identity_conflict = True
+                    self._uncertain(
+                        "macOS session leader identity changed while unreaped"
+                    )
+                    self.session = None
+                    self.session_members = {}
+                    continue
+            if self.session is None:
+                continue
+            try:
+                member_sid = self.api.session(pid)
+            except OSError as error:
+                self._uncertain(
+                    f"unobservable process {pid} session cannot be verified: "
+                    f"{_bounded_error(error)}"
+                )
+                continue
+            if member_sid is not None and member_sid == self.session:
+                self._uncertain(
+                    f"unobservable process {pid} belongs to the owned session"
+                )
+
+        # An owned pid missing from the table may be gone -- or denied the
+        # same way; ask for it directly before trusting its absence.
+        for pid in list(self.owned):
+            if pid in table or pid == self_pid:
+                continue
+            try:
+                self.api.identity(pid)
+            except OSError as error:
+                self._uncertain(
+                    f"owned process {pid} cannot be verified: "
+                    f"{_bounded_error(error)}"
+                )
+
+        changed = True
+        while changed:
+            changed = False
+            for pid, (parent, _uid, _status, identity) in table.items():
+                if pid == self_pid or known(pid, identity):
+                    continue
+                parent_info = table.get(parent)
+                if (
+                    parent in self.owned
+                    and parent_info is not None
+                    and parent_info[3] == self.owned[parent]
+                ):
+                    self.owned[pid] = identity
+                    changed = True
+        if self.session is not None:
+            leader = None if self.process is None else self.process.pid
+            # Only this supervisor's own Popen reaps the leader: while its
+            # returncode cache is still None the leader's PID -- and with it
+            # the session id -- is held by the kernel, so it anchors session
+            # generation even where libproc cannot describe the zombie.
+            held = self.process is not None and self.process.returncode is None
+            if held and leader is not None and leader in table:
+                seen = table[leader][3]
+                if self.leader_identity is None:
+                    # Spawn-time capture was missing; a real read from the
+                    # held slot is the process's own birth, never synthetic.
+                    # It also installs the kernel member bound; no wall-clock
+                    # approximation is used while this birth is unavailable.
+                    self.leader_identity = seen
+                    self.born_after = seen
+                elif seen != self.leader_identity:
+                    # An unreaped PID cannot change occupant: reject it.
+                    self.leader_identity_conflict = True
+                    self._uncertain(
+                        "macOS session leader identity changed while unreaped"
+                    )
+                    self.session = None
+                    self.session_members = {}
+            if self.session is not None:
+                members = {}
+                for pid, info in table.items():
+                    if pid == self_pid or (
+                        self.born_after is not None and info[3] < self.born_after
+                    ):
+                        continue
+                    if self.api.session(pid) == self.session:
+                        members[pid] = info
+                # A numeric SID and a later birth time cannot prove
+                # generation. At least one previously verified member must
+                # bridge snapshots; while the leader is unreaped its held slot
+                # bridges alone, because its PID (and therefore the session
+                # id) cannot be reused yet -- which covers a zombie that
+                # libproc can no longer describe.
+                bridged = any(
+                    self.session_members.get(pid) == info[3]
+                    for pid, info in members.items()
+                )
+                held_anchor = held and leader is not None and (
+                    leader not in table
+                    or table[leader][3] == self.leader_identity
+                )
+                anchored = bridged or held_anchor
+                if members and not anchored:
+                    self.session_error = "macOS session generation continuity lost"
+                    self.session = None
+                    self.session_members = {}
+                elif members and anchored:
+                    self.session_members = {
+                        pid: info[3] for pid, info in members.items()
+                    }
+                    for pid, (_parent, uid, _status, identity) in members.items():
+                        if uid == self.uid and not known(pid, identity):
+                            self.owned[pid] = identity
+                if (
+                    not any(info[2] != _MAC_SZOMB for info in members.values())
+                    and self.process is not None
+                    and self.process.returncode is not None
+                ):
+                    self.session = None
+                    self.session_members = {}
+        self.owned.pop(self_pid, None)
+        return self.owned
+
+    def _alive_owned(self):
+        self._collect()
+        return {
+            pid: identity
+            for pid, identity in self.owned.items()
+            if self.api.is_alive(pid, identity)
+        }
+
+    def cleanup(self):
+        errors = []
+
+        def record(error):
+            message = _bounded_error(error)
+            if message not in errors and len(errors) < 4:
+                errors.append(message)
+
+        if self.process is None:
+            return True, errors
+        if not self.prepared:
+            record(OSError("the macOS supervisor was not prepared"))
+            return False, errors
+        remaining = dict(self.owned)
+        for sig in _MAC_CLEANUP_SIGNALS:
+            deadline = time.monotonic() + self.cleanup_interval
+            while True:
+                try:
+                    alive = self._alive_owned()
+                except OSError as error:
+                    record(error)
+                    alive = {}
+                try:
+                    if not self.leader_identity_conflict and self.process.poll() is None:
+                        self.process.send_signal(sig)
+                except OSError as error:
+                    record(error)
+                for pid in sorted(alive):
+                    if pid == self.process.pid:
+                        continue
+                    try:
+                        self.api.terminate(pid, alive[pid], sig)
+                    except OSError as error:
+                        record(error)
+                try:
+                    if not self.leader_identity_conflict:
+                        self.process.poll()
+                except OSError as error:
+                    record(error)
+                try:
+                    remaining = self._alive_owned()
+                except OSError as error:
+                    record(error)
+                    remaining = dict(self.owned)
+                if not remaining and self.process.returncode is not None:
+                    break
+                if time.monotonic() >= deadline:
+                    break
+                time.sleep(0.02)
+            if not remaining and self.process.returncode is not None:
+                break
+        try:
+            if not self.leader_identity_conflict:
+                self.process.wait(timeout=1)
+        except (OSError, subprocess.TimeoutExpired) as error:
+            record(error)
+        try:
+            complete = (
+                not self._alive_owned()
+                and self.process.returncode is not None
+                and not self.leader_identity_conflict
+            )
+        except OSError as error:
+            record(error)
+            complete = False
+        if self.session_error is not None:
+            record(OSError(self.session_error))
+        if self.inspection_error is not None:
+            record(OSError(self.inspection_error))
+        return complete and not errors, errors
+
+
+def supervisor_kind(name=None, platform_name=None):
+    if (name or os.name) == "nt":
+        return "windows"
+    return "macos" if (platform_name or sys.platform) == "darwin" else "linux"
 
 
 def owned_supervisor():
-    if supervisor_kind() == "windows":
+    kind = supervisor_kind()
+    if kind == "windows":
         return WindowsJobSupervisor()
+    if kind == "macos":
+        return MacosSessionSupervisor()
     return PosixSubreaperSupervisor()
 
 

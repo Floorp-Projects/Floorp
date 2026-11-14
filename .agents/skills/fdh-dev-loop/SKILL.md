@@ -6,8 +6,10 @@ description: Run the FDH Gate 3 local dev loop in an existing Floorp worktree wi
 # FDH local dev loop (`fdh`)
 
 `fdh` is a thin, non-interactive CLI. It does **not** run an agent loop, call an
-LLM, push a branch, open a PR, or contact GitHub. An already-running agent
-(DSH/Codex/Claude) drives the commands below and does the editing itself.
+LLM, push a branch, or open a PR. An already-running agent (DSH/Codex/Claude)
+drives the commands below and does the editing itself. The local development
+loop needs no shared services. Optional commands such as `ext poll`, `evidence
+trace` and `qa collect` read GitHub through `gh` under their separate contracts.
 
 ## When to use
 
@@ -21,8 +23,9 @@ Use this skill when:
 - you want the build/test/browser assertions recorded automatically instead of
   hand-written in a report.
 
-Do **not** use it for packaging, release qualification, PR creation, or any
-operation that needs GitHub or another shared service.
+Do **not** treat this local loop or its optional read-only evidence commands as
+packaging, release qualification, PR creation or publication approval. Optional
+shared-service operations below require their own explicit operator intent.
 
 ## Prerequisites
 
@@ -103,6 +106,86 @@ deno run -A tools/fdh.ts dev down --task-id <task-id>
 
 `deno task fdh <command>` is equivalent to `deno run -A tools/fdh.ts <command>`.
 
+## OS API authentication (separate from browser verification)
+
+The TypeScript OS API verifier accepts an explicit token-file path using
+`--token-file` or `FLOORP_OS_TOKEN_FILE` (flag wins). It never discovers Home or
+profile credentials and never accepts a raw-token argument. An authenticated target
+must be a literal HTTP loopback root origin; redirects are refused and responses
+are redacted before reporting. HTTP 401 in the wrapper proves reachability only,
+not successful authentication. Python verifier parity is not implemented.
+
+Only use the verifier against an explicitly owned test browser: its main routine
+creates fixture pages and mutates browser state. Do not run it merely to typecheck
+code, or against the user's installed browser without authorization. For code-only
+validation, use the synthetic host/integration tests below instead.
+
+Dev/test HTTP-loader profiles opt into a separate token advertisement. On supported
+POSIX hosts its fixed location is `ProfD/floorp-os-server/os-server-token`.
+**Windows dev-profile advertisement is intentionally unavailable** until a reviewed
+native reparse-safe implementation exists; no filesystem access or Home fallback
+is permitted for that unsupported request. Product-default opt-out profiles retain
+the legacy location. POSIX preexisting-link checks are not atomic no-follow guards;
+malicious same-user replacement races and native runtime validation remain open.
+
+Synthetic checks (no credential files or browser are used):
+
+```sh
+deno test --allow-read --allow-write tools/src/os_server_token.test.ts tools/src/os_test_client.test.ts
+deno run --allow-net=127.0.0.1 tools/integration/os-test-client.ts
+# Only AFTER building bridge/loader-modules:
+deno test --allow-read tools/integration/os-server-token.test.ts
+```
+
+## Offline final-package evidence helpers (not qualification)
+
+`validateFinalPackageQaConsistency` checks caller-observed metadata/attestations
+against trusted expectations; it does not authenticate the API or archive bytes.
+`verifyFinalPackageQaArchive` separately hashes supplied bytes, validates a narrow
+bounded ZIP32 profile, verifies every entry and returns only the two required
+canonical JSON objects. Its successful integrity result still refuses publication,
+API-authenticity, native-QA and live-approval claims. Do not override the older
+consistency result's false proof fields or wire either helper alone into publishing.
+`verifyFinalPackageQaEvidence` now composes them offline: bounded immutable JSON
+snapshots and exactly four native byte inputs are privately captured before awaiting;
+only actually verified archive JSON can supply consistency evidence. Its safe
+summaries still refuse transport/API/native-QA/live-approval/publication claims.
+
+```sh
+deno test --cached-only --frozen tools/src/fdh_final_package_qa_gate.test.ts tools/src/fdh_final_package_qa_archive.test.ts tools/src/fdh_final_package_qa_evidence.test.ts
+# Explicit historical compatibility only, after separately obtaining verified samples:
+deno run --cached-only --frozen --allow-read tools/integration/fdh-qa-archive-samples.ts
+```
+
+The historical integration never downloads data; missing samples fail rather than
+skip. It is not a new browser or QA execution. Runtime zlib output-cap support,
+strict archive limits, current-attempt API collection and protected approval remain
+separate review boundaries; no helper result is release authorization.
+
+## Read-only final-package QA collection (not publication)
+
+`fdh qa collect` lazily invokes the bounded canonical GET-only collector. Its
+eight options are mandatory; source/probe heads are independent, run IDs must
+differ, and freshness is explicit (positive, at most 86400000 ms). Unknown or
+duplicate options reject before collector import/I/O. There are no repository,
+host, URL, header, token, executable or clock overrides.
+
+```sh
+deno task fdh qa collect --source-run-id N --source-attempt N --source-head SOURCE_SHA \
+  --qa-run-id N --qa-attempt N --qa-head PROBE_SHA \
+  --windows-policy require-success --max-age-ms 86400000
+# Least-privilege direct main invocation also needs --allow-read for existing FDH initialization:
+# deno run --cached-only --frozen --allow-read --allow-run=gh tools/fdh.ts qa collect ...
+```
+
+Exit 0 means read-only prerequisites matched, **not** publication permission; exit
+1 is not-ready/collection-failed and exit 2 is invalid arguments. Inspect the safe
+JSON stage/code, not exit 1 alone: a startup permission error is not a verified
+sourceNotReady result. All transport/API/native-QA/live-approval/publication flags
+remain false. Host-installed gh/auth/config/TLS is the TCB; no origin attestation
+or atomic collection lock is claimed. The live completed-source negative is
+verified; a real pending positive and protected workflow activation remain open.
+
 ## Recording commands that ran outside fdh (IMP-2)
 
 `fdh verify build|test` only records what fdh itself spawned. When a build or
@@ -150,32 +233,66 @@ deno run -A tools/fdh.ts review record --task-id <task-id> \
 ```
 
 Then post the printed `commentBody` (marker
-`<!-- fdh-review-receipt:v1 {...} -->`) to the PR. The gate counts receipts only
-from comment authors whose GitHub association is OWNER, MEMBER or COLLABORATOR;
-other authors' receipts are logged and ignored. A receipt for another commit is
-stale and ignored (it neither counts nor blocks). A head receipt with a
-`request_changes` verdict or `blocking=true` fails the gate.
+`<!-- fdh-review-receipt:v1 {...} -->`) to the PR. The legacy gate counts receipts
+only from comment authors whose GitHub association is OWNER, MEMBER or
+COLLABORATOR; other authors' receipts are logged and ignored. A receipt for
+another commit is stale and ignored (it neither counts nor blocks). A head
+receipt with a `request_changes` verdict or `blocking=true` fails the gate. This
+MEMBER policy is unchanged; it means any organisation member and is not limited
+to repository write access.
 
-Posting a trusted receipt does not run the gate itself: the `rerun-on-receipt`
-job waits for the PR head's latest `review-gate` run and reruns it when it did
-not pass, so the required check updates on the PR head. The reviewer identities
-are still declared by the poster; the gate cannot tell whether two receipts from
-one trusted account came from two independent reviews.
+## Trusted receipt-check preparation (not active policy)
+
+`.github/workflows/fdh-trusted-review-gate.yml` is a preparatory receipt-only
+checker. GitHub evaluates `pull_request_target` workflow definitions from the
+PR's base branch (and `issue_comment` workflow definitions from the default
+branch); after a trusted activation/merge, the checker explicitly checks out
+the repository's default branch for its helper. It reads PR/comment data as
+untrusted data, never checks out or executes candidate code, and publishes a
+unique `fdh-trusted-receipts` Check Run against the exact PR head SHA. It
+re-reads the PR head before success; if the head changes during validation,
+that SHA's check fails. The checker validates existing OWNER/MEMBER/COLLABORATOR
+associations, requires two distinct reviewer identities, ignores stale receipts
+and retains the existing verdict/schema policy. Protect the target base branch
+so this workflow definition cannot be changed by an untrusted PR before that
+branch has received the trusted preparatory workflow.
+
+Receipt rejection publishes a failed custom check and fails the trusted
+`trusted-receipt-publication` workflow job; the job name is deliberately different
+from the custom `fdh-trusted-receipts` check name. This check does **not** run the
+candidate host tests or build, and it does not replace the legacy `review-gate`. The legacy `pull_request` workflow still
+checks out and executes PR-controlled code (with its restricted read-only
+permissions); its checker can be changed by the candidate. Do not treat it as a
+trusted receipt validator. The preparatory Check Run is not required by current repository settings, and
+a unique name alone is not a security boundary. Before relying on it,
+maintainers must enable and require the trusted workflow itself (a required
+workflow/ruleset enforcement bound to its trusted workflow identity), not only
+require the custom check name: another check from the same GitHub App may spoof
+that name. Protect the target base workflow and verify minimal Actions
+permissions (`checks:write`, PR/issue reads only). The pending Check Run is
+created after checkout/setup and initial PR API reads; failures before creation
+can leave an older successful Check Run visible. This preparatory code therefore
+does not claim transactional fail-closed behavior for every infrastructure
+outage. Keep the existing required test/build gate until an explicitly reviewed
+replacement preserves those validations. No live settings or activation are
+claimed here.
+
+A created comment triggers revalidation only when it contains a receipt
+marker; edited or deleted comments from a trusted associated author trigger a
+re-evaluation of the latest full comment set, so removing a marker cannot leave
+a previous success valid. Ordinary trusted comments may cause a harmless
+re-evaluation. The reviewer identities are still declared by the poster; the
+gate cannot prove that two receipts from one trusted account came from two
+independent reviews.
 
 Limits to know:
 
-- `MEMBER` means any member of the organisation, not write access to this
-  repository. An org member with private membership may appear as `CONTRIBUTOR`;
-  their receipts are then ignored (make the membership public or use a
-  collaborator account).
-- Only newly created comments trigger the rerun; after editing a receipt, rerun
-  the PR's `review-gate` run by hand.
-- A PR that changes `fdh-review-gate.yml` still needs one manual rerun after its
-  receipts are posted, because `issue_comment` workflows are read from the
-  default branch.
-- The gate code runs from the PR's own checkout, so a PR can change what the
-  gate checks; review edits to `.github/workflows/fdh-review-gate.yml` and
-  `tools/src/fdh_review.ts` before merging.
+- An organisation member with private membership may appear as `CONTRIBUTOR`;
+  their receipts are then ignored (make membership public or use a collaborator
+  account), preserving the current association contract.
+- A PR that changes either review-gate workflow or checker does not affect the
+  default-branch copy used by the trusted workflow; activation still requires
+  maintainer-controlled default-branch and ruleset changes.
 
 ## Evidence on the PR (D-20, KAN-132)
 

@@ -1,0 +1,96 @@
+# SPDX-License-Identifier: MPL-2.0
+# Preparatory receipt-only check; not a test/build gate or active policy by itself.
+name: FDH trusted review receipts
+
+"on":
+  pull_request_target:
+    types: [opened, synchronize, reopened, ready_for_review]
+  issue_comment:
+    types: [created, edited, deleted]
+
+permissions:
+  contents: read
+  issues: read
+  pull-requests: read
+  checks: write
+
+jobs:
+  trusted-receipts:
+    name: trusted-receipt-publication
+    if: >-
+      github.event_name == 'pull_request_target' ||
+      (github.event.issue.pull_request != null &&
+       github.event.comment.author_association != null &&
+       contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association) &&
+       (github.event.action != 'created' || contains(github.event.comment.body, 'fdh-review-receipt:v1')))
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    concurrency:
+      group: fdh-trusted-receipts-${{ github.event.pull_request.number || github.event.issue.number }}
+      cancel-in-progress: false
+    steps:
+      - name: Checkout trusted default-branch revision only
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Set up Deno without dependency installation
+        uses: denoland/setup-deno@667a34cdef165d8d2b2e98dde39547c9daac7282
+        with:
+          deno-version: v2.x
+      - name: Validate receipts and publish exact-head check
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b
+        env:
+          PR_NUMBER: ${{ github.event_name == 'pull_request_target' && github.event.pull_request.number || github.event.issue.number }}
+          EVENT_HEAD_SHA: ${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || '' }}
+        with:
+          github-token: ${{ github.token }}
+          script: |
+            const { spawn } = require("node:child_process");
+            const [owner, repo] = (process.env.GITHUB_REPOSITORY || "").split("/");
+            const childEnv = { PATH: process.env.PATH, DENO_NO_UPDATE_CHECK: "1" };
+            for (const key of ["SystemRoot", "WINDIR"]) {
+              if (process.env[key]) childEnv[key] = process.env[key];
+            }
+            const rawNumber = process.env.PR_NUMBER || "";
+            const shaPattern = /^[0-9a-f]{40}$/;
+            if (!owner || !repo || !/^[1-9][0-9]*$/.test(rawNumber) || !Number.isSafeInteger(Number(rawNumber))) {
+              throw new Error("invalid repository or PR number");
+            }
+            const prNumber = Number(rawNumber);
+            const { data: pr } = await github.rest.pulls.get({ ...context.repo, pull_number: prNumber });
+            const eventSha = process.env.EVENT_HEAD_SHA || pr.head?.sha;
+            if (pr.number !== prNumber || !shaPattern.test(eventSha || "") || eventSha !== pr.head?.sha) {
+              throw new Error("pull request head differs from triggering event SHA");
+            }
+            const headSha = eventSha;
+            const { data: pending } = await github.rest.checks.create({
+              ...context.repo, name: "fdh-trusted-receipts", head_sha: headSha,
+              status: "in_progress", started_at: new Date().toISOString(),
+              external_id: `fdh-trusted-receipts:${prNumber}:${headSha}`,
+              output: { title: "FDH trusted receipts", summary: "Validating trusted PR receipts." },
+            });
+            let result;
+            try {
+              const comments = await github.paginate(github.rest.issues.listComments, { ...context.repo, issue_number: prNumber, per_page: 100 });
+              const inputs = comments.map((comment) => ({ body: comment.body, author: comment.user?.login, authorAssociation: comment.author_association }));
+              const stdin = JSON.stringify({ prNumber, expectedHeadSha: headSha, currentHeadSha: headSha, comments: inputs });
+              const child = spawn("deno", ["run", "--no-config", "--no-lock", "--quiet", "tools/src/fdh_trusted_review_runner.ts"], { stdio: ["pipe", "pipe", "pipe"], shell: false, windowsHide: true, env: childEnv });
+              const out = []; const err = [];
+              child.stdout.on("data", (chunk) => out.push(chunk));
+              child.stderr.on("data", (chunk) => err.push(chunk));
+              const code = await new Promise((resolve, reject) => { child.once("error", reject); child.once("close", resolve); child.stdin.end(stdin); });
+              if (code !== 0) throw new Error(`trusted Deno checker exited ${code}: ${Buffer.concat(err).toString("utf8").slice(0, 500)}`);
+              result = JSON.parse(Buffer.concat(out).toString("utf8"));
+              if (result.name !== "fdh-trusted-receipts" || result.headSha !== headSha || !["success", "failure"].includes(result.conclusion)) throw new Error("trusted checker returned invalid output");
+              const { data: latest } = await github.rest.pulls.get({ ...context.repo, pull_number: prNumber });
+              if (latest.head?.sha !== headSha) result = { name: "fdh-trusted-receipts", headSha, conclusion: "failure", summary: "PR head changed during receipt validation; rerun for the latest head." };
+            } catch (error) {
+              result = { name: "fdh-trusted-receipts", headSha, conclusion: "failure", summary: String(error instanceof Error ? error.message : "receipt validation failed").slice(0, 1000) };
+            }
+            await github.rest.checks.update({ ...context.repo, check_run_id: pending.id, status: "completed", completed_at: new Date().toISOString(), conclusion: result.conclusion, output: { title: "FDH trusted receipts", summary: result.summary } });
+            console.log(`Published trusted receipt check on ${headSha}: ${result.conclusion}`);
+            if (result.conclusion !== "success") {
+              core.setFailed("Trusted receipt validation failed");
+            }

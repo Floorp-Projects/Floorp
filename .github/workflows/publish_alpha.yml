@@ -26,6 +26,12 @@ run-name: "|α| Publish Alpha"
 jobs:
   main:
     runs-on: ubuntu-latest
+    # Protected Alpha publication. This gate must be declared on the job in the
+    # called workflow: GitHub evaluates environment protection rules against the
+    # job that references the environment, and a caller job cannot set
+    # `environment`. Creating the environment and its required reviewers is
+    # repository-admin (human) work; this workflow only declares the gate.
+    environment: Deploy-to-installer-alpha
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

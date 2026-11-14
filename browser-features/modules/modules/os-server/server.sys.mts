@@ -7,7 +7,8 @@
  *
  * Purpose
  * - Expose a minimal subset of os-apis to other local applications via HTTP/JSON.
- * - Loopback-only. Optional bearer token auth (disabled by default).
+ * - Loopback-only. Normal OS/MCP startup uses a profile preference bearer token.
+ *   Token-file advertisement is separate from authentication and may be refused.
  *
  * Endpoints (JSON)
  * - GET  /health                                 -> { status: "ok" }
@@ -22,6 +23,10 @@
 // -- Imports -----------------------------------------------------------------
 
 import type { HttpRequest } from "./http/types.ts";
+import { PROFILE_TOKEN_PREF } from "#libs/shared/os-server-token/defines.ts";
+const { publishTokenFile, cleanupTokenFile } = ChromeUtils.importESModule(
+  "resource://noraneko/modules/os-server/token-file.sys.mjs",
+);
 import {
   badRequest,
   binaryStringToByteArray,
@@ -209,6 +214,8 @@ class LocalHttpServer implements nsIServerSocketListener {
     // Build router once when starting
     this._router = this.buildRouter();
 
+    this.writeTokenFile(this._token);
+
     // Ensure we stop on shutdown
     Services.obs.addObserver(this, "xpcom-shutdown");
   }
@@ -243,6 +250,8 @@ class LocalHttpServer implements nsIServerSocketListener {
       prefName === PREF_TOKEN
     ) {
       this._updateFromPrefs();
+    } else if (prefName === "nora.startup.mode" || prefName === PROFILE_TOKEN_PREF) {
+      if (this._server) this.writeTokenFile(this._token);
     }
   }
 
@@ -252,6 +261,8 @@ class LocalHttpServer implements nsIServerSocketListener {
       Services.prefs.addObserver(PREF_MCP_ENABLED, this);
       Services.prefs.addObserver(PREF_PORT, this);
       Services.prefs.addObserver(PREF_TOKEN, this);
+      Services.prefs.addObserver("nora.startup.mode", this);
+      Services.prefs.addObserver(PROFILE_TOKEN_PREF, this);
     } catch (e) {
       void e; // ignore
     }
@@ -263,6 +274,8 @@ class LocalHttpServer implements nsIServerSocketListener {
       Services.prefs.removeObserver(PREF_MCP_ENABLED, this);
       Services.prefs.removeObserver(PREF_PORT, this);
       Services.prefs.removeObserver(PREF_TOKEN, this);
+      Services.prefs.removeObserver("nora.startup.mode", this);
+      Services.prefs.removeObserver(PROFILE_TOKEN_PREF, this);
     } catch (e) {
       void e; // ignore
     }
@@ -271,7 +284,6 @@ class LocalHttpServer implements nsIServerSocketListener {
   public ensureToken(): string {
     const existing = Services.prefs.getStringPref(PREF_TOKEN, "");
     if (existing) {
-      this.writeTokenFile(existing);
       return existing;
     }
     const generated = Services.uuid.generateUUID().toString()
@@ -281,43 +293,19 @@ class LocalHttpServer implements nsIServerSocketListener {
     } catch (e) {
       err("Failed to persist server token to preferences:", e);
     }
-    this.writeTokenFile(generated);
     return generated;
   }
 
   private writeTokenFile(token: string): void {
-    try {
-      const homeDir = Services.dirsvc.get("Home", Ci.nsIFile).path;
-      const floorpDir = PathUtils.join(homeDir, ".floorp");
-      const tokenFile = PathUtils.join(floorpDir, "os-server-token");
-      const encoder = new TextEncoder();
-      const content = encoder.encode(token);
-      void IOUtils.makeDirectory(floorpDir, { ignoreExisting: true }).then(
-        () => IOUtils.write(tokenFile, content, { mode: "overwrite" }),
-      ).then(
-        () => IOUtils.setPermissions(tokenFile, 0o600),
-      ).catch(
-        (e: unknown) => {
-          err("Failed to write token file:", e);
-        },
-      );
-    } catch (e) {
-      err("Failed to write token file:", e);
-    }
+    void publishTokenFile(token).catch(() => {
+      err("Failed to publish server token file");
+    });
   }
 
   public deleteTokenFile(): void {
-    try {
-      const homeDir = Services.dirsvc.get("Home", Ci.nsIFile).path;
-      const tokenFile = PathUtils.join(homeDir, ".floorp", "os-server-token");
-      void IOUtils.remove(tokenFile, { ignoreAbsent: true }).catch(
-        (e: unknown) => {
-          err("Failed to delete token file:", e);
-        },
-      );
-    } catch (e) {
-      err("Failed to delete token file:", e);
-    }
+    void cleanupTokenFile().catch(() => {
+      err("Failed to clean up server token file");
+    });
   }
 
   private _updateFromPrefs() {
