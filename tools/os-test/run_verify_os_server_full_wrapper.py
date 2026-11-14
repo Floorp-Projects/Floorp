@@ -73,10 +73,7 @@ def dev_port_offset_error(value: object) -> str | None:
         return "no port offset given"
     text = str(value).strip()
     if not re.fullmatch(r"[0-9]+", text):
-        return (
-            'port offset must be a non-negative integer or "auto", got '
-            + json.dumps(value)
-        )
+        return 'port offset must be a non-negative ASCII integer or "auto"'
     normalized = text.lstrip("0") or "0"
     if len(normalized) > len(str(DEV_PORT_OFFSET_MAX)):
         return "port offset exceeds the valid HTTP port range"
@@ -120,9 +117,7 @@ def parse_port_offset_spec(raw: str | int | None) -> int | str:
         if error is not None:
             raise OsTestConfigError(error)
         return int(str(raw).strip().lstrip("0") or "0")
-    raise OsTestConfigError(
-        f"--port-offset must be <n|auto>, got {json.dumps(raw)}"
-    )
+    raise OsTestConfigError("--port-offset must be an ASCII integer or auto")
 
 
 def parse_wrapper_port_offset_arg(
@@ -406,6 +401,11 @@ def main(argv: list[str] | None = None) -> int:
     skip_start = args.skip_start
     try:
         spec = parse_wrapper_port_offset_arg(args.port_offset, skip_start)
+        # Resolve the selected option (no file IO) before any auto TCP probe.
+        token_file = resolve_token_file(
+            target_args.token_file_flag,
+            os.environ.get("FLOORP_OS_TOKEN_FILE"),
+        )
         port_offset = (
             resolve_auto_dev_port_offset() if spec == "auto" else spec
         )
@@ -420,10 +420,6 @@ def main(argv: list[str] | None = None) -> int:
         return 2
     base_url = resolved.base_url
     try:
-        token_file = resolve_token_file(
-            target_args.token_file_flag,
-            os.environ.get("FLOORP_OS_TOKEN_FILE"),
-        )
         # Reject an unsafe authenticated target before starting any browser. The
         # token file itself may still be published only after browser startup.
         if token_file is not None:

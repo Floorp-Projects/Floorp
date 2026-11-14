@@ -670,7 +670,29 @@ class WrapperPortOffsetTests(unittest.TestCase):
         self.assertNotIn(raw, str(raised.exception))
         self.assertEqual(wrapper.parse_wrapper_port_offset_arg("0" * 5000 + "20", False), 20)
 
+    def test_nondigit_offset_error_is_bounded_and_value_free(self):
+        for raw in ("x" * 5000, "SYNTHETIC-not-a-port-secret"):
+            with self.assertRaises(wrapper.OsTestConfigError) as raised:
+                wrapper.parse_wrapper_port_offset_arg(raw, False)
+            self.assertLess(len(str(raised.exception)), 200)
+            self.assertNotIn(raw, str(raised.exception))
+
+    def test_empty_token_option_is_rejected_before_auto_probe(self):
+        with patch.object(wrapper, "resolve_auto_dev_port_offset", return_value=0) as auto, patch.object(wrapper.subprocess, "Popen") as popen:
+            code = wrapper.main(["--port-offset", "auto", "--token-file", ""])
+        self.assertEqual(code, 2)
+        auto.assert_not_called()
+        popen.assert_not_called()
+
+    def test_empty_token_env_is_rejected_before_auto_probe(self):
+        with patch.dict(os.environ, {"FLOORP_OS_TOKEN_FILE": ""}), patch.object(wrapper, "resolve_auto_dev_port_offset", return_value=0) as auto, patch.object(wrapper.subprocess, "Popen") as popen:
+            code = wrapper.main(["--port-offset", "auto"])
+        self.assertEqual(code, 2)
+        auto.assert_not_called()
+        popen.assert_not_called()
+
     def test_launch_ports_match_shared_table_and_dev_os_port(self):
+        self.assertEqual(wrapper.os_server_port_for_offset(60343), 65518)
         table = [5173, 5174, 5179, 5180, 5181, 5183, 5185, 5186, 5187, 5188, 5192]
         self.assertEqual(wrapper.launch_ports_for_offset(0), table + [5175])
         self.assertEqual(
