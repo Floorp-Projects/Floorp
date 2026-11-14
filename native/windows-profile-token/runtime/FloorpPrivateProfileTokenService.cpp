@@ -57,6 +57,9 @@ NS_IMETHODIMP PrivateProfileTokenService::Remove() {
   // Never re-resolve ProfD: opt-out or a directory-service change cannot redirect
   // cleanup to another profile or prevent withdrawing our captured advertisement.
   if (!NS_IsMainThread() || !XRE_IsParentProcess()) return NS_ERROR_NOT_AVAILABLE;
-  return mStorage->Remove() ? NS_OK : NS_ERROR_FAILURE;
+  if (mStorage->Remove()) return NS_OK;
+  // A short-lived ordinary reader must close before Windows permits DELETE.
+  // Keep the captured owner intact so the JS lifecycle can retry asynchronously.
+  return mStorage->CleanupBlockedByReader() ? NS_ERROR_FILE_IS_LOCKED : NS_ERROR_FAILURE;
 }
 }

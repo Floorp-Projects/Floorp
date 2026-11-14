@@ -24,6 +24,7 @@ constexpr ULONG kOpen = 1;
 constexpr ULONG kOpenIf = 3;
 constexpr NTSTATUS kNameMissing = static_cast<NTSTATUS>(0xc0000034UL);
 constexpr NTSTATUS kPathMissing = static_cast<NTSTATUS>(0xc000003aUL);
+constexpr NTSTATUS kSharingViolation = static_cast<NTSTATUS>(0xc0000043UL);
 constexpr wchar_t kDirectoryName[] = L"floorp-os-server";
 constexpr wchar_t kFileName[] = L"os-server-token";
 
@@ -140,6 +141,7 @@ struct PrivateProfileToken::Impl final {
   LocalMemory descriptor;
   std::wstring profile;
   bool ready = false;
+  bool cleanupBlockedByReader = false;
 
   bool Security() {
     HANDLE raw = nullptr;
@@ -234,6 +236,7 @@ struct PrivateProfileToken::Impl final {
 PrivateProfileToken::PrivateProfileToken() : mImpl(std::make_unique<Impl>()) {}
 PrivateProfileToken::~PrivateProfileToken() = default;
 bool PrivateProfileToken::Ready() const { return mImpl->ready; }
+bool PrivateProfileToken::CleanupBlockedByReader() const { return mImpl->cleanupBlockedByReader; }
 
 bool PrivateProfileToken::Prepare(const std::wstring& profilePath) {
   if (mImpl->ready) return mImpl->profile == profilePath && Secure();
@@ -304,12 +307,16 @@ bool PrivateProfileToken::Secure() {
   return file && mImpl->Private(file.Get());
 }
 bool PrivateProfileToken::Remove() {
+  mImpl->cleanupBlockedByReader = false;
   if (!mImpl->ready) return true;
   if (!mImpl->PinsSafe()) return false;
   NTSTATUS status = 0;
   Handle file = mImpl->Owned(DELETE | FILE_READ_ATTRIBUTES | READ_CONTROL, &status);
   if (!file) {
-    if (status != kNameMissing && status != kPathMissing) return false;
+    if (status != kNameMissing && status != kPathMissing) {
+      mImpl->cleanupBlockedByReader = status == kSharingViolation;
+      return false;
+    }
   } else {
     if (!mImpl->Private(file.Get()) || !mImpl->Private(mImpl->directory.Get())) return false;
     FILE_DISPOSITION_INFO disposition{TRUE};

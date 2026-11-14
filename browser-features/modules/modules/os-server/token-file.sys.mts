@@ -53,6 +53,25 @@ function windowsTarget(target: TokenDestination): boolean {
   return target.profileScoped && Services.appinfo.OS === "WINNT";
 }
 
+/** Retry only a native sharing violation; do not retarget or hide other refusals.
+ * An uncooperative reader can outlive this bounded wait. In that case rejection
+ * keeps captured lifecycle ownership for a later explicit cleanup retry. */
+async function removeWindowsOwner(): Promise<void> {
+  const owner = requireWindowsOwner();
+  for (let attempt = 0;; attempt++) {
+    try {
+      owner.remove();
+      return;
+    } catch (error) {
+      if (
+        attempt >= 80 || !(error instanceof Ci.nsIException) ||
+        error.result !== Cr.NS_ERROR_FILE_IS_LOCKED
+      ) throw error;
+      await new Promise<void>((resolve) => setTimeout(resolve, 25));
+    }
+  }
+}
+
 function destination(): TokenDestination | null {
   // Resolve at publication time, not module initialization: the startup marker
   // may not exist yet. Explicit opt-in with an unknown mode refuses publication.
@@ -159,7 +178,7 @@ export const tokenFile = new TokenFileLifecycle({
   },
   async remove(target) {
     if (windowsTarget(target)) {
-      requireWindowsOwner().remove();
+      await removeWindowsOwner();
       return;
     }
     guardPath(target);

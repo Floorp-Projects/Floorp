@@ -8,4 +8,6 @@ export type Options = {
   missingInterface?: boolean;
   missingSecure?: boolean;
   failWrite?: boolean;
+  removeFailures?: number;
+  permanentRemoveFailure?: boolean;
 };

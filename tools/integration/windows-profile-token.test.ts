@@ -6,7 +6,13 @@ import { assertEquals, assertRejects } from "@std/assert";
 import type { Adapter, Options } from "./windows-profile-token-types.ts";
 async function fixture(options: Options = {}) {
   const calls: string[] = [];
-  const state = { optIn: true, root: "/profile", token: "" };
+  const state = {
+    optIn: true,
+    root: "/profile",
+    token: "",
+    removeFailures: options.removeFailures ?? 0,
+    permanentRemoveFailure: options.permanentRemoveFailure ?? false,
+  };
   const names = ["Services", "PathUtils", "Cc", "Ci", "Cr", "IOUtils"];
   const saved = names.map((name) =>
     Object.getOwnPropertyDescriptor(globalThis, name)
@@ -29,6 +35,14 @@ async function fixture(options: Options = {}) {
     },
     remove() {
       calls.push("native:remove");
+      if (state.permanentRemoveFailure) {
+        throw new Error("synthetic permanent refusal");
+      }
+      if (state.removeFailures-- > 0) {
+        throw Object.assign(new Error("synthetic reader lock"), {
+          result: "locked",
+        });
+      }
       state.token = "";
     },
   };
@@ -65,7 +79,10 @@ async function fixture(options: Options = {}) {
       nsIFile: {},
       nsIException: Error,
     },
-    Cr: { NS_ERROR_FILE_NOT_FOUND: "missing" },
+    Cr: {
+      NS_ERROR_FILE_NOT_FOUND: "missing",
+      NS_ERROR_FILE_IS_LOCKED: "locked",
+    },
     IOUtils: {
       makeDirectory: () => generic("mkdir"),
       setPermissions: () => generic("chmod"),
@@ -176,6 +193,52 @@ Deno.test("built native route: failed native write cleans only captured native o
     const count = f.calls.length;
     await f.adapter.cleanupTokenFile();
     assertEquals(f.calls.length, count);
+  } finally {
+    f.restore();
+  }
+});
+
+Deno.test("built native cleanup: transient reader lock retries captured owner without fresh lookup", async () => {
+  const f = await fixture({ removeFailures: 2 });
+  try {
+    await f.adapter.publishTokenFile("SYNTHETIC");
+    f.state.optIn = false;
+    f.state.root = "/foreign-profile";
+    await f.adapter.cleanupTokenFile();
+    assertEquals(f.calls.filter((c) => c === "native:remove").length, 3);
+    assertEquals(f.calls.filter((c) => c.startsWith("dirsvc:")).length, 1);
+    assertEquals(f.calls.some((c) => c.startsWith("generic:")), false);
+    assertEquals(f.state.token, "");
+  } finally {
+    f.restore();
+  }
+});
+
+Deno.test("built native cleanup: permanent refusal retains ownership for explicit later retry", async () => {
+  const f = await fixture({ permanentRemoveFailure: true });
+  try {
+    await f.adapter.publishTokenFile("SYNTHETIC");
+    await assertRejects(() => f.adapter.cleanupTokenFile());
+    assertEquals(f.calls.filter((c) => c === "native:remove").length, 1);
+    assertEquals(f.state.token, "SYNTHETIC");
+    f.state.permanentRemoveFailure = false;
+    await f.adapter.cleanupTokenFile();
+    assertEquals(f.state.token, "");
+  } finally {
+    f.restore();
+  }
+});
+
+Deno.test("built native cleanup: prolonged reader lock rejects boundedly and remains retryable", async () => {
+  const f = await fixture({ removeFailures: 1000 });
+  try {
+    await f.adapter.publishTokenFile("SYNTHETIC");
+    await assertRejects(() => f.adapter.cleanupTokenFile());
+    assertEquals(f.calls.filter((c) => c === "native:remove").length, 81);
+    assertEquals(f.state.token, "SYNTHETIC");
+    f.state.removeFailures = 0;
+    await f.adapter.cleanupTokenFile();
+    assertEquals(f.state.token, "");
   } finally {
     f.restore();
   }

@@ -160,6 +160,40 @@ void NativeContracts() {
     PrivateProfileToken next;
     Require(next.Prepare(normal.wstring()) && next.Write("restart") && next.Remove(), "fresh owner can adopt private retained leaf");
   }
+  currentCase = "ordinary reader cleanup remains truthful and retryable";
+  const auto readerProfile = temp.Profile(L"reader-cleanup");
+  {
+    PrivateProfileToken owner;
+    Require(owner.Prepare(readerProfile.wstring()) && owner.Write("SYNTHETIC-reader"), "prepare ordinary reader cleanup fixture");
+    HANDLE reader = CreateFileW(Token(readerProfile).c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE,
+        nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+    Require(reader != INVALID_HANDLE_VALUE, "ordinary reader omits FILE_SHARE_DELETE");
+    Require(!owner.Remove() && owner.Ready() && owner.CleanupBlockedByReader() && fs::exists(Token(readerProfile)), "blocked cleanup never claims withdrawal or drops captured owner");
+    Require(CloseHandle(reader) != FALSE, "release ordinary reader");
+    Require(owner.Remove() && !owner.Ready() && !owner.CleanupBlockedByReader() && !fs::exists(Token(readerProfile)), "captured cleanup succeeds after reader closes");
+  }
+  currentCase = "ready owner cannot claim another profile";
+  const auto readyA = temp.Profile(L"ready-profile-a");
+  const auto readyB = temp.Profile(L"ready-profile-b");
+  {
+    PrivateProfileToken owner;
+    Require(owner.Prepare(readyA.wstring()) && owner.Write("SYNTHETIC-A"), "publish profile A");
+    Require(!owner.Prepare(readyB.wstring()) && owner.Ready() && !fs::exists(Token(readyB)), "ready A refuses B without a Ready lie or B IO");
+    Require(owner.Remove() && owner.Prepare(readyB.wstring()) && owner.Write("SYNTHETIC-B"), "captured A cleanup precedes B preparation");
+    Require(!fs::exists(Token(readyA)) && Read(Token(readyB)) == "SYNTHETIC-B" && owner.Remove(), "A withdrawn and B independently owned");
+  }
+  currentCase = "ACL tamper is refused then repaired before write";
+  const auto tamper = temp.Profile(L"acl-tamper");
+  {
+    PrivateProfileToken owner;
+    Require(owner.Prepare(tamper.wstring()) && owner.Write("SYNTHETIC-before-tamper"), "publish ACL tamper fixture");
+    OwnedFixture(Token(tamper), true);
+    OwnedFixture(tamper / L"floorp-os-server", true);
+    Require(!owner.Secure() && !owner.Remove() && owner.Ready() && !owner.CleanupBlockedByReader(), "ACL refusal is not classified as a reader lock or withdrawal");
+    Require(owner.Write("SYNTHETIC-repaired"), "write restores private ACL before new bytes");
+    AssertPrivate(Token(tamper)); AssertPrivate(tamper / L"floorp-os-server");
+    Require(owner.Remove(), "captured cleanup after ACL repair");
+  }
   currentCase = "external leaf deletion and pending handle cleanup";
   const auto missing = temp.Profile(L"externally-removed-leaf");
   {

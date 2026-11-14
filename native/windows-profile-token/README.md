@@ -6,7 +6,9 @@ This is the native backend for explicit dev/test profile token advertisement. It
 
 The backend accepts only a native ProfD match on a local fixed drive. It opens each component through pinned directory handles, rejects all reparse points, rejects multiply-linked leaves, and requires the current process-user owner. Before secret bytes are written it installs and independently checks a protected owner+SYSTEM full-access DACL on the exact opened objects. It never propagates ACL inheritance into existing children.
 
-A live 128-bit file identity and volume anchor binds subsequent writes and deletion. Foreign replacements are not overwritten or removed; ordinary profile IO and CRT readers remain usable. Missing leaves make cleanup idempotent. Normal object destruction retains the compatible private advertisement; explicit cleanup withdraws it.
+A live 128-bit file identity and volume anchor binds subsequent writes and deletion. Foreign replacements are not overwritten or removed; ordinary profile IO and CRT readers remain usable. Missing leaves make cleanup idempotent. Normal object destruction retains the compatible private advertisement; successful explicit cleanup withdraws it.
+
+Windows cannot delete the name while an ordinary reader omits `FILE_SHARE_DELETE`. The backend reports this as a sharing refusal and retains the captured owner. The adapter retries only this native locked result asynchronously (at most 80 scheduled 25 ms delays); permanent ACL/identity refusals are not retried. Exhaustion rejects truthfully and keeps ownership for a later explicit cleanup retry. **Until cleanup succeeds the token can remain advertised and a reader can retain stale bytes.** This is not immediate deletion under an uncooperative same-SID reader, credential revocation, or a promise that the event loop meets a hard wall-clock deadline.
 
 The claim is protection against other users/ACEs, not isolation from processes with the same SID or an administrator. Writes are in-place and are **not content-atomic**; a concurrent same-user reader can see partial bytes and must not treat them as authentication success.
 

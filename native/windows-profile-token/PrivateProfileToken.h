@@ -21,6 +21,8 @@ class PrivateProfileToken final {
   bool Secure();
   bool Remove();
   bool Ready() const;
+  // True only when the last Remove was blocked by Windows sharing semantics.
+  bool CleanupBlockedByReader() const;
  private:
   struct Impl;
   std::unique_ptr<Impl> mImpl;

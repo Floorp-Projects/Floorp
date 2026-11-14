@@ -18,7 +18,7 @@ diff --git a/xpcom/io/PrivateProfileToken.h b/xpcom/io/PrivateProfileToken.h
 new file mode 100644
 --- /dev/null
 +++ b/xpcom/io/PrivateProfileToken.h
-@@ -0,0 +1,29 @@
+@@ -0,0 +1,31 @@
 +#ifndef FLOORP_PRIVATE_PROFILE_TOKEN_H
 +#define FLOORP_PRIVATE_PROFILE_TOKEN_H
 +
@@ -42,6 +42,8 @@ new file mode 100644
 +  bool Secure();
 +  bool Remove();
 +  bool Ready() const;
++  // True only when the last Remove was blocked by Windows sharing semantics.
++  bool CleanupBlockedByReader() const;
 + private:
 +  struct Impl;
 +  std::unique_ptr<Impl> mImpl;
@@ -52,7 +54,7 @@ diff --git a/xpcom/io/PrivateProfileToken.cpp b/xpcom/io/PrivateProfileToken.cpp
 new file mode 100644
 --- /dev/null
 +++ b/xpcom/io/PrivateProfileToken.cpp
-@@ -0,0 +1,321 @@
+@@ -0,0 +1,328 @@
 +// SPDX-License-Identifier: MPL-2.0
 +#include "PrivateProfileToken.h"
 +
@@ -79,6 +81,7 @@ new file mode 100644
 +constexpr ULONG kOpenIf = 3;
 +constexpr NTSTATUS kNameMissing = static_cast<NTSTATUS>(0xc0000034UL);
 +constexpr NTSTATUS kPathMissing = static_cast<NTSTATUS>(0xc000003aUL);
++constexpr NTSTATUS kSharingViolation = static_cast<NTSTATUS>(0xc0000043UL);
 +constexpr wchar_t kDirectoryName[] = L"floorp-os-server";
 +constexpr wchar_t kFileName[] = L"os-server-token";
 +
@@ -195,6 +198,7 @@ new file mode 100644
 +  LocalMemory descriptor;
 +  std::wstring profile;
 +  bool ready = false;
++  bool cleanupBlockedByReader = false;
 +
 +  bool Security() {
 +    HANDLE raw = nullptr;
@@ -289,6 +293,7 @@ new file mode 100644
 +PrivateProfileToken::PrivateProfileToken() : mImpl(std::make_unique<Impl>()) {}
 +PrivateProfileToken::~PrivateProfileToken() = default;
 +bool PrivateProfileToken::Ready() const { return mImpl->ready; }
++bool PrivateProfileToken::CleanupBlockedByReader() const { return mImpl->cleanupBlockedByReader; }
 +
 +bool PrivateProfileToken::Prepare(const std::wstring& profilePath) {
 +  if (mImpl->ready) return mImpl->profile == profilePath && Secure();
@@ -359,12 +364,16 @@ new file mode 100644
 +  return file && mImpl->Private(file.Get());
 +}
 +bool PrivateProfileToken::Remove() {
++  mImpl->cleanupBlockedByReader = false;
 +  if (!mImpl->ready) return true;
 +  if (!mImpl->PinsSafe()) return false;
 +  NTSTATUS status = 0;
 +  Handle file = mImpl->Owned(DELETE | FILE_READ_ATTRIBUTES | READ_CONTROL, &status);
 +  if (!file) {
-+    if (status != kNameMissing && status != kPathMissing) return false;
++    if (status != kNameMissing && status != kPathMissing) {
++      mImpl->cleanupBlockedByReader = status == kSharingViolation;
++      return false;
++    }
 +  } else {
 +    if (!mImpl->Private(file.Get()) || !mImpl->Private(mImpl->directory.Get())) return false;
 +    FILE_DISPOSITION_INFO disposition{TRUE};
@@ -423,7 +432,7 @@ diff --git a/xpcom/io/FloorpPrivateProfileTokenService.cpp b/xpcom/io/FloorpPriv
 new file mode 100644
 --- /dev/null
 +++ b/xpcom/io/FloorpPrivateProfileTokenService.cpp
-@@ -0,0 +1,62 @@
+@@ -0,0 +1,65 @@
 +// SPDX-License-Identifier: MPL-2.0
 +#include "FloorpPrivateProfileTokenService.h"
 +#include "PrivateProfileToken.h"
@@ -483,7 +492,10 @@ new file mode 100644
 +  // Never re-resolve ProfD: opt-out or a directory-service change cannot redirect
 +  // cleanup to another profile or prevent withdrawing our captured advertisement.
 +  if (!NS_IsMainThread() || !XRE_IsParentProcess()) return NS_ERROR_NOT_AVAILABLE;
-+  return mStorage->Remove() ? NS_OK : NS_ERROR_FAILURE;
++  if (mStorage->Remove()) return NS_OK;
++  // A short-lived ordinary reader must close before Windows permits DELETE.
++  // Keep the captured owner intact so the JS lifecycle can retry asynchronously.
++  return mStorage->CleanupBlockedByReader() ? NS_ERROR_FILE_IS_LOCKED : NS_ERROR_FAILURE;
 +}
 +}
 diff --git a/xpcom/io/FloorpPrivateProfileTokenComponents.conf b/xpcom/io/FloorpPrivateProfileTokenComponents.conf
