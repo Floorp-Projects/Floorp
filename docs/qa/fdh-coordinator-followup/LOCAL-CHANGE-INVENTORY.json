@@ -1,0 +1,477 @@
+{
+  "schema": 1,
+  "generatedAt": "2026-11-14T04:11:51.677Z",
+  "baseCommit": "9e6b24e5fd561250ab04a011b70ee0b1280b1adc",
+  "entries": [
+    {
+      "path": ".agents/skills/fdh-dev-loop/SKILL.md",
+      "status": "modified",
+      "group": "06-docs-and-skills",
+      "bytes": 35543,
+      "sha256": "120e3e9e6a86bcaee43402b5b68d698dd71633721495a3786a9bd27cd1fb34e1"
+    },
+    {
+      "path": ".github/workflows/fdh-trusted-review-gate.yml",
+      "status": "added",
+      "group": "03-trusted-receipts",
+      "bytes": 6015,
+      "sha256": "eeea33a877d3bb7091c1650217de00778838fae01c14e9ad563b14664da85d6c"
+    },
+    {
+      "path": ".github/workflows/publish_alpha.yml",
+      "status": "modified",
+      "group": "04-alpha-environment",
+      "bytes": 3804,
+      "sha256": "3cc9f94bde0b8b76cd733d801968d098afcc9bde22deaefe4bde9423d587105a"
+    },
+    {
+      "path": ".github/workflows/qa3-macos-supervisor.yml",
+      "status": "added",
+      "group": "02-macos-supervisor",
+      "bytes": 1152,
+      "sha256": "f3251e3add9f2812a8fb91dad26ea6ca2b14e629697f52dd95a30ed5512d1b9c"
+    },
+    {
+      "path": "browser-features/modules/modules/os-automotor/OSAutomotor-manager.sys.mts",
+      "status": "modified",
+      "group": "01-dev-os-isolation",
+      "bytes": 33875,
+      "sha256": "35a3bd20c14c4eec65a679472354078a94de1b709c23e8b0278d6855fbde8ab3"
+    },
+    {
+      "path": "browser-features/modules/modules/os-server/server.sys.mts",
+      "status": "modified",
+      "group": "01-dev-os-isolation",
+      "bytes": 21701,
+      "sha256": "4fe961d7b58ba3acc4c675ef7cfa0f030c67b78df043527c3f6eacd8b3cda15d"
+    },
+    {
+      "path": "browser-features/modules/modules/os-server/token-file.sys.mts",
+      "status": "added",
+      "group": "01-dev-os-isolation",
+      "bytes": 4116,
+      "sha256": "33ed423658fc85de7fe89cb0489d4e5cf3480f05f858ea8cbd5aa73e821d257a"
+    },
+    {
+      "path": "docs/qa/fdh-coordinator-followup/CHECKPOINT.md",
+      "status": "added",
+      "group": "06-docs-and-skills",
+      "bytes": 32172,
+      "sha256": "b4001da65155f580563c40ef1ca7104e5a76267439d6c0108fca69308572a359"
+    },
+    {
+      "path": "docs/qa/fdh-coordinator-followup/LOCAL-COMMIT-PLAN.md",
+      "status": "added",
+      "group": "06-docs-and-skills",
+      "bytes": 3908,
+      "sha256": "af389a91ea483fa185186f3298b7bff6bc6d3558718901b4c9d2b1b45b53d719"
+    },
+    {
+      "path": "docs/qa/fdh-coordinator-followup/PUBLISH-GATE-DESIGN.md",
+      "status": "added",
+      "group": "06-docs-and-skills",
+      "bytes": 8327,
+      "sha256": "29a75ae379b06674f3c3375220c5d5b32944f2a31a296d69b6acbe2fc1f379ee"
+    },
+    {
+      "path": "docs/qa/fdh-coordinator-followup/QA-ARCHIVE-INTEGRITY.md",
+      "status": "added",
+      "group": "06-docs-and-skills",
+      "bytes": 7505,
+      "sha256": "818cd8af63420f3f7ee9600e27c81092e5b62d49202dd6207d92e159af097b07"
+    },
+    {
+      "path": "docs/qa/fdh-coordinator-followup/QA-COLLECTOR-PLAN.md",
+      "status": "added",
+      "group": "06-docs-and-skills",
+      "bytes": 6990,
+      "sha256": "6a3ea5148a70b1f6d0b70ab24730b0464c2f877cab35a64bcaa304e657320c81"
+    },
+    {
+      "path": "docs/qa/fdh-coordinator-followup/QA-CONSISTENCY-CONTRACT.md",
+      "status": "added",
+      "group": "06-docs-and-skills",
+      "bytes": 5261,
+      "sha256": "5e753000a3ba8fc6d71af437866eadef14055453672c830892aa31a3164c9396"
+    },
+    {
+      "path": "docs/qa/fdh-coordinator-followup/QA-EVIDENCE-COMPOSITION.md",
+      "status": "added",
+      "group": "06-docs-and-skills",
+      "bytes": 5279,
+      "sha256": "dbf220513a3d939d4d06b743c4441f83ad391eafc7aaab91b823577256747a6c"
+    },
+    {
+      "path": "docs/qa/fdh-coordinator-followup/QA-READONLY-COLLECTOR.md",
+      "status": "added",
+      "group": "06-docs-and-skills",
+      "bytes": 11067,
+      "sha256": "e3ed002b6e9ce98f13cc5913667968bbd2584dfe522f6bb65713700a75b9f3c9"
+    },
+    {
+      "path": "libs/shared/dev-ports/defines.ts",
+      "status": "modified",
+      "group": "01-dev-os-isolation",
+      "bytes": 12611,
+      "sha256": "e92ce3382f14021d0b9686205e7cccc49b7d0e4ebbd10f4b44f26fa3fba33fce"
+    },
+    {
+      "path": "libs/shared/os-server-token/defines.ts",
+      "status": "added",
+      "group": "01-dev-os-isolation",
+      "bytes": 523,
+      "sha256": "3a6b7e711dd4864b7141060f157e6bf1a09ed1b57e6a3e0842231d0f10605dd7"
+    },
+    {
+      "path": "libs/shared/os-server-token/lifecycle.ts",
+      "status": "added",
+      "group": "01-dev-os-isolation",
+      "bytes": 3147,
+      "sha256": "9b21414c89e69e1dc7b06be1947749f2a97828295a68d9ef531a3727d048133a"
+    },
+    {
+      "path": "libs/shared/os-server-token/types.ts",
+      "status": "added",
+      "group": "01-dev-os-isolation",
+      "bytes": 575,
+      "sha256": "1391a01ece976d594929ff2174f0d58c8a6e2d3643cec411ba13e67ad5bdca52"
+    },
+    {
+      "path": "tools/fdh.ts",
+      "status": "modified",
+      "group": "05-readonly-qa-chain",
+      "bytes": 64355,
+      "sha256": "b12cc72eefcafe110aee50eceb54cc25985417c84d918f5c5df2925b670e0152"
+    },
+    {
+      "path": "tools/integration/fdh-qa-archive-samples.ts",
+      "status": "added",
+      "group": "05-readonly-qa-chain",
+      "bytes": 2721,
+      "sha256": "e8143e3b600457306c70d9ff2169876d6f50daa7b8fbef53064fa0edc3e1d03b"
+    },
+    {
+      "path": "tools/integration/fdh-qa-transport-live.ts",
+      "status": "added",
+      "group": "05-readonly-qa-chain",
+      "bytes": 1611,
+      "sha256": "8655567431cbd839251a16e0385d4eb48af538442c7f200d88411a98776e3683"
+    },
+    {
+      "path": "tools/integration/fdh-trusted-review-workflow.cjs",
+      "status": "added",
+      "group": "03-trusted-receipts",
+      "bytes": 5653,
+      "sha256": "641400a5961343ad81d9019e4f72d0e9bf29f9da88891b6717241ae1d7fb815b"
+    },
+    {
+      "path": "tools/integration/os-server-token.test.ts",
+      "status": "added",
+      "group": "01-dev-os-isolation",
+      "bytes": 6017,
+      "sha256": "222f14f6a9ccb31e3987e21f6ae69a5a542592c3813e5759df86e5f5880cc474"
+    },
+    {
+      "path": "tools/integration/os-test-client.ts",
+      "status": "added",
+      "group": "01-dev-os-isolation",
+      "bytes": 2774,
+      "sha256": "cc604e7f1396104b52c5343c92848d4c75a60b467207750b9a8bb6691e828670"
+    },
+    {
+      "path": "tools/os-test/run_verify_os_server_full_wrapper.ts",
+      "status": "modified",
+      "group": "01-dev-os-isolation",
+      "bytes": 6993,
+      "sha256": "9466a42204e145a748a52201e2f211ea42ba5ea2530effa73b5b6e52c11dba86"
+    },
+    {
+      "path": "tools/os-test/verify_os_server_full.ts",
+      "status": "modified",
+      "group": "01-dev-os-isolation",
+      "bytes": 40432,
+      "sha256": "140b02820f40edc3dea2c82ab4c0af2cd0f1bd0f1455e3e48fae7413e58fe177"
+    },
+    {
+      "path": "tools/qa3/README.md",
+      "status": "modified",
+      "group": "02-macos-supervisor",
+      "bytes": 10090,
+      "sha256": "ac6b7c08a8bb9dc6750801c338df56da1791de42b228635f28b4ba8ea6e4fcca"
+    },
+    {
+      "path": "tools/qa3/source.py",
+      "status": "modified",
+      "group": "02-macos-supervisor",
+      "bytes": 62188,
+      "sha256": "15004ed16e6b44d7f8b518592a3fe3934810641a0ecf2c59abf72fa687743088"
+    },
+    {
+      "path": "tools/qa3/test_source_macos.py",
+      "status": "added",
+      "group": "02-macos-supervisor",
+      "bytes": 27218,
+      "sha256": "bd4eef6dcfd5ff40140954f22404d60a91f953db225a946ef52353bd8bc5f000"
+    },
+    {
+      "path": "tools/qa3/test_source_windows.py",
+      "status": "modified",
+      "group": "02-macos-supervisor",
+      "bytes": 17936,
+      "sha256": "344241e1980fc08ae87c12d0320315e1060c0c18182ab02713af3bbc317557a2"
+    },
+    {
+      "path": "tools/src/dev_env_manager.test.ts",
+      "status": "modified",
+      "group": "01-dev-os-isolation",
+      "bytes": 5778,
+      "sha256": "effdae381241c264b1f831bd0f9163923baabc323feeb5ed796ff501c62527ce"
+    },
+    {
+      "path": "tools/src/dev_env_manager.ts",
+      "status": "modified",
+      "group": "01-dev-os-isolation",
+      "bytes": 6012,
+      "sha256": "37990fcdfc752c3adb9ea4094cab6b2ef0cd2774ba664d6adce5cd24015c5524"
+    },
+    {
+      "path": "tools/src/fdh_final_package_qa_archive.test.ts",
+      "status": "added",
+      "group": "05-readonly-qa-chain",
+      "bytes": 24282,
+      "sha256": "7cd0c5d1eb219c0bc4c9cc4c04f918e4eae91604bb44ea59a1291fcfcbff21c8"
+    },
+    {
+      "path": "tools/src/fdh_final_package_qa_archive.ts",
+      "status": "added",
+      "group": "05-readonly-qa-chain",
+      "bytes": 13988,
+      "sha256": "c0c2c4e93766f2bf446fdc0aa7f799e42d5fbe4a78d35972381493db4d182970"
+    },
+    {
+      "path": "tools/src/fdh_final_package_qa_archive_types.ts",
+      "status": "added",
+      "group": "05-readonly-qa-chain",
+      "bytes": 1648,
+      "sha256": "3657f36d5c8e884d702bce751997b434596241240439fd45b03314339729bc99"
+    },
+    {
+      "path": "tools/src/fdh_final_package_qa_collector.test.ts",
+      "status": "added",
+      "group": "05-readonly-qa-chain",
+      "bytes": 29517,
+      "sha256": "226d23b675efce8a74b8780c2c807c8fbddf6855129a76075aead718dec30465"
+    },
+    {
+      "path": "tools/src/fdh_final_package_qa_collector.ts",
+      "status": "added",
+      "group": "05-readonly-qa-chain",
+      "bytes": 20816,
+      "sha256": "6119f33417cc175cc4a7a4bbad375f434a2947554c6459492f98317266c71c6e"
+    },
+    {
+      "path": "tools/src/fdh_final_package_qa_collector_types.ts",
+      "status": "added",
+      "group": "05-readonly-qa-chain",
+      "bytes": 1631,
+      "sha256": "9a23099253cb6234ffce19b809daa563c4ccaaf4d3c3c3d850e35d3120ce8c32"
+    },
+    {
+      "path": "tools/src/fdh_final_package_qa_evidence.test.ts",
+      "status": "added",
+      "group": "05-readonly-qa-chain",
+      "bytes": 20039,
+      "sha256": "e42d0f2f51686d5deef70b54b84cbc04e757ab777ec73c651fa54e2b0f19bded"
+    },
+    {
+      "path": "tools/src/fdh_final_package_qa_evidence.ts",
+      "status": "added",
+      "group": "05-readonly-qa-chain",
+      "bytes": 9990,
+      "sha256": "aaf024d22ca01e0a72be0d7382b8d5584235bbce26dfa155a2acf17b48b2ef80"
+    },
+    {
+      "path": "tools/src/fdh_final_package_qa_evidence_types.ts",
+      "status": "added",
+      "group": "05-readonly-qa-chain",
+      "bytes": 1455,
+      "sha256": "40b0cb70ac69360042ccd63144c25ca89add90b126774d30f45edec6eaf4780e"
+    },
+    {
+      "path": "tools/src/fdh_final_package_qa_gate.test.ts",
+      "status": "added",
+      "group": "05-readonly-qa-chain",
+      "bytes": 19229,
+      "sha256": "da2fa7d152f70372986396c2bc012686f247af7d9faa89df594b551e8c33f4df"
+    },
+    {
+      "path": "tools/src/fdh_final_package_qa_gate.ts",
+      "status": "added",
+      "group": "05-readonly-qa-chain",
+      "bytes": 15753,
+      "sha256": "c85342afa8f7a143c11d7a1141baf7934c8988bf6375c7f3e8344c5d4853cad6"
+    },
+    {
+      "path": "tools/src/fdh_final_package_qa_gate_types.ts",
+      "status": "added",
+      "group": "05-readonly-qa-chain",
+      "bytes": 1838,
+      "sha256": "838ffa08718db500f5bb4a8bb8db81999a895d7fa31b5ec56d6743cb2c6821fd"
+    },
+    {
+      "path": "tools/src/fdh_publish_workflow.test.ts",
+      "status": "added",
+      "group": "04-alpha-environment",
+      "bytes": 7362,
+      "sha256": "22a5786ba698d2a6417a6b9325337ce991bcc4ffceffd55f0d90902b802da5dc"
+    },
+    {
+      "path": "tools/src/fdh_qa_cli.test.ts",
+      "status": "added",
+      "group": "05-readonly-qa-chain",
+      "bytes": 8948,
+      "sha256": "c8e5c26f133f78a53c78d00c2ad97cfc9fa2c2ca9eaa9481a7927faa5f29752d"
+    },
+    {
+      "path": "tools/src/fdh_qa_cli.ts",
+      "status": "added",
+      "group": "05-readonly-qa-chain",
+      "bytes": 6825,
+      "sha256": "29995a4a46eb36f3dd8c58500d42e7ec24511d8ab7bddeec9e2a5dc8af1c0acc"
+    },
+    {
+      "path": "tools/src/fdh_qa_cli_types.ts",
+      "status": "added",
+      "group": "05-readonly-qa-chain",
+      "bytes": 542,
+      "sha256": "e42c6de5f4b214ba31440f952d4e02f96eae5f6819c9e0d38be00f686f824ad6"
+    },
+    {
+      "path": "tools/src/fdh_qa_gh_transport.test.ts",
+      "status": "added",
+      "group": "05-readonly-qa-chain",
+      "bytes": 21803,
+      "sha256": "4d88a98eb0e7708ffffc762b983aa8891e477bfe4399cdbe5db7f4a19463f09b"
+    },
+    {
+      "path": "tools/src/fdh_qa_gh_transport.ts",
+      "status": "added",
+      "group": "05-readonly-qa-chain",
+      "bytes": 17476,
+      "sha256": "d45a0359f003c2c7619020f9874b2f6a3884f7d814b2a6a6927f636eb237256c"
+    },
+    {
+      "path": "tools/src/fdh_qa_gh_transport_types.ts",
+      "status": "added",
+      "group": "05-readonly-qa-chain",
+      "bytes": 2615,
+      "sha256": "9c09d9b4012809feb4bdef331d02c0e75b1094e1be627122c746fc82d9697422"
+    },
+    {
+      "path": "tools/src/fdh_trusted_review.test.ts",
+      "status": "added",
+      "group": "03-trusted-receipts",
+      "bytes": 5459,
+      "sha256": "65bf069637ded264c9f2bd477a3b6119662f4030ec4d085e4cf27caa66ee3ea6"
+    },
+    {
+      "path": "tools/src/fdh_trusted_review.ts",
+      "status": "added",
+      "group": "03-trusted-receipts",
+      "bytes": 3310,
+      "sha256": "9e55dc2e3b5d31dfaa0c1e68d53cf93cafd269218c442f606f0ceb6fabdbca70"
+    },
+    {
+      "path": "tools/src/fdh_trusted_review_runner.ts",
+      "status": "added",
+      "group": "03-trusted-receipts",
+      "bytes": 814,
+      "sha256": "84704b9ec785c883feb8de82d543d366cb4afa2f7ff899f904937b911a622ec3"
+    },
+    {
+      "path": "tools/src/fdh_trusted_review_types.ts",
+      "status": "added",
+      "group": "03-trusted-receipts",
+      "bytes": 677,
+      "sha256": "bc52dc390deb05138e6accf7696315acfcbd495373b34184ae249eea29d58a8c"
+    },
+    {
+      "path": "tools/src/fdh_trusted_review_workflow.test.ts",
+      "status": "added",
+      "group": "03-trusted-receipts",
+      "bytes": 4452,
+      "sha256": "9aee9316b03227805c3a2c5260a1dc6776fde3e27a9e7d9707fd9ccd7c0326c3"
+    },
+    {
+      "path": "tools/src/os_server_token.test.ts",
+      "status": "added",
+      "group": "01-dev-os-isolation",
+      "bytes": 6444,
+      "sha256": "f6f7f12b33037202bc1aaea3ca1177cb86b719daa7d2b269c5b74b1214f5bc62"
+    },
+    {
+      "path": "tools/src/os_test_client.test.ts",
+      "status": "added",
+      "group": "01-dev-os-isolation",
+      "bytes": 9149,
+      "sha256": "20589235d64c87bc15916e2627888f60d849a1b16015d97b0c092ecc5e8f72e1"
+    },
+    {
+      "path": "tools/src/os_test_client.ts",
+      "status": "added",
+      "group": "01-dev-os-isolation",
+      "bytes": 6174,
+      "sha256": "36ab76355f5137bb417fac992357eea8d9e7c9fd138de5a4aec9b58a612d62ad"
+    },
+    {
+      "path": "tools/src/os_test_client_types.ts",
+      "status": "added",
+      "group": "01-dev-os-isolation",
+      "bytes": 573,
+      "sha256": "e28ce24c36ef0b107dee1106f97031102e428a862998058e6c6d81af9afbe183"
+    },
+    {
+      "path": "tools/src/os_test_options.test.ts",
+      "status": "added",
+      "group": "01-dev-os-isolation",
+      "bytes": 5827,
+      "sha256": "96ceeb2c9040fdab5b78b5e41b525f8f39999732b2f1a06baa5e322029487b66"
+    },
+    {
+      "path": "tools/src/os_test_options.ts",
+      "status": "added",
+      "group": "01-dev-os-isolation",
+      "bytes": 4483,
+      "sha256": "385ea797e3f58fcb5fa0ed8596dbb9329e4fdf162ed1cf112fa1d6cc97cadbff"
+    },
+    {
+      "path": "tools/src/os_test_options_types.ts",
+      "status": "added",
+      "group": "01-dev-os-isolation",
+      "bytes": 1026,
+      "sha256": "48ce9503084700809364ebdbf00c4d8c680053bee965a5ab627bfa9da87f9ba8"
+    },
+    {
+      "path": "tools/src/port_offset.test.ts",
+      "status": "modified",
+      "group": "01-dev-os-isolation",
+      "bytes": 8808,
+      "sha256": "a99d319439b90f7985bbf87d566d84429b70749fb5acae02e321b7d01c94a768"
+    },
+    {
+      "path": "tools/src/port_offset.ts",
+      "status": "modified",
+      "group": "01-dev-os-isolation",
+      "bytes": 7081,
+      "sha256": "5751b7a8042bb3cfc2bbb1350a7ac1ab272154f81ab0257ef0d97398953f8fef"
+    }
+  ],
+  "sourceSetSha256": "eda53243b3c0309258540e107ccdc83728b78c81eed4e2b883bcd35a8c438fd5",
+  "limitations": [
+    "Raw local file bytes only; not a commit, signature, API-origin proof or release qualification.",
+    "Inventory excludes its own output to avoid recursive hashes and all ignored/generated samples.",
+    "No staging, commit, branch/ref or remote operation is performed.",
+    "Filesystem checks are point-in-time; no hostile same-user race guarantee."
+  ],
+  "publicationAuthorized": false
+}
