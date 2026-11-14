@@ -67,7 +67,12 @@ async function removeWindowsOwner(): Promise<void> {
         attempt >= 80 || !(error instanceof Ci.nsIException) ||
         error.result !== Cr.NS_ERROR_FILE_IS_LOCKED
       ) throw error;
-      await new Promise<void>((resolve) => setTimeout(resolve, 25));
+      // System modules must not depend on a window-global timer. Import only
+      // after a verified native sharing refusal, never during capability checks.
+      const { setTimeout: scheduleRetry } = ChromeUtils.importESModule(
+        "resource://gre/modules/Timer.sys.mjs",
+      );
+      await new Promise<void>((resolve) => scheduleRetry(resolve, 25));
     }
   }
 }

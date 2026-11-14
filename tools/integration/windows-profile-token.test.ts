@@ -6,6 +6,7 @@ import { assertEquals, assertRejects } from "@std/assert";
 import type { Adapter, Options } from "./windows-profile-token-types.ts";
 async function fixture(options: Options = {}) {
   const calls: string[] = [];
+  const scheduleTimer = globalThis.setTimeout;
   const state = {
     optIn: true,
     root: "/profile",
@@ -13,7 +14,16 @@ async function fixture(options: Options = {}) {
     removeFailures: options.removeFailures ?? 0,
     permanentRemoveFailure: options.permanentRemoveFailure ?? false,
   };
-  const names = ["Services", "PathUtils", "Cc", "Ci", "Cr", "IOUtils"];
+  const names = [
+    "Services",
+    "PathUtils",
+    "Cc",
+    "Ci",
+    "Cr",
+    "IOUtils",
+    "ChromeUtils",
+    "setTimeout",
+  ];
   const saved = names.map((name) =>
     Object.getOwnPropertyDescriptor(globalThis, name)
   );
@@ -51,6 +61,20 @@ async function fixture(options: Options = {}) {
     return Promise.resolve();
   };
   const env: Record<string, unknown> = {
+    setTimeout: options.noGlobalTimer ? undefined : scheduleTimer,
+    ChromeUtils: {
+      importESModule(uri: string) {
+        if (uri !== "resource://gre/modules/Timer.sys.mjs") {
+          throw new Error("Unexpected system module");
+        }
+        return {
+          setTimeout(callback: () => void, delay: number) {
+            calls.push("timer:" + delay);
+            return scheduleTimer(callback, delay);
+          },
+        };
+      },
+    },
     Services: {
       appinfo: { OS: "WINNT" },
       prefs: { getBoolPref: () => state.optIn, getStringPref: () => "dev" },
@@ -239,6 +263,18 @@ Deno.test("built native cleanup: prolonged reader lock rejects boundedly and rem
     f.state.removeFailures = 0;
     await f.adapter.cleanupTokenFile();
     assertEquals(f.state.token, "");
+  } finally {
+    f.restore();
+  }
+});
+
+Deno.test("built native cleanup: explicit Firefox module timer works without window globals", async () => {
+  const f = await fixture({ removeFailures: 1, noGlobalTimer: true });
+  try {
+    await f.adapter.publishTokenFile("SYNTHETIC");
+    await f.adapter.cleanupTokenFile();
+    assertEquals(f.state.token, "");
+    assertEquals(f.calls.filter((c) => c === "timer:25").length, 1);
   } finally {
     f.restore();
   }
