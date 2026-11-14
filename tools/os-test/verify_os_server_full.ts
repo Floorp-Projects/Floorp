@@ -2,6 +2,15 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { parseArgs } from "@std/cli/parse-args";
+import {
+  createOsTestClient,
+  reconcileOsTestClientArgs,
+  resolveTokenFile,
+} from "../src/os_test_client.ts";
+import type { OsTestClient } from "../src/os_test_client_types.ts";
+
+// --token-file > FLOORP_OS_TOKEN_FILE; explicit paths only, no Home/profile discovery.
+// Python verifiers do not yet support this authenticated-client contract.
 
 const DEFAULT_BASE_URL =
   Deno.env.get("FLOORP_OS_BASE_URL") ?? "http://127.0.0.1:58261";
@@ -108,9 +117,7 @@ type RunValueTestOptions = {
   timeoutMs?: number;
 };
 
-type RuntimeOptions = {
-  baseUrl: string;
-};
+type RuntimeOptions = OsTestClient;
 
 const TEST_RESULTS: TestResult[] = [];
 
@@ -222,25 +229,9 @@ async function makeRequest(
         init.body = JSON.stringify(options.data);
       }
 
-      const response = await fetch(url, init);
-      if (stream) {
-        response.body?.cancel();
-        clearTimeout(timeoutId);
-        return { status: response.status, body: "<stream>" };
-      }
-
-      const raw = await response.text();
-      let body: unknown = raw;
-      if (raw.length > 0) {
-        try {
-          body = JSON.parse(raw);
-        } catch {
-          body = raw;
-        }
-      }
-
+      const result = await runtime.request(path, init, stream);
       clearTimeout(timeoutId);
-      return { status: response.status, body };
+      return result;
     } catch (error) {
       clearTimeout(timeoutId);
 
@@ -1495,7 +1486,8 @@ async function testParallelTabStability(
 }
 
 export async function main(argv: string[] = Deno.args): Promise<number> {
-  const parsed = parseArgs(argv, {
+  const targetArgs = reconcileOsTestClientArgs([], argv);
+  const parsed = parseArgs(targetArgs.verifierArgs, {
     string: ["base-url", "concurrency-workers", "concurrency-loops"],
     boolean: [
       "quick",
@@ -1518,9 +1510,14 @@ export async function main(argv: string[] = Deno.args): Promise<number> {
     },
   });
 
-  const runtime: RuntimeOptions = {
-    baseUrl: String(parsed["base-url"]),
-  };
+  // Load/validate explicit credentials before starting fixtures or API requests.
+  const runtime: RuntimeOptions = await createOsTestClient({
+    baseUrl: targetArgs.baseUrlFlag ?? String(parsed["base-url"]),
+    tokenFile: resolveTokenFile(
+      targetArgs.tokenFileFlag,
+      Deno.env.get("FLOORP_OS_TOKEN_FILE"),
+    ),
+  });
   const quick = parsed.quick === true;
   const skipBrowserInfo = parsed["skip-browser-info"] === true;
   const skipWorkspaces = parsed["skip-workspaces"] === true;
@@ -1552,7 +1549,9 @@ export async function main(argv: string[] = Deno.args): Promise<number> {
 
     const health = await runTest(runtime, "Health check", "/health");
     if (health === null) {
-      console.error("\nServer seems down or unreachable.");
+      console.error(
+        "\nHealth check failed: check reachability and explicit --token-file authentication.",
+      );
       recordResult("Health check reachability", "FAILED", "server unreachable");
       const summary = printSummary();
       return summary.failed > 0 ? 1 : 0;
