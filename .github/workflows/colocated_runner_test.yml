@@ -604,3 +604,28 @@ jobs:
             _dist/firefox-tests/TRIAGE.md
             _dist/firefox-tests/triage.json
             browser-features/chrome/test/firefox-downloaded/generated/manifest.json
+
+  # Read-only contract: builds the real bridge/loader-modules adapter and runs
+  # the built-adapter integration tests plus the shared lifecycle host tests.
+  # No secrets, no packaging, signing, publishing, or browser startup.
+  token-adapter-contract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - uses: denoland/setup-deno@667a34cdef165d8d2b2e98dde39547c9daac7282
+        with:
+          deno-version: v2.9.6
+      - name: Install workspace dependencies
+        run: deno install --frozen
+      - name: Build bridge/loader-modules adapter
+        working-directory: bridge/loader-modules
+        run: deno task build
+      - name: Run built token adapter contract tests
+        run: >-
+          deno test --allow-read --allow-write
+          tools/integration/os-server-token.test.ts
+          tools/src/os_server_token.test.ts

@@ -14,7 +14,8 @@ const HELP =
   "Max age is at most 86400000 ms (24 hours). No repository, host, URL, token,\n" +
   "executable, clock, or transport override is supported. Output is stdout only.\n" +
   "Exit: 0 matched, 1 not ready/collection failed, 2 invalid arguments.\n" +
-  "Matching is nonauthorizing: native QA/live approval/publication remain unverified.\n";
+  "Matching is nonauthorizing: native QA/live approval/publication remain unverified.\n" +
+  "Use fdh qa discover --help for bounded source-bound QA run discovery.\n";
 const KEYS = [
   "source-run-id",
   "source-attempt",
@@ -166,6 +167,13 @@ export async function runQaCli(
   rawArgv: readonly string[],
   testDeps?: QaCliTestDependencies,
 ): Promise<QaCliResult> {
+  if (rawArgv[0] === "qa" && rawArgv[1] === "discover") {
+    const { runQaDiscoveryCli } = await import("./fdh_qa_discovery_cli.ts");
+    return await runQaDiscoveryCli(
+      rawArgv,
+      testDeps?.discover ? { discover: testDeps.discover } : undefined,
+    );
+  }
   if (
     (rawArgv.length === 2 && rawArgv[0] === "qa" &&
       (rawArgv[1] === "--help" || rawArgv[1] === "-h" ||

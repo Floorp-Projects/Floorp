@@ -20,6 +20,11 @@ export type QaGhOperation =
     readonly runId: number;
     readonly page: number;
   }
+  | {
+    readonly kind: "qaRunsPage";
+    readonly since: string;
+    readonly page: number;
+  }
   | { readonly kind: "artifactMetadata"; readonly artifactId: number }
   | { readonly kind: "selectedZip"; readonly artifactId: number }
   | {

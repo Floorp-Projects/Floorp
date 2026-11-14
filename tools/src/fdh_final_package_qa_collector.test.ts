@@ -285,6 +285,10 @@ async function fixture(mutate?: (f: ReturnType<typeof baseFixture>) => void) {
       counts.set(key, ordinal);
       let value: QaGhResult;
       switch (op.kind) {
+        case "qaRunsPage":
+          // The explicit collector never discovers runs; keep this fixture closed.
+          value = missing;
+          break;
         case "repository":
           value = meta({ id: 437505831, full_name: "Floorp-Projects/Floorp" });
           break;
