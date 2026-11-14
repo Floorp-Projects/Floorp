@@ -523,3 +523,32 @@ Deno.test("OAuth valid fresh renamed identity rejected by session binding discar
     ),
   );
 });
+for (const failure of ["network", "missing-fresh-id-token"]) {
+  Deno.test(
+    "OAuth failed refresh retires and revokes old grant before probe logout " +
+      failure,
+    async () => {
+      const f = await fixture();
+      const flow = await f.begin();
+      const session = await f.oauth.completeAuthorization(flow.callback);
+      if (failure === "network") f.flags.tokenError = true;
+      else f.responsePatch.id_token = undefined;
+      await assertRejects(() => f.oauth.refreshSession(session.id));
+      assertEquals(f.oauth.getSession(session.id), undefined);
+      const revoked = f.requests.filter((r) => r.url === REVOKE).map((r) =>
+        r.params.get("token")
+      );
+      assertEquals(
+        revoked,
+        failure === "network"
+          ? [SECRET + "-refresh"]
+          : [SECRET + "-rotated", SECRET + "-refresh"],
+      );
+      assertEquals((await f.oauth.logout(session.id)).localLogout, true);
+      assertEquals(
+        f.requests.filter((r) => r.url === REVOKE).length,
+        revoked.length,
+      );
+    },
+  );
+}

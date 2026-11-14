@@ -761,7 +761,7 @@ Deno.test("valid renamed identity rejection revokes the fresh rotated credential
     "refresh-failed",
   );
   assertEquals(sessions.get(created.id), undefined);
-  assertEquals(revoked, ["fresh-rotated-token"]);
+  assertEquals(revoked, ["fresh-rotated-token", REFRESH_TOKEN]);
 });
 
 Deno.test("valid expired fresh material rejection revokes the fresh credential", async () => {
@@ -786,7 +786,7 @@ Deno.test("valid expired fresh material rejection revokes the fresh credential",
     "refresh-failed",
   );
   assertEquals(sessions.get(created.id), undefined);
-  assertEquals(revoked, ["fresh-expired-token"]);
+  assertEquals(revoked, ["fresh-expired-token", REFRESH_TOKEN]);
 });
 
 Deno.test("post-response clock failure revokes the fresh credential", async () => {
@@ -817,7 +817,7 @@ Deno.test("post-response clock failure revokes the fresh credential", async () =
   const error = await captureError(() => sessions.refresh(created.id));
   assertEquals(error.code, "invalid-clock");
   assertEquals(sessions.get(created.id), undefined);
-  assertEquals(revoked, ["fresh-clock-token"]);
+  assertEquals(revoked, ["fresh-clock-token", REFRESH_TOKEN]);
 });
 
 Deno.test("held logout refresh consumes capacity until the flight settles", async () => {
@@ -948,4 +948,81 @@ Deno.test("types module declares types only", async () => {
   assert(source.includes("import type"));
   const runtimeExport = /\bexport\s+(const|let|var|function|class|enum)\b/;
   assert(!runtimeExport.test(source), "runtime export in types module");
+});
+Deno.test("rejected provider refresh invalidates locally before old-grant revocation settles", async () => {
+  resetClock();
+  const entered = deferred();
+  const cleanup = deferred();
+  const revoked: string[] = [];
+  const sessions = makeSessions({
+    maxSessions: 1,
+    refresh: () => Promise.reject(new Error("transient provider failure")),
+    revoke: async (token) => {
+      revoked.push(token);
+      entered.release();
+      await cleanup.promise;
+    },
+  });
+  const created = sessions.create(material());
+  const pending = attempt(() => sessions.refresh(created.id));
+  await entered.promise;
+  try {
+    assertEquals(sessions.get(created.id), undefined);
+    assertEquals(
+      (await sessions.logout(created.id)).providerRevocationConfirmed,
+      false,
+    );
+    assertEquals(revoked, [REFRESH_TOKEN]);
+    assertEquals(
+      await attempt(() => sessions.create(material())),
+      "capacity-exceeded",
+    );
+  } finally {
+    cleanup.release();
+    await pending;
+  }
+  assertEquals(await pending, "refresh-failed");
+  assert(sessions.create(material()).id !== created.id);
+});
+Deno.test("failed admission revokes an identical old and fresh credential only once", async () => {
+  resetClock();
+  const revoked: string[] = [];
+  const sessions = makeSessions({
+    refresh: () =>
+      Promise.resolve(
+        material({ identity: identity({ email: "renamed@floorp.app" }) }),
+      ),
+    revoke: (token) => {
+      revoked.push(token);
+      return Promise.resolve();
+    },
+  });
+  const created = sessions.create(material());
+  assertEquals(
+    await attempt(() => sessions.refresh(created.id)),
+    "refresh-failed",
+  );
+  assertEquals(revoked, [REFRESH_TOKEN]);
+});
+Deno.test("failed old-grant revocation never restores a session or exposes provider errors", async () => {
+  resetClock();
+  const revoked: string[] = [];
+  const sessions = makeSessions({
+    refresh: () => Promise.reject(new Error("network " + ACCESS_TOKEN)),
+    revoke: (token) => {
+      revoked.push(token);
+      return Promise.reject(new Error("revoke " + REFRESH_TOKEN));
+    },
+  });
+  const created = sessions.create(material());
+  const error = await captureError(() => sessions.refresh(created.id));
+  assertEquals(revoked, [REFRESH_TOKEN]);
+  assertEquals(sessions.get(created.id), undefined);
+  assertEquals(error.code, "refresh-failed");
+  assertEquals(
+    error.message,
+    WORKSPACE_SESSION_ERROR_MESSAGES["refresh-failed"],
+  );
+  assertEquals(error.cause, undefined);
+  assert(!String(error).includes(REFRESH_TOKEN));
 });

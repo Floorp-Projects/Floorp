@@ -245,13 +245,18 @@ export class WorkspaceSessions {
       this.#sessions.set(sessionId, nextRecord);
       settle(snapshot);
     } catch (error) {
-      if (this.#sessions.get(sessionId) === record) {
-        this.#sessions.delete(sessionId);
+      const retiredOld = this.#sessions.get(sessionId) === record;
+      if (retiredOld) this.#sessions.delete(sessionId);
+      const freshCredential = fresh?.refreshToken ?? fresh?.accessToken;
+      if (freshCredential !== undefined) {
+        await this.#bestEffortRevoke(freshCredential);
       }
-      if (fresh !== undefined) {
-        await this.#bestEffortRevoke(
-          fresh.refreshToken ?? fresh.accessToken,
-        );
+      // A failed refresh still leaves its prior provider grant alive. Once the
+      // local record is retired, logout cannot recover that credential. Revoke
+      // it here, without repeating an identical fresh token or a prior logout.
+      const oldCredential = old.refreshToken ?? old.accessToken;
+      if (retiredOld && oldCredential !== freshCredential) {
+        await this.#bestEffortRevoke(oldCredential);
       }
       fail(new WorkspaceSessionError(normalizeErrorCode(error)));
     } finally {

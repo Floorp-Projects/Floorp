@@ -8,7 +8,7 @@ This adds an OAuth **client**, not a new Authorization Server. D-18 remains Goog
 - Fixed Google authorization/token/revocation/key-set locations. No operator issuer/JWKS/token endpoint override. No constructor network I/O. Token POST redirects are not followed.
 - Fresh state, nonce and S256 PKCE for each authorization. State is capacity-bounded, expires, and is consumed once before provider I/O, including denied or failed responses. Callback origin/path and duplicate query keys are checked. Cancellation/expiry also prevents a late exchange from installing a session.
 - Initial login still requires its exact nonce. A distinct subject-bound verification path handles refreshed ID tokens without inventing an initial-login nonce. Refresh requires a fresh verified ID token rather than reusing cached Workspace membership.
-- Provider access/refresh material is process-private and memory-only. The session registry owns refresh single-flight, rotation and logout invalidation. This is not distributed refresh coordination or a persistent vault.
+- Provider access/refresh material is process-private and memory-only. The session registry owns refresh single-flight, rotation and logout invalidation. A failed refresh retires locally before awaiting cleanup, revokes any distinct new and previous credential on a best-effort basis, and keeps capacity held until cleanup settles; it does not repeat a prior logout or revoke an identical credential twice. This is not distributed refresh coordination or a persistent vault.
 
 ## Explicit operator probe
 

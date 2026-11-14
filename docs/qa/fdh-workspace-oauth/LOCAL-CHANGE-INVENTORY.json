@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "generatedAt": "2026-11-14T16:00:27.254Z",
+  "generatedAt": "2026-11-14T16:26:32.690Z",
   "baseCommit": "23ed72cd83e8337f1b5903c3ec255c00aa0d0ba4",
   "hashBasis": "git-clean-filtered-blob",
   "entries": [
@@ -26,25 +26,25 @@
       "path": "docs/development/architecture-overview.mdx",
       "status": "modified",
       "bytes": 7054,
-      "sha256": "e97e2e830db25a5504799ea6957dd57c318e8d9ef4f656c85bb42decc21ee30d"
+      "sha256": "ffcdf48dec08187052886d9a75fdbc84c8ab1ca41f18f97622f0c521a0ffb182"
     },
     {
       "path": "docs/development/reference/command-reference.mdx",
       "status": "modified",
       "bytes": 8359,
-      "sha256": "6a3f6bb83b080ccae7eaf12b10614c95da6de2d293436f1d383e6867298fa6fe"
+      "sha256": "dcabce96f66156c1a5e7137ecf55bd28a144e3779039d90eed175ff231b6ce8a"
     },
     {
       "path": "docs/development/reference/source-inventory.mdx",
       "status": "modified",
       "bytes": 4919,
-      "sha256": "f96f611a5dcd1d357dcfbe522e5c115a50c509640ea6a0b41b57ac280086c0d5"
+      "sha256": "c04f33764ba3e2062a81ab5da0a4aa9823abf6fd7ac18bfbf5142e5863b190f0"
     },
     {
       "path": "docs/qa/fdh-workspace-oauth/CHECKPOINT.md",
       "status": "added",
-      "bytes": 3434,
-      "sha256": "5c05e70ed146355961fd9f8a5c0e3efd242c7a9eb9f351de9fc4a4ce3c4a3e21"
+      "bytes": 3687,
+      "sha256": "aa1e2309180b7a805cd701834a20305a46e4129e4b4697f43d3cccbe6ecf951f"
     },
     {
       "path": "tools/fdh.ts",
@@ -109,8 +109,8 @@
     {
       "path": "tools/src/fdh_workspace_oauth.test.ts",
       "status": "added",
-      "bytes": 18333,
-      "sha256": "60b527ff92f5e64e120f8368d83d7d3544a8954a62e4d2f631749eb0e7676cad"
+      "bytes": 19387,
+      "sha256": "68fc43edb97979aeb07b620f235e43ac8ba42a9c1fa2b7fe405eeb056071a11a"
     },
     {
       "path": "tools/src/fdh_workspace_oauth.ts",
@@ -145,14 +145,14 @@
     {
       "path": "tools/src/fdh_workspace_sessions.test.ts",
       "status": "added",
-      "bytes": 30457,
-      "sha256": "65f1f3a9e14c1f653c3f6bd8749ffc8969893d87dbc61f75a411ced5e4c86cf6"
+      "bytes": 33043,
+      "sha256": "f67d25df89120416c5cfa610b3401c2c322e9f55f8a637d699ed83b134ff2c70"
     },
     {
       "path": "tools/src/fdh_workspace_sessions.ts",
       "status": "added",
-      "bytes": 19916,
-      "sha256": "cde588e35182932326e5e32e6a7bc904c3a89716a43eef19c3c53689a408409b"
+      "bytes": 20400,
+      "sha256": "323134d9d97d1580dc06239dc8a379817f533a37b746f07246898f2c32452054"
     },
     {
       "path": "tools/src/fdh_workspace_sessions_types.ts",
@@ -161,7 +161,7 @@
       "sha256": "c21f5370903ee2523dc9444677f6d8af9dc3ab0df9dc49e4451e30b28623840e"
     }
   ],
-  "sourceSetSha256": "14302acb8c1a281d00079b7a73dd458d20aea8e0c9be95f336679120fc722d05",
+  "sourceSetSha256": "d32689269e10c4ee4174047942faaec1d8c3417fa4ec68b88d2144a4d846b3c5",
   "limitations": [
     "Canonical clean-filtered Git blob bytes, not platform CRLF worktree bytes; content may be uncommitted. Not a commit signature, provider-origin proof, live OAuth/AC-05/MCP qualification or publication authorization.",
     "This feature inventory covers only the closed OAuth change whitelist relative to its recorded base. Previous PR3142 receipts/inventory are not rebound.",
