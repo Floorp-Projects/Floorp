@@ -95,7 +95,192 @@ function installOrRunWithManagerLike(
     );
 }
 
+type PageChangeTestManager = {
+  onCurrentTabChangedOrLoaded: (browser: Browser) => Promise<void>;
+};
+
+const runPageChange = (
+  SiteSpecificBrowserManager.prototype as unknown as PageChangeTestManager
+).onCurrentTabChangedOrLoaded;
+
+function managerForPageChange(
+  dependencies: object,
+): SiteSpecificBrowserManager {
+  return Object.assign(
+    Object.create(SiteSpecificBrowserManager.prototype),
+    dependencies,
+  ) as SiteSpecificBrowserManager;
+}
+
+async function testPageChangeNotificationSubject(): Promise<void> {
+  const browser = gBrowser.selectedBrowser as Browser;
+  const notifications: (nsISupports | null)[] = [];
+  const observer = (subject: nsISupports | null) => notifications.push(subject);
+  let manifestBrowser: Browser | null = null;
+  let installedBrowser: Browser | null = null;
+  const uiUpdates: boolean[] = [];
+  const manager = managerForPageChange({
+    checkSiteCanBeInstall: () => true,
+    manifestProcesser: {
+      getManifestFromBrowser: (received: Browser) => {
+        manifestBrowser = received;
+        return Promise.resolve(makeManifest());
+      },
+    },
+    checkCurrentPageIsInstalled: (received: Browser) => {
+      installedBrowser = received;
+      return Promise.resolve(true);
+    },
+    updateUIElements: (installed: boolean) => uiUpdates.push(installed),
+  });
+  Services.obs.addObserver(observer, "nora-pwa-check-page-has-manifest");
+  try {
+    await runPageChange.call(manager, browser);
+    assertEquals(
+      manifestBrowser,
+      browser,
+      "manifest belongs to passed browser",
+    );
+    assertEquals(
+      installedBrowser,
+      browser,
+      "installed lookup uses passed browser",
+    );
+    assertEquals(uiUpdates.length, 1, "current selected page updates once");
+    assertEquals(uiUpdates[0], true, "installed state is propagated");
+    assertEquals(
+      notifications.length,
+      1,
+      "current page emits one notification",
+    );
+    assertEquals(
+      notifications[0],
+      browser as unknown as nsISupports,
+      "observer subject is the actual browser",
+    );
+  } finally {
+    Services.obs.removeObserver(observer, "nora-pwa-check-page-has-manifest");
+  }
+}
+
+async function testNonInstallablePageSkipsLookup(): Promise<void> {
+  let reads = 0;
+  let installedChecks = 0;
+  let updates = 0;
+  const browser = makeBrowser("about:blank");
+  const manager = managerForPageChange({
+    manifestProcesser: {
+      getManifestFromBrowser: () => {
+        reads++;
+        return Promise.resolve(null);
+      },
+    },
+    checkCurrentPageIsInstalled: () => {
+      installedChecks++;
+      return Promise.resolve(false);
+    },
+    updateUIElements: () => updates++,
+  });
+  const notifications: (nsISupports | null)[] = [];
+  const observer = (subject: nsISupports | null) => notifications.push(subject);
+  Services.obs.addObserver(observer, "nora-pwa-check-page-has-manifest");
+  try {
+    await runPageChange.call(manager, browser);
+    assertEquals(reads, 0, "non-installable page must not request a manifest");
+    assertEquals(
+      installedChecks,
+      0,
+      "non-installable page must not check installed state",
+    );
+    assertEquals(updates, 0, "non-installable page must not update UI");
+    assertEquals(
+      notifications.length,
+      0,
+      "non-installable page must not broadcast",
+    );
+  } finally {
+    Services.obs.removeObserver(observer, "nora-pwa-check-page-has-manifest");
+  }
+}
+
+async function testPageChangeSwitchDuringAwait(): Promise<void> {
+  const originalGBrowser = globalThis.gBrowser;
+  const selected = makeBrowser("https://selected.example/");
+  const other = makeBrowser("https://background.example/");
+  for (const pendingStage of ["manifest", "installed"] as const) {
+    const pendingManifest = createDeferred<Manifest | null>();
+    const pendingInstalled = createDeferred<boolean>();
+    let uiUpdates = 0;
+    let installedChecks = 0;
+    const notifications: (nsISupports | null)[] = [];
+    const observer = (subject: nsISupports | null) =>
+      notifications.push(subject);
+    const manager = managerForPageChange({
+      manifestProcesser: {
+        getManifestFromBrowser: () =>
+          pendingStage === "manifest"
+            ? pendingManifest.promise
+            : Promise.resolve(makeManifest()),
+      },
+      checkCurrentPageIsInstalled: () => {
+        installedChecks++;
+        return pendingStage === "installed"
+          ? pendingInstalled.promise
+          : Promise.resolve(false);
+      },
+      updateUIElements: () => uiUpdates++,
+    });
+    Services.obs.addObserver(observer, "nora-pwa-check-page-has-manifest");
+    try {
+      (globalThis as Record<string, unknown>).gBrowser = {
+        selectedBrowser: selected,
+      };
+      const operation = runPageChange.call(manager, selected);
+      if (pendingStage === "installed") {
+        await Promise.resolve();
+        assertEquals(
+          installedChecks,
+          1,
+          "installed lookup must be pending before switching",
+        );
+      }
+      (globalThis as Record<string, unknown>).gBrowser = {
+        selectedBrowser: other,
+      };
+      pendingManifest.resolve(makeManifest());
+      pendingInstalled.resolve(true);
+      await operation;
+      assertEquals(
+        uiUpdates,
+        0,
+        `${pendingStage}: stale selected tab must not update UI`,
+      );
+      assertEquals(
+        notifications.length,
+        0,
+        `${pendingStage}: stale selected tab must not broadcast`,
+      );
+    } finally {
+      globalThis.gBrowser = originalGBrowser;
+      Services.obs.removeObserver(observer, "nora-pwa-check-page-has-manifest");
+    }
+  }
+}
+
 const tests: TestCase[] = [
+  {
+    name: "page change notifies with its selected browser",
+    fn: testPageChangeNotificationSubject,
+  },
+  {
+    name: "non-installable page skips all lookups",
+    fn: testNonInstallablePageSkipsLookup,
+  },
+  {
+    name: "page change ignores a selected-tab switch during awaits",
+    fn: testPageChangeSwitchDuringAwait,
+  },
+
   {
     name: "https returns true",
     fn() {
