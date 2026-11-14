@@ -120,6 +120,19 @@ function endpoint(operation: QaGhOperation): QaGhEndpoint {
         "/artifacts?per_page=100&page=" + page(f.page);
       break;
     }
+    case "qaRunsPage": {
+      const f = read("since", "page");
+      const since = f.since;
+      requireValue(typeof since === "string");
+      const parsed = Date.parse(since);
+      requireValue(
+        Number.isFinite(parsed) && new Date(parsed).toISOString() === since,
+      );
+      p = "/actions/workflows/validate-final-package-qa.yml/runs?created=" +
+        encodeURIComponent(">=" + since) +
+        "&event=workflow_dispatch&per_page=100&page=" + page(f.page);
+      break;
+    }
     case "artifactMetadata":
     case "selectedZip": {
       p = "/actions/artifacts/" + positive(read("artifactId").artifactId);

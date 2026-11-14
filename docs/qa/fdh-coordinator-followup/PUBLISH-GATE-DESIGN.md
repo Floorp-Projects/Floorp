@@ -86,7 +86,7 @@ QA passed.
    (https://docs.github.com/en/rest/actions/workflow-runs). `display_title` is only the
    workflow name here.
 
-## Candidate designs for a follow-up task (none implemented)
+## Candidate production-graph designs (not activated)
 
 - (a) Reusable workflow call from the same run: add a `workflow_call` interface to the QA
   workflow and a race-safe await job before it. This gives an exact same-run binding but
@@ -102,9 +102,18 @@ QA passed.
   package run's actual artifacts. Pure selection/binding logic can live in a
   host-tested `tools/src` helper with fixture-based positive and negative cases.
 
-Each option changes the production publisher graph and is fail-closed by design, so each
-needs a live GitHub verification (for example on a non-production or validation mode)
-before landing; none was executed in this round.
+Each option changes the production publisher graph and needs live GitHub verification
+before landing. The later read-only discovery library/CLI is preparation for option (c),
+not activation of a production dependency. Synthetic fixtures exercise full archive
+composition but do not establish the real signed pending-source positive case. A
+validation_only unsigned run cannot satisfy that production-source contract.
+
+The cycle-safe production graph would be prepare_release -> {QA gate, release_check},
+with both gates required by every automated distribution path. Making release_check
+depend on QA would suppress the very pending deployment the collector requires. The
+current collector cannot qualify historic/prior-source resume: that needs a separate
+immutable historical-receipt design, never a QA bypass. Manual public-release UI
+actions remain outside the graph's control. No production graph patch is activated here.
 
 ## Residual limitations
 

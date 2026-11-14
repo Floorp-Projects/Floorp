@@ -123,9 +123,12 @@ validation, use the synthetic host/integration tests below instead.
 Dev/test HTTP-loader profiles opt into a separate token advertisement. On supported
 POSIX hosts its fixed location is `ProfD/floorp-os-server/os-server-token`.
 **Windows dev-profile advertisement is intentionally unavailable** until a reviewed
-native reparse-safe implementation exists; no filesystem access or Home fallback
-is permitted for that unsupported request. Product-default opt-out profiles retain
-the legacy location. POSIX preexisting-link checks are not atomic no-follow guards;
+native reparse-safe implementation exists. Initial refusal with no prior ownership
+performs no dirsvc/IO and never falls back to Home. If this lifecycle already owns
+a legacy advertisement or has a queued/in-flight write, refusal first awaits its
+generation-bumping cleanup using the captured owned path; this withdrawal may do
+IO and must settle before rejection. Live MCP token preference is not cleared.
+Product-default opt-out profiles retain the legacy location. POSIX preexisting-link checks are not atomic no-follow guards;
 malicious same-user replacement races and native runtime validation remain open.
 
 Synthetic checks (no credential files or browser are used):
@@ -185,6 +188,28 @@ sourceNotReady result. All transport/API/native-QA/live-approval/publication fla
 remain false. Host-installed gh/auth/config/TLS is the TCB; no origin attestation
 or atomic collection lock is claimed. The live completed-source negative is
 verified; a real pending positive and protected workflow activation remain open.
+
+## Bounded read-only QA discovery (not a publisher gate)
+
+`fdh qa discover` derives a QA run index window from the pinned source run's
+creation time. Source and QA probe commits stay independent. Its five required
+options do not include a caller timestamp, QA head, URL, repository or transport.
+
+```sh
+deno run -A tools/fdh.ts qa discover --source-run-id N --source-attempt N --source-head SOURCE_SHA \
+  --windows-policy shadow-observation --max-age-ms 600000
+```
+
+The hard limits are three pages, 300 indexed runs and eight candidates. Every
+candidate must pass the existing collector; an incomplete, pending, ambiguous,
+unverifiable or changed window fails closed. A selected match is recollected and
+the full window re-listed; this is still a point-in-time observation, not an
+atomic GitHub transaction. Exit 0 and matches=true remain nonauthorizing.
+Production publisher wiring and real signed pending-positive proof are separate.
+
+Also run changed test groups directly with type checking enabled. A broad host
+graph can pass while a focused graph exposes Node/DOM WebCrypto type differences;
+fixture keys should use their cryptographic library returned types, not casts.
 
 ## Recording commands that ran outside fdh (IMP-2)
 

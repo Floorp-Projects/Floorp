@@ -193,6 +193,22 @@ const endpoints: [QaGhOperation, string][] = [
     "/actions/runs/11/pending_deployments",
   ],
   [{ kind: "releaseTag", version: "12.21.2" }, "/releases/tags/v12.21.2"],
+  [
+    { kind: "qaRunsPage", since: "2026-11-14T00:00:00.000Z", page: 3 },
+    "/actions/workflows/validate-final-package-qa.yml/runs?created=" +
+    "%3E%3D2026-11-14T00%3A00%3A00.000Z" +
+    "&event=workflow_dispatch&per_page=100&page=3",
+  ],
+  [
+    {
+      kind: "qaRunsPage",
+      since: "2026-01-02T03:04:05.006Z",
+      page: QA_GH_LIMITS.pages,
+    },
+    "/actions/workflows/validate-final-package-qa.yml/runs?created=" +
+    "%3E%3D2026-01-02T03%3A04%3A05.006Z" +
+    "&event=workflow_dispatch&per_page=100&page=" + QA_GH_LIMITS.pages,
+  ],
 ];
 for (const [operation, path] of endpoints) {
   Deno.test("canonical GET " + operation.kind + path, async () => {
@@ -241,6 +257,95 @@ const invalid: unknown[] = [
   { kind: "releaseTag", version: "1.2.3/../x" },
   { kind: "releaseTag", version: "--method=POST" },
   { kind: "selectedZip", artifactId: 1, url: "https://signed" },
+  // qaRunsPage: fixed workflow route, canonical ISO-8601 UTC since, bounded page.
+  { kind: "qaRunsPage", since: "2026-11-14T00:00:00Z", page: 1 },
+  { kind: "qaRunsPage", since: "2026-11-14", page: 1 },
+  {
+    kind: "qaRunsPage",
+    since: "2026-11-14T00:00:00.000+00:00",
+    page: 1,
+  },
+  { kind: "qaRunsPage", since: "2026-11-14t00:00:00.000z", page: 1 },
+  { kind: "qaRunsPage", since: "2026-02-30T00:00:00.000Z", page: 1 },
+  { kind: "qaRunsPage", since: ">=2026-11-14T00:00:00.000Z", page: 1 },
+  {
+    kind: "qaRunsPage",
+    since: "2026-11-14T00:00:00.000Z&event=push",
+    page: 1,
+  },
+  { kind: "qaRunsPage", since: "2026-11-14T00:00:00.000Z ", page: 1 },
+  { kind: "qaRunsPage", since: "2026-11-14T00:00:00.000Z\n", page: 1 },
+  { kind: "qaRunsPage", since: 0, page: 1 },
+  { kind: "qaRunsPage", page: 1 },
+  { kind: "qaRunsPage", since: "2026-11-14T00:00:00.000Z" },
+  { kind: "qaRunsPage", since: "2026-11-14T00:00:00.000Z", page: 0 },
+  {
+    kind: "qaRunsPage",
+    since: "2026-11-14T00:00:00.000Z",
+    page: QA_GH_LIMITS.pages + 1,
+  },
+  { kind: "qaRunsPage", since: "2026-11-14T00:00:00.000Z", page: 1.5 },
+  { kind: "qaRunsPage", since: "2026-11-14T00:00:00.000Z", page: "1" },
+  {
+    kind: "qaRunsPage",
+    since: "2026-11-14T00:00:00.000Z",
+    page: 1,
+    url: "https://attacker",
+  },
+  {
+    kind: "qaRunsPage",
+    since: "2026-11-14T00:00:00.000Z",
+    page: 1,
+    repo: "attacker/Floorp",
+  },
+  {
+    kind: "qaRunsPage",
+    since: "2026-11-14T00:00:00.000Z",
+    page: 1,
+    workflow: "other.yml",
+  },
+  {
+    kind: "qaRunsPage",
+    since: "2026-11-14T00:00:00.000Z",
+    page: 1,
+    executable: "x",
+  },
+  {
+    kind: "qaRunsPage",
+    since: "2026-11-14T00:00:00.000Z",
+    page: 1,
+    args: [],
+  },
+  {
+    kind: "qaRunsPage",
+    since: "2026-11-14T00:00:00.000Z",
+    page: 1,
+    per_page: 1,
+  },
+  {
+    kind: "qaRunsPage",
+    since: "2026-11-14T00:00:00.000Z",
+    page: 1,
+    status: "completed",
+  },
+  {
+    kind: "qaRunsPage",
+    since: "2026-11-14T00:00:00.000Z",
+    page: 1,
+    event: "push",
+  },
+  {
+    kind: "qaRunsPage",
+    since: "2026-11-14T00:00:00.000Z",
+    page: 1,
+    created: ">=x",
+  },
+  {
+    kind: "qaRunsPage",
+    since: "2026-11-14T00:00:00.000Z",
+    page: 1,
+    head: "a".repeat(40),
+  },
 ];
 for (const [i, operation] of invalid.entries()) {
   Deno.test("invalid operation before spawn " + i, async () => {

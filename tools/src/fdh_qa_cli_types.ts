@@ -4,8 +4,11 @@ import type {
   QaCollectorOptions,
 } from "./fdh_final_package_qa_collector_types.ts";
 
+import type { QaDiscoveryCliTestDependencies } from "./fdh_qa_discovery_cli_types.ts";
+
 /** Library test seam only. No CLI argument can select a collector or transport. */
 export interface QaCliTestDependencies {
+  readonly discover?: QaDiscoveryCliTestDependencies["discover"];
   readonly collect: (
     options: QaCollectorOptions,
   ) => Promise<QaCollectionReport>;

@@ -156,6 +156,7 @@ Usage: deno run -A tools/fdh.ts <command> [options]
 
 Commands:
   qa collect --help         Read-only QA collection (explicit pinned IDs/heads/policy)
+  qa discover --help        Bounded read-only QA discovery (no publication authority)
   task start --task-id <id> --worktree <abs-dir> [--port-offset <n|auto>] [--base <sha>]
                             Create the local task state under
                             <worktree>/_dist/fdh/tasks/<id>.json
