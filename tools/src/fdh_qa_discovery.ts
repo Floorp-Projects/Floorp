@@ -196,7 +196,17 @@ export async function discoverAndCollectFinalPackageQa(
         o.windowsPolicy === "shadow-observation",
     );
     need(o.maxAgeMs <= MAX_AGE_MS);
-    const now = deps.now ?? (() => new Date().toISOString());
+    const readClock = deps.now ?? (() => new Date().toISOString());
+    let lastClock = -Infinity;
+    // Collector-local ordering does not span separate invocations. Enforce one
+    // monotonic observation clock across discovery and every collector call.
+    const now = (): string => {
+      const value = readClock();
+      const current = timestamp(value);
+      need(current >= lastClock);
+      lastClock = current;
+      return value;
+    };
     const start = timestamp(now());
     const transport = deps.transport ?? createQaGhTransport();
     const collect = deps.collect ?? collectFinalPackageQa;
@@ -370,6 +380,10 @@ export async function discoverAndCollectFinalPackageQa(
       code = final.code === "changed" ? "changed" : "finalRecheckFailed";
       throw new Error("final recheck failed");
     }
+    // The collector checks ordering within its own invocation. Also bind its
+    // report instant to discovery: wall time may regress between invocations
+    // and later recover before the final completion-clock check.
+    need(timestamp(final.checkedAt) >= timestamp(checkedAt));
     // Bounded race guard: the selected-only re-collect cannot prove that no
     // competing QA run appeared during the scan, so re-list the SAME bounded
     // window and require identical totals plus identical full fingerprints.

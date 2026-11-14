@@ -988,6 +988,55 @@ Deno.test("discovery reports the pre-final-collect freshness instant", async () 
   assert(timestampOf("2026-11-13T05:07:00Z") - timestampOf(stamp(6)) > maxAge);
 });
 
+Deno.test("discovery rejects clock regression between observation and final collection", async () => {
+  const t = await fixture([valid]);
+  const queue = [
+    "2026-11-13T04:10:00Z", // discovery start
+    "2026-11-13T04:14:05Z", // initial collector start
+    "2026-11-13T04:14:10Z", // initial collector report
+    "2026-11-13T04:14:10Z", // initial collector completion
+    "2026-11-13T04:17:00Z", // discovery observation: evidence age 11min
+    "2026-11-13T04:14:30Z", // clock regresses before final collector starts
+    "2026-11-13T04:15:00Z", // final collector report: evidence age 9min
+    "2026-11-13T04:15:00Z", // collector itself sees monotonic time
+    "2026-11-13T04:18:00Z", // clock recovers; completion guard alone passes
+  ];
+  let index = 0;
+  const r = await t.run(OPTIONS, () => queue[index++]!);
+  assertEquals(r.matches, false);
+  if (!r.matches) {
+    assertEquals(r.stage, "finalRecheck");
+    assertEquals(r.code, "finalRecheckFailed");
+  }
+  assertEquals(r.publicationAuthorized, false);
+  assert(timestampOf(queue[4]!) - timestampOf(stamp(6)) > OPTIONS.maxAgeMs);
+  assert(timestampOf(queue[6]!) - timestampOf(stamp(6)) <= OPTIONS.maxAgeMs);
+});
+
+Deno.test("discovery rejects clock regression before its observation instant", async () => {
+  const t = await fixture([valid]);
+  const queue = [
+    "2026-11-13T04:00:00Z", // discovery start
+    "2026-11-13T04:14:05Z", // initial collector start
+    "2026-11-13T04:14:10Z", // initial collector report
+    "2026-11-13T04:14:10Z", // initial collector completion
+    "2026-11-13T04:05:00Z", // regressed observation precedes evidence start
+    "2026-11-13T04:14:30Z", // final collector itself sees monotonic time
+    "2026-11-13T04:15:00Z",
+    "2026-11-13T04:15:00Z",
+    "2026-11-13T04:18:00Z",
+  ];
+  let index = 0;
+  const r = await t.run(OPTIONS, () => queue[index++]!);
+  assertEquals(r.matches, false);
+  if (!r.matches) {
+    assertEquals(r.stage, "finalRecheck");
+    assertEquals(r.code, "finalRecheckFailed");
+  }
+  assertEquals(r.publicationAuthorized, false);
+  assert(timestampOf(queue[4]!) < timestampOf(stamp(6)));
+});
+
 Deno.test("discovery final recheck rejects changed pending deployments", async () => {
   const t = await fixture([valid]);
   // Only the final collect's recheck read (ordinal 4) mutates: the final

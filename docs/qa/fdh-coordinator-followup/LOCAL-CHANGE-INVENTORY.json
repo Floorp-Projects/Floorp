@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "generatedAt": "2026-11-14T10:32:36.480Z",
+  "generatedAt": "2026-11-14T11:18:44.868Z",
   "baseCommit": "9e6b24e5fd561250ab04a011b70ee0b1280b1adc",
   "hashBasis": "git-clean-filtered-blob",
   "entries": [
@@ -79,28 +79,28 @@
       "status": "modified",
       "group": "06-docs-and-skills",
       "bytes": 7054,
-      "sha256": "bd0945a9c1e5be0748aa6d6b7133a54d4eeb830129baaa73f8470eb709145e92"
+      "sha256": "67f228d289919bdb4b6eff9873816c9d4c74bfe783039b1798d3de3faa73c8b9"
     },
     {
       "path": "docs/development/reference/command-reference.mdx",
       "status": "modified",
       "group": "06-docs-and-skills",
       "bytes": 8359,
-      "sha256": "0a793404cc6636b07cab850d3836d7b945dffb8f1b7e46527fa7ca9680e2e625"
+      "sha256": "2b5a41dde8097ff6f0beb25625f19e8d12f3a823ff460cec6287c67471a481db"
     },
     {
       "path": "docs/development/reference/source-inventory.mdx",
       "status": "modified",
       "group": "06-docs-and-skills",
       "bytes": 4919,
-      "sha256": "729d844234fb779bcf37d8ab59df8054aab14032d4de48e8902fa85258b62368"
+      "sha256": "2bf1d7ad8774119e2f0a6dbf99d6797bca70a28f5b96551aa20626ff6d649ec7"
     },
     {
       "path": "docs/qa/fdh-coordinator-followup/CHECKPOINT.md",
       "status": "added",
       "group": "06-docs-and-skills",
-      "bytes": 47670,
-      "sha256": "a79ff3658e68e5e5e5bb51d55f9fce437fbe62fe4e45a7712aaa4aad36a471a2"
+      "bytes": 48614,
+      "sha256": "11ade30e974df582eeb696ec569550ec02848c2f2881352577b57b1f684e40f7"
     },
     {
       "path": "docs/qa/fdh-coordinator-followup/LOCAL-COMMIT-PLAN.md",
@@ -407,15 +407,15 @@
       "path": "tools/src/fdh_qa_discovery.test.ts",
       "status": "added",
       "group": "05-readonly-qa-chain",
-      "bytes": 37908,
-      "sha256": "752771ebe60de45c38027869baac2922f1ebfafdf5312005bd96ca7c17c5a7ec"
+      "bytes": 40026,
+      "sha256": "daae27366d12c5554e79127bdfdbea86daeb254ca1821b84a4fc9dfbb04aa6d0"
     },
     {
       "path": "tools/src/fdh_qa_discovery.ts",
       "status": "added",
       "group": "05-readonly-qa-chain",
-      "bytes": 15764,
-      "sha256": "41436755a84f09f32dcc994d23b310e29abd0184a2b8fbd18b4bb19f96c6248a"
+      "bytes": 16436,
+      "sha256": "69e83036d1169217b4be5125d6f276a145d886215095ed431cb07d062ae0acff"
     },
     {
       "path": "tools/src/fdh_qa_discovery_cli.test.ts",
@@ -593,7 +593,7 @@
       "sha256": "82063f29337d5ef6c0d82bd8abdadbcbb59456e596801de6a2b141bccd0fff66"
     }
   ],
-  "sourceSetSha256": "03bfc04d0edc4be962d1cd2c26f440a61846d77964feb4788ef2a8b56644752e",
+  "sourceSetSha256": "76e75668df22d8696e4262eb2c4b6fedaa3c088492f79d45bce77402161f88b8",
   "limitations": [
     "Canonical Git clean-filtered blob bytes, not platform working-tree CRLF; inputs may be uncommitted content. Not a commit signature, API-origin proof or release qualification.",
     "Inventory excludes its own output to avoid recursive hashes and all ignored/generated samples.",
