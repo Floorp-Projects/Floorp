@@ -41,6 +41,7 @@ def extract(path):
 '''
     result['Native compile and install tests']='''./mach configure
 ./mach build --jobs="$(nproc)"
+./mach build-backend -b TestManifest
 ./mach build install-tests
 '''
     # Follow normal Linux updater handling; native packaging retains the upstream

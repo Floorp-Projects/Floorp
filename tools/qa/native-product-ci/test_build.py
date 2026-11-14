@@ -2,6 +2,7 @@
 import json
 from pathlib import Path
 import tempfile
+import subprocess
 import zipfile
 import unittest
 import yaml
@@ -23,6 +24,28 @@ class RecipeTests(unittest.TestCase):
         self.assertLess(names.index('Apply Firefox Preferences Override'),names.index('Native final package'))
         config=dict(steps)['Mach configure'];self.assertIn('--enable-tests',config);self.assertIn('--enable-debug',config)
         self.assertNotIn('--enable-artifact-builds',config);self.assertNotIn('--disable-tests',config)
+    def test_native_metadata_backend_precedes_install(self):
+        script=dict(r.extract(self.workflow()))['Native compile and install tests']
+        lines=script.splitlines()
+        self.assertEqual(lines,['./mach configure','./mach build --jobs="$(nproc)"',
+                                './mach build-backend -b TestManifest','./mach build install-tests'])
+    def test_native_metadata_backend_failure_stops_install(self):
+        script=dict(r.extract(self.workflow()))['Native compile and install tests']
+        mach=self.root/'mach'
+        mach.write_text('#!/usr/bin/env bash\necho "$*" >> calls\nif [ "$1" = build-backend ]; then exit 42; fi\n')
+        mach.chmod(0o755)
+        result=subprocess.run(['bash','-euo','pipefail','-c',script],cwd=self.root,capture_output=True)
+        self.assertEqual(result.returncode,42)
+        self.assertNotIn('build install-tests',(self.root/'calls').read_text())
+    def test_native_metadata_backend_success_reaches_install(self):
+        script=dict(r.extract(self.workflow()))['Native compile and install tests']
+        mach=self.root/'mach'
+        mach.write_text('#!/usr/bin/env bash\necho "$*" >> calls\n')
+        mach.chmod(0o755)
+        result=subprocess.run(['bash','-euo','pipefail','-c',script],cwd=self.root,capture_output=True)
+        self.assertEqual(result.returncode,0)
+        self.assertEqual((self.root/'calls').read_text().splitlines()[-2:],
+                         ['build-backend -b TestManifest','build install-tests'])
     def test_missing_phase(self):
         self.steps.pop()
         with self.assertRaises(ValueError):r.extract(self.workflow())
