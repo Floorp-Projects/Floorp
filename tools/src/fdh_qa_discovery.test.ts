@@ -465,6 +465,10 @@ function safe(
   assert(!text.includes("SECRET"));
 }
 
+function timestampOf(v: string): number {
+  assert(/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ$/.test(v));
+  return Date.parse(v);
+}
 const mutateMeta = (
   result: QaGhResult,
   fn: (v: Record<string, unknown>) => void,
@@ -947,6 +951,41 @@ Deno.test("discovery uncertainty before valid candidate fails closed", async () 
     assertEquals(r.stage, "candidates");
     assertEquals(r.code, "uncertainCandidate");
   }
+});
+
+Deno.test("discovery reports the pre-final-collect freshness instant", async () => {
+  const t = await fixture([valid]);
+  // Evidence run started 04:06; maxAge 60min -> expires 05:06. The final
+  // collect completes at 04:15:30 (9m30s, collector-verified); the window
+  // re-listing then advances the clock past expiry (05:07). The reported
+  // checkedAt must be the pre-final-collect instant (04:14:10), not the
+  // post-re-list clock, so the reported age stays inside the verified window.
+  const maxAge = 60 * 60_000;
+  const queue = [
+    "2026-11-13T04:10:00Z", // discovery start
+    "2026-11-13T04:14:05Z", // scan collect start (>= package updated_at)
+    "2026-11-13T04:14:10Z", // scan collect checkedAt
+    "2026-11-13T04:14:10Z", // scan collect done (age 8m10s <= maxAge)
+    "2026-11-13T04:14:20Z", // report instant (before final collect)
+    "2026-11-13T04:14:30Z", // final collect start
+    "2026-11-13T04:15:30Z", // final collect checkedAt
+    "2026-11-13T04:15:30Z", // final collect done (age 9m30s <= maxAge)
+    "2026-11-13T05:07:00Z", // completion clock after the slow re-listing
+  ];
+  let index = 0;
+  const r = await t.run(
+    { ...OPTIONS, maxAgeMs: maxAge },
+    () => queue[index++]!,
+  );
+  assertEquals(r.matches, true);
+  if (r.matches) {
+    assertEquals(r.checkedAt, "2026-11-13T04:14:20Z");
+    const reportedAge = timestampOf(r.checkedAt) - timestampOf(stamp(6));
+    assert(reportedAge <= maxAge);
+  }
+  // The scenario is a genuine violation under a post-re-list capture point:
+  // the completion clock exceeds the evidence age budget.
+  assert(timestampOf("2026-11-13T05:07:00Z") - timestampOf(stamp(6)) > maxAge);
 });
 
 Deno.test("discovery final recheck rejects changed pending deployments", async () => {

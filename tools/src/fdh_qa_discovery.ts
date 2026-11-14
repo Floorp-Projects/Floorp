@@ -337,6 +337,13 @@ export async function discoverAndCollectFinalPackageQa(
 
     stage = "finalRecheck";
     code = "finalRecheckFailed";
+    // Report instant captured BEFORE the final selected collect: the collector
+    // validates evidence age at its own completion clock, which is >= this
+    // instant under the shared monotonic clock, so the reported point-in-time
+    // stays inside the collector-verified freshness window even when the
+    // window re-listing completes later.
+    const checkedAt = now();
+    need(timestamp(checkedAt) >= start);
     // Fresh re-collection of the selected run after the COMPLETE candidate
     // scan, so pending deployments/source/job bindings are current.
     const final = await collect(
@@ -375,8 +382,10 @@ export async function discoverAndCollectFinalPackageQa(
       code = "changed";
       throw new Error("qa window changed during discovery");
     }
-    const checkedAt = now();
-    need(timestamp(checkedAt) >= start);
+    // Final clock monotonic validation is separate from the report instant:
+    // the collector's completion clock must not precede the report instant.
+    const completedAt = now();
+    need(timestamp(completedAt) >= timestamp(checkedAt));
     return {
       ...SCOPE,
       matches: true,

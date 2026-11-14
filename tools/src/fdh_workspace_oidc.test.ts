@@ -1055,3 +1055,27 @@ for (const edge of ["clock", "resolver", "expectation"]) {
     },
   );
 }
+
+Deno.test("singleton audience array without an authorized party is accepted", async () => {
+  const token = await signClaims({ aud: [CLIENT_ID] });
+  const identity = await verify(token);
+  assertEquals(identity.audience, [CLIENT_ID]);
+  assertEquals(identity.authorizedParty, undefined);
+});
+
+Deno.test("singleton audience array with a matching authorized party is accepted", async () => {
+  const token = await signClaims({ aud: [CLIENT_ID], azp: CLIENT_ID });
+  const identity = await verify(token);
+  assertEquals(identity.audience, [CLIENT_ID]);
+  assertEquals(identity.authorizedParty, CLIENT_ID);
+});
+
+Deno.test("singleton audience array with a foreign authorized party is rejected", async () => {
+  const token = await signClaims({ aud: [CLIENT_ID], azp: OTHER_CLIENT_ID });
+  assertEquals(await attempt(() => verify(token)), "invalid-claims");
+});
+
+Deno.test("multi audience array still requires an authorized party", async () => {
+  const token = await signClaims({ aud: [CLIENT_ID, CLIENT_ID] });
+  assertEquals(await attempt(() => verify(token)), "invalid-claims");
+});

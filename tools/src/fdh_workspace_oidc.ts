@@ -312,10 +312,16 @@ function readVerifiedClaims(
       }
     }
     const azp = payload.azp;
-    if (typeof azp !== "string" || azp !== clientId) {
+    if (azp !== undefined) {
+      if (typeof azp !== "string" || azp !== clientId) {
+        throw new WorkspaceOidcError("invalid-claims");
+      }
+      authorizedParty = azp;
+    } else if (audience.length > 1) {
+      // Multi audience tokens must name their authorized party; a single
+      // element audience array does not have to.
       throw new WorkspaceOidcError("invalid-claims");
     }
-    authorizedParty = azp;
   } else if (typeof audience === "string") {
     const azp = payload.azp;
     if (azp !== undefined) {
