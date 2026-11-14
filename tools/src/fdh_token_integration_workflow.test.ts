@@ -111,6 +111,13 @@ Deno.test("focused offline contracts preserve the independent type-check graph",
   for (
     const file of [
       "fdh_workspace_oidc",
+      "fdh_workspace_oidc_subject",
+      "fdh_workspace_oauth",
+      "fdh_workspace_sessions",
+      "fdh_workspace_auth_cli",
+      "fdh_workspace_auth_cli_runtime",
+      "fdh_workspace_auth_cli_validation",
+      "fdh_workspace_auth_roundtrip",
       "fdh_qa_discovery",
       "fdh_qa_discovery_cli",
       "fdh_qa_gh_transport",

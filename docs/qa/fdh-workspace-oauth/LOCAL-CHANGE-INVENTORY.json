@@ -1,0 +1,174 @@
+{
+  "schema": 1,
+  "generatedAt": "2026-11-14T16:00:27.254Z",
+  "baseCommit": "23ed72cd83e8337f1b5903c3ec255c00aa0d0ba4",
+  "hashBasis": "git-clean-filtered-blob",
+  "entries": [
+    {
+      "path": ".github/workflows/colocated_runner_test.yml",
+      "status": "modified",
+      "bytes": 26913,
+      "sha256": "330fa592a376c0036073498c97ce62699441d16c1f883b95b1a7e320c0bbcff8"
+    },
+    {
+      "path": "deno.json",
+      "status": "modified",
+      "bytes": 5991,
+      "sha256": "ad4b69e905d38b1736a089643ab6e6715aee7eab8b0f3f2ce986800a9109061c"
+    },
+    {
+      "path": "deno.lock",
+      "status": "modified",
+      "bytes": 248006,
+      "sha256": "c0af27e3a0c1cf2bd0e909b30f220cf34ea070f1a1399a2bbb154d9cd1bd35fd"
+    },
+    {
+      "path": "docs/development/architecture-overview.mdx",
+      "status": "modified",
+      "bytes": 7054,
+      "sha256": "e97e2e830db25a5504799ea6957dd57c318e8d9ef4f656c85bb42decc21ee30d"
+    },
+    {
+      "path": "docs/development/reference/command-reference.mdx",
+      "status": "modified",
+      "bytes": 8359,
+      "sha256": "6a3f6bb83b080ccae7eaf12b10614c95da6de2d293436f1d383e6867298fa6fe"
+    },
+    {
+      "path": "docs/development/reference/source-inventory.mdx",
+      "status": "modified",
+      "bytes": 4919,
+      "sha256": "f96f611a5dcd1d357dcfbe522e5c115a50c509640ea6a0b41b57ac280086c0d5"
+    },
+    {
+      "path": "docs/qa/fdh-workspace-oauth/CHECKPOINT.md",
+      "status": "added",
+      "bytes": 3434,
+      "sha256": "5c05e70ed146355961fd9f8a5c0e3efd242c7a9eb9f351de9fc4a4ce3c4a3e21"
+    },
+    {
+      "path": "tools/fdh.ts",
+      "status": "modified",
+      "bytes": 64807,
+      "sha256": "cc2fbd2f6e144341f96e3f01778947ea9bc0a82fba132a873b2a6443884403f2"
+    },
+    {
+      "path": "tools/src/fdh_token_integration_workflow.test.ts",
+      "status": "modified",
+      "bytes": 5032,
+      "sha256": "5b7176820015c5d17e973244c2637eac0f5c2ba44e06fbd08d521feb9cdbf30d"
+    },
+    {
+      "path": "tools/src/fdh_workspace_auth_cli.test.ts",
+      "status": "added",
+      "bytes": 6214,
+      "sha256": "b936971c6ccf213e1e0141ff2aa962679c597cd4e390199c966f230a14850cba"
+    },
+    {
+      "path": "tools/src/fdh_workspace_auth_cli.ts",
+      "status": "added",
+      "bytes": 4435,
+      "sha256": "89c574cb77cb85bd3ed223a6bff0a02f237d301712115218dbf8c2175e7193cf"
+    },
+    {
+      "path": "tools/src/fdh_workspace_auth_cli_runtime.test.ts",
+      "status": "added",
+      "bytes": 7505,
+      "sha256": "c74c8e9f1296f6797dfa802c6c06e95a126e57c33e70cfa727ef5c361d7584b9"
+    },
+    {
+      "path": "tools/src/fdh_workspace_auth_cli_runtime.ts",
+      "status": "added",
+      "bytes": 5336,
+      "sha256": "f1b12207fabb3b5cea54f1d44f81cbb7a033f95aad4d3bb46dd72ee92884122a"
+    },
+    {
+      "path": "tools/src/fdh_workspace_auth_cli_types.ts",
+      "status": "added",
+      "bytes": 1842,
+      "sha256": "37c9c2d36840531e9c702c49e532e8a0c9a313fcfe905c85b0dc0b33a0024c37"
+    },
+    {
+      "path": "tools/src/fdh_workspace_auth_cli_validation.test.ts",
+      "status": "added",
+      "bytes": 1581,
+      "sha256": "b8099e61b9ccbfb94f1b7e7a52794cf426784c14ea449c5747f0b7eb48967239"
+    },
+    {
+      "path": "tools/src/fdh_workspace_auth_cli_validation.ts",
+      "status": "added",
+      "bytes": 545,
+      "sha256": "61e556ecc07352dc70f83ae9c8ca32f1b8b570a79e3fbbcdf81aa623ab474ca0"
+    },
+    {
+      "path": "tools/src/fdh_workspace_auth_roundtrip.test.ts",
+      "status": "added",
+      "bytes": 8483,
+      "sha256": "6d3fb7e4e6b5e431807fd90f13390d5321a30e19f3ee32ac24e2b64bbfc2f8c1"
+    },
+    {
+      "path": "tools/src/fdh_workspace_oauth.test.ts",
+      "status": "added",
+      "bytes": 18333,
+      "sha256": "60b527ff92f5e64e120f8368d83d7d3544a8954a62e4d2f631749eb0e7676cad"
+    },
+    {
+      "path": "tools/src/fdh_workspace_oauth.ts",
+      "status": "added",
+      "bytes": 13345,
+      "sha256": "e61c3e0d4742a9f3be488c22513cf1fe3d1d3989d4369deec2beda3dcae592fe"
+    },
+    {
+      "path": "tools/src/fdh_workspace_oauth_types.ts",
+      "status": "added",
+      "bytes": 1545,
+      "sha256": "e4c07a57964ac349bde0a7befaab3c501816e84f044b0ba1fdc490ff66e5f175"
+    },
+    {
+      "path": "tools/src/fdh_workspace_oidc.ts",
+      "status": "modified",
+      "bytes": 14052,
+      "sha256": "c6f2b33cab7a9fad130aa25480f26ca43989d6d86c5345665f143b13e2d387b0"
+    },
+    {
+      "path": "tools/src/fdh_workspace_oidc_subject.test.ts",
+      "status": "added",
+      "bytes": 3764,
+      "sha256": "4aef30b7fa5ba5d80fb5cc3a5e9e159a46aa0b2a6509d561b8425ead50c85261"
+    },
+    {
+      "path": "tools/src/fdh_workspace_oidc_types.ts",
+      "status": "modified",
+      "bytes": 3710,
+      "sha256": "a398389b707ac55ad1232afff4854011a9ff45aeedcc6a512b5e02f8123e25fa"
+    },
+    {
+      "path": "tools/src/fdh_workspace_sessions.test.ts",
+      "status": "added",
+      "bytes": 30457,
+      "sha256": "65f1f3a9e14c1f653c3f6bd8749ffc8969893d87dbc61f75a411ced5e4c86cf6"
+    },
+    {
+      "path": "tools/src/fdh_workspace_sessions.ts",
+      "status": "added",
+      "bytes": 19916,
+      "sha256": "cde588e35182932326e5e32e6a7bc904c3a89716a43eef19c3c53689a408409b"
+    },
+    {
+      "path": "tools/src/fdh_workspace_sessions_types.ts",
+      "status": "added",
+      "bytes": 2501,
+      "sha256": "c21f5370903ee2523dc9444677f6d8af9dc3ab0df9dc49e4451e30b28623840e"
+    }
+  ],
+  "sourceSetSha256": "14302acb8c1a281d00079b7a73dd458d20aea8e0c9be95f336679120fc722d05",
+  "limitations": [
+    "Canonical clean-filtered Git blob bytes, not platform CRLF worktree bytes; content may be uncommitted. Not a commit signature, provider-origin proof, live OAuth/AC-05/MCP qualification or publication authorization.",
+    "This feature inventory covers only the closed OAuth change whitelist relative to its recorded base. Previous PR3142 receipts/inventory are not rebound.",
+    "Excludes its own output to avoid recursive hashes and ignored build/test artifacts. Filesystem checks are point-in-time, not a hostile same-user race guarantee.",
+    "No staging, commit, branch/ref or remote effect. hash-object -w may store unreachable blob objects."
+  ],
+  "liveOAuthQualified": false,
+  "mcpAuthorizationGranted": false,
+  "publicationAuthorized": false
+}

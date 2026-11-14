@@ -34,6 +34,13 @@ export type WorkspaceOidcErrorCode =
  * is resolved, and the values are then used from a frozen local snapshot for
  * the rest of the verification.
  */
+/** Fresh provider ID token bound to an already authenticated opaque subject.
+ * This is NOT an initial login: only the OAuth refresh path may use it. */
+export interface WorkspaceSubjectIdTokenExpectation {
+  readonly clientId: string;
+  readonly expectedSubject: string;
+}
+
 export interface WorkspaceIdTokenExpectation {
   readonly clientId: string;
   readonly expectedNonce: string;
