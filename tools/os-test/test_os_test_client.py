@@ -826,7 +826,7 @@ class WrapperPortOffsetTests(unittest.TestCase):
         popen.assert_not_called()
         sleep.assert_not_called()
 
-    def test_main_auto_offset_probes_before_token_io_and_appends_start_args(self):
+    def test_main_auto_resolves_token_option_before_probe_and_appends_start_args(self):
         events: list[str] = []
         captured_cmd: list[list[str]] = []
         captured_verifier: list[list[str]] = []
@@ -842,7 +842,7 @@ class WrapperPortOffsetTests(unittest.TestCase):
         ) as auto, patch.object(
             wrapper,
             "resolve_token_file",
-            side_effect=lambda *_args: events.append("token") or None,
+            side_effect=lambda *_args: events.append("token-option") or None,
         ) as token, patch.object(
             wrapper, "wait_for_health", return_value=True
         ), patch.object(wrapper.time, "sleep"), patch.object(
@@ -856,7 +856,7 @@ class WrapperPortOffsetTests(unittest.TestCase):
         ) as popen:
             code = wrapper.main(["--port-offset", "auto"])
         self.assertEqual(code, 0)
-        self.assertEqual(events, ["auto", "token"])
+        self.assertEqual(events, ["token-option", "auto"])
         self.assertEqual(
             captured_cmd,
             [["deno", "task", "feles-build", "dev", "--port-offset", "20"]],
