@@ -64,13 +64,29 @@ void AssertPrivate(const fs::path& path) {
   Require(good && user && kernel, "protected DACL grants only owner and SYSTEM, no inherited ACE");
 }
 void PublicFixture(const fs::path& path) {
+  // Elevated runners may default new objects to the Administrators group.
+  // This fixture promises current-user ownership; do not relax production Owner().
+  HANDLE processToken = nullptr;
+  Require(OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &processToken) != FALSE, "query fixture process user");
+  alignas(TOKEN_USER) BYTE userData[sizeof(TOKEN_USER) + SECURITY_MAX_SID_SIZE]{};
+  DWORD userBytes = 0;
+  const BOOL userLoaded = GetTokenInformation(processToken, TokenUser, userData, sizeof(userData), &userBytes);
+  CloseHandle(processToken);
+  Require(userLoaded != FALSE, "load bounded fixture process user");
+  const PSID user = reinterpret_cast<const TOKEN_USER*>(userData)->User.Sid;
+  PSECURITY_DESCRIPTOR priorSecurity = nullptr;
+  PSID priorOwner = nullptr;
+  Require(GetNamedSecurityInfoW(const_cast<LPWSTR>(path.c_str()), SE_FILE_OBJECT, OWNER_SECURITY_INFORMATION,
+      &priorOwner, nullptr, nullptr, nullptr, &priorSecurity) == ERROR_SUCCESS, "query fixture default owner");
+  std::cout << "Public fixture pre-owner matches process user: " << (priorOwner && EqualSid(priorOwner, user)) << "\n";
+  if (priorSecurity) LocalFree(priorSecurity);
   PSECURITY_DESCRIPTOR descriptor = nullptr;
   Require(ConvertStringSecurityDescriptorToSecurityDescriptorW(L"D:P(A;;FA;;;WD)", SDDL_REVISION_1, &descriptor, nullptr) != FALSE, "synthetic public DACL");
   BOOL present = FALSE, inherited = FALSE;
   PACL acl = nullptr;
   const bool loaded = GetSecurityDescriptorDacl(descriptor, &present, &acl, &inherited) != FALSE;
   const DWORD error = loaded ? SetNamedSecurityInfoW(const_cast<LPWSTR>(path.c_str()), SE_FILE_OBJECT,
-      DACL_SECURITY_INFORMATION | PROTECTED_DACL_SECURITY_INFORMATION, nullptr, nullptr, acl, nullptr) : ERROR_INVALID_SECURITY_DESCR;
+      OWNER_SECURITY_INFORMATION | DACL_SECURITY_INFORMATION | PROTECTED_DACL_SECURITY_INFORMATION, user, nullptr, acl, nullptr) : ERROR_INVALID_SECURITY_DESCR;
   LocalFree(descriptor);
   Require(error == ERROR_SUCCESS && present, "set public synthetic fixture DACL");
 }
@@ -147,8 +163,10 @@ void NativeContracts() {
   const auto publicProfile = temp.Profile(L"public-fixture");
   fs::create_directory(publicProfile / L"floorp-os-server");
   Put(Token(publicProfile), "SYNTHETIC-old-public-token");
-  PublicFixture(publicProfile / L"floorp-os-server");
+  // Protect the existing leaf before changing its parent DACL: fixture setup
+  // must not accidentally propagate an empty inherited ACL into the leaf.
   PublicFixture(Token(publicProfile));
+  PublicFixture(publicProfile / L"floorp-os-server");
   {
     PrivateProfileToken owner;
     Require(owner.Prepare(publicProfile.wstring()), "tighten existing owner fixture before write");
