@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 // Identify a real Mach-O 64-bit __TEXT,__text file byte, never an arbitrary tail byte.
-export function textByte(bytes: Uint8Array): number {
+export function textBytes(bytes: Uint8Array): number[] {
   const v = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   const length = bytes.byteLength;
   const fail = (): never => { throw new Error("unsupported or malformed Mach-O"); };
@@ -50,7 +50,7 @@ export function textByte(bytes: Uint8Array): number {
     return found;
   }
   range(0, 4, length); const magic = v.getUint32(0, false);
-  if (magic === 0xfeedfacf || magic === 0xcffaedfe) return thin(0, length);
+  if (magic === 0xfeedfacf || magic === 0xcffaedfe) return [thin(0, length)];
   if (magic !== 0xcafebabe && magic !== 0xcafebabf) return fail();
   range(0, 8, length); const count = v.getUint32(4, false), wide = magic === 0xcafebabf;
   const entrySize = wide ? 32 : 20; if (!count || count > 64) fail(); range(8, count * entrySize, length);
@@ -64,5 +64,7 @@ export function textByte(bytes: Uint8Array): number {
     slices.push({start,size,cpu});
   }
   const choices = slices.map((slice) => thin(slice.start, slice.size, slice.cpu));
-  return choices[0];
+  return choices;
 }
+
+export function textByte(bytes: Uint8Array): number { return textBytes(bytes)[0]; }

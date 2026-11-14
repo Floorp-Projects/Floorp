@@ -268,7 +268,19 @@ async function verifierClassification(): Promise<void> {
   assertEquals(await support.check(), "valid", "zero status is valid");
   support.response = { exitCode: 1, output: "/private/test.app: a sealed resource is missing or invalid\n" };
   assertEquals(await support.check(), "invalid", "known seal damage is invalid");
-  for (const response of [null, { exitCode: 1, output: "Permission denied" },
+  const wrapped = "/private/test.app: invalid signature (code or signature have been modified)";
+  for (const output of [wrapped, `${wrapped}\nIn architecture: x86_64\n`,
+    `${wrapped}\nIn architecture: arm64\n`]) {
+    support.response = { exitCode: 1, output };
+    assertEquals(await support.check(), "invalid", "observed applet signature failure is invalid");
+  }
+  for (const response of [null,
+    { exitCode: 2, output: `${wrapped}\nIn architecture: x86_64\n` },
+    { exitCode: 1, output: `${wrapped}\nIn architecture: unknown\n` },
+    { exitCode: 1, output: `${wrapped}\nIn architecture: x86_64\nextra\n` },
+    { exitCode: 1, output: `${wrapped}\nIn architecture: x86_64\n\n` },
+    { exitCode: 1, output: `noise\n${wrapped}\nIn architecture: x86_64\n` },
+    { exitCode: 1, output: wrapped.replace("/private/test.app", "/private/other.app") }, { exitCode: 1, output: "Permission denied" },
     { exitCode: 2, output: "code or signature have been modified" },
     { exitCode: 1, output: "/private/test.app: Permission denied\n/private/test.app: a sealed resource is missing or invalid" },
     { exitCode: 1, output: "/tmp/code or signature have been modified.app: Permission denied" }]) {

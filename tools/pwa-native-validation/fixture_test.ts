@@ -85,6 +85,10 @@ Deno.test("production verifier classifies simulated output and rejects unknown f
     assert(seen.join("|") === [SIGN,"--verify","--deep","--strict",path].join("|"), "unexpected verify argv");
     outcome = {code: 1, output: path + ": a sealed resource is missing or invalid\n"};
     assert(await support.verify(path) === "invalid", "seal failure not classified");
+    for (const arch of ["x86_64", "arm64"]) {
+      outcome = {code: 1, output: path + ": invalid signature (code or signature have been modified)\nIn architecture: " + arch + "\n"};
+      assert(await support.verify(path) === "invalid", "wrapped architecture diagnostic: " + arch);
+    }
     outcome = {code: 2, output: "simulated operational error"};
     await rejects(() => support.verify(path), "verification failed");
     outcome = {code: 1, output: "unknown diagnostic"};
@@ -94,7 +98,7 @@ Deno.test("production verifier classifies simulated output and rejects unknown f
     await rejects(() => call({command:SIGN,arguments:["--verify","--deep","--strict",join(r,"..","fixture.app")],stderr:"stdout"}), "escapes");
   } finally { restore(); }
 });
-import { textByte } from "./macho.ts";
+import { textByte, textBytes } from "./macho.ts";
 function makeThin(le = true): Uint8Array {
   const b = new Uint8Array(320), v = new DataView(b.buffer);
   v.setUint32(0,0xfeedfacf,le); v.setUint32(4,0x01000007,le); v.setUint32(16,1,le); v.setUint32(20,152,le);
@@ -111,6 +115,7 @@ function makeFat(wide:boolean): Uint8Array {
 }
 Deno.test("Mach-O text selection handles thin and universal 32/64 headers", () => {
   assert(textByte(makeThin())===256,"thin LE"); assert(textByte(makeThin(false))===256,"thin BE");
+  assert(JSON.stringify(textBytes(makeThin())) === "[256]", "thin offset count");
   assert(textByte(makeFat(false))===512,"fat32"); assert(textByte(makeFat(true))===512,"fat64");
 });
 Deno.test("Mach-O selector fails closed on truncated, escaped, invalid structures", () => {
@@ -131,8 +136,10 @@ Deno.test("universal multi-slice parsing rejects overlap and bad second slice", 
   const first=makeThin(), second=makeThin(), b=new Uint8Array(128+first.length+second.length), v=new DataView(b.buffer);
   v.setUint32(0,0xcafebabe); v.setUint32(4,2);
   v.setUint32(8,0x01000007); v.setUint32(16,128); v.setUint32(20,first.length);
-  v.setUint32(28,0x01000007); v.setUint32(36,128+first.length); v.setUint32(40,second.length);
+  v.setUint32(28,0x0100000c); v.setUint32(36,128+first.length); v.setUint32(40,second.length);
+  new DataView(second.buffer).setUint32(4,0x0100000c,true);
   b.set(first,128); b.set(second,128+first.length); assert(textByte(b)===384,"first slice text offset");
+  assert(JSON.stringify(textBytes(b)) === JSON.stringify([384,704]), "every slice offset in archive order");
   const overlap=b.slice(); new DataView(overlap.buffer).setUint32(36,200);
   const invalid=b.slice(); invalid[128+first.length]=0;
   for (const [i,value] of [overlap,invalid].entries()) { let failed=false;try{textByte(value);}catch{failed=true;}assert(failed,"unsafe universal slice "+i); }

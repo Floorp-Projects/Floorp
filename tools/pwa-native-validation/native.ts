@@ -2,7 +2,7 @@
 // Real macOS fixture only: no app execution, OS registration or xattr mutation.
 import { bounded, ExposedSupport, ID, installAdapter, join, privateRoot, SIGN } from "./fixture.ts";
 import { relative, sep } from "node:path";
-import { textByte } from "./macho.ts";
+import { textBytes } from "./macho.ts";
 if (Deno.build.os !== "darwin") throw new Error("native fixture requires macOS");
 const root = await privateRoot(Deno.env.get("PWA_FIXTURE_ROOT") ?? "");
 const path = join(root, "fixture.app");
@@ -38,13 +38,20 @@ try {
   if (details.code !== 0 || !details.output.includes("Identifier=" + ID) || !/Signature=adhoc|flags=.*adhoc/i.test(details.output)) throw new Error("signature identity/ad-hoc not proven: " + details.output);
   if (await support.verify(path) !== "valid") throw new Error("production classifier did not accept signed fixture");
   const evidence: unknown[] = []; const failures: string[] = [];
-  for (const [item, target] of [["applet", applet], ["main.scpt", script], ["icon", icon]] as const) {
+  const targets: {item:string; target:string; offset?:number}[] = [];
+  try {
+    const offsets = textBytes(await Deno.readFile(applet));
+    for (const [index, offset] of offsets.entries()) targets.push({item:`applet#slice${index}`, target:applet, offset});
+  } catch (error) {
+    const observation = {item:"applet", selectorError:String(error)}; evidence.push(observation); console.log(JSON.stringify(observation)); failures.push("applet: no safe bytes");
+  }
+  targets.push({item:"main.scpt",target:script}, {item:"icon",target:icon});
+  for (const {item, target, offset} of targets) {
     await check(target, "file");
     const bytes = await Deno.readFile(target);
     if (bytes.length === 0) throw new Error("empty target " + item);
-    let selected: number;
-    try { selected = item === "applet" ? textByte(bytes) : bytes.length - 1; }
-    catch (error) { const observation = {item, selectorError:String(error)}; evidence.push(observation); console.log(JSON.stringify(observation)); failures.push(item + ": no safe byte"); continue; }
+    const selected = offset ?? bytes.length - 1;
+    if (selected < 0 || selected >= bytes.length) throw new Error("selected byte escaped target: " + item);
     const changed = bytes.slice(); changed[selected] ^= 1;
     let direct: {code:number;output:string} | undefined; let directError: string | undefined;
     let classifier: string | undefined; let classifierError: string | undefined;

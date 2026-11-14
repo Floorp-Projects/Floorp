@@ -257,13 +257,25 @@ export class MacOSSupport {
     // Only known seal-invalid diagnostics authorize a rebuild. Other errors,
     // including tool and permission failures, must leave existing files alone.
     const prefix = `${path}: `;
-    const diagnostic = output.trimEnd();
+    // codesign terminates its diagnostic with one newline. Do not trim other
+    // output: extra lines may describe an operational rather than seal failure.
+    const diagnostic = output.endsWith("\n") ? output.slice(0, -1) : output;
     const reason = diagnostic.startsWith(prefix)
       ? diagnostic.slice(prefix.length)
       : "";
+    const observedAppletFailure = "invalid signature (code or signature have been modified)";
     if (
       exitCode === 1 &&
-      /^(?:code object is not signed at all|code or signature have been modified|a sealed resource is missing or invalid|resource envelope is obsolete|resource added, modified, or deleted)$/.test(reason)
+      ([
+        "code object is not signed at all",
+        "code or signature have been modified",
+        "a sealed resource is missing or invalid",
+        "resource envelope is obsolete",
+        "resource added, modified, or deleted",
+        observedAppletFailure,
+        `${observedAppletFailure}\nIn architecture: x86_64`,
+        `${observedAppletFailure}\nIn architecture: arm64`,
+      ].includes(reason))
     ) return "invalid";
     throw new Error(
       `[MacOSSupport] codesign verification failed (${exitCode}): ${output}`,
