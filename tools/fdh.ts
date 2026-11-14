@@ -4,11 +4,12 @@
 /**
  * `fdh` — thin CLI for the FDH Gate 3 local loop (KAN-113).
  *
- * This is not an agent loop: it has no interactive conversation, no LLM calls
- * and no GitHub/network operations. It only records task state and runs the
+ * This is not an agent loop: it has no interactive conversation or LLM calls.
+ * Local commands record task state and run the
  * existing Floorp tools (dev-tool, feles-build, host tests) so an already
  * running agent (DSH/Codex/Claude) can drive: task -> edit -> build -> test ->
- * browser confirmation -> evidence.
+ * browser confirmation -> evidence. The separate qa collect route performs
+ * bounded read-only GitHub collection and never authorizes publication.
  */
 
 import * as path from "@std/path";
@@ -154,6 +155,7 @@ const HELP = `
 Usage: deno run -A tools/fdh.ts <command> [options]
 
 Commands:
+  qa collect --help         Read-only QA collection (explicit pinned IDs/heads/policy)
   task start --task-id <id> --worktree <abs-dir> [--port-offset <n|auto>] [--base <sha>]
                             Create the local task state under
                             <worktree>/_dist/fdh/tasks/<id>.json
@@ -1788,6 +1790,14 @@ async function cmdJob(parsed: ParsedArgs, sub: JobSubcommand): Promise<void> {
 }
 
 async function main(argv: string[]): Promise<void> {
+  // Intercept RAW argv: the generic parser below collapses duplicate options.
+  // Neither this module nor the QA CLI imports the collector for help/invalid.
+  if (argv[0] === "qa") {
+    const { runQaCli } = await import("./src/fdh_qa_cli.ts");
+    const result = await runQaCli(argv);
+    console.log(result.stdout);
+    Deno.exit(result.exitCode);
+  }
   const parsed = parseArgv(argv);
   if (
     parsed.flags.has("help") || parsed.positional.length === 0 ||
