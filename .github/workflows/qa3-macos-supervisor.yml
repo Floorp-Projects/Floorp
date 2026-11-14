@@ -1,39 +1,61 @@
 # SPDX-License-Identifier: MPL-2.0
-name: QA3 macOS supervisor
-
-"on":
-  pull_request:
-    paths:
-      - "tools/qa3/**"
-      - ".github/workflows/qa3-macos-supervisor.yml"
-  workflow_dispatch:
-
+name: KAN-10 isolated native compiler fixture
+"on": workflow_dispatch
 permissions:
   contents: read
-
 jobs:
-  macos-supervisor:
-    name: macos-supervisor / ${{ matrix.runner }}
-    runs-on: ${{ matrix.runner }}
-    timeout-minutes: 15
+  fixture:
+    if: github.event_name == 'workflow_dispatch' && github.repository == 'Floorp-Projects/Floorp' && github.ref == 'refs/heads/dsh-stability/kan10-native-fixture-45b4780f'
     strategy:
       fail-fast: false
       matrix:
-        # Apple silicon and Intel, as in the final package QA matrix.
         runner: [macos-15, macos-15-intel]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
         with:
+          ref: ${{ github.sha }}
           persist-credentials: false
-      - name: Report the macOS and Python runtimes
+      - uses: denoland/setup-deno@667a34cdef165d8d2b2e98dde39547c9daac7282
+        with:
+          deno-version: v2.9.4
+      - name: Exercise source methods in isolated native fixture
+        id: exercise
+        shell: bash
         run: |
-          sw_vers
-          uname -m
-          python3 --version
-          /usr/bin/python3 --version
-      - name: Test the session supervisor contracts
-        run: |
-          python3 -B -m unittest discover -s tools/qa3 -p "test_source_macos.py" -v
-      - name: Test them again with the system Python (3.9 on macOS)
-        run: |
-          /usr/bin/python3 -B -m unittest discover -s tools/qa3 -p "test_source_macos.py" -v
+          set -euo pipefail
+          umask 077
+          test -n "$RUNNER_TEMP" && test -d "$RUNNER_TEMP"
+          parent="$(cd "$RUNNER_TEMP" && pwd -P)"
+          test -n "$parent" && test "$parent" != /
+          root="$(mktemp -d "$parent/kan10-fixture.XXXXXXXX")"
+          root="$(cd "$root" && pwd -P)"
+          case "$root" in "$parent"/kan10-fixture.*) ;; *) exit 1 ;; esac
+          echo "root=$root" >> "$GITHUB_OUTPUT"
+          mkdir "$root/home" "$root/tmp" "$root/deno" "$root/npm" "$root/fixture" "$root/host"
+          chmod 700 "$root" "$root/home" "$root/tmp" "$root/deno" "$root/npm" "$root/fixture" "$root/host"
+          export HOME="$root/home" TMPDIR="$root/tmp" TMP="$root/tmp" TEMP="$root/tmp"
+          export DENO_DIR="$root/deno" npm_config_cache="$root/npm"
+          export XDG_CACHE_HOME="$root/home/cache" XDG_CONFIG_HOME="$root/home/config" XDG_DATA_HOME="$root/home/data"
+          export PWA_FIXTURE_ROOT="$root/fixture" PWA_FIXTURE_TEST_ROOT="$root/host"
+          workspace="$(pwd -P)"
+          deno_bin="$(python3 -c 'import os,shutil; print(os.path.realpath(shutil.which("deno") or ""))')"
+          test -n "$deno_bin" && test -f "$deno_bin" && test -x "$deno_bin"
+          python3 -B tools/pwa-native-validation/prepare_symlinks.py "$PWA_FIXTURE_TEST_ROOT"
+          { sw_vers; uname -m; deno --version; git rev-parse HEAD; } | tee "$root/runtime.log"
+          shasum -a 256 browser-features/modules/modules/pwa/supports/MacOS.sys.mts tools/pwa-native-validation/*.ts tools/pwa-native-validation/*.py tools/pwa-native-validation/deno.json | tee "$root/source.sha256"
+          "$deno_bin" test --no-check --config tools/pwa-native-validation/deno.json "--allow-read=$workspace,$root,$deno_bin" "--allow-write=$root" --allow-env=PWA_FIXTURE_TEST_ROOT,PWA_TEST_SENTINEL,HOME,TMPDIR,TEMP,TMP,DENO_DIR "--allow-run=$deno_bin" tools/pwa-native-validation/fixture_test.ts 2>&1 | tee "$root/host-tests.log"
+          "$deno_bin" run --no-check --config tools/pwa-native-validation/deno.json "--allow-read=$workspace,$root,$deno_bin" "--allow-write=$root" --allow-env=PWA_FIXTURE_ROOT,HOME,TMPDIR,TEMP,TMP,DENO_DIR --allow-run=/usr/bin/osacompile,/usr/bin/codesign tools/pwa-native-validation/native.ts 2>&1 | tee "$root/native-output.log"
+          shasum -a 256 browser-features/modules/modules/pwa/supports/MacOS.sys.mts tools/pwa-native-validation/*.ts tools/pwa-native-validation/*.py tools/pwa-native-validation/deno.json > "$root/source-after.sha256"
+          cmp "$root/source.sha256" "$root/source-after.sha256"
+      - name: Preserve bounded native diagnostics
+        if: ${{ always() && steps.exercise.outputs.root != '' }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: kan10-native-compiler-${{ matrix.runner }}-${{ github.run_id }}
+          path: |
+            ${{ steps.exercise.outputs.root }}/*.log
+            ${{ steps.exercise.outputs.root }}/*.sha256
+          if-no-files-found: error
+          retention-days: 7
