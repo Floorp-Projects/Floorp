@@ -644,5 +644,236 @@ class WrapperIntegrationTests(unittest.TestCase):
         popen.assert_not_called()
 
 
+
+class WrapperPortOffsetTests(unittest.TestCase):
+    def test_offset_parser_and_validation(self):
+        self.assertIsNone(wrapper.parse_wrapper_port_offset_arg(None, False))
+        for raw, expected in (("0", 0), ("20", 20), ("60343", 60343), ("auto", "auto")):
+            self.assertEqual(wrapper.parse_wrapper_port_offset_arg(raw, False), expected)
+        for bad in ("", " ", "1", "19", "60344", "-1", "abc", "20.0"):
+            with self.assertRaises(wrapper.OsTestConfigError):
+                wrapper.parse_wrapper_port_offset_arg(bad, False)
+        with self.assertRaises(wrapper.OsTestConfigError):
+            wrapper.parse_wrapper_port_offset_arg("auto", True)
+        self.assertEqual(wrapper.parse_wrapper_port_offset_arg("20", True), 20)
+
+    def test_ascii_decimal_offset_only(self):
+        for raw in ("٢٠", "２０"):
+            with self.assertRaises(wrapper.OsTestConfigError):
+                wrapper.parse_wrapper_port_offset_arg(raw, False)
+
+    def test_huge_offset_returns_bounded_config_error(self):
+        raw = "9" * 5000
+        with self.assertRaises(wrapper.OsTestConfigError) as raised:
+            wrapper.parse_wrapper_port_offset_arg(raw, False)
+        self.assertLess(len(str(raised.exception)), 200)
+        self.assertNotIn(raw, str(raised.exception))
+        self.assertEqual(wrapper.parse_wrapper_port_offset_arg("0" * 5000 + "20", False), 20)
+
+    def test_launch_ports_match_shared_table_and_dev_os_port(self):
+        table = [5173, 5174, 5179, 5180, 5181, 5183, 5185, 5186, 5187, 5188, 5192]
+        self.assertEqual(wrapper.launch_ports_for_offset(0), table + [5175])
+        self.assertEqual(
+            wrapper.launch_ports_for_offset(20),
+            [port + 20 for port in table] + [5195],
+        )
+        candidates = wrapper.auto_port_offset_candidates()
+        self.assertEqual(candidates[0], 0)
+        self.assertEqual(candidates[1], 20)
+        self.assertEqual(candidates[-1], 60340)
+        self.assertNotIn(1, candidates)
+
+    def test_derived_target_and_start_args(self):
+        opts = wrapper.resolve_os_verify_options(None, None, None, False)
+        self.assertEqual(
+            (opts.base_url, opts.start_command_args, opts.port_offset),
+            ("http://127.0.0.1:5175", [], 0),
+        )
+        opts = wrapper.resolve_os_verify_options(None, None, 20, False)
+        self.assertEqual(
+            (opts.base_url, opts.start_command_args, opts.port_offset),
+            ("http://127.0.0.1:5195", ["--port-offset", "20"], 20),
+        )
+        opts = wrapper.resolve_os_verify_options(None, None, None, True)
+        self.assertEqual(
+            (opts.base_url, opts.start_command_args, opts.port_offset),
+            ("http://127.0.0.1:58261", [], 0),
+        )
+        opts = wrapper.resolve_os_verify_options(None, None, 20, True)
+        self.assertEqual(
+            (opts.base_url, opts.start_command_args, opts.port_offset),
+            ("http://127.0.0.1:5195", [], 20),
+        )
+        opts = wrapper.resolve_os_verify_options(
+            "http://127.0.0.1:6000", "http://127.0.0.1:7000", 20, False
+        )
+        self.assertEqual(opts.base_url, "http://127.0.0.1:6000")
+        self.assertEqual(opts.start_command_args, ["--port-offset", "20"])
+        opts = wrapper.resolve_os_verify_options(
+            None, "http://127.0.0.1:7000", None, True
+        )
+        self.assertEqual(opts.base_url, "http://127.0.0.1:7000")
+        with self.assertRaises(wrapper.OsTestConfigError):
+            wrapper.resolve_os_verify_options("http://127.0.0.1:6000", None, 1, False)
+
+    def test_auto_probe_first_free_candidate(self):
+        busy = {5173, 5175, 5180}
+
+        def probe(port):
+            return port in busy
+
+        self.assertEqual(wrapper.resolve_auto_dev_port_offset(probe), 20)
+        with self.assertRaises(wrapper.OsTestConfigError):
+            wrapper.resolve_auto_dev_port_offset(lambda _port: True)
+
+    def test_invalid_offset_fails_before_token_io_and_spawn(self):
+        with patch.object(wrapper, "resolve_token_file") as token, patch.object(
+            wrapper.subprocess, "Popen"
+        ) as popen, patch.object(wrapper, "create_os_test_client") as create_client:
+            code = wrapper.main(
+                ["--skip-start", "--port-offset", "1", "--token-file", "synthetic"]
+            )
+        self.assertEqual(code, 2)
+        token.assert_not_called()
+        popen.assert_not_called()
+        create_client.assert_not_called()
+
+    def test_auto_skip_start_rejected_before_probe_token_spawn(self):
+        with patch.object(wrapper, "resolve_auto_dev_port_offset") as auto, patch.object(
+            wrapper, "resolve_token_file"
+        ) as token, patch.object(wrapper.subprocess, "Popen") as popen:
+            code = wrapper.main(["--skip-start", "--port-offset", "auto"])
+        self.assertEqual(code, 2)
+        auto.assert_not_called()
+        token.assert_not_called()
+        popen.assert_not_called()
+
+    def test_help_with_offset_has_zero_env_probe_spawn(self):
+        with patch.object(wrapper, "resolve_auto_dev_port_offset") as auto, patch.object(
+            wrapper, "resolve_token_file"
+        ) as token, patch.object(wrapper.subprocess, "Popen") as popen, patch.dict(
+            os.environ, {"FLOORP_OS_BASE_URL": "http://example.com"}, clear=False
+        ):
+            with self.assertRaises(SystemExit) as raised:
+                wrapper.main(["--help", "--port-offset", "auto"])
+        self.assertEqual(raised.exception.code, 0)
+        auto.assert_not_called()
+        token.assert_not_called()
+        popen.assert_not_called()
+
+    def test_main_derives_dev_target_and_appends_offset_to_start(self):
+        captured_cmd: list[list[str]] = []
+        captured_verifier: list[list[str]] = []
+
+        def fake_popen(cmd, **_kwargs):
+            captured_cmd.append(list(cmd))
+            return object()
+
+        with patch.object(wrapper, "wait_for_health", return_value=True), patch.object(
+            wrapper.time, "sleep"
+        ) as sleep, patch.object(wrapper, "stop_process") as stop, patch.object(
+            wrapper,
+            "run_verifier",
+            side_effect=lambda args: captured_verifier.append(list(args)) or 0,
+        ), patch.object(
+            wrapper.subprocess, "Popen", side_effect=fake_popen
+        ) as popen:
+            code = wrapper.main(["--port-offset", "20"])
+        self.assertEqual(code, 0)
+        self.assertEqual(
+            captured_cmd,
+            [["deno", "task", "feles-build", "dev", "--port-offset", "20"]],
+        )
+        self.assertEqual(captured_verifier, [["--base-url", "http://127.0.0.1:5195"]])
+        self.assertEqual(sleep.call_count, 1)
+        stop.assert_called_once()
+        popen.assert_called_once()
+
+    def test_skip_start_derives_offset_target_without_spawn(self):
+        captured: list[list[str]] = []
+        with patch.object(
+            wrapper,
+            "run_verifier",
+            side_effect=lambda args: captured.append(list(args)) or 0,
+        ), patch.object(wrapper.subprocess, "Popen") as popen, patch.object(
+            wrapper.time, "sleep"
+        ) as sleep:
+            code = wrapper.main(["--skip-start", "--port-offset", "20"])
+        self.assertEqual(code, 0)
+        self.assertEqual(captured, [["--base-url", "http://127.0.0.1:5195"]])
+        popen.assert_not_called()
+        sleep.assert_not_called()
+
+    def test_main_auto_offset_probes_before_token_io_and_appends_start_args(self):
+        events: list[str] = []
+        captured_cmd: list[list[str]] = []
+        captured_verifier: list[list[str]] = []
+
+        def fake_popen(cmd, **_kwargs):
+            captured_cmd.append(list(cmd))
+            return object()
+
+        with patch.object(
+            wrapper,
+            "resolve_auto_dev_port_offset",
+            side_effect=lambda: events.append("auto") or 20,
+        ) as auto, patch.object(
+            wrapper,
+            "resolve_token_file",
+            side_effect=lambda *_args: events.append("token") or None,
+        ) as token, patch.object(
+            wrapper, "wait_for_health", return_value=True
+        ), patch.object(wrapper.time, "sleep"), patch.object(
+            wrapper, "stop_process"
+        ), patch.object(
+            wrapper,
+            "run_verifier",
+            side_effect=lambda args: captured_verifier.append(list(args)) or 0,
+        ), patch.object(
+            wrapper.subprocess, "Popen", side_effect=fake_popen
+        ) as popen:
+            code = wrapper.main(["--port-offset", "auto"])
+        self.assertEqual(code, 0)
+        self.assertEqual(events, ["auto", "token"])
+        self.assertEqual(
+            captured_cmd,
+            [["deno", "task", "feles-build", "dev", "--port-offset", "20"]],
+        )
+        self.assertEqual(captured_verifier, [["--base-url", "http://127.0.0.1:5195"]])
+        auto.assert_called_once()
+        token.assert_called_once()
+        popen.assert_called_once()
+
+    def test_explicit_base_wins_env_and_derived(self):
+        captured: list[list[str]] = []
+        with patch.object(
+            wrapper,
+            "run_verifier",
+            side_effect=lambda args: captured.append(list(args)) or 0,
+        ), patch.object(wrapper.subprocess, "Popen") as popen, patch.dict(
+            os.environ, {"FLOORP_OS_BASE_URL": "http://127.0.0.1:7000"}, clear=False
+        ):
+            code = wrapper.main(
+                ["--skip-start", "--base-url", "http://127.0.0.1:6000"]
+            )
+        self.assertEqual(code, 0)
+        self.assertEqual(captured, [["--base-url", "http://127.0.0.1:6000"]])
+        popen.assert_not_called()
+
+    def test_env_base_wins_derived(self):
+        captured: list[list[str]] = []
+        with patch.object(
+            wrapper,
+            "run_verifier",
+            side_effect=lambda args: captured.append(list(args)) or 0,
+        ), patch.object(wrapper.subprocess, "Popen") as popen, patch.dict(
+            os.environ, {"FLOORP_OS_BASE_URL": "http://127.0.0.1:7000"}, clear=False
+        ):
+            code = wrapper.main(["--skip-start"])
+        self.assertEqual(code, 0)
+        self.assertEqual(captured, [["--base-url", "http://127.0.0.1:7000"]])
+        popen.assert_not_called()
+
+
 if __name__ == "__main__":
     unittest.main()
