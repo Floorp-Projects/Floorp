@@ -632,6 +632,13 @@ jobs:
         run: >-
           deno test --allow-read --allow-write --deny-net --deny-env
           tools/src/fdh_workspace_oidc.test.ts
+          tools/src/fdh_workspace_oidc_subject.test.ts
+          tools/src/fdh_workspace_oauth.test.ts
+          tools/src/fdh_workspace_sessions.test.ts
+          tools/src/fdh_workspace_auth_cli.test.ts
+          tools/src/fdh_workspace_auth_cli_runtime.test.ts
+          tools/src/fdh_workspace_auth_cli_validation.test.ts
+          tools/src/fdh_workspace_auth_roundtrip.test.ts
           tools/src/fdh_qa_discovery.test.ts
           tools/src/fdh_qa_discovery_cli.test.ts
           tools/src/fdh_qa_gh_transport.test.ts

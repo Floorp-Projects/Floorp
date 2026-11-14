@@ -155,6 +155,7 @@ const HELP = `
 Usage: deno run -A tools/fdh.ts <command> [options]
 
 Commands:
+  auth probe --help         Explicit Google Workspace OAuth code/refresh/logout probe (memory-only; not an AS/MCP grant)
   qa collect --help         Read-only QA collection (explicit pinned IDs/heads/policy)
   qa discover --help        Bounded read-only QA discovery (no publication authority)
   task start --task-id <id> --worktree <abs-dir> [--port-offset <n|auto>] [--base <sha>]
@@ -1793,6 +1794,14 @@ async function cmdJob(parsed: ParsedArgs, sub: JobSubcommand): Promise<void> {
 async function main(argv: string[]): Promise<void> {
   // Intercept RAW argv: the generic parser below collapses duplicate options.
   // Neither this module nor the QA CLI imports the collector for help/invalid.
+  if (argv[0] === "auth") {
+    const { runWorkspaceAuthCli } = await import(
+      "./src/fdh_workspace_auth_cli.ts"
+    );
+    const result = await runWorkspaceAuthCli(argv);
+    console.log(result.stdout);
+    Deno.exit(result.exitCode);
+  }
   if (argv[0] === "qa") {
     const { runQaCli } = await import("./src/fdh_qa_cli.ts");
     const result = await runQaCli(argv);

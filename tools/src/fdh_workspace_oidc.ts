@@ -11,6 +11,7 @@ import type {
   WorkspaceIdTokenExpectation,
   WorkspaceOidcDependencies,
   WorkspaceOidcErrorCode,
+  WorkspaceSubjectIdTokenExpectation,
 } from "./fdh_workspace_oidc_types.ts";
 
 /** Google OpenID Connect issuers accepted verbatim; never caller supplied. */
@@ -125,6 +126,45 @@ export async function verifyWorkspaceIdToken(
   } catch {
     // Library failures can carry raw claim values, so none of them is
     // propagated: only the constant code and message leave this boundary.
+    throw new WorkspaceOidcError("verification-failed");
+  }
+  return readVerifiedClaims(payload, snapshot, now);
+}
+
+/** Verify a fresh provider ID token for an existing subject, without inventing
+ * an initial-login nonce in a response that need not contain one. OAuth grant
+ * ownership and session binding are enforced by the caller; this grants no MCP
+ * authority and is never used for an initial callback. */
+export async function verifyWorkspaceSubjectIdToken(
+  idToken: string,
+  expectation: WorkspaceSubjectIdTokenExpectation,
+  dependencies?: WorkspaceOidcDependencies,
+): Promise<VerifiedWorkspaceIdentity> {
+  assertToken(idToken);
+  if (typeof expectation !== "object" || expectation === null) {
+    throw new WorkspaceOidcError("invalid-expectation");
+  }
+  const clientId = readDataString(expectation, "clientId");
+  const expectedSubject = readDataString(expectation, "expectedSubject");
+  if (
+    clientId.length < 1 || clientId.length > MAX_CLIENT_ID_CHARS ||
+    !IDENTITY_PATTERN.test(expectedSubject)
+  ) {
+    throw new WorkspaceOidcError("invalid-expectation");
+  }
+  const snapshot = Object.freeze({ clientId, expectedSubject });
+  const now = readClock(dependencies);
+  const resolveKey = readResolveKey(dependencies) ?? createGoogleKeyResolver();
+  let payload: JWTPayload;
+  try {
+    payload = (await jwtVerify(idToken, resolveKey, {
+      algorithms: [...ALLOWED_ALGORITHMS],
+      issuer: [...GOOGLE_ID_TOKEN_ISSUERS],
+      audience: clientId,
+      clockTolerance: 0,
+      currentDate: now,
+    })).payload;
+  } catch {
     throw new WorkspaceOidcError("verification-failed");
   }
   return readVerifiedClaims(payload, snapshot, now);
@@ -253,12 +293,16 @@ function epoch(value: Date): number {
  */
 function readVerifiedClaims(
   payload: JWTPayload,
-  expectation: WorkspaceIdTokenExpectation,
+  expectation: WorkspaceIdTokenExpectation | WorkspaceSubjectIdTokenExpectation,
   now: Date,
 ): VerifiedWorkspaceIdentity {
-  const { clientId, expectedNonce } = expectation;
+  const { clientId } = expectation;
 
-  if (payload.nonce !== expectedNonce) {
+  if (
+    "expectedNonce" in expectation
+      ? payload.nonce !== expectation.expectedNonce
+      : payload.sub !== expectation.expectedSubject
+  ) {
     throw new WorkspaceOidcError("invalid-claims");
   }
 
