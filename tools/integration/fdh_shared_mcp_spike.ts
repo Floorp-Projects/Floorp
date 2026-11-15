@@ -11,6 +11,7 @@ import type {
   EphemeralKeycloakContext,
   JsonRecord,
   ProtocolCleanupDependencies,
+  ProtocolCliDependencies,
   ProtocolContainerOwnership,
   ProtocolSpikeReport,
 } from "./fdh_shared_mcp_spike_types.ts";
@@ -566,6 +567,11 @@ export async function executeProtocolOnly(): Promise<ProtocolSpikeReport> {
 
 export async function runProtocolSpikeCli(
   args: readonly string[],
+  dependencies: ProtocolCliDependencies = {
+    execute: executeProtocolOnly,
+    report: (report) => console.log(JSON.stringify(report)),
+    error: () => console.error("Protocol spike stage failed"),
+  },
 ): Promise<number> {
   if (args.length !== 1 || args[0] !== "--execute-protocol-only") {
     console.error(
@@ -574,10 +580,17 @@ export async function runProtocolSpikeCli(
     return 2;
   }
   try {
-    console.log(JSON.stringify(await executeProtocolOnly()));
-    return 0;
+    const report = await dependencies.execute();
+    dependencies.report(report);
+    const passed = report.audienceAndScopeAccepted === true &&
+      report.invalidTargetRejected === true &&
+      report.missingScopeRejected === true &&
+      report.wrongScopeRejected === true &&
+      report.expiredTokenRejected === true &&
+      report.unboundMachineMcpRejected === true;
+    return passed ? 0 : 1;
   } catch {
-    console.error("Protocol spike stage failed");
+    dependencies.error();
     return 1;
   }
 }

@@ -12,6 +12,12 @@ export interface ProtocolSpikeReport {
   expiredTokenRejected: boolean;
   unboundMachineMcpRejected: boolean;
 }
+/** Trusted offline test seam; never accepted from CLI arguments. */
+export interface ProtocolCliDependencies {
+  readonly execute: () => Promise<ProtocolSpikeReport>;
+  readonly report: (report: ProtocolSpikeReport) => void;
+  readonly error: () => void;
+}
 export interface ProtocolContainerOwnership {
   containerID: string;
   image: string;
