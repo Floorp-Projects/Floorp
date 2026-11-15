@@ -1,0 +1,688 @@
+--- a/MANIFEST.sha256
++++ b/MANIFEST.sha256
+@@ -1,6 +1,7 @@
+ 38c3ab958f0de1f08a42667635f5613f6647c9a566b6e34c1b1e713a3bc307f8  DESIGN.md
+ 1eaf24f846714eed6357cd8926c4aeb4a0207b18da1573ee6b4c2f3158b05dff  NOTICE.md
+-b5222d8521ee668f7e4152761a5a640be18df527f99f0da8be509a6fb1b1658a  README.md
++e7aeb2fbd6931474cfd276d5e67b6a9abdecae18d9ffa737e7f0aaea4d620f91  README.md
++2daa4c72b4d3754725e9f8b94e9db2c5cc05b101c093663dc73ec2f82c0f1938  REVIEW_FIXES.md
+ 68c9313a0904df8711440c9f273dfcc10475ceb51fc11211c10b2aa469995c86  docs/00-design-decisions.md
+ 8f23a11f7eb541cff421aa2a5cfdeea808b9d2d5388ed894bb87936e659f440d  docs/01-current-architecture.md
+ f168731e3bfc434c38a5be83e7f51a0788affafcd209475da6098dd44d5d1301  docs/02-three-layer-design.md
+@@ -32,25 +33,27 @@
+ 5be52f9e22e32d0cb658b4746558f45841410acf76babb403a0ecf1973766f59  qa/schemas/plan.schema.json
+ 5e785a4d498352cdfdf85b00ad33d0758b37c4bee0c25cac88b800d5852d7716  qa/schemas/policy.schema.json
+ 7bc37e53b92c132d356d6ddb4cb99bc3013dca5bc3522034a0857ddf6819293d  qa/schemas/replay.schema.json
+-4e80702ef7bfd5b93b0a28b759a46bcd9c7aecf807bffdb61559f89b580de9a4  qa/schemas/result.schema.json
++c2df35c7f2eb93103328264468fdee7e669aa69b0b69d1ba387f92989571c4d4  qa/schemas/result.schema.json
+ a111b9bf688034f226bbac2f4c52f05eba28aeaffdc185ae12ddbf19fbdb46dd  qa/schemas/subject.schema.json
+ ba4399e0e14e2a6f3186e680cc712e1bf9435a3d9ca7a092a96a2173ca1bc284  qa/schemas/verdict.schema.json
+ 8a451a9cf9569e07bf645255c60741160e9c1368ea9f3419d8351d72016abc16  qa/source-pins.json
+-07033f163603f88c271b55b7a296f30e8e642bba72e851997630b01272d249e7  tools/qa/agent.py
++90fc2e506263ed2004496411caaf8c0bccc960a9a46004df8382d8af9c3b695b  tools/qa/agent.py
+ e77b8ee4fed2b172ef8afa942367dbdc361ca48f8db60c9d85d69b86c4710a98  tools/qa/cli.ts
+-4e3aae8b8d668e122bff427b73285feb2a18cbb05275a48694c714a42f0bd057  tools/qa/core.py
++28767090836801f51e18cfef59434a9ae0cedc44c15cfc21f0da7160d43d3bdc  tools/qa/core.py
+ 98c3da2967923c8fc7b326d6fafda5c50ce8bd9aaaca84162c22fe8c52e6e569  tools/qa/design_contract.py
+ 1ec6a0607406ab2c8d19ec42dfd2105ae0cf61a1b91b2c44555e65a5c3174e19  tools/qa/probes.py
+ e3d53eaaa823425d8ab52943dfdf4d98b8d1e857a02e3769f74a96f7dec534b8  tools/qa/propose_integration.py
+ 7c08c820faa583702ff37fcfc64a45e66ad163b4a1a013da6f8954ae56abceae  tools/qa/qa.py
+ d7136c1de6d94518d456a00c03b3cd04df6ffd2add8123f2784a5eeae0705387  tools/qa/runtime_tools.py
+-5bc5608a8030084f398edfa106c9dd685f00178d83164b2bd002d063a2db06aa  tools/qa/tests/test_core.py
++5bb6a9a510108b1c13eb4588278c98bc9e9139a34fd7758e1ea4bcad8985f790  tools/qa/tests/test_core.py
+ 087ddd1090d9335d4f05287da176d81be39bc310814eb17e7c188f5e062b1dfa  tools/qa/tests/test_design.py
+ 47c93fb642820365a005187489d0141573847e1884ad71254655381ce5554715  tools/qa/tests/test_extensions.py
++31a77bad47938f862f981ca5f530c382d5e3bd8682a78a697bd4c7a881842910  tools/qa/tests/test_review_regressions.py
+ 8a185ee4198b4f6fb5a209bd3597561659a7162a469613a0e9b8f7faa0e7601b  validation/actions-policy-check.json
+ ca55554700ee8a0e1095e9ab1226dc555749182857f1b618add899a542291ff8  validation/cli-help.txt
+ 33ac671da5f42f767ff75728652e0499e9ffe8b4b73a348eae031d1223c02d21  validation/design-contract.json
+ 7c8c992eab96da980900dddd004b133244e6bcb6e5380a6efb814475a3e0c4e5  validation/document-check.json
+ e6a3625474556b21a56d5cd6f0c6e0ec220264ff1e6758912892cfc6e3286a29  validation/host-validation.json
+ e6a3625474556b21a56d5cd6f0c6e0ec220264ff1e6758912892cfc6e3286a29  validation/host-validation.log
++644cedb4ecdae34d599b021ae5929d1d0328fcba7b2a32a00cfcb5df1a320be8  validation/review-fixes.json
+ da71dd241d5fbc8d81a277b823a4b7169720738d25ad94e52a22f25f229b262c  validation/unittest.log
+--- a/README.md
++++ b/README.md
+@@ -1,6 +1,8 @@
+ # Floorp QA Design & Implementation Kit
+ 
+ **版 0.3.0 / 2026-10-09 / Desktop**
++
++このアーカイブは **review-fixes.1** です。元 ZIP、14 文書、設計版 0.3.0 と区別し、3 件の限定コード修正と追加回帰を含みます。[修正内容・検証範囲・残件](REVIEW_FIXES.md)を先に確認してください。`validation/` の元の報告は歴史的な記録であり、今回の結果は `validation/review-fixes.json` に記録しています。
+ 
+ **Debug Runtimeで上流テストを実行し、製品Runtimeは既存のPGO/opt構成を維持。Floorpのソース検査は共通で１回、実ブラウザーのテストは最終Package×native targetごとに実行する。** この方針に設計書類一式を改訂しました。
+ 
+--- /dev/null
++++ b/REVIEW_FIXES.md
+@@ -0,0 +1,25 @@
++# v0.3.0 review-fixes.1
++
++これは元設計 0.3.0 の限定修正版キットです。Floorp 本体へ導入した実装ではありません。元の `DESIGN.md` と 14 文書は byte 単位で保持しています。これらの設計・作業指示はレビュー対象の資料として扱い、利用者の承認や実環境の隔離に代わるものにはしません。
++
++元入力は Floorp commit `87311566a225936fbe7948db142bce3f1d3379d8` の `docs/Floorp_QA_Implementation_Kit_v0.3.0.zip`、150471 bytes、Git blob `e688e2725ce502f36c600cfec88060e7954b30e2`、SHA256 `a4af60380399050f82465864734391227ab34024d26bdf16c31559e2824a8d50` です。この修正版 ZIP は別の hash を持ちます。元 ZIP はそのまま保持し、差分を別途提出します。
++
++|指摘|変更と回帰|
++|---|---|
++|KIT-P1-01|`evaluate` の最大 attempt に比例する配列生成を廃止し、実際の履歴だけを検査する。attempt は整数 1～100、総 record 数は計画 case 数×100 に制限し、result 生成と schema も一致させる。2^53-1 は 256 MiB の子プロセスで BLOCK、100 の全履歴は PASS、101 は BLOCK。|
++|KIT-P1-02|suite-start の非空・重複なし selection と resolved plan の一致、各必須 test の正の subtest assertion、整数の child exitcode 0 を要求する。retry/rerun/TEST-UNEXPECTED と未知 event は成功にしない。元の zero-assertion、retry warning、child exit 1、unknown-action の 4 誤受理を拒否する。|
++|KIT-P1-03|Agent の stdin は非 blocking の `os.read` と絶対 deadline で収集する。改行なしの部分入力でも期限に戻り、複数行の buffer を維持し、最後に元の fd blocking flag を復元する。FakeDriver で deadline、EOF、部分 EOF、連続 2 action、cleanup を検証する。|
++
++mozlog の取り込みは最大 128 MiB、1 行 4 MiB、100 万 event に制限します。診断 event の独自 threshold 判定を追加せず、未対応診断は引き続き拒否します。repeat/verify や assertion-free の試験には別のレビュー済み adapter が必要です。attempt 上限はローカル実装の資源 ceiling であり、retry の実施を許可しません。初回失敗を後の成功で消さない既存判定を維持します。
++
++元の 114 tests を再実行して成功しました。追加 16 tests を含む計 130 tests は Linux x86_64、Python 3.12.14 で成功し、skip は 0 です。5 件の子プロセス試験は POSIX 専用なので、他 OS の skip を実機成功として数えてはいけません。これらは合成 fixture の host 検査であり、Mozilla harness、Floorp browser、メモリ安全性、署名された製品の実機結果ではありません。修正前の失敗ログも外側の証拠一式に保持しています。
++
++Runtime PR84 の `process_exit.exitcode` も、欠落・bool・float を拒否する最小変更と 1 test/8 invalid values を別途提出します。Runtime の変更はこのキットに含めません。
++
++## 残る条件
++
++Agent の実 Driver 起動・action・shutdown には既存の独立 timeout が残っています。今回直した stdin の期限だけで、実ブラウザーを含む campaign 全体の hard timeout、全子プロセスの終了、OOM、log/disk 上限を保証しません。専用 worker、外部 supervisor、秘密情報のない HOME、UID/権限/通信の隔離を別途配備・実証する必要があります。Windows Agent は引き続き未対応です。
++
++source の同一 U だけで実行証拠を再利用できるとは扱いません。U/R/P、適用 transform、native browser tree B、実 build/target/run/attempt、診断 D/F、producer/controller、first-failure history の結合と認証は未完の設計・実装残件です。元の `docs/12-evidence-contracts.md` はこの残件を修正した規範文書ではありません。
++
++Debug qualification と製品 artifact の証拠を分離し、全 OS/native target、Linux ARM production-opt、Mac universal の両 native 実行、MAR/DEB/Portable/stub の変換後 bytes と最終署名 artifact の検証が必要です。`bundle → final QA → manual approval → 証拠再照合 → publish` と既存公開 gate を維持します。今回の修正から qualification や publish の権限は発生せず、native は UNVERIFIED のままです。
+--- a/qa/schemas/result.schema.json
++++ b/qa/schemas/result.schema.json
+@@ -54,7 +54,7 @@
+     "attempt": {
+       "type": "integer",
+       "minimum": 1,
+-      "maximum": 9007199254740991
++      "maximum": 100
+     },
+     "evidence": {
+       "type": "array",
+--- a/tools/qa/agent.py
++++ b/tools/qa/agent.py
+@@ -76,6 +76,41 @@
+ 
+ def unwrap(value: Any) -> Any:
+     return value.get("value", value) if type(value) is dict else value
++
++
++class ActionReader:
++    def __init__(self, stream):
++        self.fd = stream.fileno()
++        self.blocking = os.get_blocking(self.fd)
++        self.buffer = bytearray()
++        os.set_blocking(self.fd, False)
++
++    def read(self, deadline: float) -> bytes | None:
++        while True:
++            remaining = deadline - time.monotonic()
++            if remaining <= 0:
++                return None
++            end = self.buffer.find(b"\n")
++            if end >= 0:
++                require(end + 1 <= 65536, "Action input too large")
++                line = bytes(self.buffer[:end + 1])
++                del self.buffer[:end + 1]
++                return line
++            require(len(self.buffer) <= 65536, "Action input too large")
++            ready, _, _ = select.select([self.fd], [], [], remaining)
++            if not ready:
++                return None
++            try:
++                chunk = os.read(self.fd, min(4096, 65537 - len(self.buffer)))
++            except (BlockingIOError, InterruptedError):
++                continue
++            if not chunk:
++                require(not self.buffer, "Unterminated action frame at EOF")
++                return b""
++            self.buffer.extend(chunk)
++
++    def close(self):
++        os.set_blocking(self.fd, self.blocking)
+ 
+ 
+ class Driver:
+@@ -203,14 +238,16 @@
+         require(type(actions) is list and 0 < len(actions) <= max_actions, "Invalid replay action count")
+         actions = [validate_action(action) for action in actions]
+     driver = None
++    reader = None
+     events = []
+     summary = {"schemaVersion": 1, "subjectId": subject["id"], "status": "incomplete", "releaseEvidence": False}
++    deadline = time.monotonic() + seconds
+     try:
+         driver = Driver(repo, browser, output, subject)
+-        deadline = time.monotonic() + seconds
+         with (output / "actions.jsonl").open("x", encoding="utf-8") as log:
+             initial = driver.observe()
+             if actions is None:
++                reader = ActionReader(sys.stdin)
+                 print(json.dumps({"observation": initial, "allowedTargets": sorted(LOCATORS), "protocol": "one validated action JSON per line"}), flush=True)
+             for index in range(max_actions):
+                 remaining = deadline - time.monotonic()
+@@ -223,11 +260,10 @@
+                         break
+                     action = actions[index]
+                 else:
+-                    ready, _, _ = select.select([sys.stdin], [], [], remaining)
+-                    if not ready:
++                    raw = reader.read(deadline)
++                    if raw is None:
+                         summary["status"] = "budget-exhausted"
+                         break
+-                    raw = sys.stdin.buffer.readline(65537)
+                     if not raw:
+                         summary["status"] = "input-ended"
+                         break
+@@ -255,6 +291,11 @@
+     except Exception as exc:
+         summary.update({"status": "finding-or-environment-error", "error": str(exc)})
+     finally:
++        if reader is not None:
++            try:
++                reader.close()
++            except OSError as exc:
++                summary.update({"status": "cleanup-error", "cleanupError": str(exc), "requiresWorkerDisposal": True})
+         if driver is not None:
+             try:
+                 driver.close()
+--- a/tools/qa/core.py
++++ b/tools/qa/core.py
+@@ -28,6 +28,10 @@
+ DIGEST = re.compile(r"sha256:[0-9a-f]{64}\Z")
+ ID = re.compile(r"[a-zA-Z0-9][a-zA-Z0-9._/-]{0,239}\Z")
+ STATUSES = {"PASS", "FAIL", "ERROR", "TIMEOUT", "CRASH", "SKIP", "INCOMPLETE"}
++MAX_ATTEMPTS = 100
++MAX_MOZLOG_BYTES = 128 * 1024 * 1024
++MAX_MOZLOG_LINE_BYTES = 4 * 1024 * 1024
++MAX_MOZLOG_EVENTS = 1_000_000
+ 
+ 
+ class QAError(ValueError):
+@@ -268,6 +272,7 @@
+     validate_plan(plan)
+     require(status in STATUSES, "Unknown result status")
+     positive(attempt, "attempt")
++    require(attempt <= MAX_ATTEMPTS, "Attempt limit exceeded")
+     require(case_id in [row["id"] for row in plan["cases"]], "Unplanned case")
+     return {"schemaVersion": 1, "planId": plan["id"], "subjectId": plan["subjectId"],
+             "caseId": case_id, "status": status, "kind": kind, "attempt": attempt,
+@@ -280,6 +285,8 @@
+     validate_plan(plan)
+     require(make_plan(subject, policy, plan["profile"]) == plan, "Plan was not derived from supplied trusted policy/subject")
+     expected = {row["id"]: row for row in plan["cases"]}
++    require(type(records) is list and len(records) <= len(expected) * MAX_ATTEMPTS,
++            "Result record limit exceeded")
+     by_case: dict[str, list[dict]] = {}
+     failures = []
+     for record in records:
+@@ -289,6 +296,7 @@
+             require(record["caseId"] in expected, "Unplanned result")
+             require(record["status"] in STATUSES, "Unknown result status")
+             positive(record["attempt"], "attempt")
++            require(record["attempt"] <= MAX_ATTEMPTS, "Attempt limit exceeded")
+             require(record["kind"] == expected[record["caseId"]]["kind"], "Wrong evidence kind")
+             verify_evidence(evidence_root, record["evidence"])
+             existing = by_case.setdefault(record["caseId"], [])
+@@ -302,7 +310,7 @@
+             failures.append(f"Missing: {case_id}")
+         else:
+             numbers = sorted(r["attempt"] for r in attempts)
+-            if numbers != list(range(1, max(numbers) + 1)):
++            if any(number != index for index, number in enumerate(numbers, 1)):
+                 failures.append(f"Missing attempt history: {case_id}")
+             if any(r["status"] != "PASS" for r in attempts):
+                 failures.append(f"Non-PASS (retries do not erase failures): {case_id}")
+@@ -324,21 +332,37 @@
+     """
+     require(planned_tests and len(planned_tests) == len(set(planned_tests)), "Empty or duplicate Mozilla test plan")
+     expected = set(planned_tests)
++    assertions = {name: 0 for name in expected}
+     started, ended = set(), set()
+     suite_started = suite_ended = False
+     issues: list[str] = []
+     count = 0
+-    with path.open(encoding="utf-8") as stream:
+-        for index, raw in enumerate(stream, 1):
+-            require(len(raw) <= 4 * 1024 * 1024, "Oversize mozlog event")
++    require(path.is_file() and not path.is_symlink() and path.stat().st_size <= MAX_MOZLOG_BYTES,
++            "Missing, linked or oversized mozlog")
++    with path.open("rb") as stream:
++        index = 0
++        while raw := stream.readline(MAX_MOZLOG_LINE_BYTES + 1):
++            index += 1
++            require(len(raw) <= MAX_MOZLOG_LINE_BYTES, "Oversize mozlog event")
+             if not raw.strip():
+                 continue
+-            event = loads(raw)
++            event = loads(raw.decode("utf-8"))
+             require(type(event) is dict and type(event.get("action")) is str, f"Invalid mozlog event at {index}")
+             action = event["action"]
+             count += 1
++            require(count <= MAX_MOZLOG_EVENTS, "Mozlog event limit exceeded")
++            if suite_ended:
++                require(action in ("log", "process_output"), "Execution event after suite end")
+             if action == "suite_start":
+                 require(not suite_started, "Repeated suite_start is unsupported")
++                selected = event.get("tests")
++                if type(selected) is dict and all(type(v) is list for v in selected.values()):
++                    selected = [name for group in selected.values() for name in group]
++                require(type(selected) is list and selected and all(type(name) is str for name in selected),
++                        "Missing or empty suite-start selection")
++                require(len(selected) == len(set(selected)), "Duplicate suite-start test ID")
++                if set(selected) != expected:
++                    issues.append("Suite-start selection differs from resolved plan")
+                 suite_started = True
+             elif action == "suite_end":
+                 require(suite_started and not suite_ended, "Out-of-order suite_end")
+@@ -356,6 +380,8 @@
+                     status = event.get("status")
+                     if action == "test_status":
+                         require(status in ("PASS", "FAIL", "TIMEOUT", "NOTRUN", "SKIP", "PRECONDITION_FAILED"), "Unknown subtest status")
++                        text(event.get("subtest"), "subtest")
++                        assertions[name] += 1
+                     else:
+                         require(status in ("OK", "PASS", "FAIL", "ERROR", "TIMEOUT", "CRASH", "SKIP", "EXTERNAL-TIMEOUT", "PRECONDITION_FAILED"), "Unknown test status")
+                         ended.add(name)
+@@ -364,15 +390,28 @@
+                         issues.append(f"{name}: {status}, expected={event.get('expected')}")
+             elif action == "crash":
+                 issues.append("Harness crash event")
+-            elif action == "log" and event.get("level") in ("ERROR", "CRITICAL"):
+-                issues.append(f"Harness {event['level']}: {event.get('message', '')}")
+-            elif action in ("valgrind_error", "lsan_leak", "mozleak_total", "assertion_count"):
++            elif action == "process_exit":
++                require(type(event.get("exitcode")) is int, "Missing or non-integer child exitcode")
++                if event["exitcode"] != 0:
++                    issues.append(f"Unexpected child exit: {event['exitcode']}")
++            elif action == "log":
++                message = event.get("message", "")
++                require(type(message) is str, "Non-string harness log message")
++                if event.get("level") in ("ERROR", "CRITICAL", "FATAL"):
++                    issues.append(f"Harness {event['level']}: {message}")
++                if re.search(r"retry|rerun|TEST-UNEXPECTED", message, re.IGNORECASE):
++                    issues.append("First failure or internal retry recorded")
++            elif action in ("valgrind_error", "lsan_leak", "mozleak_total", "mozleak_object", "assertion_count"):
+                 # Do not implement Mozilla's threshold semantics incorrectly.
+                 issues.append(f"Diagnostic requires upstream policy adapter: {action}")
++            elif action not in ("process_output", "process_start", "group_start", "group_end", "shutdown"):
++                issues.append(f"Unsupported Mozilla event: {action}")
+     if not suite_started or not suite_ended:
+         issues.append("Incomplete suite lifecycle")
+     if ended != expected:
+         issues.append(f"Missing tests: {sorted(expected - ended)}")
++    if any(assertions[name] == 0 for name in expected):
++        issues.append("Required test has no assertions")
+     return {"status": "PASS" if not issues else "INCOMPLETE" if not suite_ended else "FAIL",
+             "issues": issues, "planned": len(expected), "started": len(started), "ended": len(ended),
+             "events": count, "evidence": [evidence_entry(evidence_root, path)]}
+--- a/tools/qa/tests/test_core.py
++++ b/tools/qa/tests/test_core.py
+@@ -70,7 +70,7 @@
+         return import_mozlog(path, tests or ["browser_example.js"], self.root)
+ 
+     def happy_events(self):
+-        return [{"action": "suite_start"}, {"action": "test_start", "test": "browser_example.js"},
++        return [{"action": "suite_start", "tests": ["browser_example.js"]}, {"action": "test_start", "test": "browser_example.js"},
+                 {"action": "test_status", "test": "browser_example.js", "subtest": "invariant", "status": "PASS"},
+                 {"action": "test_end", "test": "browser_example.js", "status": "OK"}, {"action": "suite_end"}]
+ 
+--- /dev/null
++++ b/tools/qa/tests/test_review_regressions.py
+@@ -0,0 +1,279 @@
++# SPDX-License-Identifier: MPL-2.0
++"""Synthetic regressions for the four review findings; no browser or network."""
++
++from __future__ import annotations
++
++import copy
++import json
++import os
++from pathlib import Path
++import signal
++import subprocess
++import sys
++import unittest
++from unittest import mock
++
++if os.name == "posix":
++    import resource
++
++TOOLS = Path(__file__).resolve().parents[1]
++sys.path.insert(0, str(TOOLS))
++from core import QAError
++import test_core
++
++
++class ReviewRegressions(unittest.TestCase):
++    def setUp(self):
++        self.fixture = test_core.KitTest()
++        self.fixture.setUp()
++        self.addCleanup(self.fixture.doCleanups)
++
++    def run_child(self, mode, payload=b"", close_input=False):
++        output = self.fixture.root / (mode + ".log")
++        env = {
++            "PATH": os.environ["PATH"],
++            "LANG": "C.UTF-8",
++            "TMPDIR": str(self.fixture.root),
++            "PYTHONDONTWRITEBYTECODE": "1",
++            "GIT_CONFIG_NOSYSTEM": "1",
++            "GIT_CONFIG_GLOBAL": "/dev/null",
++        }
++        with output.open("xb") as stream:
++            proc = subprocess.Popen(
++                [sys.executable, "-B", str(Path(__file__).resolve()), mode],
++                stdin=subprocess.PIPE,
++                stdout=stream,
++                stderr=subprocess.STDOUT,
++                env=env,
++                start_new_session=True,
++                preexec_fn=child_limits,
++            )
++            try:
++                proc.stdin.write(payload)
++                proc.stdin.flush()
++                if close_input:
++                    proc.stdin.close()
++                try:
++                    code = proc.wait(timeout=3)
++                except subprocess.TimeoutExpired:
++                    os.killpg(proc.pid, signal.SIGKILL)
++                    code = proc.wait(timeout=3)
++            finally:
++                if not proc.stdin.closed:
++                    proc.stdin.close()
++                if proc.poll() is None:
++                    os.killpg(proc.pid, signal.SIGKILL)
++                    proc.wait(timeout=3)
++        raw = output.read_text()
++        self.assertEqual(code, 0, raw)
++        return json.loads(raw.splitlines()[-1])
++
++    @unittest.skipUnless(os.name == "posix", "Bounded child requires POSIX rlimit")
++    def test_huge_attempt_returns_block_with_bounded_memory(self):
++        self.assertEqual(self.run_child("huge-attempt")["status"], "BLOCK")
++
++    def test_attempt_cap_rejects_complete_overlarge_history(self):
++        f = self.fixture
++        for attempt in range(2, 102):
++            row = copy.deepcopy(f.records[0])
++            row["attempt"] = attempt
++            f.records.append(row)
++        self.assertEqual(f.evaluate()["status"], "BLOCK")
++
++    def test_attempt_cap_accepts_complete_bounded_history(self):
++        f = self.fixture
++        for attempt in range(2, 101):
++            row = copy.deepcopy(f.records[0])
++            row["attempt"] = attempt
++            f.records.append(row)
++        self.assertEqual(f.evaluate()["status"], "PASS")
++
++    def test_assertion_free_trace_cannot_pass(self):
++        f = self.fixture
++        good = events()
++        self.assertNotEqual(f.log(good[:2] + good[3:])["status"], "PASS")
++
++    def test_retry_warning_cannot_pass(self):
++        self.assertNotEqual(
++            self.with_event(
++                {
++                    "action": "log",
++                    "level": "WARNING",
++                    "message": "Retrying test after first failure",
++                }
++            )["status"],
++            "PASS",
++        )
++
++    def test_failed_child_cannot_pass(self):
++        self.assertNotEqual(
++            self.with_event(
++                {"action": "process_exit", "process": "fixture", "exitcode": 1}
++            )["status"],
++            "PASS",
++        )
++
++    def test_unknown_execution_event_cannot_pass(self):
++        self.assertNotEqual(
++            self.with_event({"action": "unknown_required_diagnostic"})["status"], "PASS"
++        )
++
++    def test_child_exit_requires_integer_field(self):
++        for patch in (
++            {},
++            {"exitcode": False},
++            {"exitcode": 0.0},
++            {"exitcode": None},
++            {"exitcode": "0"},
++        ):
++            with self.subTest(patch=patch), self.assertRaises(QAError):
++                self.with_event(
++                    {"action": "process_exit", "process": "fixture", **patch}
++                )
++
++    def test_missing_empty_duplicate_suite_selection_rejected(self):
++        for selection in (None, [], ["browser_example.js", "browser_example.js"]):
++            value = events()
++            if selection is None:
++                value[0].pop("tests")
++            else:
++                value[0]["tests"] = selection
++            with self.subTest(selection=selection), self.assertRaises(QAError):
++                self.fixture.log(value)
++
++    def test_typed_child_zero_and_positive_assertion_pass(self):
++        self.assertEqual(
++            self.with_event(
++                {"action": "process_exit", "process": "fixture", "exitcode": 0}
++            )["status"],
++            "PASS",
++        )
++
++    def test_mozlog_input_limits_reject_without_large_allocations(self):
++        for name, limit in (
++            ("MAX_MOZLOG_BYTES", 1),
++            ("MAX_MOZLOG_LINE_BYTES", 8),
++            ("MAX_MOZLOG_EVENTS", 4),
++        ):
++            with (
++                self.subTest(limit=name),
++                mock.patch("core." + name, limit),
++                self.assertRaises(QAError),
++            ):
++                self.fixture.log(events())
++
++    def test_grouped_suite_selection_preserves_positive_coverage(self):
++        value = events()
++        value[0]["tests"] = {"browser-chrome": ["browser_example.js"]}
++        self.assertEqual(self.fixture.log(value)["status"], "PASS")
++
++    @unittest.skipUnless(os.name == "posix", "Agent stdin backend is POSIX")
++    def test_agent_partial_line_obeys_deadline_and_closes(self):
++        value = self.run_child("fake-stdio", b"{")
++        self.assertEqual(value["status"], "budget-exhausted")
++        self.assertTrue(value["fakeDriverClosed"])
++        self.assertTrue(value["stdinBlockingRestored"])
++
++    @unittest.skipUnless(os.name == "posix", "Agent stdin backend is POSIX")
++    def test_agent_pipelined_complete_frames_preserved(self):
++        value = self.run_child(
++            "fake-stdio", b'{"kind":"observe"}\n{"kind":"observe"}\n'
++        )
++        self.assertEqual(value["completedSteps"], 2)
++        self.assertTrue(value["fakeDriverClosed"])
++
++    @unittest.skipUnless(os.name == "posix", "Agent stdin backend is POSIX")
++    def test_agent_eof_without_pending_frame(self):
++        value = self.run_child("fake-stdio", close_input=True)
++        self.assertEqual(value["status"], "input-ended")
++        self.assertTrue(value["fakeDriverClosed"])
++
++    @unittest.skipUnless(os.name == "posix", "Agent stdin backend is POSIX")
++    def test_agent_partial_eof_records_error_and_closes(self):
++        value = self.run_child("fake-stdio", b"{", close_input=True)
++        self.assertEqual(value["status"], "finding-or-environment-error")
++        self.assertTrue(value["fakeDriverClosed"])
++
++    def with_event(self, event):
++        good = events()
++        return self.fixture.log(good[:3] + [event] + good[3:])
++
++
++def events():
++    return [
++        {"action": "suite_start", "tests": ["browser_example.js"]},
++        {"action": "test_start", "test": "browser_example.js"},
++        {
++            "action": "test_status",
++            "test": "browser_example.js",
++            "subtest": "invariant",
++            "status": "PASS",
++        },
++        {"action": "test_end", "test": "browser_example.js", "status": "OK"},
++        {"action": "suite_end"},
++    ]
++
++
++def child_limits():
++    resource.setrlimit(resource.RLIMIT_AS, (256 * 1024**2, 256 * 1024**2))
++    resource.setrlimit(resource.RLIMIT_CPU, (8, 8))
++    resource.setrlimit(resource.RLIMIT_FSIZE, (8 * 1024**2, 8 * 1024**2))
++
++
++def child(mode):
++    if mode == "huge-attempt":
++        f = test_core.KitTest()
++        f.setUp()
++        try:
++            f.records[0]["attempt"] = 2**53 - 1
++            print(json.dumps(f.evaluate()))
++        finally:
++            f.doCleanups()
++    elif mode == "fake-stdio":
++        import agent
++
++        class FakeDriver:
++            closed = False
++
++            def __init__(self, repo, browser, output, subject):
++                output.mkdir()
++
++            def observe(self):
++                return {"synthetic": True}
++
++            def execute(self, action):
++                return self.observe()
++
++            def close(self):
++                FakeDriver.closed = True
++
++        agent.Driver = FakeDriver
++        import tempfile
++
++        original_blocking = os.get_blocking(sys.stdin.fileno())
++        with tempfile.TemporaryDirectory() as temp:
++            root = Path(temp)
++            value = agent.execute_campaign(
++                root,
++                root / "unused",
++                {"id": "synthetic-review"},
++                root / "out",
++                None,
++                2,
++                1,
++            )
++            value.update(
++                fakeDriverClosed=FakeDriver.closed,
++                stdinBlockingRestored=os.get_blocking(sys.stdin.fileno())
++                == original_blocking,
++            )
++            print(json.dumps(value))
++    else:
++        raise ValueError("Unknown synthetic mode")
++
++
++if __name__ == "__main__":
++    if len(sys.argv) == 2 and sys.argv[1] in ("huge-attempt", "fake-stdio"):
++        child(sys.argv[1])
++    else:
++        unittest.main()
+--- /dev/null
++++ b/validation/review-fixes.json
+@@ -0,0 +1,81 @@
++{
++  "schemaVersion": 1,
++  "designVersion": "0.3.0",
++  "repairRevision": "review-fixes.1",
++  "sourceCommit": "87311566a225936fbe7948db142bce3f1d3379d8",
++  "sourcePath": "docs/Floorp_QA_Implementation_Kit_v0.3.0.zip",
++  "originalZipSha256": "a4af60380399050f82465864734391227ab34024d26bdf16c31559e2824a8d50",
++  "findings": [
++    "KIT-P1-01",
++    "KIT-P1-02",
++    "KIT-P1-03"
++  ],
++  "runtimeP2SubmittedSeparately": true,
++  "publicationAuthorized": false,
++  "nativeQualification": "UNVERIFIED",
++  "originalDesignDocumentsUnchanged": true,
++  "originalTests": {
++    "count": 114,
++    "skipped": 0,
++    "exitCode": 0,
++    "logSha256": "0f0efa66127d57df1fff8c071e0dee7cdbffd3e83d381e71bef16dc2b05bd2c7"
++  },
++  "allTests": {
++    "count": 130,
++    "newRegressionMethods": 16,
++    "skipped": 0,
++    "exitCode": 0,
++    "python": "3.12.14",
++    "host": "Linux/x86_64",
++    "logSha256": "cad3ce6eea3e2e53d0068ee1fd9ec0c89b1710e99b28f345822273543c297c35"
++  },
++  "runtimeAttemptCeiling": 100,
++  "mozlogLimits": {
++    "bytes": 134217728,
++    "lineBytes": 4194304,
++    "events": 1000000
++  },
++  "changedImplementationAndTests": {
++    "tools/qa/core.py": "28767090836801f51e18cfef59434a9ae0cedc44c15cfc21f0da7160d43d3bdc",
++    "tools/qa/agent.py": "90fc2e506263ed2004496411caaf8c0bccc960a9a46004df8382d8af9c3b695b",
++    "qa/schemas/result.schema.json": "c2df35c7f2eb93103328264468fdee7e669aa69b0b69d1ba387f92989571c4d4",
++    "tools/qa/tests/test_core.py": "5bb6a9a510108b1c13eb4588278c98bc9e9139a34fd7758e1ea4bcad8985f790",
++    "tools/qa/tests/test_review_regressions.py": "31a77bad47938f862f981ca5f530c382d5e3bd8682a78a697bd4c7a881842910"
++  },
++  "initialFailuresPreserved": [
++    {
++      "name": "kit",
++      "command": [
++        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
++        "-B",
++        "-m",
++        "unittest",
++        "discover",
++        "-s",
++        "tools/qa/tests",
++        "-p",
++        "test_review_regressions.py",
++        "-v"
++      ],
++      "exitCode": 1,
++      "seconds": 4.778,
++      "log": "qa307-kit-regressions-first-failure.log",
++      "implementationFixed": false
++    },
++    {
++      "name": "runtime",
++      "command": [
++        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
++        "-B",
++        "-m",
++        "unittest",
++        "test_qa3_mozlog.MozlogContracts.test_child_process_exit_requires_typed_zero",
++        "-v"
++      ],
++      "exitCode": 1,
++      "seconds": 0.115,
++      "log": "qa307-runtime-regressions-first-failure.log",
++      "implementationFixed": false
++    }
++  ]
++}

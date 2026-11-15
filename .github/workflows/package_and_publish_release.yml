@@ -28,6 +28,12 @@ run-name: >-
   ${{ inputs.validation_only && ' (validation only)' || '' }}
 
 jobs:
+  source-qa-shadow:
+    name: Source QA (shadow)
+    uses: ./.github/workflows/qa3-source-shadow.yml
+    permissions:
+      contents: read
+
   check-version:
     name: Check release version
     runs-on: ubuntu-latest
@@ -416,7 +422,7 @@ jobs:
       floorp_head_sha: ${{ github.sha }}
       platform_key: mac
       native_arch: aarch64
-      runner: macos-14
+      runner: macos-15
       validation_only: ${{ inputs.validation_only }}
     secrets:
       runtime_artifact_token: ${{ secrets.PAT }}

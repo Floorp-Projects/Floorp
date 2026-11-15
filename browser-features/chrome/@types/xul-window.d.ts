@@ -25,7 +25,8 @@ interface GBrowser {
       userContextId?: number;
       triggeringPrincipal?: unknown;
       pinned?: boolean;
-      index?: number;
+      tabIndex?: number;
+      elementIndex?: number;
     },
   ): XULElement;
   addTrustedTab(

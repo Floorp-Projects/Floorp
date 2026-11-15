@@ -1,0 +1,188 @@
+# SPDX-License-Identifier: MPL-2.0
+
+# D-14 review gate: a PR merges only when at least two independent LLM
+# reviewers posted machine-readable receipts at the PR head commit. The job
+# name `review-gate` is the required status check name. One job, no
+# continue-on-error: any receipt, test, or build failure fails the check.
+#
+# Receipts count only from comment authors with OWNER, MEMBER or COLLABORATOR
+# association (X-01); receipts from anyone else are logged and ignored.
+# Receipts for other commits are ignored as stale.
+#
+# The gate itself runs only on pull_request, so it always checks out and
+# reports on the PR head. Posting a receipt comment does not run the gate:
+# `rerun-on-receipt` waits for the PR head's latest gate run and reruns it
+# when it did not pass (X-02). issue_comment workflows are read from the
+# default branch, so a PR that changes this file still needs one manual
+# rerun after its receipts are posted.
+
+name: "(CI) FDH Review Gate"
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  pull-requests: read
+  issues: read
+
+jobs:
+  review-gate:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - uses: denoland/setup-deno@667a34cdef165d8d2b2e98dde39547c9daac7282
+        with:
+          deno-version: v2.x
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
+        with:
+          path: ~/.cache/deno
+          key: deno-fdh-review-${{ hashFiles('deno.lock') }}
+          restore-keys: deno-fdh-review-
+      - run: deno install
+      - name: Validate review receipts
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          COMMENTS_FILE: ${{ runner.temp }}/fdh-review-comments.jsonl
+        run: |
+          set -euo pipefail
+          gh api --paginate \
+            --jq '.[] | {body: .body, author: .user.login, authorAssociation: .author_association}' \
+            "repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/comments" \
+            > "$COMMENTS_FILE"
+          deno run --allow-read --allow-env - <<'DENO'
+          import {
+            parseReceiptComments,
+            type ReviewCommentInput,
+            selectTrustedReceiptComments,
+            validateReceiptSet,
+          } from "./tools/src/fdh_review.ts";
+
+          const commentsFile = Deno.env.get("COMMENTS_FILE");
+          const headSha = Deno.env.get("HEAD_SHA");
+          if (!commentsFile || !headSha) {
+            throw new Error("COMMENTS_FILE and HEAD_SHA must be set");
+          }
+          const comments = Deno.readTextFileSync(commentsFile)
+            .split("\n")
+            .filter((line) => line.trim() !== "")
+            .map((line) => JSON.parse(line) as ReviewCommentInput);
+          const { trusted, ignored } = selectTrustedReceiptComments(comments);
+          for (const entry of ignored) {
+            console.log(
+              `Ignoring receipt comment by ${entry.author} (${entry.authorAssociation}): not OWNER, MEMBER or COLLABORATOR`,
+            );
+          }
+          const summary = validateReceiptSet(
+            parseReceiptComments(trusted),
+            headSha,
+          );
+          console.log(
+            `FDH review gate passed at ${summary.headSha}: reviewers ${
+              summary.reviewers.join(", ")
+            } (models ${summary.models.join(", ")}); ${summary.staleReceipts} stale receipt(s) ignored`,
+          );
+          DENO
+      - name: Run host tool tests
+        run: deno task test:host
+      - name: Build (before-mach)
+        run: deno task feles-build build --phase before-mach
+
+  rerun-on-receipt:
+    # Only a trusted author's receipt comment on a PR can trigger a rerun.
+    if: >-
+      github.event_name == 'issue_comment' &&
+      github.event.issue.pull_request != null &&
+      contains(github.event.comment.body, 'fdh-review-receipt:v1') &&
+      contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    # One job runs per PR at a time and GitHub keeps one pending job; a newer
+    # receipt replaces an older pending one. The job that runs last still sees
+    # every receipt, because the rerun fetches comments when it starts.
+    concurrency:
+      group: fdh-review-gate-rerun-${{ github.event.issue.number }}
+      cancel-in-progress: false
+    permissions:
+      actions: write
+      pull-requests: read
+    steps:
+      - name: Rerun the PR head review gate
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          set -euo pipefail
+          # Identify this PR's head exactly: the same SHA can be the head of
+          # another PR (a fork, or another PR from the same branch to another
+          # base), whose gate run must not be rerun in place of this one.
+          # Git ref names cannot contain tabs.
+          if ! pr_head=$(gh api "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}" \
+            --jq '[.head.sha, .head.ref, (.head.repo.full_name // "")] | @tsv'); then
+            echo "Could not read the head of PR #${PR_NUMBER}." >&2
+            exit 1
+          fi
+          IFS=$'\t' read -r head_sha head_ref head_repo <<< "$pr_head"
+          if [ -z "${head_sha:-}" ] || [ -z "${head_ref:-}" ] || [ -z "${head_repo:-}" ]; then
+            echo "Could not read the head of PR #${PR_NUMBER} (deleted head repository?)." >&2
+            exit 1
+          fi
+          export HEAD_REF="$head_ref" HEAD_REPO="$head_repo"
+          # Newest pull_request gate run for this exact head, as
+          # "id status conclusion"; empty when there is none. The run must
+          # match the SHA, head branch and head repository (exact string
+          # comparison in jq), and, when GitHub lists the run's PRs (same-repo
+          # heads), this PR's number. Fork runs list no PRs.
+          latest_run() {
+            gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/fdh-review-gate.yml/runs?event=pull_request&head_sha=${head_sha}&per_page=30" \
+              --jq '[.workflow_runs[] | select(.head_branch == env.HEAD_REF and .head_repository.full_name == env.HEAD_REPO and ((.pull_requests | length) == 0 or any(.pull_requests[]; .number == (env.PR_NUMBER | tonumber))))][0] | if . == null then "" else "\(.id) \(.status) \(.conclusion // "none")" end'
+          }
+          if ! run=$(latest_run); then
+            echo "Listing gate runs failed." >&2
+            exit 1
+          fi
+          if [ -z "$run" ]; then
+            echo "No pull_request gate run for ${head_repo}:${head_ref}@${head_sha} yet; the next push or reopen runs it."
+            exit 0
+          fi
+          read -r run_id status conclusion <<< "$run"
+          # Wait for an in-progress gate run (it may have read the comments
+          # before this receipt existed) so it can be rerun afterwards.
+          for _ in $(seq 1 100); do
+            case "$status" in
+              completed) break ;;
+              waiting | action_required)
+                echo "Gate run ${run_id} is waiting for approval; a maintainer has to approve it."
+                exit 0 ;;
+            esac
+            sleep 30
+            if ! run=$(latest_run) || [ -z "$run" ]; then
+              echo "Lost track of gate run ${run_id} while waiting." >&2
+              exit 1
+            fi
+            read -r run_id status conclusion <<< "$run"
+          done
+          if [ "$status" != "completed" ]; then
+            echo "Gate run ${run_id} is still ${status}; not rerunning." >&2
+            exit 1
+          fi
+          case "$conclusion" in
+            success)
+              echo "Gate run ${run_id} for ${head_sha} already passed."
+              exit 0 ;;
+            action_required)
+              echo "Gate run ${run_id} needs a maintainer's approval; not rerunning."
+              exit 0 ;;
+          esac
+          echo "Rerunning gate run ${run_id} (${conclusion}) for ${head_repo}:${head_ref}@${head_sha}."
+          gh run rerun "$run_id" --repo "${GITHUB_REPOSITORY}"

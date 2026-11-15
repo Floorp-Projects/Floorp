@@ -1,0 +1,17 @@
+test_cleanup_signal_error_cannot_abort_later_kill_and_reap (test_qa3_native_io.ProcessFailureTests.test_cleanup_signal_error_cannot_abort_later_kill_and_reap) ... FAIL
+
+======================================================================
+FAIL: test_cleanup_signal_error_cannot_abort_later_kill_and_reap (test_qa3_native_io.ProcessFailureTests.test_cleanup_signal_error_cannot_abort_later_kill_and_reap)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/repos/Floorp-Runtime/.github/workflows/scripts/test_qa3_native_io.py", line 649, in test_cleanup_signal_error_cannot_abort_later_kill_and_reap
+    receipt = self.check_failure(
+              ^^^^^^^^^^^^^^^^^^^
+  File "/workspace/qa-review-v030/repos/Floorp-Runtime/.github/workflows/scripts/test_qa3_native_io.py", line 443, in check_failure
+    self.assertFalse(owned_alive({
+AssertionError: {51363: (51362, 'S', 4227127)} is not false
+
+----------------------------------------------------------------------
+Ran 1 test in 0.143s
+
+FAILED (failures=1)

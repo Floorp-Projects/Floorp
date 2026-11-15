@@ -32,6 +32,7 @@ import {
 import type { TWorkspaceSnapshotTab } from "./utils/type";
 import type { WorkspaceArchiveSummary } from "./utils/archive-types";
 import {
+  WORKSPACE_ENABLED_PREF_NAME,
   WORKSPACE_LAST_SHOW_ID,
   WORKSPACE_TAB_ATTRIBUTION_ID,
   WORKSPACES_CHANGED_OBSERVER_TOPIC,
@@ -128,6 +129,7 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
       getSelectedWorkspaceID: this.getSelectedWorkspaceID.bind(this),
       getCurrentWorkspaceUserContextId: this.getCurrentWorkspaceUserContextId
         .bind(this),
+      canOpenWorkspaceTab: this.canOpenWorkspaceTab.bind(this),
       changeWorkspace: this.changeWorkspace.bind(this),
       isWorkspaceID: this.isWorkspaceID.bind(this),
     };
@@ -204,6 +206,7 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
   }
   setCurrentWorkspaceID(id: TWorkspaceID): void {
     this.dataManagerCtx.setCurrentWorkspaceID(id);
+    globalThis.dispatchEvent(new Event("floorp-workspace-container-ready"));
   }
   setDefaultWorkspace(id: TWorkspaceID): void {
     this.dataManagerCtx.setDefaultWorkspace(id);
@@ -226,12 +229,28 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
     return this.getRawWorkspace(id)?.userContextId ?? 0;
   }
 
+  /** Guard only implicit default selection; explicit none/other containers remain valid. */
+  canOpenWorkspaceTab(workspaceId = this.getSelectedWorkspaceID()): boolean {
+    if (!Services.prefs.getBoolPref(WORKSPACE_ENABLED_PREF_NAME, true)) {
+      return true;
+    }
+    const controller = this.syncController;
+    return Boolean(
+      controller && !controller.defaultContainerPending(workspaceId),
+    );
+  }
+
   deleteWorkspace(workspaceID: TWorkspaceID): void {
     if (workspacesDataStore.data.size === 1) return;
 
-    this.syncController?.deleteWorkspace(workspaceID).catch((error: unknown) => {
-      console.error("[WorkspacesSync] Could not sync workspace deletion", error);
-    });
+    this.syncController?.deleteWorkspace(workspaceID).catch(
+      (error: unknown) => {
+        console.error(
+          "[WorkspacesSync] Could not sync workspace deletion",
+          error,
+        );
+      },
+    );
 
     const fallbackWorkspaceID = this.findFallbackWorkspaceID(workspaceID);
     const defaultWorkspaceID = this.getDefaultWorkspaceID();
@@ -373,6 +392,7 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
 
   public changeWorkspace(id: TWorkspaceID) {
     this.tabManagerCtx.changeWorkspace(id);
+    globalThis.dispatchEvent(new Event("floorp-workspace-container-ready"));
     Services.obs.notifyObservers(
       null as unknown as nsISupports,
       WORKSPACES_CHANGED_OBSERVER_TOPIC,

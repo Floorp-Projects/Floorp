@@ -61,16 +61,64 @@ function createBoundary() {
   const [errors, setErrors] = createSignal<ReadonlyMap<TWorkspaceID, string>>(
     new Map(),
   );
+  const [enabled, setEnabled] = createSignal(true);
   const ctx = {
     getRawWorkspace: (id: TWorkspaceID) => workspaces.get(id),
     iconCtx: new WorkspaceIcons(),
     syncController: {
       isAvailable: () => true,
+      isEnabled: enabled,
       isSelected: (id: TWorkspaceID) => selected().has(id),
       errorText: (id: TWorkspaceID) => errors().get(id) ?? null,
     },
   } as unknown as WorkspacesService;
-  return { ctx, firstId, secondId, workspaces, setSelected, setErrors };
+  return {
+    ctx,
+    firstId,
+    secondId,
+    workspaces,
+    setSelected,
+    setErrors,
+    setEnabled,
+  };
+}
+
+async function testDisabledEngineShowsPausedAndRecovers(): Promise<void> {
+  await withEnglish(async () => {
+    const boundary = createBoundary();
+    boundary.setSelected(new Set([boundary.firstId]));
+    let dispose = () => {};
+    let indicator!: ReturnType<typeof createWorkspaceSyncIndicator>;
+    createRoot((cleanup) => {
+      dispose = cleanup;
+      indicator = createWorkspaceSyncIndicator(
+        boundary.ctx,
+        () => boundary.firstId,
+        () => "Alpha",
+      );
+    });
+    try {
+      assertEquals(indicator().state, "selected", "enabled sync selection");
+      boundary.setEnabled(false);
+      await settle();
+      assertEquals(indicator().state, "attention", "disabled sync warns");
+      assertEquals(indicator().status, "Sync paused", "pause is visible");
+      assert(
+        indicator().error?.includes("Resume Workspace Sync"),
+        "the explanation provides an actionable way to resume",
+      );
+      assert(
+        indicator().tooltip.includes("Workspace sync paused"),
+        "the accessible name must describe the paused transport",
+      );
+      boundary.setEnabled(true);
+      await settle();
+      assertEquals(indicator().state, "selected", "resume restores selection");
+      assertEquals(indicator().error, null, "the pause explanation clears");
+    } finally {
+      dispose();
+    }
+  });
 }
 
 async function settle(): Promise<void> {
@@ -1126,6 +1174,10 @@ async function testFocusedErrorTooltipUsesNativePopupAndCleansUp(): Promise<
 
 export async function runAllTests(): Promise<void> {
   await runTests("workspaceSyncIndicator.test.ts", [
+    {
+      name: "disabled transport shows paused status and recovers reactively",
+      fn: testDisabledEngineShowsPausedAndRecovers,
+    },
     {
       name:
         "main toolbar updates for the same workspace without changing icon or label",

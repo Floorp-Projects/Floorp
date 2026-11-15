@@ -1,0 +1,54 @@
+{
+  "capturedAt": "2026-10-09T15:56:19.012202+00:00",
+  "reviewedHead": "c9027879e053c9031c7f3e27495f6d415d36c10f",
+  "repoStatus": "",
+  "sourceSha256": "8bbea4abfc5d8cf1a3b70a275287c7fe6725b96fa17afb4c74ef51814b7d142e",
+  "testSha256": "0dae5c088abd51a84338a62c977a7a43e5765dfb1fd8a0647090b10fcab625a6",
+  "files": [
+    {
+      "path": "/workspace/qa-review-v030/fix-qa309/evidence/workflow-runtime-final-8bbea4ab-ci-attempt-jobs-poll01.json",
+      "bytes": 5849,
+      "sha256": "8315729931b911252ff100cad703f628a6aea89cf442c32a389ef2854f5583ea"
+    },
+    {
+      "path": "/workspace/qa-review-v030/fix-qa309/evidence/workflow-runtime-final-8bbea4ab-ci-contracts.log",
+      "bytes": 40955,
+      "sha256": "9bff23cd43eb073f2b67a711c71d724ac7ba5ce093c5c7655afca3e07ae4de45"
+    },
+    {
+      "path": "/workspace/qa-review-v030/fix-qa309/evidence/workflow-runtime-final-8bbea4ab-ci-final-summary.json",
+      "bytes": 4013,
+      "sha256": "b4eb711c38474cb62274516fa9aa8f6aaaab3df103db27b4b167803c1dae26e8"
+    },
+    {
+      "path": "/workspace/qa-review-v030/fix-qa309/evidence/workflow-runtime-final-8bbea4ab-ci-job-logs.json",
+      "bytes": 41686,
+      "sha256": "53af21984365c222de934a67f03af8b0b73341b344ef63cbee5d718ae5a7fb7e"
+    },
+    {
+      "path": "/workspace/qa-review-v030/fix-qa309/evidence/workflow-runtime-final-8bbea4ab-ci-job-steps.json",
+      "bytes": 1455,
+      "sha256": "5de8d03badd1dc1686a2a606ea9b2c14f760511c7ce612dd71b5ab5a94e7f4cd"
+    },
+    {
+      "path": "/workspace/qa-review-v030/fix-qa309/evidence/workflow-runtime-final-8bbea4ab-ci-report.md",
+      "bytes": 3593,
+      "sha256": "ae30561875b42d2acd5dc62e0979935030efd846f9ef64d17c874a26fd868af8"
+    },
+    {
+      "path": "/workspace/qa-review-v030/fix-qa309/evidence/workflow-runtime-final-8bbea4ab-ci-run-poll01.json",
+      "bytes": 30275,
+      "sha256": "36241f9a90ea1578c34517477f349bbaebf2e3bb6ae8a177be1bcc1df8f0f7af"
+    },
+    {
+      "path": "/workspace/qa-review-v030/fix-qa309/evidence/workflow-runtime-final-8bbea4ab-ci-runs-poll01.json",
+      "bytes": 695,
+      "sha256": "41688bdf346c673093ccfcacaf8c11a247f5cea4235cd8d8706258d0e50178c0"
+    },
+    {
+      "path": "/workspace/qa-review-v030/fix-qa309/evidence/workflow-runtime-final-8bbea4ab-ci-summary.json",
+      "bytes": 2436,
+      "sha256": "8e7810182401a031c7e8d0b01e71370496388d04f2314f6fd5aee42f8e7ed59f"
+    }
+  ]
+}

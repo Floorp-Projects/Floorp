@@ -12,9 +12,7 @@ export interface ContainerOption {
 }
 
 type PublicIdentity = {
-  name: string;
   userContextId: number;
-  l10nId?: string;
 };
 
 type BrowserTab = XULElement & {
@@ -100,13 +98,15 @@ export function getPublicContainerOptions(): ContainerOption[] {
     const { ContextualIdentityService } = ChromeUtils.importESModule(
       "moz-src:///toolkit/components/contextualidentity/ContextualIdentityService.sys.mjs",
     );
-    const identities =
-      ContextualIdentityService.getPublicIdentities() as PublicIdentity[];
+    const identities = ContextualIdentityService
+      .getPublicIdentities() as PublicIdentity[];
 
     for (const identity of identities) {
-      const label = identity.l10nId
-        ? ContextualIdentityService.getUserContextLabel(identity.userContextId)
-        : identity.name;
+      // The service handles localized defaults across runtime versions as well
+      // as user-created names; identity localization fields are internal.
+      const label = ContextualIdentityService.getUserContextLabel(
+        identity.userContextId,
+      );
       options.push({
         userContextId: identity.userContextId,
         label,

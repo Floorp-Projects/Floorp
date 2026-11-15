@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import * as path from "@std/path";
-import { PROJECT_ROOT, PATHS } from "./defines.ts";
+import { PATHS, PROJECT_ROOT } from "./defines.ts";
 import {
   createSymlink,
   exists,
@@ -60,7 +60,9 @@ export function runInParallel(commands: CommandTuple[]): void {
   for (const res of results) {
     if (!res.success) {
       throw new Error(
-        `Build command \`${res.cmd.join(" ")}\` in \`${res.dir}\` failed\nSTDOUT:\n${res.out}\nSTDERR:\n${res.err}`,
+        `Build command \`${
+          res.cmd.join(" ")
+        }\` in \`${res.dir}\` failed\nSTDOUT:\n${res.out}\nSTDERR:\n${res.err}`,
       );
     }
   }
@@ -111,8 +113,7 @@ export async function run(mode = "dev", buildid2: string): Promise<void> {
         deno,
         "run",
         "-A",
-        "vite",
-        "build",
+        path.join(PROJECT_ROOT, "tools/vite-build.ts"),
         "--base",
         "chrome://noraneko/content",
       ],
@@ -130,8 +131,7 @@ export async function run(mode = "dev", buildid2: string): Promise<void> {
         deno,
         "run",
         "-A",
-        "vite",
-        "build",
+        path.join(PROJECT_ROOT, "tools/vite-build.ts"),
         "--base",
         "chrome://noraneko/content",
       ],
@@ -144,8 +144,7 @@ export async function run(mode = "dev", buildid2: string): Promise<void> {
         deno,
         "run",
         "-A",
-        "vite",
-        "build",
+        path.join(PROJECT_ROOT, "tools/vite-build.ts"),
         "--config",
         "vite.config.ts",
         "--base",
@@ -158,8 +157,7 @@ export async function run(mode = "dev", buildid2: string): Promise<void> {
         deno,
         "run",
         "-A",
-        "vite",
-        "build",
+        path.join(PROJECT_ROOT, "tools/vite-build.ts"),
         "--config",
         "vite.config.ts",
         "--base",
@@ -172,8 +170,7 @@ export async function run(mode = "dev", buildid2: string): Promise<void> {
         deno,
         "run",
         "-A",
-        "vite",
-        "build",
+        path.join(PROJECT_ROOT, "tools/vite-build.ts"),
         "--config",
         "vite.config.ts",
         "--base",
@@ -186,8 +183,7 @@ export async function run(mode = "dev", buildid2: string): Promise<void> {
         deno,
         "run",
         "-A",
-        "vite",
-        "build",
+        path.join(PROJECT_ROOT, "tools/vite-build.ts"),
         "--config",
         "vite.config.ts",
         "--base",
@@ -200,8 +196,7 @@ export async function run(mode = "dev", buildid2: string): Promise<void> {
         deno,
         "run",
         "-A",
-        "vite",
-        "build",
+        path.join(PROJECT_ROOT, "tools/vite-build.ts"),
         "--config",
         "vite.config.ts",
         "--base",
@@ -215,8 +210,7 @@ export async function run(mode = "dev", buildid2: string): Promise<void> {
         deno,
         "run",
         "-A",
-        "vite",
-        "build",
+        path.join(PROJECT_ROOT, "tools/vite-build.ts"),
         "--config",
         "vite.config.ts",
         "--base",
@@ -230,8 +224,7 @@ export async function run(mode = "dev", buildid2: string): Promise<void> {
         deno,
         "run",
         "-A",
-        "vite",
-        "build",
+        path.join(PROJECT_ROOT, "tools/vite-build.ts"),
         "--config",
         "vite.config.ts",
         "--base",
@@ -310,7 +303,9 @@ export async function run(mode = "dev", buildid2: string): Promise<void> {
         createSymlink(linkPath, targetPath);
       } catch (error: unknown) {
         logger.warn(
-          `Failed to create symlink ${linkPath} -> ${targetPath}: ${errorToMessage(error)}`,
+          `Failed to create symlink ${linkPath} -> ${targetPath}: ${
+            errorToMessage(error)
+          }`,
         );
       }
     }
