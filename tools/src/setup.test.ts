@@ -37,6 +37,10 @@ import {
   type RuntimeMarker,
   type SetupRecord,
 } from "./setup.ts";
+import {
+  normalizePreparedRuntimeSourcePath,
+  readPreparedRuntimeReceipt,
+} from "./prepared_runtime.ts";
 
 function withTempDir(
   fn: (dir: string) => void | Promise<void>,
@@ -84,6 +88,39 @@ function writeRuntimeTree(
     JSON.stringify(marker),
   );
   Deno.writeTextFileSync(path.join(binRootDir, "runtime.txt"), "runtime");
+
+  const floorpRoot = path.join(binRootDir, "floorp");
+  const modulesDir = path.join(floorpRoot, "modules");
+  Deno.mkdirSync(modulesDir, { recursive: true });
+  Deno.writeTextFileSync(
+    path.join(modulesDir, "AppConstants.sys.mjs"),
+    `export var AppConstants = Object.freeze({
+  DEBUG: true,
+  MOZ_APP_NAME: "floorp",
+  MOZ_APP_VERSION: "${marker.version}",
+  MOZ_BUILDID: "${marker.buildId}",
+});
+`,
+  );
+  const appRoot = marker.platform === "macos"
+    ? path.join(floorpRoot, "Floorp.app", "Contents", "Resources")
+    : floorpRoot;
+  Deno.mkdirSync(appRoot, { recursive: true });
+  Deno.writeTextFileSync(
+    path.join(appRoot, "application.ini"),
+    `[App]
+Name=Floorp
+Version=${marker.version}
+BuildID=${marker.buildId}
+`,
+  );
+  const executable = marker.platform === "macos"
+    ? path.join(floorpRoot, "Floorp.app", "Contents", "MacOS", "floorp")
+    : marker.platform === "windows"
+    ? path.join(floorpRoot, "floorp.exe")
+    : path.join(floorpRoot, "floorp-bin");
+  Deno.mkdirSync(path.dirname(executable), { recursive: true });
+  Deno.writeTextFileSync(executable, "binary");
 }
 
 Deno.test("prepareDeps detects fflate and does not install twice", () =>
@@ -159,6 +196,15 @@ Deno.test("prepareRuntime copies a marker tree and relinks idempotently", () =>
     assertEquals(relinks, 1);
     assertEquals(readRuntimeMarker(binRootDir)?.buildId, "20261019220659");
     assertEquals(exists(path.join(binRootDir, "runtime.txt")), true);
+    const receipt = readPreparedRuntimeReceipt(binRootDir);
+    assertEquals(receipt.status, "present");
+    if (receipt.status === "present") {
+      assertEquals(
+        receipt.receipt.sourcePath,
+        normalizePreparedRuntimeSourcePath(source),
+      );
+      assertEquals(receipt.receipt.identity.buildId, "20261019220659");
+    }
 
     const second = await prepareRuntime({
       sourcePath: source,
@@ -169,6 +215,7 @@ Deno.test("prepareRuntime copies a marker tree and relinks idempotently", () =>
     assertEquals(second.status, "already");
     assertEquals(second.relinked, true);
     assertEquals(relinks, 2);
+    assertEquals(readPreparedRuntimeReceipt(binRootDir).status, "present");
   }));
 
 Deno.test("prepareRuntime falls back to symlink-preserving copy", () =>
@@ -605,3 +652,214 @@ Deno.test("mount links resolve to the target inside the same root", () => {
     Deno.removeSync(root, { recursive: true });
   }
 });
+
+Deno.test("prepareRuntime replaces an explicit different registry source", () =>
+  withTempDir(async (root) => {
+    const sourceA = path.join(root, "registry-a", "bin");
+    writeRuntimeTree(sourceA);
+    const sourceB = path.join(root, "registry-b", "bin");
+    writeRuntimeTree(
+      sourceB,
+      runtimeMarker({
+        artifactName: "floorp-windows-x86_64-moz-artifact.zip",
+        artifactSize: 190337065,
+        artifactSha256:
+          "11fa924d1a9c427749efc74d8c594b46c5223c4e4049de7adec1ae72d27dbc0a",
+        version: "160.0.1",
+        buildId: "20261114215908",
+      }),
+    );
+    const binRootDir = path.join(root, "target", "_dist", "bin");
+    let relinks = 0;
+    const relink = () => {
+      relinks++;
+    };
+
+    const first = await prepareRuntime({
+      sourcePath: sourceA,
+      binRootDir,
+      projectRoot: root,
+      relink,
+    });
+    assertEquals(first.status, "prepared");
+    assertEquals(readRuntimeMarker(binRootDir)?.buildId, "20261019220659");
+
+    const second = await prepareRuntime({
+      sourcePath: sourceB,
+      binRootDir,
+      projectRoot: root,
+      relink,
+    });
+    assertEquals(second.status, "prepared");
+    assertEquals(readRuntimeMarker(binRootDir)?.buildId, "20261114215908");
+    assertEquals(relinks, 2);
+  }));
+
+Deno.test("prepareRuntime fails closed on an invalid explicit source before overwrite", () =>
+  withTempDir(async (root) => {
+    const good = path.join(root, "registry-good", "bin");
+    writeRuntimeTree(good);
+    const binRootDir = path.join(root, "target", "_dist", "bin");
+    await prepareRuntime({
+      sourcePath: good,
+      binRootDir,
+      projectRoot: root,
+      relink: () => {},
+    });
+
+    const bad = path.join(root, "registry-bad", "bin");
+    writeRuntimeTree(
+      bad,
+      runtimeMarker({ platform: "linux", architecture: "x86_64" }),
+    );
+    await assertRejects(
+      () =>
+        prepareRuntime({
+          sourcePath: bad,
+          binRootDir,
+          projectRoot: root,
+          relink: () => {},
+        }),
+      Error,
+      "does not match",
+    );
+    assertEquals(readRuntimeMarker(binRootDir)?.buildId, "20261019220659");
+    assertEquals(readPreparedRuntimeReceipt(binRootDir).status, "present");
+  }));
+
+Deno.test("prepareRuntime refuses a source path that overlaps the destination", () =>
+  withTempDir(async (root) => {
+    const binRootDir = path.join(root, "target", "_dist", "bin");
+    writeRuntimeTree(binRootDir);
+    await assertRejects(
+      () =>
+        prepareRuntime({
+          sourcePath: binRootDir,
+          binRootDir,
+          projectRoot: root,
+          relink: () => {},
+        }),
+      Error,
+      "overlap",
+    );
+    assertEquals(readRuntimeMarker(binRootDir)?.buildId, "20261019220659");
+  }));
+
+Deno.test("prepareRuntime refuses an ancestor/descendant/alias source overlap", () =>
+  withTempDir(async (root) => {
+    const binRootDir = path.join(root, "target", "_dist", "bin");
+    writeRuntimeTree(binRootDir);
+    const descendant = path.join(binRootDir, "registry");
+    writeRuntimeTree(descendant);
+    await assertRejects(
+      () =>
+        prepareRuntime({
+          sourcePath: descendant,
+          binRootDir,
+          projectRoot: root,
+          relink: () => {},
+        }),
+      Error,
+      "overlap",
+    );
+    assertEquals(readRuntimeMarker(binRootDir)?.buildId, "20261019220659");
+
+    const ancestor = path.join(root, "registry-parent");
+    writeRuntimeTree(ancestor);
+    const nestedTarget = path.join(ancestor, "target");
+    writeRuntimeTree(nestedTarget);
+    await assertRejects(
+      () =>
+        prepareRuntime({
+          sourcePath: ancestor,
+          binRootDir: nestedTarget,
+          projectRoot: root,
+          relink: () => {},
+        }),
+      Error,
+      "overlap",
+    );
+    assertEquals(readRuntimeMarker(nestedTarget)?.buildId, "20261019220659");
+
+    const alias = path.join(root, "registry-alias");
+    recreateLink(binRootDir, alias, "dir");
+    await assertRejects(
+      () =>
+        prepareRuntime({
+          sourcePath: alias,
+          binRootDir,
+          projectRoot: root,
+          relink: () => {},
+        }),
+      Error,
+      "overlap",
+    );
+    assertEquals(readRuntimeMarker(binRootDir)?.buildId, "20261019220659");
+  }));
+
+Deno.test("prepareRuntime revalidates the requested source before early already", () =>
+  withTempDir(async (root) => {
+    const source = path.join(root, "registry", "bin");
+    writeRuntimeTree(source);
+    const binRootDir = path.join(root, "target", "_dist", "bin");
+    await prepareRuntime({
+      sourcePath: source,
+      binRootDir,
+      projectRoot: root,
+      relink: () => {},
+    });
+
+    writeRuntimeTree(
+      source,
+      runtimeMarker({ version: "160.0.1", buildId: "20261114215908" }),
+    );
+    const changed = await prepareRuntime({
+      sourcePath: source,
+      binRootDir,
+      projectRoot: root,
+      relink: () => {},
+    });
+    assertEquals(changed.status, "prepared");
+    assertEquals(readRuntimeMarker(binRootDir)?.buildId, "20261114215908");
+
+    Deno.removeSync(source, { recursive: true });
+    await assertRejects(
+      () =>
+        prepareRuntime({
+          sourcePath: source,
+          binRootDir,
+          projectRoot: root,
+          relink: () => {},
+        }),
+      Error,
+      "missing",
+    );
+    assertEquals(readRuntimeMarker(binRootDir)?.buildId, "20261114215908");
+
+    writeRuntimeTree(
+      source,
+      runtimeMarker({ version: "160.0.1", buildId: "20261114215908" }),
+    );
+    Deno.writeTextFileSync(
+      path.join(source, "floorp", "modules", "AppConstants.sys.mjs"),
+      `export var AppConstants = Object.freeze({
+  DEBUG: false,
+  MOZ_APP_NAME: "floorp",
+  MOZ_APP_VERSION: "160.0.1",
+  MOZ_BUILDID: "20261114215908",
+});
+`,
+    );
+    await assertRejects(
+      () =>
+        prepareRuntime({
+          sourcePath: source,
+          binRootDir,
+          projectRoot: root,
+          relink: () => {},
+        }),
+      Error,
+      "real Debug",
+    );
+    assertEquals(readRuntimeMarker(binRootDir)?.buildId, "20261114215908");
+  }));
