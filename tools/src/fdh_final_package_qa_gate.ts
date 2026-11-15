@@ -121,7 +121,7 @@ function run(
     "run repository/workflow/attempt/head mismatch",
   );
   requireCondition(
-    qa
+    qa || policy.sourceMode === "published-release"
       ? actual.status === "completed" && actual.conclusion === "success"
       : ["waiting", "in_progress"].includes(String(actual.status)) &&
         actual.conclusion === null,
@@ -164,8 +164,16 @@ function artifact(
   );
   return actual;
 }
-function eligibility(value: unknown, expected: FinalQaArtifactIdentity): void {
+function eligibility(value: unknown, policy: FinalPackageQaExpectation): void {
   const actual = object(value);
+  if (policy.sourceMode === "published-release") {
+    requireCondition(
+      actual.phase === "completed" && Reflect.ownKeys(actual).length === 1,
+      "not completed source attestation",
+    );
+    return;
+  }
+  const expected = policy.bundle;
   requireCondition(
     actual.phase === "awaiting-publication-approval" &&
       actual.publicationApprovalPerformed === false,
@@ -185,6 +193,12 @@ export function validateFinalPackageQaConsistency(
   expected: FinalPackageQaExpectation,
   observation: unknown,
 ): FinalPackageQaConsistency {
+  requireCondition(
+    expected.sourceMode === undefined ||
+      expected.sourceMode === "signed-prepublication" ||
+      expected.sourceMode === "published-release",
+    "invalid source mode",
+  );
   const observed = object(observation);
   id(expected.repository.id);
   requireCondition(
@@ -228,6 +242,8 @@ export function validateFinalPackageQaConsistency(
   requireCondition(
     packageStart <= precisionUpper(packageRun.updated_at) &&
       packageEnd <= now &&
+      (expected.sourceMode !== "published-release" ||
+        packageEnd <= qaStartUpper) &&
       packageStart <= qaStartUpper &&
       qaStart <= qaEndUpper && qaEnd <= now &&
       now - qaStart <= expected.maxAgeMs,
@@ -401,16 +417,24 @@ export function validateFinalPackageQaConsistency(
     );
     reference(input.package, selection.package);
     reference(input.record, selection.record);
-    eligibility(input.sourceEligibility, expected.bundle);
-    const after = object(entry("source-after-qa.json"));
-    eligibility(after.sourceEligibility, expected.bundle);
-    const checked = time(after.checkedAt);
-    requireCondition(
-      checked >= jobStart && checked <= precisionUpper(qaArtifact.created_at) &&
-        checked <= precisionUpper(job.completed_at) &&
-        checked <= now && now - checked <= expected.maxAgeMs,
-      "stale/future/out-of-job post-QA check",
-    );
+    eligibility(input.sourceEligibility, expected);
+    // Completed-mode workflow does not perform the protected pending-source after-QA step.
+    // Absence is not synthesized into an observation; a present observation still validates.
+    if (
+      expected.sourceMode !== "published-release" ||
+      names.includes("source-after-qa.json")
+    ) {
+      const after = object(entry("source-after-qa.json"));
+      eligibility(after.sourceEligibility, expected);
+      const checked = time(after.checkedAt);
+      requireCondition(
+        checked >= jobStart &&
+          checked <= precisionUpper(qaArtifact.created_at) &&
+          checked <= precisionUpper(job.completed_at) &&
+          checked <= now && now - checked <= expected.maxAgeMs,
+        "stale/future/out-of-job post-QA check",
+      );
+    }
   }
   requireCondition(
     new Set(selectedQaIds).size === TARGETS.length &&

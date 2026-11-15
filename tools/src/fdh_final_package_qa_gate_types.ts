@@ -20,7 +20,11 @@ export interface FinalQaRunIdentity {
 }
 
 /** Policy supplied by a trusted caller, never inferred from evidence contents. */
+export type FinalQaSourceMode = "signed-prepublication" | "published-release";
+
 export interface FinalPackageQaExpectation {
+  /** Absence retains the strict protected signed-prepublication policy. */
+  sourceMode?: FinalQaSourceMode;
   repository: { id: number; fullName: "Floorp-Projects/Floorp" };
   packageRun: FinalQaRunIdentity;
   qaRun: FinalQaRunIdentity;

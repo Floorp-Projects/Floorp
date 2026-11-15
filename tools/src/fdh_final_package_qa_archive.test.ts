@@ -744,3 +744,52 @@ Deno.test("archive accepts optional one LF and UTF8 JSON string values", async (
   );
   assert(result.archiveIntegrityMatched);
 });
+async function completedArchiveRequest(): Promise<QaArchiveRequest> {
+  const bytes = zipSync({ "input.json": pre() }, { level: 0 });
+  const hash = new Uint8Array(
+    await crypto.subtle.digest("SHA-256", new Uint8Array(bytes)),
+  );
+  const digest = "sha256:" +
+    Array.from(hash, (b) => b.toString(16).padStart(2, "0")).join("");
+  return {
+    bytes,
+    sourceMode: "published-release",
+    artifact: { id: 7, name: "completed-qa" },
+    expected: { id: 7, name: "completed-qa", digest },
+  };
+}
+Deno.test("archive completed mode represents absent post-QA observation as null, not fiction", async () => {
+  const result = await verifyFinalPackageQaArchive(
+    await completedArchiveRequest(),
+  );
+  assert(result.archiveIntegrityMatched);
+  assertEquals(result.sourceAfterQa, null);
+  assertEquals(result.publicationAuthorized, false);
+});
+Deno.test("archive signed default still requires the post-QA entry", async () => {
+  const request = await completedArchiveRequest();
+  Reflect.deleteProperty(request, "sourceMode");
+  assert(!(await verifyFinalPackageQaArchive(request)).archiveIntegrityMatched);
+});
+Deno.test("archive mode accessor rejects without invocation", async () => {
+  const request = await completedArchiveRequest();
+  let invoked = 0;
+  Object.defineProperty(request, "sourceMode", {
+    get() {
+      invoked++;
+      return "published-release";
+    },
+  });
+  const result = await verifyFinalPackageQaArchive(request);
+  assert(!result.archiveIntegrityMatched);
+  assertEquals(result.code, "invalid-input");
+  assertEquals(invoked, 0);
+});
+Deno.test("archive mode snapshots before digest await", async () => {
+  const request = await completedArchiveRequest();
+  const pending = verifyFinalPackageQaArchive(request);
+  Reflect.set(request, "sourceMode", "signed-prepublication");
+  const result = await pending;
+  assert(result.archiveIntegrityMatched);
+  assertEquals(result.sourceAfterQa, null);
+});

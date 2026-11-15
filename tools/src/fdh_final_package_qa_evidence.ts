@@ -188,7 +188,13 @@ export async function verifyFinalPackageQaEvidence(
       "now",
       "maxAgeMs",
       "windowsPolicy",
+      ...(Object.hasOwn(policy, "sourceMode") ? ["sourceMode"] : []),
     ]);
+    requireValue(
+      policy.sourceMode === undefined ||
+        policy.sourceMode === "signed-prepublication" ||
+        policy.sourceMode === "published-release",
+    );
     fields(policy.targets, TARGETS);
     requireValue(
       Array.isArray(observed.qaJobs) && observed.qaJobs.length === 4,
@@ -245,6 +251,9 @@ export async function verifyFinalPackageQaEvidence(
     const evidence = [], summaries = [];
     for (const selection of selections) {
       const result = await verifyFinalPackageQaArchive({
+        ...(expected.sourceMode === undefined
+          ? {}
+          : { sourceMode: expected.sourceMode }),
         bytes: selection.bytes,
         artifact: selection.identity,
         expected: selection.identity,
@@ -253,10 +262,13 @@ export async function verifyFinalPackageQaEvidence(
       evidence.push({
         artifactId: result.artifact.id,
         observedArchiveDigest: result.artifact.digest,
-        entries: [{ name: "input.json", value: result.input }, {
-          name: "source-after-qa.json",
-          value: result.sourceAfterQa,
-        }],
+        entries: [
+          { name: "input.json", value: result.input },
+          ...(result.sourceAfterQa === null ? [] : [{
+            name: "source-after-qa.json",
+            value: result.sourceAfterQa,
+          }]),
+        ],
       });
       summaries.push({
         target: selection.target,

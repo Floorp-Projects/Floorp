@@ -222,8 +222,20 @@ export async function collectFinalPackageQa(
       "windowsPolicy",
       "maxAgeMs",
     ] as const;
-    need(Reflect.ownKeys(options).length === keys.length);
+    const modeDescriptor = Object.getOwnPropertyDescriptor(options, "mode");
+    need(
+      Reflect.ownKeys(options).length ===
+        keys.length + (modeDescriptor ? 1 : 0),
+    );
+    if (modeDescriptor) {
+      need(
+        "value" in modeDescriptor &&
+          (modeDescriptor.value === "signed-prepublication" ||
+            modeDescriptor.value === "published-release"),
+      );
+    }
     const snapshot: Record<string, unknown> = {};
+    if (modeDescriptor) snapshot.mode = modeDescriptor.value;
     for (const key of keys) {
       const d = Object.getOwnPropertyDescriptor(options, key);
       need(d && "value" in d);
@@ -462,7 +474,7 @@ export async function collectFinalPackageQa(
         run: r,
         headSha: o.sourceHead,
         jobs,
-        prePublication: true,
+        prePublication: o.mode !== "published-release",
         unsigned: false,
         pendingDeployments: pending,
         release,
@@ -486,9 +498,11 @@ export async function collectFinalPackageQa(
       sourceJobs,
       packageArtifacts,
     );
-    equal(eligible.result.bundle, bundle);
+    if (o.mode !== "published-release") equal(eligible.result.bundle, bundle);
+    else need(eligible.result.phase === "completed");
     code = "collectionFailed";
     const expected: FinalPackageQaExpectation = {
+      sourceMode: o.mode,
       repository: { id: REPO, fullName: "Floorp-Projects/Floorp" },
       packageRun: {
         id: o.sourceRunId,

@@ -339,3 +339,81 @@ Deno.test("QA CLI projection ignores arbitrary report payload and throwing toJSO
   assertEquals(result.exitCode, 0);
   safeJson(result.stdout);
 });
+Deno.test("QA collect CLI permits explicit published source mode without authority overrides", async () => {
+  let calls = 0;
+  const result = await runQaCli([
+    "qa",
+    "collect",
+    "--source-run-id",
+    "123",
+    "--source-attempt",
+    "1",
+    "--source-head",
+    "a".repeat(40),
+    "--qa-run-id",
+    "456",
+    "--qa-attempt",
+    "2",
+    "--qa-head",
+    "b".repeat(40),
+    "--windows-policy",
+    "require-success",
+    "--max-age-ms",
+    "86400000",
+    "--mode",
+    "published-release",
+  ], {
+    collect: (input) => {
+      calls++;
+      assertEquals(Reflect.get(input, "mode"), "published-release");
+      return Promise.resolve({
+        scope: "read-only-point-in-time-qa-collection",
+        transportAuthenticityVerified: false,
+        apiAuthenticityVerified: false,
+        nativeQaVerified: false,
+        liveApprovalVerified: false,
+        publicationAuthorized: false,
+        matches: false,
+        stage: "eligibility",
+        code: "sourceNotReady",
+      });
+    },
+  });
+  assertEquals(result.exitCode, 1);
+  assertEquals(calls, 1);
+});
+const sourceModeArgs = [
+  "qa",
+  "collect",
+  "--source-run-id=123",
+  "--source-attempt=1",
+  "--source-head=" + "a".repeat(40),
+  "--qa-run-id=456",
+  "--qa-attempt=2",
+  "--qa-head=" + "b".repeat(40),
+  "--windows-policy=require-success",
+  "--max-age-ms=86400000",
+];
+for (
+  const extra of [
+    ["--mode=unsigned-validation"],
+    ["--mode=signed-pre-publication"],
+    ["--mode=published-release", "--mode=signed-prepublication"],
+    ["--mode=published-release", "--mode", "signed-prepublication"],
+  ]
+) {
+  Deno.test(
+    "QA collect invalid or duplicate mode is zero-effect " + extra.join(" "),
+    async () => {
+      let called = 0;
+      const r = await runQaCli([...sourceModeArgs, ...extra], {
+        collect: () => {
+          called++;
+          throw new Error("must not run");
+        },
+      });
+      assertEquals(r.exitCode, 2);
+      assertEquals(called, 0);
+    },
+  );
+}

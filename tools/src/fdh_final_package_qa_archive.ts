@@ -66,7 +66,7 @@ function entryLimit(name: string): number {
  * comments are intentionally unsupported (including ZIP64/Unicode overrides).
  * Directories, special files and all non-ASCII/ambiguous paths are refused.
  */
-function parseZip(bytes: Uint8Array): QaZipEntry[] {
+function parseZip(bytes: Uint8Array, completed = false): QaZipEntry[] {
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   const range = (at: number, size: number) => {
     if (!Number.isSafeInteger(at) || at < 0 || at + size > bytes.length) {
@@ -90,7 +90,9 @@ function parseZip(bytes: Uint8Array): QaZipEntry[] {
   if (
     count === 0xffff || central === 0xffffffff || centralSize === 0xffffffff
   ) fail("unsupported-zip");
-  if (count < 2 || count > QA_ARCHIVE_LIMITS.entries) fail("archive-limit");
+  if (count < (completed ? 1 : 2) || count > QA_ARCHIVE_LIMITS.entries) {
+    fail("archive-limit");
+  }
   if (u16(end + 8) !== count || central + centralSize !== end) {
     fail("zip-structure");
   }
@@ -165,7 +167,9 @@ function parseZip(bytes: Uint8Array): QaZipEntry[] {
   }
   if (
     pos !== end ||
-    !REQUIRED.every((name) => entries.some((e) => e.name === name))
+    !(completed ? ["input.json"] : REQUIRED).every((name) =>
+      entries.some((e) => e.name === name)
+    )
   ) fail("zip-structure");
   entries.sort((a, b) => a.local - b.local);
   let cursor = 0;
@@ -297,6 +301,17 @@ export async function verifyFinalPackageQaArchive(
   request: QaArchiveRequest,
 ): Promise<QaArchiveResult> {
   try {
+    const modeDescriptor = Object.getOwnPropertyDescriptor(
+      request,
+      "sourceMode",
+    );
+    if (
+      modeDescriptor &&
+      (!("value" in modeDescriptor) ||
+        (modeDescriptor.value !== "signed-prepublication" &&
+          modeDescriptor.value !== "published-release"))
+    ) fail("invalid-input");
+    const completed = modeDescriptor?.value === "published-release";
     const { bytes, artifact, expected } = request;
     // Read each metadata primitive once: accessors/Proxies must not substitute
     // a different claim between validation, comparison and result construction.
@@ -342,7 +357,7 @@ export async function verifyFinalPackageQaArchive(
     const digest = "sha256:" +
       Array.from(hash, (b) => b.toString(16).padStart(2, "0")).join("");
     if (digest !== identity.digest) fail("digest-mismatch");
-    const entries = parseZip(snapshot);
+    const entries = parseZip(snapshot, completed);
     let expandedBytes = 0;
     let input: Record<string, unknown> | undefined;
     let sourceAfterQa: Record<string, unknown> | undefined;
@@ -355,13 +370,13 @@ export async function verifyFinalPackageQaArchive(
       if (e.name === "source-after-qa.json") sourceAfterQa = decodeJson(output);
       // Extras are verified sequentially and never retained in the result.
     }
-    if (!input || !sourceAfterQa) fail("zip-structure");
+    if (!input || (!completed && !sourceAfterQa)) fail("zip-structure");
     return {
       ...SCOPE,
       archiveIntegrityMatched: true,
       artifact: identity,
       input,
-      sourceAfterQa,
+      sourceAfterQa: sourceAfterQa ?? null,
       entryCount: entries.length,
       expandedBytes,
     };

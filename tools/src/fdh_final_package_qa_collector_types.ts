@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MPL-2.0
+import type { FinalQaSourceMode } from "./fdh_final_package_qa_gate_types.ts";
 import type { QaGhTransport } from "./fdh_qa_gh_transport_types.ts";
 export interface QaCollectorOptions {
+  readonly mode?: FinalQaSourceMode;
   readonly sourceRunId: number;
   readonly sourceAttempt: number;
   readonly sourceHead: string;
