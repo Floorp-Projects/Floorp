@@ -81,6 +81,13 @@ Deno.test("native core avoids inheritance propagation and pins object identity f
   const core = await read(
     "native/windows-profile-token/PrivateProfileToken.cpp",
   );
+  assertStringIncludes(core, "#include <windows.h>");
+  assertEquals(core.includes("WindowsHWrapper.h"), false);
+  const cmake = await read("native/windows-profile-token/CMakeLists.txt");
+  assertStringIncludes(
+    cmake,
+    "target_compile_definitions(floorp_private_profile_token PRIVATE MOZILLA_INTERNAL_API",
+  );
   assertStringIncludes(core, "OBJ_CASE_INSENSITIVE | kDontReparse");
   assertStringIncludes(core, "SetKernelObjectSecurity(handle");
   assertEquals(core.includes("SetSecurityInfo("), false);

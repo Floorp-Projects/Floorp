@@ -54,15 +54,12 @@ diff --git a/xpcom/io/PrivateProfileToken.cpp b/xpcom/io/PrivateProfileToken.cpp
 new file mode 100644
 --- /dev/null
 +++ b/xpcom/io/PrivateProfileToken.cpp
-@@ -0,0 +1,328 @@
+@@ -0,0 +1,325 @@
 +// SPDX-License-Identifier: MPL-2.0
 +#include "PrivateProfileToken.h"
 +
-+#ifdef MOZILLA_INTERNAL_API
-+#  include "mozilla/WindowsHWrapper.h"
-+#else
-+#  include <windows.h>
-+#endif
++// Match the locked Gecko xpcom/io Windows sources; no nonexistent wrapper.
++#include <windows.h>
 +#include <aclapi.h>
 +#include <sddl.h>
 +#include <winternl.h>

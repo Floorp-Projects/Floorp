@@ -1,11 +1,8 @@
 // SPDX-License-Identifier: MPL-2.0
 #include "PrivateProfileToken.h"
 
-#ifdef MOZILLA_INTERNAL_API
-#  include "mozilla/WindowsHWrapper.h"
-#else
-#  include <windows.h>
-#endif
+// Match the locked Gecko xpcom/io Windows sources; no nonexistent wrapper.
+#include <windows.h>
 #include <aclapi.h>
 #include <sddl.h>
 #include <winternl.h>

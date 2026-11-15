@@ -15,7 +15,8 @@ const HELP =
   "executable, clock, or transport override is supported. Output is stdout only.\n" +
   "Exit: 0 matched, 1 not ready/collection failed, 2 invalid arguments.\n" +
   "Matching is nonauthorizing: native QA/live approval/publication remain unverified.\n" +
-  "Use fdh qa discover --help for bounded source-bound QA run discovery.\n";
+  "Use fdh qa discover --help for bounded source-bound QA run discovery.\n" +
+  "Use fdh qa plan --help for zero-effect assignment plans and explicit dispatch/reconcile.\n";
 const KEYS = [
   "source-run-id",
   "source-attempt",
@@ -167,6 +168,16 @@ export async function runQaCli(
   rawArgv: readonly string[],
   testDeps?: QaCliTestDependencies,
 ): Promise<QaCliResult> {
+  if (
+    rawArgv[0] === "qa" &&
+    ["plan", "dispatch", "reconcile"].includes(rawArgv[1])
+  ) {
+    const { runQaDispatchCli } = await import("./fdh_qa_dispatch_cli.ts");
+    return await runQaDispatchCli(
+      rawArgv,
+      testDeps?.assignment ? { execute: testDeps.assignment } : undefined,
+    );
+  }
   if (rawArgv[0] === "qa" && rawArgv[1] === "discover") {
     const { runQaDiscoveryCli } = await import("./fdh_qa_discovery_cli.ts");
     return await runQaDiscoveryCli(
