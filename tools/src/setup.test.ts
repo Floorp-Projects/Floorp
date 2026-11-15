@@ -710,7 +710,10 @@ Deno.test("prepareRuntime fails closed on an invalid explicit source before over
     const bad = path.join(root, "registry-bad", "bin");
     writeRuntimeTree(
       bad,
-      runtimeMarker({ platform: "linux", architecture: "x86_64" }),
+      runtimeMarker({
+        platform: Deno.build.os === "linux" ? "windows" : "linux",
+        architecture: "x86_64",
+      }),
     );
     await assertRejects(
       () =>
