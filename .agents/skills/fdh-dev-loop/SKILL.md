@@ -113,7 +113,8 @@ The TypeScript OS API verifier accepts an explicit token-file path using
 profile credentials and never accepts a raw-token argument. An authenticated target
 must be a literal HTTP loopback root origin; redirects are refused and responses
 are redacted before reporting. HTTP 401 in the wrapper proves reachability only,
-not successful authentication. Python verifier parity is not implemented.
+not successful authentication. The Python client has token-file transport parity
+and synthetic host coverage; confirm the checked-out wrapper flags before use.
 
 Only use the verifier against an explicitly owned test browser: its main routine
 creates fixture pages and mutates browser state. Do not run it merely to typecheck
@@ -122,8 +123,11 @@ validation, use the synthetic host/integration tests below instead.
 
 Dev/test HTTP-loader profiles opt into a separate token advertisement. On supported
 POSIX hosts its fixed location is `ProfD/floorp-os-server/os-server-token`.
-**Windows dev-profile advertisement is intentionally unavailable** until a reviewed
-native reparse-safe implementation exists. Initial refusal with no prior ownership
+Windows dev-profile advertisement requires the ABI 1 native private-profile
+bridge in the selected Debug Runtime. Runtimes without that capability
+deliberately refuse; there is no Node/Home fallback. A prepared-runtime receipt
+is selection metadata, not native behavior or default-publication proof.
+Initial refusal with no prior ownership
 performs no dirsvc/IO and never falls back to Home. If this lifecycle already owns
 a legacy advertisement or has a queued/in-flight write, refusal first awaits its
 generation-bumping cleanup using the captured owned path; this withdrawal may do
@@ -145,8 +149,11 @@ deno test --allow-read tools/integration/os-server-token.test.ts
 `validateFinalPackageQaConsistency` checks caller-observed metadata/attestations
 against trusted expectations; it does not authenticate the API or archive bytes.
 `verifyFinalPackageQaArchive` separately hashes supplied bytes, validates a narrow
-bounded ZIP32 profile, verifies every entry and returns only the two required
-canonical JSON objects. Its successful integrity result still refuses publication,
+bounded ZIP32 profile and verifies every entry. Its default signed-prepublication
+policy requires both canonical input and post-QA JSON. Explicit completed-source
+policy may return a null post-QA observation when the workflow did not create one;
+no observation or timestamp is synthesized. Its successful integrity result still
+refuses publication,
 API-authenticity, native-QA and live-approval claims. Do not override the older
 consistency result's false proof fields or wire either helper alone into publishing.
 `verifyFinalPackageQaEvidence` now composes them offline: bounded immutable JSON
@@ -172,6 +179,13 @@ eight options are mandatory; source/probe heads are independent, run IDs must
 differ, and freshness is explicit (positive, at most 86400000 ms). Unknown or
 duplicate options reject before collector import/I/O. There are no repository,
 host, URL, header, token, executable or clock overrides.
+
+The default is `--mode signed-prepublication`, preserving protected pending-source
+conditions. Explicit `--mode published-release` collects completed canonical
+package QA, not approval of an unfinished source. Unsigned collection is
+unsupported. The completed workflow may omit its prepublication-only post-QA
+entry; byte/CRC/path/size/digest verification still applies and the collector
+performs its real final API readback. All authority flags remain false.
 
 ```sh
 deno task fdh qa collect --source-run-id N --source-attempt N --source-head SOURCE_SHA \

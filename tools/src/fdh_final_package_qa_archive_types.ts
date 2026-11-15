@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
+import type { FinalQaSourceMode } from "./fdh_final_package_qa_gate_types.ts";
 
 /** Claims from a caller; this module does not authenticate their API origin. */
 export interface QaArchiveIdentity {
@@ -7,6 +8,7 @@ export interface QaArchiveIdentity {
 }
 
 export interface QaArchiveRequest {
+  readonly sourceMode?: FinalQaSourceMode;
   bytes: Uint8Array;
   artifact: QaArchiveIdentity;
   expected: QaArchiveIdentity & { digest: string };
@@ -40,7 +42,8 @@ export type QaArchiveResult =
       archiveIntegrityMatched: true;
       artifact: QaArchiveIdentity & { digest: string };
       input: Record<string, unknown>;
-      sourceAfterQa: Record<string, unknown>;
+      /** Null only when completed-mode workflow did not create an after-QA observation. */
+      sourceAfterQa: Record<string, unknown> | null;
       entryCount: number;
       expandedBytes: number;
     }
