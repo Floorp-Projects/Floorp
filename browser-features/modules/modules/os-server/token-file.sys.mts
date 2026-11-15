@@ -12,6 +12,71 @@ import {
 } from "#libs/shared/os-server-token/lifecycle.ts";
 import type { TokenDestination } from "#libs/shared/os-server-token/types.ts";
 
+const WINDOWS_PROFILE_CONTRACT = "@floorp.app/private-profile-token;1";
+interface WindowsProfileTokenNative {
+  readonly protocolVersion: number;
+  prepare(expectedProfileRoot: string): void;
+  write(token: string): void;
+  secure(): void;
+  remove(): void;
+}
+let windowsOwner: WindowsProfileTokenNative | undefined;
+
+/** Missing/unrecognized native code refuses before directory lookup or file IO.
+ * There is deliberately no nsIFile/stat/IOUtils fallback for Windows profile mode. */
+function requireWindowsOwner(): WindowsProfileTokenNative {
+  if (windowsOwner) return windowsOwner;
+  try {
+    const interfaces = Ci as unknown as Record<string, typeof Ci.nsISupports>;
+    const iid = interfaces.nsIFloorpPrivateProfileToken;
+    if (!iid) throw new Error();
+    const factory = Cc[WINDOWS_PROFILE_CONTRACT];
+    if (!factory) throw new Error();
+    const owner = factory.createInstance(
+      iid,
+    ) as unknown as WindowsProfileTokenNative;
+    if (
+      owner.protocolVersion !== 1 ||
+      ![owner.prepare, owner.write, owner.secure, owner.remove].every(
+        (method) => typeof method === "function",
+      )
+    ) throw new Error();
+    windowsOwner = owner;
+    return owner;
+  } catch {
+    throw new Error(
+      "Native profile token advertisement unavailable on Windows",
+    );
+  }
+}
+function windowsTarget(target: TokenDestination): boolean {
+  return target.profileScoped && Services.appinfo.OS === "WINNT";
+}
+
+/** Retry only a native sharing violation; do not retarget or hide other refusals.
+ * An uncooperative reader can outlive this bounded wait. In that case rejection
+ * keeps captured lifecycle ownership for a later explicit cleanup retry. */
+async function removeWindowsOwner(): Promise<void> {
+  const owner = requireWindowsOwner();
+  for (let attempt = 0;; attempt++) {
+    try {
+      owner.remove();
+      return;
+    } catch (error) {
+      if (
+        attempt >= 80 || !(error instanceof Ci.nsIException) ||
+        error.result !== Cr.NS_ERROR_FILE_IS_LOCKED
+      ) throw error;
+      // System modules must not depend on a window-global timer. Import only
+      // after a verified native sharing refusal, never during capability checks.
+      const { setTimeout: scheduleRetry } = ChromeUtils.importESModule(
+        "resource://gre/modules/Timer.sys.mjs",
+      );
+      await new Promise<void>((resolve) => scheduleRetry(resolve, 25));
+    }
+  }
+}
+
 function destination(): TokenDestination | null {
   // Resolve at publication time, not module initialization: the startup marker
   // may not exist yet. Explicit opt-in with an unknown mode refuses publication.
@@ -20,9 +85,10 @@ function destination(): TokenDestination | null {
     Services.prefs.getStringPref("nora.startup.mode", ""),
   );
   if (!scope) return null;
-  // Refuse BEFORE dirsvc or IO. Never redirect an unsupported opt-in to Home.
+  // Capability/ABI checks precede dirsvc/IO. Old Runtime artifacts remain
+  // fail-closed until the source patch is actually compiled into the Runtime.
   if (scope === "profile" && Services.appinfo.OS === "WINNT") {
-    throw new Error("Profile token advertisement unavailable on Windows");
+    requireWindowsOwner();
   }
   const root =
     Services.dirsvc.get(scope === "profile" ? "ProfD" : "Home", Ci.nsIFile)
@@ -72,6 +138,10 @@ function guardPath(target: TokenDestination): void {
 // Gecko supplies one lifecycle owner, irrespective of bundler entry splitting.
 export const tokenFile = new TokenFileLifecycle({
   async prepare(target) {
+    if (windowsTarget(target)) {
+      requireWindowsOwner().prepare(PathUtils.parent(target.directory));
+      return;
+    }
     guardPath(target);
     await IOUtils.makeDirectory(target.directory, {
       ignoreExisting: true,
@@ -85,6 +155,10 @@ export const tokenFile = new TokenFileLifecycle({
     }
   },
   async write(target, token) {
+    if (windowsTarget(target)) {
+      requireWindowsOwner().write(token);
+      return;
+    }
     guardPath(target);
     // Create only an empty file before tightening permissions. This also fixes
     // permissive pre-existing compatibility files before secret bytes are written.
@@ -100,10 +174,18 @@ export const tokenFile = new TokenFileLifecycle({
     });
   },
   async secure(target) {
+    if (windowsTarget(target)) {
+      requireWindowsOwner().secure();
+      return;
+    }
     guardPath(target);
     await IOUtils.setPermissions(target.path, 0o600);
   },
   async remove(target) {
+    if (windowsTarget(target)) {
+      await removeWindowsOwner();
+      return;
+    }
     guardPath(target);
     await IOUtils.remove(target.path, { ignoreAbsent: true });
   },

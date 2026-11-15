@@ -6,8 +6,11 @@ import type {
 
 import type { QaDiscoveryCliTestDependencies } from "./fdh_qa_discovery_cli_types.ts";
 
+import type { QaDispatchCliTestDependencies } from "./fdh_qa_dispatch_cli_types.ts";
+
 /** Library test seam only. No CLI argument can select a collector or transport. */
 export interface QaCliTestDependencies {
+  readonly assignment?: QaDispatchCliTestDependencies["execute"];
   readonly discover?: QaDiscoveryCliTestDependencies["discover"];
   readonly collect: (
     options: QaCollectorOptions,
