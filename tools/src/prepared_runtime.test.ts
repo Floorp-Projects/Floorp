@@ -256,6 +256,67 @@ Deno.test("runtime overlap recognizes a filesystem root as an ancestor", () =>
     assertEquals(runtimePathsOverlap(root, path.parse(root).root), true);
   }));
 
+for (
+  const [label, decoy] of [
+    ["block comment", "/*\n  DEBUG: true\n*/\n"],
+    ["template literal", "const note = `\n  DEBUG: true\n`;\n"],
+    ["continued quoted string", 'const note = "note\\\n  DEBUG: true\\\n";\n'],
+    ["nested property", "const unrelated = {\n  DEBUG: true\n};\n"],
+  ]
+) {
+  Deno.test(`prepared receipt ignores a DEBUG decoy in ${label}`, () =>
+    withTempDir((root) => {
+      writeRuntimeTree(root);
+      Deno.writeTextFileSync(
+        path.join(root, "floorp", "modules", "AppConstants.sys.mjs"),
+        decoy + `export var AppConstants = Object.freeze({
+  DEBUG: false,
+  MOZ_APP_NAME: "floorp",
+  MOZ_APP_VERSION: "160.0.1",
+  MOZ_BUILDID: "20261114215908",
+});
+`,
+      );
+      assertThrows(() =>
+        assertPreparedRuntimeReceiptMatchesTree(
+          root,
+          buildPreparedRuntimeReceipt(marker(), root),
+          { platform: "windows", architecture: "x86_64" },
+        )
+      );
+    }));
+}
+
+Deno.test("prepared receipt accepts Debug with a false block-comment decoy", () =>
+  withTempDir((root) => {
+    writeRuntimeTree(root);
+    const file = path.join(root, "floorp", "modules", "AppConstants.sys.mjs");
+    Deno.writeTextFileSync(
+      file,
+      "/*\n  DEBUG: false\n*/\n" + Deno.readTextFileSync(file),
+    );
+    const identity = assertPreparedRuntimeReceiptMatchesTree(
+      root,
+      buildPreparedRuntimeReceipt(marker(), root),
+      { platform: "windows", architecture: "x86_64" },
+    );
+    assertEquals(identity.version, "160.0.1");
+  }));
+
+Deno.test("prepared receipt rejects an unterminated AppConstants comment", () =>
+  withTempDir((root) => {
+    writeRuntimeTree(root);
+    const file = path.join(root, "floorp", "modules", "AppConstants.sys.mjs");
+    Deno.writeTextFileSync(file, Deno.readTextFileSync(file) + "\n/*");
+    assertThrows(() =>
+      assertPreparedRuntimeReceiptMatchesTree(
+        root,
+        buildPreparedRuntimeReceipt(marker(), root),
+        { platform: "windows", architecture: "x86_64" },
+      )
+    );
+  }));
+
 Deno.test("prepared receipt normalizes the source intent path", () => {
   const absolute = path.join(Deno.cwd(), "registry", "bin");
   const normalized = normalizePreparedRuntimeSourcePath(absolute);

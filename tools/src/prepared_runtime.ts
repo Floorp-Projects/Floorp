@@ -326,32 +326,104 @@ function parseApplicationIniIdentity(text: string): ApplicationIniIdentity {
   return { name, version, buildId };
 }
 
-/**
- * Parse only canonical property lines. A comment or string that merely
- * contains `DEBUG: true` must not make a release build look like Debug.
- */
+/** Keep canonical source lines while removing comments and multiline decoys. */
+function canonicalAppConstantsSource(text: string): string {
+  let code = "";
+  let quote = "";
+  let blockComment = false;
+  let lineComment = false;
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+    const next = text[i + 1];
+    if (lineComment) {
+      if (char === "\n" || char === "\r") {
+        lineComment = false;
+        code += char;
+      } else code += " ";
+    } else if (blockComment) {
+      if (char === "*" && next === "/") {
+        blockComment = false;
+        code += "  ";
+        i++;
+      } else code += char === "\n" || char === "\r" ? char : " ";
+    } else if (quote) {
+      // Strings cannot inject canonical property lines or object delimiters.
+      code += /[\r\n{}]/.test(char) ? " " : char;
+      if (char === "\\") {
+        if (next === undefined) {
+          throw new Error("Unterminated AppConstants string.");
+        }
+        code += /[\r\n{}]/.test(next) ? " " : next;
+        i++;
+      } else if (char === quote) quote = "";
+    } else if (char === "/" && next === "/") {
+      lineComment = true;
+      code += "  ";
+      i++;
+    } else if (char === "/" && next === "*") {
+      blockComment = true;
+      code += "  ";
+      i++;
+    } else if (char === '"' || char === "'") {
+      quote = char;
+      code += char;
+    } else if (char.charCodeAt(0) === 96) {
+      // Generated AppConstants uses literal fields, never template evaluation.
+      throw new Error(
+        "Unsupported template literal in canonical AppConstants.",
+      );
+    } else code += char;
+  }
+  if (quote || blockComment) {
+    throw new Error("Unterminated AppConstants source.");
+  }
+  return code;
+}
+
+/** Parse only top-level literal properties of the canonical generated object. */
 function parseAppConstantsIdentity(text: string): AppConstantsIdentity {
+  const code = canonicalAppConstantsSource(text);
+  const header =
+    /^\s*export\s+(?:var|const|let)\s+AppConstants\s*=\s*Object\.freeze\(\{\s*$/m
+      .exec(code);
+  if (!header) throw new Error("Canonical AppConstants object is missing.");
+  let depth = 1;
+  let debugCount = 0;
   let debug = false;
   let appName = "";
   let version = "";
   let buildId = "";
-  for (const line of text.split(/\r?\n/)) {
+  for (
+    const line of code.slice(header.index + header[0].length).split(/\r?\n/)
+  ) {
     const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith("//")) continue;
-    if (/^DEBUG:\s*true\s*,?$/.test(trimmed)) debug = true;
-    if (appName === "") {
-      appName = /^MOZ_APP_NAME:\s*"([^"]+)"\s*,?$/.exec(trimmed)?.[1] ?? "";
+    if (depth === 1) {
+      const debugProperty = /^DEBUG:\s*(true|false)\s*,?$/.exec(trimmed);
+      if (debugProperty) {
+        debugCount++;
+        debug = debugProperty[1] === "true";
+      }
+      if (appName === "") {
+        appName = /^MOZ_APP_NAME:\s*"([^"]+)"\s*,?$/.exec(trimmed)?.[1] ?? "";
+      }
+      if (version === "") {
+        version = /^MOZ_APP_VERSION:\s*"([^"]+)"\s*,?$/.exec(trimmed)?.[1] ??
+          "";
+      }
+      if (buildId === "") {
+        buildId = /^MOZ_BUILDID:\s*"([^"]+)"\s*,?$/.exec(trimmed)?.[1] ?? "";
+      }
     }
-    if (version === "") {
-      version = /^MOZ_APP_VERSION:\s*"([^"]+)"\s*,?$/.exec(trimmed)?.[1] ?? "";
+    for (const char of line) {
+      if (char === "{") depth++;
+      else if (char === "}") depth--;
     }
-    if (buildId === "") {
-      buildId = /^MOZ_BUILDID:\s*"([^"]+)"\s*,?$/.exec(trimmed)?.[1] ?? "";
-    }
+    if (depth === 0) break;
+    if (depth < 0) throw new Error("Malformed canonical AppConstants object.");
   }
-  if (!appName || !version || !buildId) {
+  if (depth !== 0 || debugCount !== 1 || !appName || !version || !buildId) {
     throw new Error(
-      "Debug Runtime AppConstants is missing the app identity fields.",
+      "Debug Runtime AppConstants is missing unambiguous canonical identity fields.",
     );
   }
   return { debug, appName, version, buildId };
