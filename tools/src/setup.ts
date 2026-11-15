@@ -16,6 +16,8 @@
  */
 
 import * as path from "@std/path";
+import { prepareRuntimeBootstrap } from "./prepared_runtime_bootstrap.ts";
+import type { PreparedRuntimeBootstrapResult } from "./prepared_runtime_bootstrap_types.ts";
 import { BRANDING, PATHS } from "./defines.ts";
 import { run as runInjector } from "./injector.ts";
 import { copyDirectoryTreeSafely } from "./runtime_archive.ts";
@@ -86,6 +88,8 @@ export interface PrepareRuntimeOptions {
   copy?: (sourceRoot: string, destinationRoot: string) => Promise<CopyMode>;
   /** DI relink hook: creates relative `noraneko-devdir` symlinks. */
   relink?: (binRootDir: string, projectRoot: string) => void;
+  /** Test-only bootstrap dependency; production always uses the fixed trusted patch. */
+  bootstrap?: typeof prepareRuntimeBootstrap;
   /** DI clock for the control receipt; tests may pin it. */
   now?: () => string;
 }
@@ -99,6 +103,7 @@ export interface PrepareRuntimeResult {
   marker?: RuntimeMarker;
   receipt?: PreparedRuntimeReceipt;
   copyMode?: CopyMode;
+  bootstrap?: PreparedRuntimeBootstrapResult;
   relinked: boolean;
 }
 
@@ -381,7 +386,11 @@ export async function prepareRuntime(
       // an otherwise valid runtime.
       const relink = options.relink ?? defaultRelink;
       relink(binRootDir, projectRoot);
+      const bootstrap = await (options.bootstrap ?? prepareRuntimeBootstrap)(
+        runtimeDirFor(binRootDir),
+      );
       return {
+        bootstrap,
         status: "already",
         binRootDir,
         marker: existing!,
@@ -405,7 +414,11 @@ export async function prepareRuntime(
       );
       const relink = options.relink ?? defaultRelink;
       relink(binRootDir, projectRoot);
+      const bootstrap = await (options.bootstrap ?? prepareRuntimeBootstrap)(
+        runtimeDirFor(binRootDir),
+      );
       return {
+        bootstrap,
         status: "already",
         binRootDir,
         sourcePath,
@@ -437,6 +450,9 @@ export async function prepareRuntime(
 
   const relink = options.relink ?? defaultRelink;
   relink(binRootDir, projectRoot);
+  const bootstrap = await (options.bootstrap ?? prepareRuntimeBootstrap)(
+    runtimeDirFor(binRootDir),
+  );
 
   const receipt = buildPreparedRuntimeReceipt(
     marker,
@@ -460,6 +476,7 @@ export async function prepareRuntime(
     marker,
     receipt,
     copyMode,
+    bootstrap,
     relinked: true,
   };
 }

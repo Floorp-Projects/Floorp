@@ -106,6 +106,20 @@ deno run -A tools/fdh.ts dev down --task-id <task-id>
 
 `deno task fdh <command>` is equivalent to `deno run -A tools/fdh.ts <command>`.
 
+## Prepared Runtime startup
+
+`task prepare` installs or verifies only the existing BrowserGlue startup patch.
+It records `setup.runtime.bootstrap` with local patch/target byte hashes; these
+are not native compiler, signature or authorization evidence. The unrelated full
+patcher guard remains `FLOORP_SKIP_PATCHER=1`. Incompatible, partial or conflicting
+hooks are refused; prepare does not change the supplied registry source.
+
+Host contracts retain no run/env permission using filesystem-only Git DI. The
+separate `tools/integration/prepared-runtime-bootstrap.test.ts` exercises real
+Git with `--allow-read --allow-write --allow-run=git` on existing Native Runtime
+CI runners. Browser qualification must observe automatic startup before any
+manual server-module import; an import-triggered result is a narrower claim.
+
 ## OS API authentication (separate from browser verification)
 
 The TypeScript OS API verifier accepts an explicit token-file path using
@@ -113,7 +127,7 @@ The TypeScript OS API verifier accepts an explicit token-file path using
 profile credentials and never accepts a raw-token argument. An authenticated target
 must be a literal HTTP loopback root origin; redirects are refused and responses
 are redacted before reporting. HTTP 401 in the wrapper proves reachability only,
-not successful authentication. Python verifier parity is not implemented.
+not successful authentication. Python client tests are synthetic; wrapper/CLI parity is a separately reviewed change.
 
 Only use the verifier against an explicitly owned test browser: its main routine
 creates fixture pages and mutates browser state. Do not run it merely to typecheck
@@ -122,14 +136,14 @@ validation, use the synthetic host/integration tests below instead.
 
 Dev/test HTTP-loader profiles opt into a separate token advertisement. On supported
 POSIX hosts its fixed location is `ProfD/floorp-os-server/os-server-token`.
-**Windows dev-profile advertisement is intentionally unavailable** until a reviewed
-native reparse-safe implementation exists. Initial refusal with no prior ownership
-performs no dirsvc/IO and never falls back to Home. If this lifecycle already owns
+Windows dev-profile advertisement requires the reviewed ABI1 native bridge
+`@floorp.app/private-profile-token;1` in the selected Runtime. Initial refusal without
+prior ownership performs no dirsvc/IO and never falls back to Home. If this lifecycle already owns
 a legacy advertisement or has a queued/in-flight write, refusal first awaits its
 generation-bumping cleanup using the captured owned path; this withdrawal may do
 IO and must settle before rejection. Live MCP token preference is not cleared.
 Product-default opt-out profiles retain the legacy location. POSIX preexisting-link checks are not atomic no-follow guards;
-malicious same-user replacement races and native runtime validation remain open.
+same-user replacement races are not prevented; native packaged/default delivery remains separate.
 
 Synthetic checks (no credential files or browser are used):
 

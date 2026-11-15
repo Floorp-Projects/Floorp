@@ -28,7 +28,8 @@ import {
   mergeSetupRecord,
   prepareDeps,
   prepareProfile,
-  prepareRuntime,
+  prepareRuntime as prepareRuntimeProduction,
+  type PrepareRuntimeOptions,
   prepareSetup,
   prepareVite,
   readRuntimeMarker,
@@ -41,6 +42,15 @@ import {
   normalizePreparedRuntimeSourcePath,
   readPreparedRuntimeReceipt,
 } from "./prepared_runtime.ts";
+
+import { prepareSyntheticRuntimeBootstrap } from "./prepared_runtime_bootstrap_test_support.ts";
+
+function prepareRuntime(options: PrepareRuntimeOptions = {}) {
+  return prepareRuntimeProduction({
+    ...options,
+    bootstrap: prepareSyntheticRuntimeBootstrap,
+  });
+}
 
 function withTempDir(
   fn: (dir: string) => void | Promise<void>,
@@ -106,6 +116,24 @@ function writeRuntimeTree(
     ? path.join(floorpRoot, "Floorp.app", "Contents", "Resources")
     : floorpRoot;
   Deno.mkdirSync(appRoot, { recursive: true });
+  const glue = path.join(
+    appRoot,
+    "moz-src/browser/components/BrowserGlue.sys.mjs",
+  );
+  Deno.mkdirSync(path.dirname(glue), { recursive: true });
+  Deno.writeTextFileSync(
+    glue,
+    [
+      'import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";',
+      'import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";',
+      "",
+      "const lazy = {};",
+      "",
+      "ChromeUtils.defineESModuleGetters(lazy, {",
+      "});",
+      "",
+    ].join("\n"),
+  );
   Deno.writeTextFileSync(
     path.join(appRoot, "application.ini"),
     `[App]
@@ -614,6 +642,7 @@ Deno.test("prepareSetup composes all steps and records the guard env", () =>
       },
       runtime: {
         sourcePath: source,
+        bootstrap: prepareSyntheticRuntimeBootstrap,
         relink: () => {
           relinks++;
         },
@@ -865,4 +894,52 @@ Deno.test("prepareRuntime revalidates the requested source before early already"
       "real Debug",
     );
     assertEquals(readRuntimeMarker(binRootDir)?.buildId, "20261114215908");
+  }));
+
+Deno.test("prepareRuntime installs the existing startup hook despite the global patcher guard", () =>
+  withTempDir(async (root) => {
+    const source = path.join(root, "raw-debug");
+    const destination = path.join(root, "prepared");
+    writeRuntimeTree(source);
+    const relative = Deno.build.os === "darwin"
+      ? "floorp/Floorp.app/Contents/Resources/moz-src/browser/components/BrowserGlue.sys.mjs"
+      : "floorp/moz-src/browser/components/BrowserGlue.sys.mjs";
+    const original = Deno.readTextFileSync(path.join(source, relative));
+    await prepareRuntime({
+      sourcePath: source,
+      binRootDir: destination,
+      projectRoot: root,
+      relink: () => {},
+    });
+    const patched = Deno.readTextFileSync(path.join(destination, relative));
+    assertStringIncludes(
+      patched,
+      'ChromeUtils.importESModule("resource://noraneko/modules/NoranekoStartup.sys.mjs");',
+    );
+    assertEquals(Deno.readTextFileSync(path.join(source, relative)), original);
+    const second = await prepareRuntime({
+      sourcePath: source,
+      binRootDir: destination,
+      projectRoot: root,
+      relink: () => {},
+    });
+    assertEquals(second.status, "already");
+    assertEquals(
+      Deno.readTextFileSync(path.join(destination, relative)),
+      patched,
+    );
+    for (const sourcePath of [source, undefined]) {
+      Deno.writeTextFileSync(path.join(destination, relative), original);
+      const repaired = await prepareRuntime({
+        sourcePath,
+        binRootDir: destination,
+        projectRoot: root,
+        relink: () => {},
+      });
+      assertEquals(repaired.status, "already");
+      assertEquals(
+        Deno.readTextFileSync(path.join(destination, relative)),
+        patched,
+      );
+    }
   }));
