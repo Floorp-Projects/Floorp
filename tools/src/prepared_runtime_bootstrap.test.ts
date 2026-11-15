@@ -22,7 +22,10 @@ const raw = [
 async function fixture(
   run: (root: string, target: string) => Promise<void>,
 ): Promise<void> {
-  const root = Deno.makeTempDirSync({ prefix: "fdh-bootstrap-contract-" });
+  // macOS temp roots can use /var aliases; the fixture owns the physical tree.
+  const root = Deno.realPathSync(
+    Deno.makeTempDirSync({ prefix: "fdh-bootstrap-contract-" }),
+  );
   const target = path.join(root, relative);
   Deno.mkdirSync(path.dirname(target), { recursive: true });
   Deno.writeTextFileSync(target, raw);
@@ -121,6 +124,29 @@ Deno.test("bootstrap refuses a parent directory link without touching its target
       "aliased paths",
     );
     assertEquals(Deno.readTextFileSync(target), raw);
+  }));
+Deno.test("bootstrap rejects a temp-root alias but accepts its explicit physical target", () =>
+  fixture(async (root) => {
+    const physical = path.join(root, "physical-runtime");
+    const target = path.join(physical, relative);
+    Deno.mkdirSync(path.dirname(target), { recursive: true });
+    Deno.writeTextFileSync(target, raw);
+    const alias = path.join(root, "temp-root-alias");
+    Deno.symlinkSync(physical, alias, {
+      type: Deno.build.os === "windows" ? "junction" : "dir",
+    });
+    await assertRejects(
+      () => prepareRuntimeBootstrap(alias),
+      Error,
+      "aliased paths",
+    );
+    assertEquals(Deno.readTextFileSync(target), raw);
+    const result = await prepareRuntimeBootstrap(Deno.realPathSync(alias));
+    assertEquals(result.status, "applied");
+    assertStringIncludes(
+      Deno.readTextFileSync(target),
+      "/*@ NORA INJECT START @*/",
+    );
   }));
 Deno.test("bootstrap does not manufacture a missing engine file", () =>
   fixture(async (root, target) => {
