@@ -136,6 +136,89 @@ export async function runAllTests(): Promise<void> {
         }),
     },
     {
+      name: "repair runs through the launcher mutation queue",
+      fn: () =>
+        withSandbox(async (root, support) => {
+          const files = paths(root);
+          await support.install(manifest);
+          const current = await IOUtils.readUTF8(files.desktop);
+          await IOUtils.writeUTF8(
+            files.desktop,
+            current.replace(" --class floorp-linux-launcher-regression", ""),
+          );
+
+          // Hold the queue, then check that repair cannot slip past it.
+          let release!: () => void;
+          const held = new Promise<void>((resolve) => {
+            release = resolve;
+          });
+          const queued = LinuxSupport.withMutation(() => held);
+          let repaired = false;
+          const repair = support.repair(manifest).then(() => {
+            repaired = true;
+          });
+          await new Promise((resolve) => setTimeout(resolve, 100));
+          assertEquals(
+            repaired,
+            false,
+            "repair waits for the in-flight launcher mutation",
+          );
+
+          release();
+          await queued;
+          await repair;
+          assertEquals(repaired, true, "repair completes once the queue drains");
+          assertEquals(
+            await IOUtils.readUTF8(files.desktop),
+            current,
+            "launcher is repaired after the queue drains",
+          );
+        }),
+    },
+    {
+      name: "the remap decision follows GDK_BACKEND when it is set",
+      fn: async () => {
+        const isWaylandSession = () =>
+          (LinuxSupport as unknown as {
+            isWaylandSession(): boolean;
+          }).isWaylandSession();
+        const saved = {
+          gdk: Services.env.get("GDK_BACKEND"),
+          session: Services.env.get("XDG_SESSION_TYPE"),
+          display: Services.env.get("WAYLAND_DISPLAY"),
+        };
+        try {
+          Services.env.set("GDK_BACKEND", "x11");
+          Services.env.set("XDG_SESSION_TYPE", "wayland");
+          assertEquals(
+            isWaylandSession(),
+            false,
+            "GDK_BACKEND=x11 wins over a Wayland session type",
+          );
+
+          Services.env.set("GDK_BACKEND", "wayland,x11");
+          Services.env.set("XDG_SESSION_TYPE", "x11");
+          assertEquals(
+            isWaylandSession(),
+            true,
+            "the first GDK_BACKEND entry decides",
+          );
+
+          Services.env.set("GDK_BACKEND", "");
+          Services.env.set("XDG_SESSION_TYPE", "wayland");
+          assertEquals(
+            isWaylandSession(),
+            true,
+            "falls back to the session type when GDK_BACKEND is unset",
+          );
+        } finally {
+          Services.env.set("GDK_BACKEND", saved.gdk);
+          Services.env.set("XDG_SESSION_TYPE", saved.session);
+          Services.env.set("WAYLAND_DISPLAY", saved.display);
+        }
+      },
+    },
+    {
       name:
         "SVG install, rejected store update, and uninstall preserve the launcher",
       fn: () =>

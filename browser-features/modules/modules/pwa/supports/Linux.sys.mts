@@ -474,6 +474,12 @@ export class LinuxSupport {
    * those installs without asking the user to reinstall the app.
    */
   async repair(ssb: Manifest) {
+    // Serialize with install()/uninstall() so a launch-time repair cannot
+    // interleave with another window installing or removing the same launcher.
+    return await LinuxSupport.withMutation(() => this.repairLocked(ssb));
+  }
+
+  private async repairLocked(ssb: Manifest) {
     const paths = LinuxSupport.getPathInfo(ssb);
     if (!await IOUtils.exists(paths.desktopPath)) {
       // Nothing to repair; a missing launcher is created by install().
@@ -861,10 +867,22 @@ export class LinuxSupport {
   /**
    * Detect the GTK backend the session will use.
    *
-   * Gecko decides between X11 and Wayland from the same environment, so this
-   * matches the backend that owns the window we are about to relabel.
+   * `GDK_BACKEND` wins when it is set: it is what GTK (and therefore Gecko)
+   * actually uses for the window we are about to relabel, and it is commonly
+   * set to `x11` on a Wayland session to work around driver problems. Only
+   * when it is unset do the session variables describe the backend.
    */
   private static isWaylandSession(): boolean {
+    // GDK_BACKEND is a comma-separated preference list; the first entry is the
+    // one GTK tries first.
+    const gdkBackend = Services.env.get("GDK_BACKEND")?.split(",")[0]?.trim();
+    if (gdkBackend === "wayland") {
+      return true;
+    }
+    if (gdkBackend === "x11") {
+      return false;
+    }
+
     const sessionType = Services.env.get("XDG_SESSION_TYPE");
     if (sessionType === "wayland") {
       return true;
