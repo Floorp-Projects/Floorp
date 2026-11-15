@@ -280,6 +280,11 @@ jobs:
           deno run -A tools/runtime-lock/runtime_lock_cli.ts
           validate-native --out _dist/runtime-validation
 
+      - name: Verify prepared Runtime startup Git contract
+        run: >-
+          deno test --allow-read --allow-write --allow-run=git
+          tools/integration/prepared-runtime-bootstrap.test.ts
+
       - name: Verify macOS G5 lifecycle helper foundation
         if: matrix.platform == 'macos'
         run: >-

@@ -106,6 +106,21 @@ deno run -A tools/fdh.ts dev down --task-id <task-id>
 
 `deno task fdh <command>` is equivalent to `deno run -A tools/fdh.ts <command>`.
 
+## Prepared Runtime startup
+
+`task prepare` installs or verifies only the existing BrowserGlue startup patch.
+The setup result includes local patch/target byte hashes; the persisted task
+setup is a summary, not the full bootstrap receipt. These hashes are not native
+compiler, signature or authorization evidence. The unrelated full
+patcher guard remains `FLOORP_SKIP_PATCHER=1`. Incompatible, partial or conflicting
+hooks are refused; prepare does not change the supplied registry source.
+
+Host contracts retain no run/env permission using filesystem-only Git DI. The
+separate `tools/integration/prepared-runtime-bootstrap.test.ts` exercises real
+Git with `--allow-read --allow-write --allow-run=git` on existing Native Runtime
+CI runners. Browser qualification must observe automatic startup before any
+manual server-module import; an import-triggered result is a narrower claim.
+
 ## OS API authentication (separate from browser verification)
 
 The TypeScript OS API verifier accepts an explicit token-file path using
@@ -124,16 +139,16 @@ validation, use the synthetic host/integration tests below instead.
 Dev/test HTTP-loader profiles opt into a separate token advertisement. On supported
 POSIX hosts its fixed location is `ProfD/floorp-os-server/os-server-token`.
 Windows dev-profile advertisement requires the ABI 1 native private-profile
-bridge in the selected Debug Runtime. Runtimes without that capability
-deliberately refuse; there is no Node/Home fallback. A prepared-runtime receipt
-is selection metadata, not native behavior or default-publication proof.
-Initial refusal with no prior ownership
+bridge `@floorp.app/private-profile-token;1` in the selected Debug Runtime.
+Runtimes without that capability deliberately refuse; there is no Node/Home
+fallback. A prepared-runtime receipt is selection metadata, not native behavior
+or default-publication proof. Initial refusal with no prior ownership
 performs no dirsvc/IO and never falls back to Home. If this lifecycle already owns
 a legacy advertisement or has a queued/in-flight write, refusal first awaits its
 generation-bumping cleanup using the captured owned path; this withdrawal may do
 IO and must settle before rejection. Live MCP token preference is not cleared.
 Product-default opt-out profiles retain the legacy location. POSIX preexisting-link checks are not atomic no-follow guards;
-malicious same-user replacement races and native runtime validation remain open.
+same-user replacement races are not prevented; native packaged/default delivery remains separate.
 
 Synthetic checks (no credential files or browser are used):
 
@@ -280,9 +295,9 @@ receipt with a `request_changes` verdict or `blocking=true` fails the gate. This
 MEMBER policy is unchanged; it means any organisation member and is not limited
 to repository write access.
 
-## Trusted receipt-check preparation (not active policy)
+## Trusted receipt-check boundary
 
-`.github/workflows/fdh-trusted-review-gate.yml` is a preparatory receipt-only
+`.github/workflows/fdh-trusted-review-gate.yml` is a default-branch receipt-only
 checker. GitHub evaluates `pull_request_target` workflow definitions from the
 PR's base branch (and `issue_comment` workflow definitions from the default
 branch); after a trusted activation/merge, the checker explicitly checks out
@@ -302,19 +317,19 @@ from the custom `fdh-trusted-receipts` check name. This check does **not** run t
 candidate host tests or build, and it does not replace the legacy `review-gate`. The legacy `pull_request` workflow still
 checks out and executes PR-controlled code (with its restricted read-only
 permissions); its checker can be changed by the candidate. Do not treat it as a
-trusted receipt validator. The preparatory Check Run is not required by current repository settings, and
-a unique name alone is not a security boundary. Before relying on it,
-maintainers must enable and require the trusted workflow itself (a required
-workflow/ruleset enforcement bound to its trusted workflow identity), not only
-require the custom check name: another check from the same GitHub App may spoof
-that name. Protect the target base workflow and verify minimal Actions
+trusted receipt validator. In this rollout, the approved protection binding requires
+the real `trusted-receipt-publication` Actions job context from App 15368, alongside
+the legacy review/test/build checks. The custom `fdh-trusted-receipts` Check Run
+remains diagnostic, not the required context. This job-name/App binding is not a
+workflow-identity ruleset guarantee: another job from the same App may spoof a
+name. Do not claim stronger isolation or change protection without approval. Protect the target base workflow and verify minimal Actions
 permissions (`checks:write`, PR/issue reads only). The pending Check Run is
 created after checkout/setup and initial PR API reads; failures before creation
 can leave an older successful Check Run visible. This preparatory code therefore
 does not claim transactional fail-closed behavior for every infrastructure
 outage. Keep the existing required test/build gate until an explicitly reviewed
-replacement preserves those validations. No live settings or activation are
-claimed here.
+replacement preserves those validations. The approved context binding above does
+not add publication authority or remove any required test/build validation.
 
 A created comment triggers revalidation only when it contains a receipt
 marker; edited or deleted comments from a trusted associated author trigger a
