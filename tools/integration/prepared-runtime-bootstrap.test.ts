@@ -170,3 +170,24 @@ Deno.test("bootstrap digest describes actual UTF8 bytes including an existing BO
     assertEquals(result.targetSha256, expected);
     assertEquals([...Deno.readFileSync(target)], [...bytes]);
   }));
+Deno.test("bootstrap applies inside a nested ignored runtime of an existing repository", () =>
+  fixture(async (root) => {
+    const initialized = new Deno.Command("git", {
+      args: ["init", "--quiet"],
+      cwd: root,
+      stdout: "null",
+      stderr: "null",
+    }).outputSync();
+    assert(initialized.success);
+    const nested = path.join(root, "_dist/bin/floorp");
+    const nestedTarget = path.join(nested, relative);
+    Deno.mkdirSync(path.dirname(nestedTarget), { recursive: true });
+    Deno.writeTextFileSync(path.join(root, ".gitignore"), "_dist/");
+    Deno.writeTextFileSync(nestedTarget, raw);
+    const result = await prepareRuntimeBootstrap(nested);
+    assertEquals(result.status, "applied");
+    assertStringIncludes(
+      Deno.readTextFileSync(nestedTarget),
+      "/*@ NORA INJECT START @*/",
+    );
+  }));

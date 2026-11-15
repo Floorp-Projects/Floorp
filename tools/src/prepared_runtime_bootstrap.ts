@@ -10,6 +10,7 @@ const TARGET = "moz-src/browser/components/BrowserGlue.sys.mjs";
 const PATCH = path.fromFileUrl(
   new URL("../patches/browser-modules-BrowserGlue.sys.patch", import.meta.url),
 );
+const COMMAND_ROOT = path.fromFileUrl(new URL("../../", import.meta.url));
 const LIMIT = 2 * 1024 * 1024;
 const START = "/*@ NORA INJECT START @*/";
 const END = "/*@ NORA INJECT END @*/";
@@ -98,11 +99,13 @@ function gitPatch(runtimeDir: string, checkOnly: boolean): boolean {
     "apply",
     ...(checkOnly ? ["--check"] : []),
     "--unsafe-paths",
+    "--directory",
+    path.resolve(runtimeDir).replaceAll(String.fromCharCode(92), "/"),
     PATCH,
   ];
   return new Deno.Command("git", {
     args,
-    cwd: runtimeDir,
+    cwd: COMMAND_ROOT,
     stdin: "null",
     stdout: "null",
     stderr: "null",
