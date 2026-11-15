@@ -199,8 +199,28 @@ function content(v: unknown, file: "package" | "runtimeLock") {
     size: encoder.encode(text).length,
   };
 }
-async function fixture(mutate?: (f: ReturnType<typeof baseFixture>) => void) {
+async function fixture(
+  mutate?: (f: ReturnType<typeof baseFixture>) => void,
+  published = false,
+) {
   const f = baseFixture();
+  if (published) {
+    Object.assign(f.expected, { sourceMode: "published-release" });
+    Object.assign(f.observed.packageRun, {
+      status: "completed",
+      conclusion: "success",
+      updated_at: f.observed.packageArtifacts[0].created_at,
+    });
+    for (const evidence of f.observed.evidence) {
+      for (const entry of evidence.entries) {
+        const eligibility = entry.value.sourceEligibility;
+        eligibility.phase = "completed";
+        Reflect.deleteProperty(eligibility, "bundle");
+        Reflect.deleteProperty(eligibility, "publicationApprovalPerformed");
+      }
+      evidence.entries.splice(1, 1); // Completed-mode workflow does not run the pending-source after-QA step.
+    }
+  }
   mutate?.(f);
   const archives = new Map<number, Uint8Array>();
   for (let i = 0; i < 4; i++) {
@@ -335,7 +355,7 @@ async function fixture(mutate?: (f: ReturnType<typeof baseFixture>) => void) {
           );
           break;
         case "pendingDeployments":
-          value = meta(pending);
+          value = meta(published ? [] : pending);
           break;
         case "releaseTag":
           assertEquals(op.version, "12.3.4");
@@ -970,3 +990,140 @@ for (const kind of ["releaseTag", "pendingDeployments"] as const) {
     );
   }
 }
+Deno.test("collector explicit published mode matches completed signed-package evidence without authority", async () => {
+  const f = await fixture(undefined, true);
+  const result = await f.collect(
+    { ...OPTIONS, mode: "published-release" } as QaCollectorOptions,
+  );
+  assert(result.matches, JSON.stringify(result));
+  assertEquals(result.publicationAuthorized, false);
+  assertEquals(result.liveApprovalVerified, false);
+  assertEquals(result.nativeQaVerified, false);
+});
+Deno.test("collector default mode still refuses a completed source without pending approval", async () => {
+  const f = await fixture(undefined, true);
+  const result = await f.collect();
+  assertEquals(result.matches, false);
+  if (!result.matches) {
+    assertEquals(result.stage, "eligibility");
+    assertEquals(result.code, "sourceNotReady");
+  }
+});
+Deno.test("collector explicit signed mode retains protected pending eligibility", async () => {
+  const f = await fixture();
+  assert(
+    (await f.collect(
+      { ...OPTIONS, mode: "signed-prepublication" } as QaCollectorOptions,
+    )).matches,
+  );
+});
+Deno.test("collector published policy cannot relabel pending source", async () => {
+  const f = await fixture();
+  const r = await f.collect(
+    { ...OPTIONS, mode: "published-release" } as QaCollectorOptions,
+  );
+  assert(!r.matches);
+  assertEquals(r.stage, "eligibility");
+});
+for (
+  const mode of [
+    undefined,
+    null,
+    "unsigned-validation",
+    "SIGNED-prepublication",
+    "",
+    true,
+  ]
+) {
+  Deno.test(
+    "collector rejects invalid own source mode " + String(mode),
+    async () => {
+      const f = await fixture();
+      const r = await f.collect(
+        { ...OPTIONS, mode } as unknown as QaCollectorOptions,
+      );
+      assert(!r.matches);
+      assertEquals(r.stage, "options");
+      assertEquals(f.calls.length, 0);
+    },
+  );
+}
+Deno.test("collector rejects mode getter without invoking it", async () => {
+  const f = await fixture();
+  let invoked = 0;
+  const o = { ...OPTIONS };
+  Object.defineProperty(o, "mode", {
+    enumerable: true,
+    get() {
+      invoked++;
+      return "published-release";
+    },
+  });
+  assert(!(await f.collect(o)).matches);
+  assertEquals(invoked, 0);
+  assertEquals(f.calls.length, 0);
+});
+Deno.test("collector completed mode does not accept archived pending-approval fiction", async () => {
+  const f = await fixture((value) => {
+    const original = baseFixture();
+    for (let i = 0; i < 4; i++) {
+      value.observed.evidence[i].entries.push(
+        original.observed.evidence[i].entries[1],
+      );
+    }
+  }, true);
+  const r = await f.collect(
+    { ...OPTIONS, mode: "published-release" } as QaCollectorOptions,
+  );
+  assert(!r.matches);
+  assertEquals(r.stage, "evidence");
+});
+Deno.test("collector completed source must finish before QA began", async () => {
+  const f = await fixture((value) => {
+    value.observed.packageRun.updated_at = value.observed.qaRun.updated_at;
+  }, true);
+  const r = await f.collect(
+    { ...OPTIONS, mode: "published-release" } as QaCollectorOptions,
+  );
+  assert(!r.matches);
+  assertEquals(r.stage, "evidence");
+});
+Deno.test("collector completed mode still verifies actual archive digest", async () => {
+  const f = await fixture(undefined, true);
+  f.setHook((_op, result) => {
+    if (result.ok && result.kind === "zip") {
+      const bytes = new Uint8Array(result.bytes);
+      bytes[0] ^= 1;
+      return { ...result, bytes };
+    }
+    return result;
+  });
+  const r = await f.collect(
+    { ...OPTIONS, mode: "published-release" } as QaCollectorOptions,
+  );
+  assert(!r.matches);
+  assertEquals(r.stage, "evidence");
+});
+Deno.test("collector completed source rerun during collection refuses final readback", async () => {
+  const f = await fixture(undefined, true);
+  f.setHook((op, result, n) => {
+    if (
+      op.kind === "currentRun" && op.runId === 10 && n === 2 && result.ok &&
+      result.kind === "metadata"
+    ) {
+      return {
+        ...result,
+        jsonText: JSON.stringify({
+          ...f.f.observed.packageRun,
+          run_attempt: 2,
+        }),
+      };
+    }
+    return result;
+  });
+  const r = await f.collect(
+    { ...OPTIONS, mode: "published-release" } as QaCollectorOptions,
+  );
+  assert(!r.matches);
+  assertEquals(r.stage, "recheck");
+});
