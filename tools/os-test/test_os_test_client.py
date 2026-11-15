@@ -738,6 +738,42 @@ class WrapperPortOffsetTests(unittest.TestCase):
         with self.assertRaises(wrapper.OsTestConfigError):
             wrapper.resolve_os_verify_options("http://127.0.0.1:6000", None, 1, False)
 
+    def test_whitespace_environment_uses_derived_target_in_all_four_modes(self):
+        cases = (
+            (None, False, "http://127.0.0.1:5175", [], 0),
+            (20, False, "http://127.0.0.1:5195", ["--port-offset", "20"], 20),
+            (None, True, "http://127.0.0.1:58261", [], 0),
+            (20, True, "http://127.0.0.1:5195", [], 20),
+        )
+        for env_value in ("   ", " \t\r\n "):
+            for offset, skip_start, base_url, start_args, resolved_offset in cases:
+                with self.subTest(env=repr(env_value), offset=offset, skip=skip_start):
+                    opts = wrapper.resolve_os_verify_options(
+                        None, env_value, offset, skip_start
+                    )
+                    self.assertEqual(
+                        (opts.base_url, opts.start_command_args, opts.port_offset),
+                        (base_url, start_args, resolved_offset),
+                    )
+
+    def test_main_whitespace_environment_passes_derived_verifier_target(self):
+        cases = (
+            ([], "http://127.0.0.1:5175"),
+            (["--port-offset", "20"], "http://127.0.0.1:5195"),
+            (["--skip-start"], "http://127.0.0.1:58261"),
+            (["--skip-start", "--port-offset", "20"], "http://127.0.0.1:5195"),
+        )
+        for args, base_url in cases:
+            with self.subTest(args=args), patch.dict(
+                os.environ, {"FLOORP_OS_BASE_URL": " \t "}, clear=True
+            ), patch.object(wrapper, "wait_for_health", return_value=True), patch.object(
+                wrapper.time, "sleep"
+            ), patch.object(wrapper.subprocess, "Popen"), patch.object(
+                wrapper, "stop_process"
+            ), patch.object(wrapper, "run_verifier", return_value=0) as run:
+                self.assertEqual(wrapper.main(args), 0)
+                run.assert_called_once_with(["--base-url", base_url])
+
     def test_auto_probe_first_free_candidate(self):
         busy = {5173, 5175, 5180}
 

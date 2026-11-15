@@ -150,7 +150,7 @@ def resolve_os_verify_options(
         os_server_port_for_offset(port_offset)
 
     flag = base_url_flag.strip() if base_url_flag else None
-    env = env_base_url.strip() if env_base_url else None
+    env = (env_base_url.strip() or None) if env_base_url else None
     explicit = flag or env
 
     targets_dev_launch = not skip_start or port_offset is not None
