@@ -295,9 +295,9 @@ receipt with a `request_changes` verdict or `blocking=true` fails the gate. This
 MEMBER policy is unchanged; it means any organisation member and is not limited
 to repository write access.
 
-## Trusted receipt-check preparation (not active policy)
+## Trusted receipt-check boundary
 
-`.github/workflows/fdh-trusted-review-gate.yml` is a preparatory receipt-only
+`.github/workflows/fdh-trusted-review-gate.yml` is a default-branch receipt-only
 checker. GitHub evaluates `pull_request_target` workflow definitions from the
 PR's base branch (and `issue_comment` workflow definitions from the default
 branch); after a trusted activation/merge, the checker explicitly checks out
@@ -317,19 +317,19 @@ from the custom `fdh-trusted-receipts` check name. This check does **not** run t
 candidate host tests or build, and it does not replace the legacy `review-gate`. The legacy `pull_request` workflow still
 checks out and executes PR-controlled code (with its restricted read-only
 permissions); its checker can be changed by the candidate. Do not treat it as a
-trusted receipt validator. The preparatory Check Run is not required by current repository settings, and
-a unique name alone is not a security boundary. Before relying on it,
-maintainers must enable and require the trusted workflow itself (a required
-workflow/ruleset enforcement bound to its trusted workflow identity), not only
-require the custom check name: another check from the same GitHub App may spoof
-that name. Protect the target base workflow and verify minimal Actions
+trusted receipt validator. In this rollout, the approved protection binding requires
+the real `trusted-receipt-publication` Actions job context from App 15368, alongside
+the legacy review/test/build checks. The custom `fdh-trusted-receipts` Check Run
+remains diagnostic, not the required context. This job-name/App binding is not a
+workflow-identity ruleset guarantee: another job from the same App may spoof a
+name. Do not claim stronger isolation or change protection without approval. Protect the target base workflow and verify minimal Actions
 permissions (`checks:write`, PR/issue reads only). The pending Check Run is
 created after checkout/setup and initial PR API reads; failures before creation
 can leave an older successful Check Run visible. This preparatory code therefore
 does not claim transactional fail-closed behavior for every infrastructure
 outage. Keep the existing required test/build gate until an explicitly reviewed
-replacement preserves those validations. No live settings or activation are
-claimed here.
+replacement preserves those validations. The approved context binding above does
+not add publication authority or remove any required test/build validation.
 
 A created comment triggers revalidation only when it contains a receipt
 marker; edited or deleted comments from a trusted associated author trigger a
