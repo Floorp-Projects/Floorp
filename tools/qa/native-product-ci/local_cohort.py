@@ -24,11 +24,14 @@ REQUIRED_SOURCE_FILES = ('mach','testing/xpcshell/runxpcshelltests.py',
                          'testing/mochitest/runtests.py','testing/marionette/mach_commands.py')
 
 
-# Files the native harness itself (re)writes inside snapshotted objdir trees
-# during resolution and runs. They are derived outputs, not build inputs:
-# Python bytecode caches (anywhere), and mochitest's generated run manifest
-# and pywebsocket log next to runtests.py (testing/mochitest/runtests.py).
-# Everything else in these trees must stay byte-identical across the run.
+# Files the native harness itself (re)writes inside snapshotted objdir test
+# trees during resolution and runs. They are derived outputs, not build
+# inputs: Python bytecode caches (only in the _tests trees, where mach loads
+# harness modules; harness processes also redirect caches out of the tree with
+# PYTHONPYCACHEPREFIX, so an in-tree .pyc is never read), and mochitest's
+# generated run manifest and pywebsocket log next to runtests.py
+# (testing/mochitest/runtests.py). dist/bin and the product copy are digested
+# without any exclusion. Everything else must stay byte-identical.
 EPHEMERAL_DIRS=frozenset({'__pycache__'})
 EPHEMERAL_SUFFIXES=('.pyc',)
 EPHEMERAL_TREE_FILES={'_tests/testing/mochitest':frozenset({'tests.json','websock.log'})}
@@ -48,7 +51,7 @@ def _inside(path, roots):
     return any(path==r or r in path.parents for r in roots)
 
 
-def _walk(root, allowed=(), ephemeral=frozenset()):
+def _walk(root, allowed=(), ephemeral=frozenset(), skip_bytecode=False):
     """Digest a build tree by content.
 
     Directory symlinks are followed only into `root` or the explicitly trusted
@@ -63,8 +66,9 @@ def _walk(root, allowed=(), ephemeral=frozenset()):
     The text of every symlink, file or directory, is recorded so a retarget to
     identical content is still detected.
 
-    Harness-written derived outputs (EPHEMERAL_*, plus `ephemeral` names at
-    the tree root) are skipped. Unreadable directories fail the walk.
+    `ephemeral` names at the tree root, and with `skip_bytecode` Python
+    bytecode caches, are skipped as harness-written derived outputs.
+    Unreadable directories fail the walk.
     """
     root=Path(root).resolve()
     gate.require(root.is_dir(), 'missing tree: '+str(root))
@@ -74,7 +78,7 @@ def _walk(root, allowed=(), ephemeral=frozenset()):
     # snapshot can be extracted on another worker.
     for base, dirs, files in os.walk(root, followlinks=True, onerror=_raise):
         chain=chains.pop(base)
-        dirs[:]=[d for d in dirs if d not in EPHEMERAL_DIRS]
+        if skip_bytecode:dirs[:]=[d for d in dirs if d not in EPHEMERAL_DIRS]
         for directory in dirs:
             path=Path(base)/directory;rel=str(path.relative_to(root))
             real=path.resolve()
@@ -85,7 +89,7 @@ def _walk(root, allowed=(), ephemeral=frozenset()):
             chains[str(path)]=chain|{real}
         for name in files:
             path=Path(base)/name;rel=str(path.relative_to(root))
-            if name.endswith(EPHEMERAL_SUFFIXES) or rel in ephemeral:continue
+            if (skip_bytecode and name.endswith(EPHEMERAL_SUFFIXES)) or rel in ephemeral:continue
             # os.walk lists broken links (file or directory) here.
             gate.require(path.is_file(), 'missing/special build material: '+rel)
             if path.is_symlink():links[rel]=os.readlink(path)
@@ -94,8 +98,8 @@ def _walk(root, allowed=(), ephemeral=frozenset()):
     return entries, links
 
 
-def tree(root, allowed=(), ephemeral=frozenset()):
-    return _walk(root, allowed, ephemeral)[0]
+def tree(root, allowed=(), ephemeral=frozenset(), skip_bytecode=False):
+    return _walk(root, allowed, ephemeral, skip_bytecode)[0]
 
 
 def differences(before, after, limit=20):
@@ -103,7 +107,13 @@ def differences(before, after, limit=20):
     out=[]
     for key in sorted(set(before)|set(after)):
         if before.get(key)==after.get(key):continue
-        if key in ('trees','directory_links'):
+        if key in ('files','source_diffs'):
+            a=before.get(key,{});b=after.get(key,{})
+            for name in sorted(set(a)|set(b)):
+                if a.get(name)!=b.get(name):
+                    state='added' if name not in a else 'removed' if name not in b else 'changed'
+                    out.append(f'{key}:{name} {state}')
+        elif key in ('trees','directory_links'):
             for top in sorted(set(before.get(key,{}))|set(after.get(key,{}))):
                 a=before.get(key,{}).get(top,{});b=after.get(key,{}).get(top,{})
                 for rel in sorted(set(a)|set(b)):
@@ -143,7 +153,7 @@ def snapshot(paths, floorp_sha, runtime_sha):
         # checkout (HEAD SHA and tracked diff recorded; untracked files are
         # not) which contains the Floorp checkout, or the objdir itself.
         trees[str(args.objdir/p)],directory_links[str(args.objdir/p)]=_walk(
-            args.objdir/p,(args.runtime,args.objdir),EPHEMERAL_TREE_FILES.get(p,frozenset()))
+            args.objdir/p,(args.runtime,args.objdir),EPHEMERAL_TREE_FILES.get(p,frozenset()),p.startswith('_tests/'))
     trees[str(args.resources)],directory_links[str(args.resources)]=_walk(args.resources)
     return {'schema':'floorp-local-native-cohort/1','paths':paths,'floorp_sha':floorp_sha,
             'runtime_sha':runtime_sha,'source_diffs':{str(root):hashlib.sha256(subprocess.check_output(['git','-C',str(root),'diff','--binary','HEAD','--'])).hexdigest() for root in (args.runtime,args.floorp)},'runner_sha256':digest(RUNNER),'config_sha256':digest(CONFIG),

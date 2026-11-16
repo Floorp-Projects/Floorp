@@ -51,7 +51,8 @@ def stage_product(objdir, output, injected_xhtml=None):
     shutil.copytree(modules,output/'testing-common',dirs_exist_ok=False)
     # copytree dereferences links, so compare content with links followed
     # only into this worker's Runtime checkout (the objdir's parent).
-    if local_cohort.tree(modules,(objdir.parent,))!=local_cohort.tree(output/'testing-common'):
+    if (local_cohort.tree(modules,(objdir.parent,),skip_bytecode=True)
+            !=local_cohort.tree(output/'testing-common',skip_bytecode=True)):
         raise ValueError('testing module copy mismatch')
     return output/'floorp'
 

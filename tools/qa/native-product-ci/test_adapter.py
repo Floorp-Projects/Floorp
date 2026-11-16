@@ -116,13 +116,16 @@ class AdapterTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError,'missing/special build material: link'):c.tree(root)
     def test_harness_bytecode_and_run_outputs_are_ephemeral(self):
         with tempfile.TemporaryDirectory() as d:
-            root=Path(d);(root/'runtests.py').write_text('x');before=c.tree(root,ephemeral={'tests.json'})
+            root=Path(d);(root/'runtests.py').write_text('x');before=c.tree(root,ephemeral={'tests.json'},skip_bytecode=True)
             (root/'__pycache__').mkdir();(root/'__pycache__'/'runtests.cpython-312.pyc').write_bytes(b'b')
             (root/'stray.pyc').write_bytes(b'b');(root/'tests.json').write_text('{}')
-            self.assertEqual(before,c.tree(root,ephemeral={'tests.json'}))
+            self.assertEqual(before,c.tree(root,ephemeral={'tests.json'},skip_bytecode=True))
+            # Outside the _tests trees (dist/bin, product) bytecode is digested.
+            strict=c.tree(root)
+            self.assertIn('__pycache__/runtests.cpython-312.pyc',strict);self.assertIn('stray.pyc',strict)
             # Only the named root-level file is ephemeral, not a nested one.
             (root/'sub').mkdir();(root/'sub'/'tests.json').write_text('{}')
-            self.assertIn('sub/tests.json',c.tree(root,ephemeral={'tests.json'}))
+            self.assertIn('sub/tests.json',c.tree(root,ephemeral={'tests.json'},skip_bytecode=True))
             self.assertIn('tests.json',c.tree(root))
     def test_mochitest_tree_ephemeral_names_are_scoped(self):
         self.assertEqual(c.EPHEMERAL_TREE_FILES,{'_tests/testing/mochitest':frozenset({'tests.json','websock.log'})})
@@ -150,13 +153,15 @@ class AdapterTests(unittest.TestCase):
         before={'trees':{'/o/t':{'a':{'sha256':'1'},'b':{'sha256':'2'}}},'directory_links':{'/o/t':{}},'files':{'x':'1'}}
         after={'trees':{'/o/t':{'a':{'sha256':'9'},'c':{'sha256':'3'}}},'directory_links':{'/o/t':{'l':'s'}},'files':{'x':'2'}}
         self.assertEqual(c.differences(before,after),
-            ['directory_links:/o/t/l added','files changed','trees:/o/t/a changed','trees:/o/t/b removed','trees:/o/t/c added'])
+            ['directory_links:/o/t/l added','files:x changed','trees:/o/t/a changed','trees:/o/t/b removed','trees:/o/t/c added'])
+        self.assertEqual(c.differences({'source_diffs':{'/r':'1'},'provenance':{'a':1}},{'source_diffs':{'/r':'2'},'provenance':{'a':2}}),
+            ['provenance changed','source_diffs:/r changed'])
         many={'trees':{'/t':{str(i):{} for i in range(30)}}}
         self.assertEqual(len(c.differences({'trees':{'/t':{}}},many)),21)
     def test_changed_snapshot_message_names_paths(self):
         record={'schema':'floorp-local-native-cohort/1','paths':{},'files':{'x':'1'}}
         with patch.object(c,'snapshot',return_value=dict(record,files={'x':'2'})):
-            with self.assertRaisesRegex(ValueError,'files changed'):c.verify(record,'a'*40,'b'*40)
+            with self.assertRaisesRegex(ValueError,'files:x changed'):c.verify(record,'a'*40,'b'*40)
     def test_changed_snapshot_rejected(self):
         record={'schema':'floorp-local-native-cohort/1','paths':{}}
         with patch.object(c,'snapshot',return_value={'changed':True}):

@@ -32,13 +32,25 @@ def module_inventory(root):
         raise ValueError(f'Missing testing modules: {root}')
     # Follow directory links like shutil.copytree (the product copy is
     # dereferenced); skip Python bytecode caches written by harness runs.
+    def fail(error):
+        raise error
     files = {}
-    for base, dirs, names in os.walk(root, followlinks=True):
+    chains = {str(root): frozenset({root.resolve()})}
+    for base, dirs, names in os.walk(root, followlinks=True, onerror=fail):
+        chain = chains.pop(base)
         dirs[:] = sorted(d for d in dirs if d != '__pycache__')
+        for d in dirs:
+            real = (Path(base) / d).resolve()
+            if real in chain:
+                raise ValueError(f'Testing module directory symlink cycle: {Path(base) / d}')
+            chains[str(Path(base) / d)] = chain | {real}
         for name in sorted(names):
             p = Path(base) / name
-            if p.is_file() and not name.endswith('.pyc'):
-                files[str(p.relative_to(root))] = digest(p)
+            if name.endswith('.pyc'):
+                continue
+            if not p.is_file():
+                raise ValueError(f'Missing/special testing module: {p}')
+            files[str(p.relative_to(root))] = digest(p)
     if not files:
         raise ValueError('Empty testing module directory')
     return files
@@ -358,7 +370,10 @@ def main(argv=None):
         args.logs.mkdir(parents=True, exist_ok=False)
         env = os.environ.copy()
         env['MOZ_DISABLE_NONLOCAL_CONNECTIONS'] = '1'
-        env['PYTHONDONTWRITEBYTECODE'] = '1'  # Keep snapshotted objdir/source trees unchanged.
+        # Keep snapshotted objdir/source trees unchanged: no bytecode written
+        # there, and caches looked up outside the tree so in-tree .pyc is never read.
+        env['PYTHONDONTWRITEBYTECODE'] = '1'
+        env['PYTHONPYCACHEPREFIX'] = tempfile.mkdtemp(prefix='floorp-native-pycache-')
         env['MOZCONFIG'] = str(args.objdir / '.mozconfig')  # Use recorded snapshot; never edit the user's source config.
         evidence = {'started': timestamp(), 'cwd': str(args.runtime), 'provenance': provenance,
                     'config': config, 'plan': plan, 'results': [], 'finished': None}

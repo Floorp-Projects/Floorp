@@ -228,5 +228,11 @@ class DryRunTests(unittest.TestCase):
         before = r.module_inventory(mods)
         (mods/'__pycache__').mkdir(); (mods/'__pycache__'/'a.cpython-312.pyc').write_bytes(b'b')
         self.assertEqual(before, r.module_inventory(mods))
+    def test_module_inventory_rejects_cycles_and_broken_links(self):
+        mods = self.root/'mods3'; (mods/'a').mkdir(parents=True); (mods/'a'/'f.js').write_text('f')
+        (mods/'a'/'loop').symlink_to(mods)
+        with self.assertRaisesRegex(ValueError, 'cycle'):r.module_inventory(mods)
+        (mods/'a'/'loop').unlink(); (mods/'gone').symlink_to(mods/'missing')
+        with self.assertRaisesRegex(ValueError, 'Missing/special'):r.module_inventory(mods)
 
 if __name__=='__main__':unittest.main()

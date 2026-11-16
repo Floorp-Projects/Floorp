@@ -238,7 +238,10 @@ symlinks are followed only into the tree, this worker's Runtime checkout or the
 objdir; links leaving those roots, and link cycles, fail with the tree-relative
 path. File symlinks are content-digested wherever they point. The text of every
 symlink is recorded in `directory_links`, so a retarget is detected even when
-the content is identical. Harness-written derived outputs are not inputs and are
-skipped: `__pycache__`/`*.pyc` anywhere, and `tests.json` and `websock.log` at
-the root of `_tests/testing/mochitest`. All harness commands run with
-`PYTHONDONTWRITEBYTECODE=1`. A changed snapshot fails with the differing paths.
+the content is identical. Harness-written derived outputs are skipped only where
+the harness writes them: `__pycache__`/`*.pyc` in the `_tests` trees, and
+`tests.json` and `websock.log` at the root of `_tests/testing/mochitest`.
+`dist/bin` and the product copy are digested without exclusions. Harness
+commands run with `PYTHONDONTWRITEBYTECODE=1` and a scratch
+`PYTHONPYCACHEPREFIX`, so in-tree bytecode is neither written nor read. A
+changed snapshot fails with the differing paths.

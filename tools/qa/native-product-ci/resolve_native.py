@@ -6,6 +6,7 @@ import json
 import os
 from pathlib import Path
 import subprocess
+import tempfile
 from types import SimpleNamespace
 import gate
 import local_cohort as c
@@ -35,8 +36,9 @@ def resolve(record, output):
     groups=[]
     keep={'PATH','HOME','LANG','LC_ALL','TMPDIR','MOZBUILD_STATE_PATH','DISPLAY','XAUTHORITY'}
     env={k:v for k,v in os.environ.items() if k in keep}
-    # No bytecode caches inside snapshotted objdir/source trees.
-    env.update(MOZCONFIG=str(args.objdir/'.mozconfig'),MOZ_DISABLE_NONLOCAL_CONNECTIONS='1',PYTHONDONTWRITEBYTECODE='1')
+    # No bytecode caches read from or written to snapshotted objdir/source trees.
+    env.update(MOZCONFIG=str(args.objdir/'.mozconfig'),MOZ_DISABLE_NONLOCAL_CONNECTIONS='1',PYTHONDONTWRITEBYTECODE='1',
+               PYTHONPYCACHEPREFIX=tempfile.mkdtemp(prefix='floorp-resolver-pycache-'))
     # Native wrappers write only in this fresh directory. Original manifests are
     # untouched; dumps do not execute test bodies, but use the real native loader.
     for suite in config['suites']:
