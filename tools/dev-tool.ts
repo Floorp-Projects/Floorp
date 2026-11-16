@@ -4,7 +4,7 @@
 import * as path from "@std/path";
 import { parseArgs } from "@std/cli/parse-args";
 import { withBrowser } from "./src/browser_connector.ts";
-import { PATHS, PLATFORM, PROJECT_ROOT } from "./src/defines.ts";
+import { BIN_PATH_EXE, PATHS, PLATFORM, PROJECT_ROOT } from "./src/defines.ts";
 import {
   matchesDevIdentity,
   selectDevProcesses,
@@ -19,6 +19,7 @@ import {
   listDevProcesses,
   readDevProcesses,
   recordDevProcess,
+  registerWindowsBrowserListenerIdentity,
   reportDevPortConflict,
   terminateDevProcesses,
 } from "./src/dev_processes.ts";
@@ -306,6 +307,22 @@ async function cmdStart() {
     try {
       const port = Deno.readTextFileSync(marionetteFile).trim();
       if (port) {
+        if (PLATFORM === "windows") {
+          try {
+            await registerWindowsBrowserListenerIdentity({
+              port: Number(port),
+              expectedBinaryPath: BIN_PATH_EXE,
+              expectedProfilePath: PATHS.profile_test,
+              recordedProcesses: readDevProcesses(),
+            });
+          } catch (error) {
+            console.error(
+              "[dev-tool] Actual browser listener identity was not registered:",
+              error,
+            );
+            Deno.exit(1);
+          }
+        }
         console.log(`Browser ready! Marionette on port ${port}.`);
         console.log(`Log: ${logFile}`);
         return;

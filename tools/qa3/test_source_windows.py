@@ -128,9 +128,12 @@ class WindowsSupervisorContractTests(unittest.TestCase):
 
     def test_supervisor_kind_selects_the_job_object_on_windows(self):
         self.assertEqual(source.supervisor_kind("nt"), "windows")
-        self.assertEqual(source.supervisor_kind("posix"), "linux")
-        self.assertEqual(source.supervisor_kind(), "windows" if WINDOWS else "linux")
-        if not WINDOWS:
+        self.assertEqual(source.supervisor_kind("posix", "linux"), "linux")
+        self.assertEqual(source.supervisor_kind("posix", "darwin"), "macos")
+        if WINDOWS:
+            self.assertEqual(source.supervisor_kind(), "windows")
+        if sys.platform == "linux":
+            self.assertEqual(source.supervisor_kind(), "linux")
             self.assertIsInstance(
                 source.owned_supervisor(), source.PosixSubreaperSupervisor
             )

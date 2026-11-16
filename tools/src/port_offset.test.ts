@@ -12,7 +12,10 @@ import {
   parsePortOffsetSpec,
   resolveAutoDevPortOffset,
 } from "./port_offset.ts";
-import { DEV_PORT_NON_OVERLAP_SPAN } from "#libs/shared/dev-ports/defines.ts";
+import {
+  DEV_PORT_NON_OVERLAP_SPAN,
+  DEV_PORT_OFFSET_MAX,
+} from "#libs/shared/dev-ports/defines.ts";
 
 // ── argument parsing ───────────────────────────────────────────
 
@@ -121,4 +124,118 @@ Deno.test("start log reports the Marionette port the launch listens on", () => {
     describeLaunchPorts(100),
     "port-offset=100 marionette=5280 pref=nora.dev.port_offset",
   );
+});
+
+// ── Floorp OS-Server dev port (KAN-135) ────────────────────────
+
+import {
+  DEV_OS_SERVER_PORT,
+  devOsServerBaseUrl,
+  OS_SERVER_PRODUCTION_DEFAULT_PORT,
+  osServerPortForOffset,
+} from "./port_offset.ts";
+import {
+  DEV_PORT_MAX,
+  DEV_PORT_MIN,
+  DEV_PORTS,
+  devPortOffsetsAreDisjoint,
+  HUB_DEV_PAGES_PLUS_PROFILE,
+  isTrustedDevPort,
+} from "#libs/shared/dev-ports/defines.ts";
+
+Deno.test("osServerPortForOffset validates via the shared offset error", () => {
+  assertEquals(osServerPortForOffset(0), 5175);
+  assertEquals(osServerPortForOffset(20), 5195);
+  assertEquals(osServerPortForOffset(100), 5275);
+  assertEquals(osServerPortForOffset(23088), 28263);
+  // the largest admissible offset keeps the OS port inside the valid range
+  assertEquals(osServerPortForOffset(DEV_PORT_OFFSET_MAX), 65518);
+  // invalid offsets fail with the shared user-facing error, not a bogus port
+  for (const bad of [Number.NaN, -1, 1.5, DEV_PORT_OFFSET_MAX + 1]) {
+    assertThrows(() => osServerPortForOffset(bad));
+  }
+  assertThrows(
+    () => osServerPortForOffset(1),
+    Error,
+    "non-overlap span",
+  );
+});
+
+Deno.test(
+  "dev OS port is an unused in-span gap, never a trusted page origin",
+  () => {
+    // inside the frozen dev table span, so existing offset invariants hold
+    assertEquals(DEV_OS_SERVER_PORT >= DEV_PORT_MIN, true);
+    assertEquals(DEV_OS_SERVER_PORT <= DEV_PORT_MAX, true);
+    // it is a gap, not a table entry
+    assertEquals(
+      new Set<number>(Object.values(DEV_PORTS)).has(DEV_OS_SERVER_PORT),
+      false,
+    );
+    // and it must never enter the dev page-origin trust lists
+    assertEquals(
+      isTrustedDevPort(DEV_OS_SERVER_PORT, HUB_DEV_PAGES_PLUS_PROFILE, 0),
+      false,
+    );
+    assertEquals(
+      isTrustedDevPort(
+        DEV_OS_SERVER_PORT + 100,
+        HUB_DEV_PAGES_PLUS_PROFILE,
+        100,
+      ),
+      false,
+    );
+    // the packaged production default stays 58261 (dev band is 5175+offset;
+    // only the hand-picked offset 53086 lands back on 58261, caught by the
+    // launch probe set / OS-Server bind error, not silently shared)
+    assertEquals(OS_SERVER_PRODUCTION_DEFAULT_PORT, 58261);
+  },
+);
+
+Deno.test(
+  "launchPortsForOffset appends the OS port without moving table indices",
+  () => {
+    const tableSize = Object.values(DEV_PORTS).length;
+    const ports = launchPortsForOffset(0);
+    assertEquals(ports.length, tableSize + 1);
+    assertEquals(ports[0], 5173); // updateDevServer unchanged
+    assertEquals(ports[2], 5179); // profileManager unchanged ([2] consumers)
+    assertEquals(ports[tableSize], 5175); // OS port appended last
+    assertEquals(launchPortsForOffset(100).at(-1), 5275);
+  },
+);
+
+Deno.test(
+  "admissible offsets give disjoint launch port sets, OS port included",
+  () => {
+    const offsets = [0, 20, 100, 23088, DEV_PORT_OFFSET_MAX];
+    const portSets = offsets.map((offset) =>
+      new Set(launchPortsForOffset(offset))
+    );
+    for (let i = 0; i < offsets.length; i++) {
+      for (let j = i + 1; j < offsets.length; j++) {
+        assertEquals(devPortOffsetsAreDisjoint(offsets[i], offsets[j]), true);
+        for (const port of portSets[i]) {
+          assertEquals(portSets[j].has(port), false);
+        }
+        // every OS port of both launches is a valid listening port
+        for (const set of [portSets[i], portSets[j]]) {
+          for (const port of set) {
+            assertEquals(port >= 1024 && port <= 65535, true);
+          }
+        }
+      }
+    }
+  },
+);
+
+Deno.test("auto skips an offset whose dev OS port is busy", async () => {
+  // only the OS port of the base topology is occupied
+  const offset = await resolveAutoDevPortOffset(probeFor([5175]));
+  assertEquals(offset, DEV_PORT_NON_OVERLAP_SPAN);
+});
+
+Deno.test("devOsServerBaseUrl builds the loopback OS-Server URL", () => {
+  assertEquals(devOsServerBaseUrl(0), "http://127.0.0.1:5175");
+  assertEquals(devOsServerBaseUrl(100), "http://127.0.0.1:5275");
 });
