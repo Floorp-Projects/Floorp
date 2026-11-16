@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import { LatestWebObservation } from "./browserObservation.ts";
 import type { ManifestProcesser } from "./manifestProcesser.ts";
 import type { DataManager } from "./dataStore.ts";
 import { DataManager as DataManagerClass } from "./dataStore.ts";
@@ -143,9 +144,11 @@ export class SiteSpecificBrowserManager {
     }, { once: true });
   }
 
+  private readonly pageObservation = new LatestWebObservation();
+
   private listener = {
     onLocationChange: () => {
-      this.onCurrentTabChangedOrLoaded();
+      void this.onCurrentTabChangedOrLoaded();
     },
   };
 
@@ -449,29 +452,29 @@ export class SiteSpecificBrowserManager {
   }
 
   private async onCurrentTabChangedOrLoaded() {
-    const browser = globalThis.gBrowser.selectedBrowser as Browser;
-    const currentPageCanBeInstalled = this.checkSiteCanBeInstall(
-      browser.currentURI,
-    );
-    const currentPageHasSsbManifest = await this.manifestProcesser
-      .getManifestFromBrowser(browser, true);
-    const currentPageIsInstalled = await this.checkCurrentPageIsInstalled(
-      browser,
-    );
-
-    if (
-      (!currentPageCanBeInstalled || !currentPageHasSsbManifest) &&
-      !currentPageIsInstalled
-    ) {
-      return;
-    }
-
-    // Update UI elements
-    this.updateUIElements(currentPageIsInstalled);
-    Services.obs.notifyObservers(
-      {} as nsISupports,
-      "nora-pwa-check-page-has-manifest",
-    );
+    const selected = () => globalThis.gBrowser?.selectedBrowser;
+    const browser = selected() as Browser;
+    await this.pageObservation.run(browser, selected, async (current) => {
+      // Non-installable pages must never be queried for a web manifest/actor.
+      if (!this.checkSiteCanBeInstall(browser.currentURI)) return;
+      const manifest = await this.manifestProcesser.getManifestFromBrowser(
+        browser,
+        true,
+      );
+      if (!current()) return;
+      const installed = await this.checkCurrentPageIsInstalled(browser);
+      if (!current() || (!manifest && !installed)) return;
+      this.updateUIElements(installed);
+      Services.obs.notifyObservers(
+        {} as nsISupports,
+        "nora-pwa-check-page-has-manifest",
+      );
+    }, (error) => {
+      console.warn(
+        "[SiteSpecificBrowserManager] Page observation failed:",
+        error,
+      );
+    });
   }
 
   public updateUIElements(isInstalled: boolean) {

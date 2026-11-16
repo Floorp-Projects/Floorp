@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import { captureWebDocument } from "./browserObservation.ts";
 import type { Browser, Icon, Manifest } from "./type.js";
 import { IconProcesser } from "./iconProcesser";
 
@@ -36,14 +37,18 @@ export class ManifestProcesser {
     browser: Browser,
     useWebManifest: boolean,
   ): Promise<Manifest | null> {
+    const document = captureWebDocument(browser);
+    if (!document) return null;
     let manifest = null;
     try {
       if (useWebManifest) {
         manifest = await ManifestObtainer.browserObtainManifest(browser);
       }
-    } catch {
-      throw new Error("Failed to obtain manifest from browser");
+    } catch (cause) {
+      if (!document.current()) return null;
+      throw new Error("Failed to obtain manifest from browser", { cause });
     }
+    if (!document.current()) return null;
 
     // YouTube returns monoChrome icon at default. Floorp(Noraneko) will reject monoChrome icon.
     if (manifest?.icons && manifest.icons.length !== 1) {
@@ -77,14 +82,23 @@ export class ManifestProcesser {
             return icon;
           }
 
-          const actor = browser.browsingContext.currentWindowGlobal.getActor(
-            "NRProgressiveWebApp",
-          );
+          if (!document.current()) return null;
+          let actor;
+          try {
+            actor = browser.browsingContext.currentWindowGlobal.getActor(
+              "NRProgressiveWebApp",
+            );
+          } catch (error) {
+            if (!document.current()) return null;
+            // Do not turn actor acquisition/permission failure into privileged fetch.
+            throw error;
+          }
           try {
             icon.src = await actor.sendQuery("LoadIcon", icon.src);
           } catch {
+            if (!document.current()) return null;
             // If the actor fails, try to fetch the icon directly in the parent process
-            // This handles cases where the actor is destroyed (race condition)
+            // Preserve the existing fallback only while the original document is live.
             try {
               icon.src = await this.fetchIconAsDataURI(icon.src);
             } catch {
@@ -98,9 +112,12 @@ export class ManifestProcesser {
       )
     ).filter((icon) => icon);
 
+    if (!document.current()) return null;
+
     // If the site provided no icons then try to use the normal page icons.
     if (!manifest.icons.length) {
       const icon = await this.iconProcesser.getIconForBrowser(browser);
+      if (!document.current()) return null;
       manifest.icons.push({ src: icon });
     }
 
@@ -170,8 +187,9 @@ export class ManifestProcesser {
 
   private async fetchIconAsDataURI(url: string): Promise<string> {
     const response = await fetch(url, { credentials: "omit" });
-    if (!response.ok)
+    if (!response.ok) {
       throw new Error(`Failed to fetch icon: ${response.status}`);
+    }
     const blob = await response.blob();
     return new Promise((resolve, reject) => {
       const reader = new FileReader();

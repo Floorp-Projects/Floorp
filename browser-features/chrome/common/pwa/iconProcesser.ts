@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import { captureWebDocument } from "./browserObservation.ts";
 import type { Browser, Icon, IconData } from "./type.ts";
 import { ImageTools } from "./imageTools.ts";
 
@@ -24,10 +25,9 @@ export class IconProcesser {
 
     for (const icon of icons) {
       for (const sizeSpec of icon.sizes) {
-        const size =
-          sizeSpec === "any"
-            ? Number.MAX_SAFE_INTEGER
-            : Number.parseInt(sizeSpec);
+        const size = sizeSpec === "any"
+          ? Number.MAX_SAFE_INTEGER
+          : Number.parseInt(sizeSpec);
 
         iconList.push({
           icon,
@@ -151,24 +151,27 @@ export class IconProcesser {
   }
 
   private async getIconDirectlyFromPage(browser: Browser): Promise<string> {
-    const actor = browser.browsingContext.currentWindowGlobal.getActor(
-      "NRProgressiveWebApp",
-    );
-    if (!actor) {
-      return "";
-    }
-
+    const document = captureWebDocument(browser);
+    if (!document) return "";
+    let actor;
     let iconCandidates: string[] = [];
     try {
+      actor = browser.browsingContext.currentWindowGlobal.getActor(
+        "NRProgressiveWebApp",
+      );
+      if (!actor) return "";
       iconCandidates = await actor.sendQuery("GetPageIcons");
-    } catch (e) {
-      console.error("Failed to collect icon candidates", e);
-      return "";
+    } catch (error) {
+      if (!document.current()) return "";
+      throw error;
     }
+    if (!document.current()) return "";
 
     for (const href of iconCandidates) {
+      if (!document.current()) return "";
       try {
         const dataUri = await actor.sendQuery("LoadIcon", href);
+        if (!document.current()) return "";
         if (typeof dataUri === "string" && dataUri.startsWith("data:")) {
           return dataUri;
         }
