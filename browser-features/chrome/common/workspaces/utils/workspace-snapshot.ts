@@ -60,7 +60,9 @@ export const toNumber = (value: string | null, fallback = 0): number => {
   return Number.isNaN(parsed) ? fallback : parsed;
 };
 
-export const extractUrlFromState = (state: Record<string, unknown>): string | null => {
+export const extractUrlFromState = (
+  state: Record<string, unknown>,
+): string | null => {
   const entries = state.entries;
   if (!Array.isArray(entries)) {
     return null;
@@ -168,38 +170,37 @@ const extractUrlFromTab = (
   return null;
 };
 
-const toWorkspaceSnapshotTab = (
+export const toWorkspaceSnapshotTab = (
   tab: XULElement,
   state: Record<string, unknown> | null,
   dataManager: WorkspacesDataManagerBase,
+  isSelected = tab === globalThis.gBrowser.selectedTab,
 ): TWorkspaceSnapshotTab => {
-  const pinned =
-    tab.hasAttribute("pinned") ||
+  const pinned = tab.hasAttribute("pinned") ||
     Boolean((tab as unknown as { pinned?: boolean }).pinned);
   const sessionState = state ?? null;
   const title = extractTitleFromTab(tab, sessionState);
   const url = extractUrlFromTab(tab, sessionState);
   const userContextId = toNumber(tab.getAttribute("usercontextid"));
   const lastShownRaw = tab.getAttribute(WORKSPACE_LAST_SHOW_ID);
-  const lastShownWorkspaceId =
-    typeof lastShownRaw === "string" &&
-    lastShownRaw.length > 0 &&
-    dataManager.isWorkspaceID(lastShownRaw)
-      ? lastShownRaw
-      : null;
+  const lastShownWorkspaceId = typeof lastShownRaw === "string" &&
+      lastShownRaw.length > 0 &&
+      dataManager.isWorkspaceID(lastShownRaw)
+    ? lastShownRaw
+    : null;
 
   return {
     state: sessionState,
     title,
     url,
     pinned,
-    isSelected: tab === globalThis.gBrowser.selectedTab,
+    isSelected,
     userContextId,
     lastShownWorkspaceId,
   };
 };
 
-const parseTabState = (
+export const parseTabState = (
   sessionStore: SessionStoreModule,
   tab: XULElement,
 ): Record<string, unknown> | null => {

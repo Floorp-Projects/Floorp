@@ -8,6 +8,7 @@ import { setWorkspacesDataStore, workspacesDataStore } from "./data/data";
 import type {
   TWorkspace,
   TWorkspaceID,
+  TWorkspaceSnapshot,
   TWorkspacesStoreData,
 } from "./utils/type";
 import type {
@@ -29,6 +30,11 @@ import {
   applyWorkspaceSnapshotMetadata,
   WorkspacesArchiveService,
 } from "./utils/workspaces-archive-service";
+import { WorkspacesBackupService } from "./utils/workspaces-backup-service";
+import type {
+  WorkspaceBackupFile,
+  WorkspaceBackupSummary,
+} from "./utils/backup-types";
 import type { TWorkspaceSnapshotTab } from "./utils/type";
 import type { WorkspaceArchiveSummary } from "./utils/archive-types";
 import {
@@ -46,6 +52,7 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
   iconCtx: WorkspaceIcons;
   modalCtx: WorkspaceManageModal;
   archiveService: WorkspacesArchiveService;
+  backupService: WorkspacesBackupService;
   syncController?: WorkspacesSyncController;
 
   private explicitTabUserContextOperations =
@@ -115,6 +122,7 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
     this.dataManagerCtx = dataManagerCtx;
     this.modalCtx = new WorkspaceManageModal(this, this.iconCtx);
     this.archiveService = new WorkspacesArchiveService();
+    this.backupService = new WorkspacesBackupService(this);
     // deno-lint-ignore no-explicit-any
     (globalThis as any).workspacesFuncs = {
       createNoNameWorkspace: this.createNoNameWorkspace.bind(this),
@@ -125,6 +133,11 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
       listArchivedWorkspaces: this.listArchivedWorkspaces.bind(this),
       restoreArchivedWorkspace: this.restoreArchivedWorkspace.bind(this),
       deleteArchivedWorkspace: this.deleteArchivedWorkspace.bind(this),
+      backupNow: this.backupNow.bind(this),
+      listBackups: this.listBackups.bind(this),
+      restoreBackup: this.restoreBackup.bind(this),
+      deleteBackup: this.deleteBackup.bind(this),
+      deleteAllBackups: this.deleteAllBackups.bind(this),
       resetWorkspaces: this.resetWorkspaces.bind(this),
       getSelectedWorkspaceID: this.getSelectedWorkspaceID.bind(this),
       getCurrentWorkspaceUserContextId: this.getCurrentWorkspaceUserContextId
@@ -482,6 +495,145 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
     return restoredWorkspaceId;
   }
 
+  public async backupNow(): Promise<WorkspaceBackupSummary> {
+    return await this.backupService.backupNow("manual");
+  }
+
+  public async listBackups(): Promise<WorkspaceBackupSummary[]> {
+    return await this.backupService.listBackups();
+  }
+
+  public async restoreBackup(
+    fileName: string,
+  ): Promise<{ success: boolean; error?: string }> {
+    return await this.backupService.restoreBackup(fileName);
+  }
+
+  public async deleteBackup(fileName: string): Promise<boolean> {
+    return await this.backupService.deleteBackup(fileName);
+  }
+
+  public async deleteAllBackups(): Promise<boolean> {
+    return await this.backupService.deleteAllBackups();
+  }
+
+  /**
+   * Replaces the entire workspace store with the contents of a backup file.
+   *
+   * Tabs are restored into the currently focused browser window. Other
+   * non-private windows keep their existing tabs, which is a v1 limitation of
+   * the multi-window merge described in WorkspacesBackupService.
+   */
+  public async restoreFromBackupFile(file: WorkspaceBackupFile): Promise<void> {
+    if (file.workspaces.length === 0) {
+      throw new Error("empty-backup");
+    }
+
+    const tempWorkspaceId = this.resetWorkspaces();
+    const snapshotById = new Map(
+      file.workspaces.map((snapshot) => [
+        snapshot.workspace.workspaceId,
+        snapshot,
+      ]),
+    );
+    const orderedIds = file.order.length > 0
+      ? file.order
+      : file.workspaces.map((snapshot) => snapshot.workspace.workspaceId);
+    const idMap = new Map<TWorkspaceID, TWorkspaceID>();
+    const restoredOrder: TWorkspaceID[] = [];
+
+    const restoreSnapshot = async (
+      snapshot: TWorkspaceSnapshot,
+    ): Promise<void> => {
+      const restoredWorkspaceId = this.dataManagerCtx.createWorkspace(
+        snapshot.workspace.name,
+      );
+      setWorkspacesDataStore(
+        "order",
+        (prev) => [...prev, restoredWorkspaceId],
+      );
+      setWorkspacesDataStore("data", (prev) => {
+        const temp = this.cloneWorkspaceMap(prev);
+        const workspace = temp.get(restoredWorkspaceId);
+        if (workspace) {
+          temp.set(
+            restoredWorkspaceId,
+            applyWorkspaceSnapshotMetadata(workspace, snapshot.workspace),
+          );
+        }
+        return temp as unknown as TWorkspacesStoreData["data"];
+      });
+      idMap.set(snapshot.workspace.workspaceId, restoredWorkspaceId);
+      restoredOrder.push(restoredWorkspaceId);
+      await this.restoreTabsFromSnapshot(
+        restoredWorkspaceId,
+        snapshot.tabs,
+      );
+    };
+
+    for (const oldId of orderedIds) {
+      const snapshot = snapshotById.get(oldId);
+      if (snapshot) {
+        await restoreSnapshot(snapshot);
+      }
+    }
+    for (const snapshot of file.workspaces) {
+      if (idMap.has(snapshot.workspace.workspaceId)) {
+        continue;
+      }
+      await restoreSnapshot(snapshot);
+    }
+
+    if (restoredOrder.length === 0) {
+      throw new Error("empty-backup");
+    }
+
+    this.closeTabsForWorkspace(tempWorkspaceId, restoredOrder[0]);
+    this.dataManagerCtx.deleteWorkspace(tempWorkspaceId);
+    setWorkspacesDataStore(
+      "order",
+      (prev) => prev.filter((id) => id !== tempWorkspaceId),
+    );
+
+    const defaultId = file.defaultID && idMap.has(file.defaultID)
+      ? idMap.get(file.defaultID) as TWorkspaceID
+      : restoredOrder[0];
+    this.setDefaultWorkspace(defaultId);
+    const currentId = file.currentWorkspaceId &&
+        idMap.has(file.currentWorkspaceId)
+      ? idMap.get(file.currentWorkspaceId) as TWorkspaceID
+      : defaultId;
+    this.changeWorkspace(currentId);
+    this.tabManagerCtx.updateTabsVisibility();
+  }
+
+  private closeTabsForWorkspace(
+    workspaceId: TWorkspaceID,
+    fallbackWorkspaceId: TWorkspaceID,
+  ): void {
+    const gBrowser = globalThis.gBrowser;
+    const tabs = [...gBrowser.tabs].filter(
+      (tab) => tab.getAttribute(WORKSPACE_TAB_ATTRIBUTION_ID) === workspaceId,
+    );
+    for (const tab of tabs) {
+      if (gBrowser.tabs.length <= 1) {
+        this.tabManagerCtx.setWorkspaceIdToAttribute(
+          tab,
+          fallbackWorkspaceId,
+        );
+        continue;
+      }
+      try {
+        gBrowser.removeTab(tab);
+      } catch (error) {
+        console.error(
+          "WorkspacesService: failed to close replaced tab",
+          error,
+        );
+      }
+    }
+  }
+
   /**
    * Reset the workspace store to its default state and assign all tabs to the new workspace.
    * @returns The newly created workspace id.
@@ -529,7 +681,7 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
     return newWorkspaceId;
   }
 
-  private async restoreTabsFromSnapshot(
+  public async restoreTabsFromSnapshot(
     workspaceId: TWorkspaceID,
     tabs: TWorkspaceSnapshotTab[],
   ) {
