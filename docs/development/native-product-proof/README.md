@@ -31,12 +31,13 @@ independently reproducible proof by themselves.
 | Added workspace visibility roundtrip diagnostic | PASS                | 1           | FAIL: shutdown window  |
 
 Each run emitted `suite_end`. None is a clean pass. These focused runs used a
-different candidate build from the first-pass cohort below, where
+patched candidate product (see `product_delta` and `candidate_patch_sha256` in
+the focused ledger), not the product of the first-pass cohort below, where
 `browser_588426.js` and `browser_595601-restore_hidden.js` are recorded as FAIL;
-the two results are for different builds, not a contradiction. The candidate was
-a native, test-enabled, **unoptimized Debug** macOS product, not the installed
-release. Source base commits and binary hashes are in the ledger, but the
-candidate included dirty prerequisite changes. The base commits alone cannot
+the two results describe different products, not a contradiction. The candidate
+was a native, test-enabled, **unoptimized Debug** macOS product, not the
+installed release. Source base commits and binary hashes are in the ledger, but
+the candidate included dirty prerequisite changes. The base commits alone cannot
 reproduce it. Product and object-directory XUL hashes differ; packaging is not
 assumed to establish equivalence. No full-suite totals are inferred from these
 three cases.
