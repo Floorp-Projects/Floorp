@@ -21,7 +21,7 @@ interface BackupBridgeResult {
 
 interface PendingBackupRequest {
   resolve: (result: BackupBridgeResult) => void;
-  timer: number;
+  timer: ReturnType<typeof globalThis.setTimeout>;
 }
 
 export class NRWorkspacesChild extends JSWindowActorChild {

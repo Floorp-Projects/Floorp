@@ -135,7 +135,7 @@ const isPrivateWindow = (window: Window): boolean => {
 export class WorkspacesBackupService {
   private readonly service: WorkspacesService;
   private config: WorkspaceBackupConfig;
-  private timer: number | null = null;
+  private timer: ReturnType<typeof globalThis.setTimeout> | null = null;
   private readonly configObserver: () => void;
   private readonly enabledObserver: () => void;
   private disposed = false;
