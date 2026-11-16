@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: MPL-2.0
 import importlib.util
 import json
+import shutil
 from pathlib import Path
 import tempfile
 import unittest
@@ -74,10 +75,44 @@ class AdapterTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             (Path(d)/'bad').symlink_to('/nonexistent-native-ci')
             with self.assertRaises(ValueError):c.tree(d)
-    def test_directory_symlink_rejected(self):
+    def test_directory_symlink_inside_tree_is_digested_by_content(self):
         with tempfile.TemporaryDirectory() as d:
-            (Path(d)/'sub').mkdir();(Path(d)/'link').symlink_to(Path(d)/'sub')
-            with self.assertRaises(ValueError):c.tree(d)
+            root=Path(d)/'tree';(root/'sub').mkdir(parents=True);(root/'sub'/'f').write_text('x')
+            (root/'link').symlink_to('sub')
+            entries,links=c._walk(root)
+            self.assertEqual(links,{'link':'sub'})
+            self.assertEqual(entries['link/f'],entries['sub/f'])
+            copy=Path(d)/'copy';shutil.copytree(root,copy,symlinks=False)
+            self.assertEqual(c.tree(root),c.tree(copy))
+    def test_directory_symlink_into_allowed_root_accepted(self):
+        with tempfile.TemporaryDirectory() as d:
+            src=Path(d)/'runtime'/'testing';src.mkdir(parents=True);(src/'t.js').write_text('t')
+            obj=Path(d)/'runtime'/'obj'/'_tests';obj.mkdir(parents=True);(obj/'own').write_text('o')
+            (obj/'testing').symlink_to(src)
+            with self.assertRaises(ValueError):c.tree(obj)
+            entries=c.tree(obj,(Path(d)/'runtime',))
+            self.assertIn('testing/t.js',entries)
+    def test_directory_symlink_leaving_trusted_roots_rejected(self):
+        with tempfile.TemporaryDirectory() as d, tempfile.TemporaryDirectory() as outside:
+            (Path(outside)/'secret').write_text('s');root=Path(d)/'tree';root.mkdir()
+            (root/'own').write_text('o');(root/'escape').symlink_to(outside)
+            with self.assertRaisesRegex(ValueError,'leaves trusted build roots: escape'):c.tree(root,(Path(d)/'other',))
+    def test_directory_symlink_cycle_rejected(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d);(root/'a').mkdir();(root/'a'/'f').write_text('x')
+            (root/'a'/'loop').symlink_to(root)
+            with self.assertRaisesRegex(ValueError,'cycle: a/loop'):c.tree(root)
+    def test_indirect_directory_symlink_cycle_rejected(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d)/'tree';root.mkdir();(root/'own').write_text('o')
+            a=Path(d)/'a';b=Path(d)/'b';a.mkdir();b.mkdir()
+            (a/'to_b').symlink_to(b);(b/'to_a').symlink_to(a);(root/'x').symlink_to(b)
+            with self.assertRaisesRegex(ValueError,'cycle'):c.tree(root,(Path(d),))
+    def test_broken_directory_symlink_rejected(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d);(root/'own').write_text('o');(root/'gone').mkdir()
+            (root/'link').symlink_to(root/'gone');(root/'gone').rmdir()
+            with self.assertRaises(ValueError):c.tree(root)
     def test_changed_snapshot_rejected(self):
         record={'schema':'floorp-local-native-cohort/1','paths':{}}
         with patch.object(c,'snapshot',return_value={'changed':True}):

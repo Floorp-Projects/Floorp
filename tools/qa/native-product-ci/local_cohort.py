@@ -27,21 +27,47 @@ REQUIRED_SOURCE_FILES = ('mach','testing/xpcshell/runxpcshelltests.py',
 def digest(path):return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
-def tree(root):
+def _inside(path, roots):
+    return any(path==r or r in path.parents for r in roots)
+
+
+def _walk(root, allowed=()):
+    """Digest a build tree by content, following directory symlinks only into
+    `root` or the explicitly trusted same-worker `allowed` roots.
+
+    Mozilla objdirs link test and support directories back into the source
+    checkout. Such a link is recorded (link text) and its content is digested
+    as if it were a real directory, so a dereferencing copy of the tree has the
+    same entries. A link that leaves the trusted roots, is broken or loops is
+    rejected with its tree-relative path.
+    """
     root=Path(root).resolve()
     gate.require(root.is_dir(), 'missing tree: '+str(root))
-    entries={}
-    # Build trees legitimately contain symlinks. Read targets, record bytes, never
-    # rewrite links or claim this snapshot can be extracted on another worker.
-    for base, dirs, files in os.walk(root, followlinks=False):
+    roots=[root]+[Path(a).resolve() for a in allowed]
+    entries={};links={};chains={str(root):frozenset({root})}
+    # Read targets and record bytes; never rewrite links or claim this
+    # snapshot can be extracted on another worker.
+    for base, dirs, files in os.walk(root, followlinks=True):
+        chain=chains.pop(base)
         for directory in dirs:
-            gate.require(not (Path(base)/directory).is_symlink(), 'directory symlink requires producer audit')
+            path=Path(base)/directory;rel=str(path.relative_to(root))
+            real=path.resolve()
+            if path.is_symlink():
+                gate.require(real.is_dir(), 'broken directory symlink: '+rel)
+                gate.require(_inside(real, roots), 'directory symlink leaves trusted build roots: '+rel+' -> '+os.readlink(path))
+                links[rel]=os.readlink(path)
+            gate.require(real not in chain, 'directory symlink cycle: '+rel)
+            chains[str(path)]=chain|{real}
         for name in files:
-            path=Path(base)/name
-            gate.require(path.is_file(), 'missing/special build material')
-            entries[str(path.relative_to(root))]={'sha256':digest(path),'executable':bool(path.stat().st_mode & 0o111)}
+            path=Path(base)/name;rel=str(path.relative_to(root))
+            gate.require(path.is_file(), 'missing/special build material: '+rel)
+            entries[rel]={'sha256':digest(path),'executable':bool(path.stat().st_mode & 0o111)}
     gate.require(entries, 'empty build material tree')
-    return entries
+    return entries, links
+
+
+def tree(root, allowed=()):
+    return _walk(root, allowed)[0]
 
 
 def git_sha(root):
@@ -67,11 +93,15 @@ def snapshot(paths, floorp_sha, runtime_sha):
     files={}
     for root,names in ((args.objdir,REQUIRED_OBJECT_FILES),(args.runtime,REQUIRED_SOURCE_FILES+gate.MANIFESTS)):
         for name in names:files[str(root/name)]=digest(root/name)
-    trees={str(args.objdir/p):tree(args.objdir/p) for p in REQUIRED_OBJECT_TREES}
-    trees[str(args.resources)]=tree(args.resources)
+    trees={};directory_links={}
+    for p in REQUIRED_OBJECT_TREES:
+        # Same-worker objdir links may point into the SHA-checked Runtime
+        # checkout (which contains the Floorp checkout) or the objdir itself.
+        trees[str(args.objdir/p)],directory_links[str(args.objdir/p)]=_walk(args.objdir/p,(args.runtime,args.objdir))
+    trees[str(args.resources)],directory_links[str(args.resources)]=_walk(args.resources)
     return {'schema':'floorp-local-native-cohort/1','paths':paths,'floorp_sha':floorp_sha,
             'runtime_sha':runtime_sha,'source_diffs':{str(root):hashlib.sha256(subprocess.check_output(['git','-C',str(root),'diff','--binary','HEAD','--'])).hexdigest() for root in (args.runtime,args.floorp)},'runner_sha256':digest(RUNNER),'config_sha256':digest(CONFIG),
-            'files':files,'trees':trees,'provenance':provenance}
+            'files':files,'trees':trees,'directory_links':directory_links,'provenance':provenance}
 
 
 def verify(record, floorp_sha, runtime_sha):

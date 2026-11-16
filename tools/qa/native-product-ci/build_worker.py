@@ -49,7 +49,9 @@ def stage_product(objdir, output, injected_xhtml=None):
     modules=objdir/'_tests/modules'
     if not modules.is_dir():raise ValueError('same-OBJDIR testing modules missing')
     shutil.copytree(modules,output/'testing-common',dirs_exist_ok=False)
-    if local_cohort.tree(modules)!=local_cohort.tree(output/'testing-common'):
+    # copytree dereferences links, so compare content with links followed
+    # only into this worker's Runtime checkout (the objdir's parent).
+    if local_cohort.tree(modules,(objdir.parent,))!=local_cohort.tree(output/'testing-common'):
         raise ValueError('testing module copy mismatch')
     return output/'floorp'
 
