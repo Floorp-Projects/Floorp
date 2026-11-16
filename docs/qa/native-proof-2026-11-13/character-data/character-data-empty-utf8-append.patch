@@ -1,0 +1,60 @@
+diff --git a/dom/base/CharacterDataBuffer.h b/dom/base/CharacterDataBuffer.h
+--- a/dom/base/CharacterDataBuffer.h
++++ b/dom/base/CharacterDataBuffer.h
+@@ -180,6 +180,11 @@
+   // As above but to UTF-8.
+   [[nodiscard]] bool AppendTo(nsACString& aString,
+                               const fallible_t& aFallible) const {
++    // An empty buffer may have a null m1b. Do not pass that null-backed
++    // substring to the Rust Latin1 converter, which requires non-null slices.
++    if (mState.mLength == 0) {
++      return true;
++    }
+     if (mState.mIs2b) {
+       return AppendUTF16toUTF8(Span(Get2b(), mState.mLength), aString,
+                                aFallible);
+diff --git a/dom/base/test/gtest/TestCharacterDataBuffer.cpp b/dom/base/test/gtest/TestCharacterDataBuffer.cpp
+--- a/dom/base/test/gtest/TestCharacterDataBuffer.cpp
++++ b/dom/base/test/gtest/TestCharacterDataBuffer.cpp
+@@ -640,4 +640,41 @@
+   EXPECT_EQ(characterDataBuffer.Equals(EmptyCString()), false);
+ }
+ 
++TEST(CharacterDataBufferTest, AppendEmptyToUTF8)
++{
++  CharacterDataBuffer buffer;
++  nsCString destination("prefix");
++  EXPECT_TRUE(buffer.AppendTo(destination, fallible));
++  EXPECT_EQ(destination, "prefix"_ns);
++
++  nsCString empty;
++  EXPECT_TRUE(buffer.AppendTo(empty, fallible));
++  EXPECT_TRUE(empty.IsEmpty());
++}
++
++TEST(CharacterDataBufferTest, AppendClearedToUTF8)
++{
++  CharacterDataBuffer buffer;
++  ASSERT_TRUE(buffer.SetTo(u"text"_ns, false, false));
++  ASSERT_TRUE(buffer.SetTo(EmptyString(), false, false));
++  nsCString destination("prefix");
++  EXPECT_TRUE(buffer.AppendTo(destination, fallible));
++  EXPECT_EQ(destination, "prefix"_ns);
++}
++
++TEST(CharacterDataBufferTest, AppendNonemptyToUTF8)
++{
++  CharacterDataBuffer buffer;
++  nsCString destination("prefix:");
++  ASSERT_TRUE(buffer.SetTo(u"\u00E9"_ns, false, false));
++  ASSERT_FALSE(buffer.Is2b());
++  ASSERT_TRUE(buffer.AppendTo(destination, fallible));
++  EXPECT_EQ(destination, "prefix:\xC3\xA9"_ns);
++
++  ASSERT_TRUE(buffer.SetTo(u"\u6F22"_ns, false, true));
++  ASSERT_TRUE(buffer.Is2b());
++  ASSERT_TRUE(buffer.AppendTo(destination, fallible));
++  EXPECT_EQ(destination, "prefix:\xC3\xA9\xE6\xBC\xA2"_ns);
++}
++
+ };  // namespace mozilla::dom

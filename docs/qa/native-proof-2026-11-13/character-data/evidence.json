@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "historical_floorp_commit": "984509d2053be7bae9027133bda7259cd706b208",
+  "historical_runtime_commit": "8965ffc346d426ccdf919bd18585e4d4a0c21654",
+  "platform": "macOS ARM64; native Debug, tests enabled, optimization disabled",
+  "historical_results": {
+    "native_build": "success, 65m50s",
+    "gtest": {
+      "tests": 20,
+      "failures": 0
+    },
+    "browser_regression": {
+      "assertions_passed": 4,
+      "tests_passed": 1,
+      "native_exit": 0
+    }
+  },
+  "publication_checks": {
+    "date_utc": "2026-11-16",
+    "git_apply_check_exact_runtime_base": "passed",
+    "current_runtime_build_or_test": "not performed"
+  },
+  "published_artifacts": {
+    "character-data-empty-utf8-append.patch": "b948810ee7d1352dc521d57aafef3e05fb1955e5ae9358e895dc5828a2bb2b2f",
+    "browser_empty_style_text_utf8.js": "a4dd44aa24dc7bae5b26a83d74b2aa594699fa1617dc1fd8de7f6fa4917adc49"
+  },
+  "retained_local_evidence_sha256": {
+    "empty-append-native-build.log": "3fdd76be61450e61344733b90853ee60d19b347b57bccc48aad7908eb3ef3d25",
+    "empty-append-gtest.log": "65db62a01fa1c43e0eeab09bd3654dd15469a70c12dc4ab93eccb9a44c02004f",
+    "empty-style-after-fix-v2/empty-style-after-fix-v2.jsonl": "355be5c9285da03dc2f46293edbd1568235d8024dab275ff23065674564e43b9",
+    "empty-style-after-fix-v2/empty-style-after-fix-v2.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+  }
+}
