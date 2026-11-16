@@ -1,7 +1,7 @@
 # macOS native-product proof: publication boundary
 
 This is a **non-green evidence handoff**, not a product fix or a release gate.
-It preserves the completed, focused checks from 2026-11-15 without publishing
+It preserves the completed historical cohort and focused checks from 2026-11-15 without publishing
 private profiles, raw logs, binaries or unreviewed candidate patches.
 
 ## Existing reusable machinery
@@ -73,7 +73,7 @@ retain their final failure verdict here.
 | Asset category | Disposition |
 | --- | --- |
 | Reusable native runner, suite config, unit tests and setup instructions | Already in #3138; identical Mac copies omitted |
-| Focused completion/provenance evidence | Sanitized allowlisted ledger in this PR |
+| Cohort and focused completion/provenance evidence | Sanitized case-outcome CSV and allowlisted ledgers in this PR |
 | Product visibility and split-panel patches | Excluded: candidate state and unresolved shutdown failures |
 | Additional workspace diagnostic source | Excluded pending navigation synchronization and rerun |
 | Ad hoc parallel/recovery launchers and port overrides | Excluded: local candidate topology, not a portable supported runner |
@@ -106,3 +106,52 @@ broader UI claims are historical report evidence, not fresh reruns in this PR.
 Publishing these product changes safely still requires applying each coherent
 patch to current main, checking overlap and running its focused tests. This
 inventory does not claim that work has already been done.
+
+
+## Reconstructed full first-pass cohort
+
+The [526-row outcome CSV](macos-cohort-outcomes-2026-11-14.csv) was reconstructed
+from actual Mac JSONL on 2026-11-16, not copied from the stale coverage ledger.
+[Selection patterns, manifest hashes, source hashes and counting rules](macos-cohort-provenance-2026-11-14.json)
+make the selected historical evidence explicit. Final observed events range from
+2026-11-13 07:28:07 UTC through 2026-11-14 15:47:42 UTC. These are multi-phase,
+unoptimized Debug product runs, not a fresh run of current main or one immutable
+product build. Later candidate experiments above remain separate.
+
+| Scope | Observed identities | PASS | FAIL | TIMEOUT | ERROR | SKIP |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| P0 browser | 203 | 147 | 34 | 17 | 0 | 5 |
+| P1 browser | 224 | 167 | 11 | 28 | 0 | 18 |
+| P1 xpcshell | 12 | 11 | 1 | 0 | 0 | 0 |
+| P1 Marionette | 80 | 52 | 6 | 0 | 16 | 6 |
+| P2 xpcshell | 6 | 6 | 0 | 0 | 0 | 0 |
+| P2 browser | 1 | 1 | 0 | 0 | 0 | 0 |
+
+Counting is by `(suite, normalized test identifier)`, not by log line, assertion,
+or worker attempt. The selected sources include first-pass, unobserved-case
+continuation, parallel recovery and late recovery only. Candidate, diagnostic
+and later targeted reruns are excluded. Source lists are explicit in the JSON.
+Fixed Runtime/installed-xpcshell relative prefixes are removed; no personal
+absolute paths or log messages are copied into the CSV.
+
+Browser identities are checked against the original manifest sections: all 203
+P0 and all 224 P1 entries are observed, with no missing registered entry. A
+synthetic `automation.py` TIMEOUT is excluded from the manifest count but retained
+in the provenance as a harness failure. It is not a 225th P1 test and is not
+silently treated as a success. Other shutdown/harness failures are likewise not
+converted into invented case rows.
+
+When a case emits multiple `test_end` events, the last timestamped event wins
+(ties: source path then line number); the CSV also preserves observation count
+and the ordered distinct status history. This retains later TIMEOUT/FAIL after
+an initial PASS rather than cherry-picking a pass or counting it twice. There
+are zero duplicate suite/test identities in the exported rows.
+
+Marionette's 80 emitted identities mix executed test methods and **file-level
+skip records**. They are neither 80 manifest files nor 80 executed methods.
+SKIP elsewhere is also observed coverage, not executed coverage. P2 browser's
+one behavioral PASS still has a known shutdown failure. Per-case PASS counts
+never override nonzero native exits, missing completion or shutdown leaks;
+this reconstructed coverage does **not** establish green suites or a release
+gate. Raw evidence remains private, with the same public-verifiability limitation
+as the focused ledger.
