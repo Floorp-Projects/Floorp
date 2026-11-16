@@ -2,6 +2,7 @@ import React from "react";
 import { FormProvider, useForm, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { BasicSettings } from "./components/BasicSettings.tsx";
+import { BackupSettings } from "./components/BackupSettings.tsx";
 import { getWorkspaceSettings, saveWorkspaceSettings } from "./dataManager.ts";
 import type { WorkspacesFormData } from "@/types/pref.ts";
 import { Button } from "@/components/common/button.tsx";
@@ -141,7 +142,7 @@ export default function Page() {
             className={styles.sections}
           >
             <BasicSettings />
-            {/* <BackupSettings /> */}
+            <BackupSettings />
           </fieldset>
         </form>
       </FormProvider>

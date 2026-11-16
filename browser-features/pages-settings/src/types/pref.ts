@@ -91,6 +91,9 @@ export const zWorkspacesFormData = t.type({
   showWorkspaceNameOnToolbar: t.boolean,
   closePopupAfterClick: t.boolean,
   exitOnLastTabClose: t.boolean,
+  backupEnabled: t.boolean,
+  backupIntervalMinutes: t.number,
+  backupRetentionDays: t.number,
 });
 
 export type WorkspacesFormData = t.TypeOf<typeof zWorkspacesFormData>;
