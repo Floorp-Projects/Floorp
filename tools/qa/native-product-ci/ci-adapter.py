@@ -22,6 +22,8 @@ def clean_environment(env):
           'XDG_RUNTIME_DIR','DBUS_SESSION_BUS_ADDRESS','MOZBUILD_STATE_PATH'}
     out={k:v for k,v in env.items() if k in keep}
     out['MOZ_DISABLE_NONLOCAL_CONNECTIONS']='1'
+    # No bytecode caches inside snapshotted objdir/source trees.
+    out['PYTHONDONTWRITEBYTECODE']='1'
     return out
 
 

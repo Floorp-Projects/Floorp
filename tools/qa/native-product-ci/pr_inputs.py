@@ -33,7 +33,7 @@ def select(event, name, repository, checkout_sha, lock_bytes):
     artifacts=[a for a in lock.get('artifacts',[]) if a.get('platform')=='linux' and a.get('architecture')=='x86_64']
     if len(artifacts)!=1:raise ValueError('ambiguous/missing Linux Runtime version')
     version=artifacts[0].get('version','')
-    if not re.fullmatch('[0-9]+\.[0-9]+(?:\.[0-9]+)?',version):raise ValueError('invalid Runtime version')
+    if not re.fullmatch(r'[0-9]+\.[0-9]+(?:\.[0-9]+)?',version):raise ValueError('invalid Runtime version')
     return {'floorp_sha':floorp,'runtime_sha':runtime,'runtime_tree':tree,'runtime_version':version,
             'lock_sha256':hashlib.sha256(lock_bytes).hexdigest()}
 

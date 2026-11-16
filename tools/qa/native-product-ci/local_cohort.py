@@ -24,22 +24,47 @@ REQUIRED_SOURCE_FILES = ('mach','testing/xpcshell/runxpcshelltests.py',
                          'testing/mochitest/runtests.py','testing/marionette/mach_commands.py')
 
 
-def digest(path):return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+# Files the native harness itself (re)writes inside snapshotted objdir trees
+# during resolution and runs. They are derived outputs, not build inputs:
+# Python bytecode caches (anywhere), and mochitest's generated run manifest
+# and pywebsocket log next to runtests.py (testing/mochitest/runtests.py).
+# Everything else in these trees must stay byte-identical across the run.
+EPHEMERAL_DIRS=frozenset({'__pycache__'})
+EPHEMERAL_SUFFIXES=('.pyc',)
+EPHEMERAL_TREE_FILES={'_tests/testing/mochitest':frozenset({'tests.json','websock.log'})}
+
+
+def digest(path):
+    h=hashlib.sha256()
+    with Path(path).open('rb') as stream:
+        for block in iter(lambda: stream.read(1024*1024), b''):h.update(block)
+    return h.hexdigest()
+
+
+def _raise(error):raise error
 
 
 def _inside(path, roots):
     return any(path==r or r in path.parents for r in roots)
 
 
-def _walk(root, allowed=()):
-    """Digest a build tree by content, following directory symlinks only into
-    `root` or the explicitly trusted same-worker `allowed` roots.
+def _walk(root, allowed=(), ephemeral=frozenset()):
+    """Digest a build tree by content.
 
-    Mozilla objdirs link test and support directories back into the source
-    checkout. Such a link is recorded (link text) and its content is digested
-    as if it were a real directory, so a dereferencing copy of the tree has the
-    same entries. A link that leaves the trusted roots, is broken or loops is
-    rejected with its tree-relative path.
+    Directory symlinks are followed only into `root` or the explicitly trusted
+    same-worker `allowed` roots. Mozilla objdirs link test and support
+    directories back into the source checkout; such a link's content is
+    digested as if it were a real directory, so a dereferencing copy of the
+    tree has the same entries. A directory link that leaves the trusted roots
+    or loops is rejected with its tree-relative path.
+
+    File symlinks are content-digested wherever they point (dist/bin links
+    into the checkout and toolchains); they are not confined to trusted roots.
+    The text of every symlink, file or directory, is recorded so a retarget to
+    identical content is still detected.
+
+    Harness-written derived outputs (EPHEMERAL_*, plus `ephemeral` names at
+    the tree root) are skipped. Unreadable directories fail the walk.
     """
     root=Path(root).resolve()
     gate.require(root.is_dir(), 'missing tree: '+str(root))
@@ -47,27 +72,46 @@ def _walk(root, allowed=()):
     entries={};links={};chains={str(root):frozenset({root})}
     # Read targets and record bytes; never rewrite links or claim this
     # snapshot can be extracted on another worker.
-    for base, dirs, files in os.walk(root, followlinks=True):
+    for base, dirs, files in os.walk(root, followlinks=True, onerror=_raise):
         chain=chains.pop(base)
+        dirs[:]=[d for d in dirs if d not in EPHEMERAL_DIRS]
         for directory in dirs:
             path=Path(base)/directory;rel=str(path.relative_to(root))
             real=path.resolve()
             if path.is_symlink():
-                gate.require(real.is_dir(), 'broken directory symlink: '+rel)
                 gate.require(_inside(real, roots), 'directory symlink leaves trusted build roots: '+rel+' -> '+os.readlink(path))
                 links[rel]=os.readlink(path)
             gate.require(real not in chain, 'directory symlink cycle: '+rel)
             chains[str(path)]=chain|{real}
         for name in files:
             path=Path(base)/name;rel=str(path.relative_to(root))
+            if name.endswith(EPHEMERAL_SUFFIXES) or rel in ephemeral:continue
+            # os.walk lists broken links (file or directory) here.
             gate.require(path.is_file(), 'missing/special build material: '+rel)
+            if path.is_symlink():links[rel]=os.readlink(path)
             entries[rel]={'sha256':digest(path),'executable':bool(path.stat().st_mode & 0o111)}
     gate.require(entries, 'empty build material tree')
     return entries, links
 
 
-def tree(root, allowed=()):
-    return _walk(root, allowed)[0]
+def tree(root, allowed=(), ephemeral=frozenset()):
+    return _walk(root, allowed, ephemeral)[0]
+
+
+def differences(before, after, limit=20):
+    """Human-readable paths that differ between two snapshots."""
+    out=[]
+    for key in sorted(set(before)|set(after)):
+        if before.get(key)==after.get(key):continue
+        if key in ('trees','directory_links'):
+            for top in sorted(set(before.get(key,{}))|set(after.get(key,{}))):
+                a=before.get(key,{}).get(top,{});b=after.get(key,{}).get(top,{})
+                for rel in sorted(set(a)|set(b)):
+                    if a.get(rel)!=b.get(rel):
+                        state='added' if rel not in a else 'removed' if rel not in b else 'changed'
+                        out.append(f'{key}:{top}/{rel} {state}')
+        else:out.append(key+' changed')
+    return out[:limit]+([f'... {len(out)-limit} more'] if len(out)>limit else [])
 
 
 def git_sha(root):
@@ -95,9 +139,11 @@ def snapshot(paths, floorp_sha, runtime_sha):
         for name in names:files[str(root/name)]=digest(root/name)
     trees={};directory_links={}
     for p in REQUIRED_OBJECT_TREES:
-        # Same-worker objdir links may point into the SHA-checked Runtime
-        # checkout (which contains the Floorp checkout) or the objdir itself.
-        trees[str(args.objdir/p)],directory_links[str(args.objdir/p)]=_walk(args.objdir/p,(args.runtime,args.objdir))
+        # Same-worker objdir links may point into this worker's Runtime
+        # checkout (HEAD SHA and tracked diff recorded; untracked files are
+        # not) which contains the Floorp checkout, or the objdir itself.
+        trees[str(args.objdir/p)],directory_links[str(args.objdir/p)]=_walk(
+            args.objdir/p,(args.runtime,args.objdir),EPHEMERAL_TREE_FILES.get(p,frozenset()))
     trees[str(args.resources)],directory_links[str(args.resources)]=_walk(args.resources)
     return {'schema':'floorp-local-native-cohort/1','paths':paths,'floorp_sha':floorp_sha,
             'runtime_sha':runtime_sha,'source_diffs':{str(root):hashlib.sha256(subprocess.check_output(['git','-C',str(root),'diff','--binary','HEAD','--'])).hexdigest() for root in (args.runtime,args.floorp)},'runner_sha256':digest(RUNNER),'config_sha256':digest(CONFIG),
@@ -107,7 +153,7 @@ def snapshot(paths, floorp_sha, runtime_sha):
 def verify(record, floorp_sha, runtime_sha):
     gate.require(record.get('schema')=='floorp-local-native-cohort/1','unsupported local cohort')
     current=snapshot(record['paths'],floorp_sha,runtime_sha)
-    gate.require(current==record,'native cohort changed after producer snapshot')
+    gate.require(current==record,'native cohort changed after producer snapshot: '+'; '.join(differences(record,current)))
     return current
 
 

@@ -215,5 +215,18 @@ class DryRunTests(unittest.TestCase):
         self.assertTrue(lock.exists())
         self.assertTrue(json.loads((logs/'run.json').read_text())['manual_cleanup_required'])
         self.assertFalse(json.loads((logs/'run.json').read_text())['results'][0]['passed'])
+    def test_module_inventory_follows_directory_links_like_copytree(self):
+        import shutil
+        src = self.root/'srcmods'; src.mkdir(); (src/'m.sys.mjs').write_text('m')
+        objmods = self.root/'objmods'; objmods.mkdir(); (objmods/'own.js').write_text('o')
+        (objmods/'linked').symlink_to(src)
+        copy = self.root/'copymods'; shutil.copytree(objmods, copy, symlinks=False)
+        self.assertEqual(r.module_inventory(objmods), r.module_inventory(copy))
+        self.assertIn('linked/m.sys.mjs', r.module_inventory(objmods))
+    def test_module_inventory_ignores_bytecode_caches(self):
+        mods = self.root/'mods2'; mods.mkdir(); (mods/'a.py').write_text('a')
+        before = r.module_inventory(mods)
+        (mods/'__pycache__').mkdir(); (mods/'__pycache__'/'a.cpython-312.pyc').write_bytes(b'b')
+        self.assertEqual(before, r.module_inventory(mods))
 
 if __name__=='__main__':unittest.main()

@@ -36,7 +36,9 @@ jobs:
       - name: Contract test dependency
         run: sudo apt-get update && sudo apt-get install -y python3-yaml
       - name: Validate contract implementation (not native test evidence)
-        run: python3 -m unittest discover -s tools/qa/native-product-ci -v
+        run: |
+          python3 -m unittest discover -s tools/qa/native-product-ci -v
+          python3 -m unittest discover -s tools/qa/native-product-tests -v
       - name: Resolve exact PR head and lock-derived Runtime
         id: pins
         run: python3 tools/qa/native-product-ci/pr_inputs.py
@@ -124,7 +126,9 @@ jobs:
         with:
           name: native-evidence-${{ github.run_id }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/native-evidence/
-          if-no-files-found: error
+          # Missing evidence after an earlier failure must not mask that root
+          # cause; the gate job still fails closed on a missing artifact.
+          if-no-files-found: warn
           retention-days: 14
 
   gate:
