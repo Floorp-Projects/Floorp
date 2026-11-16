@@ -31,8 +31,9 @@ Deno.test("non-web, missing globals and disconnected browsers are skipped", asyn
     ]
   ) {
     let calls = 0;
-    await new LatestWebObservation().run(b, () => b, async () => {
+    await new LatestWebObservation().run(b, () => b, () => {
       calls++;
+      return Promise.resolve();
     }, () => {
       calls++;
     });
@@ -56,8 +57,8 @@ Deno.test("live manifest rejection is reported without an unhandled rejection", 
   const b = browser();
   const failure = new Error("real manifest failure");
   let seen;
-  await new LatestWebObservation().run(b, () => b, async () => {
-    throw failure;
+  await new LatestWebObservation().run(b, () => b, () => {
+    return Promise.reject(failure);
   }, (e) => {
     seen = e;
   });
@@ -121,8 +122,8 @@ Deno.test("selected-browser teardown getter is safe", async () => {
   const b = browser();
   await new LatestWebObservation().run(b, () => {
     throw Error("window closed");
-  }, async () => {
-    throw Error("must not run");
+  }, () => {
+    return Promise.reject(Error("must not run"));
   }, () => {
     throw Error("must not report");
   });
