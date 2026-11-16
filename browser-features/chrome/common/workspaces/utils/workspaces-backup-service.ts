@@ -24,7 +24,6 @@ import {
   WORKSPACE_TAB_ATTRIBUTION_ID,
 } from "./workspaces-static-names.ts";
 import {
-  BACKUP_FILE_EXTENSION,
   buildBackupFile,
   buildBackupSummary,
   filterBackupFiles,
@@ -115,7 +114,12 @@ const isPrivateWindow = (window: Window): boolean => {
       "WorkspacesBackupService: failed to detect private window",
       error,
     );
-    return false;
+    const privateUI = (
+      window as unknown as {
+        gPrivateBrowsingUI?: { privateWindow?: boolean };
+      }
+    ).gPrivateBrowsingUI;
+    return privateUI?.privateWindow === true;
   }
 };
 
@@ -538,5 +542,3 @@ export class WorkspacesBackupService {
     );
   }
 }
-
-export const WORKSPACE_BACKUP_FILE_EXTENSION = BACKUP_FILE_EXTENSION;
