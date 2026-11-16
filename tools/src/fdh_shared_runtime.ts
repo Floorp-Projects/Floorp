@@ -3,7 +3,10 @@ import { types } from "node:util";
 import * as oidc from "openid-client";
 import { createRemoteJWKSet, customFetch } from "jose";
 import { parseSharedServiceConfig } from "./fdh_shared_config.ts";
-import { verifySharedAccessToken } from "./fdh_shared_access.ts";
+import {
+  SharedAccessError,
+  verifySharedAccessToken,
+} from "./fdh_shared_access.ts";
 import { createSharedGoogleBrokerResolver } from "./fdh_shared_google_broker.ts";
 import type {
   SharedRuntimePrivateIO,
@@ -17,6 +20,18 @@ const unavailable = Object.freeze({
   productionQualified: false as const,
   protectedOperationsAllowed: false as const,
 });
+/** Preserve only the maintained verifier's safe scope classification. Never read
+ * arbitrary error properties, accessors, Proxy traps, causes or provider text. */
+function insufficientScope(error: unknown): boolean {
+  if (
+    typeof error !== "object" || error === null || types.isProxy(error) ||
+    !types.isNativeError(error) ||
+    Object.getPrototypeOf(error) !== SharedAccessError.prototype
+  ) return false;
+  const code = Object.getOwnPropertyDescriptor(error, "code");
+  return code !== undefined && "value" in code &&
+    code.value === "insufficient-scope";
+}
 const MAX_BYTES = 256 * 1024;
 const TIMEOUT_MS = 5000;
 function snapshot(value: unknown): SharedRuntimePrivateIO {
@@ -94,7 +109,12 @@ export async function createSharedRuntime(
   }
   let lastNow = -1;
   const now = () => {
-    const n = io.now();
+    let n: number;
+    try {
+      n = io.now();
+    } catch {
+      throw fail();
+    }
     if (
       !Number.isSafeInteger(n) || n < 0 || n < lastNow || n > 8_640_000_000_000
     ) throw fail();
@@ -324,7 +344,10 @@ export async function createSharedRuntime(
             });
             if (verified.expiresAt <= now()) throw fail();
             return verified;
-          } catch {
+          } catch (error) {
+            if (insufficientScope(error)) {
+              throw new SharedAccessError("insufficient-scope");
+            }
             throw fail();
           }
         },

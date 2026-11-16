@@ -315,13 +315,12 @@ for (const expires of [0, -1, 0.5, NaN, Infinity, 86401]) {
     );
   });
 }
-Deno.test("stale JWT, wrong scope and malformed token fail with constant private diagnostics", async () => {
+Deno.test("stale JWT and malformed token fail with constant private diagnostics", async () => {
   const f = fixture();
   const d = await deps(f);
   for (
     const token of [
       await signed(1000),
-      await signed(2000, { scope: "openid" }),
       "broken.private.token",
     ]
   ) {
@@ -804,7 +803,7 @@ Deno.test("lookup and clock private exceptions cannot escape diagnostics", async
     true,
   );
 });
-Deno.test("access policy pins exact audience, issuer and scope despite signed token", async () => {
+Deno.test("access policy pins exact audience and issuer despite signed token", async () => {
   const f = fixture();
   const d = await deps(f);
   const tokens = await Promise.all([
@@ -819,7 +818,6 @@ Deno.test("access policy pins exact audience, issuer and scope despite signed to
       kid: jwk.kid,
     }).setIssuer(issuer).setAudience("reader").setSubject(access.subject)
       .setExpirationTime(2000).sign(keys.privateKey),
-    signed(2000, { scope: "openid" }),
   ]);
   for (const token of tokens) {
     await assertRejects(
@@ -882,3 +880,135 @@ Deno.test("root-context Keycloak issuer is explicitly accepted with pinned metad
   assertEquals(result.mode, "configured");
   assertEquals(f.state.lookups, ["FDH_READER_SECRET"]);
 });
+
+Deno.test("runtime to entry keeps valid signed wrong-scope token at 403 insufficient_scope", async () => {
+  const f = fixture();
+  f.state.now = Math.floor(Date.now() / 1000);
+  const d = await deps(f);
+  const handler = createSharedEntryHandler(settings(), d);
+  const token = await signed(f.state.now + 120, { scope: "openid" });
+  const response = await handler(
+    new Request(settings().publicOrigin + "/mcp", {
+      headers: { authorization: "Bearer " + token },
+    }),
+  );
+  assertEquals(response.status, 403);
+  assertEquals(
+    response.headers.get("www-authenticate"),
+    'Bearer resource_metadata="https://fdh.example.test/.well-known/oauth-protected-resource/mcp", error="insufficient_scope", scope="fdh:probe"',
+  );
+  assertEquals(f.state.calls.map((c) => c.method), ["GET", "GET"]);
+  assertEquals(f.state.grants, 0);
+  assertEquals((await response.text()).includes(token), false);
+});
+Deno.test("runtime to entry keeps malformed/expired signed tokens at redacted 401", async () => {
+  const f = fixture();
+  f.state.now = Math.floor(Date.now() / 1000);
+  const d = await deps(f);
+  const handler = createSharedEntryHandler(settings(), d);
+  for (
+    const token of [
+      "PRIVATE_BROKEN_TOKEN",
+      await signed(f.state.now, { scope: "fdh:probe" }),
+    ]
+  ) {
+    const response = await handler(
+      new Request(settings().publicOrigin + "/mcp", {
+        headers: { authorization: "Bearer " + token },
+      }),
+    );
+    assertEquals(response.status, 401);
+    assertEquals(
+      response.headers.get("www-authenticate"),
+      'Bearer resource_metadata="https://fdh.example.test/.well-known/oauth-protected-resource/mcp"',
+    );
+    const body = await response.text();
+    assertEquals(body.includes("PRIVATE"), false);
+    assertEquals(body.includes(token), false);
+  }
+  assertEquals(f.state.calls.some((c) => c.method === "POST"), false);
+});
+
+import { SharedAccessError } from "./fdh_shared_access.ts";
+Deno.test("known insufficient-scope gets a fresh constant SharedAccessError with no cause", async () => {
+  const f = fixture();
+  const d = await deps(f);
+  const token = await signed(2000, { scope: "openid" });
+  const error = await assertRejects(
+    () => d.verifyAccessToken(token),
+    SharedAccessError,
+    "Shared access token rejected",
+  );
+  assertEquals(error.code, "insufficient-scope");
+  assertEquals(Object.hasOwn(error, "cause"), false);
+  assertEquals(f.state.calls.some((c) => c.method === "POST"), false);
+});
+for (const kind of ["raw", "known-class", "getter", "proxy"]) {
+  Deno.test(
+    "post-verification private clock error remains redacted 401 without traps: " +
+      kind,
+    async () => {
+      const f = fixture();
+      f.state.now = Math.floor(Date.now() / 1000);
+      let traps = 0;
+      let reads = 0;
+      let armed = false;
+      let evil: unknown = new Error("PRIVATE_CLOCK_PROVIDER");
+      if (kind === "known-class") {
+        evil = new SharedAccessError("insufficient-scope");
+      }
+      if (kind === "getter") {
+        const error = new SharedAccessError("insufficient-scope");
+        Object.defineProperty(error, "code", {
+          get() {
+            traps++;
+            throw Error("PRIVATE_GETTER");
+          },
+        });
+        evil = error;
+      }
+      if (kind === "proxy") {
+        evil = new Proxy(new SharedAccessError("insufficient-scope"), {
+          get() {
+            traps++;
+            throw Error("PRIVATE_PROXY");
+          },
+          getPrototypeOf() {
+            traps++;
+            throw Error("PRIVATE_PROTO");
+          },
+          getOwnPropertyDescriptor() {
+            traps++;
+            throw Error("PRIVATE_DESCRIPTOR");
+          },
+        });
+      }
+      const result = await createSharedRuntime(settings(), {
+        ...f.io,
+        now: () => {
+          if (armed && ++reads === 2) throw evil;
+          return f.state.now;
+        },
+      });
+      if (result.mode !== "configured") throw Error("expected configured");
+      armed = true;
+      const token = await signed(f.state.now + 120);
+      const handler = createSharedEntryHandler(settings(), result.dependencies);
+      const response = await handler(
+        new Request(settings().publicOrigin + "/mcp", {
+          headers: { authorization: "Bearer " + token },
+        }),
+      );
+      assertEquals(response.status, 401);
+      assertEquals(traps, 0);
+      assertEquals(
+        response.headers.get("www-authenticate")?.includes(
+          "insufficient_scope",
+        ),
+        false,
+      );
+      assertEquals((await response.text()).includes("PRIVATE"), false);
+      assertEquals(f.state.calls.some((c) => c.method === "POST"), false);
+    },
+  );
+}
