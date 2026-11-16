@@ -12,10 +12,23 @@ type InitializeResult = {
   error?: string | null;
 };
 
+interface BackupBridgeResult {
+  requestId: string;
+  success: boolean;
+  error?: string;
+  data?: unknown;
+}
+
+interface PendingBackupRequest {
+  resolve: (result: BackupBridgeResult) => void;
+  timer: number;
+}
+
 export class NRWorkspacesChild extends JSWindowActorChild {
   #pendingInitializationPromise: Promise<InitializeResult> | null = null;
   #pendingInitializationResolver: ((result: InitializeResult) => void) | null =
     null;
+  #pendingBackupRequests = new Map<string, PendingBackupRequest>();
 
   actorCreated() {
     const window = this.contentWindow;
@@ -26,6 +39,21 @@ export class NRWorkspacesChild extends JSWindowActorChild {
     ) {
       Cu.exportFunction(this.initializeWorkspaces.bind(this), window, {
         defineAs: "NRInitializeWorkspaces",
+      });
+      Cu.exportFunction(this.backupNow.bind(this), window, {
+        defineAs: "NRWorkspacesBackupNow",
+      });
+      Cu.exportFunction(this.listBackups.bind(this), window, {
+        defineAs: "NRWorkspacesListBackups",
+      });
+      Cu.exportFunction(this.restoreBackup.bind(this), window, {
+        defineAs: "NRWorkspacesRestoreBackup",
+      });
+      Cu.exportFunction(this.deleteBackup.bind(this), window, {
+        defineAs: "NRWorkspacesDeleteBackup",
+      });
+      Cu.exportFunction(this.deleteAllBackups.bind(this), window, {
+        defineAs: "NRWorkspacesDeleteAllBackups",
       });
     }
   }
@@ -62,8 +90,58 @@ export class NRWorkspacesChild extends JSWindowActorChild {
         this.#pendingInitializationResolver = null;
         break;
       }
+      case "NRWorkspaces:BackupResult": {
+        const data = message.data as BackupBridgeResult | undefined;
+        if (!data || typeof data.requestId !== "string") {
+          break;
+        }
+        const pending = this.#pendingBackupRequests.get(data.requestId);
+        if (!pending) {
+          break;
+        }
+        this.#pendingBackupRequests.delete(data.requestId);
+        globalThis.clearTimeout(pending.timer);
+        pending.resolve(data);
+        break;
+      }
     }
   }
+
+  backupNow(): Promise<BackupBridgeResult> {
+    return this.sendBackupRequest("NRWorkspaces:BackupNow");
+  }
+
+  listBackups(): Promise<BackupBridgeResult> {
+    return this.sendBackupRequest("NRWorkspaces:ListBackups");
+  }
+
+  restoreBackup(fileName: string): Promise<BackupBridgeResult> {
+    return this.sendBackupRequest("NRWorkspaces:RestoreBackup", { fileName });
+  }
+
+  deleteBackup(fileName: string): Promise<BackupBridgeResult> {
+    return this.sendBackupRequest("NRWorkspaces:DeleteBackup", { fileName });
+  }
+
+  deleteAllBackups(): Promise<BackupBridgeResult> {
+    return this.sendBackupRequest("NRWorkspaces:DeleteAllBackups");
+  }
+
+  private sendBackupRequest(
+    name: string,
+    data: Record<string, unknown> = {},
+  ): Promise<BackupBridgeResult> {
+    const requestId = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    return new Promise<BackupBridgeResult>((resolve) => {
+      const timer = globalThis.setTimeout(() => {
+        this.#pendingBackupRequests.delete(requestId);
+        resolve({ requestId, success: false, error: "timeout" });
+      }, 30_000);
+      this.#pendingBackupRequests.set(requestId, { resolve, timer });
+      this.sendAsyncMessage(name, { ...data, requestId });
+    });
+  }
+
   handleEvent(_event: Event): void {
     // No-op
   }
