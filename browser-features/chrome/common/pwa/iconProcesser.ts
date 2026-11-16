@@ -162,8 +162,13 @@ export class IconProcesser {
       if (!actor) return "";
       iconCandidates = await actor.sendQuery("GetPageIcons");
     } catch (error) {
-      if (!document.current()) return "";
-      throw error;
+      // A stale document is cancelled silently. A live failure is logged and
+      // degrades to the other icon sources (empty icon) as before, so an
+      // install from a page without manifest icons still succeeds.
+      if (document.current()) {
+        console.error("[PWA] Failed to collect icon candidates", error);
+      }
+      return "";
     }
     if (!document.current()) return "";
 
