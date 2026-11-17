@@ -392,12 +392,12 @@ function testPaletteSurfacesTheAction(): void {
 // Member state of adopted groups and split views
 // ---------------------------------------------------------------------------
 
-interface FakeTarget extends MergeTabBrowser {
+interface FakeAdoptTarget extends MergeTabBrowser {
   readonly hidden: XULElement[];
 }
 
 function makeTabElement(workspaceId?: string, hidden = false): XULElement {
-  const tab = document.createElement("tab") as XULElement;
+  const tab = document.createElement("tab") as unknown as XULElement;
   if (workspaceId) tab.setAttribute("floorpWorkspaceId", workspaceId);
   if (hidden) tab.setAttribute("hidden", "true");
   return tab;
@@ -407,14 +407,14 @@ function makeContainer(
   tag: string,
   members: XULElement[],
 ): XULElement & { tabs: XULElement[] } {
-  const container = document.createElement(tag) as XULElement & {
+  const container = document.createElement(tag) as unknown as XULElement & {
     tabs: XULElement[];
   };
   container.tabs = members;
   return container;
 }
 
-function makeTarget(adoptedContainer: XULElement): FakeTarget {
+function makeTarget(adoptedContainer: XULElement): FakeAdoptTarget {
   const hidden: XULElement[] = [];
   return {
     tabs: [],
@@ -447,7 +447,7 @@ function testAdoptedGroupKeepsMemberState(): void {
   const target = makeTarget(adoptedGroup);
 
   const moved = adoptItem(
-    stripItemFor("group", sourceGroup as XULElement, 2),
+    stripItemFor("group", sourceGroup as unknown as XULElement, 2),
     0,
     target,
   );
@@ -487,7 +487,7 @@ function testAdoptedSplitViewKeepsMemberState(): void {
   const target = makeTarget(adoptedSplitView);
 
   const moved = adoptItem(
-    stripItemFor("splitView", sourceSplitView as XULElement, 2),
+    stripItemFor("splitView", sourceSplitView as unknown as XULElement, 2),
     0,
     target,
   );
@@ -514,7 +514,11 @@ function testAdoptedContainerLengthMismatchIsSafe(): void {
   const target = makeTarget(adoptedGroup);
 
   assert(
-    adoptItem(stripItemFor("group", sourceGroup as XULElement, 2), 0, target),
+    adoptItem(
+      stripItemFor("group", sourceGroup as unknown as XULElement, 2),
+      0,
+      target,
+    ),
     "the group should be adopted",
   );
   assertEquals(
