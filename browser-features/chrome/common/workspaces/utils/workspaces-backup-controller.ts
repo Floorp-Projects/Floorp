@@ -36,6 +36,7 @@ export interface WorkspacesBackupFuncs {
  */
 class DetachedWorkspacesBackupHost implements WorkspacesBackupHost {
   private readonly dataManager = new WorkspacesDataManager();
+  public readonly supportsWorkspaceRestore = false;
 
   public isWorkspaceID(id: string): id is TWorkspaceID {
     return this.dataManager.isWorkspaceID(id);
@@ -118,6 +119,12 @@ export class WorkspacesBackupController implements WorkspacesBackupFuncs {
   }
 
   public isRestoreInFlight(): boolean {
+    // A detached service retired mid-restore keeps restoring after its
+    // scheduler and observers are disposed; keep reporting it until it ends.
+    if (this.retiredDetachedService?.isRestoreInFlight()) {
+      return true;
+    }
+    this.retiredDetachedService = null;
     const service = this.getService();
     if (service) {
       return service.backupService.isRestoreInFlight();
@@ -127,9 +134,16 @@ export class WorkspacesBackupController implements WorkspacesBackupFuncs {
 
   public dispose(): void {
     this.disposeDetached();
+    this.retiredDetachedService = null;
   }
 
+  /** A detached service disposed while it was still restoring. */
+  private retiredDetachedService: WorkspacesBackupService | null = null;
+
   private disposeDetached(): void {
+    if (this.detachedService?.isRestoreInFlight()) {
+      this.retiredDetachedService = this.detachedService;
+    }
     this.detachedDisposer?.();
     this.detachedDisposer = null;
     this.detachedService = null;

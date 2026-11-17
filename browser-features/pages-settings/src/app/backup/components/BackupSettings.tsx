@@ -200,6 +200,11 @@ export function BackupSettings() {
           result.error,
         );
         setActionError(result.error ?? "unknown");
+        if (isTimeoutError(result.error)) {
+          // The operation may still finish in the background; show its
+          // result once it does instead of a stale list.
+          void refresh();
+        }
         return false;
       }
       onSuccess?.(result.data);

@@ -776,6 +776,9 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
     const previousDefaultID = workspacesDataStore.defaultID as TWorkspaceID;
     const preRestoreTabs = new Set<XULElement>(globalThis.gBrowser.tabs);
     const previousCurrentID = selectedWorkspaceID();
+    const previousSelectedTab = globalThis.gBrowser.selectedTab as
+      | XULElement
+      | null;
     const preserveTabs = options?.preserveTabs;
     const tabsToReplace = new Set<XULElement>(
       [...globalThis.gBrowser.tabs].filter((tab) =>
@@ -794,10 +797,11 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
         // tab may still exist in the window with a half-applied state. If
         // restoreTabsIntoWindow threw, `outcomes` is empty, so also sweep tabs
         // that did not exist before and carry a restored workspace ID. Tabs
-        // the user opened meanwhile carry a pre-restore ID and are kept; this
-        // relies on restoreTabsIntoWindow creating tabs synchronously after
-        // its single await, so the user cannot switch to a restored workspace
-        // mid-restore. Revisit if an await is added inside its tab loop.
+        // the user opened meanwhile normally carry a pre-restore ID and are
+        // kept. The restored workspaces already exist during the single
+        // `ensureSessionStore()` await in restoreTabsIntoWindow, so a tab the
+        // user opens in one of them in that brief window is swept too; its
+        // tab loop is synchronous. Revisit if an await is added inside it.
         const restoredIds = new Set<string>(restoredOrder);
         const created = new Set<XULElement>(
           outcomes.flatMap((outcome) => (outcome.tab ? [outcome.tab] : [])),
@@ -816,14 +820,22 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
         // once per tab being removed.
         const gBrowser = globalThis.gBrowser;
         if (created.has(gBrowser.selectedTab)) {
-          const fallbackTab = [...preRestoreTabs].find((tab) =>
+          const usable = (tab: XULElement): boolean =>
             tab.isConnected &&
-            (!previousCurrentID ||
-              tab.getAttribute(WORKSPACE_TAB_ATTRIBUTION_ID) ===
-                previousCurrentID)
-          ) ?? [...preRestoreTabs].find((tab) =>
-            tab.isConnected
-          );
+            !(tab as XULElement & { closing?: boolean }).closing;
+          // Prefer the tab that was selected before the restore (usually the
+          // Hub page that started it), then any tab of the previous workspace.
+          const fallbackTab = (previousSelectedTab &&
+              usable(previousSelectedTab)
+            ? previousSelectedTab
+            : null) ??
+            [...preRestoreTabs].find((tab) =>
+              usable(tab) &&
+              (!previousCurrentID ||
+                tab.getAttribute(WORKSPACE_TAB_ATTRIBUTION_ID) ===
+                  previousCurrentID)
+            ) ??
+            [...preRestoreTabs].find(usable);
           if (fallbackTab) {
             gBrowser.selectedTab = fallbackTab;
           }

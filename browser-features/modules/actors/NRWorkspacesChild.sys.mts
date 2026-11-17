@@ -38,6 +38,12 @@ export class NRWorkspacesChild extends JSWindowActorChild {
       pending.resolve({ requestId, success: false, error: "actor-destroyed" });
     }
     this.#pendingBackupRequests.clear();
+    this.#pendingInitializationResolver?.({
+      success: false,
+      error: "actor-destroyed",
+    });
+    this.#pendingInitializationResolver = null;
+    this.#pendingInitializationPromise = null;
   }
 
   #pendingInitializationPromise: Promise<InitializeResult> | null = null;

@@ -116,6 +116,9 @@ const truncate = (value: string | null, max: number): string | null =>
 /** Backoff used when a scheduled run is skipped without writing anything. */
 const SCHEDULE_SKIP_BACKOFF_MS = 5 * 60 * 1000;
 
+/** Matches the parent actor lock TTL; see isRestoreInFlight(). */
+const RESTORE_IN_FLIGHT_TTL_MS = 11 * 60 * 1000;
+
 /** Largest delay `setTimeout` accepts without overflowing to ~0. */
 const MAX_TIMER_DELAY_MS = 2 ** 31 - 1;
 
@@ -394,6 +397,11 @@ export interface WorkspacesBackupHost {
    * after an additive restore; the detached host has none.
    */
   readonly tabManagerCtx?: { updateTabsVisibility(): void };
+  /**
+   * False when restoreWorkspaceState() always rejects (the detached host).
+   * Lets a destructive restore fail before it writes a safety copy.
+   */
+  readonly supportsWorkspaceRestore?: boolean;
   isWorkspaceID(id: string): id is TWorkspaceID;
   getRawWorkspace(id: TWorkspaceID): TWorkspace | undefined;
   /** Replaces the whole workspace store from a validated backup file. */
@@ -459,9 +467,19 @@ export class WorkspacesBackupService {
    * from capturing a half-restored state.
    */
   private restoreInFlight = false;
+  private restoreStartedAt = 0;
 
+  /**
+   * Whether a restore is running here. A restore whose promise never settles
+   * lapses after RESTORE_IN_FLIGHT_TTL_MS (matching the actor lock), so it
+   * cannot suppress scheduled backups in every window forever.
+   */
   public isRestoreInFlight(): boolean {
-    return this.restoreInFlight;
+    if (!this.restoreInFlight) {
+      return false;
+    }
+    const age = Date.now() - this.restoreStartedAt;
+    return age >= 0 && age < RESTORE_IN_FLIGHT_TTL_MS;
   }
 
   constructor(host: WorkspacesBackupHost) {
@@ -528,8 +546,9 @@ export class WorkspacesBackupService {
   public async backupNow(
     kind: WorkspaceBackupKind = "manual",
   ): Promise<WorkspaceBackupSummary> {
-    if (this.restoreInFlight) {
-      // A capture taken mid-restore would record a half-replaced state.
+    // A capture taken mid-restore (in any window: the capture spans all of
+    // them) would record a half-replaced state.
+    if (this.isRestoreInFlightInAnyWindow()) {
       throw new Error("restore-in-progress");
     }
     const { summary } = await this.captureAndWrite(kind);
@@ -667,10 +686,11 @@ export class WorkspacesBackupService {
     if (!isBackupFileName(fileName)) {
       return { success: false, error: "invalid-file-name" };
     }
-    if (this.restoreInFlight) {
+    if (this.isRestoreInFlight()) {
       return { success: false, error: "restore-in-progress" };
     }
     this.restoreInFlight = true;
+    this.restoreStartedAt = Date.now();
     try {
       return await this.runRestore(fileName);
     } finally {
@@ -688,6 +708,13 @@ export class WorkspacesBackupService {
     const workspacesEnabled = isWorkspacesEnabled();
     const destructive = workspacesEnabled && file.mode === "workspaces";
     let restoreOptions: RestoreWorkspaceStateOptions | undefined;
+
+    // The detached host (workspaces off at startup, or still migrating)
+    // cannot rebuild the store. Refuse before writing a safety copy, so
+    // retries do not pile up pre-restore files that push out real backups.
+    if (destructive && this.host.supportsWorkspaceRestore === false) {
+      return { success: false, error: "workspaces-disabled" };
+    }
 
     // A safety copy is only needed when the restore replaces existing state.
     if (destructive) {
@@ -1074,23 +1101,36 @@ export class WorkspacesBackupService {
 
   /** Whether a restore is running in any browser window (including this one). */
   private isRestoreInFlightInAnyWindow(): boolean {
+    if (this.isRestoreInFlight()) {
+      return true;
+    }
+    let enumerator: ReturnType<typeof Services.wm.getEnumerator>;
     try {
-      const enumerator = Services.wm.getEnumerator("navigator:browser");
-      while (enumerator.hasMoreElements()) {
+      enumerator = Services.wm.getEnumerator("navigator:browser");
+    } catch (error) {
+      console.error(
+        "WorkspacesBackupService: window enumeration failed",
+        error,
+      );
+      // Unknown: prefer skipping one scheduled run over a torn capture.
+      return true;
+    }
+    while (enumerator.hasMoreElements()) {
+      // One misbehaving window must not block every scheduler, so a failing
+      // lookup only skips that window.
+      try {
         const window = enumerator.getNext() as Window & {
           workspacesBackupFuncs?: { isRestoreInFlight?: () => boolean };
         };
         if (window?.workspacesBackupFuncs?.isRestoreInFlight?.() === true) {
           return true;
         }
+      } catch (error) {
+        console.error(
+          "WorkspacesBackupService: restore state lookup failed",
+          error,
+        );
       }
-    } catch (error) {
-      console.error(
-        "WorkspacesBackupService: restore state lookup failed",
-        error,
-      );
-      // Unknown: prefer skipping one scheduled run over a torn capture.
-      return true;
     }
     return false;
   }
@@ -1563,7 +1603,7 @@ export class WorkspacesBackupService {
     const backoffMs = Math.min(intervalMs, SCHEDULE_SKIP_BACKOFF_MS);
     // The capture spans every window, so a restore running in any of them
     // would be captured half-done.
-    if (this.restoreInFlight || this.isRestoreInFlightInAnyWindow()) {
+    if (this.isRestoreInFlightInAnyWindow()) {
       return backoffMs;
     }
     let windows: BrowserWindow[];
