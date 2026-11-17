@@ -280,7 +280,7 @@ const remapIndex = (
  * restorable remains).
  *
  * Top-level keys kept: `entries`, `index`, `requestedIndex`, `userContextId`,
- * `pinned`, `hidden`, `lastAccessed`, `image` (inline data: images only) and
+ * `pinned`, `lastAccessed`, `image` (inline data: images only) and
  * `attributes` (primitive values, workspace markers removed). These are what
  * `SessionStore.setTabState` needs to rebuild the tab and its history.
  * Deliberately NOT kept: `userTypedValue`/`userTypedClear` (typed text),
@@ -324,7 +324,10 @@ export const sanitizeTabState = (
   if (isNonNegativeSafeInt(state.userContextId)) {
     result.userContextId = state.userContextId;
   }
-  for (const key of ["pinned", "hidden"] as const) {
+  // `hidden` is not kept: it reflects workspace visibility at capture time,
+  // and SessionStore would re-hide the tab on restore (e.g. when workspaces
+  // are now disabled and nothing recomputes visibility).
+  for (const key of ["pinned"] as const) {
     if (typeof state[key] === "boolean") {
       result[key] = state[key];
     }

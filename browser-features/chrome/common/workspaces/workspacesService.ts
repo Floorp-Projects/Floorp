@@ -773,9 +773,8 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
     // 2. Snapshot what a rollback needs and decide which tabs the restore
     //    replaces, before mutating any state. Only tabs present now are ever
     //    closed; tabs opened while the restore runs are kept.
-    const previousData = this.cloneWorkspaceMap(workspacesDataStore.data);
-    const previousOrder = [...workspacesDataStore.order] as TWorkspaceID[];
     const previousDefaultID = workspacesDataStore.defaultID as TWorkspaceID;
+    const preRestoreTabs = new Set<XULElement>(globalThis.gBrowser.tabs);
     const previousCurrentID = selectedWorkspaceID();
     const preserveTabs = options?.preserveTabs;
     const tabsToReplace = new Set<XULElement>(
@@ -792,11 +791,26 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
       // Every step is isolated so one failure cannot skip the others.
       try {
         // Remove every tab this restore created, successful or not. A failed
-        // tab may still exist in the window with a half-applied state.
+        // tab may still exist in the window with a half-applied state. If
+        // restoreTabsIntoWindow threw, `outcomes` is empty, so also sweep tabs
+        // that did not exist before and carry a restored workspace ID (tabs
+        // the user opened meanwhile carry a pre-restore ID and are kept).
+        const restoredIds = new Set<string>(restoredOrder);
+        const created = new Set<XULElement>(
+          outcomes.flatMap((outcome) => (outcome.tab ? [outcome.tab] : [])),
+        );
+        for (const tab of globalThis.gBrowser.tabs) {
+          const workspaceId = tab.getAttribute(WORKSPACE_TAB_ATTRIBUTION_ID);
+          if (
+            !preRestoreTabs.has(tab) && workspaceId &&
+            restoredIds.has(workspaceId)
+          ) {
+            created.add(tab);
+          }
+        }
         this.tabManagerCtx.runWithTabCloseSuppressed(() => {
-          for (const outcome of outcomes) {
-            const tab = outcome.tab;
-            if (!tab || !tab.isConnected) {
+          for (const tab of created) {
+            if (!tab.isConnected) {
               continue;
             }
             try {
@@ -816,13 +830,24 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
         );
       }
       try {
+        // Remove only what this restore added instead of writing back a
+        // snapshot, so workspace edits other windows made meanwhile survive.
+        const restoredIds = new Set<TWorkspaceID>(restoredOrder);
         batch(() => {
+          setWorkspacesDataStore("data", (prev) => {
+            const temp = this.cloneWorkspaceMap(prev);
+            for (const id of restoredIds) {
+              temp.delete(id);
+            }
+            return temp as unknown as TWorkspacesStoreData["data"];
+          });
           setWorkspacesDataStore(
-            "data",
-            () => previousData as unknown as TWorkspacesStoreData["data"],
+            "order",
+            (prev) => prev.filter((id) => !restoredIds.has(id)),
           );
-          setWorkspacesDataStore("order", () => previousOrder);
-          setWorkspacesDataStore("defaultID", previousDefaultID);
+          if (restoredIds.has(workspacesDataStore.defaultID as TWorkspaceID)) {
+            setWorkspacesDataStore("defaultID", previousDefaultID);
+          }
         });
       } catch (error) {
         console.error(
@@ -1001,8 +1026,10 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
         if (restoredTabs.has(tab) || tabsToReplace.has(tab)) {
           continue;
         }
-        // Preserved, exempt, and tabs opened during the restore.
-        tab.setAttribute(WORKSPACE_TAB_ATTRIBUTION_ID, fallbackWorkspaceId);
+        // Preserved, exempt, and tabs opened during the restore (including
+        // the settings page that started it) join the workspace shown after
+        // the restore, so they stay visible.
+        tab.setAttribute(WORKSPACE_TAB_ATTRIBUTION_ID, currentId);
       }
     } catch (error) {
       logStepError("parking preserved tabs", error);
@@ -1036,7 +1063,7 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
 
     // (c) Close this window's replaced tabs.
     try {
-      this.closeReplacedTabs(tabsToReplace, fallbackWorkspaceId);
+      this.closeReplacedTabs(tabsToReplace, currentId);
     } catch (error) {
       logStepError("closing replaced tabs", error);
     }

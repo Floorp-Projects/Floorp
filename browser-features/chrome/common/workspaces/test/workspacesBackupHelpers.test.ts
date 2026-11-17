@@ -552,6 +552,7 @@ function testSanitizeAllowlist(): void {
   }
   assertEquals(out.userContextId, 2, "userContextId kept");
   assertEquals(out.pinned, true, "pinned kept");
+  assert(!("hidden" in out), "capture-time hidden flag dropped");
   assert(!("image" in out), "remote image dropped");
   assertEquals(
     sanitizeTabState({ entries: [{ url: "https://a.example/" }], image: ICON })

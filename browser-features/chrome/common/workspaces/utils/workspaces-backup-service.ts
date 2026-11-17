@@ -792,7 +792,13 @@ export class WorkspacesBackupService {
       throw new Error("no-browser-window");
     }
 
-    const windows = file.windows;
+    // An additive restore never maps workspace IDs, so a stored last-shown
+    // marker would point at an unrelated live workspace (or none) and make
+    // changeWorkspace select a tab from another workspace. Drop it.
+    const windows = file.windows.map((window) => ({
+      ...window,
+      tabs: window.tabs.map((tab) => ({ ...tab, lastShownWorkspaceId: null })),
+    }));
     const outcomes: RestoreTabOutcome[] = [];
     let windowFailures = 0;
 
