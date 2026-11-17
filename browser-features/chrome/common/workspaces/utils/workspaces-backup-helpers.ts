@@ -685,20 +685,26 @@ export const selectExpiredBackups = (
     : MIN_KEEP_BACKUPS;
   const cutoff = now - retentionDays * 24 * 60 * 60 * 1000;
   // A backup dated well in the future (clock rollback or a crafted file) would
-  // otherwise never expire and would always sort first, so it neither counts
-  // toward the kept set nor survives retention. This applies to every kind.
+  // otherwise never expire and would always hold a kept slot. It never counts
+  // toward the kept set, and it is deleted only once at least `keep` backups
+  // with a plausible date exist: after the clock jumps back, the user's real
+  // history (now "future") must survive until fresh backups replace it.
   const futureLimit = now + FUTURE_CAPTURE_TOLERANCE_MS;
-  const future = summaries.filter((summary) =>
-    summary.capturedAt > futureLimit
+  const candidates = summaries.filter((summary) =>
+    summary.kind !== "pre-restore"
   );
-  const aged = summaries
-    .filter((summary) =>
-      summary.kind !== "pre-restore" && summary.capturedAt <= futureLimit
-    )
-    .sort(compareNewestFirst)
+  const plausible = candidates
+    .filter((summary) => summary.capturedAt <= futureLimit)
+    .sort(compareNewestFirst);
+  const future = plausible.length >= keep
+    ? candidates
+      .filter((summary) => summary.capturedAt > futureLimit)
+      .sort(compareNewestFirst)
+    : [];
+  const aged = plausible
     .slice(keep)
     .filter((summary) => summary.capturedAt < cutoff);
-  return [...future.sort(compareNewestFirst), ...aged];
+  return [...future, ...aged];
 };
 
 /** Clock skew tolerated before a backup counts as dated in the future. */
@@ -707,10 +713,15 @@ export const FUTURE_CAPTURE_TOLERANCE_MS = 24 * 60 * 60 * 1000;
 /**
  * Keeps at most `maxPreRestoreBackups` most recent pre-restore backups and
  * returns the excess (oldest first).
+ *
+ * With `now`, pre-restore copies dated beyond FUTURE_CAPTURE_TOLERANCE_MS are
+ * ranked after every plausibly dated one, so they cannot crowd a fresh safety
+ * copy out of the kept slots; they are the first excess to go.
  */
 export const selectExcessPreRestoreBackups = (
   summaries: WorkspaceBackupSummary[],
   maxPreRestoreBackups: number,
+  now?: number,
 ): WorkspaceBackupSummary[] => {
   if (
     !Number.isFinite(maxPreRestoreBackups) || maxPreRestoreBackups < 0
@@ -721,8 +732,18 @@ export const selectExcessPreRestoreBackups = (
   const preRestore = summaries
     .filter((summary) => summary.kind === "pre-restore")
     .sort(compareNewestFirst);
-  // Keep the newest N and return the excess oldest-first, as documented.
-  return preRestore.slice(keep).reverse();
+  const ranked = typeof now === "number" && Number.isFinite(now)
+    ? [
+      ...preRestore.filter((summary) =>
+        summary.capturedAt <= now + FUTURE_CAPTURE_TOLERANCE_MS
+      ),
+      ...preRestore.filter((summary) =>
+        summary.capturedAt > now + FUTURE_CAPTURE_TOLERANCE_MS
+      ),
+    ]
+    : preRestore;
+  // Keep the first N and return the excess, least valuable first.
+  return ranked.slice(keep).reverse();
 };
 
 /* -------------------------------------------------------------------------

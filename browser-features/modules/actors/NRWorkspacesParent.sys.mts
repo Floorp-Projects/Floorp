@@ -147,7 +147,13 @@ export class NRWorkspacesParent extends JSWindowActorParent {
       const mutating = message.name !== "NRWorkspaces:ListBackups";
       let lockToken: number | null = null;
       if (mutating) {
-        if (mutatingLock && Date.now() < mutatingLock.expiresAt) {
+        // A lock whose expiry lies further ahead than the TTL means the wall
+        // clock moved backwards; treat it as lapsed rather than held longer.
+        const now = Date.now();
+        if (
+          mutatingLock && now < mutatingLock.expiresAt &&
+          mutatingLock.expiresAt - now <= MUTATING_LOCK_TTL_MS
+        ) {
           throw new Error("restore-in-progress");
         }
         lockToken = nextLockToken++;

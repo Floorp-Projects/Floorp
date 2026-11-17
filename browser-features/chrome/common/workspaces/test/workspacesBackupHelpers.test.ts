@@ -746,22 +746,42 @@ function testMinKeep(): void {
   );
 
   // Future-dated backups (clock rollback / crafted files) never occupy the
-  // kept slots and always expire, whatever their kind.
-  const future = (name: string, kind: "auto" | "pre-restore") =>
-    makeSummary(name, kind, now + 400 * DAY);
-  const mixed = [
-    future("f1.jsonlz4", "auto"),
-    future("f2.jsonlz4", "pre-restore"),
-    old(1),
-    old(2),
-    old(3),
-  ];
-  const expiredMixed = selectExpiredBackups(mixed, 7, now)
-    .map((x) => x.fileName).sort().join(",");
+  // kept slots; they expire once enough plausibly dated backups exist.
+  const future = (name: string) => makeSummary(name, "auto", now + 400 * DAY);
+  const mixed = [future("f1.jsonlz4"), old(1), old(2), old(3)];
   assertEquals(
-    expiredMixed,
-    "f1.jsonlz4,f2.jsonlz4",
-    "future-dated backups expire and the 3 real ones are kept",
+    selectExpiredBackups(mixed, 7, now).map((x) => x.fileName).join(","),
+    "f1.jsonlz4",
+    "future-dated backup expires and the 3 plausible ones are kept",
+  );
+  // After the clock jumps back, the whole real history looks "future": it must
+  // survive until fresh backups exist.
+  assertEquals(
+    selectExpiredBackups(
+      [
+        future("f1.jsonlz4"),
+        future("f2.jsonlz4"),
+        future("f3.jsonlz4"),
+        old(1),
+      ],
+      7,
+      now,
+    ).length,
+    0,
+    "clock rollback does not wipe the history",
+  );
+  // Pre-restore: future-dated copies rank last and go first.
+  const pre = (name: string, at: number) =>
+    makeSummary(name, "pre-restore", at);
+  const excess = selectExcessPreRestoreBackups(
+    [pre("future.jsonlz4", now + 400 * DAY), pre("fresh.jsonlz4", now)],
+    1,
+    now,
+  );
+  assertEquals(
+    excess.map((x) => x.fileName).join(","),
+    "future.jsonlz4",
+    "future-dated pre-restore cannot crowd out a fresh safety copy",
   );
   assertEquals(
     selectExpiredBackups(

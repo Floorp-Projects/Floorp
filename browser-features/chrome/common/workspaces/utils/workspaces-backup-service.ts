@@ -26,6 +26,7 @@ import {
   buildBackupFile,
   buildBackupSummary,
   formatBackupFileName,
+  FUTURE_CAPTURE_TOLERANCE_MS,
   getBaseName,
   isBackupFileName,
   isRestorableTabUrl,
@@ -955,6 +956,7 @@ export class WorkspacesBackupService {
     const excessPreRestore = selectExcessPreRestoreBackups(
       summaries,
       this.config.maxPreRestoreBackups,
+      now,
     );
 
     const toDelete = new Set<string>();
@@ -965,8 +967,10 @@ export class WorkspacesBackupService {
       // Another window's service instance may be running a restore right now.
       // Its safety copy is only protected inside that instance, so keep fresh
       // pre-restore files regardless of which window cleans up.
+      // A future-dated copy (clock rollback / crafted file) is not "fresh".
       if (
         summary.kind === "pre-restore" &&
+        summary.capturedAt <= now + FUTURE_CAPTURE_TOLERANCE_MS &&
         now - summary.capturedAt < PRE_RESTORE_GRACE_MS
       ) {
         continue;
@@ -1295,6 +1299,15 @@ export class WorkspacesBackupService {
       // whole backup. Drop the state instead: the tab still restores from its
       // URL.
       const sanitizedState = sanitizeTabState(snapshotTab.state);
+      // Every history entry was unrestorable: the copy would hold only a blank
+      // tab, so treat the tab like an unrestorable URL and preserve it.
+      const rawEntries = snapshotTab.state?.entries;
+      if (
+        sanitizedState === null && Array.isArray(rawEntries) &&
+        rawEntries.length > 0
+      ) {
+        continue;
+      }
       const boundedState = isTabStateWithinLimit(sanitizedState)
         ? sanitizedState
         : null;

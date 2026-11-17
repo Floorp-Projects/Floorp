@@ -165,6 +165,16 @@ const extractUrlFromTab = (
     }
   ).linkedBrowser;
   const currentUrl = browser?.currentURI?.spec;
+  // A pending (not yet restored) tab can report about:blank as its current
+  // URI while its session state holds the real page; prefer the state then.
+  const isPlaceholder = tab.hasAttribute("pending") ||
+    currentUrl === "about:blank";
+  if (isPlaceholder && state) {
+    const stateUrl = extractUrlFromState(state);
+    if (stateUrl) {
+      return stateUrl;
+    }
+  }
   if (typeof currentUrl === "string" && currentUrl.length > 0) {
     return currentUrl;
   }
@@ -373,19 +383,21 @@ const createRestorePrincipal = (
  * SessionStore restores each history entry with its stored
  * `triggeringPrincipal_base64`, falling back to a null principal, which cannot
  * load internal or extension pages. Backup files never supply principals (the
- * sanitizer drops them), so derive one per entry from its URL with the same
- * rules as the tab load. Web entries keep the null-principal fallback.
+ * sanitizer drops them), so derive one per top-level entry from its URL with
+ * the same rules as the tab load. Web entries keep the null-principal
+ * fallback. Child (subframe) entries are left alone: an extension principal
+ * there would let a crafted file embed a non-web-accessible extension page.
  */
 const attachEntryPrincipals = (
   entries: Array<Record<string, unknown>>,
   userContextId: number,
 ): void => {
-  const serialize = (
+  const e10s = (
     globalThis as unknown as {
       E10SUtils?: { serializePrincipal?: (principal: unknown) => string };
     }
-  ).E10SUtils?.serializePrincipal;
-  if (typeof serialize !== "function") {
+  ).E10SUtils;
+  if (!e10s || typeof e10s.serializePrincipal !== "function") {
     return;
   }
   for (const entry of entries) {
@@ -396,7 +408,7 @@ const attachEntryPrincipals = (
       isExtensionUrl(url)
     ) {
       try {
-        entry.triggeringPrincipal_base64 = serialize(
+        entry.triggeringPrincipal_base64 = e10s.serializePrincipal(
           createRestorePrincipal(url, userContextId, false),
         );
       } catch (error) {
@@ -405,12 +417,6 @@ const attachEntryPrincipals = (
           error,
         );
       }
-    }
-    if (Array.isArray(entry.children)) {
-      attachEntryPrincipals(
-        entry.children as Array<Record<string, unknown>>,
-        userContextId,
-      );
     }
   }
 };
