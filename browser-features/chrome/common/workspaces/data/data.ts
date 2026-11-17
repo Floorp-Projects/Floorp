@@ -50,15 +50,17 @@ function createWorkspacesData(): [
   Store<TWorkspacesStoreData>,
   SetStoreFunction<TWorkspacesStoreData>,
 ] {
-  const [workspacesDataStore, setWorkspacesDataStore] =
-    createStore(getDefaultStore());
+  const [workspacesDataStore, setWorkspacesDataStore] = createStore(
+    getDefaultStore(),
+  );
 
   createEffect(() => {
     trackStore(workspacesDataStore);
     Services.prefs.setStringPref(
       WORKSPACE_DATA_PREF_NAME,
-      JSON.stringify(unwrap(workspacesDataStore), (k, v) =>
-        k == "data" ? [...v] : v,
+      JSON.stringify(
+        unwrap(workspacesDataStore),
+        (k, v) => k == "data" ? [...v] : v,
       ),
     );
   });
@@ -107,8 +109,9 @@ function createSelectedWorkspaceID(): [
   Accessor<TWorkspaceID | null>,
   Setter<TWorkspaceID | null>,
 ] {
-  const [selectedWorkspaceID, setSelectedWorkspaceID] =
-    createSignal<TWorkspaceID | null>(null);
+  const [selectedWorkspaceID, setSelectedWorkspaceID] = createSignal<
+    TWorkspaceID | null
+  >(null);
   return [selectedWorkspaceID, setSelectedWorkspaceID];
 }
 
