@@ -49,6 +49,7 @@ import {
   WORKSPACES_CHANGED_OBSERVER_TOPIC,
 } from "./utils/workspaces-static-names";
 import { ExplicitTabUserContextOperations } from "./utils/explicit-tab-user-context.ts";
+import { PrivateContainer } from "../private-container/PrivateContainer.ts";
 import type { WorkspacesSyncController } from "./workspacesSync.ts";
 
 export class WorkspacesService implements WorkspacesDataManagerBase {
@@ -626,17 +627,45 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
       });
     }
 
+    // Tabs the backup never captured (private containers, history-disabled
+    // tabs) must survive the restore: they cannot be recreated from the file.
+    const privateContainerUserContextId = (() => {
+      try {
+        return PrivateContainer.getPrivateContainerUserContextId();
+      } catch (error) {
+        console.error(
+          "WorkspacesService: private container lookup failed during restore",
+          error,
+        );
+        return null;
+      }
+    })();
+    const isExemptFromRestore = (tab: XULElement): boolean => {
+      if (tab.hasAttribute("floorp-disablehistory")) {
+        return true;
+      }
+      if (privateContainerUserContextId === null) {
+        return false;
+      }
+      const userContextId = Number.parseInt(
+        tab.getAttribute("usercontextid") ?? "0",
+        10,
+      );
+      return userContextId === privateContainerUserContextId;
+    };
+
+    let outcomes: Awaited<ReturnType<typeof restoreTabsIntoWindow>> = [];
+
     const rollback = (): void => {
-      // Remove the tabs this restore created.
+      // Remove every tab this restore created, successful or not. A failed tab
+      // may still exist in the window with a half-applied state.
       for (const outcome of outcomes) {
-        if (!outcome.ok || !outcome.tab) {
-          continue;
-        }
-        if (!outcome.tab.isConnected) {
+        const tab = outcome.tab;
+        if (!tab || !tab.isConnected) {
           continue;
         }
         try {
-          globalThis.gBrowser.removeTab(outcome.tab);
+          globalThis.gBrowser.removeTab(tab);
         } catch (error) {
           console.error(
             "WorkspacesService: failed to roll back a restored tab",
@@ -675,81 +704,108 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
       this.tabManagerCtx.updateTabsVisibility();
     };
 
-    // 3. Rebuild the store. Tabs are not touched yet.
-    const tempWorkspaceId = this.resetWorkspaces();
-    const idMap = new Map<TWorkspaceID, TWorkspaceID>();
-    const restoredOrder: TWorkspaceID[] = [];
+    // 3. Rebuild the store and restore tabs. Everything from here on mutates
+    //    live state, so any throw must roll back.
+    try {
+      const tempWorkspaceId = this.resetWorkspaces();
+      const idMap = new Map<TWorkspaceID, TWorkspaceID>();
+      const restoredOrder: TWorkspaceID[] = [];
 
-    for (const oldId of orderedIds) {
-      const meta = metaById.get(oldId);
-      if (!meta) {
-        continue;
-      }
-      const restoredWorkspaceId = this.dataManagerCtx.createWorkspace(
-        meta.name,
-      );
-      setWorkspacesDataStore("order", (prev) => [...prev, restoredWorkspaceId]);
-      setWorkspacesDataStore("data", (prev) => {
-        const temp = this.cloneWorkspaceMap(prev);
-        const workspace = temp.get(restoredWorkspaceId);
-        if (workspace) {
-          temp.set(restoredWorkspaceId, {
-            ...workspace,
-            userContextId: meta.userContextId,
-            icon: meta.icon ?? null,
-          });
+      for (const oldId of orderedIds) {
+        const meta = metaById.get(oldId);
+        if (!meta) {
+          continue;
         }
-        return temp as unknown as TWorkspacesStoreData["data"];
-      });
-      idMap.set(oldId, restoredWorkspaceId);
-      restoredOrder.push(restoredWorkspaceId);
-    }
-
-    const fallbackWorkspaceId = restoredOrder[0] as TWorkspaceID;
-
-    // 4. Restore tabs, mapping captured workspace IDs onto the new ones.
-    //    Tabs without a (resolvable) workspace join the first restored one so
-    //    they stay visible after the restore.
-    const allTabs = file.windows.flatMap((window) => window.tabs);
-    const outcomes = await restoreTabsIntoWindow(allTabs, {
-      gBrowser: globalThis.gBrowser as unknown as RestoreTargetBrowser,
-      resolveWorkspaceId: (tab) => {
-        if (tab.workspaceId) {
-          const mapped = idMap.get(tab.workspaceId);
-          if (mapped) {
-            return mapped;
+        const restoredWorkspaceId = this.dataManagerCtx.createWorkspace(
+          meta.name,
+        );
+        setWorkspacesDataStore(
+          "order",
+          (prev) => [...prev, restoredWorkspaceId],
+        );
+        setWorkspacesDataStore("data", (prev) => {
+          const temp = this.cloneWorkspaceMap(prev);
+          const workspace = temp.get(restoredWorkspaceId);
+          if (workspace) {
+            temp.set(restoredWorkspaceId, {
+              ...workspace,
+              userContextId: meta.userContextId,
+              icon: meta.icon ?? null,
+            });
           }
+          return temp as unknown as TWorkspacesStoreData["data"];
+        });
+        idMap.set(oldId, restoredWorkspaceId);
+        restoredOrder.push(restoredWorkspaceId);
+      }
+
+      const fallbackWorkspaceId = restoredOrder[0] as TWorkspaceID;
+
+      // Tabs the backup never captured were moved onto the temporary
+      // workspace by resetWorkspaces(). Park them on a real workspace so the
+      // cleanup below cannot close them.
+      for (const tab of globalThis.gBrowser.tabs) {
+        if (!isExemptFromRestore(tab)) {
+          continue;
         }
-        return fallbackWorkspaceId;
-      },
-    });
+        if (
+          tab.getAttribute(WORKSPACE_TAB_ATTRIBUTION_ID) !== tempWorkspaceId
+        ) {
+          continue;
+        }
+        tab.setAttribute(WORKSPACE_TAB_ATTRIBUTION_ID, fallbackWorkspaceId);
+      }
 
-    // Replacing existing tabs is only safe when every captured tab came back.
-    const failedCount = outcomes.filter((outcome) => !outcome.ok).length;
-    if (failedCount > 0) {
+      // 4. Restore tabs, mapping captured workspace IDs onto the new ones.
+      //    Tabs without a (resolvable) workspace join the first restored one so
+      //    they stay visible after the restore.
+      const allTabs = file.windows.flatMap((window) => window.tabs);
+      outcomes = await restoreTabsIntoWindow(allTabs, {
+        gBrowser: globalThis.gBrowser as unknown as RestoreTargetBrowser,
+        resolveWorkspaceId: (tab) => {
+          if (tab.workspaceId) {
+            const mapped = idMap.get(tab.workspaceId);
+            if (mapped) {
+              return mapped;
+            }
+          }
+          return fallbackWorkspaceId;
+        },
+      });
+
+      // Replacing existing tabs is only safe when every captured tab came back.
+      const failedCount = outcomes.filter((outcome) => !outcome.ok).length;
+      if (failedCount > 0) {
+        // The catch below performs the rollback exactly once.
+        throw new Error(`restore-partial-failure:${failedCount}`);
+      }
+
+      // 5. Drop the temporary workspace together with the pre-restore tabs.
+      //    Restored tabs already carry a new workspace ID, so they survive.
+      this.closeTabsForWorkspace(tempWorkspaceId, fallbackWorkspaceId);
+      this.dataManagerCtx.deleteWorkspace(tempWorkspaceId);
+      setWorkspacesDataStore(
+        "order",
+        (prev) => prev.filter((id) => id !== tempWorkspaceId),
+      );
+
+      const defaultId = state.defaultID && idMap.has(state.defaultID)
+        ? idMap.get(state.defaultID) as TWorkspaceID
+        : fallbackWorkspaceId;
+      this.setDefaultWorkspace(defaultId);
+      const currentId = state.currentWorkspaceId &&
+          idMap.has(state.currentWorkspaceId)
+        ? idMap.get(state.currentWorkspaceId) as TWorkspaceID
+        : defaultId;
+      this.changeWorkspace(currentId);
+      this.tabManagerCtx.updateTabsVisibility();
+    } catch (error) {
+      // A throw before the rollback point (store rebuild, SessionStore
+      // initialization, unexpected tab failure) must not leave a half-restored
+      // store behind.
       rollback();
-      throw new Error(`restore-partial-failure:${failedCount}`);
+      throw error;
     }
-
-    // 5. Drop the temporary workspace together with the pre-restore tabs.
-    //    Restored tabs already carry a new workspace ID, so they survive.
-    this.closeTabsForWorkspace(tempWorkspaceId, fallbackWorkspaceId);
-    this.dataManagerCtx.deleteWorkspace(tempWorkspaceId);
-    setWorkspacesDataStore(
-      "order",
-      (prev) => prev.filter((id) => id !== tempWorkspaceId),
-    );
-
-    const defaultId = state.defaultID && idMap.has(state.defaultID)
-      ? idMap.get(state.defaultID) as TWorkspaceID
-      : fallbackWorkspaceId;
-    this.setDefaultWorkspace(defaultId);
-    const currentId = state.currentWorkspaceId &&
-        idMap.has(state.currentWorkspaceId)
-      ? idMap.get(state.currentWorkspaceId) as TWorkspaceID
-      : defaultId;
-    this.changeWorkspace(currentId);
-    this.tabManagerCtx.updateTabsVisibility();
   }
 
   private closeTabsForWorkspace(
