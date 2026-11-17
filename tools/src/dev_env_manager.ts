@@ -61,6 +61,11 @@ user_pref("nora.dev.os_server.profile_token_file", ${allowBrowserHttpLoader});
 // catch instead of silently sharing the port.
 user_pref("${OS_SERVER_PORT_PREF}", ${osServerPortForOffset(portOffset)});
 user_pref("browser.sessionstore.resume_from_crash", false);
+// Dev/test browsers are torn down with signals, so every launch after a killed
+// run counts as a crash. The stock limit of 3 would then boot this profile in
+// Troubleshoot Mode (notification bar, features disabled), which breaks the
+// features under test, so keep the crash-loop guard out of the way.
+user_pref("toolkit.startup.max_resumed_crashes", -1);
 user_pref("nora.dev.allow_http_loader", ${allowBrowserHttpLoader});
 ${
     portOffset > 0
