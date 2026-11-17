@@ -178,11 +178,12 @@ class CompletionTests(unittest.TestCase):
             self.assertTrue(r.passed(0, result))
 
     def test_declared_known_differences_allow_harness_exit_one_only(self):
-        known=[{'test':'test_a.js','subtest':'cb','status':'FAIL','expected':'PASS','reason':'x'},
-               {'test':'test_a.js','subtest':None,'status':'FAIL','expected':'PASS','reason':'x'}]
-        events=[{'action':'test_status','test':'../x/test_a.js','subtest':'cb','status':'FAIL','expected':'PASS'},
-                {'action':'test_end','test':'../x/test_a.js','status':'FAIL','expected':'PASS'},
-                {'action':'suite_end'}]
+        reason='Declared Floorp product default difference.'
+        known=[{'test':'test_a.js','subtest':'cb','status':'FAIL','expected':'PASS','message':'m1','reason':reason},
+               {'test':'test_a.js','subtest':None,'status':'FAIL','expected':'PASS','message':'m2','reason':reason}]
+        events=[{'action':'test_status','test':'../x/test_a.js','subtest':'cb','status':'FAIL','expected':'PASS','message':'m1'},
+                {'action':'test_end','test':'../x/test_a.js','status':'FAIL','expected':'PASS','message':'m2'},
+                {'action':'log','message':'INFO | Failed: 1'},{'action':'suite_end'}]
         with tempfile.TemporaryDirectory() as d:
             path=Path(d)/'log.jsonl';path.write_text('\n'.join(json.dumps(e) for e in events))
             result=r.structured_summary(path,known)
@@ -193,6 +194,19 @@ class CompletionTests(unittest.TestCase):
             self.assertEqual(stale['known_differences_missing'],1);self.assertFalse(r.passed(1,stale,known))
             path.write_text('\n'.join(json.dumps(e) for e in events[:1]+events))
             self.assertFalse(r.passed(1,r.structured_summary(path,known),known))
+            other=[dict(events[0],message='other assertion')]+events[1:]
+            path.write_text('\n'.join(json.dumps(e) for e in other))
+            self.assertFalse(r.passed(1,r.structured_summary(path,known),known))
+            path.write_text('\n'.join(json.dumps(e) for e in events[:2]+[{'action':'log','message':'INFO | Failed: 2'}]+events[3:]))
+            self.assertFalse(r.passed(1,r.structured_summary(path,known),known))
+    def test_invalid_declarations_rejected_standalone(self):
+        good={'test':'test_a.js','subtest':None,'status':'FAIL','expected':'PASS','message':'m','reason':'Declared Floorp product default difference.'}
+        for bad in ({**good,'status':'CRASH'},{**good,'expected':'FAIL'},{**good,'reason':'short'},{**good,'message':''},
+                    {k:v for k,v in good.items() if k!='message'},{**good,'test':'dir/test_a.js'},{**good,'extra':1}):
+            with self.subTest(bad=bad),self.assertRaises(ValueError):r.validate_known([bad])
+        with self.assertRaises(ValueError):r.validate_known([good,dict(good)])
+        config=json.loads(Path(r.__file__).with_name('suites.json').read_text())
+        for suite in config['suites']:r.validate_known(suite.get('known_differences',[]))
     def test_retained_lock_requires_manual_cleanup(self):
         with tempfile.TemporaryDirectory() as td:
             path=Path(td)/'lock'

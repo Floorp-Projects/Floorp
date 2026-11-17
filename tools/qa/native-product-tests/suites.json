@@ -58,14 +58,16 @@
           "subtest": "cb",
           "status": "FAIL",
           "expected": "PASS",
-          "reason": "Floorp ships browser.startup.page = 3 (static/gecko/pref/override.ini), so a valid previous session is resumed (RESUME_SESSION) instead of Firefox's default deferral (DEFER_SESSION) that this upstream assertion expects."
+          "message": "[cb : 27] 2 == 3",
+          "reason": "Floorp ships browser.startup.page = 3 (static/gecko/pref/override.ini), so SessionStartup.sessionType returns RESUME_SESSION (2) instead of Firefox's default DEFER_SESSION (3) that this upstream assertion at line 27 expects. The first failed assertion aborts cb, so the two shutdown_ok telemetry assertions after it are not exercised on Floorp."
         },
         {
           "test": "test_startup_session_async.js",
           "subtest": null,
           "status": "FAIL",
           "expected": "PASS",
-          "reason": "Test-level result of the same browser.startup.page = 3 product default difference; no other assertion in this test may fail."
+          "message": "xpcshell return code: 0",
+          "reason": "Test-level result of the same browser.startup.page = 3 product default difference; the gate also requires the harness tally to report exactly this one failed test."
         }
       ]
     },

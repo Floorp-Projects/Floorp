@@ -100,14 +100,42 @@ function patchLists() {
   };
 }
 
+// Page directories that are served only by the dev server, never packaged as
+// chrome: (tools/src/injector.ts registers the packaged ones).
+const NOT_PACKAGED = new Set(["browser-features/pages-workflow-progress"]);
+
+Deno.test("every packaged page directory is covered by the CSP check", () => {
+  const injector = Deno.readTextFileSync(
+    new URL("tools/src/injector.ts", root),
+  );
+  const dirs = [...Deno.readDirSync(new URL("browser-features/", root))]
+    .filter((e) => e.isDirectory && e.name.startsWith("pages-"))
+    .map((e) => `browser-features/${e.name}`);
+  for (const dir of dirs) {
+    const name = dir.slice("browser-features/".length);
+    const registered = injector.includes(` ${name}/ `);
+    if (NOT_PACKAGED.has(dir)) {
+      assert.ok(!registered, `${dir} is packaged; add it to PAGES`);
+      continue;
+    }
+    assert.ok(
+      Object.keys(PAGES).some((page) => page.startsWith(dir + "/")),
+      `${dir} must be listed in PAGES with its document URLs`,
+    );
+  }
+});
+
 Deno.test("packaged page CSPs only use checked directives and builtin defaults", () => {
   for (const path of Object.keys(PAGES)) {
     const policy = csp(path);
     for (const name of policy.keys()) {
       assert.ok(CHECKED.has(name), `${path}: unchecked directive ${name}`);
     }
-    for (const source of policy.get("default-src") ?? []) {
-      assert.ok(BUILTIN.has(source), `${path}: default-src ${source}`);
+    // No Noraneko page is allowlisted beyond builtin sources for these.
+    for (const name of ["default-src", "script-src", "media-src"]) {
+      for (const source of policy.get(name) ?? []) {
+        assert.ok(BUILTIN.has(source), `${path}: ${name} ${source}`);
+      }
     }
     assert.deepEqual(policy.get("object-src"), ["'none'"], path);
     assert.ok(

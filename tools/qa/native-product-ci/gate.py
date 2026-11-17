@@ -89,16 +89,19 @@ def validate_producer(record, floorp_sha, runtime_sha):
     return record
 
 
-KNOWN_DIFFERENCE_FIELDS = {'test', 'subtest', 'status', 'expected', 'reason'}
+KNOWN_DIFFERENCE_FIELDS = {'test', 'subtest', 'status', 'expected', 'message', 'reason'}
+HARNESS_FAILED_TALLY = re.compile(r'INFO \| Failed: ([0-9]+)')
 
 
 def known_differences(entries, expected_ids, disabled_ids):
     """Validate reviewed Floorp product differences carried in the bound plan.
 
     Each entry names one exact native event: test identity, subtest (None for
-    the test's own end status), actual and expected status. Only an assertion
-    failure where upstream expects PASS can be declared; crashes, timeouts,
-    errors and skips never can. Returns the exact event keys.
+    the test's own end status), actual and expected status and the exact
+    mozlog message, so a different assertion failing in the same function is
+    not covered. Only an assertion failure where upstream expects PASS can be
+    declared; crashes, timeouts, errors and skips never can. Returns the exact
+    event keys.
     """
     require(isinstance(entries, list), 'invalid known differences')
     keys = set()
@@ -107,8 +110,9 @@ def known_differences(entries, expected_ids, disabled_ids):
         require(entry['test'] in expected_ids and entry['test'] not in disabled_ids, 'known difference outside executed plan')
         require(entry['subtest'] is None or (isinstance(entry['subtest'], str) and entry['subtest']), 'invalid known difference subtest')
         require(entry['status'] == 'FAIL' and entry['expected'] == 'PASS', 'known differences cover only FAIL where PASS was expected')
+        require(isinstance(entry['message'], str) and entry['message'], 'known difference needs the exact native message')
         require(isinstance(entry['reason'], str) and len(entry['reason'].strip()) >= 20, 'known difference needs a reviewed reason')
-        key = (entry['test'], entry['subtest'], entry['status'], entry['expected'])
+        key = (entry['test'], entry['subtest'], entry['status'], entry['expected'], entry['message'])
         require(key not in keys, 'duplicate known difference')
         keys.add(key)
     return keys
@@ -119,6 +123,7 @@ def raw_summary(path, expected_ids, id_mode="exact", disabled_ids=None, known=No
     require(disabled_ids <= expected_ids, "disabled identity outside native plan")
     declared = known_differences([] if known is None else known, expected_ids, disabled_ids)
     matched = set()
+    tallies = []
     def canonical(value):
         require(isinstance(value, str), "invalid native test identity")
         return value.rsplit("/", 1)[-1] if id_mode == "unique-file-basename" else value
@@ -150,7 +155,7 @@ def raw_summary(path, expected_ids, id_mode="exact", disabled_ids=None, known=No
                 # expected FAIL). status itself is mandatory, never defaulted.
                 if 'expected' in e and e['status'] != e['expected'] and e['status'] not in intermittent:
                     # Only an exact, declared, not-yet-seen product difference.
-                    key = (identity, e.get('subtest') if action == 'test_status' else None, e['status'], e['expected'])
+                    key = (identity, e.get('subtest') if action == 'test_status' else None, e['status'], e['expected'], e.get('message'))
                     require(key in declared and key not in matched, 'unexpected native status')
                     matched.add(key)
             if action == 'test_start':
@@ -173,12 +178,21 @@ def raw_summary(path, expected_ids, id_mode="exact", disabled_ids=None, known=No
                     executed.add(identity)
         elif action == 'crash' or (action == 'log' and e.get('level') in {'ERROR', 'CRITICAL'}):
             raise ValueError('native infrastructure error')
+        elif action == 'log' and isinstance(e.get('message'), str):
+            tally = HARNESS_FAILED_TALLY.fullmatch(e['message'])
+            if tally:
+                tallies.append(int(tally.group(1)))
     require(started and ended and not active, 'native suite incomplete')
     require(observed == expected_ids, 'missing native test coverage')
     require(skipped == disabled_ids, 'native skips differ from pre-resolved disabled tests')
     require(executed, 'zero executed tests / skip-only')
     # A declared difference that no longer occurs must be removed, not kept.
     require(matched == declared, 'known difference not observed; remove stale entry')
+    if declared:
+        # The harness's own failure tally (xpcshell "INFO | Failed: N") must be
+        # exactly the declared test-level failures, so an exit 1 accepted for
+        # this group cannot come from a failure the raw events do not show.
+        require(tallies == [sum(1 for k in declared if k[1] is None)], 'harness failure tally differs from declared differences')
     return len(executed)
 
 

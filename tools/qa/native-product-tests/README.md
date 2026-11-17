@@ -249,22 +249,30 @@ changed snapshot fails with the differing paths.
 ## Declared Floorp product differences
 
 Some upstream assertions assume Firefox defaults that Floorp deliberately
-changes. A suite in `suites.json` may list them under `known_differences`; each
+changes. A suite in `suites.json` may list them under `known_differences`. Each
 entry names one exact native event: the test identity (file basename in the
 browser/xpcshell pilot), the `subtest` (`null` for the test's own end status),
-`status` `FAIL`, `expected` `PASS`, and a reviewed `reason`. The resolver copies
-the list into the hash-bound plan after checking that the test is resolved and
-enabled. The runner, adapter and gate then accept such an event only once and
-only as declared; any other unexpected status, a crash, timeout, error or skip
-still fails. The harness's exit code 1 is accepted only for a suite with
-declarations, and only when its raw log proves every failure was declared. A
-declaration that no longer occurs fails the run, so stale entries must be
-removed.
+`status` `FAIL`, `expected` `PASS`, the exact mozlog `message`, and a reviewed
+`reason`. The message pins the assertion, so a different assertion failing in
+the same test function is not covered. The resolver copies the list into the
+hash-bound plan after checking that the test is resolved and enabled; the runner
+validates the same rules for standalone runs. Runner, adapter and gate accept a
+declared event only once; any other unexpected status, a crash, timeout, error
+or skip still fails, and a declaration that no longer occurs fails the run, so
+stale entries must be removed.
+
+The harness's exit code 1 is accepted only for a group with declarations, and
+only when the raw log also carries exactly one harness failure tally (xpcshell
+`INFO | Failed: N`) equal to the declared test-level failures. Declarations are
+therefore usable for xpcshell suites only. Residual risk: an exit 1 caused by
+harness post-processing that leaves no event, error log or tally change is not
+distinguishable for such a group.
 
 Current declaration: `p1-sessionstore-unit` / `test_startup_session_async.js`
-expects Firefox's deferred session (`DEFER_SESSION`), but Floorp ships
+line 27 expects Firefox's deferred session (`DEFER_SESSION`), but Floorp ships
 `browser.startup.page = 3` (`static/gecko/pref/override.ini`) and resumes the
-previous session.
+previous session. The failed assertion aborts the test function, so its two
+`shutdown_ok` telemetry assertions are not exercised on Floorp.
 
 ## Debug-build chrome page CSP checks
 
@@ -275,6 +283,15 @@ Noraneko pages keep `style-src 'unsafe-inline'` and `img-src` `data:`/`blob:`/
 `https:`, so
 `.github/patches/floorp-runtime/common/noraneko-chrome-csp-allowlist.patch` adds
 exactly those pages to the matching allowlists. `style-src data:` is not
-allowlisted; the pages no longer declare it.
-`tools/src/chrome_csp_allowlist_patch.test.ts` fails when a page CSP and the
-patch disagree.
+allowlisted; the pages no longer declare it. `about:newtab`, `about:home` and
+`about:welcome` are already allowlisted upstream.
+
+`tools/src/chrome_csp_allowlist_patch.test.ts` requires every packaged
+`browser-features/pages-*` directory to be mapped to its document URLs, every
+`default-src`/`script-src`/`media-src` source to be builtin, and the patch lists
+to equal exactly what the page CSPs need. Its record of upstream entries is
+fixed to the pinned Runtime; after a Runtime bump, re-check those entries (the
+native debug cohort crashes if one was removed). The patch is applied with the
+other common Runtime patches in every package build, so context drift in
+`nsContentSecurityUtils.cpp` fails packaging even though the lists are
+debug-only.

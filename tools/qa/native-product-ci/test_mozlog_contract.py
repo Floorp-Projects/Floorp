@@ -67,12 +67,14 @@ class MozlogContractTests(unittest.TestCase):
 class KnownDifferenceTests(unittest.TestCase):
     REASON='Floorp product default differs from the upstream assumption.'
     def known(self,subtest=None,**over):
-        k={'test':'a','subtest':subtest,'status':'FAIL','expected':'PASS','reason':self.REASON};k.update(over);return k
-    def events(self):
+        message='[cb : 27] 2 == 3' if subtest else 'xpcshell return code: 0'
+        k={'test':'a','subtest':subtest,'status':'FAIL','expected':'PASS','message':message,'reason':self.REASON};k.update(over);return k
+    def events(self,failed=1):
         return [{'action':'suite_start'},{'action':'test_start','test':'a'},
-                {'action':'test_status','test':'a','subtest':'cb','status':'FAIL','expected':'PASS'},
-                {'action':'test_end','test':'a','status':'FAIL','expected':'PASS'},
-                {'action':'test_start','test':'b'},{'action':'test_end','test':'b','status':'PASS'},{'action':'suite_end'}]
+                {'action':'test_status','test':'a','subtest':'cb','status':'FAIL','expected':'PASS','message':'[cb : 27] 2 == 3'},
+                {'action':'test_end','test':'a','status':'FAIL','expected':'PASS','message':'xpcshell return code: 0'},
+                {'action':'test_start','test':'b'},{'action':'test_end','test':'b','status':'PASS'},
+                {'action':'log','level':'INFO','message':'INFO | Failed: %d'%failed},{'action':'suite_end'}]
     def evaluate(self,events,known):
         with tempfile.TemporaryDirectory() as d:
             p=Path(d)/'log';p.write_text('\n'.join(json.dumps(e) for e in events))
@@ -97,6 +99,19 @@ class KnownDifferenceTests(unittest.TestCase):
     def test_declaration_requires_reason_and_exact_fields(self):
         for bad in ({**self.known(),'reason':'short'},{k:v for k,v in self.known().items() if k!='reason'},
                     {**self.known(),'extra':1},{**self.known(),'test':'foreign'},{**self.known(),'subtest':''}):
+            with self.subTest(bad=bad),self.assertRaises(ValueError):self.evaluate(self.events(),[bad])
+    def test_different_assertion_in_same_function_rejected(self):
+        es=self.events();es[2]['message']='[cb : 28] telemetry differs'
+        with self.assertRaises(ValueError):self.evaluate(es,self.both())
+    def test_harness_tally_must_equal_declared_test_failures(self):
+        for failed in (0,2):
+            with self.subTest(failed=failed),self.assertRaises(ValueError):self.evaluate(self.events(failed),self.both())
+        es=self.events();del es[6]
+        with self.assertRaises(ValueError):self.evaluate(es,self.both())
+        es=self.events();es.insert(6,dict(es[6]))
+        with self.assertRaises(ValueError):self.evaluate(es,self.both())
+    def test_message_is_required(self):
+        for bad in ({**self.known(),'message':''},{k:v for k,v in self.known().items() if k!='message'}):
             with self.subTest(bad=bad),self.assertRaises(ValueError):self.evaluate(self.events(),[bad])
     def test_duplicate_declaration_rejected(self):
         with self.assertRaises(ValueError):self.evaluate(self.events(),self.both()+[self.known()])

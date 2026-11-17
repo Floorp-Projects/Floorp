@@ -6,6 +6,7 @@ import ast
 import configparser
 import hashlib
 import json
+import re
 import os
 from pathlib import Path
 import signal
@@ -265,16 +266,39 @@ class Lock:
 def timestamp(): return datetime.now(timezone.utc).isoformat()
 
 
+KNOWN_FIELDS = {'test', 'subtest', 'status', 'expected', 'message', 'reason'}
+FAILED_TALLY = re.compile(r'INFO \| Failed: ([0-9]+)')
+
+
+def validate_known(entries):
+    """Same restrictions as gate.known_differences, for standalone runs."""
+    if not isinstance(entries, list):
+        raise ValueError('invalid known differences')
+    keys = set()
+    for k in entries:
+        if not (isinstance(k, dict) and set(k) == KNOWN_FIELDS and isinstance(k['test'], str) and k['test']
+                and '/' not in k['test'] and (k['subtest'] is None or (isinstance(k['subtest'], str) and k['subtest']))
+                and k['status'] == 'FAIL' and k['expected'] == 'PASS' and isinstance(k['message'], str) and k['message']
+                and isinstance(k['reason'], str) and len(k['reason'].strip()) >= 20):
+            raise ValueError('invalid known difference: ' + json.dumps(k, sort_keys=True))
+        key = (k['test'], k['subtest'], k['status'], k['expected'], k['message'])
+        if key in keys:
+            raise ValueError('duplicate known difference')
+        keys.add(key)
+    return keys
+
+
 def known_key(item):
     """Exact event key for a declared known difference (see suites.json)."""
     subtest = item.get('subtest') if item.get('action') == 'test_status' else None
-    return (str(item.get('test')).rsplit('/', 1)[-1], subtest, item.get('status'), item.get('expected'))
+    return (str(item.get('test')).rsplit('/', 1)[-1], subtest, item.get('status'), item.get('expected'), item.get('message'))
 
 
 def structured_summary(path, known=()):
-    declared = {(k['test'], k['subtest'], k['status'], k['expected']) for k in known}
+    declared = validate_known(list(known))
     summary = {'test_end': {}, 'unexpected_statuses': 0, 'suite_end': False, 'observed_unique_test_end': 0, 'executed_unique_test_end': 0,
-               'known_differences_observed': 0, 'known_differences_missing': len(declared)}
+               'known_differences_observed': 0, 'known_differences_missing': len(declared),
+               'declared_test_failures': sum(1 for k in declared if k[1] is None), 'harness_failed_tallies': []}
     seen = set()
     executed = set()
     matched = set()
@@ -283,6 +307,9 @@ def structured_summary(path, known=()):
         try: item = json.loads(line)
         except json.JSONDecodeError: continue
         if item.get('action') == 'suite_end': summary['suite_end'] = True
+        if item.get('action') == 'log' and isinstance(item.get('message'), str):
+            tally = FAILED_TALLY.fullmatch(item['message'])
+            if tally: summary['harness_failed_tallies'].append(int(tally.group(1)))
         if item.get('action') == 'test_end':
             seen.add(json.dumps(item.get('test'), sort_keys=True))
             summary['observed_unique_test_end'] = len(seen)
@@ -306,7 +333,8 @@ def passed(exit_code, summary, known=()):
     # Harnesses exit 1 for any failure; accept it only when every unexpected
     # status was a declared difference and every declared one occurred.
     exits = (0, 1) if known else (0,)
-    return (exit_code in exits and summary['suite_end'] and summary['unexpected_statuses'] == 0
+    tally = (not known) or summary.get('harness_failed_tallies') == [summary.get('declared_test_failures')]
+    return (exit_code in exits and summary['suite_end'] and summary['unexpected_statuses'] == 0 and tally
             and summary.get('known_differences_missing', 0) == 0 and summary['executed_unique_test_end'] > 0)
 
 
@@ -368,6 +396,8 @@ def main(argv=None):
     known = {s['id'] for s in config['suites']} | {s['priority'] for s in config['suites']} | {s.get('selection_group') for s in config['suites']}
     if any(c not in known for c in choices): parser.error('Unknown suite selector')
     suites = [s for s in config['suites'] if not choices or s['id'] in choices or s['priority'] in choices or s.get('selection_group') in choices]
+    for s in suites:
+        validate_known(s.get('known_differences', []))
     provenance = preflight(args, config)
     plan = [{'id': s['id'], 'kind': s['kind'], 'manifests': s['manifests'], 'registered_files': s['registered_files'],
              'test_paths': s.get('test_paths'), 'known_differences': s.get('known_differences', []),

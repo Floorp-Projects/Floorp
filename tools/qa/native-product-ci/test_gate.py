@@ -27,8 +27,9 @@ class GateTests(unittest.TestCase):
         with self.assertRaises((ValueError,OSError)):self.run_gate()
     def declare_known(self):
         s=g.GROUPS[0];t=s+'/test'
-        self.plan['groups'][0]['known_differences']=[{'test':t,'subtest':None,'status':'FAIL','expected':'PASS','reason':'Declared Floorp product default difference.'}]
-        self.write_log(s,[{'action':'suite_start'},{'action':'test_start','test':t},{'action':'test_end','test':t,'status':'FAIL','expected':'PASS'},{'action':'suite_end'}])
+        self.plan['groups'][0]['known_differences']=[{'test':t,'subtest':None,'status':'FAIL','expected':'PASS','message':'xpcshell return code: 0','reason':'Declared Floorp product default difference.'}]
+        self.write_log(s,[{'action':'suite_start'},{'action':'test_start','test':t},{'action':'test_end','test':t,'status':'FAIL','expected':'PASS','message':'xpcshell return code: 0'},
+                          {'action':'log','level':'INFO','message':'INFO | Failed: 1'},{'action':'suite_end'}])
         self.report['groups'][-1]['exit_code']=1
         self.report['plan_sha256']=self.plan_hash()
     def test_declared_difference_accepts_harness_exit_one(self):self.declare_known();self.assertEqual(self.run_gate()['executed'],8)
@@ -36,6 +37,10 @@ class GateTests(unittest.TestCase):
         self.declare_known();self.report['groups'][-1]['exit_code']=2;self.fails()
     def test_exit_one_without_declaration_fails(self):
         self.declare_known();del self.plan['groups'][0]['known_differences'];self.report['plan_sha256']=self.plan_hash();self.fails()
+    def test_exit_one_with_clean_log_and_no_declaration_fails(self):
+        self.report['groups'][0]['exit_code']=1;self.fails()
+    def test_declaration_does_not_relax_other_groups(self):
+        self.declare_known();self.report['groups'][0]['exit_code']=1;self.fails()
     def test_declaration_outside_bound_plan_fails(self):
         self.declare_known();self.plan['groups'][0]['known_differences'][0]['reason']+=' changed';self.fails()
     def test_complete_synthetic_contract(self):self.assertEqual(self.run_gate()['executed'],8)
