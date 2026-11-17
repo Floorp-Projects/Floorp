@@ -1,6 +1,6 @@
 import { type ChangeEvent, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Switch } from "../../../../../libs/ui/switch.tsx";
+import { Switch } from "../../../../libs/ui/switch.tsx";
 import { rpc } from "../lib/rpc/rpc.ts";
 import styles from "../setup.module.css";
 
