@@ -653,21 +653,23 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
       metaById.set(workspace.workspaceId, workspace);
     }
 
-    const orderedIds: TWorkspaceID[] = [];
-    const seen = new Set<TWorkspaceID>();
-    const pushId = (id: TWorkspaceID): void => {
-      if (seen.has(id) || !metaById.has(id)) {
-        return;
+    // `order` must be a strict permutation of the workspace metadata. The
+    // capture path always produces one, so anything else means a corrupt or
+    // hand-edited file, and guessing an order before a destructive restore is
+    // not acceptable.
+    const orderSet = new Set(state.order);
+    if (orderSet.size !== state.order.length) {
+      throw new Error("duplicate-order-entry");
+    }
+    if (orderSet.size !== metaById.size) {
+      throw new Error("order-workspace-mismatch");
+    }
+    for (const id of orderSet) {
+      if (!metaById.has(id)) {
+        throw new Error("order-references-unknown-workspace");
       }
-      seen.add(id);
-      orderedIds.push(id);
-    };
-    for (const id of state.order) {
-      pushId(id);
     }
-    for (const workspace of state.workspaces) {
-      pushId(workspace.workspaceId);
-    }
+    const orderedIds: TWorkspaceID[] = [...state.order];
     if (orderedIds.length === 0) {
       throw new Error("empty-backup");
     }
