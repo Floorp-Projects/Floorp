@@ -89,9 +89,36 @@ def validate_producer(record, floorp_sha, runtime_sha):
     return record
 
 
-def raw_summary(path, expected_ids, id_mode="exact", disabled_ids=None):
+KNOWN_DIFFERENCE_FIELDS = {'test', 'subtest', 'status', 'expected', 'reason'}
+
+
+def known_differences(entries, expected_ids, disabled_ids):
+    """Validate reviewed Floorp product differences carried in the bound plan.
+
+    Each entry names one exact native event: test identity, subtest (None for
+    the test's own end status), actual and expected status. Only an assertion
+    failure where upstream expects PASS can be declared; crashes, timeouts,
+    errors and skips never can. Returns the exact event keys.
+    """
+    require(isinstance(entries, list), 'invalid known differences')
+    keys = set()
+    for entry in entries:
+        require(isinstance(entry, dict) and set(entry) == KNOWN_DIFFERENCE_FIELDS, 'invalid known difference fields')
+        require(entry['test'] in expected_ids and entry['test'] not in disabled_ids, 'known difference outside executed plan')
+        require(entry['subtest'] is None or (isinstance(entry['subtest'], str) and entry['subtest']), 'invalid known difference subtest')
+        require(entry['status'] == 'FAIL' and entry['expected'] == 'PASS', 'known differences cover only FAIL where PASS was expected')
+        require(isinstance(entry['reason'], str) and len(entry['reason'].strip()) >= 20, 'known difference needs a reviewed reason')
+        key = (entry['test'], entry['subtest'], entry['status'], entry['expected'])
+        require(key not in keys, 'duplicate known difference')
+        keys.add(key)
+    return keys
+
+
+def raw_summary(path, expected_ids, id_mode="exact", disabled_ids=None, known=None):
     disabled_ids = set() if disabled_ids is None else set(disabled_ids)
     require(disabled_ids <= expected_ids, "disabled identity outside native plan")
+    declared = known_differences([] if known is None else known, expected_ids, disabled_ids)
+    matched = set()
     def canonical(value):
         require(isinstance(value, str), "invalid native test identity")
         return value.rsplit("/", 1)[-1] if id_mode == "unique-file-basename" else value
@@ -121,7 +148,11 @@ def raw_summary(path, expected_ids, id_mode="exact", disabled_ids=None):
                 require(isinstance(intermittent,list) and all(v in allowed for v in intermittent), 'invalid intermittent status list')
                 # Serialized mozlog omits expected on matching outcomes (including
                 # expected FAIL). status itself is mandatory, never defaulted.
-                require('expected' not in e or e['status'] == e['expected'] or e['status'] in intermittent, 'unexpected native status')
+                if 'expected' in e and e['status'] != e['expected'] and e['status'] not in intermittent:
+                    # Only an exact, declared, not-yet-seen product difference.
+                    key = (identity, e.get('subtest') if action == 'test_status' else None, e['status'], e['expected'])
+                    require(key in declared and key not in matched, 'unexpected native status')
+                    matched.add(key)
             if action == 'test_start':
                 require(identity not in active and identity not in observed, 'duplicate test/retry')
                 active.add(identity)
@@ -146,6 +177,8 @@ def raw_summary(path, expected_ids, id_mode="exact", disabled_ids=None):
     require(observed == expected_ids, 'missing native test coverage')
     require(skipped == disabled_ids, 'native skips differ from pre-resolved disabled tests')
     require(executed, 'zero executed tests / skip-only')
+    # A declared difference that no longer occurs must be removed, not kept.
+    require(matched == declared, 'known difference not observed; remove stale entry')
     return len(executed)
 
 
@@ -170,7 +203,11 @@ def aggregate(plan, report, evidence_root, needs, scope="full"):
     count = 0
     for group in groups:
         row = actual[group['id']]
-        require(type(row.get('exit_code')) is int and row['exit_code'] == 0, 'native exit failure')
+        known = group.get('known_differences', [])
+        # Native harnesses exit 1 for any test failure. That is accepted only
+        # when the raw log below proves every failure is a declared difference.
+        exits = {0, 1} if known else {0}
+        require(type(row.get('exit_code')) is int and row['exit_code'] in exits, 'native exit failure')
         expected = unique(group.get('resolved_test_ids'), 'resolved tests')
         logfile = material(evidence_root, row['raw_log'], row['raw_sha256'])
         mode = group.get('id_mode', 'exact')
@@ -178,7 +215,7 @@ def aggregate(plan, report, evidence_root, needs, scope="full"):
         disabled = group.get('disabled_test_ids', [])
         require(isinstance(disabled,list) and len(disabled)==len(set(disabled)), 'invalid disabled inventory')
         if scope == 'browser-xpcshell': require('disabled_test_ids' in group, 'missing native disabled inventory')
-        count += raw_summary(logfile, expected, mode, disabled)
+        count += raw_summary(logfile, expected, mode, disabled, known)
     return {'status': 'PASS_EVIDENCE_CONTRACT' if scope == 'full' else 'PASS_BROWSER_XPCSHELL_PILOT_ONLY', 'groups': len(groups), 'executed': count}
 
 

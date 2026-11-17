@@ -245,3 +245,36 @@ the harness writes them: `__pycache__`/`*.pyc` in the `_tests` trees, and
 commands run with `PYTHONDONTWRITEBYTECODE=1` and a scratch
 `PYTHONPYCACHEPREFIX`, so in-tree bytecode is neither written nor read. A
 changed snapshot fails with the differing paths.
+
+## Declared Floorp product differences
+
+Some upstream assertions assume Firefox defaults that Floorp deliberately
+changes. A suite in `suites.json` may list them under `known_differences`; each
+entry names one exact native event: the test identity (file basename in the
+browser/xpcshell pilot), the `subtest` (`null` for the test's own end status),
+`status` `FAIL`, `expected` `PASS`, and a reviewed `reason`. The resolver copies
+the list into the hash-bound plan after checking that the test is resolved and
+enabled. The runner, adapter and gate then accept such an event only once and
+only as declared; any other unexpected status, a crash, timeout, error or skip
+still fails. The harness's exit code 1 is accepted only for a suite with
+declarations, and only when its raw log proves every failure was declared. A
+declaration that no longer occurs fails the run, so stale entries must be
+removed.
+
+Current declaration: `p1-sessionstore-unit` / `test_startup_session_async.js`
+expects Firefox's deferred session (`DEFER_SESSION`), but Floorp ships
+`browser.startup.page = 3` (`static/gecko/pref/override.ini`) and resumes the
+previous session.
+
+## Debug-build chrome page CSP checks
+
+Debug Gecko builds crash when a `chrome:` or `about:` page uses a CSP source
+outside `nsContentSecurityUtils` allowlists (`AssertChromePageHasCSP`,
+`AssertAboutPageHasCSP`; release builds do not run these checks). Packaged
+Noraneko pages keep `style-src 'unsafe-inline'` and `img-src` `data:`/`blob:`/
+`https:`, so
+`.github/patches/floorp-runtime/common/noraneko-chrome-csp-allowlist.patch` adds
+exactly those pages to the matching allowlists. `style-src data:` is not
+allowlisted; the pages no longer declare it.
+`tools/src/chrome_csp_allowlist_patch.test.ts` fails when a page CSP and the
+patch disagree.

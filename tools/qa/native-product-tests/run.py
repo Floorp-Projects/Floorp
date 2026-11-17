@@ -265,10 +265,19 @@ class Lock:
 def timestamp(): return datetime.now(timezone.utc).isoformat()
 
 
-def structured_summary(path):
-    summary = {'test_end': {}, 'unexpected_statuses': 0, 'suite_end': False, 'observed_unique_test_end': 0, 'executed_unique_test_end': 0}
+def known_key(item):
+    """Exact event key for a declared known difference (see suites.json)."""
+    subtest = item.get('subtest') if item.get('action') == 'test_status' else None
+    return (str(item.get('test')).rsplit('/', 1)[-1], subtest, item.get('status'), item.get('expected'))
+
+
+def structured_summary(path, known=()):
+    declared = {(k['test'], k['subtest'], k['status'], k['expected']) for k in known}
+    summary = {'test_end': {}, 'unexpected_statuses': 0, 'suite_end': False, 'observed_unique_test_end': 0, 'executed_unique_test_end': 0,
+               'known_differences_observed': 0, 'known_differences_missing': len(declared)}
     seen = set()
     executed = set()
+    matched = set()
     if not path.exists(): return summary
     for line in path.read_text(errors='replace').splitlines():
         try: item = json.loads(line)
@@ -283,12 +292,22 @@ def structured_summary(path):
                 summary['executed_unique_test_end'] = len(executed)
             summary['test_end'][status] = summary['test_end'].get(status, 0) + 1
         if item.get('action') in ('test_end', 'test_status') and 'expected' in item:
-            summary['unexpected_statuses'] += 1
+            key = known_key(item)
+            if key in declared and key not in matched:
+                matched.add(key)
+            else:
+                summary['unexpected_statuses'] += 1
+    summary['known_differences_observed'] = len(matched)
+    summary['known_differences_missing'] = len(declared - matched)
     return summary
 
 
-def passed(exit_code, summary):
-    return exit_code == 0 and summary['suite_end'] and summary['unexpected_statuses'] == 0 and summary['executed_unique_test_end'] > 0
+def passed(exit_code, summary, known=()):
+    # Harnesses exit 1 for any failure; accept it only when every unexpected
+    # status was a declared difference and every declared one occurred.
+    exits = (0, 1) if known else (0,)
+    return (exit_code in exits and summary['suite_end'] and summary['unexpected_statuses'] == 0
+            and summary.get('known_differences_missing', 0) == 0 and summary['executed_unique_test_end'] > 0)
 
 
 def product_processes(binary):
@@ -351,7 +370,8 @@ def main(argv=None):
     suites = [s for s in config['suites'] if not choices or s['id'] in choices or s['priority'] in choices or s.get('selection_group') in choices]
     provenance = preflight(args, config)
     plan = [{'id': s['id'], 'kind': s['kind'], 'manifests': s['manifests'], 'registered_files': s['registered_files'],
-             'test_paths': s.get('test_paths'), 'command': command(args, config, s, args.logs)} for s in suites]
+             'test_paths': s.get('test_paths'), 'known_differences': s.get('known_differences', []),
+             'command': command(args, config, s, args.logs)} for s in suites]
     for suite, entry in zip(suites, plan):
         if suite['kind'] == 'xpcshell':
             entry['manifest_wrapper'] = xpcshell_wrapper(args, suite, args.logs)
@@ -392,10 +412,10 @@ def main(argv=None):
                 evidence['results'].append(result); save()
                 status = execute(entry['command'], args.runtime, log, env)
                 result.update(exit_code=status, ended=timestamp(),
-                              summary=structured_summary(args.logs / (entry['id'] + '.jsonl')))
+                              summary=structured_summary(args.logs / (entry['id'] + '.jsonl'), entry['known_differences']))
                 (args.logs / (entry['id'] + '.exit')).write_text(str(status) + '\n')
                 summary = result['summary']
-                result['passed'] = passed(status, summary)
+                result['passed'] = passed(status, summary, entry['known_differences'])
                 leftovers = product_processes(args.binary)
                 if leftovers:
                     result['passed'] = False

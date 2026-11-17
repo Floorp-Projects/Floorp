@@ -64,4 +64,45 @@ class MozlogContractTests(unittest.TestCase):
         es=self.base();es[2]['expected']='MAGIC'
         with self.assertRaises(ValueError):self.evaluate(es)
 
+class KnownDifferenceTests(unittest.TestCase):
+    REASON='Floorp product default differs from the upstream assumption.'
+    def known(self,subtest=None,**over):
+        k={'test':'a','subtest':subtest,'status':'FAIL','expected':'PASS','reason':self.REASON};k.update(over);return k
+    def events(self):
+        return [{'action':'suite_start'},{'action':'test_start','test':'a'},
+                {'action':'test_status','test':'a','subtest':'cb','status':'FAIL','expected':'PASS'},
+                {'action':'test_end','test':'a','status':'FAIL','expected':'PASS'},
+                {'action':'test_start','test':'b'},{'action':'test_end','test':'b','status':'PASS'},{'action':'suite_end'}]
+    def evaluate(self,events,known):
+        with tempfile.TemporaryDirectory() as d:
+            p=Path(d)/'log';p.write_text('\n'.join(json.dumps(e) for e in events))
+            return gate.raw_summary(p,{'a','b'},known=known)
+    def both(self):return [self.known('cb'),self.known()]
+    def test_exact_declared_differences_accepted(self):self.assertEqual(self.evaluate(self.events(),self.both()),2)
+    def test_undeclared_subtest_failure_still_rejected(self):
+        es=self.events();es.insert(3,{'action':'test_status','test':'a','subtest':'other','status':'FAIL','expected':'PASS'})
+        with self.assertRaises(ValueError):self.evaluate(es,self.both())
+    def test_repeated_declared_failure_rejected(self):
+        es=self.events();es.insert(3,dict(es[2]))
+        with self.assertRaises(ValueError):self.evaluate(es,self.both())
+    def test_other_test_failure_still_rejected(self):
+        es=self.events();es[5].update(status='FAIL',expected='PASS')
+        with self.assertRaises(ValueError):self.evaluate(es,self.both())
+    def test_stale_declaration_rejected(self):
+        es=self.events();del es[2]
+        with self.assertRaises(ValueError):self.evaluate(es,self.both())
+    def test_declaration_cannot_cover_crash_timeout_or_skip(self):
+        for status in ('CRASH','TIMEOUT','ERROR','SKIP','PASS'):
+            with self.subTest(status=status),self.assertRaises(ValueError):self.evaluate(self.events(),[self.known(status=status)])
+    def test_declaration_requires_reason_and_exact_fields(self):
+        for bad in ({**self.known(),'reason':'short'},{k:v for k,v in self.known().items() if k!='reason'},
+                    {**self.known(),'extra':1},{**self.known(),'test':'foreign'},{**self.known(),'subtest':''}):
+            with self.subTest(bad=bad),self.assertRaises(ValueError):self.evaluate(self.events(),[bad])
+    def test_duplicate_declaration_rejected(self):
+        with self.assertRaises(ValueError):self.evaluate(self.events(),self.both()+[self.known()])
+    def test_disabled_test_cannot_be_declared(self):
+        with tempfile.TemporaryDirectory() as d:
+            p=Path(d)/'log';p.write_text('')
+            with self.assertRaises(ValueError):gate.raw_summary(p,{'a','b'},disabled_ids={'a'},known=[self.known()])
+
 if __name__=='__main__':unittest.main()

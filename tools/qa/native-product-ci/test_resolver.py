@@ -22,6 +22,15 @@ class ResolverTests(unittest.TestCase):
     def test_pilot_excludes_only_marionette(self):
         self.assertEqual(set(gate.GROUPS)-set(gate.PILOT_GROUPS),{'p1-sessionstore-marionette'})
 
+    def test_configured_known_differences_are_valid_for_resolved_groups(self):
+        config=json.loads(Path(r.c.CONFIG).read_text())
+        declared=[s for s in config['suites'] if 'known_differences' in s]
+        self.assertEqual([s['id'] for s in declared],['p1-sessionstore-unit'])
+        for suite in declared:
+            tests={k['test'] for k in suite['known_differences']}
+            self.assertEqual(len(gate.known_differences(suite['known_differences'],tests|{'other.js'},set())),2)
+            with self.assertRaises(ValueError):gate.known_differences(suite['known_differences'],{'other.js'},set())
+
 class PilotGateTests(unittest.TestCase):
     def test_pilot_never_satisfies_full_gate(self):
         fixture=test_gate.GateTests();fixture.setUp()

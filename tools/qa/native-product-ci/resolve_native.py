@@ -53,9 +53,15 @@ def resolve(record, output):
             result=subprocess.run(cmd,cwd=args.runtime,env=env,stdout=log,stderr=subprocess.STDOUT,timeout=300)
         gate.require(result.returncode==0,'native resolver failed: '+suite['id'])
         data=json.loads(dump.read_text())
-        groups.append({'id':suite['id'],'id_mode':'unique-file-basename','resolved_test_ids':entries(data),
-                       'disabled_test_ids':[t['path'].rsplit('/',1)[-1] for t in data['active_tests'] if 'disabled' in t],
-                       'dump_sha256':c.digest(dump),'resolver_command':cmd})
+        group={'id':suite['id'],'id_mode':'unique-file-basename','resolved_test_ids':entries(data),
+               'disabled_test_ids':[t['path'].rsplit('/',1)[-1] for t in data['active_tests'] if 'disabled' in t],
+               'dump_sha256':c.digest(dump),'resolver_command':cmd}
+        # Reviewed product differences travel inside the hash-bound plan, and
+        # must name a resolved, enabled test of this exact group.
+        if 'known_differences' in suite:
+            gate.known_differences(suite['known_differences'],set(group['resolved_test_ids']),set(group['disabled_test_ids']))
+            group['known_differences']=suite['known_differences']
+        groups.append(group)
     gate.require(len(groups)==len(gate.PILOT_GROUPS),'incomplete pilot resolution')
     return {'schema':1,'scope':'browser-xpcshell','floorp_sha':record['floorp_sha'],
             'runtime_sha':record['runtime_sha'],'groups':groups,

@@ -51,7 +51,23 @@
       "manifests": [
         "xpcshell.toml"
       ],
-      "registered_files": 12
+      "registered_files": 12,
+      "known_differences": [
+        {
+          "test": "test_startup_session_async.js",
+          "subtest": "cb",
+          "status": "FAIL",
+          "expected": "PASS",
+          "reason": "Floorp ships browser.startup.page = 3 (static/gecko/pref/override.ini), so a valid previous session is resumed (RESUME_SESSION) instead of Firefox's default deferral (DEFER_SESSION) that this upstream assertion expects."
+        },
+        {
+          "test": "test_startup_session_async.js",
+          "subtest": null,
+          "status": "FAIL",
+          "expected": "PASS",
+          "reason": "Test-level result of the same browser.startup.page = 3 product default difference; no other assertion in this test may fail."
+        }
+      ]
     },
     {
       "id": "p1-sessionstore-marionette",

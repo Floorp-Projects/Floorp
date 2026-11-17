@@ -177,6 +177,22 @@ class CompletionTests(unittest.TestCase):
             self.assertEqual(result['executed_unique_test_end'], 1)
             self.assertTrue(r.passed(0, result))
 
+    def test_declared_known_differences_allow_harness_exit_one_only(self):
+        known=[{'test':'test_a.js','subtest':'cb','status':'FAIL','expected':'PASS','reason':'x'},
+               {'test':'test_a.js','subtest':None,'status':'FAIL','expected':'PASS','reason':'x'}]
+        events=[{'action':'test_status','test':'../x/test_a.js','subtest':'cb','status':'FAIL','expected':'PASS'},
+                {'action':'test_end','test':'../x/test_a.js','status':'FAIL','expected':'PASS'},
+                {'action':'suite_end'}]
+        with tempfile.TemporaryDirectory() as d:
+            path=Path(d)/'log.jsonl';path.write_text('\n'.join(json.dumps(e) for e in events))
+            result=r.structured_summary(path,known)
+            self.assertEqual((result['unexpected_statuses'],result['known_differences_missing']),(0,0))
+            self.assertTrue(r.passed(1,result,known));self.assertFalse(r.passed(2,result,known))
+            self.assertFalse(r.passed(1,r.structured_summary(path)))
+            stale=r.structured_summary(path,known+[{**known[0],'subtest':'gone'}])
+            self.assertEqual(stale['known_differences_missing'],1);self.assertFalse(r.passed(1,stale,known))
+            path.write_text('\n'.join(json.dumps(e) for e in events[:1]+events))
+            self.assertFalse(r.passed(1,r.structured_summary(path,known),known))
     def test_retained_lock_requires_manual_cleanup(self):
         with tempfile.TemporaryDirectory() as td:
             path=Path(td)/'lock'
