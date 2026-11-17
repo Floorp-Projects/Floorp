@@ -413,7 +413,6 @@ export class TabLoadPreserveController {
     if (
       !startedLoadSinceTyping &&
       typeof currentTyped === "string" &&
-      currentTyped.trim() !== "" &&
       currentTyped !== activeLoad.url
     ) {
       if (record) {
@@ -597,7 +596,11 @@ export class TabLoadPreserveController {
           return;
         }
         for (const tab of remaining) {
-          this.originalMethods.reloadTab?.call(this.tabBrowser, tab);
+          if (typeof tab.linkedBrowser?.reloadWithFlags === "function") {
+            tab.linkedBrowser.reloadWithFlags(reloadFlags);
+          } else {
+            this.originalMethods.reloadTab?.call(this.tabBrowser, tab);
+          }
         }
       };
     }

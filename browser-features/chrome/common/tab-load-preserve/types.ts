@@ -24,6 +24,7 @@ export interface PreserveLoadBrowser {
   readonly currentURI?: PreserveLoadURI | null;
   readonly isNavigating?: boolean;
   didStartLoadSinceLastUserTyping?: () => boolean;
+  reloadWithFlags?: (flags: number) => void;
   fixupAndLoadURIString?: (
     uriString: string,
     params: {
