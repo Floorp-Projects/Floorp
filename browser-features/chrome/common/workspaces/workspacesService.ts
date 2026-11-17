@@ -527,7 +527,10 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
    * by resetWorkspaces(); tabs in other windows would otherwise keep IDs that
    * no longer exist until that window happens to refresh.
    */
-  private reassignOtherWindowsTabs(fallbackWorkspaceId: TWorkspaceID): void {
+  private reassignOtherWindowsTabs(
+    idMap: Map<TWorkspaceID, TWorkspaceID>,
+    fallbackWorkspaceId: TWorkspaceID,
+  ): void {
     const enumerator = Services.wm.getEnumerator("navigator:browser");
     while (enumerator.hasMoreElements()) {
       const window = enumerator.getNext() as Window & {
@@ -560,9 +563,16 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
       const tabs = window.gBrowser?.tabs ?? [];
       for (const tab of tabs) {
         const workspaceId = tab.getAttribute(WORKSPACE_TAB_ATTRIBUTION_ID);
-        if (workspaceId && !this.dataManagerCtx.isWorkspaceID(workspaceId)) {
-          tab.setAttribute(WORKSPACE_TAB_ATTRIBUTION_ID, fallbackWorkspaceId);
+        if (!workspaceId || this.dataManagerCtx.isWorkspaceID(workspaceId)) {
+          continue;
         }
+        // Preserve the tab's workspace membership by mapping the captured ID
+        // onto the restored one; only unknown IDs fall back.
+        const mapped = idMap.get(workspaceId as TWorkspaceID);
+        tab.setAttribute(
+          WORKSPACE_TAB_ATTRIBUTION_ID,
+          mapped ?? fallbackWorkspaceId,
+        );
       }
     }
   }
@@ -879,7 +889,7 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
         ? idMap.get(state.currentWorkspaceId) as TWorkspaceID
         : defaultId;
       this.changeWorkspace(currentId);
-      this.reassignOtherWindowsTabs(fallbackWorkspaceId);
+      this.reassignOtherWindowsTabs(idMap, fallbackWorkspaceId);
       this.tabManagerCtx.updateTabsVisibility();
     } catch (error) {
       // A throw before the rollback point (store rebuild, SessionStore
@@ -917,6 +927,19 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
             "WorkspacesService: failed to close replaced tab",
             error,
           );
+          // Do not leave the tab pointing at a workspace that is about to be
+          // deleted; park it on a workspace that will still exist.
+          try {
+            this.tabManagerCtx.setWorkspaceIdToAttribute(
+              tab,
+              fallbackWorkspaceId,
+            );
+          } catch (attributeError) {
+            console.error(
+              "WorkspacesService: failed to reassign replaced tab",
+              attributeError,
+            );
+          }
         }
       }
     });

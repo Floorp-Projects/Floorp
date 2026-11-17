@@ -180,6 +180,13 @@ interface DelayedStartupWindow extends Window {
 const WINDOW_STARTUP_TIMEOUT_MS = 15_000;
 
 /**
+ * Fresh pre-restore backups are exempt from retention. A restore in another
+ * window may still be running, and its safety copy is only protected inside
+ * that service instance.
+ */
+const PRE_RESTORE_GRACE_MS = 10 * 60 * 1000;
+
+/**
  * Waits until the target window finished its delayed startup. `readyState`
  * alone is not enough: gBrowser and SessionStore are wired during delayed
  * startup, and touching them earlier races the window's own restore.
@@ -740,6 +747,15 @@ export class WorkspacesBackupService {
     const toDelete = new Set<string>();
     for (const summary of [...expired, ...excessPreRestore]) {
       if (summary.fileName === protectedFileName) {
+        continue;
+      }
+      // Another window's service instance may be running a restore right now.
+      // Its safety copy is only protected inside that instance, so keep fresh
+      // pre-restore files regardless of which window cleans up.
+      if (
+        summary.kind === "pre-restore" &&
+        now - summary.capturedAt < PRE_RESTORE_GRACE_MS
+      ) {
         continue;
       }
       toDelete.add(summary.fileName);
