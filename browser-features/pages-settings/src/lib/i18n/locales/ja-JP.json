@@ -299,6 +299,7 @@
         "errorCaptureInvalid": "取得したデータが検証を通らなかったため、バックアップは書き込まれていません。",
         "errorTooLarge": "バックアップがサイズ上限を超えるため、書き込みませんでした。",
         "errorRestoreInProgress": "別の復元またはバックアップ操作が実行中です。完了するまで待ってから、もう一度お試しください。",
+        "errorRestartRequired": "ワークスペースの有効・無効が切り替えられましたが、Floorp がまだ再起動されていません。再起動してから、もう一度復元してください。",
         "errorEmptyBackup": "このバックアップにはタブが含まれていないため、復元しませんでした。現在のタブは変更されていません。",
         "errorNothingToBackUp": "現在バックアップできるタブがありません。",
         "errorPrivateWindowUnsupported": "プライベートウィンドウはバックアップ・復元できません。",

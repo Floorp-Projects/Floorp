@@ -299,6 +299,7 @@
         "errorCaptureInvalid": "The captured data was rejected by validation, so no backup was written.",
         "errorTooLarge": "The backup would exceed the size limit, so it was not written.",
         "errorRestoreInProgress": "Another restore or backup operation is already running. Wait for it to finish, then try again.",
+        "errorRestartRequired": "Workspaces were turned on or off without restarting Floorp. Restart Floorp, then try the restore again.",
         "errorEmptyBackup": "That backup contains no tabs, so nothing was restored. Your current tabs are untouched.",
         "errorNothingToBackUp": "There are no tabs to back up right now.",
         "errorPrivateWindowUnsupported": "Private windows cannot be backed up or restored.",

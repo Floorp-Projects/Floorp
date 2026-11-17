@@ -27,6 +27,19 @@ interface PendingBackupRequest {
 }
 
 export class NRWorkspacesChild extends JSWindowActorChild {
+  /**
+   * The page went away (closed or navigated): settle every pending backup
+   * request and drop its timer, so a 10-minute restore timeout does not keep
+   * the actor alive.
+   */
+  didDestroy() {
+    for (const [requestId, pending] of this.#pendingBackupRequests) {
+      globalThis.clearTimeout(pending.timer);
+      pending.resolve({ requestId, success: false, error: "actor-destroyed" });
+    }
+    this.#pendingBackupRequests.clear();
+  }
+
   #pendingInitializationPromise: Promise<InitializeResult> | null = null;
   #pendingInitializationResolver: ((result: InitializeResult) => void) | null =
     null;

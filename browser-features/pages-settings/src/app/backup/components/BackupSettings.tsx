@@ -186,7 +186,9 @@ export function BackupSettings() {
     try {
       const result = await action();
       if (!result.success) {
-        if (isTimeoutError(result.error)) {
+        // Only a restore keeps running after the actor times out (its
+        // timeout is long); other operations simply failed.
+        if (key === "restore" && isTimeoutError(result.error)) {
           // The operation may still be running; do not release the UI yet.
           keepBusy = true;
           setStillRunning(true);
@@ -272,6 +274,9 @@ export function BackupSettings() {
         return t("backup.errorPreRestoreFailed");
       case "restore-in-progress":
         return t("backup.errorRestoreInProgress");
+      case "workspaces-disabled":
+        // Workspaces were toggled without restarting Floorp.
+        return t("backup.errorRestartRequired");
       case "empty-backup":
         return t("backup.errorEmptyBackup");
       case "nothing-to-back-up":

@@ -460,6 +460,10 @@ export class WorkspacesBackupService {
    */
   private restoreInFlight = false;
 
+  public isRestoreInFlight(): boolean {
+    return this.restoreInFlight;
+  }
+
   constructor(host: WorkspacesBackupHost) {
     this.host = host;
     this.config = readBackupConfig();
@@ -1068,6 +1072,29 @@ export class WorkspacesBackupService {
     }
   }
 
+  /** Whether a restore is running in any browser window (including this one). */
+  private isRestoreInFlightInAnyWindow(): boolean {
+    try {
+      const enumerator = Services.wm.getEnumerator("navigator:browser");
+      while (enumerator.hasMoreElements()) {
+        const window = enumerator.getNext() as Window & {
+          workspacesBackupFuncs?: { isRestoreInFlight?: () => boolean };
+        };
+        if (window?.workspacesBackupFuncs?.isRestoreInFlight?.() === true) {
+          return true;
+        }
+      }
+    } catch (error) {
+      console.error(
+        "WorkspacesBackupService: restore state lookup failed",
+        error,
+      );
+      // Unknown: prefer skipping one scheduled run over a torn capture.
+      return true;
+    }
+    return false;
+  }
+
   /**
    * Enumerates normal browser windows. Windows whose privacy cannot be
    * determined are excluded, and the capture is aborted so a failed check can
@@ -1534,7 +1561,9 @@ export class WorkspacesBackupService {
       return undefined;
     }
     const backoffMs = Math.min(intervalMs, SCHEDULE_SKIP_BACKOFF_MS);
-    if (this.restoreInFlight) {
+    // The capture spans every window, so a restore running in any of them
+    // would be captured half-done.
+    if (this.restoreInFlight || this.isRestoreInFlightInAnyWindow()) {
       return backoffMs;
     }
     let windows: BrowserWindow[];

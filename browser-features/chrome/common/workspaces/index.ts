@@ -60,6 +60,7 @@ export default class Workspaces extends NoraComponentBase {
       deleteBackup: (fileName: string) =>
         backupController.deleteBackup(fileName),
       deleteAllBackups: () => backupController.deleteAllBackups(),
+      isRestoreInFlight: () => backupController.isRestoreInFlight(),
     };
     onCleanup(() => backupController.dispose());
 
@@ -78,6 +79,10 @@ export default class Workspaces extends NoraComponentBase {
         const tabCtx = new WorkspacesTabManager(iconCtx, dataManagerCtx);
         const ctx = new WorkspacesService(tabCtx, iconCtx, dataManagerCtx);
         Workspaces.windowWorkspacesMap.set(window, ctx);
+        // A Hub request that arrived before migration finished may have
+        // started a detached backup service; hand over to the real one now
+        // so two schedulers and observers do not run in this window.
+        backupController.ensureStarted();
         ctx.syncController = new WorkspacesSyncController(ctx);
 
         const observer = {

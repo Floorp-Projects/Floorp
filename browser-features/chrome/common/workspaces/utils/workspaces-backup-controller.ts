@@ -22,6 +22,11 @@ export interface WorkspacesBackupFuncs {
   restoreBackup(fileName: string): Promise<RestoreBackupResult>;
   deleteBackup(fileName: string): Promise<boolean>;
   deleteAllBackups(): Promise<boolean>;
+  /**
+   * True while a restore runs in this window. Other windows' schedulers read
+   * it so they do not capture a half-restored store.
+   */
+  isRestoreInFlight(): boolean;
 }
 
 /**
@@ -110,6 +115,14 @@ export class WorkspacesBackupController implements WorkspacesBackupFuncs {
 
   public deleteAllBackups(): Promise<boolean> {
     return this.resolveService().deleteAllBackups();
+  }
+
+  public isRestoreInFlight(): boolean {
+    const service = this.getService();
+    if (service) {
+      return service.backupService.isRestoreInFlight();
+    }
+    return this.detachedService?.isRestoreInFlight() ?? false;
   }
 
   public dispose(): void {

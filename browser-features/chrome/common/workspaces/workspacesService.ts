@@ -793,8 +793,11 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
         // Remove every tab this restore created, successful or not. A failed
         // tab may still exist in the window with a half-applied state. If
         // restoreTabsIntoWindow threw, `outcomes` is empty, so also sweep tabs
-        // that did not exist before and carry a restored workspace ID (tabs
-        // the user opened meanwhile carry a pre-restore ID and are kept).
+        // that did not exist before and carry a restored workspace ID. Tabs
+        // the user opened meanwhile carry a pre-restore ID and are kept; this
+        // relies on restoreTabsIntoWindow creating tabs synchronously after
+        // its single await, so the user cannot switch to a restored workspace
+        // mid-restore. Revisit if an await is added inside its tab loop.
         const restoredIds = new Set<string>(restoredOrder);
         const created = new Set<XULElement>(
           outcomes.flatMap((outcome) => (outcome.tab ? [outcome.tab] : [])),
@@ -806,6 +809,23 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
             restoredIds.has(workspaceId)
           ) {
             created.add(tab);
+          }
+        }
+        // Select a pre-restore tab first: removing the selected restored tab
+        // would otherwise select (and start loading) the next restored tab,
+        // once per tab being removed.
+        const gBrowser = globalThis.gBrowser;
+        if (created.has(gBrowser.selectedTab)) {
+          const fallbackTab = [...preRestoreTabs].find((tab) =>
+            tab.isConnected &&
+            (!previousCurrentID ||
+              tab.getAttribute(WORKSPACE_TAB_ATTRIBUTION_ID) ===
+                previousCurrentID)
+          ) ?? [...preRestoreTabs].find((tab) =>
+            tab.isConnected
+          );
+          if (fallbackTab) {
+            gBrowser.selectedTab = fallbackTab;
           }
         }
         this.tabManagerCtx.runWithTabCloseSuppressed(() => {
@@ -1017,7 +1037,9 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
     //     while the pre-restore workspaces still exist, so no window observes
     //     a tab whose workspace vanished.
     try {
-      this.reassignOtherWindowsTabs(idMap, fallbackWorkspaceId);
+      // Unmapped tabs in other windows go to the default workspace: that is
+      // the one those windows show after the store swap.
+      this.reassignOtherWindowsTabs(idMap, defaultId);
     } catch (error) {
       logStepError("re-attributing other windows", error);
     }

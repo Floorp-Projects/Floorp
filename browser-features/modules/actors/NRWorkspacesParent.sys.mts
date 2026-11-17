@@ -171,18 +171,26 @@ export class NRWorkspacesParent extends JSWindowActorParent {
         }
       }
 
-      this.sendAsyncMessage("NRWorkspaces:BackupResult", {
-        requestId,
-        success: true,
-        data,
-      });
+      this.sendResult({ requestId, success: true, data });
     } catch (error) {
       console.error("NRWorkspacesParent: backup request failed", error);
-      this.sendAsyncMessage("NRWorkspaces:BackupResult", {
+      this.sendResult({
         requestId,
         success: false,
         error: error instanceof Error ? error.message : String(error),
       });
+    }
+  }
+
+  /** The page may have closed while the operation ran; sending then throws. */
+  private sendResult(result: Record<string, unknown>): void {
+    try {
+      this.sendAsyncMessage("NRWorkspaces:BackupResult", result);
+    } catch (error) {
+      console.error(
+        "NRWorkspacesParent: could not deliver backup result",
+        error,
+      );
     }
   }
 

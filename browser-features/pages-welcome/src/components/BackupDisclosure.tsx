@@ -154,7 +154,12 @@ export function BackupDisclosure() {
       {error && <p role="alert" className={styles.error}>{t("ui.saveError")}
       </p>}
       <div className={styles.links}>
-        <a href="about:preferences" target="_blank" rel="noopener noreferrer">
+        {/* Backup settings live in the Floorp Hub, not Firefox preferences. */}
+        <a
+          href="about:hub#/features/backup"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
           {t("setupV5.backupOpenSettings")}
         </a>
       </div>
