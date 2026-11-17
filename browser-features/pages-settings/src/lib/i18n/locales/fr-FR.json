@@ -26,6 +26,7 @@
         "tabAndAppearance": "Onglets et apparence",
         "browserSidebar": "Barre latérale",
         "workspaces": "Espaces de travail",
+        "backup": "Backup (Alpha)",
         "keyboardShortcuts": "Raccourcis clavier",
         "webApps": "Applications Web",
         "profileAndAccount": "Profil et compte",
@@ -269,6 +270,9 @@
                 "focusExpand": "Développer la barre de signets sur la mise au point"
             }
         }
+    },
+    "backup": {
+        "description": "Back up workspaces and tabs automatically, and restore them when needed. (Alpha)"
     },
     "workspaces": {
         "workspaces": "Espaces de travail",

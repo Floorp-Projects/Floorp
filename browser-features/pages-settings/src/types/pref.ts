@@ -91,12 +91,18 @@ export const zWorkspacesFormData = t.type({
   showWorkspaceNameOnToolbar: t.boolean,
   closePopupAfterClick: t.boolean,
   exitOnLastTabClose: t.boolean,
-  backupEnabled: t.boolean,
-  backupIntervalMinutes: t.number,
-  backupRetentionDays: t.number,
 });
 
 export type WorkspacesFormData = t.TypeOf<typeof zWorkspacesFormData>;
+
+/* Backup */
+export const zBackupSettingsFormData = t.type({
+  enabled: t.boolean,
+  intervalMinutes: t.number,
+  retentionDays: t.number,
+});
+
+export type BackupSettingsFormData = t.TypeOf<typeof zBackupSettingsFormData>;
 
 /* Command Palette */
 export const zCommandPaletteFormData = t.type({

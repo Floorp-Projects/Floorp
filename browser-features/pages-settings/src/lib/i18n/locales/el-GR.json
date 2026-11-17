@@ -26,6 +26,7 @@
         "tabAndAppearance": "Καρτέλα & Eμφάνιση",
         "browserSidebar": "Πίνακας πλευρικής γραμμής",
         "workspaces": "Χώροι εργασίας",
+        "backup": "Backup (Alpha)",
         "keyboardShortcuts": "Συντομεύσεις πληκτρολογίου",
         "webApps": "Εφαρμογές Web",
         "profileAndAccount": "Προφίλ και Λογαριασμός",
@@ -269,6 +270,9 @@
                 "focusExpand": "Επέκταση της γραμμής σελιδοδεικτών κατά την εστίαση"
             }
         }
+    },
+    "backup": {
+        "description": "Back up workspaces and tabs automatically, and restore them when needed. (Alpha)"
     },
     "workspaces": {
         "workspaces": "Χώροι εργασίας",

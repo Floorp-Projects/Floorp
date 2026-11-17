@@ -26,6 +26,7 @@
         "tabAndAppearance": "Tabblad & Uiterlijk",
         "browserSidebar": "Paneel zijbalk",
         "workspaces": "Workspaces",
+        "backup": "Backup (Alpha)",
         "keyboardShortcuts": "Sneltoetsen",
         "webApps": "Web Apps",
         "profileAndAccount": "Profiel en Account",
@@ -269,6 +270,9 @@
                 "focusExpand": "Bladwijzerbalk uitvouwen bij focus"
             }
         }
+    },
+    "backup": {
+        "description": "Back up workspaces and tabs automatically, and restore them when needed. (Alpha)"
     },
     "workspaces": {
         "workspaces": "Workspaces",

@@ -7,6 +7,7 @@ import {
   BadgeInfo,
   Briefcase,
   Command,
+  DatabaseBackup,
   Gauge,
   House,
   Keyboard,
@@ -75,6 +76,15 @@ const SECTION_DEFINITIONS: SectionDefinition[] = [
     icon: Briefcase,
     priority: 80,
     textKey: "workspaces",
+  },
+  {
+    id: "backup",
+    route: "/features/backup",
+    titleKey: "pages.backup",
+    descriptionKey: "backup.description",
+    icon: DatabaseBackup,
+    priority: 78,
+    textKey: "backup",
   },
   {
     id: "mouse-gestures",

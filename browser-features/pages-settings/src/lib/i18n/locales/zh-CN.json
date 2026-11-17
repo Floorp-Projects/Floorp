@@ -26,6 +26,7 @@
         "tabAndAppearance": "标签页和外观",
         "browserSidebar": "面板侧边栏",
         "workspaces": "工作区",
+        "backup": "Backup (Alpha)",
         "keyboardShortcuts": "键盘快捷键",
         "webApps": "Web 应用",
         "profileAndAccount": "配置和账户",
@@ -269,6 +270,9 @@
                 "focusExpand": "聚焦时展开书签栏"
             }
         }
+    },
+    "backup": {
+        "description": "Back up workspaces and tabs automatically, and restore them when needed. (Alpha)"
     },
     "workspaces": {
         "workspaces": "工作区",

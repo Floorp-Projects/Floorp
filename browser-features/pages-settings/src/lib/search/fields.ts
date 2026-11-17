@@ -220,19 +220,19 @@ export const SETTING_FIELDS: SettingFieldDefinition[] = [
   },
   {
     "id": "backup-enabled",
-    "route": "/features/workspaces",
+    "route": "/features/backup",
     "titleKey": "workspaces.backupAutoEnable",
     "descriptionKey": "workspaces.backupAutoEnableDescription",
   },
   {
     "id": "backup-interval",
-    "route": "/features/workspaces",
+    "route": "/features/backup",
     "titleKey": "workspaces.backupInterval",
     "descriptionKey": "workspaces.backupIntervalDescription",
   },
   {
     "id": "backup-retention",
-    "route": "/features/workspaces",
+    "route": "/features/backup",
     "titleKey": "workspaces.backupRetention",
     "descriptionKey": "workspaces.backupRetentionDescription",
   },

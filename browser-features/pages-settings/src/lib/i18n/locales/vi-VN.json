@@ -26,6 +26,7 @@
         "tabAndAppearance": "Thẻ & Diện mạo",
         "browserSidebar": "Thanh bên",
         "workspaces": "Không gian làm việc",
+        "backup": "Backup (Alpha)",
         "keyboardShortcuts": "Phím tắt ",
         "webApps": "Ứng dụng Web",
         "profileAndAccount": "Hồ sơ và Tài khoản",
@@ -269,6 +270,9 @@
                 "focusExpand": "Expand bookmark bar on focus"
             }
         }
+    },
+    "backup": {
+        "description": "Back up workspaces and tabs automatically, and restore them when needed. (Alpha)"
     },
     "workspaces": {
         "workspaces": "Workspaces",

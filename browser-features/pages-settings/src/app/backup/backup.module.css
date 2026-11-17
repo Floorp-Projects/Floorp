@@ -1,0 +1,23 @@
+.page {
+  composes: page from "../../components/common/settings-sections.module.css";
+}
+.sections {
+  composes: sections from
+    "../../components/common/settings-sections.module.css";
+}
+.section {
+  composes: section from "../../components/common/settings-sections.module.css";
+}
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  min-height: 60px;
+}
+.row > :first-child {
+  min-width: 0;
+}
+.row > :last-child {
+  flex-shrink: 0;
+}

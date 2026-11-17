@@ -26,6 +26,7 @@
         "tabAndAppearance": "탭 및 모양",
         "browserSidebar": "패널 사이드바",
         "workspaces": "워크스페이스",
+        "backup": "Backup (Alpha)",
         "keyboardShortcuts": "키보드 단축키",
         "webApps": "웹 앱",
         "profileAndAccount": "프로필 및 계정",
@@ -269,6 +270,9 @@
                 "focusExpand": "포커스하면 북마크 표시줄 확장"
             }
         }
+    },
+    "backup": {
+        "description": "Back up workspaces and tabs automatically, and restore them when needed. (Alpha)"
     },
     "workspaces": {
         "workspaces": "워크스페이스",

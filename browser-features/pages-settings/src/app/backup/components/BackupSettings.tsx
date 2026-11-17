@@ -13,7 +13,7 @@ import { Button } from "@/components/common/button.tsx";
 import { Input } from "@/components/common/input.tsx";
 import { Select } from "@/components/common/dropdown.tsx";
 import { ConfirmModal } from "@/components/common/ConfirmModal.tsx";
-import type { WorkspacesFormData } from "@/types/pref.ts";
+import type { BackupSettingsFormData } from "@/types/pref.ts";
 import {
   backupNow,
   deleteAllBackups,
@@ -23,7 +23,7 @@ import {
   type WorkspaceBackupSummary,
 } from "../dataManager.ts";
 
-import styles from "../workspace.module.css";
+import styles from "../backup.module.css";
 
 const INTERVAL_OPTIONS = [
   { value: 5, unit: "minutes" as const },
@@ -47,16 +47,10 @@ const formatFileSize = (bytes: number): string => {
 
 export function BackupSettings() {
   const { t, i18n } = useTranslation();
-  const { control, setValue } = useFormContext<WorkspacesFormData>();
-  const backupEnabled = useWatch({ control, name: "backupEnabled" });
-  const backupIntervalMinutes = useWatch({
-    control,
-    name: "backupIntervalMinutes",
-  });
-  const backupRetentionDays = useWatch({
-    control,
-    name: "backupRetentionDays",
-  });
+  const { control, setValue } = useFormContext<BackupSettingsFormData>();
+  const enabled = useWatch({ control, name: "enabled" });
+  const intervalMinutes = useWatch({ control, name: "intervalMinutes" });
+  const retentionDays = useWatch({ control, name: "retentionDays" });
 
   const [backups, setBackups] = useState<WorkspaceBackupSummary[]>([]);
   const [loading, setLoading] = useState(true);
@@ -85,7 +79,7 @@ export function BackupSettings() {
       setLoadError(false);
     } else {
       console.error(
-        "[Settings:workspaces] Failed to list backups",
+        "[Settings:backup] Failed to list backups",
         result.error,
       );
       setLoadError(true);
@@ -109,7 +103,7 @@ export function BackupSettings() {
       const result = await action();
       if (!result.success) {
         console.error(
-          "[Settings:workspaces] Backup action failed",
+          "[Settings:backup] Backup action failed",
           result.error,
         );
         setActionError(true);
@@ -198,8 +192,8 @@ export function BackupSettings() {
             </label>
             <Switch
               id="backup-enabled"
-              checked={!!backupEnabled}
-              onChange={(e) => setValue("backupEnabled", e.target.checked)}
+              checked={!!enabled}
+              onChange={(e) => setValue("enabled", e.target.checked)}
             />
           </div>
 
@@ -212,9 +206,9 @@ export function BackupSettings() {
             </label>
             <Select
               id="backup-interval"
-              value={String(backupIntervalMinutes ?? 15)}
+              value={String(intervalMinutes ?? 15)}
               onChange={(e) =>
-                setValue("backupIntervalMinutes", Number(e.target.value))}
+                setValue("intervalMinutes", Number(e.target.value))}
             >
               {INTERVAL_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -238,11 +232,11 @@ export function BackupSettings() {
                 min={1}
                 max={365}
                 className="w-24"
-                value={backupRetentionDays ?? 7}
+                value={retentionDays ?? 7}
                 onChange={(e) => {
                   const parsed = Number.parseInt(e.target.value, 10);
                   setValue(
-                    "backupRetentionDays",
+                    "retentionDays",
                     Number.isFinite(parsed) && parsed > 0 ? parsed : 7,
                   );
                 }}

@@ -26,6 +26,7 @@
         "tabAndAppearance": "タブと外観",
         "browserSidebar": "パネルサイドバー",
         "workspaces": "ワークスペース",
+        "backup": "バックアップ (Alpha)",
         "keyboardShortcuts": "キーボードショートカット",
         "webApps": "ウェブアプリ",
         "profileAndAccount": "プロファイルとアカウント",
@@ -269,6 +270,9 @@
                 "focusExpand": "カーソルを合わせたときにブックマークバーを広げる"
             }
         }
+    },
+    "backup": {
+        "description": "ワークスペースとタブを自動的にバックアップし、必要に応じて復元できます。(Alpha)"
     },
     "workspaces": {
         "workspaces": "ワークスペース",

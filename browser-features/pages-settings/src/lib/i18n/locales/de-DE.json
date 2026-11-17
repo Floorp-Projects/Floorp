@@ -26,6 +26,7 @@
         "tabAndAppearance": "Erscheinungsbild",
         "browserSidebar": "Panel-Seitenleiste",
         "workspaces": "Arbeitsbereiche",
+        "backup": "Backup (Alpha)",
         "keyboardShortcuts": "Tastenkürzel",
         "webApps": "Web-Apps",
         "profileAndAccount": "Profil und Konto",
@@ -269,6 +270,9 @@
                 "focusExpand": "Lesezeichen-Symbolleiste beim Fokus einblenden"
             }
         }
+    },
+    "backup": {
+        "description": "Back up workspaces and tabs automatically, and restore them when needed. (Alpha)"
     },
     "workspaces": {
         "workspaces": "Arbeitsbereiche",

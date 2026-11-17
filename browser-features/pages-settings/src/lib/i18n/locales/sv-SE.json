@@ -26,6 +26,7 @@
         "tabAndAppearance": "Flikar & utseende",
         "browserSidebar": "Panel sidofält",
         "workspaces": "Arbetsytor",
+        "backup": "Backup (Alpha)",
         "keyboardShortcuts": "Tangentbordsgenvägar",
         "webApps": "Webbappar",
         "profileAndAccount": "Profil och konto",
@@ -269,6 +270,9 @@
                 "focusExpand": "Expandera bokmärkesfältet vid fokus"
             }
         }
+    },
+    "backup": {
+        "description": "Back up workspaces and tabs automatically, and restore them when needed. (Alpha)"
     },
     "workspaces": {
         "workspaces": "Arbetsytor",

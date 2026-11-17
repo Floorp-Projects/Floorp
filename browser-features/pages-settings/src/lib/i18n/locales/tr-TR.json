@@ -26,6 +26,7 @@
         "tabAndAppearance": "Sekme ve Görünüm",
         "browserSidebar": "Panel Kenar Çubuğu",
         "workspaces": "Çalışma Alanları",
+        "backup": "Backup (Alpha)",
         "keyboardShortcuts": "Klavye Kısayolları",
         "webApps": "Web Uygulamaları",
         "profileAndAccount": "Profil ve Hesap",
@@ -269,6 +270,9 @@
                 "focusExpand": "Odaklanıldığında yer imi çubuğunu genişlet"
             }
         }
+    },
+    "backup": {
+        "description": "Back up workspaces and tabs automatically, and restore them when needed. (Alpha)"
     },
     "workspaces": {
         "workspaces": "Çalışma Alanları",

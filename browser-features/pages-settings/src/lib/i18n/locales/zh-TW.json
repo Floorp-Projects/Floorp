@@ -26,6 +26,7 @@
         "tabAndAppearance": "分頁與外觀",
         "browserSidebar": "面板側邊欄",
         "workspaces": "工作空間",
+        "backup": "Backup (Alpha)",
         "keyboardShortcuts": "鍵盤快捷鍵",
         "webApps": "PWA 應用程式",
         "profileAndAccount": "設定檔和帳戶",
@@ -269,6 +270,9 @@
                 "focusExpand": "對焦時展開書籤列"
             }
         }
+    },
+    "backup": {
+        "description": "Back up workspaces and tabs automatically, and restore them when needed. (Alpha)"
     },
     "workspaces": {
         "workspaces": "工作空間",

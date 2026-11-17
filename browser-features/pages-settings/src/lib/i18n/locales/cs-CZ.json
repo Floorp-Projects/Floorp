@@ -26,6 +26,7 @@
         "tabAndAppearance": "Tab & Appearance",
         "browserSidebar": "Panel Sidebar",
         "workspaces": "Workspaces",
+        "backup": "Backup (Alpha)",
         "keyboardShortcuts": "Keyboard Shortcuts",
         "webApps": "Web Apps",
         "profileAndAccount": "Profile and Account",
@@ -269,6 +270,9 @@
                 "focusExpand": "Expand bookmark bar on focus"
             }
         }
+    },
+    "backup": {
+        "description": "Back up workspaces and tabs automatically, and restore them when needed. (Alpha)"
     },
     "workspaces": {
         "workspaces": "Workspaces",

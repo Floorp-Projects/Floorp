@@ -26,6 +26,7 @@
         "tabAndAppearance": "Abas e aparência",
         "browserSidebar": "Barra lateral",
         "workspaces": "Espaços de trabalho",
+        "backup": "Backup (Alpha)",
         "keyboardShortcuts": "Atalhos de teclado",
         "webApps": "Aplicativos web",
         "profileAndAccount": "Perfil e conta",
@@ -269,6 +270,9 @@
                 "focusExpand": "Expandir a barra de favoritos ao focalizar"
             }
         }
+    },
+    "backup": {
+        "description": "Back up workspaces and tabs automatically, and restore them when needed. (Alpha)"
     },
     "workspaces": {
         "workspaces": "Espaços de trabalho",

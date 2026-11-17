@@ -26,6 +26,7 @@
         "tabAndAppearance": "Вкладки и внешний вид",
         "browserSidebar": "Боковая панель",
         "workspaces": "Рабочие пространства",
+        "backup": "Backup (Alpha)",
         "keyboardShortcuts": "Горячие клавиши",
         "webApps": "Веб-приложения",
         "profileAndAccount": "Профиль и учетная запись",
@@ -269,6 +270,9 @@
                 "focusExpand": "Развернуть панель закладок при фокусировке"
             }
         }
+    },
+    "backup": {
+        "description": "Back up workspaces and tabs automatically, and restore them when needed. (Alpha)"
     },
     "workspaces": {
         "workspaces": "Рабочие пространства",

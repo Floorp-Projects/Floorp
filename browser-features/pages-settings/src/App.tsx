@@ -20,6 +20,7 @@ import {
 const Dashboard = lazy(() => import("@/app/dashboard/page.tsx"));
 const Design = lazy(() => import("@/app/design/page.tsx"));
 const PanelSidebar = lazy(() => import("@/app/sidebar/page.tsx"));
+const Backup = lazy(() => import("@/app/backup/page.tsx"));
 const Workspaces = lazy(() => import("@/app/workspaces/page.tsx"));
 const ProgressiveWebApp = lazy(() => import("@/app/pwa/page.tsx"));
 const FloorpOS = lazy(() => import("@/app/floorp-os/page.tsx"));
@@ -104,6 +105,7 @@ function SettingsApp() {
                     path="/features/workspaces"
                     element={<Workspaces />}
                   />
+                  <Route path="/features/backup" element={<Backup />} />
                   <Route
                     path="/features/webapps"
                     element={<ProgressiveWebApp />}

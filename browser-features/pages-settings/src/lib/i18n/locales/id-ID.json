@@ -26,6 +26,7 @@
         "tabAndAppearance": "Tab dan Tampilan",
         "browserSidebar": "Bilah Sisi",
         "workspaces": "Ruang Kerja",
+        "backup": "Backup (Alpha)",
         "keyboardShortcuts": "Pintasan Kibor",
         "webApps": "Aplikasi Web",
         "profileAndAccount": "Profil dan Akun",
@@ -269,6 +270,9 @@
                 "focusExpand": "Expand bookmark bar on focus"
             }
         }
+    },
+    "backup": {
+        "description": "Back up workspaces and tabs automatically, and restore them when needed. (Alpha)"
     },
     "workspaces": {
         "workspaces": "Ruang Kerja",

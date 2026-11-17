@@ -26,6 +26,7 @@
         "tabAndAppearance": "Вкладки та зовнішній вигляд",
         "browserSidebar": "Бічна панель",
         "workspaces": "Робочі області",
+        "backup": "Backup (Alpha)",
         "keyboardShortcuts": "Гарячі Клавіші",
         "webApps": "Вебзастосунки",
         "profileAndAccount": "Профіль та обліковий запис",
@@ -269,6 +270,9 @@
                 "focusExpand": "Розгорнути панель закладок на фокусі"
             }
         }
+    },
+    "backup": {
+        "description": "Back up workspaces and tabs automatically, and restore them when needed. (Alpha)"
     },
     "workspaces": {
         "workspaces": "Робочі області",
