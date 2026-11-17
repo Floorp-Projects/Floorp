@@ -3,12 +3,33 @@ import type { BackupSettingsFormData } from "../../types/pref.ts";
 
 const WORKSPACES_BACKUP_CONFIG_PREF = "floorp.workspaces.backup.config";
 
+// Keep these limits in sync with normalizeBackupConfig in
+// chrome/common/workspaces/utils/workspaces-backup-helpers.ts and with the
+// welcome page BackupDisclosure. Out-of-range values clamp, non-finite values
+// fall back to the default (0 is no longer valid for any of them).
+export const BACKUP_LIMITS = {
+  intervalMinutes: { min: 1, max: 1440 },
+  retentionDays: { min: 1, max: 365 },
+  maxPreRestoreBackups: { min: 1, max: 50 },
+} as const;
+
 const DEFAULT_BACKUP_CONFIG = {
   enabled: true,
   intervalMinutes: 15,
   retentionDays: 7,
   maxPreRestoreBackups: 10,
 };
+
+export function clampBackupInt(
+  value: unknown,
+  limits: { readonly min: number; readonly max: number },
+  fallback: number,
+): number {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    return fallback;
+  }
+  return Math.min(limits.max, Math.max(limits.min, Math.trunc(value)));
+}
 
 interface WorkspaceBackupConfig {
   enabled: boolean;
@@ -66,21 +87,21 @@ async function getBackupConfig(): Promise<WorkspaceBackupConfig> {
       enabled: typeof parsed.enabled === "boolean"
         ? parsed.enabled
         : DEFAULT_BACKUP_CONFIG.enabled,
-      intervalMinutes: typeof parsed.intervalMinutes === "number" &&
-          Number.isFinite(parsed.intervalMinutes) &&
-          parsed.intervalMinutes > 0
-        ? parsed.intervalMinutes
-        : DEFAULT_BACKUP_CONFIG.intervalMinutes,
-      retentionDays: typeof parsed.retentionDays === "number" &&
-          Number.isFinite(parsed.retentionDays) &&
-          parsed.retentionDays >= 0
-        ? parsed.retentionDays
-        : DEFAULT_BACKUP_CONFIG.retentionDays,
-      maxPreRestoreBackups: typeof parsed.maxPreRestoreBackups === "number" &&
-          Number.isFinite(parsed.maxPreRestoreBackups) &&
-          parsed.maxPreRestoreBackups >= 0
-        ? parsed.maxPreRestoreBackups
-        : DEFAULT_BACKUP_CONFIG.maxPreRestoreBackups,
+      intervalMinutes: clampBackupInt(
+        parsed.intervalMinutes,
+        BACKUP_LIMITS.intervalMinutes,
+        DEFAULT_BACKUP_CONFIG.intervalMinutes,
+      ),
+      retentionDays: clampBackupInt(
+        parsed.retentionDays,
+        BACKUP_LIMITS.retentionDays,
+        DEFAULT_BACKUP_CONFIG.retentionDays,
+      ),
+      maxPreRestoreBackups: clampBackupInt(
+        parsed.maxPreRestoreBackups,
+        BACKUP_LIMITS.maxPreRestoreBackups,
+        DEFAULT_BACKUP_CONFIG.maxPreRestoreBackups,
+      ),
     };
   } catch (error) {
     console.error(
@@ -134,8 +155,16 @@ export async function saveBackupSettings(
     JSON.stringify({
       ...oldConfig,
       enabled: settings.enabled,
-      intervalMinutes: settings.intervalMinutes,
-      retentionDays: settings.retentionDays,
+      intervalMinutes: clampBackupInt(
+        settings.intervalMinutes,
+        BACKUP_LIMITS.intervalMinutes,
+        oldConfig.intervalMinutes,
+      ),
+      retentionDays: clampBackupInt(
+        settings.retentionDays,
+        BACKUP_LIMITS.retentionDays,
+        oldConfig.retentionDays,
+      ),
     }),
   );
 }
@@ -185,10 +214,17 @@ export function listBackups(): Promise<
   );
 }
 
+export interface RestoreBackupData {
+  /** Tabs not reopened because their address cannot be restored safely. */
+  skippedCount: number;
+}
+
 export async function restoreBackup(
   fileName: string,
-): Promise<BackupOperationResult<null>> {
-  const result = await invokeBackupBridge<{ success: boolean; error?: string }>(
+): Promise<BackupOperationResult<RestoreBackupData>> {
+  const result = await invokeBackupBridge<
+    { success: boolean; error?: string; skippedCount?: number }
+  >(
     "NRWorkspacesRestoreBackup",
     fileName,
   );
@@ -198,7 +234,16 @@ export async function restoreBackup(
   if (!result.data?.success) {
     return { success: false, error: result.data?.error ?? "restore-failed" };
   }
-  return { success: true, data: null };
+  const skipped = result.data.skippedCount;
+  return {
+    success: true,
+    data: {
+      skippedCount: typeof skipped === "number" && Number.isFinite(skipped) &&
+          skipped > 0
+        ? Math.trunc(skipped)
+        : 0,
+    },
+  };
 }
 
 export async function deleteBackup(

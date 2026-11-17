@@ -13,12 +13,30 @@ interface BackupConfig {
   maxPreRestoreBackups: number;
 }
 
+// Keep in sync with BACKUP_LIMITS in pages-settings/src/app/backup/dataManager.ts
+// and normalizeBackupConfig in workspaces-backup-helpers.ts. Out-of-range values
+// clamp; non-finite values fall back to the default (0 is no longer valid).
+const LIMITS = {
+  intervalMinutes: { min: 1, max: 1440 },
+  retentionDays: { min: 1, max: 365 },
+  maxPreRestoreBackups: { min: 1, max: 50 },
+} as const;
+
 const DEFAULT_CONFIG: BackupConfig = {
   enabled: true,
   intervalMinutes: 15,
   retentionDays: 7,
   maxPreRestoreBackups: 10,
 };
+
+const clampInt = (
+  value: unknown,
+  limits: { readonly min: number; readonly max: number },
+  fallback: number,
+): number =>
+  typeof value === "number" && Number.isFinite(value)
+    ? Math.min(limits.max, Math.max(limits.min, Math.trunc(value)))
+    : fallback;
 
 const normalize = (raw: string | null): BackupConfig => {
   if (!raw) {
@@ -35,15 +53,21 @@ const normalize = (raw: string | null): BackupConfig => {
     enabled: typeof parsed.enabled === "boolean"
       ? parsed.enabled
       : DEFAULT_CONFIG.enabled,
-    intervalMinutes: typeof parsed.intervalMinutes === "number"
-      ? parsed.intervalMinutes
-      : DEFAULT_CONFIG.intervalMinutes,
-    retentionDays: typeof parsed.retentionDays === "number"
-      ? parsed.retentionDays
-      : DEFAULT_CONFIG.retentionDays,
-    maxPreRestoreBackups: typeof parsed.maxPreRestoreBackups === "number"
-      ? parsed.maxPreRestoreBackups
-      : DEFAULT_CONFIG.maxPreRestoreBackups,
+    intervalMinutes: clampInt(
+      parsed.intervalMinutes,
+      LIMITS.intervalMinutes,
+      DEFAULT_CONFIG.intervalMinutes,
+    ),
+    retentionDays: clampInt(
+      parsed.retentionDays,
+      LIMITS.retentionDays,
+      DEFAULT_CONFIG.retentionDays,
+    ),
+    maxPreRestoreBackups: clampInt(
+      parsed.maxPreRestoreBackups,
+      LIMITS.maxPreRestoreBackups,
+      DEFAULT_CONFIG.maxPreRestoreBackups,
+    ),
   };
 };
 
@@ -106,7 +130,7 @@ export function BackupDisclosure() {
       <p className={styles.muted}>{t("setupV5.backupDescription")}</p>
       <div
         style={{
-          display: "flex",
+          display: loadFailed ? "none" : "flex",
           alignItems: "center",
           justifyContent: "space-between",
           gap: "1rem",
@@ -117,7 +141,7 @@ export function BackupDisclosure() {
         </label>
         <Switch
           id="welcome-backup-enabled"
-          checked={config?.enabled ?? true}
+          checked={config?.enabled ?? false}
           disabled={config === null || loadFailed || saving}
           onChange={(event: ChangeEvent<HTMLInputElement>) =>
             void toggle(event.currentTarget.checked)}

@@ -144,6 +144,12 @@ export const WORKSPACE_BACKUP_LIMITS = {
   maxUrlLength: 65536,
   /** Maximum bytes of one tab state, measured after serialization. */
   maxTabStateBytes: 1024 * 1024,
+  /** Maximum characters of a workspace name. */
+  maxNameLength: 256,
+  /** Maximum characters of a workspace icon value. */
+  maxIconLength: 2048,
+  /** Maximum size of the decompressed JSON payload. */
+  maxDecompressedBytes: 256 * 1024 * 1024,
   /** Maximum compressed file size accepted from disk. */
   maxFileBytes: 64 * 1024 * 1024,
 } as const;

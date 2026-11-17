@@ -94,6 +94,13 @@ export const parseBackupFileName = (
   if (!Number.isFinite(timestamp)) {
     return null;
   }
+  // Date.UTC silently normalizes out-of-range fields (month 13, hour 25, years
+  // 0-99). Re-format and compare so only canonical timestamps are accepted.
+  const canonical = formatBackupFileName(timestamp, shortId);
+  const start = BACKUP_FILE_PREFIX.length;
+  if (canonical.slice(start, start + 15) !== `${datePart}-${timePart}`) {
+    return null;
+  }
   return { fileName, shortId, timestamp };
 };
 
@@ -120,15 +127,61 @@ export const filterBackupFiles = (paths: string[]): string[] =>
  * ---------------------------------------------------------------------- */
 
 /**
- * SessionStore keys that must never reach a backup file. Form data, session
- * storage and scroll position are the sensitive parts of a tab state and are
- * not needed to restore the tab itself.
+ * Maximum timestamp accepted for `capturedAt` (end of year 9999 UTC). Keeps
+ * file names (4-digit year) and `Date` arithmetic well defined.
  */
-const SENSITIVE_STATE_KEYS: ReadonlySet<string> = new Set([
-  "formdata",
-  "storage",
-  "scroll",
+export const MAX_CAPTURED_AT = Date.UTC(9999, 11, 31);
+
+/** The newest N auto/manual backups are never expired by age. */
+export const MIN_KEEP_BACKUPS = 3;
+
+const ALLOWED_ABOUT_PAGES: ReadonlySet<string> = new Set([
+  "blank",
+  "newtab",
+  "home",
+  "reader",
 ]);
+
+/**
+ * True for URLs that may be re-opened from a backup file: http, https,
+ * moz-extension and a few harmless about: pages (blank, newtab, home, reader
+ * wrapping an http(s) URL). Everything else (javascript:, data:, chrome:,
+ * resource:, file:, view-source:, about:config, ...) is refused so a tampered
+ * file cannot reach privileged pages.
+ */
+export const isRestorableTabUrl = (url: string): boolean => {
+  if (typeof url !== "string" || url.length === 0) {
+    return false;
+  }
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return false;
+  }
+  switch (parsed.protocol) {
+    case "http:":
+    case "https:":
+    case "moz-extension:":
+      return true;
+    case "about:": {
+      const page = parsed.pathname.toLowerCase();
+      if (!ALLOWED_ABOUT_PAGES.has(page)) {
+        return false;
+      }
+      if (page === "reader") {
+        // Reader view wraps another URL; that URL must be restorable itself.
+        const inner = parsed.searchParams.get("url");
+        return inner !== null &&
+          (inner.startsWith("http://") || inner.startsWith("https://")) &&
+          isRestorableTabUrl(inner);
+      }
+      return true;
+    }
+    default:
+      return false;
+  }
+};
 
 /**
  * Floorp workspace markers live both at the top level of a tab state and
@@ -136,57 +189,170 @@ const SENSITIVE_STATE_KEYS: ReadonlySet<string> = new Set([
  * persisted as-is.
  */
 const WORKSPACE_MARKER_KEYS: ReadonlySet<string> = new Set([
-  // DOM attribute name (WORKSPACE_TAB_ATTRIBUTION_ID).
   "floorpWorkspaceId",
-  // DOM attribute name (WORKSPACE_LAST_SHOW_ID). The tab state stores this
-  // attribute verbatim under `attributes`.
   "floorpWorkspaceLastShowId",
-  // Top-level tab-state key written by the sessionstore patch.
   "floorpLastShowWorkspaceId",
   "floorpDisableHistory",
 ]);
 
 /**
- * Depth bound for the sanitizer. SessionStore tab states are shallow; the bound
- * only exists so a hostile file cannot make the walk pathological.
+ * Depth bound for `children` nesting. SessionStore frames are shallow; the
+ * bound only keeps a hostile file from making the walk pathological.
  */
 const MAX_SANITIZE_DEPTH = 8;
 
-const sanitizeValue = (value: unknown, depth: number): unknown => {
-  if (depth > MAX_SANITIZE_DEPTH) {
+const isNonNegativeSafeInt = (value: unknown): value is number =>
+  typeof value === "number" && Number.isSafeInteger(value) && value >= 0;
+
+/**
+ * Allowlist of session history entry fields. Everything else (postdata_b64,
+ * referrerInfo, triggeringPrincipal_base64, principalToInherit_base64,
+ * partitionedPrincipalToInherit_base64, csp, structuredCloneState, formdata,
+ * scroll, presState, ...) is dropped: it is either sensitive or an
+ * attacker-controlled security principal.
+ */
+const sanitizeEntry = (
+  entry: unknown,
+  depth: number,
+): Record<string, unknown> | null => {
+  if (depth > MAX_SANITIZE_DEPTH || !isRecordValue(entry)) {
     return null;
   }
-  if (Array.isArray(value)) {
-    return value.map((entry) => sanitizeValue(entry, depth + 1));
+  if (typeof entry.url !== "string" || !isRestorableTabUrl(entry.url)) {
+    return null;
   }
-  if (!isRecordValue(value)) {
-    return value;
-  }
-  const copy: Record<string, unknown> = {};
-  for (const [key, entry] of Object.entries(value)) {
-    if (SENSITIVE_STATE_KEYS.has(key) || WORKSPACE_MARKER_KEYS.has(key)) {
-      continue;
+  const result: Record<string, unknown> = { url: entry.url };
+  for (const key of ["title", "charset", "docshellUUID"] as const) {
+    if (typeof entry[key] === "string") {
+      result[key] = entry[key];
     }
-    copy[key] = sanitizeValue(entry, depth + 1);
   }
-  return copy;
+  if (typeof entry.ID === "string" || isNonNegativeSafeInt(entry.ID)) {
+    result.ID = entry.ID;
+  }
+  for (const key of ["originalURI", "resultPrincipalURI"] as const) {
+    const candidate = entry[key];
+    if (typeof candidate === "string" && isRestorableTabUrl(candidate)) {
+      result[key] = candidate;
+    }
+  }
+  for (const key of ["hasUserInteraction", "persist"] as const) {
+    if (typeof entry[key] === "boolean") {
+      result[key] = entry[key];
+    }
+  }
+  if (isNonNegativeSafeInt(entry.cacheKey)) {
+    result.cacheKey = entry.cacheKey;
+  }
+  if (Array.isArray(entry.children)) {
+    const children = entry.children
+      .map((child) => sanitizeEntry(child, depth + 1))
+      .filter((child): child is Record<string, unknown> => child !== null);
+    if (children.length > 0) {
+      result.children = children;
+    }
+  }
+  return result;
+};
+
+/** Maps a 1-based history position onto the surviving entries. */
+const remapIndex = (
+  position: unknown,
+  keptOriginalIndexes: number[],
+): number | undefined => {
+  if (!isNonNegativeSafeInt(position) || keptOriginalIndexes.length === 0) {
+    return undefined;
+  }
+  const target = Math.max(position - 1, 0);
+  let mapped = 0;
+  for (let i = 0; i < keptOriginalIndexes.length; i++) {
+    if (keptOriginalIndexes[i] <= target) {
+      mapped = i;
+    }
+  }
+  return mapped + 1;
 };
 
 /**
- * Removes sensitive and workspace-specific keys from a SessionStore tab state.
+ * Reduces a SessionStore tab state to an allowlist (null when nothing
+ * restorable remains).
  *
- * The walk is recursive: `formdata` / `storage` / `scroll` are dropped at any
- * depth, so a nested occurrence cannot survive the sanitizer. Returns a new
- * object; the input is never mutated.
+ * Top-level keys kept: `entries`, `index`, `requestedIndex`, `userContextId`,
+ * `pinned`, `hidden`, `lastAccessed`, `image` (http/https only) and
+ * `attributes` (primitive values, workspace markers removed). These are what
+ * `SessionStore.setTabState` needs to rebuild the tab and its history.
+ * Deliberately NOT kept: `userTypedValue`/`userTypedClear` (typed text),
+ * `formdata`, `storage`, `scroll`, `extData`, and any unknown key.
+ *
+ * Entries (and `children`) keep only url, title, charset, ID, docshellUUID,
+ * originalURI, resultPrincipalURI, hasUserInteraction, persist, cacheKey and
+ * children. Entries whose URL fails `isRestorableTabUrl` are dropped and
+ * `index`/`requestedIndex` are remapped. Returns a new object; the input is
+ * never mutated.
  */
 export const sanitizeTabState = (
   state: Record<string, unknown> | null,
 ): Record<string, unknown> | null => {
-  if (!state) {
+  if (!isRecordValue(state)) {
     return null;
   }
-  const result = sanitizeValue(state, 0);
-  return isRecordValue(result) ? result : null;
+  const result: Record<string, unknown> = {};
+
+  if (Array.isArray(state.entries)) {
+    const kept: Record<string, unknown>[] = [];
+    const keptOriginalIndexes: number[] = [];
+    state.entries.forEach((entry, originalIndex) => {
+      const sanitized = sanitizeEntry(entry, 0);
+      if (sanitized) {
+        kept.push(sanitized);
+        keptOriginalIndexes.push(originalIndex);
+      }
+    });
+    if (kept.length === 0) {
+      return null;
+    }
+    result.entries = kept;
+    result.index = remapIndex(state.index, keptOriginalIndexes) ?? kept.length;
+    const requested = remapIndex(state.requestedIndex, keptOriginalIndexes);
+    if (requested !== undefined) {
+      result.requestedIndex = requested;
+    }
+  }
+
+  if (isNonNegativeSafeInt(state.userContextId)) {
+    result.userContextId = state.userContextId;
+  }
+  for (const key of ["pinned", "hidden"] as const) {
+    if (typeof state[key] === "boolean") {
+      result[key] = state[key];
+    }
+  }
+  if (isNonNegativeSafeInt(state.lastAccessed)) {
+    result.lastAccessed = state.lastAccessed;
+  }
+  if (
+    typeof state.image === "string" &&
+    (state.image.startsWith("http://") || state.image.startsWith("https://")) &&
+    isRestorableTabUrl(state.image)
+  ) {
+    result.image = state.image;
+  }
+  if (isRecordValue(state.attributes)) {
+    const attributes: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(state.attributes)) {
+      if (WORKSPACE_MARKER_KEYS.has(key)) {
+        continue;
+      }
+      if (
+        typeof value === "string" || typeof value === "boolean" ||
+        typeof value === "number"
+      ) {
+        attributes[key] = value;
+      }
+    }
+    result.attributes = attributes;
+  }
+  return result;
 };
 
 /** True when the serialized state stays within the per-tab limit. */
@@ -209,17 +375,18 @@ export const isTabStateWithinLimit = (
  * Runtime validation
  * ---------------------------------------------------------------------- */
 
-const isFiniteNumber = (value: unknown): value is number =>
-  typeof value === "number" && Number.isFinite(value);
-
 const isSafeNonNegativeInteger = (value: unknown): value is number =>
   typeof value === "number" && Number.isSafeInteger(value) && value >= 0;
 
 const isStringOrNull = (value: unknown): value is string | null =>
   value === null || typeof value === "string";
 
+// Same shape as zWorkspaceID in type.ts.
+const WORKSPACE_ID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 const isWorkspaceIdValue = (value: unknown): value is TWorkspaceID =>
-  typeof value === "string" && value.length > 0;
+  typeof value === "string" && WORKSPACE_ID_PATTERN.test(value);
 
 export const isWorkspaceBackupTab = (
   value: unknown,
@@ -295,7 +462,10 @@ export const isWorkspaceBackupWorkspace = (
   if (!isWorkspaceIdValue(value.workspaceId)) {
     return false;
   }
-  if (typeof value.name !== "string") {
+  if (
+    typeof value.name !== "string" ||
+    value.name.length > WORKSPACE_BACKUP_LIMITS.maxNameLength
+  ) {
     return false;
   }
   if (!isSafeNonNegativeInteger(value.userContextId)) {
@@ -303,7 +473,8 @@ export const isWorkspaceBackupWorkspace = (
   }
   if (
     value.icon !== undefined && value.icon !== null &&
-    typeof value.icon !== "string"
+    (typeof value.icon !== "string" ||
+      value.icon.length > WORKSPACE_BACKUP_LIMITS.maxIconLength)
   ) {
     return false;
   }
@@ -328,7 +499,27 @@ export const isWorkspaceBackupState = (
   if (!Array.isArray(value.order)) {
     return false;
   }
-  if (!value.order.every(isWorkspaceIdValue)) {
+  if (
+    value.order.length > WORKSPACE_BACKUP_LIMITS.maxWorkspaces ||
+    !value.order.every(isWorkspaceIdValue)
+  ) {
+    return false;
+  }
+  // Referential integrity: unique ids, order is a permutation of them, and
+  // defaultID / currentWorkspaceId (when set) point at real workspaces.
+  const ids = new Set<string>();
+  for (const workspace of value.workspaces as WorkspaceBackupWorkspace[]) {
+    if (ids.has(workspace.workspaceId)) {
+      return false;
+    }
+    ids.add(workspace.workspaceId);
+  }
+  const orderIds = value.order as string[];
+  if (
+    new Set(orderIds).size !== orderIds.length ||
+    orderIds.length !== ids.size ||
+    !orderIds.every((id) => ids.has(id))
+  ) {
     return false;
   }
   if (value.defaultID !== null && !isWorkspaceIdValue(value.defaultID)) {
@@ -337,6 +528,15 @@ export const isWorkspaceBackupState = (
   if (
     value.currentWorkspaceId !== null &&
     !isWorkspaceIdValue(value.currentWorkspaceId)
+  ) {
+    return false;
+  }
+  if (typeof value.defaultID === "string" && !ids.has(value.defaultID)) {
+    return false;
+  }
+  if (
+    typeof value.currentWorkspaceId === "string" &&
+    !ids.has(value.currentWorkspaceId)
   ) {
     return false;
   }
@@ -363,7 +563,10 @@ export const isWorkspaceBackupFile = (
   if (!isWorkspaceBackupMode(value.mode)) {
     return false;
   }
-  if (!isFiniteNumber(value.capturedAt)) {
+  if (
+    !isSafeNonNegativeInteger(value.capturedAt) ||
+    value.capturedAt > MAX_CAPTURED_AT
+  ) {
     return false;
   }
   if (!Array.isArray(value.windows) || value.windows.length === 0) {
@@ -385,8 +588,13 @@ export const isWorkspaceBackupFile = (
   if (value.mode === "workspaces") {
     return isWorkspaceBackupState(value.workspaceState);
   }
-  // tabs mode must not carry workspace data at all.
-  return value.workspaceState === undefined;
+  // tabs mode must not carry workspace data at all, including on tabs.
+  if (value.workspaceState !== undefined) {
+    return false;
+  }
+  return value.windows.every((window) =>
+    window.tabs.every((tab) => tab.workspaceId === undefined)
+  );
 };
 
 /**
@@ -441,27 +649,41 @@ export const buildBackupSummary = (
   };
 };
 
+/** Newest first; file name (descending) breaks ties deterministically. */
+const compareNewestFirst = (
+  a: WorkspaceBackupSummary,
+  b: WorkspaceBackupSummary,
+): number =>
+  b.capturedAt - a.capturedAt ||
+  (a.fileName < b.fileName ? 1 : a.fileName > b.fileName ? -1 : 0);
+
 export const sortBackupsNewestFirst = (
   summaries: WorkspaceBackupSummary[],
-): WorkspaceBackupSummary[] =>
-  [...summaries].sort((a, b) => b.capturedAt - a.capturedAt);
+): WorkspaceBackupSummary[] => [...summaries].sort(compareNewestFirst);
 
 /**
  * Age-based retention applies to automatic and manual backups only.
- * Pre-restore safety backups are exempt and capped separately.
+ * Pre-restore safety backups are exempt and capped separately. The newest
+ * `minKeep` auto/manual backups are never returned, however old they are.
  */
 export const selectExpiredBackups = (
   summaries: WorkspaceBackupSummary[],
   retentionDays: number,
   now: number,
+  minKeep: number = MIN_KEEP_BACKUPS,
 ): WorkspaceBackupSummary[] => {
   if (!Number.isFinite(retentionDays) || retentionDays < 0) {
     return [];
   }
+  const keep = Number.isFinite(minKeep) && minKeep >= 0
+    ? Math.floor(minKeep)
+    : MIN_KEEP_BACKUPS;
   const cutoff = now - retentionDays * 24 * 60 * 60 * 1000;
-  return summaries.filter(
-    (summary) => summary.kind !== "pre-restore" && summary.capturedAt < cutoff,
-  );
+  return summaries
+    .filter((summary) => summary.kind !== "pre-restore")
+    .sort(compareNewestFirst)
+    .slice(keep)
+    .filter((summary) => summary.capturedAt < cutoff);
 };
 
 /**
@@ -480,7 +702,7 @@ export const selectExcessPreRestoreBackups = (
   const keep = Math.floor(maxPreRestoreBackups);
   const preRestore = summaries
     .filter((summary) => summary.kind === "pre-restore")
-    .sort((a, b) => b.capturedAt - a.capturedAt);
+    .sort(compareNewestFirst);
   // Keep the newest N and return the excess oldest-first, as documented.
   return preRestore.slice(keep).reverse();
 };
@@ -489,27 +711,20 @@ export const selectExcessPreRestoreBackups = (
  * Config
  * ---------------------------------------------------------------------- */
 
-const toPositiveNumber = (value: unknown, fallback: number): number => {
-  if (typeof value !== "number" || !Number.isFinite(value) || value <= 0) {
-    return fallback;
-  }
-  return value;
-};
-
-const toNonNegativeNumber = (value: unknown, fallback: number): number => {
-  if (typeof value !== "number" || !Number.isFinite(value) || value < 0) {
-    return fallback;
-  }
-  return value;
-};
-
 /**
- * Counts must be whole numbers. A fractional value such as 0.5 would make
- * `Array.prototype.slice` behave like 0 and delete every retained file.
+ * Whole number clamped into [min, max]. Non-numbers and non-finite values
+ * (NaN, +-Infinity) fall back to the default; fractions are floored.
  */
-const toNonNegativeInteger = (value: unknown, fallback: number): number => {
-  const normalized = toNonNegativeNumber(value, fallback);
-  return Math.floor(normalized);
+const toClampedInteger = (
+  value: unknown,
+  fallback: number,
+  min: number,
+  max: number,
+): number => {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    return fallback;
+  }
+  return Math.min(max, Math.max(min, Math.floor(value)));
 };
 
 /**
@@ -524,17 +739,23 @@ export const normalizeBackupConfig = (
     enabled: typeof source.enabled === "boolean"
       ? source.enabled
       : DEFAULT_WORKSPACE_BACKUP_CONFIG.enabled,
-    intervalMinutes: toPositiveNumber(
+    intervalMinutes: toClampedInteger(
       source.intervalMinutes,
       DEFAULT_WORKSPACE_BACKUP_CONFIG.intervalMinutes,
+      1,
+      1440,
     ),
-    retentionDays: toNonNegativeInteger(
+    retentionDays: toClampedInteger(
       source.retentionDays,
       DEFAULT_WORKSPACE_BACKUP_CONFIG.retentionDays,
+      1,
+      365,
     ),
-    maxPreRestoreBackups: toNonNegativeInteger(
+    maxPreRestoreBackups: toClampedInteger(
       source.maxPreRestoreBackups,
       DEFAULT_WORKSPACE_BACKUP_CONFIG.maxPreRestoreBackups,
+      1,
+      50,
     ),
   };
 };

@@ -7,7 +7,10 @@ import { createRoot } from "solid-js";
 import type { WorkspacesService } from "../workspacesService.ts";
 import { WorkspacesDataManager } from "../workspacesDataManagerBase.tsx";
 import { WorkspacesBackupService } from "./workspaces-backup-service.ts";
-import type { WorkspacesBackupHost } from "./workspaces-backup-service.ts";
+import type {
+  RestoreBackupResult,
+  WorkspacesBackupHost,
+} from "./workspaces-backup-service.ts";
 import type { WorkspaceBackupFile } from "./backup-types.ts";
 import type { WorkspaceBackupSummary } from "./backup-types.ts";
 import type { TWorkspaceID } from "./type.ts";
@@ -16,10 +19,7 @@ import type { TWorkspaceID } from "./type.ts";
 export interface WorkspacesBackupFuncs {
   backupNow(): Promise<WorkspaceBackupSummary>;
   listBackups(): Promise<WorkspaceBackupSummary[]>;
-  restoreBackup(fileName: string): Promise<{
-    success: boolean;
-    error?: string;
-  }>;
+  restoreBackup(fileName: string): Promise<RestoreBackupResult>;
   deleteBackup(fileName: string): Promise<boolean>;
   deleteAllBackups(): Promise<boolean>;
 }
@@ -100,10 +100,7 @@ export class WorkspacesBackupController implements WorkspacesBackupFuncs {
     return this.resolveService().listBackups();
   }
 
-  public restoreBackup(fileName: string): Promise<{
-    success: boolean;
-    error?: string;
-  }> {
+  public restoreBackup(fileName: string): Promise<RestoreBackupResult> {
     return this.resolveService().restoreBackup(fileName);
   }
 

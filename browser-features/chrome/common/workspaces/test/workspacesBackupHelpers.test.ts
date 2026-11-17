@@ -8,7 +8,10 @@ import {
   findDanglingWorkspaceReferences,
   formatBackupFileName,
   isBackupFileName,
+  isRestorableTabUrl,
   isWorkspaceBackupFile,
+  MAX_CAPTURED_AT,
+  MIN_KEEP_BACKUPS,
   normalizeBackupConfig,
   parseBackupConfig,
   parseBackupFileName,
@@ -18,6 +21,7 @@ import {
   serializeBackupConfig,
   sortBackupsNewestFirst,
 } from "../utils/workspaces-backup-helpers.ts";
+import { WORKSPACE_BACKUP_LIMITS } from "../utils/backup-types.ts";
 import type {
   WorkspaceBackupFile,
   WorkspaceBackupState,
@@ -324,7 +328,8 @@ function testExpiredRetentionExcludesPreRestore(): void {
     makeSummary("old-pre.jsonlz4", "pre-restore", now - 10 * DAY),
     makeSummary("new-auto.jsonlz4", "auto", now - 1 * DAY),
   ];
-  const expired = selectExpiredBackups(summaries, 7, now);
+  // minKeep 0 isolates the age rule from the keep-newest rule.
+  const expired = selectExpiredBackups(summaries, 7, now, 0);
   assertEquals(expired.length, 2, "two expired");
   assert(
     expired.every((entry) => entry.kind !== "pre-restore"),
@@ -360,10 +365,16 @@ function testPreRestoreCapKeepsNewest(): void {
 function testPreRestoreCapZero(): void {
   const now = 1700000000000;
   const summaries = [makeSummary("p1.jsonlz4", "pre-restore", now)];
+  // The raw selector still honours 0, but a config can no longer produce it.
   assertEquals(
     selectExcessPreRestoreBackups(summaries, 0).length,
     1,
-    "zero keeps none",
+    "selector with zero keeps none",
+  );
+  assertEquals(
+    normalizeBackupConfig({ maxPreRestoreBackups: 0 }).maxPreRestoreBackups,
+    1,
+    "config clamps 0 to 1",
   );
 }
 
@@ -390,16 +401,16 @@ function testNormalizeConfigDefaultsAndOverrides(): void {
   const overridden = normalizeBackupConfig({
     enabled: false,
     intervalMinutes: 30,
-    retentionDays: 0,
-    maxPreRestoreBackups: 0,
+    retentionDays: 2,
+    maxPreRestoreBackups: 4,
   });
   assertEquals(overridden.enabled, false, "enabled override");
   assertEquals(overridden.intervalMinutes, 30, "interval override");
-  assertEquals(overridden.retentionDays, 0, "retention override");
-  assertEquals(overridden.maxPreRestoreBackups, 0, "pre-restore override");
+  assertEquals(overridden.retentionDays, 2, "retention override");
+  assertEquals(overridden.maxPreRestoreBackups, 4, "pre-restore override");
 
   const invalid = normalizeBackupConfig({
-    intervalMinutes: -5,
+    intervalMinutes: "5",
     retentionDays: Number.NaN,
   });
   assertEquals(invalid.intervalMinutes, 15, "invalid interval falls back");
@@ -429,14 +440,536 @@ function testFractionalRetentionCapIsFloored(): void {
     maxPreRestoreBackups: 0.5,
     retentionDays: 1.9,
   });
-  assertEquals(config.maxPreRestoreBackups, 0, "fractional cap floored");
+  assertEquals(config.maxPreRestoreBackups, 1, "0.5 floors to 0, clamps to 1");
   assertEquals(config.retentionDays, 1, "fractional days floored");
+  assertEquals(
+    normalizeBackupConfig({ retentionDays: 2.9 }).retentionDays,
+    2,
+    "2.9 floors to 2",
+  );
 }
 
 function testParseConfigInvalidJson(): void {
   const parsed = parseBackupConfig("{not json");
   assertEquals(parsed.enabled, true, "falls back to defaults");
   assertEquals(parsed.intervalMinutes, 15, "interval default");
+}
+
+/* ---------------- round 4 additions ---------------- */
+
+const OK_URLS = [
+  "http://example.com/",
+  "https://example.com/a?b=c#d",
+  "about:blank",
+  "about:newtab",
+  "about:home",
+  "about:reader?url=https%3A%2F%2Fexample.com%2F",
+  "moz-extension://abc/page.html",
+];
+const BAD_URLS = [
+  "javascript:alert(1)",
+  "data:text/html,<b>x</b>",
+  "chrome://browser/content/browser.xhtml",
+  "resource://gre/modules/x.sys.mjs",
+  "file:///etc/passwd",
+  "about:config",
+  "about:preferences",
+  "view-source:https://example.com/",
+  "about:reader?url=javascript%3Aalert(1)",
+  "about:reader",
+  "not a url",
+  "",
+  "ftp://example.com/",
+];
+
+function testIsRestorableTabUrl(): void {
+  for (const url of OK_URLS) {
+    assert(isRestorableTabUrl(url), `allows ${url}`);
+  }
+  for (const url of BAD_URLS) {
+    assert(!isRestorableTabUrl(url), `rejects ${url}`);
+  }
+}
+
+function testSanitizeAllowlist(): void {
+  const input = {
+    entries: [
+      {
+        url: "https://example.com/1",
+        title: "One",
+        charset: "UTF-8",
+        ID: 7,
+        docshellUUID: "{abc}",
+        originalURI: "https://example.com/orig",
+        resultPrincipalURI: "https://example.com/res",
+        hasUserInteraction: true,
+        persist: true,
+        cacheKey: 3,
+        postdata_b64: "c2VjcmV0",
+        referrerInfo: "x",
+        triggeringPrincipal_base64: "t",
+        principalToInherit_base64: "p",
+        partitionedPrincipalToInherit_base64: "pp",
+        csp: "c",
+        structuredCloneState: "s",
+        presState: { a: 1 },
+        children: [
+          {
+            url: "https://example.com/child",
+            postdata_b64: "zzz",
+            triggeringPrincipal_base64: "t",
+            children: [{ url: "javascript:1" }],
+          },
+          { url: "data:text/html,x" },
+        ],
+      },
+    ],
+    index: 1,
+    requestedIndex: 1,
+    userContextId: 2,
+    pinned: true,
+    hidden: false,
+    lastAccessed: 123,
+    image: "https://example.com/i.png",
+    userTypedValue: "typed secret",
+    userTypedClear: 1,
+    extData: { k: "v" },
+    unknownKey: 1,
+    attributes: {
+      image: "x",
+      floorpWorkspaceId: WS_A,
+      nested: { a: 1 },
+    },
+  };
+  const before = JSON.stringify(input);
+  const out = sanitizeTabState(input)!;
+  assertEquals(JSON.stringify(input), before, "input not mutated");
+  for (
+    const key of ["userTypedValue", "userTypedClear", "extData", "unknownKey"]
+  ) {
+    assert(!(key in out), `${key} dropped`);
+  }
+  assertEquals(out.userContextId, 2, "userContextId kept");
+  assertEquals(out.pinned, true, "pinned kept");
+  assertEquals(out.image, "https://example.com/i.png", "http image kept");
+  const attrs = out.attributes as Record<string, unknown>;
+  assert(!("floorpWorkspaceId" in attrs), "marker dropped");
+  assert(!("nested" in attrs), "non-primitive attribute dropped");
+  const entry = (out.entries as Array<Record<string, unknown>>)[0];
+  for (
+    const key of [
+      "postdata_b64",
+      "referrerInfo",
+      "triggeringPrincipal_base64",
+      "principalToInherit_base64",
+      "partitionedPrincipalToInherit_base64",
+      "csp",
+      "structuredCloneState",
+      "presState",
+    ]
+  ) {
+    assert(!(key in entry), `entry ${key} dropped`);
+  }
+  assertEquals(entry.title, "One", "title kept");
+  assertEquals(entry.cacheKey, 3, "cacheKey kept");
+  assertEquals(entry.originalURI, "https://example.com/orig", "originalURI");
+  const children = entry.children as Array<Record<string, unknown>>;
+  assertEquals(children.length, 1, "bad child dropped");
+  assert(!("postdata_b64" in children[0]), "child postdata dropped");
+  assert(
+    !("triggeringPrincipal_base64" in children[0]),
+    "child principal dropped",
+  );
+  assert(!("children" in children[0]), "grandchild with bad url dropped");
+}
+
+function testSanitizeDropsBadEntriesAndClampsIndex(): void {
+  const out = sanitizeTabState({
+    entries: [
+      { url: "https://a.example/" },
+      { url: "javascript:alert(1)" },
+      { url: "https://c.example/" },
+    ],
+    index: 2,
+  })!;
+  assertEquals((out.entries as unknown[]).length, 2, "bad entry dropped");
+  assertEquals(out.index, 1, "index falls back to previous surviving entry");
+
+  const shifted = sanitizeTabState({
+    entries: [{ url: "data:x" }, { url: "https://b.example/" }],
+    index: 2,
+  })!;
+  assertEquals(shifted.index, 1, "index shifted after leading drop");
+
+  const none = sanitizeTabState({
+    entries: [{ url: "chrome://x/" }],
+    index: 1,
+  });
+  assertEquals(none, null, "no restorable entries -> null");
+
+  const high = sanitizeTabState({
+    entries: [{ url: "https://a.example/" }],
+    index: 99,
+  })!;
+  assertEquals(high.index, 1, "out-of-range index clamped");
+}
+
+function testSanitizeMultibyteInputAndDepth(): void {
+  let deep: Record<string, unknown> = { url: "https://deep.example/" };
+  for (let i = 0; i < 20; i++) {
+    deep = { url: "https://deep.example/", children: [deep] };
+  }
+  const out = sanitizeTabState({ entries: [deep], index: 1 })!;
+  assert(out !== null, "deep state survives");
+  let depth = 0;
+  let node = (out.entries as Array<Record<string, unknown>>)[0];
+  while (node.children) {
+    node = (node.children as Array<Record<string, unknown>>)[0];
+    depth++;
+  }
+  assert(depth <= 8, "children depth bounded");
+}
+
+function testCapturedAtValidation(): void {
+  for (
+    const bad of [
+      -1,
+      1.5,
+      Number.NaN,
+      Number.POSITIVE_INFINITY,
+      Number.MAX_SAFE_INTEGER + 2,
+      MAX_CAPTURED_AT + 1,
+      "1700000000000",
+    ]
+  ) {
+    assert(
+      !isWorkspaceBackupFile({ ...makeFile(), capturedAt: bad }),
+      `rejects capturedAt ${String(bad)}`,
+    );
+  }
+  assert(
+    isWorkspaceBackupFile(makeFile({ capturedAt: 0 })),
+    "0 is accepted",
+  );
+  assert(
+    isWorkspaceBackupFile(makeFile({ capturedAt: MAX_CAPTURED_AT })),
+    "max accepted",
+  );
+}
+
+function testParseFileNameRejectsOutOfRange(): void {
+  for (
+    const name of [
+      "backup-20261301-000000-abcdef01.jsonlz4",
+      "backup-20260001-000000-abcdef01.jsonlz4",
+      "backup-20261132-000000-abcdef01.jsonlz4",
+      "backup-20260230-000000-abcdef01.jsonlz4",
+      "backup-20261117-240000-abcdef01.jsonlz4",
+      "backup-20261117-006000-abcdef01.jsonlz4",
+      "backup-20261117-000060-abcdef01.jsonlz4",
+      "backup-00501117-000000-abcdef01.jsonlz4",
+    ]
+  ) {
+    assertEquals(parseBackupFileName(name), null, `rejects ${name}`);
+  }
+  assert(
+    parseBackupFileName("backup-20240229-235959-abcdef01.jsonlz4") !== null,
+    "leap day ok",
+  );
+}
+
+function testDeterministicTieBreak(): void {
+  const a = makeSummary("a.jsonlz4", "auto", 5);
+  const b = makeSummary("b.jsonlz4", "auto", 5);
+  const forward = sortBackupsNewestFirst([a, b]).map((x) => x.fileName);
+  const reverse = sortBackupsNewestFirst([b, a]).map((x) => x.fileName);
+  assertEquals(forward.join(","), reverse.join(","), "order independent");
+  assertEquals(forward[0], "b.jsonlz4", "fileName desc is secondary key");
+
+  const p1 = makeSummary("p1.jsonlz4", "pre-restore", 5);
+  const p2 = makeSummary("p2.jsonlz4", "pre-restore", 5);
+  const e1 = selectExcessPreRestoreBackups([p1, p2], 1);
+  const e2 = selectExcessPreRestoreBackups([p2, p1], 1);
+  assertEquals(e1[0].fileName, e2[0].fileName, "excess deterministic");
+  assertEquals(e1[0].fileName, "p1.jsonlz4", "lower name is older on tie");
+}
+
+function testMinKeep(): void {
+  const now = 1700000000000;
+  const old = (n: number, kind: "auto" | "manual" = "auto") =>
+    makeSummary(`o${n}.jsonlz4`, kind, now - (100 + n) * DAY);
+  const summaries = [old(1), old(2), old(3, "manual"), old(4), old(5)];
+  const expired = selectExpiredBackups(summaries, 7, now);
+  assertEquals(MIN_KEEP_BACKUPS, 3, "default minKeep");
+  assertEquals(expired.length, 2, "newest 3 survive regardless of age");
+  assertEquals(
+    expired.map((x) => x.fileName).sort().join(","),
+    "o4.jsonlz4,o5.jsonlz4",
+    "oldest two expire",
+  );
+  assertEquals(
+    selectExpiredBackups(summaries, 7, now, 5).length,
+    0,
+    "minKeep 5 keeps all",
+  );
+  const withPre = [
+    ...summaries.slice(0, 3),
+    makeSummary("pre.jsonlz4", "pre-restore", now - 500 * DAY),
+  ];
+  assertEquals(
+    selectExpiredBackups(withPre, 7, now).length,
+    0,
+    "pre-restore neither expired nor counted toward minKeep",
+  );
+}
+
+function testConfigClamps(): void {
+  const hi = normalizeBackupConfig({
+    intervalMinutes: 1e9,
+    retentionDays: 1e9,
+    maxPreRestoreBackups: 1e9,
+  });
+  assertEquals(hi.intervalMinutes, 1440, "interval max");
+  assertEquals(hi.retentionDays, 365, "retention max");
+  assertEquals(hi.maxPreRestoreBackups, 50, "pre-restore max");
+
+  const zero = normalizeBackupConfig({
+    intervalMinutes: 0,
+    retentionDays: 0,
+    maxPreRestoreBackups: 0,
+  });
+  assertEquals(zero.intervalMinutes, 1, "interval min");
+  assertEquals(zero.retentionDays, 1, "retention min");
+  assertEquals(zero.maxPreRestoreBackups, 1, "pre-restore min");
+
+  const frac = normalizeBackupConfig({
+    intervalMinutes: 1.5,
+    retentionDays: 1.5,
+    maxPreRestoreBackups: 1.5,
+  });
+  assertEquals(frac.intervalMinutes, 1, "1.5 -> 1");
+  assertEquals(frac.retentionDays, 1, "1.5 -> 1");
+  assertEquals(frac.maxPreRestoreBackups, 1, "1.5 -> 1");
+
+  for (const bad of [Number.POSITIVE_INFINITY, Number.NaN]) {
+    const c = normalizeBackupConfig({
+      intervalMinutes: bad,
+      retentionDays: bad,
+      maxPreRestoreBackups: bad,
+    });
+    assertEquals(c.intervalMinutes, 15, `interval ${bad} default`);
+    assertEquals(c.retentionDays, 7, `retention ${bad} default`);
+    assertEquals(c.maxPreRestoreBackups, 10, `pre-restore ${bad} default`);
+  }
+  assertEquals(
+    normalizeBackupConfig({ intervalMinutes: -5 }).intervalMinutes,
+    1,
+    "negative clamps to min",
+  );
+}
+
+function testLimitConstants(): void {
+  assertEquals(WORKSPACE_BACKUP_LIMITS.maxNameLength, 256, "name");
+  assertEquals(WORKSPACE_BACKUP_LIMITS.maxIconLength, 2048, "icon");
+  assertEquals(
+    WORKSPACE_BACKUP_LIMITS.maxDecompressedBytes,
+    256 * 1024 * 1024,
+    "decompressed",
+  );
+}
+
+function testLimitBoundaries(): void {
+  const L = WORKSPACE_BACKUP_LIMITS;
+  const windowsOf = (n: number) =>
+    Array.from({ length: n }, (_, i) => makeWindow(1, i === 0));
+  assert(
+    isWorkspaceBackupFile(makeFile({ windows: windowsOf(L.maxWindows) })),
+    "maxWindows ok",
+  );
+  assert(
+    !isWorkspaceBackupFile(makeFile({ windows: windowsOf(L.maxWindows + 1) })),
+    "maxWindows+1 rejected",
+  );
+
+  const bigTabs = (n: number, overrides?: Partial<WorkspaceBackupTab>) => ({
+    isFocused: true,
+    tabs: Array.from({ length: n }, () => makeTab(1, overrides)),
+  });
+  assert(
+    isWorkspaceBackupFile(makeFile({ windows: [bigTabs(L.maxTabsPerWindow)] })),
+    "maxTabsPerWindow ok",
+  );
+  assert(
+    !isWorkspaceBackupFile(
+      makeFile({ windows: [bigTabs(L.maxTabsPerWindow + 1)] }),
+    ),
+    "maxTabsPerWindow+1 rejected",
+  );
+
+  const one = (overrides: Partial<WorkspaceBackupTab>) =>
+    makeFile({ windows: [{ isFocused: true, tabs: [makeTab(0, overrides)] }] });
+  assert(
+    isWorkspaceBackupFile(one({ title: "a".repeat(L.maxTitleLength) })),
+    "title at limit ok",
+  );
+  assert(
+    !isWorkspaceBackupFile(one({ title: "a".repeat(L.maxTitleLength + 1) })),
+    "title+1 rejected",
+  );
+  const urlAt = "https://e.example/" + "a".repeat(L.maxUrlLength - 18);
+  assertEquals(urlAt.length, L.maxUrlLength, "url length sanity");
+  assert(isWorkspaceBackupFile(one({ url: urlAt })), "url at limit ok");
+  assert(!isWorkspaceBackupFile(one({ url: urlAt + "a" })), "url+1 rejected");
+
+  // Byte budget: "あ" is 3 bytes in UTF-8 but 1 UTF-16 unit.
+  const overhead = JSON.stringify({ k: "" }).length;
+  const fit = Math.floor((L.maxTabStateBytes - overhead) / 3);
+  assert(
+    isWorkspaceBackupFile(one({ state: { k: "あ".repeat(fit) } })),
+    "multibyte state within bytes ok",
+  );
+  assert(
+    !isWorkspaceBackupFile(one({ state: { k: "あ".repeat(fit + 1) } })),
+    "multibyte state over bytes rejected (code units would pass)",
+  );
+  assert(
+    "あ".repeat(fit + 1).length < L.maxTabStateBytes,
+    "sanity: code unit count is below the byte limit",
+  );
+
+  // maxTotalTabs: 6 windows x 1000 = 6000 > 5000 though each window is ok.
+  assert(
+    !isWorkspaceBackupFile(
+      makeFile({ windows: Array.from({ length: 6 }, () => bigTabs(1000)) }),
+    ),
+    "maxTotalTabs exceeded rejected",
+  );
+}
+
+function testIntegrityFailures(): void {
+  const state = (
+    over: Partial<WorkspaceBackupState>,
+  ): WorkspaceBackupState => ({
+    ...makeWorkspaceState(),
+    ...over,
+  });
+  const wsOf = (id: string, name = "N") => ({
+    workspaceId: id as TWorkspaceID,
+    name,
+    userContextId: 0,
+  });
+  const cases: Array<[string, WorkspaceBackupState]> = [
+    [
+      "duplicate workspaceId",
+      state({ workspaces: [wsOf(WS_A), wsOf(WS_A)], order: [WS_A, WS_A] }),
+    ],
+    ["order missing an id", state({ order: [WS_A] })],
+    ["order duplicate", state({ order: [WS_A, WS_A] })],
+    [
+      "order unknown id",
+      state({
+        order: [WS_A, "00000000-0000-4000-8000-0000000000ff" as TWorkspaceID],
+      }),
+    ],
+    [
+      "defaultID unknown",
+      state({
+        defaultID: "00000000-0000-4000-8000-0000000000ff" as TWorkspaceID,
+      }),
+    ],
+    [
+      "currentWorkspaceId unknown",
+      state({
+        currentWorkspaceId:
+          "00000000-0000-4000-8000-0000000000ff" as TWorkspaceID,
+      }),
+    ],
+    [
+      "non-uuid workspaceId",
+      state({
+        workspaces: [wsOf("abc"), wsOf(WS_B)],
+        order: ["abc" as TWorkspaceID, WS_B],
+      }),
+    ],
+    [
+      "name too long",
+      state({
+        workspaces: [wsOf(WS_A, "n".repeat(257)), wsOf(WS_B)],
+      }),
+    ],
+    [
+      "icon too long",
+      state({
+        workspaces: [
+          { ...wsOf(WS_A), icon: "i".repeat(2049) },
+          wsOf(WS_B),
+        ],
+      }),
+    ],
+  ];
+  for (const [label, workspaceState] of cases) {
+    assert(
+      !isWorkspaceBackupFile(makeFile({ workspaceState })),
+      `rejects ${label}`,
+    );
+  }
+  assert(
+    isWorkspaceBackupFile(makeFile({
+      workspaceState: state({
+        workspaces: [wsOf(WS_A, "n".repeat(256)), {
+          ...wsOf(WS_B),
+          icon: "i".repeat(2048),
+        }],
+      }),
+    })),
+    "name/icon at limit ok",
+  );
+  assert(
+    isWorkspaceBackupFile(makeFile({
+      workspaceState: state({ defaultID: null, currentWorkspaceId: null }),
+    })),
+    "null default/current ok",
+  );
+
+  // order longer than maxWorkspaces
+  const many = Array.from(
+    { length: 201 },
+    (_, i) => `00000000-0000-4000-8000-${String(i).padStart(12, "0")}`,
+  );
+  assert(
+    !isWorkspaceBackupFile(makeFile({
+      workspaceState: {
+        workspaces: many.map((id) => wsOf(id)),
+        order: many as TWorkspaceID[],
+        defaultID: null,
+        currentWorkspaceId: null,
+      },
+    })),
+    "maxWorkspaces+1 rejected",
+  );
+
+  // tabs mode tabs must not carry workspaceId
+  assert(
+    !isWorkspaceBackupFile(makeFile({
+      mode: "tabs",
+      workspaceState: undefined,
+      windows: [{
+        isFocused: true,
+        tabs: [makeTab(0, { workspaceId: WS_A })],
+      }],
+    })),
+    "tabs mode tab with workspaceId rejected",
+  );
+  // malformed tab workspaceId
+  assert(
+    !isWorkspaceBackupFile(makeFile({
+      windows: [{
+        isFocused: true,
+        tabs: [makeTab(0, { workspaceId: "nope" as TWorkspaceID })],
+      }],
+    })),
+    "bad tab workspaceId format rejected",
+  );
 }
 
 /* ------------------------------------------------------------------ */
@@ -492,8 +1025,27 @@ export function runAllTests(): void {
       fn: testFractionalRetentionCapIsFloored,
     },
     { name: "parse config invalid json", fn: testParseConfigInvalidJson },
+    { name: "isRestorableTabUrl", fn: testIsRestorableTabUrl },
+    { name: "sanitize allowlist", fn: testSanitizeAllowlist },
+    {
+      name: "sanitize drops bad entries and clamps index",
+      fn: testSanitizeDropsBadEntriesAndClampsIndex,
+    },
+    { name: "sanitize depth bound", fn: testSanitizeMultibyteInputAndDepth },
+    { name: "capturedAt validation", fn: testCapturedAtValidation },
+    {
+      name: "parse file name rejects out-of-range",
+      fn: testParseFileNameRejectsOutOfRange,
+    },
+    { name: "deterministic tie-break", fn: testDeterministicTieBreak },
+    { name: "minKeep", fn: testMinKeep },
+    { name: "config clamps", fn: testConfigClamps },
+    { name: "limit constants", fn: testLimitConstants },
+    { name: "limit boundaries", fn: testLimitBoundaries },
+    { name: "integrity failures", fn: testIntegrityFailures },
   ];
 
+  console.log(`workspacesBackupHelpers: running ${tests.length} tests`);
   const failures: string[] = [];
   for (const test of tests) {
     try {

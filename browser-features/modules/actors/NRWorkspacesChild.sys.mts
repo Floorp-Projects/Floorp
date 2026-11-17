@@ -6,6 +6,8 @@ import { launchDevPorts } from "../common/dev-port-offset.ts";
 const launchDevPort = launchDevPorts();
 
 const WORKSPACES_INIT_TOPIC = "floorp.workspaces.initialize";
+const REQUEST_TIMEOUT_MS = 30_000;
+const RESTORE_TIMEOUT_MS = 10 * 60_000;
 
 type InitializeResult = {
   success: boolean;
@@ -32,14 +34,26 @@ export class NRWorkspacesChild extends JSWindowActorChild {
 
   actorCreated() {
     const window = this.contentWindow;
+    const href = window?.location.href ?? "";
+    const isTrustedDevPort = launchDevPort.isTrustedPort(
+      window?.location.port,
+      HUB_DEV_PAGES,
+    );
     if (
-      launchDevPort.isTrustedPort(window?.location.port, HUB_DEV_PAGES) ||
-      window?.location.href.startsWith("chrome://noraneko-settings") ||
-      window?.location.href.startsWith("about:")
+      isTrustedDevPort ||
+      href.startsWith("chrome://noraneko-settings") ||
+      href.startsWith("about:")
     ) {
       Cu.exportFunction(this.initializeWorkspaces.bind(this), window, {
         defineAs: "NRInitializeWorkspaces",
       });
+    }
+    // Backup bridge: settings page only (not every about: page).
+    if (
+      isTrustedDevPort ||
+      href.startsWith("chrome://noraneko-settings") ||
+      href.startsWith("about:hub")
+    ) {
       Cu.exportFunction(this.backupNow.bind(this), window, {
         defineAs: "NRWorkspacesBackupNow",
       });
@@ -133,10 +147,15 @@ export class NRWorkspacesChild extends JSWindowActorChild {
   ): Promise<BackupBridgeResult> {
     const requestId = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
     return new Promise<BackupBridgeResult>((resolve) => {
-      const timer = globalThis.setTimeout(() => {
-        this.#pendingBackupRequests.delete(requestId);
-        resolve({ requestId, success: false, error: "timeout" });
-      }, 30_000);
+      const timer = globalThis.setTimeout(
+        () => {
+          this.#pendingBackupRequests.delete(requestId);
+          resolve({ requestId, success: false, error: "timeout" });
+        },
+        name === "NRWorkspaces:RestoreBackup"
+          ? RESTORE_TIMEOUT_MS
+          : REQUEST_TIMEOUT_MS,
+      );
       this.#pendingBackupRequests.set(requestId, { resolve, timer });
       this.sendAsyncMessage(name, { ...data, requestId });
     });

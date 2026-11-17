@@ -30,6 +30,7 @@ import {
   isBackupFileName,
   isTabStateWithinLimit,
   isWorkspaceBackupFile,
+  normalizeBackupConfig,
   parseBackupConfig,
   sanitizeTabState,
   selectExcessPreRestoreBackups,
@@ -108,6 +109,89 @@ const isWorkspacesEnabled = (): boolean =>
  */
 const truncate = (value: string | null, max: number): string | null =>
   value !== null && value.length > max ? value.slice(0, max) : value;
+
+/** Backoff used when a scheduled run is skipped without writing anything. */
+const SCHEDULE_SKIP_BACKOFF_MS = 5 * 60 * 1000;
+
+/** Largest delay `setTimeout` accepts without overflowing to ~0. */
+const MAX_TIMER_DELAY_MS = 2 ** 31 - 1;
+
+/**
+ * Orphaned atomic-write temp files left by a crash during `IOUtils.write`.
+ * Matched strictly so no other file in the directory is ever touched.
+ */
+const BACKUP_TMP_FILE_NAME_PATTERN =
+  /^backup-\d{8}-\d{6}-[0-9a-f]{8}\.jsonlz4\.tmp$/i;
+
+/**
+ * Temp files younger than this may belong to a write still running in another
+ * window, so startup cleanup leaves them alone.
+ */
+const ORPHAN_TMP_MIN_AGE_MS = 10 * 60 * 1000;
+
+/**
+ * mozlz4 header: the magic ("mozLz40" + NUL) followed by the decompressed
+ * size as a little-endian uint32.
+ */
+const MOZLZ4_MAGIC = [0x6d, 0x6f, 0x7a, 0x4c, 0x7a, 0x34, 0x30, 0x00];
+const MOZLZ4_HEADER_BYTES = 12;
+
+/**
+ * Reads the decompressed size from a mozlz4 header without decompressing.
+ * Throws `backup-invalid` for anything that is not a mozlz4 file.
+ */
+const readMozLz4DecompressedSize = async (path: string): Promise<number> => {
+  const header = await IOUtils.read(path, { maxBytes: MOZLZ4_HEADER_BYTES });
+  if (header.length < MOZLZ4_HEADER_BYTES) {
+    throw new Error("backup-invalid");
+  }
+  for (let index = 0; index < MOZLZ4_MAGIC.length; index++) {
+    if (header[index] !== MOZLZ4_MAGIC[index]) {
+      throw new Error("backup-invalid");
+    }
+  }
+  return (header[8] | (header[9] << 8) | (header[10] << 16) |
+    (header[11] << 24)) >>> 0;
+};
+
+/** A captured tab together with the element it came from. */
+interface CapturedTabEntry {
+  tab: XULElement;
+  backupTab: WorkspaceBackupTab;
+}
+
+/**
+ * Picks at most `budget` tabs, preferring the selected tab, then pinned tabs,
+ * then the rest in tab order. The original order is preserved in the result.
+ */
+const selectTabsWithinBudget = (
+  entries: CapturedTabEntry[],
+  budget: number,
+): CapturedTabEntry[] => {
+  if (entries.length <= budget) {
+    return entries;
+  }
+  if (budget <= 0) {
+    return [];
+  }
+  const keep = new Set<number>();
+  const passes: ((entry: CapturedTabEntry) => boolean)[] = [
+    (entry) => entry.backupTab.isSelected,
+    (entry) => entry.backupTab.pinned,
+    () => true,
+  ];
+  for (const accept of passes) {
+    for (let index = 0; index < entries.length; index++) {
+      if (keep.size >= budget) {
+        break;
+      }
+      if (accept(entries[index])) {
+        keep.add(index);
+      }
+    }
+  }
+  return entries.filter((_, index) => keep.has(index));
+};
 
 /* -------------------------------------------------------------------------
  * Privacy
@@ -302,6 +386,11 @@ export interface RestoreWorkspaceStateOptions {
 }
 
 export interface WorkspacesBackupHost {
+  /**
+   * Present on WorkspacesService. Used to re-apply workspace tab visibility
+   * after an additive restore; the detached host has none.
+   */
+  readonly tabManagerCtx?: { updateTabsVisibility(): void };
   isWorkspaceID(id: string): id is TWorkspaceID;
   getRawWorkspace(id: TWorkspaceID): TWorkspace | undefined;
   /** Replaces the whole workspace store from a validated backup file. */
@@ -324,7 +413,25 @@ export interface RestoreTabsResult {
   outcomes: RestoreTabOutcome[];
   /** Number of captured windows that could not be opened. */
   windowFailures: number;
+  /** Tabs that failed to restore (skipped tabs are not failures). */
+  failedCount: number;
+  /** Tabs intentionally not opened, e.g. for unsupported URLs. */
+  skippedCount: number;
 }
+
+/** Result of `restoreBackup`, sent across the actor bridge as-is. */
+export interface RestoreBackupResult {
+  success: boolean;
+  error?: string;
+  /** Tabs skipped for unsupported URLs, when an additive restore ran. */
+  skippedCount?: number;
+}
+
+const countFailures = (outcomes: RestoreTabOutcome[]): number =>
+  outcomes.filter((outcome) => !outcome.ok && !outcome.skipped).length;
+
+const countSkipped = (outcomes: RestoreTabOutcome[]): number =>
+  outcomes.filter((outcome) => outcome.skipped === true).length;
 
 /**
  * Periodic workspace backup service.
@@ -343,6 +450,12 @@ export class WorkspacesBackupService {
   private readonly enabledObserver: () => void;
   private disposed = false;
   private cleanupInFlight: Promise<void> | null = null;
+  /**
+   * Per-window restore guard. The process-wide lock lives in the parent actor;
+   * this one also covers callers that bypass the actor and keeps the scheduler
+   * from capturing a half-restored state.
+   */
+  private restoreInFlight = false;
 
   constructor(host: WorkspacesBackupHost) {
     this.host = host;
@@ -379,6 +492,12 @@ export class WorkspacesBackupService {
         error,
       );
     });
+    removeOrphanTmpFiles(ORPHAN_TMP_MIN_AGE_MS).catch((error) => {
+      console.error(
+        "WorkspacesBackupService: startup temp file cleanup failed",
+        error,
+      );
+    });
     this.scheduleNext(5_000);
   }
 
@@ -388,7 +507,7 @@ export class WorkspacesBackupService {
 
   public updateConfig(config: WorkspaceBackupConfig): void {
     const wasEnabled = this.config.enabled;
-    this.config = { ...config };
+    this.config = normalizeBackupConfig(config);
     Services.prefs.setStringPref(
       WORKSPACE_BACKUP_CONFIG_PREF_NAME,
       serializeBackupConfig(this.config),
@@ -402,6 +521,10 @@ export class WorkspacesBackupService {
   public async backupNow(
     kind: WorkspaceBackupKind = "manual",
   ): Promise<WorkspaceBackupSummary> {
+    if (this.restoreInFlight) {
+      // A capture taken mid-restore would record a half-replaced state.
+      throw new Error("restore-in-progress");
+    }
     const { summary } = await this.captureAndWrite(kind);
     return summary;
   }
@@ -508,11 +631,14 @@ export class WorkspacesBackupService {
       }
       const children = await IOUtils.getChildren(directory);
       for (const child of children) {
+        // Unreadable or unknown-version files still carry a valid name and are
+        // removed here too, even though listBackups() cannot show them.
         if (!isBackupFileName(getBaseName(child))) {
           continue;
         }
         await IOUtils.remove(child);
       }
+      await removeOrphanTmpFiles(0);
       return true;
     } catch (error) {
       console.error(
@@ -530,16 +656,27 @@ export class WorkspacesBackupService {
    * mode: the same button always does the same thing in a given configuration.
    * The file mode only decides which data is available.
    */
-  public async restoreBackup(
-    fileName: string,
-  ): Promise<{ success: boolean; error?: string }> {
+  public async restoreBackup(fileName: string): Promise<RestoreBackupResult> {
     if (!isBackupFileName(fileName)) {
       return { success: false, error: "invalid-file-name" };
     }
-    const file = await this.loadBackup(fileName);
-    if (!file) {
-      return { success: false, error: "backup-not-found" };
+    if (this.restoreInFlight) {
+      return { success: false, error: "restore-in-progress" };
     }
+    this.restoreInFlight = true;
+    try {
+      return await this.runRestore(fileName);
+    } finally {
+      this.restoreInFlight = false;
+    }
+  }
+
+  private async runRestore(fileName: string): Promise<RestoreBackupResult> {
+    const loaded = await this.loadBackup(fileName);
+    if ("error" in loaded) {
+      return { success: false, error: loaded.error };
+    }
+    const file = loaded.file;
 
     const workspacesEnabled = isWorkspacesEnabled();
     const destructive = workspacesEnabled && file.mode === "workspaces";
@@ -547,24 +684,25 @@ export class WorkspacesBackupService {
 
     // A safety copy is only needed when the restore replaces existing state.
     if (destructive) {
-      if (this.config.maxPreRestoreBackups === 0) {
-        // Retention would delete the copy immediately, leaving the destructive
-        // restore without a way back.
-        return { success: false, error: "pre-restore-disabled" };
-      }
       let capturedTabs: Set<XULElement>;
       try {
         ({ capturedTabs } = await this.captureAndWrite("pre-restore"));
       } catch (error) {
-        console.error(
-          "WorkspacesBackupService: failed to capture pre-restore backup",
-          error,
-        );
-        return { success: false, error: "pre-restore-failed" };
+        if (error instanceof Error && error.message === "nothing-to-back-up") {
+          // No capturable tab exists, so there is nothing a safety copy could
+          // hold. Every current tab is preserved below instead.
+          capturedTabs = new Set();
+        } else {
+          console.error(
+            "WorkspacesBackupService: failed to capture pre-restore backup",
+            error,
+          );
+          return { success: false, error: "pre-restore-failed" };
+        }
       }
       // Only tabs the safety copy covers may be replaced. Anything opened since
-      // the copy (including a same-count swap) is parked on a restored
-      // workspace instead of being closed.
+      // the copy (including a same-count swap, or tabs dropped by capture
+      // limits) is parked on a restored workspace instead of being closed.
       let preserveTabs: Set<XULElement>;
       try {
         preserveTabs = this.collectTabsNotIn(capturedTabs);
@@ -581,37 +719,52 @@ export class WorkspacesBackupService {
     try {
       if (destructive) {
         await this.host.restoreWorkspaceState(file, restoreOptions);
-      } else if (workspacesEnabled) {
-        // tabs file while workspaces are enabled: add them to the current
-        // workspace, flattened into the focused window.
-        const result = await this.restoreTabs(file, {
-          splitWindows: false,
-          assignWorkspaceId: this.resolveCurrentWorkspaceId(),
-        });
-        if (result.outcomes.some((outcome) => !outcome.ok)) {
-          return { success: false, error: "restore-partial-failure" };
-        }
-      } else {
-        // Workspaces disabled: never touch the store. Always keep the captured
-        // window layout, whatever mode the file was captured in.
-        const result = await this.restoreTabs(file, {
-          splitWindows: true,
-          assignWorkspaceId: null,
-        });
-        if (
-          result.windowFailures > 0 ||
-          result.outcomes.some((outcome) => !outcome.ok)
-        ) {
-          return { success: false, error: "restore-partial-failure" };
-        }
+        return { success: true };
       }
-      return { success: true };
+      // Workspaces enabled + tabs file: add them to the current workspace,
+      // flattened into this window. Workspaces disabled: never touch the store
+      // and always keep the captured window layout, whatever the file mode.
+      const result = await this.restoreTabs(
+        file,
+        workspacesEnabled
+          ? {
+            splitWindows: false,
+            assignWorkspaceId: this.resolveCurrentWorkspaceId(),
+          }
+          : { splitWindows: true, assignWorkspaceId: null },
+      );
+      if (workspacesEnabled) {
+        this.refreshTabsVisibility();
+      }
+      if (result.windowFailures > 0 || result.failedCount > 0) {
+        return {
+          success: false,
+          error: "restore-partial-failure",
+          skippedCount: result.skippedCount,
+        };
+      }
+      return { success: true, skippedCount: result.skippedCount };
     } catch (error) {
       console.error("WorkspacesBackupService: restore failed", error);
       return {
         success: false,
         error: error instanceof Error ? error.message : String(error),
       };
+    }
+  }
+
+  /**
+   * Re-applies workspace visibility after tabs were added, so restored tabs
+   * assigned to a hidden workspace do not stay visible.
+   */
+  private refreshTabsVisibility(): void {
+    try {
+      this.host.tabManagerCtx?.updateTabsVisibility();
+    } catch (error) {
+      console.error(
+        "WorkspacesBackupService: failed to update tab visibility",
+        error,
+      );
     }
   }
 
@@ -636,7 +789,12 @@ export class WorkspacesBackupService {
         gBrowser: currentBrowser,
         resolveWorkspaceId: () => options.assignWorkspaceId,
       });
-      return { outcomes: flatOutcomes, windowFailures: 0 };
+      return {
+        outcomes: flatOutcomes,
+        windowFailures: 0,
+        failedCount: countFailures(flatOutcomes),
+        skippedCount: countSkipped(flatOutcomes),
+      };
     }
 
     // Multi-window restore: the focused captured window lands in the current
@@ -702,9 +860,12 @@ export class WorkspacesBackupService {
       });
       outcomes.push(...result);
 
-      // Only discard the placeholder tabs once every tab in this window was
-      // restored, and never remove the last remaining tab.
-      if (result.some((entry) => !entry.ok)) {
+      // Only discard the placeholder tabs once no tab in this window failed and
+      // at least one was actually opened (skipped tabs are not failures), and
+      // never remove the last remaining tab.
+      if (
+        countFailures(result) > 0 || !result.some((entry) => entry.ok)
+      ) {
         continue;
       }
       for (const tab of initialTabs) {
@@ -725,7 +886,12 @@ export class WorkspacesBackupService {
       }
     }
 
-    return { outcomes, windowFailures };
+    return {
+      outcomes,
+      windowFailures,
+      failedCount: countFailures(outcomes),
+      skippedCount: countSkipped(outcomes),
+    };
   }
 
   public dispose(): void {
@@ -805,19 +971,8 @@ export class WorkspacesBackupService {
   ): Promise<WorkspaceBackupSummary | null> {
     const fileName = getBaseName(path);
     try {
-      const stat = await IOUtils.stat(path);
-      if ((stat.size ?? 0) > WORKSPACE_BACKUP_LIMITS.maxFileBytes) {
-        console.error(
-          "WorkspacesBackupService: skipping oversized backup",
-          { path, size: stat.size },
-        );
-        return null;
-      }
-      const file = await this.readBackupFile(path);
-      if (!file) {
-        return null;
-      }
-      return buildBackupSummary(fileName, file, stat.size ?? 0);
+      const { file, size } = await this.readBackupFile(path);
+      return buildBackupSummary(fileName, file, size);
     } catch (error) {
       console.error(
         "WorkspacesBackupService: skipping unreadable backup",
@@ -827,18 +982,37 @@ export class WorkspacesBackupService {
     }
   }
 
+  /**
+   * Reads and validates a backup file. Both the compressed size and the
+   * decompressed size declared in the mozlz4 header are bounded before any
+   * decompression happens, so a hostile file cannot exhaust memory.
+   *
+   * Throws `backup-too-large`, `backup-invalid`, or an I/O error.
+   */
   private async readBackupFile(
     path: string,
-  ): Promise<WorkspaceBackupFile | null> {
+  ): Promise<{ file: WorkspaceBackupFile; size: number }> {
     const stat = await IOUtils.stat(path);
-    if ((stat.size ?? 0) > WORKSPACE_BACKUP_LIMITS.maxFileBytes) {
+    const size = stat.size ?? 0;
+    if (size > WORKSPACE_BACKUP_LIMITS.maxFileBytes) {
       console.error(
         "WorkspacesBackupService: refusing to read oversized backup",
-        { path, size: stat.size },
+        { path, size },
       );
-      return null;
+      throw new Error("backup-too-large");
+    }
+    const decompressedSize = await readMozLz4DecompressedSize(path);
+    if (decompressedSize > WORKSPACE_BACKUP_LIMITS.maxDecompressedBytes) {
+      console.error(
+        "WorkspacesBackupService: refusing to decompress oversized backup",
+        { path, decompressedSize },
+      );
+      throw new Error("backup-too-large");
     }
     const bytes = await IOUtils.read(path, { decompress: true });
+    if (bytes.length > WORKSPACE_BACKUP_LIMITS.maxDecompressedBytes) {
+      throw new Error("backup-too-large");
+    }
     const text = new TextDecoder().decode(bytes);
     const parsed: unknown = JSON.parse(text);
     if (!isWorkspaceBackupFile(parsed)) {
@@ -846,23 +1020,29 @@ export class WorkspacesBackupService {
         "WorkspacesBackupService: invalid or unsupported backup file",
         path,
       );
-      return null;
+      throw new Error("backup-invalid");
     }
-    return parsed;
+    return { file: parsed, size };
   }
 
   private async loadBackup(
     fileName: string,
-  ): Promise<WorkspaceBackupFile | null> {
+  ): Promise<{ file: WorkspaceBackupFile } | { error: string }> {
     const path = PathUtils.join(getBackupDirectory(), fileName);
-    if (!(await IOUtils.exists(path))) {
-      return null;
-    }
     try {
-      return await this.readBackupFile(path);
+      if (!(await IOUtils.exists(path))) {
+        return { error: "backup-not-found" };
+      }
+      const { file } = await this.readBackupFile(path);
+      return { file };
     } catch (error) {
       console.error("WorkspacesBackupService: failed to load backup", error);
-      return null;
+      if (error instanceof Error && error.message === "backup-too-large") {
+        return { error: "backup-too-large" };
+      }
+      // Unreadable and invalid files are not listed either, so the UI treats
+      // them the same as a missing file.
+      return { error: "backup-not-found" };
     }
   }
 
@@ -970,47 +1150,104 @@ export class WorkspacesBackupService {
     return null;
   }
 
+  /**
+   * Captures the workspace store in a shape the validator accepts.
+   *
+   * The live store may carry duplicate or stale `order` entries, or workspaces
+   * missing from `order`. Restore requires `order` to be an exact permutation of
+   * the captured workspaces, so it is rebuilt here: live order first (filtered
+   * and de-duplicated), then any remaining workspaces in data order. Counts and
+   * string lengths are clamped to the validator's limits.
+   */
   private captureWorkspaceState(): WorkspaceBackupState | null {
-    const order = [...workspacesDataStore.order] as TWorkspaceID[];
+    const rawData: unknown = workspacesDataStore.data;
+    const dataIds: TWorkspaceID[] = rawData instanceof Map
+      ? [...(rawData as Map<TWorkspaceID, TWorkspace>).keys()]
+      : [];
+    const known = new Set<TWorkspaceID>(dataIds);
+    const candidates: TWorkspaceID[] = [];
+    const seen = new Set<TWorkspaceID>();
+    const consider = (workspaceId: TWorkspaceID): void => {
+      if (seen.has(workspaceId)) {
+        return;
+      }
+      seen.add(workspaceId);
+      candidates.push(workspaceId);
+    };
+    for (const workspaceId of workspacesDataStore.order as TWorkspaceID[]) {
+      // Without a readable data map, fall back to the host lookup below.
+      if (known.size === 0 || known.has(workspaceId)) {
+        consider(workspaceId);
+      }
+    }
+    for (const workspaceId of dataIds) {
+      consider(workspaceId);
+    }
+
     const workspaces: WorkspaceBackupWorkspace[] = [];
-    for (const workspaceId of order) {
+    for (const workspaceId of candidates) {
+      if (workspaces.length >= WORKSPACE_BACKUP_LIMITS.maxWorkspaces) {
+        console.warn(
+          "WorkspacesBackupService: workspace count exceeds backup limit",
+          {
+            total: candidates.length,
+            kept: WORKSPACE_BACKUP_LIMITS.maxWorkspaces,
+          },
+        );
+        break;
+      }
       const workspace = this.host.getRawWorkspace(workspaceId);
       if (!workspace) {
         continue;
       }
+      const icon = workspace.icon ?? null;
       workspaces.push({
         workspaceId,
-        name: workspace.name,
+        name: truncate(
+          workspace.name,
+          WORKSPACE_BACKUP_LIMITS.maxNameLength,
+        ) ?? "",
         userContextId: workspace.userContextId ?? 0,
-        icon: workspace.icon ?? null,
+        // A cut-off icon (often a data URL) is useless; drop it instead.
+        icon: icon !== null &&
+            icon.length > WORKSPACE_BACKUP_LIMITS.maxIconLength
+          ? null
+          : icon,
       });
     }
     if (workspaces.length === 0) {
       return null;
     }
+    const order = workspaces.map((workspace) => workspace.workspaceId);
+    const kept = new Set(order);
     const defaultCandidate = workspacesDataStore.defaultID as TWorkspaceID;
+    const current = this.resolveCurrentWorkspaceId();
     return {
       workspaces,
       order,
-      defaultID: order.includes(defaultCandidate) ? defaultCandidate : null,
-      currentWorkspaceId: this.resolveCurrentWorkspaceId(),
+      defaultID: kept.has(defaultCandidate) ? defaultCandidate : null,
+      currentWorkspaceId: current !== null && kept.has(current)
+        ? current
+        : null,
     };
   }
 
+  /**
+   * Captures one window's tabs. Elements are returned alongside the data so the
+   * caller can apply count limits before deciding which tabs are covered.
+   */
   private captureWindowTabs(
     window: BrowserWindow,
     sessionStore: Awaited<ReturnType<typeof ensureSessionStore>>,
     mode: WorkspaceBackupMode,
-    isFocused: boolean,
     privateContainerUserContextId: number | null,
-    capturedTabs: Set<XULElement>,
-  ): WorkspaceBackupWindow | null {
+  ): CapturedTabEntry[] | null {
     const gBrowser = window.gBrowser;
     if (!gBrowser) {
       return null;
     }
     const selectedTab = gBrowser.selectedTab;
-    const tabs: WorkspaceBackupTab[] = [];
+    const entries: CapturedTabEntry[] = [];
 
     for (const tab of gBrowser.tabs) {
       const userContextId = toNumber(tab.getAttribute("usercontextid"));
@@ -1064,11 +1301,10 @@ export class WorkspacesBackupService {
           backupTab.workspaceId = workspaceId;
         }
       }
-      tabs.push(backupTab);
-      capturedTabs.add(tab);
+      entries.push({ tab, backupTab });
     }
 
-    return { isFocused, tabs };
+    return entries;
   }
 
   /**
@@ -1077,6 +1313,15 @@ export class WorkspacesBackupService {
    * In `workspaces` mode tabs carry their workspace attribution and the file
    * carries the workspace store. In `tabs` mode no workspace data is read at
    * all, so the backup stays correct even when the feature is disabled.
+   *
+   * Count limits are enforced here rather than left to the validator: a user
+   * above a limit would otherwise get `backup-capture-invalid` on every run and
+   * could never take a pre-restore copy. The focused window is kept first,
+   * then windows in enumeration order; within a window the selected and pinned
+   * tabs are kept preferentially. Tabs left out are not in `capturedTabs`, so a
+   * destructive restore preserves them instead of closing them.
+   *
+   * Throws `nothing-to-back-up` when no capturable tab exists.
    */
   private async captureAllWorkspaces(
     kind: WorkspaceBackupKind,
@@ -1103,23 +1348,63 @@ export class WorkspacesBackupService {
     const workspacesEnabled = isWorkspacesEnabled();
     const mode: WorkspaceBackupMode = workspacesEnabled ? "workspaces" : "tabs";
 
+    const focusedIndex = windows.findIndex((window) =>
+      window === focusedWindow
+    );
+    const orderedWindows = focusedIndex > 0
+      ? [
+        windows[focusedIndex],
+        ...windows.filter((_, index) => index !== focusedIndex),
+      ]
+      : windows;
+
     const capturedTabs = new Set<XULElement>();
     const capturedWindows: WorkspaceBackupWindow[] = [];
-    for (const window of windows) {
-      const captured = this.captureWindowTabs(
+    let seenTabs = 0;
+    let seenWindows = 0;
+    let remainingBudget: number = WORKSPACE_BACKUP_LIMITS.maxTotalTabs;
+    for (const window of orderedWindows) {
+      const entries = this.captureWindowTabs(
         window,
         sessionStore,
         mode,
-        window === focusedWindow,
         privateContainerUserContextId,
-        capturedTabs,
       );
-      if (captured) {
-        capturedWindows.push(captured);
+      if (!entries || entries.length === 0) {
+        // Windows with nothing capturable would restore as empty windows.
+        continue;
       }
+      seenWindows++;
+      seenTabs += entries.length;
+      if (capturedWindows.length >= WORKSPACE_BACKUP_LIMITS.maxWindows) {
+        continue;
+      }
+      const kept = selectTabsWithinBudget(
+        entries,
+        Math.min(WORKSPACE_BACKUP_LIMITS.maxTabsPerWindow, remainingBudget),
+      );
+      if (kept.length === 0) {
+        continue;
+      }
+      remainingBudget -= kept.length;
+      for (const entry of kept) {
+        capturedTabs.add(entry.tab);
+      }
+      capturedWindows.push({
+        isFocused: window === focusedWindow,
+        tabs: kept.map((entry) => entry.backupTab),
+      });
     }
     if (capturedWindows.length === 0) {
-      throw new Error("no-browser-window");
+      throw new Error("nothing-to-back-up");
+    }
+    if (
+      capturedTabs.size < seenTabs || capturedWindows.length < seenWindows
+    ) {
+      console.warn("WorkspacesBackupService: backup truncated to limits", {
+        windows: { total: seenWindows, kept: capturedWindows.length },
+        tabs: { total: seenTabs, kept: capturedTabs.size },
+      });
     }
 
     const workspaceState = mode === "workspaces"
@@ -1127,6 +1412,18 @@ export class WorkspacesBackupService {
       : null;
     if (mode === "workspaces" && !workspaceState) {
       throw new Error("workspace-state-unavailable");
+    }
+    if (workspaceState) {
+      // Attribution to a workspace that is not in the file (stale, or dropped
+      // by the workspace limit) is removed; restore would ignore it anyway.
+      const keptWorkspaceIds = new Set(workspaceState.order);
+      for (const capturedWindow of capturedWindows) {
+        for (const tab of capturedWindow.tabs) {
+          if (tab.workspaceId && !keptWorkspaceIds.has(tab.workspaceId)) {
+            delete tab.workspaceId;
+          }
+        }
+      }
     }
 
     return {
@@ -1150,34 +1447,55 @@ export class WorkspacesBackupService {
       return;
     }
 
-    const intervalMs = Math.max(1, this.config.intervalMinutes) * 60_000;
+    const intervalMs = this.getIntervalMs();
     const elapsed = Date.now() - readLastRunAt();
     // A negative elapsed means the clock moved backwards; fall back to a full
     // interval instead of scheduling far into the future.
     const remaining = elapsed < 0 ? intervalMs : intervalMs - elapsed;
-    const delay = delayMs ?? Math.max(1_000, remaining);
+    // setTimeout overflows above 2^31-1 ms and would fire immediately.
+    const delay = Math.min(
+      MAX_TIMER_DELAY_MS,
+      delayMs ?? Math.max(1_000, remaining),
+    );
     this.timer = globalThis.setTimeout(() => {
       this.timer = null;
       this.runScheduledBackup()
-        .catch((error) => {
+        .catch((error): undefined => {
           console.error(
             "WorkspacesBackupService: scheduled backup failed",
             error,
           );
+          return undefined;
         })
-        .finally(() => this.scheduleNext());
+        .then((nextDelay) => this.scheduleNext(nextDelay));
     }, delay);
   }
 
-  private async runScheduledBackup(): Promise<void> {
+  private getIntervalMs(): number {
+    // normalizeBackupConfig already clamps the interval; this guards against a
+    // non-normalized value reaching the scheduler.
+    return Math.max(1, this.config.intervalMinutes) * 60_000;
+  }
+
+  /**
+   * Runs one scheduled backup if it is due.
+   *
+   * Returns a delay override when the run was skipped without updating
+   * `lastRun`; without it the scheduler would retry every second.
+   */
+  private async runScheduledBackup(): Promise<number | undefined> {
     // Workspaces may be disabled; unassigned tabs are still backed up.
     if (!this.config.enabled) {
-      return;
+      return undefined;
     }
-    const intervalMs = Math.max(1, this.config.intervalMinutes) * 60_000;
+    const intervalMs = this.getIntervalMs();
     const elapsed = Date.now() - readLastRunAt();
     if (elapsed >= 0 && elapsed < intervalMs) {
-      return;
+      return undefined;
+    }
+    const backoffMs = Math.min(intervalMs, SCHEDULE_SKIP_BACKOFF_MS);
+    if (this.restoreInFlight) {
+      return backoffMs;
     }
     let windows: BrowserWindow[];
     try {
@@ -1187,12 +1505,23 @@ export class WorkspacesBackupService {
         "WorkspacesBackupService: skipping scheduled backup",
         error,
       );
-      return;
+      return backoffMs;
     }
     if (windows.length === 0) {
-      return;
+      // Only private windows are open.
+      return backoffMs;
     }
-    await this.backupNow("auto");
+    try {
+      // lastRun is written before capture, so a failed or empty run waits a
+      // full interval through the normal schedule.
+      await this.backupNow("auto");
+    } catch (error) {
+      if (error instanceof Error && error.message === "nothing-to-back-up") {
+        return undefined;
+      }
+      throw error;
+    }
+    return undefined;
   }
 }
 
@@ -1235,5 +1564,38 @@ const writeBackupFile = async (
   } catch (error) {
     await IOUtils.remove(path, { ignoreAbsent: true }).catch(() => {});
     throw error;
+  }
+};
+
+/**
+ * Removes orphaned `backup-*.jsonlz4.tmp` files left by an interrupted atomic
+ * write. Only names matching the strict temp pattern are touched. Files newer
+ * than `minAgeMs` are kept because another window may still be writing them.
+ */
+const removeOrphanTmpFiles = async (minAgeMs: number): Promise<void> => {
+  const directory = getBackupDirectory();
+  if (!(await IOUtils.exists(directory))) {
+    return;
+  }
+  const now = Date.now();
+  for (const child of await IOUtils.getChildren(directory)) {
+    if (!BACKUP_TMP_FILE_NAME_PATTERN.test(getBaseName(child))) {
+      continue;
+    }
+    try {
+      if (minAgeMs > 0) {
+        const stat = await IOUtils.stat(child);
+        const modified = stat.lastModified ?? now;
+        if (now - modified < minAgeMs) {
+          continue;
+        }
+      }
+      await IOUtils.remove(child, { ignoreAbsent: true });
+    } catch (error) {
+      console.error(
+        "WorkspacesBackupService: failed to remove orphan temp file",
+        { path: child, error },
+      );
+    }
   }
 };

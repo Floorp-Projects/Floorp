@@ -1,4 +1,15 @@
+import { HUB_DEV_PAGES } from "#libs/shared/dev-ports/defines.ts";
+import { launchDevPorts } from "../common/dev-port-offset.ts";
+
+const launchDevPort = launchDevPorts();
+
 const WORKSPACES_INIT_TOPIC = "floorp.workspaces.initialize";
+
+/**
+ * Module-scope (process-wide, shared by every window's actor) single-flight
+ * lock for mutating backup operations. List is never blocked.
+ */
+let mutatingBackupInFlight = false;
 
 interface WorkspacesFuncs {
   backupNow(): Promise<unknown>;
@@ -104,14 +115,21 @@ export class NRWorkspacesParent extends JSWindowActorParent {
       ? message.data.requestId
       : null;
     try {
+      if (!this.isTrustedBackupDocument()) {
+        throw new Error("untrusted-document");
+      }
       const window = this.resolveRequestingWindow();
       if (!window) {
         throw new Error("workspaces-unavailable");
       }
-      // A destructive restore must never run against a private window: the
-      // pre-restore safety copy excludes private windows, so its tabs could not
-      // be recovered afterwards.
-      if (this.isPrivateWindow(window) !== false) {
+      // Restore and backup-now capture/replace the window's tabs; neither may
+      // run against a private window (the safety copy excludes them). Listing
+      // and deleting backup files is window-independent and stays allowed.
+      if (
+        (message.name === "NRWorkspaces:RestoreBackup" ||
+          message.name === "NRWorkspaces:BackupNow") &&
+        this.isPrivateWindow(window) !== false
+      ) {
         throw new Error("private-window-unsupported");
       }
       const funcs = window.workspacesBackupFuncs ?? window.workspacesFuncs;
@@ -119,6 +137,65 @@ export class NRWorkspacesParent extends JSWindowActorParent {
         throw new Error("workspaces-unavailable");
       }
 
+      const mutating = message.name !== "NRWorkspaces:ListBackups";
+      if (mutating) {
+        if (mutatingBackupInFlight) {
+          throw new Error("restore-in-progress");
+        }
+        mutatingBackupInFlight = true;
+      }
+      let data: unknown;
+      try {
+        data = await this.runBackupOperation(funcs, message);
+      } finally {
+        if (mutating) {
+          mutatingBackupInFlight = false;
+        }
+      }
+
+      this.sendAsyncMessage("NRWorkspaces:BackupResult", {
+        requestId,
+        success: true,
+        data,
+      });
+    } catch (error) {
+      console.error("NRWorkspacesParent: backup request failed", error);
+      this.sendAsyncMessage("NRWorkspaces:BackupResult", {
+        requestId,
+        success: false,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
+
+  private isTrustedBackupDocument(): boolean {
+    try {
+      const uri = this.manager?.documentURI ??
+        this.browsingContext?.currentURI;
+      if (!uri) {
+        return false;
+      }
+      const spec = uri.spec;
+      if (
+        spec.startsWith("chrome://noraneko-settings") ||
+        spec.startsWith("about:hub")
+      ) {
+        return true;
+      }
+      if (uri.scheme === "http" && uri.host === "localhost") {
+        return launchDevPort.isTrustedPort(String(uri.port), HUB_DEV_PAGES);
+      }
+    } catch (error) {
+      console.error("NRWorkspacesParent: document check failed", error);
+    }
+    return false;
+  }
+
+  private async runBackupOperation(
+    funcs: WorkspacesFuncs,
+    message: ReceiveMessageArgument,
+  ): Promise<unknown> {
+    {
       let data: unknown;
       switch (message.name) {
         case "NRWorkspaces:BackupNow":
@@ -145,19 +222,7 @@ export class NRWorkspacesParent extends JSWindowActorParent {
           data = await funcs.deleteAllBackups();
           break;
       }
-
-      this.sendAsyncMessage("NRWorkspaces:BackupResult", {
-        requestId,
-        success: true,
-        data,
-      });
-    } catch (error) {
-      console.error("NRWorkspacesParent: backup request failed", error);
-      this.sendAsyncMessage("NRWorkspaces:BackupResult", {
-        requestId,
-        success: false,
-        error: error instanceof Error ? error.message : String(error),
-      });
+      return data;
     }
   }
 }

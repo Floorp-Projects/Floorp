@@ -202,8 +202,12 @@ function translatedSectionText(key: string, instance: I18nInstance): string {
   for (const language of instance.languages) {
     collect(instance.getResource(language, namespace, key), key);
   }
+  // Plural keys ("{{count}} tabs") only make sense with a count; indexing the
+  // raw placeholder would add noise, so drop them from the search text.
   return sanitizeWhitespace(
-    [...keys].map((path) => String(instance.t(path))).join(" "),
+    [...keys].map((path) => String(instance.t(path)))
+      .filter((text) => !text.includes("{{count}}"))
+      .join(" "),
   );
 }
 

@@ -14,6 +14,10 @@ import {
 } from "./workspaces-static-names.ts";
 import type { WorkspacesDataManagerBase } from "../workspacesDataManagerBase.tsx";
 import type { RestorableTab } from "./backup-types.ts";
+import {
+  isRestorableTabUrl,
+  sanitizeTabState,
+} from "./workspaces-backup-helpers.ts";
 
 interface SessionStoreModule {
   promiseInitialized: Promise<void> | undefined;
@@ -280,6 +284,9 @@ export interface RestoreTabOutcome {
   index: number;
   ok: boolean;
   error?: string;
+  /** True when the tab was intentionally not opened (not a failure). */
+  skipped?: true;
+  reason?: "unsupported-url";
   /** The created tab element, when creation succeeded. */
   tab?: XULElement;
 }
@@ -292,7 +299,79 @@ export interface RestoreTabsOptions<T extends RestorableTab> {
    * unattributed (tabs mode / workspaces disabled).
    */
   resolveWorkspaceId: (tab: T) => TWorkspaceID | null;
+  /**
+   * Skip the URL allowlist and state sanitization and load with the system
+   * principal, as the workspace archive restore did before backups existed.
+   * Backup files are untrusted input and must leave this unset.
+   */
+  trustedSource?: boolean;
 }
+
+/**
+ * Fixed internal pages the allowlist accepts. They are not web content, so a
+ * null principal cannot load them; the system principal is safe here because
+ * the target is one of these exact pages, never a file-derived arbitrary URL.
+ */
+const INTERNAL_RESTORE_URLS = new Set([
+  "about:blank",
+  "about:newtab",
+  "about:home",
+]);
+
+const createRestorePrincipal = (
+  url: string,
+  userContextId: number,
+  trustedSource: boolean,
+): unknown => {
+  const ssm = Services.scriptSecurityManager;
+  if (trustedSource || INTERNAL_RESTORE_URLS.has(url)) {
+    return ssm.getSystemPrincipal();
+  }
+  try {
+    const scheme = new URL(url).protocol;
+    if (scheme === "moz-extension:") {
+      // Extension pages reject loads from a null principal unless they are
+      // web-accessible; the allowlist already limited the scheme.
+      return ssm.getSystemPrincipal();
+    }
+  } catch {
+    // Fall through to the null principal.
+  }
+  // Web URLs from a backup file are untrusted: load them like a link from an
+  // opaque origin, scoped to the tab's container.
+  return ssm.createNullPrincipal({ userContextId });
+};
+
+/**
+ * Sanitizes a stored tab state for restore and removes history entries whose
+ * URL is not restorable. Returns null when no usable entry remains, so the
+ * caller falls back to loading the tab URL.
+ */
+const sanitizeRestoreState = (
+  state: Record<string, unknown>,
+): Record<string, unknown> | null => {
+  const sanitized = sanitizeTabState(structuredClone(state));
+  if (!sanitized) {
+    return null;
+  }
+  const entries = Array.isArray(sanitized.entries)
+    ? (sanitized.entries as Array<Record<string, unknown> | null>)
+    : [];
+  const kept = entries.filter((entry) =>
+    !!entry && typeof entry.url === "string" && isRestorableTabUrl(entry.url)
+  );
+  if (kept.length === 0) {
+    return null;
+  }
+  if (kept.length !== entries.length) {
+    sanitized.entries = kept;
+    const index = typeof sanitized.index === "number"
+      ? sanitized.index
+      : kept.length;
+    sanitized.index = Math.min(Math.max(1, index), kept.length);
+  }
+  return sanitized;
+};
 
 /**
  * Opens tabs in `options.gBrowser` without touching the workspace store.
@@ -325,15 +404,55 @@ export const restoreTabsIntoWindow = async <T extends RestorableTab>(
       console.error(`WorkspacesSnapshot: failed to restore ${label}`, error);
     };
 
+    const trusted = options.trustedSource === true;
+
+    // Backup files are untrusted input: never open a URL the allowlist rejects.
+    if (!trusted && tabSnapshot.url && !isRestorableTabUrl(tabSnapshot.url)) {
+      outcomes.push({
+        index,
+        ok: false,
+        skipped: true,
+        reason: "unsupported-url",
+      });
+      continue;
+    }
+
+    // Re-sanitize the session state and drop history entries with unsafe URLs.
+    let safeState: Record<string, unknown> | null = null;
+    if (tabSnapshot.state) {
+      try {
+        safeState = trusted
+          ? structuredClone(tabSnapshot.state)
+          : sanitizeRestoreState(tabSnapshot.state);
+      } catch (error) {
+        console.error(
+          "WorkspacesSnapshot: failed to sanitize tab state",
+          error,
+        );
+        safeState = null;
+      }
+    }
+    const loadUrl = tabSnapshot.url ?? "about:blank";
+
+    // Never load a file-derived web URL with the system principal; see
+    // createRestorePrincipal for the per-scheme choice.
+    const triggeringPrincipal = createRestorePrincipal(
+      loadUrl,
+      tabSnapshot.userContextId,
+      trusted,
+    );
+
     let tab: XULElement;
     try {
-      const initialUrl = tabSnapshot.url ?? "about:blank";
-      tab = gBrowser.addTab(initialUrl, {
+      // With a session state the tab starts as a blank placeholder that
+      // SessionStore.setTabState replaces, as before this change.
+      tab = gBrowser.addTab(safeState ? "about:blank" : loadUrl, {
         skipAnimation: true,
         inBackground: true,
         userContextId: tabSnapshot.userContextId,
-        triggeringPrincipal: Services.scriptSecurityManager
-          .getSystemPrincipal(),
+        triggeringPrincipal: safeState
+          ? Services.scriptSecurityManager.getSystemPrincipal()
+          : triggeringPrincipal,
       });
     } catch (error) {
       recordFailure(error, "tab");
@@ -363,9 +482,9 @@ export const restoreTabsIntoWindow = async <T extends RestorableTab>(
       recordFailure(error, "tab attributes");
     }
 
-    if (tabSnapshot.state) {
+    if (safeState) {
       try {
-        const clonedState = structuredClone(tabSnapshot.state);
+        const clonedState = safeState;
         const attributes =
           (clonedState.attributes as Record<string, unknown> | undefined) ??
             {};
@@ -400,10 +519,7 @@ export const restoreTabsIntoWindow = async <T extends RestorableTab>(
       try {
         gBrowser.getBrowserForTab(tab).loadURI(
           Services.io.newURI(tabSnapshot.url),
-          {
-            triggeringPrincipal: Services.scriptSecurityManager
-              .getSystemPrincipal(),
-          },
+          { triggeringPrincipal },
         );
       } catch (error) {
         recordFailure(error, "tab URL");

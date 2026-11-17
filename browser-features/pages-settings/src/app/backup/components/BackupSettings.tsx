@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useFormContext, useWatch } from "react-hook-form";
 import { SaveAll } from "lucide-react";
@@ -15,7 +15,9 @@ import { Select } from "@/components/common/dropdown.tsx";
 import { ConfirmModal } from "@/components/common/ConfirmModal.tsx";
 import type { BackupSettingsFormData } from "@/types/pref.ts";
 import {
+  BACKUP_LIMITS,
   backupNow,
+  clampBackupInt,
   deleteAllBackups,
   deleteBackup,
   getWorkspacesEnabled,
@@ -35,6 +37,17 @@ const INTERVAL_OPTIONS = [
   { value: 720, unit: "hours" as const },
   { value: 1440, unit: "hours" as const },
 ];
+
+// The restore actor call can time out while the restore keeps running in the
+// parent process, so the list is polled for a while before the UI is released.
+const STILL_RUNNING_POLL_MS = 10_000;
+const STILL_RUNNING_POLL_COUNT = 6;
+
+const isTimeoutError = (code: string | undefined): boolean =>
+  typeof code === "string" && /time-?d?\s?out/i.test(code);
+
+const intervalUnit = (value: number): "minutes" | "hours" =>
+  value >= 60 && value % 60 === 0 ? "hours" : "minutes";
 
 const formatFileSize = (bytes: number): string => {
   if (bytes >= 1024 * 1024) {
@@ -70,6 +83,14 @@ export function BackupSettings() {
     boolean | null
   >(null);
   const [showDeleteAll, setShowDeleteAll] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<
+    WorkspaceBackupSummary | null
+  >(null);
+  const [skippedCount, setSkippedCount] = useState(0);
+  const [stillRunning, setStillRunning] = useState(false);
+  const [retentionText, setRetentionText] = useState<string | null>(null);
+  const pollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const mountedRef = useRef(true);
 
   const dateFormatter = useMemo(
     () =>
@@ -104,6 +125,33 @@ export function BackupSettings() {
   }, [refresh]);
 
   useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      if (pollTimerRef.current !== null) {
+        clearTimeout(pollTimerRef.current);
+      }
+    };
+  }, []);
+
+  // A restore that outlived the actor timeout is still running in the parent
+  // process. Keep the UI busy and reload the list a few times before releasing.
+  const pollWhileStillRunning = useCallback((remaining: number) => {
+    pollTimerRef.current = setTimeout(async () => {
+      if (!mountedRef.current) return;
+      await refresh();
+      if (!mountedRef.current) return;
+      if (remaining > 1) {
+        pollWhileStillRunning(remaining - 1);
+      } else {
+        pollTimerRef.current = null;
+        setStillRunning(false);
+        setBusy(null);
+      }
+    }, STILL_RUNNING_POLL_MS);
+  }, [refresh]);
+
+  useEffect(() => {
     let active = true;
     const refresh = () => {
       void getWorkspacesEnabled().then((value) => {
@@ -123,15 +171,28 @@ export function BackupSettings() {
 
   const lastBackup = backups[0] ?? null;
 
-  const runAction = async (
+  const runAction = async <T,>(
     key: string,
-    action: () => Promise<{ success: boolean; error?: string }>,
+    action: () => Promise<
+      { success: true; data: T } | { success: false; error?: string }
+    >,
+    onSuccess?: (data: T) => void,
   ) => {
     setBusy(key);
     setActionError(null);
+    setSkippedCount(0);
+    setStillRunning(false);
+    let keepBusy = false;
     try {
       const result = await action();
       if (!result.success) {
+        if (isTimeoutError(result.error)) {
+          // The operation may still be running; do not release the UI yet.
+          keepBusy = true;
+          setStillRunning(true);
+          pollWhileStillRunning(STILL_RUNNING_POLL_COUNT);
+          return false;
+        }
         console.error(
           "[Settings:backup] Backup action failed",
           result.error,
@@ -139,10 +200,13 @@ export function BackupSettings() {
         setActionError(result.error ?? "unknown");
         return false;
       }
+      onSuccess?.(result.data);
       await refresh();
       return true;
     } finally {
-      setBusy(null);
+      if (!keepBusy) {
+        setBusy(null);
+      }
     }
   };
 
@@ -165,20 +229,33 @@ export function BackupSettings() {
     const target = restoreTarget;
     const planned = restorePlanEnabled;
     closeRestoreDialog();
-    // Re-check immediately before the destructive call: if the feature was
-    // toggled in another window the dialog wording no longer matches what the
-    // service would do, so refuse instead of guessing.
-    const current = await getWorkspacesEnabled();
-    if (current !== planned) {
-      setWorkspacesEnabled(current);
-      setActionError("restore-state-changed");
-      return;
-    }
-    await runAction("restore", () => restoreBackup(target.fileName));
+    // runAction marks the page busy before the first await, so the pre-flight
+    // re-check below cannot overlap another action.
+    await runAction("restore", async () => {
+      // Re-check immediately before the destructive call: if the feature was
+      // toggled in another window the dialog wording no longer matches what
+      // the service would do, so refuse instead of guessing.
+      const current = await getWorkspacesEnabled();
+      if (current !== planned) {
+        setWorkspacesEnabled(current);
+        return { success: false as const, error: "restore-state-changed" };
+      }
+      return restoreBackup(target.fileName);
+    }, (data) => setSkippedCount(data.skippedCount));
   };
 
-  const handleDelete = (backup: WorkspaceBackupSummary) =>
-    runAction(`delete:${backup.fileName}`, () => deleteBackup(backup.fileName));
+  const openDeleteDialog = (backup: WorkspaceBackupSummary) =>
+    setDeleteTarget(backup);
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    const target = deleteTarget;
+    setDeleteTarget(null);
+    await runAction(
+      `delete:${target.fileName}`,
+      () => deleteBackup(target.fileName),
+    );
+  };
 
   const handleDeleteAll = async () => {
     setShowDeleteAll(false);
@@ -193,8 +270,14 @@ export function BackupSettings() {
     switch (code) {
       case "pre-restore-failed":
         return t("backup.errorPreRestoreFailed");
-      case "pre-restore-disabled":
-        return t("backup.errorPreRestoreDisabled");
+      case "restore-in-progress":
+        return t("backup.errorRestoreInProgress");
+      case "empty-backup":
+        return t("backup.errorEmptyBackup");
+      case "nothing-to-back-up":
+        return t("backup.errorNothingToBackUp");
+      case "private-window-unsupported":
+        return t("backup.errorPrivateWindowUnsupported");
       case "restore-state-changed":
         return t("backup.errorStateChanged");
       case "restore-partial-failure":
@@ -212,6 +295,34 @@ export function BackupSettings() {
       default:
         return t("workspaces.backupActionError");
     }
+  };
+
+  // A stored value outside the presets (for example set by hand in about:config)
+  // is added as an extra option so the select shows what is really configured.
+  const intervalOptions = useMemo(() => {
+    const current = intervalMinutes ?? 15;
+    if (INTERVAL_OPTIONS.some((option) => option.value === current)) {
+      return INTERVAL_OPTIONS;
+    }
+    return [
+      ...INTERVAL_OPTIONS,
+      { value: current, unit: intervalUnit(current) },
+    ].sort((a, b) => a.value - b.value);
+  }, [intervalMinutes]);
+
+  const retentionValue = retentionText ?? String(retentionDays ?? 7);
+
+  const commitRetention = () => {
+    if (retentionText === null) return;
+    const parsed = Number.parseInt(retentionText, 10);
+    if (Number.isFinite(parsed)) {
+      setValue(
+        "retentionDays",
+        clampBackupInt(parsed, BACKUP_LIMITS.retentionDays, 7),
+      );
+    }
+    // Empty or invalid input reverts to the stored value instead of resetting.
+    setRetentionText(null);
   };
 
   const intervalLabel = (value: number, unit: "minutes" | "hours") =>
@@ -232,6 +343,15 @@ export function BackupSettings() {
     parts.push(formatFileSize(backup.fileSize));
     return parts.join(" · ");
   };
+
+  const kindLabel = (backup: WorkspaceBackupSummary) =>
+    t(
+      backup.kind === "auto"
+        ? "workspaces.backupKindAuto"
+        : backup.kind === "manual"
+        ? "workspaces.backupKindManual"
+        : "workspaces.backupKindPreRestore",
+    );
 
   const modeLabel = (backup: WorkspaceBackupSummary) =>
     backup.mode === "workspaces"
@@ -271,6 +391,25 @@ export function BackupSettings() {
           </ConfirmModal>
         )
         : null}
+      {deleteTarget
+        ? (
+          <ConfirmModal
+            isOpen
+            onClose={() => setDeleteTarget(null)}
+            onConfirm={handleDelete}
+            title={t("backup.deleteConfirmTitle")}
+            confirmText={t("backup.deleteConfirmAction")}
+            cancelText={t("workspaces.backupCancel")}
+            confirmVariant="danger"
+          >
+            <p>
+              {t("backup.deleteConfirmDescription", {
+                time: dateFormatter.format(new Date(deleteTarget.capturedAt)),
+              })}
+            </p>
+          </ConfirmModal>
+        )
+        : null}
       {showDeleteAll
         ? (
           <ConfirmModal
@@ -304,12 +443,16 @@ export function BackupSettings() {
           <div className={styles.row}>
             <label htmlFor="backup-enabled" className="flex flex-col gap-1.5">
               <span>{t("workspaces.backupAutoEnable")}</span>
-              <span className="font-normal text-sm text-base-content/70">
+              <span
+                id="backup-enabled-description"
+                className="font-normal text-sm text-base-content/70"
+              >
                 {t("workspaces.backupAutoEnableDescription")}
               </span>
             </label>
             <Switch
               id="backup-enabled"
+              aria-describedby="backup-enabled-description"
               checked={!!enabled}
               onChange={(e) => setValue("enabled", e.target.checked)}
             />
@@ -318,17 +461,21 @@ export function BackupSettings() {
           <div className={styles.row}>
             <label htmlFor="backup-interval" className="flex flex-col gap-1.5">
               <span>{t("workspaces.backupInterval")}</span>
-              <span className="font-normal text-sm text-base-content/70">
+              <span
+                id="backup-interval-description"
+                className="font-normal text-sm text-base-content/70"
+              >
                 {t("workspaces.backupIntervalDescription")}
               </span>
             </label>
             <Select
               id="backup-interval"
+              aria-describedby="backup-interval-description"
               value={String(intervalMinutes ?? 15)}
               onChange={(e) =>
                 setValue("intervalMinutes", Number(e.target.value))}
             >
-              {INTERVAL_OPTIONS.map((option) => (
+              {intervalOptions.map((option) => (
                 <option key={option.value} value={option.value}>
                   {intervalLabel(option.value, option.unit)}
                 </option>
@@ -339,25 +486,25 @@ export function BackupSettings() {
           <div className={styles.row}>
             <label htmlFor="backup-retention" className="flex flex-col gap-1.5">
               <span>{t("workspaces.backupRetention")}</span>
-              <span className="font-normal text-sm text-base-content/70">
+              <span
+                id="backup-retention-description"
+                className="font-normal text-sm text-base-content/70"
+              >
                 {t("workspaces.backupRetentionDescription")}
               </span>
             </label>
             <div className="flex items-center gap-2">
               <Input
                 id="backup-retention"
+                aria-describedby="backup-retention-description"
                 type="number"
-                min={1}
-                max={365}
+                inputMode="numeric"
+                min={BACKUP_LIMITS.retentionDays.min}
+                max={BACKUP_LIMITS.retentionDays.max}
                 className="w-24"
-                value={retentionDays ?? 7}
-                onChange={(e) => {
-                  const parsed = Number.parseInt(e.target.value, 10);
-                  setValue(
-                    "retentionDays",
-                    Number.isFinite(parsed) && parsed > 0 ? parsed : 7,
-                  );
-                }}
+                value={retentionValue}
+                onChange={(e) => setRetentionText(e.target.value)}
+                onBlur={commitRetention}
               />
               <span className="text-sm">
                 {t("workspaces.backupRetentionUnit")}
@@ -391,6 +538,21 @@ export function BackupSettings() {
                 className="text-sm text-red-600 dark:text-red-400"
               >
                 {describeActionError(actionError)}
+              </p>
+            )
+            : null}
+
+          {stillRunning
+            ? (
+              <p role="status" className="text-sm">
+                {t("backup.restoreStillRunning")}
+              </p>
+            )
+            : null}
+          {skippedCount > 0
+            ? (
+              <p role="status" className="text-sm">
+                {t("backup.restoreSkipped", { count: skippedCount })}
               </p>
             )
             : null}
@@ -442,19 +604,16 @@ export function BackupSettings() {
                             )}
                           </span>
                           <span className="rounded px-2 py-0.5 text-xs bg-base-300">
-                            {t(
-                              backup.kind === "auto"
-                                ? "workspaces.backupKindAuto"
-                                : backup.kind === "manual"
-                                ? "workspaces.backupKindManual"
-                                : "workspaces.backupKindPreRestore",
-                            )}
+                            {kindLabel(backup)}
                           </span>
                           <span className="rounded px-2 py-0.5 text-xs bg-base-300">
                             {modeLabel(backup)}
                           </span>
                         </div>
-                        <p className="text-xs text-base-content/70">
+                        <p
+                          id={`backup-desc-${backup.id}`}
+                          className="text-xs text-base-content/70"
+                        >
                           {describeCounts(backup)}
                         </p>
                       </div>
@@ -463,6 +622,13 @@ export function BackupSettings() {
                           variant="secondary"
                           size="sm"
                           disabled={busy !== null}
+                          aria-label={t("backup.restoreAriaLabel", {
+                            kind: kindLabel(backup),
+                            time: dateFormatter.format(
+                              new Date(backup.capturedAt),
+                            ),
+                          })}
+                          aria-describedby={`backup-desc-${backup.id}`}
                           onClick={() => void openRestoreDialog(backup)}
                         >
                           {workspacesEnabled
@@ -473,7 +639,14 @@ export function BackupSettings() {
                           variant="ghost"
                           size="sm"
                           disabled={busy !== null}
-                          onClick={() => void handleDelete(backup)}
+                          aria-label={t("backup.deleteAriaLabel", {
+                            kind: kindLabel(backup),
+                            time: dateFormatter.format(
+                              new Date(backup.capturedAt),
+                            ),
+                          })}
+                          aria-describedby={`backup-desc-${backup.id}`}
+                          onClick={() => openDeleteDialog(backup)}
                         >
                           {t("workspaces.backupDelete")}
                         </Button>
