@@ -1,0 +1,49 @@
+diff --git a/dom/security/nsContentSecurityUtils.cpp b/dom/security/nsContentSecurityUtils.cpp
+--- a/dom/security/nsContentSecurityUtils.cpp
++++ b/dom/security/nsContentSecurityUtils.cpp
+@@ -1344,6 +1344,15 @@
+     "chrome://pippki/content/load_device.xhtml"_ns,
+     "chrome://pippki/content/resetpassword.xhtml"_ns,
+     "chrome://pippki/content/setp12password.xhtml"_ns,
++    // Floorp: packaged Noraneko pages (debug-build CSP assertion only).
++    "about:hub"_ns,
++    "chrome://browser/content/aboutDialog.xhtml"_ns,
++    "chrome://noraneko-modal-child/content/index.html"_ns,
++    "chrome://noraneko-newtab/content/index.html"_ns,
++    "chrome://noraneko-notes/content/index.html"_ns,
++    "chrome://noraneko-profile-manager/content/index.html"_ns,
++    "chrome://noraneko-settings/content/index.html"_ns,
++    "chrome://noraneko-welcome/content/index.html"_ns,
+ };
+ // img-src moz-remote-image:
+ static nsLiteralCString sImgSrcMozRemoteImageAllowList[] = {
+@@ -1411,6 +1420,14 @@
+     "chrome://devtools/content/webconsole/index.html"_ns,
+     "chrome://global/content/alerts/alert.xhtml"_ns,
+     "chrome://global/content/print.html"_ns,
++    // Floorp: packaged Noraneko pages (debug-build CSP assertion only).
++    "about:hub"_ns,
++    "chrome://noraneko-modal-child/content/index.html"_ns,
++    "chrome://noraneko-newtab/content/index.html"_ns,
++    "chrome://noraneko-notes/content/index.html"_ns,
++    "chrome://noraneko-profile-manager/content/index.html"_ns,
++    "chrome://noraneko-settings/content/index.html"_ns,
++    "chrome://noraneko-welcome/content/index.html"_ns,
+ };
+ // img-src https:
+ static nsLiteralCString sImgSrcHttpsAllowList[] = {
+@@ -1424,6 +1441,14 @@
+     "chrome://devtools/content/application/index.html"_ns,
+     "chrome://devtools/content/framework/browser-toolbox/window.html"_ns,
+     "chrome://devtools/content/framework/toolbox-window.xhtml"_ns,
++    // Floorp: packaged Noraneko pages (debug-build CSP assertion only).
++    "about:hub"_ns,
++    "chrome://noraneko-modal-child/content/index.html"_ns,
++    "chrome://noraneko-newtab/content/index.html"_ns,
++    "chrome://noraneko-notes/content/index.html"_ns,
++    "chrome://noraneko-profile-manager/content/index.html"_ns,
++    "chrome://noraneko-settings/content/index.html"_ns,
++    "chrome://noraneko-welcome/content/index.html"_ns,
+ };
+ // img-src http:
+ //  UNSAFE! Do not use.

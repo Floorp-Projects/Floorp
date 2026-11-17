@@ -1,0 +1,103 @@
+{
+  "schema": 1,
+  "browser_preferences": {
+    "floorp.newtab.configs": "{\"components\":{\"topSites\":false},\"background\":{\"type\":\"none\"},\"topSites\":{\"pinned\":[],\"blocked\":[]}}",
+    "floorp.panelSidebar.data": "{\"data\":[]}",
+    "extensions.getAddons.langpacks.url": "http://127.0.0.1:8888/floorp-no-langpacks.json",
+    "floorp.experiments.manifestUrl": "http://127.0.0.1:8888/floorp-test-no-remote-manifest.json",
+    "floorp.releaseNotes.mode": "disabled",
+    "floorp.releaseNotes.choiceConfirmed": "true"
+  },
+  "suites": [
+    {
+      "id": "p0-tabs",
+      "priority": "P0",
+      "kind": "browser",
+      "path": "browser/components/tabbrowser/test/browser/tabs/",
+      "manifests": [
+        "browser.toml"
+      ],
+      "registered_files": 203
+    },
+    {
+      "id": "p1-sessionstore-browser",
+      "priority": "P1",
+      "kind": "browser",
+      "path": "browser/components/sessionstore/test/browser.toml",
+      "manifests": [],
+      "registered_files": 132
+    },
+    {
+      "id": "p1-sessionstore-oldformat",
+      "priority": "P1",
+      "kind": "browser",
+      "path": "browser/components/sessionstore/test/browser_oldformat.toml",
+      "manifests": [],
+      "registered_files": 91
+    },
+    {
+      "id": "p1-sessionstore-startup-telemetry",
+      "priority": "P1",
+      "kind": "browser",
+      "path": "browser/components/sessionstore/test/browser_startup_telemetry.toml",
+      "manifests": [],
+      "registered_files": 1
+    },
+    {
+      "id": "p1-sessionstore-unit",
+      "priority": "P1",
+      "kind": "xpcshell",
+      "path": "browser/components/sessionstore/test/unit/",
+      "manifests": [
+        "xpcshell.toml"
+      ],
+      "registered_files": 12,
+      "known_differences": [
+        {
+          "test": "test_startup_session_async.js",
+          "subtest": "cb",
+          "status": "FAIL",
+          "expected": "PASS",
+          "message": "[cb : 27] 2 == 3",
+          "reason": "Floorp ships browser.startup.page = 3 (static/gecko/pref/override.ini), so SessionStartup.sessionType returns RESUME_SESSION (2) instead of Firefox's default DEFER_SESSION (3) that this upstream assertion at line 27 expects. The first failed assertion aborts cb, so the two shutdown_ok telemetry assertions after it are not exercised on Floorp."
+        },
+        {
+          "test": "test_startup_session_async.js",
+          "subtest": null,
+          "status": "FAIL",
+          "expected": "PASS",
+          "message": "xpcshell return code: 0",
+          "reason": "Test-level result of the same browser.startup.page = 3 product default difference; the gate also requires the harness tally to report exactly this one failed test."
+        }
+      ]
+    },
+    {
+      "id": "p1-sessionstore-marionette",
+      "priority": "P1",
+      "kind": "marionette",
+      "path": "browser/components/sessionstore/test/marionette/manifest.toml",
+      "manifests": [],
+      "registered_files": 28
+    },
+    {
+      "id": "p2-contextualidentity-unit",
+      "priority": "P2",
+      "kind": "xpcshell",
+      "path": "toolkit/components/contextualidentity/tests/unit/",
+      "manifests": [
+        "xpcshell.toml"
+      ],
+      "registered_files": 6
+    },
+    {
+      "id": "p2-contextualidentity-browser",
+      "priority": "P2",
+      "kind": "browser",
+      "path": "toolkit/components/contextualidentity/tests/browser/",
+      "manifests": [
+        "browser.toml"
+      ],
+      "registered_files": 1
+    }
+  ]
+}
