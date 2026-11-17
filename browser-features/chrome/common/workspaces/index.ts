@@ -64,6 +64,10 @@ export default class Workspaces extends NoraComponentBase {
     onCleanup(() => backupController.dispose());
 
     if (!enabled()) {
+      // Workspaces are disabled, but backup must still run. Start the detached
+      // service now so the scheduler does not depend on the Hub page being
+      // opened first.
+      backupController.ensureStarted();
       return;
     }
 

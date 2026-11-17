@@ -9,6 +9,7 @@ import { Button } from "../../../../../libs/ui/button.tsx";
 import styles from "../../setup.module.css";
 import { SetupSummary } from "../../components/SetupSummary.tsx";
 import { SetupInfo } from "../../components/SetupControls.tsx";
+import { BackupDisclosure } from "../../components/BackupDisclosure.tsx";
 export default function FinishPage() {
   const { t } = useTranslation();
   const { choice, reviewed } = useSetupReleaseNotesChoice();
@@ -75,6 +76,7 @@ export default function FinishPage() {
           </a>
         </div>
       </section>
+      <BackupDisclosure />
       <SetupInfo>{t("setupV5.finishNotice")}</SetupInfo>
       {choice.error && (
         <p role="alert" className={styles.error}>{t("releaseNotes.error")}</p>

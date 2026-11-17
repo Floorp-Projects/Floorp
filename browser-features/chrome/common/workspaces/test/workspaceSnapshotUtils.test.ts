@@ -2,15 +2,10 @@
 // @colocated-env browser
 
 import {
-  createUnassignedWorkspaceSnapshot,
   createWorkspaceSnapshotMetadata,
   extractUrlFromState,
   toNumber,
 } from "../utils/workspace-snapshot.ts";
-import {
-  isUnassignedWorkspaceID,
-  UNASSIGNED_WORKSPACE_NAME,
-} from "../utils/workspaces-static-names.ts";
 import type { TWorkspaceID } from "../utils/type.ts";
 import {
   assert,
@@ -224,44 +219,6 @@ function testSnapshotMetadataPreservesRawIconCategories(): void {
   );
 }
 
-function testCreateUnassignedWorkspaceSnapshot(): void {
-  const tabs = [
-    {
-      state: null,
-      title: "Unassigned tab",
-      url: "https://example.com/unassigned",
-      pinned: false,
-      isSelected: true,
-      userContextId: 0,
-      lastShownWorkspaceId: null,
-    },
-  ];
-  const capturedAt = 1700000000000;
-  const snapshot = createUnassignedWorkspaceSnapshot(tabs, capturedAt);
-
-  assertEquals(snapshot.capturedAt, capturedAt, "capturedAt override");
-  assertEquals(
-    isUnassignedWorkspaceID(snapshot.workspace.workspaceId),
-    true,
-    "workspace ID is the dedicated unassigned sentinel",
-  );
-  assertEquals(snapshot.workspace.name, UNASSIGNED_WORKSPACE_NAME, "name");
-  assertEquals(snapshot.workspace.userContextId, 0, "user context");
-  assertEquals(snapshot.tabs.length, 1, "tab count");
-  assert(
-    snapshot.tabs[0] === tabs[0],
-    "tab entries are preserved by reference",
-  );
-
-  const defaultCapturedSnapshot = createUnassignedWorkspaceSnapshot([]);
-  assert(
-    typeof defaultCapturedSnapshot.capturedAt === "number" &&
-      defaultCapturedSnapshot.capturedAt > 0 &&
-      defaultCapturedSnapshot.capturedAt <= Date.now(),
-    "capturedAt defaults to now",
-  );
-}
-
 // ---------------------------------------------------------------------------
 // Runner
 // ---------------------------------------------------------------------------
@@ -295,10 +252,6 @@ export function runAllTests(): void {
     {
       name: "snapshot metadata preserves raw icon categories",
       fn: testSnapshotMetadataPreservesRawIconCategories,
-    },
-    {
-      name: "unassigned workspace snapshot builder",
-      fn: testCreateUnassignedWorkspaceSnapshot,
     },
   ];
 

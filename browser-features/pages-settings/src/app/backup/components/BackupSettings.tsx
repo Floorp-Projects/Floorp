@@ -18,6 +18,7 @@ import {
   backupNow,
   deleteAllBackups,
   deleteBackup,
+  getWorkspacesEnabled,
   listBackups,
   restoreBackup,
   type WorkspaceBackupSummary,
@@ -57,6 +58,7 @@ export function BackupSettings() {
   const [loadError, setLoadError] = useState(false);
   const [actionError, setActionError] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
+  const [workspacesEnabled, setWorkspacesEnabled] = useState(true);
   const [restoreTarget, setRestoreTarget] = useState<
     WorkspaceBackupSummary | null
   >(null);
@@ -73,23 +75,38 @@ export function BackupSettings() {
 
   const refresh = useCallback(async () => {
     setLoading(true);
-    const result = await listBackups();
-    if (result.success) {
-      setBackups(result.data);
-      setLoadError(false);
-    } else {
-      console.error(
-        "[Settings:backup] Failed to list backups",
-        result.error,
-      );
-      setLoadError(true);
+    try {
+      const result = await listBackups();
+      if (result.success) {
+        setBackups(result.data);
+        setLoadError(false);
+      } else {
+        console.error(
+          "[Settings:backup] Failed to list backups",
+          result.error,
+        );
+        setLoadError(true);
+      }
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }, []);
 
   useEffect(() => {
     void refresh();
   }, [refresh]);
+
+  useEffect(() => {
+    let active = true;
+    void getWorkspacesEnabled().then((value) => {
+      if (active) {
+        setWorkspacesEnabled(value);
+      }
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const lastBackup = backups[0] ?? null;
 
@@ -138,6 +155,28 @@ export function BackupSettings() {
       ? t("workspaces.backupIntervalMinutes", { count: value })
       : t("workspaces.backupIntervalHours", { count: value / 60 });
 
+  const describeCounts = (backup: WorkspaceBackupSummary) => {
+    const parts: string[] = [];
+    if (backup.mode === "workspaces") {
+      parts.push(
+        t("workspaces.backupWorkspaceCount", { count: backup.workspaceCount }),
+      );
+    } else {
+      parts.push(t("backup.windowCount", { count: backup.windowCount }));
+    }
+    parts.push(t("workspaces.backupTabCount", { count: backup.tabCount }));
+    parts.push(formatFileSize(backup.fileSize));
+    return parts.join(" · ");
+  };
+
+  const modeLabel = (backup: WorkspaceBackupSummary) =>
+    backup.mode === "workspaces"
+      ? t("backup.modeWorkspaces")
+      : t("backup.modeTabs");
+
+  const restoreWillReplace = workspacesEnabled &&
+    restoreTarget?.mode === "workspaces";
+
   return (
     <>
       {restoreTarget
@@ -146,12 +185,25 @@ export function BackupSettings() {
             isOpen
             onClose={() => setRestoreTarget(null)}
             onConfirm={handleRestore}
-            title={t("workspaces.backupRestoreConfirmTitle")}
-            confirmText={t("workspaces.backupRestoreConfirmAction")}
+            title={restoreWillReplace
+              ? t("workspaces.backupRestoreConfirmTitle")
+              : t("backup.tabsRestoreConfirmTitle")}
+            confirmText={restoreWillReplace
+              ? t("workspaces.backupRestoreConfirmAction")
+              : t("backup.tabsRestoreConfirmAction")}
             cancelText={t("workspaces.backupCancel")}
-            confirmVariant="danger"
+            confirmVariant={restoreWillReplace ? "danger" : "primary"}
           >
-            <p>{t("workspaces.backupRestoreConfirmDescription")}</p>
+            {restoreWillReplace
+              ? <p>{t("workspaces.backupRestoreConfirmDescription")}</p>
+              : (
+                <p>
+                  {t("backup.tabsRestoreConfirmDescription")}
+                  {!workspacesEnabled && restoreTarget.mode === "workspaces"
+                    ? ` ${t("backup.workspacesFileWarning")}`
+                    : ""}
+                </p>
+              )}
           </ConfirmModal>
         )
         : null}
@@ -175,12 +227,14 @@ export function BackupSettings() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <SaveAll className="size-5" />
-            {t("workspaces.backup")}
+            {workspacesEnabled ? t("workspaces.backup") : t("backup.tabsTitle")}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm text-base-content/70">
-            {t("workspaces.backupDescription")}
+            {workspacesEnabled
+              ? t("workspaces.backupDescription")
+              : t("backup.tabsDescription")}
           </p>
 
           <div className={styles.row}>
@@ -332,17 +386,12 @@ export function BackupSettings() {
                                 : "workspaces.backupKindPreRestore",
                             )}
                           </span>
+                          <span className="rounded px-2 py-0.5 text-xs bg-base-300">
+                            {modeLabel(backup)}
+                          </span>
                         </div>
                         <p className="text-xs text-base-content/70">
-                          {t("workspaces.backupWorkspaceCount", {
-                            count: backup.workspaceCount,
-                          })}
-                          {" · "}
-                          {t("workspaces.backupTabCount", {
-                            count: backup.tabCount,
-                          })}
-                          {" · "}
-                          {formatFileSize(backup.fileSize)}
+                          {describeCounts(backup)}
                         </p>
                       </div>
                       <div className="flex items-center gap-2">
@@ -352,7 +401,9 @@ export function BackupSettings() {
                           disabled={busy !== null}
                           onClick={() => setRestoreTarget(backup)}
                         >
-                          {t("workspaces.backupRestore")}
+                          {workspacesEnabled
+                            ? t("workspaces.backupRestore")
+                            : t("backup.tabsRestore")}
                         </Button>
                         <Button
                           variant="ghost"

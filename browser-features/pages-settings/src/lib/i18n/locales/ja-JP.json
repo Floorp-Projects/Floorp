@@ -272,7 +272,17 @@
         }
     },
     "backup": {
-        "description": "ワークスペースとタブを自動的にバックアップし、必要に応じて復元できます。(Alpha)"
+        "description": "ワークスペースとタブを自動的にバックアップし、必要に応じて復元できます。(Alpha)",
+        "tabsTitle": "タブのバックアップ",
+        "tabsDescription": "開いているタブを自動的にバックアップし、必要に応じて開き直せます。(Alpha)",
+        "tabsRestore": "タブを開き直す",
+        "tabsRestoreConfirmTitle": "バックアップしたタブを開き直す",
+        "tabsRestoreConfirmAction": "開き直す",
+        "tabsRestoreConfirmDescription": "現在のタブは閉じません。バックアップしたタブを追加するため、重複する場合があります。",
+        "windowCount": "{{count}} ウィンドウ",
+        "modeTabs": "タブ",
+        "modeWorkspaces": "ワークスペース",
+        "workspacesFileWarning": "このバックアップはワークスペース有効時に作成されたものです。ワークスペースのグループ分けなしでタブを開き直します。"
     },
     "workspaces": {
         "workspaces": "ワークスペース",

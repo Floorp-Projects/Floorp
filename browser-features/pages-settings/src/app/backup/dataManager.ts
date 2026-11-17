@@ -18,11 +18,14 @@ interface WorkspaceBackupConfig {
 }
 
 export type WorkspaceBackupKind = "auto" | "manual" | "pre-restore";
+export type WorkspaceBackupMode = "workspaces" | "tabs";
 
 export interface WorkspaceBackupSummary {
   id: string;
   kind: WorkspaceBackupKind;
+  mode: WorkspaceBackupMode;
   capturedAt: number;
+  windowCount: number;
   workspaceCount: number;
   tabCount: number;
   fileName: string;
@@ -85,6 +88,24 @@ async function getBackupConfig(): Promise<WorkspaceBackupConfig> {
       error,
     );
     return { ...DEFAULT_BACKUP_CONFIG };
+  }
+}
+
+/**
+ * Whether the workspaces feature is enabled. Restore semantics follow this
+ * flag, not the mode of the backup file, so the UI needs it to describe what
+ * the restore button will actually do.
+ */
+export async function getWorkspacesEnabled(): Promise<boolean> {
+  try {
+    const value = await rpc.getBoolPref("floorp.workspaces.enabled");
+    return value ?? true;
+  } catch (error) {
+    console.error(
+      "[Settings:backup] Failed to read workspaces enabled state",
+      error,
+    );
+    return true;
   }
 }
 

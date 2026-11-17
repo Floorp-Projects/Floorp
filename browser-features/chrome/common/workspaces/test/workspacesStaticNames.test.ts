@@ -2,8 +2,6 @@
 // @colocated-env browser
 
 import {
-  isUnassignedWorkspaceID,
-  UNASSIGNED_WORKSPACE_ID,
   WORKSPACE_DATA_PREF_NAME,
   WORKSPACE_ENABLED_PREF_NAME,
   WORKSPACE_LAST_SHOW_ID,
@@ -68,23 +66,6 @@ function testObserverTopicsAreUniqueAndNamespaced(): void {
   }
 }
 
-function testUnassignedWorkspaceIDGuard(): void {
-  assert(
-    isUnassignedWorkspaceID(UNASSIGNED_WORKSPACE_ID),
-    "the dedicated sentinel ID should match",
-  );
-  assert(
-    !isUnassignedWorkspaceID("00000000-0000-4000-8000-000000000001"),
-    "real workspace UUIDs should not match",
-  );
-  assert(
-    !isUnassignedWorkspaceID("__floorp_unassigned_"),
-    "near-miss strings should not match",
-  );
-  assert(!isUnassignedWorkspaceID(null), "null should not match");
-  assert(!isUnassignedWorkspaceID(undefined), "undefined should not match");
-}
-
 export async function runAllTests(): Promise<void> {
   const tests: TestCase[] = [
     {
@@ -98,10 +79,6 @@ export async function runAllTests(): Promise<void> {
     {
       name: "observer topics are unique and namespaced",
       fn: testObserverTopicsAreUniqueAndNamespaced,
-    },
-    {
-      name: "unassigned workspace ID guard",
-      fn: testUnassignedWorkspaceIDGuard,
     },
   ];
 

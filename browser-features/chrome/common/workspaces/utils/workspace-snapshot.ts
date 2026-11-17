@@ -9,12 +9,11 @@ import type {
   TWorkspaceSnapshotTab,
 } from "./type.ts";
 import {
-  UNASSIGNED_WORKSPACE_ID,
-  UNASSIGNED_WORKSPACE_NAME,
   WORKSPACE_LAST_SHOW_ID,
   WORKSPACE_TAB_ATTRIBUTION_ID,
 } from "./workspaces-static-names.ts";
 import type { WorkspacesDataManagerBase } from "../workspacesDataManagerBase.tsx";
+import type { RestorableTab } from "./backup-types.ts";
 
 interface SessionStoreModule {
   promiseInitialized: Promise<void> | undefined;
@@ -39,17 +38,17 @@ const createSessionStoreImporter = (): SessionStoreImporter => {
 
 const sessionStoreImporter = createSessionStoreImporter();
 
+/**
+ * Resolves SessionStore and waits for its initialization.
+ *
+ * Rejections are propagated on purpose: capturing or restoring tabs from a
+ * half-initialized SessionStore silently produces empty tab states, so callers
+ * must fail closed instead.
+ */
 export const ensureSessionStore = async (): Promise<SessionStoreModule> => {
   const sessionStore = sessionStoreImporter();
-  try {
-    if (sessionStore.promiseInitialized) {
-      await sessionStore.promiseInitialized;
-    }
-  } catch (error) {
-    console.error(
-      "WorkspacesSnapshot: SessionStore initialization failed",
-      error,
-    );
+  if (sessionStore.promiseInitialized) {
+    await sessionStore.promiseInitialized;
   }
   return sessionStore;
 };
@@ -252,73 +251,114 @@ export const createWorkspaceSnapshot = async (
   };
 };
 
-/**
- * Builds the virtual snapshot used to back up non-private tabs that have no
- * `floorpWorkspaceId` attribute. The sentinel workspace ID intentionally
- * escapes the UUID-based `TWorkspaceID` brand; readers must check it with
- * `isUnassignedWorkspaceID()` before using the snapshot as a workspace.
- */
-export const createUnassignedWorkspaceSnapshot = (
-  tabs: TWorkspaceSnapshotTab[],
-  capturedAt = Date.now(),
-): TWorkspaceSnapshot => ({
-  capturedAt,
-  workspace: {
-    workspaceId: UNASSIGNED_WORKSPACE_ID as unknown as TWorkspaceID,
-    name: UNASSIGNED_WORKSPACE_NAME,
-    userContextId: 0,
-  },
-  tabs: [...tabs],
-});
+/* -------------------------------------------------------------------------
+ * Restore primitive
+ * ---------------------------------------------------------------------- */
 
-export interface SnapshotTabRestoreOptions {
+/** Subset of `gBrowser` needed to recreate tabs in a target window. */
+export interface RestoreTargetBrowser {
+  addTab(
+    url: string,
+    options: {
+      skipAnimation?: boolean;
+      inBackground?: boolean;
+      userContextId?: number;
+      triggeringPrincipal?: unknown;
+    },
+  ): XULElement;
+  getBrowserForTab(tab: XULElement): {
+    loadURI(uri: unknown, options?: unknown): void;
+  };
+  pinTab(tab: XULElement): void;
+  removeTab?(tab: XULElement): void;
+  selectedTab: XULElement | null;
+  tabs: XULElement[];
+}
+
+export interface RestoreTabOutcome {
+  /** Index of the tab inside the restored array. */
+  index: number;
+  ok: boolean;
+  error?: string;
+}
+
+export interface RestoreTabsOptions<T extends RestorableTab> {
+  /** Window that receives the tabs. */
+  gBrowser: RestoreTargetBrowser;
   /**
-   * Workspace assigned to restored tabs. `null` keeps tabs unassigned, which
-   * is used when the workspaces feature is disabled during restore.
+   * Workspace assigned to each restored tab. Return `null` to leave the tab
+   * unattributed (tabs mode / workspaces disabled).
    */
-  assignWorkspaceId: TWorkspaceID | null;
+  resolveWorkspaceId: (tab: T) => TWorkspaceID | null;
 }
 
 /**
- * Opens snapshot tabs in the current window without touching the workspace
- * store. When `assignWorkspaceId` is set the tabs become visible members of
- * that workspace; otherwise they stay unassigned. The caller decides whether
- * workspace visibility needs to be refreshed afterwards.
+ * Opens tabs in `options.gBrowser` without touching the workspace store.
+ *
+ * Every tab is reported individually so destructive callers can decide whether
+ * to proceed (for example, only close replaced tabs when every restore
+ * succeeded). Failures never throw out of this function.
  */
-export const restoreSnapshotTabs = async (
-  tabs: TWorkspaceSnapshotTab[],
-  options: SnapshotTabRestoreOptions,
-): Promise<void> => {
+export const restoreTabsIntoWindow = async <T extends RestorableTab>(
+  tabs: T[],
+  options: RestoreTabsOptions<T>,
+): Promise<RestoreTabOutcome[]> => {
   if (tabs.length === 0) {
-    return;
+    return [];
   }
 
   const sessionStore = await ensureSessionStore();
-  const workspaceId = options.assignWorkspaceId;
+  const gBrowser = options.gBrowser;
+  const outcomes: RestoreTabOutcome[] = [];
   let targetTab: XULElement | null = null;
 
-  for (const tabSnapshot of tabs) {
-    const initialUrl = tabSnapshot.url ?? "about:blank";
-    const tab = globalThis.gBrowser.addTab(initialUrl, {
-      skipAnimation: true,
-      inBackground: true,
-      userContextId: tabSnapshot.userContextId,
-      triggeringPrincipal: Services.scriptSecurityManager
-        .getSystemPrincipal(),
-    });
+  for (let index = 0; index < tabs.length; index++) {
+    const tabSnapshot = tabs[index];
+    let ok = true;
+    let errorMessage: string | undefined;
 
-    if (workspaceId) {
-      tab.setAttribute(WORKSPACE_TAB_ATTRIBUTION_ID, workspaceId);
+    const recordFailure = (error: unknown, label: string): void => {
+      ok = false;
+      errorMessage = error instanceof Error ? error.message : String(error);
+      console.error(`WorkspacesSnapshot: failed to restore ${label}`, error);
+    };
+
+    let tab: XULElement;
+    try {
+      const initialUrl = tabSnapshot.url ?? "about:blank";
+      tab = gBrowser.addTab(initialUrl, {
+        skipAnimation: true,
+        inBackground: true,
+        userContextId: tabSnapshot.userContextId,
+        triggeringPrincipal: Services.scriptSecurityManager
+          .getSystemPrincipal(),
+      });
+    } catch (error) {
+      recordFailure(error, "tab");
+      outcomes.push({ index, ok: false, error: errorMessage });
+      continue;
     }
-    tab.setAttribute("usercontextid", String(tabSnapshot.userContextId));
 
-    if (workspaceId && tabSnapshot.lastShownWorkspaceId) {
-      tab.setAttribute(
-        WORKSPACE_LAST_SHOW_ID,
-        tabSnapshot.lastShownWorkspaceId,
-      );
-    } else {
-      tab.removeAttribute(WORKSPACE_LAST_SHOW_ID);
+    const workspaceId = options.resolveWorkspaceId(tabSnapshot);
+
+    try {
+      if (workspaceId) {
+        tab.setAttribute(WORKSPACE_TAB_ATTRIBUTION_ID, workspaceId);
+      } else {
+        tab.removeAttribute(WORKSPACE_TAB_ATTRIBUTION_ID);
+      }
+      tab.setAttribute("usercontextid", String(tabSnapshot.userContextId));
+
+      if (workspaceId && tabSnapshot.lastShownWorkspaceId) {
+        tab.setAttribute(
+          WORKSPACE_LAST_SHOW_ID,
+          tabSnapshot.lastShownWorkspaceId,
+        );
+      } else {
+        tab.removeAttribute(WORKSPACE_LAST_SHOW_ID);
+      }
+    } catch (error) {
+      recordFailure(error, "tab attributes");
     }
 
     if (tabSnapshot.state) {
@@ -337,41 +377,59 @@ export const restoreSnapshotTabs = async (
         } else if (WORKSPACE_LAST_SHOW_ID in attributes) {
           delete attributes[WORKSPACE_LAST_SHOW_ID];
         }
+        // Keep the top-level representation consistent with `attributes`.
+        if (workspaceId) {
+          clonedState[WORKSPACE_TAB_ATTRIBUTION_ID] = workspaceId;
+        } else if (WORKSPACE_TAB_ATTRIBUTION_ID in clonedState) {
+          delete clonedState[WORKSPACE_TAB_ATTRIBUTION_ID];
+        }
+        if (workspaceId && tabSnapshot.lastShownWorkspaceId) {
+          clonedState[WORKSPACE_LAST_SHOW_ID] =
+            tabSnapshot.lastShownWorkspaceId;
+        } else if (WORKSPACE_LAST_SHOW_ID in clonedState) {
+          delete clonedState[WORKSPACE_LAST_SHOW_ID];
+        }
         clonedState.attributes = attributes;
         sessionStore.setTabState(tab, JSON.stringify(clonedState));
       } catch (error) {
-        console.error(
-          "WorkspacesSnapshot: failed to restore tab state",
-          error,
-        );
+        recordFailure(error, "tab state");
       }
     } else if (tabSnapshot.url) {
       try {
-        globalThis.gBrowser
-          .getBrowserForTab(tab)
-          .loadURI(Services.io.newURI(tabSnapshot.url), {
+        gBrowser.getBrowserForTab(tab).loadURI(
+          Services.io.newURI(tabSnapshot.url),
+          {
             triggeringPrincipal: Services.scriptSecurityManager
               .getSystemPrincipal(),
-          });
+          },
+        );
       } catch (error) {
-        console.error("WorkspacesSnapshot: failed to load tab URL", error);
+        recordFailure(error, "tab URL");
       }
     }
 
     if (tabSnapshot.pinned) {
       try {
-        globalThis.gBrowser.pinTab(tab);
+        gBrowser.pinTab(tab);
       } catch (error) {
-        console.error("WorkspacesSnapshot: failed to pin restored tab", error);
+        recordFailure(error, "tab pin");
       }
     }
 
     if (tabSnapshot.isSelected) {
       targetTab = tab;
     }
+
+    outcomes.push({ index, ok, error: errorMessage });
   }
 
   if (targetTab) {
-    globalThis.gBrowser.selectedTab = targetTab;
+    try {
+      gBrowser.selectedTab = targetTab;
+    } catch (error) {
+      console.error("WorkspacesSnapshot: failed to select restored tab", error);
+    }
   }
+
+  return outcomes;
 };

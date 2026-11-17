@@ -4,26 +4,28 @@
 import {
   buildBackupFile,
   buildBackupSummary,
-  collectTabsForWorkspacelessRestore,
   filterBackupFiles,
+  findDanglingWorkspaceReferences,
   formatBackupFileName,
   isBackupFileName,
-  isUnassignedSnapshot,
   isWorkspaceBackupFile,
   normalizeBackupConfig,
   parseBackupConfig,
   parseBackupFileName,
+  sanitizeTabState,
   selectExcessPreRestoreBackups,
   selectExpiredBackups,
   serializeBackupConfig,
   sortBackupsNewestFirst,
 } from "../utils/workspaces-backup-helpers.ts";
-import type { WorkspaceBackupSummary } from "../utils/backup-types.ts";
-import type { TWorkspaceID, TWorkspaceSnapshot } from "../utils/type.ts";
-import {
-  isUnassignedWorkspaceID,
-  UNASSIGNED_WORKSPACE_ID,
-} from "../utils/workspaces-static-names.ts";
+import type {
+  WorkspaceBackupFile,
+  WorkspaceBackupState,
+  WorkspaceBackupSummary,
+  WorkspaceBackupTab,
+  WorkspaceBackupWindow,
+} from "../utils/backup-types.ts";
+import type { TWorkspaceID } from "../utils/type.ts";
 import {
   assert,
   assertEquals,
@@ -31,31 +33,52 @@ import {
 } from "../../../test/utils/test_harness.ts";
 
 const DAY = 24 * 60 * 60 * 1000;
+const WS_A = "00000000-0000-4000-8000-000000000001" as TWorkspaceID;
+const WS_B = "00000000-0000-4000-8000-000000000002" as TWorkspaceID;
 
-const makeSnapshot = (
-  workspaceId: string,
-  tabCount: number,
-): TWorkspaceSnapshot => ({
-  capturedAt: 1700000000000,
-  workspace: {
-    workspaceId: workspaceId as unknown as TWorkspaceID,
-    name: workspaceId,
-    userContextId: 0,
-  },
-  tabs: Array.from({ length: tabCount }, (_, index) => ({
-    state: null,
-    title: `Tab ${index}`,
-    url: `https://example.com/${index}`,
-    pinned: false,
-    isSelected: index === 0,
-    userContextId: 0,
-    lastShownWorkspaceId: null,
-  })),
+const makeTab = (
+  index: number,
+  overrides: Partial<WorkspaceBackupTab> = {},
+): WorkspaceBackupTab => ({
+  state: null,
+  title: `Tab ${index}`,
+  url: `https://example.com/${index}`,
+  pinned: false,
+  isSelected: index === 0,
+  userContextId: 0,
+  lastShownWorkspaceId: null,
+  ...overrides,
 });
 
-const makeUnassignedSnapshot = (
+const makeWindow = (
   tabCount: number,
-): TWorkspaceSnapshot => makeSnapshot(UNASSIGNED_WORKSPACE_ID, tabCount);
+  isFocused = false,
+): WorkspaceBackupWindow => ({
+  isFocused,
+  tabs: Array.from({ length: tabCount }, (_, index) => makeTab(index)),
+});
+
+const makeWorkspaceState = (): WorkspaceBackupState => ({
+  workspaces: [
+    { workspaceId: WS_A, name: "A", userContextId: 0, icon: null },
+    { workspaceId: WS_B, name: "B", userContextId: 0, icon: null },
+  ],
+  order: [WS_A, WS_B],
+  defaultID: WS_A,
+  currentWorkspaceId: WS_A,
+});
+
+const makeFile = (
+  overrides: Partial<WorkspaceBackupFile> = {},
+): WorkspaceBackupFile => ({
+  version: 2,
+  kind: "manual",
+  mode: "workspaces",
+  capturedAt: 1700000000000,
+  windows: [makeWindow(2, true)],
+  workspaceState: makeWorkspaceState(),
+  ...overrides,
+});
 
 const makeSummary = (
   fileName: string,
@@ -64,316 +87,368 @@ const makeSummary = (
 ): WorkspaceBackupSummary => ({
   id: fileName,
   kind,
+  mode: "tabs",
   capturedAt,
-  workspaceCount: 1,
+  windowCount: 1,
+  workspaceCount: 0,
   tabCount: 1,
   fileName,
   fileSize: 100,
 });
 
+/* ------------------------------------------------------------------ */
+
 function testFormatAndParseFileName(): void {
-  const capturedAt = Date.UTC(2026, 10, 16, 12, 34, 56);
-  const fileName = formatBackupFileName(capturedAt, "abcdef12");
-  assertEquals(
-    fileName,
-    "backup-20261116-123456-abcdef12.jsonlz4",
-    "file name format",
-  );
+  const capturedAt = Date.UTC(2026, 10, 17, 8, 30, 15);
+  const fileName = formatBackupFileName(capturedAt, "abcdef01");
+  assertEquals(fileName, "backup-20261117-083015-abcdef01.jsonlz4", "name");
+  assert(isBackupFileName(fileName), "name is a backup name");
+
   const parsed = parseBackupFileName(fileName);
-  assert(parsed !== null, "file name should parse");
-  assertEquals(parsed?.shortId, "abcdef12", "short id");
-  assertEquals(parsed?.timestamp, capturedAt, "timestamp round-trips");
+  assert(parsed !== null, "parsed");
+  assertEquals(parsed!.shortId, "abcdef01", "short id");
+  assertEquals(parsed!.timestamp, capturedAt, "timestamp round trip");
 }
 
 function testParseInvalidFileName(): void {
-  assertEquals(parseBackupFileName("backup.jsonlz4"), null, "missing stamp");
-  assertEquals(
-    parseBackupFileName("backup-20261116-123456-ABCDEF12.jsonlz4")?.shortId,
-    "ABCDEF12",
-    "short id is case-insensitive",
-  );
-  assertEquals(
-    parseBackupFileName("backup-20261116-123456-abcdef12.json"),
-    null,
-    "wrong extension",
-  );
+  for (
+    const name of [
+      "backup-20261117-083015-abcdef01.json",
+      "backup-2026111-083015-abcdef01.jsonlz4",
+      "other-20261117-083015-abcdef01.jsonlz4",
+      "backup-20261117-083015-abcdef01.jsonlz4\n",
+      "../backup-20261117-083015-abcdef01.jsonlz4",
+    ]
+  ) {
+    assert(!isBackupFileName(name), `rejects ${JSON.stringify(name)}`);
+  }
 }
 
 function testFilterBackupFiles(): void {
-  const paths = [
-    "/profile/workspaces/backup/backup-20261116-123456-abcdef12.jsonlz4",
-    "/profile/workspaces/backup/backup-20261116-123456-abcdef12.jsonlz4.tmp",
+  const filtered = filterBackupFiles([
+    "/profile/workspaces/backup/backup-20261117-083015-abcdef01.jsonlz4",
     "/profile/workspaces/backup/notes.txt",
-  ];
-  const filtered = filterBackupFiles(paths);
-  assertEquals(filtered.length, 1, "only final jsonlz4 files");
-  assert(isBackupFileName("backup-20261116-123456-abcdef12.jsonlz4"), "valid");
-  assert(
-    !isBackupFileName("../../backup-20261116-123456-abcdef12.jsonlz4"),
-    "path traversal is not a file name",
-  );
+    "/profile/workspaces/backup/backup-20261117-083015-abcdef01.jsonlz4.tmp",
+  ]);
+  assertEquals(filtered.length, 1, "only the real backup is kept");
 }
 
-function testBuildSummaryCountsTabs(): void {
-  const file = buildBackupFile(
-    "manual",
-    1700000000000,
-    ["ws-1" as unknown as TWorkspaceID],
-    "ws-1" as unknown as TWorkspaceID,
-    "ws-1" as unknown as TWorkspaceID,
-    [makeSnapshot("ws-1", 3), makeSnapshot("ws-2", 2)],
-  );
-  const summary = buildBackupSummary("backup.jsonlz4", file, 512);
-  assertEquals(summary.workspaceCount, 2, "workspace count");
+function testSummaryCountsWindowsAndTabs(): void {
+  const file = makeFile({
+    windows: [makeWindow(2, true), makeWindow(3)],
+  });
+  const summary = buildBackupSummary("backup-x.jsonlz4", file, 4096);
+  assertEquals(summary.windowCount, 2, "window count");
   assertEquals(summary.tabCount, 5, "tab count");
-  assertEquals(summary.fileSize, 512, "file size");
-  assertEquals(summary.kind, "manual", "kind");
+  assertEquals(summary.workspaceCount, 2, "workspace count");
+  assertEquals(summary.mode, "workspaces", "mode");
+  assertEquals(summary.fileSize, 4096, "file size");
 }
 
-function testBuildSummaryExcludesVirtualWorkspaceButCountsItsTabs(): void {
-  const realId = "00000000-0000-4000-8000-000000000001";
+function testSummaryTabsModeHasNoWorkspaces(): void {
+  const file = makeFile({
+    mode: "tabs",
+    workspaceState: undefined,
+    windows: [makeWindow(4, true)],
+  });
+  const summary = buildBackupSummary("backup-y.jsonlz4", file, 10);
+  assertEquals(summary.workspaceCount, 0, "no workspaces in tabs mode");
+  assertEquals(summary.windowCount, 1, "window count");
+  assertEquals(summary.tabCount, 4, "tab count");
+}
+
+function testValidatesWorkspacesMode(): void {
+  assert(isWorkspaceBackupFile(makeFile()), "valid workspaces file");
+}
+
+function testValidatesTabsMode(): void {
+  const file = makeFile({ mode: "tabs", workspaceState: undefined });
+  assert(isWorkspaceBackupFile(file), "valid tabs file");
+}
+
+function testRejectsInvalidFiles(): void {
+  const cases: Array<[string, unknown]> = [
+    ["v1", { ...makeFile(), version: 1 }],
+    ["unknown mode", { ...makeFile(), mode: "everything" }],
+    ["tabs with workspaceState", makeFile({ mode: "tabs" })],
+    [
+      "workspaces without workspaceState",
+      { ...makeFile(), workspaceState: undefined },
+    ],
+    ["empty windows", makeFile({ windows: [] })],
+    [
+      "focused flag missing",
+      makeFile({
+        windows: [{ tabs: [makeTab(0)] } as unknown as WorkspaceBackupWindow],
+      }),
+    ],
+    [
+      "tab with bad userContextId",
+      makeFile({
+        windows: [{
+          isFocused: true,
+          tabs: [makeTab(0, { userContextId: -1 })],
+        }],
+      }),
+    ],
+    [
+      "tab with bad state type",
+      makeFile({
+        windows: [{
+          isFocused: true,
+          tabs: [
+            { ...makeTab(0), state: "nope" } as unknown as WorkspaceBackupTab,
+          ],
+        }],
+      }),
+    ],
+    ["null", null],
+    ["array", []],
+  ];
+  for (const [label, value] of cases) {
+    assert(!isWorkspaceBackupFile(value), `rejects ${label}`);
+  }
+}
+
+function testDanglingWorkspaceReferences(): void {
+  const file = makeFile({
+    windows: [{
+      isFocused: true,
+      tabs: [
+        makeTab(0, { workspaceId: WS_A }),
+        makeTab(1, {
+          workspaceId: "00000000-0000-4000-8000-00000000dead" as TWorkspaceID,
+        }),
+      ],
+    }],
+  });
+  const dangling = findDanglingWorkspaceReferences(file);
+  assertEquals(dangling.length, 1, "one dangling reference");
+  assertEquals(
+    dangling[0],
+    "00000000-0000-4000-8000-00000000dead",
+    "dangling id",
+  );
+  // The file itself stays valid; the tab is treated as unattributed.
+  assert(isWorkspaceBackupFile(file), "file remains valid");
+}
+
+function testSanitizeStripsSensitiveState(): void {
+  const sanitized = sanitizeTabState({
+    entries: [{ url: "https://example.com" }],
+    index: 1,
+    formdata: { field: "secret" },
+    storage: { key: "value" },
+    scroll: "0,120",
+    floorpWorkspaceId: WS_A,
+    floorpLastShowWorkspaceId: WS_B,
+    floorpDisableHistory: "true",
+    attributes: {
+      floorpWorkspaceId: WS_A,
+      floorpLastShowWorkspaceId: WS_B,
+      image: "https://example.com/icon.png",
+    },
+  });
+  assert(sanitized !== null, "sanitized");
+  assert(!("formdata" in sanitized!), "formdata removed");
+  assert(!("storage" in sanitized!), "storage removed");
+  assert(!("scroll" in sanitized!), "scroll removed");
+  assert(
+    !("floorpWorkspaceId" in sanitized!),
+    "top-level workspace id removed",
+  );
+  assert(
+    !("floorpDisableHistory" in sanitized!),
+    "disable-history marker removed",
+  );
+  const attributes = sanitized!.attributes as Record<string, unknown>;
+  assert(
+    !("floorpWorkspaceId" in attributes),
+    "attribute workspace id removed",
+  );
+  assertEquals(
+    attributes.image,
+    "https://example.com/icon.png",
+    "unrelated attributes kept",
+  );
+  assertEquals(sanitized!.index, 1, "unrelated state kept");
+}
+
+function testSanitizeKeepsNull(): void {
+  assertEquals(sanitizeTabState(null), null, "null stays null");
+}
+
+function testBuildBackupFileTabsMode(): void {
   const file = buildBackupFile(
     "auto",
+    "tabs",
     1700000000000,
-    [],
-    null,
-    null,
-    [makeSnapshot(realId, 2), makeUnassignedSnapshot(3)],
+    [makeWindow(1, true)],
   );
-  const summary = buildBackupSummary("backup.jsonlz4", file, 128);
-
-  assertEquals(
-    summary.workspaceCount,
-    1,
-    "the virtual unassigned snapshot is not a real workspace",
-  );
-  assertEquals(
-    summary.tabCount,
-    5,
-    "unassigned tabs are included in the tab count",
-  );
+  assertEquals(file.version, 2, "version");
+  assertEquals(file.mode, "tabs", "mode");
+  assert(!("workspaceState" in file), "tabs mode carries no workspace state");
+  assert(isWorkspaceBackupFile(file), "valid");
 }
 
-function testUnassignedSnapshotDetection(): void {
-  assert(isUnassignedSnapshot(makeUnassignedSnapshot(1)), "sentinel matches");
-  assert(
-    !isUnassignedSnapshot(
-      makeSnapshot("00000000-0000-4000-8000-000000000001", 1),
-    ),
-    "real workspaces do not match",
-  );
-}
-
-function testWorkspacelessRestorePrefersUnassignedTabs(): void {
-  const unassigned = makeUnassignedSnapshot(3);
-  const realId = "00000000-0000-4000-8000-000000000001";
+function testBuildBackupFileWorkspacesMode(): void {
   const file = buildBackupFile(
     "manual",
+    "workspaces",
     1700000000000,
-    [],
-    null,
-    null,
-    [makeSnapshot(realId, 2), unassigned],
+    [makeWindow(1, true)],
+    makeWorkspaceState(),
   );
-  const tabs = collectTabsForWorkspacelessRestore(file);
-
-  assertEquals(tabs.length, 3, "only unassigned tabs are restored");
-  assert(
-    tabs[0] === unassigned.tabs[0],
-    "restored tabs come from the virtual unassigned snapshot",
-  );
-}
-
-function testWorkspacelessRestoreFallsBackToAllTabs(): void {
-  const realId = "00000000-0000-4000-8000-000000000001";
-  const file = buildBackupFile(
-    "auto",
-    1700000000000,
-    [],
-    null,
-    null,
-    [makeSnapshot(realId, 2)],
-  );
-  assertEquals(
-    collectTabsForWorkspacelessRestore(file).length,
-    2,
-    "without unassigned tabs, every snapshot's tabs are restored",
-  );
-}
-
-function testUnassignedWorkspaceIDStillGuardedHere(): void {
-  assert(
-    isUnassignedWorkspaceID(UNASSIGNED_WORKSPACE_ID),
-    "helper re-export stays consistent",
-  );
-}
-
-function testWorkspaceBackupFileValidation(): void {
-  const valid = buildBackupFile(
-    "auto",
-    1,
-    [],
-    null,
-    null,
-    [],
-  );
-  assert(isWorkspaceBackupFile(valid), "valid file");
-  assert(!isWorkspaceBackupFile({ ...valid, version: 2 }), "version");
-  assert(!isWorkspaceBackupFile({ ...valid, kind: "other" }), "kind");
-  assert(
-    !isWorkspaceBackupFile({ ...valid, capturedAt: "now" }),
-    "capturedAt",
-  );
-  assert(!isWorkspaceBackupFile(null), "null");
-  assert(!isWorkspaceBackupFile([]), "array");
+  assert("workspaceState" in file, "workspace state present");
+  assert(isWorkspaceBackupFile(file), "valid");
 }
 
 function testExpiredRetentionExcludesPreRestore(): void {
-  const now = 10 * DAY;
+  const now = 1700000000000;
   const summaries = [
-    makeSummary("old-auto", "auto", now - 8 * DAY),
-    makeSummary("fresh-auto", "auto", now - 2 * DAY),
-    makeSummary("old-manual", "manual", now - 10 * DAY),
-    makeSummary("old-pre", "pre-restore", now - 30 * DAY),
+    makeSummary("old-auto.jsonlz4", "auto", now - 10 * DAY),
+    makeSummary("old-manual.jsonlz4", "manual", now - 10 * DAY),
+    makeSummary("old-pre.jsonlz4", "pre-restore", now - 10 * DAY),
+    makeSummary("new-auto.jsonlz4", "auto", now - 1 * DAY),
   ];
   const expired = selectExpiredBackups(summaries, 7, now);
-  assertEquals(expired.length, 2, "two age-expired backups");
-  assert(expired.some((s) => s.fileName === "old-auto"), "old auto");
-  assert(expired.some((s) => s.fileName === "old-manual"), "old manual");
+  assertEquals(expired.length, 2, "two expired");
   assert(
-    !expired.some((s) => s.fileName === "old-pre"),
+    expired.every((entry) => entry.kind !== "pre-restore"),
     "pre-restore is exempt",
   );
 }
 
 function testExpiredRetentionInvalidDays(): void {
-  const summaries = [makeSummary("old", "auto", 0)];
-  assertEquals(selectExpiredBackups(summaries, -1, DAY).length, 0, "negative");
+  const now = 1700000000000;
+  const summaries = [makeSummary("a.jsonlz4", "auto", now - 100 * DAY)];
+  assertEquals(selectExpiredBackups(summaries, -1, now).length, 0, "negative");
   assertEquals(
-    selectExpiredBackups(summaries, Number.NaN, DAY).length,
+    selectExpiredBackups(summaries, Number.NaN, now).length,
     0,
     "NaN",
   );
 }
 
 function testPreRestoreCapKeepsNewest(): void {
+  const now = 1700000000000;
   const summaries = [
-    makeSummary("pre-1", "pre-restore", 1),
-    makeSummary("pre-2", "pre-restore", 2),
-    makeSummary("pre-3", "pre-restore", 3),
-    makeSummary("auto", "auto", 4),
+    makeSummary("p1.jsonlz4", "pre-restore", now - 4 * DAY),
+    makeSummary("p2.jsonlz4", "pre-restore", now - 3 * DAY),
+    makeSummary("p3.jsonlz4", "pre-restore", now - 2 * DAY),
+    makeSummary("p4.jsonlz4", "pre-restore", now - 1 * DAY),
   ];
   const excess = selectExcessPreRestoreBackups(summaries, 2);
-  assertEquals(excess.length, 1, "one excess pre-restore");
-  assertEquals(excess[0].fileName, "pre-1", "oldest is removed");
+  assertEquals(excess.length, 2, "two excess");
+  assertEquals(excess[0].fileName, "p1.jsonlz4", "oldest first");
+  assertEquals(excess[1].fileName, "p2.jsonlz4", "second oldest");
 }
 
 function testPreRestoreCapZero(): void {
-  const summaries = [makeSummary("pre-1", "pre-restore", 1)];
+  const now = 1700000000000;
+  const summaries = [makeSummary("p1.jsonlz4", "pre-restore", now)];
   assertEquals(
     selectExcessPreRestoreBackups(summaries, 0).length,
     1,
     "zero keeps none",
   );
-  assertEquals(
-    selectExcessPreRestoreBackups(summaries, -1).length,
-    0,
-    "negative disables cleanup",
-  );
 }
 
 function testSortNewestFirst(): void {
-  const summaries = [
-    makeSummary("a", "auto", 1),
-    makeSummary("b", "auto", 3),
-    makeSummary("c", "auto", 2),
-  ];
-  const sorted = sortBackupsNewestFirst(summaries);
-  assertEquals(sorted.map((s) => s.fileName).join(","), "b,c,a", "sorted");
-  assertEquals(summaries[0].fileName, "a", "input is not mutated");
+  const sorted = sortBackupsNewestFirst([
+    makeSummary("a.jsonlz4", "auto", 1),
+    makeSummary("b.jsonlz4", "auto", 3),
+    makeSummary("c.jsonlz4", "auto", 2),
+  ]);
+  assertEquals(
+    sorted.map((entry) => entry.fileName).join(","),
+    "b.jsonlz4,c.jsonlz4,a.jsonlz4",
+    "sorted",
+  );
 }
 
 function testNormalizeConfigDefaultsAndOverrides(): void {
-  const defaults = normalizeBackupConfig(null);
+  const defaults = normalizeBackupConfig({});
   assertEquals(defaults.enabled, true, "enabled default");
   assertEquals(defaults.intervalMinutes, 15, "interval default");
   assertEquals(defaults.retentionDays, 7, "retention default");
   assertEquals(defaults.maxPreRestoreBackups, 10, "pre-restore default");
 
-  const custom = normalizeBackupConfig({
+  const overridden = normalizeBackupConfig({
     enabled: false,
     intervalMinutes: 30,
     retentionDays: 0,
-    maxPreRestoreBackups: 3,
+    maxPreRestoreBackups: 0,
   });
-  assertEquals(custom.enabled, false, "enabled override");
-  assertEquals(custom.intervalMinutes, 30, "interval override");
-  assertEquals(custom.retentionDays, 0, "retention allows zero");
-  assertEquals(custom.maxPreRestoreBackups, 3, "cap override");
+  assertEquals(overridden.enabled, false, "enabled override");
+  assertEquals(overridden.intervalMinutes, 30, "interval override");
+  assertEquals(overridden.retentionDays, 0, "retention override");
+  assertEquals(overridden.maxPreRestoreBackups, 0, "pre-restore override");
 
   const invalid = normalizeBackupConfig({
-    enabled: "yes",
     intervalMinutes: -5,
     retentionDays: Number.NaN,
-    maxPreRestoreBackups: -1,
   });
-  assertEquals(invalid.enabled, true, "invalid enabled falls back");
   assertEquals(invalid.intervalMinutes, 15, "invalid interval falls back");
   assertEquals(invalid.retentionDays, 7, "invalid retention falls back");
-  assertEquals(
-    invalid.maxPreRestoreBackups,
-    10,
-    "invalid cap falls back",
-  );
 }
 
 function testConfigRoundTrip(): void {
-  const config = normalizeBackupConfig({
+  const config = {
     enabled: false,
     intervalMinutes: 60,
-    retentionDays: 14,
-    maxPreRestoreBackups: 5,
-  });
+    retentionDays: 3,
+    maxPreRestoreBackups: 2,
+  };
   const parsed = parseBackupConfig(serializeBackupConfig(config));
-  assertEquals(parsed.enabled, false, "enabled round-trip");
-  assertEquals(parsed.intervalMinutes, 60, "interval round-trip");
-  assertEquals(parsed.retentionDays, 14, "retention round-trip");
-  assertEquals(parsed.maxPreRestoreBackups, 5, "cap round-trip");
+  assertEquals(parsed.enabled, config.enabled, "enabled");
+  assertEquals(parsed.intervalMinutes, config.intervalMinutes, "interval");
+  assertEquals(parsed.retentionDays, config.retentionDays, "retention");
+  assertEquals(
+    parsed.maxPreRestoreBackups,
+    config.maxPreRestoreBackups,
+    "pre-restore",
+  );
 }
 
 function testParseConfigInvalidJson(): void {
   const parsed = parseBackupConfig("{not json");
   assertEquals(parsed.enabled, true, "falls back to defaults");
-  assertEquals(parsed.intervalMinutes, 15, "default interval");
+  assertEquals(parsed.intervalMinutes, 15, "interval default");
 }
+
+/* ------------------------------------------------------------------ */
 
 export function runAllTests(): void {
   const tests: TestCase[] = [
     { name: "file name format and parse", fn: testFormatAndParseFileName },
     { name: "invalid file names", fn: testParseInvalidFileName },
     { name: "filter backup files", fn: testFilterBackupFiles },
-    { name: "summary counts tabs", fn: testBuildSummaryCountsTabs },
     {
-      name: "summary excludes virtual workspace but counts its tabs",
-      fn: testBuildSummaryExcludesVirtualWorkspaceButCountsItsTabs,
+      name: "summary counts windows and tabs",
+      fn: testSummaryCountsWindowsAndTabs,
     },
     {
-      name: "unassigned snapshot detection",
-      fn: testUnassignedSnapshotDetection,
+      name: "summary tabs mode has no workspaces",
+      fn: testSummaryTabsModeHasNoWorkspaces,
+    },
+    { name: "validates workspaces mode", fn: testValidatesWorkspacesMode },
+    { name: "validates tabs mode", fn: testValidatesTabsMode },
+    { name: "rejects invalid files", fn: testRejectsInvalidFiles },
+    {
+      name: "dangling workspace references",
+      fn: testDanglingWorkspaceReferences,
     },
     {
-      name: "workspace-less restore prefers unassigned tabs",
-      fn: testWorkspacelessRestorePrefersUnassignedTabs,
+      name: "sanitize strips sensitive state",
+      fn: testSanitizeStripsSensitiveState,
     },
+    { name: "sanitize keeps null", fn: testSanitizeKeepsNull },
+    { name: "build file tabs mode", fn: testBuildBackupFileTabsMode },
     {
-      name: "workspace-less restore falls back to all tabs",
-      fn: testWorkspacelessRestoreFallsBackToAllTabs,
+      name: "build file workspaces mode",
+      fn: testBuildBackupFileWorkspacesMode,
     },
-    {
-      name: "unassigned workspace ID guard (backup helpers)",
-      fn: testUnassignedWorkspaceIDStillGuardedHere,
-    },
-    { name: "backup file validation", fn: testWorkspaceBackupFileValidation },
     {
       name: "expired retention excludes pre-restore",
       fn: testExpiredRetentionExcludesPreRestore,

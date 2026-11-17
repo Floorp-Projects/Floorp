@@ -1,10 +1,13 @@
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 import { createRoot } from "solid-js";
 import type { WorkspacesService } from "../workspacesService.ts";
 import { WorkspacesDataManager } from "../workspacesDataManagerBase.tsx";
 import { WorkspacesBackupService } from "./workspaces-backup-service.ts";
 import type { WorkspacesBackupHost } from "./workspaces-backup-service.ts";
-import { collectTabsForWorkspacelessRestore } from "./workspaces-backup-helpers.ts";
-import { restoreSnapshotTabs } from "./workspace-snapshot.ts";
 import type { WorkspaceBackupFile } from "./backup-types.ts";
 import type { WorkspaceBackupSummary } from "./backup-types.ts";
 import type { TWorkspaceID } from "./type.ts";
@@ -23,8 +26,8 @@ export interface WorkspacesBackupFuncs {
 
 /**
  * Capture/restore host for the workspaces-disabled case. It reads the
- * persistent workspace store directly and restores tabs without assigning a
- * workspace or touching the store.
+ * persistent workspace store directly for metadata lookups, but never writes
+ * to it: tabs-mode restore is handled by the service itself.
  */
 class DetachedWorkspacesBackupHost implements WorkspacesBackupHost {
   private readonly dataManager = new WorkspacesDataManager();
@@ -39,28 +42,10 @@ class DetachedWorkspacesBackupHost implements WorkspacesBackupHost {
     return this.dataManager.getRawWorkspace(id);
   }
 
-  public async restoreFromBackupFile(file: WorkspaceBackupFile): Promise<void> {
-    const tabs = collectTabsForWorkspacelessRestore(file);
-    if (tabs.length === 0) {
-      throw new Error("empty-backup");
-    }
-    const existingTabs = [...globalThis.gBrowser.tabs];
-    await restoreSnapshotTabs(tabs, { assignWorkspaceId: null });
-    // Restore is a full replacement. Add the restored tabs first so the
-    // window never has to close its last tab, then remove the old tabs.
-    for (const tab of existingTabs) {
-      if (!tab.isConnected) {
-        continue;
-      }
-      try {
-        globalThis.gBrowser.removeTab(tab);
-      } catch (error) {
-        console.error(
-          "WorkspacesBackupController: failed to close replaced tab",
-          error,
-        );
-      }
-    }
+  public restoreWorkspaceState(_file: WorkspaceBackupFile): Promise<void> {
+    // Workspaces-mode restores only run while the feature is enabled, so this
+    // host must never touch the store.
+    return Promise.reject(new Error("workspaces-disabled"));
   }
 }
 
@@ -77,6 +62,17 @@ export class WorkspacesBackupController implements WorkspacesBackupFuncs {
 
   constructor(getService: () => WorkspacesService | null) {
     this.getService = getService;
+  }
+
+  /**
+   * Starts the backup service immediately.
+   *
+   * Used when workspaces are disabled: without this the detached service would
+   * only exist after the Hub backup page was opened, so scheduled backups
+   * would never run.
+   */
+  public ensureStarted(): void {
+    this.resolveService();
   }
 
   private resolveService(): WorkspacesBackupService {

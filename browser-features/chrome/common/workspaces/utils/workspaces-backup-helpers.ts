@@ -3,16 +3,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import type { TWorkspaceID, TWorkspaceSnapshot } from "./type.ts";
-import type { TWorkspaceSnapshotTab } from "./type.ts";
-import { isUnassignedWorkspaceID } from "./workspaces-static-names.ts";
+import type { TWorkspaceID } from "./type.ts";
 import {
   DEFAULT_WORKSPACE_BACKUP_CONFIG,
   WORKSPACE_BACKUP_KINDS,
+  WORKSPACE_BACKUP_LIMITS,
+  WORKSPACE_BACKUP_MODES,
   type WorkspaceBackupConfig,
   type WorkspaceBackupFile,
   type WorkspaceBackupKind,
+  type WorkspaceBackupMode,
+  type WorkspaceBackupState,
   type WorkspaceBackupSummary,
+  type WorkspaceBackupTab,
+  type WorkspaceBackupWindow,
+  type WorkspaceBackupWorkspace,
 } from "./backup-types.ts";
 
 export const BACKUP_FILE_PREFIX = "backup-";
@@ -31,6 +36,12 @@ export const isWorkspaceBackupKind = (
 ): value is WorkspaceBackupKind =>
   typeof value === "string" &&
   (WORKSPACE_BACKUP_KINDS as readonly string[]).includes(value);
+
+export const isWorkspaceBackupMode = (
+  value: unknown,
+): value is WorkspaceBackupMode =>
+  typeof value === "string" &&
+  (WORKSPACE_BACKUP_MODES as readonly string[]).includes(value);
 
 const pad = (value: number, length = 2): string =>
   String(value).padStart(length, "0");
@@ -94,42 +105,294 @@ export const getBaseName = (path: string): string => {
 export const isBackupFileName = (fileName: string): boolean =>
   BACKUP_FILE_NAME_PATTERN.test(fileName);
 
+/**
+ * Returns the children that look like backup files. This is only a cheap
+ * pre-filter; callers that read or delete must still validate the exact name
+ * with `isBackupFileName`.
+ */
 export const filterBackupFiles = (paths: string[]): string[] =>
   paths.filter((path) =>
     getBaseName(path).toLowerCase().endsWith(BACKUP_FILE_EXTENSION)
   );
 
+/* -------------------------------------------------------------------------
+ * Tab state sanitization
+ * ---------------------------------------------------------------------- */
+
+/**
+ * SessionStore keys that must never reach a backup file. Form data, session
+ * storage and scroll position are the sensitive parts of a tab state and are
+ * not needed to restore the tab itself.
+ */
+const STATE_KEYS_TO_DROP = ["formdata", "storage", "scroll"] as const;
+
+/**
+ * Floorp workspace markers live both at the top level of a tab state and
+ * inside `attributes`. They are re-derived on restore, so they must not be
+ * persisted as-is.
+ */
+const WORKSPACE_MARKER_KEYS = [
+  "floorpWorkspaceId",
+  "floorpLastShowWorkspaceId",
+  "floorpDisableHistory",
+] as const;
+
+/**
+ * Removes sensitive and workspace-specific keys from a SessionStore tab state.
+ * Returns a new object; the input is never mutated.
+ */
+export const sanitizeTabState = (
+  state: Record<string, unknown> | null,
+): Record<string, unknown> | null => {
+  if (!state) {
+    return null;
+  }
+  const copy: Record<string, unknown> = { ...state };
+  for (const key of STATE_KEYS_TO_DROP) {
+    delete copy[key];
+  }
+  for (const key of WORKSPACE_MARKER_KEYS) {
+    delete copy[key];
+  }
+  const attributes = copy.attributes;
+  if (isRecordValue(attributes)) {
+    const nextAttributes: Record<string, unknown> = { ...attributes };
+    for (const key of WORKSPACE_MARKER_KEYS) {
+      delete nextAttributes[key];
+    }
+    copy.attributes = nextAttributes;
+  }
+  return copy;
+};
+
+/** True when the serialized state stays within the per-tab limit. */
+export const isTabStateWithinLimit = (
+  state: Record<string, unknown> | null,
+): boolean => {
+  if (!state) {
+    return true;
+  }
+  try {
+    return JSON.stringify(state).length <=
+      WORKSPACE_BACKUP_LIMITS.maxTabStateBytes;
+  } catch {
+    return false;
+  }
+};
+
+/* -------------------------------------------------------------------------
+ * Runtime validation
+ * ---------------------------------------------------------------------- */
+
+const isFiniteNumber = (value: unknown): value is number =>
+  typeof value === "number" && Number.isFinite(value);
+
+const isSafeNonNegativeInteger = (value: unknown): value is number =>
+  typeof value === "number" && Number.isSafeInteger(value) && value >= 0;
+
+const isStringOrNull = (value: unknown): value is string | null =>
+  value === null || typeof value === "string";
+
+const isWorkspaceIdValue = (value: unknown): value is TWorkspaceID =>
+  typeof value === "string" && value.length > 0;
+
+export const isWorkspaceBackupTab = (
+  value: unknown,
+): value is WorkspaceBackupTab => {
+  if (!isRecordValue(value)) {
+    return false;
+  }
+  if (value.state !== null && !isRecordValue(value.state)) {
+    return false;
+  }
+  if (!isStringOrNull(value.title) || !isStringOrNull(value.url)) {
+    return false;
+  }
+  if (typeof value.pinned !== "boolean") {
+    return false;
+  }
+  if (typeof value.isSelected !== "boolean") {
+    return false;
+  }
+  if (!isSafeNonNegativeInteger(value.userContextId)) {
+    return false;
+  }
+  if (
+    value.lastShownWorkspaceId !== null &&
+    !isWorkspaceIdValue(value.lastShownWorkspaceId)
+  ) {
+    return false;
+  }
+  if (
+    value.workspaceId !== undefined && !isWorkspaceIdValue(value.workspaceId)
+  ) {
+    return false;
+  }
+  if (
+    typeof value.title === "string" &&
+    value.title.length > WORKSPACE_BACKUP_LIMITS.maxTitleLength
+  ) {
+    return false;
+  }
+  if (
+    typeof value.url === "string" &&
+    value.url.length > WORKSPACE_BACKUP_LIMITS.maxUrlLength
+  ) {
+    return false;
+  }
+  return isTabStateWithinLimit(value.state as Record<string, unknown> | null);
+};
+
+export const isWorkspaceBackupWindow = (
+  value: unknown,
+): value is WorkspaceBackupWindow => {
+  if (!isRecordValue(value)) {
+    return false;
+  }
+  if (typeof value.isFocused !== "boolean") {
+    return false;
+  }
+  if (!Array.isArray(value.tabs)) {
+    return false;
+  }
+  if (value.tabs.length > WORKSPACE_BACKUP_LIMITS.maxTabsPerWindow) {
+    return false;
+  }
+  return value.tabs.every(isWorkspaceBackupTab);
+};
+
+export const isWorkspaceBackupWorkspace = (
+  value: unknown,
+): value is WorkspaceBackupWorkspace => {
+  if (!isRecordValue(value)) {
+    return false;
+  }
+  if (!isWorkspaceIdValue(value.workspaceId)) {
+    return false;
+  }
+  if (typeof value.name !== "string") {
+    return false;
+  }
+  if (!isSafeNonNegativeInteger(value.userContextId)) {
+    return false;
+  }
+  if (
+    value.icon !== undefined && value.icon !== null &&
+    typeof value.icon !== "string"
+  ) {
+    return false;
+  }
+  return true;
+};
+
+export const isWorkspaceBackupState = (
+  value: unknown,
+): value is WorkspaceBackupState => {
+  if (!isRecordValue(value)) {
+    return false;
+  }
+  if (!Array.isArray(value.workspaces) || value.workspaces.length === 0) {
+    return false;
+  }
+  if (value.workspaces.length > WORKSPACE_BACKUP_LIMITS.maxWorkspaces) {
+    return false;
+  }
+  if (!value.workspaces.every(isWorkspaceBackupWorkspace)) {
+    return false;
+  }
+  if (!Array.isArray(value.order)) {
+    return false;
+  }
+  if (!value.order.every(isWorkspaceIdValue)) {
+    return false;
+  }
+  if (value.defaultID !== null && !isWorkspaceIdValue(value.defaultID)) {
+    return false;
+  }
+  if (
+    value.currentWorkspaceId !== null &&
+    !isWorkspaceIdValue(value.currentWorkspaceId)
+  ) {
+    return false;
+  }
+  return true;
+};
+
+/**
+ * Validates a decoded backup file. Returns false for anything that is not a
+ * well-formed v2 file; v1 files are rejected here by design (the v1 format was
+ * never shipped).
+ */
 export const isWorkspaceBackupFile = (
   value: unknown,
 ): value is WorkspaceBackupFile => {
   if (!isRecordValue(value)) {
     return false;
   }
-  if (value.version !== 1) {
+  if (value.version !== 2) {
     return false;
   }
   if (!isWorkspaceBackupKind(value.kind)) {
     return false;
   }
-  if (
-    typeof value.capturedAt !== "number" || !Number.isFinite(value.capturedAt)
-  ) {
+  if (!isWorkspaceBackupMode(value.mode)) {
     return false;
   }
-  if (!Array.isArray(value.order)) {
+  if (!isFiniteNumber(value.capturedAt)) {
     return false;
   }
-  if (value.defaultID !== null && typeof value.defaultID !== "string") {
+  if (!Array.isArray(value.windows) || value.windows.length === 0) {
     return false;
   }
-  if (
-    value.currentWorkspaceId !== null &&
-    typeof value.currentWorkspaceId !== "string"
-  ) {
+  if (value.windows.length > WORKSPACE_BACKUP_LIMITS.maxWindows) {
     return false;
   }
-  return Array.isArray(value.workspaces);
+  if (!value.windows.every(isWorkspaceBackupWindow)) {
+    return false;
+  }
+  let totalTabs = 0;
+  for (const window of value.windows) {
+    totalTabs += window.tabs.length;
+  }
+  if (totalTabs > WORKSPACE_BACKUP_LIMITS.maxTotalTabs) {
+    return false;
+  }
+  if (value.mode === "workspaces") {
+    return isWorkspaceBackupState(value.workspaceState);
+  }
+  // tabs mode must not carry workspace data at all.
+  return value.workspaceState === undefined;
 };
+
+/**
+ * Returns workspace IDs referenced by tabs but missing from the workspace
+ * metadata. Such tabs are treated as unattributed on restore; the file itself
+ * is not rejected.
+ */
+export const findDanglingWorkspaceReferences = (
+  file: WorkspaceBackupFile,
+): TWorkspaceID[] => {
+  const state = file.workspaceState;
+  if (!state) {
+    return [];
+  }
+  const known = new Set(
+    state.workspaces.map((workspace) => workspace.workspaceId),
+  );
+  const dangling: TWorkspaceID[] = [];
+  for (const window of file.windows) {
+    for (const tab of window.tabs) {
+      if (tab.workspaceId && !known.has(tab.workspaceId)) {
+        dangling.push(tab.workspaceId);
+      }
+    }
+  }
+  return dangling;
+};
+
+/* -------------------------------------------------------------------------
+ * Summary / ordering / retention
+ * ---------------------------------------------------------------------- */
 
 export const buildBackupSummary = (
   fileName: string,
@@ -137,44 +400,20 @@ export const buildBackupSummary = (
   fileSize: number,
 ): WorkspaceBackupSummary => {
   let tabCount = 0;
-  let workspaceCount = 0;
-  for (const workspace of file.workspaces) {
-    // The virtual unassigned-workspace snapshot contributes its tabs, but it
-    // is not a real workspace. Settings UI is implemented separately; it can
-    // rely on workspaceCount being the number of real workspaces and
-    // tabCount covering every tab stored in the file, including unassigned
-    // tabs.
-    tabCount += workspace.tabs.length;
-    if (!isUnassignedWorkspaceID(workspace.workspace.workspaceId)) {
-      workspaceCount++;
-    }
+  for (const window of file.windows) {
+    tabCount += window.tabs.length;
   }
   return {
     id: fileName,
     kind: file.kind,
+    mode: file.mode,
     capturedAt: file.capturedAt,
-    workspaceCount,
+    windowCount: file.windows.length,
     tabCount,
+    workspaceCount: file.workspaceState?.workspaces.length ?? 0,
     fileName,
     fileSize,
   };
-};
-
-export const isUnassignedSnapshot = (
-  snapshot: TWorkspaceSnapshot,
-): boolean => isUnassignedWorkspaceID(snapshot.workspace.workspaceId);
-
-/**
- * Chooses the tabs to reopen when restoring without touching the workspace
- * store (workspaces disabled). Tabs from the virtual unassigned snapshot are
- * preferred; if the backup has none, every snapshot's tabs are restored.
- */
-export const collectTabsForWorkspacelessRestore = (
-  file: WorkspaceBackupFile,
-): TWorkspaceSnapshotTab[] => {
-  const unassigned = file.workspaces.filter(isUnassignedSnapshot);
-  const source = unassigned.length > 0 ? unassigned : file.workspaces;
-  return source.flatMap((workspace) => workspace.tabs);
 };
 
 export const sortBackupsNewestFirst = (
@@ -218,6 +457,10 @@ export const selectExcessPreRestoreBackups = (
     .sort((a, b) => b.capturedAt - a.capturedAt);
   return preRestore.slice(maxPreRestoreBackups);
 };
+
+/* -------------------------------------------------------------------------
+ * Config
+ * ---------------------------------------------------------------------- */
 
 const toPositiveNumber = (value: unknown, fallback: number): number => {
   if (typeof value !== "number" || !Number.isFinite(value) || value <= 0) {
@@ -278,19 +521,26 @@ export const parseBackupConfig = (
   }
 };
 
+/* -------------------------------------------------------------------------
+ * Construction
+ * ---------------------------------------------------------------------- */
+
 export const buildBackupFile = (
   kind: WorkspaceBackupKind,
+  mode: WorkspaceBackupMode,
   capturedAt: number,
-  order: TWorkspaceID[],
-  defaultID: TWorkspaceID | null,
-  currentWorkspaceId: TWorkspaceID | null,
-  workspaces: TWorkspaceSnapshot[],
-): WorkspaceBackupFile => ({
-  version: 1,
-  kind,
-  capturedAt,
-  order: [...order],
-  defaultID,
-  currentWorkspaceId,
-  workspaces,
-});
+  windows: WorkspaceBackupWindow[],
+  workspaceState?: WorkspaceBackupState,
+): WorkspaceBackupFile => {
+  const file: WorkspaceBackupFile = {
+    version: 2,
+    kind,
+    mode,
+    capturedAt,
+    windows,
+  };
+  if (mode === "workspaces" && workspaceState) {
+    file.workspaceState = workspaceState;
+  }
+  return file;
+};

@@ -2,7 +2,7 @@ diff --git a/browser/components/tabbrowser/Tabbrowser.sys.mjs b/browser/componen
 index e41d07a03d5..1a06b53b97e 100644
 --- a/browser/components/tabbrowser/Tabbrowser.sys.mjs
 +++ b/browser/components/tabbrowser/Tabbrowser.sys.mjs
-@@ -4975,6 +4975,45 @@ export class Tabbrowser {
+@@ -4975,6 +4975,49 @@ export class Tabbrowser {
      for (var i = 0; i < tabDataList.length; i++) {
        let tabData = tabDataList[i];
  
@@ -30,7 +30,11 @@ index e41d07a03d5..1a06b53b97e 100644
 +      let floorpLastShowWorkspaceId = tabData.floorpLastShowWorkspaceId;
 +      let floorpSSB = tabData.floorpSSB;
 +
-+      if (!isPrivateContainerPlaceholder && !floorpWorkspaceId) {
++      if (
++        !isPrivateContainerPlaceholder &&
++        !floorpWorkspaceId &&
++        Services.prefs.getBoolPref("floorp.workspaces.enabled", true)
++      ) {
 +        try {
 +          floorpWorkspaceId = JSON.parse(
 +            Services.prefs.getStringPref("floorp.workspaces.v4.store", "{}")

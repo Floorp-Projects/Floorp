@@ -272,7 +272,18 @@
         }
     },
     "backup": {
-        "description": "Back up workspaces and tabs automatically, and restore them when needed. (Alpha)"
+        "description": "Back up workspaces and tabs automatically, and restore them when needed. (Alpha)",
+        "tabsTitle": "Tab Backup",
+        "tabsDescription": "Back up open tabs automatically, and reopen them when needed. (Alpha)",
+        "tabsRestore": "Reopen tabs",
+        "tabsRestoreConfirmTitle": "Reopen backed-up tabs",
+        "tabsRestoreConfirmAction": "Reopen",
+        "tabsRestoreConfirmDescription": "Your current tabs will not be closed. The backed-up tabs are added, so duplicates may appear.",
+        "windowCount": "{{count}} window",
+        "windowCount_plural": "{{count}} windows",
+        "modeTabs": "Tabs",
+        "modeWorkspaces": "Workspaces",
+        "workspacesFileWarning": "This backup was captured with workspaces enabled; its tabs are reopened without workspace grouping."
     },
     "workspaces": {
         "workspaces": "Workspaces",
