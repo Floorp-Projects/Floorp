@@ -339,6 +339,10 @@
     "resize": "Resize Firefox sidebar"
   },
   "panelSidebar": {
+    "resetInvalidTitle": "Reset Panel Sidebar settings?",
+    "resetInvalidMessage": "Floorp could not read the saved panel list. Save the displayed panels and replace the unreadable settings?",
+    "savedUnreadBadge": "{{panel}}, last seen unread: {{count}}",
+    "unreadBadge": "{{panel}}, unread: {{count}}",
     "resize": "Resize panel sidebar",
     "modal": {
       "type": "Panel Type",
@@ -360,6 +364,8 @@
       "cancel": "Cancel"
     },
     "contextMenu": {
+      "loadAtStartupForBadges": "Load at startup for badges (non-private windows)",
+      "clearBadge": "Clear badge",
       "unload": "Unload this webpanel",
       "mute": "Mute/Unmute this webpanel",
       "changeZoom": "Change zoom level",

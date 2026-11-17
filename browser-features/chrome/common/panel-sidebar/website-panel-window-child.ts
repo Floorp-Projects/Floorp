@@ -233,6 +233,7 @@ export class WebsitePanelWindowChild {
     applySavedZoomLevel(browser, panelId);
   }
 
+  /** Initialize the embedded browser and start navigation even when hidden. */
   createWebpanelWindow() {
     const panelId = this.webpanelId;
     const loadURL = this.loadURL;
@@ -254,10 +255,11 @@ export class WebsitePanelWindowChild {
 
     const browser = this.getContentBrowser();
 
-    globalThis.requestAnimationFrame(() => {
+    // Startup panels are hidden and may never receive an animation frame.
+    globalThis.setTimeout(() => {
       loadUriInWebPanelBrowser(browser, loadURL);
       this.setZoomLevel(browser);
-    });
+    }, 0);
 
     Services.prefs.addObserver(PANEL_SIDEBAR_DATA_PREF_NAME, () => {
       this.setZoomLevel(browser);

@@ -14,6 +14,7 @@ const PANEL_SIDEBAR_DATA_PREF_NAME =
 export type WebPanelBrowserElement = XULBrowserElement & {
   audioMuted?: boolean;
   fullZoom?: number;
+  mIconURL?: string | null;
   reload?: () => void;
   goBack?: () => void;
   goForward?: () => void;
