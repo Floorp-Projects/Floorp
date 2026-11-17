@@ -4,6 +4,9 @@
  * "Merge all windows" — pulls every tab of every other Firefox window into the
  * window it is invoked from, then closes the emptied windows.
  *
+ * Private and non-private windows are never mixed: a private window is skipped
+ * when the invoking window is not private, and vice versa.
+ *
  * Reachable as:
  *  - the tab context menu entry below "Select All Tabs" (tab-context-menu.tsx),
  *  - the `floorp-merge-all-windows` action in the command palette (F2),
