@@ -8,8 +8,15 @@ const WORKSPACES_INIT_TOPIC = "floorp.workspaces.initialize";
 /**
  * Module-scope (process-wide, shared by every window's actor) single-flight
  * lock for mutating backup operations. List is never blocked.
+ *
+ * The lock carries a token and an expiry: if an operation's promise never
+ * settles (for example its window closed mid-await), the lock lapses instead
+ * of blocking every window until restart. The expiry exceeds the child's
+ * 10-minute restore timeout, and a stale holder never releases a newer lock.
  */
-let mutatingBackupInFlight = false;
+const MUTATING_LOCK_TTL_MS = 11 * 60 * 1000;
+let mutatingLock: { token: number; expiresAt: number } | null = null;
+let nextLockToken = 1;
 
 interface WorkspacesFuncs {
   backupNow(): Promise<unknown>;
@@ -138,18 +145,23 @@ export class NRWorkspacesParent extends JSWindowActorParent {
       }
 
       const mutating = message.name !== "NRWorkspaces:ListBackups";
+      let lockToken: number | null = null;
       if (mutating) {
-        if (mutatingBackupInFlight) {
+        if (mutatingLock && Date.now() < mutatingLock.expiresAt) {
           throw new Error("restore-in-progress");
         }
-        mutatingBackupInFlight = true;
+        lockToken = nextLockToken++;
+        mutatingLock = {
+          token: lockToken,
+          expiresAt: Date.now() + MUTATING_LOCK_TTL_MS,
+        };
       }
       let data: unknown;
       try {
         data = await this.runBackupOperation(funcs, message);
       } finally {
-        if (mutating) {
-          mutatingBackupInFlight = false;
+        if (lockToken !== null && mutatingLock?.token === lockToken) {
+          mutatingLock = null;
         }
       }
 
@@ -175,10 +187,11 @@ export class NRWorkspacesParent extends JSWindowActorParent {
       if (!uri) {
         return false;
       }
-      const spec = uri.spec;
+      // Compare the page itself (no query/fragment) rather than a loose
+      // prefix, so e.g. a hypothetical about:hubfoo never matches.
+      const page = uri.spec.split(/[?#]/)[0];
       if (
-        spec.startsWith("chrome://noraneko-settings") ||
-        spec.startsWith("about:hub")
+        page.startsWith("chrome://noraneko-settings/") || page === "about:hub"
       ) {
         return true;
       }

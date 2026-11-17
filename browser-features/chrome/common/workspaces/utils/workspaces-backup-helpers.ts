@@ -201,6 +201,9 @@ const WORKSPACE_MARKER_KEYS: ReadonlySet<string> = new Set([
  */
 const MAX_SANITIZE_DEPTH = 8;
 
+/** Upper bound for an inline tab icon kept in the backup (characters). */
+const MAX_TAB_IMAGE_LENGTH = 64 * 1024;
+
 const isNonNegativeSafeInt = (value: unknown): value is number =>
   typeof value === "number" && Number.isSafeInteger(value) && value >= 0;
 
@@ -222,19 +225,18 @@ const sanitizeEntry = (
     return null;
   }
   const result: Record<string, unknown> = { url: entry.url };
-  for (const key of ["title", "charset", "docshellUUID"] as const) {
+  // originalURI / resultPrincipalURI are not kept: docshell uses
+  // resultPrincipalURI to compute the document principal, so a crafted file
+  // could make one origin's page render with another origin's principal.
+  // docshellUUID is dropped too (Components.ID() throws on malformed input and
+  // the restore does not need it).
+  for (const key of ["title", "charset"] as const) {
     if (typeof entry[key] === "string") {
       result[key] = entry[key];
     }
   }
-  if (typeof entry.ID === "string" || isNonNegativeSafeInt(entry.ID)) {
+  if (isNonNegativeSafeInt(entry.ID)) {
     result.ID = entry.ID;
-  }
-  for (const key of ["originalURI", "resultPrincipalURI"] as const) {
-    const candidate = entry[key];
-    if (typeof candidate === "string" && isRestorableTabUrl(candidate)) {
-      result[key] = candidate;
-    }
   }
   for (const key of ["hasUserInteraction", "persist"] as const) {
     if (typeof entry[key] === "boolean") {
@@ -278,27 +280,27 @@ const remapIndex = (
  * restorable remains).
  *
  * Top-level keys kept: `entries`, `index`, `requestedIndex`, `userContextId`,
- * `pinned`, `hidden`, `lastAccessed`, `image` (http/https only) and
+ * `pinned`, `hidden`, `lastAccessed`, `image` (inline data: images only) and
  * `attributes` (primitive values, workspace markers removed). These are what
  * `SessionStore.setTabState` needs to rebuild the tab and its history.
  * Deliberately NOT kept: `userTypedValue`/`userTypedClear` (typed text),
  * `formdata`, `storage`, `scroll`, `extData`, and any unknown key.
  *
- * Entries (and `children`) keep only url, title, charset, ID, docshellUUID,
- * originalURI, resultPrincipalURI, hasUserInteraction, persist, cacheKey and
- * children. Entries whose URL fails `isRestorableTabUrl` are dropped and
+ * Entries (and `children`) keep only url, title, charset, numeric ID,
+ * hasUserInteraction, persist, cacheKey and children. A state without
+ * `entries` is rejected because SessionStore.setTabState throws on it. Entries whose URL fails `isRestorableTabUrl` are dropped and
  * `index`/`requestedIndex` are remapped. Returns a new object; the input is
  * never mutated.
  */
 export const sanitizeTabState = (
   state: Record<string, unknown> | null,
 ): Record<string, unknown> | null => {
-  if (!isRecordValue(state)) {
+  if (!isRecordValue(state) || !Array.isArray(state.entries)) {
     return null;
   }
   const result: Record<string, unknown> = {};
 
-  if (Array.isArray(state.entries)) {
+  {
     const kept: Record<string, unknown>[] = [];
     const keptOriginalIndexes: number[] = [];
     state.entries.forEach((entry, originalIndex) => {
@@ -330,10 +332,13 @@ export const sanitizeTabState = (
   if (isNonNegativeSafeInt(state.lastAccessed)) {
     result.lastAccessed = state.lastAccessed;
   }
+  // Tab icons are restored only from inline images: tabbrowser refuses remote
+  // icon URLs without a loading principal, and data: images need no network.
   if (
     typeof state.image === "string" &&
-    (state.image.startsWith("http://") || state.image.startsWith("https://")) &&
-    isRestorableTabUrl(state.image)
+    state.image.length <= MAX_TAB_IMAGE_LENGTH &&
+    /^data:image\/(?:png|x-icon|vnd\.microsoft\.icon|gif|jpeg|webp|svg\+xml)[;,]/i
+      .test(state.image)
   ) {
     result.image = state.image;
   }
@@ -385,7 +390,7 @@ const isStringOrNull = (value: unknown): value is string | null =>
 const WORKSPACE_ID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-const isWorkspaceIdValue = (value: unknown): value is TWorkspaceID =>
+export const isWorkspaceIdValue = (value: unknown): value is TWorkspaceID =>
   typeof value === "string" && WORKSPACE_ID_PATTERN.test(value);
 
 export const isWorkspaceBackupTab = (
@@ -679,12 +684,25 @@ export const selectExpiredBackups = (
     ? Math.floor(minKeep)
     : MIN_KEEP_BACKUPS;
   const cutoff = now - retentionDays * 24 * 60 * 60 * 1000;
-  return summaries
-    .filter((summary) => summary.kind !== "pre-restore")
+  // A backup dated well in the future (clock rollback or a crafted file) would
+  // otherwise never expire and would always sort first, so it neither counts
+  // toward the kept set nor survives retention. This applies to every kind.
+  const futureLimit = now + FUTURE_CAPTURE_TOLERANCE_MS;
+  const future = summaries.filter((summary) =>
+    summary.capturedAt > futureLimit
+  );
+  const aged = summaries
+    .filter((summary) =>
+      summary.kind !== "pre-restore" && summary.capturedAt <= futureLimit
+    )
     .sort(compareNewestFirst)
     .slice(keep)
     .filter((summary) => summary.capturedAt < cutoff);
+  return [...future.sort(compareNewestFirst), ...aged];
 };
+
+/** Clock skew tolerated before a backup counts as dated in the future. */
+export const FUTURE_CAPTURE_TOLERANCE_MS = 24 * 60 * 60 * 1000;
 
 /**
  * Keeps at most `maxPreRestoreBackups` most recent pre-restore backups and

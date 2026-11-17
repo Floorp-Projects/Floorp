@@ -492,6 +492,7 @@ function testIsRestorableTabUrl(): void {
 }
 
 function testSanitizeAllowlist(): void {
+  const ICON = "data:image/png;base64,iVBORw0KGgo=";
   const input = {
     entries: [
       {
@@ -551,7 +552,26 @@ function testSanitizeAllowlist(): void {
   }
   assertEquals(out.userContextId, 2, "userContextId kept");
   assertEquals(out.pinned, true, "pinned kept");
-  assertEquals(out.image, "https://example.com/i.png", "http image kept");
+  assert(!("image" in out), "remote image dropped");
+  assertEquals(
+    sanitizeTabState({ entries: [{ url: "https://a.example/" }], image: ICON })
+      ?.image,
+    ICON,
+    "inline data: image kept",
+  );
+  assert(
+    !("image" in
+      sanitizeTabState({
+        entries: [{ url: "https://a.example/" }],
+        image: "data:text/html,<script>1</script>",
+      })!),
+    "non-image data: URL dropped",
+  );
+  assertEquals(
+    sanitizeTabState({ pinned: true }),
+    null,
+    "state without entries rejected",
+  );
   const attrs = out.attributes as Record<string, unknown>;
   assert(!("floorpWorkspaceId" in attrs), "marker dropped");
   assert(!("nested" in attrs), "non-primitive attribute dropped");
@@ -572,7 +592,10 @@ function testSanitizeAllowlist(): void {
   }
   assertEquals(entry.title, "One", "title kept");
   assertEquals(entry.cacheKey, 3, "cacheKey kept");
-  assertEquals(entry.originalURI, "https://example.com/orig", "originalURI");
+  assertEquals(entry.ID, 7, "numeric ID kept");
+  for (const key of ["originalURI", "resultPrincipalURI", "docshellUUID"]) {
+    assert(!(key in entry), `entry ${key} dropped (principal spoofing)`);
+  }
   const children = entry.children as Array<Record<string, unknown>>;
   assertEquals(children.length, 1, "bad child dropped");
   assert(!("postdata_b64" in children[0]), "child postdata dropped");
@@ -720,6 +743,34 @@ function testMinKeep(): void {
     selectExpiredBackups(withPre, 7, now).length,
     0,
     "pre-restore neither expired nor counted toward minKeep",
+  );
+
+  // Future-dated backups (clock rollback / crafted files) never occupy the
+  // kept slots and always expire, whatever their kind.
+  const future = (name: string, kind: "auto" | "pre-restore") =>
+    makeSummary(name, kind, now + 400 * DAY);
+  const mixed = [
+    future("f1.jsonlz4", "auto"),
+    future("f2.jsonlz4", "pre-restore"),
+    old(1),
+    old(2),
+    old(3),
+  ];
+  const expiredMixed = selectExpiredBackups(mixed, 7, now)
+    .map((x) => x.fileName).sort().join(",");
+  assertEquals(
+    expiredMixed,
+    "f1.jsonlz4,f2.jsonlz4",
+    "future-dated backups expire and the 3 real ones are kept",
+  );
+  assertEquals(
+    selectExpiredBackups(
+      [makeSummary("skew.jsonlz4", "auto", now + 60 * 60 * 1000)],
+      7,
+      now,
+    ).length,
+    0,
+    "small clock skew is tolerated",
   );
 }
 

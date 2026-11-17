@@ -28,8 +28,10 @@ import {
   formatBackupFileName,
   getBaseName,
   isBackupFileName,
+  isRestorableTabUrl,
   isTabStateWithinLimit,
   isWorkspaceBackupFile,
+  isWorkspaceIdValue,
   normalizeBackupConfig,
   parseBackupConfig,
   sanitizeTabState,
@@ -719,7 +721,17 @@ export class WorkspacesBackupService {
     try {
       if (destructive) {
         await this.host.restoreWorkspaceState(file, restoreOptions);
-        return { success: true };
+        // restoreTabsIntoWindow skips exactly the tabs the URL allowlist
+        // rejects, so the count can be derived from the file.
+        const skippedCount = file.windows.reduce(
+          (count, window) =>
+            count +
+            window.tabs.filter((tab) =>
+              !!tab.url && !isRestorableTabUrl(tab.url)
+            ).length,
+          0,
+        );
+        return { success: true, skippedCount };
       }
       // Workspaces enabled + tabs file: add them to the current workspace,
       // flattened into this window. Workspaces disabled: never touch the store
@@ -1168,7 +1180,9 @@ export class WorkspacesBackupService {
     const candidates: TWorkspaceID[] = [];
     const seen = new Set<TWorkspaceID>();
     const consider = (workspaceId: TWorkspaceID): void => {
-      if (seen.has(workspaceId)) {
+      // The store's data keys are not validated on load; one malformed key
+      // would otherwise make every backup fail validation.
+      if (seen.has(workspaceId) || !isWorkspaceIdValue(workspaceId)) {
         return;
       }
       seen.add(workspaceId);
@@ -1270,6 +1284,13 @@ export class WorkspacesBackupService {
         this.host,
         tab === selectedTab,
       );
+      // A tab the restore allowlist would skip (local files, internal pages
+      // such as the settings page itself) cannot come back from this file.
+      // Leave it out so it is not in `capturedTabs`: a destructive restore
+      // then preserves it instead of closing it on the promise of a copy.
+      if (snapshotTab.url && !isRestorableTabUrl(snapshotTab.url)) {
+        continue;
+      }
       // The validator rejects oversized states, and a rejected tab discards the
       // whole backup. Drop the state instead: the tab still restores from its
       // URL.
@@ -1539,6 +1560,11 @@ const writeBackupFile = async (
   path: string,
   bytes: Uint8Array,
 ): Promise<void> => {
+  // The reader rejects anything above this bound, so writing it would report
+  // success for a safety copy that can never be restored.
+  if (bytes.length > WORKSPACE_BACKUP_LIMITS.maxDecompressedBytes) {
+    throw new Error("backup-too-large");
+  }
   const tmpPath = `${path}.tmp`;
   try {
     await IOUtils.write(path, bytes, {

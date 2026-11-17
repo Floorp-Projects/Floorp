@@ -318,28 +318,101 @@ const INTERNAL_RESTORE_URLS = new Set([
   "about:home",
 ]);
 
+/** `about:NewTab?x#y` → `about:newtab`; null for other schemes or bad input. */
+const toAboutPage = (url: string): string | null => {
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === "about:"
+      ? `about:${parsed.pathname.toLowerCase()}`
+      : null;
+  } catch {
+    return null;
+  }
+};
+
+const isExtensionUrl = (url: string): boolean => {
+  try {
+    return new URL(url).protocol === "moz-extension:";
+  } catch {
+    return false;
+  }
+};
+
+/**
+ * Triggering principal for loading `url` from a backup file:
+ * - the fixed internal pages above: system principal (null cannot load them);
+ * - moz-extension pages: the extension's own content principal, so the page
+ *   loads as if it opened itself and never with system privileges;
+ * - web URLs: a null principal scoped to the tab's container, like a link from
+ *   an opaque origin.
+ * With `trustedSource` the archive behavior (system principal) is kept.
+ */
 const createRestorePrincipal = (
   url: string,
   userContextId: number,
   trustedSource: boolean,
 ): unknown => {
   const ssm = Services.scriptSecurityManager;
-  if (trustedSource || INTERNAL_RESTORE_URLS.has(url)) {
+  const aboutPage = toAboutPage(url);
+  if (trustedSource || (aboutPage && INTERNAL_RESTORE_URLS.has(aboutPage))) {
     return ssm.getSystemPrincipal();
   }
-  try {
-    const scheme = new URL(url).protocol;
-    if (scheme === "moz-extension:") {
-      // Extension pages reject loads from a null principal unless they are
-      // web-accessible; the allowlist already limited the scheme.
-      return ssm.getSystemPrincipal();
+  if (isExtensionUrl(url)) {
+    try {
+      return ssm.createContentPrincipal(Services.io.newURI(url), {
+        userContextId,
+      });
+    } catch {
+      // Fall through to the null principal.
     }
-  } catch {
-    // Fall through to the null principal.
   }
-  // Web URLs from a backup file are untrusted: load them like a link from an
-  // opaque origin, scoped to the tab's container.
   return ssm.createNullPrincipal({ userContextId });
+};
+
+/**
+ * SessionStore restores each history entry with its stored
+ * `triggeringPrincipal_base64`, falling back to a null principal, which cannot
+ * load internal or extension pages. Backup files never supply principals (the
+ * sanitizer drops them), so derive one per entry from its URL with the same
+ * rules as the tab load. Web entries keep the null-principal fallback.
+ */
+const attachEntryPrincipals = (
+  entries: Array<Record<string, unknown>>,
+  userContextId: number,
+): void => {
+  const serialize = (
+    globalThis as unknown as {
+      E10SUtils?: { serializePrincipal?: (principal: unknown) => string };
+    }
+  ).E10SUtils?.serializePrincipal;
+  if (typeof serialize !== "function") {
+    return;
+  }
+  for (const entry of entries) {
+    const url = typeof entry.url === "string" ? entry.url : "";
+    const aboutPage = toAboutPage(url);
+    if (
+      (aboutPage && INTERNAL_RESTORE_URLS.has(aboutPage)) ||
+      isExtensionUrl(url)
+    ) {
+      try {
+        entry.triggeringPrincipal_base64 = serialize(
+          createRestorePrincipal(url, userContextId, false),
+        );
+      } catch (error) {
+        console.error(
+          "WorkspacesSnapshot: failed to derive entry principal",
+          error,
+        );
+      }
+    }
+    if (Array.isArray(entry.children)) {
+      attachEntryPrincipals(
+        entry.children as Array<Record<string, unknown>>,
+        userContextId,
+      );
+    }
+  }
 };
 
 /**
@@ -349,6 +422,7 @@ const createRestorePrincipal = (
  */
 const sanitizeRestoreState = (
   state: Record<string, unknown>,
+  userContextId: number,
 ): Record<string, unknown> | null => {
   const sanitized = sanitizeTabState(structuredClone(state));
   if (!sanitized) {
@@ -370,6 +444,10 @@ const sanitizeRestoreState = (
       : kept.length;
     sanitized.index = Math.min(Math.max(1, index), kept.length);
   }
+  attachEntryPrincipals(
+    sanitized.entries as Array<Record<string, unknown>>,
+    userContextId,
+  );
   return sanitized;
 };
 
@@ -423,7 +501,10 @@ export const restoreTabsIntoWindow = async <T extends RestorableTab>(
       try {
         safeState = trusted
           ? structuredClone(tabSnapshot.state)
-          : sanitizeRestoreState(tabSnapshot.state);
+          : sanitizeRestoreState(
+            tabSnapshot.state,
+            tabSnapshot.userContextId,
+          );
       } catch (error) {
         console.error(
           "WorkspacesSnapshot: failed to sanitize tab state",
@@ -445,7 +526,7 @@ export const restoreTabsIntoWindow = async <T extends RestorableTab>(
     let tab: XULElement;
     try {
       // With a session state the tab starts as a blank placeholder that
-      // SessionStore.setTabState replaces, as before this change.
+      // SessionStore.setTabState then replaces (avoids loading the URL twice).
       tab = gBrowser.addTab(safeState ? "about:blank" : loadUrl, {
         skipAnimation: true,
         inBackground: true,
