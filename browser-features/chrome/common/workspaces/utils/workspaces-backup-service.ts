@@ -28,6 +28,7 @@ import {
   formatBackupFileName,
   getBaseName,
   isBackupFileName,
+  isTabStateWithinLimit,
   isWorkspaceBackupFile,
   parseBackupConfig,
   sanitizeTabState,
@@ -899,8 +900,21 @@ export class WorkspacesBackupService {
         this.host,
         tab === selectedTab,
       );
+      // The validator rejects oversized states, and a rejected tab discards the
+      // whole backup. Drop the state instead: the tab still restores from its
+      // URL.
+      const sanitizedState = sanitizeTabState(snapshotTab.state);
+      const boundedState = isTabStateWithinLimit(sanitizedState)
+        ? sanitizedState
+        : null;
+      if (sanitizedState !== null && boundedState === null) {
+        console.warn(
+          "WorkspacesBackupService: dropping oversized tab state",
+          { url: snapshotTab.url },
+        );
+      }
       const backupTab: WorkspaceBackupTab = {
-        state: sanitizeTabState(snapshotTab.state),
+        state: boundedState,
         title: truncate(
           snapshotTab.title,
           WORKSPACE_BACKUP_LIMITS.maxTitleLength,

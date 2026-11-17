@@ -759,7 +759,16 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
       // 4. Restore tabs, mapping captured workspace IDs onto the new ones.
       //    Tabs without a (resolvable) workspace join the first restored one so
       //    they stay visible after the restore.
-      const allTabs = file.windows.flatMap((window) => window.tabs);
+      // The last-shown marker also references a workspace ID; map it onto the
+      // restored workspace or the saved tab selection is lost.
+      const allTabs = file.windows.flatMap((window) => window.tabs).map(
+        (tab) => ({
+          ...tab,
+          lastShownWorkspaceId: tab.lastShownWorkspaceId
+            ? idMap.get(tab.lastShownWorkspaceId) ?? null
+            : null,
+        }),
+      );
       outcomes = await restoreTabsIntoWindow(allTabs, {
         gBrowser: globalThis.gBrowser as unknown as RestoreTargetBrowser,
         resolveWorkspaceId: (tab) => {
