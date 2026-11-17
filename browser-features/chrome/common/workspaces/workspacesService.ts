@@ -511,7 +511,11 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
       // Keep the archive snapshot: it is the only remaining copy of the tabs
       // that failed to restore.
       this.rollbackCreatedWorkspace(restoredWorkspaceId, outcomes);
-      throw new Error(`archive-restore-partial-failure:${failedCount}`);
+      console.error(
+        "WorkspacesService: archive restore failed for some tabs",
+        failedCount,
+      );
+      throw new Error("archive-restore-partial-failure");
     }
 
     await this.archiveService.removeSnapshot(archiveId);
@@ -648,6 +652,7 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
    */
   public async restoreWorkspaceState(
     file: WorkspaceBackupFile,
+    options?: { preserveTabs?: ReadonlySet<XULElement> },
   ): Promise<void> {
     const state = file.workspaceState;
     if (!state) {
@@ -711,17 +716,19 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
 
     // Tabs the backup never captured (private containers, history-disabled
     // tabs) must survive the restore: they cannot be recreated from the file.
-    const privateContainerUserContextId = (() => {
-      try {
-        return PrivateContainer.getPrivateContainerUserContextId();
-      } catch (error) {
-        console.error(
-          "WorkspacesService: private container lookup failed during restore",
-          error,
-        );
-        return null;
-      }
-    })();
+    let privateContainerUserContextId: number | null;
+    try {
+      privateContainerUserContextId = PrivateContainer
+        .getPrivateContainerUserContextId();
+    } catch (error) {
+      // Without a reliable container identity we cannot tell which tabs must
+      // survive, so refuse before mutating anything.
+      console.error(
+        "WorkspacesService: private container lookup failed during restore",
+        error,
+      );
+      throw new Error("private-container-detection-failed");
+    }
     const isExemptFromRestore = (tab: XULElement): boolean => {
       if (tab.hasAttribute("floorp-disablehistory")) {
         return true;
@@ -826,8 +833,9 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
       // Tabs the backup never captured were moved onto the temporary
       // workspace by resetWorkspaces(). Park them on a real workspace so the
       // cleanup below cannot close them.
+      const preserveTabs = options?.preserveTabs;
       for (const tab of globalThis.gBrowser.tabs) {
-        if (!isExemptFromRestore(tab)) {
+        if (!isExemptFromRestore(tab) && !preserveTabs?.has(tab)) {
           continue;
         }
         if (
@@ -867,8 +875,13 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
       // Replacing existing tabs is only safe when every captured tab came back.
       const failedCount = outcomes.filter((outcome) => !outcome.ok).length;
       if (failedCount > 0) {
-        // The catch below performs the rollback exactly once.
-        throw new Error(`restore-partial-failure:${failedCount}`);
+        // The catch below performs the rollback exactly once. Keep the code bare
+        // so the UI can map it to a message; the count is for diagnostics.
+        console.error(
+          "WorkspacesService: restore failed for some tabs",
+          failedCount,
+        );
+        throw new Error("restore-partial-failure");
       }
 
       // 5. Drop the temporary workspace together with the pre-restore tabs.

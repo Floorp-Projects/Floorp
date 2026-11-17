@@ -207,6 +207,8 @@ export function BackupSettings() {
         return t("backup.errorInvalidName");
       case "backup-capture-invalid":
         return t("backup.errorCaptureInvalid");
+      case "backup-too-large":
+        return t("backup.errorTooLarge");
       default:
         return t("workspaces.backupActionError");
     }

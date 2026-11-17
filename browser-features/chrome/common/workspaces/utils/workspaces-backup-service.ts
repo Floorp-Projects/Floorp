@@ -293,11 +293,22 @@ const openNewBrowserWindow = async (): Promise<BrowserWindow> => {
  * detached implementation is used while the workspaces feature is disabled and
  * no WorkspacesService instance exists.
  */
+export interface RestoreWorkspaceStateOptions {
+  /**
+   * Tabs that must survive the replacement because the safety copy does not
+   * cover them. They are parked on a restored workspace instead of closed.
+   */
+  preserveTabs?: ReadonlySet<XULElement>;
+}
+
 export interface WorkspacesBackupHost {
   isWorkspaceID(id: string): id is TWorkspaceID;
   getRawWorkspace(id: TWorkspaceID): TWorkspace | undefined;
   /** Replaces the whole workspace store from a validated backup file. */
-  restoreWorkspaceState(file: WorkspaceBackupFile): Promise<void>;
+  restoreWorkspaceState(
+    file: WorkspaceBackupFile,
+    options?: RestoreWorkspaceStateOptions,
+  ): Promise<void>;
 }
 
 /** Options for restoring a backup as plain tabs. */
@@ -391,13 +402,28 @@ export class WorkspacesBackupService {
   public async backupNow(
     kind: WorkspaceBackupKind = "manual",
   ): Promise<WorkspaceBackupSummary> {
+    const { summary } = await this.captureAndWrite(kind);
+    return summary;
+  }
+
+  /**
+   * Captures, writes and verifies a backup, and also returns the tab elements
+   * that were captured. The restore path uses them to tell which tabs the
+   * safety copy actually covers.
+   */
+  private async captureAndWrite(
+    kind: WorkspaceBackupKind,
+  ): Promise<{
+    summary: WorkspaceBackupSummary;
+    capturedTabs: Set<XULElement>;
+  }> {
     if (kind !== "pre-restore") {
       // Write the run timestamp before capturing to reduce duplicate runs
       // across windows. See the class comment for the trade-off.
       writeLastRunAt(Date.now());
     }
 
-    const file = await this.captureAllWorkspaces(kind);
+    const { file, capturedTabs } = await this.captureAllWorkspaces(kind);
     if (!isWorkspaceBackupFile(file)) {
       // Never persist a file the reader would reject. A pre-restore copy that
       // cannot be listed or restored is worse than no copy at all, because the
@@ -413,13 +439,23 @@ export class WorkspacesBackupService {
     await writeBackupFile(path, bytes);
 
     const stat = await IOUtils.stat(path);
+    const fileSize = stat.size ?? 0;
+    if (fileSize > WORKSPACE_BACKUP_LIMITS.maxFileBytes) {
+      // The reader rejects files above this limit, so reporting success would
+      // hand back an unusable safety copy.
+      await IOUtils.remove(path, { ignoreAbsent: true }).catch(() => {});
+      throw new Error("backup-too-large");
+    }
     // The file just written must survive retention: a pre-restore copy that is
     // deleted before the destructive restore runs is worse than no copy.
     await this.cleanupRetention(fileName);
     if (!(await IOUtils.exists(path))) {
       throw new Error("backup-retention-removed-new-file");
     }
-    return buildBackupSummary(fileName, file, stat.size ?? 0);
+    return {
+      summary: buildBackupSummary(fileName, file, fileSize),
+      capturedTabs,
+    };
   }
 
   public async listBackups(): Promise<WorkspaceBackupSummary[]> {
@@ -507,6 +543,7 @@ export class WorkspacesBackupService {
 
     const workspacesEnabled = isWorkspacesEnabled();
     const destructive = workspacesEnabled && file.mode === "workspaces";
+    let restoreOptions: RestoreWorkspaceStateOptions | undefined;
 
     // A safety copy is only needed when the restore replaces existing state.
     if (destructive) {
@@ -515,9 +552,9 @@ export class WorkspacesBackupService {
         // restore without a way back.
         return { success: false, error: "pre-restore-disabled" };
       }
-      let preRestore: WorkspaceBackupSummary;
+      let capturedTabs: Set<XULElement>;
       try {
-        preRestore = await this.backupNow("pre-restore");
+        ({ capturedTabs } = await this.captureAndWrite("pre-restore"));
       } catch (error) {
         console.error(
           "WorkspacesBackupService: failed to capture pre-restore backup",
@@ -525,12 +562,12 @@ export class WorkspacesBackupService {
         );
         return { success: false, error: "pre-restore-failed" };
       }
-      // The restore closes every tab that exists when it starts. A tab opened
-      // between the safety copy and the restore would be closed without being
-      // in the copy, so abort instead of silently losing it.
-      let currentTabCount: number;
+      // Only tabs the safety copy covers may be replaced. Anything opened since
+      // the copy (including a same-count swap) is parked on a restored
+      // workspace instead of being closed.
+      let preserveTabs: Set<XULElement>;
       try {
-        currentTabCount = this.countRestorableTabs();
+        preserveTabs = this.collectTabsNotIn(capturedTabs);
       } catch (error) {
         console.error(
           "WorkspacesBackupService: failed to verify restore state",
@@ -538,14 +575,12 @@ export class WorkspacesBackupService {
         );
         return { success: false, error: "private-detection-failed" };
       }
-      if (currentTabCount !== preRestore.tabCount) {
-        return { success: false, error: "restore-state-changed" };
-      }
+      restoreOptions = { preserveTabs };
     }
 
     try {
       if (destructive) {
-        await this.host.restoreWorkspaceState(file);
+        await this.host.restoreWorkspaceState(file, restoreOptions);
       } else if (workspacesEnabled) {
         // tabs file while workspaces are enabled: add them to the current
         // workspace, flattened into the focused window.
@@ -905,35 +940,22 @@ export class WorkspacesBackupService {
   }
 
   /**
-   * Counts the tabs a capture would include right now. Used to detect tabs that
-   * appeared between the safety copy and the destructive restore.
+   * Returns the tabs that are open now but were not part of the capture.
+   *
+   * Those tabs are not in the safety copy, so a destructive restore must not
+   * close them. Comparing counts is not enough: closing one tab and opening
+   * another keeps the count identical.
    */
-  private countRestorableTabs(): number {
-    const privateContainer = lookupPrivateContainer();
-    if (privateContainer.status === "unknown") {
-      throw new Error("private-container-detection-failed");
-    }
-    const privateContainerUserContextId =
-      privateContainer.status === "configured"
-        ? privateContainer.userContextId
-        : null;
-    let count = 0;
+  private collectTabsNotIn(capturedTabs: Set<XULElement>): Set<XULElement> {
+    const preserve = new Set<XULElement>();
     for (const window of this.getBrowserWindows()) {
       for (const tab of window.gBrowser?.tabs ?? []) {
-        const userContextId = toNumber(tab.getAttribute("usercontextid"));
-        if (
-          privateContainerUserContextId !== null &&
-          userContextId === privateContainerUserContextId
-        ) {
-          continue;
+        if (!capturedTabs.has(tab)) {
+          preserve.add(tab);
         }
-        if (tab.hasAttribute("floorp-disablehistory")) {
-          continue;
-        }
-        count++;
       }
     }
-    return count;
+    return preserve;
   }
 
   private resolveCurrentWorkspaceId(): TWorkspaceID | null {
@@ -981,6 +1003,7 @@ export class WorkspacesBackupService {
     mode: WorkspaceBackupMode,
     isFocused: boolean,
     privateContainerUserContextId: number | null,
+    capturedTabs: Set<XULElement>,
   ): WorkspaceBackupWindow | null {
     const gBrowser = window.gBrowser;
     if (!gBrowser) {
@@ -1042,6 +1065,7 @@ export class WorkspacesBackupService {
         }
       }
       tabs.push(backupTab);
+      capturedTabs.add(tab);
     }
 
     return { isFocused, tabs };
@@ -1056,7 +1080,7 @@ export class WorkspacesBackupService {
    */
   private async captureAllWorkspaces(
     kind: WorkspaceBackupKind,
-  ): Promise<WorkspaceBackupFile> {
+  ): Promise<{ file: WorkspaceBackupFile; capturedTabs: Set<XULElement> }> {
     const windows = this.getBrowserWindows();
     if (windows.length === 0) {
       throw new Error("no-browser-window");
@@ -1079,6 +1103,7 @@ export class WorkspacesBackupService {
     const workspacesEnabled = isWorkspacesEnabled();
     const mode: WorkspaceBackupMode = workspacesEnabled ? "workspaces" : "tabs";
 
+    const capturedTabs = new Set<XULElement>();
     const capturedWindows: WorkspaceBackupWindow[] = [];
     for (const window of windows) {
       const captured = this.captureWindowTabs(
@@ -1087,6 +1112,7 @@ export class WorkspacesBackupService {
         mode,
         window === focusedWindow,
         privateContainerUserContextId,
+        capturedTabs,
       );
       if (captured) {
         capturedWindows.push(captured);
@@ -1103,13 +1129,16 @@ export class WorkspacesBackupService {
       throw new Error("workspace-state-unavailable");
     }
 
-    return buildBackupFile(
-      kind,
-      mode,
-      Date.now(),
-      capturedWindows,
-      workspaceState ?? undefined,
-    );
+    return {
+      file: buildBackupFile(
+        kind,
+        mode,
+        Date.now(),
+        capturedWindows,
+        workspaceState ?? undefined,
+      ),
+      capturedTabs,
+    };
   }
 
   private scheduleNext(delayMs?: number): void {

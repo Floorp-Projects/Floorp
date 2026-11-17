@@ -295,6 +295,7 @@
         "errorNotFound": "そのバックアップファイルは存在しません。",
         "errorInvalidName": "そのバックアップファイル名は無効です。",
         "errorCaptureInvalid": "取得したデータが検証を通らなかったため、バックアップは書き込まれていません。",
+        "errorTooLarge": "バックアップがサイズ上限を超えるため、書き込みませんでした。",
         "modeTabs": "タブ",
         "modeWorkspaces": "ワークスペース",
         "workspacesFileWarning": "このバックアップはワークスペース有効時に作成されたものです。ワークスペースのグループ分けなしでタブを開き直します。"

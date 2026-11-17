@@ -296,6 +296,7 @@
         "errorNotFound": "That backup file no longer exists.",
         "errorInvalidName": "That backup file name is not valid.",
         "errorCaptureInvalid": "The captured data was rejected by validation, so no backup was written.",
+        "errorTooLarge": "The backup would exceed the size limit, so it was not written.",
         "modeTabs": "Tabs",
         "modeWorkspaces": "Workspaces",
         "workspacesFileWarning": "This backup was captured with workspaces enabled; its tabs are reopened without workspace grouping."
