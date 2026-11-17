@@ -477,11 +477,12 @@ export const selectExcessPreRestoreBackups = (
   ) {
     return [];
   }
+  const keep = Math.floor(maxPreRestoreBackups);
   const preRestore = summaries
     .filter((summary) => summary.kind === "pre-restore")
     .sort((a, b) => b.capturedAt - a.capturedAt);
   // Keep the newest N and return the excess oldest-first, as documented.
-  return preRestore.slice(maxPreRestoreBackups).reverse();
+  return preRestore.slice(keep).reverse();
 };
 
 /* -------------------------------------------------------------------------
@@ -503,6 +504,15 @@ const toNonNegativeNumber = (value: unknown, fallback: number): number => {
 };
 
 /**
+ * Counts must be whole numbers. A fractional value such as 0.5 would make
+ * `Array.prototype.slice` behave like 0 and delete every retained file.
+ */
+const toNonNegativeInteger = (value: unknown, fallback: number): number => {
+  const normalized = toNonNegativeNumber(value, fallback);
+  return Math.floor(normalized);
+};
+
+/**
  * Decodes the backup config pref. Invalid or missing fields fall back to the
  * documented defaults instead of rejecting the whole object.
  */
@@ -518,11 +528,11 @@ export const normalizeBackupConfig = (
       source.intervalMinutes,
       DEFAULT_WORKSPACE_BACKUP_CONFIG.intervalMinutes,
     ),
-    retentionDays: toNonNegativeNumber(
+    retentionDays: toNonNegativeInteger(
       source.retentionDays,
       DEFAULT_WORKSPACE_BACKUP_CONFIG.retentionDays,
     ),
-    maxPreRestoreBackups: toNonNegativeNumber(
+    maxPreRestoreBackups: toNonNegativeInteger(
       source.maxPreRestoreBackups,
       DEFAULT_WORKSPACE_BACKUP_CONFIG.maxPreRestoreBackups,
     ),

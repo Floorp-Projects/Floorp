@@ -424,6 +424,15 @@ function testConfigRoundTrip(): void {
   );
 }
 
+function testFractionalRetentionCapIsFloored(): void {
+  const config = normalizeBackupConfig({
+    maxPreRestoreBackups: 0.5,
+    retentionDays: 1.9,
+  });
+  assertEquals(config.maxPreRestoreBackups, 0, "fractional cap floored");
+  assertEquals(config.retentionDays, 1, "fractional days floored");
+}
+
 function testParseConfigInvalidJson(): void {
   const parsed = parseBackupConfig("{not json");
   assertEquals(parsed.enabled, true, "falls back to defaults");
@@ -478,6 +487,10 @@ export function runAllTests(): void {
       fn: testNormalizeConfigDefaultsAndOverrides,
     },
     { name: "config round trip", fn: testConfigRoundTrip },
+    {
+      name: "fractional retention cap is floored",
+      fn: testFractionalRetentionCapIsFloored,
+    },
     { name: "parse config invalid json", fn: testParseConfigInvalidJson },
   ];
 

@@ -406,7 +406,12 @@ export class WorkspacesBackupService {
     await writeBackupFile(path, bytes);
 
     const stat = await IOUtils.stat(path);
-    await this.cleanupRetention();
+    // The file just written must survive retention: a pre-restore copy that is
+    // deleted before the destructive restore runs is worse than no copy.
+    await this.cleanupRetention(fileName);
+    if (!(await IOUtils.exists(path))) {
+      throw new Error("backup-retention-removed-new-file");
+    }
     return buildBackupSummary(fileName, file, stat.size ?? 0);
   }
 
@@ -503,14 +508,31 @@ export class WorkspacesBackupService {
         // restore without a way back.
         return { success: false, error: "pre-restore-disabled" };
       }
+      let preRestore: WorkspaceBackupSummary;
       try {
-        await this.backupNow("pre-restore");
+        preRestore = await this.backupNow("pre-restore");
       } catch (error) {
         console.error(
           "WorkspacesBackupService: failed to capture pre-restore backup",
           error,
         );
         return { success: false, error: "pre-restore-failed" };
+      }
+      // The restore closes every tab that exists when it starts. A tab opened
+      // between the safety copy and the restore would be closed without being
+      // in the copy, so abort instead of silently losing it.
+      let currentTabCount: number;
+      try {
+        currentTabCount = this.countRestorableTabs();
+      } catch (error) {
+        console.error(
+          "WorkspacesBackupService: failed to verify restore state",
+          error,
+        );
+        return { success: false, error: "private-detection-failed" };
+      }
+      if (currentTabCount !== preRestore.tabCount) {
+        return { success: false, error: "restore-state-changed" };
       }
     }
 
@@ -680,12 +702,18 @@ export class WorkspacesBackupService {
     );
   }
 
-  /** Single-flight retention cleanup. */
-  public cleanupRetention(): Promise<void> {
+  /**
+   * Single-flight retention cleanup.
+   *
+   * `protectedFileName` is never deleted, even when it falls outside the
+   * retention window (for example when the clock moved backwards and existing
+   * copies carry future timestamps).
+   */
+  public cleanupRetention(protectedFileName?: string): Promise<void> {
     if (this.cleanupInFlight) {
       return this.cleanupInFlight;
     }
-    const run = this.runCleanupRetention().finally(() => {
+    const run = this.runCleanupRetention(protectedFileName).finally(() => {
       if (this.cleanupInFlight === run) {
         this.cleanupInFlight = null;
       }
@@ -694,7 +722,9 @@ export class WorkspacesBackupService {
     return run;
   }
 
-  private async runCleanupRetention(): Promise<void> {
+  private async runCleanupRetention(
+    protectedFileName?: string,
+  ): Promise<void> {
     const summaries = await this.listBackups();
     const now = Date.now();
     const expired = selectExpiredBackups(
@@ -709,6 +739,9 @@ export class WorkspacesBackupService {
 
     const toDelete = new Set<string>();
     for (const summary of [...expired, ...excessPreRestore]) {
+      if (summary.fileName === protectedFileName) {
+        continue;
+      }
       toDelete.add(summary.fileName);
     }
     for (const fileName of toDelete) {
@@ -853,6 +886,38 @@ export class WorkspacesBackupService {
       }
     }
     return null;
+  }
+
+  /**
+   * Counts the tabs a capture would include right now. Used to detect tabs that
+   * appeared between the safety copy and the destructive restore.
+   */
+  private countRestorableTabs(): number {
+    const privateContainer = lookupPrivateContainer();
+    if (privateContainer.status === "unknown") {
+      throw new Error("private-container-detection-failed");
+    }
+    const privateContainerUserContextId =
+      privateContainer.status === "configured"
+        ? privateContainer.userContextId
+        : null;
+    let count = 0;
+    for (const window of this.getBrowserWindows()) {
+      for (const tab of window.gBrowser?.tabs ?? []) {
+        const userContextId = toNumber(tab.getAttribute("usercontextid"));
+        if (
+          privateContainerUserContextId !== null &&
+          userContextId === privateContainerUserContextId
+        ) {
+          continue;
+        }
+        if (tab.hasAttribute("floorp-disablehistory")) {
+          continue;
+        }
+        count++;
+      }
+    }
+    return count;
   }
 
   private resolveCurrentWorkspaceId(): TWorkspaceID | null {

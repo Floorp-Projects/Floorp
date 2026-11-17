@@ -960,10 +960,13 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
         this.tabManagerCtx.updateTabsVisibility();
       }
     } catch (error) {
+      // Propagate: the caller must roll back rather than continue a destructive
+      // restore with tabs that still point at workspaces that no longer exist.
       console.error(
         "WorkspacesService: failed to reassign tabs on reset",
         error,
       );
+      throw error;
     }
 
     return newWorkspaceId;
