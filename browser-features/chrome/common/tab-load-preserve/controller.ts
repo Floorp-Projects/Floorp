@@ -25,11 +25,28 @@ const STATE_IS_NETWORK = 0x00040000;
 const LOCATION_CHANGE_SAME_DOCUMENT = 0x00000001;
 const LOCATION_CHANGE_ERROR_PAGE = 0x00000004;
 
-const LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP = 0x0008;
-const LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL = 0x0020;
+const LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP = 0x100000;
+const LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL = 0x40000;
 const LOAD_FLAGS_BYPASS_CACHE = 0x0100;
 const LOAD_FLAGS_BYPASS_PROXY = 0x0200;
-const LOAD_FLAGS_FIXUP_SCHEME_TYPOS = 0x0800;
+const LOAD_FLAGS_FIXUP_SCHEME_TYPOS = 0x200000;
+
+function getWebNavigationLoadFlags() {
+  const nav =
+    typeof Ci !== "undefined" ? Ci.nsIWebNavigation : undefined;
+  return {
+    allowThirdPartyFixup:
+      nav?.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP ??
+      LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP,
+    disallowInheritPrincipal:
+      nav?.LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL ??
+      LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL,
+    bypassCache: nav?.LOAD_FLAGS_BYPASS_CACHE ?? LOAD_FLAGS_BYPASS_CACHE,
+    bypassProxy: nav?.LOAD_FLAGS_BYPASS_PROXY ?? LOAD_FLAGS_BYPASS_PROXY,
+    fixupSchemeTypos:
+      nav?.LOAD_FLAGS_FIXUP_SCHEME_TYPOS ?? LOAD_FLAGS_FIXUP_SCHEME_TYPOS,
+  };
+}
 
 const DEFAULT_CANCELLED_OLD_LOAD_STATUS = 0x805d0027;
 const HAS_SCHEME_RE = /^[a-zA-Z][a-zA-Z\d+.-]*:/;
@@ -519,11 +536,12 @@ export class TabLoadPreserveController {
     record.preservedUrl = null;
     record.activeLoad = null;
 
+    const flags = getWebNavigationLoadFlags();
     const effectiveFlags =
-      LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP |
-      LOAD_FLAGS_FIXUP_SCHEME_TYPOS |
-      LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL |
-      (reloadFlags & (LOAD_FLAGS_BYPASS_CACHE | LOAD_FLAGS_BYPASS_PROXY));
+      flags.allowThirdPartyFixup |
+      flags.fixupSchemeTypos |
+      flags.disallowInheritPrincipal |
+      (reloadFlags & (flags.bypassCache | flags.bypassProxy));
 
     try {
       browser.userTypedValue = targetUrl;

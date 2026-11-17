@@ -458,6 +458,12 @@ function testReloadRetriesPreservedUrlInsteadOfReloadingAboutBlank(): void {
     "system-principal",
     "system principal should be passed for URL bar / preserved retry",
   );
+  const expectedFlags = 0x100000 | 0x200000 | 0x40000 | 0x0100;
+  assertEquals(
+    h.browser.fixupLoads[0].loadFlags,
+    expectedFlags,
+    "retry should include fixup, disallow-inherit-principal, and bypass-cache flags",
+  );
 }
 
 function testReloadTabRetriesPreservedUrlAndClearsWhenClearedByUser(): void {
