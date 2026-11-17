@@ -59,6 +59,7 @@ export function BackupDisclosure() {
   const [config, setConfig] = useState<BackupConfig | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(false);
+  const [loadFailed, setLoadFailed] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -68,8 +69,10 @@ export function BackupDisclosure() {
       }
     }).catch((loadError) => {
       console.error("[Welcome] Failed to read backup config", loadError);
+      // Do not fall back to defaults: writing them back would overwrite the
+      // user's real settings. Leave the switch disabled instead.
       if (active) {
-        setConfig({ ...DEFAULT_CONFIG });
+        setLoadFailed(true);
       }
     });
     return () => {
@@ -115,12 +118,15 @@ export function BackupDisclosure() {
         <Switch
           id="welcome-backup-enabled"
           checked={config?.enabled ?? true}
-          disabled={config === null || saving}
+          disabled={config === null || loadFailed || saving}
           onChange={(event: ChangeEvent<HTMLInputElement>) =>
             void toggle(event.currentTarget.checked)}
         />
       </div>
       <p className={styles.muted}>{t("setupV5.backupDetails")}</p>
+      {loadFailed && (
+        <p role="alert" className={styles.error}>{t("ui.loadError")}</p>
+      )}
       {error && <p role="alert" className={styles.error}>{t("ui.saveError")}
       </p>}
       <div className={styles.links}>

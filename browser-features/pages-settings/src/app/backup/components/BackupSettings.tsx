@@ -56,7 +56,8 @@ export function BackupSettings() {
   const [backups, setBackups] = useState<WorkspaceBackupSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
-  const [actionError, setActionError] = useState(false);
+  // Holds the failure code so the UI can explain why the action was rejected.
+  const [actionError, setActionError] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [workspacesEnabled, setWorkspacesEnabled] = useState(true);
   const [restoreTarget, setRestoreTarget] = useState<
@@ -127,7 +128,7 @@ export function BackupSettings() {
     action: () => Promise<{ success: boolean; error?: string }>,
   ) => {
     setBusy(key);
-    setActionError(false);
+    setActionError(null);
     try {
       const result = await action();
       if (!result.success) {
@@ -135,7 +136,7 @@ export function BackupSettings() {
           "[Settings:backup] Backup action failed",
           result.error,
         );
-        setActionError(true);
+        setActionError(result.error ?? "unknown");
         return false;
       }
       await refresh();
@@ -170,7 +171,7 @@ export function BackupSettings() {
     const current = await getWorkspacesEnabled();
     if (current !== planned) {
       setWorkspacesEnabled(current);
-      setActionError(true);
+      setActionError("restore-state-changed");
       return;
     }
     await runAction("restore", () => restoreBackup(target.fileName));
@@ -182,6 +183,33 @@ export function BackupSettings() {
   const handleDeleteAll = async () => {
     setShowDeleteAll(false);
     await runAction("delete-all", () => deleteAllBackups());
+  };
+
+  /**
+   * Maps a service failure code to a message. The service returns codes rather
+   * than prose so the UI can explain what happened and what to do next.
+   */
+  const describeActionError = (code: string): string => {
+    switch (code) {
+      case "pre-restore-failed":
+        return t("backup.errorPreRestoreFailed");
+      case "pre-restore-disabled":
+        return t("backup.errorPreRestoreDisabled");
+      case "restore-state-changed":
+        return t("backup.errorStateChanged");
+      case "restore-partial-failure":
+        return t("backup.errorPartialFailure");
+      case "private-detection-failed":
+        return t("backup.errorPrivateDetection");
+      case "backup-not-found":
+        return t("backup.errorNotFound");
+      case "invalid-file-name":
+        return t("backup.errorInvalidName");
+      case "backup-capture-invalid":
+        return t("backup.errorCaptureInvalid");
+      default:
+        return t("workspaces.backupActionError");
+    }
   };
 
   const intervalLabel = (value: number, unit: "minutes" | "hours") =>
@@ -360,7 +388,7 @@ export function BackupSettings() {
                 role="alert"
                 className="text-sm text-red-600 dark:text-red-400"
               >
-                {t("workspaces.backupActionError")}
+                {describeActionError(actionError)}
               </p>
             )
             : null}
