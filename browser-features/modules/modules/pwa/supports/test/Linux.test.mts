@@ -72,6 +72,112 @@ export async function runAllTests(): Promise<void> {
 
   await runTests("Linux.test.mts", [
     {
+      name: "renamed launcher deletion failure preserves icons for retry",
+      fn: () =>
+        withSandbox(async (root, support) => {
+          const files = paths(root);
+          await support.install(manifest);
+          const renamed = PathUtils.join(
+            PathUtils.parent(files.desktop)!,
+            "renamed.desktop",
+          );
+          await IOUtils.move(files.desktop, renamed);
+          const remove = Object.getOwnPropertyDescriptor(IOUtils, "remove")!;
+          const originalRemove = IOUtils.remove.bind(IOUtils);
+          let rejected = false;
+          try {
+            Object.defineProperty(IOUtils, "remove", {
+              ...remove,
+              value: (path: string, options?: RemoveOptions) => {
+                if (path === renamed) {
+                  return Promise.reject(new Error("fixture deletion failure"));
+                }
+                return originalRemove(path, options);
+              },
+            });
+            await support.uninstall(manifest);
+          } catch {
+            rejected = true;
+          } finally {
+            Object.defineProperty(IOUtils, "remove", remove);
+          }
+          assert(rejected, "Uninstall reports the launcher deletion failure");
+          assert(await IOUtils.exists(renamed), "Failed launcher remains");
+          assert(await IOUtils.exists(files.svg), "Its icon remains usable");
+          await support.uninstall(manifest);
+          assert(!await IOUtils.exists(renamed), "Retry removes the launcher");
+          assert(!await IOUtils.exists(files.svg), "Retry removes the icon");
+        }),
+    },
+    {
+      name:
+        "uninstall finds renamed launchers by app and exact profile command",
+      fn: () =>
+        withSandbox(async (root, support) => {
+          const files = paths(root);
+          await support.install(manifest);
+          const original = await IOUtils.readUTF8(files.desktop);
+          const directory = PathUtils.parent(files.desktop)!;
+          const renamed = PathUtils.join(
+            directory,
+            "org.mozilla.firefox.webapp-{linux-launcher-regression}.desktop",
+          );
+          const duplicate = PathUtils.join(directory, "My renamed app.desktop");
+          const legacy = PathUtils.join(
+            PathUtils.parent(paths(root, true).desktop)!,
+            "Renamed legacy app.desktop",
+          );
+          await IOUtils.move(files.desktop, renamed);
+          await IOUtils.writeUTF8(duplicate, original);
+          await IOUtils.makeDirectory(PathUtils.parent(legacy)!, {
+            createAncestors: true,
+          });
+          await IOUtils.writeUTF8(legacy, original);
+          const preserved = [
+            [
+              "foreign-profile.desktop",
+              original.replace("Exec=", "Exec=other "),
+            ],
+            [
+              "foreign-id.desktop",
+              original.replace("X-Floorp-Id=", "X-Floorp-Id=other-"),
+            ],
+            ["duplicate-exec.desktop", original + "Exec=other\n"],
+            ["backup.txt", original],
+          ];
+          for (const [name, text] of preserved) {
+            await IOUtils.writeUTF8(PathUtils.join(directory, name), text);
+          }
+          const nested = PathUtils.join(directory, "nested.desktop");
+          await IOUtils.makeDirectory(nested);
+          await IOUtils.writeUTF8(
+            PathUtils.join(nested, "owned.desktop"),
+            original,
+          );
+          await support.uninstall(manifest);
+          for (
+            const path of [files.desktop, renamed, duplicate, legacy, files.svg]
+          ) {
+            assert(
+              !await IOUtils.exists(path),
+              `Owned launcher/icon removed: ${path}`,
+            );
+          }
+          for (const [name, text] of preserved) {
+            assertEquals(
+              await IOUtils.readUTF8(PathUtils.join(directory, name)),
+              text,
+              `Unrelated entry is preserved: ${name}`,
+            );
+          }
+          assertEquals(
+            await IOUtils.readUTF8(PathUtils.join(nested, "owned.desktop")),
+            original,
+            "Nested directories are not traversed",
+          );
+        }),
+    },
+    {
       name:
         "SVG install, rejected store update, and uninstall preserve the launcher",
       fn: () =>
