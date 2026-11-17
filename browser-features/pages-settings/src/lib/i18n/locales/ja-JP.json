@@ -320,7 +320,7 @@
         "initializeConfirmAction": "初期化",
         "initializeConfirmCancel": "キャンセル",
         "backupAutoEnable": "自動バックアップ",
-        "backupAutoEnableDescription": "すべてのワークスペースをプロファイルに定期的に保存します。",
+        "backupAutoEnableDescription": "タブとワークスペースをプロファイルに定期的に保存します。",
         "backupInterval": "バックアップ間隔",
         "backupIntervalDescription": "自動バックアップを実行する頻度です。",
         "backupRetention": "バックアップの保持期間",

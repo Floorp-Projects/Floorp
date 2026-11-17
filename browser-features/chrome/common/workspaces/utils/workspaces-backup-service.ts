@@ -98,6 +98,16 @@ const readBackupConfig = (): WorkspaceBackupConfig =>
 const isWorkspacesEnabled = (): boolean =>
   Services.prefs.getBoolPref(WORKSPACE_ENABLED_PREF_NAME, true);
 
+/**
+ * Clamps a captured string to the validator's limit.
+ *
+ * Capture must never emit a value the validator rejects: a single over-long
+ * title would otherwise make `writeBackupFile` discard the whole backup and
+ * break every subsequent automatic run.
+ */
+const truncate = (value: string | null, max: number): string | null =>
+  value !== null && value.length > max ? value.slice(0, max) : value;
+
 /* -------------------------------------------------------------------------
  * Privacy
  * ---------------------------------------------------------------------- */
@@ -891,8 +901,11 @@ export class WorkspacesBackupService {
       );
       const backupTab: WorkspaceBackupTab = {
         state: sanitizeTabState(snapshotTab.state),
-        title: snapshotTab.title,
-        url: snapshotTab.url,
+        title: truncate(
+          snapshotTab.title,
+          WORKSPACE_BACKUP_LIMITS.maxTitleLength,
+        ),
+        url: truncate(snapshotTab.url, WORKSPACE_BACKUP_LIMITS.maxUrlLength),
         pinned: snapshotTab.pinned,
         isSelected: tab === selectedTab,
         userContextId: snapshotTab.userContextId,

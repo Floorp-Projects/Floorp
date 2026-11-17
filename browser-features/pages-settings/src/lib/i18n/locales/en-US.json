@@ -321,7 +321,7 @@
         "initializeConfirmAction": "Initialize",
         "initializeConfirmCancel": "Cancel",
         "backupAutoEnable": "Automatic backup",
-        "backupAutoEnableDescription": "Periodically save all workspaces to your profile.",
+        "backupAutoEnableDescription": "Periodically save tabs and workspaces to your profile.",
         "backupInterval": "Backup interval",
         "backupIntervalDescription": "How often automatic backups run.",
         "backupRetention": "Keep backups for",

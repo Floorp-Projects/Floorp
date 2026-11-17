@@ -136,7 +136,12 @@ const SENSITIVE_STATE_KEYS: ReadonlySet<string> = new Set([
  * persisted as-is.
  */
 const WORKSPACE_MARKER_KEYS: ReadonlySet<string> = new Set([
+  // DOM attribute name (WORKSPACE_TAB_ATTRIBUTION_ID).
   "floorpWorkspaceId",
+  // DOM attribute name (WORKSPACE_LAST_SHOW_ID). The tab state stores this
+  // attribute verbatim under `attributes`.
+  "floorpWorkspaceLastShowId",
+  // Top-level tab-state key written by the sessionstore patch.
   "floorpLastShowWorkspaceId",
   "floorpDisableHistory",
 ]);
@@ -192,7 +197,8 @@ export const isTabStateWithinLimit = (
     return true;
   }
   try {
-    return JSON.stringify(state).length <=
+    // Measure bytes, not UTF-16 code units: the limit is a byte budget.
+    return new TextEncoder().encode(JSON.stringify(state)).length <=
       WORKSPACE_BACKUP_LIMITS.maxTabStateBytes;
   } catch {
     return false;
@@ -474,7 +480,8 @@ export const selectExcessPreRestoreBackups = (
   const preRestore = summaries
     .filter((summary) => summary.kind === "pre-restore")
     .sort((a, b) => b.capturedAt - a.capturedAt);
-  return preRestore.slice(maxPreRestoreBackups);
+  // Keep the newest N and return the excess oldest-first, as documented.
+  return preRestore.slice(maxPreRestoreBackups).reverse();
 };
 
 /* -------------------------------------------------------------------------

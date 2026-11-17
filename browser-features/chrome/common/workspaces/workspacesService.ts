@@ -816,23 +816,28 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
     const tabs = [...gBrowser.tabs].filter(
       (tab) => tab.getAttribute(WORKSPACE_TAB_ATTRIBUTION_ID) === workspaceId,
     );
-    for (const tab of tabs) {
-      if (gBrowser.tabs.length <= 1) {
-        this.tabManagerCtx.setWorkspaceIdToAttribute(
-          tab,
-          fallbackWorkspaceId,
-        );
-        continue;
+    // The temporary workspace is current during a restore. Closing its last tab
+    // would otherwise make handleTabClose create a replacement tab or close the
+    // window (exitOnLastTabClose / closeWindowWithLastTab).
+    this.tabManagerCtx.runWithTabCloseSuppressed(() => {
+      for (const tab of tabs) {
+        if (gBrowser.tabs.length <= 1) {
+          this.tabManagerCtx.setWorkspaceIdToAttribute(
+            tab,
+            fallbackWorkspaceId,
+          );
+          continue;
+        }
+        try {
+          gBrowser.removeTab(tab);
+        } catch (error) {
+          console.error(
+            "WorkspacesService: failed to close replaced tab",
+            error,
+          );
+        }
       }
-      try {
-        gBrowser.removeTab(tab);
-      } catch (error) {
-        console.error(
-          "WorkspacesService: failed to close replaced tab",
-          error,
-        );
-      }
-    }
+    });
   }
 
   /**

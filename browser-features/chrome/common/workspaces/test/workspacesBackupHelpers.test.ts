@@ -250,7 +250,7 @@ function testSanitizeStripsSensitiveState(): void {
     floorpDisableHistory: "true",
     attributes: {
       floorpWorkspaceId: WS_A,
-      floorpLastShowWorkspaceId: WS_B,
+      floorpWorkspaceLastShowId: WS_B,
       image: "https://example.com/icon.png",
     },
   });
@@ -270,6 +270,10 @@ function testSanitizeStripsSensitiveState(): void {
   assert(
     !("floorpWorkspaceId" in attributes),
     "attribute workspace id removed",
+  );
+  assert(
+    !("floorpWorkspaceLastShowId" in attributes),
+    "attribute last-shown workspace id removed",
   );
   assertEquals(
     attributes.image,
