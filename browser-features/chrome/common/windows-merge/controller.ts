@@ -54,24 +54,36 @@ export interface MergeTabBrowser {
     readonly arrowScrollbox?: Element | null;
   } | null;
   adoptTab(tab: XULElement, options?: AdoptOptions): XULElement | null;
-  adoptTabGroup?(group: XULElement, options?: AdoptOptions): XULElement | null;
+  adoptTabGroup?(
+    group: XULElement,
+    options?: AdoptOptions,
+  ): StripContainer | null;
   adoptSplitView?(
     container: XULElement,
     options?: AdoptOptions,
-  ): XULElement | null;
+  ): StripContainer | null;
   hideTab?(tab: XULElement): void;
 }
 
 /** A browser window as far as the merge is concerned. */
-export type MergeWindow = Window & { gBrowser?: MergeTabBrowser };
+export type MergeWindow =
+  & Window
+  & {
+    gBrowser?: MergeTabBrowser;
+    /** Present on browser windows; popups hide their toolbar. */
+    toolbar?: { visible?: boolean };
+  };
 
 interface StripTab extends XULElement {
   closing?: boolean;
   pinned?: boolean;
-  tabs?: ArrayLike<unknown>;
+  tabs?: ArrayLike<XULElement>;
 }
 
-interface StripItem {
+/** A tab, tab group or split view: anything that can carry member tabs. */
+export type StripContainer = StripTab;
+
+export interface StripItem {
   readonly kind: MergeItemKind;
   readonly pinned: boolean;
   readonly tabCount: number;
@@ -185,7 +197,28 @@ function preserveTabState(
   }
 }
 
-function adoptItem(
+/**
+ * Copies the per-tab state of a group's or split view's members onto the tabs
+ * Firefox created for them.
+ *
+ * The adoption APIs return the new container, whose members are in the same
+ * order as the source members, so the two lists are zipped by index.
+ */
+function preserveMemberState(
+  sourceContainer: StripContainer,
+  adoptedContainer: StripContainer,
+  browser: MergeTabBrowser,
+): void {
+  const sourceMembers = Array.from(sourceContainer.tabs ?? []);
+  const adoptedMembers = Array.from(adoptedContainer.tabs ?? []);
+  const count = Math.min(sourceMembers.length, adoptedMembers.length);
+
+  for (let index = 0; index < count; index++) {
+    preserveTabState(sourceMembers[index], adoptedMembers[index], browser);
+  }
+}
+
+export function adoptItem(
   item: StripItem,
   index: number,
   target: MergeTabBrowser,
@@ -193,16 +226,22 @@ function adoptItem(
   try {
     if (item.kind === "group") {
       if (typeof target.adoptTabGroup !== "function") return false;
-      return Boolean(
-        target.adoptTabGroup(item.element, { tabIndex: index }),
-      );
+      const adoptedGroup = target.adoptTabGroup(item.element, {
+        tabIndex: index,
+      });
+      if (!adoptedGroup) return false;
+      preserveMemberState(item.element, adoptedGroup, target);
+      return true;
     }
 
     if (item.kind === "splitView") {
       if (typeof target.adoptSplitView !== "function") return false;
-      return Boolean(
-        target.adoptSplitView(item.element, { tabIndex: index }),
-      );
+      const adoptedSplitView = target.adoptSplitView(item.element, {
+        tabIndex: index,
+      });
+      if (!adoptedSplitView) return false;
+      preserveMemberState(item.element, adoptedSplitView, target);
+      return true;
     }
 
     const adoptedTab = target.adoptTab(item.element, {
@@ -266,10 +305,26 @@ function closeEmptiedWindow(window: MergeWindow): boolean {
   return true;
 }
 
+/**
+ * Whether this window belongs in a merge.
+ *
+ * Popups (`window.open` without the toolbar, e.g. a login or OAuth dialog) also
+ * report `navigator:browser`; merging one would drag its tab into the target
+ * window and then close the dialog, so they are left alone.
+ */
+export function isMergeableWindow(
+  window: MergeWindow,
+  target: Window,
+): boolean {
+  if (window === target || window.closed) return false;
+  if (!window.gBrowser) return false;
+  return window.toolbar?.visible !== false;
+}
+
 function collectSources(target: Window): WindowSource[] {
   const sources: WindowSource[] = [];
   for (const window of listBrowserWindows()) {
-    if (window === target || window.closed) continue;
+    if (!isMergeableWindow(window, target)) continue;
 
     const browser = window.gBrowser;
     if (!browser) continue;

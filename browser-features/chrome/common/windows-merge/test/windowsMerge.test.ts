@@ -19,10 +19,14 @@ import {
   invalidateCache,
 } from "../../command-palette/command-registry.ts";
 import {
+  adoptItem,
   classifyStripElement,
+  isMergeableWindow,
   MERGE_WINDOWS_ACTION_ID,
   mergeAllWindows,
   type MergeTabBrowser,
+  type MergeWindow,
+  type StripItem,
   stripItems,
 } from "../controller.ts";
 import { mergeWindowsIntoOne } from "../merge.ts";
@@ -385,6 +389,200 @@ function testPaletteSurfacesTheAction(): void {
 }
 
 // ---------------------------------------------------------------------------
+// Member state of adopted groups and split views
+// ---------------------------------------------------------------------------
+
+interface FakeTarget extends MergeTabBrowser {
+  readonly hidden: XULElement[];
+}
+
+function makeTabElement(workspaceId?: string, hidden = false): XULElement {
+  const tab = document.createElement("tab") as XULElement;
+  if (workspaceId) tab.setAttribute("floorpWorkspaceId", workspaceId);
+  if (hidden) tab.setAttribute("hidden", "true");
+  return tab;
+}
+
+function makeContainer(
+  tag: string,
+  members: XULElement[],
+): XULElement & { tabs: XULElement[] } {
+  const container = document.createElement(tag) as XULElement & {
+    tabs: XULElement[];
+  };
+  container.tabs = members;
+  return container;
+}
+
+function makeTarget(adoptedContainer: XULElement): FakeTarget {
+  const hidden: XULElement[] = [];
+  return {
+    tabs: [],
+    pinnedTabCount: 0,
+    hidden,
+    adoptTab: () => null,
+    adoptTabGroup: () => adoptedContainer as XULElement,
+    adoptSplitView: () => adoptedContainer as XULElement,
+    hideTab: (tab: XULElement) => {
+      hidden.push(tab);
+    },
+  };
+}
+
+function stripItemFor(
+  kind: StripItem["kind"],
+  element: XULElement,
+  tabCount: number,
+): StripItem {
+  return { kind, pinned: false, tabCount, element };
+}
+
+function testAdoptedGroupKeepsMemberState(): void {
+  const sourceGroup = makeContainer("tab-group", [
+    makeTabElement("workspace-a"),
+    makeTabElement("workspace-b", true),
+  ]);
+  const adoptedMembers = [makeTabElement(), makeTabElement()];
+  const adoptedGroup = makeContainer("tab-group", adoptedMembers);
+  const target = makeTarget(adoptedGroup);
+
+  const moved = adoptItem(
+    stripItemFor("group", sourceGroup as XULElement, 2),
+    0,
+    target,
+  );
+
+  assert(moved, "the group should be adopted");
+  assertEquals(
+    adoptedMembers[0].getAttribute("floorpWorkspaceId"),
+    "workspace-a",
+    "first member keeps its workspace",
+  );
+  assertEquals(
+    adoptedMembers[1].getAttribute("floorpWorkspaceId"),
+    "workspace-b",
+    "second member keeps its workspace",
+  );
+  assertEquals(
+    target.hidden.length,
+    1,
+    "only the hidden source member is hidden again",
+  );
+  assert(
+    target.hidden[0] === adoptedMembers[1],
+    "the hidden member that gets re-hidden is the mapped one",
+  );
+}
+
+function testAdoptedSplitViewKeepsMemberState(): void {
+  const sourceSplitView = makeContainer("tab-split-view-wrapper", [
+    makeTabElement(undefined, true),
+    makeTabElement("workspace-c"),
+  ]);
+  const adoptedMembers = [makeTabElement(), makeTabElement()];
+  const adoptedSplitView = makeContainer(
+    "tab-split-view-wrapper",
+    adoptedMembers,
+  );
+  const target = makeTarget(adoptedSplitView);
+
+  const moved = adoptItem(
+    stripItemFor("splitView", sourceSplitView as XULElement, 2),
+    0,
+    target,
+  );
+
+  assert(moved, "the split view should be adopted");
+  assertEquals(
+    target.hidden.length,
+    1,
+    "the hidden pane is hidden again",
+  );
+  assertEquals(
+    adoptedMembers[1].getAttribute("floorpWorkspaceId"),
+    "workspace-c",
+    "visible member keeps its workspace",
+  );
+}
+
+function testAdoptedContainerLengthMismatchIsSafe(): void {
+  const sourceGroup = makeContainer("tab-group", [
+    makeTabElement("workspace-a"),
+    makeTabElement("workspace-b"),
+  ]);
+  const adoptedGroup = makeContainer("tab-group", [makeTabElement()]);
+  const target = makeTarget(adoptedGroup);
+
+  assert(
+    adoptItem(stripItemFor("group", sourceGroup as XULElement, 2), 0, target),
+    "the group should be adopted",
+  );
+  assertEquals(
+    adoptedGroup.tabs[0].getAttribute("floorpWorkspaceId"),
+    "workspace-a",
+    "the members that exist are mapped, the extra one is ignored",
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Popup windows are not merge sources
+// ---------------------------------------------------------------------------
+
+function fakeWindow(options: {
+  isTarget?: boolean;
+  closed?: boolean;
+  hasBrowser?: boolean;
+  toolbarVisible?: boolean | undefined;
+}): MergeWindow {
+  return {
+    closed: options.closed ?? false,
+    gBrowser: options.hasBrowser === false
+      ? undefined
+      : ({} as MergeTabBrowser),
+    toolbar: options.toolbarVisible === undefined
+      ? undefined
+      : { visible: options.toolbarVisible },
+  } as unknown as MergeWindow;
+}
+
+function testPopupWindowsAreNotMergeable(): void {
+  const target = {} as Window;
+  const sameWindow = fakeWindow({ toolbarVisible: true });
+
+  assert(
+    isMergeableWindow(fakeWindow({ toolbarVisible: true }), target),
+    "a normal browser window is mergeable",
+  );
+  assert(
+    isMergeableWindow(fakeWindow({ toolbarVisible: undefined }), target),
+    "a window without a toolbar object is still mergeable",
+  );
+  assertEquals(
+    isMergeableWindow(fakeWindow({ toolbarVisible: false }), target),
+    false,
+    "a popup without a toolbar is not merged",
+  );
+  assertEquals(
+    isMergeableWindow(sameWindow, sameWindow as unknown as Window),
+    false,
+    "the target window is never a source",
+  );
+  assertEquals(
+    isMergeableWindow(
+      fakeWindow({ hasBrowser: false, toolbarVisible: true }),
+      target,
+    ),
+    false,
+    "a window without gBrowser is not merged",
+  );
+  assertEquals(
+    isMergeableWindow(fakeWindow({ closed: true }), target),
+    false,
+    "a closed window is not merged",
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Localized labels
 // ---------------------------------------------------------------------------
 
@@ -464,6 +662,22 @@ export async function runAllTests(): Promise<void> {
     {
       name: "command palette surfaces the action",
       fn: testPaletteSurfacesTheAction,
+    },
+    {
+      name: "adopted groups keep member workspace and hidden state",
+      fn: testAdoptedGroupKeepsMemberState,
+    },
+    {
+      name: "adopted split views keep member workspace and hidden state",
+      fn: testAdoptedSplitViewKeepsMemberState,
+    },
+    {
+      name: "adopted container length mismatch is safe",
+      fn: testAdoptedContainerLengthMismatchIsSafe,
+    },
+    {
+      name: "popup windows are not merge sources",
+      fn: testPopupWindowsAreNotMergeable,
     },
     { name: "EN/JA chrome locales", fn: testChromeLocales },
   ];

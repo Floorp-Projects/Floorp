@@ -111,7 +111,11 @@ async function testMergesRealBrowserWindows(): Promise<void> {
     const result = mergeAllWindows(globalThis as unknown as Window);
 
     assert(result.movedTabs >= 3, "the requested tabs moved");
-    assertEquals(result.failedItems, 0, "no tab was refused");
+    assertEquals(
+      result.failedItems,
+      0,
+      `no tab was refused (sources=${expectedSources}, moved=${result.movedTabs}, closed=${result.closedWindows})`,
+    );
     assertEquals(result.skippedWindows, 0, "no window skipped");
     assertEquals(
       result.closedWindows,
