@@ -8,20 +8,25 @@
 
 import { WORKSPACE_TAB_ATTRIBUTION_ID } from "#features-chrome/common/workspaces/utils/workspaces-static-names.ts";
 import { emptyMergeResult, mergeWindowsIntoOne } from "./merge.ts";
-import type { MergeItemKind, MergeResult, MergeSource } from "./types.ts";
+import type {
+  MergeItemKind,
+  MergeResult,
+  MergeTabBrowser,
+  MergeWindow,
+  PrivateBrowsingUtilsModule,
+  StripContainer,
+  StripItem,
+  StripTab,
+  WindowSource,
+} from "./types.ts";
 
-/** Action id used by the command palette, keyboard shortcuts and gestures. */
-export const MERGE_WINDOWS_ACTION_ID = "floorp-merge-all-windows";
-
-const BROWSER_WINDOW_TYPE = "navigator:browser";
-
-const STRIP_TAG_TAB = "tab";
-const STRIP_TAG_GROUP = "tab-group";
-const STRIP_TAG_SPLIT_VIEW = "tab-split-view-wrapper";
-
-interface PrivateBrowsingUtilsModule {
-  PrivateBrowsingUtils: { isWindowPrivate(window: Window): boolean };
-}
+export type {
+  MergeTabBrowser,
+  MergeWindow,
+  StripContainer,
+  StripItem,
+  StripTab,
+} from "./types.ts";
 
 let privateBrowsingUtils:
   | PrivateBrowsingUtilsModule["PrivateBrowsingUtils"]
@@ -39,61 +44,14 @@ function getPrivateBrowsingUtils(): PrivateBrowsingUtilsModule[
   return privateBrowsingUtils;
 }
 
-interface AdoptOptions {
-  elementIndex?: number;
-  tabIndex?: number;
-  selectTab?: boolean;
-}
+/** Action id used by the command palette, keyboard shortcuts and gestures. */
+export const MERGE_WINDOWS_ACTION_ID = "floorp-merge-all-windows";
 
-/** The part of gBrowser this feature uses. */
-export interface MergeTabBrowser {
-  readonly tabs: ArrayLike<XULElement>;
-  readonly pinnedTabCount: number;
-  readonly tabContainer?: {
-    readonly pinnedTabsContainer?: Element | null;
-    readonly arrowScrollbox?: Element | null;
-  } | null;
-  adoptTab(tab: XULElement, options?: AdoptOptions): XULElement | null;
-  adoptTabGroup?(
-    group: XULElement,
-    options?: AdoptOptions,
-  ): StripContainer | null;
-  adoptSplitView?(
-    container: XULElement,
-    options?: AdoptOptions,
-  ): StripContainer | null;
-  hideTab?(tab: XULElement): void;
-}
+const BROWSER_WINDOW_TYPE = "navigator:browser";
 
-/** A browser window as far as the merge is concerned. */
-export type MergeWindow =
-  & Window
-  & {
-    gBrowser?: MergeTabBrowser;
-    /** Present on browser windows; popups hide their toolbar. */
-    toolbar?: { visible?: boolean };
-  };
-
-interface StripTab extends XULElement {
-  closing?: boolean;
-  pinned?: boolean;
-  tabs?: ArrayLike<XULElement>;
-}
-
-/** A tab, tab group or split view: anything that can carry member tabs. */
-export type StripContainer = StripTab;
-
-export interface StripItem {
-  readonly kind: MergeItemKind;
-  readonly pinned: boolean;
-  readonly tabCount: number;
-  readonly element: XULElement;
-}
-
-interface WindowSource extends MergeSource {
-  readonly window: MergeWindow;
-  readonly browser: MergeTabBrowser;
-}
+const STRIP_TAG_TAB = "tab";
+const STRIP_TAG_GROUP = "tab-group";
+const STRIP_TAG_SPLIT_VIEW = "tab-split-view-wrapper";
 
 /**
  * Classifies one child of the tab strip.
