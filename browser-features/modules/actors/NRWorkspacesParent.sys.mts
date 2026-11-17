@@ -14,6 +14,12 @@ type BrowserWindowWithWorkspaces = Window & {
   workspacesFuncs?: WorkspacesFuncs;
 };
 
+interface PrivateBrowsingUtilsModule {
+  PrivateBrowsingUtils: {
+    isWindowPrivate(window: Window): boolean;
+  };
+}
+
 export class NRWorkspacesParent extends JSWindowActorParent {
   receiveMessage(message: ReceiveMessageArgument) {
     switch (message.name) {
@@ -57,6 +63,40 @@ export class NRWorkspacesParent extends JSWindowActorParent {
     }
   }
 
+  /**
+   * Resolves the browser window that hosts the requesting document.
+   *
+   * Using the most-recent window instead would apply a destructive restore to a
+   * window the user is not looking at.
+   */
+  private resolveRequestingWindow(): BrowserWindowWithWorkspaces | null {
+    const requesting = this.browsingContext?.topChromeWindow as
+      | BrowserWindowWithWorkspaces
+      | null;
+    if (requesting) {
+      return requesting;
+    }
+    return Services.wm.getMostRecentWindow(
+      "navigator:browser",
+    ) as BrowserWindowWithWorkspaces | null;
+  }
+
+  /** Returns false only when the window is known to be a normal window. */
+  private isPrivateWindow(window: Window): boolean | null {
+    try {
+      const module = ChromeUtils.importESModule(
+        "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
+      ) as unknown as PrivateBrowsingUtilsModule;
+      return module.PrivateBrowsingUtils.isWindowPrivate(window);
+    } catch (error) {
+      console.error(
+        "NRWorkspacesParent: private window detection failed",
+        error,
+      );
+      return null;
+    }
+  }
+
   private async handleBackupRequest(
     message: ReceiveMessageArgument,
   ): Promise<void> {
@@ -64,10 +104,17 @@ export class NRWorkspacesParent extends JSWindowActorParent {
       ? message.data.requestId
       : null;
     try {
-      const window = Services.wm.getMostRecentWindow(
-        "navigator:browser",
-      ) as BrowserWindowWithWorkspaces | null;
-      const funcs = window?.workspacesBackupFuncs ?? window?.workspacesFuncs;
+      const window = this.resolveRequestingWindow();
+      if (!window) {
+        throw new Error("workspaces-unavailable");
+      }
+      // A destructive restore must never run against a private window: the
+      // pre-restore safety copy excludes private windows, so its tabs could not
+      // be recovered afterwards.
+      if (this.isPrivateWindow(window) !== false) {
+        throw new Error("private-window-unsupported");
+      }
+      const funcs = window.workspacesBackupFuncs ?? window.workspacesFuncs;
       if (!funcs) {
         throw new Error("workspaces-unavailable");
       }

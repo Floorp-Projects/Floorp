@@ -97,7 +97,7 @@ export default function Page() {
           {t("pages.backup")}
         </h1>
         <p className="floorp-page-description">
-          {t("backup.description")}
+          {t("backup.pageDescription")}
         </p>
       </div>
 

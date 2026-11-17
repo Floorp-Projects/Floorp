@@ -280,6 +280,8 @@ export interface RestoreTabOutcome {
   index: number;
   ok: boolean;
   error?: string;
+  /** The created tab element, when creation succeeded. */
+  tab?: XULElement;
 }
 
 export interface RestoreTabsOptions<T extends RestorableTab> {
@@ -420,7 +422,7 @@ export const restoreTabsIntoWindow = async <T extends RestorableTab>(
       targetTab = tab;
     }
 
-    outcomes.push({ index, ok, error: errorMessage });
+    outcomes.push({ index, ok, error: errorMessage, tab });
   }
 
   if (targetTab) {

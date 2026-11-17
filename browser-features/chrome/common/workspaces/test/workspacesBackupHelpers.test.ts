@@ -235,7 +235,12 @@ function testDanglingWorkspaceReferences(): void {
 
 function testSanitizeStripsSensitiveState(): void {
   const sanitized = sanitizeTabState({
-    entries: [{ url: "https://example.com" }],
+    entries: [{
+      url: "https://example.com",
+      // Nested occurrences must be removed too, not just the top-level keys.
+      formdata: { field: "secret" },
+      scroll: "0,10",
+    }],
     index: 1,
     formdata: { field: "secret" },
     storage: { key: "value" },
@@ -272,6 +277,10 @@ function testSanitizeStripsSensitiveState(): void {
     "unrelated attributes kept",
   );
   assertEquals(sanitized!.index, 1, "unrelated state kept");
+  const entries = sanitized!.entries as Array<Record<string, unknown>>;
+  assert(!("formdata" in entries[0]), "nested formdata removed");
+  assert(!("scroll" in entries[0]), "nested scroll removed");
+  assertEquals(entries[0].url, "https://example.com", "nested url kept");
 }
 
 function testSanitizeKeepsNull(): void {

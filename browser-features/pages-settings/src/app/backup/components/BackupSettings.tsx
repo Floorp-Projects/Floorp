@@ -62,6 +62,12 @@ export function BackupSettings() {
   const [restoreTarget, setRestoreTarget] = useState<
     WorkspaceBackupSummary | null
   >(null);
+  // Workspaces state captured when the confirm dialog opened. The service reads
+  // the pref again at restore time, so the dialog must not rely on a value that
+  // may be stale by the time the user confirms.
+  const [restorePlanEnabled, setRestorePlanEnabled] = useState<
+    boolean | null
+  >(null);
   const [showDeleteAll, setShowDeleteAll] = useState(false);
 
   const dateFormatter = useMemo(
@@ -98,13 +104,19 @@ export function BackupSettings() {
 
   useEffect(() => {
     let active = true;
-    void getWorkspacesEnabled().then((value) => {
-      if (active) {
-        setWorkspacesEnabled(value);
-      }
-    });
+    const refresh = () => {
+      void getWorkspacesEnabled().then((value) => {
+        if (active) {
+          setWorkspacesEnabled(value);
+        }
+      });
+    };
+    refresh();
+    // Another window can toggle the feature while this page stays open.
+    globalThis.addEventListener("focus", refresh);
     return () => {
       active = false;
+      globalThis.removeEventListener("focus", refresh);
     };
   }, []);
 
@@ -135,10 +147,32 @@ export function BackupSettings() {
 
   const handleBackupNow = () => runAction("backup-now", () => backupNow());
 
-  const handleRestore = async () => {
-    if (!restoreTarget) return;
-    const target = restoreTarget;
+  const openRestoreDialog = async (backup: WorkspaceBackupSummary) => {
+    const current = await getWorkspacesEnabled();
+    setWorkspacesEnabled(current);
+    setRestorePlanEnabled(current);
+    setRestoreTarget(backup);
+  };
+
+  const closeRestoreDialog = () => {
     setRestoreTarget(null);
+    setRestorePlanEnabled(null);
+  };
+
+  const handleRestore = async () => {
+    if (!restoreTarget || restorePlanEnabled === null) return;
+    const target = restoreTarget;
+    const planned = restorePlanEnabled;
+    closeRestoreDialog();
+    // Re-check immediately before the destructive call: if the feature was
+    // toggled in another window the dialog wording no longer matches what the
+    // service would do, so refuse instead of guessing.
+    const current = await getWorkspacesEnabled();
+    if (current !== planned) {
+      setWorkspacesEnabled(current);
+      setActionError(true);
+      return;
+    }
     await runAction("restore", () => restoreBackup(target.fileName));
   };
 
@@ -174,7 +208,7 @@ export function BackupSettings() {
       ? t("backup.modeWorkspaces")
       : t("backup.modeTabs");
 
-  const restoreWillReplace = workspacesEnabled &&
+  const restoreWillReplace = (restorePlanEnabled ?? workspacesEnabled) &&
     restoreTarget?.mode === "workspaces";
 
   return (
@@ -183,7 +217,7 @@ export function BackupSettings() {
         ? (
           <ConfirmModal
             isOpen
-            onClose={() => setRestoreTarget(null)}
+            onClose={closeRestoreDialog}
             onConfirm={handleRestore}
             title={restoreWillReplace
               ? t("workspaces.backupRestoreConfirmTitle")
@@ -399,7 +433,7 @@ export function BackupSettings() {
                           variant="secondary"
                           size="sm"
                           disabled={busy !== null}
-                          onClick={() => setRestoreTarget(backup)}
+                          onClick={() => void openRestoreDialog(backup)}
                         >
                           {workspacesEnabled
                             ? t("workspaces.backupRestore")

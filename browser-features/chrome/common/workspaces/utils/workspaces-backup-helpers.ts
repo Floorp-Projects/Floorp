@@ -124,22 +124,55 @@ export const filterBackupFiles = (paths: string[]): string[] =>
  * storage and scroll position are the sensitive parts of a tab state and are
  * not needed to restore the tab itself.
  */
-const STATE_KEYS_TO_DROP = ["formdata", "storage", "scroll"] as const;
+const SENSITIVE_STATE_KEYS: ReadonlySet<string> = new Set([
+  "formdata",
+  "storage",
+  "scroll",
+]);
 
 /**
  * Floorp workspace markers live both at the top level of a tab state and
  * inside `attributes`. They are re-derived on restore, so they must not be
  * persisted as-is.
  */
-const WORKSPACE_MARKER_KEYS = [
+const WORKSPACE_MARKER_KEYS: ReadonlySet<string> = new Set([
   "floorpWorkspaceId",
   "floorpLastShowWorkspaceId",
   "floorpDisableHistory",
-] as const;
+]);
+
+/**
+ * Depth bound for the sanitizer. SessionStore tab states are shallow; the bound
+ * only exists so a hostile file cannot make the walk pathological.
+ */
+const MAX_SANITIZE_DEPTH = 8;
+
+const sanitizeValue = (value: unknown, depth: number): unknown => {
+  if (depth > MAX_SANITIZE_DEPTH) {
+    return null;
+  }
+  if (Array.isArray(value)) {
+    return value.map((entry) => sanitizeValue(entry, depth + 1));
+  }
+  if (!isRecordValue(value)) {
+    return value;
+  }
+  const copy: Record<string, unknown> = {};
+  for (const [key, entry] of Object.entries(value)) {
+    if (SENSITIVE_STATE_KEYS.has(key) || WORKSPACE_MARKER_KEYS.has(key)) {
+      continue;
+    }
+    copy[key] = sanitizeValue(entry, depth + 1);
+  }
+  return copy;
+};
 
 /**
  * Removes sensitive and workspace-specific keys from a SessionStore tab state.
- * Returns a new object; the input is never mutated.
+ *
+ * The walk is recursive: `formdata` / `storage` / `scroll` are dropped at any
+ * depth, so a nested occurrence cannot survive the sanitizer. Returns a new
+ * object; the input is never mutated.
  */
 export const sanitizeTabState = (
   state: Record<string, unknown> | null,
@@ -147,22 +180,8 @@ export const sanitizeTabState = (
   if (!state) {
     return null;
   }
-  const copy: Record<string, unknown> = { ...state };
-  for (const key of STATE_KEYS_TO_DROP) {
-    delete copy[key];
-  }
-  for (const key of WORKSPACE_MARKER_KEYS) {
-    delete copy[key];
-  }
-  const attributes = copy.attributes;
-  if (isRecordValue(attributes)) {
-    const nextAttributes: Record<string, unknown> = { ...attributes };
-    for (const key of WORKSPACE_MARKER_KEYS) {
-      delete nextAttributes[key];
-    }
-    copy.attributes = nextAttributes;
-  }
-  return copy;
+  const result = sanitizeValue(state, 0);
+  return isRecordValue(result) ? result : null;
 };
 
 /** True when the serialized state stays within the per-tab limit. */

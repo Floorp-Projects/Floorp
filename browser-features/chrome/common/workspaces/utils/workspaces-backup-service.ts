@@ -127,19 +127,30 @@ const getPrivacyVerdict = (window: Window): PrivacyVerdict => {
 };
 
 /**
- * Returns the userContextId of Floorp's private container, or null when the
- * feature is unavailable. Tabs in this container live in normal windows, so
- * window-level privacy checks cannot exclude them.
+ * Result of resolving Floorp's private container.
+ *
+ * `none` (no private container configured) is a normal state; `unknown`
+ * (lookup threw) must abort the capture, because treating it as "none" would
+ * persist private-container tabs.
  */
-const getPrivateContainerUserContextId = (): number | null => {
+export type PrivateContainerLookup =
+  | { status: "none" }
+  | { status: "configured"; userContextId: number }
+  | { status: "unknown" };
+
+const lookupPrivateContainer = (): PrivateContainerLookup => {
   try {
-    return PrivateContainer.getPrivateContainerUserContextId();
+    const id = PrivateContainer.getPrivateContainerUserContextId();
+    if (typeof id === "number" && Number.isSafeInteger(id) && id > 0) {
+      return { status: "configured", userContextId: id };
+    }
+    return { status: "none" };
   } catch (error) {
     console.error(
       "WorkspacesBackupService: private container lookup failed",
       error,
     );
-    return null;
+    return { status: "unknown" };
   }
 };
 
@@ -161,6 +172,9 @@ const WINDOW_STARTUP_TIMEOUT_MS = 15_000;
  * Waits until the target window finished its delayed startup. `readyState`
  * alone is not enough: gBrowser and SessionStore are wired during delayed
  * startup, and touching them earlier races the window's own restore.
+ *
+ * Every resolution path shares the same timeout and unload guard so a promise
+ * that never settles cannot hang the restore forever.
  */
 const waitForDelayedStartup = (window: DelayedStartupWindow): Promise<void> => {
   return new Promise<void>((resolve, reject) => {
@@ -168,6 +182,9 @@ const waitForDelayedStartup = (window: DelayedStartupWindow): Promise<void> => {
     let observer: ((subject: nsISupports | null) => void) | null = null;
     let timer: ReturnType<typeof globalThis.setTimeout> | null = null;
 
+    const onUnload = (): void => {
+      settle(new Error("window-closed"));
+    };
     const cleanup = (): void => {
       if (timer !== null) {
         globalThis.clearTimeout(timer);
@@ -187,8 +204,9 @@ const waitForDelayedStartup = (window: DelayedStartupWindow): Promise<void> => {
         }
         observer = null;
       }
+      window.removeEventListener("unload", onUnload);
     };
-    const settle = (error?: unknown): void => {
+    function settle(error?: unknown): void {
       if (settled) {
         return;
       }
@@ -199,12 +217,19 @@ const waitForDelayedStartup = (window: DelayedStartupWindow): Promise<void> => {
       } else {
         resolve();
       }
-    };
+    }
+
+    timer = globalThis.setTimeout(() => {
+      settle(new Error("window-startup-timeout"));
+    }, WINDOW_STARTUP_TIMEOUT_MS);
+    window.addEventListener("unload", onUnload, { once: true });
 
     const startup = window.delayedStartupPromise ??
       window.gBrowserInit?.delayedStartupPromise;
     if (startup) {
-      startup.then(() => settle()).catch((error) => settle(error));
+      startup.then(() => settle()).catch((error) => {
+        settle(error ?? new Error("window-startup-failed"));
+      });
       return;
     }
     if (window.gBrowserInit?.delayedStartupFinished) {
@@ -219,15 +244,6 @@ const waitForDelayedStartup = (window: DelayedStartupWindow): Promise<void> => {
       settle();
     };
     Services.obs.addObserver(observer, "browser-delayed-startup-finished");
-    timer = globalThis.setTimeout(() => {
-      settle(new Error("window-startup-timeout"));
-    }, WINDOW_STARTUP_TIMEOUT_MS);
-
-    window.addEventListener(
-      "unload",
-      () => settle(new Error("window-closed")),
-      { once: true },
-    );
   });
 };
 
@@ -272,6 +288,13 @@ export interface RestoreTabsOptions {
   splitWindows: boolean;
   /** Workspace assigned to every restored tab, or null to leave them unassigned. */
   assignWorkspaceId: TWorkspaceID | null;
+}
+
+/** Result of a tabs-mode restore. */
+export interface RestoreTabsResult {
+  outcomes: RestoreTabOutcome[];
+  /** Number of captured windows that could not be opened. */
+  windowFailures: number;
 }
 
 /**
@@ -475,17 +498,26 @@ export class WorkspacesBackupService {
       } else if (workspacesEnabled) {
         // tabs file while workspaces are enabled: add them to the current
         // workspace, flattened into the focused window.
-        await this.restoreTabs(file, {
+        const result = await this.restoreTabs(file, {
           splitWindows: false,
           assignWorkspaceId: this.resolveCurrentWorkspaceId(),
         });
+        if (result.outcomes.some((outcome) => !outcome.ok)) {
+          return { success: false, error: "restore-partial-failure" };
+        }
       } else {
-        // Workspaces disabled: never touch the store. Keep the captured
-        // window layout when the file has one.
-        await this.restoreTabs(file, {
-          splitWindows: file.mode === "tabs",
+        // Workspaces disabled: never touch the store. Always keep the captured
+        // window layout, whatever mode the file was captured in.
+        const result = await this.restoreTabs(file, {
+          splitWindows: true,
           assignWorkspaceId: null,
         });
+        if (
+          result.windowFailures > 0 ||
+          result.outcomes.some((outcome) => !outcome.ok)
+        ) {
+          return { success: false, error: "restore-partial-failure" };
+        }
       }
       return { success: true };
     } catch (error) {
@@ -501,7 +533,7 @@ export class WorkspacesBackupService {
   public async restoreTabs(
     file: WorkspaceBackupFile,
     options: RestoreTabsOptions,
-  ): Promise<RestoreTabOutcome[]> {
+  ): Promise<RestoreTabsResult> {
     const currentWindow = this.getRestoreTargetWindow();
     const currentBrowser = currentWindow?.gBrowser;
     if (!currentWindow || !currentBrowser) {
@@ -510,13 +542,15 @@ export class WorkspacesBackupService {
 
     const windows = file.windows;
     const outcomes: RestoreTabOutcome[] = [];
+    let windowFailures = 0;
 
     if (!options.splitWindows || windows.length <= 1) {
       const tabs = windows.flatMap((window) => window.tabs);
-      return restoreTabsIntoWindow(tabs, {
+      const flatOutcomes = await restoreTabsIntoWindow(tabs, {
         gBrowser: currentBrowser,
         resolveWorkspaceId: () => options.assignWorkspaceId,
       });
+      return { outcomes: flatOutcomes, windowFailures: 0 };
     }
 
     // Multi-window restore: the focused captured window lands in the current
@@ -533,8 +567,12 @@ export class WorkspacesBackupService {
       }
     }
 
+    let flatIndex = 0;
     for (let position = 0; position < order.length; position++) {
       const captured = windows[order[position]];
+      const startIndex = flatIndex;
+      flatIndex += captured.tabs.length;
+
       if (position === 0) {
         outcomes.push(
           ...await restoreTabsIntoWindow(captured.tabs, {
@@ -553,10 +591,22 @@ export class WorkspacesBackupService {
           "WorkspacesBackupService: failed to open a restore window",
           error,
         );
+        windowFailures++;
+        outcomes.push({
+          index: startIndex,
+          ok: false,
+          error: "window-open-failed",
+        });
         continue;
       }
       const newBrowser = newWindow.gBrowser;
       if (!newBrowser) {
+        windowFailures++;
+        outcomes.push({
+          index: startIndex,
+          ok: false,
+          error: "window-unavailable",
+        });
         continue;
       }
       const initialTabs = [...newBrowser.tabs];
@@ -566,9 +616,9 @@ export class WorkspacesBackupService {
       });
       outcomes.push(...result);
 
-      // Only discard the placeholder tabs once at least one restore succeeded,
-      // and never remove the last remaining tab.
-      if (!result.some((entry) => entry.ok)) {
+      // Only discard the placeholder tabs once every tab in this window was
+      // restored, and never remove the last remaining tab.
+      if (result.some((entry) => !entry.ok)) {
         continue;
       }
       for (const tab of initialTabs) {
@@ -589,7 +639,7 @@ export class WorkspacesBackupService {
       }
     }
 
-    return outcomes;
+    return { outcomes, windowFailures };
   }
 
   public dispose(): void {
@@ -674,6 +724,14 @@ export class WorkspacesBackupService {
   private async readBackupFile(
     path: string,
   ): Promise<WorkspaceBackupFile | null> {
+    const stat = await IOUtils.stat(path);
+    if ((stat.size ?? 0) > WORKSPACE_BACKUP_LIMITS.maxFileBytes) {
+      console.error(
+        "WorkspacesBackupService: refusing to read oversized backup",
+        { path, size: stat.size },
+      );
+      return null;
+    }
     const bytes = await IOUtils.read(path, { decompress: true });
     const text = new TextDecoder().decode(bytes);
     const parsed: unknown = JSON.parse(text);
@@ -866,13 +924,23 @@ export class WorkspacesBackupService {
     if (windows.length === 0) {
       throw new Error("no-browser-window");
     }
+    const privateContainer = lookupPrivateContainer();
+    if (privateContainer.status === "unknown") {
+      // Fail closed: without a reliable container identity we cannot tell
+      // private-container tabs apart from normal ones.
+      throw new Error("private-container-detection-failed");
+    }
+    const privateContainerUserContextId =
+      privateContainer.status === "configured"
+        ? privateContainer.userContextId
+        : null;
+
     const sessionStore = await ensureSessionStore();
     const focusedWindow = Services.wm.getMostRecentWindow(
       "navigator:browser",
     ) as BrowserWindow | null;
     const workspacesEnabled = isWorkspacesEnabled();
     const mode: WorkspaceBackupMode = workspacesEnabled ? "workspaces" : "tabs";
-    const privateContainerUserContextId = getPrivateContainerUserContextId();
 
     const capturedWindows: WorkspaceBackupWindow[] = [];
     for (const window of windows) {
@@ -967,7 +1035,7 @@ export class WorkspacesBackupService {
  * ---------------------------------------------------------------------- */
 
 /**
- * Writes a backup and verifies it can be read back.
+ * Writes a backup and verifies the bytes read back match what was written.
  *
  * `IOUtils.write` is the atomic variant in the pinned runtime: it accepts
  * `tmpPath` and `compress`; there is no `writeAtomic` method.
@@ -990,9 +1058,13 @@ const writeBackupFile = async (
 
   try {
     const readBack = await IOUtils.read(path, { decompress: true });
-    const parsed: unknown = JSON.parse(new TextDecoder().decode(readBack));
-    if (!isWorkspaceBackupFile(parsed)) {
-      throw new Error("backup-verify-failed");
+    if (readBack.length !== bytes.length) {
+      throw new Error("backup-verify-length-mismatch");
+    }
+    for (let index = 0; index < bytes.length; index++) {
+      if (readBack[index] !== bytes[index]) {
+        throw new Error("backup-verify-content-mismatch");
+      }
     }
   } catch (error) {
     await IOUtils.remove(path, { ignoreAbsent: true }).catch(() => {});
