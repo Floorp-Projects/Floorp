@@ -526,12 +526,11 @@ export class TabLoadPreserveController {
     }
 
     const typed = browser.userTypedValue;
-    if (typeof typed !== "string" || typed.trim() === "") {
-      record.preservedUrl = null;
+    if (typeof typed !== "string" || typed !== record.preservedUrl) {
       return false;
     }
 
-    const targetUrl = typed;
+    const targetUrl = record.preservedUrl;
     record.preservedUrl = null;
     record.activeLoad = null;
 
