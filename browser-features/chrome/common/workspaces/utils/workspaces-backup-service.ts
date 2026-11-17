@@ -391,6 +391,12 @@ export class WorkspacesBackupService {
     }
 
     const file = await this.captureAllWorkspaces(kind);
+    if (!isWorkspaceBackupFile(file)) {
+      // Never persist a file the reader would reject. A pre-restore copy that
+      // cannot be listed or restored is worse than no copy at all, because the
+      // destructive restore would proceed without a usable safety net.
+      throw new Error("backup-capture-invalid");
+    }
     const directory = getBackupDirectory();
     await ensureDirectory(directory);
 
@@ -492,6 +498,11 @@ export class WorkspacesBackupService {
 
     // A safety copy is only needed when the restore replaces existing state.
     if (destructive) {
+      if (this.config.maxPreRestoreBackups === 0) {
+        // Retention would delete the copy immediately, leaving the destructive
+        // restore without a way back.
+        return { success: false, error: "pre-restore-disabled" };
+      }
       try {
         await this.backupNow("pre-restore");
       } catch (error) {
@@ -806,6 +817,24 @@ export class WorkspacesBackupService {
 
   /** Non-private window used as the restore destination. */
   private getRestoreTargetWindow(): BrowserWindow | null {
+    // The service belongs to exactly one window. Prefer it over the most recent
+    // window: the actor already pinned the requesting window, and a focus change
+    // while the confirmation dialog is open must not move the restore to a
+    // different window.
+    const own = globalThis as unknown as BrowserWindow;
+    if (own && !own.closed && own.gBrowser) {
+      const ownVerdict = getPrivacyVerdict(own);
+      if (ownVerdict === "normal") {
+        return own;
+      }
+      if (ownVerdict === "unknown") {
+        throw new Error("private-detection-failed");
+      }
+      throw new Error("private-window-unsupported");
+    }
+
+    // Detached contexts without their own browser window fall back to the most
+    // recently used one.
     const recent = Services.wm.getMostRecentWindow(
       "navigator:browser",
     ) as BrowserWindow | null;

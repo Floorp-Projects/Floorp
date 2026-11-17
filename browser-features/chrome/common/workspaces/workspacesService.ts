@@ -510,7 +510,7 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
     if (failedCount > 0) {
       // Keep the archive snapshot: it is the only remaining copy of the tabs
       // that failed to restore.
-      this.rollbackCreatedWorkspace(restoredWorkspaceId);
+      this.rollbackCreatedWorkspace(restoredWorkspaceId, outcomes);
       throw new Error(`archive-restore-partial-failure:${failedCount}`);
     }
 
@@ -520,8 +520,78 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
     return restoredWorkspaceId;
   }
 
-  /** Removes a workspace created by a failed restore attempt. */
-  private rollbackCreatedWorkspace(workspaceId: TWorkspaceID): void {
+  /**
+   * Re-points tabs in other normal windows at a workspace that still exists.
+   *
+   * The store is global but only the restoring window's tabs are re-attributed
+   * by resetWorkspaces(); tabs in other windows would otherwise keep IDs that
+   * no longer exist until that window happens to refresh.
+   */
+  private reassignOtherWindowsTabs(fallbackWorkspaceId: TWorkspaceID): void {
+    const enumerator = Services.wm.getEnumerator("navigator:browser");
+    while (enumerator.hasMoreElements()) {
+      const window = enumerator.getNext() as Window & {
+        closed?: boolean;
+        gBrowser?: { tabs: XULElement[] };
+      };
+      if (
+        !window || window.closed ||
+        (window as unknown) === (globalThis as unknown)
+      ) {
+        continue;
+      }
+      try {
+        const module = ChromeUtils.importESModule(
+          "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
+        ) as unknown as {
+          PrivateBrowsingUtils: { isWindowPrivate(w: Window): boolean };
+        };
+        if (module.PrivateBrowsingUtils.isWindowPrivate(window)) {
+          continue;
+        }
+      } catch (error) {
+        // Unknown privacy: leave the window alone rather than touch it.
+        console.error(
+          "WorkspacesService: skipped a window during tab re-attribution",
+          error,
+        );
+        continue;
+      }
+      const tabs = window.gBrowser?.tabs ?? [];
+      for (const tab of tabs) {
+        const workspaceId = tab.getAttribute(WORKSPACE_TAB_ATTRIBUTION_ID);
+        if (workspaceId && !this.dataManagerCtx.isWorkspaceID(workspaceId)) {
+          tab.setAttribute(WORKSPACE_TAB_ATTRIBUTION_ID, fallbackWorkspaceId);
+        }
+      }
+    }
+  }
+
+  /**
+   * Removes a workspace created by a failed restore attempt, together with the
+   * tabs that attempt already opened. Leaving those tabs behind would orphan
+   * them: their workspace is about to disappear from the store.
+   */
+  private rollbackCreatedWorkspace(
+    workspaceId: TWorkspaceID,
+    outcomes: Awaited<ReturnType<typeof restoreTabsIntoWindow>> = [],
+  ): void {
+    this.tabManagerCtx.runWithTabCloseSuppressed(() => {
+      for (const outcome of outcomes) {
+        const tab = outcome.tab;
+        if (!tab || !tab.isConnected) {
+          continue;
+        }
+        try {
+          globalThis.gBrowser.removeTab(tab);
+        } catch (error) {
+          console.error(
+            "WorkspacesService: failed to roll back a restored archive tab",
+            error,
+          );
+        }
+      }
+    });
     try {
       this.dataManagerCtx.deleteWorkspace(workspaceId);
     } catch (error) {
@@ -807,6 +877,7 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
         ? idMap.get(state.currentWorkspaceId) as TWorkspaceID
         : defaultId;
       this.changeWorkspace(currentId);
+      this.reassignOtherWindowsTabs(fallbackWorkspaceId);
       this.tabManagerCtx.updateTabsVisibility();
     } catch (error) {
       // A throw before the rollback point (store rebuild, SessionStore
