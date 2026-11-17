@@ -4,9 +4,11 @@
 import {
   buildBackupFile,
   buildBackupSummary,
+  collectTabsForWorkspacelessRestore,
   filterBackupFiles,
   formatBackupFileName,
   isBackupFileName,
+  isUnassignedSnapshot,
   isWorkspaceBackupFile,
   normalizeBackupConfig,
   parseBackupConfig,
@@ -18,6 +20,10 @@ import {
 } from "../utils/workspaces-backup-helpers.ts";
 import type { WorkspaceBackupSummary } from "../utils/backup-types.ts";
 import type { TWorkspaceID, TWorkspaceSnapshot } from "../utils/type.ts";
+import {
+  isUnassignedWorkspaceID,
+  UNASSIGNED_WORKSPACE_ID,
+} from "../utils/workspaces-static-names.ts";
 import {
   assert,
   assertEquals,
@@ -46,6 +52,10 @@ const makeSnapshot = (
     lastShownWorkspaceId: null,
   })),
 });
+
+const makeUnassignedSnapshot = (
+  tabCount: number,
+): TWorkspaceSnapshot => makeSnapshot(UNASSIGNED_WORKSPACE_ID, tabCount);
 
 const makeSummary = (
   fileName: string,
@@ -118,6 +128,84 @@ function testBuildSummaryCountsTabs(): void {
   assertEquals(summary.tabCount, 5, "tab count");
   assertEquals(summary.fileSize, 512, "file size");
   assertEquals(summary.kind, "manual", "kind");
+}
+
+function testBuildSummaryExcludesVirtualWorkspaceButCountsItsTabs(): void {
+  const realId = "00000000-0000-4000-8000-000000000001";
+  const file = buildBackupFile(
+    "auto",
+    1700000000000,
+    [],
+    null,
+    null,
+    [makeSnapshot(realId, 2), makeUnassignedSnapshot(3)],
+  );
+  const summary = buildBackupSummary("backup.jsonlz4", file, 128);
+
+  assertEquals(
+    summary.workspaceCount,
+    1,
+    "the virtual unassigned snapshot is not a real workspace",
+  );
+  assertEquals(
+    summary.tabCount,
+    5,
+    "unassigned tabs are included in the tab count",
+  );
+}
+
+function testUnassignedSnapshotDetection(): void {
+  assert(isUnassignedSnapshot(makeUnassignedSnapshot(1)), "sentinel matches");
+  assert(
+    !isUnassignedSnapshot(
+      makeSnapshot("00000000-0000-4000-8000-000000000001", 1),
+    ),
+    "real workspaces do not match",
+  );
+}
+
+function testWorkspacelessRestorePrefersUnassignedTabs(): void {
+  const unassigned = makeUnassignedSnapshot(3);
+  const realId = "00000000-0000-4000-8000-000000000001";
+  const file = buildBackupFile(
+    "manual",
+    1700000000000,
+    [],
+    null,
+    null,
+    [makeSnapshot(realId, 2), unassigned],
+  );
+  const tabs = collectTabsForWorkspacelessRestore(file);
+
+  assertEquals(tabs.length, 3, "only unassigned tabs are restored");
+  assert(
+    tabs[0] === unassigned.tabs[0],
+    "restored tabs come from the virtual unassigned snapshot",
+  );
+}
+
+function testWorkspacelessRestoreFallsBackToAllTabs(): void {
+  const realId = "00000000-0000-4000-8000-000000000001";
+  const file = buildBackupFile(
+    "auto",
+    1700000000000,
+    [],
+    null,
+    null,
+    [makeSnapshot(realId, 2)],
+  );
+  assertEquals(
+    collectTabsForWorkspacelessRestore(file).length,
+    2,
+    "without unassigned tabs, every snapshot's tabs are restored",
+  );
+}
+
+function testUnassignedWorkspaceIDStillGuardedHere(): void {
+  assert(
+    isUnassignedWorkspaceID(UNASSIGNED_WORKSPACE_ID),
+    "helper re-export stays consistent",
+  );
 }
 
 function testWorkspaceBackupFileValidation(): void {
@@ -265,6 +353,26 @@ export function runAllTests(): void {
     { name: "invalid file names", fn: testParseInvalidFileName },
     { name: "filter backup files", fn: testFilterBackupFiles },
     { name: "summary counts tabs", fn: testBuildSummaryCountsTabs },
+    {
+      name: "summary excludes virtual workspace but counts its tabs",
+      fn: testBuildSummaryExcludesVirtualWorkspaceButCountsItsTabs,
+    },
+    {
+      name: "unassigned snapshot detection",
+      fn: testUnassignedSnapshotDetection,
+    },
+    {
+      name: "workspace-less restore prefers unassigned tabs",
+      fn: testWorkspacelessRestorePrefersUnassignedTabs,
+    },
+    {
+      name: "workspace-less restore falls back to all tabs",
+      fn: testWorkspacelessRestoreFallsBackToAllTabs,
+    },
+    {
+      name: "unassigned workspace ID guard (backup helpers)",
+      fn: testUnassignedWorkspaceIDStillGuardedHere,
+    },
     { name: "backup file validation", fn: testWorkspaceBackupFileValidation },
     {
       name: "expired retention excludes pre-restore",

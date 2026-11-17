@@ -5,14 +5,15 @@
 
 import { onCleanup } from "solid-js";
 import { selectedWorkspaceID, workspacesDataStore } from "../data/data.ts";
-import type { WorkspacesService } from "../workspacesService.ts";
 import {
+  createUnassignedWorkspaceSnapshot,
   createWorkspaceSnapshotMetadata,
   ensureSessionStore,
   parseTabState,
   toWorkspaceSnapshotTab,
 } from "./workspace-snapshot.ts";
 import type {
+  TWorkspace,
   TWorkspaceID,
   TWorkspaceSnapshot,
   TWorkspaceSnapshotTab,
@@ -124,6 +125,17 @@ const isPrivateWindow = (window: Window): boolean => {
 };
 
 /**
+ * The subset of WorkspacesService behavior that backup capture/restore
+ * needs. A detached implementation is used while the workspaces feature is
+ * disabled and no WorkspacesService instance exists.
+ */
+export interface WorkspacesBackupHost {
+  isWorkspaceID(id: string): id is TWorkspaceID;
+  getRawWorkspace(id: TWorkspaceID): TWorkspace | undefined;
+  restoreFromBackupFile(file: WorkspaceBackupFile): Promise<void>;
+}
+
+/**
  * Periodic workspace backup service.
  *
  * One instance exists per browser window. Scheduled runs are idempotent across
@@ -133,15 +145,15 @@ const isPrivateWindow = (window: Window): boolean => {
  * one interval; that trade-off is preferred over concurrent duplicate backups.
  */
 export class WorkspacesBackupService {
-  private readonly service: WorkspacesService;
+  private readonly host: WorkspacesBackupHost;
   private config: WorkspaceBackupConfig;
   private timer: ReturnType<typeof globalThis.setTimeout> | null = null;
   private readonly configObserver: () => void;
   private readonly enabledObserver: () => void;
   private disposed = false;
 
-  constructor(service: WorkspacesService) {
-    this.service = service;
+  constructor(host: WorkspacesBackupHost) {
+    this.host = host;
     this.config = readBackupConfig();
     this.configObserver = () => {
       this.config = readBackupConfig();
@@ -291,7 +303,7 @@ export class WorkspacesBackupService {
     }
 
     try {
-      await this.service.restoreFromBackupFile(file);
+      await this.host.restoreFromBackupFile(file);
       return { success: true };
     } catch (error) {
       console.error("WorkspacesBackupService: restore failed", error);
@@ -300,6 +312,22 @@ export class WorkspacesBackupService {
         error: error instanceof Error ? error.message : String(error),
       };
     }
+  }
+
+  public dispose(): void {
+    this.disposed = true;
+    if (this.timer !== null) {
+      globalThis.clearTimeout(this.timer);
+      this.timer = null;
+    }
+    Services.prefs.removeObserver(
+      WORKSPACE_BACKUP_CONFIG_PREF_NAME,
+      this.configObserver,
+    );
+    Services.prefs.removeObserver(
+      WORKSPACE_ENABLED_PREF_NAME,
+      this.enabledObserver,
+    );
   }
 
   public async cleanupRetention(): Promise<void> {
@@ -425,8 +453,34 @@ export class WorkspacesBackupService {
         const state = parseTabState(sessionStore, tab);
         const isSelected = window === focusedWindow &&
           tab === window.gBrowser?.selectedTab;
+        tabs.push(toWorkspaceSnapshotTab(tab, state, this.host, isSelected));
+      }
+    }
+    return tabs;
+  }
+
+  /**
+   * Collects non-private tabs that have no workspace attribution. They are
+   * stored in the virtual unassigned snapshot so backups cover every tab even
+   * while the workspaces feature is disabled.
+   */
+  private collectTabsWithoutWorkspaceAttribute(
+    windows: BrowserWindow[],
+    focusedWindow: BrowserWindow | null,
+    sessionStore: Awaited<ReturnType<typeof ensureSessionStore>>,
+  ): TWorkspaceSnapshotTab[] {
+    const tabs: TWorkspaceSnapshotTab[] = [];
+    for (const window of windows) {
+      const candidates = window.gBrowser?.tabs ?? [];
+      for (const tab of candidates) {
+        if (tab.getAttribute(WORKSPACE_TAB_ATTRIBUTION_ID)) {
+          continue;
+        }
+        const state = parseTabState(sessionStore, tab);
+        const isSelected = window === focusedWindow &&
+          tab === window.gBrowser?.selectedTab;
         tabs.push(
-          toWorkspaceSnapshotTab(tab, state, this.service, isSelected),
+          toWorkspaceSnapshotTab(tab, state, this.host, isSelected),
         );
       }
     }
@@ -450,28 +504,48 @@ export class WorkspacesBackupService {
     const focusedWindow = Services.wm.getMostRecentWindow(
       "navigator:browser",
     ) as BrowserWindow | null;
-    const order = [...workspacesDataStore.order] as TWorkspaceID[];
+    const workspacesEnabled = Services.prefs.getBoolPref(
+      WORKSPACE_ENABLED_PREF_NAME,
+      true,
+    );
+    // While workspaces are disabled every tab is unassigned. Do not persist
+    // stale workspace metadata from the previous enabled session into the
+    // backup; the virtual unassigned snapshot below is the complete state.
+    const order = workspacesEnabled
+      ? [...workspacesDataStore.order] as TWorkspaceID[]
+      : [];
     const workspaces: TWorkspaceSnapshot[] = [];
 
-    for (const workspaceId of order) {
-      const workspace = this.service.getRawWorkspace(workspaceId);
-      if (!workspace) {
-        continue;
+    if (workspacesEnabled) {
+      for (const workspaceId of order) {
+        const workspace = this.host.getRawWorkspace(workspaceId);
+        if (!workspace) {
+          continue;
+        }
+        workspaces.push({
+          capturedAt: Date.now(),
+          workspace: createWorkspaceSnapshotMetadata(workspaceId, workspace),
+          tabs: this.collectTabsForWorkspace(
+            workspaceId,
+            windows,
+            focusedWindow,
+            sessionStore,
+          ),
+        });
       }
-      workspaces.push({
-        capturedAt: Date.now(),
-        workspace: createWorkspaceSnapshotMetadata(workspaceId, workspace),
-        tabs: this.collectTabsForWorkspace(
-          workspaceId,
-          windows,
-          focusedWindow,
-          sessionStore,
-        ),
-      });
+    }
+
+    const unassignedTabs = this.collectTabsWithoutWorkspaceAttribute(
+      windows,
+      focusedWindow,
+      sessionStore,
+    );
+    if (unassignedTabs.length > 0) {
+      workspaces.push(createUnassignedWorkspaceSnapshot(unassignedTabs));
     }
 
     const defaultCandidate = workspacesDataStore.defaultID as TWorkspaceID;
-    const defaultID = order.includes(defaultCandidate)
+    const defaultID = workspacesEnabled && order.includes(defaultCandidate)
       ? defaultCandidate
       : null;
     return buildBackupFile(
@@ -479,7 +553,9 @@ export class WorkspacesBackupService {
       Date.now(),
       order,
       defaultID,
-      this.resolveCurrentWorkspaceId(focusedWindow, order),
+      workspacesEnabled
+        ? this.resolveCurrentWorkspaceId(focusedWindow, order)
+        : null,
       workspaces,
     );
   }
@@ -510,10 +586,10 @@ export class WorkspacesBackupService {
   }
 
   private async runScheduledBackup(): Promise<void> {
-    if (
-      !this.config.enabled ||
-      !Services.prefs.getBoolPref(WORKSPACE_ENABLED_PREF_NAME, true)
-    ) {
+    // Workspaces may be disabled; unassigned tabs are still backed up via the
+    // virtual snapshot. Only the backup feature's own enabled flag gates
+    // scheduled runs.
+    if (!this.config.enabled) {
       return;
     }
     const intervalMs = Math.max(1, this.config.intervalMinutes) * 60_000;
@@ -524,21 +600,5 @@ export class WorkspacesBackupService {
       return;
     }
     await this.backupNow("auto");
-  }
-
-  private dispose(): void {
-    this.disposed = true;
-    if (this.timer !== null) {
-      globalThis.clearTimeout(this.timer);
-      this.timer = null;
-    }
-    Services.prefs.removeObserver(
-      WORKSPACE_BACKUP_CONFIG_PREF_NAME,
-      this.configObserver,
-    );
-    Services.prefs.removeObserver(
-      WORKSPACE_ENABLED_PREF_NAME,
-      this.enabledObserver,
-    );
   }
 }

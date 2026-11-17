@@ -9,6 +9,8 @@ interface WorkspacesFuncs {
 }
 
 type BrowserWindowWithWorkspaces = Window & {
+  /** Backup-only entry point; available even when workspaces are disabled. */
+  workspacesBackupFuncs?: WorkspacesFuncs;
   workspacesFuncs?: WorkspacesFuncs;
 };
 
@@ -24,7 +26,11 @@ export class NRWorkspacesParent extends JSWindowActorParent {
         let errorMessage: string | null = null;
 
         try {
-          Services.obs.notifyObservers(null, WORKSPACES_INIT_TOPIC, reason);
+          Services.obs.notifyObservers(
+            null as unknown as nsISupports,
+            WORKSPACES_INIT_TOPIC,
+            reason,
+          );
         } catch (error) {
           success = false;
           errorMessage = error instanceof Error ? error.message : String(error);
@@ -61,7 +67,7 @@ export class NRWorkspacesParent extends JSWindowActorParent {
       const window = Services.wm.getMostRecentWindow(
         "navigator:browser",
       ) as BrowserWindowWithWorkspaces | null;
-      const funcs = window?.workspacesFuncs;
+      const funcs = window?.workspacesBackupFuncs ?? window?.workspacesFuncs;
       if (!funcs) {
         throw new Error("workspaces-unavailable");
       }

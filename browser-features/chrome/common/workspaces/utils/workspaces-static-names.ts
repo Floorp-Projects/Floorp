@@ -20,6 +20,23 @@ export const WORKSPACE_LAST_SHOW_ID = "floorpWorkspaceLastShowId";
 
 export const WORKSPACE_ENABLED_PREF_NAME = "floorp.workspaces.enabled";
 
+/**
+ * Sentinel ID for tabs that have no workspace attribution.
+ *
+ * This ID is only valid inside backup snapshots: it must never be written to
+ * the workspace store or to a real tab attribute. Consumers must check it
+ * with `isUnassignedWorkspaceID()` before treating a snapshot ID as real.
+ */
+export const UNASSIGNED_WORKSPACE_ID = "__floorp_unassigned__";
+export type TUnassignedWorkspaceID = typeof UNASSIGNED_WORKSPACE_ID;
+
+export const isUnassignedWorkspaceID = (
+  id: string | null | undefined,
+): id is TUnassignedWorkspaceID => id === UNASSIGNED_WORKSPACE_ID;
+
+/** Name stored in the virtual unassigned-workspace backup snapshot. */
+export const UNASSIGNED_WORKSPACE_NAME = "Unassigned";
+
 export const WORKSPACED_CONFIG_PREF_NAME = "floorp.workspaces.v4.config";
 
 /** JSON backup configuration, kept separate from the strict v4 config codec. */

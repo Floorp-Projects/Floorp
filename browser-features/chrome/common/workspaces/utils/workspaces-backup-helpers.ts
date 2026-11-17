@@ -4,6 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import type { TWorkspaceID, TWorkspaceSnapshot } from "./type.ts";
+import type { TWorkspaceSnapshotTab } from "./type.ts";
+import { isUnassignedWorkspaceID } from "./workspaces-static-names.ts";
 import {
   DEFAULT_WORKSPACE_BACKUP_CONFIG,
   WORKSPACE_BACKUP_KINDS,
@@ -135,18 +137,44 @@ export const buildBackupSummary = (
   fileSize: number,
 ): WorkspaceBackupSummary => {
   let tabCount = 0;
+  let workspaceCount = 0;
   for (const workspace of file.workspaces) {
+    // The virtual unassigned-workspace snapshot contributes its tabs, but it
+    // is not a real workspace. Settings UI is implemented separately; it can
+    // rely on workspaceCount being the number of real workspaces and
+    // tabCount covering every tab stored in the file, including unassigned
+    // tabs.
     tabCount += workspace.tabs.length;
+    if (!isUnassignedWorkspaceID(workspace.workspace.workspaceId)) {
+      workspaceCount++;
+    }
   }
   return {
     id: fileName,
     kind: file.kind,
     capturedAt: file.capturedAt,
-    workspaceCount: file.workspaces.length,
+    workspaceCount,
     tabCount,
     fileName,
     fileSize,
   };
+};
+
+export const isUnassignedSnapshot = (
+  snapshot: TWorkspaceSnapshot,
+): boolean => isUnassignedWorkspaceID(snapshot.workspace.workspaceId);
+
+/**
+ * Chooses the tabs to reopen when restoring without touching the workspace
+ * store (workspaces disabled). Tabs from the virtual unassigned snapshot are
+ * preferred; if the backup has none, every snapshot's tabs are restored.
+ */
+export const collectTabsForWorkspacelessRestore = (
+  file: WorkspaceBackupFile,
+): TWorkspaceSnapshotTab[] => {
+  const unassigned = file.workspaces.filter(isUnassignedSnapshot);
+  const source = unassigned.length > 0 ? unassigned : file.workspaces;
+  return source.flatMap((workspace) => workspace.tabs);
 };
 
 export const sortBackupsNewestFirst = (

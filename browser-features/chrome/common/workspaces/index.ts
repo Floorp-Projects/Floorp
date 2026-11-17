@@ -21,6 +21,10 @@ import { createRoot, getOwner, onCleanup, runWithOwner } from "solid-js";
 import { WORKSPACES_INIT_OBSERVER_TOPIC } from "./utils/workspaces-static-names.ts";
 import { WorkspacesLinkContextMenu } from "./link-context-menu.tsx";
 import { WorkspacesSyncController } from "./workspacesSync.ts";
+import {
+  WorkspacesBackupController,
+  type WorkspacesBackupFuncs,
+} from "./utils/workspaces-backup-controller.ts";
 
 @noraComponent(import.meta.hot)
 export default class Workspaces extends NoraComponentBase {
@@ -37,11 +41,32 @@ export default class Workspaces extends NoraComponentBase {
   }
 
   init(): void {
+    const owner = getOwner();
+    // Backup must keep working while workspaces are disabled, so the backup
+    // controller is initialized before the feature's enabled gate. It
+    // delegates to WorkspacesService once that exists and otherwise captures/
+    // restores tabs through a detached backup host.
+    const backupController = new WorkspacesBackupController(() =>
+      Workspaces.windowWorkspacesMap.get(window) ?? null
+    );
+    const backupFuncsHost = globalThis as typeof globalThis & {
+      workspacesBackupFuncs?: WorkspacesBackupFuncs;
+    };
+    backupFuncsHost.workspacesBackupFuncs = {
+      backupNow: () => backupController.backupNow(),
+      listBackups: () => backupController.listBackups(),
+      restoreBackup: (fileName: string) =>
+        backupController.restoreBackup(fileName),
+      deleteBackup: (fileName: string) =>
+        backupController.deleteBackup(fileName),
+      deleteAllBackups: () => backupController.deleteAllBackups(),
+    };
+    onCleanup(() => backupController.dispose());
+
     if (!enabled()) {
       return;
     }
 
-    const owner = getOwner();
     migrateWorkspacesData().then(() => {
       const exec = () => {
         const iconCtx = new WorkspaceIcons();

@@ -24,7 +24,7 @@ import {
 import i18next from "i18next";
 import {
   createWorkspaceSnapshot,
-  ensureSessionStore,
+  restoreSnapshotTabs,
 } from "./utils/workspace-snapshot";
 import {
   applyWorkspaceSnapshotMetadata,
@@ -38,6 +38,7 @@ import type {
 import type { TWorkspaceSnapshotTab } from "./utils/type";
 import type { WorkspaceArchiveSummary } from "./utils/archive-types";
 import {
+  isUnassignedWorkspaceID,
   WORKSPACE_ENABLED_PREF_NAME,
   WORKSPACE_LAST_SHOW_ID,
   WORKSPACE_TAB_ATTRIBUTION_ID,
@@ -530,6 +531,16 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
     }
 
     const tempWorkspaceId = this.resetWorkspaces();
+    const replacedTabs = [...globalThis.gBrowser.tabs].filter(
+      (tab) =>
+        tab.getAttribute(WORKSPACE_TAB_ATTRIBUTION_ID) === tempWorkspaceId,
+    );
+    const unassignedSnapshots = file.workspaces.filter((snapshot) =>
+      isUnassignedWorkspaceID(snapshot.workspace.workspaceId)
+    );
+    const unassignedTabs = unassignedSnapshots.flatMap(
+      (snapshot) => snapshot.tabs,
+    );
     const snapshotById = new Map(
       file.workspaces.map((snapshot) => [
         snapshot.workspace.workspaceId,
@@ -545,6 +556,11 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
     const restoreSnapshot = async (
       snapshot: TWorkspaceSnapshot,
     ): Promise<void> => {
+      if (isUnassignedWorkspaceID(snapshot.workspace.workspaceId)) {
+        // The virtual unassigned snapshot is not a real workspace; its tabs
+        // are restored into the current workspace after the store is rebuilt.
+        return;
+      }
       const restoredWorkspaceId = this.dataManagerCtx.createWorkspace(
         snapshot.workspace.name,
       );
@@ -585,25 +601,53 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
     }
 
     if (restoredOrder.length === 0) {
-      throw new Error("empty-backup");
+      if (unassignedTabs.length === 0) {
+        throw new Error("empty-backup");
+      }
     }
 
-    this.closeTabsForWorkspace(tempWorkspaceId, restoredOrder[0]);
-    this.dataManagerCtx.deleteWorkspace(tempWorkspaceId);
-    setWorkspacesDataStore(
-      "order",
-      (prev) => prev.filter((id) => id !== tempWorkspaceId),
-    );
+    const fallbackWorkspaceId = restoredOrder[0] ?? tempWorkspaceId;
+    if (restoredOrder.length > 0) {
+      this.closeTabsForWorkspace(tempWorkspaceId, fallbackWorkspaceId);
+      this.dataManagerCtx.deleteWorkspace(tempWorkspaceId);
+      setWorkspacesDataStore(
+        "order",
+        (prev) => prev.filter((id) => id !== tempWorkspaceId),
+      );
+    }
 
     const defaultId = file.defaultID && idMap.has(file.defaultID)
       ? idMap.get(file.defaultID) as TWorkspaceID
-      : restoredOrder[0];
+      : fallbackWorkspaceId;
     this.setDefaultWorkspace(defaultId);
     const currentId = file.currentWorkspaceId &&
         idMap.has(file.currentWorkspaceId)
       ? idMap.get(file.currentWorkspaceId) as TWorkspaceID
       : defaultId;
     this.changeWorkspace(currentId);
+    // Tabs captured without a workspace become members of the restored
+    // current workspace so they stay visible after restore.
+    if (unassignedTabs.length > 0) {
+      await this.restoreTabsFromSnapshot(currentId, unassignedTabs);
+      if (restoredOrder.length === 0) {
+        // A backup containing only unassigned tabs has no real workspace to
+        // replace the temp workspace. Remove the tabs captured before restore
+        // after adding the replacement tabs, keeping the window alive.
+        for (const tab of replacedTabs) {
+          if (!tab.isConnected) {
+            continue;
+          }
+          try {
+            globalThis.gBrowser.removeTab(tab);
+          } catch (error) {
+            console.error(
+              "WorkspacesService: failed to close replaced unassigned tab",
+              error,
+            );
+          }
+        }
+      }
+    }
     this.tabManagerCtx.updateTabsVisibility();
   }
 
@@ -685,86 +729,11 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
     workspaceId: TWorkspaceID,
     tabs: TWorkspaceSnapshotTab[],
   ) {
-    if (!tabs.length) {
+    if (tabs.length === 0) {
       return;
     }
 
-    const sessionStore = await ensureSessionStore();
-    let targetTab: XULElement | null = null;
-
-    for (const tabSnapshot of tabs) {
-      const initialUrl = tabSnapshot.url ?? "about:blank";
-      const tab = globalThis.gBrowser.addTab(initialUrl, {
-        skipAnimation: true,
-        inBackground: true,
-        userContextId: tabSnapshot.userContextId,
-        triggeringPrincipal: Services.scriptSecurityManager
-          .getSystemPrincipal(),
-      });
-
-      this.tabManagerCtx.setWorkspaceIdToAttribute(tab, workspaceId);
-      tab.setAttribute("usercontextid", String(tabSnapshot.userContextId));
-
-      if (tabSnapshot.lastShownWorkspaceId) {
-        tab.setAttribute(
-          WORKSPACE_LAST_SHOW_ID,
-          tabSnapshot.lastShownWorkspaceId,
-        );
-      } else {
-        tab.removeAttribute(WORKSPACE_LAST_SHOW_ID);
-      }
-
-      if (tabSnapshot.state) {
-        try {
-          const clonedState = structuredClone(tabSnapshot.state);
-          const attributes =
-            (clonedState.attributes as Record<string, unknown> | undefined) ??
-              {};
-          attributes[WORKSPACE_TAB_ATTRIBUTION_ID] = workspaceId;
-          if (tabSnapshot.lastShownWorkspaceId) {
-            attributes[WORKSPACE_LAST_SHOW_ID] =
-              tabSnapshot.lastShownWorkspaceId;
-          } else if (WORKSPACE_LAST_SHOW_ID in attributes) {
-            delete attributes[WORKSPACE_LAST_SHOW_ID];
-          }
-          clonedState.attributes = attributes;
-          sessionStore.setTabState(tab, JSON.stringify(clonedState));
-        } catch (error) {
-          console.error(
-            "WorkspacesService: failed to restore tab state",
-            error,
-          );
-        }
-      } else if (tabSnapshot.url) {
-        try {
-          globalThis.gBrowser
-            .getBrowserForTab(tab)
-            .loadURI(Services.io.newURI(tabSnapshot.url), {
-              triggeringPrincipal: Services.scriptSecurityManager
-                .getSystemPrincipal(),
-            });
-        } catch (error) {
-          console.error("WorkspacesService: failed to load tab URL", error);
-        }
-      }
-
-      if (tabSnapshot.pinned) {
-        try {
-          globalThis.gBrowser.pinTab(tab);
-        } catch (error) {
-          console.error("WorkspacesService: failed to pin restored tab", error);
-        }
-      }
-
-      if (tabSnapshot.isSelected) {
-        targetTab = tab;
-      }
-    }
-
-    if (targetTab) {
-      globalThis.gBrowser.selectedTab = targetTab;
-    }
-
+    await restoreSnapshotTabs(tabs, { assignWorkspaceId: workspaceId });
     this.tabManagerCtx.updateTabsVisibility();
   }
 
