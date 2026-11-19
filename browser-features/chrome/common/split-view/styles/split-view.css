@@ -753,6 +753,14 @@
   min-width: unset !important;
 }
 
+/* Ordinary tabs still need the configured minimum. Keep the reset above for
+ * tabs inside split wrappers so large configured widths cannot overlap them. */
+#TabsToolbar[splitview-multibar]
+  #tabbrowser-tabs:not([orient="vertical"])
+  .tabbrowser-tab:not([pinned]):not([data-floorp-split-tab]) {
+  min-width: var(--floorp-tab-min-width) !important;
+}
+
 
 /* Prevent user text selection during splitter drag */
 #tabbrowser-tabpanels[data-floorp-dragging] {
