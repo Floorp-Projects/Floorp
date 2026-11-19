@@ -2,8 +2,8 @@
 
 Status: documentation-only proposal. No workflow or required check is enabled.
 Source baseline: Floorp `7b89a91d51534eeec9d591740f808dd49bb6133b`.
-Evidence snapshot: 2026-11-19. Counts below describe selected cases, not complete
-upstream directories or whole-product qualification.
+Evidence snapshot: 2026-11-19, evening JST. Counts below describe selected cases,
+not complete upstream directories or whole-product qualification.
 
 ## Goal and constraints
 
@@ -18,8 +18,8 @@ compiled product. Passing one environment does not establish the other two.
 
 | Evidence | Current result | What it does not establish |
 | --- | --- | --- |
-| Local original tabs cases | 20 passing cases reported by the validation lane | Hosted producer provenance or the complete tabs directory |
-| Local clean SessionStore cases | 64 distinct cases passing across four isolated batches (9, 16, 20, and 19) | Full SessionStore coverage or integrated product correctness |
+| Local original tabs cases | 48 distinct passing cases across isolated component runs | Hosted producer provenance or the complete tabs directory |
+| Local clean SessionStore cases | 99 distinct passing cases across isolated component runs | Full SessionStore coverage or integrated product correctness |
 | Isolated restart chunks | 8 methods passed in two completed green batches; a separate batch had 7 passes and one driver error | A complete restart suite, normal onboarding, or an integrated hosted pass |
 | Hidden-tab restore | Reproduction established; integrated fix not qualified | A clean product-wide result |
 | Historical Actions artifact transport | Actual ZIP hash matches independent API digest | Original producer-attempt proof or original Firefox test semantics |
@@ -31,6 +31,54 @@ The local counts are a validation-lane status summary, not an independent replay
 performed by this documentation change. Retain exact per-run manifests, product
 identities and raw records before using those cases as the hosted starting set.
 Do not sum different scopes or replace missing results with host-unit-test counts.
+
+### Candidate first hosted shadow
+
+Keep two separately discovered, serial cohorts in the first future approved
+producer attempt. Do not merge or rewrite their manifests.
+
+| Candidate cohort | Local original files | Stock assertions (pass / fail / TODO) |
+| --- | ---: | ---: |
+| Tabs State12 | 12 / 12 | 81 / 0 / 0 |
+| SessionStore History5 | 5 / 5 | 71 / 0 / 0 |
+
+State12, under `browser/components/tabbrowser/test/browser/tabs/`:
+
+- `browser_blank_tab_label.js`
+- `browser_close_tab_by_dblclick.js`
+- `browser_multiselect_tabs_using_Ctrl.js`
+- `browser_multiselect_tabs_using_Shift_and_Ctrl.js`
+- `browser_openURI_background.js`
+- `browser_tabswitch_updatecommands.js`
+- `browser_tab_label_character_cap.js`
+- `browser_long_data_url_label_truncation.js`
+- `browser_tab_aria_posinset_setsize.js`
+- `browser_positional_attributes.js`
+- `browser_tab_aria_level.js`
+- `browser_tab_label_reader_mode.js`
+
+History5, under `browser/components/sessionstore/test/`:
+
+- `browser_navigation_api_restore.js`
+- `browser_dynamic_frames.js`
+- `browser_frametree.js`
+- `browser_restore_srcdoc.js`
+- `browser_purge_shistory.js`
+
+For this strict-validation scope, pin Runtime
+`6ffed8ad4dcfadeb85bb158c82395cefcc3e2c06` and bind the actual executable,
+Floorp assets, overlays, original manifests and complete support closure
+independently. The local measurements help select the cases; they do not
+authenticate a hosted execution, qualify ordinary DEV/STG or the compiled
+product, or show that a trusted hosted producer is ready.
+
+Preserve the original tests and all raw evidence through process shutdown.
+File-level PASS and exit zero do not override excess debug assertions or
+over-threshold leaks. Leak records must be handled explicitly; missing or
+unsupported evidence must not be interpreted as zero. Do not enable the
+shadow until an independently reviewed producer and complete capture and
+intake are actually available. The first shadow would be nonrequired and
+nonreporting; do not combine passing fragments across attempts.
 
 ## Proposed trust boundary
 
