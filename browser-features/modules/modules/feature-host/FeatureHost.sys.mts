@@ -67,6 +67,58 @@ interface WindowEntry {
 }
 
 const owners = new Map<string, M0FeatureHost>();
+const openingHosts = new Map<string, Promise<M0FeatureHost>>();
+
+export function isEligibleM0MainWindowForTests(
+  windowType: string | null,
+  toolbarVisible: boolean,
+  isPrivate: boolean,
+  isWebPanel: boolean,
+): boolean {
+  return windowType === "navigator:browser" && toolbarVisible && !isPrivate &&
+    !isWebPanel;
+}
+
+export function hasUnfinishedM0FinalizationForTests(
+  pendingTxId: string | null,
+  terminalTxId: string | null,
+  terminalStatus: string | null,
+  txId: string,
+): boolean {
+  if (terminalTxId === txId) return terminalStatus === "pending";
+  return pendingTxId === txId;
+}
+
+function detachedOutcome(outcome: Outcome): Outcome {
+  return JSON.parse(JSON.stringify(outcome)) as Outcome;
+}
+
+function isM0WebPanelWindow(window: Window): boolean {
+  if (
+    (window as Window & { floorpWebPanelWindow?: boolean }).floorpWebPanelWindow
+  ) {
+    return true;
+  }
+  try {
+    return new URL(window.location.href).searchParams.has("floorpWebPanelId");
+  } catch {
+    return true;
+  }
+}
+
+function isEligibleM0Window(window: Window): boolean {
+  if (window.closed) return false;
+  const documentElement = window.document.documentElement;
+  const toolbarVisible = (window as Window & {
+    toolbar?: { visible?: boolean };
+  }).toolbar?.visible === true;
+  return isEligibleM0MainWindowForTests(
+    documentElement?.getAttribute("windowtype") ?? null,
+    toolbarVisible,
+    PrivateBrowsingUtils.isWindowPrivate(window),
+    isM0WebPanelWindow(window),
+  );
+}
 
 class StorageFailure extends Error {
   constructor() {
@@ -182,7 +234,9 @@ function validateRecord(value: unknown): M0Record {
 
 async function digest(source: string): Promise<string> {
   const bytes = new TextEncoder().encode(source);
-  const result = await crypto.subtle.digest("SHA-256", bytes);
+  const data = new ArrayBuffer(bytes.byteLength);
+  new Uint8Array(data).set(bytes);
+  const result = await crypto.subtle.digest("SHA-256", data);
   return [...new Uint8Array(result)].map((byte) =>
     byte.toString(16).padStart(2, "0")
   ).join("");
@@ -304,30 +358,43 @@ export class M0FeatureHost {
           !/^m0-[0-9a-f-]+$/.test(PathUtils.filename(root))
         : root !== ROOT)
     ) throw new Error("M0 host is dev/test opt-in only");
-    if (owners.has(root)) throw new Error("M0 state root already owned");
+    const opening = openingHosts.get(root);
+    if (opening) return opening;
+    const existing = owners.get(root);
+    if (existing) return existing;
     const host = new M0FeatureHost(root);
     owners.set(root, host);
+    const openingPromise = (async () => {
+      try {
+        if (testRoot && await IOUtils.exists(root)) {
+          throw new Error("test root must be newly created");
+        }
+        await IOUtils.makeDirectory(root, {
+          createAncestors: true,
+          ignoreExisting: true,
+          permissions: 0o700,
+        });
+        if (await IOUtils.exists(host.#recordPath)) {
+          host.#record = validateRecord(
+            await IOUtils.readJSON(host.#recordPath),
+          );
+          if (
+            host.#record.desiredEnabled || host.#record.pending ||
+            host.#record.lastOutcome?.status === "pending" ||
+            host.#record.lastOutcome?.status === "storage_failed"
+          ) host.#volatileBlocked = true;
+        }
+        return host;
+      } catch (error) {
+        owners.delete(root);
+        throw error;
+      }
+    })();
+    openingHosts.set(root, openingPromise);
     try {
-      if (testRoot && await IOUtils.exists(root)) {
-        throw new Error("test root must be newly created");
-      }
-      await IOUtils.makeDirectory(root, {
-        createAncestors: true,
-        ignoreExisting: true,
-        permissions: 0o700,
-      });
-      if (await IOUtils.exists(host.#recordPath)) {
-        host.#record = validateRecord(await IOUtils.readJSON(host.#recordPath));
-        if (
-          host.#record.desiredEnabled || host.#record.pending ||
-          host.#record.lastOutcome?.status === "pending" ||
-          host.#record.lastOutcome?.status === "storage_failed"
-        ) host.#volatileBlocked = true;
-      }
-      return host;
-    } catch (error) {
-      owners.delete(root);
-      throw error;
+      return await openingPromise;
+    } finally {
+      if (openingHosts.get(root) === openingPromise) openingHosts.delete(root);
     }
   }
 
@@ -345,6 +412,10 @@ export class M0FeatureHost {
   } {
     return this.#running?.scopeDiagnosticsForTests ??
       { resources: 0, childScopes: 0 };
+  }
+
+  get windowIdsForTests(): string[] {
+    return [...this.#windows.keys()];
   }
 
   install(txId: string, expectedRevision: number, version: FixtureVersion) {
@@ -371,7 +442,7 @@ export class M0FeatureHost {
     const found = this.#findOutcome(txId);
     return found === "outcome_unknown_or_expired"
       ? found
-      : JSON.parse(JSON.stringify(found)) as Outcome;
+      : detachedOutcome(found);
   }
 
   #findOutcome(txId: string): Outcome | "outcome_unknown_or_expired" {
@@ -464,24 +535,25 @@ export class M0FeatureHost {
       if (JSON.stringify(known.request) !== JSON.stringify(request)) {
         return Promise.reject(new Error("transaction ID payload conflict"));
       }
-      return Promise.resolve(JSON.parse(JSON.stringify(known)) as Outcome);
+      return Promise.resolve(detachedOutcome(known));
     }
     if (expectedRevision !== this.#record.stateRevision) {
       return Promise.reject(new Error("stale_revision"));
     }
     return this.#enqueue(async () => {
+      if (this.#closed) throw new Error("M0 host closed");
       const queuedKnown = this.#findOutcome(txId);
       if (queuedKnown !== "outcome_unknown_or_expired") {
         if (JSON.stringify(queuedKnown.request) !== JSON.stringify(request)) {
           throw new Error("transaction ID payload conflict");
         }
-        return JSON.parse(JSON.stringify(queuedKnown)) as Outcome;
+        return detachedOutcome(queuedKnown);
       }
       if (expectedRevision !== this.#record.stateRevision) {
         throw new Error("stale_revision");
       }
       try {
-        return await this.#perform(txId, request);
+        return detachedOutcome(await this.#perform(txId, request));
       } catch (error) {
         if (!(error instanceof StorageFailure)) throw error;
         if (this.#record.pending?.txId === txId) this.#volatileBlocked = true;
@@ -628,6 +700,8 @@ export class M0FeatureHost {
       }
       this.#running = null;
     }
+    this.#windows.clear();
+    for (const entry of windows) this.#windows.set(entry.id, entry.window);
     const generation = ++this.#generation;
     const token = `${this.#epoch}:${generation}`;
     const runtime = new M0ModuleHost(
@@ -803,10 +877,12 @@ export class M0FeatureHost {
       this.#record = durable;
       selectedVersion = durable.selectedVersion;
       const terminal = durable.lastOutcome;
-      const unfinished = durable.pending?.txId === txId ||
-        (terminal?.txId === txId && (terminal.status === "pending" ||
-          terminal.status === "succeeded" ||
-          terminal.status === "failed_restored"));
+      const unfinished = hasUnfinishedM0FinalizationForTests(
+        durable.pending?.txId ?? null,
+        terminal?.txId ?? null,
+        terminal?.status ?? null,
+        txId,
+      );
       if (unfinished) {
         await this.#terminal(txId, request, "failed_quarantined", {
           ...durable,
@@ -821,19 +897,12 @@ export class M0FeatureHost {
   }
 
   #captureWindows(): WindowEntry[] {
-    this.#windows.clear();
     const entries: WindowEntry[] = [];
     const enumerator = Services.wm.getEnumerator("navigator:browser");
     while (enumerator.hasMoreElements()) {
       const window = enumerator.getNext() as unknown as Window;
-      if (
-        window.closed ||
-        window.document.documentElement.getAttribute("windowtype") !==
-          "navigator:browser" ||
-        PrivateBrowsingUtils.isWindowPrivate(window)
-      ) continue;
+      if (!isEligibleM0Window(window)) continue;
       const id = Services.uuid.generateUUID().toString();
-      this.#windows.set(id, window);
       entries.push({ id, window });
     }
     return entries;
@@ -864,7 +933,7 @@ export class M0FeatureHost {
     }
     const window = this.#windows.get(request.windowId);
     if (
-      !window || window.closed || PrivateBrowsingUtils.isWindowPrivate(window)
+      !window || !isEligibleM0Window(window)
     ) {
       throw new Error("ineligible window");
     }
@@ -923,7 +992,7 @@ export class M0FeatureHost {
       recentOutcomes: recent,
       lastOutcome: entry,
     });
-    return next.lastOutcome as Outcome;
+    return detachedOutcome(next.lastOutcome as Outcome);
   }
 
   async #quarantine(
@@ -967,15 +1036,16 @@ export async function getM0FeatureHostExperimental(
   if (!experimentalOptIn || (mode !== "dev" && mode !== "test")) {
     throw new Error("M0 host is dev/test opt-in only");
   }
-  return owners.get(ROOT) ?? await M0FeatureHost.open(ROOT, experimentalOptIn);
+  return await M0FeatureHost.open(ROOT, experimentalOptIn);
 }
 
 export async function createM0FeatureHostForTests(
   experimentalOptIn: boolean,
+  rootOverride?: string,
 ): Promise<M0TestHostHandle> {
   const suffix = Services.uuid.generateUUID().toString().replace(/[{}]/g, "")
     .toLowerCase();
-  const root = PathUtils.join(TEST_ROOT, `m0-${suffix}`);
+  const root = rootOverride ?? PathUtils.join(TEST_ROOT, `m0-${suffix}`);
   const host = await M0FeatureHost.open(root, experimentalOptIn, true);
   let cleanupPromise: Promise<DisposeReport> | null = null;
   return {

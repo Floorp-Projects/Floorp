@@ -12,12 +12,42 @@ type Resource = {
   cleanup: Cleanup | null;
   owner: ResourceScope | null;
   disposing: boolean;
+  disposal: Promise<void> | null;
   dispose: () => Promise<void>;
 };
+
+let activeDeadlineTimers = 0;
+
+function startDeadline(callback: () => void, timeoutMs: number): {
+  cancel(): void;
+} {
+  activeDeadlineTimers += 1;
+  let active = true;
+  const timer = setTimeout(() => {
+    if (!active) return;
+    active = false;
+    activeDeadlineTimers -= 1;
+    callback();
+  }, timeoutMs);
+  return {
+    cancel() {
+      if (!active) return;
+      active = false;
+      activeDeadlineTimers -= 1;
+      clearTimeout(timer);
+    },
+  };
+}
+
+export function activeM0DeadlineTimersForTests(): number {
+  return activeDeadlineTimers;
+}
 
 export class ResourceScope {
   readonly #resources = new Map<number, Resource>();
   readonly #children = new Map<string, ResourceScope>();
+  readonly #disposals = new Set<Promise<void>>();
+  readonly #errors: string[] = [];
   #nextId = 0;
   #revoked = false;
   #disposing: Promise<DisposeReport> | null = null;
@@ -27,11 +57,17 @@ export class ResourceScope {
   }
 
   get resourceCount(): number {
-    return this.#resources.size;
+    return this.#resources.size + [...this.#children.values()].reduce(
+      (total, child) => total + child.resourceCount,
+      0,
+    );
   }
 
   get childCount(): number {
-    return this.#children.size;
+    return this.#children.size + [...this.#children.values()].reduce(
+      (total, child) => total + child.childCount,
+      0,
+    );
   }
 
   child(windowId: string): ResourceScope {
@@ -51,6 +87,7 @@ export class ResourceScope {
       cleanup,
       owner: this,
       disposing: false,
+      disposal: null,
       dispose: () => {
         if (resource.disposing || !resource.cleanup) return Promise.resolve();
         resource.disposing = true;
@@ -58,9 +95,20 @@ export class ResourceScope {
         const owner = resource.owner;
         resource.cleanup = null;
         resource.owner = null;
-        return Promise.resolve().then(cleanupNow).finally(() => {
-          owner?.#resources.delete(id);
+        const disposal = Promise.resolve().then(cleanupNow).catch((error) => {
+          if (owner) owner.#errors.push(String(error));
+          throw error;
+        }).finally(() => {
+          if (owner) {
+            owner.#resources.delete(id);
+            owner.#disposals.delete(disposal);
+          }
+          resource.disposal = null;
         });
+        resource.disposal = disposal;
+        if (owner) owner.#disposals.add(disposal);
+        void disposal.catch(() => {});
+        return disposal;
       },
     };
     this.#resources.set(id, resource);
@@ -79,16 +127,15 @@ export class ResourceScope {
       const children = [...this.#children.values()].map((child) =>
         child.disposeAll(timeoutMs)
       );
-      const resources = [...this.#resources.values()].map((resource) =>
-        resource.dispose()
-      );
+      for (const resource of this.#resources.values()) resource.dispose();
+      const resources = [...this.#disposals];
       const work = Promise.all([
         Promise.allSettled(children),
         Promise.allSettled(resources),
       ]);
-      let timer: ReturnType<typeof setTimeout> | undefined;
+      let timer: { cancel(): void } | undefined;
       const deadline = new Promise<"timeout">((resolve) => {
-        timer = setTimeout(() => resolve("timeout"), timeoutMs);
+        timer = startDeadline(() => resolve("timeout"), timeoutMs);
       });
       let timedOut = false;
       const errors: string[] = [];
@@ -100,7 +147,7 @@ export class ResourceScope {
         if (result.kind === "timeout") {
           timedOut = true;
           errors.push("resource cleanup deadline");
-          return { errors, timedOut };
+          return { errors: [...this.#errors, ...errors], timedOut };
         }
         const [childResults, resourceResults] = result.value;
         for (const result of childResults) {
@@ -111,14 +158,17 @@ export class ResourceScope {
           }
         }
         for (const result of resourceResults) {
-          if (result.status === "rejected") errors.push(String(result.reason));
+          if (result.status === "rejected") {
+            const error = String(result.reason);
+            if (!this.#errors.includes(error)) errors.push(error);
+          }
         }
       } finally {
-        if (timer !== undefined) clearTimeout(timer);
+        timer?.cancel();
         this.#resources.clear();
         this.#children.clear();
       }
-      return { errors, timedOut };
+      return { errors: [...this.#errors, ...errors], timedOut };
     })();
     return this.#disposing;
   }
@@ -147,15 +197,15 @@ function isLifecycle(value: unknown): value is M0Lifecycle {
 }
 
 function bounded<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
-  let timer: ReturnType<typeof setTimeout> | undefined;
+  let timer: { cancel(): void } | undefined;
   const timeout = new Promise<T>((_, reject) => {
-    timer = setTimeout(
+    timer = startDeadline(
       () => reject(new Error("lifecycle deadline")),
       timeoutMs,
     );
   });
   return Promise.race([promise, timeout]).finally(() => {
-    if (timer !== undefined) clearTimeout(timer);
+    timer?.cancel();
   });
 }
 
@@ -215,7 +265,11 @@ export class M0ModuleHost {
     }
     const sandbox = Components.utils.Sandbox(
       Services.scriptSecurityManager.getSystemPrincipal(),
-      { sandboxName: `floorp-hotfix-m0-${digest}`, wantComponents: false },
+      {
+        sandboxName: `floorp-hotfix-m0-${digest}`,
+        wantComponents: false,
+        freshCompartment: true,
+      },
     );
     this.#sandbox = sandbox;
     try {
@@ -261,8 +315,9 @@ export class M0ModuleHost {
         throw new Error("fixture health failed");
       }
     } catch (error) {
+      const failure = new Error(String(error));
       await this.stop("activation-failed");
-      throw error;
+      throw failure;
     }
   }
 
