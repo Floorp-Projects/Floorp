@@ -15,6 +15,8 @@ export type SetupKind =
   | "disable"
   | "enable";
 
+export type RuntimeLockArchitecture = "aarch64" | "x86_64";
+
 export interface ScenarioStep {
   boundary: DurableBoundary | null;
   reopen: boolean;

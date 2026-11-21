@@ -2,11 +2,13 @@ import {
   assertOwnedBrowserRoot,
   assertOwnedMarionetteListener,
   assertProcessRecoveryPlatform,
+  hashUntrackedSourceFiles,
   matchesDurableBoundary,
   parseBrowserDriverResult,
   parseDurableMarker,
   parseLinuxProcStat,
   resolveExpectedRuntimeBuildId,
+  runtimeLockArchitectureForDenoArch,
   selectOwnedProcessTree,
   signalVerifiedOwnedProcessTree,
   waitForDurableMarker,
@@ -320,25 +322,56 @@ Deno.test("driver result binds nonce launch and BuildID", () => {
   }
 });
 
-Deno.test("runtime BuildID is bound to source and installed locks", () => {
+Deno.test("runtime BuildID is bound to lock architecture", () => {
   const encoder = new TextEncoder();
   const source = encoder.encode(JSON.stringify({
-    artifacts: [{
+    artifacts: [
+      {
+        platform: "linux",
+        architecture: "x86_64",
+        buildId: "20261112140843",
+      },
+      {
+        platform: "linux",
+        architecture: "aarch64",
+        buildId: "20261212140843",
+      },
+    ],
+  }));
+  for (
+    const [denoArch, buildId] of [
+      ["x86_64", "20261112140843"],
+      ["aarch64", "20261212140843"],
+    ] as const
+  ) {
+    const architecture = runtimeLockArchitectureForDenoArch(denoArch);
+    assert(architecture === denoArch, `${denoArch} maps to lock architecture`);
+    const installed = encoder.encode(JSON.stringify({
       platform: "linux",
-      architecture: "x86_64",
-      buildId: "20261112140843",
-    }],
-  }));
-  const installed = encoder.encode(JSON.stringify({
-    platform: "linux",
-    architecture: "x86_64",
-    buildId: "20261112140843",
-  }));
-  assert(
-    resolveExpectedRuntimeBuildId(source, installed) === "20261112140843",
-    "BuildID read from lock metadata",
-  );
-  let rejected = false;
+      architecture,
+      buildId,
+    }));
+    assert(
+      resolveExpectedRuntimeBuildId(source, installed, denoArch) === buildId,
+      `${denoArch} BuildID read from matching lock artifact`,
+    );
+    const mismatch = encoder.encode(JSON.stringify({
+      platform: "linux",
+      architecture: denoArch === "x86_64" ? "aarch64" : "x86_64",
+      buildId,
+    }));
+    let architectureRejected = false;
+    try {
+      resolveExpectedRuntimeBuildId(source, mismatch, denoArch);
+    } catch {
+      architectureRejected = true;
+    }
+    assert(
+      architectureRejected,
+      `${denoArch} rejects mismatched installed architecture`,
+    );
+  }
+  let buildIdRejected = false;
   try {
     resolveExpectedRuntimeBuildId(
       source,
@@ -347,11 +380,90 @@ Deno.test("runtime BuildID is bound to source and installed locks", () => {
         architecture: "x86_64",
         buildId: "20260101000000",
       })),
+      "x86_64",
     );
   } catch {
-    rejected = true;
+    buildIdRejected = true;
   }
-  assert(rejected, "mismatched installed BuildID rejected");
+  assert(buildIdRejected, "mismatched installed BuildID rejected");
+  let unsupportedRejected = false;
+  try {
+    runtimeLockArchitectureForDenoArch("riscv64");
+  } catch {
+    unsupportedRejected = true;
+  }
+  assert(unsupportedRejected, "unsupported Deno architecture rejected");
+});
+
+Deno.test({
+  name: "untracked source hashes preserve raw NUL-delimited paths",
+  ignore: Deno.build.os === "windows",
+  fn: async () => {
+    const directory = await Deno.makeTempDir();
+    const names = [
+      "日本語 file.txt",
+      "line\nbreak.txt",
+      `quote"and's.txt`,
+      " leading and trailing ",
+    ];
+    const encoder = new TextEncoder();
+    try {
+      for (const [index, name] of names.entries()) {
+        await Deno.writeFile(
+          `${directory}/${name}`,
+          encoder.encode(`file-${index}`),
+        );
+      }
+      const listing = encoder.encode(`${names.join("\0")}\0`);
+      const hashes = await hashUntrackedSourceFiles(directory, listing);
+      const reordered = await hashUntrackedSourceFiles(
+        directory,
+        encoder.encode(`${[...names].reverse().join("\0")}\0`),
+      );
+      assert(hashes.length === names.length, "every path gets a source hash");
+      assert(
+        new Set(hashes).size === names.length,
+        "path names bind each hash",
+      );
+      assert(
+        hashes.join("\n") === reordered.join("\n"),
+        "source hashes are stable regardless of listing order",
+      );
+      await assertRejects(
+        () =>
+          hashUntrackedSourceFiles(directory, encoder.encode("unterminated")),
+        "unterminated path list is rejected",
+      );
+    } finally {
+      await Deno.remove(directory, { recursive: true });
+    }
+  },
+});
+
+Deno.test({
+  name: "untracked symlink hashes use link metadata without following targets",
+  ignore: Deno.build.os === "windows",
+  fn: async () => {
+    const directory = await Deno.makeTempDir();
+    const outside = await Deno.makeTempDir();
+    const target = `${outside}/outside.txt`;
+    const link = `${directory}/outside-link`;
+    try {
+      await Deno.writeTextFile(target, "outside content one");
+      await Deno.symlink(target, link);
+      const listing = new TextEncoder().encode("outside-link\0");
+      const before = await hashUntrackedSourceFiles(directory, listing);
+      await Deno.writeTextFile(target, "outside content two");
+      const after = await hashUntrackedSourceFiles(directory, listing);
+      assert(
+        before.join("\n") === after.join("\n"),
+        "link fingerprint is independent of target file content",
+      );
+    } finally {
+      await Deno.remove(directory, { recursive: true });
+      await Deno.remove(outside, { recursive: true });
+    }
+  },
 });
 
 Deno.test("marker wait reports timeout and browser-driver error", async () => {

@@ -12,6 +12,7 @@ import type {
   ProcessOwnershipMonitor,
   ProcessRecoveryTrace,
   ProcessSupervisorDependencies,
+  RuntimeLockArchitecture,
   ScenarioStep,
   SetupKind,
 } from "./hotfix_process_recovery_types.ts";
@@ -107,7 +108,9 @@ export function assertProcessRecoveryPlatform(platform: string): void {
 export function resolveExpectedRuntimeBuildId(
   sourceLockBytes: Uint8Array,
   installedLockBytes: Uint8Array,
+  denoArch = Deno.build.arch,
 ): string {
+  const architecture = runtimeLockArchitectureForDenoArch(denoArch);
   const source: unknown = JSON.parse(new TextDecoder().decode(sourceLockBytes));
   const installed: unknown = JSON.parse(
     new TextDecoder().decode(installedLockBytes),
@@ -120,19 +123,28 @@ export function resolveExpectedRuntimeBuildId(
   }
   const artifacts = source.artifacts.filter((artifact) =>
     isRecord(artifact) && artifact.platform === "linux" &&
-    artifact.architecture === "x86_64"
+    artifact.architecture === architecture
   );
   if (artifacts.length !== 1) {
-    throw new Error("runtime lock must contain one Linux x86_64 artifact");
+    throw new Error(
+      `runtime lock must contain one Linux ${architecture} artifact`,
+    );
   }
   const expected = (artifacts[0] as Record<string, unknown>).buildId;
   const actual = installed.buildId;
   if (
     typeof expected !== "string" || !/^\d{14}$/.test(expected) ||
     actual !== expected || installed.platform !== "linux" ||
-    installed.architecture !== "x86_64"
+    installed.architecture !== architecture
   ) throw new Error("installed runtime BuildID disagrees with runtime lock");
   return expected;
+}
+
+export function runtimeLockArchitectureForDenoArch(
+  denoArch: string,
+): RuntimeLockArchitecture {
+  if (denoArch === "x86_64" || denoArch === "aarch64") return denoArch;
+  throw new Error(`unsupported Deno architecture: ${denoArch}`);
 }
 
 export function assertOwnedBrowserRoot(
@@ -682,6 +694,79 @@ async function commandOutput(args: string[]): Promise<string> {
   return new TextDecoder().decode(output.stdout).trim();
 }
 
+async function commandOutputBytes(args: string[]): Promise<Uint8Array> {
+  const output = await new Deno.Command("git", {
+    args,
+    cwd: PROJECT_ROOT,
+    stdout: "piped",
+    stderr: "piped",
+  }).output();
+  if (!output.success) {
+    throw new Error(new TextDecoder().decode(output.stderr));
+  }
+  return output.stdout;
+}
+
+function parseNulDelimitedPaths(output: Uint8Array): string[] {
+  if (output.length === 0) return [];
+  if (output[output.length - 1] !== 0) {
+    throw new Error("git path list is missing its NUL terminator");
+  }
+  const text = new TextDecoder("utf-8", { fatal: true }).decode(output);
+  const paths = text.slice(0, -1).split("\0");
+  if (paths.some((path) => !path)) {
+    throw new Error("git path list contains an empty path");
+  }
+  return paths;
+}
+
+export async function hashUntrackedSourceFiles(
+  rootDirectory: string,
+  pathList: Uint8Array,
+): Promise<string[]> {
+  const root = resolve(rootDirectory);
+  const encoder = new TextEncoder();
+  const hashes = await Promise.all(
+    parseNulDelimitedPaths(pathList).map(async (filePath) => {
+      const components = filePath.split("/");
+      if (
+        filePath.startsWith("/") ||
+        components.some((component) =>
+          component === "" || component === "." || component === ".."
+        )
+      ) throw new Error("git path escapes the source root");
+      let absolutePath = root;
+      let kind: "file" | "symlink" | null = null;
+      let contents = new Uint8Array();
+      for (let index = 0; index < components.length; index += 1) {
+        const component = components[index];
+        if (!component) throw new Error("git path contains an empty component");
+        absolutePath = join(absolutePath, component);
+        const info = await Deno.lstat(absolutePath);
+        if (index < components.length - 1) {
+          if (!info.isDirectory || info.isSymlink) {
+            throw new Error("git path traverses a non-directory source entry");
+          }
+        } else if (info.isSymlink) {
+          kind = "symlink";
+          contents = encoder.encode(await Deno.readLink(absolutePath));
+        } else if (info.isFile) {
+          kind = "file";
+          contents = await Deno.readFile(absolutePath);
+        } else {
+          throw new Error("git path is not a file or symlink");
+        }
+      }
+      const pathToken = Array.from(
+        encoder.encode(filePath),
+        (byte) => byte.toString(16).padStart(2, "0"),
+      ).join("");
+      return `${pathToken}:${kind}:${await hash(contents)}`;
+    }),
+  );
+  return hashes.sort();
+}
+
 async function buildTrace(
   runNonce: string,
   port: number,
@@ -700,19 +785,21 @@ async function buildTrace(
     commandOutput(["rev-parse", "HEAD"]),
     commandOutput(["status", "--porcelain=v1"]),
     commandOutput(["diff", "--binary", "HEAD"]),
-    commandOutput(["ls-files", "--others", "--exclude-standard"]),
+    commandOutputBytes([
+      "ls-files",
+      "--others",
+      "--exclude-standard",
+      "-z",
+    ]),
     Deno.readFile(join(PROJECT_ROOT, "floorp-runtime.lock.json")),
     Deno.readFile(
       join(PROJECT_ROOT, "_dist", "bin", ".floorp-runtime-lock.json"),
     )
       .catch(() => new Uint8Array()),
   ]);
-  const untrackedHashes = await Promise.all(
-    untracked.split("\n").filter(Boolean).map(async (filePath) =>
-      `${filePath}:${await hash(
-        await Deno.readFile(join(PROJECT_ROOT, filePath)),
-      )}`
-    ),
+  const untrackedHashes = await hashUntrackedSourceFiles(
+    PROJECT_ROOT,
+    untracked,
   );
   const runtimeExpectedBuildId = resolveExpectedRuntimeBuildId(
     runtimeLock,
