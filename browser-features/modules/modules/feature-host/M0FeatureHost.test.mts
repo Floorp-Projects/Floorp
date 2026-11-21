@@ -1948,7 +1948,8 @@ async function testEmptyWindowSetAndSandboxCleanupFailures(): Promise<void> {
       "cleanup-test-epoch",
       1,
       "e".repeat(64),
-      `globalThis.__floorpM0 = { activate() {}, attachWindow() {}, health() { return "ok"; }, deactivate() { ${deactivate} } };`,
+      "globalThis.__floorpM0 = { activate() {}, attachWindow() {}, " +
+        'health() { return "ok"; }, deactivate() { ' + deactivate + " } };",
       () => "{}",
     );
   for (
@@ -1980,7 +1981,7 @@ async function testEmptyWindowSetAndSandboxCleanupFailures(): Promise<void> {
   let activeGeneration = 1;
   let currentResourceMutations = 0;
   const staleSource =
-    `globalThis.__floorpM0 = { activate(_context, request) { this.retainedRequest = request; }, attachWindow() {}, health() { return "ok"; }, deactivate() {} };`;
+    'globalThis.__floorpM0 = { activate(_context, request) { this.retainedRequest = request; }, attachWindow() {}, health() { return "ok"; }, deactivate() {} };';
   const staleRuntime = new M0ModuleHost(
     "stale-callback-epoch",
     1,
