@@ -1,6 +1,6 @@
 # FDH AC-05 — Workspace MCP probe, live run (test B)
 
-Date: 2026-11-21. Account: r.asano@floorp.app (Google Workspace). Probe: `tools/integration/fdh_workspace_mcp_spike.ts --execute-google-workspace` against an ephemeral local Keycloak 26.8.2 container with the Google identity broker.
+Date: 2026-11-21. Account: a `floorp.app` Google Workspace member (account-specific values redacted). Probe: `tools/integration/fdh_workspace_mcp_spike.ts --execute-google-workspace` against an ephemeral local Keycloak 26.8.2 container with the Google identity broker.
 
 ## Result
 
@@ -17,6 +17,6 @@ Date: 2026-11-21. Account: r.asano@floorp.app (Google Workspace). Probe: `tools/
 
 The stock spike could not run on the pinned 26.8.2 image; three real incompatibilities were found and fixed:
 
-1. `unmanagedAttributePolicy: "DISABLED"` is no longer a valid enum value — realm profile PUT returns 400. `ADMIN_VIEW` keeps the same strictness (users still cannot write unmanaged attributes) and passes `validProfile`.
+1. `unmanagedAttributePolicy: "DISABLED"` is no longer a valid enum value — realm profile PUT returns 400. `ADMIN_VIEW` keeps the same write restriction (users still cannot edit unmanaged attributes) while permitting management interfaces to read them, and passes `validProfile`.
 2. The Admin REST API rejects service-account tokens without the built-in `kc-admin-api` client scope (RFC 9700 audience check) → `fdh-broker-reader` gets it as a default scope.
 3. Token introspection requires the introspecting client to appear in the token's `aud` (hardening added in Keycloak 26.6.2). With RFC 8707 resource indicators the aud is the resource URI and never contains a client id, so the reader client needs `allow.token.introspection.without.audience.check=true`.
