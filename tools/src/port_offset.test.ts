@@ -110,19 +110,19 @@ Deno.test("auto candidates are 0 plus the non-overlap ladder", () => {
   }
 });
 
-Deno.test("start log reports the Marionette port the launch listens on", () => {
+Deno.test("start log reports the launch Marionette port and OS-Server URL", () => {
   // Offset 0 writes no marionette.port pref, so the default 2828 applies.
   assertEquals(launchMarionettePort(0), MARIONETTE_DEFAULT_PORT);
   assertEquals(MARIONETTE_DEFAULT_PORT, 2828);
   assertEquals(
     describeLaunchPorts(0),
-    "port-offset=0 marionette=2828 pref=nora.dev.port_offset",
+    "port-offset=0 marionette=2828 os-server=http://127.0.0.1:5175 pref=nora.dev.port_offset",
   );
   // Non-zero offsets shift the 5180 base (Gate 2: offset 100 -> 5280).
   assertEquals(launchMarionettePort(100), 5280);
   assertEquals(
     describeLaunchPorts(100),
-    "port-offset=100 marionette=5280 pref=nora.dev.port_offset",
+    "port-offset=100 marionette=5280 os-server=http://127.0.0.1:5275 pref=nora.dev.port_offset",
   );
 });
 

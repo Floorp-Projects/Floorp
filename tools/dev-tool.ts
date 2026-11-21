@@ -222,14 +222,10 @@ async function cmdStart() {
 
   // Resolve the optional --port-offset before spawning so the log shows the
   // actual topology and the detached feles-build inherits a concrete number.
-  let spawnCommandArgs = "";
-  const rawOffsetArg = rawPortOffsetArgument(Deno.args);
-  if (rawOffsetArg !== undefined) {
-    const spec = parsePortOffsetSpec(rawOffsetArg);
-    const offset = spec === "auto" ? await resolveAutoDevPortOffset() : spec;
-    console.log(`[dev-tool] Using ${describeLaunchPorts(offset)}`);
-    spawnCommandArgs = ` --port-offset ${offset}`;
-  }
+  const spec = parsePortOffsetSpec(rawPortOffsetArgument(Deno.args));
+  const offset = spec === "auto" ? await resolveAutoDevPortOffset() : spec;
+  console.log(`[dev-tool] Using ${describeLaunchPorts(offset)}`);
+  const spawnCommandArgs = ` --port-offset ${offset}`;
 
   const logFile = path.join(PROJECT_ROOT, "_dist", "dev-server.log");
   const marionetteFile = path.join(

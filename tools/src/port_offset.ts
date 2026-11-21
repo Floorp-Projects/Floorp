@@ -191,6 +191,7 @@ export function describeLaunchPorts(offset: number): string {
   return [
     `port-offset=${offset}`,
     `marionette=${launchMarionettePort(offset)}`,
+    `os-server=${devOsServerBaseUrl(offset)}`,
     `pref=${DEV_PORT_OFFSET_PREF}`,
   ].join(" ");
 }

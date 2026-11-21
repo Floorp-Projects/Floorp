@@ -4,9 +4,13 @@ import { assertEquals, assertStringIncludes } from "@std/assert";
 import * as path from "@std/path";
 import { savePrefs } from "./dev_env_manager.ts";
 
-Deno.test("profile token isolation opts in only dev/test HTTP loader profiles", async () => {
-  assertStringIncludes(await generateUserJs(true), 'user_pref("nora.dev.os_server.profile_token_file", true);');
-  assertStringIncludes(await generateUserJs(false), 'user_pref("nora.dev.os_server.profile_token_file", false);');
+Deno.test("dev/test and stage profiles opt into profile token isolation", async () => {
+  for (const allowHttpLoader of [true, false]) {
+    assertStringIncludes(
+      await generateUserJs(allowHttpLoader),
+      'user_pref("nora.dev.os_server.profile_token_file", true);',
+    );
+  }
 });
 
 const BASELINE_CSP_PREF =

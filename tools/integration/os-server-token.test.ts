@@ -155,7 +155,13 @@ Deno.test("built adapter: Windows zero IO; Unix links guard publication and all 
     nodes.set("/profile", "directory");
     nodes.set("/profile/floorp-os-server", "directory");
     nodes.delete("/profile/floorp-os-server/os-server-token");
+    mode = "stage";
+    calls.length = 0;
     await adapter.publishTokenFile("fake");
+    assertEquals(
+      calls.filter((call) => call.startsWith("dirsvc:")),
+      ["dirsvc:ProfD"],
+    );
     nodes.set("/profile/floorp-os-server", "link");
     calls.length = 0;
     await assertRejects(() => adapter.cleanupTokenFile());

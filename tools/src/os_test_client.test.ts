@@ -4,6 +4,7 @@ import { assert, assertEquals, assertRejects, assertThrows } from "@std/assert";
 import {
   createOsTestClient,
   reconcileOsTestClientArgs,
+  resolveOsTestBaseUrl,
   resolveTokenFile,
   validateAuthenticatedBaseUrl,
 } from "./os_test_client.ts";
@@ -11,6 +12,17 @@ import {
 const BASE = "http://127.0.0.1:5175";
 const SECRET = "synthetic-test-secret-12345";
 const bytes = (text: string) => new TextEncoder().encode(text);
+
+Deno.test("OS test URL prefers CLI then environment then the default", () => {
+  const env = "http://127.0.0.1:5275";
+  assertEquals(resolveOsTestBaseUrl(BASE, env), BASE);
+  assertEquals(resolveOsTestBaseUrl(undefined, ` ${env}/ `), env + "/");
+  assertEquals(
+    resolveOsTestBaseUrl(undefined, " \t"),
+    "http://127.0.0.1:58261",
+  );
+  assertEquals(resolveOsTestBaseUrl(undefined, undefined, BASE), BASE);
+});
 
 Deno.test("token file CLI overrides env; absent means no discovery", async () => {
   assertEquals(resolveTokenFile("explicit", "environment"), "explicit");
