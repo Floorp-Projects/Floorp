@@ -49,8 +49,10 @@ const approvals = [receipt('one'), receipt('two')];
  * @param {ScenarioOptions} [options]
  */
 async function run(label, comments, expected, options = {}) {
-  process.env.EVENT_HEAD_SHA = options.eventHead ?? '';
+  process.env.EVENT_HEAD_SHA = options.eventHead ?? head;
   let reads = 0, created = 0, spawns = 0;
+  /** @type {string[]} */
+  const permissionLookups = [];
   /** @type {CheckUpdateInput | undefined} */
   let updated;
   /** @type {ScenarioOperation[]} */
@@ -62,7 +64,21 @@ async function run(label, comments, expected, options = {}) {
     rest: {
       pulls: { get: () => ({ data: { number: 42, head: {
         sha: ++reads === 2 && options.headRace ? other : head,
-      } } }) },
+      }, base: { ref: 'main' }, state: 'open' } }) },
+      repos: {
+        getCollaboratorPermissionLevel: ({ owner, repo, username }) => {
+          assert.equal(owner, 'fixture');
+          assert.equal(repo, 'repo');
+          permissionLookups.push(username.toLowerCase());
+          if (username === 'read-only') return { data: { permission: 'read' } };
+          if (options.collaboratorLookupFailure) {
+            throw Object.assign(new Error('fixture permissions API failure'), {
+              status: options.collaboratorLookupFailure,
+            });
+          }
+          return { data: { permission: options.collaboratorPermission ?? 'write' } };
+        },
+      },
       checks: {
         create: input => {
           assert.equal(input.head_sha, head);
@@ -132,6 +148,8 @@ async function run(label, comments, expected, options = {}) {
       github, { repo: { owner: 'fixture', repo: 'repo' } }, core,
     );
   } catch (error) { thrown = error; }
+  assert.equal(new Set(permissionLookups).size, permissionLookups.length, 'one lookup per login');
+  assert.ok(!permissionLookups.includes('outside-contributor'), 'skip ineligible associations');
   if (options.stale) {
     assert.ok(thrown);
     assert.equal(created, 0);
@@ -154,13 +172,27 @@ async function run(label, comments, expected, options = {}) {
 }
 (async () => {
   await run('real Deno approvals', approvals, 'success');
+  await run('repository admins count', approvals, 'success', { collaboratorPermission: 'admin' });
+  const readOnlyMember = { ...approvals[1], user: { login: 'read-only' } };
+  await run('read-only member cannot satisfy reviewer count', [approvals[0], readOnlyMember], 'failure');
+  await run('malformed marker from read-only member is ignored', [...approvals, {
+    ...readOnlyMember, body: '<!-- fdh-review-receipt:v1 malformed -->',
+  }], 'success');
+  await run('contributor cannot satisfy reviewer count', [approvals[0], {
+    ...approvals[1], user: { login: 'outside-contributor' }, author_association: 'CONTRIBUTOR',
+  }], 'failure');
+  await run('missing collaborator cannot satisfy reviewer count', approvals, 'failure', { collaboratorLookupFailure: 404 });
+  await run('permissions API outage fails closed', approvals, 'failure', { collaboratorLookupFailure: 503 });
+  await run('unexpected permission response fails closed', approvals, 'failure', { collaboratorPermission: 'unknown' });
   await run('edited marker removed', [approvals[0], { ...approvals[1], body: 'withdrawn' }], 'failure');
   await run('deleted receipt', [approvals[0]], 'failure');
   await run('blocking receipt', [approvals[0], receipt('two', { blocking: true })], 'failure');
+  await run('request changes receipt', [approvals[0], receipt('two', { verdict: 'request_changes' })], 'failure');
+  await run('receipt for the wrong head is stale', [approvals[0], receipt('two', { commit: other })], 'failure');
   await run('head changes during validation', approvals, 'failure', { headRace: true });
   await run('comments API fails', [], 'failure', { apiFailure: true });
   await run('runner nonzero exit', [], 'failure', { childFailure: true });
   await run('malformed runner stdout', [], 'failure', { invalidOutput: true });
   await run('stale triggering head', approvals, undefined, { eventHead: other, stale: true });
-  console.log('PASS all 9 workflow scenarios; custom rejection propagates AFTER publication.');
+  console.log('PASS all workflow scenarios; failed validation publishes before failing the job.');
 })().catch(error => { console.error(error); process.exitCode = 1; });

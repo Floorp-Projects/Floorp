@@ -273,7 +273,7 @@ execution.
 An independent LLM review is recorded as a machine-readable receipt bound to the
 PR head commit. `fdh review record` is still local-only: it writes the receipt
 under `<worktree>/_dist/fdh/reviews/` and prints the comment body. The agent
-posts that body with `gh pr comment`, and the `fdh-review-gate` workflow
+posts that body with `gh pr comment`, and the `fdh-trusted-review-gate` workflow
 requires at least two distinct reviewer identities at the PR head.
 
 ```sh
@@ -287,66 +287,33 @@ deno run -A tools/fdh.ts review record --task-id <task-id> \
 ```
 
 Then post the printed `commentBody` (marker
-`<!-- fdh-review-receipt:v1 {...} -->`) to the PR. The legacy gate counts receipts
-only from comment authors whose GitHub association is OWNER, MEMBER or
-COLLABORATOR; other authors' receipts are logged and ignored. A receipt for
-another commit is stale and ignored (it neither counts nor blocks). A head
-receipt with a `request_changes` verdict or `blocking=true` fails the gate. This
-MEMBER policy is unchanged; it means any organisation member and is not limited
-to repository write access.
+`<!-- fdh-review-receipt:v1 {...} -->`) to the PR. The gate counts receipts from
+authors whose GitHub association is OWNER, MEMBER or COLLABORATOR and whose
+effective repository permission is write or admin (GitHub maps maintain to
+write). A receipt for another commit is stale. A head receipt with a
+`request_changes` verdict or `blocking=true` fails the gate.
 
 ## Trusted receipt-check boundary
 
-`.github/workflows/fdh-trusted-review-gate.yml` is a default-branch receipt-only
-checker. GitHub evaluates `pull_request_target` workflow definitions from the
-PR's base branch (and `issue_comment` workflow definitions from the default
-branch); after a trusted activation/merge, the checker explicitly checks out
-the repository's default branch for its helper. It reads PR/comment data as
-untrusted data, never checks out or executes candidate code, and publishes a
-unique `fdh-trusted-receipts` Check Run against the exact PR head SHA. It
-re-reads the PR head before success; if the head changes during validation,
-that SHA's check fails. The checker validates existing OWNER/MEMBER/COLLABORATOR
-associations, requires two distinct reviewer identities, ignores stale receipts
-and retains the existing verdict/schema policy. Protect the target base branch
-so this workflow definition cannot be changed by an untrusted PR before that
-branch has received the trusted preparatory workflow.
+GitHub loads the `pull_request_target` workflow from the PR's base on `main`.
+The `trusted-receipt-publication` job checks out that same workflow commit with
+`github.workflow_sha` and evaluates receipt comments against the event's PR
+head. It verifies the PR still targets `main` at that head before and after
+validation. The custom `fdh-trusted-receipts` Check Run carries the diagnostic
+result. The separate `pull_request` job `review-gate` runs the candidate host
+tests and build with read-only contents permission.
 
-Receipt rejection publishes a failed custom check and fails the trusted
-`trusted-receipt-publication` workflow job; the job name is deliberately different
-from the custom `fdh-trusted-receipts` check name. This check does **not** run the
-candidate host tests or build, and it does not replace the legacy `review-gate`. The legacy `pull_request` workflow still
-checks out and executes PR-controlled code (with its restricted read-only
-permissions); its checker can be changed by the candidate. Do not treat it as a
-trusted receipt validator. In this rollout, the approved protection binding requires
-the real `trusted-receipt-publication` Actions job context from App 15368, alongside
-the legacy review/test/build checks. The custom `fdh-trusted-receipts` Check Run
-remains diagnostic, not the required context. This job-name/App binding is not a
-workflow-identity ruleset guarantee: another job from the same App may spoof a
-name. Do not claim stronger isolation or change protection without approval. Protect the target base workflow and verify minimal Actions
-permissions (`checks:write`, PR/issue reads only). The pending Check Run is
-created after checkout/setup and initial PR API reads; failures before creation
-can leave an older successful Check Run visible. This preparatory code therefore
-does not claim transactional fail-closed behavior for every infrastructure
-outage. Keep the existing required test/build gate until an explicitly reviewed
-replacement preserves those validations. The approved context binding above does
-not add publication authority or remove any required test/build validation.
+The default-branch `issue_comment` job reruns trusted validation for the current
+PR head when an eligible author's receipt marker is added, edited, or removed.
+For a PR already open when the rerun workflow ships, reopen it or update it to
+start a run the comment job can find. Revalidation reads the full comment set.
+Reviewer identities remain declarations by the poster.
 
-A created comment triggers revalidation only when it contains a receipt
-marker; edited or deleted comments from a trusted associated author trigger a
-re-evaluation of the latest full comment set, so removing a marker cannot leave
-a previous success valid. Ordinary trusted comments may cause a harmless
-re-evaluation. The reviewer identities are still declared by the poster; the
-gate cannot prove that two receipts from one trusted account came from two
-independent reviews.
-
-Limits to know:
-
-- An organisation member with private membership may appear as `CONTRIBUTOR`;
-  their receipts are then ignored (make membership public or use a collaborator
-  account), preserving the current association contract.
-- A PR that changes either review-gate workflow or checker does not affect the
-  default-branch copy used by the trusted workflow; activation still requires
-  maintainer-controlled default-branch and ruleset changes.
+Keep both required Actions job contexts on `main`. The binding to GitHub Actions
+App 15368 still permits another workflow from that App to report the same job
+name. Block that route with a workflow-identity ruleset where supported or by
+requiring a maintainer code-owner review for workflow changes, the trusted
+receipt checker and CODEOWNERS itself.
 
 ## Evidence on the PR (D-20, KAN-132)
 

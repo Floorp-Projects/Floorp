@@ -13,8 +13,8 @@
  *   <!-- fdh-review-receipt:v1 {"schemaVersion":1,...} -->
  *
  * This module is local-only and deterministic: no network, no GitHub calls.
- * The workflow (`.github/workflows/fdh-review-gate.yml`) fetches comments and
- * feeds them to `parseReceiptComments` + `validateReceiptSet`.
+ * The trusted receipt workflow verifies comment authors' repository access
+ * before passing the comments to the trusted review runner.
  */
 
 /** Schema version of the receipt payload carried in the marker. */
@@ -72,10 +72,8 @@ export interface ReviewCommentInput {
 }
 
 /**
- * Comment authors whose receipts the gate counts (X-01). Anyone can comment
- * on a public PR, so receipts from other associations (CONTRIBUTOR, NONE,
- * FIRST_TIME_CONTRIBUTOR, ...) are ignored rather than trusted or allowed to
- * fail the gate with a malformed marker.
+ * Author associations eligible to submit receipts (X-01). The trusted CI
+ * workflow additionally checks effective repository permission via GitHub.
  */
 export const TRUSTED_RECEIPT_AUTHOR_ASSOCIATIONS = [
   "OWNER",
