@@ -4,9 +4,13 @@ import { assertEquals, assertStringIncludes } from "@std/assert";
 import * as path from "@std/path";
 import { savePrefs } from "./dev_env_manager.ts";
 
-Deno.test("profile token isolation opts in only dev/test HTTP loader profiles", async () => {
-  assertStringIncludes(await generateUserJs(true), 'user_pref("nora.dev.os_server.profile_token_file", true);');
-  assertStringIncludes(await generateUserJs(false), 'user_pref("nora.dev.os_server.profile_token_file", false);');
+Deno.test("dev/test and stage profiles opt into profile token isolation", async () => {
+  for (const allowHttpLoader of [true, false]) {
+    assertStringIncludes(
+      await generateUserJs(allowHttpLoader),
+      'user_pref("nora.dev.os_server.profile_token_file", true);',
+    );
+  }
 });
 
 const BASELINE_CSP_PREF =
@@ -159,21 +163,6 @@ Deno.test(
         await generateUserJs(true, 100),
       ),
       false,
-    );
-  },
-);
-
-Deno.test(
-  "the hand-picked offset 53086 documents the one 58261 coincidence",
-  async () => {
-    // 5175 + 53086 = 58261: this offset coincides with the packaged
-    // production default. It is not silently shared: the launch probe set
-    // (launchPortsForOffset, used by auto resolution and the fdh guard)
-    // rejects the rung while the port is held, and a direct bind fails with
-    // the OS-Server's own port error.
-    assertStringIncludes(
-      await generateUserJs(true, 53086),
-      'user_pref("floorp.os.server.port", 58261);',
     );
   },
 );

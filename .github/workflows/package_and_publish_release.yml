@@ -18,6 +18,21 @@ name: "(P) ⚠️ Package and Publish Release"
         required: false
         type: boolean
         default: false
+  workflow_call:
+    inputs:
+      runtime_workflow_run_id:
+        required: true
+        type: string
+      runtime_manifest_artifact_id:
+        required: true
+        type: string
+      validation_only:
+        type: boolean
+        default: false
+      alpha:
+        description: Publish the verified Windows package to Alpha
+        required: true
+        type: boolean
 
 permissions:
   actions: read
@@ -59,7 +74,7 @@ jobs:
             }
 
       - name: Reject an existing production release
-        if: ${{ inputs.validation_only != true }}
+        if: ${{ inputs.validation_only != true && inputs.alpha != true }}
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -71,7 +86,7 @@ jobs:
           fi
 
       - name: Reject a production tag bound to another commit
-        if: ${{ inputs.validation_only != true }}
+        if: ${{ inputs.validation_only != true && inputs.alpha != true }}
         uses: actions/github-script@v7
         with:
           script: |
@@ -524,13 +539,14 @@ jobs:
   publish:
     name: Publish verified release
     needs: assemble-release-bundle
-    if: ${{ inputs.validation_only != true }}
+    if: ${{ inputs.validation_only != true && inputs.alpha != true }}
     permissions:
       actions: read
       contents: write
     uses: ./.github/workflows/publish_release.yml
     with:
       source_workflow_run_id: ${{ github.run_id }}
+      installer_artifact_ids: ${{ needs.assemble-release-bundle.outputs.installer_artifact_ids }}
       bundle_artifact: >-
         ${{ format('{{"name":"{0}","id":{1},"digest":"{2}"}}',
         needs.assemble-release-bundle.outputs.artifact_name,
@@ -549,6 +565,22 @@ jobs:
       CLOUDFLARE_API_TOKEN_FOR_PURGE: >-
         ${{ secrets.CLOUDFLARE_API_TOKEN_FOR_PURGE }}
       CLOUDFLARE_ZONE_ID: ${{ secrets.CLOUDFLARE_ZONE_ID }}
+
+  publish-alpha:
+    name: Publish verified Alpha
+    needs: assemble-release-bundle
+    if: ${{ inputs.validation_only != true && inputs.alpha == true }}
+    permissions:
+      actions: read
+      contents: write
+    uses: ./.github/workflows/publish_alpha.yml
+    with:
+      installer_artifact_ids: ${{ needs.assemble-release-bundle.outputs.installer_artifact_ids }}
+      bundle_artifact: >-
+        ${{ format('{{"name":"{0}","id":{1},"digest":"{2}"}}',
+        needs.assemble-release-bundle.outputs.artifact_name,
+        needs.assemble-release-bundle.outputs.artifact_id,
+        needs.assemble-release-bundle.outputs.artifact_digest) }}
 
   validation-complete:
     name: Validation-only release bundle complete

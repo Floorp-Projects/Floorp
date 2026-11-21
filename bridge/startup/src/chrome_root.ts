@@ -56,7 +56,12 @@ function assertHttpLoaderAllowed(): void {
 const isTestOwner = import.meta.env.MODE === "test" &&
   claimTestRunOwnership(Services.ppmm.sharedData);
 if (import.meta.env.MODE !== "test" || isTestOwner) {
-  setStartupMarker("nora.startup.mode", import.meta.env.MODE);
+  // Stage is a local dev launch with packaged assets. Its runtime profile
+  // token service recognizes the same dev marker as the HTTP-loader launch.
+  const startupMode = import.meta.env.MODE === "stage"
+    ? "dev"
+    : import.meta.env.MODE;
+  setStartupMarker("nora.startup.mode", startupMode);
   setStartupMarker("nora.startup.loader", "");
   setStartupMarker("nora.startup.test", "");
   setStartupMarker("nora.startup.error", "");

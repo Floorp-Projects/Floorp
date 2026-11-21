@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
+import { OS_SERVER_PRODUCTION_DEFAULT_PORT } from "./port_offset.ts";
 import type {
   OsTestClient,
   OsTestClientArgs,
@@ -8,6 +9,15 @@ import type {
 } from "./os_test_client_types.ts";
 
 const MAX_TOKEN_BYTES = 4096;
+
+/** Explicit CLI target, environment target, then the installed or launch default. */
+export function resolveOsTestBaseUrl(
+  flag?: string,
+  env?: string,
+  fallback = `http://127.0.0.1:${OS_SERVER_PRODUCTION_DEFAULT_PORT}`,
+): string {
+  return flag?.trim() || env?.trim() || fallback;
+}
 
 /** Explicit paths only. No Home/profile discovery and no raw-token CLI/env. */
 export function resolveTokenFile(

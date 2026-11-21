@@ -8,6 +8,7 @@ import {
   marionettePortForOffset,
   requireDevPortOffset,
 } from "#libs/shared/dev-ports/defines.ts";
+import { PROFILE_TOKEN_PREF } from "#libs/shared/os-server-token/defines.ts";
 import { OS_SERVER_PORT_PREF, osServerPortForOffset } from "./port_offset.ts";
 
 const logger = new Logger("dev-env");
@@ -52,13 +53,9 @@ user_pref("security.sandbox.content.level", 1);
 user_pref("remote.active-protocols", 1);
 user_pref("browser.newtabpage.enabled", true);
 user_pref("floorp.mcp.enabled", true);
-// Dev/test profile isolation; runtime also requires a dev/test startup marker.
-user_pref("nora.dev.os_server.profile_token_file", ${allowBrowserHttpLoader});
-// Dev-only Floorp OS-Server port (KAN-135): the in-span dev port shifted by
-// the launch offset. The default and ladder offsets avoid the packaged
-// production default 58261; the hand-picked offset 53086 would land back on
-// it, which the launch probe set (auto/guard) and the OS-Server bind error
-// catch instead of silently sharing the port.
+// Local launch profile isolation; runtime also checks the startup mode.
+user_pref("${PROFILE_TOKEN_PREF}", true);
+// Dev-only Floorp OS-Server port, shifted by the launch offset (KAN-135).
 user_pref("${OS_SERVER_PORT_PREF}", ${osServerPortForOffset(portOffset)});
 user_pref("browser.sessionstore.resume_from_crash", false);
 user_pref("nora.dev.allow_http_loader", ${allowBrowserHttpLoader});

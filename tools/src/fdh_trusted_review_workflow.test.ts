@@ -6,6 +6,10 @@ const WORKFLOW = new URL(
   "../../.github/workflows/fdh-trusted-review-gate.yml",
   import.meta.url,
 );
+const CANDIDATE_WORKFLOW = new URL(
+  "../../.github/workflows/fdh-review-gate.yml",
+  import.meta.url,
+);
 const RUNNER = new URL("./fdh_trusted_review_runner.ts", import.meta.url);
 
 Deno.test("FDH trusted receipt workflow is base-trusted and does not execute candidate code", async () => {
@@ -14,8 +18,9 @@ Deno.test("FDH trusted receipt workflow is base-trusted and does not execute can
   assertStringIncludes(workflow, "issue_comment:");
   assertStringIncludes(
     workflow,
-    "ref: ${{ github.event.repository.default_branch }}",
+    "ref: ${{ github.workflow_sha }}",
   );
+  assertStringIncludes(workflow, "branches: [main]");
   assertStringIncludes(workflow, "persist-credentials: false");
   assertStringIncludes(workflow, "checks: write");
   assertStringIncludes(
@@ -35,8 +40,21 @@ Deno.test("FDH trusted receipt workflow is base-trusted and does not execute can
     "const { data: pending } = await github.rest.checks.create",
   );
   assertStringIncludes(workflow, "types: [created, edited, deleted]");
-  assertStringIncludes(workflow, "github.event.action != 'created'");
+  assertStringIncludes(
+    workflow,
+    "contains(github.event.changes.body.from, 'fdh-review-receipt:v1')",
+  );
+  assertStringIncludes(workflow, "event=pull_request_target&head_sha=");
+  assertStringIncludes(
+    workflow,
+    ".display_title == $title and .head_sha == $sha",
+  );
+  assertStringIncludes(workflow, 'gh run rerun "$run_id"');
   assertStringIncludes(workflow, "github.rest.pulls.get");
+  assertStringIncludes(
+    workflow,
+    "github.rest.repos.getCollaboratorPermissionLevel",
+  );
   assertStringIncludes(workflow, "currentHeadSha: headSha");
   assertStringIncludes(
     workflow,
@@ -48,7 +66,10 @@ Deno.test("FDH trusted receipt workflow is base-trusted and does not execute can
     'const childEnv = { PATH: process.env.PATH, DENO_NO_UPDATE_CHECK: "1" }',
   );
   assertEquals(workflow.includes("GITHUB_TOKEN: \${{ github.token }}"), false);
-  assertEquals(workflow.includes("GH_TOKEN"), false);
+  assertEquals(
+    workflow.split("  trusted-receipts:")[1].includes("GH_TOKEN"),
+    false,
+  );
   assertEquals(workflow.includes("secrets."), false);
   assertStringIncludes(workflow, '"run", "--no-config"');
   assertStringIncludes(workflow, "latest.head?.sha !== headSha");
@@ -57,8 +78,24 @@ Deno.test("FDH trusted receipt workflow is base-trusted and does not execute can
   assertEquals(workflow.includes("deno install"), false);
   assertEquals(workflow.includes("deno task test"), false);
   assertEquals(workflow.includes("feles-build"), false);
-  assertEquals(workflow.includes("pull_request:\\n"), false);
-  assertStringIncludes(workflow, "github.event.pull_request.head.sha || ''");
+  assertEquals(workflow.includes("\n  pull_request:\n"), false);
+  assertStringIncludes(
+    workflow,
+    "EVENT_HEAD_SHA: ${{ github.event.pull_request.head.sha }}",
+  );
+});
+
+Deno.test("FDH candidate workflow retains the required host test and build job", async () => {
+  const workflow = await Deno.readTextFile(CANDIDATE_WORKFLOW);
+  assertStringIncludes(workflow, "\n  pull_request:\n");
+  assertStringIncludes(workflow, "\n  review-gate:\n");
+  assertStringIncludes(workflow, "deno task test:host");
+  assertStringIncludes(
+    workflow,
+    "deno task feles-build build --phase before-mach",
+  );
+  assertEquals(workflow.includes("fdh_review.ts"), false);
+  assertEquals(workflow.includes("pull_request_target:"), false);
 });
 
 Deno.test({
@@ -89,6 +126,7 @@ Deno.test({
           } -->`,
           author: "member-a",
           authorAssociation: "MEMBER",
+          authorPermission: "write",
         },
         {
           body: `<!-- fdh-review-receipt:v1 ${
@@ -96,6 +134,7 @@ Deno.test({
           } -->`,
           author: "member-b",
           authorAssociation: "COLLABORATOR",
+          authorPermission: "admin",
         },
       ],
     };

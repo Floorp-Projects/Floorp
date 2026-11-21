@@ -1,11 +1,11 @@
 # QA3 source shadow foundation
 
-This is the first QA3-04/11 host foundation, not product qualification. The
-approved initial mode is **shadow**. Release and Alpha each call the reusable
-source job once, alongside their existing jobs. Its job-level
-`continue-on-error` preserves the current required jobs, signing, approval,
-bundle schema and publisher. The raw receipt retains FAIL/INCOMPLETE even when
-the calling workflow continues. Do not make packages depend on this job yet.
+This is the QA3-04/11 host foundation. FDH decision D-13 keeps source QA in
+**shadow** for v0.1 ([KAN-114](https://floorp-projects.atlassian.net/browse/KAN-114)).
+Release and Alpha each call the reusable source job once, in parallel with
+packaging. The job uses `continue-on-error` and is independent of signing,
+approval, and publishing. The raw receipt retains FAIL/INCOMPLETE even when
+the calling workflow continues.
 
 ## Fixed plan and execution
 
@@ -53,10 +53,12 @@ plan/runner/root-config/root-lock/host-map/host-lock/test-file digests,
 planned/executed IDs and each raw verdict. `--local` explicitly records
 dirty/local execution during development; it does not issue qualification.
 Preflight rejection also writes a FAIL receipt. CI preserves contract-test logs
-and exit codes alongside the source receipt in `source/`. Workflow artifacts are
-named with run and attempt and retained for 14 days. This initial receipt does
-not establish complete history across runs; that requires the QA3-08 trusted
-controller before required promotion.
+and exit codes alongside the source receipt in `source/`. The Actions job
+summary reports the contract-test outcome and the verdict and SHA-256 of a
+receipt matching the expected checkout, run, and attempt. Missing or invalid
+receipts are shown explicitly. The raw evidence is uploaded as
+`qa3-source-<run>-<attempt>` and retained for 14 days. Complete history across
+runs requires the QA3-08 trusted controller.
 
 Child processes receive a small environment without credentials or runner option
 injection. Each group has a 180-second timeout and a 16-MiB limit for regular
@@ -150,6 +152,26 @@ contract tests: an in-memory process API on any host, and the real libproc
 tests in the `macos-supervisor` jobs (Apple silicon and Intel). It also
 covers the 2-E contract only, not a macOS source host.
 
+### Mac Firefox45 verifier order
+
+[KAN-118](https://floorp-projects.atlassian.net/browse/KAN-118) carries the stage
+order check from the [investigated Runtime run](https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/41630387790)
+into the QA3 shadow contract tests. The check requires inventory after helper
+installation, before all seven target builds. Each required stage must appear
+exactly once, and the target builds and subsequent child and resource stages
+must retain their order.
+
+To check the stage order of a recovered `summary.json` after authenticating the
+run and its evidence:
+
+```sh
+python3 -B tools/qa3/mac_verifier_order.py /path/to/summary.json
+```
+
+QA3 shadow CI exercises the stage order check with synthetic summaries. The
+command checks order only. Provenance, stage results, native execution, and
+qualification require their existing verification.
+
 ## Coverage and remaining gates
 
 `coverage.json` keeps installer, MAR, DEB/PPA, Portable and stub proof plans and
@@ -177,8 +199,13 @@ repeat product evidence on Windows x64, Linux x64/ARM, Mac Intel/ARM. Keep Mac
 universal bytes bound to both native executions. Use separate real MAR, DEB,
 Portable and stub evidence. No such native execution is claimed by this change.
 
-The future publisher must perform
+The GitHub Actions publishers perform
 `bundle -> final QA -> manual approval ->
-fresh evidence revalidation -> publish`,
-authenticate exact digests and retain the existing gates. The current manual
-publication/approval flow is unchanged.
+fresh evidence revalidation -> publish`.
+The reusable QA workflow checks the same-run signed bundle and its installer
+artifact IDs. The protected publish jobs revalidate that bundle before making
+the release public. Windows remains in shadow mode for stable QA and is required
+for Windows-only Alpha. Repository administrators manage required reviewers
+for `Deploy-to-installer-release` and `Deploy-to-installer-alpha` under
+GitHub Settings → Environments. Keep administrator bypass disabled on both
+environments so every deployment requires reviewer approval.

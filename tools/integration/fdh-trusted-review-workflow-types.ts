@@ -39,6 +39,8 @@ export interface ScenarioOptions {
   eventHead?: string;
   headRace?: boolean;
   apiFailure?: boolean;
+  collaboratorLookupFailure?: number;
+  collaboratorPermission?: string;
   childFailure?: boolean;
   invalidOutput?: boolean;
   stale?: boolean;
@@ -68,7 +70,12 @@ export interface CheckCreateResult {
 
 /** Response of the mocked pulls.get call. */
 export interface PullRequestFixture {
-  data: { number: number; head: { sha: string } };
+  data: {
+    number: number;
+    head: { sha: string };
+    base: { ref: string };
+    state: string;
+  };
 }
 
 /** Mocked `github.rest.pulls` surface. */
@@ -87,12 +94,20 @@ export interface IssuesApiFixture {
   listComments: () => void;
 }
 
+/** Mocked collaborator permission lookup. */
+export interface ReposApiFixture {
+  getCollaboratorPermissionLevel: (
+    input: { owner: string; repo: string; username: string },
+  ) => { data: { permission: string } };
+}
+
 /** Mocked `github` client consumed by the workflow script. */
 export interface GitHubFixture {
   rest: {
     pulls: PullsApiFixture;
     checks: ChecksApiFixture;
     issues: IssuesApiFixture;
+    repos: ReposApiFixture;
   };
   paginate: () => ReviewCommentFixture[];
 }
