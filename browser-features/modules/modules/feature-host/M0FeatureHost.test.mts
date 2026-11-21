@@ -136,6 +136,31 @@ async function waitForCondition(
   }
 }
 
+function createTestGate(): {
+  entered: Promise<void>;
+  wait: Promise<void>;
+  enter(): void;
+  release(): void;
+} {
+  let markEntered!: () => void;
+  let releaseWait!: () => void;
+  return {
+    entered: new Promise<void>((resolve) => markEntered = resolve),
+    wait: new Promise<void>((resolve) => releaseWait = resolve),
+    enter: () => markEntered(),
+    release: () => releaseWait(),
+  };
+}
+
+function pendingTransactionId(
+  snapshot: Readonly<Record<string, unknown>>,
+): string | null {
+  const pending = snapshot.pending;
+  if (typeof pending !== "object" || pending === null) return null;
+  const txId = (pending as { txId?: unknown }).txId;
+  return typeof txId === "string" ? txId : null;
+}
+
 async function testFreshGenerationLifecycle(): Promise<void> {
   let session: M0TestHostHandle | null = null;
   try {
@@ -744,6 +769,11 @@ async function testNativeFiftyUpdatesStayBounded(): Promise<void> {
     await host.enable("m0-50-enable", host.diagnostics.stateRevision);
     const baseline = host.runningScopeDiagnosticsForTests;
     assert(baseline.resources > 0, "native window resources are tracked");
+    assertEquals(
+      baseline.pendingTasks,
+      0,
+      "active generation has no pending tasks",
+    );
     const timerBaseline = activeM0DeadlineTimersForTests();
     for (let cycle = 0; cycle < 50; cycle += 1) {
       const previous = host.runningLifecycleForTests;
@@ -784,6 +814,26 @@ async function testNativeFiftyUpdatesStayBounded(): Promise<void> {
         "window scopes stay bounded",
       );
       assertEquals(
+        diagnostics.tasks,
+        baseline.tasks,
+        "managed task count stays bounded",
+      );
+      assertEquals(
+        diagnostics.pendingTasks,
+        baseline.pendingTasks,
+        "pending managed tasks stay bounded",
+      );
+      assertEquals(
+        diagnostics.observedTaskRejections,
+        baseline.observedTaskRejections,
+        "observed task rejections stay bounded",
+      );
+      assertEquals(
+        diagnostics.taskFailures,
+        baseline.taskFailures,
+        "task failures stay bounded",
+      );
+      assertEquals(
         activeM0DeadlineTimersForTests(),
         timerBaseline,
         "lifecycle/disposal timers do not accumulate",
@@ -797,6 +847,11 @@ async function testNativeFiftyUpdatesStayBounded(): Promise<void> {
       host.runningScopeDiagnosticsForTests.resources,
       0,
       "disable drains resources",
+    );
+    assertEquals(
+      host.runningScopeDiagnosticsForTests.pendingTasks,
+      0,
+      "disable drains managed tasks",
     );
     assertEquals(
       activeM0DeadlineTimersForTests(),
@@ -834,6 +889,582 @@ async function testNativeFiftyUpdatesStayBounded(): Promise<void> {
         "50-update shutdown clears readiness waiters",
       );
     }
+  }
+}
+
+async function testPendingRequestRetryReturnsRecordedOutcome(): Promise<void> {
+  let session: M0TestHostHandle | null = null;
+  const gate = createTestGate();
+  const txId = "pending-identical-retry";
+  let writes = 0;
+  let held = false;
+  let operation: Promise<unknown> | null = null;
+  try {
+    session = await createM0FeatureHostForTests(
+      true,
+      undefined,
+      false,
+      undefined,
+      {
+        afterDurableWriteForTests: (snapshot) => {
+          writes += 1;
+          if (!held && pendingTransactionId(snapshot) === txId) {
+            held = true;
+            gate.enter();
+            return gate.wait;
+          }
+          return Promise.resolve();
+        },
+      },
+    );
+    const host = session.host;
+    const revision = host.diagnostics.stateRevision;
+    const evaluations = host.evaluationCountForTests;
+    const pendingOperation = host.install(txId, revision, "v1");
+    operation = pendingOperation;
+    void pendingOperation.catch(() => {});
+    await within(gate.entered, 10_000, "pending request write gate");
+
+    const writesAtPending = writes;
+    const retry = await host.install(txId, revision, "v1");
+    assertEquals(retry.status, "pending", "identical retry returns pending");
+    assertEquals(
+      JSON.stringify(retry.request),
+      JSON.stringify(operationRequest("install", revision, "v1")),
+      "pending retry returns the recorded request descriptor",
+    );
+    assertEquals(writes, writesAtPending, "pending retry performs no writes");
+    assertEquals(
+      host.evaluationCountForTests,
+      evaluations,
+      "pending retry performs no evaluation",
+    );
+
+    gate.release();
+    const terminal = await pendingOperation;
+    assertEquals(terminal.status, "succeeded", "original install completes");
+  } finally {
+    gate.release();
+    if (operation) await Promise.allSettled([operation]);
+    if (session) await finishTestHosts(session);
+  }
+}
+
+async function testTxIdDescriptorConflictPrecedesStaleRevision(): Promise<
+  void
+> {
+  let session: M0TestHostHandle | null = null;
+  let writes = 0;
+  try {
+    session = await createM0FeatureHostForTests(
+      true,
+      undefined,
+      false,
+      undefined,
+      {
+        afterDurableWriteForTests: () => {
+          writes += 1;
+          return Promise.resolve();
+        },
+      },
+    );
+    const host = session.host;
+    const installed = await host.install("descriptor-conflict", 0, "v1");
+    assertEquals(installed.status, "succeeded", "initial request succeeds");
+    const revision = host.diagnostics.stateRevision;
+    const writesBeforeConflict = writes;
+    const evaluationsBeforeConflict = host.evaluationCountForTests;
+    const conflict = await host.update("descriptor-conflict", 0, "v2").then(
+      () => null,
+      (error: unknown) => errorMessage(error),
+    );
+    assertEquals(
+      conflict,
+      "transaction ID payload conflict",
+      "full descriptor conflict is reported before stale revision",
+    );
+    assertEquals(
+      host.diagnostics.stateRevision,
+      revision,
+      "conflicting descriptor leaves revision unchanged",
+    );
+    assertEquals(writes, writesBeforeConflict, "conflict performs no writes");
+    assertEquals(
+      host.evaluationCountForTests,
+      evaluationsBeforeConflict,
+      "conflict performs no evaluation",
+    );
+  } finally {
+    if (session) await finishTestHosts(session);
+  }
+}
+
+async function testTerminalReplayIsDetachedAfterRevisionAdvance(): Promise<
+  void
+> {
+  let session: M0TestHostHandle | null = null;
+  let writes = 0;
+  try {
+    session = await createM0FeatureHostForTests(
+      true,
+      undefined,
+      false,
+      undefined,
+      {
+        afterDurableWriteForTests: () => {
+          writes += 1;
+          return Promise.resolve();
+        },
+      },
+    );
+    const host = session.host;
+    const txId = "terminal-lost-response";
+    const initial = await host.install(txId, 0, "v1");
+    assertEquals(initial.status, "succeeded", "initial request succeeds");
+    initial.request.expectedRevision = 99;
+    initial.request.target = "broken";
+    initial.request.normalizedInput = "caller mutation";
+    initial.selectedVersion = "broken";
+
+    const advance = await host.update(
+      "terminal-replay-advance",
+      host.diagnostics.stateRevision,
+      "v2",
+    );
+    assertEquals(
+      advance.status,
+      "succeeded",
+      "later request advances revision",
+    );
+    const replayRevision = host.diagnostics.stateRevision;
+    const writesBeforeReplay = writes;
+    const evaluationsBeforeReplay = host.evaluationCountForTests;
+    const expectedRequest = JSON.stringify(
+      operationRequest("install", 0, "v1"),
+    );
+
+    const replay = await host.install(txId, 0, "v1");
+    assertEquals(replay.status, "succeeded", "terminal request is replayed");
+    assertEquals(
+      JSON.stringify(replay.request),
+      expectedRequest,
+      "replay returns the original detached descriptor",
+    );
+    assertEquals(
+      replay.selectedVersion,
+      "v1",
+      "replay returns stored selection",
+    );
+    assertEquals(
+      host.diagnostics.stateRevision,
+      replayRevision,
+      "stale original revision does not execute the replay",
+    );
+    assertEquals(writes, writesBeforeReplay, "replay performs no writes");
+    assertEquals(
+      host.evaluationCountForTests,
+      evaluationsBeforeReplay,
+      "replay performs no evaluation",
+    );
+
+    replay.request.target = "broken";
+    replay.request.expectedRevision = 100;
+    const queried = host.retryExisting(txId);
+    assert(
+      queried !== "outcome_unknown_or_expired",
+      "terminal result is retained",
+    );
+    assertEquals(
+      JSON.stringify(queried.request),
+      expectedRequest,
+      "mutating replay request cannot change stored descriptor",
+    );
+    queried.request.normalizedInput = "query mutation";
+    const replayAgain = await host.install(txId, 0, "v1");
+    assertEquals(
+      replayAgain.status,
+      "succeeded",
+      "descriptor matching is unchanged",
+    );
+    assertEquals(
+      JSON.stringify(replayAgain.request),
+      expectedRequest,
+      "subsequent replay remains detached from caller mutations",
+    );
+    assertEquals(
+      writes,
+      writesBeforeReplay,
+      "repeated replay performs no writes",
+    );
+    assertEquals(
+      host.evaluationCountForTests,
+      evaluationsBeforeReplay,
+      "repeated replay performs no evaluation",
+    );
+  } finally {
+    if (session) await finishTestHosts(session);
+  }
+}
+
+async function testQueuedRequestsRecheckExpectedRevision(): Promise<void> {
+  let session: M0TestHostHandle | null = null;
+  let writes = 0;
+  try {
+    session = await createM0FeatureHostForTests(
+      true,
+      undefined,
+      false,
+      undefined,
+      {
+        afterDurableWriteForTests: () => {
+          writes += 1;
+          return Promise.resolve();
+        },
+      },
+    );
+    const host = session.host;
+    const revision = host.diagnostics.stateRevision;
+    const writesBefore = writes;
+    const first = host.install("same-revision-first", revision, "v1");
+    const later = host.update("same-revision-later", revision, "v2");
+    const [firstResult, laterResult] = await Promise.allSettled([first, later]);
+    if (firstResult.status !== "fulfilled") {
+      throw new Error(
+        `first admitted request failed: ${String(firstResult.reason)}`,
+      );
+    }
+    assertEquals(
+      firstResult.value.status,
+      "succeeded",
+      "first request succeeds",
+    );
+    if (laterResult.status !== "rejected") {
+      throw new Error("later admitted request unexpectedly succeeded");
+    }
+    assertEquals(
+      errorMessage(laterResult.reason),
+      "stale_revision",
+      "later request rechecks revision when dequeued",
+    );
+    assertEquals(
+      host.diagnostics.stateRevision,
+      revision + 2,
+      "only first request advances the journal",
+    );
+    assertEquals(writes - writesBefore, 2, "stale request performs no writes");
+  } finally {
+    if (session) await finishTestHosts(session);
+  }
+}
+
+async function testBoundedQueueReturnsBusyWhileHeld(): Promise<void> {
+  let session: M0TestHostHandle | null = null;
+  const gate = createTestGate();
+  const activeTxId = "bounded-queue-active";
+  let writes = 0;
+  let held = false;
+  let activeOperation: Promise<unknown> | null = null;
+  const queuedOperations: Promise<unknown>[] = [];
+  try {
+    session = await createM0FeatureHostForTests(
+      true,
+      undefined,
+      false,
+      undefined,
+      {
+        afterDurableWriteForTests: (snapshot) => {
+          writes += 1;
+          if (!held && pendingTransactionId(snapshot) === activeTxId) {
+            held = true;
+            gate.enter();
+            return gate.wait;
+          }
+          return Promise.resolve();
+        },
+      },
+    );
+    const host = session.host;
+    const active = host.install(
+      activeTxId,
+      host.diagnostics.stateRevision,
+      "v1",
+    );
+    activeOperation = active;
+    void active.catch(() => {});
+    await within(gate.entered, 10_000, "bounded queue write gate");
+
+    const revision = host.diagnostics.stateRevision;
+    const writesAtGate = writes;
+    for (let index = 0; index < 15; index += 1) {
+      queuedOperations.push(
+        host.update(`bounded-queue-${index}`, revision, "v2"),
+      );
+    }
+    const overflow = host.update("bounded-queue-overflow", revision, "v2").then(
+      () => "fulfilled",
+      (error: unknown) => errorMessage(error),
+    );
+    const settled = Promise.allSettled([active, ...queuedOperations]);
+    assertEquals(await overflow, "busy", "queue rejects overflow as busy");
+    assertEquals(
+      writes,
+      writesAtGate,
+      "busy admission performs no journal write",
+    );
+
+    gate.release();
+    const results = await settled;
+    if (results[0]?.status !== "fulfilled") {
+      throw new Error("held request failed before queue drained");
+    }
+    assertEquals(
+      (results[0].value as { status: string }).status,
+      "succeeded",
+      "held request completes after release",
+    );
+    for (const result of results.slice(1)) {
+      if (result.status !== "rejected") {
+        throw new Error("queued request unexpectedly executed");
+      }
+      assertEquals(
+        errorMessage(result.reason),
+        "stale_revision",
+        "queued request rechecks revision after the held write",
+      );
+    }
+    assertEquals(
+      writes,
+      writesAtGate + 1,
+      "only held request writes terminal state",
+    );
+    assertEquals(
+      host.evaluationCountForTests,
+      0,
+      "held install and stale queued requests do not evaluate payloads",
+    );
+  } finally {
+    gate.release();
+    if (activeOperation) {
+      await Promise.allSettled([activeOperation, ...queuedOperations]);
+    }
+    if (session) await finishTestHosts(session);
+  }
+}
+
+async function testOutcomeRetentionSurvivesReopenAndEvictsOldEntries(): Promise<
+  void
+> {
+  let first: M0TestHostHandle | null = null;
+  let reopened: M0TestHostHandle | null = null;
+  let writes = 0;
+  const testOptions = {
+    afterDurableWriteForTests: () => {
+      writes += 1;
+      return Promise.resolve();
+    },
+  };
+  try {
+    first = await createM0FeatureHostForTests(
+      true,
+      undefined,
+      false,
+      undefined,
+      testOptions,
+    );
+    const host = first.host;
+    const initialRevision = host.diagnostics.stateRevision;
+    const initialWrites = writes;
+    const initialEvaluations = m0PayloadEvaluationsForTests();
+    const install = await host.install(
+      "retention-install",
+      initialRevision,
+      "v1",
+    );
+    assertEquals(
+      install.status,
+      "succeeded",
+      "initial disabled install succeeds",
+    );
+    for (let index = 1; index <= 34; index += 1) {
+      const target: FixtureVersion = index % 2 === 1 ? "v2" : "v1";
+      const result = await host.update(
+        `retention-update-${index}`,
+        host.diagnostics.stateRevision,
+        target,
+      );
+      assertEquals(
+        result.status,
+        "succeeded",
+        `disabled pointer update ${index} succeeds`,
+      );
+    }
+    assertEquals(
+      host.diagnostics.stateRevision - initialRevision,
+      70,
+      "35 pointer-only requests emit their real pending and terminal writes",
+    );
+    assertEquals(
+      writes - initialWrites,
+      70,
+      "durable observer sees both writes for every pointer-only request",
+    );
+    assertEquals(
+      m0PayloadEvaluationsForTests(),
+      initialEvaluations,
+      "disabled pointer updates perform no payload evaluation",
+    );
+    assertEquals(
+      host.diagnostics.recentOutcomes.length,
+      32,
+      "only the bounded archived history is retained",
+    );
+    assertEquals(
+      host.diagnostics.recentOutcomes[0]?.txId,
+      "retention-update-2",
+      "oldest retained archive is naturally selected by the limit",
+    );
+    assertEquals(
+      host.diagnostics.recentOutcomes[31]?.txId,
+      "retention-update-33",
+      "newest archived outcome precedes lastOutcome",
+    );
+    assertEquals(
+      host.diagnostics.lastOutcome?.txId,
+      "retention-update-34",
+      "lastOutcome is retained separately from the 32-entry archive",
+    );
+    const persisted = await IOUtils.readJSON(
+      PathUtils.join(first.root, "state.json"),
+    ) as JsonRecord;
+    const persistedRecent = persisted.recentOutcomes as JsonRecord[];
+    assertEquals(
+      persistedRecent.length,
+      32,
+      "journal stores 32 archived outcomes",
+    );
+    assertEquals(
+      (persistedRecent[0] as JsonRecord).txId,
+      "retention-update-2",
+      "journal stores natural oldest retained outcome",
+    );
+    assertEquals(
+      (persisted.lastOutcome as JsonRecord).txId,
+      "retention-update-34",
+      "journal stores latest outcome separately",
+    );
+
+    const root = first.root;
+    const retainedRevision = host.diagnostics.stateRevision;
+    const shutdown = await first.shutdownForRestartForTests();
+    assertEquals(
+      shutdown.errors.length,
+      0,
+      "retention host shuts down cleanly",
+    );
+    assertEquals(shutdown.timedOut, false, "retention host shutdown completes");
+    reopened = await createM0FeatureHostForTests(
+      true,
+      root,
+      true,
+      undefined,
+      testOptions,
+    );
+    assertEquals(
+      reopened.host.diagnostics.stateRevision,
+      retainedRevision,
+      "state revision survives reopen",
+    );
+    assertEquals(
+      reopened.host.diagnostics.recentOutcomes.length,
+      32,
+      "32 archived outcomes survive reopen",
+    );
+    assertEquals(
+      reopened.host.diagnostics.recentOutcomes[0]?.txId,
+      "retention-update-2",
+      "archive bounds survive reopen exactly",
+    );
+    assertEquals(
+      reopened.host.diagnostics.lastOutcome?.txId,
+      "retention-update-34",
+      "lastOutcome survives reopen",
+    );
+    assertEquals(
+      reopened.host.retryExisting("retention-install"),
+      "outcome_unknown_or_expired",
+      "evicted install retry is unknown",
+    );
+    assertEquals(
+      reopened.host.retryExisting("retention-update-1"),
+      "outcome_unknown_or_expired",
+      "evicted first update retry is unknown",
+    );
+    const oldestRetained = reopened.host.retryExisting("retention-update-2");
+    assert(
+      oldestRetained !== "outcome_unknown_or_expired",
+      "oldest retained archive remains queryable",
+    );
+    assertEquals(
+      oldestRetained.txId,
+      "retention-update-2",
+      "oldest retained tx matches",
+    );
+    const latestRetained = reopened.host.retryExisting("retention-update-34");
+    assert(
+      latestRetained !== "outcome_unknown_or_expired",
+      "lastOutcome remains queryable",
+    );
+    assertEquals(
+      latestRetained.txId,
+      "retention-update-34",
+      "latest tx matches",
+    );
+
+    const writesBeforeUnknown = writes;
+    const revisionBeforeUnknown = reopened.host.diagnostics.stateRevision;
+    const evaluationsBeforeUnknown = m0PayloadEvaluationsForTests();
+    assertEquals(
+      reopened.host.retryExisting("retention-install"),
+      "outcome_unknown_or_expired",
+      "expired retry returns unknown",
+    );
+    assertEquals(
+      writes,
+      writesBeforeUnknown,
+      "unknown retry performs no writes",
+    );
+    assertEquals(
+      m0PayloadEvaluationsForTests(),
+      evaluationsBeforeUnknown,
+      "unknown retry performs no evaluation",
+    );
+    const fresh = await reopened.host.update(
+      "retention-after-expiry",
+      revisionBeforeUnknown,
+      "v2",
+    );
+    assertEquals(
+      fresh.status,
+      "succeeded",
+      "new current-revision request succeeds",
+    );
+    assertEquals(
+      reopened.host.diagnostics.stateRevision,
+      revisionBeforeUnknown + 2,
+      "new request writes its pending and terminal state",
+    );
+    assertEquals(
+      writes,
+      writesBeforeUnknown + 2,
+      "new request emits real writes",
+    );
+    assertEquals(
+      m0PayloadEvaluationsForTests(),
+      evaluationsBeforeUnknown,
+      "new disabled update remains pointer-only",
+    );
+  } finally {
+    await finishTestHosts(first, reopened);
   }
 }
 
@@ -2995,6 +3626,30 @@ export async function runAllTests(): Promise<void> {
     {
       name: "native 50-update lifecycle remains bounded",
       fn: testNativeFiftyUpdatesStayBounded,
+    },
+    {
+      name: "pending identical request retry returns recorded outcome",
+      fn: testPendingRequestRetryReturnsRecordedOutcome,
+    },
+    {
+      name: "transaction descriptor conflict precedes stale revision",
+      fn: testTxIdDescriptorConflictPrecedesStaleRevision,
+    },
+    {
+      name: "terminal lost-response replay is detached after revision advance",
+      fn: testTerminalReplayIsDetachedAfterRevisionAdvance,
+    },
+    {
+      name: "queued requests recheck expected revision at dequeue",
+      fn: testQueuedRequestsRecheckExpectedRevision,
+    },
+    {
+      name: "bounded management queue returns busy while held",
+      fn: testBoundedQueueReturnsBusyWhileHeld,
+    },
+    {
+      name: "outcome retention survives reopen and evicts old entries",
+      fn: testOutcomeRetentionSurvivesReopenAndEvictsOldEntries,
     },
     {
       name: "fresh sandbox lifecycle across enable/update/rollback",

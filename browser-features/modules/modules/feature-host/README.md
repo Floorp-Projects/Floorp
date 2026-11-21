@@ -115,17 +115,17 @@ acceptance.
 | 8  | concurrent dispose / hook throw / timeout         | Native: task, hook, child/window, resource, deadline, and sandbox teardown outcomes are aggregated.                  |
 | 9  | W0 capture / window churn                         | Native: finite W0, delayed startup, close detach, admission, filtering, and shutdown teardown are tested.            |
 | 10 | no HUB tab / ack / live disconnect                | Deferred: HUB publication is outside this slice.                                                                     |
-| 11 | precommit / revision update                       | Atomic record revisions and before/after-replace write faults are covered; full request matrix is partial.           |
+| 11 | precommit / revision update                       | Native tests cover pending replay, descriptor conflict ordering, dequeue revision checks, and bounded-queue busy.    |
 | 12 | postcommit publication / attach failure           | Partial: staged-close cleanup failure quarantines before commit; failed admission quarantines; HUB is deferred.      |
 | 13 | PREPARED crash recovery                           | Schema-2 recovery has Linux process-kill coverage at PREPARED, OLD_STOPPED, CANDIDATE_READY, and disabled update.    |
 | 14 | interrupted / repeated attempts                   | Linux process kills repeat fallback-before-mark and verify bounded digest exhaustion without retry.                  |
 | 15 | rejected selected package / corrupt record        | Preflight rejection may use one proof-eligible fallback; malformed/incompatible records evaluate nothing.            |
 | 16 | candidate failure / old restore / cleanup failure | Candidate failure restores only a current-health before generation within the two-candidate budget.                  |
 | 17 | private-mode existing feature migration           | Deferred to M2.                                                                                                      |
-| 18 | fifty-update session                              | Existing native test tracks resources, wrappers, and timers over 50 updates.                                         |
+| 18 | fifty-update session                              | Native test compares resource, window-scope, task, and timer baselines and fresh wrappers across 50 updates.         |
 | 19 | profile/data compatibility                        | Deferred to M2; no existing feature data is touched.                                                                 |
 | 20 | terminal write after publish                      | Before/after-replace fault paths preserve durable success when present and block the current runtime.                |
-| 21 | new request / lost response / txId reuse / expiry | Partial: retry/query and descriptor conflict are supported; retention expiry remains untested.                       |
+| 21 | new request / lost response / txId reuse / expiry | Native: detached replay; 32 archived + last persist on reopen; retry unknown/no effects; current-revision tx works.  |
 | 22 | host/runtime build tuple change                   | Package compatibility metadata and rollback health proof are separately exact-tuple gated.                           |
 | 23 | startup fallback / crash boundary                 | Linux process kills cover committed update publication and fallback recovery; other crash models remain open.        |
 

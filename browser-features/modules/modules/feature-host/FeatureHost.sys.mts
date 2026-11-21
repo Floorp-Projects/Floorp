@@ -1142,9 +1142,20 @@ export class M0FeatureHost {
   get runningScopeDiagnosticsForTests(): {
     resources: number;
     childScopes: number;
+    tasks: number;
+    pendingTasks: number;
+    observedTaskRejections: number;
+    taskFailures: number;
   } {
     return this.#running?.scopeDiagnosticsForTests ??
-      { resources: 0, childScopes: 0 };
+      {
+        resources: 0,
+        childScopes: 0,
+        tasks: 0,
+        pendingTasks: 0,
+        observedTaskRejections: 0,
+        taskFailures: 0,
+      };
   }
 
   get windowIdsForTests(): string[] {
