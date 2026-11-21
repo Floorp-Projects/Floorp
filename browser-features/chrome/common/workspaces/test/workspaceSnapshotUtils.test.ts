@@ -209,7 +209,10 @@ function testSnapshotMetadataPreservesRawIconCategories(): void {
     ...base,
     icon: undefined,
   });
-  const json = JSON.parse(JSON.stringify(ownUndefined)) as Record<string, unknown>;
+  const json = JSON.parse(JSON.stringify(ownUndefined)) as Record<
+    string,
+    unknown
+  >;
   assert(
     !Object.hasOwn(json, "icon"),
     "snapshot JSON omits own undefined instead of producing null",
@@ -241,7 +244,10 @@ export function runAllTests(): void {
     { name: "extractUrl entry without URL", fn: testExtractUrlEntryWithoutUrl },
     { name: "extractUrl zero index", fn: testExtractUrlZeroIndex },
     { name: "extractUrl null entries", fn: testExtractUrlNullEntries },
-    { name: "extractUrl entry with null URL", fn: testExtractUrlEntryWithNullUrl },
+    {
+      name: "extractUrl entry with null URL",
+      fn: testExtractUrlEntryWithNullUrl,
+    },
     { name: "extractUrl complex entries", fn: testExtractUrlComplexEntries },
     {
       name: "snapshot metadata preserves raw icon categories",
