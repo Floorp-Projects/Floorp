@@ -185,6 +185,5 @@ artifact IDs. The protected publish jobs revalidate that bundle before making
 the release public. Windows remains in shadow mode for stable QA and is required
 for Windows-only Alpha. Repository administrators manage required reviewers
 for `Deploy-to-installer-release` and `Deploy-to-installer-alpha` under
-GitHub Settings → Environments. Both environments currently allow
-administrator bypass. Disable that setting on both to require reviewer
-approval for every deployment.
+GitHub Settings → Environments. Keep administrator bypass disabled on both
+environments so every deployment requires reviewer approval.
