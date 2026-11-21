@@ -1671,6 +1671,13 @@ export class M0FeatureHost {
     operationEpoch = this.#revocationEpoch,
   ): Promise<Outcome> {
     this.#assertOperationCurrent(operationEpoch);
+    const committedOutcome = this.#record.lastOutcome;
+    const recoveryPending = this.#record.pending;
+    const committedFallbackRecovery =
+      committedOutcome?.status === "committed_pending_publish" &&
+      committedOutcome.txId === txId && recoveryPending?.txId === txId &&
+      recoveryPending.targetDigest === fixture.digest &&
+      recoveryPending.before.selectedDigest !== fixture.digest;
     const verifiedFixture = fixture;
     const previousAdmission = this.#admissionsOpen;
     const previousPublishedToken = this.#publishedToken;
@@ -1805,7 +1812,7 @@ export class M0FeatureHost {
       this.#running = runtime;
       const startupFallback = request.op === "startup_recovery" &&
         before.selectedDigest !== fixture.digest;
-      const rollbackTarget = startupFallback
+      const rollbackTarget = startupFallback || committedFallbackRecovery
         ? null
         : this.#healthyRollbackTarget(before, fixture.digest);
       let committed: M0Record;

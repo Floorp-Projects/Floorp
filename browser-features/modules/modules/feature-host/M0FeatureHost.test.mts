@@ -268,6 +268,11 @@ async function testFreshGenerationLifecycle(): Promise<void> {
       "rollback loads v1 fresh",
     );
     assertEquals(host.diagnostics.selectedVersion, "v1", "rollback selects v1");
+    assertEquals(
+      host.diagnostics.rollbackVersion,
+      "v2",
+      "normal rollback retains the displaced healthy selection",
+    );
   } finally {
     if (session) {
       const report = await session.cleanup();
@@ -1259,6 +1264,72 @@ async function testActualPendingPhaseRecovery(): Promise<void> {
       await finishTestHosts(first, reopened);
     }
   }
+
+  let first: M0TestHostHandle | null = null;
+  let reopened: M0TestHostHandle | null = null;
+  try {
+    first = await createM0FeatureHostForTests(true);
+    await first.host.install("rollback-pair-install", 0, "v1");
+    await first.host.enable(
+      "rollback-pair-enable",
+      first.host.diagnostics.stateRevision,
+    );
+    await first.host.update(
+      "rollback-pair-update-v2",
+      first.host.diagnostics.stateRevision,
+      "v2",
+    );
+    const root = first.root;
+    const rollbackTxId = "rollback-pair-interrupted";
+    const evaluationsBefore = m0PayloadEvaluationsForTests();
+    first.failNextWriteForTests("after_replace", 0);
+    const result = await first.host.rollback(
+      rollbackTxId,
+      first.host.diagnostics.stateRevision,
+    );
+    assertEquals(
+      result.status,
+      "storage_failed",
+      "rollback write is uncertain",
+    );
+    const persisted = await IOUtils.readJSON(
+      PathUtils.join(root, "state.json"),
+    ) as JsonRecord;
+    const pending = persisted.pending as JsonRecord;
+    assertEquals(pending.phase, "PREPARED", "rollback PREPARED is emitted");
+    assertEquals(pending.txId, rollbackTxId, "rollback keeps its original tx");
+    await first.shutdownForRestartForTests();
+
+    reopened = await createM0FeatureHostForTests(true, root, true);
+    assertEquals(
+      reopened.host.diagnostics.selectedVersion,
+      "v2",
+      "interrupted rollback restores the before selection",
+    );
+    assertEquals(
+      reopened.host.diagnostics.rollbackVersion,
+      "v1",
+      "failed_restored keeps the original healthy rollback pair",
+    );
+    assertEquals(
+      reopened.host.diagnostics.lastOutcome?.status,
+      "failed_restored",
+      "interrupted normal rollback is recorded as restored",
+    );
+    const outcome = reopened.host.queryOutcome(rollbackTxId);
+    assert(
+      outcome !== "outcome_unknown_or_expired",
+      "interrupted rollback outcome remains retained",
+    );
+    assertEquals(outcome.status, "failed_restored", "rollback tx is restored");
+    assertEquals(
+      m0PayloadEvaluationsForTests() - evaluationsBefore,
+      1,
+      "rollback recovery evaluates only the before selection",
+    );
+  } finally {
+    await finishTestHosts(first, reopened);
+  }
 }
 
 async function testCommittedFallbackResumesAcrossInterruptions(): Promise<
@@ -1413,6 +1484,135 @@ async function testCommittedFallbackResumesAcrossInterruptions(): Promise<
       m0PayloadEvaluationsForTests() - evaluationsBeforeRecovery,
       1,
       "the unattempted v1 fallback is evaluated exactly once",
+    );
+    assertEquals(
+      reopened.host.diagnostics.rollbackVersion,
+      null,
+      "unpublished v2 is not restored as v1's rollback target",
+    );
+    assertEquals(
+      reopened.host.diagnostics.rollbackDigest,
+      null,
+      "unpublished v2 digest is not retained for rollback",
+    );
+    const evaluationsBeforeRollback = m0PayloadEvaluationsForTests();
+    let rollbackError: unknown = null;
+    try {
+      await reopened.host.rollback(
+        "committed-fallback-cannot-reselect-v2",
+        reopened.host.diagnostics.stateRevision,
+      );
+    } catch (error) {
+      rollbackError = error;
+    }
+    assertEquals(
+      errorMessage(rollbackError),
+      "missing target version",
+      "rollback cannot reselect the abandoned committed v2",
+    );
+    assertEquals(
+      reopened.host.diagnostics.selectedVersion,
+      "v1",
+      "rejected rollback keeps the restored v1 selection",
+    );
+    assertEquals(
+      m0PayloadEvaluationsForTests(),
+      evaluationsBeforeRollback,
+      "rejected rollback does not evaluate the abandoned candidate",
+    );
+
+    assertEquals(
+      (await reopened.host.update(
+        "committed-rollback-update-v2",
+        reopened.host.diagnostics.stateRevision,
+        "v2",
+      )).status,
+      "succeeded",
+      "adjacent rollback scenario prepares v2",
+    );
+    const rollbackTxId = "committed-rollback-v1";
+    assertEquals(
+      (await reopened.host.rollback(
+        rollbackTxId,
+        reopened.host.diagnostics.stateRevision,
+      )).status,
+      "succeeded",
+      "normal rollback commits v1",
+    );
+    assertEquals(
+      reopened.host.diagnostics.rollbackVersion,
+      "v2",
+      "normal rollback first retains displaced v2",
+    );
+    const rollbackCommitted = reopened.committedPendingPublishRecordForTests();
+    assert(
+      rollbackCommitted !== null,
+      "capture actual committed-pending rollback write",
+    );
+    assertEquals(
+      (rollbackCommitted.lastOutcome as JsonRecord).status,
+      "committed_pending_publish",
+      "adjacent recovery seed is an emitted committed rollback",
+    );
+    const rollbackRoot = reopened.root;
+    const rollbackRecoveryEvaluations = m0PayloadEvaluationsForTests();
+    await reopened.shutdownForRestartForTests();
+    await seedRecord(rollbackRoot, rollbackCommitted);
+    reopened = await createM0FeatureHostForTests(true, rollbackRoot, true);
+    assertEquals(
+      reopened.host.diagnostics.selectedVersion,
+      "v2",
+      "committed rollback recovery restores the prior v2 selection",
+    );
+    assertEquals(
+      reopened.host.diagnostics.rollbackVersion,
+      null,
+      "unpublished rollback candidate is not retained as rollback",
+    );
+    assertEquals(
+      reopened.host.diagnostics.lastOutcome?.txId,
+      rollbackTxId,
+      "adjacent recovery retains the original rollback transaction",
+    );
+    assertEquals(
+      reopened.host.diagnostics.lastOutcome?.status,
+      "failed_restored",
+      "adjacent committed rollback recovery is restored",
+    );
+    const rollbackRecoveryOutcome = reopened.host.queryOutcome(rollbackTxId);
+    assert(
+      rollbackRecoveryOutcome !== "outcome_unknown_or_expired",
+      "adjacent rollback transaction outcome remains retained",
+    );
+    assertEquals(
+      rollbackRecoveryOutcome.status,
+      "failed_restored",
+      "adjacent rollback transaction remains queryable as restored",
+    );
+    assertEquals(
+      m0PayloadEvaluationsForTests() - rollbackRecoveryEvaluations,
+      1,
+      "adjacent committed rollback evaluates one fallback candidate",
+    );
+    const rollbackEvaluationsAfterRecovery = m0PayloadEvaluationsForTests();
+    let adjacentRollbackError: unknown = null;
+    try {
+      await reopened.host.rollback(
+        "committed-rollback-cannot-reselect-v1",
+        reopened.host.diagnostics.stateRevision,
+      );
+    } catch (error) {
+      adjacentRollbackError = error;
+    }
+    assertEquals(
+      errorMessage(adjacentRollbackError),
+      "missing target version",
+      "rollback cannot reselect the abandoned committed v1",
+    );
+    assertEquals(
+      m0PayloadEvaluationsForTests(),
+      rollbackEvaluationsAfterRecovery,
+      "adjacent rejected rollback does not evaluate the abandoned candidate",
     );
   } finally {
     await finishTestHosts(first, reopened);
@@ -2358,7 +2558,7 @@ export async function runAllTests(): Promise<void> {
       fn: testAttemptBudgetAndBuildMismatch,
     },
     {
-      name: "actual replaced PREPARED OLD_STOPPED and CANDIDATE_READY recovery",
+      name: "actual journal phases and rollback pair recovery",
       fn: testActualPendingPhaseRecovery,
     },
     {
