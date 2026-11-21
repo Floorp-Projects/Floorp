@@ -8,20 +8,132 @@ import {
   runTests,
   type TestCase,
 } from "../../../chrome/test/utils/test_harness.ts";
-import {
+import type { M0TestHostHandle } from "./FeatureHost.sys.mts";
+import { type FixtureVersion, M0_FIXTURES } from "./M0Fixtures.sys.mts";
+import type { M0Lifecycle } from "./M0ModuleHost.sys.mts";
+
+type FeatureHostModule = typeof import("./FeatureHost.sys.mts");
+const {
   createM0FeatureHostForTests,
   hasUnfinishedM0FinalizationForTests,
   isEligibleM0MainWindowForTests,
   isM0FixtureCompatibleForTests,
   m0PayloadEvaluationsForTests,
-  type M0TestHostHandle,
-} from "./FeatureHost.sys.mts";
-import { type FixtureVersion, M0_FIXTURES } from "./M0Fixtures.sys.mts";
-import {
+} = ChromeUtils.importESModule(
+  "resource://noraneko/modules/feature-host/FeatureHost.sys.mjs",
+) as FeatureHostModule;
+type M0ModuleHostModule = typeof import("./M0ModuleHost.sys.mts");
+const {
   activeM0DeadlineTimersForTests,
   M0ModuleHost,
   ResourceScope,
-} from "./M0ModuleHost.sys.mts";
+} = ChromeUtils.importESModule(
+  "resource://noraneko/modules/feature-host/M0ModuleHost.sys.mjs",
+) as M0ModuleHostModule;
+const { BrowserWindowTracker } = ChromeUtils.importESModule(
+  "resource:///modules/BrowserWindowTracker.sys.mjs",
+);
+const { setTimeout, clearTimeout } = ChromeUtils.importESModule(
+  "resource://gre/modules/Timer.sys.mjs",
+);
+
+function within<T>(promise: Promise<T>, milliseconds: number, label: string) {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(
+      () => reject(new Error(`${label} timed out`)),
+      milliseconds,
+    );
+    promise.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (error: unknown) => {
+        clearTimeout(timer);
+        reject(error);
+      },
+    );
+  });
+}
+
+function errorMessage(error: unknown): string | null {
+  if (typeof error !== "object" || error === null || !("message" in error)) {
+    return null;
+  }
+  return String(error.message);
+}
+
+function openTestBrowserWindow(
+  features = "width=640,height=480",
+  privateBrowsing = false,
+): Window {
+  const args = Cc["@mozilla.org/supports-string;1"].createInstance(
+    Ci.nsISupportsString,
+  );
+  args.data = "about:blank";
+  return BrowserWindowTracker.openWindow({
+    args,
+    features,
+    remote: true,
+    fission: true,
+    private: privateBrowsing,
+  }) as Window;
+}
+
+function openTestPopupWindow(): Window {
+  const parent = Services.wm.getMostRecentWindow("navigator:browser");
+  if (!parent) throw new Error("test runner browser window unavailable");
+  const args = Cc["@mozilla.org/supports-string;1"].createInstance(
+    Ci.nsISupportsString,
+  );
+  args.data = "about:blank";
+  return Services.ww.openWindow(
+    parent,
+    "chrome://browser/content/browser.xhtml",
+    "_blank",
+    "chrome,popup,dialog=no,toolbar=no,menubar=no,location=no,width=640,height=480",
+    args,
+  ) as Window;
+}
+
+async function waitForDelayedStartup(window: Window): Promise<void> {
+  if (
+    (window as Window & {
+      gBrowserInit?: { delayedStartupFinished?: boolean };
+    }).gBrowserInit?.delayedStartupFinished
+  ) return;
+  await new Promise<void>((resolve, reject) => {
+    let timer: number | null = null;
+    const observer: nsIObserver = {
+      observe: (subject: nsISupports | null) => {
+        if (subject !== window) return;
+        Services.obs.removeObserver(
+          observer,
+          "browser-delayed-startup-finished",
+        );
+        if (timer !== null) clearTimeout(timer);
+        resolve();
+      },
+    };
+    timer = setTimeout(() => {
+      Services.obs.removeObserver(observer, "browser-delayed-startup-finished");
+      reject(new Error("browser delayed startup timed out"));
+    }, 30_000);
+    Services.obs.addObserver(observer, "browser-delayed-startup-finished");
+  });
+}
+
+async function waitForCondition(
+  condition: () => boolean,
+  label: string,
+  milliseconds = 10_000,
+): Promise<void> {
+  const deadline = Date.now() + milliseconds;
+  while (!condition()) {
+    if (Date.now() >= deadline) throw new Error(`${label} timed out`);
+    await new Promise<void>((resolve) => setTimeout(resolve, 25));
+  }
+}
 
 async function testFreshGenerationLifecycle(): Promise<void> {
   let session: M0TestHostHandle | null = null;
@@ -140,7 +252,11 @@ async function testFreshGenerationLifecycle(): Promise<void> {
   } finally {
     if (session) {
       const report = await session.cleanup();
-      assertEquals(report.errors.length, 0, "test host shuts down cleanly");
+      assertEquals(
+        report.errors.length,
+        0,
+        `test host shuts down cleanly: ${JSON.stringify(report.errors)}`,
+      );
       assertEquals(report.timedOut, false, "test host cleanup completes");
     }
   }
@@ -230,6 +346,94 @@ async function testResourceScopeRevocation(): Promise<void> {
     ),
     "drain includes prior manual disposal failures",
   );
+
+  const concurrentScope = new ResourceScope();
+  let startCleanup!: () => void;
+  let finishCleanup!: () => void;
+  const started = new Promise<void>((resolve) => startCleanup = resolve);
+  const finished = new Promise<void>((resolve) => finishCleanup = resolve);
+  let releaseCleanup!: () => void;
+  const cleanupGate = new Promise<void>((resolve) => releaseCleanup = resolve);
+  const concurrentHandle = concurrentScope.register(async () => {
+    startCleanup();
+    await cleanupGate;
+    finishCleanup();
+    throw new Error("concurrent manual disposal failure");
+  });
+  const originalDisposal = concurrentHandle.dispose().catch(() => {});
+  await started;
+  let drainSettled = false;
+  const concurrentDrain = concurrentScope.disposeAll(100).then((value) => {
+    drainSettled = true;
+    return value;
+  });
+  await Promise.resolve();
+  assert(!drainSettled, "root drain awaits the original manual disposal");
+  releaseCleanup();
+  await finished;
+  const concurrentReport = await concurrentDrain;
+  await originalDisposal;
+  assert(
+    concurrentReport.errors.some((error) =>
+      error.includes("concurrent manual disposal failure")
+    ),
+    "root drain reports concurrent manual disposal failure",
+  );
+
+  const failedChildRoot = new ResourceScope();
+  failedChildRoot.child("closed").register(() => {
+    throw new Error("closed child cleanup failure");
+  });
+  const childReport = await failedChildRoot.disposeChild("closed", 100);
+  assert(
+    childReport.errors.some((error) =>
+      error.includes("closed child cleanup failure")
+    ),
+    "child disposal reports its failure",
+  );
+  const failedChildDrain = await failedChildRoot.disposeAll(100);
+  assert(
+    failedChildDrain.errors.some((error) =>
+      error.includes("closed child cleanup failure")
+    ),
+    "root retains completed child disposal failures",
+  );
+
+  const pendingChildRoot = new ResourceScope();
+  let startChildCleanup!: () => void;
+  let finishChildCleanup!: () => void;
+  let releaseChildCleanup!: () => void;
+  const childStarted = new Promise<void>((resolve) =>
+    startChildCleanup = resolve
+  );
+  const childFinished = new Promise<void>((resolve) =>
+    finishChildCleanup = resolve
+  );
+  const childCleanupGate = new Promise<void>((resolve) => {
+    releaseChildCleanup = resolve;
+  });
+  pendingChildRoot.child("pending").register(async () => {
+    startChildCleanup();
+    await childCleanupGate;
+    finishChildCleanup();
+  });
+  const childTimeoutPromise = pendingChildRoot.disposeChild("pending", 5);
+  await childStarted;
+  const childTimeout = await childTimeoutPromise;
+  assertEquals(childTimeout.timedOut, true, "child timeout is reported");
+  assertEquals(
+    pendingChildRoot.childCount,
+    1,
+    "a timed-out pending child remains counted",
+  );
+  const pendingChildDrain = await pendingChildRoot.disposeAll(100);
+  assertEquals(pendingChildDrain.timedOut, true, "root retains child timeout");
+  releaseChildCleanup();
+  await childFinished;
+  await waitForCondition(
+    () => pendingChildRoot.childCount === 0,
+    "pending child cleanup settles",
+  );
 }
 
 async function testFailedEnableKeepsDisabledSelection(): Promise<void> {
@@ -268,7 +472,9 @@ async function testFailedEnableKeepsDisabledSelection(): Promise<void> {
       assertEquals(
         report.errors.length,
         0,
-        "failed enable host shuts down cleanly",
+        `failed enable host shuts down cleanly: ${
+          JSON.stringify(report.errors)
+        }`,
       );
       assertEquals(report.timedOut, false, "failed enable cleanup completes");
     }
@@ -359,13 +565,15 @@ async function testShutdownRejectsQueuedOperations(): Promise<void> {
     const enable = host.enable("m0-shutdown-enable", revision);
     const shutdown = host.shutdown();
     const results = await Promise.allSettled([rollback, enable]);
+    const resultsText = results.map((result) =>
+      result.status === "rejected" ? String(result.reason) : "fulfilled"
+    ).join(", ");
     assert(
       results.every((result) =>
         result.status === "rejected" &&
-        result.reason instanceof Error &&
-        result.reason.message === "M0 host closed"
+        errorMessage(result.reason) === "M0 host closed"
       ),
-      "dequeued operations reject after shutdown starts",
+      `dequeued operations reject after shutdown starts: ${resultsText}`,
     );
     const report = await shutdown;
     assertEquals(report.errors.length, 0, "queued shutdown drains cleanly");
@@ -493,13 +701,34 @@ async function testNativeFiftyUpdatesStayBounded(): Promise<void> {
     );
   } finally {
     if (session) {
+      const host = session.host;
       const report = await session.cleanup();
       assertEquals(
         report.errors.length,
         0,
-        "50-update host shuts down cleanly",
+        `50-update host shuts down cleanly: ${JSON.stringify(report.errors)}`,
       );
       assertEquals(report.timedOut, false, "50-update cleanup completes");
+      assertEquals(
+        host.windowLifecycleDiagnosticsForTests.observers,
+        false,
+        "50-update shutdown removes window observers",
+      );
+      assertEquals(
+        host.windowLifecycleDiagnosticsForTests.tracked,
+        0,
+        "50-update shutdown releases browser windows",
+      );
+      assertEquals(
+        host.windowLifecycleDiagnosticsForTests.admissionTasks,
+        0,
+        "50-update shutdown drains admission callbacks",
+      );
+      assertEquals(
+        host.windowLifecycleDiagnosticsForTests.readyWaiters,
+        0,
+        "50-update shutdown clears readiness waiters",
+      );
     }
   }
 }
@@ -594,12 +823,20 @@ async function finishTestHosts(
 ): Promise<void> {
   if (second) {
     const result = await second.shutdownForRestartForTests();
-    assertEquals(result.errors.length, 0, "reopened host stops cleanly");
+    assertEquals(
+      result.errors.length,
+      0,
+      `reopened host stops cleanly: ${JSON.stringify(result.errors)}`,
+    );
     await second.cleanup();
   }
   if (first) {
     const result = await first.shutdownForRestartForTests();
-    assertEquals(result.errors.length, 0, "test host stops cleanly");
+    assertEquals(
+      result.errors.length,
+      0,
+      `test host stops cleanly: ${JSON.stringify(result.errors)}`,
+    );
     await first.cleanup();
   }
 }
@@ -1322,6 +1559,519 @@ async function testDurableDisableAndBuildMismatch(): Promise<void> {
   }
 }
 
+async function testNativeWindowAdmissionAndClose(): Promise<void> {
+  let session: M0TestHostHandle | null = null;
+  const ownedWindows: Window[] = [];
+  try {
+    session = await createM0FeatureHostForTests(true);
+    const host = session.host;
+    await host.install("m0-window-install", 0, "v1");
+    assertEquals(
+      (await host.enable("m0-window-enable", host.diagnostics.stateRevision))
+        .status,
+      "succeeded",
+      "first window enables through the parent system module",
+    );
+    const originalWindow = window;
+    const originalId = host.windowIdForTests(originalWindow);
+    assert(originalId !== null, "the runner window has a stable host ID");
+
+    const second = openTestBrowserWindow();
+    ownedWindows.push(second);
+    await waitForDelayedStartup(second);
+    await waitForCondition(
+      () =>
+        host.windowIdForTests(second) !== null &&
+        host.windowIdsForTests.includes(host.windowIdForTests(second) ?? ""),
+      "new normal window admission",
+    );
+    const secondId = host.windowIdForTests(second);
+    assert(secondId !== null, "new normal window receives a stable ID");
+    const marker = second.document.documentElement.getAttribute(
+      "data-floorp-hotfix-m0",
+    );
+    assert(
+      marker !== null && !marker.endsWith(":staged"),
+      "new window marker is published after core attach succeeds",
+    );
+    const scopeCounts = host.runningScopeDiagnosticsForTests;
+    assertEquals(
+      scopeCounts.childScopes,
+      2,
+      "both browser child scopes attach",
+    );
+    second.close();
+    await waitForCondition(
+      () =>
+        host.windowIdForTests(second) === null &&
+        !host.windowIdsForTests.includes(secondId),
+      "closed window detach",
+    );
+    assertEquals(
+      host.runningScopeDiagnosticsForTests.childScopes,
+      1,
+      "close disposes only the closed window child scope",
+    );
+    const updated = await host.update(
+      "m0-window-update-after-close",
+      host.diagnostics.stateRevision,
+      "v2",
+    );
+    assertEquals(updated.status, "succeeded", "remaining window updates");
+    assert(
+      host.windowIdsForTests.includes(originalId),
+      "original window ID is stable across generations",
+    );
+    assertEquals(
+      host.runningLifecycleForTests?.health(),
+      "v2:1",
+      "closing one window leaves the global generation active",
+    );
+
+    const popup = openTestPopupWindow();
+    ownedWindows.push(popup);
+    await waitForDelayedStartup(popup);
+    const popupRoot = popup.document.documentElement;
+    const popupWindow = popup as Window & { toolbar?: { visible?: boolean } };
+    assertEquals(
+      popupWindow.toolbar?.visible,
+      false,
+      "test popup actually hides the toolbar",
+    );
+    assertEquals(
+      host.windowIdForTests(popup),
+      null,
+      `popup remains ineligible: ${
+        JSON.stringify({
+          windowtype: popupRoot.getAttribute("windowtype"),
+          toolbarVisible: popupWindow.toolbar?.visible ?? null,
+          chromehidden: popupRoot.getAttribute("chromehidden"),
+          webPanelId: new URL(popup.location.href).searchParams.get(
+            "floorpWebPanelId",
+          ),
+        })
+      }`,
+    );
+    const privateWindow = openTestBrowserWindow("width=640,height=480", true);
+    ownedWindows.push(privateWindow);
+    await waitForDelayedStartup(privateWindow);
+    const { PrivateBrowsingUtils } = ChromeUtils.importESModule(
+      "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
+    );
+    assert(
+      PrivateBrowsingUtils.isWindowPrivate(privateWindow),
+      "test window is actually private",
+    );
+    assertEquals(
+      host.windowIdForTests(privateWindow),
+      null,
+      "private browser window is never admitted",
+    );
+  } finally {
+    for (const owned of ownedWindows) if (!owned.closed) owned.close();
+    if (session) {
+      const host = session.host;
+      await session.cleanup();
+      assertEquals(
+        host.windowLifecycleDiagnosticsForTests.observers,
+        false,
+        "shutdown removes host window observers",
+      );
+      assertEquals(
+        host.windowLifecycleDiagnosticsForTests.tracked,
+        0,
+        "shutdown releases tracked window references",
+      );
+      assertEquals(
+        host.windowLifecycleDiagnosticsForTests.pendingStartup,
+        0,
+        "shutdown removes load callbacks",
+      );
+    }
+  }
+}
+
+async function testLateWindowAttachCannotDeleteReplacement(): Promise<void> {
+  let session: M0TestHostHandle | null = null;
+  let gate:
+    | ReturnType<
+      M0TestHostHandle["deferWindowAttachCompletionForTests"]
+    >
+    | null = null;
+  const ownedWindows: Window[] = [];
+  try {
+    session = await createM0FeatureHostForTests(true);
+    const host = session.host;
+    await host.install("m0-late-window-install", 0, "v1");
+    await host.enable("m0-late-window-enable", host.diagnostics.stateRevision);
+    await waitForCondition(
+      () => host.windowLifecycleDiagnosticsForTests.admissionTasks === 0,
+      "initial admissions settle",
+    );
+
+    gate = session.deferWindowAttachCompletionForTests();
+    const later = openTestBrowserWindow();
+    ownedWindows.push(later);
+    await waitForDelayedStartup(later);
+    const laterId = host.windowIdForTests(later);
+    assert(laterId !== null, "late window has stable ID");
+    await within(gate.entered, 15_000, "old generation attach completion");
+
+    const updated = await within(
+      host.update(
+        "m0-late-window-update",
+        host.diagnostics.stateRevision,
+        "v2",
+      ),
+      30_000,
+      "replacement generation update",
+    );
+    assertEquals(updated.status, "succeeded", "replacement generation commits");
+    assert(
+      host.windowIdsForTests.includes(laterId),
+      "replacement generation owns the admitted window before old attach settles",
+    );
+    assertEquals(
+      host.runningScopeDiagnosticsForTests.childScopes,
+      2,
+      "replacement has both window scopes",
+    );
+
+    gate.release();
+    await waitForCondition(
+      () => host.windowLifecycleDiagnosticsForTests.admissionTasks === 0,
+      "old admission settles",
+    );
+    assert(
+      host.windowIdsForTests.includes(laterId),
+      "stale attach completion cannot delete the replacement map entry",
+    );
+    assertEquals(
+      host.runningScopeDiagnosticsForTests.childScopes,
+      2,
+      "stale attach completion leaves replacement scopes intact",
+    );
+  } finally {
+    gate?.release();
+    for (const owned of ownedWindows) if (!owned.closed) owned.close();
+    if (session) await session.cleanup();
+  }
+}
+
+async function testNativeWindowCloseDuringGatedUpdate(): Promise<void> {
+  let session: M0TestHostHandle | null = null;
+  let gate: ReturnType<M0TestHostHandle["deferWindowAttachForTests"]> | null =
+    null;
+  const ownedWindows: Window[] = [];
+  try {
+    session = await createM0FeatureHostForTests(true);
+    const host = session.host;
+    await host.install("m0-window-gate-install", 0, "v1");
+    await host.enable("m0-window-gate-enable", host.diagnostics.stateRevision);
+    const gatedWindow = openTestBrowserWindow();
+    ownedWindows.push(gatedWindow);
+    await waitForDelayedStartup(gatedWindow);
+    await waitForCondition(
+      () =>
+        host.windowIdForTests(gatedWindow) !== null &&
+        host.windowIdsForTests.includes(
+          host.windowIdForTests(gatedWindow) ?? "",
+        ),
+      "gated window initial admission",
+    );
+    const gatedId = host.windowIdForTests(gatedWindow);
+    assert(gatedId !== null, "gated window has stable ID");
+    gate = session.deferWindowAttachForTests(gatedId);
+    const update = host.update(
+      "m0-window-gated-update",
+      host.diagnostics.stateRevision,
+      "v2",
+    );
+    await within(gate.entered, 15_000, "gated W0 attachment");
+
+    const during = openTestBrowserWindow();
+    ownedWindows.push(during);
+    await waitForDelayedStartup(during);
+    const duringId = host.windowIdForTests(during);
+    assert(duringId !== null, "during-operation window is tracked");
+    assert(
+      !host.windowIdsForTests.includes(duringId),
+      "new window is not added to finite W0 mid-operation",
+    );
+    gatedWindow.close();
+    const result = await within(update, 15_000, "update after W0 close");
+    assertEquals(
+      result.status,
+      "succeeded",
+      "closing W0 member releases attach",
+    );
+    gate.release();
+    await waitForCondition(
+      () => host.windowIdsForTests.includes(duringId),
+      "post-commit admission of during-operation window",
+    );
+    assert(
+      !host.windowIdsForTests.includes(gatedId),
+      "closed W0 member is detached",
+    );
+  } finally {
+    gate?.release();
+    for (const owned of ownedWindows) if (!owned.closed) owned.close();
+    if (session) await session.cleanup();
+  }
+}
+
+async function testParentModuleSurvivesOwnedInitialWindowClose(): Promise<
+  void
+> {
+  let session: M0TestHostHandle | null = null;
+  let initial: Window | null = null;
+  try {
+    session = await createM0FeatureHostForTests(true);
+    const host = session.host;
+    initial = openTestBrowserWindow();
+    await waitForDelayedStartup(initial);
+    session.useOnlyWindowForTests(initial);
+    await host.install("m0-owned-initial-install", 0, "v1");
+    assertEquals(
+      (await host.enable(
+        "m0-owned-initial-enable",
+        host.diagnostics.stateRevision,
+      )).status,
+      "succeeded",
+      "parent system ESM host starts on a test-owned initial window",
+    );
+    const initialId = host.windowIdForTests(initial);
+    assert(initialId !== null, "test-owned initial window has a host ID");
+    initial.close();
+    await waitForCondition(
+      () => !host.windowIdsForTests.includes(initialId),
+      "test-owned initial window detach",
+    );
+    assertEquals(
+      host.runningLifecycleForTests?.health(),
+      "v1:1",
+      "closing the first attached window leaves global generation alive",
+    );
+    const update = await host.update(
+      "m0-owned-initial-update",
+      host.diagnostics.stateRevision,
+      "v2",
+    );
+    assertEquals(
+      update.status,
+      "succeeded",
+      "host remains operable after close",
+    );
+    assertEquals(
+      host.runningLifecycleForTests?.health(),
+      "v2:1",
+      "surviving parent host attaches to remaining normal windows",
+    );
+  } finally {
+    if (initial && !initial.closed) initial.close();
+    if (session) await session.cleanup();
+  }
+}
+
+async function testPostcommitWindowFailureQuarantines(): Promise<void> {
+  let session: M0TestHostHandle | null = null;
+  let extra: Window | null = null;
+  try {
+    session = await createM0FeatureHostForTests(true);
+    const host = session.host;
+    await host.install("m0-window-failure-install", 0, "v1");
+    await host.enable(
+      "m0-window-failure-enable",
+      host.diagnostics.stateRevision,
+    );
+    const previous = host.runningLifecycleForTests;
+    assert(previous !== null, "published generation is active");
+    session.failWindowAttachForTests("*");
+    extra = openTestBrowserWindow();
+    await waitForDelayedStartup(extra);
+    await waitForCondition(
+      () =>
+        host.diagnostics.blockedReason !== null &&
+        host.runningLifecycleForTests === null,
+      "post-commit attach quarantine",
+    );
+    assertEquals(
+      host.diagnostics.desiredEnabled,
+      true,
+      "post-commit failure preserves desired intent",
+    );
+    assertEquals(
+      host.diagnostics.lastOutcome?.status,
+      "succeeded",
+      "completed terminal outcome is not overwritten",
+    );
+    assertThrows(() => previous.health(), "failed generation is stopped");
+    assertEquals(
+      host.runningLifecycleForTests,
+      null,
+      "old generation is not revived after admission failure",
+    );
+  } finally {
+    if (extra && !extra.closed) extra.close();
+    if (session) await session.cleanup();
+  }
+}
+
+async function testEmptyWindowSetAndSandboxCleanupFailures(): Promise<void> {
+  let session: M0TestHostHandle | null = null;
+  try {
+    session = await createM0FeatureHostForTests(true);
+    session.excludeWindowsForTests();
+    await session.host.install("m0-empty-w0-install", 0, "v1");
+    const enabled = await session.host.enable(
+      "m0-empty-w0-enable",
+      session.host.diagnostics.stateRevision,
+    );
+    assertEquals(enabled.status, "succeeded", "empty W0 activates fixture");
+    assertEquals(
+      session.host.windowIdsForTests.length,
+      0,
+      "empty W0 stays empty",
+    );
+    assertEquals(
+      session.host.runningLifecycleForTests?.health(),
+      "v1:1",
+      "empty W0 still runs the fixture lifecycle",
+    );
+  } finally {
+    if (session) await session.cleanup();
+  }
+
+  const makeRuntime = (deactivate: string) =>
+    new M0ModuleHost(
+      "cleanup-test-epoch",
+      1,
+      "e".repeat(64),
+      `globalThis.__floorpM0 = { activate() {}, attachWindow() {}, health() { return "ok"; }, deactivate() { ${deactivate} } };`,
+      () => "{}",
+    );
+  for (
+    const [name, deactivate] of [
+      ["throws", 'throw new Error("deactivate failure");'],
+      ["times out", "return new Promise(() => {});"],
+    ] as const
+  ) {
+    const runtime = makeRuntime(deactivate);
+    let disposed = false;
+    runtime.scope.register(() => {
+      disposed = true;
+    });
+    await runtime.start();
+    const report = await runtime.stop(name);
+    assert(disposed, `host disposer runs when deactivate ${name}`);
+    assert(
+      report.errors.length > 0,
+      `deactivate ${name} is reported to the host`,
+    );
+    if (name === "times out") {
+      assert(
+        report.errors.some((error) => error.includes("lifecycle deadline")),
+        "async deactivate timeout is reported",
+      );
+    }
+  }
+
+  let activeGeneration = 1;
+  let currentResourceMutations = 0;
+  const staleSource =
+    `globalThis.__floorpM0 = { activate(_context, request) { this.retainedRequest = request; }, attachWindow() {}, health() { return "ok"; }, deactivate() {} };`;
+  const staleRuntime = new M0ModuleHost(
+    "stale-callback-epoch",
+    1,
+    "f".repeat(64),
+    staleSource,
+    (_epoch, generation) => {
+      if (generation !== activeGeneration) throw new Error("stale token");
+      currentResourceMutations += 1;
+      return "{}";
+    },
+  );
+  await staleRuntime.start();
+  const lifecycle = staleRuntime.lifecycleForTests as M0Lifecycle & {
+    retainedRequest?: (json: string) => string;
+  };
+  const retainedRequest = lifecycle.retainedRequest;
+  assert(retainedRequest, "fixture retained its broker callback");
+  await staleRuntime.stop("replace");
+  activeGeneration = 2;
+  try {
+    retainedRequest(JSON.stringify({ type: "marker", windowId: "old" }));
+  } catch (error) {
+    assert(error !== undefined, "stale broker callback rejects after stop");
+  }
+  assertEquals(
+    currentResourceMutations,
+    0,
+    "old retained broker callback cannot mutate the current token resource",
+  );
+}
+
+async function testStagedWindowCloseCleanupFailureQuarantines(): Promise<void> {
+  let session: M0TestHostHandle | null = null;
+  let ownedWindow: Window | null = null;
+  let gate:
+    | ReturnType<
+      M0TestHostHandle["deferWindowAttachCompletionForTests"]
+    >
+    | null = null;
+  try {
+    ownedWindow = openTestBrowserWindow();
+    await waitForDelayedStartup(ownedWindow);
+    session = await createM0FeatureHostForTests(true);
+    session.useOnlyWindowForTests(ownedWindow);
+    const host = session.host;
+    await host.install("m0-staged-close-install", 0, "v1");
+    const windowId = host.windowIdForTests(ownedWindow);
+    assert(windowId !== null, "staged test window has a stable ID");
+    gate = session.deferWindowAttachCompletionForTests(windowId);
+    const enabling = host.enable(
+      "m0-staged-close-enable",
+      host.diagnostics.stateRevision,
+    );
+    await within(gate.entered, 15_000, "staged window core attach");
+    session.registerWindowCleanupForTests(windowId, () => {
+      throw new Error("staged child cleanup failure");
+    });
+    ownedWindow.close();
+    await waitForCondition(
+      () => host.windowLifecycleDiagnosticsForTests.cleanupFailures > 0,
+      "staged child cleanup failure is observed",
+    );
+    gate.release();
+    const outcome = await within(enabling, 30_000, "staged failure quarantine");
+    assertEquals(
+      outcome.status,
+      "failed_quarantined",
+      "staged child cleanup failure prevents candidate commit",
+    );
+    assertEquals(
+      host.diagnostics.blockedReason,
+      "candidate-window-cleanup-failure",
+      "staged cleanup failure is durably diagnosed",
+    );
+    assertEquals(
+      host.runningLifecycleForTests,
+      null,
+      "staged candidate does not remain active after cleanup failure",
+    );
+    assertEquals(
+      host.diagnostics.pending,
+      null,
+      "quarantine clears the unfinished pending operation",
+    );
+  } finally {
+    gate?.release();
+    if (ownedWindow && !ownedWindow.closed) ownedWindow.close();
+    if (session) await session.cleanup();
+  }
+}
+
 export async function runAllTests(): Promise<void> {
   const tests: TestCase[] = [
     {
@@ -1400,6 +2150,34 @@ export async function runAllTests(): Promise<void> {
     {
       name: "concurrent module host stops share one report",
       fn: testConcurrentModuleHostStopsShareReport,
+    },
+    {
+      name: "native main-window admission and close detach",
+      fn: testNativeWindowAdmissionAndClose,
+    },
+    {
+      name: "late old-window admission cannot delete replacement state",
+      fn: testLateWindowAttachCannotDeleteReplacement,
+    },
+    {
+      name: "native W0 close cancels gated attach without starving update",
+      fn: testNativeWindowCloseDuringGatedUpdate,
+    },
+    {
+      name: "parent system module survives first attached window close",
+      fn: testParentModuleSurvivesOwnedInitialWindowClose,
+    },
+    {
+      name: "post-commit window attach failure quarantines generation",
+      fn: testPostcommitWindowFailureQuarantines,
+    },
+    {
+      name: "staged window close cleanup failure quarantines candidate",
+      fn: testStagedWindowCloseCleanupFailureQuarantines,
+    },
+    {
+      name: "empty W0 and sandbox cleanup failures",
+      fn: testEmptyWindowSetAndSandboxCleanupFailures,
     },
   ];
   await runTests("M0FeatureHost.test.mts", tests);

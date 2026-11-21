@@ -1,5 +1,9 @@
 // SPDX-License-Identifier: MPL-2.0
 
+const { setTimeout, clearTimeout } = ChromeUtils.importESModule(
+  "resource://gre/modules/Timer.sys.mjs",
+);
+
 export type Cleanup = () => void | Promise<void>;
 
 export interface DisposeReport {
@@ -47,27 +51,46 @@ export class ResourceScope {
   readonly #resources = new Map<number, Resource>();
   readonly #children = new Map<string, ResourceScope>();
   readonly #disposals = new Set<Promise<void>>();
+  readonly #childDisposals = new Map<Promise<DisposeReport>, ResourceScope>();
   readonly #errors: string[] = [];
   #nextId = 0;
   #revoked = false;
   #disposing: Promise<DisposeReport> | null = null;
+  #timedOut = false;
 
   get revoked(): boolean {
     return this.#revoked;
   }
 
   get resourceCount(): number {
-    return this.#resources.size + [...this.#children.values()].reduce(
-      (total, child) => total + child.resourceCount,
-      0,
+    const tracked = new Set(
+      [...this.#resources.values()].flatMap((resource) =>
+        resource.disposal ? [resource.disposal] : []
+      ),
     );
+    return this.#resources.size +
+      [...this.#disposals].filter((disposal) => !tracked.has(disposal)).length +
+      [...this.#children.values()].reduce(
+        (total, child) => total + child.resourceCount,
+        0,
+      ) +
+      [...this.#childDisposals.values()].reduce(
+        (total, child) => total + child.resourceCount,
+        0,
+      );
   }
 
   get childCount(): number {
-    return this.#children.size + [...this.#children.values()].reduce(
-      (total, child) => total + child.childCount,
-      0,
-    );
+    return this.#children.size +
+      [...this.#children.values()].reduce(
+        (total, child) => total + child.childCount,
+        0,
+      ) +
+      this.#childDisposals.size +
+      [...this.#childDisposals.values()].reduce(
+        (total, child) => total + child.childCount,
+        0,
+      );
   }
 
   child(windowId: string): ResourceScope {
@@ -77,6 +100,83 @@ export class ResourceScope {
     const child = new ResourceScope();
     this.#children.set(windowId, child);
     return child;
+  }
+
+  disposeChild(windowId: string, timeoutMs = 2_000): Promise<DisposeReport> {
+    const child = this.#children.get(windowId);
+    if (!child) return Promise.resolve({ errors: [], timedOut: false });
+    child.revoke();
+    this.#children.delete(windowId);
+    const disposal = child.disposeAll(timeoutMs);
+    return this.#trackChildDisposal(child, disposal);
+  }
+
+  #recordError(error: unknown): void {
+    const message = String(error).slice(0, 256);
+    if (!this.#errors.includes(message) && this.#errors.length < 32) {
+      this.#errors.push(message);
+    }
+  }
+
+  #recordReport(report: DisposeReport): void {
+    for (const error of report.errors) this.#recordError(error);
+    if (report.timedOut) this.#timedOut = true;
+  }
+
+  #recordChildEvidence(child: ResourceScope): void {
+    for (const error of child.#errors) this.#recordError(error);
+    if (child.#timedOut) this.#timedOut = true;
+  }
+
+  #pendingCleanupCount(): number {
+    return this.#disposals.size +
+      [...this.#childDisposals.values()].reduce(
+        (total, child) => total + 1 + child.#pendingCleanupCount(),
+        0,
+      );
+  }
+
+  #pendingCleanupSettled(): Promise<void> {
+    const pending: Promise<unknown>[] = [
+      ...[...this.#disposals].map((disposal) => disposal.catch(() => {})),
+    ];
+    for (const [disposal, child] of this.#childDisposals) {
+      pending.push(disposal.catch(() => {}), child.#pendingCleanupSettled());
+    }
+    return Promise.all(pending).then(() => {});
+  }
+
+  #trackChildDisposal(
+    child: ResourceScope,
+    disposal: Promise<DisposeReport>,
+  ): Promise<DisposeReport> {
+    this.#childDisposals.set(disposal, child);
+    const finish = (): void => {
+      this.#recordChildEvidence(child);
+      if (child.#pendingCleanupCount() === 0) {
+        if (this.#childDisposals.get(disposal) === child) {
+          this.#childDisposals.delete(disposal);
+        }
+        return;
+      }
+      void child.#pendingCleanupSettled().then(() => {
+        this.#recordChildEvidence(child);
+        if (this.#childDisposals.get(disposal) === child) {
+          this.#childDisposals.delete(disposal);
+        }
+      });
+    };
+    void disposal.then(
+      (report) => {
+        this.#recordReport(report);
+        finish();
+      },
+      (error) => {
+        this.#recordError(error);
+        finish();
+      },
+    );
+    return disposal;
   }
 
   register(cleanup: Cleanup): { dispose(): Promise<void> } {
@@ -96,7 +196,7 @@ export class ResourceScope {
         resource.cleanup = null;
         resource.owner = null;
         const disposal = Promise.resolve().then(cleanupNow).catch((error) => {
-          if (owner) owner.#errors.push(String(error));
+          if (owner) owner.#recordError(error);
           throw error;
         }).finally(() => {
           if (owner) {
@@ -124,9 +224,13 @@ export class ResourceScope {
     if (this.#disposing) return this.#disposing;
     this.revoke();
     this.#disposing = (async () => {
-      const children = [...this.#children.values()].map((child) =>
-        child.disposeAll(timeoutMs)
+      const pendingChildren = [...this.#childDisposals.keys()];
+      const childScopes = [...this.#children.values()];
+      this.#children.clear();
+      const children = childScopes.map((child) =>
+        this.#trackChildDisposal(child, child.disposeAll(timeoutMs))
       );
+      children.push(...pendingChildren);
       for (const resource of this.#resources.values()) resource.dispose();
       const resources = [...this.#disposals];
       const work = Promise.all([
@@ -137,38 +241,30 @@ export class ResourceScope {
       const deadline = new Promise<"timeout">((resolve) => {
         timer = startDeadline(() => resolve("timeout"), timeoutMs);
       });
-      let timedOut = false;
-      const errors: string[] = [];
       try {
         const result = await Promise.race([
           work.then((value) => ({ kind: "complete" as const, value })),
           deadline.then(() => ({ kind: "timeout" as const })),
         ]);
         if (result.kind === "timeout") {
-          timedOut = true;
-          errors.push("resource cleanup deadline");
-          return { errors: [...this.#errors, ...errors], timedOut };
+          this.#timedOut = true;
+          this.#recordError("resource cleanup deadline");
+          return { errors: [...this.#errors], timedOut: true };
         }
         const [childResults, resourceResults] = result.value;
         for (const result of childResults) {
-          if (result.status === "rejected") errors.push(String(result.reason));
-          else {
-            errors.push(...result.value.errors);
-            if (result.value.timedOut) timedOut = true;
-          }
+          if (result.status === "rejected") this.#recordError(result.reason);
+          else this.#recordReport(result.value);
         }
         for (const result of resourceResults) {
-          if (result.status === "rejected") {
-            const error = String(result.reason);
-            if (!this.#errors.includes(error)) errors.push(error);
-          }
+          if (result.status === "rejected") this.#recordError(result.reason);
         }
       } finally {
         timer?.cancel();
         this.#resources.clear();
         this.#children.clear();
       }
-      return { errors: [...this.#errors, ...errors], timedOut };
+      return { errors: [...this.#errors], timedOut: this.#timedOut };
     })();
     return this.#disposing;
   }
@@ -256,7 +352,7 @@ export class M0ModuleHost {
     };
   }
 
-  async start(windows: readonly string[]): Promise<void> {
+  async start(windows: readonly string[] = []): Promise<void> {
     const digest = this.#digest;
     const source = this.#source;
     const broker = this.#request;
@@ -298,27 +394,47 @@ export class M0ModuleHost {
         )),
         2_000,
       );
-      for (const windowId of windows) {
-        await bounded(
-          Promise.resolve(exports.attachWindow(
-            JSON.stringify({
-              epoch: this.epoch,
-              generation: this.generation,
-              windowId,
-            }),
-            request,
-          )),
-          2_000,
-        );
-      }
       if (exports.health().length === 0) {
         throw new Error("fixture health failed");
       }
+      for (const windowId of windows) await this.attachWindow(windowId);
     } catch (error) {
       const failure = new Error(String(error));
       await this.stop("activation-failed");
       throw failure;
     }
+  }
+
+  async attachWindow(windowId: string): Promise<boolean> {
+    const lifecycle = this.#lifecycle;
+    const broker = this.#request;
+    if (!lifecycle || !broker || this.#stopPromise || this.scope.revoked) {
+      throw new Error("generation is not active");
+    }
+    const child = this.scope.child(windowId);
+    try {
+      await bounded(
+        Promise.resolve(lifecycle.attachWindow(
+          JSON.stringify({
+            epoch: this.epoch,
+            generation: this.generation,
+            windowId,
+          }),
+          (json) => broker(this.epoch, this.generation, json),
+        )),
+        2_000,
+      );
+      return !child.revoked && !this.scope.revoked && !this.#stopPromise;
+    } catch (error) {
+      if (child.revoked || this.scope.revoked || this.#stopPromise) {
+        return false;
+      }
+      throw error;
+    }
+  }
+
+  detachWindow(windowId: string): Promise<DisposeReport> {
+    return this.scope.disposeChild(windowId);
   }
 
   stop(reason: string): Promise<DisposeReport> {
