@@ -11,7 +11,8 @@ following the procedure in `CHECKPOINT.md`.
 - Redirect URI: `http://127.0.0.1:8765/oauth/callback` (pre-registered)
 - Client secret: newly minted for this run; stored as the organization secret
   `FDH_GOOGLE_CLIENT_SECRET`
-- Operator identity: `r.asano@floorp.app` (Google Workspace)
+- Operator identity: a `floorp.app` Google Workspace member
+  (account-specific values redacted below)
 
 ## Command
 
@@ -22,10 +23,10 @@ deno run -A tools/fdh.ts auth probe \
   --client-secret-env FDH_GOOGLE_CLIENT_SECRET
 ```
 
-## Result (verbatim CLI output)
+## Result (CLI output, account-specific values redacted)
 
 ```json
-{"schemaVersion":1,"scope":"workspace-oauth-probe","codeExchangeVerified":true,"refreshVerified":true,"localLogout":true,"providerRevocationConfirmed":true,"identity":{"subject":"115635322223238183201","email":"r.asano@floorp.app","hostedDomain":"floorp.app","issuer":"https://accounts.google.com"},"mcpAuthorizationGranted":false,"ac05Qualified":false}
+{"schemaVersion":1,"scope":"workspace-oauth-probe","codeExchangeVerified":true,"refreshVerified":true,"localLogout":true,"providerRevocationConfirmed":true,"identity":{"subject":"REDACTED","email":"REDACTED","hostedDomain":"floorp.app","issuer":"https://accounts.google.com"},"mcpAuthorizationGranted":false,"ac05Qualified":false}
 ```
 
 The normal, refresh and revocation cases passed live against Google.
