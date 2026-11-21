@@ -1629,7 +1629,7 @@ async function testManagedTaskRejectionsAreObserved(): Promise<void> {
 
 async function testManagedTaskDeadlineAggregatesCleanup(): Promise<void> {
   const source =
-    `globalThis.__floorpM0 = { activate() {}, attachWindow() {}, health() { return "ok"; }, deactivate() { throw new Error("deactivate failure"); } };`;
+    'globalThis.__floorpM0 = { activate() {}, attachWindow() {}, health() { return "ok"; }, deactivate() { throw new Error("deactivate failure"); } };';
   const runtime = new M0ModuleHost(
     "deadline-epoch",
     1,
