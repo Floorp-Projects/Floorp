@@ -77,9 +77,21 @@ Deno.test("alpha publication requires QA and writes only from the protected job"
   assertStringIncludes(main, "contents: write");
   assertEquals(alpha.match(/contents: write/g)?.length, 1);
   assertStringIncludes(main, "validate-release-bundle --bundle-dir");
+  assertStringIncludes(
+    main,
+    "generateUpdateXml(Deno.args[0], Deno.args[1], Deno.args[2])",
+  );
+  assertStringIncludes(main, '"$BUNDLE_DIR/win-meta.json"');
   assertStringIncludes(main, `tag_name: "alpha"`);
   assertStringIncludes(main, "prerelease: true");
   assertStringIncludes(main, "name: noraneko-publish");
+  const publishIndex = main.indexOf("- name: Deploy to GitHub Releases");
+  const bindTagIndex = main.indexOf("- name: Bind the rolling Alpha tag");
+  assertEquals(publishIndex >= 0 && bindTagIndex > publishIndex, true);
+  const bindTag = main.slice(bindTagIndex);
+  assertStringIncludes(bindTag, "ref: 'tags/alpha'");
+  assertStringIncludes(bindTag, "github.rest.git.updateRef");
+  assertStringIncludes(bindTag, "sha: context.sha, force: true");
 });
 
 Deno.test("alpha caller supplies Runtime identity to the shared package workflow", async () => {

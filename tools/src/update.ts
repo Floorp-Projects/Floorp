@@ -45,6 +45,22 @@ export function generateUpdateXml(
     "http://github.com/nyanrus/noraneko/releases/download/alpha/noraneko-win-x86_64-full.mar",
 ): void {
   const meta = JSON.parse(Deno.readTextFileSync(metaPath));
+  let marSize = meta.mar_size;
+  let marSha512 = meta.mar_shasum;
+  if (meta.schema_version === 2) {
+    marSize = meta.mar?.size;
+    marSha512 = meta.mar?.sha512;
+    if (!Number.isSafeInteger(marSize) || marSize <= 0) {
+      throw new Error(
+        "Update metadata v2 mar.size must be a positive safe integer",
+      );
+    }
+    if (typeof marSha512 !== "string" || !/^[0-9a-f]{128}$/.test(marSha512)) {
+      throw new Error(
+        "Update metadata v2 mar.sha512 must be a SHA-512 hex digest",
+      );
+    }
+  }
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <updates>
   <update type="minor" displayVersion="${
@@ -52,9 +68,7 @@ export function generateUpdateXml(
   }" appVersion="${meta["version"]}" platformVersion="${
     meta["version"]
   }" buildID="${meta["buildid"]}" appVersion2="${meta["noraneko_version"]}">
-    <patch type="complete" URL="${patchUrl}" size="${
-    meta["mar_size"]
-  }" hashFunction="sha512" hashValue="${meta["mar_shasum"]}"/>
+    <patch type="complete" URL="${patchUrl}" size="${marSize}" hashFunction="sha512" hashValue="${marSha512}"/>
   </update>
 </updates>
 `;

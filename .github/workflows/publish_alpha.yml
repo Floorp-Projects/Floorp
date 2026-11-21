@@ -110,6 +110,23 @@ jobs:
           prerelease: true
           token: ${{ github.token }}
 
+      # The release action only uses target_commitish when creating the tag.
+      # Advance the rolling tag after the prerelease assets upload successfully.
+      - name: Bind the rolling Alpha tag to the QA source
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const ref = { ...context.repo, ref: 'tags/alpha' };
+            const { data: current } = await github.rest.git.getRef(ref);
+            if (current.object.type === 'commit' && current.object.sha === context.sha) return;
+
+            const { data: updated } = await github.rest.git.updateRef({
+              ...ref, sha: context.sha, force: true,
+            });
+            if (updated.object.type !== 'commit' || updated.object.sha !== context.sha) {
+              throw new Error('The rolling Alpha tag does not point to the QA source');
+            }
+
       - name: Upload published Alpha assets
         uses: actions/upload-artifact@v4
         with:
