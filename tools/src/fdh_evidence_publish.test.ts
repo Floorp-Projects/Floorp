@@ -17,7 +17,7 @@ import {
   writeEvidenceOutputs,
 } from "./fdh_evidence_publish.ts";
 import { FDH_REVIEW_RECEIPT_MARKER } from "./fdh_review.ts";
-import type { GhRunner } from "./fdh_ext_poll.ts";
+import { GhNotFound, type GhRunner } from "./fdh_ext_poll.ts";
 import type { EvidenceManifest } from "../qa3/evidence/types.ts";
 
 const HEAD = "1d687fb15a6dfb9b1aba11386d9e8396852d1e41";
@@ -206,14 +206,18 @@ Deno.test("fdh evidence publish: a large manifest is compressed, a too large one
   }
 });
 
-function receipt(reviewer: string, model: string, commit = HEAD): string {
+function receipt(
+  reviewer: string,
+  model: string,
+  verdict: "approve" | "request_changes" = "approve",
+): string {
   return `<!-- ${FDH_REVIEW_RECEIPT_MARKER} ${
     JSON.stringify({
       schemaVersion: 1,
       reviewer,
       model,
-      commit,
-      verdict: "approve",
+      commit: HEAD,
+      verdict,
       blocking: false,
       scope: "full",
       tier: "full_read",
@@ -224,6 +228,7 @@ function receipt(reviewer: string, model: string, commit = HEAD): string {
 function fakeGh(
   pr: Record<string, unknown>,
   comments: Array<Record<string, unknown>>,
+  permissions: Record<string, string | Error> = { dev: "write" },
 ): GhRunner {
   return (args) => {
     if (args[1] === "repos/o/r/pulls/7") {
@@ -232,6 +237,14 @@ function fakeGh(
     if (args.includes("repos/o/r/issues/7/comments?per_page=100")) {
       return Promise.resolve(
         comments.map((c) => JSON.stringify(c)).join("\n") + "\n",
+      );
+    }
+    const login = /^repos\/o\/r\/collaborators\/([^/]+)\/permission$/
+      .exec(args[1])?.[1];
+    if (login && Object.hasOwn(permissions, login)) {
+      const value = permissions[login];
+      return value instanceof Error ? Promise.reject(value) : Promise.resolve(
+        JSON.stringify({ permission: value }),
       );
     }
     return Promise.reject(new Error(`unexpected gh ${args.join(" ")}`));
@@ -274,6 +287,64 @@ Deno.test("fdh evidence trace: a merged PR leads to its evidence and receipts at
     assertEquals(report.receipts.reviewers, ["reviewer-a", "reviewer-b"]);
     assertEquals(report.receipts.ignored, 1);
     assertEquals(report.notes.length, 1);
+  } finally {
+    await Deno.remove(dir, { recursive: true });
+  }
+});
+
+Deno.test("fdh evidence trace: a read-only member cannot approve or block", async () => {
+  const dir = await Deno.makeTempDir();
+  try {
+    const manifest = await manifestIn(dir);
+    const evidence = trustedComment(
+      (await evidenceCommentBody(manifest, input)).body,
+    );
+    const memberApproval = trustedComment(receipt("member", "m"), {
+      author: "reader",
+    });
+    const permissions = { dev: "write", reader: "read" };
+    const [first, second] = reviews();
+    const insufficient = await traceEvidence(
+      "o/r",
+      7,
+      fakeGh(MERGED, [evidence, first, memberApproval], permissions),
+    );
+    assertEquals(insufficient.complete, false);
+    assertEquals(insufficient.receipts.ignored, 1);
+    assert(insufficient.receipts.error?.includes("found 1"));
+
+    const blocked = trustedComment(receipt("member", "m", "request_changes"), {
+      author: "reader",
+    });
+    const approved = await traceEvidence(
+      "o/r",
+      7,
+      fakeGh(MERGED, [evidence, first, second, blocked], permissions),
+    );
+    assertEquals(approved.complete, true);
+    assertEquals(approved.receipts.ignored, 1);
+
+    const missing = await traceEvidence(
+      "o/r",
+      7,
+      fakeGh(MERGED, [evidence, first, memberApproval], {
+        dev: "write",
+        reader: new GhNotFound("HTTP 404"),
+      }),
+    );
+    assertEquals(missing.receipts.ignored, 1);
+    assert(missing.receipts.error?.includes("found 1"));
+
+    const unavailable = await traceEvidence(
+      "o/r",
+      7,
+      fakeGh(MERGED, [evidence, first, second, blocked], {
+        dev: "write",
+        reader: new Error("permission lookup failed"),
+      }),
+    );
+    assertEquals(unavailable.complete, false);
+    assertEquals(unavailable.receipts.error, "permission lookup failed");
   } finally {
     await Deno.remove(dir, { recursive: true });
   }
