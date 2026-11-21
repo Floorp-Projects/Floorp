@@ -234,6 +234,25 @@ async function testFreshGenerationLifecycle(): Promise<void> {
       "v2:1",
       "update evaluates v2",
     );
+    const repeatedUpdate = await host.update(
+      "m0-update-v2-same-digest",
+      host.diagnostics.stateRevision,
+      "v2",
+    );
+    assertEquals(
+      repeatedUpdate.status,
+      "succeeded",
+      "updating the active digest succeeds",
+    );
+    assertEquals(
+      host.diagnostics.rollbackVersion,
+      "v1",
+      "same-digest update retains the distinct healthy rollback target",
+    );
+    assert(
+      host.diagnostics.rollbackDigest !== host.diagnostics.selectedDigest,
+      "same-digest update never points rollback at the selected digest",
+    );
     const rolledBack = await host.rollback(
       "m0-rollback-v1",
       host.diagnostics.stateRevision,
@@ -259,6 +278,83 @@ async function testFreshGenerationLifecycle(): Promise<void> {
       );
       assertEquals(report.timedOut, false, "test host cleanup completes");
     }
+  }
+}
+
+async function testDisabledUpdateToRollbackKeepsDistinctTarget(): Promise<
+  void
+> {
+  let session: M0TestHostHandle | null = null;
+  try {
+    session = await createM0FeatureHostForTests(true);
+    session.excludeWindowsForTests();
+    const host = session.host;
+    await host.install("disabled-rollback-install", 0, "v1");
+    await host.enable(
+      "disabled-rollback-enable",
+      host.diagnostics.stateRevision,
+    );
+    await host.update(
+      "disabled-rollback-update-v2",
+      host.diagnostics.stateRevision,
+      "v2",
+    );
+    await host.disable(
+      "disabled-rollback-disable",
+      host.diagnostics.stateRevision,
+    );
+    assertEquals(host.diagnostics.selectedVersion, "v2", "v2 remains selected");
+    assertEquals(host.diagnostics.rollbackVersion, "v1", "v1 is rollback");
+
+    const evaluationsBefore = host.evaluationCountForTests;
+    const updated = await host.update(
+      "disabled-rollback-update-v1",
+      host.diagnostics.stateRevision,
+      "v1",
+    );
+    assertEquals(
+      updated.status,
+      "succeeded",
+      "disabled update selects rollback v1",
+    );
+    assertEquals(host.diagnostics.selectedVersion, "v1", "v1 becomes selected");
+    assertEquals(
+      host.diagnostics.rollbackVersion,
+      "v2",
+      "healthy prior v2 replaces the now-selected rollback pointer",
+    );
+    assert(
+      host.diagnostics.rollbackDigest !== host.diagnostics.selectedDigest,
+      "disabled update leaves a distinct rollback digest",
+    );
+    assertEquals(
+      host.evaluationCountForTests,
+      evaluationsBefore,
+      "disabled update performs no payload evaluation",
+    );
+
+    const rolledBack = await host.rollback(
+      "disabled-rollback-use-v2",
+      host.diagnostics.stateRevision,
+    );
+    assertEquals(rolledBack.status, "succeeded", "rollback selects v2");
+    assertEquals(
+      host.diagnostics.selectedVersion,
+      "v2",
+      "rollback is not a no-op",
+    );
+    assertEquals(
+      host.diagnostics.rollbackVersion,
+      null,
+      "rollback consumes the pointer back to its just-selected version",
+    );
+    assertEquals(
+      host.evaluationCountForTests,
+      evaluationsBefore,
+      "disabled rollback performs no payload evaluation",
+    );
+  } finally {
+    if (session) await finishTestHosts(session);
   }
 }
 
@@ -2139,6 +2235,10 @@ export async function runAllTests(): Promise<void> {
     {
       name: "fresh sandbox lifecycle across enable/update/rollback",
       fn: testFreshGenerationLifecycle,
+    },
+    {
+      name: "disabled update to rollback target preserves distinct version",
+      fn: testDisabledUpdateToRollbackKeepsDistinctTarget,
     },
     {
       name: "resource scope revokes synchronously and disposes once",

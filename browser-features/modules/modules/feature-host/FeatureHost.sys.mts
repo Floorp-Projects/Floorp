@@ -1521,6 +1521,12 @@ export class M0FeatureHost {
       ? before.rollbackVersion
       : request.target;
     if (!targetVersion) throw new Error("missing target version");
+    if (
+      request.op === "rollback" &&
+      before.rollbackDigest === before.selectedDigest
+    ) {
+      throw new Error("rollback target is already selected");
+    }
     if (request.op === "rollback" && !this.#rollbackEligible(before)) {
       throw new Error("rollback target lacks current-build health proof");
     }
@@ -1538,24 +1544,10 @@ export class M0FeatureHost {
       );
     }
     if (request.op === "update" || request.op === "rollback") {
-      const previousIsHealthy = this.#selectedEligible(before);
-      const keepOldRollback = request.op === "update" &&
-        this.#rollbackEligible(before);
-      const nextRollbackVersion = request.op === "update" && keepOldRollback
-        ? before.rollbackVersion
-        : previousIsHealthy
-        ? before.selectedVersion
-        : null;
-      const nextRollbackDigest = request.op === "update" && keepOldRollback
-        ? before.rollbackDigest
-        : previousIsHealthy
-        ? before.selectedDigest
-        : null;
-      const nextRollbackHealthBuild = request.op === "update" && keepOldRollback
-        ? before.rollbackHealthBuild
-        : previousIsHealthy
-        ? before.selectedHealthBuild
-        : null;
+      const rollbackTarget = this.#healthyRollbackTarget(
+        before,
+        fixture.digest,
+      );
       await this.#write({
         ...before,
         pending: {
@@ -1577,9 +1569,9 @@ export class M0FeatureHost {
         selectedHealthBuild: request.op === "rollback"
           ? before.rollbackHealthBuild
           : null,
-        rollbackVersion: nextRollbackVersion,
-        rollbackDigest: nextRollbackDigest,
-        rollbackHealthBuild: nextRollbackHealthBuild,
+        rollbackVersion: rollbackTarget?.version ?? null,
+        rollbackDigest: rollbackTarget?.digest ?? null,
+        rollbackHealthBuild: rollbackTarget?.healthBuild ?? null,
         pending: null,
         attempt: null,
       });
@@ -1597,9 +1589,43 @@ export class M0FeatureHost {
 
   #rollbackEligible(record: M0Record): boolean {
     return record.rollbackVersion !== null &&
+      record.rollbackDigest !== record.selectedDigest &&
       record.rollbackDigest === M0_FIXTURES[record.rollbackVersion].digest &&
       record.rollbackHealthBuild?.hostBuildId === HOST_BUILD_ID &&
       record.rollbackHealthBuild.runtimeBuildId === Services.appinfo.appBuildID;
+  }
+
+  #healthyRollbackTarget(
+    record: M0Record,
+    selectedDigest: string,
+  ): {
+    version: FixtureVersion;
+    digest: string;
+    healthBuild: M0Record["rollbackHealthBuild"];
+  } | null {
+    if (
+      record.selectedVersion && record.selectedDigest &&
+      record.selectedDigest !== selectedDigest &&
+      this.#selectedEligible(record)
+    ) {
+      return {
+        version: record.selectedVersion,
+        digest: record.selectedDigest,
+        healthBuild: record.selectedHealthBuild,
+      };
+    }
+    if (
+      record.rollbackVersion && record.rollbackDigest &&
+      record.rollbackDigest !== selectedDigest &&
+      this.#rollbackEligible(record)
+    ) {
+      return {
+        version: record.rollbackVersion,
+        digest: record.rollbackDigest,
+        healthBuild: record.rollbackHealthBuild,
+      };
+    }
+    return null;
   }
 
   async #activate(
@@ -1744,33 +1770,11 @@ export class M0FeatureHost {
         runtimeBuildId: Services.appinfo.appBuildID,
       };
       this.#running = runtime;
-      const previousWasHealthy = this.#selectedEligible(before);
       const startupFallback = request.op === "startup_recovery" &&
         before.selectedDigest !== fixture.digest;
-      const preserveRollback = this.#rollbackEligible(before);
-      const preserveBeforePair = terminalStatus === "failed_restored";
-      const nextRollbackVersion = preserveBeforePair
-        ? before.rollbackVersion
-        : startupFallback
+      const rollbackTarget = startupFallback
         ? null
-        : request.op === "startup_recovery" || request.op === "enable"
-        ? preserveRollback ? before.rollbackVersion : null
-        : previousWasHealthy
-        ? before.selectedVersion
-        : preserveRollback
-        ? before.rollbackVersion
-        : null;
-      const nextRollbackDigest = nextRollbackVersion === before.rollbackVersion
-        ? before.rollbackDigest
-        : nextRollbackVersion === before.selectedVersion
-        ? before.selectedDigest
-        : null;
-      const nextRollbackHealthBuild =
-        nextRollbackVersion === before.rollbackVersion
-          ? before.rollbackHealthBuild
-          : nextRollbackVersion === before.selectedVersion
-          ? before.selectedHealthBuild
-          : null;
+        : this.#healthyRollbackTarget(before, fixture.digest);
       let committed: M0Record;
       try {
         this.#assertGenerationCurrent(operationEpoch, runtime, token);
@@ -1781,9 +1785,9 @@ export class M0FeatureHost {
           desiredEnabled: true,
           selectedHealth: "verified",
           selectedHealthBuild: build,
-          rollbackVersion: nextRollbackVersion,
-          rollbackDigest: nextRollbackDigest,
-          rollbackHealthBuild: nextRollbackHealthBuild,
+          rollbackVersion: rollbackTarget?.version ?? null,
+          rollbackDigest: rollbackTarget?.digest ?? null,
+          rollbackHealthBuild: rollbackTarget?.healthBuild ?? null,
           pending: null,
           attempt: this.#record.attempt,
           lastOutcome: {
