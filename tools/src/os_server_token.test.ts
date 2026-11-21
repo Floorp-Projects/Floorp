@@ -44,14 +44,13 @@ function fixture() {
   return { files, calls, storage, lifecycle: new TokenFileLifecycle(storage) };
 }
 
-Deno.test("token scope: default compatible; explicit isolation requires a local launch", () => {
-  for (const mode of ["", "production", "unknown"]) {
+Deno.test("token scope: default compatible; explicit isolation fails closed outside dev/test", () => {
+  for (const mode of ["", "production", "stage", "dev", "test"]) {
     assertEquals(tokenFileScope(false, mode), "legacy");
-    assertEquals(tokenFileScope(true, mode), null);
-  }
-  for (const mode of ["stage", "dev", "test"]) {
-    assertEquals(tokenFileScope(false, mode), "legacy");
-    assertEquals(tokenFileScope(true, mode), "profile");
+    assertEquals(
+      tokenFileScope(true, mode),
+      mode === "dev" || mode === "test" ? "profile" : null,
+    );
   }
 });
 
