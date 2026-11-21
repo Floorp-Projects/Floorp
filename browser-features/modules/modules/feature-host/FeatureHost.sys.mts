@@ -8,7 +8,7 @@ import {
 } from "./M0ModuleHost.sys.mts";
 
 const FEATURE_ID = "experimental-local-sample";
-const HOST_BUILD_ID = "m0-schema-1";
+const HOST_BUILD_ID = "m0-schema-2";
 const ROOT = PathUtils.join(PathUtils.profileDir, "floorp-hotfix-m0");
 const TEST_ROOT = PathUtils.join(
   PathUtils.profileDir,
@@ -19,8 +19,11 @@ const { PrivateBrowsingUtils } = ChromeUtils.importESModule(
 );
 
 type Operation = "install" | "enable" | "disable" | "update" | "rollback";
+type RequestOperation = Operation | "startup_recovery";
+type PendingPhase = "PREPARED" | "OLD_STOPPED" | "CANDIDATE_READY";
 type OutcomeStatus =
   | "pending"
+  | "committed_pending_publish"
   | "succeeded"
   | "failed_restored"
   | "failed_quarantined"
@@ -28,9 +31,10 @@ type OutcomeStatus =
 
 interface Descriptor {
   featureId: string;
-  op: Operation;
-  expectedRevision: number;
+  op: RequestOperation;
+  expectedRevision: number | null;
   target: FixtureVersion | null;
+  recoveryEpoch: string | null;
   normalizedInput: string;
 }
 
@@ -42,7 +46,7 @@ interface Outcome {
 }
 
 interface M0Record {
-  schemaVersion: 1;
+  schemaVersion: 2;
   featureId: string;
   desiredEnabled: boolean;
   selectedVersion: FixtureVersion | null;
@@ -53,12 +57,41 @@ interface M0Record {
   rollbackDigest: string | null;
   rollbackHealthBuild: { hostBuildId: string; runtimeBuildId: string } | null;
   stateRevision: number;
-  pending: { txId: string; request: Descriptor; phase: string } | null;
-  startupAttempt: null;
-  recoveryAttempt: null;
+  pending: PendingTransaction | null;
+  attempt: AttemptEpisode | null;
   blockedReason: string | null;
   recentOutcomes: Outcome[];
   lastOutcome: Outcome | null;
+}
+
+interface RecordSnapshot {
+  selectedVersion: FixtureVersion | null;
+  selectedDigest: string | null;
+  selectedHealth: "verified" | "unverified";
+  selectedHealthBuild: M0Record["selectedHealthBuild"];
+  rollbackVersion: FixtureVersion | null;
+  rollbackDigest: string | null;
+  rollbackHealthBuild: M0Record["rollbackHealthBuild"];
+  desiredEnabled: boolean;
+}
+
+interface PendingTransaction {
+  op: RequestOperation;
+  txId: string;
+  request: Descriptor;
+  before: RecordSnapshot;
+  targetVersion: FixtureVersion | null;
+  targetDigest: string | null;
+  phase: PendingPhase;
+}
+
+interface AttemptEpisode {
+  recoveryEpoch: string;
+  originTxId: string;
+  request: Descriptor;
+  targetDigest: string;
+  attemptedDigests: string[];
+  rejectedDigests: string[];
 }
 
 interface WindowEntry {
@@ -68,6 +101,11 @@ interface WindowEntry {
 
 const owners = new Map<string, M0FeatureHost>();
 const openingHosts = new Map<string, Promise<M0FeatureHost>>();
+let m0PayloadEvaluations = 0;
+
+export function m0PayloadEvaluationsForTests(): number {
+  return m0PayloadEvaluations;
+}
 
 export function isEligibleM0MainWindowForTests(
   windowType: string | null,
@@ -85,7 +123,10 @@ export function hasUnfinishedM0FinalizationForTests(
   terminalStatus: string | null,
   txId: string,
 ): boolean {
-  if (terminalTxId === txId) return terminalStatus === "pending";
+  if (terminalTxId === txId) {
+    return terminalStatus === "pending" ||
+      terminalStatus === "committed_pending_publish";
+  }
   return pendingTxId === txId;
 }
 
@@ -121,7 +162,7 @@ function isEligibleM0Window(window: Window): boolean {
 }
 
 class StorageFailure extends Error {
-  constructor() {
+  constructor(readonly uncertain = true) {
     super("storage_failed");
     this.name = "StorageFailure";
   }
@@ -129,7 +170,7 @@ class StorageFailure extends Error {
 
 function defaultRecord(): M0Record {
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     featureId: FEATURE_ID,
     desiredEnabled: false,
     selectedVersion: null,
@@ -141,35 +182,108 @@ function defaultRecord(): M0Record {
     rollbackHealthBuild: null,
     stateRevision: 0,
     pending: null,
-    startupAttempt: null,
-    recoveryAttempt: null,
+    attempt: null,
     blockedReason: null,
     recentOutcomes: [],
     lastOutcome: null,
   };
 }
 
+function snapshotRecord(record: M0Record): RecordSnapshot {
+  return {
+    selectedVersion: record.selectedVersion,
+    selectedDigest: record.selectedDigest,
+    selectedHealth: record.selectedHealth,
+    selectedHealthBuild: record.selectedHealthBuild,
+    rollbackVersion: record.rollbackVersion,
+    rollbackDigest: record.rollbackDigest,
+    rollbackHealthBuild: record.rollbackHealthBuild,
+    desiredEnabled: record.desiredEnabled,
+  };
+}
+
+function withSnapshot(
+  record: M0Record,
+  snapshot: RecordSnapshot,
+): M0Record {
+  return { ...record, ...snapshot };
+}
+
 function isVersion(value: unknown): value is FixtureVersion {
   return value === "v1" || value === "v2" || value === "broken";
 }
 
+function isTxId(value: unknown): value is string {
+  return typeof value === "string" && value.length > 0 && value.length <= 128 &&
+    /^[A-Za-z0-9._:-]+$/.test(value);
+}
+
+function isKnownDigest(value: unknown): value is string {
+  return typeof value === "string" &&
+    Object.values(M0_FIXTURES).some((fixture) => fixture.digest === value);
+}
+
+function isOperation(value: unknown): value is RequestOperation {
+  return value === "install" || value === "enable" || value === "disable" ||
+    value === "update" || value === "rollback" ||
+    value === "startup_recovery";
+}
+
+function hasExactKeys(value: object, keys: readonly string[]): boolean {
+  const actual = Object.keys(value);
+  return actual.length === keys.length &&
+    actual.every((key) => keys.includes(key));
+}
+
 function isDescriptor(value: unknown): value is Descriptor {
-  if (typeof value !== "object" || value === null) return false;
+  if (
+    typeof value !== "object" || value === null ||
+    !hasExactKeys(value, [
+      "featureId",
+      "op",
+      "expectedRevision",
+      "target",
+      "recoveryEpoch",
+      "normalizedInput",
+    ])
+  ) return false;
   const descriptor = value as Partial<Descriptor>;
-  return descriptor.featureId === FEATURE_ID &&
-    (descriptor.op === "install" || descriptor.op === "enable" ||
-      descriptor.op === "disable" || descriptor.op === "update" ||
-      descriptor.op === "rollback") &&
-    Number.isInteger(descriptor.expectedRevision) &&
-    (descriptor.target === null || isVersion(descriptor.target)) &&
-    typeof descriptor.normalizedInput === "string";
+  if (
+    descriptor.featureId !== FEATURE_ID || !isOperation(descriptor.op) ||
+    !(descriptor.expectedRevision === null ||
+      (typeof descriptor.expectedRevision === "number" &&
+        Number.isSafeInteger(descriptor.expectedRevision) &&
+        descriptor.expectedRevision >= 0)) ||
+    !(descriptor.target === null || isVersion(descriptor.target)) ||
+    !(descriptor.recoveryEpoch === null || isTxId(descriptor.recoveryEpoch)) ||
+    typeof descriptor.normalizedInput !== "string" ||
+    descriptor.normalizedInput.length > 256
+  ) return false;
+  if (descriptor.op === "startup_recovery") {
+    return descriptor.expectedRevision === null && descriptor.target === null &&
+      descriptor.recoveryEpoch !== null &&
+      descriptor.normalizedInput ===
+        `startup_recovery:${descriptor.recoveryEpoch}`;
+  }
+  return descriptor.expectedRevision !== null &&
+    descriptor.recoveryEpoch === null &&
+    (descriptor.op === "install" || descriptor.op === "update"
+      ? descriptor.target !== null
+      : descriptor.target === null) &&
+    descriptor.normalizedInput ===
+      `${descriptor.op}:${descriptor.target ?? "none"}`;
 }
 
 function isOutcome(value: unknown): value is Outcome {
-  if (typeof value !== "object" || value === null) return false;
+  if (
+    typeof value !== "object" || value === null ||
+    !hasExactKeys(value, ["txId", "request", "status", "selectedVersion"])
+  ) return false;
   const outcome = value as Partial<Outcome>;
-  return typeof outcome.txId === "string" && isDescriptor(outcome.request) &&
-    (outcome.status === "pending" || outcome.status === "succeeded" ||
+  return isTxId(outcome.txId) && isDescriptor(outcome.request) &&
+    (outcome.status === "pending" ||
+      outcome.status === "committed_pending_publish" ||
+      outcome.status === "succeeded" ||
       outcome.status === "failed_restored" ||
       outcome.status === "failed_quarantined" ||
       outcome.status === "storage_failed") &&
@@ -180,10 +294,119 @@ function isHealthBuild(
   value: unknown,
 ): value is M0Record["selectedHealthBuild"] {
   if (value === null) return true;
-  if (typeof value !== "object" || value === null) return false;
+  if (
+    typeof value !== "object" || value === null ||
+    !hasExactKeys(value, ["hostBuildId", "runtimeBuildId"])
+  ) return false;
   const build = value as { hostBuildId?: unknown; runtimeBuildId?: unknown };
   return typeof build.hostBuildId === "string" &&
-    typeof build.runtimeBuildId === "string";
+    build.hostBuildId.length > 0 && build.hostBuildId.length <= 128 &&
+    typeof build.runtimeBuildId === "string" &&
+    build.runtimeBuildId.length > 0 && build.runtimeBuildId.length <= 128;
+}
+
+function isSnapshot(value: unknown): value is RecordSnapshot {
+  if (
+    typeof value !== "object" || value === null ||
+    !hasExactKeys(value, [
+      "selectedVersion",
+      "selectedDigest",
+      "selectedHealth",
+      "selectedHealthBuild",
+      "rollbackVersion",
+      "rollbackDigest",
+      "rollbackHealthBuild",
+      "desiredEnabled",
+    ])
+  ) return false;
+  const snapshot = value as Partial<RecordSnapshot>;
+  return typeof snapshot.desiredEnabled === "boolean" &&
+    (snapshot.selectedVersion === null ||
+      isVersion(snapshot.selectedVersion)) &&
+    (snapshot.rollbackVersion === null ||
+      isVersion(snapshot.rollbackVersion)) &&
+    (snapshot.selectedDigest === null ||
+      isKnownDigest(snapshot.selectedDigest)) &&
+    (snapshot.rollbackDigest === null ||
+      isKnownDigest(snapshot.rollbackDigest)) &&
+    (snapshot.selectedHealth === "verified" ||
+      snapshot.selectedHealth === "unverified") &&
+    isHealthBuild(snapshot.selectedHealthBuild) &&
+    isHealthBuild(snapshot.rollbackHealthBuild) &&
+    ((snapshot.selectedVersion === null) ===
+      (snapshot.selectedDigest === null)) &&
+    ((snapshot.rollbackVersion === null) ===
+      (snapshot.rollbackDigest === null)) &&
+    (snapshot.selectedVersion !== null ||
+      (snapshot.selectedHealth === "unverified" &&
+        snapshot.selectedHealthBuild === null)) &&
+    ((snapshot.selectedHealth === "verified") ===
+      (snapshot.selectedHealthBuild !== null)) &&
+    ((snapshot.rollbackVersion === null) ===
+      (snapshot.rollbackHealthBuild === null)) &&
+    (snapshot.selectedVersion === null ||
+      snapshot.selectedDigest ===
+        M0_FIXTURES[snapshot.selectedVersion].digest) &&
+    (snapshot.rollbackVersion === null ||
+      snapshot.rollbackDigest === M0_FIXTURES[snapshot.rollbackVersion].digest);
+}
+
+function isPending(value: unknown): value is PendingTransaction {
+  if (
+    typeof value !== "object" || value === null ||
+    !hasExactKeys(value, [
+      "op",
+      "txId",
+      "request",
+      "before",
+      "targetVersion",
+      "targetDigest",
+      "phase",
+    ])
+  ) return false;
+  const pending = value as Partial<PendingTransaction>;
+  return isOperation(pending.op) && isTxId(pending.txId) &&
+    isDescriptor(pending.request) && pending.request.op === pending.op &&
+    isSnapshot(pending.before) &&
+    (pending.targetVersion === null || isVersion(pending.targetVersion)) &&
+    (pending.targetDigest === null || isKnownDigest(pending.targetDigest)) &&
+    pending.targetVersion !== null && pending.targetDigest !== null &&
+    (pending.targetVersion === null ||
+      pending.targetDigest === M0_FIXTURES[pending.targetVersion].digest) &&
+    (pending.phase === "PREPARED" || pending.phase === "OLD_STOPPED" ||
+      pending.phase === "CANDIDATE_READY");
+}
+
+function isAttemptEpisode(value: unknown): value is AttemptEpisode {
+  if (
+    typeof value !== "object" || value === null ||
+    !hasExactKeys(value, [
+      "recoveryEpoch",
+      "originTxId",
+      "request",
+      "targetDigest",
+      "attemptedDigests",
+      "rejectedDigests",
+    ])
+  ) return false;
+  const episode = value as Partial<AttemptEpisode>;
+  if (
+    !isTxId(episode.recoveryEpoch) || !isTxId(episode.originTxId) ||
+    !isDescriptor(episode.request) || !isKnownDigest(episode.targetDigest) ||
+    !Array.isArray(episode.attemptedDigests) ||
+    !Array.isArray(episode.rejectedDigests) ||
+    episode.attemptedDigests.length > 2 || episode.rejectedDigests.length > 2 ||
+    !episode.attemptedDigests.every(isKnownDigest) ||
+    !episode.rejectedDigests.every(isKnownDigest)
+  ) return false;
+  const attempted = episode.attemptedDigests;
+  const rejected = episode.rejectedDigests;
+  return new Set(attempted).size === attempted.length &&
+    new Set(rejected).size === rejected.length &&
+    attempted.length + rejected.length <= 2 &&
+    !attempted.some((digestValue) => rejected.includes(digestValue)) &&
+    (episode.request.op !== "startup_recovery" ||
+      episode.request.recoveryEpoch === episode.recoveryEpoch);
 }
 
 function validateRecord(value: unknown): M0Record {
@@ -191,10 +414,29 @@ function validateRecord(value: unknown): M0Record {
     throw new Error("invalid M0 state record");
   }
   const record = value as Partial<M0Record>;
+  const keys = [
+    "schemaVersion",
+    "featureId",
+    "desiredEnabled",
+    "selectedVersion",
+    "selectedDigest",
+    "selectedHealth",
+    "selectedHealthBuild",
+    "rollbackVersion",
+    "rollbackDigest",
+    "rollbackHealthBuild",
+    "stateRevision",
+    "pending",
+    "attempt",
+    "blockedReason",
+    "recentOutcomes",
+    "lastOutcome",
+  ];
   if (
-    record.schemaVersion !== 1 || record.featureId !== FEATURE_ID ||
+    Object.keys(value).some((key) => !keys.includes(key)) ||
+    record.schemaVersion !== 2 || record.featureId !== FEATURE_ID ||
     typeof record.desiredEnabled !== "boolean" ||
-    !Number.isInteger(record.stateRevision) ||
+    !Number.isSafeInteger(record.stateRevision) ||
     (record.stateRevision ?? -1) < 0 ||
     !(record.selectedVersion === null || isVersion(record.selectedVersion)) ||
     !(record.rollbackVersion === null || isVersion(record.rollbackVersion)) ||
@@ -213,21 +455,55 @@ function validateRecord(value: unknown): M0Record {
     !Array.isArray(record.recentOutcomes) ||
     record.recentOutcomes.length > 32 ||
     !record.recentOutcomes.every(isOutcome) ||
+    record.recentOutcomes.some((outcome) =>
+      outcome.status === "pending" ||
+      outcome.status === "committed_pending_publish" ||
+      outcome.status === "storage_failed"
+    ) ||
     !(record.lastOutcome === null || isOutcome(record.lastOutcome)) ||
-    !(record.pending === null || (typeof record.pending === "object" &&
-      record.pending !== null && typeof record.pending.txId === "string" &&
-      isDescriptor(record.pending.request) &&
-      record.pending.phase === "PREPARED")) ||
-    record.startupAttempt !== null || record.recoveryAttempt !== null ||
+    (record.lastOutcome !== null &&
+      (record.lastOutcome.status === "pending" ||
+        record.lastOutcome.status === "storage_failed")) ||
+    !(record.pending === null || isPending(record.pending)) ||
+    !(record.attempt === null || isAttemptEpisode(record.attempt)) ||
     !(record.blockedReason === null ||
-      typeof record.blockedReason === "string") ||
+      typeof record.blockedReason === "string" &&
+        record.blockedReason.length > 0 &&
+        record.blockedReason.length <= 128) ||
     (record.selectedVersion === null) !== (record.selectedDigest === null) ||
+    (record.selectedVersion === null &&
+      (record.selectedHealth !== "unverified" ||
+        record.selectedHealthBuild !== null)) ||
     (record.rollbackVersion === null) !== (record.rollbackDigest === null) ||
     (record.selectedVersion !== null &&
       record.selectedDigest !== M0_FIXTURES[record.selectedVersion].digest) ||
     (record.rollbackVersion !== null &&
       record.rollbackDigest !== M0_FIXTURES[record.rollbackVersion].digest) ||
-    (record.desiredEnabled && record.selectedVersion === null)
+    (record.desiredEnabled && record.selectedVersion === null) ||
+    (record.pending !== null &&
+      (record.pending.txId === "" ||
+        record.pending.request.op === "startup_recovery" &&
+          record.pending.request.recoveryEpoch !== record.pending.txId)) ||
+    (record.pending !== null && record.attempt !== null &&
+      (record.attempt.originTxId !== record.pending.txId ||
+        record.attempt.targetDigest !== record.pending.targetDigest ||
+        JSON.stringify(record.attempt.request) !==
+          JSON.stringify(record.pending.request))) ||
+    (record.pending === null && record.attempt !== null &&
+      (record.lastOutcome?.txId !== record.attempt.originTxId ||
+        JSON.stringify(record.lastOutcome.request) !==
+          JSON.stringify(record.attempt.request) ||
+        record.lastOutcome.status !== "committed_pending_publish" &&
+          record.lastOutcome.status !== "failed_quarantined")) ||
+    (record.lastOutcome?.status === "committed_pending_publish" &&
+      (record.attempt === null ||
+        record.attempt.originTxId !== record.lastOutcome.txId ||
+        record.lastOutcome.selectedVersion === null ||
+        !record.attempt.attemptedDigests.includes(
+          M0_FIXTURES[record.lastOutcome.selectedVersion].digest,
+        ))) ||
+    (record.lastOutcome?.status === "failed_quarantined" &&
+      record.blockedReason === null)
   ) throw new Error("invalid M0 state record");
   return record as M0Record;
 }
@@ -242,6 +518,25 @@ async function digest(source: string): Promise<string> {
   ).join("");
 }
 
+const HOST_CAPABILITIES = new Set(["window-marker"]);
+
+export function isM0FixtureCompatibleForTests(
+  version: FixtureVersion,
+  hostBuildId: string,
+  runtimeBuildId: string,
+  availableCapabilities: readonly string[],
+): boolean {
+  const compatibility = M0_FIXTURES[version].compatibility;
+  return compatibility.hostSchema === 2 &&
+    compatibility.hostBuildId === HOST_BUILD_ID &&
+    hostBuildId === HOST_BUILD_ID &&
+    compatibility.runtimeBuildIds.includes(runtimeBuildId) &&
+    compatibility.capabilities.every((capability) =>
+      HOST_CAPABILITIES.has(capability) &&
+      availableCapabilities.includes(capability)
+    );
+}
+
 class PackageStore {
   readonly #directory: string;
 
@@ -251,6 +546,14 @@ class PackageStore {
 
   async ensure(version: FixtureVersion): Promise<M0FixtureValue> {
     const fixture = M0_FIXTURES[version];
+    if (
+      !isM0FixtureCompatibleForTests(
+        version,
+        HOST_BUILD_ID,
+        Services.appinfo.appBuildID,
+        [...HOST_CAPABILITIES],
+      )
+    ) throw new Error("fixture is incompatible with this host/runtime");
     if (await digest(fixture.source) !== fixture.digest) {
       throw new Error("pinned fixture digest mismatch");
     }
@@ -300,10 +603,25 @@ class PackageStore {
     version: FixtureVersion,
   ): Promise<M0FixtureValue> {
     const fixture = M0_FIXTURES[version];
+    if (
+      !isM0FixtureCompatibleForTests(
+        version,
+        HOST_BUILD_ID,
+        Services.appinfo.appBuildID,
+        [...HOST_CAPABILITIES],
+      )
+    ) throw new Error("fixture is incompatible with this host/runtime");
     if (digestValue !== fixture.digest) {
       throw new Error("untrusted fixture digest");
     }
     const path = PathUtils.join(this.#directory, `${digestValue}.js`);
+    let exists: boolean;
+    try {
+      exists = await IOUtils.exists(path);
+    } catch {
+      throw new StorageFailure();
+    }
+    if (!exists) throw new Error("cached fixture is missing");
     let source: string;
     try {
       source = await IOUtils.readUTF8(path);
@@ -337,9 +655,16 @@ export class M0FeatureHost {
   #closed = false;
   #volatileBlocked = false;
   #shutdownPromise: Promise<DisposeReport> | null = null;
+  #nextWriteFault: {
+    mode: "before_replace" | "after_replace";
+    skip: number;
+  } | null = null;
+  #evaluations = 0;
   readonly #markerKeys = new Set<string>();
+  readonly #testWritesEnabled: boolean;
 
-  private constructor(readonly root: string) {
+  private constructor(readonly root: string, testWritesEnabled: boolean) {
+    this.#testWritesEnabled = testWritesEnabled;
     this.#store = new PackageStore(root);
     this.#recordPath = PathUtils.join(root, "state.json");
   }
@@ -348,6 +673,7 @@ export class M0FeatureHost {
     root: string,
     experimentalOptIn: boolean,
     testRoot = false,
+    reopenTestRoot = false,
   ): Promise<M0FeatureHost> {
     const mode = Services.prefs.getStringPref("nora.startup.mode", "");
     if (
@@ -362,11 +688,11 @@ export class M0FeatureHost {
     if (opening) return opening;
     const existing = owners.get(root);
     if (existing) return existing;
-    const host = new M0FeatureHost(root);
+    const host = new M0FeatureHost(root, testRoot);
     owners.set(root, host);
     const openingPromise = (async () => {
       try {
-        if (testRoot && await IOUtils.exists(root)) {
+        if (testRoot && !reopenTestRoot && await IOUtils.exists(root)) {
           throw new Error("test root must be newly created");
         }
         await IOUtils.makeDirectory(root, {
@@ -379,11 +705,19 @@ export class M0FeatureHost {
             await IOUtils.readJSON(host.#recordPath),
           );
           if (
-            host.#record.desiredEnabled || host.#record.pending ||
-            host.#record.lastOutcome?.status === "pending" ||
-            host.#record.lastOutcome?.status === "storage_failed"
-          ) host.#volatileBlocked = true;
+            !host.#record.blockedReason &&
+            host.#record.lastOutcome?.status !== "failed_quarantined" &&
+            host.#record.selectedHealth === "verified" &&
+            !host.#selectedEligible(host.#record)
+          ) {
+            await host.#write({
+              ...host.#record,
+              selectedHealth: "unverified",
+              selectedHealthBuild: null,
+            });
+          }
         }
+        await host.#recover();
         return host;
       } catch (error) {
         owners.delete(root);
@@ -396,6 +730,297 @@ export class M0FeatureHost {
     } finally {
       if (openingHosts.get(root) === openingPromise) openingHosts.delete(root);
     }
+  }
+
+  async #recover(): Promise<void> {
+    let record = this.#record;
+    if (
+      record.blockedReason ||
+      record.lastOutcome?.status === "failed_quarantined"
+    ) {
+      this.#volatileBlocked = true;
+      return;
+    }
+    if (!record.desiredEnabled) {
+      if (!record.pending) return;
+      const pending = record.pending;
+      const disabledBefore = withSnapshot(record, pending.before);
+      const status = pending.op === "disable" ? "succeeded" : "failed_restored";
+      await this.#terminal(pending.txId, pending.request, status, {
+        ...disabledBefore,
+        desiredEnabled: false,
+        pending: null,
+        attempt: null,
+      });
+      return;
+    }
+
+    const committed = record.pending === null &&
+      record.lastOutcome?.status === "committed_pending_publish";
+    const pending = record.pending;
+    if (
+      pending && (pending.op === "install" || pending.op === "enable" ||
+        !pending.before.desiredEnabled)
+    ) {
+      await this.#terminal(pending.txId, pending.request, "failed_restored", {
+        ...withSnapshot(record, pending.before),
+        desiredEnabled: false,
+        pending: null,
+        attempt: null,
+      });
+      return;
+    }
+
+    const txId = committed ? record.attempt!.originTxId : pending?.txId;
+    const request = committed ? record.attempt!.request : pending?.request;
+    if (committed || pending) {
+      if (!txId || !request) throw new Error("invalid recovery origin");
+      let base = pending ? withSnapshot(record, pending.before) : record;
+      let targetVersion: FixtureVersion | null = null;
+      const episode = record.attempt;
+      const tried = new Set([
+        ...(episode?.attemptedDigests ?? []),
+        ...(episode?.rejectedDigests ?? []),
+      ]);
+      if (
+        pending?.op === "startup_recovery" && pending.targetVersion &&
+        pending.targetDigest && !tried.has(pending.targetDigest)
+      ) {
+        targetVersion = pending.targetVersion;
+      } else if (
+        pending && pending.op !== "startup_recovery" &&
+        this.#selectedEligible(base) && base.selectedDigest &&
+        !tried.has(base.selectedDigest)
+      ) {
+        targetVersion = base.selectedVersion;
+      } else if (
+        (!pending || pending.op === "startup_recovery") &&
+        this.#rollbackEligible(record) && record.rollbackVersion &&
+        record.rollbackDigest && !tried.has(record.rollbackDigest)
+      ) {
+        targetVersion = record.rollbackVersion;
+        base = {
+          ...record,
+          rollbackVersion: null,
+          rollbackDigest: null,
+          rollbackHealthBuild: null,
+        };
+      }
+      if (!targetVersion) {
+        await this.#quarantine(txId, request, "recovery-attempt-exhausted");
+        return;
+      }
+      const targetDigest = M0_FIXTURES[targetVersion].digest;
+      const recoveryPending: PendingTransaction = pending ?? {
+        op: request.op,
+        txId,
+        request,
+        before: snapshotRecord(record),
+        targetVersion,
+        targetDigest,
+        phase: "OLD_STOPPED",
+      };
+      const attempt = episode ?? this.#newAttempt(txId, request, targetDigest);
+      await this.#write({
+        ...record,
+        ...(!committed ? {} : { lastOutcome: record.lastOutcome }),
+        pending: {
+          ...recoveryPending,
+          targetVersion,
+          targetDigest,
+          phase: "OLD_STOPPED",
+        },
+        attempt: { ...attempt, targetDigest },
+      });
+      let fixture: M0FixtureValue;
+      try {
+        fixture = await this.#store.load(targetDigest, targetVersion);
+      } catch (error) {
+        if (error instanceof StorageFailure) throw error;
+        await this.#rejectRecoveryCandidate(
+          txId,
+          request,
+          this.#record.pending!,
+          targetVersion,
+          base,
+        );
+        return;
+      }
+      await this.#activate(
+        txId,
+        request,
+        base,
+        fixture,
+        request.op === "startup_recovery" ? "succeeded" : "failed_restored",
+      );
+      return;
+    }
+
+    if (!record.selectedVersion || !record.selectedDigest) {
+      this.#volatileBlocked = true;
+      throw new Error("enabled record has no selected fixture");
+    }
+    const startupVersion = record.selectedVersion;
+    const startupDigest = record.selectedDigest;
+    const recoveryEpoch = Services.uuid.generateUUID().toString()
+      .replace(/[{}]/g, "").toLowerCase();
+    const startupRequest: Descriptor = {
+      featureId: FEATURE_ID,
+      op: "startup_recovery",
+      expectedRevision: null,
+      target: null,
+      recoveryEpoch,
+      normalizedInput: `startup_recovery:${recoveryEpoch}`,
+    };
+    const startupTxId = recoveryEpoch;
+    const pendingRecovery: PendingTransaction = {
+      op: "startup_recovery",
+      txId: startupTxId,
+      request: startupRequest,
+      before: snapshotRecord(record),
+      targetVersion: startupVersion,
+      targetDigest: startupDigest,
+      phase: "PREPARED",
+    };
+    const attempt = this.#newAttempt(
+      startupTxId,
+      startupRequest,
+      startupDigest,
+    );
+    record = await this.#write({
+      ...record,
+      pending: pendingRecovery,
+      attempt,
+    });
+    let fixture: M0FixtureValue;
+    try {
+      fixture = await this.#store.load(
+        startupDigest,
+        startupVersion,
+      );
+    } catch (error) {
+      if (error instanceof StorageFailure) throw error;
+      await this.#rejectRecoveryCandidate(
+        startupTxId,
+        startupRequest,
+        this.#record.pending!,
+        startupVersion,
+        record,
+      );
+      return;
+    }
+    await this.#activate(
+      startupTxId,
+      startupRequest,
+      record,
+      fixture,
+      "succeeded",
+    );
+  }
+
+  #newAttempt(
+    txId: string,
+    request: Descriptor,
+    targetDigest: string,
+  ): AttemptEpisode {
+    return {
+      recoveryEpoch: request.recoveryEpoch ??
+        Services.uuid.generateUUID().toString().replace(/[{}]/g, "")
+          .toLowerCase(),
+      originTxId: txId,
+      request,
+      targetDigest,
+      attemptedDigests: [],
+      rejectedDigests: [],
+    };
+  }
+
+  async #rejectRecoveryCandidate(
+    txId: string,
+    request: Descriptor,
+    pending: PendingTransaction,
+    targetVersion: FixtureVersion,
+    base: M0Record,
+  ): Promise<void> {
+    const targetDigest = M0_FIXTURES[targetVersion].digest;
+    const episode = this.#record.attempt ??
+      this.#newAttempt(txId, request, targetDigest);
+    if (
+      episode.attemptedDigests.includes(targetDigest) ||
+      episode.rejectedDigests.includes(targetDigest) ||
+      episode.attemptedDigests.length + episode.rejectedDigests.length >= 2
+    ) {
+      await this.#quarantine(txId, request, "recovery-attempt-exhausted");
+      return;
+    }
+    let record = await this.#write({
+      ...this.#record,
+      pending,
+      attempt: {
+        ...episode,
+        targetDigest,
+        rejectedDigests: [...episode.rejectedDigests, targetDigest],
+      },
+    });
+    const mayFallback = request.op === "startup_recovery" ||
+      record.lastOutcome?.txId === txId &&
+        record.lastOutcome.status === "committed_pending_publish";
+    if (
+      !mayFallback || !this.#rollbackEligible(record) ||
+      !record.rollbackVersion || !record.rollbackDigest ||
+      episode.attemptedDigests.includes(record.rollbackDigest) ||
+      episode.rejectedDigests.includes(record.rollbackDigest) ||
+      episode.attemptedDigests.length + episode.rejectedDigests.length >= 2
+    ) {
+      await this.#quarantine(txId, request, "recovery-preflight-rejected");
+      return;
+    }
+    const fallbackVersion = record.rollbackVersion;
+    const fallbackDigest = record.rollbackDigest;
+    const fallbackPending = {
+      ...pending,
+      targetVersion: fallbackVersion,
+      targetDigest: fallbackDigest,
+      phase: "OLD_STOPPED" as const,
+    };
+    const nextAttempt = { ...record.attempt!, targetDigest: fallbackDigest };
+    record = await this.#write({
+      ...record,
+      pending: fallbackPending,
+      attempt: nextAttempt,
+    });
+    let fixture: M0FixtureValue;
+    try {
+      fixture = await this.#store.load(fallbackDigest, fallbackVersion);
+    } catch (error) {
+      if (error instanceof StorageFailure) throw error;
+      const attempt = record.attempt!;
+      if (
+        attempt.attemptedDigests.length + attempt.rejectedDigests.length < 2
+      ) {
+        await this.#write({
+          ...record,
+          attempt: {
+            ...attempt,
+            rejectedDigests: [...attempt.rejectedDigests, fallbackDigest],
+          },
+        });
+      }
+      await this.#quarantine(txId, request, "recovery-fallback-rejected");
+      return;
+    }
+    await this.#activate(
+      txId,
+      request,
+      {
+        ...base,
+        rollbackVersion: null,
+        rollbackDigest: null,
+        rollbackHealthBuild: null,
+      },
+      fixture,
+      request.op === "startup_recovery" ? "succeeded" : "failed_restored",
+    );
   }
 
   get diagnostics(): Readonly<M0Record> {
@@ -416,6 +1041,21 @@ export class M0FeatureHost {
 
   get windowIdsForTests(): string[] {
     return [...this.#windows.keys()];
+  }
+
+  get evaluationCountForTests(): number {
+    return this.#evaluations;
+  }
+
+  setNextWriteFaultForTests(
+    mode: "before_replace" | "after_replace",
+    skip = 0,
+  ): void {
+    if (!this.#testWritesEnabled) throw new Error("test write fault disabled");
+    if (!Number.isInteger(skip) || skip < 0 || skip > 32) {
+      throw new Error("invalid write fault offset");
+    }
+    this.#nextWriteFault = { mode, skip };
   }
 
   install(txId: string, expectedRevision: number, version: FixtureVersion) {
@@ -501,10 +1141,22 @@ export class M0FeatureHost {
   async #write(
     next: Omit<M0Record, "stateRevision"> & { stateRevision?: number },
   ): Promise<M0Record> {
+    const nextRevision = this.#record.stateRevision + 1;
+    if (!Number.isSafeInteger(nextRevision)) {
+      throw new Error("state revision exhausted");
+    }
     const committed = {
       ...next,
-      stateRevision: this.#record.stateRevision + 1,
+      stateRevision: nextRevision,
     } as M0Record;
+    validateRecord(committed);
+    const plan = this.#nextWriteFault;
+    const fault = plan?.skip === 0 ? plan.mode : null;
+    if (plan) {
+      if (plan.skip === 0) this.#nextWriteFault = null;
+      else this.#nextWriteFault = { ...plan, skip: plan.skip - 1 };
+    }
+    if (fault === "before_replace") throw new StorageFailure(false);
     try {
       await IOUtils.writeJSON(this.#recordPath, committed, {
         tmpPath: `${this.#recordPath}.tmp`,
@@ -513,6 +1165,7 @@ export class M0FeatureHost {
     } catch {
       throw new StorageFailure();
     }
+    if (fault === "after_replace") throw new StorageFailure();
     this.#record = committed;
     return committed;
   }
@@ -523,13 +1176,23 @@ export class M0FeatureHost {
     op: Operation,
     target: FixtureVersion | null,
   ): Promise<Outcome> {
+    if (!isTxId(txId)) {
+      return Promise.reject(new Error("invalid transaction ID"));
+    }
+    if (!Number.isSafeInteger(expectedRevision) || expectedRevision < 0) {
+      return Promise.reject(new Error("invalid expected revision"));
+    }
     const request: Descriptor = {
       featureId: FEATURE_ID,
       op,
       expectedRevision,
       target,
+      recoveryEpoch: null,
       normalizedInput: `${op}:${target ?? "none"}`,
     };
+    if (!isDescriptor(request)) {
+      return Promise.reject(new Error("invalid transaction descriptor"));
+    }
     const known = this.#findOutcome(txId);
     if (known !== "outcome_unknown_or_expired") {
       if (JSON.stringify(known.request) !== JSON.stringify(request)) {
@@ -556,7 +1219,9 @@ export class M0FeatureHost {
         return detachedOutcome(await this.#perform(txId, request));
       } catch (error) {
         if (!(error instanceof StorageFailure)) throw error;
-        if (this.#record.pending?.txId === txId) this.#volatileBlocked = true;
+        if (error.uncertain || this.#record.pending?.txId === txId) {
+          this.#volatileBlocked = true;
+        }
         return {
           txId,
           request,
@@ -572,13 +1237,29 @@ export class M0FeatureHost {
     if (this.#volatileBlocked || this.#record.blockedReason) {
       throw new Error("quarantined");
     }
+    if (
+      this.#record.pending ||
+      this.#record.lastOutcome?.status === "committed_pending_publish"
+    ) throw new Error("recovery required before new transaction");
     if (request.op === "install") {
       if (before.selectedVersion !== null || !request.target) {
         throw new Error("invalid install");
       }
       const fixture = await this.#store.ensure(request.target);
-      return await this.#terminal(txId, request, "succeeded", {
+      await this.#write({
         ...before,
+        pending: {
+          op: request.op,
+          txId,
+          request,
+          before: snapshotRecord(before),
+          targetVersion: fixture.version,
+          targetDigest: fixture.digest,
+          phase: "PREPARED",
+        },
+      });
+      return await this.#terminal(txId, request, "succeeded", {
+        ...this.#record,
         selectedVersion: fixture.version,
         selectedDigest: fixture.digest,
         desiredEnabled: false,
@@ -591,8 +1272,21 @@ export class M0FeatureHost {
     }
     if (request.op === "disable") {
       if (!before.desiredEnabled) throw new Error("already disabled");
-      const pending = { txId, request, phase: "PREPARED" };
-      await this.#write({ ...before, desiredEnabled: false, pending });
+      const pending: PendingTransaction = {
+        op: request.op,
+        txId,
+        request,
+        before: snapshotRecord(before),
+        targetVersion: before.selectedVersion,
+        targetDigest: before.selectedDigest,
+        phase: "PREPARED",
+      };
+      await this.#write({
+        ...before,
+        desiredEnabled: false,
+        pending,
+        attempt: null,
+      });
       const stopped = this.#running
         ? await this.#running.stop("disable")
         : { errors: [], timedOut: false };
@@ -607,6 +1301,7 @@ export class M0FeatureHost {
         ...this.#record,
         desiredEnabled: false,
         pending: null,
+        attempt: null,
       });
     }
     if (request.op === "enable" && before.desiredEnabled) {
@@ -644,8 +1339,20 @@ export class M0FeatureHost {
         : previousIsHealthy
         ? before.selectedHealthBuild
         : null;
-      return await this.#terminal(txId, request, "succeeded", {
+      await this.#write({
         ...before,
+        pending: {
+          op: request.op,
+          txId,
+          request,
+          before: snapshotRecord(before),
+          targetVersion: fixture.version,
+          targetDigest: fixture.digest,
+          phase: "PREPARED",
+        },
+      });
+      return await this.#terminal(txId, request, "succeeded", {
+        ...this.#record,
         selectedVersion: fixture.version,
         selectedDigest: fixture.digest,
         selectedHealth: request.op === "rollback" ? "verified" : "unverified",
@@ -655,6 +1362,8 @@ export class M0FeatureHost {
         rollbackVersion: nextRollbackVersion,
         rollbackDigest: nextRollbackDigest,
         rollbackHealthBuild: nextRollbackHealthBuild,
+        pending: null,
+        attempt: null,
       });
     }
     throw new Error("unsupported operation");
@@ -680,16 +1389,22 @@ export class M0FeatureHost {
     request: Descriptor,
     before: M0Record,
     fixture: M0FixtureValue,
+    terminalStatus: "succeeded" | "failed_restored" = "succeeded",
   ): Promise<Outcome> {
-    const verifiedFixture = await this.#store.load(
-      fixture.digest,
-      fixture.version,
-    );
+    const verifiedFixture = fixture;
     const windows = this.#captureWindows();
-    await this.#write({
-      ...before,
-      pending: { txId, request, phase: "PREPARED" },
-    });
+    let pending = this.#record.pending?.txId === txId ? this.#record.pending : {
+      op: request.op,
+      txId,
+      request,
+      before: snapshotRecord(before),
+      targetVersion: fixture.version,
+      targetDigest: fixture.digest,
+      phase: "PREPARED" as const,
+    };
+    if (this.#record.pending?.txId !== txId) {
+      await this.#write({ ...before, pending, attempt: null });
+    }
     const old = this.#running;
     if (old) {
       this.#activeToken = null;
@@ -700,6 +1415,39 @@ export class M0FeatureHost {
       }
       this.#running = null;
     }
+    pending = {
+      ...pending,
+      targetVersion: fixture.version,
+      targetDigest: fixture.digest,
+      phase: "OLD_STOPPED",
+    };
+    const episode = this.#record.attempt ??
+      this.#newAttempt(txId, request, fixture.digest);
+    await this.#write({
+      ...this.#record,
+      pending,
+      attempt: { ...episode, targetDigest: fixture.digest },
+    });
+    if (
+      episode.attemptedDigests.includes(fixture.digest) ||
+      episode.rejectedDigests.includes(fixture.digest) ||
+      episode.attemptedDigests.length + episode.rejectedDigests.length >= 2
+    ) {
+      return await this.#quarantine(
+        txId,
+        request,
+        "recovery-attempt-exhausted",
+      );
+    }
+    await this.#write({
+      ...this.#record,
+      pending,
+      attempt: {
+        ...episode,
+        targetDigest: fixture.digest,
+        attemptedDigests: [...episode.attemptedDigests, fixture.digest],
+      },
+    });
     this.#windows.clear();
     for (const entry of windows) this.#windows.set(entry.id, entry.window);
     const generation = ++this.#generation;
@@ -714,31 +1462,43 @@ export class M0FeatureHost {
     this.#activeToken = token;
     this.#running = runtime;
     try {
+      this.#evaluations += 1;
+      m0PayloadEvaluations += 1;
       await runtime.start(windows.map((entry) => entry.id));
+      pending = { ...pending, phase: "CANDIDATE_READY" };
+      await this.#write({ ...this.#record, pending });
       const build = {
         hostBuildId: HOST_BUILD_ID,
         runtimeBuildId: Services.appinfo.appBuildID,
       };
       this.#running = runtime;
       const previousWasHealthy = this.#selectedEligible(before);
-      const preserveFallback =
-        (request.op === "update" || request.op === "enable") &&
-        this.#rollbackEligible(before);
-      const nextRollbackVersion = previousWasHealthy
+      const startupFallback = request.op === "startup_recovery" &&
+        before.selectedDigest !== fixture.digest;
+      const preserveRollback = this.#rollbackEligible(before);
+      const preserveBeforePair = terminalStatus === "failed_restored";
+      const nextRollbackVersion = preserveBeforePair
+        ? before.rollbackVersion
+        : startupFallback
+        ? null
+        : request.op === "startup_recovery" || request.op === "enable"
+        ? preserveRollback ? before.rollbackVersion : null
+        : previousWasHealthy
         ? before.selectedVersion
-        : preserveFallback
+        : preserveRollback
         ? before.rollbackVersion
         : null;
-      const nextRollbackDigest = previousWasHealthy
-        ? before.selectedDigest
-        : preserveFallback
+      const nextRollbackDigest = nextRollbackVersion === before.rollbackVersion
         ? before.rollbackDigest
+        : nextRollbackVersion === before.selectedVersion
+        ? before.selectedDigest
         : null;
-      const nextRollbackHealthBuild = previousWasHealthy
-        ? before.selectedHealthBuild
-        : preserveFallback
-        ? before.rollbackHealthBuild
-        : null;
+      const nextRollbackHealthBuild =
+        nextRollbackVersion === before.rollbackVersion
+          ? before.rollbackHealthBuild
+          : nextRollbackVersion === before.selectedVersion
+          ? before.selectedHealthBuild
+          : null;
       let committed: M0Record;
       try {
         committed = await this.#write({
@@ -752,10 +1512,11 @@ export class M0FeatureHost {
           rollbackDigest: nextRollbackDigest,
           rollbackHealthBuild: nextRollbackHealthBuild,
           pending: null,
+          attempt: this.#record.attempt,
           lastOutcome: {
             txId,
             request,
-            status: "pending",
+            status: "committed_pending_publish",
             selectedVersion: fixture.version,
           },
         });
@@ -768,7 +1529,7 @@ export class M0FeatureHost {
         );
       }
       try {
-        return await this.#terminal(txId, request, "succeeded", committed);
+        return await this.#terminal(txId, request, terminalStatus, committed);
       } catch {
         return await this.#finalizationStorageFailure(
           txId,
@@ -781,75 +1542,115 @@ export class M0FeatureHost {
       this.#activeToken = null;
       const stopped = await runtime.stop("candidate-failed");
       this.#running = null;
+      if (error instanceof StorageFailure) {
+        this.#volatileBlocked = true;
+        this.#windows.clear();
+        return {
+          txId,
+          request,
+          status: "storage_failed",
+          selectedVersion: this.#record.selectedVersion,
+        };
+      }
       if (stopped.errors.length || stopped.timedOut) {
-        this.#running = null;
         return await this.#quarantine(
           txId,
           request,
           "candidate-cleanup-failure",
         );
       }
+      const episode = this.#record.attempt;
+      const alreadyTried = new Set([
+        ...(episode?.attemptedDigests ?? []),
+        ...(episode?.rejectedDigests ?? []),
+      ]);
+      let fallbackVersion: FixtureVersion | null = null;
       if (
-        before.desiredEnabled && before.selectedVersion && before.selectedDigest
-      ) {
-        let previous: M0FixtureValue;
+        before.desiredEnabled && before.selectedVersion &&
+        before.selectedDigest &&
+        this.#selectedEligible(before) &&
+        !alreadyTried.has(before.selectedDigest)
+      ) fallbackVersion = before.selectedVersion;
+      else if (
+        request.op === "startup_recovery" && this.#rollbackEligible(before) &&
+        before.rollbackVersion && before.rollbackDigest &&
+        !alreadyTried.has(before.rollbackDigest)
+      ) fallbackVersion = before.rollbackVersion;
+      if (fallbackVersion) {
+        const fallbackDigest = M0_FIXTURES[fallbackVersion].digest;
+        let fallback: M0FixtureValue;
         try {
-          previous = await this.#store.load(
-            before.selectedDigest,
-            before.selectedVersion,
-          );
-        } catch {
+          fallback = await this.#store.load(fallbackDigest, fallbackVersion);
+        } catch (fallbackError) {
+          if (fallbackError instanceof StorageFailure) {
+            this.#volatileBlocked = true;
+            return {
+              txId,
+              request,
+              status: "storage_failed",
+              selectedVersion: this.#record.selectedVersion,
+            };
+          }
+          const episode = this.#record.attempt;
+          const currentPending = this.#record.pending;
+          if (
+            episode && currentPending?.txId === txId &&
+            !episode.attemptedDigests.includes(fallbackDigest) &&
+            !episode.rejectedDigests.includes(fallbackDigest) &&
+            episode.attemptedDigests.length + episode.rejectedDigests.length < 2
+          ) {
+            await this.#write({
+              ...this.#record,
+              pending: {
+                ...currentPending,
+                targetVersion: fallbackVersion,
+                targetDigest: fallbackDigest,
+                phase: "OLD_STOPPED",
+              },
+              attempt: {
+                ...episode,
+                targetDigest: fallbackDigest,
+                rejectedDigests: [...episode.rejectedDigests, fallbackDigest],
+              },
+            });
+          }
           return await this.#quarantine(
             txId,
             request,
-            "restore-package-unavailable",
+            "recovery-fallback-preflight-rejected",
           );
         }
-        const restore = new M0ModuleHost(
-          this.#epoch,
-          ++this.#generation,
-          previous.digest,
-          previous.source,
-          (epoch, gen, json) =>
-            this.#broker(epoch, gen, json, `${epoch}:${gen}`),
+        return await this.#activate(
+          txId,
+          request,
+          before,
+          fallback,
+          request.op === "startup_recovery" ? "succeeded" : "failed_restored",
         );
-        this.#activeToken = `${this.#epoch}:${this.#generation}`;
-        this.#running = restore;
-        try {
-          await restore.start(windows.map((entry) => entry.id));
-        } catch {
-          this.#activeToken = null;
-          await restore.stop("restore-failed");
-          this.#running = null;
-          return await this.#quarantine(txId, request, "restore-failure");
-        }
-        this.#running = restore;
-        try {
-          return await this.#terminal(txId, request, "failed_restored", {
-            ...before,
-            pending: null,
-          });
-        } catch {
-          return await this.#finalizationStorageFailure(
-            txId,
-            request,
-            restore,
-            "restore-finalization-storage-failure",
-          );
-        }
+      }
+      if (before.desiredEnabled) {
+        return await this.#quarantine(
+          txId,
+          request,
+          "recovery-attempt-exhausted",
+        );
       }
       this.#windows.clear();
       return await this.#terminal(txId, request, "failed_restored", {
         ...before,
         desiredEnabled: false,
         pending: null,
+        attempt: null,
       }, String(error));
     }
   }
 
   #archiveTerminalBeforeReplacement(record: M0Record, txId: string): M0Record {
     const previous = record.lastOutcome;
-    if (!previous || previous.txId === txId || previous.status === "pending") {
+    if (
+      !previous || previous.txId === txId || previous.status === "pending" ||
+      previous.status === "committed_pending_publish"
+    ) {
       return record;
     }
     return {
@@ -886,7 +1687,6 @@ export class M0FeatureHost {
       if (unfinished) {
         await this.#terminal(txId, request, "failed_quarantined", {
           ...durable,
-          desiredEnabled: false,
           blockedReason: "finalization_storage_failure",
         });
       }
@@ -983,12 +1783,16 @@ export class M0FeatureHost {
       selectedVersion: base.selectedVersion,
     };
     const recent = base.lastOutcome && base.lastOutcome.txId !== txId &&
-        base.lastOutcome.status !== "pending"
+        base.lastOutcome.status !== "pending" &&
+        base.lastOutcome.status !== "committed_pending_publish"
       ? [...base.recentOutcomes, base.lastOutcome].slice(-32)
       : base.recentOutcomes;
     const next = await this.#write({
       ...base,
       pending: null,
+      attempt: status === "succeeded" || status === "failed_restored"
+        ? null
+        : base.attempt,
       recentOutcomes: recent,
       lastOutcome: entry,
     });
@@ -1014,7 +1818,6 @@ export class M0FeatureHost {
       const base = this.#record;
       return await this.#terminal(txId, request, "failed_quarantined", {
         ...base,
-        desiredEnabled: false,
         blockedReason: reason,
       });
     } catch {
@@ -1026,6 +1829,12 @@ export class M0FeatureHost {
 export interface M0TestHostHandle {
   readonly root: string;
   readonly host: M0FeatureHost;
+  shutdown(): Promise<DisposeReport>;
+  shutdownForRestartForTests(): Promise<DisposeReport>;
+  failNextWriteForTests(
+    mode: "before_replace" | "after_replace",
+    skip?: number,
+  ): void;
   cleanup(): Promise<DisposeReport>;
 }
 
@@ -1042,20 +1851,36 @@ export async function getM0FeatureHostExperimental(
 export async function createM0FeatureHostForTests(
   experimentalOptIn: boolean,
   rootOverride?: string,
+  reopenExisting = false,
 ): Promise<M0TestHostHandle> {
   const suffix = Services.uuid.generateUUID().toString().replace(/[{}]/g, "")
     .toLowerCase();
   const root = rootOverride ?? PathUtils.join(TEST_ROOT, `m0-${suffix}`);
-  const host = await M0FeatureHost.open(root, experimentalOptIn, true);
+  const createdRoot = !(await IOUtils.exists(root));
+  const host = await M0FeatureHost.open(
+    root,
+    experimentalOptIn,
+    true,
+    reopenExisting,
+  );
   let cleanupPromise: Promise<DisposeReport> | null = null;
   return {
     root,
     host,
+    shutdown: () => host.shutdown(),
+    shutdownForRestartForTests: async () => {
+      const report = await host.shutdown();
+      if (report.errors.length === 0 && !report.timedOut) owners.delete(root);
+      return report;
+    },
+    failNextWriteForTests: (mode, skip) =>
+      host.setNextWriteFaultForTests(mode, skip),
     cleanup: () => {
       if (cleanupPromise) return cleanupPromise;
       cleanupPromise = (async () => {
         const report = await host.shutdown();
         if (
+          createdRoot &&
           report.errors.length === 0 && !report.timedOut && !owners.has(root)
         ) {
           await IOUtils.remove(root, { recursive: true, ignoreAbsent: true });

@@ -25,41 +25,62 @@ disposal while that cleanup is running is a non-awaiting no-op, while
 errors/deadlines. The colocated browser test covers delayed/manual disposal,
 manual failure aggregation, nested resource counts, and timer/resource bounds.
 
+The experimental journal is schema 2. It records a strict before snapshot and
+`PREPARED`/`OLD_STOPPED`/`CANDIDATE_READY` phase, plus one durable attempt
+episode shared by startup and interrupted operations. Episodes allow at most two
+distinct candidate digests; an evaluation is recorded before sandbox execution,
+and a preflight rejection is recorded before fallback. Only `succeeded` and
+`failed_restored` clear an episode. Recovery preserves the origin transaction,
+refuses stale build proofs, treats durable disable intent as authoritative, and
+leaves durable quarantine blocked without automatic repair. Schema-1 or
+malformed records fail closed before fixture evaluation. Each pinned fixture
+also carries host-schema/build, locked runtime BuildID, and capability metadata.
+The store checks this tuple and the host's explicit capability allowlist before
+returning bytes to the activation path; compatible package metadata is separate
+from the health proof used for rollback.
+
+Browser tests may reopen the same UUID-named test root after stopping its host.
+The test-only write-fault adapter injects failures before or after native
+`IOUtils.writeJSON`; reads still use native `IOUtils`. Recovery-boundary tests
+seed real journal records after shutdown, so they are synthetic crash-boundary
+tests, not evidence from killing a Floorp process mid-write. The production
+singleton has no fault-injection option. No window observers/admission gate, HUB
+publication, signing, migration, or production loader is included.
+
 ## Design acceptance cases
 
 The case names and numbers below match §16 of `floorp-hotfix-design-v0.2.md`.
-Statuses describe source coverage only; none is claimed to have passed native
-verification.
+Statuses describe this local prototype and its colocated tests, not full M0
+acceptance.
 
-| #  | Design case                                       | Slice status                                                                                                   |
-| -- | ------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| 1  | import top-level failure                          | Partial: broken fixture rejection exists; legacy ownership is out of scope.                                    |
-| 2  | install                                           | Source implemented, unrun: pinned package only, zero evaluation.                                               |
-| 3  | disabled update crash                             | Partial: disabled update is pointer-only; crash recovery is absent.                                            |
-| 4  | enable failure / disable crash intent             | Partial: failed enable preserves disabled selection; reopen blocks unresolved records.                         |
-| 5  | v1→v2→v1 and re-enable                            | Source/test implemented, unrun: each activation uses a fresh sandbox.                                          |
-| 6  | old callback/disposer delay                       | Partial: scopes revoke references; native tests check stale wrappers after disable/update.                     |
-| 7  | hook needs task release                           | Partial: deactivate begins alongside disposal; task-drain coordination is absent.                              |
-| 8  | concurrent dispose / hook throw / timeout         | Partial: manual in-flight/error drains, bounded cleanup, and shared stop are tested; full fault matrix absent. |
-| 9  | W0 capture / window churn                         | Partial: W0 excludes hidden-toolbar, private, and web-panel windows; observer/close handling are absent.       |
-| 10 | no HUB tab / ack / live disconnect                | Deferred: HUB publication is outside this slice.                                                               |
-| 11 | precommit / revision update                       | Partial: atomic revision writes and stale-revision rejection exist; fault injection is absent.                 |
-| 12 | postcommit publication / attach failure           | Deferred: no HUB readiness protocol.                                                                           |
-| 13 | PREPARED crash recovery                           | Deferred: unresolved reopen fails closed; journal recovery is absent.                                          |
-| 14 | interrupted / repeated attempts                   | Deferred: durable attempt episodes and retry budgets are absent.                                               |
-| 15 | rejected selected package / corrupt record        | Partial: pinned bytes are revalidated and malformed records fail closed; fallback recovery is absent.          |
-| 16 | candidate failure / old restore / cleanup failure | Partial: clean active restore and disabled failed-enable path exist; injected cleanup faults are absent.       |
-| 17 | private-mode existing feature migration           | Deferred to M2.                                                                                                |
-| 18 | fifty-update session                              | Source/test implemented, unrun: native test tracks resources, wrappers, and timers over 50 updates.            |
-| 19 | profile/data compatibility                        | Deferred to M2; no existing feature data is touched.                                                           |
-| 20 | terminal write after publish                      | Partial: terminal outcomes are preserved by a guard; end-to-end storage-fault injection is absent.             |
-| 21 | new request / lost response / txId reuse / expiry | Partial: queued duplicate checks and detached outcomes exist; expiry cases remain untested.                    |
-| 22 | host/runtime build tuple change                   | Partial: rollback requires an exact current tuple; migration behavior is untested.                             |
-| 23 | startup fallback / crash boundary                 | Deferred: startup recovery is absent.                                                                          |
+| #  | Design case                                       | Slice status                                                                                                      |
+| -- | ------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| 1  | import top-level failure                          | Partial: broken fixture rejection exists; legacy ownership is out of scope.                                       |
+| 2  | install                                           | Pinned fixture installation is pointer-only and performs zero evaluation.                                         |
+| 3  | disabled update crash                             | Journal restores the before pointer without evaluation; synthetic native case added.                              |
+| 4  | enable failure / disable crash intent             | Failed enable restores disabled state; durable disable wins on reopen.                                            |
+| 5  | v1→v2→v1 and re-enable                            | Existing native lifecycle test exercises fresh sandbox generations.                                               |
+| 6  | old callback/disposer delay                       | Partial: scope revocation and stale-wrapper checks exist; arbitrary callback termination is not proven.           |
+| 7  | hook needs task release                           | Partial: deactivate begins alongside disposal; task-drain coordination is absent.                                 |
+| 8  | concurrent dispose / hook throw / timeout         | Partial: in-flight/error drains, bounded cleanup, and shared stop are tested; full fault matrix absent.           |
+| 9  | W0 capture / window churn                         | Partial: W0 filters hidden-toolbar, private, and web-panel windows; observers/close handling are absent.          |
+| 10 | no HUB tab / ack / live disconnect                | Deferred: HUB publication is outside this slice.                                                                  |
+| 11 | precommit / revision update                       | Atomic record revisions and before/after-replace write faults are covered; full request matrix is partial.        |
+| 12 | postcommit publication / attach failure           | Deferred: no HUB readiness protocol.                                                                              |
+| 13 | PREPARED crash recovery                           | Schema-2 recovery covers all three actual replaced phases and disabled before state.                              |
+| 14 | interrupted / repeated attempts                   | Durable two-digest episodes survive reopen; exhaustion quarantines without automatic retry.                       |
+| 15 | rejected selected package / corrupt record        | Preflight rejection may use one proof-eligible fallback; malformed/incompatible records evaluate nothing.         |
+| 16 | candidate failure / old restore / cleanup failure | Candidate failure restores only a current-health before generation within the two-candidate budget.               |
+| 17 | private-mode existing feature migration           | Deferred to M2.                                                                                                   |
+| 18 | fifty-update session                              | Existing native test tracks resources, wrappers, and timers over 50 updates.                                      |
+| 19 | profile/data compatibility                        | Deferred to M2; no existing feature data is touched.                                                              |
+| 20 | terminal write after publish                      | Before/after-replace fault paths preserve durable success when present and block the current runtime.             |
+| 21 | new request / lost response / txId reuse / expiry | Partial: retry/query and descriptor conflict are supported; retention expiry remains untested.                    |
+| 22 | host/runtime build tuple change                   | Package compatibility metadata and rollback health proof are separately exact-tuple gated.                        |
+| 23 | startup fallback / crash boundary                 | Startup selected/fallback recovery and synthetic interrupted episodes are covered; killed-process faults are not. |
 
-The colocated browser test is `M0FeatureHost.test.mts`; the documented command
-is
+The colocated browser test is `M0FeatureHost.test.mts`; run it with
 `deno task test --near browser-features/modules/modules/feature-host/M0FeatureHost.test.mts --layer esm`.
-Do not claim native loader behavior, repeat-update bounds, or complete M0
-acceptance until that test and the remaining gates run against the pinned Floorp
-runtime. This source-coverage map does not claim complete M0 acceptance.
+The 50-update lifecycle case remains part of `runAllTests`. Passing these tests
+does not validate window churn observers, HUB readiness, real process-kill
+recovery, or complete M0 acceptance.

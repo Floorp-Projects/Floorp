@@ -12,9 +12,11 @@ import {
   createM0FeatureHostForTests,
   hasUnfinishedM0FinalizationForTests,
   isEligibleM0MainWindowForTests,
+  isM0FixtureCompatibleForTests,
+  m0PayloadEvaluationsForTests,
   type M0TestHostHandle,
 } from "./FeatureHost.sys.mts";
-import { M0_FIXTURES } from "./M0Fixtures.sys.mts";
+import { type FixtureVersion, M0_FIXTURES } from "./M0Fixtures.sys.mts";
 import {
   activeM0DeadlineTimersForTests,
   M0ModuleHost,
@@ -541,6 +543,785 @@ async function testConcurrentModuleHostStopsShareReport(): Promise<void> {
   );
 }
 
+type JsonRecord = Record<string, unknown>;
+
+function recordCopy(session: M0TestHostHandle): JsonRecord {
+  return JSON.parse(JSON.stringify(session.host.diagnostics)) as JsonRecord;
+}
+
+function recordSnapshot(record: JsonRecord): JsonRecord {
+  return {
+    selectedVersion: record.selectedVersion,
+    selectedDigest: record.selectedDigest,
+    selectedHealth: record.selectedHealth,
+    selectedHealthBuild: record.selectedHealthBuild,
+    rollbackVersion: record.rollbackVersion,
+    rollbackDigest: record.rollbackDigest,
+    rollbackHealthBuild: record.rollbackHealthBuild,
+    desiredEnabled: record.desiredEnabled,
+  };
+}
+
+function operationRequest(
+  op: string,
+  expectedRevision: number | null,
+  target: FixtureVersion | null,
+  recoveryEpoch: string | null = null,
+): JsonRecord {
+  return {
+    featureId: "experimental-local-sample",
+    op,
+    expectedRevision,
+    target,
+    recoveryEpoch,
+    normalizedInput: op === "startup_recovery"
+      ? `startup_recovery:${recoveryEpoch}`
+      : `${op}:${target ?? "none"}`,
+  };
+}
+
+async function seedRecord(root: string, record: JsonRecord): Promise<void> {
+  const path = PathUtils.join(root, "state.json");
+  await IOUtils.writeJSON(path, record, {
+    tmpPath: `${path}.seed.tmp`,
+    flush: true,
+  });
+}
+
+async function finishTestHosts(
+  first: M0TestHostHandle | null,
+  second: M0TestHostHandle | null = null,
+): Promise<void> {
+  if (second) {
+    const result = await second.shutdownForRestartForTests();
+    assertEquals(result.errors.length, 0, "reopened host stops cleanly");
+    await second.cleanup();
+  }
+  if (first) {
+    const result = await first.shutdownForRestartForTests();
+    assertEquals(result.errors.length, 0, "test host stops cleanly");
+    await first.cleanup();
+  }
+}
+
+async function testDisabledUpdateCrashRecovery(): Promise<void> {
+  let first: M0TestHostHandle | null = null;
+  let reopened: M0TestHostHandle | null = null;
+  try {
+    first = await createM0FeatureHostForTests(true);
+    await first.host.install("recovery-install", 0, "v1");
+    first.failNextWriteForTests("after_replace");
+    const failure = await first.host.update(
+      "disabled-update-crash",
+      first.host.diagnostics.stateRevision,
+      "v2",
+    );
+    assertEquals(
+      failure.status,
+      "storage_failed",
+      "uncertain PREPARED write fails closed",
+    );
+    const root = first.root;
+    await first.shutdownForRestartForTests();
+    reopened = await createM0FeatureHostForTests(true, root, true);
+    assertEquals(
+      reopened.host.evaluationCountForTests,
+      0,
+      "disabled update recovery does not evaluate",
+    );
+    assertEquals(
+      reopened.host.diagnostics.selectedVersion,
+      "v1",
+      "disabled recovery restores before pointer",
+    );
+    assertEquals(
+      reopened.host.diagnostics.desiredEnabled,
+      false,
+      "disabled recovery remains disabled",
+    );
+    assertEquals(
+      reopened.host.diagnostics.pending,
+      null,
+      "recovery clears pending",
+    );
+    const recovered = reopened.host.queryOutcome("disabled-update-crash");
+    assertEquals(
+      recovered === "outcome_unknown_or_expired" ? null : recovered.status,
+      "failed_restored",
+      "original transaction receives restored outcome",
+    );
+  } finally {
+    await finishTestHosts(first, reopened);
+  }
+}
+
+async function testNormalStartupAndInterruptedUpdateRecovery(): Promise<void> {
+  let first: M0TestHostHandle | null = null;
+  let reopened: M0TestHostHandle | null = null;
+  try {
+    first = await createM0FeatureHostForTests(true);
+    await first.host.install("startup-install", 0, "v1");
+    await first.host.enable(
+      "startup-enable",
+      first.host.diagnostics.stateRevision,
+    );
+    const root = first.root;
+    await first.shutdownForRestartForTests();
+    reopened = await createM0FeatureHostForTests(true, root, true);
+    assertEquals(
+      reopened.host.evaluationCountForTests,
+      1,
+      "normal startup evaluates selected once in a fresh host",
+    );
+    assertEquals(
+      reopened.host.runningLifecycleForTests?.health(),
+      "v1:1",
+      "startup uses a fresh generation",
+    );
+    assertEquals(
+      reopened.host.diagnostics.attempt,
+      null,
+      "terminal startup clears its episode",
+    );
+    await reopened.shutdownForRestartForTests();
+
+    const state = recordCopy(reopened);
+    const request = operationRequest(
+      "update",
+      Number(state.stateRevision),
+      "v2",
+    );
+    const txId = "interrupted-enabled-update";
+    const before = recordSnapshot(state);
+    const targetDigest = M0_FIXTURES.v2.digest;
+    state.pending = {
+      op: "update",
+      txId,
+      request,
+      before,
+      targetVersion: "v2",
+      targetDigest,
+      phase: "CANDIDATE_READY",
+    };
+    state.attempt = {
+      recoveryEpoch: "interrupted-update-episode",
+      originTxId: txId,
+      request,
+      targetDigest,
+      attemptedDigests: [targetDigest],
+      rejectedDigests: [],
+    };
+    state.stateRevision = Number(state.stateRevision) + 1;
+    await seedRecord(root, state);
+    reopened = await createM0FeatureHostForTests(true, root, true);
+    assertEquals(
+      reopened.host.evaluationCountForTests,
+      1,
+      "interrupted update restores only the verified before generation",
+    );
+    assertEquals(
+      reopened.host.runningLifecycleForTests?.health(),
+      "v1:1",
+      "interrupted target is not resumed",
+    );
+    assertEquals(
+      reopened.host.diagnostics.selectedVersion,
+      "v1",
+      "before selection is restored",
+    );
+    assertEquals(
+      reopened.host.diagnostics.lastOutcome?.status,
+      "failed_restored",
+      "origin update ends restored",
+    );
+    assertEquals(
+      reopened.host.diagnostics.attempt,
+      null,
+      "restored terminal clears episode",
+    );
+  } finally {
+    await finishTestHosts(first, reopened);
+  }
+}
+
+async function testAttemptBudgetAndBuildMismatch(): Promise<void> {
+  let first: M0TestHostHandle | null = null;
+  let reopened: M0TestHostHandle | null = null;
+  try {
+    first = await createM0FeatureHostForTests(true);
+    await first.host.install("budget-install", 0, "v1");
+    await first.host.enable(
+      "budget-enable",
+      first.host.diagnostics.stateRevision,
+    );
+    const v1Proof = first.host.diagnostics.selectedHealthBuild;
+    await first.host.update(
+      "budget-update-v2",
+      first.host.diagnostics.stateRevision,
+      "v2",
+    );
+    await first.host.rollback(
+      "budget-rollback-v1",
+      first.host.diagnostics.stateRevision,
+    );
+    const root = first.root;
+    await first.shutdownForRestartForTests();
+    const state = recordCopy(first);
+    const txId = "startup-budget-episode";
+    const epoch = "startup-budget-episode";
+    const request = operationRequest("startup_recovery", null, null, epoch);
+    const before = recordSnapshot(state);
+    const proof = v1Proof as JsonRecord;
+    state.pending = {
+      op: "startup_recovery",
+      txId,
+      request,
+      before: {
+        ...before,
+      },
+      targetVersion: "v1",
+      targetDigest: M0_FIXTURES.v1.digest,
+      phase: "OLD_STOPPED",
+    };
+    state.attempt = {
+      recoveryEpoch: epoch,
+      originTxId: txId,
+      request,
+      targetDigest: M0_FIXTURES.v1.digest,
+      attemptedDigests: [M0_FIXTURES.v1.digest],
+      rejectedDigests: [],
+    };
+    state.stateRevision = Number(state.stateRevision) + 1;
+    await seedRecord(root, state);
+    reopened = await createM0FeatureHostForTests(true, root, true);
+    assertEquals(
+      reopened.host.evaluationCountForTests,
+      1,
+      "attempted selected is skipped in favor of one eligible fallback",
+    );
+    assertEquals(
+      reopened.host.runningLifecycleForTests?.health(),
+      "v2:1",
+      "fallback generation is active",
+    );
+    assertEquals(
+      reopened.host.diagnostics.selectedVersion,
+      "v2",
+      "fallback selection is committed",
+    );
+    assertEquals(
+      reopened.host.diagnostics.rollbackVersion,
+      null,
+      "consumed fallback proof is cleared",
+    );
+
+    await reopened.shutdownForRestartForTests();
+    const exhausted = recordCopy(reopened);
+    exhausted.lastOutcome = {
+      txId,
+      request,
+      status: "committed_pending_publish",
+      selectedVersion: "v2",
+    };
+    exhausted.attempt = {
+      recoveryEpoch: epoch,
+      originTxId: txId,
+      request,
+      targetDigest: M0_FIXTURES.v2.digest,
+      attemptedDigests: [M0_FIXTURES.v1.digest, M0_FIXTURES.v2.digest],
+      rejectedDigests: [],
+    };
+    exhausted.rollbackVersion = "v1";
+    exhausted.rollbackDigest = M0_FIXTURES.v1.digest;
+    exhausted.rollbackHealthBuild = proof;
+    exhausted.stateRevision = Number(exhausted.stateRevision) + 1;
+    await seedRecord(root, exhausted);
+    reopened = await createM0FeatureHostForTests(true, root, true);
+    assertEquals(
+      reopened.host.evaluationCountForTests,
+      0,
+      "exhausted episode is quarantined without repeating a digest",
+    );
+    assertEquals(
+      reopened.host.diagnostics.desiredEnabled,
+      true,
+      "quarantine preserves enabled intent",
+    );
+    assert(
+      reopened.host.diagnostics.blockedReason !== null,
+      "attempt exhaustion remains durably blocked",
+    );
+    await reopened.shutdownForRestartForTests();
+    reopened = await createM0FeatureHostForTests(true, root, true);
+    assertEquals(
+      reopened.host.evaluationCountForTests,
+      0,
+      "persistent quarantine is not automatically cleared on another open",
+    );
+    assert(
+      reopened.host.diagnostics.blockedReason !== null,
+      "blocked reason remains durable across repeated open",
+    );
+  } finally {
+    await finishTestHosts(first, reopened);
+  }
+}
+
+async function testActualPendingPhaseRecovery(): Promise<void> {
+  for (
+    const [phase, skip, expectedEvaluations] of [
+      ["PREPARED", 0, 1],
+      ["OLD_STOPPED", 1, 1],
+      ["CANDIDATE_READY", 3, 2],
+    ] as const
+  ) {
+    let first: M0TestHostHandle | null = null;
+    let reopened: M0TestHostHandle | null = null;
+    try {
+      first = await createM0FeatureHostForTests(true);
+      await first.host.install(`phase-install-${phase}`, 0, "v1");
+      await first.host.enable(
+        `phase-enable-${phase}`,
+        first.host.diagnostics.stateRevision,
+      );
+      const evaluationsBefore = m0PayloadEvaluationsForTests();
+      first.failNextWriteForTests("after_replace", skip);
+      const result = await first.host.update(
+        `phase-update-${phase}`,
+        first.host.diagnostics.stateRevision,
+        "v2",
+      );
+      assertEquals(
+        result.status,
+        "storage_failed",
+        `${phase} write uncertainty is reported`,
+      );
+      const persisted = await IOUtils.readJSON(
+        PathUtils.join(first.root, "state.json"),
+      ) as JsonRecord;
+      assertEquals(
+        (persisted.pending as JsonRecord).phase,
+        phase,
+        `${phase} phase is the actual replaced journal state`,
+      );
+      const root = first.root;
+      await first.shutdownForRestartForTests();
+      reopened = await createM0FeatureHostForTests(true, root, true);
+      assertEquals(
+        reopened.host.diagnostics.selectedVersion,
+        "v1",
+        `${phase} recovery restores the before selection`,
+      );
+      assertEquals(
+        reopened.host.diagnostics.lastOutcome?.status,
+        "failed_restored",
+        `${phase} recovery terminates the original transaction`,
+      );
+      assertEquals(
+        m0PayloadEvaluationsForTests() - evaluationsBefore,
+        expectedEvaluations,
+        `${phase} has the expected candidate and restore evaluations`,
+      );
+    } finally {
+      await finishTestHosts(first, reopened);
+    }
+  }
+}
+
+function testPinnedCompatibilityPreflight(): void {
+  const evaluationsBefore = m0PayloadEvaluationsForTests();
+  assert(
+    isM0FixtureCompatibleForTests(
+      "v1",
+      "m0-schema-2",
+      Services.appinfo.appBuildID,
+      ["window-marker"],
+    ),
+    "pinned host/runtime/capability tuple is accepted",
+  );
+  assert(
+    !isM0FixtureCompatibleForTests(
+      "v1",
+      "m0-schema-1",
+      Services.appinfo.appBuildID,
+      ["window-marker"],
+    ),
+    "unsupported host schema is rejected",
+  );
+  assert(
+    !isM0FixtureCompatibleForTests(
+      "v1",
+      "m0-schema-2",
+      `${Services.appinfo.appBuildID}-other`,
+      ["window-marker"],
+    ),
+    "unsupported runtime build is rejected",
+  );
+  assert(
+    !isM0FixtureCompatibleForTests(
+      "v1",
+      "m0-schema-2",
+      Services.appinfo.appBuildID,
+      [],
+    ),
+    "missing required capability is rejected",
+  );
+  assertEquals(
+    m0PayloadEvaluationsForTests(),
+    evaluationsBefore,
+    "compatibility preflight performs no payload evaluation",
+  );
+}
+
+async function testInvalidSelectedFallbackAndCorruptRecord(): Promise<void> {
+  let first: M0TestHostHandle | null = null;
+  let reopened: M0TestHostHandle | null = null;
+  try {
+    first = await createM0FeatureHostForTests(true);
+    await first.host.install("invalid-install", 0, "v1");
+    await first.host.enable(
+      "invalid-enable",
+      first.host.diagnostics.stateRevision,
+    );
+    await first.host.disable(
+      "invalid-disable-to-cache-broken",
+      first.host.diagnostics.stateRevision,
+    );
+    await first.host.update(
+      "invalid-cache-broken",
+      first.host.diagnostics.stateRevision,
+      "broken",
+    );
+    await first.host.update(
+      "invalid-restore-pointer",
+      first.host.diagnostics.stateRevision,
+      "v1",
+    );
+    await first.host.enable(
+      "invalid-reenable-v1",
+      first.host.diagnostics.stateRevision,
+    );
+    const root = first.root;
+    await first.shutdownForRestartForTests();
+    const state = recordCopy(first);
+    const proof = state.selectedHealthBuild;
+    state.selectedVersion = "broken";
+    state.selectedDigest = M0_FIXTURES.broken.digest;
+    state.selectedHealth = "unverified";
+    state.selectedHealthBuild = null;
+    state.rollbackVersion = "v1";
+    state.rollbackDigest = M0_FIXTURES.v1.digest;
+    state.rollbackHealthBuild = proof;
+    state.stateRevision = Number(state.stateRevision) + 1;
+    await seedRecord(root, state);
+    reopened = await createM0FeatureHostForTests(true, root, true);
+    assertEquals(
+      reopened.host.evaluationCountForTests,
+      2,
+      "selected failure uses one fallback evaluation",
+    );
+    assertEquals(
+      reopened.host.diagnostics.selectedVersion,
+      "v1",
+      "fallback becomes selected",
+    );
+    assertEquals(
+      reopened.host.diagnostics.rollbackVersion,
+      null,
+      "failed selection is not promoted to rollback",
+    );
+
+    await reopened.shutdownForRestartForTests();
+    const corrupt = {
+      schemaVersion: 1,
+      featureId: "experimental-local-sample",
+    };
+    await seedRecord(root, corrupt);
+    const evaluations = m0PayloadEvaluationsForTests();
+    let rejected = false;
+    try {
+      await createM0FeatureHostForTests(true, root, true);
+    } catch {
+      rejected = true;
+    }
+    assert(rejected, "incompatible schema is rejected");
+    assertEquals(
+      m0PayloadEvaluationsForTests(),
+      evaluations,
+      "corrupt record is rejected before payload evaluation",
+    );
+  } finally {
+    await finishTestHosts(first, reopened);
+  }
+}
+
+async function testPreflightRejectedDigestFallback(): Promise<void> {
+  let first: M0TestHostHandle | null = null;
+  let reopened: M0TestHostHandle | null = null;
+  try {
+    first = await createM0FeatureHostForTests(true);
+    await first.host.install("preflight-install", 0, "v1");
+    await first.host.enable(
+      "preflight-enable",
+      first.host.diagnostics.stateRevision,
+    );
+    await first.host.update(
+      "preflight-update",
+      first.host.diagnostics.stateRevision,
+      "v2",
+    );
+    await first.host.rollback(
+      "preflight-rollback",
+      first.host.diagnostics.stateRevision,
+    );
+    const root = first.root;
+    await first.shutdownForRestartForTests();
+    await IOUtils.writeUTF8(
+      PathUtils.join(root, "packages", `${M0_FIXTURES.v1.digest}.js`),
+      "not the pinned fixture",
+    );
+    reopened = await createM0FeatureHostForTests(true, root, true);
+    assertEquals(
+      reopened.host.evaluationCountForTests,
+      1,
+      "preflight-rejected selected digest is never evaluated",
+    );
+    assertEquals(
+      reopened.host.runningLifecycleForTests?.health(),
+      "v2:1",
+      "one independently verified fallback is activated",
+    );
+    assertEquals(
+      reopened.host.diagnostics.selectedVersion,
+      "v2",
+      "fallback is durably selected",
+    );
+    assertEquals(
+      reopened.host.diagnostics.rollbackVersion,
+      null,
+      "fallback consumes the stale pointer",
+    );
+  } finally {
+    await finishTestHosts(first, reopened);
+  }
+}
+
+async function testWriteFailureBoundaries(): Promise<void> {
+  let session: M0TestHostHandle | null = null;
+  try {
+    session = await createM0FeatureHostForTests(true);
+    await session.host.install("write-install", 0, "v1");
+    await session.host.enable(
+      "write-enable",
+      session.host.diagnostics.stateRevision,
+    );
+    const runtime = session.host.runningLifecycleForTests;
+    const revision = session.host.diagnostics.stateRevision;
+    let badTransactionRejected = false;
+    try {
+      await session.host.disable("", revision);
+    } catch {
+      badTransactionRejected = true;
+    }
+    assert(
+      badTransactionRejected,
+      "empty transaction ID is rejected before writes",
+    );
+    let unsafeRevisionRejected = false;
+    try {
+      await session.host.disable(
+        "unsafe-revision",
+        Number.MAX_SAFE_INTEGER + 1,
+      );
+    } catch {
+      unsafeRevisionRejected = true;
+    }
+    assert(unsafeRevisionRejected, "unsafe revision is rejected before writes");
+    assertEquals(
+      session.host.diagnostics.stateRevision,
+      revision,
+      "invalid descriptors do not mutate state",
+    );
+    session.failNextWriteForTests("before_replace");
+    const disabled = await session.host.disable(
+      "disable-before-write",
+      session.host.diagnostics.stateRevision,
+    );
+    assertEquals(
+      disabled.status,
+      "storage_failed",
+      "pre-replace disable failure is reported",
+    );
+    assert(
+      session.host.runningLifecycleForTests === runtime,
+      "pre-replace disable failure leaves old runtime untouched",
+    );
+    assertEquals(runtime?.health(), "v1:1", "old generation remains callable");
+  } finally {
+    if (session) await finishTestHosts(session);
+  }
+}
+
+async function testTerminalWriteUncertainty(): Promise<void> {
+  for (const mode of ["before_replace", "after_replace"] as const) {
+    let session: M0TestHostHandle | null = null;
+    let reopened: M0TestHostHandle | null = null;
+    try {
+      session = await createM0FeatureHostForTests(true);
+      await session.host.install(`terminal-install-${mode}`, 0, "v1");
+      session.failNextWriteForTests(mode, 5);
+      const result = await session.host.enable(
+        `terminal-enable-${mode}`,
+        session.host.diagnostics.stateRevision,
+      );
+      assertEquals(
+        result.status,
+        "storage_failed",
+        `${mode} terminal write never reports success`,
+      );
+      assertEquals(
+        session.host.runningLifecycleForTests,
+        null,
+        "uncertain terminal write stops runtime",
+      );
+      if (mode === "after_replace") {
+        assertEquals(
+          session.host.diagnostics.lastOutcome?.status,
+          "succeeded",
+          "durable success is preserved after replace error",
+        );
+        assertEquals(
+          session.host.diagnostics.attempt,
+          null,
+          "durable terminal success cleared episode atomically",
+        );
+      } else {
+        assertEquals(
+          session.host.diagnostics.lastOutcome?.status,
+          "failed_quarantined",
+          "unfinished transaction is best-effort quarantined",
+        );
+        assert(
+          session.host.diagnostics.attempt !== null,
+          "quarantine retains attempt budget",
+        );
+        assertEquals(
+          session.host.diagnostics.desiredEnabled,
+          true,
+          "quarantine preserves enabled intent",
+        );
+      }
+      const root = session.root;
+      await session.shutdownForRestartForTests();
+      reopened = await createM0FeatureHostForTests(true, root, true);
+      const durableOutcome = reopened.host.queryOutcome(
+        `terminal-enable-${mode}`,
+      );
+      assertEquals(
+        durableOutcome === "outcome_unknown_or_expired"
+          ? null
+          : durableOutcome.status,
+        mode === "after_replace" ? "succeeded" : "failed_quarantined",
+        `${mode} finalization state survives actual reopen`,
+      );
+      assertEquals(
+        reopened.host.evaluationCountForTests,
+        mode === "after_replace" ? 1 : 0,
+        `${mode} reopen respects durable terminal or quarantine`,
+      );
+    } finally {
+      await finishTestHosts(session, reopened);
+    }
+  }
+}
+
+async function testDurableDisableAndBuildMismatch(): Promise<void> {
+  let first: M0TestHostHandle | null = null;
+  let reopened: M0TestHostHandle | null = null;
+  try {
+    first = await createM0FeatureHostForTests(true);
+    await first.host.install("disable-restart-install", 0, "v1");
+    await first.host.enable(
+      "disable-restart-enable",
+      first.host.diagnostics.stateRevision,
+    );
+    const root = first.root;
+    await first.host.disable(
+      "disable-restart",
+      first.host.diagnostics.stateRevision,
+    );
+    await first.shutdownForRestartForTests();
+    reopened = await createM0FeatureHostForTests(true, root, true);
+    assertEquals(
+      reopened.host.evaluationCountForTests,
+      0,
+      "durable disable startup performs zero evaluation",
+    );
+    assertEquals(
+      reopened.host.diagnostics.desiredEnabled,
+      false,
+      "durable disable remains authoritative",
+    );
+    await reopened.shutdownForRestartForTests();
+
+    const state = recordCopy(reopened);
+    state.desiredEnabled = true;
+    state.selectedVersion = "v1";
+    state.selectedDigest = M0_FIXTURES.v1.digest;
+    state.selectedHealth = "unverified";
+    state.selectedHealthBuild = null;
+    state.rollbackVersion = "v2";
+    state.rollbackDigest = M0_FIXTURES.v2.digest;
+    state.rollbackHealthBuild = {
+      hostBuildId: "old-host",
+      runtimeBuildId: "old-runtime",
+    };
+    const request = operationRequest(
+      "update",
+      Number(state.stateRevision),
+      "broken",
+    );
+    const txId = "build-mismatch-update";
+    const targetDigest = M0_FIXTURES.broken.digest;
+    state.pending = {
+      op: "update",
+      txId,
+      request,
+      before: recordSnapshot(state),
+      targetVersion: "broken",
+      targetDigest,
+      phase: "OLD_STOPPED",
+    };
+    state.attempt = {
+      recoveryEpoch: "build-mismatch-episode",
+      originTxId: txId,
+      request,
+      targetDigest,
+      attemptedDigests: [targetDigest],
+      rejectedDigests: [],
+    };
+    state.stateRevision = Number(state.stateRevision) + 1;
+    await seedRecord(root, state);
+    reopened = await createM0FeatureHostForTests(true, root, true);
+    assertEquals(
+      reopened.host.evaluationCountForTests,
+      0,
+      "wrong-build before and rollback proofs are not evaluated",
+    );
+    assert(
+      reopened.host.diagnostics.blockedReason !== null,
+      "unrecoverable build mismatch is durably blocked",
+    );
+    assertEquals(
+      reopened.host.diagnostics.desiredEnabled,
+      true,
+      "quarantine keeps desired-enabled for diagnosis",
+    );
+  } finally {
+    await finishTestHosts(first, reopened);
+  }
+}
+
 export async function runAllTests(): Promise<void> {
   const tests: TestCase[] = [
     {
@@ -558,6 +1339,47 @@ export async function runAllTests(): Promise<void> {
     {
       name: "failed PREPARED write preserves active W0",
       fn: testPreparedWriteFailurePreservesActiveWindowMap,
+    },
+    {
+      name: "disabled update PREPARED crash restores before without evaluation",
+      fn: testDisabledUpdateCrashRecovery,
+    },
+    {
+      name: "normal startup and interrupted enabled update recovery",
+      fn: testNormalStartupAndInterruptedUpdateRecovery,
+    },
+    {
+      name: "durable attempt budget and repeated recovery quarantine",
+      fn: testAttemptBudgetAndBuildMismatch,
+    },
+    {
+      name: "actual replaced PREPARED OLD_STOPPED and CANDIDATE_READY recovery",
+      fn: testActualPendingPhaseRecovery,
+    },
+    {
+      name: "pinned host runtime and capability preflight",
+      fn: testPinnedCompatibilityPreflight,
+    },
+    {
+      name:
+        "invalid selected startup falls back once and corrupt state is inert",
+      fn: testInvalidSelectedFallbackAndCorruptRecord,
+    },
+    {
+      name: "preflight-rejected digest is persisted before fallback",
+      fn: testPreflightRejectedDigestFallback,
+    },
+    {
+      name: "durable disable intent and current-build proof gate recovery",
+      fn: testDurableDisableAndBuildMismatch,
+    },
+    {
+      name: "terminal write uncertainty preserves durable success",
+      fn: testTerminalWriteUncertainty,
+    },
+    {
+      name: "known pre-replace disable failure preserves active runtime",
+      fn: testWriteFailureBoundaries,
     },
     {
       name: "native 50-update lifecycle remains bounded",
