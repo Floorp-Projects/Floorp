@@ -1261,6 +1261,164 @@ async function testActualPendingPhaseRecovery(): Promise<void> {
   }
 }
 
+async function testCommittedFallbackResumesAcrossInterruptions(): Promise<
+  void
+> {
+  let first: M0TestHostHandle | null = null;
+  let reopened: M0TestHostHandle | null = null;
+  try {
+    first = await createM0FeatureHostForTests(true);
+    first.excludeWindowsForTests();
+    await first.host.install("committed-fallback-install", 0, "v1");
+    await first.host.enable(
+      "committed-fallback-enable",
+      first.host.diagnostics.stateRevision,
+    );
+    await first.host.update(
+      "committed-fallback-update-v2",
+      first.host.diagnostics.stateRevision,
+      "v2",
+    );
+    const committed = first.committedPendingPublishRecordForTests();
+    assert(
+      committed !== null,
+      "capture actual committed-pending journal write",
+    );
+    const committedOutcome = committed.lastOutcome as JsonRecord;
+    assertEquals(
+      committedOutcome.status,
+      "committed_pending_publish",
+      "captured state is the emitted committed-pending write",
+    );
+    const txId = committedOutcome.txId;
+    assert(typeof txId === "string", "committed write retains its transaction");
+    const root = first.root;
+    const committedRevision = Number(committed.stateRevision);
+    await first.shutdownForRestartForTests();
+    await seedRecord(root, committed);
+
+    const evaluationsBeforeRecovery = m0PayloadEvaluationsForTests();
+    for (let interruption = 0; interruption < 2; interruption += 1) {
+      let interrupted = false;
+      try {
+        await createM0FeatureHostForTests(true, root, true, {
+          mode: "after_replace",
+        });
+      } catch {
+        interrupted = true;
+      }
+      assert(
+        interrupted,
+        `interruption ${interruption + 1} follows the actual fallback write`,
+      );
+      const persisted = await IOUtils.readJSON(
+        PathUtils.join(root, "state.json"),
+      ) as JsonRecord;
+      const pending = persisted.pending as JsonRecord;
+      const attempt = persisted.attempt as JsonRecord;
+      assertEquals(
+        persisted.stateRevision,
+        committedRevision + interruption + 1,
+        "each interruption leaves one incremented emitted journal revision",
+      );
+      assertEquals(
+        persisted.lastOutcome &&
+          (persisted.lastOutcome as JsonRecord).status,
+        "committed_pending_publish",
+        "committed selection remains authoritative",
+      );
+      assertEquals(persisted.selectedVersion, "v2", "committed v2 is retained");
+      assertEquals(
+        persisted.desiredEnabled,
+        true,
+        "enabled intent is retained",
+      );
+      assertEquals(pending.phase, "OLD_STOPPED", "fallback is durably pending");
+      assertEquals(
+        pending.txId,
+        txId,
+        "fallback keeps the original transaction",
+      );
+      assertEquals(pending.targetVersion, "v1", "fallback target is persisted");
+      assertEquals(
+        pending.targetDigest,
+        M0_FIXTURES.v1.digest,
+        "persisted target has the exact v1 digest",
+      );
+      assertEquals(
+        attempt.originTxId,
+        txId,
+        "attempt episode keeps original tx",
+      );
+      assertEquals(
+        attempt.targetDigest,
+        M0_FIXTURES.v1.digest,
+        "attempt target matches the emitted pending target",
+      );
+      assertEquals(
+        JSON.stringify(attempt.request),
+        JSON.stringify(committedOutcome.request),
+        "attempt request remains the original update descriptor",
+      );
+      const attemptedDigests = attempt.attemptedDigests as string[];
+      assert(
+        attemptedDigests.includes(M0_FIXTURES.v2.digest),
+        "the committed candidate remains counted in the episode",
+      );
+      assert(
+        !attemptedDigests.includes(M0_FIXTURES.v1.digest),
+        "the interrupted fallback is still unattempted",
+      );
+    }
+    assertEquals(
+      m0PayloadEvaluationsForTests(),
+      evaluationsBeforeRecovery,
+      "repeated interruption before marking evaluates no fallback",
+    );
+
+    reopened = await createM0FeatureHostForTests(true, root, true);
+    assertEquals(
+      reopened.host.diagnostics.selectedVersion,
+      "v1",
+      "next open resumes the unattempted fallback",
+    );
+    assertEquals(
+      reopened.host.diagnostics.desiredEnabled,
+      true,
+      "fallback recovery preserves enabled intent",
+    );
+    assertEquals(
+      reopened.host.diagnostics.lastOutcome?.txId,
+      txId,
+      "fallback finalization reports the original transaction",
+    );
+    assertEquals(
+      reopened.host.diagnostics.lastOutcome?.status,
+      "failed_restored",
+      "fallback finalization reports the original update as restored",
+    );
+    const recoveredOutcome = reopened.host.queryOutcome(txId);
+    assert(
+      recoveredOutcome !== "outcome_unknown_or_expired",
+      "original transaction outcome remains retained",
+    );
+    assertEquals(
+      recoveredOutcome.status,
+      "failed_restored",
+      "original transaction outcome is queryable after recovery",
+    );
+    assertEquals(reopened.host.diagnostics.pending, null, "pending is cleared");
+    assertEquals(reopened.host.diagnostics.attempt, null, "episode is cleared");
+    assertEquals(
+      m0PayloadEvaluationsForTests() - evaluationsBeforeRecovery,
+      1,
+      "the unattempted v1 fallback is evaluated exactly once",
+    );
+  } finally {
+    await finishTestHosts(first, reopened);
+  }
+}
+
 function testPinnedCompatibilityPreflight(): void {
   const evaluationsBefore = m0PayloadEvaluationsForTests();
   assert(
@@ -2202,6 +2360,10 @@ export async function runAllTests(): Promise<void> {
     {
       name: "actual replaced PREPARED OLD_STOPPED and CANDIDATE_READY recovery",
       fn: testActualPendingPhaseRecovery,
+    },
+    {
+      name: "committed fallback resumes after repeated pre-mark interruption",
+      fn: testCommittedFallbackResumesAcrossInterruptions,
     },
     {
       name: "pinned host runtime and capability preflight",

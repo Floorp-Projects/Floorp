@@ -115,6 +115,11 @@ interface WindowAttachGate {
   promise: Promise<void>;
 }
 
+interface WriteFaultPlan {
+  mode: "before_replace" | "after_replace";
+  skip: number;
+}
+
 const owners = new Map<string, M0FeatureHost>();
 const openingHosts = new Map<string, Promise<M0FeatureHost>>();
 let m0PayloadEvaluations = 0;
@@ -700,10 +705,8 @@ export class M0FeatureHost {
   #closed = false;
   #volatileBlocked = false;
   #shutdownPromise: Promise<DisposeReport> | null = null;
-  #nextWriteFault: {
-    mode: "before_replace" | "after_replace";
-    skip: number;
-  } | null = null;
+  #nextWriteFault: WriteFaultPlan | null = null;
+  #committedPendingPublishForTests: M0Record | null = null;
   #evaluations = 0;
   readonly #markerKeys = new Set<string>();
   readonly #testWritesEnabled: boolean;
@@ -727,6 +730,7 @@ export class M0FeatureHost {
     experimentalOptIn: boolean,
     testRoot = false,
     reopenTestRoot = false,
+    initialWriteFaultForTests?: WriteFaultPlan,
   ): Promise<M0FeatureHost> {
     const mode = Services.prefs.getStringPref("nora.startup.mode", "");
     if (
@@ -742,6 +746,13 @@ export class M0FeatureHost {
     const existing = owners.get(root);
     if (existing) return existing;
     const host = new M0FeatureHost(root, testRoot);
+    if (initialWriteFaultForTests) {
+      if (!testRoot) throw new Error("test write fault disabled");
+      host.setNextWriteFaultForTests(
+        initialWriteFaultForTests.mode,
+        initialWriteFaultForTests.skip,
+      );
+    }
     owners.set(root, host);
     const openingPromise = (async () => {
       try {
@@ -810,9 +821,10 @@ export class M0FeatureHost {
       return;
     }
 
-    const committed = record.pending === null &&
-      record.lastOutcome?.status === "committed_pending_publish";
     const pending = record.pending;
+    const committed =
+      record.lastOutcome?.status === "committed_pending_publish";
+    const committedRecovery = committed && pending !== null;
     if (
       pending && (pending.op === "install" || pending.op === "enable" ||
         !pending.before.desiredEnabled)
@@ -838,12 +850,18 @@ export class M0FeatureHost {
         ...(episode?.rejectedDigests ?? []),
       ]);
       if (
-        pending?.op === "startup_recovery" && pending.targetVersion &&
+        committedRecovery && pending.targetVersion && pending.targetDigest &&
+        !tried.has(pending.targetDigest)
+      ) {
+        targetVersion = pending.targetVersion;
+      } else if (
+        !committed && pending?.op === "startup_recovery" &&
+        pending.targetVersion &&
         pending.targetDigest && !tried.has(pending.targetDigest)
       ) {
         targetVersion = pending.targetVersion;
       } else if (
-        pending && pending.op !== "startup_recovery" &&
+        !committed && pending && pending.op !== "startup_recovery" &&
         this.#selectedEligible(base) && base.selectedDigest &&
         !tried.has(base.selectedDigest)
       ) {
@@ -1203,6 +1221,17 @@ export class M0FeatureHost {
     return this.#evaluations;
   }
 
+  committedPendingPublishRecordForTests(): Record<string, unknown> | null {
+    if (!this.#testWritesEnabled) {
+      throw new Error("test record capture disabled");
+    }
+    return this.#committedPendingPublishForTests
+      ? JSON.parse(
+        JSON.stringify(this.#committedPendingPublishForTests),
+      ) as Record<string, unknown>
+      : null;
+  }
+
   setNextWriteFaultForTests(
     mode: "before_replace" | "after_replace",
     skip = 0,
@@ -1355,6 +1384,10 @@ export class M0FeatureHost {
     } catch {
       throw new StorageFailure();
     }
+    if (
+      this.#testWritesEnabled &&
+      committed.lastOutcome?.status === "committed_pending_publish"
+    ) this.#committedPendingPublishForTests = committed;
     if (fault === "after_replace") throw new StorageFailure();
     this.#record = committed;
     return committed;
@@ -2682,6 +2715,7 @@ export interface M0TestHostHandle {
   readonly host: M0FeatureHost;
   shutdown(): Promise<DisposeReport>;
   shutdownForRestartForTests(): Promise<DisposeReport>;
+  committedPendingPublishRecordForTests(): Record<string, unknown> | null;
   failNextWriteForTests(
     mode: "before_replace" | "after_replace",
     skip?: number,
@@ -2715,6 +2749,10 @@ export async function createM0FeatureHostForTests(
   experimentalOptIn: boolean,
   rootOverride?: string,
   reopenExisting = false,
+  initialWriteFaultForTests?: {
+    mode: "before_replace" | "after_replace";
+    skip?: number;
+  },
 ): Promise<M0TestHostHandle> {
   const suffix = Services.uuid.generateUUID().toString().replace(/[{}]/g, "")
     .toLowerCase();
@@ -2725,6 +2763,12 @@ export async function createM0FeatureHostForTests(
     experimentalOptIn,
     true,
     reopenExisting,
+    initialWriteFaultForTests
+      ? {
+        mode: initialWriteFaultForTests.mode,
+        skip: initialWriteFaultForTests.skip ?? 0,
+      }
+      : undefined,
   );
   let cleanupPromise: Promise<DisposeReport> | null = null;
   return {
@@ -2736,6 +2780,8 @@ export async function createM0FeatureHostForTests(
       if (report.errors.length === 0 && !report.timedOut) owners.delete(root);
       return report;
     },
+    committedPendingPublishRecordForTests: () =>
+      host.committedPendingPublishRecordForTests(),
     failNextWriteForTests: (mode, skip) =>
       host.setNextWriteFaultForTests(mode, skip),
     deferWindowAttachForTests: (windowId) =>
