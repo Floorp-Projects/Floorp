@@ -126,6 +126,7 @@ Deno.test({
           } -->`,
           author: "member-a",
           authorAssociation: "MEMBER",
+          authorPermission: "write",
         },
         {
           body: `<!-- fdh-review-receipt:v1 ${
@@ -133,6 +134,7 @@ Deno.test({
           } -->`,
           author: "member-b",
           authorAssociation: "COLLABORATOR",
+          authorPermission: "admin",
         },
       ],
     };

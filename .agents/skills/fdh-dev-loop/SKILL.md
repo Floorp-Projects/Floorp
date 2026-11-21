@@ -306,14 +306,18 @@ tests and build with read-only contents permission.
 The default-branch `issue_comment` job reruns trusted validation for the current
 PR head when an eligible author's receipt marker is added, edited, or removed.
 For a PR already open when the rerun workflow ships, reopen it or update it to
-start a run the comment job can find. Revalidation reads the full comment set.
-Reviewer identities remain declarations by the poster.
+start a run the comment job can find. Use the same recovery when the original
+run is outside GitHub's 30-day rerun window. Revalidation reads the full comment
+set. Reviewer identities remain declarations by the poster.
 
-Keep both required Actions job contexts on `main`. The binding to GitHub Actions
-App 15368 still permits another workflow from that App to report the same job
-name. Block that route with a workflow-identity ruleset where supported or by
-requiring a maintainer code-owner review for workflow changes, the trusted
-receipt checker and CODEOWNERS itself.
+Before moving all receipt enforcement to this workflow, the repo admin must
+protect the trusted job from impersonation. The binding to GitHub Actions App
+15368 identifies the App and job name. Require the trusted workflow by identity
+from a protected source in an organization ruleset where supported.
+Alternatively, enforce maintainer code-owner approvals with stale approvals
+dismissed for all workflow files, local actions, the trusted receipt checker and
+its imports, and CODEOWNERS itself. Keep the candidate test/build check required
+through rollout.
 
 ## Evidence on the PR (D-20, KAN-132)
 
@@ -331,6 +335,10 @@ deno task fdh evidence publish --task-id <id> --pr <n> --out _dist/fdh/evidence-
 gh pr comment <n> --body-file _dist/fdh/evidence-<n>.md
 deno task fdh evidence trace --pr <n> [--require-merged true]   # exit 1 if incomplete
 ```
+
+The trace evaluates receipts using the poster's current repository permission
+and the same eligibility policy as the trusted gate. If GitHub cannot verify
+permissions, the trace reports an incomplete receipt set.
 
 The comment is public. The manifest carries command output and local paths,
 and fdh's secret check only refuses known secret references; it does not find

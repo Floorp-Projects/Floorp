@@ -55,7 +55,7 @@ jobs:
             fi
             sleep 10
           done
-          echo "Could not rerun trusted receipts for PR #${PR_NUMBER} at ${head_sha}. Reopen or update the PR if no trusted run exists yet." >&2
+          echo "Could not rerun trusted receipts for PR #${PR_NUMBER} at ${head_sha}. Reopen or update the PR if the trusted run is missing or older than 30 days." >&2
           exit 1
 
   trusted-receipts:
@@ -91,6 +91,7 @@ jobs:
           github-token: ${{ github.token }}
           script: |
             const { spawn } = require("node:child_process");
+            const { loadReceiptAuthorPermissions } = require("./tools/src/fdh_receipt_permissions.cjs");
             const [owner, repo] = (process.env.GITHUB_REPOSITORY || "").split("/");
             const childEnv = { PATH: process.env.PATH, DENO_NO_UPDATE_CHECK: "1" };
             for (const key of ["SystemRoot", "WINDIR"]) {
@@ -117,34 +118,19 @@ jobs:
             let result;
             try {
               const comments = await github.paginate(github.rest.issues.listComments, { ...context.repo, issue_number: prNumber, per_page: 100 });
-              const permissions = new Map();
-              const inputs = [];
-              for (const comment of comments) {
-                const login = comment.user?.login;
-                if (!login || !comment.body?.includes("fdh-review-receipt:v1") ||
-                    !["OWNER", "MEMBER", "COLLABORATOR"].includes(comment.author_association)) continue;
-                const key = login.toLowerCase();
-                if (!permissions.has(key)) {
-                  // The collaborator permission endpoint requires Metadata read,
-                  // available to GITHUB_TOKEN without a separate credential.
-                  let canWrite = false;
+              const inputs = await loadReceiptAuthorPermissions(
+                comments.map((comment) => ({ body: comment.body, author: comment.user?.login, authorAssociation: comment.author_association })),
+                async (username) => {
+                  // Metadata read is available to GITHUB_TOKEN.
                   try {
-                    const { data } = await github.rest.repos.getCollaboratorPermissionLevel({ ...context.repo, username: login });
-                    if (!["none", "read", "write", "admin"].includes(data.permission)) {
-                      throw new Error("unexpected collaborator permission response");
-                    }
-                    canWrite = ["write", "admin"].includes(data.permission); // includes maintain (mapped to write)
+                    const { data } = await github.rest.repos.getCollaboratorPermissionLevel({ ...context.repo, username });
+                    return data.permission;
                   } catch (error) {
-                    if (error.status !== 404) throw error;
+                    if (error.status === 404) return null;
+                    throw error;
                   }
-                  permissions.set(key, canWrite);
                 }
-                if (permissions.get(key)) {
-                  inputs.push({ body: comment.body, author: login, authorAssociation: comment.author_association });
-                } else {
-                  console.log(`Ignoring receipt from ${login}: repository write access required`);
-                }
-              }
+              );
               const stdin = JSON.stringify({ prNumber, expectedHeadSha: headSha, currentHeadSha: headSha, comments: inputs });
               const child = spawn("deno", ["run", "--no-config", "--no-lock", "--quiet", "tools/src/fdh_trusted_review_runner.ts"], { stdio: ["pipe", "pipe", "pipe"], shell: false, windowsHide: true, env: childEnv });
               const out = []; const err = [];

@@ -3,6 +3,7 @@
 // Uses mocked GitHub APIs, real Deno for receipt validation; no network mutations.
 const assert = require('node:assert/strict');
 const { readFileSync } = require('node:fs');
+const { resolve } = require('node:path');
 const { spawn: realSpawn } = require('node:child_process');
 const { EventEmitter } = require('node:events');
 /** @typedef {import('./fdh-trusted-review-workflow-types.ts').CheckCreateInput} CheckCreateInput */
@@ -139,7 +140,7 @@ async function run(label, comments, expected, options = {}) {
    * @returns {unknown}
    */
   function loadModule(name) {
-    return name === 'node:child_process' ? { spawn } : require(name);
+    return name === 'node:child_process' ? { spawn } : require(resolve(name));
   }
   let thrown;
   try {
